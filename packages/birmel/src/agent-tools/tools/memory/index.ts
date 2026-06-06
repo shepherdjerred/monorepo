@@ -25,9 +25,7 @@ export const manageMemoryTool = createTool({
     scope: z
       .enum(["server", "owner", "channel", "user", "session"])
       .default("server")
-      .describe(
-        "Memory scope: server, owner, channel, user, or session",
-      ),
+      .describe("Memory scope: server, owner, channel, user, or session"),
     memoryId: z.string().optional().describe("Structured memory record ID"),
     query: z.string().optional().describe("Search query"),
     key: z.string().optional().describe("Optional memory key"),

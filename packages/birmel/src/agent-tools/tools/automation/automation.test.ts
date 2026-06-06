@@ -146,7 +146,7 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
     });
 
     expect(result.success).toBe(true);
-    expect(result.data?.["taskId"]).toBeTruthy();
+    expect(result.data?.["jobId"]).toBeTruthy();
     expect(result.data?.["scheduledAt"]).toBeTruthy();
   });
 
@@ -210,12 +210,12 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
       ...testContext,
     });
 
-    const taskId = createResult.data?.["taskId"];
-    expect(taskId).toBeTruthy();
+    const jobId = createResult.data?.["jobId"];
+    expect(jobId).toBeTruthy();
 
     const cancelResult = await executeTool(manageTaskTool, {
       action: "cancel",
-      taskId,
+      jobId,
       guildId: testGuildId,
       userId: testUserId,
       ...testContext,
@@ -223,10 +223,10 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
 
     expect(cancelResult.success).toBe(true);
 
-    const task = await prisma.scheduledTask.findUnique({
-      where: { id: Number(taskId) },
+    const task = await prisma.agentJob.findUnique({
+      where: { id: String(jobId) },
     });
-    expect(task?.enabled).toBe(false);
+    expect(task?.status).toBe("cancelled");
   });
 });
 

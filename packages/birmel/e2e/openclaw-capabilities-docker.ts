@@ -48,7 +48,12 @@ async function buildImageIfNeeded(): Promise<void> {
   ]);
   const loaded = await run(["docker", "load", "--input", imageTar]);
   if (!loaded.includes(imageTag)) {
-    await run(["docker", "tag", loaded.trim().split(/\s+/).at(-1) ?? imageTag, imageTag]);
+    await run([
+      "docker",
+      "tag",
+      loaded.trim().split(/\s+/).at(-1) ?? imageTag,
+      imageTag,
+    ]);
   }
 }
 
@@ -85,7 +90,7 @@ async function runPhase(phase: "setup" | "verify"): Promise<void> {
     "PINCHTAB_PROFILE=birmel-e2e",
     imageTag,
     "-lc",
-    `bunx --trust prisma db push --accept-data-loss && bun e2e/openclaw-capabilities-container.ts ${phase}`,
+    `bun run generate && bunx --trust prisma db push --accept-data-loss && bun e2e/openclaw-capabilities-container.ts ${phase}`,
   ]);
 }
 

@@ -1,5 +1,6 @@
 import { ChannelType, type Client } from "discord.js";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { z } from "zod";
 
 const logger = loggers.tools.child("discord.threads");
 
@@ -302,9 +303,12 @@ export async function handleSummarizeThread(
     if (message == null || typeof message !== "object") {
       return [];
     }
-    const record = Object.fromEntries(Object.entries(message));
-    const authorName = record.authorName;
-    const content = record.content;
+    const record = z.record(z.string(), z.unknown()).safeParse(message);
+    if (!record.success) {
+      return [];
+    }
+    const authorName = record.data["authorName"];
+    const content = record.data["content"];
     if (typeof authorName !== "string" || typeof content !== "string") {
       return [];
     }

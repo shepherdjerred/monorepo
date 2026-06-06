@@ -3,7 +3,10 @@ import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { handleSend } from "@shepherdjerred/birmel/agent-tools/tools/discord/message-actions.ts";
 import { allTools } from "@shepherdjerred/birmel/agent-tools/tools/index.ts";
-import { parseJsonRecord, getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
+import {
+  parseJsonRecord,
+  getErrorMessage,
+} from "@shepherdjerred/birmel/utils/errors.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import {
   getNextAgentJobRun,
@@ -13,7 +16,7 @@ import {
 
 const logger = loggers.scheduler.child("agent-jobs");
 
-const ToolResultSchema = {
+const toolResult = {
   isSuccess(value: unknown): boolean {
     if (value == null || typeof value !== "object") {
       return true;
@@ -48,14 +51,22 @@ async function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
 ): Promise<T> {
-  return await Promise.race([
-    promise,
-    new Promise<T>((_, reject) => {
-      setTimeout(() => {
-        reject(new Error(`Agent job timed out after ${String(timeoutMs)}ms`));
-      }, timeoutMs);
-    }),
-  ]);
+  const timeoutRef: {
+    current: ReturnType<typeof setTimeout> | undefined;
+  } = { current: undefined };
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutRef.current = setTimeout(() => {
+      reject(new Error(`Agent job timed out after ${String(timeoutMs)}ms`));
+    }, timeoutMs);
+  });
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    const timeout = timeoutRef.current;
+    if (timeout !== undefined) {
+      clearTimeout(timeout);
+    }
+  }
 }
 
 async function executeToolPayload(job: AgentJob): Promise<unknown> {
@@ -69,7 +80,7 @@ async function executeToolPayload(job: AgentJob): Promise<unknown> {
   }
   const execute = tool.execute;
   if (typeof execute !== "function") {
-    throw new Error(`Tool execute is not a function: ${job.toolId}`);
+    throw new TypeError(`Tool execute is not a function: ${job.toolId}`);
   }
 
   const input =
@@ -242,7 +253,7 @@ async function processAgentJob(job: AgentJob): Promise<void> {
       executeAgentJob(runningJob),
       runningJob.timeoutMs,
     );
-    if (!ToolResultSchema.isSuccess(output)) {
+    if (!toolResult.isSuccess(output)) {
       throw new Error(`Tool reported failure: ${serializeOutput(output)}`);
     }
     await markJobSuccess(runningJob, run.id, output);
@@ -272,7 +283,7 @@ function legacyMessage(task: ScheduledTask): string | null {
   }
   try {
     const input = parseJsonRecord(task.toolInput);
-    const content = input.content;
+    const content = input["content"];
     return typeof content === "string" ? content : task.description;
   } catch {
     return task.description;

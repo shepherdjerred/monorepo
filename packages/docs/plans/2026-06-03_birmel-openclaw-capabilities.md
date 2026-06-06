@@ -63,3 +63,34 @@ VoltAgent, Discord.js, Prisma, and the existing specialist-agent routing model.
 - The OpenAI hosted-search path is represented as the configured provider, but
   the current implementation uses direct DuckDuckGo/static-fetch fallback when
   hosted search is unavailable in-process.
+
+## Session Log — 2026-06-05
+
+### Done
+
+- Addressed PR review findings for durable automation:
+  `cancelAgentJob` now requires the requesting user to own the job, reminders
+  enforce the per-guild active-job limit, `run-now` queues only the selected
+  job instead of running every due job inline, and agent-job timeout timers are
+  cleared after completion.
+- Updated browser screenshot path defaults to avoid `process.cwd()` in the
+  runtime browser tool.
+- Split the PinchTab browser provider into its own module so the browser tool
+  stays lintable while keeping PinchTab as the primary backend.
+- Fixed strict TypeScript issues in the newly added memory/session/thread/web
+  research/scheduler code paths.
+- Fixed the Docker E2E harness to generate Prisma Client inside the container
+  before `db push`.
+- Verified `bun run --filter='./packages/birmel' typecheck`,
+  `bun run --filter='./packages/birmel' lint`,
+  `bun --env-file=.env.test test` in `packages/birmel`, and
+  `bun run --filter='./packages/birmel' test:e2e:openclaw-docker`.
+
+### Remaining
+
+- Continue PR readiness monitoring until CI is green, mergeability is clean,
+  and all P3-or-higher comments are resolved or outdated.
+
+### Caveats
+
+- The full Birmel test suite still reports 5 existing skipped browser tests.

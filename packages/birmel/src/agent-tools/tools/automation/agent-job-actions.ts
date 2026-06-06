@@ -4,12 +4,31 @@ import {
   resolveAgentJobSchedule,
   type AgentJobScheduleKind,
 } from "@shepherdjerred/birmel/scheduler/agent-job-schedule.ts";
-import { runAgentJobsJob } from "@shepherdjerred/birmel/scheduler/jobs/agent-jobs.ts";
 
 export type AgentJobToolResult = {
   success: boolean;
   message: string;
   data?: unknown;
+};
+
+type CreateAgentJobOptions = {
+  guildId: string;
+  userId?: string | undefined;
+  channelId?: string | undefined;
+  threadId?: string | undefined;
+  scheduleKind?: string | undefined;
+  scheduleValue?: string | undefined;
+  timezone?: string | undefined;
+  toolId?: string | undefined;
+  toolInput?: Record<string, unknown> | undefined;
+  message?: string | undefined;
+  name?: string | undefined;
+  description?: string | undefined;
+  maxAttempts?: number | undefined;
+  timeoutMs?: number | undefined;
+  model?: string | undefined;
+  reasoningEffort?: string | undefined;
+  textVerbosity?: string | undefined;
 };
 
 function inferScheduleKind(value: string): AgentJobScheduleKind {
@@ -30,38 +49,16 @@ function serializeInput(input: Record<string, unknown> | undefined): string {
   return JSON.stringify(input ?? {});
 }
 
-export async function createAgentJob(options: {
-  guildId: string;
-  userId: string | undefined;
-  channelId: string | undefined;
-  threadId: string | undefined;
-  scheduleKind: string | undefined;
-  scheduleValue: string | undefined;
-  timezone: string | undefined;
-  toolId: string | undefined;
-  toolInput: Record<string, unknown> | undefined;
-  message: string | undefined;
-  name: string | undefined;
-  description: string | undefined;
-  maxAttempts: number | undefined;
-  timeoutMs: number | undefined;
-  model: string | undefined;
-  reasoningEffort: string | undefined;
-  textVerbosity: string | undefined;
-}): Promise<AgentJobToolResult> {
+function validateCreateAgentJobOptions(
+  options: CreateAgentJobOptions,
+  payloadKind: "tool" | "message",
+): AgentJobToolResult | null {
   if (options.userId == null || options.userId.length === 0) {
     return { success: false, message: "userId is required" };
   }
   if (options.scheduleValue == null || options.scheduleValue.length === 0) {
     return { success: false, message: "scheduleValue is required" };
   }
-  const parsedKind = options.scheduleKind ?? inferScheduleKind(options.scheduleValue);
-  const kindResult = AgentJobScheduleKindSchema.safeParse(parsedKind);
-  if (!kindResult.success) {
-    return { success: false, message: `Invalid schedule kind: ${parsedKind}` };
-  }
-  const payloadKind =
-    options.toolId != null && options.toolId.length > 0 ? "tool" : "message";
   if (payloadKind === "message") {
     if (options.message == null || options.message.length === 0) {
       return {
@@ -79,33 +76,69 @@ export async function createAgentJob(options: {
       };
     }
   }
+  return null;
+}
+
+export async function createAgentJob(
+  options: CreateAgentJobOptions,
+): Promise<AgentJobToolResult> {
+  const payloadKind =
+    options.toolId != null && options.toolId.length > 0 ? "tool" : "message";
+  const validation = validateCreateAgentJobOptions(options, payloadKind);
+  if (validation != null) {
+    return validation;
+  }
+
+  const scheduleValue = options.scheduleValue ?? "";
+  const userId = options.userId ?? "";
+  return await createValidatedAgentJob(
+    options,
+    payloadKind,
+    scheduleValue,
+    userId,
+  );
+}
+
+async function createValidatedAgentJob(
+  options: CreateAgentJobOptions,
+  payloadKind: "tool" | "message",
+  scheduleValue: string,
+  userId: string,
+): Promise<AgentJobToolResult> {
+  const parsedKind: string =
+    options.scheduleKind ?? inferScheduleKind(scheduleValue);
+  const kindResult = AgentJobScheduleKindSchema.safeParse(parsedKind);
+  if (!kindResult.success) {
+    return { success: false, message: `Invalid schedule kind: ${parsedKind}` };
+  }
 
   const resolved = resolveAgentJobSchedule({
     scheduleKind: kindResult.data,
-    scheduleValue: options.scheduleValue,
+    scheduleValue,
     timezone: options.timezone,
   });
   const job = await prisma.agentJob.create({
     data: {
       guildId: options.guildId,
-      channelId: options.channelId,
-      threadId: options.threadId,
-      userId: options.userId,
-      name: options.name,
-      description: options.description,
+      channelId: options.channelId ?? null,
+      threadId: options.threadId ?? null,
+      userId,
+      name: options.name ?? null,
+      description: options.description ?? null,
       scheduleKind: resolved.scheduleKind,
       scheduleValue: resolved.scheduleValue,
       timezone: resolved.timezone,
       nextRunAt: resolved.nextRunAt,
       payloadKind,
-      message: options.message,
-      toolId: options.toolId,
-      toolInput: payloadKind === "tool" ? serializeInput(options.toolInput) : null,
+      message: options.message ?? null,
+      toolId: options.toolId ?? null,
+      toolInput:
+        payloadKind === "tool" ? serializeInput(options.toolInput) : null,
       maxAttempts: options.maxAttempts ?? 3,
       timeoutMs: options.timeoutMs ?? 300_000,
-      model: options.model,
-      reasoningEffort: options.reasoningEffort,
-      textVerbosity: options.textVerbosity,
+      model: options.model ?? null,
+      reasoningEffort: options.reasoningEffort ?? null,
+      textVerbosity: options.textVerbosity ?? null,
     },
   });
 
@@ -124,7 +157,7 @@ export async function createAgentJob(options: {
 
 export async function listAgentJobs(options: {
   guildId: string;
-  includeArchived: boolean | undefined;
+  includeArchived?: boolean | undefined;
 }): Promise<AgentJobToolResult> {
   const jobs = await prisma.agentJob.findMany({
     where: {
@@ -161,7 +194,7 @@ export async function listAgentJobs(options: {
 
 export async function showAgentJob(options: {
   guildId: string;
-  jobId: string | undefined;
+  jobId?: string | undefined;
 }): Promise<AgentJobToolResult> {
   if (options.jobId == null || options.jobId.length === 0) {
     return { success: false, message: "jobId is required" };
@@ -177,18 +210,18 @@ export async function showAgentJob(options: {
 
 export async function editAgentJob(options: {
   guildId: string;
-  jobId: string | undefined;
-  scheduleKind: string | undefined;
-  scheduleValue: string | undefined;
-  timezone: string | undefined;
-  message: string | undefined;
-  toolId: string | undefined;
-  toolInput: Record<string, unknown> | undefined;
-  status: string | undefined;
-  name: string | undefined;
-  description: string | undefined;
-  maxAttempts: number | undefined;
-  timeoutMs: number | undefined;
+  jobId?: string | undefined;
+  scheduleKind?: string | undefined;
+  scheduleValue?: string | undefined;
+  timezone?: string | undefined;
+  message?: string | undefined;
+  toolId?: string | undefined;
+  toolInput?: Record<string, unknown> | undefined;
+  status?: string | undefined;
+  name?: string | undefined;
+  description?: string | undefined;
+  maxAttempts?: number | undefined;
+  timeoutMs?: number | undefined;
 }): Promise<AgentJobToolResult> {
   if (options.jobId == null || options.jobId.length === 0) {
     return { success: false, message: "jobId is required" };
@@ -202,7 +235,10 @@ export async function editAgentJob(options: {
   const scheduleKind = options.scheduleKind ?? existing.scheduleKind;
   const kindResult = AgentJobScheduleKindSchema.safeParse(scheduleKind);
   if (!kindResult.success) {
-    return { success: false, message: `Invalid schedule kind: ${scheduleKind}` };
+    return {
+      success: false,
+      message: `Invalid schedule kind: ${scheduleKind}`,
+    };
   }
   const scheduleValue = options.scheduleValue ?? existing.scheduleValue;
   const timezone = options.timezone ?? existing.timezone;
@@ -221,7 +257,9 @@ export async function editAgentJob(options: {
       message: options.message ?? existing.message,
       toolId: options.toolId ?? existing.toolId,
       toolInput:
-        options.toolInput == null ? existing.toolInput : serializeInput(options.toolInput),
+        options.toolInput == null
+          ? existing.toolInput
+          : serializeInput(options.toolInput),
       status: options.status ?? existing.status,
       name: options.name ?? existing.name,
       description: options.description ?? existing.description,
@@ -229,29 +267,43 @@ export async function editAgentJob(options: {
       timeoutMs: options.timeoutMs ?? existing.timeoutMs,
     },
   });
-  return { success: true, message: "Agent job updated", data: { job: updated } };
+  return {
+    success: true,
+    message: "Agent job updated",
+    data: { job: updated },
+  };
 }
 
 export async function cancelAgentJob(options: {
   guildId: string;
-  jobId: string | undefined;
+  userId?: string | undefined;
+  jobId?: string | undefined;
 }): Promise<AgentJobToolResult> {
   if (options.jobId == null || options.jobId.length === 0) {
     return { success: false, message: "jobId is required" };
   }
-  const updated = await prisma.agentJob.updateMany({
+  if (options.userId == null || options.userId.length === 0) {
+    return { success: false, message: "userId is required for cancel" };
+  }
+  const job = await prisma.agentJob.findFirst({
     where: { id: options.jobId, guildId: options.guildId },
-    data: { status: "cancelled", nextRunAt: null },
   });
-  if (updated.count === 0) {
+  if (job == null) {
     return { success: false, message: "Agent job not found" };
   }
+  if (job.userId !== options.userId) {
+    return { success: false, message: "Only the job creator can cancel it" };
+  }
+  await prisma.agentJob.update({
+    where: { id: job.id },
+    data: { status: "cancelled", nextRunAt: null },
+  });
   return { success: true, message: "Agent job cancelled" };
 }
 
 export async function runAgentJobNow(options: {
   guildId: string;
-  jobId: string | undefined;
+  jobId?: string | undefined;
 }): Promise<AgentJobToolResult> {
   if (options.jobId == null || options.jobId.length === 0) {
     return { success: false, message: "jobId is required" };
@@ -263,13 +315,12 @@ export async function runAgentJobNow(options: {
   if (updated.count === 0) {
     return { success: false, message: "Agent job not found" };
   }
-  await runAgentJobsJob();
-  return { success: true, message: "Agent job run requested" };
+  return { success: true, message: "Agent job queued to run now" };
 }
 
 export async function getAgentJobRunHistory(options: {
   guildId: string;
-  jobId: string | undefined;
+  jobId?: string | undefined;
 }): Promise<AgentJobToolResult> {
   if (options.jobId == null || options.jobId.length === 0) {
     return { success: false, message: "jobId is required" };
