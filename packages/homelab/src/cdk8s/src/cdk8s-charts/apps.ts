@@ -50,6 +50,7 @@ import { createPostalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/arg
 import { createSyncthingApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/syncthing.ts";
 import { createGolinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/golink.ts";
 import { createFreshrssApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/freshrss.ts";
+import { createPinchtabApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/pinchtab.ts";
 import { createPokemonApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/pokemon.ts";
 import { createMarioKartApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/mario-kart.ts";
 import { createGickupApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/gickup.ts";
@@ -161,6 +162,7 @@ export async function createAppsChart(app: App) {
   createSyncthingApp(chart);
   createGolinkApp(chart);
   createFreshrssApp(chart);
+  createPinchtabApp(chart);
   createPokemonApp(chart);
   createMarioKartApp(chart);
   createGickupApp(chart);

@@ -57,6 +57,18 @@ export function createBirmelDeployment(chart: Chart) {
     },
   });
 
+  // Shared "PinchTab" 1Password item synced into the birmel namespace so birmel
+  // and the in-cluster pinchtab service (pinchtab namespace) share one bearer
+  // token. Same item is referenced by resources/pinchtab/index.ts.
+  const pinchtabCreds = new OnePasswordItem(chart, "birmel-pinchtab-1p", {
+    spec: {
+      itemPath: vaultItemPath("t2dgtdx47yd2gegad6zeelzylu"),
+    },
+    metadata: {
+      name: "birmel-pinchtab-token",
+    },
+  });
+
   const localPathVolume = new ZfsNvmeVolume(chart, "birmel-pvc", {
     storage: Size.gibibytes(2),
   });
@@ -182,18 +194,22 @@ export function createBirmelDeployment(chart: Chart) {
         VOICE_ENABLED: EnvValue.fromValue("true"),
         DAILY_POSTS_ENABLED: EnvValue.fromValue("true"),
         WEB_SEARCH_PROVIDER: EnvValue.fromValue("openai"),
-        // The browser tool is temporarily disabled. The PINCHTAB_TOKEN secret
-        // key does not exist in the Birmel 1Password item, which crashed the pod
-        // with CreateContainerConfigError, and pinchtab is not yet deployed
-        // in-cluster (the pinchtab namespace is empty). Disable the browser until
-        // the in-cluster pinchtab service lands, at which point BROWSER_ENABLED is
-        // removed and PINCHTAB_TOKEN is sourced from a shared "PinchTab" item.
-        BROWSER_ENABLED: EnvValue.fromValue("false"),
         BROWSER_PROVIDER: EnvValue.fromValue("pinchtab"),
         PINCHTAB_BASE_URL: EnvValue.fromValue(
           "http://pinchtab.pinchtab.svc.cluster.local:9867",
         ),
         PINCHTAB_PROFILE: EnvValue.fromValue("birmel"),
+        // Token comes from the shared "PinchTab" 1Password item (synced into the
+        // birmel namespace via pinchtabCreds), the same item the in-cluster
+        // pinchtab service authenticates against.
+        PINCHTAB_TOKEN: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "birmel-pinchtab-token-secret",
+            pinchtabCreds.name,
+          ),
+          key: "PINCHTAB_TOKEN",
+        }),
 
         // Editor configuration
         EDITOR_ENABLED: EnvValue.fromValue("true"),
