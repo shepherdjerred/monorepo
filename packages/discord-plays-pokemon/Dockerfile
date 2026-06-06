@@ -29,6 +29,9 @@ RUN bun install --frozen-lockfile
 # App source (includes the vendored packages/backend/assets/pokeemerald.wasm).
 COPY . .
 
+# Build the web UI served by the backend (web.assets).
+RUN cd packages/frontend && bun run build
+
 # config.toml is provided at runtime (mount or bake a non-secret config).
 # The flash save directory is created on demand by the emulator.
 ENV NODE_ENV=production

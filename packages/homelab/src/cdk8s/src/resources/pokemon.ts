@@ -1,7 +1,6 @@
 import {
   Deployment,
   DeploymentStrategy,
-  EmptyDirMedium,
   EnvValue,
   Protocol,
   Secret,
@@ -9,7 +8,7 @@ import {
   Volume,
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
-import { ApiObject, JsonPatch, Size } from "cdk8s";
+import { Size } from "cdk8s";
 import {
   setRevisionHistoryLimit,
   withCommonProps,
@@ -20,11 +19,19 @@ import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
+// Headless Discord Plays Pokemon: pokeemerald-wasm runs in Bun, renders frames
+// in software, and streams to a Discord voice channel via the voice UDP path.
+// No GPU, desktop, Firefox, or Selkies — just a plain Bun service. The app runs
+// from the inner-monorepo root (/workspace/packages/discord-plays-pokemon), so
+// config.toml / wasm / saves resolve relative to that CWD.
+const APP_ROOT = "/workspace/packages/discord-plays-pokemon";
+const WEB_PORT = 8081;
+
 export function createPokemonDeployment(chart: Chart) {
   const GID = 1000;
 
   const deployment = new Deployment(chart, "pokemon", {
-    replicas: 0,
+    replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     securityContext: {
       fsGroup: GID,
@@ -39,10 +46,8 @@ export function createPokemonDeployment(chart: Chart) {
     },
   });
 
-  const localPathVolume = new ZfsNvmeVolume(chart, "pokemon-volume", {
-    storage: Size.gibibytes(8),
-  });
-  const romVolume = new ZfsNvmeVolume(chart, "pokemon-rom-volume", {
+  // Persists the flash save (save_path = "saves/pokeemerald.flash").
+  const saveVolume = new ZfsNvmeVolume(chart, "pokemon-volume", {
     storage: Size.gibibytes(8),
   });
 
@@ -63,53 +68,34 @@ export function createPokemonDeployment(chart: Chart) {
     withCommonProps({
       image: `ghcr.io/shepherdjerred/discord-plays-pokemon:${versions["shepherdjerred/discord-plays-pokemon"]}`,
       envVariables: {
-        SIZEW: EnvValue.fromValue("1920"),
-        SIZEH: EnvValue.fromValue("1080"),
-        REFRESH: EnvValue.fromValue("60"),
-        PASSWD: EnvValue.fromSecretValue({
-          secret,
-          key: "password",
-        }),
-        BASIC_AUTH_PASSWORD: EnvValue.fromSecretValue({
-          secret,
-          key: "password",
-        }),
-        SELKIES_ENCODER: EnvValue.fromValue("vah264enc"),
-        KASMVNC_ENABLE: EnvValue.fromValue("true"),
+        NODE_ENV: EnvValue.fromValue("production"),
       },
       securityContext: {
         ensureNonRoot: false,
         readOnlyRootFilesystem: false,
         user: 1000,
         group: 1000,
-        // GPU is passed via gpu.intel.com/i915 resource limit, not privileged mode
         privileged: false,
         allowPrivilegeEscalation: false,
       },
       ports: [
         {
-          name: "selkies",
-          number: 8080,
-          protocol: Protocol.TCP,
-        },
-        {
           name: "ui",
-          number: 8181,
+          number: WEB_PORT,
           protocol: Protocol.TCP,
         },
       ],
-
       volumeMounts: [
         {
-          path: "/home/ubuntu/Downloads",
+          path: `${APP_ROOT}/saves`,
           volume: Volume.fromPersistentVolumeClaim(
             chart,
             "pokemon-pvc",
-            localPathVolume.claim,
+            saveVolume.claim,
           ),
         },
         {
-          path: "/home/ubuntu/config.toml",
+          path: `${APP_ROOT}/config.toml`,
           subPath: "config.toml",
           volume: Volume.fromSecret(chart, "pokemon-config-volume", secret, {
             items: {
@@ -119,40 +105,15 @@ export function createPokemonDeployment(chart: Chart) {
             },
           }),
         },
-        {
-          path: `/home/ubuntu/packages/frontend/dist/roms`,
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "pokemon-rom-pvc",
-            romVolume.claim,
-          ),
-        },
-        {
-          path: "/dev/shm",
-          volume: Volume.fromEmptyDir(chart, "shm-volume", "shm", {
-            medium: EmptyDirMedium.MEMORY,
-            sizeLimit: Size.gibibytes(8),
-          }),
-        },
       ],
     }),
   );
 
   setRevisionHistoryLimit(deployment);
 
-  const selkiesService = new Service(chart, "selkies-service", {
-    selector: deployment,
-    ports: [{ port: 8080 }],
-  });
-
-  new TailscaleIngress(chart, "selkies-tailscale-ingress", {
-    service: selkiesService,
-    host: "selkies",
-  });
-
   const uiService = new Service(chart, "ui-service", {
     selector: deployment,
-    ports: [{ port: 8181 }],
+    ports: [{ port: WEB_PORT }],
   });
 
   new TailscaleIngress(chart, "ui-tailscale-ingress", {
@@ -164,12 +125,4 @@ export function createPokemonDeployment(chart: Chart) {
     serviceName: uiService.name,
     subdomain: "pokebot",
   });
-
-  ApiObject.of(deployment).addJsonPatch(
-    JsonPatch.add("/spec/template/spec/containers/0/resources", {
-      limits: {
-        "gpu.intel.com/i915": 1,
-      },
-    }),
-  );
 }
