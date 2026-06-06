@@ -126,16 +126,6 @@ export async function createPrometheusApp(chart: Chart) {
         },
       },
     },
-    "kube-state-metrics": {
-      // Export PVC velero.io labels as metric labels on
-      // kube_persistentvolumeclaim_labels so backup-coverage alerts can tell a
-      // genuinely-unprotected PVC from an intentionally-excluded one (rather
-      // than paging on size alone). Chart value is a list of
-      // `<resource>=[label,...]` strings.
-      metricLabelsAllowlist: [
-        "persistentvolumeclaims=[velero.io/backup,velero.io/exclude-from-backup]",
-      ],
-    },
     alertmanager: {
       alertmanagerSpec: {
         externalUrl: "https://alertmanager.tailnet-1a49.ts.net",
@@ -397,6 +387,16 @@ export async function createPrometheusApp(chart: Chart) {
           name: "prometheus-grafana",
           namespace: "prometheus",
           jsonPointers: ["/data/admin-password"],
+        },
+        {
+          // The grafana subchart regenerates this image-renderer token on
+          // every helm render (randAlphaNum), so it can never converge.
+          // The live token is the source of truth; never reconcile it.
+          group: "",
+          kind: "Secret",
+          name: "prometheus-grafana-image-renderer",
+          namespace: "prometheus",
+          jsonPointers: ["/data/token"],
         },
         {
           group: "apps",

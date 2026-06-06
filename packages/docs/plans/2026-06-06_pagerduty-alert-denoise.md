@@ -36,19 +36,19 @@ snapshots. Distinct from the 2026-03 re-deploy mode.
 - **Operational (manual, needs go-ahead):** `zfs destroy` the 31 orphans via the runbook, then
   re-trigger `velero-orphan-audit`. Not part of the PR.
 
-### Fix 2 — Large-PVC backup alerts (5335–5339)
+### Fix 2 — Large-PVC backup alerts (5335–5339) — SUPERSEDED by main
 
-Alert was a pure size trip-wire and KSM wasn't exporting the velero labels.
+**Dropped in the 2026-06-06 merge.** While this PR was open, `main` independently fixed the same
+alert with a different mechanism: an explicit `REVIEWED_LARGE_PVC_BACKUP_POLICY_MATCHERS` allowlist of
+(namespace, pvc) pairs in `monitoring/rules/velero.ts` (the alert fires `unless` the PVC is in that
+reviewed list). When merging `origin/main` into this branch the conflict was resolved by taking main's
+version and backing out this PR's now-redundant label-based scaffolding (the KSM `metricLabelsAllowlist`
+in `prometheus.ts`, the `PrometheusValuesWithBlackbox` type extension in `grafana-values.ts`, and the
+`exclude-large-bulk-pvcs` Kyverno rule). The incident is resolved by main's approach; no PVC labeling
+or one-time `kubectl label` is needed.
 
-- `argo-applications/grafana-values.ts` — extend `PrometheusValuesWithBlackbox` with a type-safe
-  `kube-state-metrics.metricLabelsAllowlist?: string[]` (Omit+intersection, no `as`).
-- `argo-applications/prometheus.ts` — KSM `metricLabelsAllowlist:
-["persistentvolumeclaims=[velero.io/backup,velero.io/exclude-from-backup]"]`.
-- `monitoring/rules/velero.ts` — rewrite `VeleroLargePVCMayImpactBackups` to fire only for large PVCs
-  with no backup decision (`unless` labeled enabled/disabled or excluded).
-- `kyverno-policies.ts` — new `exclude-large-bulk-pvcs` rule labels prometheus-db, seaweedfs volume,
-  and dagger engine PVCs `velero.io/backup=disabled` + `exclude-from-backup=true`.
-- **Operational:** one-time `kubectl label` the 3 existing PVCs so the alert clears before recreation.
+Original (now-dropped) approach was: export velero.io labels via kube-state-metrics + rewrite the alert
+to fire only for an undecided large PVC + Kyverno-label the excluded PVCs.
 
 ### Fix 3 — TaskNotes restart alert (5398)
 

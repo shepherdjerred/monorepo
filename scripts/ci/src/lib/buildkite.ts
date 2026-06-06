@@ -1,5 +1,5 @@
 import type { BuildkiteStep } from "./types.ts";
-import { k8sPlugin, k8sPluginWithCheckout } from "./k8s-plugin.ts";
+import { k8sPlugin } from "./k8s-plugin.ts";
 
 /** Convert a name to a Buildkite-safe step key. */
 export function safeKey(name: string): string {
@@ -132,50 +132,6 @@ export const DAGGER_ENV: Record<string, string> = {
   // http/protobuf and http/json content types.
   OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "http://loki-gateway.loki/otlp/v1/logs",
 };
-
-/**
- * Create a plain Buildkite step that runs directly on the CI agent pod.
- *
- * Use for checks that only need bash/bun/git (all in ci-base image) and
- * operate on the repo checkout. Avoids the overhead of copying the entire
- * repo into a Dagger container when no specialized toolchain is needed.
- *
- * **Uses {@link k8sPluginWithCheckout}** because every existing `plainStep`
- * caller assumes a working tree under cwd. PR2 of the BK-pressure
- * reduction plan migrates each of these to a Dagger function (via
- * `daggerStep`), at which point `plainStep` itself is deleted and the
- * `buildkite-git-mirrors` PVC can be removed.
- */
-export function plainStep(opts: {
-  label: string;
-  key: string;
-  command: string;
-  timeoutMinutes?: number;
-  dependsOn?: string | string[];
-  softFail?: boolean;
-  artifactPaths?: string[];
-}): BuildkiteStep {
-  const step: BuildkiteStep = {
-    label: opts.label,
-    key: opts.key,
-    command: opts.command,
-    timeout_in_minutes: opts.timeoutMinutes ?? 10,
-    retry: RETRY,
-    plugins: [k8sPluginWithCheckout()],
-  };
-
-  if (opts.dependsOn !== undefined) {
-    step.depends_on = opts.dependsOn;
-  }
-  if (opts.softFail !== undefined) {
-    step.soft_fail = opts.softFail;
-  }
-  if (opts.artifactPaths !== undefined) {
-    step.artifact_paths = opts.artifactPaths;
-  }
-
-  return step;
-}
 
 /** Create a basic Buildkite step using dagger call. */
 export function daggerStep(opts: {

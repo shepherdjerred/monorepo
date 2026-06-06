@@ -53,7 +53,15 @@ export function extractYouTubeVideoId(url: string): string | undefined {
     return undefined;
   }
 
-  const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+  const host = parsed.hostname.toLowerCase();
+  const isYouTubeHost =
+    host === "youtube.com" ||
+    host.endsWith(".youtube.com") ||
+    host === "youtu.be";
+  if (!isYouTubeHost) {
+    return undefined;
+  }
+
   const searchParamId = parsed.searchParams.get("v");
   if (searchParamId != null && searchParamId.length > 0) {
     return searchParamId;

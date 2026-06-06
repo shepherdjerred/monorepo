@@ -28,7 +28,10 @@ import { ExportResultCode, type ExportResult } from "@opentelemetry/core";
 import { AgentRegistry, VoltAgentObservability } from "@voltagent/core";
 import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
-import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
+import {
+  logger,
+  setOtlpLogsEnabled,
+} from "@shepherdjerred/birmel/utils/logger.ts";
 
 // Single VoltAgentObservability instance shared across the whole process.
 // VoltAgent's `Agent.getObservability()` falls back to `createVoltAgentObservability()`
@@ -151,6 +154,11 @@ export function initializeTracing(): void {
   if (initialized) {
     return;
   }
+
+  // Reset OTLP log emission on every fresh init path — including the
+  // telemetry-disabled early return below — so a prior shutdownTracing()
+  // (which sets this to false) does not leave logs suppressed after re-init.
+  setOtlpLogsEnabled(true);
 
   const config = getConfig();
 
@@ -312,6 +320,11 @@ export async function shutdownTracing(): Promise<void> {
     }
   }
   if (loggerProvider != null) {
+    // Stop routing logs to the provider before tearing it down. Otherwise a
+    // shut-down LoggerProvider's `getLogger()` emits a diag warning on every
+    // call, and that warning re-enters our logger -> emitOtlp -> getLogger,
+    // overflowing the stack (RangeError). Flushing already happened above.
+    setOtlpLogsEnabled(false);
     try {
       await loggerProvider.shutdown();
     } catch (error) {
