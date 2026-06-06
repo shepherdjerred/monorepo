@@ -28,7 +28,10 @@ import { ExportResultCode, type ExportResult } from "@opentelemetry/core";
 import { AgentRegistry, VoltAgentObservability } from "@voltagent/core";
 import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
-import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
+import {
+  logger,
+  setOtlpLogsEnabled,
+} from "@shepherdjerred/birmel/utils/logger.ts";
 
 // Single VoltAgentObservability instance shared across the whole process.
 // VoltAgent's `Agent.getObservability()` falls back to `createVoltAgentObservability()`
@@ -266,6 +269,9 @@ export function initializeTracing(): void {
   // if a provider is already registered (which VoltAgent just did).
   logsAPI.disable();
   logsAPI.setGlobalLoggerProvider(loggerProvider);
+  // Re-enable OTLP log emission (a prior shutdown may have disabled it; tests
+  // re-init within one process). Safe to call before any logging happens.
+  setOtlpLogsEnabled(true);
 
   // Make this the global so every Agent (and workflow) reuses it instead of
   // calling createVoltAgentObservability() and triggering the duplicate-
@@ -312,6 +318,11 @@ export async function shutdownTracing(): Promise<void> {
     }
   }
   if (loggerProvider != null) {
+    // Stop routing logs to the provider before tearing it down. Otherwise a
+    // shut-down LoggerProvider's `getLogger()` emits a diag warning on every
+    // call, and that warning re-enters our logger -> emitOtlp -> getLogger,
+    // overflowing the stack (RangeError). Flushing already happened above.
+    setOtlpLogsEnabled(false);
     try {
       await loggerProvider.shutdown();
     } catch (error) {
