@@ -38,6 +38,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runDnsAudit",
   "runHomelabAuditWorkflow",
   "agentTaskWorkflow",
+  // Fans out child workflows and emails a summary; no in-workflow sleep().
+  "alertRemediationSweepWorkflow",
   "runScoutDataDragonVersionCheck",
   "runScoutDataDragonWeeklyRefresh",
   "runScoutSeasonRefreshWorkflow",
