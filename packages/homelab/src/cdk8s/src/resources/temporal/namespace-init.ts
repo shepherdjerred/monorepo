@@ -66,8 +66,8 @@ export function createTemporalNamespaceInitJob(
           "until temporal operator cluster health; do sleep 5; done",
           'echo "Temporal frontend is ready"',
           // Create default namespace if needed, then enforce current retention.
-          'if temporal operator namespace describe --namespace default; then echo "Temporal default namespace already exists"; else temporal operator namespace create --namespace default --retention 168h; fi',
-          "temporal operator namespace update --namespace default --retention 168h",
+          'if temporal operator namespace describe --namespace default; then echo "Temporal default namespace already exists"; else temporal operator namespace create --namespace default --retention 720h; fi',
+          "temporal operator namespace update --namespace default --retention 720h",
           'echo "Namespace init complete"',
         ].join(" && "),
       ],

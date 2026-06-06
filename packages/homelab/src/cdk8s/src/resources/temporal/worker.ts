@@ -448,6 +448,12 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "CLAUDE_CODE_OAUTH_TOKEN",
         }),
+        // Master kill switch for the whole PR bot (review + summary). While "false"
+        // the GitHub webhook acks deliveries but posts no comments and starts no
+        // workflows. Disabled because every specialist pass was failing with HTTP 429
+        // rate_limit_error (swallowed, so the bot posted "0 findings" on every PR).
+        // Flip to "true" to re-enable. See packages/temporal/src/event-bridge/github-webhook.ts `isPrBotEnabled`.
+        PR_BOT_ENABLED: EnvValue.fromValue("false"),
         // Kill switch for the new pr-review pipeline's live posting. Set
         // "true" once the bot is dogfooded — every non-draft PR will then
         // receive a `<!-- pr-review-finding ... -->` comment. Flip back to

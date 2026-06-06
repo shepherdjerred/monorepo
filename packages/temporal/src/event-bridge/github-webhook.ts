@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { verify } from "@octokit/webhooks-methods";
 import { Octokit } from "octokit";
 import { z } from "zod/v4";
@@ -271,6 +271,58 @@ export async function postWebhookStatus(
   });
 }
 
+// Master kill switch for the PR bot (review + summary). Defaults enabled; set
+// PR_BOT_ENABLED=false to make the webhook ack deliveries (200) without posting
+// any comment or starting any workflow. Read at request time so the flag can be
+// toggled via env without a code change. See the temporal worker deployment in
+// packages/homelab/src/cdk8s/src/resources/temporal/worker.ts.
+function isPrBotEnabled(): boolean {
+  return (Bun.env["PR_BOT_ENABLED"] ?? "true").toLowerCase() === "true";
+}
+
+type DraftSkipContext = {
+  deliveryId: string;
+  action: string;
+};
+
+async function handleDraftSkip(
+  c: Context,
+  baseInput: PrAgentInput,
+  postStatus: StatusFn,
+  ctx: DraftSkipContext,
+): Promise<Response> {
+  const { deliveryId, action } = ctx;
+  prWebhookSkippedTotal.inc({ reason: "draft" });
+  jsonLog("info", "Skipping draft PR", {
+    prNumber: baseInput.prNumber,
+    action,
+  });
+  try {
+    await postStatus(baseInput, "draft_skipped");
+  } catch (error: unknown) {
+    Sentry.withScope((scope) => {
+      scope.setTag("component", COMPONENT);
+      scope.setContext("webhook", {
+        deliveryId,
+        action,
+        owner: baseInput.owner,
+        repo: baseInput.repo,
+        prNumber: baseInput.prNumber,
+        skipReason: "draft",
+      });
+      Sentry.captureException(error);
+    });
+    jsonLog("error", "Failed to post draft skipped status", {
+      deliveryId,
+      action,
+      prNumber: baseInput.prNumber,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return c.text("draft status failed\n", 500);
+  }
+  return c.text("skipped: draft\n");
+}
+
 /**
  * Pure handler — kept separate from Bun.serve so tests can drive it
  * directly without binding a real port.
@@ -361,36 +413,17 @@ export function buildWebhookApp(
       prAuthor: parsed.pull_request.user.login,
     });
 
-    if (parsed.pull_request.draft === true && action !== "ready_for_review") {
-      prWebhookSkippedTotal.inc({ reason: "draft" });
-      jsonLog("info", "Skipping draft PR", {
-        prNumber: parsed.pull_request.number,
+    if (!isPrBotEnabled()) {
+      prWebhookSkippedTotal.inc({ reason: "pr-bot-disabled" });
+      jsonLog("info", "PR bot disabled; skipping status + workflows", {
+        prNumber: baseInput.prNumber,
         action,
       });
-      try {
-        await postStatus(baseInput, "draft_skipped");
-      } catch (error: unknown) {
-        Sentry.withScope((scope) => {
-          scope.setTag("component", COMPONENT);
-          scope.setContext("webhook", {
-            deliveryId,
-            action,
-            owner: baseInput.owner,
-            repo: baseInput.repo,
-            prNumber: baseInput.prNumber,
-            skipReason: "draft",
-          });
-          Sentry.captureException(error);
-        });
-        jsonLog("error", "Failed to post draft skipped status", {
-          deliveryId,
-          action,
-          prNumber: baseInput.prNumber,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        return c.text("draft status failed\n", 500);
-      }
-      return c.text("skipped: draft\n");
+      return c.text("skipped: pr-bot disabled\n");
+    }
+
+    if (parsed.pull_request.draft === true && action !== "ready_for_review") {
+      return handleDraftSkip(c, baseInput, postStatus, { deliveryId, action });
     }
 
     if (parsed.pull_request.user.type === "Bot") {
