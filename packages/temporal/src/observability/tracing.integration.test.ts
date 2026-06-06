@@ -9,7 +9,7 @@
 // original fix is exactly this assertion, codified.
 import { describe, expect, test, beforeAll, afterAll } from "bun:test";
 import * as Sentry from "@sentry/bun";
-import { trace, context, propagation } from "@opentelemetry/api";
+import { trace, context, propagation, metrics } from "@opentelemetry/api";
 import { logs as logsAPI } from "@opentelemetry/api-logs";
 import { initializeTracing, shutdownTracing, withSpan } from "./tracing.ts";
 
@@ -59,6 +59,7 @@ describe("OTLP tracing integration", () => {
     trace.disable();
     context.disable();
     propagation.disable();
+    metrics.disable();
     logsAPI.disable();
   });
 
