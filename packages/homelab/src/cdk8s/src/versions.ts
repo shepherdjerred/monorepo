@@ -20,6 +20,7 @@ const versions = {
   // renovate: datasource=github-releases versioning=semver
   "adyanth/cloudflare-operator": "v0.13.1",
   // renovate: datasource=docker registryUrl=https://quay.io versioning=docker
+  // Upstream ysdragon/StreamBot publishes its Docker Compose image as quay.io/ydrag0n/streambot.
   "ydrag0n/streambot":
     "latest@sha256:6bb994bbc70f974092e54580002bf53152e00687dfe40469db06a6a7ef7e4368",
   // renovate: datasource=docker registryUrl=https://quay.io versioning=docker
