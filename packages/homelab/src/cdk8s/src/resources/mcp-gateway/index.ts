@@ -83,7 +83,7 @@ export async function createMcpGatewayDeployment(chart: Chart) {
 
   deployment.addContainer(
     withCommonProps({
-      image: `ghcr.io/tbxark/mcp-proxy:${versions["tbxark/mcp-proxy"]}`,
+      image: `ghcr.io/shepherdjerred/mcp-gateway:${versions["shepherdjerred/mcp-gateway"]}`,
       args: ["--config", "/config/config.json"],
       ports: [{ number: 9090, name: "http" }],
       securityContext: {
@@ -164,6 +164,42 @@ export async function createMcpGatewayDeployment(chart: Chart) {
             mcpGatewayCredentials.name,
           ),
           key: "GMAIL_TOKEN",
+        }),
+        // Edstem (Ed Discussion) configuration - rob-9/edstem-mcp expects ED_API_TOKEN
+        ED_API_TOKEN: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "edstem-api-token-secret",
+            mcpGatewayCredentials.name,
+          ),
+          key: "ED_API_TOKEN",
+        }),
+        ED_REGION: EnvValue.fromValue("us"),
+        // Gradescope configuration - Yuanpeng-Li/gradescope-mcp logs in with account credentials
+        GRADESCOPE_EMAIL: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "gradescope-email-secret",
+            mcpGatewayCredentials.name,
+          ),
+          key: "GRADESCOPE_EMAIL",
+        }),
+        GRADESCOPE_PASSWORD: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "gradescope-password-secret",
+            mcpGatewayCredentials.name,
+          ),
+          key: "GRADESCOPE_PASSWORD",
+        }),
+        // Discord configuration - mcp-discord expects DISCORD_TOKEN (bot token)
+        DISCORD_TOKEN: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "discord-token-secret",
+            mcpGatewayCredentials.name,
+          ),
+          key: "DISCORD_TOKEN",
         }),
       },
       volumeMounts: [

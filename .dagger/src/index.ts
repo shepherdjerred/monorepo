@@ -55,12 +55,14 @@ import {
   pushImageHelper,
   buildCaddyS3ProxyImageHelper,
   buildObsidianHeadlessImageHelper,
+  buildMcpGatewayImageHelper,
   buildScoutImageHelper,
   buildDiscordPlaysPokemonImageHelper,
   buildTemporalWorkerImageHelper,
   buildTrmnlDashboardImageHelper,
   pushCaddyS3ProxyImageHelper,
   pushObsidianHeadlessImageHelper,
+  pushMcpGatewayImageHelper,
   pushScoutImageHelper,
   pushDiscordPlaysPokemonImageHelper,
   pushTemporalWorkerImageHelper,
@@ -89,6 +91,7 @@ import {
   smokeTestTasknotesServerHelper,
   smokeTestCaddyS3ProxyHelper,
   smokeTestObsidianHeadlessHelper,
+  smokeTestMcpGatewayHelper,
   smokeTestDiscordPlaysPokemonHelper,
   smokeTestTrmnlDashboardHelper,
 } from "./misc";
@@ -429,6 +432,33 @@ export class Monorepo {
     gitSha: string = "unknown",
   ): Promise<string> {
     return pushObsidianHeadlessImageHelper(
+      tags,
+      registryUsername,
+      registryPassword,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Build the custom mcp-gateway image (tbxark/mcp-proxy + prebuilt edstem-mcp) */
+  @func()
+  buildMcpGatewayImage(
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildMcpGatewayImageHelper(version, gitSha);
+  }
+
+  /** Push a custom mcp-gateway image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushMcpGatewayImage(
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushMcpGatewayImageHelper(
       tags,
       registryUsername,
       registryPassword,
@@ -1390,6 +1420,12 @@ export class Monorepo {
   @func()
   async smokeTestObsidianHeadless(): Promise<string> {
     return smokeTestObsidianHeadlessHelper();
+  }
+
+  /** Smoke test mcp-gateway: verifies Node runtime + prebuilt edstem-mcp entrypoint */
+  @func()
+  async smokeTestMcpGateway(): Promise<string> {
+    return smokeTestMcpGatewayHelper();
   }
 
   /** Smoke test discord-plays-pokemon: build production image, boots app, expects Discord auth failure */

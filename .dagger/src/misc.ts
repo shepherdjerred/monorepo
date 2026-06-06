@@ -21,6 +21,7 @@ import {
   buildImageHelper,
   buildCaddyS3ProxyImageHelper,
   buildObsidianHeadlessImageHelper,
+  buildMcpGatewayImageHelper,
   buildScoutImageHelper,
   buildDiscordPlaysPokemonImageHelper,
   buildTrmnlDashboardImageHelper,
@@ -410,6 +411,31 @@ export async function smokeTestObsidianHeadlessHelper(): Promise<string> {
     // Layer 4 — CLI sync/store init path works offline.
     .withExec(["mkdir", "-p", "/vault"])
     .withExec(["ob", "sync-list-local"]);
+
+  return runSmokeTest(container, []);
+}
+
+/**
+ * Smoke test the custom mcp-gateway image.
+ * Verifies the runtime has Node and the prebuilt edstem-mcp server was baked in
+ * with a syntactically valid, runnable entrypoint.
+ */
+export async function smokeTestMcpGatewayHelper(): Promise<string> {
+  const container = buildMcpGatewayImageHelper()
+    .withEntrypoint([])
+    // Layer 1 — Node runtime present (needed for `node /opt/edstem-mcp/dist/index.js`).
+    .withExec(["node", "--version"])
+    // Layer 2 — edstem-mcp entrypoint exists and parses.
+    .withExec([
+      "sh",
+      "-c",
+      [
+        "set -e",
+        "test -f /opt/edstem-mcp/dist/index.js",
+        "node --check /opt/edstem-mcp/dist/index.js",
+        'echo "edstem-mcp entrypoint OK"',
+      ].join("\n"),
+    ]);
 
   return runSmokeTest(container, []);
 }

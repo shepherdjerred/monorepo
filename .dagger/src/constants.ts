@@ -47,9 +47,22 @@ export const PYTHON_IMAGE =
   "python:3.14-slim@sha256:c845af9399020c7e562969a13689e929074a10fd057acd1b1fad06a2fb068e97";
 
 // Base image for obsidian-headless container (uses Node, not Bun, due to native better-sqlite3 addon).
+// Also reused as the Node builder stage for the custom mcp-gateway image (edstem-mcp build).
 // renovate: datasource=docker depName=node
 export const OBSIDIAN_HEADLESS_BASE_IMAGE =
   "node:24-slim@sha256:242549cd46785b480c832479a730f4f2a20865d61ea2e404fdb2a5c3d3b73ecf";
+
+// Base image for the custom mcp-gateway image. Layered with a prebuilt edstem-mcp
+// (rob-9/edstem-mcp is git-only, has no committed dist, and no build-on-install,
+// so plain npx-from-git fails). Keep this digest in sync with the
+// "tbxark/mcp-proxy" entry in packages/homelab/src/cdk8s/src/versions.ts.
+// renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
+export const MCP_PROXY_BASE_IMAGE =
+  "ghcr.io/tbxark/mcp-proxy:v0.43.2@sha256:1c43164a910a4f74a3ce48d95cb2ef792de8d467296555e63944fa798f0a44bd";
+
+// Pinned commit of rob-9/edstem-mcp baked into the custom mcp-gateway image.
+// Bump to pick up upstream fixes (changes the Dagger build cache key).
+export const EDSTEM_MCP_COMMIT = "661a3c498c82f47b1d352410b53fa06c6806c949";
 // renovate: datasource=docker depName=alpine/helm
 export const HELM_IMAGE =
   "alpine/helm:4.1.4@sha256:8edcaedab4d9864886b7f443d55731be87d4b5ec7dca714c24551455707a8aac";
