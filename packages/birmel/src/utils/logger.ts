@@ -99,6 +99,23 @@ export type Logger = {
   child: (module: string) => Logger;
 };
 
+// Re-entrancy guard. Breaks any logger<->OTel feedback loop: the OTel logs API
+// routes its internal diagnostics through `diag`, which `tracing.ts` wires back
+// into this logger. Once the LoggerProvider is shut down, `getLogger()` emits a
+// `diag.warn(...)` on every call — that warning re-enters `logger.warn` ->
+// `emitOtlp` -> `getLogger` -> `diag.warn` and recurses until the stack
+// overflows (RangeError). This flag short-circuits the re-entrant call.
+let emittingOtlp = false;
+
+// Disabled during graceful shutdown (see `setOtlpLogsEnabled` callers in
+// tracing.ts) so we stop emitting to a LoggerProvider that is being torn down,
+// which also prevents the post-shutdown diag-warning loop at its source.
+let otlpLogsEnabled = true;
+
+export function setOtlpLogsEnabled(enabled: boolean): void {
+  otlpLogsEnabled = enabled;
+}
+
 // Emit a LogRecord to the OTLP pipeline alongside the stdout JSON write.
 // The OTel logs API auto-attaches the active span's trace_id/span_id, which
 // is the whole point — that's how Loki's "filter by trace ID" surfaces the
@@ -110,16 +127,24 @@ function emitOtlp(
   attributes: LogAttributes,
   moduleName: string | undefined,
 ): void {
+  if (!otlpLogsEnabled || emittingOtlp) {
+    return;
+  }
   const scope =
     moduleName != null && moduleName.length > 0
       ? `birmel.${moduleName}`
       : "birmel";
-  logsAPI.getLogger(scope).emit({
-    severityNumber: SEVERITY_NUMBER[level],
-    severityText: level,
-    body: message,
-    attributes,
-  });
+  emittingOtlp = true;
+  try {
+    logsAPI.getLogger(scope).emit({
+      severityNumber: SEVERITY_NUMBER[level],
+      severityText: level,
+      body: message,
+      attributes,
+    });
+  } finally {
+    emittingOtlp = false;
+  }
 }
 
 function createLogger(moduleName?: string): Logger {

@@ -7,8 +7,12 @@ export const DiscordConfigSchema = z.object({
 
 export const OpenAIConfigSchema = z.object({
   apiKey: z.string().min(1, "OPENAI_API_KEY is required"),
-  model: z.string().default("gpt-5.4-mini"),
+  model: z.string().default("gpt-5.5"),
   classifierModel: z.string().default("gpt-5.4-nano"),
+  reasoningEffort: z
+    .enum(["minimal", "low", "medium", "high"])
+    .default("medium"),
+  textVerbosity: z.enum(["low", "medium", "high"]).default("low"),
   maxTokens: z.number().default(4096),
 });
 
@@ -41,6 +45,7 @@ export const DailyPostsConfigSchema = z.object({
 export const ExternalApisSchema = z.object({
   newsApiKey: z.string().optional(),
   riotApiKey: z.string().optional(),
+  webSearchProvider: z.enum(["openai", "duckduckgo"]).default("openai"),
 });
 
 export const LoggingConfigSchema = z.object({
@@ -67,6 +72,28 @@ export const PersonaConfigSchema = z.object({
   enabled: z.boolean().default(true),
   defaultPersona: z.string().default("virmel"),
   styleModel: z.string().default("gpt-5.4-nano"),
+});
+
+/**
+ * Conversational-trigger configuration.
+ *
+ * After the bot has been directly engaged in a channel (an @mention or wake
+ * word), it stays "engaged" for `engagementWindowMs`. While engaged, each
+ * subsequent allowed-user message is run through a cheap GPT-nano classifier
+ * (`openai.classifierModel`) to decide whether to respond — enabling natural
+ * follow-up without re-pinging. Transcript bounds control how much recent
+ * channel history is fed to the classifier and the main agent.
+ */
+export const ResponderConfigSchema = z.object({
+  enabled: z.boolean().default(true),
+  // How long a channel stays "engaged" after the bot is talked to (3 min).
+  engagementWindowMs: z.number().default(180_000),
+  // Always include at least this many of the most recent messages...
+  transcriptMinMessages: z.number().default(25),
+  // ...plus every message newer than this (1 hour), whichever set is larger.
+  transcriptWindowMs: z.number().default(3_600_000),
+  // Hard cap on transcript size for token safety (single Discord fetch page).
+  transcriptMaxMessages: z.number().default(100),
 });
 
 export const BirthdayConfigSchema = z.object({
@@ -102,12 +129,16 @@ export const SchedulerConfigSchema = z.object({
 
 export const BrowserConfigSchema = z.object({
   enabled: z.boolean().default(true),
+  provider: z.enum(["pinchtab", "playwright"]).default("pinchtab"),
   headless: z.boolean().default(true),
   viewportWidth: z.number().default(1280),
   viewportHeight: z.number().default(720),
   maxSessions: z.number().default(5),
   sessionTimeoutMs: z.number().default(300_000),
   userAgent: z.string().optional(),
+  pinchtabBaseUrl: z.string().default("http://localhost:9867"),
+  pinchtabToken: z.string().optional(),
+  pinchtabProfile: z.string().default("default"),
 });
 
 export const ElectionsConfigSchema = z.object({
@@ -152,6 +183,7 @@ export const ConfigSchema = z.object({
   logging: LoggingConfigSchema,
   sentry: SentryConfigSchema,
   persona: PersonaConfigSchema,
+  responder: ResponderConfigSchema,
   shell: ShellConfigSchema,
   scheduler: SchedulerConfigSchema,
   browser: BrowserConfigSchema,
@@ -171,6 +203,7 @@ export type ExternalApisConfig = z.infer<typeof ExternalApisSchema>;
 export type LoggingConfig = z.infer<typeof LoggingConfigSchema>;
 export type SentryConfig = z.infer<typeof SentryConfigSchema>;
 export type PersonaConfig = z.infer<typeof PersonaConfigSchema>;
+export type ResponderConfig = z.infer<typeof ResponderConfigSchema>;
 export type ShellConfig = z.infer<typeof ShellConfigSchema>;
 export type SchedulerConfig = z.infer<typeof SchedulerConfigSchema>;
 export type BrowserConfig = z.infer<typeof BrowserConfigSchema>;

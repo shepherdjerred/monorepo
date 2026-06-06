@@ -67,6 +67,9 @@ describe("buildSupervisorPrompt", () => {
     const prompt = buildSupervisorPrompt(persona);
     expect(prompt).toContain("You are Birmel");
     expect(prompt).toContain("delegate_task");
+    expect(prompt).toContain("durable cron/jobs/reminders");
+    expect(prompt).toContain("Use web-research before claiming current facts");
+    expect(prompt).toContain("Use agent sessions for long-running work");
     expect(prompt).toContain("## Persona: TestPersona");
     expect(prompt).toContain("- terse");
     expect(prompt).toContain("## Friend group context (Glitter Boys)");
@@ -96,6 +99,8 @@ describe("buildSubAgentPrompt", () => {
       persona,
     });
     expect(prompt).toContain("specialist sub-agent for the Birmel Discord bot");
+    expect(prompt).toContain("Use durable jobs for `at`, `every`, cron");
+    expect(prompt).toContain("Use agent sessions when work is resumable");
     expect(prompt).toContain("## Your role: test-agent");
     expect(prompt).toContain("FINGERPRINT-RESPONSIBILITIES handle test things");
     expect(prompt).toContain("FINGERPRINT-TOOLS use the test_tool");

@@ -83,6 +83,14 @@ kubectl -n openebs exec -i $NODE_POD -c openebs-zfs-plugin -- sh -c '
 
 Output groups orphans by dataset. Save it to a file (`/tmp/orphans-local.txt`) and **review before proceeding**.
 
+> **Reading the orphan set — which failure mode?** If every orphan shares the **same snapshot suffix**
+> (e.g. all `…@monthly-backup-20260301050003`, one per PVC), this is the **TTL-finalizer mode**: a
+> single backup's TTL expired and the plugin's `DeleteSnapshot` finalizer failed to destroy the ZFS
+> snapshots. It's safe to prune — the parent Backup CR is gone by definition. If orphans span **many
+> different suffixes/dates**, suspect the **re-deploy mode** (Backup CRs removed while the controller
+> was absent); double-check you're not mid-re-deploy before pruning. See the [prevention decision
+> doc](../decisions/2026-05-05_velero-orphan-snapshot-prevention.md#recurrence--2026-05-30-ttl-finalizer-mode).
+
 ### R2 orphan prefixes
 
 ```bash

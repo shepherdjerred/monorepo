@@ -18,6 +18,7 @@
     "test": "bun --env-file=.env.test run generate && bun --env-file=.env.test test",
     "test:e2e:music": "bun run e2e/music-playback.ts",
     "test:e2e:youtube-stream": "bun run e2e/youtube-stream-resource.ts",
+    "test:e2e:openclaw-docker": "bun run e2e/openclaw-capabilities-docker.ts",
     "typecheck": "bun run generate && tsc --noEmit",
     "lint": "bun run generate && eslint ."
   },

@@ -6,6 +6,7 @@ import {
   TelemetryConfigSchema,
   DailyPostsConfigSchema,
   ExternalApisSchema,
+  BrowserConfigSchema,
   LoggingConfigSchema,
   ConfigSchema,
 } from "@shepherdjerred/birmel/config/schema.ts";
@@ -49,8 +50,10 @@ describe("OpenAIConfigSchema", () => {
     });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.model).toBe("gpt-5.4-mini");
+      expect(result.data.model).toBe("gpt-5.5");
       expect(result.data.classifierModel).toBe("gpt-5.4-nano");
+      expect(result.data.reasoningEffort).toBe("medium");
+      expect(result.data.textVerbosity).toBe("low");
       expect(result.data.maxTokens).toBe(4096);
     }
   });
@@ -159,6 +162,9 @@ describe("ExternalApisSchema", () => {
   test("allows empty config", () => {
     const result = ExternalApisSchema.safeParse({});
     expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.webSearchProvider).toBe("openai");
+    }
   });
 
   test("allows optional API keys", () => {
@@ -170,6 +176,18 @@ describe("ExternalApisSchema", () => {
     if (result.success) {
       expect(result.data.newsApiKey).toBe("news-key");
       expect(result.data.riotApiKey).toBe("riot-key");
+    }
+  });
+});
+
+describe("BrowserConfigSchema", () => {
+  test("uses PinchTab defaults", () => {
+    const result = BrowserConfigSchema.safeParse({});
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.provider).toBe("pinchtab");
+      expect(result.data.pinchtabBaseUrl).toBe("http://localhost:9867");
+      expect(result.data.pinchtabProfile).toBe("default");
     }
   });
 });
@@ -216,6 +234,7 @@ describe("ConfigSchema (full)", () => {
       logging: {},
       sentry: {},
       persona: {},
+      responder: {},
       birthdays: {},
       activityTracking: {},
       shell: {},

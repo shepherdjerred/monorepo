@@ -107,8 +107,10 @@ export function createBirmelDeployment(chart: Chart) {
           ),
           key: "OPENAI_API_KEY",
         }),
-        OPENAI_MODEL: EnvValue.fromValue("gpt-5.4-mini"),
+        OPENAI_MODEL: EnvValue.fromValue("gpt-5.5"),
         OPENAI_CLASSIFIER_MODEL: EnvValue.fromValue("gpt-5.4-nano"),
+        OPENAI_REASONING_EFFORT: EnvValue.fromValue("medium"),
+        OPENAI_TEXT_VERBOSITY: EnvValue.fromValue("low"),
 
         // Anthropic configuration
         ANTHROPIC_API_KEY: EnvValue.fromSecretValue({
@@ -179,6 +181,20 @@ export function createBirmelDeployment(chart: Chart) {
         LOG_LEVEL: EnvValue.fromValue("info"),
         VOICE_ENABLED: EnvValue.fromValue("true"),
         DAILY_POSTS_ENABLED: EnvValue.fromValue("true"),
+        WEB_SEARCH_PROVIDER: EnvValue.fromValue("openai"),
+        BROWSER_PROVIDER: EnvValue.fromValue("pinchtab"),
+        PINCHTAB_BASE_URL: EnvValue.fromValue(
+          "http://pinchtab.pinchtab.svc.cluster.local:9867",
+        ),
+        PINCHTAB_PROFILE: EnvValue.fromValue("birmel"),
+        PINCHTAB_TOKEN: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "birmel-pinchtab-token-secret",
+            onePasswordItem.name,
+          ),
+          key: "PINCHTAB_TOKEN",
+        }),
 
         // Editor configuration
         EDITOR_ENABLED: EnvValue.fromValue("true"),

@@ -54,6 +54,23 @@ export const OBSIDIAN_HEADLESS_BASE_IMAGE =
 export const HELM_IMAGE =
   "alpine/helm:4.1.4@sha256:8edcaedab4d9864886b7f443d55731be87d4b5ec7dca714c24551455707a8aac";
 
+// Quality-step scanner images (used by .dagger/src/quality.ts).
+// Pinned with `@sha256:` digests to match every other image constant in
+// this file — a mutable tag would let an upstream registry mutation
+// silently alter the security tooling without a Renovate signal.
+// renovate: datasource=docker depName=aquasec/trivy
+export const TRIVY_IMAGE =
+  "aquasec/trivy:0.70.0@sha256:be1190afcb28352bfddc4ddeb71470835d16462af68d310f9f4bca710961a41e";
+// renovate: datasource=docker depName=semgrep/semgrep
+export const SEMGREP_IMAGE =
+  "semgrep/semgrep:1.162.0@sha256:9349edbadf90c3f3c0c3f55867625354e89680e6fa10d9034042af52fdb0e0d0";
+// renovate: datasource=docker depName=zricethezav/gitleaks
+export const GITLEAKS_IMAGE =
+  "zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f";
+// renovate: datasource=docker depName=koalaman/shellcheck-alpine
+export const SHELLCHECK_IMAGE =
+  "koalaman/shellcheck-alpine:v0.11.0@sha256:9955be09ea7f0dbf7ae942ac1f2094355bb30d96fffba0ec09f5432207544002";
+
 // Pinned Bun version for containers that install Bun manually (e.g. Playwright)
 // renovate: datasource=npm depName=bun
 export const BUN_VERSION = "1.3.14";

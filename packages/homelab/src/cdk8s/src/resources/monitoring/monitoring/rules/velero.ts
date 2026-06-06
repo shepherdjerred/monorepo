@@ -3,6 +3,37 @@ import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s
 import { escapePrometheusTemplate } from "./shared.ts";
 import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/velero-schedules.ts";
 
+export const REVIEWED_LARGE_PVC_BACKUP_POLICY_MATCHERS = [
+  {
+    namespace: "dagger",
+    persistentvolumeclaim: "data-dagger-dagger-helm-engine-0",
+  },
+  { namespace: "gickup", persistentvolumeclaim: "gickup-backup-pvc" },
+  { namespace: "media", persistentvolumeclaim: "plex-movies-hdd-pvc" },
+  { namespace: "media", persistentvolumeclaim: "plex-tv-hdd-pvc" },
+  { namespace: "media", persistentvolumeclaim: "qbittorrent-hdd-pvc" },
+  {
+    namespace: "prometheus",
+    persistentvolumeclaim:
+      "prometheus-prometheus-kube-prometheus-prometheus-db-prometheus-prometheus-kube-prometheus-prometheus-0",
+  },
+  { namespace: "seaweedfs", persistentvolumeclaim: "data-seaweedfs-volume-0" },
+];
+
+const largePvcBackupPolicyReviewedSelector =
+  REVIEWED_LARGE_PVC_BACKUP_POLICY_MATCHERS.map(
+    ({ namespace, persistentvolumeclaim }) =>
+      `kube_persistentvolumeclaim_resource_requests_storage_bytes{namespace="${namespace}",persistentvolumeclaim="${persistentvolumeclaim}"}`,
+  ).join("\n  or ");
+
+export const largePvcMayImpactBackupsExpr = `(
+  kube_persistentvolumeclaim_resource_requests_storage_bytes > 200 * 1024 * 1024 * 1024
+)
+unless on (namespace, persistentvolumeclaim)
+(
+  ${largePvcBackupPolicyReviewedSelector}
+)`;
+
 export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     // Velero backup size monitoring
@@ -30,7 +61,7 @@ export function getVeleroRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `kube_persistentvolumeclaim_resource_requests_storage_bytes > 200 * 1024 * 1024 * 1024`,
+            largePvcMayImpactBackupsExpr,
           ),
           for: "5m",
           labels: {
