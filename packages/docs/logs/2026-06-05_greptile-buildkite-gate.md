@@ -30,10 +30,16 @@ themselves instead of waiting on Greptile's check.
      `startup_failure`) → `failed` ("re-trigger Greptile")
    - otherwise → reviewed
 2. **Are its comments resolved?** — PR review threads via GraphQL
-   (`reviewThreads { isResolved isOutdated }`). A thread blocks iff it is
-   authored by Greptile (`GREPTILE_AUTHOR_LOGIN`, default `greptile-apps`),
-   **not** resolved, and **not** outdated (outdated = the code it referenced
-   changed, i.e. it no longer applies to the latest revision).
+   (`reviewThreads { isResolved isOutdated comments{ body } }`). A thread blocks
+   iff it is authored by Greptile (`GREPTILE_AUTHOR_LOGIN`, default
+   `greptile-apps`), **not** resolved, **not** outdated (outdated = the code it
+   referenced changed, i.e. it no longer applies to the latest revision), **and**
+   its severity badge is at or above the blocking threshold. Greptile badges each
+   comment `P0` (most severe) … `P3` (least). `parseGreptilePriority` reads the
+   badge from the comment body; a thread blocks only when
+   `priority <= GREPTILE_MAX_BLOCKING_PRIORITY` (default `3` → all of P0–P3
+   block; un-badged comments never block). Lower the env var (e.g. `2`) to stop
+   gating on P3 nitpicks.
 
 Reviewed + zero blocking threads → `passed`. Reviewed + ≥1 blocking thread →
 `failed` fast, printing the file:line + URL of each unresolved comment. We only
@@ -89,3 +95,25 @@ three PR pipeline paths and `ci-complete`'s `depends_on`.
   `.git/worktrees/<name>/` admin dir and `git reset --hard HEAD`; no committed
   work was lost. The PR branch (`codex/greptile-buildkite-gate`) was intact
   throughout.
+
+## Session Log — 2026-06-06 (severity threshold + required check)
+
+### Done
+
+- Made the gate severity-aware: only Greptile comments at priority **P3 or more
+  severe** block. `parseGreptilePriority` reads the `P0`–`P3` badge from each
+  comment body; a thread blocks only when `priority <= GREPTILE_MAX_BLOCKING_PRIORITY`
+  (default `3`; un-badged comments never block). New tests; `bun test` 215 pass,
+  typecheck clean.
+- Made `buildkite/monorepo/pr/mag-greptile-review` a **required status check** in
+  the `main` ruleset (id 11098884), alongside the existing
+  `buildkite/monorepo/pr/white-check-mark-ci-complete`. The gate was already
+  _transitively_ blocking (required `ci-complete` `depends_on` `greptile-review`);
+  this makes it explicit.
+
+### Caveats
+
+- The required check `mag-greptile-review` only appears on builds that include
+  this PR's pipeline change. Until #1026 merges to `main`, **other open PRs are
+  blocked** (their builds don't emit that context) — accepted per owner decision.
+  Resolves itself once #1026 lands and other PRs rebase onto the new `main`.
