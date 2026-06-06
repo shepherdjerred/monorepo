@@ -1,3 +1,34 @@
+/**
+ * PR-only gate that passes once Greptile has finished reviewing the PR head
+ * commit AND every Greptile review comment that still applies to the latest
+ * revision has been resolved.
+ *
+ * Why not just wait for Greptile's own status check?
+ *
+ *   Greptile's "Greptile Review" check goes green as soon as the review
+ *   *completes* — it does not track whether the comments it posted were
+ *   addressed (verified live: the check is `completed/success` on PR #1026
+ *   while three review comments sit unresolved). So waiting on that check is
+ *   useless as a merge gate.
+ *
+ * What this does instead:
+ *
+ *   1. Uses Greptile's check-run on the head commit ONLY as a signal that
+ *      Greptile has *finished reviewing this revision*. The check is present
+ *      even when the review found nothing because `.greptile/config.json` sets
+ *      `statusCheck: true`, so it is a reliable "has Greptile reviewed head?"
+ *      marker that also covers the clean-review case.
+ *   2. Reads the PR's review threads via the GitHub GraphQL API and requires
+ *      that every Greptile-authored thread which still applies to the latest
+ *      revision (i.e. not `isOutdated`) is `isResolved`.
+ *
+ * Unresolved comments need a human/agent action (resolve the thread, or push a
+ * fix and let Greptile re-review), so once Greptile has reviewed the head we
+ * fail fast with an actionable list rather than holding a CI agent for the full
+ * timeout. We only *poll* while Greptile is still reviewing the head commit,
+ * which is the one genuinely transient state.
+ */
+
 type CheckConclusion =
   | "success"
   | "failure"
@@ -10,26 +41,76 @@ type CheckConclusion =
   | "stale"
   | null;
 
-export type GreptileSignal = {
-  source: "check-run" | "commit-status";
-  name: string;
-  status: string;
+/** Greptile's own check-run on the head commit, normalised. */
+export type GreptileReviewCheck = {
+  found: boolean;
+  status: string | null;
   conclusion: CheckConclusion;
   url: string | null;
-  updatedAt: string | null;
 };
 
-type Evaluation =
+/** A PR review thread, normalised from the GraphQL `reviewThreads` connection. */
+export type GreptileThread = {
+  authorLogin: string | null;
+  isResolved: boolean;
+  isOutdated: boolean;
+  path: string | null;
+  line: number | null;
+  url: string | null;
+};
+
+export type GateDecision =
+  | { state: "waiting"; message: string }
   | { state: "passed"; message: string }
-  | { state: "waiting"; message: string };
+  | { state: "failed"; message: string };
 
 const DEFAULT_REPO = "shepherdjerred/monorepo";
-const DEFAULT_TIMEOUT_SECONDS = 30 * 60;
+const DEFAULT_GREPTILE_LOGIN = "greptile-apps";
+const DEFAULT_CHECK_PATTERN = "greptile";
+const DEFAULT_TIMEOUT_SECONDS = 20 * 60;
 const DEFAULT_INTERVAL_SECONDS = 30;
 const GITHUB_API_VERSION = "2022-11-28";
+const GITHUB_API_URL = "https://api.github.com";
+
+const REVIEW_THREADS_QUERY = `
+query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      headRefOid
+      reviewThreads(first: 100, after: $cursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          isResolved
+          isOutdated
+          path
+          line
+          comments(first: 1) {
+            nodes {
+              author { login }
+              url
+            }
+          }
+        }
+      }
+    }
+  }
+}`;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+function recordField(
+  record: Record<string, unknown>,
+  key: string,
+): Record<string, unknown> | null {
+  const value = record[key];
+  return isRecord(value) ? value : null;
+}
+
+function arrayField(record: Record<string, unknown>, key: string): unknown[] {
+  const value = record[key];
+  return Array.isArray(value) ? value : [];
 }
 
 function stringField(
@@ -46,6 +127,10 @@ function numberField(
 ): number | null {
   const value = record[key];
   return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function boolField(record: Record<string, unknown>, key: string): boolean {
+  return record[key] === true;
 }
 
 function conclusionField(value: string | null): CheckConclusion {
@@ -73,6 +158,36 @@ function parsePositiveIntegerEnv(name: string, fallback: number): number {
     throw new Error(`${name} must be a positive integer, got ${raw}`);
   }
   return parsed;
+}
+
+/**
+ * Build the RegExp used to match Greptile's check-run name. Guarded so an
+ * invalid `GREPTILE_CHECK_PATTERN` fails with an actionable message instead of
+ * a bare `SyntaxError`.
+ */
+export function compileCheckPattern(raw: string | undefined): RegExp {
+  const source =
+    raw === undefined || raw.trim() === "" ? DEFAULT_CHECK_PATTERN : raw.trim();
+  try {
+    return new RegExp(source, "iu");
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `GREPTILE_CHECK_PATTERN is not a valid regular expression (${source}): ${detail}`,
+    );
+  }
+}
+
+/** Extract the `rel="next"` URL from a GitHub `Link` header, if present. */
+export function parseLinkNext(header: string | null): string | null {
+  if (header === null) return null;
+  for (const part of header.split(",")) {
+    const match = part.match(/<([^>]+)>\s*;\s*rel="next"/u);
+    if (match !== null && match[1] !== undefined) {
+      return match[1];
+    }
+  }
+  return null;
 }
 
 function repoFromEnvironment(): string {
@@ -103,167 +218,329 @@ function repoFromEnvironment(): string {
   return DEFAULT_REPO;
 }
 
-function matchingSignal(signal: GreptileSignal, pattern: RegExp): boolean {
-  return pattern.test(signal.name);
-}
-
-function signalPassed(signal: GreptileSignal): boolean {
-  if (signal.source === "commit-status") {
-    return signal.status === "success";
+function splitRepo(repo: string): { owner: string; name: string } {
+  const [owner, name] = repo.split("/");
+  if (
+    owner === undefined ||
+    name === undefined ||
+    owner === "" ||
+    name === ""
+  ) {
+    throw new Error(`Expected repository in owner/name form, got ${repo}`);
   }
-  return signal.status === "completed" && signal.conclusion === "success";
+  return { owner, name };
 }
 
-function describeSignal(signal: GreptileSignal): string {
-  const conclusion =
-    signal.conclusion === null ? "" : `, conclusion=${signal.conclusion}`;
-  const url = signal.url === null ? "" : `, url=${signal.url}`;
-  return `${signal.source} ${signal.name}: status=${signal.status}${conclusion}${url}`;
+type ReviewState = "reviewing" | "reviewed" | "errored";
+
+/**
+ * Classify Greptile's check-run into a coarse review state:
+ * - `reviewing`: Greptile has not finished reviewing this commit yet.
+ * - `errored`: Greptile's review job failed/was cancelled (thread state cannot
+ *   be trusted; the reviewer needs to re-trigger it).
+ * - `reviewed`: Greptile finished reviewing this commit.
+ */
+function classifyReviewCheck(check: GreptileReviewCheck): ReviewState {
+  if (!check.found || check.status !== "completed") {
+    return "reviewing";
+  }
+  switch (check.conclusion) {
+    case "failure":
+    case "cancelled":
+    case "timed_out":
+    case "startup_failure":
+      return "errored";
+    default:
+      return "reviewed";
+  }
 }
 
-export function evaluateGreptileSignals(
-  signals: readonly GreptileSignal[],
-  pattern: RegExp = /greptile/iu,
-): Evaluation {
-  const matching = signals.filter((signal) => matchingSignal(signal, pattern));
+function isBlocking(thread: GreptileThread, greptileLogin: string): boolean {
+  return (
+    thread.authorLogin === greptileLogin &&
+    !thread.isResolved &&
+    !thread.isOutdated
+  );
+}
 
-  if (matching.length === 0) {
+function describeThread(thread: GreptileThread): string {
+  const location =
+    thread.path === null
+      ? "(general comment)"
+      : thread.line === null
+        ? thread.path
+        : `${thread.path}:${String(thread.line)}`;
+  const url = thread.url === null ? "" : ` — ${thread.url}`;
+  return `${location}${url}`;
+}
+
+/**
+ * Pure decision: given the head commit, Greptile's review-check state, and the
+ * PR's review threads, decide whether the gate should pass, keep waiting, or
+ * fail.
+ */
+export function evaluateGate(input: {
+  head: string;
+  reviewCheck: GreptileReviewCheck;
+  threads: readonly GreptileThread[];
+  greptileLogin: string;
+}): GateDecision {
+  const reviewState = classifyReviewCheck(input.reviewCheck);
+
+  if (reviewState === "reviewing") {
+    const status = !input.reviewCheck.found
+      ? "not started"
+      : (input.reviewCheck.status ?? "pending");
     return {
       state: "waiting",
-      message: "No Greptile GitHub status check has been reported yet.",
+      message: `Waiting for Greptile to finish reviewing ${input.head} (review check: ${status}).`,
     };
   }
 
-  const pending = matching.filter((signal) => !signalPassed(signal));
-  if (pending.length === 0) {
+  if (reviewState === "errored") {
+    return {
+      state: "failed",
+      message:
+        `Greptile's review of ${input.head} did not complete successfully ` +
+        `(conclusion=${input.reviewCheck.conclusion ?? "unknown"}). ` +
+        `Re-trigger Greptile, then re-run this step.`,
+    };
+  }
+
+  const blocking = input.threads.filter((thread) =>
+    isBlocking(thread, input.greptileLogin),
+  );
+
+  if (blocking.length === 0) {
     return {
       state: "passed",
-      message: `Greptile is green: ${matching.map(describeSignal).join("; ")}`,
+      message: `Greptile reviewed ${input.head}; no unresolved Greptile comments remain on the latest revision.`,
     };
   }
 
+  const list = blocking
+    .map((thread) => `  - ${describeThread(thread)}`)
+    .join("\n");
   return {
-    state: "waiting",
-    message: `Waiting for Greptile to pass: ${pending.map(describeSignal).join("; ")}`,
+    state: "failed",
+    message:
+      `${String(blocking.length)} unresolved Greptile comment(s) on ${input.head}:\n${list}\n` +
+      `Resolve each thread (or push a fix and let Greptile re-review), then re-run this step.`,
   };
 }
 
-function latestByName(signals: readonly GreptileSignal[]): GreptileSignal[] {
-  const latest = new Map<string, GreptileSignal>();
-  for (const signal of signals) {
-    const existing = latest.get(signal.name);
-    if (existing === undefined) {
-      latest.set(signal.name, signal);
-      continue;
-    }
-
-    const currentTimestamp = Date.parse(signal.updatedAt ?? "");
-    const existingTimestamp = Date.parse(existing.updatedAt ?? "");
-    if (
-      Number.isFinite(currentTimestamp) &&
-      (!Number.isFinite(existingTimestamp) ||
-        currentTimestamp >= existingTimestamp)
-    ) {
-      latest.set(signal.name, signal);
-    }
-  }
-  return [...latest.values()];
+function githubHeaders(token: string): Record<string, string> {
+  return {
+    Accept: "application/vnd.github+json",
+    Authorization: `Bearer ${token}`,
+    "X-GitHub-Api-Version": GITHUB_API_VERSION,
+  };
 }
 
-function parseCheckRuns(payload: unknown): GreptileSignal[] {
-  if (!isRecord(payload)) {
-    throw new Error("GitHub check-runs response was not an object");
-  }
-
-  const checkRuns = payload["check_runs"];
-  if (!Array.isArray(checkRuns)) {
-    throw new Error("GitHub check-runs response did not include check_runs[]");
-  }
-
-  const parsed: GreptileSignal[] = [];
-  for (const item of checkRuns) {
-    if (!isRecord(item)) continue;
-    const name = stringField(item, "name");
-    const status = stringField(item, "status");
-    if (name === null || status === null) continue;
-    parsed.push({
-      source: "check-run",
-      name,
-      status,
-      conclusion: conclusionField(stringField(item, "conclusion")),
-      url: stringField(item, "html_url"),
-      updatedAt:
-        stringField(item, "completed_at") ??
-        stringField(item, "started_at") ??
-        stringField(item, "created_at") ??
-        (numberField(item, "id") === null
-          ? null
-          : String(numberField(item, "id"))),
-    });
-  }
-  return latestByName(parsed);
-}
-
-function parseCommitStatuses(payload: unknown): GreptileSignal[] {
-  if (!isRecord(payload)) {
-    throw new Error("GitHub statuses response was not an object");
-  }
-
-  const statuses = payload["statuses"];
-  if (!Array.isArray(statuses)) {
-    throw new Error("GitHub statuses response did not include statuses[]");
-  }
-
-  const parsed: GreptileSignal[] = [];
-  for (const item of statuses) {
-    if (!isRecord(item)) continue;
-    const context = stringField(item, "context");
-    const state = stringField(item, "state");
-    if (context === null || state === null) continue;
-    parsed.push({
-      source: "commit-status",
-      name: context,
-      status: state,
-      conclusion: state === "success" ? "success" : null,
-      url: stringField(item, "target_url"),
-      updatedAt:
-        stringField(item, "updated_at") ?? stringField(item, "created_at"),
-    });
-  }
-  return latestByName(parsed);
-}
-
-async function getJson(url: string, token: string): Promise<unknown> {
-  const response = await fetch(url, {
-    headers: {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${token}`,
-      "X-GitHub-Api-Version": GITHUB_API_VERSION,
-    },
-  });
-
+async function getJsonWithLink(
+  url: string,
+  token: string,
+): Promise<{ payload: unknown; linkNext: string | null }> {
+  const response = await fetch(url, { headers: githubHeaders(token) });
   if (!response.ok) {
     const body = await response.text();
     throw new Error(
       `GitHub API request failed with ${String(response.status)} ${response.statusText}: ${body}`,
     );
   }
-
-  return await response.json();
+  const payload: unknown = await response.json();
+  return { payload, linkNext: parseLinkNext(response.headers.get("link")) };
 }
 
-async function fetchSignals(input: {
-  repo: string;
-  commit: string;
-  token: string;
-}): Promise<GreptileSignal[]> {
-  const encodedCommit = encodeURIComponent(input.commit);
-  const checkRunsUrl = `https://api.github.com/repos/${input.repo}/commits/${encodedCommit}/check-runs?per_page=100`;
-  const statusesUrl = `https://api.github.com/repos/${input.repo}/commits/${encodedCommit}/status`;
+async function graphqlRequest(
+  query: string,
+  variables: Record<string, unknown>,
+  token: string,
+): Promise<unknown> {
+  const response = await fetch(`${GITHUB_API_URL}/graphql`, {
+    method: "POST",
+    headers: {
+      ...githubHeaders(token),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query, variables }),
+  });
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `GitHub GraphQL request failed with ${String(response.status)} ${response.statusText}: ${body}`,
+    );
+  }
+  const payload: unknown = await response.json();
+  if (isRecord(payload) && payload["errors"] !== undefined) {
+    throw new Error(
+      `GitHub GraphQL returned errors: ${JSON.stringify(payload["errors"])}`,
+    );
+  }
+  return payload;
+}
 
-  const checkRuns = parseCheckRuns(await getJson(checkRunsUrl, input.token));
-  const statuses = parseCommitStatuses(await getJson(statusesUrl, input.token));
-  return [...checkRuns, ...statuses];
+type CheckRunRecord = {
+  status: string;
+  conclusion: CheckConclusion;
+  url: string | null;
+  updatedAt: string | null;
+};
+
+function parseMatchingCheckRuns(
+  payload: unknown,
+  pattern: RegExp,
+): CheckRunRecord[] {
+  if (!isRecord(payload)) {
+    throw new Error("GitHub check-runs response was not an object");
+  }
+  const checkRuns = arrayField(payload, "check_runs");
+  const matches: CheckRunRecord[] = [];
+  for (const item of checkRuns) {
+    if (!isRecord(item)) continue;
+    const name = stringField(item, "name");
+    const status = stringField(item, "status");
+    if (name === null || status === null || !pattern.test(name)) continue;
+    matches.push({
+      status,
+      conclusion: conclusionField(stringField(item, "conclusion")),
+      url: stringField(item, "html_url"),
+      updatedAt:
+        stringField(item, "completed_at") ??
+        stringField(item, "started_at") ??
+        stringField(item, "created_at"),
+    });
+  }
+  return matches;
+}
+
+/** Pick the most recently updated check-run (the latest review attempt). */
+function pickLatestCheck(
+  checks: readonly CheckRunRecord[],
+): CheckRunRecord | null {
+  let chosen: CheckRunRecord | null = null;
+  let chosenScore = Number.NEGATIVE_INFINITY;
+  for (const check of checks) {
+    const parsed = Date.parse(check.updatedAt ?? "");
+    const score = Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY;
+    if (chosen === null || score >= chosenScore) {
+      chosen = check;
+      chosenScore = score;
+    }
+  }
+  return chosen;
+}
+
+async function fetchGreptileReviewCheck(input: {
+  repo: string;
+  head: string;
+  token: string;
+  pattern: RegExp;
+}): Promise<GreptileReviewCheck> {
+  let url: string | null =
+    `${GITHUB_API_URL}/repos/${input.repo}/commits/${encodeURIComponent(input.head)}/check-runs?per_page=100`;
+  const matches: CheckRunRecord[] = [];
+  while (url !== null) {
+    const { payload, linkNext } = await getJsonWithLink(url, input.token);
+    matches.push(...parseMatchingCheckRuns(payload, input.pattern));
+    url = linkNext;
+  }
+  const chosen = pickLatestCheck(matches);
+  if (chosen === null) {
+    return { found: false, status: null, conclusion: null, url: null };
+  }
+  return {
+    found: true,
+    status: chosen.status,
+    conclusion: chosen.conclusion,
+    url: chosen.url,
+  };
+}
+
+type ThreadPage = {
+  headRefOid: string | null;
+  threads: GreptileThread[];
+  hasNextPage: boolean;
+  endCursor: string | null;
+};
+
+function parseThreadPage(payload: unknown): ThreadPage {
+  if (!isRecord(payload)) {
+    throw new Error("GitHub GraphQL response was not an object");
+  }
+  const data = recordField(payload, "data");
+  const repository = data === null ? null : recordField(data, "repository");
+  const pullRequest =
+    repository === null ? null : recordField(repository, "pullRequest");
+  if (pullRequest === null) {
+    throw new Error(
+      "GitHub GraphQL response did not include repository.pullRequest",
+    );
+  }
+  const reviewThreads = recordField(pullRequest, "reviewThreads");
+  if (reviewThreads === null) {
+    throw new Error("GitHub GraphQL response did not include reviewThreads");
+  }
+
+  const threads: GreptileThread[] = [];
+  for (const node of arrayField(reviewThreads, "nodes")) {
+    if (!isRecord(node)) continue;
+    const comments = recordField(node, "comments");
+    const commentNodes = comments === null ? [] : arrayField(comments, "nodes");
+    const firstComment: unknown = commentNodes[0];
+    let authorLogin: string | null = null;
+    let url: string | null = null;
+    if (isRecord(firstComment)) {
+      const author = recordField(firstComment, "author");
+      authorLogin = author === null ? null : stringField(author, "login");
+      url = stringField(firstComment, "url");
+    }
+    threads.push({
+      authorLogin,
+      isResolved: boolField(node, "isResolved"),
+      isOutdated: boolField(node, "isOutdated"),
+      path: stringField(node, "path"),
+      line: numberField(node, "line"),
+      url,
+    });
+  }
+
+  const pageInfo = recordField(reviewThreads, "pageInfo");
+  return {
+    headRefOid: stringField(pullRequest, "headRefOid"),
+    threads,
+    hasNextPage: pageInfo !== null && boolField(pageInfo, "hasNextPage"),
+    endCursor: pageInfo === null ? null : stringField(pageInfo, "endCursor"),
+  };
+}
+
+async function fetchGreptileThreads(input: {
+  owner: string;
+  name: string;
+  number: number;
+  token: string;
+}): Promise<{ threads: GreptileThread[]; headRefOid: string | null }> {
+  const threads: GreptileThread[] = [];
+  let headRefOid: string | null = null;
+  let cursor: string | null = null;
+  for (;;) {
+    const payload = await graphqlRequest(
+      REVIEW_THREADS_QUERY,
+      {
+        owner: input.owner,
+        name: input.name,
+        number: input.number,
+        cursor,
+      },
+      input.token,
+    );
+    const page = parseThreadPage(payload);
+    if (page.headRefOid !== null) headRefOid = page.headRefOid;
+    threads.push(...page.threads);
+    if (!page.hasNextPage || page.endCursor === null) break;
+    cursor = page.endCursor;
+  }
+  return { threads, headRefOid };
 }
 
 async function waitForGreptile(): Promise<void> {
@@ -273,26 +550,32 @@ async function waitForGreptile(): Promise<void> {
     pullRequest === "" ||
     pullRequest === "false"
   ) {
-    console.log("Not a Buildkite pull request build; skipping Greptile wait.");
+    console.log("Not a Buildkite pull request build; skipping Greptile gate.");
     return;
+  }
+  const number = Number.parseInt(pullRequest, 10);
+  if (!Number.isInteger(number) || number <= 0) {
+    throw new Error(
+      `BUILDKITE_PULL_REQUEST must be a positive integer, got ${pullRequest}`,
+    );
   }
 
   const token = process.env["GH_TOKEN"];
   if (token === undefined || token.trim() === "") {
-    throw new Error("GH_TOKEN is required to query GitHub check status");
+    throw new Error("GH_TOKEN is required to query GitHub review threads");
   }
 
   const commit = process.env["BUILDKITE_COMMIT"];
   if (commit === undefined || commit.trim() === "") {
-    throw new Error(
-      "BUILDKITE_COMMIT is required to query GitHub check status",
-    );
+    throw new Error("BUILDKITE_COMMIT is required to identify the PR head");
   }
+  const head = commit.trim();
 
-  const pattern = new RegExp(
-    process.env["GREPTILE_CHECK_PATTERN"] ?? "greptile",
-    "iu",
-  );
+  const repo = repoFromEnvironment();
+  const { owner, name } = splitRepo(repo);
+  const greptileLogin =
+    process.env["GREPTILE_AUTHOR_LOGIN"]?.trim() ?? DEFAULT_GREPTILE_LOGIN;
+  const pattern = compileCheckPattern(process.env["GREPTILE_CHECK_PATTERN"]);
   const timeoutSeconds = parsePositiveIntegerEnv(
     "GREPTILE_WAIT_TIMEOUT_SECONDS",
     DEFAULT_TIMEOUT_SECONDS,
@@ -301,20 +584,50 @@ async function waitForGreptile(): Promise<void> {
     "GREPTILE_WAIT_INTERVAL_SECONDS",
     DEFAULT_INTERVAL_SECONDS,
   );
-  const repo = repoFromEnvironment();
-  const startedAt = Date.now();
-  const deadline = startedAt + timeoutSeconds * 1000;
+
+  const deadline = Date.now() + timeoutSeconds * 1000;
+  let warnedMismatch = false;
 
   while (Date.now() <= deadline) {
-    const signals = await fetchSignals({ repo, commit: commit.trim(), token });
-    const evaluation = evaluateGreptileSignals(signals, pattern);
-    console.log(evaluation.message);
-    if (evaluation.state === "passed") return;
+    const [reviewCheck, threadResult] = await Promise.all([
+      fetchGreptileReviewCheck({ repo, head, token, pattern }),
+      fetchGreptileThreads({ owner, name, number, token }),
+    ]);
+
+    if (
+      !warnedMismatch &&
+      threadResult.headRefOid !== null &&
+      threadResult.headRefOid !== head
+    ) {
+      console.warn(
+        `PR #${String(number)} head is now ${threadResult.headRefOid}, but this build is for ${head}; evaluating ${head}.`,
+      );
+      warnedMismatch = true;
+    }
+
+    const decision = evaluateGate({
+      head,
+      reviewCheck,
+      threads: threadResult.threads,
+      greptileLogin,
+    });
+
+    if (decision.state === "passed") {
+      console.log(decision.message);
+      return;
+    }
+    if (decision.state === "failed") {
+      throw new Error(decision.message);
+    }
+
+    console.log(decision.message);
     await Bun.sleep(intervalSeconds * 1000);
   }
 
   throw new Error(
-    `Timed out after ${String(timeoutSeconds)}s waiting for Greptile to pass on ${repo}@${commit.trim()}`,
+    `Timed out after ${String(timeoutSeconds)}s waiting for Greptile to finish reviewing ${repo}@${head}. ` +
+      `If Greptile is enabled, confirm its check name matches GREPTILE_CHECK_PATTERN (/${pattern.source}/i) ` +
+      `and that it authors threads as ${greptileLogin} (override with GREPTILE_AUTHOR_LOGIN).`,
   );
 }
 
