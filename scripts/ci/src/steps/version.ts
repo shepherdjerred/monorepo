@@ -28,16 +28,21 @@ const MAIN_ONLY = "build.branch == pipeline.default_branch";
  * if any requested key is missing.
  */
 function collectDigestsCmd(pushedVersionKeys: readonly string[]): string {
+  // Buildkite's `pipeline upload` interpolates single-`$` tokens at upload
+  // time, so every shell variable used at agent runtime must use `$$` to
+  // survive interpolation. Without this, `$key`/`$d`/`$first`/`$(...)`
+  // get blanked out and the for-loop body fails on the first iteration
+  // with "ERROR: missing digest for key " (empty $key).
   const lines = [
     `bash -c '`,
     `set -euo pipefail; `,
     `echo "{" > /tmp/digests.json; `,
     `first=1; `,
     `for key in ${pushedVersionKeys.map((k) => `"${k}"`).join(" ")}; do `,
-    `  d=$(buildkite-agent meta-data get "digest:$key" --default ""); `,
-    `  if [ -z "$d" ]; then echo "ERROR: missing digest for key $key" >&2; exit 1; fi; `,
-    `  if [ "$first" = "1" ]; then first=0; else echo "," >> /tmp/digests.json; fi; `,
-    `  printf "  \\"%s\\": \\"%s\\"" "$key" "$d" >> /tmp/digests.json; `,
+    `  d=$$(buildkite-agent meta-data get "digest:$$key" --default ""); `,
+    `  if [ -z "$$d" ]; then echo "ERROR: missing digest for key $$key" >&2; exit 1; fi; `,
+    `  if [ "$$first" = "1" ]; then first=0; else echo "," >> /tmp/digests.json; fi; `,
+    `  printf "  \\"%s\\": \\"%s\\"" "$$key" "$$d" >> /tmp/digests.json; `,
     `done; `,
     `echo "" >> /tmp/digests.json; `,
     `echo "}" >> /tmp/digests.json; `,
