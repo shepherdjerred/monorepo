@@ -103,11 +103,11 @@ pod sandboxes failed with `/run/flannel/subnet.env: no such file`. Self-healed b
 
 - ✅ **streambot `ADMIN_IDS`** = `160509172704739328` set; secret synced (7 keys); pod
   `streambot-754f59c8bb-*` **1/1 Running**, logged into Discord as `.pokebot_`.
-- **streambot yt-dlp bug (non-secret)**: container (UID 1000) can't `mkdir
-/home/bots/StreamBot/scripts` (root-owned image dir, no writable mount) → yt-dlp
-  setup fails → URL/YouTube streaming broken. Fix in `streambot.ts`: mount a writable
-  volume (emptyDir or ZFS PVC) at `/home/bots/StreamBot/scripts`. Local `/videos` files
-  unaffected.
+- ✅ **streambot yt-dlp bug (non-secret)** FIXED in PR #1051: mounted an `emptyDir` at
+  `/home/bots/StreamBot/scripts` in `streambot.ts` so the UID-1000 container can write the
+  self-downloaded yt-dlp binary (root-owned image WORKDIR otherwise blocked it → `EACCES` →
+  `yt-dlp ENOENT` → no URL/YouTube playback). Added `streambot.test.ts` synth smoke test.
+  Reaches prod via Dagger → ArgoCD after merge; live pod stays broken until then.
 - **Confirm** `VIDEO_CHANNEL_ID` (reused pokemon stream voice channel) is correct.
 - **mcp-gateway**: `FASTMAIL_TOKEN` + `GMAIL_TOKEN` (deferred by user).
 
