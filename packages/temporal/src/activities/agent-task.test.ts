@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test";
 import { register } from "#observability/metrics.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
 import type { AgentTaskCommand } from "./agent-task-command.ts";
+import * as agentTaskCommandModule from "./agent-task-command.ts";
 
 const originalFetch = globalThis.fetch;
 const originalGitHubAppId = Bun.env["GITHUB_APP_ID"];
@@ -82,6 +83,7 @@ const fetchStub = Object.assign(
 );
 
 void mock.module("#activities/agent-task-command.ts", () => ({
+  ...agentTaskCommandModule,
   buildAgentTaskCommand: async (
     _input: AgentTaskInput,
     workdir: string,
