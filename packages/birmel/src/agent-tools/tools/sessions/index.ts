@@ -34,16 +34,9 @@ const ManageAgentSessionInputSchema = z.object({
   includeArchived: z.boolean().optional(),
 });
 
-type ManageAgentSessionContext = z.infer<typeof ManageAgentSessionInputSchema>;
-type AgentSessionToolResult = {
-  success: boolean;
-  message: string;
-  data?: unknown;
-};
+type ManageAgentSessionInput = z.infer<typeof ManageAgentSessionInputSchema>;
 
-async function createSession(
-  ctx: ManageAgentSessionContext,
-): Promise<AgentSessionToolResult> {
+async function handleCreateOrSpawn(ctx: ManageAgentSessionInput) {
   if (ctx.channelId == null || ctx.channelId.length === 0) {
     return { success: false, message: "channelId is required" };
   }
@@ -73,9 +66,7 @@ async function createSession(
   };
 }
 
-async function listSessions(
-  ctx: ManageAgentSessionContext,
-): Promise<AgentSessionToolResult> {
+async function handleListSessions(ctx: ManageAgentSessionInput) {
   const sessions = await prisma.agentSession.findMany({
     where: {
       guildId: ctx.guildId,
@@ -96,15 +87,20 @@ async function listSessions(
   };
 }
 
-async function getSession(
-  ctx: ManageAgentSessionContext,
-): Promise<AgentSessionToolResult> {
+async function findSession(ctx: ManageAgentSessionInput) {
+  if (ctx.sessionId == null || ctx.sessionId.length === 0) {
+    return null;
+  }
+  return await prisma.agentSession.findFirst({
+    where: { id: ctx.sessionId, guildId: ctx.guildId },
+  });
+}
+
+async function handleGetOrHistory(ctx: ManageAgentSessionInput) {
   if (ctx.sessionId == null || ctx.sessionId.length === 0) {
     return { success: false, message: "sessionId is required" };
   }
-  const session = await prisma.agentSession.findFirst({
-    where: { id: ctx.sessionId, guildId: ctx.guildId },
-  });
+  const session = await findSession(ctx);
   if (session == null) {
     return { success: false, message: "Agent session not found" };
   }
@@ -123,18 +119,14 @@ async function getSession(
   };
 }
 
-async function addSessionEvent(
-  ctx: ManageAgentSessionContext,
-): Promise<AgentSessionToolResult> {
+async function handleFollowUpOrSteer(ctx: ManageAgentSessionInput) {
   if (ctx.sessionId == null || ctx.sessionId.length === 0) {
     return { success: false, message: "sessionId is required" };
   }
   if (ctx.content == null || ctx.content.length === 0) {
     return { success: false, message: "content is required" };
   }
-  const session = await prisma.agentSession.findFirst({
-    where: { id: ctx.sessionId, guildId: ctx.guildId },
-  });
+  const session = await findSession(ctx);
   if (session == null) {
     return { success: false, message: "Agent session not found" };
   }
@@ -163,18 +155,21 @@ async function addSessionEvent(
   };
 }
 
-async function setSessionStatus(
-  ctx: ManageAgentSessionContext,
-): Promise<AgentSessionToolResult> {
+function statusForAction(action: ManageAgentSessionInput["action"]): string {
+  if (action === "resume") {
+    return "active";
+  }
+  if (action === "archive") {
+    return "archived";
+  }
+  return "cancelled";
+}
+
+async function handleStatusChange(ctx: ManageAgentSessionInput) {
   if (ctx.sessionId == null || ctx.sessionId.length === 0) {
     return { success: false, message: "sessionId is required" };
   }
-  const status =
-    ctx.action === "resume"
-      ? "active"
-      : ctx.action === "archive"
-        ? "archived"
-        : "cancelled";
+  const status = statusForAction(ctx.action);
   const updated = await prisma.agentSession.updateMany({
     where: { id: ctx.sessionId, guildId: ctx.guildId },
     data: { status },
@@ -185,15 +180,11 @@ async function setSessionStatus(
   return { success: true, message: `Agent session ${status}` };
 }
 
-async function setSessionOptions(
-  ctx: ManageAgentSessionContext,
-): Promise<AgentSessionToolResult> {
+async function handleSetOptions(ctx: ManageAgentSessionInput) {
   if (ctx.sessionId == null || ctx.sessionId.length === 0) {
     return { success: false, message: "sessionId is required" };
   }
-  const session = await prisma.agentSession.findFirst({
-    where: { id: ctx.sessionId, guildId: ctx.guildId },
-  });
+  const session = await findSession(ctx);
   if (session == null) {
     return { success: false, message: "Agent session not found" };
   }
@@ -231,21 +222,21 @@ export const manageAgentSessionTool = createTool({
       switch (ctx.action) {
         case "create":
         case "spawn":
-          return await createSession(ctx);
+          return await handleCreateOrSpawn(ctx);
         case "list":
-          return await listSessions(ctx);
+          return await handleListSessions(ctx);
         case "get":
         case "history":
-          return await getSession(ctx);
+          return await handleGetOrHistory(ctx);
         case "follow-up":
         case "steer":
-          return await addSessionEvent(ctx);
+          return await handleFollowUpOrSteer(ctx);
         case "cancel":
         case "archive":
         case "resume":
-          return await setSessionStatus(ctx);
+          return await handleStatusChange(ctx);
         case "set-options":
-          return await setSessionOptions(ctx);
+          return await handleSetOptions(ctx);
       }
     } catch (error) {
       logger.error("Failed to manage agent session", error);

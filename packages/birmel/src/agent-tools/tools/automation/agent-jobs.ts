@@ -38,7 +38,10 @@ export const manageAgentJobTool = createTool({
       .string()
       .optional()
       .describe("Date/natural time, duration like 15m, or cron expression"),
-    timezone: z.string().optional().describe("IANA timezone for cron schedules"),
+    timezone: z
+      .string()
+      .optional()
+      .describe("IANA timezone for cron schedules"),
     toolId: z.string().optional().describe("Tool to execute"),
     toolInput: z.record(z.string(), z.unknown()).optional(),
     message: z.string().optional().describe("Discord message to deliver"),

@@ -74,7 +74,7 @@ export const manageTaskTool = createTool({
               jobId: z.string().optional(),
               name: z.string().nullable(),
               description: z.string().nullable(),
-              scheduledAt: z.string(),
+              scheduledAt: z.string().nullable(),
               toolId: z.string().nullable(),
               isRecurring: z.boolean(),
               cronPattern: z.string().nullable(),

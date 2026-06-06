@@ -126,8 +126,7 @@ function loadFeatureConfig() {
         300_000,
       ),
       userAgent: Bun.env["BROWSER_USER_AGENT"],
-      pinchtabBaseUrl:
-        Bun.env["PINCHTAB_BASE_URL"] ?? "http://localhost:9867",
+      pinchtabBaseUrl: Bun.env["PINCHTAB_BASE_URL"] ?? "http://localhost:9867",
       pinchtabToken: Bun.env["PINCHTAB_TOKEN"],
       pinchtabProfile: Bun.env["PINCHTAB_PROFILE"] ?? "default",
     },

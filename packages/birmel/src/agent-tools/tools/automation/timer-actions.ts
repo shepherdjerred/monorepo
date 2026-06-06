@@ -18,10 +18,9 @@ type TimerResult = {
     cronPattern?: string;
     tasks?: {
       id: string;
-      jobId?: string;
       name: string | null;
       description: string | null;
-      scheduledAt: string;
+      scheduledAt: string | null;
       toolId: string | null;
       isRecurring: boolean;
       cronPattern: string | null;
@@ -36,29 +35,16 @@ const AgentJobListDataSchema = z.object({
   jobs: z.array(
     z.object({
       id: z.string(),
-      name: z.string().nullable(),
-      description: z.string().nullable(),
-      nextRunAt: z.string().nullable(),
-      toolId: z.string().nullable(),
+      name: z.string().nullable().optional(),
+      description: z.string().nullable().optional(),
+      nextRunAt: z.string().nullable().optional(),
+      toolId: z.string().nullable().optional(),
       scheduleKind: z.string(),
-      scheduleValue: z.string().nullable(),
+      scheduleValue: z.string().nullable().optional(),
       status: z.string(),
     }),
   ),
 });
-
-type TimerTask = {
-  id: string;
-  jobId?: string;
-  name: string | null;
-  description: string | null;
-  scheduledAt: string;
-  toolId: string | null;
-  isRecurring: boolean;
-  cronPattern: string | null;
-  executedAt: string | null;
-  enabled: boolean;
-};
 
 function isCronLike(value: string): boolean {
   return (
@@ -74,6 +60,15 @@ function scheduleKindForWhen(value: string): "at" | "every" | "cron" {
     return "every";
   }
   return "at";
+}
+
+async function countActiveAgentJobs(guildId: string): Promise<number> {
+  return await prisma.agentJob.count({
+    where: {
+      guildId,
+      status: { in: ["active", "retrying", "running", "paused"] },
+    },
+  });
 }
 
 function toTimerResult(result: {
@@ -108,23 +103,6 @@ function toTimerResult(result: {
   return { success: result.success, message: result.message };
 }
 
-function toTimerTask(
-  job: z.infer<typeof AgentJobListDataSchema>["jobs"][number],
-): TimerTask {
-  return {
-    id: job.id,
-    jobId: job.id,
-    name: job.name,
-    description: job.description,
-    scheduledAt: job.nextRunAt ?? "",
-    toolId: job.toolId,
-    isRecurring: job.scheduleKind === "cron" || job.scheduleKind === "every",
-    cronPattern: job.scheduleKind === "cron" ? job.scheduleValue : null,
-    executedAt: null,
-    enabled: job.status !== "cancelled",
-  };
-}
-
 export async function handleSchedule(options: {
   guildId: string;
   config: {
@@ -152,12 +130,7 @@ export async function handleSchedule(options: {
     };
   }
 
-  const existingTasks = await prisma.agentJob.count({
-    where: {
-      guildId: options.guildId,
-      status: { in: ["active", "retrying", "running", "paused"] },
-    },
-  });
+  const existingTasks = await countActiveAgentJobs(options.guildId);
   if (existingTasks >= options.config.scheduler.maxTasksPerGuild) {
     return {
       success: false,
@@ -195,11 +168,23 @@ export async function handleListTasks(
     guildId,
     includeArchived: includeExecuted,
   });
-  const dataResult = AgentJobListDataSchema.safeParse(result.data);
-  if (!dataResult.success) {
+  const parsedData = AgentJobListDataSchema.safeParse(result.data);
+  if (!parsedData.success) {
     return { success: result.success, message: result.message };
   }
-  const tasks = dataResult.data.jobs.map((job) => toTimerTask(job));
+  const tasks = parsedData.data.jobs.map((job) => ({
+    id: job.id,
+    jobId: job.id,
+    name: job.name ?? null,
+    description: job.description ?? null,
+    scheduledAt: job.nextRunAt ?? null,
+    toolId: job.toolId ?? null,
+    isRecurring: job.scheduleKind === "cron" || job.scheduleKind === "every",
+    cronPattern:
+      job.scheduleKind === "cron" ? (job.scheduleValue ?? null) : null,
+    executedAt: null,
+    enabled: job.status !== "cancelled",
+  }));
   return {
     success: result.success,
     message: result.message,
@@ -213,10 +198,13 @@ export async function handleCancelTask(
   userId: string | undefined,
   jobId: string | undefined,
 ): Promise<TimerResult> {
-  if (jobId != null && jobId.length > 0) {
-    return toTimerResult(await cancelAgentJob({ guildId, userId, jobId }));
+  if (userId == null || userId.length === 0) {
+    return { success: false, message: "userId is required for cancel" };
   }
-  if (taskId == null || userId == null || userId.length === 0) {
+  if (jobId != null && jobId.length > 0) {
+    return toTimerResult(await cancelAgentJob({ guildId, jobId, userId }));
+  }
+  if (taskId == null) {
     return {
       success: false,
       message:
@@ -234,8 +222,11 @@ export async function handleCancelTask(
   });
   if (job != null) {
     return toTimerResult(
-      await cancelAgentJob({ guildId, userId, jobId: job.id }),
+      await cancelAgentJob({ guildId, jobId: job.id, userId }),
     );
+  }
+  if (task.userId !== userId) {
+    return { success: false, message: "Task not found or not owned by user" };
   }
   await prisma.scheduledTask.update({
     where: { id: taskId },
@@ -273,19 +264,13 @@ export async function handleRemind(options: {
   const message =
     options.reminderMessage ??
     `<@${options.userId}> Reminder: ${options.reminderAction}`;
-  const existingTasks = await prisma.agentJob.count({
-    where: {
-      guildId: options.guildId,
-      status: { in: ["active", "retrying", "running", "paused"] },
-    },
-  });
+  const existingTasks = await countActiveAgentJobs(options.guildId);
   if (existingTasks >= options.config.scheduler.maxTasksPerGuild) {
     return {
       success: false,
       message: `Maximum tasks per guild (${String(options.config.scheduler.maxTasksPerGuild)}) reached`,
     };
   }
-
   const result = await createAgentJob({
     guildId: options.guildId,
     userId: options.userId,

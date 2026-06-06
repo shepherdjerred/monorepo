@@ -1,23 +1,14 @@
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import type {
+  BrowserContext,
+  BrowserResult,
+} from "@shepherdjerred/birmel/agent-tools/tools/automation/browser.ts";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import type { BrowserContext, BrowserResult } from "./browser.ts";
 
 let currentPinchtabInstanceId: string | null = null;
 let currentPinchtabTabId: string | null = null;
-
-function getDefaultScreenshotsDir(): string {
-  return path.join(
-    import.meta.dir,
-    "..",
-    "..",
-    "..",
-    "..",
-    "data",
-    "screenshots",
-  );
-}
 
 async function pinchtabRequest(
   pathSuffix: string,
@@ -52,11 +43,11 @@ async function pinchtabRequest(
 }
 
 function getStringField(value: unknown, field: string): string | null {
-  const record = z.record(z.string(), z.unknown()).safeParse(value);
-  if (!record.success) {
+  const parsed = z.record(z.string(), z.unknown()).safeParse(value);
+  if (!parsed.success) {
     return null;
   }
-  const fieldValue = record.data[field];
+  const fieldValue = parsed.data[field];
   return typeof fieldValue === "string" ? fieldValue : null;
 }
 
@@ -131,41 +122,37 @@ async function handleOpen(ctx: BrowserContext): Promise<BrowserResult> {
       body: JSON.stringify({ url: ctx.url ?? "about:blank" }),
     },
   );
-  const newTabId = getStringField(raw, "tabId") ?? getStringField(raw, "id");
-  if (newTabId == null || newTabId.length === 0) {
+  const tabId = getStringField(raw, "tabId") ?? getStringField(raw, "id");
+  if (tabId == null || tabId.length === 0) {
     throw new Error("PinchTab open response did not include a tab ID");
   }
-  currentPinchtabTabId = newTabId;
+  currentPinchtabTabId = tabId;
   return {
     success: true,
     message: "PinchTab tab opened",
-    data: { provider: "pinchtab", instanceId, tabId: newTabId, raw },
+    data: { provider: "pinchtab", instanceId, tabId, raw },
   };
 }
 
-async function resolveTabId(ctx: BrowserContext): Promise<string | null> {
-  const tabId = ctx.tabId ?? currentPinchtabTabId;
-  if (tabId != null) {
-    return tabId;
-  }
-  const opened = await handleOpen(ctx);
-  return opened.data?.tabId ?? null;
-}
-
 async function handleNavigate(ctx: BrowserContext): Promise<BrowserResult> {
-  const targetTabId = await resolveTabId(ctx);
-  if (targetTabId == null || ctx.url == null || ctx.url.length === 0) {
+  const existingTabId = ctx.tabId ?? currentPinchtabTabId;
+  const openedTab = existingTabId == null ? await handleOpen(ctx) : null;
+  const tabId = existingTabId ?? getStringField(openedTab?.data, "tabId");
+  if (tabId == null || ctx.url == null || ctx.url.length === 0) {
     return { success: false, message: "url is required for navigate" };
   }
   const raw = await pinchtabRequest(
-    `/tabs/${encodeURIComponent(targetTabId)}/navigate`,
-    { method: "POST", body: JSON.stringify({ url: ctx.url }) },
+    `/tabs/${encodeURIComponent(tabId)}/navigate`,
+    {
+      method: "POST",
+      body: JSON.stringify({ url: ctx.url }),
+    },
   );
-  currentPinchtabTabId = targetTabId;
+  currentPinchtabTabId = tabId;
   return {
     success: true,
     message: "PinchTab tab navigated",
-    data: { provider: "pinchtab", tabId: targetTabId, url: ctx.url, raw },
+    data: { provider: "pinchtab", tabId, url: ctx.url, raw },
   };
 }
 
@@ -186,8 +173,8 @@ async function handleText(ctx: BrowserContext): Promise<BrowserResult> {
     data: {
       provider: "pinchtab",
       tabId,
-      raw,
       ...(text == null ? {} : { text }),
+      raw,
     },
   };
 }
@@ -207,7 +194,7 @@ async function handleCookies(ctx: BrowserContext): Promise<BrowserResult> {
   };
 }
 
-async function handleAction(ctx: BrowserContext): Promise<BrowserResult> {
+async function handlePageAction(ctx: BrowserContext): Promise<BrowserResult> {
   const tabId = ctx.tabId ?? currentPinchtabTabId;
   if (tabId == null) {
     return { success: false, message: "tabId is required" };
@@ -258,7 +245,8 @@ async function handleScreenshot(ctx: BrowserContext): Promise<BrowserResult> {
   const timestamp = Date.now();
   const filename = ctx.filename ?? `pinchtab-${String(timestamp)}.png`;
   const screenshotsDir =
-    Bun.env["BIRMEL_SCREENSHOTS_DIR"] ?? getDefaultScreenshotsDir();
+    Bun.env["BIRMEL_SCREENSHOTS_DIR"] ??
+    path.join(import.meta.dir, "..", "..", "..", "..", "data", "screenshots");
   const filepath = path.join(screenshotsDir, filename);
   await mkdir(path.dirname(filepath), { recursive: true });
   await writeFile(filepath, Buffer.from(await response.arrayBuffer()));
@@ -306,15 +294,14 @@ export async function handlePinchtab(
     case "click":
     case "type":
     case "press":
-      return await handleAction(ctx);
+      return await handlePageAction(ctx);
     case "screenshot":
       return await handleScreenshot(ctx);
     case "close":
       return await handleClose(ctx);
-    default:
-      return {
-        success: false,
-        message: `Unsupported PinchTab action: ${ctx.action}`,
-      };
   }
+  return {
+    success: false,
+    message: `Unsupported PinchTab action: ${ctx.action}`,
+  };
 }

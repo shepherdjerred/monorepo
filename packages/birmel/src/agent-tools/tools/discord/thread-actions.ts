@@ -30,6 +30,11 @@ type ThreadResult = {
   data?: unknown;
 };
 
+const ThreadMessageSummarySchema = z.object({
+  authorName: z.string(),
+  content: z.string(),
+});
+
 type CreateFromMessageOptions = {
   client: Client;
   channelId: string | undefined;
@@ -300,18 +305,11 @@ export async function handleSummarizeThread(
     return result;
   }
   const messages = result.data.messages.flatMap((message) => {
-    if (message == null || typeof message !== "object") {
+    const parsedMessage = ThreadMessageSummarySchema.safeParse(message);
+    if (!parsedMessage.success) {
       return [];
     }
-    const record = z.record(z.string(), z.unknown()).safeParse(message);
-    if (!record.success) {
-      return [];
-    }
-    const authorName = record.data["authorName"];
-    const content = record.data["content"];
-    if (typeof authorName !== "string" || typeof content !== "string") {
-      return [];
-    }
+    const { authorName, content } = parsedMessage.data;
     return [{ authorName, content }];
   });
   const participants = new Set(messages.map((message) => message.authorName));

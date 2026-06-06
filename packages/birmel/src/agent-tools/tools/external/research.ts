@@ -26,7 +26,7 @@ function extractLinks(
   baseUrl: string,
 ): { text: string; url: string }[] {
   const links: { text: string; url: string }[] = [];
-  const linkRegex = /<a[^>]+href="(?<href>[^"]+)"[^>]*>(?<text>.*?)<\/a>/gis;
+  const linkRegex = /<a\s[^>]*href="(?<href>[^"]+)"[^>]*>(?<text>.*?)<\/a>/gis;
   let match = linkRegex.exec(html);
   while (match != null && links.length < 100) {
     const href = match.groups?.["href"];

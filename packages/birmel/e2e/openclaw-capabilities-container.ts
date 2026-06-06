@@ -20,8 +20,8 @@ function getExecutableTool(tool: unknown): ToolLike {
   }
   return {
     execute: async (input) => {
-      const result: unknown = Reflect.apply(execute, undefined, [input]);
-      return await Promise.resolve(result);
+      const output: unknown = await Reflect.apply(execute, undefined, [input]);
+      return output;
     },
   };
 }

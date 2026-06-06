@@ -253,7 +253,7 @@ function memoryScopeWhere(options: {
 export async function handleAddStructuredMemory(options: {
   guildId: string;
   scope: MemoryScope;
-  content?: string | undefined;
+  content: string | undefined;
   key?: string | undefined;
   tags?: string[] | undefined;
   channelId?: string | undefined;

@@ -15,18 +15,6 @@ let browserInstance: Browser | null = null;
 let currentPage: Page | null = null;
 let sessionTimeout: NodeJS.Timeout | null = null;
 
-function getDefaultScreenshotsDir(): string {
-  return path.join(
-    import.meta.dir,
-    "..",
-    "..",
-    "..",
-    "..",
-    "data",
-    "screenshots",
-  );
-}
-
 async function getBrowser(): Promise<Browser> {
   const config = getConfig();
 
@@ -197,7 +185,8 @@ async function handleScreenshot(ctx: BrowserContext): Promise<BrowserResult> {
   const timestamp = Date.now();
   const filename = ctx.filename ?? `screenshot-${String(timestamp)}.png`;
   const screenshotsDir =
-    Bun.env["BIRMEL_SCREENSHOTS_DIR"] ?? getDefaultScreenshotsDir();
+    Bun.env["BIRMEL_SCREENSHOTS_DIR"] ??
+    path.join(import.meta.dir, "..", "..", "..", "..", "data", "screenshots");
   const filepath = path.join(screenshotsDir, filename);
   await mkdir(path.dirname(filepath), { recursive: true });
   const screenshot = await page.screenshot({

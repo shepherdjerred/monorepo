@@ -11,6 +11,7 @@ import { describe, test, expect } from "bun:test";
 import { z } from "zod";
 import { executeShellCommandTool } from "./shell.ts";
 import { manageTaskTool } from "./timers.ts";
+import { handleRemind } from "./timer-actions.ts";
 import { browserAutomationTool } from "./browser.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 
@@ -182,6 +183,21 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
     expect(result.data?.["scheduledAt"]).toBeTruthy();
   });
 
+  test("rejects reminders when the guild task limit is reached", async () => {
+    const result = await handleRemind({
+      guildId: testGuildId,
+      config: { scheduler: { maxTasksPerGuild: 0 } },
+      userId: testUserId,
+      when: "in 5 minutes",
+      channelId: "test-channel-e2e",
+      reminderAction: "Limit test reminder",
+      reminderMessage: undefined,
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.message).toContain("Maximum tasks per guild");
+  });
+
   test("lists scheduled tasks", async () => {
     const result = await executeTool(manageTaskTool, {
       action: "list",
@@ -223,10 +239,41 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
 
     expect(cancelResult.success).toBe(true);
 
-    const task = await prisma.agentJob.findUnique({
+    const job = await prisma.agentJob.findUnique({
       where: { id: String(jobId) },
     });
-    expect(task?.status).toBe("cancelled");
+    expect(job?.status).toBe("cancelled");
+  });
+
+  test("rejects cancelling another user's job", async () => {
+    const createResult = await executeTool(manageTaskTool, {
+      action: "schedule",
+      when: "in 1 hour",
+      toolId: "execute-shell-command",
+      toolInput: { command: "echo", args: ["not yours"] },
+      guildId: testGuildId,
+      userId: testUserId,
+      name: "Owned task",
+      ...testContext,
+    });
+    const jobId = createResult.data?.["jobId"];
+    expect(jobId).toBeTruthy();
+
+    const cancelResult = await executeTool(manageTaskTool, {
+      action: "cancel",
+      jobId,
+      guildId: testGuildId,
+      userId: "different-user-e2e",
+      ...testContext,
+    });
+
+    expect(cancelResult.success).toBe(false);
+    expect(cancelResult.message).toContain("not found or not owned");
+
+    const job = await prisma.agentJob.findUnique({
+      where: { id: String(jobId) },
+    });
+    expect(job?.status).toBe("active");
   });
 });
 

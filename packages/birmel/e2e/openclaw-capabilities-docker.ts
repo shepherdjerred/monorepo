@@ -75,7 +75,7 @@ async function runPhase(phase: "setup" | "verify"): Promise<void> {
     "--env",
     "OPENAI_API_KEY=e2e-openai",
     "--env",
-    "ANTHROPIC_API_KEY=e2e-anthropic",
+    "ANTHROPIC_API_KEY=dummy",
     "--env",
     "DATABASE_URL=file:/workspace/packages/birmel/data/openclaw-e2e.db",
     "--env",

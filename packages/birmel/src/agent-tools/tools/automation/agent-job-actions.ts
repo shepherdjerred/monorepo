@@ -4,6 +4,10 @@ import {
   resolveAgentJobSchedule,
   type AgentJobScheduleKind,
 } from "@shepherdjerred/birmel/scheduler/agent-job-schedule.ts";
+import { runAgentJobById } from "@shepherdjerred/birmel/scheduler/jobs/agent-jobs.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+
+const logger = loggers.automation.child("agent-job-actions");
 
 export type AgentJobToolResult = {
   success: boolean;
@@ -31,6 +35,20 @@ type CreateAgentJobOptions = {
   textVerbosity?: string | undefined;
 };
 
+type AgentJobPayloadKind = "message" | "tool";
+
+type ValidCreateAgentJob = {
+  userId: string;
+  scheduleKind: AgentJobScheduleKind;
+  scheduleValue: string;
+  payloadKind: AgentJobPayloadKind;
+};
+
+type CreateAgentJobValidation = {
+  failure: AgentJobToolResult | null;
+  valid: ValidCreateAgentJob | null;
+};
+
 function inferScheduleKind(value: string): AgentJobScheduleKind {
   const trimmed = value.trim();
   if (AgentJobScheduleKindSchema.safeParse(trimmed).success) {
@@ -49,72 +67,110 @@ function serializeInput(input: Record<string, unknown> | undefined): string {
   return JSON.stringify(input ?? {});
 }
 
-function validateCreateAgentJobOptions(
+function validateMessagePayload(
   options: CreateAgentJobOptions,
-  payloadKind: "tool" | "message",
 ): AgentJobToolResult | null {
-  if (options.userId == null || options.userId.length === 0) {
-    return { success: false, message: "userId is required" };
+  if (options.message == null || options.message.length === 0) {
+    return {
+      success: false,
+      message: "message is required when toolId is not provided",
+    };
   }
-  if (options.scheduleValue == null || options.scheduleValue.length === 0) {
-    return { success: false, message: "scheduleValue is required" };
-  }
-  if (payloadKind === "message") {
-    if (options.message == null || options.message.length === 0) {
-      return {
-        success: false,
-        message: "message is required when toolId is not provided",
-      };
-    }
-    if (
-      (options.channelId == null || options.channelId.length === 0) &&
-      (options.threadId == null || options.threadId.length === 0)
-    ) {
-      return {
-        success: false,
-        message: "channelId or threadId is required for message jobs",
-      };
-    }
+  if (
+    (options.channelId == null || options.channelId.length === 0) &&
+    (options.threadId == null || options.threadId.length === 0)
+  ) {
+    return {
+      success: false,
+      message: "channelId or threadId is required for message jobs",
+    };
   }
   return null;
+}
+
+function payloadKindFor(options: CreateAgentJobOptions): AgentJobPayloadKind {
+  return options.toolId != null && options.toolId.length > 0
+    ? "tool"
+    : "message";
+}
+
+function validateCreateAgentJob(
+  options: CreateAgentJobOptions,
+): CreateAgentJobValidation {
+  if (options.userId == null || options.userId.length === 0) {
+    return {
+      failure: { success: false, message: "userId is required" },
+      valid: null,
+    };
+  }
+  if (options.scheduleValue == null || options.scheduleValue.length === 0) {
+    return {
+      failure: { success: false, message: "scheduleValue is required" },
+      valid: null,
+    };
+  }
+  const parsedKind =
+    options.scheduleKind ?? inferScheduleKind(options.scheduleValue);
+  const kindResult = AgentJobScheduleKindSchema.safeParse(parsedKind);
+  if (!kindResult.success) {
+    return {
+      failure: {
+        success: false,
+        message: `Invalid schedule kind: ${parsedKind}`,
+      },
+      valid: null,
+    };
+  }
+  const payloadKind = payloadKindFor(options);
+  if (payloadKind === "message") {
+    const validation = validateMessagePayload(options);
+    if (validation != null) {
+      return { failure: validation, valid: null };
+    }
+  }
+  return {
+    failure: null,
+    valid: {
+      userId: options.userId,
+      scheduleKind: kindResult.data,
+      scheduleValue: options.scheduleValue,
+      payloadKind,
+    },
+  };
+}
+
+function runRequestedAgentJobInBackground(
+  guildId: string,
+  jobId: string,
+): void {
+  queueMicrotask(() => {
+    void (async () => {
+      try {
+        await runAgentJobById(jobId);
+      } catch (error) {
+        logger.error("Failed to run requested agent job", error, {
+          guildId,
+          jobId,
+        });
+      }
+    })();
+  });
 }
 
 export async function createAgentJob(
   options: CreateAgentJobOptions,
 ): Promise<AgentJobToolResult> {
-  const payloadKind =
-    options.toolId != null && options.toolId.length > 0 ? "tool" : "message";
-  const validation = validateCreateAgentJobOptions(options, payloadKind);
-  if (validation != null) {
-    return validation;
+  const validation = validateCreateAgentJob(options);
+  if (validation.failure != null) {
+    return validation.failure;
   }
-
-  const scheduleValue = options.scheduleValue ?? "";
-  const userId = options.userId ?? "";
-  return await createValidatedAgentJob(
-    options,
-    payloadKind,
-    scheduleValue,
-    userId,
-  );
-}
-
-async function createValidatedAgentJob(
-  options: CreateAgentJobOptions,
-  payloadKind: "tool" | "message",
-  scheduleValue: string,
-  userId: string,
-): Promise<AgentJobToolResult> {
-  const parsedKind: string =
-    options.scheduleKind ?? inferScheduleKind(scheduleValue);
-  const kindResult = AgentJobScheduleKindSchema.safeParse(parsedKind);
-  if (!kindResult.success) {
-    return { success: false, message: `Invalid schedule kind: ${parsedKind}` };
+  if (validation.valid == null) {
+    return { success: false, message: "create validation failed" };
   }
 
   const resolved = resolveAgentJobSchedule({
-    scheduleKind: kindResult.data,
-    scheduleValue,
+    scheduleKind: validation.valid.scheduleKind,
+    scheduleValue: validation.valid.scheduleValue,
     timezone: options.timezone,
   });
   const job = await prisma.agentJob.create({
@@ -122,18 +178,20 @@ async function createValidatedAgentJob(
       guildId: options.guildId,
       channelId: options.channelId ?? null,
       threadId: options.threadId ?? null,
-      userId,
+      userId: validation.valid.userId,
       name: options.name ?? null,
       description: options.description ?? null,
       scheduleKind: resolved.scheduleKind,
       scheduleValue: resolved.scheduleValue,
       timezone: resolved.timezone,
       nextRunAt: resolved.nextRunAt,
-      payloadKind,
+      payloadKind: validation.valid.payloadKind,
       message: options.message ?? null,
       toolId: options.toolId ?? null,
       toolInput:
-        payloadKind === "tool" ? serializeInput(options.toolInput) : null,
+        validation.valid.payloadKind === "tool"
+          ? serializeInput(options.toolInput)
+          : null,
       maxAttempts: options.maxAttempts ?? 3,
       timeoutMs: options.timeoutMs ?? 300_000,
       model: options.model ?? null,
@@ -276,28 +334,30 @@ export async function editAgentJob(options: {
 
 export async function cancelAgentJob(options: {
   guildId: string;
-  userId?: string | undefined;
   jobId?: string | undefined;
+  userId?: string | undefined;
 }): Promise<AgentJobToolResult> {
   if (options.jobId == null || options.jobId.length === 0) {
     return { success: false, message: "jobId is required" };
   }
+  const jobId = options.jobId;
   if (options.userId == null || options.userId.length === 0) {
-    return { success: false, message: "userId is required for cancel" };
+    return { success: false, message: "userId is required" };
   }
-  const job = await prisma.agentJob.findFirst({
-    where: { id: options.jobId, guildId: options.guildId },
-  });
-  if (job == null) {
-    return { success: false, message: "Agent job not found" };
-  }
-  if (job.userId !== options.userId) {
-    return { success: false, message: "Only the job creator can cancel it" };
-  }
-  await prisma.agentJob.update({
-    where: { id: job.id },
+  const updated = await prisma.agentJob.updateMany({
+    where: {
+      id: jobId,
+      guildId: options.guildId,
+      userId: options.userId,
+    },
     data: { status: "cancelled", nextRunAt: null },
   });
+  if (updated.count === 0) {
+    return {
+      success: false,
+      message: "Agent job not found or not owned by user",
+    };
+  }
   return { success: true, message: "Agent job cancelled" };
 }
 
@@ -308,14 +368,16 @@ export async function runAgentJobNow(options: {
   if (options.jobId == null || options.jobId.length === 0) {
     return { success: false, message: "jobId is required" };
   }
+  const jobId = options.jobId;
   const updated = await prisma.agentJob.updateMany({
-    where: { id: options.jobId, guildId: options.guildId },
+    where: { id: jobId, guildId: options.guildId },
     data: { status: "active", nextRunAt: new Date() },
   });
   if (updated.count === 0) {
     return { success: false, message: "Agent job not found" };
   }
-  return { success: true, message: "Agent job queued to run now" };
+  runRequestedAgentJobInBackground(options.guildId, jobId);
+  return { success: true, message: "Agent job run requested" };
 }
 
 export async function getAgentJobRunHistory(options: {

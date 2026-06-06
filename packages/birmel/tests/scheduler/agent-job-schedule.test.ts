@@ -12,9 +12,7 @@ describe("agent job schedules", () => {
       scheduleValue: "15m",
       from,
     });
-    expect(schedule.nextRunAt.toISOString()).toBe(
-      "2026-06-03T12:15:00.000Z",
-    );
+    expect(schedule.nextRunAt.toISOString()).toBe("2026-06-03T12:15:00.000Z");
   });
 
   test("resolves one-shot at schedules", () => {
@@ -23,9 +21,7 @@ describe("agent job schedules", () => {
       scheduleValue: "2026-06-03T13:00:00.000Z",
       from: new Date("2026-06-03T12:00:00.000Z"),
     });
-    expect(schedule.nextRunAt.toISOString()).toBe(
-      "2026-06-03T13:00:00.000Z",
-    );
+    expect(schedule.nextRunAt.toISOString()).toBe("2026-06-03T13:00:00.000Z");
     expect(
       getNextAgentJobRun({
         scheduleKind: "at",
@@ -42,8 +38,6 @@ describe("agent job schedules", () => {
       timezone: "America/Los_Angeles",
       from: new Date("2026-06-03T12:00:00.000Z"),
     });
-    expect(schedule.nextRunAt.toISOString()).toBe(
-      "2026-06-03T16:00:00.000Z",
-    );
+    expect(schedule.nextRunAt.toISOString()).toBe("2026-06-03T16:00:00.000Z");
   });
 });

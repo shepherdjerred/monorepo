@@ -2,7 +2,6 @@ import type { AgentJob, ScheduledTask } from "@prisma/client";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { handleSend } from "@shepherdjerred/birmel/agent-tools/tools/discord/message-actions.ts";
-import { allTools } from "@shepherdjerred/birmel/agent-tools/tools/index.ts";
 import {
   parseJsonRecord,
   getErrorMessage,
@@ -16,7 +15,7 @@ import {
 
 const logger = loggers.scheduler.child("agent-jobs");
 
-const toolResult = {
+const toolResultStatus = {
   isSuccess(value: unknown): boolean {
     if (value == null || typeof value !== "object") {
       return true;
@@ -51,20 +50,19 @@ async function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
 ): Promise<T> {
-  const timeoutRef: {
-    current: ReturnType<typeof setTimeout> | undefined;
-  } = { current: undefined };
-  const timeoutPromise = new Promise<T>((_, reject) => {
-    timeoutRef.current = setTimeout(() => {
-      reject(new Error(`Agent job timed out after ${String(timeoutMs)}ms`));
-    }, timeoutMs);
-  });
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
   try {
-    return await Promise.race([promise, timeoutPromise]);
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error(`Agent job timed out after ${String(timeoutMs)}ms`));
+        }, timeoutMs);
+      }),
+    ]);
   } finally {
-    const timeout = timeoutRef.current;
-    if (timeout !== undefined) {
-      clearTimeout(timeout);
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
     }
   }
 }
@@ -74,6 +72,8 @@ async function executeToolPayload(job: AgentJob): Promise<unknown> {
     throw new Error("toolId is required for tool jobs");
   }
 
+  const { allTools } =
+    await import("@shepherdjerred/birmel/agent-tools/tools/index.ts");
   const tool = allTools[job.toolId];
   if (tool == null || typeof tool !== "object" || !("execute" in tool)) {
     throw new Error(`Tool not found or not executable: ${job.toolId}`);
@@ -253,7 +253,7 @@ async function processAgentJob(job: AgentJob): Promise<void> {
       executeAgentJob(runningJob),
       runningJob.timeoutMs,
     );
-    if (!toolResult.isSuccess(output)) {
+    if (!toolResultStatus.isSuccess(output)) {
       throw new Error(`Tool reported failure: ${serializeOutput(output)}`);
     }
     await markJobSuccess(runningJob, run.id, output);
@@ -378,4 +378,19 @@ export async function runAgentJobsJob(): Promise<void> {
   for (const job of dueJobs) {
     await processAgentJob(job);
   }
+}
+
+export async function runAgentJobById(jobId: string): Promise<void> {
+  const job = await prisma.agentJob.findFirst({
+    where: {
+      id: jobId,
+      status: { in: ["active", "retrying"] },
+    },
+  });
+
+  if (job == null) {
+    return;
+  }
+
+  await processAgentJob(job);
 }
