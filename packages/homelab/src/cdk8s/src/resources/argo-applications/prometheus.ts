@@ -389,6 +389,16 @@ export async function createPrometheusApp(chart: Chart) {
           jsonPointers: ["/data/admin-password"],
         },
         {
+          // The grafana subchart regenerates this image-renderer token on
+          // every helm render (randAlphaNum), so it can never converge.
+          // The live token is the source of truth; never reconcile it.
+          group: "",
+          kind: "Secret",
+          name: "prometheus-grafana-image-renderer",
+          namespace: "prometheus",
+          jsonPointers: ["/data/token"],
+        },
+        {
           group: "apps",
           kind: "StatefulSet",
           name: "prometheus-grafana",
