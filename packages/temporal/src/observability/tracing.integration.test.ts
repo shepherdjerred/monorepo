@@ -59,6 +59,7 @@ describe("OTLP tracing integration", () => {
     trace.disable();
     context.disable();
     propagation.disable();
+    metrics.disable();
     logsAPI.disable();
     // NodeSDK.start() also registers a global MeterProvider; reset it too or
     // the next file's initializeTracing() logs "Attempted duplicate
