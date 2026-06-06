@@ -175,18 +175,15 @@ async function handleAddQuery(
   if (track == null) {
     return { success: false, message: "No tracks found" };
   }
-  const result = addTrackToPlaylist(
-    guildId,
-    playlistName,
-    normalizeTrack(track),
-  );
+  const trackInfo = normalizeTrack(track);
+  const result = addTrackToPlaylist(guildId, playlistName, trackInfo);
   if (!result.ok) {
     return { success: false, message: result.message };
   }
   await sendPlaylist(result.value.name, result.value.tracks);
   return {
     success: true,
-    message: `Added to playlist: ${normalizeTrack(track).title}`,
+    message: `Added to playlist: ${trackInfo.title}`,
     data: playlistData(result.value.name, result.value.tracks),
   };
 }

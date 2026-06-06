@@ -17,6 +17,7 @@ import {
   sumDurations,
   type MusicTrackInfo,
 } from "@shepherdjerred/birmel/music/metadata.ts";
+import { withoutQueueNotifications } from "@shepherdjerred/birmel/music/notification-suppression.ts";
 import { sendMusicEmbed } from "@shepherdjerred/birmel/music/responses.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 
@@ -103,13 +104,6 @@ async function handleAddTrack(
   }
   queue.addTrack(track);
   const info = normalizeTrack(track);
-  await sendMusicEmbed(
-    buildActionEmbed({
-      title: "Added to Queue",
-      message: `Added: ${info.title}`,
-      track: info,
-    }),
-  );
   return {
     success: true,
     message: `Added to queue: ${info.title}`,
@@ -154,10 +148,12 @@ async function handleRemoveTrack(
 }
 
 function rebuildQueue(queue: GuildQueue, tracks: Track[]): void {
-  queue.tracks.clear();
-  for (const track of tracks) {
-    queue.addTrack(track);
-  }
+  withoutQueueNotifications(queue, () => {
+    queue.tracks.clear();
+    for (const track of tracks) {
+      queue.addTrack(track);
+    }
+  });
 }
 
 async function handleMoveTrack(

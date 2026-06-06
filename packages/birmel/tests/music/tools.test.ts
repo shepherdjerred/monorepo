@@ -236,7 +236,7 @@ describe("music AI tools", () => {
     expect(playCalls).toEqual([
       { voiceChannelId: "voice-1", textChannelId: "text-1" },
     ]);
-    expect(sentEmbeds).toHaveLength(1);
+    expect(sentEmbeds).toHaveLength(0);
   });
 
   test("play returns an explicit error when no voice channel is available", async () => {

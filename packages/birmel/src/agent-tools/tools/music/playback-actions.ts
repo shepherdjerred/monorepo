@@ -131,7 +131,6 @@ export async function handlePlay(
   const track = result.track;
   const info = normalizeTrack(track);
   logger.info("Music playback started", { guildId, track: info.title });
-  await sendMusicEmbed(buildNowPlayingEmbed(info), resolvedChannelId);
   return {
     success: true,
     message: `Playing: ${info.title}`,

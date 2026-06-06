@@ -4,6 +4,7 @@ import { recordTrackPlay } from "@shepherdjerred/birmel/database/repositories/mu
 import { buildActionEmbed, buildNowPlayingEmbed } from "./embeds.ts";
 import { getChannelMetadata } from "./channel-metadata.ts";
 import { normalizeTrack, trackDurationSeconds } from "./metadata.ts";
+import { isQueueNotificationSuppressed } from "./notification-suppression.ts";
 
 export function setupPlayerEvents(player: Player): void {
   player.events.on("playerStart", (queue, track) => {
@@ -38,6 +39,9 @@ export function setupPlayerEvents(player: Player): void {
   });
 
   player.events.on("audioTrackAdd", (queue, track) => {
+    if (isQueueNotificationSuppressed(queue)) {
+      return;
+    }
     const channel = getChannelMetadata(queue.metadata);
     const trackInfo = normalizeTrack(track);
     if (channel?.send != null) {
