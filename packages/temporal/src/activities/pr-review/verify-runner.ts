@@ -115,13 +115,32 @@ export function makeVerificationResult(input: {
  * widening happens when you write `let proc: ReturnType<typeof Bun.spawn>`
  * because that drops the option narrowing.
  */
+// Defense-in-depth: the verifier runs repository scripts (`bun test`,
+// `bun run typecheck`, eslint flat configs) which execute as code. Never
+// expose operational secrets to that subprocess — even though PR processing
+// is already gated to the trusted owner (see github-webhook.ts). Strip any
+// env var whose name looks credential-bearing, rather than allowlisting, so a
+// newly-added secret is excluded by default.
+const SECRET_ENV_NAME =
+  /TOKEN|SECRET|KEY|PASSWORD|PASS|CREDENTIAL|PRIVATE|DSN|OAUTH|TALOSCONFIG|KUBECONFIG/i;
+
+function verifierEnv(): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(Bun.env)) {
+    if (value === undefined || SECRET_ENV_NAME.test(key)) continue;
+    env[key] = value;
+  }
+  env["CI"] = "1";
+  return env;
+}
+
 function spawnPiped(cmd: string[], cwd: string) {
   return Bun.spawn(cmd, {
     cwd,
     stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
-    env: { ...Bun.env, CI: "1" },
+    env: verifierEnv(),
   });
 }
 

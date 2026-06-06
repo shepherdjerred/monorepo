@@ -25,6 +25,18 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
 const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
 
+// Init-container script: substitute the client auth token (from a Secret) into
+// the proxy config so the token never lives in the ConfigMap. Fails closed if
+// the token env is missing. The placeholder is a plain identifier (no sed
+// escaping needed); generate the token as hex (`openssl rand -hex 32`) so the
+// sed replacement is safe.
+const RENDER_CONFIG_SCRIPT = [
+  "set -eu",
+  'if [ -z "${MCP_PROXY_AUTH_TOKEN:-}" ]; then echo "MCP_PROXY_AUTH_TOKEN is required for the mcp-gateway client auth token" >&2; exit 1; fi',
+  'sed "s#MCP_PROXY_AUTH_TOKEN_PLACEHOLDER#${MCP_PROXY_AUTH_TOKEN}#g" /config/config.json > /rendered/config.json',
+  'echo "rendered mcp-proxy config with client auth token"',
+].join("\n");
+
 export async function createMcpGatewayDeployment(chart: Chart) {
   const UID = 65_534;
   const GID = 65_534;
@@ -81,10 +93,56 @@ export async function createMcpGatewayDeployment(chart: Chart) {
     },
   });
 
+  // Source config (ConfigMap, holds only the placeholder) and the rendered
+  // output (emptyDir, holds the real token after the init container runs).
+  const configVolume = Volume.fromConfigMap(
+    chart,
+    "mcp-proxy-config-volume",
+    mcpProxyConfig,
+  );
+  const renderedConfigVolume = Volume.fromEmptyDir(
+    chart,
+    "mcp-proxy-rendered-config-volume",
+    "rendered-config",
+  );
+
+  // Render config.json with the client auth token before the proxy starts, so
+  // the secret never lives in the ConfigMap. The proxy then requires
+  // `Authorization: <token>` from clients (mcpProxy.options.authTokens).
+  deployment.addInitContainer(
+    withCommonProps({
+      name: "render-config",
+      image: `library/busybox:${versions["library/busybox"]}`,
+      command: ["/bin/sh", "-c"],
+      args: [RENDER_CONFIG_SCRIPT],
+      securityContext: {
+        user: UID,
+        group: GID,
+        ensureNonRoot: true,
+        allowPrivilegeEscalation: false,
+        readOnlyRootFilesystem: false,
+      },
+      envVariables: {
+        MCP_PROXY_AUTH_TOKEN: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "mcp-proxy-auth-token-secret",
+            mcpGatewayCredentials.name,
+          ),
+          key: "MCP_PROXY_AUTH_TOKEN",
+        }),
+      },
+      volumeMounts: [
+        { path: "/config", volume: configVolume, readOnly: true },
+        { path: "/rendered", volume: renderedConfigVolume },
+      ],
+    }),
+  );
+
   deployment.addContainer(
     withCommonProps({
       image: `ghcr.io/tbxark/mcp-proxy:${versions["tbxark/mcp-proxy"]}`,
-      args: ["--config", "/config/config.json"],
+      args: ["--config", "/rendered/config.json"],
       ports: [{ number: 9090, name: "http" }],
       securityContext: {
         user: UID,
@@ -168,12 +226,8 @@ export async function createMcpGatewayDeployment(chart: Chart) {
       },
       volumeMounts: [
         {
-          path: "/config",
-          volume: Volume.fromConfigMap(
-            chart,
-            "mcp-proxy-config-volume",
-            mcpProxyConfig,
-          ),
+          path: "/rendered",
+          volume: renderedConfigVolume,
         },
       ],
     }),

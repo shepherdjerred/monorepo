@@ -47,6 +47,24 @@ const RELEVANT_ACTIONS = new Set([
   "ready_for_review",
 ]);
 
+// Security: PR automation (the review/summary pipelines — whose verify stage
+// checks out and executes PR-head code) must only run for the trusted
+// repository owner. The repo is public, so without this gate any external
+// fork PR's title/diff/code would flow into the agents and the verifier.
+const ALLOWED_PR_AUTHOR = "shepherdjerred";
+
+// Returns a skip reason (for metrics/logs) when a PR's author is not the
+// trusted owner — bots and any non-owner account are skipped — or null to
+// proceed.
+function disallowedAuthorReason(user: {
+  readonly login: string;
+  readonly type: string;
+}): string | null {
+  if (user.type === "Bot") return "bot-author";
+  if (user.login !== ALLOWED_PR_AUTHOR) return "untrusted-author";
+  return null;
+}
+
 const PrUserSchema = z.object({
   login: z.string(),
   type: z.string(),
@@ -393,13 +411,15 @@ export function buildWebhookApp(
       return c.text("skipped: draft\n");
     }
 
-    if (parsed.pull_request.user.type === "Bot") {
-      prWebhookSkippedTotal.inc({ reason: "bot-author" });
-      jsonLog("info", "Skipping bot-authored PR", {
+    const authorSkip = disallowedAuthorReason(parsed.pull_request.user);
+    if (authorSkip !== null) {
+      prWebhookSkippedTotal.inc({ reason: authorSkip });
+      jsonLog("info", "Skipping PR by author policy", {
         prNumber: parsed.pull_request.number,
         author: parsed.pull_request.user.login,
+        reason: authorSkip,
       });
-      return c.text("skipped: bot\n");
+      return c.text(`skipped: ${authorSkip}\n`);
     }
 
     try {
