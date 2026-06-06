@@ -175,7 +175,11 @@ export function trivyScanHelper(source: Directory): Container {
     .from(TRIVY_IMAGE)
     .withWorkdir("/repo")
     .withDirectory("/repo", source, { exclude: SOURCE_EXCLUDES })
+    // The aquasec/trivy image's entrypoint is the `trivy` binary, but
+    // Dagger's `withExec` overrides the entrypoint — so we invoke the
+    // binary explicitly as the first arg (same as gitleaks/semgrep above).
     .withExec([
+      "trivy",
       "fs",
       "--exit-code",
       "1",
