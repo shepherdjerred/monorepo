@@ -11,6 +11,10 @@ import {
   handleSetVolume,
   handleSetLoop,
   handleNowPlaying,
+  handleReplayCurrent,
+  handleReplayRecent,
+  handleRecentTracks,
+  handleMusicHelp,
 } from "./playback-actions.ts";
 
 export const musicPlaybackTool = createTool({
@@ -30,6 +34,10 @@ export const musicPlaybackTool = createTool({
         "set-volume",
         "set-loop",
         "now-playing",
+        "replay-current",
+        "replay-recent",
+        "recent",
+        "help",
       ])
       .describe("The action to perform"),
     channelId: z
@@ -56,18 +64,24 @@ export const musicPlaybackTool = createTool({
       .enum(["off", "track", "queue", "autoplay"])
       .optional()
       .describe("Loop mode (for set-loop)"),
+    position: z
+      .number()
+      .int()
+      .min(1)
+      .optional()
+      .describe("Recent-track position (for replay-recent)"),
+    limit: z
+      .number()
+      .int()
+      .min(1)
+      .max(25)
+      .optional()
+      .describe("Number of recent tracks to show"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
     message: z.string(),
-    data: z
-      .object({
-        title: z.string(),
-        duration: z.string(),
-        url: z.string(),
-        progress: z.string().optional(),
-      })
-      .optional(),
+    data: z.unknown().optional(),
   }),
   execute: async (ctx) => {
     try {
@@ -80,21 +94,34 @@ export const musicPlaybackTool = createTool({
             ctx.query,
           );
         case "pause":
-          return handlePause(ctx.guildId);
+          return await handlePause(ctx.guildId);
         case "resume":
-          return handleResume(ctx.guildId);
+          return await handleResume(ctx.guildId);
         case "skip":
-          return handleSkip(ctx.guildId);
+          return await handleSkip(ctx.guildId);
         case "stop":
-          return handleStop(ctx.guildId);
+          return await handleStop(ctx.guildId);
         case "seek":
           return await handleSeek(ctx.guildId, ctx.seconds);
         case "set-volume":
-          return handleSetVolume(ctx.guildId, ctx.volume);
+          return await handleSetVolume(ctx.guildId, ctx.volume);
         case "set-loop":
-          return handleSetLoop(ctx.guildId, ctx.loopMode);
+          return await handleSetLoop(ctx.guildId, ctx.loopMode);
         case "now-playing":
-          return handleNowPlaying(ctx.guildId);
+          return await handleNowPlaying(ctx.guildId);
+        case "replay-current":
+          return await handleReplayCurrent(ctx.guildId);
+        case "replay-recent":
+          return await handleReplayRecent(
+            ctx.guildId,
+            ctx.channelId,
+            ctx.voiceChannelId,
+            ctx.position,
+          );
+        case "recent":
+          return await handleRecentTracks(ctx.guildId, ctx.limit);
+        case "help":
+          return await handleMusicHelp();
       }
     } catch (error) {
       logger.error("Failed music playback action", error);

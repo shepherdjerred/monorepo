@@ -17,6 +17,10 @@ const EnvSchema = z.object({
   BIRMEL_E2E_TIMEOUT_MS: z.coerce.number().int().min(5000).default(45_000),
 });
 
+const PlayResultDataSchema = z.object({
+  title: z.string().min(1),
+});
+
 function ensure(condition: boolean, message: string): void {
   if (!condition) {
     throw new Error(message);
@@ -132,9 +136,8 @@ async function main(): Promise<void> {
     );
 
     ensure(playResult.success, playResult.message);
-    const playData = requireValue(
-      playResult.data,
-      "Play result did not include track data",
+    const playData = PlayResultDataSchema.parse(
+      requireValue(playResult.data, "Play result did not include track data"),
     );
     ensure(
       playData.title.length > 0,
@@ -174,7 +177,7 @@ async function main(): Promise<void> {
     );
     ensure(activeQueue.isPlaying(), "Guild queue stopped before verification");
 
-    const stopResult = handleStop(env.BIRMEL_E2E_GUILD_ID);
+    const stopResult = await handleStop(env.BIRMEL_E2E_GUILD_ID);
     ensure(stopResult.success, stopResult.message);
 
     console.log(
@@ -182,7 +185,7 @@ async function main(): Promise<void> {
     );
   } finally {
     try {
-      handleStop(env.BIRMEL_E2E_GUILD_ID);
+      await handleStop(env.BIRMEL_E2E_GUILD_ID);
     } catch (error) {
       console.warn(
         `Birmel music E2E cleanup stop failed: ${error instanceof Error ? error.message : String(error)}`,
