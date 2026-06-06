@@ -55,12 +55,14 @@ stdout, and is non-blocking.
 ### Done
 
 - `.claude/settings.json` — switched hook registration from `WorktreeCreate` to `SessionStart`.
-- `.claude/hooks/trust-mise.sh` — rewritten for SessionStart: cwd-based, worktree-gated nested walk, best-effort, plain-text stdout.
-- Verified across main/worktree/empty-input cases; shellcheck + prettier + JSON validation pass.
+- `.claude/hooks/trust-mise.sh` — rewritten for SessionStart: cwd-based, worktree-gated nested walk, best-effort, plain-text stdout. No `2>/dev/null` / `|| true` suppressions (passes `check-suppressions`).
+- Verified across main/worktree/empty-input cases; shellcheck + prettier + markdownlint + JSON validation pass.
+- Branch `fix/worktree-mise-trust-sessionstart`, commit `c78cde17e`, PR shepherdjerred/monorepo#1023.
+- Buildkite build #3287 green (all checks pass; trivy soft-fails as expected, `ci-complete` gate passed).
 
 ### Remaining
 
-- None. Change is uncommitted (no commit was requested).
+- PR merge (awaiting Greptile automated review + human approval — not a CI gate).
 
 ### Caveats
 

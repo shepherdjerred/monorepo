@@ -50,8 +50,11 @@ fi
 count=0
 if [ -n "$git_dir" ] && [ "$git_dir" != "$common_dir" ]; then
   while IFS= read -r cfg; do
-    mise trust --yes --quiet "$cfg" >/dev/null
-    count=$((count + 1))
+    # Count only successful trusts so the status line can't overstate coverage
+    # when a per-package `mise trust` fails silently under `set +e`.
+    if mise trust --yes --quiet "$cfg" >/dev/null; then
+      count=$((count + 1))
+    fi
   done < <(find "$dir" \
     \( -name node_modules -o -name .git -o -name archive -o -name dist -o -name build -o -name target \) -prune \
     -o -type f \( -name mise.toml -o -name .mise.toml \) -print)
