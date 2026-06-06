@@ -15,6 +15,7 @@ import {
   handleModifyThread,
   handleAddMember,
   handleGetThreadMessages,
+  handleSummarizeThread,
 } from "./thread-actions.ts";
 
 const logger = loggers.tools.child("discord.threads");
@@ -22,7 +23,7 @@ const logger = loggers.tools.child("discord.threads");
 export const manageThreadTool = createTool({
   id: "manage-thread",
   description:
-    "Manage threads: create from an existing message, create standalone, edit thread settings via 'modify', add a member to a thread, or fetch a thread's messages. Does NOT send messages to a thread — use manage-message with the thread's channelId for that.",
+    "Manage Discord threads as first-class routing targets: create/move a conversation into a thread, edit settings, add members, fetch or summarize messages, and use thread IDs as session/job anchors. Does NOT send messages to a thread — use manage-message with the thread's channelId for that.",
   inputSchema: z.object({
     action: z
       .enum([
@@ -31,9 +32,10 @@ export const manageThreadTool = createTool({
         "modify",
         "add-member",
         "get-messages",
+        "summarize",
       ])
       .describe(
-        "The action to perform. 'modify' edits a thread's name and archived/locked state — use 'add-member' to add a user, and manage-message to post into a thread.",
+        "The action to perform. 'create-from-message' moves a conversation into a thread. 'summarize' summarizes thread history. Use manage-message to post into a thread.",
       ),
     channelId: z
       .string()
@@ -89,26 +91,7 @@ export const manageThreadTool = createTool({
   outputSchema: z.object({
     success: z.boolean(),
     message: z.string(),
-    data: z
-      .union([
-        z.object({
-          threadId: z.string(),
-          threadName: z.string(),
-        }),
-        z.object({
-          messages: z.array(
-            z.object({
-              id: z.string(),
-              authorId: z.string(),
-              authorName: z.string(),
-              isBot: z.boolean(),
-              content: z.string(),
-              createdAt: z.string(),
-            }),
-          ),
-        }),
-      ])
-      .optional(),
+    data: z.unknown().optional(),
   }),
   execute: async (ctx) => {
     return withToolSpan("manage-thread", undefined, async () => {
@@ -158,6 +141,13 @@ export const manageThreadTool = createTool({
             return await handleAddMember(client, ctx.threadId, ctx.userId);
           case "get-messages":
             return await handleGetThreadMessages(
+              client,
+              ctx.threadId,
+              ctx.limit,
+              ctx.before,
+            );
+          case "summarize":
+            return await handleSummarizeThread(
               client,
               ctx.threadId,
               ctx.limit,

@@ -21,12 +21,15 @@ notably `mastra-memory.db` is the real production memory store.)
 
 ## OpenAI provider options
 
-Every agent and the top-level `streamText` call receive the shared
-`OPENAI_RESPONSES_PROVIDER_OPTIONS` (`src/voltagent/openai-provider-options.ts`):
-`store: false` plus `include: ["reasoning.encrypted_content"]`. Without these,
-GPT-5 reasoning replay fails with `AI_APICallError: required 'reasoning' item`
-because the AI SDK references OpenAI-side stored items by id, and those items
-expire. With them, reasoning content is round-tripped inline through libSQL.
+Every agent and the top-level `streamText` call receive shared Responses API
+provider options from `getOpenAIResponsesProviderOptions()`
+(`src/voltagent/openai-provider-options.ts`): `store: false`,
+`include: ["reasoning.encrypted_content"]`, and the configured
+`OPENAI_REASONING_EFFORT` / `OPENAI_TEXT_VERBOSITY`. Without the store/include
+pair, GPT-5 reasoning replay fails with `AI_APICallError: required 'reasoning'
+item` because the AI SDK references OpenAI-side stored items by id, and those
+items expire. With them, reasoning content is round-tripped inline through
+libSQL.
 
 ## Commands
 
@@ -56,6 +59,12 @@ Requires `.env` with Discord and AI API keys. Key variables:
 - `OTLP_ENDPOINT` — OpenTelemetry trace endpoint
   (`http://tempo.tempo.svc.cluster.local:4318` in production).
 - `EDITOR_ENABLED` / `EDITOR_GITHUB_*` — see `src/editor/`.
+- `OPENAI_MODEL` defaults to `gpt-5.5`; classifier/style models stay on
+  nano-class defaults unless explicitly configured.
+- `BROWSER_PROVIDER` defaults to `pinchtab`; set `PINCHTAB_BASE_URL`,
+  `PINCHTAB_TOKEN`, and `PINCHTAB_PROFILE` for real browser automation.
+- `WEB_SEARCH_PROVIDER` defaults to `openai`; direct search/fetch fallbacks
+  stay available through the `web-research` tool.
 
 ## Image build
 

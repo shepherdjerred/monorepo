@@ -1,3 +1,5 @@
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+
 /**
  * Shared OpenAI Responses API provider options.
  *
@@ -27,14 +29,23 @@
  * Together this makes reasoning replay self-contained — no dependence on
  * OpenAI's server-side storage state.
  */
-export const OPENAI_RESPONSES_PROVIDER_OPTIONS: {
+export type OpenAIResponsesProviderOptions = {
   openai: {
     store: boolean;
     include: string[];
+    reasoningEffort: "minimal" | "low" | "medium" | "high";
+    textVerbosity: "low" | "medium" | "high";
   };
-} = {
-  openai: {
-    store: false,
-    include: ["reasoning.encrypted_content"],
-  },
 };
+
+export function getOpenAIResponsesProviderOptions(): OpenAIResponsesProviderOptions {
+  const config = getConfig();
+  return {
+    openai: {
+      store: false,
+      include: ["reasoning.encrypted_content"],
+      reasoningEffort: config.openai.reasoningEffort,
+      textVerbosity: config.openai.textVerbosity,
+    },
+  };
+}

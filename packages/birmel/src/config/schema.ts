@@ -7,8 +7,12 @@ export const DiscordConfigSchema = z.object({
 
 export const OpenAIConfigSchema = z.object({
   apiKey: z.string().min(1, "OPENAI_API_KEY is required"),
-  model: z.string().default("gpt-5.4-mini"),
+  model: z.string().default("gpt-5.5"),
   classifierModel: z.string().default("gpt-5.4-nano"),
+  reasoningEffort: z
+    .enum(["minimal", "low", "medium", "high"])
+    .default("medium"),
+  textVerbosity: z.enum(["low", "medium", "high"]).default("low"),
   maxTokens: z.number().default(4096),
 });
 
@@ -41,6 +45,7 @@ export const DailyPostsConfigSchema = z.object({
 export const ExternalApisSchema = z.object({
   newsApiKey: z.string().optional(),
   riotApiKey: z.string().optional(),
+  webSearchProvider: z.enum(["openai", "duckduckgo"]).default("openai"),
 });
 
 export const LoggingConfigSchema = z.object({
@@ -102,12 +107,16 @@ export const SchedulerConfigSchema = z.object({
 
 export const BrowserConfigSchema = z.object({
   enabled: z.boolean().default(true),
+  provider: z.enum(["pinchtab", "playwright"]).default("pinchtab"),
   headless: z.boolean().default(true),
   viewportWidth: z.number().default(1280),
   viewportHeight: z.number().default(720),
   maxSessions: z.number().default(5),
   sessionTimeoutMs: z.number().default(300_000),
   userAgent: z.string().optional(),
+  pinchtabBaseUrl: z.string().default("http://localhost:9867"),
+  pinchtabToken: z.string().optional(),
+  pinchtabProfile: z.string().default("default"),
 });
 
 export const ElectionsConfigSchema = z.object({
