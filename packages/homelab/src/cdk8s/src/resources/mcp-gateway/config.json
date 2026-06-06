@@ -52,7 +52,7 @@
     },
     "discord": {
       "command": "npx",
-      "args": ["-y", "mcp-discord"]
+      "args": ["-y", "mcp-discord@1.3.4"]
     }
   }
 }

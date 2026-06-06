@@ -63,6 +63,7 @@ export const MCP_PROXY_BASE_IMAGE =
 // Pinned commit of rob-9/edstem-mcp baked into the custom mcp-gateway image.
 // Bump to pick up upstream fixes (changes the Dagger build cache key).
 export const EDSTEM_MCP_COMMIT = "661a3c498c82f47b1d352410b53fa06c6806c949";
+
 // renovate: datasource=docker depName=alpine/helm
 export const HELM_IMAGE =
   "alpine/helm:4.1.4@sha256:8edcaedab4d9864886b7f443d55731be87d4b5ec7dca714c24551455707a8aac";
