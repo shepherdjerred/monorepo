@@ -199,8 +199,12 @@ async function runChild(
     return await executeChild(alertRemediationChildWorkflow, {
       args: [input],
       workflowId: alertRemediationWorkflowId(input.alert),
-      // 35 min: a hung child shouldn't consume the 2h sweep window.
-      workflowExecutionTimeout: "35 minutes",
+      // Budget = 30-min agent + buffer for findExistingPr/prepare/cleanup workdir
+      // activities (each 10-min startToClose, up to 2 attempts). 50 min keeps the
+      // agent's full 30-min budget intact and guarantees cleanup runs even if a
+      // workdir step retries, while still bounding a stuck child far under the 2h
+      // sweep window (down from the original 2h child cap).
+      workflowExecutionTimeout: "50 minutes",
     });
   } catch (error: unknown) {
     return failedResult(input, error);
