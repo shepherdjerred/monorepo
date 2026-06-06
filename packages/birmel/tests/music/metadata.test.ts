@@ -20,6 +20,15 @@ describe("music metadata", () => {
     );
   });
 
+  test("does not extract YouTube IDs from non-YouTube hosts", () => {
+    expect(extractYouTubeVideoId("https://example.com/watch?v=abc123")).toBe(
+      undefined,
+    );
+    expect(buildYouTubeCoverUrl("https://example.com/watch?v=abc123")).toBe(
+      undefined,
+    );
+  });
+
   test("builds YouTube cover URLs from track URLs", () => {
     expect(buildYouTubeCoverUrl("https://youtu.be/abc123")).toBe(
       "https://img.youtube.com/vi/abc123/hqdefault.jpg",

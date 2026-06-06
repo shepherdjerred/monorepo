@@ -5,6 +5,7 @@ import {
   clearAllPlaylistsForTests,
   getPlaylist,
 } from "@shepherdjerred/birmel/music/playlists.ts";
+import { isQueueNotificationSuppressed } from "@shepherdjerred/birmel/music/notification-suppression.ts";
 
 type MockTrack = {
   title: string;
@@ -17,6 +18,7 @@ type MockTrack = {
 
 type MockQueue = {
   currentTrack: MockTrack | null;
+  addTrack: (track: MockTrack) => void;
   tracks: {
     size: number;
     toArray: () => MockTrack[];
@@ -50,8 +52,14 @@ function makeQueue(input: {
   tracks: MockTrack[];
 }): MockQueue {
   const tracks = [...input.tracks];
-  return {
+  const queue: MockQueue = {
     currentTrack: input.currentTrack ?? null,
+    addTrack: (track: MockTrack) => {
+      tracks.push(track);
+      if (!isQueueNotificationSuppressed(queue)) {
+        sentEmbeds.push({ title: "Added to Queue", track });
+      }
+    },
     tracks: {
       get size() {
         return tracks.length;
@@ -65,6 +73,7 @@ function makeQueue(input: {
       },
     },
   };
+  return queue;
 }
 
 const channels = new Map<string, unknown>();
@@ -344,5 +353,76 @@ describe("music AI tools", () => {
       "Guild One",
     ]);
     expect(guildTwoPlaylist.value.tracks).toEqual([]);
+  });
+
+  test("playlist play suppresses per-track queue add embeds", async () => {
+    searchTracks.set("first-song", makeTrack("First", "first123"));
+    searchTracks.set(
+      "https://www.youtube.com/watch?v=first123",
+      makeTrack("First", "first123"),
+    );
+    searchTracks.set(
+      "https://www.youtube.com/watch?v=second123",
+      makeTrack("Second", "second123"),
+    );
+    searchTracks.set(
+      "https://www.youtube.com/watch?v=third123",
+      makeTrack("Third", "third123"),
+    );
+
+    queues.set(
+      "guild-1",
+      makeQueue({
+        currentTrack: makeTrack("First", "first123"),
+        tracks: [],
+      }),
+    );
+
+    await executePlaylist({
+      guildId: "guild-1",
+      action: "create",
+      playlistName: "mix",
+    });
+    await executePlaylist({
+      guildId: "guild-1",
+      action: "add",
+      playlistName: "mix",
+      query: "first-song",
+    });
+    await executePlaylist({
+      guildId: "guild-1",
+      action: "add",
+      playlistName: "mix",
+      query: "https://www.youtube.com/watch?v=second123",
+    });
+    await executePlaylist({
+      guildId: "guild-1",
+      action: "add",
+      playlistName: "mix",
+      query: "https://www.youtube.com/watch?v=third123",
+    });
+    sentEmbeds.length = 0;
+
+    const result = BasicToolResultSchema.parse(
+      await withMusicContext({ voiceChannelId: "voice-1" }, () =>
+        executePlaylist({
+          guildId: "guild-1",
+          action: "play",
+          playlistName: "mix",
+        }),
+      ),
+    );
+
+    expect(result.success).toBe(true);
+    expect(playCalls).toEqual([
+      { voiceChannelId: "voice-1", textChannelId: "text-1" },
+    ]);
+    expect(sentEmbeds).toHaveLength(1);
+    expect(
+      queues
+        .get("guild-1")
+        ?.tracks.toArray()
+        .map((track) => track.title),
+    ).toEqual(["Second", "Third"]);
   });
 });
