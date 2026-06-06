@@ -5,6 +5,7 @@ import { rankToLeaguePoints } from "@scout-for-lol/data";
 import type { Rank } from "@scout-for-lol/data";
 import {
   competitionChartToImage,
+  competitionChartToSvg,
   type CompetitionChartProps,
 } from "#src/html/competition-chart.ts";
 
@@ -159,6 +160,26 @@ test("11-bar-single-participant — degenerate case", async () => {
     yAxisLabel: "Games",
     bars: [{ playerName: "Jerred", value: 91 }],
   });
+});
+
+test("bar charts render every category label", () => {
+  const labels = Array.from({ length: 24 }, (_, i) => {
+    return `Player ${String(i + 1).padStart(2, "0")}`;
+  });
+  const svg = competitionChartToSvg({
+    chartType: "bar",
+    title: "Most League of Legends",
+    subtitle: "24 row(s), 4933 fact row(s) scanned",
+    yAxisLabel: "Games",
+    bars: labels.map((playerName, i) => ({
+      playerName,
+      value: 240 - i,
+    })),
+  });
+
+  for (const label of labels) {
+    expect(svg).toContain(label);
+  }
 });
 
 // ============================================================================

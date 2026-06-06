@@ -1,4 +1,7 @@
-import { OPENAI_RESPONSES_PROVIDER_OPTIONS } from "@shepherdjerred/birmel/voltagent/openai-provider-options.ts";
+import {
+  getOpenAIResponsesProviderOptions,
+  type OpenAIResponsesProviderOptions,
+} from "@shepherdjerred/birmel/voltagent/openai-provider-options.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { traceTextStream } from "@shepherdjerred/llm-observability";
@@ -27,7 +30,7 @@ type StreamingAgent = {
     options: {
       userId: string;
       conversationId: string;
-      providerOptions: typeof OPENAI_RESPONSES_PROVIDER_OPTIONS;
+      providerOptions: OpenAIResponsesProviderOptions;
       abortSignal: AbortSignal;
     },
   ) => Promise<StreamTextResponse>;
@@ -75,7 +78,7 @@ export async function streamAgentResponse(params: {
       const response = await params.agent.streamText(params.input, {
         userId: params.userId,
         conversationId: params.conversationId,
-        providerOptions: OPENAI_RESPONSES_PROVIDER_OPTIONS,
+        providerOptions: getOpenAIResponsesProviderOptions(),
         abortSignal: AbortSignal.timeout(STREAM_TIMEOUT_MS),
       });
 

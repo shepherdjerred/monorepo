@@ -26,7 +26,10 @@ export function markEngaged(channelId: string): void {
  * Whether a channel has been engaged within the last `windowMs`. Lazily
  * evicts stale entries on read so the map cannot grow unbounded.
  */
-export function isRecentlyEngaged(channelId: string, windowMs: number): boolean {
+export function isRecentlyEngaged(
+  channelId: string,
+  windowMs: number,
+): boolean {
   const last = lastEngagement.get(channelId);
   if (last == null) {
     return false;

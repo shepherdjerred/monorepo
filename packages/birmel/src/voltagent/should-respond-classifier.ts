@@ -4,7 +4,7 @@ import { z } from "zod";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
-import { OPENAI_RESPONSES_PROVIDER_OPTIONS } from "@shepherdjerred/birmel/voltagent/openai-provider-options.ts";
+import { getOpenAIResponsesProviderOptions } from "@shepherdjerred/birmel/voltagent/openai-provider-options.ts";
 import { buildPersonaPrompt } from "@shepherdjerred/birmel/persona/style-transform.ts";
 
 const logger = loggers.discord.child("should-respond-classifier");
@@ -61,7 +61,7 @@ export async function classifyShouldRespond(
 
         const { output: object } = await generateText({
           model: openai(config.openai.classifierModel),
-          providerOptions: OPENAI_RESPONSES_PROVIDER_OPTIONS,
+          providerOptions: getOpenAIResponsesProviderOptions(),
           output: Output.object({ schema: ClassificationSchema }),
           prompt: `${personaBlock}
 

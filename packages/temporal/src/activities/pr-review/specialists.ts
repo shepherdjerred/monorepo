@@ -2,7 +2,7 @@
  * Specialist fan-out dispatcher.
  *
  * Phase 3 replaces the single-specialist `correctnessReviewer` call with a
- * parallel fan-out across all 5 specialists (correctness / security / perf
+ * provider-aware fan-out across all 5 specialists (correctness / security / perf
  * / convention / deps) × N=3 randomized passes each — 15 LLM calls per PR.
  * Each pass's findings are annotated with the producing specialist and
  * pass index so the downstream `consensus` activity can vote.
@@ -19,13 +19,14 @@
  *   - convention, deps:      effort=medium (Sonnet 4.6)
  * The PR description documents this deviation in detail.
  *
- * # Concurrency
+ * # Provider backoff
  *
- * Calls run through a small bounded-concurrency queue. A failed pass is
- * logged + reported to Sentry/Bugsink but does NOT fail the activity:
- * consensus voting tolerates 1–2 missing passes (the rule degrades
- * gracefully). If EVERY pass fails, the activity returns an empty annotated
- * array and lets postReview log "no findings".
+ * Calls run sequentially and stop after the first Anthropic provider-limit
+ * error. A non-provider failed pass is logged + reported to Sentry/Bugsink
+ * but does NOT fail the activity: consensus voting tolerates 1–2 missing
+ * passes. Provider-limit failures are operational, so continuing to run
+ * remaining passes only burns requests and keeps the active provider gauge
+ * paging longer.
  *
  * # Cost / latency emission
  *
@@ -41,7 +42,6 @@ import { prReviewCostUsd } from "#observability/pr-review-metrics.ts";
 import { prReviewSpecialistLatencySeconds } from "#observability/metrics.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import type { Finding } from "#shared/pr-review/finding.ts";
-import { readPositiveIntegerEnv } from "#shared/env.ts";
 import { PASSES_PER_SPECIALIST } from "#lib/diff-slicing.ts";
 import type { BootstrapResult } from "./bootstrap.ts";
 import type { AnnotatedFinding } from "./consensus.ts";
@@ -60,12 +60,9 @@ import type {
   SpecialistConfig,
   SpecialistRunResult,
 } from "./specialists/runner.ts";
+import { classifyAnthropicProviderError } from "./specialists/runner.ts";
 
 const COMPONENT = "pr-review-pipeline";
-export const SPECIALIST_PASS_CONCURRENCY = readPositiveIntegerEnv({
-  name: "PR_REVIEW_SPECIALIST_PASS_CONCURRENCY",
-  defaultValue: 1,
-});
 
 function jsonLog(
   level: "info" | "warning" | "error",
@@ -102,6 +99,20 @@ type SpecialistDispatcher = {
     passId: number;
   }) => Promise<SpecialistRunResult>;
 };
+
+type SpecialistPassDispatchResult =
+  | {
+      status: "success";
+      findings: AnnotatedFinding[];
+    }
+  | {
+      status: "failed";
+    }
+  | {
+      status: "provider-limited";
+      provider: "anthropic";
+      kind: "credit_balance_low" | "rate_limit";
+    };
 
 /**
  * Single source of truth for the specialist roster. Adding a 6th specialist
@@ -144,7 +155,7 @@ async function runSinglePass(
   input: RunSpecialistsInput,
   dispatcher: SpecialistDispatcher,
   passId: number,
-): Promise<AnnotatedFinding[] | null> {
+): Promise<SpecialistPassDispatchResult> {
   const { config } = dispatcher;
   try {
     const result = await dispatcher.invoke({
@@ -153,53 +164,41 @@ async function runSinglePass(
       passId,
     });
     recordPassMetrics(config, result);
-    return result.findings.map<AnnotatedFinding>((finding) => ({
-      finding,
-      specialistId: config.id,
-      passId,
-    }));
+    return {
+      status: "success",
+      findings: result.findings.map<AnnotatedFinding>((finding) => ({
+        finding,
+        specialistId: config.id,
+        passId,
+      })),
+    };
   } catch (error: unknown) {
+    const providerError = classifyAnthropicProviderError(error);
     jsonLog("warning", "specialist pass failed", {
       specialist: config.id,
       passId,
       prNumber: input.pipeline.prNumber,
       error: error instanceof Error ? error.message : String(error),
+      providerError: providerError?.providerTag,
     });
-    return null;
+    if (providerError !== null) {
+      return {
+        status: "provider-limited",
+        provider: "anthropic",
+        kind: providerError.kind,
+      };
+    }
+    return { status: "failed" };
   }
 }
 
-export async function runWithConcurrency<T>(
-  jobs: readonly (() => Promise<T>)[],
-  concurrency: number,
-): Promise<T[]> {
-  if (concurrency < 1) {
-    throw new Error("concurrency must be at least 1");
-  }
-  const results: T[] = [];
-  let nextIndex = 0;
-  const workerCount = Math.min(concurrency, jobs.length);
-
-  async function worker(): Promise<void> {
-    while (nextIndex < jobs.length) {
-      const jobIndex = nextIndex;
-      nextIndex++;
-      const job = jobs[jobIndex];
-      if (job === undefined) {
-        throw new Error(`missing specialist job at index ${String(jobIndex)}`);
-      }
-      results[jobIndex] = await job();
-    }
-  }
-
-  const workers = Array.from({ length: workerCount }, () => worker());
-  await Promise.all(workers);
-  return results;
+export function shouldStopSpecialistFanout(error: unknown): boolean {
+  return classifyAnthropicProviderError(error) !== null;
 }
 
 /**
- * Fan out every (specialist × pass) combination in parallel, collect the
- * annotated findings, log failures, and return the union.
+ * Fan out every (specialist × pass) combination, collect the annotated
+ * findings, stop on provider limits, and return the union.
  */
 async function runAllSpecialistsImpl(
   input: RunSpecialistsInput,
@@ -213,29 +212,38 @@ async function runAllSpecialistsImpl(
       "passes.perSpecialist": PASSES_PER_SPECIALIST,
     },
     async () => {
-      const jobs: (() => Promise<AnnotatedFinding[] | null>)[] = [];
-      for (const dispatcher of SPECIALISTS) {
-        for (let passId = 0; passId < PASSES_PER_SPECIALIST; passId++) {
-          jobs.push(() => runSinglePass(input, dispatcher, passId));
-        }
-      }
-      const results = await runWithConcurrency(
-        jobs,
-        SPECIALIST_PASS_CONCURRENCY,
-      );
       const annotated: AnnotatedFinding[] = [];
       let failed = 0;
-      for (const r of results) {
-        if (r === null) {
+      let attempted = 0;
+      let providerLimited = false;
+
+      specialistLoop: for (const dispatcher of SPECIALISTS) {
+        for (let passId = 0; passId < PASSES_PER_SPECIALIST; passId++) {
+          attempted++;
+          const result = await runSinglePass(input, dispatcher, passId);
+          if (result.status === "success") {
+            annotated.push(...result.findings);
+            continue;
+          }
           failed++;
-          continue;
+          if (result.status === "provider-limited") {
+            providerLimited = true;
+            jsonLog("warning", "provider-limited specialist fan-out stopped", {
+              prNumber: input.pipeline.prNumber,
+              provider: result.provider,
+              kind: result.kind,
+              attemptedPasses: attempted,
+            });
+            break specialistLoop;
+          }
         }
-        annotated.push(...r);
       }
       jsonLog("info", "runSpecialists fan-out complete", {
         prNumber: input.pipeline.prNumber,
-        totalPasses: jobs.length,
+        totalPasses: SPECIALISTS.length * PASSES_PER_SPECIALIST,
+        attemptedPasses: attempted,
         failedPasses: failed,
+        providerLimited,
         rawFindings: annotated.length,
       });
       return annotated;

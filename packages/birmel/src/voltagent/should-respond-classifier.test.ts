@@ -22,9 +22,8 @@ await mock.module("ai", () => ({
   },
 }));
 
-const { classifyShouldRespond } = await import(
-  "./should-respond-classifier.ts"
-);
+const { classifyShouldRespond } =
+  await import("./should-respond-classifier.ts");
 
 const baseInput = {
   persona: "virmel",

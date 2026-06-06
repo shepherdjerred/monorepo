@@ -8,7 +8,15 @@
  * See decisions/2026-04-04_unified-versioning-strategy.md
  */
 import { HELM_CHARTS } from "../catalog.ts";
-import { RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
+import {
+  RETRY,
+  DAGGER_ENV,
+  DRYRUN_FLAG,
+  REPO_GIT_REF,
+  gitDir,
+  gitFile,
+  DAGGER_CALL,
+} from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
@@ -24,13 +32,16 @@ const MAIN_ONLY = "build.branch == pipeline.default_branch";
 export function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
   const deps = WORKSPACE_DEPS["homelab/src/cdk8s"] ?? [];
   const depFlags = deps
-    .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
+    .flatMap((d: string) => [
+      `--dep-names ${d}`,
+      `--dep-dirs ${gitDir(`packages/${d}`)}`,
+    ])
     .join(" ");
   return {
     label: ":cdk8s: Build cdk8s Manifests",
     key: "homelab-cdk8s",
     depends_on: dependsOn,
-    command: `dagger call homelab-synth --pkg-dir ./packages/homelab/src/cdk8s ${depFlags} --tsconfig ./tsconfig.base.json`,
+    command: `${DAGGER_CALL} homelab-synth --pkg-dir ${gitDir("packages/homelab/src/cdk8s")} ${depFlags} --tsconfig ${gitFile("tsconfig.base.json")}`,
     timeout_in_minutes: 15,
     priority: 1,
     retry: RETRY,
@@ -48,7 +59,7 @@ function helmPushStep(chartName: string): BuildkiteStep {
   const synthDepFlags = deps
     .flatMap((d: string) => [
       `--synth-dep-names ${d}`,
-      `--synth-dep-dirs ./packages/${d}`,
+      `--synth-dep-dirs ${gitDir(`packages/${d}`)}`,
     ])
     .join(" ");
   return {
@@ -58,11 +69,11 @@ function helmPushStep(chartName: string): BuildkiteStep {
     depends_on: ["quality-gate"],
     command:
       [
-        `dagger call helm-synth-and-package`,
-        `--source .`,
-        `--synth-pkg-dir ./packages/homelab/src/cdk8s`,
+        `${DAGGER_CALL} helm-synth-and-package`,
+        `--source ${REPO_GIT_REF}`,
+        `--synth-pkg-dir ${gitDir("packages/homelab/src/cdk8s")}`,
         synthDepFlags,
-        `--tsconfig ./tsconfig.base.json`,
+        `--tsconfig ${gitFile("tsconfig.base.json")}`,
         `--chart-name ${chartName}`,
         // Semver prerelease: 2.0.0-BUILD. ArgoCD ~2.0.0-0 auto-updates to latest.
         `--version "2.0.0-$BUILDKITE_BUILD_NUMBER"`,

@@ -42,7 +42,6 @@ import {
   type SpecialistConfig,
   type SpecialistRunResult,
 } from "#activities/pr-review/specialists/runner.ts";
-import { runWithConcurrency } from "#activities/pr-review/specialists.ts";
 import {
   buildInlineReviewComments,
   markerFor,
@@ -343,7 +342,14 @@ async function runReplaySpecialists(input: {
     }
   }
 
-  const results = await runWithConcurrency(jobs, 3);
+  const results: ({
+    config: SpecialistConfig;
+    passId: number;
+    result: SpecialistRunResult;
+  } | null)[] = [];
+  for (const job of jobs) {
+    results.push(await job());
+  }
   const annotated: AnnotatedFinding[] = [];
   let failedPasses = 0;
   for (const result of results) {

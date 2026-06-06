@@ -4,7 +4,6 @@ import {
   getChannelConversationId,
   getChannelMemoryConversationId,
   getPersonaConversationId,
-  getOwnerConversationId,
 } from "./index.ts";
 
 describe("memory conversation ids", () => {
@@ -23,9 +22,11 @@ describe("memory conversation ids", () => {
   });
 
   it("keeps the persona id stable on the legacy :owner: segment", () => {
-    expect(getPersonaConversationId("g", "virmel")).toBe("guild:g:owner:virmel");
-    // eslint-disable-next-line @typescript-eslint/no-deprecated -- intentionally asserting the deprecated back-compat alias still points at the new fn
-    expect(getOwnerConversationId).toBe(getPersonaConversationId);
+    // Data-preservation invariant: persona memory keeps using the legacy
+    // `:owner:` conversationId segment so stored memory survives the rename.
+    expect(getPersonaConversationId("g", "virmel")).toBe(
+      "guild:g:owner:virmel",
+    );
   });
 
   it("does not key server memory per persona", () => {

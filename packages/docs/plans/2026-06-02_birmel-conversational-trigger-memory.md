@@ -29,6 +29,7 @@ so it had no context for messages it didn't itself answer. This change adds:
 ## Implementation
 
 ### Feature 1 — conversational trigger
+
 - `src/discord/engagement-tracker.ts` — in-memory per-channel last-engagement
   map (`markEngaged` / `isRecentlyEngaged`, lazy-evicting).
 - `src/voltagent/should-respond-classifier.ts` — `classifyShouldRespond` using
@@ -42,6 +43,7 @@ so it had no context for messages it didn't itself answer. This change adds:
   `src/config/index.ts` (`RESPONDER_*` env vars).
 
 ### Feature 2 — three memory scopes
+
 - `src/voltagent/memory/index.ts` — renamed owner→persona (functions +
   `PERSONA_MEMORY_TEMPLATE`, keeping the legacy `:owner:` conversationId and
   deprecated aliases); added channel saved-memory
@@ -54,12 +56,14 @@ so it had no context for messages it didn't itself answer. This change adds:
   (legacy `owner` aliased); channel scope reads channelId from request context.
 
 ### Feature 3 — transcript
+
 - `src/discord/utils/channel-history.ts` — `getConversationTranscript`
   (`MAX(min, window)` capped) + `formatTranscript`.
 - `src/voltagent/message-handler.ts` — injects `## Server/Channel/Persona Memory`
-  + `## Recent Channel Transcript` sections.
+  and `## Recent Channel Transcript` sections.
 
 ### Feature 4 — pervasive persona
+
 - Persona fed into `classifyShouldRespond`; agents already inject persona via
   `system-prompt.ts`. Documented in `packages/birmel/AGENTS.md`.
 

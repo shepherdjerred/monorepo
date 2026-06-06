@@ -151,6 +151,123 @@ model ScheduledTask {
   @@index([enabled, scheduledAt])
 }
 
+model AgentJob {
+  id              String        @id @default(uuid())
+  guildId         String
+  channelId       String?
+  threadId        String?
+  userId          String
+  name            String?
+  description     String?
+  scheduleKind    String
+  scheduleValue   String
+  timezone        String        @default("UTC")
+  nextRunAt       DateTime?
+  status          String        @default("active")
+  payloadKind     String        @default("tool")
+  message         String?
+  toolId          String?
+  toolInput       String?
+  deliveryMode    String        @default("discord")
+  model           String?
+  reasoningEffort String?
+  textVerbosity   String?
+  maxAttempts     Int           @default(3)
+  timeoutMs       Int           @default(300000)
+  attemptCount    Int           @default(0)
+  lastRunAt       DateTime?
+  lastStatus      String?
+  lastError       String?
+  legacyTaskId    Int?          @unique
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  runs            AgentJobRun[]
+
+  @@index([guildId, status])
+  @@index([status, nextRunAt])
+  @@index([channelId])
+  @@index([threadId])
+}
+
+model AgentJobRun {
+  id         String    @id @default(uuid())
+  jobId      String
+  job        AgentJob  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status     String
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  output     String?
+  error      String?
+  metadata   String?
+  createdAt  DateTime  @default(now())
+
+  @@index([jobId, startedAt])
+  @@index([status, startedAt])
+}
+
+model AgentSession {
+  id              String              @id @default(uuid())
+  guildId         String
+  channelId       String
+  threadId        String?
+  userId          String
+  label           String?
+  status          String              @default("active")
+  steeringPolicy  String              @default("steer")
+  model           String?
+  reasoningEffort String?
+  textVerbosity   String?
+  summary         String?
+  expiresAt       DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  events          AgentSessionEvent[]
+
+  @@index([guildId, status])
+  @@index([channelId, status])
+  @@index([threadId, status])
+  @@index([userId, status])
+}
+
+model AgentSessionEvent {
+  id        String       @id @default(uuid())
+  sessionId String
+  session   AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String
+  eventType String
+  content   String
+  metadata  String?
+  createdAt DateTime     @default(now())
+
+  @@index([sessionId, createdAt])
+  @@index([eventType, createdAt])
+}
+
+model AgentMemory {
+  id          String   @id @default(uuid())
+  guildId     String
+  scope       String
+  ownerKey    String?
+  channelId   String?
+  userId      String?
+  sessionId   String?
+  key         String?
+  content     String
+  tags        String?
+  sourceType  String?
+  sourceId    String?
+  salience    Float    @default(0.5)
+  embedding    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([guildId, scope])
+  @@index([channelId])
+  @@index([userId])
+  @@index([sessionId])
+  @@index([updatedAt])
+}
+
 model EditorSession {
   id              String    @id @default(uuid())
   userId          String

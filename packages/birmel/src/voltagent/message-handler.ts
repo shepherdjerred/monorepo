@@ -110,7 +110,7 @@ export async function handleMessageWithStreaming(
     }
 
     // 4. Build prompt with context
-    const prompt = `User ${context.username} (ID: ${context.userId}) in channel ${context.channelId} says:
+    const prompt = `User ${context.username} (ID: ${context.userId}) in channel ${context.channelId}${context.voiceChannelId == null ? "" : ` and voice channel ${context.voiceChannelId}`} says:
 
 ${context.content}
 
@@ -118,6 +118,7 @@ ${context.attachments.length > 0 ? `[User attached ${String(context.attachments.
 
 Guild ID: ${context.guildId}
 Channel ID: ${context.channelId}
+${context.voiceChannelId == null ? "Voice Channel ID: unavailable" : `Voice Channel ID: ${context.voiceChannelId}`}
 ${memoryContext}`;
 
     // 5. Build multimodal content if images present
@@ -145,6 +146,9 @@ ${memoryContext}`;
             sourceChannelId: context.channelId,
             sourceMessageId: context.message.id,
             guildId: context.guildId,
+            ...(context.voiceChannelId != null && {
+              voiceChannelId: context.voiceChannelId,
+            }),
             userId: context.userId,
           },
           async () => {

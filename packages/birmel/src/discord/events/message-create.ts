@@ -58,6 +58,7 @@ export type MessageContext = {
   attachments: ImageAttachment[];
   guildId: string;
   channelId: string;
+  voiceChannelId?: string;
   userId: string;
   username: string;
 };
@@ -252,6 +253,9 @@ export function setupMessageCreateHandler(client: Client): void {
             attachments: extractImageAttachments(message),
             guildId,
             channelId: message.channel.id,
+            ...(message.member?.voice.channelId != null && {
+              voiceChannelId: message.member.voice.channelId,
+            }),
             userId: message.author.id,
             username: message.author.username,
           });

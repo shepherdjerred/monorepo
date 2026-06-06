@@ -53,10 +53,16 @@ describe("k8sPlugin", () => {
     expect(json).toContain("buildkite-argocd-token");
   });
 
-  it("includes shallow clone flags", () => {
+  it("skips Buildkite-managed checkout (Dagger fetches source via git URL refs)", () => {
     const plugin = k8sPlugin() as Record<string, unknown>;
     const k8s = plugin["kubernetes"] as Record<string, unknown>;
-    const checkout = k8s["checkout"] as Record<string, string>;
-    expect(checkout["cloneFlags"]).toContain("--depth=100");
+    const checkout = k8s["checkout"] as Record<string, unknown>;
+    expect(checkout["skip"]).toBe(true);
+  });
+
+  it("does not mount buildkite-git-mirrors PVC anywhere", () => {
+    const plugin = k8sPlugin() as Record<string, unknown>;
+    const json = JSON.stringify(plugin);
+    expect(json).not.toContain("buildkite-git-mirrors");
   });
 });

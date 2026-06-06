@@ -1,10 +1,10 @@
 # ZFS kernel module parameters
-# ARC maximum set to 48 GB (aligned with sysfs override in image.yaml)
-# Leaves ~77 GB for K8s pods + OS (69 Gi allocatable after kubelet reservations)
+# ARC maximum set to 62.5 GiB (aligned with sysfs override in image.yaml)
+# Leaves ~62.5 GiB for K8s pods + OS before kubelet reservations.
 machine:
   kernel:
     modules:
       - name: zfs
         parameters:
-          - zfs_arc_max=51539607552 # 48 GB (matches sysfs override in image.yaml)
+          - zfs_arc_max=67108864000 # 62.5 GiB (matches sysfs override in image.yaml)
           - zfs_arc_min=8589934592 # 8 GB minimum

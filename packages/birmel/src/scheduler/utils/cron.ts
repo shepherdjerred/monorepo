@@ -22,11 +22,15 @@ export function isValidCron(pattern: string): boolean {
  * @param from Start time (defaults to now)
  * @returns Next execution date
  */
-export function getNextCronRun(pattern: string, from?: Date): Date {
+export function getNextCronRun(
+  pattern: string,
+  from?: Date,
+  timezone = "UTC",
+): Date {
   try {
     const interval = CronParser.parse(pattern, {
       currentDate: from ?? new Date(),
-      tz: "UTC",
+      tz: timezone,
     });
     return interval.next().toDate();
   } catch (error) {

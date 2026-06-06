@@ -10,7 +10,15 @@ import {
   PLAYWRIGHT_PACKAGES,
   NPM_BUILD_PACKAGES,
 } from "../catalog.ts";
-import { safeKey, RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
+import {
+  safeKey,
+  RETRY,
+  DAGGER_ENV,
+  DAGGER_CALL,
+  REPO_GIT_REF,
+  gitDir,
+  gitFile,
+} from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 
@@ -20,14 +28,18 @@ import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
 /**
  * Build Dagger CLI flags for per-package operations.
  * Generates --pkg-dir, --dep-names, --dep-dirs, --tsconfig flags.
+ *
+ * Paths are git-URL refs (see `gitDir`/`gitFile` in lib/buildkite.ts), so
+ * the Dagger engine fetches each subdir from the public monorepo at
+ * `$BUILDKITE_COMMIT` instead of the BK pod uploading a local working tree.
  */
 function daggerPkgFlags(pkg: string): string {
   const deps = WORKSPACE_DEPS[pkg] ?? [];
-  const flags = [`--pkg-dir ./packages/${pkg}`, `--pkg ${pkg}`];
+  const flags = [`--pkg-dir ${gitDir(`packages/${pkg}`)}`, `--pkg ${pkg}`];
   for (const dep of deps) {
-    flags.push(`--dep-names ${dep}`, `--dep-dirs ./packages/${dep}`);
+    flags.push(`--dep-names ${dep}`, `--dep-dirs ${gitDir(`packages/${dep}`)}`);
   }
-  flags.push("--tsconfig ./tsconfig.base.json");
+  flags.push(`--tsconfig ${gitFile("tsconfig.base.json")}`);
   return flags.join(" ");
 }
 
@@ -53,19 +65,19 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
       daggerCallStep(
         `:eslint: Lint`,
         `lint-${sk}`,
-        `dagger call generate-and-lint ${pf}`,
+        `${DAGGER_CALL} generate-and-lint ${pf}`,
         resources,
       ),
       daggerCallStep(
         `:typescript: Typecheck`,
         `typecheck-${sk}`,
-        `dagger call generate-and-typecheck ${pf}`,
+        `${DAGGER_CALL} generate-and-typecheck ${pf}`,
         resources,
       ),
       daggerCallStep(
         `:test_tube: Test`,
         `test-${sk}`,
-        `dagger call generate-and-test ${pf}`,
+        `${DAGGER_CALL} generate-and-test ${pf}`,
         resources,
       ),
     );
@@ -81,13 +93,13 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
     // uses the HASS_ prefix.
     const typecheckCmd =
       pkg === "temporal"
-        ? `dagger call generate-and-typecheck-with-secrets ${pf} --ha-url env:HASS_URL --ha-token env:HASS_TOKEN`
-        : `dagger call typecheck ${pf}`;
+        ? `${DAGGER_CALL} generate-and-typecheck-with-secrets ${pf} --ha-url env:HASS_URL --ha-token env:HASS_TOKEN`
+        : `${DAGGER_CALL} typecheck ${pf}`;
     steps.push(
       daggerCallStep(
         `:eslint: Lint`,
         `lint-${sk}`,
-        `dagger call lint ${pf}`,
+        `${DAGGER_CALL} lint ${pf}`,
         resources,
       ),
       daggerCallStep(
@@ -104,7 +116,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
         daggerCallStep(
           `:performing_arts: Playwright Test`,
           `playwright-test-${sk}`,
-          `dagger call playwright-test ${pf}`,
+          `${DAGGER_CALL} playwright-test ${pf}`,
           resources,
         ),
       );
@@ -114,7 +126,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
         daggerCallStep(
           `:test_tube: Test`,
           `test-${sk}`,
-          `dagger call test ${pf}${needsHelm}`,
+          `${DAGGER_CALL} test ${pf}${needsHelm}`,
           resources,
         ),
       );
@@ -134,7 +146,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
       daggerCallStep(
         `:building_construction: Build helm-types`,
         `build-helm-types`,
-        `dagger call build-package ${htFlags}`,
+        `${DAGGER_CALL} build-package ${htFlags}`,
         resources,
       ),
     );
@@ -145,13 +157,13 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
       daggerCallStep(
         `:rocket: Astro Check`,
         `astro-check-${sk}`,
-        `dagger call astro-check ${pf}`,
+        `${DAGGER_CALL} astro-check ${pf}`,
         resources,
       ),
       daggerCallStep(
         `:building_construction: Astro Build`,
         `astro-build-${sk}`,
-        `dagger call astro-build ${pf}`,
+        `${DAGGER_CALL} astro-build ${pf}`,
         resources,
       ),
     );
@@ -164,7 +176,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
       daggerCallStep(
         `:building_construction: Build`,
         `build-${sk}`,
-        `dagger call build-package ${pf}`,
+        `${DAGGER_CALL} build-package ${pf}`,
         resources,
       ),
     );
@@ -178,6 +190,7 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
 }
 
 function goPackageGroup(sk: string): BuildkiteGroup {
+  const goPkgDir = gitDir("packages/terraform-provider-asuswrt");
   return {
     group: `:dagger_knife: terraform-provider-asuswrt`,
     key: `pkg-${sk}`,
@@ -185,19 +198,19 @@ function goPackageGroup(sk: string): BuildkiteGroup {
       daggerCallStep(
         `:building_construction: Build`,
         `build-${sk}`,
-        `dagger call go-build --pkg-dir ./packages/terraform-provider-asuswrt`,
+        `${DAGGER_CALL} go-build --pkg-dir ${goPkgDir}`,
         DEFAULT_RESOURCES,
       ),
       daggerCallStep(
         `:test_tube: Test`,
         `test-${sk}`,
-        `dagger call go-test --pkg-dir ./packages/terraform-provider-asuswrt`,
+        `${DAGGER_CALL} go-test --pkg-dir ${goPkgDir}`,
         DEFAULT_RESOURCES,
       ),
       daggerCallStep(
         `:mag: Lint`,
         `lint-${sk}`,
-        `dagger call go-lint --pkg-dir ./packages/terraform-provider-asuswrt`,
+        `${DAGGER_CALL} go-lint --pkg-dir ${goPkgDir}`,
         DEFAULT_RESOURCES,
       ),
     ],
@@ -212,7 +225,7 @@ function latexPackageGroup(sk: string): BuildkiteGroup {
       daggerCallStep(
         `:page_facing_up: LaTeX Build`,
         `latex-build-${sk}`,
-        `dagger call latex-build --pkg-dir ./packages/resume`,
+        `${DAGGER_CALL} latex-build --pkg-dir ${gitDir("packages/resume")}`,
         DEFAULT_RESOURCES,
       ),
     ],
@@ -241,6 +254,14 @@ function daggerCallStep(
   return step;
 }
 
+/**
+ * iOS native deps check — runs `bun install --linker hoisted` and
+ * `bun run check:ios-native-deps` for `packages/tasks-for-obsidian` inside
+ * the Dagger engine. Source comes from the git URL ref (no BK checkout).
+ * Replaces the previous plainStep that ran
+ * `.buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh` against a
+ * local working tree.
+ */
 function tasksForObsidianNativeDepsStep(resources: {
   cpu: string;
   memory: string;
@@ -248,9 +269,10 @@ function tasksForObsidianNativeDepsStep(resources: {
   return {
     label: ":iphone: iOS Native Deps",
     key: "ios-native-deps-tasks-for-obsidian",
-    command: "bash .buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh",
+    command: `${DAGGER_CALL} tasks-for-obsidian-ios-native-deps --source ${REPO_GIT_REF}`,
     timeout_in_minutes: 10,
     retry: RETRY,
+    env: DAGGER_ENV,
     plugins: [k8sPlugin({ cpu: resources.cpu, memory: resources.memory })],
   };
 }

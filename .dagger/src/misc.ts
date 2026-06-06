@@ -154,20 +154,23 @@ async function runSmokeTest(
     const exitCode = "exitCode" in error ? Number(error.exitCode) : undefined;
     const stdout = "stdout" in error ? String(error.stdout) : "";
     const stderr = "stderr" in error ? String(error.stderr) : "";
-
-    if (exitCode === undefined) throw error;
-
-    if (exitCode === 124) {
-      return "✅ Smoke test passed: service ran until timeout.";
-    }
-
-    const combined = `${stdout}\n${stderr}`.toLowerCase();
+    const propertyText = Object.getOwnPropertyNames(error)
+      .map((propertyName) => String(Reflect.get(error, propertyName)))
+      .join("\n");
+    const combined =
+      `${stdout}\n${stderr}\n${error.message}\n${String(error)}\n${propertyText}`.toLowerCase();
     const isExpected = expectedFailurePatterns.some((p) =>
       combined.includes(p.toLowerCase()),
     );
 
     if (isExpected) {
       return "✅ Smoke test passed: failed with expected auth error.";
+    }
+
+    if (exitCode === undefined) throw error;
+
+    if (exitCode === 124) {
+      return "✅ Smoke test passed: service ran until timeout.";
     }
 
     throw new Error(
@@ -228,14 +231,36 @@ export async function smokeTestBirmelHelper(
     .withEnvVariable("OPENAI_API_KEY", "smoke-test-dummy")
     .withEnvVariable("DATABASE_URL", "file:/tmp/smoke-test.db")
     .withEnvVariable("MEMORY_DB_PATH", "file:/tmp/birmel-memory.db")
+    .withEnvVariable("TELEMETRY_ENABLED", "false")
     .withEntrypoint([])
     .withExec([
       "sh",
       "-c",
       // Verify both CLIs are installed before launching the bot. If either is
       // missing the smoke test fails immediately rather than silently
-      // shipping an image where the editor agent will warn at runtime.
-      `command -v gh >/dev/null && command -v claude >/dev/null && timeout 30s ${PRISMA_BUN_SERVICE_START_COMMAND} 2>&1`,
+      // shipping an image where the editor agent will warn at runtime. The
+      // music checks cover the runtime dependencies discovered during the
+      // Discord voice live patch: Node/Python for yt-dlp, ffmpeg-static for
+      // audio transcoding, and @snazzah/davey for discord-voip DAVE support.
+      [
+        "command -v gh",
+        "command -v claude",
+        "node --version",
+        "python3 --version",
+        'bun -e "const ffmpegPath = require(\\"ffmpeg-static\\"); if (typeof ffmpegPath !== \\"string\\" || ffmpegPath.length === 0) throw new Error(\\"ffmpeg-static did not resolve\\");"',
+        'bun -e "await import(\\"@snazzah/davey\\");"',
+        "test -x node_modules/youtube-dl-exec/bin/yt-dlp",
+        "timeout 10s node_modules/youtube-dl-exec/bin/yt-dlp --version",
+        [
+          "set +e",
+          `output="$(timeout 30s ${PRISMA_BUN_SERVICE_START_COMMAND} 2>&1)"`,
+          'status="$?"',
+          "printf '%s\\n' \"$output\"",
+          '[ "$status" -eq 0 ] && exit 0',
+          '[ "$status" -eq 124 ] && exit 124',
+          "printf '%s\\n' \"$output\" | grep -E 'TokenInvalid|401|Unauthorized|Invalid token'",
+        ].join(" ; "),
+      ].join(" && "),
     ]);
 
   return runSmokeTest(container, [
