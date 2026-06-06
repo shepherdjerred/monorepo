@@ -60,6 +60,7 @@ function imageBuildStep(
   const NO_SOURCE_BUILDS = new Set([
     "build-caddy-s-3-proxy-image",
     "build-obsidian-headless-image",
+    "build-mcp-gateway-image",
   ]);
 
   const flags = depFlags(pkg);
@@ -206,6 +207,7 @@ function imagePushStep(
   const NO_SOURCE_PUSHES = new Set([
     "push-caddy-s-3-proxy-image",
     "push-obsidian-headless-image",
+    "push-mcp-gateway-image",
   ]);
   const flags = depFlags(pkg);
 
