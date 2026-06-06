@@ -19,14 +19,16 @@ let schedulerInterval: ReturnType<typeof setInterval> | null = null;
 export function startScheduler(): void {
   const config = getConfig();
 
-  if (!config.dailyPosts.enabled) {
-    logger.info("Daily posts scheduler is disabled");
+  if (!config.scheduler.enabled) {
+    logger.info("Scheduler is disabled");
     return;
   }
 
   // Check every minute for due posts and announcements
   schedulerInterval = setInterval(() => {
-    void checkAndSendDailyPosts();
+    if (config.dailyPosts.enabled) {
+      void checkAndSendDailyPosts();
+    }
     void runAnnouncementsJob();
     void checkAndPostBirthdays();
     void aggregateActivityMetrics();
@@ -37,7 +39,9 @@ export function startScheduler(): void {
   }, 60 * 1000);
 
   // Also run immediately on startup
-  void checkAndSendDailyPosts();
+  if (config.dailyPosts.enabled) {
+    void checkAndSendDailyPosts();
+  }
   void runAnnouncementsJob();
   void checkAndPostBirthdays();
   void aggregateActivityMetrics();

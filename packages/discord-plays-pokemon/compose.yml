@@ -1,6 +1,6 @@
 services:
   discord-plays-pokemon:
-    image: ghcr.io/shepherdjerred/discord-plays-pokemon@sha256:7c0797e6b230564ba2897d6f6d68d63298e8c0dc639905d6a96c4f9660a30aec
+    image: ghcr.io/shepherdjerred/discord-plays-pokemon@sha256:87f6e4847faba3f2de1eb331193e79d6b9d2d98b06f9ae3b5a3a9cea0a204baf
     shm_size: "4gb"
     container_name: discord-plays-pokemon
     stdin_open: true

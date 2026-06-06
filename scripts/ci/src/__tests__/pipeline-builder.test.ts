@@ -1120,8 +1120,13 @@ describe("buildPipeline", () => {
           if (typeof obj["command"] === "string") {
             const cmd = obj["command"] as string;
             const key = obj["key"];
+            // Dagger CLI invocations may have flags between `dagger` and `call`
+            // (e.g. `dagger -m <module-ref> call`) so we look for both tokens
+            // rather than the literal substring.
+            const isDaggerCall =
+              /(^|\s)dagger(\s+-[\w-]+(\s+\S+)?)*\s+call(\s|$)/.test(cmd);
             if (
-              !cmd.includes("dagger call") &&
+              !isDaggerCall &&
               !cmd.includes("echo ") &&
               !cmd.includes("buildkite-agent") &&
               !(typeof key === "string" && PLAIN_STEP_KEYS.has(key))

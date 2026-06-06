@@ -43,6 +43,7 @@ export const manageTaskTool = createTool({
       .describe("Task description (for schedule)"),
     channelId: z.string().optional().describe("Channel ID (for remind)"),
     taskId: z.number().optional().describe("Task ID (for cancel)"),
+    jobId: z.string().optional().describe("AgentJob ID (for cancel)"),
     reminderAction: z
       .string()
       .optional()
@@ -62,16 +63,18 @@ export const manageTaskTool = createTool({
     data: z
       .object({
         taskId: z.number().optional(),
+        jobId: z.string().optional(),
         scheduledAt: z.string().optional(),
         isRecurring: z.boolean().optional(),
         cronPattern: z.string().optional(),
         tasks: z
           .array(
             z.object({
-              id: z.number(),
+              id: z.union([z.number(), z.string()]),
+              jobId: z.string().optional(),
               name: z.string().nullable(),
               description: z.string().nullable(),
-              scheduledAt: z.string(),
+              scheduledAt: z.string().nullable(),
               toolId: z.string().nullable(),
               isRecurring: z.boolean(),
               cronPattern: z.string().nullable(),
@@ -111,7 +114,12 @@ export const manageTaskTool = createTool({
         case "list":
           return await handleListTasks(ctx.guildId, ctx.includeExecuted);
         case "cancel":
-          return await handleCancelTask(ctx.guildId, ctx.taskId, ctx.userId);
+          return await handleCancelTask(
+            ctx.guildId,
+            ctx.taskId,
+            ctx.userId,
+            ctx.jobId,
+          );
         case "remind":
           return await handleRemind({
             guildId: ctx.guildId,

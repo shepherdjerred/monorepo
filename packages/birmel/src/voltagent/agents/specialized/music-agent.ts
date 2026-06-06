@@ -11,15 +11,19 @@ import {
 
 const MUSIC_PURPOSE = `This agent handles music playback and voice channels.
     It can play, pause, skip, and stop music.
-    It manages the music queue (add, remove, shuffle, clear).
+    It manages the music queue (add, remove, move, jump, shuffle, clear).
+    It manages temporary per-server playlists.
     It controls volume and loop modes.
     It joins and leaves voice channels.
     Use this agent for any music playback, queue management, or voice channel task.`;
 
-const MUSIC_RESPONSIBILITIES = `Play, pause, skip, stop music. Manage the queue (add, remove, shuffle, clear). Control volume and loop modes. Join and leave voice channels.`;
+const MUSIC_RESPONSIBILITIES = `Play, pause, skip, stop music. Manage the queue (add, remove, move, jump, shuffle, clear). Control volume and loop modes. Join and leave voice channels. Manage temporary per-server playlists. Show recent tracks and music help.`;
 
-const MUSIC_TOOL_GUIDANCE = `- Use \`manage-playback\` for play/pause/skip/stop/volume/loop and \`manage-queue\` for queue mutations.
-- When the user says "play X", call \`manage-playback\` action="play" with the search query directly — don't ask which song they meant.
+const MUSIC_TOOL_GUIDANCE = `- Use \`music-playback\` for play/pause/resume/skip/stop/seek/volume/loop/now-playing/replay/recent/help.
+- Use \`music-queue\` for queue get/add/remove/move/jump/shuffle/clear/summary.
+- Use \`music-playlist\` for create/delete/rename/list/show/add/add-current/save-queue/remove/move/play/clear.
+- When the user says "play X", call \`music-playback\` action="play" with the search query directly. The tool can infer the user's voice channel when available.
+- Playlists are in-memory per server and disappear when Birmel restarts.
 - If joining a voice channel fails (user not in voice, missing permissions), say so clearly in one line.`;
 
 export function createMusicAgent(persona: PersonaContext | null): Agent {

@@ -25,15 +25,19 @@ import { resetConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { initializeObservability, shutdownObservability } from "./index.ts";
 import { withSpan } from "./tracing.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
+import { getAvailableLocalPort } from "./test-ports.ts";
 
 describe("OTLP logs integration", () => {
-  let traceServer: ReturnType<typeof Bun.serve>;
-  let logServer: ReturnType<typeof Bun.serve>;
+  let traceServer: ReturnType<typeof Bun.serve> | null = null;
+  let logServer: ReturnType<typeof Bun.serve> | null = null;
   const logPosts: { bytes: number; body: string }[] = [];
 
-  beforeAll(() => {
+  beforeAll(async () => {
+    const tracePort = await getAvailableLocalPort();
+    const logPort = await getAvailableLocalPort();
     traceServer = Bun.serve({
-      port: 0,
+      hostname: "127.0.0.1",
+      port: tracePort,
       async fetch(req) {
         if (
           new URL(req.url).pathname === "/v1/traces" &&
@@ -46,7 +50,8 @@ describe("OTLP logs integration", () => {
       },
     });
     logServer = Bun.serve({
-      port: 0,
+      hostname: "127.0.0.1",
+      port: logPort,
       async fetch(req) {
         if (new URL(req.url).pathname === "/v1/logs" && req.method === "POST") {
           const body = await req.arrayBuffer();
@@ -59,14 +64,17 @@ describe("OTLP logs integration", () => {
         return new Response("not found", { status: 404 });
       },
     });
-    Bun.env["OTLP_ENDPOINT"] = `http://127.0.0.1:${traceServer.url.port}`;
+    Bun.env["OTLP_ENDPOINT"] = `http://127.0.0.1:${String(tracePort)}`;
     Bun.env["LOKI_OTLP_ENDPOINT"] =
-      `http://127.0.0.1:${logServer.url.port}/v1/logs`;
+      `http://127.0.0.1:${String(logPort)}/v1/logs`;
     resetConfig();
   });
 
   afterAll(async () => {
-    await Promise.all([traceServer.stop(true), logServer.stop(true)]);
+    await Promise.all([
+      traceServer?.stop(true) ?? Promise.resolve(),
+      logServer?.stop(true) ?? Promise.resolve(),
+    ]);
     // Reset OTel global API state so a sibling test file (the trace
     // integration test) can re-register its own providers cleanly.
     trace.disable();
