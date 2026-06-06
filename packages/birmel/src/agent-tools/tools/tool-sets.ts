@@ -20,6 +20,7 @@ import { activityTools } from "./discord/activity.ts";
 import { schedulingTools } from "./discord/scheduling.ts";
 import { playbackTools } from "./music/playback.ts";
 import { queueTools } from "./music/queue.ts";
+import { playlistTools } from "./music/playlists.ts";
 import { executeShellCommandTool } from "./automation/shell.ts";
 import { manageTaskTool } from "./automation/timers.ts";
 import { browserAutomationTool } from "./automation/browser.ts";
@@ -75,7 +76,7 @@ export const moderationToolSet = [
 /**
  * Music Agent - handles music playback
  */
-export const musicToolSet = [...playbackTools, ...queueTools];
+export const musicToolSet = [...playbackTools, ...queueTools, ...playlistTools];
 
 /**
  * Automation Agent - handles automation, external APIs, events, elections, birthdays

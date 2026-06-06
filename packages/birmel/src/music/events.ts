@@ -1,28 +1,31 @@
 import type { Player } from "discord-player";
+import type { MessageCreateOptions } from "discord.js";
 import { z } from "zod";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";
 import { recordTrackPlay } from "@shepherdjerred/birmel/database/repositories/music-history.ts";
+import { buildActionEmbed, buildNowPlayingEmbed } from "./embeds.ts";
+import { normalizeTrack, trackDurationSeconds } from "./metadata.ts";
 
 type ChannelMetadata = {
-  send?: ((msg: string) => Promise<unknown>) | undefined;
+  send?: ((msg: string | MessageCreateOptions) => Promise<unknown>) | undefined;
   id?: string | undefined;
 };
 
 const ChannelMetadataSchema = z
   .object({
-    send: z.any().optional(),
+    send: z.unknown().optional(),
     id: z.string().optional(),
   })
   .loose();
 
 function wrapSendFunction(
   value: unknown,
-): ((msg: string) => Promise<unknown>) | undefined {
+): ((msg: string | MessageCreateOptions) => Promise<unknown>) | undefined {
   if (typeof value !== "function") {
     return undefined;
   }
   const fn = value;
-  return (msg: string): Promise<unknown> => {
+  return (msg: string | MessageCreateOptions): Promise<unknown> => {
     const result: unknown = Reflect.apply(fn, undefined, [msg]);
     if (result instanceof Promise) {
       return result;
@@ -42,33 +45,47 @@ function getChannelMetadata(metadata: unknown): ChannelMetadata | undefined {
 export function setupPlayerEvents(player: Player): void {
   player.events.on("playerStart", (queue, track) => {
     const channel = getChannelMetadata(queue.metadata);
+    const trackInfo = normalizeTrack(track);
+    const trackDuration = trackDurationSeconds(track);
     if (channel?.send != null) {
-      void channel.send(`🎵 Now playing: **${track.title}**`);
+      void channel.send({
+        embeds: [
+          buildNowPlayingEmbed(
+            trackInfo,
+            queue.node.createProgressBar() ?? undefined,
+          ),
+        ],
+      });
     }
 
-    // Record to history
-    const trackDuration = track.durationMS
-      ? Math.floor(track.durationMS / 1000)
-      : undefined;
     recordTrackPlay({
       guildId: queue.guild.id,
       channelId: channel?.id ?? "",
       requestedBy: track.requestedBy?.id ?? "unknown",
-      trackTitle: track.title,
-      trackUrl: track.url,
+      trackTitle: trackInfo.title,
+      trackUrl: trackInfo.url,
       ...(trackDuration !== undefined && { trackDuration }),
     });
 
     logger.info("Started playing track", {
       guildId: queue.guild.id,
-      track: track.title,
+      track: trackInfo.title,
     });
   });
 
   player.events.on("audioTrackAdd", (queue, track) => {
     const channel = getChannelMetadata(queue.metadata);
+    const trackInfo = normalizeTrack(track);
     if (channel?.send != null) {
-      void channel.send(`✅ Added to queue: **${track.title}**`);
+      void channel.send({
+        embeds: [
+          buildActionEmbed({
+            title: "Added to Queue",
+            message: `Added: ${trackInfo.title}`,
+            track: trackInfo,
+          }),
+        ],
+      });
     }
   });
 
