@@ -290,6 +290,10 @@ export async function editAgentJob(options: {
   if (existing == null) {
     return { success: false, message: "Agent job not found" };
   }
+  const hasScheduleChange =
+    options.scheduleKind !== undefined ||
+    options.scheduleValue !== undefined ||
+    options.timezone !== undefined;
   const scheduleKind = options.scheduleKind ?? existing.scheduleKind;
   const kindResult = AgentJobScheduleKindSchema.safeParse(scheduleKind);
   if (!kindResult.success) {
@@ -300,18 +304,25 @@ export async function editAgentJob(options: {
   }
   const scheduleValue = options.scheduleValue ?? existing.scheduleValue;
   const timezone = options.timezone ?? existing.timezone;
-  const resolved = resolveAgentJobSchedule({
-    scheduleKind: kindResult.data,
-    scheduleValue,
-    timezone,
-  });
+  const schedulePatch = hasScheduleChange
+    ? resolveAgentJobSchedule({
+        scheduleKind: kindResult.data,
+        scheduleValue,
+        timezone,
+      })
+    : {
+        scheduleKind: existing.scheduleKind,
+        scheduleValue: existing.scheduleValue,
+        timezone: existing.timezone,
+        nextRunAt: existing.nextRunAt,
+      };
   const updated = await prisma.agentJob.update({
     where: { id: existing.id },
     data: {
-      scheduleKind: resolved.scheduleKind,
-      scheduleValue: resolved.scheduleValue,
-      timezone: resolved.timezone,
-      nextRunAt: resolved.nextRunAt,
+      scheduleKind: schedulePatch.scheduleKind,
+      scheduleValue: schedulePatch.scheduleValue,
+      timezone: schedulePatch.timezone,
+      nextRunAt: schedulePatch.nextRunAt,
       message: options.message ?? existing.message,
       toolId: options.toolId ?? existing.toolId,
       toolInput:

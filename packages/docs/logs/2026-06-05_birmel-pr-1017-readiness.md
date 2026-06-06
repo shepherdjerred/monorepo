@@ -40,11 +40,14 @@ Looped on PR #1017 readiness for `codex/birmel-openclaw-capabilities`: addressed
 - Reconciled the local PR branch with the remote review-fix commit.
 - Fixed the Docker E2E test env placeholder so gitleaks no longer flags the dummy Anthropic key.
 - Formatted the repo-wide files that blocked the Buildkite Prettier step.
+- Fixed `editAgentJob` so non-schedule edits preserve the existing `nextRunAt`.
+- Added a regression test for preserving `nextRunAt` when only metadata fields are edited.
 
 ### Remaining
 
-- Commit and push the CI fixes, then wait for Buildkite and automated review to settle.
+- Push the follow-up review fix, then wait for Buildkite and automated review to settle.
 
 ### Caveats
 
 - The local branch had an unpublished overlapping review-fix commit; conflict resolution kept the remote PR implementation for overlapping files before applying the CI fixes.
+- Buildkite may still report soft failures; those do not count for this readiness loop per the user request.

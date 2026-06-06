@@ -12,6 +12,7 @@ import { z } from "zod";
 import { executeShellCommandTool } from "./shell.ts";
 import { manageTaskTool } from "./timers.ts";
 import { handleRemind } from "./timer-actions.ts";
+import { createAgentJob, editAgentJob } from "./agent-job-actions.ts";
 import { browserAutomationTool } from "./browser.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 
@@ -30,6 +31,10 @@ const ToolResultSchema = z.object({
   success: z.boolean(),
   message: z.string(),
   data: z.record(z.string(), z.unknown()).optional(),
+});
+
+const CreatedAgentJobDataSchema = z.object({
+  jobId: z.string(),
 });
 
 async function executeTool(
@@ -274,6 +279,39 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
       where: { id: String(jobId) },
     });
     expect(job?.status).toBe("active");
+  });
+
+  test("editing non-schedule fields preserves the next run time", async () => {
+    const createResult = await createAgentJob({
+      guildId: testGuildId,
+      userId: testUserId,
+      channelId: "test-channel-e2e",
+      scheduleKind: "every",
+      scheduleValue: "every 1 hour",
+      message: "Preserve schedule test",
+      name: "Original schedule name",
+    });
+    expect(createResult.success).toBe(true);
+    const created = CreatedAgentJobDataSchema.parse(createResult.data);
+    const before = await prisma.agentJob.findUniqueOrThrow({
+      where: { id: created.jobId },
+    });
+    expect(before.nextRunAt).toBeInstanceOf(Date);
+
+    const editResult = await editAgentJob({
+      guildId: testGuildId,
+      jobId: created.jobId,
+      name: "Renamed schedule",
+    });
+    expect(editResult.success).toBe(true);
+
+    const after = await prisma.agentJob.findUniqueOrThrow({
+      where: { id: created.jobId },
+    });
+    expect(after.name).toBe("Renamed schedule");
+    expect(after.nextRunAt?.toISOString()).toBe(
+      before.nextRunAt?.toISOString(),
+    );
   });
 });
 
