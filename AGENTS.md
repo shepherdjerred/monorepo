@@ -148,6 +148,27 @@ cd packages/<name> && bunx eslint . --fix
 cd scripts/ci && bun run src/main.ts
 ```
 
+## GitHub CLI in Codex
+
+`gh` works from Codex, but GitHub network access is sandboxed. Do not conclude that
+`gh` is broken just because the first attempt says it cannot connect to
+`api.github.com` or cannot resolve `github.com`.
+
+- For GitHub reads (`gh status`, `gh repo view/list`, `gh pr view/list/diff/checks`),
+  retry with Codex network escalation when the sandbox blocks the first attempt.
+- For publishing or mutating GitHub state, check `gh auth status` early and separate
+  auth failures from sandbox/network failures.
+- For GitHub writes (`gh pr comment`, `gh issue create`, `gh pr create`,
+  `gh pr review`, `gh pr merge`), require an explicit target and payload from the
+  user or task, then run with Codex escalation.
+- In Codex tool calls, escalation means rerunning `exec_command` with
+  `sandbox_permissions: "require_escalated"` and a narrow `prefix_rule` such as
+  `["gh", "pr", "view"]` or `["gh", "pr", "comment"]`.
+- CI for this monorepo is Buildkite, not GitHub Actions. Do not use `gh run` as the
+  CI source of truth; use Buildkite tooling or the relevant PR/status surface.
+- If a PR or push flow fails, report the exact layer: local git ref permission,
+  GitHub auth, sandboxed network access, or remote rejection.
+
 ## Development Setup
 
 ```bash

@@ -18,6 +18,21 @@ describe("music metadata", () => {
     expect(extractYouTubeVideoId("https://youtube.com/embed/jkl012")).toBe(
       "jkl012",
     );
+    expect(extractYouTubeVideoId("https://m.youtube.com/watch?v=mno345")).toBe(
+      "mno345",
+    );
+    expect(
+      extractYouTubeVideoId("https://music.youtube.com/watch?v=pqr678"),
+    ).toBe("pqr678");
+  });
+
+  test("does not extract YouTube IDs from non-YouTube hosts", () => {
+    expect(extractYouTubeVideoId("https://example.com/watch?v=abc123")).toBe(
+      undefined,
+    );
+    expect(buildYouTubeCoverUrl("https://example.com/watch?v=abc123")).toBe(
+      undefined,
+    );
   });
 
   test("builds YouTube cover URLs from track URLs", () => {

@@ -36,3 +36,23 @@ Expanded Birmel's AI-only music bot surface with richer metadata, embeds, queue 
 
 - Playlists are intentionally in-memory and are lost on bot restart.
 - The earlier Birmel runtime caveat still applies: real Kubernetes voice playback depends on Discord voice UDP egress and a real `node` binary for yt-dlp's configured JavaScript runtime.
+
+## Session Log - 2026-06-06
+
+### Done
+
+- Opened and monitored PR #1021 for the AI music bot expansion.
+- Addressed automated review feedback with fixes for duplicate now-playing notifications, duplicate queue-add notifications, and queue reorder spam.
+- Verified the PR head with `bun run --filter='./packages/birmel' typecheck`, `bun run --filter='./packages/birmel' test`, and `cd packages/birmel && bunx eslint . --fix`.
+- Confirmed Buildkite build #3313 passed for PR #1021, ignoring the Trivy soft failure per the user instruction.
+- Confirmed PR #1021 had no merge conflicts and no remaining P3-or-higher actionable review comments before it merged.
+- Added a follow-up branch after PR #1021 merged to suppress per-track queue-add embeds during playlist playback and to tighten YouTube thumbnail extraction to recognized YouTube hosts.
+
+### Remaining
+
+- Monitor the follow-up PR containing the playlist bulk-notification fix until CI is green, there are no merge conflicts, and there are no P3-or-higher comments.
+
+### Caveats
+
+- Live Discord/YouTube playback remains optional manual validation with real credentials and voice connectivity.
+- The follow-up branch is needed because PR #1021 auto-merged before the last playlist notification fix could land.

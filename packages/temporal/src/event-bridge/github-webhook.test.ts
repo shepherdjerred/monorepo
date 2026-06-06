@@ -1,16 +1,26 @@
 import { describe, expect, it, mock } from "bun:test";
 import { sign } from "@octokit/webhooks-methods";
 import { buildWebhookApp, postWebhookStatus } from "./github-webhook.ts";
-import type { PrAgentInput } from "#shared/schemas.ts";
+import type {
+  CancelBuildkiteBuildsInput,
+  PrAgentInput,
+} from "#shared/schemas.ts";
 import type { PostReviewOctokit } from "#activities/pr-review/post-github.ts";
 
 const SECRET = "test-webhook-secret-do-not-use-anywhere";
 
 const RESOLVED: Promise<void> = Promise.resolve();
 const noopStart = (_input: PrAgentInput): Promise<void> => RESOLVED;
+const noopStatus = (
+  _input: PrAgentInput,
+  _state: "draft_skipped",
+): Promise<void> => RESOLVED;
+const noopCancel = (_input: CancelBuildkiteBuildsInput): Promise<void> =>
+  RESOLVED;
 
 type StartCall = [PrAgentInput];
 type StatusCall = [PrAgentInput, "draft_skipped"];
+type CancelCall = [CancelBuildkiteBuildsInput];
 
 function makePrInput(): PrAgentInput {
   return {
@@ -60,6 +70,7 @@ function makeBaseEvent(
   overrides: Partial<{
     action: string;
     draft: boolean;
+    merged: boolean;
     userType: string;
     number: number;
     headSha: string;
@@ -72,6 +83,7 @@ function makeBaseEvent(
     pull_request: {
       number: overrides.number ?? 42,
       draft: overrides.draft ?? false,
+      merged: overrides.merged ?? false,
       title: "Add foo support",
       base: { ref: "main", sha: "00".repeat(20) },
       head: { ref: "feature/foo", sha: overrides.headSha ?? "ab".repeat(20) },
@@ -293,16 +305,6 @@ describe("buildWebhookApp", () => {
     expect(start).not.toHaveBeenCalled();
   });
 
-  it("skips irrelevant actions like closed", async () => {
-    const start = mock(noopStart);
-    const app = buildWebhookApp(SECRET, start);
-    const res = await postWebhook(app, makeBaseEvent({ action: "closed" }));
-    expect(res.status).toBe(200);
-    const text = await res.text();
-    expect(text).toContain("ignored");
-    expect(start).not.toHaveBeenCalled();
-  });
-
   it("ignores non-pull_request events", async () => {
     const start = mock(noopStart);
     const app = buildWebhookApp(SECRET, start);
@@ -318,6 +320,90 @@ describe("buildWebhookApp", () => {
     });
     const app = buildWebhookApp(SECRET, start);
     const res = await postWebhook(app, makeBaseEvent());
+    expect(res.status).toBe(500);
+  });
+});
+
+describe("buildWebhookApp PR closed", () => {
+  it("starts the cancel workflow when a merged PR is closed", async () => {
+    const cancelCalls: CancelCall[] = [];
+    const start = mock(noopStart);
+    const cancel = mock(async (input: CancelBuildkiteBuildsInput) => {
+      cancelCalls.push([input]);
+    });
+    const app = buildWebhookApp(SECRET, start, noopStatus, cancel);
+    const res = await postWebhook(
+      app,
+      makeBaseEvent({ action: "closed", merged: true }),
+    );
+    expect(res.status).toBe(200);
+    expect(await res.text()).toContain("cancel started");
+    // The review/summary start fn must NOT run for a closed PR.
+    expect(start).not.toHaveBeenCalled();
+    expect(cancel).toHaveBeenCalledTimes(1);
+    const call = cancelCalls[0];
+    if (call === undefined) {
+      throw new Error("expected one cancel call");
+    }
+    const input = call[0];
+    expect(input.owner).toBe("shepherdjerred");
+    expect(input.repo).toBe("monorepo");
+    expect(input.prNumber).toBe(42);
+    expect(input.branch).toBe("feature/foo");
+    expect(input.commitSha).toBe("ab".repeat(20));
+    expect(input.merged).toBe(true);
+  });
+
+  it("starts the cancel workflow when a PR is closed without merging", async () => {
+    const cancelCalls: CancelCall[] = [];
+    const cancel = mock(async (input: CancelBuildkiteBuildsInput) => {
+      cancelCalls.push([input]);
+    });
+    const app = buildWebhookApp(SECRET, mock(noopStart), noopStatus, cancel);
+    const res = await postWebhook(
+      app,
+      makeBaseEvent({ action: "closed", merged: false }),
+    );
+    expect(res.status).toBe(200);
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(cancelCalls[0]?.[0].merged).toBe(false);
+  });
+
+  it("cancels builds even for bot-authored closed PRs", async () => {
+    const cancel = mock(noopCancel);
+    const app = buildWebhookApp(SECRET, mock(noopStart), noopStatus, cancel);
+    const res = await postWebhook(
+      app,
+      makeBaseEvent({
+        action: "closed",
+        merged: true,
+        userType: "Bot",
+        authorLogin: "renovate[bot]",
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(cancel).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not start the cancel workflow for opened PRs", async () => {
+    const cancel = mock(noopCancel);
+    const start = mock(noopStart);
+    const app = buildWebhookApp(SECRET, start, noopStatus, cancel);
+    const res = await postWebhook(app, makeBaseEvent({ action: "opened" }));
+    expect(res.status).toBe(200);
+    expect(start).toHaveBeenCalledTimes(1);
+    expect(cancel).not.toHaveBeenCalled();
+  });
+
+  it("returns 500 when the cancel start function throws", async () => {
+    const cancel = mock((_input: CancelBuildkiteBuildsInput): Promise<void> => {
+      throw new Error("Temporal unavailable");
+    });
+    const app = buildWebhookApp(SECRET, mock(noopStart), noopStatus, cancel);
+    const res = await postWebhook(
+      app,
+      makeBaseEvent({ action: "closed", merged: true }),
+    );
     expect(res.status).toBe(500);
   });
 });

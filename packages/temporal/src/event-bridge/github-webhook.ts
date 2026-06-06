@@ -14,6 +14,11 @@ import {
   type PrSummaryInput,
 } from "#shared/schemas.ts";
 import {
+  handleClosedPr,
+  startCancelBuildkiteBuilds,
+  type CancelStartFn,
+} from "./pr-closed.ts";
+import {
   prWebhookReceivedTotal,
   prWebhookSignatureFailuresTotal,
   prWebhookSkippedTotal,
@@ -78,6 +83,7 @@ const PrRefSchema = z.object({
 const PrSchema = z.object({
   number: z.number().int().positive(),
   draft: z.boolean().optional(),
+  merged: z.boolean().optional(),
   title: z.string(),
   base: PrRefSchema,
   head: PrRefSchema,
@@ -218,6 +224,7 @@ async function startPrWorkflows(
 
 type StartFn = (input: PrAgentInput) => Promise<void>;
 type StatusFn = (input: PrAgentInput, state: "draft_skipped") => Promise<void>;
+const noopCancel: CancelStartFn = () => Promise.resolve();
 type WebhookStatusDeps = {
   createInstallationToken?: () => Promise<GitHubAppTokenResult>;
   createOctokit?: (token: string) => PostReviewOctokit;
@@ -290,6 +297,44 @@ export async function postWebhookStatus(
 }
 
 /**
+ * Verify the `X-Hub-Signature-256` HMAC. Returns a `Response` to return on
+ * failure, or `null` when the signature is valid. Extracted from the handler
+ * to keep its cyclomatic complexity within bounds.
+ */
+async function verifyWebhookSignature(
+  secret: string,
+  payload: string,
+  signature: string,
+  deliveryId: string,
+): Promise<Response | null> {
+  if (signature.length === 0) {
+    prWebhookSignatureFailuresTotal.inc();
+    jsonLog("warning", "Missing X-Hub-Signature-256", { deliveryId });
+    return new Response("missing signature\n", { status: 401 });
+  }
+
+  let signatureOk: boolean;
+  try {
+    signatureOk = await verify(secret, payload, signature);
+  } catch (error: unknown) {
+    prWebhookSignatureFailuresTotal.inc();
+    jsonLog("warning", "Signature verify threw", {
+      deliveryId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return new Response("bad signature\n", { status: 401 });
+  }
+
+  if (!signatureOk) {
+    prWebhookSignatureFailuresTotal.inc();
+    jsonLog("warning", "Bad X-Hub-Signature-256", { deliveryId });
+    return new Response("bad signature\n", { status: 401 });
+  }
+
+  return null;
+}
+
+/**
  * Pure handler — kept separate from Bun.serve so tests can drive it
  * directly without binding a real port.
  */
@@ -297,6 +342,7 @@ export function buildWebhookApp(
   secret: string,
   startWorkflows: StartFn,
   postStatus: StatusFn = postWebhookStatus,
+  startCancel: CancelStartFn = noopCancel,
 ): Hono {
   const app = new Hono();
 
@@ -319,28 +365,14 @@ export function buildWebhookApp(
       return c.text("ignored\n");
     }
 
-    if (signature.length === 0) {
-      prWebhookSignatureFailuresTotal.inc();
-      jsonLog("warning", "Missing X-Hub-Signature-256", { deliveryId });
-      return c.text("missing signature\n", 401);
-    }
-
-    let signatureOk: boolean;
-    try {
-      signatureOk = await verify(secret, payload, signature);
-    } catch (error: unknown) {
-      prWebhookSignatureFailuresTotal.inc();
-      jsonLog("warning", "Signature verify threw", {
-        deliveryId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      return c.text("bad signature\n", 401);
-    }
-
-    if (!signatureOk) {
-      prWebhookSignatureFailuresTotal.inc();
-      jsonLog("warning", "Bad X-Hub-Signature-256", { deliveryId });
-      return c.text("bad signature\n", 401);
+    const sigFailure = await verifyWebhookSignature(
+      secret,
+      payload,
+      signature,
+      deliveryId,
+    );
+    if (sigFailure !== null) {
+      return sigFailure;
     }
 
     let parsed;
@@ -357,6 +389,14 @@ export function buildWebhookApp(
 
     const action = parsed.action;
     prWebhookReceivedTotal.inc({ event: "pull_request", action });
+
+    // PR closed (merged or plain close): stop any still-active Buildkite builds
+    // for the head branch. Delegated to handleClosedPr — it does not skip draft
+    // or bot PRs (Renovate branches churn the most CI). Runs before the
+    // review/summary RELEVANT_ACTIONS gate.
+    if (action === "closed") {
+      return handleClosedPr(parsed, deliveryId, startCancel);
+    }
 
     if (!RELEVANT_ACTIONS.has(action)) {
       prWebhookSkippedTotal.inc({ reason: `action:${action}` });
@@ -468,8 +508,11 @@ export function startGithubWebhook(client: Client): WebhookHandle {
     10,
   );
 
-  const app = buildWebhookApp(secret, (input) =>
-    startPrWorkflows(client, input),
+  const app = buildWebhookApp(
+    secret,
+    (input) => startPrWorkflows(client, input),
+    postWebhookStatus,
+    (input) => startCancelBuildkiteBuilds(client, input),
   );
 
   const server = Bun.serve({

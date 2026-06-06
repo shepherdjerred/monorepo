@@ -154,3 +154,5 @@ export async function buildAgentTaskCommand(
     ? await claudeCommand(input, workdir)
     : await codexCommand(input, workdir);
 }
+
+// Force CI rebuild
