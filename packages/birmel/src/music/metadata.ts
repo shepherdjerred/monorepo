@@ -53,8 +53,11 @@ export function extractYouTubeVideoId(url: string): string | undefined {
     return undefined;
   }
 
-  const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
-  const isYouTubeHost = host === "youtube.com" || host === "youtu.be";
+  const host = parsed.hostname.toLowerCase();
+  const isYouTubeHost =
+    host === "youtube.com" ||
+    host.endsWith(".youtube.com") ||
+    host === "youtu.be";
   if (!isYouTubeHost) {
     return undefined;
   }
