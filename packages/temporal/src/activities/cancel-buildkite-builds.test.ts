@@ -18,10 +18,6 @@ let savedToken: string | undefined;
 let savedOrg: string | undefined;
 let savedPipeline: string | undefined;
 
-function restore(key: string, value: string | undefined): void {
-  Bun.env[key] = value ?? "";
-}
-
 const forbiddenFetch: FetchFn = () =>
   Promise.resolve(new Response("forbidden", { status: 403 }));
 
@@ -34,10 +30,26 @@ beforeEach(() => {
   Bun.env["BUILDKITE_PIPELINE_SLUG"] = "monorepo";
 });
 
+// Restore each var to its pre-test value — deleting (not blanking to "") when
+// it was genuinely absent, so a var that was unset before this suite stays
+// unset after, preserving isolation for any later test that distinguishes
+// undefined from "". Literal keys keep this clear of no-dynamic-delete.
 afterEach(() => {
-  restore("BUILDKITE_API_TOKEN", savedToken);
-  restore("BUILDKITE_ORGANIZATION_SLUG", savedOrg);
-  restore("BUILDKITE_PIPELINE_SLUG", savedPipeline);
+  if (savedToken === undefined) {
+    delete Bun.env["BUILDKITE_API_TOKEN"];
+  } else {
+    Bun.env["BUILDKITE_API_TOKEN"] = savedToken;
+  }
+  if (savedOrg === undefined) {
+    delete Bun.env["BUILDKITE_ORGANIZATION_SLUG"];
+  } else {
+    Bun.env["BUILDKITE_ORGANIZATION_SLUG"] = savedOrg;
+  }
+  if (savedPipeline === undefined) {
+    delete Bun.env["BUILDKITE_PIPELINE_SLUG"];
+  } else {
+    Bun.env["BUILDKITE_PIPELINE_SLUG"] = savedPipeline;
+  }
 });
 
 function listBody(numbers: number[]): Response {
