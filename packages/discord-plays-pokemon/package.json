@@ -28,7 +28,6 @@
     "node-av",
     "@snazzah/davey",
     "sharp",
-    "zeromq",
     "@sentry/profiling-node"
   ],
   "patchedDependencies": {
