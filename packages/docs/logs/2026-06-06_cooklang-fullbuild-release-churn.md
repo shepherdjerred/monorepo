@@ -2,7 +2,8 @@
 
 ## Status
 
-Complete (changes uncommitted in worktree `intelligent-buck-86ba99`)
+Complete — shipped in [PR #1038](https://github.com/shepherdjerred/monorepo/pull/1038)
+(branch `claude/intelligent-buck-86ba99`), awaiting CI/merge.
 
 ## Summary
 
@@ -84,7 +85,8 @@ real cooklang source/dep changes (incl. a Renovate `chevrotain` bump that touche
   Not required to stop the reported churn; issue 1 fully addresses it. The
   manifest is currently at v1.0.19; the next _real_ cooklang change resumes
   normal versioning.
-- Changes are **uncommitted** in the worktree — open a PR when ready.
+- Shipped in [PR #1038](https://github.com/shepherdjerred/monorepo/pull/1038);
+  watch Buildkite on the PR through merge.
 
 ### Caveats
 
@@ -92,7 +94,7 @@ real cooklang source/dep changes (incl. a Renovate `chevrotain` bump that touche
   (found `prunable`, directory gone) and recreated from branch
   `claude/intelligent-buck-86ba99` (`cef5e749f`); uncommitted edits were
   re-applied from context. Nothing in the main checkout or other worktrees was
-  touched. Consider committing soon to avoid re-loss.
+  touched.
 - A forced `[full-build]` that _also_ edits cooklang source in the same commit
   will not auto-publish (forced path passes `cooklangChanged=false`). Rare;
   documented in code. Land cooklang changes in a normal commit to release.
