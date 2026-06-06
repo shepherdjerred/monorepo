@@ -9,6 +9,7 @@ import { alertRemediationActivities } from "./alert-remediation.ts";
 import { zfsMaintenanceActivities } from "./zfs-maintenance.ts";
 import { bugsinkHousekeepingActivities } from "./bugsink.ts";
 import { dataDragonActivities } from "./data-dragon.ts";
+import { pokeemeraldWasmActivities } from "./pokeemerald-wasm.ts";
 import { scoutSeasonRefreshActivities } from "./scout-season-refresh.ts";
 import { prReviewActivities } from "./pr-review/index.ts";
 import { prReviewEvalActivities } from "./pr-review-eval/index.ts";
@@ -28,6 +29,7 @@ export const activities = {
   ...zfsMaintenanceActivities,
   ...bugsinkHousekeepingActivities,
   ...dataDragonActivities,
+  ...pokeemeraldWasmActivities,
   ...scoutSeasonRefreshActivities,
   ...prReviewActivities,
   ...prReviewEvalActivities,

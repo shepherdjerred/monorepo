@@ -64,12 +64,15 @@ install the app imports cleanly; the Linux Docker image also installs system
 - **Audio:** stream is video-only (the JS port has no sound path).
 - **wasm provisioning:** the built `pokeemerald.wasm` (~12 MB) is **vendored
   in-repo** at `packages/backend/assets/pokeemerald.wasm` (un-ignored; allowlisted
-  in the `large-files` pre-commit hook). It is refreshed **monthly** by
-  `.buildkite/scripts/update-pokeemerald-wasm.sh`, which re-runs `fetch-wasm.ts`
-  and opens a PR if the blob changed (mirrors `update-readmes.sh`).
-  **One-time manual step:** create a monthly Buildkite Schedule in the UI that
-  runs that script (Renovate can't fetch binaries — hosted Mend app, no
-  postUpgradeTasks). Tradeoff: each refresh adds ~12 MB to git history.
+  in the `large-files` pre-commit hook). It is refreshed **monthly** by the
+  Temporal `pokeemerald-wasm-monthly` schedule
+  (`packages/temporal/src/workflows/pokeemerald-wasm.ts` +
+  `activities/pokeemerald-wasm.ts`), which clones the repo, re-runs
+  `fetch-wasm.ts`, and opens a PR if the blob changed — the same deterministic
+  clone→commit→PR pattern as the Scout Data Dragon updater. (Renovate can't
+  fetch binaries — hosted Mend app, no postUpgradeTasks.) The schedule
+  registers automatically on temporal worker startup; no manual UI step.
+  Tradeoff: each refresh adds ~12 MB to git history.
 - **Not yet run:** the live Discord send (needs a user token) and the Docker
   build on a non-GPU host.
 
