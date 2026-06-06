@@ -63,3 +63,24 @@ Alert groups:
 - Only PagerDuty incident #5346 was modified. No other incidents were acknowledged or resolved because fresh evidence still showed active backing conditions or undeployed code/config remediation.
 - The large-PVC rule can only stop paging after the updated Prometheus rule is rendered and applied.
 - The ZFS ARC repo fix is not live until Talos machine config is patched and the node is rebooted.
+
+## Session Log - 2026-06-05 PR Follow-up
+
+### Done
+
+- Opened PR #1014 for the PagerDuty remediation branch: `codex/pagerduty-alert-remediation`.
+- Merged `origin/main` into the branch and pushed the merge commit so GitHub reported the PR as mergeable and up to date.
+- Addressed the Greptile P2 review finding by removing the now-unused `PR_REVIEW_SPECIALIST_PASS_CONCURRENCY` configuration path instead of leaving a silently ignored knob after the sequential provider-backoff change.
+- Updated `packages/temporal/scripts/replay-pr-review.ts` to run specialist replay passes sequentially, matching the production remediation path.
+- Removed the stale `PR_REVIEW_SPECIALIST_PASS_CONCURRENCY` env var from `packages/homelab/src/cdk8s/src/resources/temporal/worker.ts`.
+- Verified with Temporal eslint, Temporal focused specialist tests, Temporal typecheck, cdk8s worker eslint, cdk8s typecheck, and the focused Velero rule test.
+
+### Remaining
+
+- Push the follow-up commit and wait for the current Buildkite build and automated review reruns to finish.
+- Confirm PR #1014 remains mergeable with no P3-or-higher review findings after the new head commit.
+
+### Caveats
+
+- The previous Buildkite build for commit `8aa72b866` is stale and should not be used for final readiness after the follow-up commit.
+- PagerDuty incident remediation is still bounded by live evidence and deployment state; this PR does not by itself resolve the remaining open incidents.

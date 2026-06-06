@@ -42,7 +42,6 @@ import { prReviewCostUsd } from "#observability/pr-review-metrics.ts";
 import { prReviewSpecialistLatencySeconds } from "#observability/metrics.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import type { Finding } from "#shared/pr-review/finding.ts";
-import { readPositiveIntegerEnv } from "#shared/env.ts";
 import { PASSES_PER_SPECIALIST } from "#lib/diff-slicing.ts";
 import type { BootstrapResult } from "./bootstrap.ts";
 import type { AnnotatedFinding } from "./consensus.ts";
@@ -64,10 +63,6 @@ import type {
 import { classifyAnthropicProviderError } from "./specialists/runner.ts";
 
 const COMPONENT = "pr-review-pipeline";
-export const SPECIALIST_PASS_CONCURRENCY = readPositiveIntegerEnv({
-  name: "PR_REVIEW_SPECIALIST_PASS_CONCURRENCY",
-  defaultValue: 1,
-});
 
 function jsonLog(
   level: "info" | "warning" | "error",
@@ -199,34 +194,6 @@ async function runSinglePass(
 
 export function shouldStopSpecialistFanout(error: unknown): boolean {
   return classifyAnthropicProviderError(error) !== null;
-}
-
-export async function runWithConcurrency<T>(
-  jobs: readonly (() => Promise<T>)[],
-  concurrency: number,
-): Promise<T[]> {
-  if (concurrency < 1) {
-    throw new Error("concurrency must be at least 1");
-  }
-  const results: T[] = [];
-  let nextIndex = 0;
-  const workerCount = Math.min(concurrency, jobs.length);
-
-  async function worker(): Promise<void> {
-    while (nextIndex < jobs.length) {
-      const jobIndex = nextIndex;
-      nextIndex++;
-      const job = jobs[jobIndex];
-      if (job === undefined) {
-        throw new Error(`missing specialist job at index ${String(jobIndex)}`);
-      }
-      results[jobIndex] = await job();
-    }
-  }
-
-  const workers = Array.from({ length: workerCount }, () => worker());
-  await Promise.all(workers);
-  return results;
 }
 
 /**
