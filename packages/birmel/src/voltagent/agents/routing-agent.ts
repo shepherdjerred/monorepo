@@ -2,7 +2,7 @@ import { Agent, createSubagent } from "@voltagent/core";
 import { openai } from "@ai-sdk/openai";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { createMemory } from "@shepherdjerred/birmel/voltagent/memory/index.ts";
-import { OPENAI_RESPONSES_PROVIDER_OPTIONS } from "@shepherdjerred/birmel/voltagent/openai-provider-options.ts";
+import { getOpenAIResponsesProviderOptions } from "@shepherdjerred/birmel/voltagent/openai-provider-options.ts";
 import { sanitizeReplayHook } from "@shepherdjerred/birmel/voltagent/agents/hooks.ts";
 import {
   buildSupervisorPrompt,
@@ -41,7 +41,7 @@ function wrapWithStreamOptions(agent: Agent) {
     agent,
     method: "streamText",
     options: {
-      providerOptions: OPENAI_RESPONSES_PROVIDER_OPTIONS,
+      providerOptions: getOpenAIResponsesProviderOptions(),
     },
   });
 }

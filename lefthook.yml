@@ -221,15 +221,10 @@ pre-commit:
         parallel: true
         jobs:
           # --- TypeScript typecheck per package ---
-          - name: birmel-typecheck
+          - name: birmel-check
             root: "packages/birmel/"
             glob: "packages/birmel/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: birmel-test
-            root: "packages/birmel/"
-            glob: "packages/birmel/**/*.{ts,tsx}"
-            run: bunx prisma generate && bun run test
+            run: bun run typecheck && bun run test
 
           - name: eslint-config-typecheck
             root: "packages/eslint-config/"

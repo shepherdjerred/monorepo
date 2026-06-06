@@ -254,10 +254,10 @@ export async function smokeTestBirmelHelper(
         [
           "set +e",
           `output="$(timeout 30s ${PRISMA_BUN_SERVICE_START_COMMAND} 2>&1)"`,
-          "status=\"$?\"",
+          'status="$?"',
           "printf '%s\\n' \"$output\"",
-          "[ \"$status\" -eq 0 ] && exit 0",
-          "[ \"$status\" -eq 124 ] && exit 124",
+          '[ "$status" -eq 0 ] && exit 0',
+          '[ "$status" -eq 124 ] && exit 124',
           "printf '%s\\n' \"$output\" | grep -E 'TokenInvalid|401|Unauthorized|Invalid token'",
         ].join(" ; "),
       ].join(" && "),

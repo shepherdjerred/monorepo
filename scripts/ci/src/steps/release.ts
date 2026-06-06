@@ -17,6 +17,8 @@ import {
   DRYRUN_FLAG,
   GITHUB_APP_SECRET_ARGS,
   CLAUDE_OAUTH_SECRET_ARG,
+  REPO_GIT_REF,
+  DAGGER_CALL,
 } from "../lib/buildkite.ts";
 import type { BuildkiteStep } from "../lib/types.ts";
 
@@ -26,7 +28,7 @@ export function releasePleaseStep(dependsOn?: string[]): BuildkiteStep {
   const opts: Parameters<typeof daggerStep>[0] = {
     label: ":bookmark: Release Please",
     key: "release-please",
-    daggerCmd: `dagger call release-please --source . ${GITHUB_APP_SECRET_ARGS} ${CLAUDE_OAUTH_SECRET_ARG}${DRYRUN_FLAG}`,
+    daggerCmd: `${DAGGER_CALL} release-please --source ${REPO_GIT_REF} ${GITHUB_APP_SECRET_ARGS} ${CLAUDE_OAUTH_SECRET_ARG}${DRYRUN_FLAG}`,
     timeoutMinutes: 20,
     condition: MAIN_ONLY,
     priority: 1,

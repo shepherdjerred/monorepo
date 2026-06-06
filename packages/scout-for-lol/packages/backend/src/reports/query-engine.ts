@@ -3,6 +3,7 @@ import {
   CompetitionIdSchema,
   RankSchema,
   parseCompetition,
+  rankToString,
   rankToLeaguePoints,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
@@ -191,16 +192,28 @@ async function executeCompetitionRankReport(
 
   const leaderboard = await calculateLeaderboard(params.prisma, competition);
   const limit = cappedLimit(plan, params.maxRows);
+  const isHighestRankReport = competition.criteria.type === "HIGHEST_RANK";
+  const reportColumnForMetric = (metric: string): string =>
+    isHighestRankReport && metric === "score" ? "rank" : metric;
+  const columns = plan.metrics.map((metric) => reportColumnForMetric(metric));
   return {
     plan,
-    columns: ["label", ...plan.metrics],
+    columns: ["label", ...columns],
     rows: leaderboard.slice(0, limit).map((entry) => ({
       label: entry.playerName,
       discordId: entry.discordId ?? null,
-      values: plan.metrics.map((metric) => ({
-        column: metric,
-        value: metric === "score" ? scoreToNumber(entry.score) : entry.rank,
-      })),
+      values: plan.metrics.map((metric) => {
+        const column = reportColumnForMetric(metric);
+        return {
+          column,
+          value:
+            column === "rank"
+              ? rankToString(RankSchema.parse(entry.score))
+              : metric === "score"
+                ? scoreToNumber(entry.score)
+                : entry.rank,
+        };
+      }),
     })),
     rowsScanned: leaderboard.length,
   };

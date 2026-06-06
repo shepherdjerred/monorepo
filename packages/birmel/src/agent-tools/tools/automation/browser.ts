@@ -5,6 +5,8 @@ import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
+import { getErrorMessage } from "@shepherdjerred/birmel/utils/errors.ts";
+import { handlePinchtab } from "./pinchtab-browser.ts";
 
 const logger = loggers.automation;
 
@@ -126,7 +128,7 @@ async function closeBrowser(): Promise<void> {
   logger.info("Browser session closed");
 }
 
-type BrowserResult = {
+export type BrowserResult = {
   success: boolean;
   message: string;
   data?: {
@@ -135,11 +137,18 @@ type BrowserResult = {
     path?: string;
     filename?: string;
     text?: string;
+    provider?: string;
+    instanceId?: string;
+    tabId?: string;
+    raw?: unknown;
   };
 };
 
-type BrowserContext = {
+export type BrowserContext = {
   action: string;
+  profile?: string | undefined;
+  instanceId?: string | undefined;
+  tabId?: string | undefined;
   url?: string | undefined;
   waitUntil?: "load" | "domcontentloaded" | "networkidle" | undefined;
   filename?: string | undefined;
@@ -148,6 +157,7 @@ type BrowserContext = {
   text?: string | undefined;
   pressEnter?: boolean | undefined;
   timeout?: number | undefined;
+  key?: string | undefined;
 };
 
 async function handleNavigate(ctx: BrowserContext): Promise<BrowserResult> {
@@ -176,7 +186,7 @@ async function handleScreenshot(ctx: BrowserContext): Promise<BrowserResult> {
   const filename = ctx.filename ?? `screenshot-${String(timestamp)}.png`;
   const screenshotsDir =
     Bun.env["BIRMEL_SCREENSHOTS_DIR"] ??
-    path.join(process.cwd(), "data", "screenshots");
+    path.join(import.meta.dir, "..", "..", "..", "..", "data", "screenshots");
   const filepath = path.join(screenshotsDir, filename);
   await mkdir(path.dirname(filepath), { recursive: true });
   const screenshot = await page.screenshot({
@@ -256,11 +266,28 @@ async function handleGetText(ctx: BrowserContext): Promise<BrowserResult> {
 export const browserAutomationTool = createTool({
   id: "browser-automation",
   description:
-    "Browser automation: navigate to URL, take screenshot, click element, type text, get text content, or close session",
+    "Browser automation through PinchTab by default, with Playwright fallback. Start/list profiles, open/navigate tabs, snapshot/text, click/type/press, screenshot, read cookies, and close tabs or sessions.",
   inputSchema: z.object({
     action: z
-      .enum(["navigate", "screenshot", "click", "type", "get-text", "close"])
+      .enum([
+        "start",
+        "list-profiles",
+        "open",
+        "tabs",
+        "navigate",
+        "snapshot",
+        "screenshot",
+        "click",
+        "type",
+        "press",
+        "get-text",
+        "cookies",
+        "close",
+      ])
       .describe("The action to perform"),
+    profile: z.string().optional().describe("PinchTab profile name"),
+    instanceId: z.string().optional().describe("PinchTab instance ID"),
+    tabId: z.string().optional().describe("PinchTab tab ID"),
     url: z.string().optional().describe("URL to navigate to (for navigate)"),
     waitUntil: z
       .enum(["load", "domcontentloaded", "networkidle"])
@@ -284,6 +311,7 @@ export const browserAutomationTool = createTool({
       .optional()
       .describe("Press Enter after typing (for type)"),
     timeout: z.number().optional().describe("Timeout in milliseconds"),
+    key: z.string().optional().describe("Key to press"),
   }),
   outputSchema: z.object({
     success: z.boolean(),
@@ -295,11 +323,19 @@ export const browserAutomationTool = createTool({
         path: z.string().optional(),
         filename: z.string().optional(),
         text: z.string().optional(),
+        provider: z.string().optional(),
+        instanceId: z.string().optional(),
+        tabId: z.string().optional(),
+        raw: z.unknown().optional(),
       })
       .optional(),
   }),
   execute: async (ctx) => {
     try {
+      const config = getConfig();
+      if (config.browser.provider === "pinchtab") {
+        return await handlePinchtab(ctx);
+      }
       switch (ctx.action) {
         case "navigate":
           return await handleNavigate(ctx);
@@ -310,18 +346,29 @@ export const browserAutomationTool = createTool({
         case "type":
           return await handleType(ctx);
         case "get-text":
+        case "snapshot":
           return await handleGetText(ctx);
         case "close": {
           await closeBrowser();
           return { success: true, message: "Browser session closed" };
         }
+        case "start":
+        case "list-profiles":
+        case "open":
+        case "tabs":
+        case "press":
+        case "cookies":
+          return {
+            success: false,
+            message: `${ctx.action} requires BROWSER_PROVIDER=pinchtab`,
+          };
       }
     } catch (error) {
       logger.error("Browser automation failed", {
         action: ctx.action,
-        error: String(error),
+        error: getErrorMessage(error),
       });
-      return { success: false, message: `Failed: ${String(error)}` };
+      return { success: false, message: `Failed: ${getErrorMessage(error)}` };
     }
   },
 });
