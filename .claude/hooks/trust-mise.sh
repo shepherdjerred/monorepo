@@ -17,12 +17,25 @@ emit() {
   exit 0
 }
 
-# Minimal JSON string escaper (quotes + backslashes) — avoids a jq dependency.
+# JSON string escaper — avoids a jq dependency. Escapes backslash and double
+# quote, encodes the JSON control-character escapes (\n \t \r), then strips any
+# remaining C0 control chars (U+0000–U+001F) so the output is always valid JSON.
 json_str() {
   local s=${1//\\/\\\\}
   s=${s//\"/\\\"}
+  s=${s//$'\t'/\\t}
+  s=${s//$'\r'/\\r}
+  s=${s//$'\n'/\\n}
+  s=$(printf '%s' "$s" | LC_ALL=C tr -d '\000-\010\013\014\016-\037')
   printf '"%s"' "$s"
 }
+
+# `set -e` is active for the `mise trust` calls below: if one exits non-zero
+# (malformed mise.toml, permission error, a mise bug) bash would abort with no
+# stdout — reproducing the exact "no output" failure this hook fixes. Trap any
+# such error and emit JSON instead. Trusting configs is best-effort; a failure
+# must never block worktree creation.
+trap 'emit "mise trust hook error (line $LINENO): $BASH_COMMAND"' ERR
 
 # The harness may invoke hooks with a minimal PATH; include the common mise
 # install locations so `mise` resolves even when the login profile isn't sourced.
