@@ -77,7 +77,6 @@ export function createStreambotDeployment(chart: Chart) {
         PREVIEW_CACHE_DIR: EnvValue.fromValue(
           "/home/bots/StreamBot/tmp/preview-cache",
         ),
-        YTDLP_COOKIES_PATH: EnvValue.fromValue(""),
         STREAM_RESPECT_VIDEO_PARAMS: EnvValue.fromValue("false"),
         STREAM_BITRATE_OVERRIDE: EnvValue.fromValue("false"),
         STREAM_WIDTH: EnvValue.fromValue("1280"),
