@@ -120,7 +120,7 @@ export async function createMcpGatewayDeployment(chart: Chart) {
         group: GID,
         ensureNonRoot: true,
         allowPrivilegeEscalation: false,
-        readOnlyRootFilesystem: false,
+        readOnlyRootFilesystem: true,
       },
       envVariables: {
         MCP_PROXY_AUTH_TOKEN: EnvValue.fromSecretValue({

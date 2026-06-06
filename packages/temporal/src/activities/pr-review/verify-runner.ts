@@ -122,7 +122,7 @@ export function makeVerificationResult(input: {
 // env var whose name looks credential-bearing, rather than allowlisting, so a
 // newly-added secret is excluded by default.
 const SECRET_ENV_NAME =
-  /TOKEN|SECRET|KEY|PASSWORD|PASS|CREDENTIAL|PRIVATE|DSN|OAUTH|TALOSCONFIG|KUBECONFIG/i;
+  /TOKEN|SECRET|KEY|PASSWORD|PASS|CREDENTIAL|PRIVATE|DSN|OAUTH|TALOSCONFIG|KUBECONFIG|URL/i;
 
 function verifierEnv(): Record<string, string> {
   const env: Record<string, string> = {};
