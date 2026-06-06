@@ -168,6 +168,10 @@ export function suppressionCheckHelper(source: Directory): Container {
  * Trivy filesystem scan (HIGH + CRITICAL severities). Uses the upstream
  * aquasec/trivy image — CVE DB updates land via the image's
  * `trivy-db` baked layer + on first run. Exit 1 on any finding.
+ *
+ * The aquasec/trivy image's entrypoint is the `trivy` binary, but Dagger's
+ * `withExec` overrides the entrypoint — so we invoke the binary explicitly as
+ * the first arg (same as gitleaks/semgrep above).
  */
 export function trivyScanHelper(source: Directory): Container {
   return dag
@@ -175,9 +179,6 @@ export function trivyScanHelper(source: Directory): Container {
     .from(TRIVY_IMAGE)
     .withWorkdir("/repo")
     .withDirectory("/repo", source, { exclude: SOURCE_EXCLUDES })
-    // The aquasec/trivy image's entrypoint is the `trivy` binary, but
-    // Dagger's `withExec` overrides the entrypoint — so we invoke the
-    // binary explicitly as the first arg (same as gitleaks/semgrep above).
     .withExec([
       "trivy",
       "fs",
