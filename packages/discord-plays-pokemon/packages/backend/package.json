@@ -21,10 +21,12 @@
     "test:watch": "bun test --watch"
   },
   "dependencies": {
+    "@dank074/discord-video-stream": "^6.0.0",
     "@discord-plays-pokemon/common": "file:../common",
     "@sentry/bun": "^10.0.0",
     "cors": "^2.8.5",
     "discord.js": "^14.26.4",
+    "discord.js-selfbot-v13": "^3.6.1",
     "express": "^5.0.0",
     "lodash": "4.18.1",
     "rxjs": "^7.8.2",

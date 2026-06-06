@@ -22,5 +22,16 @@
   "overrides": {
     "js-cookie": "3.0.7",
     "tmp": "0.2.6"
+  },
+  "trustedDependencies": [
+    "@lng2004/node-datachannel",
+    "node-av",
+    "@snazzah/davey",
+    "sharp",
+    "zeromq",
+    "@sentry/profiling-node"
+  ],
+  "patchedDependencies": {
+    "@dank074/discord-video-stream@6.0.0": "patches/@dank074%2Fdiscord-video-stream@6.0.0.patch"
   }
 }

@@ -8,6 +8,7 @@ config*.toml
 error.png
 .tmp-earthly-out
 *.gba
+*.wasm
 logs
 saves
 .DS_Store
