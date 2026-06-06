@@ -355,22 +355,30 @@ export function mergeConflictCheckHelper(source: Directory): Container {
  * (read in-container).
  */
 export function largeFileCheckHelper(source: Directory): Container {
+  // Build the `-not -path` exclusions from `.largeignore` into a bash
+  // array, then expand it with `"${extra[@]}"`. No `eval`, no string
+  // splicing — globs, single quotes, and whitespace in path entries
+  // stay literal. The hard-coded excludes go first; per-line entries
+  // get prefixed with `./` to anchor them against find's relative paths.
   return bunQualityBase(source).withExec([
     "bash",
     "-c",
     [
-      'ignore_args="";',
+      "extra=();",
       "if [ -f .largeignore ]; then",
       "  while IFS= read -r line; do",
       '    case "$line" in ""|"#"*) continue ;; esac;',
-      '    ignore_args="$ignore_args -not -path ./$line";',
+      '    extra+=( -not -path "./$line" );',
       "  done < .largeignore;",
       "fi;",
-      'cmd="find . -type f -size +5M',
-      '-not -path \\"*/node_modules/*\\" -not -path \\"*/.git/*\\"',
-      '-not -path \\"*/.build/*\\" -not -path \\"*/.dagger/*\\"',
-      '-not -path \\"*/archive/*\\"";',
-      'large=$(eval "$cmd $ignore_args -exec ls -lh {} +");',
+      "large=$(find . -type f -size +5M",
+      '  -not -path "*/node_modules/*"',
+      '  -not -path "*/.git/*"',
+      '  -not -path "*/.build/*"',
+      '  -not -path "*/.dagger/*"',
+      '  -not -path "*/archive/*"',
+      '  "${extra[@]}"',
+      "  -exec ls -lh {} +);",
       'if [ -n "$large" ]; then',
       '  echo "Files exceed 5MB limit:";',
       '  echo "$large";',
