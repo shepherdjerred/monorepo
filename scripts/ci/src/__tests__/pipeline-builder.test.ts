@@ -183,6 +183,30 @@ describe("buildPipeline", () => {
         expect(ciComplete.depends_on).toEqual(["no-changes"]);
       }
     });
+
+    it("includes Greptile review gate on no-change pull request builds", () => {
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(emptyAffected()),
+      );
+      expect(pipeline.steps).toHaveLength(3);
+      const steps = pipeline.steps.filter(isStep);
+      const greptile = steps.find((s) => s.key === "greptile-review");
+      const ciComplete = steps.find((s) => s.key === "ci-complete");
+
+      expect(greptile).toBeDefined();
+      expect(greptile?.command).toContain("github-app-token.ts");
+      expect(greptile?.command).toContain("wait-for-greptile.ts");
+      expect(ciComplete?.depends_on).toContain("greptile-review");
+    });
+
+    it("omits Greptile review gate on no-change main builds", () => {
+      const pipeline = withBuildkitePullRequest("false", () =>
+        buildPipeline(emptyAffected()),
+      );
+      const steps = pipeline.steps.filter(isStep);
+
+      expect(steps.some((s) => s.key === "greptile-review")).toBe(false);
+    });
   });
 
   describe("ci-base image changes", () => {
@@ -581,6 +605,7 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("build-images");
       expect(groupKeys).toContain("homelab-tofu-plan");
       expect(stepKeys).toContain("ci-complete");
+      expect(stepKeys).toContain("greptile-review");
 
       expect(groupKeys).not.toContain("push-images");
       expect(groupKeys).not.toContain("publish-npm");
@@ -594,6 +619,28 @@ describe("buildPipeline", () => {
       expect(stepKeys).not.toContain("argocd-health");
       expect(stepKeys).not.toContain("version-commit-back");
       expect(stepKeys).not.toContain("build-summary");
+    });
+
+    it("makes ci-complete depend on Greptile for pull request builds", () => {
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(fullBuild()),
+      );
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      const ciComplete = allSteps.find((s) => s.key === "ci-complete");
+
+      expect(ciComplete).toBeDefined();
+      expect(ciComplete?.depends_on).toContain("greptile-review");
+    });
+
+    it("does not include Greptile on main builds", () => {
+      const pipeline = withBuildkitePullRequest("false", () =>
+        buildPipeline(fullBuild()),
+      );
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      expect(allSteps.some((s) => s.key === "greptile-review")).toBe(false);
     });
 
     it("includes image build/push, npm, cooklang, and sites groups", () => {

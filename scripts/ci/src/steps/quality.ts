@@ -274,6 +274,21 @@ export function largeFileStep(): BuildkiteStep {
   });
 }
 
+/** PR-only step that stays pending until Greptile's GitHub check is green. */
+export function greptileReviewStep(): BuildkiteStep {
+  return plainStep({
+    label: ":mag: Greptile Review",
+    key: "greptile-review",
+    command: [
+      'echo "+++ :mag: Greptile Review"',
+      'export GH_TOKEN="$(bun packages/temporal/src/lib/github-app-token.ts)"',
+      'test -n "$$GH_TOKEN"',
+      "bun scripts/ci/src/wait-for-greptile.ts",
+    ].join(" && "),
+    timeoutMinutes: 35,
+  });
+}
+
 export function caddyfileValidateStep(): BuildkiteStep {
   return daggerStep({
     label: ":globe_with_meridians: Caddyfile Validate",
