@@ -7,7 +7,6 @@ const config = [
         "eslint.config.ts",
         "src/config/index.test.ts",
         "src/game/command/chord.test.ts",
-        "src/game/command/chord-parser.test.ts",
         "src/game/command/command-input.test.ts",
         "src/emulator/buttons.test.ts",
       ],
