@@ -36,8 +36,14 @@ pre-commit:
                 - name: large-files
                   run: |
                     max=5242880
+                    # Intentionally-vendored large binaries (kept in-repo on
+                    # purpose, e.g. the pokeemerald.wasm emulator blob).
+                    allow="packages/discord-plays-pokemon/packages/backend/assets/pokeemerald.wasm"
                     large=$(git diff --staged --name-only --diff-filter=d | while read -r f; do
                       if [ "${f#archive/}" != "$f" ]; then
+                        continue
+                      fi
+                      if [ "$f" = "$allow" ]; then
                         continue
                       fi
                       size=$(wc -c < "$f" 2>/dev/null || echo 0)

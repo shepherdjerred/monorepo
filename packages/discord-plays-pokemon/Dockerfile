@@ -26,11 +26,8 @@ COPY packages/frontend/package.json packages/frontend/
 # discord-video-stream lazy-load sharp.
 RUN bun install --frozen-lockfile
 
-# App source
+# App source (includes the vendored packages/backend/assets/pokeemerald.wasm).
 COPY . .
-
-# Fetch the built pokeemerald.wasm into packages/backend/assets/.
-RUN bun scripts/fetch-wasm.ts
 
 # config.toml is provided at runtime (mount or bake a non-secret config).
 # The flash save directory is created on demand by the emulator.

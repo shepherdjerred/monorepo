@@ -62,8 +62,14 @@ install the app imports cleanly; the Linux Docker image also installs system
 - **Selfbot token required** — Discord blocks video from bot tokens; the
   streaming account stays (only the browser it drove is gone). Same ToS exposure.
 - **Audio:** stream is video-only (the JS port has no sound path).
-- **wasm provisioning:** `scripts/fetch-wasm.ts` pulls the published artifact
-  from pokeemerald.com (a moving target). Pin a hash or build from source in CI.
+- **wasm provisioning:** the built `pokeemerald.wasm` (~12 MB) is **vendored
+  in-repo** at `packages/backend/assets/pokeemerald.wasm` (un-ignored; allowlisted
+  in the `large-files` pre-commit hook). It is refreshed **monthly** by
+  `.buildkite/scripts/update-pokeemerald-wasm.sh`, which re-runs `fetch-wasm.ts`
+  and opens a PR if the blob changed (mirrors `update-readmes.sh`).
+  **One-time manual step:** create a monthly Buildkite Schedule in the UI that
+  runs that script (Renovate can't fetch binaries — hosted Mend app, no
+  postUpgradeTasks). Tradeoff: each refresh adds ~12 MB to git history.
 - **Not yet run:** the live Discord send (needs a user token) and the Docker
   build on a non-GPU host.
 

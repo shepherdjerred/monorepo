@@ -5,6 +5,7 @@ dist
 coverage
 saves
 *.wasm
+!packages/backend/assets/pokeemerald.wasm
 config*.toml
 !config.example.toml
 .git
