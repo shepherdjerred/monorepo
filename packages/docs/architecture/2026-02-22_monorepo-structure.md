@@ -23,7 +23,7 @@ The root `package.json` owns only repo-level scripts and dev dependencies. Packa
 | `homelab`       | K8s infrastructure (cdk8s, OpenTofu)                 |
 | `birmel`        | Discord bot (VoltAgent + Claude AI)                  |
 | `scout-for-lol` | League of Legends match analysis                     |
-| `tools`         | CLI developer tools                                  |
+| `toolkit`       | CLI developer tools (fetch, recall, pr, pd, grafana) |
 | `docs`          | This documentation (AI-maintained)                   |
 
 ## Verification Commands

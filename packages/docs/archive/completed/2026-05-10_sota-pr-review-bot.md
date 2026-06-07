@@ -2,6 +2,8 @@
 
 ## Status
 
+**Complete** — all phase code verified shipped to `main`; archived to `archive/completed/` during the 2026-06-06 docs groom (pass 2). NOTE: the PR-review bot was operationally **disabled** on 2026-06-06 (`PR_BOT_ENABLED=false`); re-enabling and the rate-limit fix are tracked in `todos/pr-review-agent-rate-limit-saturation.md`, not here. Original tracking status preserved below.
+
 In Progress — Phase 1 (foundation) implementation landed in PR #728; subsequent phases tracked via the team task list. Supersedes [`2026-04-25_pr-review-and-summary-bot.md`](../archive/superseded/2026-04-25_pr-review-and-summary-bot.md), which should move to `archive/superseded/` once this plan is approved.
 
 ## Context

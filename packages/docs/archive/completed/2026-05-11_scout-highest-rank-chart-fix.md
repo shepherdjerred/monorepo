@@ -2,6 +2,8 @@
 
 ## Status
 
+**Complete** — work verified shipped to `main` during the 2026-06-06 docs groom (pass 2); archived to `archive/completed/`. Original tracking status preserved below.
+
 Partially Complete — code changes ready (branch `fix/scout-highest-rank-iron-iv`, unmerged); S3 cleanup applied to beta + prod.
 
 ## Context
