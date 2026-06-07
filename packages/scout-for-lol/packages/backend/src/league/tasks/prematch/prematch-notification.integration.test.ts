@@ -143,6 +143,35 @@ function makeArenaGameInfo() {
   });
 }
 
+// Real custom Summoner's Rift game shape: gameType CUSTOM with an unmapped
+// queue ID (3110). Regression for the text-only fallback on custom games.
+function makeCustomGameInfo() {
+  return RawCurrentGameInfoSchema.parse({
+    gameId: 5_576_694_431,
+    gameStartTime: Date.now(),
+    gameMode: "CLASSIC",
+    mapId: 11,
+    gameType: "CUSTOM",
+    gameQueueConfigId: 3110,
+    gameLength: -20,
+    platformId: "NA1",
+    bannedChampions: [],
+    participants: [
+      {
+        championId: 420,
+        puuid: trackedPuuid,
+        teamId: 100,
+        riotId: "sjerred#sjerr",
+        spell1Id: 12,
+        spell2Id: 4,
+        lastSelectedSkinIndex: 0,
+        bot: false,
+        profileIconId: 1,
+      },
+    ],
+  });
+}
+
 function makeTrackedPlayer() {
   return PlayerConfigEntrySchema.parse({
     alias: "Tracked",
@@ -220,6 +249,21 @@ describe.skipIf(!RUN_INTEGRATION_TEST)("sendPrematchNotification", () => {
     expect(sendCalls[0]?.message["content"]).toBe(
       "Tracked started an arena game",
     );
+    expect(sendCalls[0]?.message["files"]).toBeDefined();
+    expect(captureExceptionMock).not.toHaveBeenCalled();
+  });
+
+  test("renders loading-screen image for custom games (unmapped queue 3110)", async () => {
+    await sendPrematchNotification(makeCustomGameInfo(), [makeTrackedPlayer()]);
+
+    expect(callOrder).toContain("buildLoadingScreenData");
+    expect(sendCalls).toHaveLength(1);
+    // gameType CUSTOM resolves the queue to "custom", so the message reads
+    // "custom" rather than leaking the raw gameMode ("CLASSIC").
+    expect(sendCalls[0]?.message["content"]).toBe(
+      "Tracked started a custom game",
+    );
+    // Image path taken (files present), not the text-only fallback embed.
     expect(sendCalls[0]?.message["files"]).toBeDefined();
     expect(captureExceptionMock).not.toHaveBeenCalled();
   });

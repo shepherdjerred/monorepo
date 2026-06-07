@@ -60,6 +60,36 @@ describe("Arena queue resolution", () => {
   });
 });
 
+describe("custom games with unmapped queue IDs", () => {
+  // Regression: real custom Summoner's Rift game 5576694431 reported
+  // gameQueueConfigId 3110 (absent from queues.json). Without the gameType
+  // signal this resolved to undefined and the loading-screen image fell back
+  // to a plain text embed.
+  test("resolves an unmapped queue ID to custom when gameType is CUSTOM", () => {
+    expect(parseQueueType(3110)).toBeUndefined();
+    expect(resolveQueueTypeFromGame(3110, "CLASSIC", "CUSTOM")).toBe("custom");
+    expect(resolveQueueTypeFromGame(3110, "CLASSIC", "CUSTOM")).not.toBe(
+      undefined,
+    );
+  });
+
+  test("also matches Match V5 CUSTOM_GAME game type", () => {
+    expect(resolveQueueTypeFromGame(3110, "CLASSIC", "CUSTOM_GAME")).toBe(
+      "custom",
+    );
+  });
+
+  test("leaves an unmapped queue ID undefined without a gameType (legacy behavior)", () => {
+    expect(resolveQueueTypeFromGame(3110, "CLASSIC")).toBeUndefined();
+  });
+
+  test("does not mislabel an unmapped non-custom queue as custom", () => {
+    expect(
+      resolveQueueTypeFromGame(99_999, "CLASSIC", "MATCHED"),
+    ).toBeUndefined();
+  });
+});
+
 describe("queueTypeToDisplayString", () => {
   const cases: readonly (readonly [QueueType, string])[] = [
     ["solo", "ranked solo"],
