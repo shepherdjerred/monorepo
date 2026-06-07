@@ -82,7 +82,6 @@ import { playwrightTestHelper, playwrightUpdateHelper } from "./playwright";
 import { ciAllHelper } from "./ci";
 
 import {
-  mkdocsBuildHelper,
   caddyfileValidateHelper,
   smokeTestHelper,
   smokeTestScoutForLolHelper,
@@ -788,16 +787,6 @@ export class Monorepo {
   @func()
   async latexBuild(pkgDir: Directory): Promise<string> {
     return latexBuildHelper(pkgDir).stdout();
-  }
-
-  // ---------------------------------------------------------------------------
-  // MkDocs operations
-  // ---------------------------------------------------------------------------
-
-  /** Build MkDocs documentation site and return the built site/ directory */
-  @func()
-  mkdocsBuild(source: Directory): Directory {
-    return mkdocsBuildHelper(source);
   }
 
   // ---------------------------------------------------------------------------

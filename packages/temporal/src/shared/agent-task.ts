@@ -167,6 +167,58 @@ async function shortSha256(input: string): Promise<string> {
   ).join("");
 }
 
+export function reportOnlyPrompt(
+  input: AgentTaskInput,
+  workdir: string,
+): string {
+  const runtimeLines =
+    input.agentTimeoutMinutes === undefined
+      ? []
+      : [
+          `Runtime budget: ${String(input.agentTimeoutMinutes)} minutes.`,
+          "- Keep every shell command narrowly scoped and time-bounded; use the `timeout` command when available.",
+          "- If a command is slow or would exceed the budget, stop that section, mark it Skipped or Failed, and return the partial report.",
+          "",
+        ];
+  const sourceLines =
+    input.source === undefined
+      ? []
+      : [
+          "Source context:",
+          input.source.docPath === undefined
+            ? undefined
+            : `- docPath: ${input.source.docPath}`,
+          input.source.url === undefined
+            ? undefined
+            : `- url: ${input.source.url}`,
+          input.source.note === undefined
+            ? undefined
+            : `- note: ${input.source.note}`,
+          "",
+        ].filter((line) => line !== undefined);
+
+  return [
+    "You are running as a delayed Temporal agent task.",
+    "",
+    "Hard constraints:",
+    "- This task is report-only.",
+    "- Do not edit files, commit, push, open pull requests, open issues, or mutate live systems.",
+    "- You may inspect the checked-out repository and query read-only operational tools when the prompt requires current state.",
+    "- Revalidate the source context first; if the task is already resolved, report that clearly.",
+    "- If a recurring schedule is no longer useful, set cancelCron=true and explain why in cancelReason.",
+    "- If one future report-only follow-up is needed, set followUp with either runAt or cron.",
+    "- Return only JSON matching the provided schema.",
+    "",
+    ...runtimeLines,
+    `Task title: ${input.title}`,
+    `Repository workdir: ${workdir}`,
+    "",
+    ...sourceLines,
+    "User prompt:",
+    input.prompt,
+  ].join("\n");
+}
+
 export function sanitizeTemporalIdPart(input: string): string {
   return input
     .trim()

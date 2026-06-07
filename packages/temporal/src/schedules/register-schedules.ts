@@ -11,6 +11,15 @@ import type { AgentTaskInput } from "#shared/agent-task.ts";
 // All cron expressions below are wall-clock local time for the homelab.
 const SCHEDULE_TIMEZONE = "America/Los_Angeles";
 
+// Schedules whose workflow type was removed from the bundle. registerSchedules
+// deletes these on startup so they stop firing and failing. Explicit removal
+// allow-list — NOT a blind prune of "anything not in SCHEDULES", which would
+// also delete the ad-hoc/cron agent-task schedules created via the /agent-tasks API.
+export const DELETED_SCHEDULE_IDS = [
+  "good-morning-weekday-early",
+  "good-morning-weekend-early",
+] as const;
+
 type ScheduleDefinition = {
   id: string;
   workflowType: string;
@@ -56,7 +65,8 @@ const HOMELAB_AUDIT_AGENT_TASK: AgentTaskInput = {
   scheduleId: "homelab-audit-daily",
   allowSelfCancel: false,
   maxTurns: 8,
-  agentTimeoutMinutes: 8,
+  // The audit's 8 turns take ~25 min end-to-end; the old 8-min timeout killed it mid-run.
+  agentTimeoutMinutes: 45,
   emailSubjectPrefix: "Homelab Audit",
   source: {
     docPath: "packages/docs/guides/2026-04-04_homelab-audit-runbook.md",
@@ -122,7 +132,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "30 6 * * *",
     taskQueue: TASK_QUEUES.AGENT_TASK,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "10 minutes",
+    workflowExecutionTimeout: "50 minutes",
     memo: "Bounded daily homelab health check email via generic report-only agent task (Claude -> Postal)",
   },
   {
@@ -160,6 +170,18 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "3 hours",
     memo: "Weekly Scout Data Dragon refresh even when version is unchanged",
+  },
+  {
+    id: "pokeemerald-wasm-monthly",
+    workflowType: "runPokeemeraldWasmUpdate",
+    args: [],
+    // 06:00 PT on the 1st of each month. Monthly keeps git-history growth from
+    // the ~12 MB blob bounded.
+    cronExpression: "0 6 1 * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Monthly refresh of the vendored pokeemerald.wasm emulator blob (opens a PR if it changed)",
   },
   {
     id: "scout-season-refresh-weekly",
@@ -375,6 +397,17 @@ async function reconcileSchedulePauseState(
 
 export async function registerSchedules(client: Client): Promise<void> {
   const scheduleClient = client.schedule;
+
+  for (const scheduleId of DELETED_SCHEDULE_IDS) {
+    try {
+      await scheduleClient.getHandle(scheduleId).delete();
+      console.warn(`Deleted orphaned schedule: ${scheduleId}`);
+    } catch (error: unknown) {
+      if (!(error instanceof ScheduleNotFoundError)) {
+        throw error;
+      }
+    }
+  }
 
   for (const schedule of SCHEDULES) {
     let handle = scheduleClient.getHandle(schedule.id);

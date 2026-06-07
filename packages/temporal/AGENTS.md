@@ -163,11 +163,17 @@ The `runPrSummaryPipeline` activity (`src/activities/pr-review/summary.ts`) talk
 
 **Models** — legacy review uses `claude-opus-4-8` (max-turns 30), legacy summary uses `claude-haiku-4-5-20251001` (max-turns 10), SDK summary uses `claude-haiku-4-5` via the official SDK with streaming.
 
-## HA presence (welcomeHome / leavingHome) — debounce model
+## HA presence (welcomeHome / leavingHome / reconcileLock) — debounce model
 
-HA `state_changed` events for `person.jerred` / `person.shuxin` flap at the home/not_home boundary (GPS / wifi / cell-tower jitter). Two layers, both keyed off `PRESENCE_COOLDOWN_SECONDS = 90` in `src/shared/presence.ts`:
+HA `state_changed` events for `person.jerred` / `person.shuxin` flap at the home/not_home boundary (GPS / wifi / cell-tower jitter). `PRESENCE_COOLDOWN_SECONDS = 90` (`src/shared/presence.ts`) is the settle window everywhere.
 
-1. **Trigger dedupe** (`src/event-bridge/triggers.ts`) — workflow ids are `welcome-home-{cooldownBucket()}-{entity}` / `leaving-home-{cooldownBucket()}-{entity}` with `REJECT_DUPLICATE` + `WorkflowIdConflictPolicy.FAIL`. Duplicate transitions inside one 90 s tumbling window are rejected at the server and surfaced as `component=ha-presence phase=debounced`.
-2. **Workflow recheck** (`src/workflows/ha/{leaving,welcome}-home.ts`) — both workflows sleep `PRESENCE_COOLDOWN_SECONDS` before any side-effect, then re-fetch presence (`everyoneAway()` / `anyoneHome()` from `./util.ts`). A single false transition exits without notifying / locking / vacuuming, logged as `phase=debounced`.
+**Front-door lock — owned by `reconcileLock`, not by the edge workflows.** The lock is the one side-effect that flaps audibly, so it is no longer actuated from `welcomeHome` / `leavingHome`. Instead `src/workflows/ha/reconcile-lock.ts` is a **singleton, debounced reconciler**:
 
-LogQL: `{namespace="temporal"} | json | component="ha-presence"`.
+- Every presence transition (both directions) calls `signalWithStart("reconcileLock", { workflowId: "reconcile-lock", signal: "presenceChanged" })` in `src/event-bridge/triggers.ts` — one workflow, started if absent, signalled if running. Attribute-only updates (`oldState === newState`, e.g. GPS coordinate churn) are ignored.
+- The workflow blocks on `condition(() => edges !== seen, PRESENCE_COOLDOWN_SECONDS * 1000)` (the Temporal SDK timeout is in milliseconds); each signal bumps `edges` and restarts the wait. Reaching the timeout means a full window with no edge → the household has settled.
+- Desired state is a pure function of who is home (`shouldLock(states)` — lock iff **nobody** is in the `home` zone; named zones / `unknown` count as away). It reads **live** lock + person state and **actuates only when current ≠ desired** (idempotent — a redundant trigger never clunks the bolt). A late edge during the read re-arms the loop.
+- This makes lock/unlock races impossible: a single in-flight workflow, so an unlock and a lock can never both fire from one flap cycle.
+
+**Lights / vacuums / notifications — still edge-triggered** via `welcomeHome` (arrival) and `leavingHome` (last departure). Each sleeps `PRESENCE_COOLDOWN_SECONDS` then rechecks presence (`anyoneHome()` / `everyoneAway()` from `./util.ts`); a single false transition exits as `phase=debounced`. Their workflow ids still use the `cooldownBucket()` tumbling window for dedupe — adequate for these lower-stakes effects, but note a tumbling window leaks across its boundary (it does **not** guarantee 90 s of separation); the lock no longer depends on it.
+
+**Component log values / LogQL:** `{namespace="temporal"} | json | component="ha-presence"`. reconcileLock logs `phase=actuated` (with `desiredLocked`) or `phase=noop`.

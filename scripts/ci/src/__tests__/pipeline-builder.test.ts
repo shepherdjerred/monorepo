@@ -626,6 +626,35 @@ describe("buildPipeline", () => {
       expect(groupKeys).not.toContain("cooklang-release");
     });
 
+    it("omits cooklang release on a full build when cooklang did not change", () => {
+      // A full build (infra/lockfile change) rebuilds everything but must not
+      // publish a cooklang plugin version when no cooklang source changed —
+      // otherwise every unrelated full build opens a manifest-bump PR.
+      const affected = fullBuild();
+      affected.cooklangChanged = false;
+
+      const pipeline = buildPipeline(affected);
+      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
+
+      expect(groupKeys).not.toContain("cooklang-release");
+      // ...but the rest of the full-build release track still runs.
+      expect(groupKeys).toContain("build-images");
+      expect(groupKeys).toContain("push-images");
+      expect(groupKeys).toContain("publish-npm");
+      expect(groupKeys).toContain("deploy-sites");
+    });
+
+    it("includes cooklang release on a scoped build when cooklang changed", () => {
+      const affected = emptyAffected();
+      affected.packages.add("cooklang-for-obsidian");
+      affected.cooklangChanged = true;
+
+      const pipeline = buildPipeline(affected);
+      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
+
+      expect(groupKeys).toContain("cooklang-release");
+    });
+
     it("uses GitHub App auth for release tasks and GHCR_TOKEN for image pushes with GH_TOKEN fallback", () => {
       const pipeline = buildPipeline(fullBuild());
       const allSteps: BuildkiteStep[] = [];

@@ -856,13 +856,21 @@ export function buildDiscordPlaysPokemonImageHelper(
   gitSha: string = "unknown",
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
+  const innerRoot = "/workspace/packages/discord-plays-pokemon";
 
   let container = dag
     .container()
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+    // ffmpeg + libvips for @dank074/discord-video-stream (fluent-ffmpeg encode
+    // path + sharp). No browser/GPU/desktop — this is a headless Bun service.
+    .withExec([
+      "sh",
+      "-c",
+      "apt-get update -qq && apt-get install -y -qq --no-install-recommends ffmpeg libvips42 ca-certificates && rm -rf /var/lib/apt/lists/*",
+    ])
     .withWorkdir("/workspace")
-    .withDirectory("/workspace/packages/discord-plays-pokemon", pkgDir, {
+    .withDirectory(innerRoot, pkgDir, {
       exclude: excludes,
     });
 
@@ -874,20 +882,33 @@ export function buildDiscordPlaysPokemonImageHelper(
     );
   }
 
-  return container
-    .withWorkdir("/workspace/packages/discord-plays-pokemon")
-    .withExec(["bun", "install", "--frozen-lockfile"])
-    .withWorkdir("/workspace/packages/discord-plays-pokemon/packages/backend")
-    .withExec(["bun", "install", "--frozen-lockfile"])
-    .withLabel(
-      "org.opencontainers.image.source",
-      "https://github.com/shepherdjerred/monorepo",
-    )
-    .withLabel("org.opencontainers.image.version", version)
-    .withLabel("org.opencontainers.image.revision", gitSha)
-    .withEnvVariable("VERSION", version)
-    .withEnvVariable("GIT_SHA", gitSha)
-    .withEntrypoint(["bun", "run", "src/index.ts"]);
+  return (
+    container
+      // Workspace install (covers backend + frontend) — runs the
+      // trustedDependencies postinstalls (node-datachannel, node-av) and
+      // applies the lazy-sharp bun patch. The committed
+      // packages/backend/assets/pokeemerald.wasm is copied in (not excluded).
+      .withWorkdir(innerRoot)
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withWorkdir(`${innerRoot}/packages/backend`)
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      // Build the web UI served by the backend web server (web.assets).
+      .withWorkdir(`${innerRoot}/packages/frontend`)
+      .withExec(["bun", "run", "build"])
+      .withLabel(
+        "org.opencontainers.image.source",
+        "https://github.com/shepherdjerred/monorepo",
+      )
+      .withLabel("org.opencontainers.image.version", version)
+      .withLabel("org.opencontainers.image.revision", gitSha)
+      .withEnvVariable("VERSION", version)
+      .withEnvVariable("GIT_SHA", gitSha)
+      // Run from the inner-monorepo root so getConfig()/emulator resolve
+      // config.toml, packages/backend/assets/pokeemerald.wasm, and saves/
+      // relative to CWD.
+      .withWorkdir(innerRoot)
+      .withEntrypoint(["bun", "packages/backend/src/index.ts"])
+  );
 }
 
 // ---------------------------------------------------------------------------

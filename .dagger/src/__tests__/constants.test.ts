@@ -13,7 +13,6 @@ import {
   TEXLIVE_IMAGE,
   CADDY_BUILDER_IMAGE,
   CADDY_IMAGE,
-  PYTHON_IMAGE,
   SOURCE_EXCLUDES,
 } from "../constants";
 
@@ -30,7 +29,6 @@ describe("image constants", () => {
     { name: "TEXLIVE_IMAGE", value: TEXLIVE_IMAGE },
     { name: "CADDY_BUILDER_IMAGE", value: CADDY_BUILDER_IMAGE },
     { name: "CADDY_IMAGE", value: CADDY_IMAGE },
-    { name: "PYTHON_IMAGE", value: PYTHON_IMAGE },
   ];
 
   for (const { name, value } of images) {

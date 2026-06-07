@@ -39,6 +39,13 @@ export function createVeleroApp(chart: Chart) {
       metadata: {
         name: scheduleConfig.name,
         namespace: "velero",
+        // Never let an ArgoCD re-sync prune the backup schedules. Pruning
+        // backup-class Velero resources while the controller is mid-teardown is
+        // the re-deploy failure mode that produces orphan ZFS snapshots (see
+        // decisions/2026-05-05_velero-orphan-snapshot-prevention.md, Option 2).
+        annotations: {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+        },
       },
       spec: {
         schedule: scheduleConfig.cronSchedule,

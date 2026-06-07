@@ -38,7 +38,6 @@ export const staticSites: StaticSiteConfig[] = [
   },
   { hostname: "webring.sjer.red", bucket: "webring" },
   { hostname: "resume.sjer.red", bucket: "resume" },
-  { hostname: "discord-plays-pokemon.com", bucket: "dpp-docs" },
   {
     hostname: "scout-for-lol.com",
     bucket: "scout-frontend",

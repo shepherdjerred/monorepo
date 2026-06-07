@@ -82,6 +82,13 @@ const fetchStub = Object.assign(
   { preconnect: originalFetch.preconnect },
 );
 
+// Spread the real module so this mock only overrides `buildAgentTaskCommand`.
+// Bun's `mock.module` registers the mock process-wide and is NOT auto-restored
+// between test files, and `#activities/agent-task-command.ts` resolves to the
+// same file as the relative `./agent-task-command.ts`. Without the spread, a
+// sibling file importing another export (e.g. `reportOnlyPrompt` in
+// alert-remediation-command.test.ts) would intermittently fail to link with
+// "Export named 'reportOnlyPrompt' not found", depending on test-file order.
 void mock.module("#activities/agent-task-command.ts", () => ({
   ...agentTaskCommandModule,
   buildAgentTaskCommand: async (

@@ -42,10 +42,6 @@ export const CADDY_IMAGE =
 // renovate: datasource=docker depName=caddy
 export const CADDY_BUILDER_IMAGE =
   "caddy:2.11.3-builder-alpine@sha256:52575959b1eeee9900869325a953d71e4c521ab9102dd5cce07d429ea8246b85";
-// renovate: datasource=docker depName=python
-export const PYTHON_IMAGE =
-  "python:3.14-slim@sha256:c845af9399020c7e562969a13689e929074a10fd057acd1b1fad06a2fb068e97";
-
 // Base image for obsidian-headless container (uses Node, not Bun, due to native better-sqlite3 addon).
 // Also reused as the Node builder stage for the custom mcp-gateway image (edstem-mcp build).
 // renovate: datasource=docker depName=node
