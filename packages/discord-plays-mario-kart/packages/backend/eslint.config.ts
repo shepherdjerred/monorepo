@@ -9,6 +9,7 @@ const config = [
         "src/game/command/chord.test.ts",
         "src/game/command/command-input.test.ts",
         "src/emulator/buttons.test.ts",
+        "src/emulator/png.test.ts",
       ],
     },
   }),
