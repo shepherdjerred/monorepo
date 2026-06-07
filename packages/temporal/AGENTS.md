@@ -170,7 +170,7 @@ HA `state_changed` events for `person.jerred` / `person.shuxin` flap at the home
 **Front-door lock — owned by `reconcileLock`, not by the edge workflows.** The lock is the one side-effect that flaps audibly, so it is no longer actuated from `welcomeHome` / `leavingHome`. Instead `src/workflows/ha/reconcile-lock.ts` is a **singleton, debounced reconciler**:
 
 - Every presence transition (both directions) calls `signalWithStart("reconcileLock", { workflowId: "reconcile-lock", signal: "presenceChanged" })` in `src/event-bridge/triggers.ts` — one workflow, started if absent, signalled if running. Attribute-only updates (`oldState === newState`, e.g. GPS coordinate churn) are ignored.
-- The workflow blocks on `condition(() => edges !== seen, PRESENCE_COOLDOWN_SECONDS)`; each signal bumps `edges` and restarts the wait. Reaching the timeout means a full window with no edge → the household has settled.
+- The workflow blocks on `condition(() => edges !== seen, PRESENCE_COOLDOWN_SECONDS * 1000)` (the Temporal SDK timeout is in milliseconds); each signal bumps `edges` and restarts the wait. Reaching the timeout means a full window with no edge → the household has settled.
 - Desired state is a pure function of who is home (`shouldLock(states)` — lock iff **nobody** is in the `home` zone; named zones / `unknown` count as away). It reads **live** lock + person state and **actuates only when current ≠ desired** (idempotent — a redundant trigger never clunks the bolt). A late edge during the read re-arms the loop.
 - This makes lock/unlock races impossible: a single in-flight workflow, so an unlock and a lock can never both fire from one flap cycle.
 

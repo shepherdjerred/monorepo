@@ -47,8 +47,13 @@ async function bumpLockReconciler(client: Client): Promise<void> {
       signalArgs: [],
     });
   } catch (error: unknown) {
+    // Fail fast: surface the failure instead of silently proceeding with the
+    // door's desired state un-reconciled. The HA event client wraps handlers in
+    // `Promise.resolve(handler()).catch(emitError)`, so this propagates as a
+    // logged subscription error rather than crashing the worker.
     const detail = error instanceof Error ? error.message : String(error);
     console.error(`Failed to signal reconcileLock: ${detail}`);
+    throw error;
   }
 }
 

@@ -105,3 +105,18 @@ function of occupancy, so stop edge-triggering it and reconcile instead.
   is used for the person/lock reads so entity-id drift won't break the build.
 - `CLAUDE.md` in `packages/temporal` is a symlink to `AGENTS.md` — edit the real
   target.
+
+## Follow-up — Greptile review (stacked PR)
+
+Two P2 comments on PR #1053, both addressed in a stacked follow-up PR
+(`claude/lock-reconciler-greptile`, based on `claude/zealous-fermat-fc618d`):
+
+- **AGENTS.md dropped `* 1000`** — the prose snippet showed
+  `condition(() => edges !== seen, PRESENCE_COOLDOWN_SECONDS)`; the real code uses
+  `* 1000` (Temporal SDK timeouts are milliseconds). Fixed the doc so a literal
+  copy doesn't yield a 90 ms window.
+- **`bumpLockReconciler` swallowed `signalWithStart` errors** — now re-throws after
+  logging. Safe because the HA event client wraps handlers in
+  `Promise.resolve(handler()).catch(emitError)` (`packages/home-assistant/src/ws/client.ts`),
+  so it surfaces as a logged subscription error, not a worker crash. Aligns with
+  the repo's fail-fast / no-silent-fallback principle.
