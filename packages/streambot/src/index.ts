@@ -181,7 +181,7 @@ async function main(): Promise<void> {
   const bootAtMs = Date.now();
   let lastKnownPositionSeconds = decision.input.initialSeekSeconds ?? 0;
 
-  async function saveSnapshot(): Promise<void> {
+  async function writeSnapshot(): Promise<void> {
     const { context } = actor.getSnapshot();
     const live = streamer.getPosition();
     if (context.current === null) {
@@ -211,6 +211,20 @@ async function main(): Promise<void> {
         error: getErrorMessage(error),
       });
     }
+  }
+
+  // Serialize snapshot writes so a fired interval and the shutdown flush can't run concurrently and
+  // observe `lastKnownPositionSeconds` / `persistResume*` in a torn state — each call waits for the
+  // previous to finish. (writeSnapshot swallows its own errors, so the tail never rejects.)
+  let snapshotTail: Promise<void> = Promise.resolve();
+  function saveSnapshot(): Promise<void> {
+    const previous = snapshotTail;
+    const run = (async (): Promise<void> => {
+      await previous;
+      await writeSnapshot();
+    })();
+    snapshotTail = run;
+    return run;
   }
 
   const checkpointTimer = setInterval(() => {

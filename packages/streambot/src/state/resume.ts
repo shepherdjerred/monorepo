@@ -81,8 +81,8 @@ export type ResumeDecision = {
  * Decide how to start the machine from loaded state. The in-progress item, when kept, is placed at
  * `queue[0]` so the normal dequeue flow plays it first (with `initialSeekSeconds`). The current item
  * is dropped — falling back to the rest of the queue — when:
- *  - the saved guild no longer matches config (different server / stale state), which discards
- *    everything; or
+ *  - the saved guild or voice channel no longer matches config (reconfigured / stale state), which
+ *    discards everything so we never resume into a stale channel; or
  *  - it has crashed the bot `maxResumeAttempts` times in a row (crash-loop guard).
  */
 export function buildResumeInput(
@@ -90,7 +90,10 @@ export function buildResumeInput(
   base: PlaybackInput,
   opts: { maxResumeAttempts: number },
 ): ResumeDecision {
-  if (restored?.guildId !== base.guildId) {
+  if (
+    restored?.guildId !== base.guildId ||
+    restored.channelId !== base.channelId
+  ) {
     return {
       input: base,
       resumedCurrent: false,
