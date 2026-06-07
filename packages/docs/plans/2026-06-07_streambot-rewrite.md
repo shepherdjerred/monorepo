@@ -112,14 +112,24 @@ and `helm/streambot`. `versions.ts` key `ydrag0n/streambot` → `shepherdjerred/
   1Password operator will sync a complete secret. (`APPLICATION_ID` isn't needed — the bot reads its
   app id from the logged-in client.)
 
+- **Ran the live Dagger e2e (PASS) against a dedicated test guild** (`1337623164146155593`, voice
+  `1337623164955398253`, text `1337631455085334650`) — see `project_streambot_e2e_test_server`
+  memory. It now exercises **both identities**: the command bot logs in (as `Glidiot Helper`) and
+  registers the `/stream` command on the guild; the userbot (`glidiot_`) joins the voice channel,
+  reaches `streaming`, holds, and stops cleanly. Two real bugs were found+fixed in the process:
+  - `runStream` ended the stream at ffmpeg-_encode_ completion (~0.5s for a local file) instead of
+    real-time playback — would cut every video short. Now awaits `playStream`; the ffmpeg promise
+    only surfaces failures (`2a6159595`).
+  - selfbot `Client.destroy()` threw on a null gateway connection and masked a passing e2e as exit 1
+    — now guarded (`2a6159595`).
+  - Added `CommandBot.ready` + debounced the "alone in VC" auto-leave behind a 30s grace so a
+    transient empty channel (or an unattended e2e) doesn't drop playback (`4183b580b`).
+
 ### Remaining
 
 - Merge PR #1056; CI commit-back fills the real `shepherdjerred/streambot` digest in `versions.ts`,
   then ArgoCD deploys to the `media` namespace. After deploy, confirm the pod is `1/1` and run a
   manual `/stream play <library title>` smoke check in Discord.
-- Optional live e2e in Dagger (joins the real voice channel):
-  `dagger call e2e-streambot --pkg-dir ./packages/streambot --bot-token=op://… --user-token=op://…
---guild-id … --video-channel-id … --command-channel-id …`.
 
 ### Caveats
 
