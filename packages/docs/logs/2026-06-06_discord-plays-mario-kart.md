@@ -20,12 +20,13 @@ Go-Live selfbot, and it deploys via Dagger + cdk8s. That stack is the template
 for this package.
 
 A spike proved MK64 runs the same way: a patched **N64Wasm** core (parallel-n64
-+ angrylion software RDP) compiled to WebAssembly, booted under Bun with the ROM
-injected into wasm memory, stepping `_runMainLoop` per frame and reading the
-RGBA framebuffer out of `HEAPU8` — **no GPU, browser, or desktop**. Measured
-~120 fps headless on the MacBook; the productionized host booted MK64 at ~160
-fps. N64 has no simple PPU like the GBA, so angrylion's software RDP is the only
-GPU-free render path.
+
+- angrylion software RDP) compiled to WebAssembly, booted under Bun with the ROM
+  injected into wasm memory, stepping `_runMainLoop` per frame and reading the
+  RGBA framebuffer out of `HEAPU8` — **no GPU, browser, or desktop**. Measured
+  ~120 fps headless on the MacBook; the productionized host booted MK64 at ~160
+  fps. N64 has no simple PPU like the GBA, so angrylion's software RDP is the only
+  GPU-free render path.
 
 ## What shipped
 
@@ -92,17 +93,17 @@ shell + `socket.ts`). Game-specific work:
 1. **1Password** — create an item in vault `v64ocnykdqju4ui6j6pua56xw4` with a
    `config.toml` field (server id, `[stream.userbot]` selfbot token + ids,
    `[stream.video]`, `[emulator] rom_path="roms/mariokart64.z64"`, `[web]
-   port=8081`), then replace the placeholder item id in
+port=8081`), then replace the placeholder item id in
    `resources/mario-kart.ts` (`mariokartconfigreplaceme`).
 2. **ROM** — `kubectl cp mariokart64.z64
-   <pod>:/workspace/packages/discord-plays-mario-kart/roms/mariokart64.z64`
+<pod>:/workspace/packages/discord-plays-mario-kart/roms/mariokart64.z64`
    once into the ROM PVC. The ROM is copyrighted — never in the image, git, or a
    Secret.
 
 ## Risks / notes
 
 - **Selfbot ToS** — Discord blocks video from bot tokens, so Go-Live needs a
-  *user* token. This violates Discord ToS and the token invalidates on password
+  _user_ token. This violates Discord ToS and the token invalidates on password
   change. Use a dedicated throwaway account; rotate via 1Password +
   `kubectl rollout restart`.
 - **Players navigate menus themselves** (by design) — four virtual controllers,

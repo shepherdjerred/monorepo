@@ -73,15 +73,17 @@ Two things are provisioned out-of-band (by design):
    `v64ocnykdqju4ui6j6pua56xw4`) with a `config.toml` field, then replace the
    placeholder item id in `resources/mario-kart.ts`.
 2. **ROM** — copy your own MK64 ROM into the ROM PVC once:
+
    ```sh
    kubectl cp mariokart64.z64 \
      <pod>:/workspace/packages/discord-plays-mario-kart/roms/mariokart64.z64
    ```
+
    The ROM is **copyrighted** — it is never baked into the image, committed to
    git, or stored in a Secret. You must supply your own copy.
 
 > **Self-bot caveat.** Discord blocks video from bot tokens, so Go-Live requires
-> a *user* token. This violates Discord's ToS and the token invalidates on a
+> a _user_ token. This violates Discord's ToS and the token invalidates on a
 > password change — use a dedicated throwaway account and rotate via 1Password +
 > `kubectl rollout restart`.
 

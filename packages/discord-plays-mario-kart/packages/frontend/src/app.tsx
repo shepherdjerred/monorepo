@@ -166,8 +166,8 @@ export function App() {
         <div className="flex flex-col items-center gap-6 py-8">
           <h1 className="text-2xl font-bold">Discord Plays Mario Kart 64</h1>
           <p className="text-sm text-slate-400">
-            Watch the live game in Discord (Go-Live). Claim a seat below to drive
-            a kart. Latency:{" "}
+            Watch the live game in Discord (Go-Live). Claim a seat below to
+            drive a kart. Latency:{" "}
             {latency === undefined ? "…" : `${String(latency)}ms`}
           </p>
 
@@ -203,8 +203,8 @@ export function App() {
           ) : (
             <div className="flex flex-col items-center gap-4">
               <p className="text-emerald-400">
-                You are P{seat + 1} — WASD / arrows, E = item, Shift = hop, Enter
-                = start.
+                You are P{seat + 1} — WASD / arrows, E = item, Shift = hop,
+                Enter = start.
               </p>
               <div className="grid grid-cols-4 gap-2">
                 {PADS.map((p) => (

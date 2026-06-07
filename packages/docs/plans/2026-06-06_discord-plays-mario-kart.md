@@ -18,6 +18,7 @@ Decisions (confirmed): **4 web seats, players do their own menu nav** (no savest
 Mirror `packages/discord-plays-pokemon` layout: root workspace + inner `packages/{common,backend,frontend}`, scope `@discord-plays-mario-kart/*`. Copy and rename `pokemon`→`mario-kart`: `package.json`, `bun.lock`, `tsconfig*`, `eslint.config.ts`, `mise.toml`, `.gitignore`, `.dockerignore`, `config.example.toml`, `compose.yml`. Carry over from root `package.json`: `trustedDependencies`, `overrides`, and the **`patchedDependencies` sharp `bun patch`** (`patches/@dank074%2Fdiscord-video-stream@6.0.0.patch`) — `@dank074/discord-video-stream` needs it under Bun.
 
 **Reuse near-verbatim** (game-agnostic) from `discord-plays-pokemon`:
+
 - `packages/common/src/**` — socket request/response model + player/status/login types (extend, see Step 4).
 - `packages/backend/src/config/{index.ts}` (TOML loader), `logger.ts`, `util.ts`.
 - `packages/backend/src/webserver/**` (express + socket.io + RxJS).
@@ -30,13 +31,15 @@ Mirror `packages/discord-plays-pokemon` layout: root workspace + inner `packages
 The core is a from-source emscripten build of our patched N64Wasm (parallel-n64 + angrylion). Vendor the **patched source** into the package at `wasm-src/` (the `spike/n64wasm/code/` tree + `PATCHES.md` recording upstream commit + our diffs: `neilSetRom`, `neilGetVideoBuffer/Height`, ROM-inject branch, `volatile` globals).
 
 **Add the per-player input export** in `wasm-src/code/mymain.cpp` (beside `neil_send_mobile_controls`, ~line 1898): `neil_send_mobile_controls_player(int player, char* controls, char* axis0, char* axis1)` writing `neilbuttons[player]` (`player` bounds-checked vs `NEILNUMCONTROLLERS`=4). 14-char button order must match the existing P1 setter: `[up,down,left,right,a,b,start,z,l,r,cUp,cDown,cLeft,cRight]`; analog `axis0=±32000*x`, `axis1=-32000*y`. Add `'_neil_send_mobile_controls_player'` to `EXPORTED_FUNCTIONS` in `code/Makefile`.
-- Ordering contract: the core zeroes `neilbuttons[*]` each frame *before* the input poll — call the setters **immediately before** `_runMainLoop()` each tick (matches the established P1 mobile path).
+
+- Ordering contract: the core zeroes `neilbuttons[*]` each frame _before_ the input poll — call the setters **immediately before** `_runMainLoop()` each tick (matches the established P1 mobile path).
 
 **Build in Dagger CI** (per decision): a dedicated emscripten stage (`emscripten/emsdk` pinned tag, the same image the spike used) runs `make` in `wasm-src/code/`, producing `n64wasm.js` + `n64wasm.wasm`; copy them (and the FS-staged assets `shader_vert.hlsl`, `shader_frag.hlsl`, `overlay.png`, `res/arial.ttf`) into the app image under the backend's assets dir. No binaries committed.
 
 ## Step 3 — Backend: `N64Emulator` host (replaces the GBA `emulator/` module)
 
 Productionize `spike/n64wasm/run.mjs` into `packages/backend/src/emulator/`:
+
 - `wasm-host.ts` — the Node browser/WebGL stubs from run.mjs: CommonJS shims (`require/__filename/__dirname`), `makeGLStub()` (incl. the `getProgramParameter`→0-uniforms and `getActiveUniform` fixes), `fakeCanvas`, `el()`, `screen/document/AudioContext`. **Do NOT define `window`** (must stay `ENVIRONMENT_IS_NODE`-only, or `fseek` null-traps).
 - `config-txt.ts` — `buildConfig()` (positional config, `disableAudioSync=0`, `forceAngry=1`).
 - `constants.ts` — `FRAME_WIDTH=640`, dynamic height (`_neilGetVideoHeight()` ≈240), `CONTROL_CHARS=14`, target fps.
@@ -80,6 +83,7 @@ Add `packages/docs/logs/2026-06-06_discord-plays-mario-kart.md` (or plan) record
 5. **Deploy**: merge → CI pushes image + version-commit-back → ArgoCD syncs `mario-kart`; `kubectl cp` the ROM into the PVC once; web UI reachable at `mariokart.sjer.red`; stream live in Discord.
 
 ## Risks
+
 - **Selfbot ToS / token rotation** (above) — dedicated account.
 - **Players must navigate menus** themselves into multiplayer (by design) — document the controls.
 - **Per-frame input reset ordering** — setters must run immediately before `_runMainLoop`.

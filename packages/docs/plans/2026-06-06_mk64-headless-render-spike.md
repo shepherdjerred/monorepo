@@ -29,7 +29,7 @@ software RDP (angrylion).
   packaging for Bun (~days, not invention).
 
 **Recommendation:** ship the **native child-process** path first (lowest risk, mature
-renderer, best perf), feeding the *unchanged* `stream/game-streamer.ts`. Keep WASM as a
+renderer, best perf), feeding the _unchanged_ `stream/game-streamer.ts`. Keep WASM as a
 later "pure-Bun single-process" optimization.
 
 ## What was built (spike/)
@@ -84,9 +84,11 @@ the emulator/frame-source module + N64 button **and analog-stick** input mapping
 ## Session Log — 2026-06-06
 
 ### Done
+
 - Resolved native (GREEN) vs WASM (YELLOW) feasibility with 3 research threads + a
   working headless build that confirms the no-GPU software-RDP path and frame plumbing.
 - Built reusable capture harness + Dockerfile; identified exact core/options/keys.
 
 ### Remaining
+
 - Capture a real frame + perf number on Linux (dynarec); then implement the package.

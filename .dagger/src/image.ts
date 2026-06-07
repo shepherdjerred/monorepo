@@ -968,7 +968,10 @@ export function buildDiscordPlaysMarioKartImageHelper(
     container
       // Copy the compiled core + the files the host stages into MEMFS at
       // runtime (loadFile reads these; see the emulator host).
-      .withFile(`${assetsDir}/n64wasm.js`, wasmBuild.file("/src/code/n64wasm.js"))
+      .withFile(
+        `${assetsDir}/n64wasm.js`,
+        wasmBuild.file("/src/code/n64wasm.js"),
+      )
       .withFile(
         `${assetsDir}/n64wasm.wasm`,
         wasmBuild.file("/src/code/n64wasm.wasm"),

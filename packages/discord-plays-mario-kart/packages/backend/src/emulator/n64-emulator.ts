@@ -305,8 +305,11 @@ export class N64Emulator {
       this.nextAt = performance.now();
       delay = 0;
     }
-    this.timer = setTimeout(() => {
-      this.loop();
-    }, Math.max(0, delay));
+    this.timer = setTimeout(
+      () => {
+        this.loop();
+      },
+      Math.max(0, delay),
+    );
   }
 }
