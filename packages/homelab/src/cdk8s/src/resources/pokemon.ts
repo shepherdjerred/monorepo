@@ -105,6 +105,16 @@ export function createPokemonDeployment(chart: Chart) {
             },
           }),
         },
+        // The app's CWD (APP_ROOT) is owned by root and not writable by the
+        // runtime user (uid 1000). Images at/before 2.0.0-3436 use a winston
+        // File transport that crashes at startup trying to `mkdir logs/`. This
+        // writable scratch volume keeps that path writable. Once an image built
+        // with the stdout-only logger (Console transport only) is deployed, this
+        // mount is harmless and can be removed.
+        {
+          path: `${APP_ROOT}/logs`,
+          volume: Volume.fromEmptyDir(chart, "pokemon-logs", "pokemon-logs"),
+        },
       ],
     }),
   );
