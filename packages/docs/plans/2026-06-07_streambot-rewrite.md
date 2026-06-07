@@ -16,6 +16,9 @@ Live deploy is gated on the user creating a Discord **bot** token and adding `BO
 - Slash commands registered guild-scoped on ready; intents reduced to `Guilds` + `GuildVoiceStates`.
 - VAAPI via `@dank074` `Encoders.vaapi`; image installs the Intel iHD driver (Debian non-free) +
   ffmpeg; cdk8s requests `gpu.intel.com/i915: 1` (Jellyfin's non-root pattern), `LIBVA_DRIVER_NAME=iHD`.
+- The Intel iHD driver is **x86-only**, so the image installs it conditionally
+  (`dpkg --print-architecture = amd64`) and downloads the arch-matching yt-dlp static binary
+  (`yt-dlp_linux_aarch64` on arm64) — local arm64 (Mac) smoke builds pass with software encoding.
 - No **seek/pause** (library exposes only volume+stop) — documented in `FORK.md`.
 - e2e (`e2e/run.ts` + Dagger `e2eStreambot`, Secret-passed creds) streams a generated clip into the
   real voice channel; run manually with `dagger call e2e-streambot …`.
@@ -82,3 +85,35 @@ and `helm/streambot`. `versions.ts` key `ydrag0n/streambot` → `shepherdjerred/
 - First deploy: CI's version commit-back replaces the seed digest in `versions.ts`; the old
   `streambot` namespace is pruned by ArgoCD when the standalone app disappears.
 - Selfbot (`discord.js-selfbot-v13`) is ToS-gray (pre-existing); isolated behind `src/streamer/`.
+
+## Session Log — 2026-06-06
+
+### Done
+
+- Made the VAAPI image arch-aware in `.dagger/src/image.ts` `withStreambotRuntime`: install
+  `libva2`/`libva-drm2`/`vainfo` always; install the x86-only `intel-media-va-driver-non-free`
+  only when `dpkg --print-architecture = amd64`; download the arch-matching yt-dlp static binary
+  (`yt-dlp_linux` on amd64, `yt-dlp_linux_aarch64` on arm64). Fixes the local arm64 smoke-build.
+- Verified locally: `dagger call smoke-test-streambot …` **passes** on arm64 (failed-with-expected-
+  auth-error). Removed a stray `.dagger/bun.lock` (the module is npm-based).
+- All gates green: streambot `bun test` (51), `tsc`, `eslint`; homelab typecheck + `test-gpu-resources`
+  (3 i915 in media: plex/jellyfin/streambot); dagger-hygiene; full pre-commit (tier-1 + tier-2).
+- Committed `729e4deb1` and pushed to PR #1056 (branded types, slash commands, adult-block, VAAPI,
+  queue features were already in `d1ccc279e`; this commit adds the image VAAPI stack, GPU request,
+  and the Dagger e2e func + `e2e/run.ts`).
+
+### Remaining
+
+- **Blocked on user creds:** create the Discord **bot**, add `BOT_TOKEN` to the `streambot-config`
+  1Password item, then run the live e2e:
+  `dagger call e2e-streambot --pkg-dir ./packages/streambot --bot-token=env:BOT_TOKEN
+--user-token=env:TOKEN --guild-id … --video-channel-id … --command-channel-id …`.
+- Merge PR #1056; CI commit-back fills the real `shepherdjerred/streambot` digest in `versions.ts`.
+
+### Caveats
+
+- lefthook renders a failed `prettier` step with the same green-ish coloring as a pass — the hook
+  exit code (1) is the source of truth. `e2e/run.ts` needed `prettier --write` before it would commit.
+- HW encoding only engages on the amd64 cluster (the iHD driver isn't installed on arm64); local/dev
+  builds silently fall back to software encoding (`STREAM_HARDWARE_ACCELERATION` still defaults true
+  in prod, false in the e2e helper).
