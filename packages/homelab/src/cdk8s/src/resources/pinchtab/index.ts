@@ -74,7 +74,7 @@ export function createPinchtabDeployment(chart: Chart) {
         {
           server: {
             bind: "0.0.0.0",
-            port: String(PINCHTAB_PORT),
+            port: PINCHTAB_PORT,
             stateDir: "/data/state",
           },
           profiles: {
