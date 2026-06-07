@@ -172,6 +172,18 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Weekly Scout Data Dragon refresh even when version is unchanged",
   },
   {
+    id: "pokeemerald-wasm-monthly",
+    workflowType: "runPokeemeraldWasmUpdate",
+    args: [],
+    // 06:00 PT on the 1st of each month. Monthly keeps git-history growth from
+    // the ~12 MB blob bounded.
+    cronExpression: "0 6 1 * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Monthly refresh of the vendored pokeemerald.wasm emulator blob (opens a PR if it changed)",
+  },
+  {
     id: "scout-season-refresh-weekly",
     workflowType: "runScoutSeasonRefreshWorkflow",
     args: [],

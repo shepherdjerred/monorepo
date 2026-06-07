@@ -8,21 +8,22 @@ import {
   time,
   ChannelType,
 } from "discord.js";
-import type { WebDriver } from "selenium-webdriver";
-import { Buffer } from "node:buffer";
 import client from "#src/discord/client.ts";
 import { getConfig } from "#src/config/index.ts";
+import type { Emulator } from "#src/emulator/emulator.ts";
+import { encodePng } from "#src/emulator/png.ts";
 
 export const screenshotCommand = new SlashCommandBuilder()
   .setName("screenshot")
   .setDescription("Take a screenshot and upload it to the chat");
 
-export function makeScreenshot(driver: WebDriver) {
+const SCREENSHOT_SCALE = 3;
+
+export function makeScreenshot(emulator: Emulator) {
   return async function handleScreenshotCommand(
     interaction: CommandInteraction,
   ) {
-    const screenshotData = await driver.takeScreenshot();
-    const buffer = Buffer.from(screenshotData, "base64");
+    const buffer = encodePng(emulator.renderFrame(), SCREENSHOT_SCALE);
     const date = new Date();
     const attachment = new AttachmentBuilder(buffer, {
       name: "screenshot.png",

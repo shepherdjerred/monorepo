@@ -123,6 +123,19 @@ export function createStreambotDeployment(chart: Chart) {
             cacheVolume.claim,
           ),
         },
+        {
+          // StreamBot downloads (and self-updates) the yt-dlp binary into
+          // `${cwd}/scripts` at runtime. The image's WORKDIR is root-owned, but we
+          // run as UID 1000, so without a writable mount here the `mkdir`/download
+          // fails (EACCES) and every YouTube/URL play breaks with `yt-dlp ENOENT`.
+          // An emptyDir is correct: the binary is ephemeral, re-fetched on start.
+          path: "/home/bots/StreamBot/scripts",
+          volume: Volume.fromEmptyDir(
+            chart,
+            "streambot-scripts-volume",
+            "streambot-scripts",
+          ),
+        },
       ],
     }),
   );

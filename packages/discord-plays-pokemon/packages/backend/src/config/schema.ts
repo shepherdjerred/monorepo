@@ -42,19 +42,24 @@ export const ConfigSchema = z.strictObject({
         .string()
         .regex(/\d*/, "IDs must only have numeric characters")
         .min(1),
-      username: z.string().min(1),
-      password: z.string().min(1),
+      // Discord user (selfbot) token for the streaming account. Required
+      // because Discord blocks video from bot tokens.
+      token: z.string().min(1),
+    }),
+    video: z.strictObject({
+      // Integer upscale of the native 240x160 frame sent to Discord.
+      scale: z.number().int().min(1).max(6),
+      frame_rate: z.number().positive(),
+      bitrate_kbps: z.number().positive(),
+      bitrate_max_kbps: z.number().positive(),
     }),
   }),
   game: z.strictObject({
     enabled: z.boolean(),
-    emulator_url: z.union([
-      z.literal("built_in"),
-      z.url("Must be a valid URL"),
-    ]),
-    browser: z.strictObject({
-      preferences: z.record(z.string(), z.union([z.boolean(), z.number()])),
-    }),
+    // Path to the built pokeemerald.wasm (see scripts/fetch-wasm.ts).
+    wasm_path: z.string().min(1),
+    // Optional path for the persisted 128 KiB flash save.
+    save_path: z.string().min(1).optional(),
     commands: z.strictObject({
       enabled: z.boolean(),
       channel_id: z
