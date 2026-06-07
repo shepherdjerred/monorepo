@@ -22,6 +22,7 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   birmel: ["eslint-config", "llm-observability"],
   "llm-observability": ["eslint-config"],
   "starlight-karma-bot": ["eslint-config"],
+  streambot: ["eslint-config"],
   "tasknotes-types": ["eslint-config"],
   "home-assistant": ["eslint-config"],
   "trmnl-dashboard": ["eslint-config", "home-assistant"],

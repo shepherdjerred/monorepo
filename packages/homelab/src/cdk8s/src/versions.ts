@@ -19,10 +19,10 @@ const versions = {
   "tailscale-operator": "1.96.5",
   // renovate: datasource=github-releases versioning=semver
   "adyanth/cloudflare-operator": "v0.13.1",
-  // renovate: datasource=docker registryUrl=https://quay.io versioning=docker
-  // Upstream ysdragon/StreamBot publishes its Docker Compose image as quay.io/ydrag0n/streambot.
-  "ydrag0n/streambot":
-    "latest@sha256:6bb994bbc70f974092e54580002bf53152e00687dfe40469db06a6a7ef7e4368",
+  // not managed by renovate — built from packages/streambot; CI's version commit-back fills the
+  // real tag@digest after the first image push. Seed digest is a placeholder until then.
+  "shepherdjerred/streambot":
+    "0.0.0-seed@sha256:0000000000000000000000000000000000000000000000000000000000000000",
   // renovate: datasource=docker registryUrl=https://quay.io versioning=docker
   // Tracked via the rolling `latest` tag because upstream redlib only publishes
   // sha-<short-commit> tags, which Renovate cannot version-compare. The global

@@ -124,6 +124,7 @@ const SMOKE_TEST_FUNCTIONS: Record<string, string> = {
   "caddy-s3proxy": "smoke-test-caddy-s-3-proxy",
   "obsidian-headless": "smoke-test-obsidian-headless",
   "discord-plays-pokemon": "smoke-test-discord-plays-pokemon",
+  streambot: "smoke-test-streambot",
   "discord-plays-mario-kart": "smoke-test-discord-plays-mario-kart",
   "trmnl-dashboard": "smoke-test-trmnl-dashboard",
 };
@@ -139,6 +140,7 @@ const SMOKE_CUSTOM_INFRA = new Set([
   "smoke-test-scout-for-lol",
   "smoke-test-discord-plays-pokemon",
   "smoke-test-discord-plays-mario-kart",
+  "smoke-test-streambot",
   "smoke-test-trmnl-dashboard",
 ]);
 

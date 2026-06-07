@@ -47,6 +47,7 @@ export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
     name: "starlight-karma-bot",
     versionKey: "shepherdjerred/starlight-karma-bot",
   },
+  { name: "streambot", versionKey: "shepherdjerred/streambot" },
   {
     name: "temporal-worker",
     package: "temporal",
@@ -272,7 +273,6 @@ export const HELM_CHARTS: string[] = [
   "tasknotes",
   "temporal",
   "trmnl-dashboard",
-  "streambot",
 ];
 
 // ---------------------------------------------------------------------------
@@ -332,6 +332,7 @@ export const ALL_PACKAGES: string[] = [
   "sjer.red",
   "starlight-karma-bot",
   "stocks-sjer-red",
+  "streambot",
   "tasknotes-server",
   "tasknotes-types",
   "temporal",
@@ -361,6 +362,7 @@ export const PACKAGE_RESOURCES: Record<string, ResourceTier> = {
   "discord-plays-pokemon": MEDIUM,
   "discord-plays-mario-kart": MEDIUM,
   "starlight-karma-bot": MEDIUM,
+  streambot: MEDIUM,
   "tasknotes-server": MEDIUM,
   "better-skill-capped": MEDIUM,
   "sjer.red": MEDIUM,
@@ -480,6 +482,12 @@ export const DEPLOY_TARGETS: Record<string, DeployTarget> = {
     images: [imageByName("discord-plays-pokemon")],
     charts: ["pokemon"],
     argoApps: ["pokemon"],
+  },
+  media: {
+    name: "media",
+    images: [imageByName("streambot")],
+    charts: ["media"],
+    argoApps: ["media"],
   },
   "mario-kart": {
     name: "mario-kart",
