@@ -51,7 +51,12 @@ import {
   alertRemediationChildWorkflow as _alertRemediationChildWorkflow,
   alertRemediationSweepWorkflow as _alertRemediationSweepWorkflow,
 } from "./alert-remediation.ts";
-import type { PrReviewPipelineInput, PrSummaryInput } from "#shared/schemas.ts";
+import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from "./cancel-buildkite-builds.ts";
+import type {
+  CancelBuildkiteBuildsInput,
+  PrReviewPipelineInput,
+  PrSummaryInput,
+} from "#shared/schemas.ts";
 import type { PrReviewPipelineResult } from "./pr-review/index.ts";
 import type { RunSummaryResult } from "#activities/pr-review/summary.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
@@ -186,4 +191,10 @@ export async function prReactionListener(
   input: PrReactionListenerInput,
 ): Promise<void> {
   return _prReactionListener(input);
+}
+
+export async function cancelBuildkiteBuildsWorkflow(
+  input: CancelBuildkiteBuildsInput,
+): Promise<void> {
+  return _cancelBuildkiteBuildsWorkflow(input);
 }

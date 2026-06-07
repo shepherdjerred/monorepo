@@ -234,6 +234,7 @@ describe("ConfigSchema (full)", () => {
       logging: {},
       sentry: {},
       persona: {},
+      responder: {},
       birthdays: {},
       activityTracking: {},
       shell: {},

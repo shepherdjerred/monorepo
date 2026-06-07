@@ -1,0 +1,6 @@
+apiVersion: v2
+name: streambot
+description: StreamBot - Discord video streaming self-bot
+type: application
+version: "$version"
+appVersion: "$appVersion"

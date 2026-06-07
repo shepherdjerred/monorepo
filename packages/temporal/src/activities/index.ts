@@ -16,6 +16,7 @@ import { prReviewEvalActivities } from "./pr-review-eval/index.ts";
 import { prSummaryActivities } from "./pr-review/summary.ts";
 import { veleroOrphanAuditActivities } from "./velero-orphan-audit.ts";
 import { outcomeActivities } from "./outcome.ts";
+import { cancelBuildkiteBuildsActivities } from "./cancel-buildkite-builds.ts";
 
 export const activities = {
   ...fetcherActivities,
@@ -36,4 +37,5 @@ export const activities = {
   ...prSummaryActivities,
   ...veleroOrphanAuditActivities,
   ...outcomeActivities,
+  ...cancelBuildkiteBuildsActivities,
 };

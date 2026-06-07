@@ -1,7 +1,7 @@
 # Velero Orphan-Snapshot Pathology — Prevention Options Analyzed
 
-**Date:** 2026-05-05
-**Status:** Decided — detection + manual remediation only; auto-prune and self-healing deferred.
+**Date:** 2026-05-05 (reaffirmed 2026-06-06)
+**Status:** Decided — detection + manual remediation only; auto-prune and self-healing **declined**. Re-deploy guard (Option 2, `Prune=false`) implemented 2026-06-06. See [Recurrence — 2026-05-30](#recurrence--2026-05-30-ttl-finalizer-mode).
 
 ## Summary
 
@@ -137,14 +137,45 @@ Patch `openebs/velero-plugin` so its `DeleteSnapshot` verifies the snapshot was 
 - Manual remediation is acceptable because (a) the cleanup is straightforward (`zfs destroy` per orphan, `aws s3 rm` per prefix), (b) alerts page within the existing PagerDuty pipeline, and (c) the cost of a 24-hour-old orphan is negligible (a few MB on disk).
 - Self-healing's apparent benefit (faster cleanup) is offset by its operational risk during recovery scenarios. The grace-period model (Option 5) is the safer self-healing version, but only worth enabling once detection accuracy is proven.
 
+## Recurrence — 2026-05-30 (TTL-finalizer mode)
+
+On 2026-05-30 the audit detected **31 orphan local snapshots (~19 GiB)**, paging
+`VeleroOrphanLocalSnapshots` + `VeleroOrphanLocalBytesExcessive` (PagerDuty 5383/5384). This is a
+**distinct failure mode** from the 2026-03 re-deploy event:
+
+- All 31 orphans shared the exact suffix `@monthly-backup-20260301050003` — one snapshot per backed-up
+  PVC from a single monthly backup. That backup's 90-day TTL expired ~2026-05-30; Velero deleted the
+  Backup CR, but the openebs-zfs plugin's `DeleteSnapshot` finalizer failed to destroy the underlying
+  ZFS snapshots. **A same-suffix orphan set is the signature of one expired backup's failed finalizer**
+  (vs. the re-deploy mode, where orphans span many backups/dates). This signature is now noted in the
+  runbook.
+- This is normal-operation TTL expiry, not a re-deploy — so it confirms the residual risk the original
+  decision acknowledged (Velero's deletion path is not 100% reliable at the plugin layer).
+
+**Decision on this recurrence (2026-06-06):**
+
+- **Auto-prune (Option 5) declined**, not merely deferred. Detection accuracy is now proven (33 clean
+  daily runs; the 5383/5384 counts matched two independent live measurements exactly), so the original
+  "enable once trusted" precondition is met — but scheduled, destructive deletion of snapshots that may
+  represent a recovery path was judged too risky for backups. Cleanup stays manual via the runbook.
+- **Option 2 (`Prune=false`) implemented** on the Velero `Schedule` CRs in
+  `argo-applications/velero.ts`, guarding the re-deploy mode. (BackupStorageLocation /
+  VolumeSnapshotLocation are Helm-rendered by the velero chart and can't be individually annotated
+  without forking; the documented "drain backups before re-deploy" procedure remains the primary
+  re-deploy guard.)
+- The TTL-finalizer mode itself remains detection + manual remediation by design. If it recurs
+  frequently, revisit an **on-demand, manually-triggered** prune workflow (human invokes after review)
+  as a safer middle ground than scheduled auto-prune.
+
 ## Follow-ups
 
-| Item                                                                     | Priority | Notes                                       |
-| ------------------------------------------------------------------------ | -------- | ------------------------------------------- |
-| Add `Prune=false` to Velero Backup-class CRs in cdk8s                    | Medium   | Cheap, eliminates ArgoCD-prune failure mode |
-| Document Velero re-deploy procedure (`velero backup delete --all` first) | Medium   | Goes in `packages/docs/guides/`             |
-| Evaluate auto-prune (Option 5) after Option 1 has run for N cycles       | Low      | Re-decide once detection is trusted         |
-| Kyverno guardrails (Option 3)                                            | Low      | Re-evaluate if detection misses an incident |
+| Item                                                                     | Priority   | Notes                                                              |
+| ------------------------------------------------------------------------ | ---------- | ------------------------------------------------------------------ |
+| Add `Prune=false` to Velero Backup-class CRs in cdk8s                    | ~~Medium~~ | **Done 2026-06-06** — applied to `Schedule` CRs (velero.ts)        |
+| Document Velero re-deploy procedure (`velero backup delete --all` first) | ~~Medium~~ | **Done** — see remediation runbook "Re-deploying Velero correctly" |
+| ~~Evaluate auto-prune (Option 5) after Option 1 has run for N cycles~~   | —          | **Declined 2026-06-06** — too risky for backups (see Recurrence)   |
+| On-demand (manually-triggered) prune workflow                            | Low        | Only if TTL-finalizer orphans recur often                          |
+| Kyverno guardrails (Option 3)                                            | Low        | Re-evaluate if detection misses an incident                        |
 
 ## Cross-References
 

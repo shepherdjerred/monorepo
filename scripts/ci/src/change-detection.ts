@@ -35,6 +35,12 @@ const COOKLANG_VERSION_COMMIT_BACK_FILES = new Set([
   "packages/cooklang-for-obsidian/versions.json",
 ]);
 
+/** Package directories whose source changes warrant a cooklang plugin release. */
+const COOKLANG_PACKAGE_PREFIXES = [
+  "packages/cooklang-for-obsidian/",
+  "packages/cooklang-rich-preview/",
+];
+
 // ---------------------------------------------------------------------------
 // Version commit-back fast-track
 // ---------------------------------------------------------------------------
@@ -62,6 +68,25 @@ function isCooklangVersionCommitBackOnly(changedFiles: string[]): boolean {
   return (
     changedFiles.length > 0 &&
     changedFiles.every((file) => COOKLANG_VERSION_COMMIT_BACK_FILES.has(file))
+  );
+}
+
+/**
+ * True when a real cooklang *source* file changed — a file under a cooklang
+ * package that is NOT one of the auto-generated version-bump artifacts
+ * (`manifest.json` / `versions.json`).
+ *
+ * The release gate keys off this rather than "any cooklang file changed" so
+ * that bot-authored manifest bumps — and infra/full builds that don't touch
+ * cooklang at all — never cut a new plugin release. Cooklang is still BUILT
+ * and TESTED whenever any of its files change (driven by `packages`); this
+ * flag governs only whether we PUBLISH.
+ */
+function hasCooklangSourceChange(changedFiles: string[]): boolean {
+  return changedFiles.some(
+    (file) =>
+      COOKLANG_PACKAGE_PREFIXES.some((prefix) => file.startsWith(prefix)) &&
+      !COOKLANG_VERSION_COMMIT_BACK_FILES.has(file),
   );
 }
 
@@ -672,12 +697,17 @@ function transitiveClosure(
 // Result builders
 // ---------------------------------------------------------------------------
 
-function fullBuildResult(): AffectedPackages {
+/**
+ * A full build rebuilds and retests everything, but a cooklang plugin release
+ * is published only when cooklang *source* actually changed — `buildAll` alone
+ * must never cut a release (that was the source of the manifest-bump churn).
+ */
+function fullBuildResult(cooklangChanged: boolean): AffectedPackages {
   return {
     packages: new Set(ALL_PACKAGES),
     buildAll: true,
     homelabChanged: true,
-    cooklangChanged: true,
+    cooklangChanged,
     resumeChanged: true,
     ciImageChanged: false,
     hasImagePackages: new Set(PACKAGES_WITH_IMAGES),
@@ -710,6 +740,7 @@ function emptyResult(): AffectedPackages {
 
 function buildScopedResult(
   allAffected: Set<string>,
+  cooklangChanged: boolean,
   ciImageChanged: boolean,
   ciImageVersionChanged = false,
 ): AffectedPackages {
@@ -732,9 +763,7 @@ function buildScopedResult(
     packages: allAffected,
     buildAll: false,
     homelabChanged: allAffected.has("homelab"),
-    cooklangChanged:
-      allAffected.has("cooklang-rich-preview") ||
-      allAffected.has("cooklang-for-obsidian"),
+    cooklangChanged,
     resumeChanged: allAffected.has("resume"),
     ciImageChanged,
     hasImagePackages,
@@ -758,11 +787,14 @@ export async function detectChanges(): Promise<AffectedPackages> {
   const forceFull = forceFullEnv || commitMsg.includes("[full-build]");
 
   if (forceFull) {
+    // A forced full build rebuilds/retests everything but never publishes
+    // cooklang — change a cooklang source file to cut a plugin release.
     console.error("Full build requested, building everything");
-    return fullBuildResult();
+    return fullBuildResult(false);
   }
 
   const changedFiles = await getChangedFiles();
+  const cooklangSourceChanged = hasCooklangSourceChange(changedFiles);
 
   // Renovate fast-track: runs BEFORE infra check so that bun.lock/package.json
   // in INFRA_FILES don't short-circuit the fast path.
@@ -800,7 +832,7 @@ export async function detectChanges(): Promise<AffectedPackages> {
         console.error(`  ${p}`);
       }
 
-      return buildScopedResult(allAffected, false);
+      return buildScopedResult(allAffected, cooklangSourceChanged, false);
     }
 
     // classification === null: unrecognized files, fall through to normal detection
@@ -819,7 +851,11 @@ export async function detectChanges(): Promise<AffectedPackages> {
       console.error(
         "Version commit-back: skipping image builds, running deploy pipeline",
       );
-      const result = buildScopedResult(new Set(["homelab"]), false);
+      const result = buildScopedResult(
+        new Set(["homelab"]),
+        cooklangSourceChanged,
+        false,
+      );
       result.versionBumpOnly = true;
       return result;
     }
@@ -846,7 +882,7 @@ export async function detectChanges(): Promise<AffectedPackages> {
   const infraChanged = checkInfraChanges(changedFiles);
   if (infraChanged) {
     console.error("Infrastructure files changed, building everything");
-    return fullBuildResult();
+    return fullBuildResult(cooklangSourceChanged);
   }
 
   // Map changed files to packages
@@ -875,7 +911,12 @@ export async function detectChanges(): Promise<AffectedPackages> {
     console.error(`  ${p}`);
   }
 
-  return buildScopedResult(allAffected, ciImageChanged, ciImageVersionChanged);
+  return buildScopedResult(
+    allAffected,
+    cooklangSourceChanged,
+    ciImageChanged,
+    ciImageVersionChanged,
+  );
 }
 
 // Export for testing
@@ -887,6 +928,7 @@ export {
   isVersionCommitBack as _isVersionCommitBack,
   isCooklangVersionCommitBack as _isCooklangVersionCommitBack,
   isCooklangVersionCommitBackOnly as _isCooklangVersionCommitBackOnly,
+  hasCooklangSourceChange as _hasCooklangSourceChange,
   isAutoGeneratedCommit as _isAutoGeneratedCommit,
   isReleasePleaseMerge as _isReleasePleaseMerge,
   classifyRenovateFiles as _classifyRenovateFiles,

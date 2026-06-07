@@ -5,6 +5,7 @@ import {
   WorkflowIdConflictPolicy,
   WorkflowIdReusePolicy,
 } from "@temporalio/client";
+import type { Duration } from "@temporalio/common";
 import type {
   EntityState,
   EventEnvelope,
@@ -41,6 +42,7 @@ async function startWorkflow(
     args?: unknown[];
     workflowIdReusePolicy?: WorkflowIdReusePolicy;
     workflowIdConflictPolicy?: WorkflowIdConflictPolicy;
+    workflowExecutionTimeout?: Duration;
   } = {},
 ): Promise<void> {
   try {
@@ -52,7 +54,8 @@ async function startWorkflow(
       ...(options.workflowIdConflictPolicy !== undefined && {
         workflowIdConflictPolicy: options.workflowIdConflictPolicy,
       }),
-      workflowExecutionTimeout: "10 minutes",
+      workflowExecutionTimeout:
+        options.workflowExecutionTimeout ?? "10 minutes",
       args: options.args ?? [],
     });
     console.warn(`Started workflow ${workflowType} id=${workflowId}`);
@@ -157,6 +160,8 @@ export function handleStateChanged(
         {
           workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
           workflowIdConflictPolicy: WorkflowIdConflictPolicy.FAIL,
+          // leavingHome's vacuum-verify path can run ~750s+; the 10-min default killed it every run.
+          workflowExecutionTimeout: "20 minutes",
         },
       );
     }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { reportOnlyPrompt } from "./agent-task-command.ts";
+import { reportOnlyPrompt } from "#shared/agent-task.ts";
 import { buildAlertRemediationPrompt } from "./alert-remediation-command.ts";
 
 describe("alert remediation prompt", () => {
