@@ -251,7 +251,26 @@ export function prepareStream(
 
   const { hardwareAcceleratedDecoding, minimizeLatency, customHeaders } =
     mergedOptions;
-  if (hardwareAcceleratedDecoding) command.inputOption("-hwaccel", "auto");
+
+  // Resolve the encoder up front so its optional `hwPipeline` can drive both the input decode
+  // options and the scale filter below. A hardware encoder that declares `hwPipeline` (e.g. VAAPI)
+  // lets us decode straight into GPU surfaces and scale on the GPU, avoiding the software `scale`
+  // (swscale) that would otherwise download every frame to system memory.
+  const encoderSettings = mergedOptions.noTranscoding
+    ? undefined
+    : mergedOptions.encoder(
+        mergedOptions.bitrateVideo,
+        mergedOptions.bitrateVideoMax,
+      )[mergedOptions.videoCodec];
+  const hwPipeline =
+    hardwareAcceleratedDecoding && encoderSettings
+      ? encoderSettings.hwPipeline
+      : undefined;
+
+  if (hardwareAcceleratedDecoding) {
+    if (hwPipeline) command.inputOptions(hwPipeline.decodeOptions);
+    else command.inputOption("-hwaccel", "auto");
+  }
 
   if (minimizeLatency) {
     command.addOptions(["-fflags nobuffer", "-analyzeduration 0"]);
@@ -281,7 +300,7 @@ export function prepareStream(
   // general output options
   command.output(output).outputFormat("nut");
 
-  // video setup
+  // video setup (the `encoder` is resolved earlier, into `encoderSettings`/`hwPipeline`)
   const {
     noTranscoding,
     width,
@@ -290,14 +309,21 @@ export function prepareStream(
     bitrateVideo,
     bitrateVideoMax,
     videoCodec,
-    encoder,
   } = mergedOptions;
   command.addOutputOption("-map 0:v");
 
   if (noTranscoding) {
     command.videoCodec("copy");
   } else {
-    command.videoFilter(`scale=${width}:${height}`);
+    if (!encoderSettings)
+      throw new Error(`Encoder settings not specified for ${videoCodec}`);
+
+    // Scale on the GPU when the encoder declares a hardware pipeline; otherwise software `scale`.
+    command.videoFilter(
+      hwPipeline
+        ? hwPipeline.scaleFilter(width, height)
+        : `scale=${width}:${height}`,
+    );
 
     if (frameRate) command.fpsOutput(frameRate);
 
@@ -310,18 +336,18 @@ export function prepareStream(
       `${Math.round(bitrateVideo / 2)}k`,
       "-bf",
       "0",
-      "-pix_fmt",
-      "yuv420p",
+      // `-pix_fmt yuv420p` only applies to the software path. On a GPU pipeline the surface format
+      // is set by the scale filter (`format=nv12`) and h264_vaapi auto-selects `vaapi` anyway.
+      ...(hwPipeline ? [] : ["-pix_fmt", "yuv420p"]),
       "-force_key_frames",
       "expr:gte(t,n_forced*1)",
     ]);
 
-    const encoderSettings = encoder(bitrateVideo, bitrateVideoMax)[videoCodec];
-    if (!encoderSettings)
-      throw new Error(`Encoder settings not specified for ${videoCodec}`);
     command
       .videoCodec(encoderSettings.name)
-      .videoFilter(encoderSettings.outFilters ?? [])
+      // On a GPU pipeline the frames are already hardware surfaces, so the encoder's upload/format
+      // `outFilters` (hwupload, format=nv12|vaapi) are unnecessary.
+      .videoFilter(hwPipeline ? [] : (encoderSettings.outFilters ?? []))
       .outputOptions(encoderSettings.options)
       .outputOptions(encoderSettings.globalOptions ?? []);
   }
