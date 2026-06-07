@@ -46,6 +46,13 @@ export const CADDY_BUILDER_IMAGE =
 // renovate: datasource=docker depName=node
 export const OBSIDIAN_HEADLESS_BASE_IMAGE =
   "node:24-slim@sha256:242549cd46785b480c832479a730f4f2a20865d61ea2e404fdb2a5c3d3b73ecf";
+// emscripten toolchain for the discord-plays-mario-kart N64Wasm core build.
+// Pinned to 2.0.7 — the exact toolchain the vendored parallel-n64 + angrylion
+// source (packages/discord-plays-mario-kart/wasm-src) is known to compile with.
+// Not Renovate-managed: a newer emsdk silently breaks the legacy SDL2/GLES2
+// build, so the version is intentionally frozen until the core is reworked.
+export const EMSCRIPTEN_IMAGE =
+  "emscripten/emsdk:2.0.7@sha256:cbeeb7cccd2e7915fe0596345f10bfdec5578cc0386aaa823ad6f1d41910619f";
 // renovate: datasource=docker depName=alpine/helm
 export const HELM_IMAGE =
   "alpine/helm:4.1.4@sha256:8edcaedab4d9864886b7f443d55731be87d4b5ec7dca714c24551455707a8aac";

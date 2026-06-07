@@ -43,6 +43,7 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
 
   // Nested workspace packages (sub-packages are inside parent dir)
   "discord-plays-pokemon": ["eslint-config"],
+  "discord-plays-mario-kart": ["eslint-config"],
   "scout-for-lol": ["eslint-config", "llm-observability"],
   "scout-for-lol/packages/frontend": [
     "eslint-config",

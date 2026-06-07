@@ -1,0 +1,6 @@
+apiVersion: v2
+name: mario-kart
+description: Discord Plays Mario Kart 64 application
+type: application
+version: "$version"
+appVersion: "$appVersion"
