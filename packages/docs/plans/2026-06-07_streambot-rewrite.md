@@ -124,6 +124,15 @@ and `helm/streambot`. `versions.ts` key `ydrag0n/streambot` → `shepherdjerred/
     — now guarded (`2a6159595`).
   - Added `CommandBot.ready` + debounced the "alone in VC" auto-leave behind a 30s grace so a
     transient empty channel (or an unattended e2e) doesn't drop playback (`4183b580b`).
+- **Closed the command/interaction test gap** (`4cdb349c8`): extracted the slash-command logic into
+  a discord.js-free `CommandHandler` (over a minimal `CommandInteraction` interface); `command-bot.ts`
+  is now just Client wiring + an interaction adapter. Added 21 unit tests (51 → 72) covering routing,
+  play/playnext, adult-block shaming (no dispatch), playlist expansion, permission gating
+  (skip requester/admin, stop/clear admin-only, remove ownership + bounds), move/shuffle, volume
+  live-vs-deferred, loop valid/invalid, and the status reporter (now-playing de-dupe/re-announce,
+  blocked-nonce shaming). Live e2e re-run green after the refactor. Remaining thin spots — the
+  discord.js adapter glue and the alone-timer wiring in `command-bot.ts` — are covered only by the
+  live e2e, which is acceptable for thin glue around the now-tested logic.
 
 ### Remaining
 
