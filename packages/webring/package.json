@@ -17,7 +17,7 @@
     "url": "https://github.com/shepherdjerred/monorepo/issues"
   },
   "type": "module",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "scripts": {
     "lint": "eslint src --cache",
     "build": "tsc",

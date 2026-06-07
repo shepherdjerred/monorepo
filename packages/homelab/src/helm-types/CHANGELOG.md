@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.3.0...helm-types-v1.3.1) (2026-06-07)
+
+
+### Bug Fixes
+
+* **root:** restore plainStep so Greptile review gate generates ([c0d3ff1](https://github.com/shepherdjerred/monorepo/commit/c0d3ff1eedfb305816f9770dcf5f99ee749ea596))
+
 ## [1.3.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.2.1...helm-types-v1.3.0) (2026-05-27)
 
 * Spawn errors from the chart fetcher now preserve the original error as `.cause`, so callers can inspect what `helm` or `git` actually failed with ([c285f88](https://github.com/shepherdjerred/monorepo/commit/c285f88a7387b679980e63dde07c8543a39cc217))
