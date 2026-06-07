@@ -34,6 +34,7 @@
     "socket.io": "^4.8.1",
     "ts-pattern": "^5.7.0",
     "winston": "^3.17.0",
+    "xstate": "^5.32.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
