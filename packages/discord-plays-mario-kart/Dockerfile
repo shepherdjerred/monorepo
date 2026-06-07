@@ -2,7 +2,7 @@
 # Replaces the old GPU + desktop + Firefox image: this runs pokeemerald-wasm
 # entirely in Bun, renders frames in software, and streams to Discord over the
 # voice UDP path. No X server, no browser, no GPU.
-FROM oven/bun:1.3.14-debian
+FROM oven/bun:1.3.14-debian@sha256:9dba1a1b43ce28c9d7931bfc4eb00feb63b0114720a0277a8f939ae4dfc9db6f
 
 # System deps:
 # - ffmpeg: used by @dank074/discord-video-stream (fluent-ffmpeg) to encode the

@@ -2,7 +2,10 @@
   "mcpProxy": {
     "addr": ":9090",
     "name": "MCP Gateway",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "options": {
+      "authTokens": ["MCP_PROXY_AUTH_TOKEN_PLACEHOLDER"]
+    }
   },
   "mcpServers": {
     "canvas": {

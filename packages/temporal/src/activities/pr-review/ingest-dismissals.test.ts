@@ -201,7 +201,13 @@ describe("ingestDismissalsImpl — thumbs-down ingest", () => {
         user: { login: "pr-review-bot", type: "Bot" },
       },
     ];
-    const reactions = [{ content: "-1", created_at: "2026-05-30T11:00:00Z" }];
+    const reactions = [
+      {
+        content: "-1",
+        created_at: "2026-05-30T11:00:00Z",
+        user: { login: "o" },
+      },
+    ];
 
     const ROUTE_LIST = { _id: "listReviewCommentsForRepo" };
     const ROUTE_REACTIONS = { _id: "listForPullRequestReviewComment" };
@@ -315,7 +321,9 @@ describe("ingestDismissalsImpl — thumbs-down ingest", () => {
         user: { login: "pr-review-bot", type: "Bot" },
       },
     ];
-    const reactions = [{ content: "-1", created_at: "..." }];
+    const reactions = [
+      { content: "-1", created_at: "...", user: { login: "o" } },
+    ];
 
     const makeOcto = (): IngestOctokit => {
       const ROUTE_LIST = { _id: "lrc" };

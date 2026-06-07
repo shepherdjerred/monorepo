@@ -88,7 +88,7 @@ function makeBaseEvent(
       base: { ref: "main", sha: "00".repeat(20) },
       head: { ref: "feature/foo", sha: overrides.headSha ?? "ab".repeat(20) },
       user: {
-        login: overrides.authorLogin ?? "alice",
+        login: overrides.authorLogin ?? "shepherdjerred",
         type: overrides.userType ?? "User",
       },
     },
@@ -205,7 +205,7 @@ describe("buildWebhookApp", () => {
     expect(input.headRef).toBe("feature/foo");
     expect(input.baseRef).toBe("main");
     expect(input.commitSha).toBe("ab".repeat(20));
-    expect(input.prAuthor).toBe("alice");
+    expect(input.prAuthor).toBe("shepherdjerred");
   });
 
   it("foundation: passes through fields the pr-review pipeline derives its id from", async () => {
@@ -291,6 +291,19 @@ describe("buildWebhookApp", () => {
     expect(res.status).toBe(200);
     const text = await res.text();
     expect(text).toContain("bot");
+    expect(start).not.toHaveBeenCalled();
+  });
+
+  it("skips PRs whose author is not the allowlisted owner", async () => {
+    const start = mock(noopStart);
+    const app = buildWebhookApp(SECRET, start);
+    const res = await postWebhook(
+      app,
+      makeBaseEvent({ authorLogin: "mallory" }),
+    );
+    expect(res.status).toBe(200);
+    const text = await res.text();
+    expect(text).toContain("untrusted");
     expect(start).not.toHaveBeenCalled();
   });
 

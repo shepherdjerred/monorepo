@@ -5,7 +5,10 @@ import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test";
 import { register } from "#observability/metrics.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
 import type { AgentTaskCommand } from "./agent-task-command.ts";
-import * as agentTaskCommandModule from "./agent-task-command.ts";
+// Static namespace import resolves the real module before mock.module runs, so
+// its non-mocked exports (e.g. reportOnlyPrompt) can be spread back into the
+// process-wide mock below.
+import * as actualAgentTaskCommand from "#activities/agent-task-command.ts";
 
 const originalFetch = globalThis.fetch;
 const originalGitHubAppId = Bun.env["GITHUB_APP_ID"];
@@ -90,7 +93,7 @@ const fetchStub = Object.assign(
 // alert-remediation-command.test.ts) would intermittently fail to link with
 // "Export named 'reportOnlyPrompt' not found", depending on test-file order.
 void mock.module("#activities/agent-task-command.ts", () => ({
-  ...agentTaskCommandModule,
+  ...actualAgentTaskCommand,
   buildAgentTaskCommand: async (
     _input: AgentTaskInput,
     workdir: string,
