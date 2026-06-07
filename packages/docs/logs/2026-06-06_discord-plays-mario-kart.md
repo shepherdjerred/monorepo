@@ -112,3 +112,14 @@ shell + `socket.ts`). Game-specific work:
   use; never define `window`.
 - **No audio in v1** — frames only. Piping
   `_neilGetSoundBufferResampledAddress` → ffmpeg is a stretch goal.
+
+## Future work
+
+- **TODO: rewrite the whole stack in Rust.** Replace the Bun/TypeScript backend
+  (emulator host, seat/input model, streaming, web server) with a Rust service.
+  Likely shape: run the N64 core natively (an mupen64plus/parallel-n64 binding or
+  a Rust N64 core) instead of the emscripten/wasm build, read the software
+  framebuffer directly, encode via an ffmpeg binding, and stream over the Discord
+  voice path. Goal: lower CPU/memory for the software renderer and a single
+  statically-linked binary. Large effort — tracked as a follow-up, not part of
+  this PR.
