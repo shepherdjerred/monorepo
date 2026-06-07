@@ -85,6 +85,7 @@ function buildFallbackPrematchEmbed(
   const queueType = resolveQueueTypeFromGame(
     gameInfo.gameQueueConfigId,
     gameInfo.gameMode,
+    gameInfo.gameType,
   );
   const queueName = queueType
     ? queueTypeToDisplayString(queueType)
@@ -175,6 +176,7 @@ export async function sendPrematchNotification(
   const queueType = resolveQueueTypeFromGame(
     gameInfo.gameQueueConfigId,
     gameInfo.gameMode,
+    gameInfo.gameType,
   );
   const prematchMessageContent = formatPrematchMessage(
     trackedPlayers,

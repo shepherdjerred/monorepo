@@ -27,6 +27,8 @@ const currentDir = new URL(".", import.meta.url).pathname;
 const FIXTURE_PATHS = [
   `${currentDir}testdata/ranked-flex-5v5.json`,
   `${currentDir}testdata/arena-3v3.json`,
+  // Real custom Summoner's Rift game 5576694431 (queue 3110, gameType CUSTOM).
+  `${currentDir}testdata/custom-classic-5v5.json`,
 ];
 
 for (const path of FIXTURE_PATHS) {
