@@ -38,6 +38,9 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runDnsAudit",
   "runHomelabAuditWorkflow",
   "agentTaskWorkflow",
+  // Fan-out sweep: child workflows run in parallel; the sweep workflow itself
+  // only awaits their futures, no long sleeps of its own.
+  "alertRemediationSweepWorkflow",
   "runScoutDataDragonVersionCheck",
   "runScoutDataDragonWeeklyRefresh",
   "runScoutSeasonRefreshWorkflow",
