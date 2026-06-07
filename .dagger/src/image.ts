@@ -480,6 +480,21 @@ function withToolkit(container: Container): Container {
 }
 
 /**
+ * Give the vendored `discord-video-stream` fork its own `node_modules` at its mounted source
+ * location. The fork is consumed as TypeScript source (bun runs `src/`), so when a consumer imports
+ * it, the fork's files resolve their native runtime deps (`@lng2004/node-datachannel`, `node-av`, …)
+ * from the fork's OWN directory — a sibling of the consumer, whose `node_modules` is unreachable.
+ * Without this, the image builds fine but crashes at startup with `Cannot find module
+ * '@lng2004/node-datachannel'`. Mirrors the per-dep install loop in `bunBaseContainer` (base.ts).
+ */
+function withForkRuntimeDeps(container: Container, depNames: string[]): Container {
+  if (!depNames.includes("discord-video-stream")) return container;
+  return container
+    .withWorkdir("/workspace/packages/discord-video-stream")
+    .withExec(["bun", "install", "--frozen-lockfile"]);
+}
+
+/**
  * Build a Bun service OCI image. Constructs a minimal workspace with
  * only the target package and its workspace deps — no file modification.
  *
@@ -529,6 +544,8 @@ export function buildImageHelper(
       { exclude: excludes },
     );
   }
+
+  container = withForkRuntimeDeps(container, depNames);
 
   // Install deps then set up the final image
   let image = container
@@ -901,6 +918,8 @@ export function buildDiscordPlaysPokemonImageHelper(
     );
   }
 
+  container = withForkRuntimeDeps(container, depNames);
+
   return (
     container
       // Workspace install (covers backend + frontend) — runs the
@@ -1052,6 +1071,8 @@ export function buildDiscordPlaysMarioKartImageHelper(
       { exclude: excludes },
     );
   }
+
+  container = withForkRuntimeDeps(container, depNames);
 
   return (
     container
