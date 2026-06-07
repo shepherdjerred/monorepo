@@ -101,14 +101,25 @@ and `helm/streambot`. `versions.ts` key `ydrag0n/streambot` → `shepherdjerred/
 - Committed `729e4deb1` and pushed to PR #1056 (branded types, slash commands, adult-block, VAAPI,
   queue features were already in `d1ccc279e`; this commit adds the image VAAPI stack, GPU request,
   and the Dagger e2e func + `e2e/run.ts`).
+- **Nested all commands under a single `/stream` parent** (`4c85dc297`): `commands.ts` is now one
+  `SlashCommandBuilder("stream")` with 14 `addSubcommand` entries (`/stream play`, `/stream skip`,
+  `/stream queue`, …); `command-bot.ts` `handle()` switches on `interaction.options.getSubcommand()`.
+  Docs/FORK updated. Tests/tsc/eslint green.
+- **Wired the bot token into the deployment secret:** moved the Discord **bot** `TOKEN` from the
+  `Glidiot Helper` 1P item into `streambot-config` as `BOT_TOKEN` (72 chars) and deleted it from the
+  source so it isn't duplicated. `streambot-config` now holds every key the cdk8s resource reads
+  (`BOT_TOKEN`, `TOKEN`, `GUILD_ID`, `COMMAND_CHANNEL_ID`, `VIDEO_CHANNEL_ID`, `ADMIN_IDS`); the
+  1Password operator will sync a complete secret. (`APPLICATION_ID` isn't needed — the bot reads its
+  app id from the logged-in client.)
 
 ### Remaining
 
-- **Blocked on user creds:** create the Discord **bot**, add `BOT_TOKEN` to the `streambot-config`
-  1Password item, then run the live e2e:
-  `dagger call e2e-streambot --pkg-dir ./packages/streambot --bot-token=env:BOT_TOKEN
---user-token=env:TOKEN --guild-id … --video-channel-id … --command-channel-id …`.
-- Merge PR #1056; CI commit-back fills the real `shepherdjerred/streambot` digest in `versions.ts`.
+- Merge PR #1056; CI commit-back fills the real `shepherdjerred/streambot` digest in `versions.ts`,
+  then ArgoCD deploys to the `media` namespace. After deploy, confirm the pod is `1/1` and run a
+  manual `/stream play <library title>` smoke check in Discord.
+- Optional live e2e in Dagger (joins the real voice channel):
+  `dagger call e2e-streambot --pkg-dir ./packages/streambot --bot-token=op://… --user-token=op://…
+--guild-id … --video-channel-id … --command-channel-id …`.
 
 ### Caveats
 
