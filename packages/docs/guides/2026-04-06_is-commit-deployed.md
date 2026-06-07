@@ -87,15 +87,14 @@ If the digests match, the exact image from that build is deployed.
 
 ## Key Files
 
-| File                                         | Purpose                                                   |
-| -------------------------------------------- | --------------------------------------------------------- |
-| `packages/homelab/src/cdk8s/src/versions.ts` | Source of truth for deployed image versions + digests     |
-| `scripts/ci/src/steps/version.ts`            | Generates the version-commit-back CI step                 |
-| `.buildkite/scripts/update-versions.ts`      | Updates versions.ts with new digests from CI metadata     |
-| `.buildkite/scripts/collect-digests.sh`      | Collects image digests from Buildkite metadata after push |
-| `scripts/ci/src/steps/images.ts`             | Image build/push steps that store digests in CI metadata  |
-| `scripts/ci/src/steps/helm.ts`               | Helm chart packaging and push to ChartMuseum              |
-| `scripts/ci/src/steps/argocd.ts`             | ArgoCD sync + health wait after release                   |
+| File                                         | Purpose                                                  |
+| -------------------------------------------- | -------------------------------------------------------- |
+| `packages/homelab/src/cdk8s/src/versions.ts` | Source of truth for deployed image versions + digests    |
+| `scripts/ci/src/steps/version.ts`            | Generates the version-commit-back CI step                |
+| `.buildkite/scripts/update-versions.ts`      | Updates versions.ts with new digests from CI metadata    |
+| `scripts/ci/src/steps/images.ts`             | Image build/push steps that store digests in CI metadata |
+| `scripts/ci/src/steps/helm.ts`               | Helm chart packaging and push to ChartMuseum             |
+| `scripts/ci/src/steps/argocd.ts`             | ArgoCD sync + health wait after release                  |
 
 ## Common Failure Modes
 

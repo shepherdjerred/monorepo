@@ -7,6 +7,8 @@ AI-maintained knowledge base for the monorepo.
 - [Monorepo Structure](architecture/2026-02-22_monorepo-structure.md) - Package discovery, repo layout, and verification commands
 - [Monarch](architecture/2026-02-23_monarch.md) - Transaction categorization pipeline with tiered classification
 - [Release/Push/Deploy Inventory](architecture/2026-04-04_release-push-inventory.md) - External publish targets from the CI catalog
+- [Temporal Worker & Agent-Task Scheduler](architecture/2026-06-06_temporal-worker-and-scheduler.md) - Worker topology, schedules, agent-task scheduler + `/agent-tasks` API, event bridge
+- [Scout-for-LoL Web UI & S3/Caddy Serving](architecture/2026-06-06_scout-web-ui-and-serving.md) - Marketing site + SPA, merged bucket build, prod/beta fan-out, caddy-s3proxy routing
 
 ## Patterns
 
@@ -28,56 +30,11 @@ AI-maintained knowledge base for the monorepo.
 
 ## Plans
 
-Active or upcoming plans only. Completed plans live in `archive/completed/`; thin per-session journals live in `logs/`.
-
-- [Bedrock Waker](plans/2026-03-01_bedrock-waker.md) - UDP proxy to wake sleeping Minecraft Bedrock servers
-- [CI Reporting & Artifact Collection](plans/2026-04-04_ci-reporting-artifacts.md) - Structured CI reports, coverage, and artifacts
-- [CI Security Remediation](plans/2026-04-04_ci-security-remediation-plan.md) - Defense-in-depth work before enabling external contributor CI
-- [Accelerated CI for Release-Please](plans/2026-04-05_accelerated-ci-release-please.md) - Fast path for automated version-bump and release PRs
-- [CI Quality Hardening](plans/2026-04-05_ci-quality-hardening.md) - Make Trivy, Semgrep, and Knip hard failures
-- [OpenTofu Audit & Expansion](plans/2026-04-05_opentofu-audit-expansion.md) - Existing tofu module gaps and candidate providers
-- [Scout Branded Types](plans/2026-04-05_scout-branded-types.md) - Add missing branded domain IDs to scout-for-lol
-- [Move Scripts to Packages](plans/2026-04-07_move-scripts-to-packages.md) - Relocate root scripts into package-owned paths
-- [Dagger CI Infrastructure Fixes](plans/2026-04-21_dagger-ci-infra-fixes.md) - Punch list for ciAllHelper and Dagger infra bugs
-- [Temporal Tailscale Exposure](plans/2026-04-21_temporal-tailscale-exposure.md) - Expose Temporal gRPC over Tailscale without port-forwarding
-- [Homelab Ops Hardening Backlog](plans/2026-04-25_homelab-ops-hardening-backlog.md) - Active follow-ups from the archived homelab ops audit
-- [Monarch Match-Rate Fixes](plans/2026-04-25_monarch-match-rate-fixes.md) - Diagnose and fix Monarch transaction classifier match rate
-- [Polyrepo → Monorepo Link Audit](plans/2026-04-25_polyrepo-link-audit.md) - Rewrite all stale polyrepo URLs to monorepo + add lychee CI link-check gate
-- [Renovate Blocked Majors](plans/2026-04-25_renovate-blocked-majors.md) - Dedicated-session dependency upgrades and deploy promotions
-- [Shared Glitter-Context Package](plans/2026-04-25_shared-glitter-context-package.md) - De-duplicate style cards and lore across Birmel and Scout
-- [Tasks for Obsidian iOS Target Wiring](plans/2026-04-25_tasks-for-obsidian-ios-target-wiring.md) - Finish native iOS target wiring after the completed audit
-- [HomeKit Vacuum via Matter Hub](plans/2026-05-05_homekit-vacuum-via-matter-hub.md) - Deploy `t0bst4r/home-assistant-matter-hub` to expose HA `vacuum.*` entities to Apple Home
-- [Mysa HACS Max-Temp Cap](plans/2026-05-05_mysa-max-temp-cap.md) - Local hotfix at 30 °C while upstream PR kgelinas/Mysa_HA#18 lands the 40 °C support
-- [Docs Grooming: plans/logs split](plans/2026-05-10_docs-grooming-plans-logs-split.md) - Split `plans/` into `plans/` + new `logs/`; broader docs staleness/status/link audit
-- [NVMe Firmware Update Runbook](plans/2026-05-10_firmware-update-runbook.md) - Single-window 4B2QJXD7 → 8B2QJXD7 update for both Samsung 990 PRO drives on single-node Talos
-- [PR Review Bot Phase 8 Emit-Site Wiring](plans/2026-05-10_pr-review-bot-emit-site-wiring.md) - Fire the Phase 8 metrics from the workflow + activity path
-- [PR Review Bot Phase 10 — Continuous-Eval Harness](plans/2026-05-10_pr-review-bot-phase-10-continuous-eval.md) - Held-out fixture corpus, nightly Temporal cron, Postgres eval store, and precision-regression alerts
-- [PR Review Bot Phase 8 — Measurement](plans/2026-05-10_pr-review-bot-phase-8-measurement.md) - Prometheus metrics, Grafana dashboard, and PagerDuty alerts for the SOTA PR review bot
-- [SOTA PR Review Bot](plans/2026-05-10_sota-pr-review-bot.md) - Full-spec multi-agent + verification + retrieval + continuous-eval PR review bot; supersedes the archived 2026-04-25 plan
-- [Competition Active-Only Season Drift Fix](plans/2026-05-11_competition-active-only-season-drift.md) - Root-cause fix for `/competition list active-only:true` returning ended season-based competitions; introduces `Season` table + seeder + silent backfill
-- [Scout HIGHEST_RANK chart drops-to-0 fix](plans/2026-05-11_scout-highest-rank-chart-fix.md) - Stop fabricating Iron IV / 0 LP entries, hide chart dot markers, clean active-competition S3 snapshots
-- [Scout Season Dropdown Hardening](plans/2026-05-11_scout-season-dropdown-hardening.md) - Fail-fast guard so an empty `getSeasonChoices()` no longer degrades `/competition`'s season option to free text
-- [Scout Season-Date Refresh](plans/2026-05-11_scout-season-refresh.md) - Manual Pandemonium fix + weekly Temporal workflow that re-researches LoL season dates and opens drift PRs
-- [Scout Competition Recovery Implementation](plans/2026-05-12_scout-competition-recovery-implementation.md) - Lifecycle retries, rank-history scoring, S3 date recovery, and active-competition repair rollout
-- [Renovate-481 Fixes & CI Gap](plans/2026-05-12_renovate-481-fixes-and-ci-gap.md) - Unbreak main after the renovate-481 sweep (Prisma 7 schemas, react-dom skew, birmel start, temporal lint) and remove `MAIN_ONLY` from validation-only CI steps so PRs catch the same class of regression pre-merge
-- [Competition CRON Schedule](plans/2026-05-11_competition-cron-schedule.md) - Per-`Competition` CRON expression gating leaderboard posts; replaces global midnight-UTC cron with a per-minute dispatcher
-- [Renovate Dashboard Residual Dependency Updates](plans/2026-05-12_renovate-dashboard-residual-updates.md) - Finish remaining dashboard #481 package, Docker, Helm, Rust, and Maven updates
-- [Talos + Kubernetes Upgrade on `torvalds`](plans/2026-05-12_talos-k8s-upgrade.md) - Apply already-pinned Talos v1.13.2 + Kubernetes v1.36.1 to the live single-node cluster
-- [Renovate Dashboard Update Batch](plans/2026-05-13_renovate-dashboard-update.md) - Apply the current actionable Renovate dashboard Docker digest, Helm chart, and production image pin updates
-- [Bugsink Cleanup: Scout, Temporal, Birmel](plans/2026-05-13_bugsink-cleanup-scout-temporal-birmel.md) - Manual Scout DB repair, queue 3200 support, Temporal de-spam, and Birmel empty-stream fix
-- [Cooklang Rich Preview Manifest + Automated Versioned Releases](plans/2026-05-13_cooklang-rich-preview-manifest-and-release.md) - Fix the failed Obsidian directory review and rebuild the broken plugin release flow (auto patch-bump from the configured plugin repo's latest tag, publish with matching tag + `versions.json`, commit-back to monorepo)
+Active or upcoming plans only — high-churn, so not individually indexed. See [`plans/`](plans/) for the current listing. Completed plans move to [`archive/completed/`](archive/completed/); thin per-session journals live in [`logs/`](logs/).
 
 ## Logs
 
 Per-session journals (one-shot fixes, Q&A answers, bug recaps). Not individually indexed — see [`logs/`](logs/) for the directory listing.
-
-- [Fix trmnl-dashboard helm chart](plans/2026-05-10_fix-trmnl-dashboard-helm-chart.md) - Add the missing `Chart.yaml` skeleton so Dagger's `helmPackageHelper` can package the chart (Buildkite #1915)
-- [trmnl-dashboard Dagger Image](plans/2026-05-10_trmnl-dashboard-dagger-image.md) - Build trmnl-dashboard via Dagger (no Dockerfile) with non-root user; unblock degraded ArgoCD app
-- [TaskNotes Recurring Fix + Wiring](plans/2026-05-10_tasknotes-recurring-and-wiring.md) - Fix recurring-task drop bug; wire half-built subsystems (offline sync, Pomodoro, Live Activities, time-tracking UI, markdown rendering)
-- [update-versions.ts: same-line entry fix](plans/2026-05-10_update-versions-script-fix.md) - Fix commit-back script clobbering closing `};` in versions.ts when key+value share a line
-- [Update docker / helm / infra-tool pins (round 2)](plans/2026-05-10_update-docker-helm-images-round2.md) - Bundle Renovate dashboard #481 docker/CI-tool bumps after #748: prod tags, Dagger base images, ci-base tools
-- [Talos/Kubernetes Connectivity Investigation](plans/2026-05-10_talos-k8s-connectivity.md) - Diagnose local Talos and Kubernetes access failures from configured contexts and network reachability
-- [Bugsink/Temporal Error Spike Investigation](plans/2026-05-10_bugsink-temporal-error-spike.md) - Correlate current Bugsink issue influx with Temporal worker/server and Kubernetes restart fallout
 
 ## TODOs
 
@@ -100,6 +57,7 @@ General issue tracking — deferred work, acceptance-testing gaps, post-merge ve
 - [Velero Orphan-Snapshot Remediation](guides/2026-05-05_velero-orphan-snapshot-remediation.md) - Procedure for manually pruning orphan ZFS snapshots and R2 objects when the audit workflow alerts
 - [Homelab Health Audit (2026-05-08)](guides/2026-05-08_homelab-health-audit.md) - Current cluster health audit snapshot
 - [Homelab Issue Investigation (2026-05-08)](guides/2026-05-08_homelab-issue-investigation.md) - Root-cause deep dive on every Yellow row, PD incident, and Bugsink issue from the audit
+- [Temporal Post-Deploy Quality Checklist](guides/2026-05-22_temporal-post-deploy-quality-checklist.md) - Standard verification steps to run after a Temporal deploy
 
 ## Archive
 
@@ -107,10 +65,10 @@ Historical docs preserved for reference. These are no longer actively maintained
 
 - [`archive/bazel/`](archive/bazel/) - 12 docs from the Bazel era
 - [`archive/changelogs/`](archive/changelogs/) - 1 historical changelog
-- [`archive/completed/`](archive/completed/) - Plans whose work has shipped (preserves design context)
+- [`archive/completed/`](archive/completed/) - 87 plans whose work has shipped (preserves design context)
 - [`archive/dagger-migration/`](archive/dagger-migration/) - 18 Dagger migration plans and audits
 - [`archive/homelab-audits/`](archive/homelab-audits/) - 9 superseded homelab health audit snapshots
 - [`archive/on-hold/`](archive/on-hold/) - 4 on-hold Sentinel architecture and implementation docs
 - [`archive/scout-followups/`](archive/scout-followups/) - 1 time-boxed Scout follow-up checklist
-- [`archive/stale/`](archive/stale/) - 7 stale operational snapshots and superseded plans
-- [`archive/superseded/`](archive/superseded/) - Plans/guides replaced by newer versions
+- [`archive/stale/`](archive/stale/) - 8 stale operational snapshots and superseded plans
+- [`archive/superseded/`](archive/superseded/) - 9 plans/guides replaced by newer versions

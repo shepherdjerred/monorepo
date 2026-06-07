@@ -27,6 +27,7 @@
         "socket.io": "^4.8.1",
         "ts-pattern": "^5.7.0",
         "winston": "^3.17.0",
+        "xstate": "^5.32.0",
         "zod": "^4.4.3",
       },
       "devDependencies": {
@@ -118,7 +119,6 @@
     "sharp",
     "@lng2004/node-datachannel",
     "node-av",
-    "zeromq",
   ],
   "patchedDependencies": {
     "@dank074/discord-video-stream@6.0.0": "patches/@dank074%2Fdiscord-video-stream@6.0.0.patch",
@@ -1901,6 +1901,8 @@
     "ws": ["ws@8.20.0", "", { "peerDependencies": { "bufferutil": "^4.0.1", "utf-8-validate": ">=5.0.2" }, "optionalPeers": ["bufferutil", "utf-8-validate"] }, "sha512-sAt8BhgNbzCtgGbt2OxmpuryO63ZoDk/sqaB/znQm94T4fCEsy/yV+7CdC1kJhOU9lboAEU7R3kquuycDoibVA=="],
 
     "xmlhttprequest-ssl": ["xmlhttprequest-ssl@2.1.2", "", {}, "sha512-TEU+nJVUUnA4CYJFLvK5X9AOeH4KvDvhIfm0vV1GaQRtchnG0hgK5p8hw/xjv8cunWYCsiPCSDzObPyhEwq3KQ=="],
+
+    "xstate": ["xstate@5.32.0", "", {}, "sha512-zsk73aWGmxn9z34P0kbiod5JwTvdYRW3+IDxITq8sd9+VWwMyW7BUzpplnYy9mIEXa6V8IMDv7Hy4m0mhT5+2Q=="],
 
     "xtend": ["xtend@4.0.2", "", {}, "sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ=="],
 

@@ -231,6 +231,28 @@ export function largeFileStep(): BuildkiteStep {
   });
 }
 
+/**
+ * PR-only gate: waits for Greptile to finish reviewing the head commit, then
+ * passes only once every Greptile review comment on the latest revision is
+ * resolved. Fails fast (with the list of unresolved comments) otherwise — see
+ * `scripts/ci/src/wait-for-greptile.ts`. Greptile's own status check is NOT
+ * sufficient: it goes green when the review completes, regardless of whether
+ * the comments were addressed.
+ */
+export function greptileReviewStep(): BuildkiteStep {
+  return plainStep({
+    label: ":mag: Greptile Review",
+    key: "greptile-review",
+    command: [
+      'echo "+++ :mag: Greptile Review"',
+      'export GH_TOKEN="$(bun packages/temporal/src/lib/github-app-token.ts)"',
+      'test -n "$$GH_TOKEN"',
+      "bun scripts/ci/src/wait-for-greptile.ts",
+    ].join(" && "),
+    timeoutMinutes: 25,
+  });
+}
+
 export function caddyfileValidateStep(): BuildkiteStep {
   return daggerStep({
     label: ":globe_with_meridians: Caddyfile Validate",

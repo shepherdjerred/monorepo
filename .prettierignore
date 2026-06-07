@@ -29,6 +29,9 @@ pnpm-lock.yaml
 # Vendored
 packages/scout-for-lol/packages/frontend/public/emulatorjs/
 
+# Vendored N64Wasm emulator source (third-party C/C++/docs) — preserve formatting
+packages/discord-plays-mario-kart/wasm-src/
+
 # Generated
 packages/clauderon/mobile/src/types/generated/
 packages/clauderon/web/shared/src/generated/

@@ -37,10 +37,10 @@ const versions = {
     "1.43.1.10611-1e34174b1-amd64@sha256:7fe30c0ca399103535e6a5b10207aa2b72d053c652763ee2ce69d082db797d74",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
   "linuxserver/tautulli":
-    "2.17.1@sha256:97a8127cfd3be10f653cea347cef64098243e315c2d81385813b7d8fc6fc384b",
+    "2.17.1@sha256:8e1a0d8104422f646c3e89d9b261b0507dc664bd6764baaea0ff0a5718f83b94",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/bazarr":
-    "1.5.6@sha256:95f27692c3de6dbe130cd035d342d8138ec74ade7b62cfc52e11ae222c52c855",
+    "1.5.6@sha256:4b5e510042bf471c8bafab89cada9774fba2fb25f16ec64235151cacbe847c10",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
   // Kept alongside Seerr during the migration; remove once Seerr fully owns the request flow.
   "linuxserver/overseerr":
@@ -56,7 +56,7 @@ const versions = {
     "v2.3.1@sha256:683c04827ef3fecf1cc5cb178f75f91f968aef6c6d89d34bc9c70966fd1d7259",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/prowlarr":
-    "2.3.5@sha256:c9fe528f34b1fd3715438b6f6d6991d64e2965f2c055db36398bc66a0e7eab01",
+    "2.3.5@sha256:2489c6dbaf11e3a6d71aeb2e6980d04193d4af611aa7064a974851222fd41722",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver-coerced
   "qdm12/gluetun":
     "v3.41.1@sha256:1a5bf4b4820a879cdf8d93d7ef0d2d963af56670c9ebff8981860b6804ebc8ab",
@@ -70,7 +70,7 @@ const versions = {
     "6.1.1@sha256:c0a4335d4249b46102f64cf6fa27ffc3bddfd9138fac1e4ddf238afd37f02d1f",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/sonarr":
-    "4.0.17@sha256:0b5c4803f92456fb9b65bae8375716ea120b4ea17b3cced7da32b63f0085782b",
+    "4.0.17@sha256:0b3f344388bd7bed4f2f770058de795e76447e4a481b83c8d5f8fed489371fde",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "timothyjmiller/cloudflare-ddns":
     "latest@sha256:37c99677e997710c1bbe9d74c93f2e3b8de3457a5ca6e28643e251b38ed05311",
@@ -134,9 +134,16 @@ const versions = {
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
     "2.0.0-3460@sha256:28d279ab73b465c4d22615cb732e0d7e83123d35c6c76869445fadc7d0ae0548",
+  // not managed by renovate — placeholder digest; CI version-commit-back fills
+  // the real digest after the first successful image push.
+  "shepherdjerred/discord-plays-mario-kart":
+    "0.0.0-placeholder@sha256:0000000000000000000000000000000000000000000000000000000000000000",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.29.0@sha256:cca8988d05cd449e1c6c69405971b1e6fc2c2116ceeb45c9fa3fc33837997a75",
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
+  "pinchtab/pinchtab":
+    "0.13.2@sha256:9cf0d94352f3e322e9897e61030b5bb90693334f8e5aa1b25a572d892fb3b13c",
   // renovate: datasource=docker registryUrl=https://ghcr.io/buildkite/helm versioning=semver packageName=agent-stack-k8s
   "agent-stack-k8s":
     "0.43.1@sha256:aee3771c2f19ad138b041d3fa5785a738214dcc64195b6417459fe721defec16",

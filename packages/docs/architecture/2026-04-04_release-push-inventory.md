@@ -2,7 +2,7 @@
 
 Complete inventory of everything this monorepo publishes externally. Central source of truth: `scripts/ci/src/catalog.ts`.
 
-Last verified against `scripts/ci/src/catalog.ts` on 2026-04-25.
+Last verified against `scripts/ci/src/catalog.ts` on 2026-06-06.
 
 All targets are orchestrated via **Buildkite CI** using **Dagger** as the build engine.
 
@@ -11,7 +11,7 @@ All targets are orchestrated via **Buildkite CI** using **Dagger** as the build 
 | Category             | Count | Destination                              | Auth         |
 | -------------------- | ----- | ---------------------------------------- | ------------ |
 | Docker / OCI images  | 9     | `ghcr.io/shepherdjerred/*`               | GHCR_TOKEN   |
-| Helm charts          | 26    | ChartMuseum (`chartmuseum.sjer.red`)     | HTTP Basic   |
+| Helm charts          | 27    | ChartMuseum (`chartmuseum.sjer.red`)     | HTTP Basic   |
 | npm packages         | 3     | npm registry                             | NPM_TOKEN    |
 | Static sites (S3)    | 8     | SeaweedFS + Cloudflare R2                | AWS creds    |
 | GitHub releases      | 2     | GitHub API                               | GitHub App   |
@@ -26,7 +26,7 @@ Code: `.dagger/src/image.ts`, `scripts/ci/src/steps/images.ts`, `scripts/ci/src/
 
 Auth exception: GHCR publishing still uses `GHCR_TOKEN` because GitHub's container registry auth path supports PAT classic or the built-in GitHub Actions token, not arbitrary Buildkite-minted GitHub App installation tokens. Remove this exception only after GitHub supports installation tokens for Docker/OCI registry login from external CI.
 
-### Application images (6)
+### Application images (7)
 
 | Image                 | Package               | Registry Path                                  |
 | --------------------- | --------------------- | ---------------------------------------------- |
@@ -36,6 +36,7 @@ Auth exception: GHCR publishing still uses `GHCR_TOKEN` because GitHub's contain
 | discord-plays-pokemon | discord-plays-pokemon | `ghcr.io/shepherdjerred/discord-plays-pokemon` |
 | starlight-karma-bot   | starlight-karma-bot   | `ghcr.io/shepherdjerred/starlight-karma-bot`   |
 | temporal-worker       | temporal              | `ghcr.io/shepherdjerred/temporal-worker`       |
+| trmnl-dashboard       | trmnl-dashboard       | `ghcr.io/shepherdjerred/trmnl-dashboard`       |
 
 ### Infrastructure images (2)
 
@@ -50,11 +51,11 @@ Auth exception: GHCR publishing still uses `GHCR_TOKEN` because GitHub's contain
 
 ## Helm Charts → ChartMuseum
 
-25 charts from `packages/homelab/src/cdk8s/helm/`. Version: `2.0.0-{BUILD_NUMBER}`.
+27 charts from `packages/homelab/src/cdk8s/helm/`. Version: `2.0.0-{BUILD_NUMBER}`.
 
 Code: `.dagger/src/release.ts`, `scripts/ci/src/steps/helm.ts`
 
-ddns, apps, scout-beta, scout-prod, starlight-karma-bot-beta, starlight-karma-bot-prod, redlib, plausible, birmel, cloudflare-tunnel, media, home, postal, syncthing, golink, freshrss, pokemon, gickup, grafana-db, mcp-gateway, s3-static-sites, kyverno-policies, bugsink, tasknotes, temporal
+ddns, apps, scout-beta, scout-prod, starlight-karma-bot-beta, starlight-karma-bot-prod, redlib, plausible, birmel, cloudflare-tunnel, media, home, postal, syncthing, golink, freshrss, pokemon, gickup, grafana-db, mcp-gateway, s3-static-sites, kyverno-policies, bugsink, tasknotes, temporal, streambot, trmnl-dashboard
 
 ## npm Packages → npm Registry
 
@@ -72,15 +73,16 @@ Code: `.dagger/src/release.ts`, `scripts/ci/src/steps/npm.ts`
 
 Method: `aws s3 sync --delete`. Code: `.dagger/src/release.ts`, `scripts/ci/src/steps/sites.ts`
 
-| Site                       | Bucket              | URL                               |
-| -------------------------- | ------------------- | --------------------------------- |
-| sjer.red                   | sjer-red            | https://sjer.red                  |
-| resume                     | resume              | https://resume.sjer.red           |
-| webring                    | webring             | https://webring.sjer.red          |
-| cooklang-rich-preview      | cook                | https://cook.sjer.red             |
-| scout-for-lol frontend     | scout-frontend      | https://scout-for-lol.com         |
-| better-skill-capped        | better-skill-capped | https://better-skill-capped.com   |
-| discord-plays-pokemon docs | dpp-docs            | https://discord-plays-pokemon.com |
+| Site                           | Bucket              | URL                             |
+| ------------------------------ | ------------------- | ------------------------------- |
+| sjer.red                       | sjer-red            | https://sjer.red                |
+| resume                         | resume              | https://resume.sjer.red         |
+| webring                        | webring             | https://webring.sjer.red        |
+| cooklang-rich-preview          | cook                | https://cook.sjer.red           |
+| stocks-sjer-red                | stocks-sjer-red     | https://stocks.sjer.red         |
+| scout-for-lol frontend + app   | scout-frontend      | https://scout-for-lol.com       |
+| scout-for-lol frontend + app β | scout-frontend-beta | https://beta.scout-for-lol.com  |
+| better-skill-capped            | better-skill-capped | https://better-skill-capped.com |
 
 ## GitHub Releases & Artifacts
 

@@ -17,9 +17,10 @@ In `scripts/ci/src/change-detection.ts`, if ALL changed files match these patter
 
 - `CHANGELOG.md`
 - `.release-please-manifest.json`
-- `package.json` (only in release-please-managed package paths: `packages/clauderon`, `packages/astro-opengraph-images`, `packages/webring`, `packages/homelab/src/helm-types`)
-- `Cargo.toml`, `Cargo.lock` (clauderon uses Rust release-type)
+- `package.json` (only in release-please-managed package paths: `packages/astro-opengraph-images`, `packages/webring`, `packages/homelab/src/helm-types`)
 - `packages/homelab/src/cdk8s/src/versions.ts`
+
+(Note: `packages/clauderon` was archived, so the former Rust/`Cargo.toml` release-type path no longer applies.)
 
 → set `affected.accelerated = true`
 

@@ -1,0 +1,12 @@
+node_modules
+**/node_modules
+dist
+**/dist
+coverage
+saves
+*.wasm
+!packages/backend/assets/pokeemerald.wasm
+config*.toml
+!config.example.toml
+.git
+.DS_Store
