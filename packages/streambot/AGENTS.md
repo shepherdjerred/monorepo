@@ -9,8 +9,10 @@ One Bun process, two Discord identities, one XState machine as the single source
 
 - **Command bot** (`discord.js`, bot token) — receives commands, validates input, renders
   status/queue embeds. Translates commands into machine events. ToS-clean control plane.
-- **Streamer** (`discord.js-selfbot-v13` + `@dank074/discord-video-stream`, user token) —
-  owns the voice connection + ffmpeg; driven entirely by the machine's invoked actors.
+- **Streamer** (`discord.js-selfbot-v13` + `@shepherdjerred/discord-video-stream`, user token) —
+  owns the voice connection + ffmpeg; driven entirely by the machine's invoked actors. The library
+  is our in-repo fork of `@dank074/discord-video-stream` (adds a seekable player; see `FORK.md`).
+  Live `/stream volume` and `/stream seek` act on the active player as side-channels.
 - **Playback machine** (`src/machine/`) — XState v5. Models the lifecycle
   (`idle → joining → resolving → streaming{playing,paused} → leaving`, plus `failed`/retry).
   All I/O lives in invoked actors; the machine itself is pure and unit-tested.

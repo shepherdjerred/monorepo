@@ -881,7 +881,7 @@ export function buildDiscordPlaysPokemonImageHelper(
     .container()
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    // ffmpeg + libvips for @dank074/discord-video-stream (fluent-ffmpeg encode
+    // ffmpeg + libvips for discord-video-stream (fluent-ffmpeg encode
     // path + sharp). No browser/GPU/desktop — this is a headless Bun service.
     .withExec([
       "sh",
@@ -904,9 +904,9 @@ export function buildDiscordPlaysPokemonImageHelper(
   return (
     container
       // Workspace install (covers backend + frontend) — runs the
-      // trustedDependencies postinstalls (node-datachannel, node-av) and
-      // applies the lazy-sharp bun patch. The committed
-      // packages/backend/assets/pokeemerald.wasm is copied in (not excluded).
+      // trustedDependencies postinstalls (node-datachannel, node-av). The
+      // discord-video-stream fork lazy-loads sharp in source (no bun patch). The
+      // committed packages/backend/assets/pokeemerald.wasm is copied in (not excluded).
       .withWorkdir(innerRoot)
       .withExec(["bun", "install", "--frozen-lockfile"])
       .withWorkdir(`${innerRoot}/packages/backend`)
@@ -1030,7 +1030,7 @@ export function buildDiscordPlaysMarioKartImageHelper(
     .container()
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    // ffmpeg + libvips for @dank074/discord-video-stream (fluent-ffmpeg encode
+    // ffmpeg + libvips for discord-video-stream (fluent-ffmpeg encode
     // path + sharp). No browser/GPU/desktop — software-rendered N64 frames are
     // read straight out of wasm memory.
     .withExec([
@@ -1082,7 +1082,8 @@ export function buildDiscordPlaysMarioKartImageHelper(
         wasmBuild.file("/src/code/res/arial.ttf"),
       )
       // Workspace install (backend + frontend) — runs trustedDependencies
-      // postinstalls and applies the lazy-sharp bun patch.
+      // postinstalls. The discord-video-stream fork lazy-loads sharp in source
+      // (no bun patch).
       .withWorkdir(innerRoot)
       .withExec(["bun", "install", "--frozen-lockfile"])
       .withWorkdir(`${innerRoot}/packages/backend`)

@@ -5,7 +5,7 @@ import {
   prepareStream,
   playStream,
   Encoders,
-} from "@dank074/discord-video-stream";
+} from "@shepherdjerred/discord-video-stream";
 import { WIDTH, HEIGHT, N64_FPS } from "#src/emulator/constants.ts";
 import { logger } from "#src/logger.ts";
 

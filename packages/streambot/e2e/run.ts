@@ -109,6 +109,7 @@ async function main(): Promise<number> {
     view,
     library: () => [],
     setVolume: (percent) => streamer.setVolume(percent),
+    seek: (seconds) => streamer.seek(seconds),
     expandPlaylist: (url, signal) => expandPlaylist(config, url, signal),
     streamerUserId: () => streamer.userId(),
   });

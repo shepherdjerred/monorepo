@@ -54,23 +54,29 @@ function makeHandler(over: {
   view?: PlaybackView;
   library?: LibraryEntry[];
   volumeApplied?: boolean;
+  seekApplied?: boolean;
   playlistItems?: { url: string; title: string }[];
-}): Harness {
+}): Harness & { seeks: number[] } {
   const events: PlaybackEvent[] = [];
   const announces: string[] = [];
+  const seeks: number[] = [];
   const deps: CommandHandlerDeps = {
     config: makeConfig(over.adminIds ?? []),
     dispatch: (event) => events.push(event),
     view: () => over.view ?? EMPTY_VIEW,
     library: () => over.library ?? [],
     setVolume: () => Promise.resolve(over.volumeApplied ?? true),
+    seek: (seconds) => {
+      seeks.push(seconds);
+      return Promise.resolve(over.seekApplied ?? true);
+    },
     expandPlaylist: () => Promise.resolve(over.playlistItems ?? []),
     announce: (message) => {
       announces.push(message);
       return Promise.resolve();
     },
   };
-  return { handler: new CommandHandler(deps), events, announces };
+  return { handler: new CommandHandler(deps), events, announces, seeks };
 }
 
 type FakeOpts = {
@@ -340,5 +346,68 @@ describe("CommandHandler queue edits + volume + loop", () => {
     await bad.handler.run(junk.interaction);
     expect(bad.events).toHaveLength(0);
     expect(junk.replies[0]).toBe("Invalid loop mode.");
+  });
+});
+
+describe("CommandHandler seek", () => {
+  test("seek is rejected when nothing is playing", async () => {
+    const h = makeHandler({ view: EMPTY_VIEW });
+    const { interaction, replies } = fakeInteraction({
+      sub: "seek",
+      strings: { position: "1:30" },
+    });
+    await h.handler.run(interaction);
+    expect(h.seeks).toHaveLength(0);
+    expect(replies[0]).toBe("Nothing is playing.");
+  });
+
+  test("seek is denied for a non-requester non-admin", async () => {
+    const h = makeHandler({ view: viewWithCurrent(OTHER) });
+    const { interaction, replies } = fakeInteraction({
+      sub: "seek",
+      userId: REQUESTER,
+      strings: { position: "1:30" },
+    });
+    await h.handler.run(interaction);
+    expect(h.seeks).toHaveLength(0);
+    expect(replies[0]).toContain("Only the requester or an admin");
+  });
+
+  test("seek parses the timestamp and acks for the requester", async () => {
+    const h = makeHandler({ view: viewWithCurrent(REQUESTER) });
+    const { interaction, replies } = fakeInteraction({
+      sub: "seek",
+      userId: REQUESTER,
+      strings: { position: "1:30" },
+    });
+    await h.handler.run(interaction);
+    expect(h.seeks).toEqual([90]);
+    expect(replies[0]).toBe("⏩ Seeked to 1:30.");
+  });
+
+  test("seek allows an admin who isn't the requester", async () => {
+    const h = makeHandler({
+      adminIds: [ADMIN],
+      view: viewWithCurrent(OTHER),
+    });
+    const { interaction } = fakeInteraction({
+      sub: "seek",
+      userId: ADMIN,
+      strings: { position: "90" },
+    });
+    await h.handler.run(interaction);
+    expect(h.seeks).toEqual([90]);
+  });
+
+  test("seek rejects an invalid timestamp", async () => {
+    const h = makeHandler({ view: viewWithCurrent(REQUESTER) });
+    const { interaction, replies } = fakeInteraction({
+      sub: "seek",
+      userId: REQUESTER,
+      strings: { position: "abc" },
+    });
+    await h.handler.run(interaction);
+    expect(h.seeks).toHaveLength(0);
+    expect(replies[0]).toBe("Invalid timestamp. Try 90, 1:30, or 1:02:03.");
   });
 });

@@ -21,7 +21,7 @@
     "test:watch": "bun test --watch"
   },
   "dependencies": {
-    "@dank074/discord-video-stream": "^6.0.0",
+    "@shepherdjerred/discord-video-stream": "file:../../../discord-video-stream",
     "@discord-plays-pokemon/common": "file:../common",
     "@sentry/bun": "^10.0.0",
     "cors": "^2.8.5",

@@ -22,16 +22,26 @@ We deliberately diverged:
 - **Branded types** for ids/tokens (Zod `.brand()`), validate-at-boundary throughout.
 - **Intel VAAPI hardware encoding** (with software fallback), and adult-source blocking.
 
-## Playback limitations (library)
+## Streaming library
 
-`@dank074/discord-video-stream` exposes only `setVolume` and `stopStream` at runtime — there is
-**no seek and no pause**. So:
+The streamer drives [`@shepherdjerred/discord-video-stream`](../discord-video-stream) — our in-repo
+fork of [`@dank074/discord-video-stream`](https://github.com/dank074/Discord-video-stream) `6.0.0`.
+We fork it (rather than depend on npm) so we can add a seekable player and bake in the bun-safe lazy
+`sharp` import. See that package's `README.md` for the divergence.
+
+## Playback capabilities & limitations
+
+Upstream `@dank074/discord-video-stream` exposes only `setVolume` and `stopStream` at runtime — no
+live seek and no pause. Our fork adds seek:
 
 - `/stream volume` is supported (live). `/stream loop`, `/stream shuffle`, queue editing, and
   skip/stop are all supported (they're machine/queue operations, not stream-transport controls).
-- **Seek / pause are intentionally absent.** Seek would require stop → restart-with-`-ss`-offset
-  (a future enhancement); pause has no clean implementation for a continuous live stream.
-- Live streams (yt-dlp `is_live`) play but report no duration.
+- **`/stream seek` is supported (live).** Upstream has no live seek, so the fork's seekable player
+  restarts ffmpeg with an input `-ss` offset and re-attaches the demux → stream pipeline onto the
+  **same** Go-Live connection — viewers see a seek, not a stream restart. Seek is absolute
+  (`/stream seek 1:30`); it acts on the live stream as a side-channel, not a machine event.
+- **Pause is still absent** — no clean implementation for a continuous live stream.
+- Live streams (yt-dlp `is_live`) play but report no duration; seeking them is not meaningful.
 
 ## Caveats
 

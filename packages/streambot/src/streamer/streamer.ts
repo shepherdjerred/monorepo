@@ -3,9 +3,9 @@ import {
   Encoders,
   Streamer,
   Utils,
-  prepareStream,
-  playStream,
-} from "@dank074/discord-video-stream";
+  createSeekablePlayer,
+  type Player,
+} from "@shepherdjerred/discord-video-stream";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type {
   JoinVoiceInput,
@@ -18,19 +18,20 @@ import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 const log = logger.child("streamer");
 
-type StreamController = { setVolume: (volume: number) => Promise<boolean> };
-
 /**
- * Owns the selfbot voice connection and ffmpeg streaming via `@dank074/discord-video-stream`.
- * Its methods are the playback machine's `joinVoice` / `runStream` / `leaveVoice` actors, so all
- * voice I/O is driven by — and cancellable from — the machine. Uses Intel VAAPI hardware encoding
- * when enabled, falling back to software if the device/driver is unavailable.
+ * Owns the selfbot voice connection and ffmpeg streaming via `@shepherdjerred/discord-video-stream`
+ * (our fork). Its methods are the playback machine's `joinVoice` / `runStream` / `leaveVoice`
+ * actors, so all voice I/O is driven by — and cancellable from — the machine. Uses Intel VAAPI
+ * hardware encoding when enabled, falling back to software if the device/driver is unavailable.
+ *
+ * Live controls (`setVolume`, `seek`) act on the currently-playing {@link Player} as side-channels,
+ * independent of the machine.
  */
 export class StreambotStreamer {
   private readonly client: Client;
   private readonly streamer: Streamer;
   private readonly config: Config;
-  private controller: StreamController | null = null;
+  private player: Player | null = null;
 
   constructor(config: Config) {
     this.config = config;
@@ -62,14 +63,28 @@ export class StreambotStreamer {
 
   /** Apply a volume percentage (0-200) to the live stream; false when nothing is playing. */
   async setVolume(percent: number): Promise<boolean> {
-    if (this.controller === null) {
+    if (this.player === null) {
       return false;
     }
-    await this.controller.setVolume(Math.max(0, percent) / 100);
+    return this.player.setVolume(Math.max(0, percent) / 100);
+  }
+
+  /** Seek the live stream to an absolute offset (seconds); false when nothing is playing. */
+  async seek(seconds: number): Promise<boolean> {
+    if (this.player === null) {
+      return false;
+    }
+    await this.player.seek(seconds);
     return true;
   }
 
   private safeStop(): void {
+    try {
+      this.player?.stop();
+    } catch (error) {
+      log.warn("player stop failed", { error: getErrorMessage(error) });
+    }
+    this.player = null;
     try {
       this.streamer.stopStream();
     } catch (error) {
@@ -116,7 +131,7 @@ export class StreambotStreamer {
     useHardware: boolean,
   ): Promise<void> {
     const { stream } = this.config;
-    const streamOpts = {
+    const prepareOpts = {
       width: stream.width,
       height: stream.height,
       frameRate: stream.fps,
@@ -136,42 +151,43 @@ export class StreambotStreamer {
       title: input.resolved.title,
       hardware: useHardware,
     });
-    const { output, promise, controller } = prepareStream(
+
+    // The seekable player owns prepare+play on a single Go-Live connection. `finished` resolves at
+    // the true end of playback (or on stop) and rejects on an ffmpeg/encode failure — folding in the
+    // play/ffmpeg-failure race the old code did by hand, and letting `/stream seek` restart ffmpeg at
+    // a new offset without dropping the Go-Live stream.
+    const player = createSeekablePlayer(
+      this.streamer,
       input.resolved.ffmpegInput,
-      streamOpts,
-      signal,
+      {
+        prepare: prepareOpts,
+        play: { type: "go-live" },
+      },
     );
-    this.controller = controller;
-    try {
-      await controller.setVolume(Math.max(0, input.volume) / 100);
-    } catch (error) {
-      log.warn("initial setVolume failed", { error: getErrorMessage(error) });
+    this.player = player;
+
+    const onAbort = () => {
+      player.stop();
+    };
+    if (signal.aborted) {
+      player.stop();
+    } else {
+      signal.addEventListener("abort", onAbort, { once: true });
     }
+
     try {
-      // `playStream` resolves when real-time *playback* finishes (or `signal` aborts) — that's the
-      // true end of the stream. The ffmpeg `promise` resolves when *encoding* finishes, which for a
-      // local file runs far ahead of playback; using its resolution to end the stream would cut
-      // every video short. So await playStream for the end, and fold in `promise` only to surface
-      // ffmpeg *failures* (it stays pending on success, never ending playback early).
-      const ffmpegFailure = (async (): Promise<never> => {
-        try {
-          await promise;
-        } catch (error) {
-          throw error instanceof Error
-            ? error
-            : new Error(getErrorMessage(error));
-        }
-        // ffmpeg finished encoding; stay pending so only playback ends the stream.
-        return new Promise<never>(() => {
-          /* never settles */
-        });
-      })();
-      await Promise.race([
-        playStream(output, this.streamer, undefined, signal),
-        ffmpegFailure,
-      ]);
+      await player.start();
+      try {
+        await player.setVolume(Math.max(0, input.volume) / 100);
+      } catch (error) {
+        log.warn("initial setVolume failed", { error: getErrorMessage(error) });
+      }
+      await player.finished;
     } finally {
-      this.controller = null;
+      signal.removeEventListener("abort", onAbort);
+      if (this.player === player) {
+        this.player = null;
+      }
     }
     log.info("stream ended", { title: input.resolved.title });
   }
