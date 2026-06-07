@@ -25,8 +25,10 @@ describe("Encoders.vaapi", () => {
     }
   });
 
-  test("uses VBR rate control so bitrate caps are honored (not AVBR)", () => {
+  test("pins VBR rate control on H264 only (H265/AV1 VBR is driver-dependent)", () => {
     expect(settings.H264?.options).toEqual(["-rc_mode", "VBR"]);
+    expect(settings.H265?.options).toEqual([]);
+    expect(settings.AV1?.options).toEqual([]);
   });
 
   test("threads the configured render device into both decode and -vaapi_device", () => {

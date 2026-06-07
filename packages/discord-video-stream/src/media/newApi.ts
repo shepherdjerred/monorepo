@@ -262,8 +262,14 @@ export function prepareStream(
         mergedOptions.bitrateVideo,
         mergedOptions.bitrateVideoMax,
       )[mergedOptions.videoCodec];
+  // Only take the GPU pipeline when both dimensions are explicit positives: `scale_vaapi` aborts on
+  // the negative aspect-ratio shorthand (`-2`) that the software `scale` accepts, so anything
+  // without concrete dimensions falls back to the (correct, if slower) software path.
   const hwPipeline =
-    hardwareAcceleratedDecoding && encoderSettings
+    hardwareAcceleratedDecoding &&
+    encoderSettings?.hwPipeline &&
+    mergedOptions.width > 0 &&
+    mergedOptions.height > 0
       ? encoderSettings.hwPipeline
       : undefined;
 
