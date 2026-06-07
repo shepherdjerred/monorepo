@@ -99,16 +99,14 @@ export function k8sPlugin(
 }
 
 /**
- * Like {@link k8sPlugin} but lets Buildkite check out the repo into the agent
- * pod (shallow), for the rare step whose command runs bun/git scripts directly
- * against the working tree rather than via a Dagger git-URL ref.
+ * Escape hatch for steps that genuinely need the repo source on the BK pod
+ * (i.e. they run repo scripts directly on the agent rather than via a Dagger
+ * git-URL ref). Re-enables Buildkite's built-in checkout (`--depth=100`) and
+ * restores the `buildkite-git-mirrors` mount that {@link k8sPlugin} omits.
  *
- * Unlike the pre-PR2 version, this does NOT mount the `buildkite-git-mirrors`
- * PVC (that volume was deleted in PR2 of the BK-pressure reduction plan). The
- * agent's host-level git mirror still accelerates the clone, so a plain shallow
- * checkout is cheap enough for the handful of PR-only steps that need source on
- * disk (currently just the Greptile review gate). New callers should prefer a
- * Dagger function instead.
+ * Only the Greptile PR gate uses this — it shells out to `bun
+ * scripts/ci/src/wait-for-greptile.ts` + `buildkite-agent` on the agent. Do
+ * not add new callers; new agent-side work should be migrated to Dagger.
  */
 export function k8sPluginWithCheckout(
   opts: {
@@ -117,15 +115,26 @@ export function k8sPluginWithCheckout(
     secrets?: string[];
   } = {},
 ): Record<string, unknown> {
-  const plugin = k8sPlugin(opts);
-  const kubernetes = plugin["kubernetes"];
-  if (typeof kubernetes !== "object" || kubernetes === null) {
-    throw new Error("k8sPluginWithCheckout: expected kubernetes plugin object");
+  const plugin = k8sPlugin(opts) as {
+    kubernetes: Record<string, unknown> & {
+      podSpecPatch: { containers: { volumeMounts?: unknown[] }[] };
+    };
+  };
+  plugin.kubernetes["checkout"] = {
+    cloneFlags: "--depth=100",
+    fetchFlags: "--depth=100",
+  };
+  // Restore the git-mirrors volume mount that base k8sPlugin omits.
+  const container = plugin.kubernetes.podSpecPatch.containers[0];
+  if (container === undefined) {
+    throw new Error("k8sPluginWithCheckout: expected container-0");
   }
-  // Replace the base plugin's `checkout: { skip: true }` with a real shallow
-  // checkout so the step's command can read the repo from the working tree.
-  Object.assign(kubernetes, {
-    checkout: { cloneFlags: "--depth=100", fetchFlags: "--depth=100" },
-  });
+  container.volumeMounts = [
+    {
+      name: "buildkite-git-mirrors",
+      mountPath: "/buildkite/git-mirrors",
+      readOnly: true,
+    },
+  ];
   return plugin;
 }

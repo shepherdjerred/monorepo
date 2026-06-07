@@ -217,13 +217,10 @@ export function daggerStep(opts: {
 }
 
 /**
- * Create a plain Buildkite step that runs directly on the CI agent pod with a
- * shallow repo checkout (via {@link k8sPluginWithCheckout}).
- *
- * Use only for checks that need bash/bun/git operating on the working tree and
- * have no Dagger function yet — currently just the PR-only Greptile review gate.
- * Most steps should use {@link daggerStep} instead, which reads the repo via a
- * git-URL ref so the BK pod writes no source to disk.
+ * A plain command step that runs on the BK agent with the repo checked out
+ * (via {@link k8sPluginWithCheckout}). Use only when a step must execute repo
+ * scripts or `buildkite-agent` directly on the agent rather than through a
+ * Dagger git-URL ref — currently just the Greptile PR gate.
  */
 export function plainStep(opts: {
   label: string;
@@ -233,7 +230,6 @@ export function plainStep(opts: {
   dependsOn?: string | string[];
   softFail?: boolean;
   artifactPaths?: string[];
-  secrets?: string[];
 }): BuildkiteStep {
   const step: BuildkiteStep = {
     label: opts.label,
@@ -241,11 +237,7 @@ export function plainStep(opts: {
     command: opts.command,
     timeout_in_minutes: opts.timeoutMinutes ?? 10,
     retry: RETRY,
-    plugins: [
-      k8sPluginWithCheckout(
-        opts.secrets !== undefined ? { secrets: opts.secrets } : {},
-      ),
-    ],
+    plugins: [k8sPluginWithCheckout()],
   };
 
   if (opts.dependsOn !== undefined) {
