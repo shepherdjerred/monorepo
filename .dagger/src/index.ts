@@ -91,6 +91,7 @@ import {
   smokeTestObsidianHeadlessHelper,
   smokeTestDiscordPlaysPokemonHelper,
   smokeTestStreambotHelper,
+  e2eStreambotHelper,
   smokeTestTrmnlDashboardHelper,
 } from "./misc";
 
@@ -1411,6 +1412,30 @@ export class Monorepo {
     depDirs: Directory[] = [],
   ): Promise<string> {
     return smokeTestStreambotHelper(pkgDir, depNames, depDirs);
+  }
+
+  /** E2E streambot with real creds: streams a generated clip into the voice channel (manual run). */
+  @func()
+  async e2eStreambot(
+    pkgDir: Directory,
+    botToken: Secret,
+    userToken: Secret,
+    guildId: string,
+    videoChannelId: string,
+    commandChannelId: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return e2eStreambotHelper(
+      pkgDir,
+      botToken,
+      userToken,
+      guildId,
+      videoChannelId,
+      commandChannelId,
+      depNames,
+      depDirs,
+    );
   }
 
   /** Smoke test trmnl-dashboard: builds image, boots Bun.serve, killed at timeout. */

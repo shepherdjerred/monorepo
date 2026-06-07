@@ -1,5 +1,5 @@
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
+import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
   Cpu,
   Deployment,
@@ -71,11 +71,14 @@ export function createStreambotDeployment(
         ADMIN_IDS: fromSecret("ADMIN_IDS"),
         VIDEOS_DIR: EnvValue.fromValue("/data/videos"),
         MEDIA_DIRS: EnvValue.fromValue("/media/movies,/media/tv"),
-        STREAM_WIDTH: EnvValue.fromValue("1280"),
-        STREAM_HEIGHT: EnvValue.fromValue("720"),
+        STREAM_WIDTH: EnvValue.fromValue("1920"),
+        STREAM_HEIGHT: EnvValue.fromValue("1080"),
         STREAM_FPS: EnvValue.fromValue("30"),
-        STREAM_BITRATE_KBPS: EnvValue.fromValue("2000"),
-        STREAM_HARDWARE_ACCELERATION: EnvValue.fromValue("false"),
+        STREAM_BITRATE_KBPS: EnvValue.fromValue("4000"),
+        STREAM_HARDWARE_ACCELERATION: EnvValue.fromValue("true"),
+        VAAPI_DEVICE: EnvValue.fromValue("/dev/dri/renderD128"),
+        // Intel iHD VAAPI driver for QuickSync hardware encoding.
+        LIBVA_DRIVER_NAME: EnvValue.fromValue("iHD"),
       },
       securityContext: {
         user: STREAMBOT_UID,
@@ -127,4 +130,14 @@ export function createStreambotDeployment(
   );
 
   setRevisionHistoryLimit(deployment);
+
+  // Request the Intel iGPU so ffmpeg can VAAPI hardware-encode. The intel-device-plugin mounts
+  // /dev/dri into the pod; non-root UID 1000 works (same as Jellyfin). The GPU resource patch
+  // (scripts/patch.ts) leaves an explicit `1` untouched.
+  ApiObject.of(deployment).addJsonPatch(
+    JsonPatch.add(
+      "/spec/template/spec/containers/0/resources/limits/gpu.intel.com~1i915",
+      1,
+    ),
+  );
 }

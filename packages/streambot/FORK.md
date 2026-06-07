@@ -15,8 +15,22 @@ We deliberately diverged:
   Modeled on `packages/discord-plays-pokemon` (which streams via a browser — we use ffmpeg).
 - **System yt-dlp/ffmpeg.** Baked into the image; no runtime download into a writable dir
   (which broke under our non-root securityContext).
-- **No web UI.** Dropped upstream's express/ejs/bcrypt/argon2/session stack; Discord commands
-  are the control surface.
+- **No web UI.** Dropped upstream's express/ejs/bcrypt/argon2/session stack; **real Discord slash
+  commands** are the control surface (accepted in any channel; public status posts to a configured
+  channel).
+- **Branded types** for ids/tokens (Zod `.brand()`), validate-at-boundary throughout.
+- **Intel VAAPI hardware encoding** (with software fallback), and adult-source blocking.
+
+## Playback limitations (library)
+
+`@dank074/discord-video-stream` exposes only `setVolume` and `stopStream` at runtime — there is
+**no seek and no pause**. So:
+
+- `/volume` is supported (live). `/loop`, `/shuffle`, queue editing, and skip/stop are all
+  supported (they're machine/queue operations, not stream-transport controls).
+- **Seek / pause are intentionally absent.** Seek would require stop → restart-with-`-ss`-offset
+  (a future enhancement); pause has no clean implementation for a continuous live stream.
+- Live streams (yt-dlp `is_live`) play but report no duration.
 
 ## Caveats
 

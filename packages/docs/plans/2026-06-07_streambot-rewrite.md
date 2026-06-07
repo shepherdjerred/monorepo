@@ -2,9 +2,23 @@
 
 ## Status
 
-Complete — shipped in one PR (branch `claude/naughty-carson-2fca27`). Live deploy is gated on the
-user creating a Discord **bot** token and adding `BOT_TOKEN` to the `streambot-config` 1Password
-item; CI builds/pushes the image and fills the real digest into `versions.ts`.
+Complete — shipped in one PR (branch `claude/naughty-carson-2fca27`), including **Revision 2**
+(feedback): branded types, real slash commands (any channel, public output to the configured
+channel), adult-source blocking with public shaming, Intel VAAPI hardware encoding (on by default,
+software fallback), the full gap-feature set (volume, loop/shuffle, remove/move/clear/playnext,
+admin permissions, idle/alone auto-disconnect, playlist expansion), and smoke + e2e Dagger tests.
+Live deploy is gated on the user creating a Discord **bot** token and adding `BOT_TOKEN` to the
+`streambot-config` 1Password item; CI builds/pushes the image and fills the real digest into
+`versions.ts`.
+
+### Revision 2 notes
+
+- Slash commands registered guild-scoped on ready; intents reduced to `Guilds` + `GuildVoiceStates`.
+- VAAPI via `@dank074` `Encoders.vaapi`; image installs the Intel iHD driver (Debian non-free) +
+  ffmpeg; cdk8s requests `gpu.intel.com/i915: 1` (Jellyfin's non-root pattern), `LIBVA_DRIVER_NAME=iHD`.
+- No **seek/pause** (library exposes only volume+stop) — documented in `FORK.md`.
+- e2e (`e2e/run.ts` + Dagger `e2eStreambot`, Secret-passed creds) streams a generated clip into the
+  real voice channel; run manually with `dagger call e2e-streambot …`.
 
 ## Context
 

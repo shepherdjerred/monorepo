@@ -115,9 +115,24 @@ function withBirmelMusicRuntime(container: Container): Container {
  *  - yt-dlp: the system binary streambot shells out to (config default
  *    /usr/local/bin/yt-dlp). Intentionally tracks the latest release — yt-dlp
  *    must stay current or YouTube extraction breaks; it is a tool, not a lib.
+ *  - Intel VAAPI stack (intel-media-va-driver iHD + libva): lets ffmpeg
+ *    hardware-encode (h264_vaapi) on the cluster's Intel iGPU. The iHD driver
+ *    lives in Debian non-free, so we enable that component first. Software
+ *    encoding is the runtime fallback if the device/driver is missing.
  */
 function withStreambotRuntime(container: Container): Container {
   return container
+    .withExec([
+      "sh",
+      "-c",
+      // Enable Debian contrib/non-free (where the Intel iHD driver lives). Handles both the
+      // deb822 (`debian.sources`) and legacy one-line (`sources.list`) formats.
+      [
+        "set -e",
+        'if [ -f /etc/apt/sources.list.d/debian.sources ]; then sed -i "s/^Components: main.*/Components: main contrib non-free non-free-firmware/" /etc/apt/sources.list.d/debian.sources; fi',
+        'if [ -f /etc/apt/sources.list ]; then sed -i "s/ main$/ main contrib non-free non-free-firmware/" /etc/apt/sources.list; fi',
+      ].join("\n"),
+    ])
     .withExec(["apt-get", "update", "-qq"])
     .withExec([
       "apt-get",
@@ -132,14 +147,39 @@ function withStreambotRuntime(container: Container): Container {
       "cmake",
       "pkg-config",
       "ffmpeg",
+      "libva2",
+      "libva-drm2",
+      "vainfo",
     ])
     .withExec([
       "sh",
       "-c",
+      // The Intel iHD media driver (intel-media-va-driver-non-free) is x86-only; it has no
+      // arm64 candidate. The production cluster is amd64, so install it there for VAAPI
+      // hardware encoding, and skip it on arm64 (local Mac) builds — which have no Intel GPU
+      // anyway and fall back to software encoding.
       [
-        "curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o /usr/local/bin/yt-dlp",
+        "set -e",
+        'if [ "$(dpkg --print-architecture)" = "amd64" ]; then',
+        "  apt-get install -y -qq --no-install-recommends intel-media-va-driver-non-free",
+        "fi",
+      ].join("\n"),
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      // yt-dlp ships per-arch static binaries: yt-dlp_linux (x86_64) and yt-dlp_linux_aarch64
+      // (arm64). Pick the one matching the build arch so the binary actually runs (the smoke
+      // test invokes `yt-dlp --version`).
+      [
+        "set -e",
+        'arch="$(dpkg --print-architecture)"',
+        'if [ "$arch" = "amd64" ]; then asset=yt-dlp_linux',
+        'elif [ "$arch" = "arm64" ]; then asset=yt-dlp_linux_aarch64',
+        'else echo "unsupported architecture: $arch" >&2; exit 1; fi',
+        'curl -fsSL "https://github.com/yt-dlp/yt-dlp/releases/latest/download/$asset" -o /usr/local/bin/yt-dlp',
         "chmod +x /usr/local/bin/yt-dlp",
-      ].join(" && "),
+      ].join("\n"),
     ])
     .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"])
     .withExec(["ffmpeg", "-version"])
