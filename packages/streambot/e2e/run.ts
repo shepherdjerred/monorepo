@@ -2,15 +2,23 @@ import { createActor, waitFor } from "xstate";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
+import { expandPlaylist } from "@shepherdjerred/streambot/sources/ytdlp.ts";
+import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
+import {
+  CommandBot,
+  type PlaybackView,
+} from "@shepherdjerred/streambot/discord/command-bot.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 /**
- * End-to-end test, run inside Dagger with real credentials (see `e2eStreambot`). Generates a short
- * test clip, drives it through the real machine + selfbot streamer into the configured voice
- * channel, asserts the machine reaches `streaming`, then stops cleanly. Exits non-zero on failure.
+ * End-to-end test, run inside Dagger with real credentials (see `e2eStreambot`). Exercises BOTH
+ * Discord identities — the command bot (logs in, registers slash commands on the guild) and the
+ * userbot streamer (joins the voice channel and streams). Generates a short clip, drives it through
+ * the real machine into the configured voice channel, asserts the machine reaches `streaming`, then
+ * stops cleanly. Exits non-zero on failure.
  */
 const log = logger.child("e2e");
 const TEST_CLIP = "/tmp/streambot-e2e.mp4";
@@ -73,8 +81,46 @@ async function main(): Promise<number> {
       },
     },
   );
+
+  const view = (): PlaybackView => {
+    const { context } = actor.getSnapshot();
+    return {
+      state: JSON.stringify(actor.getSnapshot().value),
+      current:
+        context.current === null
+          ? null
+          : {
+              title:
+                context.resolved?.title ?? sourceLabel(context.current.source),
+              requesterId: context.current.requesterId,
+            },
+      queue: context.queue.map((entry) => ({
+        title: sourceLabel(entry.source),
+        requesterId: entry.requesterId,
+      })),
+      loop: context.loop,
+      volume: context.volume,
+    };
+  };
+
+  const commandBot = new CommandBot({
+    config,
+    dispatch: (event) => {
+      actor.send(event);
+    },
+    view,
+    library: () => [],
+    setVolume: (percent) => streamer.setVolume(percent),
+    expandPlaylist: (url, signal) => expandPlaylist(config, url, signal),
+    streamerUserId: () => streamer.userId(),
+  });
+
   actor.start();
-  await streamer.login();
+  // Bring up both identities: the command bot (which then registers slash commands on the guild)
+  // and the userbot streamer.
+  await Promise.all([streamer.login(), commandBot.login()]);
+  await commandBot.ready;
+  log.info("e2e: both clients logged in, slash commands registered");
 
   try {
     actor.send({
@@ -99,6 +145,7 @@ async function main(): Promise<number> {
     return 1;
   } finally {
     actor.stop();
+    await commandBot.destroy();
     await streamer.destroy();
   }
 }

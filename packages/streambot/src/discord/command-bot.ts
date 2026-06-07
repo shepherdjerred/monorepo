@@ -42,6 +42,9 @@ import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 const log = logger.child("command-bot");
 const MAX_LIST = 20;
 const PLAYLIST_TIMEOUT_MS = 60_000;
+// Grace period before leaving an empty voice channel, so a brief solo moment or a reconnect
+// blip doesn't drop playback (and an unattended e2e can stream to an empty channel).
+const ALONE_GRACE_MS = 30_000;
 
 export type QueueItemView = {
   readonly title: string;
@@ -75,14 +78,19 @@ export type CommandBotDeps = {
 export class CommandBot {
   private readonly client: Client;
   private readonly deps: CommandBotDeps;
+  private aloneTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Resolves once the bot is logged in and its slash commands are registered; rejects on failure. */
+  readonly ready: Promise<void>;
 
   constructor(deps: CommandBotDeps) {
     this.deps = deps;
     this.client = new Client({
       intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
     });
-    this.client.once(Events.ClientReady, (ready) => {
-      void this.register(ready.application.id);
+    this.ready = new Promise<void>((resolve, reject) => {
+      this.client.once(Events.ClientReady, (ready) => {
+        void this.registerThenSettle(ready.application.id, resolve, reject);
+      });
     });
     this.client.on(Events.InteractionCreate, (interaction) => {
       if (interaction.isChatInputCommand()) {
@@ -102,7 +110,15 @@ export class CommandBot {
   }
 
   async destroy(): Promise<void> {
+    this.clearAloneTimer();
     await this.client.destroy();
+  }
+
+  private clearAloneTimer(): void {
+    if (this.aloneTimer !== null) {
+      clearTimeout(this.aloneTimer);
+      this.aloneTimer = null;
+    }
   }
 
   /** Post a world-readable message to the configured status channel (used by the status reporter). */
@@ -116,6 +132,21 @@ export class CommandBot {
       }
     } catch (error) {
       log.warn("announce failed", { error: getErrorMessage(error) });
+    }
+  }
+
+  private async registerThenSettle(
+    applicationId: string,
+    resolve: () => void,
+    reject: (error: Error) => void,
+  ): Promise<void> {
+    try {
+      await this.register(applicationId);
+      resolve();
+    } catch (error) {
+      reject(
+        error instanceof Error ? error : new Error(getErrorMessage(error)),
+      );
     }
   }
 
@@ -149,10 +180,18 @@ export class CommandBot {
     const humans = channel.members.filter(
       (member) => !member.user.bot && member.id !== streamerId,
     );
-    if (humans.size === 0) {
-      log.info("voice channel empty — stopping");
-      this.deps.dispatch({ type: "STOP" });
+    if (humans.size > 0) {
+      // Someone's (still) here — cancel any pending leave.
+      this.clearAloneTimer();
+      return;
     }
+    // Alone in the VC. Leave after a grace period (cancelled if a human (re)joins), rather than
+    // dropping playback the instant the channel empties.
+    this.aloneTimer ??= setTimeout(() => {
+      this.aloneTimer = null;
+      log.info("voice channel empty for grace period — stopping");
+      this.deps.dispatch({ type: "STOP" });
+    }, ALONE_GRACE_MS);
   }
 
   private async safeHandle(
