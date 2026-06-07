@@ -4,6 +4,8 @@
 
 **Not started (2026-04-21).** Punch list for a dedicated CI-infra PR. These bugs exist on `main` at commit `4b77c05f` independent of any dep updates; they make `dagger call ci-all --source .` unrunnable end-to-end locally. Documented while cleaning up Renovate Dashboard #481 — see `2026-04-21_renovate-dashboard-cleanup.md`.
 
+> **Stale-content note (2026-06-06):** `packages/clauderon` has been archived and `.dagger/src/ci.ts` no longer runs `cargo`/Rust, so **Bug #1 (Rust workdir) and Bug #4 (`@clauderon/shared` workspace mount) are obsolete**. Re-verify Bugs #2/#3 against the current `.dagger/src/ci.ts` before starting; the commit ref `4b77c05f` is also long superseded.
+
 ## Context
 
 `dagger call ci-all --source .` is the single umbrella pipeline that fans out lint/typecheck/test for every TS package plus Rust + Go. It lives in `.dagger/src/ci.ts` (`ciAllHelper`). Locally each package's `bun run lint/typecheck/test` and `cargo test` pass, but the Dagger orchestration fails because the containers are constructed with wrong working directories and missing tools. Buildkite CI runs per-package pipelines (not `ci-all`) which is why these bugs aren't felt in upstream CI.

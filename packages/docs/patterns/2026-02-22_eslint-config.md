@@ -54,4 +54,4 @@ CJS packages need `import X from` (not `import * as X`) for ESM interop with the
 ## Known Constraints
 
 - `unicorn/prefer-string-replace-all` must be OFF for ES2020 targets
-- Quality baseline suppression count includes cdk8s generated files (~6700 of 6893 total)
+- Quality is ratcheted via per-category counts in `.quality-baseline.json` (`eslint-disable`, `ts-suppressions`, `rust-allow`, `prettier-ignore`); adding a suppression above the recorded baseline fails CI

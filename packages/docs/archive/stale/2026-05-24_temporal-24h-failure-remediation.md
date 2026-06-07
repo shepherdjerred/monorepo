@@ -2,6 +2,8 @@
 
 ## Status
 
+**Obsolete** — this one-shot remediation pinned a specific image (`2.0.0-2752`) that is long superseded (main is now well past `2.0.0-3445`), and its PR-review-eval fixture concern is moot (bot disabled 2026-06-06). Archived to `archive/stale/` during the 2026-06-06 docs groom (pass 2). Original notes preserved below.
+
 Partially Complete
 
 ## Summary

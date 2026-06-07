@@ -7,6 +7,8 @@ AI-maintained knowledge base for the monorepo.
 - [Monorepo Structure](architecture/2026-02-22_monorepo-structure.md) - Package discovery, repo layout, and verification commands
 - [Monarch](architecture/2026-02-23_monarch.md) - Transaction categorization pipeline with tiered classification
 - [Release/Push/Deploy Inventory](architecture/2026-04-04_release-push-inventory.md) - External publish targets from the CI catalog
+- [Temporal Worker & Agent-Task Scheduler](architecture/2026-06-06_temporal-worker-and-scheduler.md) - Worker topology, schedules, agent-task scheduler + `/agent-tasks` API, event bridge
+- [Scout-for-LoL Web UI & S3/Caddy Serving](architecture/2026-06-06_scout-web-ui-and-serving.md) - Marketing site + SPA, merged bucket build, prod/beta fan-out, caddy-s3proxy routing
 
 ## Patterns
 
@@ -63,10 +65,10 @@ Historical docs preserved for reference. These are no longer actively maintained
 
 - [`archive/bazel/`](archive/bazel/) - 12 docs from the Bazel era
 - [`archive/changelogs/`](archive/changelogs/) - 1 historical changelog
-- [`archive/completed/`](archive/completed/) - 66 plans whose work has shipped (preserves design context)
+- [`archive/completed/`](archive/completed/) - 87 plans whose work has shipped (preserves design context)
 - [`archive/dagger-migration/`](archive/dagger-migration/) - 18 Dagger migration plans and audits
 - [`archive/homelab-audits/`](archive/homelab-audits/) - 9 superseded homelab health audit snapshots
 - [`archive/on-hold/`](archive/on-hold/) - 4 on-hold Sentinel architecture and implementation docs
 - [`archive/scout-followups/`](archive/scout-followups/) - 1 time-boxed Scout follow-up checklist
-- [`archive/stale/`](archive/stale/) - 7 stale operational snapshots and superseded plans
+- [`archive/stale/`](archive/stale/) - 8 stale operational snapshots and superseded plans
 - [`archive/superseded/`](archive/superseded/) - 9 plans/guides replaced by newer versions
