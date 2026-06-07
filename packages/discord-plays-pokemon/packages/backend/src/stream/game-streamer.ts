@@ -95,11 +95,17 @@ export class GameStreamer {
 
   private deps(): StreamMachineDeps {
     return {
-      joinVoice: async () => {
+      joinVoice: async (signal) => {
         await this.streamer.joinVoice(
           this.options.guildId,
           this.options.channelId,
         );
+        // The library's joinVoice cannot be cancelled mid-flight. If STOP arrived
+        // while we were connecting, the actor was aborted and leaveVoice already ran;
+        // tear down the connection we just established so it isn't orphaned.
+        if (signal.aborted) {
+          this.streamer.leaveVoice();
+        }
       },
       prepareEncoder: () => Promise.resolve(this.buildEncoder()),
       runStream: ({ output, playing }) => this.runStream(output, playing),

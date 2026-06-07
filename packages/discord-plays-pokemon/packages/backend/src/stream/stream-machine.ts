@@ -222,7 +222,7 @@ export function createStreamMachine(deps: StreamMachineDeps) {
           assign({ retries: ({ context }) => context.retries + 1 }),
           ({ context }) => {
             logger.error(
-              `stream failed (attempt ${String(context.retries)}): ${
+              `stream failed (attempt ${String(context.retries)}/${String(context.maxRetries)}): ${
                 context.lastError ?? "unknown"
               }`,
             );
