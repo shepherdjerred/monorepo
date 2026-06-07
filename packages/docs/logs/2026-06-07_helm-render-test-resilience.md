@@ -34,10 +34,19 @@ Two changes to `argocd-helm-render.test.ts`, no behavior change for real failure
    Per-test timeout raised `300s → 600s` for full-fleet headroom.
 2. **Transient-after-retries → non-fatal skip.** `helmTemplate` now returns a
    `transient` flag (final result still matched the strict upstream/5xx/network
-   pattern). The render test routes those to a loudly-logged `transientSkips`
-   bucket instead of failing the build. Real errors — `404`/missing version,
-   template errors, schema-validation failures — do **not** match the transient
-   pattern and remain hard failures.
+   pattern). Real errors — `404`/missing version, template errors,
+   schema-validation failures — do **not** match the transient pattern and
+   remain hard failures.
+3. **Single render pass, one skip log** (follow-up commit, addresses a Greptile
+   P1). The suite now renders every chart exactly once in `beforeAll` and logs
+   transient skips there, in one place. Both assertions (`render` and
+   `non-empty output`) read that shared result set instead of independently
+   re-fetching every chart. This (a) fixes the "never silent" invariant — the
+   old second test silently swallowed non-zero exits — and (b) halves the
+   network load / flake surface, since charts were previously fetched twice.
+   Also `.gitignore`d `.argocd-test-*` temp dirs (matching the existing
+   `.helm-test-*` / `.helm-render-*` patterns) so a killed run can't leave
+   staged junk.
 
 The test's contract is "do OUR values render against the pinned chart" — which
 can only be asserted once the chart is actually fetched. Upstream CDN
@@ -65,13 +74,20 @@ failures.
 
 - Hardened `packages/homelab/src/cdk8s/src/argocd-helm-render.test.ts` against
   transient upstream chart-fetch failures (longer jittered retries + non-fatal
-  transient skip + classifier guardrail test).
+  transient skip + classifier guardrail test). Commit `0ec2f34ff`.
+- Follow-up `ed86e2da9`: render charts once in `beforeAll`, log skips in one
+  place, both assertions read shared results (resolves Greptile P1 about silent
+  skips in the second test; halves network/flake surface). `.gitignore`d
+  `.argocd-test-*` temp dirs.
+- Opened [PR #1081](https://github.com/shepherdjerred/monorepo/pull/1081);
+  Buildkite build 3567 fully green (39/39 checks, incl. Test, Greptile, Line
+  Endings). MERGEABLE.
 - Verified typecheck, lint, and both test modes (network-free + live) locally.
 
 ### Remaining
 
-- None. (Standalone PR off `main`; once merged, all PRs benefit — including #1077,
-  which was separately retried to green.)
+- Merge PR #1081 (green + mergeable). Once on `main`, all PRs benefit. PR #1077
+  (pinchtab) was separately driven green and is now **merged**.
 
 ### Caveats
 
