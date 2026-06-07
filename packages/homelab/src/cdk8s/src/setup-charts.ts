@@ -23,7 +23,6 @@ import { createBugsinkChart } from "./cdk8s-charts/bugsink.ts";
 import { createTasknotesChart } from "./cdk8s-charts/tasknotes.ts";
 import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
 import { createTrmnlDashboardChart } from "./cdk8s-charts/trmnl-dashboard.ts";
-import { createStreambotChart } from "./cdk8s-charts/streambot.ts";
 
 /**
  * Sets up all charts for the application
@@ -65,5 +64,4 @@ export async function setupCharts(app: App): Promise<void> {
   createTasknotesChart(app);
   createTemporalChart(app);
   createTrmnlDashboardChart(app);
-  createStreambotChart(app);
 }

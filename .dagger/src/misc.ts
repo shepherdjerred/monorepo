@@ -206,6 +206,40 @@ export async function smokeTestScoutForLolHelper(
 }
 
 /**
+ * Smoke test streambot image.
+ * Verifies: ffmpeg + the baked yt-dlp are runnable, config validates, the playback machine
+ * boots, and both Discord clients attempt login and fail with the expected auth error.
+ */
+export async function smokeTestStreambotHelper(
+  pkgDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+): Promise<string> {
+  const container = buildImageHelper(pkgDir, "streambot", depNames, depDirs)
+    .withEnvVariable("BOT_TOKEN", "smoke-test-dummy")
+    .withEnvVariable("TOKEN", "smoke-test-dummy")
+    .withEnvVariable("GUILD_ID", "000000000000000000")
+    .withEnvVariable("COMMAND_CHANNEL_ID", "000000000000000000")
+    .withEnvVariable("VIDEO_CHANNEL_ID", "000000000000000000")
+    .withEnvVariable("ADMIN_IDS", "000000000000000000")
+    .withEnvVariable("VIDEOS_DIR", "/tmp/videos")
+    .withEntrypoint([])
+    .withExec([
+      "sh",
+      "-c",
+      "mkdir -p /tmp/videos && ffmpeg -version && /usr/local/bin/yt-dlp --version && timeout 30s bun run src/index.ts 2>&1",
+    ]);
+
+  return runSmokeTest(container, [
+    "tokeninvalid",
+    "an invalid token was provided",
+    "unauthorized",
+    "401",
+    "invalid token",
+  ]);
+}
+
+/**
  * Smoke test birmel Discord bot image.
  * Verifies: config loads, Discord client attempts login, auth fails as expected.
  */

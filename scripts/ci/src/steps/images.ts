@@ -124,6 +124,7 @@ const SMOKE_TEST_FUNCTIONS: Record<string, string> = {
   "caddy-s3proxy": "smoke-test-caddy-s-3-proxy",
   "obsidian-headless": "smoke-test-obsidian-headless",
   "discord-plays-pokemon": "smoke-test-discord-plays-pokemon",
+  streambot: "smoke-test-streambot",
   "trmnl-dashboard": "smoke-test-trmnl-dashboard",
 };
 

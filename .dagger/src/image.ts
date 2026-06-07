@@ -106,6 +106,47 @@ function withBirmelMusicRuntime(container: Container): Container {
 }
 
 /**
+ * Runtime for the streambot video-streaming bot. Installs:
+ *  - ffmpeg: prepareStream() spawns the ffmpeg CLI to transcode the source.
+ *  - build-essential / cmake / pkg-config / python3: native build deps for
+ *    node-datachannel (WebRTC) and node-av (libav bindings), which Bun builds
+ *    during `bun install` because they're listed in the package's
+ *    trustedDependencies. These must be present BEFORE the install step.
+ *  - yt-dlp: the system binary streambot shells out to (config default
+ *    /usr/local/bin/yt-dlp). Intentionally tracks the latest release — yt-dlp
+ *    must stay current or YouTube extraction breaks; it is a tool, not a lib.
+ */
+function withStreambotRuntime(container: Container): Container {
+  return container
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "ca-certificates",
+      "curl",
+      "python3",
+      "build-essential",
+      "cmake",
+      "pkg-config",
+      "ffmpeg",
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      [
+        "curl -fsSL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -o /usr/local/bin/yt-dlp",
+        "chmod +x /usr/local/bin/yt-dlp",
+      ].join(" && "),
+    ])
+    .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"])
+    .withExec(["ffmpeg", "-version"])
+    .withExec(["yt-dlp", "--version"]);
+}
+
+/**
  * Hand ownership of Bun's install cache to UID 1000.
  *
  * The oven/bun base image sets `BUN_INSTALL=/usr/local`, which makes Bun
@@ -424,6 +465,10 @@ export function buildImageHelper(
 
   if (pkg === "birmel") {
     container = withBirmelMusicRuntime(container);
+  }
+
+  if (pkg === "streambot") {
+    container = withStreambotRuntime(container);
   }
 
   container = container

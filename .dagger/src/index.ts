@@ -90,6 +90,7 @@ import {
   smokeTestCaddyS3ProxyHelper,
   smokeTestObsidianHeadlessHelper,
   smokeTestDiscordPlaysPokemonHelper,
+  smokeTestStreambotHelper,
   smokeTestTrmnlDashboardHelper,
 } from "./misc";
 
@@ -1400,6 +1401,16 @@ export class Monorepo {
     depDirs: Directory[] = [],
   ): Promise<string> {
     return smokeTestDiscordPlaysPokemonHelper(pkgDir, depNames, depDirs);
+  }
+
+  /** Smoke test streambot: build image, verify ffmpeg + yt-dlp, boot machine, expect auth failure */
+  @func()
+  async smokeTestStreambot(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return smokeTestStreambotHelper(pkgDir, depNames, depDirs);
   }
 
   /** Smoke test trmnl-dashboard: builds image, boots Bun.serve, killed at timeout. */
