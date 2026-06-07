@@ -11,7 +11,6 @@ import {
 } from "./util.ts";
 import { PRESENCE_COOLDOWN_SECONDS } from "#shared/presence.ts";
 
-const FRONT_DOOR_LOCK = "lock.front_door" as const;
 const ROOMBA = "vacuum.roomba" as const;
 const Q7_MAX = "vacuum.q7_max" as const;
 const VACUUMS = [ROOMBA, Q7_MAX] as const;
@@ -38,8 +37,9 @@ export async function leavingHome(): Promise<void> {
     "Goodbye! The vacuums will start cleaning soon.",
   );
 
-  await callServiceUnchecked("lock", "lock", { entity_id: FRONT_DOOR_LOCK });
-
+  // The front-door lock is owned by the debounced reconcileLock workflow, not
+  // locked here — edge-triggered lock/unlock on raw presence flap caused the
+  // door to cycle. This workflow only handles lights and the vacuums.
   const lights = await getEntitiesInDomain("light");
   for (const light of lights) {
     // entity_id from getEntitiesInDomain is a runtime-filtered plain string —

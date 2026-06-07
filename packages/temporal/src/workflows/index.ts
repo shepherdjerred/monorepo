@@ -12,6 +12,7 @@ import {
 import { goodNight as _goodNight } from "./ha/good-night.ts";
 import { welcomeHome as _welcomeHome } from "./ha/welcome-home.ts";
 import { leavingHome as _leavingHome } from "./ha/leaving-home.ts";
+import { reconcileLock as _reconcileLock } from "./ha/reconcile-lock.ts";
 import { runVacuumIfNotHome as _runVacuumIfNotHome } from "./ha/run-vacuum-if-not-home.ts";
 import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./zfs-maintenance.ts";
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
@@ -99,6 +100,10 @@ export async function welcomeHome(firstArrival = true): Promise<void> {
 
 export async function leavingHome(): Promise<void> {
   return _leavingHome();
+}
+
+export async function reconcileLock(): Promise<void> {
+  return _reconcileLock();
 }
 
 export async function runVacuumIfNotHome(): Promise<void> {
