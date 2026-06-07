@@ -57,12 +57,14 @@ import {
   buildObsidianHeadlessImageHelper,
   buildScoutImageHelper,
   buildDiscordPlaysPokemonImageHelper,
+  buildDiscordPlaysMarioKartImageHelper,
   buildTemporalWorkerImageHelper,
   buildTrmnlDashboardImageHelper,
   pushCaddyS3ProxyImageHelper,
   pushObsidianHeadlessImageHelper,
   pushScoutImageHelper,
   pushDiscordPlaysPokemonImageHelper,
+  pushDiscordPlaysMarioKartImageHelper,
   pushTemporalWorkerImageHelper,
   pushTrmnlDashboardImageHelper,
   buildCiBaseImageHelper,
@@ -91,6 +93,7 @@ import {
   smokeTestDiscordPlaysPokemonHelper,
   smokeTestStreambotHelper,
   e2eStreambotHelper,
+  smokeTestDiscordPlaysMarioKartHelper,
   smokeTestTrmnlDashboardHelper,
 } from "./misc";
 
@@ -509,6 +512,48 @@ export class Monorepo {
     gitSha: string = "unknown",
   ): Promise<string> {
     return pushDiscordPlaysPokemonImageHelper(
+      pkgDir,
+      tags,
+      registryUsername,
+      registryPassword,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Build the discord-plays-mario-kart backend image (Bun workspace + N64Wasm) */
+  @func()
+  buildDiscordPlaysMarioKartImage(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildDiscordPlaysMarioKartImageHelper(
+      pkgDir,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Push a discord-plays-mario-kart image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushDiscordPlaysMarioKartImage(
+    pkgDir: Directory,
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushDiscordPlaysMarioKartImageHelper(
       pkgDir,
       tags,
       registryUsername,
@@ -1425,6 +1470,16 @@ export class Monorepo {
       depNames,
       depDirs,
     );
+  }
+
+  /** Smoke test discord-plays-mario-kart: build production image (incl. wasm stage), boots app, expects Discord auth failure */
+  @func()
+  async smokeTestDiscordPlaysMarioKart(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return smokeTestDiscordPlaysMarioKartHelper(pkgDir, depNames, depDirs);
   }
 
   /** Smoke test trmnl-dashboard: builds image, boots Bun.serve, killed at timeout. */

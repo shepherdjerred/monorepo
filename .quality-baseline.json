@@ -3,6 +3,7 @@
     "packages/better-skill-capped/src/components/app.tsx": 1,
     "packages/better-skill-capped/src/components/router.tsx": 1,
     "packages/discord-plays-pokemon/packages/frontend/src/main.tsx": 1,
+    "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx": 1,
     "packages/scout-for-lol/packages/backend/src/testing/discord-mocks.ts": 2,
     "packages/toolkit/src/daemon/watch.ts": 1,
     "packages/temporal/src/activities/fetcher.ts": 1,

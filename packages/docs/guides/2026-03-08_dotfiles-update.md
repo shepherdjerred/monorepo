@@ -18,13 +18,17 @@ Configured in `.chezmoi.toml.tmpl` to use `~/git/monorepo/packages/dotfiles` (no
 
 `private_dot_config/private_fish/config.fish.tmpl` loads secrets via `onepasswordRead`. If a 1Password item is deleted/archived, `chezmoi apply` fails entirely.
 
-Affected secrets (lines 39-46):
+Affected secrets (`config.fish.tmpl` lines 52-62):
 
-- `GH_TOKEN` — Homelab vault
+- `BUILDKITE_API_TOKEN` — Personal vault
 - `GRAFANA_API_KEY` — Homelab vault
-- `PAGERDUTY_TOKEN` — was Homelab vault item `yio3tx4wkvysvy5umdrqh7fe2e`, **deleted as of 2026-02-28**
+- `PAGERDUTY_TOKEN` — Homelab vault item `xjneyr3nt56u5li4anhbglnbr4` (live; an earlier revision of this guide wrongly listed it as deleted)
 - `BUGSINK_TOKEN` — Personal vault
 - `ARGOCD_AUTH_TOKEN` — separate vault
+- `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` — Personal vault
+- `HASS_TOKEN` — separate vault
+
+(`GH_TOKEN` was removed and replaced by `BUILDKITE_API_TOKEN`.)
 
 ### write_brewfile.sh path mismatch
 

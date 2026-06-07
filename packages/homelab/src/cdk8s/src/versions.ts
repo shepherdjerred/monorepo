@@ -37,10 +37,10 @@ const versions = {
     "1.43.1.10611-1e34174b1-amd64@sha256:7fe30c0ca399103535e6a5b10207aa2b72d053c652763ee2ce69d082db797d74",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
   "linuxserver/tautulli":
-    "2.17.1@sha256:97a8127cfd3be10f653cea347cef64098243e315c2d81385813b7d8fc6fc384b",
+    "2.17.1@sha256:8e1a0d8104422f646c3e89d9b261b0507dc664bd6764baaea0ff0a5718f83b94",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/bazarr":
-    "1.5.6@sha256:95f27692c3de6dbe130cd035d342d8138ec74ade7b62cfc52e11ae222c52c855",
+    "1.5.6@sha256:4b5e510042bf471c8bafab89cada9774fba2fb25f16ec64235151cacbe847c10",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
   // Kept alongside Seerr during the migration; remove once Seerr fully owns the request flow.
   "linuxserver/overseerr":
@@ -56,7 +56,7 @@ const versions = {
     "v2.3.1@sha256:683c04827ef3fecf1cc5cb178f75f91f968aef6c6d89d34bc9c70966fd1d7259",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/prowlarr":
-    "2.3.5@sha256:c9fe528f34b1fd3715438b6f6d6991d64e2965f2c055db36398bc66a0e7eab01",
+    "2.3.5@sha256:2489c6dbaf11e3a6d71aeb2e6980d04193d4af611aa7064a974851222fd41722",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver-coerced
   "qdm12/gluetun":
     "v3.41.1@sha256:1a5bf4b4820a879cdf8d93d7ef0d2d963af56670c9ebff8981860b6804ebc8ab",
@@ -70,7 +70,7 @@ const versions = {
     "6.1.1@sha256:c0a4335d4249b46102f64cf6fa27ffc3bddfd9138fac1e4ddf238afd37f02d1f",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/sonarr":
-    "4.0.17@sha256:0b5c4803f92456fb9b65bae8375716ea120b4ea17b3cced7da32b63f0085782b",
+    "4.0.17@sha256:0b3f344388bd7bed4f2f770058de795e76447e4a481b83c8d5f8fed489371fde",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "timothyjmiller/cloudflare-ddns":
     "latest@sha256:37c99677e997710c1bbe9d74c93f2e3b8de3457a5ca6e28643e251b38ed05311",
@@ -118,22 +118,26 @@ const versions = {
   openebs: "4.4.0",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-3445@sha256:af2e21c958860d6d691ae94d065486e0075bf349fb58fe2b5f8f9578bb6cc6da",
+    "2.0.0-3460@sha256:c9c99c207fc9c3f5b9e0eac01c10010e77b111da5be8bab0df6a978351bde460",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
     "2.0.0-2985@sha256:8b66f27b0daaff642a2ac838e838e8f8ccd64a21e2f9e09fb69730c1bbf8ff36",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
-    "2.0.0-3445@sha256:3ec90130d803de38f4b005d0d6edb955f0873ca21b48b5599348c5288437e215",
+    "2.0.0-3460@sha256:734f13dd7c69a56a29b6b85ceac9ea2d6767783d054f34e1a5564ae9ace31ec5",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
     "2.0.0-2970@sha256:89b85d616852f61f17a5201378d0adb812b68d1255ddbe221a6f31670b9c36c2",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-3445@sha256:cb74cdba6a7dd65f840bf2675779b4176d385a3d2a293ca0b45a7af911d48ca9",
+    "2.0.0-3460@sha256:88ef273d61d86e7abf7bf8db257848a508b800ad69865011e7efb986f129d290",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-3445@sha256:a7a0f9ab13e5f692c504068e07d875707e7e942e2e268a985c35a3449dbe70bf",
+    "2.0.0-3460@sha256:28d279ab73b465c4d22615cb732e0d7e83123d35c6c76869445fadc7d0ae0548",
+  // not managed by renovate — placeholder digest; CI version-commit-back fills
+  // the real digest after the first successful image push.
+  "shepherdjerred/discord-plays-mario-kart":
+    "0.0.0-placeholder@sha256:0000000000000000000000000000000000000000000000000000000000000000",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.29.0@sha256:cca8988d05cd449e1c6c69405971b1e6fc2c2116ceeb45c9fa3fc33837997a75",
@@ -223,15 +227,15 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-3445@sha256:d0c10590bb02546db7ca6a763059a343eee5944a187dba89a11f3204cc474ad4",
+    "2.0.0-3460@sha256:0d8ece2c6216785fa4987d99222bf359b8c835788f92cc5e14efa1990c250206",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
-    "2.0.0-3445@sha256:36c6f9d6bd2c876234487ea4315498765dba54dae8dcd6c59b0dcf57ea68c888",
+    "2.0.0-3460@sha256:0da3adc43924d68da905609bdb70c6fe7f4119f732a132aacbce6c6d32c0f48a",
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-3445@sha256:75920720a199a035d269d533227a821732619db86f35f9e633790de991dd95a7",
+    "2.0.0-3460@sha256:a008c14d1a97f5e89e0e6172c4bd0c4a1897a70ab372505a8799bd291c4c92c5",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.6@sha256:1263120feed69d82e4ca23b8ca6f1d702c3029fe70714e382966d0192318eab6",
@@ -244,11 +248,11 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-3445@sha256:fa820a144423bc858196615fd6fdb13d4973ee2709d74dcf1df171e98e5b8c3c",
+    "2.0.0-3460@sha256:413ec4963be84344c8447f4ff412420f1bd9a90440257357430492023f5c4529",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/trmnl-dashboard":
-    "2.0.0-3445@sha256:2d8bce97068869b303fbdd359c7f4a5b1ee8b43b70c5be309ab94ac22b34cc4b",
+    "2.0.0-3460@sha256:3c5039ae99002376dc2cfb274ba45284df0dc2662e4381fa54e1dc40f1c9ed12",
 };
 
 /**

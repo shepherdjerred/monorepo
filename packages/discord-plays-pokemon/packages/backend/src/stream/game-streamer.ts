@@ -6,8 +6,11 @@ import {
   playStream,
   Encoders,
 } from "@dank074/discord-video-stream";
+import { type Actor, createActor } from "xstate";
 import { WIDTH, HEIGHT, GBA_FPS } from "#src/emulator/constants.ts";
 import { logger } from "#src/logger.ts";
+import { createOrchestratorMachine } from "./orchestrator-machine.ts";
+import type { EncoderHandles, StreamMachineDeps } from "./stream-machine.ts";
 
 export type GameStreamerOptions = {
   token: string;
@@ -26,25 +29,33 @@ export type GameStreamerOptions = {
 const SRC_FPS = GBA_FPS;
 
 // Streams the emulator's RGBA frames into a Discord voice channel as a Go-Live
-// broadcast, over the voice UDP path. Replaces the userbot + browser
-// screen-share. Frames are fed as rawvideo straight into the library's ffmpeg
-// (one encode pass).
+// broadcast, over the voice UDP path.
+//
+// The lifecycle (join voice → encode → broadcast → leave) is owned by an XState
+// machine; this class is a thin facade that supplies the side effects and
+// exposes the same start()/stop()/pushFrame() surface the rest of the app uses.
+// start()/stop() set the *desired* state and return immediately — the
+// orchestrator reconciles it against the in-flight machine, so they are safe to
+// call fire-and-forget (and rapidly) from VoiceStateUpdate callbacks without the
+// races the old hand-rolled mutex guarded against.
 export class GameStreamer {
   private readonly options: GameStreamerOptions;
   private readonly streamer: Streamer;
-  private rgba: PassThrough | undefined;
-  private playing: Promise<void> | undefined;
-  private active = false;
-  // Serializes start()/stop(). Both are driven fire-and-forget from
-  // VoiceStateUpdate callbacks, so without this a stop() landing mid-start()
-  // (or a second start()) could interleave at the `await joinVoice` point and
-  // orphan the PassThrough/ffmpeg or tear the voice connection. Each call waits
-  // for the previous to fully settle before running.
-  private opChain: Promise<void> = Promise.resolve();
+  private readonly actor: Actor<ReturnType<typeof createOrchestratorMachine>>;
+  // Mirror of the machine's live frame sink, kept in sync via subscription so
+  // the per-frame hot path is a single null check + write.
+  private frameSink: PassThrough | null = null;
 
   constructor(options: GameStreamerOptions) {
     this.options = options;
     this.streamer = new Streamer(new Client());
+
+    const machine = createOrchestratorMachine(this.deps());
+    this.actor = createActor(machine);
+    this.actor.subscribe((snapshot) => {
+      this.frameSink = snapshot.context.frameSink;
+    });
+    this.actor.start();
   }
 
   async login(): Promise<void> {
@@ -53,53 +64,66 @@ export class GameStreamer {
     logger.info(`stream account logged in as ${user?.tag ?? "unknown"}`);
   }
 
-  /** True while a Go-Live broadcast is running and accepting frames. */
+  /** True while a Go-Live broadcast is live and accepting frames. */
   get isStreaming(): boolean {
-    return this.active;
+    return this.frameSink !== null;
   }
 
-  /** Feed one RGBA frame (no-op unless a broadcast is active). */
+  /** Feed one RGBA frame (no-op unless a broadcast is live). */
   pushFrame(frame: Buffer): void {
-    if (this.active && this.rgba) this.rgba.write(frame);
+    if (this.frameSink) this.frameSink.write(frame);
   }
 
+  /** Request that the broadcast be running. Resolves immediately. */
   start(): Promise<void> {
-    return this.runExclusive(() => this.doStart());
+    this.actor.send({ type: "SET_DESIRED", desired: true });
+    return Promise.resolve();
   }
 
+  /** Request that the broadcast be stopped. Resolves immediately. */
   stop(): Promise<void> {
-    return this.runExclusive(() => this.doStop());
+    this.actor.send({ type: "SET_DESIRED", desired: false });
+    return Promise.resolve();
   }
 
-  // Runs `op` only after every previously-queued op settles, so start()/stop()
-  // never interleave. The synchronous prefix here (capturing `previous` and
-  // replacing `this.opChain`) runs before any await, so concurrent callers queue
-  // in call order. The barrier never rejects — a failed op can't wedge the
-  // queue — yet the returned promise still rejects so callers see the failure.
-  private runExclusive(op: () => Promise<void>): Promise<void> {
-    const previous = this.opChain;
-    const result = (async (): Promise<void> => {
-      await previous;
-      await op();
-    })();
-    this.opChain = this.settle(result);
-    return result;
+  destroy(): void {
+    this.actor.stop();
+    this.streamer.client.destroy();
   }
 
-  private async settle(work: Promise<void>): Promise<void> {
-    try {
-      await work;
-    } catch {
-      // Swallowed so the serialization barrier never wedges on a failed op; the
-      // failure is still surfaced to the original caller via runExclusive's
-      // returned promise.
-    }
+  // ---- side effects injected into the machine ----
+
+  private deps(): StreamMachineDeps {
+    return {
+      joinVoice: async (signal) => {
+        await this.streamer.joinVoice(
+          this.options.guildId,
+          this.options.channelId,
+        );
+        // The library's joinVoice cannot be cancelled mid-flight. If STOP arrived
+        // while we were connecting, the actor was aborted and leaveVoice already ran;
+        // tear down the connection we just established so it isn't orphaned.
+        if (signal.aborted) {
+          this.streamer.leaveVoice();
+        }
+      },
+      prepareEncoder: () => Promise.resolve(this.buildEncoder()),
+      runStream: ({ output, playing }) => this.runStream(output, playing),
+      leaveVoice: async (playing) => {
+        if (playing) {
+          try {
+            await playing;
+          } catch {
+            // ffmpeg is SIGKILLed when the frame stream ends on stop; the encode
+            // promise rejecting here is expected and not an error.
+          }
+        }
+        this.streamer.leaveVoice();
+      },
+    };
   }
 
-  private async doStart(): Promise<void> {
-    if (this.active) return;
-    await this.streamer.joinVoice(this.options.guildId, this.options.channelId);
-
+  private buildEncoder(): EncoderHandles {
     const rgba = new PassThrough();
     const { output, promise } = prepareStream(rgba, {
       width: WIDTH * this.options.scale,
@@ -124,19 +148,12 @@ export class GameStreamer {
         x264: { preset: "ultrafast", tune: "zerolatency" },
       }),
     });
-
-    // Publish state only once the stream is fully wired; these assignments are
-    // synchronous (no await between them), so pushFrame never sees a half-set
-    // state.
-    this.rgba = rgba;
-    this.playing = this.runStream(output, promise);
-    this.active = true;
-    logger.info("Go-Live stream started");
+    return { sink: rgba, output, playing: promise };
   }
 
   // Drives the Go-Live broadcast and watches the ffmpeg encode for errors.
-  // ffmpeg is killed when the frame stream ends on stop(), which is expected
-  // and not surfaced as an error.
+  // ffmpeg is killed when the frame stream ends on stop(), which is expected and
+  // not surfaced as an error. Resolves when the stream ends for any reason.
   private async runStream(
     output: Readable,
     encode: Promise<void>,
@@ -152,21 +169,5 @@ export class GameStreamer {
         logger.error(`stream error: ${message}`);
       }
     }
-  }
-
-  private async doStop(): Promise<void> {
-    if (!this.active) return;
-    this.active = false;
-    this.rgba?.end();
-    this.rgba = undefined;
-    // runStream never rejects (it logs internally), so awaiting is safe.
-    await this.playing;
-    this.playing = undefined;
-    this.streamer.leaveVoice();
-    logger.info("Go-Live stream stopped");
-  }
-
-  destroy(): void {
-    this.streamer.client.destroy();
   }
 }

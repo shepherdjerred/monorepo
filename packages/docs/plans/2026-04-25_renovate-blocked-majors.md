@@ -6,7 +6,7 @@ Active. Replaces the archived 2026-04-21 dashboard cleanup session log.
 
 ## Remaining Work
 
-- Framework and language majors that need dedicated sessions: ESLint 10, TypeScript 6, Astro 6, Zod 4, React Native 0.84, Prisma 7, Gradle 9, Java 25, and JVM/Birmel media dependency majors.
+- Framework and language majors that need dedicated sessions: ESLint 10, Astro 6, Zod 4, React Native 0.84, Prisma 7, Gradle 9, Java 25, and JVM/Birmel media dependency majors. (TypeScript 6 landed — commits `242667be2` / `b02ab1dcc`.)
 - Production image pin promotions for Scout and starlight-karma-bot should be handled as explicit deploy work, not routine dependency cleanup.
 - Dagger CI infrastructure failures are tracked separately in `2026-04-21_dagger-ci-infra-fixes.md`.
 

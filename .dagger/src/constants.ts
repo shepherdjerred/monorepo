@@ -41,11 +41,18 @@ export const CADDY_IMAGE =
   "caddy:2.11.3-alpine@sha256:86deaf5e3d3408a6ccec08fbb79989783dd26e206ae10bcf78a801dc8c9ab794";
 // renovate: datasource=docker depName=caddy
 export const CADDY_BUILDER_IMAGE =
-  "caddy:2.11.3-builder-alpine@sha256:52575959b1eeee9900869325a953d71e4c521ab9102dd5cce07d429ea8246b85";
+  "caddy:2.11.3-builder-alpine@sha256:3eae6b351ecdb05da6d16e341261a457692d344a435764c5ece7a60cf03a23f3";
 // Base image for obsidian-headless container (uses Node, not Bun, due to native better-sqlite3 addon).
 // renovate: datasource=docker depName=node
 export const OBSIDIAN_HEADLESS_BASE_IMAGE =
   "node:24-slim@sha256:242549cd46785b480c832479a730f4f2a20865d61ea2e404fdb2a5c3d3b73ecf";
+// emscripten toolchain for the discord-plays-mario-kart N64Wasm core build.
+// Pinned to 2.0.7 — the exact toolchain the vendored parallel-n64 + angrylion
+// source (packages/discord-plays-mario-kart/wasm-src) is known to compile with.
+// Not Renovate-managed: a newer emsdk silently breaks the legacy SDL2/GLES2
+// build, so the version is intentionally frozen until the core is reworked.
+export const EMSCRIPTEN_IMAGE =
+  "emscripten/emsdk:2.0.7@sha256:cbeeb7cccd2e7915fe0596345f10bfdec5578cc0386aaa823ad6f1d41910619f";
 // renovate: datasource=docker depName=alpine/helm
 export const HELM_IMAGE =
   "alpine/helm:4.1.4@sha256:8edcaedab4d9864886b7f443d55731be87d4b5ec7dca714c24551455707a8aac";

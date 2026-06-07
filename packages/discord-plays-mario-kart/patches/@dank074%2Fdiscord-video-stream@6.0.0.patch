@@ -1,0 +1,26 @@
+diff --git a/node_modules/@dank074/discord-video-stream/.bun-tag-fdef7ceb0c07c857 b/.bun-tag-fdef7ceb0c07c857
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/dist/media/newApi.js b/dist/media/newApi.js
+index d00994c2e1c7141caacd9c9798ec5daba6bf7ed9..50d1bb345bee47663b7ac6f9d9efe15d85313232 100644
+--- a/dist/media/newApi.js
++++ b/dist/media/newApi.js
+@@ -1,6 +1,17 @@
+ import ffmpeg from "fluent-ffmpeg";
+ import pDebounce from "p-debounce";
+-import sharp from "sharp";
++import { createRequire as __createRequire } from "node:module";
++const __require = __createRequire(import.meta.url);
++let __sharpModule;
++// Lazy-load sharp: it is only used by the optional streamPreview path. Loading
++// it eagerly forces a native dlopen that fails on some bun/global-cache layouts.
++// The module name is built at runtime so the bundler cannot statically
++// pre-resolve (and therefore eagerly load) it.
++const __sharpName = ["sh", "arp"].join("");
++const sharp = (...args) => {
++  __sharpModule ??= __require(__sharpName);
++  return __sharpModule(...args);
++};
+ import Log from "debug-level";
+ import { AV_PKT_FLAG_KEY } from "node-av";
+ import { PassThrough } from "node:stream";

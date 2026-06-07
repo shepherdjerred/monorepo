@@ -22,6 +22,7 @@ import {
   buildObsidianHeadlessImageHelper,
   buildScoutImageHelper,
   buildDiscordPlaysPokemonImageHelper,
+  buildDiscordPlaysMarioKartImageHelper,
   buildTrmnlDashboardImageHelper,
 } from "./image";
 
@@ -544,6 +545,103 @@ enabled = false
       configToml,
     )
     .withWorkdir("/workspace/packages/discord-plays-pokemon")
+    .withExec([
+      "sh",
+      "-c",
+      "timeout 30s bun packages/backend/src/index.ts 2>&1",
+    ]);
+
+  return runSmokeTest(container, [
+    "TokenInvalid",
+    "401",
+    "Unauthorized",
+    "Invalid token",
+    "Used disallowed intents",
+  ]);
+}
+
+/**
+ * Smoke test discord-plays-mario-kart image.
+ * Verifies: the image builds (incl. the emscripten N64Wasm stage), the app
+ * boots, parses config, and attempts a Discord (selfbot) login that fails with
+ * a dummy token. The emulator is disabled so no copyrighted ROM is needed — the
+ * stream login is what exercises the Discord auth path.
+ */
+export async function smokeTestDiscordPlaysMarioKartHelper(
+  pkgDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+): Promise<string> {
+  // Minimal config.toml that passes Zod validation but uses dummy tokens.
+  // emulator disabled (no ROM available in CI); stream enabled so the selfbot
+  // login runs and rejects with TokenInvalid.
+  const configToml = `
+server_id = "000000000000000000"
+
+[bot]
+enabled = false
+discord_token = "smoke-test-dummy-token"
+application_id = "000000000000000000"
+
+[bot.commands]
+enabled = false
+update = false
+
+[bot.commands.screenshot]
+enabled = false
+
+[bot.notifications]
+channel_id = "000000000000000000"
+enabled = false
+
+[stream]
+enabled = true
+channel_id = "000000000000000000"
+dynamic_streaming = false
+minimum_in_channel = 0
+require_watching = false
+
+[stream.userbot]
+id = "000000000000000000"
+token = "smoke-test-dummy-selfbot-token"
+
+[stream.video]
+scale = 2
+frame_rate = 30
+bitrate_kbps = 1500
+bitrate_max_kbps = 4000
+
+[emulator]
+enabled = false
+wasm_dir = "packages/backend/assets/n64wasm"
+rom_path = "roms/mariokart64.z64"
+fps = 30
+software_render = true
+seats = 4
+
+[web]
+enabled = false
+cors = false
+port = 8081
+assets = "/tmp"
+
+[web.api]
+enabled = false
+`;
+
+  const container = buildDiscordPlaysMarioKartImageHelper(
+    pkgDir,
+    depNames,
+    depDirs,
+  )
+    .withEntrypoint([])
+    // The app runs from the inner-monorepo root (see the image build), so
+    // config.toml + assets + saves resolve relative to that CWD.
+    .withNewFile(
+      "/workspace/packages/discord-plays-mario-kart/config.toml",
+      configToml,
+    )
+    .withWorkdir("/workspace/packages/discord-plays-mario-kart")
     .withExec([
       "sh",
       "-c",

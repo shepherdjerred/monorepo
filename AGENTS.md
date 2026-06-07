@@ -6,25 +6,37 @@ Bun workspaces monorepo. Use `bun` commands exclusively (never npm/yarn/pnpm).
 
 ```
 packages/
-├── anki/                    # Anki flashcard tools
-├── astro-opengraph-images/  # Astro OpenGraph image generation
-├── better-skill-capped/     # Browser extension
-├── birmel/                  # Discord bot (VoltAgent + Claude AI)
-├── bun-decompile/           # Bun binary decompiler
-├── discord-plays-pokemon/   # Discord Plays Pokemon
-├── docs/                    # AI-maintained monorepo documentation
-├── dotfiles/                # Dotfiles & shell config
-├── eslint-config/           # Shared ESLint rules
-├── fonts/                   # Custom fonts
-├── homelab/                 # Homelab infrastructure (K8s, Tofu)
-├── resume/                  # Resume site
-├── scout-for-lol/           # League of Legends match analysis
-├── sjer.red/                # Personal website
-├── starlight-karma-bot/     # Discord karma bot
-├── toolkit/                 # CLI developer tools (fetch, recall, pr, pd, bugsink, grafana)
-├── webring/                 # Webring component
-scripts/ci/                  # TypeScript CI pipeline generator
-archive/                     # Legacy projects (do not modify), including castle-casters, clauderon, glance, hn-enhancer, macos-cross-compiler, tips
+├── anki/                       # Anki flashcard tools
+├── astro-opengraph-images/     # Astro OpenGraph image generation (npm)
+├── better-skill-capped/        # Browser extension
+├── birmel/                     # Discord bot (VoltAgent + Claude AI)
+├── cooklang-for-obsidian/      # Cooklang Obsidian plugin
+├── cooklang-rich-preview/      # Cooklang rich link preview site
+├── discord-plays-pokemon/      # Discord Plays Pokemon (headless emulator + Go-Live stream)
+├── docs/                       # AI-maintained monorepo documentation
+├── dotfiles/                   # Dotfiles & shell config (chezmoi source)
+├── eslint-config/              # Shared ESLint rules (npm)
+├── fonts/                      # Custom fonts
+├── home-assistant/             # Type-safe Home Assistant client + codegen
+├── homelab/                    # Homelab infrastructure (K8s, cdk8s, Tofu)
+├── leetcode/                   # LeetCode practice
+├── llm-observability/          # LLM tracing/metrics package
+├── monarch/                    # Transaction categorization pipeline
+├── resume/                     # Resume site
+├── scout-for-lol/              # League of Legends match analysis (backend + web app + desktop)
+├── sjer.red/                   # Personal website
+├── starlight-karma-bot/        # Discord karma bot
+├── stocks-sjer-red/            # Stocks static site
+├── tasknotes-server/           # TaskNotes sync server
+├── tasknotes-types/            # TaskNotes shared types
+├── tasks-for-obsidian/         # React Native task app
+├── temporal/                   # Temporal workflows, schedules, and agent-task scheduler
+├── terraform-provider-asuswrt/ # Terraform provider for AsusWRT
+├── toolkit/                    # CLI developer tools (fetch, recall, pr, pd, bugsink, grafana)
+├── trmnl-dashboard/            # TRMNL e-ink dashboard
+├── webring/                    # Webring component (npm)
+scripts/ci/                     # TypeScript CI pipeline generator
+archive/                        # Legacy projects (do not modify), including bun-decompile, castle-casters, clauderon, glance, hn-enhancer, macos-cross-compiler, tips
 ```
 
 ## Documentation Discipline — Per Session
