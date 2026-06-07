@@ -5,6 +5,11 @@ import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test";
 import { register } from "#observability/metrics.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
 import type { AgentTaskCommand } from "./agent-task-command.ts";
+// Real module imported so the partial mock below can spread its exports. bun's
+// mock.module is process-wide and not restored between files; without the
+// spread, sibling test files importing other exports (e.g. reportOnlyPrompt)
+// fail with "Export not found".
+import * as agentTaskCommandModule from "./agent-task-command.ts";
 
 const originalFetch = globalThis.fetch;
 const originalGitHubAppId = Bun.env["GITHUB_APP_ID"];
@@ -82,6 +87,7 @@ const fetchStub = Object.assign(
 );
 
 void mock.module("#activities/agent-task-command.ts", () => ({
+  ...agentTaskCommandModule,
   buildAgentTaskCommand: async (
     _input: AgentTaskInput,
     workdir: string,
