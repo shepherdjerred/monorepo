@@ -41,7 +41,7 @@ export const CADDY_IMAGE =
   "caddy:2.11.3-alpine@sha256:86deaf5e3d3408a6ccec08fbb79989783dd26e206ae10bcf78a801dc8c9ab794";
 // renovate: datasource=docker depName=caddy
 export const CADDY_BUILDER_IMAGE =
-  "caddy:2.11.3-builder-alpine@sha256:52575959b1eeee9900869325a953d71e4c521ab9102dd5cce07d429ea8246b85";
+  "caddy:2.11.3-builder-alpine@sha256:3eae6b351ecdb05da6d16e341261a457692d344a435764c5ece7a60cf03a23f3";
 // Base image for obsidian-headless container (uses Node, not Bun, due to native better-sqlite3 addon).
 // renovate: datasource=docker depName=node
 export const OBSIDIAN_HEADLESS_BASE_IMAGE =
