@@ -188,7 +188,8 @@ export class CommandBot {
   private async handle(
     interaction: ChatInputCommandInteraction,
   ): Promise<void> {
-    switch (interaction.commandName) {
+    // Single `/stream` command; the action is the subcommand (`/stream play`, `/stream skip`, …).
+    switch (interaction.options.getSubcommand()) {
       case "play":
         return this.handlePlay(interaction, false);
       case "playnext":

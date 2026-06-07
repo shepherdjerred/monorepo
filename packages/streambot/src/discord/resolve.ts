@@ -15,7 +15,7 @@ export function isHttpUrl(value: string): boolean {
 }
 
 /**
- * Turn a `/play` query into a concrete {@link Source}: prefer a local library match, then an
+ * Turn a `/stream play` query into a concrete {@link Source}: prefer a local library match, then an
  * explicit URL, otherwise treat it as a search query resolved by yt-dlp at play time. Pure.
  */
 export function resolvePlayQuery(
