@@ -323,6 +323,7 @@ export const ALL_PACKAGES: string[] = [
   "sjer.red",
   "starlight-karma-bot",
   "stocks-sjer-red",
+  "streambot",
   "tasknotes-server",
   "tasknotes-types",
   "temporal",
