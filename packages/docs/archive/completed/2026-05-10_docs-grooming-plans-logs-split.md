@@ -1,5 +1,9 @@
 # Docs Grooming: split plans/logs + audit, status-verify, consolidate, link-check
 
+## Status
+
+**Complete** — the `plans/`/`logs/` split, taxonomy, and discipline rewrite shipped 2026-05-10 (see Session Log below) and are now codified in `packages/docs/AGENTS.md` and root `CLAUDE.md`. Archived during the 2026-06-06 docs groom. The deferred archive-consolidation items under "Remaining" (delete `archive/stale/`, prune `archive/homelab-audits/`, merge `archive/dagger-migration/` + `archive/on-hold/`) remain open and need explicit user sign-off before any history is deleted.
+
 ## Context
 
 `packages/docs/plans/` has accumulated 40 files because `monorepo/CLAUDE.md` ("Documentation Discipline — Per Session") forces a plan file for every session, even one-shot edits. The user wants:

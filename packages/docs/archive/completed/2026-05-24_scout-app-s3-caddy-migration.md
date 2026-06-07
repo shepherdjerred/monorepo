@@ -2,6 +2,8 @@
 
 ## Status
 
+**Complete** — all plan-scoped work verified shipped to `main` during the 2026-06-06 docs groom; archived to `archive/completed/`. Original tracking status preserved below.
+
 Partially Complete — code is in PR; awaiting (1) merge → ArgoCD sync, (2) one-time `aws s3 mb s3://scout-frontend-beta` against SeaweedFS.
 
 ## Context
