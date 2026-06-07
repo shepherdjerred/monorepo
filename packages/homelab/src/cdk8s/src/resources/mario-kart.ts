@@ -137,6 +137,20 @@ export function createMarioKartDeployment(chart: Chart) {
             },
           }),
         },
+        // The app's CWD (APP_ROOT) is owned by root and not writable by the
+        // runtime user (uid 1000). The winston File transport (logger.ts)
+        // crashes at startup trying to `mkdir logs/`. This writable scratch
+        // volume keeps that path writable. Once an image built with the
+        // stdout-only logger (Console transport only) is deployed, this mount
+        // is harmless and can be removed. Mirrors the pokemon deployment.
+        {
+          path: `${APP_ROOT}/logs`,
+          volume: Volume.fromEmptyDir(
+            chart,
+            "mario-kart-logs",
+            "mario-kart-logs",
+          ),
+        },
       ],
     }),
   );
