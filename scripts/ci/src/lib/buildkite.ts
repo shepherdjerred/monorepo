@@ -1,5 +1,5 @@
 import type { BuildkiteStep } from "./types.ts";
-import { k8sPlugin } from "./k8s-plugin.ts";
+import { k8sPlugin, k8sPluginWithCheckout } from "./k8s-plugin.ts";
 
 /** Convert a name to a Buildkite-safe step key. */
 export function safeKey(name: string): string {
@@ -211,6 +211,43 @@ export function daggerStep(opts: {
   }
   if (opts.priority !== undefined) {
     step.priority = opts.priority;
+  }
+
+  return step;
+}
+
+/**
+ * A plain command step that runs on the BK agent with the repo checked out
+ * (via {@link k8sPluginWithCheckout}). Use only when a step must execute repo
+ * scripts or `buildkite-agent` directly on the agent rather than through a
+ * Dagger git-URL ref — currently just the Greptile PR gate.
+ */
+export function plainStep(opts: {
+  label: string;
+  key: string;
+  command: string;
+  timeoutMinutes?: number;
+  dependsOn?: string | string[];
+  softFail?: boolean;
+  artifactPaths?: string[];
+}): BuildkiteStep {
+  const step: BuildkiteStep = {
+    label: opts.label,
+    key: opts.key,
+    command: opts.command,
+    timeout_in_minutes: opts.timeoutMinutes ?? 10,
+    retry: RETRY,
+    plugins: [k8sPluginWithCheckout()],
+  };
+
+  if (opts.dependsOn !== undefined) {
+    step.depends_on = opts.dependsOn;
+  }
+  if (opts.softFail !== undefined) {
+    step.soft_fail = opts.softFail;
+  }
+  if (opts.artifactPaths !== undefined) {
+    step.artifact_paths = opts.artifactPaths;
   }
 
   return step;
