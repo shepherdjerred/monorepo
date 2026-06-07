@@ -127,7 +127,7 @@ async function main(): Promise<void> {
   });
   actor.start();
 
-  await Promise.all([streamer.login(), commandBot.login()]);
+  await Promise.all([streamer.login(), commandBot.login(), commandBot.ready]);
   logger.info("streambot ready");
 
   let shuttingDown = false;

@@ -169,16 +169,20 @@ function withStreambotRuntime(container: Container): Container {
       "sh",
       "-c",
       // yt-dlp ships per-arch static binaries: yt-dlp_linux (x86_64) and yt-dlp_linux_aarch64
-      // (arm64). Pick the one matching the build arch so the binary actually runs (the smoke
-      // test invokes `yt-dlp --version`).
+      // (arm64). Pick the one matching the build arch, then verify it against the release's
+      // published SHA2-256SUMS before installing so a swapped/compromised asset can't be baked in.
       [
         "set -e",
         'arch="$(dpkg --print-architecture)"',
         'if [ "$arch" = "amd64" ]; then asset=yt-dlp_linux',
         'elif [ "$arch" = "arm64" ]; then asset=yt-dlp_linux_aarch64',
         'else echo "unsupported architecture: $arch" >&2; exit 1; fi',
-        'curl -fsSL "https://github.com/yt-dlp/yt-dlp/releases/latest/download/$asset" -o /usr/local/bin/yt-dlp',
-        "chmod +x /usr/local/bin/yt-dlp",
+        "base=https://github.com/yt-dlp/yt-dlp/releases/latest/download",
+        'curl -fsSL "$base/$asset" -o "/tmp/$asset"',
+        'curl -fsSL "$base/SHA2-256SUMS" -o /tmp/SHA2-256SUMS',
+        "cd /tmp",
+        'grep " $asset$" SHA2-256SUMS | sha256sum -c -',
+        'install -m 0755 "/tmp/$asset" /usr/local/bin/yt-dlp',
       ].join("\n"),
     ])
     .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"])
