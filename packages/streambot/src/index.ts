@@ -14,10 +14,8 @@ import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
 import { expandPlaylist } from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
-import {
-  CommandBot,
-  type PlaybackView,
-} from "@shepherdjerred/streambot/discord/command-bot.ts";
+import { CommandBot } from "@shepherdjerred/streambot/discord/command-bot.ts";
+import type { PlaybackView } from "@shepherdjerred/streambot/discord/command-handler.ts";
 import {
   StatusReporter,
   type StatusSnapshot,
