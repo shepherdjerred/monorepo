@@ -2,7 +2,8 @@
 
 ## Status
 
-In Progress
+Complete (implementation shipped to branch `claude/stoic-almeida-8b7ddf`; pending PR/merge and a
+live manual e2e of seamless seek)
 
 ## Context
 
@@ -150,3 +151,44 @@ Both use `Streamer`/`prepareStream`/`playStream` for a continuous rawvideo feed
 ## Out of scope
 
 - Relative seek (`+30`/`-15`), nowplaying position readout, pause — no elapsed-position tracking today.
+
+## Session Log — 2026-06-07
+
+### Done
+
+- Vendored `@dank074/discord-video-stream` 6.0.0 → `packages/discord-video-stream`
+  (`@shepherdjerred/discord-video-stream`, `file:` dep). Source-consumed via bun; declaration-only
+  `dist` for tsc consumers; ISC `LICENSE` + fork `README`; lazy `sharp` baked into `src/media/newApi.ts`.
+- Seek: added `prepareStream` `startTime` (`-ss`), extracted `attachPipeline` from `playStream`, added
+  `createSeekablePlayer` (`src/media/player.ts`) — `seek()` restarts ffmpeg at a new offset on the same
+  Go-Live connection (reuses conn/packetizer, no `setPacketizer` re-init → RTP continuity). 7 player
+  unit tests (injected fakes).
+- streambot: streamer now drives playback via the player (`runStream` + HW→SW fallback), added
+  `streamer.seek`; `/stream seek` command (string `position`), `handleSeek` (perms mirror skip),
+  `timecode.ts` parser/formatter; wired `seek` dep through command-handler/command-bot/index/e2e.
+  Tests for seek handler + timecode. Docs: `FORK.md`, `AGENTS.md`.
+- Migrated discord-plays-pokemon + discord-plays-mario-kart to the fork (`file:../../../discord-video-stream`),
+  deleted both sharp-lazy-load bun patches + `patchedDependencies`, updated Dockerfiles/READMEs, refreshed
+  lockfiles.
+- Wiring: `.dagger/src/deps.ts` (`WORKSPACE_DEPS` for the 3 consumers + `BUILD_TIME_DEPS`), `setup.ts`
+  shared build + verify artifact, and vendored-package exclusions in `knip.json`, `.prettierignore`,
+  `.markdownlint-cli2.jsonc`, `scripts/quality-ratchet.ts`, `scripts/check-suppressions.ts`.
+- Verified: typecheck/test/lint green for discord-video-stream, streambot, pokemon, mario-kart; all
+  global guards pass; committed as `cc26eabb2` with full pre-commit hooks green.
+
+### Remaining
+
+- Open the PR (not yet pushed). Branch base is 3 commits behind `origin/main`.
+- Live manual e2e of seamless seek (only verifiable against a real Discord voice session): `/stream
+play <video>` then `/stream seek 1:30` — confirm playback jumps and Go-Live stays up (no blip).
+  Smoke pokemon + mario-kart streams still render.
+
+### Caveats
+
+- Seamless seek's WebRTC continuity is not unit-testable; player tests cover state transitions only.
+  If RTP continuity glitches in practice, fall back to the "restart Go-Live with `-ss`" variant.
+- The raw `packages/discord-plays-*/Dockerfile`s can no longer `docker build` standalone (the fork is a
+  `file:` dep outside their build context); the canonical build is the Dagger pipeline, which mounts the
+  dep. Dockerfiles updated with a note + `COPY patches/` removed.
+- Unrelated pre-existing `scripts/ci` typecheck error (`plainStep` in `quality.ts`) exists on the
+  3-commits-behind base and is already fixed on `origin/main`; not touched here.
