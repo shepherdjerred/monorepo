@@ -4,8 +4,13 @@
 # voice UDP path. No X server, no browser, no GPU.
 FROM oven/bun:1.3.14-debian@sha256:9dba1a1b43ce28c9d7931bfc4eb00feb63b0114720a0277a8f939ae4dfc9db6f
 
+# NOTE: The canonical build is the Dagger pipeline (`build-discord-plays-pokemon-image`), which
+# mounts the in-repo fork `@shepherdjerred/discord-video-stream` (a `file:` dep outside this
+# directory) into the workspace. A raw `docker build` from this directory cannot resolve that
+# out-of-context dependency; this Dockerfile is kept for reference/local iteration only.
+#
 # System deps:
-# - ffmpeg: used by @dank074/discord-video-stream (fluent-ffmpeg) to encode the
+# - ffmpeg: used by discord-video-stream (fluent-ffmpeg) to encode the
 #   rawvideo frame feed to H.264.
 # - libvips: native lib for sharp (a transitive dep of discord-video-stream).
 RUN apt-get update \
@@ -16,14 +21,13 @@ WORKDIR /app
 
 # Install dependencies first for layer caching. The inner monorepo manifests:
 COPY package.json bun.lock ./
-COPY patches/ patches/
 COPY packages/common/package.json packages/common/
 COPY packages/backend/package.json packages/backend/
 COPY packages/frontend/package.json packages/frontend/
 
 # trustedDependencies in the root package.json lets the native postinstalls
-# (node-datachannel, node-av) run during a frozen install. The patch makes
-# discord-video-stream lazy-load sharp.
+# (node-datachannel, node-av) run during a frozen install. discord-video-stream's
+# bun-safe lazy `sharp` import is baked into the fork source (no patch needed).
 RUN bun install --frozen-lockfile
 
 # App source (includes the vendored packages/backend/assets/pokeemerald.wasm).

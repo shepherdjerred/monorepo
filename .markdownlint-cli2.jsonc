@@ -39,5 +39,6 @@
     "practice/**",
     "**/.terraform/**",
     "packages/dotfiles/dot_agents/skills/**",
+    "packages/discord-video-stream/**",
   ],
 }

@@ -11,8 +11,9 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
 - **Game** — [pokeemerald-wasm](https://github.com/tripplyons/pokeemerald-wasm)
   runs in Bun and renders frames to RGBA in software.
 - **Streaming** — frames are encoded with ffmpeg and pushed to a Discord voice
-  channel over the voice UDP path via
-  [`@dank074/discord-video-stream`](https://github.com/dank074/Discord-video-stream)
+  channel over the voice UDP path via `@shepherdjerred/discord-video-stream` (our
+  in-repo fork of
+  [`@dank074/discord-video-stream`](https://github.com/dank074/Discord-video-stream))
   (a self-bot Go-Live), so viewers watch in the voice channel.
 - **Input** — a Discord bot takes button/chord commands (plus an optional web
   UI) and feeds them into the emulator's input queue.

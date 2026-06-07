@@ -46,6 +46,7 @@ export class CommandBot {
       view: deps.view,
       library: deps.library,
       setVolume: deps.setVolume,
+      seek: deps.seek,
       expandPlaylist: deps.expandPlaylist,
       announce: (message) => this.announce(message),
     });

@@ -116,6 +116,17 @@ export const commandDefinitions = [
     )
     .addSubcommand((sub) =>
       sub
+        .setName("seek")
+        .setDescription("Jump to a position in the current video")
+        .addStringOption((o) =>
+          o
+            .setName("position")
+            .setDescription("timestamp: 90, 1:30, or 1:02:03")
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
         .setName("list")
         .setDescription("Browse the video library")
         .addStringOption((o) =>

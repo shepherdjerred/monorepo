@@ -11,6 +11,10 @@ import {
   canControlItem,
   isAdmin,
 } from "@shepherdjerred/streambot/discord/permissions.ts";
+import {
+  formatTimecode,
+  parseTimecode,
+} from "@shepherdjerred/streambot/discord/timecode.ts";
 import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
 import {
   searchLibrary,
@@ -67,6 +71,8 @@ export type CommandHandlerDeps = {
   readonly library: () => readonly LibraryEntry[];
   /** Apply volume to the live stream; resolves false when nothing is playing. */
   readonly setVolume: (percent: number) => Promise<boolean>;
+  /** Seek the live stream to an absolute offset (seconds); resolves false when nothing is playing. */
+  readonly seek: (seconds: number) => Promise<boolean>;
   /** Expand a playlist URL into items (yt-dlp), adult-filtered. */
   readonly expandPlaylist: (
     url: string,
@@ -113,6 +119,8 @@ export class CommandHandler {
         return this.handleLoop(interaction);
       case "volume":
         return this.handleVolume(interaction);
+      case "seek":
+        return this.handleSeek(interaction);
       case "list":
         return interaction.reply(
           this.listText(interaction.getString("filter")),
@@ -259,6 +267,35 @@ export class CommandHandler {
       applied
         ? `🔊 Volume → ${String(level)}%.`
         : `Volume set to ${String(level)}% for the next video.`,
+    );
+  }
+
+  private async handleSeek(interaction: CommandInteraction): Promise<void> {
+    const current = this.deps.view().current;
+    if (current === null) {
+      await interaction.reply("Nothing is playing.");
+      return;
+    }
+    if (
+      !canControlItem(
+        interaction.userId,
+        current.requesterId,
+        this.deps.config.discord.adminIds,
+      )
+    ) {
+      await interaction.reply("Only the requester or an admin can seek this.");
+      return;
+    }
+    const seconds = parseTimecode(interaction.getStringRequired("position"));
+    if (seconds === null) {
+      await interaction.reply("Invalid timestamp. Try 90, 1:30, or 1:02:03.");
+      return;
+    }
+    const applied = await this.deps.seek(seconds);
+    await interaction.reply(
+      applied
+        ? `⏩ Seeked to ${formatTimecode(seconds)}.`
+        : "Nothing is playing.",
     );
   }
 
