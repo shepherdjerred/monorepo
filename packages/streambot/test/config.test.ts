@@ -18,16 +18,20 @@ const VALID: EnvLookup = {
 describe("loadConfig", () => {
   test("parses a valid environment and applies defaults", () => {
     const config = loadConfig(VALID);
-    expect(config.discord.botToken).toBe("bot-token");
-    expect(config.discord.userToken).toBe("user-token");
-    expect(config.discord.adminIds).toEqual([
+    // Branded ids/tokens are structurally strings — compare via String().
+    expect(String(config.discord.botToken)).toBe("bot-token");
+    expect(String(config.discord.userToken)).toBe("user-token");
+    expect(String(config.discord.statusChannelId)).toBe("1337631455085334650");
+    expect(config.discord.adminIds.map(String)).toEqual([
       "160509172704739328",
       "160509172704739329",
     ]);
-    expect(config.discord.prefix).toBe("$");
     expect(config.library.mediaDirs).toEqual(["/media/movies", "/media/tv"]);
     expect(config.library.extensions).toContain("mkv");
     expect(config.stream.width).toBe(1280);
+    expect(config.stream.hardwareAcceleration).toBe(true);
+    expect(config.stream.vaapiDevice).toBe("/dev/dri/renderD128");
+    expect(config.idleTimeoutSeconds).toBe(300);
     expect(config.ytDlpPath).toBe("/usr/local/bin/yt-dlp");
   });
 

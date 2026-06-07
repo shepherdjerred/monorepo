@@ -1,32 +1,33 @@
 import { z } from "zod";
-
-/** A Discord snowflake id (guild / channel / user). */
-const Snowflake = z
-  .string()
-  .regex(/^\d{17,20}$/u, "must be a Discord snowflake (17-20 digits)");
+import {
+  BotTokenSchema,
+  ChannelIdSchema,
+  GuildIdSchema,
+  UserIdSchema,
+  UserTokenSchema,
+} from "@shepherdjerred/streambot/types/ids.ts";
 
 /**
  * Runtime configuration. Parsed once at boot from the process environment and never read
- * directly elsewhere — every consumer takes a validated {@link Config}.
+ * directly elsewhere — every consumer takes a validated {@link Config}. Ids and tokens are
+ * branded (parsed, not cast) at this boundary.
  */
 export const ConfigSchema = z.strictObject({
   discord: z.strictObject({
-    /** Bot token for the command bot (discord.js). */
-    botToken: z.string().min(1),
+    /** Bot token for the command bot (discord.js) — handles slash commands. */
+    botToken: BotTokenSchema,
     /** User token for the streamer (discord.js-selfbot-v13). */
-    userToken: z.string().min(1),
-    guildId: Snowflake,
-    /** Text channel the command bot listens in. */
-    commandChannelId: Snowflake,
+    userToken: UserTokenSchema,
+    guildId: GuildIdSchema,
+    /** Channel where world-readable status is posted (now-playing, queue, shaming, …). */
+    statusChannelId: ChannelIdSchema,
     /** Voice channel the streamer joins. */
-    videoChannelId: Snowflake,
-    /** User ids permitted to run admin commands. */
-    adminIds: z.array(Snowflake).default([]),
-    /** Command prefix for text commands. */
-    prefix: z.string().min(1).default("$"),
+    videoChannelId: ChannelIdSchema,
+    /** User ids permitted to run admin commands (stop/clear, and skip/remove of others). */
+    adminIds: z.array(UserIdSchema).default([]),
   }),
   library: z.strictObject({
-    /** Writable directory for uploaded videos. */
+    /** Writable directory scanned for ad-hoc videos. */
     videosDir: z.string().min(1),
     /** Read-only library roots (e.g. /media/movies, /media/tv). */
     mediaDirs: z.array(z.string().min(1)).default([]),
@@ -40,8 +41,15 @@ export const ConfigSchema = z.strictObject({
     height: z.number().int().positive().default(720),
     fps: z.number().int().positive().default(30),
     bitrateKbps: z.number().int().positive().default(2000),
-    hardwareAcceleration: z.boolean().default(false),
+    bitrateAudioKbps: z.number().int().positive().default(128),
+    /** Use Intel VAAPI hardware encoding (falls back to software if the device is unavailable). */
+    hardwareAcceleration: z.boolean().default(true),
+    vaapiDevice: z.string().min(1).default("/dev/dri/renderD128"),
   }),
+  /** Leave the voice channel after this many idle seconds. */
+  idleTimeoutSeconds: z.number().int().positive().default(300),
+  /** Maximum number of items to enqueue when expanding a playlist URL. */
+  playlistLimit: z.number().int().positive().default(100),
   ytDlpPath: z.string().min(1).default("/usr/local/bin/yt-dlp"),
   ffmpegPath: z.string().min(1).default("ffmpeg"),
 });

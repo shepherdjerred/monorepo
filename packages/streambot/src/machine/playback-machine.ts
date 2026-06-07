@@ -1,5 +1,15 @@
 import { assign, fromPromise, setup } from "xstate";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
+import { BlockedSourceError } from "@shepherdjerred/streambot/moderation/adult-block.ts";
+import {
+  ChannelIdSchema,
+  GuildIdSchema,
+} from "@shepherdjerred/streambot/types/ids.ts";
+import {
+  moveItem,
+  removeAt,
+  shuffleQueue,
+} from "@shepherdjerred/streambot/machine/queue-ops.ts";
 import type {
   JoinVoiceInput,
   LeaveVoiceInput,
@@ -12,10 +22,14 @@ import type {
   VoiceHandle,
 } from "@shepherdjerred/streambot/machine/types.ts";
 
+// Branded placeholders for the XState `types` phantom (never read at runtime).
+const PLACEHOLDER_GUILD = GuildIdSchema.parse("000000000000000000");
+const PLACEHOLDER_CHANNEL = ChannelIdSchema.parse("000000000000000000");
+
 /**
  * The side-effecting operations the machine drives. Implementations live in the streamer/sources
  * layers (real) or are stubbed in tests. Each receives an {@link AbortSignal} that fires when the
- * machine leaves the invoking state (e.g. SKIP/STOP) so I/O can cancel promptly.
+ * machine leaves the invoking state (SKIP/STOP) so I/O cancels promptly.
  */
 export type PlaybackActors = {
   joinVoice: (
@@ -30,6 +44,9 @@ export type PlaybackActors = {
   runStream: (input: RunStreamInput, signal: AbortSignal) => Promise<void>;
   leaveVoice: (input: LeaveVoiceInput, signal: AbortSignal) => Promise<void>;
 };
+
+const VOLUME_MIN = 0;
+const VOLUME_MAX = 200;
 
 function mustCurrent(
   context: PlaybackContext,
@@ -55,34 +72,43 @@ function mustResolved(context: PlaybackContext): ResolvedSource {
 }
 
 /**
- * Build the playback state machine. The machine is the single source of truth for the streaming
- * lifecycle; all I/O is delegated to the provided {@link PlaybackActors}. Keeping the machine pure
- * makes every transition deterministically unit-testable.
+ * Build the playback state machine — the single source of truth for the streaming lifecycle. All
+ * I/O is delegated to the provided {@link PlaybackActors}, so the machine is pure and every
+ * transition (queue edits, loop modes, skip/stop, blocked sources, idle disconnect) is
+ * deterministically unit-testable.
  *
- * Lifecycle: `idle → joining → resolving → streaming → (advance) → resolving|leaving → idle`,
- * with `failed` handling join/resolve/stream errors (drop the bad item and continue, or bail).
+ * Flow: `idle → joining → advance → resolving → streaming → advance → … → waiting → leaving → idle`.
+ * `advance` picks the next item per loop mode; `waiting` holds the voice connection for a grace
+ * period before disconnecting; `failed` drops a bad/blocked item and continues (or bails on join
+ * failure).
  */
 export function createPlaybackMachine(actors: PlaybackActors) {
-  // XState's `setup({ types })` reads the *type* of these phantom values for inference; the values
-  // are never used at runtime. An explicitly-annotated holder locks the full types — in particular
-  // the event union — so we get sound inference without an `as` assertion. (The values are valid
-  // members of each type; the annotation, not the literals, drives inference.)
   const machineTypes: {
     context: PlaybackContext;
     events: PlaybackEvent;
     input: PlaybackInput;
   } = {
     context: {
-      guildId: "",
-      channelId: "",
+      guildId: PLACEHOLDER_GUILD,
+      channelId: PLACEHOLDER_CHANNEL,
+      idleTimeoutMs: 0,
       queue: [],
       current: null,
       voice: null,
       resolved: null,
+      loop: "off",
+      volume: 100,
       lastError: null,
+      lastErrorKind: null,
+      blockedNonce: 0,
+      lastBlockedRequester: null,
     },
     events: { type: "SKIP" },
-    input: { guildId: "", channelId: "" },
+    input: {
+      guildId: PLACEHOLDER_GUILD,
+      channelId: PLACEHOLDER_CHANNEL,
+      idleTimeoutMs: 0,
+    },
   };
 
   return setup({
@@ -110,15 +136,30 @@ export function createPlaybackMachine(actors: PlaybackActors) {
           actors.leaveVoice(input, signal),
       ),
     },
+    delays: {
+      idleTimeout: ({ context }) => context.idleTimeoutMs,
+    },
     guards: {
       hasQueue: ({ context }) => context.queue.length > 0,
       hasVoice: ({ context }) => context.voice !== null,
+      isTrackReplay: ({ context }) =>
+        context.loop === "track" && context.current !== null,
+      isQueueLoopHasContent: ({ context }) =>
+        context.loop === "queue" &&
+        (context.current !== null || context.queue.length > 0),
     },
     actions: {
       dequeue: assign({
         current: ({ context }) => context.queue[0] ?? null,
         queue: ({ context }) => context.queue.slice(1),
       }),
+      requeueCurrent: assign({
+        queue: ({ context }) =>
+          context.current === null
+            ? context.queue
+            : [...context.queue, context.current],
+      }),
+      clearCurrent: assign({ current: null }),
       clearQueue: assign({ queue: [] }),
       resetPlayback: assign({ current: null, resolved: null, voice: null }),
     },
@@ -127,15 +168,20 @@ export function createPlaybackMachine(actors: PlaybackActors) {
     context: ({ input }) => ({
       guildId: input.guildId,
       channelId: input.channelId,
+      idleTimeoutMs: input.idleTimeoutMs,
       queue: [],
       current: null,
       voice: null,
       resolved: null,
+      loop: "off",
+      volume: 100,
       lastError: null,
+      lastErrorKind: null,
+      blockedNonce: 0,
+      lastBlockedRequester: null,
     }),
     initial: "idle",
-    // ADD is accepted in every state: it always just enqueues. `idle` then auto-starts via its
-    // `always` guard, so an ADD that arrives mid-shutdown still plays once we settle back to idle.
+    // Queue-editing events are accepted in every state (they only touch context).
     on: {
       ADD: {
         actions: assign({
@@ -143,6 +189,38 @@ export function createPlaybackMachine(actors: PlaybackActors) {
             ...context.queue,
             { source: event.source, requesterId: event.requesterId },
           ],
+        }),
+      },
+      ADD_NEXT: {
+        actions: assign({
+          queue: ({ context, event }) => [
+            { source: event.source, requesterId: event.requesterId },
+            ...context.queue,
+          ],
+        }),
+      },
+      REMOVE: {
+        actions: assign({
+          queue: ({ context, event }) => removeAt(context.queue, event.index),
+        }),
+      },
+      CLEAR: { actions: "clearQueue" },
+      MOVE: {
+        actions: assign({
+          queue: ({ context, event }) =>
+            moveItem(context.queue, event.from, event.to),
+        }),
+      },
+      SHUFFLE: {
+        actions: assign({
+          queue: ({ context }) => shuffleQueue(context.queue),
+        }),
+      },
+      SET_LOOP: { actions: assign({ loop: ({ event }) => event.mode }) },
+      SET_VOLUME: {
+        actions: assign({
+          volume: ({ event }) =>
+            Math.min(VOLUME_MAX, Math.max(VOLUME_MIN, event.volume)),
         }),
       },
     },
@@ -159,25 +237,44 @@ export function createPlaybackMachine(actors: PlaybackActors) {
             channelId: context.channelId,
           }),
           onDone: {
-            target: "resolving",
+            target: "advance",
             actions: assign({
               voice: ({ event }) => event.output,
               lastError: null,
+              lastErrorKind: null,
             }),
           },
           onError: {
             target: "failed",
             actions: assign({
               lastError: ({ event }) => getErrorMessage(event.error),
+              lastErrorKind: "generic",
             }),
           },
         },
-        on: {
-          STOP: { target: "idle", actions: "clearQueue" },
-        },
+        on: { STOP: { target: "idle", actions: "clearQueue" } },
+      },
+      // Transient: choose the next item to play according to the loop mode.
+      advance: {
+        always: [
+          { guard: "isTrackReplay", target: "resolving" },
+          {
+            guard: "isQueueLoopHasContent",
+            actions: ["requeueCurrent", "dequeue"],
+            target: "resolving",
+          },
+          { guard: "hasQueue", actions: ["dequeue"], target: "resolving" },
+          { actions: "clearCurrent", target: "waiting" },
+        ],
+      },
+      // Transient: drop the current item and move on, ignoring loop (used by SKIP and after a failure).
+      skipped: {
+        always: [
+          { guard: "hasQueue", actions: ["dequeue"], target: "resolving" },
+          { actions: "clearCurrent", target: "waiting" },
+        ],
       },
       resolving: {
-        entry: "dequeue",
         invoke: {
           src: "resolveSource",
           input: ({ context }) => ({ source: mustCurrent(context).source }),
@@ -186,17 +283,28 @@ export function createPlaybackMachine(actors: PlaybackActors) {
             actions: assign({
               resolved: ({ event }) => event.output,
               lastError: null,
+              lastErrorKind: null,
             }),
           },
           onError: {
             target: "failed",
-            actions: assign({
-              lastError: ({ event }) => getErrorMessage(event.error),
+            actions: assign(({ context, event }) => {
+              const blocked = event.error instanceof BlockedSourceError;
+              return {
+                lastError: getErrorMessage(event.error),
+                lastErrorKind: blocked ? "blocked" : "generic",
+                blockedNonce: blocked
+                  ? context.blockedNonce + 1
+                  : context.blockedNonce,
+                lastBlockedRequester: blocked
+                  ? (context.current?.requesterId ?? null)
+                  : context.lastBlockedRequester,
+              };
             }),
           },
         },
         on: {
-          SKIP: { target: "advance" },
+          SKIP: { target: "skipped" },
           STOP: { target: "leaving", actions: "clearQueue" },
         },
       },
@@ -206,26 +314,27 @@ export function createPlaybackMachine(actors: PlaybackActors) {
           input: ({ context }) => ({
             voice: mustVoice(context),
             resolved: mustResolved(context),
+            volume: context.volume,
           }),
           onDone: { target: "advance" },
           onError: {
             target: "failed",
             actions: assign({
               lastError: ({ event }) => getErrorMessage(event.error),
+              lastErrorKind: "generic",
             }),
           },
         },
         on: {
-          SKIP: { target: "advance" },
+          SKIP: { target: "skipped" },
           STOP: { target: "leaving", actions: "clearQueue" },
         },
       },
-      // Transient: pick the next item or wind down.
-      advance: {
-        always: [
-          { guard: "hasQueue", target: "resolving" },
-          { target: "leaving" },
-        ],
+      // In voice, nothing playing: hold for a grace period, then disconnect. New items resume play.
+      waiting: {
+        after: { idleTimeout: { target: "leaving" } },
+        always: { guard: "hasQueue", target: "advance" },
+        on: { STOP: { target: "leaving", actions: "clearQueue" } },
       },
       leaving: {
         invoke: {
@@ -236,15 +345,15 @@ export function createPlaybackMachine(actors: PlaybackActors) {
             target: "idle",
             actions: assign({
               lastError: ({ event }) => getErrorMessage(event.error),
+              lastErrorKind: "generic",
             }),
           },
         },
       },
-      // Transient: with a live voice connection, drop the failed item and continue; otherwise
-      // (e.g. join failed) clear the queue and rest, so we never hot-loop a persistent failure.
+      // Transient: with a live voice connection, drop the bad item and continue; otherwise bail.
       failed: {
         always: [
-          { guard: "hasVoice", target: "advance" },
+          { guard: "hasVoice", target: "skipped" },
           { target: "idle", actions: "clearQueue" },
         ],
       },

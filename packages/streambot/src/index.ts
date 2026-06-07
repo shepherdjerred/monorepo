@@ -11,12 +11,17 @@ import {
   type LibraryRoot,
 } from "@shepherdjerred/streambot/sources/library.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
+import { expandPlaylist } from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
 import {
   CommandBot,
   type PlaybackView,
 } from "@shepherdjerred/streambot/discord/command-bot.ts";
+import {
+  StatusReporter,
+  type StatusSnapshot,
+} from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
@@ -26,10 +31,11 @@ async function main(): Promise<void> {
   const config = loadConfig();
   logger.info("starting streambot", {
     guildId: config.discord.guildId,
-    commandChannelId: config.discord.commandChannelId,
+    statusChannelId: config.discord.statusChannelId,
     videoChannelId: config.discord.videoChannelId,
     videosDir: config.library.videosDir,
     mediaDirs: config.library.mediaDirs,
+    hardwareAcceleration: config.stream.hardwareAcceleration,
   });
 
   const roots: LibraryRoot[] = [
@@ -67,22 +73,28 @@ async function main(): Promise<void> {
     input: {
       guildId: config.discord.guildId,
       channelId: config.discord.videoChannelId,
+      idleTimeoutMs: config.idleTimeoutSeconds * 1000,
     },
   });
-  actor.subscribe((snapshot) => {
-    logger.debug("playback state", { state: JSON.stringify(snapshot.value) });
-  });
-  actor.start();
 
   const view = (): PlaybackView => {
-    const snapshot = actor.getSnapshot();
-    const current = snapshot.context.current;
+    const { context } = actor.getSnapshot();
     return {
-      state: JSON.stringify(snapshot.value),
-      currentTitle:
-        snapshot.context.resolved?.title ??
-        (current === null ? null : sourceLabel(current.source)),
-      queueLength: snapshot.context.queue.length,
+      state: JSON.stringify(actor.getSnapshot().value),
+      current:
+        context.current === null
+          ? null
+          : {
+              title:
+                context.resolved?.title ?? sourceLabel(context.current.source),
+              requesterId: context.current.requesterId,
+            },
+      queue: context.queue.map((entry) => ({
+        title: sourceLabel(entry.source),
+        requesterId: entry.requesterId,
+      })),
+      loop: context.loop,
+      volume: context.volume,
     };
   };
 
@@ -93,7 +105,29 @@ async function main(): Promise<void> {
     },
     view,
     library: () => library,
+    setVolume: (percent) => streamer.setVolume(percent),
+    expandPlaylist: (url, signal) => expandPlaylist(config, url, signal),
+    streamerUserId: () => streamer.userId(),
   });
+
+  const reporter = new StatusReporter((message) =>
+    commandBot.announce(message),
+  );
+  actor.subscribe((snapshot) => {
+    const stateValue = snapshot.value;
+    const snap: StatusSnapshot = {
+      state:
+        typeof stateValue === "string"
+          ? stateValue
+          : JSON.stringify(stateValue),
+      currentTitle: snapshot.context.resolved?.title ?? null,
+      currentRequester: snapshot.context.current?.requesterId ?? null,
+      blockedNonce: snapshot.context.blockedNonce,
+      blockedRequester: snapshot.context.lastBlockedRequester,
+    };
+    reporter.handle(snap);
+  });
+  actor.start();
 
   await Promise.all([streamer.login(), commandBot.login()]);
   logger.info("streambot ready");

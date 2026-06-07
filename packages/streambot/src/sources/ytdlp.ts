@@ -6,6 +6,11 @@ import {
   getErrorMessage,
   parseJson,
 } from "@shepherdjerred/streambot/util/errors.ts";
+import {
+  BlockedSourceError,
+  isBlockedText,
+  isBlockedUrl,
+} from "@shepherdjerred/streambot/moderation/adult-block.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 const log = logger.child("ytdlp");
@@ -64,6 +69,74 @@ export function toResolvedSource(info: YtdlpInfo): ResolvedSource {
   return { title: info.title, ffmpegInput: info.url };
 }
 
+/** True if a URL looks like a playlist that should be expanded into individual items. */
+export function isLikelyPlaylist(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return (
+      url.searchParams.has("list") || /\/playlist(?:\/|$)/u.test(url.pathname)
+    );
+  } catch {
+    return false;
+  }
+}
+
+const PlaylistLineSchema = z.object({
+  url: z.string().min(1),
+  title: z.string().min(1),
+});
+export type PlaylistItem = z.infer<typeof PlaylistLineSchema>;
+
+/**
+ * Expand a playlist URL into individual `{ url, title }` items via `yt-dlp --flat-playlist`, capped
+ * at `config.playlistLimit`. Adult items are dropped here too (defense before they reach the queue).
+ */
+export async function expandPlaylist(
+  config: Config,
+  url: string,
+  signal: AbortSignal,
+): Promise<PlaylistItem[]> {
+  const proc = Bun.spawn(
+    [
+      config.ytDlpPath,
+      "--flat-playlist",
+      "--no-warnings",
+      "--print",
+      "%(url)s\t%(title)s",
+      url,
+    ],
+    { stdout: "pipe", stderr: "pipe", stdin: "ignore", signal },
+  );
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+    proc.exited,
+  ]);
+  if (exitCode !== 0) {
+    throw new Error(
+      `yt-dlp playlist expansion failed (code ${String(exitCode)}): ${stderr.trim()}`,
+    );
+  }
+
+  const items: PlaylistItem[] = [];
+  for (const line of stdout.split("\n")) {
+    const [itemUrl, title] = line.split("\t");
+    const parsed = PlaylistLineSchema.safeParse({ url: itemUrl, title });
+    if (!parsed.success) {
+      continue;
+    }
+    if (isBlockedUrl(parsed.data.url) || isBlockedText(parsed.data.title)) {
+      continue;
+    }
+    items.push(parsed.data);
+    if (items.length >= config.playlistLimit) {
+      log.warn("playlist truncated", { limit: config.playlistLimit });
+      break;
+    }
+  }
+  return items;
+}
+
 /**
  * Resolve a URL/search source to a streamable {@link ResolvedSource} by shelling out to the system
  * `yt-dlp`. Honours the {@link AbortSignal} so SKIP/STOP cancels promptly.
@@ -95,12 +168,19 @@ export async function resolveWithYtdlp(
     );
   }
 
+  let info: YtdlpInfo;
   try {
-    return toResolvedSource(parseYtdlpInfo(stdout));
+    info = parseYtdlpInfo(stdout);
   } catch (error) {
     throw new Error(
       `could not parse yt-dlp output: ${getErrorMessage(error)}`,
       { cause: error },
     );
   }
+
+  // Defense in depth: a search/redirect can land on an adult site the request text didn't reveal.
+  if (isBlockedUrl(info.webpage_url ?? "") || isBlockedText(info.title)) {
+    throw new BlockedSourceError(info.webpage_url ?? info.title);
+  }
+  return toResolvedSource(info);
 }

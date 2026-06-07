@@ -44,10 +44,10 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       botToken: env["BOT_TOKEN"],
       userToken: env["TOKEN"],
       guildId: env["GUILD_ID"],
-      commandChannelId: env["COMMAND_CHANNEL_ID"],
+      // The configured channel is where world-readable output is posted; commands work anywhere.
+      statusChannelId: env["COMMAND_CHANNEL_ID"],
       videoChannelId: env["VIDEO_CHANNEL_ID"],
       adminIds: list(env["ADMIN_IDS"]),
-      prefix: env["PREFIX"],
     },
     library: {
       videosDir: env["VIDEOS_DIR"],
@@ -59,8 +59,12 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       height: num(env["STREAM_HEIGHT"]),
       fps: num(env["STREAM_FPS"]),
       bitrateKbps: num(env["STREAM_BITRATE_KBPS"]),
+      bitrateAudioKbps: num(env["STREAM_BITRATE_AUDIO_KBPS"]),
       hardwareAcceleration: bool(env["STREAM_HARDWARE_ACCELERATION"]),
+      vaapiDevice: env["VAAPI_DEVICE"],
     },
+    idleTimeoutSeconds: num(env["IDLE_TIMEOUT_SECONDS"]),
+    playlistLimit: num(env["PLAYLIST_LIMIT"]),
     ytDlpPath: env["YT_DLP_PATH"],
     ffmpegPath: env["FFMPEG_PATH"],
   };

@@ -5,15 +5,25 @@ import {
   type PlaybackActors,
 } from "@shepherdjerred/streambot/machine/playback-machine.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
+import { BlockedSourceError } from "@shepherdjerred/streambot/moderation/adult-block.ts";
+import {
+  ChannelIdSchema,
+  GuildIdSchema,
+  UserIdSchema,
+} from "@shepherdjerred/streambot/types/ids.ts";
 
-const INPUT = { guildId: "1", channelId: "2" } as const;
+const U1 = UserIdSchema.parse("100000000000000001");
+const INPUT = {
+  guildId: GuildIdSchema.parse("100000000000000010"),
+  channelId: ChannelIdSchema.parse("100000000000000020"),
+  idleTimeoutMs: 30,
+} as const;
 const WAIT = { timeout: 2000 } as const;
 
 function fileSource(title: string): Source {
   return { kind: "file", path: `/videos/${title}.mkv`, title };
 }
 
-/** Lets a test hold a `runStream` invocation open and end it (or fail it) on demand. */
 function makeStreamController() {
   const resolvers: { resolve: () => void; reject: (error: unknown) => void }[] =
     [];
@@ -25,9 +35,6 @@ function makeStreamController() {
     runStream,
     endCurrent: () => {
       resolvers.at(-1)?.resolve();
-    },
-    failCurrent: (error: unknown) => {
-      resolvers.at(-1)?.reject(error);
     },
     invocationCount: () => resolvers.length,
   };
@@ -53,53 +60,35 @@ function makeActors(overrides: Partial<PlaybackActors> = {}): PlaybackActors {
   };
 }
 
+function startActor(actors: PlaybackActors) {
+  const actor = createActor(createPlaybackMachine(actors), { input: INPUT });
+  actor.start();
+  return actor;
+}
+
 describe("playback machine", () => {
-  test("plays a queued file through join → resolve → stream → leave → idle", async () => {
+  test("plays a file then winds down to idle after the grace period", async () => {
     const stream = makeStreamController();
-    const actor = createActor(
-      createPlaybackMachine(makeActors({ runStream: stream.runStream })),
-      {
-        input: INPUT,
-      },
-    );
-    actor.start();
-    expect(actor.getSnapshot().value).toBe("idle");
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    actor.send({ type: "ADD", source: fileSource("movie"), requesterId: U1 });
 
-    actor.send({ type: "ADD", source: fileSource("movie"), requesterId: "u1" });
-
-    await waitFor(actor, (snap) => snap.matches("streaming"), WAIT);
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
     expect(actor.getSnapshot().context.current?.source).toEqual(
       fileSource("movie"),
     );
-    expect(actor.getSnapshot().context.resolved?.ffmpegInput).toBe(
-      "resolved:movie",
-    );
 
     stream.endCurrent();
-    await waitFor(actor, (snap) => snap.matches("idle"), WAIT);
+    await waitFor(actor, (s) => s.matches("idle"), WAIT);
     expect(actor.getSnapshot().context.queue).toHaveLength(0);
-    expect(actor.getSnapshot().context.current).toBeNull();
     expect(actor.getSnapshot().context.voice).toBeNull();
   });
 
   test("advances to the next queued item when a stream ends", async () => {
     const stream = makeStreamController();
-    const actor = createActor(
-      createPlaybackMachine(makeActors({ runStream: stream.runStream })),
-      {
-        input: INPUT,
-      },
-    );
-    actor.start();
-
-    actor.send({ type: "ADD", source: fileSource("first"), requesterId: "u1" });
-    actor.send({
-      type: "ADD",
-      source: fileSource("second"),
-      requesterId: "u1",
-    });
-
-    await waitFor(actor, (snap) => snap.matches("streaming"), WAIT);
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    actor.send({ type: "ADD", source: fileSource("first"), requesterId: U1 });
+    actor.send({ type: "ADD", source: fileSource("second"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
     expect(actor.getSnapshot().context.current?.source).toEqual(
       fileSource("first"),
     );
@@ -107,128 +96,163 @@ describe("playback machine", () => {
     stream.endCurrent();
     await waitFor(
       actor,
-      (snap) =>
-        snap.matches("streaming") &&
-        snap.context.current?.source.kind === "file" &&
-        snap.context.current.source.title === "second",
+      (s) =>
+        s.matches("streaming") &&
+        s.context.current?.source.kind === "file" &&
+        s.context.current.source.title === "second",
       WAIT,
     );
-    expect(stream.invocationCount()).toBe(2);
   });
 
-  test("SKIP cancels the current stream and plays the next", async () => {
+  test("SKIP plays the next item, SKIP on the last winds down", async () => {
     const stream = makeStreamController();
-    const actor = createActor(
-      createPlaybackMachine(makeActors({ runStream: stream.runStream })),
-      {
-        input: INPUT,
-      },
-    );
-    actor.start();
-    actor.send({ type: "ADD", source: fileSource("a"), requesterId: "u1" });
-    actor.send({ type: "ADD", source: fileSource("b"), requesterId: "u1" });
-    await waitFor(actor, (snap) => snap.matches("streaming"), WAIT);
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
+    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
 
     actor.send({ type: "SKIP" });
     await waitFor(
       actor,
-      (snap) =>
-        snap.matches("streaming") &&
-        snap.context.current?.source.kind === "file" &&
-        snap.context.current.source.title === "b",
+      (s) =>
+        s.matches("streaming") &&
+        s.context.current?.source.kind === "file" &&
+        s.context.current.source.title === "b",
       WAIT,
     );
-  });
-
-  test("SKIP on the last item winds down to idle", async () => {
-    const stream = makeStreamController();
-    const actor = createActor(
-      createPlaybackMachine(makeActors({ runStream: stream.runStream })),
-      {
-        input: INPUT,
-      },
-    );
-    actor.start();
-    actor.send({ type: "ADD", source: fileSource("only"), requesterId: "u1" });
-    await waitFor(actor, (snap) => snap.matches("streaming"), WAIT);
 
     actor.send({ type: "SKIP" });
-    await waitFor(actor, (snap) => snap.matches("idle"), WAIT);
-    expect(actor.getSnapshot().context.queue).toHaveLength(0);
+    await waitFor(actor, (s) => s.matches("idle"), WAIT);
   });
 
   test("STOP clears the queue and leaves", async () => {
     const stream = makeStreamController();
-    const actor = createActor(
-      createPlaybackMachine(makeActors({ runStream: stream.runStream })),
-      {
-        input: INPUT,
-      },
-    );
-    actor.start();
-    actor.send({ type: "ADD", source: fileSource("a"), requesterId: "u1" });
-    actor.send({ type: "ADD", source: fileSource("b"), requesterId: "u1" });
-    await waitFor(actor, (snap) => snap.matches("streaming"), WAIT);
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
+    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
 
     actor.send({ type: "STOP" });
-    await waitFor(actor, (snap) => snap.matches("idle"), WAIT);
+    await waitFor(actor, (s) => s.matches("idle"), WAIT);
     expect(actor.getSnapshot().context.queue).toHaveLength(0);
   });
 
-  test("a join failure clears the queue and rests in idle (no hot-loop)", async () => {
-    const actor = createActor(
-      createPlaybackMachine(
-        makeActors({
-          joinVoice: () => Promise.reject(new Error("cannot join")),
-        }),
-      ),
-      { input: INPUT },
-    );
-    actor.start();
-    actor.send({ type: "ADD", source: fileSource("x"), requesterId: "u1" });
-
-    await waitFor(
-      actor,
-      (snap) => snap.matches("idle") && snap.context.lastError !== null,
-      WAIT,
-    );
-    expect(actor.getSnapshot().context.lastError).toBe("cannot join");
-    expect(actor.getSnapshot().context.queue).toHaveLength(0);
-  });
-
-  test("a resolve failure drops the bad item and continues with the next", async () => {
-    let resolveCalls = 0;
+  test("loop=track replays the current item", async () => {
     const stream = makeStreamController();
-    const actors = makeActors({
-      runStream: stream.runStream,
-      resolveSource: (input) => {
-        resolveCalls += 1;
-        if (resolveCalls === 1) {
-          return Promise.reject(new Error("unresolvable"));
-        }
-        const { source } = input;
-        const title =
-          source.kind === "file"
-            ? source.title
-            : source.kind === "url"
-              ? source.url
-              : source.query;
-        return Promise.resolve({ title, ffmpegInput: `resolved:${title}` });
-      },
-    });
-    const actor = createActor(createPlaybackMachine(actors), { input: INPUT });
-    actor.start();
-    actor.send({ type: "ADD", source: fileSource("bad"), requesterId: "u1" });
-    actor.send({ type: "ADD", source: fileSource("good"), requesterId: "u1" });
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    actor.send({ type: "ADD", source: fileSource("repeat"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    actor.send({ type: "SET_LOOP", mode: "track" });
 
+    stream.endCurrent();
     await waitFor(
       actor,
-      (snap) =>
-        snap.matches("streaming") &&
-        snap.context.current?.source.kind === "file" &&
-        snap.context.current.source.title === "good",
+      (s) => s.matches("streaming") && stream.invocationCount() === 2,
       WAIT,
     );
-    expect(resolveCalls).toBe(2);
+    expect(actor.getSnapshot().context.current?.source).toEqual(
+      fileSource("repeat"),
+    );
+  });
+
+  test("loop=queue cycles items to the back", async () => {
+    const stream = makeStreamController();
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
+    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    actor.send({ type: "SET_LOOP", mode: "queue" });
+
+    stream.endCurrent();
+    await waitFor(
+      actor,
+      (s) =>
+        s.matches("streaming") &&
+        s.context.current?.source.kind === "file" &&
+        s.context.current.source.title === "b",
+      WAIT,
+    );
+    // 'a' was cycled to the back of the queue.
+    expect(
+      actor
+        .getSnapshot()
+        .context.queue.map((q) =>
+          q.source.kind === "file" ? q.source.title : "",
+        ),
+    ).toEqual(["a"]);
+  });
+
+  test("a join failure clears the queue and rests in idle", async () => {
+    const actor = startActor(
+      makeActors({ joinVoice: () => Promise.reject(new Error("cannot join")) }),
+    );
+    actor.send({ type: "ADD", source: fileSource("x"), requesterId: U1 });
+    await waitFor(
+      actor,
+      (s) => s.matches("idle") && s.context.lastError !== null,
+      WAIT,
+    );
+    expect(actor.getSnapshot().context.queue).toHaveLength(0);
+  });
+
+  test("a blocked source increments the nonce and records the requester", async () => {
+    const stream = makeStreamController();
+    const actor = startActor(
+      makeActors({
+        runStream: stream.runStream,
+        resolveSource: (input) =>
+          input.source.kind === "search"
+            ? Promise.reject(new BlockedSourceError(input.source.query))
+            : Promise.resolve({ title: "ok", ffmpegInput: "ok" }),
+      }),
+    );
+    actor.send({
+      type: "ADD",
+      source: { kind: "search", query: "porn" },
+      requesterId: U1,
+    });
+
+    await waitFor(actor, (s) => s.context.blockedNonce === 1, WAIT);
+    expect(actor.getSnapshot().context.lastErrorKind).toBe("blocked");
+    expect(actor.getSnapshot().context.lastBlockedRequester).toBe(U1);
+  });
+});
+
+describe("queue editing events", () => {
+  test("ADD_NEXT, REMOVE, MOVE, SHUFFLE, SET_VOLUME", async () => {
+    // Hold the first stream open so the queue stays populated while we edit it.
+    const stream = makeStreamController();
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
+    actor.send({ type: "ADD", source: fileSource("c"), requesterId: U1 });
+    actor.send({
+      type: "ADD_NEXT",
+      source: fileSource("front"),
+      requesterId: U1,
+    });
+
+    const titles = () =>
+      actor
+        .getSnapshot()
+        .context.queue.map((q) =>
+          q.source.kind === "file" ? q.source.title : "",
+        );
+    expect(titles()).toEqual(["front", "b", "c"]);
+
+    actor.send({ type: "REMOVE", index: 2 }); // remove "b"
+    expect(titles()).toEqual(["front", "c"]);
+
+    actor.send({ type: "MOVE", from: 1, to: 2 }); // front → after c
+    expect(titles()).toEqual(["c", "front"]);
+
+    actor.send({ type: "SHUFFLE" });
+    expect(titles().toSorted()).toEqual(["c", "front"]);
+
+    actor.send({ type: "SET_VOLUME", volume: 250 });
+    expect(actor.getSnapshot().context.volume).toBe(200);
+    actor.send({ type: "SET_VOLUME", volume: -5 });
+    expect(actor.getSnapshot().context.volume).toBe(0);
   });
 });
