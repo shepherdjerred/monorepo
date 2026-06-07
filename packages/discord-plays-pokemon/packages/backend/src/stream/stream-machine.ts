@@ -195,6 +195,10 @@ export function createStreamMachine(deps: StreamMachineDeps) {
       // (for reconnect) only if we got here via an error; a clean STOP has no
       // error and returns to idle.
       stopping: {
+        // No `on` handler: events (STOP/START) delivered mid-teardown are
+        // intentionally dropped by XState. The orchestrator reconciles the
+        // desired state via onSnapshot once we land in idle/failed, so a direct
+        // actor.send during `stopping` is a no-op by design.
         entry: [
           ({ context }) => {
             context.frameSink?.end();
@@ -219,14 +223,17 @@ export function createStreamMachine(deps: StreamMachineDeps) {
       // immediately (and resets the budget via idle/streaming entry).
       failed: {
         entry: [
-          assign({ retries: ({ context }) => context.retries + 1 }),
           ({ context }) => {
+            // Log before the increment below so the attempt number is computed
+            // explicitly rather than depending on assign-vs-action ordering.
+            const attempt = context.retries + 1;
             logger.error(
-              `stream failed (attempt ${String(context.retries)}/${String(context.maxRetries)}): ${
-                context.lastError ?? "unknown"
-              }`,
+              `stream failed (attempt ${String(attempt)} of ${String(
+                context.maxRetries,
+              )}): ${context.lastError ?? "unknown"}`,
             );
           },
+          assign({ retries: ({ context }) => context.retries + 1 }),
         ],
         on: {
           START: "starting",
