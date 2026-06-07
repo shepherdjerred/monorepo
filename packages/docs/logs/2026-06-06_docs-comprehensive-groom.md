@@ -37,7 +37,7 @@ Full groom of `packages/docs/`: triage all 90 plans, archive completed+shipped w
 
 ## Remaining / for user decision
 
-- **Archive consolidation (needs explicit sign-off — deletes history):** carried over from the 2026-05-10 charter and still open — delete `archive/stale/` (7), prune `archive/homelab-audits/` (keep 1 of 9), merge `archive/dagger-migration/` (18) audit + chunk files, merge `archive/on-hold/` (4) Sentinel docs into 1. Not done this session.
+- **Archive consolidation — RESOLVED, declined.** The 2026-05-10 charter's deferred idea (delete `archive/stale/`, prune `archive/homelab-audits/`, merge `archive/dagger-migration/` + `archive/on-hold/`) was raised to the user on 2026-06-06 and **declined** — keep the archive intact, honoring the "Archive, don't delete" principle. No further action; future grooms should not re-raise this.
 - **todos awaiting live verification:** buildkite-pvc-expansion, grafana-trace-log-prod, helm-types-publish, pagerduty-velero-alert-formatting, scout-migration-competition-update-schedule — code merged, runtime gate unrun. Keep until verified on the cluster/prod.
 - **44→43 active plans remain** (Not Started / Planned / genuinely In Progress, e.g. the SOTA PR-review-bot phase cluster). Left in `plans/`.
 
