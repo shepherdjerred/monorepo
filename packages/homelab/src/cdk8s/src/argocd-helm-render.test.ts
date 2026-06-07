@@ -274,10 +274,38 @@ async function helmTemplate(chart: ExternalChart): Promise<HelmTemplateResult> {
   }
 }
 
+type RenderOutcome = { chart: ExternalChart; result: HelmTemplateResult };
+
+function describeChart(chart: ExternalChart): string {
+  return `${chart.appName} (${chart.chart}@${chart.version} from ${chart.repoURL})`;
+}
+
+// Render every chart exactly once (batched for concurrency), shared by all
+// assertions below. Rendering each chart per-test would double the network
+// load — and the flake surface — against the same upstream repos.
+async function renderAllCharts(
+  charts: ExternalChart[],
+): Promise<RenderOutcome[]> {
+  const outcomes: RenderOutcome[] = [];
+  const batchSize = 5;
+  for (let i = 0; i < charts.length; i += batchSize) {
+    const batch = charts.slice(i, i + batchSize);
+    const results = await Promise.all(
+      batch.map(async (chart) => ({
+        chart,
+        result: await helmTemplate(chart),
+      })),
+    );
+    outcomes.push(...results);
+  }
+  return outcomes;
+}
+
 const describeFn = shouldRun ? describe : describe.skip;
 
 describeFn("ArgoCD Helm Render - External Charts", () => {
   let externalCharts: ExternalChart[];
+  let outcomes: RenderOutcome[];
 
   beforeAll(async () => {
     const appsFile = Bun.file(APPS_YAML);
@@ -288,7 +316,30 @@ describeFn("ArgoCD Helm Render - External Charts", () => {
     }
     const yamlContent = await appsFile.text();
     externalCharts = extractExternalCharts(yamlContent);
-  });
+
+    // Single render pass for the whole suite.
+    outcomes = await renderAllCharts(externalCharts);
+
+    // Log transient skips ONCE, loudly, here — so the "never silent" invariant
+    // holds regardless of which downstream assertion observes the outcome.
+    // (A chart that exhausted retries on a transient upstream error has
+    // exitCode !== 0 && transient; it is reported, not failed — see
+    // TRANSIENT_HELM_ERROR_PATTERN.)
+    const transientSkips = outcomes.filter(
+      (o) => o.result.exitCode !== 0 && o.result.transient,
+    );
+    if (transientSkips.length > 0) {
+      const msg = transientSkips
+        .map(
+          (o) =>
+            `  ${describeChart(o.chart)}:\n    ${o.result.stderr.trim().split("\n").join("\n    ")}`,
+        )
+        .join("\n\n");
+      console.warn(
+        `⚠️  Skipped ${String(transientSkips.length)}/${String(externalCharts.length)} chart(s) due to transient upstream errors that persisted through all retries. This is upstream (registry/CDN) unavailability, NOT a chart/values bug — not failing the build:\n\n${msg}`,
+      );
+    }
+  }, 600_000); // 10 minute ceiling: ample headroom for full-fleet retries during an upstream blip
 
   it("should find external helm charts to test", () => {
     expect(externalCharts.length).toBeGreaterThan(0);
@@ -297,83 +348,40 @@ describeFn("ArgoCD Helm Render - External Charts", () => {
     );
   });
 
-  it("should render all external helm charts with our values", async () => {
-    const failures: { chart: string; error: string }[] = [];
-    // Charts that never fetched cleanly but only ever failed transiently
-    // (upstream 5xx / network) after exhausting retries. Reported, not fatal —
-    // see TRANSIENT_HELM_ERROR_PATTERN.
-    const transientSkips: { chart: string; error: string }[] = [];
-
-    // Run in batches of 5 for concurrency control
-    const batchSize = 5;
-    for (let i = 0; i < externalCharts.length; i += batchSize) {
-      const batch = externalCharts.slice(i, i + batchSize);
-      const results = await Promise.all(
-        batch.map(async (chart) => {
-          const result = await helmTemplate(chart);
-          return { chart, result };
-        }),
-      );
-
-      for (const { chart, result } of results) {
-        if (result.exitCode === 0) continue;
-        const entry = {
-          chart: `${chart.appName} (${chart.chart}@${chart.version} from ${chart.repoURL})`,
-          error: result.stderr.trim(),
-        };
-        if (result.transient) {
-          transientSkips.push(entry);
-        } else {
-          failures.push(entry);
-        }
-      }
-    }
-
-    if (transientSkips.length > 0) {
-      const msg = transientSkips
-        .map((f) => `  ${f.chart}:\n    ${f.error.split("\n").join("\n    ")}`)
-        .join("\n\n");
-      console.warn(
-        `⚠️  Skipped ${String(transientSkips.length)}/${String(externalCharts.length)} chart(s) due to transient upstream errors that persisted through all retries. This is upstream (registry/CDN) unavailability, NOT a chart/values bug — not failing the build:\n\n${msg}`,
-      );
-    }
+  it("should render all external helm charts with our values", () => {
+    // Real (non-transient) failures only — these are the chart/values bugs this
+    // test exists to catch. Transient skips were already logged in beforeAll.
+    const failures = outcomes.filter(
+      (o) => o.result.exitCode !== 0 && !o.result.transient,
+    );
 
     if (failures.length > 0) {
       const msg = failures
-        .map((f) => `  ${f.chart}:\n    ${f.error.split("\n").join("\n    ")}`)
+        .map(
+          (f) =>
+            `  ${describeChart(f.chart)}:\n    ${f.result.stderr.trim().split("\n").join("\n    ")}`,
+        )
         .join("\n\n");
       throw new Error(
         `helm template failed for ${String(failures.length)}/${String(externalCharts.length)} chart(s):\n\n${msg}`,
       );
     }
-  }, 600_000); // 10 minute ceiling: ample headroom for full-fleet retries during an upstream blip
+  });
 
-  it("should produce non-empty output for all charts", async () => {
-    const emptyOutputs: string[] = [];
-
-    const batchSize = 5;
-    for (let i = 0; i < externalCharts.length; i += batchSize) {
-      const batch = externalCharts.slice(i, i + batchSize);
-      const results = await Promise.all(
-        batch.map(async (chart) => {
-          const result = await helmTemplate(chart);
-          return { chart, result };
-        }),
-      );
-
-      for (const { chart, result } of results) {
-        if (result.exitCode === 0 && result.stdout.trim() === "") {
-          emptyOutputs.push(chart.appName);
-        }
-      }
-    }
+  it("should produce non-empty output for every chart that rendered", () => {
+    // Scoped to charts that actually rendered (exitCode === 0). Charts skipped
+    // for transient upstream errors are intentionally excluded and were already
+    // surfaced by the beforeAll warning — never silently dropped here.
+    const emptyOutputs = outcomes
+      .filter((o) => o.result.exitCode === 0 && o.result.stdout.trim() === "")
+      .map((o) => o.chart.appName);
 
     if (emptyOutputs.length > 0) {
       throw new Error(
         `Charts with empty template output: ${emptyOutputs.join(", ")}`,
       );
     }
-  }, 600_000);
+  });
 });
 
 // Network-free guardrail for the resilience contract: a transient upstream
