@@ -1,7 +1,6 @@
 import { Hono, type Context } from "hono";
 import { verify } from "@octokit/webhooks-methods";
 import { Octokit } from "octokit";
-import { z } from "zod/v4";
 import * as Sentry from "@sentry/bun";
 import type { Client } from "@temporalio/client";
 import {
@@ -39,48 +38,13 @@ import {
   createGitHubAppInstallationToken,
   type GitHubAppTokenResult,
 } from "#lib/github-app-token.ts";
+import {
+  PullRequestEventSchema,
+  RELEVANT_ACTIONS,
+  disallowedAuthorReason,
+} from "./github-webhook-schema.ts";
 
 const DEFAULT_PORT = 9466;
-
-const RELEVANT_ACTIONS = new Set([
-  "opened",
-  "synchronize",
-  "reopened",
-  "ready_for_review",
-]);
-
-const PrUserSchema = z.object({
-  login: z.string(),
-  type: z.string(),
-});
-
-const PrRefSchema = z.object({
-  ref: z.string(),
-  sha: z.string(),
-});
-
-const PrSchema = z.object({
-  number: z.number().int().positive(),
-  draft: z.boolean().optional(),
-  merged: z.boolean().optional(),
-  title: z.string(),
-  base: PrRefSchema,
-  head: PrRefSchema,
-  user: PrUserSchema,
-});
-
-const RepoOwnerSchema = z.object({ login: z.string() });
-
-const RepoSchema = z.object({
-  name: z.string(),
-  owner: RepoOwnerSchema,
-});
-
-const PullRequestEventSchema = z.object({
-  action: z.string(),
-  pull_request: PrSchema,
-  repository: RepoSchema,
-});
 
 export type WebhookHandle = {
   port: number;
@@ -349,13 +313,15 @@ export function buildWebhookApp(
       return handleDraftSkip(c, baseInput, postStatus, { deliveryId, action });
     }
 
-    if (parsed.pull_request.user.type === "Bot") {
-      prWebhookSkippedTotal.inc({ reason: "bot-author" });
-      jsonLog("info", "Skipping bot-authored PR", {
+    const authorSkip = disallowedAuthorReason(parsed.pull_request.user);
+    if (authorSkip !== null) {
+      prWebhookSkippedTotal.inc({ reason: authorSkip });
+      jsonLog("info", "Skipping PR by author policy", {
         prNumber: parsed.pull_request.number,
         author: parsed.pull_request.user.login,
+        reason: authorSkip,
       });
-      return c.text("skipped: bot\n");
+      return c.text(`skipped: ${authorSkip}\n`);
     }
 
     try {
