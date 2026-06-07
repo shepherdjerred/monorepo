@@ -29,6 +29,34 @@ const StateChangedEventData = z.object({
 const PERSON_ENTITIES = ["person.jerred", "person.shuxin"] as const;
 const PERSON_ENTITY_SET = new Set<string>(PERSON_ENTITIES);
 
+// Singleton id for the debounced front-door lock reconciler. Every presence
+// transition signals this one workflow (starting it if needed) rather than
+// spawning per-edge lock/unlock workflows, so a flapping sensor can never make
+// the bolt cycle. See workflows/ha/reconcile-lock.ts.
+const RECONCILE_LOCK_WORKFLOW_ID = "reconcile-lock";
+const PRESENCE_CHANGED_SIGNAL = "presenceChanged";
+
+async function bumpLockReconciler(client: Client): Promise<void> {
+  try {
+    await client.workflow.signalWithStart("reconcileLock", {
+      taskQueue: TASK_QUEUES.DEFAULT,
+      workflowId: RECONCILE_LOCK_WORKFLOW_ID,
+      workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
+      workflowExecutionTimeout: "30 minutes",
+      signal: PRESENCE_CHANGED_SIGNAL,
+      signalArgs: [],
+    });
+  } catch (error: unknown) {
+    // Fail fast: surface the failure instead of silently proceeding with the
+    // door's desired state un-reconciled. The HA event client wraps handlers in
+    // `Promise.resolve(handler()).catch(emitError)`, so this propagates as a
+    // logged subscription error rather than crashing the worker.
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to signal reconcileLock: ${detail}`);
+    throw error;
+  }
+}
+
 function dayKey(): string {
   const now = new Date();
   return `${String(now.getUTCFullYear())}${String(now.getUTCMonth() + 1).padStart(2, "0")}${String(now.getUTCDate()).padStart(2, "0")}`;
@@ -129,6 +157,16 @@ export function handleStateChanged(
     if (oldState === undefined || newState === undefined) {
       return;
     }
+    // Ignore attribute-only updates (e.g. GPS coordinate churn while the state
+    // stays `home`) — only real presence transitions matter.
+    if (oldState === newState) {
+      return;
+    }
+
+    // Every presence transition (both directions) re-arms the debounced lock
+    // reconciler; it decides lock/unlock from settled, live state.
+    await bumpLockReconciler(client);
+
     if (oldState === "not_home" && newState === "home") {
       // Fire on every arrival so the door is always unlocked and lights come
       // on, even if someone else is already home. `firstArrival` (the house was

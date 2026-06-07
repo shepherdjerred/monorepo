@@ -217,6 +217,8 @@ See the `worktree-workflow` skill for the full workflow. Trivial single-file edi
 
 **If you were started in a worktree, stay in that worktree.** Keep every command, search, and file operation scoped to the worktree path you were launched in. Do not `cd` into, read from, or write to the main checkout (the parent of the `.claude/worktrees/` directory you are in) — the worktree is a complete checkout with the same files, so there is no reason to reach outside it. The main checkout may hold the user's own in-progress work; only touch it when the user explicitly asks.
 
+**Never trust an absolute path from a subagent (Explore/Plan/general-purpose) report.** Subagents search the entire repo and report main-checkout paths like `/…/monorepo/packages/<x>/…` — NOT your worktree path. The two trees share an identical relative layout, so a `Write`/`Edit` to a main-checkout absolute path **silently succeeds in the wrong tree** (your `git status` stays clean and you won't notice until much later). Before writing, **rebase every path onto your worktree root**: take the `packages/…`-relative portion and prepend `.claude/worktrees/<name>/`. A reliable check: the absolute target path of any `Write`/`Edit` MUST contain `/.claude/worktrees/<name>/`. If it doesn't, you're about to write to main — stop and fix the path. Prefer worktree-relative paths over absolute ones for exactly this reason.
+
 ## Package Notes
 
 Each package has its own AGENTS.md with specific instructions:

@@ -195,21 +195,6 @@ export const DEPLOY_SITES: DeploySite[] = [
     buildCmd: "bun run build",
     distDir: "packages/better-skill-capped/dist",
   },
-  // discord-plays-pokemon docs uses MkDocs (Python), not bun — deployed via
-  // a dedicated mkdocs-build-and-deploy step, not the generic deploy-site function.
-];
-
-// Sites deployed via non-standard mechanisms (not the generic deploy-site function).
-export interface ExtraDeploySite {
-  name: string;
-  url: string;
-}
-
-export const EXTRA_DEPLOY_SITES: ExtraDeploySite[] = [
-  {
-    name: "discord-plays-pokemon docs",
-    url: "https://discord-plays-pokemon.com",
-  },
 ];
 
 /** Derived from NPM_PACKAGES — workspace packages whose changes should trigger npm publishes. */
@@ -301,7 +286,6 @@ export const PACKAGE_TO_SITE: Record<string, string[]> = {
   "scout-for-lol": ["scout-frontend", "scout-frontend-beta"],
   "stocks-sjer-red": ["stocks-sjer-red"],
   "better-skill-capped": ["better-skill-capped"],
-  // discord-plays-pokemon docs deployed via dedicated mkdocs step, not deploy-site
 };
 
 // ---------------------------------------------------------------------------
