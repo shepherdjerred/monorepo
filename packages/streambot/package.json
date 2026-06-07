@@ -19,6 +19,9 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@dank074/discord-video-stream": "6.0.0",
+    "discord.js": "^14.26.4",
+    "discord.js-selfbot-v13": "^3.7.1",
     "xstate": "^5.32.0",
     "zod": "^4.4.3"
   },
@@ -29,5 +32,10 @@
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3"
-  }
+  },
+  "trustedDependencies": [
+    "@lng2004/node-datachannel",
+    "node-av",
+    "unrs-resolver"
+  ]
 }
