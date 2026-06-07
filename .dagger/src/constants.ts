@@ -35,7 +35,7 @@ export const MAVEN_IMAGE =
   "maven:3.9.15-eclipse-temurin-25@sha256:1c3a703ab39fee7ac0880f46e6ccd22c0d701f17f0616e6e66a258ddc1c637d2";
 // renovate: datasource=docker depName=texlive/texlive
 export const TEXLIVE_IMAGE =
-  "texlive/texlive:TL2024-historic@sha256:fd576ce8b1cfd03cdabc15ca75682fb050eb10de5c057d81449883c2ad644855";
+  "texlive/texlive:TL2024-historic@sha256:7cf892aa62a923b3a2d9242a27e3f0d8b432385e8f76f34049ffad676aabcc1c";
 // renovate: datasource=docker depName=caddy
 export const CADDY_IMAGE =
   "caddy:2.11.3-alpine@sha256:86deaf5e3d3408a6ccec08fbb79989783dd26e206ae10bcf78a801dc8c9ab794";
