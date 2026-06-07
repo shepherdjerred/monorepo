@@ -97,3 +97,35 @@ export function k8sPlugin(
     },
   };
 }
+
+/**
+ * Like {@link k8sPlugin} but lets Buildkite check out the repo into the agent
+ * pod (shallow), for the rare step whose command runs bun/git scripts directly
+ * against the working tree rather than via a Dagger git-URL ref.
+ *
+ * Unlike the pre-PR2 version, this does NOT mount the `buildkite-git-mirrors`
+ * PVC (that volume was deleted in PR2 of the BK-pressure reduction plan). The
+ * agent's host-level git mirror still accelerates the clone, so a plain shallow
+ * checkout is cheap enough for the handful of PR-only steps that need source on
+ * disk (currently just the Greptile review gate). New callers should prefer a
+ * Dagger function instead.
+ */
+export function k8sPluginWithCheckout(
+  opts: {
+    cpu?: string;
+    memory?: string;
+    secrets?: string[];
+  } = {},
+): Record<string, unknown> {
+  const plugin = k8sPlugin(opts);
+  const kubernetes = plugin["kubernetes"];
+  if (typeof kubernetes !== "object" || kubernetes === null) {
+    throw new Error("k8sPluginWithCheckout: expected kubernetes plugin object");
+  }
+  // Replace the base plugin's `checkout: { skip: true }` with a real shallow
+  // checkout so the step's command can read the repo from the working tree.
+  Object.assign(kubernetes, {
+    checkout: { cloneFlags: "--depth=100", fetchFlags: "--depth=100" },
+  });
+  return plugin;
+}

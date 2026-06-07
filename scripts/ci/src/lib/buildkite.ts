@@ -1,5 +1,5 @@
 import type { BuildkiteStep } from "./types.ts";
-import { k8sPlugin } from "./k8s-plugin.ts";
+import { k8sPlugin, k8sPluginWithCheckout } from "./k8s-plugin.ts";
 
 /** Convert a name to a Buildkite-safe step key. */
 export function safeKey(name: string): string {
@@ -211,6 +211,51 @@ export function daggerStep(opts: {
   }
   if (opts.priority !== undefined) {
     step.priority = opts.priority;
+  }
+
+  return step;
+}
+
+/**
+ * Create a plain Buildkite step that runs directly on the CI agent pod with a
+ * shallow repo checkout (via {@link k8sPluginWithCheckout}).
+ *
+ * Use only for checks that need bash/bun/git operating on the working tree and
+ * have no Dagger function yet — currently just the PR-only Greptile review gate.
+ * Most steps should use {@link daggerStep} instead, which reads the repo via a
+ * git-URL ref so the BK pod writes no source to disk.
+ */
+export function plainStep(opts: {
+  label: string;
+  key: string;
+  command: string;
+  timeoutMinutes?: number;
+  dependsOn?: string | string[];
+  softFail?: boolean;
+  artifactPaths?: string[];
+  secrets?: string[];
+}): BuildkiteStep {
+  const step: BuildkiteStep = {
+    label: opts.label,
+    key: opts.key,
+    command: opts.command,
+    timeout_in_minutes: opts.timeoutMinutes ?? 10,
+    retry: RETRY,
+    plugins: [
+      k8sPluginWithCheckout(
+        opts.secrets !== undefined ? { secrets: opts.secrets } : {},
+      ),
+    ],
+  };
+
+  if (opts.dependsOn !== undefined) {
+    step.depends_on = opts.dependsOn;
+  }
+  if (opts.softFail !== undefined) {
+    step.soft_fail = opts.softFail;
+  }
+  if (opts.artifactPaths !== undefined) {
+    step.artifact_paths = opts.artifactPaths;
   }
 
   return step;

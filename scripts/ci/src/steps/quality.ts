@@ -1,16 +1,24 @@
 /**
  * Quality gate step generators.
  *
- * Every step in this file is a `daggerStep` that runs an `@func()` from
+ * Almost every step here is a `daggerStep` that runs an `@func()` from
  * `.dagger/src/quality.ts` against `${REPO_GIT_REF}`. The Dagger engine
  * fetches source server-side, content-addressed by SHA — the BK pod itself
  * writes no source to disk.
  *
- * `plainStep` and the `buildkite-git-mirrors` mount were removed in PR2 of
- * the BK-pressure reduction plan
- * (`packages/docs/plans/2026-05-31_bk-dagger-git-url-refactor.md`).
+ * PR2 of the BK-pressure reduction plan
+ * (`packages/docs/plans/2026-05-31_bk-dagger-git-url-refactor.md`) migrated all
+ * plain steps to Dagger and dropped the `buildkite-git-mirrors` PVC. The lone
+ * exception is `greptileReviewStep`, which runs dependency-free bun scripts
+ * against the working tree and so still uses `plainStep` (a shallow checkout,
+ * no PVC). It has no Dagger function yet; migrate it and `plainStep` can go.
  */
-import { daggerStep, REPO_GIT_REF, DAGGER_CALL } from "../lib/buildkite.ts";
+import {
+  daggerStep,
+  plainStep,
+  REPO_GIT_REF,
+  DAGGER_CALL,
+} from "../lib/buildkite.ts";
 import type { BuildkiteStep } from "../lib/types.ts";
 
 /**
