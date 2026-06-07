@@ -94,6 +94,8 @@ import {
   smokeTestObsidianHeadlessHelper,
   smokeTestMcpGatewayHelper,
   smokeTestDiscordPlaysPokemonHelper,
+  smokeTestStreambotHelper,
+  e2eStreambotHelper,
   smokeTestDiscordPlaysMarioKartHelper,
   smokeTestTrmnlDashboardHelper,
 } from "./misc";
@@ -1470,6 +1472,40 @@ export class Monorepo {
     depDirs: Directory[] = [],
   ): Promise<string> {
     return smokeTestDiscordPlaysPokemonHelper(pkgDir, depNames, depDirs);
+  }
+
+  /** Smoke test streambot: build image, verify ffmpeg + yt-dlp, boot machine, expect auth failure */
+  @func()
+  async smokeTestStreambot(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return smokeTestStreambotHelper(pkgDir, depNames, depDirs);
+  }
+
+  /** E2E streambot with real creds: streams a generated clip into the voice channel (manual run). */
+  @func()
+  async e2eStreambot(
+    pkgDir: Directory,
+    botToken: Secret,
+    userToken: Secret,
+    guildId: string,
+    videoChannelId: string,
+    commandChannelId: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return e2eStreambotHelper(
+      pkgDir,
+      botToken,
+      userToken,
+      guildId,
+      videoChannelId,
+      commandChannelId,
+      depNames,
+      depDirs,
+    );
   }
 
   /** Smoke test discord-plays-mario-kart: build production image (incl. wasm stage), boots app, expects Discord auth failure */

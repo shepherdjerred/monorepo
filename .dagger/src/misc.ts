@@ -3,7 +3,7 @@
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
-import { dag, Container, Directory, File } from "@dagger.io/dagger";
+import { dag, Container, Directory, File, Secret } from "@dagger.io/dagger";
 
 import {
   BUN_IMAGE,
@@ -172,6 +172,69 @@ export async function smokeTestScoutForLolHelper(
     "Unauthorized",
     "Invalid token",
   ]);
+}
+
+/**
+ * Smoke test streambot image.
+ * Verifies: ffmpeg + the baked yt-dlp are runnable, config validates, the playback machine
+ * boots, and both Discord clients attempt login and fail with the expected auth error.
+ */
+export async function smokeTestStreambotHelper(
+  pkgDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+): Promise<string> {
+  const container = buildImageHelper(pkgDir, "streambot", depNames, depDirs)
+    .withEnvVariable("BOT_TOKEN", "smoke-test-dummy")
+    .withEnvVariable("TOKEN", "smoke-test-dummy")
+    .withEnvVariable("GUILD_ID", "000000000000000000")
+    .withEnvVariable("COMMAND_CHANNEL_ID", "000000000000000000")
+    .withEnvVariable("VIDEO_CHANNEL_ID", "000000000000000000")
+    .withEnvVariable("ADMIN_IDS", "000000000000000000")
+    .withEnvVariable("VIDEOS_DIR", "/tmp/videos")
+    .withEntrypoint([])
+    .withExec([
+      "sh",
+      "-c",
+      "mkdir -p /tmp/videos && ffmpeg -version && /usr/local/bin/yt-dlp --version && timeout 30s bun run src/index.ts 2>&1",
+    ]);
+
+  return runSmokeTest(container, [
+    "tokeninvalid",
+    "an invalid token was provided",
+    "unauthorized",
+    "401",
+    "invalid token",
+  ]);
+}
+
+/**
+ * End-to-end test streambot with REAL credentials (run manually — it joins a real voice channel).
+ * Builds the image, generates a short clip, drives it through the machine + selfbot streamer into
+ * the configured voice channel, and asserts the run reaches `streaming` then stops. Software
+ * encoding (no GPU in the build sandbox). Tokens are passed as Dagger Secrets.
+ */
+export async function e2eStreambotHelper(
+  pkgDir: Directory,
+  botToken: Secret,
+  userToken: Secret,
+  guildId: string,
+  videoChannelId: string,
+  commandChannelId: string,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+): Promise<string> {
+  const container = buildImageHelper(pkgDir, "streambot", depNames, depDirs)
+    .withSecretVariable("BOT_TOKEN", botToken)
+    .withSecretVariable("TOKEN", userToken)
+    .withEnvVariable("GUILD_ID", guildId)
+    .withEnvVariable("VIDEO_CHANNEL_ID", videoChannelId)
+    .withEnvVariable("COMMAND_CHANNEL_ID", commandChannelId)
+    .withEnvVariable("VIDEOS_DIR", "/tmp/videos")
+    .withEnvVariable("STREAM_HARDWARE_ACCELERATION", "false")
+    .withEntrypoint([])
+    .withExec(["sh", "-c", "mkdir -p /tmp/videos && bun run e2e/run.ts"]);
+  return container.stdout();
 }
 
 /**

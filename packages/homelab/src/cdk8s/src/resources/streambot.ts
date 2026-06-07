@@ -1,28 +1,36 @@
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
+import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
+  Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
+  type PersistentVolumeClaim,
   Secret,
-  Service,
   Volume,
 } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
-import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import {
   setRevisionHistoryLimit,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 const STREAMBOT_UID = 1000;
 const STREAMBOT_GID = 1000;
-const SERVER_PORT = 3000;
 
-export function createStreambotDeployment(chart: Chart) {
+/**
+ * First-party streambot (the rewrite in packages/streambot). Discord-only — no web server — so it
+ * has no Service/Ingress; it makes outbound Discord connections and streams via the selfbot.
+ *
+ * Runs in the `media` namespace so it can read-only mount the existing movies/tv libraries
+ * (RWO PVCs, same single node as Plex/Jellyfin). yt-dlp + ffmpeg are baked into the image.
+ */
+export function createStreambotDeployment(
+  chart: Chart,
+  claims: { movies: PersistentVolumeClaim; tv: PersistentVolumeClaim },
+) {
   const onePasswordItem = new OnePasswordItem(chart, "streambot-config", {
     spec: {
       itemPath: vaultItemPath("streambot-config"),
@@ -34,12 +42,7 @@ export function createStreambotDeployment(chart: Chart) {
     onePasswordItem.name,
   );
 
-  const videoVolume = new ZfsNvmeVolume(chart, "streambot-videos", {
-    storage: Size.gibibytes(128),
-  });
-  const cacheVolume = new ZfsNvmeVolume(chart, "streambot-cache", {
-    storage: Size.gibibytes(16),
-  });
+  const fromSecret = (key: string) => EnvValue.fromSecretValue({ secret, key });
 
   const deployment = new Deployment(chart, "streambot", {
     replicas: 1,
@@ -50,7 +53,7 @@ export function createStreambotDeployment(chart: Chart) {
     metadata: {
       annotations: {
         "ignore-check.kube-linter.io/no-read-only-root-fs":
-          "StreamBot writes yt-dlp state, uploaded videos, and preview cache at runtime.",
+          "Bun writes its install cache and ffmpeg writes temp files at runtime.",
       },
     },
   });
@@ -58,83 +61,69 @@ export function createStreambotDeployment(chart: Chart) {
   deployment.addContainer(
     withCommonProps({
       name: "streambot",
-      image: `quay.io/ydrag0n/streambot:${versions["ydrag0n/streambot"]}`,
-      portNumber: SERVER_PORT,
+      image: `ghcr.io/shepherdjerred/streambot:${versions["shepherdjerred/streambot"]}`,
       envVariables: {
-        TOKEN: EnvValue.fromSecretValue({ secret, key: "TOKEN" }),
-        PREFIX: EnvValue.fromValue("$"),
-        GUILD_ID: EnvValue.fromSecretValue({ secret, key: "GUILD_ID" }),
-        COMMAND_CHANNEL_ID: EnvValue.fromSecretValue({
-          secret,
-          key: "COMMAND_CHANNEL_ID",
-        }),
-        VIDEO_CHANNEL_ID: EnvValue.fromSecretValue({
-          secret,
-          key: "VIDEO_CHANNEL_ID",
-        }),
-        ADMIN_IDS: EnvValue.fromSecretValue({ secret, key: "ADMIN_IDS" }),
-        VIDEOS_DIR: EnvValue.fromValue("/home/bots/StreamBot/videos"),
-        PREVIEW_CACHE_DIR: EnvValue.fromValue(
-          "/home/bots/StreamBot/tmp/preview-cache",
-        ),
-        STREAM_RESPECT_VIDEO_PARAMS: EnvValue.fromValue("false"),
-        STREAM_BITRATE_OVERRIDE: EnvValue.fromValue("false"),
-        STREAM_WIDTH: EnvValue.fromValue("1280"),
-        STREAM_HEIGHT: EnvValue.fromValue("720"),
-        STREAM_MAX_WIDTH: EnvValue.fromValue("0"),
-        STREAM_MAX_HEIGHT: EnvValue.fromValue("0"),
+        BOT_TOKEN: fromSecret("BOT_TOKEN"),
+        TOKEN: fromSecret("TOKEN"),
+        GUILD_ID: fromSecret("GUILD_ID"),
+        COMMAND_CHANNEL_ID: fromSecret("COMMAND_CHANNEL_ID"),
+        VIDEO_CHANNEL_ID: fromSecret("VIDEO_CHANNEL_ID"),
+        ADMIN_IDS: fromSecret("ADMIN_IDS"),
+        VIDEOS_DIR: EnvValue.fromValue("/data/videos"),
+        MEDIA_DIRS: EnvValue.fromValue("/media/movies,/media/tv"),
+        STREAM_WIDTH: EnvValue.fromValue("1920"),
+        STREAM_HEIGHT: EnvValue.fromValue("1080"),
         STREAM_FPS: EnvValue.fromValue("30"),
-        STREAM_BITRATE_KBPS: EnvValue.fromValue("2000"),
-        STREAM_MAX_BITRATE_KBPS: EnvValue.fromValue("2500"),
-        STREAM_HARDWARE_ACCELERATION: EnvValue.fromValue("false"),
-        STREAM_VIDEO_CODEC: EnvValue.fromValue("H264"),
-        STREAM_H26X_PRESET: EnvValue.fromValue("ultrafast"),
-        SERVER_ENABLED: EnvValue.fromValue("true"),
-        SERVER_USERNAME: EnvValue.fromSecretValue({
-          secret,
-          key: "SERVER_USERNAME",
-        }),
-        SERVER_PASSWORD: EnvValue.fromSecretValue({
-          secret,
-          key: "SERVER_PASSWORD",
-        }),
-        SERVER_PORT: EnvValue.fromValue(String(SERVER_PORT)),
+        STREAM_BITRATE_KBPS: EnvValue.fromValue("4000"),
+        STREAM_HARDWARE_ACCELERATION: EnvValue.fromValue("true"),
+        VAAPI_DEVICE: EnvValue.fromValue("/dev/dri/renderD128"),
+        // Intel iHD VAAPI driver for QuickSync hardware encoding.
+        LIBVA_DRIVER_NAME: EnvValue.fromValue("iHD"),
       },
       securityContext: {
         user: STREAMBOT_UID,
         group: STREAMBOT_GID,
+        ensureNonRoot: true,
         readOnlyRootFilesystem: false,
         allowPrivilegeEscalation: false,
       },
+      resources: {
+        cpu: {
+          request: Cpu.millis(250),
+          limit: Cpu.millis(2000),
+        },
+        memory: {
+          request: Size.mebibytes(512),
+          limit: Size.gibibytes(2),
+        },
+      },
       volumeMounts: [
         {
-          path: "/home/bots/StreamBot/videos",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "streambot-videos-volume",
-            videoVolume.claim,
-          ),
-        },
-        {
-          path: "/home/bots/StreamBot/tmp",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "streambot-cache-volume",
-            cacheVolume.claim,
-          ),
-        },
-        {
-          // StreamBot downloads (and self-updates) the yt-dlp binary into
-          // `${cwd}/scripts` at runtime. The image's WORKDIR is root-owned, but we
-          // run as UID 1000, so without a writable mount here the `mkdir`/download
-          // fails (EACCES) and every YouTube/URL play breaks with `yt-dlp ENOENT`.
-          // An emptyDir is correct: the binary is ephemeral, re-fetched on start.
-          path: "/home/bots/StreamBot/scripts",
+          // Writable scan dir for ad-hoc uploads (the library proper is the RO mounts below).
+          path: "/data/videos",
           volume: Volume.fromEmptyDir(
             chart,
-            "streambot-scripts-volume",
-            "streambot-scripts",
+            "streambot-videos-volume",
+            "streambot-videos",
           ),
+        },
+        {
+          path: "/media/movies",
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "streambot-movies-volume",
+            claims.movies,
+          ),
+          readOnly: true,
+        },
+        {
+          path: "/media/tv",
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "streambot-tv-volume",
+            claims.tv,
+          ),
+          readOnly: true,
         },
       ],
     }),
@@ -142,13 +131,13 @@ export function createStreambotDeployment(chart: Chart) {
 
   setRevisionHistoryLimit(deployment);
 
-  const service = new Service(chart, "streambot-service", {
-    selector: deployment,
-    ports: [{ port: SERVER_PORT }],
-  });
-
-  new TailscaleIngress(chart, "streambot-tailscale-ingress", {
-    service,
-    host: "streambot",
-  });
+  // Request the Intel iGPU so ffmpeg can VAAPI hardware-encode. The intel-device-plugin mounts
+  // /dev/dri into the pod; non-root UID 1000 works (same as Jellyfin). The GPU resource patch
+  // (scripts/patch.ts) leaves an explicit `1` untouched.
+  ApiObject.of(deployment).addJsonPatch(
+    JsonPatch.add(
+      "/spec/template/spec/containers/0/resources/limits/gpu.intel.com~1i915",
+      1,
+    ),
+  );
 }
