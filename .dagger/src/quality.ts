@@ -87,6 +87,7 @@ export function shellcheckHelper(source: Directory): Container {
       [
         'find . -name "*.sh"',
         '-not -path "*/archive/*"',
+        '-not -path "*/wasm-src/*"',
         '-not -path "*/node_modules/*"',
         '-not -path "*/Pods/*"',
         '-not -path "*/target/*"',

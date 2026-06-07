@@ -51,6 +51,7 @@ import { createSyncthingApp } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { createGolinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/golink.ts";
 import { createFreshrssApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/freshrss.ts";
 import { createPokemonApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/pokemon.ts";
+import { createMarioKartApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/mario-kart.ts";
 import { createGickupApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/gickup.ts";
 import { createGrafanaDbApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/grafana-db.ts";
 import { createS3StaticSitesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/s3-static-sites.ts";
@@ -161,6 +162,7 @@ export async function createAppsChart(app: App) {
   createGolinkApp(chart);
   createFreshrssApp(chart);
   createPokemonApp(chart);
+  createMarioKartApp(chart);
   createGickupApp(chart);
   createGrafanaDbApp(chart);
   createMcpGatewayApp(chart);

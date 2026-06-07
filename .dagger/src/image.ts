@@ -14,6 +14,7 @@ import {
   CADDY_IMAGE,
   CLAUDE_CODE_VERSION,
   CODEX_CLI_VERSION,
+  EMSCRIPTEN_IMAGE,
   GH_CLI_VERSION,
   GITHUB_MCP_SERVER_VERSION,
   KUBECTL_VERSION,
@@ -882,6 +883,151 @@ export async function pushDiscordPlaysPokemonImageHelper(
   gitSha: string = "unknown",
 ): Promise<string> {
   const container = buildDiscordPlaysPokemonImageHelper(
+    pkgDir,
+    depNames,
+    depDirs,
+    version,
+    gitSha,
+  );
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
+}
+
+/**
+ * Build the discord-plays-mario-kart backend image.
+ *
+ * Two stages:
+ *  1. An emscripten stage compiles the vendored, patched N64Wasm core
+ *     (parallel-n64 + angrylion software RDP) from `wasm-src/` into
+ *     `n64wasm.js` + `n64wasm.wasm`. No binaries are committed — the build is
+ *     reproducible from source (the patched mymain.cpp adds neilSetRom,
+ *     neilGetVideoBuffer/Height, and the per-player input export). `make clean`
+ *     guarantees the patched sources are recompiled rather than reusing any
+ *     stale local object files.
+ *  2. A Bun stage mirrors discord-plays-pokemon (ffmpeg + libvips for
+ *     @dank074/discord-video-stream, workspace install, frontend build) and
+ *     copies the compiled core + MEMFS-staged assets into the backend's
+ *     assets dir. Headless: no GPU, browser, or desktop.
+ */
+export function buildDiscordPlaysMarioKartImageHelper(
+  pkgDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Container {
+  const excludes = ["node_modules", "dist", ".eslintcache"];
+  const innerRoot = "/workspace/packages/discord-plays-mario-kart";
+  const assetsDir = `${innerRoot}/packages/backend/assets/n64wasm`;
+
+  // Stage 1: compile the N64Wasm core in the pinned emscripten toolchain.
+  const wasmSrc = pkgDir.directory("wasm-src");
+  const wasmBuild = dag
+    .container()
+    .from(EMSCRIPTEN_IMAGE)
+    .withDirectory("/src", wasmSrc, { exclude: ["dist"] })
+    .withWorkdir("/src/code")
+    // `make clean` drops any object files so the patched sources are rebuilt
+    // from scratch; `make` emits n64wasm.js + n64wasm.wasm in this dir.
+    .withExec(["make", "clean"])
+    .withExec(["make"]);
+
+  // Stage 2: the headless Bun service (mirrors discord-plays-pokemon).
+  let container = dag
+    .container()
+    .from(BUN_IMAGE)
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+    // ffmpeg + libvips for @dank074/discord-video-stream (fluent-ffmpeg encode
+    // path + sharp). No browser/GPU/desktop — software-rendered N64 frames are
+    // read straight out of wasm memory.
+    .withExec([
+      "sh",
+      "-c",
+      "apt-get update -qq && apt-get install -y -qq --no-install-recommends ffmpeg libvips42 ca-certificates && rm -rf /var/lib/apt/lists/*",
+    ])
+    .withWorkdir("/workspace")
+    // wasm-src is the build input for stage 1 only — keep the large vendored
+    // C/C++ tree out of the runtime image.
+    .withDirectory(innerRoot, pkgDir, {
+      exclude: [...excludes, "wasm-src"],
+    });
+
+  for (let i = 0; i < depNames.length; i++) {
+    container = container.withDirectory(
+      `/workspace/packages/${depNames[i]}`,
+      depDirs[i],
+      { exclude: excludes },
+    );
+  }
+
+  return (
+    container
+      // Copy the compiled core + the files the host stages into MEMFS at
+      // runtime (loadFile reads these; see the emulator host).
+      .withFile(
+        `${assetsDir}/n64wasm.js`,
+        wasmBuild.file("/src/code/n64wasm.js"),
+      )
+      .withFile(
+        `${assetsDir}/n64wasm.wasm`,
+        wasmBuild.file("/src/code/n64wasm.wasm"),
+      )
+      .withFile(
+        `${assetsDir}/shader_vert.hlsl`,
+        wasmBuild.file("/src/code/shader_vert.hlsl"),
+      )
+      .withFile(
+        `${assetsDir}/shader_frag.hlsl`,
+        wasmBuild.file("/src/code/shader_frag.hlsl"),
+      )
+      .withFile(
+        `${assetsDir}/overlay.png`,
+        wasmBuild.file("/src/code/overlay.png"),
+      )
+      .withFile(
+        `${assetsDir}/res/arial.ttf`,
+        wasmBuild.file("/src/code/res/arial.ttf"),
+      )
+      // Workspace install (backend + frontend) — runs trustedDependencies
+      // postinstalls and applies the lazy-sharp bun patch.
+      .withWorkdir(innerRoot)
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withWorkdir(`${innerRoot}/packages/backend`)
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      // Build the web UI served by the backend web server (web.assets).
+      .withWorkdir(`${innerRoot}/packages/frontend`)
+      .withExec(["bun", "run", "build"])
+      .withLabel(
+        "org.opencontainers.image.source",
+        "https://github.com/shepherdjerred/monorepo",
+      )
+      .withLabel("org.opencontainers.image.version", version)
+      .withLabel("org.opencontainers.image.revision", gitSha)
+      .withEnvVariable("VERSION", version)
+      .withEnvVariable("GIT_SHA", gitSha)
+      // Run from the inner-monorepo root so getConfig()/emulator resolve
+      // config.toml, the n64wasm assets, and saves/ relative to CWD.
+      .withWorkdir(innerRoot)
+      .withEntrypoint(["bun", "packages/backend/src/index.ts"])
+  );
+}
+
+/** Push a discord-plays-mario-kart image to a registry. Returns the digest. */
+export async function pushDiscordPlaysMarioKartImageHelper(
+  pkgDir: Directory,
+  tags: string[],
+  registryUsername: string,
+  registryPassword: Secret,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Promise<string> {
+  const container = buildDiscordPlaysMarioKartImageHelper(
     pkgDir,
     depNames,
     depDirs,

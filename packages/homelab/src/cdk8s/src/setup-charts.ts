@@ -14,6 +14,7 @@ import { createSyncthingChart } from "./cdk8s-charts/syncthing.ts";
 import { createGolinkChart } from "./cdk8s-charts/golink.ts";
 import { createFreshRssChart } from "./cdk8s-charts/freshrss.ts";
 import { createPokemonChart } from "./cdk8s-charts/pokemon.ts";
+import { createMarioKartChart } from "./cdk8s-charts/mario-kart.ts";
 import { createGickupChart } from "./cdk8s-charts/gickup.ts";
 import { createGrafanaDbChart } from "./cdk8s-charts/grafana-db.ts";
 import { createS3StaticSitesChart } from "./cdk8s-charts/s3-static-sites.ts";
@@ -58,6 +59,7 @@ export async function setupCharts(app: App): Promise<void> {
   createGolinkChart(app);
   createFreshRssChart(app);
   createPokemonChart(app);
+  createMarioKartChart(app);
   await createGickupChart(app);
   createGrafanaDbChart(app);
   await createMcpGatewayChart(app);

@@ -1,0 +1,17 @@
+{
+  "recommendations": [
+    "earthly.earthfile-syntax-highlighting",
+    "esbenp.prettier-vscode",
+    "davidanson.vscode-markdownlint",
+    "timonwong.shellcheck",
+    "mkhl.shfmt",
+    "redhat.vscode-yaml",
+    "arahata.linter-actionlint",
+    "dbaeumer.vscode-eslint",
+    "github.vscode-github-actions",
+    "bradlc.vscode-tailwindcss",
+    "lightyen.tailwindcss-intellisense-twin",
+    "tamasfe.even-better-toml",
+    "orta.vscode-jest"
+  ]
+}
