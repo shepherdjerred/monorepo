@@ -2,6 +2,8 @@
 
 ## Status
 
+**Complete** — all plan-scoped work verified shipped to `main` during the 2026-06-06 docs groom; archived to `archive/completed/`. Original tracking status preserved below.
+
 Partially Complete — PRs open, awaiting merge + ArgoCD rollout.
 
 - Monorepo PR: [shepherdjerred/monorepo#861](https://github.com/shepherdjerred/monorepo/pull/861)

@@ -2,6 +2,8 @@
 
 ## Status
 
+**Complete** — all plan-scoped work verified shipped to `main` during the 2026-06-06 docs groom; archived to `archive/completed/`. Original tracking status preserved below.
+
 In Progress — code shipped on branch `feat/refine-release-notes-in-ci`. Awaiting (1) PR merge and (2) addition of `CLAUDE_CODE_OAUTH_TOKEN` to the 1Password item backing the `buildkite-ci-secrets` k8s secret (vault `v64ocnykdqju4ui6j6pua56xw4`, item `rzk3lawpk4yspyyu5rxlz44ssi`). Without the secret field, the release-please CI step will fail when it tries to read the env var.
 
 ## Context

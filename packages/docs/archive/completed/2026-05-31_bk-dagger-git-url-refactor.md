@@ -2,6 +2,8 @@
 
 ## Status
 
+**Complete** — all plan-scoped work verified shipped to `main` during the 2026-06-06 docs groom; archived to `archive/completed/`. Original tracking status preserved below.
+
 In Progress — PR1 + PR2 both open, PR2 stacked on PR1.
 
 **Phase 1.1 (gate test): ✅ PASSED 2026-05-31.** Confirmed `dagger call lint --pkg-dir https://github.com/shepherdjerred/monorepo.git#<ref>:packages/eslint-config --tsconfig …#<ref>:tsconfig.base.json` works against the in-cluster engine (v0.20.8) with both `#main` and `#<40-char SHA>` ref forms. Engine resolves git URLs server-side and presents them as `Address.directory`/`Address.file`. Cache hits work — re-running the same call drops total Dagger time from 10.9s to 4.4s. Multi-package (homelab + deps) also works. The fallback (`bunBaseContainer` refactor to accept `commit: string`) is **not** needed.

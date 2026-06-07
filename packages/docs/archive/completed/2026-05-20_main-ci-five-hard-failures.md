@@ -2,6 +2,8 @@
 
 ## Status
 
+**Complete** — all plan-scoped work verified shipped to `main` during the 2026-06-06 docs groom; archived to `archive/completed/`. Original tracking status preserved below.
+
 In Progress — PR covers Fix 6.b + Fix 7; secret rotations (`GITHUB_APP_PRIVATE_KEY`,
 `NPM_TOKEN`) remain user-owned and unblock the remaining 3 hard failures.
 
