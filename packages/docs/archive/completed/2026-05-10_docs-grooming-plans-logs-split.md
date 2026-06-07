@@ -2,7 +2,7 @@
 
 ## Status
 
-**Complete** — the `plans/`/`logs/` split, taxonomy, and discipline rewrite shipped 2026-05-10 (see Session Log below) and are now codified in `packages/docs/AGENTS.md` and root `CLAUDE.md`. Archived during the 2026-06-06 docs groom. The deferred archive-consolidation items under "Remaining" (delete `archive/stale/`, prune `archive/homelab-audits/`, merge `archive/dagger-migration/` + `archive/on-hold/`) remain open and need explicit user sign-off before any history is deleted.
+**Complete** — the `plans/`/`logs/` split, taxonomy, and discipline rewrite shipped 2026-05-10 (see Session Log below) and are now codified in `packages/docs/AGENTS.md` and root `CLAUDE.md`. Archived during the 2026-06-06 docs groom. The deferred archive-consolidation items under "Remaining" (delete `archive/stale/`, prune `archive/homelab-audits/`, merge `archive/dagger-migration/` + `archive/on-hold/`) were raised to the user on 2026-06-06 and **declined** — the archive stays intact per "Archive, don't delete". Considered closed; do not re-raise.
 
 ## Context
 
