@@ -97,3 +97,44 @@ export function k8sPlugin(
     },
   };
 }
+
+/**
+ * Escape hatch for steps that genuinely need the repo source on the BK pod
+ * (i.e. they run repo scripts directly on the agent rather than via a Dagger
+ * git-URL ref). Re-enables Buildkite's built-in checkout (`--depth=100`) and
+ * restores the `buildkite-git-mirrors` mount that {@link k8sPlugin} omits.
+ *
+ * Only the Greptile PR gate uses this — it shells out to `bun
+ * scripts/ci/src/wait-for-greptile.ts` + `buildkite-agent` on the agent. Do
+ * not add new callers; new agent-side work should be migrated to Dagger.
+ */
+export function k8sPluginWithCheckout(
+  opts: {
+    cpu?: string;
+    memory?: string;
+    secrets?: string[];
+  } = {},
+): Record<string, unknown> {
+  const plugin = k8sPlugin(opts) as {
+    kubernetes: Record<string, unknown> & {
+      podSpecPatch: { containers: { volumeMounts?: unknown[] }[] };
+    };
+  };
+  plugin.kubernetes["checkout"] = {
+    cloneFlags: "--depth=100",
+    fetchFlags: "--depth=100",
+  };
+  // Restore the git-mirrors volume mount that base k8sPlugin omits.
+  const container = plugin.kubernetes.podSpecPatch.containers[0];
+  if (container === undefined) {
+    throw new Error("k8sPluginWithCheckout: expected container-0");
+  }
+  container.volumeMounts = [
+    {
+      name: "buildkite-git-mirrors",
+      mountPath: "/buildkite/git-mirrors",
+      readOnly: true,
+    },
+  ];
+  return plugin;
+}

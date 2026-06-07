@@ -62,12 +62,12 @@ export function createMarioKartDeployment(chart: Chart) {
 
   const item = new OnePasswordItem(chart, "mario-kart-config", {
     spec: {
-      // 1Password item with a `config.toml` field (server id, [stream.userbot]
-      // selfbot token + ids, [stream.video], [emulator], [web]). Create this
-      // item in the same vault and replace the item id below before first
-      // deploy — see packages/discord-plays-mario-kart/README.md.
+      // "MK64 Config" — 1Password item with a `config.toml` field (server id,
+      // [bot], [stream] + [stream.userbot] selfbot token/ids, [stream.video],
+      // [emulator], [web]). Lives in the Homelab (Kubernetes) vault alongside
+      // the Pokebot config — see packages/discord-plays-mario-kart/README.md.
       itemPath:
-        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/mariokartconfigreplaceme",
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/fcugoc3kohpmfwzfvko4hgysyq",
     },
   });
 
@@ -136,6 +136,20 @@ export function createMarioKartDeployment(chart: Chart) {
               },
             },
           }),
+        },
+        // The app's CWD (APP_ROOT) is owned by root and not writable by the
+        // runtime user (uid 1000). The winston File transport (logger.ts)
+        // crashes at startup trying to `mkdir logs/`. This writable scratch
+        // volume keeps that path writable. Once an image built with the
+        // stdout-only logger (Console transport only) is deployed, this mount
+        // is harmless and can be removed. Mirrors the pokemon deployment.
+        {
+          path: `${APP_ROOT}/logs`,
+          volume: Volume.fromEmptyDir(
+            chart,
+            "mario-kart-logs",
+            "mario-kart-logs",
+          ),
         },
       ],
     }),
