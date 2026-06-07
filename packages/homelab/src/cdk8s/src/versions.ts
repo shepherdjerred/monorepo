@@ -22,7 +22,7 @@ const versions = {
   // not managed by renovate — built from packages/streambot; CI's version commit-back fills the
   // real tag@digest after the first image push. Seed digest is a placeholder until then.
   "shepherdjerred/streambot":
-    "2.0.0-3573@sha256:d0396a72515b5fe34f9ea1949f94d49edee8c6ca7649f768e850e9040f3daaaf",
+    "2.0.0-3583@sha256:68095cf47eac21a12b314a4dae6cf9ec685becac5258cf0a3dc249f740bf353c",
   // renovate: datasource=docker registryUrl=https://quay.io versioning=docker
   // Tracked via the rolling `latest` tag because upstream redlib only publishes
   // sha-<short-commit> tags, which Renovate cannot version-compare. The global
@@ -230,7 +230,7 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-3573@sha256:d60f4affdc21caec3721fffc69484776b1a55ea2cc73ee4bd7d85db3fe8b0c0f",
+    "2.0.0-3583@sha256:b47c1cc60b78c4d36889a724cbb19ecd1785aa8f6dfafb7317be78d0447f98b3",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
@@ -238,7 +238,7 @@ const versions = {
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-3573@sha256:33853fd414dc3b33547cdf2b246e3c16aee3e39251f6d1229b9c7bd395607d68",
+    "2.0.0-3583@sha256:ef7869d43716d8bb69c39b3ae27593d82de0d0361704f62d6c6f6a556a16b073",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.6@sha256:1263120feed69d82e4ca23b8ca6f1d702c3029fe70714e382966d0192318eab6",
