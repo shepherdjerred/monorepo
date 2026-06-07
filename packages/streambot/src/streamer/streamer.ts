@@ -50,7 +50,13 @@ export class StreambotStreamer {
 
   async destroy(): Promise<void> {
     this.safeStop();
-    this.client.destroy();
+    try {
+      this.client.destroy();
+    } catch (error) {
+      // discord.js-selfbot-v13's destroy throws (`this.connection.readyState` on null) when the
+      // gateway shard never fully opened or already closed — harmless during shutdown.
+      log.warn("client destroy failed", { error: getErrorMessage(error) });
+    }
     await Promise.resolve();
   }
 
@@ -142,10 +148,27 @@ export class StreambotStreamer {
       log.warn("initial setVolume failed", { error: getErrorMessage(error) });
     }
     try {
-      // playStream resolves on natural end; `promise` rejects on ffmpeg failure. Race them.
+      // `playStream` resolves when real-time *playback* finishes (or `signal` aborts) — that's the
+      // true end of the stream. The ffmpeg `promise` resolves when *encoding* finishes, which for a
+      // local file runs far ahead of playback; using its resolution to end the stream would cut
+      // every video short. So await playStream for the end, and fold in `promise` only to surface
+      // ffmpeg *failures* (it stays pending on success, never ending playback early).
+      const ffmpegFailure = (async (): Promise<never> => {
+        try {
+          await promise;
+        } catch (error) {
+          throw error instanceof Error
+            ? error
+            : new Error(getErrorMessage(error));
+        }
+        // ffmpeg finished encoding; stay pending so only playback ends the stream.
+        return new Promise<never>(() => {
+          /* never settles */
+        });
+      })();
       await Promise.race([
         playStream(output, this.streamer, undefined, signal),
-        promise,
+        ffmpegFailure,
       ]);
     } finally {
       this.controller = null;
