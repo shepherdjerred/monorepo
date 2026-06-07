@@ -56,7 +56,7 @@ resource "tailscale_acl" "homelab" {
 
       # Monitoring scrapers: node/exporter/kubelet metrics + ICMP. Nothing else.
       { action = "accept", src = ["tag:monitoring"], dst = ["tag:server:9090,9093,9100,10250"] },
-      { action = "accept", src = ["tag:monitoring"], proto = "icmp", dst = ["*:*"] },
+      { action = "accept", src = ["tag:monitoring"], proto = "icmp", dst = ["tag:server:*"] },
 
       # tag:ci and tag:iot intentionally get NO inbound access (deny-by-default):
       # CI reaches out, appliances are sources only — nothing reaches into them
@@ -88,6 +88,14 @@ resource "tailscale_acl" "homelab" {
         src    = "tag:monitoring"
         accept = ["tag:server:9100"]
         deny   = ["tag:server:22"]
+      },
+      # Core security invariant: non-admin members reach only the published web
+      # apps on tag:k8s (80/443) — never SSH, the Kubernetes API, or raw server
+      # ports. A future edit that widens the autogroup:member rule fails here.
+      {
+        src    = "autogroup:member"
+        accept = ["tag:k8s:443"]
+        deny   = ["tag:k8s:22", "tag:server:22"]
       },
     ]
   })
