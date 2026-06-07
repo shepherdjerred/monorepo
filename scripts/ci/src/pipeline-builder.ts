@@ -40,11 +40,7 @@ import {
   allPushKeys,
 } from "./steps/images.ts";
 import { publishNpmGroup, filterNpmPackages } from "./steps/npm.ts";
-import {
-  deploySitesGroup,
-  filterSites,
-  mkdocsDeployStep,
-} from "./steps/sites.ts";
+import { deploySitesGroup, filterSites } from "./steps/sites.ts";
 import { cdk8sSynthStep, homelabHelmGroup } from "./steps/helm.ts";
 import { homelabTofuGroup, homelabTofuPlanGroup } from "./steps/tofu.ts";
 import { argoCdSyncStep, argoCdHealthStep } from "./steps/argocd.ts";
@@ -194,14 +190,6 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       steps.push(releasePleaseStep(releaseDeps));
     }
 
-    // Helper: build deps array scoped to quality-gate + a specific package build
-    const scopedDeps = (pkg: string, extra: string[] = []): string[] => {
-      const deps = ["quality-gate", ...extra];
-      const pkgKey = pkgKeyMap.get(pkg);
-      if (pkgKey) deps.push(pkgKey);
-      return deps;
-    };
-
     // =======================================================================
     // BUILD PHASE — depends on quality-gate, runs before release
     // =======================================================================
@@ -305,14 +293,6 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       const siteDeployDeps =
         affected.buildAll || affected.homelabChanged ? ["tofu-seaweedfs"] : [];
       steps.push(deploySitesGroup(sitesToDeploy, pkgKeyMap, siteDeployDeps));
-    }
-
-    // --- MkDocs deploy (discord-plays-pokemon docs, needs Python not Bun) ---
-    if (
-      releaseBuild &&
-      (affected.buildAll || affected.packages.has("discord-plays-pokemon"))
-    ) {
-      steps.push(mkdocsDeployStep(scopedDeps("discord-plays-pokemon")));
     }
 
     // --- Homelab Tofu Plan (runs on PRs for early feedback) ---

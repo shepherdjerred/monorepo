@@ -8,7 +8,6 @@ import {
   HELM_CHARTS,
   NPM_PACKAGES,
   DEPLOY_SITES,
-  EXTRA_DEPLOY_SITES,
 } from "../catalog.ts";
 import { RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
@@ -103,11 +102,6 @@ function buildSummaryScript(): string {
     `echo "|------|-----|" >> $$SUMMARY`,
   );
   for (const site of DEPLOY_SITES) {
-    lines.push(
-      `echo "| ${site.name} | [${site.url}](${site.url}) |" >> $$SUMMARY`,
-    );
-  }
-  for (const site of EXTRA_DEPLOY_SITES) {
     lines.push(
       `echo "| ${site.name} | [${site.url}](${site.url}) |" >> $$SUMMARY`,
     );

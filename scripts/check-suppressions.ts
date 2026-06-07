@@ -83,6 +83,9 @@ const EXCLUDED_FILES = [
   // The literal "x-access-token" is the username GitHub's HTTPS clone
   // expects when the password is a PAT; not a token-in-URL.
   "packages/temporal/src/lib/pr-review-workdir.ts",
+  // Same GIT_ASKPASS pattern as data-dragon.ts — emits "x-access-token" as the
+  // git username for the monthly pokeemerald.wasm refresh clone.
+  "packages/temporal/src/activities/pokeemerald-wasm.ts",
 ];
 
 type Finding = {

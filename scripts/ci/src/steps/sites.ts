@@ -13,7 +13,6 @@ import {
   RETRY,
   DAGGER_ENV,
   DRYRUN_FLAG,
-  REPO_GIT_REF,
   gitDir,
   gitFile,
   DAGGER_CALL,
@@ -144,36 +143,6 @@ export function deploySitesGroup(
       if (pkgKey) deps.push(pkgKey);
       return deploySiteStep(s, deps);
     }),
-  };
-}
-
-/**
- * MkDocs docs deploy — build with mkdocs (Python), export, then deploy via deploy-site (awscli inside Dagger).
- * Two-step pipeline: mkdocs-build produces the site/, then deploy-site syncs to S3.
- */
-export function mkdocsDeployStep(dependsOn: string[]): BuildkiteStep {
-  return {
-    label: ":book: Deploy discord-plays-pokemon docs",
-    key: "deploy-discord-plays-pokemon-docs",
-    depends_on: dependsOn,
-    command:
-      [
-        // Step 1: Build with mkdocs (Python container), export built site to local path
-        `${DAGGER_CALL} mkdocs-build --source ${REPO_GIT_REF} export --path /tmp/mkdocs-site`,
-        // Step 2: Deploy pre-built HTML via deploy-static-site (no bun install needed)
-        `${DAGGER_CALL} deploy-static-site --site-dir /tmp/mkdocs-site --bucket dpp-docs --target seaweedfs --aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID --aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
-      ].join(" && ") + DRYRUN_FLAG,
-    timeout_in_minutes: 15,
-    priority: 1,
-    retry: RETRY,
-    env: DAGGER_ENV,
-    plugins: [
-      k8sPlugin({
-        cpu: "250m",
-        memory: "512Mi",
-        secrets: ["buildkite-argocd-token"],
-      }),
-    ],
   };
 }
 
