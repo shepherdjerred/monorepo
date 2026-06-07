@@ -7,10 +7,6 @@ resource "aws_s3_bucket" "clauderon" {
   bucket = "clauderon"
 }
 
-resource "aws_s3_bucket" "dpp_docs" {
-  bucket = "dpp-docs"
-}
-
 resource "aws_s3_bucket" "resume" {
   bucket = "resume"
 }

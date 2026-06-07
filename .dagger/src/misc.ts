@@ -1,5 +1,5 @@
 /**
- * Miscellaneous helper functions (mkdocs, caddyfile, smokeTest).
+ * Miscellaneous helper functions (caddyfile, smokeTest).
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
@@ -9,7 +9,6 @@ import {
   BUN_IMAGE,
   CADDY_BUILDER_IMAGE,
   CADDY_IMAGE,
-  PYTHON_IMAGE,
   BUN_CACHE,
   GO_BUILD,
   GO_MOD,
@@ -27,38 +26,6 @@ import {
 } from "./image";
 
 import versions from "./versions";
-
-/** Build MkDocs documentation site and return the built site/ directory. */
-export function mkdocsBuildHelper(source: Directory): Directory {
-  return dag
-    .container()
-    .from(PYTHON_IMAGE)
-    .withExec(["apt-get", "update", "-qq"])
-    .withExec([
-      "apt-get",
-      "install",
-      "-y",
-      "-qq",
-      "--no-install-recommends",
-      "pngquant",
-    ])
-    .withExec([
-      "pip",
-      "install",
-      "--no-cache-dir",
-      "mkdocs-material",
-      "mkdocs-minify-plugin",
-      "pillow",
-      "cairosvg",
-    ])
-    .withWorkdir("/workspace")
-    .withDirectory(
-      "/workspace",
-      source.directory("packages/discord-plays-pokemon/docs"),
-    )
-    .withExec(["mkdocs", "build"])
-    .directory("/workspace/site");
-}
 
 /** Build custom Caddy binary with s3-proxy plugin, using cached Go modules. */
 function caddyS3ProxyBinary(): File {
