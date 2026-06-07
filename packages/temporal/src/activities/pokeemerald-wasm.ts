@@ -13,6 +13,7 @@ const MAIN_BRANCH = "main";
 const PR_BRANCH = "auto/update-pokeemerald-wasm";
 const WASM_PATH =
   "packages/discord-plays-pokemon/packages/backend/assets/pokeemerald.wasm";
+const SHA_PATH = `${WASM_PATH}.sha256`;
 const FETCH_SCRIPT = "packages/discord-plays-pokemon/scripts/fetch-wasm.ts";
 
 export type PokeemeraldWasmUpdateResult = {
@@ -91,14 +92,16 @@ export const pokeemeraldWasmActivities = {
         "1",
       ]);
 
-      // Re-fetch the blob (FORCE overwrites the committed copy).
+      // Re-fetch the blob (FORCE overwrites the committed copy). ALLOW_WASM_UPDATE
+      // lets fetch-wasm accept a new upstream hash and rewrite the sidecar; the
+      // change still has to be reviewed in the PR this activity opens.
       await runCommand(["bun", FETCH_SCRIPT], {
         cwd: repoDir,
-        env: { FORCE: "1" },
+        env: { FORCE: "1", ALLOW_WASM_UPDATE: "1" },
       });
 
       const status = await runCommand(
-        ["git", "status", "--porcelain", "--", WASM_PATH],
+        ["git", "status", "--porcelain", "--", WASM_PATH, SHA_PATH],
         { cwd: repoDir, trimStdout: false },
       );
       if (status.trim().length === 0) {
@@ -125,7 +128,9 @@ export const pokeemeraldWasmActivities = {
         cwd: repoDir,
       });
       await runCommand(["git", "checkout", "-B", PR_BRANCH], { cwd: repoDir });
-      await runCommand(["git", "add", "--", WASM_PATH], { cwd: repoDir });
+      await runCommand(["git", "add", "--", WASM_PATH, SHA_PATH], {
+        cwd: repoDir,
+      });
       await runCommand(["git", "commit", "-m", title], { cwd: repoDir });
       const commitHash = await runCommand(["git", "rev-parse", "HEAD"], {
         cwd: repoDir,

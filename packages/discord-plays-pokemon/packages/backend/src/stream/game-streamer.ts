@@ -6,7 +6,7 @@ import {
   playStream,
   Encoders,
 } from "@dank074/discord-video-stream";
-import { WIDTH, HEIGHT } from "#src/emulator/constants.ts";
+import { WIDTH, HEIGHT, GBA_FPS } from "#src/emulator/constants.ts";
 import { logger } from "#src/logger.ts";
 
 export type GameStreamerOptions = {
@@ -20,7 +20,10 @@ export type GameStreamerOptions = {
   bitrateMaxKbps: number;
 };
 
-const SRC_FPS = 60;
+// rawvideo input framerate handed to ffmpeg — it assigns presentation
+// timestamps from this value, so it must match the emulator's actual tick rate
+// (GBA_FPS), not a rounded 60, or the output drifts ~0.27 fps behind wall-clock.
+const SRC_FPS = GBA_FPS;
 
 // Streams the emulator's RGBA frames into a Discord voice channel as a Go-Live
 // broadcast, over the voice UDP path. Replaces the userbot + browser
@@ -56,38 +59,53 @@ export class GameStreamer {
 
   async start(): Promise<void> {
     if (this.active) return;
-    await this.streamer.joinVoice(this.options.guildId, this.options.channelId);
-
-    const rgba = new PassThrough();
-    this.rgba = rgba;
+    // Claim `active` before the first await so concurrent start() calls — the
+    // fire-and-forget callbacks from VoiceStateUpdate — serialize on the guard
+    // above instead of racing a second joinVoice and overwriting this.rgba
+    // (which would leak the first PassThrough + its ffmpeg). Roll back on
+    // failure so a later start() can retry.
     this.active = true;
+    try {
+      await this.streamer.joinVoice(
+        this.options.guildId,
+        this.options.channelId,
+      );
 
-    const { output, promise } = prepareStream(rgba, {
-      width: WIDTH * this.options.scale,
-      height: HEIGHT * this.options.scale,
-      frameRate: this.options.frameRate,
-      videoCodec: "H264",
-      bitrateVideo: this.options.bitrateKbps,
-      bitrateVideoMax: this.options.bitrateMaxKbps,
-      includeAudio: false,
-      minimizeLatency: true,
-      customInputOptions: [
-        "-f",
-        "rawvideo",
-        "-pix_fmt",
-        "rgba",
-        "-video_size",
-        `${String(WIDTH)}x${String(HEIGHT)}`,
-        "-framerate",
-        String(SRC_FPS),
-      ],
-      encoder: Encoders.software({
-        x264: { preset: "ultrafast", tune: "zerolatency" },
-      }),
-    });
+      const rgba = new PassThrough();
+      this.rgba = rgba;
 
-    this.playing = this.runStream(output, promise);
-    logger.info("Go-Live stream started");
+      const { output, promise } = prepareStream(rgba, {
+        width: WIDTH * this.options.scale,
+        height: HEIGHT * this.options.scale,
+        frameRate: this.options.frameRate,
+        videoCodec: "H264",
+        bitrateVideo: this.options.bitrateKbps,
+        bitrateVideoMax: this.options.bitrateMaxKbps,
+        includeAudio: false,
+        minimizeLatency: true,
+        customInputOptions: [
+          "-f",
+          "rawvideo",
+          "-pix_fmt",
+          "rgba",
+          "-video_size",
+          `${String(WIDTH)}x${String(HEIGHT)}`,
+          "-framerate",
+          String(SRC_FPS),
+        ],
+        encoder: Encoders.software({
+          x264: { preset: "ultrafast", tune: "zerolatency" },
+        }),
+      });
+
+      this.playing = this.runStream(output, promise);
+      logger.info("Go-Live stream started");
+    } catch (error) {
+      this.active = false;
+      this.rgba?.end();
+      this.rgba = undefined;
+      throw error;
+    }
   }
 
   // Drives the Go-Live broadcast and watches the ffmpeg encode for errors.
