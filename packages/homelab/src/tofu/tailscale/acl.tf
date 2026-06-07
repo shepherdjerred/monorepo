@@ -58,9 +58,18 @@ resource "tailscale_acl" "homelab" {
       { action = "accept", src = ["tag:monitoring"], dst = ["tag:server:9090,9093,9100,10250"] },
       { action = "accept", src = ["tag:monitoring"], proto = "icmp", dst = ["tag:server:*"] },
 
-      # tag:ci and tag:iot intentionally get NO inbound access (deny-by-default):
-      # CI reaches out, appliances are sources only — nothing reaches into them
-      # and they cannot reach the infrastructure.
+      # CI runners (tag:ci) must reach the SeaweedFS S3 backend that stores the
+      # OpenTofu state for every stack (cloudflare, github, seaweedfs, and this
+      # tailscale stack). That backend, seaweedfs-s3.tailnet-1a49.ts.net, is
+      # published by the Tailscale operator's ingress proxy (tag:k8s) on 443 —
+      # NOT a tag:server node — so the grant must target tag:k8s:443. Without it,
+      # deny-by-default would cut CI off from tofu state and break apply for ALL
+      # stacks, not just this one.
+      { action = "accept", src = ["tag:ci"], dst = ["tag:k8s:443"] },
+
+      # tag:iot intentionally gets NO inbound or outbound access, and tag:ci gets
+      # no *inbound* access (deny-by-default): appliances are sources only,
+      # nothing reaches into them, and they cannot reach the infrastructure.
     ]
 
     # Let the operator self-approve any subnet routes it advertises (none today).
@@ -96,6 +105,14 @@ resource "tailscale_acl" "homelab" {
         src    = "autogroup:member"
         accept = ["tag:k8s:443"]
         deny   = ["tag:k8s:22", "tag:server:22"]
+      },
+      # CI must keep reaching the SeaweedFS S3 tofu-state backend (tag:k8s:443)
+      # but nothing more — guards against accidentally dropping the tag:ci grant
+      # above (which would break tofu apply for every stack) or widening it.
+      {
+        src    = "tag:ci"
+        accept = ["tag:k8s:443"]
+        deny   = ["tag:server:22", "tag:k8s:22"]
       },
     ]
   })
