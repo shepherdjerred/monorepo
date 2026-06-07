@@ -1,3 +1,4 @@
+import { rm } from "node:fs/promises";
 import { Client } from "discord.js-selfbot-v13";
 import {
   Encoders,
@@ -10,9 +11,11 @@ import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type {
   JoinVoiceInput,
   LeaveVoiceInput,
+  ResolvedSubtitle,
   RunStreamInput,
   VoiceHandle,
 } from "@shepherdjerred/streambot/machine/types.ts";
+import { buildSubtitleFilter } from "@shepherdjerred/streambot/sources/subtitles.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
@@ -112,24 +115,48 @@ export class StreambotStreamer {
     input: RunStreamInput,
     signal: AbortSignal,
   ): Promise<void> => {
-    const useHardware = this.config.stream.hardwareAcceleration;
+    // libass subtitle burn-in is a CPU filter that doesn't compose with the VAAPI hardware-frame
+    // graph, so force software encoding whenever this track has burned-in subtitles. VAAPI is still
+    // used for subtitle-free videos.
+    const hasSubtitle = input.resolved.subtitle !== undefined;
+    const useHardware = this.config.stream.hardwareAcceleration && !hasSubtitle;
     try {
-      await this.streamOnce(input, signal, useHardware, 0);
-    } catch (error) {
-      if (useHardware && !signal.aborted) {
-        // Resume the software retry at wherever playback (incl. any live seek) had reached, rather
-        // than restarting the video from 0.
-        const resumeAt = this.lastPlaybackPositionSeconds;
-        log.warn("hardware (VAAPI) encode failed; retrying with software", {
-          error: getErrorMessage(error),
-          resumeAt,
-        });
-        await this.streamOnce(input, signal, false, resumeAt);
-        return;
+      try {
+        await this.streamOnce(input, signal, useHardware, 0);
+      } catch (error) {
+        if (useHardware && !signal.aborted) {
+          // Resume the software retry at wherever playback (incl. any live seek) had reached, rather
+          // than restarting the video from 0.
+          const resumeAt = this.lastPlaybackPositionSeconds;
+          log.warn("hardware (VAAPI) encode failed; retrying with software", {
+            error: getErrorMessage(error),
+            resumeAt,
+          });
+          await this.streamOnce(input, signal, false, resumeAt);
+          return;
+        }
+        throw error;
       }
-      throw error;
+    } finally {
+      // Drop the staged subtitle temp file once the whole track is done (covers both encode attempts
+      // and every in-segment seek, which reuse the same file).
+      await this.cleanupSubtitle(input.resolved.subtitle);
     }
   };
+
+  private async cleanupSubtitle(
+    subtitle: ResolvedSubtitle | undefined,
+  ): Promise<void> {
+    if (subtitle === undefined) return;
+    try {
+      await rm(subtitle.cleanupPath, { force: true });
+    } catch (error) {
+      log.warn("failed to remove subtitle temp file", {
+        path: subtitle.cleanupPath,
+        error: getErrorMessage(error),
+      });
+    }
+  }
 
   private async streamOnce(
     input: RunStreamInput,
@@ -150,6 +177,9 @@ export class StreambotStreamer {
       hardwareAcceleratedDecoding: useHardware,
       minimizeLatency: false,
       ...(startSeconds > 0 ? { startTime: startSeconds } : {}),
+      ...(input.resolved.subtitle
+        ? { videoFilters: [buildSubtitleFilter(input.resolved.subtitle.path)] }
+        : {}),
       ...(useHardware
         ? { encoder: Encoders.vaapi({ device: stream.vaapiDevice }) }
         : {}),

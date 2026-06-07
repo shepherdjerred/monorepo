@@ -26,8 +26,13 @@ We deliberately diverged:
 
 The streamer drives [`@shepherdjerred/discord-video-stream`](../discord-video-stream) — our in-repo
 fork of [`@dank074/discord-video-stream`](https://github.com/dank074/Discord-video-stream) `6.0.0`.
-We fork it (rather than depend on npm) so we can add a seekable player and bake in the bun-safe lazy
-`sharp` import. See that package's `README.md` for the divergence.
+We fork it (rather than depend on npm) so we can add a seekable player, a `videoFilters` option, and
+bake in the bun-safe lazy `sharp` import. See that package's `README.md` for the divergence.
+
+The fork adds a `videoFilters?: string[]` option to `prepareStream`, merged into the same `-vf` chain
+as the built-in `scale` (a raw `-vf` via `customFfmpegFlags` would instead collide with it). streambot
+uses it to burn subtitles (`subtitles='…'`). Because the seekable player re-applies the prepare options
+on every ffmpeg restart, burned subtitles survive `/stream seek` and the HW→SW retry.
 
 ## Playback capabilities & limitations
 

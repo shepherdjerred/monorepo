@@ -22,10 +22,20 @@ export type VoiceHandle = {
   readonly channelId: ChannelId;
 };
 
+/** A subtitle track staged to a safe temp file, ready to burn into the video. */
+export type ResolvedSubtitle = {
+  /** Safe temp file the ffmpeg `subtitles` filter reads. */
+  readonly path: string;
+  /** Temp file to unlink once the stream ends (always the staged copy — never a user file). */
+  readonly cleanupPath: string;
+};
+
 /** A source resolved to something ffmpeg can read (a local path or a direct stream URL). */
 export type ResolvedSource = {
   readonly title: string;
   readonly ffmpegInput: string;
+  /** Burnable subtitle for this source, if one was found and subtitles are enabled. */
+  readonly subtitle?: ResolvedSubtitle;
 };
 
 /** A queue entry: a requested source plus who asked for it. */

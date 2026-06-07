@@ -119,6 +119,15 @@ export type PrepareStreamOptions = {
   customFfmpegFlags: string[];
 
   /**
+   * Extra video filters appended to the transcoding filter chain, immediately after the internal
+   * `scale` filter and before the encoder's own output filters (e.g.
+   * `["subtitles='/tmp/subs.srt'"]` to burn in subtitles). Ignored when `noTranscoding` is set.
+   * Composed into the same `-vf` chain as `scale`, so — unlike a raw `-vf` in `customFfmpegFlags` —
+   * it cannot collide with / clobber the built-in scale and encoder filters.
+   */
+  videoFilters: string[];
+
+  /**
    * Start playback at this offset, in seconds (ffmpeg input `-ss` seek). Fast and accurate for
    * seekable inputs. Used by the seekable player to restart a source at a new position.
    */
@@ -129,6 +138,25 @@ export type Controller = {
   volume: number;
   setVolume(newVolume: number): Promise<boolean>;
 };
+
+/**
+ * Assemble the ordered video filter chain for the transcoding path: the base `scale`, then any
+ * caller-provided `videoFilters` (e.g. burned-in subtitles), then the encoder's own output filters.
+ * Pure and order-preserving so the chain is unit-testable without spawning ffmpeg. Empty entries are
+ * dropped so a missing encoder filter list doesn't leave a stray comma in the `-vf` spec.
+ */
+export function buildVideoFilterChain(
+  width: number,
+  height: number,
+  videoFilters: readonly string[],
+  encoderOutFilters: readonly string[],
+): string[] {
+  return [
+    `scale=${String(width)}:${String(height)}`,
+    ...videoFilters,
+    ...encoderOutFilters,
+  ].filter((filter) => filter.length > 0);
+}
 
 export function prepareStream(
   input: string | Readable,
@@ -157,6 +185,7 @@ export function prepareStream(
     },
     customInputOptions: [],
     customFfmpegFlags: [],
+    videoFilters: [],
     startTime: undefined,
   } satisfies PrepareStreamOptions;
 
@@ -212,6 +241,7 @@ export function prepareStream(
         opts.customInputOptions ?? defaultOptions.customInputOptions,
       customFfmpegFlags:
         opts.customFfmpegFlags ?? defaultOptions.customFfmpegFlags,
+      videoFilters: opts.videoFilters ?? defaultOptions.videoFilters,
       startTime:
         isFiniteNonZero(opts.startTime) && opts.startTime > 0
           ? opts.startTime
@@ -297,7 +327,20 @@ export function prepareStream(
   if (noTranscoding) {
     command.videoCodec("copy");
   } else {
-    command.videoFilter(`scale=${width}:${height}`);
+    const encoderSettings = encoder(bitrateVideo, bitrateVideoMax)[videoCodec];
+    if (!encoderSettings)
+      throw new Error(`Encoder settings not specified for ${videoCodec}`);
+
+    // One combined `-vf` chain: scale, then caller filters (e.g. burned subtitles), then the
+    // encoder's own output filters. Built by a pure helper so the ordering is unit-testable.
+    command.videoFilter(
+      buildVideoFilterChain(
+        width,
+        height,
+        mergedOptions.videoFilters,
+        encoderSettings.outFilters ?? [],
+      ),
+    );
 
     if (frameRate) command.fpsOutput(frameRate);
 
@@ -316,12 +359,8 @@ export function prepareStream(
       "expr:gte(t,n_forced*1)",
     ]);
 
-    const encoderSettings = encoder(bitrateVideo, bitrateVideoMax)[videoCodec];
-    if (!encoderSettings)
-      throw new Error(`Encoder settings not specified for ${videoCodec}`);
     command
       .videoCodec(encoderSettings.name)
-      .videoFilter(encoderSettings.outFilters ?? [])
       .outputOptions(encoderSettings.options)
       .outputOptions(encoderSettings.globalOptions ?? []);
   }
