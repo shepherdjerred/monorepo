@@ -35,6 +35,12 @@ export class GameStreamer {
   private rgba: PassThrough | undefined;
   private playing: Promise<void> | undefined;
   private active = false;
+  // Serializes start()/stop(). Both are driven fire-and-forget from
+  // VoiceStateUpdate callbacks, so without this a stop() landing mid-start()
+  // (or a second start()) could interleave at the `await joinVoice` point and
+  // orphan the PassThrough/ffmpeg or tear the voice connection. Each call waits
+  // for the previous to fully settle before running.
+  private opChain: Promise<void> = Promise.resolve();
 
   constructor(options: GameStreamerOptions) {
     this.options = options;
@@ -57,55 +63,75 @@ export class GameStreamer {
     if (this.active && this.rgba) this.rgba.write(frame);
   }
 
-  async start(): Promise<void> {
-    if (this.active) return;
-    // Claim `active` before the first await so concurrent start() calls — the
-    // fire-and-forget callbacks from VoiceStateUpdate — serialize on the guard
-    // above instead of racing a second joinVoice and overwriting this.rgba
-    // (which would leak the first PassThrough + its ffmpeg). Roll back on
-    // failure so a later start() can retry.
-    this.active = true;
+  start(): Promise<void> {
+    return this.runExclusive(() => this.doStart());
+  }
+
+  stop(): Promise<void> {
+    return this.runExclusive(() => this.doStop());
+  }
+
+  // Runs `op` only after every previously-queued op settles, so start()/stop()
+  // never interleave. The synchronous prefix here (capturing `previous` and
+  // replacing `this.opChain`) runs before any await, so concurrent callers queue
+  // in call order. The barrier never rejects — a failed op can't wedge the
+  // queue — yet the returned promise still rejects so callers see the failure.
+  private runExclusive(op: () => Promise<void>): Promise<void> {
+    const previous = this.opChain;
+    const result = (async (): Promise<void> => {
+      await previous;
+      await op();
+    })();
+    this.opChain = this.settle(result);
+    return result;
+  }
+
+  private async settle(work: Promise<void>): Promise<void> {
     try {
-      await this.streamer.joinVoice(
-        this.options.guildId,
-        this.options.channelId,
-      );
-
-      const rgba = new PassThrough();
-      this.rgba = rgba;
-
-      const { output, promise } = prepareStream(rgba, {
-        width: WIDTH * this.options.scale,
-        height: HEIGHT * this.options.scale,
-        frameRate: this.options.frameRate,
-        videoCodec: "H264",
-        bitrateVideo: this.options.bitrateKbps,
-        bitrateVideoMax: this.options.bitrateMaxKbps,
-        includeAudio: false,
-        minimizeLatency: true,
-        customInputOptions: [
-          "-f",
-          "rawvideo",
-          "-pix_fmt",
-          "rgba",
-          "-video_size",
-          `${String(WIDTH)}x${String(HEIGHT)}`,
-          "-framerate",
-          String(SRC_FPS),
-        ],
-        encoder: Encoders.software({
-          x264: { preset: "ultrafast", tune: "zerolatency" },
-        }),
-      });
-
-      this.playing = this.runStream(output, promise);
-      logger.info("Go-Live stream started");
-    } catch (error) {
-      this.active = false;
-      this.rgba?.end();
-      this.rgba = undefined;
-      throw error;
+      await work;
+    } catch {
+      // Swallowed so the serialization barrier never wedges on a failed op; the
+      // failure is still surfaced to the original caller via runExclusive's
+      // returned promise.
     }
+  }
+
+  private async doStart(): Promise<void> {
+    if (this.active) return;
+    await this.streamer.joinVoice(this.options.guildId, this.options.channelId);
+
+    const rgba = new PassThrough();
+    const { output, promise } = prepareStream(rgba, {
+      width: WIDTH * this.options.scale,
+      height: HEIGHT * this.options.scale,
+      frameRate: this.options.frameRate,
+      videoCodec: "H264",
+      bitrateVideo: this.options.bitrateKbps,
+      bitrateVideoMax: this.options.bitrateMaxKbps,
+      includeAudio: false,
+      minimizeLatency: true,
+      customInputOptions: [
+        "-f",
+        "rawvideo",
+        "-pix_fmt",
+        "rgba",
+        "-video_size",
+        `${String(WIDTH)}x${String(HEIGHT)}`,
+        "-framerate",
+        String(SRC_FPS),
+      ],
+      encoder: Encoders.software({
+        x264: { preset: "ultrafast", tune: "zerolatency" },
+      }),
+    });
+
+    // Publish state only once the stream is fully wired; these assignments are
+    // synchronous (no await between them), so pushFrame never sees a half-set
+    // state.
+    this.rgba = rgba;
+    this.playing = this.runStream(output, promise);
+    this.active = true;
+    logger.info("Go-Live stream started");
   }
 
   // Drives the Go-Live broadcast and watches the ffmpeg encode for errors.
@@ -128,7 +154,7 @@ export class GameStreamer {
     }
   }
 
-  async stop(): Promise<void> {
+  private async doStop(): Promise<void> {
     if (!this.active) return;
     this.active = false;
     this.rgba?.end();
