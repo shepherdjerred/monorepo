@@ -32,6 +32,8 @@ export class StreambotStreamer {
   private readonly streamer: Streamer;
   private readonly config: Config;
   private player: Player | null = null;
+  /** Last known playback offset (seconds), captured per segment so a HW→SW retry can resume there. */
+  private lastPlaybackPositionSeconds = 0;
 
   constructor(config: Config) {
     this.config = config;
@@ -112,13 +114,17 @@ export class StreambotStreamer {
   ): Promise<void> => {
     const useHardware = this.config.stream.hardwareAcceleration;
     try {
-      await this.streamOnce(input, signal, useHardware);
+      await this.streamOnce(input, signal, useHardware, 0);
     } catch (error) {
       if (useHardware && !signal.aborted) {
+        // Resume the software retry at wherever playback (incl. any live seek) had reached, rather
+        // than restarting the video from 0.
+        const resumeAt = this.lastPlaybackPositionSeconds;
         log.warn("hardware (VAAPI) encode failed; retrying with software", {
           error: getErrorMessage(error),
+          resumeAt,
         });
-        await this.streamOnce(input, signal, false);
+        await this.streamOnce(input, signal, false, resumeAt);
         return;
       }
       throw error;
@@ -129,6 +135,7 @@ export class StreambotStreamer {
     input: RunStreamInput,
     signal: AbortSignal,
     useHardware: boolean,
+    startSeconds: number,
   ): Promise<void> {
     const { stream } = this.config;
     const prepareOpts = {
@@ -142,6 +149,7 @@ export class StreambotStreamer {
       videoCodec: Utils.normalizeVideoCodec("H264"),
       hardwareAcceleratedDecoding: useHardware,
       minimizeLatency: false,
+      ...(startSeconds > 0 ? { startTime: startSeconds } : {}),
       ...(useHardware
         ? { encoder: Encoders.vaapi({ device: stream.vaapiDevice }) }
         : {}),
@@ -185,6 +193,9 @@ export class StreambotStreamer {
       await player.finished;
     } finally {
       signal.removeEventListener("abort", onAbort);
+      // Capture where playback reached (incl. live seeks) before dropping the player, so a HW→SW
+      // retry can resume there.
+      this.lastPlaybackPositionSeconds = player.position;
       if (this.player === player) {
         this.player = null;
       }

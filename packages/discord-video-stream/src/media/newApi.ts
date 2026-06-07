@@ -583,19 +583,22 @@ export async function attachPipeline(
 
   const vStream = new VideoStream(conn);
   video.stream.pipe(vStream);
+  // Hoisted so destroy() can tear the audio side down too (see the destroy closure below).
+  let aStream: AudioStream | undefined;
   if (audio) {
-    const aStream = new AudioStream(conn);
-    audio.stream.pipe(aStream);
-    vStream.syncStream = aStream;
+    const a = new AudioStream(conn);
+    aStream = a;
+    audio.stream.pipe(a);
+    vStream.syncStream = a;
 
     const burstTime = options.readrateInitialBurst;
     if (typeof burstTime === "number") {
       vStream.sync = false;
-      vStream.noSleep = aStream.noSleep = true;
+      vStream.noSleep = a.noSleep = true;
       const stopBurst = (pts: number) => {
         if (pts < burstTime * 1000) return;
         vStream.sync = true;
-        vStream.noSleep = aStream.noSleep = false;
+        vStream.noSleep = a.noSleep = false;
         vStream.off("pts", stopBurst);
       };
       vStream.on("pts", stopBurst);
@@ -683,10 +686,15 @@ export async function attachPipeline(
   return {
     done,
     destroy: () => {
-      // Force-end this segment (used on seek): drop the source pipe + streams. The `finish`
-      // handler (or this resolveDone) settles `done`; cleanup is idempotent.
+      // Force-end this segment (used on seek): drop the source pipes + BOTH streams so the old
+      // segment can't keep writing to `conn` while the next one starts (audio desync otherwise). The
+      // `finish` handler (or this resolveDone) settles `done`; cleanup is idempotent.
       video.stream.unpipe(vStream);
       vStream.destroy();
+      if (audio && aStream) {
+        audio.stream.unpipe(aStream);
+        aStream.destroy();
+      }
       resolveDone?.();
     },
   };
