@@ -182,19 +182,18 @@ export function createBirmelDeployment(chart: Chart) {
         VOICE_ENABLED: EnvValue.fromValue("true"),
         DAILY_POSTS_ENABLED: EnvValue.fromValue("true"),
         WEB_SEARCH_PROVIDER: EnvValue.fromValue("openai"),
+        // The browser tool is temporarily disabled. The PINCHTAB_TOKEN secret
+        // key does not exist in the Birmel 1Password item, which crashed the pod
+        // with CreateContainerConfigError, and pinchtab is not yet deployed
+        // in-cluster (the pinchtab namespace is empty). Disable the browser until
+        // the in-cluster pinchtab service lands, at which point BROWSER_ENABLED is
+        // removed and PINCHTAB_TOKEN is sourced from a shared "PinchTab" item.
+        BROWSER_ENABLED: EnvValue.fromValue("false"),
         BROWSER_PROVIDER: EnvValue.fromValue("pinchtab"),
         PINCHTAB_BASE_URL: EnvValue.fromValue(
           "http://pinchtab.pinchtab.svc.cluster.local:9867",
         ),
         PINCHTAB_PROFILE: EnvValue.fromValue("birmel"),
-        PINCHTAB_TOKEN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
-            chart,
-            "birmel-pinchtab-token-secret",
-            onePasswordItem.name,
-          ),
-          key: "PINCHTAB_TOKEN",
-        }),
 
         // Editor configuration
         EDITOR_ENABLED: EnvValue.fromValue("true"),

@@ -9,7 +9,6 @@ import {
 import { PRESENCE_COOLDOWN_SECONDS } from "#shared/presence.ts";
 
 const LIVING_ROOM_SCENE = "scene.living_room_bright" as const;
-const FRONT_DOOR_LOCK = "lock.front_door" as const;
 const ENTRYWAY_LIGHT = "switch.light_2" as const;
 const FRONT_DOOR_LIGHT = "switch.light" as const;
 const SUN = "sun.sun" as const;
@@ -49,10 +48,10 @@ export async function welcomeHome(firstArrival = true): Promise<void> {
     );
   }
 
-  await callServiceUnchecked("lock", "unlock", {
-    entity_id: FRONT_DOOR_LOCK,
-  });
-
+  // The front-door lock is owned by the debounced reconcileLock workflow, not
+  // unlocked here — edge-triggered unlock/lock on raw presence flap caused the
+  // door to cycle. This workflow only handles the welcome notification, scene,
+  // lights, and vacuum docking.
   await callServiceUnchecked("scene", "turn_on", {
     entity_id: LIVING_ROOM_SCENE,
   });

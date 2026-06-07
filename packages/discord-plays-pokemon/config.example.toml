@@ -43,27 +43,25 @@ require_watching = true
 [stream.userbot]
 # the Discord user ID of the account that will stream video
 id = ""
-# username for the Discord account that will stream video
-username = ""
-# password for the Discord account that will stream video
-password = ""
+# Discord user (selfbot) token for the streaming account. Required because
+# Discord blocks video from bot tokens. Treat this as a secret.
+token = ""
+
+[stream.video]
+# integer upscale of the native 240x160 frame (1-6)
+scale = 3
+# frames per second sent to Discord (30 for non-Nitro accounts)
+frame_rate = 30
+bitrate_kbps = 1500
+bitrate_max_kbps = 4000
 
 [game]
-# should components like the emulator, browser, etc. be enabled
+# should the emulator + game components be enabled
 enabled = true
-# the game emulator URL
-# can accept any URL that points to Emulator JS (https://www.emulatorjs.com/)
-# use the built-in emulator (http://localhost:${config.web.port}/emulator.html) by default
-emulator_url = "built_in"
-
-# These are required for the application to work properly
-[game.browser.preferences]
-"media.navigator.permission.disabled" = true
-"media.autoplay.block-webaudio" = false
-"privacy.webrtc.legacyGlobalIndicator" = false
-"privacy.webrtc.hideGlobalIndicator" = true
-"browser.download.folderlist" = 1
-"browser.download.alwaysOpenPanel" = false
+# path to the built pokeemerald.wasm (run `bun scripts/fetch-wasm.ts`)
+wasm_path = "packages/backend/assets/pokeemerald.wasm"
+# optional path for the persisted 128 KiB flash save
+save_path = "saves/pokeemerald.flash"
 
 [game.commands]
 # should chat commands be enabled

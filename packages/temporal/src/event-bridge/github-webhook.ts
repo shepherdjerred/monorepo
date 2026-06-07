@@ -1,22 +1,20 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { verify } from "@octokit/webhooks-methods";
 import { Octokit } from "octokit";
 import * as Sentry from "@sentry/bun";
 import type { Client } from "@temporalio/client";
-import { WorkflowIdReusePolicy } from "@temporalio/common";
-import { WorkflowExecutionAlreadyStartedError } from "@temporalio/client";
-import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   PrAgentInputSchema,
   type PrAgentInput,
   type PrReviewPipelineInput,
-  type PrSummaryInput,
 } from "#shared/schemas.ts";
 import {
   handleClosedPr,
   startCancelBuildkiteBuilds,
   type CancelStartFn,
 } from "./pr-closed.ts";
+import { COMPONENT, jsonLog } from "./webhook-log.ts";
+import { startPrWorkflows } from "./pr-pipeline-starts.ts";
 import {
   prWebhookReceivedTotal,
   prWebhookSignatureFailuresTotal,
@@ -46,127 +44,12 @@ import {
   disallowedAuthorReason,
 } from "./github-webhook-schema.ts";
 
-const COMPONENT = "pr-webhook";
 const DEFAULT_PORT = 9466;
 
 export type WebhookHandle = {
   port: number;
   close: () => Promise<void>;
 };
-
-function jsonLog(
-  level: "info" | "warning" | "error",
-  message: string,
-  fields: Record<string, unknown> = {},
-): void {
-  console.warn(
-    JSON.stringify({
-      level,
-      msg: message,
-      component: COMPONENT,
-      ...fields,
-    }),
-  );
-}
-
-function pipelineWorkflowIdFor(pr: PrReviewPipelineInput): string {
-  return `pr-review-pipeline-${pr.owner}-${pr.repo}-${String(pr.prNumber)}-${pr.commitSha}`;
-}
-
-function summaryPipelineWorkflowIdFor(pr: PrSummaryInput): string {
-  return `pr-summary-pipeline-${pr.owner}-${pr.repo}-${String(pr.prNumber)}-${pr.commitSha}`;
-}
-
-async function startPrReviewPipeline(
-  client: Client,
-  pipelineInput: PrReviewPipelineInput,
-): Promise<void> {
-  // REJECT_DUPLICATE so a redelivered webhook for the same commit sha
-  // no-ops at the Temporal server rather than re-running the pipeline.
-  // The "already-started" error is the expected idempotent path; surface
-  // it as an info log rather than a workflow-start failure.
-  try {
-    await client.workflow.start("prReviewPipeline", {
-      taskQueue: TASK_QUEUES.PR_REVIEW,
-      workflowId: pipelineWorkflowIdFor(pipelineInput),
-      workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
-      args: [pipelineInput],
-    });
-  } catch (error: unknown) {
-    if (error instanceof WorkflowExecutionAlreadyStartedError) {
-      jsonLog("info", "pr-review pipeline already started for this commit", {
-        prNumber: pipelineInput.prNumber,
-        commitSha: pipelineInput.commitSha,
-        workflowId: pipelineWorkflowIdFor(pipelineInput),
-      });
-      return;
-    }
-    throw error;
-  }
-}
-
-async function startPrSummaryPipeline(
-  client: Client,
-  summaryInput: PrSummaryInput,
-): Promise<void> {
-  // Same idempotency model as the review pipeline — redelivered webhooks
-  // for the same commit sha no-op at the server.
-  try {
-    await client.workflow.start("prSummaryPipeline", {
-      taskQueue: TASK_QUEUES.PR_SUMMARY,
-      workflowId: summaryPipelineWorkflowIdFor(summaryInput),
-      workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
-      args: [summaryInput],
-    });
-  } catch (error: unknown) {
-    if (error instanceof WorkflowExecutionAlreadyStartedError) {
-      jsonLog("info", "pr-summary pipeline already started for this commit", {
-        prNumber: summaryInput.prNumber,
-        commitSha: summaryInput.commitSha,
-        workflowId: summaryPipelineWorkflowIdFor(summaryInput),
-      });
-      return;
-    }
-    throw error;
-  }
-}
-
-async function startPrWorkflows(
-  client: Client,
-  input: PrAgentInput,
-): Promise<void> {
-  const pipelineInput: PrReviewPipelineInput = {
-    owner: input.owner,
-    repo: input.repo,
-    prNumber: input.prNumber,
-    commitSha: input.commitSha,
-    baseRef: input.baseRef,
-    headRef: input.headRef,
-    prTitle: input.prTitle,
-    prAuthor: input.prAuthor,
-  };
-
-  const summaryInput: PrSummaryInput = {
-    owner: input.owner,
-    repo: input.repo,
-    prNumber: input.prNumber,
-    commitSha: input.commitSha,
-    baseRef: input.baseRef,
-    headRef: input.headRef,
-    prTitle: input.prTitle,
-    prAuthor: input.prAuthor,
-  };
-
-  // SOTA review pipeline (multi-specialist consensus + verification) +
-  // summary pipeline (Haiku 4.5 + prompt caching) are now the sole path.
-  // The legacy `prReview` + `prSummary` claude -p workflows were retired
-  // in the cutover commit — see
-  // packages/docs/plans/2026-05-10_sota-pr-review-bot.md addendum.
-  await Promise.all([
-    startPrReviewPipeline(client, pipelineInput),
-    startPrSummaryPipeline(client, summaryInput),
-  ]);
-}
 
 type StartFn = (input: PrAgentInput) => Promise<void>;
 type StatusFn = (input: PrAgentInput, state: "draft_skipped") => Promise<void>;
@@ -240,6 +123,58 @@ export async function postWebhookStatus(
     commentId: result.commentId,
     created: result.created,
   });
+}
+
+// Master kill switch for the PR bot (review + summary). Defaults enabled; set
+// PR_BOT_ENABLED=false to make the webhook ack deliveries (200) without posting
+// any comment or starting any workflow. Read at request time so the flag can be
+// toggled via env without a code change. See the temporal worker deployment in
+// packages/homelab/src/cdk8s/src/resources/temporal/worker.ts.
+function isPrBotEnabled(): boolean {
+  return (Bun.env["PR_BOT_ENABLED"] ?? "true").toLowerCase() === "true";
+}
+
+type DraftSkipContext = {
+  deliveryId: string;
+  action: string;
+};
+
+async function handleDraftSkip(
+  c: Context,
+  baseInput: PrAgentInput,
+  postStatus: StatusFn,
+  ctx: DraftSkipContext,
+): Promise<Response> {
+  const { deliveryId, action } = ctx;
+  prWebhookSkippedTotal.inc({ reason: "draft" });
+  jsonLog("info", "Skipping draft PR", {
+    prNumber: baseInput.prNumber,
+    action,
+  });
+  try {
+    await postStatus(baseInput, "draft_skipped");
+  } catch (error: unknown) {
+    Sentry.withScope((scope) => {
+      scope.setTag("component", COMPONENT);
+      scope.setContext("webhook", {
+        deliveryId,
+        action,
+        owner: baseInput.owner,
+        repo: baseInput.repo,
+        prNumber: baseInput.prNumber,
+        skipReason: "draft",
+      });
+      Sentry.captureException(error);
+    });
+    jsonLog("error", "Failed to post draft skipped status", {
+      deliveryId,
+      action,
+      prNumber: baseInput.prNumber,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return c.text("draft status failed\n", 500);
+  }
+  return c.text("skipped: draft\n");
 }
 
 /**
@@ -365,36 +300,17 @@ export function buildWebhookApp(
       prAuthor: parsed.pull_request.user.login,
     });
 
-    if (parsed.pull_request.draft === true && action !== "ready_for_review") {
-      prWebhookSkippedTotal.inc({ reason: "draft" });
-      jsonLog("info", "Skipping draft PR", {
-        prNumber: parsed.pull_request.number,
+    if (!isPrBotEnabled()) {
+      prWebhookSkippedTotal.inc({ reason: "pr-bot-disabled" });
+      jsonLog("info", "PR bot disabled; skipping status + workflows", {
+        prNumber: baseInput.prNumber,
         action,
       });
-      try {
-        await postStatus(baseInput, "draft_skipped");
-      } catch (error: unknown) {
-        Sentry.withScope((scope) => {
-          scope.setTag("component", COMPONENT);
-          scope.setContext("webhook", {
-            deliveryId,
-            action,
-            owner: baseInput.owner,
-            repo: baseInput.repo,
-            prNumber: baseInput.prNumber,
-            skipReason: "draft",
-          });
-          Sentry.captureException(error);
-        });
-        jsonLog("error", "Failed to post draft skipped status", {
-          deliveryId,
-          action,
-          prNumber: baseInput.prNumber,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        return c.text("draft status failed\n", 500);
-      }
-      return c.text("skipped: draft\n");
+      return c.text("skipped: pr-bot disabled\n");
+    }
+
+    if (parsed.pull_request.draft === true && action !== "ready_for_review") {
+      return handleDraftSkip(c, baseInput, postStatus, { deliveryId, action });
     }
 
     const authorSkip = disallowedAuthorReason(parsed.pull_request.user);
