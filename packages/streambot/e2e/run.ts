@@ -138,9 +138,11 @@ function buildSession(config: Config, input: PlaybackInput): Session {
 }
 
 async function startSession(session: Session): Promise<void> {
-  session.actor.start();
+  // Log in BEFORE starting the machine: on the resume session the queue is non-empty, so the
+  // machine immediately tries to joinVoice, which needs the streamer connected (mirrors index.ts).
   await Promise.all([session.streamer.login(), session.commandBot.login()]);
   await session.commandBot.ready;
+  session.actor.start();
 }
 
 async function stopSession(session: Session): Promise<void> {
