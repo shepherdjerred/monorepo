@@ -36,9 +36,11 @@ Claim a seat in the web UI, then:
 
 ## The N64Wasm core
 
-The core is built **from source** in CI — no binaries are committed. The patched
-source is vendored under [`wasm-src/`](./wasm-src); [`wasm-src/PATCHES.md`](./wasm-src/PATCHES.md)
-records the upstream baseline and our diffs:
+The core is built **from source** in CI — no binaries are committed. The source is
+vendored **byte-pristine** under [`wasm-src/code`](./wasm-src) at a pinned upstream
+commit; our changes live as a patch series in [`wasm-src/patches/`](./wasm-src/patches)
+and are applied **at build time**. [`wasm-src/PATCHES.md`](./wasm-src/PATCHES.md)
+records the pinned baseline, the patches, and the update procedure. Our changes:
 
 - `neilSetRom` + a ROM-inject branch (with `volatile` globals so LTO can't fold
   it away) — bypasses the Node `fseek` null-trap by loading the ROM from memory.
