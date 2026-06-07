@@ -28,6 +28,7 @@ import {
 const G = GuildIdSchema.parse("100000000000000010");
 const OTHER_G = GuildIdSchema.parse("100000000000000099");
 const C = ChannelIdSchema.parse("100000000000000020");
+const OTHER_C = ChannelIdSchema.parse("100000000000000098");
 const U = UserIdSchema.parse("100000000000000001");
 
 const BASE: PlaybackInput = { guildId: G, channelId: C, idleTimeoutMs: 30 };
@@ -123,6 +124,12 @@ describe("buildResumeInput", () => {
 
   test("guild mismatch → ignore restored entirely", () => {
     const d = buildResumeInput(makeState({ guildId: OTHER_G }), BASE, opts);
+    expect(d.input).toEqual(BASE);
+    expect(d.resumedCurrent).toBe(false);
+  });
+
+  test("channel mismatch → ignore restored (don't resume into a stale channel)", () => {
+    const d = buildResumeInput(makeState({ channelId: OTHER_C }), BASE, opts);
     expect(d.input).toEqual(BASE);
     expect(d.resumedCurrent).toBe(false);
   });
