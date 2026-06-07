@@ -152,6 +152,14 @@ function buildParticipant(
       participant.perks?.perkSubStyle === undefined
         ? undefined
         : RuneIdSchema.parse(participant.perks.perkSubStyle),
+    // Tracked players can only be matched by puuid. KNOWN LIMITATION: Riot's
+    // Spectator-V5 returns `puuid: null` for privacy-scrubbed participants (and
+    // their `riotId` is just the champion name, not a real Riot ID), so a
+    // tracked player who has privacy enabled is unidentifiable here and is
+    // intentionally absent from the pre-match image. They still appear
+    // post-match because Match-V5 always returns full puuids. We accept this
+    // data loss — there is no usable identity to match on. See
+    // packages/docs/decisions/2026-06-07_scout-arena-prematch-scrubbed-players.md
     isTrackedPlayer: puuid !== null && context.trackedPuuids.has(puuid),
   };
 }

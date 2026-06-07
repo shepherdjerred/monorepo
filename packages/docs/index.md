@@ -27,6 +27,7 @@ AI-maintained knowledge base for the monorepo.
 - [CI Build Scoping Fixes](decisions/2026-04-26_ci-build-scoping-fixes.md) - Three bugs causing every main build to rebuild all 25 packages; fixed baseline lookup and Renovate fast-track
 - [Velero Orphan-Snapshot Prevention](decisions/2026-05-05_velero-orphan-snapshot-prevention.md) - Why we chose detection + manual remediation over self-healing for Velero orphan ZFS snapshots and R2 objects
 - [ZFS Fragmentation Acceptance](decisions/2026-05-05_zfs-fragmentation-acceptance.md) - Why we raised the fragmentation alert thresholds on SSD pools instead of mitigating
+- [Scout Arena Pre-match Scrubbed Players](decisions/2026-06-07_scout-arena-prematch-scrubbed-players.md) - Privacy-scrubbed players have no usable identity in Spectator-V5, so they're dropped from the pre-match image; accepted data loss
 
 ## Plans
 
