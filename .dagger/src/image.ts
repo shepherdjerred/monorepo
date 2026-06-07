@@ -487,7 +487,10 @@ function withToolkit(container: Container): Container {
  * Without this, the image builds fine but crashes at startup with `Cannot find module
  * '@lng2004/node-datachannel'`. Mirrors the per-dep install loop in `bunBaseContainer` (base.ts).
  */
-function withForkRuntimeDeps(container: Container, depNames: string[]): Container {
+function withForkRuntimeDeps(
+  container: Container,
+  depNames: string[],
+): Container {
   if (!depNames.includes("discord-video-stream")) return container;
   return container
     .withWorkdir("/workspace/packages/discord-video-stream")
