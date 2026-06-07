@@ -65,4 +65,20 @@ describe("loadConfig", () => {
     expect(config.discord.adminIds).toEqual([]);
     expect(config.library.mediaDirs).toEqual([]);
   });
+
+  test("defaults the resume-state config when unset", () => {
+    const config = loadConfig(VALID);
+    expect(config.state.dir).toBe("/state");
+    expect(config.state.resumeMaxAgeSeconds).toBe(21_600);
+  });
+
+  test("reads STATE_DIR and RESUME_MAX_AGE_SECONDS from the environment", () => {
+    const config = loadConfig({
+      ...VALID,
+      STATE_DIR: "/data/state",
+      RESUME_MAX_AGE_SECONDS: "60",
+    });
+    expect(config.state.dir).toBe("/data/state");
+    expect(config.state.resumeMaxAgeSeconds).toBe(60);
+  });
 });

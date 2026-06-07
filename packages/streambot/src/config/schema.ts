@@ -46,6 +46,15 @@ export const ConfigSchema = z.strictObject({
     hardwareAcceleration: z.boolean().default(true),
     vaapiDevice: z.string().min(1).default("/dev/dri/renderD128"),
   }),
+  /** Resume state: persisted playback so a restart (deploy/crash) picks up where it left off. */
+  state: z
+    .strictObject({
+      /** Directory holding the resume-state file — a persistent volume in production. */
+      dir: z.string().min(1).default("/state"),
+      /** Ignore resume state older than this many seconds (don't resume a long-dead movie). */
+      resumeMaxAgeSeconds: z.number().int().positive().default(21_600),
+    })
+    .default({ dir: "/state", resumeMaxAgeSeconds: 21_600 }),
   /** Leave the voice channel after this many idle seconds. */
   idleTimeoutSeconds: z.number().int().positive().default(300),
   /** Maximum number of items to enqueue when expanding a playlist URL. */
