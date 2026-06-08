@@ -24,6 +24,8 @@ import { createMcRouterApp } from "@shepherdjerred/homelab/cdk8s/src/resources/a
 import { createLokiApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/loki.ts";
 import { createPromtailApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/promtail.ts";
 import { createTempoApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/tempo.ts";
+import { createPyroscopeApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/pyroscope.ts";
+import { createAlloyApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/alloy.ts";
 import { Namespace } from "cdk8s-plus-31";
 import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import { createPriorityClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
@@ -121,6 +123,8 @@ export async function createAppsChart(app: App) {
   createLokiApp(chart);
   createPromtailApp(chart);
   createTempoApp(chart);
+  createPyroscopeApp(chart);
+  createAlloyApp(chart);
   createBuildkiteApp(chart);
   createKueueApp(chart);
   createKueueConfig(chart);
