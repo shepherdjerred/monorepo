@@ -91,11 +91,12 @@ export function isVoiceChannel(
 }
 
 export function isDeno() {
-  // @ts-expect-error
-  return typeof Deno !== "undefined";
+  // `in globalThis` avoids referencing the untyped `Deno` global directly, so it
+  // typechecks whether or not Deno/Bun ambient types are present (the latter makes
+  // a `@ts-expect-error` on `typeof Deno` "unused" in consumers like the bots).
+  return "Deno" in globalThis;
 }
 
 export function isBun() {
-  // @ts-expect-error
-  return typeof Bun !== "undefined";
+  return "Bun" in globalThis;
 }

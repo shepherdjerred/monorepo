@@ -47,11 +47,20 @@ export const ConfigSchema = z.strictObject({
       token: z.string().min(1),
     }),
     video: z.strictObject({
-      // Integer upscale of the native 640x240 MK64 frame sent to Discord.
-      scale: z.number().int().min(1).max(6),
+      // @deprecated Superseded by the 16:9 letterbox (canvas_height + display
+      // aspect). Retained, optional, so existing config.toml files still validate;
+      // no longer read. Remove once all configs drop it.
+      scale: z.number().int().min(1).max(6).optional(),
       frame_rate: z.number().positive(),
       bitrate_kbps: z.number().positive(),
       bitrate_max_kbps: z.number().positive(),
+      // Height of the 16:9 output canvas sent to Discord (width derived as 16:9).
+      // The 4:3 game is scaled to fit and pillarboxed onto black.
+      canvas_height: z.number().int().positive().default(720),
+      // VAAPI hardware H.264 encoding on an Intel iGPU. Off by default (software
+      // libx264 fallback); also enableable via the STREAM_HARDWARE_ACCELERATION env.
+      hardware_acceleration: z.boolean().default(false),
+      vaapi_device: z.string().min(1).default("/dev/dri/renderD128"),
     }),
   }),
   // Headless N64Wasm (parallel-n64 + angrylion software RDP) host.

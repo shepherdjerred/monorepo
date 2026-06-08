@@ -48,12 +48,15 @@ id = ""
 token = ""
 
 [stream.video]
-# integer upscale of the native 240x160 frame (1-6)
-scale = 3
+# 16:9 output canvas height (-> 1280x720); the 3:2 game is pillarboxed onto black
+canvas_height = 720
 # frames per second sent to Discord (30 for non-Nitro accounts)
 frame_rate = 30
 bitrate_kbps = 1500
 bitrate_max_kbps = 4000
+# VAAPI h264 on an Intel iGPU; also enableable via STREAM_HARDWARE_ACCELERATION env
+hardware_acceleration = false
+vaapi_device = "/dev/dri/renderD128"
 
 [game]
 # should the emulator + game components be enabled

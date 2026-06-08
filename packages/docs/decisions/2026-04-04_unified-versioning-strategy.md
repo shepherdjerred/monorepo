@@ -107,3 +107,11 @@ bump.
 - **`$$` escaping**: Buildkite interpolates `$VAR` in pipeline commands at upload time. Shell
   variables that need to survive to runtime must use `$$VAR`. Dagger step arguments that should be
   interpolated at upload time (like `$BUILDKITE_BUILD_NUMBER`) use single `$`.
+- **Chart/image version lag + cancellation stranding**: a chart published in build N embeds the
+  image tag from `versions.ts` as of that build — i.e. the _previous_ image, since the commit-back
+  that points `versions.ts` at image N is an async auto-merge PR. The corrected chart is only
+  published by a later build. If that later build is canceled (Buildkite cancels superseded `main`
+  builds during rapid commit bursts), the image fix is built and pinned but never charted, so
+  ArgoCD keeps serving the prior image while reporting Synced/Healthy. A chart version and the image
+  of the same number are therefore not the same release (`mario-kart-2.0.0-3637` shipped image
+  `2.0.0-3610`). See `logs/2026-06-08_mariokart-react-fix-not-deployed.md`.

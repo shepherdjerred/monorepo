@@ -3,6 +3,13 @@ import { logger } from "#src/logger.ts";
 import { installBrowserStubs, getFakeCanvas } from "./wasm-host.ts";
 import { buildConfigTxt } from "./config-txt.ts";
 import { WIDTH, BUTTON_ORDER, MAX_SEATS } from "./constants.ts";
+import {
+  emulateMs,
+  copyMs,
+  lateMs,
+  ticksTotal,
+  loopResyncTotal,
+} from "#src/observability/metrics.ts";
 import type {
   ButtonState,
   PlayerInputState,
@@ -279,7 +286,9 @@ export class N64Emulator {
       );
     }
 
+    const emulateStart = performance.now();
     rt.runMainLoop();
+    emulateMs.observe(performance.now() - emulateStart);
 
     const cb = this.onFrameCb;
     if (cb !== undefined) {
@@ -288,9 +297,12 @@ export class N64Emulator {
       if (vbuf && h) {
         this.lastHeight = h;
         // Copy out of the (reused) heap view before handing off.
+        const copyStart = performance.now();
         cb(Buffer.from(rt.heap().subarray(vbuf, vbuf + WIDTH * h * 4)));
+        copyMs.observe(performance.now() - copyStart);
       }
     }
+    ticksTotal.inc();
   }
 
   private loop(): void {
@@ -302,8 +314,11 @@ export class N64Emulator {
     }
     this.nextAt += this.frameMs;
     let delay = this.nextAt - performance.now();
+    // delay < 0 means the tick overran its budget; record how far behind we are.
+    lateMs.observe(Math.max(0, -delay));
     if (delay < -250) {
       // Fell far behind (paused process); resync rather than sprint.
+      loopResyncTotal.inc();
       this.nextAt = performance.now();
       delay = 0;
     }

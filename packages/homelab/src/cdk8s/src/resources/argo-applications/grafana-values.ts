@@ -152,6 +152,16 @@ export function createGrafanaValues(
           nodeGraph: { enabled: true },
         },
       },
+      {
+        // Continuous profiling store fed by the Alloy eBPF DaemonSet. Flame
+        // graphs are grouped by service_name = <namespace>/<container>.
+        name: "pyroscope",
+        uid: "pyroscope",
+        editable: false,
+        type: "grafanapyroscope",
+        url: "http://pyroscope.pyroscope.svc.cluster.local:4040",
+        version: 1,
+      },
     ],
   };
 }
