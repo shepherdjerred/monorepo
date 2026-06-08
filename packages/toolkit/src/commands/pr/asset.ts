@@ -6,13 +6,15 @@ import {
   firstDuplicateBasename,
   PUBLIC_BUCKET,
 } from "#lib/s3/assets.ts";
-import { loadS3Credentials, putObject } from "#lib/s3/client.ts";
+import { createS3Client, putObject } from "#lib/s3/client.ts";
 
 export type AssetOptions = {
   markdown?: boolean | undefined;
+  profile?: string | undefined;
 };
 
-const USAGE = "Usage: toolkit pr asset <pr-number> <file...> [--markdown]";
+const USAGE =
+  "Usage: toolkit pr asset <pr-number> <file...> [--markdown] [--profile <name>]";
 
 /**
  * Upload one or more files as PR screenshots to the `public-sjer-red` bucket
@@ -65,11 +67,11 @@ export async function assetCommand(
     }
   }
 
-  const credentials = loadS3Credentials();
+  const client = createS3Client(options.profile);
 
   for (const file of files) {
     const body = new Uint8Array(await Bun.file(file).arrayBuffer());
-    await putObject(credentials, {
+    await putObject(client, {
       bucket: PUBLIC_BUCKET,
       key: assetKey(parsed, file),
       body,

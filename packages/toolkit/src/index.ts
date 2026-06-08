@@ -78,10 +78,7 @@ Environment Variables:
   BUGSINK_TOKEN              Bugsink API token
   GRAFANA_URL                Grafana instance URL
   GRAFANA_API_KEY            Grafana API key or service account token
-  SEAWEEDFS_ACCESS_KEY_ID    SeaweedFS S3 access key (pr asset)
-  SEAWEEDFS_SECRET_ACCESS_KEY  SeaweedFS S3 secret key (pr asset)
-  SEAWEEDFS_S3_ENDPOINT      SeaweedFS S3 endpoint (default seaweedfs.sjer.red)
-  SEAWEEDFS_S3_REGION        SeaweedFS S3 region (default us-east-1)
+  AWS_PROFILE                AWS profile for 'pr asset' (or use --profile)
 
 Examples:
   toolkit fetch https://docs.lancedb.com/
