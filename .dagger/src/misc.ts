@@ -175,8 +175,10 @@ export async function smokeTestScoutForLolHelper(
 
 /**
  * Smoke test streambot image.
- * Verifies: ffmpeg + the baked yt-dlp are runnable, config validates, the playback machine
- * boots, and both Discord clients attempt login and fail with the expected auth error.
+ * Verifies: ffmpeg + the baked yt-dlp are runnable; the real-ffmpeg subtitle integration suite passes
+ * (sidecar detection, embedded text extraction, and a libass `subtitles=` burn — which needs the
+ * image's ffmpeg+libass+fonts, absent from the plain test container); config validates; the playback
+ * machine boots; and both Discord clients attempt login and fail with the expected auth error.
  */
 export async function smokeTestStreambotHelper(
   pkgDir: Directory,
@@ -192,10 +194,18 @@ export async function smokeTestStreambotHelper(
     .withEnvVariable("ADMIN_IDS", "000000000000000000")
     .withEnvVariable("VIDEOS_DIR", "/tmp/videos")
     .withEntrypoint([])
+    // Real-ffmpeg subtitle integration tests — a distinct exec so a non-zero exit hard-fails the
+    // pipeline (no silent skip). This is the only place they run in CI: the plain `streambot: test`
+    // container has no ffmpeg/libass.
     .withExec([
       "sh",
       "-c",
-      "mkdir -p /tmp/videos && ffmpeg -version && /usr/local/bin/yt-dlp --version && timeout 30s bun run src/index.ts 2>&1",
+      "mkdir -p /tmp/videos && bun run test:integration 2>&1",
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      "ffmpeg -version && /usr/local/bin/yt-dlp --version && timeout 30s bun run src/index.ts 2>&1",
     ]);
 
   return runSmokeTest(container, [

@@ -39,6 +39,8 @@ import { logger } from "@shepherdjerred/streambot/util/logger.ts";
  */
 const log = logger.child("e2e");
 const TEST_CLIP = "/tmp/streambot-e2e.mp4";
+// Sidecar next to the clip (same base name) so subtitles (on by default) burn in over the live stream.
+const TEST_SIDECAR = "/tmp/streambot-e2e.en.srt";
 const REQUESTER = UserIdSchema.parse("100000000000000001");
 const STREAM_HOLD_MS = 6000;
 const CLIP_DURATION_SECONDS = 30;
@@ -157,6 +159,12 @@ const sleep = (ms: number): Promise<void> =>
 async function main(): Promise<number> {
   const baseConfig = loadConfig();
   await generateClip(baseConfig.ffmpegPath);
+  // Sidecar next to the clip (same base name) so subtitles (on by default) burn in over the live
+  // stream — exercises the real resolve → software-encode → burn path end to end.
+  await Bun.write(
+    TEST_SIDECAR,
+    "1\n00:00:00,000 --> 00:00:11,000\nstreambot e2e subtitle\n",
+  );
 
   const stateDir = await mkdtemp(path.join(tmpdir(), "streambot-e2e-state-"));
   const config: Config = {
