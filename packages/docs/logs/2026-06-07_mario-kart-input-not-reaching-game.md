@@ -139,12 +139,16 @@ compiles cleanly (emscripten/emsdk:2.0.7) and produces `n64wasm.js`/`.wasm`.
 
 ## Workflow Friction
 
-- **`toolkit pr asset` is documented but not in the installed binary.** The root
-  `CLAUDE.md` (PR Screenshots section) says to upload PR images with
-  `op run --env-file=.env.seaweedfs -- toolkit pr asset <PR> ...`, but the
-  installed `toolkit` (v0.1.0) only exposes `pr health | logs | detect` — there is
-  no `pr asset` subcommand, so I could not attach the before/after emulator
-  screenshots to PR #1110 (I delivered them to the user directly instead).
-  `public.sjer.red` itself is up (root returns 403 as expected). Fix: rebuild/
-  reinstall `toolkit` so `pr asset` exists, or correct the docs to match the
-  shipped CLI. Also no `.env.seaweedfs` exists in the worktree — the docs imply one.
+- **`toolkit` binary at `~/.local/bin/toolkit` was non-functional for PR-asset
+  upload.** First the installed `toolkit` (v0.1.0) lacked the `pr asset`
+  subcommand the root `CLAUDE.md` documents; after a rebuild it emitted **zero
+  bytes for every command** (`--help`, `pr detect`, even a bogus subcommand — all
+  exit 0, no output) and `pr asset` silently uploaded nothing. The `op` creds
+  path was fine (item `vet52jaeh75chsalu6lulugium` =
+  `seaweedfs-s3-credentials` in vault `v64ocnykdqju4ui6j6pua56xw4`; fields
+  `SEAWEEDFS_ACCESS_KEY_ID` / `SEAWEEDFS_SECRET_ACCESS_KEY`). **Workaround that
+  worked:** replicate the documented raw PUT with the system `aws` CLI —
+  `op run --env-file=<refs> -- aws s3 cp <png> s3://public-sjer-red/pr/assets/<PR>/<name> --endpoint-url https://seaweedfs.sjer.red --content-type image/png`
+  then embed `https://public.sjer.red/pr/assets/<PR>/<name>` in the PR. Used this
+  to attach the before/after emulator screenshots to PR #1110. No `.env.seaweedfs`
+  exists locally; build it as `op://` references instead (no secrets on disk).
