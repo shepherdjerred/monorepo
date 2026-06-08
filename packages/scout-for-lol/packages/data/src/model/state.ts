@@ -61,14 +61,34 @@ export function isArenaQueueOrMode(queueId: number, gameMode: string): boolean {
   return queueId === ARENA_QUEUE_ID || gameMode === ARENA_GAME_MODE;
 }
 
+// Custom and tutorial games surface as `gameType: "CUSTOM"` (Spectator V5) or
+// `"CUSTOM_GAME"` (Match V5). Riot does not publish a stable queue ID for these,
+// so live payloads carry ad-hoc values (e.g. 3110 for a custom Summoner's Rift
+// draft) that are absent from queues.json and therefore unmapped by
+// `parseQueueType`. Detect them by game type instead.
+function isCustomGameType(gameType: string | undefined): boolean {
+  return gameType?.toUpperCase().startsWith("CUSTOM") ?? false;
+}
+
 export function resolveQueueTypeFromGame(
   queueId: number,
   gameMode: string,
+  gameType?: string,
 ): QueueType | undefined {
   if (isArenaQueueOrMode(queueId, gameMode)) {
     return "arena";
   }
-  return parseQueueType(queueId);
+  const mapped = parseQueueType(queueId);
+  if (mapped !== undefined) {
+    return mapped;
+  }
+  // Unknown queue ID: only treat as "custom" when the payload says so. A
+  // genuinely-new ranked/normal queue still resolves to undefined (unchanged
+  // behavior for callers that don't pass gameType).
+  if (isCustomGameType(gameType)) {
+    return "custom";
+  }
+  return undefined;
 }
 
 export function queueTypeToDisplayString(queueType: QueueType): string {
