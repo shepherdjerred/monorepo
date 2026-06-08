@@ -174,7 +174,17 @@ export function tofuApplyHelper(
   // OpenTofu image ships only `tofu`, so the CLI must be installed for apply to
   // succeed. Done before mounting the source so the layer caches independently.
   if (stack === "seaweedfs") {
-    container = container.withExec(["apk", "add", "--no-cache", "aws-cli"]);
+    container = container
+      .withExec(["apk", "add", "--no-cache", "aws-cli"])
+      // SeaweedFS S3 requires s3v4 signing; pin the region to avoid mismatches
+      // with newer AWS CLI versions that use CRT-based signing. The
+      // WHEN_REQUIRED checksum settings suppress the checksum headers AWS CLI
+      // v2 sends by default but SeaweedFS does not understand — without them the
+      // local-exec `s3api`/`s3 cp` calls fail. Matches deploySiteHelper and
+      // deployStaticSiteHelper below.
+      .withEnvVariable("AWS_DEFAULT_REGION", "us-east-1")
+      .withEnvVariable("AWS_REQUEST_CHECKSUM_CALCULATION", "WHEN_REQUIRED")
+      .withEnvVariable("AWS_RESPONSE_CHECKSUM_VALIDATION", "WHEN_REQUIRED");
   }
 
   container = container
