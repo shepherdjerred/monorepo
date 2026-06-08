@@ -87,6 +87,11 @@ export class StatusReporter {
       void (async () => {
         const { title, year } = parseTitleYear(nowKey);
         const poster = await fetchPoster(title, year);
+        // The track may have changed while the poster fetch was in flight; don't post a stale
+        // announcement out of order behind the newer track's message.
+        if (this.lastNowKey !== nowKey) {
+          return;
+        }
         await this.announce(
           poster === null
             ? content

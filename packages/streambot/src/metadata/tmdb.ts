@@ -93,6 +93,10 @@ export async function fetchPoster(
   year: number | null,
 ): Promise<PosterInfo | null> {
   const url = new URL(TMDB_SEARCH_URL);
+  // We use a TMDB v3 API key, which is only accepted as the `api_key` query param — the
+  // `Authorization: Bearer` header requires a separate v4 read-access token (using the v3 key there
+  // returns 401). The key never reaches our logs (we only log the resulting image URL + title), and
+  // the request itself is HTTPS.
   url.searchParams.set("api_key", apiKey);
   url.searchParams.set("query", title);
   url.searchParams.set("include_adult", "false");
