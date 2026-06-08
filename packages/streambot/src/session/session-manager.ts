@@ -229,10 +229,22 @@ export class SessionManager {
       }
       const entry = this.deps.pool.acquire(guildId);
       if (entry === null) {
-        log.warn("no userbot available to resume session", {
-          guildId,
-          channelId,
-        });
+        if (this.deps.pool.canServe(guildId)) {
+          // A member userbot exists but is busy — keep the file and retry on a later boot (or until it
+          // ages out via resumeMaxAgeSeconds, which loadState enforces above).
+          log.warn("no userbot free to resume session (will retry)", {
+            guildId,
+            channelId,
+          });
+        } else {
+          // No pooled userbot is a member of this guild, so it can never be resumed — drop the stale
+          // file instead of letting it accumulate until expiry.
+          log.warn("dropping unresumable session (no member userbot)", {
+            guildId,
+            channelId,
+          });
+          await deleteState(filePath);
+        }
         continue;
       }
       const session = this.spawn({

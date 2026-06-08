@@ -25,6 +25,8 @@ export type UserbotEntry = {
 export type UserbotProvider = {
   acquire: (guildId: GuildId) => UserbotEntry | null;
   release: (entry: UserbotEntry) => void;
+  /** Whether any pooled userbot is a member of `guildId` (regardless of busy state). */
+  canServe: (guildId: GuildId) => boolean;
 };
 
 /** A streamer the pool can log in and probe membership on (production: {@link StreambotStreamer}). */
@@ -124,6 +126,11 @@ export class UserbotPool {
   /** Return a userbot to the pool (its streamer has already left voice). */
   release(entry: UserbotEntry): void {
     entry.busy = false;
+  }
+
+  /** Whether any pooled userbot is a member of `guildId` (ignores busy state). */
+  canServe(guildId: GuildId): boolean {
+    return this.entries.some((entry) => entry.guildIds.has(guildId));
   }
 
   /** Union of all guilds the pool can serve — used to size command registration / diagnostics. */

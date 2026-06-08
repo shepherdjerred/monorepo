@@ -133,6 +133,7 @@ function buildSession(config: Config, input: PlaybackInput): Session {
       release: () => {
         /* empty pool: nothing to release */
       },
+      canServe: () => false,
     },
     resolveSource: (actorInput, signal) =>
       resolveSource(config, actorInput.source, signal),

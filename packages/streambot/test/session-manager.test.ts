@@ -12,6 +12,11 @@ import type {
 import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import {
+  saveState,
+  stateFilePath,
+  type PersistedState,
+} from "@shepherdjerred/streambot/state/persistence.ts";
+import {
   ChannelIdSchema,
   GuildIdSchema,
   UserIdSchema,
@@ -72,6 +77,7 @@ function fakePool(size: number) {
       entry.busy = false;
       released.push(entry);
     },
+    canServe: (guildId) => entries.some((e) => e.guildIds.has(guildId)),
   };
   return {
     provider,
@@ -249,4 +255,58 @@ describe("SessionManager", () => {
 
     await manager.destroyAll();
   });
+
+  test("resumeAll drops a persisted session no userbot can serve", async () => {
+    const config = await makeConfig();
+    const file = stateFilePath(config.state.dir, GUILD, CHANNEL_A);
+    await saveState(file, persistedWithQueue());
+    const { manager } = makeManager(config, {
+      acquire: () => null,
+      release: () => {
+        /* unused */
+      },
+      canServe: () => false, // no member userbot exists for this guild
+    });
+
+    await manager.resumeAll();
+    expect(await Bun.file(file).exists()).toBe(false);
+  });
+
+  test("resumeAll keeps a persisted session when a member userbot is merely busy", async () => {
+    const config = await makeConfig();
+    const file = stateFilePath(config.state.dir, GUILD, CHANNEL_A);
+    await saveState(file, persistedWithQueue());
+    const { manager } = makeManager(config, {
+      acquire: () => null, // all member userbots currently busy
+      release: () => {
+        /* unused */
+      },
+      canServe: () => true,
+    });
+
+    await manager.resumeAll();
+    expect(await Bun.file(file).exists()).toBe(true);
+  });
 });
+
+/** A persisted state with one queued item (so resumeAll has something to resume). */
+function persistedWithQueue(): PersistedState {
+  return {
+    version: 2,
+    savedAt: Date.now(),
+    guildId: GUILD,
+    channelId: CHANNEL_A,
+    statusChannelId: STATUS,
+    loop: "off",
+    volume: 100,
+    current: null,
+    queue: [
+      {
+        source: { kind: "file", path: "/clip.mkv", title: "Clip" },
+        requesterId: USER,
+      },
+    ],
+    resumeAttempts: 0,
+    resumeKey: null,
+  };
+}
