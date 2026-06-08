@@ -77,6 +77,9 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
     ytDlpPath: env["YT_DLP_PATH"],
     ffmpegPath: env["FFMPEG_PATH"],
     ffprobePath: env["FFPROBE_PATH"],
+    observability: {
+      metricsPort: num(env["METRICS_PORT"]),
+    },
   };
 
   const parsed = ConfigSchema.safeParse(raw);

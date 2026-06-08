@@ -31,6 +31,7 @@ import type { Streamer } from "../client/index.js";
 import type { EncoderSettingsGetter } from "./encoders/index.js";
 import type { VideoStreamInfo } from "./LibavDemuxer.js";
 import type { WebRtcConnWrapper } from "../client/voice/WebRtcWrapper.js";
+import type { StreamObserver } from "./StreamObserver.js";
 
 export type PrepareStreamOptions = {
   /**
@@ -132,6 +133,12 @@ export type PrepareStreamOptions = {
    * seekable inputs. Used by the seekable player to restart a source at a new position.
    */
   startTime?: number;
+
+  /**
+   * Optional observability seam. When supplied, the ffmpeg command line, input codec metadata, and
+   * periodic transcode progress are forwarded to the observer. No effect on behavior.
+   */
+  observer?: StreamObserver;
 
   /**
    * Letterbox/pillarbox. After scaling the video to `width`x`height`, pad it onto a centered
@@ -274,6 +281,38 @@ export function prepareStream(
 
   // command creation
   const command = ffmpeg(input);
+
+  // Observability seam: forward the ffmpeg command line, input codec metadata, and periodic
+  // transcode progress to an optional observer. Registered before `command.run()` so no events are
+  // missed. Purely additive — no effect when `options.observer` is undefined.
+  const { observer } = options;
+  if (observer?.onCommand) {
+    command.on("start", (commandLine) => observer.onCommand?.(commandLine));
+  }
+  if (observer?.onCodecData) {
+    command.on("codecData", (data) => {
+      observer.onCodecData?.({
+        format: data.format,
+        duration: data.duration,
+        video: data.video,
+        audio: data.audio,
+        video_details: data.video_details,
+        audio_details: data.audio_details,
+      });
+    });
+  }
+  if (observer?.onProgress) {
+    command.on("progress", (progress) => {
+      observer.onProgress?.({
+        frames: progress.frames,
+        currentFps: progress.currentFps,
+        currentKbps: progress.currentKbps,
+        targetSize: progress.targetSize,
+        timemark: progress.timemark,
+        percent: progress.percent,
+      });
+    });
+  }
 
   // input seek: `-ss` before `-i` is a fast, accurate input seek for seekable sources.
   if (mergedOptions.startTime !== undefined) {
@@ -567,6 +606,12 @@ export type PlayStreamOptions = {
    * Enable stream preview from input stream (experimental)
    */
   streamPreview: boolean;
+
+  /**
+   * Optional observability seam. When supplied, per-frame send timing (frametime ratio) from the
+   * video/audio send path is forwarded to the observer. No effect on behavior.
+   */
+  observer?: StreamObserver;
 };
 
 const playStreamDefaultOptions = {
@@ -616,6 +661,8 @@ export function mergePlayStreamOptions(
         : playStreamDefaultOptions.readrateInitialBurst,
 
     streamPreview: opts.streamPreview ?? playStreamDefaultOptions.streamPreview,
+
+    observer: opts.observer,
   } satisfies PlayStreamOptions;
 }
 
@@ -680,12 +727,12 @@ export async function attachPipeline(
     });
   }
 
-  const vStream = new VideoStream(conn);
+  const vStream = new VideoStream(conn, false, options.observer);
   video.stream.pipe(vStream);
   // Hoisted so destroy() can tear the audio side down too (see the destroy closure below).
   let aStream: AudioStream | undefined;
   if (audio) {
-    const a = new AudioStream(conn);
+    const a = new AudioStream(conn, false, options.observer);
     aStream = a;
     audio.stream.pipe(a);
     vStream.syncStream = a;
