@@ -63,8 +63,8 @@ no public ACL change.
 
 ### Remaining
 
-- **Operator infra apply** (needs tailnet + 1Password): `tofu -chdir=seaweedfs apply` (bucket + lifecycle + seed) and `tofu -chdir=cloudflare apply` (DNS), then let ArgoCD sync the Caddy config for the new `public.sjer.red` vhost.
-- **True E2E** (after apply): a real `toolkit pr asset` upload + `curl` + GitHub render check. Not run locally because the bucket doesn't exist until apply and creds need `op`.
+- **Infra apply happens in CI on merge to main** — no manual step. Buildkite's release build runs `homelabTofuGroup()` → `tofu-apply` for the `seaweedfs` (bucket + lifecycle + seed) and `cloudflare` (DNS) stacks, then a unified ArgoCD sync rolls out the Caddy `public.sjer.red` vhost. PRs only run `tofu plan` for review. (`op run -- tofu apply` is the operator fallback, not the normal path.)
+- **True E2E** (after the merge build applies): a real `toolkit pr asset` upload + `curl` + GitHub render check. Can't run locally because the bucket doesn't exist until apply and creds need `op`.
 - Push branch / open PR (not done — awaiting user).
 
 ### Caveats
