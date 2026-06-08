@@ -10,6 +10,7 @@ import { exportBuildkiteDashboardJson } from "@shepherdjerred/homelab/cdk8s/graf
 import { exportZfsDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/zfs-dashboard.ts";
 import { exportTemporalDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/temporal-dashboard.ts";
 import { exportPrReviewBotDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/pr-review-bot-dashboard.ts";
+import { exportStreambotDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/streambot-dashboard.ts";
 import { exportStaticSiteProbesDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/static-site-probes-dashboard.ts";
 
 /**
@@ -130,6 +131,13 @@ const PR_REVIEW_BOT_DASHBOARD: DashboardConfig = {
   exportFn: exportPrReviewBotDashboardJson,
 };
 
+const STREAMBOT_DASHBOARD: DashboardConfig = {
+  id: "streambot-dashboard-configmap",
+  name: "streambot-dashboard",
+  jsonFilename: "streambot.json",
+  exportFn: exportStreambotDashboardJson,
+};
+
 const ALL_DASHBOARDS: DashboardConfig[] = [
   AI_PROVIDER_DASHBOARD,
   BUILDKITE_DASHBOARD,
@@ -138,6 +146,7 @@ const ALL_DASHBOARDS: DashboardConfig[] = [
   SCOUT_DASHBOARD,
   SMARTCTL_DASHBOARD,
   STATIC_SITE_PROBES_DASHBOARD,
+  STREAMBOT_DASHBOARD,
   TASKNOTES_DASHBOARD,
   TEMPORAL_DASHBOARD,
   VELERO_DASHBOARD,

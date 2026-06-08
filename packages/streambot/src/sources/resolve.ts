@@ -9,6 +9,49 @@ import {
   BlockedSourceError,
   isBlockedSource,
 } from "@shepherdjerred/streambot/moderation/adult-block.ts";
+import {
+  probeMedia,
+  resolutionBucket,
+} from "@shepherdjerred/streambot/sources/probe.ts";
+import { setSourceInfo } from "@shepherdjerred/streambot/observability/metrics.ts";
+import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+
+const log = logger.child("resolve");
+
+/**
+ * Probe the resolved input and publish its media properties as a log line + the
+ * `streambot_source_info` metric. Best-effort — {@link probeMedia} never throws, and a null result
+ * (probe failed) simply skips the update.
+ */
+async function recordSourceMetadata(
+  config: Config,
+  resolved: ResolvedSource,
+  signal: AbortSignal,
+): Promise<void> {
+  const info = await probeMedia(config, resolved.ffmpegInput, signal);
+  if (info === null) {
+    return;
+  }
+  const resolution = resolutionBucket(info.height);
+  log.info("source probed", {
+    title: resolved.title,
+    videoCodec: info.videoCodec,
+    audioCodec: info.audioCodec,
+    width: info.width,
+    height: info.height,
+    resolution,
+    hdr: info.hdr,
+    pixelFormat: info.pixelFormat,
+    audioChannels: info.audioChannels,
+    durationSeconds: info.durationSeconds,
+  });
+  setSourceInfo({
+    video_codec: info.videoCodec,
+    audio_codec: info.audioCodec,
+    hdr: info.hdr ? "true" : "false",
+    resolution,
+  });
+}
 
 /**
  * Resolve a {@link Source} to a {@link ResolvedSource} ffmpeg can read: local files pass straight
@@ -24,8 +67,10 @@ export async function resolveSource(
   if (isBlockedSource(source)) {
     throw new BlockedSourceError(sourceLabel(source));
   }
-  if (source.kind === "file") {
-    return { title: source.title, ffmpegInput: source.path };
-  }
-  return resolveWithYtdlp(config, source, signal);
+  const resolved =
+    source.kind === "file"
+      ? { title: source.title, ffmpegInput: source.path }
+      : await resolveWithYtdlp(config, source, signal);
+  await recordSourceMetadata(config, resolved, signal);
+  return resolved;
 }

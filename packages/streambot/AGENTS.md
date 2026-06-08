@@ -29,8 +29,21 @@ but we stream files/URLs directly with ffmpeg instead of automating a browser.
   search), `ytdlp.ts` (system `yt-dlp` via `Bun.spawn`, `--dump-json` → Zod).
 - `src/discord/` — command bot client + commands (PR B).
 - `src/streamer/` — selfbot + `@dank074` stream driver (PR B).
+- `src/observability/` — `metrics.ts` (`prom-client` registry + `Bun.serve` `/metrics`),
+  `stream-observer.ts` (maps the fork's `StreamObserver` callbacks → metrics/logs).
 - `src/util/` — structured logger, errors.
 - `test/` — `bun:test`; the machine is the most heavily tested surface.
+
+## Observability
+
+Prometheus metrics are served at `/metrics` on `METRICS_PORT` (default `9466`, `0` disables),
+scraped by a ServiceMonitor (homelab `streambot.ts`). The headline metric is
+`streambot_ffmpeg_speed_ratio` — sustained `< 1.0` means the transcode can't keep realtime and
+playback will stutter once the buffer drains; read it alongside `streambot_send_frametime_ratio`
+(send-bound vs transcode-bound) and `streambot_source_info` (ffprobe codec/resolution/HDR/audio).
+Grafana dashboard: `packages/homelab/src/cdk8s/grafana/streambot-dashboard.ts` (uid `streambot`).
+The ffmpeg/send signals come from the vendored fork's optional `StreamObserver`
+(`@shepherdjerred/discord-video-stream`), threaded via the prepare/play options in `streamer.ts`.
 
 ## Conventions
 

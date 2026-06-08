@@ -61,6 +61,14 @@ export const ConfigSchema = z.strictObject({
   playlistLimit: z.number().int().positive().default(100),
   ytDlpPath: z.string().min(1).default("/usr/local/bin/yt-dlp"),
   ffmpegPath: z.string().min(1).default("ffmpeg"),
+  ffprobePath: z.string().min(1).default("ffprobe"),
+  /** Observability: Prometheus metrics HTTP server. */
+  observability: z
+    .strictObject({
+      /** Port for the `/metrics` endpoint. `0` disables the metrics server entirely. */
+      metricsPort: z.number().int().nonnegative().default(9466),
+    })
+    .default({ metricsPort: 9466 }),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
