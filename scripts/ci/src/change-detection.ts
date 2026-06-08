@@ -132,10 +132,15 @@ const RELEASE_PLEASE_PR_BRANCH = "release-please--branches--main";
  * release-please release PR. These PRs are no-op version bumps, so we skip the
  * full CI rather than burn the whole pipeline (and the Greptile gate) on them.
  *
- * The skip is bypassed — full CI runs — when the build is triggered on purpose:
- *   - manually via the Buildkite UI ("New Build") or API / `bk build create`
- *     (BUILDKITE_SOURCE is "ui" / "api" rather than "webhook"), or
- *   - with RUN_RELEASE_CI=true set on the build.
+ * The skip is intentionally narrow: it fires *only* when BUILDKITE_SOURCE is
+ * exactly "webhook" (the automatic build Buildkite starts from the GitHub PR
+ * webhook). Every other source — "ui"/"api" (manual New Build / API /
+ * `bk build create`), "schedule", "trigger_job" (triggered by another
+ * pipeline), or an unknown/empty value — runs full CI. Defaulting unknown
+ * sources to "run" is deliberate: we'd rather over-run CI than silently skip a
+ * build and mistake the no-op pipeline for real coverage.
+ *
+ * RUN_RELEASE_CI=true also forces a full run regardless of source.
  *
  * This lets a release still be cut on demand while leaving the PR un-CI'd (and
  * therefore not mergeable) until you ask for it. Note this only matches the
@@ -148,8 +153,7 @@ export function shouldSkipReleasePleasePrBuild(): boolean {
   const optIn = (process.env["RUN_RELEASE_CI"] ?? "").toLowerCase() === "true";
   if (optIn) return false;
   const source = process.env["BUILDKITE_SOURCE"] ?? "";
-  const isManual = source === "ui" || source === "api";
-  return !isManual;
+  return source === "webhook";
 }
 
 // ---------------------------------------------------------------------------
