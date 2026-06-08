@@ -404,12 +404,13 @@ pre-commit:
             glob: "tsconfig.base.json"
             run: bun run typecheck
 
-          # --- Knip ---
-          - name: knip
-            glob:
-              - "**/package.json"
-              - "**/knip.json"
-            run: bunx knip --no-exit-code
+          # --- Knip: CI-only ---
+          # Knip is a whole-graph dead-code analysis: it loads every workspace
+          # declared in knip.json and needs all ~30 packages' deps installed to
+          # run. On the per-commit path that forced a full `scripts/setup.ts`
+          # install before any commit, which is expensive per-worktree. It runs
+          # in CI instead (the `knip-check` Dagger step in scripts/ci), so it
+          # stays off the commit hot path with no loss of coverage.
 
           # --- Compliance ---
           - name: compliance-check
