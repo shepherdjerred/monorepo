@@ -104,7 +104,7 @@ Running against the vault revealed genuine discrepancies (not false positives):
 
 ## Addendum — fail on blank required fields (2026-06-07)
 
-Per owner direction ("fail on blank items"), the linter was tightened: field *existence* alone
+Per owner direction ("fail on blank items"), the linter was tightened: field _existence_ alone
 is no longer enough for a **required** `secretKeyRef`. The snapshot now records, per item, which
 exposed keys are **blank** (empty-valued from every source — still hashes only, no values), and
 the linter fails when a required reference points at a blank field (the operator skips empty
