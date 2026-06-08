@@ -21,8 +21,13 @@ function chunk(type: string, data: Uint8Array): Buffer {
   return Buffer.concat([length, body, crc]);
 }
 
-// Encode a width x height RGBA frame to PNG, optionally nearest-neighbour
-// upscaled by an integer factor for legibility on Discord. Dependency-free.
+// Encode a width x height RGBA frame to PNG as RGB (no alpha), optionally
+// nearest-neighbour upscaled by an integer factor for legibility on Discord.
+// The screenshot frame's colours are already correct (R,G,B in bytes 0-2); its
+// 4th byte is undefined XRGB8888 padding, not a real alpha (see
+// wasm-src/PATCHES.md). Emitting an RGB (colour type 2) PNG drops that dead byte
+// — otherwise it leaks through as transparency. Source is read 4 bytes/pixel;
+// output is 3 bytes/pixel. Dependency-free.
 export function encodePng(
   rgba: Buffer,
   width: number,
@@ -33,7 +38,7 @@ export function encodePng(
   const outW = width * factor;
   const outH = height * factor;
 
-  const stride = outW * 4;
+  const stride = outW * 3;
   const raw = Buffer.alloc((stride + 1) * outH);
   for (let y = 0; y < outH; y++) {
     const srcY = Math.trunc(y / factor);
@@ -41,11 +46,10 @@ export function encodePng(
     raw[pos++] = 0; // filter: none
     for (let x = 0; x < outW; x++) {
       const srcX = Math.trunc(x / factor);
-      const s = (srcY * width + srcX) * 4;
-      raw[pos++] = rgba[s];
-      raw[pos++] = rgba[s + 1];
-      raw[pos++] = rgba[s + 2];
-      raw[pos++] = rgba[s + 3];
+      const s = (srcY * width + srcX) * 4; // RGBA source: R,G,B,X
+      raw[pos++] = rgba[s]; // R
+      raw[pos++] = rgba[s + 1]; // G
+      raw[pos++] = rgba[s + 2]; // B
     }
   }
 
@@ -53,7 +57,7 @@ export function encodePng(
   ihdr.writeUInt32BE(outW, 0);
   ihdr.writeUInt32BE(outH, 4);
   ihdr[8] = 8; // bit depth
-  ihdr[9] = 6; // colour type: RGBA
+  ihdr[9] = 2; // colour type: RGB (no alpha)
   ihdr[10] = 0; // compression
   ihdr[11] = 0; // filter
   ihdr[12] = 0; // interlace

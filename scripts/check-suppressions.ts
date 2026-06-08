@@ -29,6 +29,9 @@ const SUPPRESSION_PATTERNS = [
 
 // Files where suppression patterns are legitimate (config, the script itself, etc.)
 const EXCLUDED_FILES = [
+  // Vendored fork of @dank074/discord-video-stream — preserve upstream source as-is, including
+  // its @ts-expect-error comments (matched as a path prefix).
+  "packages/discord-video-stream/",
   "scripts/check-suppressions.ts",
   "scripts/quality-ratchet.sh",
   "CHANGELOG.md",

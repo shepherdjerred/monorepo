@@ -109,6 +109,7 @@ import {
   trivyScanHelper,
   daggerHygieneHelper,
   tunnelDnsCoverageHelper,
+  reactVersionSyncHelper,
   semgrepScanHelper,
   lockfileCheckHelper,
   envVarNamesHelper,
@@ -1314,6 +1315,12 @@ export class Monorepo {
   @func()
   async tunnelDnsCoverage(source: Directory): Promise<string> {
     return tunnelDnsCoverageHelper(source).stdout();
+  }
+
+  /** Verify react/react-dom (+ @types) resolve to matching versions in every bun.lock. */
+  @func()
+  async reactVersionSync(source: Directory): Promise<string> {
+    return reactVersionSyncHelper(source).stdout();
   }
 
   /** Semgrep auto-config scan against the repo. */

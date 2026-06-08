@@ -62,6 +62,9 @@ packages/castle-casters/assets/
 # Legacy / archived projects — repo AGENTS.md marks archive/ as "do not modify"
 archive/
 
+# Vendored fork of @dank074/discord-video-stream — preserve upstream (biome) source formatting.
+packages/discord-video-stream/
+
 # Agent skills contain vendored/reference material whose source formatting is preserved.
 packages/dotfiles/dot_agents/skills/**
 packages/discord-plays-pokemon/packages/frontend/public/emulatorjs/

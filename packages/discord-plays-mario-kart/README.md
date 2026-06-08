@@ -16,8 +16,9 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
   back out of memory — no GPU and no canvas. N64 has no simple PPU like the GBA,
   so a software RDP is the only GPU-free render path.
 - **Streaming** — frames are encoded with ffmpeg and pushed to a Discord voice
-  channel (Go-Live) via
-  [`@dank074/discord-video-stream`](https://github.com/dank074/Discord-video-stream)
+  channel (Go-Live) via `@shepherdjerred/discord-video-stream` (our in-repo fork
+  of
+  [`@dank074/discord-video-stream`](https://github.com/dank074/Discord-video-stream))
   using a self-bot, so viewers watch in the voice channel.
 - **Input** — the web UI exposes up to **four virtual controllers** (seats
   P1–P4). Players claim a seat and drive with WASD/arrows in real time; inputs

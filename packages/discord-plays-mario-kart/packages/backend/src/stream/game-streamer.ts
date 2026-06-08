@@ -5,7 +5,7 @@ import {
   prepareStream,
   playStream,
   Encoders,
-} from "@dank074/discord-video-stream";
+} from "@shepherdjerred/discord-video-stream";
 import { WIDTH, HEIGHT, N64_FPS } from "#src/emulator/constants.ts";
 import { logger } from "#src/logger.ts";
 
@@ -24,14 +24,14 @@ export type GameStreamerOptions = {
 // timestamps from this value, so it must match the emulator's actual tick rate.
 const SRC_FPS = N64_FPS;
 
-// Streams the emulator's RGBA frames into a Discord voice channel as a Go-Live
+// Streams the emulator's BGRA frames into a Discord voice channel as a Go-Live
 // broadcast, over the voice UDP path. Replaces the userbot + browser
 // screen-share. Frames are fed as rawvideo straight into the library's ffmpeg
 // (one encode pass).
 export class GameStreamer {
   private readonly options: GameStreamerOptions;
   private readonly streamer: Streamer;
-  private rgba: PassThrough | undefined;
+  private bgra: PassThrough | undefined;
   private playing: Promise<void> | undefined;
   private active = false;
   // Serializes start()/stop(). Both are driven fire-and-forget from
@@ -57,9 +57,9 @@ export class GameStreamer {
     return this.active;
   }
 
-  /** Feed one RGBA frame (no-op unless a broadcast is active). */
+  /** Feed one BGRA frame (no-op unless a broadcast is active). */
   pushFrame(frame: Buffer): void {
-    if (this.active && this.rgba) this.rgba.write(frame);
+    if (this.active && this.bgra) this.bgra.write(frame);
   }
 
   start(): Promise<void> {
@@ -99,8 +99,8 @@ export class GameStreamer {
     if (this.active) return;
     await this.streamer.joinVoice(this.options.guildId, this.options.channelId);
 
-    const rgba = new PassThrough();
-    const { output, promise } = prepareStream(rgba, {
+    const bgra = new PassThrough();
+    const { output, promise } = prepareStream(bgra, {
       width: WIDTH * this.options.scale,
       height: HEIGHT * this.options.scale,
       frameRate: this.options.frameRate,
@@ -112,8 +112,12 @@ export class GameStreamer {
       customInputOptions: [
         "-f",
         "rawvideo",
+        // Frames pushed to the stream arrive BGRA (see wasm-src/PATCHES.md —
+        // get_video_buffer's non-idempotent b<->r swap nets BGRA on the tick
+        // path). Declaring rgba here swaps red/blue in the broadcast; ffmpeg
+        // drops the X byte converting to yuv420p.
         "-pix_fmt",
-        "rgba",
+        "bgra",
         "-video_size",
         `${String(WIDTH)}x${String(HEIGHT)}`,
         "-framerate",
@@ -127,7 +131,7 @@ export class GameStreamer {
     // Publish state only once the stream is fully wired; these assignments are
     // synchronous (no await between them), so pushFrame never sees a half-set
     // state.
-    this.rgba = rgba;
+    this.bgra = bgra;
     this.playing = this.runStream(output, promise);
     this.active = true;
     logger.info("Go-Live stream started");
@@ -156,8 +160,8 @@ export class GameStreamer {
   private async doStop(): Promise<void> {
     if (!this.active) return;
     this.active = false;
-    this.rgba?.end();
-    this.rgba = undefined;
+    this.bgra?.end();
+    this.bgra = undefined;
     // runStream never rejects (it logs internally), so awaiting is safe.
     await this.playing;
     this.playing = undefined;

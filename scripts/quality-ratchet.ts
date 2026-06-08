@@ -35,7 +35,7 @@ const RULES: GrepRule[] = [
     pattern: String.raw`^\s*(//|/\*)\s*eslint-disable`,
     searchPaths: ["packages/", ".dagger/"],
     includes: ["*.ts", "*.tsx"],
-    excludeDirs: ["node_modules", "dist", "archive"],
+    excludeDirs: ["node_modules", "dist", "archive", "discord-video-stream"],
     excludePathPatterns: ["/generated/"],
   },
   {
@@ -43,7 +43,7 @@ const RULES: GrepRule[] = [
     pattern: String.raw`^\s*//\s*@ts-(expect-error|ignore|nocheck)`,
     searchPaths: ["packages/", ".dagger/"],
     includes: ["*.ts", "*.tsx"],
-    excludeDirs: ["node_modules", "dist", "archive"],
+    excludeDirs: ["node_modules", "dist", "archive", "discord-video-stream"],
     excludePathPatterns: ["/generated/"],
   },
   {
@@ -59,7 +59,7 @@ const RULES: GrepRule[] = [
     pattern: String.raw`^\s*(//|/\*)\s*prettier-ignore`,
     searchPaths: ["packages/", ".dagger/"],
     includes: ["*.ts", "*.tsx", "*.js", "*.jsx", "*.css", "*.json"],
-    excludeDirs: ["node_modules", "dist", "archive"],
+    excludeDirs: ["node_modules", "dist", "archive", "discord-video-stream"],
     excludePathPatterns: [],
   },
 ];

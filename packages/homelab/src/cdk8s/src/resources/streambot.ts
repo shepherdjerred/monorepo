@@ -15,6 +15,7 @@ import {
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 const STREAMBOT_UID = 1000;
@@ -44,6 +45,14 @@ export function createStreambotDeployment(
 
   const fromSecret = (key: string) => EnvValue.fromSecretValue({ secret, key });
 
+  // Small persistent volume for resume state (current item + playback position + queue). Survives
+  // pod restarts so a deploy/crash mid-movie picks up where it left off. RWO + the Recreate strategy
+  // below guarantees the old pod detaches before the new one attaches (a rolling update would
+  // multi-attach-conflict).
+  const stateVolume = new ZfsNvmeVolume(chart, "streambot-state-pvc", {
+    storage: Size.gibibytes(1),
+  });
+
   const deployment = new Deployment(chart, "streambot", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
@@ -71,6 +80,8 @@ export function createStreambotDeployment(
         ADMIN_IDS: fromSecret("ADMIN_IDS"),
         VIDEOS_DIR: EnvValue.fromValue("/data/videos"),
         MEDIA_DIRS: EnvValue.fromValue("/media/movies,/media/tv"),
+        // Resume state lives on the persistent volume mounted at /state.
+        STATE_DIR: EnvValue.fromValue("/state"),
         STREAM_WIDTH: EnvValue.fromValue("1920"),
         STREAM_HEIGHT: EnvValue.fromValue("1080"),
         STREAM_FPS: EnvValue.fromValue("30"),
@@ -105,6 +116,15 @@ export function createStreambotDeployment(
             chart,
             "streambot-videos-volume",
             "streambot-videos",
+          ),
+        },
+        {
+          // Writable resume-state volume (current item + position + queue), persisted across restarts.
+          path: "/state",
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "streambot-state-volume",
+            stateVolume.claim,
           ),
         },
         {

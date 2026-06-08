@@ -63,6 +63,10 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       hardwareAcceleration: bool(env["STREAM_HARDWARE_ACCELERATION"]),
       vaapiDevice: env["VAAPI_DEVICE"],
     },
+    state: {
+      dir: env["STATE_DIR"],
+      resumeMaxAgeSeconds: num(env["RESUME_MAX_AGE_SECONDS"]),
+    },
     idleTimeoutSeconds: num(env["IDLE_TIMEOUT_SECONDS"]),
     playlistLimit: num(env["PLAYLIST_LIMIT"]),
     ytDlpPath: env["YT_DLP_PATH"],
