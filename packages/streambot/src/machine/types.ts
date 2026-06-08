@@ -61,6 +61,12 @@ export type PlaybackContext = {
   blockedNonce: number;
   /** Who requested the most recently blocked source (for the public shaming message). */
   lastBlockedRequester: UserId | null;
+  /**
+   * One-shot seek offset (seconds) applied to the first stream after a resume. Set from persisted
+   * state at boot, consumed when the first item starts streaming, then zeroed so loops/replays start
+   * from 0.
+   */
+  resumeSeekSeconds: number;
 };
 
 export type PlaybackEvent =
@@ -79,6 +85,14 @@ export type PlaybackInput = {
   readonly guildId: GuildId;
   readonly channelId: ChannelId;
   readonly idleTimeoutMs: number;
+  /** Queue to start with (resume) — the in-progress item, if any, goes at index 0. */
+  readonly initialQueue?: QueuedSource[];
+  /** Loop mode to start with (resume). */
+  readonly initialLoop?: LoopMode;
+  /** Volume to start with (resume). */
+  readonly initialVolume?: number;
+  /** One-shot seek (seconds) for the first streamed item (resume position). */
+  readonly initialSeekSeconds?: number;
 };
 
 export type JoinVoiceInput = {
@@ -90,5 +104,7 @@ export type RunStreamInput = {
   readonly voice: VoiceHandle;
   readonly resolved: ResolvedSource;
   readonly volume: number;
+  /** Offset (seconds) to start playback at — >0 only for the first item after a resume. */
+  readonly seekSeconds: number;
 };
 export type LeaveVoiceInput = { readonly voice: VoiceHandle };

@@ -16,6 +16,7 @@ import type {
   VoiceHandle,
 } from "@shepherdjerred/streambot/machine/types.ts";
 import { buildSubtitleFilter } from "@shepherdjerred/streambot/sources/subtitles.ts";
+import { computeElapsed } from "@shepherdjerred/streambot/streamer/elapsed.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
@@ -30,16 +31,33 @@ const log = logger.child("streamer");
  * Live controls (`setVolume`, `seek`) act on the currently-playing {@link Player} as side-channels,
  * independent of the machine.
  */
+/** Factory for the seekable player — injectable so tests can drive playback without a live stream. */
+export type PlayerFactory = typeof createSeekablePlayer;
+
 export class StreambotStreamer {
   private readonly client: Client;
   private readonly streamer: Streamer;
   private readonly config: Config;
+  /** Injectable clock (ms) so position tracking is deterministic in tests. */
+  private readonly now: () => number;
+  /** Injectable player factory (defaults to the fork's real one) so tests can supply a fake. */
+  private readonly createPlayer: PlayerFactory;
   private player: Player | null = null;
   /** Last known playback offset (seconds), captured per segment so a HW→SW retry can resume there. */
   private lastPlaybackPositionSeconds = 0;
+  /** Offset (seconds) the current segment started playing at (initial resume seek or last live seek). */
+  private segmentStartOffsetSeconds = 0;
+  /** Wall-clock (ms) when the current segment began playing; null when nothing is playing. */
+  private segmentStartedAtMs: number | null = null;
 
-  constructor(config: Config) {
+  constructor(
+    config: Config,
+    now: () => number = Date.now,
+    createPlayer: PlayerFactory = createSeekablePlayer,
+  ) {
     this.config = config;
+    this.now = now;
+    this.createPlayer = createPlayer;
     this.client = new Client();
     this.streamer = new Streamer(this.client);
   }
@@ -79,8 +97,28 @@ export class StreambotStreamer {
     if (this.player === null) {
       return false;
     }
-    await this.player.seek(seconds);
+    const target = Math.max(0, seconds);
+    await this.player.seek(target);
+    // Re-anchor the elapsed clock so getPosition() tracks from the new offset.
+    this.segmentStartOffsetSeconds = target;
+    this.segmentStartedAtMs = this.now();
     return true;
+  }
+
+  /**
+   * Current playback position in seconds (segment start offset + real time since it began playing),
+   * or null when nothing is playing. Used to checkpoint resume state — unlike the fork's
+   * `Player.position`, this advances with the clock.
+   */
+  getPosition(): number | null {
+    if (this.segmentStartedAtMs === null) {
+      return null;
+    }
+    return computeElapsed(
+      this.segmentStartOffsetSeconds,
+      this.segmentStartedAtMs,
+      this.now(),
+    );
   }
 
   private safeStop(): void {
@@ -90,6 +128,7 @@ export class StreambotStreamer {
       log.warn("player stop failed", { error: getErrorMessage(error) });
     }
     this.player = null;
+    this.segmentStartedAtMs = null;
     try {
       this.streamer.stopStream();
     } catch (error) {
@@ -122,7 +161,8 @@ export class StreambotStreamer {
     const useHardware = this.config.stream.hardwareAcceleration && !hasSubtitle;
     try {
       try {
-        await this.streamOnce(input, signal, useHardware, 0);
+        // Start at the resume offset (0 for a fresh play; >0 when resuming after a restart).
+        await this.streamOnce(input, signal, useHardware, input.seekSeconds);
       } catch (error) {
         if (useHardware && !signal.aborted) {
           // Resume the software retry at wherever playback (incl. any live seek) had reached, rather
@@ -194,7 +234,7 @@ export class StreambotStreamer {
     // the true end of playback (or on stop) and rejects on an ffmpeg/encode failure — folding in the
     // play/ffmpeg-failure race the old code did by hand, and letting `/stream seek` restart ffmpeg at
     // a new offset without dropping the Go-Live stream.
-    const player = createSeekablePlayer(
+    const player = this.createPlayer(
       this.streamer,
       input.resolved.ffmpegInput,
       {
@@ -215,6 +255,9 @@ export class StreambotStreamer {
 
     try {
       await player.start();
+      // Anchor the elapsed clock at the segment's start offset so getPosition() tracks live position.
+      this.segmentStartOffsetSeconds = startSeconds;
+      this.segmentStartedAtMs = this.now();
       try {
         await player.setVolume(Math.max(0, input.volume) / 100);
       } catch (error) {
@@ -224,8 +267,10 @@ export class StreambotStreamer {
     } finally {
       signal.removeEventListener("abort", onAbort);
       // Capture where playback reached (incl. live seeks) before dropping the player, so a HW→SW
-      // retry can resume there.
-      this.lastPlaybackPositionSeconds = player.position;
+      // retry can resume there. Uses the wall-clock tracker, not the fork's segment-offset
+      // `Player.position`, falling back to the requested offset if playback never started.
+      this.lastPlaybackPositionSeconds = this.getPosition() ?? startSeconds;
+      this.segmentStartedAtMs = null;
       if (this.player === player) {
         this.player = null;
       }
