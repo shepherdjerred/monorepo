@@ -7,7 +7,14 @@
 //
 // No ROM or wasm needed; this runs in CI. The "input actually moves the game"
 // half is covered by the manual scripts/e2e-input.ts (needs a ROM).
-import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "bun:test";
 import { createServer, type Server as HttpServer } from "node:http";
 import { io as ioClient, type Socket as ClientSocket } from "socket.io-client";
 import type { Subscription } from "rxjs";
@@ -47,6 +54,12 @@ beforeAll(async () => {
     throw new Error("server did not bind a TCP port");
   }
   port = addr.port;
+});
+
+beforeEach(() => {
+  // Fresh seat state per test so seat reuse across tests can't race on the
+  // async disconnect handler from a previous test's closed socket.
+  seatManager = new SeatManager(4);
 });
 
 afterAll(() => {

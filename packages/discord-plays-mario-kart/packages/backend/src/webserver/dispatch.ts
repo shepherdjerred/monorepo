@@ -68,7 +68,7 @@ export function handleRequest(
       emulator.setPlayerInput(e.request.seat, e.request.state);
     })
     .with({ request: { kind: "login" } }, (e) => {
-      // TODO: real auth. Identity is cosmetic; seats gate control.
+      // TODO(todo:mario-kart-web-auth): real auth. Identity is cosmetic; seats gate control.
       const player = { discordId: "id", discordUsername: "username" };
       const response: LoginResponse = { kind: "login", value: player };
       e.socket.emit("response", response);
