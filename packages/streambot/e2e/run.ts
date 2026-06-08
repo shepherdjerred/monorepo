@@ -25,6 +25,7 @@ import {
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import { register } from "@shepherdjerred/streambot/observability/metrics.ts";
 
 /**
  * End-to-end test, run inside Dagger with real credentials (see `e2eStreambot`). Exercises BOTH
@@ -154,6 +155,47 @@ async function stopSession(session: Session): Promise<void> {
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Assert the observability metrics reflect an in-progress real stream. Throws with the relevant
+ * `streambot_*` lines on failure. The send-frametime histogram is the load-bearing check — it only
+ * advances when frames are actually packetized and sent over the Discord voice connection.
+ */
+function assertStreamingMetrics(metricsText: string): void {
+  const dump = (): string =>
+    metricsText
+      .split("\n")
+      .filter(
+        (l) =>
+          l.startsWith("streambot_send_") ||
+          l.startsWith("streambot_stream_") ||
+          l.startsWith("streambot_source_info"),
+      )
+      .join("\n");
+
+  // prom-client emits the default `app="streambot"` label alongside `kind`, in registration order,
+  // so match `kind="video"` anywhere within the label set rather than assuming label order.
+  const videoSends =
+    /streambot_send_frametime_ratio_count\{[^}]*kind="video"[^}]*\}\s+(\d+)/.exec(
+      metricsText,
+    );
+  if (videoSends === null || Number(videoSends[1]) <= 0) {
+    throw new Error(
+      `expected streambot_send_frametime_ratio observations for video frames, got none:\n${dump()}`,
+    );
+  }
+  if (!/streambot_stream_active\{[^}]*\}\s+1\b/.test(metricsText)) {
+    throw new Error(
+      `expected streambot_stream_active=1 during streaming:\n${dump()}`,
+    );
+  }
+  if (!/streambot_source_info\{[^}]*\}\s+1\b/.test(metricsText)) {
+    throw new Error(`expected streambot_source_info to be set:\n${dump()}`);
+  }
+  log.info("e2e: observability metrics PASS", {
+    videoSends: videoSends[1],
+  });
+}
+
 async function main(): Promise<number> {
   const baseConfig = loadConfig();
   await generateClip(baseConfig.ffmpegPath);
@@ -195,6 +237,11 @@ async function main(): Promise<number> {
           `expected playback to advance past 3s, got ${String(capturedPosition)}`,
         );
       }
+
+      // Observability: after several seconds of REAL streaming to the voice channel, the metrics
+      // populated by the new StreamObserver must reflect it. This is the one path the credential-free
+      // `e2e/local.ts` cannot reach — the Discord send loop (`onSendStats`).
+      assertStreamingMetrics(await register.metrics());
       const { context } = s1.actor.getSnapshot();
       await saveState(
         stateFile,
@@ -238,7 +285,16 @@ async function main(): Promise<number> {
       await waitFor(s2.actor, (snapshot) => snapshot.matches("streaming"), {
         timeout: 60_000,
       });
-      const resumedAt = s2.streamer.getPosition() ?? 0;
+      // The machine enters `streaming` when the runStream actor STARTS, but getPosition() only
+      // anchors once player.start() resolves (a beat later). Poll briefly so we read the resumed
+      // offset, not the pre-anchor 0.
+      let resumedAt = 0;
+      for (let i = 0; i < 50 && resumedAt === 0; i += 1) {
+        resumedAt = s2.streamer.getPosition() ?? 0;
+        if (resumedAt === 0) {
+          await sleep(100);
+        }
+      }
       log.info("e2e: cycle 2 resumed position", {
         resumedAt,
         capturedPosition,
