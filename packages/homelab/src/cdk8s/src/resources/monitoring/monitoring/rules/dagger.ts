@@ -26,7 +26,7 @@ export function getDaggerEngineRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "DaggerEnginePVCStorageHigh",
           annotations: {
             summary: "Dagger engine cache PVC usage is high",
-            message: escapePrometheusTemplate(
+            description: escapePrometheusTemplate(
               "Dagger engine PVC {{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full. " +
                 "Approaching the ZFS quota; a heavy build can hit EDQUOT and fail CI. Expand the PVC or lower GC maxUsedSpace. " +
                 "Runbook: packages/docs/guides/2026-06-07_dagger-engine-pvc-resize.md",
@@ -46,7 +46,7 @@ export function getDaggerEngineRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "DaggerEnginePVCStorageCritical",
           annotations: {
             summary: "Dagger engine cache PVC is nearly full",
-            message: escapePrometheusTemplate(
+            description: escapePrometheusTemplate(
               "Dagger engine PVC {{ $labels.persistentvolumeclaim }} is {{ $value | humanizePercentage }} full. " +
                 "Imminent EDQUOT risk — CI image pushes and tofu applies will fail. Expand the PVC now. " +
                 "Runbook: packages/docs/guides/2026-06-07_dagger-engine-pvc-resize.md",
