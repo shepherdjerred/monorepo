@@ -53,12 +53,14 @@ registration; membership discovered at runtime from `client.guilds.cache`.
 
 ## Remaining / operator steps
 
-1. **Add a `USER_TOKENS` field (comma-separated userbot tokens) to the `streambot-config` 1Password
-   item before the new image deploys.** Confirmed on 2026-06-07 that the item currently has
-   `BOT_TOKEN, TOKEN, GUILD_ID, VIDEO_CHANNEL_ID, COMMAND_CHANNEL_ID, ADMIN_IDS` but **no
-   `USER_TOKENS`** — so the new pod would `CreateContainerConfigError`/CrashLoop until it's added (the
-   operator only materializes secret keys for fields that exist). The old `TOKEN` field can be deleted
-   afterwards. (No snapshot refresh needed — that linter was removed.)
+1. ~~Add a `USER_TOKENS` field to the `streambot-config` 1Password item.~~ **DONE 2026-06-07** —
+   added a concealed `USER_TOKENS` field seeded from the existing `TOKEN` value (verified identical),
+   kept `TOKEN` as the code fallback, appended a migration note to both `streambot-config` and
+   `streambot-tmdb`. The 1Password operator synced `USER_TOKENS` into the live `media-streambot-config`
+   Secret (confirmed via `kubectl`). To grow the pool later, append more comma-separated tokens (one
+   per additional Discord account, each invited to the target servers). `TOKEN` can be removed once the
+   pool is confirmed in prod. **Remaining:** merge this branch so ArgoCD rolls out the new
+   manifest+image (the running pod still uses the old `TOKEN` manifest until then — no disruption).
 2. Run the live Dagger e2e (`e-2-e-streambot`, pool-of-1) to confirm login/register/join/stream/resume
    under the new env names.
 3. Each userbot account must be invited to the target servers (membership = what it can serve); the
