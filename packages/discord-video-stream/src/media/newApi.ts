@@ -123,6 +123,16 @@ export type PrepareStreamOptions = {
    * seekable inputs. Used by the seekable player to restart a source at a new position.
    */
   startTime?: number;
+
+  /**
+   * Letterbox/pillarbox. After scaling the video to `width`x`height`, pad it onto a centered
+   * black canvas of these dimensions. Use to emit a fixed aspect ratio (e.g. 16:9) for content
+   * of a different aspect without stretching: set `width`/`height` to the aspect-correct content
+   * box and `pad` to the final canvas. Software path only — the pad runs before any GPU `hwupload`,
+   * so it composes with VAAPI raw-frame encoding; it is ignored when a hardware decode pipeline
+   * (`hardwareAcceleratedDecoding` + an encoder with `hwPipeline`) is active.
+   */
+  pad?: { width: number; height: number };
 };
 
 export type Controller = {
@@ -158,6 +168,7 @@ export function prepareStream(
     customInputOptions: [],
     customFfmpegFlags: [],
     startTime: undefined,
+    pad: undefined,
   } satisfies PrepareStreamOptions;
 
   function mergeOptions(opts: Partial<PrepareStreamOptions>) {
@@ -216,6 +227,7 @@ export function prepareStream(
         isFiniteNonZero(opts.startTime) && opts.startTime > 0
           ? opts.startTime
           : defaultOptions.startTime,
+      pad: opts.pad ?? defaultOptions.pad,
     } satisfies PrepareStreamOptions;
   }
 
@@ -325,10 +337,20 @@ export function prepareStream(
       throw new Error(`Encoder settings not specified for ${videoCodec}`);
 
     // Scale on the GPU when the encoder declares a hardware pipeline; otherwise software `scale`.
+    // On the software path an optional `pad` letterboxes/pillarboxes the scaled frame onto a
+    // centered black canvas (e.g. fit 4:3 content into a 16:9 output). The pad runs before the
+    // encoder's `outFilters` (`format=nv12|vaapi`, `hwupload`) appended below, so it still composes
+    // with VAAPI raw-frame encoding. `pad` is intentionally not supported on the GPU pipeline.
+    const { pad } = mergedOptions;
     command.videoFilter(
       hwPipeline
         ? hwPipeline.scaleFilter(width, height)
-        : `scale=${width}:${height}`,
+        : pad && pad.width > 0 && pad.height > 0
+          ? [
+              `scale=${width}:${height}`,
+              `pad=${pad.width}:${pad.height}:-1:-1:color=black`,
+            ]
+          : `scale=${width}:${height}`,
     );
 
     if (frameRate) command.fpsOutput(frameRate);

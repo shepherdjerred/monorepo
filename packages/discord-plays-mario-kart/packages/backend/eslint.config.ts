@@ -10,6 +10,7 @@ const config = [
         "src/game/command/command-input.test.ts",
         "src/emulator/buttons.test.ts",
         "src/emulator/png.test.ts",
+        "src/stream/letterbox.test.ts",
       ],
     },
   }),

@@ -6,18 +6,27 @@ import {
   playStream,
   Encoders,
 } from "@shepherdjerred/discord-video-stream";
-import { WIDTH, HEIGHT, N64_FPS } from "#src/emulator/constants.ts";
+import {
+  WIDTH,
+  HEIGHT,
+  N64_FPS,
+  DISPLAY_ASPECT,
+} from "#src/emulator/constants.ts";
+import { computeLetterbox } from "#src/stream/letterbox.ts";
 import { logger } from "#src/logger.ts";
 
 export type GameStreamerOptions = {
   token: string;
   guildId: string;
   channelId: string;
-  // Output scale applied to the native 640x240 MK64 frame.
-  scale: number;
+  // Height of the 16:9 output canvas; the 4:3 game is pillarboxed onto it.
+  canvasHeight: number;
   frameRate: number;
   bitrateKbps: number;
   bitrateMaxKbps: number;
+  // VAAPI hardware H.264 encoding on an Intel iGPU; falls back to libx264 when off.
+  hardwareAcceleration: boolean;
+  vaapiDevice: string;
 };
 
 // rawvideo input framerate handed to ffmpeg — it assigns presentation
@@ -100,9 +109,16 @@ export class GameStreamer {
     await this.streamer.joinVoice(this.options.guildId, this.options.channelId);
 
     const bgra = new PassThrough();
+    // Scale the 4:3 game into an aspect-correct content box, then pillarbox it onto
+    // a black 16:9 canvas for Discord (see prepareStream `pad`).
+    const { content, canvas } = computeLetterbox(
+      DISPLAY_ASPECT,
+      this.options.canvasHeight,
+    );
     const { output, promise } = prepareStream(bgra, {
-      width: WIDTH * this.options.scale,
-      height: HEIGHT * this.options.scale,
+      width: content.width,
+      height: content.height,
+      pad: canvas,
       frameRate: this.options.frameRate,
       videoCodec: "H264",
       bitrateVideo: this.options.bitrateKbps,
@@ -123,9 +139,14 @@ export class GameStreamer {
         "-framerate",
         String(SRC_FPS),
       ],
-      encoder: Encoders.software({
-        x264: { preset: "ultrafast", tune: "zerolatency" },
-      }),
+      // Raw-frame input → keep hardwareAcceleratedDecoding off; Encoders.vaapi()
+      // then uploads frames to the GPU (format=nv12|vaapi, hwupload) and encodes
+      // with h264_vaapi. Software libx264 is the no-GPU fallback (local/arm64).
+      encoder: this.options.hardwareAcceleration
+        ? Encoders.vaapi({ device: this.options.vaapiDevice })
+        : Encoders.software({
+            x264: { preset: "ultrafast", tune: "zerolatency" },
+          }),
     });
 
     // Publish state only once the stream is fully wired; these assignments are

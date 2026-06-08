@@ -58,10 +58,16 @@ if (config.stream.enabled) {
     token: config.stream.userbot.token,
     guildId: config.server_id,
     channelId: config.stream.channel_id,
-    scale: config.stream.video.scale,
+    canvasHeight: config.stream.video.canvas_height,
     frameRate: config.stream.video.frame_rate,
     bitrateKbps: config.stream.video.bitrate_kbps,
     bitrateMaxKbps: config.stream.video.bitrate_max_kbps,
+    // Env (set by the k8s deployment) overrides config so VAAPI can be toggled
+    // without editing the 1Password-sourced config.toml.
+    hardwareAcceleration:
+      Bun.env.STREAM_HARDWARE_ACCELERATION === "true" ||
+      config.stream.video.hardware_acceleration,
+    vaapiDevice: Bun.env.VAAPI_DEVICE ?? config.stream.video.vaapi_device,
   });
   await streamer.login();
 
