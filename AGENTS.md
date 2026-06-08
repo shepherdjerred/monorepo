@@ -284,3 +284,23 @@ toolkit recall reindex           # Re-scan all watched directories
 toolkit recall status            # Index stats, daemon health
 toolkit recall debug             # Full diagnostic check
 ```
+
+## PR Screenshots — `public.sjer.red`
+
+`gh` cannot upload images into a PR/issue body (drag-drop uses a private,
+session-only endpoint). To attach screenshots in a PR description/comment,
+upload them to the public artifact host and embed the returned URLs.
+
+```bash
+# Creds come from 1Password (item vet52jaeh75chsalu6lulugium); run under op:
+op run --env-file=.env.seaweedfs -- toolkit pr asset <PR_NUMBER> ./before.png ./after.png --markdown
+```
+
+- Uploads to the `public-sjer-red` SeaweedFS bucket under `pr/assets/<PR_NUMBER>/`
+  and prints `https://public.sjer.red/pr/assets/<PR_NUMBER>/<file>` for each
+  (with `--markdown`, ready-to-paste `![file](url)` tags).
+- GitHub's image proxy fetches the public URL, so images render for reviewers
+  without checking out the branch.
+- Objects under `pr/assets/` expire after 365 days; the homelab must be up for
+  the images to load. Env: `SEAWEEDFS_ACCESS_KEY_ID`,
+  `SEAWEEDFS_SECRET_ACCESS_KEY` (optionally `SEAWEEDFS_S3_ENDPOINT`).
