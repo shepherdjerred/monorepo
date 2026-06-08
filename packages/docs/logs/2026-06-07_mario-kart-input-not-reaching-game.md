@@ -84,3 +84,54 @@ compiles cleanly (emscripten/emsdk:2.0.7) and produces `n64wasm.js`/`.wasm`.
 - `applyHostControls()` runs even when `showOverlay` is true (it's placed after
   the overlay reset). That's intended for headless — the host always drives the
   game — but worth knowing if an overlay/menu mode is added later.
+
+## Session Log — 2026-06-07 (part 2: e2e verification + tests)
+
+### Done
+
+- **Proved the fix end-to-end with the real ROM** (`~/Downloads/Mario Kart 64
+(USA).z64`): booting the real `N64Emulator`, holding START on the title screen
+  advances to the **GAME SELECT** menu; baseline (no input) stays on the title.
+  Baseline is byte-deterministic across runs; START diverges. Earlier "black
+  frame" confusion was just boot/transition screens (added luma logging to find
+  the title at frame ~1050).
+- **Audited + closed the full React→game chain** and added automated coverage:
+  - Extracted the browser input mapping to
+    [`frontend/src/input-map.ts`](../../discord-plays-mario-kart/packages/frontend/src/input-map.ts)
+    (`KEYMAP`/`PADS`/`computeState`) and added
+    `frontend/src/input-map.test.ts` (10 tests). Enabled the frontend test
+    runner (`"test": "bun test"`) and excluded `*.test.*` from the app tsconfig.
+  - Extracted the request dispatch from `index.ts` to
+    [`backend/src/webserver/dispatch.ts`](../../discord-plays-mario-kart/packages/backend/src/webserver/dispatch.ts)
+    (`handleRequest` + `EmulatorControls`), used by both `index.ts` and tests.
+  - Added `backend/src/webserver/dispatch.test.ts`: a **real Socket.IO
+    client → createSocket (schema parse) → handleRequest → fake emulator**
+    integration test (claim routes input with correct decoded state; seat
+    gating; schema rejection; release + disconnect clear input). Added
+    `socket.io-client` devDep.
+  - Added `backend/src/emulator/constants.test.ts` (BUTTON_ORDER ⇄ ButtonState
+    permutation + length === CONTROL_CHARS).
+- **Saved the ROM-driven e2e as documented manual scripts**:
+  `backend/scripts/e2e-input.ts` (single run + `DUMP_EVERY` PNG dumps) and
+  `e2e-input-assert.ts` (baseline vs START, PASS/FAIL). npm scripts:
+  `build:wasm`, `e2e:input`, `e2e:input:check`. Documented in the package README
+  Testing table.
+- Verified: `bun run --filter '*' test` → frontend 10 + backend 12 green;
+  eslint clean; backend typecheck clean (mario-kart code).
+
+### Remaining
+
+- **Deploy** still pending (unchanged): WASM builds in the Dagger image; the fix
+  reaches prod only after image rebuild + GitOps redeploy.
+
+### Caveats
+
+- The CI test suite covers the whole chain **except** the literal browser
+  `addEventListener`/render glue and the actual game pixels — those need a DOM /
+  ROM. The game-effect e2e is therefore manual-only (ROM is copyright; the core
+  is built in a Dagger stage absent from the test container).
+- Local `bun run typecheck` in `backend` reports one error inside the vendored
+  `discord-video-stream` source (`Unused '@ts-expect-error'`), unrelated to this
+  work — it only appears because that shared lib isn't pre-built in a fresh
+  worktree (CI builds it first). Not introduced here.
+- `bun install` added `socket.io-client` to the backend; lockfile updated.
