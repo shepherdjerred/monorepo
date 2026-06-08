@@ -158,6 +158,30 @@ async function stopSession(session: Session): Promise<void> {
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Wait until the streamer has anchored its playback clock (`getPosition()` becomes non-null after
+ * `player.start()` resolves). The machine reaches `streaming` the instant the runStream actor is
+ * invoked — a tick before the clock is anchored — so reading the position immediately would race and
+ * report 0. Polling here lets us assert the true resume offset without masking a real seek bug (a
+ * broken seek would still surface as ~0).
+ */
+async function waitForPosition(
+  streamer: StreambotStreamer,
+  timeoutMs = 10_000,
+): Promise<number> {
+  const start = Date.now();
+  for (;;) {
+    const position = streamer.getPosition();
+    if (position !== null) {
+      return position;
+    }
+    if (Date.now() - start > timeoutMs) {
+      throw new Error("streamer never anchored a playback position");
+    }
+    await sleep(50);
+  }
+}
+
 async function main(): Promise<number> {
   const baseConfig = loadConfig();
   await generateClip(baseConfig.ffmpegPath);
@@ -256,7 +280,9 @@ async function main(): Promise<number> {
       await waitFor(s2.actor, (snapshot) => snapshot.matches("streaming"), {
         timeout: 60_000,
       });
-      const resumedAt = s2.streamer.getPosition() ?? 0;
+      // Wait for the clock to anchor (player.start resolved) before reading the resume offset, so we
+      // assert the real seek position rather than racing the streamer's setup.
+      const resumedAt = await waitForPosition(s2.streamer);
       log.info("e2e: cycle 2 resumed position", {
         resumedAt,
         capturedPosition,
