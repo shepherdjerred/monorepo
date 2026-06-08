@@ -34,9 +34,12 @@ exist to confirm and target the real cause.
 ## Verification done
 
 - ffmpeg `scale,pad` chain renders valid 1280×720 pillarboxed output (synthetic frames; PNGs).
-- pokemon Dagger image (with VAAPI apt) builds + boots (smoke test: expected auth failure).
+- **Both** Dagger images (with the VAAPI apt stack) build + boot — pokemon and mario-kart (incl. the
+  emscripten wasm stage) smoke tests pass with the expected Discord auth failure.
 - `prom-client` incl. default + event-loop-lag metrics serialize under Bun; `/metrics` lint-clean.
 - typecheck + tests + eslint green: fork, both bot backends, homelab cdk8s (131 pass); cdk8s synths.
+
+Shipped as PR shepherdjerred/monorepo#1101 (6 commits).
 
 ## Remaining / cluster verification (post-deploy)
 
@@ -49,5 +52,50 @@ exist to confirm and target the real cause.
 - Use the profile/metrics to decide the real fps fix (likely emulation-side: pokemon renders ~60
   but streams 30 → render every other frame; MK angrylion → lower res/scale or worker thread).
 - Image version bump in `versions.ts` is CI-managed (version-commit-back) after merge.
+
+## streambot — applicability (decided: leave as-is)
+
+streambot uses the same fork and was the VAAPI template, so it already hardware-encodes. What
+carries over vs. not:
+
+- **Continuous profiling**: applies for free — the cluster-wide Alloy eBPF DaemonSet profiles every
+  pod, so streambot shows up as `media/streambot` with no code change.
+- **VAAPI**: already present.
+- **16:9 `pad` letterbox**: does **not** apply — streambot decodes files on the GPU pipeline
+  (`hardwareAcceleratedDecoding: true` → `scale_vaapi`), while `pad` is wired only on the software
+  path. Note streambot currently `scale_vaapi=w:h` **stretches** non-16:9 sources; fixing that would
+  need a `pad_vaapi` step on the fork's hwPipeline branch (intentionally out of scope).
+- **Frame metrics / dashboard / traces**: emulator-specific; not added to streambot. A future
+  follow-up could add stream-health metrics + Tempo traces if wanted.
+
+Owner decision (2026-06-07): leave streambot as-is for now.
+
+## Session Log — 2026-06-07
+
+### Done
+
+- Fork `pad` letterbox + `isBun/isDeno` type-safety: `packages/discord-video-stream` (commit c50f1746e).
+- Both bots: VAAPI/software encoder selection + 16:9 1280×720 pillarbox + config; Intel VAAPI stack in
+  the Dagger image builders + Dockerfiles (commits c50f1746e, 1beabdbad).
+- Both bots: Prometheus `/metrics` + emulator hot-loop instrumentation + OTLP lifecycle traces
+  (commit 271252c8c).
+- Homelab: i915 + VAAPI/telemetry env + ServiceMonitors; Pyroscope + Alloy eBPF; Grafana datasource +
+  "Discord Plays — Stream Health" dashboard (commits cf2494057, a67815b19).
+- Verified locally: ffmpeg pad render, both image smoke tests, prom-client under Bun, all
+  typecheck/test/lint, cdk8s synth. PR shepherdjerred/monorepo#1101.
+
+### Remaining
+
+- Post-deploy cluster verification (see "Remaining / cluster verification" above): confirm
+  `h264_vaapi` in use, 16:9 + smoothness in the live stream, dashboard/Tempo/Pyroscope populate,
+  Alloy eBPF River config valid at runtime.
+- Use the metrics/profile to choose the real fps fix (likely emulation-side, not encode).
+
+### Caveats
+
+- VAAPI frees CPU but won't fix an emulation-bound loop; observability is there to confirm the cause.
+- Alloy eBPF DaemonSet is cluster-wide privileged (owner-approved).
+- New config fields are `.default()`-ed and `scale` kept optional so the 1Password-sourced
+  `config.toml` still validates without edits; VAAPI is enabled via the deployment env, not 1Password.
 
 <!-- temporal-agent-task omitted: no standing future obligation with a concrete date. -->
