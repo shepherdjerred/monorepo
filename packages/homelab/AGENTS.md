@@ -161,11 +161,15 @@ cd src/cdk8s && bun run scripts/snapshot-1password-vault.ts
 
 Notes:
 
-- Field existence means the **label is present** on the item; the linter does not check that
-  a field is populated (values are volatile and never enter the snapshot).
-- `secretKeyRef` marked `optional: true` is allowed to reference a non-existent field by
-  design, so the linter does not require those to exist.
-- If the lint fails right after a legitimate vault change, refresh the snapshot and commit it.
+- A referenced field must **exist** (its label is present on the item) **and**, for a
+  required reference, be **non-blank**. A required `secretKeyRef` pointing at an
+  empty-valued field fails the lint, because the operator skips empty fields at sync time
+  and the pod's env var would be missing (`CreateContainerConfigError`). The snapshot records
+  which keys are blank as hashes only — no values are ever stored.
+- `secretKeyRef` marked `optional: true` is exempt: it may reference a missing or blank field
+  by design, so the linter neither requires it to exist nor to be populated.
+- If the lint fails right after a legitimate vault change (item/field added, renamed, or
+  populated), refresh the snapshot and commit it.
 
 ## Git Workflow
 

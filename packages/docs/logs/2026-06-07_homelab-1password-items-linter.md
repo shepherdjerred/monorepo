@@ -101,3 +101,18 @@ Running against the vault revealed genuine discrepancies (not false positives):
 - Snapshot staleness is the model's tradeoff (lockfile-style): vault changes require a manual
   refresh + commit. An optional server-side report-only Temporal drift-check could catch this
   without putting credentials in CI (not implemented).
+
+## Addendum — fail on blank required fields (2026-06-07)
+
+Per owner direction ("fail on blank items"), the linter was tightened: field *existence* alone
+is no longer enough for a **required** `secretKeyRef`. The snapshot now records, per item, which
+exposed keys are **blank** (empty-valued from every source — still hashes only, no values), and
+the linter fails when a required reference points at a blank field (the operator skips empty
+fields at sync, so the env var would be missing → `CreateContainerConfigError`). `optional: true`
+refs remain exempt. Commit `efa7734bd`.
+
+This currently flags **`FASTMAIL_TOKEN`** and **`GMAIL_TOKEN`** on `mcp-gateway-credentials`
+(required by mcp-gateway's Fastmail JMAP / Gmail email-reader MCP backends, blank in the vault).
+Owner chose to **push the strict linter and leave CI red** on these two until the tokens are
+populated in 1Password (then refresh the snapshot). This is an intentional, known red — not a
+regression in this PR.

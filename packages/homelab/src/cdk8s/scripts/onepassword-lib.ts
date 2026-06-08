@@ -75,8 +75,13 @@ export const SnapshotItemSchema = z.object({
   ref: z.string(),
   /** sha256 of the 1Password item title (items are referenced by id OR title). */
   title: z.string(),
-  /** Sorted sha256 hashes of the operator-emitted secret keys for this item. */
+  /** Sorted sha256 hashes of every secret key the item exposes (field existence). */
   fields: z.array(z.string()),
+  /**
+   * Sorted sha256 hashes of the subset of `fields` that are empty-valued from every
+   * source — the operator skips these, so a required secretKeyRef to one fails at deploy.
+   */
+  blankFields: z.array(z.string()),
 });
 export type SnapshotItem = z.infer<typeof SnapshotItemSchema>;
 
@@ -122,25 +127,32 @@ export const OpItemListSchema = z.array(
 );
 
 /**
- * Compute the set of Kubernetes Secret data keys an item *can* expose — every field
- * label, URL label, and file name run through {@link formatSecretDataName} (the same
- * key the operator's BuildKubernetesSecretData would emit).
+ * Compute, for an item, the Kubernetes Secret data keys it can expose — every field
+ * label, URL label, and file name run through {@link formatSecretDataName} (the key the
+ * operator's BuildKubernetesSecretData would emit) — split into:
  *
- * This intentionally tracks field *existence* (the label is present), independent of
- * whether the field currently holds a value. The linter answers "does this field exist
- * on the item?", per the request; it does not assert the field is populated (values are
- * volatile and never enter the snapshot). The operator additionally skips empty-valued
- * fields at sync time, but that is a deployment/population concern, not existence.
+ * - `all`:   every key whose label is present (field/url/file *existence*).
+ * - `blank`: keys that exist as a label but are empty-valued from EVERY source, so the
+ *            operator would skip them (allowEmptyValues=false) and the synced Secret
+ *            would NOT contain that key. A required `secretKeyRef` to such a key fails at
+ *            deploy with CreateContainerConfigError.
+ *
+ * Only emptiness (a boolean) ever influences the result — no field value is returned or
+ * stored, so the snapshot still leaks nothing.
  */
-export function operatorSecretKeys(item: OpItem): Set<string> {
-  const keys = new Set<string>();
-  const add = (label: string | undefined): void => {
+export function operatorSecretKeys(item: OpItem): { all: Set<string>; blank: Set<string> } {
+  const all = new Set<string>();
+  const live = new Set<string>();
+  const add = (label: string | undefined, hasValue: boolean): void => {
     if (label === undefined) return;
     const key = formatSecretDataName(label);
-    if (key !== "") keys.add(key);
+    if (key === "") return;
+    all.add(key);
+    if (hasValue) live.add(key);
   };
-  for (const field of item.fields ?? []) add(field.label);
-  for (const url of item.urls ?? []) add(url.label);
-  for (const file of item.files ?? []) add(file.name);
-  return keys;
+  for (const field of item.fields ?? []) add(field.label, (field.value ?? "").length > 0);
+  for (const url of item.urls ?? []) add(url.label, (url.href ?? "").length > 0);
+  for (const file of item.files ?? []) add(file.name, true); // file attachments always carry content
+  const blank = new Set([...all].filter((key) => !live.has(key)));
+  return { all, blank };
 }

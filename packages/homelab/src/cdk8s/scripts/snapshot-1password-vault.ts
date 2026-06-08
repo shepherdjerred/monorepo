@@ -154,11 +154,15 @@ async function fetchViaConnect(
 
 function buildSnapshot(items: OpItem[]): Snapshot {
   const snapshotItems: SnapshotItem[] = items
-    .map((item) => ({
-      ref: hash(item.id),
-      title: hash(item.title),
-      fields: [...operatorSecretKeys(item)].map((key) => hash(key)).toSorted(),
-    }))
+    .map((item) => {
+      const keys = operatorSecretKeys(item);
+      return {
+        ref: hash(item.id),
+        title: hash(item.title),
+        fields: [...keys.all].map((key) => hash(key)).toSorted(),
+        blankFields: [...keys.blank].map((key) => hash(key)).toSorted(),
+      };
+    })
     .toSorted((a, b) => a.ref.localeCompare(b.ref));
 
   return {

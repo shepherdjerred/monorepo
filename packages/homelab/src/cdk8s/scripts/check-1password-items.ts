@@ -233,10 +233,17 @@ function validateFields(
       if (entry === undefined) continue; // not a (resolved) 1Password-backed secret
       for (const key of [...keys].toSorted()) {
         checked += 1;
-        if (!entry.fields.includes(hash(key))) {
+        const keyHash = hash(key);
+        if (!entry.fields.includes(keyHash)) {
           errors.push(
             `field "${key}" not found on 1Password item backing secret ${namespace}/${secretName}. ` +
               `If it was just added/renamed, refresh the snapshot.`,
+          );
+        } else if (entry.blankFields.includes(keyHash)) {
+          errors.push(
+            `field "${key}" is BLANK (empty value) on the 1Password item backing secret ${namespace}/${secretName}. ` +
+              `The operator skips empty fields, so this required env var would be missing at deploy. ` +
+              `Populate it in 1Password, or mark the secretKeyRef optional if it is genuinely optional.`,
           );
         }
       }
