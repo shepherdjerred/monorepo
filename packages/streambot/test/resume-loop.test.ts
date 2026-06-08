@@ -47,6 +47,7 @@ function makeRecordingActors() {
       Promise.resolve({
         title: input.source.kind === "file" ? input.source.title : "x",
         ffmpegInput: `resolved:${resumeKeyFor(input.source)}`,
+        chapters: [],
       }),
     runStream: (input) => {
       seeks.push(input.seekSeconds);

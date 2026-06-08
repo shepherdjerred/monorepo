@@ -26,9 +26,16 @@ but we stream files/URLs directly with ffmpeg instead of automating a browser.
 - `src/config/` — Zod config parsed from env at boot (validate at boundary).
 - `src/machine/` — XState machine, context/events/actor types.
 - `src/sources/` — `source.ts` (Zod discriminated union), `library.ts` (recursive fs scan +
-  search), `ytdlp.ts` (system `yt-dlp` via `Bun.spawn`, `--dump-json` → Zod), `subtitles.ts`
-  (pure subtitle helpers), `subtitle-io.ts` (ffprobe/ffmpeg/yt-dlp glue that stages a track).
-- `src/discord/` — command bot client + commands (PR B).
+  search), `ytdlp.ts` (system `yt-dlp` via `Bun.spawn`, `--dump-json` → Zod), `normalize.ts`
+  (clean release-junk filenames → `Title (Year)`, used for display + matching), `chapters.ts`
+  (chapter markers: `ffprobe` for files, yt-dlp `chapters` for URLs; best-effort, never throws),
+  `subtitles.ts` (pure subtitle helpers), `subtitle-io.ts` (ffprobe/ffmpeg/yt-dlp glue that stages
+  a track).
+- `src/metadata/` — `tmdb.ts`: optional TMDB poster lookup for the now-playing embed (local files).
+  Best-effort + in-process cache; disabled unless `TMDB_API_KEY` is set.
+- `src/discord/` — command bot client + commands. `status-reporter.ts` posts the now-playing line
+  (with a TMDB poster embed for local files when configured). `/stream chapters` lists chapters;
+  `/stream chapter <n>` seeks to one (reuses the live seek side-channel).
 - `src/streamer/` — selfbot + `@dank074` stream driver (PR B).
 - `src/observability/` — `metrics.ts` (`prom-client` registry + `Bun.serve` `/metrics`),
   `stream-observer.ts` (maps the fork's `StreamObserver` callbacks → metrics/logs).

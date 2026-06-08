@@ -1,17 +1,19 @@
 import { describe, expect, test } from "bun:test";
 import {
+  type Announcement,
   StatusReporter,
   type StatusSnapshot,
 } from "@shepherdjerred/streambot/discord/status-reporter.ts";
+import type { PosterInfo } from "@shepherdjerred/streambot/metadata/tmdb.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 
 const REQUESTER = UserIdSchema.parse("100000000000000001");
 
 function collector(): {
   reporter: StatusReporter;
-  messages: string[];
+  messages: Announcement[];
 } {
-  const messages: string[] = [];
+  const messages: Announcement[] = [];
   const reporter = new StatusReporter((message) => {
     messages.push(message);
     return Promise.resolve();
@@ -19,11 +21,15 @@ function collector(): {
   return { reporter, messages };
 }
 
-function streaming(title: string): StatusSnapshot {
+function streaming(
+  title: string,
+  kind: StatusSnapshot["currentKind"] = "search",
+): StatusSnapshot {
   return {
     state: "streaming",
     currentTitle: title,
     currentRequester: REQUESTER,
+    currentKind: kind,
     blockedNonce: 0,
     blockedRequester: null,
   };
@@ -54,6 +60,7 @@ describe("StatusReporter now-playing", () => {
       state: "idle",
       currentTitle: null,
       currentRequester: null,
+      currentKind: null,
       blockedNonce: 0,
       blockedRequester: null,
     });
@@ -67,10 +74,87 @@ describe("StatusReporter now-playing", () => {
       state: "resolving",
       currentTitle: "Song A",
       currentRequester: REQUESTER,
+      currentKind: "file",
       blockedNonce: 0,
       blockedRequester: null,
     });
     expect(messages).toHaveLength(0);
+  });
+});
+
+function posterCollector(
+  fetchPoster: (
+    title: string,
+    year: number | null,
+  ) => Promise<PosterInfo | null>,
+): { reporter: StatusReporter; messages: Announcement[] } {
+  const messages: Announcement[] = [];
+  const reporter = new StatusReporter(
+    (message) => {
+      messages.push(message);
+      return Promise.resolve();
+    },
+    { fetchPoster },
+  );
+  return { reporter, messages };
+}
+
+describe("StatusReporter poster embeds", () => {
+  test("attaches a poster embed for a local file when a poster is found", async () => {
+    const calls: { title: string; year: number | null }[] = [];
+    const { reporter, messages } = posterCollector((title, year) => {
+      calls.push({ title, year });
+      return Promise.resolve({
+        posterUrl: "https://image.tmdb.org/t/p/w500/poster.jpg",
+        tmdbTitle: "Avengers: Endgame",
+      });
+    });
+
+    reporter.handle(streaming("Avengers - Endgame (2019)", "file"));
+    // Let the async poster fetch settle.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(calls).toEqual([{ title: "Avengers - Endgame", year: 2019 }]);
+    expect(messages).toEqual([
+      {
+        content: `▶️ Now playing **Avengers - Endgame (2019)** (requested by <@${REQUESTER}>)`,
+        embed: {
+          title: "Avengers - Endgame (2019)",
+          imageUrl: "https://image.tmdb.org/t/p/w500/poster.jpg",
+        },
+      },
+    ]);
+  });
+
+  test("falls back to plain text when no poster is found", async () => {
+    const { reporter, messages } = posterCollector(() => Promise.resolve(null));
+    reporter.handle(streaming("Obscure Film (1953)", "file"));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(messages).toEqual([
+      `▶️ Now playing **Obscure Film (1953)** (requested by <@${REQUESTER}>)`,
+    ]);
+  });
+
+  test("does not fetch a poster for non-file sources", async () => {
+    let called = false;
+    const { reporter, messages } = posterCollector(() => {
+      called = true;
+      return Promise.resolve(null);
+    });
+    reporter.handle(streaming("Some YouTube Video", "url"));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(called).toBe(false);
+    expect(messages).toEqual([
+      `▶️ Now playing **Some YouTube Video** (requested by <@${REQUESTER}>)`,
+    ]);
+  });
+
+  test("stays text-only when no poster fetcher is configured", () => {
+    const { reporter, messages } = collector();
+    reporter.handle(streaming("A Local Movie (2020)", "file"));
+    expect(messages).toEqual([
+      `▶️ Now playing **A Local Movie (2020)** (requested by <@${REQUESTER}>)`,
+    ]);
   });
 });
 
@@ -81,6 +165,7 @@ describe("StatusReporter blocked shaming", () => {
       state: "idle",
       currentTitle: null,
       currentRequester: null,
+      currentKind: null,
       blockedNonce: 1,
       blockedRequester: REQUESTER,
     });
@@ -94,6 +179,7 @@ describe("StatusReporter blocked shaming", () => {
       state: "idle",
       currentTitle: null,
       currentRequester: null,
+      currentKind: null,
       blockedNonce: 1,
       blockedRequester: REQUESTER,
     };
@@ -103,15 +189,19 @@ describe("StatusReporter blocked shaming", () => {
   });
 
   test("respects the initial nonce so a resume doesn't re-shame", () => {
-    const messages: string[] = [];
-    const reporter = new StatusReporter((message) => {
-      messages.push(message);
-      return Promise.resolve();
-    }, 1);
+    const messages: Announcement[] = [];
+    const reporter = new StatusReporter(
+      (message) => {
+        messages.push(message);
+        return Promise.resolve();
+      },
+      { initialNonce: 1 },
+    );
     reporter.handle({
       state: "idle",
       currentTitle: null,
       currentRequester: null,
+      currentKind: null,
       blockedNonce: 1,
       blockedRequester: REQUESTER,
     });

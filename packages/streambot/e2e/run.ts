@@ -8,10 +8,17 @@ import type { PlaybackInput } from "@shepherdjerred/streambot/machine/types.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
 import { expandPlaylist } from "@shepherdjerred/streambot/sources/ytdlp.ts";
+import { createPosterFetcher } from "@shepherdjerred/streambot/metadata/tmdb.ts";
 import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
 import { CommandBot } from "@shepherdjerred/streambot/discord/command-bot.ts";
+import { StatusReporter } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type { PlaybackView } from "@shepherdjerred/streambot/discord/command-handler.ts";
+import {
+  checkTmdbPoster,
+  verifyNowPlayingEmbed,
+  verifyRegisteredCommands,
+} from "./verify.ts";
 import {
   loadState,
   saveState,
@@ -32,14 +39,18 @@ import { register } from "@shepherdjerred/streambot/observability/metrics.ts";
  * Discord identities — the command bot (logs in, registers slash commands on the guild) and the
  * userbot streamer (joins the voice channel and streams).
  *
- * Two phases:
- *  1. Generate a clip, drive it into the voice channel, assert `streaming`, then stop cleanly.
- *  2. Resume: play, capture the position, persist it, tear the session down (simulated restart), then
- *     boot a fresh session from the persisted state and assert it resumes near the same position and
- *     keeps playing. Exits non-zero on failure.
+ * Phases:
+ *  0. (Optional) If `TMDB_API_KEY` is set, look up a known title and assert a live poster URL comes
+ *     back — validates the real TMDB + image CDN integration. Skipped cleanly when no key is set.
+ *  1. Generate a clip (with embedded chapters), drive it into the voice channel, assert `streaming`,
+ *     assert the real `ffprobe` extracted its chapters, verify the now-playing poster embed actually
+ *     posts to the status channel (read back via the bot), then capture + persist.
+ *  2. Resume: boot a fresh session from the persisted state and assert it resumes near the same
+ *     position and keeps playing. Exits non-zero on failure.
  */
 const log = logger.child("e2e");
 const TEST_CLIP = "/tmp/streambot-e2e.mp4";
+const CHAPTERS_META = "/tmp/streambot-e2e-chapters.txt";
 // Sidecar next to the clip (same base name) so subtitles (on by default) burn in over the live stream.
 const TEST_SIDECAR = "/tmp/streambot-e2e.en.srt";
 const REQUESTER = UserIdSchema.parse("100000000000000001");
@@ -47,8 +58,33 @@ const STREAM_HOLD_MS = 6000;
 const CLIP_DURATION_SECONDS = 30;
 /** Resume tolerance — wall-clock position can drift a little vs the captured checkpoint. */
 const RESUME_TOLERANCE_SECONDS = 5;
+/** Chapters embedded into the generated clip; asserted end-to-end via the real ffprobe in the image. */
+const EXPECTED_CHAPTERS: readonly { title: string; startSeconds: number }[] = [
+  { title: "Intro", startSeconds: 0 },
+  { title: "Middle", startSeconds: 10 },
+  { title: "End", startSeconds: 20 },
+];
+/**
+ * Title given to the local test clip so the now-playing announcement resolves a real TMDB poster —
+ * lets us verify the full StatusReporter → announce → Discord embed path end-to-end (not just the
+ * fetch). Parsed by the reporter into title + year for the lookup.
+ */
+const NOW_PLAYING_TITLE = "Big Buck Bunny (2008)";
+
+/** Build an ffmetadata chapters file (ms timebase) from {@link EXPECTED_CHAPTERS}. */
+function chaptersMetadata(): string {
+  const blocks = EXPECTED_CHAPTERS.map((chapter, index) => {
+    const startMs = chapter.startSeconds * 1000;
+    const endMs =
+      (EXPECTED_CHAPTERS[index + 1]?.startSeconds ?? CLIP_DURATION_SECONDS) *
+      1000;
+    return `[CHAPTER]\nTIMEBASE=1/1000\nSTART=${String(startMs)}\nEND=${String(endMs)}\ntitle=${chapter.title}`;
+  });
+  return `;FFMETADATA1\n${blocks.join("\n")}\n`;
+}
 
 async function generateClip(ffmpegPath: string): Promise<void> {
+  await Bun.write(CHAPTERS_META, chaptersMetadata());
   const proc = Bun.spawn(
     [
       ffmpegPath,
@@ -61,6 +97,15 @@ async function generateClip(ffmpegPath: string): Promise<void> {
       "lavfi",
       "-i",
       `sine=frequency=440:duration=${String(CLIP_DURATION_SECONDS)}`,
+      // Third input: the chapter metadata, mapped in so ffprobe (and our chapters probe) can read it.
+      "-i",
+      CHAPTERS_META,
+      "-map_metadata",
+      "2",
+      "-map",
+      "0:v",
+      "-map",
+      "1:a",
       "-c:v",
       "libx264",
       "-preset",
@@ -114,10 +159,12 @@ function buildSession(config: Config, input: PlaybackInput): Session {
               title:
                 context.resolved?.title ?? sourceLabel(context.current.source),
               requesterId: context.current.requesterId,
+              chapters: context.resolved?.chapters ?? [],
             },
       queue: context.queue.map((entry) => ({
         title: sourceLabel(entry.source),
         requesterId: entry.requesterId,
+        chapters: [],
       })),
       loop: context.loop,
       volume: context.volume,
@@ -156,6 +203,84 @@ async function stopSession(session: Session): Promise<void> {
 
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Wait for the streamer's position clock to anchor after entering `streaming`. The machine reaches
+ * `streaming` when `runStream` is invoked, but `getPosition()` only becomes non-null once
+ * `player.start()` resolves — so reading it the instant `waitFor(streaming)` returns can race and see
+ * `0`. Poll until it anchors (or time out).
+ */
+async function waitForAnchoredPosition(
+  session: Session,
+  timeoutMs = 15_000,
+): Promise<number> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const position = session.streamer.getPosition();
+    if (position !== null) {
+      return position;
+    }
+    if (Date.now() >= deadline) {
+      throw new Error(
+        "playback position never anchored after entering streaming",
+      );
+    }
+    await sleep(200);
+  }
+}
+
+/**
+ * Assert the playing item's chapters were extracted by the real `ffprobe` in the image and threaded
+ * onto `context.resolved.chapters` (1-based, titles + start seconds matching {@link EXPECTED_CHAPTERS}).
+ */
+function assertResolvedChapters(session: Session): void {
+  const chapters = session.actor.getSnapshot().context.resolved?.chapters ?? [];
+  if (chapters.length !== EXPECTED_CHAPTERS.length) {
+    throw new Error(
+      `expected ${String(EXPECTED_CHAPTERS.length)} chapters, got ${String(chapters.length)}`,
+    );
+  }
+  EXPECTED_CHAPTERS.forEach((expected, index) => {
+    const got = chapters[index];
+    if (
+      got?.index !== index + 1 ||
+      got.title !== expected.title ||
+      got.startSeconds !== expected.startSeconds
+    ) {
+      throw new Error(
+        `chapter ${String(index + 1)} mismatch: got ${JSON.stringify(got)}`,
+      );
+    }
+  });
+  log.info("e2e: chapters extracted", { count: chapters.length });
+}
+
+/**
+ * Wire a {@link StatusReporter} to a session's actor (mirroring index.ts) so now-playing
+ * announcements — with a TMDB poster embed for file sources — actually post to the status channel.
+ */
+function attachReporter(session: Session, config: Config): void {
+  const reporter = new StatusReporter(
+    (message) => session.commandBot.announce(message),
+    config.tmdb === undefined
+      ? {}
+      : { fetchPoster: createPosterFetcher(config.tmdb.apiKey) },
+  );
+  session.actor.subscribe((snapshot) => {
+    const stateValue = snapshot.value;
+    reporter.handle({
+      state:
+        typeof stateValue === "string"
+          ? stateValue
+          : JSON.stringify(stateValue),
+      currentTitle: snapshot.context.resolved?.title ?? null,
+      currentRequester: snapshot.context.current?.requesterId ?? null,
+      currentKind: snapshot.context.current?.source.kind ?? null,
+      blockedNonce: snapshot.context.blockedNonce,
+      blockedRequester: snapshot.context.lastBlockedRequester,
+    });
+  });
+}
 
 /**
  * Assert the observability metrics reflect an in-progress real stream. Throws with the relevant
@@ -221,21 +346,40 @@ async function main(): Promise<number> {
   };
 
   try {
+    // --- Phase 0: optional live TMDB poster check (skipped cleanly when no key is configured). ---
+    await checkTmdbPoster(baseConfig);
+
     // --- Phase 1: play, capture position, persist, tear down (simulated restart). ---
     let capturedPosition = 0;
     const s1 = buildSession(config, input);
     try {
       await startSession(s1);
+      // Wire the reporter so the now-playing poster embed actually posts to the status channel.
+      attachReporter(s1, config);
       log.info("e2e: cycle 1 — clients up");
+      // Confirm Discord accepted the new chapter slash subcommands.
+      await verifyRegisteredCommands(config);
       s1.actor.send({
         type: "ADD",
-        source: { kind: "file", path: TEST_CLIP, title: "e2e-test" },
+        source: { kind: "file", path: TEST_CLIP, title: NOW_PLAYING_TITLE },
         requesterId: REQUESTER,
       });
       await waitFor(s1.actor, (snapshot) => snapshot.matches("streaming"), {
         timeout: 60_000,
       });
       log.info("e2e: cycle 1 reached streaming");
+
+      // Chapters: assert the real ffprobe populated context.resolved.chapters. (The chapter → seek
+      // mapping is unit-tested; live mid-stream seek continuity is manual-only per the fork notes,
+      // and the seek mechanism itself is exercised by the resume phase below.)
+      assertResolvedChapters(s1);
+
+      // Poster: verify the now-playing poster embed reaches the Discord status channel (full
+      // StatusReporter → announce → embed path), when TMDB is configured.
+      if (config.tmdb !== undefined) {
+        await verifyNowPlayingEmbed(config);
+      }
+
       await sleep(STREAM_HOLD_MS);
 
       capturedPosition = s1.streamer.getPosition() ?? 0;
@@ -293,16 +437,7 @@ async function main(): Promise<number> {
       await waitFor(s2.actor, (snapshot) => snapshot.matches("streaming"), {
         timeout: 60_000,
       });
-      // The machine enters `streaming` when the runStream actor STARTS, but getPosition() only
-      // anchors once player.start() resolves (a beat later). Poll briefly so we read the resumed
-      // offset, not the pre-anchor 0.
-      let resumedAt = 0;
-      for (let i = 0; i < 50 && resumedAt === 0; i += 1) {
-        resumedAt = s2.streamer.getPosition() ?? 0;
-        if (resumedAt === 0) {
-          await sleep(100);
-        }
-      }
+      const resumedAt = await waitForAnchoredPosition(s2);
       log.info("e2e: cycle 2 resumed position", {
         resumedAt,
         capturedPosition,

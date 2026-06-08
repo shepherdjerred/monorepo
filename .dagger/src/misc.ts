@@ -230,17 +230,24 @@ export async function e2eStreambotHelper(
   guildId: string,
   videoChannelId: string,
   commandChannelId: string,
+  tmdbApiKey: Secret | null = null,
   depNames: string[] = [],
   depDirs: Directory[] = [],
 ): Promise<string> {
-  const container = buildImageHelper(pkgDir, "streambot", depNames, depDirs)
+  const base = buildImageHelper(pkgDir, "streambot", depNames, depDirs)
     .withSecretVariable("BOT_TOKEN", botToken)
     .withSecretVariable("TOKEN", userToken)
     .withEnvVariable("GUILD_ID", guildId)
     .withEnvVariable("VIDEO_CHANNEL_ID", videoChannelId)
     .withEnvVariable("COMMAND_CHANNEL_ID", commandChannelId)
     .withEnvVariable("VIDEOS_DIR", "/tmp/videos")
-    .withEnvVariable("STREAM_HARDWARE_ACCELERATION", "false")
+    .withEnvVariable("STREAM_HARDWARE_ACCELERATION", "false");
+  // Optional: when provided, enables the live TMDB poster assertion in the e2e (skipped otherwise).
+  const withTmdb =
+    tmdbApiKey === null
+      ? base
+      : base.withSecretVariable("TMDB_API_KEY", tmdbApiKey);
+  const container = withTmdb
     .withEntrypoint([])
     .withExec(["sh", "-c", "mkdir -p /tmp/videos && bun run e2e/run.ts"]);
   return container.stdout();

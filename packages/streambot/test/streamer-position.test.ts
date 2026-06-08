@@ -23,6 +23,7 @@ const VOICE: VoiceHandle = {
 const RESOLVED: ResolvedSource = {
   title: "Movie",
   ffmpegInput: "/videos/movie.mkv",
+  chapters: [],
 };
 
 function env(over: EnvLookup = {}): EnvLookup {

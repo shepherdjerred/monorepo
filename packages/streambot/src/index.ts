@@ -21,6 +21,7 @@ import {
   StatusReporter,
   type StatusSnapshot,
 } from "@shepherdjerred/streambot/discord/status-reporter.ts";
+import { createPosterFetcher } from "@shepherdjerred/streambot/metadata/tmdb.ts";
 import {
   loadState,
   saveState,
@@ -135,10 +136,12 @@ async function main(): Promise<void> {
               title:
                 context.resolved?.title ?? sourceLabel(context.current.source),
               requesterId: context.current.requesterId,
+              chapters: context.resolved?.chapters ?? [],
             },
       queue: context.queue.map((entry) => ({
         title: sourceLabel(entry.source),
         requesterId: entry.requesterId,
+        chapters: [],
       })),
       loop: context.loop,
       volume: context.volume,
@@ -158,8 +161,11 @@ async function main(): Promise<void> {
     streamerUserId: () => streamer.userId(),
   });
 
-  const reporter = new StatusReporter((message) =>
-    commandBot.announce(message),
+  const reporter = new StatusReporter(
+    (message) => commandBot.announce(message),
+    config.tmdb === undefined
+      ? {}
+      : { fetchPoster: createPosterFetcher(config.tmdb.apiKey) },
   );
   actor.subscribe((snapshot) => {
     const stateValue = snapshot.value;
@@ -170,6 +176,7 @@ async function main(): Promise<void> {
           : JSON.stringify(stateValue),
       currentTitle: snapshot.context.resolved?.title ?? null,
       currentRequester: snapshot.context.current?.requesterId ?? null,
+      currentKind: snapshot.context.current?.source.kind ?? null,
       blockedNonce: snapshot.context.blockedNonce,
       blockedRequester: snapshot.context.lastBlockedRequester,
     };
