@@ -132,6 +132,16 @@ export type PrepareStreamOptions = {
    * seekable inputs. Used by the seekable player to restart a source at a new position.
    */
   startTime?: number;
+
+  /**
+   * Letterbox/pillarbox. After scaling the video to `width`x`height`, pad it onto a centered
+   * black canvas of these dimensions. Use to emit a fixed aspect ratio (e.g. 16:9) for content
+   * of a different aspect without stretching: set `width`/`height` to the aspect-correct content
+   * box and `pad` to the final canvas. Software path only — the pad runs before any GPU `hwupload`,
+   * so it composes with VAAPI raw-frame encoding; it is ignored when a hardware decode pipeline
+   * (`hardwareAcceleratedDecoding` + an encoder with `hwPipeline`) is active.
+   */
+  pad?: { width: number; height: number };
 };
 
 export type Controller = {
@@ -184,6 +194,7 @@ export function prepareStream(
     customFfmpegFlags: [],
     videoFilters: [],
     startTime: undefined,
+    pad: undefined,
   } satisfies PrepareStreamOptions;
 
   function mergeOptions(opts: Partial<PrepareStreamOptions>) {
@@ -243,6 +254,7 @@ export function prepareStream(
         isFiniteNonZero(opts.startTime) && opts.startTime > 0
           ? opts.startTime
           : defaultOptions.startTime,
+      pad: opts.pad ?? defaultOptions.pad,
     } satisfies PrepareStreamOptions;
   }
 
@@ -362,11 +374,28 @@ export function prepareStream(
     // software `scale`), then caller filters (e.g. burned subtitles), then the encoder's own output
     // filters. Built by a pure helper so the ordering is unit-testable. On a GPU pipeline the frames
     // are already hardware surfaces, so the encoder's upload/format outFilters are unnecessary.
+    //
+    // On the software path an optional `pad` letterboxes/pillarboxes the scaled frame onto a centered
+    // black canvas (e.g. fit 4:3 content into a 16:9 output). It's folded into the scale step so it
+    // runs before the caller/encoder filters. `pad` is intentionally not supported on the GPU pipeline.
+    const { pad } = mergedOptions;
+    const padded = pad !== undefined && pad.width > 0 && pad.height > 0;
+    if (padded && hwPipeline) {
+      // The GPU pipeline scales with scale_vaapi and never consults `pad`; make
+      // the silent drop visible rather than emitting unexpectedly-unletterboxed output.
+      new Log("prepareStream").warn(
+        "`pad` (letterbox) is ignored when a hardware decode pipeline is active (scale_vaapi); " +
+          "use the software path (hardwareAcceleratedDecoding: false) for padded output",
+      );
+    }
+    const scaleFilter = hwPipeline
+      ? hwPipeline.scaleFilter(width, height)
+      : padded
+        ? `scale=${width}:${height},pad=${pad.width}:${pad.height}:-1:-1:color=black`
+        : `scale=${width}:${height}`;
     command.videoFilter(
       buildVideoFilterChain(
-        hwPipeline
-          ? hwPipeline.scaleFilter(width, height)
-          : `scale=${width}:${height}`,
+        scaleFilter,
         mergedOptions.videoFilters,
         hwPipeline ? [] : (encoderSettings.outFilters ?? []),
       ),
