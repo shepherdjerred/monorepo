@@ -140,7 +140,10 @@ export const OpItemListSchema = z.array(
  * Only emptiness (a boolean) ever influences the result — no field value is returned or
  * stored, so the snapshot still leaks nothing.
  */
-export function operatorSecretKeys(item: OpItem): { all: Set<string>; blank: Set<string> } {
+export function operatorSecretKeys(item: OpItem): {
+  all: Set<string>;
+  blank: Set<string>;
+} {
   const all = new Set<string>();
   const live = new Set<string>();
   const add = (label: string | undefined, hasValue: boolean): void => {
@@ -150,8 +153,10 @@ export function operatorSecretKeys(item: OpItem): { all: Set<string>; blank: Set
     all.add(key);
     if (hasValue) live.add(key);
   };
-  for (const field of item.fields ?? []) add(field.label, (field.value ?? "").length > 0);
-  for (const url of item.urls ?? []) add(url.label, (url.href ?? "").length > 0);
+  for (const field of item.fields ?? [])
+    add(field.label, (field.value ?? "").length > 0);
+  for (const url of item.urls ?? [])
+    add(url.label, (url.href ?? "").length > 0);
   for (const file of item.files ?? []) add(file.name, true); // file attachments always carry content
   const blank = new Set([...all].filter((key) => !live.has(key)));
   return { all, blank };
