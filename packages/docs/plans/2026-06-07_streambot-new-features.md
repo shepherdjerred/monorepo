@@ -261,3 +261,13 @@ Two e2e robustness bugs the live runs surfaced and fixed (in `e2e/run.ts`):
 
 1. **Over-eager live chapter seek** — seeking 1 ms after `streaming` began (before the Go-Live WebRTC stream stabilized) tore the stream down. Live mid-stream seek continuity is manual-only per the fork notes, and the chapter→seek wiring is unit-tested + the seek mechanism is covered by the resume phase — so the strict live-seek assertion was removed; `assertResolvedChapters` (the meaningful new live check) stays.
 2. **Resume position read race** — phase 2 read `getPosition()` the instant `waitFor(streaming)` returned, before `player.start()` anchored the clock, yielding `0`. Added `waitForAnchoredPosition()` to poll until the clock anchors before asserting.
+
+## Session Log — 2026-06-07 (deeper live verification)
+
+Hardened the live e2e to verify the user-visible surfaces, not just the internal calls (new `e2e/verify.ts` holds the Config-only Discord/TMDB checks). Final run **PASSED** (`DAGGER EXIT: 0`):
+
+- **Slash commands accepted by Discord** — `verifyRegisteredCommands` reads back the guild's registered `/stream` command and asserts the new `chapters` + `chapter` (with its `number` option) subcommands exist. Catches command-schema errors nothing else would. Logged: all 17 subcommands incl. `chapters`, `chapter`.
+- **Now-playing poster embed actually posts to Discord** — `verifyNowPlayingEmbed` wires a real `StatusReporter` to the session, plays a file titled `Big Buck Bunny (2008)`, then polls the status channel via the bot REST API until the message with a TMDB poster embed appears, asserts content + `image.tmdb.org` URL, and deletes it. Proves the full `StatusReporter → announce → discord.js embed → Discord` path (not just `fetchPoster`).
+- Still green: real-ffprobe chapter extraction (count 3), resume (6.755 → 6.04).
+
+Net: both new features verified end-to-end on real Discord — command registration, the poster embed landing in-channel, and chapter extraction mid-stream.

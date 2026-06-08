@@ -8,11 +8,17 @@ import type { PlaybackInput } from "@shepherdjerred/streambot/machine/types.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
 import { expandPlaylist } from "@shepherdjerred/streambot/sources/ytdlp.ts";
-import { fetchPoster } from "@shepherdjerred/streambot/metadata/tmdb.ts";
+import { createPosterFetcher } from "@shepherdjerred/streambot/metadata/tmdb.ts";
 import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
 import { CommandBot } from "@shepherdjerred/streambot/discord/command-bot.ts";
+import { StatusReporter } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type { PlaybackView } from "@shepherdjerred/streambot/discord/command-handler.ts";
+import {
+  checkTmdbPoster,
+  verifyNowPlayingEmbed,
+  verifyRegisteredCommands,
+} from "./verify.ts";
 import {
   loadState,
   saveState,
@@ -36,7 +42,8 @@ import { logger } from "@shepherdjerred/streambot/util/logger.ts";
  *  0. (Optional) If `TMDB_API_KEY` is set, look up a known title and assert a live poster URL comes
  *     back — validates the real TMDB + image CDN integration. Skipped cleanly when no key is set.
  *  1. Generate a clip (with embedded chapters), drive it into the voice channel, assert `streaming`,
- *     assert the real `ffprobe` extracted its chapters, then capture + persist.
+ *     assert the real `ffprobe` extracted its chapters, verify the now-playing poster embed actually
+ *     posts to the status channel (read back via the bot), then capture + persist.
  *  2. Resume: boot a fresh session from the persisted state and assert it resumes near the same
  *     position and keeps playing. Exits non-zero on failure.
  */
@@ -54,9 +61,12 @@ const EXPECTED_CHAPTERS: readonly { title: string; startSeconds: number }[] = [
   { title: "Middle", startSeconds: 10 },
   { title: "End", startSeconds: 20 },
 ];
-/** A well-known title TMDB will always have a poster for (used by the optional poster check). */
-const TMDB_PROBE_TITLE = "Big Buck Bunny";
-const TMDB_PROBE_YEAR = 2008;
+/**
+ * Title given to the local test clip so the now-playing announcement resolves a real TMDB poster —
+ * lets us verify the full StatusReporter → announce → Discord embed path end-to-end (not just the
+ * fetch). Parsed by the reporter into title + year for the lookup.
+ */
+const NOW_PLAYING_TITLE = "Big Buck Bunny (2008)";
 
 /** Build an ffmetadata chapters file (ms timebase) from {@link EXPECTED_CHAPTERS}. */
 function chaptersMetadata(): string {
@@ -243,36 +253,29 @@ function assertResolvedChapters(session: Session): void {
 }
 
 /**
- * Optional live TMDB check — only runs when `TMDB_API_KEY` is configured. Looks up a well-known title
- * and asserts a poster URL comes back AND is live (HTTP 200), validating the real TMDB + image CDN.
+ * Wire a {@link StatusReporter} to a session's actor (mirroring index.ts) so now-playing
+ * announcements — with a TMDB poster embed for file sources — actually post to the status channel.
  */
-async function checkTmdbPoster(config: Config): Promise<void> {
-  if (config.tmdb === undefined) {
-    log.info("e2e: TMDB not configured — skipping poster check");
-    return;
-  }
-  const poster = await fetchPoster(
-    config.tmdb.apiKey,
-    TMDB_PROBE_TITLE,
-    TMDB_PROBE_YEAR,
+function attachReporter(session: Session, config: Config): void {
+  const reporter = new StatusReporter(
+    (message) => session.commandBot.announce(message),
+    config.tmdb === undefined
+      ? {}
+      : { fetchPoster: createPosterFetcher(config.tmdb.apiKey) },
   );
-  if (poster === null) {
-    throw new Error(
-      `TMDB returned no poster for "${TMDB_PROBE_TITLE}" (${String(TMDB_PROBE_YEAR)})`,
-    );
-  }
-  const head = await fetch(poster.posterUrl, {
-    method: "HEAD",
-    signal: AbortSignal.timeout(10_000),
-  });
-  if (!head.ok) {
-    throw new Error(
-      `TMDB poster URL not live (${String(head.status)}): ${poster.posterUrl}`,
-    );
-  }
-  log.info("e2e: TMDB poster OK", {
-    title: poster.tmdbTitle,
-    url: poster.posterUrl,
+  session.actor.subscribe((snapshot) => {
+    const stateValue = snapshot.value;
+    reporter.handle({
+      state:
+        typeof stateValue === "string"
+          ? stateValue
+          : JSON.stringify(stateValue),
+      currentTitle: snapshot.context.resolved?.title ?? null,
+      currentRequester: snapshot.context.current?.requesterId ?? null,
+      currentKind: snapshot.context.current?.source.kind ?? null,
+      blockedNonce: snapshot.context.blockedNonce,
+      blockedRequester: snapshot.context.lastBlockedRequester,
+    });
   });
 }
 
@@ -301,10 +304,14 @@ async function main(): Promise<number> {
     const s1 = buildSession(config, input);
     try {
       await startSession(s1);
+      // Wire the reporter so the now-playing poster embed actually posts to the status channel.
+      attachReporter(s1, config);
       log.info("e2e: cycle 1 — clients up");
+      // Confirm Discord accepted the new chapter slash subcommands.
+      await verifyRegisteredCommands(config);
       s1.actor.send({
         type: "ADD",
-        source: { kind: "file", path: TEST_CLIP, title: "e2e-test" },
+        source: { kind: "file", path: TEST_CLIP, title: NOW_PLAYING_TITLE },
         requesterId: REQUESTER,
       });
       await waitFor(s1.actor, (snapshot) => snapshot.matches("streaming"), {
@@ -316,6 +323,12 @@ async function main(): Promise<number> {
       // mapping is unit-tested; live mid-stream seek continuity is manual-only per the fork notes,
       // and the seek mechanism itself is exercised by the resume phase below.)
       assertResolvedChapters(s1);
+
+      // Poster: verify the now-playing poster embed reaches the Discord status channel (full
+      // StatusReporter → announce → embed path), when TMDB is configured.
+      if (config.tmdb !== undefined) {
+        await verifyNowPlayingEmbed(config);
+      }
 
       await sleep(STREAM_HOLD_MS);
 
