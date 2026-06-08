@@ -1,5 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { buildPipeline } from "../pipeline-builder.ts";
+import {
+  buildPipeline,
+  buildReleasePleaseSkipPipeline,
+} from "../pipeline-builder.ts";
 import type { AffectedPackages } from "../lib/types.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 import {
@@ -1350,5 +1353,20 @@ describe("buildPipeline", () => {
         expect(step.command).toMatch(/--pkg-path \S+/);
       }
     });
+  });
+});
+
+describe("buildReleasePleaseSkipPipeline", () => {
+  it("emits a single annotation step and no required gates", () => {
+    const pipeline = buildReleasePleaseSkipPipeline();
+    const steps = pipeline.steps.filter(isStep);
+    expect(steps).toHaveLength(1);
+    expect(steps[0]!.key).toBe("release-please-skip");
+    expect(steps[0]!.command).toContain("buildkite-agent annotate");
+    const keys = pipeline.steps.map((s) => ("key" in s ? s.key : undefined));
+    // The skip pipeline must NOT post the required merge gates, so the PR stays
+    // un-mergeable until a real build is requested on purpose.
+    expect(keys).not.toContain("ci-complete");
+    expect(keys).not.toContain("greptile-review");
   });
 });
