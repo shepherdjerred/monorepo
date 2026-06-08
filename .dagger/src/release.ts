@@ -166,9 +166,18 @@ export function tofuApplyHelper(
   cloudflareApiToken: Secret | null = null,
   dryrun = false,
 ): Container {
-  let container = dag
-    .container()
-    .from(TOFU_IMAGE)
+  let container = dag.container().from(TOFU_IMAGE);
+
+  // The seaweedfs stack uses `local-exec` provisioners that shell out to the
+  // AWS CLI (S3 bucket lifecycle config + object seeding against SeaweedFS's S3
+  // gateway — see packages/homelab/src/tofu/seaweedfs/buckets.tf). The base
+  // OpenTofu image ships only `tofu`, so the CLI must be installed for apply to
+  // succeed. Done before mounting the source so the layer caches independently.
+  if (stack === "seaweedfs") {
+    container = container.withExec(["apk", "add", "--no-cache", "aws-cli"]);
+  }
+
+  container = container
     .withWorkdir("/workspace")
     .withDirectory(
       "/workspace",
