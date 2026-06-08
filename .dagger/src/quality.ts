@@ -211,6 +211,19 @@ export function daggerHygieneHelper(source: Directory): Container {
 }
 
 /**
+ * Verify `react`/`react-dom` (and their `@types`) resolve to matching versions
+ * in every `bun.lock`. A skew throws "Incompatible React versions" at runtime
+ * — invisible to typecheck/build/test. The script reads only `bun.lock` files
+ * from the mounted source; no `node_modules` install required.
+ */
+export function reactVersionSyncHelper(source: Directory): Container {
+  return bunQualityBase(source).withExec([
+    "bun",
+    "scripts/check-react-version-sync.ts",
+  ]);
+}
+
+/**
  * Verify every cdk8s `TunnelBinding` has a matching cdk8s+Tofu
  * `cloudflare_dns_record`. The script reads both cdk8s TypeScript and
  * Tofu HCL from the repo — both are inside the mounted source.

@@ -83,6 +83,23 @@ Before ending any session, append a section to whichever file you produced (log 
 
 If a session spans multiple files, append a Session Log to each. **Also restate the same Done / Remaining / Caveats inline as the final chat message** so the user sees it without opening the file.
 
+### Workflow friction (optional — only if you hit some)
+
+**This is entirely optional and never required.** Most sessions should add nothing here. Only record an item when fixing it would be a **medium/high quality-of-life improvement** for future sessions, or a **low QOL improvement that is also low effort** to fix. Skip anything that is high-effort for low payoff, or a one-off that won't recur. An empty or padded section is worse than none.
+
+When you do hit something worth it, append a `## Workflow Friction` section to your log (logs only, not plans). For each item, describe what was painful and the concrete improvement, with file paths/commands so it can be acted on cold. Examples of the kind of thing worth recording:
+
+- It was hard to verify a change on Discord — a dedicated test Discord account/app would have helped.
+- I couldn't easily access test/dev credentials, so I ran `op` many times (a cached/scoped test credential set would have avoided this).
+- The `toolkit` CLI was missing a command I needed, or a flag behaved misleadingly.
+- This doc/AGENTS.md/skill was wrong or misleading (say which, and what's actually true).
+- I expected X to be in some location but it wasn't there — it actually lives at `<path>`.
+- I wanted to verify UI changes but couldn't effectively access a browser.
+- Task X was slower because I didn't have Y.
+- I hit roadblock X because there was no documentation about Y.
+
+If the fix is substantial or belongs to a future session, also file it as a `packages/docs/todos/<kebab-id>.md` per **TODO Documentation** below and link it from the section.
+
 ### When a plan is finished
 
 When a plan in `packages/docs/plans/` reaches `Status: Complete` and the work is shipped, `git mv` it to `packages/docs/archive/completed/`. Don't leave finished plans accumulating in `plans/`.

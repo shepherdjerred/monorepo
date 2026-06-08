@@ -1065,12 +1065,13 @@ export async function pushDiscordPlaysPokemonImageHelper(
  * Build the discord-plays-mario-kart backend image.
  *
  * Two stages:
- *  1. An emscripten stage compiles the vendored, patched N64Wasm core
- *     (parallel-n64 + angrylion software RDP) from `wasm-src/` into
- *     `n64wasm.js` + `n64wasm.wasm`. No binaries are committed — the build is
- *     reproducible from source (the patched mymain.cpp adds neilSetRom,
- *     neilGetVideoBuffer/Height, and the per-player input export). `make clean`
- *     guarantees the patched sources are recompiled rather than reusing any
+ *  1. An emscripten stage compiles the vendored N64Wasm core (parallel-n64 +
+ *     angrylion software RDP) from `wasm-src/` into `n64wasm.js` + `n64wasm.wasm`.
+ *     The committed `wasm-src/code` tree is byte-pristine upstream; our changes
+ *     (neilSetRom, neilGetVideoBuffer/Height, the per-player input export, and the
+ *     Makefile exports) live in `wasm-src/patches/` and are applied here at build
+ *     time. No binaries are committed — the build is reproducible from source.
+ *     `make clean` guarantees the sources are recompiled rather than reusing any
  *     stale local object files.
  *  2. A Bun stage mirrors discord-plays-pokemon (ffmpeg + libvips for
  *     @dank074/discord-video-stream, workspace install, frontend build) and
@@ -1094,6 +1095,16 @@ export function buildDiscordPlaysMarioKartImageHelper(
     .container()
     .from(EMSCRIPTEN_IMAGE)
     .withDirectory("/src", wasmSrc, { exclude: ["dist"] })
+    // The committed wasm-src/code tree is BYTE-PRISTINE upstream; our changes live
+    // in wasm-src/patches and are applied here at build time (never committed into
+    // the tree). Uses patch(1) (present in the emscripten image; /src is not a git
+    // work tree). See wasm-src/PATCHES.md.
+    .withWorkdir("/src")
+    .withExec([
+      "sh",
+      "-c",
+      'set -e; for p in patches/*.patch; do echo "applying $p"; patch -p1 --no-backup-if-mismatch < "$p"; done',
+    ])
     .withWorkdir("/src/code")
     // `make clean` drops any object files so the patched sources are rebuilt
     // from scratch; `make` emits n64wasm.js + n64wasm.wasm in this dir.
