@@ -20,9 +20,9 @@ export type FfmpegCodecData = {
 };
 
 /**
- * ffmpeg transcode progress, emitted ~once per second. `speed` is forwarded when fluent-ffmpeg
- * parses it; consumers should not rely on it and can derive the realtime ratio from `timemark`
- * (media time) advance vs wall-clock instead.
+ * ffmpeg transcode progress, emitted ~once per second. fluent-ffmpeg does not surface a realtime
+ * `speed` figure, so consumers derive the realtime ratio from `timemark` (media time) advance vs
+ * wall-clock instead.
  */
 export type FfmpegProgress = {
   frames?: number;
@@ -31,7 +31,6 @@ export type FfmpegProgress = {
   targetSize?: number;
   timemark?: string;
   percent?: number;
-  speed?: number;
 };
 
 /** Per-frame send timing from the realtime media send path. `ratio > 1` means the frame was late. */

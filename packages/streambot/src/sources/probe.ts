@@ -109,10 +109,14 @@ export async function probeMedia(
       ],
       { stdout: "pipe", stderr: "pipe", signal: abort },
     );
-    const stdout = await new Response(proc.stdout).text();
-    const exitCode = await proc.exited;
+    // Drain stdout AND stderr concurrently. If stderr were only read on failure, a chatty ffprobe
+    // could fill the (~64 KB) pipe buffer and block before closing stdout, hanging the stdout read.
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+      proc.exited,
+    ]);
     if (exitCode !== 0) {
-      const stderr = await new Response(proc.stderr).text();
       log.warn("ffprobe exited non-zero", { exitCode, stderr: stderr.trim() });
       return null;
     }

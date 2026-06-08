@@ -95,7 +95,10 @@ export function createStreamObserver(
       ) {
         const deltaMedia = mediaSeconds - prevMediaSeconds;
         const deltaWall = (wallMs - prevWallMs) / 1000;
-        if (deltaWall > 0 && deltaMedia >= 0) {
+        // Require deltaMedia > 0 (not >= 0): two samples with the same timemark (e.g. the 1s tick
+        // firing before ffmpeg advanced the media clock) would otherwise write ratio=0, which is
+        // indistinguishable from "catastrophically behind realtime" on the dashboard.
+        if (deltaWall > 0 && deltaMedia > 0) {
           ffmpegSpeedRatio.set({ hardware: hw }, deltaMedia / deltaWall);
         }
       }
