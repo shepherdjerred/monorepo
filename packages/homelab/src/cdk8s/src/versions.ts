@@ -22,7 +22,7 @@ const versions = {
   // not managed by renovate — built from packages/streambot; CI's version commit-back fills the
   // real tag@digest after the first image push. Seed digest is a placeholder until then.
   "shepherdjerred/streambot":
-    "2.0.0-3583@sha256:68095cf47eac21a12b314a4dae6cf9ec685becac5258cf0a3dc249f740bf353c",
+    "2.0.0-3610@sha256:6f0855cdfa72f978a1390f036a7bf467fc6ddd432afb7bc47f0d7b0abe8588a1",
   // renovate: datasource=docker registryUrl=https://quay.io versioning=docker
   // Tracked via the rolling `latest` tag because upstream redlib only publishes
   // sha-<short-commit> tags, which Renovate cannot version-compare. The global
@@ -137,7 +137,7 @@ const versions = {
   // not managed by renovate — placeholder digest; CI version-commit-back fills
   // the real digest after the first successful image push.
   "shepherdjerred/discord-plays-mario-kart":
-    "2.0.0-3573@sha256:360e7668eaeca07da5ffacf74da8e3a42ef76e33b5523b3aefc8ad8e7da93555",
+    "2.0.0-3610@sha256:4724cf1b256a4540a5d37e92b16573e2281636eece8e4d509e616a8de8768ca3",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.29.0@sha256:cca8988d05cd449e1c6c69405971b1e6fc2c2116ceeb45c9fa3fc33837997a75",
@@ -230,7 +230,7 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-3583@sha256:b47c1cc60b78c4d36889a724cbb19ecd1785aa8f6dfafb7317be78d0447f98b3",
+    "2.0.0-3610@sha256:a733165b458e18c52f7ebf6ad0a4b3224dca6035af4b5f6939879c8140ba5695",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
@@ -238,7 +238,7 @@ const versions = {
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-3583@sha256:ef7869d43716d8bb69c39b3ae27593d82de0d0361704f62d6c6f6a556a16b073",
+    "2.0.0-3610@sha256:ef9dc01bfb21b13e1048a505706e59548f28e1e01f74e7bed192aabaeb77696c",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.6@sha256:1263120feed69d82e4ca23b8ca6f1d702c3029fe70714e382966d0192318eab6",
