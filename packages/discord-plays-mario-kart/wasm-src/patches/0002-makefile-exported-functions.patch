@@ -1,0 +1,17 @@
+--- a/code/Makefile
++++ b/code/Makefile
+@@ -226,10 +226,10 @@
+     -s EXPORTED_FUNCTIONS="['_main','_runMainLoop','_neilGetSoundBufferResampledAddress', \
+     '_neilGetAudioWritePosition','_neil_serialize','_neil_unserialize','_neil_toast_message', \
+     '_neil_export_eep','_neil_export_sra','_neil_export_fla','_neil_reset','_toggleFPS', '_neil_send_mobile_controls', \
+-    '_neil_set_buffer_remaining','_neil_set_endframe_callback','_neil_set_double_speed']" \
+-	-s INVOKE_RUN=0 \
+-    && mv n64wasm.js ../dist/ \
+-    && mv n64wasm.wasm ../dist/
++    '_neil_set_buffer_remaining','_neil_set_endframe_callback','_neil_set_double_speed', \
++    '_neilGetVideoBuffer','_neilGetVideoHeight','_neilSetRom','_neil_send_mobile_controls_player']" \
++	-s INVOKE_RUN=0
++	# outputs n64wasm.js + n64wasm.wasm in this dir; build-wasm.sh copies them.
+     
+ 
+ %.o : %.cpp
