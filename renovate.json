@@ -119,6 +119,16 @@
       "matchUpdateTypes": ["major"]
     },
     {
+      "description": "Keep react, react-dom and their @types in lockstep. React 19 throws 'Incompatible React versions' at runtime when react and react-dom differ, so they must always bump together in one PR to the same resolved version. Enforced by scripts/check-react-version-sync.ts.",
+      "groupName": "React",
+      "matchPackageNames": [
+        "react",
+        "react-dom",
+        "@types/react",
+        "@types/react-dom"
+      ]
+    },
+    {
       "description": "Keep TOFU_IMAGE (docker datasource) and TOFU_VERSION (github-releases) in `.dagger/src/constants.ts` bumping together — they pin the same upstream and drift between them means the worker image and any container running TOFU_IMAGE are on different OpenTofu versions, which corrupts state files written by the other binary.",
       "groupName": "OpenTofu",
       "matchPackageNames": ["opentofu/opentofu"]
