@@ -106,25 +106,26 @@ async function resolveSelection(opts: DeployedOptions): Promise<
   return { mode: "commit", commit, targets, notes };
 }
 
-function computeVerdict(args: {
+export function computeVerdict(args: {
   pinExists: boolean;
   writingIsBump: boolean;
   merged: boolean;
   commitInImage: boolean;
-  cluster: boolean;
   argo: ArgoStatus | null;
   pinBuild: number | null;
   digestMatch: boolean;
-  podsMatched: number;
 }): Verdict {
   if (!args.pinExists) {
     return "UNKNOWN";
   }
-  if (!args.writingIsBump) {
-    return "NO_IMAGE";
-  }
+  // Ladder order matters: NOT_MERGED is the most fundamental blocker, so it must
+  // be reported before NO_IMAGE (a seed/placeholder pin). Otherwise an unmerged
+  // commit on a never-built service would hide the more actionable "not merged".
   if (!args.merged) {
     return "NOT_MERGED";
+  }
+  if (!args.writingIsBump) {
+    return "NO_IMAGE";
   }
   if (!args.commitInImage) {
     return "PENDING";
@@ -224,13 +225,14 @@ function gitDetail(
     ];
   }
   const bsha = writingCommit?.sha.slice(0, 9) ?? "?";
+  // Mirror the verdict ladder: NOT_MERGED outranks NO_IMAGE.
+  if (verdict === "NOT_MERGED") {
+    return ["Commit is not an ancestor of origin/main — not merged."];
+  }
   if (!writingIsBump) {
     return [
       `Pinned digest was hand-written by ${bsha} (${writingCommit?.subject ?? "?"}), not a version bump — no real image built yet.`,
     ];
-  }
-  if (verdict === "NOT_MERGED") {
-    return ["Commit is not an ancestor of origin/main — not merged."];
   }
   if (verdict !== "PENDING") {
     return [
@@ -311,11 +313,9 @@ async function evaluateTarget(
     writingIsBump: git.writingIsBump,
     merged: ctx.merged,
     commitInImage: git.commitInImage,
-    cluster: ctx.opts.noCluster !== true,
     argo,
     pinBuild: git.pin?.build ?? null,
     digestMatch,
-    podsMatched: pods.length,
   });
 
   const detail = [
