@@ -83,6 +83,8 @@ type Session = {
   lastKnownPositionSeconds: number;
   checkpointTimer: ReturnType<typeof setInterval> | null;
   snapshotTail: Promise<void>;
+  /** Set at teardown so a queued checkpoint can't re-write the file after we delete it. */
+  torndown: boolean;
 };
 
 export type SessionManagerDeps = {
@@ -315,6 +317,7 @@ export class SessionManager {
       lastKnownPositionSeconds: params.seekSeconds ?? 0,
       checkpointTimer: null,
       snapshotTail: Promise.resolve(),
+      torndown: false,
     };
 
     const subscription = actor.subscribe((snapshot) => {
@@ -375,16 +378,12 @@ export class SessionManager {
       clearInterval(session.checkpointTimer);
       session.checkpointTimer = null;
     }
+    session.torndown = true;
     session.unsubscribe();
     session.actor.stop();
     this.deps.pool.release(session.entry);
-    void deleteState(
-      stateFilePath(
-        this.deps.config.state.dir,
-        session.guildId,
-        session.voiceChannelId,
-      ),
-    );
+    // Delete resume state only AFTER any in-flight checkpoint settles (see deleteStateAfterFlush).
+    void this.deleteStateAfterFlush(session);
     queueLength.set(this.totalQueueLength());
     if (this.sessions.size === 0) {
       setPlaybackState("idle");
@@ -393,6 +392,27 @@ export class SessionManager {
       guildId: session.guildId,
       channelId: session.voiceChannelId,
     });
+  }
+
+  /**
+   * Drain any in-flight checkpoint, then delete the session's resume-state file. A checkpoint that
+   * started before teardown could otherwise complete its write AFTER the delete, re-creating a stale
+   * file that would wrongly resume the just-finished item on the next boot. `session.torndown` blocks
+   * writes still queued on the tail; awaiting the tail drains the one that may already be mid-write.
+   */
+  private async deleteStateAfterFlush(session: Session): Promise<void> {
+    try {
+      await session.snapshotTail;
+    } catch {
+      // Checkpoint write failures are already logged in writeSnapshot; delete regardless.
+    }
+    await deleteState(
+      stateFilePath(
+        this.deps.config.state.dir,
+        session.guildId,
+        session.voiceChannelId,
+      ),
+    );
   }
 
   /** Pool-wide queue length across all active sessions (for the global queue-length gauge). */
@@ -416,6 +436,10 @@ export class SessionManager {
   }
 
   private async writeSnapshot(session: Session): Promise<void> {
+    // A checkpoint queued on the tail before teardown must not re-create the deleted state file.
+    if (session.torndown) {
+      return;
+    }
     const { context } = session.actor.getSnapshot();
     const live = session.entry.streamer.getPosition();
     if (context.current === null) {
