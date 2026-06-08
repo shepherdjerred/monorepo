@@ -8,6 +8,7 @@ import type { PlaybackInput } from "@shepherdjerred/streambot/machine/types.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
 import { expandPlaylist } from "@shepherdjerred/streambot/sources/ytdlp.ts";
+import { fetchPoster } from "@shepherdjerred/streambot/metadata/tmdb.ts";
 import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
 import { CommandBot } from "@shepherdjerred/streambot/discord/command-bot.ts";
@@ -31,21 +32,48 @@ import { logger } from "@shepherdjerred/streambot/util/logger.ts";
  * Discord identities — the command bot (logs in, registers slash commands on the guild) and the
  * userbot streamer (joins the voice channel and streams).
  *
- * Two phases:
- *  1. Generate a clip, drive it into the voice channel, assert `streaming`, then stop cleanly.
- *  2. Resume: play, capture the position, persist it, tear the session down (simulated restart), then
- *     boot a fresh session from the persisted state and assert it resumes near the same position and
- *     keeps playing. Exits non-zero on failure.
+ * Phases:
+ *  0. (Optional) If `TMDB_API_KEY` is set, look up a known title and assert a live poster URL comes
+ *     back — validates the real TMDB + image CDN integration. Skipped cleanly when no key is set.
+ *  1. Generate a clip (with embedded chapters), drive it into the voice channel, assert `streaming`,
+ *     assert the real `ffprobe` extracted its chapters, exercise a chapter seek, then capture + persist.
+ *  2. Resume: boot a fresh session from the persisted state and assert it resumes near the same
+ *     position and keeps playing. Exits non-zero on failure.
  */
 const log = logger.child("e2e");
 const TEST_CLIP = "/tmp/streambot-e2e.mp4";
+const CHAPTERS_META = "/tmp/streambot-e2e-chapters.txt";
 const REQUESTER = UserIdSchema.parse("100000000000000001");
 const STREAM_HOLD_MS = 6000;
 const CLIP_DURATION_SECONDS = 30;
 /** Resume tolerance — wall-clock position can drift a little vs the captured checkpoint. */
 const RESUME_TOLERANCE_SECONDS = 5;
+/** Chapters embedded into the generated clip; asserted end-to-end via the real ffprobe in the image. */
+const EXPECTED_CHAPTERS: readonly { title: string; startSeconds: number }[] = [
+  { title: "Intro", startSeconds: 0 },
+  { title: "Middle", startSeconds: 10 },
+  { title: "End", startSeconds: 20 },
+];
+/** Tolerance (seconds) for the live position after a chapter seek (wall-clock drift + decode). */
+const SEEK_TOLERANCE_SECONDS = 4;
+/** A well-known title TMDB will always have a poster for (used by the optional poster check). */
+const TMDB_PROBE_TITLE = "Big Buck Bunny";
+const TMDB_PROBE_YEAR = 2008;
+
+/** Build an ffmetadata chapters file (ms timebase) from {@link EXPECTED_CHAPTERS}. */
+function chaptersMetadata(): string {
+  const blocks = EXPECTED_CHAPTERS.map((chapter, index) => {
+    const startMs = chapter.startSeconds * 1000;
+    const endMs =
+      (EXPECTED_CHAPTERS[index + 1]?.startSeconds ?? CLIP_DURATION_SECONDS) *
+      1000;
+    return `[CHAPTER]\nTIMEBASE=1/1000\nSTART=${String(startMs)}\nEND=${String(endMs)}\ntitle=${chapter.title}`;
+  });
+  return `;FFMETADATA1\n${blocks.join("\n")}\n`;
+}
 
 async function generateClip(ffmpegPath: string): Promise<void> {
+  await Bun.write(CHAPTERS_META, chaptersMetadata());
   const proc = Bun.spawn(
     [
       ffmpegPath,
@@ -58,6 +86,15 @@ async function generateClip(ffmpegPath: string): Promise<void> {
       "lavfi",
       "-i",
       `sine=frequency=440:duration=${String(CLIP_DURATION_SECONDS)}`,
+      // Third input: the chapter metadata, mapped in so ffprobe (and our chapters probe) can read it.
+      "-i",
+      CHAPTERS_META,
+      "-map_metadata",
+      "2",
+      "-map",
+      "0:v",
+      "-map",
+      "1:a",
       "-c:v",
       "libx264",
       "-preset",
@@ -156,6 +193,99 @@ async function stopSession(session: Session): Promise<void> {
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Assert the playing item's chapters were extracted by the real `ffprobe` in the image and threaded
+ * onto `context.resolved.chapters` (1-based, titles + start seconds matching {@link EXPECTED_CHAPTERS}).
+ */
+function assertResolvedChapters(session: Session): void {
+  const chapters = session.actor.getSnapshot().context.resolved?.chapters ?? [];
+  if (chapters.length !== EXPECTED_CHAPTERS.length) {
+    throw new Error(
+      `expected ${String(EXPECTED_CHAPTERS.length)} chapters, got ${String(chapters.length)}`,
+    );
+  }
+  EXPECTED_CHAPTERS.forEach((expected, index) => {
+    const got = chapters[index];
+    if (
+      got?.index !== index + 1 ||
+      got.title !== expected.title ||
+      got.startSeconds !== expected.startSeconds
+    ) {
+      throw new Error(
+        `chapter ${String(index + 1)} mismatch: got ${JSON.stringify(got)}`,
+      );
+    }
+  });
+  log.info("e2e: chapters extracted", { count: chapters.length });
+}
+
+/**
+ * Drive `/stream chapter 2` (a live seek to the second chapter's start) and assert the stream jumps
+ * to that offset and keeps advancing — exercising the chapter → seek loop on a real Go-Live stream.
+ */
+async function assertChapterSeek(session: Session): Promise<void> {
+  const target = session.actor.getSnapshot().context.resolved?.chapters[1];
+  if (target === undefined) {
+    throw new Error("no second chapter to seek to");
+  }
+  const ok = await session.streamer.seek(target.startSeconds);
+  if (!ok) {
+    throw new Error("chapter seek returned false (nothing playing)");
+  }
+  await sleep(1500);
+  const position = session.streamer.getPosition() ?? 0;
+  if (
+    position < target.startSeconds ||
+    position > target.startSeconds + SEEK_TOLERANCE_SECONDS
+  ) {
+    throw new Error(
+      `chapter seek position off: ${String(position)} not within [${String(target.startSeconds)}, ${String(target.startSeconds + SEEK_TOLERANCE_SECONDS)}]`,
+    );
+  }
+  await sleep(1000);
+  const advanced = session.streamer.getPosition() ?? 0;
+  if (advanced <= position) {
+    throw new Error(
+      `playback did not advance after chapter seek: ${String(advanced)} <= ${String(position)}`,
+    );
+  }
+  log.info("e2e: chapter seek PASS", { jumpedTo: position, advanced });
+}
+
+/**
+ * Optional live TMDB check — only runs when `TMDB_API_KEY` is configured. Looks up a well-known title
+ * and asserts a poster URL comes back AND is live (HTTP 200), validating the real TMDB + image CDN.
+ */
+async function checkTmdbPoster(config: Config): Promise<void> {
+  if (config.tmdb === undefined) {
+    log.info("e2e: TMDB not configured — skipping poster check");
+    return;
+  }
+  const poster = await fetchPoster(
+    config.tmdb.apiKey,
+    TMDB_PROBE_TITLE,
+    TMDB_PROBE_YEAR,
+  );
+  if (poster === null) {
+    throw new Error(
+      `TMDB returned no poster for "${TMDB_PROBE_TITLE}" (${String(TMDB_PROBE_YEAR)})`,
+    );
+  }
+  const head = await fetch(poster.posterUrl, {
+    method: "HEAD",
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!head.ok) {
+    throw new Error(
+      `TMDB poster URL not live (${String(head.status)}): ${poster.posterUrl}`,
+    );
+  }
+  log.info("e2e: TMDB poster OK", {
+    title: poster.tmdbTitle,
+    url: poster.posterUrl,
+  });
+}
+
 async function main(): Promise<number> {
   const baseConfig = loadConfig();
   await generateClip(baseConfig.ffmpegPath);
@@ -173,6 +303,9 @@ async function main(): Promise<number> {
   };
 
   try {
+    // --- Phase 0: optional live TMDB poster check (skipped cleanly when no key is configured). ---
+    await checkTmdbPoster(baseConfig);
+
     // --- Phase 1: play, capture position, persist, tear down (simulated restart). ---
     let capturedPosition = 0;
     const s1 = buildSession(config, input);
@@ -188,6 +321,12 @@ async function main(): Promise<number> {
         timeout: 60_000,
       });
       log.info("e2e: cycle 1 reached streaming");
+
+      // Chapters: assert the real ffprobe populated context.resolved.chapters, then exercise a
+      // chapter seek (the /stream chapter path) on the live stream.
+      assertResolvedChapters(s1);
+      await assertChapterSeek(s1);
+
       await sleep(STREAM_HOLD_MS);
 
       capturedPosition = s1.streamer.getPosition() ?? 0;

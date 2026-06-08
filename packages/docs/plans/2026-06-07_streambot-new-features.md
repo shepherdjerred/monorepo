@@ -227,3 +227,24 @@ no fetchPoster → plain text; dedup still single announce).
 - Posters depend on TMDB title-match quality; obscure/foreign titles fall back to text-only by design.
 - Chapters are best-effort: files without chapter metadata and most non-YouTube URLs report none.
 - Fresh worktree required several `bun install`s (root, streambot, discord-video-stream fork, eslint-config build, homelab cdk8s + helm-types) before typecheck/eslint ran cleanly — see `setup.ts`.
+
+## Session Log — 2026-06-07 (e2e)
+
+### Done
+
+- Extended the Dagger e2e (`packages/streambot/e2e/run.ts`, run via `dagger call e2e-streambot`) to cover the new features with real binaries + real Discord:
+  - **Chapters** — the generated test clip now embeds 3 chapters (Intro@0 / Middle@10 / End@20 via an ffmetadata input). Phase 1 asserts the real `ffprobe` populated `context.resolved.chapters`, then drives a chapter seek (the `/stream chapter` path) and asserts the live position jumps to the chapter start and keeps advancing.
+  - **TMDB poster (optional)** — new Phase 0 (`checkTmdbPoster`): when `TMDB_API_KEY` is set, looks up a known title (`Big Buck Bunny` 2008) via the real `fetchPoster` and asserts a poster URL comes back **and** is live (HTTP 200 HEAD). Skipped cleanly when no key.
+- **Dagger wiring** — added optional `tmdbApiKey: Secret | null = null` to `e2eStreambot` (`.dagger/src/index.ts`) + `e2eStreambotHelper` (`.dagger/src/misc.ts`); sets `TMDB_API_KEY` only when provided. `e2eStreambot` is manual-run (not in CI), so the added arg is safe.
+- **Local validation** (no Discord needed): generated a chaptered clip and ran the real `resolveSource` → `ResolvedSource.chapters` matched the expected 3 chapters (assertion passed). ffprobe path also validated directly earlier.
+- **Normalization** is covered by the existing filesystem integration test (`test/library.test.ts` writes real files and scans them) — no Discord e2e needed.
+- Verified: streambot typecheck + eslint clean, `155 pass`; dagger hygiene check clean.
+
+### Remaining
+
+- To exercise the TMDB e2e assertion, pass `--tmdb-api-key` to `dagger call e2e-streambot` (and add the `TMDB_API_KEY` field to the `streambot-config` 1P item). Without it, the e2e skips that phase.
+- The chapter-seek + Discord-streaming assertions only run in the full Dagger e2e (real voice channel); they can't run in plain `bun test`.
+
+### Caveats
+
+- e2e requires the engine + real test-server credentials (see `packages/docs` notes on the streambot e2e test server); it is a manual/opt-in run, not part of the standard CI gate.
