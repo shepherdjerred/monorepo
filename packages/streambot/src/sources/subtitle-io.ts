@@ -56,18 +56,28 @@ export async function sweepSubtitleTempDir(): Promise<void> {
 type ProcResult = { ok: boolean; stdout: string; stderr: string };
 
 async function run(cmd: string[], signal: AbortSignal): Promise<ProcResult> {
-  const proc = Bun.spawn(cmd, {
-    stdout: "pipe",
-    stderr: "pipe",
-    stdin: "ignore",
-    signal,
-  });
-  const [stdout, stderr, code] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
-  return { ok: code === 0, stdout, stderr };
+  // Subtitles are best-effort: a missing binary (ENOENT from Bun.spawn), an abort, or any spawn
+  // failure must degrade to "no subtitle", never throw through resolution and abort playback.
+  try {
+    const proc = Bun.spawn(cmd, {
+      stdout: "pipe",
+      stderr: "pipe",
+      stdin: "ignore",
+      signal,
+    });
+    const [stdout, stderr, code] = await Promise.all([
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+      proc.exited,
+    ]);
+    return { ok: code === 0, stdout, stderr };
+  } catch (error) {
+    log.warn("subtitle subprocess failed to run", {
+      command: cmd[0],
+      error: getErrorMessage(error),
+    });
+    return { ok: false, stdout: "", stderr: getErrorMessage(error) };
+  }
 }
 
 async function findSidecarFile(
@@ -203,12 +213,22 @@ export async function resolveSubtitleForFile(
   const eff = effectiveSubtitleConfig(pref, config);
   if (!eff.enabled) return undefined;
 
-  const sidecarPath = await findSidecarFile(filePath, eff);
-  if (sidecarPath !== undefined) {
-    const staged = await stageSidecar(sidecarPath);
-    if (staged !== undefined) return staged;
+  // Best-effort: any unexpected failure (fs, ffprobe/ffmpeg missing, temp-dir error) degrades to
+  // "no subtitle" rather than aborting playback.
+  try {
+    const sidecarPath = await findSidecarFile(filePath, eff);
+    if (sidecarPath !== undefined) {
+      const staged = await stageSidecar(sidecarPath);
+      if (staged !== undefined) return staged;
+    }
+    return await extractEmbedded(config, filePath, eff, signal);
+  } catch (error) {
+    log.warn("subtitle resolution failed; continuing without subtitles", {
+      file: filePath,
+      error: getErrorMessage(error),
+    });
+    return undefined;
   }
-  return extractEmbedded(config, filePath, eff, signal);
 }
 
 /**
