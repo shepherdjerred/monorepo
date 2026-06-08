@@ -222,21 +222,24 @@ async function checkLockfile(file: string): Promise<Violation[]> {
     if (aVersions.size === 0 || bVersions.size === 0) continue;
 
     if (pair.match === "exact") {
-      const a = [...aVersions].sort();
-      const b = [...bVersions].sort();
-      if (a.join(",") !== b.join(",")) {
+      // Subset semantics: every pair.b version must have a matching pair.a version.
+      // A bare pair.a with no pair.b (e.g. React Native) is fine.
+      const missing = [...bVersions].filter((v) => !aVersions.has(v));
+      if (missing.length > 0) {
         violations.push({
           file,
-          message: `${pair.a} (${a.join(", ")}) and ${pair.b} (${b.join(", ")}) must resolve to the exact same version — React throws "Incompatible React versions" at runtime otherwise. Run \`bun install\` after aligning the pins.`,
+          message: `${pair.b} (${missing.join(", ")}) has no matching ${pair.a} version (${pair.a} resolves to: ${[...aVersions].sort().join(", ")}) — React throws "Incompatible React versions" at runtime. Run \`bun install\` after aligning the pins.`,
         });
       }
     } else {
       const aMajors = new Set([...aVersions].map(major));
       const bMajors = new Set([...bVersions].map(major));
-      if (new Set([...aMajors, ...bMajors]).size > 1) {
+      // Subset semantics: every pair.b major must have a matching pair.a major.
+      const missingMajors = [...bMajors].filter((m) => !aMajors.has(m));
+      if (missingMajors.length > 0) {
         violations.push({
           file,
-          message: `${pair.a} (v${[...aMajors].join(", ")}) and ${pair.b} (v${[...bMajors].join(", ")}) must share the same major version.`,
+          message: `${pair.b} major(s) (${missingMajors.join(", ")}) have no matching ${pair.a} major (${pair.a} resolves to major(s): ${[...aMajors].sort().join(", ")}).`,
         });
       }
     }
