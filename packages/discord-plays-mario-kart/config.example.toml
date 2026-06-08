@@ -36,10 +36,12 @@ id = ""
 token = ""
 
 [stream.video]
-scale = 2          # integer upscale of the native 640x240 frame (-> 1280x480)
+canvas_height = 720       # 16:9 output canvas height (-> 1280x720); 4:3 game pillarboxed onto black
 frame_rate = 30
 bitrate_kbps = 5000
 bitrate_max_kbps = 8000
+hardware_acceleration = false  # VAAPI h264 on an Intel iGPU; also via STREAM_HARDWARE_ACCELERATION env
+vaapi_device = "/dev/dri/renderD128"
 
 [emulator]
 enabled = true

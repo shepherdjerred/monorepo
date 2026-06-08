@@ -47,6 +47,8 @@ stream files/URLs directly with ffmpeg instead of automating a browser.
 - `src/pool/` — userbot pool (login, membership snapshot, acquire/release).
 - `src/session/` — per-`(guild, channel)` session manager (actor lifecycle, resume, checkpointing).
 - `src/streamer/` — selfbot + `@dank074` stream driver.
+- `src/observability/` — `metrics.ts` (`prom-client` registry + `Bun.serve` `/metrics`),
+  `stream-observer.ts` (maps the fork's `StreamObserver` callbacks → metrics/logs).
 - `src/util/` — structured logger, errors.
 - `test/` — `bun:test`; the machine is the most heavily tested surface.
 - `integration/` — real-ffmpeg integration tests (`bun run test:integration`); run only in the
@@ -74,6 +76,17 @@ doesn't compose with the VAAPI hardware-frame graph); VAAPI is still used for su
 Subtitles survive `/stream seek` and the HW→SW retry because the seekable player re-applies the filter
 on every ffmpeg restart. Config: `SUBTITLES_ENABLED`, `SUBTITLE_LANGUAGES`,
 `SUBTITLES_INCLUDE_AUTO_GENERATED`, `FFPROBE_PATH`.
+
+## Observability
+
+Prometheus metrics are served at `/metrics` on `METRICS_PORT` (default `9466`, `0` disables),
+scraped by a ServiceMonitor (homelab `streambot.ts`). The headline metric is
+`streambot_ffmpeg_speed_ratio` — sustained `< 1.0` means the transcode can't keep realtime and
+playback will stutter once the buffer drains; read it alongside `streambot_send_frametime_ratio`
+(send-bound vs transcode-bound) and `streambot_source_info` (ffprobe codec/resolution/HDR/audio).
+Grafana dashboard: `packages/homelab/src/cdk8s/grafana/streambot-dashboard.ts` (uid `streambot`).
+The ffmpeg/send signals come from the vendored fork's optional `StreamObserver`
+(`@shepherdjerred/discord-video-stream`), threaded via the prepare/play options in `streamer.ts`.
 
 ## Conventions
 

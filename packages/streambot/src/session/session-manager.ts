@@ -16,6 +16,11 @@ import type {
   ResolveSourceInput,
 } from "@shepherdjerred/streambot/machine/types.ts";
 import { buildPlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
+import {
+  playbackPositionSeconds,
+  queueLength,
+  setPlaybackState,
+} from "@shepherdjerred/streambot/observability/metrics.ts";
 import type {
   UserbotEntry,
   UserbotProvider,
@@ -326,6 +331,11 @@ export class SessionManager {
         blockedRequester: snapshot.context.lastBlockedRequester,
       };
       reporter.handle(snap);
+      // Metrics are process-global (unlabeled) gauges inherited from the single-session design:
+      // playback state is last-writer across sessions and queue length is the pool-wide total.
+      // (Per-(guild,channel) labels are a follow-up if multi-session observability matters.)
+      setPlaybackState(stateName);
+      queueLength.set(this.totalQueueLength());
       if (stateName !== "idle") {
         session.hasStarted = true;
       } else if (session.hasStarted && snapshot.context.queue.length === 0) {
@@ -375,10 +385,23 @@ export class SessionManager {
         session.voiceChannelId,
       ),
     );
+    queueLength.set(this.totalQueueLength());
+    if (this.sessions.size === 0) {
+      setPlaybackState("idle");
+    }
     log.info("session ended", {
       guildId: session.guildId,
       channelId: session.voiceChannelId,
     });
+  }
+
+  /** Pool-wide queue length across all active sessions (for the global queue-length gauge). */
+  private totalQueueLength(): number {
+    let total = 0;
+    for (const session of this.sessions.values()) {
+      total += session.actor.getSnapshot().context.queue.length;
+    }
+    return total;
   }
 
   /** Serialize snapshot writes per session so a fired interval and the shutdown flush don't race. */
@@ -400,6 +423,7 @@ export class SessionManager {
     } else if (live !== null) {
       session.lastKnownPositionSeconds = live;
     }
+    playbackPositionSeconds.set(session.lastKnownPositionSeconds);
     if (
       !session.resumeConfirmed &&
       Date.now() - session.bootAtMs >= RESUME_CONFIRM_MS

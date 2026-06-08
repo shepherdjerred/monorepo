@@ -2,6 +2,7 @@ import { Log } from "debug-level";
 import { setTimeout } from "node:timers/promises";
 import { Writable } from "node:stream";
 import type { Packet } from "node-av";
+import type { SendStats, StreamObserver } from "./StreamObserver.js";
 
 export class BaseMediaStream extends Writable {
   private _pts?: number;
@@ -15,13 +16,18 @@ export class BaseMediaStream extends Writable {
   private _startPts?: number;
   private _sync = true;
   private _syncStream?: BaseMediaStream;
+  /** "video" | "audio" — the stream kind, reused as the {@link SendStats} label. */
+  private _kind: SendStats["kind"];
+  private _observer?: StreamObserver;
 
-  constructor(type: string, noSleep = false) {
+  constructor(type: SendStats["kind"], noSleep = false, observer?: StreamObserver) {
     super({ objectMode: true, highWaterMark: 0 });
     this._loggerSend = new Log(`stream:${type}:send`);
     this._loggerSync = new Log(`stream:${type}:sync`);
     this._loggerSleep = new Log(`stream:${type}:sleep`);
     this._noSleep = noSleep;
+    this._kind = type;
+    this._observer = observer;
   }
 
   get sync(): boolean {
@@ -131,6 +137,12 @@ export class BaseMediaStream extends Writable {
         `Frame takes too long to send (${(ratio * 100).toFixed(2)}% frametime)`,
       );
     }
+    this._observer?.onSendStats?.({
+      kind: this._kind,
+      ratio,
+      sendTime,
+      frametime,
+    });
 
     this._startTime ??= start_sendFrame;
     this._startPts ??= this._pts;

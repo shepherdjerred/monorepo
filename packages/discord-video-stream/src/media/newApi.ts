@@ -31,6 +31,7 @@ import type { Streamer } from "../client/index.js";
 import type { EncoderSettingsGetter } from "./encoders/index.js";
 import type { VideoStreamInfo } from "./LibavDemuxer.js";
 import type { WebRtcConnWrapper } from "../client/voice/WebRtcWrapper.js";
+import type { StreamObserver } from "./StreamObserver.js";
 
 export type PrepareStreamOptions = {
   /**
@@ -132,6 +133,22 @@ export type PrepareStreamOptions = {
    * seekable inputs. Used by the seekable player to restart a source at a new position.
    */
   startTime?: number;
+
+  /**
+   * Optional observability seam. When supplied, the ffmpeg command line, input codec metadata, and
+   * periodic transcode progress are forwarded to the observer. No effect on behavior.
+   */
+  observer?: StreamObserver;
+
+  /**
+   * Letterbox/pillarbox. After scaling the video to `width`x`height`, pad it onto a centered
+   * black canvas of these dimensions. Use to emit a fixed aspect ratio (e.g. 16:9) for content
+   * of a different aspect without stretching: set `width`/`height` to the aspect-correct content
+   * box and `pad` to the final canvas. Software path only — the pad runs before any GPU `hwupload`,
+   * so it composes with VAAPI raw-frame encoding; it is ignored when a hardware decode pipeline
+   * (`hardwareAcceleratedDecoding` + an encoder with `hwPipeline`) is active.
+   */
+  pad?: { width: number; height: number };
 };
 
 export type Controller = {
@@ -184,6 +201,7 @@ export function prepareStream(
     customFfmpegFlags: [],
     videoFilters: [],
     startTime: undefined,
+    pad: undefined,
   } satisfies PrepareStreamOptions;
 
   function mergeOptions(opts: Partial<PrepareStreamOptions>) {
@@ -243,6 +261,7 @@ export function prepareStream(
         isFiniteNonZero(opts.startTime) && opts.startTime > 0
           ? opts.startTime
           : defaultOptions.startTime,
+      pad: opts.pad ?? defaultOptions.pad,
     } satisfies PrepareStreamOptions;
   }
 
@@ -262,6 +281,38 @@ export function prepareStream(
 
   // command creation
   const command = ffmpeg(input);
+
+  // Observability seam: forward the ffmpeg command line, input codec metadata, and periodic
+  // transcode progress to an optional observer. Registered before `command.run()` so no events are
+  // missed. Purely additive — no effect when `options.observer` is undefined.
+  const { observer } = options;
+  if (observer?.onCommand) {
+    command.on("start", (commandLine) => observer.onCommand?.(commandLine));
+  }
+  if (observer?.onCodecData) {
+    command.on("codecData", (data) => {
+      observer.onCodecData?.({
+        format: data.format,
+        duration: data.duration,
+        video: data.video,
+        audio: data.audio,
+        video_details: data.video_details,
+        audio_details: data.audio_details,
+      });
+    });
+  }
+  if (observer?.onProgress) {
+    command.on("progress", (progress) => {
+      observer.onProgress?.({
+        frames: progress.frames,
+        currentFps: progress.currentFps,
+        currentKbps: progress.currentKbps,
+        targetSize: progress.targetSize,
+        timemark: progress.timemark,
+        percent: progress.percent,
+      });
+    });
+  }
 
   // input seek: `-ss` before `-i` is a fast, accurate input seek for seekable sources.
   if (mergedOptions.startTime !== undefined) {
@@ -362,11 +413,28 @@ export function prepareStream(
     // software `scale`), then caller filters (e.g. burned subtitles), then the encoder's own output
     // filters. Built by a pure helper so the ordering is unit-testable. On a GPU pipeline the frames
     // are already hardware surfaces, so the encoder's upload/format outFilters are unnecessary.
+    //
+    // On the software path an optional `pad` letterboxes/pillarboxes the scaled frame onto a centered
+    // black canvas (e.g. fit 4:3 content into a 16:9 output). It's folded into the scale step so it
+    // runs before the caller/encoder filters. `pad` is intentionally not supported on the GPU pipeline.
+    const { pad } = mergedOptions;
+    const padded = pad !== undefined && pad.width > 0 && pad.height > 0;
+    if (padded && hwPipeline) {
+      // The GPU pipeline scales with scale_vaapi and never consults `pad`; make
+      // the silent drop visible rather than emitting unexpectedly-unletterboxed output.
+      new Log("prepareStream").warn(
+        "`pad` (letterbox) is ignored when a hardware decode pipeline is active (scale_vaapi); " +
+          "use the software path (hardwareAcceleratedDecoding: false) for padded output",
+      );
+    }
+    const scaleFilter = hwPipeline
+      ? hwPipeline.scaleFilter(width, height)
+      : padded
+        ? `scale=${width}:${height},pad=${pad.width}:${pad.height}:-1:-1:color=black`
+        : `scale=${width}:${height}`;
     command.videoFilter(
       buildVideoFilterChain(
-        hwPipeline
-          ? hwPipeline.scaleFilter(width, height)
-          : `scale=${width}:${height}`,
+        scaleFilter,
         mergedOptions.videoFilters,
         hwPipeline ? [] : (encoderSettings.outFilters ?? []),
       ),
@@ -538,6 +606,12 @@ export type PlayStreamOptions = {
    * Enable stream preview from input stream (experimental)
    */
   streamPreview: boolean;
+
+  /**
+   * Optional observability seam. When supplied, per-frame send timing (frametime ratio) from the
+   * video/audio send path is forwarded to the observer. No effect on behavior.
+   */
+  observer?: StreamObserver;
 };
 
 const playStreamDefaultOptions = {
@@ -587,6 +661,8 @@ export function mergePlayStreamOptions(
         : playStreamDefaultOptions.readrateInitialBurst,
 
     streamPreview: opts.streamPreview ?? playStreamDefaultOptions.streamPreview,
+
+    observer: opts.observer,
   } satisfies PlayStreamOptions;
 }
 
@@ -651,12 +727,12 @@ export async function attachPipeline(
     });
   }
 
-  const vStream = new VideoStream(conn);
+  const vStream = new VideoStream(conn, false, options.observer);
   video.stream.pipe(vStream);
   // Hoisted so destroy() can tear the audio side down too (see the destroy closure below).
   let aStream: AudioStream | undefined;
   if (audio) {
-    const a = new AudioStream(conn);
+    const a = new AudioStream(conn, false, options.observer);
     aStream = a;
     audio.stream.pipe(a);
     vStream.syncStream = a;

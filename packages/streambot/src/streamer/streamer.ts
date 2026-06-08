@@ -24,6 +24,14 @@ import {
 } from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import { createStreamObserver } from "@shepherdjerred/streambot/observability/stream-observer.ts";
+import {
+  hwFallbackTotal,
+  streamActive,
+  streamHardware,
+  streamSegmentDurationSeconds,
+  streamSegmentsTotal,
+} from "@shepherdjerred/streambot/observability/metrics.ts";
 
 const log = logger.child("streamer");
 
@@ -217,6 +225,7 @@ export class StreambotStreamer implements StreamerLike {
           // Resume the software retry at wherever playback (incl. any live seek) had reached, rather
           // than restarting the video from 0.
           const resumeAt = this.lastPlaybackPositionSeconds;
+          hwFallbackTotal.inc();
           log.warn("hardware (VAAPI) encode failed; retrying with software", {
             error: getErrorMessage(error),
             resumeAt,
@@ -279,6 +288,10 @@ export class StreambotStreamer implements StreamerLike {
       hardware: useHardware,
     });
 
+    // Observability seam — forwards ffmpeg command/codec/progress and send-frametime stats to the
+    // Prometheus metrics. Passed to both prepare (ffmpeg events) and play (send stats).
+    const observer = createStreamObserver(useHardware, this.now);
+
     // The seekable player owns prepare+play on a single Go-Live connection. `finished` resolves at
     // the true end of playback (or on stop) and rejects on an ffmpeg/encode failure — folding in the
     // play/ffmpeg-failure race the old code did by hand, and letting `/stream seek` restart ffmpeg at
@@ -287,8 +300,8 @@ export class StreambotStreamer implements StreamerLike {
       this.streamer,
       input.resolved.ffmpegInput,
       {
-        prepare: prepareOpts,
-        play: { type: "go-live" },
+        prepare: { ...prepareOpts, observer },
+        play: { type: "go-live", observer },
       },
     );
     this.player = player;
@@ -302,6 +315,11 @@ export class StreambotStreamer implements StreamerLike {
       signal.addEventListener("abort", onAbort, { once: true });
     }
 
+    const segmentHardware = useHardware ? "true" : "false";
+    const segmentStartedMs = this.now();
+    streamActive.set(1);
+    streamHardware.set(useHardware ? 1 : 0);
+    let outcome: "ended" | "error" = "ended";
     try {
       await player.start();
       // Anchor the elapsed clock at the segment's start offset so getPosition() tracks live position.
@@ -313,6 +331,9 @@ export class StreambotStreamer implements StreamerLike {
         log.warn("initial setVolume failed", { error: getErrorMessage(error) });
       }
       await player.finished;
+    } catch (error) {
+      outcome = "error";
+      throw error;
     } finally {
       signal.removeEventListener("abort", onAbort);
       // Capture where playback reached (incl. live seeks) before dropping the player, so a HW→SW
@@ -323,6 +344,13 @@ export class StreambotStreamer implements StreamerLike {
       if (this.player === player) {
         this.player = null;
       }
+      streamActive.set(0);
+      const durationSeconds = (this.now() - segmentStartedMs) / 1000;
+      streamSegmentsTotal.inc({ hardware: segmentHardware, outcome });
+      streamSegmentDurationSeconds.observe(
+        { hardware: segmentHardware, outcome },
+        durationSeconds,
+      );
     }
     log.info("stream ended", { title: input.resolved.title });
   }

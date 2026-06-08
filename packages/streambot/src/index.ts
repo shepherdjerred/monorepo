@@ -13,6 +13,10 @@ import { SessionManager } from "@shepherdjerred/streambot/session/session-manage
 import { CommandBot } from "@shepherdjerred/streambot/discord/command-bot.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import {
+  startMetricsServer,
+  stopMetricsServer,
+} from "@shepherdjerred/streambot/observability/metrics.ts";
 
 const LIBRARY_REFRESH_MS = 5 * 60 * 1000;
 
@@ -25,6 +29,8 @@ async function main(): Promise<void> {
     hardwareAcceleration: config.stream.hardwareAcceleration,
     subtitles: config.subtitles.enabled,
   });
+
+  startMetricsServer(config.observability.metricsPort);
 
   // Clear any subtitle temp files orphaned by a previous run (e.g. a resolve that was aborted before
   // the stream cleaned up after itself).
@@ -96,6 +102,7 @@ async function main(): Promise<void> {
     await sessions.destroyAll();
     await commandBot.destroy();
     await pool.destroy();
+    await stopMetricsServer();
     process.exit(0);
   }
   process.on("SIGINT", () => void shutdown());
