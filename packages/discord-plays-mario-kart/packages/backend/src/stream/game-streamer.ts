@@ -5,6 +5,7 @@ import {
   prepareStream,
   playStream,
   Encoders,
+  computeLetterbox,
 } from "@shepherdjerred/discord-video-stream";
 import {
   WIDTH,
@@ -12,7 +13,6 @@ import {
   N64_FPS,
   DISPLAY_ASPECT,
 } from "#src/emulator/constants.ts";
-import { computeLetterbox } from "#src/stream/letterbox.ts";
 import { sinkBufferBytes, streamActive } from "#src/observability/metrics.ts";
 import { withSpan } from "#src/observability/tracing.ts";
 import { logger } from "#src/logger.ts";

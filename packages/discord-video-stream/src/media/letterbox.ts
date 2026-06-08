@@ -1,7 +1,6 @@
-/** Round to the nearest even integer (h264 yuv420p requires even dimensions). */
+/** Round to the nearest even integer (ties round up). h264 yuv420p requires even dimensions. */
 function even(n: number): number {
-  const r = Math.round(n);
-  return r % 2 === 0 ? r : r + 1;
+  return Math.round(n / 2) * 2;
 }
 
 export type Box = { width: number; height: number };
@@ -9,11 +8,10 @@ export type Letterbox = { content: Box; canvas: Box };
 
 /**
  * Compute a 16:9 output canvas and the centered, aspect-correct content box for a
- * game whose frames *display* at `displayAspect` (width / height). The game is
- * scaled to the content box and padded onto a black 16:9 canvas (prepareStream's
- * `pad`), so e.g. 4:3 content becomes a pillarboxed 16:9 stream without stretching.
- *
- * Both content and canvas dimensions are forced even so the yuv420p encode is valid.
+ * source whose frames *display* at `displayAspect` (width / height). Pair with
+ * prepareStream's `pad`: scale the source to `content` and pad it onto the black
+ * `canvas`, so e.g. 4:3 or 3:2 content becomes a pillarboxed 16:9 stream without
+ * stretching. Both content and canvas dimensions are even so the yuv420p encode is valid.
  */
 export function computeLetterbox(
   displayAspect: number,

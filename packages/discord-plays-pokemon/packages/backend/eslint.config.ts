@@ -11,7 +11,6 @@ const config = [
         "src/emulator/buttons.test.ts",
         "src/stream/stream-machine.test.ts",
         "src/stream/orchestrator-machine.test.ts",
-        "src/stream/letterbox.test.ts",
       ],
     },
   }),

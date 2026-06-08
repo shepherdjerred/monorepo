@@ -342,6 +342,14 @@ export function prepareStream(
     // encoder's `outFilters` (`format=nv12|vaapi`, `hwupload`) appended below, so it still composes
     // with VAAPI raw-frame encoding. `pad` is intentionally not supported on the GPU pipeline.
     const { pad } = mergedOptions;
+    if (pad && pad.width > 0 && pad.height > 0 && hwPipeline) {
+      // The GPU pipeline scales with scale_vaapi and never consults `pad`; make
+      // the silent drop visible rather than emitting unexpectedly-unletterboxed output.
+      new Log("prepareStream").warn(
+        "`pad` (letterbox) is ignored when a hardware decode pipeline is active (scale_vaapi); " +
+          "use the software path (hardwareAcceleratedDecoding: false) for padded output",
+      );
+    }
     command.videoFilter(
       hwPipeline
         ? hwPipeline.scaleFilter(width, height)
