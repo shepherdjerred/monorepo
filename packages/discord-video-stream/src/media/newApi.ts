@@ -120,6 +120,15 @@ export type PrepareStreamOptions = {
   customFfmpegFlags: string[];
 
   /**
+   * Extra video filters appended to the transcoding filter chain, immediately after the internal
+   * `scale` filter and before the encoder's own output filters (e.g.
+   * `["subtitles='/tmp/subs.srt'"]` to burn in subtitles). Ignored when `noTranscoding` is set.
+   * Composed into the same `-vf` chain as `scale`, so — unlike a raw `-vf` in `customFfmpegFlags` —
+   * it cannot collide with / clobber the built-in scale and encoder filters.
+   */
+  videoFilters: string[];
+
+  /**
    * Start playback at this offset, in seconds (ffmpeg input `-ss` seek). Fast and accurate for
    * seekable inputs. Used by the seekable player to restart a source at a new position.
    */
@@ -130,12 +139,38 @@ export type PrepareStreamOptions = {
    * periodic transcode progress are forwarded to the observer. No effect on behavior.
    */
   observer?: StreamObserver;
+
+  /**
+   * Letterbox/pillarbox. After scaling the video to `width`x`height`, pad it onto a centered
+   * black canvas of these dimensions. Use to emit a fixed aspect ratio (e.g. 16:9) for content
+   * of a different aspect without stretching: set `width`/`height` to the aspect-correct content
+   * box and `pad` to the final canvas. Software path only — the pad runs before any GPU `hwupload`,
+   * so it composes with VAAPI raw-frame encoding; it is ignored when a hardware decode pipeline
+   * (`hardwareAcceleratedDecoding` + an encoder with `hwPipeline`) is active.
+   */
+  pad?: { width: number; height: number };
 };
 
 export type Controller = {
   volume: number;
   setVolume(newVolume: number): Promise<boolean>;
 };
+
+/**
+ * Assemble the ordered video filter chain for the transcoding path: the base `scale`, then any
+ * caller-provided `videoFilters` (e.g. burned-in subtitles), then the encoder's own output filters.
+ * Pure and order-preserving so the chain is unit-testable without spawning ffmpeg. Empty entries are
+ * dropped so a missing encoder filter list doesn't leave a stray comma in the `-vf` spec.
+ */
+export function buildVideoFilterChain(
+  scaleFilter: string,
+  videoFilters: readonly string[],
+  encoderOutFilters: readonly string[],
+): string[] {
+  return [scaleFilter, ...videoFilters, ...encoderOutFilters].filter(
+    (filter) => filter.length > 0,
+  );
+}
 
 export function prepareStream(
   input: string | Readable,
@@ -164,7 +199,9 @@ export function prepareStream(
     },
     customInputOptions: [],
     customFfmpegFlags: [],
+    videoFilters: [],
     startTime: undefined,
+    pad: undefined,
   } satisfies PrepareStreamOptions;
 
   function mergeOptions(opts: Partial<PrepareStreamOptions>) {
@@ -219,10 +256,12 @@ export function prepareStream(
         opts.customInputOptions ?? defaultOptions.customInputOptions,
       customFfmpegFlags:
         opts.customFfmpegFlags ?? defaultOptions.customFfmpegFlags,
+      videoFilters: opts.videoFilters ?? defaultOptions.videoFilters,
       startTime:
         isFiniteNonZero(opts.startTime) && opts.startTime > 0
           ? opts.startTime
           : defaultOptions.startTime,
+      pad: opts.pad ?? defaultOptions.pad,
     } satisfies PrepareStreamOptions;
   }
 
@@ -358,16 +397,47 @@ export function prepareStream(
   command.addOutputOption("-map 0:v");
 
   if (noTranscoding) {
+    // `noTranscoding` passes the input video through unmodified, so a filter chain can't apply. Fail
+    // fast instead of silently dropping caller-provided filters (e.g. burned-in subtitles).
+    if (mergedOptions.videoFilters.length > 0) {
+      throw new Error(
+        "videoFilters cannot be applied when noTranscoding is set: the input video stream is copied through unmodified. Disable noTranscoding to burn in subtitles or other filters.",
+      );
+    }
     command.videoCodec("copy");
   } else {
     if (!encoderSettings)
       throw new Error(`Encoder settings not specified for ${videoCodec}`);
 
-    // Scale on the GPU when the encoder declares a hardware pipeline; otherwise software `scale`.
+    // One combined `-vf` chain: scale (GPU scale when the encoder declares a hardware pipeline, else
+    // software `scale`), then caller filters (e.g. burned subtitles), then the encoder's own output
+    // filters. Built by a pure helper so the ordering is unit-testable. On a GPU pipeline the frames
+    // are already hardware surfaces, so the encoder's upload/format outFilters are unnecessary.
+    //
+    // On the software path an optional `pad` letterboxes/pillarboxes the scaled frame onto a centered
+    // black canvas (e.g. fit 4:3 content into a 16:9 output). It's folded into the scale step so it
+    // runs before the caller/encoder filters. `pad` is intentionally not supported on the GPU pipeline.
+    const { pad } = mergedOptions;
+    const padded = pad !== undefined && pad.width > 0 && pad.height > 0;
+    if (padded && hwPipeline) {
+      // The GPU pipeline scales with scale_vaapi and never consults `pad`; make
+      // the silent drop visible rather than emitting unexpectedly-unletterboxed output.
+      new Log("prepareStream").warn(
+        "`pad` (letterbox) is ignored when a hardware decode pipeline is active (scale_vaapi); " +
+          "use the software path (hardwareAcceleratedDecoding: false) for padded output",
+      );
+    }
+    const scaleFilter = hwPipeline
+      ? hwPipeline.scaleFilter(width, height)
+      : padded
+        ? `scale=${width}:${height},pad=${pad.width}:${pad.height}:-1:-1:color=black`
+        : `scale=${width}:${height}`;
     command.videoFilter(
-      hwPipeline
-        ? hwPipeline.scaleFilter(width, height)
-        : `scale=${width}:${height}`,
+      buildVideoFilterChain(
+        scaleFilter,
+        mergedOptions.videoFilters,
+        hwPipeline ? [] : (encoderSettings.outFilters ?? []),
+      ),
     );
 
     if (frameRate) command.fpsOutput(frameRate);
@@ -390,9 +460,6 @@ export function prepareStream(
 
     command
       .videoCodec(encoderSettings.name)
-      // On a GPU pipeline the frames are already hardware surfaces, so the encoder's upload/format
-      // `outFilters` (hwupload, format=nv12|vaapi) are unnecessary.
-      .videoFilter(hwPipeline ? [] : (encoderSettings.outFilters ?? []))
       .outputOptions(encoderSettings.options)
       .outputOptions(encoderSettings.globalOptions ?? []);
   }

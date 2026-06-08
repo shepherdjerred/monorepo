@@ -11,6 +11,7 @@ import {
   type LibraryRoot,
 } from "@shepherdjerred/streambot/sources/library.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
+import { sweepSubtitleTempDir } from "@shepherdjerred/streambot/sources/subtitle-io.ts";
 import { expandPlaylist } from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
@@ -58,9 +59,14 @@ async function main(): Promise<void> {
     videosDir: config.library.videosDir,
     mediaDirs: config.library.mediaDirs,
     hardwareAcceleration: config.stream.hardwareAcceleration,
+    subtitles: config.subtitles.enabled,
   });
 
   startMetricsServer(config.observability.metricsPort);
+
+  // Clear any subtitle temp files orphaned by a previous run (e.g. a resolve that was aborted before
+  // the stream cleaned up after itself).
+  await sweepSubtitleTempDir();
 
   const roots: LibraryRoot[] = [
     { dir: config.library.videosDir, label: "videos" },

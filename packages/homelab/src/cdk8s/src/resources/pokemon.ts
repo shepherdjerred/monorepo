@@ -1,4 +1,5 @@
 import {
+  Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
@@ -8,7 +9,7 @@ import {
   Volume,
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
+import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
   setRevisionHistoryLimit,
   withCommonProps,
@@ -16,6 +17,7 @@ import {
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
@@ -69,6 +71,18 @@ export function createPokemonDeployment(chart: Chart) {
       image: `ghcr.io/shepherdjerred/discord-plays-pokemon:${versions["shepherdjerred/discord-plays-pokemon"]}`,
       envVariables: {
         NODE_ENV: EnvValue.fromValue("production"),
+        // VAAPI hardware H.264 encoding on the Intel iGPU (requested below). The
+        // app reads STREAM_HARDWARE_ACCELERATION/VAAPI_DEVICE; ffmpeg reads
+        // LIBVA_DRIVER_NAME. Falls back to software libx264 if the device is absent.
+        STREAM_HARDWARE_ACCELERATION: EnvValue.fromValue("true"),
+        VAAPI_DEVICE: EnvValue.fromValue("/dev/dri/renderD128"),
+        LIBVA_DRIVER_NAME: EnvValue.fromValue("iHD"),
+        // OTLP traces → Tempo; frame metrics are scraped from /metrics.
+        TELEMETRY_ENABLED: EnvValue.fromValue("true"),
+        TELEMETRY_SERVICE_NAME: EnvValue.fromValue("discord-plays-pokemon"),
+        OTLP_ENDPOINT: EnvValue.fromValue(
+          "http://tempo.tempo.svc.cluster.local:4318",
+        ),
       },
       securityContext: {
         ensureNonRoot: false,
@@ -78,6 +92,19 @@ export function createPokemonDeployment(chart: Chart) {
         privileged: false,
         allowPrivilegeEscalation: false,
       },
+      // Single-threaded WASM emulation at ~60fps is CPU-heavy; give it room. The
+      // i915 limit is added via JsonPatch below (the cdk8s resources API has no
+      // GPU field). The limits block must exist for that patch path to resolve.
+      resources: {
+        cpu: {
+          request: Cpu.millis(1000),
+          limit: Cpu.millis(4000),
+        },
+        memory: {
+          request: Size.gibibytes(1),
+          limit: Size.gibibytes(2),
+        },
+      },
       ports: [
         {
           name: "ui",
@@ -85,6 +112,7 @@ export function createPokemonDeployment(chart: Chart) {
           protocol: Protocol.TCP,
         },
       ],
+      // /metrics is served on the same web server (WEB_PORT); see ServiceMonitor below.
       volumeMounts: [
         {
           path: `${APP_ROOT}/saves`,
@@ -121,9 +149,33 @@ export function createPokemonDeployment(chart: Chart) {
 
   setRevisionHistoryLimit(deployment);
 
+  // Request the Intel iGPU so ffmpeg can VAAPI hardware-encode. The
+  // intel-device-plugin mounts /dev/dri into the pod; non-root UID 1000 works
+  // (same as Jellyfin/streambot). cdk8s has no GPU resource field, so patch it in.
+  ApiObject.of(deployment).addJsonPatch(
+    JsonPatch.add(
+      "/spec/template/spec/containers/0/resources/limits/gpu.intel.com~1i915",
+      1,
+    ),
+  );
+
   const uiService = new Service(chart, "ui-service", {
+    metadata: {
+      labels: {
+        app: "pokemon",
+      },
+    },
     selector: deployment,
-    ports: [{ port: WEB_PORT }],
+    ports: [{ port: WEB_PORT, name: "ui" }],
+  });
+
+  // Scrape the frame-loop + process metrics exposed at /metrics on the web port.
+  createServiceMonitor(chart, {
+    name: "pokemon",
+    port: "ui",
+    path: "/metrics",
+    namespace: "pokemon",
+    matchLabels: { app: "pokemon" },
   });
 
   new TailscaleIngress(chart, "ui-tailscale-ingress", {

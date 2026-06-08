@@ -50,6 +50,7 @@ function makeStreamer() {
 /** Fake prepareStream/attachPipeline that record calls and expose per-segment control. */
 function makeDeps() {
   const prepareCalls = [];
+  const videoFiltersCalls = [];
   const ffmpeg = [];
   const attachCalls = [];
   const segments = [];
@@ -59,6 +60,7 @@ function makeDeps() {
   const deps = {
     prepareStream: (_input, opts) => {
       prepareCalls.push({ startTime: opts.startTime });
+      videoFiltersCalls.push(opts.videoFilters);
       const ff = deferred();
       ffmpeg.push(ff);
       return {
@@ -89,7 +91,16 @@ function makeDeps() {
     },
   };
 
-  return { deps, prepareCalls, ffmpeg, attachCalls, segments, destroyed, volumes };
+  return {
+    deps,
+    prepareCalls,
+    videoFiltersCalls,
+    ffmpeg,
+    attachCalls,
+    segments,
+    destroyed,
+    volumes,
+  };
 }
 
 describe("createSeekablePlayer", () => {
@@ -183,6 +194,28 @@ describe("createSeekablePlayer", () => {
     player.stop();
     await player.finished;
     expect(streamer.calls.stopStream).toBe(1);
+  });
+
+  test("prepare.videoFilters (e.g. burned subtitles) are applied on start AND re-applied after seek", async () => {
+    const streamer = makeStreamer();
+    const f = makeDeps();
+    const filters = ["subtitles='/tmp/streambot-subs/x.srt'"];
+    const player = createSeekablePlayer(
+      streamer,
+      "video.mkv",
+      { prepare: { videoFilters: filters } },
+      f.deps,
+    );
+    await player.start();
+    await player.seek(120);
+
+    // Same filter list reaches ffmpeg on the initial segment and on the post-seek restart, so the
+    // burned subtitles survive a /stream seek (and, by the same mechanism, the HW→SW retry).
+    expect(f.videoFiltersCalls).toEqual([filters, filters]);
+    expect(f.prepareCalls).toEqual([
+      { startTime: undefined },
+      { startTime: 120 },
+    ]);
   });
 
   test("setVolume delegates to the active segment controller", async () => {

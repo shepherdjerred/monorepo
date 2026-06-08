@@ -7,6 +7,13 @@ import {
   KEYINPUT,
   KEY_MASK,
 } from "./constants.ts";
+import {
+  emulateMs,
+  copyMs,
+  lateMs,
+  ticksTotal,
+  loopResyncTotal,
+} from "#src/observability/metrics.ts";
 import { logger } from "#src/logger.ts";
 
 // Minimal view of the wasm exports we depend on, validated at runtime so we
@@ -180,13 +187,18 @@ export class Emulator {
     }
 
     this.setKeys(mask);
+    const emulateStart = performance.now();
     exports.runFrame();
+    emulateMs.observe(performance.now() - emulateStart);
     this.currentFrame += 1;
 
     if (this.onFrameCb !== undefined) {
+      const copyStart = performance.now();
       const rgba = this.renderer.render();
       this.onFrameCb(Buffer.from(rgba));
+      copyMs.observe(performance.now() - copyStart);
     }
+    ticksTotal.inc();
 
     const interval = this.options.saveIntervalFrames ?? 60;
     if (this.currentFrame % interval === 0) this.saveIfChanged(false);
@@ -195,7 +207,11 @@ export class Emulator {
     // behind by more than a few frames (e.g. the process was paused), resync
     // rather than sprinting to catch up.
     this.nextTickAt += FRAME_MS;
-    if (performance.now() - this.nextTickAt > 250) {
+    // behind > 0 means the tick overran its budget.
+    const behind = performance.now() - this.nextTickAt;
+    lateMs.observe(Math.max(0, behind));
+    if (behind > 250) {
+      loopResyncTotal.inc();
       this.nextTickAt = performance.now();
     }
     this.scheduleNext();

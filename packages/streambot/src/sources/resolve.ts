@@ -5,6 +5,7 @@ import {
 } from "@shepherdjerred/streambot/sources/source.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import { resolveWithYtdlp } from "@shepherdjerred/streambot/sources/ytdlp.ts";
+import { resolveSubtitleForFile } from "@shepherdjerred/streambot/sources/subtitle-io.ts";
 import {
   BlockedSourceError,
   isBlockedSource,
@@ -67,10 +68,22 @@ export async function resolveSource(
   if (isBlockedSource(source)) {
     throw new BlockedSourceError(sourceLabel(source));
   }
-  const resolved =
-    source.kind === "file"
-      ? { title: source.title, ffmpegInput: source.path }
-      : await resolveWithYtdlp(config, source, signal);
+  let resolved: ResolvedSource;
+  if (source.kind === "file") {
+    const subtitle = await resolveSubtitleForFile(
+      config,
+      source.path,
+      source.subtitles,
+      signal,
+    );
+    resolved = {
+      title: source.title,
+      ffmpegInput: source.path,
+      ...(subtitle === undefined ? {} : { subtitle }),
+    };
+  } else {
+    resolved = await resolveWithYtdlp(config, source, signal);
+  }
   await recordSourceMetadata(config, resolved, signal);
   return resolved;
 }
