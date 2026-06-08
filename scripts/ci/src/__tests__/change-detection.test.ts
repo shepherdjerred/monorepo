@@ -458,9 +458,9 @@ describe("shouldSkipReleasePleasePrBuild", () => {
     expect(_shouldSkipReleasePleasePrBuild()).toBe(true);
   });
 
-  it("skips when source is unset (defensive default)", () => {
+  it("does not skip when source is unset (defaults to running CI)", () => {
     process.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
-    expect(_shouldSkipReleasePleasePrBuild()).toBe(true);
+    expect(_shouldSkipReleasePleasePrBuild()).toBe(false);
   });
 
   it("does not skip a manually-triggered (ui) build", () => {
@@ -472,6 +472,24 @@ describe("shouldSkipReleasePleasePrBuild", () => {
   it("does not skip an api-triggered build", () => {
     process.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
     process.env["BUILDKITE_SOURCE"] = "api";
+    expect(_shouldSkipReleasePleasePrBuild()).toBe(false);
+  });
+
+  it("does not skip a scheduled build", () => {
+    process.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
+    process.env["BUILDKITE_SOURCE"] = "schedule";
+    expect(_shouldSkipReleasePleasePrBuild()).toBe(false);
+  });
+
+  it("does not skip a downstream trigger_job build", () => {
+    process.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
+    process.env["BUILDKITE_SOURCE"] = "trigger_job";
+    expect(_shouldSkipReleasePleasePrBuild()).toBe(false);
+  });
+
+  it("does not skip an unknown future source", () => {
+    process.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
+    process.env["BUILDKITE_SOURCE"] = "some_new_source";
     expect(_shouldSkipReleasePleasePrBuild()).toBe(false);
   });
 
