@@ -7,6 +7,11 @@ Sentry.init({
   environment: Bun.env.NODE_ENV ?? "development",
 });
 
+import { initializeTracing } from "./observability/tracing.ts";
+
+// Start OTLP tracing before any traced network work (Discord login, voice).
+initializeTracing();
+
 import { match } from "ts-pattern";
 import type { Socket } from "socket.io";
 import { handleSlashCommands } from "./discord/slashCommands/index.ts";

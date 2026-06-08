@@ -14,6 +14,8 @@ import {
   DISPLAY_ASPECT,
 } from "#src/emulator/constants.ts";
 import { computeLetterbox } from "#src/stream/letterbox.ts";
+import { sinkBufferBytes, streamActive } from "#src/observability/metrics.ts";
+import { withSpan } from "#src/observability/tracing.ts";
 import { logger } from "#src/logger.ts";
 import { createOrchestratorMachine } from "./orchestrator-machine.ts";
 import type { EncoderHandles, StreamMachineDeps } from "./stream-machine.ts";
@@ -63,6 +65,7 @@ export class GameStreamer {
     this.actor = createActor(machine);
     this.actor.subscribe((snapshot) => {
       this.frameSink = snapshot.context.frameSink;
+      streamActive.set(this.frameSink === null ? 0 : 1);
     });
     this.actor.start();
   }
@@ -80,7 +83,11 @@ export class GameStreamer {
 
   /** Feed one RGBA frame (no-op unless a broadcast is live). */
   pushFrame(frame: Buffer): void {
-    if (this.frameSink) this.frameSink.write(frame);
+    if (this.frameSink) {
+      this.frameSink.write(frame);
+      // Rising buffered bytes ⇒ ffmpeg/encode can't keep up with the frame rate.
+      sinkBufferBytes.set(this.frameSink.writableLength);
+    }
   }
 
   /** Request that the broadcast be running. Resolves immediately. */
@@ -104,31 +111,36 @@ export class GameStreamer {
 
   private deps(): StreamMachineDeps {
     return {
-      joinVoice: async (signal) => {
-        await this.streamer.joinVoice(
-          this.options.guildId,
-          this.options.channelId,
-        );
-        // The library's joinVoice cannot be cancelled mid-flight. If STOP arrived
-        // while we were connecting, the actor was aborted and leaveVoice already ran;
-        // tear down the connection we just established so it isn't orphaned.
-        if (signal.aborted) {
-          this.streamer.leaveVoice();
-        }
-      },
-      prepareEncoder: () => Promise.resolve(this.buildEncoder()),
-      runStream: ({ output, playing }) => this.runStream(output, playing),
-      leaveVoice: async (playing) => {
-        if (playing) {
-          try {
-            await playing;
-          } catch {
-            // ffmpeg is SIGKILLed when the frame stream ends on stop; the encode
-            // promise rejecting here is expected and not an error.
+      joinVoice: (signal) =>
+        withSpan("stream.joinVoice", async () => {
+          await this.streamer.joinVoice(
+            this.options.guildId,
+            this.options.channelId,
+          );
+          // The library's joinVoice cannot be cancelled mid-flight. If STOP arrived
+          // while we were connecting, the actor was aborted and leaveVoice already ran;
+          // tear down the connection we just established so it isn't orphaned.
+          if (signal.aborted) {
+            this.streamer.leaveVoice();
           }
-        }
-        this.streamer.leaveVoice();
-      },
+        }),
+      prepareEncoder: () =>
+        withSpan("stream.prepareEncoder", () =>
+          Promise.resolve(this.buildEncoder()),
+        ),
+      runStream: ({ output, playing }) => this.runStream(output, playing),
+      leaveVoice: (playing) =>
+        withSpan("stream.leaveVoice", async () => {
+          if (playing) {
+            try {
+              await playing;
+            } catch {
+              // ffmpeg is SIGKILLed when the frame stream ends on stop; the encode
+              // promise rejecting here is expected and not an error.
+            }
+          }
+          this.streamer.leaveVoice();
+        }),
     };
   }
 

@@ -13,6 +13,8 @@ import {
   DISPLAY_ASPECT,
 } from "#src/emulator/constants.ts";
 import { computeLetterbox } from "#src/stream/letterbox.ts";
+import { sinkBufferBytes, streamActive } from "#src/observability/metrics.ts";
+import { withSpan } from "#src/observability/tracing.ts";
 import { logger } from "#src/logger.ts";
 
 export type GameStreamerOptions = {
@@ -68,7 +70,11 @@ export class GameStreamer {
 
   /** Feed one BGRA frame (no-op unless a broadcast is active). */
   pushFrame(frame: Buffer): void {
-    if (this.active && this.bgra) this.bgra.write(frame);
+    if (this.active && this.bgra) {
+      this.bgra.write(frame);
+      // Rising buffered bytes ⇒ ffmpeg/encode can't keep up with the frame rate.
+      sinkBufferBytes.set(this.bgra.writableLength);
+    }
   }
 
   start(): Promise<void> {
@@ -104,9 +110,15 @@ export class GameStreamer {
     }
   }
 
-  private async doStart(): Promise<void> {
+  private doStart(): Promise<void> {
+    return withSpan("stream.start", () => this.doStartInner());
+  }
+
+  private async doStartInner(): Promise<void> {
     if (this.active) return;
-    await this.streamer.joinVoice(this.options.guildId, this.options.channelId);
+    await withSpan("stream.joinVoice", () =>
+      this.streamer.joinVoice(this.options.guildId, this.options.channelId),
+    );
 
     const bgra = new PassThrough();
     // Scale the 4:3 game into an aspect-correct content box, then pillarbox it onto
@@ -155,6 +167,7 @@ export class GameStreamer {
     this.bgra = bgra;
     this.playing = this.runStream(output, promise);
     this.active = true;
+    streamActive.set(1);
     logger.info("Go-Live stream started");
   }
 
@@ -178,11 +191,17 @@ export class GameStreamer {
     }
   }
 
-  private async doStop(): Promise<void> {
+  private doStop(): Promise<void> {
+    return withSpan("stream.stop", () => this.doStopInner());
+  }
+
+  private async doStopInner(): Promise<void> {
     if (!this.active) return;
     this.active = false;
+    streamActive.set(0);
     this.bgra?.end();
     this.bgra = undefined;
+    sinkBufferBytes.set(0);
     // runStream never rejects (it logs internally), so awaiting is safe.
     await this.playing;
     this.playing = undefined;
