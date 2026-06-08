@@ -50,3 +50,24 @@ no public ACL change.
 - `cd packages/toolkit && bun run typecheck && bun run test:unit`
 - Operator: `tofu -chdir=seaweedfs apply` (bucket+lifecycle+seed), `tofu -chdir=cloudflare apply` (DNS), commit cdk8s → ArgoCD syncs Caddy
 - E2E: `curl -I https://public.sjer.red/` → 200; `toolkit pr asset 9999 ./test.png --markdown`; `curl -I` the URL → 200 image/png; paste into a throwaway PR comment and confirm GitHub renders it
+
+## Session Log — 2026-06-07
+
+### Done
+
+- Code committed on branch `claude/practical-elgamal-5f7eef` (commit `b5d8dfef0`).
+- homelab: `public-sjer-red` bucket + 365d `pr/assets/` lifecycle + root-seed provisioner ([buckets.tf](../../homelab/src/tofu/seaweedfs/buckets.tf)); seed pages [public/index.html](../../homelab/src/tofu/seaweedfs/public/index.html), [public/404.html](../../homelab/src/tofu/seaweedfs/public/404.html); DNS [sjer-red.tf](../../homelab/src/tofu/cloudflare/sjer-red.tf); static-site entry [sites.ts](../../homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts).
+- toolkit: SigV4 S3 lib [client.ts](../../toolkit/src/lib/s3/client.ts) + helpers [assets.ts](../../toolkit/src/lib/s3/assets.ts) + tests; `pr asset` command [asset.ts](../../toolkit/src/commands/pr/asset.ts), routed in [pr.ts](../../toolkit/src/handlers/pr.ts), usage in [index.ts](../../toolkit/src/index.ts).
+- Docs: root + toolkit AGENTS.md.
+- Verified: toolkit typecheck + 16 unit tests; homelab typecheck; static-site tests (31 pass); tunnel-dns-coverage (31 bindings); eslint (toolkit) + tofu fmt clean; full pre-commit tier-1/tier-2 green.
+
+### Remaining
+
+- **Operator infra apply** (needs tailnet + 1Password): `tofu -chdir=seaweedfs apply` (bucket + lifecycle + seed) and `tofu -chdir=cloudflare apply` (DNS), then let ArgoCD sync the Caddy config for the new `public.sjer.red` vhost.
+- **True E2E** (after apply): a real `toolkit pr asset` upload + `curl` + GitHub render check. Not run locally because the bucket doesn't exist until apply and creds need `op`.
+- Push branch / open PR (not done — awaiting user).
+
+### Caveats
+
+- Image durability is coupled to the homelab + the 365d TTL on `pr/assets/`.
+- `packages/sjer.red/bun.lock` was modified by `scripts/setup.ts` during this session; intentionally left unstaged (unrelated churn).
