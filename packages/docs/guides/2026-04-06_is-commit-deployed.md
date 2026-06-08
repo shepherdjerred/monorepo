@@ -2,6 +2,12 @@
 
 Guide for tracing a commit through the deployment pipeline to verify it's running on the `torvalds` cluster.
 
+> **Automated by `toolkit deployed`.** Run `toolkit deployed <service>` (e.g.
+> `toolkit deployed scout` or `toolkit deployed scout/prod`), or `toolkit deployed <commit>`,
+> to perform the whole trace below automatically (git → version bump →
+> `versions.ts` → ArgoCD → running pod digest). This guide remains the manual
+> fallback and the source of truth for how the pipeline works.
+
 ## Pipeline Overview
 
 ```
