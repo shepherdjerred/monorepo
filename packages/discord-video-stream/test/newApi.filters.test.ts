@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { buildVideoFilterChain } from "../src/media/newApi.ts";
+import { buildVideoFilterChain, prepareStream } from "../src/media/newApi.ts";
 
 describe("buildVideoFilterChain", () => {
   test("scale only when no extra or encoder filters", () => {
@@ -46,5 +46,16 @@ describe("buildVideoFilterChain", () => {
     expect(
       buildVideoFilterChain("scale=1280:720", ["", "subtitles='x'"], ["", ""]),
     ).toEqual(["scale=1280:720", "subtitles='x'"]);
+  });
+});
+
+describe("prepareStream videoFilters + noTranscoding guard", () => {
+  test("throws instead of silently dropping videoFilters when noTranscoding is set", () => {
+    expect(() =>
+      prepareStream("input.mkv", {
+        noTranscoding: true,
+        videoFilters: ["subtitles='/tmp/x.srt'"],
+      }),
+    ).toThrow(/noTranscoding/);
   });
 });

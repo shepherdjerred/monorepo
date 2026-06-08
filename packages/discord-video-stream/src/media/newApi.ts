@@ -346,6 +346,13 @@ export function prepareStream(
   command.addOutputOption("-map 0:v");
 
   if (noTranscoding) {
+    // `noTranscoding` passes the input video through unmodified, so a filter chain can't apply. Fail
+    // fast instead of silently dropping caller-provided filters (e.g. burned-in subtitles).
+    if (mergedOptions.videoFilters.length > 0) {
+      throw new Error(
+        "videoFilters cannot be applied when noTranscoding is set: the input video stream is copied through unmodified. Disable noTranscoding to burn in subtitles or other filters.",
+      );
+    }
     command.videoCodec("copy");
   } else {
     if (!encoderSettings)
