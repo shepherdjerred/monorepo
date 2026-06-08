@@ -36,14 +36,29 @@ registration; membership discovered at runtime from `client.guilds.cache`.
 ## Verification
 
 - `packages/streambot`: `bun run typecheck` ✅, `bunx eslint .` ✅, `bun run test` ✅ (167 pass).
-- `packages/homelab`: `bun run typecheck` ✅.
-- `.dagger`: not standalone-typecheckable locally (`@dagger.io/dagger` SDK is `dagger develop`-generated); edits are mechanical and consistent across helper + `@func`.
+- `packages/homelab`: `bun run typecheck` ✅; streambot deployment test ✅.
+- **k8s synth** (`bun run src/app.ts`): the `media` chart wires `USER_TOKENS`/`BOT_TOKEN`/`ADMIN_IDS`
+  from the `media-streambot-config` secret (OnePasswordItem → vault `streambot-config`), with no
+  leftover `TOKEN`/`GUILD_ID`/`VIDEO_CHANNEL_ID`/`COMMAND_CHANNEL_ID`. ✅
+- **Live Dagger e2e** (`dagger call e-2-e-streambot`, real test-guild creds): `resume PASS`,
+  `DAGGER_EXIT=0`. Confirmed end-to-end — command bot + selfbot login, **membership discovery
+  (`guilds: 2`)**, voice join, subtitled stream, persist, and resume-at-offset (5.03s vs 5.19s) across
+  a simulated restart. Fixed a pre-existing e2e harness race (read `getPosition()` before the streamer
+  anchored its clock) by polling for the anchor.
+- `.dagger`: not standalone-typecheckable locally (`@dagger.io/dagger` SDK is `dagger develop`-generated);
+  edits are mechanical and consistent across helper + `@func`. The e2e run above exercised them for real.
+- Note: the "offline 1Password field linter" prior sessions referenced has been **removed** from the
+  repo, so nothing gates a `fromSecret` reference at commit time — a missing field only surfaces at
+  deploy as a pod CrashLoop (see below).
 
 ## Remaining / operator steps
 
-1. Add a `USER_TOKENS` field (comma-separated userbot tokens) to the `streambot-config` 1Password item
-   **before** the new image deploys (the deployment no longer reads `TOKEN`/`GUILD_ID`/…). Refresh the
-   homelab 1P snapshot if its linter requires it.
+1. **Add a `USER_TOKENS` field (comma-separated userbot tokens) to the `streambot-config` 1Password
+   item before the new image deploys.** Confirmed on 2026-06-07 that the item currently has
+   `BOT_TOKEN, TOKEN, GUILD_ID, VIDEO_CHANNEL_ID, COMMAND_CHANNEL_ID, ADMIN_IDS` but **no
+   `USER_TOKENS`** — so the new pod would `CreateContainerConfigError`/CrashLoop until it's added (the
+   operator only materializes secret keys for fields that exist). The old `TOKEN` field can be deleted
+   afterwards. (No snapshot refresh needed — that linter was removed.)
 2. Run the live Dagger e2e (`e-2-e-streambot`, pool-of-1) to confirm login/register/join/stream/resume
    under the new env names.
 3. Each userbot account must be invited to the target servers (membership = what it can serve); the
