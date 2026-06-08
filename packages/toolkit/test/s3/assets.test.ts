@@ -3,6 +3,7 @@ import {
   assetKey,
   assetPublicUrl,
   contentTypeForFile,
+  firstDuplicateBasename,
   PUBLIC_BUCKET,
   PUBLIC_HOST,
 } from "#lib/s3/assets.ts";
@@ -56,4 +57,20 @@ describe("assetPublicUrl", () => {
 test("PUBLIC_BUCKET / PUBLIC_HOST constants", () => {
   expect(PUBLIC_BUCKET).toBe("public-sjer-red");
   expect(PUBLIC_HOST).toBe("https://public.sjer.red");
+});
+
+describe("firstDuplicateBasename", () => {
+  test("returns undefined when all basenames are unique", () => {
+    expect(
+      firstDuplicateBasename(["/a/before.png", "/b/after.png"]),
+    ).toBeUndefined();
+  });
+
+  test("detects a collision across different directories", () => {
+    expect(firstDuplicateBasename(["/a/shot.png", "/b/shot.png"])).toEqual({
+      basename: "shot.png",
+      first: "/a/shot.png",
+      second: "/b/shot.png",
+    });
+  });
 });
