@@ -70,12 +70,27 @@ The `mymain.cpp` patch adds:
   inject the ROM bytes from JS; `main()` uses them instead of `fopen`/`fseek`
   (musl stdio `fseek` null-traps under Node). `volatile` defeats an LTO
   constant-fold that would otherwise drop the inject branch.
-- `neil_send_mobile_controls_player(int player, controls, axis0, axis1)` —
-  per-player variant of the stock `neil_send_mobile_controls` (which only wrote
-  `neilbuttons[0]`); writes `neilbuttons[player]` for player 0..3. The 14-char
-  `controls` order is `[up,down,left,right,a,b,start,z,l,r,cUp,cDown,cLeft,cRight]`.
-  Must be called immediately before `_runMainLoop()` (the core zeroes
-  `neilbuttons[*]` at frame start, then polls).
+- `neil_send_mobile_controls_player(int player, controls, axis0, axis1)` +
+  `applyHostControls()` — per-player input for headless multi-controller play
+  (the stock `neil_send_mobile_controls` only wrote `neilbuttons[0]`). The
+  14-char `controls` order is
+  `[up,down,left,right,a,b,start,z,l,r,cUp,cDown,cLeft,cRight]`.
+
+  **Why two functions (and a latch):** `mainLoopInner()` calls
+  `resetNeilButtons()` near its top *every frame*, then the upstream input path
+  re-fills `neilbuttons[*]` from the keyboard/SDL/gamepad — and from JS only
+  when `mobileMode` is on (it calls back into JS via `processMobileControls()`
+  *after* the reset). Headless runs with `mobileMode = 0` and no physical
+  devices, and the host injects input *before* `_runMainLoop()`, so a direct
+  write to `neilbuttons[player]` is **wiped by `resetNeilButtons()` before
+  `retro_run()` ever polls it** (this silently dropped *all* input — frames
+  still rendered, but no button/steer reached the game). So
+  `neil_send_mobile_controls_player()` now only **latches** the state into a
+  persistent `g_neilHostPads[4]`, and `applyHostControls()` — inserted into
+  `mainLoopInner()` *after* every reset and *immediately before* `retro_run()` —
+  copies the latch into `neilbuttons[*]`. The host still calls
+  `neil_send_mobile_controls_player()` once per tick before `_runMainLoop()`;
+  ordering within the frame is handled in C.
 
 ## Excludes (`vendor-excludes.txt`)
 

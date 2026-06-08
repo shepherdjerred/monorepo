@@ -265,8 +265,10 @@ export class N64Emulator {
     const rt = this.rt;
     if (rt === undefined) return;
 
-    // Apply each seat's latched input IMMEDIATELY before runMainLoop (the core
-    // zeroes neilbuttons[*] at frame start then polls — see PATCHES.md).
+    // Push each seat's input before runMainLoop. The C side only LATCHES it
+    // (into g_neilHostPads) and re-applies it inside mainLoopInner AFTER the
+    // per-frame resetNeilButtons() — a direct write here would be wiped before
+    // retro_run() polls it. See applyHostControls() in PATCHES.md.
     for (let p = 0; p < this.opts.seats; p++) {
       const s = this.inputs[p];
       rt.send(
