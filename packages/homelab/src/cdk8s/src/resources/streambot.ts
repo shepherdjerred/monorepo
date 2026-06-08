@@ -47,6 +47,19 @@ export function createStreambotDeployment(
 
   const fromSecret = (key: string) => EnvValue.fromSecretValue({ secret, key });
 
+  // Dedicated item for the optional TMDB poster API key (kept out of the shared streambot-config
+  // item). Its single `TMDB_API_KEY` field syncs to a secret key of the same name.
+  const tmdbItem = new OnePasswordItem(chart, "streambot-tmdb", {
+    spec: {
+      itemPath: vaultItemPath("streambot-tmdb"),
+    },
+  });
+  const tmdbSecret = Secret.fromSecretName(
+    chart,
+    "streambot-tmdb-secret",
+    tmdbItem.name,
+  );
+
   // Small persistent volume for resume state (current item + playback position + queue). Survives
   // pod restarts so a deploy/crash mid-movie picks up where it left off. RWO + the Recreate strategy
   // below guarantees the old pod detaches before the new one attaches (a rolling update would
@@ -80,6 +93,13 @@ export function createStreambotDeployment(
         // so GUILD_ID/VIDEO_CHANNEL_ID/COMMAND_CHANNEL_ID are no longer needed.
         USER_TOKENS: fromSecret("USER_TOKENS"),
         ADMIN_IDS: fromSecret("ADMIN_IDS"),
+        // Optional: enables movie/TV poster art on the now-playing embed for local files. Sourced
+        // from the dedicated streambot-tmdb item; marked optional so the pod still starts if it's
+        // ever absent.
+        TMDB_API_KEY: EnvValue.fromSecretValue(
+          { secret: tmdbSecret, key: "TMDB_API_KEY" },
+          { optional: true },
+        ),
         VIDEOS_DIR: EnvValue.fromValue("/data/videos"),
         MEDIA_DIRS: EnvValue.fromValue("/media/movies,/media/tv"),
         // Resume state lives on the persistent volume mounted at /state.

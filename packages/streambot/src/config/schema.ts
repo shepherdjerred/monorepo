@@ -64,13 +64,15 @@ export const ConfigSchema = z.strictObject({
       resumeMaxAgeSeconds: z.number().int().positive().default(21_600),
     })
     .default({ dir: "/state", resumeMaxAgeSeconds: 21_600 }),
+  /** Optional TMDB integration for movie/TV poster art on the now-playing embed (local files). */
+  tmdb: z.strictObject({ apiKey: z.string().min(1) }).optional(),
   /** Leave the voice channel after this many idle seconds. */
   idleTimeoutSeconds: z.number().int().positive().default(300),
   /** Maximum number of items to enqueue when expanding a playlist URL. */
   playlistLimit: z.number().int().positive().default(100),
   ytDlpPath: z.string().min(1).default("/usr/local/bin/yt-dlp"),
   ffmpegPath: z.string().min(1).default("ffmpeg"),
-  /** ffprobe binary — detects embedded subtitle tracks and probes source media properties. */
+  /** ffprobe binary — chapter extraction, embedded subtitle detection, and source media probing. */
   ffprobePath: z.string().min(1).default("ffprobe"),
   /** Observability: Prometheus metrics HTTP server. */
   observability: z

@@ -1,14 +1,17 @@
 import {
   type ChatInputCommandInteraction,
   Client,
+  EmbedBuilder,
   Events,
   GatewayIntentBits,
+  type MessageCreateOptions,
   MessageFlags,
   REST,
   Routes,
   type VoiceState,
 } from "discord.js";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
+import type { Announcement } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import {
   CommandHandler,
   type CommandInteraction,
@@ -47,6 +50,24 @@ export type CommandBotDeps = {
     signal: AbortSignal,
   ) => Promise<PlaylistItem[]>;
 };
+
+/** Render a neutral {@link Announcement} into discord.js message options (text, optional poster embed). */
+function toMessageOptions(message: Announcement): MessageCreateOptions {
+  if (typeof message === "string") {
+    return { content: message };
+  }
+  if (message.embed === undefined) {
+    return { content: message.content };
+  }
+  const embed = new EmbedBuilder();
+  if (message.embed.title !== undefined) {
+    embed.setTitle(message.embed.title);
+  }
+  if (message.embed.imageUrl !== undefined) {
+    embed.setImage(message.embed.imageUrl);
+  }
+  return { content: message.content, embeds: [embed] };
+}
 
 /**
  * The discord.js (bot-token) command bot. Registers global slash commands and routes each
@@ -98,15 +119,18 @@ export class CommandBot {
     await this.client.destroy();
   }
 
-  /** Post a world-readable message to a text channel (now-playing, shaming, resume). No-op if null. */
-  async announce(channelId: ChannelId | null, message: string): Promise<void> {
+  /** Post a world-readable announcement to a text channel (now-playing, shaming, resume). No-op if null. */
+  async announce(
+    channelId: ChannelId | null,
+    message: Announcement,
+  ): Promise<void> {
     if (channelId === null) {
       return;
     }
     try {
       const channel = await this.client.channels.fetch(channelId);
       if (channel?.isSendable() === true) {
-        await channel.send(message);
+        await channel.send(toMessageOptions(message));
       }
     } catch (error) {
       log.warn("announce failed", { error: getErrorMessage(error) });

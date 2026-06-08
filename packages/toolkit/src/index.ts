@@ -29,6 +29,11 @@ Commands:
   pr detect                  Detect PR for current branch
   pr asset <PR> <FILE...>    Upload PR screenshots to public.sjer.red, print URLs
 
+  deployed [SELECTOR]        Is my commit/service deployed to the homelab k8s?
+  deployed <service>         e.g. scout, birmel — is its latest commit live?
+  deployed <service>/<var>   e.g. scout/prod — scope to one product variant
+  deployed <commit> --json   Trace a specific commit, JSON output
+
   pagerduty incidents        List open PagerDuty incidents
   pagerduty incident <ID>    View PagerDuty incident details
   pd ...                     Alias for pagerduty
@@ -73,10 +78,7 @@ Environment Variables:
   BUGSINK_TOKEN              Bugsink API token
   GRAFANA_URL                Grafana instance URL
   GRAFANA_API_KEY            Grafana API key or service account token
-  SEAWEEDFS_ACCESS_KEY_ID    SeaweedFS S3 access key (pr asset)
-  SEAWEEDFS_SECRET_ACCESS_KEY  SeaweedFS S3 secret key (pr asset)
-  SEAWEEDFS_S3_ENDPOINT      SeaweedFS S3 endpoint (default seaweedfs.sjer.red)
-  SEAWEEDFS_S3_REGION        SeaweedFS S3 region (default us-east-1)
+  AWS_PROFILE                AWS profile for 'pr asset' (or use --profile)
 
 Examples:
   toolkit fetch https://docs.lancedb.com/
@@ -84,6 +86,8 @@ Examples:
   toolkit recall search "vector database"
   toolkit recall status --perf
   toolkit pr health
+  toolkit deployed scout
+  toolkit deployed scout/prod
   toolkit pd incidents
   toolkit gf dashboards
 `);
@@ -123,6 +127,12 @@ async function main(): Promise<void> {
     case "pr": {
       const { handlePrCommand } = await import("./handlers/pr.ts");
       await handlePrCommand(subcommand, args.slice(2));
+      break;
+    }
+    case "deployed": {
+      const { handleDeployedCommand } = await import("./handlers/deployed.ts");
+      // No sub-subcommand: the first token after `deployed` is the selector.
+      await handleDeployedCommand(subcommand, args.slice(1));
       break;
     }
     case "pagerduty":

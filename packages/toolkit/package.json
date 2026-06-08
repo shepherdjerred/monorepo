@@ -17,7 +17,7 @@
   "scripts": {
     "build": "bun build ./src/index.ts --compile --outfile=dist/toolkit",
     "test": "true",
-    "test:unit": "bun test test/recall test/fetch test/daemon test/bugsink test/s3 --exclude '*integration*'",
+    "test:unit": "bun test test/recall test/fetch test/daemon test/bugsink test/s3 test/deployed --exclude '*integration*'",
     "test:integration": "bun test test/**/*integration*",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
@@ -30,6 +30,7 @@
     "typescript": "^6.0.3"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1001.0",
     "@lancedb/lancedb": "^0.27.2",
     "gray-matter": "^4.0.3",
     "zod": "^4.4.3"

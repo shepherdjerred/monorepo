@@ -14,7 +14,7 @@
     "lint:check": "eslint .",
     "lint:fix": "eslint --fix .",
     "preview": "vite preview",
-    "test": "true"
+    "test": "bun test"
   },
   "dependencies": {
     "@sentry/react": "^10.0.0",

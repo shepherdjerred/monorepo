@@ -70,6 +70,10 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       dir: env["STATE_DIR"],
       resumeMaxAgeSeconds: num(env["RESUME_MAX_AGE_SECONDS"]),
     },
+    tmdb:
+      env["TMDB_API_KEY"] === undefined
+        ? undefined
+        : { apiKey: env["TMDB_API_KEY"] },
     idleTimeoutSeconds: num(env["IDLE_TIMEOUT_SECONDS"]),
     playlistLimit: num(env["PLAYLIST_LIMIT"]),
     ytDlpPath: env["YT_DLP_PATH"],

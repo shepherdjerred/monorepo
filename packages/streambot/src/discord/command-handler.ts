@@ -20,6 +20,7 @@ import {
   type Source,
   type SubtitlePref,
 } from "@shepherdjerred/streambot/sources/source.ts";
+import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
 import {
   searchLibrary,
   type LibraryEntry,
@@ -85,6 +86,8 @@ function subtitlesSuffix(pref: SubtitlePref | undefined): string {
 export type QueueItemView = {
   readonly title: string;
   readonly requesterId: UserId;
+  /** Chapter markers of this item (only populated for the currently-playing item). */
+  readonly chapters: readonly Chapter[];
 };
 export type PlaybackView = {
   readonly state: string;
@@ -170,6 +173,10 @@ export class CommandHandler {
         return this.handleVolume(interaction);
       case "seek":
         return this.handleSeek(interaction);
+      case "chapters":
+        return interaction.reply(this.chaptersText());
+      case "chapter":
+        return this.handleChapter(interaction);
       case "list":
         return interaction.reply(
           this.listText(interaction.getString("filter")),
@@ -353,6 +360,55 @@ export class CommandHandler {
         ? `⏩ Seeked to ${formatTimecode(seconds)}.`
         : "Nothing is playing.",
     );
+  }
+
+  private async handleChapter(interaction: CommandInteraction): Promise<void> {
+    const current = this.deps.view().current;
+    if (current === null) {
+      await interaction.reply("Nothing is playing.");
+      return;
+    }
+    if (
+      !canControlItem(
+        interaction.userId,
+        current.requesterId,
+        this.deps.config.discord.adminIds,
+      )
+    ) {
+      await interaction.reply("Only the requester or an admin can seek this.");
+      return;
+    }
+    const number = interaction.getIntegerRequired("number");
+    const chapter = current.chapters[number - 1];
+    if (chapter === undefined) {
+      await interaction.reply(
+        current.chapters.length === 0
+          ? "No chapters for the current video."
+          : `There's no chapter ${String(number)}. This video has ${String(current.chapters.length)}.`,
+      );
+      return;
+    }
+    const applied = await this.deps.seek(chapter.startSeconds);
+    await interaction.reply(
+      applied
+        ? `⏩ Chapter ${String(chapter.index)}: **${chapter.title}** (${formatTimecode(chapter.startSeconds)}).`
+        : "Nothing is playing.",
+    );
+  }
+
+  private chaptersText(): string {
+    const current = this.deps.view().current;
+    if (current === null) {
+      return "Nothing is playing.";
+    }
+    if (current.chapters.length === 0) {
+      return "No chapters for the current video.";
+    }
+    const lines = current.chapters.map(
+      (chapter) =>
+        `${String(chapter.index)}. \`${formatTimecode(chapter.startSeconds)}\` — ${chapter.title}`,
+    );
+    return `**Chapters for ${current.title}:**\n${lines.join("\n")}`;
   }
 
   private nowPlayingText(): string {

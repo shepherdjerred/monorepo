@@ -152,6 +152,24 @@ describe("streambot deployment (media namespace)", () => {
     expect(stateDir?.value).toBe(STREAMBOT_STATE);
   });
 
+  it("wires TMDB_API_KEY as an optional secret ref (poster art, never crashes if absent)", () => {
+    const EnvFromSecretSchema = z.object({
+      name: z.string(),
+      valueFrom: z.object({
+        secretKeyRef: z.object({
+          key: z.string(),
+          optional: z.boolean().optional(),
+        }),
+      }),
+    });
+    const tmdb = (container?.env ?? []).find(
+      (variable) => variable.name === "TMDB_API_KEY",
+    );
+    const parsed = EnvFromSecretSchema.parse(tmdb);
+    expect(parsed.valueFrom.secretKeyRef.key).toBe("TMDB_API_KEY");
+    expect(parsed.valueFrom.secretKeyRef.optional).toBe(true);
+  });
+
   it("provisions a ReadWriteOnce state PVC", () => {
     const pvc = getStatePvc();
     expect(pvc.spec?.accessModes).toEqual(["ReadWriteOnce"]);

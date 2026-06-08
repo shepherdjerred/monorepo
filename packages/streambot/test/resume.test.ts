@@ -45,7 +45,11 @@ function makeContext(over: Partial<PlaybackContext> = {}): PlaybackContext {
     queue: [{ source: fileSource("next"), requesterId: U }],
     current: { source: fileSource("movie"), requesterId: U },
     voice: null,
-    resolved: { title: "Movie Title", ffmpegInput: "/videos/movie.mkv" },
+    resolved: {
+      title: "Movie Title",
+      ffmpegInput: "/videos/movie.mkv",
+      chapters: [],
+    },
     loop: "queue",
     volume: 80,
     lastError: null,

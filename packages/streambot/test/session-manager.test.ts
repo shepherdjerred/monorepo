@@ -10,6 +10,7 @@ import type {
   UserbotProvider,
 } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer.ts";
+import type { Announcement } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import {
   saveState,
@@ -28,7 +29,11 @@ const CHANNEL_B = ChannelIdSchema.parse("100000000000000011");
 const STATUS = ChannelIdSchema.parse("100000000000000020");
 const USER = UserIdSchema.parse("100000000000000099");
 
-const RESOLVED: ResolvedSource = { title: "Clip", ffmpegInput: "/clip.mkv" };
+const RESOLVED: ResolvedSource = {
+  title: "Clip",
+  ffmpegInput: "/clip.mkv",
+  chapters: [],
+};
 
 /** Fake streamer: joins/leaves instantly; runStream parks until the machine aborts it (SKIP/STOP). */
 function fakeStreamer(): StreamerLike {
@@ -122,8 +127,13 @@ async function waitUntil(
   }
 }
 
+/** Flatten an Announcement (string | {content,...}) to its text for assertions. */
+function announcementText(message: Announcement): string {
+  return typeof message === "string" ? message : message.content;
+}
+
 function makeManager(config: Config, pool: UserbotProvider) {
-  const announced: { channelId: string | null; message: string }[] = [];
+  const announced: { channelId: string | null; message: Announcement }[] = [];
   const manager = new SessionManager({
     config,
     pool,
@@ -167,9 +177,13 @@ describe("SessionManager", () => {
     });
 
     await waitUntil(() =>
-      announced.some((a) => a.message.includes("Now playing")),
+      announced.some((a) =>
+        announcementText(a.message).includes("Now playing"),
+      ),
     );
-    const nowPlaying = announced.find((a) => a.message.includes("Now playing"));
+    const nowPlaying = announced.find((a) =>
+      announcementText(a.message).includes("Now playing"),
+    );
     expect(nowPlaying?.channelId).toBe(STATUS);
     expect(pool.acquireCount()).toBe(1);
 

@@ -159,6 +159,23 @@ export const commandDefinitions = [
     )
     .addSubcommand((sub) =>
       sub
+        .setName("chapters")
+        .setDescription("List the chapters of the current video"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("chapter")
+        .setDescription("Jump to a chapter of the current video")
+        .addIntegerOption((o) =>
+          o
+            .setName("number")
+            .setDescription("chapter number (1-based)")
+            .setMinValue(1)
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
         .setName("list")
         .setDescription("Browse the video library")
         .addStringOption((o) =>

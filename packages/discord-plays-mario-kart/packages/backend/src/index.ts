@@ -12,25 +12,16 @@ import { initializeTracing } from "./observability/tracing.ts";
 // Start OTLP tracing before any traced network work (Discord login, voice).
 initializeTracing();
 
-import { match } from "ts-pattern";
-import type { Socket } from "socket.io";
 import { handleSlashCommands } from "./discord/slashCommands/index.ts";
 import { registerSlashCommands } from "./discord/slashCommands/rest.ts";
 import { handleChannelUpdate } from "./discord/channel-handler.ts";
 import { createWebServer } from "./webserver/index.ts";
+import { handleRequest } from "./webserver/dispatch.ts";
 import { logger } from "./logger.ts";
 import { getConfig } from "./config/index.ts";
 import { N64Emulator } from "./emulator/n64-emulator.ts";
-import { encodePng } from "./emulator/png.ts";
 import { GameStreamer } from "./stream/game-streamer.ts";
 import { SeatManager } from "./input/seat-manager.ts";
-import type {
-  LoginResponse,
-  StatusResponse,
-  ScreenshotResponse,
-  SeatResponse,
-  SeatsResponse,
-} from "@discord-plays-mario-kart/common";
 
 const config = getConfig();
 const seatManager = new SeatManager(config.emulator.seats);
@@ -91,75 +82,9 @@ if (config.web.enabled) {
     isCorsEnabled: config.web.cors,
   });
 
-  const broadcastSeats = (sock: Socket): void => {
-    const response: SeatsResponse = {
-      kind: "seats",
-      value: { occupied: seatManager.occupied() },
-    };
-    sock.nsp.emit("response", response);
-  };
-
   if (socket) {
     socket.subscribe((event) => {
-      const sock = event.socket;
-      match(event)
-        .with({ request: { kind: "seat-claim" } }, (e) => {
-          const seat = seatManager.claim(sock.id, e.request.seat);
-          const response: SeatResponse = { kind: "seat", value: { seat } };
-          sock.emit("response", response);
-          if (seat !== null) {
-            // Free the seat (and clear held input) when this socket leaves.
-            sock.once("disconnect", () => {
-              const freed = seatManager.release(sock.id);
-              if (freed !== null) {
-                emulator?.clearPlayerInput(freed);
-                broadcastSeats(sock);
-              }
-            });
-            broadcastSeats(sock);
-          }
-        })
-        .with({ request: { kind: "seat-release" } }, () => {
-          const freed = seatManager.release(sock.id);
-          if (freed !== null) emulator?.clearPlayerInput(freed);
-          const response: SeatResponse = {
-            kind: "seat",
-            value: { seat: null },
-          };
-          sock.emit("response", response);
-          broadcastSeats(sock);
-        })
-        .with({ request: { kind: "input" } }, (e) => {
-          if (emulator === undefined) return;
-          if (!seatManager.owns(sock.id, e.request.seat)) return; // not your seat
-          emulator.setPlayerInput(e.request.seat, e.request.state);
-        })
-        .with({ request: { kind: "login" } }, (e) => {
-          // TODO: real auth. Identity is cosmetic; seats gate control.
-          const player = { discordId: "id", discordUsername: "username" };
-          const response: LoginResponse = { kind: "login", value: player };
-          e.socket.emit("response", response);
-        })
-        .with({ request: { kind: "screenshot" } }, (e) => {
-          if (emulator === undefined) return;
-          const frame = emulator.renderFrame();
-          if (frame.height === 0) return;
-          const png = encodePng(frame.rgba, frame.width, frame.height, 2);
-          const response: ScreenshotResponse = {
-            kind: "screenshot",
-            value: png.toString("base64"),
-          };
-          e.socket.emit("response", response);
-        })
-        .with({ request: { kind: "status" } }, (e) => {
-          const response: StatusResponse = {
-            kind: "status",
-            value: { playerList: [] },
-          };
-          e.socket.emit("response", response);
-          broadcastSeats(e.socket);
-        })
-        .exhaustive();
+      handleRequest(event, { seatManager, emulator });
     });
   }
 }

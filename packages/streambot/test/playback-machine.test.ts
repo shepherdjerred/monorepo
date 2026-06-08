@@ -52,7 +52,11 @@ function makeActors(overrides: Partial<PlaybackActors> = {}): PlaybackActors {
           : source.kind === "url"
             ? source.url
             : source.query;
-      return Promise.resolve({ title, ffmpegInput: `resolved:${title}` });
+      return Promise.resolve({
+        title,
+        ffmpegInput: `resolved:${title}`,
+        chapters: [],
+      });
     },
     runStream: () => Promise.resolve(),
     leaveVoice: () => Promise.resolve(),
@@ -203,7 +207,7 @@ describe("playback machine", () => {
         resolveSource: (input) =>
           input.source.kind === "search"
             ? Promise.reject(new BlockedSourceError(input.source.query))
-            : Promise.resolve({ title: "ok", ffmpegInput: "ok" }),
+            : Promise.resolve({ title: "ok", ffmpegInput: "ok", chapters: [] }),
       }),
     );
     actor.send({

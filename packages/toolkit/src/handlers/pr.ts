@@ -46,11 +46,15 @@ async function handleAsset(args: string[]): Promise<void> {
     args,
     options: {
       markdown: { type: "boolean", default: false },
+      profile: { type: "string" },
     },
     allowPositionals: true,
   });
   const [prNumber, ...files] = positionals;
-  await assetCommand(prNumber, files, { markdown: values.markdown });
+  await assetCommand(prNumber, files, {
+    markdown: values.markdown,
+    profile: values.profile,
+  });
 }
 
 async function handleDetect(args: string[]): Promise<void> {
@@ -90,11 +94,12 @@ Options:
   --failed-only         (logs) Only show failed job logs
   --job <name>          (logs) Filter to specific job
   --markdown            (asset) Emit markdown image tags instead of bare URLs
+  --profile <name>      (asset) AWS profile to use (overrides AWS_PROFILE)
 
-Environment (asset):
-  SEAWEEDFS_ACCESS_KEY_ID, SEAWEEDFS_SECRET_ACCESS_KEY   SeaweedFS S3 credentials
-  SEAWEEDFS_S3_ENDPOINT                                  Override S3 endpoint
-  SEAWEEDFS_S3_REGION                                    Override S3 region (default us-east-1)
+Credentials (asset):
+  Uses the standard AWS toolchain. Credentials, endpoint (endpoint_url), and
+  region are resolved from ~/.aws/credentials, ~/.aws/config, and AWS_* env
+  vars — like the AWS CLI. Pass --profile <name> or set AWS_PROFILE.
 `);
     process.exit(0);
   }

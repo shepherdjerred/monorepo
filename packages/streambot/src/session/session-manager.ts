@@ -3,8 +3,13 @@ import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { PlaybackView } from "@shepherdjerred/streambot/discord/command-handler.ts";
 import {
   StatusReporter,
+  type Announcement,
   type StatusSnapshot,
 } from "@shepherdjerred/streambot/discord/status-reporter.ts";
+import {
+  createPosterFetcher,
+  type PosterFetcher,
+} from "@shepherdjerred/streambot/metadata/tmdb.ts";
 import {
   createPlaybackMachine,
   type PlaybackActors,
@@ -95,10 +100,10 @@ export type SessionManagerDeps = {
     input: ResolveSourceInput,
     signal: AbortSignal,
   ) => Promise<ResolvedSource>;
-  /** Post a world-readable message to a channel (no-op when the channel is null/unknown). */
+  /** Post a world-readable announcement to a channel (no-op when the channel is null/unknown). */
   readonly announce: (
     channelId: ChannelId | null,
-    message: string,
+    message: Announcement,
   ) => Promise<void>;
 };
 
@@ -133,9 +138,15 @@ function keyOf(guildId: GuildId, channelId: ChannelId): string {
 export class SessionManager {
   private readonly deps: SessionManagerDeps;
   private readonly sessions = new Map<string, Session>();
+  /** Shared TMDB poster lookup (when configured) — attaches a poster to now-playing announcements. */
+  private readonly fetchPoster: PosterFetcher | undefined;
 
   constructor(deps: SessionManagerDeps) {
     this.deps = deps;
+    this.fetchPoster =
+      deps.config.tmdb === undefined
+        ? undefined
+        : createPosterFetcher(deps.config.tmdb.apiKey);
   }
 
   /**
@@ -306,8 +317,9 @@ export class SessionManager {
     const actor = createActor(createPlaybackMachine(actors), {
       input: params.input,
     });
-    const reporter = new StatusReporter((message) =>
-      this.deps.announce(params.statusChannelId, message),
+    const reporter = new StatusReporter(
+      (message) => this.deps.announce(params.statusChannelId, message),
+      this.fetchPoster === undefined ? {} : { fetchPoster: this.fetchPoster },
     );
 
     const session: Session = {
@@ -342,6 +354,7 @@ export class SessionManager {
         state: stateName,
         currentTitle: snapshot.context.resolved?.title ?? null,
         currentRequester: snapshot.context.current?.requesterId ?? null,
+        currentKind: snapshot.context.current?.source.kind ?? null,
         blockedNonce: snapshot.context.blockedNonce,
         blockedRequester: snapshot.context.lastBlockedRequester,
       };

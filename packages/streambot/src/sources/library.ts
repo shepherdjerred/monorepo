@@ -1,9 +1,10 @@
 import path from "node:path";
 import { sep as posixSep } from "node:path/posix";
+import { normalizeTitle } from "@shepherdjerred/streambot/sources/normalize.ts";
 
 /** A playable video file discovered under a library root. */
 export type LibraryEntry = {
-  /** Filename without extension — what users match against. */
+  /** Normalized, human-friendly title (release junk stripped) — shown and matched against. */
   readonly title: string;
   /** Absolute path passed to ffmpeg. */
   readonly path: string;
@@ -47,7 +48,7 @@ export async function scanRoot(
       continue;
     }
     entries.push({
-      title: path.basename(relative, path.extname(relative)),
+      title: normalizeTitle(path.basename(relative, path.extname(relative))),
       path: path.join(root.dir, relative),
       relativePath: relative.split(path.sep).join(posixSep),
       library: root.label,
