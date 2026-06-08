@@ -11,6 +11,7 @@ import {
   isBlockedText,
   isBlockedUrl,
 } from "@shepherdjerred/streambot/moderation/adult-block.ts";
+import { resolveSubtitleForYtdlp } from "@shepherdjerred/streambot/sources/subtitle-io.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 const log = logger.child("ytdlp");
@@ -182,5 +183,16 @@ export async function resolveWithYtdlp(
   if (isBlockedUrl(info.webpage_url ?? "") || isBlockedText(info.title)) {
     throw new BlockedSourceError(info.webpage_url ?? info.title);
   }
-  return toResolvedSource(info);
+  const base = toResolvedSource(info);
+  // Live streams have no fetchable subtitle file; skip subtitle resolution for them.
+  if (info.is_live === true) {
+    return base;
+  }
+  const subtitle = await resolveSubtitleForYtdlp(
+    config,
+    info.webpage_url ?? ytdlpTarget(source),
+    source.subtitles,
+    signal,
+  );
+  return { ...base, ...(subtitle === undefined ? {} : { subtitle }) };
 }
