@@ -124,10 +124,29 @@ async function loadSnapshot(): Promise<Snapshot> {
       2,
     );
   }
-  const parsed = SnapshotSchema.safeParse(await file.json());
+  let raw: unknown;
+  try {
+    raw = await file.json();
+  } catch (error) {
+    // Invalid JSON (e.g. unresolved merge-conflict markers) throws here, before
+    // safeParse can run — surface it as a clean exit 2 instead of an unhandled rejection.
+    const message = error instanceof Error ? error.message : String(error);
+    fail(
+      `check-1password-items: snapshot is not valid JSON (${message}).\n` +
+        `  If it contains merge-conflict markers, resolve them and re-run scripts/snapshot-1password-vault.ts.`,
+      2,
+    );
+  }
+  const parsed = SnapshotSchema.safeParse(raw);
   if (!parsed.success)
     fail(
       `check-1password-items: snapshot is malformed: ${parsed.error.message}`,
+      2,
+    );
+  if (parsed.data.vaultId !== VAULT_ID)
+    fail(
+      `check-1password-items: snapshot is for vault "${parsed.data.vaultId}", expected ${VAULT_ID}. ` +
+        `Regenerate it with scripts/snapshot-1password-vault.ts.`,
       2,
     );
   return parsed.data;
