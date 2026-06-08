@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
+import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
 import type {
   ChannelId,
   GuildId,
@@ -26,6 +27,8 @@ export type VoiceHandle = {
 export type ResolvedSource = {
   readonly title: string;
   readonly ffmpegInput: string;
+  /** Chapter markers (ffprobe for files, yt-dlp for URLs); empty when none are available. */
+  readonly chapters: readonly Chapter[];
 };
 
 /** A queue entry: a requested source plus who asked for it. */

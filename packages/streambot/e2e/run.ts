@@ -111,10 +111,12 @@ function buildSession(config: Config, input: PlaybackInput): Session {
               title:
                 context.resolved?.title ?? sourceLabel(context.current.source),
               requesterId: context.current.requesterId,
+              chapters: context.resolved?.chapters ?? [],
             },
       queue: context.queue.map((entry) => ({
         title: sourceLabel(entry.source),
         requesterId: entry.requesterId,
+        chapters: [],
       })),
       loop: context.loop,
       volume: context.volume,

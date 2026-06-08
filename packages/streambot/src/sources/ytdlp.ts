@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
+import { toChapters } from "@shepherdjerred/streambot/sources/chapters.ts";
 import {
   getErrorMessage,
   parseJson,
@@ -26,6 +27,16 @@ export const YtdlpInfoSchema = z.object({
   duration: z.number().optional(),
   is_live: z.boolean().optional(),
   webpage_url: z.string().optional(),
+  // Chapter markers (e.g. YouTube timestamps); yt-dlp gives seconds as numbers.
+  chapters: z
+    .array(
+      z.object({
+        start_time: z.number(),
+        end_time: z.number().optional(),
+        title: z.string().optional(),
+      }),
+    )
+    .nullish(),
 });
 
 export type YtdlpInfo = z.infer<typeof YtdlpInfoSchema>;
@@ -66,7 +77,17 @@ export function parseYtdlpInfo(stdout: string): YtdlpInfo {
 
 /** Map validated yt-dlp info to a {@link ResolvedSource} ffmpeg can read. */
 export function toResolvedSource(info: YtdlpInfo): ResolvedSource {
-  return { title: info.title, ffmpegInput: info.url };
+  return {
+    title: info.title,
+    ffmpegInput: info.url,
+    chapters: toChapters(
+      (info.chapters ?? []).map((chapter) => ({
+        startSeconds: chapter.start_time,
+        endSeconds: chapter.end_time ?? null,
+        title: chapter.title ?? null,
+      })),
+    ),
+  };
 }
 
 /** True if a URL looks like a playlist that should be expanded into individual items. */

@@ -133,7 +133,11 @@ function viewWithCurrent(requesterId: string): PlaybackView {
   return {
     ...EMPTY_VIEW,
     state: "streaming",
-    current: { title: "Current Song", requesterId: uid(requesterId) },
+    current: {
+      title: "Current Song",
+      requesterId: uid(requesterId),
+      chapters: [],
+    },
   };
 }
 
@@ -266,7 +270,7 @@ describe("CommandHandler permissions", () => {
   test("remove honours requester/admin and bounds-checks the index", async () => {
     const view: PlaybackView = {
       ...EMPTY_VIEW,
-      queue: [{ title: "Item A", requesterId: uid(OTHER) }],
+      queue: [{ title: "Item A", requesterId: uid(OTHER), chapters: [] }],
     };
     const denied = makeHandler({ view });
     const r1 = fakeInteraction({
@@ -409,5 +413,92 @@ describe("CommandHandler seek", () => {
     await h.handler.run(interaction);
     expect(h.seeks).toHaveLength(0);
     expect(replies[0]).toBe("Invalid timestamp. Try 90, 1:30, or 1:02:03.");
+  });
+});
+
+function viewWithChapters(requesterId: string): PlaybackView {
+  return {
+    ...EMPTY_VIEW,
+    state: "streaming",
+    current: {
+      title: "Current Movie",
+      requesterId: uid(requesterId),
+      chapters: [
+        { index: 1, title: "Intro", startSeconds: 0, endSeconds: 90 },
+        { index: 2, title: "The Heist", startSeconds: 90, endSeconds: 3723 },
+      ],
+    },
+  };
+}
+
+describe("CommandHandler chapters", () => {
+  test("chapters lists the current video's chapters with timecodes", async () => {
+    const h = makeHandler({ view: viewWithChapters(REQUESTER) });
+    const { interaction, replies } = fakeInteraction({ sub: "chapters" });
+    await h.handler.run(interaction);
+    expect(replies[0]).toBe(
+      "**Chapters for Current Movie:**\n1. `0:00` — Intro\n2. `1:30` — The Heist",
+    );
+  });
+
+  test("chapters reports none when the current video has no chapters", async () => {
+    const h = makeHandler({ view: viewWithCurrent(REQUESTER) });
+    const { interaction, replies } = fakeInteraction({ sub: "chapters" });
+    await h.handler.run(interaction);
+    expect(replies[0]).toBe("No chapters for the current video.");
+  });
+
+  test("chapters reports nothing playing when idle", async () => {
+    const h = makeHandler({ view: EMPTY_VIEW });
+    const { interaction, replies } = fakeInteraction({ sub: "chapters" });
+    await h.handler.run(interaction);
+    expect(replies[0]).toBe("Nothing is playing.");
+  });
+
+  test("chapter seeks to the chapter's start and acks", async () => {
+    const h = makeHandler({ view: viewWithChapters(REQUESTER) });
+    const { interaction, replies } = fakeInteraction({
+      sub: "chapter",
+      userId: REQUESTER,
+      integers: { number: 2 },
+    });
+    await h.handler.run(interaction);
+    expect(h.seeks).toEqual([90]);
+    expect(replies[0]).toBe("⏩ Chapter 2: **The Heist** (1:30).");
+  });
+
+  test("chapter rejects an out-of-range number", async () => {
+    const h = makeHandler({ view: viewWithChapters(REQUESTER) });
+    const { interaction, replies } = fakeInteraction({
+      sub: "chapter",
+      userId: REQUESTER,
+      integers: { number: 9 },
+    });
+    await h.handler.run(interaction);
+    expect(h.seeks).toHaveLength(0);
+    expect(replies[0]).toBe("There's no chapter 9. This video has 2.");
+  });
+
+  test("chapter is denied for a non-requester non-admin", async () => {
+    const h = makeHandler({ view: viewWithChapters(OTHER) });
+    const { interaction, replies } = fakeInteraction({
+      sub: "chapter",
+      userId: REQUESTER,
+      integers: { number: 1 },
+    });
+    await h.handler.run(interaction);
+    expect(h.seeks).toHaveLength(0);
+    expect(replies[0]).toContain("Only the requester or an admin");
+  });
+
+  test("chapter reports nothing playing when idle", async () => {
+    const h = makeHandler({ view: EMPTY_VIEW });
+    const { interaction, replies } = fakeInteraction({
+      sub: "chapter",
+      integers: { number: 1 },
+    });
+    await h.handler.run(interaction);
+    expect(h.seeks).toHaveLength(0);
+    expect(replies[0]).toBe("Nothing is playing.");
   });
 });

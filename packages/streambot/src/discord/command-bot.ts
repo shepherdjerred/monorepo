@@ -1,13 +1,16 @@
 import {
   type ChatInputCommandInteraction,
   Client,
+  EmbedBuilder,
   Events,
   GatewayIntentBits,
+  type MessageCreateOptions,
   MessageFlags,
   REST,
   Routes,
   type VoiceState,
 } from "discord.js";
+import type { Announcement } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import {
   CommandHandler,
   type CommandHandlerDeps,
@@ -28,6 +31,24 @@ export type CommandBotDeps = Omit<CommandHandlerDeps, "announce"> & {
   /** Discord user id of the streamer selfbot, to exclude it from the "alone in VC" check. */
   readonly streamerUserId: () => string | null;
 };
+
+/** Render a neutral {@link Announcement} into discord.js message options (text, optional poster embed). */
+function toMessageOptions(message: Announcement): MessageCreateOptions {
+  if (typeof message === "string") {
+    return { content: message };
+  }
+  if (message.embed === undefined) {
+    return { content: message.content };
+  }
+  const embed = new EmbedBuilder();
+  if (message.embed.title !== undefined) {
+    embed.setTitle(message.embed.title);
+  }
+  if (message.embed.imageUrl !== undefined) {
+    embed.setImage(message.embed.imageUrl);
+  }
+  return { content: message.content, embeds: [embed] };
+}
 
 /** The discord.js (bot-token) command bot. Registers + handles slash commands in any channel. */
 export class CommandBot {
@@ -88,13 +109,13 @@ export class CommandBot {
   }
 
   /** Post a world-readable message to the configured status channel (used by the status reporter). */
-  async announce(message: string): Promise<void> {
+  async announce(message: Announcement): Promise<void> {
     try {
       const channel = await this.client.channels.fetch(
         this.deps.config.discord.statusChannelId,
       );
       if (channel?.isSendable() === true) {
-        await channel.send(message);
+        await channel.send(toMessageOptions(message));
       }
     } catch (error) {
       log.warn("announce failed", { error: getErrorMessage(error) });

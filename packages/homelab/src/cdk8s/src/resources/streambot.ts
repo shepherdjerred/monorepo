@@ -78,6 +78,12 @@ export function createStreambotDeployment(
         COMMAND_CHANNEL_ID: fromSecret("COMMAND_CHANNEL_ID"),
         VIDEO_CHANNEL_ID: fromSecret("VIDEO_CHANNEL_ID"),
         ADMIN_IDS: fromSecret("ADMIN_IDS"),
+        // Optional: enables movie/TV poster art on the now-playing embed for local files. Marked
+        // optional so the pod still starts if the field isn't present in the streambot-config item.
+        TMDB_API_KEY: EnvValue.fromSecretValue(
+          { secret, key: "TMDB_API_KEY" },
+          { optional: true },
+        ),
         VIDEOS_DIR: EnvValue.fromValue("/data/videos"),
         MEDIA_DIRS: EnvValue.fromValue("/media/movies,/media/tv"),
         // Resume state lives on the persistent volume mounted at /state.

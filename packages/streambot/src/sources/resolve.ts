@@ -4,6 +4,7 @@ import {
   type Source,
 } from "@shepherdjerred/streambot/sources/source.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
+import { probeFileChapters } from "@shepherdjerred/streambot/sources/chapters.ts";
 import { resolveWithYtdlp } from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import {
   BlockedSourceError,
@@ -25,7 +26,11 @@ export async function resolveSource(
     throw new BlockedSourceError(sourceLabel(source));
   }
   if (source.kind === "file") {
-    return { title: source.title, ffmpegInput: source.path };
+    return {
+      title: source.title,
+      ffmpegInput: source.path,
+      chapters: await probeFileChapters(config, source.path, signal),
+    };
   }
   return resolveWithYtdlp(config, source, signal);
 }
