@@ -83,10 +83,12 @@ function withEditorClis(container: Container): Container {
  * Install runtime binaries required by Birmel's Discord music stack.
  *
  * discord-player-youtubei shells out through youtube-dl-exec. That path needs
- * a real Node binary for the package postinstall/runtime wrapper and Python for
- * yt-dlp itself. ffmpeg-static and @snazzah/davey are package dependencies, but
- * this helper installs the system interpreters before dependency install so the
- * later image smoke checks can prove the final image is voice-playback-ready.
+ * a real Node binary for the package runtime wrapper and Python for yt-dlp itself.
+ * ffmpeg-static and @snazzah/davey are package dependencies, but this helper installs
+ * the system interpreters before dependency install so the later image smoke checks can
+ * prove the final image is voice-playback-ready. curl is needed to fetch the yt-dlp
+ * binary from the release CDN (see installYtDlp) instead of youtube-dl-exec's own
+ * rate-limited api.github.com postinstall.
  */
 function withBirmelMusicRuntime(container: Container): Container {
   return container
@@ -98,12 +100,61 @@ function withBirmelMusicRuntime(container: Container): Container {
       "-qq",
       "--no-install-recommends",
       "ca-certificates",
+      "curl",
       "nodejs",
       "python3",
     ])
     .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"])
     .withExec(["node", "--version"])
     .withExec(["python3", "--version"]);
+}
+
+/**
+ * Download the architecture-appropriate yt-dlp standalone binary from the GitHub
+ * release CDN and install it (executable) at `destPath`.
+ *
+ * Why this instead of letting the consumer fetch yt-dlp itself: youtube-dl-exec's
+ * postinstall downloads from `https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest`
+ * UNAUTHENTICATED. Shared CI runners share an egress IP, so they exhaust GitHub's
+ * 60 req/hr anonymous REST limit and the build dies with "API rate limit exceeded".
+ * Release-asset downloads (`releases/latest/download/...`) are served from the asset
+ * CDN and are NOT subject to the REST API rate limit, so this path is rate-limit-proof.
+ *
+ * The asset is verified against the release's published SHA2-256SUMS so a swapped or
+ * compromised binary can't be baked in, and curl retries ride out transient 5xx/network
+ * blips. yt-dlp ships per-arch static binaries: yt-dlp_linux (x86_64) and
+ * yt-dlp_linux_aarch64 (arm64); the standalone binary is self-contained (no Python
+ * needed) and works as a drop-in for anything that just spawns the executable.
+ *
+ * Requires curl + ca-certificates in the container (coreutils `install`/`sha256sum`
+ * ship with the Debian base). Runs under dash (`sh`), which lacks `pipefail`, so the
+ * checksum line is extracted with a redirect (not a pipe) — under `set -e` a missing or
+ * renamed asset then aborts the build instead of silently skipping verification.
+ */
+function installYtDlp(container: Container, destPath: string): Container {
+  return container.withExec([
+    "sh",
+    "-c",
+    [
+      "set -e",
+      'arch="$(dpkg --print-architecture)"',
+      'if [ "$arch" = "amd64" ]; then asset=yt-dlp_linux',
+      'elif [ "$arch" = "arm64" ]; then asset=yt-dlp_linux_aarch64',
+      'else echo "unsupported architecture: $arch" >&2; exit 1; fi',
+      "base=https://github.com/yt-dlp/yt-dlp/releases/latest/download",
+      'curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 "$base/$asset" -o "/tmp/$asset"',
+      'curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 "$base/SHA2-256SUMS" -o /tmp/SHA2-256SUMS',
+      "cd /tmp",
+      // `grep > file` (not a pipe): under `set -e` a no-match exits non-zero and aborts,
+      // so a missing/renamed asset can't slip past verification the way `grep | sha256sum`
+      // would (dash has no pipefail).
+      'grep " $asset$" SHA2-256SUMS > "$asset.sha256"',
+      'sha256sum -c "$asset.sha256"',
+      `install -D -m 0755 "/tmp/$asset" "${destPath}"`,
+      // Don't leave the downloaded asset + checksums lying around in the image layer.
+      'rm -f "/tmp/$asset" /tmp/SHA2-256SUMS "/tmp/$asset.sha256"',
+    ].join("\n"),
+  ]);
 }
 
 /**
@@ -122,7 +173,7 @@ function withBirmelMusicRuntime(container: Container): Container {
  *    encoding is the runtime fallback if the device/driver is missing.
  */
 function withStreambotRuntime(container: Container): Container {
-  return container
+  const withApt = container
     .withExec([
       "sh",
       "-c",
@@ -166,29 +217,66 @@ function withStreambotRuntime(container: Container): Container {
         "fi",
       ].join("\n"),
     ])
+    .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"]);
+  // streambot shells out to a system yt-dlp at /usr/local/bin/yt-dlp (config default).
+  return installYtDlp(withApt, "/usr/local/bin/yt-dlp")
+    .withExec(["ffmpeg", "-version"])
+    .withExec(["yt-dlp", "--version"]);
+}
+
+/**
+ * Runtime deps for the headless discord-plays-* bots (pokemon, mario-kart):
+ *  - ffmpeg + libvips: prepareStream()'s fluent-ffmpeg encode path and sharp.
+ *  - Intel VAAPI stack (libva + iHD driver): lets ffmpeg hardware-encode
+ *    (h264_vaapi) the raw emulator frames on the cluster's Intel iGPU, freeing
+ *    CPU for the software emulation. The iHD driver lives in Debian non-free and
+ *    is x86-only, so we enable non-free first and install it amd64-only; arm64
+ *    (local Mac) builds fall back to software libx264. Mirrors the VAAPI portion
+ *    of withStreambotRuntime.
+ */
+function withDiscordPlaysRuntime(container: Container): Container {
+  return container
     .withExec([
       "sh",
       "-c",
-      // yt-dlp ships per-arch static binaries: yt-dlp_linux (x86_64) and yt-dlp_linux_aarch64
-      // (arm64). Pick the one matching the build arch, then verify it against the release's
-      // published SHA2-256SUMS before installing so a swapped/compromised asset can't be baked in.
+      // Enable Debian contrib/non-free (where the Intel iHD driver lives). Handles both the
+      // deb822 (`debian.sources`) and legacy one-line (`sources.list`) formats.
       [
         "set -e",
-        'arch="$(dpkg --print-architecture)"',
-        'if [ "$arch" = "amd64" ]; then asset=yt-dlp_linux',
-        'elif [ "$arch" = "arm64" ]; then asset=yt-dlp_linux_aarch64',
-        'else echo "unsupported architecture: $arch" >&2; exit 1; fi',
-        "base=https://github.com/yt-dlp/yt-dlp/releases/latest/download",
-        'curl -fsSL "$base/$asset" -o "/tmp/$asset"',
-        'curl -fsSL "$base/SHA2-256SUMS" -o /tmp/SHA2-256SUMS',
-        "cd /tmp",
-        'grep " $asset$" SHA2-256SUMS | sha256sum -c -',
-        'install -m 0755 "/tmp/$asset" /usr/local/bin/yt-dlp',
+        'if [ -f /etc/apt/sources.list.d/debian.sources ]; then sed -i "s/^Components: main.*/Components: main contrib non-free non-free-firmware/" /etc/apt/sources.list.d/debian.sources; fi',
+        'if [ -f /etc/apt/sources.list ]; then sed -i "s/ main$/ main contrib non-free non-free-firmware/" /etc/apt/sources.list; fi',
+      ].join("\n"),
+    ])
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "ca-certificates",
+      "ffmpeg",
+      "libvips42",
+      "libva2",
+      "libva-drm2",
+      "vainfo",
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      // The Intel iHD media driver (intel-media-va-driver-non-free) is x86-only; it has no
+      // arm64 candidate. The production cluster is amd64, so install it there for VAAPI
+      // hardware encoding, and skip it on arm64 (local Mac) builds — which have no Intel GPU
+      // anyway and fall back to software encoding.
+      [
+        "set -e",
+        'if [ "$(dpkg --print-architecture)" = "amd64" ]; then',
+        "  apt-get install -y -qq --no-install-recommends intel-media-va-driver-non-free",
+        "fi",
       ].join("\n"),
     ])
     .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"])
-    .withExec(["ffmpeg", "-version"])
-    .withExec(["yt-dlp", "--version"]);
+    .withExec(["ffmpeg", "-version"]);
 }
 
 /**
@@ -556,9 +644,15 @@ export function buildImageHelper(
     .withExec(["bun", "install", "--frozen-lockfile"]);
 
   if (pkg === "birmel") {
-    image = image
-      .withExec(["node", "node_modules/youtube-dl-exec/scripts/postinstall.js"])
-      .withExec(["test", "-x", "node_modules/youtube-dl-exec/bin/yt-dlp"]);
+    // youtube-dl-exec resolves its binary at <pkg>/bin/yt-dlp (constants.YOUTUBE_DL_PATH),
+    // but its own postinstall fetches that binary from api.github.com UNAUTHENTICATED and
+    // flakes on shared CI runners (anonymous 60 req/hr REST limit). Provide it via the
+    // rate-limit-proof, SHA-verified release-CDN download instead, then prove the final
+    // image is voice-playback-ready.
+    image = installYtDlp(
+      image,
+      "/workspace/packages/birmel/node_modules/youtube-dl-exec/bin/yt-dlp",
+    ).withExec(["test", "-x", "node_modules/youtube-dl-exec/bin/yt-dlp"]);
   }
 
   return image
@@ -900,14 +994,12 @@ export function buildDiscordPlaysPokemonImageHelper(
   let container = dag
     .container()
     .from(BUN_IMAGE)
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    // ffmpeg + libvips for discord-video-stream (fluent-ffmpeg encode
-    // path + sharp). No browser/GPU/desktop — this is a headless Bun service.
-    .withExec([
-      "sh",
-      "-c",
-      "apt-get update -qq && apt-get install -y -qq --no-install-recommends ffmpeg libvips42 ca-certificates && rm -rf /var/lib/apt/lists/*",
-    ])
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE));
+
+  // ffmpeg + libvips for discord-video-stream (fluent-ffmpeg encode path + sharp)
+  // plus the Intel VAAPI stack so ffmpeg can hardware-encode on the iGPU. No
+  // browser/desktop — this is a headless Bun service.
+  container = withDiscordPlaysRuntime(container)
     .withWorkdir("/workspace")
     .withDirectory(innerRoot, pkgDir, {
       exclude: excludes,
@@ -1062,15 +1154,12 @@ export function buildDiscordPlaysMarioKartImageHelper(
   let container = dag
     .container()
     .from(BUN_IMAGE)
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    // ffmpeg + libvips for discord-video-stream (fluent-ffmpeg encode
-    // path + sharp). No browser/GPU/desktop — software-rendered N64 frames are
-    // read straight out of wasm memory.
-    .withExec([
-      "sh",
-      "-c",
-      "apt-get update -qq && apt-get install -y -qq --no-install-recommends ffmpeg libvips42 ca-certificates && rm -rf /var/lib/apt/lists/*",
-    ])
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE));
+
+  // ffmpeg + libvips for discord-video-stream (fluent-ffmpeg encode path + sharp)
+  // plus the Intel VAAPI stack so ffmpeg can hardware-encode on the iGPU. The
+  // software-rendered N64 frames are read straight out of wasm memory.
+  container = withDiscordPlaysRuntime(container)
     .withWorkdir("/workspace")
     // wasm-src is the build input for stage 1 only — keep the large vendored
     // C/C++ tree out of the runtime image.

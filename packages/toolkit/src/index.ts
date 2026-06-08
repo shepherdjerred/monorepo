@@ -27,6 +27,7 @@ Commands:
   pr health [PR_NUMBER]      Check PR health (conflicts, CI, approval)
   pr logs <RUN_ID>           Get workflow run logs
   pr detect                  Detect PR for current branch
+  pr asset <PR> <FILE...>    Upload PR screenshots to public.sjer.red, print URLs
 
   pagerduty incidents        List open PagerDuty incidents
   pagerduty incident <ID>    View PagerDuty incident details
@@ -72,6 +73,10 @@ Environment Variables:
   BUGSINK_TOKEN              Bugsink API token
   GRAFANA_URL                Grafana instance URL
   GRAFANA_API_KEY            Grafana API key or service account token
+  SEAWEEDFS_ACCESS_KEY_ID    SeaweedFS S3 access key (pr asset)
+  SEAWEEDFS_SECRET_ACCESS_KEY  SeaweedFS S3 secret key (pr asset)
+  SEAWEEDFS_S3_ENDPOINT      SeaweedFS S3 endpoint (default seaweedfs.sjer.red)
+  SEAWEEDFS_S3_REGION        SeaweedFS S3 region (default us-east-1)
 
 Examples:
   toolkit fetch https://docs.lancedb.com/

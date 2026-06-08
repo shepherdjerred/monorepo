@@ -5,9 +5,17 @@ import {
   prepareStream,
   playStream,
   Encoders,
+  computeLetterbox,
 } from "@shepherdjerred/discord-video-stream";
 import { type Actor, createActor } from "xstate";
-import { WIDTH, HEIGHT, GBA_FPS } from "#src/emulator/constants.ts";
+import {
+  WIDTH,
+  HEIGHT,
+  GBA_FPS,
+  DISPLAY_ASPECT,
+} from "#src/emulator/constants.ts";
+import { sinkBufferBytes, streamActive } from "#src/observability/metrics.ts";
+import { withSpan } from "#src/observability/tracing.ts";
 import { logger } from "#src/logger.ts";
 import { createOrchestratorMachine } from "./orchestrator-machine.ts";
 import type { EncoderHandles, StreamMachineDeps } from "./stream-machine.ts";
@@ -16,11 +24,14 @@ export type GameStreamerOptions = {
   token: string;
   guildId: string;
   channelId: string;
-  // Output scale applied to the native 240x160 frame.
-  scale: number;
+  // Height of the 16:9 output canvas; the 3:2 game is pillarboxed onto it.
+  canvasHeight: number;
   frameRate: number;
   bitrateKbps: number;
   bitrateMaxKbps: number;
+  // VAAPI hardware H.264 encoding on an Intel iGPU; falls back to libx264 when off.
+  hardwareAcceleration: boolean;
+  vaapiDevice: string;
 };
 
 // rawvideo input framerate handed to ffmpeg — it assigns presentation
@@ -54,6 +65,7 @@ export class GameStreamer {
     this.actor = createActor(machine);
     this.actor.subscribe((snapshot) => {
       this.frameSink = snapshot.context.frameSink;
+      streamActive.set(this.frameSink === null ? 0 : 1);
     });
     this.actor.start();
   }
@@ -71,7 +83,11 @@ export class GameStreamer {
 
   /** Feed one RGBA frame (no-op unless a broadcast is live). */
   pushFrame(frame: Buffer): void {
-    if (this.frameSink) this.frameSink.write(frame);
+    if (this.frameSink) {
+      this.frameSink.write(frame);
+      // Rising buffered bytes ⇒ ffmpeg/encode can't keep up with the frame rate.
+      sinkBufferBytes.set(this.frameSink.writableLength);
+    }
   }
 
   /** Request that the broadcast be running. Resolves immediately. */
@@ -95,39 +111,51 @@ export class GameStreamer {
 
   private deps(): StreamMachineDeps {
     return {
-      joinVoice: async (signal) => {
-        await this.streamer.joinVoice(
-          this.options.guildId,
-          this.options.channelId,
-        );
-        // The library's joinVoice cannot be cancelled mid-flight. If STOP arrived
-        // while we were connecting, the actor was aborted and leaveVoice already ran;
-        // tear down the connection we just established so it isn't orphaned.
-        if (signal.aborted) {
-          this.streamer.leaveVoice();
-        }
-      },
-      prepareEncoder: () => Promise.resolve(this.buildEncoder()),
-      runStream: ({ output, playing }) => this.runStream(output, playing),
-      leaveVoice: async (playing) => {
-        if (playing) {
-          try {
-            await playing;
-          } catch {
-            // ffmpeg is SIGKILLed when the frame stream ends on stop; the encode
-            // promise rejecting here is expected and not an error.
+      joinVoice: (signal) =>
+        withSpan("stream.joinVoice", async () => {
+          await this.streamer.joinVoice(
+            this.options.guildId,
+            this.options.channelId,
+          );
+          // The library's joinVoice cannot be cancelled mid-flight. If STOP arrived
+          // while we were connecting, the actor was aborted and leaveVoice already ran;
+          // tear down the connection we just established so it isn't orphaned.
+          if (signal.aborted) {
+            this.streamer.leaveVoice();
           }
-        }
-        this.streamer.leaveVoice();
-      },
+        }),
+      prepareEncoder: () =>
+        withSpan("stream.prepareEncoder", () =>
+          Promise.resolve(this.buildEncoder()),
+        ),
+      runStream: ({ output, playing }) => this.runStream(output, playing),
+      leaveVoice: (playing) =>
+        withSpan("stream.leaveVoice", async () => {
+          if (playing) {
+            try {
+              await playing;
+            } catch {
+              // ffmpeg is SIGKILLed when the frame stream ends on stop; the encode
+              // promise rejecting here is expected and not an error.
+            }
+          }
+          this.streamer.leaveVoice();
+        }),
     };
   }
 
   private buildEncoder(): EncoderHandles {
     const rgba = new PassThrough();
+    // Scale the 3:2 game into an aspect-correct content box, then pillarbox it onto
+    // a black 16:9 canvas for Discord (see prepareStream `pad`).
+    const { content, canvas } = computeLetterbox(
+      DISPLAY_ASPECT,
+      this.options.canvasHeight,
+    );
     const { output, promise } = prepareStream(rgba, {
-      width: WIDTH * this.options.scale,
-      height: HEIGHT * this.options.scale,
+      width: content.width,
+      height: content.height,
+      pad: canvas,
       frameRate: this.options.frameRate,
       videoCodec: "H264",
       bitrateVideo: this.options.bitrateKbps,
@@ -144,9 +172,14 @@ export class GameStreamer {
         "-framerate",
         String(SRC_FPS),
       ],
-      encoder: Encoders.software({
-        x264: { preset: "ultrafast", tune: "zerolatency" },
-      }),
+      // Raw-frame input → keep hardwareAcceleratedDecoding off; Encoders.vaapi()
+      // then uploads frames to the GPU (format=nv12|vaapi, hwupload) and encodes
+      // with h264_vaapi. Software libx264 is the no-GPU fallback (local/arm64).
+      encoder: this.options.hardwareAcceleration
+        ? Encoders.vaapi({ device: this.options.vaapiDevice })
+        : Encoders.software({
+            x264: { preset: "ultrafast", tune: "zerolatency" },
+          }),
     });
     return { sink: rgba, output, playing: promise };
   }

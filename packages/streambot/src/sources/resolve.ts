@@ -6,6 +6,7 @@ import {
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import { probeFileChapters } from "@shepherdjerred/streambot/sources/chapters.ts";
 import { resolveWithYtdlp } from "@shepherdjerred/streambot/sources/ytdlp.ts";
+import { resolveSubtitleForFile } from "@shepherdjerred/streambot/sources/subtitle-io.ts";
 import {
   BlockedSourceError,
   isBlockedSource,
@@ -26,10 +27,17 @@ export async function resolveSource(
     throw new BlockedSourceError(sourceLabel(source));
   }
   if (source.kind === "file") {
+    const subtitle = await resolveSubtitleForFile(
+      config,
+      source.path,
+      source.subtitles,
+      signal,
+    );
     return {
       title: source.title,
       ffmpegInput: source.path,
       chapters: await probeFileChapters(config, source.path, signal),
+      ...(subtitle === undefined ? {} : { subtitle }),
     };
   }
   return resolveWithYtdlp(config, source, signal);

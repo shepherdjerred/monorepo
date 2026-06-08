@@ -21,6 +21,22 @@ export const commandDefinitions = [
             .setName("query")
             .setDescription("library title, URL, or search terms")
             .setRequired(true),
+        )
+        .addStringOption((o) =>
+          o
+            .setName("subtitles")
+            .setDescription("Burn in subtitles (default: server setting)")
+            .addChoices(
+              { name: "on", value: "on" },
+              { name: "off", value: "off" },
+            ),
+        )
+        .addStringOption((o) =>
+          o
+            .setName("sublang")
+            .setDescription(
+              "Preferred subtitle language, e.g. en, es, en.forced",
+            ),
         ),
     )
     .addSubcommand((sub) =>
@@ -32,6 +48,22 @@ export const commandDefinitions = [
             .setName("query")
             .setDescription("library title, URL, or search terms")
             .setRequired(true),
+        )
+        .addStringOption((o) =>
+          o
+            .setName("subtitles")
+            .setDescription("Burn in subtitles (default: server setting)")
+            .addChoices(
+              { name: "on", value: "on" },
+              { name: "off", value: "off" },
+            ),
+        )
+        .addStringOption((o) =>
+          o
+            .setName("sublang")
+            .setDescription(
+              "Preferred subtitle language, e.g. en, es, en.forced",
+            ),
         ),
     )
     .addSubcommand((sub) =>

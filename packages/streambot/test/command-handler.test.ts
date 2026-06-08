@@ -502,3 +502,63 @@ describe("CommandHandler chapters", () => {
     expect(replies[0]).toBe("Nothing is playing.");
   });
 });
+
+function playedSource(strings: Record<string, string>) {
+  const h = makeHandler({});
+  return { h, fake: fakeInteraction({ sub: "play", strings }) };
+}
+
+describe("CommandHandler subtitles options", () => {
+  test("no subtitle options → source carries no preference", async () => {
+    const { h, fake } = playedSource({ query: "a song" });
+    await h.handler.run(fake.interaction);
+    const event = h.events[0];
+    expect(event?.type).toBe("ADD");
+    if (event?.type !== "ADD") throw new Error("expected ADD");
+    expect(event.source.subtitles).toBeUndefined();
+  });
+
+  test("subtitles:on + sublang thread a preference onto the source and ack", async () => {
+    const { h, fake } = playedSource({
+      query: "a song",
+      subtitles: "on",
+      sublang: "es",
+    });
+    await h.handler.run(fake.interaction);
+    const event = h.events[0];
+    if (event?.type !== "ADD") throw new Error("expected ADD");
+    expect(event.source.subtitles).toEqual({ enabled: true, language: "es" });
+    expect(fake.replies[0]).toBe("Queued: **a song** _(subtitles: es)_");
+  });
+
+  test("subtitles:off disables and is reflected in the ack", async () => {
+    const { h, fake } = playedSource({ query: "a song", subtitles: "off" });
+    await h.handler.run(fake.interaction);
+    const event = h.events[0];
+    if (event?.type !== "ADD") throw new Error("expected ADD");
+    expect(event.source.subtitles).toEqual({ enabled: false });
+    expect(fake.replies[0]).toBe("Queued: **a song** _(subtitles: off)_");
+  });
+
+  test("playlist items inherit the subtitle preference", async () => {
+    const h = makeHandler({
+      playlistItems: [
+        { url: "https://youtube.com/watch?v=1", title: "one" },
+        { url: "https://youtube.com/watch?v=2", title: "two" },
+      ],
+    });
+    const fake = fakeInteraction({
+      sub: "play",
+      strings: {
+        query: "https://youtube.com/playlist?list=PL123",
+        subtitles: "on",
+      },
+    });
+    await h.handler.run(fake.interaction);
+    expect(h.events).toHaveLength(2);
+    for (const event of h.events) {
+      if (event.type !== "ADD") throw new Error("expected ADD");
+      expect(event.source.subtitles).toEqual({ enabled: true });
+    }
+  });
+});

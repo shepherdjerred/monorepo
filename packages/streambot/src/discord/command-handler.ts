@@ -15,7 +15,11 @@ import {
   formatTimecode,
   parseTimecode,
 } from "@shepherdjerred/streambot/discord/timecode.ts";
-import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
+import {
+  sourceLabel,
+  type Source,
+  type SubtitlePref,
+} from "@shepherdjerred/streambot/sources/source.ts";
 import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
 import {
   searchLibrary,
@@ -33,6 +37,51 @@ import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 
 const MAX_LIST = 20;
 const PLAYLIST_TIMEOUT_MS = 60_000;
+
+/**
+ * Build a per-request subtitle preference from the `subtitles` (on/off) and `sublang` options.
+ * Returns undefined when neither is set, so the source falls back to the server's subtitle config.
+ */
+export function buildSubtitlePref(
+  subtitles: string | null,
+  sublang: string | null,
+): SubtitlePref | undefined {
+  const enabled = subtitles === null ? undefined : subtitles === "on";
+  const trimmed = sublang?.trim() ?? "";
+  const language = trimmed.length > 0 ? trimmed : undefined;
+  if (enabled === undefined && language === undefined) return undefined;
+  return {
+    ...(enabled === undefined ? {} : { enabled }),
+    ...(language === undefined ? {} : { language }),
+  };
+}
+
+/** Attach a subtitle preference to a resolved source, preserving its discriminant. */
+function withSubtitles(
+  source: Source,
+  subtitles: SubtitlePref | undefined,
+): Source {
+  switch (source.kind) {
+    case "file":
+      return { ...source, subtitles };
+    case "url":
+      return { ...source, subtitles };
+    case "search":
+      return { ...source, subtitles };
+  }
+}
+
+/** A short " _(subtitles: …)_" suffix for the ephemeral ack, or "" when no override was given. */
+function subtitlesSuffix(pref: SubtitlePref | undefined): string {
+  if (pref?.enabled === false) return " _(subtitles: off)_";
+  if (pref?.enabled === true) {
+    return pref.language === undefined
+      ? " _(subtitles: on)_"
+      : ` _(subtitles: ${pref.language})_`;
+  }
+  if (pref?.language !== undefined) return ` _(subtitles: ${pref.language})_`;
+  return "";
+}
 
 export type QueueItemView = {
   readonly title: string;
@@ -147,6 +196,10 @@ export class CommandHandler {
   ): Promise<void> {
     const userId = interaction.userId;
     const query = interaction.getStringRequired("query");
+    const subtitles = buildSubtitlePref(
+      interaction.getString("subtitles"),
+      interaction.getString("sublang"),
+    );
 
     if (isHttpUrl(query) && isLikelyPlaylist(query)) {
       await interaction.defer();
@@ -155,7 +208,7 @@ export class CommandHandler {
         AbortSignal.timeout(PLAYLIST_TIMEOUT_MS),
       );
       for (const item of items) {
-        const source = { kind: "url", url: item.url } as const;
+        const source = { kind: "url", url: item.url, subtitles } as const;
         this.deps.dispatch({
           type: next ? "ADD_NEXT" : "ADD",
           source,
@@ -163,12 +216,15 @@ export class CommandHandler {
         });
       }
       await interaction.editReply(
-        `Queued ${String(items.length)} item(s) from the playlist.`,
+        `Queued ${String(items.length)} item(s) from the playlist.${subtitlesSuffix(subtitles)}`,
       );
       return;
     }
 
-    const source = resolvePlayQuery(query, this.deps.library());
+    const source = withSubtitles(
+      resolvePlayQuery(query, this.deps.library()),
+      subtitles,
+    );
     if (isBlockedSource(source)) {
       await this.deps.announce(shameMessage(userId));
       await interaction.reply("🚫 Nope.");
@@ -180,7 +236,7 @@ export class CommandHandler {
       requesterId: userId,
     });
     await interaction.reply(
-      `${next ? "Up next" : "Queued"}: **${sourceLabel(source)}**`,
+      `${next ? "Up next" : "Queued"}: **${sourceLabel(source)}**${subtitlesSuffix(subtitles)}`,
     );
   }
 
