@@ -28,6 +28,7 @@ import {
   semgrepScanStep,
   daggerHygieneStep,
   tunnelDnsCoverageStep,
+  reactVersionSyncStep,
   caddyfileValidateStep,
   lockfileCheckStep,
   envVarNamesStep,
@@ -152,6 +153,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     migrationGuardStep(),
     mergeConflictStep(),
     largeFileStep(),
+    reactVersionSyncStep(),
     ...(pullRequestBuild ? [greptileReviewStep()] : []),
   ];
   for (const gate of blockingGates) {

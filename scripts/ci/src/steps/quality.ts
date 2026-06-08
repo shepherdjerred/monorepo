@@ -146,6 +146,21 @@ export function tunnelDnsCoverageStep(): BuildkiteStep {
   });
 }
 
+/**
+ * Verifies `react`/`react-dom` (and their `@types`) resolve to matching
+ * versions in every `bun.lock`. A skew throws "Incompatible React versions" at
+ * runtime — invisible to typecheck/build/test. See the mariokart.sjer.red
+ * post-mortem in packages/docs/plans.
+ */
+export function reactVersionSyncStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":react: React Version Sync",
+    key: "react-version-sync",
+    daggerCmd: `${DAGGER_CALL} react-version-sync --source ${REPO_GIT_REF}`,
+    timeoutMinutes: 10,
+  });
+}
+
 export function semgrepScanStep(): BuildkiteStep {
   return daggerStep({
     label: ":mag: Semgrep Scan",

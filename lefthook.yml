@@ -435,6 +435,20 @@ pre-commit:
               - "packages/homelab/src/tofu/cloudflare/*.tf"
             run: bun scripts/check-tunnel-dns-coverage.ts
 
+          # --- React version sync ---
+          # react/react-dom (and their @types) must resolve to matching versions
+          # in every bun.lock — a skew throws "Incompatible React versions" at
+          # runtime (invisible to typecheck/build/test). See mariokart.sjer.red
+          # post-mortem in packages/docs/plans.
+          - name: react-version-sync
+            glob:
+              - "**/package.json"
+              - "**/bun.lock"
+            exclude:
+              - "archive/**"
+              - "**/node_modules/**"
+            run: bun scripts/check-react-version-sync.ts
+
           # --- Quality ratchet ---
           - name: quality-ratchet
             glob: "**/*.{ts,tsx,rs}"
