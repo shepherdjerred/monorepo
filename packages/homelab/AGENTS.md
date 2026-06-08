@@ -136,6 +136,37 @@ When adding a new Kubernetes service/chart, you MUST complete ALL of these steps
 
 **NEVER apply manifests directly with `kubectl apply`. All deployments go through ArgoCD.**
 
+## 1Password Secrets
+
+Secrets are synced from the homelab 1Password vault into Kubernetes via the
+`OnePasswordItem` CRD (`spec.itemPath` → `vaults/<vault>/items/<id-or-title>`), and the
+synced secret's data keys are consumed via `secretKeyRef`/`envFrom`/volume mounts.
+
+A linter guarantees that **every referenced item and field actually exists in 1Password**,
+so a typo'd field name or a missing/renamed item is caught before deploy instead of failing
+the operator sync (or crashing the pod) at runtime. It runs offline (pre-commit + a blocking
+CI gate) by checking the synthesized references against a committed snapshot of vault
+structure — `src/cdk8s/onepassword-vault-snapshot.json`, which holds **only sha256 hashes**
+of item ids/titles/field keys (no values, no plaintext names).
+
+```bash
+# Lint (offline, no 1Password access). Synthesizes in-memory + checks the snapshot.
+cd src/cdk8s && bun run scripts/check-1password-items.ts
+
+# Refresh the snapshot — the ONLY step needing 1Password. Run whenever you add/rename an
+# item or field in the vault, then commit the updated snapshot. Uses your local `op` login
+# (or 1Password Connect if OP_CONNECT_TOKEN + OP_CONNECT_URL are set).
+cd src/cdk8s && bun run scripts/snapshot-1password-vault.ts
+```
+
+Notes:
+
+- Field existence means the **label is present** on the item; the linter does not check that
+  a field is populated (values are volatile and never enter the snapshot).
+- `secretKeyRef` marked `optional: true` is allowed to reference a non-existent field by
+  design, so the linter does not require those to exist.
+- If the lint fails right after a legitimate vault change, refresh the snapshot and commit it.
+
 ## Git Workflow
 
 - Conventional commits and pre-commit checks are managed at monorepo root

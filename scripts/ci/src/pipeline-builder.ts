@@ -46,7 +46,11 @@ import {
 } from "./steps/images.ts";
 import { publishNpmGroup, filterNpmPackages } from "./steps/npm.ts";
 import { deploySitesGroup, filterSites } from "./steps/sites.ts";
-import { cdk8sSynthStep, homelabHelmGroup } from "./steps/helm.ts";
+import {
+  cdk8sSynthStep,
+  onePasswordItemsStep,
+  homelabHelmGroup,
+} from "./steps/helm.ts";
 import { homelabTofuGroup, homelabTofuPlanGroup } from "./steps/tofu.ts";
 import { argoCdSyncStep, argoCdHealthStep } from "./steps/argocd.ts";
 import { cooklangReleaseGroup } from "./steps/cooklang.ts";
@@ -255,6 +259,9 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         ? ["quality-gate", homelabPkgKey]
         : ["quality-gate"];
       steps.push(cdk8sSynthStep(synthDeps));
+      // Blocking gate: every OnePasswordItem reference + consumed field must exist
+      // in the committed vault snapshot. Shares the synth environment.
+      steps.push(onePasswordItemsStep(synthDeps));
     }
 
     // =======================================================================

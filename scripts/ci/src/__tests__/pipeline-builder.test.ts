@@ -985,6 +985,12 @@ describe("buildPipeline", () => {
       expect(steps.some((s) => s.key === "homelab-cdk8s")).toBe(true);
     });
 
+    it("includes the 1Password item/field lint gate", () => {
+      const pipeline = buildPipeline(versionBumpAffected());
+      const steps = pipeline.steps.filter(isStep);
+      expect(steps.some((s) => s.key === "homelab-1password-items")).toBe(true);
+    });
+
     it("includes helm chart push so ArgoCD picks up new manifests", () => {
       const pipeline = buildPipeline(versionBumpAffected());
       const groups = pipeline.steps.filter(isGroup);

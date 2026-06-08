@@ -435,6 +435,16 @@ pre-commit:
               - "packages/homelab/src/tofu/cloudflare/*.tf"
             run: bun scripts/check-tunnel-dns-coverage.ts
 
+          # --- 1Password items & fields ---
+          # Every cdk8s OnePasswordItem reference + consumed secret field must exist
+          # in the committed vault snapshot. Offline, no 1Password access.
+          - name: onepassword-items
+            root: "packages/homelab/src/cdk8s/"
+            glob:
+              - "packages/homelab/src/cdk8s/src/**/*.ts"
+              - "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json"
+            run: bun run scripts/check-1password-items.ts
+
           # --- Quality ratchet ---
           - name: quality-ratchet
             glob: "**/*.{ts,tsx,rs}"
