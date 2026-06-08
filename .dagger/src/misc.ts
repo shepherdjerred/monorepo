@@ -187,10 +187,7 @@ export async function smokeTestStreambotHelper(
 ): Promise<string> {
   const container = buildImageHelper(pkgDir, "streambot", depNames, depDirs)
     .withEnvVariable("BOT_TOKEN", "smoke-test-dummy")
-    .withEnvVariable("TOKEN", "smoke-test-dummy")
-    .withEnvVariable("GUILD_ID", "000000000000000000")
-    .withEnvVariable("COMMAND_CHANNEL_ID", "000000000000000000")
-    .withEnvVariable("VIDEO_CHANNEL_ID", "000000000000000000")
+    .withEnvVariable("USER_TOKENS", "smoke-test-dummy")
     .withEnvVariable("ADMIN_IDS", "000000000000000000")
     .withEnvVariable("VIDEOS_DIR", "/tmp/videos")
     .withEntrypoint([])
@@ -229,16 +226,16 @@ export async function e2eStreambotHelper(
   userToken: Secret,
   guildId: string,
   videoChannelId: string,
-  commandChannelId: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
 ): Promise<string> {
+  // USER_TOKENS is the real config (a single-token pool); E2E_* pin the voice channel the unattended
+  // test joins (production joins the requester's current VC, which a headless test can't set).
   const container = buildImageHelper(pkgDir, "streambot", depNames, depDirs)
     .withSecretVariable("BOT_TOKEN", botToken)
-    .withSecretVariable("TOKEN", userToken)
-    .withEnvVariable("GUILD_ID", guildId)
-    .withEnvVariable("VIDEO_CHANNEL_ID", videoChannelId)
-    .withEnvVariable("COMMAND_CHANNEL_ID", commandChannelId)
+    .withSecretVariable("USER_TOKENS", userToken)
+    .withEnvVariable("E2E_GUILD_ID", guildId)
+    .withEnvVariable("E2E_VIDEO_CHANNEL_ID", videoChannelId)
     .withEnvVariable("VIDEOS_DIR", "/tmp/videos")
     .withEnvVariable("STREAM_HARDWARE_ACCELERATION", "false")
     .withEntrypoint([])

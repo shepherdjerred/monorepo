@@ -73,10 +73,10 @@ export function createStreambotDeployment(
       image: `ghcr.io/shepherdjerred/streambot:${versions["shepherdjerred/streambot"]}`,
       envVariables: {
         BOT_TOKEN: fromSecret("BOT_TOKEN"),
-        TOKEN: fromSecret("TOKEN"),
-        GUILD_ID: fromSecret("GUILD_ID"),
-        COMMAND_CHANNEL_ID: fromSecret("COMMAND_CHANNEL_ID"),
-        VIDEO_CHANNEL_ID: fromSecret("VIDEO_CHANNEL_ID"),
+        // Pool of userbot tokens (comma-separated, one per Discord account). The bot acquires a free
+        // member-userbot per (guild, voice channel); guild/channel are now dynamic (the issuer's VC),
+        // so GUILD_ID/VIDEO_CHANNEL_ID/COMMAND_CHANNEL_ID are no longer needed.
+        USER_TOKENS: fromSecret("USER_TOKENS"),
         ADMIN_IDS: fromSecret("ADMIN_IDS"),
         VIDEOS_DIR: EnvValue.fromValue("/data/videos"),
         MEDIA_DIRS: EnvValue.fromValue("/media/movies,/media/tv"),

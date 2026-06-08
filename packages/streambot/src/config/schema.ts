@@ -1,8 +1,6 @@
 import { z } from "zod";
 import {
   BotTokenSchema,
-  ChannelIdSchema,
-  GuildIdSchema,
   UserIdSchema,
   UserTokenSchema,
 } from "@shepherdjerred/streambot/types/ids.ts";
@@ -14,15 +12,15 @@ import {
  */
 export const ConfigSchema = z.strictObject({
   discord: z.strictObject({
-    /** Bot token for the command bot (discord.js) — handles slash commands. */
+    /** Bot token for the command bot (discord.js) — handles slash commands in every server. */
     botToken: BotTokenSchema,
-    /** User token for the streamer (discord.js-selfbot-v13). */
-    userToken: UserTokenSchema,
-    guildId: GuildIdSchema,
-    /** Channel where world-readable status is posted (now-playing, queue, shaming, …). */
-    statusChannelId: ChannelIdSchema,
-    /** Voice channel the streamer joins. */
-    videoChannelId: ChannelIdSchema,
+    /**
+     * Pool of user tokens for the streamer userbots (discord.js-selfbot-v13). Each token is a
+     * distinct Discord account; a session acquires a free userbot that is a member of the requesting
+     * guild. One userbot streams in at most one voice channel at a time, so the pool size bounds the
+     * number of concurrent streams across all servers.
+     */
+    userTokens: z.array(UserTokenSchema).min(1),
     /** User ids permitted to run admin commands (stop/clear, and skip/remove of others). */
     adminIds: z.array(UserIdSchema).default([]),
   }),

@@ -8,10 +8,9 @@ import type { PlaybackInput } from "@shepherdjerred/streambot/machine/types.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
 import { expandPlaylist } from "@shepherdjerred/streambot/sources/ytdlp.ts";
-import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
 import { CommandBot } from "@shepherdjerred/streambot/discord/command-bot.ts";
-import type { PlaybackView } from "@shepherdjerred/streambot/discord/command-handler.ts";
+import { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
 import {
   loadState,
   saveState,
@@ -22,7 +21,13 @@ import {
   buildSnapshot,
   resumeKeyFor,
 } from "@shepherdjerred/streambot/state/resume.ts";
-import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
+import {
+  ChannelIdSchema,
+  GuildIdSchema,
+  UserIdSchema,
+  type GuildId,
+  type ChannelId,
+} from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
@@ -90,7 +95,11 @@ type Session = {
 
 /** Build a real session (streamer + machine + command bot) with the given start input. */
 function buildSession(config: Config, input: PlaybackInput): Session {
-  const streamer = new StreambotStreamer(config);
+  const userToken = config.discord.userTokens[0];
+  if (userToken === undefined) {
+    throw new Error("e2e requires at least one user token (USER_TOKENS/TOKEN)");
+  }
+  const streamer = new StreambotStreamer(userToken, config);
   const actor = createActor(
     createPlaybackMachine({
       joinVoice: streamer.joinVoice,
@@ -102,38 +111,31 @@ function buildSession(config: Config, input: PlaybackInput): Session {
     { input },
   );
 
-  const view = (): PlaybackView => {
-    const { context } = actor.getSnapshot();
-    return {
-      state: JSON.stringify(actor.getSnapshot().value),
-      current:
-        context.current === null
-          ? null
-          : {
-              title:
-                context.resolved?.title ?? sourceLabel(context.current.source),
-              requesterId: context.current.requesterId,
-            },
-      queue: context.queue.map((entry) => ({
-        title: sourceLabel(entry.source),
-        requesterId: entry.requesterId,
-      })),
-      loop: context.loop,
-      volume: context.volume,
-    };
-  };
-
+  // The command bot just proves the bot token logs in + registers; the test drives the actor
+  // directly. Its session manager is wired to an empty pool so no extra userbot is acquired.
+  const refs: { sessions: SessionManager | null } = { sessions: null };
   const commandBot = new CommandBot({
     config,
-    dispatch: (event) => {
-      actor.send(event);
+    getSessions: () => {
+      if (refs.sessions === null) {
+        throw new Error("session manager not initialized");
+      }
+      return refs.sessions;
     },
-    view,
     library: () => [],
-    setVolume: (percent) => streamer.setVolume(percent),
-    seek: (seconds) => streamer.seek(seconds),
     expandPlaylist: (url, signal) => expandPlaylist(config, url, signal),
-    streamerUserId: () => streamer.userId(),
+  });
+  refs.sessions = new SessionManager({
+    config,
+    pool: {
+      acquire: () => null,
+      release: () => {
+        /* empty pool: nothing to release */
+      },
+    },
+    resolveSource: (actorInput, signal) =>
+      resolveSource(config, actorInput.source, signal),
+    announce: (channelId, message) => commandBot.announce(channelId, message),
   });
 
   return { streamer, actor, commandBot };
@@ -166,15 +168,22 @@ async function main(): Promise<number> {
     "1\n00:00:00,000 --> 00:00:11,000\nstreambot e2e subtitle\n",
   );
 
+  // The voice channel is pinned via test-only env (the bot otherwise joins the requester's current
+  // VC, which an unattended e2e has no way to set).
+  const guildId: GuildId = GuildIdSchema.parse(Bun.env["E2E_GUILD_ID"]);
+  const channelId: ChannelId = ChannelIdSchema.parse(
+    Bun.env["E2E_VIDEO_CHANNEL_ID"],
+  );
+
   const stateDir = await mkdtemp(path.join(tmpdir(), "streambot-e2e-state-"));
   const config: Config = {
     ...baseConfig,
     state: { dir: stateDir, resumeMaxAgeSeconds: 3600 },
   };
-  const stateFile = stateFilePath(stateDir);
+  const stateFile = stateFilePath(stateDir, guildId, channelId);
   const input: PlaybackInput = {
-    guildId: config.discord.guildId,
-    channelId: config.discord.videoChannelId,
+    guildId,
+    channelId,
     idleTimeoutMs: 5000,
   };
 
@@ -215,6 +224,7 @@ async function main(): Promise<number> {
               ? null
               : resumeKeyFor(context.current.source),
           resumeAttempts: 0,
+          statusChannelId: null,
         }),
       );
       log.info("e2e: persisted resume state");

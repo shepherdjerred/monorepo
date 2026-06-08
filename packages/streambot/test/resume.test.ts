@@ -59,10 +59,11 @@ function makeContext(over: Partial<PlaybackContext> = {}): PlaybackContext {
 
 function makeState(over: Partial<PersistedState> = {}): PersistedState {
   return {
-    version: 1,
+    version: 2,
     savedAt: 1000,
     guildId: G,
     channelId: C,
+    statusChannelId: C,
     loop: "off",
     volume: 100,
     current: {
@@ -86,8 +87,10 @@ describe("buildSnapshot", () => {
       savedAt: 1234,
       resumeKey: "k",
       resumeAttempts: 1,
+      statusChannelId: C,
     });
-    expect(state.version).toBe(1);
+    expect(state.version).toBe(2);
+    expect(state.statusChannelId).toBe(C);
     expect(state.savedAt).toBe(1234);
     expect(state.loop).toBe("queue");
     expect(state.volume).toBe(80);
@@ -108,6 +111,7 @@ describe("buildSnapshot", () => {
       savedAt: 1,
       resumeKey: null,
       resumeAttempts: 0,
+      statusChannelId: null,
     });
     expect(state.current).toBeNull();
   });
@@ -247,7 +251,7 @@ describe("snapshot → persist → restore round-trip", () => {
   test("reproduces queue/current/loop/volume through disk", async () => {
     const dir = await mkdtemp(path.join(tmpdir(), "streambot-resume-"));
     dirs.push(dir);
-    const file = stateFilePath(dir);
+    const file = stateFilePath(dir, G, C);
 
     const snapshot = buildSnapshot({
       context: makeContext(),
@@ -255,6 +259,7 @@ describe("snapshot → persist → restore round-trip", () => {
       savedAt: 5000,
       resumeKey: resumeKeyFor(fileSource("movie")),
       resumeAttempts: 0,
+      statusChannelId: C,
     });
     await saveState(file, snapshot);
     const loaded = await loadState(file, 3600, 5000);

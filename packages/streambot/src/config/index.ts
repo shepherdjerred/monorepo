@@ -42,11 +42,9 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
   const raw = {
     discord: {
       botToken: env["BOT_TOKEN"],
-      userToken: env["TOKEN"],
-      guildId: env["GUILD_ID"],
-      // The configured channel is where world-readable output is posted; commands work anywhere.
-      statusChannelId: env["COMMAND_CHANNEL_ID"],
-      videoChannelId: env["VIDEO_CHANNEL_ID"],
+      // Pool of userbot tokens (comma-separated). `TOKEN` is accepted as a single-token fallback for
+      // backward compatibility with the pre-pool deployment.
+      userTokens: list(env["USER_TOKENS"]) ?? list(env["TOKEN"]),
       adminIds: list(env["ADMIN_IDS"]),
     },
     library: {
