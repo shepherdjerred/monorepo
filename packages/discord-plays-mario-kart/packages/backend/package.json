@@ -18,7 +18,10 @@
     "lint:eslint:check": "bunx eslint .",
     "lint:eslint:fix": "bunx eslint . --fix",
     "test": "bun test",
-    "test:watch": "bun test --watch"
+    "test:watch": "bun test --watch",
+    "build:wasm": "bash ../../scripts/build-wasm.sh",
+    "e2e:input": "bun run scripts/e2e-input.ts",
+    "e2e:input:check": "bun run scripts/e2e-input-assert.ts"
   },
   "dependencies": {
     "@shepherdjerred/discord-video-stream": "file:../../../discord-video-stream",
@@ -57,6 +60,7 @@
     "@typescript-eslint/parser": "^8.28.0",
     "eslint": "^10.3.0",
     "eslint-config-prettier": "^10.1.1",
+    "socket.io-client": "^4.8.1",
     "tslib": "^2.8.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.50.0"
