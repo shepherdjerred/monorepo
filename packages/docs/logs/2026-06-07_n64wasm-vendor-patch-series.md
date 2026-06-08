@@ -76,11 +76,11 @@ eol=lf` to override the repo-root `*.vcxproj eol=crlf` rule and stop CRLF churn 
 eol=crlf` rule on the inert `N64_Wasm.vcxproj`. Confirmed content-identical
   (`--ignore-cr-at-eol` empty, clean-filtered hash == HEAD blob) and resolved with the
   scoped `eol=lf` attribute. ✅
-- Full `build-wasm.sh` emscripten compile: the rewritten script applied both patches
-  and `make` began compiling; the **local** run is blocked by flaky-network failures
-  fetching emscripten's SDL2 ports (`IncompleteRead`), not by the patches. Patch
-  application is independently proven in the real image (above); CI's Dagger emscripten
-  stage runs the authoritative build with reliable network.
+- **Full `build-wasm.sh` emscripten compile: green** ✅ — the rewritten script (stage
+  pristine → apply patches → `make`) produced `n64wasm.js` (306K) + `n64wasm.wasm`
+  (2.6M) with all four neil exports present in the output. (The first attempt failed on
+  a flaky-network `IncompleteRead` fetching emscripten's SDL2 ports; re-running with a
+  persistent port cache completed cleanly. CI/Dagger has reliable network.)
 
 ## Caveats
 
@@ -109,12 +109,14 @@ eol=crlf` rule on the inert `N64_Wasm.vcxproj`. Confirmed content-identical
 - Rewrote `PATCHES.md` + `README.md`; this log.
 - Verified: shellcheck, dagger-hygiene, prettier, markdownlint, check-suppressions/
   todos/migration-guard all clean.
+- Full `build-wasm.sh` emscripten compile green: produced `n64wasm.js` + `n64wasm.wasm`
+  with all neil exports.
+- Shipped as [monorepo#1093](https://github.com/shepherdjerred/monorepo/pull/1093).
 
 ### Remaining
 
-- Confirm a fully green **local** `build-wasm.sh` compile (blocked here only by flaky
-  network on emscripten port fetch). CI's Dagger emscripten stage is the authoritative
-  build and exercises the same patch-apply path.
+- Watch the PR's CI (Dagger emscripten stage runs the authoritative build over the same
+  patch-apply path) and merge.
 
 ### Caveats
 
