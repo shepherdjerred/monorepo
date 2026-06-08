@@ -63,6 +63,10 @@ export type SidecarInfo = {
  * modifier, or null if `filename` isn't a subtitle sidecar for that video. Handles the real Plex/Bazarr
  * convention `<videoBase>.<lang>[.<modifier>].<ext>` (e.g. `… Proper.en.forced.srt`, `… 1080p.en.srt`,
  * `… .zh-TW.srt`, `… .en.hi.srt`).
+ *
+ * Position matters: the FIRST token after the base is always the language — even when it's a code like
+ * `hi` (Hindi) that also names a modifier (hearing-impaired). Only the tokens AFTER the language are
+ * treated as modifiers, so `Movie.hi.srt` is Hindi while `Movie.en.hi.srt` is English + HI.
  */
 export function parseSidecarName(
   filename: string,
@@ -75,21 +79,20 @@ export function parseSidecarName(
   const ext = path.extname(rest).slice(1).toLowerCase();
   if (!SIDECAR_EXTENSION_SET.has(ext)) return null;
 
-  // Strip the leading "." and the ".<ext>" → "en.forced" | "en" | "" | "forced".
+  // Strip the leading "." and the ".<ext>" → "en.forced" | "en" | "" | "hi".
   const middle = rest.slice(1, rest.length - (ext.length + 1));
   const tokens = middle.length > 0 ? middle.split(".") : [];
 
+  const [langToken, ...modifierTokens] = tokens;
   let modifier: SubtitleModifier | null = null;
-  const langTokens: string[] = [];
-  for (const raw of tokens) {
+  for (const raw of modifierTokens) {
     const parsed = SubtitleModifierSchema.safeParse(raw.toLowerCase());
-    if (modifier === null && parsed.success) {
+    if (parsed.success) {
       modifier = parsed.data;
-    } else {
-      langTokens.push(raw);
+      break;
     }
   }
-  return { lang: langTokens[0] ?? null, modifier };
+  return { lang: langToken ?? null, modifier };
 }
 
 export type SidecarCandidate = SidecarInfo & { readonly file: string };

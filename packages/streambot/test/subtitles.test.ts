@@ -87,6 +87,24 @@ describe("parseSidecarName (real Plex/Bazarr names)", () => {
     expect(parseSidecarName(`${base}.en.ass`, base)?.lang).toBe("en");
     expect(parseSidecarName(`${base}.en.vtt`, base)?.lang).toBe("en");
   });
+  test("first token is the language even when it collides with a modifier name (hi = Hindi)", () => {
+    // `hi` is both ISO 639-1 Hindi and the hearing-impaired modifier; as the FIRST token it's the
+    // language, not a modifier (regression: Greptile P1).
+    expect(parseSidecarName(`${base}.hi.srt`, base)).toEqual({
+      lang: "hi",
+      modifier: null,
+    });
+    // As a trailing token it's the modifier on an explicit language.
+    expect(parseSidecarName(`${base}.en.hi.srt`, base)).toEqual({
+      lang: "en",
+      modifier: "hi",
+    });
+    // Hindi + hearing-impaired: language first, modifier second.
+    expect(parseSidecarName(`${base}.hi.hi.srt`, base)).toEqual({
+      lang: "hi",
+      modifier: "hi",
+    });
+  });
   test("rejects non-matching base, non-subtitle ext, and bitmap pairs", () => {
     expect(parseSidecarName(`Other Movie.en.srt`, base)).toBeNull();
     expect(parseSidecarName(`${base}.en.txt`, base)).toBeNull();
