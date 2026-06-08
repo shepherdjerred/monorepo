@@ -127,7 +127,9 @@ function withBirmelMusicRuntime(container: Container): Container {
  * needed) and works as a drop-in for anything that just spawns the executable.
  *
  * Requires curl + ca-certificates in the container (coreutils `install`/`sha256sum`
- * ship with the Debian base).
+ * ship with the Debian base). Runs under dash (`sh`), which lacks `pipefail`, so the
+ * checksum line is extracted with a redirect (not a pipe) — under `set -e` a missing or
+ * renamed asset then aborts the build instead of silently skipping verification.
  */
 function installYtDlp(container: Container, destPath: string): Container {
   return container.withExec([
@@ -143,8 +145,14 @@ function installYtDlp(container: Container, destPath: string): Container {
       'curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 "$base/$asset" -o "/tmp/$asset"',
       'curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 "$base/SHA2-256SUMS" -o /tmp/SHA2-256SUMS',
       "cd /tmp",
-      'grep " $asset$" SHA2-256SUMS | sha256sum -c -',
+      // `grep > file` (not a pipe): under `set -e` a no-match exits non-zero and aborts,
+      // so a missing/renamed asset can't slip past verification the way `grep | sha256sum`
+      // would (dash has no pipefail).
+      'grep " $asset$" SHA2-256SUMS > "$asset.sha256"',
+      'sha256sum -c "$asset.sha256"',
       `install -D -m 0755 "/tmp/$asset" "${destPath}"`,
+      // Don't leave the downloaded asset + checksums lying around in the image layer.
+      'rm -f "/tmp/$asset" /tmp/SHA2-256SUMS "/tmp/$asset.sha256"',
     ].join("\n"),
   ]);
 }
