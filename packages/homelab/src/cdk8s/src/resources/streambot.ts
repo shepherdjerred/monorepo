@@ -7,6 +7,7 @@ import {
   EnvValue,
   type PersistentVolumeClaim,
   Secret,
+  Service,
   Volume,
 } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
@@ -14,6 +15,7 @@ import {
   setRevisionHistoryLimit,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
@@ -110,7 +112,10 @@ export function createStreambotDeployment(
         VAAPI_DEVICE: EnvValue.fromValue("/dev/dri/renderD128"),
         // Intel iHD VAAPI driver for QuickSync hardware encoding.
         LIBVA_DRIVER_NAME: EnvValue.fromValue("iHD"),
+        // Prometheus /metrics endpoint (scraped by the ServiceMonitor below).
+        METRICS_PORT: EnvValue.fromValue("9466"),
       },
+      ports: [{ number: 9466, name: "metrics" }],
       securityContext: {
         user: STREAMBOT_UID,
         group: STREAMBOT_GID,
@@ -119,13 +124,18 @@ export function createStreambotDeployment(
         allowPrivilegeEscalation: false,
       },
       resources: {
+        // 4K remuxes (e.g. 2160p Blu-ray) are demanding even with VAAPI: bursty CPU for demux +
+        // decode orchestration + Opus/voice work would peg the old 2-core limit, and CFS throttling
+        // stalled the event loop → late frames → stream stutter. Memory likewise blew past 2Gi and
+        // OOMKilled the pod into a crash loop. Limits raised with generous headroom; the node
+        // (torvalds) has 32 cores / 128Gi, so this is comfortably within capacity.
         cpu: {
-          request: Cpu.millis(250),
-          limit: Cpu.millis(2000),
+          request: Cpu.millis(2000),
+          limit: Cpu.millis(12_000),
         },
         memory: {
-          request: Size.mebibytes(512),
-          limit: Size.gibibytes(2),
+          request: Size.gibibytes(2),
+          limit: Size.gibibytes(12),
         },
       },
       volumeMounts: [
@@ -180,4 +190,20 @@ export function createStreambotDeployment(
       1,
     ),
   );
+
+  // Internal-only metrics Service + ServiceMonitor so Prometheus scrapes the streambot `/metrics`
+  // endpoint on :9466. Not Ingress-exposed — streambot is otherwise Discord-only outbound.
+  new Service(chart, "streambot-metrics-service", {
+    selector: deployment,
+    metadata: {
+      name: "streambot-metrics",
+      labels: { app: "streambot-metrics" },
+    },
+    ports: [{ name: "metrics", port: 9466, targetPort: 9466 }],
+  });
+
+  createServiceMonitor(chart, {
+    name: "streambot-metrics",
+    matchLabels: { app: "streambot-metrics" },
+  });
 }

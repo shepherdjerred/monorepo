@@ -35,6 +35,13 @@ import {
 } from "@shepherdjerred/streambot/state/resume.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import {
+  playbackPositionSeconds,
+  queueLength,
+  setPlaybackState,
+  startMetricsServer,
+  stopMetricsServer,
+} from "@shepherdjerred/streambot/observability/metrics.ts";
 
 const LIBRARY_REFRESH_MS = 5 * 60 * 1000;
 /** How often to checkpoint playback state to disk for resume. */
@@ -55,6 +62,8 @@ async function main(): Promise<void> {
     hardwareAcceleration: config.stream.hardwareAcceleration,
     subtitles: config.subtitles.enabled,
   });
+
+  startMetricsServer(config.observability.metricsPort);
 
   // Clear any subtitle temp files orphaned by a previous run (e.g. a resolve that was aborted before
   // the stream cleaned up after itself).
@@ -172,6 +181,8 @@ async function main(): Promise<void> {
       blockedRequester: snapshot.context.lastBlockedRequester,
     };
     reporter.handle(snap);
+    setPlaybackState(snap.state);
+    queueLength.set(snapshot.context.queue.length);
   });
   // Start the machine only after login — on resume the queue is non-empty, so the machine
   // immediately tries to joinVoice, which needs the streamer connected.
@@ -202,6 +213,7 @@ async function main(): Promise<void> {
     } else if (live !== null) {
       lastKnownPositionSeconds = live;
     }
+    playbackPositionSeconds.set(lastKnownPositionSeconds);
     if (!resumeConfirmed && Date.now() - bootAtMs >= RESUME_CONFIRM_MS) {
       resumeConfirmed = true;
     }
@@ -258,6 +270,7 @@ async function main(): Promise<void> {
     actor.stop();
     await commandBot.destroy();
     await streamer.destroy();
+    await stopMetricsServer();
     process.exit(0);
   }
   process.on("SIGINT", () => void shutdown());
