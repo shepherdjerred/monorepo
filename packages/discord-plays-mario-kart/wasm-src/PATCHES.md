@@ -34,12 +34,12 @@ wasm-src/
 
 ## Patches (`patches/`)
 
-Applied in order with `git apply` (paths are `a/code/… b/code/…`, so `-p1`):
+Applied in order with `patch -p1` (paths are `a/code/… b/code/…`):
 
 | Patch | Touches | What it does |
 | --- | --- | --- |
 | `0001-mymain-neil-host-exports.patch` | `code/mymain.cpp` | Adds the `extern "C"` host contract (below) and the ROM-from-memory `main()` path. |
-| `0002-makefile-exported-functions.patch` | `code/Makefile` | Adds the four exports to `EXPORTED_FUNCTIONS`; enables `ASSERTIONS=1 --profiling-funcs` (named wasm frames — drop for a smaller prod build). |
+| `0002-makefile-exported-functions.patch` | `code/Makefile` | Adds the four exports to `EXPORTED_FUNCTIONS`, and keeps the build outputs in `code/` (drops upstream's `mv … ../dist/`) so the build scripts collect them. Leaves the upstream optimization flags untouched (`ASSERTIONS=0`, no profiling) for a lean prod build. |
 
 The `mymain.cpp` patch adds:
 

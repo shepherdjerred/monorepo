@@ -1044,12 +1044,13 @@ export function buildDiscordPlaysMarioKartImageHelper(
     .withDirectory("/src", wasmSrc, { exclude: ["dist"] })
     // The committed wasm-src/code tree is BYTE-PRISTINE upstream; our changes live
     // in wasm-src/patches and are applied here at build time (never committed into
-    // the tree). git is present in the emscripten image. See wasm-src/PATCHES.md.
+    // the tree). Uses patch(1) (present in the emscripten image; /src is not a git
+    // work tree). See wasm-src/PATCHES.md.
     .withWorkdir("/src")
     .withExec([
       "sh",
       "-c",
-      'set -e; for p in patches/*.patch; do echo "applying $p"; git apply "$p"; done',
+      'set -e; for p in patches/*.patch; do echo "applying $p"; patch -p1 --no-backup-if-mismatch < "$p"; done',
     ])
     .withWorkdir("/src/code")
     // `make clean` drops any object files so the patched sources are rebuilt

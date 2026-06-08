@@ -66,7 +66,7 @@ cp -R "$clone/code" "$WASM_SRC/code"
 
 echo "[vendor] validating patch series still applies cleanly"
 for p in "$PATCHES_DIR"/*.patch; do
-  if ! ( cd "$WASM_SRC" && git apply --check "$p" ); then
+  if ! ( cd "$WASM_SRC" && patch -p1 --dry-run --force < "$p" ); then
     echo "[vendor] ERROR: patch does not apply to the new upstream: $(basename "$p")" >&2
     echo "[vendor]        Re-base it against wasm-src/code and retry." >&2
     exit 1

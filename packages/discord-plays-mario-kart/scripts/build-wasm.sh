@@ -22,7 +22,9 @@ echo "[build-wasm] staging pristine wasm-src + applying patch series"
 cp -R "$SRC/code" "$build/code"
 for p in "$SRC"/patches/*.patch; do
   echo "[build-wasm]   apply $(basename "$p")"
-  ( cd "$build" && git apply "$p" )
+  # patch(1), not `git apply`: the staging dir is not a git work tree, and patch
+  # is portable + non-interactive here (paths are a/code…, so -p1).
+  ( cd "$build" && patch -p1 --no-backup-if-mismatch < "$p" )
 done
 
 echo "[build-wasm] compiling N64Wasm via $EMSDK_IMAGE (this takes a few minutes)"

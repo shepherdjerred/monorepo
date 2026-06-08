@@ -1,15 +1,6 @@
 --- a/code/Makefile
 +++ b/code/Makefile
-@@ -219,17 +219,18 @@
- 	--use-preload-plugins \
- 	-s MIN_WEBGL_VERSION=2 \
- 	-s FULL_ES3=1 \
--	-s ASSERTIONS=0 \
-+	-s ASSERTIONS=1 \
-+	--profiling-funcs \
- 	-O3 \
- 	-s EXIT_RUNTIME=0 \
- 	-s EXTRA_EXPORTED_RUNTIME_METHODS="['callMain','cwrap']" \
+@@ -226,10 +226,10 @@
      -s EXPORTED_FUNCTIONS="['_main','_runMainLoop','_neilGetSoundBufferResampledAddress', \
      '_neilGetAudioWritePosition','_neil_serialize','_neil_unserialize','_neil_toast_message', \
      '_neil_export_eep','_neil_export_sra','_neil_export_fla','_neil_reset','_toggleFPS', '_neil_send_mobile_controls', \
