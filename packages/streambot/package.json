@@ -16,6 +16,7 @@
     "build": "true",
     "test": "bun test",
     "e2e": "bun run e2e/run.ts",
+    "e2e:local": "bun run e2e/local.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },

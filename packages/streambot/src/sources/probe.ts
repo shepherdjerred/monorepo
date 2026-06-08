@@ -43,7 +43,7 @@ export type MediaInfo = {
 };
 
 /** Map a pixel height to a coarse, bounded resolution label (keeps `streambot_source_info` low-card). */
-export function resolutionBucket(height: number | undefined): string {
+export function resolutionBucket(height?: number): string {
   if (height === undefined) return "unknown";
   if (height >= 2000) return "2160p";
   if (height >= 1400) return "1440p";
@@ -53,7 +53,7 @@ export function resolutionBucket(height: number | undefined): string {
 }
 
 /** ffprobe `color_transfer` values that denote HDR (PQ / HLG). */
-export function isHdrTransfer(transfer: string | undefined): boolean {
+export function isHdrTransfer(transfer?: string): boolean {
   return transfer === "smpte2084" || transfer === "arib-std-b67";
 }
 

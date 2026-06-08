@@ -26,9 +26,7 @@ import {
 const log = logger.child("streamer:metrics");
 
 /** Parse an ffmpeg `timemark` ("HH:MM:SS.ss", possibly negative) to seconds; undefined if unparseable. */
-export function parseTimemarkSeconds(
-  timemark: string | undefined,
-): number | undefined {
+export function parseTimemarkSeconds(timemark?: string): number | undefined {
   if (timemark === undefined) {
     return undefined;
   }
