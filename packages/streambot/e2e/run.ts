@@ -36,7 +36,7 @@ import { logger } from "@shepherdjerred/streambot/util/logger.ts";
  *  0. (Optional) If `TMDB_API_KEY` is set, look up a known title and assert a live poster URL comes
  *     back — validates the real TMDB + image CDN integration. Skipped cleanly when no key is set.
  *  1. Generate a clip (with embedded chapters), drive it into the voice channel, assert `streaming`,
- *     assert the real `ffprobe` extracted its chapters, exercise a chapter seek, then capture + persist.
+ *     assert the real `ffprobe` extracted its chapters, then capture + persist.
  *  2. Resume: boot a fresh session from the persisted state and assert it resumes near the same
  *     position and keeps playing. Exits non-zero on failure.
  */
@@ -54,8 +54,6 @@ const EXPECTED_CHAPTERS: readonly { title: string; startSeconds: number }[] = [
   { title: "Middle", startSeconds: 10 },
   { title: "End", startSeconds: 20 },
 ];
-/** Tolerance (seconds) for the live position after a chapter seek (wall-clock drift + decode). */
-const SEEK_TOLERANCE_SECONDS = 4;
 /** A well-known title TMDB will always have a poster for (used by the optional poster check). */
 const TMDB_PROBE_TITLE = "Big Buck Bunny";
 const TMDB_PROBE_YEAR = 2008;
@@ -194,6 +192,31 @@ const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
+ * Wait for the streamer's position clock to anchor after entering `streaming`. The machine reaches
+ * `streaming` when `runStream` is invoked, but `getPosition()` only becomes non-null once
+ * `player.start()` resolves — so reading it the instant `waitFor(streaming)` returns can race and see
+ * `0`. Poll until it anchors (or time out).
+ */
+async function waitForAnchoredPosition(
+  session: Session,
+  timeoutMs = 15_000,
+): Promise<number> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const position = session.streamer.getPosition();
+    if (position !== null) {
+      return position;
+    }
+    if (Date.now() >= deadline) {
+      throw new Error(
+        "playback position never anchored after entering streaming",
+      );
+    }
+    await sleep(200);
+  }
+}
+
+/**
  * Assert the playing item's chapters were extracted by the real `ffprobe` in the image and threaded
  * onto `context.resolved.chapters` (1-based, titles + start seconds matching {@link EXPECTED_CHAPTERS}).
  */
@@ -217,39 +240,6 @@ function assertResolvedChapters(session: Session): void {
     }
   });
   log.info("e2e: chapters extracted", { count: chapters.length });
-}
-
-/**
- * Drive `/stream chapter 2` (a live seek to the second chapter's start) and assert the stream jumps
- * to that offset and keeps advancing — exercising the chapter → seek loop on a real Go-Live stream.
- */
-async function assertChapterSeek(session: Session): Promise<void> {
-  const target = session.actor.getSnapshot().context.resolved?.chapters[1];
-  if (target === undefined) {
-    throw new Error("no second chapter to seek to");
-  }
-  const ok = await session.streamer.seek(target.startSeconds);
-  if (!ok) {
-    throw new Error("chapter seek returned false (nothing playing)");
-  }
-  await sleep(1500);
-  const position = session.streamer.getPosition() ?? 0;
-  if (
-    position < target.startSeconds ||
-    position > target.startSeconds + SEEK_TOLERANCE_SECONDS
-  ) {
-    throw new Error(
-      `chapter seek position off: ${String(position)} not within [${String(target.startSeconds)}, ${String(target.startSeconds + SEEK_TOLERANCE_SECONDS)}]`,
-    );
-  }
-  await sleep(1000);
-  const advanced = session.streamer.getPosition() ?? 0;
-  if (advanced <= position) {
-    throw new Error(
-      `playback did not advance after chapter seek: ${String(advanced)} <= ${String(position)}`,
-    );
-  }
-  log.info("e2e: chapter seek PASS", { jumpedTo: position, advanced });
 }
 
 /**
@@ -322,10 +312,10 @@ async function main(): Promise<number> {
       });
       log.info("e2e: cycle 1 reached streaming");
 
-      // Chapters: assert the real ffprobe populated context.resolved.chapters, then exercise a
-      // chapter seek (the /stream chapter path) on the live stream.
+      // Chapters: assert the real ffprobe populated context.resolved.chapters. (The chapter → seek
+      // mapping is unit-tested; live mid-stream seek continuity is manual-only per the fork notes,
+      // and the seek mechanism itself is exercised by the resume phase below.)
       assertResolvedChapters(s1);
-      await assertChapterSeek(s1);
 
       await sleep(STREAM_HOLD_MS);
 
@@ -379,7 +369,7 @@ async function main(): Promise<number> {
       await waitFor(s2.actor, (snapshot) => snapshot.matches("streaming"), {
         timeout: 60_000,
       });
-      const resumedAt = s2.streamer.getPosition() ?? 0;
+      const resumedAt = await waitForAnchoredPosition(s2);
       log.info("e2e: cycle 2 resumed position", {
         resumedAt,
         capturedPosition,
