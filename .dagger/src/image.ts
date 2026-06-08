@@ -192,6 +192,61 @@ function withStreambotRuntime(container: Container): Container {
 }
 
 /**
+ * Runtime deps for the headless discord-plays-* bots (pokemon, mario-kart):
+ *  - ffmpeg + libvips: prepareStream()'s fluent-ffmpeg encode path and sharp.
+ *  - Intel VAAPI stack (libva + iHD driver): lets ffmpeg hardware-encode
+ *    (h264_vaapi) the raw emulator frames on the cluster's Intel iGPU, freeing
+ *    CPU for the software emulation. The iHD driver lives in Debian non-free and
+ *    is x86-only, so we enable non-free first and install it amd64-only; arm64
+ *    (local Mac) builds fall back to software libx264. Mirrors the VAAPI portion
+ *    of withStreambotRuntime.
+ */
+function withDiscordPlaysRuntime(container: Container): Container {
+  return container
+    .withExec([
+      "sh",
+      "-c",
+      // Enable Debian contrib/non-free (where the Intel iHD driver lives). Handles both the
+      // deb822 (`debian.sources`) and legacy one-line (`sources.list`) formats.
+      [
+        "set -e",
+        'if [ -f /etc/apt/sources.list.d/debian.sources ]; then sed -i "s/^Components: main.*/Components: main contrib non-free non-free-firmware/" /etc/apt/sources.list.d/debian.sources; fi',
+        'if [ -f /etc/apt/sources.list ]; then sed -i "s/ main$/ main contrib non-free non-free-firmware/" /etc/apt/sources.list; fi',
+      ].join("\n"),
+    ])
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "ca-certificates",
+      "ffmpeg",
+      "libvips42",
+      "libva2",
+      "libva-drm2",
+      "vainfo",
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      // The Intel iHD media driver (intel-media-va-driver-non-free) is x86-only; it has no
+      // arm64 candidate. The production cluster is amd64, so install it there for VAAPI
+      // hardware encoding, and skip it on arm64 (local Mac) builds — which have no Intel GPU
+      // anyway and fall back to software encoding.
+      [
+        "set -e",
+        'if [ "$(dpkg --print-architecture)" = "amd64" ]; then',
+        "  apt-get install -y -qq --no-install-recommends intel-media-va-driver-non-free",
+        "fi",
+      ].join("\n"),
+    ])
+    .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"])
+    .withExec(["ffmpeg", "-version"]);
+}
+
+/**
  * Hand ownership of Bun's install cache to UID 1000.
  *
  * The oven/bun base image sets `BUN_INSTALL=/usr/local`, which makes Bun
@@ -900,14 +955,12 @@ export function buildDiscordPlaysPokemonImageHelper(
   let container = dag
     .container()
     .from(BUN_IMAGE)
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    // ffmpeg + libvips for discord-video-stream (fluent-ffmpeg encode
-    // path + sharp). No browser/GPU/desktop — this is a headless Bun service.
-    .withExec([
-      "sh",
-      "-c",
-      "apt-get update -qq && apt-get install -y -qq --no-install-recommends ffmpeg libvips42 ca-certificates && rm -rf /var/lib/apt/lists/*",
-    ])
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE));
+
+  // ffmpeg + libvips for discord-video-stream (fluent-ffmpeg encode path + sharp)
+  // plus the Intel VAAPI stack so ffmpeg can hardware-encode on the iGPU. No
+  // browser/desktop — this is a headless Bun service.
+  container = withDiscordPlaysRuntime(container)
     .withWorkdir("/workspace")
     .withDirectory(innerRoot, pkgDir, {
       exclude: excludes,
@@ -1051,15 +1104,12 @@ export function buildDiscordPlaysMarioKartImageHelper(
   let container = dag
     .container()
     .from(BUN_IMAGE)
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    // ffmpeg + libvips for discord-video-stream (fluent-ffmpeg encode
-    // path + sharp). No browser/GPU/desktop — software-rendered N64 frames are
-    // read straight out of wasm memory.
-    .withExec([
-      "sh",
-      "-c",
-      "apt-get update -qq && apt-get install -y -qq --no-install-recommends ffmpeg libvips42 ca-certificates && rm -rf /var/lib/apt/lists/*",
-    ])
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE));
+
+  // ffmpeg + libvips for discord-video-stream (fluent-ffmpeg encode path + sharp)
+  // plus the Intel VAAPI stack so ffmpeg can hardware-encode on the iGPU. The
+  // software-rendered N64 frames are read straight out of wasm memory.
+  container = withDiscordPlaysRuntime(container)
     .withWorkdir("/workspace")
     // wasm-src is the build input for stage 1 only — keep the large vendored
     // C/C++ tree out of the runtime image.
