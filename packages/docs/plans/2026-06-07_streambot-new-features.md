@@ -217,7 +217,7 @@ no fetchPoster → plain text; dedup still single announce).
 
 ### Remaining
 
-- **Operator step:** add a `TMDB_API_KEY` field to the `streambot-config` 1Password item to enable posters (bot runs fine without it — posters silently disabled).
+- **Operator step:** DONE — created a dedicated `streambot-tmdb` 1Password item (Homelab vault) with a concealed `TMDB_API_KEY` field; homelab `streambot.ts` references it via its own `OnePasswordItem`/secret (optional env). Bot runs fine without it — posters silently disabled.
 - **PR:** open PR; capture a Discord screenshot of the poster embed + `/stream chapters` output for the description (repo visual-change rule).
 - **Live smoke (optional):** confirm `ffprobe` chapter extraction against a real chaptered `.mkv` on the deployed pod; confirm a real TMDB lookup once the key is set.
 
