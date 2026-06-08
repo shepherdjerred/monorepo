@@ -135,3 +135,16 @@ compiles cleanly (emscripten/emsdk:2.0.7) and produces `n64wasm.js`/`.wasm`.
   work — it only appears because that shared lib isn't pre-built in a fresh
   worktree (CI builds it first). Not introduced here.
 - `bun install` added `socket.io-client` to the backend; lockfile updated.
+- PR: [#1110](https://github.com/shepherdjerred/monorepo/pull/1110).
+
+## Workflow Friction
+
+- **`toolkit pr asset` is documented but not in the installed binary.** The root
+  `CLAUDE.md` (PR Screenshots section) says to upload PR images with
+  `op run --env-file=.env.seaweedfs -- toolkit pr asset <PR> ...`, but the
+  installed `toolkit` (v0.1.0) only exposes `pr health | logs | detect` — there is
+  no `pr asset` subcommand, so I could not attach the before/after emulator
+  screenshots to PR #1110 (I delivered them to the user directly instead).
+  `public.sjer.red` itself is up (root returns 403 as expected). Fix: rebuild/
+  reinstall `toolkit` so `pr asset` exists, or correct the docs to match the
+  shipped CLI. Also no `.env.seaweedfs` exists in the worktree — the docs imply one.
