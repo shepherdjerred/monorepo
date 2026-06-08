@@ -94,6 +94,7 @@ Options:
 Environment (asset):
   SEAWEEDFS_ACCESS_KEY_ID, SEAWEEDFS_SECRET_ACCESS_KEY   SeaweedFS S3 credentials
   SEAWEEDFS_S3_ENDPOINT                                  Override S3 endpoint
+  SEAWEEDFS_S3_REGION                                    Override S3 region (default us-east-1)
 `);
     process.exit(0);
   }

@@ -66,6 +66,7 @@ src/
 | `SEAWEEDFS_ACCESS_KEY_ID`     | SeaweedFS S3 access key (`pr asset`)                        |
 | `SEAWEEDFS_SECRET_ACCESS_KEY` | SeaweedFS S3 secret key (`pr asset`)                        |
 | `SEAWEEDFS_S3_ENDPOINT`       | S3 endpoint override (default `https://seaweedfs.sjer.red`) |
+| `SEAWEEDFS_S3_REGION`         | S3 region override (default `us-east-1`)                    |
 
 ## `pr asset` — PR screenshot host
 

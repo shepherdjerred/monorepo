@@ -76,6 +76,7 @@ Environment Variables:
   SEAWEEDFS_ACCESS_KEY_ID    SeaweedFS S3 access key (pr asset)
   SEAWEEDFS_SECRET_ACCESS_KEY  SeaweedFS S3 secret key (pr asset)
   SEAWEEDFS_S3_ENDPOINT      SeaweedFS S3 endpoint (default seaweedfs.sjer.red)
+  SEAWEEDFS_S3_REGION        SeaweedFS S3 region (default us-east-1)
 
 Examples:
   toolkit fetch https://docs.lancedb.com/

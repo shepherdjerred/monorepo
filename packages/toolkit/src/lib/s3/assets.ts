@@ -48,3 +48,22 @@ export function assetPublicUrl(prNumber: number, filename: string): string {
   const base = encodeURIComponent(path.basename(filename));
   return `${PUBLIC_HOST}/pr/assets/${String(prNumber)}/${base}`;
 }
+
+/**
+ * Return the first pair of files that share a basename (and would collide on the
+ * same object key), or undefined if all basenames are unique.
+ */
+export function firstDuplicateBasename(
+  files: string[],
+): { basename: string; first: string; second: string } | undefined {
+  const seen = new Map<string, string>();
+  for (const file of files) {
+    const base = path.basename(file);
+    const previous = seen.get(base);
+    if (previous !== undefined) {
+      return { basename: base, first: previous, second: file };
+    }
+    seen.set(base, file);
+  }
+  return undefined;
+}
