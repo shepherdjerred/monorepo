@@ -56,25 +56,31 @@ src/
 
 ## Environment Variables
 
-| Variable                      | Description                                                 |
-| ----------------------------- | ----------------------------------------------------------- |
-| `PAGERDUTY_TOKEN`             | PagerDuty API token                                         |
-| `BUGSINK_URL`                 | Bugsink instance URL (e.g., `https://bugsink.example.com`)  |
-| `BUGSINK_TOKEN`               | Bugsink API token                                           |
-| `GRAFANA_URL`                 | Grafana instance URL                                        |
-| `GRAFANA_API_KEY`             | Grafana API key or service account token                    |
-| `SEAWEEDFS_ACCESS_KEY_ID`     | SeaweedFS S3 access key (`pr asset`)                        |
-| `SEAWEEDFS_SECRET_ACCESS_KEY` | SeaweedFS S3 secret key (`pr asset`)                        |
-| `SEAWEEDFS_S3_ENDPOINT`       | S3 endpoint override (default `https://seaweedfs.sjer.red`) |
-| `SEAWEEDFS_S3_REGION`         | S3 region override (default `us-east-1`)                    |
+| Variable          | Description                                                |
+| ----------------- | ---------------------------------------------------------- |
+| `PAGERDUTY_TOKEN` | PagerDuty API token                                        |
+| `BUGSINK_URL`     | Bugsink instance URL (e.g., `https://bugsink.example.com`) |
+| `BUGSINK_TOKEN`   | Bugsink API token                                          |
+| `GRAFANA_URL`     | Grafana instance URL                                       |
+| `GRAFANA_API_KEY` | Grafana API key or service account token                   |
+| `AWS_PROFILE`     | AWS profile for `pr asset` (or pass `--profile`)           |
 
 ## `pr asset` — PR screenshot host
 
-`toolkit pr asset <PR> <file...> [--markdown]` uploads files to the
-`public-sjer-red` SeaweedFS bucket under `pr/assets/<PR>/` and prints the public
-`https://public.sjer.red/...` URLs for embedding in PRs. Uses a minimal SigV4
-PUT (`src/lib/s3/`), no AWS SDK. Supply creds via 1Password, e.g.
-`op run --env-file=... -- toolkit pr asset 1234 ./after.png --markdown`.
+`toolkit pr asset <PR> <file...> [--markdown] [--profile <name>]` uploads files
+to the `public-sjer-red` SeaweedFS bucket under `pr/assets/<PR>/` and prints the
+public `https://public.sjer.red/...` URLs for embedding in PRs. Uses
+`@aws-sdk/client-s3` with `forcePathStyle: true` (path-style is required for
+SeaweedFS).
+
+Credentials, endpoint (`endpoint_url`), and region are resolved by the standard
+AWS toolchain — `~/.aws/credentials`, `~/.aws/config`, and `AWS_*` env vars,
+exactly like the AWS CLI. Select a profile with `--profile <name>` or
+`AWS_PROFILE`; no `op run` wrapper is needed:
+
+```bash
+toolkit pr asset 1234 ./after.png --profile seaweedfs --markdown
+```
 
 ## Adding New Commands
 

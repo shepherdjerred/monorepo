@@ -309,8 +309,8 @@ session-only endpoint). To attach screenshots in a PR description/comment,
 upload them to the public artifact host and embed the returned URLs.
 
 ```bash
-# Creds come from 1Password (item vet52jaeh75chsalu6lulugium); run under op:
-op run --env-file=.env.seaweedfs -- toolkit pr asset <PR_NUMBER> ./before.png ./after.png --markdown
+# Creds come from your AWS profile (~/.aws); no op wrapper needed:
+toolkit pr asset <PR_NUMBER> ./before.png ./after.png --profile seaweedfs --markdown
 ```
 
 - Uploads to the `public-sjer-red` SeaweedFS bucket under `pr/assets/<PR_NUMBER>/`
@@ -318,6 +318,9 @@ op run --env-file=.env.seaweedfs -- toolkit pr asset <PR_NUMBER> ./before.png ./
   (with `--markdown`, ready-to-paste `![file](url)` tags).
 - GitHub's image proxy fetches the public URL, so images render for reviewers
   without checking out the branch.
+- Uses the standard AWS toolchain (`@aws-sdk/client-s3`, path-style): credentials,
+  `endpoint_url`, and region come from `~/.aws/credentials` / `~/.aws/config`.
+  Select the profile with `--profile <name>` or `AWS_PROFILE` (the `seaweedfs`
+  profile points at `https://seaweedfs.sjer.red`).
 - Objects under `pr/assets/` expire after 365 days; the homelab must be up for
-  the images to load. Env: `SEAWEEDFS_ACCESS_KEY_ID`,
-  `SEAWEEDFS_SECRET_ACCESS_KEY` (optionally `SEAWEEDFS_S3_ENDPOINT`).
+  the images to load.
