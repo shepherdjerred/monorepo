@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.11.1",
+  "version": "16.12.1",
   "data": {
     "Jax": {
       "id": "Jax",
@@ -364,13 +364,13 @@
           ],
           "cooldownBurn": "8/7.5/7/6.5/6",
           "cost": [
-            65,
-            65,
-            65,
-            65,
-            65
+            50,
+            50,
+            50,
+            50,
+            50
           ],
-          "costBurn": "65",
+          "costBurn": "50",
           "datavalues": {},
           "effect": [
             null,
