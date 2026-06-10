@@ -1633,13 +1633,13 @@
         4
       ],
       "MaxLevel": [
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
       ]
     },
     "calculations": {},
@@ -2475,18 +2475,18 @@
     "rarity": "silver",
     "dataValues": {
       "Cooldown": [
-        10,
-        10,
         5,
         5,
-        5,
-        5,
-        5
+        0.5,
+        0.25,
+        0.25,
+        0.25,
+        0.25
       ],
       "MSBuffAmount": [
         0.5,
         0.5,
-        0.5,
+        0.75,
         0.5,
         0.5,
         0.5,
@@ -5907,13 +5907,13 @@
     "rarity": "silver",
     "dataValues": {
       "BombDelay": [
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13
       ],
       "KnockupDuration": [
         0.75,
@@ -6168,8 +6168,8 @@
     "id": 115,
     "apiName": "ScopiestWeapons",
     "name": "Scopiest Weapons",
-    "desc": "Gain @MeleeRangeIncrease@ Attack Range, reduced to @RangedRangeIncrease@ if you are Ranged.",
-    "tooltip": "Gain @MeleeRangeIncrease@ Attack Range, reduced to @RangedRangeIncrease@ if you are Ranged.",
+    "desc": "Gain @RangeIncrease@ Attack Range.",
+    "tooltip": "Gain @RangeIncrease@ Attack Range.",
     "iconLarge": "assets/ux/cherry/augments/icons/scopiestweapons_large.png",
     "iconSmall": "assets/ux/cherry/augments/icons/scopiestweapons_small.png",
     "rarity": "gold",
@@ -6193,16 +6193,32 @@
         450
       ],
       "RangedRangeIncrease": [
-        75,
-        75,
-        125,
-        175,
+        90,
+        90,
+        135,
+        180,
         250,
         300,
         350
       ]
     },
-    "calculations": {},
+    "calculations": {
+      "RangeIncrease": {
+        "__type": "{e9a3c91d}",
+        "mExpandedTooltipCalculationDisplay": 5,
+        "mFormulaParts": [
+          {
+            "__type": "NamedDataValueCalculationPart",
+            "mDataValue": "MeleeRangeIncrease"
+          }
+        ],
+        "mRangedMultiplier": {
+          "__type": "NumberCalculationPart",
+          "mNumber": 0.6000000238418579
+        },
+        "mSimpleTooltipCalculationDisplay": 5
+      }
+    },
     "type": "full"
   },
   "116": {
@@ -8585,8 +8601,8 @@
     "id": 204,
     "apiName": "StackosaurusRex",
     "name": "Stackosaurus Rex",
-    "desc": "When you gain permanent <keywordMajor>Stacks</keywordMajor> of an Ability, gain @StackModifier*100@% more!",
-    "tooltip": "When you gain permanent <keywordMajor>Stacks</keywordMajor> of an Ability, gain @StackModifier*100@% more!",
+    "desc": "When you gain permanent <keywordMajor>Stacks</keywordMajor> of an Ability, Augment, or Item gain @StackModifier*100@% more!",
+    "tooltip": "When you gain permanent <keywordMajor>Stacks</keywordMajor> of an Ability, Augment, or Item gain @StackModifier*100@% more!",
     "iconLarge": "assets/ux/cherry/augments/icons/stackosaurusrex_large.png",
     "iconSmall": "assets/ux/cherry/augments/icons/stackosaurusrex_small.png",
     "rarity": "silver",
@@ -9704,8 +9720,8 @@
       "AttackReduction": [
         0.4000000059604645,
         0.4000000059604645,
-        0.4000000059604645,
-        0.4000000059604645,
+        0.5,
+        0.6000000238418579,
         0.4000000059604645,
         0.4000000059604645,
         0.4000000059604645
@@ -11247,8 +11263,8 @@
     "id": 310,
     "apiName": "ClownCollege",
     "name": "Clown College",
-    "desc": "Gain <spellName>Deceive</spellName> Summoner Spell.<br><br><spellName>Deceive</spellName>: You teleport and become <keywordStealth>Invisible</keywordStealth>. Your next Attack while <keywordStealth>Invisible</keywordStealth> deals an additional <physicalDamage>physical damage</physicalDamage>. <br><br>When you die, spawn an exploding box that deals a large amount of <trueDamage>true damage</trueDamage> and <status>Fear</status> nearby enemies.",
-    "tooltip": "<spellName>Backstab</spellName>: You deal @BasicAttackDamage@ <physicalDamage>bonus physical damage</physicalDamage> when striking from behind.<br><br><spellName>Deceive</spellName>: You teleport and become <keywordStealth>Invisible</keywordStealth> for @StealthDuration@ seconds. Your next Attack while <keywordStealth>Invisible</keywordStealth> deals an additional <physicalDamage>@TotalDamage@ physical damage</physicalDamage>. If striking from behind, this Attack critically strikes for @QCritDamageMod@ damage.<br><br><spellName>Hallucinate: Death</spellName>: On death, deal <magicDamage>@FearDamage*100@% maximum Health true damage</magicDamage> and fear for @FearDuration@s around you.",
+    "desc": "Gain <spellName>Deceive</spellName> Summoner Spell.<br><br><spellName>Deceive</spellName>: You teleport and become <keywordStealth>Invisible</keywordStealth>. Your next Attack while <keywordStealth>Invisible</keywordStealth> deals an additional <physicalDamage>physical damage</physicalDamage>. <br><br>When you die, spawn an exploding box that deals a large amount of <magicDamage>magic damage</magicDamage> and <status>Fear</status> nearby enemies.",
+    "tooltip": "<spellName>Backstab</spellName>: You deal @BasicAttackDamage@ <physicalDamage>bonus physical damage</physicalDamage> when striking from behind.<br><br><spellName>Deceive</spellName>: You teleport and become <keywordStealth>Invisible</keywordStealth> for @StealthDuration@ seconds. Your next Attack while <keywordStealth>Invisible</keywordStealth> deals an additional <physicalDamage>@TotalDamage@ physical damage</physicalDamage>. If striking from behind, this Attack critically strikes for @QCritDamageMod@ damage.<br><br><spellName>Hallucinate: Death</spellName>: On death, deal <magicDamage>@FearDamage*100@% maximum Health magic damage</magicDamage> and fear for @FearDuration@s around you.",
     "iconLarge": "assets/ux/cherry/augments/icons/clowncollege_large.png",
     "iconSmall": "assets/ux/cherry/augments/icons/clowncollege_small.png",
     "rarity": "gold",
@@ -13599,13 +13615,13 @@
         0.10000000149011612
       ],
       "HealthPercentageMod": [
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612
+        0.15000000596046448,
+        0.15000000596046448,
+        0.15000000596046448,
+        0.15000000596046448,
+        0.15000000596046448,
+        0.15000000596046448,
+        0.15000000596046448
       ],
       "MaxLevel": [
         1,
@@ -13724,20 +13740,20 @@
     "id": 362,
     "apiName": "GoHVoteAllyHunter",
     "name": "Ally Hunter",
-    "desc": "Vote for your team to ally with the Demon Hunters. <br><br>Allying with Demon Hunters grants you <gold>+%i:goldCoins%@BonusGold@ bonus gold</gold> when you defeat a <keywordMajor>Demon team</keywordMajor>.",
-    "tooltip": "Vote for your team to ally with the Demon Hunters. <br><br>Allying with Demon Hunters grants you <gold>+%i:goldCoins%@BonusGold@ bonus gold</gold> when you defeat a <keywordMajor>Demon team</keywordMajor>.",
+    "desc": "Vote for your team to ally with the Demon Hunters. <br><br>Allying with Demon Hunters grants you <gold>+%i:goldCoins%@BonusGold@ bonus gold</gold> <keywordMajor>when you beat a Demon team</keywordMajor>.",
+    "tooltip": "Vote for your team to ally with the Demon Hunters. <br><br>Allying with Demon Hunters grants you <gold>+%i:goldCoins%@BonusGold@ bonus gold</gold> <keywordMajor>when you beat a Demon team</keywordMajor>.",
     "iconLarge": "assets/ux/cherry/augments/icons/yonehunter_large.arena_2026_s2_a2.png",
     "iconSmall": "assets/ux/cherry/augments/icons/yonehunter_small.arena_2026_s2_a2.png",
     "rarity": "silver",
     "dataValues": {
       "BonusGold": [
-        250,
-        250,
-        250,
-        250,
-        250,
-        250,
-        250
+        500,
+        500,
+        500,
+        500,
+        500,
+        500,
+        500
       ],
       "MaxLevel": [
         1,
@@ -14239,6 +14255,47 @@
         ]
       }
     },
+    "type": "full"
+  },
+  "392": {
+    "id": 392,
+    "apiName": "GoHSwindlersOrb",
+    "name": "Swindler's Orb",
+    "desc": "Dealing damage to an enemy champion reduces their <shield>shields</shield>.",
+    "tooltip": "Dealing damage to an enemy champion reduces any <shield>shields</shield> they have or gain by @ShieldShred@% for @DebuffDuration@ seconds. <br><br><rules>Affects General and <physicalDamage>Physical Damage</physicalDamage> shields, but not purely <magicDamage>Magical Damage</magicDamage> blocking shields.</rules>",
+    "iconLarge": "assets/ux/cherry/augments/icons/swindlers_orb_item_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/swindlers_orb_item_small.png",
+    "rarity": "silver",
+    "dataValues": {
+      "DebuffDuration": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "MaxLevel": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "ShieldShred": [
+        40,
+        40,
+        40,
+        40,
+        40,
+        40,
+        40
+      ]
+    },
+    "calculations": {},
     "type": "full"
   },
   "404": {

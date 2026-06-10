@@ -665,7 +665,7 @@
     },
     "2052": {
       "name": "Poro-Snax",
-      "description": "<mainText><stats></stats><br><br><active>Active - Consume:</active> Serves a scrumptious scoop to a nearby Poro, causing it to grow in size.<br><br><flavorText>This savory blend of free-range, grass-fed Avarosan game hens and organic, non-ZMO Freljordian herbs contains the essential nutrients necessary to keep your Poro purring with pleasure.<br><br>All proceeds will be donated towards fighting Noxian animal cruelty. </flavorText></mainText>",
+      "description": "<mainText><stats></stats><br><br><active>Active - Consume:</active> Serves a scrumptious scoop to a nearby Poro, causing it to grow in size.<br><br><flavorText>This savory blend of Avarosan hen and local Freljordian herbs—picked daily and flash-frozen—contains the essential nutrients necessary to keep your Poro cool and calm.<br><br>All proceeds will be donated towards preserving the habitat of the endangered Spotted Poro.</flavorText></mainText>",
       "plaintext": "",
       "stats": {}
     },
@@ -2559,7 +2559,7 @@
     },
     "4645": {
       "name": "Shadowflame",
-      "description": "<mainText><stats><attention>110</attention> Ability Power<br><attention>15</attention> Magic Penetration</stats><br><br><passive>Cinderbloom</passive><br><magicDamage>Magic</magicDamage> and <trueDamage>true damage</trueDamage> <attention>Critically Strikes</attention> enemies below 40% Health, dealing 20% increased damage. </mainText>",
+      "description": "<mainText><stats><attention>110</attention> Ability Power<br><attention>15</attention> Magic Penetration</stats><br><br><passive>Cinderbloom</passive><br><magicDamage>Magic</magicDamage> and <trueDamage>true damage</trueDamage> <attention>Critically Strike</attention> enemies below 40% Health, dealing 20% increased damage. </mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 110
@@ -3433,6 +3433,12 @@
       "plaintext": "",
       "stats": {}
     },
+    "220013": {
+      "name": "Poro-Snax",
+      "description": "<mainText><stats></stats><br><br><active>Active - Consume:</active> Serves a scrumptious scoop to a nearby Poro, causing it to grow in size.<br><br><flavorText>This savory blend of Avarosan hen and Freljordian herbs—now finished with a touch of refined Demacian sugarcraft—contains the essential nutrients necessary to keep your Poro positively radiant.<br><br>All proceeds will be donated towards the Cloudfield Youth Choir. Help a Demacian child afford an etwahl, today!</flavorText></mainText>",
+      "plaintext": "",
+      "stats": {}
+    },
     "221011": {
       "name": "Giant's Belt",
       "description": "<mainText><stats><attention>300</attention> Health</stats><br><br></mainText>",
@@ -3548,7 +3554,7 @@
     },
     "222504": {
       "name": "Kaenic Rookern",
-      "description": "<mainText><stats><attention>350</attention> Health<br><attention>80</attention> Magic Resist</stats><br><br><passive>Magebane</passive><br>After not taking magic damage for 15 seconds, gain a <shield>magic shield</shield>. </mainText>",
+      "description": "<mainText><stats><attention>350</attention> Health<br><attention>80</attention> Magic Resist</stats><br><br><passive>Magebane</passive><br>After not taking magic damage for 10 seconds, gain a <shield>magic shield</shield>. </mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 80,
@@ -3923,11 +3929,11 @@
     },
     "223078": {
       "name": "Trinity Force",
-      "description": "<mainText><stats><attention>35</attention> Attack Damage<br><attention>25%</attention> Attack Speed<br><attention>333</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Spellblade</passive><br>After using an Ability, your next Attack is enhanced with additional physical damage.<br><br><passive>Quicken</passive><br>Basic attacks grant Move Speed.<br><br></mainText>",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>25%</attention> Attack Speed<br><attention>375</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Spellblade</passive><br>After using an Ability, your next Attack is enhanced with additional physical damage.<br><br><passive>Quicken</passive><br>Basic attacks grant Move Speed.<br><br></mainText>",
       "plaintext": "",
       "stats": {
-        "FlatHPPoolMod": 333,
-        "FlatPhysicalDamageMod": 35,
+        "FlatHPPoolMod": 375,
+        "FlatPhysicalDamageMod": 40,
         "PercentAttackSpeedMod": 0.25
       }
     },
@@ -3979,7 +3985,7 @@
     },
     "223094": {
       "name": "Rapid Firecannon",
-      "description": "<mainText><stats><attention>30%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance<br><attention>4%</attention> Move Speed</stats><br><br><passive>Energized</passive><br>Moving and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Sharpshooter</passive><br>Your <keyword>Energized Attack</keyword> applies <magicDamage>200 bonus magic damage</magicDamage>. In addition, Energized attacks gain up to 35% bonus Attack Range.<br><br><buffedStat>Energized stacks twice as fast in Arena.</buffedStat><br></mainText>",
+      "description": "<mainText><stats><attention>30%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance<br><attention>4%</attention> Move Speed</stats><br><br><passive>Energized</passive><br>Moving and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Sharpshooter</passive><br>Your <keyword>Energized Attack</keyword> applies <magicDamage>200 bonus magic damage</magicDamage>. In addition, Energized attacks gain up to 35% bonus Attack Range.<br></mainText>",
       "plaintext": "",
       "stats": {
         "FlatCritChanceMod": 0.25,
@@ -4368,15 +4374,15 @@
     },
     "224004": {
       "name": "Spectral Cutlass",
-      "description": "<mainText><stats><attention>55</attention> Attack Damage<br><attention>21</attention> Lethality</stats><br><br><active>Active -</active> <active>Soul Anchor</active> (0s)<br>Mark your current location. After 5 seconds, return to that location. You may recast at any point during <active>Soul Anchor's</active> duration to return to your marked location early.</mainText>",
+      "description": "<mainText><stats><attention>60</attention> Attack Damage<br><attention>21</attention> Lethality</stats><br><br><active>Active -</active> <active>Soul Anchor</active> (0s)<br>Mark your current location. After 5 seconds, return to that location. You may recast at any point during <active>Soul Anchor's</active> duration to return to your marked location early.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatPhysicalDamageMod": 55
+        "FlatPhysicalDamageMod": 60
       }
     },
     "224005": {
       "name": "Imperial Mandate",
-      "description": "<mainText><stats><attention>60</attention> Ability Power<br><attention>35</attention> Ability Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Coordinated Fire</passive> (0s) per target<br><keyword>Slowing</keyword> or <keyword>Immobilizing</keyword> an enemy champion marks them for 5 seconds. Ally champion damage detonates the mark, dealing <magicDamage>magic damage equal to 20% of current health</magicDamage>. </mainText>",
+      "description": "<mainText><stats><attention>60</attention> Ability Power<br><attention>15</attention> Ability Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Control</passive><br>Gain 15 Ability Haste for your abilities with <keyword>Immobilizing</keyword> effects.<br><br><passive>Command</passive><br>On <keyword>Immobilizing</keyword> an enemy champion, mark them as 6% <Keyword>Vulnerable</Keyword> for 4 seconds.<br></mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 60
@@ -4627,7 +4633,7 @@
     },
     "226662": {
       "name": "Iceborn Gauntlet",
-      "description": "<mainText><stats><attention>300</attention> Health<br><attention>45</attention> Armor<br><attention>10</attention> Ability Haste</stats><br><br><passive>Spellblade</passive><br>After using an Ability, your next Attack deals <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit> and creates a frost field for 2s that <status>Slows</status>.</mainText>",
+      "description": "<mainText><stats><attention>300</attention> Health<br><attention>45</attention> Armor<br><attention>15</attention> Ability Haste</stats><br><br><passive>Spellblade</passive><br>After using an Ability, your next Attack deals <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit> and creates a frost field for 2s that <status>Slows</status>.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 300,
@@ -4738,10 +4744,10 @@
     },
     "226694": {
       "name": "Serylda's Grudge",
-      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>40%</attention> Armor Penetration<br><attention>10</attention> Ability Haste</stats><br><br><passive>Bitter Cold</passive><br>Damaging Abilities <status>Slow</status> enemies <scaleHealth>below 50% Health</scaleHealth> by 30% for 1 second.</mainText>",
+      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>40%</attention> Armor Penetration<br><attention>15</attention> Ability Haste</stats><br><br><passive>Bitter Cold</passive><br>Damaging Abilities <status>Slow</status> enemies <scaleHealth>below 50% Health</scaleHealth> by 50% for 1 second.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatPhysicalDamageMod": 40
+        "FlatPhysicalDamageMod": 50
       }
     },
     "226695": {
@@ -4778,10 +4784,10 @@
     },
     "226699": {
       "name": "Voltaic Cyclosword",
-      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>20</attention> Ability Haste</stats><br><br><passive>Galvanize</passive><br>Damaging an Enemy Champions with an ability triggers <keyword>Energized</keyword> if it is ready.<br><br><passive>Firmament</passive><br>Your <keyword>Energized Attack</keyword> deals <physicalDamage>%</physicalDamage> target's Current Health as <physicalDamage>bonus physical damage</physicalDamage> and grants you <scaleLethality> Lethality</scaleLethality> for 4 seconds.</mainText>",
+      "description": "<mainText><stats><attention>60</attention> Attack Damage<br><attention>20</attention> Lethality<br><attention>20</attention> Ability Haste</stats><br><br><passive>Galvanize</passive><br>Damaging an Enemy Champions with an ability triggers <keyword>Energized</keyword> if it is ready.<br><br><passive>Firmament</passive><br>Your <keyword>Energized Attack</keyword> deals <physicalDamage>%</physicalDamage> target's Current Health as <physicalDamage>bonus physical damage</physicalDamage> and grants you <scaleLethality> Lethality</scaleLethality> for 4 seconds.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatPhysicalDamageMod": 50
+        "FlatPhysicalDamageMod": 60
       }
     },
     "226701": {
@@ -4831,7 +4837,7 @@
     },
     "228005": {
       "name": "Obsidian Cleaver",
-      "description": "<mainText><stats><ornnBonus>70</ornnBonus> Attack Damage<br><ornnBonus>700</ornnBonus> Health<br><ornnBonus>40</ornnBonus> Ability Haste</stats><br><br><passive>Carve</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> to champions reduces the target's <scaleArmor>Armor by 500%</scaleArmor> for 0.1 seconds. (stacks 5 times).<br><br><passive>Fervor</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> grants <speed>20 Move Speed</speed> for 2 seconds.</mainText>",
+      "description": "<mainText><stats><ornnBonus>70</ornnBonus> Attack Damage<br><ornnBonus>700</ornnBonus> Health<br><ornnBonus>40</ornnBonus> Ability Haste</stats><br><br><passive>Carve</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> to champions reduces the target's <scaleArmor>Armor by 6%</scaleArmor> for 6 seconds. (stacks 5 times).<br><br><passive>Fervor</passive><br>Dealing <physicalDamage>physical damage</physicalDamage> grants <speed>20 Move Speed</speed> for 2 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 700,

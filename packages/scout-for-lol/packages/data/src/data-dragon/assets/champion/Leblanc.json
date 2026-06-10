@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.11.1",
+  "version": "16.12.1",
   "data": {
     "Leblanc": {
       "id": "Leblanc",
@@ -416,6 +416,19 @@
           "name": "iG LeBlanc (Elite)",
           "chromas": false,
           "parentSkin": 19
+        },
+        {
+          "id": "7059",
+          "num": 59,
+          "name": "Prestige Sinful Shores LeBlanc",
+          "chromas": true
+        },
+        {
+          "id": "7060",
+          "num": 60,
+          "name": "Prestige Sinful Shores LeBlanc (Vivid)",
+          "chromas": false,
+          "parentSkin": 59
         }
       ],
       "lore": "Mysterious even to other members of the Black Rose cabal, LeBlanc is but one of many names for a pale woman who has manipulated people and events since the earliest days of Noxus. Using her magic to mirror herself, the sorceress can appear to anyone, anywhere, and even be in many places at once. Always plotting just out of sight, LeBlanc's true motives are as inscrutable as her shifting identity.",
