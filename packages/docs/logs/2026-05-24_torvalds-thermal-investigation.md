@@ -2,7 +2,9 @@
 
 ## Status
 
-Partially Complete — diagnostic done, CPU power-cap DaemonSet PR opened. NVMe-side remediation (physical, alerts) still pending.
+Partially Complete — CPU solved (AIO cooler + RAPL cap, verified under heavy CI). Both NVMes now have dedicated cooling (active cooler on the OS disk, heatsink on the ZFS drive) and peak ≤ 65 °C NAND on light days. Talos install disk now pinned by serial. Remaining: Grafana thermal alert rules; re-verify NVMe temps on the next heavy CI day.
+
+> **Drive identity warning**: `nvme0`/`nvme1` names are assigned randomly per boot. Identify drives by serial only: OS/EPHEMERAL = `S7KGNU0XB15590B`, ZFS pool = `S7KGNU0X511734N`. Per-name claims in dated sections below reflect that boot's mapping.
 
 ## Summary
 
@@ -105,6 +107,33 @@ Expected ~25–35 % multi-thread perf cost under sustained Buildkite load. Accep
   - `node_hwmon_temp_celsius{chip="platform_coretemp_0", sensor="temp1"} > 90` warn / `>= 100` critical
 - Future: temp-reactive RAPL cap (daemon polls NVMe Composite and tightens PL1 when above threshold)
 
+## Verification — 2026-06-09 (post active cooling)
+
+User installed active cooling on `torvalds` at the 2026-06-08 00:02 PT reboot. Daily `max_over_time` from Prometheus (`toolkit grafana`), temps in °C, with daily write volume and load for workload context (days relative to 2026-06-09):
+
+| Day   | nvme0 Comp/NAND | nvme1 Comp/NAND | Written (nvme0 / nvme1) | load5 max | CPU pkg |
+| ----- | --------------- | --------------- | ----------------------- | --------- | ------- |
+| −6d   | 52.85 / 79.85   | 70.85 / 97.85   | 337 GB / 1.6 TB         | 297       | 89      |
+| −5d   | 45.85 / 67.85   | 52.85 / 74.85   | 167 / 117 GB            | 7         | 75      |
+| −4d   | 46.85 / 68.85   | 48.85 / 72.85   | 170 / 108 GB            | 6         | 66      |
+| −3d   | 57.85 / 84.85   | 70.85 / 95.85   | 1.7 / 5.1 TB            | 354       | 82      |
+| −2d   | 66.85 / 93.85   | 62.85 / 88.85   | 1.6 / 3.1 TB            | 95        | 84      |
+| −1d   | 52.85 / 75.85   | 35.85 / 48.85   | 168 / 155 GB            | 13        | 81      |
+| today | 51.85 / 77.85   | 34.85 / 47.85   | 240 / 210 GB            | 30        | 80      |
+
+(−1d straddles the reboot; nvme0/nvme1 names may refer to different physical drives before vs after it.)
+
+- **Naming (corrected 2026-06-12)**: `nvme0`/`nvme1` assignment is **random per boot** — not slot-stable and not drive-stable. (An earlier revision of this doc claimed slot-stability; that was wrong.) Proven by the `/var` (EPHEMERAL) filesystem's `device` label flipping across reboots: `nvme0n1p4` May 12–23, `nvme1n1p4` May 23–Jun 6, `nvme0n1p4` Jun 6–7, `nvme1n1p4` Jun 8–9, `nvme0n1p4` as of Jun 12. **Always identify these drives by serial**: OS/EPHEMERAL disk = `S7KGNU0XB15590B`, ZFS pool drive (`zfspv-pool-nvme`) = `S7KGNU0X511734N`. Physically (since the 2026-06-08 maintenance): the OS disk sits in the slot away from the CPU under the active cooler; the ZFS drive sits in the near-CPU slot.
+- **Which drive was May's crisis drive**: on 2026-05-24, `/var` was on `nvme1n1p4` — so the overheating "nvme1" (82.85 °C Composite / 103.85 °C NAND) was the **OS/EPHEMERAL disk** (`S7KGNU0XB15590B`). Per the 2026-04-21 wear attribution, that disk is the heavy CI writer: Buildkite overlayfs ≈ 4.2 TB/day on heavy days, ~66% of all NVMe writes, vs the Dagger buildcache's ~0.7–0.9 TB/day on the ZFS drive.
+- **Workload confound (added later on 2026-06-09)**: the post-install days were 7–20× lighter on writes (~200 GB/day vs 1.6–5 TB/day on pre-reboot CI days, load5 max 13–30 vs 95–354). The initially-claimed across-the-board improvement was mostly workload, not cooling.
+- **Light-day vs light-day comparison** (pre-reboot −4d/−5d vs post-reboot −0d/−1d relative to 2026-06-09, comparable ~100–240 GB/day writes): the OS/EPHEMERAL disk (`S7KGNU0XB15590B`, moved away from the CPU and put under the active cooler) improved to 35/48 °C Composite/NAND from 46–53/68–75. The ZFS drive (`S7KGNU0X511734N`), displaced into the near-CPU slot, was unchanged to slightly worse (52–53/76–78).
+- **Conclusion (corrected 2026-06-12): the active cooler went on the RIGHT drive.** The cooled OS disk is both the heavy CI writer (~66% of NVMe writes) and May's 103.85 °C NAND crisis drive. An earlier revision of this doc concluded the opposite ("swap the drives back") by misattributing drive identity across reboots — **do not swap**; identify by serial before drawing per-drive conclusions.
+- **2026-06-10/11 follow-up hardware (operator)**: BIOS updated; a heatsink was added to the ZFS drive (`S7KGNU0X511734N`) in the near-CPU slot. 24 h maxes measured 2026-06-12: ZFS drive **39.85/49.85 °C** (was 52/78 bare), OS disk 43.85/64.85 °C, CPU package 86 °C. Both NVMes now have dedicated cooling and sit well inside thresholds; the remaining test is a heavy CI day (multi-TB writes, load5 > 90).
+- **Drive roles** (serials; both Samsung 990 PRO 4TB): `S7KGNU0X511734N` hosts the `zfspv-pool-nvme` ZFS pool — the 2 TiB Dagger engine buildcache (`zfs-ssd-buildcache`, sync=disabled), the Buildkite git-mirrors PVC, and all `zfs-ssd` PVCs (Prometheus, Loki, media, Minecraft, …). `S7KGNU0XB15590B` is the Talos system disk (EFI/META/STATE/EPHEMERAL) and takes container overlayfs, image layers, logs, and etcd — which under CI is the **larger** write stream (5.1 TB vs 1.7 TB on the heaviest measured day). A correction to an earlier revision: the ZFS drive is _not_ the main CI write target; EPHEMERAL is.
+- **CPU no longer hits TJMax — primarily the AIO cooler, not the RAPL cap**. Timeline (all PT): RAPL cap DaemonSet deployed 2026-05-25 11:11 (running healthy since; liveness probe confirms PL1 sticks). User installed a large AIO CPU cooler at the 2026-05-26 double reboot (13:06 + 15:52). Daily CPU max: 97–100 °C every day through May 26 — **including ~26 h with the cap active but no AIO, where it still hit 100 °C** — then never above 91 °C after the AIO (peaks: 91 on May 28, 89 on Jun 3, 82–84 on the heavy-CI days Jun 6–7). The cap alone did not stop TJMax; the AIO did. The cap still limits sustained draw and radiated heat into the M.2 slots.
+- No RAPL power metrics exist (node-exporter `rapl` collector not enabled), so cap-binding (whether the CPU actually rides the 95/140 W ceilings under CI) can't be verified from Prometheus.
+- Still missing: Grafana thermal alert rules (none exist as of this check).
+
 ## Session Log — 2026-05-24
 
 ### Done
@@ -128,3 +157,48 @@ Expected ~25–35 % multi-thread perf cost under sustained Buildkite load. Accep
 - The cap only protects against CPU-radiated heat. If the NVMe is hot because its own controller/NAND is being hammered (sustained CI writes, ZFS L2ARC churn), this PR helps only marginally. Physical inspection still required.
 - If the ASUS firmware locks RAPL via MSR 0x610, the DaemonSet will CrashLoopBackOff with a clear FATAL message — that's the signal to switch to BIOS-only configuration
 - Could not access Talos kernel logs via Loki (only K8s pod logs flow there) to directly confirm `nvme0n1: critical temperature warning` events
+
+## Session Log — 2026-06-09
+
+### Done
+
+- Evaluated the active cooling installed at the 2026-06-08 00:02 PT reboot. Initial read ("everything improved") was confounded by workload: post-install days wrote ~200 GB/day vs 1.6–5 TB/day on pre-reboot CI days. Light-day vs light-day comparison shows only the system disk improved (~15–25 °C); ~~the cooler favors the wrong drive~~ **(WRONG — corrected 2026-06-12: the system disk IS the heavy CI drive; the cooler is on the right drive)**
+- ~~Resolved drive naming with operator input: names are slot-stable~~ **(WRONG — corrected 2026-06-12: naming is random per boot; only serials are stable.** The physical part stands: the system disk moved to the far slot under the active cooler, the ZFS drive to the near-CPU slot)
+- Mapped drives to workloads: `nvme0n1` (S7KGNU0X511734N) = ZFS pool `zfspv-pool-nvme` (Dagger 2 TiB buildcache + all zfs-ssd PVCs — the CI write target); `nvme1n1` (S7KGNU0XB15590B) = Talos system/EPHEMERAL disk. Note: under heavy CI the EPHEMERAL disk also takes multi-TB daily writes (5.1 TB on −3d under pre-reboot naming)
+- Reconstructed the CPU remediation timeline: RAPL cap deployed 2026-05-25 11:11 PT (DaemonSet healthy since, 8 restarts = reboots); AIO cooler installed at the 2026-05-26 double reboot. CPU hit 100 °C with cap-only for ~26 h, never after the AIO → AIO is the primary fix for TJMax, cap is secondary
+- Confirmed `toolkit grafana alerts` still returns no alert rules
+- Updated Status line and added Verification section to this doc
+
+### Remaining
+
+- ~~Swap the drives so the ZFS/CI drive sits under the active cooler~~ **(RETRACTED 2026-06-12 — based on misattributed drive identity; the cooler is on the right drive. The ZFS drive got its own heatsink on ~2026-06-10/11 and now peaks at 39.85/49.85 °C.)**
+- Grafana thermal alert rules (queries already specified in Follow-ups above) — these would catch the next heavy-CI thermal excursion automatically
+- Re-verify NVMe temps during the next heavy CI day (multi-TB writes / load5 > 90) — the new NVMe cooling is untested under real load (CPU has been tested: 82–84 °C on the Jun 6–7 heavy days with AIO + cap)
+- Consider enabling node-exporter's `rapl` collector to expose package power — would let us verify whether the 95/140 W cap binds under CI, and whether PL1/PL2 can be loosened now that the AIO handles dissipation
+
+### Caveats
+
+- CPU TJMax elimination is attributable primarily to the AIO (cap-only period May 25–26 still hit 100 °C); with the AIO in place, the RAPL cap may now be unnecessarily conservative
+- ~~Slot↔name mapping (near-CPU = `nvme0`) … has held across every reboot since mid-May~~ **(WRONG — corrected 2026-06-12: the mapping flips randomly per boot; see the naming bullet in the Verification section)**
+
+## Session Log — 2026-06-12
+
+### Done
+
+- **Corrected this doc's 2026-06-09 errors**: drive naming is random per boot (proven via the `/var` device label flipping across May–June reboots), NOT slot-stable; the active cooler is on the RIGHT drive (the OS/EPHEMERAL disk, which is both the heavy CI writer per the 2026-04-21 wear attribution and May's 103.85 °C NAND crisis drive). Retracted the "swap drives back" recommendation.
+- **Fixed the Talos install-disk footgun**: `packages/homelab/src/talos/patches/image.yaml` and the live machine config now select the install disk via `diskSelector.serial: S7KGNU0XB15590B` instead of `disk: /dev/nvme0n1` + `wipe: true`, which had a per-boot coin-flip chance of pointing at the ZFS pool drive on a reinstall. Applied live without reboot; verified node Ready. (`diskSelector` always has priority over `disk` per Talos docs; the stale `disk` field was also removed from the live config.)
+- Recorded operator hardware updates (~2026-06-10/11): BIOS updated; heatsink added to the ZFS drive. 24 h maxes on 2026-06-12: ZFS drive 39.85/49.85 °C Composite/NAND, OS disk 43.85/64.85 °C, CPU 86 °C.
+- Investigated the wear doc's "Plex 471 GB/day" anomaly: it was a one-off burst Apr 17–22 (~2.7 TB total, ~0.3 GB/day since) — noted as stale in `guides/2026-04-21_nvme-wear-attribution.md`.
+- Answered the "ZFS on the cooled drive / move BK+Dagger to OS drive" question: technically possible (Talos `VolumeConfig` EPHEMERAL maxSize + `RawVolumeConfig`, requires wiping EPHEMERAL) but not recommended — BK overlayfs is already on the cooled OS drive, and moving the Dagger cache there would forfeit the lz4/sync=disabled write reduction on the busiest drive. Keep current layout. Plan: `packages/docs/archive/completed/2026-06-12_talos-install-disk-selector.md`.
+
+### Remaining
+
+- Grafana thermal alert rules (PromQL specified in Follow-ups above) — still none exist
+- Re-verify both NVMe temps + CPU on the next heavy CI day (multi-TB writes / load5 > 90)
+- Optional: enable node-exporter `rapl` collector to see whether the 95/140 W cap binds under CI; consider loosening PL1/PL2 now that the AIO handles dissipation
+- Optional hardware path discussed: M.2→PCIe adapter in the free x16 slot (board runs on iGPU, all PCIe slots empty) for a third drive or to mirror `zfspv-pool-nvme`
+
+### Caveats
+
+- The BIOS update (~2026-06-10/11) may have reset firmware power-limit settings; the cpu-power-cap DaemonSet re-applies RAPL every 5 min so the cap survives, but the CPU 24 h max ticked up to 86 °C — watch on the next heavy CI day
+- All cross-boot per-drive analysis in this doc must go through serials; per-name claims are only valid within the boot they were measured in
