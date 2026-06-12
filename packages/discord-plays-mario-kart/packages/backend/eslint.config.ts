@@ -12,6 +12,7 @@ const config = [
         "src/emulator/png.test.ts",
         "src/emulator/constants.test.ts",
         "src/webserver/dispatch.test.ts",
+        "src/stream/overlay.test.ts",
       ],
     },
   }),
