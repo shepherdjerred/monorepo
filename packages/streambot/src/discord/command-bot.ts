@@ -160,6 +160,17 @@ export class CommandBot {
       body: commandJson,
     });
     log.info("slash commands registered", { count: commandJson.length });
+    // Pre-pool deploys registered guild-scoped commands. Discord stores guild and global commands
+    // in separate buckets and a PUT to one never clears the other, so a leftover guild-scoped copy
+    // shows up as a duplicate /stream in the picker. Empty every guild bucket the bot can see.
+    for (const guildId of this.client.guilds.cache.keys()) {
+      await rest.put(Routes.applicationGuildCommands(applicationId, guildId), {
+        body: [],
+      });
+    }
+    log.info("stale guild-scoped commands cleared", {
+      guilds: this.client.guilds.cache.size,
+    });
   }
 
   /** Voice channel the issuer is currently in (for joining / addressing their session), or null. */
