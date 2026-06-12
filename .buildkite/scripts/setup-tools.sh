@@ -7,7 +7,7 @@ set -euo pipefail
 RIPGREP_VERSION="15.1.0"
 
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
-KUBECTL_VERSION="v1.36.1"
+KUBECTL_VERSION="v1.36.2"
 
 # renovate: datasource=github-releases depName=astral-sh/uv
 UV_VERSION="0.11.14"
