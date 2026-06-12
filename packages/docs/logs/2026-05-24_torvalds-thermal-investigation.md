@@ -195,10 +195,19 @@ User installed active cooling on `torvalds` at the 2026-06-08 00:02 PT reboot. D
 
 - Grafana thermal alert rules (PromQL specified in Follow-ups above) — still none exist
 - Re-verify both NVMe temps + CPU on the next heavy CI day (multi-TB writes / load5 > 90)
-- Optional: enable node-exporter `rapl` collector to see whether the 95/140 W cap binds under CI; consider loosening PL1/PL2 now that the AIO handles dissipation
+- Optional: enable node-exporter `rapl` collector to see whether the cap binds under CI
 - Optional hardware path discussed: M.2→PCIe adapter in the free x16 slot (board runs on iGPU, all PCIe slots empty) for a third drive or to mirror `zfspv-pool-nvme`
 
 ### Caveats
 
 - The BIOS update (~2026-06-10/11) may have reset firmware power-limit settings; the cpu-power-cap DaemonSet re-applies RAPL every 5 min so the cap survives, but the CPU 24 h max ticked up to 86 °C — watch on the next heavy CI day
 - All cross-boot per-drive analysis in this doc must go through serials; per-name claims are only valid within the boot they were measured in
+
+## Session Log — 2026-06-12 (later: CPU performance restore)
+
+CPU performance limits rolled back now that the AIO + per-drive NVMe cooling are in place. Full detail in `packages/docs/plans/2026-06-12_torvalds-cpu-performance-restore.md`.
+
+- RAPL cap raised to Intel stock 125/253 W (`apps.ts`; deploys post-merge). The DaemonSet stays as a guard against ASUS unlimited-PL firmware defaults.
+- `cpufreq.default_governor=powersave` + `intel_pstate=passive` removed from the factory schematic; new image ID `cb410305…74c38c` regenerated (and `update-image-id.ts` fixed to refresh the pinned digest — it previously left it stale, silently resolving to the old image).
+- Live machine config: new install image, dead `install.extraKernelArgs` removed.
+- **Pending operator action**: `talosctl upgrade` (reboot) to boot the cleaned image — command in the plan doc.
