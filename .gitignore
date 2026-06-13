@@ -117,3 +117,6 @@ packages/eslint-config/local.js
 packages/eslint-config/local.js.map
 packages/eslint-config/local.d.ts
 packages/eslint-config/local.d.ts.map
+
+# Agent scratch scripts for live Discord interaction (see discord skill)
+packages/streambot/scratch/
