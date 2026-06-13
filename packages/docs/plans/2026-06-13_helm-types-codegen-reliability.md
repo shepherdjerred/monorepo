@@ -4,6 +4,9 @@
 
 Largely Addressed by [PR #1150](https://github.com/shepherdjerred/monorepo/pull/1150) (in-flight) — this captures only the residual gaps. If #1150 covers them, delete this doc.
 
+> **Update (2026-06-13):** `generate-helm-types` now has a `--check` mode and is run as a fail-fast Buildkite
+> `helm-types-drift-check` gate (replacing the weekly Temporal refresh). See `2026-06-13_helm-types-ci-gate.md`.
+
 ## Background
 
 `packages/homelab/src/cdk8s/scripts/generate-helm-types.ts` generates the **committed** `generated/helm/*.types.ts`. On 2026-06-13 it cost ~an hour of churn: it `rm -rf`'d the output dir at start, then fetched each chart with a network-flaky `helm repo update`, silently skipping (`warnOnly`) any that failed — so each run left a _different_ random chart missing and never converged, and `setup.ts` Phase 4 deleted committed types (the promtail/kube-prometheus drift, see `reference_setup_codegen_promtail_drift`).

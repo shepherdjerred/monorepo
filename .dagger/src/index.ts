@@ -75,7 +75,7 @@ import {
 
 import { goBuildHelper, goTestHelper, goLintHelper } from "./golang";
 
-import { homelabSynthHelper } from "./homelab";
+import { homelabSynthHelper, helmTypesDriftCheckHelper } from "./homelab";
 
 import { swiftLintHelper } from "./swift";
 
@@ -750,6 +750,26 @@ export class Monorepo {
     tsconfig: File | null = null,
   ): Directory {
     return homelabSynthHelper(pkgDir, depNames, depDirs, tsconfig);
+  }
+
+  /**
+   * Regenerate the cdk8s Helm value types and fail if they drift from the
+   * committed `generated/helm/` tree. This is the CI freshness gate (replaces
+   * the weekly helm-types-refresh Temporal workflow).
+   */
+  @func()
+  async helmTypesDriftCheck(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return helmTypesDriftCheckHelper(
+      pkgDir,
+      depNames,
+      depDirs,
+      tsconfig,
+    ).stdout();
   }
 
   // ---------------------------------------------------------------------------

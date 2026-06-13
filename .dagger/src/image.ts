@@ -18,7 +18,6 @@ import {
   EMSCRIPTEN_IMAGE,
   GH_CLI_VERSION,
   GITHUB_MCP_SERVER_VERSION,
-  HELM_IMAGE,
   KUBECTL_VERSION,
   OBSIDIAN_HEADLESS_BASE_IMAGE,
   REDLIB_SOURCE_REF,
@@ -379,19 +378,6 @@ function withGithubMcpServer(container: Container): Container {
       ].join(" && "),
     ])
     .withExec(["github-mcp-server", "--version"]);
-}
-
-/**
- * Install the helm CLI. Required by the helm-types-weekly-refresh workflow,
- * which runs `bun run generate-helm-types` — that shells out to `helm pull`
- * (incl. `helm pull oci://...`) for every chart in versions.ts. Copied from the
- * pinned, SHA-addressed HELM_IMAGE (same source the CI test harness uses).
- */
-function withHelm(container: Container): Container {
-  const helmBinary = dag.container().from(HELM_IMAGE).file("/usr/bin/helm");
-  return container
-    .withFile("/usr/local/bin/helm", helmBinary)
-    .withExec(["helm", "version", "--short"]);
 }
 
 /**
@@ -874,12 +860,8 @@ export function buildTemporalWorkerImageHelper(
   // The homelab-audit-daily workflow runs `claude -p` against the audit
   // runbook, which invokes talosctl / tofu / argocd / velero — see
   // `withHomelabAuditClis`.
-  // The helm-types-weekly-refresh workflow shells out to `helm pull` to
-  // regenerate the cdk8s chart types — see `withHelm`.
-  container = withHelm(
-    withHomelabAuditClis(
-      withGithubMcpServer(withKubectl(withEditorClis(container))),
-    ),
+  container = withHomelabAuditClis(
+    withGithubMcpServer(withKubectl(withEditorClis(container))),
   );
 
   container = container

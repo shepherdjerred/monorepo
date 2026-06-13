@@ -21,6 +21,7 @@ function emptyAffected(): AffectedPackages {
     tofuChanged: false,
     cooklangChanged: false,
     resumeChanged: false,
+    helmTypesInputsChanged: false,
     ciImageChanged: false,
     hasImagePackages: new Set(),
     hasSitePackages: new Set(),
@@ -40,6 +41,7 @@ function fullBuild(): AffectedPackages {
     tofuChanged: true,
     cooklangChanged: true,
     resumeChanged: true,
+    helmTypesInputsChanged: true,
     ciImageChanged: false,
     hasImagePackages: new Set(PACKAGES_WITH_IMAGES),
     hasSitePackages: new Set(Object.keys(PACKAGE_TO_SITE)),
@@ -404,6 +406,38 @@ describe("buildPipeline", () => {
         .filter((k): k is string => typeof k === "string");
       expect(pushKeys.some((k) => k.includes("temporal-worker"))).toBe(true);
       expect(pushKeys.some((k) => k.includes("birmel"))).toBe(false);
+    });
+  });
+
+  describe("helm-types drift check", () => {
+    function homelabStepKeys(affected: AffectedPackages): string[] {
+      const pipeline = buildPipeline(affected);
+      const homelab = pipeline.steps
+        .filter(isGroup)
+        .find((g) => g.key === "pkg-homelab");
+      return (homelab?.steps ?? []).filter(isStep).map((s) => s.key);
+    }
+
+    it("emits the drift-check step when a generator input changed", () => {
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.homelabChanged = true;
+      affected.helmTypesInputsChanged = true;
+
+      const keys = homelabStepKeys(affected);
+      expect(keys).toContain("helm-types-drift-check");
+      // build-helm-types is unconditional for homelab; drift-check is the gate.
+      expect(keys).toContain("build-helm-types");
+    });
+
+    it("omits the drift-check step when no generator input changed", () => {
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.homelabChanged = true;
+
+      const keys = homelabStepKeys(affected);
+      expect(keys).not.toContain("helm-types-drift-check");
+      expect(keys).toContain("build-helm-types");
     });
   });
 

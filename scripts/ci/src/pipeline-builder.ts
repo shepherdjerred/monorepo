@@ -156,7 +156,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   const releaseDeps: string[] = [];
 
   for (const pkg of packages) {
-    const group = perPackageSteps(pkg);
+    const group = perPackageSteps(pkg, affected.helmTypesInputsChanged);
     if (group) {
       steps.push(group);
       pkgKeyMap.set(pkg, group.key);

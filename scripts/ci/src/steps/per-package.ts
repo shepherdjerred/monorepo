@@ -43,8 +43,15 @@ function daggerPkgFlags(pkg: string): string {
   return flags.join(" ");
 }
 
-/** Generate per-package build/test groups for a single package, or null if skipped. */
-export function perPackageSteps(pkg: string): BuildkiteGroup | null {
+/**
+ * Generate per-package build/test groups for a single package, or null if
+ * skipped. `helmTypesInputsChanged` gates the homelab helm-types drift-check
+ * step (only emitted when a generator input changed — see change-detection).
+ */
+export function perPackageSteps(
+  pkg: string,
+  helmTypesInputsChanged = false,
+): BuildkiteGroup | null {
   if (SKIP_PACKAGES.has(pkg)) return null;
 
   const sk = safeKey(pkg);
@@ -150,6 +157,30 @@ export function perPackageSteps(pkg: string): BuildkiteGroup | null {
         resources,
       ),
     );
+
+    // Regenerate the committed Helm value types and fail if they drift. Scoped
+    // to PRs that touch a generator input (versions.ts / the generate+parse
+    // scripts / the helm-types lib) so the ~24-chart network fetch doesn't run
+    // on unrelated cdk8s edits. Replaces the weekly helm-types-refresh Temporal
+    // workflow: a chart bump that wasn't regenerated now fails CI. Flags mirror
+    // `cdk8sSynthStep` (the `homelab-synth` Dagger func has no `--pkg` param).
+    if (helmTypesInputsChanged) {
+      const cdk8sDeps = WORKSPACE_DEPS["homelab/src/cdk8s"] ?? [];
+      const cdk8sDepFlags = cdk8sDeps
+        .flatMap((d) => [
+          `--dep-names ${d}`,
+          `--dep-dirs ${gitDir(`packages/${d}`)}`,
+        ])
+        .join(" ");
+      steps.push(
+        daggerCallStep(
+          `:helm: Helm types drift check`,
+          `helm-types-drift-check`,
+          `${DAGGER_CALL} helm-types-drift-check --pkg-dir ${gitDir("packages/homelab/src/cdk8s")} ${cdk8sDepFlags} --tsconfig ${gitFile("tsconfig.base.json")}`,
+          resources,
+        ),
+      );
+    }
   }
 
   if (ASTRO_PACKAGES.has(pkg)) {
