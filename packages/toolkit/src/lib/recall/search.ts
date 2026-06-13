@@ -26,6 +26,12 @@ type SearchStatOptions = {
 
 /**
  * Hybrid search: vector similarity + FTS5 keyword search, merged via RRF.
+ *
+ * Fusion happens at the document level: the FTS index has one row per
+ * document while vector hits are per-chunk, so vector hits are collapsed
+ * to their best-ranked chunk per document before fusing on path. A
+ * document surfaced by both methods gets its RRF scores summed, ranking
+ * it above documents found by only one.
  */
 export async function hybridSearch(
   db: RecallDb,
@@ -68,7 +74,10 @@ export async function hybridSearch(
     const vecStart = performance.now();
     let vecCandidates: Awaited<ReturnType<RecallDb["vectorSearch"]>>;
     try {
-      vecCandidates = await db.vectorSearch(queryVector, candidateLimit);
+      // Chunk-level hits collapse to far fewer documents (large docs can
+      // occupy many of the top slots), so over-fetch chunks to still get
+      // ~candidateLimit distinct documents for fusion.
+      vecCandidates = await db.vectorSearch(queryVector, candidateLimit * 10);
     } catch (error) {
       if (mode === "semantic") {
         recordSearchStat(db, {
@@ -102,17 +111,22 @@ export async function hybridSearch(
       );
     }
 
-    vectorResults = vecCandidates.map((row) => {
-      const meta = db.getMetadata(row.doc_path);
-      return {
-        path: row.doc_path,
-        title: meta?.title ?? "",
-        chunk: row.text,
-        score: 1 / (1 + row._distance), // Convert distance to similarity
-        source: meta?.source ?? "unknown",
-        chunkIndex: row.chunk_index,
-      };
-    });
+    // Candidates arrive sorted by distance, so the first chunk seen for a
+    // document is its best one. Cap at candidateLimit docs so both fusion
+    // lists have comparable rank depth.
+    vectorResults = collapseToBestChunkPerDoc(
+      vecCandidates.map((row) => {
+        const meta = db.getMetadata(row.doc_path);
+        return {
+          path: row.doc_path,
+          title: meta?.title ?? "",
+          chunk: row.text,
+          score: 1 / (1 + row._distance), // Convert distance to similarity
+          source: meta?.source ?? "unknown",
+          chunkIndex: row.chunk_index,
+        };
+      }),
+    ).slice(0, candidateLimit);
   }
 
   // FTS search
@@ -150,12 +164,11 @@ export async function hybridSearch(
     results = reciprocalRankFusion(vectorResults, ftsResults);
   }
 
-  // Deduplicate by path + chunkIndex
+  // Deduplicate by document path
   const seen = new Set<string>();
   const deduped = results.filter((r) => {
-    const key = `${r.path}:${String(r.chunkIndex)}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
+    if (seen.has(r.path)) return false;
+    seen.add(r.path);
     return true;
   });
 
@@ -190,8 +203,13 @@ function recordSearchStat(
 }
 
 /**
- * Reciprocal Rank Fusion: merges two ranked lists.
+ * Reciprocal Rank Fusion: merges two ranked lists of documents.
  * RRF(d) = Σ 1/(k + rank(d)) for each list containing d
+ *
+ * Lists are fused on document path; both inputs must already be one
+ * entry per document. When both lists contain a document, the first
+ * list's entry wins (callers pass the vector list first so the
+ * best-matching chunk excerpt is kept over the FTS document head).
  */
 function reciprocalRankFusion(
   listA: SearchResult[],
@@ -200,31 +218,35 @@ function reciprocalRankFusion(
 ): SearchResult[] {
   const scores = new Map<string, { score: number; result: SearchResult }>();
 
-  for (const [rank, result] of listA.entries()) {
-    const key = `${result.path}:${String(result.chunkIndex)}`;
-    const existing = scores.get(key);
-    const rrfScore = 1 / (k + rank + 1);
-    if (existing == null) {
-      scores.set(key, { score: rrfScore, result });
-    } else {
-      existing.score += rrfScore;
-    }
-  }
-
-  for (const [rank, result] of listB.entries()) {
-    const key = `${result.path}:${String(result.chunkIndex)}`;
-    const existing = scores.get(key);
-    const rrfScore = 1 / (k + rank + 1);
-    if (existing == null) {
-      scores.set(key, { score: rrfScore, result });
-    } else {
-      existing.score += rrfScore;
+  for (const list of [listA, listB]) {
+    for (const [rank, result] of list.entries()) {
+      const existing = scores.get(result.path);
+      const rrfScore = 1 / (k + rank + 1);
+      if (existing == null) {
+        scores.set(result.path, { score: rrfScore, result });
+      } else {
+        existing.score += rrfScore;
+      }
     }
   }
 
   return [...scores.values()]
     .toSorted((a, b) => b.score - a.score)
     .map(({ result, score }) => ({ ...result, score }));
+}
+
+/**
+ * Collapses chunk-level results (sorted best-first) to one entry per
+ * document, keeping each document's best chunk.
+ */
+function collapseToBestChunkPerDoc(results: SearchResult[]): SearchResult[] {
+  const byDoc = new Map<string, SearchResult>();
+  for (const result of results) {
+    if (!byDoc.has(result.path)) {
+      byDoc.set(result.path, result);
+    }
+  }
+  return [...byDoc.values()];
 }
 
 function keywordSearch(
