@@ -215,5 +215,5 @@ talosctl upgrade --nodes 192.168.1.81 \
 
 ```bash {"interpreter":"/opt/homebrew/bin/bash"}
 VERSION=1.36.2
-talosctl --nodes 192.168.1.81 upgrade-k8s --to $VERSION
+talosctl --nodes 192.168.1.81 --endpoint https://torvalds:6443 upgrade-k8s --to $VERSION
 ```
