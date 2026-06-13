@@ -258,8 +258,6 @@ export type PromtailHelmValuesReadinessProbeHttpGet = {
   port?: string;
 };
 
-export type PromtailHelmValuesResources = object;
-
 export type PromtailHelmValuesPodSecurityContext = {
   /**
    * @default 0
@@ -334,25 +332,6 @@ export type PromtailHelmValuesServiceAccountAnnotations = {
    * This is common for config maps, custom settings, and extensible configurations.
    */
   [key: string]: unknown;
-};
-
-export type PromtailHelmValuesNodeSelector = object;
-
-export type PromtailHelmValuesAffinity = object;
-
-export type PromtailHelmValuesTolerationsElement = {
-  /**
-   * @default "node-role.kubernetes.io/master"
-   */
-  key?: string;
-  /**
-   * @default "Exists"
-   */
-  operator?: string;
-  /**
-   * @default "NoSchedule"
-   */
-  effect?: string;
 };
 
 export type PromtailHelmValuesDefaultVolumesElement = {
@@ -769,10 +748,11 @@ export type PromtailHelmValuesSidecarConfigReloader = {
   livenessProbe?: PromtailHelmValuesSidecarConfigReloaderLivenessProbe;
   /**
    * Resource requests and limits for sidecar config-reloader
-   *
-   * @default {}
    */
-  resources?: PromtailHelmValuesSidecarConfigReloaderResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {"serverPort":9533}
    */
@@ -833,8 +813,6 @@ export type PromtailHelmValuesSidecarConfigReloaderContainerSecurityContextCapab
 export type PromtailHelmValuesSidecarConfigReloaderReadinessProbe = object;
 
 export type PromtailHelmValuesSidecarConfigReloaderLivenessProbe = object;
-
-export type PromtailHelmValuesSidecarConfigReloaderResources = object;
 
 export type PromtailHelmValuesSidecarConfigReloaderConfig = {
   /**
@@ -932,10 +910,11 @@ export type PromtailHelmValues = {
   readinessProbe?: PromtailHelmValuesReadinessProbe;
   /**
    * Resource requests and limits
-   *
-   * @default {}
    */
-  resources?: PromtailHelmValuesResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * The security context for pods
    *
@@ -965,17 +944,16 @@ export type PromtailHelmValues = {
   automountServiceAccountToken?: boolean;
   /**
    * Node selector for pods
-   *
-   * @default {}
    */
-  nodeSelector?: PromtailHelmValuesNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
    * Affinity configuration for pods
-   *
-   * @default {}
    */
-  affinity?: PromtailHelmValuesAffinity;
-  tolerations?: PromtailHelmValuesTolerationsElement[];
+  affinity?: Record<string, unknown>;
+  /**
+   * Tolerations for pods. By default, pods will be scheduled on master/control-plane nodes.
+   */
+  tolerations?: unknown[];
   defaultVolumes?: PromtailHelmValuesDefaultVolumesElement[];
   defaultVolumeMounts?: PromtailHelmValuesDefaultVolumeMountsElement[];
   extraVolumes?: unknown[];
@@ -1074,6 +1052,7 @@ export type PromtailHelmParameters = {
   "readinessProbe.periodSeconds"?: string;
   "readinessProbe.successThreshold"?: string;
   "readinessProbe.timeoutSeconds"?: string;
+  resources?: string;
   "podSecurityContext.runAsUser"?: string;
   "podSecurityContext.runAsGroup"?: string;
   "containerSecurityContext.readOnlyRootFilesystem"?: string;
@@ -1087,9 +1066,9 @@ export type PromtailHelmParameters = {
   "serviceAccount.imagePullSecrets"?: string;
   "serviceAccount.automountServiceAccountToken"?: string;
   automountServiceAccountToken?: string;
-  "tolerations.key"?: string;
-  "tolerations.operator"?: string;
-  "tolerations.effect"?: string;
+  nodeSelector?: string;
+  affinity?: string;
+  tolerations?: string;
   "defaultVolumes.name"?: string;
   "defaultVolumes.hostPath.path"?: string;
   "defaultVolumeMounts.name"?: string;
@@ -1156,6 +1135,7 @@ export type PromtailHelmParameters = {
   "sidecar.configReloader.containerSecurityContext.readOnlyRootFilesystem"?: string;
   "sidecar.configReloader.containerSecurityContext.capabilities.drop"?: string;
   "sidecar.configReloader.containerSecurityContext.allowPrivilegeEscalation"?: string;
+  "sidecar.configReloader.resources"?: string;
   "sidecar.configReloader.config.serverPort"?: string;
   "sidecar.configReloader.serviceMonitor.enabled"?: string;
   extraObjects?: string;

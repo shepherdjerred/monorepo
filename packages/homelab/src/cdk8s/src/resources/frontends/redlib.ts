@@ -20,6 +20,9 @@ export function createRedlibDeployment(chart: Chart) {
 
   redlibDeployment.addContainer(
     withCommonProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
       image: `ghcr.io/shepherdjerred/redlib:${versions["shepherdjerred/redlib"]}`,
       envVariables: {
         REDLIB_DEFAULT_THEME: EnvValue.fromValue("system"),

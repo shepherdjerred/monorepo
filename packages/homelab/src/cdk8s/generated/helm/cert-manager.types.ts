@@ -9,10 +9,8 @@ export type CertmanagerHelmValuesGlobal = {
    * For more information, see [Assigning Pods to Nodes](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
    * If a component-specific nodeSelector is also set, it will be merged and take precedence.
    * +docs:property
-   *
-   * @default {}
    */
-  nodeSelector?: CertmanagerHelmValuesGlobalNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
    * Labels to apply to all resources.
    * Please note that this does not add labels to the resources created dynamically by the controllers.
@@ -73,8 +71,6 @@ export type CertmanagerHelmValuesGlobal = {
    */
   leaderElection?: CertmanagerHelmValuesGlobalLeaderElection;
 };
-
-export type CertmanagerHelmValuesGlobalNodeSelector = object;
 
 export type CertmanagerHelmValuesGlobalCommonLabels = object;
 
@@ -218,8 +214,6 @@ export type CertmanagerHelmValuesConfig = {
   [key: string]: unknown;
 };
 
-export type CertmanagerHelmValuesResources = object;
-
 export type CertmanagerHelmValuesSecurityContext = {
   /**
    * @default true
@@ -258,13 +252,6 @@ export type CertmanagerHelmValuesContainerSecurityContextCapabilities = {
 };
 
 export type CertmanagerHelmValuesPodLabels = object;
-
-export type CertmanagerHelmValuesNodeSelector = {
-  /**
-   * @default "linux"
-   */
-  "kubernetes.io/os"?: string;
-};
 
 export type CertmanagerHelmValuesNetworkPolicy = {
   /**
@@ -308,8 +295,6 @@ export type CertmanagerHelmValuesNetworkPolicyEgressPortsElement = {
 };
 
 export type CertmanagerHelmValuesIngressShim = object;
-
-export type CertmanagerHelmValuesAffinity = object;
 
 export type CertmanagerHelmValuesLivenessProbe = {
   /**
@@ -644,10 +629,11 @@ export type CertmanagerHelmValuesWebhook = {
   featureGates?: string;
   /**
    * For more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
-   *
-   * @default {}
    */
-  resources?: CertmanagerHelmValuesWebhookResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Liveness probe values.
    * For more information, see [Container probes](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes).
@@ -671,14 +657,15 @@ export type CertmanagerHelmValuesWebhook = {
    * This default ensures that Pods are only scheduled to Linux nodes.
    * It prevents Pods being scheduled to Windows nodes in a mixed OS cluster.
    * +docs:property
-   *
-   * @default {"kubernetes.io/os":"linux"}
    */
-  nodeSelector?: CertmanagerHelmValuesWebhookNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
-   * @default {}
+   * Kubernetes affinity (standard Affinity object)
    */
-  affinity?: CertmanagerHelmValuesWebhookAffinity;
+  affinity?: Record<string, unknown>;
+  /**
+   * Kubernetes tolerations (standard Toleration objects)
+   */
   tolerations?: unknown[];
   topologySpreadConstraints?: unknown[];
   /**
@@ -892,8 +879,6 @@ export type CertmanagerHelmValuesWebhookMutatingWebhookConfiguration = {
 export type CertmanagerHelmValuesWebhookMutatingWebhookConfigurationNamespaceSelector =
   object;
 
-export type CertmanagerHelmValuesWebhookResources = object;
-
 export type CertmanagerHelmValuesWebhookLivenessProbe = {
   /**
    * @default 3
@@ -939,15 +924,6 @@ export type CertmanagerHelmValuesWebhookReadinessProbe = {
    */
   timeoutSeconds?: number;
 };
-
-export type CertmanagerHelmValuesWebhookNodeSelector = {
-  /**
-   * @default "linux"
-   */
-  "kubernetes.io/os"?: string;
-};
-
-export type CertmanagerHelmValuesWebhookAffinity = object;
 
 export type CertmanagerHelmValuesWebhookPodLabels = object;
 
@@ -1145,10 +1121,11 @@ export type CertmanagerHelmValuesCainjector = {
   featureGates?: string;
   /**
    * For more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
-   *
-   * @default {}
    */
-  resources?: CertmanagerHelmValuesCainjectorResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with
    * matching labels.
@@ -1156,14 +1133,15 @@ export type CertmanagerHelmValuesCainjector = {
    * This default ensures that Pods are only scheduled to Linux nodes.
    * It prevents Pods being scheduled to Windows nodes in a mixed OS cluster.
    * +docs:property
-   *
-   * @default {"kubernetes.io/os":"linux"}
    */
-  nodeSelector?: CertmanagerHelmValuesCainjectorNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
-   * @default {}
+   * Kubernetes affinity (standard Affinity object)
    */
-  affinity?: CertmanagerHelmValuesCainjectorAffinity;
+  affinity?: Record<string, unknown>;
+  /**
+   * Kubernetes tolerations (standard Toleration objects)
+   */
   tolerations?: unknown[];
   topologySpreadConstraints?: unknown[];
   /**
@@ -1299,17 +1277,6 @@ export type CertmanagerHelmValuesCainjectorPodDisruptionBudget = {
    */
   enabled?: boolean;
 };
-
-export type CertmanagerHelmValuesCainjectorResources = object;
-
-export type CertmanagerHelmValuesCainjectorNodeSelector = {
-  /**
-   * @default "linux"
-   */
-  "kubernetes.io/os"?: string;
-};
-
-export type CertmanagerHelmValuesCainjectorAffinity = object;
 
 export type CertmanagerHelmValuesCainjectorPodLabels = object;
 
@@ -1462,10 +1429,11 @@ export type CertmanagerHelmValuesStartupapicheck = {
   extraEnv?: unknown[];
   /**
    * For more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
-   *
-   * @default {}
    */
-  resources?: CertmanagerHelmValuesStartupapicheckResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with
    * matching labels.
@@ -1473,14 +1441,15 @@ export type CertmanagerHelmValuesStartupapicheck = {
    * This default ensures that Pods are only scheduled to Linux nodes.
    * It prevents Pods being scheduled to Windows nodes in a mixed OS cluster.
    * +docs:property
-   *
-   * @default {"kubernetes.io/os":"linux"}
    */
-  nodeSelector?: CertmanagerHelmValuesStartupapicheckNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
-   * @default {}
+   * Kubernetes affinity (standard Affinity object)
    */
-  affinity?: CertmanagerHelmValuesStartupapicheckAffinity;
+  affinity?: Record<string, unknown>;
+  /**
+   * Kubernetes tolerations (standard Toleration objects)
+   */
   tolerations?: unknown[];
   /**
    * Optional additional labels to add to the startupapicheck Pods.
@@ -1571,17 +1540,6 @@ export type CertmanagerHelmValuesStartupapicheckJobAnnotations = {
    */
   "helm.sh/hook-delete-policy"?: string;
 };
-
-export type CertmanagerHelmValuesStartupapicheckResources = object;
-
-export type CertmanagerHelmValuesStartupapicheckNodeSelector = {
-  /**
-   * @default "linux"
-   */
-  "kubernetes.io/os"?: string;
-};
-
-export type CertmanagerHelmValuesStartupapicheckAffinity = object;
 
 export type CertmanagerHelmValuesStartupapicheckPodLabels = object;
 
@@ -1890,10 +1848,11 @@ export type CertmanagerHelmValues = {
    * Resources to provide to the cert-manager controller pod.
    * For example:
    * For more information, see [Resource Management for Pods and Containers](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/).
-   *
-   * @default {}
    */
-  resources?: CertmanagerHelmValuesResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Pod Security Context.
    * For more information, see [Configure a Security Context for a Pod or Container](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/).
@@ -1930,10 +1889,8 @@ export type CertmanagerHelmValues = {
    * This default ensures that Pods are only scheduled to Linux nodes.
    * It prevents Pods being scheduled to Windows nodes in a mixed OS cluster.
    * +docs:property
-   *
-   * @default {"kubernetes.io/os":"linux"}
    */
-  nodeSelector?: CertmanagerHelmValuesNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
    * Enables default network policies for cert-manager.
    * This provides a way for you to restrict network traffic
@@ -1969,10 +1926,12 @@ export type CertmanagerHelmValues = {
    * +docs:property
    * A Kubernetes Affinity, if required. For more information, see [Affinity v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core).
    * For example:
-   *
-   * @default {}
    */
-  affinity?: CertmanagerHelmValuesAffinity;
+  affinity?: Record<string, unknown>;
+  /**
+   * A list of Kubernetes Tolerations, if required. For more information, see [Toleration v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core).
+   * For example:
+   */
   tolerations?: unknown[];
   topologySpreadConstraints?: unknown[];
   /**
@@ -2057,6 +2016,7 @@ export type CertmanagerHelmValues = {
 
 export type CertmanagerHelmParameters = {
   "global.imagePullSecrets"?: string;
+  "global.nodeSelector"?: string;
   "global.priorityClassName"?: string;
   "global.rbac.create"?: string;
   "global.rbac.aggregateClusterRoles"?: string;
@@ -2088,6 +2048,7 @@ export type CertmanagerHelmParameters = {
   extraArgs?: string;
   extraContainers?: string;
   extraEnv?: string;
+  resources?: string;
   "securityContext.runAsNonRoot"?: string;
   "securityContext.seccompProfile.type"?: string;
   "containerSecurityContext.allowPrivilegeEscalation"?: string;
@@ -2096,12 +2057,13 @@ export type CertmanagerHelmParameters = {
   volumes?: string;
   volumeMounts?: string;
   hostAliases?: string;
-  "nodeSelector.kubernetes.io/os"?: string;
+  nodeSelector?: string;
   "networkPolicy.enabled"?: string;
   "networkPolicy.ingress.ports.port"?: string;
   "networkPolicy.ingress.ports.protocol"?: string;
   "networkPolicy.egress.ports.port"?: string;
   "networkPolicy.egress.ports.protocol"?: string;
+  affinity?: string;
   tolerations?: string;
   topologySpreadConstraints?: string;
   "livenessProbe.enabled"?: string;
@@ -2139,6 +2101,7 @@ export type CertmanagerHelmParameters = {
   "webhook.extraArgs"?: string;
   "webhook.extraEnv"?: string;
   "webhook.featureGates"?: string;
+  "webhook.resources"?: string;
   "webhook.livenessProbe.failureThreshold"?: string;
   "webhook.livenessProbe.initialDelaySeconds"?: string;
   "webhook.livenessProbe.periodSeconds"?: string;
@@ -2149,7 +2112,8 @@ export type CertmanagerHelmParameters = {
   "webhook.readinessProbe.periodSeconds"?: string;
   "webhook.readinessProbe.successThreshold"?: string;
   "webhook.readinessProbe.timeoutSeconds"?: string;
-  "webhook.nodeSelector.kubernetes.io/os"?: string;
+  "webhook.nodeSelector"?: string;
+  "webhook.affinity"?: string;
   "webhook.tolerations"?: string;
   "webhook.topologySpreadConstraints"?: string;
   "webhook.serviceIPFamilyPolicy"?: string;
@@ -2189,7 +2153,9 @@ export type CertmanagerHelmParameters = {
   "cainjector.extraArgs"?: string;
   "cainjector.extraEnv"?: string;
   "cainjector.featureGates"?: string;
-  "cainjector.nodeSelector.kubernetes.io/os"?: string;
+  "cainjector.resources"?: string;
+  "cainjector.nodeSelector"?: string;
+  "cainjector.affinity"?: string;
   "cainjector.tolerations"?: string;
   "cainjector.topologySpreadConstraints"?: string;
   "cainjector.image.name"?: string;
@@ -2216,7 +2182,9 @@ export type CertmanagerHelmParameters = {
   "startupapicheck.jobAnnotations.helm.sh/hook-delete-policy"?: string;
   "startupapicheck.extraArgs"?: string;
   "startupapicheck.extraEnv"?: string;
-  "startupapicheck.nodeSelector.kubernetes.io/os"?: string;
+  "startupapicheck.resources"?: string;
+  "startupapicheck.nodeSelector"?: string;
+  "startupapicheck.affinity"?: string;
   "startupapicheck.tolerations"?: string;
   "startupapicheck.image.name"?: string;
   "startupapicheck.image.repository"?: string;

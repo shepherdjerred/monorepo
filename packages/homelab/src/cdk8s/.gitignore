@@ -3,3 +3,4 @@ rendered/
 .helm-render-*
 .helm-test-*
 .argocd-test-*
+.test-synth-container-resources/

@@ -6,6 +6,14 @@ const config = [
   }),
   { rules: { "no-console": "off" } },
   {
+    // cdk8s-plus silently defaults omitted container resources to 1 CPU/512Mi
+    // requests; helpers that inject an empty object silently produce BestEffort
+    // pods. Force every container to state its resources (or `resources: {}`
+    // as a visible BestEffort opt-in).
+    files: ["src/**/*.ts"],
+    rules: { "custom-rules/require-container-resources": "error" },
+  },
+  {
     files: ["src/misc/modded-minecraft.ts"],
     rules: { "no-secrets/no-secrets": "off" },
   },

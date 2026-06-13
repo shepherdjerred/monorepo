@@ -856,39 +856,6 @@ export type PostgresoperatorHelmValuesPodPriorityClassName = {
   priority?: number;
 };
 
-export type PostgresoperatorHelmValuesResources = {
-  /**
-   * @default {"cpu":"500m","memory":"500Mi"}
-   */
-  limits?: PostgresoperatorHelmValuesResourcesLimits;
-  /**
-   * @default {"cpu":"100m","memory":"250Mi"}
-   */
-  requests?: PostgresoperatorHelmValuesResourcesRequests;
-};
-
-export type PostgresoperatorHelmValuesResourcesLimits = {
-  /**
-   * @default "500m"
-   */
-  cpu?: string;
-  /**
-   * @default "500Mi"
-   */
-  memory?: string;
-};
-
-export type PostgresoperatorHelmValuesResourcesRequests = {
-  /**
-   * @default "100m"
-   */
-  cpu?: string;
-  /**
-   * @default "250Mi"
-   */
-  memory?: string;
-};
-
 export type PostgresoperatorHelmValuesSecurityContext = {
   /**
    * @default 1000
@@ -918,10 +885,6 @@ export type PostgresoperatorHelmValuesReadinessProbe = {
    */
   periodSeconds?: number;
 };
-
-export type PostgresoperatorHelmValuesAffinity = object;
-
-export type PostgresoperatorHelmValuesNodeSelector = object;
 
 export type PostgresoperatorHelmValuesControllerID = {
   /**
@@ -1078,9 +1041,12 @@ export type PostgresoperatorHelmValues = {
    */
   podPriorityClassName?: PostgresoperatorHelmValuesPodPriorityClassName;
   /**
-   * @default {"limits":{"cpu":"500m","memory":"500Mi"},"requests":{"cpu":"100m","memory":"250Mi"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: PostgresoperatorHelmValuesResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {...} (4 keys)
    */
@@ -1095,17 +1061,17 @@ export type PostgresoperatorHelmValues = {
   /**
    * Affinity for pod assignment
    * Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
-   *
-   * @default {}
    */
-  affinity?: PostgresoperatorHelmValuesAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * Node labels for pod assignment
    * Ref: https://kubernetes.io/docs/user-guide/node-selection/
-   *
-   * @default {}
    */
-  nodeSelector?: PostgresoperatorHelmValuesNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Tolerations for pod assignment
+   * Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+   */
   tolerations?: unknown[];
   /**
    * @default {"create":false,"name":null}
@@ -1247,10 +1213,7 @@ export type PostgresoperatorHelmParameters = {
   "podPriorityClassName.create"?: string;
   "podPriorityClassName.name"?: string;
   "podPriorityClassName.priority"?: string;
-  "resources.limits.cpu"?: string;
-  "resources.limits.memory"?: string;
-  "resources.requests.cpu"?: string;
-  "resources.requests.memory"?: string;
+  resources?: string;
   "securityContext.runAsUser"?: string;
   "securityContext.runAsNonRoot"?: string;
   "securityContext.readOnlyRootFilesystem"?: string;
@@ -1258,6 +1221,8 @@ export type PostgresoperatorHelmParameters = {
   "readinessProbe.initialDelaySeconds"?: string;
   "readinessProbe.periodSeconds"?: string;
   extraEnvs?: string;
+  affinity?: string;
+  nodeSelector?: string;
   tolerations?: string;
   "controllerID.create"?: string;
   "controllerID.name"?: string;

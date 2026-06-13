@@ -14,6 +14,7 @@ import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { BUILDCACHE_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
 // ZFS properties that OpenEBS CSI doesn't support as storage class parameters.
 // Applied via a one-shot Job that runs `zfs set` on the Dagger engine's dataset.
@@ -348,7 +349,7 @@ echo "Done."`,
                 },
               },
             },
-          },
+          } satisfies HelmValuesForChart<"dagger-helm">,
         },
       },
       destination: {

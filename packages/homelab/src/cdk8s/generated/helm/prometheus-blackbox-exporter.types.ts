@@ -131,10 +131,6 @@ export type PrometheusblackboxexporterHelmValuesReadinessProbeHttpGet = {
   port?: string;
 };
 
-export type PrometheusblackboxexporterHelmValuesNodeSelector = object;
-
-export type PrometheusblackboxexporterHelmValuesAffinity = object;
-
 export type PrometheusblackboxexporterHelmValuesConfig = {
   /**
    * This type allows arbitrary additional properties beyond those defined below.
@@ -180,8 +176,6 @@ export type PrometheusblackboxexporterHelmValuesConfigModulesHttp2xxHttp = {
    */
   preferred_ip_protocol?: string;
 };
-
-export type PrometheusblackboxexporterHelmValuesResources = object;
 
 export type PrometheusblackboxexporterHelmValuesService = {
   /**
@@ -688,9 +682,12 @@ export type PrometheusblackboxexporterHelmValuesConfigReloader = {
    */
   securityContext?: PrometheusblackboxexporterHelmValuesConfigReloaderSecurityContext;
   /**
-   * @default {"limits":{"memory":"50Mi"},"requests":{"cpu":"10m","memory":"20Mi"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: PrometheusblackboxexporterHelmValuesConfigReloaderResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {"httpGet":{"path":"/healthz","port":"reloader-web","scheme":"HTTP"}}
    */
@@ -783,37 +780,6 @@ export type PrometheusblackboxexporterHelmValuesConfigReloaderSecurityContext =
 export type PrometheusblackboxexporterHelmValuesConfigReloaderSecurityContextCapabilities =
   {
     drop?: string[];
-  };
-
-export type PrometheusblackboxexporterHelmValuesConfigReloaderResources = {
-  /**
-   * @default {"memory":"50Mi"}
-   */
-  limits?: PrometheusblackboxexporterHelmValuesConfigReloaderResourcesLimits;
-  /**
-   * @default {"cpu":"10m","memory":"20Mi"}
-   */
-  requests?: PrometheusblackboxexporterHelmValuesConfigReloaderResourcesRequests;
-};
-
-export type PrometheusblackboxexporterHelmValuesConfigReloaderResourcesLimits =
-  {
-    /**
-     * @default "50Mi"
-     */
-    memory?: string;
-  };
-
-export type PrometheusblackboxexporterHelmValuesConfigReloaderResourcesRequests =
-  {
-    /**
-     * @default "10m"
-     */
-    cpu?: string;
-    /**
-     * @default "20Mi"
-     */
-    memory?: string;
   };
 
 export type PrometheusblackboxexporterHelmValuesConfigReloaderLivenessProbe = {
@@ -1004,14 +970,17 @@ export type PrometheusblackboxexporterHelmValues = {
    */
   readinessProbe?: PrometheusblackboxexporterHelmValuesReadinessProbe;
   /**
-   * @default {}
+   * Kubernetes nodeSelector (arbitrary label key/value pairs)
    */
-  nodeSelector?: PrometheusblackboxexporterHelmValuesNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Kubernetes tolerations (standard Toleration objects)
+   */
   tolerations?: unknown[];
   /**
-   * @default {}
+   * Kubernetes affinity (standard Affinity object)
    */
-  affinity?: PrometheusblackboxexporterHelmValuesAffinity;
+  affinity?: Record<string, unknown>;
   topologySpreadConstraints?: unknown[];
   /**
    * if the configuration is managed as secret outside the chart, using SealedSecret for example,
@@ -1034,9 +1003,12 @@ export type PrometheusblackboxexporterHelmValues = {
   extraConfigmapMounts?: unknown[];
   extraSecretMounts?: unknown[];
   /**
-   * @default {}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: PrometheusblackboxexporterHelmValuesResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default ""
    */
@@ -1174,7 +1146,9 @@ export type PrometheusblackboxexporterHelmParameters = {
   "livenessProbe.failureThreshold"?: string;
   "readinessProbe.httpGet.path"?: string;
   "readinessProbe.httpGet.port"?: string;
+  nodeSelector?: string;
   tolerations?: string;
+  affinity?: string;
   topologySpreadConstraints?: string;
   configExistingSecretName?: string;
   secretConfig?: string;
@@ -1185,6 +1159,7 @@ export type PrometheusblackboxexporterHelmParameters = {
   "config.modules.http_2xx.http.preferred_ip_protocol"?: string;
   extraConfigmapMounts?: string;
   extraSecretMounts?: string;
+  resources?: string;
   priorityClassName?: string;
   "service.type"?: string;
   "service.port"?: string;
@@ -1259,9 +1234,7 @@ export type PrometheusblackboxexporterHelmParameters = {
   "configReloader.securityContext.runAsNonRoot"?: string;
   "configReloader.securityContext.allowPrivilegeEscalation"?: string;
   "configReloader.securityContext.capabilities.drop"?: string;
-  "configReloader.resources.limits.memory"?: string;
-  "configReloader.resources.requests.cpu"?: string;
-  "configReloader.resources.requests.memory"?: string;
+  "configReloader.resources"?: string;
   "configReloader.livenessProbe.httpGet.path"?: string;
   "configReloader.livenessProbe.httpGet.port"?: string;
   "configReloader.livenessProbe.httpGet.scheme"?: string;

@@ -67,6 +67,9 @@ export async function createGickupDeployment(chart: Chart) {
 
   deployment.addContainer(
     withCommonProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
       image: `ghcr.io/cooperspencer/gickup:${versions["cooperspencer/gickup"]}`,
       ports: [{ number: 6178, name: "metrics" }],
       securityContext: {
