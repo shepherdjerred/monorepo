@@ -192,6 +192,16 @@ export const commandDefinitions = [
     )
     .addSubcommand((sub) =>
       sub
+        .setName("sources")
+        .setDescription("List or search the sources yt-dlp can stream")
+        .addStringOption((o) =>
+          o
+            .setName("query")
+            .setDescription("filter the source list, e.g. twitch"),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
         .setName("help")
         .setDescription("List all commands and supported sources"),
     ),
