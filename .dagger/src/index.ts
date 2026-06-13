@@ -112,6 +112,7 @@ import {
   trivyScanHelper,
   daggerHygieneHelper,
   tunnelDnsCoverageHelper,
+  reactVersionSyncHelper,
   semgrepScanHelper,
   lockfileCheckHelper,
   envVarNamesHelper,
@@ -1330,6 +1331,12 @@ export class Monorepo {
     return tunnelDnsCoverageHelper(source).stdout();
   }
 
+  /** Verify react/react-dom (+ @types) resolve to matching versions in every bun.lock. */
+  @func()
+  async reactVersionSync(source: Directory): Promise<string> {
+    return reactVersionSyncHelper(source).stdout();
+  }
+
   /** Semgrep auto-config scan against the repo. */
   @func()
   async semgrepScan(source: Directory): Promise<string> {
@@ -1492,7 +1499,6 @@ export class Monorepo {
     userToken: Secret,
     guildId: string,
     videoChannelId: string,
-    commandChannelId: string,
     depNames: string[] = [],
     depDirs: Directory[] = [],
   ): Promise<string> {
@@ -1502,7 +1508,6 @@ export class Monorepo {
       userToken,
       guildId,
       videoChannelId,
-      commandChannelId,
       depNames,
       depDirs,
     );

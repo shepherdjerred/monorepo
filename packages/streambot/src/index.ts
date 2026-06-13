@@ -1,40 +1,40 @@
 import path from "node:path";
-import { createActor } from "xstate";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
-import {
-  createPlaybackMachine,
-  type PlaybackActors,
-} from "@shepherdjerred/streambot/machine/playback-machine.ts";
 import {
   scanLibrary,
   type LibraryEntry,
   type LibraryRoot,
 } from "@shepherdjerred/streambot/sources/library.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
+import { sweepSubtitleTempDir } from "@shepherdjerred/streambot/sources/subtitle-io.ts";
 import { expandPlaylist } from "@shepherdjerred/streambot/sources/ytdlp.ts";
-import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
-import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
+import { UserbotPool } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
+import { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
 import { CommandBot } from "@shepherdjerred/streambot/discord/command-bot.ts";
-import type { PlaybackView } from "@shepherdjerred/streambot/discord/command-handler.ts";
-import {
-  StatusReporter,
-  type StatusSnapshot,
-} from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import {
+  startMetricsServer,
+  stopMetricsServer,
+} from "@shepherdjerred/streambot/observability/metrics.ts";
 
 const LIBRARY_REFRESH_MS = 5 * 60 * 1000;
 
 async function main(): Promise<void> {
   const config = loadConfig();
   logger.info("starting streambot", {
-    guildId: config.discord.guildId,
-    statusChannelId: config.discord.statusChannelId,
-    videoChannelId: config.discord.videoChannelId,
+    userTokenCount: config.discord.userTokens.length,
     videosDir: config.library.videosDir,
     mediaDirs: config.library.mediaDirs,
     hardwareAcceleration: config.stream.hardwareAcceleration,
+    subtitles: config.subtitles.enabled,
   });
+
+  startMetricsServer(config.observability.metricsPort);
+
+  // Clear any subtitle temp files orphaned by a previous run (e.g. a resolve that was aborted before
+  // the stream cleaned up after itself).
+  await sweepSubtitleTempDir();
 
   const roots: LibraryRoot[] = [
     { dir: config.library.videosDir, label: "videos" },
@@ -58,76 +58,36 @@ async function main(): Promise<void> {
     void refreshLibrary();
   }, LIBRARY_REFRESH_MS);
 
-  const streamer = new StreambotStreamer(config);
-  const actors: PlaybackActors = {
-    joinVoice: streamer.joinVoice,
-    resolveSource: (input, signal) =>
-      resolveSource(config, input.source, signal),
-    runStream: streamer.runStream,
-    leaveVoice: streamer.leaveVoice,
-  };
+  // Log every userbot in and snapshot guild membership before anything tries to acquire one.
+  const pool = new UserbotPool(config.discord.userTokens, config);
+  await pool.start();
 
-  const actor = createActor(createPlaybackMachine(actors), {
-    input: {
-      guildId: config.discord.guildId,
-      channelId: config.discord.videoChannelId,
-      idleTimeoutMs: config.idleTimeoutSeconds * 1000,
-    },
-  });
-
-  const view = (): PlaybackView => {
-    const { context } = actor.getSnapshot();
-    return {
-      state: JSON.stringify(actor.getSnapshot().value),
-      current:
-        context.current === null
-          ? null
-          : {
-              title:
-                context.resolved?.title ?? sourceLabel(context.current.source),
-              requesterId: context.current.requesterId,
-            },
-      queue: context.queue.map((entry) => ({
-        title: sourceLabel(entry.source),
-        requesterId: entry.requesterId,
-      })),
-      loop: context.loop,
-      volume: context.volume,
-    };
-  };
-
+  // The command bot resolves sessions lazily so it can be constructed before the SessionManager
+  // (which needs the bot's `announce`), breaking the wiring cycle.
+  const refs: { sessions: SessionManager | null } = { sessions: null };
   const commandBot = new CommandBot({
     config,
-    dispatch: (event) => {
-      actor.send(event);
+    getSessions: () => {
+      if (refs.sessions === null) {
+        throw new Error("session manager not initialized");
+      }
+      return refs.sessions;
     },
-    view,
     library: () => library,
-    setVolume: (percent) => streamer.setVolume(percent),
     expandPlaylist: (url, signal) => expandPlaylist(config, url, signal),
-    streamerUserId: () => streamer.userId(),
   });
-
-  const reporter = new StatusReporter((message) =>
-    commandBot.announce(message),
-  );
-  actor.subscribe((snapshot) => {
-    const stateValue = snapshot.value;
-    const snap: StatusSnapshot = {
-      state:
-        typeof stateValue === "string"
-          ? stateValue
-          : JSON.stringify(stateValue),
-      currentTitle: snapshot.context.resolved?.title ?? null,
-      currentRequester: snapshot.context.current?.requesterId ?? null,
-      blockedNonce: snapshot.context.blockedNonce,
-      blockedRequester: snapshot.context.lastBlockedRequester,
-    };
-    reporter.handle(snap);
+  const sessions = new SessionManager({
+    config,
+    pool,
+    resolveSource: (input, signal) =>
+      resolveSource(config, input.source, signal),
+    announce: (channelId, message) => commandBot.announce(channelId, message),
   });
-  actor.start();
+  refs.sessions = sessions;
 
-  await Promise.all([streamer.login(), commandBot.login(), commandBot.ready]);
+  await Promise.all([commandBot.login(), commandBot.ready]);
+  // Resume after login so the back-online announcements can be posted (and the pool is up).
+  await sessions.resumeAll();
   logger.info("streambot ready");
 
   let shuttingDown = false;
@@ -138,9 +98,11 @@ async function main(): Promise<void> {
     shuttingDown = true;
     logger.info("shutting down");
     clearInterval(refreshTimer);
-    actor.stop();
+    // Flush per-session resume state BEFORE stopping streams — getPosition() goes null once stopped.
+    await sessions.destroyAll();
     await commandBot.destroy();
-    await streamer.destroy();
+    await pool.destroy();
+    await stopMetricsServer();
     process.exit(0);
   }
   process.on("SIGINT", () => void shutdown());

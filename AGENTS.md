@@ -83,6 +83,23 @@ Before ending any session, append a section to whichever file you produced (log 
 
 If a session spans multiple files, append a Session Log to each. **Also restate the same Done / Remaining / Caveats inline as the final chat message** so the user sees it without opening the file.
 
+### Workflow friction (optional — only if you hit some)
+
+**This is entirely optional and never required.** Most sessions should add nothing here. Only record an item when fixing it would be a **medium/high quality-of-life improvement** for future sessions, or a **low QOL improvement that is also low effort** to fix. Skip anything that is high-effort for low payoff, or a one-off that won't recur. An empty or padded section is worse than none.
+
+When you do hit something worth it, append a `## Workflow Friction` section to your log (logs only, not plans). For each item, describe what was painful and the concrete improvement, with file paths/commands so it can be acted on cold. Examples of the kind of thing worth recording:
+
+- It was hard to verify a change on Discord — a dedicated test Discord account/app would have helped.
+- I couldn't easily access test/dev credentials, so I ran `op` many times (a cached/scoped test credential set would have avoided this).
+- The `toolkit` CLI was missing a command I needed, or a flag behaved misleadingly.
+- This doc/AGENTS.md/skill was wrong or misleading (say which, and what's actually true).
+- I expected X to be in some location but it wasn't there — it actually lives at `<path>`.
+- I wanted to verify UI changes but couldn't effectively access a browser.
+- Task X was slower because I didn't have Y.
+- I hit roadblock X because there was no documentation about Y.
+
+If the fix is substantial or belongs to a future session, also file it as a `packages/docs/todos/<kebab-id>.md` per **TODO Documentation** below and link it from the section.
+
 ### When a plan is finished
 
 When a plan in `packages/docs/plans/` reaches `Status: Complete` and the work is shipped, `git mv` it to `packages/docs/archive/completed/`. Don't leave finished plans accumulating in `plans/`.
@@ -284,3 +301,52 @@ toolkit recall reindex           # Re-scan all watched directories
 toolkit recall status            # Index stats, daemon health
 toolkit recall debug             # Full diagnostic check
 ```
+
+## PR Media & Demo Artifacts — `public.sjer.red`
+
+A reviewer should be able to **see** that a change works without checking out
+the branch. Attach the **lightest artifact that proves the behavior** — most
+PRs (pure logic, refactors, types, infra config, dep bumps) need nothing
+beyond the diff; never attach media reflexively. A single visual state is a
+screenshot, not a video.
+
+| Change type                       | Artifact                                                                         |
+| --------------------------------- | -------------------------------------------------------------------------------- |
+| UI tweak, single state            | Screenshot (before/after where it applies)                                       |
+| UI flow / interaction / animation | Short GIF (renders inline) or short video (link)                                 |
+| Brand-new feature                 | End-to-end demo — **one short video per scenario**, not one long tour            |
+| CLI / TUI program                 | asciinema recording of a real terminal: `asciinema rec demo.cast -c "<command>"` |
+| Web page / component              | Small static demo site uploaded as a directory (root `index.html` required)      |
+| Metrics / logging / tracing       | Screenshot of Grafana/Loki showing the **new** data flowing end-to-end           |
+| Anything else                     | Only when seeing it communicates faster than reading the diff                    |
+
+Conventions: one artifact per scenario, a one-line caption saying what to
+look at, before/after pairs when changing existing behavior.
+
+`gh` cannot upload media into a PR/issue body (drag-drop uses a private,
+session-only endpoint). Upload to the public artifact host and embed the
+returned URLs:
+
+```bash
+# Creds come from your AWS profile (~/.aws); no op wrapper needed.
+# Mix files, recordings, and demo-site directories in one call:
+toolkit pr asset <PR_NUMBER> ./before.png ./flow.mp4 ./demo.cast ./demo-site --profile seaweedfs --markdown
+```
+
+- Uploads to the `public-sjer-red` SeaweedFS bucket under `pr/assets/<PR_NUMBER>/`
+  and prints a `https://public.sjer.red/...` URL per argument (with
+  `--markdown`, ready-to-paste type-appropriate markdown).
+- **Embedding rules:** images/GIFs render inline via GitHub's image proxy
+  (`![file](url)`); GitHub **never embeds external video** — videos become
+  labeled links that play in a browser tab (served with a real video
+  content type); `.cast` uploads get a generated self-contained HTML player
+  page (`<name>.cast.html`) and the link points there; directories link to
+  their `index.html`.
+- Directories upload recursively to `pr/assets/<PR_NUMBER>/<dirname>/` and
+  must contain a root `index.html` (dotfiles are skipped).
+- Uses the standard AWS toolchain (`@aws-sdk/client-s3`, path-style): credentials,
+  `endpoint_url`, and region come from `~/.aws/credentials` / `~/.aws/config`.
+  Select the profile with `--profile <name>` or `AWS_PROFILE` (the `seaweedfs`
+  profile points at `https://seaweedfs.sjer.red`).
+- Objects under `pr/assets/` expire after 365 days; the homelab must be up for
+  the artifacts to load.

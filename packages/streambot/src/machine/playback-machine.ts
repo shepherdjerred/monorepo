@@ -102,6 +102,7 @@ export function createPlaybackMachine(actors: PlaybackActors) {
       lastErrorKind: null,
       blockedNonce: 0,
       lastBlockedRequester: null,
+      resumeSeekSeconds: 0,
     },
     events: { type: "SKIP" },
     input: {
@@ -162,6 +163,9 @@ export function createPlaybackMachine(actors: PlaybackActors) {
       clearCurrent: assign({ current: null }),
       clearQueue: assign({ queue: [] }),
       resetPlayback: assign({ current: null, resolved: null, voice: null }),
+      // Consume the one-shot resume seek so only the first post-restart playthrough seeks; any
+      // loop/replay of the same item starts from 0.
+      consumeSeek: assign({ resumeSeekSeconds: 0 }),
     },
   }).createMachine({
     id: "playback",
@@ -169,16 +173,19 @@ export function createPlaybackMachine(actors: PlaybackActors) {
       guildId: input.guildId,
       channelId: input.channelId,
       idleTimeoutMs: input.idleTimeoutMs,
-      queue: [],
+      // Resume seeding: the in-progress item (if any) is placed at queue[0] by the caller, so the
+      // normal idle → joining → advance(dequeue) → resolving → streaming flow plays it first.
+      queue: input.initialQueue ?? [],
       current: null,
       voice: null,
       resolved: null,
-      loop: "off",
-      volume: 100,
+      loop: input.initialLoop ?? "off",
+      volume: input.initialVolume ?? 100,
       lastError: null,
       lastErrorKind: null,
       blockedNonce: 0,
       lastBlockedRequester: null,
+      resumeSeekSeconds: input.initialSeekSeconds ?? 0,
     }),
     initial: "idle",
     // Queue-editing events are accepted in every state (they only touch context).
@@ -309,12 +316,16 @@ export function createPlaybackMachine(actors: PlaybackActors) {
         },
       },
       streaming: {
+        // Zero the one-shot resume seek once the segment is underway, so loop/replay restarts at 0.
+        // Exit runs after `invoke.input` is evaluated, so the first playthrough still gets the seek.
+        exit: "consumeSeek",
         invoke: {
           src: "runStream",
           input: ({ context }) => ({
             voice: mustVoice(context),
             resolved: mustResolved(context),
             volume: context.volume,
+            seekSeconds: context.resumeSeekSeconds,
           }),
           onDone: { target: "advance" },
           onError: {

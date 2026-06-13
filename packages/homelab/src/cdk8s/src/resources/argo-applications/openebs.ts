@@ -29,6 +29,22 @@ export function createOpenEBSApp(chart: Chart) {
     "zfs-localpv": {
       zfsNode: {
         encrKeysDir: "/var",
+        // Baseline request (no limits) so the CSI driver isn't BestEffort —
+        // losing it to eviction breaks all volume operations on the node.
+        resources: {
+          requests: {
+            cpu: "50m",
+            memory: "128Mi",
+          },
+        },
+      },
+      zfsController: {
+        resources: {
+          requests: {
+            cpu: "25m",
+            memory: "128Mi",
+          },
+        },
       },
     },
     loki: {

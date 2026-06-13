@@ -35,13 +35,20 @@ export const MAVEN_IMAGE =
   "maven:3.9.15-eclipse-temurin-25@sha256:1c3a703ab39fee7ac0880f46e6ccd22c0d701f17f0616e6e66a258ddc1c637d2";
 // renovate: datasource=docker depName=texlive/texlive
 export const TEXLIVE_IMAGE =
-  "texlive/texlive:TL2024-historic@sha256:fd576ce8b1cfd03cdabc15ca75682fb050eb10de5c057d81449883c2ad644855";
+  "texlive/texlive:TL2024-historic@sha256:7cf892aa62a923b3a2d9242a27e3f0d8b432385e8f76f34049ffad676aabcc1c";
 // renovate: datasource=docker depName=caddy
 export const CADDY_IMAGE =
   "caddy:2.11.3-alpine@sha256:86deaf5e3d3408a6ccec08fbb79989783dd26e206ae10bcf78a801dc8c9ab794";
 // renovate: datasource=docker depName=caddy
 export const CADDY_BUILDER_IMAGE =
   "caddy:2.11.3-builder-alpine@sha256:3eae6b351ecdb05da6d16e341261a457692d344a435764c5ece7a60cf03a23f3";
+// xcaddy --with module for the S3 proxy plugin. The fork keeps the upstream
+// import path (existing Caddyfiles keep working) and adds HEAD support, the
+// 304-on-index fix, and 206/Accept-Ranges on byte-range responses (Safari
+// refuses to play video from origins that answer 200 to Range requests).
+// Not managed by renovate — bump the tag when the fork changes.
+export const CADDY_S3_PROXY_MODULE =
+  "github.com/lindenlab/caddy-s3-proxy=github.com/shepherdjerred/caddy-s3-proxy@v0.5.7-head2";
 // Base image for obsidian-headless container (uses Node, not Bun, due to native better-sqlite3 addon).
 // Also reused as the Node builder stage for the custom mcp-gateway image (edstem-mcp build).
 // renovate: datasource=docker depName=node

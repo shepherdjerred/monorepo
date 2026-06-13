@@ -219,18 +219,17 @@ n64wasm.js: $(FILES)
 	--use-preload-plugins \
 	-s MIN_WEBGL_VERSION=2 \
 	-s FULL_ES3=1 \
-	-s ASSERTIONS=1 \
-	--profiling-funcs \
+	-s ASSERTIONS=0 \
 	-O3 \
 	-s EXIT_RUNTIME=0 \
 	-s EXTRA_EXPORTED_RUNTIME_METHODS="['callMain','cwrap']" \
     -s EXPORTED_FUNCTIONS="['_main','_runMainLoop','_neilGetSoundBufferResampledAddress', \
     '_neilGetAudioWritePosition','_neil_serialize','_neil_unserialize','_neil_toast_message', \
     '_neil_export_eep','_neil_export_sra','_neil_export_fla','_neil_reset','_toggleFPS', '_neil_send_mobile_controls', \
-    '_neil_set_buffer_remaining','_neil_set_endframe_callback','_neil_set_double_speed', \
-    '_neilGetVideoBuffer','_neilGetVideoHeight','_neilSetRom','_neil_send_mobile_controls_player']" \
-	-s INVOKE_RUN=0
-	# outputs n64wasm.js + n64wasm.wasm in this dir; build-wasm.sh copies them.
+    '_neil_set_buffer_remaining','_neil_set_endframe_callback','_neil_set_double_speed']" \
+	-s INVOKE_RUN=0 \
+    && mv n64wasm.js ../dist/ \
+    && mv n64wasm.wasm ../dist/
     
 
 %.o : %.cpp

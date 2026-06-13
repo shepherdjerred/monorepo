@@ -11,7 +11,16 @@ import {
   canControlItem,
   isAdmin,
 } from "@shepherdjerred/streambot/discord/permissions.ts";
-import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
+import {
+  formatTimecode,
+  parseTimecode,
+} from "@shepherdjerred/streambot/discord/timecode.ts";
+import {
+  sourceLabel,
+  type Source,
+  type SubtitlePref,
+} from "@shepherdjerred/streambot/sources/source.ts";
+import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
 import {
   searchLibrary,
   type LibraryEntry,
@@ -29,9 +38,56 @@ import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 const MAX_LIST = 20;
 const PLAYLIST_TIMEOUT_MS = 60_000;
 
+/**
+ * Build a per-request subtitle preference from the `subtitles` (on/off) and `sublang` options.
+ * Returns undefined when neither is set, so the source falls back to the server's subtitle config.
+ */
+export function buildSubtitlePref(
+  subtitles: string | null,
+  sublang: string | null,
+): SubtitlePref | undefined {
+  const enabled = subtitles === null ? undefined : subtitles === "on";
+  const trimmed = sublang?.trim() ?? "";
+  const language = trimmed.length > 0 ? trimmed : undefined;
+  if (enabled === undefined && language === undefined) return undefined;
+  return {
+    ...(enabled === undefined ? {} : { enabled }),
+    ...(language === undefined ? {} : { language }),
+  };
+}
+
+/** Attach a subtitle preference to a resolved source, preserving its discriminant. */
+function withSubtitles(
+  source: Source,
+  subtitles: SubtitlePref | undefined,
+): Source {
+  switch (source.kind) {
+    case "file":
+      return { ...source, subtitles };
+    case "url":
+      return { ...source, subtitles };
+    case "search":
+      return { ...source, subtitles };
+  }
+}
+
+/** A short " _(subtitles: …)_" suffix for the ephemeral ack, or "" when no override was given. */
+function subtitlesSuffix(pref: SubtitlePref | undefined): string {
+  if (pref?.enabled === false) return " _(subtitles: off)_";
+  if (pref?.enabled === true) {
+    return pref.language === undefined
+      ? " _(subtitles: on)_"
+      : ` _(subtitles: ${pref.language})_`;
+  }
+  if (pref?.language !== undefined) return ` _(subtitles: ${pref.language})_`;
+  return "";
+}
+
 export type QueueItemView = {
   readonly title: string;
   readonly requesterId: UserId;
+  /** Chapter markers of this item (only populated for the currently-playing item). */
+  readonly chapters: readonly Chapter[];
 };
 export type PlaybackView = {
   readonly state: string;
@@ -67,6 +123,8 @@ export type CommandHandlerDeps = {
   readonly library: () => readonly LibraryEntry[];
   /** Apply volume to the live stream; resolves false when nothing is playing. */
   readonly setVolume: (percent: number) => Promise<boolean>;
+  /** Seek the live stream to an absolute offset (seconds); resolves false when nothing is playing. */
+  readonly seek: (seconds: number) => Promise<boolean>;
   /** Expand a playlist URL into items (yt-dlp), adult-filtered. */
   readonly expandPlaylist: (
     url: string,
@@ -113,6 +171,12 @@ export class CommandHandler {
         return this.handleLoop(interaction);
       case "volume":
         return this.handleVolume(interaction);
+      case "seek":
+        return this.handleSeek(interaction);
+      case "chapters":
+        return interaction.reply(this.chaptersText());
+      case "chapter":
+        return this.handleChapter(interaction);
       case "list":
         return interaction.reply(
           this.listText(interaction.getString("filter")),
@@ -132,6 +196,10 @@ export class CommandHandler {
   ): Promise<void> {
     const userId = interaction.userId;
     const query = interaction.getStringRequired("query");
+    const subtitles = buildSubtitlePref(
+      interaction.getString("subtitles"),
+      interaction.getString("sublang"),
+    );
 
     if (isHttpUrl(query) && isLikelyPlaylist(query)) {
       await interaction.defer();
@@ -140,7 +208,7 @@ export class CommandHandler {
         AbortSignal.timeout(PLAYLIST_TIMEOUT_MS),
       );
       for (const item of items) {
-        const source = { kind: "url", url: item.url } as const;
+        const source = { kind: "url", url: item.url, subtitles } as const;
         this.deps.dispatch({
           type: next ? "ADD_NEXT" : "ADD",
           source,
@@ -148,12 +216,15 @@ export class CommandHandler {
         });
       }
       await interaction.editReply(
-        `Queued ${String(items.length)} item(s) from the playlist.`,
+        `Queued ${String(items.length)} item(s) from the playlist.${subtitlesSuffix(subtitles)}`,
       );
       return;
     }
 
-    const source = resolvePlayQuery(query, this.deps.library());
+    const source = withSubtitles(
+      resolvePlayQuery(query, this.deps.library()),
+      subtitles,
+    );
     if (isBlockedSource(source)) {
       await this.deps.announce(shameMessage(userId));
       await interaction.reply("🚫 Nope.");
@@ -165,7 +236,7 @@ export class CommandHandler {
       requesterId: userId,
     });
     await interaction.reply(
-      `${next ? "Up next" : "Queued"}: **${sourceLabel(source)}**`,
+      `${next ? "Up next" : "Queued"}: **${sourceLabel(source)}**${subtitlesSuffix(subtitles)}`,
     );
   }
 
@@ -260,6 +331,84 @@ export class CommandHandler {
         ? `🔊 Volume → ${String(level)}%.`
         : `Volume set to ${String(level)}% for the next video.`,
     );
+  }
+
+  private async handleSeek(interaction: CommandInteraction): Promise<void> {
+    const current = this.deps.view().current;
+    if (current === null) {
+      await interaction.reply("Nothing is playing.");
+      return;
+    }
+    if (
+      !canControlItem(
+        interaction.userId,
+        current.requesterId,
+        this.deps.config.discord.adminIds,
+      )
+    ) {
+      await interaction.reply("Only the requester or an admin can seek this.");
+      return;
+    }
+    const seconds = parseTimecode(interaction.getStringRequired("position"));
+    if (seconds === null) {
+      await interaction.reply("Invalid timestamp. Try 90, 1:30, or 1:02:03.");
+      return;
+    }
+    const applied = await this.deps.seek(seconds);
+    await interaction.reply(
+      applied
+        ? `⏩ Seeked to ${formatTimecode(seconds)}.`
+        : "Nothing is playing.",
+    );
+  }
+
+  private async handleChapter(interaction: CommandInteraction): Promise<void> {
+    const current = this.deps.view().current;
+    if (current === null) {
+      await interaction.reply("Nothing is playing.");
+      return;
+    }
+    if (
+      !canControlItem(
+        interaction.userId,
+        current.requesterId,
+        this.deps.config.discord.adminIds,
+      )
+    ) {
+      await interaction.reply("Only the requester or an admin can seek this.");
+      return;
+    }
+    const number = interaction.getIntegerRequired("number");
+    const chapter = current.chapters[number - 1];
+    if (chapter === undefined) {
+      await interaction.reply(
+        current.chapters.length === 0
+          ? "No chapters for the current video."
+          : `There's no chapter ${String(number)}. This video has ${String(current.chapters.length)}.`,
+      );
+      return;
+    }
+    const applied = await this.deps.seek(chapter.startSeconds);
+    await interaction.reply(
+      applied
+        ? `⏩ Chapter ${String(chapter.index)}: **${chapter.title}** (${formatTimecode(chapter.startSeconds)}).`
+        : "Nothing is playing.",
+    );
+  }
+
+  private chaptersText(): string {
+    const current = this.deps.view().current;
+    if (current === null) {
+      return "Nothing is playing.";
+    }
+    if (current.chapters.length === 0) {
+      return "No chapters for the current video.";
+    }
+    const lines = current.chapters.map(
+      (chapter) =>
+        `${String(chapter.index)}. \`${formatTimecode(chapter.startSeconds)}\` — ${chapter.title}`,
+    );
+    return `**Chapters for ${current.title}:**\n${lines.join("\n")}`;
   }
 
   private nowPlayingText(): string {

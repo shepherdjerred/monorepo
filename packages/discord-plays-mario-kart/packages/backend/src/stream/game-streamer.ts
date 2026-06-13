@@ -5,35 +5,64 @@ import {
   prepareStream,
   playStream,
   Encoders,
-} from "@dank074/discord-video-stream";
-import { WIDTH, HEIGHT, N64_FPS } from "#src/emulator/constants.ts";
+  computeLetterbox,
+  type StreamObserver,
+} from "@shepherdjerred/discord-video-stream";
+import {
+  WIDTH,
+  HEIGHT,
+  N64_FPS,
+  DISPLAY_ASPECT,
+} from "#src/emulator/constants.ts";
+import {
+  sinkBufferBytes,
+  streamActive,
+  streamFfmpegBitrateKbps,
+  streamFfmpegFps,
+  streamFfmpegSpeedRatio,
+  streamFrameIntervalMs,
+  streamFrameWriteMs,
+  streamHwEncodeEngaged,
+} from "#src/observability/metrics.ts";
+import {
+  createStreamObserver,
+  newSessionStats,
+  type SessionStats,
+} from "#src/stream/stream-observer.ts";
+import { withSpan } from "#src/observability/tracing.ts";
 import { logger } from "#src/logger.ts";
 
 export type GameStreamerOptions = {
   token: string;
   guildId: string;
   channelId: string;
-  // Output scale applied to the native 640x240 MK64 frame.
-  scale: number;
+  // Height of the 16:9 output canvas; the 4:3 game is pillarboxed onto it.
+  canvasHeight: number;
   frameRate: number;
   bitrateKbps: number;
   bitrateMaxKbps: number;
+  // VAAPI hardware H.264 encoding on an Intel iGPU; falls back to libx264 when off.
+  hardwareAcceleration: boolean;
+  vaapiDevice: string;
 };
 
 // rawvideo input framerate handed to ffmpeg — it assigns presentation
 // timestamps from this value, so it must match the emulator's actual tick rate.
 const SRC_FPS = N64_FPS;
 
-// Streams the emulator's RGBA frames into a Discord voice channel as a Go-Live
+// Streams the emulator's BGRA frames into a Discord voice channel as a Go-Live
 // broadcast, over the voice UDP path. Replaces the userbot + browser
 // screen-share. Frames are fed as rawvideo straight into the library's ffmpeg
 // (one encode pass).
 export class GameStreamer {
   private readonly options: GameStreamerOptions;
   private readonly streamer: Streamer;
-  private rgba: PassThrough | undefined;
+  private bgra: PassThrough | undefined;
   private playing: Promise<void> | undefined;
   private active = false;
+  private session: SessionStats | undefined;
+  private sessionStartedAt = 0;
+  private lastPushAt: number | undefined;
   // Serializes start()/stop(). Both are driven fire-and-forget from
   // VoiceStateUpdate callbacks, so without this a stop() landing mid-start()
   // (or a second start()) could interleave at the `await joinVoice` point and
@@ -57,9 +86,21 @@ export class GameStreamer {
     return this.active;
   }
 
-  /** Feed one RGBA frame (no-op unless a broadcast is active). */
+  /** Feed one BGRA frame (no-op unless a broadcast is active). */
   pushFrame(frame: Buffer): void {
-    if (this.active && this.rgba) this.rgba.write(frame);
+    if (this.active && this.bgra) {
+      const pushAt = performance.now();
+      if (this.lastPushAt !== undefined) {
+        streamFrameIntervalMs.observe(pushAt - this.lastPushAt);
+      }
+      this.lastPushAt = pushAt;
+      this.bgra.write(frame);
+      // A slow write is backpressure showing up before the buffer gauge moves.
+      streamFrameWriteMs.observe(performance.now() - pushAt);
+      if (this.session) this.session.framesPushed++;
+      // Rising buffered bytes ⇒ ffmpeg/encode can't keep up with the frame rate.
+      sinkBufferBytes.set(this.bgra.writableLength);
+    }
   }
 
   start(): Promise<void> {
@@ -95,14 +136,30 @@ export class GameStreamer {
     }
   }
 
-  private async doStart(): Promise<void> {
-    if (this.active) return;
-    await this.streamer.joinVoice(this.options.guildId, this.options.channelId);
+  private doStart(): Promise<void> {
+    return withSpan("stream.start", () => this.doStartInner());
+  }
 
-    const rgba = new PassThrough();
-    const { output, promise } = prepareStream(rgba, {
-      width: WIDTH * this.options.scale,
-      height: HEIGHT * this.options.scale,
+  private async doStartInner(): Promise<void> {
+    if (this.active) return;
+    await withSpan("stream.joinVoice", () =>
+      this.streamer.joinVoice(this.options.guildId, this.options.channelId),
+    );
+
+    const bgra = new PassThrough();
+    // Scale the 4:3 game into an aspect-correct content box, then pillarbox it onto
+    // a black 16:9 canvas for Discord (see prepareStream `pad`).
+    const { content, canvas } = computeLetterbox(
+      DISPLAY_ASPECT,
+      this.options.canvasHeight,
+    );
+    const session = newSessionStats();
+    const observer = createStreamObserver(session);
+    const { output, promise } = prepareStream(bgra, {
+      observer,
+      width: content.width,
+      height: content.height,
+      pad: canvas,
       frameRate: this.options.frameRate,
       videoCodec: "H264",
       bitrateVideo: this.options.bitrateKbps,
@@ -112,24 +169,37 @@ export class GameStreamer {
       customInputOptions: [
         "-f",
         "rawvideo",
+        // Frames pushed to the stream arrive BGRA (see wasm-src/PATCHES.md —
+        // get_video_buffer's non-idempotent b<->r swap nets BGRA on the tick
+        // path). Declaring rgba here swaps red/blue in the broadcast; ffmpeg
+        // drops the X byte converting to yuv420p.
         "-pix_fmt",
-        "rgba",
+        "bgra",
         "-video_size",
         `${String(WIDTH)}x${String(HEIGHT)}`,
         "-framerate",
         String(SRC_FPS),
       ],
-      encoder: Encoders.software({
-        x264: { preset: "ultrafast", tune: "zerolatency" },
-      }),
+      // Raw-frame input → keep hardwareAcceleratedDecoding off; Encoders.vaapi()
+      // then uploads frames to the GPU (format=nv12|vaapi, hwupload) and encodes
+      // with h264_vaapi. Software libx264 is the no-GPU fallback (local/arm64).
+      encoder: this.options.hardwareAcceleration
+        ? Encoders.vaapi({ device: this.options.vaapiDevice })
+        : Encoders.software({
+            x264: { preset: "ultrafast", tune: "zerolatency" },
+          }),
     });
 
     // Publish state only once the stream is fully wired; these assignments are
     // synchronous (no await between them), so pushFrame never sees a half-set
     // state.
-    this.rgba = rgba;
-    this.playing = this.runStream(output, promise);
+    this.bgra = bgra;
+    this.session = session;
+    this.sessionStartedAt = performance.now();
+    this.lastPushAt = undefined;
+    this.playing = this.runStream(output, promise, observer);
     this.active = true;
+    streamActive.set(1);
     logger.info("Go-Live stream started");
   }
 
@@ -139,10 +209,11 @@ export class GameStreamer {
   private async runStream(
     output: Readable,
     encode: Promise<void>,
+    observer: StreamObserver,
   ): Promise<void> {
     try {
       await Promise.all([
-        playStream(output, this.streamer, { type: "go-live" }),
+        playStream(output, this.streamer, { type: "go-live", observer }),
         encode,
       ]);
     } catch (error) {
@@ -153,15 +224,48 @@ export class GameStreamer {
     }
   }
 
-  private async doStop(): Promise<void> {
+  private doStop(): Promise<void> {
+    return withSpan("stream.stop", () => this.doStopInner());
+  }
+
+  private async doStopInner(): Promise<void> {
     if (!this.active) return;
     this.active = false;
-    this.rgba?.end();
-    this.rgba = undefined;
+    streamActive.set(0);
+    this.bgra?.end();
+    this.bgra = undefined;
+    sinkBufferBytes.set(0);
+    streamFfmpegSpeedRatio.set(0);
+    streamFfmpegFps.set(0);
+    streamFfmpegBitrateKbps.set(0);
+    streamHwEncodeEngaged.set(0);
+    this.lastPushAt = undefined;
     // runStream never rejects (it logs internally), so awaiting is safe.
     await this.playing;
     this.playing = undefined;
     this.streamer.leaveVoice();
+    const session = this.session;
+    this.session = undefined;
+    if (session) {
+      const durationS = (performance.now() - this.sessionStartedAt) / 1000;
+      logger.info("stream session summary", {
+        durationS: Math.round(durationS),
+        framesPushed: session.framesPushed,
+        pushedFps:
+          durationS > 0
+            ? Math.round((session.framesPushed / durationS) * 10) / 10
+            : 0,
+        videoFramesSent: session.videoFramesSent,
+        lateVideoFrames: session.lateVideoFrames,
+        latePct:
+          session.videoFramesSent > 0
+            ? Math.round(
+                (session.lateVideoFrames / session.videoFramesSent) * 1000,
+              ) / 10
+            : 0,
+        lastSpeedRatio: session.lastSpeedRatio,
+      });
+    }
     logger.info("Go-Live stream stopped");
   }
 

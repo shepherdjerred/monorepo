@@ -1,51 +1,131 @@
+import { rm } from "node:fs/promises";
 import { Client } from "discord.js-selfbot-v13";
 import {
   Encoders,
   Streamer,
   Utils,
-  prepareStream,
-  playStream,
-} from "@dank074/discord-video-stream";
+  createSeekablePlayer,
+  type Player,
+} from "@shepherdjerred/discord-video-stream";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type {
   JoinVoiceInput,
   LeaveVoiceInput,
+  ResolvedSubtitle,
   RunStreamInput,
   VoiceHandle,
 } from "@shepherdjerred/streambot/machine/types.ts";
+import { computeElapsed } from "@shepherdjerred/streambot/streamer/elapsed.ts";
+import {
+  GuildIdSchema,
+  type GuildId,
+  type UserToken,
+} from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import { createStreamObserver } from "@shepherdjerred/streambot/observability/stream-observer.ts";
+import {
+  hwFallbackTotal,
+  streamActive,
+  streamHardware,
+  streamSegmentDurationSeconds,
+  streamSegmentsTotal,
+} from "@shepherdjerred/streambot/observability/metrics.ts";
 
 const log = logger.child("streamer");
 
-type StreamController = { setVolume: (volume: number) => Promise<boolean> };
+/**
+ * Owns the selfbot voice connection and ffmpeg streaming via `@shepherdjerred/discord-video-stream`
+ * (our fork). Its methods are the playback machine's `joinVoice` / `runStream` / `leaveVoice`
+ * actors, so all voice I/O is driven by — and cancellable from — the machine. Uses Intel VAAPI
+ * hardware encoding when enabled, falling back to software if the device/driver is unavailable.
+ *
+ * Live controls (`setVolume`, `seek`) act on the currently-playing {@link Player} as side-channels,
+ * independent of the machine.
+ */
+/** Factory for the seekable player — injectable so tests can drive playback without a live stream. */
+export type PlayerFactory = typeof createSeekablePlayer;
 
 /**
- * Owns the selfbot voice connection and ffmpeg streaming via `@dank074/discord-video-stream`.
- * Its methods are the playback machine's `joinVoice` / `runStream` / `leaveVoice` actors, so all
- * voice I/O is driven by — and cancellable from — the machine. Uses Intel VAAPI hardware encoding
- * when enabled, falling back to software if the device/driver is unavailable.
+ * The streamer surface the pool/session layer depends on. Lets a {@link UserbotEntry} hold a real
+ * {@link StreambotStreamer} in production and a lightweight fake in tests without type assertions.
  */
-export class StreambotStreamer {
+export type StreamerLike = {
+  joinVoice: (
+    input: JoinVoiceInput,
+    signal: AbortSignal,
+  ) => Promise<VoiceHandle>;
+  runStream: (input: RunStreamInput, signal: AbortSignal) => Promise<void>;
+  leaveVoice: (input: LeaveVoiceInput, signal: AbortSignal) => Promise<void>;
+  setVolume: (percent: number) => Promise<boolean>;
+  seek: (seconds: number) => Promise<boolean>;
+  getPosition: () => number | null;
+  userId: () => string | null;
+  destroy: () => Promise<void>;
+};
+
+export class StreambotStreamer implements StreamerLike {
   private readonly client: Client;
   private readonly streamer: Streamer;
-  private readonly config: Config;
-  private controller: StreamController | null = null;
+  /** This userbot's account token (one per pool entry). */
+  private readonly userToken: UserToken;
+  /** Only `config.stream.*` is read here; the discord token comes from {@link userToken}. */
+  private readonly config: Pick<Config, "stream">;
+  /** Injectable clock (ms) so position tracking is deterministic in tests. */
+  private readonly now: () => number;
+  /** Injectable player factory (defaults to the fork's real one) so tests can supply a fake. */
+  private readonly createPlayer: PlayerFactory;
+  private player: Player | null = null;
+  /** Last known playback offset (seconds), captured per segment so a HW→SW retry can resume there. */
+  private lastPlaybackPositionSeconds = 0;
+  /** Offset (seconds) the current segment started playing at (initial resume seek or last live seek). */
+  private segmentStartOffsetSeconds = 0;
+  /** Wall-clock (ms) when the current segment began playing; null when nothing is playing. */
+  private segmentStartedAtMs: number | null = null;
 
-  constructor(config: Config) {
+  constructor(
+    userToken: UserToken,
+    config: Pick<Config, "stream">,
+    now: () => number = Date.now,
+    createPlayer: PlayerFactory = createSeekablePlayer,
+  ) {
+    this.userToken = userToken;
     this.config = config;
+    this.now = now;
+    this.createPlayer = createPlayer;
     this.client = new Client();
     this.streamer = new Streamer(this.client);
   }
 
+  /**
+   * Log in and wait for the gateway to finish hydrating — `client.guilds.cache` is empty until the
+   * `ready` event fires, so the pool's membership snapshot ({@link guildIds}) would be wrong if we
+   * resolved on login alone.
+   */
   async login(): Promise<void> {
-    await this.client.login(this.config.discord.userToken);
-    log.info("streamer logged in", { user: this.client.user?.username });
+    const ready = new Promise<void>((resolve) => {
+      this.client.once("ready", () => {
+        resolve();
+      });
+    });
+    await this.client.login(this.userToken);
+    await ready;
+    log.info("streamer logged in", {
+      user: this.client.user?.username,
+      guilds: this.client.guilds.cache.size,
+    });
   }
 
   /** Discord user id of the logged-in streamer (for the alone-in-VC check), or null. */
   userId(): string | null {
     return this.client.user?.id ?? null;
+  }
+
+  /** Guild ids this userbot is a member of (snapshot of the gateway cache after {@link login}). */
+  guildIds(): GuildId[] {
+    return [...this.client.guilds.cache.keys()].map((id) =>
+      GuildIdSchema.parse(id),
+    );
   }
 
   async destroy(): Promise<void> {
@@ -62,14 +142,49 @@ export class StreambotStreamer {
 
   /** Apply a volume percentage (0-200) to the live stream; false when nothing is playing. */
   async setVolume(percent: number): Promise<boolean> {
-    if (this.controller === null) {
+    if (this.player === null) {
       return false;
     }
-    await this.controller.setVolume(Math.max(0, percent) / 100);
+    return this.player.setVolume(Math.max(0, percent) / 100);
+  }
+
+  /** Seek the live stream to an absolute offset (seconds); false when nothing is playing. */
+  async seek(seconds: number): Promise<boolean> {
+    if (this.player === null) {
+      return false;
+    }
+    const target = Math.max(0, seconds);
+    await this.player.seek(target);
+    // Re-anchor the elapsed clock so getPosition() tracks from the new offset.
+    this.segmentStartOffsetSeconds = target;
+    this.segmentStartedAtMs = this.now();
     return true;
   }
 
+  /**
+   * Current playback position in seconds (segment start offset + real time since it began playing),
+   * or null when nothing is playing. Used to checkpoint resume state — unlike the fork's
+   * `Player.position`, this advances with the clock.
+   */
+  getPosition(): number | null {
+    if (this.segmentStartedAtMs === null) {
+      return null;
+    }
+    return computeElapsed(
+      this.segmentStartOffsetSeconds,
+      this.segmentStartedAtMs,
+      this.now(),
+    );
+  }
+
   private safeStop(): void {
+    try {
+      this.player?.stop();
+    } catch (error) {
+      log.warn("player stop failed", { error: getErrorMessage(error) });
+    }
+    this.player = null;
+    this.segmentStartedAtMs = null;
     try {
       this.streamer.stopStream();
     } catch (error) {
@@ -95,28 +210,59 @@ export class StreambotStreamer {
     input: RunStreamInput,
     signal: AbortSignal,
   ): Promise<void> => {
+    // Subtitles no longer disqualify VAAPI: prepareStream composes them as a GPU overlay branch
+    // (libass alpha canvas → hwupload → overlay_vaapi), so decode, scale, tonemap, and encode all
+    // stay on the GPU even with burned-in subs. The HW→SW retry below remains the safety net for
+    // graph features the device lacks (tonemap_vaapi/overlay_vaapi on older iGPUs).
     const useHardware = this.config.stream.hardwareAcceleration;
     try {
-      await this.streamOnce(input, signal, useHardware);
-    } catch (error) {
-      if (useHardware && !signal.aborted) {
-        log.warn("hardware (VAAPI) encode failed; retrying with software", {
-          error: getErrorMessage(error),
-        });
-        await this.streamOnce(input, signal, false);
-        return;
+      try {
+        // Start at the resume offset (0 for a fresh play; >0 when resuming after a restart).
+        await this.streamOnce(input, signal, useHardware, input.seekSeconds);
+      } catch (error) {
+        if (useHardware && !signal.aborted) {
+          // Resume the software retry at wherever playback (incl. any live seek) had reached, rather
+          // than restarting the video from 0.
+          const resumeAt = this.lastPlaybackPositionSeconds;
+          hwFallbackTotal.inc();
+          log.warn("hardware (VAAPI) encode failed; retrying with software", {
+            error: getErrorMessage(error),
+            resumeAt,
+          });
+          await this.streamOnce(input, signal, false, resumeAt);
+          return;
+        }
+        throw error;
       }
-      throw error;
+    } finally {
+      // Drop the staged subtitle temp file once the whole track is done (covers both encode attempts
+      // and every in-segment seek, which reuse the same file).
+      await this.cleanupSubtitle(input.resolved.subtitle);
     }
   };
+
+  private async cleanupSubtitle(
+    subtitle: ResolvedSubtitle | undefined,
+  ): Promise<void> {
+    if (subtitle === undefined) return;
+    try {
+      await rm(subtitle.cleanupPath, { force: true });
+    } catch (error) {
+      log.warn("failed to remove subtitle temp file", {
+        path: subtitle.cleanupPath,
+        error: getErrorMessage(error),
+      });
+    }
+  }
 
   private async streamOnce(
     input: RunStreamInput,
     signal: AbortSignal,
     useHardware: boolean,
+    startSeconds: number,
   ): Promise<void> {
     const { stream } = this.config;
-    const streamOpts = {
+    const prepareOpts = {
       width: stream.width,
       height: stream.height,
       frameRate: stream.fps,
@@ -127,6 +273,14 @@ export class StreambotStreamer {
       videoCodec: Utils.normalizeVideoCodec("H264"),
       hardwareAcceleratedDecoding: useHardware,
       minimizeLatency: false,
+      ...(startSeconds > 0 ? { startTime: startSeconds } : {}),
+      ...(input.resolved.subtitle
+        ? { subtitleBurn: { path: input.resolved.subtitle.path } }
+        : {}),
+      // HDR sources get tonemapped to BT.709 SDR by the pipeline (tonemap_vaapi on the GPU path,
+      // a zimg chain on the software path) — without it, PQ/HLG content looks washed out.
+      inputColor:
+        input.resolved.hdr === true ? ("hdr" as const) : ("sdr" as const),
       ...(useHardware
         ? { encoder: Encoders.vaapi({ device: stream.vaapiDevice }) }
         : {}),
@@ -136,42 +290,70 @@ export class StreambotStreamer {
       title: input.resolved.title,
       hardware: useHardware,
     });
-    const { output, promise, controller } = prepareStream(
+
+    // Observability seam — forwards ffmpeg command/codec/progress and send-frametime stats to the
+    // Prometheus metrics. Passed to both prepare (ffmpeg events) and play (send stats).
+    const observer = createStreamObserver(useHardware, this.now);
+
+    // The seekable player owns prepare+play on a single Go-Live connection. `finished` resolves at
+    // the true end of playback (or on stop) and rejects on an ffmpeg/encode failure — folding in the
+    // play/ffmpeg-failure race the old code did by hand, and letting `/stream seek` restart ffmpeg at
+    // a new offset without dropping the Go-Live stream.
+    const player = this.createPlayer(
+      this.streamer,
       input.resolved.ffmpegInput,
-      streamOpts,
-      signal,
+      {
+        prepare: { ...prepareOpts, observer },
+        play: { type: "go-live", observer },
+      },
     );
-    this.controller = controller;
-    try {
-      await controller.setVolume(Math.max(0, input.volume) / 100);
-    } catch (error) {
-      log.warn("initial setVolume failed", { error: getErrorMessage(error) });
+    this.player = player;
+
+    const onAbort = () => {
+      player.stop();
+    };
+    if (signal.aborted) {
+      player.stop();
+    } else {
+      signal.addEventListener("abort", onAbort, { once: true });
     }
+
+    const segmentHardware = useHardware ? "true" : "false";
+    const segmentStartedMs = this.now();
+    streamActive.set(1);
+    streamHardware.set(useHardware ? 1 : 0);
+    let outcome: "ended" | "error" = "ended";
     try {
-      // `playStream` resolves when real-time *playback* finishes (or `signal` aborts) — that's the
-      // true end of the stream. The ffmpeg `promise` resolves when *encoding* finishes, which for a
-      // local file runs far ahead of playback; using its resolution to end the stream would cut
-      // every video short. So await playStream for the end, and fold in `promise` only to surface
-      // ffmpeg *failures* (it stays pending on success, never ending playback early).
-      const ffmpegFailure = (async (): Promise<never> => {
-        try {
-          await promise;
-        } catch (error) {
-          throw error instanceof Error
-            ? error
-            : new Error(getErrorMessage(error));
-        }
-        // ffmpeg finished encoding; stay pending so only playback ends the stream.
-        return new Promise<never>(() => {
-          /* never settles */
-        });
-      })();
-      await Promise.race([
-        playStream(output, this.streamer, undefined, signal),
-        ffmpegFailure,
-      ]);
+      await player.start();
+      // Anchor the elapsed clock at the segment's start offset so getPosition() tracks live position.
+      this.segmentStartOffsetSeconds = startSeconds;
+      this.segmentStartedAtMs = this.now();
+      try {
+        await player.setVolume(Math.max(0, input.volume) / 100);
+      } catch (error) {
+        log.warn("initial setVolume failed", { error: getErrorMessage(error) });
+      }
+      await player.finished;
+    } catch (error) {
+      outcome = "error";
+      throw error;
     } finally {
-      this.controller = null;
+      signal.removeEventListener("abort", onAbort);
+      // Capture where playback reached (incl. live seeks) before dropping the player, so a HW→SW
+      // retry can resume there. Uses the wall-clock tracker, not the fork's segment-offset
+      // `Player.position`, falling back to the requested offset if playback never started.
+      this.lastPlaybackPositionSeconds = this.getPosition() ?? startSeconds;
+      this.segmentStartedAtMs = null;
+      if (this.player === player) {
+        this.player = null;
+      }
+      streamActive.set(0);
+      const durationSeconds = (this.now() - segmentStartedMs) / 1000;
+      streamSegmentsTotal.inc({ hardware: segmentHardware, outcome });
+      streamSegmentDurationSeconds.observe(
+        { hardware: segmentHardware, outcome },
+        durationSeconds,
+      );
     }
     log.info("stream ended", { title: input.resolved.title });
   }

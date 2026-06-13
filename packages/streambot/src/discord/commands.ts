@@ -21,6 +21,22 @@ export const commandDefinitions = [
             .setName("query")
             .setDescription("library title, URL, or search terms")
             .setRequired(true),
+        )
+        .addStringOption((o) =>
+          o
+            .setName("subtitles")
+            .setDescription("Burn in subtitles (default: server setting)")
+            .addChoices(
+              { name: "on", value: "on" },
+              { name: "off", value: "off" },
+            ),
+        )
+        .addStringOption((o) =>
+          o
+            .setName("sublang")
+            .setDescription(
+              "Preferred subtitle language, e.g. en, es, en.forced",
+            ),
         ),
     )
     .addSubcommand((sub) =>
@@ -32,6 +48,22 @@ export const commandDefinitions = [
             .setName("query")
             .setDescription("library title, URL, or search terms")
             .setRequired(true),
+        )
+        .addStringOption((o) =>
+          o
+            .setName("subtitles")
+            .setDescription("Burn in subtitles (default: server setting)")
+            .addChoices(
+              { name: "on", value: "on" },
+              { name: "off", value: "off" },
+            ),
+        )
+        .addStringOption((o) =>
+          o
+            .setName("sublang")
+            .setDescription(
+              "Preferred subtitle language, e.g. en, es, en.forced",
+            ),
         ),
     )
     .addSubcommand((sub) =>
@@ -111,6 +143,34 @@ export const commandDefinitions = [
             .setDescription("0-200")
             .setMinValue(0)
             .setMaxValue(200)
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("seek")
+        .setDescription("Jump to a position in the current video")
+        .addStringOption((o) =>
+          o
+            .setName("position")
+            .setDescription("timestamp: 90, 1:30, or 1:02:03")
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("chapters")
+        .setDescription("List the chapters of the current video"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("chapter")
+        .setDescription("Jump to a chapter of the current video")
+        .addIntegerOption((o) =>
+          o
+            .setName("number")
+            .setDescription("chapter number (1-based)")
+            .setMinValue(1)
             .setRequired(true),
         ),
     )

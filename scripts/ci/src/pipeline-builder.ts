@@ -28,6 +28,7 @@ import {
   semgrepScanStep,
   daggerHygieneStep,
   tunnelDnsCoverageStep,
+  reactVersionSyncStep,
   caddyfileValidateStep,
   lockfileCheckStep,
   envVarNamesStep,
@@ -66,6 +67,28 @@ function isPullRequestBuild(): boolean {
 
 function greptileGateForPullRequest(): BuildkiteStep[] {
   return isPullRequestBuild() ? [greptileReviewStep()] : [];
+}
+
+/**
+ * Minimal pipeline emitted for auto-triggered release-please PR builds (see
+ * {@link shouldSkipReleasePleasePrBuild}). It runs a single annotation step and
+ * intentionally omits the Greptile and `ci-complete` required gates, so the
+ * webhook build finishes in seconds and the PR stays un-mergeable until a real
+ * build is requested on purpose.
+ */
+export function buildReleasePleaseSkipPipeline(): BuildkitePipeline {
+  return {
+    agents: { queue: "default" },
+    steps: [
+      {
+        label: ":fast_forward: Release-please PR — CI auto-skipped",
+        key: "release-please-skip",
+        command:
+          'buildkite-agent annotate "Full CI is auto-skipped for release-please PRs. To run CI (and make this release mergeable), trigger a build manually in the Buildkite UI (New Build) or set RUN_RELEASE_CI=true." --style info --context release-please-skip',
+        plugins: [k8sPlugin()],
+      },
+    ],
+  };
 }
 
 export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
@@ -152,6 +175,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     migrationGuardStep(),
     mergeConflictStep(),
     largeFileStep(),
+    reactVersionSyncStep(),
     ...(pullRequestBuild ? [greptileReviewStep()] : []),
   ];
   for (const gate of blockingGates) {

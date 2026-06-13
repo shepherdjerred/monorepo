@@ -16,8 +16,9 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
   back out of memory — no GPU and no canvas. N64 has no simple PPU like the GBA,
   so a software RDP is the only GPU-free render path.
 - **Streaming** — frames are encoded with ffmpeg and pushed to a Discord voice
-  channel (Go-Live) via
-  [`@dank074/discord-video-stream`](https://github.com/dank074/Discord-video-stream)
+  channel (Go-Live) via `@shepherdjerred/discord-video-stream` (our in-repo fork
+  of
+  [`@dank074/discord-video-stream`](https://github.com/dank074/Discord-video-stream))
   using a self-bot, so viewers watch in the voice channel.
 - **Input** — the web UI exposes up to **four virtual controllers** (seats
   P1–P4). Players claim a seat and drive with WASD/arrows in real time; inputs
@@ -35,15 +36,22 @@ Claim a seat in the web UI, then:
 
 ## The N64Wasm core
 
-The core is built **from source** in CI — no binaries are committed. The patched
-source is vendored under [`wasm-src/`](./wasm-src); [`wasm-src/PATCHES.md`](./wasm-src/PATCHES.md)
-records the upstream baseline and our diffs:
+The core is built **from source** in CI — no binaries are committed. The source is
+vendored **byte-pristine** under [`wasm-src/code`](./wasm-src) at a pinned upstream
+commit; our changes live as a patch series in [`wasm-src/patches/`](./wasm-src/patches)
+and are applied **at build time**. [`wasm-src/PATCHES.md`](./wasm-src/PATCHES.md)
+records the pinned baseline, the patches, and the update procedure. Our changes:
 
 - `neilSetRom` + a ROM-inject branch (with `volatile` globals so LTO can't fold
   it away) — bypasses the Node `fseek` null-trap by loading the ROM from memory.
 - `neilGetVideoBuffer` / `neilGetVideoHeight` — expose the software framebuffer.
-- `neil_send_mobile_controls_player(player, controls, axis0, axis1)` — per-player
-  input (bounds-checked against `NEILNUMCONTROLLERS` = 4).
+- `neil_send_mobile_controls_player(player, controls, axis0, axis1)` + a per-frame
+  `applyHostControls()` — per-player input (bounds-checked against
+  `NEILNUMCONTROLLERS` = 4). The host call only **latches** input; the core's
+  `mainLoopInner()` zeroes `neilbuttons[*]` every frame, so `applyHostControls()`
+  re-applies the latch after that reset, right before `retro_run()` polls it.
+  Without this, all input is silently dropped (frames still render). See
+  [`PATCHES.md`](./wasm-src/PATCHES.md).
 
 For local development, [`scripts/build-wasm.sh`](./scripts/build-wasm.sh) compiles
 the core into `packages/backend/assets/n64wasm/` using the pinned
@@ -52,6 +60,36 @@ the core into `packages/backend/assets/n64wasm/` using the pinned
 > **Do not define `window`.** The emscripten glue must detect
 > `ENVIRONMENT_IS_NODE` only; if it also detects a web environment its FS path
 > null-traps `fseek`. See `packages/backend/src/emulator/wasm-host.ts`.
+
+## Testing
+
+The input path — **browser keypress → Socket.IO → backend → emulator → game** —
+is covered at three levels:
+
+| Level            | What it proves                                                                                                                                                                             | Where                                                                                         | CI?       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | --------- |
+| Frontend mapping | `KeyboardEvent.code` → the `PlayerInputState` the browser ships (KEYMAP / `computeState`, schema-valid)                                                                                    | [`frontend/src/input-map.test.ts`](./packages/frontend/src/input-map.test.ts)                 | ✅        |
+| Server plumbing  | a real Socket.IO client → `createSocket` (schema parse) → `handleRequest` → `emulator.setPlayerInput` with the right state; seat gating, schema rejection, release/disconnect clears input | [`backend/src/webserver/dispatch.test.ts`](./packages/backend/src/webserver/dispatch.test.ts) | ✅        |
+| Game effect      | input actually advances the running game (boots the real emulator + ROM; holding START moves the title screen → GAME SELECT menu)                                                          | [`backend/scripts/e2e-input.ts`](./packages/backend/scripts/e2e-input.ts)                     | ⛔ manual |
+
+Run the CI-level tests:
+
+```bash
+bun run --filter '*' test    # from packages/discord-plays-mario-kart
+```
+
+Run the manual game-effect e2e (needs a ROM — not in the repo — and a built core):
+
+```bash
+cd packages/backend
+bun run build:wasm                                   # compile the core into assets/n64wasm
+bun run e2e:input:check "/path/to/Mario Kart 64.z64" # baseline vs START, asserts the frame changes
+# single run + per-frame PNG dumps for eyeballing:
+DUMP_EVERY=150 bun run e2e:input "/path/to/rom.z64" none 99999 3000 /tmp/seq.png
+```
+
+The game-effect e2e can't run in CI: the ROM is copyright (not committed) and the
+core is built in a Dagger emscripten stage, not present in the test container.
 
 ## Deployment
 

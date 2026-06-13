@@ -525,7 +525,7 @@
             "icon": "perk-images/Styles/Sorcery/DeathfireTouch/DEATHFIRE_TOUCH_KEYSTONE.png",
             "name": "Deathfire Touch",
             "shortDesc": "Damaging a champion with an ability burns them over time.",
-            "longDesc": "Damaging a champion with an ability burns them for 3 - 12 based on level (+<scaleAP>7.0% AP</scaleAP>) (+<scaleAD>2.5% bonus AD</scaleAD>)  magical damage per second. After burning for 3 seconds, the damage of the burn increases by 75% while they remain on fire.<br><rules><br>Duration:<br>Single Target: 4s<br>Area of Effect: 2s<br>Damage over Time: 1s<br></rules>"
+            "longDesc": "Damaging a champion with an ability burns them for 3 - 12 based on level (+<scaleAP>7.0% AP</scaleAP>) (+<scaleAD>2.5% bonus AD</scaleAD>)  magic damage per second. After burning for 3 seconds, the damage of the burn increases by 75% while they remain on fire.<br><rules><br>Duration:<br>Single Target: 4s<br>Area of Effect: 2s<br>Damage over Time: 1s<br></rules>"
           }
         ]
       },

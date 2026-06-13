@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
+import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
 import type {
   ChannelId,
   GuildId,
@@ -22,10 +23,27 @@ export type VoiceHandle = {
   readonly channelId: ChannelId;
 };
 
+/** A subtitle track staged to a safe temp file, ready to burn into the video. */
+export type ResolvedSubtitle = {
+  /** Safe temp file the ffmpeg `subtitles` filter reads. */
+  readonly path: string;
+  /** Temp file to unlink once the stream ends (always the staged copy — never a user file). */
+  readonly cleanupPath: string;
+};
+
 /** A source resolved to something ffmpeg can read (a local path or a direct stream URL). */
 export type ResolvedSource = {
   readonly title: string;
   readonly ffmpegInput: string;
+  /** Chapter markers (ffprobe for files, yt-dlp for URLs); empty when none are available. */
+  readonly chapters: readonly Chapter[];
+  /** Burnable subtitle for this source, if one was found and subtitles are enabled. */
+  readonly subtitle?: ResolvedSubtitle;
+  /**
+   * Input is HDR (PQ/HLG transfer, from the resolve-time ffprobe). Drives the HDR→SDR tonemap in
+   * the stream pipeline; absent (probe failed or SDR) → no tonemap.
+   */
+  readonly hdr?: boolean;
 };
 
 /** A queue entry: a requested source plus who asked for it. */
@@ -51,6 +69,12 @@ export type PlaybackContext = {
   blockedNonce: number;
   /** Who requested the most recently blocked source (for the public shaming message). */
   lastBlockedRequester: UserId | null;
+  /**
+   * One-shot seek offset (seconds) applied to the first stream after a resume. Set from persisted
+   * state at boot, consumed when the first item starts streaming, then zeroed so loops/replays start
+   * from 0.
+   */
+  resumeSeekSeconds: number;
 };
 
 export type PlaybackEvent =
@@ -69,6 +93,14 @@ export type PlaybackInput = {
   readonly guildId: GuildId;
   readonly channelId: ChannelId;
   readonly idleTimeoutMs: number;
+  /** Queue to start with (resume) — the in-progress item, if any, goes at index 0. */
+  readonly initialQueue?: QueuedSource[];
+  /** Loop mode to start with (resume). */
+  readonly initialLoop?: LoopMode;
+  /** Volume to start with (resume). */
+  readonly initialVolume?: number;
+  /** One-shot seek (seconds) for the first streamed item (resume position). */
+  readonly initialSeekSeconds?: number;
 };
 
 export type JoinVoiceInput = {
@@ -80,5 +112,7 @@ export type RunStreamInput = {
   readonly voice: VoiceHandle;
   readonly resolved: ResolvedSource;
   readonly volume: number;
+  /** Offset (seconds) to start playback at — >0 only for the first item after a resume. */
+  readonly seekSeconds: number;
 };
 export type LeaveVoiceInput = { readonly voice: VoiceHandle };

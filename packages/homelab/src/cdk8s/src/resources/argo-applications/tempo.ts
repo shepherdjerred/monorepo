@@ -67,6 +67,14 @@ export function createTempoApp(chart: Chart) {
           path: "/var/tempo/metrics-generator-traces",
         },
       },
+      // Baseline request (no limits) so trace storage isn't BestEffort.
+      // 30d peak ~16m CPU / ~2.75Gi; steady ~640Mi.
+      resources: {
+        requests: {
+          cpu: "50m",
+          memory: "1Gi",
+        },
+      },
     },
     // Persistence configuration
     persistence: {

@@ -52,7 +52,11 @@ function makeActors(overrides: Partial<PlaybackActors> = {}): PlaybackActors {
           : source.kind === "url"
             ? source.url
             : source.query;
-      return Promise.resolve({ title, ffmpegInput: `resolved:${title}` });
+      return Promise.resolve({
+        title,
+        ffmpegInput: `resolved:${title}`,
+        chapters: [],
+      });
     },
     runStream: () => Promise.resolve(),
     leaveVoice: () => Promise.resolve(),
@@ -203,7 +207,7 @@ describe("playback machine", () => {
         resolveSource: (input) =>
           input.source.kind === "search"
             ? Promise.reject(new BlockedSourceError(input.source.query))
-            : Promise.resolve({ title: "ok", ffmpegInput: "ok" }),
+            : Promise.resolve({ title: "ok", ffmpegInput: "ok", chapters: [] }),
       }),
     );
     actor.send({
@@ -254,5 +258,96 @@ describe("queue editing events", () => {
     expect(actor.getSnapshot().context.volume).toBe(200);
     actor.send({ type: "SET_VOLUME", volume: -5 });
     expect(actor.getSnapshot().context.volume).toBe(0);
+  });
+});
+
+function makeSeekRecorder() {
+  const seeks: number[] = [];
+  const resolvers: (() => void)[] = [];
+  const runStream: PlaybackActors["runStream"] = (input) => {
+    seeks.push(input.seekSeconds);
+    return new Promise<void>((resolve) => resolvers.push(resolve));
+  };
+  return {
+    runStream,
+    seeks,
+    endCurrent: () => {
+      resolvers.shift()?.();
+    },
+  };
+}
+
+describe("playback machine — resume", () => {
+  test("first item after a resume streams at the saved seek offset", async () => {
+    const rec = makeSeekRecorder();
+    const actor = createActor(
+      createPlaybackMachine(makeActors({ runStream: rec.runStream })),
+      {
+        input: {
+          ...INPUT,
+          initialQueue: [{ source: fileSource("movie"), requesterId: U1 }],
+          initialSeekSeconds: 90,
+        },
+      },
+    );
+    actor.start();
+
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    expect(rec.seeks[0]).toBe(90);
+    expect(actor.getSnapshot().context.current?.source).toEqual(
+      fileSource("movie"),
+    );
+  });
+
+  test("consumeSeek: a track-loop replay restarts the same item at 0", async () => {
+    const rec = makeSeekRecorder();
+    const actor = createActor(
+      createPlaybackMachine(makeActors({ runStream: rec.runStream })),
+      {
+        input: {
+          ...INPUT,
+          initialQueue: [{ source: fileSource("movie"), requesterId: U1 }],
+          initialLoop: "track",
+          initialSeekSeconds: 90,
+        },
+      },
+    );
+    actor.start();
+
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    expect(rec.seeks[0]).toBe(90);
+
+    rec.endCurrent(); // natural end → track loop replays the same item
+    await waitFor(actor, () => rec.seeks.length === 2, WAIT);
+    expect(rec.seeks[1]).toBe(0);
+    expect(actor.getSnapshot().context.resumeSeekSeconds).toBe(0);
+  });
+
+  test("the next item after a resumed item streams at 0 (seek not reused)", async () => {
+    const rec = makeSeekRecorder();
+    const actor = createActor(
+      createPlaybackMachine(makeActors({ runStream: rec.runStream })),
+      {
+        input: {
+          ...INPUT,
+          initialQueue: [
+            { source: fileSource("movie"), requesterId: U1 },
+            { source: fileSource("next"), requesterId: U1 },
+          ],
+          initialSeekSeconds: 90,
+        },
+      },
+    );
+    actor.start();
+
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    expect(rec.seeks[0]).toBe(90);
+
+    actor.send({ type: "SKIP" });
+    await waitFor(actor, () => rec.seeks.length === 2, WAIT);
+    expect(rec.seeks[1]).toBe(0);
+    expect(actor.getSnapshot().context.current?.source).toEqual(
+      fileSource("next"),
+    );
   });
 });

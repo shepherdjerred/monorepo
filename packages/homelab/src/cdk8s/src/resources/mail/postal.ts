@@ -201,11 +201,11 @@ export function createPostalDeployment(
       ],
       resources: {
         cpu: {
-          request: Cpu.millis(500),
+          request: Cpu.millis(100),
           limit: Cpu.millis(2000),
         },
         memory: {
-          request: Size.gibibytes(1),
+          request: Size.mebibytes(256),
           limit: Size.gibibytes(4),
         },
       },
@@ -264,11 +264,11 @@ export function createPostalDeployment(
       ],
       resources: {
         cpu: {
-          request: Cpu.millis(250),
+          request: Cpu.millis(100),
           limit: Cpu.millis(1000),
         },
         memory: {
-          request: Size.mebibytes(512),
+          request: Size.mebibytes(256),
           limit: Size.gibibytes(2),
         },
       },
@@ -353,11 +353,11 @@ export function createPostalDeployment(
       })(),
       resources: {
         cpu: {
-          request: Cpu.millis(250),
+          request: Cpu.millis(100),
           limit: Cpu.millis(1000),
         },
         memory: {
-          request: Size.mebibytes(512),
+          request: Size.mebibytes(256),
           limit: Size.gibibytes(2),
         },
       },

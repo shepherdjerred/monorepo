@@ -32,6 +32,18 @@ Patches are applied to the base Talos machine configuration to customize the clu
 
 **Background**: The ZFS ARC was originally limited to 48 GB despite the node having 125 GB total memory. This caused the cache to run at 98% capacity, triggering recurring PagerDuty alerts for hash collisions. Increasing to 62.5 GB (industry standard 50% of RAM) provides headroom for I/O spikes.
 
+### sysctls.yaml
+
+**Purpose**: Kernel sysctls
+
+**Current settings**:
+
+- `kernel.kptr_restrict: 1` - Talos defaults to 2 (KSPP), which hides /proc/kallsyms addresses from all readers, including privileged containers. Value 1 exposes them to CAP_SYSLOG holders only, which the alloy eBPF profiler needs for kernel stack symbolization.
+
+**Applied**: 2026-06-12 (`talosctl patch machineconfig --patch @patches/sysctls.yaml`, no reboot needed).
+
+**Known limitation**: this alone does NOT make the alloy eBPF profiler work. The SecureBoot image boots with kernel lockdown in `confidentiality` mode, which disables the `bpf_probe_read*()` helpers entirely ("program of this type cannot use helper bpf_probe_read"). Fixing that requires regenerating the factory image schematic with `extraKernelArgs: [-lockdown, lockdown=integrity]` and a node upgrade. See <https://github.com/falcosecurity/libs/issues/2736> and <https://github.com/siderolabs/talos/pull/8535>.
+
 ### Other Patches
 
 - `interface.yaml` - Network interface configuration

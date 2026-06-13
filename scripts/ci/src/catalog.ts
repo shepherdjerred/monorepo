@@ -325,6 +325,7 @@ export const ALL_PACKAGES: string[] = [
   "cooklang-rich-preview",
   "discord-plays-pokemon",
   "discord-plays-mario-kart",
+  "discord-video-stream",
   "docs",
   "dotfiles",
   "eslint-config",
@@ -368,6 +369,8 @@ export const PACKAGE_RESOURCES: Record<string, ResourceTier> = {
   "scout-for-lol": MEDIUM,
   "discord-plays-pokemon": MEDIUM,
   "discord-plays-mario-kart": MEDIUM,
+  // Vendored fork; its `test` loads node-av's native ffmpeg, so give it headroom.
+  "discord-video-stream": MEDIUM,
   "starlight-karma-bot": MEDIUM,
   streambot: MEDIUM,
   "tasknotes-server": MEDIUM,

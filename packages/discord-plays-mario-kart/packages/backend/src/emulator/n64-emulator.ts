@@ -3,6 +3,15 @@ import { logger } from "#src/logger.ts";
 import { installBrowserStubs, getFakeCanvas } from "./wasm-host.ts";
 import { buildConfigTxt } from "./config-txt.ts";
 import { WIDTH, BUTTON_ORDER, MAX_SEATS } from "./constants.ts";
+import {
+  emulateMs,
+  copyMs,
+  lateMs,
+  ticksTotal,
+  loopResyncTotal,
+  inputApplyDelayMs,
+} from "#src/observability/metrics.ts";
+import { InputLatencyTracker } from "#src/input/input-latency-tracker.ts";
 import type {
   ButtonState,
   PlayerInputState,
@@ -76,6 +85,7 @@ export class N64Emulator {
   private readonly opts: N64EmulatorOptions;
   private rt: Runtime | undefined;
   private readonly inputs: PlayerInputState[];
+  private readonly inputLatency = new InputLatencyTracker(MAX_SEATS);
   private onFrameCb: ((rgba: Buffer) => void) | undefined;
   private running = false;
   private timer: ReturnType<typeof setTimeout> | undefined;
@@ -224,12 +234,27 @@ export class N64Emulator {
   setPlayerInput(player: number, state: PlayerInputState): void {
     if (player < 0 || player >= MAX_SEATS) return;
     this.inputs[player] = state;
+    this.inputLatency.record(player);
   }
 
   /** Zero a player's input (e.g. on disconnect) so a held key doesn't stick. */
   clearPlayerInput(player: number): void {
     if (player < 0 || player >= MAX_SEATS) return;
     this.inputs[player] = structuredClone(EMPTY_INPUT);
+    this.inputLatency.clear(player);
+  }
+
+  /** Per-seat "any control held" flags (buttons or analog deflection), for the
+   *  stream HUD's input-echo indicators. */
+  seatActivity(): boolean[] {
+    return this.inputs
+      .slice(0, this.opts.seats)
+      .map(
+        (s) =>
+          Object.values(s.buttons).some(Boolean) ||
+          Math.abs(s.analogX) > 0.25 ||
+          Math.abs(s.analogY) > 0.25,
+      );
   }
 
   start(): void {
@@ -265,8 +290,10 @@ export class N64Emulator {
     const rt = this.rt;
     if (rt === undefined) return;
 
-    // Apply each seat's latched input IMMEDIATELY before runMainLoop (the core
-    // zeroes neilbuttons[*] at frame start then polls — see PATCHES.md).
+    // Push each seat's input before runMainLoop. The C side only LATCHES it
+    // (into g_neilHostPads) and re-applies it inside mainLoopInner AFTER the
+    // per-frame resetNeilButtons() — a direct write here would be wiped before
+    // retro_run() polls it. See applyHostControls() in PATCHES.md.
     for (let p = 0; p < this.opts.seats; p++) {
       const s = this.inputs[p];
       rt.send(
@@ -276,8 +303,14 @@ export class N64Emulator {
         String(s.analogY),
       );
     }
+    // Everything pending is now latched into this tick.
+    this.inputLatency.drainAll((ms) => {
+      inputApplyDelayMs.observe(ms);
+    });
 
+    const emulateStart = performance.now();
     rt.runMainLoop();
+    emulateMs.observe(performance.now() - emulateStart);
 
     const cb = this.onFrameCb;
     if (cb !== undefined) {
@@ -286,9 +319,12 @@ export class N64Emulator {
       if (vbuf && h) {
         this.lastHeight = h;
         // Copy out of the (reused) heap view before handing off.
+        const copyStart = performance.now();
         cb(Buffer.from(rt.heap().subarray(vbuf, vbuf + WIDTH * h * 4)));
+        copyMs.observe(performance.now() - copyStart);
       }
     }
+    ticksTotal.inc();
   }
 
   private loop(): void {
@@ -300,8 +336,11 @@ export class N64Emulator {
     }
     this.nextAt += this.frameMs;
     let delay = this.nextAt - performance.now();
+    // delay < 0 means the tick overran its budget; record how far behind we are.
+    lateMs.observe(Math.max(0, -delay));
     if (delay < -250) {
       // Fell far behind (paused process); resync rather than sprint.
+      loopResyncTotal.inc();
       this.nextAt = performance.now();
       delay = 0;
     }

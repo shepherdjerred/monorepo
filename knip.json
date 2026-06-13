@@ -132,6 +132,7 @@
     "archive/**",
     ".dagger/**",
     "practice/**",
+    "packages/discord-video-stream/**",
     "packages/resume/**",
     "packages/dotfiles/**",
     "packages/fonts/**",

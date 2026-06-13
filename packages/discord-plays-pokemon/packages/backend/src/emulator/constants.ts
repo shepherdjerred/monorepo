@@ -6,6 +6,10 @@ export const WIDTH = 240;
 export const HEIGHT = 160;
 export const FRAME_BYTES = WIDTH * HEIGHT * 4;
 
+// The GBA screen is 240x160 = 3:2 (square pixels). We letterbox this onto a 16:9
+// canvas for Discord, so the stream uses the display aspect, pillarboxed on black.
+export const DISPLAY_ASPECT = 3 / 2;
+
 export const REG = 0x04_00_00_00;
 export const PAL = 0x05_00_00_00;
 export const VRAM = 0x06_00_00_00;

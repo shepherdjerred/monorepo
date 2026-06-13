@@ -5,7 +5,18 @@ Sentry.init({
     Bun.env.SENTRY_DSN ??
     "https://9c905c2bb5924e55b4dea32e2a95f0d1@bugsink.sjer.red/8",
   environment: Bun.env.NODE_ENV ?? "development",
+  // Don't let Sentry register the global OTel TracerProvider/Propagator/
+  // ContextManager. It runs before initializeTracing(), so it lands first and
+  // the NodeSDK below fails registration ("duplicate registration of API:
+  // trace") — spans then route through Sentry's sampler (tracesSampleRate
+  // unset) and never reach Tempo. Sentry stays for errors via captureException.
+  skipOpenTelemetrySetup: true,
 });
+
+import { initializeTracing } from "./observability/tracing.ts";
+
+// Start OTLP tracing before any traced network work (Discord login, voice).
+initializeTracing();
 
 import { match } from "ts-pattern";
 import { handleMessages } from "./discord/message-handler.ts";
@@ -58,10 +69,16 @@ if (config.stream.enabled) {
     token: config.stream.userbot.token,
     guildId: config.server_id,
     channelId: config.stream.channel_id,
-    scale: config.stream.video.scale,
+    canvasHeight: config.stream.video.canvas_height,
     frameRate: config.stream.video.frame_rate,
     bitrateKbps: config.stream.video.bitrate_kbps,
     bitrateMaxKbps: config.stream.video.bitrate_max_kbps,
+    // Env (set by the k8s deployment) overrides config so VAAPI can be toggled
+    // without editing the 1Password-sourced config.toml.
+    hardwareAcceleration:
+      Bun.env.STREAM_HARDWARE_ACCELERATION === "true" ||
+      config.stream.video.hardware_acceleration,
+    vaapiDevice: Bun.env.VAAPI_DEVICE ?? config.stream.video.vaapi_device,
   });
   await streamer.login();
 

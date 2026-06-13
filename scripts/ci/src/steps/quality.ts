@@ -6,11 +6,18 @@
  * fetches source server-side, content-addressed by SHA — the BK pod itself
  * writes no source to disk.
  *
- * `plainStep` and the `buildkite-git-mirrors` mount were removed in PR2 of
- * the BK-pressure reduction plan
+ * The one exception is `greptileReviewStep`, a `plainStep` that runs repo
+ * scripts + `buildkite-agent` on the agent (so it keeps the agent-side
+ * checkout / `buildkite-git-mirrors` mount via `k8sPluginWithCheckout`). All
+ * other steps are Dagger git-URL refs per the BK-pressure reduction plan
  * (`packages/docs/plans/2026-05-31_bk-dagger-git-url-refactor.md`).
  */
-import { daggerStep, REPO_GIT_REF, DAGGER_CALL } from "../lib/buildkite.ts";
+import {
+  daggerStep,
+  plainStep,
+  REPO_GIT_REF,
+  DAGGER_CALL,
+} from "../lib/buildkite.ts";
 import type { BuildkiteStep } from "../lib/types.ts";
 
 /**
@@ -135,6 +142,21 @@ export function tunnelDnsCoverageStep(): BuildkiteStep {
     label: ":cloud: Tunnel DNS Coverage",
     key: "tunnel-dns-coverage",
     daggerCmd: `${DAGGER_CALL} tunnel-dns-coverage --source ${REPO_GIT_REF}`,
+    timeoutMinutes: 10,
+  });
+}
+
+/**
+ * Verifies `react`/`react-dom` (and their `@types`) resolve to matching
+ * versions in every `bun.lock`. A skew throws "Incompatible React versions" at
+ * runtime — invisible to typecheck/build/test. See the mariokart.sjer.red
+ * post-mortem in packages/docs/plans.
+ */
+export function reactVersionSyncStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":react: React Version Sync",
+    key: "react-version-sync",
+    daggerCmd: `${DAGGER_CALL} react-version-sync --source ${REPO_GIT_REF}`,
     timeoutMinutes: 10,
   });
 }

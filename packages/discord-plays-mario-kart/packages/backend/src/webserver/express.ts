@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { assertPathExists } from "#src/util.ts";
 import { logger } from "#src/logger.ts";
+import { registry } from "#src/observability/metrics.ts";
 
 export function createExpressApp({
   isCorsEnabled,
@@ -21,6 +22,18 @@ export function createExpressApp({
   } else {
     logger.info("not enabling cors for the express app");
   }
+
+  // Prometheus scrape endpoint (registered before the static handler so it isn't
+  // shadowed). Frame-loop + default process metrics; see observability/metrics.ts.
+  app.get("/metrics", async (_req, res) => {
+    try {
+      const body = await registry.metrics();
+      res.set("Content-Type", registry.contentType).send(body);
+    } catch (error) {
+      logger.error("failed to collect metrics", { error });
+      res.status(500).end();
+    }
+  });
 
   assertPathExists(webAssetsPath, "web assets");
 

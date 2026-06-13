@@ -331,16 +331,17 @@ export function createTemporalWorkerDeployment(
       // Sized for in-process claude -p invocations. The pr-agent activity
       // (review + summary) runs for a few minutes; the homelab-audit-daily
       // workflow runs ~25 min and shells out to kubectl / talosctl / curl
-      // alongside claude. 1500m/4Gi gives headroom without throttling
-      // either lifecycle.
+      // alongside claude. 30d working-set peak hit 3.9Gi against the old 4Gi
+      // limit (near-OOM), so the request reflects real usage and the limit
+      // has slack above the observed peak.
       resources: {
         cpu: {
           request: Cpu.millis(500),
           limit: Cpu.millis(1500),
         },
         memory: {
-          request: Size.mebibytes(512),
-          limit: Size.gibibytes(4),
+          request: Size.gibibytes(2),
+          limit: Size.gibibytes(6),
         },
       },
       envVariables: {

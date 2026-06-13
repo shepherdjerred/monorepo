@@ -20,10 +20,15 @@ const VolumeMountSchema = z
   })
   .loose();
 
+const EnvVarSchema = z
+  .object({ name: z.string(), value: z.string().optional() })
+  .loose();
+
 const ContainerSchema = z
   .object({
     image: z.string().optional(),
     volumeMounts: z.array(VolumeMountSchema).optional(),
+    env: z.array(EnvVarSchema).optional(),
     securityContext: z
       .object({ runAsUser: z.number().optional() })
       .loose()
@@ -37,6 +42,7 @@ const DeploymentSchema = z
     metadata: z.object({ name: z.string().optional() }).loose().optional(),
     spec: z
       .object({
+        strategy: z.object({ type: z.string().optional() }).loose().optional(),
         template: z
           .object({
             spec: z.object({ containers: z.array(ContainerSchema) }).loose(),
@@ -44,6 +50,20 @@ const DeploymentSchema = z
           .loose(),
       })
       .loose(),
+  })
+  .loose();
+
+const PvcSchema = z
+  .object({
+    kind: z.literal("PersistentVolumeClaim"),
+    metadata: z.object({ name: z.string().optional() }).loose().optional(),
+    spec: z
+      .object({
+        accessModes: z.array(z.string()).optional(),
+        storageClassName: z.string().optional(),
+      })
+      .loose()
+      .optional(),
   })
   .loose();
 
@@ -55,10 +75,14 @@ function parseSynthesizedDocuments(yamlContent: string): unknown[] {
     .map((document): unknown => parseYaml(document));
 }
 
-function getStreambotDeployment(): z.infer<typeof DeploymentSchema> {
+function synthMediaDocuments(): unknown[] {
   const app = new App({ outdir: ".test-synth-streambot-media" });
   createMediaChart(app);
-  for (const document of parseSynthesizedDocuments(app.synthYaml())) {
+  return parseSynthesizedDocuments(app.synthYaml());
+}
+
+function getStreambotDeployment(): z.infer<typeof DeploymentSchema> {
+  for (const document of synthMediaDocuments()) {
     const result = DeploymentSchema.safeParse(document);
     if (result.success && result.data.metadata?.name === "media-streambot") {
       return result.data;
@@ -68,6 +92,23 @@ function getStreambotDeployment(): z.infer<typeof DeploymentSchema> {
     "streambot Deployment was not synthesized into the media chart",
   );
 }
+
+function getStatePvc(): z.infer<typeof PvcSchema> {
+  for (const document of synthMediaDocuments()) {
+    const result = PvcSchema.safeParse(document);
+    if (
+      result.success &&
+      result.data.metadata?.name === "streambot-state-pvc"
+    ) {
+      return result.data;
+    }
+  }
+  throw new Error(
+    "streambot-state-pvc was not synthesized into the media chart",
+  );
+}
+
+const STREAMBOT_STATE = "/state";
 
 describe("streambot deployment (media namespace)", () => {
   const deployment = getStreambotDeployment();
@@ -94,5 +135,48 @@ describe("streambot deployment (media namespace)", () => {
     expect(
       mounts.some((mount) => mount.mountPath === LEGACY_SCRIPTS_PATH),
     ).toBe(false);
+  });
+
+  it("mounts the resume-state volume writable at /state", () => {
+    const mounts = container?.volumeMounts ?? [];
+    const state = mounts.find((mount) => mount.mountPath === STREAMBOT_STATE);
+    expect(state).toBeDefined();
+    // Must be writable (default / not readOnly) so the bot can persist resume state.
+    expect(state?.readOnly ?? false).toBe(false);
+  });
+
+  it("sets STATE_DIR to the persistent /state mount", () => {
+    const stateDir = (container?.env ?? []).find(
+      (variable) => variable.name === "STATE_DIR",
+    );
+    expect(stateDir?.value).toBe(STREAMBOT_STATE);
+  });
+
+  it("wires TMDB_API_KEY as an optional secret ref (poster art, never crashes if absent)", () => {
+    const EnvFromSecretSchema = z.object({
+      name: z.string(),
+      valueFrom: z.object({
+        secretKeyRef: z.object({
+          key: z.string(),
+          optional: z.boolean().optional(),
+        }),
+      }),
+    });
+    const tmdb = (container?.env ?? []).find(
+      (variable) => variable.name === "TMDB_API_KEY",
+    );
+    const parsed = EnvFromSecretSchema.parse(tmdb);
+    expect(parsed.valueFrom.secretKeyRef.key).toBe("TMDB_API_KEY");
+    expect(parsed.valueFrom.secretKeyRef.optional).toBe(true);
+  });
+
+  it("provisions a ReadWriteOnce state PVC", () => {
+    const pvc = getStatePvc();
+    expect(pvc.spec?.accessModes).toEqual(["ReadWriteOnce"]);
+  });
+
+  it("keeps the Recreate strategy so the RWO state PVC detaches before reattach", () => {
+    // A RollingUpdate would briefly run two pods, multi-attach-conflicting the RWO state PVC.
+    expect(deployment.spec.strategy?.type).toBe("Recreate");
   });
 });

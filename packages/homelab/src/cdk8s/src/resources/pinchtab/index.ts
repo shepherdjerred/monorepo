@@ -25,6 +25,17 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 
 const PINCHTAB_PORT = 9867;
 
+// pinchtab's /health route requires the bearer token (its "guard" mode rejects
+// unauthenticated requests on every route except `/`). The probe runs inside the
+// container, so it can read PINCHTAB_TOKEN from the env and authenticate without
+// the token ever appearing in the manifest. wget exits non-zero on a 401/non-2xx,
+// which is exactly the failure signal the probe needs.
+const HEALTHCHECK_COMMAND = [
+  "sh",
+  "-c",
+  `wget -q -O /dev/null --header="Authorization: Bearer $PINCHTAB_TOKEN" http://localhost:${String(PINCHTAB_PORT)}/health`,
+];
+
 export function createPinchtabDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "pinchtab", {
     replicas: 1,
@@ -74,7 +85,11 @@ export function createPinchtabDeployment(chart: Chart) {
         {
           server: {
             bind: "0.0.0.0",
-            port: PINCHTAB_PORT,
+            // pinchtab's config schema types server.port as a string; emitting a
+            // number makes the Go parser fail ("cannot unmarshal number into
+            // ServerConfig.server.port of type string"), the server never binds,
+            // and the pod crashloops on the /health startup probe.
+            port: String(PINCHTAB_PORT),
             stateDir: "/data/state",
           },
           profiles: {
@@ -127,21 +142,21 @@ export function createPinchtabDeployment(chart: Chart) {
           key: "PINCHTAB_TOKEN",
         }),
       },
-      // Two-stage readiness: the dashboard answers /health quickly, but Chrome
-      // takes a few seconds to initialize. The generous startup probe covers
-      // that warm-up before liveness/readiness take over.
-      startup: Probe.fromHttpGet("/health", {
-        port: PINCHTAB_PORT,
+      // pinchtab 0.13.2 runs its "guard" with auth required on every route
+      // except `/` — `/health` returns 401 without the bearer token, so a plain
+      // httpGet probe fails. Use an exec probe that reads PINCHTAB_TOKEN from the
+      // container env (never the manifest) and calls /health. Two-stage readiness:
+      // the generous startup probe covers Chrome warm-up before liveness/readiness
+      // take over.
+      startup: Probe.fromCommand(HEALTHCHECK_COMMAND, {
         periodSeconds: Duration.seconds(5),
         failureThreshold: 24,
       }),
-      liveness: Probe.fromHttpGet("/health", {
-        port: PINCHTAB_PORT,
+      liveness: Probe.fromCommand(HEALTHCHECK_COMMAND, {
         periodSeconds: Duration.seconds(30),
         failureThreshold: 3,
       }),
-      readiness: Probe.fromHttpGet("/health", {
-        port: PINCHTAB_PORT,
+      readiness: Probe.fromCommand(HEALTHCHECK_COMMAND, {
         periodSeconds: Duration.seconds(10),
         failureThreshold: 3,
       }),

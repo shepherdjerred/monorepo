@@ -6,10 +6,7 @@ import {
 
 const VALID: EnvLookup = {
   BOT_TOKEN: "bot-token",
-  TOKEN: "user-token",
-  GUILD_ID: "1337623164146155593",
-  COMMAND_CHANNEL_ID: "1337631455085334650",
-  VIDEO_CHANNEL_ID: "1337623164955398253",
+  USER_TOKENS: "user-token-a, user-token-b",
   ADMIN_IDS: "160509172704739328, 160509172704739329",
   VIDEOS_DIR: "/home/bots/StreamBot/videos",
   MEDIA_DIRS: "/media/movies,/media/tv",
@@ -20,8 +17,10 @@ describe("loadConfig", () => {
     const config = loadConfig(VALID);
     // Branded ids/tokens are structurally strings — compare via String().
     expect(String(config.discord.botToken)).toBe("bot-token");
-    expect(String(config.discord.userToken)).toBe("user-token");
-    expect(String(config.discord.statusChannelId)).toBe("1337631455085334650");
+    expect(config.discord.userTokens.map(String)).toEqual([
+      "user-token-a",
+      "user-token-b",
+    ]);
     expect(config.discord.adminIds.map(String)).toEqual([
       "160509172704739328",
       "160509172704739329",
@@ -41,10 +40,18 @@ describe("loadConfig", () => {
     expect(() => loadConfig(env)).toThrow("Invalid streambot configuration");
   });
 
-  test("rejects a non-snowflake guild id", () => {
-    expect(() =>
-      loadConfig({ ...VALID, GUILD_ID: "not-a-snowflake" }),
-    ).toThrow();
+  test("throws when no user tokens are configured", () => {
+    const env = { ...VALID };
+    delete env["USER_TOKENS"];
+    expect(() => loadConfig(env)).toThrow("Invalid streambot configuration");
+  });
+
+  test("accepts the singular TOKEN as a one-token fallback", () => {
+    const env = { ...VALID };
+    delete env["USER_TOKENS"];
+    env["TOKEN"] = "legacy-token";
+    const config = loadConfig(env);
+    expect(config.discord.userTokens.map(String)).toEqual(["legacy-token"]);
   });
 
   test("overrides numeric stream settings from the environment", () => {
@@ -64,5 +71,21 @@ describe("loadConfig", () => {
     const config = loadConfig(env);
     expect(config.discord.adminIds).toEqual([]);
     expect(config.library.mediaDirs).toEqual([]);
+  });
+
+  test("defaults the resume-state config when unset", () => {
+    const config = loadConfig(VALID);
+    expect(config.state.dir).toBe("/state");
+    expect(config.state.resumeMaxAgeSeconds).toBe(21_600);
+  });
+
+  test("reads STATE_DIR and RESUME_MAX_AGE_SECONDS from the environment", () => {
+    const config = loadConfig({
+      ...VALID,
+      STATE_DIR: "/data/state",
+      RESUME_MAX_AGE_SECONDS: "60",
+    });
+    expect(config.state.dir).toBe("/data/state");
+    expect(config.state.resumeMaxAgeSeconds).toBe(60);
   });
 });

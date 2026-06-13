@@ -142,7 +142,7 @@ export function createTemporalServerDeployment(
       ],
       resources: {
         cpu: {
-          request: Cpu.millis(250),
+          request: Cpu.millis(100),
           limit: Cpu.millis(1000),
         },
         memory: {

@@ -4,26 +4,36 @@
 # voice UDP path. No X server, no browser, no GPU.
 FROM oven/bun:1.3.14-debian@sha256:9dba1a1b43ce28c9d7931bfc4eb00feb63b0114720a0277a8f939ae4dfc9db6f
 
+# NOTE: The canonical build is the Dagger pipeline (`build-discord-plays-pokemon-image`), which
+# mounts the in-repo fork `@shepherdjerred/discord-video-stream` (a `file:` dep outside this
+# directory) into the workspace. A raw `docker build` from this directory cannot resolve that
+# out-of-context dependency; this Dockerfile is kept for reference/local iteration only.
+#
 # System deps:
-# - ffmpeg: used by @dank074/discord-video-stream (fluent-ffmpeg) to encode the
+# - ffmpeg: used by discord-video-stream (fluent-ffmpeg) to encode the
 #   rawvideo frame feed to H.264.
 # - libvips: native lib for sharp (a transitive dep of discord-video-stream).
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends ffmpeg libvips42 ca-certificates \
+# - Intel VAAPI stack (libva + iHD driver): h264_vaapi hardware encoding on an
+#   Intel iGPU. iHD lives in Debian non-free (enabled below) and is amd64-only;
+#   software libx264 is the fallback when the device/driver is absent.
+RUN set -e; \
+  if [ -f /etc/apt/sources.list.d/debian.sources ]; then sed -i "s/^Components: main.*/Components: main contrib non-free non-free-firmware/" /etc/apt/sources.list.d/debian.sources; fi; \
+  apt-get update \
+  && apt-get install -y --no-install-recommends ffmpeg libvips42 ca-certificates libva2 libva-drm2 vainfo \
+  && if [ "$(dpkg --print-architecture)" = "amd64" ]; then apt-get install -y --no-install-recommends intel-media-va-driver-non-free; fi \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 # Install dependencies first for layer caching. The inner monorepo manifests:
 COPY package.json bun.lock ./
-COPY patches/ patches/
 COPY packages/common/package.json packages/common/
 COPY packages/backend/package.json packages/backend/
 COPY packages/frontend/package.json packages/frontend/
 
 # trustedDependencies in the root package.json lets the native postinstalls
-# (node-datachannel, node-av) run during a frozen install. The patch makes
-# discord-video-stream lazy-load sharp.
+# (node-datachannel, node-av) run during a frozen install. discord-video-stream's
+# bun-safe lazy `sharp` import is baked into the fork source (no patch needed).
 RUN bun install --frozen-lockfile
 
 # App source (includes the vendored packages/backend/assets/pokeemerald.wasm).
