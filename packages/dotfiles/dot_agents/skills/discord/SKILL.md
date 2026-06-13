@@ -54,8 +54,8 @@ import { Client as UserClient } from "discord.js-selfbot-v13";
 
 const GUILD_ID = "<target guild — confirm with the user>";
 
-const botToken = process.env["BOT_TOKEN"];
-const userToken = process.env["TOKEN"];
+const botToken = Bun.env["BOT_TOKEN"];
+const userToken = Bun.env["TOKEN"];
 if (botToken === undefined || botToken === "" || userToken === undefined || userToken === "") {
   throw new Error("BOT_TOKEN and TOKEN must be set");
 }
@@ -156,7 +156,9 @@ import { Events, REST, Routes, SlashCommandBuilder } from "discord.js";
 
 const rest = new REST().setToken(botToken);
 const command = new SlashCommandBuilder().setName("agent-ping").setDescription("test ping");
-await rest.put(Routes.applicationGuildCommands(bot.user.id, GUILD_ID), { body: [command.toJSON()] });
+const botUserId = bot.user?.id;
+if (botUserId === undefined) throw new Error("bot user not available after ready");
+await rest.put(Routes.applicationGuildCommands(botUserId, GUILD_ID), { body: [command.toJSON()] });
 
 const interactionSeen = new Promise<boolean>((resolve) => {
   const timer = setTimeout(() => {
@@ -171,10 +173,10 @@ const interactionSeen = new Promise<boolean>((resolve) => {
   });
 });
 await new Promise((resolve) => setTimeout(resolve, 3_000)); // registration → cache lag
-await userChannel.sendSlash(bot.user.id, "agent-ping");
+await userChannel.sendSlash(botUserId, "agent-ping");
 console.log(`round-trip ok: ${String(await interactionSeen)}`);
 // cleanup so the guild stays tidy
-await rest.put(Routes.applicationGuildCommands(bot.user.id, GUILD_ID), { body: [] });
+await rest.put(Routes.applicationGuildCommands(botUserId, GUILD_ID), { body: [] });
 ```
 
 ## Join voice / verify a stream
