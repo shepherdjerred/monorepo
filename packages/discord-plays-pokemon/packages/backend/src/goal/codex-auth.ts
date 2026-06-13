@@ -4,7 +4,7 @@ export function envValue(
   values: Record<string, string | undefined>,
   name: string,
 ): string | undefined {
-  const value = Object.entries(values).find(([key]) => key === name)?.[1];
+  const value = values[name];
   if (value === undefined || value.length === 0) {
     return undefined;
   }
