@@ -2,6 +2,18 @@ import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/gen
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared.ts";
 
+// nvme_* metrics are keyed by `device` (e.g. nvme0n1) — the kernel's NVMe
+// enumeration name, which is NOT stable across reboots or slot changes. The
+// stable serial + model live only on the nvme_device_info metric, so join it in
+// via group_left: every alert then carries `serial` and `model` and identifies
+// the physical drive instead of an enumeration slot. The join is evaluated per
+// scrape, so it always reflects the current device->serial mapping even when the
+// enumeration order flips. nvme_device_info has value 1, so the multiplication
+// leaves the alert's `$value` unchanged.
+function withNvmeIdentity(expr: string): string {
+  return `(${expr}) * on(device) group_left(serial, model) nvme_device_info`;
+}
+
 export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     {
@@ -15,7 +27,7 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "NvmePercentageUsedHigh",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "nvme_percentage_used_ratio > 0.5",
+            withNvmeIdentity("nvme_percentage_used_ratio > 0.5"),
           ),
           for: "1h",
           labels: {
@@ -24,17 +36,17 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "NVMe wear above 50% on {{ $labels.device }}",
+              "NVMe wear above 50% on {{ $labels.model }} (serial {{ $labels.serial }})",
             ),
             description: escapePrometheusTemplate(
-              "NVMe {{ $labels.device }} reports SMART percentage_used at {{ $value | humanizePercentage }}. Begin replacement planning.",
+              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}, dev {{ $labels.device }}) reports SMART percentage_used at {{ $value | humanizePercentage }}. Begin replacement planning.",
             ),
           },
         },
         {
           alert: "NvmePercentageUsedCritical",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "nvme_percentage_used_ratio > 0.8",
+            withNvmeIdentity("nvme_percentage_used_ratio > 0.8"),
           ),
           for: "10m",
           labels: {
@@ -43,10 +55,10 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "NVMe wear above 80% on {{ $labels.device }}",
+              "NVMe wear above 80% on {{ $labels.model }} (serial {{ $labels.serial }})",
             ),
             description: escapePrometheusTemplate(
-              "NVMe {{ $labels.device }} reports SMART percentage_used at {{ $value | humanizePercentage }}. Replace before reaching 1.0 (end-of-life prediction).",
+              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}, dev {{ $labels.device }}) reports SMART percentage_used at {{ $value | humanizePercentage }}. Replace before reaching 1.0 (end-of-life prediction).",
             ),
           },
         },
@@ -57,7 +69,9 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "NvmeAvailableSpareLow",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "nvme_available_spare_ratio < nvme_available_spare_threshold_ratio",
+            withNvmeIdentity(
+              "nvme_available_spare_ratio < nvme_available_spare_threshold_ratio",
+            ),
           ),
           for: "10m",
           labels: {
@@ -66,10 +80,10 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "NVMe available spare below firmware threshold on {{ $labels.device }}",
+              "NVMe available spare below firmware threshold on {{ $labels.model }} (serial {{ $labels.serial }})",
             ),
             description: escapePrometheusTemplate(
-              "NVMe {{ $labels.device }} reports available_spare {{ $value | humanizePercentage }}, below the device's own warning threshold. Replace.",
+              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}, dev {{ $labels.device }}) reports available_spare {{ $value | humanizePercentage }}, below the device's own warning threshold. Replace.",
             ),
           },
         },
@@ -78,7 +92,7 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "NvmeMediaErrors",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "increase(nvme_media_errors_total[1h]) > 0",
+            withNvmeIdentity("increase(nvme_media_errors_total[1h]) > 0"),
           ),
           for: "5m",
           labels: {
@@ -87,28 +101,23 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "NVMe media errors detected on {{ $labels.device }}",
+              "NVMe media errors detected on {{ $labels.model }} (serial {{ $labels.serial }})",
             ),
             description: escapePrometheusTemplate(
-              "NVMe {{ $labels.device }} accumulated {{ $value }} media errors in the last hour. Investigate and consider replacement.",
+              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}, dev {{ $labels.device }}) accumulated {{ $value }} media errors in the last hour. Investigate and consider replacement.",
             ),
           },
         },
 
-        // Thermal alerts using the working nvme_temperature_celsius metric.
-        // The existing SmartNvmeTemperatureHigh/Critical in smartctl.ts use
-        // smartmon_temperature_celsius_value, which the smartmon-collector
-        // emits with an empty `device` label on this cluster — meaning the
-        // device=~".*/nvme[0-9].*" filter never matches and those alerts
-        // never fire for NVMe drives. (Coincidentally, the SATA fallback
-        // SmartDeviceTemperature* alerts catch them because the empty-device
-        // negation matches; that's fragile and misleadingly named.)
-        // These NVMe-specific alerts use the node-exporter nvme collector,
-        // which emits proper `device=nvme[0-9]+n[0-9]+` labels.
+        // Thermal alerts using the nvme_temperature_celsius metric (node-exporter
+        // nvme collector), which emits proper `device=nvme[0-9]+n[0-9]+` labels.
+        // The smartmon collector emits temperature without a usable device label
+        // for NVMe, so NVMe temperature is owned here, not in smartctl.ts (whose
+        // temp alerts are now scoped to SATA via type="sat").
         {
           alert: "NvmeTemperatureHigh",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "nvme_temperature_celsius > 65",
+            withNvmeIdentity("nvme_temperature_celsius > 65"),
           ),
           for: "5m",
           labels: {
@@ -117,17 +126,17 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "Elevated NVMe temperature on {{ $labels.device }}",
+              "Elevated NVMe temperature on {{ $labels.model }} (serial {{ $labels.serial }})",
             ),
             description: escapePrometheusTemplate(
-              "NVMe {{ $labels.device }} is {{ $value }}°C. Samsung 990 PRO rated operating max is 70°C; thermal throttling kicks in at the limit.",
+              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}, dev {{ $labels.device }}) is {{ $value }}°C. Samsung 990 PRO rated operating max is 70°C; thermal throttling kicks in at the limit.",
             ),
           },
         },
         {
           alert: "NvmeTemperatureCritical",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "nvme_temperature_celsius > 70",
+            withNvmeIdentity("nvme_temperature_celsius > 70"),
           ),
           for: "1m",
           labels: {
@@ -136,10 +145,10 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "NVMe at thermal throttle limit on {{ $labels.device }}",
+              "NVMe at thermal throttle limit on {{ $labels.model }} (serial {{ $labels.serial }})",
             ),
             description: escapePrometheusTemplate(
-              "NVMe {{ $labels.device }} is {{ $value }}°C — at or above Samsung 990 PRO rated operating limit. Dynamic Thermal Guard is throttling write bandwidth, extending CI burst windows in a self-reinforcing loop.",
+              "NVMe {{ $labels.model }} (serial {{ $labels.serial }}, dev {{ $labels.device }}) is {{ $value }}°C — at or above Samsung 990 PRO rated operating limit. Dynamic Thermal Guard is throttling write bandwidth, extending CI burst windows in a self-reinforcing loop.",
             ),
           },
         },
