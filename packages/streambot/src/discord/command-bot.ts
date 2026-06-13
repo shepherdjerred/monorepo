@@ -38,8 +38,8 @@ const ALONE_GRACE_MS = 30_000;
 
 /** Subcommands that start (or join) a session in the issuer's current voice channel. */
 const PLAY_SUBCOMMANDS = new Set(["play", "playnext"]);
-/** Subcommands that only read the media library — no session required. */
-const LIBRARY_SUBCOMMANDS = new Set(["list", "search"]);
+/** Subcommands answerable without a playback session (library/yt-dlp lookups + static help). */
+const STATELESS_SUBCOMMANDS = new Set(["list", "search", "sources", "help"]);
 
 export type CommandBotDeps = {
   readonly config: Config;
@@ -50,6 +50,7 @@ export type CommandBotDeps = {
     url: string,
     signal: AbortSignal,
   ) => Promise<PlaylistItem[]>;
+  readonly listSources: (signal: AbortSignal) => Promise<readonly string[]>;
 };
 
 /** Render a neutral {@link Announcement} into discord.js message options (text, optional poster embed). */
@@ -238,7 +239,7 @@ export class CommandBot {
         return;
       }
       announceChannel = statusChannelId;
-    } else if (LIBRARY_SUBCOMMANDS.has(sub)) {
+    } else if (STATELESS_SUBCOMMANDS.has(sub)) {
       handle = EMPTY_HANDLE;
     } else {
       const voiceChannelId = this.issuerVoiceChannel(interaction);
@@ -263,6 +264,7 @@ export class CommandBot {
       setVolume: handle.setVolume,
       seek: handle.seek,
       expandPlaylist: this.deps.expandPlaylist,
+      listSources: this.deps.listSources,
       announce: (message) => this.announce(announceChannel, message),
     });
     await handler.run(this.adapt(interaction));

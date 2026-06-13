@@ -1,11 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import {
   CommandHandler,
-  helpText,
   type CommandHandlerDeps,
   type CommandInteraction,
   type PlaybackView,
 } from "@shepherdjerred/streambot/discord/command-handler.ts";
+import {
+  helpText,
+  sourcesText,
+} from "@shepherdjerred/streambot/discord/help-text.ts";
 import { commandJson } from "@shepherdjerred/streambot/discord/commands.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import type { PlaybackEvent } from "@shepherdjerred/streambot/machine/types.ts";
@@ -58,6 +61,7 @@ function makeHandler(over: {
   volumeApplied?: boolean;
   seekApplied?: boolean;
   playlistItems?: { url: string; title: string }[];
+  sources?: string[];
 }): Harness & { seeks: number[] } {
   const events: PlaybackEvent[] = [];
   const announces: string[] = [];
@@ -73,6 +77,7 @@ function makeHandler(over: {
       return Promise.resolve(over.seekApplied ?? true);
     },
     expandPlaylist: () => Promise.resolve(over.playlistItems ?? []),
+    listSources: () => Promise.resolve(over.sources ?? []),
     announce: (message) => {
       announces.push(message);
       return Promise.resolve();
@@ -589,5 +594,51 @@ describe("help", () => {
       // `queue · nowplaying · …` layout, so names aren't all prefixed with `/stream`).
       expect(text).toMatch(new RegExp(String.raw`\b${option.name}\b`));
     }
+  });
+});
+
+describe("sources", () => {
+  test("bare sources defers and summarizes the count", async () => {
+    const h = makeHandler({ sources: ["youtube", "twitch:vod", "vimeo"] });
+    const fake = fakeInteraction({ sub: "sources" });
+    await h.handler.run(fake.interaction);
+    expect(fake.state.deferred).toBe(true);
+    const edit = fake.edits[0];
+    if (edit === undefined) throw new Error("expected an edited reply");
+    expect(edit).toContain("3 sources");
+    expect(edit).toContain("/stream sources");
+  });
+
+  test("filtered sources lists case-insensitive matches only", async () => {
+    const h = makeHandler({
+      sources: ["youtube", "twitch:vod", "twitch:clips", "vimeo"],
+    });
+    const fake = fakeInteraction({
+      sub: "sources",
+      strings: { query: "TWITCH" },
+    });
+    await h.handler.run(fake.interaction);
+    const edit = fake.edits[0];
+    if (edit === undefined) throw new Error("expected an edited reply");
+    expect(edit).toContain("twitch:vod");
+    expect(edit).toContain("twitch:clips");
+    expect(edit).not.toContain("vimeo");
+    expect(edit).toContain("2 source(s)");
+  });
+
+  test("filtered sources reports when nothing matches", async () => {
+    const h = makeHandler({ sources: ["youtube", "vimeo"] });
+    const fake = fakeInteraction({
+      sub: "sources",
+      strings: { query: "nope" },
+    });
+    await h.handler.run(fake.interaction);
+    expect(fake.edits[0]).toContain("No sources matching");
+  });
+
+  test("sourcesText truncates beyond the display cap", () => {
+    const many = Array.from({ length: 25 }, (_, i) => `site${String(i)}`);
+    const text = sourcesText(many, "site");
+    expect(text).toContain("…and 5 more");
   });
 });

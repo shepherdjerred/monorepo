@@ -16,6 +16,10 @@ import {
   parseTimecode,
 } from "@shepherdjerred/streambot/discord/timecode.ts";
 import {
+  helpText,
+  sourcesText,
+} from "@shepherdjerred/streambot/discord/help-text.ts";
+import {
   sourceLabel,
   type Source,
   type SubtitlePref,
@@ -37,6 +41,7 @@ import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 
 const MAX_LIST = 20;
 const PLAYLIST_TIMEOUT_MS = 60_000;
+const SOURCES_TIMEOUT_MS = 15_000;
 
 /**
  * Build a per-request subtitle preference from the `subtitles` (on/off) and `sublang` options.
@@ -81,42 +86,6 @@ function subtitlesSuffix(pref: SubtitlePref | undefined): string {
   }
   if (pref?.language !== undefined) return ` _(subtitles: ${pref.language})_`;
   return "";
-}
-
-/**
- * The `/stream help` reference: a grouped command list plus a "Supported sources" note. Static
- * (no playback state), so it's an exported pure function — the command-handler test asserts every
- * registered subcommand name appears here, guarding against drift. Must stay under Discord's
- * 2000-char message limit.
- */
-export function helpText(): string {
-  return [
-    "🎬 **Streambot** — `/stream` commands",
-    "",
-    "**Playback**",
-    "• `/stream play <query>` — queue a video (library title, URL, playlist, or search)",
-    "• `/stream playnext <query>` — queue it to the front",
-    "• `/stream skip` — skip the current video",
-    "• `/stream stop` — stop & clear the queue _(admin)_",
-    "• `/stream seek <pos>` — jump to a timestamp (`90`, `1:30`, `1:02:03`)",
-    "",
-    "**Queue**",
-    "• `/stream queue` · `nowplaying` · `remove <index>` · `move <from> <to>`",
-    "• `/stream clear` _(admin)_ · `shuffle` · `loop <off|track|queue>` · `volume <0-200>`",
-    "",
-    "**Library & chapters**",
-    "• `/stream list [filter]` · `search <query>` · `chapters` · `chapter <n>`",
-    "",
-    "**Subtitles** — add `subtitles:on|off` and `sublang:<lang>` (e.g. `en`, `en.forced`) to `play`/`playnext`.",
-    "",
-    "📡 **Supported sources**",
-    "`/stream play` accepts a library title, search terms, or any public link yt-dlp can fetch " +
-      "without logging in — YouTube, Twitch, Vimeo, SoundCloud, Reddit, direct `.mp4`/HLS, and most " +
-      "public video sites. Playlist links expand automatically. Subscription/DRM (Netflix, Disney+…) " +
-      "and login-only sites won't work.",
-    "",
-    "• `/stream help` — show this message",
-  ].join("\n");
 }
 
 export type QueueItemView = {
@@ -166,6 +135,8 @@ export type CommandHandlerDeps = {
     url: string,
     signal: AbortSignal,
   ) => Promise<PlaylistItem[]>;
+  /** List the source/site names yt-dlp supports (cached); backs `/stream sources`. */
+  readonly listSources: (signal: AbortSignal) => Promise<readonly string[]>;
   /** Post a world-readable message to the status channel (shaming, etc.). */
   readonly announce: (message: string) => Promise<void>;
 };
@@ -221,6 +192,8 @@ export class CommandHandler {
         return interaction.reply(
           this.listText(interaction.getStringRequired("query")),
         );
+      case "sources":
+        return this.handleSources(interaction);
       case "help":
         return interaction.reply(helpText());
       default:
@@ -276,6 +249,16 @@ export class CommandHandler {
     await interaction.reply(
       `${next ? "Up next" : "Queued"}: **${sourceLabel(source)}**${subtitlesSuffix(subtitles)}`,
     );
+  }
+
+  private async handleSources(interaction: CommandInteraction): Promise<void> {
+    const query = interaction.getString("query");
+    // Listing extractors shells out to yt-dlp (and loads every extractor), so defer first.
+    await interaction.defer();
+    const sources = await this.deps.listSources(
+      AbortSignal.timeout(SOURCES_TIMEOUT_MS),
+    );
+    await interaction.editReply(sourcesText(sources, query));
   }
 
   private async handleSkip(interaction: CommandInteraction): Promise<void> {

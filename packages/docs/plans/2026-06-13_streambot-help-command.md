@@ -42,6 +42,28 @@ Wiring an optional cookies-file / credentials config is a separate, larger follo
 guard can call it without instantiating the handler — preserving the existing discord.js-free,
 unit-testable design.
 
+### Follow-up (same PR): `/stream sources [query]`
+
+A second command to list/search what's streamable, plus a routing fix the help command exposed:
+
+| File                                            | Change                                                                                                                                                       |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/sources/ytdlp.ts`                          | `listExtractors()` (spawns `yt-dlp --list-extractors`, **memoized** for the process) + pure `parseExtractors()` (drops blanks + `(CURRENTLY BROKEN)` lines). |
+| `src/discord/help-text.ts` (**new**)            | Extracted `helpText()` + new `sourcesText()` here — pure builders, keeps `command-handler.ts` under the 500-line ESLint cap.                                 |
+| `src/discord/command-handler.ts`                | `case "sources"` → `handleSources()` (defers, calls injected `listSources` dep, edits in `sourcesText`). New `listSources` dep on `CommandHandlerDeps`.      |
+| `src/discord/command-bot.ts`                    | **Routing fix:** `help` + `sources` are session-less — added to `STATELESS_SUBCOMMANDS` (renamed from `LIBRARY_SUBCOMMANDS`). Wires `listSources`.           |
+| `src/index.ts`, `e2e/run.ts`                    | Provide `listSources: (signal) => listExtractors(config, signal)`.                                                                                           |
+| `test/ytdlp.test.ts`, `command-handler.test.ts` | `parseExtractors` parsing test; bare/filtered/no-match/truncation `sources` tests.                                                                           |
+
+**Routing bug fixed:** the originally-committed `/stream help` fell through to the "needs an active
+session" branch (`route()` in `command-bot.ts`), so it only worked while something was playing.
+`help` and `sources` are now session-less like `list`/`search`.
+
+**Bare `/stream sources`** shows a live count (broken extractors excluded → ~1620) + popular
+highlights + a search hint; **`/stream sources <query>`** lists up to 20 case-insensitive matches
+with a truncation note. yt-dlp errors propagate to the bot's `safeHandle`, which replies with an
+error (same pattern as `expandPlaylist`).
+
 ## Verification (done)
 
 - `bun test test/command-handler.test.ts` → 32 pass (2 new).
@@ -57,11 +79,13 @@ should list every subcommand. Slash commands register on `ready`, so it appears 
 
 ### Done
 
-- Added `/stream help` (`packages/streambot/src/discord/commands.ts`, `command-handler.ts`) with an
-  exported pure `helpText()` builder.
-- Added a content test + subcommand drift-guard in `test/command-handler.test.ts` (32 pass).
-- Documented `/stream help` in streambot `AGENTS.md`.
-- Verified: typecheck clean, eslint clean, help renders at 1102 chars.
+- Added `/stream help` with an exported pure `helpText()` builder (moved to `src/discord/help-text.ts`).
+- Added `/stream sources [query]` — `listExtractors()`/`parseExtractors()` in `sources/ytdlp.ts`
+  (memoized live `yt-dlp --list-extractors`) + `sourcesText()` in `help-text.ts`.
+- Fixed routing so `help`/`sources` work without an active session (`STATELESS_SUBCOMMANDS`).
+- Tests: 44 pass (drift guard + help content + sources bare/filtered/no-match/truncation + `parseExtractors`).
+- Documented both commands in streambot `AGENTS.md`.
+- Verified: typecheck clean, eslint clean; rendered real output (1620 sources; `twitch`→7, `soundcloud`→9).
 
 ### Remaining
 

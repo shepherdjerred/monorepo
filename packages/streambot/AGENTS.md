@@ -53,6 +53,9 @@ stream files/URLs directly with ffmpeg instead of automating a browser.
   lists chapters; `/stream chapter <n>` seeks to one (reuses the live seek side-channel).
   `/stream help` (`helpText()` in `command-handler.ts`) prints the command reference + a
   "supported sources" note; a command-handler test asserts every registered subcommand appears in it.
+  `/stream sources [query]` (`sourcesText()` + `listExtractors()` in `sources/ytdlp.ts`, memoized)
+  lists/searches the live `yt-dlp --list-extractors` set. `help`/`sources` are session-less
+  (`STATELESS_SUBCOMMANDS` in `command-bot.ts`), so they work without anything playing.
 - `src/pool/` — userbot pool (login, membership snapshot, acquire/release).
 - `src/session/` — per-`(guild, channel)` session manager (actor lifecycle, resume, checkpointing).
 - `src/streamer/` — selfbot + `@dank074` stream driver.
