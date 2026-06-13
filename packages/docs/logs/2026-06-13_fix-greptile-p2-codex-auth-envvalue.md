@@ -68,6 +68,38 @@ Note: this fix pushed `goal-manager.ts` over the 500-line `max-lines` ESLint cap
 trimmed by collapsing prompt blank-line array entries into `\n`-embedded strings
 (rendered prompt unchanged) and folding multi-line warning prose into one entry.
 
+## Follow-up: Greptile P1 — final report not truncated before Discord send
+
+`readFinalReport` read the Codex `--output-last-message` file with no size cap,
+then embedded the raw text in a Discord message. Discord rejects payloads over
+2000 chars with a 400; the prompt asks Codex to summarize achievements/remaining/
+state, so over-limit reports are the expected case. The completion message was
+silently dropped and the user never learned the goal finished/failed.
+
+### Fix
+
+- New sibling module `goal/discord-message.ts` with `truncateForDiscord` (caps at
+  the 2000 code-point limit, appends `… (truncated)`, truncates on grapheme
+  boundaries via `Intl.Segmenter` so emoji/combining marks are never split).
+  Moved `sanitizeDiscordText` into this module too (keeps `goal-manager.ts` under
+  the 500-line cap — the extraction the previous caveat predicted).
+- Wrapped both the final-report and progress completion messages in
+  `truncateForDiscord` so the whole assembled payload (mention + prefix +
+  sanitize expansion + report) always fits.
+- Tests: `goal/discord-message.test.ts` (bound, indicator, grapheme safety,
+  sanitize) + integration test in `goal-manager.test.ts` asserting a >2000-char
+  report is delivered truncated to ≤2000 with the indicator, not dropped.
+- Registered `src/goal/discord-message.test.ts` in `eslint.config.ts`
+  `allowDefaultProject` (backend test files must be listed there; tsconfig already
+  excludes `**/*.test.ts`).
+
+Lint gotchas hit: `unicorn/prefer-spread` wants `[...str]` but
+`@typescript-eslint/no-misused-spread` then bans spreading strings — resolved by
+counting code points with a `for…of` loop and truncating via `Intl.Segmenter`
+(no string spread anywhere). The new integration test pushed the `GoalManager`
+describe arrow past the 200-line `max-lines-per-function` cap, so it lives in its
+own `describe("GoalManager final report")` block.
+
 ## Session Log — 2026-06-13
 
 ### Done
@@ -84,8 +116,14 @@ trimmed by collapsing prompt blank-line array entries into `\n`-embedded strings
   Codex subprocess env now restricted to an allowlist + goal delimited as
   untrusted; added regression test in `goal-manager.test.ts`
 - Committed as `e5dcc5e4e` (fix(discord-plays-pokemon): restrict codex subprocess env to an allowlist)
-- Pushed to `feature/pokemon-goal-mode`
 - Resolved Greptile review thread `PRRT_kwDOHf4r4c6JWRSx` (confirmed `isResolved: true`)
+- Follow-up: fixed Greptile P1 in
+  `packages/discord-plays-pokemon/packages/backend/src/goal/goal-manager.ts` — goal
+  final report (and progress) now truncated to Discord's 2000-char limit via a new
+  `goal/discord-message.ts` helper; added unit + integration tests
+- Committed as `7a583dd52` (fix(discord-plays-pokemon): truncate goal final report to Discord limit)
+- Pushed to `feature/pokemon-goal-mode`
+- Resolved Greptile review thread `PRRT_kwDOHf4r4c6JWbZh` (confirmed `isResolved: true`)
 
 ### Remaining
 
@@ -97,5 +135,12 @@ trimmed by collapsing prompt blank-line array entries into `\n`-embedded strings
   the working tree (not yet committed). Committed and pushed that existing change.
 - The repo bans `.then()` chaining via `custom-rules/prefer-async-await`; do not paste Greptile
   suggestions that use `.then()` verbatim — convert to async/await first.
-- `goal-manager.ts` is now near the 500-line `max-lines` cap; further additions will need an
-  extraction (e.g. move `buildPrompt` to its own module) rather than inline growth.
+- `goal-manager.ts` sits right at the 500-line `max-lines` cap. `sanitizeDiscordText` +
+  `truncateForDiscord` now live in `goal/discord-message.ts`; further Discord-message logic
+  belongs there, not inline in goal-manager.
+- Backend test files must be registered in `eslint.config.ts` `allowDefaultProject` (cap 10,
+  currently 9) AND are excluded from tsconfig via `**/*.test.ts` — new backend tests need the
+  allowDefaultProject entry or eslint errors "not found by the project service".
+- String code-point work trips a lint conflict: `unicorn/prefer-spread` vs
+  `@typescript-eslint/no-misused-spread`. Use a `for…of` count + `Intl.Segmenter`, never
+  `[...str]`, to satisfy both without suppressions.
