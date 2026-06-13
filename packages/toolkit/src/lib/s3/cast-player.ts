@@ -20,6 +20,17 @@ function escapeInlineScript(js: string): string {
 }
 
 /**
+ * A literal `</style` (case-insensitive) inside inlined CSS would terminate
+ * the surrounding `<style>` element early. Escaping the slash is safe in
+ * CSS: `\/` is a valid CSS escape for `/` inside strings and identifiers,
+ * and inside comments the alteration is harmless, so the stylesheet behaves
+ * identically after the replacement.
+ */
+function escapeInlineStyle(css: string): string {
+  return css.replaceAll(/<\/style/gi, String.raw`<\/style`);
+}
+
+/**
  * Render a self-contained HTML page that plays an asciinema recording. The
  * player JS and CSS are inlined (no CDN, no extra objects), and the cast is
  * fetched via a relative URL, so the page works wherever the
@@ -36,7 +47,7 @@ export function renderCastPlayerHtml(castBasename: string): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title} — terminal recording</title>
-<style>${playerCss}</style>
+<style>${escapeInlineStyle(playerCss)}</style>
 <style>
 body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #121314; }
 #player { width: min(100ch, 96vw); }
