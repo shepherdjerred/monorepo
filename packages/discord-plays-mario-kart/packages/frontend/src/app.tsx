@@ -3,17 +3,6 @@ import { useInterval } from "react-use";
 import { Container } from "./stories/container.tsx";
 import { socket } from "./socket.ts";
 import {
-  AnalogStick,
-  ControlButton,
-  ControlCluster,
-  DpadControls,
-  InputPill,
-  MappingTerm,
-  N64ControllerShell,
-  SeatPicker,
-  isControlPressed,
-} from "./controller-ui.tsx";
-import {
   type InputRequest,
   type LatencyReportRequest,
   type Response,
@@ -30,6 +19,19 @@ import {
   computeState,
   resolveKeyboardCode,
 } from "./input-map.ts";
+import {
+  AnalogStick,
+  ControlButton,
+  ControlCluster,
+  DpadControls,
+  InputPill,
+  MappingTerm,
+  N64ControllerShell,
+  SeatPicker,
+  isControlPressed,
+} from "./controller-ui.tsx";
+import { NameEntry } from "./name-entry.tsx";
+import { Leaderboard } from "./leaderboard.tsx";
 
 const BUTTON_LABELS = [
   ["up", "D↑"],
@@ -51,6 +53,7 @@ const BUTTON_LABELS = [
 export function App() {
   const [seat, setSeat] = useState<number | null>(null);
   const [occupied, setOccupied] = useState<boolean[]>([]);
+  const [names, setNames] = useState<(string | null)[]>([]);
   const [latency, setLatency] = useState<number>();
   const pressed = useRef<Set<string>>(new Set());
   const [pressedCodes, setPressedCodes] = useState<Set<string>>(
@@ -116,6 +119,7 @@ export function App() {
         setSeat(response.value.seat);
       } else if (response.kind === "seats") {
         setOccupied(response.value.occupied);
+        setNames(response.value.names);
       }
     };
     socket.on("response", onResponse);
@@ -196,10 +200,12 @@ export function App() {
                   {latency === undefined ? "..." : `${String(latency)}ms`}
                 </span>
               </div>
+              {hasSeat && <NameEntry seat={seat} />}
             </div>
             <SeatPicker
               count={seatCount}
               occupied={occupied}
+              names={names}
               seat={seat}
               onClaim={claim}
               onRelease={releaseSeat}
@@ -361,6 +367,7 @@ export function App() {
                     ? "Your inputs are being sent to the game."
                     : "Claim a player slot when you are ready. Controls still light up here for testing."}
                 </div>
+                <Leaderboard />
               </div>
             </aside>
           </section>

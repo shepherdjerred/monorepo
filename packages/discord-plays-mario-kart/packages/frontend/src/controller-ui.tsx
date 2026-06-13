@@ -112,12 +112,14 @@ export function N64ControllerShell() {
 export function SeatPicker({
   count,
   occupied,
+  names = [],
   seat,
   onClaim,
   onRelease,
 }: {
   count: number;
   occupied: boolean[];
+  names?: (string | null)[];
   seat: number | null;
   onClaim: (seat: number) => void;
   onRelease: () => void;
@@ -127,6 +129,14 @@ export function SeatPicker({
       {Array.from({ length: count }, (_unused, i) => {
         const taken = occupied[i] ?? false;
         const mine = seat === i;
+        const playerName = names[i] ?? null;
+        const label = mine
+          ? " (you)"
+          : playerName !== null
+            ? ` — ${playerName}`
+            : taken
+              ? " (taken)"
+              : "";
         return (
           <button
             key={i}
@@ -149,6 +159,7 @@ export function SeatPicker({
             )}
           >
             P{i + 1}
+            {label}
           </button>
         );
       })}

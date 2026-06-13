@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+  // Stable in-repo output (gitignored) so codegen lands deterministically in a
+  // bun workspace — matches the scout-for-lol backend pattern.
+  output   = "../generated/prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// One completed (non-battle) race, with one RaceResult row per human seat.
+model Race {
+  id         Int          @id @default(autoincrement())
+  finishedAt DateTime     @default(now())
+  // MK64 internal course id (0x00..0x13); names live in mk64-memory.ts.
+  courseId   Int
+  // "gp" | "time-trials" | "versus" — leaderboard aggregation excludes
+  // time-trials (a solo run against a ghost is trivially "1st place").
+  gameMode   String
+  // Humans in the race (1..4) at race start.
+  humanCount Int
+  results    RaceResult[]
+}
+
+model RaceResult {
+  id         Int     @id @default(autoincrement())
+  raceId     Int
+  race       Race    @relation(fields: [raceId], references: [id], onDelete: Cascade)
+  // Seat / player slot (0..3).
+  seat       Int
+  // Display name as typed (trimmed); null = the seat had no name set.
+  playerName String?
+  // Lowercased identity key; aggregation groups on this. Null = unnamed.
+  playerKey  String?
+  // Future: real identity once web auth lands (todo:mario-kart-web-auth).
+  discordId  String?
+  // MK64 character id (0..7); names live in mk64-memory.ts.
+  character  Int
+  // Final placement 1..8 (field includes CPU karts).
+  placement  Int
+  raceTimeMs Int
+  // False if the race outcome was decided before this player crossed the line.
+  finished   Boolean @default(true)
+
+  @@index([playerKey])
+  @@index([raceId])
+  @@index([playerKey, placement])
+}

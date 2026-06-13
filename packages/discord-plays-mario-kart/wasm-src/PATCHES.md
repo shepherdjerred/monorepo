@@ -40,6 +40,7 @@ Applied in order with `patch -p1` (paths are `a/code/… b/code/…`):
 | --- | --- | --- |
 | `0001-mymain-neil-host-exports.patch` | `code/mymain.cpp` | Adds the `extern "C"` host contract (below) and the ROM-from-memory `main()` path. |
 | `0002-makefile-exported-functions.patch` | `code/Makefile` | Adds the four exports to `EXPORTED_FUNCTIONS`, and keeps the build outputs in `code/` (drops upstream's `mv … ../dist/`) so the build scripts collect them. Leaves the upstream optimization flags untouched (`ASSERTIONS=0`, no profiling) for a lean prod build. |
+| `0003-rdram-export.patch` | `code/mymain.cpp`, `code/Makefile` | Adds `neilGetRdram()` / `neilGetRdramSize()` (and their `EXPORTED_FUNCTIONS` entries) — base + size of the core's `g_rdram` array (referenced directly: this build links `libretronew.c`, which has no `retro_get_memory_data`), so the host can read game state (race placements, course id, timers) for leaderboards. See the byte-order contract below. |
 
 The `mymain.cpp` patch adds:
 
@@ -91,6 +92,22 @@ The `mymain.cpp` patch adds:
   copies the latch into `neilbuttons[*]`. The host still calls
   `neil_send_mobile_controls_player()` once per tick before `_runMainLoop()`;
   ordering within the frame is handled in C.
+
+The `0003` patch adds:
+
+- `neilGetRdram()` / `neilGetRdramSize()` — base offset (in wasm linear memory)
+  and size of the emulated N64 RDRAM (`g_rdram`, 8 MB always allocated; MK64
+  uses 4 MB). **Byte-order contract:** mupen64plus-core stores RDRAM as
+  host-endian 32-bit words (`S8 3`/`S16 2` swizzle in `memory.h`), and wasm is
+  little-endian, so for an N64 virtual address `A` (KSEG0 `0x80xxxxxx`,
+  physical = `A & 0x7FFFFF`):
+  - **u8** lives at `rdram + (phys ^ 3)`
+  - **u16** (2-aligned) is a little-endian read at `rdram + (phys ^ 2)`
+  - **u32/f32** (4-aligned) is a plain little-endian read at `rdram + phys` —
+    the value comes out numerically correct (reinterpret bits for f32)
+
+  The TS decoding helpers live in `backend/src/emulator/mk64-memory.ts`; keep
+  them as the single consumer of this contract.
 
 ## Excludes (`vendor-excludes.txt`)
 
