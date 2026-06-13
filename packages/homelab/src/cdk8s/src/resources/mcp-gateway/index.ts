@@ -202,37 +202,27 @@ export async function createMcpGatewayDeployment(chart: Chart) {
           key: "GH_TOKEN",
         }),
         // Fastmail JMAP configuration.
-        // Marked optional so the pod starts while the Fastmail token is pending population;
-        // only the fastmail MCP server fails (with a missing-credential error) until the field is set.
         JMAP_SESSION_URL: EnvValue.fromValue(
           "https://api.fastmail.com/jmap/session",
         ),
-        JMAP_TOKEN: EnvValue.fromSecretValue(
-          {
-            secret: Secret.fromSecretName(
-              chart,
-              "fastmail-jmap-token-secret",
-              mcpGatewayCredentials.name,
-            ),
-            key: "FASTMAIL_TOKEN",
-          },
-          { optional: true },
-        ),
+        JMAP_TOKEN: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "fastmail-jmap-token-secret",
+            mcpGatewayCredentials.name,
+          ),
+          key: "FASTMAIL_TOKEN",
+        }),
         // Gmail IMAP configuration - @automatearmy/email-reader-mcp expects USER_EMAIL and USER_PASS.
-        // Marked optional so the pod starts while the Gmail app-password is pending population;
-        // only the gmail MCP server fails (with a missing-credential error) until the field is set.
         USER_EMAIL: EnvValue.fromValue("shepherdjerred@gmail.com"),
-        USER_PASS: EnvValue.fromSecretValue(
-          {
-            secret: Secret.fromSecretName(
-              chart,
-              "gmail-pass-secret",
-              mcpGatewayCredentials.name,
-            ),
-            key: "GMAIL_TOKEN",
-          },
-          { optional: true },
-        ),
+        USER_PASS: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "gmail-pass-secret",
+            mcpGatewayCredentials.name,
+          ),
+          key: "GMAIL_TOKEN",
+        }),
       },
       volumeMounts: [
         {
