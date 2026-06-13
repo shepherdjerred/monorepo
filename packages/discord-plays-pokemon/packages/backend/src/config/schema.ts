@@ -60,6 +60,30 @@ export const ConfigSchema = z.strictObject({
         .regex(/\d*/, "IDs must only have numeric characters")
         .min(1),
       enabled: z.boolean(),
+      // Notifications for in-game events detected by polling emulator memory
+      // (faints, badges, evolutions, catches, ...). All defaulted so existing
+      // config.toml files validate unchanged.
+      events: z
+        .strictObject({
+          enabled: z.boolean().default(true),
+          // "log" (shadow mode) detects + logs + counts events but sends
+          // nothing to Discord; "send" posts to the notifications channel.
+          mode: z.enum(["log", "send"]).default("send"),
+          // How often to poll game memory. 30 frames ≈ 0.5s at ~60fps.
+          poll_interval_frames: z.number().int().min(1).default(30),
+          attach_screenshot: z.boolean().default(true),
+          faint: z.boolean().default(true),
+          badge: z.boolean().default(true),
+          evolution: z.boolean().default(true),
+          catch: z.boolean().default(true),
+          whiteout: z.boolean().default(true),
+          level_up: z.boolean().default(true),
+          dex_entry: z.boolean().default(true),
+        })
+        // prefault (not default): an absent/`{}` events table is treated as
+        // input so the per-field defaults above fill in. zod v4's .default()
+        // would instead require the fully-parsed object.
+        .prefault({}),
     }),
   }),
   stream: z.strictObject({

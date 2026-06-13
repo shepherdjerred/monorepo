@@ -436,6 +436,17 @@ pre-commit:
               - "packages/homelab/src/tofu/cloudflare/*.tf"
             run: bun scripts/check-tunnel-dns-coverage.ts
 
+          # --- Talos schematic sync ---
+          # The pinned installer in patches/image.yaml must match what the
+          # image.yaml schematic produces. Editing image.yaml (extraKernelArgs,
+          # systemExtensions) without regenerating the pin silently boots the old
+          # schematic — e.g. dropping lockdown=integrity and breaking eBPF.
+          - name: talos-schematic-sync
+            glob:
+              - "packages/homelab/src/talos/image.yaml"
+              - "packages/homelab/src/talos/patches/image.yaml"
+            run: bun packages/homelab/src/talos/update-image-id.ts --check
+
           # --- React version sync ---
           # react/react-dom (and their @types) must resolve to matching versions
           # in every bun.lock — a skew throws "Incompatible React versions" at

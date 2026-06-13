@@ -236,6 +236,22 @@ export function tunnelDnsCoverageHelper(source: Directory): Container {
 }
 
 /**
+ * Verify the pinned Talos installer in `patches/image.yaml` matches what the
+ * `image.yaml` schematic produces (queries the Image Factory). Catches drift
+ * where `image.yaml`'s extraKernelArgs/systemExtensions change without
+ * regenerating the pin — which silently boots the old schematic (e.g. dropping
+ * `lockdown=integrity` and breaking eBPF profiling). The script is
+ * dependency-free, so it runs in the quality base without a node_modules install.
+ */
+export function talosSchematicSyncHelper(source: Directory): Container {
+  return bunQualityBase(source).withExec([
+    "bun",
+    "packages/homelab/src/talos/update-image-id.ts",
+    "--check",
+  ]);
+}
+
+/**
  * Semgrep `--config auto` scan against the repo. Uses the upstream
  * semgrep/semgrep image which ships with the engine and rule loader.
  */

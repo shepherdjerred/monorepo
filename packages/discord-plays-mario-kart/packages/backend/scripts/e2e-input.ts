@@ -10,12 +10,13 @@
 // same (rom, config, input schedule) produce byte-identical frames.
 //
 // Usage:
-//   bun run scripts/e2e-input.ts <rom> <press> <warmup> <total> <outPng>
+//   bun run scripts/e2e-input.ts [rom] <press> <warmup> <total> <outPng>
 //     press : none | start | a | accel | left | right
+//   (rom resolves via --rom-less default: arg → MK64_ROM → Syncthing path)
 //
 // Not a CI test (needs a ROM, which is not in the repo). Run locally.
 import { createHash } from "node:crypto";
-import { N64Emulator } from "#src/emulator/n64-emulator.ts";
+import { bootEmulator, resolveRom } from "./lib/harness.ts";
 import { encodePng } from "#src/emulator/png.ts";
 import { EMPTY_BUTTONS } from "@discord-plays-mario-kart/common";
 import type { PlayerInputState } from "@discord-plays-mario-kart/common";
@@ -24,16 +25,11 @@ const out = (s: string): void => {
   process.stdout.write(s + "\n");
 };
 
-const rom = process.argv.at(2);
 const press = process.argv.at(3) ?? "none";
 const warmup = Number(process.argv.at(4) ?? 600);
 const total = Number(process.argv.at(5) ?? 1200);
 const outPng = process.argv.at(6) ?? `/tmp/mk_${press}.png`;
-if (rom === undefined || rom === "") {
-  throw new Error(
-    "usage: e2e-input.ts <rom> [press] [warmup] [total] [outPng]",
-  );
-}
+const rom = await resolveRom(process.argv.at(2));
 
 function inputFor(kind: string): PlayerInputState {
   const buttons = { ...EMPTY_BUTTONS };
@@ -63,16 +59,8 @@ function inputFor(kind: string): PlayerInputState {
 
 const held = inputFor(press);
 
-const emu = new N64Emulator({
-  wasmDir: Bun.env.WASM_DIR ?? "assets/n64wasm",
-  romPath: rom,
-  fps: 1000, // sprint; pacing only, emulation is per-tick deterministic
-  software: true,
-  seats: 4,
-});
-
 out(`[e2e] booting (rom=${rom})…`);
-await emu.init();
+const emu = await bootEmulator({ rom, seats: 4 });
 
 const dumpEvery = Number(Bun.env.DUMP_EVERY ?? 0);
 function meanLuma(rgba: Buffer, w: number, h: number): number {

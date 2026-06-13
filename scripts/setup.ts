@@ -336,6 +336,14 @@ const DAG_TASKS: DagTask[] = [
     deps: ["birmel-prisma"],
     warnOnly: false,
   },
+  {
+    id: "mario-kart-prisma",
+    label: "discord-plays-mario-kart prisma",
+    cmd: ["bunx", "--trust", "prisma", "generate"],
+    cwd: "packages/discord-plays-mario-kart/packages/backend",
+    deps: [],
+    warnOnly: false,
+  },
 ];
 
 async function runDag(
@@ -435,6 +443,10 @@ async function verifySetup(): Promise<void> {
     {
       label: "scout-for-lol prisma client",
       path: "packages/scout-for-lol/packages/backend/generated/prisma/client",
+    },
+    {
+      label: "discord-plays-mario-kart prisma client",
+      path: "packages/discord-plays-mario-kart/packages/backend/generated/prisma/client",
     },
   ];
 
