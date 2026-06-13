@@ -46,10 +46,18 @@ export function createSocket({
       });
 
       socket.on("request", (event: unknown) => {
-        logger.info("request received", identifier);
         const result = RequestSchema.safeParse(event);
         if (result.success) {
-          logger.info("request parsed", identifier, result.data);
+          // Input arrives per keypress and latency reports every 2s per
+          // client — logging those at info floods Loki during gameplay.
+          const chatty =
+            result.data.kind === "input" ||
+            result.data.kind === "latency-report";
+          if (chatty) {
+            logger.debug("request parsed", identifier, result.data);
+          } else {
+            logger.info("request parsed", identifier, result.data);
+          }
           subscriber.next({ request: result.data, socket });
         } else {
           logger.error("unable to parse request", identifier, event);
