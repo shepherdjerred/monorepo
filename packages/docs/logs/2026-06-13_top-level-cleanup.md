@@ -83,6 +83,12 @@ Updated every **root-anchored** path reference:
 - Consolidated `archive`/`poc`/`practice` under `sandbox/` and rewired ~18
   config/script/doc files. Committed as `6c7bff856` on
   `feature/top-level-cleanup`.
+- Pointed **living agent docs** at the new `sandbox/` paths (`b59f09f30`):
+  `architecture/2026-02-22_monorepo-structure.md`, the `oai-solution-reviewer`
+  skill, and `tasks-for-obsidian/AGENTS.md`. Also updated out-of-repo agent
+  context: the live `oai-solution-reviewer` skill copies (`~/.agents` +
+  `~/.claude`, hardlinked) and the `user_oai_interview_prep` memory + index.
+  Left historical `logs/`/`plans/` unchanged (point-in-time record).
 
 ### Remaining
 
