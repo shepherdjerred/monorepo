@@ -124,7 +124,11 @@ function withCogapp(container: Container): Container {
       "--break-system-packages",
       `cogapp==${COGAPP_VERSION}`,
     ])
-    .withExec(["cog", "--version"]);
+    // cogapp's `cog` CLI uses `-v` for "print the version and exit"; it has no
+    // `--version` flag (that errors with exit 2 "option --version not
+    // recognized"). `cog -v` prints e.g. "Cog version 3.6.0" and exits 0,
+    // confirming the binary is installed and runnable on PATH.
+    .withExec(["cog", "-v"]);
 }
 
 /**
