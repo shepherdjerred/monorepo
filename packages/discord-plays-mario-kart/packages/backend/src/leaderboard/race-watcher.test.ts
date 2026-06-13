@@ -69,7 +69,7 @@ function makeWatcher(names: (string | null)[] = ["Jerred", "Alice"]) {
   };
 }
 
-describe("RaceWatcher", () => {
+describe("RaceWatcher — race recording", () => {
   test("clean race emits exactly once with placements and times from finish edges", () => {
     const { watcher } = makeWatcher();
     expect(feed(watcher, snap("menu"))).toEqual([]);
@@ -230,7 +230,9 @@ describe("RaceWatcher", () => {
     feed(watcher, snap("racing", twoHumans));
     expect(feed(watcher, snap("finished", done), 6)).toHaveLength(1);
   });
+});
 
+describe("RaceWatcher — isRecordable filtering", () => {
   test("battle mode and award ceremony are never recorded", () => {
     const { watcher } = makeWatcher();
     const battle = snap("racing", twoHumans, { gameMode: "battle" });
@@ -249,7 +251,7 @@ describe("RaceWatcher", () => {
     expect(feed(watcher, ceremony, 6)).toEqual([]);
   });
 
-  test("TT ghosts (non-human karts in slots 1+) are excluded from the roster", () => {
+  test("time-trials are never recorded (excluded by isRecordable)", () => {
     const { watcher } = makeWatcher(["Jerred"]);
     const tt: PlayerOverride[] = [
       { human: true, rank: 1, characterId: 0 },
@@ -275,6 +277,31 @@ describe("RaceWatcher", () => {
       snap("finished", done, { gameMode: "time-trials" }),
       6,
     );
+    expect(emitted).toHaveLength(0);
+  });
+
+  test("non-human ghost karts in slots 1+ are excluded from the versus roster", () => {
+    const { watcher } = makeWatcher(["Jerred"]);
+    const withGhost: PlayerOverride[] = [
+      { human: true, rank: 1, characterId: 0 },
+      { human: false, rank: 2 }, // CPU / ghost
+      { present: false },
+      { present: false },
+    ];
+    feed(watcher, snap("racing", withGhost));
+    const done: PlayerOverride[] = [
+      {
+        human: true,
+        rank: 1,
+        characterId: 0,
+        finished: true,
+        raceTimeMs: 75_500,
+      },
+      { human: false, rank: 2 },
+      { present: false },
+      { present: false },
+    ];
+    const emitted = feed(watcher, snap("finished", done), 6);
     expect(emitted).toHaveLength(1);
     expect(emitted[0]?.results).toHaveLength(1);
     expect(emitted[0]?.results[0]?.seat).toBe(0);
