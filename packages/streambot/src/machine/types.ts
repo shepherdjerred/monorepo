@@ -39,6 +39,11 @@ export type ResolvedSource = {
   readonly chapters: readonly Chapter[];
   /** Burnable subtitle for this source, if one was found and subtitles are enabled. */
   readonly subtitle?: ResolvedSubtitle;
+  /**
+   * Input is HDR (PQ/HLG transfer, from the resolve-time ffprobe). Drives the HDR→SDR tonemap in
+   * the stream pipeline; absent (probe failed or SDR) → no tonemap.
+   */
+  readonly hdr?: boolean;
 };
 
 /** A queue entry: a requested source plus who asked for it. */

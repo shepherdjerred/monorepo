@@ -14,6 +14,7 @@ import {
 import {
   probeMedia,
   resolutionBucket,
+  type MediaInfo,
 } from "@shepherdjerred/streambot/sources/probe.ts";
 import { setSourceInfo } from "@shepherdjerred/streambot/observability/metrics.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
@@ -22,17 +23,18 @@ const log = logger.child("resolve");
 
 /**
  * Probe the resolved input and publish its media properties as a log line + the
- * `streambot_source_info` metric. Best-effort — {@link probeMedia} never throws, and a null result
- * (probe failed) simply skips the update.
+ * `streambot_source_info` metric. Returns the probe result so the caller can thread fields the
+ * pipeline needs (HDR). Best-effort — {@link probeMedia} never throws, and a null result (probe
+ * failed) simply skips the update.
  */
-async function recordSourceMetadata(
+async function probeAndRecordSourceMetadata(
   config: Config,
   resolved: ResolvedSource,
   signal: AbortSignal,
-): Promise<void> {
+): Promise<MediaInfo | null> {
   const info = await probeMedia(config, resolved.ffmpegInput, signal);
   if (info === null) {
-    return;
+    return null;
   }
   const resolution = resolutionBucket(info.height);
   log.info("source probed", {
@@ -53,6 +55,7 @@ async function recordSourceMetadata(
     hdr: info.hdr ? "true" : "false",
     resolution,
   });
+  return info;
 }
 
 /**
@@ -86,6 +89,8 @@ export async function resolveSource(
   } else {
     resolved = await resolveWithYtdlp(config, source, signal);
   }
-  await recordSourceMetadata(config, resolved, signal);
-  return resolved;
+  const info = await probeAndRecordSourceMetadata(config, resolved, signal);
+  // Thread the probed HDR flag into the pipeline (drives the HDR→SDR tonemap). A failed probe
+  // leaves it unset — the stream then runs as SDR, which matches today's best-effort behavior.
+  return info?.hdr === true ? { ...resolved, hdr: true } : resolved;
 }
