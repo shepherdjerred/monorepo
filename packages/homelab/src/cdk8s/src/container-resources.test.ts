@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeAll } from "bun:test";
+import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { App } from "cdk8s";
+import { rm } from "node:fs/promises";
 import { setupCharts } from "./setup-charts.ts";
 import { BEST_EFFORT_CONTAINER_ALLOWLIST } from "./misc/container-resource-allowlist.ts";
 
@@ -73,7 +74,7 @@ type FoundContainer = {
 };
 
 async function synthesizeApp(): Promise<string> {
-  const app = new App({ outdir: ".test-synth-container-resources" });
+  const app = new App({ outdir: SYNTH_OUTDIR });
   await setupCharts(app);
   return app.synthYaml();
 }
@@ -142,11 +143,17 @@ function collectContainers(yamlContent: string): {
   return { all, missing: all.filter((c) => !c.hasRequests) };
 }
 
+const SYNTH_OUTDIR = ".test-synth-container-resources";
+
 describe("Container resource requests backstop", () => {
   let collected: { all: FoundContainer[]; missing: FoundContainer[] };
 
   beforeAll(async () => {
     collected = collectContainers(await synthesizeApp());
+  });
+
+  afterAll(async () => {
+    await rm(SYNTH_OUTDIR, { recursive: true, force: true });
   });
 
   it("synthesizes a meaningful number of containers (sanity check)", () => {

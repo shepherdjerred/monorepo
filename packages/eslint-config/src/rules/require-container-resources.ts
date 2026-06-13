@@ -11,6 +11,15 @@ const CONTAINER_METHODS = new Set(["addContainer", "addInitContainer"]);
 /**
  * Wrapper helpers whose first argument is the container props object. The rule
  * looks through these to find the props literal.
+ *
+ * MAINTENANCE: Each name here corresponds to a wrapper function in the homelab
+ * cdk8s package. The wrapper definitions carry a JSDoc comment pointing back
+ * here — search for "PROPS_WRAPPERS" in that codebase to find them:
+ *   - packages/homelab/src/cdk8s/src/misc/common.ts        → withCommonProps
+ *   - packages/homelab/src/cdk8s/src/misc/linux-server.ts  → withCommonLinuxServerProps
+ *
+ * When adding a new wrapper function, add its name here AND add the reciprocal
+ * JSDoc comment to the new wrapper so the two lists can't silently drift.
  */
 const PROPS_WRAPPERS = new Set([
   "withCommonProps",
