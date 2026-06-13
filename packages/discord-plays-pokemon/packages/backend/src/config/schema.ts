@@ -31,10 +31,10 @@ export const ConfigSchema = z.strictObject({
       // config.toml files validate unchanged.
       events: z
         .strictObject({
-          enabled: z.boolean().default(false),
+          enabled: z.boolean().default(true),
           // "log" (shadow mode) detects + logs + counts events but sends
           // nothing to Discord; "send" posts to the notifications channel.
-          mode: z.enum(["log", "send"]).default("log"),
+          mode: z.enum(["log", "send"]).default("send"),
           // How often to poll game memory. 30 frames ≈ 0.5s at ~60fps.
           poll_interval_frames: z.number().int().min(1).default(30),
           attach_screenshot: z.boolean().default(true),

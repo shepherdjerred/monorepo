@@ -2,7 +2,7 @@
 
 ## Status
 
-Complete (shipped behind a default-off, shadow-mode-default config flag; awaiting live shadow-mode validation before flipping to `send`)
+Complete — enabled on by default and posting to Discord (`mode = "send"`). Takes effect on the next homelab deploy after PR #1142 merges. Shadow mode is still available by setting `bot.notifications.events.mode = "log"` in the 1Password config (no redeploy of code needed).
 
 ## Context
 
@@ -55,10 +55,12 @@ All paths under `packages/discord-plays-pokemon/packages/backend/`.
 
 ## Rollout
 
-1. Merge with `events.enabled = false` (zod default) — zero behavior change; existing 1Password config validates unchanged.
-2. Set `events.enabled = true`, `mode = "log"` in the prod config (1Password item) → **shadow mode**: events detected, logged, counted in `game_events_total`, nothing sent to Discord. Compare logged events against the live stream for a few days (validates decryption/detection against ground truth with zero risk).
-3. Flip `mode = "send"` (optionally a test channel first) once shadow mode looks correct.
-4. Watch `game_events_total{kind}`, `notification_send_errors_total`, `game_snapshot_invalid_total`.
+The zod schema defaults are `events.enabled = true`, `mode = "send"`. The prod `config.toml` (1Password item, mounted by `packages/homelab/src/cdk8s/src/resources/pokemon.ts`) omits the `[bot.notifications.events]` table, so these defaults apply on the next homelab deploy after merge — no 1Password edit needed to turn it on.
+
+1. Merge PR #1142 → Dagger builds the image → homelab/ArgoCD deploys it.
+2. Confirm the pod logs `game event notifications enabled (mode=send, every 30 frames)`. If absent, prod `bot.notifications.enabled` is `false` / `channel_id` unset — set them in the 1Password config.
+3. Watch the notifications channel for real event embeds + screenshots, and `game_events_total{kind}`, `notification_send_errors_total`, `game_snapshot_invalid_total`.
+4. **Rollback to logging-only without a code change:** set `bot.notifications.events.mode = "log"` (or `enabled = false`) in the 1Password config item.
 
 ## Verification
 
