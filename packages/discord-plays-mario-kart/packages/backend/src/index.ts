@@ -22,7 +22,7 @@ import { getConfig } from "./config/index.ts";
 import { N64Emulator } from "./emulator/n64-emulator.ts";
 import { WIDTH } from "./emulator/constants.ts";
 import { GameStreamer } from "./stream/game-streamer.ts";
-import { drawTimestampOverlay } from "./stream/overlay.ts";
+import { drawHudOverlay } from "./stream/overlay.ts";
 import { SeatManager } from "./input/seat-manager.ts";
 
 const config = getConfig();
@@ -65,10 +65,11 @@ if (config.stream.enabled) {
 
   if (emulator) {
     const activeStreamer = streamer;
-    emulator.onFrame((frame) => {
-      // Stamp the capture-time wall clock so the Go-Live stream shows its own
-      // glass-to-glass latency (compare the on-screen clock to `date -u`).
-      drawTimestampOverlay(frame, WIDTH, Date.now());
+    const activeEmulator = emulator;
+    activeEmulator.onFrame((frame) => {
+      // HUD: capture-time wall clock (compare to `date -u` for glass-to-glass
+      // latency) + per-seat input echo (press→glass from a recording).
+      drawHudOverlay(frame, WIDTH, Date.now(), activeEmulator.seatActivity());
       activeStreamer.pushFrame(frame);
     });
   }

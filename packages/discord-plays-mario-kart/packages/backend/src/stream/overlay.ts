@@ -145,3 +145,27 @@ export function drawTimestampOverlay(
 ): void {
   drawTextOverlay(frame, width, formatUtcTimestamp(epochMs));
 }
+
+/**
+ * Per-seat input-echo flags: the seat digit while that player holds any
+ * control, `.` while idle — e.g. `[true,false,false,true]` → `"1..4"`. Lets a
+ * screen recording of the Discord stream measure press→glass latency: the
+ * digit lights the frame the input was applied.
+ */
+export function formatSeatFlags(held: readonly boolean[]): string {
+  return held.map((h, i) => (h ? String(i + 1) : ".")).join("");
+}
+
+/** The full stream HUD: capture-time UTC clock + per-seat input echo. */
+export function drawHudOverlay(
+  frame: Buffer,
+  width: number,
+  epochMs: number,
+  held: readonly boolean[],
+): void {
+  drawTextOverlay(
+    frame,
+    width,
+    `${formatUtcTimestamp(epochMs)} ${formatSeatFlags(held)}`,
+  );
+}
