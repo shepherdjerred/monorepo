@@ -27,6 +27,9 @@ dir=""
 if [ -n "$input" ] && command -v jq >/dev/null 2>&1; then
   src="$(printf '%s' "$input" | jq -r '.source // empty')"
   dir="$(printf '%s' "$input" | jq -r '.cwd // empty')"
+elif [ -n "$input" ]; then
+  # jq unavailable — can't classify source, so skip the nudge (safe default).
+  exit 0
 fi
 [ -n "$dir" ] || dir="${CLAUDE_PROJECT_DIR:-$PWD}"
 [ -d "$dir" ] || exit 0
