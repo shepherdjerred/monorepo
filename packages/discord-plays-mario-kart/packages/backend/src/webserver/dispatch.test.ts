@@ -19,7 +19,12 @@ import { createServer, type Server as HttpServer } from "node:http";
 import { io as ioClient, type Socket as ClientSocket } from "socket.io-client";
 import type { Subscription } from "rxjs";
 import { createSocket } from "./socket.ts";
-import { handleRequest, type EmulatorControls } from "./dispatch.ts";
+import {
+  handleRequest,
+  type EmulatorControls,
+  type LeaderboardDeps,
+} from "./dispatch.ts";
+import type { LeaderboardStore } from "#src/leaderboard/store.ts";
 import { SeatManager } from "#src/input/seat-manager.ts";
 import { registry } from "#src/observability/metrics.ts";
 import {
@@ -29,6 +34,7 @@ import {
 import {
   EMPTY_BUTTONS,
   ResponseSchema,
+  type LeaderboardEntry,
   type PlayerInputState,
   type Response,
 } from "@discord-plays-mario-kart/common";
@@ -46,6 +52,19 @@ const fakeEmu: EmulatorControls = {
   renderFrame: () => fakeFrame,
 };
 
+const overlayNames: { seat: number; name: string | null }[] = [];
+const fakeEntries: LeaderboardEntry[] = [
+  { name: "Jerred", wins: 3, races: 5, winRate: 0.6 },
+];
+const fakeStore: LeaderboardStore = {
+  recordRace: () => Promise.resolve(),
+  leaderboard: () => Promise.resolve(fakeEntries),
+};
+const fakeLeaderboard: LeaderboardDeps = {
+  store: fakeStore,
+  setOverlayName: (seat, name) => overlayNames.push({ seat, name }),
+};
+
 let http: HttpServer;
 let seatManager: SeatManager;
 let sub: Subscription;
@@ -55,8 +74,12 @@ beforeAll(async () => {
   http = createServer();
   seatManager = new SeatManager(4);
   const obs = createSocket({ server: http, isCorsEnabled: false });
-  sub = obs.subscribe((event) => {
-    handleRequest(event, { seatManager, emulator: fakeEmu });
+  sub = obs.events.subscribe((event) => {
+    handleRequest(event, {
+      seatManager,
+      emulator: fakeEmu,
+      leaderboard: fakeLeaderboard,
+    });
   });
   await new Promise<void>((resolve) => http.listen(0, resolve));
   const addr = http.address();
@@ -307,5 +330,71 @@ describe("web controller dispatch (socket -> handleRequest -> emulator)", () => 
 
     client.close();
     await waitUntil(() => !seatManager.occupied()[0] && cleared.includes(0));
+  });
+
+  it("sets a name on the owned seat and broadcasts it in `seats`", async () => {
+    overlayNames.length = 0;
+    const client = await connect();
+    const claimResp = nextResponse(client, "seat");
+    client.emit("request", { kind: "seat-claim", seat: 1 });
+    await claimResp;
+
+    // Collect seats broadcasts: the claim emits one (names all null) before the
+    // name-set one, so wait for the broadcast that actually carries the name.
+    let namedSeats: (string | null)[] | undefined;
+    client.on("response", (raw: unknown) => {
+      const resp = ResponseSchema.parse(raw);
+      if (resp.kind === "seats" && resp.value.names[1] === "Speedy") {
+        namedSeats = resp.value.names;
+      }
+    });
+    client.emit("request", { kind: "name-set", name: "Speedy" });
+    await waitUntil(() => namedSeats !== undefined);
+    expect(namedSeats?.[1]).toBe("Speedy");
+    expect(overlayNames.at(-1)).toEqual({ seat: 1, name: "Speedy" });
+    client.close();
+  });
+
+  it("ignores name-set from a socket that holds no seat", async () => {
+    overlayNames.length = 0;
+    const client = await connect();
+    client.emit("request", { kind: "name-set", name: "Ghost" });
+    // No seat -> the name never reaches the overlay. (Assert intent, not array
+    // emptiness: a prior test's async disconnect may push a null-name cleanup.)
+    await new Promise((r) => setTimeout(r, 150));
+    expect(overlayNames.some((o) => o.name === "Ghost")).toBe(false);
+    const statusResp = nextResponse(client, "status");
+    client.emit("request", { kind: "status" });
+    const status = await statusResp;
+    expect(status.kind).toBe("status");
+    client.close();
+  });
+
+  it("rejects a name that fails the shared schema (too long / non-ASCII)", async () => {
+    overlayNames.length = 0;
+    const client = await connect();
+    const claimResp = nextResponse(client, "seat");
+    client.emit("request", { kind: "seat-claim", seat: 2 });
+    await claimResp;
+
+    const tooLong = "x".repeat(50);
+    client.emit("request", { kind: "name-set", name: tooLong });
+    client.emit("request", { kind: "name-set", name: "🚗💨" });
+    await new Promise((r) => setTimeout(r, 150));
+    // Both dropped at the schema boundary (never reach the overlay).
+    expect(
+      overlayNames.some((o) => o.name === tooLong || o.name === "🚗💨"),
+    ).toBe(false);
+    client.close();
+  });
+
+  it("returns the leaderboard on request", async () => {
+    const client = await connect();
+    const lbResp = nextResponse(client, "leaderboard");
+    client.emit("request", { kind: "leaderboard" });
+    const lb = await lbResp;
+    if (lb.kind !== "leaderboard") throw new Error("expected leaderboard");
+    expect(lb.value.entries).toEqual(fakeEntries);
+    client.close();
   });
 });

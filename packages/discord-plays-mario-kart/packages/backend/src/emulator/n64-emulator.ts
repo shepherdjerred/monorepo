@@ -33,6 +33,7 @@ type Runtime = {
   setRom: (ptr: number, size: number) => void;
   videoBuffer: () => number;
   videoHeight: () => number;
+  rdramBase: () => number;
   runMainLoop: () => void;
   reset: () => void;
   heap: () => Uint8Array;
@@ -159,6 +160,7 @@ export class N64Emulator {
     const setRom = requireFn(mod, "_neilSetRom");
     const videoBuffer = requireFn(mod, "_neilGetVideoBuffer");
     const videoHeight = requireFn(mod, "_neilGetVideoHeight");
+    const rdramBase = requireFn(mod, "_neilGetRdram");
     const runMainLoop = requireFn(mod, "_runMainLoop");
     const reset = requireFn(mod, "_neil_reset");
     const callMain = requireFn(mod, "callMain");
@@ -221,6 +223,7 @@ export class N64Emulator {
       },
       videoBuffer: () => asNumber(videoBuffer()),
       videoHeight: () => asNumber(videoHeight()),
+      rdramBase: () => asNumber(rdramBase()),
       runMainLoop: () => {
         runMainLoop();
       },
@@ -296,6 +299,20 @@ export class N64Emulator {
     if (wasRunning) {
       this.start();
     }
+  }
+
+  /**
+   * Emulated N64 RDRAM as a window into wasm linear memory, for game-state
+   * reads (leaderboards). `base` is the RDRAM offset within `heap`; decode
+   * via mk64-memory.ts, which owns the byte-order contract (PATCHES.md §0003).
+   * Undefined before init or if the core hasn't allocated RDRAM yet.
+   */
+  rdram(): { base: number; heap: Uint8Array } | undefined {
+    const rt = this.rt;
+    if (rt === undefined) return undefined;
+    const base = rt.rdramBase();
+    if (!base) return undefined;
+    return { base, heap: rt.heap() };
   }
 
   /** Read the current frame as RGBA (for screenshots). */

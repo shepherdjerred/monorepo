@@ -28,6 +28,7 @@ import {
   semgrepScanStep,
   daggerHygieneStep,
   tunnelDnsCoverageStep,
+  talosSchematicSyncStep,
   reactVersionSyncStep,
   caddyfileValidateStep,
   lockfileCheckStep,
@@ -190,6 +191,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   steps.push(daggerHygieneStep());
   if (affected.buildAll || affected.homelabChanged) {
     steps.push(tunnelDnsCoverageStep());
+    steps.push(talosSchematicSyncStep());
   }
   steps.push(trivyScanStep());
   steps.push(semgrepScanStep());

@@ -12,7 +12,16 @@ import type { TSESLint } from "@typescript-eslint/utils";
 
 export type BaseConfigOptions = {
   tsconfigRootDir?: string;
-  projectService?: boolean | { allowDefaultProject?: string[] };
+  projectService?:
+    | boolean
+    | {
+        allowDefaultProject?: string[];
+        defaultProject?: string;
+        // Raise the default-project file cap (default 8). Linting the extra
+        // out-of-project files (e.g. many *.test.ts excluded from tsconfig) is
+        // slower, hence the loud name from typescript-eslint.
+        maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING?: number;
+      };
   ignores?: string[];
 };
 
@@ -79,7 +88,7 @@ export function baseConfig(
     // ESLint disable directive rules
     {
       plugins: {
-        "eslint-comments": eslintComments as unknown,
+        "eslint-comments": eslintComments,
       },
       rules: {
         "eslint-comments/no-unlimited-disable": "error",

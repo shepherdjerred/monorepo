@@ -6,6 +6,8 @@ import { match } from "ts-pattern";
 import type { Socket } from "socket.io";
 import { encodeScreenshotPng } from "#src/emulator/screenshot.ts";
 import type { SeatManager } from "#src/input/seat-manager.ts";
+import type { LeaderboardStore } from "#src/leaderboard/store.ts";
+import { logger } from "#src/logger.ts";
 import { controllerRttMs } from "#src/observability/metrics.ts";
 import type {
   PlayerInputState,
@@ -15,6 +17,7 @@ import type {
   ScreenshotResponse,
   SeatResponse,
   SeatsResponse,
+  LeaderboardResponse,
 } from "@discord-plays-mario-kart/common";
 
 /** The subset of the emulator the request dispatch needs (lets tests inject a
@@ -25,31 +28,63 @@ export type EmulatorControls = {
   renderFrame: () => { rgba: Buffer; width: number; height: number };
 };
 
+/** Optional leaderboard wiring; absent when the feature is disabled. */
+export type LeaderboardDeps = {
+  store: LeaderboardStore;
+  /** Push the seat's name into the stream overlay (or clear with null). */
+  setOverlayName?: (seat: number, name: string | null) => void;
+};
+
+export type DispatchDeps = {
+  seatManager: SeatManager;
+  emulator: EmulatorControls | undefined;
+  leaderboard?: LeaderboardDeps;
+};
+
 export function broadcastSeats(sock: Socket, seatManager: SeatManager): void {
   const response: SeatsResponse = {
     kind: "seats",
-    value: { occupied: seatManager.occupied() },
+    value: { occupied: seatManager.occupied(), names: seatManager.names() },
   };
   sock.nsp.emit("response", response);
 }
 
+/** Fetch + emit the leaderboard to a single socket (fire-and-forget). */
+async function emitLeaderboard(
+  sock: Socket,
+  store: LeaderboardStore,
+): Promise<void> {
+  try {
+    const entries = await store.leaderboard();
+    const response: LeaderboardResponse = {
+      kind: "leaderboard",
+      value: { entries },
+    };
+    sock.emit("response", response);
+  } catch (error) {
+    logger.warn("leaderboard fetch failed", error);
+  }
+}
+
 export function handleRequest(
   event: { request: Request; socket: Socket },
-  deps: { seatManager: SeatManager; emulator: EmulatorControls | undefined },
+  deps: DispatchDeps,
 ): void {
   const sock = event.socket;
-  const { seatManager, emulator } = deps;
+  const { seatManager, emulator, leaderboard } = deps;
   match(event)
     .with({ request: { kind: "seat-claim" } }, (e) => {
       const seat = seatManager.claim(sock.id, e.request.seat);
       const response: SeatResponse = { kind: "seat", value: { seat } };
       sock.emit("response", response);
       if (seat !== null) {
-        // Free the seat (and clear held input) when this socket leaves.
+        // Free the seat (and clear held input + overlay name) when this socket
+        // leaves.
         sock.once("disconnect", () => {
           const freed = seatManager.release(sock.id);
           if (freed !== null) {
             emulator?.clearPlayerInput(freed);
+            leaderboard?.setOverlayName?.(freed, null);
             broadcastSeats(sock, seatManager);
           }
         });
@@ -58,7 +93,10 @@ export function handleRequest(
     })
     .with({ request: { kind: "seat-release" } }, () => {
       const freed = seatManager.release(sock.id);
-      if (freed !== null) emulator?.clearPlayerInput(freed);
+      if (freed !== null) {
+        emulator?.clearPlayerInput(freed);
+        leaderboard?.setOverlayName?.(freed, null);
+      }
       const response: SeatResponse = { kind: "seat", value: { seat: null } };
       sock.emit("response", response);
       broadcastSeats(sock, seatManager);
@@ -76,6 +114,18 @@ export function handleRequest(
       const player = { discordId: "id", discordUsername: "username" };
       const response: LoginResponse = { kind: "login", value: player };
       e.socket.emit("response", response);
+    })
+    .with({ request: { kind: "name-set" } }, (e) => {
+      // Identity is the socket connection: only the seat this socket owns can
+      // be (re)named. Unseated callers are ignored.
+      const seat = seatManager.setName(sock.id, e.request.name);
+      if (seat === null) return;
+      leaderboard?.setOverlayName?.(seat, e.request.name);
+      broadcastSeats(sock, seatManager);
+    })
+    .with({ request: { kind: "leaderboard" } }, () => {
+      if (leaderboard === undefined) return;
+      void emitLeaderboard(sock, leaderboard.store);
     })
     .with({ request: { kind: "screenshot" } }, (e) => {
       if (emulator === undefined) return;
