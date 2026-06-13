@@ -130,6 +130,13 @@ export function createEventNotifier(deps: {
         notificationSendErrorsTotal.inc();
         return;
       }
+      if (batch.length > MAX_EMBEDS_PER_MESSAGE) {
+        const dropped = batch.length - MAX_EMBEDS_PER_MESSAGE;
+        logger.warn(
+          `event batch exceeded embed cap: sending ${String(MAX_EMBEDS_PER_MESSAGE)}, dropping ${String(dropped)}`,
+        );
+        notificationSendErrorsTotal.inc();
+      }
       const embeds = batch
         .slice(0, MAX_EMBEDS_PER_MESSAGE)
         .map((event) => eventToEmbed(event));
