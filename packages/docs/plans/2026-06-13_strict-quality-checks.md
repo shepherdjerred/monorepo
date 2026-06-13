@@ -54,3 +54,7 @@ function with a git URL source ref, not the local worktree path.
 
 - Local `dagger call ... --source .` hangs from this Git worktree after parsing arguments; direct local checks for the same large-file logic and Trivy arguments pass.
 - Standalone `.dagger` `tsc` could not run without installing `.dagger/node_modules`; `dagger call large-file-check --help` did load the module successfully.
+
+### Shipped
+
+- Committed the full change set (57 files) as `63b77f812` and opened PR #1151 (`chore: make knip, trivy, and large-file checks strict and blocking`) against `main`. PR reports MERGEABLE.
