@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Partially Complete — code shipped in PR #1170; live PinchTab e2e + screenshots pending (needs `dev:web` / op session)
 
 ## Context
 
@@ -269,3 +269,22 @@ Do steps in a **git worktree** (`feature/scout-competitions-reports`), commit + 
 - `scout_session` cookie `SameSite` + SPA/API same-origin in prod → cookie-auth vs signed-URL for image GETs (A5).
 - SPA tRPC transformer serializes `Date` (else `z.coerce.date()` for competition dates).
 - Whether web `report.run`/`competition.refreshLeaderboard` need per-guild debounce (both hit Riot/S3); acceptable un-debounced for v1 admin clicks.
+
+## Session Log — 2026-06-13
+
+### Done
+
+- **Backend** (commit `62bc245`): `competition.router.ts` + `report.router.ts` (full CRUD + leaderboard read/refresh + report run/preview), all gated on `assertGuildAdmin`; `ReportRun` migration (`renderedContent`/`imageS3Key`/`imageByteSize`) + `s3-report-run.ts` wired into `runReport`; `refresh.ts` (`refreshAndCacheLeaderboard`/`cacheLeaderboardArtifacts`) shared with `daily-update.ts`; `s3-leaderboard-image.ts` (chart PNG archival); cookie-authed image GET routes in `image-routes.ts` + `http-server.ts`; `chart-builder.ts` split into `renderCompetitionChartBuffer` + wrapper. Tests: `s3-report-run.test.ts`, `s3-leaderboard-image.test.ts`. 957 backend tests pass.
+- **Frontend** (commit `c41f22b`): Competitions + Reports nav tabs/routes; competition list/detail/form (+ leaderboard-panel, participants-panel, dates-fields, criteria-fields, form-fields); report list/detail/form (+ run-history, query-preview); shared `badge`/`textarea`/`status-badge`/`section`/`chart-image`/`criteria-summary`/`format`. Added `ts-pattern` to app deps. App typecheck + eslint clean; `vite build` compiles.
+- PR **#1170** opened (single PR for the whole feature).
+
+### Remaining
+
+- **Live PinchTab e2e + PR screenshots** (one per scenario, light+dark). Blocked on: `op signin` (interactive), the BETA bot in a test guild where the operator is admin, and a one-time headed Discord OAuth login (HttpOnly `scout_session` cookie can't be scripted). Running `dev:web` also briefly disconnects the deployed beta bot. Drive the SPA at `http://localhost:5180/app/` once signed in.
+- Confirm at runtime: `scout_session` cookie `SameSite` + SPA/API same-origin so the `<img>` chart GETs authorize via cookie (else switch to signed URLs).
+
+### Caveats
+
+- `competitionId`/`reportId` route params are validated with `*IdSchema.safeParse(Number(param))`; a placeholder branded id (`parse(1)`) is used while a query is disabled — never sent because `enabled` gates it.
+- Web `report.run` / `competition.refreshLeaderboard` hit Riot API + S3 synchronously (acceptable for explicit admin clicks; no per-guild debounce yet).
+- `Date` crosses the tRPC link as an ISO string (no superjson transformer) — competition date inputs use `z.coerce.date()` server-side.
