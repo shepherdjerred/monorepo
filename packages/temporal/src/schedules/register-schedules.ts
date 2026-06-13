@@ -184,6 +184,18 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Monthly refresh of the vendored pokeemerald.wasm emulator blob (opens a PR if it changed)",
   },
   {
+    id: "helm-types-weekly-refresh",
+    workflowType: "runHelmTypesRefresh",
+    args: [],
+    // 06:00 PT every Monday — after Renovate's "after 3am on Sunday" window, so
+    // it catches chart version bumps Renovate merged over the weekend.
+    cronExpression: "0 6 * * 1",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Weekly regeneration of cdk8s generated/helm types (opens a PR if they drifted)",
+  },
+  {
     id: "scout-season-refresh-weekly",
     workflowType: "runScoutSeasonRefreshWorkflow",
     args: [],
