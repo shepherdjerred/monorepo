@@ -2,16 +2,40 @@
 
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
-import { z } from "zod";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const schematicFile = join(scriptDir, "image.yaml");
 const patchFile = join(scriptDir, "patches/image.yaml");
 const readmeFile = join(scriptDir, "../../README.md");
 
-const SchematicResponseSchema = z.object({
-  id: z.string().regex(/^[a-f0-9]{64}$/),
-});
+// With --check the script verifies (without writing) that the pinned schematic
+// ID + digest in patches/image.yaml still match what image.yaml produces, then
+// exits non-zero on drift. Wired into pre-commit + CI so editing image.yaml's
+// extraKernelArgs/systemExtensions without regenerating the pin (which silently
+// boots the old schematic — e.g. losing lockdown=integrity) fails fast.
+const CHECK_MODE = Bun.argv.includes("--check");
+
+const SCHEMATIC_ID_PATTERN = /^[a-f0-9]{64}$/;
+
+// Validate the Image Factory response without pulling in a schema library, so
+// the script stays dependency-free and runs in the CI quality container (which
+// does not install node_modules). This intentionally uses manual typeof guards
+// instead of Zod (contrary to homelab AGENTS.md) because Zod is a node_modules
+// dep and this script must run without `bun install` in the quality container.
+function parseSchematicId(body: unknown): string {
+  if (
+    typeof body === "object" &&
+    body !== null &&
+    "id" in body &&
+    typeof body.id === "string" &&
+    SCHEMATIC_ID_PATTERN.test(body.id)
+  ) {
+    return body.id;
+  }
+  throw new Error(
+    `Image Factory returned an unexpected schematic response: ${JSON.stringify(body)}`,
+  );
+}
 
 const IMAGE_REPO = "metal-installer-secureboot";
 const IMAGE_REF_PATTERN = new RegExp(
@@ -27,7 +51,7 @@ async function fetchSchematicId(schematic: string): Promise<string> {
   if (!response.ok) {
     throw new Error(`Image Factory returned ${String(response.status)}`);
   }
-  return SchematicResponseSchema.parse(await response.json()).id;
+  return parseSchematicId(await response.json());
 }
 
 // The installer image in patches/image.yaml is pinned by digest. Registries
@@ -81,8 +105,32 @@ async function main() {
   console.log(`Installer digest for ${version}: ${newDigest}`);
 
   if (oldId === newId && oldDigest === newDigest) {
-    console.log("Image ID and digest unchanged, nothing to update");
+    console.log(
+      CHECK_MODE
+        ? "✓ Pinned Talos installer is in sync with image.yaml"
+        : "Image ID and digest unchanged, nothing to update",
+    );
     return;
+  }
+
+  if (CHECK_MODE) {
+    console.error(
+      [
+        "✗ Talos installer pin is OUT OF SYNC with image.yaml.",
+        "",
+        `  pinned   (patches/image.yaml): ${oldId}@${oldDigest}`,
+        `  expected (from image.yaml):    ${newId}@${newDigest}`,
+        "",
+        "image.yaml (the schematic source) changed but the pinned installer",
+        "reference was not regenerated, so the node would boot a stale schematic",
+        "(e.g. dropping extraKernelArgs like lockdown=integrity). Regenerate with:",
+        "",
+        "  bun packages/homelab/src/talos/update-image-id.ts",
+        "",
+        "then commit the updated patches/image.yaml and README.md.",
+      ].join("\n"),
+    );
+    process.exit(1);
   }
 
   console.log(`Old schematic ID: ${oldId}`);

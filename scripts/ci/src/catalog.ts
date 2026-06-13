@@ -85,6 +85,13 @@ export const INFRA_PUSH_TARGETS: ImageTarget[] = [
     buildFn: "build-mcp-gateway-image",
     pushFn: "push-mcp-gateway-image",
   },
+  {
+    name: "redlib",
+    package: "homelab",
+    versionKey: "shepherdjerred/redlib",
+    buildFn: "build-redlib-image",
+    pushFn: "push-redlib-image",
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -400,6 +407,7 @@ export const SKIP_PACKAGES: Set<string> = new Set([
 export const PRISMA_PACKAGES: Set<string> = new Set([
   "birmel",
   "scout-for-lol",
+  "discord-plays-mario-kart",
 ]);
 
 /**
