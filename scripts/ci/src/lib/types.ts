@@ -3,6 +3,8 @@ export interface AffectedPackages {
   packages: Set<string>;
   buildAll: boolean;
   homelabChanged: boolean;
+  /** True when a file under `packages/homelab/src/tofu/` changed. Gates the PR tofu *plan* group specifically — narrower than `homelabChanged` so cdk8s-only homelab PRs skip the plan jobs. */
+  tofuChanged: boolean;
   cooklangChanged: boolean;
   resumeChanged: boolean;
   ciImageChanged: boolean;

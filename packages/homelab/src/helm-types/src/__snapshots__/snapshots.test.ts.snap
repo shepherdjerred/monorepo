@@ -235,32 +235,6 @@ export type ArgocdrbacHelmParameters = {
 exports[`Snapshot Tests should generate consistent output for arrays and objects 1`] = `
 "// Generated TypeScript types for complex-types Helm chart
 
-export type ComplexTypesHelmValuesTolerationsElement = {
-  /**
-   * @default "node-role"
-   */
-  key?: string;
-  /**
-   * @default "Equal"
-   */
-  operator?: string;
-  /**
-   * @default "worker"
-   */
-  value?: string;
-  /**
-   * @default "NoSchedule"
-   */
-  effect?: string;
-};
-
-export type ComplexTypesHelmValuesNodeSelector = {
-  /**
-   * @default "linux"
-   */
-  "kubernetes.io/os"?: string;
-};
-
 export type ComplexTypesHelmValuesEnvElement = {
   /**
    * @default "LOG_LEVEL"
@@ -273,22 +247,20 @@ export type ComplexTypesHelmValuesEnvElement = {
 };
 
 export type ComplexTypesHelmValues = {
-  tolerations?: ComplexTypesHelmValuesTolerationsElement[];
+  /**
+   * Pod tolerations for node taints
+   */
+  tolerations?: unknown[];
   /**
    * Node selector labels
-   *
-   * @default {"kubernetes.io/os":"linux"}
    */
-  nodeSelector?: ComplexTypesHelmValuesNodeSelector;
+  nodeSelector?: Record<string, string>;
   env?: ComplexTypesHelmValuesEnvElement[];
 };
 
 export type ComplextypesHelmParameters = {
-  "tolerations.key"?: string;
-  "tolerations.operator"?: string;
-  "tolerations.value"?: string;
-  "tolerations.effect"?: string;
-  "nodeSelector.kubernetes.io/os"?: string;
+  "tolerations"?: string;
+  "nodeSelector"?: string;
   "env.name"?: string;
   "env.value"?: string;
 };

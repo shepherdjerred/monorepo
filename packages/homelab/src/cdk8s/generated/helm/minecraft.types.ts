@@ -19,47 +19,10 @@ export type MinecraftHelmValuesImage = {
   pullSecret?: string;
 };
 
-export type MinecraftHelmValuesResources = {
-  /**
-   * @default {"memory":"512Mi","cpu":"500m"}
-   */
-  requests?: MinecraftHelmValuesResourcesRequests;
-  /**
-   * Kubernetes resource limits (memory, cpu, etc.)
-   */
-  limits?: MinecraftHelmValuesResourcesLimits;
-};
-
-export type MinecraftHelmValuesResourcesRequests = {
-  /**
-   * @default "512Mi"
-   */
-  memory?: string;
-  /**
-   * @default "500m"
-   */
-  cpu?: string;
-};
-
-export type MinecraftHelmValuesResourcesLimits = {
-  /**
-   * @default "512Mi"
-   */
-  memory?: string;
-  /**
-   * @default "500m"
-   */
-  cpu?: string;
-};
-
 export type MinecraftHelmValuesLifecycle = {
   postStart?: unknown[];
   preStop?: unknown[];
 };
-
-export type MinecraftHelmValuesNodeSelector = object;
-
-export type MinecraftHelmValuesAffinity = object;
 
 export type MinecraftHelmValuesPodSecurityContext = {
   /**
@@ -856,9 +819,12 @@ export type MinecraftHelmValuesMcbackup = {
   extraEnv?: MinecraftHelmValuesMcbackupExtraEnv;
   envFrom?: unknown[];
   /**
-   * @default {"requests":{"memory":"512Mi","cpu":"500m"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: MinecraftHelmValuesMcbackupResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {"annotations":{},"backupDir":{"enabled":false,"Size":"1Gi","accessModes":["ReadWriteOnce"]}}
    */
@@ -888,39 +854,6 @@ export type MinecraftHelmValuesMcbackupExtraEnv = {
    * This is common for config maps, custom settings, and extensible configurations.
    */
   [key: string]: unknown;
-};
-
-export type MinecraftHelmValuesMcbackupResources = {
-  /**
-   * @default {"memory":"512Mi","cpu":"500m"}
-   */
-  requests?: MinecraftHelmValuesMcbackupResourcesRequests;
-  /**
-   * Kubernetes resource limits (memory, cpu, etc.)
-   */
-  limits?: MinecraftHelmValuesMcbackupResourcesLimits;
-};
-
-export type MinecraftHelmValuesMcbackupResourcesRequests = {
-  /**
-   * @default "512Mi"
-   */
-  memory?: string;
-  /**
-   * @default "500m"
-   */
-  cpu?: string;
-};
-
-export type MinecraftHelmValuesMcbackupResourcesLimits = {
-  /**
-   * @default "512Mi"
-   */
-  memory?: string;
-  /**
-   * @default "500m"
-   */
-  cpu?: string;
 };
 
 export type MinecraftHelmValuesMcbackupPersistence = {
@@ -999,10 +932,11 @@ export type MinecraftHelmValues = {
   /**
    * Configure resource requests and limits
    * ref: http://kubernetes.io/docs/user-guide/compute-resources/
-   *
-   * @default {"requests":{"memory":"512Mi","cpu":"500m"}}
    */
-  resources?: MinecraftHelmValuesResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {"postStart":[],"preStop":[]}
    */
@@ -1024,14 +958,17 @@ export type MinecraftHelmValues = {
    */
   strategyType?: string;
   /**
-   * @default {}
+   * Kubernetes nodeSelector (arbitrary label key/value pairs)
    */
-  nodeSelector?: MinecraftHelmValuesNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Kubernetes tolerations (standard Toleration objects)
+   */
   tolerations?: unknown[];
   /**
-   * @default {}
+   * Kubernetes affinity (standard Affinity object)
    */
-  affinity?: MinecraftHelmValuesAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * @default 10
    */
@@ -1152,15 +1089,14 @@ export type MinecraftHelmParameters = {
   replicaCount?: string;
   nameOverride?: string;
   fullnameOverride?: string;
-  "resources.requests.memory"?: string;
-  "resources.requests.cpu"?: string;
-  "resources.limits.memory"?: string;
-  "resources.limits.cpu"?: string;
+  resources?: string;
   "lifecycle.postStart"?: string;
   "lifecycle.preStop"?: string;
   workloadAsStatefulSet?: string;
   strategyType?: string;
+  nodeSelector?: string;
   tolerations?: string;
+  affinity?: string;
   revisionHistoryLimit?: string;
   "podSecurityContext.runAsUser"?: string;
   "podSecurityContext.runAsGroup"?: string;
@@ -1319,10 +1255,7 @@ export type MinecraftHelmParameters = {
   "mcbackup.pruneResticRetention"?: string;
   "mcbackup.resticHostname"?: string;
   "mcbackup.envFrom"?: string;
-  "mcbackup.resources.requests.memory"?: string;
-  "mcbackup.resources.requests.cpu"?: string;
-  "mcbackup.resources.limits.memory"?: string;
-  "mcbackup.resources.limits.cpu"?: string;
+  "mcbackup.resources"?: string;
   "mcbackup.persistence.backupDir.enabled"?: string;
   "mcbackup.persistence.backupDir.Size"?: string;
   "mcbackup.persistence.backupDir.accessModes"?: string;

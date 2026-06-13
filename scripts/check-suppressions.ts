@@ -47,6 +47,10 @@ const EXCLUDED_FILES = [
   "packages/birmel/tests/agent-tools/tools/discord/channel-resolver.test.ts",
   // Intentional: Sentry ErrorBoundary class types incompatible with React 19
   "packages/discord-plays-pokemon/packages/frontend/src/main.tsx",
+  // Intentional: Sentry ErrorBoundary class types incompatible with React 19 (same issue as Pokemon)
+  "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx",
+  // Vendored third-party code: mupen64plus-core (GPL-2.0) — preserve upstream source as-is
+  "packages/discord-plays-mario-kart/wasm-src/code/src/mupen64plus-core/",
   // Intentional: public Firebase web API key (same as better-skill-capped fetcher)
   "packages/temporal/src/activities/fetcher.ts",
   // Intentional: ha-codegen emits `/* eslint-disable */` into the generated HA schema header

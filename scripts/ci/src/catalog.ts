@@ -78,6 +78,13 @@ export const INFRA_PUSH_TARGETS: ImageTarget[] = [
     buildFn: "build-obsidian-headless-image",
     pushFn: "push-obsidian-headless-image",
   },
+  {
+    name: "redlib",
+    package: "homelab",
+    versionKey: "shepherdjerred/redlib",
+    buildFn: "build-redlib-image",
+    pushFn: "push-redlib-image",
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -318,6 +325,7 @@ export const ALL_PACKAGES: string[] = [
   "cooklang-rich-preview",
   "discord-plays-pokemon",
   "discord-plays-mario-kart",
+  "discord-stream-lifecycle",
   "discord-video-stream",
   "docs",
   "dotfiles",
@@ -393,6 +401,7 @@ export const SKIP_PACKAGES: Set<string> = new Set([
 export const PRISMA_PACKAGES: Set<string> = new Set([
   "birmel",
   "scout-for-lol",
+  "discord-plays-mario-kart",
 ]);
 
 /**

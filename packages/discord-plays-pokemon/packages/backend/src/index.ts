@@ -33,6 +33,15 @@ import { enqueueCommand, framesFromMs } from "./emulator/command-sink.ts";
 import type { CommandTiming } from "./emulator/command-sink.ts";
 import { encodePng } from "./emulator/png.ts";
 import { GameStreamer } from "./stream/game-streamer.ts";
+import discordClient from "./discord/client.ts";
+import { createGameEventWatcher } from "./game/events/watcher.ts";
+import { createEventNotifier } from "./discord/event-notifier.ts";
+import type { EventToggles } from "./discord/event-notifier.ts";
+import { GoalManager, type GoalDiscordMessage } from "./goal/goal-manager.ts";
+import {
+  startGoalControlServer,
+  type GoalControlServer,
+} from "./goal/control-server.ts";
 import type {
   LoginResponse,
   StatusResponse,
@@ -92,6 +101,40 @@ if (config.stream.enabled) {
   if (!config.stream.dynamic_streaming) {
     await streamer.start();
   }
+}
+
+async function sendDiscordMessage(message: GoalDiscordMessage): Promise<void> {
+  const channel = await discordClient.channels.fetch(message.channelId);
+  if (channel?.isSendable() !== true) {
+    throw new Error(`Discord channel is not sendable: ${message.channelId}`);
+  }
+
+  await channel.send({
+    content: message.content,
+    allowedMentions: {
+      users: message.allowedUserIds ?? [],
+      roles: [],
+      parse: [],
+    },
+  });
+}
+
+// ---- goal mode control loop ----
+let goalManager: GoalManager | undefined;
+let goalControlServer: GoalControlServer | undefined;
+if (emulator && config.game.goal.enabled) {
+  const controlToken = crypto.randomUUID();
+  goalManager = new GoalManager({
+    config: config.game.goal,
+    controlToken,
+    sendMessage: sendDiscordMessage,
+  });
+  goalControlServer = startGoalControlServer({
+    emulator,
+    goalManager,
+    config,
+    token: controlToken,
+  });
 }
 
 // ---- web server (optional) ----
@@ -158,7 +201,56 @@ if (emulator && config.bot.enabled && config.bot.commands.enabled) {
   if (config.bot.commands.update) {
     await registerSlashCommands();
   }
-  handleSlashCommands(emulator);
+  handleSlashCommands(emulator, goalManager);
+}
+
+// ---- in-game event notifications ----
+// Polls emulator memory each Nth frame and posts detected events (faints,
+// badges, evolutions, catches, ...). Built inside a try/catch so a missing wasm
+// symbol degrades to "no notifications" rather than taking down the stream.
+if (
+  emulator &&
+  config.bot.enabled &&
+  config.bot.notifications.enabled &&
+  config.bot.notifications.events.enabled
+) {
+  const eventsConfig = config.bot.notifications.events;
+  try {
+    const activeEmulator = emulator;
+    const watcher = createGameEventWatcher({
+      reader: activeEmulator.memoryReader(),
+      symbols: activeEmulator.gameSymbols(),
+    });
+    const toggles: EventToggles = {
+      faint: eventsConfig.faint,
+      whiteout: eventsConfig.whiteout,
+      badge: eventsConfig.badge,
+      evolution: eventsConfig.evolution,
+      catch: eventsConfig.catch,
+      levelUp: eventsConfig.level_up,
+      dexEntry: eventsConfig.dex_entry,
+    };
+    const notifier = createEventNotifier({
+      client: discordClient,
+      channelId: config.bot.notifications.channel_id,
+      toggles,
+      mode: eventsConfig.mode,
+      attachScreenshot: eventsConfig.attach_screenshot,
+      renderScreenshot: () => encodePng(activeEmulator.renderFrame(), 3),
+    });
+    const interval = eventsConfig.poll_interval_frames;
+    activeEmulator.addFrameHook((frame) => {
+      if (frame % interval !== 0) return;
+      for (const event of watcher.poll()) {
+        notifier.enqueue(event);
+      }
+    });
+    logger.info(
+      `game event notifications enabled (mode=${eventsConfig.mode}, every ${String(interval)} frames)`,
+    );
+  } catch (error) {
+    logger.error("failed to start game event notifications", error);
+  }
 }
 
 // ---- discord text commands ----
@@ -183,3 +275,24 @@ if (streamer && config.stream.dynamic_streaming) {
     await (participants > 0 ? activeStreamer.start() : activeStreamer.stop());
   });
 }
+
+async function shutdown(): Promise<void> {
+  await goalManager?.shutdown();
+  if (goalControlServer !== undefined) {
+    await goalControlServer.stop(true);
+  }
+  emulator?.stop();
+}
+
+async function shutdownAndExit(): Promise<void> {
+  await shutdown();
+  process.exit(0);
+}
+
+process.once("SIGTERM", () => {
+  void shutdownAndExit();
+});
+
+process.once("SIGINT", () => {
+  void shutdownAndExit();
+});

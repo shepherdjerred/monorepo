@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import {
   loadState,
+  moveState,
   saveState,
   stateFilePath,
   type PersistedState,
@@ -16,6 +17,7 @@ import {
 
 const G = GuildIdSchema.parse("100000000000000010");
 const C = ChannelIdSchema.parse("100000000000000020");
+const C2 = ChannelIdSchema.parse("100000000000000021");
 const U = UserIdSchema.parse("100000000000000001");
 
 function makeState(over: Partial<PersistedState> = {}): PersistedState {
@@ -41,10 +43,13 @@ function makeState(over: Partial<PersistedState> = {}): PersistedState {
 }
 
 const dirs: string[] = [];
-async function tempFile(): Promise<string> {
+async function tempDir(): Promise<string> {
   const dir = await mkdtemp(path.join(tmpdir(), "streambot-state-"));
   dirs.push(dir);
-  return stateFilePath(dir, G, C);
+  return dir;
+}
+async function tempFile(): Promise<string> {
+  return stateFilePath(await tempDir(), G, C);
 }
 
 afterEach(async () => {
@@ -137,5 +142,62 @@ describe("schema validation of fields", () => {
     await saveState(file, makeState({ current: null, resumeKey: null }));
     const loaded = await loadState(file, 3600, 1000);
     expect(loaded?.current).toBeNull();
+  });
+});
+
+describe("moveState — session rekey to a new channel", () => {
+  test("moves the snapshot to the new path and rewrites its channelId", async () => {
+    const dir = await tempDir();
+    const from = stateFilePath(dir, G, C);
+    const to = stateFilePath(dir, G, C2);
+    await saveState(from, makeState());
+
+    await moveState({ fromPath: from, toPath: to, guildId: G, channelId: C2 });
+
+    // The new path holds the snapshot, the old path is gone, and the file's channelId now matches the
+    // new channel so buildResumeInput's channel check passes on resume (the bug being fixed: otherwise
+    // the renamed file would carry the old channelId and resume would discard everything).
+    const moved = await loadState(to, 3600, makeState().savedAt);
+    expect(moved).not.toBeNull();
+    expect(moved?.channelId).toBe(C2);
+    expect(moved?.current?.positionSeconds).toBe(42);
+    expect(await loadState(from, 3600, makeState().savedAt)).toBeNull();
+  });
+
+  test("at no point is the snapshot absent from both paths (no crash window)", async () => {
+    const dir = await tempDir();
+    const from = stateFilePath(dir, G, C);
+    const to = stateFilePath(dir, G, C2);
+    await saveState(from, makeState());
+
+    await moveState({ fromPath: from, toPath: to, guildId: G, channelId: C2 });
+
+    // Exactly one state file exists afterwards — the deleted source never preceded the new write.
+    const entries = await readdir(dir);
+    const stateFiles = entries.filter((name) =>
+      name.startsWith("playback-state-"),
+    );
+    expect(stateFiles.length).toBe(1);
+    expect(stateFiles[0]).toBe(path.basename(to));
+  });
+
+  test("a missing source file is a no-op (nothing persisted yet)", async () => {
+    const dir = await tempDir();
+    const from = stateFilePath(dir, G, C);
+    const to = stateFilePath(dir, G, C2);
+
+    await moveState({ fromPath: from, toPath: to, guildId: G, channelId: C2 });
+
+    expect(await loadState(to, 3600, 1000)).toBeNull();
+  });
+
+  test("identical from/to paths is a no-op that leaves the file intact", async () => {
+    const dir = await tempDir();
+    const from = stateFilePath(dir, G, C);
+    await saveState(from, makeState());
+
+    await moveState({ fromPath: from, toPath: from, guildId: G, channelId: C });
+
+    expect(await loadState(from, 3600, makeState().savedAt)).not.toBeNull();
   });
 });

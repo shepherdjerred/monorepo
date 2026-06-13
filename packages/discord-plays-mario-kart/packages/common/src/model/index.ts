@@ -13,6 +13,11 @@ import {
   SeatResponseSchema,
   SeatsResponseSchema,
 } from "./input.ts";
+import {
+  LeaderboardRequestSchema,
+  LeaderboardResponseSchema,
+  NameSetRequestSchema,
+} from "./leaderboard.ts";
 
 export type Request = z.infer<typeof RequestSchema>;
 export const RequestSchema = z.discriminatedUnion("kind", [
@@ -23,6 +28,8 @@ export const RequestSchema = z.discriminatedUnion("kind", [
   SeatReleaseRequestSchema,
   ScreenshotRequestSchema,
   StatusRequestSchema,
+  NameSetRequestSchema,
+  LeaderboardRequestSchema,
 ]);
 
 export type Response = z.infer<typeof ResponseSchema>;
@@ -32,4 +39,5 @@ export const ResponseSchema = z.discriminatedUnion("kind", [
   ScreenshotResponseSchema,
   SeatResponseSchema,
   SeatsResponseSchema,
+  LeaderboardResponseSchema,
 ]);

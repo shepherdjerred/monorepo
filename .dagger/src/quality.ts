@@ -105,6 +105,32 @@ export function qualityRatchetHelper(source: Directory): Container {
 }
 
 /**
+ * Enforce the source-marker → docs invariant for TODO/FIXME/XXX markers
+ * (`scripts/check-todos.ts`). This runs in the lefthook pre-commit hook; the
+ * Dagger wrapper adds the matching CI gate so a `--no-verify` commit can't
+ * bypass it.
+ *
+ * `check-todos.ts` uses `rg` (ripgrep) to scan source markers; the oven/bun
+ * base image does not ship it, so we install it here. Bun's `$` shell returns
+ * exit code 1 for both "command not found" and "no matches found", which means
+ * a missing `rg` would silently produce an empty marker list and trigger false
+ * stale-source-marker-claim errors for every doc with `source_marker: true`.
+ */
+export function checkTodosHelper(source: Directory): Container {
+  return bunQualityBase(source)
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "ripgrep",
+    ])
+    .withExec(["bun", "scripts/check-todos.ts"]);
+}
+
+/**
  * Validate every package has the required scripts in its package.json.
  */
 export function complianceCheckHelper(source: Directory): Container {
@@ -236,6 +262,22 @@ export function tunnelDnsCoverageHelper(source: Directory): Container {
   return bunQualityBase(source).withExec([
     "bun",
     "scripts/check-tunnel-dns-coverage.ts",
+  ]);
+}
+
+/**
+ * Verify the pinned Talos installer in `patches/image.yaml` matches what the
+ * `image.yaml` schematic produces (queries the Image Factory). Catches drift
+ * where `image.yaml`'s extraKernelArgs/systemExtensions change without
+ * regenerating the pin — which silently boots the old schematic (e.g. dropping
+ * `lockdown=integrity` and breaking eBPF profiling). The script is
+ * dependency-free, so it runs in the quality base without a node_modules install.
+ */
+export function talosSchematicSyncHelper(source: Directory): Container {
+  return bunQualityBase(source).withExec([
+    "bun",
+    "packages/homelab/src/talos/update-image-id.ts",
+    "--check",
   ]);
 }
 

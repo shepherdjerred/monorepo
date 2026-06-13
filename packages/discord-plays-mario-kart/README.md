@@ -78,18 +78,35 @@ Run the CI-level tests:
 bun run --filter '*' test    # from packages/discord-plays-mario-kart
 ```
 
-Run the manual game-effect e2e (needs a ROM — not in the repo — and a built core):
+### Manual harness (needs a ROM + a built core)
+
+These boot the real emulator, so they can't run in CI (the ROM is copyright and
+not committed; the core is built in a Dagger emscripten stage). The **ROM is
+resolved** from, in order: an explicit `--rom`/positional arg → `MK64_ROM` env →
+`~/syncthing/Sync/roms/mariokart64.z64` (the canonical Syncthing copy — see
+[Deployment](#one-time-provisioning)). All three failing prints where to put it.
 
 ```bash
 cd packages/backend
-bun run build:wasm                                   # compile the core into assets/n64wasm
-bun run e2e:input:check "/path/to/Mario Kart 64.z64" # baseline vs START, asserts the frame changes
-# single run + per-frame PNG dumps for eyeballing:
-DUMP_EVERY=150 bun run e2e:input "/path/to/rom.z64" none 99999 3000 /tmp/seq.png
+bun run build:wasm            # compile the core into assets/n64wasm (once)
+
+# Scenario harness — drive the game to a known state and screenshot it.
+bun run e2e:scenario                       # list scenarios (menu, 1p, 2p, 3p, 4p)
+bun run e2e:scenario 4p --shot /tmp/4p.png # 4-player race; names burned into each quadrant
+bun run e2e:scenario 2p --watch            # log state transitions (menu → staging → racing)
+bun run e2e:scenario 1p --names Me,Bot     # override the burned-in names
+
+# Lower-level scripts:
+bun run e2e:input:check       # baseline vs START, asserts the frame changes (frame-hash)
+bun run e2e:race "" 6000 start-mash  # stream raw RDRAM globals (validate the address map)
 ```
 
-The game-effect e2e can't run in CI: the ROM is copyright (not committed) and the
-core is built in a Dagger emscripten stage, not present in the test container.
+The reusable primitives live in [`backend/scripts/lib/`](./packages/backend/scripts/lib/)
+(`resolveRom`, `bootEmulator`, `driveUntil`, `captureScreenshot`); scenarios are
+data in [`scenarios.ts`](./packages/backend/scripts/lib/scenarios.ts). Add a
+scenario by adding an entry there. **Menu-nav gotcha:** multiplayer character
+select blocks until _every_ seat presses A, so the schedules mirror A onto all
+N controllers.
 
 ## Deployment
 
@@ -110,15 +127,18 @@ Two things are provisioned out-of-band (by design):
 1. **Config secret** — create a 1Password item (vault
    `v64ocnykdqju4ui6j6pua56xw4`) with a `config.toml` field, then replace the
    placeholder item id in `resources/mario-kart.ts`.
-2. **ROM** — copy your own MK64 ROM into the ROM PVC once:
+2. **ROM** — the canonical copy lives in Syncthing at
+   `~/syncthing/Sync/roms/mariokart64.z64` (replicated across your machines; the
+   manual harness reads it from there by default). Copy it into the ROM PVC once:
 
    ```sh
-   kubectl cp mariokart64.z64 \
+   kubectl cp ~/syncthing/Sync/roms/mariokart64.z64 \
      <pod>:/workspace/packages/discord-plays-mario-kart/roms/mariokart64.z64
    ```
 
    The ROM is **copyrighted** — it is never baked into the image, committed to
-   git, or stored in a Secret. You must supply your own copy.
+   git (the repo is public + has a 5 MB file limit), or stored in a Secret. You
+   must supply your own copy; Syncthing is just where this project keeps it.
 
 > **Self-bot caveat.** Discord blocks video from bot tokens, so Go-Live requires
 > a _user_ token. This violates Discord's ToS and the token invalidates on a

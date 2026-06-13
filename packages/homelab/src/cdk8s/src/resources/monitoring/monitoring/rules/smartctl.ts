@@ -2,6 +2,22 @@ import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/gen
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared.ts";
 
+// smartmon_* metrics are keyed by `disk` (e.g. /dev/nvme0, /dev/sda) — the device
+// path assigned at scan time, which is NOT stable across reboots or controller
+// re-enumeration. The stable serial_number + device_model live only on the
+// smartmon_device_info metric, so join it in via group_left: every alert then
+// carries serial_number + device_model and identifies the physical drive instead
+// of a /dev path. The join is evaluated per scrape, so it always reflects the
+// current disk->serial mapping even when enumeration flips. smartmon_device_info
+// has value 1, so the multiplication leaves the alert's `$value` unchanged.
+//
+// This also fixes annotations that previously referenced {{ $labels.device }} and
+// {{ $labels.model_name }} — neither label exists on smartmon_* metrics (they
+// carry `disk`/`type`/`smart_id`), so those annotations rendered blank.
+function withSmartIdentity(expr: string): string {
+  return `(${expr}) * on(disk) group_left(serial_number, device_model) smartmon_device_info`;
+}
+
 export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
     {
@@ -12,7 +28,7 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "SmartDeviceHealthFailure",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "smartmon_device_smart_healthy == 0",
+            withSmartIdentity("smartmon_device_smart_healthy == 0"),
           ),
           for: "0m",
           labels: {
@@ -21,59 +37,25 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "SMART health check failed for device {{ $labels.device }}",
+              "SMART health check failed for {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
             ),
             description: escapePrometheusTemplate(
-              "Device {{ $labels.device }} ({{ $labels.model_name }}) has failed SMART health check. Serial: {{ $labels.serial_number }}",
+              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has failed its SMART health check.",
             ),
           },
         },
-        // NVMe (Samsung 990 PRO): rated operating max 70°C per Samsung spec.
-        // 62°C is normal under high write load — 60°C threshold was a false positive.
-        {
-          alert: "SmartNvmeTemperatureHigh",
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'smartmon_temperature_celsius_value{device=~".*/nvme[0-9].*"} > 65',
-          ),
-          for: "5m",
-          labels: {
-            severity: "warning",
-            category: "hardware",
-          },
-          annotations: {
-            summary: escapePrometheusTemplate(
-              "Elevated NVMe temperature on {{ $labels.device }}",
-            ),
-            description: escapePrometheusTemplate(
-              "NVMe {{ $labels.device }} ({{ $labels.model_name }}) is {{ $value }}°C. Samsung 990 PRO rated operating max is 70°C.",
-            ),
-          },
-        },
-        {
-          alert: "SmartNvmeTemperatureCritical",
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'smartmon_temperature_celsius_value{device=~".*/nvme[0-9].*"} > 70',
-          ),
-          for: "1m",
-          labels: {
-            severity: "critical",
-            category: "hardware",
-          },
-          annotations: {
-            summary: escapePrometheusTemplate(
-              "NVMe temperature at rated operating limit on {{ $labels.device }}",
-            ),
-            description: escapePrometheusTemplate(
-              "NVMe {{ $labels.device }} ({{ $labels.model_name }}) is {{ $value }}°C — at Samsung 990 PRO rated limit; Dynamic Thermal Guard will throttle the drive.",
-            ),
-          },
-        },
-        // SATA (Samsung 870 EVO): keep 60°C/70°C thresholds. SATA drives in a
-        // homelab should not reach 60°C; if they do it indicates a real problem.
+
+        // Temperature: SATA only (type!="nvme"). NVMe temperature is owned by the
+        // nvme.rules group (NvmeTemperatureHigh/Critical), which uses the
+        // node-exporter nvme collector's properly-labelled nvme_temperature_celsius.
+        // SATA (Samsung 870 EVO) keeps 60°C/70°C thresholds — a SATA SSD in a
+        // homelab should not reach 60°C; if it does it indicates a real problem.
         {
           alert: "SmartDeviceTemperatureHigh",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'smartmon_temperature_celsius_value{device!~".*/nvme[0-9].*"} > 60',
+            withSmartIdentity(
+              'smartmon_temperature_celsius_value{type!="nvme"} > 60',
+            ),
           ),
           for: "5m",
           labels: {
@@ -82,17 +64,19 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "High temperature detected on device {{ $labels.device }}",
+              "High temperature on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
             ),
             description: escapePrometheusTemplate(
-              "Device {{ $labels.device }} ({{ $labels.model_name }}) temperature is {{ $value }}°C, which is above the warning threshold of 60°C",
+              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) is {{ $value }}°C, above the 60°C warning threshold.",
             ),
           },
         },
         {
           alert: "SmartDeviceTemperatureCritical",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'smartmon_temperature_celsius_value{device!~".*/nvme[0-9].*"} > 70',
+            withSmartIdentity(
+              'smartmon_temperature_celsius_value{type!="nvme"} > 70',
+            ),
           ),
           for: "1m",
           labels: {
@@ -101,10 +85,10 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "Critical temperature detected on device {{ $labels.device }}",
+              "Critical temperature on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
             ),
             description: escapePrometheusTemplate(
-              "Device {{ $labels.device }} ({{ $labels.model_name }}) temperature is {{ $value }}°C, which is above the critical threshold of 70°C",
+              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) is {{ $value }}°C, above the 70°C critical threshold.",
             ),
           },
         },
@@ -113,7 +97,7 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "SmartReallocatedSectorsHigh",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "smartmon_reallocated_sector_ct_raw_value > 0",
+            withSmartIdentity("smartmon_reallocated_sector_ct_raw_value > 0"),
           ),
           for: "0m",
           labels: {
@@ -122,17 +106,17 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "Reallocated sectors detected on device {{ $labels.device }}",
+              "Reallocated sectors on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
             ),
             description: escapePrometheusTemplate(
-              "Device {{ $labels.device }} ({{ $labels.model_name }}) has {{ $value }} reallocated sectors. This may indicate disk degradation.",
+              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} reallocated sectors. This may indicate disk degradation.",
             ),
           },
         },
         {
           alert: "SmartReallocatedSectorsCritical",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "smartmon_reallocated_sector_ct_raw_value > 10",
+            withSmartIdentity("smartmon_reallocated_sector_ct_raw_value > 10"),
           ),
           for: "0m",
           labels: {
@@ -141,10 +125,10 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "High number of reallocated sectors on device {{ $labels.device }}",
+              "High reallocated sector count on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
             ),
             description: escapePrometheusTemplate(
-              "Device {{ $labels.device }} ({{ $labels.model_name }}) has {{ $value }} reallocated sectors, indicating significant disk degradation.",
+              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} reallocated sectors, indicating significant disk degradation.",
             ),
           },
         },
@@ -153,7 +137,7 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "SmartPendingSectorsHigh",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "smartmon_current_pending_sector_raw_value > 0",
+            withSmartIdentity("smartmon_current_pending_sector_raw_value > 0"),
           ),
           for: "5m",
           labels: {
@@ -162,17 +146,17 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "Pending sectors detected on device {{ $labels.device }}",
+              "Pending sectors on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
             ),
             description: escapePrometheusTemplate(
-              "Device {{ $labels.device }} ({{ $labels.model_name }}) has {{ $value }} pending sectors waiting for reallocation.",
+              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} pending sectors waiting for reallocation.",
             ),
           },
         },
         {
           alert: "SmartPendingSectorsCritical",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "smartmon_current_pending_sector_raw_value > 5",
+            withSmartIdentity("smartmon_current_pending_sector_raw_value > 5"),
           ),
           for: "1m",
           labels: {
@@ -181,10 +165,10 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "High number of pending sectors on device {{ $labels.device }}",
+              "High pending sector count on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
             ),
             description: escapePrometheusTemplate(
-              "Device {{ $labels.device }} ({{ $labels.model_name }}) has {{ $value }} pending sectors, indicating potential hardware failure.",
+              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} pending sectors, indicating potential hardware failure.",
             ),
           },
         },
@@ -193,7 +177,7 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "SmartUncorrectableErrors",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "smartmon_offline_uncorrectable_raw_value > 0",
+            withSmartIdentity("smartmon_offline_uncorrectable_raw_value > 0"),
           ),
           for: "0m",
           labels: {
@@ -202,19 +186,19 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "Uncorrectable errors detected on device {{ $labels.device }}",
+              "Uncorrectable errors on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
             ),
             description: escapePrometheusTemplate(
-              "Device {{ $labels.device }} ({{ $labels.model_name }}) has {{ $value }} uncorrectable errors. This indicates serious disk problems.",
+              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} uncorrectable errors. This indicates serious disk problems.",
             ),
           },
         },
 
-        // UDMA CRC Error Count (for SATA drives)
+        // UDMA CRC Error Count (SATA cable/interface issues)
         {
           alert: "SmartUdmaCrcErrorsHigh",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "smartmon_udma_crc_error_count_raw_value > 0",
+            withSmartIdentity("smartmon_udma_crc_error_count_raw_value > 0"),
           ),
           for: "5m",
           labels: {
@@ -223,19 +207,19 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "UDMA CRC errors detected on device {{ $labels.device }}",
+              "UDMA CRC errors on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
             ),
             description: escapePrometheusTemplate(
-              "Device {{ $labels.device }} ({{ $labels.model_name }}) has {{ $value }} UDMA CRC errors. This may indicate cable or interface problems.",
+              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} UDMA CRC errors. This may indicate cable or interface problems.",
             ),
           },
         },
 
-        // Power Cycle Count (for wear monitoring)
+        // Power Cycle Count (wear monitoring)
         {
           alert: "SmartHighPowerCycles",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "smartmon_power_cycle_count_raw_value > 10000",
+            withSmartIdentity("smartmon_power_cycle_count_raw_value > 10000"),
           ),
           for: "0m",
           labels: {
@@ -244,19 +228,23 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "High power cycle count on device {{ $labels.device }}",
+              "High power cycle count on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
             ),
             description: escapePrometheusTemplate(
-              "Device {{ $labels.device }} ({{ $labels.model_name }}) has {{ $value }} power cycles, which is quite high for typical usage.",
+              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) has {{ $value }} power cycles, which is quite high for typical usage.",
             ),
           },
         },
 
-        // SSD-specific rules
+        // SSD-specific rules.
+        // NOTE: smartmon_wear_leveling_count_value is not currently reported by the
+        // smartmon collector on this cluster, so these never fire. NVMe wear is
+        // covered by NvmePercentageUsed{High,Critical} in nvme.rules. Kept (with
+        // stable-identity annotations) so they work if SATA wear data appears.
         {
           alert: "SmartSsdWearLevelingHigh",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "smartmon_wear_leveling_count_value < 10",
+            withSmartIdentity("smartmon_wear_leveling_count_value < 10"),
           ),
           for: "5m",
           labels: {
@@ -265,18 +253,17 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "SSD wear leveling count low on device {{ $labels.device }}",
+              "SSD wear leveling count low on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
             ),
             description: escapePrometheusTemplate(
-              "SSD {{ $labels.device }} ({{ $labels.model_name }}) wear leveling count is {{ $value }}, indicating high wear level.",
+              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) wear leveling count is {{ $value }}, indicating high wear level.",
             ),
           },
         },
-        // TODO: this doesn't seem to exist
         {
           alert: "SmartSsdWearLevelingCritical",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "smartmon_wear_leveling_count_value < 5",
+            withSmartIdentity("smartmon_wear_leveling_count_value < 5"),
           ),
           for: "1m",
           labels: {
@@ -285,10 +272,10 @@ export function getSmartctlRuleGroups(): PrometheusRuleSpecGroups[] {
           },
           annotations: {
             summary: escapePrometheusTemplate(
-              "SSD wear leveling critically low on device {{ $labels.device }}",
+              "SSD wear leveling critically low on {{ $labels.device_model }} (serial {{ $labels.serial_number }})",
             ),
             description: escapePrometheusTemplate(
-              "SSD {{ $labels.device }} ({{ $labels.model_name }}) wear leveling count is {{ $value }}, indicating critical wear level.",
+              "{{ $labels.device_model }} (serial {{ $labels.serial_number }}, {{ $labels.disk }}) wear leveling count is {{ $value }}, indicating critical wear level.",
             ),
           },
         },

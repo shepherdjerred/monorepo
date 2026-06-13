@@ -1,6 +1,9 @@
 {
   "name": "@discord-plays-pokemon/monorepo",
   "version": "1.0.0",
+  "bin": {
+    "pokemonctl": "packages/backend/src/goal/pokemonctl.ts"
+  },
   "scripts": {
     "start": "bun packages/backend/src/index.ts",
     "build": "bun run --filter '*' build",

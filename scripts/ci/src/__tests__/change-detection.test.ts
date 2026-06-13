@@ -15,6 +15,7 @@ import {
   _classifyRenovateFiles,
   _checkCiImageChanges,
   _checkCiImageVersionChanges,
+  _checkTofuChanges,
   _getBaseRevision,
   _getChangedFiles,
   _getBuildRejectionReason,
@@ -708,6 +709,33 @@ describe("ci image change detection", () => {
     expect(_checkCiImageVersionChanges([".buildkite/ci-image/VERSION"])).toBe(
       true,
     );
+  });
+});
+
+describe("tofu source change detection", () => {
+  it("detects changes under packages/homelab/src/tofu/", () => {
+    expect(
+      _checkTofuChanges(["packages/homelab/src/tofu/cloudflare/dns.tf"]),
+    ).toBe(true);
+  });
+
+  it("ignores cdk8s-only homelab changes", () => {
+    expect(_checkTofuChanges(["packages/homelab/src/cdk8s/src/main.ts"])).toBe(
+      false,
+    );
+  });
+
+  it("returns true when a tofu file is mixed in with non-tofu changes", () => {
+    expect(
+      _checkTofuChanges([
+        "packages/homelab/src/cdk8s/src/main.ts",
+        "packages/homelab/src/tofu/github/rulesets.tf",
+      ]),
+    ).toBe(true);
+  });
+
+  it("returns false for an empty change set", () => {
+    expect(_checkTofuChanges([])).toBe(false);
   });
 });
 
