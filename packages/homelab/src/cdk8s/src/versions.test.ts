@@ -18,6 +18,7 @@ const DatasourceSchema = z.enum([
   "helm",
   "docker",
   "github-releases",
+  "npm",
   "custom.papermc",
 ]);
 
@@ -26,6 +27,7 @@ const VersioningSchema = z.enum([
   "semver-coerced",
   "docker",
   "loose",
+  "npm",
 ]);
 
 const RenovateCommentSchema = z.object({

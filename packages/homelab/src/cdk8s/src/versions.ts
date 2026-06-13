@@ -228,6 +228,15 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "tbxark/mcp-proxy":
     "v0.43.2@sha256:1c43164a910a4f74a3ce48d95cb2ef792de8d467296555e63944fa798f0a44bd",
+  // mcp-gateway downstream MCP servers (npx-launched in the mcp-proxy container).
+  // Pinned + Renovate-tracked so cold starts are reproducible instead of `npx -y`
+  // grabbing latest. Substituted into mcp-gateway/config.json at synth time.
+  // renovate: datasource=npm versioning=npm
+  "@r-huijts/canvas-mcp": "1.0.8",
+  // renovate: datasource=npm versioning=npm
+  "@modelcontextprotocol/server-github": "2025.4.8",
+  // renovate: datasource=npm versioning=npm
+  "@automatearmy/email-reader-mcp": "1.0.3",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "bugsink/bugsink":
     "2.1.3@sha256:cf9ad368d436f0e9dd6e686d0becf5062cc079518efbf032a084c5f73fcf7754",
