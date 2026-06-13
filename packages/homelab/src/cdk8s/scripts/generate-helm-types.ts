@@ -131,32 +131,30 @@ async function generateHelmTypes() {
     }
     console.log("✅ Prettier formatting completed");
 
-    // Run TypeScript compilation check
+    // Sanity-check that the generated type files are valid standalone
+    // TypeScript. `--ignoreConfig` is required: passing files on the command
+    // line while a tsconfig.json is present is a hard error (TS5112) otherwise.
+    // We check only `*.types.ts` (self-contained type declarations) — `index.ts`
+    // re-exports with `.ts` extensions, which need the project's
+    // `allowImportingTsExtensions` and is validated by the cdk8s project
+    // typecheck. This is a fast guardrail that the generator didn't emit broken
+    // syntax/types; the project typecheck remains the authoritative strict check.
     console.log("\n🔧 Running TypeScript compilation check...");
-    try {
-      // Use shell to expand glob pattern
-      const tscProc = Bun.spawn(
-        ["sh", "-c", `bun x tsc --noEmit --skipLibCheck "${OUTPUT_DIR}"/*.ts`],
-        {
-          stdio: ["inherit", "pipe", "pipe"],
-        },
-      );
-
-      const tscOutput = await new Response(tscProc.stderr).text();
-      const tscExitCode = await tscProc.exited;
-
-      if (tscExitCode === 0) {
-        console.log("✅ TypeScript compilation check passed");
-      } else {
-        console.warn("⚠️  TypeScript compilation issues found:");
-        console.warn(tscOutput);
-        console.warn("Generated types may have compilation errors");
-      }
-    } catch (error) {
-      console.warn(
-        `Failed to run TypeScript check: ${String(error)}, continuing...`,
+    const tscProc = Bun.spawn(
+      [
+        "sh",
+        "-c",
+        `bun x tsc --noEmit --skipLibCheck --ignoreConfig "${OUTPUT_DIR}"/*.types.ts`,
+      ],
+      { stdio: ["inherit", "inherit", "inherit"] },
+    );
+    const tscExitCode = await tscProc.exited;
+    if (tscExitCode !== 0) {
+      throw new Error(
+        `generated types failed tsc (exit ${tscExitCode.toString()}) — the generator emitted invalid TypeScript`,
       );
     }
+    console.log("✅ TypeScript compilation check passed");
   }
 
   console.log("\n🎉 Helm chart type generation completed!");
