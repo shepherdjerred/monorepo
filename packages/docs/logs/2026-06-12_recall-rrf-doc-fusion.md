@@ -83,3 +83,23 @@ overlap with the FTS list rare even at the document level.
   behavior, not the old bug.
 - The rebuilt binary must be reinstalled (`./install.sh` in packages/toolkit)
   for the global `~/.local/bin/toolkit` to pick up the fix.
+
+## Session Log — 2026-06-13
+
+### Done
+
+- Fixed Greptile P2: `collapseToBestChunkPerDoc` now explicitly compares
+  scores to keep the highest-scoring chunk per document, removing the
+  implicit sorted-input invariant. Commit `68f351348` pushed to
+  `feature/recall-rrf-doc-fusion`.
+- Replied to and resolved the unresolved Greptile review thread
+  (`PRRT_kwDOHf4r4c6JRtYO`) on PR #1131.
+
+### Remaining
+
+- Nothing. A fresh Buildkite build was triggered by the push; CI should
+  now pass the `mag-greptile-review` gate.
+
+### Caveats
+
+- None.
