@@ -4,7 +4,7 @@ Complete
 
 ## Summary
 
-Implemented Mario Kart 64 backend fixes for stream lifecycle resets and screenshot aspect ratio.
+Implemented Mario Kart 64 backend fixes for stream lifecycle resets and screenshot aspect ratio. Shipped as separate stacked PR [#1152](https://github.com/shepherdjerred/monorepo/pull/1152), based on `feature/stream-lifecycle-xstate` (PR #1146) since the session-end restart wiring builds on #1146's GameStreamer rewrite.
 
 ## Session Log - 2026-06-13
 
