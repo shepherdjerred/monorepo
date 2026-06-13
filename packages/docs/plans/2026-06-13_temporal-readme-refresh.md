@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress (implemented on `feature/temporal-readme-refresh`; PR open, pending merge + Buildkite-UI schedule removal — see `packages/docs/todos/disable-buildkite-readme-schedule.md`)
+In Progress (implemented on `feature/temporal-readme-refresh`, [PR #1164](https://github.com/shepherdjerred/monorepo/pull/1164); pending merge + Buildkite-UI schedule removal — see `packages/docs/todos/disable-buildkite-readme-schedule.md`)
 
 ## Context
 
