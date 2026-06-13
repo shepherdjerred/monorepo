@@ -27,6 +27,12 @@ Commands:
   pr health [PR_NUMBER]      Check PR health (conflicts, CI, approval)
   pr logs <RUN_ID>           Get workflow run logs
   pr detect                  Detect PR for current branch
+  pr asset <PR> <FILE|DIR...>  Upload PR media (images, video, .cast, demo dirs) to public.sjer.red
+
+  deployed [SELECTOR]        Is my commit/service deployed to the homelab k8s?
+  deployed <service>         e.g. scout, birmel — is its latest commit live?
+  deployed <service>/<var>   e.g. scout/prod — scope to one product variant
+  deployed <commit> --json   Trace a specific commit, JSON output
 
   pagerduty incidents        List open PagerDuty incidents
   pagerduty incident <ID>    View PagerDuty incident details
@@ -61,6 +67,16 @@ Commands:
   grafana annotate <TEXT>    Create an annotation
   gf ...                     Alias for grafana
 
+  discord daemon start       Start session daemon (DISCORD_BOT_TOKEN / DISCORD_USER_TOKEN)
+  discord daemon stop|status Manage the daemon
+  discord send <CH> <MSG>    Send a message
+  discord read <CH> [-n 20]  Read recent messages (incl. embeds)
+  discord wait <CH>          Block until a matching message arrives
+  discord slash <CH> <BOT> <CMD> [ARGS...]  Invoke another bot's slash command
+  discord voice join|leave|states           Voice presence + who's streaming
+  discord guilds|channels    Discovery
+  discord whoami             Daemon identities + uptime
+
 Options:
   --version                  Print toolkit version
   --json                     Output as JSON
@@ -72,6 +88,9 @@ Environment Variables:
   BUGSINK_TOKEN              Bugsink API token
   GRAFANA_URL                Grafana instance URL
   GRAFANA_API_KEY            Grafana API key or service account token
+  AWS_PROFILE                AWS profile for 'pr asset' (or use --profile)
+  DISCORD_BOT_TOKEN          Discord bot token (for 'discord daemon start')
+  DISCORD_USER_TOKEN         Discord user/selfbot token (for 'discord daemon start')
 
 Examples:
   toolkit fetch https://docs.lancedb.com/
@@ -79,6 +98,8 @@ Examples:
   toolkit recall search "vector database"
   toolkit recall status --perf
   toolkit pr health
+  toolkit deployed scout
+  toolkit deployed scout/prod
   toolkit pd incidents
   toolkit gf dashboards
 `);
@@ -120,6 +141,12 @@ async function main(): Promise<void> {
       await handlePrCommand(subcommand, args.slice(2));
       break;
     }
+    case "deployed": {
+      const { handleDeployedCommand } = await import("./handlers/deployed.ts");
+      // No sub-subcommand: the first token after `deployed` is the selector.
+      await handleDeployedCommand(subcommand, args.slice(1));
+      break;
+    }
     case "pagerduty":
     case "pd": {
       const { handlePagerDutyCommand } =
@@ -136,6 +163,11 @@ async function main(): Promise<void> {
     case "gf": {
       const { handleGrafanaCommand } = await import("./handlers/grafana.ts");
       await handleGrafanaCommand(subcommand, args.slice(2));
+      break;
+    }
+    case "discord": {
+      const { handleDiscordCommand } = await import("./handlers/discord.ts");
+      await handleDiscordCommand(subcommand, args.slice(2));
       break;
     }
     default:

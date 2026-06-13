@@ -50,6 +50,7 @@ function makeStreamer() {
 /** Fake prepareStream/attachPipeline that record calls and expose per-segment control. */
 function makeDeps() {
   const prepareCalls = [];
+  const subtitleBurnCalls = [];
   const ffmpeg = [];
   const attachCalls = [];
   const segments = [];
@@ -59,6 +60,7 @@ function makeDeps() {
   const deps = {
     prepareStream: (_input, opts) => {
       prepareCalls.push({ startTime: opts.startTime });
+      subtitleBurnCalls.push(opts.subtitleBurn);
       const ff = deferred();
       ffmpeg.push(ff);
       return {
@@ -89,7 +91,16 @@ function makeDeps() {
     },
   };
 
-  return { deps, prepareCalls, ffmpeg, attachCalls, segments, destroyed, volumes };
+  return {
+    deps,
+    prepareCalls,
+    subtitleBurnCalls,
+    ffmpeg,
+    attachCalls,
+    segments,
+    destroyed,
+    volumes,
+  };
 }
 
 describe("createSeekablePlayer", () => {
@@ -183,6 +194,30 @@ describe("createSeekablePlayer", () => {
     player.stop();
     await player.finished;
     expect(streamer.calls.stopStream).toBe(1);
+  });
+
+  test("prepare.subtitleBurn is applied on start AND re-applied after seek with the new offset", async () => {
+    const streamer = makeStreamer();
+    const f = makeDeps();
+    const subtitleBurn = { path: "/tmp/streambot-subs/x.srt" };
+    const player = createSeekablePlayer(
+      streamer,
+      "video.mkv",
+      { prepare: { subtitleBurn } },
+      f.deps,
+    );
+    await player.start();
+    await player.seek(120);
+
+    // The same subtitleBurn option reaches ffmpeg on the initial segment and on the post-seek
+    // restart, and each restart carries its own startTime — prepareStream derives the subtitle
+    // PTS compensation from that, so the burned cues track the seek (and, by the same mechanism,
+    // the HW→SW retry).
+    expect(f.subtitleBurnCalls).toEqual([subtitleBurn, subtitleBurn]);
+    expect(f.prepareCalls).toEqual([
+      { startTime: undefined },
+      { startTime: 120 },
+    ]);
   });
 
   test("setVolume delegates to the active segment controller", async () => {

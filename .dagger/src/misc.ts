@@ -8,6 +8,7 @@ import { dag, Container, Directory, File, Secret } from "@dagger.io/dagger";
 import {
   BUN_IMAGE,
   CADDY_BUILDER_IMAGE,
+  CADDY_S3_PROXY_MODULE,
   CADDY_IMAGE,
   BUN_CACHE,
   GO_BUILD,
@@ -35,12 +36,7 @@ function caddyS3ProxyBinary(): File {
     .from(CADDY_BUILDER_IMAGE)
     .withMountedCache("/go/pkg/mod", dag.cacheVolume(GO_MOD))
     .withMountedCache("/root/.cache/go-build", dag.cacheVolume(GO_BUILD))
-    .withExec([
-      "xcaddy",
-      "build",
-      "--with",
-      "github.com/lindenlab/caddy-s3-proxy",
-    ])
+    .withExec(["xcaddy", "build", "--with", CADDY_S3_PROXY_MODULE])
     .file("/usr/bin/caddy");
 }
 
@@ -175,8 +171,10 @@ export async function smokeTestScoutForLolHelper(
 
 /**
  * Smoke test streambot image.
- * Verifies: ffmpeg + the baked yt-dlp are runnable, config validates, the playback machine
- * boots, and both Discord clients attempt login and fail with the expected auth error.
+ * Verifies: ffmpeg + the baked yt-dlp are runnable; the real-ffmpeg subtitle integration suite passes
+ * (sidecar detection, embedded text extraction, and a libass `subtitles=` burn — which needs the
+ * image's ffmpeg+libass+fonts, absent from the plain test container); config validates; the playback
+ * machine boots; and both Discord clients attempt login and fail with the expected auth error.
  */
 export async function smokeTestStreambotHelper(
   pkgDir: Directory,
@@ -185,17 +183,22 @@ export async function smokeTestStreambotHelper(
 ): Promise<string> {
   const container = buildImageHelper(pkgDir, "streambot", depNames, depDirs)
     .withEnvVariable("BOT_TOKEN", "smoke-test-dummy")
-    .withEnvVariable("TOKEN", "smoke-test-dummy")
-    .withEnvVariable("GUILD_ID", "000000000000000000")
-    .withEnvVariable("COMMAND_CHANNEL_ID", "000000000000000000")
-    .withEnvVariable("VIDEO_CHANNEL_ID", "000000000000000000")
+    .withEnvVariable("USER_TOKENS", "smoke-test-dummy")
     .withEnvVariable("ADMIN_IDS", "000000000000000000")
     .withEnvVariable("VIDEOS_DIR", "/tmp/videos")
     .withEntrypoint([])
+    // Real-ffmpeg subtitle integration tests — a distinct exec so a non-zero exit hard-fails the
+    // pipeline (no silent skip). This is the only place they run in CI: the plain `streambot: test`
+    // container has no ffmpeg/libass.
     .withExec([
       "sh",
       "-c",
-      "mkdir -p /tmp/videos && ffmpeg -version && /usr/local/bin/yt-dlp --version && timeout 30s bun run src/index.ts 2>&1",
+      "mkdir -p /tmp/videos && bun run test:integration 2>&1",
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      "ffmpeg -version && /usr/local/bin/yt-dlp --version && timeout 30s bun run src/index.ts 2>&1",
     ]);
 
   return runSmokeTest(container, [
@@ -219,16 +222,16 @@ export async function e2eStreambotHelper(
   userToken: Secret,
   guildId: string,
   videoChannelId: string,
-  commandChannelId: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
 ): Promise<string> {
+  // USER_TOKENS is the real config (a single-token pool); E2E_* pin the voice channel the unattended
+  // test joins (production joins the requester's current VC, which a headless test can't set).
   const container = buildImageHelper(pkgDir, "streambot", depNames, depDirs)
     .withSecretVariable("BOT_TOKEN", botToken)
-    .withSecretVariable("TOKEN", userToken)
-    .withEnvVariable("GUILD_ID", guildId)
-    .withEnvVariable("VIDEO_CHANNEL_ID", videoChannelId)
-    .withEnvVariable("COMMAND_CHANNEL_ID", commandChannelId)
+    .withSecretVariable("USER_TOKENS", userToken)
+    .withEnvVariable("E2E_GUILD_ID", guildId)
+    .withEnvVariable("E2E_VIDEO_CHANNEL_ID", videoChannelId)
     .withEnvVariable("VIDEOS_DIR", "/tmp/videos")
     .withEnvVariable("STREAM_HARDWARE_ACCELERATION", "false")
     .withEntrypoint([])

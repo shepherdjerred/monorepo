@@ -227,7 +227,7 @@ Always verify changes:
 
 ## Parallel Work — Use Worktrees
 
-When starting parallel feature work, hot-fixing while another change is in progress, or running multiple Claude agents in this repo concurrently, use `git worktree` to get an isolated working directory per branch.
+**Before your first edit on any non-trivial change, create a `git worktree` — don't edit in the main checkout.** "Non-trivial" = anything you'll open a PR for, anything touching more than one file, or any multi-step task. Only stay in the main checkout for a single-file, single-commit fix you won't PR (a typo, a one-line config tweak). **When unsure, make the worktree.** Each worktree gives a branch its own isolated working directory, so parallel work and concurrent agents never collide.
 
 ```bash
 # Create an isolated worktree on a new branch off main
@@ -242,7 +242,7 @@ bun run scripts/setup.ts
 
 After PR merge: `git worktree remove .claude/worktrees/<feature-slug>` and `git branch -d feature/<slug>` from the main checkout. Run `git worktree prune` to clean up stale entries.
 
-See the `worktree-workflow` skill for the full workflow. Trivial single-file edits don't need a worktree — those stay in the main checkout.
+See the `worktree-workflow` skill for the full workflow. `claude -w <slug>` creates and enters a worktree at launch; for Codex, create the worktree first and start it with `codex -C <dir>`. A `SessionStart` hook (`.claude/hooks/worktree-reminder.sh`, wired for both Claude Code and Codex) also reminds you whenever a session opens in the main checkout.
 
 **If you were started in a worktree, stay in that worktree.** Keep every command, search, and file operation scoped to the worktree path you were launched in. Do not `cd` into, read from, or write to the main checkout (the parent of the `.claude/worktrees/` directory you are in) — the worktree is a complete checkout with the same files, so there is no reason to reach outside it. The main checkout may hold the user's own in-progress work; only touch it when the user explicitly asks.
 
@@ -301,3 +301,52 @@ toolkit recall reindex           # Re-scan all watched directories
 toolkit recall status            # Index stats, daemon health
 toolkit recall debug             # Full diagnostic check
 ```
+
+## PR Media & Demo Artifacts — `public.sjer.red`
+
+A reviewer should be able to **see** that a change works without checking out
+the branch. Attach the **lightest artifact that proves the behavior** — most
+PRs (pure logic, refactors, types, infra config, dep bumps) need nothing
+beyond the diff; never attach media reflexively. A single visual state is a
+screenshot, not a video.
+
+| Change type                       | Artifact                                                                         |
+| --------------------------------- | -------------------------------------------------------------------------------- |
+| UI tweak, single state            | Screenshot (before/after where it applies)                                       |
+| UI flow / interaction / animation | Short GIF (renders inline) or short video (link)                                 |
+| Brand-new feature                 | End-to-end demo — **one short video per scenario**, not one long tour            |
+| CLI / TUI program                 | asciinema recording of a real terminal: `asciinema rec demo.cast -c "<command>"` |
+| Web page / component              | Small static demo site uploaded as a directory (root `index.html` required)      |
+| Metrics / logging / tracing       | Screenshot of Grafana/Loki showing the **new** data flowing end-to-end           |
+| Anything else                     | Only when seeing it communicates faster than reading the diff                    |
+
+Conventions: one artifact per scenario, a one-line caption saying what to
+look at, before/after pairs when changing existing behavior.
+
+`gh` cannot upload media into a PR/issue body (drag-drop uses a private,
+session-only endpoint). Upload to the public artifact host and embed the
+returned URLs:
+
+```bash
+# Creds come from your AWS profile (~/.aws); no op wrapper needed.
+# Mix files, recordings, and demo-site directories in one call:
+toolkit pr asset <PR_NUMBER> ./before.png ./flow.mp4 ./demo.cast ./demo-site --profile seaweedfs --markdown
+```
+
+- Uploads to the `public-sjer-red` SeaweedFS bucket under `pr/assets/<PR_NUMBER>/`
+  and prints a `https://public.sjer.red/...` URL per argument (with
+  `--markdown`, ready-to-paste type-appropriate markdown).
+- **Embedding rules:** images/GIFs render inline via GitHub's image proxy
+  (`![file](url)`); GitHub **never embeds external video** — videos become
+  labeled links that play in a browser tab (served with a real video
+  content type); `.cast` uploads get a generated self-contained HTML player
+  page (`<name>.cast.html`) and the link points there; directories link to
+  their `index.html`.
+- Directories upload recursively to `pr/assets/<PR_NUMBER>/<dirname>/` and
+  must contain a root `index.html` (dotfiles are skipped).
+- Uses the standard AWS toolchain (`@aws-sdk/client-s3`, path-style): credentials,
+  `endpoint_url`, and region come from `~/.aws/credentials` / `~/.aws/config`.
+  Select the profile with `--profile <name>` or `AWS_PROFILE` (the `seaweedfs`
+  profile points at `https://seaweedfs.sjer.red`).
+- Objects under `pr/assets/` expire after 365 days; the homelab must be up for
+  the artifacts to load.

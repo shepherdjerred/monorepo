@@ -153,11 +153,11 @@ export async function createMcpGatewayDeployment(chart: Chart) {
       },
       resources: {
         memory: {
-          request: Size.mebibytes(512),
+          request: Size.mebibytes(128),
           limit: Size.gibibytes(1),
         },
         cpu: {
-          request: Cpu.millis(200),
+          request: Cpu.millis(50),
           limit: Cpu.millis(500),
         },
       },

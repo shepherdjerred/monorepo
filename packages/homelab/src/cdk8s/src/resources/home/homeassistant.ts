@@ -110,6 +110,19 @@ echo "installed eufy_security $VERSION"
       privileged: false,
       allowPrivilegeEscalation: false,
     },
+    // Without this, cdk8s-plus defaults to a 1 CPU / 512Mi request, and the pod's
+    // effective request is max(init, main) — so the init container was silently
+    // reserving a full core for a one-shot tarball download.
+    resources: {
+      cpu: {
+        request: Cpu.millis(100),
+        limit: Cpu.millis(500),
+      },
+      memory: {
+        request: Size.mebibytes(128),
+        limit: Size.mebibytes(512),
+      },
+    },
     volumeMounts: [
       {
         path: "/config",
@@ -155,8 +168,9 @@ echo "installed eufy_security $VERSION"
           request: Cpu.millis(100),
           limit: Cpu.millis(2000),
         },
+        // 30d working-set peak is ~1.1Gi; request reflects steady state.
         memory: {
-          request: Size.mebibytes(512),
+          request: Size.gibibytes(1),
           limit: Size.gibibytes(2),
         },
       },

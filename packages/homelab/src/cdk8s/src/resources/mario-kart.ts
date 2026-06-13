@@ -9,7 +9,7 @@ import {
   Volume,
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
+import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
   setRevisionHistoryLimit,
   withCommonProps,
@@ -17,6 +17,7 @@ import {
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
@@ -60,6 +61,13 @@ export function createMarioKartDeployment(chart: Chart) {
     storage: Size.gibibytes(1),
   });
 
+  // Leaderboard SQLite DB. Separate from `saves` on purpose: wiping the
+  // emulator's mempak/eeprom saves to reset game state must not destroy the
+  // recorded race history. Velero backs it up automatically (<200 GiB).
+  const dataVolume = new ZfsNvmeVolume(chart, "mario-kart-data-volume", {
+    storage: Size.gibibytes(1),
+  });
+
   const item = new OnePasswordItem(chart, "mario-kart-config", {
     spec: {
       // "MK64 Config" — 1Password item with a `config.toml` field (server id,
@@ -82,6 +90,22 @@ export function createMarioKartDeployment(chart: Chart) {
       image: `ghcr.io/shepherdjerred/discord-plays-mario-kart:${versions["shepherdjerred/discord-plays-mario-kart"]}`,
       envVariables: {
         NODE_ENV: EnvValue.fromValue("production"),
+        // VAAPI hardware H.264 encoding on the Intel iGPU (requested below). The
+        // app reads STREAM_HARDWARE_ACCELERATION/VAAPI_DEVICE; ffmpeg reads
+        // LIBVA_DRIVER_NAME. Falls back to software libx264 if the device is absent.
+        STREAM_HARDWARE_ACCELERATION: EnvValue.fromValue("true"),
+        VAAPI_DEVICE: EnvValue.fromValue("/dev/dri/renderD128"),
+        LIBVA_DRIVER_NAME: EnvValue.fromValue("iHD"),
+        // OTLP traces → Tempo; frame metrics are scraped from /metrics.
+        TELEMETRY_ENABLED: EnvValue.fromValue("true"),
+        TELEMETRY_SERVICE_NAME: EnvValue.fromValue("discord-plays-mario-kart"),
+        OTLP_ENDPOINT: EnvValue.fromValue(
+          "http://tempo.tempo.svc.cluster.local:4318",
+        ),
+        // Leaderboard SQLite DB on the persistent data volume (overrides the
+        // config's relative db_path). The image entrypoint runs `prisma db
+        // push` against this before start.
+        DATABASE_PATH: EnvValue.fromValue(`${APP_ROOT}/data/leaderboard.db`),
       },
       securityContext: {
         ensureNonRoot: false,
@@ -91,10 +115,11 @@ export function createMarioKartDeployment(chart: Chart) {
         privileged: false,
         allowPrivilegeEscalation: false,
       },
-      // Software RDP is CPU-heavy and there's no GPU on the node — give it room.
+      // Software RDP is CPU-heavy and there's no GPU on the node — give it burst room
+      // via the limit. 30d peak is ~900m, so the guaranteed request stays modest.
       resources: {
         cpu: {
-          request: Cpu.millis(3000),
+          request: Cpu.millis(1000),
           limit: Cpu.millis(8000),
         },
         memory: {
@@ -124,6 +149,14 @@ export function createMarioKartDeployment(chart: Chart) {
             chart,
             "mario-kart-rom-pvc",
             romVolume.claim,
+          ),
+        },
+        {
+          path: `${APP_ROOT}/data`,
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "mario-kart-data-pvc",
+            dataVolume.claim,
           ),
         },
         {
@@ -157,9 +190,33 @@ export function createMarioKartDeployment(chart: Chart) {
 
   setRevisionHistoryLimit(deployment);
 
+  // Request the Intel iGPU so ffmpeg can VAAPI hardware-encode (frees CPU the
+  // angrylion software RDP needs). The intel-device-plugin mounts /dev/dri into
+  // the pod; non-root UID 1000 works. cdk8s has no GPU field, so patch it in.
+  ApiObject.of(deployment).addJsonPatch(
+    JsonPatch.add(
+      "/spec/template/spec/containers/0/resources/limits/gpu.intel.com~1i915",
+      1,
+    ),
+  );
+
   const uiService = new Service(chart, "ui-service", {
+    metadata: {
+      labels: {
+        app: "mario-kart",
+      },
+    },
     selector: deployment,
-    ports: [{ port: WEB_PORT }],
+    ports: [{ port: WEB_PORT, name: "ui" }],
+  });
+
+  // Scrape the frame-loop + process metrics exposed at /metrics on the web port.
+  createServiceMonitor(chart, {
+    name: "mario-kart",
+    port: "ui",
+    path: "/metrics",
+    namespace: "mario-kart",
+    matchLabels: { app: "mario-kart" },
   });
 
   new TailscaleIngress(chart, "ui-tailscale-ingress", {

@@ -69,6 +69,8 @@ import {
   pushTrmnlDashboardImageHelper,
   buildCiBaseImageHelper,
   pushCiBaseImageHelper,
+  buildRedlibImageHelper,
+  pushRedlibImageHelper,
 } from "./image";
 
 import { goBuildHelper, goTestHelper, goLintHelper } from "./golang";
@@ -109,6 +111,7 @@ import {
   trivyScanHelper,
   daggerHygieneHelper,
   tunnelDnsCoverageHelper,
+  talosSchematicSyncHelper,
   reactVersionSyncHelper,
   semgrepScanHelper,
   lockfileCheckHelper,
@@ -434,6 +437,33 @@ export class Monorepo {
     gitSha: string = "unknown",
   ): Promise<string> {
     return pushObsidianHeadlessImageHelper(
+      tags,
+      registryUsername,
+      registryPassword,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Build the redlib image from upstream's glibc Dockerfile.ubuntu at a pinned commit. */
+  @func()
+  buildRedlibImage(
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildRedlibImageHelper(version, gitSha);
+  }
+
+  /** Push a redlib image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushRedlibImage(
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushRedlibImageHelper(
       tags,
       registryUsername,
       registryPassword,
@@ -1317,6 +1347,12 @@ export class Monorepo {
     return tunnelDnsCoverageHelper(source).stdout();
   }
 
+  /** Verify the pinned Talos installer matches what image.yaml produces. */
+  @func()
+  async talosSchematicSync(source: Directory): Promise<string> {
+    return talosSchematicSyncHelper(source).stdout();
+  }
+
   /** Verify react/react-dom (+ @types) resolve to matching versions in every bun.lock. */
   @func()
   async reactVersionSync(source: Directory): Promise<string> {
@@ -1479,7 +1515,6 @@ export class Monorepo {
     userToken: Secret,
     guildId: string,
     videoChannelId: string,
-    commandChannelId: string,
     depNames: string[] = [],
     depDirs: Directory[] = [],
   ): Promise<string> {
@@ -1489,7 +1524,6 @@ export class Monorepo {
       userToken,
       guildId,
       videoChannelId,
-      commandChannelId,
       depNames,
       depDirs,
     );

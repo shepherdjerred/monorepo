@@ -14,8 +14,10 @@ import type {
 import {
   ChannelIdSchema,
   GuildIdSchema,
+  UserTokenSchema,
 } from "@shepherdjerred/streambot/types/ids.ts";
 
+const USER_TOKEN = UserTokenSchema.parse("user-token");
 const VOICE: VoiceHandle = {
   guildId: GuildIdSchema.parse("100000000000000010"),
   channelId: ChannelIdSchema.parse("100000000000000020"),
@@ -23,15 +25,13 @@ const VOICE: VoiceHandle = {
 const RESOLVED: ResolvedSource = {
   title: "Movie",
   ffmpegInput: "/videos/movie.mkv",
+  chapters: [],
 };
 
 function env(over: EnvLookup = {}): EnvLookup {
   return {
     BOT_TOKEN: "bot-token",
-    TOKEN: "user-token",
-    GUILD_ID: "100000000000000010",
-    COMMAND_CHANNEL_ID: "100000000000000030",
-    VIDEO_CHANNEL_ID: "100000000000000020",
+    USER_TOKENS: "user-token",
     VIDEOS_DIR: "/videos",
     ...over,
   };
@@ -78,6 +78,7 @@ describe("StreambotStreamer position tracking", () => {
     const clock = { ms: 1000 };
     const { factory, segments } = makeFakeFactory();
     const streamer = new StreambotStreamer(
+      USER_TOKEN,
       loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "false" })),
       () => clock.ms,
       factory,
@@ -107,6 +108,7 @@ describe("StreambotStreamer position tracking", () => {
     const clock = { ms: 1000 };
     const { factory, segments } = makeFakeFactory();
     const streamer = new StreambotStreamer(
+      USER_TOKEN,
       loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
       () => clock.ms,
       factory,

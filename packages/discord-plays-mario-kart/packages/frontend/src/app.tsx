@@ -3,72 +3,20 @@ import { useInterval } from "react-use";
 import { Container } from "./stories/container.tsx";
 import { socket } from "./socket.ts";
 import {
-  EMPTY_BUTTONS,
-  type ButtonState,
   type InputRequest,
-  type PlayerInputState,
+  type LatencyReportRequest,
   type Response,
   type SeatClaimRequest,
   type SeatReleaseRequest,
 } from "@discord-plays-mario-kart/common";
-
-// Web-key -> N64 control. Steering is analog (left/right); accelerate is the A
-// button, brake/reverse is B, hop/drift is R, item is Z, camera is C-buttons.
-type Action =
-  | { kind: "button"; name: keyof ButtonState }
-  | { kind: "axis"; axis: "x" | "y"; value: number };
-
-const KEYMAP: Record<string, Action | undefined> = {
-  KeyW: { kind: "button", name: "a" },
-  ArrowUp: { kind: "button", name: "a" },
-  KeyS: { kind: "button", name: "b" },
-  ArrowDown: { kind: "button", name: "b" },
-  KeyA: { kind: "axis", axis: "x", value: -1 },
-  ArrowLeft: { kind: "axis", axis: "x", value: -1 },
-  KeyD: { kind: "axis", axis: "x", value: 1 },
-  ArrowRight: { kind: "axis", axis: "x", value: 1 },
-  ShiftLeft: { kind: "button", name: "r" },
-  ShiftRight: { kind: "button", name: "r" },
-  KeyE: { kind: "button", name: "z" },
-  Enter: { kind: "button", name: "start" },
-  KeyI: { kind: "button", name: "cUp" },
-  KeyK: { kind: "button", name: "cDown" },
-  KeyJ: { kind: "button", name: "cLeft" },
-  KeyL: { kind: "button", name: "cRight" },
-};
-
-// On-screen buttons (touch / click), each tied to a key code in KEYMAP.
-const PADS: { code: string; label: string }[] = [
-  { code: "KeyA", label: "◀ steer" },
-  { code: "KeyW", label: "accel (A)" },
-  { code: "KeyD", label: "steer ▶" },
-  { code: "KeyS", label: "brake (B)" },
-  { code: "ShiftLeft", label: "hop (R)" },
-  { code: "KeyE", label: "item (Z)" },
-  { code: "Enter", label: "start" },
-];
-
-function computeState(pressed: Set<string>): PlayerInputState {
-  const buttons: ButtonState = { ...EMPTY_BUTTONS };
-  let x = 0;
-  let y = 0;
-  for (const code of pressed) {
-    const action = KEYMAP[code];
-    if (action === undefined) continue;
-    if (action.kind === "button") buttons[action.name] = true;
-    else if (action.axis === "x") x += action.value;
-    else y += action.value;
-  }
-  return {
-    buttons,
-    analogX: Math.max(-1, Math.min(1, x)),
-    analogY: Math.max(-1, Math.min(1, y)),
-  };
-}
+import { KEYMAP, PADS, computeState } from "./input-map.ts";
+import { NameEntry } from "./name-entry.tsx";
+import { Leaderboard } from "./leaderboard.tsx";
 
 export function App() {
   const [seat, setSeat] = useState<number | null>(null);
   const [occupied, setOccupied] = useState<boolean[]>([]);
+  const [names, setNames] = useState<(string | null)[]>([]);
   const [latency, setLatency] = useState<number>();
   const pressed = useRef<Set<string>>(new Set());
   const seatRef = useRef<number | null>(null);
@@ -77,7 +25,15 @@ export function App() {
   useInterval(() => {
     const start = Date.now();
     socket.emit("ping", () => {
-      setLatency(Date.now() - start);
+      const rtt = Date.now() - start;
+      setLatency(rtt);
+      // Report the measurement so the server can export it as a metric
+      // (client-side timing avoids any clock-skew question).
+      const report: LatencyReportRequest = {
+        kind: "latency-report",
+        rttMs: rtt,
+      };
+      socket.emit("request", report);
     });
   }, 2000);
 
@@ -115,6 +71,7 @@ export function App() {
         setSeat(response.value.seat);
       } else if (response.kind === "seats") {
         setOccupied(response.value.occupied);
+        setNames(response.value.names);
       }
     };
     socket.on("response", onResponse);
@@ -175,6 +132,14 @@ export function App() {
             {Array.from({ length: seatCount }, (_unused, i) => {
               const taken = occupied[i] ?? false;
               const mine = seat === i;
+              const playerName = names[i] ?? null;
+              const label = mine
+                ? " (you)"
+                : playerName === null
+                  ? taken
+                    ? " (taken)"
+                    : ""
+                  : ` — ${playerName}`;
               return (
                 <button
                   key={i}
@@ -192,7 +157,7 @@ export function App() {
                   }`}
                 >
                   P{i + 1}
-                  {mine ? " (you)" : taken ? " (taken)" : ""}
+                  {label}
                 </button>
               );
             })}
@@ -206,6 +171,7 @@ export function App() {
                 You are P{seat + 1} — WASD / arrows, E = item, Shift = hop,
                 Enter = start.
               </p>
+              <NameEntry seat={seat} />
               <div className="grid grid-cols-4 gap-2">
                 {PADS.map((p) => (
                   <button
@@ -227,6 +193,8 @@ export function App() {
               </div>
             </div>
           )}
+
+          <Leaderboard />
         </div>
       </Container>
     </div>

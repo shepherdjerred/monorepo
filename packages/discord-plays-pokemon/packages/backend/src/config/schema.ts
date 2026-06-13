@@ -26,6 +26,30 @@ export const ConfigSchema = z.strictObject({
         .regex(/\d*/, "IDs must only have numeric characters")
         .min(1),
       enabled: z.boolean(),
+      // Notifications for in-game events detected by polling emulator memory
+      // (faints, badges, evolutions, catches, ...). All defaulted so existing
+      // config.toml files validate unchanged.
+      events: z
+        .strictObject({
+          enabled: z.boolean().default(true),
+          // "log" (shadow mode) detects + logs + counts events but sends
+          // nothing to Discord; "send" posts to the notifications channel.
+          mode: z.enum(["log", "send"]).default("send"),
+          // How often to poll game memory. 30 frames ≈ 0.5s at ~60fps.
+          poll_interval_frames: z.number().int().min(1).default(30),
+          attach_screenshot: z.boolean().default(true),
+          faint: z.boolean().default(true),
+          badge: z.boolean().default(true),
+          evolution: z.boolean().default(true),
+          catch: z.boolean().default(true),
+          whiteout: z.boolean().default(true),
+          level_up: z.boolean().default(true),
+          dex_entry: z.boolean().default(true),
+        })
+        // prefault (not default): an absent/`{}` events table is treated as
+        // input so the per-field defaults above fill in. zod v4's .default()
+        // would instead require the fully-parsed object.
+        .prefault({}),
     }),
   }),
   stream: z.strictObject({
@@ -47,11 +71,20 @@ export const ConfigSchema = z.strictObject({
       token: z.string().min(1),
     }),
     video: z.strictObject({
-      // Integer upscale of the native 240x160 frame sent to Discord.
-      scale: z.number().int().min(1).max(6),
+      // @deprecated Superseded by the 16:9 letterbox (canvas_height + display
+      // aspect). Retained, optional, so existing config.toml files still validate;
+      // no longer read. Remove once all configs drop it.
+      scale: z.number().int().min(1).max(6).optional(),
       frame_rate: z.number().positive(),
       bitrate_kbps: z.number().positive(),
       bitrate_max_kbps: z.number().positive(),
+      // Height of the 16:9 output canvas sent to Discord (width derived as 16:9).
+      // The 3:2 game is scaled to fit and pillarboxed onto black.
+      canvas_height: z.number().int().positive().default(720),
+      // VAAPI hardware H.264 encoding on an Intel iGPU. Off by default (software
+      // libx264 fallback); also enableable via the STREAM_HARDWARE_ACCELERATION env.
+      hardware_acceleration: z.boolean().default(false),
+      vaapi_device: z.string().min(1).default("/dev/dri/renderD128"),
     }),
   }),
   game: z.strictObject({

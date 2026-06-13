@@ -8,10 +8,9 @@ import type { PlaybackInput } from "@shepherdjerred/streambot/machine/types.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
 import { expandPlaylist } from "@shepherdjerred/streambot/sources/ytdlp.ts";
-import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
 import { CommandBot } from "@shepherdjerred/streambot/discord/command-bot.ts";
-import type { PlaybackView } from "@shepherdjerred/streambot/discord/command-handler.ts";
+import { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
 import {
   loadState,
   saveState,
@@ -22,9 +21,16 @@ import {
   buildSnapshot,
   resumeKeyFor,
 } from "@shepherdjerred/streambot/state/resume.ts";
-import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
+import {
+  ChannelIdSchema,
+  GuildIdSchema,
+  UserIdSchema,
+  type GuildId,
+  type ChannelId,
+} from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import { register } from "@shepherdjerred/streambot/observability/metrics.ts";
 
 /**
  * End-to-end test, run inside Dagger with real credentials (see `e2eStreambot`). Exercises BOTH
@@ -39,6 +45,8 @@ import { logger } from "@shepherdjerred/streambot/util/logger.ts";
  */
 const log = logger.child("e2e");
 const TEST_CLIP = "/tmp/streambot-e2e.mp4";
+// Sidecar next to the clip (same base name) so subtitles (on by default) burn in over the live stream.
+const TEST_SIDECAR = "/tmp/streambot-e2e.en.srt";
 const REQUESTER = UserIdSchema.parse("100000000000000001");
 const STREAM_HOLD_MS = 6000;
 const CLIP_DURATION_SECONDS = 30;
@@ -88,7 +96,11 @@ type Session = {
 
 /** Build a real session (streamer + machine + command bot) with the given start input. */
 function buildSession(config: Config, input: PlaybackInput): Session {
-  const streamer = new StreambotStreamer(config);
+  const userToken = config.discord.userTokens[0];
+  if (userToken === undefined) {
+    throw new Error("e2e requires at least one user token (USER_TOKENS/TOKEN)");
+  }
+  const streamer = new StreambotStreamer(userToken, config);
   const actor = createActor(
     createPlaybackMachine({
       joinVoice: streamer.joinVoice,
@@ -100,38 +112,32 @@ function buildSession(config: Config, input: PlaybackInput): Session {
     { input },
   );
 
-  const view = (): PlaybackView => {
-    const { context } = actor.getSnapshot();
-    return {
-      state: JSON.stringify(actor.getSnapshot().value),
-      current:
-        context.current === null
-          ? null
-          : {
-              title:
-                context.resolved?.title ?? sourceLabel(context.current.source),
-              requesterId: context.current.requesterId,
-            },
-      queue: context.queue.map((entry) => ({
-        title: sourceLabel(entry.source),
-        requesterId: entry.requesterId,
-      })),
-      loop: context.loop,
-      volume: context.volume,
-    };
-  };
-
+  // The command bot just proves the bot token logs in + registers; the test drives the actor
+  // directly. Its session manager is wired to an empty pool so no extra userbot is acquired.
+  const refs: { sessions: SessionManager | null } = { sessions: null };
   const commandBot = new CommandBot({
     config,
-    dispatch: (event) => {
-      actor.send(event);
+    getSessions: () => {
+      if (refs.sessions === null) {
+        throw new Error("session manager not initialized");
+      }
+      return refs.sessions;
     },
-    view,
     library: () => [],
-    setVolume: (percent) => streamer.setVolume(percent),
-    seek: (seconds) => streamer.seek(seconds),
     expandPlaylist: (url, signal) => expandPlaylist(config, url, signal),
-    streamerUserId: () => streamer.userId(),
+  });
+  refs.sessions = new SessionManager({
+    config,
+    pool: {
+      acquire: () => null,
+      release: () => {
+        /* empty pool: nothing to release */
+      },
+      canServe: () => false,
+    },
+    resolveSource: (actorInput, signal) =>
+      resolveSource(config, actorInput.source, signal),
+    announce: (channelId, message) => commandBot.announce(channelId, message),
   });
 
   return { streamer, actor, commandBot };
@@ -154,19 +160,97 @@ async function stopSession(session: Session): Promise<void> {
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Wait until the streamer has anchored its playback clock (`getPosition()` becomes non-null after
+ * `player.start()` resolves). The machine reaches `streaming` the instant the runStream actor is
+ * invoked — a tick before the clock is anchored — so reading the position immediately would race and
+ * report 0. Polling here lets us assert the true resume offset without masking a real seek bug (a
+ * broken seek would still surface as ~0).
+ */
+async function waitForPosition(
+  streamer: StreambotStreamer,
+  timeoutMs = 10_000,
+): Promise<number> {
+  const start = Date.now();
+  for (;;) {
+    const position = streamer.getPosition();
+    if (position !== null) {
+      return position;
+    }
+    if (Date.now() - start > timeoutMs) {
+      throw new Error("streamer never anchored a playback position");
+    }
+    await sleep(50);
+  }
+}
+
+/**
+ * Assert the observability metrics reflect an in-progress real stream. Throws with the relevant
+ * `streambot_*` lines on failure. The send-frametime histogram is the load-bearing check — it only
+ * advances when frames are actually packetized and sent over the Discord voice connection.
+ */
+function assertStreamingMetrics(metricsText: string): void {
+  const dump = (): string =>
+    metricsText
+      .split("\n")
+      .filter(
+        (l) =>
+          l.startsWith("streambot_send_") ||
+          l.startsWith("streambot_stream_") ||
+          l.startsWith("streambot_source_info"),
+      )
+      .join("\n");
+
+  // prom-client emits the default `app="streambot"` label alongside `kind`, in registration order,
+  // so match `kind="video"` anywhere within the label set rather than assuming label order.
+  const videoSends =
+    /streambot_send_frametime_ratio_count\{[^}]*kind="video"[^}]*\}\s+(\d+)/.exec(
+      metricsText,
+    );
+  if (videoSends === null || Number(videoSends[1]) <= 0) {
+    throw new Error(
+      `expected streambot_send_frametime_ratio observations for video frames, got none:\n${dump()}`,
+    );
+  }
+  if (!/streambot_stream_active\{[^}]*\}\s+1\b/.test(metricsText)) {
+    throw new Error(
+      `expected streambot_stream_active=1 during streaming:\n${dump()}`,
+    );
+  }
+  if (!/streambot_source_info\{[^}]*\}\s+1\b/.test(metricsText)) {
+    throw new Error(`expected streambot_source_info to be set:\n${dump()}`);
+  }
+  log.info("e2e: observability metrics PASS", {
+    videoSends: videoSends[1],
+  });
+}
+
 async function main(): Promise<number> {
   const baseConfig = loadConfig();
   await generateClip(baseConfig.ffmpegPath);
+  // Sidecar next to the clip (same base name) so subtitles (on by default) burn in over the live
+  // stream — exercises the real resolve → software-encode → burn path end to end.
+  await Bun.write(
+    TEST_SIDECAR,
+    "1\n00:00:00,000 --> 00:00:11,000\nstreambot e2e subtitle\n",
+  );
+
+  // The voice channel is pinned via test-only env (the bot otherwise joins the requester's current
+  // VC, which an unattended e2e has no way to set).
+  const guildId: GuildId = GuildIdSchema.parse(Bun.env["E2E_GUILD_ID"]);
+  const channelId: ChannelId = ChannelIdSchema.parse(
+    Bun.env["E2E_VIDEO_CHANNEL_ID"],
+  );
 
   const stateDir = await mkdtemp(path.join(tmpdir(), "streambot-e2e-state-"));
   const config: Config = {
     ...baseConfig,
     state: { dir: stateDir, resumeMaxAgeSeconds: 3600 },
   };
-  const stateFile = stateFilePath(stateDir);
+  const stateFile = stateFilePath(stateDir, guildId, channelId);
   const input: PlaybackInput = {
-    guildId: config.discord.guildId,
-    channelId: config.discord.videoChannelId,
+    guildId,
+    channelId,
     idleTimeoutMs: 5000,
   };
 
@@ -195,6 +279,11 @@ async function main(): Promise<number> {
           `expected playback to advance past 3s, got ${String(capturedPosition)}`,
         );
       }
+
+      // Observability: after several seconds of REAL streaming to the voice channel, the metrics
+      // populated by the new StreamObserver must reflect it. This is the one path the credential-free
+      // `e2e/local.ts` cannot reach — the Discord send loop (`onSendStats`).
+      assertStreamingMetrics(await register.metrics());
       const { context } = s1.actor.getSnapshot();
       await saveState(
         stateFile,
@@ -207,6 +296,7 @@ async function main(): Promise<number> {
               ? null
               : resumeKeyFor(context.current.source),
           resumeAttempts: 0,
+          statusChannelId: null,
         }),
       );
       log.info("e2e: persisted resume state");
@@ -238,7 +328,9 @@ async function main(): Promise<number> {
       await waitFor(s2.actor, (snapshot) => snapshot.matches("streaming"), {
         timeout: 60_000,
       });
-      const resumedAt = s2.streamer.getPosition() ?? 0;
+      // Wait for the clock to anchor (player.start resolved) before reading the resume offset, so we
+      // assert the real seek position rather than racing the streamer's setup.
+      const resumedAt = await waitForPosition(s2.streamer);
       log.info("e2e: cycle 2 resumed position", {
         resumedAt,
         capturedPosition,

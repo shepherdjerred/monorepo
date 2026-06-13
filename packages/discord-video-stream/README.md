@@ -18,6 +18,10 @@ file). The ISC text and original copyright are retained in [`LICENSE`](./LICENSE
    `require` instead of a top-level `import`, because eagerly loading its native binding crashes
    on some bun / global-cache layouts. Previously carried as a committed bun patch in the consumer
    packages; now baked into source. `sharp` is only used by the optional stream-preview path.
+3. **`videoFilters` option** (`src/media/newApi.ts`) — `prepareStream` gains `videoFilters?: string[]`,
+   appended (via the pure `buildVideoFilterChain`) to the transcoding `-vf` chain right after the
+   built-in `scale`, so it composes with scale/encoder filters instead of clobbering them like a raw
+   `-vf` in `customFfmpegFlags` would. streambot uses it to burn in subtitles (`subtitles='…'`).
 
 `prepareStream` / `playStream` keep their upstream public behavior; the rawvideo bots
 (`discord-plays-*`) use them unchanged.

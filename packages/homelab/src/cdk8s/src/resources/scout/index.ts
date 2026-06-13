@@ -1,4 +1,5 @@
 import {
+  Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
@@ -192,6 +193,16 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       securityContext: {
         ensureNonRoot: false,
         readOnlyRootFilesystem: false,
+      },
+      // Baseline request (no limits) so the backend isn't BestEffort.
+      // 30d peaks: prod ~145m / ~1.2Gi, beta ~60m / ~2.1Gi; steady ~30m / ~500Mi.
+      resources: {
+        cpu: {
+          request: Cpu.millis(50),
+        },
+        memory: {
+          request: Size.mebibytes(512),
+        },
       },
       startup: Probe.fromHttpGet("/ping", {
         port: 3000,

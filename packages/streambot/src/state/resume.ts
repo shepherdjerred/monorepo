@@ -8,6 +8,7 @@ import {
   type Source,
 } from "@shepherdjerred/streambot/sources/source.ts";
 import type { PersistedState } from "@shepherdjerred/streambot/state/persistence.ts";
+import type { ChannelId } from "@shepherdjerred/streambot/types/ids.ts";
 
 /**
  * Pure resume logic, split out of `index.ts` so it can be unit-tested without Discord clients or a
@@ -35,14 +36,23 @@ export function buildSnapshot(params: {
   savedAt: number;
   resumeKey: string | null;
   resumeAttempts: number;
+  /** Text channel to announce the resume in (the session's status channel), or null if unknown. */
+  statusChannelId: ChannelId | null;
 }): PersistedState {
-  const { context, positionSeconds, savedAt, resumeKey, resumeAttempts } =
-    params;
+  const {
+    context,
+    positionSeconds,
+    savedAt,
+    resumeKey,
+    resumeAttempts,
+    statusChannelId,
+  } = params;
   return {
-    version: 1,
+    version: 2,
     savedAt,
     guildId: context.guildId,
     channelId: context.channelId,
+    statusChannelId,
     loop: context.loop,
     volume: context.volume,
     current:

@@ -54,6 +54,23 @@ describe("parseYtdlpInfo / toResolvedSource", () => {
     const resolved = toResolvedSource(parseYtdlpInfo(SAMPLE));
     expect(resolved.title).toBe("Rick Astley - Never Gonna Give You Up");
     expect(resolved.ffmpegInput).toContain("googlevideo.com");
+    expect(resolved.chapters).toEqual([]);
+  });
+
+  test("maps yt-dlp chapters to 1-based chapters", () => {
+    const withChapters = JSON.stringify({
+      title: "A Talk",
+      url: "https://example.com/v.mp4",
+      chapters: [
+        { start_time: 0, end_time: 60, title: "Welcome" },
+        { start_time: 60, end_time: 600 },
+      ],
+    });
+    const resolved = toResolvedSource(parseYtdlpInfo(withChapters));
+    expect(resolved.chapters).toEqual([
+      { index: 1, title: "Welcome", startSeconds: 0, endSeconds: 60 },
+      { index: 2, title: "Chapter 2", startSeconds: 60, endSeconds: 600 },
+    ]);
   });
 
   test("rejects output missing required fields", () => {

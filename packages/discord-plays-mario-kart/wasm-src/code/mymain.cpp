@@ -27,20 +27,6 @@ extern "C" {
 #include "neil.h"
 
 int angryVerticalResolution = 240;
-
-// Headless framebuffer access: expose the angrylion software-rendered frame
-// (640 x angryVerticalResolution, RGBA) so a Node/Bun host can read it straight
-// out of wasm memory (the pokeemerald-VRAM pattern). No GPU / canvas needed.
-EMSCRIPTEN_KEEPALIVE int neilGetVideoBuffer() { return (int)(intptr_t)get_video_buffer(); }
-EMSCRIPTEN_KEEPALIVE int neilGetVideoHeight() { return angryVerticalResolution; }
-
-// Headless ROM injection (bypasses fopen/fseek which traps under Node).
-// volatile: the bytes are set externally via the exported neilSetRom, so LTO
-// must not assume g_injectedRomSize stays 0 (it would fold the check + DCE the
-// inject path, falling back to the trapping fseek read).
-uint8_t* volatile g_injectedRom = 0;
-volatile int g_injectedRomSize = 0;
-EMSCRIPTEN_KEEPALIVE void neilSetRom(int ptr, int size) { g_injectedRom = (uint8_t*)(intptr_t)ptr; g_injectedRomSize = size; }
 int mouseX = 0;
 int mouseY = 0;
 int mousePressed = 0;
@@ -741,21 +727,14 @@ int main(int argc, char* argv[])
     readConfig();
     readCheats();
 
-    uint8_t* filecontent; int fsize;
-    if (g_injectedRomSize > 0) {
-        // Headless (Node/Bun): ROM bytes injected via neilSetRom(), bypassing
-        // fopen/fseek (emscripten musl stdio seek traps outside the browser).
-        filecontent = g_injectedRom;
-        fsize = g_injectedRomSize;
-    } else {
-        FILE* f = fopen(rom_name, "rb");
-        fseek(f, 0, SEEK_END);
-        fsize = ftell(f);
-        fseek(f, 0, SEEK_SET);  /* same as rewind(f); */
-        filecontent = (uint8_t*)malloc(fsize);
-        fread(filecontent, 1, fsize, f);
-        fclose(f);
-    }
+    FILE* f = fopen(rom_name, "rb");
+    fseek(f, 0, SEEK_END);
+    int fsize = ftell(f);
+    fseek(f, 0, SEEK_SET);  /* same as rewind(f); */
+
+    uint8_t* filecontent = (uint8_t*)malloc(fsize);
+    fread(filecontent, 1, fsize, f);
+    fclose(f);
 
     bool loaded = retro_load_game_new(filecontent, fsize, loadEep, loadSra, loadFla);
     if (!loaded)
@@ -1920,32 +1899,6 @@ extern "C" {
         float axis1Float = std::stof(axis1String);
         neilbuttons[0].axis1 = -(int)((float)32000*axis1Float);
 
-	}
-
-    // Per-player variant for headless multi-controller input (Discord Plays
-    // Mario Kart). `player` indexes neilbuttons[0..NEILNUMCONTROLLERS-1].
-    // Must be called immediately before _runMainLoop() each tick (the core
-    // zeroes neilbuttons[*] at frame start, then polls input).
-    void neil_send_mobile_controls_player(int player, char* controls, char* axis0, char* axis1)
-	{
-        if (player < 0 || player >= NEILNUMCONTROLLERS) return;
-        if (controls[0]=='1') neilbuttons[player].upKey = true;
-        if (controls[1]=='1') neilbuttons[player].downKey = true;
-        if (controls[2]=='1') neilbuttons[player].leftKey = true;
-        if (controls[3]=='1') neilbuttons[player].rightKey = true;
-        if (controls[4]=='1') neilbuttons[player].aKey = true;
-        if (controls[5]=='1') neilbuttons[player].bKey = true;
-        if (controls[6]=='1') neilbuttons[player].startKey = true;
-        if (controls[7]=='1') neilbuttons[player].zKey = true;
-        if (controls[8]=='1') neilbuttons[player].lKey = true;
-        if (controls[9]=='1') neilbuttons[player].rKey = true;
-        if (controls[10]=='1') neilbuttons[player].cbUp = true;
-        if (controls[11]=='1') neilbuttons[player].cbDown = true;
-        if (controls[12]=='1') neilbuttons[player].cbLeft = true;
-        if (controls[13]=='1') neilbuttons[player].cbRight = true;
-
-        neilbuttons[player].axis0 =  (int)((float)32000 * std::stof(std::string(axis0)));
-        neilbuttons[player].axis1 = -(int)((float)32000 * std::stof(std::string(axis1)));
 	}
 
     void neil_set_buffer_remaining(int remaining)

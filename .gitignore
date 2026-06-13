@@ -45,6 +45,7 @@ packages/dpp/
 /.claude/hooks/*
 !/.claude/hooks/trust-mise.sh
 !/.claude/hooks/install-git-hooks.sh
+!/.claude/hooks/worktree-reminder.sh
 /.claude.json
 /.claude.json.*
 
@@ -117,3 +118,6 @@ packages/eslint-config/local.js
 packages/eslint-config/local.js.map
 packages/eslint-config/local.d.ts
 packages/eslint-config/local.d.ts.map
+
+# Agent scratch scripts for live Discord interaction (see discord skill)
+packages/streambot/scratch/

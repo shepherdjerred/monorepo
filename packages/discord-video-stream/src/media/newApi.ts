@@ -24,6 +24,7 @@ import { isBun, isDeno, isFiniteNonZero } from "../utils.js";
 import { AVCodecID } from "./LibavCodecId.js";
 import { createDecoder } from "./LibavDecoder.js";
 import { Encoders } from "./encoders/index.js";
+import { buildSoftwareVideoGraph } from "./videoGraph.js";
 
 import type { Request } from "zeromq";
 import type { SupportedVideoCodec } from "../utils.js";
@@ -31,6 +32,7 @@ import type { Streamer } from "../client/index.js";
 import type { EncoderSettingsGetter } from "./encoders/index.js";
 import type { VideoStreamInfo } from "./LibavDemuxer.js";
 import type { WebRtcConnWrapper } from "../client/voice/WebRtcWrapper.js";
+import type { StreamObserver } from "./StreamObserver.js";
 
 export type PrepareStreamOptions = {
   /**
@@ -119,10 +121,44 @@ export type PrepareStreamOptions = {
   customFfmpegFlags: string[];
 
   /**
+   * Burn this subtitle file into the video. The graph is composed by `prepareStream` itself: on
+   * the GPU pipeline the subtitles are rendered by libass onto a transparent BGRA canvas,
+   * uploaded, and composited with `overlay_vaapi` (the whole video path stays on the GPU); on the
+   * software path a `subtitles=` burn is appended after any HDR tonemap. Either way the burn is
+   * PTS-compensated for `startTime`, so cues stay correct across seeks. Incompatible with
+   * `noTranscoding` (throws).
+   */
+  subtitleBurn?: { path: string };
+
+  /**
+   * Color/transfer characteristics of the input. `"hdr"` (PQ/HLG sources) inserts a tonemap to
+   * BT.709 SDR — `tonemap_vaapi` on the GPU pipeline, a zimg/Hable chain on the software path —
+   * without which HDR output looks washed out. Ignored (with a warning) when `noTranscoding` is
+   * set. Default `"sdr"`.
+   */
+  inputColor: "sdr" | "hdr";
+
+  /**
    * Start playback at this offset, in seconds (ffmpeg input `-ss` seek). Fast and accurate for
    * seekable inputs. Used by the seekable player to restart a source at a new position.
    */
   startTime?: number;
+
+  /**
+   * Optional observability seam. When supplied, the ffmpeg command line, input codec metadata, and
+   * periodic transcode progress are forwarded to the observer. No effect on behavior.
+   */
+  observer?: StreamObserver;
+
+  /**
+   * Letterbox/pillarbox. After scaling the video to `width`x`height`, pad it onto a centered
+   * black canvas of these dimensions. Use to emit a fixed aspect ratio (e.g. 16:9) for content
+   * of a different aspect without stretching: set `width`/`height` to the aspect-correct content
+   * box and `pad` to the final canvas. Software path only — the pad runs before any GPU `hwupload`,
+   * so it composes with VAAPI raw-frame encoding; it is ignored when a hardware decode pipeline
+   * (`hardwareAcceleratedDecoding` + an encoder with `hwPipeline`) is active.
+   */
+  pad?: { width: number; height: number };
 };
 
 export type Controller = {
@@ -157,7 +193,10 @@ export function prepareStream(
     },
     customInputOptions: [],
     customFfmpegFlags: [],
+    subtitleBurn: undefined,
+    inputColor: "sdr",
     startTime: undefined,
+    pad: undefined,
   } satisfies PrepareStreamOptions;
 
   function mergeOptions(opts: Partial<PrepareStreamOptions>) {
@@ -212,10 +251,13 @@ export function prepareStream(
         opts.customInputOptions ?? defaultOptions.customInputOptions,
       customFfmpegFlags:
         opts.customFfmpegFlags ?? defaultOptions.customFfmpegFlags,
+      subtitleBurn: opts.subtitleBurn ?? defaultOptions.subtitleBurn,
+      inputColor: opts.inputColor ?? defaultOptions.inputColor,
       startTime:
         isFiniteNonZero(opts.startTime) && opts.startTime > 0
           ? opts.startTime
           : defaultOptions.startTime,
+      pad: opts.pad ?? defaultOptions.pad,
     } satisfies PrepareStreamOptions;
   }
 
@@ -235,6 +277,38 @@ export function prepareStream(
 
   // command creation
   const command = ffmpeg(input);
+
+  // Observability seam: forward the ffmpeg command line, input codec metadata, and periodic
+  // transcode progress to an optional observer. Registered before `command.run()` so no events are
+  // missed. Purely additive — no effect when `options.observer` is undefined.
+  const { observer } = options;
+  if (observer?.onCommand) {
+    command.on("start", (commandLine) => observer.onCommand?.(commandLine));
+  }
+  if (observer?.onCodecData) {
+    command.on("codecData", (data) => {
+      observer.onCodecData?.({
+        format: data.format,
+        duration: data.duration,
+        video: data.video,
+        audio: data.audio,
+        video_details: data.video_details,
+        audio_details: data.audio_details,
+      });
+    });
+  }
+  if (observer?.onProgress) {
+    command.on("progress", (progress) => {
+      observer.onProgress?.({
+        frames: progress.frames,
+        currentFps: progress.currentFps,
+        currentKbps: progress.currentKbps,
+        targetSize: progress.targetSize,
+        timemark: progress.timemark,
+        percent: progress.percent,
+      });
+    });
+  }
 
   // input seek: `-ss` before `-i` is a fast, accurate input seek for seekable sources.
   if (mergedOptions.startTime !== undefined) {
@@ -316,20 +390,76 @@ export function prepareStream(
     bitrateVideoMax,
     videoCodec,
   } = mergedOptions;
-  command.addOutputOption("-map 0:v");
 
   if (noTranscoding) {
+    // `noTranscoding` passes the input video through unmodified, so a filter graph can't apply.
+    // Fail fast instead of silently dropping a requested subtitle burn; an HDR input merely keeps
+    // its original transfer (the caller opted out of transcoding), so warn rather than throw.
+    if (mergedOptions.subtitleBurn !== undefined) {
+      throw new Error(
+        "subtitleBurn cannot be applied when noTranscoding is set: the input video stream is copied through unmodified. Disable noTranscoding to burn in subtitles.",
+      );
+    }
+    if (mergedOptions.inputColor === "hdr") {
+      new Log("prepareStream").warn(
+        "inputColor 'hdr' is ignored when noTranscoding is set: the video stream is copied through unmodified, so no tonemap can apply",
+      );
+    }
+    command.addOutputOption("-map 0:v");
     command.videoCodec("copy");
   } else {
     if (!encoderSettings)
       throw new Error(`Encoder settings not specified for ${videoCodec}`);
 
-    // Scale on the GPU when the encoder declares a hardware pipeline; otherwise software `scale`.
-    command.videoFilter(
-      hwPipeline
-        ? hwPipeline.scaleFilter(width, height)
-        : `scale=${width}:${height}`,
-    );
+    // Build the whole video graph with the pure builders in videoGraph.ts (unit-testable without
+    // spawning ffmpeg): scale (GPU when the encoder declares a hardware pipeline, else software
+    // `scale`), HDR tonemap, subtitle burn, and — software path only — the encoder's own output
+    // filters (on a GPU pipeline the frames are already hardware surfaces, so upload/format
+    // outFilters are unnecessary).
+    //
+    // On the software path an optional `pad` letterboxes/pillarboxes the scaled frame onto a
+    // centered black canvas (e.g. fit 4:3 content into a 16:9 output). `pad` is intentionally not
+    // supported on the GPU pipeline.
+    const { pad } = mergedOptions;
+    const padded = pad !== undefined && pad.width > 0 && pad.height > 0;
+    if (padded && hwPipeline) {
+      // The GPU pipeline scales with scale_vaapi and never consults `pad`; make
+      // the silent drop visible rather than emitting unexpectedly-unletterboxed output.
+      new Log("prepareStream").warn(
+        "`pad` (letterbox) is ignored when a hardware decode pipeline is active (scale_vaapi); " +
+          "use the software path (hardwareAcceleratedDecoding: false) for padded output",
+      );
+    }
+    const graphSpec = {
+      width,
+      height,
+      inputColor: mergedOptions.inputColor,
+      ...(frameRate !== undefined ? { frameRate } : {}),
+      ...(mergedOptions.subtitleBurn !== undefined
+        ? {
+            subtitle: {
+              path: mergedOptions.subtitleBurn.path,
+              startTime: mergedOptions.startTime ?? 0,
+            },
+          }
+        : {}),
+    };
+    const graph = hwPipeline
+      ? hwPipeline.videoGraph(graphSpec)
+      : buildSoftwareVideoGraph({
+          ...graphSpec,
+          ...(padded ? { pad } : {}),
+          encoderOutFilters: encoderSettings.outFilters ?? [],
+        });
+    if (graph.kind === "filterChain") {
+      command.addOutputOption("-map 0:v");
+      command.videoFilter(graph.filters);
+    } else {
+      // Multi-branch graph (GPU subtitle overlay): -filter_complex plus -map of its labeled
+      // output. `-map 0:v` must NOT be emitted alongside it — that would put a second, unfiltered
+      // video stream into the NUT output.
+      command.complexFilter(graph.graph, graph.mapLabel);
+    }
 
     if (frameRate) command.fpsOutput(frameRate);
 
@@ -351,11 +481,11 @@ export function prepareStream(
 
     command
       .videoCodec(encoderSettings.name)
-      // On a GPU pipeline the frames are already hardware surfaces, so the encoder's upload/format
-      // `outFilters` (hwupload, format=nv12|vaapi) are unnecessary.
-      .videoFilter(hwPipeline ? [] : (encoderSettings.outFilters ?? []))
       .outputOptions(encoderSettings.options)
-      .outputOptions(encoderSettings.globalOptions ?? []);
+      // `globalOptions` serve the software-decode path (device init for the outFilters hwupload).
+      // When the hardware pipeline is active its decodeOptions already initialized the same named
+      // device, and a second -init_hw_device with that name is a hard ffmpeg error.
+      .outputOptions(hwPipeline ? [] : (encoderSettings.globalOptions ?? []));
   }
 
   // audio setup
@@ -500,6 +630,12 @@ export type PlayStreamOptions = {
    * Enable stream preview from input stream (experimental)
    */
   streamPreview: boolean;
+
+  /**
+   * Optional observability seam. When supplied, per-frame send timing (frametime ratio) from the
+   * video/audio send path is forwarded to the observer. No effect on behavior.
+   */
+  observer?: StreamObserver;
 };
 
 const playStreamDefaultOptions = {
@@ -549,6 +685,8 @@ export function mergePlayStreamOptions(
         : playStreamDefaultOptions.readrateInitialBurst,
 
     streamPreview: opts.streamPreview ?? playStreamDefaultOptions.streamPreview,
+
+    observer: opts.observer,
   } satisfies PlayStreamOptions;
 }
 
@@ -613,12 +751,12 @@ export async function attachPipeline(
     });
   }
 
-  const vStream = new VideoStream(conn);
+  const vStream = new VideoStream(conn, false, options.observer);
   video.stream.pipe(vStream);
   // Hoisted so destroy() can tear the audio side down too (see the destroy closure below).
   let aStream: AudioStream | undefined;
   if (audio) {
-    const a = new AudioStream(conn);
+    const a = new AudioStream(conn, false, options.observer);
     aStream = a;
     audio.stream.pipe(a);
     vStream.syncStream = a;

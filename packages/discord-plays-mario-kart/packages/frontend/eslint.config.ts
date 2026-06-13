@@ -5,7 +5,7 @@ const config = [
     react: true,
     accessibility: true,
     projectService: {
-      allowDefaultProject: ["eslint.config.ts"],
+      allowDefaultProject: ["eslint.config.ts", "src/input-map.test.ts"],
     },
     ignores: ["vite.config.ts", "dist/**/*", "public/**/*"],
   }),

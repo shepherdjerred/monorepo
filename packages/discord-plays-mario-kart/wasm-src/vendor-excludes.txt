@@ -1,0 +1,11 @@
+# Paths removed from the upstream N64Wasm clone when vendoring (see vendor-n64wasm.sh).
+# One path per line, relative to the upstream repo root. Blank lines and #-comments ignored.
+#
+# Why these are removed:
+#   The Vulkan parallel-RDP / parallel-RSP renderer. It is dead code in our build
+#   (only compiled behind `#if defined(HAVE_PARALLEL)`, which the Makefile never
+#   defines — we use the angrylion software RDP for headless, GPU-less rendering).
+#   Removed to keep the vendored tree lean and under the repo's 5 MB per-file hook
+#   (the tree includes a 14 MB generated slangmosh.hpp shader header).
+code/src/mupen64plus-rsp-paraLLEl
+code/src/mupen64plus-video-paraLLEl

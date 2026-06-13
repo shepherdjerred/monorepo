@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
+import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
 import type {
   ChannelId,
   GuildId,
@@ -22,10 +23,27 @@ export type VoiceHandle = {
   readonly channelId: ChannelId;
 };
 
+/** A subtitle track staged to a safe temp file, ready to burn into the video. */
+export type ResolvedSubtitle = {
+  /** Safe temp file the ffmpeg `subtitles` filter reads. */
+  readonly path: string;
+  /** Temp file to unlink once the stream ends (always the staged copy — never a user file). */
+  readonly cleanupPath: string;
+};
+
 /** A source resolved to something ffmpeg can read (a local path or a direct stream URL). */
 export type ResolvedSource = {
   readonly title: string;
   readonly ffmpegInput: string;
+  /** Chapter markers (ffprobe for files, yt-dlp for URLs); empty when none are available. */
+  readonly chapters: readonly Chapter[];
+  /** Burnable subtitle for this source, if one was found and subtitles are enabled. */
+  readonly subtitle?: ResolvedSubtitle;
+  /**
+   * Input is HDR (PQ/HLG transfer, from the resolve-time ffprobe). Drives the HDR→SDR tonemap in
+   * the stream pipeline; absent (probe failed or SDR) → no tonemap.
+   */
+  readonly hdr?: boolean;
 };
 
 /** A queue entry: a requested source plus who asked for it. */

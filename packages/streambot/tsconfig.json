@@ -6,6 +6,12 @@
       "@shepherdjerred/streambot/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*", "test/**/*", "e2e/**/*", "eslint.config.ts"],
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "integration/**/*",
+    "e2e/**/*",
+    "eslint.config.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

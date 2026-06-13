@@ -147,6 +147,21 @@ export function tunnelDnsCoverageStep(): BuildkiteStep {
 }
 
 /**
+ * Verifies the pinned Talos installer in `patches/image.yaml` matches what the
+ * `image.yaml` schematic produces (queries the Image Factory). Drift means the
+ * node boots a stale schematic — e.g. silently dropping `lockdown=integrity`,
+ * which breaks eBPF profiling. See the 2026-06-13 talos/k8s upgrade log.
+ */
+export function talosSchematicSyncStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":talos: Talos Schematic Sync",
+    key: "talos-schematic-sync",
+    daggerCmd: `${DAGGER_CALL} talos-schematic-sync --source ${REPO_GIT_REF}`,
+    timeoutMinutes: 10,
+  });
+}
+
+/**
  * Verifies `react`/`react-dom` (and their `@types`) resolve to matching
  * versions in every `bun.lock`. A skew throws "Incompatible React versions" at
  * runtime — invisible to typecheck/build/test. See the mariokart.sjer.red

@@ -42,6 +42,23 @@ export const CADDY_IMAGE =
 // renovate: datasource=docker depName=caddy
 export const CADDY_BUILDER_IMAGE =
   "caddy:2.11.3-builder-alpine@sha256:3eae6b351ecdb05da6d16e341261a457692d344a435764c5ece7a60cf03a23f3";
+// xcaddy --with module for the S3 proxy plugin. The fork keeps the upstream
+// import path (existing Caddyfiles keep working) and adds HEAD support, the
+// 304-on-index fix, and 206/Accept-Ranges on byte-range responses (Safari
+// refuses to play video from origins that answer 200 to Range requests).
+// Not managed by renovate — bump the tag when the fork changes.
+export const CADDY_S3_PROXY_MODULE =
+  "github.com/lindenlab/caddy-s3-proxy=github.com/shepherdjerred/caddy-s3-proxy@v0.5.7-head2";
+// redlib is built from source ourselves (Dockerfile.ubuntu) rather than pulled
+// from quay. Upstream only publishes a musl/Alpine image whose TLS fingerprint
+// Reddit now blocks during OAuth (redlib-org/redlib#551 — "Failed to create
+// OAuth client: 401 Unauthorized"); the glibc Dockerfile.ubuntu build works.
+// The fingerprint fixes live on `main` — the last GitHub release (v0.36.0,
+// 2025-03) predates them, and the numerically-newest tag (v3.0.0) is a 2021
+// libreddit-era relic — so we pin main's HEAD commit and let Renovate's
+// dedicated git-refs custom manager (see renovate.json) advance it as main moves.
+// renovate: datasource=git-refs depName=redlib-source branch=main
+export const REDLIB_SOURCE_REF = "a4d36e954cf1bd64f209cd8868c5a29edc81b374";
 // Base image for obsidian-headless container (uses Node, not Bun, due to native better-sqlite3 addon).
 // renovate: datasource=docker depName=node
 export const OBSIDIAN_HEADLESS_BASE_IMAGE =
@@ -94,13 +111,13 @@ export const GOLANGCI_LINT_VERSION = "v2.12.2";
 export const GH_CLI_VERSION = "2.92.0";
 
 // renovate: datasource=github-releases depName=kubernetes/kubectl
-export const KUBECTL_VERSION = "v1.36.1";
+export const KUBECTL_VERSION = "v1.36.2";
 
 // renovate: datasource=github-releases depName=github/github-mcp-server
 export const GITHUB_MCP_SERVER_VERSION = "1.0.4";
 
 // renovate: datasource=github-releases depName=siderolabs/talos
-export const TALOSCTL_VERSION = "v1.13.3";
+export const TALOSCTL_VERSION = "v1.13.4";
 
 // renovate: datasource=github-releases depName=opentofu/opentofu
 export const TOFU_VERSION = "1.11.7";

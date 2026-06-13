@@ -93,6 +93,9 @@ export const staticSites: StaticSiteConfig[] = [
   { hostname: "ts-mc.net", bucket: "ts-mc" },
   { hostname: "cook.sjer.red", bucket: "cook" },
   { hostname: "stocks.sjer.red", bucket: "stocks-sjer-red" },
+  // Public artifact host. PR screenshots are served from the `pr/assets/<n>/`
+  // prefix; uploads go through `toolkit pr asset`.
+  { hostname: "public.sjer.red", bucket: "public-sjer-red" },
 ];
 
 export const S3_ENDPOINT = "https://seaweedfs.sjer.red";

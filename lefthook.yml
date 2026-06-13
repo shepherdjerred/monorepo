@@ -404,12 +404,13 @@ pre-commit:
             glob: "tsconfig.base.json"
             run: bun run typecheck
 
-          # --- Knip ---
-          - name: knip
-            glob:
-              - "**/package.json"
-              - "**/knip.json"
-            run: bunx knip --no-exit-code
+          # --- Knip: CI-only ---
+          # Knip is a whole-graph dead-code analysis: it loads every workspace
+          # declared in knip.json and needs all ~30 packages' deps installed to
+          # run. On the per-commit path that forced a full `scripts/setup.ts`
+          # install before any commit, which is expensive per-worktree. It runs
+          # in CI instead (the `knip-check` Dagger step in scripts/ci), so it
+          # stays off the commit hot path with no loss of coverage.
 
           # --- Compliance ---
           - name: compliance-check
@@ -434,6 +435,17 @@ pre-commit:
               - "packages/homelab/src/cdk8s/src/**/*.ts"
               - "packages/homelab/src/tofu/cloudflare/*.tf"
             run: bun scripts/check-tunnel-dns-coverage.ts
+
+          # --- Talos schematic sync ---
+          # The pinned installer in patches/image.yaml must match what the
+          # image.yaml schematic produces. Editing image.yaml (extraKernelArgs,
+          # systemExtensions) without regenerating the pin silently boots the old
+          # schematic — e.g. dropping lockdown=integrity and breaking eBPF.
+          - name: talos-schematic-sync
+            glob:
+              - "packages/homelab/src/talos/image.yaml"
+              - "packages/homelab/src/talos/patches/image.yaml"
+            run: bun packages/homelab/src/talos/update-image-id.ts --check
 
           # --- 1Password items & fields ---
           # Every cdk8s OnePasswordItem reference + consumed secret field must exist

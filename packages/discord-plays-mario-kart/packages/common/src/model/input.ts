@@ -67,6 +67,15 @@ export const SeatReleaseRequestSchema = z.strictObject({
   kind: z.literal("seat-release"),
 });
 
+// Client-measured socket round-trip time, reported periodically so the server
+// can export it as a metric. Client-side measurement avoids clock skew — the
+// browser times its own ping/ack round trip.
+export type LatencyReportRequest = z.infer<typeof LatencyReportRequestSchema>;
+export const LatencyReportRequestSchema = z.strictObject({
+  kind: z.literal("latency-report"),
+  rttMs: z.number().min(0).max(60_000),
+});
+
 // ---- responses (server -> client) ----
 export type SeatResponse = z.infer<typeof SeatResponseSchema>;
 export const SeatResponseSchema = z.strictObject({
@@ -77,5 +86,9 @@ export const SeatResponseSchema = z.strictObject({
 export type SeatsResponse = z.infer<typeof SeatsResponseSchema>;
 export const SeatsResponseSchema = z.strictObject({
   kind: z.literal("seats"),
-  value: z.strictObject({ occupied: z.array(z.boolean()) }),
+  value: z.strictObject({
+    occupied: z.array(z.boolean()),
+    // Display name per seat (index-aligned with `occupied`); null = unnamed.
+    names: z.array(z.string().nullable()),
+  }),
 });

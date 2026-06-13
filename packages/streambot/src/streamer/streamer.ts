@@ -1,3 +1,4 @@
+import { rm } from "node:fs/promises";
 import { Client } from "discord.js-selfbot-v13";
 import {
   Encoders,
@@ -10,12 +11,26 @@ import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type {
   JoinVoiceInput,
   LeaveVoiceInput,
+  ResolvedSubtitle,
   RunStreamInput,
   VoiceHandle,
 } from "@shepherdjerred/streambot/machine/types.ts";
 import { computeElapsed } from "@shepherdjerred/streambot/streamer/elapsed.ts";
+import {
+  GuildIdSchema,
+  type GuildId,
+  type UserToken,
+} from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import { createStreamObserver } from "@shepherdjerred/streambot/observability/stream-observer.ts";
+import {
+  hwFallbackTotal,
+  streamActive,
+  streamHardware,
+  streamSegmentDurationSeconds,
+  streamSegmentsTotal,
+} from "@shepherdjerred/streambot/observability/metrics.ts";
 
 const log = logger.child("streamer");
 
@@ -31,10 +46,31 @@ const log = logger.child("streamer");
 /** Factory for the seekable player — injectable so tests can drive playback without a live stream. */
 export type PlayerFactory = typeof createSeekablePlayer;
 
-export class StreambotStreamer {
+/**
+ * The streamer surface the pool/session layer depends on. Lets a {@link UserbotEntry} hold a real
+ * {@link StreambotStreamer} in production and a lightweight fake in tests without type assertions.
+ */
+export type StreamerLike = {
+  joinVoice: (
+    input: JoinVoiceInput,
+    signal: AbortSignal,
+  ) => Promise<VoiceHandle>;
+  runStream: (input: RunStreamInput, signal: AbortSignal) => Promise<void>;
+  leaveVoice: (input: LeaveVoiceInput, signal: AbortSignal) => Promise<void>;
+  setVolume: (percent: number) => Promise<boolean>;
+  seek: (seconds: number) => Promise<boolean>;
+  getPosition: () => number | null;
+  userId: () => string | null;
+  destroy: () => Promise<void>;
+};
+
+export class StreambotStreamer implements StreamerLike {
   private readonly client: Client;
   private readonly streamer: Streamer;
-  private readonly config: Config;
+  /** This userbot's account token (one per pool entry). */
+  private readonly userToken: UserToken;
+  /** Only `config.stream.*` is read here; the discord token comes from {@link userToken}. */
+  private readonly config: Pick<Config, "stream">;
   /** Injectable clock (ms) so position tracking is deterministic in tests. */
   private readonly now: () => number;
   /** Injectable player factory (defaults to the fork's real one) so tests can supply a fake. */
@@ -48,10 +84,12 @@ export class StreambotStreamer {
   private segmentStartedAtMs: number | null = null;
 
   constructor(
-    config: Config,
+    userToken: UserToken,
+    config: Pick<Config, "stream">,
     now: () => number = Date.now,
     createPlayer: PlayerFactory = createSeekablePlayer,
   ) {
+    this.userToken = userToken;
     this.config = config;
     this.now = now;
     this.createPlayer = createPlayer;
@@ -59,14 +97,35 @@ export class StreambotStreamer {
     this.streamer = new Streamer(this.client);
   }
 
+  /**
+   * Log in and wait for the gateway to finish hydrating — `client.guilds.cache` is empty until the
+   * `ready` event fires, so the pool's membership snapshot ({@link guildIds}) would be wrong if we
+   * resolved on login alone.
+   */
   async login(): Promise<void> {
-    await this.client.login(this.config.discord.userToken);
-    log.info("streamer logged in", { user: this.client.user?.username });
+    const ready = new Promise<void>((resolve) => {
+      this.client.once("ready", () => {
+        resolve();
+      });
+    });
+    await this.client.login(this.userToken);
+    await ready;
+    log.info("streamer logged in", {
+      user: this.client.user?.username,
+      guilds: this.client.guilds.cache.size,
+    });
   }
 
   /** Discord user id of the logged-in streamer (for the alone-in-VC check), or null. */
   userId(): string | null {
     return this.client.user?.id ?? null;
+  }
+
+  /** Guild ids this userbot is a member of (snapshot of the gateway cache after {@link login}). */
+  guildIds(): GuildId[] {
+    return [...this.client.guilds.cache.keys()].map((id) =>
+      GuildIdSchema.parse(id),
+    );
   }
 
   async destroy(): Promise<void> {
@@ -151,25 +210,50 @@ export class StreambotStreamer {
     input: RunStreamInput,
     signal: AbortSignal,
   ): Promise<void> => {
+    // Subtitles no longer disqualify VAAPI: prepareStream composes them as a GPU overlay branch
+    // (libass alpha canvas → hwupload → overlay_vaapi), so decode, scale, tonemap, and encode all
+    // stay on the GPU even with burned-in subs. The HW→SW retry below remains the safety net for
+    // graph features the device lacks (tonemap_vaapi/overlay_vaapi on older iGPUs).
     const useHardware = this.config.stream.hardwareAcceleration;
     try {
-      // Start at the resume offset (0 for a fresh play; >0 when resuming after a restart).
-      await this.streamOnce(input, signal, useHardware, input.seekSeconds);
-    } catch (error) {
-      if (useHardware && !signal.aborted) {
-        // Resume the software retry at wherever playback (incl. any live seek) had reached, rather
-        // than restarting the video from 0.
-        const resumeAt = this.lastPlaybackPositionSeconds;
-        log.warn("hardware (VAAPI) encode failed; retrying with software", {
-          error: getErrorMessage(error),
-          resumeAt,
-        });
-        await this.streamOnce(input, signal, false, resumeAt);
-        return;
+      try {
+        // Start at the resume offset (0 for a fresh play; >0 when resuming after a restart).
+        await this.streamOnce(input, signal, useHardware, input.seekSeconds);
+      } catch (error) {
+        if (useHardware && !signal.aborted) {
+          // Resume the software retry at wherever playback (incl. any live seek) had reached, rather
+          // than restarting the video from 0.
+          const resumeAt = this.lastPlaybackPositionSeconds;
+          hwFallbackTotal.inc();
+          log.warn("hardware (VAAPI) encode failed; retrying with software", {
+            error: getErrorMessage(error),
+            resumeAt,
+          });
+          await this.streamOnce(input, signal, false, resumeAt);
+          return;
+        }
+        throw error;
       }
-      throw error;
+    } finally {
+      // Drop the staged subtitle temp file once the whole track is done (covers both encode attempts
+      // and every in-segment seek, which reuse the same file).
+      await this.cleanupSubtitle(input.resolved.subtitle);
     }
   };
+
+  private async cleanupSubtitle(
+    subtitle: ResolvedSubtitle | undefined,
+  ): Promise<void> {
+    if (subtitle === undefined) return;
+    try {
+      await rm(subtitle.cleanupPath, { force: true });
+    } catch (error) {
+      log.warn("failed to remove subtitle temp file", {
+        path: subtitle.cleanupPath,
+        error: getErrorMessage(error),
+      });
+    }
+  }
 
   private async streamOnce(
     input: RunStreamInput,
@@ -190,6 +274,13 @@ export class StreambotStreamer {
       hardwareAcceleratedDecoding: useHardware,
       minimizeLatency: false,
       ...(startSeconds > 0 ? { startTime: startSeconds } : {}),
+      ...(input.resolved.subtitle
+        ? { subtitleBurn: { path: input.resolved.subtitle.path } }
+        : {}),
+      // HDR sources get tonemapped to BT.709 SDR by the pipeline (tonemap_vaapi on the GPU path,
+      // a zimg chain on the software path) — without it, PQ/HLG content looks washed out.
+      inputColor:
+        input.resolved.hdr === true ? ("hdr" as const) : ("sdr" as const),
       ...(useHardware
         ? { encoder: Encoders.vaapi({ device: stream.vaapiDevice }) }
         : {}),
@@ -200,6 +291,10 @@ export class StreambotStreamer {
       hardware: useHardware,
     });
 
+    // Observability seam — forwards ffmpeg command/codec/progress and send-frametime stats to the
+    // Prometheus metrics. Passed to both prepare (ffmpeg events) and play (send stats).
+    const observer = createStreamObserver(useHardware, this.now);
+
     // The seekable player owns prepare+play on a single Go-Live connection. `finished` resolves at
     // the true end of playback (or on stop) and rejects on an ffmpeg/encode failure — folding in the
     // play/ffmpeg-failure race the old code did by hand, and letting `/stream seek` restart ffmpeg at
@@ -208,8 +303,8 @@ export class StreambotStreamer {
       this.streamer,
       input.resolved.ffmpegInput,
       {
-        prepare: prepareOpts,
-        play: { type: "go-live" },
+        prepare: { ...prepareOpts, observer },
+        play: { type: "go-live", observer },
       },
     );
     this.player = player;
@@ -223,6 +318,11 @@ export class StreambotStreamer {
       signal.addEventListener("abort", onAbort, { once: true });
     }
 
+    const segmentHardware = useHardware ? "true" : "false";
+    const segmentStartedMs = this.now();
+    streamActive.set(1);
+    streamHardware.set(useHardware ? 1 : 0);
+    let outcome: "ended" | "error" = "ended";
     try {
       await player.start();
       // Anchor the elapsed clock at the segment's start offset so getPosition() tracks live position.
@@ -234,6 +334,9 @@ export class StreambotStreamer {
         log.warn("initial setVolume failed", { error: getErrorMessage(error) });
       }
       await player.finished;
+    } catch (error) {
+      outcome = "error";
+      throw error;
     } finally {
       signal.removeEventListener("abort", onAbort);
       // Capture where playback reached (incl. live seeks) before dropping the player, so a HW→SW
@@ -244,6 +347,13 @@ export class StreambotStreamer {
       if (this.player === player) {
         this.player = null;
       }
+      streamActive.set(0);
+      const durationSeconds = (this.now() - segmentStartedMs) / 1000;
+      streamSegmentsTotal.inc({ hardware: segmentHardware, outcome });
+      streamSegmentDurationSeconds.observe(
+        { hardware: segmentHardware, outcome },
+        durationSeconds,
+      );
     }
     log.info("stream ended", { title: input.resolved.title });
   }

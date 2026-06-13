@@ -7,7 +7,17 @@ import {
   KEYINPUT,
   KEY_MASK,
 } from "./constants.ts";
+import {
+  emulateMs,
+  copyMs,
+  lateMs,
+  ticksTotal,
+  loopResyncTotal,
+  frameHookErrorsTotal,
+} from "#src/observability/metrics.ts";
 import { logger } from "#src/logger.ts";
+import { createMemoryReader, type MemoryReader } from "./memory.ts";
+import { createGameSymbols, type GameSymbols } from "./symbols.ts";
 
 // Minimal view of the wasm exports we depend on, validated at runtime so we
 // never assert types we haven't checked.
@@ -56,11 +66,15 @@ export class Emulator {
   private readonly options: EmulatorOptions;
 
   private exports: WasmExports | undefined;
+  private rawExports: WebAssembly.Exports | undefined;
+  private cachedMemoryReader: MemoryReader | undefined;
+  private cachedGameSymbols: GameSymbols | undefined;
   private u16 = new Uint16Array(0);
   private currentFrame = 0;
 
   private readonly queue: QueueStep[] = [];
   private onFrameCb: ((rgba: Buffer) => void) | undefined;
+  private readonly frameHooks: ((frame: number) => void)[] = [];
 
   private loopTimer: ReturnType<typeof setTimeout> | undefined;
   private nextTickAt = 0;
@@ -83,6 +97,7 @@ export class Emulator {
     );
 
     const memory = requireMemory(instance.exports);
+    this.rawExports = instance.exports;
     this.exports = {
       memory,
       agbMain: requireFunction(instance.exports, "AgbMain"),
@@ -108,6 +123,33 @@ export class Emulator {
 
   onFrame(cb: (rgba: Buffer) => void): void {
     this.onFrameCb = cb;
+  }
+
+  /**
+   * Register a hook invoked after every emulated frame. Hooks are isolated:
+   * a throwing hook is logged and counted, never breaking the frame loop or
+   * other hooks. Used for game-state polling (event notifications).
+   */
+  addFrameHook(cb: (frame: number) => void): void {
+    this.frameHooks.push(cb);
+  }
+
+  /** Typed read-only access to the wasm linear memory. Valid after init(). */
+  memoryReader(): MemoryReader {
+    if (this.exports === undefined) {
+      throw new Error("emulator is not initialized");
+    }
+    this.cachedMemoryReader ??= createMemoryReader(this.exports.memory);
+    return this.cachedMemoryReader;
+  }
+
+  /** Addresses of the game-state globals. Valid after init(). */
+  gameSymbols(): GameSymbols {
+    if (this.rawExports === undefined) {
+      throw new Error("emulator is not initialized");
+    }
+    this.cachedGameSymbols ??= createGameSymbols(this.rawExports);
+    return this.cachedGameSymbols;
   }
 
   /** Render the current frame to a fresh RGBA buffer (for screenshots). */
@@ -180,13 +222,26 @@ export class Emulator {
     }
 
     this.setKeys(mask);
+    const emulateStart = performance.now();
     exports.runFrame();
+    emulateMs.observe(performance.now() - emulateStart);
     this.currentFrame += 1;
 
     if (this.onFrameCb !== undefined) {
+      const copyStart = performance.now();
       const rgba = this.renderer.render();
       this.onFrameCb(Buffer.from(rgba));
+      copyMs.observe(performance.now() - copyStart);
     }
+    for (const hook of this.frameHooks) {
+      try {
+        hook(this.currentFrame);
+      } catch (error) {
+        frameHookErrorsTotal.inc();
+        logger.error("frame hook failed", error);
+      }
+    }
+    ticksTotal.inc();
 
     const interval = this.options.saveIntervalFrames ?? 60;
     if (this.currentFrame % interval === 0) this.saveIfChanged(false);
@@ -195,7 +250,11 @@ export class Emulator {
     // behind by more than a few frames (e.g. the process was paused), resync
     // rather than sprinting to catch up.
     this.nextTickAt += FRAME_MS;
-    if (performance.now() - this.nextTickAt > 250) {
+    // behind > 0 means the tick overran its budget.
+    const behind = performance.now() - this.nextTickAt;
+    lateMs.observe(Math.max(0, behind));
+    if (behind > 250) {
+      loopResyncTotal.inc();
       this.nextTickAt = performance.now();
     }
     this.scheduleNext();
