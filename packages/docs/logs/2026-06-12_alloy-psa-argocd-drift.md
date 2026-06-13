@@ -46,23 +46,33 @@ User asked to apply the fix live to test. Result: the PSA fix works, but alloy e
 
 Live state at session end: alloy ns has PSA labels, node has `kptr_restrict=1`, live alloy Application targetRevision=1.10.0 (matches the versions.ts bump in the PR, so no drift post-merge). Alloy pod Running but `pyroscope.ebpf` component unhealthy (lockdown).
 
+## Lockdown switch (2026-06-12 late evening) — owner approved, executed, verified
+
+Owner chose to relax kernel lockdown to `integrity`. Execution notes:
+
+1. Added `[-lockdown, lockdown=integrity]` to `src/talos/image.yaml`, regenerated schematic via `update-image-id.ts` → `ef9feacc2b73…`, refreshed the (stale) installer digest from the factory registry.
+2. **`talosctl upgrade` gotcha #1**: a `repo:tag@digest` image reference fails — containerd pulls by digest but the installer looks up `tag@digest` in the store and misses ("not found in containerd store"). Use the tag-only reference.
+3. **`talosctl upgrade` gotcha #2**: the upgrade's node drain deadlocked on the postgres-operator's PDBs (`minAvailable: 1` on 1-replica postgres clusters in bugsink/temporal/plausible — can never be satisfied on a single node). The drain timed out, the upgrade aborted safely, and **the node was left cordoned** with evicted pods Pending. Fixed by deleting the 6 PDBs by hand and retrying; permanent fix in code: `configKubernetes.enable_pod_disruption_budget: false` on the postgres-operator (also covers a 4th PDB pair in `prometheus/postgres-grafana-*`).
+4. Upgrade succeeded; node booted `7c20468c…` with lockdown `[integrity]`. Talos did NOT auto-uncordon (cordon predated the successful upgrade attempt) — manual `kubectl uncordon torvalds`.
+5. **End-to-end verified**: alloy 2/2, eBPF tracer loads, 0 push errors, ArgoCD alloy app **Healthy** (first time ever), and Pyroscope `LabelValues` returns `service_name` entries for every workload on the node (birmel, streambot, dagger-engine, kube-apiserver, …).
+
 ## Session Log — 2026-06-12
 
 ### Done
 
 - Health check of Talos / K8s / ArgoCD (all findings above).
-- PR [#1126](https://github.com/shepherdjerred/monorepo/pull/1126) (`fix/alloy-psa-and-argocd-drift`): alloy namespace PSA labels, removal of `group: ""` from three minecraft `ignoreDifferences`, `sysctls.yaml` Talos patch (kptr_restrict=1, applied live), alloy chart bump 1.8.2 → 1.10.0 (matches live), Talos README docs.
-- Live-verified: PSA fix works (pod schedules/runs); minecraft drift fix needs no live action (live CRs already lack `group: ""`).
+- PR [#1126](https://github.com/shepherdjerred/monorepo/pull/1126): alloy namespace PSA labels; minecraft `ignoreDifferences` drift fix; `sysctls.yaml` Talos patch (kptr_restrict=1); alloy chart bump 1.8.2 → 1.10.0; Talos image schematic with `lockdown=integrity` (+ refreshed digest); postgres-operator `enable_pod_disruption_budget: false`; Talos README docs.
+- All of it applied live and verified: node upgraded/rebooted to the new image, alloy eBPF profiling works end-to-end into Pyroscope, ArgoCD alloy app Healthy.
 
 ### Remaining
 
-- **Owner decision**: change Talos kernel lockdown confidentiality → integrity (new image schematic + `talosctl upgrade` + reboot) to make alloy eBPF actually profile, or park/remove alloy. Until then the alloy app stays Progressing with an unhealthy `pyroscope.ebpf` component.
-- Merge #1126; post-merge confirm `apps` goes Synced and alloy stays as live-tested.
-- **mcp-gateway still Degraded** (missing `FASTMAIL_TOKEN` key in `mcp-gateway-credentials`) — separate fix needed, not in scope of this PR.
+- Merge #1126. Post-merge: `apps` goes Synced (live alloy targetRevision already 1.10.0); the operator deletes the remaining `prometheus/postgres-grafana-*` PDBs once the disabled-PDB config syncs.
+- **mcp-gateway still Degraded** (missing `FASTMAIL_TOKEN` key in `mcp-gateway-credentials`, ~4.7 days) — separate fix needed.
+- bugsink/plausible/temporal showed Degraded briefly post-reboot (pods all Running; ArgoCD health lagging) — expected to self-clear; re-check if not.
 
 ### Caveats
 
-- The rendered Namespace carries `namespace: argocd` metadata (chart default); harmless for cluster-scoped resources and identical to the working buildkite pattern.
-- First fix attempt blamed the API server for dropping `group: ""`; live prometheus disproved that. Comments/PR describe the real omitempty round-trip mechanism.
-- `kptr_restrict=1` is a (mild) hardening relaxation that currently buys nothing while lockdown blocks eBPF; trivially revertible (`talosctl patch` back to "2" + delete sysctls.yaml) if alloy is dropped instead.
-- Alloy was Progressing since 2026-06-08 with zero pods and nothing alerted on it — a DaemonSet with desired>0/current=0 or an app stuck Progressing >1h may deserve an alert.
+- Kernel hardening posture changed deliberately: lockdown confidentiality → integrity and kptr_restrict 2 → 1, both to enable eBPF profiling. Revert = remove the two extraKernelArgs from image.yaml + sysctls.yaml, regen schematic, upgrade.
+- The first upgrade attempt's abort left the node cordoned with most workloads evicted — that's the failure mode if a drain-blocking PDB ever reappears.
+- First drift diagnosis blamed the API server for dropping `group: ""`; live prometheus disproved that (real cause: ArgoCD Go `omitempty` round-trip).
+- Alloy was Progressing since 2026-06-08 with zero pods and nothing alerted — a DaemonSet desired>0/current=0 or app Progressing >1h alert may be worth adding.
