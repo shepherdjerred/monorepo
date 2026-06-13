@@ -22,6 +22,17 @@ export function makeScreenshot(emulator: N64Emulator) {
     interaction: CommandInteraction,
   ) {
     const frame = emulator.renderFrame();
+    // Before the emulator's first rendered frame, renderFrame() returns
+    // height 0; encodeScreenshotPng would then throw a RangeError out of this
+    // async handler. Mirror dispatch.ts's `frame.height === 0` guard and reply
+    // with a friendly message instead. (See handleRequest screenshot branch.)
+    if (frame.height === 0 || frame.width === 0) {
+      await interaction.reply({
+        ephemeral: true,
+        content: "No frame rendered yet, try again in a moment.",
+      });
+      return;
+    }
     const buffer = encodeScreenshotPng(frame);
     const date = new Date();
     const attachment = new AttachmentBuilder(buffer, {
