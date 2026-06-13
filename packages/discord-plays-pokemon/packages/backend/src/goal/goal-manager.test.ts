@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import path from "node:path";
 import type { Config } from "#src/config/schema.ts";
+import { DISCORD_MESSAGE_LIMIT } from "./discord-message.ts";
 import {
   GoalManager,
   type GoalDiscordMessage,
@@ -56,6 +57,14 @@ function makeProcess(): GoalProcess & {
 
 async function noopSendMessage(): Promise<void> {
   await Bun.sleep(0);
+}
+
+function codePointLength(value: string): number {
+  let length = 0;
+  for (const _codePoint of value) {
+    length += 1;
+  }
+  return length;
 }
 
 describe("GoalManager", () => {
@@ -274,6 +283,69 @@ describe("GoalManager", () => {
     expect(await manager.publishProgress("I am now walking north")).toBe(true);
     expect(messages).toHaveLength(1);
     expect(messages[0]?.content).toContain("I am now walking north");
+    await manager.shutdown();
+  });
+});
+
+describe("GoalManager final report", () => {
+  const originalOpenAiKey = Bun.env.OPENAI_API_KEY;
+
+  beforeEach(() => {
+    Bun.env.OPENAI_API_KEY = "test-key";
+  });
+
+  afterEach(() => {
+    if (originalOpenAiKey === undefined) {
+      delete Bun.env.OPENAI_API_KEY;
+    } else {
+      Bun.env.OPENAI_API_KEY = originalOpenAiKey;
+    }
+  });
+
+  test("truncates an oversized final report to Discord's limit", async () => {
+    const runtimeDirectory = await createRuntimeDirectory();
+    const process = makeProcess();
+    const messages: GoalDiscordMessage[] = [];
+    const config = makeGoalConfig(runtimeDirectory);
+    const manager = new GoalManager({
+      config,
+      controlToken: "token",
+      spawner: () => process,
+      sendMessage: async (message) => {
+        messages.push(message);
+      },
+      now: () => new Date("2026-06-13T00:00:00.000Z"),
+    });
+
+    const start = await manager.startGoal({
+      goal: "Reach Petalburg",
+      requesterId: "user-a",
+      channelId: "channel",
+    });
+    expect(start.kind).toBe("started");
+
+    const goalId = manager.getStatus()?.id;
+    expect(goalId).toBeDefined();
+    const outputPath = path.resolve(
+      runtimeDirectory,
+      config.screenshot_dir,
+      `${String(goalId)}-final.txt`,
+    );
+    // A multi-paragraph report well over the 2000-char Discord limit.
+    await Bun.write(outputPath, "z".repeat(DISCORD_MESSAGE_LIMIT * 2));
+
+    process.finish(0);
+    // observeProcess awaits process.exited, then reads/persists state before
+    // sending; poll briefly for the completion message to be delivered.
+    for (let attempt = 0; attempt < 50 && messages.length === 0; attempt += 1) {
+      await Bun.sleep(1);
+    }
+
+    expect(messages).toHaveLength(1);
+    const content = messages[0]?.content ?? "";
+    expect(codePointLength(content)).toBeLessThanOrEqual(DISCORD_MESSAGE_LIMIT);
+    expect(content.endsWith("… (truncated)")).toBe(true);
+    expect(content).toContain("goal finished");
     await manager.shutdown();
   });
 });

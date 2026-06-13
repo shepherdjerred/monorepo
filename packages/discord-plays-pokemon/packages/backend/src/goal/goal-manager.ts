@@ -5,6 +5,7 @@ import {
   buildCodexCredentialEnvironment,
   hasCodexCredential,
 } from "./codex-auth.ts";
+import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
 
 export type GoalStatus =
   | "running"
@@ -100,10 +101,6 @@ function defaultSpawner(
     stdout: "pipe",
     stderr: "pipe",
   });
-}
-
-function sanitizeDiscordText(value: string): string {
-  return value.replaceAll("@", "@\u200B");
 }
 
 async function streamToLog(
@@ -265,9 +262,9 @@ export class GoalManager {
     await this.persistState(active.state);
     await this.sendMessage({
       channelId: active.state.channelId,
-      content: `<@${active.state.requestedBy}> goal update: ${sanitizeDiscordText(
-        trimmed,
-      )}`,
+      content: truncateForDiscord(
+        `<@${active.state.requestedBy}> goal update: ${sanitizeDiscordText(trimmed)}`,
+      ),
       allowedUserIds: [active.state.requestedBy],
     });
     return true;
@@ -431,9 +428,11 @@ export class GoalManager {
 
     await this.sendMessage({
       channelId: active.state.channelId,
-      content: `<@${active.state.requestedBy}> goal ${
-        exitCode === 0 ? "finished" : "stopped with an error"
-      }: ${sanitizeDiscordText(report)}`,
+      content: truncateForDiscord(
+        `<@${active.state.requestedBy}> goal ${
+          exitCode === 0 ? "finished" : "stopped with an error"
+        }: ${sanitizeDiscordText(report)}`,
+      ),
       allowedUserIds: [active.state.requestedBy],
     });
   }

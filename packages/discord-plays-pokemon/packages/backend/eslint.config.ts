@@ -10,6 +10,7 @@ const config = [
         "src/game/command/chord.test.ts",
         "src/game/command/command-input.test.ts",
         "src/emulator/buttons.test.ts",
+        "src/goal/discord-message.test.ts",
         "src/goal/goal-manager.test.ts",
         "src/stream/stream-machine.test.ts",
         "src/stream/orchestrator-machine.test.ts",
