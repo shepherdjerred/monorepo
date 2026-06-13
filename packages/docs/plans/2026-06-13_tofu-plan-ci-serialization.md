@@ -59,12 +59,12 @@ generator still run the plan via `buildAll`.
 ### Done
 
 - Implemented both fixes in worktree `feature/tofu-plan-parallelize`; 6 files changed.
-- Tests/typecheck/hygiene all green.
+- Tests/typecheck/hygiene all green. Opened PR #1160.
 
 ### Remaining
 
-- Open PR; confirm post-merge that homelab cdk8s-only PRs skip `homelab-tofu-plan` and
-  that tofu-source PRs still run all three plans in parallel without queuing.
+- Confirm post-merge that homelab cdk8s-only PRs skip `homelab-tofu-plan` and that
+  tofu-source PRs still run all three plans in parallel without queuing.
 
 ### Caveats
 
