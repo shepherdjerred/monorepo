@@ -109,9 +109,25 @@ export function qualityRatchetHelper(source: Directory): Container {
  * (`scripts/check-todos.ts`). This runs in the lefthook pre-commit hook; the
  * Dagger wrapper adds the matching CI gate so a `--no-verify` commit can't
  * bypass it.
+ *
+ * `check-todos.ts` uses `rg` (ripgrep) to scan source markers; the oven/bun
+ * base image does not ship it, so we install it here. Bun's `$` shell returns
+ * exit code 1 for both "command not found" and "no matches found", which means
+ * a missing `rg` would silently produce an empty marker list and trigger false
+ * stale-source-marker-claim errors for every doc with `source_marker: true`.
  */
 export function checkTodosHelper(source: Directory): Container {
-  return bunQualityBase(source).withExec(["bun", "scripts/check-todos.ts"]);
+  return bunQualityBase(source)
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "ripgrep",
+    ])
+    .withExec(["bun", "scripts/check-todos.ts"]);
 }
 
 /**
