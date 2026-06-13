@@ -2,6 +2,7 @@ import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
 // The Kueue Helm chart uses a single YAML string for the entire controller config.
 // Individual top-level values don't work — must override the full controllerManagerConfigYaml.
@@ -44,6 +45,28 @@ export function createKueueApp(chart: Chart) {
     },
   });
 
+  const kueueValues: HelmValuesForChart<"kueue"> = {
+    controllerManager: {
+      manager: {
+        priorityClassName: "infrastructure-critical",
+        // Chart defaults request 500m/512Mi; 30d peak is ~50m / ~240Mi.
+        resources: {
+          requests: {
+            cpu: "100m",
+            memory: "256Mi",
+          },
+          limits: {
+            cpu: "1000m",
+            memory: "512Mi",
+          },
+        },
+      },
+    },
+    managerConfig: {
+      controllerManagerConfigYaml: KUEUE_CONFIG_YAML,
+    },
+  };
+
   return new Application(chart, "kueue-app", {
     metadata: {
       name: "kueue",
@@ -60,29 +83,7 @@ export function createKueueApp(chart: Chart) {
         chart: "kueue",
         targetRevision: versions.kueue.split("@")[0] ?? versions.kueue,
         helm: {
-          // Untyped: this is an OCI-registry chart, not yet covered by
-          // HelmValuesForChart. See packages/docs/todos/oci-helm-chart-types.md.
-          valuesObject: {
-            controllerManager: {
-              manager: {
-                priorityClassName: "infrastructure-critical",
-                // Chart defaults request 500m/512Mi; 30d peak is ~50m / ~240Mi.
-                resources: {
-                  requests: {
-                    cpu: "100m",
-                    memory: "256Mi",
-                  },
-                  limits: {
-                    cpu: "1000m",
-                    memory: "512Mi",
-                  },
-                },
-              },
-            },
-            managerConfig: {
-              controllerManagerConfigYaml: KUEUE_CONFIG_YAML,
-            },
-          },
+          valuesObject: kueueValues,
         },
       },
       destination: {

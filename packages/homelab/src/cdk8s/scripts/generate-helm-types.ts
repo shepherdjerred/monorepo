@@ -31,9 +31,17 @@ async function main() {
   }
 }
 
+const MAX_FETCH_ATTEMPTS = 3;
+const RETRY_BACKOFF_MS = 3000;
+
 async function generateHelmTypes() {
-  // Clean up existing types directory
-  await Bun.$`rm -rf ${OUTPUT_DIR}`.quiet();
+  // Do NOT wipe the output directory: chart fetches hit the network and can
+  // flake transiently. A blanket `rm -rf` followed by per-chart regeneration
+  // means a single flaky fetch silently deletes a committed type file (the
+  // historical promtail/kube-prometheus-stack drift). Instead, write each file
+  // in place, keep existing files on failure, prune only charts that no longer
+  // exist in versions.ts, and fail the whole run if any chart could not be
+  // generated — so a partial/destructive tree is never produced.
   await Bun.$`mkdir -p ${OUTPUT_DIR}`.quiet();
 
   // Parse chart information from versions.ts
@@ -50,31 +58,57 @@ async function generateHelmTypes() {
     console.log(`   - ${chart.name} (${chart.version}) from ${chart.repoUrl}`);
   });
 
-  // Generate types for each chart
-  const generatedFiles: string[] = [];
+  // Generate types for each chart, retrying transient (network) fetch failures.
+  const failures: string[] = [];
 
   for (const chart of charts) {
-    try {
-      console.log(`\n🔍 Processing ${chart.name}...`);
-
-      await generateChartTypes(chart);
-      generatedFiles.push(`${chart.name}.types.ts`);
-      console.log(`✅ Generated types for ${chart.name}`);
-    } catch (error) {
-      console.error(`❌ Failed to process ${chart.name}:`, error);
-      console.error(`   Skipping ${chart.name} and continuing...`);
+    console.log(`\n🔍 Processing ${chart.name}...`);
+    let generated = false;
+    for (let attempt = 1; attempt <= MAX_FETCH_ATTEMPTS; attempt++) {
+      try {
+        await generateChartTypes(chart);
+        generated = true;
+        console.log(`✅ Generated types for ${chart.name}`);
+        break;
+      } catch (error) {
+        if (attempt < MAX_FETCH_ATTEMPTS) {
+          console.warn(
+            `⚠️  Attempt ${attempt.toString()}/${MAX_FETCH_ATTEMPTS.toString()} for ${chart.name} failed; retrying...`,
+          );
+          await Bun.sleep(RETRY_BACKOFF_MS);
+        } else {
+          console.error(
+            `❌ Failed to process ${chart.name} after ${MAX_FETCH_ATTEMPTS.toString()} attempts:`,
+            error,
+          );
+        }
+      }
+    }
+    if (!generated) {
+      failures.push(chart.name);
     }
   }
 
-  // Generate index file
-  if (generatedFiles.length > 0) {
-    await generateIndexFile(generatedFiles);
+  // Prune type files for charts no longer present in versions.ts (deterministic,
+  // based on versions.ts rather than fetch success).
+  await pruneStaleTypeFiles(charts.map((c) => c.name));
+
+  // Regenerate the index from the type files that actually exist on disk (every
+  // expected chart, freshly generated or retained from a prior run).
+  const indexFiles: string[] = [];
+  for (const chart of charts) {
+    if (await Bun.file(`${OUTPUT_DIR}/${chart.name}.types.ts`).exists()) {
+      indexFiles.push(`${chart.name}.types.ts`);
+    }
+  }
+  if (indexFiles.length > 0) {
+    await generateIndexFile(indexFiles);
     console.log(
-      `\n✅ Generated index.ts with ${generatedFiles.length.toString()} exports`,
+      `\n✅ Generated index.ts with ${indexFiles.length.toString()} exports`,
     );
   }
 
-  if (generatedFiles.length > 0) {
+  if (indexFiles.length > 0) {
     // Run prettier on generated files
     console.log("\n🎨 Running prettier on generated files...");
     try {
@@ -126,11 +160,20 @@ async function generateHelmTypes() {
   }
 
   console.log("\n🎉 Helm chart type generation completed!");
-  if (generatedFiles.length > 0) {
+  if (indexFiles.length > 0) {
     console.log(
-      `📁 Generated ${generatedFiles.length.toString()} type files in ${OUTPUT_DIR}`,
+      `📁 ${indexFiles.length.toString()} type files in ${OUTPUT_DIR}`,
     );
     console.log(`🔍 Files validated with prettier, tsc`);
+  }
+
+  // Fail loudly if any chart could not be generated. The committed files for
+  // those charts (if any) are left untouched, but the run is not "clean" — so
+  // callers (CI, the weekly refresh workflow) must not treat the tree as fresh.
+  if (failures.length > 0) {
+    throw new Error(
+      `Failed to generate types for ${failures.length.toString()} chart(s): ${failures.join(", ")}. Existing files for these charts were left in place.`,
+    );
   }
 }
 
@@ -193,6 +236,23 @@ export type ${capitalizeFirst(chart.name).replaceAll("-", "")}HelmParameters = {
 
 function capitalizeFirst(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
+ * Remove `<chart>.types.ts` files for charts that are no longer declared in
+ * versions.ts. Driven entirely by versions.ts (not fetch success), so it never
+ * deletes a file just because that chart's fetch flaked.
+ */
+async function pruneStaleTypeFiles(expectedChartNames: string[]) {
+  const expected = new Set(expectedChartNames.map((n) => `${n}.types.ts`));
+  const lsOutput = await Bun.$`ls -1 ${OUTPUT_DIR}`.quiet().text();
+  for (const entry of lsOutput.split("\n").map((s) => s.trim())) {
+    if (entry === "" || !entry.endsWith(".types.ts") || expected.has(entry)) {
+      continue;
+    }
+    console.log(`  🧹 Pruning stale type file: ${entry}`);
+    await Bun.$`rm -f ${`${OUTPUT_DIR}/${entry}`}`.quiet();
+  }
 }
 
 /**
