@@ -1,18 +1,20 @@
 import { describe, expect, test } from "bun:test";
 import {
-  buildSubtitleFilter,
   classifySubtitleCodec,
   effectiveSubtitleConfig,
-  escapeSubtitlePath,
+  embeddedSubtitleModifier,
   parseFfprobeSubtitles,
   parseLangPref,
   parseSidecarName,
   pickEmbeddedSubtitle,
   pickWrittenSubtitleFile,
   rankSidecars,
+  rankSubtitleCandidates,
+  toEmbeddedCandidates,
   ytdlpSubtitleArgs,
   type FfprobeSubtitleStream,
   type SidecarCandidate,
+  type SubtitleCandidate,
 } from "@shepherdjerred/streambot/sources/subtitles.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
@@ -144,17 +146,109 @@ describe("rankSidecars", () => {
   });
 });
 
-describe("escapeSubtitlePath / buildSubtitleFilter", () => {
-  test("escapes filtergraph-special characters", () => {
-    expect(escapeSubtitlePath("/tmp/a:b.srt")).toBe(String.raw`/tmp/a\:b.srt`);
-    expect(escapeSubtitlePath("/tmp/a'b.srt")).toBe(String.raw`/tmp/a\'b.srt`);
-    expect(escapeSubtitlePath(String.raw`C:\subs\x.srt`)).toBe(
-      String.raw`C\:\\subs\\x.srt`,
+describe("embeddedSubtitleModifier", () => {
+  test("dispositions are authoritative (forced beats title)", () => {
+    expect(embeddedSubtitleModifier({ disposition: { forced: 1 } })).toBe(
+      "forced",
+    );
+    expect(
+      embeddedSubtitleModifier({ disposition: { hearing_impaired: 1 } }),
+    ).toBe("sdh");
+  });
+  test("title tags are a conservative fallback", () => {
+    expect(embeddedSubtitleModifier({ tags: { title: "FORCED" } })).toBe(
+      "forced",
+    );
+    expect(embeddedSubtitleModifier({ tags: { title: "English (SDH)" } })).toBe(
+      "sdh",
+    );
+    expect(
+      embeddedSubtitleModifier({ tags: { title: "Hearing Impaired" } }),
+    ).toBe("sdh");
+  });
+  test("plain tracks (and bare CC titles) are full", () => {
+    expect(embeddedSubtitleModifier({ tags: { language: "eng" } })).toBeNull();
+    expect(embeddedSubtitleModifier({ tags: { title: "CC" } })).toBeNull();
+  });
+});
+
+describe("rankSubtitleCandidates (cross-source)", () => {
+  // The exact Endgame regression: a forced-only English sidecar next to a remux whose full
+  // English subs are embedded (subrip default + subrip SDH + PGS variants). The forced sidecar
+  // used to win on source priority and the user saw "no subtitles".
+  const forcedSidecar: SubtitleCandidate = {
+    kind: "sidecar",
+    file: "M.en.forced.srt",
+    lang: "en",
+    modifier: "forced",
+  };
+  const endgameStreams: FfprobeSubtitleStream[] = [
+    { codec_name: "subrip", tags: { language: "eng" } },
+    {
+      codec_name: "subrip",
+      tags: { language: "eng", title: "SDH" },
+      disposition: { hearing_impaired: 1 },
+    },
+    { codec_name: "hdmv_pgs_subtitle", tags: { language: "eng" } },
+    {
+      codec_name: "hdmv_pgs_subtitle",
+      tags: { language: "fre", title: "FORCED" },
+    },
+  ];
+  const endgame = [forcedSidecar, ...toEmbeddedCandidates(endgameStreams)];
+  const LANGS = ["en", "eng", "en-US"];
+
+  test("full embedded track beats a forced-only sidecar (PGS never competes)", () => {
+    const ranked = rankSubtitleCandidates(endgame, LANGS);
+    expect(ranked[0]).toEqual({
+      kind: "embedded",
+      subtitleIndex: 0,
+      codec: "subrip",
+      lang: "eng",
+      modifier: null,
+    });
+    // SDH (quality 1) still beats the forced sidecar (quality 2).
+    expect(ranked[1]?.kind).toBe("embedded");
+    expect(ranked[2]).toBe(forcedSidecar);
+    expect(ranked).toHaveLength(3); // both PGS tracks were excluded up front
+  });
+
+  test("pinned forced modifier flips the ranking (sublang:en.forced)", () => {
+    expect(rankSubtitleCandidates(endgame, LANGS, "forced")[0]).toBe(
+      forcedSidecar,
     );
   });
-  test("builds the subtitles= filter", () => {
-    expect(buildSubtitleFilter("/tmp/streambot-subs/x.srt")).toBe(
-      "subtitles=/tmp/streambot-subs/x.srt",
+
+  test("sidecar wins over embedded only at equal language + modifier quality", () => {
+    const fullSidecar: SubtitleCandidate = {
+      kind: "sidecar",
+      file: "M.en.srt",
+      lang: "en",
+      modifier: null,
+    };
+    const ranked = rankSubtitleCandidates(
+      [...toEmbeddedCandidates(endgameStreams), fullSidecar],
+      LANGS,
+    );
+    expect(ranked[0]).toBe(fullSidecar);
+  });
+
+  test("language preference dominates modifier quality across sources", () => {
+    const italianFull: SubtitleCandidate = {
+      kind: "embedded",
+      subtitleIndex: 0,
+      codec: "subrip",
+      lang: "ita",
+      modifier: null,
+    };
+    const englishSdh: SubtitleCandidate = {
+      kind: "sidecar",
+      file: "M.en.sdh.srt",
+      lang: "en",
+      modifier: "sdh",
+    };
+    expect(rankSubtitleCandidates([italianFull, englishSdh], LANGS)[0]).toBe(
+      englishSdh,
     );
   });
 });
@@ -266,6 +360,24 @@ describe("pickEmbeddedSubtitle (real Dune ffprobe shape)", () => {
       { codec_name: "subrip", tags: { language: "eng" } },
     ];
     expect(pickEmbeddedSubtitle(streams, ["en", "eng"])?.subtitleIndex).toBe(1);
+  });
+  test("full > SDH > forced among embedded tracks (incl. title-derived modifiers)", () => {
+    const streams: FfprobeSubtitleStream[] = [
+      {
+        codec_name: "subrip",
+        tags: { language: "eng" },
+        disposition: { forced: 1 },
+      },
+      { codec_name: "subrip", tags: { language: "eng", title: "SDH" } },
+      { codec_name: "subrip", tags: { language: "eng" } },
+    ];
+    expect(pickEmbeddedSubtitle(streams, ["eng"])?.subtitleIndex).toBe(2);
+    expect(
+      pickEmbeddedSubtitle(streams.slice(0, 2), ["eng"])?.subtitleIndex,
+    ).toBe(1);
+    expect(
+      pickEmbeddedSubtitle(streams, ["eng"], "forced")?.subtitleIndex,
+    ).toBe(0);
   });
 });
 
