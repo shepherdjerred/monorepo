@@ -53,6 +53,13 @@ export const loopResyncTotal = new Counter({
   registers: [registry],
 });
 
+export const inputApplyDelayMs = new Histogram({
+  name: "emulator_input_apply_delay_ms",
+  help: "Time from a controller input arriving at the backend to being latched into the emulator tick that applies it, in ms",
+  buckets: [1, 2, 4, 8, 16, 25, 33, 50, 100, 250],
+  registers: [registry],
+});
+
 export const controllerRttMs = new Histogram({
   name: "controller_rtt_ms",
   help: "Socket round-trip time measured by the web controller and reported to the server, in ms",

@@ -9,7 +9,9 @@ import {
   lateMs,
   ticksTotal,
   loopResyncTotal,
+  inputApplyDelayMs,
 } from "#src/observability/metrics.ts";
+import { InputLatencyTracker } from "#src/input/input-latency-tracker.ts";
 import type {
   ButtonState,
   PlayerInputState,
@@ -83,6 +85,7 @@ export class N64Emulator {
   private readonly opts: N64EmulatorOptions;
   private rt: Runtime | undefined;
   private readonly inputs: PlayerInputState[];
+  private readonly inputLatency = new InputLatencyTracker(MAX_SEATS);
   private onFrameCb: ((rgba: Buffer) => void) | undefined;
   private running = false;
   private timer: ReturnType<typeof setTimeout> | undefined;
@@ -231,12 +234,27 @@ export class N64Emulator {
   setPlayerInput(player: number, state: PlayerInputState): void {
     if (player < 0 || player >= MAX_SEATS) return;
     this.inputs[player] = state;
+    this.inputLatency.record(player);
   }
 
   /** Zero a player's input (e.g. on disconnect) so a held key doesn't stick. */
   clearPlayerInput(player: number): void {
     if (player < 0 || player >= MAX_SEATS) return;
     this.inputs[player] = structuredClone(EMPTY_INPUT);
+    this.inputLatency.clear(player);
+  }
+
+  /** Per-seat "any control held" flags (buttons or analog deflection), for the
+   *  stream HUD's input-echo indicators. */
+  seatActivity(): boolean[] {
+    return this.inputs
+      .slice(0, this.opts.seats)
+      .map(
+        (s) =>
+          Object.values(s.buttons).some(Boolean) ||
+          Math.abs(s.analogX) > 0.25 ||
+          Math.abs(s.analogY) > 0.25,
+      );
   }
 
   start(): void {
@@ -285,6 +303,10 @@ export class N64Emulator {
         String(s.analogY),
       );
     }
+    // Everything pending is now latched into this tick.
+    this.inputLatency.drainAll((ms) => {
+      inputApplyDelayMs.observe(ms);
+    });
 
     const emulateStart = performance.now();
     rt.runMainLoop();
