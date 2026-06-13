@@ -1,5 +1,10 @@
 import { inflateSync } from "node:zlib";
-import { encodePng } from "./png.ts";
+import {
+  encodeScreenshotPng,
+  SCREENSHOT_HEIGHT,
+  SCREENSHOT_WIDTH,
+} from "./screenshot.ts";
+import { encodePng, encodePngToSize } from "./png.ts";
 
 // Minimal PNG reader: returns IHDR fields and the inflated, de-filtered pixel
 // rows so tests can assert exact channel mapping without a PNG dependency.
@@ -66,6 +71,40 @@ function rgbaFrom(pixels: [number, number, number][]): Buffer {
   return buf;
 }
 
+describe("encodePngToSize", () => {
+  it("throws a RangeError when the rgba buffer is smaller than width*height*4", () => {
+    // 2x2 frame requires 16 bytes; supply only 12.
+    const tooSmall = Buffer.alloc(12);
+    expect(() =>
+      encodePngToSize(
+        { rgba: tooSmall, width: 2, height: 2 },
+        { width: 2, height: 2 },
+      ),
+    ).toThrow(RangeError);
+  });
+
+  it("throws with a descriptive message naming expected vs actual size", () => {
+    const tooSmall = Buffer.alloc(4);
+    expect(() =>
+      encodePngToSize(
+        { rgba: tooSmall, width: 2, height: 1 },
+        { width: 2, height: 1 },
+      ),
+    ).toThrow(/need 8 bytes for 2x1 \(got 4\)/);
+  });
+
+  it("accepts a buffer exactly the right size", () => {
+    // 1x1 frame: exactly 4 bytes needed. Should not throw.
+    const exact = Buffer.alloc(4);
+    expect(() =>
+      encodePngToSize(
+        { rgba: exact, width: 1, height: 1 },
+        { width: 1, height: 1 },
+      ),
+    ).not.toThrow();
+  });
+});
+
 describe("encodePng", () => {
   it("emits RGB (colour type 2) with no alpha channel", () => {
     const png = encodePng(rgbaFrom([[10, 20, 30]]), 1, 1);
@@ -119,5 +158,42 @@ describe("encodePng", () => {
     const expected = [255, 0, 0, 255, 0, 0, 0, 0, 255, 0, 0, 255];
     expect([...rows[0]]).toEqual(expected);
     expect([...rows[1]]).toEqual(expected);
+  });
+
+  it("nearest-neighbour resizes to an explicit output size", () => {
+    const png = encodePngToSize(
+      {
+        rgba: rgbaFrom([
+          [255, 0, 0],
+          [0, 0, 255],
+        ]),
+        width: 2,
+        height: 1,
+      },
+      { width: 2, height: 3 },
+    );
+    const { width, height, rows } = decodePng(png);
+    expect(width).toBe(2);
+    expect(height).toBe(3);
+    const expected = [255, 0, 0, 0, 0, 255];
+    expect([...rows[0]]).toEqual(expected);
+    expect([...rows[1]]).toEqual(expected);
+    expect([...rows[2]]).toEqual(expected);
+  });
+
+  it("encodes emulator screenshots at 4:3 display dimensions", () => {
+    const png = encodeScreenshotPng({
+      rgba: rgbaFrom([
+        [255, 0, 0],
+        [0, 0, 255],
+      ]),
+      width: 2,
+      height: 1,
+    });
+    const { width, height, rows } = decodePng(png);
+    expect(width).toBe(SCREENSHOT_WIDTH);
+    expect(height).toBe(SCREENSHOT_HEIGHT);
+    expect([...rows[0].subarray(0, 3)]).toEqual([255, 0, 0]);
+    expect([...rows[0].subarray(-3)]).toEqual([0, 0, 255]);
   });
 });

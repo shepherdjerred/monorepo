@@ -12,6 +12,7 @@ import {
   buildPipeline,
   buildReleasePleaseSkipPipeline,
 } from "./pipeline-builder.ts";
+import { applyBuildAgePriority } from "./lib/build-age-priority.ts";
 import { validateCatalog } from "./lib/validate-catalog.ts";
 
 if (shouldSkipReleasePleasePrBuild()) {
@@ -23,10 +24,16 @@ if (shouldSkipReleasePleasePrBuild()) {
       "Trigger a build manually (Buildkite UI → New Build) or set " +
       "RUN_RELEASE_CI=true to run it.",
   );
-  console.log(JSON.stringify(buildReleasePleaseSkipPipeline(), null, 2));
+  console.log(
+    JSON.stringify(
+      applyBuildAgePriority(buildReleasePleaseSkipPipeline()),
+      null,
+      2,
+    ),
+  );
 } else {
   await validateCatalog();
   const affected = await detectChanges();
-  const pipeline = buildPipeline(affected);
+  const pipeline = applyBuildAgePriority(buildPipeline(affected));
   console.log(JSON.stringify(pipeline, null, 2));
 }

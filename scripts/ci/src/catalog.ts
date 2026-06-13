@@ -79,6 +79,13 @@ export const INFRA_PUSH_TARGETS: ImageTarget[] = [
     pushFn: "push-obsidian-headless-image",
   },
   {
+    name: "mcp-gateway",
+    package: "homelab",
+    versionKey: "shepherdjerred/mcp-gateway",
+    buildFn: "build-mcp-gateway-image",
+    pushFn: "push-mcp-gateway-image",
+  },
+  {
     name: "redlib",
     package: "homelab",
     versionKey: "shepherdjerred/redlib",
@@ -239,12 +246,18 @@ for (const pkg of NPM_PACKAGES) {
 // OpenTofu stacks
 // ---------------------------------------------------------------------------
 
-export const TOFU_STACKS = ["cloudflare", "github", "seaweedfs"] as const;
+export const TOFU_STACKS = [
+  "cloudflare",
+  "github",
+  "seaweedfs",
+  "tailscale",
+] as const;
 
 export const TOFU_STACK_LABELS: Record<string, string> = {
   cloudflare: "Cloudflare DNS",
   github: "GitHub Config",
   seaweedfs: "SeaweedFS Config",
+  tailscale: "Tailscale ACLs",
 };
 
 // ---------------------------------------------------------------------------

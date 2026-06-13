@@ -254,6 +254,12 @@ const versions = {
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
     "2.0.0-3960@sha256:c3d35e576578547875eedd3b238506cf42147f0586f7fcbdecd60f7541523a50",
+  // Custom mcp-gateway image - tbxark/mcp-proxy + prebuilt edstem-mcp (rob-9/edstem-mcp)
+  // not managed by renovate
+  // NOTE: placeholder digest — CI's version-commit-back fills the real tag@digest
+  // after the first build+push on main. Do not deploy until this is replaced.
+  "shepherdjerred/mcp-gateway":
+    "0.0.0-placeholder@sha256:0000000000000000000000000000000000000000000000000000000000000000",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.6@sha256:1263120feed69d82e4ca23b8ca6f1d702c3029fe70714e382966d0192318eab6",
