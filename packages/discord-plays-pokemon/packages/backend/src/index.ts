@@ -33,6 +33,12 @@ import { enqueueCommand, framesFromMs } from "./emulator/command-sink.ts";
 import type { CommandTiming } from "./emulator/command-sink.ts";
 import { encodePng } from "./emulator/png.ts";
 import { GameStreamer } from "./stream/game-streamer.ts";
+import client from "./discord/client.ts";
+import { GoalManager, type GoalDiscordMessage } from "./goal/goal-manager.ts";
+import {
+  startGoalControlServer,
+  type GoalControlServer,
+} from "./goal/control-server.ts";
 import type {
   LoginResponse,
   StatusResponse,
@@ -92,6 +98,40 @@ if (config.stream.enabled) {
   if (!config.stream.dynamic_streaming) {
     await streamer.start();
   }
+}
+
+async function sendDiscordMessage(message: GoalDiscordMessage): Promise<void> {
+  const channel = await client.channels.fetch(message.channelId);
+  if (channel?.isSendable() !== true) {
+    throw new Error(`Discord channel is not sendable: ${message.channelId}`);
+  }
+
+  await channel.send({
+    content: message.content,
+    allowedMentions: {
+      users: message.allowedUserIds ?? [],
+      roles: [],
+      parse: [],
+    },
+  });
+}
+
+// ---- goal mode control loop ----
+let goalManager: GoalManager | undefined;
+let goalControlServer: GoalControlServer | undefined;
+if (emulator && config.game.goal.enabled) {
+  const controlToken = crypto.randomUUID();
+  goalManager = new GoalManager({
+    config: config.game.goal,
+    controlToken,
+    sendMessage: sendDiscordMessage,
+  });
+  goalControlServer = startGoalControlServer({
+    emulator,
+    goalManager,
+    config,
+    token: controlToken,
+  });
 }
 
 // ---- web server (optional) ----
@@ -158,7 +198,7 @@ if (emulator && config.bot.enabled && config.bot.commands.enabled) {
   if (config.bot.commands.update) {
     await registerSlashCommands();
   }
-  handleSlashCommands(emulator);
+  handleSlashCommands(emulator, goalManager);
 }
 
 // ---- discord text commands ----
@@ -183,3 +223,19 @@ if (streamer && config.stream.dynamic_streaming) {
     await (participants > 0 ? activeStreamer.start() : activeStreamer.stop());
   });
 }
+
+async function shutdown(): Promise<void> {
+  await goalManager?.shutdown();
+  if (goalControlServer !== undefined) {
+    await goalControlServer.stop(true);
+  }
+  emulator?.stop();
+}
+
+process.once("SIGTERM", () => {
+  void shutdown();
+});
+
+process.once("SIGINT", () => {
+  void shutdown();
+});

@@ -66,6 +66,25 @@ wasm_path = "packages/backend/assets/pokeemerald.wasm"
 # optional path for the persisted 128 KiB flash save
 save_path = "saves/pokeemerald.flash"
 
+[game.goal]
+# enable Codex goal mode and the /goal slash command
+enabled = false
+# runtime must provide CODEX_API_KEY, CODEX_ACCESS_TOKEN, OPENAI_API_KEY, or a mounted Codex auth cache
+# lower-cost model used by the long-running Codex loop
+model = "gpt-5.4-mini"
+codex_binary = "codex"
+# Codex runs from this directory; screenshots/state paths are relative to it
+runtime_directory = "."
+screenshot_dir = "goal-screenshots"
+state_path = "goal-state.json"
+control_host = "127.0.0.1"
+control_port = 8082
+# hard cap; schema rejects values above 30
+max_runtime_minutes = 30
+# another user can replace the goal after this lock expires
+lock_minutes = 5
+progress_update_interval_seconds = 60
+
 [game.commands]
 # should chat commands be enabled
 # these chat commands are how the game is normally played

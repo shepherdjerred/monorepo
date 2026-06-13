@@ -105,6 +105,13 @@ export async function help(interaction: CommandInteraction) {
           config.bot.notifications.channel_id,
         )} channel.`
       : "",
+    config.game.goal.enabled
+      ? `The ${inlineCode(
+          "/goal",
+        )} command asks Codex to work toward a Pokemon objective for up to ${String(
+          config.game.goal.max_runtime_minutes,
+        )} minutes.`
+      : "",
   ];
   await interaction.reply({
     content: lines.join("\n"),
