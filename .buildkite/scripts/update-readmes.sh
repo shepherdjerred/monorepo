@@ -42,7 +42,7 @@ git remote set-url origin "https://git@github.com/${REPO}.git"
 
 # Regenerate README content (cog blocks call Codex CLI).
 # Existing _summary.md files are reused as cache; Codex is only called for missing ones.
-cog -r README.md practice/README.md archive/README.md
+cog -r README.md sandbox/practice/README.md sandbox/archive/README.md
 
 if git diff --quiet; then
   echo "No README changes detected."
@@ -50,12 +50,12 @@ if git diff --quiet; then
 fi
 
 git checkout -B "${BRANCH}"
-git add README.md practice/README.md archive/README.md
+git add README.md sandbox/practice/README.md sandbox/archive/README.md
 
 # Also add any generated summary files
 while IFS= read -r summary_file; do
   [ -n "$summary_file" ] && git add "$summary_file"
-done < <(git ls-files -m -o --exclude-standard -- "packages/*/_summary.md" "practice/*/_summary.md" "archive/*/_summary.md")
+done < <(git ls-files -m -o --exclude-standard -- "packages/*/_summary.md" "sandbox/practice/*/_summary.md" "sandbox/archive/*/_summary.md")
 
 LEFTHOOK=0 HUSKY=0 git commit -m "docs: auto-update READMEs"
 git push --force origin "${BRANCH}"

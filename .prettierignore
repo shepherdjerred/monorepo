@@ -56,11 +56,11 @@ coverage/
 **/__snapshots__/*.png
 
 # XML tileset files with .tsx extension (Tiled map editor)
-practice/bevy-experiment/assets/
+sandbox/practice/bevy-experiment/assets/
 packages/castle-casters/assets/
 
-# Legacy / archived projects — repo AGENTS.md marks archive/ as "do not modify"
-archive/
+# Legacy / archived projects — repo AGENTS.md marks sandbox/archive/ as "do not modify"
+sandbox/archive/
 
 # Vendored fork of @dank074/discord-video-stream — preserve upstream (biome) source formatting.
 packages/discord-video-stream/

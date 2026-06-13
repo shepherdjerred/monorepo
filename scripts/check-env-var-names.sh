@@ -10,7 +10,7 @@ set -eu
 FILES_CMD=(git ls-files -z --
   '*.ts' '*.rs' '*.py' '*.fish' '*.tmpl' '*.yaml' '*.yml'
   '*.env' '*.md' '*.sh' '*.swift'
-  ':!:archive/' ':!:practice/' ':!:.dagger/' ':!:.build/' ':!:**/generated/*'
+  ':!:sandbox/archive/' ':!:sandbox/practice/' ':!:.dagger/' ':!:.build/' ':!:**/generated/*'
 )
 
 # Files to exclude from all pattern matches

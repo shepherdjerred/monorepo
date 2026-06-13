@@ -129,9 +129,9 @@
     "**/postcss.config.ts",
     "**/generated/**",
     "**/dist/**",
-    "archive/**",
+    "sandbox/archive/**",
     ".dagger/**",
-    "practice/**",
+    "sandbox/practice/**",
     "packages/discord-video-stream/**",
     "packages/resume/**",
     "packages/dotfiles/**",
@@ -143,7 +143,7 @@
     "packages/bun-decompile/**",
     "packages/scout-for-lol/scripts/**",
     "packages/docs/**",
-    "poc/**",
+    "sandbox/poc/**",
     "scripts/**"
   ]
 }

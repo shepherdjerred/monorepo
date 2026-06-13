@@ -36,7 +36,10 @@ packages/
 ├── trmnl-dashboard/            # TRMNL e-ink dashboard
 ├── webring/                    # Webring component (npm)
 scripts/ci/                     # TypeScript CI pipeline generator
-archive/                        # Legacy projects (do not modify), including bun-decompile, castle-casters, clauderon, glance, hn-enhancer, macos-cross-compiler, tips
+sandbox/                        # Personal scratch (not shipped, excluded from most lint/CI)
+├── archive/                    # Legacy projects (do not modify): bun-decompile, castle-casters, clauderon, glance, hn-enhancer, macos-cross-compiler, tips
+├── poc/                        # Proof-of-concept experiments (e.g. interview-practice CLI)
+└── practice/                   # Coding practice (Exercism, LeetCode, courses, books)
 ```
 
 ## Documentation Discipline — Per Session

@@ -315,10 +315,11 @@ Scout for League of Legends is a Discord bot that tracks your friends’ matches
 
 ## Other Directories
 
-| Directory              | Description                                           |
-| ---------------------- | ----------------------------------------------------- |
-| [practice/](practice/) | Learning projects - books, courses, coding challenges |
-| [archive/](archive/)   | Archived projects - completed or superseded           |
+| Directory                              | Description                                           |
+| -------------------------------------- | ----------------------------------------------------- |
+| [sandbox/poc/](sandbox/poc/)           | Proof-of-concept experiments                          |
+| [sandbox/practice/](sandbox/practice/) | Learning projects - books, courses, coding challenges |
+| [sandbox/archive/](sandbox/archive/)   | Archived projects - completed or superseded           |
 
 ## Development
 
@@ -338,7 +339,7 @@ See [CLAUDE.md](CLAUDE.md) for detailed development guidance.
 This README uses [cogapp](https://nedbatchelder.com/code/cog/) to auto-generate project listings.
 
 ```bash
-uvx --from cogapp cog -r README.md practice/README.md archive/README.md
+uvx --from cogapp cog -r README.md sandbox/practice/README.md sandbox/archive/README.md
 ```
 
 Summaries are cached in `_summary.md` files. Delete a summary to regenerate it.
