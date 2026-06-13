@@ -220,7 +220,10 @@ export function createMinecraftTsmcApp(chart: Chart) {
           ],
         },
         {
-          group: "",
+          // No `group` — Service is in the core API group. ArgoCD's Application Go
+          // types mark `group` as omitempty, so any write through the ArgoCD API
+          // drops an explicit "" from the live CR, leaving the apps app-of-apps
+          // perpetually OutOfSync against a manifest that includes it.
           kind: "Service",
           jsonPointers: [
             "/spec/clusterIP",

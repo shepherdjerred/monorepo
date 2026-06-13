@@ -117,7 +117,7 @@ const versions = {
   // renovate: datasource=helm registryUrl=https://grafana.github.io/helm-charts versioning=semver
   pyroscope: "2.0.3",
   // renovate: datasource=helm registryUrl=https://grafana.github.io/helm-charts versioning=semver
-  alloy: "1.8.2",
+  alloy: "1.10.0",
   // renovate: datasource=helm registryUrl=https://openebs.github.io/openebs versioning=semver
   openebs: "4.4.0",
   // not managed by renovate — beta updated by version-commit-back

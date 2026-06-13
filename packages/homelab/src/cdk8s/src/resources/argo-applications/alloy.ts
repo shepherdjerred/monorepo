@@ -1,5 +1,6 @@
 import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
+import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 // Grafana Alloy River config: eBPF-sample every pod on the local node kernel-side
@@ -63,6 +64,21 @@ pyroscope.write "default" {
  * It only pushes profiles to the in-cluster Pyroscope; it has no ingress.
  */
 export function createAlloyApp(chart: Chart) {
+  // The DaemonSet is privileged (hostPID + privileged container), so the namespace
+  // must opt out of the cluster-default "baseline" Pod Security enforcement.
+  // CreateNamespace=true creates a bare namespace without these labels, which
+  // blocks every pod the daemonset-controller tries to create.
+  new Namespace(chart, "alloy-namespace", {
+    metadata: {
+      name: "alloy",
+      labels: {
+        "pod-security.kubernetes.io/enforce": "privileged",
+        "pod-security.kubernetes.io/audit": "privileged",
+        "pod-security.kubernetes.io/warn": "privileged",
+      },
+    },
+  });
+
   const alloyValues = {
     controller: {
       type: "daemonset",
