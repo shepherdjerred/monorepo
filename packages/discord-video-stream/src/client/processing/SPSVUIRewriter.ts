@@ -4,6 +4,9 @@ import {
 } from "./AnnexBBitstreamReaderWriter.js";
 
 export function rewriteSPSVUI(buffer: Buffer) {
+  const nalHeader = buffer[0];
+  if (nalHeader === undefined) throw new Error("Missing SPS NAL header");
+
   const reader = new AnnexBBitstreamReader(buffer.subarray(1));
   const writer = new AnnexBBitstreamWriter();
 
@@ -17,7 +20,7 @@ export function rewriteSPSVUI(buffer: Buffer) {
   const writeSE = (v: number) => writer.writeSignedExpGolomb(v);
 
   // Rewrite the NAL header
-  writeU(buffer[0], 8);
+  writeU(nalHeader, 8);
 
   const profile_idc = readU(8);
   writeU(profile_idc, 8);
@@ -203,18 +206,18 @@ export function rewriteSPSVUI(buffer: Buffer) {
     const video_signal_type_present_flag = readBit(1);
     writeBit(0, 1);
     if (video_signal_type_present_flag) {
-      const _video_format = readBit(3);
+      readBit(3);
       // writeBit(video_format, 3);
-      const _video_full_range_flag = readBit(1);
+      readBit(1);
       // writeBit(video_full_range_flag, 1);
       const colour_description_present_flag = readBit(1);
       // writeBit(colour_description_present_flag, 1);
       if (colour_description_present_flag) {
-        const _colour_primaries = readU(8);
+        readU(8);
         // writeU(colour_primaries, 8);
-        const _transfer_characteristics = readU(8);
+        readU(8);
         // writeU(transfer_characteristics, 8);
-        const _matrix_coeffs = readU(8);
+        readU(8);
         // writeU(matrix_coeffs, 8);
       }
     }
@@ -318,9 +321,9 @@ export function rewriteSPSVUI(buffer: Buffer) {
       writeUE(log2_max_mv_length_horizontal);
       const log2_max_mv_length_vertical = readUE();
       writeUE(log2_max_mv_length_vertical);
-      const _num_reorder_frames = readUE();
+      readUE();
       writeUE(0);
-      const _max_dec_frame_buffering = readUE();
+      readUE();
       writeUE(max_num_ref_frames);
     }
   }

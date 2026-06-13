@@ -66,5 +66,8 @@
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "1.14.4"
   }
 }

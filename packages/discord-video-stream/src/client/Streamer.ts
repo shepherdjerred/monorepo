@@ -13,7 +13,7 @@ import type { WebRtcConnWrapper } from "./voice/WebRtcWrapper.js";
 import { generateStreamKey, parseStreamKey } from "../utils.js";
 
 export class Streamer {
-  private _voiceConnection?: VoiceConnection;
+  private _voiceConnection: VoiceConnection | undefined;
   private _client: Client;
   private _gatewayEmitter = new EventEmitter<GatewayEventMap>();
 

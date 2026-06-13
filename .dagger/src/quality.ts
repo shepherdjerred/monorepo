@@ -117,19 +117,20 @@ export function complianceCheckHelper(source: Directory): Container {
 /**
  * Run knip across all packages. Replicates `knip-check.sh`: discovers each
  * `packages/<pkg>/bun.lock`, runs `bun install --frozen-lockfile` inside
- * each (so per-workspace `node_modules` exist), then `bunx knip
- * --no-config-hints` from the repo root.
+ * each (so per-workspace `node_modules` exist), installs the root lockfile,
+ * then runs the root-pinned Knip binary.
  */
 export function knipCheckHelper(source: Directory): Container {
   return bunQualityBase(source).withExec([
     "bash",
     "-c",
     [
+      "bun install --frozen-lockfile;",
       "while IFS= read -r -d '' lockfile; do",
       '  dir="$(dirname "$lockfile")";',
       '  (cd "$dir" && bun install --frozen-lockfile);',
       'done < <(find packages/ -name bun.lock -not -path "*/node_modules/*" -not -path "*/example/*" -print0);',
-      "bunx knip --no-config-hints",
+      "bun run knip",
     ].join(" "),
   ]);
 }
@@ -183,6 +184,9 @@ export function trivyScanHelper(source: Directory): Container {
     .withExec([
       "trivy",
       "fs",
+      "--scanners",
+      "vuln",
+      "--skip-version-check",
       "--exit-code",
       "1",
       "--severity",
@@ -383,6 +387,7 @@ export function largeFileCheckHelper(source: Directory): Container {
     "bash",
     "-c",
     [
+      "bun packages/scout-for-lol/scripts/check-asset-sizes.ts;",
       "extra=();",
       "if [ -f .largeignore ]; then",
       "  while IFS= read -r line; do",

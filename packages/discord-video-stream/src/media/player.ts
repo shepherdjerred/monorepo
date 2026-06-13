@@ -113,9 +113,15 @@ export function createSeekablePlayer(
     const abort = new AbortController();
     currentAbort = abort;
 
+    const prepareOptions: Partial<PrepareStreamOptions> = {
+      ...(options.prepare ?? {}),
+    };
+    delete prepareOptions.startTime;
+    if (startSeconds > 0) prepareOptions.startTime = startSeconds;
+
     const { promise, controller, output } = prepareStream(
       input,
-      { ...options.prepare, startTime: startSeconds > 0 ? startSeconds : undefined },
+      prepareOptions,
       abort.signal,
     );
     if (gen !== generation) {
