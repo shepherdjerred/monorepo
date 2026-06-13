@@ -37,6 +37,11 @@ import discordClient from "./discord/client.ts";
 import { createGameEventWatcher } from "./game/events/watcher.ts";
 import { createEventNotifier } from "./discord/event-notifier.ts";
 import type { EventToggles } from "./discord/event-notifier.ts";
+import { GoalManager, type GoalDiscordMessage } from "./goal/goal-manager.ts";
+import {
+  startGoalControlServer,
+  type GoalControlServer,
+} from "./goal/control-server.ts";
 import type {
   LoginResponse,
   StatusResponse,
@@ -96,6 +101,40 @@ if (config.stream.enabled) {
   if (!config.stream.dynamic_streaming) {
     await streamer.start();
   }
+}
+
+async function sendDiscordMessage(message: GoalDiscordMessage): Promise<void> {
+  const channel = await discordClient.channels.fetch(message.channelId);
+  if (channel?.isSendable() !== true) {
+    throw new Error(`Discord channel is not sendable: ${message.channelId}`);
+  }
+
+  await channel.send({
+    content: message.content,
+    allowedMentions: {
+      users: message.allowedUserIds ?? [],
+      roles: [],
+      parse: [],
+    },
+  });
+}
+
+// ---- goal mode control loop ----
+let goalManager: GoalManager | undefined;
+let goalControlServer: GoalControlServer | undefined;
+if (emulator && config.game.goal.enabled) {
+  const controlToken = crypto.randomUUID();
+  goalManager = new GoalManager({
+    config: config.game.goal,
+    controlToken,
+    sendMessage: sendDiscordMessage,
+  });
+  goalControlServer = startGoalControlServer({
+    emulator,
+    goalManager,
+    config,
+    token: controlToken,
+  });
 }
 
 // ---- web server (optional) ----
@@ -162,7 +201,7 @@ if (emulator && config.bot.enabled && config.bot.commands.enabled) {
   if (config.bot.commands.update) {
     await registerSlashCommands();
   }
-  handleSlashCommands(emulator);
+  handleSlashCommands(emulator, goalManager);
 }
 
 // ---- in-game event notifications ----
@@ -236,3 +275,24 @@ if (streamer && config.stream.dynamic_streaming) {
     await (participants > 0 ? activeStreamer.start() : activeStreamer.stop());
   });
 }
+
+async function shutdown(): Promise<void> {
+  await goalManager?.shutdown();
+  if (goalControlServer !== undefined) {
+    await goalControlServer.stop(true);
+  }
+  emulator?.stop();
+}
+
+async function shutdownAndExit(): Promise<void> {
+  await shutdown();
+  process.exit(0);
+}
+
+process.once("SIGTERM", () => {
+  void shutdownAndExit();
+});
+
+process.once("SIGINT", () => {
+  void shutdownAndExit();
+});

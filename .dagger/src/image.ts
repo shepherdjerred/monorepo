@@ -81,6 +81,14 @@ function withEditorClis(container: Container): Container {
     .withExec(["codex", "--version"]);
 }
 
+/** Install only the Codex CLI for runtime agent loops such as Pokemon goal mode. */
+function withCodexCli(container: Container): Container {
+  return container
+    .withEnvVariable("BUN_INSTALL", "/usr/local")
+    .withExec(["bun", "add", "-g", `@openai/codex@${CODEX_CLI_VERSION}`])
+    .withExec(["codex", "--version"]);
+}
+
 /**
  * Install runtime binaries required by Birmel's Discord music stack.
  *
@@ -1005,7 +1013,7 @@ export function buildDiscordPlaysPokemonImageHelper(
   // ffmpeg + libvips for discord-video-stream (fluent-ffmpeg encode path + sharp)
   // plus the Intel VAAPI stack so ffmpeg can hardware-encode on the iGPU. No
   // browser/desktop — this is a headless Bun service.
-  container = withDiscordPlaysRuntime(container)
+  container = withCodexCli(withDiscordPlaysRuntime(container))
     .withWorkdir("/workspace")
     .withDirectory(innerRoot, pkgDir, {
       exclude: excludes,
@@ -1031,6 +1039,15 @@ export function buildDiscordPlaysPokemonImageHelper(
       .withExec(["bun", "install", "--frozen-lockfile"])
       .withWorkdir(`${innerRoot}/packages/backend`)
       .withExec(["bun", "install", "--frozen-lockfile"])
+      .withExec([
+        "install",
+        "-D",
+        "-m",
+        "0755",
+        `${innerRoot}/packages/backend/src/goal/pokemonctl.ts`,
+        "/usr/local/bin/pokemonctl",
+      ])
+      .withExec(["pokemonctl", "--help"])
       // Build the web UI served by the backend web server (web.assets).
       .withWorkdir(`${innerRoot}/packages/frontend`)
       .withExec(["bun", "run", "build"])
