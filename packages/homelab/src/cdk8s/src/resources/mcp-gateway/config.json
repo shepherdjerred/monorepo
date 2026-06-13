@@ -37,6 +37,22 @@
       "options": {
         "panicIfInvalid": false
       }
+    },
+    "edstem": {
+      "command": "node",
+      "args": ["/opt/edstem-mcp/dist/index.js"]
+    },
+    "gradescope": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/Yuanpeng-Li/gradescope-mcp.git@1e9743be7de62b14f9a6ddc843e2789ba6eb6d6e",
+        "gradescope-mcp"
+      ]
+    },
+    "discord": {
+      "command": "npx",
+      "args": ["-y", "mcp-discord@1.3.4"]
     }
   }
 }

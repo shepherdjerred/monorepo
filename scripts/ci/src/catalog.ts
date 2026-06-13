@@ -79,6 +79,13 @@ export const INFRA_PUSH_TARGETS: ImageTarget[] = [
     pushFn: "push-obsidian-headless-image",
   },
   {
+    name: "mcp-gateway",
+    package: "homelab",
+    versionKey: "shepherdjerred/mcp-gateway",
+    buildFn: "build-mcp-gateway-image",
+    pushFn: "push-mcp-gateway-image",
+  },
+  {
     name: "redlib",
     package: "homelab",
     versionKey: "shepherdjerred/redlib",
