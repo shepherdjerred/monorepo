@@ -72,3 +72,31 @@ PR); until then, a missing field surfaces as a pod crash-loop.
 
 - **Pokemon auth collapsed:** goal mode accepts any one of CODEX_ACCESS_TOKEN / CODEX_API_KEY / OPENAI_API_KEY (or a mounted auth.json). Per user, kept only `OPENAI_API_KEY` as a required ref and dropped the other two — so pokemon needs just that one 1P field.
 - Fresh-worktree pre-commit `eslint-homelab` fails with `jiti` not found until `bun install` is run in `packages/homelab/` root (eslint+jiti live there, not just in the cdk8s subpkg). Re: memory `reference_worktree_precommit_eslint`.
+
+## Session Log — 2026-06-13 (Greptile P1 address)
+
+### Done
+
+- Investigated Greptile P1 thread `PRRT_kwDOHf4r4c6JXA03` on PR #1163:
+  `PR_REVIEW_FIXTURES_REPO_URL omitted from the deploy gate table`.
+- Confirmed `PR_REVIEW_FIXTURES_REPO_URL` was intentionally absent from the deploy gate
+  table because it was already present in the 1P item (only missing fields needed to be
+  added before deploy). Unlike `BUILDKITE_API_TOKEN`, `HOMELAB_AUDIT_ARCHIVE_BUCKET`,
+  `PR_REVIEW_EVAL_DATABASE_URL`, `VOYAGE_API_KEY` which were listed as missing.
+- Added a confirming comment to `worker.ts` at line 404 explaining:
+  (a) the field is required and carried in 1P, (b) the self-pause mechanism in
+  `register-schedules.ts` handles the case where the env var is blank at runtime,
+  (c) why the original `optional: true` existed and why it was removed by this PR.
+- Typecheck + ESLint both pass.
+- Resolved PR thread via GraphQL mutation.
+
+### Remaining
+
+- None specific to this thread.
+
+### Caveats
+
+- The `PR_REVIEW_EVAL_DATABASE_URL` was dropped from the pod env (commit `ed92763b2`),
+  but `scheduleRequiresConfigPause` in `register-schedules.ts` still checks for it.
+  This means `pr-review-eval-nightly` schedule will always be paused (database env
+  var never set). That's acceptable behavior since `PR_BOT_ENABLED=false`.
