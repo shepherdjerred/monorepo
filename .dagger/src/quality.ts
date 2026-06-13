@@ -387,7 +387,8 @@ export function largeFileCheckHelper(source: Directory): Container {
     "bash",
     "-c",
     [
-      "bun packages/scout-for-lol/scripts/check-asset-sizes.ts;",
+      "assetExitCode=0;",
+      "bun packages/scout-for-lol/scripts/check-asset-sizes.ts || assetExitCode=1;",
       "extra=();",
       "if [ -f .largeignore ]; then",
       "  while IFS= read -r line; do",
@@ -407,7 +408,8 @@ export function largeFileCheckHelper(source: Directory): Container {
       '  echo "Files exceed 5MB limit:";',
       '  echo "$large";',
       "  exit 1;",
-      "fi",
+      "fi;",
+      "exit $assetExitCode",
     ].join(" "),
   ]);
 }
