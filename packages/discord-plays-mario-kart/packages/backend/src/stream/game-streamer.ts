@@ -6,6 +6,7 @@ import {
   playStream,
   Encoders,
   computeLetterbox,
+  type StreamObserver,
 } from "@shepherdjerred/discord-video-stream";
 import {
   WIDTH,
@@ -13,7 +14,21 @@ import {
   N64_FPS,
   DISPLAY_ASPECT,
 } from "#src/emulator/constants.ts";
-import { sinkBufferBytes, streamActive } from "#src/observability/metrics.ts";
+import {
+  sinkBufferBytes,
+  streamActive,
+  streamFfmpegBitrateKbps,
+  streamFfmpegFps,
+  streamFfmpegSpeedRatio,
+  streamFrameIntervalMs,
+  streamFrameWriteMs,
+  streamHwEncodeEngaged,
+} from "#src/observability/metrics.ts";
+import {
+  createStreamObserver,
+  newSessionStats,
+  type SessionStats,
+} from "#src/stream/stream-observer.ts";
 import { withSpan } from "#src/observability/tracing.ts";
 import { logger } from "#src/logger.ts";
 
@@ -45,6 +60,9 @@ export class GameStreamer {
   private bgra: PassThrough | undefined;
   private playing: Promise<void> | undefined;
   private active = false;
+  private session: SessionStats | undefined;
+  private sessionStartedAt = 0;
+  private lastPushAt: number | undefined;
   // Serializes start()/stop(). Both are driven fire-and-forget from
   // VoiceStateUpdate callbacks, so without this a stop() landing mid-start()
   // (or a second start()) could interleave at the `await joinVoice` point and
@@ -71,7 +89,15 @@ export class GameStreamer {
   /** Feed one BGRA frame (no-op unless a broadcast is active). */
   pushFrame(frame: Buffer): void {
     if (this.active && this.bgra) {
+      const pushAt = performance.now();
+      if (this.lastPushAt !== undefined) {
+        streamFrameIntervalMs.observe(pushAt - this.lastPushAt);
+      }
+      this.lastPushAt = pushAt;
       this.bgra.write(frame);
+      // A slow write is backpressure showing up before the buffer gauge moves.
+      streamFrameWriteMs.observe(performance.now() - pushAt);
+      if (this.session) this.session.framesPushed++;
       // Rising buffered bytes ⇒ ffmpeg/encode can't keep up with the frame rate.
       sinkBufferBytes.set(this.bgra.writableLength);
     }
@@ -127,7 +153,10 @@ export class GameStreamer {
       DISPLAY_ASPECT,
       this.options.canvasHeight,
     );
+    const session = newSessionStats();
+    const observer = createStreamObserver(session);
     const { output, promise } = prepareStream(bgra, {
+      observer,
       width: content.width,
       height: content.height,
       pad: canvas,
@@ -165,7 +194,10 @@ export class GameStreamer {
     // synchronous (no await between them), so pushFrame never sees a half-set
     // state.
     this.bgra = bgra;
-    this.playing = this.runStream(output, promise);
+    this.session = session;
+    this.sessionStartedAt = performance.now();
+    this.lastPushAt = undefined;
+    this.playing = this.runStream(output, promise, observer);
     this.active = true;
     streamActive.set(1);
     logger.info("Go-Live stream started");
@@ -177,10 +209,11 @@ export class GameStreamer {
   private async runStream(
     output: Readable,
     encode: Promise<void>,
+    observer: StreamObserver,
   ): Promise<void> {
     try {
       await Promise.all([
-        playStream(output, this.streamer, { type: "go-live" }),
+        playStream(output, this.streamer, { type: "go-live", observer }),
         encode,
       ]);
     } catch (error) {
@@ -202,10 +235,37 @@ export class GameStreamer {
     this.bgra?.end();
     this.bgra = undefined;
     sinkBufferBytes.set(0);
+    streamFfmpegSpeedRatio.set(0);
+    streamFfmpegFps.set(0);
+    streamFfmpegBitrateKbps.set(0);
+    streamHwEncodeEngaged.set(0);
+    this.lastPushAt = undefined;
     // runStream never rejects (it logs internally), so awaiting is safe.
     await this.playing;
     this.playing = undefined;
     this.streamer.leaveVoice();
+    const session = this.session;
+    this.session = undefined;
+    if (session) {
+      const durationS = (performance.now() - this.sessionStartedAt) / 1000;
+      logger.info("stream session summary", {
+        durationS: Math.round(durationS),
+        framesPushed: session.framesPushed,
+        pushedFps:
+          durationS > 0
+            ? Math.round((session.framesPushed / durationS) * 10) / 10
+            : 0,
+        videoFramesSent: session.videoFramesSent,
+        lateVideoFrames: session.lateVideoFrames,
+        latePct:
+          session.videoFramesSent > 0
+            ? Math.round(
+                (session.lateVideoFrames / session.videoFramesSent) * 1000,
+              ) / 10
+            : 0,
+        lastSpeedRatio: session.lastSpeedRatio,
+      });
+    }
     logger.info("Go-Live stream stopped");
   }
 

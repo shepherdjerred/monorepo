@@ -14,6 +14,7 @@ const config = [
         "src/webserver/dispatch.test.ts",
         "src/stream/overlay.test.ts",
         "src/input/input-latency-tracker.test.ts",
+        "src/stream/stream-observer.test.ts",
       ],
     },
   }),
