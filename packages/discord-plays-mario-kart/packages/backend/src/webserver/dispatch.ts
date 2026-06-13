@@ -6,6 +6,7 @@ import { match } from "ts-pattern";
 import type { Socket } from "socket.io";
 import { encodePng } from "#src/emulator/png.ts";
 import type { SeatManager } from "#src/input/seat-manager.ts";
+import { controllerRttMs } from "#src/observability/metrics.ts";
 import type {
   PlayerInputState,
   Request,
@@ -66,6 +67,9 @@ export function handleRequest(
       if (emulator === undefined) return;
       if (!seatManager.owns(sock.id, e.request.seat)) return; // not your seat
       emulator.setPlayerInput(e.request.seat, e.request.state);
+    })
+    .with({ request: { kind: "latency-report" } }, (e) => {
+      controllerRttMs.observe(e.request.rttMs);
     })
     .with({ request: { kind: "login" } }, (e) => {
       // TODO(todo:mario-kart-web-auth): real auth. Identity is cosmetic; seats gate control.

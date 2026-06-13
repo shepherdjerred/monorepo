@@ -186,6 +186,132 @@ export function createDiscordPlaysDashboard() {
     }),
   );
 
+  // Latency attribution rows (mario-kart emits these as of PR #1128; pokemon
+  // panels stay empty until it grows the same instruments).
+  builder.withRow(new dashboard.RowBuilder("Input path latency"));
+
+  builder.withPanel(
+    timeSeriesPanel({
+      title: "Input apply delay p95 (ms)",
+      description:
+        "Controller input arriving at the backend → latched into the emulator tick that applies it. Expected ≲ one frame budget (33ms@30fps); sustained higher ⇒ the tick loop is starved.",
+      targets: [
+        {
+          expr: `histogram_quantile(0.95, sum(rate(emulator_input_apply_delay_ms_bucket{${SCOPE}}[5m])) by (le, namespace))`,
+          legend: "{{namespace}}",
+        },
+      ],
+      gridPos: { x: 0, y: 40, w: 12, h: 8 },
+      unit: "ms",
+    }),
+  );
+
+  builder.withPanel(
+    timeSeriesPanel({
+      title: "Controller RTT (ms)",
+      description:
+        "Socket round trip measured by the web controller itself (reported every 2s per connected client). One-way controller→backend ≈ RTT/2.",
+      targets: [
+        {
+          expr: `histogram_quantile(0.5, sum(rate(controller_rtt_ms_bucket{${SCOPE}}[5m])) by (le, namespace))`,
+          legend: "p50 {{namespace}}",
+        },
+        {
+          expr: `histogram_quantile(0.95, sum(rate(controller_rtt_ms_bucket{${SCOPE}}[5m])) by (le, namespace))`,
+          legend: "p95 {{namespace}}",
+        },
+      ],
+      gridPos: { x: 12, y: 40, w: 12, h: 8 },
+      unit: "ms",
+    }),
+  );
+
+  builder.withRow(new dashboard.RowBuilder("Encoder / RTP send health"));
+
+  builder.withPanel(
+    timeSeriesPanel({
+      title: "ffmpeg speed ratio",
+      description:
+        "Media seconds encoded per wall-clock second (from timemark advance). Sustained <1 ⇒ the encoder can't keep realtime and latency builds.",
+      targets: [
+        {
+          expr: `max(stream_ffmpeg_speed_ratio{${SCOPE}}) by (namespace)`,
+          legend: "{{namespace}}",
+        },
+      ],
+      gridPos: { x: 0, y: 49, w: 8, h: 8 },
+      unit: "short",
+    }),
+  );
+
+  builder.withPanel(
+    timeSeriesPanel({
+      title: "ffmpeg output fps / bitrate",
+      targets: [
+        {
+          expr: `max(stream_ffmpeg_fps{${SCOPE}}) by (namespace)`,
+          legend: "fps {{namespace}}",
+        },
+        {
+          expr: `max(stream_ffmpeg_bitrate_kbps{${SCOPE}}) by (namespace)`,
+          legend: "kbps {{namespace}}",
+        },
+      ],
+      gridPos: { x: 8, y: 49, w: 8, h: 8 },
+      unit: "short",
+    }),
+  );
+
+  builder.withPanel(
+    timeSeriesPanel({
+      title: "RTP send frametime ratio p95",
+      description:
+        "Fraction of each frame's wall-clock budget spent sending it to Discord; >1 means the frame was sent late.",
+      targets: [
+        {
+          expr: `histogram_quantile(0.95, sum(rate(stream_send_frametime_ratio_bucket{${SCOPE}}[5m])) by (le, namespace))`,
+          legend: "{{namespace}}",
+        },
+      ],
+      gridPos: { x: 16, y: 49, w: 8, h: 8 },
+      unit: "short",
+    }),
+  );
+
+  builder.withPanel(
+    timeSeriesPanel({
+      title: "Late RTP sends (frames/s)",
+      targets: [
+        {
+          expr: `sum(rate(stream_send_late_frames_total{${SCOPE}}[5m])) by (namespace)`,
+          legend: "{{namespace}}",
+        },
+      ],
+      gridPos: { x: 0, y: 57, w: 12, h: 7 },
+      unit: "short",
+    }),
+  );
+
+  builder.withPanel(
+    timeSeriesPanel({
+      title: "Frame push interval & write p95 (ms)",
+      description:
+        "Cadence of frames handed to ffmpeg (should sit at the frame budget) and the pipe-write duration (rises with encoder backpressure).",
+      targets: [
+        {
+          expr: `histogram_quantile(0.95, sum(rate(stream_frame_interval_ms_bucket{${SCOPE}}[5m])) by (le, namespace))`,
+          legend: "interval {{namespace}}",
+        },
+        {
+          expr: `histogram_quantile(0.95, sum(rate(stream_frame_write_ms_bucket{${SCOPE}}[5m])) by (le, namespace))`,
+          legend: "write {{namespace}}",
+        },
+      ],
+      gridPos: { x: 12, y: 57, w: 12, h: 7 },
+      unit: "ms",
+    }),
+  );
+
   return builder.build();
 }
 

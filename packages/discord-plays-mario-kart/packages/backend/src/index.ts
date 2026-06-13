@@ -26,7 +26,9 @@ import { handleRequest } from "./webserver/dispatch.ts";
 import { logger } from "./logger.ts";
 import { getConfig } from "./config/index.ts";
 import { N64Emulator } from "./emulator/n64-emulator.ts";
+import { WIDTH } from "./emulator/constants.ts";
 import { GameStreamer } from "./stream/game-streamer.ts";
+import { drawHudOverlay } from "./stream/overlay.ts";
 import { SeatManager } from "./input/seat-manager.ts";
 
 const config = getConfig();
@@ -69,7 +71,11 @@ if (config.stream.enabled) {
 
   if (emulator) {
     const activeStreamer = streamer;
-    emulator.onFrame((frame) => {
+    const activeEmulator = emulator;
+    activeEmulator.onFrame((frame) => {
+      // HUD: capture-time wall clock (compare to `date -u` for glass-to-glass
+      // latency) + per-seat input echo (press→glass from a recording).
+      drawHudOverlay(frame, WIDTH, Date.now(), activeEmulator.seatActivity());
       activeStreamer.pushFrame(frame);
     });
   }

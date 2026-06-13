@@ -21,6 +21,7 @@ import type { Subscription } from "rxjs";
 import { createSocket } from "./socket.ts";
 import { handleRequest, type EmulatorControls } from "./dispatch.ts";
 import { SeatManager } from "#src/input/seat-manager.ts";
+import { registry } from "#src/observability/metrics.ts";
 import {
   EMPTY_BUTTONS,
   ResponseSchema,
@@ -109,6 +110,18 @@ function pressState(
   return { buttons: { ...EMPTY_BUTTONS, ...overrides }, analogX, analogY: 0 };
 }
 
+// Observation count of the controller_rtt_ms histogram. The registry is shared
+// across tests in this process, so callers must assert deltas, not absolutes.
+async function rttSampleCount(): Promise<number> {
+  const metrics = await registry.getMetricsAsJSON();
+  const hist = metrics.find((m) => m.name === "controller_rtt_ms");
+  if (hist === undefined) throw new Error("controller_rtt_ms not registered");
+  const count = hist.values.find(
+    (v) => v.metricName === "controller_rtt_ms_count",
+  );
+  return count?.value ?? 0;
+}
+
 describe("web controller dispatch (socket -> handleRequest -> emulator)", () => {
   it("claims a seat and routes that seat's input to the emulator", async () => {
     recorded.length = 0;
@@ -191,6 +204,35 @@ describe("web controller dispatch (socket -> handleRequest -> emulator)", () => 
     const release = await releaseResp;
     expect(release.value).toEqual({ seat: null });
     await waitUntil(() => cleared.includes(3));
+    client.close();
+  });
+
+  it("observes a reported controller RTT in the latency histogram", async () => {
+    const before = await rttSampleCount();
+    const client = await connect();
+    client.emit("request", { kind: "latency-report", rttMs: 42 });
+
+    const deadline = Date.now() + 1000;
+    while ((await rttSampleCount()) <= before && Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 10));
+    }
+    expect(await rttSampleCount()).toBe(before + 1);
+    client.close();
+  });
+
+  it("rejects out-of-range latency reports at the schema boundary", async () => {
+    const before = await rttSampleCount();
+    const client = await connect();
+    client.emit("request", { kind: "latency-report", rttMs: -1 });
+    client.emit("request", { kind: "latency-report", rttMs: "fast" });
+
+    await new Promise((r) => setTimeout(r, 150));
+    expect(await rttSampleCount()).toBe(before);
+    // Connection still alive after bad reports.
+    const statusResp = nextResponse(client, "status");
+    client.emit("request", { kind: "status" });
+    const status = await statusResp;
+    expect(status.kind).toBe("status");
     client.close();
   });
 
