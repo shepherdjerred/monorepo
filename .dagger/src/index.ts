@@ -69,6 +69,8 @@ import {
   pushTrmnlDashboardImageHelper,
   buildCiBaseImageHelper,
   pushCiBaseImageHelper,
+  buildRedlibImageHelper,
+  pushRedlibImageHelper,
 } from "./image";
 
 import { goBuildHelper, goTestHelper, goLintHelper } from "./golang";
@@ -434,6 +436,33 @@ export class Monorepo {
     gitSha: string = "unknown",
   ): Promise<string> {
     return pushObsidianHeadlessImageHelper(
+      tags,
+      registryUsername,
+      registryPassword,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Build the redlib image from upstream's glibc Dockerfile.ubuntu at a pinned commit. */
+  @func()
+  buildRedlibImage(
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildRedlibImageHelper(version, gitSha);
+  }
+
+  /** Push a redlib image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushRedlibImage(
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushRedlibImageHelper(
       tags,
       registryUsername,
       registryPassword,

@@ -20,6 +20,7 @@ import {
   GITHUB_MCP_SERVER_VERSION,
   KUBECTL_VERSION,
   OBSIDIAN_HEADLESS_BASE_IMAGE,
+  REDLIB_SOURCE_REF,
   TALOSCTL_VERSION,
   TEMPORAL_CLI_VERSION,
   TOFU_VERSION,
@@ -1321,6 +1322,57 @@ export async function pushTrmnlDashboardImageHelper(
     version,
     gitSha,
   );
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// redlib image (built from upstream's glibc Dockerfile.ubuntu)
+// ---------------------------------------------------------------------------
+
+/**
+ * Build the redlib image from upstream's glibc `Dockerfile.ubuntu` at a pinned
+ * commit (REDLIB_SOURCE_REF). We build it ourselves rather than pulling the
+ * published image because that one is musl/Alpine, and Reddit now blocks its
+ * TLS fingerprint during OAuth ("Failed to create OAuth client: 401
+ * Unauthorized", redlib-org/redlib#551). The glibc build is unaffected.
+ */
+export function buildRedlibImageHelper(
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Container {
+  // The cluster node (torvalds) is amd64. Platform is a branded string in the
+  // Dagger SDK with no public constructor, so cast it the same way the CI base
+  // image build does — otherwise dockerBuild can emit a wrong-arch image.
+  const platform: Platform = "linux/amd64" as unknown as Platform;
+  const redlibSource = dag
+    .git("https://github.com/redlib-org/redlib.git")
+    .commit(REDLIB_SOURCE_REF)
+    .tree();
+  return redlibSource
+    .dockerBuild({ dockerfile: "Dockerfile.ubuntu", platform })
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/redlib-org/redlib",
+    )
+    .withLabel("org.opencontainers.image.version", version)
+    .withLabel("org.opencontainers.image.revision", gitSha)
+    .withLabel("org.opencontainers.image.revision.redlib", REDLIB_SOURCE_REF);
+}
+
+/** Build and push a redlib image to a registry. Returns the digest. */
+export async function pushRedlibImageHelper(
+  tags: string[],
+  registryUsername: string,
+  registryPassword: Secret,
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Promise<string> {
+  const container = buildRedlibImageHelper(version, gitSha);
   return pushContainerHelper(
     container,
     tags,

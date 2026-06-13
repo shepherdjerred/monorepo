@@ -23,12 +23,14 @@ const versions = {
   // real tag@digest after the first image push. Seed digest is a placeholder until then.
   "shepherdjerred/streambot":
     "2.0.0-3822@sha256:ca8da71aafbe4d23eed4587822db78975150d276bcd167a134832ff34399cec8",
-  // renovate: datasource=docker registryUrl=https://quay.io versioning=docker
-  // Tracked via the rolling `latest` tag because upstream redlib only publishes
-  // sha-<short-commit> tags, which Renovate cannot version-compare. The global
-  // pinDigests rule (renovate.json) keeps the @sha256 fresh as `latest` moves.
-  "redlib/redlib":
-    "latest@sha256:e6647a94d553bf3f7c95c53fc6d9da5785e6c278d9002e99ea32abdb5e3c513a",
+  // not managed by renovate — built from upstream redlib's glibc Dockerfile.ubuntu
+  // at REDLIB_SOURCE_REF (.dagger/src/constants.ts). The published image is
+  // musl/Alpine, which Reddit blocks during OAuth (redlib-org/redlib#551 —
+  // "Failed to create OAuth client: 401 Unauthorized"); the glibc build works.
+  // CI's version commit-back fills the real tag@digest after the first image
+  // push; the seed digest below is a placeholder until then.
+  "shepherdjerred/redlib":
+    "2.0.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "itzg/minecraft-server":
     "2026.6.0-java21@sha256:496ee192e5f680e8c20bc51da90160fb294d37db98319fad3ecb82e852766e08",
