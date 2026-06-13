@@ -4,42 +4,39 @@
     "name": "MCP Gateway",
     "version": "1.0.0",
     "options": {
-      "authTokens": ["MCP_PROXY_AUTH_TOKEN_PLACEHOLDER"]
+      "authTokens": ["MCP_PROXY_AUTH_TOKEN_PLACEHOLDER"],
+      "panicIfInvalid": true
     }
   },
   "mcpServers": {
     "canvas": {
       "command": "npx",
-      "args": ["-y", "@r-huijts/canvas-mcp@1.0.8"]
+      "args": ["-y", "@r-huijts/canvas-mcp@CANVAS_MCP_VERSION"]
     },
     "home-assistant": {
-      "command": "uvx",
-      "args": [
-        "mcp-proxy",
-        "--transport=streamablehttp",
-        "--stateless",
-        "https://homeassistant.tailnet-1a49.ts.net/api/mcp"
-      ]
+      "transportType": "streamable-http",
+      "url": "https://homeassistant.tailnet-1a49.ts.net/api/mcp",
+      "headers": {
+        "Authorization": "Bearer HOMEASSISTANT_TOKEN_PLACEHOLDER"
+      }
     },
     "github": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github"]
-    },
-    "sonos": {
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/WinstonFassett/sonos-mcp-server.git",
-        "sonos-mcp-server"
-      ]
+      "args": ["-y", "@modelcontextprotocol/server-github@GITHUB_MCP_VERSION"]
     },
     "fastmail": {
-      "command": "npx",
-      "args": ["-y", "@jahfer/jmap-mcp-server"]
+      "transportType": "streamable-http",
+      "url": "https://api.fastmail.com/mcp",
+      "headers": {
+        "Authorization": "Bearer FASTMAIL_TOKEN_PLACEHOLDER"
+      }
     },
     "gmail": {
       "command": "npx",
-      "args": ["-y", "@automatearmy/email-reader-mcp"]
+      "args": ["-y", "@automatearmy/email-reader-mcp@GMAIL_MCP_VERSION"],
+      "options": {
+        "panicIfInvalid": false
+      }
     }
   }
 }
