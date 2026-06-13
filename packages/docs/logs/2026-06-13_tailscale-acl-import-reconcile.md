@@ -42,6 +42,7 @@ Net effect of a first apply is now only the intended change: **allow-all → den
 
 ### Caveats
 
+- **CI/ArgoCD backend access gap (found & fixed).** The k8s node `torvalds` is `tag:k8s`; the tofu state backend `seaweedfs-s3` and ArgoCD's `chartmuseum` are `tag:k8s` ingresses reached over the tailnet on 443. The first reconciled draft had **no `tag:k8s -> tag:k8s:443` rule**, and `/acl/validate` confirmed deny-by-default would **Drop** that traffic — which would break `tofu apply` for every stack and ArgoCD chart pulls. Fixed by adding an explicit `tag:k8s -> tag:k8s:443` acl + test. Lesson: `/acl/validate` proves the policy is valid and that _named_ tests pass, but it does NOT enumerate every real device-to-device path — those must be reasoned out from live tags (`tailscale status --json`).
 - The OAuth **client secret was pasted into chat** — rotate it in the admin console when convenient and re-store the new value in the same 1P fields.
 - `overwrite_existing_content = true`: apply replaces the entire console policy. The dry-run confirms the diff is behavior-preserving except allow-all→deny, but re-run `tofu plan` immediately before applying.
 - The state backend (`seaweedfs-s3.tailnet-1a49.ts.net`) is reachable only over the tailnet and only while the homelab is up.

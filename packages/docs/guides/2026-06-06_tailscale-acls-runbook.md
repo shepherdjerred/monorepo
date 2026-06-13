@@ -65,6 +65,8 @@ op run --env-file=.env -- tofu -chdir=tailscale apply
 - Operator still works: trigger/observe a new `tag:k8s` ingress proxy coming up healthy.
 - CI/state: confirm `tofu`/ArgoCD can still reach `seaweedfs-s3.tailnet` and the k8s API.
 
+> **Gotcha found & fixed during reconciliation:** the k8s node (`torvalds`) is `tag:k8s`, and both the tofu state backend (`seaweedfs-s3`) and ArgoCD's Helm repo (`chartmuseum`) are `tag:k8s` ingresses reached **over the tailnet on 443**. The first draft had no `tag:k8s -> tag:k8s:443` rule, so `/acl/validate` proved deny-by-default would **drop** that traffic — breaking `tofu apply` for every stack and ArgoCD chart pulls. `acl.tf` now has an explicit `tag:k8s -> tag:k8s:443` acl + test. The original `tag:ci` rule was aimed at this but `tag:ci` matches no device (CI runs on the `tag:k8s` node).
+
 ## 5. Enable CI drift detection — DONE
 
 The OAuth secrets exist in CI (`buildkite-ci-secrets` → `TAILSCALE_OAUTH_CLIENT_ID`/`SECRET`, step 1, reached via the existing `envFrom`), and the code wiring is in place:

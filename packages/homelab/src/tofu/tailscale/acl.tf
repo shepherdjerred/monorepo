@@ -58,13 +58,24 @@ resource "tailscale_acl" "homelab" {
       { action = "accept", src = ["tag:monitoring"], dst = ["tag:server:9090,9093,9100,10250"] },
       { action = "accept", src = ["tag:monitoring"], proto = "icmp", dst = ["tag:server:*"] },
 
-      # CI runners (tag:ci) must reach the SeaweedFS S3 backend that stores the
-      # OpenTofu state for every stack (cloudflare, github, seaweedfs, and this
-      # tailscale stack). That backend, seaweedfs-s3.tailnet-1a49.ts.net, is
-      # published by the Tailscale operator's ingress proxy (tag:k8s) on 443 —
-      # NOT a tag:server node — so the grant must target tag:k8s:443. Without it,
-      # deny-by-default would cut CI off from tofu state and break apply for ALL
-      # stacks, not just this one.
+      # Cluster components (tag:k8s — the k8s NODE itself plus the operator's
+      # ingress proxies) reach published *.ts.net ingresses on 443 OVER THE TAILNET.
+      # Two critical paths depend on this and would otherwise be dropped by
+      # deny-by-default (verified via /acl/validate: tag:k8s -> tag:k8s:443 = Drop
+      # without this rule):
+      #   * CI/tofu runs on the tag:k8s node and reaches
+      #     seaweedfs-s3.tailnet-1a49.ts.net — the SeaweedFS S3 backend that stores
+      #     OpenTofu state for EVERY stack. Losing this breaks `tofu apply`/`plan`
+      #     for cloudflare, github, seaweedfs, AND tailscale.
+      #   * ArgoCD pulls Helm charts from chartmuseum.tailnet-1a49.ts.net. Losing
+      #     this breaks chart pulls / deployments.
+      # Both targets are tag:k8s operator ingresses on 443. (The backend uses the
+      # *.ts.net tailnet endpoint deliberately — see backend.tf — not the in-cluster
+      # service, so the traffic is tailnet traffic subject to this ACL.)
+      { action = "accept", src = ["tag:k8s"], dst = ["tag:k8s:443"] },
+
+      # A dedicated CI runner tagged tag:ci (none today — CI currently runs on the
+      # tag:k8s node above) would also need the tofu-state backend on 443.
       { action = "accept", src = ["tag:ci"], dst = ["tag:k8s:443"] },
 
       # tag:iot intentionally gets NO inbound or outbound access, and tag:ci gets
@@ -115,6 +126,16 @@ resource "tailscale_acl" "homelab" {
         src    = "tag:monitoring"
         accept = ["tag:server:9100"]
         deny   = ["tag:server:22"]
+      },
+      # CRITICAL: the cluster node + proxies (tag:k8s) MUST reach tailnet ingresses
+      # on 443 — the tofu-state backend (seaweedfs-s3) and ArgoCD's chartmuseum.
+      # A future edit that drops the tag:k8s -> tag:k8s:443 acl fails here, before
+      # it can break tofu apply for every stack or ArgoCD deployments. They must
+      # NOT, however, get raw node SSH/k8s-API ports.
+      {
+        src    = "tag:k8s"
+        accept = ["tag:k8s:443"]
+        deny   = ["tag:k8s:22"]
       },
       # NOTE: the "non-admin members reach only the published web apps" invariant
       # is enforced by the `autogroup:members -> tag:k8s:80,443` acl above, but it
