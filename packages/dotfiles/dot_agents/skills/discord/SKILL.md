@@ -2,7 +2,7 @@
 name: discord
 description: |
   Interact with Discord live as an agent — send/read messages, invoke other bots' slash commands, join voice channels — by writing and running short TypeScript scripts with Bun.
-  Use when testing or iterating on Discord bots (streambot, birmel, discord-plays-pokemon), verifying bot behavior on a real server, or when any task needs to act on Discord directly.
+  Use when testing or iterating on Discord bots, verifying bot behavior on a real server, or when any task needs to act on Discord directly.
 ---
 
 # Discord Agent Access
@@ -16,10 +16,10 @@ Interact with Discord by **writing short TypeScript scripts and running them wit
 Load all needed fields with **one** batched `op` call (each `op` invocation needs manual approval). Example shape — substitute the item/vault/field labels the user gives you:
 
 ```bash
-cd packages/streambot && bash -c 'J=$(op item get <ITEM> --vault "<VAULT>" --format json --reveal) \
+bash -c 'J=$(op item get <ITEM> --vault "<VAULT>" --format json --reveal) \
   && export BOT_TOKEN=$(echo "$J" | jq -r ".fields[]|select((.label//.id)==\"BOT_TOKEN\").value") \
   && export TOKEN=$(echo "$J" | jq -r ".fields[]|select((.label//.id)==\"TOKEN\").value") \
-  && bun run scratch/<your-script>.ts'
+  && bun run <your-script>.ts'
 ```
 
 Never write tokens to files or print them to logs — env vars only, loaded in the same command that runs the script.
@@ -31,21 +31,20 @@ Never write tokens to files or print them to logs — env vars only, loaded in t
 | Userbot (selfbot, a real user account) | `discord.js-selfbot-v13` | Invoking **other bots' slash commands** (`sendSlash`), joining voice as a regular user, acting like a human tester |
 | Bot (application token) | `discord.js` v14 | Plain send/read, observing guild state (voice states, messages), registering throwaway slash commands |
 
-A bot **cannot** invoke another bot's slash commands or appear as a user in voice — that's what a userbot is for. The selfbot library is archived upstream (Oct 2025) but pinned and working in this repo.
+A bot **cannot** invoke another bot's slash commands or appear as a user in voice — that's what a userbot is for. The selfbot library is archived upstream (Oct 2025) but still works.
 
 Scripts may act on **any** server the chosen identity is in — confirm the target guild/channel IDs with the user. A userbot is a real account, so be deliberate in shared/production servers.
 
-### Example: streambot test setup
-
-One ready-made option for bot testing — the dedicated test server used by the streambot e2e (tokens in the `streambot-config` 1P item, Homelab (Kubernetes) vault: `BOT_TOKEN` = bot `Glidiot Helper#1544`, `TOKEN` = userbot `glidiot_`):
-
-- Guild: `1337623164146155593`
-- Text channel: `1337631455085334650`
-- Voice channel: `1337623164955398253`
-
 ## Where scripts live & how to run
 
-Write scratch scripts in `packages/streambot/scratch/` (gitignored) — Bun resolves `discord.js` and `discord.js-selfbot-v13` from that package. If `packages/streambot/node_modules` is missing, run `bun install --frozen-lockfile` there first.
+Set up a throwaway scratch dir (the explicit `debug` is required — a transitive dep of the selfbot lib fails to declare it and fresh installs break without it):
+
+```bash
+mkdir -p /tmp/discord-scratch && cd /tmp/discord-scratch \
+  && bun add discord.js@^14 discord.js-selfbot-v13@^3.7 debug
+```
+
+Write your script there and run it with `bun run` (tokens via env, see above). If you're working inside a repo that already has these deps installed, a gitignored scratch dir inside that package works too.
 
 ## Script skeleton (login, teardown, watchdog)
 
@@ -178,9 +177,9 @@ console.log(`round-trip ok: ${String(await interactionSeen)}`);
 await rest.put(Routes.applicationGuildCommands(bot.user.id, GUILD_ID), { body: [] });
 ```
 
-## Join voice / verify a stream (the streambot test loop)
+## Join voice / verify a stream
 
-Do **NOT** use `user.voice.joinChannel(...)` — it attempts a full media handshake with deprecated encryption modes and dies with `VOICE_CONNECTION_TIMEOUT`. To just *be present* in a voice channel (which is all you need to observe or trigger streaming), send a raw gateway VoiceStateUpdate (op 4) — the same mechanism `@shepherdjerred/discord-video-stream` uses:
+Do **NOT** use `user.voice.joinChannel(...)` — it attempts a full media handshake with deprecated encryption modes and dies with `VOICE_CONNECTION_TIMEOUT`. To just *be present* in a voice channel (which is all you need to observe or trigger streaming behavior), send a raw gateway VoiceStateUpdate (op 4):
 
 ```typescript
 const VOICE_CHANNEL_ID = "<target voice channel>";
@@ -201,7 +200,7 @@ await new Promise((resolve) => setTimeout(resolve, 3_000)); // let the state pro
 // observe voice states from the bot side (needs GuildVoiceStates intent)
 const guild = await bot.guilds.fetch(GUILD_ID);
 for (const [memberId, voiceState] of guild.voiceStates.cache) {
-  // voiceState.streaming === true → that member has a live Go-Live stream (e.g. streambot's streamer)
+  // voiceState.streaming === true → that member has a live Go-Live stream
   console.log(`${memberId} in ${String(voiceState.channelId)} streaming=${String(voiceState.streaming)} video=${String(voiceState.selfVideo)}`);
 }
 
@@ -212,10 +211,11 @@ user.ws.broadcast({
 });
 ```
 
-To actually **send** video/audio into the channel, use the `Streamer` class from `@shepherdjerred/discord-video-stream` (see `packages/streambot/src/streamer/streamer.ts` and `packages/streambot/e2e/run.ts` for the full pattern) — that's streambot's own job, so usually you want streambot to do it while you observe.
+To actually **send** video/audio into a channel, use `@shepherdjerred/discord-video-stream` (a maintained fork of `@dank074/discord-video-stream`) — its `Streamer` class drives the full media pipeline via ffmpeg. Usually the bot under test does the streaming while your script observes.
 
 ## Gotchas
 
+- Fresh installs of the selfbot lib fail at import time with `Cannot find package 'debug'` (undeclared transitive dep via werift-rtp) — always `bun add debug` alongside it.
 - discord.js v14 logs a `DeprecationWarning` about `ready` → `clientReady`; harmless, ignore it.
 - The selfbot lib's `destroy()` can throw (`this.connection.readyState` on null) — always wrap it (see skeleton).
 - Reading message *content* from the bot requires the privileged `MessageContent` intent (enabled per-application in the Discord developer portal).
@@ -225,5 +225,3 @@ To actually **send** video/audio into the channel, use the `Streamer` class from
 ## Related
 
 - `discord-bot-helper` skill — building bots with discord.js v14 (this skill is about *acting on* Discord, not building bots).
-- `packages/streambot/e2e/run.ts` — full dual-identity e2e (command bot + streaming userbot).
-- `packages/streambot/scratch/` — put your scripts here (gitignored).

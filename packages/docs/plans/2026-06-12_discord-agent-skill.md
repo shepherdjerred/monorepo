@@ -19,8 +19,8 @@ Building blocks that already existed:
 
 ## Deliverables
 
-1. **`discord` skill** — `packages/dotfiles/dot_agents/skills/discord/SKILL.md` (chezmoi source) + live copy at `~/.agents/skills/discord/SKILL.md`. Covers: identity selection (userbot vs bot), ask-the-user credential sourcing (single-batched-`op` loading), scratch-script workflow, and live-verified examples (send/read, sendSlash round-trip, gateway-op4 voice join + voice-state verification), plus gotchas. Agents may act on any server the chosen identity is in; the streambot test server is documented as one ready-made example.
-2. **Gitignore** — `packages/streambot/scratch/` added to root `.gitignore` (agent scratch scripts live there so Bun resolves the Discord deps).
+1. **`discord` skill** — `packages/dotfiles/dot_agents/skills/discord/SKILL.md` (chezmoi source) + live copy at `~/.agents/skills/discord/SKILL.md`. Covers: identity selection (userbot vs bot), ask-the-user credential sourcing (single-batched-`op` loading), standalone scratch-dir workflow (`bun add discord.js discord.js-selfbot-v13 debug` in a temp dir), and live-verified examples (send/read, sendSlash round-trip, gateway-op4 voice join + voice-state verification), plus gotchas. Per user direction the skill is fully generic: agents may act on any server the chosen identity is in, must ask the user for credentials and targets, and the skill names no specific monorepo bots, servers, or 1P items.
+2. **Gitignore** — `packages/streambot/scratch/` added to root `.gitignore` (used during this session's verification; the skill itself recommends a temp dir).
 3. This plan doc.
 
 ## Verification performed (live, 2026-06-12)
@@ -51,7 +51,7 @@ Findings baked into the skill as gotchas:
 - Researched Discord MCP server landscape (none fit: slash-command invocation + voice-as-user require a userbot).
 - Wrote and live-verified `packages/streambot/scratch/verify-skill.ts` — all 3 checks passed against the test guild.
 - Authored `discord` skill: `packages/dotfiles/dot_agents/skills/discord/SKILL.md` + live copy in `~/.agents/skills/discord/`.
-- Revised per user feedback: removed the test-server-only restriction (any server is allowed; test server kept as an example) and made the skill instruct agents to ask the user for the correct credentials/1P item instead of assuming `streambot-config`.
+- Revised per user feedback (twice): removed the test-server-only restriction (any server is allowed) and the assumed `streambot-config` credentials (agents must ask the user for the correct creds/1P item and targets); then removed all mentions of specific monorepo bots/projects from the skill, switching the script workflow to a standalone temp dir (`bun add discord.js@^14 discord.js-selfbot-v13@^3.7 debug` — `debug` is required because a selfbot transitive dep, werift-rtp, fails to declare it; verified by smoke test).
 - Added `packages/streambot/scratch/` to root `.gitignore`.
 - This plan doc; PR from branch `feature/discord-agent-skill`.
 
