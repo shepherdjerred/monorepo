@@ -189,6 +189,11 @@ export const commandDefinitions = [
         .addStringOption((o) =>
           o.setName("query").setDescription("search terms").setRequired(true),
         ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("help")
+        .setDescription("List all commands and supported sources"),
     ),
 ];
 
