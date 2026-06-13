@@ -7,11 +7,12 @@ customization:
     # See https://github.com/falcosecurity/libs/issues/2736
     - -lockdown
     - lockdown=integrity
-    # Power saving for NAS workload
-    - cpufreq.default_governor=powersave
-    - intel_pstate=passive
     # Limit deep C-states to reduce wake latency (good for NAS responsiveness)
     - processor.max_cstate=2
+    # NOTE: cpufreq.default_governor=powersave and intel_pstate=passive were
+    # removed 2026-06-12 to restore HWP (active-mode intel_pstate) after the
+    # AIO cooler made power-saving caps unnecessary. See
+    # packages/docs/logs/2026-05-24_torvalds-thermal-investigation.md.
   systemExtensions:
     officialExtensions:
       - siderolabs/i915

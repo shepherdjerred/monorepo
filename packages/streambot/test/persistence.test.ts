@@ -20,10 +20,11 @@ const U = UserIdSchema.parse("100000000000000001");
 
 function makeState(over: Partial<PersistedState> = {}): PersistedState {
   return {
-    version: 1,
+    version: 2,
     savedAt: 1000,
     guildId: G,
     channelId: C,
+    statusChannelId: C,
     loop: "off",
     volume: 100,
     current: {
@@ -43,7 +44,7 @@ const dirs: string[] = [];
 async function tempFile(): Promise<string> {
   const dir = await mkdtemp(path.join(tmpdir(), "streambot-state-"));
   dirs.push(dir);
-  return stateFilePath(dir);
+  return stateFilePath(dir, G, C);
 }
 
 afterEach(async () => {
@@ -95,7 +96,14 @@ describe("loadState fail-soft cases", () => {
 
   test("rejects a future schema version", async () => {
     const file = await tempFile();
-    await writeFile(file, JSON.stringify({ ...makeState(), version: 2 }));
+    await writeFile(file, JSON.stringify({ ...makeState(), version: 3 }));
+    expect(await loadState(file, 3600, 1000)).toBeNull();
+  });
+
+  test("rejects a legacy v1 file (cutover)", async () => {
+    const file = await tempFile();
+    const { statusChannelId: _drop, ...v1 } = makeState();
+    await writeFile(file, JSON.stringify({ ...v1, version: 1 }));
     expect(await loadState(file, 3600, 1000)).toBeNull();
   });
 });
