@@ -51,3 +51,27 @@ op item edit iixelnobjabehkgxhl3ekacdy4 --vault v64ocnykdqju4ui6j6pua56xw4 FASTM
 ```
 
 Once set, the 1Password operator re-syncs the secret (adds the two keys) and the pod recovers on its next retry (or `kubectl rollout restart deployment/mcp-gateway -n mcp-gateway`). No code change required.
+
+## Session Log — 2026-06-13
+
+### Done
+
+- Diagnosed both workloads to root cause (redlib musl OAuth block #551; mcp-gateway empty `FASTMAIL_TOKEN`/`GMAIL_TOKEN` 1Password fields).
+- Implemented redlib self-built glibc image end-to-end on `feature/redlib-glibc-image` (commit `9941e9b7c`): Dagger build/push funcs, `REDLIB_SOURCE_REF` pin, CI catalog + steps, homelab `versions.ts`/`redlib.ts`, Renovate git-refs manager.
+- Verified: `dagger call build-redlib-image` builds; CI generator emits redlib steps; scripts/ci + homelab typecheck; 237 ci tests; eslint/prettier/dagger-hygiene/markdownlint clean; Renovate regex matches.
+- Opened PR [#1147](https://github.com/shepherdjerred/monorepo/pull/1147); wrote this log (`f4df95383`); added memory `reference_redlib_glibc_image`.
+
+### Remaining
+
+- **redlib:** merge #1147 → CI pushes `ghcr.io/shepherdjerred/redlib` → **set the ghcr package Public** (GitHub UI) → version-commit-back PR merges → ArgoCD deploys. Confirm OAuth via redlib pod logs.
+- **mcp-gateway:** user to populate the two empty 1Password fields (see above), then verify pod goes `Running` (operator re-sync is automatic).
+
+### Caveats
+
+- redlib `versions.ts` seed digest is a placeholder (`sha256:000…`) until CI's first commit-back; the first deploy may briefly ImagePullBackOff and self-heals next pipeline.
+- Runtime OAuth not confirmed locally — local Dagger engine flakiness (see Workflow Friction), not a code issue.
+- redlib source tracks `main` HEAD (Renovate git-refs), so future redlib commits will open rebuild PRs; a broken upstream commit fails CI and stays unmerged (prod keeps last-good).
+
+## Workflow Friction
+
+- The local Dagger engine (`dagger v0.21.6`, engine container "Up 18h") reliably **builds** images but drops the connection — `Error: Post "http://dagger/query": unexpected EOF` — on **every** follow-on `with-exec … stdout`, `export-image`, and `as-tarball`. This made local runtime/image verification (e.g. running redlib to confirm OAuth, `docker load`-ing the image) impossible; only `dagger call build-redlib-image` (no output streaming) succeeded. Restarting the engine container (`docker restart dagger-engine-v0.21.6`) is the likely fix for a future session that needs local image runtime checks.
