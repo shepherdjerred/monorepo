@@ -184,6 +184,45 @@ describe("GoalManager", () => {
     await manager.shutdown();
   });
 
+  test("does not forward unrelated process secrets to the Codex subprocess", async () => {
+    const originalDiscordToken = Bun.env.DISCORD_TOKEN;
+    Bun.env.DISCORD_TOKEN = "super-secret-discord-token";
+    try {
+      const runtimeDirectory = await createRuntimeDirectory();
+      const process = makeProcess();
+      let spawnedEnvironment: Record<string, string> | undefined;
+      const manager = new GoalManager({
+        config: makeGoalConfig(runtimeDirectory),
+        controlToken: "token",
+        spawner: (_args, options) => {
+          spawnedEnvironment = options.env;
+          return process;
+        },
+        sendMessage: noopSendMessage,
+        now: () => new Date("2026-06-13T00:00:00.000Z"),
+      });
+
+      const result = await manager.startGoal({
+        goal: "Reach Petalburg",
+        requesterId: "user-a",
+        channelId: "channel",
+      });
+
+      expect(result.kind).toBe("started");
+      // The Codex credential the subprocess legitimately needs is still present.
+      expect(spawnedEnvironment?.CODEX_API_KEY).toBe("test-key");
+      // The bot token (and any other non-allowlisted secret) must not leak.
+      expect(spawnedEnvironment?.DISCORD_TOKEN).toBeUndefined();
+      await manager.shutdown();
+    } finally {
+      if (originalDiscordToken === undefined) {
+        delete Bun.env.DISCORD_TOKEN;
+      } else {
+        Bun.env.DISCORD_TOKEN = originalDiscordToken;
+      }
+    }
+  });
+
   test("accepts Codex access token without an API key", async () => {
     delete Bun.env.OPENAI_API_KEY;
     Bun.env.CODEX_ACCESS_TOKEN = "test-access-token";
