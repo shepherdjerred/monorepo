@@ -78,7 +78,9 @@ async function synthesizeApp(): Promise<string> {
   return app.synthYaml();
 }
 
-function parseWorkload(doc: string): z.infer<typeof WorkloadSchema> | undefined {
+function parseWorkload(
+  doc: string,
+): z.infer<typeof WorkloadSchema> | undefined {
   let parsed: unknown;
   try {
     parsed = parseYaml(doc);
@@ -157,13 +159,18 @@ describe("Container resource requests backstop", () => {
         !BEST_EFFORT_CONTAINER_ALLOWLIST.has(`${workload}/${container}`),
     );
     expect(
-      unexpected.map((c) => `${c.kind} ${c.workload}/${c.container}${c.init ? " (init)" : ""}`),
+      unexpected.map(
+        (c) =>
+          `${c.kind} ${c.workload}/${c.container}${c.init ? " (init)" : ""}`,
+      ),
     ).toEqual([]);
   });
 
   it("allowlist has no stale entries", () => {
     const missingKeys = new Set(
-      collected.missing.map(({ workload, container }) => `${workload}/${container}`),
+      collected.missing.map(
+        ({ workload, container }) => `${workload}/${container}`,
+      ),
     );
     const stale = [...BEST_EFFORT_CONTAINER_ALLOWLIST].filter(
       (key) => !missingKeys.has(key),
