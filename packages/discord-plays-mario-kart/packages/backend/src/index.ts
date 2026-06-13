@@ -5,6 +5,12 @@ Sentry.init({
     Bun.env.SENTRY_DSN ??
     "https://9c905c2bb5924e55b4dea32e2a95f0d1@bugsink.sjer.red/8",
   environment: Bun.env.NODE_ENV ?? "development",
+  // Don't let Sentry register the global OTel TracerProvider/Propagator/
+  // ContextManager. It runs before initializeTracing(), so it lands first and
+  // the NodeSDK below fails registration ("duplicate registration of API:
+  // trace") — spans then route through Sentry's sampler (tracesSampleRate
+  // unset) and never reach Tempo. Sentry stays for errors via captureException.
+  skipOpenTelemetrySetup: true,
 });
 
 import { initializeTracing } from "./observability/tracing.ts";
