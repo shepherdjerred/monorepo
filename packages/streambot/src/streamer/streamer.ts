@@ -15,7 +15,6 @@ import type {
   RunStreamInput,
   VoiceHandle,
 } from "@shepherdjerred/streambot/machine/types.ts";
-import { buildSubtitleFilter } from "@shepherdjerred/streambot/sources/subtitles.ts";
 import { computeElapsed } from "@shepherdjerred/streambot/streamer/elapsed.ts";
 import {
   GuildIdSchema,
@@ -211,11 +210,11 @@ export class StreambotStreamer implements StreamerLike {
     input: RunStreamInput,
     signal: AbortSignal,
   ): Promise<void> => {
-    // libass subtitle burn-in is a CPU filter that doesn't compose with the VAAPI hardware-frame
-    // graph, so force software encoding whenever this track has burned-in subtitles. VAAPI is still
-    // used for subtitle-free videos.
-    const hasSubtitle = input.resolved.subtitle !== undefined;
-    const useHardware = this.config.stream.hardwareAcceleration && !hasSubtitle;
+    // Subtitles no longer disqualify VAAPI: prepareStream composes them as a GPU overlay branch
+    // (libass alpha canvas → hwupload → overlay_vaapi), so decode, scale, tonemap, and encode all
+    // stay on the GPU even with burned-in subs. The HW→SW retry below remains the safety net for
+    // graph features the device lacks (tonemap_vaapi/overlay_vaapi on older iGPUs).
+    const useHardware = this.config.stream.hardwareAcceleration;
     try {
       try {
         // Start at the resume offset (0 for a fresh play; >0 when resuming after a restart).
@@ -276,8 +275,12 @@ export class StreambotStreamer implements StreamerLike {
       minimizeLatency: false,
       ...(startSeconds > 0 ? { startTime: startSeconds } : {}),
       ...(input.resolved.subtitle
-        ? { videoFilters: [buildSubtitleFilter(input.resolved.subtitle.path)] }
+        ? { subtitleBurn: { path: input.resolved.subtitle.path } }
         : {}),
+      // HDR sources get tonemapped to BT.709 SDR by the pipeline (tonemap_vaapi on the GPU path,
+      // a zimg chain on the software path) — without it, PQ/HLG content looks washed out.
+      inputColor:
+        input.resolved.hdr === true ? ("hdr" as const) : ("sdr" as const),
       ...(useHardware
         ? { encoder: Encoders.vaapi({ device: stream.vaapiDevice }) }
         : {}),

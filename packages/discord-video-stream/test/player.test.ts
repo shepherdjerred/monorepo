@@ -50,7 +50,7 @@ function makeStreamer() {
 /** Fake prepareStream/attachPipeline that record calls and expose per-segment control. */
 function makeDeps() {
   const prepareCalls = [];
-  const videoFiltersCalls = [];
+  const subtitleBurnCalls = [];
   const ffmpeg = [];
   const attachCalls = [];
   const segments = [];
@@ -60,7 +60,7 @@ function makeDeps() {
   const deps = {
     prepareStream: (_input, opts) => {
       prepareCalls.push({ startTime: opts.startTime });
-      videoFiltersCalls.push(opts.videoFilters);
+      subtitleBurnCalls.push(opts.subtitleBurn);
       const ff = deferred();
       ffmpeg.push(ff);
       return {
@@ -94,7 +94,7 @@ function makeDeps() {
   return {
     deps,
     prepareCalls,
-    videoFiltersCalls,
+    subtitleBurnCalls,
     ffmpeg,
     attachCalls,
     segments,
@@ -196,22 +196,24 @@ describe("createSeekablePlayer", () => {
     expect(streamer.calls.stopStream).toBe(1);
   });
 
-  test("prepare.videoFilters (e.g. burned subtitles) are applied on start AND re-applied after seek", async () => {
+  test("prepare.subtitleBurn is applied on start AND re-applied after seek with the new offset", async () => {
     const streamer = makeStreamer();
     const f = makeDeps();
-    const filters = ["subtitles='/tmp/streambot-subs/x.srt'"];
+    const subtitleBurn = { path: "/tmp/streambot-subs/x.srt" };
     const player = createSeekablePlayer(
       streamer,
       "video.mkv",
-      { prepare: { videoFilters: filters } },
+      { prepare: { subtitleBurn } },
       f.deps,
     );
     await player.start();
     await player.seek(120);
 
-    // Same filter list reaches ffmpeg on the initial segment and on the post-seek restart, so the
-    // burned subtitles survive a /stream seek (and, by the same mechanism, the HW→SW retry).
-    expect(f.videoFiltersCalls).toEqual([filters, filters]);
+    // The same subtitleBurn option reaches ffmpeg on the initial segment and on the post-seek
+    // restart, and each restart carries its own startTime — prepareStream derives the subtitle
+    // PTS compensation from that, so the burned cues track the seek (and, by the same mechanism,
+    // the HW→SW retry).
+    expect(f.subtitleBurnCalls).toEqual([subtitleBurn, subtitleBurn]);
     expect(f.prepareCalls).toEqual([
       { startTime: undefined },
       { startTime: 120 },

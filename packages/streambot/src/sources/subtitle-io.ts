@@ -9,13 +9,12 @@ import {
   effectiveSubtitleConfig,
   parseFfprobeSubtitles,
   parseSidecarName,
-  pickEmbeddedSubtitle,
   pickWrittenSubtitleFile,
-  rankSidecars,
+  rankSubtitleCandidates,
+  toEmbeddedCandidates,
   ytdlpSubtitleArgs,
-  type EffectiveSubtitleConfig,
   type FfprobeSubtitleStream,
-  type SidecarCandidate,
+  type SubtitleCandidate,
 } from "@shepherdjerred/streambot/sources/subtitles.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
@@ -80,10 +79,10 @@ async function run(cmd: string[], signal: AbortSignal): Promise<ProcResult> {
   }
 }
 
-async function findSidecarFile(
+/** All sidecar candidates next to the video (Plex/Bazarr naming) — unranked. */
+async function gatherSidecarCandidates(
   filePath: string,
-  eff: EffectiveSubtitleConfig,
-): Promise<string | undefined> {
+): Promise<SubtitleCandidate[]> {
   const dir = path.dirname(filePath);
   const videoBase = path.basename(filePath, path.extname(filePath));
   let entries: string[];
@@ -94,15 +93,14 @@ async function findSidecarFile(
       dir,
       error: getErrorMessage(error),
     });
-    return undefined;
+    return [];
   }
-  const candidates: SidecarCandidate[] = [];
+  const candidates: SubtitleCandidate[] = [];
   for (const file of entries) {
     const info = parseSidecarName(file, videoBase);
-    if (info !== null) candidates.push({ ...info, file });
+    if (info !== null) candidates.push({ kind: "sidecar", ...info, file });
   }
-  const best = rankSidecars(candidates, eff.languages, eff.pinnedModifier);
-  return best === null ? undefined : path.join(dir, best.file);
+  return candidates;
 }
 
 async function stageSidecar(
@@ -124,12 +122,12 @@ async function stageSidecar(
   }
 }
 
-async function extractEmbedded(
+/** All burnable embedded text-track candidates from ffprobe — unranked; [] on any failure. */
+async function probeEmbeddedCandidates(
   config: Config,
   filePath: string,
-  eff: EffectiveSubtitleConfig,
   signal: AbortSignal,
-): Promise<ResolvedSubtitle | undefined> {
+): Promise<SubtitleCandidate[]> {
   const probe = await run(
     [
       config.ffprobePath,
@@ -148,7 +146,7 @@ async function extractEmbedded(
     log.debug("ffprobe found no subtitle streams (or failed)", {
       file: filePath,
     });
-    return undefined;
+    return [];
   }
   let streams: FfprobeSubtitleStream[];
   try {
@@ -157,17 +155,25 @@ async function extractEmbedded(
     log.warn("could not parse ffprobe subtitle output", {
       error: getErrorMessage(error),
     });
-    return undefined;
+    return [];
   }
-  const pick = pickEmbeddedSubtitle(streams, eff.languages, eff.pinnedModifier);
-  if (pick === null) {
-    if (streams.length > 0) {
-      log.info("only non-text embedded subtitles; skipping burn-in", {
-        file: filePath,
-      });
-    }
-    return undefined;
+  const candidates = toEmbeddedCandidates(streams);
+  if (streams.length > 0 && candidates.length === 0) {
+    log.info("embedded subtitles are image-only (PGS/VobSub); cannot burn", {
+      file: filePath,
+    });
   }
+  return candidates;
+}
+
+/** Extract one embedded text track (by subtitle-relative index) to a staged SRT temp file. */
+async function extractEmbeddedTrack(
+  config: Config,
+  filePath: string,
+  track: { subtitleIndex: number; codec: string },
+  signal: AbortSignal,
+): Promise<ResolvedSubtitle | undefined> {
+  const { subtitleIndex, codec } = track;
   const dir = await ensureTempDir();
   const dest = tempFile(dir, "srt");
   const extract = await run(
@@ -177,7 +183,7 @@ async function extractEmbedded(
       "-i",
       filePath,
       "-map",
-      `0:s:${String(pick.subtitleIndex)}`,
+      `0:s:${String(subtitleIndex)}`,
       "-c:s",
       "srt",
       dest,
@@ -193,16 +199,19 @@ async function extractEmbedded(
   }
   log.info("extracted embedded subtitle", {
     file: filePath,
-    stream: pick.subtitleIndex,
-    codec: pick.codec,
+    stream: subtitleIndex,
+    codec,
   });
   return { path: dest, cleanupPath: dest };
 }
 
 /**
- * Resolve a burnable subtitle for a local file: prefer a sibling sidecar, otherwise extract an embedded
- * text track. Returns undefined when subtitles are disabled or no usable track exists (a normal case —
- * playback continues without subtitles).
+ * Resolve a burnable subtitle for a local file. Sidecars and embedded text tracks compete in ONE
+ * cross-source ranking (language → full/SDH/forced quality → sidecar-first tie-break), so a
+ * forced-only sidecar no longer shadows a full embedded track. Candidates are staged in ranked
+ * order — a stage/extract failure falls through to the next-best track. Returns undefined when
+ * subtitles are disabled or no usable track exists (a normal case — playback continues without
+ * subtitles).
  */
 export async function resolveSubtitleForFile(
   config: Config,
@@ -216,12 +225,31 @@ export async function resolveSubtitleForFile(
   // Best-effort: any unexpected failure (fs, ffprobe/ffmpeg missing, temp-dir error) degrades to
   // "no subtitle" rather than aborting playback.
   try {
-    const sidecarPath = await findSidecarFile(filePath, eff);
-    if (sidecarPath !== undefined) {
-      const staged = await stageSidecar(sidecarPath);
-      if (staged !== undefined) return staged;
+    const sidecars = await gatherSidecarCandidates(filePath);
+    const embedded = await probeEmbeddedCandidates(config, filePath, signal);
+    const ranked = rankSubtitleCandidates(
+      [...sidecars, ...embedded],
+      eff.languages,
+      eff.pinnedModifier,
+    );
+    for (const candidate of ranked) {
+      const staged =
+        candidate.kind === "sidecar"
+          ? await stageSidecar(
+              path.join(path.dirname(filePath), candidate.file),
+            )
+          : await extractEmbeddedTrack(config, filePath, candidate, signal);
+      if (staged !== undefined) {
+        log.info("subtitle selected", {
+          file: filePath,
+          kind: candidate.kind,
+          lang: candidate.lang,
+          modifier: candidate.modifier,
+        });
+        return staged;
+      }
     }
-    return await extractEmbedded(config, filePath, eff, signal);
+    return undefined;
   } catch (error) {
     log.warn("subtitle resolution failed; continuing without subtitles", {
       file: filePath,

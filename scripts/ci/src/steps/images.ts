@@ -61,6 +61,7 @@ function imageBuildStep(
     "build-caddy-s-3-proxy-image",
     "build-obsidian-headless-image",
     "build-mcp-gateway-image",
+    "build-redlib-image",
   ]);
 
   const flags = depFlags(pkg);
@@ -212,6 +213,7 @@ function imagePushStep(
     "push-caddy-s-3-proxy-image",
     "push-obsidian-headless-image",
     "push-mcp-gateway-image",
+    "push-redlib-image",
   ]);
   const flags = depFlags(pkg);
 

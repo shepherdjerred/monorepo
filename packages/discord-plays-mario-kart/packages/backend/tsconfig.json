@@ -10,5 +10,15 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "exclude": ["**/*.test.ts", "eslint.config.ts"]
+  "exclude": [
+    "eslint.config.ts",
+    "generated",
+    "src/config/index.test.ts",
+    "src/emulator/constants.test.ts",
+    "src/emulator/png.test.ts",
+    "src/input/input-latency-tracker.test.ts",
+    "src/stream/overlay.test.ts",
+    "src/stream/stream-observer.test.ts",
+    "src/webserver/dispatch.test.ts"
+  ]
 }

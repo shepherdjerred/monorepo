@@ -8,6 +8,7 @@ import { dag, Container, Directory, File, Secret } from "@dagger.io/dagger";
 import {
   BUN_IMAGE,
   CADDY_BUILDER_IMAGE,
+  CADDY_S3_PROXY_MODULE,
   CADDY_IMAGE,
   BUN_CACHE,
   GO_BUILD,
@@ -35,12 +36,7 @@ function caddyS3ProxyBinary(): File {
     .from(CADDY_BUILDER_IMAGE)
     .withMountedCache("/go/pkg/mod", dag.cacheVolume(GO_MOD))
     .withMountedCache("/root/.cache/go-build", dag.cacheVolume(GO_BUILD))
-    .withExec([
-      "xcaddy",
-      "build",
-      "--with",
-      "github.com/lindenlab/caddy-s3-proxy",
-    ])
+    .withExec(["xcaddy", "build", "--with", CADDY_S3_PROXY_MODULE])
     .file("/usr/bin/caddy");
 }
 

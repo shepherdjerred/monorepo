@@ -27,7 +27,7 @@ Commands:
   pr health [PR_NUMBER]      Check PR health (conflicts, CI, approval)
   pr logs <RUN_ID>           Get workflow run logs
   pr detect                  Detect PR for current branch
-  pr asset <PR> <FILE...>    Upload PR screenshots to public.sjer.red, print URLs
+  pr asset <PR> <FILE|DIR...>  Upload PR media (images, video, .cast, demo dirs) to public.sjer.red
 
   deployed [SELECTOR]        Is my commit/service deployed to the homelab k8s?
   deployed <service>         e.g. scout, birmel — is its latest commit live?

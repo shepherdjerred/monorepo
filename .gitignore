@@ -45,6 +45,7 @@ packages/dpp/
 /.claude/hooks/*
 !/.claude/hooks/trust-mise.sh
 !/.claude/hooks/install-git-hooks.sh
+!/.claude/hooks/worktree-reminder.sh
 /.claude.json
 /.claude.json.*
 

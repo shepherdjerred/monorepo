@@ -11,6 +11,7 @@ import {
   BUN_CACHE,
   BUILDKITE_CLI_VERSION,
   CADDY_BUILDER_IMAGE,
+  CADDY_S3_PROXY_MODULE,
   CADDY_IMAGE,
   CLAUDE_CODE_VERSION,
   CODEX_CLI_VERSION,
@@ -19,6 +20,7 @@ import {
   GITHUB_MCP_SERVER_VERSION,
   KUBECTL_VERSION,
   OBSIDIAN_HEADLESS_BASE_IMAGE,
+  REDLIB_SOURCE_REF,
   TALOSCTL_VERSION,
   TEMPORAL_CLI_VERSION,
   TOFU_VERSION,
@@ -257,6 +259,10 @@ function withDiscordPlaysRuntime(container: Container): Container {
       "ca-certificates",
       "ffmpeg",
       "libvips42",
+      // fontconfig: sharp/libvips text rendering (the leaderboard name overlay)
+      // needs it initialised even though the glyphs come from a bundled TTF
+      // passed via `fontfile` — without it sharp logs a fontconfig error.
+      "fontconfig",
       "libva2",
       "libva-drm2",
       "vainfo",
@@ -683,8 +689,8 @@ export function buildImageHelper(
  *
  * Uses shepherdjerred/caddy-s3-proxy as a drop-in replacement for the upstream
  * lindenlab module — keeps the import path so existing Caddyfiles work, but
- * adds native HEAD support and fixes the 304-on-index regression. See
- * upstream PR (TBD) tracking the contribution back to lindenlab.
+ * adds native HEAD support, fixes the 304-on-index regression, and returns
+ * 206 + Accept-Ranges on byte-range requests. See CADDY_S3_PROXY_MODULE.
  */
 export function buildCaddyS3ProxyImageHelper(
   version: string = "dev",
@@ -694,12 +700,7 @@ export function buildCaddyS3ProxyImageHelper(
   const caddyBinary = dag
     .container()
     .from(CADDY_BUILDER_IMAGE)
-    .withExec([
-      "xcaddy",
-      "build",
-      "--with",
-      "github.com/lindenlab/caddy-s3-proxy=github.com/shepherdjerred/caddy-s3-proxy@v0.5.7-head1",
-    ])
+    .withExec(["xcaddy", "build", "--with", CADDY_S3_PROXY_MODULE])
     .file("/usr/bin/caddy");
 
   // Stage 2: Runtime image with the custom binary
@@ -1217,6 +1218,9 @@ export function buildDiscordPlaysMarioKartImageHelper(
       .withExec(["bun", "install", "--frozen-lockfile"])
       .withWorkdir(`${innerRoot}/packages/backend`)
       .withExec(["bun", "install", "--frozen-lockfile"])
+      // Generate the Prisma client for the leaderboard DB (output is gitignored,
+      // so it must be produced in the image). Mirrors the birmel/scout flow.
+      .withExec(["bunx", "--trust", "prisma", "generate"])
       // Build the web UI served by the backend web server (web.assets).
       .withWorkdir(`${innerRoot}/packages/frontend`)
       .withExec(["bun", "run", "build"])
@@ -1229,9 +1233,17 @@ export function buildDiscordPlaysMarioKartImageHelper(
       .withEnvVariable("VERSION", version)
       .withEnvVariable("GIT_SHA", gitSha)
       // Run from the inner-monorepo root so getConfig()/emulator resolve
-      // config.toml, the n64wasm assets, and saves/ relative to CWD.
+      // config.toml, the n64wasm assets, and saves/ relative to CWD. Apply the
+      // leaderboard schema to the (persistent-volume) SQLite DB before start —
+      // idempotent, birmel-style; harmless when leaderboards are disabled.
       .withWorkdir(innerRoot)
-      .withEntrypoint(["bun", "packages/backend/src/index.ts"])
+      .withEntrypoint([
+        "sh",
+        "-c",
+        "cd packages/backend && bunx prisma db push --skip-generate && cd " +
+          innerRoot +
+          " && exec bun packages/backend/src/index.ts",
+      ])
   );
 }
 
@@ -1325,6 +1337,57 @@ export async function pushTrmnlDashboardImageHelper(
     version,
     gitSha,
   );
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// redlib image (built from upstream's glibc Dockerfile.ubuntu)
+// ---------------------------------------------------------------------------
+
+/**
+ * Build the redlib image from upstream's glibc `Dockerfile.ubuntu` at a pinned
+ * commit (REDLIB_SOURCE_REF). We build it ourselves rather than pulling the
+ * published image because that one is musl/Alpine, and Reddit now blocks its
+ * TLS fingerprint during OAuth ("Failed to create OAuth client: 401
+ * Unauthorized", redlib-org/redlib#551). The glibc build is unaffected.
+ */
+export function buildRedlibImageHelper(
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Container {
+  // The cluster node (torvalds) is amd64. Platform is a branded string in the
+  // Dagger SDK with no public constructor, so cast it the same way the CI base
+  // image build does — otherwise dockerBuild can emit a wrong-arch image.
+  const platform: Platform = "linux/amd64" as unknown as Platform;
+  const redlibSource = dag
+    .git("https://github.com/redlib-org/redlib.git")
+    .commit(REDLIB_SOURCE_REF)
+    .tree();
+  return redlibSource
+    .dockerBuild({ dockerfile: "Dockerfile.ubuntu", platform })
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/redlib-org/redlib",
+    )
+    .withLabel("org.opencontainers.image.version", version)
+    .withLabel("org.opencontainers.image.revision", gitSha)
+    .withLabel("org.opencontainers.image.revision.redlib", REDLIB_SOURCE_REF);
+}
+
+/** Build and push a redlib image to a registry. Returns the digest. */
+export async function pushRedlibImageHelper(
+  tags: string[],
+  registryUsername: string,
+  registryPassword: Secret,
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Promise<string> {
+  const container = buildRedlibImageHelper(version, gitSha);
   return pushContainerHelper(
     container,
     tags,

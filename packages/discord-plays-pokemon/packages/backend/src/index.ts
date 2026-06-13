@@ -33,6 +33,10 @@ import { enqueueCommand, framesFromMs } from "./emulator/command-sink.ts";
 import type { CommandTiming } from "./emulator/command-sink.ts";
 import { encodePng } from "./emulator/png.ts";
 import { GameStreamer } from "./stream/game-streamer.ts";
+import discordClient from "./discord/client.ts";
+import { createGameEventWatcher } from "./game/events/watcher.ts";
+import { createEventNotifier } from "./discord/event-notifier.ts";
+import type { EventToggles } from "./discord/event-notifier.ts";
 import type {
   LoginResponse,
   StatusResponse,
@@ -159,6 +163,55 @@ if (emulator && config.bot.enabled && config.bot.commands.enabled) {
     await registerSlashCommands();
   }
   handleSlashCommands(emulator);
+}
+
+// ---- in-game event notifications ----
+// Polls emulator memory each Nth frame and posts detected events (faints,
+// badges, evolutions, catches, ...). Built inside a try/catch so a missing wasm
+// symbol degrades to "no notifications" rather than taking down the stream.
+if (
+  emulator &&
+  config.bot.enabled &&
+  config.bot.notifications.enabled &&
+  config.bot.notifications.events.enabled
+) {
+  const eventsConfig = config.bot.notifications.events;
+  try {
+    const activeEmulator = emulator;
+    const watcher = createGameEventWatcher({
+      reader: activeEmulator.memoryReader(),
+      symbols: activeEmulator.gameSymbols(),
+    });
+    const toggles: EventToggles = {
+      faint: eventsConfig.faint,
+      whiteout: eventsConfig.whiteout,
+      badge: eventsConfig.badge,
+      evolution: eventsConfig.evolution,
+      catch: eventsConfig.catch,
+      levelUp: eventsConfig.level_up,
+      dexEntry: eventsConfig.dex_entry,
+    };
+    const notifier = createEventNotifier({
+      client: discordClient,
+      channelId: config.bot.notifications.channel_id,
+      toggles,
+      mode: eventsConfig.mode,
+      attachScreenshot: eventsConfig.attach_screenshot,
+      renderScreenshot: () => encodePng(activeEmulator.renderFrame(), 3),
+    });
+    const interval = eventsConfig.poll_interval_frames;
+    activeEmulator.addFrameHook((frame) => {
+      if (frame % interval !== 0) return;
+      for (const event of watcher.poll()) {
+        notifier.enqueue(event);
+      }
+    });
+    logger.info(
+      `game event notifications enabled (mode=${eventsConfig.mode}, every ${String(interval)} frames)`,
+    );
+  } catch (error) {
+    logger.error("failed to start game event notifications", error);
+  }
 }
 
 // ---- discord text commands ----

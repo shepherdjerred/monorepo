@@ -138,13 +138,37 @@ Design notes encoded in the code:
 
 The agent-facing how-to lives in the `discord` skill.
 
-## `pr asset` — PR screenshot host
+## `pr asset` — PR media host
 
-`toolkit pr asset <PR> <file...> [--markdown] [--profile <name>]` uploads files
-to the `public-sjer-red` SeaweedFS bucket under `pr/assets/<PR>/` and prints the
-public `https://public.sjer.red/...` URLs for embedding in PRs. Uses
-`@aws-sdk/client-s3` with `forcePathStyle: true` (path-style is required for
-SeaweedFS).
+`toolkit pr asset <PR> <file|dir...> [--markdown] [--profile <name>]` uploads
+PR media (screenshots, GIFs, videos, asciinema recordings, static demo-site
+directories) to the `public-sjer-red` SeaweedFS bucket under `pr/assets/<PR>/`
+and prints one public `https://public.sjer.red/...` URL per argument for
+embedding in PRs. Uses `@aws-sdk/client-s3` with `forcePathStyle: true`
+(path-style is required for SeaweedFS).
+
+Behavior by input type:
+
+- **Directories** are auto-detected (no flag), must contain a root
+  `index.html` (fail-fast otherwise), and upload recursively to
+  `pr/assets/<PR>/<dirname>/<relative path>`; dotfiles/dot-dirs and symlinks
+  inside are skipped. The printed URL points at `index.html`, so no
+  server-side SPA fallback is involved.
+- **`.cast` recordings** (asciinema) also upload a generated self-contained
+  HTML player page at `<name>.cast.html` — the `asciinema-player` npm
+  package's JS/CSS are vendored via Bun text imports and inlined, so the page
+  has no CDN or node_modules dependency at runtime. The printed URL is the
+  player page, never the raw cast.
+- **`--markdown`** emits per content-type class (`markdownForAsset` in
+  `src/lib/s3/assets.ts`): images `![name](url)` (render inline via GitHub's
+  proxy), video `[name (video)](url)` (GitHub never embeds external video),
+  HTML `[name (demo)](url)`, PDF `[name (pdf)](url)`, casts
+  `[name (terminal recording)](player url)`, everything else `[name](url)`.
+
+All planning/validation (paths exist, demo dirs have an entry point, no two
+uploads — including generated player pages — target the same object key)
+completes before the first upload, so a bad argument never leaves a partial
+object set behind.
 
 Credentials, endpoint (`endpoint_url`), and region are resolved by the standard
 AWS toolchain — `~/.aws/credentials`, `~/.aws/config`, and `AWS_*` env vars,
@@ -152,7 +176,7 @@ exactly like the AWS CLI. Select a profile with `--profile <name>` or
 `AWS_PROFILE`; no `op run` wrapper is needed:
 
 ```bash
-toolkit pr asset 1234 ./after.png --profile seaweedfs --markdown
+toolkit pr asset 1234 ./after.png ./flow.mp4 ./demo.cast ./demo-site --profile seaweedfs --markdown
 ```
 
 ## Adding New Commands

@@ -172,7 +172,9 @@ export function createGrafanaValues(
         // Pyroscope data source".
         type: "grafana-pyroscope-datasource",
         url: "http://pyroscope.pyroscope.svc.cluster.local:4040",
-        version: 1,
+        // Bump above the live Grafana DB version when changing provisioned
+        // datasource identity fields, or Grafana leaves the stale row in place.
+        version: 3,
       },
     ],
   };

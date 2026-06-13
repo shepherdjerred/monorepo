@@ -62,3 +62,9 @@ assets = "packages/frontend/dist"
 
 [web.api]
 enabled = true
+
+[leaderboard]
+enabled = true                      # race-result recording + the leaderboard API
+db_path = "data/leaderboard.db"     # overridden by DATABASE_PATH / DATABASE_URL env
+overlay_enabled = true              # burn player names into the stream per viewport
+poll_every_n_frames = 10            # RDRAM race-state poll cadence (~3 Hz at 30fps)

@@ -17,6 +17,11 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
   (a self-bot Go-Live), so viewers watch in the voice channel.
 - **Input** — a Discord bot takes button/chord commands (plus an optional web
   UI) and feeds them into the emulator's input queue.
+- **Notifications** — the bot polls the emulator's memory (~2×/sec) and posts
+  Discord embeds for in-game events: faints, gym badges, evolutions, catches,
+  level-ups, whiteouts, and new Pokédex entries. Configure under
+  `[bot.notifications.events]` in `config.toml` (`mode = "log"` for a
+  detect-only shadow mode; `"send"` to post).
 
 The WASM blob is vendored at `packages/backend/assets/pokeemerald.wasm` and
 refreshed periodically by a Temporal workflow that opens a PR.

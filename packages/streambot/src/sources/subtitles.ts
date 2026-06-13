@@ -5,13 +5,15 @@ import type { SubtitlePref } from "@shepherdjerred/streambot/sources/source.ts";
 import { parseJson } from "@shepherdjerred/streambot/util/errors.ts";
 
 /**
- * Pure subtitle helpers: name parsing, ranking, codec classification, escaping, and ffmpeg/yt-dlp arg
+ * Pure subtitle helpers: name parsing, cross-source ranking, codec classification, and yt-dlp arg
  * building — deterministic and unit-testable with zero I/O. The ffprobe/ffmpeg/yt-dlp glue that stages
- * a chosen track to a temp file lives in {@link file://./subtitle-io.ts}.
+ * a chosen track to a temp file lives in {@link file://./subtitle-io.ts}; the ffmpeg filter graph that
+ * burns the staged file (incl. path escaping) is owned by the discord-video-stream fork.
  *
  * Discord Go-Live carries a single video track, so subtitles are **burned in** via ffmpeg's
  * `subtitles=` (libass) filter — text only (SRT/ASS/SSA/VTT/mov_text); image subs (PGS/VobSub/DVB) are
- * skipped (covered by a sibling sidecar on real Remux libraries).
+ * skipped. Sidecar and embedded text tracks compete in ONE ranking (language → full/SDH/forced quality
+ * → source), so a forced-only sidecar no longer shadows a full embedded track.
  */
 
 /** Text-subtitle sidecar extensions we can burn with libass (image formats like VobSub are excluded). */
@@ -97,14 +99,64 @@ export function parseSidecarName(
 
 export type SidecarCandidate = SidecarInfo & { readonly file: string };
 
+/** ISO 639-2 (and legacy bibliographic) codes → ISO 639-1, for the languages that show up in real
+ * media tags. Sidecars are usually tagged `en` while embedded streams are usually `eng`; without
+ * canonicalization those would rank as DIFFERENT languages and the preference list
+ * `["en", "eng", "en-US"]` would order them by list position — making a forced `en` sidecar beat
+ * a full `eng` embedded track on "language" (the Endgame bug). */
+const ISO639_2_TO_1: Record<string, string> = {
+  eng: "en",
+  fre: "fr",
+  fra: "fr",
+  ger: "de",
+  deu: "de",
+  spa: "es",
+  ita: "it",
+  jpn: "ja",
+  chi: "zh",
+  zho: "zh",
+  kor: "ko",
+  rus: "ru",
+  por: "pt",
+  dut: "nl",
+  nld: "nl",
+  ara: "ar",
+  hin: "hi",
+  pol: "pl",
+  tur: "tr",
+  swe: "sv",
+  nor: "no",
+  dan: "da",
+  fin: "fi",
+  cze: "cs",
+  ces: "cs",
+  gre: "el",
+  ell: "el",
+  heb: "he",
+  hun: "hu",
+  tha: "th",
+  vie: "vi",
+  ukr: "uk",
+  ron: "ro",
+  rum: "ro",
+};
+
+/** Canonicalize a language tag for comparison: lowercase, strip the region (`en-US` → `en`), and
+ * map ISO 639-2 to 639-1 (`eng` → `en`). Unknown codes pass through lowercased. */
+export function canonicalizeLangTag(tag: string): string {
+  const base = tag.toLowerCase().split(/[-_]/u)[0] ?? tag.toLowerCase();
+  return ISO639_2_TO_1[base] ?? base;
+}
+
 function languageScore(
   lang: string | null,
   langPrefs: readonly string[],
 ): number {
   if (lang === null) return langPrefs.length + 1;
-  const idx = langPrefs.findIndex(
-    (p) => p.toLowerCase() === lang.toLowerCase(),
-  );
+  const canonical = canonicalizeLangTag(lang);
+  // Index of the FIRST pref whose canonical form matches — so alias lists like
+  // ["en", "eng", "en-US"] collapse to one English rank and modifier quality can decide.
+  const idx = langPrefs.findIndex((p) => canonicalizeLangTag(p) === canonical);
   return idx === -1 ? langPrefs.length : idx;
 }
 
@@ -116,41 +168,87 @@ function modifierScore(modifier: SubtitleModifier | null): number {
 }
 
 /**
- * Pick the best sidecar: by language preference, then modifier preference, then filename (deterministic
- * tie-break). When `pinnedModifier` is set (e.g. user asked `sublang:en.forced`), candidates with that
- * modifier are preferred but the call still falls back to the rest if none match.
+ * A burnable subtitle candidate from any source, ranked uniformly by
+ * {@link rankSubtitleCandidates}. Sidecars carry their filename (relative to the video's
+ * directory); embedded tracks their subtitle-relative stream index (for `-map 0:s:<i>`).
+ */
+export type SubtitleCandidate =
+  | {
+      readonly kind: "sidecar";
+      readonly file: string;
+      readonly lang: string | null;
+      readonly modifier: SubtitleModifier | null;
+    }
+  | {
+      readonly kind: "embedded";
+      readonly subtitleIndex: number;
+      readonly codec: string;
+      readonly lang: string | null;
+      readonly modifier: SubtitleModifier | null;
+    };
+
+/** Sidecars beat embedded tracks ONLY at equal language + modifier quality (extraction-free). */
+function sourceScore(candidate: SubtitleCandidate): number {
+  return candidate.kind === "sidecar" ? 0 : 1;
+}
+
+/** Deterministic intra-source tie-break: filename for sidecars, stream order for embedded. */
+function candidateTieBreak(a: SubtitleCandidate, b: SubtitleCandidate): number {
+  if (a.kind === "sidecar" && b.kind === "sidecar") {
+    return a.file.localeCompare(b.file);
+  }
+  if (a.kind === "embedded" && b.kind === "embedded") {
+    return a.subtitleIndex - b.subtitleIndex;
+  }
+  return 0; // different kinds were already ordered by sourceScore
+}
+
+/**
+ * Rank subtitle candidates best-first ACROSS sources: language preference, then modifier quality
+ * (full > HI/SDH/CC > forced), then source (sidecar over embedded as a tie-break only), then a
+ * deterministic intra-source order. Ranking quality before source is the point: a forced-only
+ * sidecar must not beat a full embedded text track (a 4K remux with `<base>.en.forced.srt` next
+ * to it is the canonical case — the forced sidecar is nearly empty). When `pinnedModifier` is set
+ * (e.g. `sublang:en.forced`) candidates with that modifier are preferred, falling back to the
+ * rest if none match.
+ */
+export function rankSubtitleCandidates(
+  candidates: readonly SubtitleCandidate[],
+  langPrefs: readonly string[],
+  pinnedModifier: SubtitleModifier | null = null,
+): SubtitleCandidate[] {
+  const pinned =
+    pinnedModifier === null
+      ? []
+      : candidates.filter((c) => c.modifier === pinnedModifier);
+  const pool = pinned.length > 0 ? pinned : candidates;
+  return pool.toSorted(
+    (a, b) =>
+      languageScore(a.lang, langPrefs) - languageScore(b.lang, langPrefs) ||
+      modifierScore(a.modifier) - modifierScore(b.modifier) ||
+      sourceScore(a) - sourceScore(b) ||
+      candidateTieBreak(a, b),
+  );
+}
+
+/**
+ * Pick the best sidecar among sidecars only. Thin wrapper over
+ * {@link rankSubtitleCandidates} so sidecar-only and cross-source ranking can never diverge.
  */
 export function rankSidecars(
   candidates: readonly SidecarCandidate[],
   langPrefs: readonly string[],
   pinnedModifier: SubtitleModifier | null = null,
 ): SidecarCandidate | null {
-  if (candidates.length === 0) return null;
-  const pinned =
-    pinnedModifier === null
-      ? []
-      : candidates.filter((c) => c.modifier === pinnedModifier);
-  const pool = pinned.length > 0 ? pinned : candidates;
-  const sorted = pool.toSorted(
-    (a, b) =>
-      languageScore(a.lang, langPrefs) - languageScore(b.lang, langPrefs) ||
-      modifierScore(a.modifier) - modifierScore(b.modifier) ||
-      a.file.localeCompare(b.file),
+  const ranked = rankSubtitleCandidates(
+    candidates.map((c) => ({ kind: "sidecar" as const, ...c })),
+    langPrefs,
+    pinnedModifier,
   );
-  return sorted[0] ?? null;
-}
-
-/** Escape a path for use inside an ffmpeg `subtitles=` filter argument. */
-export function escapeSubtitlePath(p: string): string {
-  return p
-    .replaceAll("\\", "\\\\")
-    .replaceAll(":", String.raw`\:`)
-    .replaceAll("'", String.raw`\'`);
-}
-
-/** Build the `subtitles=<path>` video filter that burns a subtitle file into the frame. */
-export function buildSubtitleFilter(subtitlePath: string): string {
-  return `subtitles=${escapeSubtitlePath(subtitlePath)}`;
+  const best = ranked[0];
+  return best?.kind === "sidecar"
+    ? { file: best.file, lang: best.lang, modifier: best.modifier }
+    : null;
 }
 
 export type EffectiveSubtitleConfig = {
@@ -253,8 +351,15 @@ export function pickWrittenSubtitleFile(
 
 const FfprobeStreamSchema = z.object({
   codec_name: z.string().optional(),
-  tags: z.object({ language: z.string().optional() }).optional(),
-  disposition: z.object({ forced: z.number().optional() }).optional(),
+  tags: z
+    .object({ language: z.string().optional(), title: z.string().optional() })
+    .optional(),
+  disposition: z
+    .object({
+      forced: z.number().optional(),
+      hearing_impaired: z.number().optional(),
+    })
+    .optional(),
 });
 const FfprobeOutputSchema = z.object({
   streams: z.array(FfprobeStreamSchema).default([]),
@@ -273,40 +378,65 @@ export type EmbeddedPick = {
 };
 
 /**
- * Choose a burnable embedded subtitle stream: text codecs only (PGS/VobSub image subs are skipped),
- * ranked by language preference then forced-disposition (full preferred unless `forced` is pinned).
- * Returns the subtitle-relative index (its position among subtitle streams), not the absolute index.
+ * Derive a {@link SubtitleModifier} for an embedded track from its disposition flags and title
+ * tag. Dispositions are authoritative; title matching is a conservative fallback for remuxes that
+ * tag `"SDH"`/`"FORCED"` in the title without setting the flag. Bare `"CC"` titles are deliberately
+ * not matched (too false-positive-prone); unknown → null (treated as a full track).
+ */
+export function embeddedSubtitleModifier(
+  stream: FfprobeSubtitleStream,
+): SubtitleModifier | null {
+  if ((stream.disposition?.forced ?? 0) === 1) return "forced";
+  if ((stream.disposition?.hearing_impaired ?? 0) === 1) return "sdh";
+  const title = stream.tags?.title ?? "";
+  if (/\bforced\b/iu.test(title)) return "forced";
+  if (/\bsdh\b/iu.test(title) || /hearing.?impaired/iu.test(title)) {
+    return "sdh";
+  }
+  return null;
+}
+
+/**
+ * Map ffprobe subtitle streams to burnable embedded candidates: text codecs only (PGS/VobSub
+ * image subs are skipped — libass can't render them), preserving each stream's subtitle-relative
+ * index for `-map 0:s:<i>`.
+ */
+export function toEmbeddedCandidates(
+  streams: readonly FfprobeSubtitleStream[],
+): SubtitleCandidate[] {
+  return streams
+    .map((s, subtitleIndex) => ({ s, subtitleIndex }))
+    .filter(
+      ({ s }) =>
+        s.codec_name !== undefined &&
+        classifySubtitleCodec(s.codec_name) === "text",
+    )
+    .map(({ s, subtitleIndex }) => ({
+      kind: "embedded" as const,
+      subtitleIndex,
+      codec: s.codec_name ?? "",
+      lang: s.tags?.language ?? null,
+      modifier: embeddedSubtitleModifier(s),
+    }));
+}
+
+/**
+ * Choose a burnable embedded subtitle stream among embedded tracks only. Thin wrapper over
+ * {@link rankSubtitleCandidates}, so full > SDH > forced ordering applies to embedded tracks the
+ * same way it does to sidecars. Returns the subtitle-relative index, not the absolute index.
  */
 export function pickEmbeddedSubtitle(
   streams: readonly FfprobeSubtitleStream[],
   langPrefs: readonly string[],
   pinnedModifier: SubtitleModifier | null = null,
 ): EmbeddedPick | null {
-  const candidates = streams
-    .map((s, subtitleIndex) => ({ s, subtitleIndex }))
-    .filter(
-      ({ s }) =>
-        s.codec_name !== undefined &&
-        classifySubtitleCodec(s.codec_name) === "text",
-    );
-  if (candidates.length === 0) return null;
-
-  const wantForced = pinnedModifier === "forced";
-  const langRank = (s: FfprobeSubtitleStream): number =>
-    languageScore(s.tags?.language ?? null, langPrefs);
-  const forcedRank = (s: FfprobeSubtitleStream): number => {
-    const isForced = (s.disposition?.forced ?? 0) === 1;
-    if (wantForced) return isForced ? 0 : 1;
-    return isForced ? 1 : 0;
-  };
-  const sorted = candidates.toSorted(
-    (a, b) =>
-      langRank(a.s) - langRank(b.s) ||
-      forcedRank(a.s) - forcedRank(b.s) ||
-      a.subtitleIndex - b.subtitleIndex,
+  const ranked = rankSubtitleCandidates(
+    toEmbeddedCandidates(streams),
+    langPrefs,
+    pinnedModifier,
   );
-  const best = sorted[0];
-  return best === undefined
-    ? null
-    : { subtitleIndex: best.subtitleIndex, codec: best.s.codec_name ?? "" };
+  const best = ranked[0];
+  return best?.kind === "embedded"
+    ? { subtitleIndex: best.subtitleIndex, codec: best.codec }
+    : null;
 }
