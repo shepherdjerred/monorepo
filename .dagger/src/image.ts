@@ -565,6 +565,11 @@ function withToolkit(container: Container): Container {
       "build",
       "./src/index.ts",
       "--compile",
+      // prism-media (pulled in by discord.js-selfbot-v13) requires ffmpeg-static at
+      // import time, but ffmpeg-static is a native binary shim that must not be
+      // bundled into the compiled output — mark it external so bun skips bundling it.
+      "--external",
+      "ffmpeg-static",
       "--outfile=/usr/local/bin/toolkit",
     ])
     .withExec(["chmod", "+x", "/usr/local/bin/toolkit"])
