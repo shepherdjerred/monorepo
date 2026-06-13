@@ -20,7 +20,7 @@ export function createRedlibDeployment(chart: Chart) {
 
   redlibDeployment.addContainer(
     withCommonProps({
-      image: `quay.io/redlib/redlib:${versions["redlib/redlib"]}`,
+      image: `ghcr.io/shepherdjerred/redlib:${versions["shepherdjerred/redlib"]}`,
       envVariables: {
         REDLIB_DEFAULT_THEME: EnvValue.fromValue("system"),
         REDLIB_DEFAULT_LAYOUT: EnvValue.fromValue("card"),
