@@ -36,8 +36,15 @@ COPY packages/frontend/package.json packages/frontend/
 # bun-safe lazy `sharp` import is baked into the fork source (no patch needed).
 RUN bun install --frozen-lockfile
 
+# Goal mode shells out to Codex. Keep this pinned to .dagger/src/constants.ts.
+RUN bun install -g @openai/codex@0.130.0 && codex --version
+
 # App source (includes the vendored packages/backend/assets/pokeemerald.wasm).
 COPY . .
+
+# Make the goal-mode control CLI available to operators and spawned Codex loops.
+RUN install -D -m 0755 packages/backend/src/goal/pokemonctl.ts /usr/local/bin/pokemonctl \
+  && pokemonctl --help
 
 # Build the web UI served by the backend (web.assets).
 RUN cd packages/frontend && bun run build

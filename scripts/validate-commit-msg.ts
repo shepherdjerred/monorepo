@@ -8,7 +8,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const VALID_TYPES = [
+const VALID_TYPES: readonly string[] = [
   "feat",
   "fix",
   "chore",
@@ -21,9 +21,25 @@ const VALID_TYPES = [
   "style",
   "revert",
   "misc",
-] as const;
+];
 
-const EXTRA_SCOPES = ["practice", "archive", "root", "dagger"] as const;
+// Scopes beyond the auto-derived `packages/*` directory names.
+// - practice: the top-level `practice/` dir (outside packages/)
+// - archive: legacy projects under `archive/`
+// - root: cross-cutting changes (scripts/, root configs, lockfiles)
+// - dagger: `.dagger/` CI pipeline definitions
+// - deps: dependency bumps (Renovate's `chore(deps):` convention)
+// - ci: `scripts/ci/` pipeline generator and `.buildkite/`
+// - cooklang: release-bot version bumps spanning the cooklang-* packages
+const EXTRA_SCOPES: readonly string[] = [
+  "practice",
+  "archive",
+  "root",
+  "dagger",
+  "deps",
+  "ci",
+  "cooklang",
+];
 
 const BYPASS_PATTERNS = [
   /^Merge /,
@@ -85,7 +101,7 @@ function main(): void {
   const type = match[1];
   const scope = match[2];
 
-  if (!VALID_TYPES.includes(type as (typeof VALID_TYPES)[number])) {
+  if (!VALID_TYPES.includes(type)) {
     console.error(`Invalid commit type: "${type}"`);
     console.error("");
     console.error(`Valid types: ${VALID_TYPES.join(", ")}`);

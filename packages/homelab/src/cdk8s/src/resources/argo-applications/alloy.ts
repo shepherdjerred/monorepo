@@ -2,6 +2,7 @@ import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
 // Grafana Alloy River config: eBPF-sample every pod on the local node kernel-side
 // and push profiles to Pyroscope. No application instrumentation — works for the
@@ -79,7 +80,7 @@ export function createAlloyApp(chart: Chart) {
     },
   });
 
-  const alloyValues = {
+  const alloyValues: HelmValuesForChart<"alloy"> = {
     controller: {
       type: "daemonset",
       // eBPF reads host PIDs from /proc; share the host PID namespace.

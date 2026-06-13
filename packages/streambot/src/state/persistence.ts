@@ -124,6 +124,69 @@ export async function deleteState(filePath: string): Promise<void> {
 }
 
 /**
+ * Move a session's resume-state file to a new voice channel (best-effort; never throws). Used when a
+ * live session is re-keyed to a new channel: the existing snapshot must follow the session so resume
+ * still works if the process crashes before the next checkpoint writes the new path.
+ *
+ * `VOICE_TARGET_MOVED` only updates the machine's context (no state transition), so it triggers no
+ * snapshot write. A naive delete-the-old-and-wait would leave a crash window with no state file at
+ * either path, losing resume entirely. Instead we write-then-delete: load the old file, rewrite its
+ * `guildId`/`channelId` to the new channel (so {@link buildResumeInput}'s channel check passes), save
+ * it atomically to the new path, and only then remove the old file. A missing source file is the
+ * normal "nothing persisted yet" case — there is nothing to move.
+ */
+export async function moveState(params: {
+  fromPath: string;
+  toPath: string;
+  guildId: GuildId;
+  channelId: ChannelId;
+}): Promise<void> {
+  const { fromPath, toPath, guildId, channelId } = params;
+  if (fromPath === toPath) {
+    return;
+  }
+  let raw: unknown;
+  try {
+    const file = Bun.file(fromPath);
+    if (!(await file.exists())) {
+      return;
+    }
+    raw = await file.json();
+  } catch (error) {
+    log.warn("could not read resume state to move to new channel path", {
+      fromPath,
+      toPath,
+      error: getErrorMessage(error),
+    });
+    return;
+  }
+
+  const parsed = PersistedStateSchema.safeParse(raw);
+  if (!parsed.success) {
+    // The old file is unreadable/corrupt — drop it; nothing resumable to carry over.
+    log.warn("resume state to move was invalid; dropping it", {
+      fromPath,
+      issues: z.flattenError(parsed.error),
+    });
+    await deleteState(fromPath);
+    return;
+  }
+
+  const moved: PersistedState = { ...parsed.data, guildId, channelId };
+  try {
+    await saveState(toPath, moved);
+  } catch (error) {
+    // Could not write the new path — keep the old file so the session can still resume in place.
+    log.warn("failed to write moved resume state; keeping original", {
+      toPath,
+      error: getErrorMessage(error),
+    });
+    return;
+  }
+  await deleteState(fromPath);
+}
+
+/**
  * Load and validate resume state. Returns `null` (logging the reason) for any non-resumable case —
  * missing file, unreadable/corrupt JSON, schema/version mismatch, or a file older than
  * `maxAgeSeconds`. Resume is best-effort: this never throws, so a bad state file can't break boot.

@@ -35,7 +35,7 @@ export function createMarioKartDeployment(chart: Chart) {
   const GID = 1000;
 
   const deployment = new Deployment(chart, "mario-kart", {
-    replicas: 1,
+    replicas: 0,
     strategy: DeploymentStrategy.recreate(),
     securityContext: {
       fsGroup: GID,

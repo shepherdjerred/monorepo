@@ -23,6 +23,7 @@ function deferred<T>(): Deferred<T> {
 type Harness = {
   deps: RawGoLiveDeps;
   encoder: EncoderHandles;
+  joinTargets: string[];
   gates: {
     join: Deferred<true>;
     run: Deferred<true>;
@@ -43,8 +44,10 @@ function makeHarness(): Harness {
   };
   gates.join.resolve(true);
   gates.leave.resolve(true);
+  const joinTargets: string[] = [];
   const deps: RawGoLiveDeps = {
-    joinVoice: async () => {
+    joinVoice: async (input) => {
+      joinTargets.push(input.target.channelId);
       await gates.join.promise;
     },
     prepareEncoder: () => Promise.resolve(encoder),
@@ -57,7 +60,7 @@ function makeHarness(): Harness {
     retryDelayMs: 10,
   };
 
-  return { deps, encoder, gates };
+  return { deps, encoder, joinTargets, gates };
 }
 
 function createHarnessActor(h: Harness) {
@@ -118,6 +121,35 @@ describe("desired stream machine", () => {
       timeout: 2000,
     });
     expect(actor.getSnapshot().context.desired).toBe(true);
+    actor.stop();
+  });
+
+  test("VOICE_TARGET_MOVED forwarded during teardown rejoins the new channel", async () => {
+    const h = makeHarness();
+    h.gates.leave = deferred<true>();
+    const actor = createHarnessActor(h);
+    actor.start();
+
+    actor.send({ type: "SET_DESIRED", desired: true });
+    await waitFor(actor, (s) => s.context.frameSink !== null);
+    expect(h.joinTargets).toEqual(["channel-1"]);
+
+    // Begin teardown (leave gated open), then move the target while the child is stopping.
+    actor.send({ type: "SET_DESIRED", desired: false });
+    await waitFor(actor, (s) => s.context.frameSink === null);
+    actor.send({
+      type: "VOICE_TARGET_MOVED",
+      target: { guildId: "guild-1", channelId: "channel-2" },
+    });
+    actor.send({ type: "SET_DESIRED", desired: true });
+
+    // Finish teardown — the reconciler restarts and must join the NEW channel, not the stale one.
+    h.gates.leave.resolve(true);
+    await waitFor(actor, (s) => s.context.frameSink !== null, {
+      timeout: 2000,
+    });
+    expect(actor.getSnapshot().context.voiceTarget.channelId).toBe("channel-2");
+    expect(h.joinTargets.at(-1)).toBe("channel-2");
     actor.stop();
   });
 

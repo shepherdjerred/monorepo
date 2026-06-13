@@ -347,6 +347,9 @@ export class S3StaticSites extends Construct {
 
     const container = deployment.addContainer(
       withCommonProps({
+        // Deliberately BestEffort (no requests/limits) — negligible or
+        // non-critical usage; see the 2026-06-12 right-sizing plan.
+        resources: {},
         name: "caddy",
         image: `ghcr.io/shepherdjerred/caddy-s3proxy:${versions["shepherdjerred/caddy-s3proxy"]}`,
         portNumber: 80,

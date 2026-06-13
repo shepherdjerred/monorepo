@@ -53,9 +53,12 @@ export type TempoHelmValuesTempo = {
    */
   updateStrategy?: string;
   /**
-   * @default {}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: TempoHelmValuesTempoResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default 1024
    */
@@ -153,8 +156,6 @@ export type TempoHelmValuesTempo = {
   extraEnvFrom?: unknown[];
   extraVolumeMounts?: unknown[];
 };
-
-export type TempoHelmValuesTempoResources = object;
 
 export type TempoHelmValuesTempoMetricsGenerator = {
   /**
@@ -527,9 +528,12 @@ export type TempoHelmValuesTempoQuery = {
    */
   ingress?: TempoHelmValuesTempoQueryIngress;
   /**
-   * @default {}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: TempoHelmValuesTempoQueryResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Additional container arguments
    *
@@ -601,8 +605,6 @@ export type TempoHelmValuesTempoQueryIngressLabels = {
    */
   [key: string]: unknown;
 };
-
-export type TempoHelmValuesTempoQueryResources = object;
 
 export type TempoHelmValuesTempoQueryExtraArgs = object;
 
@@ -772,10 +774,6 @@ export type TempoHelmValuesPodLabels = object;
 
 export type TempoHelmValuesExtraLabels = object;
 
-export type TempoHelmValuesNodeSelector = object;
-
-export type TempoHelmValuesAffinity = object;
-
 export type TempoHelmValuesNetworkPolicy = {
   /**
    * Enable creation of NetworkPolicy resources. Only Ingress traffic is filtered for now.
@@ -929,17 +927,16 @@ export type TempoHelmValues = {
   extraVolumes?: unknown[];
   /**
    * Node labels for pod assignment. See: https://kubernetes.io/docs/user-guide/node-selection/
-   *
-   * @default {}
    */
-  nodeSelector?: TempoHelmValuesNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Tolerations for pod assignment. See: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+   */
   tolerations?: unknown[];
   /**
    * Affinity for pod assignment. See: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
-   *
-   * @default {}
    */
-  affinity?: TempoHelmValuesAffinity;
+  affinity?: Record<string, unknown>;
   priorityClassName?: unknown;
   hostAliases?: unknown[];
   /**
@@ -957,6 +954,7 @@ export type TempoHelmParameters = {
   "tempo.tag"?: string;
   "tempo.pullPolicy"?: string;
   "tempo.updateStrategy"?: string;
+  "tempo.resources"?: string;
   "tempo.memBallastSizeMbs"?: string;
   "tempo.multitenancyEnabled"?: string;
   "tempo.reportingEnabled"?: string;
@@ -1007,6 +1005,7 @@ export type TempoHelmParameters = {
   "tempoQuery.ingress.hosts"?: string;
   "tempoQuery.ingress.extraPaths"?: string;
   "tempoQuery.ingress.tls"?: string;
+  "tempoQuery.resources"?: string;
   "tempoQuery.extraEnv"?: string;
   "tempoQuery.extraVolumeMounts"?: string;
   "securityContext.runAsUser"?: string;
@@ -1029,7 +1028,9 @@ export type TempoHelmParameters = {
   "persistence.accessModes"?: string;
   "persistence.size"?: string;
   extraVolumes?: string;
+  nodeSelector?: string;
   tolerations?: string;
+  affinity?: string;
   priorityClassName?: string;
   hostAliases?: string;
   "networkPolicy.enabled"?: string;

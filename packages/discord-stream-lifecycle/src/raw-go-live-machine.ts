@@ -130,6 +130,15 @@ export function createRawGoLiveMachine(deps: RawGoLiveDeps) {
         lastError: null,
         teardownReason: "undesired",
       }),
+      // Update only the voice target, leaving lastError/teardownReason untouched. Used while tearing
+      // down (stopping) so a VOICE_TARGET_MOVED arriving mid-teardown keeps the target current
+      // without clobbering the in-flight teardown reason that drives stopping's onDone/onError routing.
+      updateVoiceTarget: assign({
+        voiceTarget: ({ event, context }) =>
+          event.type === "VOICE_TARGET_MOVED"
+            ? event.target
+            : context.voiceTarget,
+      }),
       reportFailure: ({ context }) => {
         deps.onFailure?.({
           attempt: context.retries + 1,
@@ -331,6 +340,12 @@ export function createRawGoLiveMachine(deps: RawGoLiveDeps) {
             { target: "idle" },
           ],
         },
+        on: {
+          // Keep the voice target current during teardown without clobbering the in-flight
+          // teardownReason/lastError — otherwise a move arriving while stopping would be dropped and
+          // the machine would later rejoin (or retry) the stale channel.
+          VOICE_TARGET_MOVED: { actions: "updateVoiceTarget" },
+        },
         exit: assign({ encoder: null }),
       },
       failed: {
@@ -339,7 +354,11 @@ export function createRawGoLiveMachine(deps: RawGoLiveDeps) {
           assign({ retries: ({ context }) => context.retries + 1 }),
         ],
         on: {
-          START: "joining",
+          // An externally-driven START while failed must respect the same retry budget as the
+          // retryDelay auto-transition below — otherwise a SET_DESIRED:true (or reconciler START)
+          // arriving mid-backoff would jump straight to joining, bypassing canRetry and the delay
+          // and defeating the retry cap. Out of budget → give up to idle.
+          START: [{ guard: "canRetry", target: "joining" }, { target: "idle" }],
           STOP: "idle",
           VOICE_TARGET_MOVED: { target: "idle", actions: "moveVoiceTarget" },
           STREAMER_VOICE_DETACHED: {

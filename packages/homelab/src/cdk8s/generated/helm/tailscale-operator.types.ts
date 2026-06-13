@@ -44,13 +44,16 @@ export type TailscaleoperatorHelmValuesOperatorConfig = {
    */
   hostname?: string;
   /**
-   * @default {"kubernetes.io/os":"linux"}
+   * Kubernetes nodeSelector (arbitrary label key/value pairs)
    */
-  nodeSelector?: TailscaleoperatorHelmValuesOperatorConfigNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
-   * @default {}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: TailscaleoperatorHelmValuesOperatorConfigResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {}
    */
@@ -63,11 +66,14 @@ export type TailscaleoperatorHelmValuesOperatorConfig = {
    * @default {}
    */
   serviceAccountAnnotations?: TailscaleoperatorHelmValuesOperatorConfigServiceAccountAnnotations;
+  /**
+   * eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/tailscale-operator-role
+   */
   tolerations?: unknown[];
   /**
-   * @default {}
+   * Kubernetes affinity (standard Affinity object)
    */
-  affinity?: TailscaleoperatorHelmValuesOperatorConfigAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * @default {}
    */
@@ -103,23 +109,12 @@ export type TailscaleoperatorHelmValuesOperatorConfigImage = {
   pullPolicy?: string;
 };
 
-export type TailscaleoperatorHelmValuesOperatorConfigNodeSelector = {
-  /**
-   * @default "linux"
-   */
-  "kubernetes.io/os"?: string;
-};
-
-export type TailscaleoperatorHelmValuesOperatorConfigResources = object;
-
 export type TailscaleoperatorHelmValuesOperatorConfigPodAnnotations = object;
 
 export type TailscaleoperatorHelmValuesOperatorConfigPodLabels = object;
 
 export type TailscaleoperatorHelmValuesOperatorConfigServiceAccountAnnotations =
   object;
-
-export type TailscaleoperatorHelmValuesOperatorConfigAffinity = object;
 
 export type TailscaleoperatorHelmValuesOperatorConfigPodSecurityContext =
   object;
@@ -298,8 +293,10 @@ export type TailscaleoperatorHelmParameters = {
   "operatorConfig.image.pullPolicy"?: string;
   "operatorConfig.logging"?: string;
   "operatorConfig.hostname"?: string;
-  "operatorConfig.nodeSelector.kubernetes.io/os"?: string;
+  "operatorConfig.nodeSelector"?: string;
+  "operatorConfig.resources"?: string;
   "operatorConfig.tolerations"?: string;
+  "operatorConfig.affinity"?: string;
   "operatorConfig.extraEnv"?: string;
   "ingressClass.name"?: string;
   "ingressClass.enabled"?: string;

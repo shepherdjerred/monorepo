@@ -5,8 +5,13 @@ import { makeScreenshot } from "./commands/screenshot.ts";
 import type { Emulator } from "#src/emulator/emulator.ts";
 import { help } from "./commands/help.ts";
 import { logger } from "#src/logger.ts";
+import { makeGoal } from "./commands/goal.ts";
+import type { GoalManager } from "#src/goal/goal-manager.ts";
 
-export function handleSlashCommands(emulator: Emulator) {
+export function handleSlashCommands(
+  emulator: Emulator,
+  goalManager?: GoalManager,
+) {
   logger.info("handling slash commands");
   client.on(Events.InteractionCreate, (interaction) => {
     void (async () => {
@@ -22,6 +27,10 @@ export function handleSlashCommands(emulator: Emulator) {
             break;
           case "help":
             await help(interaction);
+            break;
+          case "goal":
+            await makeGoal(goalManager)(interaction);
+            break;
         }
       } catch (error) {
         logger.error(error);

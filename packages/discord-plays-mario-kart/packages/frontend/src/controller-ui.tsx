@@ -130,6 +130,9 @@ export function SeatPicker({
         const taken = occupied[i] ?? false;
         const mine = seat === i;
         const playerName = names[i] ?? null;
+        const sublabel = mine
+          ? "(you)"
+          : (playerName ?? (taken ? "(taken)" : null));
         return (
           <button
             key={i}
@@ -152,9 +155,9 @@ export function SeatPicker({
             )}
           >
             <span>P{i + 1}</span>
-            {playerName !== null && (
+            {sublabel !== null && (
               <span className="block truncate text-xs font-normal opacity-75">
-                {playerName}
+                {sublabel}
               </span>
             )}
           </button>

@@ -77,14 +77,20 @@ export type NodefeaturediscoveryHelmValuesMaster = {
    */
   rbac?: NodefeaturediscoveryHelmValuesMasterRbac;
   /**
-   * @default {"limits":{"memory":"4Gi"},"requests":{"cpu":"100m","memory":"128Mi"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: NodefeaturediscoveryHelmValuesMasterResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
-   * @default {}
+   * Kubernetes nodeSelector (arbitrary label key/value pairs)
    */
-  nodeSelector?: NodefeaturediscoveryHelmValuesMasterNodeSelector;
-  tolerations?: NodefeaturediscoveryHelmValuesMasterTolerationsElement[];
+  nodeSelector?: Record<string, string>;
+  /**
+   * Kubernetes tolerations (standard Toleration objects)
+   */
+  tolerations?: unknown[];
   /**
    * @default {"enable":false,"minAvailable":1,"unhealthyPodEvictionPolicy":"AlwaysAllow"}
    */
@@ -94,9 +100,9 @@ export type NodefeaturediscoveryHelmValuesMaster = {
    */
   annotations?: NodefeaturediscoveryHelmValuesMasterAnnotations;
   /**
-   * @default {"nodeAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"weight":1,"preference":{"matchExpressions":[{"key":"node-role.kubernetes.io/control-plane","operator":"In","values":[""]}]}}]}}
+   * Kubernetes affinity (standard Affinity object)
    */
-  affinity?: NodefeaturediscoveryHelmValuesMasterAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * @default {"failureThreshold":30}
    */
@@ -169,62 +175,6 @@ export type NodefeaturediscoveryHelmValuesMasterRbac = {
   create?: boolean;
 };
 
-export type NodefeaturediscoveryHelmValuesMasterResources = {
-  /**
-   * @default {"memory":"4Gi"}
-   */
-  limits?: NodefeaturediscoveryHelmValuesMasterResourcesLimits;
-  /**
-   * @default {"cpu":"100m","memory":"128Mi"}
-   */
-  requests?: NodefeaturediscoveryHelmValuesMasterResourcesRequests;
-};
-
-export type NodefeaturediscoveryHelmValuesMasterResourcesLimits = {
-  /**
-   * @default "4Gi"
-   */
-  memory?: string;
-};
-
-export type NodefeaturediscoveryHelmValuesMasterResourcesRequests = {
-  /**
-   * @default "100m"
-   */
-  cpu?: string;
-  /**
-   * You may want to use the same value for `requests.memory` and `limits.memory`. The “requests” value affects scheduling to accommodate pods on nodes.
-   * If there is a large difference between “requests” and “limits” and nodes experience memory pressure, the kernel may invoke
-   * the OOM Killer, even if the memory does not exceed the “limits” threshold. This can cause unexpected pod evictions. Memory
-   * cannot be compressed and once allocated to a pod, it can only be reclaimed by killing the pod.
-   * Natan Yellin 22/09/2022 https://home.robusta.dev/blog/kubernetes-memory-limit
-   *
-   * @default "128Mi"
-   */
-  memory?: string;
-};
-
-export type NodefeaturediscoveryHelmValuesMasterNodeSelector = object;
-
-export type NodefeaturediscoveryHelmValuesMasterTolerationsElement = {
-  /**
-   * @default "node-role.kubernetes.io/control-plane"
-   */
-  key?: string;
-  /**
-   * @default "Equal"
-   */
-  operator?: string;
-  /**
-   * @default ""
-   */
-  value?: string;
-  /**
-   * @default "NoSchedule"
-   */
-  effect?: string;
-};
-
 export type NodefeaturediscoveryHelmValuesMasterPodDisruptionBudget = {
   /**
    * @default false
@@ -247,52 +197,6 @@ export type NodefeaturediscoveryHelmValuesMasterAnnotations = {
    */
   [key: string]: unknown;
 };
-
-export type NodefeaturediscoveryHelmValuesMasterAffinity = {
-  /**
-   * @default {"preferredDuringSchedulingIgnoredDuringExecution":[{"weight":1,"preference":{"matchExpressions":[{"key":"node-role.kubernetes.io/control-plane","operator":"In","values":[""]}]}}]}
-   */
-  nodeAffinity?: NodefeaturediscoveryHelmValuesMasterAffinityNodeAffinity;
-};
-
-export type NodefeaturediscoveryHelmValuesMasterAffinityNodeAffinity = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-  preferredDuringSchedulingIgnoredDuringExecution?: NodefeaturediscoveryHelmValuesMasterAffinityNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type NodefeaturediscoveryHelmValuesMasterAffinityNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default 1
-     */
-    weight?: number;
-    /**
-     * @default {"matchExpressions":[{"key":"node-role.kubernetes.io/control-plane","operator":"In","values":[""]}]}
-     */
-    preference?: NodefeaturediscoveryHelmValuesMasterAffinityNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreference;
-  };
-
-export type NodefeaturediscoveryHelmValuesMasterAffinityNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreference =
-  {
-    matchExpressions?: NodefeaturediscoveryHelmValuesMasterAffinityNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreferenceMatchExpressionsElement[];
-  };
-
-export type NodefeaturediscoveryHelmValuesMasterAffinityNodeAffinityPreferredDuringSchedulingIgnoredDuringExecutionPreferenceMatchExpressionsElement =
-  {
-    /**
-     * @default "node-role.kubernetes.io/control-plane"
-     */
-    key?: string;
-    /**
-     * @default "In"
-     */
-    operator?: string;
-    values?: string[];
-  };
 
 export type NodefeaturediscoveryHelmValuesMasterStartupProbe = {
   /**
@@ -367,22 +271,28 @@ export type NodefeaturediscoveryHelmValuesWorker = {
    */
   mountUsrSrc?: boolean;
   /**
-   * @default {"limits":{"memory":"512Mi"},"requests":{"cpu":"5m","memory":"64Mi"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: NodefeaturediscoveryHelmValuesWorkerResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
-   * @default {}
+   * Kubernetes nodeSelector (arbitrary label key/value pairs)
    */
-  nodeSelector?: NodefeaturediscoveryHelmValuesWorkerNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Kubernetes tolerations (standard Toleration objects)
+   */
   tolerations?: unknown[];
   /**
    * @default {}
    */
   annotations?: NodefeaturediscoveryHelmValuesWorkerAnnotations;
   /**
-   * @default {}
+   * Kubernetes affinity (standard Affinity object)
    */
-  affinity?: NodefeaturediscoveryHelmValuesWorkerAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * @default ""
    */
@@ -470,37 +380,6 @@ export type NodefeaturediscoveryHelmValuesWorkerRbac = {
   create?: boolean;
 };
 
-export type NodefeaturediscoveryHelmValuesWorkerResources = {
-  /**
-   * @default {"memory":"512Mi"}
-   */
-  limits?: NodefeaturediscoveryHelmValuesWorkerResourcesLimits;
-  /**
-   * @default {"cpu":"5m","memory":"64Mi"}
-   */
-  requests?: NodefeaturediscoveryHelmValuesWorkerResourcesRequests;
-};
-
-export type NodefeaturediscoveryHelmValuesWorkerResourcesLimits = {
-  /**
-   * @default "512Mi"
-   */
-  memory?: string;
-};
-
-export type NodefeaturediscoveryHelmValuesWorkerResourcesRequests = {
-  /**
-   * @default "5m"
-   */
-  cpu?: string;
-  /**
-   * @default "64Mi"
-   */
-  memory?: string;
-};
-
-export type NodefeaturediscoveryHelmValuesWorkerNodeSelector = object;
-
 export type NodefeaturediscoveryHelmValuesWorkerAnnotations = {
   /**
    * This type allows arbitrary additional properties beyond those defined below.
@@ -508,8 +387,6 @@ export type NodefeaturediscoveryHelmValuesWorkerAnnotations = {
    */
   [key: string]: unknown;
 };
-
-export type NodefeaturediscoveryHelmValuesWorkerAffinity = object;
 
 export type NodefeaturediscoveryHelmValuesWorkerUpdateStrategy = object;
 
@@ -577,13 +454,19 @@ export type NodefeaturediscoveryHelmValuesTopologyUpdater = {
    */
   readinessProbe?: NodefeaturediscoveryHelmValuesTopologyUpdaterReadinessProbe;
   /**
-   * @default {"limits":{"memory":"60Mi"},"requests":{"cpu":"50m","memory":"40Mi"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: NodefeaturediscoveryHelmValuesTopologyUpdaterResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
-   * @default {}
+   * Kubernetes nodeSelector (arbitrary label key/value pairs)
    */
-  nodeSelector?: NodefeaturediscoveryHelmValuesTopologyUpdaterNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Kubernetes tolerations (standard Toleration objects)
+   */
   tolerations?: unknown[];
   /**
    * @default {}
@@ -594,9 +477,9 @@ export type NodefeaturediscoveryHelmValuesTopologyUpdater = {
    */
   daemonsetAnnotations?: NodefeaturediscoveryHelmValuesTopologyUpdaterDaemonsetAnnotations;
   /**
-   * @default {}
+   * Kubernetes affinity (standard Affinity object)
    */
-  affinity?: NodefeaturediscoveryHelmValuesTopologyUpdaterAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * @default true
    */
@@ -676,37 +559,6 @@ export type NodefeaturediscoveryHelmValuesTopologyUpdaterReadinessProbe = {
   failureThreshold?: number;
 };
 
-export type NodefeaturediscoveryHelmValuesTopologyUpdaterResources = {
-  /**
-   * @default {"memory":"60Mi"}
-   */
-  limits?: NodefeaturediscoveryHelmValuesTopologyUpdaterResourcesLimits;
-  /**
-   * @default {"cpu":"50m","memory":"40Mi"}
-   */
-  requests?: NodefeaturediscoveryHelmValuesTopologyUpdaterResourcesRequests;
-};
-
-export type NodefeaturediscoveryHelmValuesTopologyUpdaterResourcesLimits = {
-  /**
-   * @default "60Mi"
-   */
-  memory?: string;
-};
-
-export type NodefeaturediscoveryHelmValuesTopologyUpdaterResourcesRequests = {
-  /**
-   * @default "50m"
-   */
-  cpu?: string;
-  /**
-   * @default "40Mi"
-   */
-  memory?: string;
-};
-
-export type NodefeaturediscoveryHelmValuesTopologyUpdaterNodeSelector = object;
-
 export type NodefeaturediscoveryHelmValuesTopologyUpdaterAnnotations = {
   /**
    * This type allows arbitrary additional properties beyond those defined below.
@@ -717,8 +569,6 @@ export type NodefeaturediscoveryHelmValuesTopologyUpdaterAnnotations = {
 
 export type NodefeaturediscoveryHelmValuesTopologyUpdaterDaemonsetAnnotations =
   object;
-
-export type NodefeaturediscoveryHelmValuesTopologyUpdaterAffinity = object;
 
 export type NodefeaturediscoveryHelmValuesGc = {
   /**
@@ -764,17 +614,23 @@ export type NodefeaturediscoveryHelmValuesGc = {
    */
   readinessProbe?: NodefeaturediscoveryHelmValuesGcReadinessProbe;
   /**
-   * @default {"limits":{"memory":"1Gi"},"requests":{"cpu":"10m","memory":"128Mi"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: NodefeaturediscoveryHelmValuesGcResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default 8080
    */
   port?: number;
   /**
-   * @default {}
+   * Kubernetes nodeSelector (arbitrary label key/value pairs)
    */
-  nodeSelector?: NodefeaturediscoveryHelmValuesGcNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Kubernetes tolerations (standard Toleration objects)
+   */
   tolerations?: unknown[];
   /**
    * @default {}
@@ -785,9 +641,9 @@ export type NodefeaturediscoveryHelmValuesGc = {
    */
   deploymentAnnotations?: NodefeaturediscoveryHelmValuesGcDeploymentAnnotations;
   /**
-   * @default {}
+   * Kubernetes affinity (standard Affinity object)
    */
-  affinity?: NodefeaturediscoveryHelmValuesGcAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * @default {"enable":false,"minAvailable":1,"unhealthyPodEvictionPolicy":"AlwaysAllow"}
    */
@@ -838,37 +694,6 @@ export type NodefeaturediscoveryHelmValuesGcReadinessProbe = {
   initialDelaySeconds?: number;
 };
 
-export type NodefeaturediscoveryHelmValuesGcResources = {
-  /**
-   * @default {"memory":"1Gi"}
-   */
-  limits?: NodefeaturediscoveryHelmValuesGcResourcesLimits;
-  /**
-   * @default {"cpu":"10m","memory":"128Mi"}
-   */
-  requests?: NodefeaturediscoveryHelmValuesGcResourcesRequests;
-};
-
-export type NodefeaturediscoveryHelmValuesGcResourcesLimits = {
-  /**
-   * @default "1Gi"
-   */
-  memory?: string;
-};
-
-export type NodefeaturediscoveryHelmValuesGcResourcesRequests = {
-  /**
-   * @default "10m"
-   */
-  cpu?: string;
-  /**
-   * @default "128Mi"
-   */
-  memory?: string;
-};
-
-export type NodefeaturediscoveryHelmValuesGcNodeSelector = object;
-
 export type NodefeaturediscoveryHelmValuesGcAnnotations = {
   /**
    * This type allows arbitrary additional properties beyond those defined below.
@@ -878,8 +703,6 @@ export type NodefeaturediscoveryHelmValuesGcAnnotations = {
 };
 
 export type NodefeaturediscoveryHelmValuesGcDeploymentAnnotations = object;
-
-export type NodefeaturediscoveryHelmValuesGcAffinity = object;
 
 export type NodefeaturediscoveryHelmValuesGcPodDisruptionBudget = {
   /**
@@ -1006,20 +829,13 @@ export type NodefeaturediscoveryHelmParameters = {
   "master.serviceAccount.name"?: string;
   "master.revisionHistoryLimit"?: string;
   "master.rbac.create"?: string;
-  "master.resources.limits.memory"?: string;
-  "master.resources.requests.cpu"?: string;
-  "master.resources.requests.memory"?: string;
-  "master.tolerations.key"?: string;
-  "master.tolerations.operator"?: string;
-  "master.tolerations.value"?: string;
-  "master.tolerations.effect"?: string;
+  "master.resources"?: string;
+  "master.nodeSelector"?: string;
+  "master.tolerations"?: string;
   "master.podDisruptionBudget.enable"?: string;
   "master.podDisruptionBudget.minAvailable"?: string;
   "master.podDisruptionBudget.unhealthyPodEvictionPolicy"?: string;
-  "master.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution.weight"?: string;
-  "master.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution.preference.matchExpressions.key"?: string;
-  "master.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution.preference.matchExpressions.operator"?: string;
-  "master.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution.preference.matchExpressions.values"?: string;
+  "master.affinity"?: string;
   "master.startupProbe.failureThreshold"?: string;
   "master.readinessProbe.failureThreshold"?: string;
   "worker.enable"?: string;
@@ -1041,10 +857,10 @@ export type NodefeaturediscoveryHelmParameters = {
   "worker.revisionHistoryLimit"?: string;
   "worker.rbac.create"?: string;
   "worker.mountUsrSrc"?: string;
-  "worker.resources.limits.memory"?: string;
-  "worker.resources.requests.cpu"?: string;
-  "worker.resources.requests.memory"?: string;
+  "worker.resources"?: string;
+  "worker.nodeSelector"?: string;
   "worker.tolerations"?: string;
+  "worker.affinity"?: string;
   "worker.priorityClassName"?: string;
   "topologyUpdater.config"?: string;
   "topologyUpdater.enable"?: string;
@@ -1070,10 +886,10 @@ export type NodefeaturediscoveryHelmParameters = {
   "topologyUpdater.livenessProbe.initialDelaySeconds"?: string;
   "topologyUpdater.readinessProbe.initialDelaySeconds"?: string;
   "topologyUpdater.readinessProbe.failureThreshold"?: string;
-  "topologyUpdater.resources.limits.memory"?: string;
-  "topologyUpdater.resources.requests.cpu"?: string;
-  "topologyUpdater.resources.requests.memory"?: string;
+  "topologyUpdater.resources"?: string;
+  "topologyUpdater.nodeSelector"?: string;
   "topologyUpdater.tolerations"?: string;
+  "topologyUpdater.affinity"?: string;
   "topologyUpdater.podSetFingerprint"?: string;
   "gc.enable"?: string;
   "gc.extraArgs"?: string;
@@ -1087,11 +903,11 @@ export type NodefeaturediscoveryHelmParameters = {
   "gc.interval"?: string;
   "gc.livenessProbe.initialDelaySeconds"?: string;
   "gc.readinessProbe.initialDelaySeconds"?: string;
-  "gc.resources.limits.memory"?: string;
-  "gc.resources.requests.cpu"?: string;
-  "gc.resources.requests.memory"?: string;
+  "gc.resources"?: string;
   "gc.port"?: string;
+  "gc.nodeSelector"?: string;
   "gc.tolerations"?: string;
+  "gc.affinity"?: string;
   "gc.podDisruptionBudget.enable"?: string;
   "gc.podDisruptionBudget.minAvailable"?: string;
   "gc.podDisruptionBudget.unhealthyPodEvictionPolicy"?: string;

@@ -1,6 +1,6 @@
 import type { PlaybackEvent } from "@shepherdjerred/streambot/machine/types.ts";
 import {
-  deleteState,
+  moveState,
   stateFilePath,
 } from "@shepherdjerred/streambot/state/persistence.ts";
 import type {
@@ -61,13 +61,25 @@ export function moveSessionRecord<TSession extends MovableSession>(
   session.key = toKey;
   session.voiceChannelId = params.toChannelId;
   params.setSession(toKey, session);
+  // Move the existing resume-state file to the new channel's path BEFORE notifying the actor.
+  // VOICE_TARGET_MOVED only updates context (no state transition), so it triggers no snapshot write —
+  // a plain delete-then-hope would leave a crash window with no state file at either path. moveState
+  // write-then-deletes (rewriting the file's channel id) so a resumable snapshot is present at all
+  // times; the next checkpoint overwrites it.
+  void moveState({
+    fromPath: stateFilePath(
+      params.stateDir,
+      params.guildId,
+      params.fromChannelId,
+    ),
+    toPath: stateFilePath(params.stateDir, params.guildId, params.toChannelId),
+    guildId: params.guildId,
+    channelId: params.toChannelId,
+  });
   session.actor.send({
     type: "VOICE_TARGET_MOVED",
     target: { guildId: params.guildId, channelId: params.toChannelId },
   });
-  void deleteState(
-    stateFilePath(params.stateDir, params.guildId, params.fromChannelId),
-  );
   params.logInfo("session voice target moved", {
     guildId: params.guildId,
     fromChannelId: params.fromChannelId,
