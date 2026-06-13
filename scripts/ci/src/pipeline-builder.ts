@@ -336,7 +336,10 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     }
 
     // --- Homelab Tofu Plan (runs on PRs for early feedback) ---
-    if (pullRequestBuild && (affected.buildAll || affected.homelabChanged)) {
+    // Gated on tofu *source* changes (not any homelab change) so cdk8s-only PRs
+    // don't run plans that yield no signal for them. `.dagger/` and `scripts/ci/`
+    // changes trigger a full build, which runs the plan via `buildAll`.
+    if (pullRequestBuild && (affected.buildAll || affected.tofuChanged)) {
       steps.push(homelabTofuPlanGroup());
     }
 

@@ -636,6 +636,23 @@ function checkCiImageVersionChanges(changedFiles: string[]): boolean {
   return changedFiles.includes(".buildkite/ci-image/VERSION");
 }
 
+/**
+ * True when an OpenTofu source file changed. Gates the PR tofu *plan* group so
+ * that cdk8s-only homelab PRs don't run (and queue behind) tofu plans that
+ * produce no signal for them. Changes to the tofu Dagger logic (`.dagger/`) or
+ * the CI generator (`scripts/ci/`) trigger a full build instead, which runs the
+ * plan via `buildAll`.
+ */
+function checkTofuChanges(changedFiles: string[]): boolean {
+  for (const f of changedFiles) {
+    if (f.startsWith("packages/homelab/src/tofu/")) {
+      console.error(`Tofu source changed: ${f}`);
+      return true;
+    }
+  }
+  return false;
+}
+
 function extractPackageName(filePath: string): string | null {
   if (!filePath.startsWith("packages/")) return null;
   const rest = filePath.slice("packages/".length);
@@ -739,6 +756,7 @@ function fullBuildResult(cooklangChanged: boolean): AffectedPackages {
     packages: new Set(ALL_PACKAGES),
     buildAll: true,
     homelabChanged: true,
+    tofuChanged: true,
     cooklangChanged,
     resumeChanged: true,
     ciImageChanged: false,
@@ -757,6 +775,7 @@ function emptyResult(): AffectedPackages {
     packages: new Set(),
     buildAll: false,
     homelabChanged: false,
+    tofuChanged: false,
     cooklangChanged: false,
     resumeChanged: false,
     ciImageChanged: false,
@@ -775,6 +794,7 @@ function buildScopedResult(
   cooklangChanged: boolean,
   ciImageChanged: boolean,
   ciImageVersionChanged = false,
+  tofuChanged = false,
 ): AffectedPackages {
   const hasImagePackages = new Set<string>();
   const hasSitePackages = new Set<string>();
@@ -795,6 +815,7 @@ function buildScopedResult(
     packages: allAffected,
     buildAll: false,
     homelabChanged: allAffected.has("homelab"),
+    tofuChanged,
     cooklangChanged,
     resumeChanged: allAffected.has("resume"),
     ciImageChanged,
@@ -827,6 +848,7 @@ export async function detectChanges(): Promise<AffectedPackages> {
 
   const changedFiles = await getChangedFiles();
   const cooklangSourceChanged = hasCooklangSourceChange(changedFiles);
+  const tofuChanged = checkTofuChanges(changedFiles);
 
   // Renovate fast-track: runs BEFORE infra check so that bun.lock/package.json
   // in INFRA_FILES don't short-circuit the fast path.
@@ -864,7 +886,13 @@ export async function detectChanges(): Promise<AffectedPackages> {
         console.error(`  ${p}`);
       }
 
-      return buildScopedResult(allAffected, cooklangSourceChanged, false);
+      return buildScopedResult(
+        allAffected,
+        cooklangSourceChanged,
+        false,
+        false,
+        tofuChanged,
+      );
     }
 
     // classification === null: unrecognized files, fall through to normal detection
@@ -887,6 +915,8 @@ export async function detectChanges(): Promise<AffectedPackages> {
         new Set(["homelab"]),
         cooklangSourceChanged,
         false,
+        false,
+        tofuChanged,
       );
       result.versionBumpOnly = true;
       return result;
@@ -948,6 +978,7 @@ export async function detectChanges(): Promise<AffectedPackages> {
     cooklangSourceChanged,
     ciImageChanged,
     ciImageVersionChanged,
+    tofuChanged,
   );
 }
 
@@ -967,6 +998,7 @@ export {
   classifyRenovateFiles as _classifyRenovateFiles,
   checkCiImageChanges as _checkCiImageChanges,
   checkCiImageVersionChanges as _checkCiImageVersionChanges,
+  checkTofuChanges as _checkTofuChanges,
   getBuildRejectionReason as _getBuildRejectionReason,
   getLastSuccessfulCommit as _getLastSuccessfulCommit,
   getBaseRevision as _getBaseRevision,
