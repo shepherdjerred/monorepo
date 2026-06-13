@@ -43,17 +43,23 @@ Grafana UI: `https://grafana.tailnet-1a49.ts.net` (Tailscale ingress, host `graf
 - Deployment has `replicas: 0` on main (commit `6a509c790 feat(homelab): scale pokemon deployment to 0 replicas`); nothing runs, so no traces. The stale 4d-old `Unknown` pod is leftover from today's node reboot.
 - Its `index.ts` has the identical Sentry-before-tracing bug as mario-kart, so once scaled back up it still won't trace until fixed.
 
+### pyroscope datasource — dead on arrival (bonus finding)
+
+- Provisioned with `type: "grafanapyroscope"`, which is not a registered plugin (`/api/datasources/uid/pyroscope/health` → `plugin.notRegistered`). Profiles Drilldown showed "Missing Pyroscope data source" and all queries failed.
+- Correct plugin ID on Grafana v13 is `grafana-pyroscope-datasource`; fixed in `grafana-values.ts` (same PR #1130).
+
 ## Session Log — 2026-06-12
 
 ### Done
 
 - Verified Tempo + Grafana trace wiring in cdk8s source and against the live API; opened Grafana Explore in browser.
 - Root-caused the three "silent" services (see follow-up section above): scout works (sparse LLM-only traces), mario-kart broken by Sentry OTel-global registration order, pokemon scaled to 0 (+ same Sentry bug latent).
+- Fixed the dead pyroscope datasource type in `packages/homelab/src/cdk8s/src/resources/argo-applications/grafana-values.ts` (PR #1130).
 - Fixed the Sentry bug in both bots: added `skipOpenTelemetrySetup: true` to `Sentry.init` in `packages/discord-plays-{mario-kart,pokemon}/packages/backend/src/index.ts` (PR #1130, typecheck + lint green).
 
 ### Remaining
 
-- Post-merge: verify mario-kart traces appear in Tempo after its next deploy (`{ resource.service.name =~ "discord-plays.*" }` in Grafana Explore). Pokemon stays silent until intentionally scaled back up from 0.
+- Post-merge: verify mario-kart traces appear in Tempo after its next deploy (`{ resource.service.name =~ "discord-plays.*" }` in Grafana Explore). Pokemon stays silent until intentionally scaled back up from 0. Also verify pyroscope datasource health + Profiles Drilldown after the grafana ArgoCD app syncs.
 
 ### Caveats
 
