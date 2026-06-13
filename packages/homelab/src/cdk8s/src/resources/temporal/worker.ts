@@ -399,18 +399,10 @@ export function createTemporalWorkerDeployment(
           key: "AWS_SECRET_ACCESS_KEY",
         }),
         // GitHub
-        // URL of the private fixtures repo used by the pr-review-eval
-        // nightly schedule. Required — the 1P item carries this field.
-        // Note: even when set, the eval schedule self-pauses when the
-        // value is blank or when PR_REVIEW_EVAL_DATABASE_URL is absent
-        // (see register-schedules.ts scheduleRequiresConfigPause).
-        // The original optional:true was removed by the zero-optional-
-        // secrets sweep; the 1P field must be populated (even if the
-        // schedule ends up paused at runtime) so the pod starts cleanly.
-        PR_REVIEW_FIXTURES_REPO_URL: EnvValue.fromSecretValue({
-          secret,
-          key: "PR_REVIEW_FIXTURES_REPO_URL",
-        }),
+        // PR_REVIEW_FIXTURES_REPO_URL is not wired — it belongs to the disabled
+        // pr-review-eval feature (PR_BOT_ENABLED=false) and is not present in the
+        // 1P item, so requiring it would crash-loop the worker. The eval schedule
+        // self-pauses when it's absent (register-schedules.ts).
         GITHUB_APP_ID: EnvValue.fromSecretValue({
           secret,
           key: "GITHUB_APP_ID",

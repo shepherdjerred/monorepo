@@ -6,10 +6,11 @@
  * - 1Password secret for bot token and channel IDs
  * - Environment variable substitution via itzg/minecraft-server
  *
- * Required 1Password fields (all required — no optional secrets; a missing
- * field fails the pod at startup rather than booting with a silent gap):
- * - DISCORD_BOT_TOKEN: The Discord bot token
- * - DISCORD_CHANNEL_ID: The main chat channel ID
+ * Required 1Password fields (lowercase-kebab labels; all required — no optional
+ * secrets, a missing field fails the pod at startup rather than booting with a
+ * silent gap):
+ * - discord-bot-token: The Discord bot token
+ * - discord-channel-id: The main chat channel ID
  *
  * Console channel + invite link are not wired (features unused) — the config
  * template sets them to empty strings.
@@ -80,12 +81,15 @@ export function getDiscordSrvExtraEnv(
   return {
     // Enable itzg's environment variable substitution for ${CFG_*} placeholders
     REPLACE_ENV_VARIABLES: "TRUE",
-    // DiscordSRV natively reads bot token from DISCORDSRV_TOKEN env var
+    // DiscordSRV natively reads bot token from DISCORDSRV_TOKEN env var.
+    // Secret keys are lowercase-kebab (the 1P field labels are
+    // `discord-bot-token` / `discord-channel-id`), so reference them exactly —
+    // an uppercase key would not resolve and the required ref would crash-loop.
     DISCORDSRV_TOKEN: {
       valueFrom: {
         secretKeyRef: {
           name: secretName,
-          key: "DISCORD_BOT_TOKEN",
+          key: "discord-bot-token",
         },
       },
     },
@@ -93,7 +97,7 @@ export function getDiscordSrvExtraEnv(
       valueFrom: {
         secretKeyRef: {
           name: secretName,
-          key: "DISCORD_CHANNEL_ID",
+          key: "discord-channel-id",
         },
       },
     },
