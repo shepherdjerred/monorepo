@@ -49,7 +49,7 @@ PR); until then, a missing field surfaces as a pod crash-loop.
 | 1P item                                                | Missing field(s)                                                                                                                |
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
 | temporal-worker `mjgnqqh37jxyzseqrddde2jgaq`           | `BUILDKITE_API_TOKEN` (**write_builds scope**), `HOMELAB_AUDIT_ARCHIVE_BUCKET`, `PR_REVIEW_EVAL_DATABASE_URL`, `VOYAGE_API_KEY` |
-| pokemon `hwyhh64dyu3s7w37q7oj7r4qn4`                   | `CODEX_API_KEY`, `CODEX_ACCESS_TOKEN`, `OPENAI_API_KEY`                                                                         |
+| pokemon `hwyhh64dyu3s7w37q7oj7r4qn4`                   | `OPENAI_API_KEY` (the other Codex auth refs were dropped — single auth method)                                                  |
 | streambot-tmdb                                         | `TMDB_API_KEY`                                                                                                                  |
 | minecraft-sjerred-discord `q37vet77dfggoqbvu4bqle3gje` | `DISCORD_CONSOLE_CHANNEL_ID`, `DISCORD_INVITE_LINK`                                                                             |
 
@@ -70,5 +70,5 @@ PR); until then, a missing field surfaces as a pod crash-loop.
 
 ### Caveats
 
-- **Pokemon all-three:** app only needs one of CODEX_API_KEY/CODEX_ACCESS_TOKEN/OPENAI_API_KEY (goal mode, `enabled=false` default), but all three are now required refs → all three keys must exist. Offered to collapse to a single ref if the user prefers.
+- **Pokemon auth collapsed:** goal mode accepts any one of CODEX_ACCESS_TOKEN / CODEX_API_KEY / OPENAI_API_KEY (or a mounted auth.json). Per user, kept only `OPENAI_API_KEY` as a required ref and dropped the other two — so pokemon needs just that one 1P field.
 - Fresh-worktree pre-commit `eslint-homelab` fails with `jiti` not found until `bun install` is run in `packages/homelab/` root (eslint+jiti live there, not just in the cdk8s subpkg). Re: memory `reference_worktree_precommit_eslint`.
