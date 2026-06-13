@@ -286,6 +286,11 @@ model ReportRun {
   rowsReturned Int       @default(0)
   rowsScanned  Int       @default(0)
   errorMessage String?
+  // Faithful per-run archive of what was posted: the rendered text body and an
+  // S3 key for the chart PNG (null for text-only formats or when S3 is off).
+  renderedContent String?
+  imageS3Key      String?
+  imageByteSize   Int?
   createdAt    DateTime  @default(now())
 
   report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)

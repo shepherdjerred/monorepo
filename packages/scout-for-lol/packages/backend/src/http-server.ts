@@ -10,6 +10,7 @@ import {
   handleDiscordStart,
   handleWebLogout,
 } from "#src/trpc/auth-web.ts";
+import { handleImageRoute } from "#src/trpc/image-routes.ts";
 
 const logger = createLogger("http-server");
 
@@ -219,6 +220,16 @@ const server = Bun.serve({
     // Web auth: logout
     if (url.pathname === "/api/auth/logout" && request.method === "POST") {
       return handleWebLogout(request);
+    }
+
+    // Generated chart PNGs for the web app (<img src>), cookie-authorized.
+    const imageResponse = await handleImageRoute(
+      request,
+      url,
+      corsHeadersFor(request),
+    );
+    if (imageResponse !== null) {
+      return imageResponse;
     }
 
     // tRPC API endpoint
