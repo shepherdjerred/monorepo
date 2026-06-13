@@ -86,16 +86,12 @@ export type ConnectHelmValuesConnect = {
   version?: string;
   /**
    * [Node selector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector) stanza for the Connect pod
-   *
-   * @default {}
    */
-  nodeSelector?: ConnectHelmValuesConnectNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
    * [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the Connect pod
-   *
-   * @default {}
    */
-  affinity?: ConnectHelmValuesConnectAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * Horizontal Pod Autoscaling for the Connect pod
    *
@@ -150,6 +146,9 @@ export type ConnectHelmValuesConnect = {
    * @default {...} (5 keys)
    */
   podSecurityContext?: ConnectHelmValuesConnectPodSecurityContext;
+  /**
+   * List of tolerations to be added to the Connect API pods.
+   */
   tolerations?: unknown[];
   /**
    * 1Password Connect volume shared between 1Password Connect Containers
@@ -193,10 +192,11 @@ export type ConnectHelmValuesConnectApi = {
   imageRepository?: string;
   /**
    * The resources requests/limits for the 1Password Connect API pod
-   *
-   * @default {"limits":{"memory":"128Mi"},"requests":{"cpu":0.2}}
    */
-  resources?: ConnectHelmValuesConnectApiResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * The port the Connect API is served on when TLS is disabled
    *
@@ -228,31 +228,6 @@ export type ConnectHelmValuesConnectApi = {
    * @default {"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"allowPrivilegeEscalation":false}
    */
   securityContext?: ConnectHelmValuesConnectApiSecurityContext;
-};
-
-export type ConnectHelmValuesConnectApiResources = {
-  /**
-   * @default {"memory":"128Mi"}
-   */
-  limits?: ConnectHelmValuesConnectApiResourcesLimits;
-  /**
-   * @default {"cpu":0.2}
-   */
-  requests?: ConnectHelmValuesConnectApiResourcesRequests;
-};
-
-export type ConnectHelmValuesConnectApiResourcesLimits = {
-  /**
-   * @default "128Mi"
-   */
-  memory?: string;
-};
-
-export type ConnectHelmValuesConnectApiResourcesRequests = {
-  /**
-   * @default 0.2
-   */
-  cpu?: number;
 };
 
 export type ConnectHelmValuesConnectApiServiceMonitor = {
@@ -332,10 +307,11 @@ export type ConnectHelmValuesConnectSync = {
   imageRepository?: string;
   /**
    * The resources requests/limits for the 1Password Connect Sync pod
-   *
-   * @default {}
    */
-  resources?: ConnectHelmValuesConnectSyncResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * The port serving the health of the Sync container
    *
@@ -355,8 +331,6 @@ export type ConnectHelmValuesConnectSync = {
    */
   securityContext?: ConnectHelmValuesConnectSyncSecurityContext;
 };
-
-export type ConnectHelmValuesConnectSyncResources = object;
 
 export type ConnectHelmValuesConnectSyncSecurityContext = {
   /**
@@ -407,10 +381,6 @@ export type ConnectHelmValuesConnectServiceAccountAnnotations = {
    */
   [key: string]: unknown;
 };
-
-export type ConnectHelmValuesConnectNodeSelector = object;
-
-export type ConnectHelmValuesConnectAffinity = object;
 
 export type ConnectHelmValuesConnectHpa = {
   /**
@@ -758,16 +728,12 @@ export type ConnectHelmValuesOperator = {
   securityContext?: ConnectHelmValuesOperatorSecurityContext;
   /**
    * [Node selector](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector) stanza for the operator pod
-   *
-   * @default {}
    */
-  nodeSelector?: ConnectHelmValuesOperatorNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
    * [Affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity) rules for the Operator pod
-   *
-   * @default {}
    */
-  affinity?: ConnectHelmValuesOperatorAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * Horizontal Pod Autoscaling for the Operator pod
    *
@@ -810,14 +776,18 @@ export type ConnectHelmValuesOperator = {
    * @default ""
    */
   priorityClassName?: string;
+  /**
+   * List of tolerations to be added to the Operator pods.
+   */
   tolerations?: unknown[];
   watchNamespace?: unknown[];
   /**
    * The resources requests/limits for the 1Password Operator pod
-   *
-   * @default {}
    */
-  resources?: ConnectHelmValuesOperatorResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * 1Password Operator Health Probes
    *
@@ -936,10 +906,6 @@ export type ConnectHelmValuesOperatorSecurityContextCapabilities = {
   drop?: string[];
 };
 
-export type ConnectHelmValuesOperatorNodeSelector = object;
-
-export type ConnectHelmValuesOperatorAffinity = object;
-
 export type ConnectHelmValuesOperatorHpa = {
   /**
    * Enable Horizontal Pod Autoscaling for the Operator pod
@@ -1049,8 +1015,6 @@ export type ConnectHelmValuesOperatorLabels = {
 export type ConnectHelmValuesOperatorPodAnnotations = object;
 
 export type ConnectHelmValuesOperatorPodLabels = object;
-
-export type ConnectHelmValuesOperatorResources = object;
 
 export type ConnectHelmValuesOperatorProbes = {
   /**
@@ -1379,8 +1343,7 @@ export type ConnectHelmParameters = {
   "connect.replicas"?: string;
   "connect.api.name"?: string;
   "connect.api.imageRepository"?: string;
-  "connect.api.resources.limits.memory"?: string;
-  "connect.api.resources.requests.cpu"?: string;
+  "connect.api.resources"?: string;
   "connect.api.httpPort"?: string;
   "connect.api.httpsPort"?: string;
   "connect.api.logLevel"?: string;
@@ -1392,6 +1355,7 @@ export type ConnectHelmParameters = {
   "connect.api.securityContext.allowPrivilegeEscalation"?: string;
   "connect.sync.name"?: string;
   "connect.sync.imageRepository"?: string;
+  "connect.sync.resources"?: string;
   "connect.sync.httpPort"?: string;
   "connect.sync.logLevel"?: string;
   "connect.sync.securityContext.capabilities.drop"?: string;
@@ -1409,6 +1373,8 @@ export type ConnectHelmParameters = {
   "connect.imagePullPolicy"?: string;
   "connect.imagePullSecrets"?: string;
   "connect.version"?: string;
+  "connect.nodeSelector"?: string;
+  "connect.affinity"?: string;
   "connect.hpa.enabled"?: string;
   "connect.hpa.minReplicas"?: string;
   "connect.hpa.maxReplicas"?: string;
@@ -1459,6 +1425,8 @@ export type ConnectHelmParameters = {
   "operator.securityContext.capabilities.drop"?: string;
   "operator.securityContext.readOnlyRootFilesystem"?: string;
   "operator.securityContext.allowPrivilegeEscalation"?: string;
+  "operator.nodeSelector"?: string;
+  "operator.affinity"?: string;
   "operator.hpa.enabled"?: string;
   "operator.hpa.minReplicas"?: string;
   "operator.hpa.maxReplicas"?: string;
@@ -1470,6 +1438,7 @@ export type ConnectHelmParameters = {
   "operator.priorityClassName"?: string;
   "operator.tolerations"?: string;
   "operator.watchNamespace"?: string;
+  "operator.resources"?: string;
   "operator.probes.port"?: string;
   "operator.probes.liveness.create"?: string;
   "operator.probes.liveness.failureThreshold"?: string;

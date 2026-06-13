@@ -217,3 +217,55 @@ export async function resolveWithYtdlp(
   );
   return { ...base, ...(subtitle === undefined ? {} : { subtitle }) };
 }
+
+/**
+ * Parse `yt-dlp --list-extractors` stdout into supported source names. yt-dlp prints one name per
+ * line; entries it tags ` (CURRENTLY BROKEN)` are dropped (they won't actually stream), as are
+ * blank lines.
+ */
+export function parseExtractors(stdout: string): string[] {
+  const names: string[] = [];
+  for (const raw of stdout.split("\n")) {
+    const line = raw.trim();
+    if (line.length === 0 || line.endsWith("(CURRENTLY BROKEN)")) {
+      continue;
+    }
+    names.push(line);
+  }
+  return names;
+}
+
+let extractorCache: readonly string[] | undefined;
+
+/**
+ * The source/site names yt-dlp can extract (`yt-dlp --list-extractors`), backing `/stream sources`.
+ * Memoized for the process lifetime — the set only changes when yt-dlp itself is upgraded, which
+ * implies a restart. Throws on a non-zero exit so the caller can surface a clear error.
+ */
+export async function listExtractors(
+  config: Config,
+  signal: AbortSignal,
+): Promise<readonly string[]> {
+  if (extractorCache !== undefined) {
+    return extractorCache;
+  }
+  const proc = Bun.spawn([config.ytDlpPath, "--list-extractors"], {
+    stdout: "pipe",
+    stderr: "pipe",
+    stdin: "ignore",
+    signal,
+  });
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+    proc.exited,
+  ]);
+  if (exitCode !== 0) {
+    throw new Error(
+      `yt-dlp --list-extractors failed (code ${String(exitCode)}): ${stderr.trim()}`,
+    );
+  }
+  const names = parseExtractors(stdout);
+  extractorCache = names;
+  return names;
+}

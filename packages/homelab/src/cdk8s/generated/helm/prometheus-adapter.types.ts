@@ -1,7 +1,5 @@
 // Generated TypeScript types for prometheus-adapter Helm chart
 
-export type PrometheusadapterHelmValuesAffinity = object;
-
 export type PrometheusadapterHelmValuesImage = {
   /**
    * @default "registry.k8s.io/prometheus-adapter/prometheus-a..."
@@ -19,8 +17,6 @@ export type PrometheusadapterHelmValuesImage = {
   pullPolicy?: string;
   pullSecrets?: unknown[];
 };
-
-export type PrometheusadapterHelmValuesNodeSelector = object;
 
 export type PrometheusadapterHelmValuesCustomAnnotations = object;
 
@@ -151,8 +147,6 @@ export type PrometheusadapterHelmValuesServiceAccountAnnotations = {
 };
 
 export type PrometheusadapterHelmValuesDnsConfig = object;
-
-export type PrometheusadapterHelmValuesResources = object;
 
 export type PrometheusadapterHelmValuesLivenessProbe = {
   /**
@@ -364,9 +358,9 @@ export type PrometheusadapterHelmValuesCertManager = {
 
 export type PrometheusadapterHelmValues = {
   /**
-   * @default {}
+   * Kubernetes affinity (standard Affinity object)
    */
-  affinity?: PrometheusadapterHelmValuesAffinity;
+  affinity?: Record<string, unknown>;
   topologySpreadConstraints?: unknown[];
   /**
    * Override the name of the chart
@@ -397,9 +391,9 @@ export type PrometheusadapterHelmValues = {
    */
   listenPort?: number;
   /**
-   * @default {}
+   * Kubernetes nodeSelector (arbitrary label key/value pairs)
    */
-  nodeSelector?: PrometheusadapterHelmValuesNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
    * @default ""
    */
@@ -467,9 +461,12 @@ export type PrometheusadapterHelmValues = {
    */
   dnsConfig?: PrometheusadapterHelmValuesDnsConfig;
   /**
-   * @default {}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: PrometheusadapterHelmValuesResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Configure liveness probe
    * https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#Probe
@@ -507,6 +504,9 @@ export type PrometheusadapterHelmValues = {
   extraContainers?: unknown[];
   extraVolumes?: unknown[];
   extraVolumeMounts?: unknown[];
+  /**
+   * Kubernetes tolerations (standard Toleration objects)
+   */
   tolerations?: unknown[];
   /**
    * Labels added to the pod
@@ -555,6 +555,7 @@ export type PrometheusadapterHelmValues = {
 };
 
 export type PrometheusadapterHelmParameters = {
+  affinity?: string;
   topologySpreadConstraints?: string;
   nameOverride?: string;
   fullnameOverride?: string;
@@ -565,6 +566,7 @@ export type PrometheusadapterHelmParameters = {
   logLevel?: string;
   metricsRelistInterval?: string;
   listenPort?: string;
+  nodeSelector?: string;
   priorityClassName?: string;
   namespaceOverride?: string;
   "prometheus.url"?: string;
@@ -586,6 +588,7 @@ export type PrometheusadapterHelmParameters = {
   "serviceAccount.create"?: string;
   "serviceAccount.name"?: string;
   "serviceAccount.automountServiceAccountToken"?: string;
+  resources?: string;
   "livenessProbe.httpGet.path"?: string;
   "livenessProbe.httpGet.port"?: string;
   "livenessProbe.httpGet.scheme"?: string;

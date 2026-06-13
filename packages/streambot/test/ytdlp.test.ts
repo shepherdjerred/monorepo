@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   buildInfoArgs,
+  parseExtractors,
   parseYtdlpInfo,
   toResolvedSource,
   ytdlpTarget,
@@ -79,5 +80,24 @@ describe("parseYtdlpInfo / toResolvedSource", () => {
 
   test("rejects non-JSON output", () => {
     expect(() => parseYtdlpInfo("not json at all")).toThrow();
+  });
+});
+
+describe("parseExtractors", () => {
+  test("keeps names, trims, and drops blanks + broken extractors", () => {
+    const stdout = [
+      "youtube",
+      "twitch:vod",
+      "  vimeo  ",
+      "",
+      "20min (CURRENTLY BROKEN)",
+      "Bilibili category extractor",
+    ].join("\n");
+    expect(parseExtractors(stdout)).toEqual([
+      "youtube",
+      "twitch:vod",
+      "vimeo",
+      "Bilibili category extractor",
+    ]);
   });
 });

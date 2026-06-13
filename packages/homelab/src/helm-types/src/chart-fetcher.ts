@@ -63,6 +63,32 @@ async function runCommand(command: string, args: string[]): Promise<string> {
 }
 
 /**
+ * Locate the directory `helm pull --untar` created. helm names it after the
+ * Chart.yaml `name`, which can differ from the OCI artifact path (e.g.
+ * `kueue/charts/kueue` untars to `kueue/`), so prefer the version-key fallback
+ * but fall back to scanning for the extracted Chart.yaml.
+ */
+async function resolveUntarredChartDir(
+  tempDir: string,
+  fallbackName: string,
+): Promise<string> {
+  const fallback = `${tempDir}/${fallbackName}`;
+  if (await Bun.file(`${fallback}/Chart.yaml`).exists()) {
+    return fallback;
+  }
+  const lsOutput = await runCommand("ls", ["-1", tempDir]);
+  for (const entry of lsOutput.split("\n").map((s) => s.trim())) {
+    if (entry === "") {
+      continue;
+    }
+    if (await Bun.file(`${tempDir}/${entry}/Chart.yaml`).exists()) {
+      return `${tempDir}/${entry}`;
+    }
+  }
+  return fallback;
+}
+
+/**
  * Fetch a Helm chart and extract its values.yaml and optional schema
  */
 export async function fetchHelmChart(chart: ChartInfo): Promise<{
@@ -78,28 +104,49 @@ export async function fetchHelmChart(chart: ChartInfo): Promise<{
     // Ensure temp directory exists
     await Bun.$`mkdir -p ${tempDir}`.quiet();
 
-    console.log(`  📦 Adding Helm repo: ${chart.repoUrl}`);
-    // Add the helm repo
-    await runCommand("helm", ["repo", "add", repoName, chart.repoUrl]);
+    let chartDir: string;
+    if (chart.oci === true) {
+      // OCI registry: pull directly, no `helm repo add` needed.
+      const ociRef = `oci://${chart.repoUrl}/${chart.chartName}`;
+      console.log(`  ⬇️  Pulling OCI chart ${ociRef}:${chart.version}...`);
+      await runCommand("helm", [
+        "pull",
+        ociRef,
+        "--version",
+        chart.version,
+        "--destination",
+        tempDir,
+        "--untar",
+      ]);
+      chartDir = await resolveUntarredChartDir(tempDir, chart.name);
+    } else {
+      console.log(`  📦 Adding Helm repo: ${chart.repoUrl}`);
+      // Add the helm repo
+      await runCommand("helm", ["repo", "add", repoName, chart.repoUrl]);
 
-    console.log(`  🔄 Updating Helm repos...`);
-    // Update repo
-    await runCommand("helm", ["repo", "update"]);
+      console.log(`  🔄 Updating Helm repo ${repoName}...`);
+      // Update ONLY the repo we just added. `helm repo update` with no args
+      // refreshes every repo in the local helm config — including unrelated
+      // stale entries (e.g. the retired public bitnami repo) whose failure
+      // would abort an otherwise-fine fetch.
+      await runCommand("helm", ["repo", "update", repoName]);
 
-    console.log(`  ⬇️  Pulling chart ${chart.chartName}:${chart.version}...`);
-    // Pull the chart
-    await runCommand("helm", [
-      "pull",
-      `${repoName}/${chart.chartName}`,
-      "--version",
-      chart.version,
-      "--destination",
-      tempDir,
-      "--untar",
-    ]);
+      console.log(`  ⬇️  Pulling chart ${chart.chartName}:${chart.version}...`);
+      // Pull the chart
+      await runCommand("helm", [
+        "pull",
+        `${repoName}/${chart.chartName}`,
+        "--version",
+        chart.version,
+        "--destination",
+        tempDir,
+        "--untar",
+      ]);
+      chartDir = `${tempDir}/${chart.chartName}`;
+    }
 
     // Read values.yaml
-    const valuesPath = `${tempDir}/${chart.chartName}/values.yaml`;
+    const valuesPath = `${chartDir}/values.yaml`;
     console.log(`  📖 Reading values.yaml from ${valuesPath}`);
 
     try {
@@ -137,8 +184,7 @@ export async function fetchHelmChart(chart: ChartInfo): Promise<{
       const parseResult = HelmValueSchema.safeParse(recordParseResult.data);
 
       // Try to load JSON schema
-      const chartPath = `${tempDir}/${chart.chartName}`;
-      const schema = await loadJSONSchema(chartPath);
+      const schema = await loadJSONSchema(chartDir);
 
       if (parseResult.success) {
         console.log(`  ✅ Zod validation successful`);
@@ -163,7 +209,10 @@ export async function fetchHelmChart(chart: ChartInfo): Promise<{
     // Cleanup
     try {
       console.log(`  🧹 Cleaning up...`);
-      await runCommand("helm", ["repo", "remove", repoName]);
+      // OCI charts never added a named repo, so only remove for HTTP repos.
+      if (chart.oci !== true) {
+        await runCommand("helm", ["repo", "remove", repoName]);
+      }
       await Bun.$`rm -rf ${tempDir}`.quiet();
     } catch (cleanupError) {
       console.warn(`Cleanup failed for ${chart.name}:`, String(cleanupError));

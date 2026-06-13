@@ -3,6 +3,7 @@ import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
 /**
  * Creates Grafana Tempo for distributed tracing.
@@ -12,7 +13,7 @@ import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/stora
 export function createTempoApp(chart: Chart) {
   // Tempo values - SingleBinary mode with OTLP receiver enabled
   // Dagger will send traces directly to Tempo's OTLP endpoint
-  const tempoValues = {
+  const tempoValues: HelmValuesForChart<"tempo"> = {
     tempo: {
       // Enable OTLP receivers for trace ingestion
       receivers: {

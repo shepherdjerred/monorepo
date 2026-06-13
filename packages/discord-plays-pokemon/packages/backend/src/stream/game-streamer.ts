@@ -7,6 +7,11 @@ import {
   Encoders,
   computeLetterbox,
 } from "@shepherdjerred/discord-video-stream";
+import { createDesiredStreamMachine } from "@shepherdjerred/discord-stream-lifecycle";
+import type {
+  EncoderHandles,
+  RawGoLiveDeps,
+} from "@shepherdjerred/discord-stream-lifecycle/types.ts";
 import { type Actor, createActor } from "xstate";
 import {
   WIDTH,
@@ -17,8 +22,6 @@ import {
 import { sinkBufferBytes, streamActive } from "#src/observability/metrics.ts";
 import { withSpan } from "#src/observability/tracing.ts";
 import { logger } from "#src/logger.ts";
-import { createOrchestratorMachine } from "./orchestrator-machine.ts";
-import type { EncoderHandles, StreamMachineDeps } from "./stream-machine.ts";
 
 export type GameStreamerOptions = {
   token: string;
@@ -52,7 +55,7 @@ const SRC_FPS = GBA_FPS;
 export class GameStreamer {
   private readonly options: GameStreamerOptions;
   private readonly streamer: Streamer;
-  private readonly actor: Actor<ReturnType<typeof createOrchestratorMachine>>;
+  private readonly actor: Actor<ReturnType<typeof createDesiredStreamMachine>>;
   // Mirror of the machine's live frame sink, kept in sync via subscription so
   // the per-frame hot path is a single null check + write.
   private frameSink: PassThrough | null = null;
@@ -61,8 +64,15 @@ export class GameStreamer {
     this.options = options;
     this.streamer = new Streamer(new Client());
 
-    const machine = createOrchestratorMachine(this.deps());
-    this.actor = createActor(machine);
+    const machine = createDesiredStreamMachine(this.deps());
+    this.actor = createActor(machine, {
+      input: {
+        voiceTarget: {
+          guildId: this.options.guildId,
+          channelId: this.options.channelId,
+        },
+      },
+    });
     this.actor.subscribe((snapshot) => {
       this.frameSink = snapshot.context.frameSink;
       streamActive.set(this.frameSink === null ? 0 : 1);
@@ -109,14 +119,11 @@ export class GameStreamer {
 
   // ---- side effects injected into the machine ----
 
-  private deps(): StreamMachineDeps {
+  private deps(): RawGoLiveDeps {
     return {
-      joinVoice: (signal) =>
+      joinVoice: ({ target }, signal) =>
         withSpan("stream.joinVoice", async () => {
-          await this.streamer.joinVoice(
-            this.options.guildId,
-            this.options.channelId,
-          );
+          await this.streamer.joinVoice(target.guildId, target.channelId);
           // The library's joinVoice cannot be cancelled mid-flight. If STOP arrived
           // while we were connecting, the actor was aborted and leaveVoice already ran;
           // tear down the connection we just established so it isn't orphaned.
@@ -141,6 +148,13 @@ export class GameStreamer {
           }
           this.streamer.leaveVoice();
         }),
+      onFailure: ({ attempt, maxRetries, error }) => {
+        logger.error(
+          `stream failed (attempt ${String(attempt)} of ${String(
+            maxRetries,
+          )}): ${error ?? "unknown"}`,
+        );
+      },
     };
   }
 

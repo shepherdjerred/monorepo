@@ -304,10 +304,11 @@ export type RedisHelmValuesMaster = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * @default {}
    */
-  resources?: RedisHelmValuesMasterResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {"openssl":""}
    */
@@ -409,16 +410,15 @@ export type RedisHelmValuesMaster = {
   /**
    * ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
    * NOTE: `master.podAffinityPreset`, `master.podAntiAffinityPreset`, and `master.nodeAffinityPreset` will be ignored when it's set
-   *
-   * @default {}
    */
-  affinity?: RedisHelmValuesMasterAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-   *
-   * @default {}
    */
-  nodeSelector?: RedisHelmValuesMasterNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+   */
   tolerations?: unknown[];
   topologySpreadConstraints?: unknown[];
   /**
@@ -628,8 +628,6 @@ export type RedisHelmValuesMasterCustomLivenessProbe = object;
 
 export type RedisHelmValuesMasterCustomReadinessProbe = object;
 
-export type RedisHelmValuesMasterResources = object;
-
 export type RedisHelmValuesMasterFips = {
   /**
    * Configure OpenSSL FIPS mode: '', 'restricted', 'relaxed', 'off'. If empty (""), 'global.defaultFips' would be used
@@ -760,10 +758,6 @@ export type RedisHelmValuesMasterNodeAffinityPreset = {
   key?: string;
   values?: unknown[];
 };
-
-export type RedisHelmValuesMasterAffinity = object;
-
-export type RedisHelmValuesMasterNodeSelector = object;
 
 export type RedisHelmValuesMasterDnsConfig = object;
 
@@ -1194,10 +1188,11 @@ export type RedisHelmValuesReplica = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * @default {}
    */
-  resources?: RedisHelmValuesReplicaResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {"openssl":""}
    */
@@ -1299,16 +1294,15 @@ export type RedisHelmValuesReplica = {
   /**
    * ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
    * NOTE: `replica.podAffinityPreset`, `replica.podAntiAffinityPreset`, and `replica.nodeAffinityPreset` will be ignored when it's set
-   *
-   * @default {}
    */
-  affinity?: RedisHelmValuesReplicaAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-   *
-   * @default {}
    */
-  nodeSelector?: RedisHelmValuesReplicaNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+   */
   tolerations?: unknown[];
   topologySpreadConstraints?: unknown[];
   /**
@@ -1545,8 +1539,6 @@ export type RedisHelmValuesReplicaCustomLivenessProbe = object;
 
 export type RedisHelmValuesReplicaCustomReadinessProbe = object;
 
-export type RedisHelmValuesReplicaResources = object;
-
 export type RedisHelmValuesReplicaFips = {
   /**
    * Configure OpenSSL FIPS mode: '', 'restricted', 'relaxed', 'off'. If empty (""), 'global.defaultFips' would be used
@@ -1677,10 +1669,6 @@ export type RedisHelmValuesReplicaNodeAffinityPreset = {
   key?: string;
   values?: unknown[];
 };
-
-export type RedisHelmValuesReplicaAffinity = object;
-
-export type RedisHelmValuesReplicaNodeSelector = object;
 
 export type RedisHelmValuesReplicaDnsConfig = object;
 
@@ -2199,10 +2187,11 @@ export type RedisHelmValuesSentinel = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * @default {}
    */
-  resources?: RedisHelmValuesSentinelResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {"openssl":""}
    */
@@ -2570,8 +2559,6 @@ export type RedisHelmValuesSentinelPersistentVolumeClaimRetentionPolicy = {
    */
   whenDeleted?: string;
 };
-
-export type RedisHelmValuesSentinelResources = object;
 
 export type RedisHelmValuesSentinelFips = {
   /**
@@ -3242,10 +3229,11 @@ export type RedisHelmValuesMetrics = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * @default {}
    */
-  resources?: RedisHelmValuesMetricsResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {"openssl":"","golang":"restricted"}
    */
@@ -3528,8 +3516,6 @@ export type RedisHelmValuesMetricsContainerSecurityContextSeccompProfile = {
 export type RedisHelmValuesMetricsContainerSecurityContextCapabilities = {
   drop?: string[];
 };
-
-export type RedisHelmValuesMetricsResources = object;
 
 export type RedisHelmValuesMetricsFips = {
   /**
@@ -3824,10 +3810,11 @@ export type RedisHelmValuesVolumePermissions = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * @default {}
    */
-  resources?: RedisHelmValuesVolumePermissionsResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {"openssl":""}
    */
@@ -3877,8 +3864,6 @@ export type RedisHelmValuesVolumePermissionsImage = {
   pullSecrets?: unknown[];
 };
 
-export type RedisHelmValuesVolumePermissionsResources = object;
-
 export type RedisHelmValuesVolumePermissionsFips = {
   /**
    * Configure OpenSSL FIPS mode: '', 'restricted', 'relaxed', 'off'. If empty (""), 'global.defaultFips' would be used
@@ -3926,10 +3911,11 @@ export type RedisHelmValuesKubectl = {
   /**
    * Bitnami Kubectl resource requests and limits
    * ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
-   *
-   * @default {"limits":{},"requests":{}}
    */
-  resources?: RedisHelmValuesKubectlResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {"openssl":"","golang":"relaxed"}
    */
@@ -4038,25 +4024,6 @@ export type RedisHelmValuesKubectlContainerSecurityContextCapabilities = {
   drop?: string[];
 };
 
-export type RedisHelmValuesKubectlResources = {
-  /**
-   * The resources limits for the kubectl containers
-   *
-   * @default {}
-   */
-  limits?: RedisHelmValuesKubectlResourcesLimits;
-  /**
-   * The requested resources for the kubectl containers
-   *
-   * @default {}
-   */
-  requests?: RedisHelmValuesKubectlResourcesRequests;
-};
-
-export type RedisHelmValuesKubectlResourcesLimits = object;
-
-export type RedisHelmValuesKubectlResourcesRequests = object;
-
 export type RedisHelmValuesKubectlFips = {
   /**
    * Configure OpenSSL FIPS mode: '', 'restricted', 'relaxed', 'off'. If empty (""), 'global.defaultFips' would be used
@@ -4108,10 +4075,11 @@ export type RedisHelmValuesSysctl = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * @default {}
    */
-  resources?: RedisHelmValuesSysctlResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {"openssl":""}
    */
@@ -4149,8 +4117,6 @@ export type RedisHelmValuesSysctlImage = {
   pullPolicy?: string;
   pullSecrets?: unknown[];
 };
-
-export type RedisHelmValuesSysctlResources = object;
 
 export type RedisHelmValuesSysctlFips = {
   /**
@@ -4494,6 +4460,7 @@ export type RedisHelmParameters = {
   "master.readinessProbe.successThreshold"?: string;
   "master.readinessProbe.failureThreshold"?: string;
   "master.resourcesPreset"?: string;
+  "master.resources"?: string;
   "master.fips.openssl"?: string;
   "master.podSecurityContext.enabled"?: string;
   "master.podSecurityContext.fsGroupChangePolicy"?: string;
@@ -4522,6 +4489,8 @@ export type RedisHelmParameters = {
   "master.nodeAffinityPreset.type"?: string;
   "master.nodeAffinityPreset.key"?: string;
   "master.nodeAffinityPreset.values"?: string;
+  "master.affinity"?: string;
+  "master.nodeSelector"?: string;
   "master.tolerations"?: string;
   "master.topologySpreadConstraints"?: string;
   "master.dnsPolicy"?: string;
@@ -4598,6 +4567,7 @@ export type RedisHelmParameters = {
   "replica.readinessProbe.successThreshold"?: string;
   "replica.readinessProbe.failureThreshold"?: string;
   "replica.resourcesPreset"?: string;
+  "replica.resources"?: string;
   "replica.fips.openssl"?: string;
   "replica.podSecurityContext.enabled"?: string;
   "replica.podSecurityContext.fsGroupChangePolicy"?: string;
@@ -4626,6 +4596,8 @@ export type RedisHelmParameters = {
   "replica.nodeAffinityPreset.type"?: string;
   "replica.nodeAffinityPreset.key"?: string;
   "replica.nodeAffinityPreset.values"?: string;
+  "replica.affinity"?: string;
+  "replica.nodeSelector"?: string;
   "replica.tolerations"?: string;
   "replica.topologySpreadConstraints"?: string;
   "replica.dnsPolicy"?: string;
@@ -4726,6 +4698,7 @@ export type RedisHelmParameters = {
   "sentinel.persistentVolumeClaimRetentionPolicy.whenScaled"?: string;
   "sentinel.persistentVolumeClaimRetentionPolicy.whenDeleted"?: string;
   "sentinel.resourcesPreset"?: string;
+  "sentinel.resources"?: string;
   "sentinel.fips.openssl"?: string;
   "sentinel.containerSecurityContext.enabled"?: string;
   "sentinel.containerSecurityContext.runAsUser"?: string;
@@ -4834,6 +4807,7 @@ export type RedisHelmParameters = {
   "metrics.extraVolumes"?: string;
   "metrics.extraVolumeMounts"?: string;
   "metrics.resourcesPreset"?: string;
+  "metrics.resources"?: string;
   "metrics.fips.openssl"?: string;
   "metrics.fips.golang"?: string;
   "metrics.podAnnotations.prometheus.io/scrape"?: string;
@@ -4884,6 +4858,7 @@ export type RedisHelmParameters = {
   "volumePermissions.image.pullPolicy"?: string;
   "volumePermissions.image.pullSecrets"?: string;
   "volumePermissions.resourcesPreset"?: string;
+  "volumePermissions.resources"?: string;
   "volumePermissions.fips.openssl"?: string;
   "volumePermissions.containerSecurityContext.runAsUser"?: string;
   "volumePermissions.extraEnvVars"?: string;
@@ -4902,6 +4877,7 @@ export type RedisHelmParameters = {
   "kubectl.containerSecurityContext.readOnlyRootFilesystem"?: string;
   "kubectl.containerSecurityContext.seccompProfile.type"?: string;
   "kubectl.containerSecurityContext.capabilities.drop"?: string;
+  "kubectl.resources"?: string;
   "kubectl.fips.openssl"?: string;
   "kubectl.fips.golang"?: string;
   "sysctl.enabled"?: string;
@@ -4914,6 +4890,7 @@ export type RedisHelmParameters = {
   "sysctl.command"?: string;
   "sysctl.mountHostSys"?: string;
   "sysctl.resourcesPreset"?: string;
+  "sysctl.resources"?: string;
   "sysctl.fips.openssl"?: string;
   "useExternalDNS.enabled"?: string;
   "useExternalDNS.suffix"?: string;

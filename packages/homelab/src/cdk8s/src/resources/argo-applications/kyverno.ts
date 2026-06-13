@@ -2,6 +2,7 @@ import type { Chart } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { Namespace } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
 export function createKyvernoApp(chart: Chart) {
   new Namespace(chart, "kyverno-namespace", {
@@ -10,7 +11,7 @@ export function createKyvernoApp(chart: Chart) {
     },
   });
 
-  const kyvernoValues = {
+  const kyvernoValues: HelmValuesForChart<"kyverno"> = {
     admissionController: {
       replicas: 1,
     },
@@ -23,23 +24,13 @@ export function createKyvernoApp(chart: Chart) {
     reportsController: {
       replicas: 1,
     },
-    // Fix for removed bitnami/kubectl image - use bitnamilegacy instead
-    policyReportsCleanup: {
-      image: {
-        repository: "bitnamilegacy/kubectl",
-        tag:
-          versions["bitnamilegacy/kubectl"].split("@")[0] ??
-          versions["bitnamilegacy/kubectl"],
-      },
-    },
-    webhooksCleanup: {
-      image: {
-        repository: "bitnamilegacy/kubectl",
-        tag:
-          versions["bitnamilegacy/kubectl"].split("@")[0] ??
-          versions["bitnamilegacy/kubectl"],
-      },
-    },
+    // NOTE: a stale bitnami/kubectl override for the cleanup pre-delete hooks
+    // used to live here. It was added at kyverno 3.6.2 to work around the chart
+    // shipping the (removed) bitnami/kubectl image. kyverno 3.8.0 no longer uses
+    // bitnami/kubectl: `webhooksCleanup` defaults to ghcr.io/kyverno/readiness-checker
+    // and `policyReportsCleanup` no longer exists at all (it was a silent no-op
+    // — typing this values object surfaced it). The override is therefore
+    // obsolete and was removed so the chart's maintained defaults apply.
   };
 
   return new Application(chart, "kyverno-app", {

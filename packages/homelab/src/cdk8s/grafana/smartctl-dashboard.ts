@@ -8,14 +8,18 @@ import {
   addErrorTrackingPanels,
   addLifecyclePanels,
   addSectorHealthPanels,
+  DRIVE_LEGEND,
 } from "./smartctl-panels.ts";
 
-// Helper function to build filter expression
-// Note: instance label may not always be present on textfile collector metrics
-function buildFilter() {
-  // Only include instance filter if it's not "All" (.*)
-  // This makes queries work even if instance label is missing
-  return 'disk=~"$device"';
+// smartmon_* metrics are keyed by the unstable `disk` path (/dev/nvme0, /dev/sda),
+// which can change across reboots / controller re-enumeration. The stable
+// serial_number + device_model live only on smartmon_device_info, so join it in
+// via group_left and filter/group on serial_number. The join is per-scrape, so
+// the result always tracks the physical drive even when device paths swap.
+// smartmon_device_info has value 1, leaving the original metric value intact.
+const SERIAL_INFO = 'smartmon_device_info{serial_number=~"$serial"}';
+function bySerial(metric: string): string {
+  return `${metric} * on(disk) group_left(serial_number, device_model) ${SERIAL_INFO}`;
 }
 
 /**
@@ -29,10 +33,10 @@ export function createSmartctlDashboard() {
     uid: "Prometheus",
   };
 
-  // Create device variable for filtering
-  const deviceVariable = new dashboard.QueryVariableBuilder("device")
-    .label("Device")
-    .query("label_values(smartmon_device_smart_healthy, disk)")
+  // Filter by stable serial number (survives /dev-path re-enumeration across reboots).
+  const serialVariable = new dashboard.QueryVariableBuilder("serial")
+    .label("Drive")
+    .query("label_values(smartmon_device_info, serial_number)")
     .datasource(prometheusDatasource)
     .multi(true)
     .includeAll(true)
@@ -58,7 +62,7 @@ export function createSmartctlDashboard() {
     .refresh("30s")
     .timezone("browser")
     .editable()
-    .withVariable(deviceVariable)
+    .withVariable(serialVariable)
     .withVariable(instanceVariable);
 
   // Row 1: Overview Stats
@@ -72,7 +76,7 @@ export function createSmartctlDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`count(smartmon_device_smart_healthy{${buildFilter()}})`)
+          .expr(`count(${bySerial("smartmon_device_smart_healthy")})`)
           .legendFormat("Total"),
       )
       .unit("short")
@@ -89,7 +93,7 @@ export function createSmartctlDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`count(smartmon_device_smart_healthy{${buildFilter()}} == 1)`)
+          .expr(`count(${bySerial("smartmon_device_smart_healthy")} == 1)`)
           .legendFormat("Healthy"),
       )
       .unit("short")
@@ -117,7 +121,7 @@ export function createSmartctlDashboard() {
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `count(smartmon_device_smart_healthy{${buildFilter()}} == 0) or vector(0)`,
+            `count(${bySerial("smartmon_device_smart_healthy")} == 0) or vector(0)`,
           )
           .legendFormat("Unhealthy"),
       )
@@ -144,7 +148,7 @@ export function createSmartctlDashboard() {
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `(count(smartmon_device_smart_healthy{${buildFilter()}} == 1) / count(smartmon_device_smart_healthy{${buildFilter()}})) * 100`,
+            `(count(${bySerial("smartmon_device_smart_healthy")} == 1) / count(${bySerial("smartmon_device_smart_healthy")})) * 100`,
           )
           .legendFormat("Health Ratio"),
       )
@@ -175,7 +179,7 @@ export function createSmartctlDashboard() {
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `count(smartmon_reallocated_sector_ct_raw_value{${buildFilter()}} > 0) or vector(0)`,
+            `count(${bySerial("smartmon_reallocated_sector_ct_raw_value")} > 0) or vector(0)`,
           )
           .legendFormat("With Reallocated"),
       )
@@ -205,7 +209,7 @@ export function createSmartctlDashboard() {
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `count(smartmon_current_pending_sector_raw_value{${buildFilter()}} > 0) or vector(0)`,
+            `count(${bySerial("smartmon_current_pending_sector_raw_value")} > 0) or vector(0)`,
           )
           .legendFormat("With Pending"),
       )
@@ -235,10 +239,8 @@ export function createSmartctlDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`smartmon_temperature_celsius_value{${buildFilter()}}`)
-          // Use a static legend here to avoid complex templating that breaks Helm linting
-          // (the dynamic disk/model legend is nice-to-have but not essential)
-          .legendFormat("{{disk}}"),
+          .expr(bySerial("smartmon_temperature_celsius_value"))
+          .legendFormat(DRIVE_LEGEND),
       )
       .unit("celsius")
       .decimals(1)
@@ -265,7 +267,7 @@ export function createSmartctlDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`max(smartmon_temperature_celsius_value{${buildFilter()}})`)
+          .expr(`max(${bySerial("smartmon_temperature_celsius_value")})`)
           .legendFormat("Max Temp"),
       )
       .unit("celsius")
@@ -293,7 +295,7 @@ export function createSmartctlDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`avg(smartmon_temperature_celsius_value{${buildFilter()}})`)
+          .expr(`avg(${bySerial("smartmon_temperature_celsius_value")})`)
           .legendFormat("Avg Temp"),
       )
       .unit("celsius")
@@ -321,17 +323,17 @@ export function createSmartctlDashboard() {
       .datasource(prometheusDatasource)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`min(smartmon_temperature_celsius_value{${buildFilter()}})`)
+          .expr(`min(${bySerial("smartmon_temperature_celsius_value")})`)
           .legendFormat("Min"),
       )
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`avg(smartmon_temperature_celsius_value{${buildFilter()}})`)
+          .expr(`avg(${bySerial("smartmon_temperature_celsius_value")})`)
           .legendFormat("Avg"),
       )
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(`max(smartmon_temperature_celsius_value{${buildFilter()}})`)
+          .expr(`max(${bySerial("smartmon_temperature_celsius_value")})`)
           .legendFormat("Max"),
       )
       .unit("celsius")
@@ -342,9 +344,9 @@ export function createSmartctlDashboard() {
   );
 
   // Sector health, error tracking, and lifecycle panels
-  addSectorHealthPanels(builder, prometheusDatasource, buildFilter);
-  addErrorTrackingPanels(builder, prometheusDatasource, buildFilter);
-  addLifecyclePanels(builder, prometheusDatasource, buildFilter);
+  addSectorHealthPanels(builder, prometheusDatasource, bySerial);
+  addErrorTrackingPanels(builder, prometheusDatasource, bySerial);
+  addLifecyclePanels(builder, prometheusDatasource, bySerial);
 
   return builder.build();
 }

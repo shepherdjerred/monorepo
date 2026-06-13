@@ -262,6 +262,10 @@ export type OpenebsHelmValuesPreUpgradeHook = {
    * @default true
    */
   enabled?: boolean;
+  /**
+   * Node tolerations for server scheduling to nodes with taints
+   * Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+   */
   tolerations?: unknown[];
   imagePullSecrets?: unknown[];
   /**

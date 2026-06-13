@@ -143,10 +143,15 @@ parse_smartctl_info() {
   local model_family='' device_model='' serial_number='' fw_version='' vendor='' product='' revision='' lun_id=''
   while read -r line; do
     info_type="$(echo "${line}" | cut -f1 -d: | tr ' ' '_')"
-    info_value="$(echo "${line}" | cut -f2- -d: | sed 's/^ \+//g' | sed 's/"/\\"/')"
+    # Strip leading whitespace with a POSIX class ([[:space:]]*) rather than the
+    # GNU-only `\+`, which silently no-ops on BSD/macOS sed and leaves values padded.
+    info_value="$(echo "${line}" | cut -f2- -d: | sed 's/^[[:space:]]*//' | sed 's/"/\\"/')"
     case "${info_type}" in
     Model_Family) model_family="${info_value}" ;;
     Device_Model) device_model="${info_value}" ;;
+    # NVMe reports the model as "Model Number" (SATA/ATA uses "Device Model");
+    # map both to device_model so NVMe device_info carries a model label too.
+    Model_Number) device_model="${info_value}" ;;
     Serial_Number|Serial_number) serial_number="${info_value}" ;;
     Firmware_Version) fw_version="${info_value}" ;;
     Vendor) vendor="${info_value}" ;;

@@ -1,8 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { PassThrough } from "node:stream";
 import { createActor, waitFor } from "xstate";
-import { createOrchestratorMachine } from "./orchestrator-machine.ts";
-import type { EncoderHandles, StreamMachineDeps } from "./stream-machine.ts";
+import { createDesiredStreamMachine } from "@shepherdjerred/discord-stream-lifecycle";
+import type {
+  EncoderHandles,
+  RawGoLiveDeps,
+} from "@shepherdjerred/discord-stream-lifecycle/types.ts";
 
 // Resolves with a sentinel `true` rather than `void` — the repo's
 // no-invalid-void-type rule rejects `void` as a generic type argument.
@@ -20,7 +23,7 @@ function deferred<T>(): Deferred<T> {
 }
 
 type Harness = {
-  deps: StreamMachineDeps;
+  deps: RawGoLiveDeps;
   encoder: EncoderHandles;
   gates: {
     join: Deferred<true>;
@@ -45,22 +48,35 @@ function makeHarness(): Harness {
   gates.join.resolve(true);
   gates.leave.resolve(true);
 
-  const deps: StreamMachineDeps = {
-    joinVoice: () => gates.join.promise,
+  const deps: RawGoLiveDeps = {
+    joinVoice: async () => {
+      await gates.join.promise;
+    },
     prepareEncoder: () => Promise.resolve(encoder),
-    runStream: () => gates.run.promise,
-    leaveVoice: () => gates.leave.promise,
-    maxRetries: 3,
+    runStream: async () => {
+      await gates.run.promise;
+    },
+    leaveVoice: async () => {
+      await gates.leave.promise;
+    },
     retryDelayMs: 10,
   };
 
   return { deps, encoder, gates };
 }
 
+function createHarnessActor(h: Harness) {
+  return createActor(createDesiredStreamMachine(h.deps), {
+    input: {
+      voiceTarget: { guildId: "guild-1", channelId: "channel-1" },
+    },
+  });
+}
+
 describe("orchestrator machine", () => {
   test("desired=true brings the stream up; desired=false takes it down", async () => {
     const h = makeHarness();
-    const actor = createActor(createOrchestratorMachine(h.deps));
+    const actor = createHarnessActor(h);
     actor.start();
 
     actor.send({ type: "SET_DESIRED", desired: true });
@@ -75,7 +91,7 @@ describe("orchestrator machine", () => {
   test("flapping true→false→true while joining converges to streaming", async () => {
     const h = makeHarness();
     h.gates.join = deferred<true>(); // hold the join so events interleave mid-start
-    const actor = createActor(createOrchestratorMachine(h.deps));
+    const actor = createHarnessActor(h);
     actor.start();
 
     actor.send({ type: "SET_DESIRED", desired: true });
@@ -94,7 +110,7 @@ describe("orchestrator machine", () => {
   test("a START arriving during teardown converges back to streaming", async () => {
     const h = makeHarness();
     h.gates.leave = deferred<true>(); // hold teardown so START lands mid-stopping
-    const actor = createActor(createOrchestratorMachine(h.deps));
+    const actor = createHarnessActor(h);
     actor.start();
 
     actor.send({ type: "SET_DESIRED", desired: true });
@@ -116,7 +132,7 @@ describe("orchestrator machine", () => {
 
   test("a settle while undesired stays down (no spurious restart)", async () => {
     const h = makeHarness();
-    const actor = createActor(createOrchestratorMachine(h.deps));
+    const actor = createHarnessActor(h);
     actor.start();
 
     actor.send({ type: "SET_DESIRED", desired: true });

@@ -332,6 +332,7 @@ export const ALL_PACKAGES: string[] = [
   "cooklang-rich-preview",
   "discord-plays-pokemon",
   "discord-plays-mario-kart",
+  "discord-stream-lifecycle",
   "discord-video-stream",
   "docs",
   "dotfiles",

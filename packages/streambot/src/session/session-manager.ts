@@ -43,6 +43,7 @@ import {
   buildSnapshot,
   resumeKeyFor,
 } from "@shepherdjerred/streambot/state/resume.ts";
+import { moveSessionRecord } from "@shepherdjerred/streambot/session/session-move.ts";
 import type {
   ChannelId,
   GuildId,
@@ -70,9 +71,9 @@ export type SessionHandle = {
 };
 
 type Session = {
-  readonly key: string;
+  key: string;
   readonly guildId: GuildId;
-  readonly voiceChannelId: ChannelId;
+  voiceChannelId: ChannelId;
   readonly statusChannelId: ChannelId | null;
   readonly entry: UserbotEntry;
   readonly actor: PlaybackActor;
@@ -204,6 +205,32 @@ export class SessionManager {
       voiceChannelId: session.voiceChannelId,
       userId: session.entry.streamer.userId(),
     };
+  }
+
+  /** Re-key a live session when Discord moves the streamer account to another voice channel. */
+  moveSession(params: {
+    guildId: GuildId;
+    fromChannelId: ChannelId;
+    toChannelId: ChannelId;
+  }): boolean {
+    return moveSessionRecord({
+      stateDir: this.deps.config.state.dir,
+      ...params,
+      getSession: (key) => this.sessions.get(key),
+      hasSession: (key) => this.sessions.has(key),
+      deleteSession: (key) => {
+        this.sessions.delete(key);
+      },
+      setSession: (key, session) => {
+        this.sessions.set(key, session);
+      },
+      logInfo: (message, metadata) => {
+        log.info(message, metadata);
+      },
+      logWarn: (message, metadata) => {
+        log.warn(message, metadata);
+      },
+    });
   }
 
   /**

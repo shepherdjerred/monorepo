@@ -23,6 +23,7 @@
         "@opentelemetry/sdk-trace-base": "^2.7.1",
         "@opentelemetry/semantic-conventions": "^1.40.0",
         "@sentry/bun": "^10.0.0",
+        "@shepherdjerred/discord-stream-lifecycle": "file:../../../discord-stream-lifecycle",
         "@shepherdjerred/discord-video-stream": "file:../../../discord-video-stream",
         "cors": "^2.8.5",
         "discord.js": "^14.26.4",
@@ -2015,6 +2016,8 @@
 
     "@babel/helper-compilation-targets/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 
+    "@discord-plays-pokemon/backend/@shepherdjerred/discord-stream-lifecycle": ["@shepherdjerred/discord-stream-lifecycle@file:../discord-stream-lifecycle", { "dependencies": { "xstate": "^5.32.0" }, "devDependencies": { "@shepherdjerred/eslint-config": "file:../eslint-config", "@types/bun": "^1.3.13", "@types/node": "^25.0.0", "@typescript-eslint/utils": "^8.59.3", "eslint": "^10.3.0", "jiti": "^2.7.0", "typescript": "^6.0.3" } }],
+
     "@discord-plays-pokemon/backend/@shepherdjerred/discord-video-stream": ["@shepherdjerred/discord-video-stream@file:../discord-video-stream", { "dependencies": { "@lng2004/node-datachannel": "0.32.0-20260202", "@snazzah/davey": "^0.1.8", "debug-level": "^4.1.1", "fluent-ffmpeg": "^2.1.3", "node-av": "^5.2.2", "p-debounce": "^5.1.0", "sharp": "^0.34.5", "zeromq": "^6.5.0" }, "devDependencies": { "@types/bun": "^1.3.13", "@types/fluent-ffmpeg": "^2.1.28", "discord.js-selfbot-v13": "^3.7.1", "typescript": "^6.0.3" }, "peerDependencies": { "discord.js-selfbot-v13": "^3.6.0" } }],
 
     "@discord-plays-pokemon/backend/@shepherdjerred/eslint-config": ["@shepherdjerred/eslint-config@file:../eslint-config", { "dependencies": { "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1", "@eslint/compat": "^2.1.0", "@eslint/js": "^10.0.1", "@typescript-eslint/utils": "^8.59.3", "eslint-config-prettier": "^10.1.8", "eslint-import-resolver-typescript": "^4.4.4", "eslint-import-resolver-typescript-bun": "^0.0.104", "eslint-plugin-astro": "^1.7.0", "eslint-plugin-import": "^2.32.0", "eslint-plugin-jsx-a11y": "^6.10.2", "eslint-plugin-no-secrets": "^2.3.3", "eslint-plugin-react": "^7.37.5", "eslint-plugin-react-hooks": "^7.1.1", "eslint-plugin-react-native": "^5.0.0", "eslint-plugin-regexp": "^3.0.0", "eslint-plugin-unicorn": "^64.0.0", "jiti": "^2.7.0", "typescript-eslint": "^8.59.0" }, "devDependencies": { "@types/node": "^25.6.0", "@typescript-eslint/rule-tester": "^8.59.0" }, "peerDependencies": { "eslint": "^10.3.0", "typescript": "^6.0.3" } }],
@@ -2278,6 +2281,8 @@
     "yargs/find-up": ["find-up@4.1.0", "", { "dependencies": { "locate-path": "^5.0.0", "path-exists": "^4.0.0" } }, "sha512-PpOwAdQ/YlXQ2vj8a3h8IipDuYRi3wceVQQGYWxNINccq40Anw7BlsEXCMbt1Zt+OLA6Fq9suIpIWD0OsnISlw=="],
 
     "yargs-parser/camelcase": ["camelcase@5.3.1", "", {}, "sha512-L28STB170nwWS63UjtlEOE3dldQApaJXZkOI1uMFfzf3rRuPegHaHesyee+YxQ+W6SvRDQV6UrdOdRiR153wJg=="],
+
+    "@discord-plays-pokemon/backend/@shepherdjerred/discord-stream-lifecycle/@shepherdjerred/eslint-config": ["@shepherdjerred/eslint-config@file:../eslint-config", {}],
 
     "@eslint/eslintrc/espree/eslint-visitor-keys": ["eslint-visitor-keys@4.2.1", "", {}, "sha512-Uhdk5sfqcee/9H/rCOJikYz67o0a2Tw2hGRPOG2Y1R2dg7brRe1uG0yaNQDHu+TO/uQPF/5eCapvYSmHUjt7JQ=="],
 

@@ -4,13 +4,20 @@ import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
 
 type Datasource = { type: string; uid: string };
 
+// `bySerial` joins smartmon_device_info via group_left so panels group/label by
+// the stable serial_number instead of the unstable /dev path. See smartctl-dashboard.ts.
+type BySerial = (metric: string) => string;
+
+// Legend that names the physical drive rather than its (unstable) /dev path.
+export const DRIVE_LEGEND = "{{device_model}} {{serial_number}}";
+
 /**
  * Add error tracking panels (UDMA CRC errors, raw read error rate)
  */
 export function addErrorTrackingPanels(
   builder: dashboard.DashboardBuilder,
   ds: Datasource,
-  buildFilter: () => string,
+  bySerial: BySerial,
 ): void {
   builder.withRow(new dashboard.RowBuilder("Error Tracking"));
 
@@ -23,9 +30,9 @@ export function addErrorTrackingPanels(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `(smartmon_udma_crc_error_count_raw_value{${buildFilter()}} * on(disk) group_left(device_model) smartmon_device_info{${buildFilter()}}) or on() vector(0)`,
+            `(${bySerial("smartmon_udma_crc_error_count_raw_value")}) or on() vector(0)`,
           )
-          .legendFormat("{{disk}} - {{device_model}}"),
+          .legendFormat(DRIVE_LEGEND),
       )
       .unit("short")
       .lineWidth(2)
@@ -50,9 +57,9 @@ export function addErrorTrackingPanels(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `(smartmon_raw_read_error_rate_raw_value{${buildFilter()}} * on(disk) group_left(device_model) smartmon_device_info{${buildFilter()}}) or on() vector(0)`,
+            `(${bySerial("smartmon_raw_read_error_rate_raw_value")}) or on() vector(0)`,
           )
-          .legendFormat("{{disk}} - {{device_model}}"),
+          .legendFormat(DRIVE_LEGEND),
       )
       .unit("short")
       .lineWidth(2)
@@ -67,7 +74,7 @@ export function addErrorTrackingPanels(
 export function addLifecyclePanels(
   builder: dashboard.DashboardBuilder,
   ds: Datasource,
-  buildFilter: () => string,
+  bySerial: BySerial,
 ): void {
   builder.withRow(new dashboard.RowBuilder("Device Lifecycle"));
 
@@ -79,10 +86,8 @@ export function addLifecyclePanels(
       .datasource(ds)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(
-            `smartmon_power_on_hours_raw_value{${buildFilter()}} * on(disk) group_left(device_model) smartmon_device_info{${buildFilter()}}`,
-          )
-          .legendFormat("{{disk}} - {{device_model}}"),
+          .expr(bySerial("smartmon_power_on_hours_raw_value"))
+          .legendFormat(DRIVE_LEGEND),
       )
       .unit("h")
       .lineWidth(2)
@@ -98,10 +103,8 @@ export function addLifecyclePanels(
       .datasource(ds)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(
-            `smartmon_power_cycle_count_raw_value{${buildFilter()}} * on(disk) group_left(device_model) smartmon_device_info{${buildFilter()}}`,
-          )
-          .legendFormat("{{disk}} - {{device_model}}"),
+          .expr(bySerial("smartmon_power_cycle_count_raw_value"))
+          .legendFormat(DRIVE_LEGEND),
       )
       .unit("short")
       .lineWidth(2)
@@ -124,7 +127,7 @@ export function addLifecyclePanels(
 export function addSectorHealthPanels(
   builder: dashboard.DashboardBuilder,
   ds: Datasource,
-  buildFilter: () => string,
+  bySerial: BySerial,
 ): void {
   builder.withRow(new dashboard.RowBuilder("Sector Health"));
 
@@ -136,10 +139,8 @@ export function addSectorHealthPanels(
       .datasource(ds)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(
-            `smartmon_reallocated_sector_ct_raw_value{${buildFilter()}} * on(disk) group_left(device_model) smartmon_device_info{${buildFilter()}}`,
-          )
-          .legendFormat("{{disk}} - {{device_model}}"),
+          .expr(bySerial("smartmon_reallocated_sector_ct_raw_value"))
+          .legendFormat(DRIVE_LEGEND),
       )
       .unit("short")
       .lineWidth(2)
@@ -165,9 +166,9 @@ export function addSectorHealthPanels(
       .withTarget(
         new prometheus.DataqueryBuilder()
           .expr(
-            `(smartmon_current_pending_sector_raw_value{${buildFilter()}} * on(disk) group_left(device_model) smartmon_device_info{${buildFilter()}}) or on() vector(0)`,
+            `(${bySerial("smartmon_current_pending_sector_raw_value")}) or on() vector(0)`,
           )
-          .legendFormat("{{disk}} - {{device_model}}"),
+          .legendFormat(DRIVE_LEGEND),
       )
       .unit("short")
       .lineWidth(2)
@@ -192,10 +193,8 @@ export function addSectorHealthPanels(
       .datasource(ds)
       .withTarget(
         new prometheus.DataqueryBuilder()
-          .expr(
-            `smartmon_offline_uncorrectable_raw_value{${buildFilter()}} * on(disk) group_left(device_model) smartmon_device_info{${buildFilter()}}`,
-          )
-          .legendFormat("{{disk}} - {{device_model}}"),
+          .expr(bySerial("smartmon_offline_uncorrectable_raw_value"))
+          .legendFormat(DRIVE_LEGEND),
       )
       .unit("short")
       .lineWidth(2)

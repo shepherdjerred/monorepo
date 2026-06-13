@@ -64,6 +64,9 @@ export function createQBitTorrentDeployment(
 
   deployment.addContainer(
     withCommonProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
       name: "gluetun",
       image: `ghcr.io/qdm12/gluetun:${versions["qdm12/gluetun"]}`,
       // TODO: replace this with capability to run as non-root
@@ -138,6 +141,9 @@ export function createQBitTorrentDeployment(
   // Add Prometheus exporter for qBittorrent metrics
   deployment.addContainer(
     withCommonProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
       name: "qbittorrent-exporter",
       image: `ghcr.io/esanchezm/prometheus-qbittorrent-exporter:${versions["esanchezm/prometheus-qbittorrent-exporter"]}`,
       ports: [{ number: 17_871, name: "metrics" }],

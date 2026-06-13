@@ -7,7 +7,10 @@ import {
 } from "@shepherdjerred/streambot/sources/library.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
 import { sweepSubtitleTempDir } from "@shepherdjerred/streambot/sources/subtitle-io.ts";
-import { expandPlaylist } from "@shepherdjerred/streambot/sources/ytdlp.ts";
+import {
+  expandPlaylist,
+  listExtractors,
+} from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import { UserbotPool } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
 import { CommandBot } from "@shepherdjerred/streambot/discord/command-bot.ts";
@@ -75,6 +78,7 @@ async function main(): Promise<void> {
     },
     library: () => library,
     expandPlaylist: (url, signal) => expandPlaylist(config, url, signal),
+    listSources: (signal) => listExtractors(config, signal),
   });
   const sessions = new SessionManager({
     config,

@@ -7,7 +7,10 @@ import { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playbac
 import type { PlaybackInput } from "@shepherdjerred/streambot/machine/types.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { resolveSource } from "@shepherdjerred/streambot/sources/resolve.ts";
-import { expandPlaylist } from "@shepherdjerred/streambot/sources/ytdlp.ts";
+import {
+  expandPlaylist,
+  listExtractors,
+} from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
 import { CommandBot } from "@shepherdjerred/streambot/discord/command-bot.ts";
 import { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
@@ -125,6 +128,7 @@ function buildSession(config: Config, input: PlaybackInput): Session {
     },
     library: () => [],
     expandPlaylist: (url, signal) => expandPlaylist(config, url, signal),
+    listSources: (signal) => listExtractors(config, signal),
   });
   refs.sessions = new SessionManager({
     config,

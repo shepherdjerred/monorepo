@@ -122,6 +122,9 @@ export function createBugsinkDeployment(chart: Chart) {
   // Init container to run Django migrations
   deployment.addInitContainer(
     withCommonProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
       name: "migrate",
       image: `bugsink/bugsink:${versions["bugsink/bugsink"]}`,
       command: ["/bin/sh", "-c"],
@@ -149,6 +152,9 @@ export function createBugsinkDeployment(chart: Chart) {
   // We must run these migrations on every startup to recreate the tables.
   deployment.addInitContainer(
     withCommonProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
       name: "migrate-snappea",
       image: `bugsink/bugsink:${versions["bugsink/bugsink"]}`,
       command: ["/bin/sh", "-c"],
