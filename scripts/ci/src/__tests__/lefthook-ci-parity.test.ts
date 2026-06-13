@@ -43,6 +43,7 @@ const JOB_TO_CI_STEP: Record<string, string> = {
   "compliance-check": "compliance-check",
   "quality-ratchet": "quality-ratchet",
   "scout-test-template-check": "scout-test-template-check",
+  "react-version-sync": "react-version-sync",
 };
 
 /**
@@ -76,7 +77,6 @@ const ASYNC_OR_SOFT_CI: Record<string, string> = {
   "dagger-hygiene": "dagger-hygiene",
   "tunnel-dns-coverage": "tunnel-dns-coverage",
   "talos-schematic-sync": "talos-schematic-sync",
-  "react-version-sync": "react-version-sync",
 };
 
 /** Jobs intentionally pre-commit-only (NOT a CI gate). Document the reason. */
