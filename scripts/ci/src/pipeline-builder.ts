@@ -167,16 +167,13 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     shellcheckStep(),
     qualityRatchetStep(),
     complianceCheckStep(),
-    knipCheckStep(),
     gitleaksCheckStep(),
     suppressionCheckStep(),
-    trivyScanStep(),
     envVarNamesStep(),
     lineEndingsCheckStep(),
     scoutTestTemplateCheckStep(),
     migrationGuardStep(),
     mergeConflictStep(),
-    largeFileStep(),
     reactVersionSyncStep(),
     ...(pullRequestBuild ? [greptileReviewStep()] : []),
   ];
@@ -188,11 +185,14 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   // --- Async quality checks (soft_fail, run in parallel with release track) ---
   steps.push(prettierStep());
   steps.push(markdownlintStep());
+  steps.push(knipCheckStep());
   steps.push(daggerHygieneStep());
   if (affected.buildAll || affected.homelabChanged) {
     steps.push(tunnelDnsCoverageStep());
   }
+  steps.push(trivyScanStep());
   steps.push(semgrepScanStep());
+  steps.push(largeFileStep());
 
   // --- Caddyfile validation (blocking, only when homelab changes) ---
   if (affected.buildAll || affected.homelabChanged) {

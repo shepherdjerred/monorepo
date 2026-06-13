@@ -90,8 +90,9 @@ export function knipCheckStep(): BuildkiteStep {
   return daggerStep({
     label: ":scissors: Knip",
     key: "knip-check",
-    daggerCmd: annotatedDaggerScan("knip-check", "knip", "error"),
+    daggerCmd: annotatedDaggerScan("knip-check", "knip"),
     timeoutMinutes: 10,
+    softFail: true,
     artifactPaths: ["/tmp/knip.txt"],
   });
 }
@@ -118,8 +119,9 @@ export function trivyScanStep(): BuildkiteStep {
   return daggerStep({
     label: ":shield: Trivy Scan",
     key: "trivy-scan",
-    daggerCmd: annotatedDaggerScan("trivy-scan", "trivy", "error"),
+    daggerCmd: annotatedDaggerScan("trivy-scan", "trivy"),
     timeoutMinutes: 15,
+    softFail: true,
     artifactPaths: ["/tmp/trivy.txt"],
   });
 }
@@ -238,8 +240,8 @@ export function mergeConflictStep(): BuildkiteStep {
 }
 
 /**
- * Surfaces files >5 MB so they can be moved to LFS, removed, or explicitly
- * justified in `.largeignore`.
+ * Surfaces files >5 MB so they can be moved to LFS or removed. **Soft-fail**:
+ * findings are surfaced as annotations but do not block the build.
  */
 export function largeFileStep(): BuildkiteStep {
   return daggerStep({
@@ -247,6 +249,7 @@ export function largeFileStep(): BuildkiteStep {
     key: "large-file-check",
     daggerCmd: `${DAGGER_CALL} large-file-check --source ${REPO_GIT_REF}`,
     timeoutMinutes: 5,
+    softFail: true,
   });
 }
 

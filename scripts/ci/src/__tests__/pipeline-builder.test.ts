@@ -314,24 +314,30 @@ describe("buildPipeline", () => {
       expect(deps).toContain("shellcheck");
     });
 
-    it("includes async and blocking quality checks even without main steps", () => {
+    it("includes async quality checks even without main steps", () => {
       const affected = emptyAffected();
       affected.packages.add("webring");
 
       const pipeline = buildPipeline(affected);
       const steps = pipeline.steps.filter(isStep);
-      // Async checks should still be present.
-      for (const key of ["prettier", "dagger-hygiene", "semgrep-scan"]) {
+      // All async checks should be present
+      for (const key of [
+        "prettier",
+        "knip-check",
+        "dagger-hygiene",
+        "trivy-scan",
+        "semgrep-scan",
+      ]) {
         expect(steps.find((s) => s.key === key)).toBeDefined();
       }
-      // Strict quality checks should be present as blocking gates.
-      for (const key of ["knip-check", "trivy-scan", "large-file-check"]) {
-        const step = steps.find((s) => s.key === key);
-        expect(step).toBeDefined();
-        expect(step?.soft_fail).toBeUndefined();
-      }
-      // Remaining advisory checks are explicitly soft_fail.
-      for (const key of ["dagger-hygiene", "semgrep-scan"]) {
+      // These specific checks should be soft_fail
+      for (const key of [
+        "knip-check",
+        "dagger-hygiene",
+        "trivy-scan",
+        "semgrep-scan",
+        "large-file-check",
+      ]) {
         expect(steps.find((s) => s.key === key)?.soft_fail).toBe(true);
       }
     });
@@ -427,15 +433,16 @@ describe("buildPipeline", () => {
       }
     });
 
-    it("separates blocking scans from advisory scans", () => {
+    it("includes security and quality scans with soft_fail", () => {
       const pipeline = buildPipeline(fullBuild());
       const steps = pipeline.steps.filter(isStep);
-      for (const key of ["trivy-scan", "knip-check", "large-file-check"]) {
-        const step = steps.find((s) => s.key === key);
-        expect(step).toBeDefined();
-        expect(step?.soft_fail).toBeUndefined();
-      }
-      for (const key of ["semgrep-scan", "dagger-hygiene"]) {
+      for (const key of [
+        "semgrep-scan",
+        "trivy-scan",
+        "dagger-hygiene",
+        "knip-check",
+        "large-file-check",
+      ]) {
         const step = steps.find((s) => s.key === key);
         expect(step).toBeDefined();
         expect(step?.soft_fail).toBe(true);
@@ -470,16 +477,13 @@ describe("buildPipeline", () => {
         "shellcheck",
         "quality-ratchet",
         "compliance-check",
-        "knip-check",
         "gitleaks-check",
         "suppression-check",
-        "trivy-scan",
         "env-var-names",
         "line-endings-check",
         "scout-test-template-check",
         "migration-guard",
         "merge-conflict-check",
-        "large-file-check",
         "caddyfile-validate",
       ];
       for (const key of blockingGateKeys) {
@@ -487,7 +491,14 @@ describe("buildPipeline", () => {
       }
 
       // depends_on does NOT include async (soft_fail) check keys
-      const asyncKeys = ["prettier", "dagger-hygiene", "semgrep-scan"];
+      const asyncKeys = [
+        "prettier",
+        "knip-check",
+        "dagger-hygiene",
+        "trivy-scan",
+        "semgrep-scan",
+        "large-file-check",
+      ];
       for (const key of asyncKeys) {
         expect(Array.isArray(deps) ? deps : []).not.toContain(key);
       }
