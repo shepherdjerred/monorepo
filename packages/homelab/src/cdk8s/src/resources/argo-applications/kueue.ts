@@ -64,6 +64,17 @@ export function createKueueApp(chart: Chart) {
             controllerManager: {
               manager: {
                 priorityClassName: "infrastructure-critical",
+                // Chart defaults request 500m/512Mi; 30d peak is ~50m / ~240Mi.
+                resources: {
+                  requests: {
+                    cpu: "100m",
+                    memory: "256Mi",
+                  },
+                  limits: {
+                    cpu: "1000m",
+                    memory: "512Mi",
+                  },
+                },
               },
             },
             managerConfig: {

@@ -1,4 +1,5 @@
 import {
+  Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
@@ -79,6 +80,16 @@ export function createBirmelDeployment(chart: Chart) {
       securityContext: {
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
+      },
+      // Baseline request (no limits) so the bot isn't BestEffort.
+      // 30d peak ~510m / ~1.6Gi; steady ~10m / ~450Mi.
+      resources: {
+        cpu: {
+          request: Cpu.millis(50),
+        },
+        memory: {
+          request: Size.mebibytes(512),
+        },
       },
       ports: [{ number: 4112, name: "oauth" }],
       volumeMounts: [

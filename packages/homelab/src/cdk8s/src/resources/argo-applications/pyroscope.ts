@@ -24,6 +24,14 @@ export function createPyroscopeApp(chart: Chart) {
         storageClassName: NVME_STORAGE_CLASS,
         size: Size.gibibytes(32).asString(),
       },
+      // Baseline request (no limits) so the profiling store isn't BestEffort.
+      // 30d peak ~35m / ~200Mi.
+      resources: {
+        requests: {
+          cpu: "50m",
+          memory: "256Mi",
+        },
+      },
     },
     // No separate agent — profiles arrive from the Alloy eBPF DaemonSet.
     "alloy-stack": {

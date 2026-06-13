@@ -172,11 +172,11 @@ export function createPlausibleDeployment(
       ],
       resources: {
         cpu: {
-          request: Cpu.millis(250),
+          request: Cpu.millis(100),
           limit: Cpu.millis(1000),
         },
         memory: {
-          request: Size.mebibytes(512),
+          request: Size.mebibytes(384),
           limit: Size.gibibytes(2),
         },
       },
