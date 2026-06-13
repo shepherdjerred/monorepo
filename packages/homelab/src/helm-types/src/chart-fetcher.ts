@@ -124,9 +124,12 @@ export async function fetchHelmChart(chart: ChartInfo): Promise<{
       // Add the helm repo
       await runCommand("helm", ["repo", "add", repoName, chart.repoUrl]);
 
-      console.log(`  🔄 Updating Helm repos...`);
-      // Update repo
-      await runCommand("helm", ["repo", "update"]);
+      console.log(`  🔄 Updating Helm repo ${repoName}...`);
+      // Update ONLY the repo we just added. `helm repo update` with no args
+      // refreshes every repo in the local helm config — including unrelated
+      // stale entries (e.g. the retired public bitnami repo) whose failure
+      // would abort an otherwise-fine fetch.
+      await runCommand("helm", ["repo", "update", repoName]);
 
       console.log(`  ⬇️  Pulling chart ${chart.chartName}:${chart.version}...`);
       // Pull the chart

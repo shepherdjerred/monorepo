@@ -73,16 +73,12 @@ export const helmTypesRefreshActivities = {
       await runCommand(["bun", "run", "build"], {
         cwd: `${repoDir}/${HELM_TYPES_ROOT}`,
       });
-      // `generate-helm-types` fails the run if any chart can't be fetched, so a
-      // transient network blip surfaces as an activity failure (and Temporal
-      // retry) rather than a destructive partial tree.
+      // `generate-helm-types` formats its output with the repo's pinned
+      // prettier and fails the run if any chart can't be fetched or prettier
+      // errors — so its committed output already matches the prettier gate, and
+      // a transient network blip surfaces as an activity failure (Temporal
+      // retry) rather than a destructive/unformatted partial tree.
       await runCommand(["bun", "run", "generate-helm-types"], {
-        cwd: `${repoDir}/${CDK8S_ROOT}`,
-      });
-      // Normalize with the REPO's prettier. The generator's bundled prettier
-      // wraps differently, so without this every run produces formatting-only
-      // churn and a spurious weekly PR.
-      await runCommand(["bunx", "prettier", "--write", "generated/helm/"], {
         cwd: `${repoDir}/${CDK8S_ROOT}`,
       });
 
