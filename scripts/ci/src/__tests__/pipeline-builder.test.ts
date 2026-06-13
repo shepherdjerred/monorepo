@@ -476,6 +476,7 @@ describe("buildPipeline", () => {
       const blockingGateKeys = [
         "shellcheck",
         "quality-ratchet",
+        "check-todos",
         "compliance-check",
         "gitleaks-check",
         "suppression-check",
