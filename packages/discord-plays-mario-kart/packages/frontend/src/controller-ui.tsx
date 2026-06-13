@@ -132,11 +132,11 @@ export function SeatPicker({
         const playerName = names[i] ?? null;
         const label = mine
           ? " (you)"
-          : playerName !== null
-            ? ` — ${playerName}`
-            : taken
+          : playerName === null
+            ? taken
               ? " (taken)"
-              : "";
+              : ""
+            : ` — ${playerName}`;
         return (
           <button
             key={i}
