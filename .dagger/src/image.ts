@@ -34,6 +34,19 @@ import versions from "./versions";
 export const PRISMA_BUN_SERVICE_START_COMMAND =
   "bunx --trust prisma generate && bunx prisma db push && bun run src/index.ts";
 
+// Inner-monorepo root the discord-plays-mario-kart app runs from (config.toml,
+// n64wasm assets, saves/ resolve relative to this CWD).
+export const MARIO_KART_INNER_ROOT =
+  "/workspace/packages/discord-plays-mario-kart";
+
+// The real container entrypoint command for discord-plays-mario-kart. Applies the
+// leaderboard schema to the (persistent-volume) SQLite DB before start, then execs
+// the app from the inner root. NOTE: Prisma 7's `db push` no longer accepts
+// `--skip-generate` (generate is decoupled) — passing it crashes the container on
+// boot. Shared with the smoke test so the two cannot drift.
+export const MARIO_KART_ENTRYPOINT_COMMAND =
+  `cd packages/backend && bunx prisma db push && cd ${MARIO_KART_INNER_ROOT} && exec bun packages/backend/src/index.ts`;
+
 function withGitHubCli(container: Container): Container {
   return container
     .withExec(["apt-get", "update", "-qq"])
@@ -1237,7 +1250,7 @@ export function buildDiscordPlaysMarioKartImageHelper(
   gitSha: string = "unknown",
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
-  const innerRoot = "/workspace/packages/discord-plays-mario-kart";
+  const innerRoot = MARIO_KART_INNER_ROOT;
   const assetsDir = `${innerRoot}/packages/backend/assets/n64wasm`;
 
   // Stage 1: compile the N64Wasm core in the pinned emscripten toolchain.
@@ -1343,13 +1356,7 @@ export function buildDiscordPlaysMarioKartImageHelper(
       // leaderboard schema to the (persistent-volume) SQLite DB before start —
       // idempotent, birmel-style; harmless when leaderboards are disabled.
       .withWorkdir(innerRoot)
-      .withEntrypoint([
-        "sh",
-        "-c",
-        "cd packages/backend && bunx prisma db push --skip-generate && cd " +
-          innerRoot +
-          " && exec bun packages/backend/src/index.ts",
-      ])
+      .withEntrypoint(["sh", "-c", MARIO_KART_ENTRYPOINT_COMMAND])
   );
 }
 
