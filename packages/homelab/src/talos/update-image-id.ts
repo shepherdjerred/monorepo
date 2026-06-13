@@ -19,7 +19,9 @@ const SCHEMATIC_ID_PATTERN = /^[a-f0-9]{64}$/;
 
 // Validate the Image Factory response without pulling in a schema library, so
 // the script stays dependency-free and runs in the CI quality container (which
-// does not install node_modules).
+// does not install node_modules). This intentionally uses manual typeof guards
+// instead of Zod (contrary to homelab AGENTS.md) because Zod is a node_modules
+// dep and this script must run without `bun install` in the quality container.
 function parseSchematicId(body: unknown): string {
   if (
     typeof body === "object" &&
