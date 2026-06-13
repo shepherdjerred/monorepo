@@ -58,3 +58,23 @@ function with a git URL source ref, not the local worktree path.
 ### Shipped
 
 - Committed the full change set (57 files) as `63b77f812` and opened PR #1151 (`chore: make knip, trivy, and large-file checks strict and blocking`) against `main`. PR reports MERGEABLE.
+
+## Session Log — 2026-06-13 (soft-fail correction)
+
+### Done
+
+- Identified root cause: commit `63b77f812` had the PR title "make knip, trivy, and large-file checks strict and blocking" but the user confirmed the actual intent is for all three to be **soft-fail**. The commit removed `softFail: true` from knip/trivy/large-file, moved them into `blockingGates`, and changed annotation style to `"error"`.
+- Restored `softFail: true` in `scripts/ci/src/steps/quality.ts` for `knipCheckStep()`, `trivyScanStep()`, and `largeFileStep()`.
+- Changed annotation style back to `"warning"` (default) for knip and trivy.
+- Moved all three back from `blockingGates` to the async section in `scripts/ci/src/pipeline-builder.ts`.
+- Updated tests in `scripts/ci/src/__tests__/pipeline-builder.test.ts` to assert soft_fail=true for knip/trivy/large-file and removed them from `blockingGateKeys`.
+- Verified: `bunx tsc --noEmit` passes, `bun test` passes (237/237), generator output confirms `knip-check: soft_fail=True`, `trivy-scan: soft_fail=True`, `large-file-check: soft_fail=True`.
+- Committed as `5cc990f8b` and pushed to `chore/strict-quality-checks`.
+
+### Remaining
+
+- Nothing — the fix is complete and on the PR branch.
+
+### Caveats
+
+- The PR title "make knip, trivy, and large-file checks strict and blocking" no longer matches the actual behavior. The user may want to update the PR title/description to "keep knip, trivy, and large-file as soft-fail advisory checks".
