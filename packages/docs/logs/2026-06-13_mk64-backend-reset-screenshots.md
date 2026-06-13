@@ -30,3 +30,22 @@ Implemented Mario Kart 64 backend fixes for stream lifecycle resets and screensh
 ## Workflow Friction
 
 - Fresh worktree setup blocks unrelated package work on `packages/homelab/src/cdk8s` Helm type generation. In this session, `bun run scripts/setup.ts` installed dependencies, then spent several minutes in `helm repo update` inside the warn-only `helm-types codegen` task and dirtied `packages/homelab/src/cdk8s/generated/helm`. A setup flag to skip warn-only codegen or scope setup to a package would make backend-only worktrees faster and less error-prone.
+
+## Session Log — 2026-06-13 (CI fix: discord-stream-lifecycle deps wiring)
+
+### Done
+
+- Fixed CI failure on PR #1152 by adding `discord-stream-lifecycle` to `WORKSPACE_DEPS` in `.dagger/src/deps.ts`.
+- Added standalone entry `"discord-stream-lifecycle": ["eslint-config"]`.
+- Added `discord-stream-lifecycle` to deps of `streambot`, `discord-plays-pokemon`, and `discord-plays-mario-kart` (all three consumers that import `@shepherdjerred/discord-stream-lifecycle` via `file:` deps).
+- Confirmed `discord-stream-lifecycle` was already in `ALL_PACKAGES` in `scripts/ci/src/catalog.ts` — no catalog change needed.
+- Verified with `bunx tsc --noEmit` in `scripts/ci/` (clean) and confirmed generated Dagger commands now include `--dep-names discord-stream-lifecycle` for all consumers.
+- Committed and pushed to `feature/mk64-backend-reset-screenshots`.
+
+### Remaining
+
+- CI will re-run on the new commit; no further work expected for this fix.
+
+### Caveats
+
+- The root cause was that `discord-stream-lifecycle` was introduced on the `feature/stream-lifecycle-xstate` branch (PR #1146), and when #1152 was based on that branch, its `deps.ts` was not updated to include the new package. The reference wiring from `feature/stream-lifecycle-xstate` was used as the model for this fix.
