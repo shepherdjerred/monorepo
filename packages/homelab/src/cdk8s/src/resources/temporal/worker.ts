@@ -37,32 +37,32 @@ export type CreateTemporalWorkerDeploymentProps = {
 };
 
 /**
- * Build a map of `KEY: EnvValue.fromSecretValue(..., { optional: true })`
- * entries for the homelab-audit-daily workflow credentials. Marked optional
- * so the pod still starts if a 1P field is unset — the audit activity then
- * fails fast in its agent loop with a clear "API X returned 401" while every
- * other workflow keeps running.
+ * Build a map of `KEY: EnvValue.fromSecretValue(...)` entries for the
+ * homelab-audit-daily workflow credentials. Every field is REQUIRED: if a 1P
+ * field is unset the pod fails to start (CreateContainerConfigError) rather
+ * than booting with a silently-missing secret. This is the fail-fast contract
+ * for the whole repo — no `optional: true` on secrets. The 1P item must carry
+ * every key referenced here.
  */
-function optionalSecretEnv(
+function requiredSecretEnv(
   secret: ISecret,
   keys: readonly string[],
 ): Record<string, EnvValue> {
   const env: Record<string, EnvValue> = {};
   for (const key of keys) {
-    env[key] = EnvValue.fromSecretValue({ secret, key }, { optional: true });
+    env[key] = EnvValue.fromSecretValue({ secret, key });
   }
   return env;
 }
 
 function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
   return {
-    // homelab-audit-daily workflow credentials. All secret fields are optional
-    // so the pod starts if 1P is incomplete; the audit activity then fails fast
-    // in its agent loop with a clear API-specific auth error.
+    // homelab-audit-daily workflow credentials. All required — a missing 1P
+    // field crash-loops the pod (fail-fast) instead of starting with a gap.
     BUGSINK_URL: EnvValue.fromValue("https://bugsink.sjer.red"),
     BUILDKITE_ORGANIZATION_SLUG: EnvValue.fromValue("sjerred"),
     BUILDKITE_PIPELINE_SLUG: EnvValue.fromValue("monorepo"),
-    ...optionalSecretEnv(secret, [
+    ...requiredSecretEnv(secret, [
       "PAGERDUTY_TOKEN",
       "BUGSINK_TOKEN",
       "GRAFANA_URL",
@@ -72,8 +72,8 @@ function homelabAuditEnv(secret: ISecret): Record<string, EnvValue> {
       "CLOUDFLARE_API_TOKEN",
       "BUILDKITE_API_TOKEN",
     ]),
-    // talosctl reads its config from $TALOSCONFIG; the optional secret volume
-    // below projects 1P field TALOSCONFIG_YAML to this path.
+    // talosctl reads its config from $TALOSCONFIG; the secret volume below
+    // projects 1P field TALOSCONFIG_YAML to this path.
     TALOSCONFIG: EnvValue.fromValue("/etc/talos/config"),
   };
 }
@@ -387,13 +387,10 @@ export function createTemporalWorkerDeployment(
         AWS_DEFAULT_REGION: EnvValue.fromValue("us-east-1"),
         S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
         ...llmArchiveEnvVars(),
-        HOMELAB_AUDIT_ARCHIVE_BUCKET: EnvValue.fromSecretValue(
-          {
-            secret,
-            key: "HOMELAB_AUDIT_ARCHIVE_BUCKET",
-          },
-          { optional: true },
-        ),
+        HOMELAB_AUDIT_ARCHIVE_BUCKET: EnvValue.fromSecretValue({
+          secret,
+          key: "HOMELAB_AUDIT_ARCHIVE_BUCKET",
+        }),
         HOMELAB_AUDIT_ARCHIVE_PREFIX: EnvValue.fromValue("homelab-audits"),
         AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
           secret,
@@ -404,20 +401,14 @@ export function createTemporalWorkerDeployment(
           key: "AWS_SECRET_ACCESS_KEY",
         }),
         // GitHub
-        PR_REVIEW_FIXTURES_REPO_URL: EnvValue.fromSecretValue(
-          {
-            secret,
-            key: "PR_REVIEW_FIXTURES_REPO_URL",
-          },
-          { optional: true },
-        ),
-        PR_REVIEW_EVAL_DATABASE_URL: EnvValue.fromSecretValue(
-          {
-            secret,
-            key: "PR_REVIEW_EVAL_DATABASE_URL",
-          },
-          { optional: true },
-        ),
+        PR_REVIEW_FIXTURES_REPO_URL: EnvValue.fromSecretValue({
+          secret,
+          key: "PR_REVIEW_FIXTURES_REPO_URL",
+        }),
+        PR_REVIEW_EVAL_DATABASE_URL: EnvValue.fromSecretValue({
+          secret,
+          key: "PR_REVIEW_EVAL_DATABASE_URL",
+        }),
         GITHUB_APP_ID: EnvValue.fromSecretValue({
           secret,
           key: "GITHUB_APP_ID",
@@ -484,17 +475,15 @@ export function createTemporalWorkerDeployment(
         // Voyage AI API key for the pr-review-bot dedupe activity
         // (Phase 9). Primary embedding provider for the dismissed-
         // comments cosine-similarity match; @xenova/transformers
-        // `bge-small-en-v1.5` is the local fallback when this is
-        // unset, rate-limited, or 5xx-ing. Both produce 384-d vectors
-        // so Redis entries are provider-agnostic. New field on the
-        // existing 1P item — per `feedback_dont_modify_1p_items`,
-        // never rename/duplicate; add only. Marked optional so the
-        // pod still starts when the field is unset (local fallback
-        // kicks in transparently).
-        VOYAGE_API_KEY: EnvValue.fromSecretValue(
-          { secret, key: "VOYAGE_API_KEY" },
-          { optional: true },
-        ),
+        // `bge-small-en-v1.5` is the runtime fallback when Voyage is
+        // rate-limited or 5xx-ing. Both produce 384-d vectors so Redis
+        // entries are provider-agnostic. Required: the 1P item must
+        // carry this field (per `feedback_dont_modify_1p_items`, add
+        // it, never rename/duplicate) or the pod fails to start.
+        VOYAGE_API_KEY: EnvValue.fromSecretValue({
+          secret,
+          key: "VOYAGE_API_KEY",
+        }),
         // Comma-separated list of `owner/repo` pairs the pr-review
         // reaction-listener workflow polls every 15 min for
         // thumbs-down reactions + resolved-without-followup signals
@@ -503,14 +492,11 @@ export function createTemporalWorkerDeployment(
         // and rotates with repo lineage rather than credentials.
         PR_REVIEW_LISTENER_REPOS: EnvValue.fromValue("shepherdjerred/monorepo"),
         // Bugsink (Sentry-compatible) error tracking. Read by initSentry()
-        // in worker.ts; when unset, Sentry init is a no-op.
-        SENTRY_DSN: EnvValue.fromSecretValue(
-          {
-            secret,
-            key: "SENTRY_DSN",
-          },
-          { optional: true },
-        ),
+        // in worker.ts. Required — the 1P item carries SENTRY_DSN.
+        SENTRY_DSN: EnvValue.fromSecretValue({
+          secret,
+          key: "SENTRY_DSN",
+        }),
         // OpenAI
         OPENAI_API_KEY: EnvValue.fromSecretValue({
           secret,
@@ -535,16 +521,11 @@ export function createTemporalWorkerDeployment(
         // was non-routable and got silently dropped by external recipients.
         // Sourced from 1Password (item `temporal-temporal-worker-1p`, key
         // `SENDER_EMAIL`) so the address can rotate without code changes.
-        // Marked optional so the pod still starts if the field is unset; the
-        // deps-summary activity itself fails fast with a clear error in that
-        // case — only the deps-summary workflow is affected, not the worker.
-        SENDER_EMAIL: EnvValue.fromSecretValue(
-          {
-            secret,
-            key: "SENDER_EMAIL",
-          },
-          { optional: true },
-        ),
+        // Required — the 1P item carries SENDER_EMAIL.
+        SENDER_EMAIL: EnvValue.fromSecretValue({
+          secret,
+          key: "SENDER_EMAIL",
+        }),
         ...homelabAuditEnv(secret),
       },
     }),
@@ -564,10 +545,8 @@ export function createTemporalWorkerDeployment(
   // (`talosctl health`, `talosctl get members`, `talosctl dmesg`) need it —
   // kubectl-derived signal covers Ready/kernel but misses ZFS / OOM event
   // detail. The 1P field is `TALOSCONFIG_YAML` (one string holding the full
-  // YAML). Marked optional so the pod still starts when the field is unset;
-  // when it is, /etc/talos/config will be absent and talosctl commands fail
-  // fast with a clear error inside the audit run, while every other workflow
-  // keeps running.
+  // YAML). Required — the secret must carry this key (a missing TALOSCONFIG_YAML
+  // crash-loops the pod rather than silently dropping talosctl coverage).
   const talosConfigVolume = Volume.fromSecret(
     chart,
     "temporal-worker-talosconfig",
@@ -576,7 +555,6 @@ export function createTemporalWorkerDeployment(
       name: "talosconfig",
       items: { TALOSCONFIG_YAML: { path: "config" } },
       defaultMode: 0o400,
-      optional: true,
     },
   );
   container.mount("/etc/talos", talosConfigVolume, { readOnly: true });

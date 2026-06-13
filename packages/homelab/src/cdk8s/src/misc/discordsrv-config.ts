@@ -6,11 +6,12 @@
  * - 1Password secret for bot token and channel IDs
  * - Environment variable substitution via itzg/minecraft-server
  *
- * Required 1Password fields:
+ * Required 1Password fields (all required — no optional secrets; a missing
+ * field fails the pod at startup rather than booting with a silent gap):
  * - DISCORD_BOT_TOKEN: The Discord bot token
  * - DISCORD_CHANNEL_ID: The main chat channel ID
- * - DISCORD_CONSOLE_CHANNEL_ID: (optional) Console channel ID
- * - DISCORD_INVITE_LINK: (optional) Server invite link
+ * - DISCORD_CONSOLE_CHANNEL_ID: Console channel ID
+ * - DISCORD_INVITE_LINK: Server invite link
  */
 
 export const DISCORDSRV_PLUGIN_URL =
@@ -100,7 +101,6 @@ export function getDiscordSrvExtraEnv(
         secretKeyRef: {
           name: secretName,
           key: "DISCORD_CONSOLE_CHANNEL_ID",
-          optional: true,
         },
       },
     },
@@ -109,7 +109,6 @@ export function getDiscordSrvExtraEnv(
         secretKeyRef: {
           name: secretName,
           key: "DISCORD_INVITE_LINK",
-          optional: true,
         },
       },
     },
