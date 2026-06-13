@@ -24,7 +24,6 @@
     "e2e:input:check": "bun run scripts/e2e-input-assert.ts"
   },
   "dependencies": {
-    "@shepherdjerred/discord-video-stream": "file:../../../discord-video-stream",
     "@discord-plays-mario-kart/common": "file:../common",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/context-async-hooks": "^2.7.1",
@@ -33,6 +32,8 @@
     "@opentelemetry/sdk-node": "^0.218.0",
     "@opentelemetry/sdk-trace-base": "^2.7.1",
     "@opentelemetry/semantic-conventions": "^1.40.0",
+    "@shepherdjerred/discord-stream-lifecycle": "file:../../../discord-stream-lifecycle",
+    "@shepherdjerred/discord-video-stream": "file:../../../discord-video-stream",
     "@sentry/bun": "^10.0.0",
     "cors": "^2.8.5",
     "discord.js": "^14.26.4",
@@ -45,6 +46,7 @@
     "socket.io": "^4.8.1",
     "ts-pattern": "^5.7.0",
     "winston": "^3.17.0",
+    "xstate": "^5.32.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
