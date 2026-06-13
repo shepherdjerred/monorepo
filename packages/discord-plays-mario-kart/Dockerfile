@@ -19,7 +19,7 @@ FROM oven/bun:1.3.14-debian@sha256:9dba1a1b43ce28c9d7931bfc4eb00feb63b0114720a02
 RUN set -e; \
   if [ -f /etc/apt/sources.list.d/debian.sources ]; then sed -i "s/^Components: main.*/Components: main contrib non-free non-free-firmware/" /etc/apt/sources.list.d/debian.sources; fi; \
   apt-get update \
-  && apt-get install -y --no-install-recommends ffmpeg libvips42 ca-certificates libva2 libva-drm2 vainfo \
+  && apt-get install -y --no-install-recommends ffmpeg libvips42 fontconfig ca-certificates libva2 libva-drm2 vainfo \
   && if [ "$(dpkg --print-architecture)" = "amd64" ]; then apt-get install -y --no-install-recommends intel-media-va-driver-non-free; fi \
   && rm -rf /var/lib/apt/lists/*
 
@@ -39,10 +39,14 @@ RUN bun install --frozen-lockfile
 # App source (includes the vendored packages/backend/assets/pokeemerald.wasm).
 COPY . .
 
+# Generate the Prisma client for the leaderboard DB (output is gitignored).
+RUN cd packages/backend && bunx --trust prisma generate
+
 # Build the web UI served by the backend (web.assets).
 RUN cd packages/frontend && bun run build
 
 # config.toml is provided at runtime (mount or bake a non-secret config).
-# The flash save directory is created on demand by the emulator.
+# The save + data directories are created on demand (data holds the leaderboard
+# SQLite DB; `prisma db push` applies the schema before start, idempotently).
 ENV NODE_ENV=production
-CMD ["bun", "packages/backend/src/index.ts"]
+CMD ["sh", "-c", "cd packages/backend && bunx prisma db push --skip-generate && cd /app && exec bun packages/backend/src/index.ts"]

@@ -10,10 +10,13 @@ import {
   type SeatReleaseRequest,
 } from "@discord-plays-mario-kart/common";
 import { KEYMAP, PADS, computeState } from "./input-map.ts";
+import { NameEntry } from "./name-entry.tsx";
+import { Leaderboard } from "./leaderboard.tsx";
 
 export function App() {
   const [seat, setSeat] = useState<number | null>(null);
   const [occupied, setOccupied] = useState<boolean[]>([]);
+  const [names, setNames] = useState<(string | null)[]>([]);
   const [latency, setLatency] = useState<number>();
   const pressed = useRef<Set<string>>(new Set());
   const seatRef = useRef<number | null>(null);
@@ -68,6 +71,7 @@ export function App() {
         setSeat(response.value.seat);
       } else if (response.kind === "seats") {
         setOccupied(response.value.occupied);
+        setNames(response.value.names);
       }
     };
     socket.on("response", onResponse);
@@ -128,6 +132,14 @@ export function App() {
             {Array.from({ length: seatCount }, (_unused, i) => {
               const taken = occupied[i] ?? false;
               const mine = seat === i;
+              const playerName = names[i] ?? null;
+              const label = mine
+                ? " (you)"
+                : playerName === null
+                  ? taken
+                    ? " (taken)"
+                    : ""
+                  : ` — ${playerName}`;
               return (
                 <button
                   key={i}
@@ -145,7 +157,7 @@ export function App() {
                   }`}
                 >
                   P{i + 1}
-                  {mine ? " (you)" : taken ? " (taken)" : ""}
+                  {label}
                 </button>
               );
             })}
@@ -159,6 +171,7 @@ export function App() {
                 You are P{seat + 1} — WASD / arrows, E = item, Shift = hop,
                 Enter = start.
               </p>
+              <NameEntry seat={seat} />
               <div className="grid grid-cols-4 gap-2">
                 {PADS.map((p) => (
                   <button
@@ -180,6 +193,8 @@ export function App() {
               </div>
             </div>
           )}
+
+          <Leaderboard />
         </div>
       </Container>
     </div>

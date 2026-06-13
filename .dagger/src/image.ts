@@ -259,6 +259,10 @@ function withDiscordPlaysRuntime(container: Container): Container {
       "ca-certificates",
       "ffmpeg",
       "libvips42",
+      // fontconfig: sharp/libvips text rendering (the leaderboard name overlay)
+      // needs it initialised even though the glyphs come from a bundled TTF
+      // passed via `fontfile` — without it sharp logs a fontconfig error.
+      "fontconfig",
       "libva2",
       "libva-drm2",
       "vainfo",
@@ -1214,6 +1218,9 @@ export function buildDiscordPlaysMarioKartImageHelper(
       .withExec(["bun", "install", "--frozen-lockfile"])
       .withWorkdir(`${innerRoot}/packages/backend`)
       .withExec(["bun", "install", "--frozen-lockfile"])
+      // Generate the Prisma client for the leaderboard DB (output is gitignored,
+      // so it must be produced in the image). Mirrors the birmel/scout flow.
+      .withExec(["bunx", "--trust", "prisma", "generate"])
       // Build the web UI served by the backend web server (web.assets).
       .withWorkdir(`${innerRoot}/packages/frontend`)
       .withExec(["bun", "run", "build"])
@@ -1226,9 +1233,17 @@ export function buildDiscordPlaysMarioKartImageHelper(
       .withEnvVariable("VERSION", version)
       .withEnvVariable("GIT_SHA", gitSha)
       // Run from the inner-monorepo root so getConfig()/emulator resolve
-      // config.toml, the n64wasm assets, and saves/ relative to CWD.
+      // config.toml, the n64wasm assets, and saves/ relative to CWD. Apply the
+      // leaderboard schema to the (persistent-volume) SQLite DB before start —
+      // idempotent, birmel-style; harmless when leaderboards are disabled.
       .withWorkdir(innerRoot)
-      .withEntrypoint(["bun", "packages/backend/src/index.ts"])
+      .withEntrypoint([
+        "sh",
+        "-c",
+        "cd packages/backend && bunx prisma db push --skip-generate && cd " +
+          innerRoot +
+          " && exec bun packages/backend/src/index.ts",
+      ])
   );
 }
 

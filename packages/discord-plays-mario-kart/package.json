@@ -6,7 +6,8 @@
     "build": "bun run --filter '*' build",
     "test": "bun run --filter '*' test",
     "lint": "bun run --filter '*' lint",
-    "typecheck": "bun run --filter '*' typecheck"
+    "typecheck": "bun run --filter '*' typecheck",
+    "generate": "bun run --cwd packages/backend generate"
   },
   "workspaces": [
     "packages/common",

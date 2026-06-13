@@ -15,6 +15,9 @@ error.png
 packages/backend/assets/n64wasm/
 logs
 saves
+data
+# Generated Prisma client (leaderboard) — codegen output, never committed.
+**/generated/
 .DS_Store
 .claude/settings.local.json
 wasm-src/dist/

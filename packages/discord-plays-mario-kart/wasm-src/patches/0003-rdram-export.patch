@@ -1,0 +1,34 @@
+--- a/code/Makefile	2026-06-12 18:39:54
++++ b/code/Makefile	2026-06-12 18:40:15
+@@ -227,7 +227,8 @@
+     '_neilGetAudioWritePosition','_neil_serialize','_neil_unserialize','_neil_toast_message', \
+     '_neil_export_eep','_neil_export_sra','_neil_export_fla','_neil_reset','_toggleFPS', '_neil_send_mobile_controls', \
+     '_neil_set_buffer_remaining','_neil_set_endframe_callback','_neil_set_double_speed', \
+-    '_neilGetVideoBuffer','_neilGetVideoHeight','_neilSetRom','_neil_send_mobile_controls_player']" \
++    '_neilGetVideoBuffer','_neilGetVideoHeight','_neilSetRom','_neil_send_mobile_controls_player', \
++    '_neilGetRdram','_neilGetRdramSize']" \
+ 	-s INVOKE_RUN=0
+ 	# outputs n64wasm.js + n64wasm.wasm in this dir; build-wasm.sh copies them.
+     
+--- a/code/mymain.cpp	2026-06-12 18:39:54
++++ b/code/mymain.cpp	2026-06-12 18:46:42
+@@ -42,6 +42,19 @@
+ volatile int g_injectedRomSize = 0;
+ EMSCRIPTEN_KEEPALIVE void neilSetRom(int ptr, int size) { g_injectedRom = (uint8_t*)(intptr_t)ptr; g_injectedRomSize = size; }
+ 
++// Headless RDRAM access (Discord Plays Mario Kart leaderboards): expose the
++// emulated N64 RDRAM base so the JS host can read game state (race placements,
++// course id, timers) straight out of wasm memory, like neilGetVideoBuffer above.
++// This build links libretronew.c (no retro_get_memory_data), so we reference
++// the core's g_rdram array directly (defined in mupen64plus-core main.c).
++// Byte-order contract for the host: mupen64plus stores RDRAM as host-endian
++// (little-endian under wasm) 32-bit words, so a byte at N64 physical address A
++// lives at rdram[(A & 0x7FFFFF) ^ 3]; an aligned u32 is a plain little-endian
++// read at (A & 0x7FFFFF). See wasm-src/PATCHES.md.
++extern uint32_t g_rdram[]; // mupen64plus-core src/main/main.c (RDRAM_MAX_SIZE/4 words)
++EMSCRIPTEN_KEEPALIVE int neilGetRdram() { return (int)(intptr_t)g_rdram; }
++EMSCRIPTEN_KEEPALIVE int neilGetRdramSize() { return 0x800000; /* RDRAM_MAX_SIZE, main.h */ }
++
+ // Headless host controller state (Discord Plays Mario Kart). Set by JS via
+ // neil_send_mobile_controls_player() each tick. It MUST persist across the
+ // per-frame resetNeilButtons() (called at the top of mainLoopInner): the host
