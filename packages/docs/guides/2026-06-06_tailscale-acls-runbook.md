@@ -1,56 +1,73 @@
 # Tailscale ACLs — enablement runbook
 
-## Status: Not Started
+## Status: In Progress — reconciled & validated, not yet applied
 
-The OpenTofu module (`packages/homelab/src/tofu/tailscale/`) is authored and validated, but **not yet applied** and **not yet in CI drift**. This runbook is the operator path to turn it on safely. It exists because the tailnet currently trusts every device (implicit allow-all); the module moves it to deny-by-default.
+The OpenTofu module (`packages/homelab/src/tofu/tailscale/`) is authored, **reconciled against the live console policy, and validated against Tailscale's API** (see step 2), but **not yet applied** and **not yet in CI drift**. The OAuth client exists and is stored in 1Password (step 1). This runbook is the operator path to turn it on safely. It exists because the tailnet currently trusts every device (implicit allow-all); the module moves it to deny-by-default.
 
 ## Why a runbook instead of "just apply"
 
 - First apply **overwrites the admin-console policy**. The Tailscale K8s operator relies on `tagOwners` for `tag:k8s`; if those aren't carried over, new `*.ts.net` ingresses break.
 - The tailnet hosts the control plane and the OpenTofu **state backend** (`seaweedfs-s3.tailnet-1a49.ts.net`). A bad policy can cut off CI/operator/admin. The module keeps `autogroup:admin` at full access to prevent owner lockout, but infra paths must still be verified.
 
-## 1. Create a Tailscale OAuth client
+## 1. Create a Tailscale OAuth client — DONE
 
-Admin console → Settings → OAuth clients → Generate. Scope: **`acl`** (write). Optionally `auth_keys` if you later manage keys here. Record the client ID + secret.
+Admin console → Settings → OAuth clients → Generate. Scope: **Policy File → Read/Write** (`acl`). Record the client ID + secret.
 
-Store them in 1Password (the homelab vault) so CI can read them later as `TAILSCALE_OAUTH_CLIENT_ID` / `TAILSCALE_OAUTH_CLIENT_SECRET`.
+**Status: done.** A dedicated `acl`-scoped OAuth client was created (separate from the operator's `Tailscale k8s OAuth client`, which is `devices`/`auth_keys`-scoped and returns `403` on `/acl`). Its credentials are stored in the **`Buildkite CI Secrets`** 1Password item (`v64ocnykdqju4ui6j6pua56xw4/rzk3lawpk4yspyyu5rxlz44ssi`) as fields `TAILSCALE_OAUTH_CLIENT_ID` / `TAILSCALE_OAUTH_CLIENT_SECRET` — so both CI (`buildkite-ci-secrets` `envFrom`) and local `op run` (`src/tofu/.env` references) resolve them. Only `op://` references are committed; the secret itself lives only in 1Password.
 
-## 2. Reconcile the current console policy (critical)
+## 2. Reconcile the current console policy (critical) — DONE
 
-Fetch what's live and merge anything the module is missing (especially `tagOwners` and `autoApprovers` the operator depends on). Using a Tailscale API access token (basic auth: token as the username), `GET` the current policy and save it locally:
+The robust way to reconcile is a **local-state `tofu import` + Tailscale `/acl/validate` dry-run** — it produces a structured diff and verifies the rendered policy without writing to the live tailnet or to remote state:
 
-```text
-GET https://api.tailscale.com/api/v2/tailnet/-/acl   ->   /tmp/current-acl.hujson
+```bash
+# throwaway copy WITHOUT backend.tf so tofu uses local state (no AWS creds, no remote state)
+mkdir /tmp/ts-dryrun && cp acl.tf providers.tf variables.tf .terraform.lock.hcl /tmp/ts-dryrun/
+cd /tmp/ts-dryrun && tofu init                     # local backend
+op run --env-file=<repo>/packages/homelab/src/tofu/.env -- tofu import tailscale_acl.homelab acl
+op run --env-file=<repo>/packages/homelab/src/tofu/.env -- tofu plan      # live -> acl.tf diff
+# render acl.tf to JSON and POST to the validator (runs the `tests` server-side, no apply):
+#   POST https://api.tailscale.com/api/v2/tailnet/-/acl/validate   (200 + {} == valid)
 ```
 
-Compare that file against `acl.tf`. Make sure every tag the operator/devices currently use appears in `tagOwners` with the correct owner. Adjust `acl.tf` as needed.
+> `-backend=false` only works for `tofu validate`; `import`/`plan` need a backend, hence the backend-less throwaway copy for a pure local dry-run.
+
+**Reconciliation result (done).** The live policy was Tailscale's default (allow-all + operator `tagOwners` + default Tailscale-SSH-to-self + Funnel `nodeAttrs`). Findings folded into `acl.tf`:
+
+- **Bug fixed:** the `tests` block used `autogroup:members` as a test `src` — the validator **rejects autogroups as test sources** ("user or host is invalid"), so `tofu apply` would have failed its server-side tests. That member test was removed (the invariant is still enforced by the `acls` rule; a solo tailnet has no member principal to name in a test). Member references normalized to the canonical `autogroup:members`.
+- **Preserved:** operator `tag:k8s` ownership (ingresses keep working), `autogroup:admin` full access (no lockout), and **Tailscale-SSH into your own devices** (`{action=check, src=autogroup:members, dst=autogroup:self}`) — the owner SSHes into a Steam Deck / MacBook this way; Windows uses regular sshd (covered by the `admin -> *:*` acl).
+- **Dropped on purpose:** the default Funnel `nodeAttrs` grants — Funnel is unused (all `TailscaleIngress` are tailnet-only), so public exposure stays off by default.
+
+Net effect of an apply is now only the intended change: **allow-all → deny-by-default**.
 
 ## 3. Plan, preview, apply (local, as operator)
 
+Run from `packages/homelab/src/tofu/` using the shared `.env` (op:// references for `AWS_*` state creds + `TAILSCALE_OAUTH_*`), same as the other stacks:
+
 ```bash
-cd packages/homelab/src/tofu/tailscale
-op run --env-file=../../../../.env.tailscale -- tofu init      # needs AWS_* (state) + TAILSCALE_OAUTH_*
-op run --env-file=../../../../.env.tailscale -- tofu plan       # review every change
+cd packages/homelab/src/tofu
+op run --env-file=.env -- tofu -chdir=tailscale init      # AWS_* (state) + TAILSCALE_OAUTH_*
+op run --env-file=.env -- tofu -chdir=tailscale plan      # review every change
 ```
 
-Optionally preview the rendered policy against Tailscale's validator (`POST /api/v2/tailnet/-/acl/preview`) before applying — or just rely on `tofu plan` plus the `tests` block — then apply:
+This is the first apply against the **real S3 backend** (creates `tailscale/terraform.tfstate`). The dry-run in step 2 used a backend-less local copy; here the backend is real. Rely on `tofu plan` plus the validated `tests` block, then apply:
 
 ```bash
-op run --env-file=../../../../.env.tailscale -- tofu apply
+op run --env-file=.env -- tofu -chdir=tailscale apply
 ```
 
 `tests` in `acl.tf` run server-side on apply; a failing assertion blocks the change.
 
 ## 4. Verify
 
-- Admin device: can still reach apps, SSH a `tag:server`, and hit the k8s API.
-- A non-admin/member device: can reach `*.ts.net` apps (80/443) but **not** SSH or the k8s API.
+- Admin device: can still reach apps and hit the k8s API.
+- **SSH into your own devices still works** — `tailscale ssh` / regular SSH into the Steam Deck, MacBook, and Windows PC (the preserved `autogroup:self` rule + the `admin -> *:*` acl).
+- A non-admin/member device (if the tailnet is ever shared): can reach `*.ts.net` apps (80/443) but **not** SSH or the k8s API.
 - Operator still works: trigger/observe a new `tag:k8s` ingress proxy coming up healthy.
 - CI/state: confirm `tofu`/ArgoCD can still reach `seaweedfs-s3.tailnet` and the k8s API.
 
 ## 5. Enable CI drift detection
 
-Once the OAuth secrets exist in CI (`buildkite-ci-secrets` → `TAILSCALE_OAUTH_CLIENT_ID`/`SECRET`), wire the stack in:
+The OAuth secrets already exist in CI (`buildkite-ci-secrets` → `TAILSCALE_OAUTH_CLIENT_ID`/`SECRET`, added in step 1 — reach the agent via the existing `envFrom`). Remaining work is the code wiring:
 
 1. `scripts/ci/src/catalog.ts` — add to the list + label:
 

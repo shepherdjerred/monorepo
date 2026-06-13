@@ -49,7 +49,7 @@ resource "tailscale_acl" "homelab" {
       # proxies (tag:k8s) serve every *.ts.net service on 80/443. Non-admin
       # humans do NOT get the raw node, the Kubernetes API, or SSH. This is the
       # core change from "all devices trusted".
-      { action = "accept", src = ["autogroup:member"], dst = ["tag:k8s:80,443"] },
+      { action = "accept", src = ["autogroup:members"], dst = ["tag:k8s:80,443"] },
 
       # The K8s operator manages the ingress/proxy devices it creates.
       { action = "accept", src = ["tag:k8s-operator"], dst = ["tag:k8s:*"] },
@@ -78,7 +78,13 @@ resource "tailscale_acl" "homelab" {
       exitNode = []
     }
 
-    # Tailscale SSH: admins only, to tagged servers.
+    # Tailscale SSH:
+    #   1. Admins -> tagged servers (e.g. future tag:server nodes).
+    #   2. Preserve the tailnet default: any member may Tailscale-SSH into their
+    #      OWN devices (autogroup:self) in check mode. The owner SSHes into personal
+    #      devices (Steam Deck, MacBook) this way — dropping it would break that.
+    #      (Windows has no Tailscale SSH server, so it uses regular sshd, already
+    #      covered by the autogroup:admin -> *:* acl above.)
     ssh = [
       {
         action = "accept"
@@ -86,7 +92,19 @@ resource "tailscale_acl" "homelab" {
         dst    = ["tag:server"]
         users  = ["autogroup:nonroot", "root"]
       },
+      {
+        action = "check"
+        src    = ["autogroup:members"]
+        dst    = ["autogroup:self"]
+        users  = ["autogroup:nonroot", "root"]
+      },
     ]
+
+    # NOTE: Funnel is intentionally NOT granted. The prior console policy granted
+    # `funnel` to autogroup:members and tag:k8s by default, but nothing uses Funnel
+    # (all TailscaleIngress resources are tailnet-only), so this policy drops it —
+    # public internet exposure stays off by default. Add a `nodeAttrs` funnel grant
+    # here if a service ever needs to be published via Funnel.
 
     # Assertions evaluated by Tailscale on every apply; a failing test blocks the
     # change. Tag-sourced tests are unambiguous; add user-identity tests with
@@ -98,14 +116,13 @@ resource "tailscale_acl" "homelab" {
         accept = ["tag:server:9100"]
         deny   = ["tag:server:22"]
       },
-      # Core security invariant: non-admin members reach only the published web
-      # apps on tag:k8s (80/443) — never SSH, the Kubernetes API, or raw server
-      # ports. A future edit that widens the autogroup:member rule fails here.
-      {
-        src    = "autogroup:member"
-        accept = ["tag:k8s:443"]
-        deny   = ["tag:k8s:22", "tag:server:22"]
-      },
+      # NOTE: the "non-admin members reach only the published web apps" invariant
+      # is enforced by the `autogroup:members -> tag:k8s:80,443` acl above, but it
+      # CANNOT be expressed as a Tailscale ACL test: a test `src` must be a concrete
+      # user or tag — the validator rejects `autogroup:members` as a test source —
+      # and this solo tailnet has no non-admin member account to name instead.
+      # Re-add a user-identity test here if a non-admin human is added to the tailnet.
+
       # CI must keep reaching the SeaweedFS S3 tofu-state backend (tag:k8s:443)
       # but nothing more — guards against accidentally dropping the tag:ci grant
       # above (which would break tofu apply for every stack) or widening it.
