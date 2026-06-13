@@ -13,6 +13,7 @@ import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer.t
 import type { Announcement } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import {
+  loadState,
   saveState,
   stateFilePath,
   type PersistedState,
@@ -21,6 +22,7 @@ import {
   ChannelIdSchema,
   GuildIdSchema,
   UserIdSchema,
+  type ChannelId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 
 const GUILD = GuildIdSchema.parse("100000000000000001");
@@ -122,6 +124,19 @@ async function waitUntil(
   while (!predicate()) {
     if (Date.now() - start > timeoutMs) {
       throw new Error("waitUntil timed out");
+    }
+    await sleep(10);
+  }
+}
+
+async function waitForAsync(
+  predicate: () => Promise<boolean>,
+  timeoutMs = 3000,
+): Promise<void> {
+  const start = Date.now();
+  while (!(await predicate())) {
+    if (Date.now() - start > timeoutMs) {
+      throw new Error("waitForAsync timed out");
     }
     await sleep(10);
   }
@@ -238,6 +253,89 @@ describe("SessionManager", () => {
     await manager.destroyAll();
   });
 
+  test("moveSession rekeys a live session to the new voice channel", async () => {
+    const config = await makeConfig();
+    const pool = fakePool(1);
+    const { manager } = makeManager(config, pool.provider);
+
+    const handle = manager.ensureForPlay({
+      guildId: GUILD,
+      voiceChannelId: CHANNEL_A,
+      statusChannelId: STATUS,
+    });
+    handle?.dispatch({
+      type: "ADD",
+      source: { kind: "file", path: "/clip.mkv", title: "Clip" },
+      requesterId: USER,
+    });
+    await waitUntil(() => handle?.view().state === "streaming");
+
+    expect(
+      manager.moveSession({
+        guildId: GUILD,
+        fromChannelId: CHANNEL_A,
+        toChannelId: CHANNEL_B,
+      }),
+    ).toBe(true);
+
+    expect(manager.getExisting(GUILD, CHANNEL_A)).toBeNull();
+    expect(manager.getExisting(GUILD, CHANNEL_B)).not.toBeNull();
+
+    manager.getExisting(GUILD, CHANNEL_B)?.dispatch({ type: "STOP" });
+    await waitUntil(() => manager.getExisting(GUILD, CHANNEL_B) === null);
+    expect(pool.released.length).toBe(1);
+
+    await manager.destroyAll();
+  });
+
+  test("moveSession carries the resume-state file to the new channel path", async () => {
+    const config = await makeConfig();
+    const pool = fakePool(1);
+    const { manager } = makeManager(config, pool.provider);
+
+    const handle = manager.ensureForPlay({
+      guildId: GUILD,
+      voiceChannelId: CHANNEL_A,
+      statusChannelId: STATUS,
+    });
+    handle?.dispatch({
+      type: "ADD",
+      source: { kind: "file", path: "/clip.mkv", title: "Clip" },
+      requesterId: USER,
+    });
+    await waitUntil(() => handle?.view().state === "streaming");
+
+    // Seed a snapshot at the OLD channel path so we can prove it follows the move (VOICE_TARGET_MOVED
+    // alone writes no snapshot, so without moveState the new path would be empty).
+    const oldFile = stateFilePath(config.state.dir, GUILD, CHANNEL_A);
+    await saveState(oldFile, persistedAt(CHANNEL_A));
+
+    expect(
+      manager.moveSession({
+        guildId: GUILD,
+        fromChannelId: CHANNEL_A,
+        toChannelId: CHANNEL_B,
+      }),
+    ).toBe(true);
+
+    const newFile = stateFilePath(config.state.dir, GUILD, CHANNEL_B);
+    // moveState is fire-and-forget; wait for the new path to appear and the old one to vanish.
+    await waitForAsync(
+      async () =>
+        (await Bun.file(newFile).exists()) &&
+        !(await Bun.file(oldFile).exists()),
+    );
+    const moved = await loadState(newFile, 3600);
+    expect(moved).not.toBeNull();
+    // The file's channelId was rewritten to the destination so resume's channel check passes.
+    expect(moved?.channelId).toBe(CHANNEL_B);
+
+    manager.getExisting(GUILD, CHANNEL_B)?.dispatch({ type: "STOP" });
+    await waitUntil(() => manager.getExisting(GUILD, CHANNEL_B) === null);
+
+    await manager.destroyAll();
+  });
+
   test("STOP tears the session down and releases the userbot", async () => {
     const config = await makeConfig();
     const pool = fakePool(1);
@@ -323,4 +421,9 @@ function persistedWithQueue(): PersistedState {
     resumeAttempts: 0,
     resumeKey: null,
   };
+}
+
+/** A persisted snapshot keyed to a specific channel (used to prove a move carries the file across). */
+function persistedAt(channelId: ChannelId): PersistedState {
+  return { ...persistedWithQueue(), channelId };
 }

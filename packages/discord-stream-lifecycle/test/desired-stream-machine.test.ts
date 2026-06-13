@@ -7,8 +7,6 @@ import type {
   RawGoLiveDeps,
 } from "@shepherdjerred/discord-stream-lifecycle/types.ts";
 
-// Resolves with a sentinel `true` rather than `void` — the repo's
-// no-invalid-void-type rule rejects `void` as a generic type argument.
 type Deferred<T> = {
   promise: Promise<T>;
   resolve: (value: T) => void;
@@ -25,6 +23,7 @@ function deferred<T>(): Deferred<T> {
 type Harness = {
   deps: RawGoLiveDeps;
   encoder: EncoderHandles;
+  joinTargets: string[];
   gates: {
     join: Deferred<true>;
     run: Deferred<true>;
@@ -32,8 +31,6 @@ type Harness = {
   };
 };
 
-// join/leave auto-resolve by default (override the gate to make them pending);
-// run stays pending so the orchestrator settles in `streaming`.
 function makeHarness(): Harness {
   const encoder: EncoderHandles = {
     sink: new PassThrough(),
@@ -47,9 +44,10 @@ function makeHarness(): Harness {
   };
   gates.join.resolve(true);
   gates.leave.resolve(true);
-
+  const joinTargets: string[] = [];
   const deps: RawGoLiveDeps = {
-    joinVoice: async () => {
+    joinVoice: async (input) => {
+      joinTargets.push(input.target.channelId);
       await gates.join.promise;
     },
     prepareEncoder: () => Promise.resolve(encoder),
@@ -62,19 +60,17 @@ function makeHarness(): Harness {
     retryDelayMs: 10,
   };
 
-  return { deps, encoder, gates };
+  return { deps, encoder, joinTargets, gates };
 }
 
 function createHarnessActor(h: Harness) {
   return createActor(createDesiredStreamMachine(h.deps), {
-    input: {
-      voiceTarget: { guildId: "guild-1", channelId: "channel-1" },
-    },
+    input: { voiceTarget: { guildId: "guild-1", channelId: "channel-1" } },
   });
 }
 
-describe("orchestrator machine", () => {
-  test("desired=true brings the stream up; desired=false takes it down", async () => {
+describe("desired stream machine", () => {
+  test("desired=true brings stream up and desired=false takes it down", async () => {
     const h = makeHarness();
     const actor = createHarnessActor(h);
     actor.start();
@@ -85,19 +81,19 @@ describe("orchestrator machine", () => {
 
     actor.send({ type: "SET_DESIRED", desired: false });
     await waitFor(actor, (s) => s.context.frameSink === null);
+    expect(actor.getSnapshot().context.desired).toBe(false);
     actor.stop();
   });
 
-  test("flapping true→false→true while joining converges to streaming", async () => {
+  test("flapping while joining converges to final desired=true", async () => {
     const h = makeHarness();
-    h.gates.join = deferred<true>(); // hold the join so events interleave mid-start
+    h.gates.join = deferred<true>();
     const actor = createHarnessActor(h);
     actor.start();
 
     actor.send({ type: "SET_DESIRED", desired: true });
     actor.send({ type: "SET_DESIRED", desired: false });
     actor.send({ type: "SET_DESIRED", desired: true });
-
     h.gates.join.resolve(true);
 
     await waitFor(actor, (s) => s.context.frameSink !== null, {
@@ -107,21 +103,19 @@ describe("orchestrator machine", () => {
     actor.stop();
   });
 
-  test("a START arriving during teardown converges back to streaming", async () => {
+  test("START during teardown converges back to streaming", async () => {
     const h = makeHarness();
-    h.gates.leave = deferred<true>(); // hold teardown so START lands mid-stopping
+    h.gates.leave = deferred<true>();
     const actor = createHarnessActor(h);
     actor.start();
 
     actor.send({ type: "SET_DESIRED", desired: true });
     await waitFor(actor, (s) => s.context.frameSink !== null);
 
-    // Begin teardown, then immediately ask for it back up.
     actor.send({ type: "SET_DESIRED", desired: false });
     await waitFor(actor, (s) => s.context.frameSink === null);
     actor.send({ type: "SET_DESIRED", desired: true });
 
-    // Let teardown finish; the orchestrator must re-establish the stream.
     h.gates.leave.resolve(true);
     await waitFor(actor, (s) => s.context.frameSink !== null, {
       timeout: 2000,
@@ -130,20 +124,47 @@ describe("orchestrator machine", () => {
     actor.stop();
   });
 
-  test("a settle while undesired stays down (no spurious restart)", async () => {
+  test("VOICE_TARGET_MOVED forwarded during teardown rejoins the new channel", async () => {
+    const h = makeHarness();
+    h.gates.leave = deferred<true>();
+    const actor = createHarnessActor(h);
+    actor.start();
+
+    actor.send({ type: "SET_DESIRED", desired: true });
+    await waitFor(actor, (s) => s.context.frameSink !== null);
+    expect(h.joinTargets).toEqual(["channel-1"]);
+
+    // Begin teardown (leave gated open), then move the target while the child is stopping.
+    actor.send({ type: "SET_DESIRED", desired: false });
+    await waitFor(actor, (s) => s.context.frameSink === null);
+    actor.send({
+      type: "VOICE_TARGET_MOVED",
+      target: { guildId: "guild-1", channelId: "channel-2" },
+    });
+    actor.send({ type: "SET_DESIRED", desired: true });
+
+    // Finish teardown — the reconciler restarts and must join the NEW channel, not the stale one.
+    h.gates.leave.resolve(true);
+    await waitFor(actor, (s) => s.context.frameSink !== null, {
+      timeout: 2000,
+    });
+    expect(actor.getSnapshot().context.voiceTarget.channelId).toBe("channel-2");
+    expect(h.joinTargets.at(-1)).toBe("channel-2");
+    actor.stop();
+  });
+
+  test("external detach terminates and clears desired state", async () => {
     const h = makeHarness();
     const actor = createHarnessActor(h);
     actor.start();
 
     actor.send({ type: "SET_DESIRED", desired: true });
     await waitFor(actor, (s) => s.context.frameSink !== null);
-    actor.send({ type: "SET_DESIRED", desired: false });
-    await waitFor(actor, (s) => s.context.frameSink === null);
+    actor.send({ type: "STREAMER_VOICE_DETACHED", reason: "kicked" });
 
-    // Give the machine room to (incorrectly) restart, then assert it didn't.
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    expect(actor.getSnapshot().context.frameSink).toBeNull();
+    await waitFor(actor, (s) => s.context.teardownReason === "voiceDetached");
     expect(actor.getSnapshot().context.desired).toBe(false);
+    expect(actor.getSnapshot().context.frameSink).toBeNull();
     actor.stop();
   });
 });

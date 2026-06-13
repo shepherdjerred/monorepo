@@ -238,6 +238,7 @@ export function createMinecraftShuxinApp(chart: Chart) {
           "CreateNamespace=true",
           "ServerSideApply=true",
           "RespectIgnoreDifferences=true",
+          "ApplyOutOfSyncOnly=true",
         ],
       },
     },
