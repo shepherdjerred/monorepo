@@ -5,21 +5,36 @@ yt-dlp/URL sources into a Discord voice channel.
 
 ## Architecture
 
-One Bun process, two Discord identities, one XState machine as the single source of truth:
+One Bun process serving **many servers** — and **many voice channels per server** — with a single
+command bot plus a **pool of streamer userbots**:
 
-- **Command bot** (`discord.js`, bot token) — receives commands, validates input, renders
-  status/queue embeds. Translates commands into machine events. ToS-clean control plane.
-- **Streamer** (`discord.js-selfbot-v13` + `@shepherdjerred/discord-video-stream`, user token) —
-  owns the voice connection + ffmpeg; driven entirely by the machine's invoked actors. The library
-  is our in-repo fork of `@dank074/discord-video-stream` (adds a seekable player; see `FORK.md`).
-  Live `/stream volume` and `/stream seek` act on the active player as side-channels.
+- **Command bot** (`discord.js`, bot token) — one identity, registers **global** slash commands and
+  routes each interaction (by `interaction.guildId` + the issuer's current voice channel) to the
+  right session. Renders status/queue embeds. ToS-clean control plane (`src/discord/command-bot.ts`).
+- **Userbot pool** (`src/pool/userbot-pool.ts`) — N `discord.js-selfbot-v13` accounts
+  (`USER_TOKENS`, comma-separated). Each logs in at boot and snapshots its guild membership from
+  `client.guilds.cache`. A play **acquires** a free userbot that is a member of the requesting guild;
+  when none is free the bot replies "No stream bots are available right now." One userbot streams in
+  at most one voice channel at a time, so the pool size bounds concurrent streams.
+- **Session manager** (`src/session/session-manager.ts`) — one playback session per
+  `(guild, voice channel)`, each an isolated XState actor bound to the acquired userbot's streamer.
+  Sessions are independent (separate queues/loop/volume) and release their userbot when the channel
+  goes idle. The bot joins the **issuer's current voice channel**; status posts to the channel the
+  command was invoked in.
+- **Streamer** (`src/streamer/streamer.ts`, `@shepherdjerred/discord-video-stream`) — owns one
+  selfbot's voice connection + ffmpeg, driven by the machine's invoked actors. The library is our
+  in-repo fork of `@dank074/discord-video-stream` (seekable player; see `FORK.md`). Live
+  `/stream volume` and `/stream seek` act on the active player as side-channels.
 - **Playback machine** (`src/machine/`) — XState v5. Models the lifecycle
-  (`idle → joining → resolving → streaming{playing,paused} → leaving`, plus `failed`/retry).
-  All I/O lives in invoked actors; the machine itself is pure and unit-tested.
+  (`idle → joining → resolving → streaming → … → waiting → leaving`, plus `failed`/retry). All I/O
+  lives in invoked actors; the machine itself is pure and unit-tested. One actor per active session.
 
-The two-identity split is necessary because Discord bots cannot stream video to voice — only
-user accounts can (via the unofficial selfbot lib). Modeled on `packages/discord-plays-pokemon`,
-but we stream files/URLs directly with ffmpeg instead of automating a browser.
+Resume: per-`(guild, channel)` state files `playback-state-<guildId>-<channelId>.json` (schema v2).
+On restart the session manager re-acquires a member-userbot per persisted session and resumes it.
+
+The bot/userbot split is necessary because Discord bots cannot stream video to voice — only user
+accounts can (via the unofficial selfbot lib). Modeled on `packages/discord-plays-pokemon`, but we
+stream files/URLs directly with ffmpeg instead of automating a browser.
 
 ## Layout
 
@@ -33,10 +48,12 @@ but we stream files/URLs directly with ffmpeg instead of automating a browser.
   a track).
 - `src/metadata/` — `tmdb.ts`: optional TMDB poster lookup for the now-playing embed (local files).
   Best-effort + in-process cache; disabled unless `TMDB_API_KEY` is set.
-- `src/discord/` — command bot client + commands. `status-reporter.ts` posts the now-playing line
-  (with a TMDB poster embed for local files when configured). `/stream chapters` lists chapters;
-  `/stream chapter <n>` seeks to one (reuses the live seek side-channel).
-- `src/streamer/` — selfbot + `@dank074` stream driver (PR B).
+- `src/discord/` — command bot client + commands + routing. `status-reporter.ts` posts the
+  now-playing line (with a TMDB poster embed for local files when configured). `/stream chapters`
+  lists chapters; `/stream chapter <n>` seeks to one (reuses the live seek side-channel).
+- `src/pool/` — userbot pool (login, membership snapshot, acquire/release).
+- `src/session/` — per-`(guild, channel)` session manager (actor lifecycle, resume, checkpointing).
+- `src/streamer/` — selfbot + `@dank074` stream driver.
 - `src/observability/` — `metrics.ts` (`prom-client` registry + `Bun.serve` `/metrics`),
   `stream-observer.ts` (maps the fork's `StreamObserver` callbacks → metrics/logs).
 - `src/util/` — structured logger, errors.

@@ -19,6 +19,8 @@ Both Samsung 990 PRO 4 TB NVMes are at 7% and 14% wear in under a year. Earlier 
 
 **Combined CI (Buildkite + Dagger) is ~80% of all NVMe wear.** Observability stack (Loki, Prometheus, Postgres, ClickHouse) combined is < 1% — earlier "retention reduction" recommendations were wrong.
 
+> **Update 2026-06-12**: the Plex figure was a transient. The plex-pvc wrote ~400–490 GB/day only during Apr 17–22 (~2.7 TB total — signature of a one-time library-wide analysis/thumbnail pass), and ~0.3 GB/day before and since. This doc happened to be written mid-burst. Treat lever #2 below as resolved; steady-state CI share of wear is therefore ~85–90%.
+
 ## Measured byte accounting
 
 ### Both NVMes, 24h total
@@ -95,7 +97,7 @@ Note: `node_zfs_zil_zil_itx_metaslab_normal_bytes` over 24h = 600 GB across both
 ## Levers that actually reduce wear, ranked
 
 1. **Cut CI run frequency** — Buildkite + Dagger cache is ~80% of wear. Halving CI runs ~doubles drive life.
-2. **Investigate Plex PVC at 471 GB/day** — 7× full-PVC rewrite per day on a 64 GiB volume is suspicious. Probably transcoder cache or metadata DB rewriting. Redirect to tmpfs or the HDD pool.
+2. ~~**Investigate Plex PVC at 471 GB/day**~~ — **resolved 2026-06-12**: one-off Apr 17–22 burst, ~0.3 GB/day steady state. No action needed.
 3. **Move CI agents off `torvalds`** — put Buildkite agent nodes on different hardware (dedicated CI box with its own SSD lifecycle) so this node's NVMes outlast the CI churn.
 4. **Tune Dagger cache policy** — not GC, but _keep_ the cache warm (higher hit rate = fewer rebuild writes). Already mostly hot.
 
