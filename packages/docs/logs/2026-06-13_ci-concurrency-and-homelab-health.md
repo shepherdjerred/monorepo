@@ -2,8 +2,8 @@
 
 ## Status
 
-Partially Complete — `max-in-flight` bump implemented (this PR); build-focus prioritization
-and Buildkite-in-Tofu are scoped recommendations awaiting decision.
+Partially Complete — `max-in-flight` bump **and** build-age job priority implemented (PR #1162);
+Buildkite-in-Tofu written up as a plan (`plans/2026-06-13_buildkite-opentofu.md`) awaiting decision.
 
 ## Questions
 
@@ -19,14 +19,14 @@ and Buildkite-in-Tofu are scoped recommendations awaiting decision.
 - **Concurrency: bumped `max-in-flight` 20 → 24** (this PR). Kueue (resource gate) was **not**
   saturated — 0 pending workloads, 5.15/7.5 CPU used. The real ceiling is node CPU
   (**93 %/24h**, load1 ≈ 55 on 32 cores) feeding **one shared Dagger engine**.
-- **Build-focus:** the 20 slots are **cluster-wide across all concurrent branch builds**, so
-  ~6 branches interleave and each crawls (build #3930 took 27 min). Fix = **Buildkite job
-  `priority` by build age** in the CI generator so the oldest build drains first. Recommended,
-  not yet done.
-- **Tofu:** the `buildkite/buildkite` provider can codify pipelines/clusters/queues/tokens, but
-  the concurrency + focus knobs live in **cdk8s** (`max-in-flight`, Kueue) and the **CI
-  generator** (priority) — Tofu doesn't manage those. Worth doing for IaC hygiene, orthogonal
-  to the throughput goals.
+- **Build-focus (implemented):** the slots are **cluster-wide across all concurrent branch
+  builds**, so ~6 branches interleaved and each crawled (build #3930 took 27 min). Fixed with
+  **build-age job `priority`** (`scripts/ci/src/lib/build-age-priority.ts`) so the oldest build
+  drains first (FIFO-by-build).
+- **Tofu (plan written):** the `buildkite/buildkite` provider can codify pipelines/clusters/
+  queues/tokens, but the concurrency + focus knobs live in **cdk8s** (`max-in-flight`, Kueue)
+  and the **CI generator** (priority) — Tofu doesn't manage those. Plan in
+  `plans/2026-06-13_buildkite-opentofu.md`: IaC hygiene, orthogonal to throughput.
 
 ## How concurrency is bounded (verified live)
 
@@ -67,18 +67,22 @@ The 24-slot cap is **cluster-wide**, so when ~6 branch builds each have hundreds
 with dependency waves, the slots interleave → all builds progress a little, none finishes fast.
 Example: build #3930 ran 21:32→21:59 (**27 min**) while sharing slots with 5 peers.
 
-**Fix (recommended, not yet implemented): Buildkite job `priority` by build age.**
+**Fix (implemented in PR #1162): Buildkite job `priority` by build age.**
 
 - agent-stack-k8s watches the Buildkite Agent API for scheduled jobs; the Agent API dispatches
   **higher `priority` first**. The CI generator already uses `priority: 1` to push deploy/publish
   steps ahead within a build (`scripts/ci/src/steps/{images,helm,sites,argocd,tofu,…}.ts`).
-- Extend the generator to set `priority` as a function of `BUILDKITE_BUILD_NUMBER` so an older
-  build's jobs outrank a newer build's (e.g. `priority = -(BUILDKITE_BUILD_NUMBER) + stepTypeBump`).
-  The controller fills its 24 slots with the oldest build's ready jobs first, spilling into the
-  next build only when the oldest has fewer than 24 runnable jobs (no idle slots wasted).
-- Net effect: FIFO-by-build — finish #3930 fully, then #3935, etc. — instead of round-robin.
-- Caveats: preserve the existing intra-build `priority: 1` ordering inside the formula; behavior
-  change for all builds, so review/observe before/after on the Agent & Job Activity chart.
+- New `scripts/ci/src/lib/build-age-priority.ts` post-processes the generated pipeline in
+  `main.ts`, subtracting `BUILDKITE_BUILD_NUMBER * 100` from every command step's priority. An
+  older build (smaller number) outranks a newer one across the whole queue; the `*100` scale
+  preserves the existing intra-build deploy-first tier (priorities 0/1) as the low-order tiebreak.
+  No-op when `BUILDKITE_BUILD_NUMBER` is unset (local generation).
+- The controller fills its 24 slots with the oldest build's ready jobs first, spilling into the
+  next build only when the oldest has fewer than 24 runnable jobs (no idle slots wasted). Net
+  effect: FIFO-by-build — finish #3930 fully, then #3935 — instead of round-robin.
+- Verified: build #3954 buildAll → all 199 command steps at −395400 (deploy steps −395399);
+  8 unit tests in `build-age-priority.test.ts`. **Observe before/after on the Agent & Job
+  Activity chart** post-merge.
 
 ## Should we add Buildkite to OpenTofu?
 
@@ -106,16 +110,21 @@ Tofu to deliver those.
   peaks 90 °C; mem peaks 82 %; load1 ≈ 55/32; iowait 1.9 %.
 - Diagnosed the "spread thin" cause: cluster-wide 24-slot cap shared across ~6 concurrent
   **branch** builds with dependency waves (confirmed via BK API build list).
-- **Implemented:** `max-in-flight` 20 → 24 in `buildkite.ts` (fits the current Kueue quota; no
-  Kueue change needed). homelab typecheck passes.
+- **Implemented (item 1):** `max-in-flight` 20 → 24 in `buildkite.ts` (fits the current Kueue
+  quota; no Kueue change needed).
+- **Implemented (item 2):** build-age job priority — `scripts/ci/src/lib/build-age-priority.ts`
+  - wiring in `main.ts` + 8 unit tests. FIFO-by-build so the oldest build drains first.
+- **Wrote (item 3):** `plans/2026-06-13_buildkite-opentofu.md` — full plan for a
+  `src/tofu/buildkite/` stack (import existing pipeline/cluster/token; agent-token coordination
+  is the key risk). Awaiting owner decision on 3 open questions.
+- Verified: scripts/ci typecheck + 245 tests pass; homelab typecheck + 256 tests + helm-lint pass.
 
 ### Remaining
 
-- **Build-focus (item 2):** add build-age `priority` to the CI generator (`scripts/ci/src/steps/`).
-  Awaiting go-ahead — it changes scheduling behavior for all builds.
-- **Tofu (item 3):** new `packages/homelab/src/tofu/buildkite/` stack to codify the pipeline,
-  cluster queue, and agent token. Awaiting decision; needs a Buildkite API token (GraphQL
-  scopes) and a state import.
+- **Tofu (item 3):** execute the plan once the owner answers the 3 open decisions (import vs
+  rotate the agent token; scope; single vs multi-queue).
+- **Observe item 2 post-merge:** confirm on the Agent & Job Activity chart that builds now finish
+  FIFO instead of interleaving.
 - If pushing past `max-in-flight` ~30: also raise Kueue CPU `nominalQuota` (request headroom
   exists; watch CPU package temp 90 °C and load1).
 
