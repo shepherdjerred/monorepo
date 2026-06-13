@@ -349,3 +349,55 @@ describe("GoalManager final report", () => {
     await manager.shutdown();
   });
 });
+
+describe("GoalManager concurrency", () => {
+  const originalOpenAiKey = Bun.env.OPENAI_API_KEY;
+
+  beforeEach(() => {
+    Bun.env.OPENAI_API_KEY = "test-key";
+  });
+
+  afterEach(() => {
+    if (originalOpenAiKey === undefined) {
+      delete Bun.env.OPENAI_API_KEY;
+    } else {
+      Bun.env.OPENAI_API_KEY = originalOpenAiKey;
+    }
+  });
+
+  test("only spawns one process for near-simultaneous starts", async () => {
+    const runtimeDirectory = await createRuntimeDirectory();
+    const processes: ReturnType<typeof makeProcess>[] = [];
+    const manager = new GoalManager({
+      config: makeGoalConfig(runtimeDirectory),
+      controlToken: "token",
+      spawner: () => {
+        const process = makeProcess();
+        processes.push(process);
+        return process;
+      },
+      sendMessage: noopSendMessage,
+      now: () => new Date("2026-06-13T00:00:00.000Z"),
+    });
+
+    // Fire both without awaiting the first: the second runs while the first is
+    // still inside its pre-spawn await window. The synchronous lock must make
+    // the second bail before it can spawn a second (orphaned) process.
+    const firstPromise = manager.startGoal({
+      goal: "Reach Petalburg",
+      requesterId: "user-a",
+      channelId: "channel",
+    });
+    const secondPromise = manager.startGoal({
+      goal: "Buy potions",
+      requesterId: "user-b",
+      channelId: "channel",
+    });
+    const [first, second] = await Promise.all([firstPromise, secondPromise]);
+
+    const kinds = [first.kind, second.kind].toSorted();
+    expect(kinds).toEqual(["busy", "started"]);
+    expect(processes).toHaveLength(1);
+    await manager.shutdown();
+  });
+});
