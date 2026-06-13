@@ -64,3 +64,28 @@ export const streamActive = new Gauge({
   help: "1 while a Go-Live broadcast is running and accepting frames, else 0",
   registers: [registry],
 });
+
+export const frameHookErrorsTotal = new Counter({
+  name: "emulator_frame_hook_errors_total",
+  help: "Exceptions thrown by frame hooks (isolated from the frame loop)",
+  registers: [registry],
+});
+
+export const gameEventsTotal = new Counter({
+  name: "game_events_total",
+  help: "In-game events detected by the memory watcher, by kind",
+  labelNames: ["kind"],
+  registers: [registry],
+});
+
+export const snapshotInvalidTotal = new Counter({
+  name: "game_snapshot_invalid_total",
+  help: "Polls where the game state was unreadable (no save loaded, torn read)",
+  registers: [registry],
+});
+
+export const notificationSendErrorsTotal = new Counter({
+  name: "notification_send_errors_total",
+  help: "Failures sending game event notifications to Discord",
+  registers: [registry],
+});
