@@ -65,33 +65,17 @@ op run --env-file=.env -- tofu -chdir=tailscale apply
 - Operator still works: trigger/observe a new `tag:k8s` ingress proxy coming up healthy.
 - CI/state: confirm `tofu`/ArgoCD can still reach `seaweedfs-s3.tailnet` and the k8s API.
 
-## 5. Enable CI drift detection
+## 5. Enable CI drift detection — DONE
 
-The OAuth secrets already exist in CI (`buildkite-ci-secrets` → `TAILSCALE_OAUTH_CLIENT_ID`/`SECRET`, added in step 1 — reach the agent via the existing `envFrom`). Remaining work is the code wiring:
+The OAuth secrets exist in CI (`buildkite-ci-secrets` → `TAILSCALE_OAUTH_CLIENT_ID`/`SECRET`, step 1, reached via the existing `envFrom`), and the code wiring is in place:
 
-1. `scripts/ci/src/catalog.ts` — add to the list + label:
+1. `scripts/ci/src/catalog.ts` — `tailscale` added to `TOFU_STACKS` + `TOFU_STACK_LABELS` (`"Tailscale ACLs"`).
+2. `scripts/ci/src/steps/tofu.ts` — both `tofuStackStep` and `tofuPlanStep` pass `--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID` / `--tailscale-oauth-client-secret env:TAILSCALE_OAUTH_CLIENT_SECRET` for `stack === "tailscale"`.
+3. `.dagger/src/release.ts` (`tofuApplyHelper`/`tofuPlanHelper`) + `.dagger/src/index.ts` (`tofuApply`/`tofuPlan`) — optional `tailscaleOauthClientId` / `tailscaleOauthClientSecret` `Secret` params wired via `.withSecretVariable("TAILSCALE_OAUTH_CLIENT_ID"/"…_SECRET", …)`, mirroring `cloudflareApiToken`.
 
-   ```ts
-   export const TOFU_STACKS = [
-     "cloudflare",
-     "github",
-     "seaweedfs",
-     "tailscale",
-   ] as const;
-   // TOFU_STACK_LABELS: add  tailscale: "Tailscale ACLs",
-   ```
+Verified locally: `scripts/ci` typecheck + 57 pipeline tests pass; `dagger call tofu-apply --help` exposes the two new flags.
 
-2. `scripts/ci/src/steps/tofu.ts` — in both `tofuStackStep` and `tofuPlanStep`, pass the OAuth secrets for the tailscale stack:
-
-   ```ts
-   stack === "tailscale"
-     ? "--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID --tailscale-oauth-client-secret env:TAILSCALE_OAUTH_CLIENT_SECRET"
-     : "",
-   ```
-
-3. `.dagger/src/release.ts` (`tofuApplyHelper`/`tofuPlanHelper`) + `.dagger/src/index.ts` (`tofuApply`/`tofuPlan`) — add optional `tailscaleOauthClientId` / `tailscaleOauthClientSecret` `Secret` params and `.withSecretVariable("TAILSCALE_OAUTH_CLIENT_ID", …)` / `…_SECRET`, mirroring the existing `cloudflareApiToken` wiring.
-
-After this, PR builds run `tofu plan` (drift) and `main` runs `tofu apply` for the tailscale stack, same as the other modules.
+> ⚠️ **First apply now happens via CI on merge.** With `tailscale` in `TOFU_STACKS`, PR builds run `tofu plan` (`tofu-plan-tailscale`, drift preview — review it on this PR) and **`main` builds run `tofu apply -auto-approve` (`tofu-tailscale`)**. So merging this to `main` performs the first apply (the `overwrite_existing_content` policy swap) automatically — there is no separate manual step 3 anymore. The plan was validated as behaviour-preserving (allow-all → deny-by-default only), and the PR plan step is the pre-merge review. If you want to apply manually first anyway, run step 3 before merging; CI will then just reconcile against the existing state.
 
 ## 6. Phase C — finer, per-service hardening (follow-up)
 

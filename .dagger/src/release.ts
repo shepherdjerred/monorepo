@@ -164,6 +164,8 @@ export function tofuApplyHelper(
   githubToken: Secret | null = null,
   cloudflareAccountId: Secret | null = null,
   cloudflareApiToken: Secret | null = null,
+  tailscaleOauthClientId: Secret | null = null,
+  tailscaleOauthClientSecret: Secret | null = null,
   dryrun = false,
 ): Container {
   let container = dag
@@ -195,6 +197,20 @@ export function tofuApplyHelper(
     container = container.withSecretVariable(
       "CLOUDFLARE_API_TOKEN",
       cloudflareApiToken,
+    );
+  }
+
+  if (tailscaleOauthClientId != null) {
+    container = container.withSecretVariable(
+      "TAILSCALE_OAUTH_CLIENT_ID",
+      tailscaleOauthClientId,
+    );
+  }
+
+  if (tailscaleOauthClientSecret != null) {
+    container = container.withSecretVariable(
+      "TAILSCALE_OAUTH_CLIENT_SECRET",
+      tailscaleOauthClientSecret,
     );
   }
 
@@ -215,6 +231,8 @@ export function tofuPlanHelper(
   githubToken: Secret | null = null,
   cloudflareAccountId: Secret | null = null,
   cloudflareApiToken: Secret | null = null,
+  tailscaleOauthClientId: Secret | null = null,
+  tailscaleOauthClientSecret: Secret | null = null,
   dryrun = false,
 ): Container {
   let container = dag
@@ -246,6 +264,20 @@ export function tofuPlanHelper(
     container = container.withSecretVariable(
       "CLOUDFLARE_API_TOKEN",
       cloudflareApiToken,
+    );
+  }
+
+  if (tailscaleOauthClientId != null) {
+    container = container.withSecretVariable(
+      "TAILSCALE_OAUTH_CLIENT_ID",
+      tailscaleOauthClientId,
+    );
+  }
+
+  if (tailscaleOauthClientSecret != null) {
+    container = container.withSecretVariable(
+      "TAILSCALE_OAUTH_CLIENT_SECRET",
+      tailscaleOauthClientSecret,
     );
   }
 

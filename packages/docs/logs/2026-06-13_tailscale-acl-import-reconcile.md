@@ -33,11 +33,11 @@ Net effect of a first apply is now only the intended change: **allow-all → den
 - Created dedicated `acl`-scoped Tailscale OAuth client; stored in `Buildkite CI Secrets` 1P item (CI + local `op run` both resolve it). Only `op://` refs committed.
 - Reconciled `packages/homelab/src/tofu/tailscale/acl.tf`: removed invalid member test, preserved SSH-to-self, dropped Funnel, normalized `autogroup:members`. Validated clean against Tailscale `/acl/validate`.
 - Added `op://` refs to `src/tofu/.env`; updated the runbook.
+- **CI wiring done** (runbook step 5): added `tailscale` to `TOFU_STACKS` + label; wired `--tailscale-oauth-client-id/-secret` in `scripts/ci/src/steps/tofu.ts` (apply + plan); added `tailscaleOauthClientId`/`tailscaleOauthClientSecret` `Secret` params to `tofuApply`/`tofuPlan` + helpers in `.dagger`. Verified: `scripts/ci` typecheck + 57 tests pass; `dagger call tofu-apply --help` exposes the flags.
 
 ### Remaining
 
-- **Apply** the module (runbook step 3): `op run --env-file=.env -- tofu -chdir=tailscale plan|apply` from `packages/homelab/src/tofu/`. First apply creates real S3 state and flips the tailnet to deny-by-default.
-- **CI wiring** (runbook step 5): add `tailscale` to `TOFU_STACKS`, pass the OAuth secrets in `scripts/ci/src/steps/tofu.ts`, wire `.dagger`. Secret prerequisite is already met.
+- **First apply now happens via CI on merge** — `tofu-plan-tailscale` previews on PRs; merging to `main` runs `tofu-tailscale` (`tofu apply -auto-approve`), performing the first `overwrite_existing_content` swap. Review the PR plan step before merging; optionally run the manual apply first for extra caution.
 - Phase C per-service tagging (argocd/grafana admins-only) — separate follow-up.
 
 ### Caveats

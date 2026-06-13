@@ -570,6 +570,16 @@ describe("buildPipeline", () => {
         } else {
           expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
         }
+        if (s.key === "tofu-plan-tailscale") {
+          expect(s.command).toContain(
+            "--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID",
+          );
+          expect(s.command).toContain(
+            "--tailscale-oauth-client-secret env:TAILSCALE_OAUTH_CLIENT_SECRET",
+          );
+        } else {
+          expect(s.command).not.toContain("TAILSCALE_OAUTH_CLIENT_ID");
+        }
       }
     });
 
@@ -909,6 +919,13 @@ describe("buildPipeline", () => {
           expect(s.command).toContain("--github-token env:TOFU_GITHUB_TOKEN");
         } else {
           expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
+        }
+        if (s.key === "tofu-tailscale" || s.key === "tofu-plan-tailscale") {
+          expect(s.command).toContain(
+            "--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID",
+          );
+        } else {
+          expect(s.command).not.toContain("TAILSCALE_OAUTH_CLIENT_ID");
         }
       }
 
