@@ -12,6 +12,7 @@ const config = [
         "src/game/events/diff.test.ts",
         "src/game/events/snapshot.test.ts",
         "src/game/events/watcher.test.ts",
+        "src/game/events/saves.test.ts",
         "src/discord/event-notifier.test.ts",
         "src/emulator/buttons.test.ts",
         "src/emulator/emulator-symbols.integration.test.ts",
