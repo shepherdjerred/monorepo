@@ -18,6 +18,7 @@ function emptyAffected(): AffectedPackages {
     packages: new Set(),
     buildAll: false,
     homelabChanged: false,
+    tofuChanged: false,
     cooklangChanged: false,
     resumeChanged: false,
     ciImageChanged: false,
@@ -36,6 +37,7 @@ function fullBuild(): AffectedPackages {
     packages: new Set(ALL_PACKAGES),
     buildAll: true,
     homelabChanged: true,
+    tofuChanged: true,
     cooklangChanged: true,
     resumeChanged: true,
     ciImageChanged: false,
@@ -592,6 +594,10 @@ describe("buildPipeline", () => {
       expect(planSteps.length).toBeGreaterThan(0);
       for (const s of planSteps) {
         expect(s.if).toBe("build.branch != pipeline.default_branch");
+        // Plan is read-only and the backends have no state locking, so plan
+        // steps must NOT carry a concurrency group — they run in parallel.
+        expect(s.concurrency).toBeUndefined();
+        expect(s.concurrency_group).toBeUndefined();
         if (s.key === "tofu-plan-github") {
           expect(s.command).toContain("--github-token env:TOFU_GITHUB_TOKEN");
         } else {
@@ -950,9 +956,14 @@ describe("buildPipeline", () => {
       }
       collect(pipeline.steps);
 
-      const tofuSteps = allSteps.filter((s) => s.key.startsWith("tofu-"));
-      expect(tofuSteps.length).toBeGreaterThan(0);
-      for (const s of tofuSteps) {
+      // Only APPLY steps (tofu-<stack>) carry a concurrency group — they write
+      // state. PLAN steps (tofu-plan-<stack>) are read-only and intentionally
+      // have none (asserted in "tofu plan steps are PR-only").
+      const tofuApplySteps = allSteps.filter(
+        (s) => s.key.startsWith("tofu-") && !s.key.startsWith("tofu-plan-"),
+      );
+      expect(tofuApplySteps.length).toBeGreaterThan(0);
+      for (const s of tofuApplySteps) {
         expect(s.concurrency).toBe(1);
         expect(s.concurrency_group).toContain("monorepo/tofu-");
         if (s.key === "tofu-github") {
@@ -1092,6 +1103,35 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("homelab-helm-push");
       expect(groupKeys).toContain("homelab-tofu");
       expect(groupKeys).not.toContain("cooklang-release");
+    });
+  });
+
+  describe("tofu plan gating (PR builds)", () => {
+    it("omits the tofu plan group for a cdk8s-only homelab PR", () => {
+      // homelab changed (e.g. cdk8s) but no tofu source files changed
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.homelabChanged = true;
+      affected.tofuChanged = false;
+
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(affected),
+      );
+      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
+      expect(groupKeys).not.toContain("homelab-tofu-plan");
+    });
+
+    it("includes the tofu plan group when tofu source changed", () => {
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.homelabChanged = true;
+      affected.tofuChanged = true;
+
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(affected),
+      );
+      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
+      expect(groupKeys).toContain("homelab-tofu-plan");
     });
   });
 

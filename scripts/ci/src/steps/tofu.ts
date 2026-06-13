@@ -75,8 +75,11 @@ function tofuPlanStep(stack: string): BuildkiteStep {
         .filter(Boolean)
         .join(" ") + DRYRUN_FLAG,
     timeout_in_minutes: 15,
-    concurrency: 1,
-    concurrency_group: `monorepo/tofu-plan-${stack}`,
+    // No concurrency group: `tofu plan` is read-only (never writes state) and the
+    // S3 backends configure no locking (no dynamodb_table / use_lockfile), so
+    // concurrent plans across branches are safe. Serializing them here only made
+    // green PRs queue for an hour behind every other branch's plans. The `apply`
+    // step (tofuStackStep) keeps concurrency:1 — applies DO write state.
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [
