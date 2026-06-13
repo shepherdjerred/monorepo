@@ -223,6 +223,7 @@ export function createMinecraftSjerredApp(chart: Chart) {
           "CreateNamespace=true",
           "ServerSideApply=true",
           "RespectIgnoreDifferences=true",
+          "ApplyOutOfSyncOnly=true",
         ],
       },
     },

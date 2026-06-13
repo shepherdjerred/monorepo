@@ -361,6 +361,7 @@ echo "Done."`,
           "CreateNamespace=true",
           "ServerSideApply=true",
           "RespectIgnoreDifferences=true",
+          "ApplyOutOfSyncOnly=true",
         ],
       },
       // Kubernetes injects fields (apiVersion, kind, volumeMode, status) into

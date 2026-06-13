@@ -242,6 +242,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
           "CreateNamespace=true",
           "ServerSideApply=true",
           "RespectIgnoreDifferences=true",
+          "ApplyOutOfSyncOnly=true",
         ],
       },
     },
