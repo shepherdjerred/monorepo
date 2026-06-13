@@ -132,3 +132,17 @@ Add to `SCHEDULES` (mirror the `helm-types-weekly-refresh` entry):
 - **Behavioral change:** the old BK job force-pushed one rolling `auto/update-readmes` branch; this opens a fresh `chore/readme-refresh-<sha>` PR each week on drift (the scout/helm pattern).
 - The cog blocks call `bunx @openai/codex` only for brand-new packages lacking a committed `_summary.md`; needs the pod's `OPENAI_API_KEY` (already present) + network. Steady-state runs make no Codex calls.
 - `git status --porcelain` parsing deliberately avoids the leading `.trim()` bug in `changedFilesInPaths` (which mangles status lines whose first column is a space, i.e. unstaged-only changes) since this job stages scattered exact paths, not a directory.
+
+## Testing & generation-quality fixes — 2026-06-13 (cont.)
+
+Ran the actual generation locally (blobless clone + `cog -r`) before relying on the workflow. This validated the infra **and surfaced three real problems the move alone wouldn't have caught**:
+
+- **`cog --version` doesn't exist** in cogapp 3.6.0 (`option --version not recognized`) → the `withCogapp` image smoke check would have failed the temporal-worker build. Fixed to `cog --help` (commit `8af0d035c`).
+- **codex contaminated ~8/21 summaries.** `codex exec` runs in the repo root, reads `AGENTS.md`, obeys "every session must produce a session log," and dumps `**Done**/**Remaining**/**Caveats**` meta into the summary (e.g. _"Workspace is read-only, so no session log was added"_). Fixed by passing `-c project_doc_max_bytes=0` in all three README cog blocks (validated: trmnl-dashboard summary went CONTAMINATED→CLEAN).
+- **cog output fails the prettier gate** (e.g. a missing blank line after `]]]-->`), so auto-PRs would fail CI. The activity now runs `bun install --frozen-lockfile` + `bunx prettier --write` on the regenerated files before opening the PR (mirrors helm-types). markdownlint only checks the root `README.md` (`archive/**`, `practice/**`, `**/_summary.md` are ignored); clean single-paragraph summaries don't trip MD032.
+
+**Seeded 23 `_summary.md`** (commits `47e34f5f8` + `529c5a1b4`) so the first scheduled run is ~a no-op rather than a 21-call codex batch. All summaries spot-checked for accuracy: terraform-provider-asuswrt initially got temporal's summary (codex wandered) — regenerated correctly; cooklang-for-obsidian had a stale "Bazel" mention — regenerated clean.
+
+### Convergence (not instant idempotency)
+
+`cog` only ever **adds** a missing `_summary.md`, never removes one. Packages near the 170-char quality bar (e.g. `archive/tips`, `practice/langchain`) pass codex some runs and fail others, so the workflow is **convergent**: the first few weekly runs may open a small PR adding a borderline summary, then it settles. Six trivial dirs (`practice/Exercism`, `practice/hson`, `archive/devcontainers-features`, `archive/eng211-research-paper`, `archive/is-quarantine-over-yet`, `archive/siphon`) consistently fail the bar and render "_No description available._" — stable, left as-is. These trivial dirs also cost ~6 codex calls per run (cog retries the uncached ones); acceptable for a weekly job, but a future improvement could cache a sentinel so they're not retried.
