@@ -312,6 +312,15 @@ export async function createPrometheusApp(chart: Chart) {
         externalUrl: "https://prometheus.tailnet-1a49.ts.net",
         retention: "365d", // Keep data for 1 year
         retentionSize: "200GB", // Safety limit - keep headroom below PVC usage alerts
+        // Baseline request so Prometheus isn't BestEffort (first evicted under
+        // memory pressure). Steady ~1.9Gi, 30d spike to ~17.6Gi (compaction/big
+        // queries) — request covers steady state; deliberately no limit.
+        resources: {
+          requests: {
+            cpu: "200m",
+            memory: "4Gi",
+          },
+        },
         // Required so Tempo's metrics-generator can push service-graph,
         // span-metrics, and local-blocks samples to Prometheus via remote_write.
         enableRemoteWriteReceiver: true,
@@ -387,6 +396,16 @@ export async function createPrometheusApp(chart: Chart) {
           name: "prometheus-grafana",
           namespace: "prometheus",
           jsonPointers: ["/data/admin-password"],
+        },
+        {
+          // The grafana subchart regenerates this image-renderer token on
+          // every helm render (randAlphaNum), so it can never converge.
+          // The live token is the source of truth; never reconcile it.
+          group: "",
+          kind: "Secret",
+          name: "prometheus-grafana-image-renderer",
+          namespace: "prometheus",
+          jsonPointers: ["/data/token"],
         },
         {
           group: "apps",

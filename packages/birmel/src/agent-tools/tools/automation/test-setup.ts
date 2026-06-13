@@ -58,6 +58,8 @@ const dbPush = spawnSync(
     env: {
       HOME: Bun.env["HOME"] ?? "",
       PATH: Bun.env["PATH"] ?? "",
+      TMPDIR: Bun.env["TMPDIR"] ?? "",
+      BUN_INSTALL_CACHE_DIR: Bun.env["BUN_INSTALL_CACHE_DIR"] ?? "",
       DATABASE_URL: `file:${normalizedDbPath}`,
     },
   },

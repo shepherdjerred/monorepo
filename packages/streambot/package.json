@@ -1,0 +1,45 @@
+{
+  "name": "@shepherdjerred/streambot",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun run --watch src/index.ts",
+    "build": "true",
+    "test": "bun test test/",
+    "test:integration": "bun test integration/",
+    "e2e": "bun run e2e/run.ts",
+    "e2e:local": "bun run e2e/local.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@shepherdjerred/discord-video-stream": "file:../discord-video-stream",
+    "discord.js": "^14.26.4",
+    "discord.js-selfbot-v13": "^3.7.1",
+    "prom-client": "^15.1.3",
+    "xstate": "^5.32.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@types/bun": "^1.3.13",
+    "@typescript-eslint/utils": "^8.59.3",
+    "eslint": "^10.3.0",
+    "jiti": "^2.7.0",
+    "typescript": "^6.0.3"
+  },
+  "trustedDependencies": [
+    "@lng2004/node-datachannel",
+    "node-av",
+    "unrs-resolver"
+  ]
+}

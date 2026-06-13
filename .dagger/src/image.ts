@@ -11,9 +11,11 @@ import {
   BUN_CACHE,
   BUILDKITE_CLI_VERSION,
   CADDY_BUILDER_IMAGE,
+  CADDY_S3_PROXY_MODULE,
   CADDY_IMAGE,
   CLAUDE_CODE_VERSION,
   CODEX_CLI_VERSION,
+  EMSCRIPTEN_IMAGE,
   GH_CLI_VERSION,
   GITHUB_MCP_SERVER_VERSION,
   KUBECTL_VERSION,
@@ -76,6 +78,206 @@ function withEditorClis(container: Container): Container {
     .withExec(["claude", "--version"])
     .withExec(["bun", "add", "-g", `@openai/codex@${CODEX_CLI_VERSION}`])
     .withExec(["codex", "--version"]);
+}
+
+/**
+ * Install runtime binaries required by Birmel's Discord music stack.
+ *
+ * discord-player-youtubei shells out through youtube-dl-exec. That path needs
+ * a real Node binary for the package runtime wrapper and Python for yt-dlp itself.
+ * ffmpeg-static and @snazzah/davey are package dependencies, but this helper installs
+ * the system interpreters before dependency install so the later image smoke checks can
+ * prove the final image is voice-playback-ready. curl is needed to fetch the yt-dlp
+ * binary from the release CDN (see installYtDlp) instead of youtube-dl-exec's own
+ * rate-limited api.github.com postinstall.
+ */
+function withBirmelMusicRuntime(container: Container): Container {
+  return container
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "ca-certificates",
+      "curl",
+      "nodejs",
+      "python3",
+    ])
+    .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"])
+    .withExec(["node", "--version"])
+    .withExec(["python3", "--version"]);
+}
+
+/**
+ * Download the architecture-appropriate yt-dlp standalone binary from the GitHub
+ * release CDN and install it (executable) at `destPath`.
+ *
+ * Why this instead of letting the consumer fetch yt-dlp itself: youtube-dl-exec's
+ * postinstall downloads from `https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest`
+ * UNAUTHENTICATED. Shared CI runners share an egress IP, so they exhaust GitHub's
+ * 60 req/hr anonymous REST limit and the build dies with "API rate limit exceeded".
+ * Release-asset downloads (`releases/latest/download/...`) are served from the asset
+ * CDN and are NOT subject to the REST API rate limit, so this path is rate-limit-proof.
+ *
+ * The asset is verified against the release's published SHA2-256SUMS so a swapped or
+ * compromised binary can't be baked in, and curl retries ride out transient 5xx/network
+ * blips. yt-dlp ships per-arch static binaries: yt-dlp_linux (x86_64) and
+ * yt-dlp_linux_aarch64 (arm64); the standalone binary is self-contained (no Python
+ * needed) and works as a drop-in for anything that just spawns the executable.
+ *
+ * Requires curl + ca-certificates in the container (coreutils `install`/`sha256sum`
+ * ship with the Debian base). Runs under dash (`sh`), which lacks `pipefail`, so the
+ * checksum line is extracted with a redirect (not a pipe) — under `set -e` a missing or
+ * renamed asset then aborts the build instead of silently skipping verification.
+ */
+function installYtDlp(container: Container, destPath: string): Container {
+  return container.withExec([
+    "sh",
+    "-c",
+    [
+      "set -e",
+      'arch="$(dpkg --print-architecture)"',
+      'if [ "$arch" = "amd64" ]; then asset=yt-dlp_linux',
+      'elif [ "$arch" = "arm64" ]; then asset=yt-dlp_linux_aarch64',
+      'else echo "unsupported architecture: $arch" >&2; exit 1; fi',
+      "base=https://github.com/yt-dlp/yt-dlp/releases/latest/download",
+      'curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 "$base/$asset" -o "/tmp/$asset"',
+      'curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 "$base/SHA2-256SUMS" -o /tmp/SHA2-256SUMS',
+      "cd /tmp",
+      // `grep > file` (not a pipe): under `set -e` a no-match exits non-zero and aborts,
+      // so a missing/renamed asset can't slip past verification the way `grep | sha256sum`
+      // would (dash has no pipefail).
+      'grep " $asset$" SHA2-256SUMS > "$asset.sha256"',
+      'sha256sum -c "$asset.sha256"',
+      `install -D -m 0755 "/tmp/$asset" "${destPath}"`,
+      // Don't leave the downloaded asset + checksums lying around in the image layer.
+      'rm -f "/tmp/$asset" /tmp/SHA2-256SUMS "/tmp/$asset.sha256"',
+    ].join("\n"),
+  ]);
+}
+
+/**
+ * Runtime for the streambot video-streaming bot. Installs:
+ *  - ffmpeg: prepareStream() spawns the ffmpeg CLI to transcode the source.
+ *  - build-essential / cmake / pkg-config / python3: native build deps for
+ *    node-datachannel (WebRTC) and node-av (libav bindings), which Bun builds
+ *    during `bun install` because they're listed in the package's
+ *    trustedDependencies. These must be present BEFORE the install step.
+ *  - yt-dlp: the system binary streambot shells out to (config default
+ *    /usr/local/bin/yt-dlp). Intentionally tracks the latest release — yt-dlp
+ *    must stay current or YouTube extraction breaks; it is a tool, not a lib.
+ *  - Intel VAAPI stack (intel-media-va-driver iHD + libva): lets ffmpeg
+ *    hardware-encode (h264_vaapi) on the cluster's Intel iGPU. The iHD driver
+ *    lives in Debian non-free, so we enable that component first. Software
+ *    encoding is the runtime fallback if the device/driver is missing.
+ */
+function withStreambotRuntime(container: Container): Container {
+  const withApt = container
+    .withExec([
+      "sh",
+      "-c",
+      // Enable Debian contrib/non-free (where the Intel iHD driver lives). Handles both the
+      // deb822 (`debian.sources`) and legacy one-line (`sources.list`) formats.
+      [
+        "set -e",
+        'if [ -f /etc/apt/sources.list.d/debian.sources ]; then sed -i "s/^Components: main.*/Components: main contrib non-free non-free-firmware/" /etc/apt/sources.list.d/debian.sources; fi',
+        'if [ -f /etc/apt/sources.list ]; then sed -i "s/ main$/ main contrib non-free non-free-firmware/" /etc/apt/sources.list; fi',
+      ].join("\n"),
+    ])
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "ca-certificates",
+      "curl",
+      "python3",
+      "build-essential",
+      "cmake",
+      "pkg-config",
+      "ffmpeg",
+      "libva2",
+      "libva-drm2",
+      "vainfo",
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      // The Intel iHD media driver (intel-media-va-driver-non-free) is x86-only; it has no
+      // arm64 candidate. The production cluster is amd64, so install it there for VAAPI
+      // hardware encoding, and skip it on arm64 (local Mac) builds — which have no Intel GPU
+      // anyway and fall back to software encoding.
+      [
+        "set -e",
+        'if [ "$(dpkg --print-architecture)" = "amd64" ]; then',
+        "  apt-get install -y -qq --no-install-recommends intel-media-va-driver-non-free",
+        "fi",
+      ].join("\n"),
+    ])
+    .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"]);
+  // streambot shells out to a system yt-dlp at /usr/local/bin/yt-dlp (config default).
+  return installYtDlp(withApt, "/usr/local/bin/yt-dlp")
+    .withExec(["ffmpeg", "-version"])
+    .withExec(["yt-dlp", "--version"]);
+}
+
+/**
+ * Runtime deps for the headless discord-plays-* bots (pokemon, mario-kart):
+ *  - ffmpeg + libvips: prepareStream()'s fluent-ffmpeg encode path and sharp.
+ *  - Intel VAAPI stack (libva + iHD driver): lets ffmpeg hardware-encode
+ *    (h264_vaapi) the raw emulator frames on the cluster's Intel iGPU, freeing
+ *    CPU for the software emulation. The iHD driver lives in Debian non-free and
+ *    is x86-only, so we enable non-free first and install it amd64-only; arm64
+ *    (local Mac) builds fall back to software libx264. Mirrors the VAAPI portion
+ *    of withStreambotRuntime.
+ */
+function withDiscordPlaysRuntime(container: Container): Container {
+  return container
+    .withExec([
+      "sh",
+      "-c",
+      // Enable Debian contrib/non-free (where the Intel iHD driver lives). Handles both the
+      // deb822 (`debian.sources`) and legacy one-line (`sources.list`) formats.
+      [
+        "set -e",
+        'if [ -f /etc/apt/sources.list.d/debian.sources ]; then sed -i "s/^Components: main.*/Components: main contrib non-free non-free-firmware/" /etc/apt/sources.list.d/debian.sources; fi',
+        'if [ -f /etc/apt/sources.list ]; then sed -i "s/ main$/ main contrib non-free non-free-firmware/" /etc/apt/sources.list; fi',
+      ].join("\n"),
+    ])
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "ca-certificates",
+      "ffmpeg",
+      "libvips42",
+      "libva2",
+      "libva-drm2",
+      "vainfo",
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      // The Intel iHD media driver (intel-media-va-driver-non-free) is x86-only; it has no
+      // arm64 candidate. The production cluster is amd64, so install it there for VAAPI
+      // hardware encoding, and skip it on arm64 (local Mac) builds — which have no Intel GPU
+      // anyway and fall back to software encoding.
+      [
+        "set -e",
+        'if [ "$(dpkg --print-architecture)" = "amd64" ]; then',
+        "  apt-get install -y -qq --no-install-recommends intel-media-va-driver-non-free",
+        "fi",
+      ].join("\n"),
+    ])
+    .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"])
+    .withExec(["ffmpeg", "-version"]);
 }
 
 /**
@@ -360,10 +562,33 @@ function withToolkit(container: Container): Container {
       "build",
       "./src/index.ts",
       "--compile",
+      // prism-media (pulled in by discord.js-selfbot-v13) requires ffmpeg-static at
+      // import time, but ffmpeg-static is a native binary shim that must not be
+      // bundled into the compiled output — mark it external so bun skips bundling it.
+      "--external",
+      "ffmpeg-static",
       "--outfile=/usr/local/bin/toolkit",
     ])
     .withExec(["chmod", "+x", "/usr/local/bin/toolkit"])
     .withExec(["toolkit", "--version"]);
+}
+
+/**
+ * Give the vendored `discord-video-stream` fork its own `node_modules` at its mounted source
+ * location. The fork is consumed as TypeScript source (bun runs `src/`), so when a consumer imports
+ * it, the fork's files resolve their native runtime deps (`@lng2004/node-datachannel`, `node-av`, …)
+ * from the fork's OWN directory — a sibling of the consumer, whose `node_modules` is unreachable.
+ * Without this, the image builds fine but crashes at startup with `Cannot find module
+ * '@lng2004/node-datachannel'`. Mirrors the per-dep install loop in `bunBaseContainer` (base.ts).
+ */
+function withForkRuntimeDeps(
+  container: Container,
+  depNames: string[],
+): Container {
+  if (!depNames.includes("discord-video-stream")) return container;
+  return container
+    .withWorkdir("/workspace/packages/discord-video-stream")
+    .withExec(["bun", "install", "--frozen-lockfile"]);
 }
 
 /**
@@ -395,6 +620,14 @@ export function buildImageHelper(
     container = withEditorClis(container);
   }
 
+  if (pkg === "birmel") {
+    container = withBirmelMusicRuntime(container);
+  }
+
+  if (pkg === "streambot") {
+    container = withStreambotRuntime(container);
+  }
+
   container = container
     .withWorkdir("/workspace")
     .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
@@ -409,10 +642,26 @@ export function buildImageHelper(
     );
   }
 
+  container = withForkRuntimeDeps(container, depNames);
+
   // Install deps then set up the final image
-  return container
+  let image = container
     .withWorkdir(`/workspace/packages/${pkg}`)
-    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withExec(["bun", "install", "--frozen-lockfile"]);
+
+  if (pkg === "birmel") {
+    // youtube-dl-exec resolves its binary at <pkg>/bin/yt-dlp (constants.YOUTUBE_DL_PATH),
+    // but its own postinstall fetches that binary from api.github.com UNAUTHENTICATED and
+    // flakes on shared CI runners (anonymous 60 req/hr REST limit). Provide it via the
+    // rate-limit-proof, SHA-verified release-CDN download instead, then prove the final
+    // image is voice-playback-ready.
+    image = installYtDlp(
+      image,
+      "/workspace/packages/birmel/node_modules/youtube-dl-exec/bin/yt-dlp",
+    ).withExec(["test", "-x", "node_modules/youtube-dl-exec/bin/yt-dlp"]);
+  }
+
+  return image
     .withLabel(
       "org.opencontainers.image.source",
       "https://github.com/shepherdjerred/monorepo",
@@ -435,8 +684,8 @@ export function buildImageHelper(
  *
  * Uses shepherdjerred/caddy-s3-proxy as a drop-in replacement for the upstream
  * lindenlab module — keeps the import path so existing Caddyfiles work, but
- * adds native HEAD support and fixes the 304-on-index regression. See
- * upstream PR (TBD) tracking the contribution back to lindenlab.
+ * adds native HEAD support, fixes the 304-on-index regression, and returns
+ * 206 + Accept-Ranges on byte-range requests. See CADDY_S3_PROXY_MODULE.
  */
 export function buildCaddyS3ProxyImageHelper(
   version: string = "dev",
@@ -446,12 +695,7 @@ export function buildCaddyS3ProxyImageHelper(
   const caddyBinary = dag
     .container()
     .from(CADDY_BUILDER_IMAGE)
-    .withExec([
-      "xcaddy",
-      "build",
-      "--with",
-      "github.com/lindenlab/caddy-s3-proxy=github.com/shepherdjerred/caddy-s3-proxy@v0.5.7-head1",
-    ])
+    .withExec(["xcaddy", "build", "--with", CADDY_S3_PROXY_MODULE])
     .file("/usr/bin/caddy");
 
   // Stage 2: Runtime image with the custom binary
@@ -746,13 +990,19 @@ export function buildDiscordPlaysPokemonImageHelper(
   gitSha: string = "unknown",
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
+  const innerRoot = "/workspace/packages/discord-plays-pokemon";
 
   let container = dag
     .container()
     .from(BUN_IMAGE)
-    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE));
+
+  // ffmpeg + libvips for discord-video-stream (fluent-ffmpeg encode path + sharp)
+  // plus the Intel VAAPI stack so ffmpeg can hardware-encode on the iGPU. No
+  // browser/desktop — this is a headless Bun service.
+  container = withDiscordPlaysRuntime(container)
     .withWorkdir("/workspace")
-    .withDirectory("/workspace/packages/discord-plays-pokemon", pkgDir, {
+    .withDirectory(innerRoot, pkgDir, {
       exclude: excludes,
     });
 
@@ -764,20 +1014,35 @@ export function buildDiscordPlaysPokemonImageHelper(
     );
   }
 
-  return container
-    .withWorkdir("/workspace/packages/discord-plays-pokemon")
-    .withExec(["bun", "install", "--frozen-lockfile"])
-    .withWorkdir("/workspace/packages/discord-plays-pokemon/packages/backend")
-    .withExec(["bun", "install", "--frozen-lockfile"])
-    .withLabel(
-      "org.opencontainers.image.source",
-      "https://github.com/shepherdjerred/monorepo",
-    )
-    .withLabel("org.opencontainers.image.version", version)
-    .withLabel("org.opencontainers.image.revision", gitSha)
-    .withEnvVariable("VERSION", version)
-    .withEnvVariable("GIT_SHA", gitSha)
-    .withEntrypoint(["bun", "run", "src/index.ts"]);
+  container = withForkRuntimeDeps(container, depNames);
+
+  return (
+    container
+      // Workspace install (covers backend + frontend) — runs the
+      // trustedDependencies postinstalls (node-datachannel, node-av). The
+      // discord-video-stream fork lazy-loads sharp in source (no bun patch). The
+      // committed packages/backend/assets/pokeemerald.wasm is copied in (not excluded).
+      .withWorkdir(innerRoot)
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withWorkdir(`${innerRoot}/packages/backend`)
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      // Build the web UI served by the backend web server (web.assets).
+      .withWorkdir(`${innerRoot}/packages/frontend`)
+      .withExec(["bun", "run", "build"])
+      .withLabel(
+        "org.opencontainers.image.source",
+        "https://github.com/shepherdjerred/monorepo",
+      )
+      .withLabel("org.opencontainers.image.version", version)
+      .withLabel("org.opencontainers.image.revision", gitSha)
+      .withEnvVariable("VERSION", version)
+      .withEnvVariable("GIT_SHA", gitSha)
+      // Run from the inner-monorepo root so getConfig()/emulator resolve
+      // config.toml, packages/backend/assets/pokeemerald.wasm, and saves/
+      // relative to CWD.
+      .withWorkdir(innerRoot)
+      .withEntrypoint(["bun", "packages/backend/src/index.ts"])
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -822,6 +1087,162 @@ export async function pushDiscordPlaysPokemonImageHelper(
   gitSha: string = "unknown",
 ): Promise<string> {
   const container = buildDiscordPlaysPokemonImageHelper(
+    pkgDir,
+    depNames,
+    depDirs,
+    version,
+    gitSha,
+  );
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
+}
+
+/**
+ * Build the discord-plays-mario-kart backend image.
+ *
+ * Two stages:
+ *  1. An emscripten stage compiles the vendored N64Wasm core (parallel-n64 +
+ *     angrylion software RDP) from `wasm-src/` into `n64wasm.js` + `n64wasm.wasm`.
+ *     The committed `wasm-src/code` tree is byte-pristine upstream; our changes
+ *     (neilSetRom, neilGetVideoBuffer/Height, the per-player input export, and the
+ *     Makefile exports) live in `wasm-src/patches/` and are applied here at build
+ *     time. No binaries are committed — the build is reproducible from source.
+ *     `make clean` guarantees the sources are recompiled rather than reusing any
+ *     stale local object files.
+ *  2. A Bun stage mirrors discord-plays-pokemon (ffmpeg + libvips for
+ *     @dank074/discord-video-stream, workspace install, frontend build) and
+ *     copies the compiled core + MEMFS-staged assets into the backend's
+ *     assets dir. Headless: no GPU, browser, or desktop.
+ */
+export function buildDiscordPlaysMarioKartImageHelper(
+  pkgDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Container {
+  const excludes = ["node_modules", "dist", ".eslintcache"];
+  const innerRoot = "/workspace/packages/discord-plays-mario-kart";
+  const assetsDir = `${innerRoot}/packages/backend/assets/n64wasm`;
+
+  // Stage 1: compile the N64Wasm core in the pinned emscripten toolchain.
+  const wasmSrc = pkgDir.directory("wasm-src");
+  const wasmBuild = dag
+    .container()
+    .from(EMSCRIPTEN_IMAGE)
+    .withDirectory("/src", wasmSrc, { exclude: ["dist"] })
+    // The committed wasm-src/code tree is BYTE-PRISTINE upstream; our changes live
+    // in wasm-src/patches and are applied here at build time (never committed into
+    // the tree). Uses patch(1) (present in the emscripten image; /src is not a git
+    // work tree). See wasm-src/PATCHES.md.
+    .withWorkdir("/src")
+    .withExec([
+      "sh",
+      "-c",
+      'set -e; for p in patches/*.patch; do echo "applying $p"; patch -p1 --no-backup-if-mismatch < "$p"; done',
+    ])
+    .withWorkdir("/src/code")
+    // `make clean` drops any object files so the patched sources are rebuilt
+    // from scratch; `make` emits n64wasm.js + n64wasm.wasm in this dir.
+    .withExec(["make", "clean"])
+    .withExec(["make"]);
+
+  // Stage 2: the headless Bun service (mirrors discord-plays-pokemon).
+  let container = dag
+    .container()
+    .from(BUN_IMAGE)
+    .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE));
+
+  // ffmpeg + libvips for discord-video-stream (fluent-ffmpeg encode path + sharp)
+  // plus the Intel VAAPI stack so ffmpeg can hardware-encode on the iGPU. The
+  // software-rendered N64 frames are read straight out of wasm memory.
+  container = withDiscordPlaysRuntime(container)
+    .withWorkdir("/workspace")
+    // wasm-src is the build input for stage 1 only — keep the large vendored
+    // C/C++ tree out of the runtime image.
+    .withDirectory(innerRoot, pkgDir, {
+      exclude: [...excludes, "wasm-src"],
+    });
+
+  for (let i = 0; i < depNames.length; i++) {
+    container = container.withDirectory(
+      `/workspace/packages/${depNames[i]}`,
+      depDirs[i],
+      { exclude: excludes },
+    );
+  }
+
+  container = withForkRuntimeDeps(container, depNames);
+
+  return (
+    container
+      // Copy the compiled core + the files the host stages into MEMFS at
+      // runtime (loadFile reads these; see the emulator host).
+      .withFile(
+        `${assetsDir}/n64wasm.js`,
+        wasmBuild.file("/src/code/n64wasm.js"),
+      )
+      .withFile(
+        `${assetsDir}/n64wasm.wasm`,
+        wasmBuild.file("/src/code/n64wasm.wasm"),
+      )
+      .withFile(
+        `${assetsDir}/shader_vert.hlsl`,
+        wasmBuild.file("/src/code/shader_vert.hlsl"),
+      )
+      .withFile(
+        `${assetsDir}/shader_frag.hlsl`,
+        wasmBuild.file("/src/code/shader_frag.hlsl"),
+      )
+      .withFile(
+        `${assetsDir}/overlay.png`,
+        wasmBuild.file("/src/code/overlay.png"),
+      )
+      .withFile(
+        `${assetsDir}/res/arial.ttf`,
+        wasmBuild.file("/src/code/res/arial.ttf"),
+      )
+      // Workspace install (backend + frontend) — runs trustedDependencies
+      // postinstalls. The discord-video-stream fork lazy-loads sharp in source
+      // (no bun patch).
+      .withWorkdir(innerRoot)
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withWorkdir(`${innerRoot}/packages/backend`)
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      // Build the web UI served by the backend web server (web.assets).
+      .withWorkdir(`${innerRoot}/packages/frontend`)
+      .withExec(["bun", "run", "build"])
+      .withLabel(
+        "org.opencontainers.image.source",
+        "https://github.com/shepherdjerred/monorepo",
+      )
+      .withLabel("org.opencontainers.image.version", version)
+      .withLabel("org.opencontainers.image.revision", gitSha)
+      .withEnvVariable("VERSION", version)
+      .withEnvVariable("GIT_SHA", gitSha)
+      // Run from the inner-monorepo root so getConfig()/emulator resolve
+      // config.toml, the n64wasm assets, and saves/ relative to CWD.
+      .withWorkdir(innerRoot)
+      .withEntrypoint(["bun", "packages/backend/src/index.ts"])
+  );
+}
+
+/** Push a discord-plays-mario-kart image to a registry. Returns the digest. */
+export async function pushDiscordPlaysMarioKartImageHelper(
+  pkgDir: Directory,
+  tags: string[],
+  registryUsername: string,
+  registryPassword: Secret,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Promise<string> {
+  const container = buildDiscordPlaysMarioKartImageHelper(
     pkgDir,
     depNames,
     depDirs,

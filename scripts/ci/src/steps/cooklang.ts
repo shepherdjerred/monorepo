@@ -12,14 +12,22 @@ import {
   DAGGER_ENV,
   DRYRUN_FLAG,
   GITHUB_APP_SECRET_ARGS,
+  REPO_GIT_REF,
+  gitDir,
+  gitFile,
+  DAGGER_CALL,
 } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup } from "../lib/types.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
-const COOKLANG_PKG_FLAGS =
-  "--pkg-dir ./packages/cooklang-for-obsidian --dep-names eslint-config --dep-dirs ./packages/eslint-config --tsconfig ./tsconfig.base.json";
+const COOKLANG_PKG_FLAGS = [
+  `--pkg-dir ${gitDir("packages/cooklang-for-obsidian")}`,
+  `--dep-names eslint-config`,
+  `--dep-dirs ${gitDir("packages/eslint-config")}`,
+  `--tsconfig ${gitFile("tsconfig.base.json")}`,
+].join(" ");
 
 export function cooklangReleaseGroup(pkgKey?: string): BuildkiteGroup {
   const dependsOn = pkgKey ? ["quality-gate", pkgKey] : ["quality-gate"];
@@ -32,7 +40,7 @@ export function cooklangReleaseGroup(pkgKey?: string): BuildkiteGroup {
         key: "cooklang-publish",
         if: MAIN_ONLY,
         depends_on: dependsOn,
-        command: `dagger call cooklang-build-and-publish --source . ${COOKLANG_PKG_FLAGS} --plugin-repo shepherdjerred/cooklang-for-obsidian ${GITHUB_APP_SECRET_ARGS}${DRYRUN_FLAG}`,
+        command: `${DAGGER_CALL} cooklang-build-and-publish --source ${REPO_GIT_REF} ${COOKLANG_PKG_FLAGS} --plugin-repo shepherdjerred/cooklang-for-obsidian ${GITHUB_APP_SECRET_ARGS}${DRYRUN_FLAG}`,
         timeout_in_minutes: 15,
         priority: 1,
         retry: RETRY,

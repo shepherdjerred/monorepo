@@ -21,6 +21,7 @@ import { getEtcdCustomRuleGroups } from "./rules/etcd-custom.ts";
 import { getZfsMaintenanceRuleGroups } from "./rules/zfs-maintenance.ts";
 import { getTemporalRuleGroups } from "./rules/temporal.ts";
 import { getPrReviewBotRuleGroups } from "./rules/pr-review-bot.ts";
+import { getDaggerEngineRuleGroups } from "./rules/dagger.ts";
 
 export function createPrometheusMonitoring(chart: Chart) {
   // Create Home Assistant rules
@@ -274,6 +275,18 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getPrReviewBotRuleGroups(),
+    },
+  });
+
+  // Create Dagger engine rules (CI build-cache PVC quota early-warning)
+  new PrometheusRule(chart, "prometheus-dagger-engine-rules", {
+    metadata: {
+      name: "prometheus-dagger-engine-rules",
+      namespace: "dagger",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getDaggerEngineRuleGroups(),
     },
   });
 }

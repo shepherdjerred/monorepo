@@ -42,19 +42,33 @@ export const ConfigSchema = z.strictObject({
         .string()
         .regex(/\d*/, "IDs must only have numeric characters")
         .min(1),
-      username: z.string().min(1),
-      password: z.string().min(1),
+      // Discord user (selfbot) token for the streaming account. Required
+      // because Discord blocks video from bot tokens.
+      token: z.string().min(1),
+    }),
+    video: z.strictObject({
+      // @deprecated Superseded by the 16:9 letterbox (canvas_height + display
+      // aspect). Retained, optional, so existing config.toml files still validate;
+      // no longer read. Remove once all configs drop it.
+      scale: z.number().int().min(1).max(6).optional(),
+      frame_rate: z.number().positive(),
+      bitrate_kbps: z.number().positive(),
+      bitrate_max_kbps: z.number().positive(),
+      // Height of the 16:9 output canvas sent to Discord (width derived as 16:9).
+      // The 3:2 game is scaled to fit and pillarboxed onto black.
+      canvas_height: z.number().int().positive().default(720),
+      // VAAPI hardware H.264 encoding on an Intel iGPU. Off by default (software
+      // libx264 fallback); also enableable via the STREAM_HARDWARE_ACCELERATION env.
+      hardware_acceleration: z.boolean().default(false),
+      vaapi_device: z.string().min(1).default("/dev/dri/renderD128"),
     }),
   }),
   game: z.strictObject({
     enabled: z.boolean(),
-    emulator_url: z.union([
-      z.literal("built_in"),
-      z.url("Must be a valid URL"),
-    ]),
-    browser: z.strictObject({
-      preferences: z.record(z.string(), z.union([z.boolean(), z.number()])),
-    }),
+    // Path to the built pokeemerald.wasm (see scripts/fetch-wasm.ts).
+    wasm_path: z.string().min(1),
+    // Optional path for the persisted 128 KiB flash save.
+    save_path: z.string().min(1).optional(),
     commands: z.strictObject({
       enabled: z.boolean(),
       channel_id: z

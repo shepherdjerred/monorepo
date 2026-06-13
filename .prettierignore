@@ -29,6 +29,9 @@ pnpm-lock.yaml
 # Vendored
 packages/scout-for-lol/packages/frontend/public/emulatorjs/
 
+# Vendored N64Wasm emulator source (third-party C/C++/docs) — preserve formatting
+packages/discord-plays-mario-kart/wasm-src/
+
 # Generated
 packages/clauderon/mobile/src/types/generated/
 packages/clauderon/web/shared/src/generated/
@@ -58,6 +61,9 @@ packages/castle-casters/assets/
 
 # Legacy / archived projects — repo AGENTS.md marks archive/ as "do not modify"
 archive/
+
+# Vendored fork of @dank074/discord-video-stream — preserve upstream (biome) source formatting.
+packages/discord-video-stream/
 
 # Agent skills contain vendored/reference material whose source formatting is preserved.
 packages/dotfiles/dot_agents/skills/**

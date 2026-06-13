@@ -12,6 +12,7 @@ import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
+  REPORT_DEFAULT_MAX_ROWS,
   REPORT_MAX_ROWS_LIMIT,
   getCompetitionStatus,
   parseCompetition,
@@ -31,6 +32,7 @@ const COMMON_DENOMINATOR_CHANNEL_ID = DiscordChannelIdSchema.parse(
 const COMMON_DENOMINATOR_CRON = "0 18 * * 0";
 const COMMON_DENOMINATOR_LOOKBACK_DAYS = 30;
 const COMMON_DENOMINATOR_MIN_GAMES = 10;
+const COMPETITION_REPORT_TOP_ROWS = REPORT_DEFAULT_MAX_ROWS;
 
 export type SystemReportSyncResult = {
   created: number;
@@ -100,6 +102,7 @@ async function competitionReportDefinitions(
     .map((competition) => {
       const cronExpression =
         competition.updateCronExpression ?? DEFAULT_COMPETITION_CRON;
+      const outputFormat = competitionOutputFormat(competition.criteria);
       return {
         serverId: DiscordGuildIdSchema.parse(competition.serverId),
         ownerId: competition.ownerId,
@@ -108,8 +111,11 @@ async function competitionReportDefinitions(
         description: competition.description,
         queryText: competitionReportQuery(competition.id, competition.criteria),
         lookbackDays: 30,
-        maxRows: Math.min(competition.maxParticipants, REPORT_MAX_ROWS_LIMIT),
-        outputFormat: competitionOutputFormat(competition.criteria),
+        maxRows: competitionReportMaxRows(
+          competition.maxParticipants,
+          outputFormat,
+        ),
+        outputFormat,
         systemSource: "COMPETITION",
         sourceCompetitionId: CompetitionIdSchema.parse(competition.id),
         cronExpression,
@@ -307,6 +313,17 @@ function competitionOutputFormat(
     return "LEADERBOARD";
   }
   return "BAR_CHART";
+}
+
+function competitionReportMaxRows(
+  maxParticipants: number,
+  outputFormat: ReportOutputFormat,
+): number {
+  const outputLimit =
+    outputFormat === "BAR_CHART"
+      ? COMPETITION_REPORT_TOP_ROWS
+      : REPORT_MAX_ROWS_LIMIT;
+  return Math.min(maxParticipants, outputLimit, REPORT_MAX_ROWS_LIMIT);
 }
 
 async function findSystemReport(

@@ -8,7 +8,15 @@
  */
 import type { DeploySite } from "../catalog.ts";
 import { DEPLOY_SITES, PACKAGE_TO_SITE } from "../catalog.ts";
-import { safeKey, RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
+import {
+  safeKey,
+  RETRY,
+  DAGGER_ENV,
+  DRYRUN_FLAG,
+  gitDir,
+  gitFile,
+  DAGGER_CALL,
+} from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
@@ -57,7 +65,10 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
   const pkgPath = site.buildDir.replace("packages/", "");
   const deps = WORKSPACE_DEPS[pkgPath] ?? [];
   const depFlags = deps
-    .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
+    .flatMap((d: string) => [
+      `--dep-names ${d}`,
+      `--dep-dirs ${gitDir(`packages/${d}`)}`,
+    ])
     .join(" ");
   const buildEnvVars =
     site.buildEnvVars ?? Object.keys(site.buildEnvPlaceholders ?? {});
@@ -87,9 +98,9 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
       ? "."
       : site.distDir.replace(site.buildDir + "/", "");
 
-  // Build dagger call command for deploy-site
+  // Build the dagger call command for deploy-site
   const args = [
-    `dagger call deploy-site --pkg-dir ./${site.buildDir}`,
+    `${DAGGER_CALL} deploy-site --pkg-dir ${gitDir(site.buildDir)}`,
     `--pkg ${pkgPath}`,
     depFlags,
     buildEnvFlags,
@@ -99,7 +110,7 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
     `--target seaweedfs`,
     `--aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID`,
     `--aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
-    `--tsconfig ./tsconfig.base.json`,
+    `--tsconfig ${gitFile("tsconfig.base.json")}`,
     site.needsPlaywright ? `--needs-playwright` : "",
   ].filter(Boolean);
 
@@ -132,36 +143,6 @@ export function deploySitesGroup(
       if (pkgKey) deps.push(pkgKey);
       return deploySiteStep(s, deps);
     }),
-  };
-}
-
-/**
- * MkDocs docs deploy — build with mkdocs (Python), export, then deploy via deploy-site (awscli inside Dagger).
- * Two-step pipeline: mkdocs-build produces the site/, then deploy-site syncs to S3.
- */
-export function mkdocsDeployStep(dependsOn: string[]): BuildkiteStep {
-  return {
-    label: ":book: Deploy discord-plays-pokemon docs",
-    key: "deploy-discord-plays-pokemon-docs",
-    depends_on: dependsOn,
-    command:
-      [
-        // Step 1: Build with mkdocs (Python container), export built site to local path
-        `dagger call mkdocs-build --source . export --path /tmp/mkdocs-site`,
-        // Step 2: Deploy pre-built HTML via deploy-static-site (no bun install needed)
-        `dagger call deploy-static-site --site-dir /tmp/mkdocs-site --bucket dpp-docs --target seaweedfs --aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID --aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
-      ].join(" && ") + DRYRUN_FLAG,
-    timeout_in_minutes: 15,
-    priority: 1,
-    retry: RETRY,
-    env: DAGGER_ENV,
-    plugins: [
-      k8sPlugin({
-        cpu: "250m",
-        memory: "512Mi",
-        secrets: ["buildkite-argocd-token"],
-      }),
-    ],
   };
 }
 

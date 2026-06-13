@@ -7,8 +7,9 @@ Procedure for manually pruning orphan ZFS snapshots and R2 objects detected by t
 Trigger any of these:
 
 - PagerDuty fires `VeleroOrphanLocalSnapshots` (orphan ZFS snapshots present > 24h)
-- PagerDuty fires `VeleroOrphanR2Objects` (orphan R2 objects under `s3://homelab/zfspv-incr/` present > 24h)
-- PagerDuty fires `ZFSSnapshotCountExcessive` (any PVC dataset > 35 snapshots — backstop alert)
+- PagerDuty fires `VeleroOrphanLocalBytesExcessive` (orphan ZFS snapshot bytes over threshold)
+- PagerDuty fires `ZFSDatasetSnapshotCountExcessive` (any PVC dataset > ~26 snapshots — backstop alert)
+- You manually discover orphan R2 objects under `s3://homelab/zfspv-incr/` (the audit does **not** scan R2 — see Step 1)
 - A PVC reads `100%` full unexpectedly and `zfs list` shows large `USED` vs small `REFER` (snapshot bloat — same root cause)
 - Velero was just re-deployed (helm uninstall + reinstall, ArgoCD app re-creation, etc.)
 
@@ -32,18 +33,17 @@ ENDPOINT="https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com"
 
 ## Step 1: Verify the orphan finding
 
-The audit workflow surfaces orphan counts via these Prometheus metrics:
+The audit workflow surfaces local ZFS-snapshot orphan counts via these Prometheus metrics:
 
-- `velero_orphan_local_snapshots{dataset="..."}`
-- `velero_orphan_local_bytes{dataset="..."}`
-- `velero_orphan_r2_objects`
-- `velero_orphan_r2_bytes`
+- `velero_orphan_local_snapshots_total{dataset="..."}`
+- `velero_orphan_local_bytes_total{dataset="..."}`
+
+The audit only scans local ZFS snapshots — there is **no** R2 orphan metric or alert. Check for orphan R2 objects manually with the `aws s3 ls` steps below.
 
 Confirm with `toolkit gf query` and cross-check independently before destroying anything.
 
 ```bash
-toolkit gf query 'velero_orphan_local_snapshots'
-toolkit gf query 'velero_orphan_r2_objects'
+toolkit gf query 'velero_orphan_local_snapshots_total'
 ```
 
 Also confirm the workflow itself ran recently:
@@ -82,6 +82,14 @@ kubectl -n openebs exec -i $NODE_POD -c openebs-zfs-plugin -- sh -c '
 ```
 
 Output groups orphans by dataset. Save it to a file (`/tmp/orphans-local.txt`) and **review before proceeding**.
+
+> **Reading the orphan set — which failure mode?** If every orphan shares the **same snapshot suffix**
+> (e.g. all `…@monthly-backup-20260301050003`, one per PVC), this is the **TTL-finalizer mode**: a
+> single backup's TTL expired and the plugin's `DeleteSnapshot` finalizer failed to destroy the ZFS
+> snapshots. It's safe to prune — the parent Backup CR is gone by definition. If orphans span **many
+> different suffixes/dates**, suspect the **re-deploy mode** (Backup CRs removed while the controller
+> was absent); double-check you're not mid-re-deploy before pruning. See the [prevention decision
+> doc](../decisions/2026-05-05_velero-orphan-snapshot-prevention.md#recurrence--2026-05-30-ttl-finalizer-mode).
 
 ### R2 orphan prefixes
 
@@ -208,8 +216,7 @@ kubectl exec -n temporal deploy/temporal-temporal-server -- \
 Wait a few minutes, then re-query the metrics:
 
 ```bash
-toolkit gf query 'velero_orphan_local_snapshots'
-toolkit gf query 'velero_orphan_r2_objects'
+toolkit gf query 'velero_orphan_local_snapshots_total'
 ```
 
 The PagerDuty alerts auto-resolve once the metrics stay at 0 for the alert's `for:` window (default 24h, but the underlying alert clears as soon as Prometheus sees the new value).

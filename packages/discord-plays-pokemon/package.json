@@ -22,5 +22,12 @@
   "overrides": {
     "js-cookie": "3.0.7",
     "tmp": "0.2.6"
-  }
+  },
+  "trustedDependencies": [
+    "@lng2004/node-datachannel",
+    "node-av",
+    "@snazzah/davey",
+    "sharp",
+    "@sentry/profiling-node"
+  ]
 }

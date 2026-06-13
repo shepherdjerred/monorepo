@@ -297,6 +297,14 @@ const DAG_TASKS: DagTask[] = [
     warnOnly: false,
   },
   {
+    id: "discord-video-stream",
+    label: "discord-video-stream build (d.ts)",
+    cmd: ["bun", "run", "build"],
+    cwd: "packages/discord-video-stream",
+    deps: [],
+    warnOnly: false,
+  },
+  {
     id: "helm-types-build",
     label: "helm-types build",
     cmd: ["bun", "run", "build"],
@@ -411,6 +419,10 @@ async function verifySetup(): Promise<void> {
     {
       label: "astro-opengraph-images dist",
       path: "packages/astro-opengraph-images/dist/index.js",
+    },
+    {
+      label: "discord-video-stream d.ts",
+      path: "packages/discord-video-stream/dist/index.d.ts",
     },
     {
       label: "helm-types dist",

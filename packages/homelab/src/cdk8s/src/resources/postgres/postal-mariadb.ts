@@ -90,8 +90,8 @@ export class PostalMariaDB extends Construct {
         },
         resources: {
           requests: {
-            cpu: "250m",
-            memory: "512Mi",
+            cpu: "100m",
+            memory: "256Mi",
           },
           limits: {
             cpu: "2000m",

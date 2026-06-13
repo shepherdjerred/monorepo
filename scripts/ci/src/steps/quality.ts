@@ -1,34 +1,36 @@
 /**
- * Quality gate step generators: prettier, shellcheck, compliance, ratchet, knip, gitleaks.
+ * Quality gate step generators.
+ *
+ * Every step in this file is a `daggerStep` that runs an `@func()` from
+ * `.dagger/src/quality.ts` against `${REPO_GIT_REF}`. The Dagger engine
+ * fetches source server-side, content-addressed by SHA — the BK pod itself
+ * writes no source to disk.
+ *
+ * The one exception is `greptileReviewStep`, a `plainStep` that runs repo
+ * scripts + `buildkite-agent` on the agent (so it keeps the agent-side
+ * checkout / `buildkite-git-mirrors` mount via `k8sPluginWithCheckout`). All
+ * other steps are Dagger git-URL refs per the BK-pressure reduction plan
+ * (`packages/docs/plans/2026-05-31_bk-dagger-git-url-refactor.md`).
  */
-import { readFileSync, existsSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import { daggerStep, plainStep } from "../lib/buildkite.ts";
+import {
+  daggerStep,
+  plainStep,
+  REPO_GIT_REF,
+  DAGGER_CALL,
+} from "../lib/buildkite.ts";
 import type { BuildkiteStep } from "../lib/types.ts";
 
-/** Resolve a path relative to the monorepo root (4 levels up from this file). */
-const REPO_ROOT = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  "../../../..",
-);
-
-/** Read an ignore file (one entry per line, # comments, blank lines skipped). */
-function readIgnoreFile(path: string): string[] {
-  const fullPath = resolve(REPO_ROOT, path);
-  if (!existsSync(fullPath)) return [];
-  return readFileSync(fullPath, "utf-8")
-    .split("\n")
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0 && !l.startsWith("#"));
-}
-
-/** Wraps a command to tee output and annotate the build page on failure. */
-function annotatedScanCmd(cmd: string, context: string): string {
+/**
+ * Wrap a Dagger scanner call so its output is teed to a file and posted to
+ * the build page via `buildkite-agent annotate` on non-zero exit. Used by
+ * Knip / Trivy / Semgrep — annotation lifecycle stays BK-side because
+ * `buildkite-agent` is only available in the agent pod.
+ */
+function annotatedDaggerScan(daggerFn: string, context: string): string {
   const outFile = `/tmp/${context}.txt`;
   return [
     `set -o pipefail`,
-    `${cmd} 2>&1 | tee ${outFile}`,
+    `${DAGGER_CALL} ${daggerFn} --source ${REPO_GIT_REF} 2>&1 | tee ${outFile}`,
     `status=$$?`,
     `if [ $$status -ne 0 ] && [ -s ${outFile} ]; then buildkite-agent annotate --style warning --context ${context} < ${outFile}; fi`,
     `exit $$status`,
@@ -36,65 +38,55 @@ function annotatedScanCmd(cmd: string, context: string): string {
 }
 
 export function prettierStep(): BuildkiteStep {
-  return plainStep({
+  return daggerStep({
     label: ":art: Prettier",
     key: "prettier",
-    command: "bash .buildkite/scripts/prettier.sh",
+    daggerCmd: `${DAGGER_CALL} prettier --source ${REPO_GIT_REF}`,
     timeoutMinutes: 10,
   });
 }
 
 export function markdownlintStep(): BuildkiteStep {
-  return plainStep({
+  return daggerStep({
     label: ":pencil: Markdownlint",
     key: "markdownlint",
-    command:
-      'bun install --frozen-lockfile && echo "+++ :pencil: Markdownlint" && bun run markdownlint',
+    daggerCmd: `${DAGGER_CALL} markdownlint --source ${REPO_GIT_REF}`,
     timeoutMinutes: 10,
   });
 }
 
 export function shellcheckStep(): BuildkiteStep {
-  return plainStep({
+  return daggerStep({
     label: ":shell: Shellcheck",
     key: "shellcheck",
-    command: [
-      "bash -c 'source .buildkite/scripts/setup-tools.sh && install_shellcheck",
-      '&& echo "+++ :shell: Shellcheck"',
-      '&& find . -name "*.sh"',
-      '-not -path "*/archive/*"',
-      '-not -path "*/node_modules/*"',
-      '-not -path "*/Pods/*"',
-      '-not -path "*/target/*"',
-      "-print0 | xargs -0 shellcheck --severity=warning'",
-    ].join(" "),
+    daggerCmd: `${DAGGER_CALL} shellcheck --source ${REPO_GIT_REF}`,
     timeoutMinutes: 10,
   });
 }
 
-/** Plain step: only needs bun (in ci-base). Reads .quality-baseline.json and counts suppressions. */
 export function qualityRatchetStep(): BuildkiteStep {
-  return plainStep({
+  return daggerStep({
     label: ":chart_with_upwards_trend: Quality Ratchet",
     key: "quality-ratchet",
-    command: "bun scripts/quality-ratchet.ts",
+    daggerCmd: `${DAGGER_CALL} quality-ratchet --source ${REPO_GIT_REF}`,
+    timeoutMinutes: 10,
   });
 }
 
-/** Plain step: only needs bash (in ci-base). Checks all packages have required scripts. */
 export function complianceCheckStep(): BuildkiteStep {
-  return plainStep({
+  return daggerStep({
     label: ":clipboard: Compliance Check",
     key: "compliance-check",
-    command: "bash scripts/compliance-check.sh",
+    daggerCmd: `${DAGGER_CALL} compliance-check --source ${REPO_GIT_REF}`,
+    timeoutMinutes: 10,
   });
 }
 
 export function knipCheckStep(): BuildkiteStep {
-  return plainStep({
+  return daggerStep({
     label: ":scissors: Knip",
     key: "knip-check",
-    command: annotatedScanCmd("bash .buildkite/scripts/knip-check.sh", "knip"),
+    daggerCmd: annotatedDaggerScan("knip-check", "knip"),
     timeoutMinutes: 10,
     softFail: true,
     artifactPaths: ["/tmp/knip.txt"],
@@ -102,175 +94,184 @@ export function knipCheckStep(): BuildkiteStep {
 }
 
 export function gitleaksCheckStep(): BuildkiteStep {
-  return plainStep({
+  return daggerStep({
     label: ":lock: Gitleaks",
     key: "gitleaks-check",
-    command: [
-      "bash -c 'source .buildkite/scripts/setup-tools.sh",
-      "&& install_gitleaks",
-      '&& echo "+++ :lock: Gitleaks"',
-      "&& gitleaks detect --source . --no-git'",
-    ].join(" "),
+    daggerCmd: `${DAGGER_CALL} gitleaks-check --source ${REPO_GIT_REF}`,
     timeoutMinutes: 10,
   });
 }
 
 export function suppressionCheckStep(): BuildkiteStep {
-  return plainStep({
+  return daggerStep({
     label: ":no_entry_sign: Suppression Check",
     key: "suppression-check",
-    command:
-      'echo "+++ :no_entry_sign: Suppression Check" && bun scripts/check-suppressions.ts --ci',
+    daggerCmd: `${DAGGER_CALL} suppression-check --source ${REPO_GIT_REF}`,
     timeoutMinutes: 10,
   });
 }
 
 export function trivyScanStep(): BuildkiteStep {
-  return plainStep({
+  return daggerStep({
     label: ":shield: Trivy Scan",
     key: "trivy-scan",
-    command: annotatedScanCmd("bash .buildkite/scripts/trivy-scan.sh", "trivy"),
+    daggerCmd: annotatedDaggerScan("trivy-scan", "trivy"),
     timeoutMinutes: 15,
     softFail: true,
     artifactPaths: ["/tmp/trivy.txt"],
   });
 }
 
-/** Plain step: only needs bun (in ci-base). Greps for banned patterns in CI code. */
 export function daggerHygieneStep(): BuildkiteStep {
-  return plainStep({
+  return daggerStep({
     label: ":broom: Dagger Hygiene",
     key: "dagger-hygiene",
-    command: "bun scripts/check-dagger-hygiene.ts",
+    daggerCmd: `${DAGGER_CALL} dagger-hygiene --source ${REPO_GIT_REF}`,
+    timeoutMinutes: 10,
     softFail: true,
   });
 }
 
 /**
- * Plain step: verifies every cdk8s `TunnelBinding` has a matching
+ * Verifies every cdk8s `TunnelBinding` has a matching
  * `cloudflare_dns_record` in Tofu. Without DNS, the tunnel hostname silently
  * fails to resolve — see prReview/prSummary outage on 2026-05-02.
  */
 export function tunnelDnsCoverageStep(): BuildkiteStep {
-  return plainStep({
+  return daggerStep({
     label: ":cloud: Tunnel DNS Coverage",
     key: "tunnel-dns-coverage",
-    command: "bun scripts/check-tunnel-dns-coverage.ts",
+    daggerCmd: `${DAGGER_CALL} tunnel-dns-coverage --source ${REPO_GIT_REF}`,
+    timeoutMinutes: 10,
+  });
+}
+
+/**
+ * Verifies `react`/`react-dom` (and their `@types`) resolve to matching
+ * versions in every `bun.lock`. A skew throws "Incompatible React versions" at
+ * runtime — invisible to typecheck/build/test. See the mariokart.sjer.red
+ * post-mortem in packages/docs/plans.
+ */
+export function reactVersionSyncStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":react: React Version Sync",
+    key: "react-version-sync",
+    daggerCmd: `${DAGGER_CALL} react-version-sync --source ${REPO_GIT_REF}`,
+    timeoutMinutes: 10,
   });
 }
 
 export function semgrepScanStep(): BuildkiteStep {
-  return plainStep({
+  return daggerStep({
     label: ":mag: Semgrep Scan",
     key: "semgrep-scan",
-    command: annotatedScanCmd(
-      "bash .buildkite/scripts/semgrep-scan.sh",
-      "semgrep",
-    ),
+    daggerCmd: annotatedDaggerScan("semgrep-scan", "semgrep"),
     timeoutMinutes: 15,
     softFail: true,
     artifactPaths: ["/tmp/semgrep.txt"],
   });
 }
 
-/** Plain step: only needs bun (in ci-base). Validates lockfile is up to date. */
 export function lockfileCheckStep(): BuildkiteStep {
-  return plainStep({
+  return daggerStep({
     label: ":lock: Lockfile Check",
     key: "lockfile-check",
-    command: "bun install --frozen-lockfile",
+    daggerCmd: `${DAGGER_CALL} lockfile-check --source ${REPO_GIT_REF}`,
     timeoutMinutes: 5,
   });
 }
 
-/** Plain step: only needs bash+grep+git (in ci-base). Validates env var naming conventions. */
 export function envVarNamesStep(): BuildkiteStep {
-  return plainStep({
+  return daggerStep({
     label: ":label: Env Var Names",
     key: "env-var-names",
-    command: "bash scripts/check-env-var-names.sh",
-  });
-}
-
-/**
- * Plain step: only needs bun + git (in ci-base). Verifies every tracked file's
- * index line endings match its .gitattributes declaration. Catches the class
- * of bug from renovate-481 where a file with mixed CRLF/LF leaked into a
- * Unix-only path and nothing flagged it pre-merge.
- */
-export function lineEndingsCheckStep(): BuildkiteStep {
-  return plainStep({
-    label: ":scroll: Line Endings",
-    key: "line-endings-check",
-    command: "bun scripts/check-line-endings.ts",
-    timeoutMinutes: 5,
-  });
-}
-
-/** Plain step: verifies Scout's committed SQLite test template matches migrations + seeds. */
-export function scoutTestTemplateCheckStep(): BuildkiteStep {
-  return plainStep({
-    label: ":floppy_disk: Scout Test Template",
-    key: "scout-test-template-check",
-    command: [
-      "cd packages/scout-for-lol",
-      "bun install --frozen-lockfile",
-      "cd packages/backend",
-      "bunx --trust prisma generate",
-      "bun run check:test-template",
-    ].join(" && "),
+    daggerCmd: `${DAGGER_CALL} env-var-names --source ${REPO_GIT_REF}`,
     timeoutMinutes: 10,
   });
 }
 
-/** Plain step: only needs bun (in ci-base). Guards against package exclusions. */
+/**
+ * Verifies every tracked file's index line endings match its `.gitattributes`
+ * declaration. Catches the class of bug from renovate-481 where a file with
+ * mixed CRLF/LF leaked into a Unix-only path and nothing flagged it pre-merge.
+ */
+export function lineEndingsCheckStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":scroll: Line Endings",
+    key: "line-endings-check",
+    daggerCmd: `${DAGGER_CALL} line-endings-check --source ${REPO_GIT_REF}`,
+    timeoutMinutes: 5,
+  });
+}
+
+/**
+ * Verify Scout's committed SQLite test template matches migrations + seeds.
+ * Migrated to Dagger in PR2 of the BK-pressure plan.
+ */
+export function scoutTestTemplateCheckStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":floppy_disk: Scout Test Template",
+    key: "scout-test-template-check",
+    daggerCmd: `${DAGGER_CALL} scout-test-template-check --source ${REPO_GIT_REF}`,
+    timeoutMinutes: 10,
+  });
+}
+
 export function migrationGuardStep(): BuildkiteStep {
-  return plainStep({
+  return daggerStep({
     label: ":shield: Migration Guard",
     key: "migration-guard",
-    command: "bun scripts/guard-no-package-exclusions.ts",
+    daggerCmd: `${DAGGER_CALL} migration-guard --source ${REPO_GIT_REF}`,
+    timeoutMinutes: 10,
   });
 }
 
-/** Plain step: only needs grep (in ci-base). Detects unresolved merge conflict markers. */
 export function mergeConflictStep(): BuildkiteStep {
-  const ignored = readIgnoreFile(".conflictignore");
-  const filterPipe =
-    ignored.length > 0 ? ignored.map((p) => `| grep -v '${p}'`).join(" ") : "";
-  return plainStep({
+  return daggerStep({
     label: ":no_entry: Merge Conflict Check",
     key: "merge-conflict-check",
-    command: [
-      "files=$(grep -rl '<<<<<<< \\|>>>>>>> '",
-      "--include='*.ts' --include='*.tsx' --include='*.rs'",
-      "--include='*.json' --include='*.yaml' --include='*.yml'",
-      "--include='*.md' --include='*.sh'",
-      "--exclude-dir=node_modules --exclude-dir=.dagger",
-      `--exclude=lefthook.yml . ${filterPipe} || true)`,
-      '&& if [ -n "$files" ]; then echo "Merge conflict markers found:" && echo "$files" && exit 1; fi',
-    ].join(" "),
+    daggerCmd: `${DAGGER_CALL} merge-conflict-check --source ${REPO_GIT_REF}`,
     timeoutMinutes: 5,
   });
 }
 
-/** Plain step: only needs find (in ci-base). Detects files exceeding 5MB. */
+/**
+ * Surfaces files >5 MB so they can be moved to LFS or removed. **Soft-fail**:
+ * PR2 of the BK-pressure plan moved this check from a plain step (whose
+ * `[ -n "$large" ]` test was a silent no-op because `buildkite-agent
+ * pipeline upload` interpolated `$large` to empty at upload time) to a
+ * real Dagger function. The fix surfaces 8 pre-existing large files —
+ * cleaning them up is a separate task (see `packages/docs/todos/`).
+ */
 export function largeFileStep(): BuildkiteStep {
-  const ignoreExclusions = readIgnoreFile(".largeignore").map(
-    (p) => `-not -path "./${p}"`,
-  );
-  return plainStep({
+  return daggerStep({
     label: ":warning: Large File Check",
     key: "large-file-check",
-    command: [
-      "large=$(find . -type f -size +5M",
-      '-not -path "*/node_modules/*" -not -path "*/.git/*"',
-      '-not -path "*/.build/*" -not -path "*/.dagger/*"',
-      '-not -path "*/archive/*"',
-      ...ignoreExclusions,
-      "-exec ls -lh {} +)",
-      '&& if [ -n "$large" ]; then echo "Files exceed 5MB limit:" && echo "$large" && exit 1; fi',
-    ].join(" "),
+    daggerCmd: `${DAGGER_CALL} large-file-check --source ${REPO_GIT_REF}`,
     timeoutMinutes: 5,
+    softFail: true,
+  });
+}
+
+/**
+ * PR-only gate: waits for Greptile to finish reviewing the head commit, then
+ * passes only once every Greptile review comment on the latest revision is
+ * resolved. Fails fast (with the list of unresolved comments) otherwise — see
+ * `scripts/ci/src/wait-for-greptile.ts`. Greptile's own status check is NOT
+ * sufficient: it goes green when the review completes, regardless of whether
+ * the comments were addressed.
+ */
+export function greptileReviewStep(): BuildkiteStep {
+  return plainStep({
+    label: ":mag: Greptile Review",
+    key: "greptile-review",
+    command: [
+      'echo "+++ :mag: Greptile Review"',
+      'export GH_TOKEN="$(bun packages/temporal/src/lib/github-app-token.ts)"',
+      'test -n "$$GH_TOKEN"',
+      "bun scripts/ci/src/wait-for-greptile.ts",
+    ].join(" && "),
+    timeoutMinutes: 25,
   });
 }
 
@@ -278,7 +279,7 @@ export function caddyfileValidateStep(): BuildkiteStep {
   return daggerStep({
     label: ":globe_with_meridians: Caddyfile Validate",
     key: "caddyfile-validate",
-    daggerCmd: "dagger call caddyfile-validate --source .",
+    daggerCmd: `${DAGGER_CALL} caddyfile-validate --source ${REPO_GIT_REF}`,
     timeoutMinutes: 10,
   });
 }

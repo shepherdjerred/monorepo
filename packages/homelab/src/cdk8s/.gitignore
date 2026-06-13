@@ -2,3 +2,4 @@
 rendered/
 .helm-render-*
 .helm-test-*
+.argocd-test-*

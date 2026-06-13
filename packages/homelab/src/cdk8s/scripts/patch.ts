@@ -20,7 +20,11 @@ const gsedPath = Bun.which("gsed");
 const sedCommand = gsedPath === null ? "sed" : "gsed";
 
 // Files that may contain Intel GPU resources
-const filesToPatch = ["dist/media.k8s.yaml", "dist/pokemon.k8s.yaml"];
+const filesToPatch = [
+  "dist/media.k8s.yaml",
+  "dist/pokemon.k8s.yaml",
+  "dist/mario-kart.k8s.yaml",
+];
 
 console.log("🔧 Applying Intel GPU resource patches...");
 

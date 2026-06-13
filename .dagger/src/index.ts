@@ -57,12 +57,14 @@ import {
   buildObsidianHeadlessImageHelper,
   buildScoutImageHelper,
   buildDiscordPlaysPokemonImageHelper,
+  buildDiscordPlaysMarioKartImageHelper,
   buildTemporalWorkerImageHelper,
   buildTrmnlDashboardImageHelper,
   pushCaddyS3ProxyImageHelper,
   pushObsidianHeadlessImageHelper,
   pushScoutImageHelper,
   pushDiscordPlaysPokemonImageHelper,
+  pushDiscordPlaysMarioKartImageHelper,
   pushTemporalWorkerImageHelper,
   pushTrmnlDashboardImageHelper,
   buildCiBaseImageHelper,
@@ -80,7 +82,6 @@ import { playwrightTestHelper, playwrightUpdateHelper } from "./playwright";
 import { ciAllHelper } from "./ci";
 
 import {
-  mkdocsBuildHelper,
   caddyfileValidateHelper,
   smokeTestHelper,
   smokeTestScoutForLolHelper,
@@ -90,8 +91,35 @@ import {
   smokeTestCaddyS3ProxyHelper,
   smokeTestObsidianHeadlessHelper,
   smokeTestDiscordPlaysPokemonHelper,
+  smokeTestStreambotHelper,
+  e2eStreambotHelper,
+  smokeTestDiscordPlaysMarioKartHelper,
   smokeTestTrmnlDashboardHelper,
 } from "./misc";
+
+import {
+  prettierHelper,
+  markdownlintHelper,
+  shellcheckHelper,
+  qualityRatchetHelper,
+  complianceCheckHelper,
+  knipCheckHelper,
+  gitleaksCheckHelper,
+  suppressionCheckHelper,
+  trivyScanHelper,
+  daggerHygieneHelper,
+  tunnelDnsCoverageHelper,
+  reactVersionSyncHelper,
+  semgrepScanHelper,
+  lockfileCheckHelper,
+  envVarNamesHelper,
+  lineEndingsCheckHelper,
+  migrationGuardHelper,
+  scoutTestTemplateCheckHelper,
+  mergeConflictCheckHelper,
+  largeFileCheckHelper,
+  tasksForObsidianIosNativeDepsHelper,
+} from "./quality";
 
 function requireRecord(
   value: unknown,
@@ -496,6 +524,48 @@ export class Monorepo {
     );
   }
 
+  /** Build the discord-plays-mario-kart backend image (Bun workspace + N64Wasm) */
+  @func()
+  buildDiscordPlaysMarioKartImage(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildDiscordPlaysMarioKartImageHelper(
+      pkgDir,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Push a discord-plays-mario-kart image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushDiscordPlaysMarioKartImage(
+    pkgDir: Directory,
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushDiscordPlaysMarioKartImageHelper(
+      pkgDir,
+      tags,
+      registryUsername,
+      registryPassword,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Temporal worker image
   // ---------------------------------------------------------------------------
@@ -735,16 +805,6 @@ export class Monorepo {
   @func()
   async latexBuild(pkgDir: Directory): Promise<string> {
     return latexBuildHelper(pkgDir).stdout();
-  }
-
-  // ---------------------------------------------------------------------------
-  // MkDocs operations
-  // ---------------------------------------------------------------------------
-
-  /** Build MkDocs documentation site and return the built site/ directory */
-  @func()
-  mkdocsBuild(source: Directory): Directory {
-    return mkdocsBuildHelper(source);
   }
 
   // ---------------------------------------------------------------------------
@@ -1169,6 +1229,139 @@ export class Monorepo {
   }
 
   // ---------------------------------------------------------------------------
+  // Quality checks — Dagger replacements for the 18 plain Buildkite steps.
+  // The corresponding Buildkite step generators live in
+  // scripts/ci/src/steps/quality.ts and call these via `dagger call <fn>
+  // --source ${REPO_GIT_REF}`. Helpers live in ./quality.ts.
+  // ---------------------------------------------------------------------------
+
+  /** Prettier formatting check across the entire monorepo. */
+  @func()
+  async prettier(source: Directory): Promise<string> {
+    return prettierHelper(source).stdout();
+  }
+
+  /** Markdownlint via the root `bun run markdownlint` script. */
+  @func()
+  async markdownlint(source: Directory): Promise<string> {
+    return markdownlintHelper(source).stdout();
+  }
+
+  /** Shellcheck against every `*.sh` outside archive/node_modules/Pods/target. */
+  @func()
+  async shellcheck(source: Directory): Promise<string> {
+    return shellcheckHelper(source).stdout();
+  }
+
+  /** Quality ratchet: enforce per-rule suppression counts don't exceed baseline. */
+  @func()
+  async qualityRatchet(source: Directory): Promise<string> {
+    return qualityRatchetHelper(source).stdout();
+  }
+
+  /** Compliance check: every package has the required scripts in its package.json. */
+  @func()
+  async complianceCheck(source: Directory): Promise<string> {
+    return complianceCheckHelper(source).stdout();
+  }
+
+  /** Knip dead-code detection across the monorepo. */
+  @func()
+  async knipCheck(source: Directory): Promise<string> {
+    return knipCheckHelper(source).stdout();
+  }
+
+  /** Gitleaks scan for secrets in the working tree. */
+  @func()
+  async gitleaksCheck(source: Directory): Promise<string> {
+    return gitleaksCheckHelper(source).stdout();
+  }
+
+  /** Suppression check: any rule's suppression count vs baseline. */
+  @func()
+  async suppressionCheck(source: Directory): Promise<string> {
+    return suppressionCheckHelper(source).stdout();
+  }
+
+  /** Trivy filesystem CVE scan (HIGH + CRITICAL). */
+  @func()
+  async trivyScan(source: Directory): Promise<string> {
+    return trivyScanHelper(source).stdout();
+  }
+
+  /** Grep `.dagger/`, `scripts/ci/`, `.buildkite/scripts/` for banned patterns. */
+  @func()
+  async daggerHygiene(source: Directory): Promise<string> {
+    return daggerHygieneHelper(source).stdout();
+  }
+
+  /** Verify every cdk8s `TunnelBinding` has a matching cloudflare DNS record. */
+  @func()
+  async tunnelDnsCoverage(source: Directory): Promise<string> {
+    return tunnelDnsCoverageHelper(source).stdout();
+  }
+
+  /** Verify react/react-dom (+ @types) resolve to matching versions in every bun.lock. */
+  @func()
+  async reactVersionSync(source: Directory): Promise<string> {
+    return reactVersionSyncHelper(source).stdout();
+  }
+
+  /** Semgrep auto-config scan against the repo. */
+  @func()
+  async semgrepScan(source: Directory): Promise<string> {
+    return semgrepScanHelper(source).stdout();
+  }
+
+  /** Lockfile check: `bun install --frozen-lockfile` against the root lock. */
+  @func()
+  async lockfileCheck(source: Directory): Promise<string> {
+    return lockfileCheckHelper(source).stdout();
+  }
+
+  /** Env-var naming convention check across staged-style file types. */
+  @func()
+  async envVarNames(source: Directory): Promise<string> {
+    return envVarNamesHelper(source).stdout();
+  }
+
+  /** Verify every tracked file's line endings match `.gitattributes`. */
+  @func()
+  async lineEndingsCheck(source: Directory): Promise<string> {
+    return lineEndingsCheckHelper(source).stdout();
+  }
+
+  /** Guard against silent package-exclusion drift in the catalog. */
+  @func()
+  async migrationGuard(source: Directory): Promise<string> {
+    return migrationGuardHelper(source).stdout();
+  }
+
+  /** Verify Scout's committed SQLite test template matches migrations + seeds. */
+  @func()
+  async scoutTestTemplateCheck(source: Directory): Promise<string> {
+    return scoutTestTemplateCheckHelper(source).stdout();
+  }
+
+  /** Detect unresolved merge-conflict markers in source files. */
+  @func()
+  async mergeConflictCheck(source: Directory): Promise<string> {
+    return mergeConflictCheckHelper(source).stdout();
+  }
+
+  /** Detect files >5 MB in the working tree (honors `.largeignore`). */
+  @func()
+  async largeFileCheck(source: Directory): Promise<string> {
+    return largeFileCheckHelper(source).stdout();
+  }
+
+  /** iOS native-deps check for `packages/tasks-for-obsidian`. */
+  @func()
+  async tasksForObsidianIosNativeDeps(source: Directory): Promise<string> {
+    return tasksForObsidianIosNativeDepsHelper(source).stdout();
+  }
+
+  // ---------------------------------------------------------------------------
   // Smoke test
   // ---------------------------------------------------------------------------
 
@@ -1250,6 +1443,48 @@ export class Monorepo {
     depDirs: Directory[] = [],
   ): Promise<string> {
     return smokeTestDiscordPlaysPokemonHelper(pkgDir, depNames, depDirs);
+  }
+
+  /** Smoke test streambot: build image, verify ffmpeg + yt-dlp, boot machine, expect auth failure */
+  @func()
+  async smokeTestStreambot(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return smokeTestStreambotHelper(pkgDir, depNames, depDirs);
+  }
+
+  /** E2E streambot with real creds: streams a generated clip into the voice channel (manual run). */
+  @func()
+  async e2eStreambot(
+    pkgDir: Directory,
+    botToken: Secret,
+    userToken: Secret,
+    guildId: string,
+    videoChannelId: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return e2eStreambotHelper(
+      pkgDir,
+      botToken,
+      userToken,
+      guildId,
+      videoChannelId,
+      depNames,
+      depDirs,
+    );
+  }
+
+  /** Smoke test discord-plays-mario-kart: build production image (incl. wasm stage), boots app, expects Discord auth failure */
+  @func()
+  async smokeTestDiscordPlaysMarioKart(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return smokeTestDiscordPlaysMarioKartHelper(pkgDir, depNames, depDirs);
   }
 
   /** Smoke test trmnl-dashboard: builds image, boots Bun.serve, killed at timeout. */

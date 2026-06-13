@@ -1,17 +1,33 @@
 # Discord Plays Pokémon
 
-<video src='https://private-user-images.githubusercontent.com/3904778/428340702-4e153629-538d-4f07-bf63-396a2d8a72bd.mp4?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDMyNzQxMzMsIm5iZiI6MTc0MzI3MzgzMywicGF0aCI6Ii8zOTA0Nzc4LzQyODM0MDcwMi00ZTE1MzYyOS01MzhkLTRmMDctYmY2My0zOTZhMmQ4YTcyYmQubXA0P1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9QUtJQVZDT0RZTFNBNTNQUUs0WkElMkYyMDI1MDMyOSUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNTAzMjlUMTg0MzUzWiZYLUFtei1FeHBpcmVzPTMwMCZYLUFtei1TaWduYXR1cmU9NzRmNDI3NDdjNWYzNTZmOWRhMDNiYWZmYTU0Y2NmMjA0MGQ5NDFlZTU5ODA4NjJjYTM2MDRlMzNiYzNkZDQ3OSZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QifQ.LQv-_PqCMB-xyOxI5Lu_fzKdCyoHON9mgdcgLkgz5vY' width=180></video>
+A cooperative, [Twitch Plays Pokémon](https://en.wikipedia.org/wiki/Twitch_Plays_Pok%C3%A9mon)–style
+bot: a Discord server plays Pokémon Emerald together by sending inputs, and the
+game is streamed live into a voice channel.
 
-This application allows your Discord server to play a cooperative game of Pokémon (or any other Game Boy Advance ROM) using Discord as the input method. The concept is similar to that of [Twitch Plays Pokémon](https://en.wikipedia.org/wiki/Twitch_Plays_Pok%C3%A9mon).
+## How it works
 
-This project also includes a built-in web interface to allow direct control of the game without needing to type commands into Discord. Once the web page is loaded, key presses are sent directly to the emulator.
+Fully headless — no browser, no emulator UI, no GPU, no desktop:
 
-See [the documentation](https://docs.discord-plays-pokemon.com/) for more information. View [the roadmap](./ROADMAP.md) for information about upcoming features.
+- **Game** — [pokeemerald-wasm](https://github.com/tripplyons/pokeemerald-wasm)
+  runs in Bun and renders frames to RGBA in software.
+- **Streaming** — frames are encoded with ffmpeg and pushed to a Discord voice
+  channel over the voice UDP path via `@shepherdjerred/discord-video-stream` (our
+  in-repo fork of
+  [`@dank074/discord-video-stream`](https://github.com/dank074/Discord-video-stream))
+  (a self-bot Go-Live), so viewers watch in the voice channel.
+- **Input** — a Discord bot takes button/chord commands (plus an optional web
+  UI) and feeds them into the emulator's input queue.
 
-## Get Started
+The WASM blob is vendored at `packages/backend/assets/pokeemerald.wasm` and
+refreshed periodically by a Temporal workflow that opens a PR.
 
-Read the [setup guide](https://docs.discord-plays-pokemon.com/user/) to begin using this bot.
+## Deployment
+
+Runs on the homelab Kubernetes cluster via ArgoCD
+(`packages/homelab/src/cdk8s/src/resources/pokemon.ts`). The image is built in
+CI (Dagger); configuration is a mounted `config.toml` — see
+`config.example.toml`.
 
 ## Disclaimer
 
-I have no relationship to either Pokémon or Twitch Plays Pokémon. This is purely a fan project.
+A fan project, unaffiliated with Pokémon or Twitch Plays Pokémon.

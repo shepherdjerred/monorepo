@@ -257,6 +257,16 @@ export function createLokiApp(chart: Chart) {
     read: { replicas: 0 },
     write: { replicas: 0 },
     backend: { replicas: 0 },
+    // The chart derives memcached pod resources from allocated* (request ≈ 1.2×).
+    // Chart defaults are 8Gi/500m for chunks and 500m CPU for results; 30d peaks
+    // are 3.6Gi fill / ~10m CPU, so halve the chunk cache and trim CPU.
+    chunksCache: {
+      allocatedMemory: 4096,
+      allocatedCPU: "100m",
+    },
+    resultsCache: {
+      allocatedCPU: "100m",
+    },
     loki: {
       commonConfig: {
         replication_factor: 1,

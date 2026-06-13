@@ -1,5 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { buildPipeline } from "../pipeline-builder.ts";
+import {
+  buildPipeline,
+  buildReleasePleaseSkipPipeline,
+} from "../pipeline-builder.ts";
 import type { AffectedPackages } from "../lib/types.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 import {
@@ -183,6 +186,30 @@ describe("buildPipeline", () => {
         expect(ciComplete.depends_on).toEqual(["no-changes"]);
       }
     });
+
+    it("includes Greptile review gate on no-change pull request builds", () => {
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(emptyAffected()),
+      );
+      expect(pipeline.steps).toHaveLength(3);
+      const steps = pipeline.steps.filter(isStep);
+      const greptile = steps.find((s) => s.key === "greptile-review");
+      const ciComplete = steps.find((s) => s.key === "ci-complete");
+
+      expect(greptile).toBeDefined();
+      expect(greptile?.command).toContain("github-app-token.ts");
+      expect(greptile?.command).toContain("wait-for-greptile.ts");
+      expect(ciComplete?.depends_on).toContain("greptile-review");
+    });
+
+    it("omits Greptile review gate on no-change main builds", () => {
+      const pipeline = withBuildkitePullRequest("false", () =>
+        buildPipeline(emptyAffected()),
+      );
+      const steps = pipeline.steps.filter(isStep);
+
+      expect(steps.some((s) => s.key === "greptile-review")).toBe(false);
+    });
   });
 
   describe("ci-base image changes", () => {
@@ -327,8 +354,13 @@ describe("buildPipeline", () => {
       );
 
       expect(nativeDepsStep).toBeDefined();
+      // After PR2's DAGGER_CALL refactor the command is
+      // `dagger -m <module-ref> call tasks-for-obsidian-ios-native-deps`.
+      expect(nativeDepsStep?.command).toMatch(
+        /dagger(\s+-[\w-]+\s+\S+)*\s+call\s+tasks-for-obsidian-ios-native-deps/,
+      );
       expect(nativeDepsStep?.command).toContain(
-        ".buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh",
+        "https://github.com/shepherdjerred/monorepo.git",
       );
       expect(nativeDepsStep?.soft_fail).toBeUndefined();
     });
@@ -581,6 +613,7 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("build-images");
       expect(groupKeys).toContain("homelab-tofu-plan");
       expect(stepKeys).toContain("ci-complete");
+      expect(stepKeys).toContain("greptile-review");
 
       expect(groupKeys).not.toContain("push-images");
       expect(groupKeys).not.toContain("publish-npm");
@@ -594,6 +627,28 @@ describe("buildPipeline", () => {
       expect(stepKeys).not.toContain("argocd-health");
       expect(stepKeys).not.toContain("version-commit-back");
       expect(stepKeys).not.toContain("build-summary");
+    });
+
+    it("makes ci-complete depend on Greptile for pull request builds", () => {
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(fullBuild()),
+      );
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      const ciComplete = allSteps.find((s) => s.key === "ci-complete");
+
+      expect(ciComplete).toBeDefined();
+      expect(ciComplete?.depends_on).toContain("greptile-review");
+    });
+
+    it("does not include Greptile on main builds", () => {
+      const pipeline = withBuildkitePullRequest("false", () =>
+        buildPipeline(fullBuild()),
+      );
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      expect(allSteps.some((s) => s.key === "greptile-review")).toBe(false);
     });
 
     it("includes image build/push, npm, cooklang, and sites groups", () => {
@@ -619,6 +674,35 @@ describe("buildPipeline", () => {
       const groupKeys = groups.map((g) => g.key);
 
       expect(groupKeys).not.toContain("cooklang-release");
+    });
+
+    it("omits cooklang release on a full build when cooklang did not change", () => {
+      // A full build (infra/lockfile change) rebuilds everything but must not
+      // publish a cooklang plugin version when no cooklang source changed —
+      // otherwise every unrelated full build opens a manifest-bump PR.
+      const affected = fullBuild();
+      affected.cooklangChanged = false;
+
+      const pipeline = buildPipeline(affected);
+      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
+
+      expect(groupKeys).not.toContain("cooklang-release");
+      // ...but the rest of the full-build release track still runs.
+      expect(groupKeys).toContain("build-images");
+      expect(groupKeys).toContain("push-images");
+      expect(groupKeys).toContain("publish-npm");
+      expect(groupKeys).toContain("deploy-sites");
+    });
+
+    it("includes cooklang release on a scoped build when cooklang changed", () => {
+      const affected = emptyAffected();
+      affected.packages.add("cooklang-for-obsidian");
+      affected.cooklangChanged = true;
+
+      const pipeline = buildPipeline(affected);
+      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
+
+      expect(groupKeys).toContain("cooklang-release");
     });
 
     it("uses GitHub App auth for release tasks and GHCR_TOKEN for image pushes with GH_TOKEN fallback", () => {
@@ -1120,8 +1204,13 @@ describe("buildPipeline", () => {
           if (typeof obj["command"] === "string") {
             const cmd = obj["command"] as string;
             const key = obj["key"];
+            // Dagger CLI invocations may have flags between `dagger` and `call`
+            // (e.g. `dagger -m <module-ref> call`) so we look for both tokens
+            // rather than the literal substring.
+            const isDaggerCall =
+              /(^|\s)dagger(\s+-[\w-]+(\s+\S+)?)*\s+call(\s|$)/.test(cmd);
             if (
-              !cmd.includes("dagger call") &&
+              !isDaggerCall &&
               !cmd.includes("echo ") &&
               !cmd.includes("buildkite-agent") &&
               !(typeof key === "string" && PLAIN_STEP_KEYS.has(key))
@@ -1264,5 +1353,20 @@ describe("buildPipeline", () => {
         expect(step.command).toMatch(/--pkg-path \S+/);
       }
     });
+  });
+});
+
+describe("buildReleasePleaseSkipPipeline", () => {
+  it("emits a single annotation step and no required gates", () => {
+    const pipeline = buildReleasePleaseSkipPipeline();
+    const steps = pipeline.steps.filter(isStep);
+    expect(steps).toHaveLength(1);
+    expect(steps[0]!.key).toBe("release-please-skip");
+    expect(steps[0]!.command).toContain("buildkite-agent annotate");
+    const keys = pipeline.steps.map((s) => ("key" in s ? s.key : undefined));
+    // The skip pipeline must NOT post the required merge gates, so the PR stays
+    // un-mergeable until a real build is requested on purpose.
+    expect(keys).not.toContain("ci-complete");
+    expect(keys).not.toContain("greptile-review");
   });
 });

@@ -273,19 +273,35 @@ echo "Done."`,
             engine: {
               kind: "StatefulSet",
               port: 8080,
+              // No CPU limit on purpose — the engine bursts freely; the request is
+              // just the scheduling reservation. 30d peaks: 4.6 CPU / 14.4Gi.
               resources: {
                 requests: {
-                  cpu: "8",
-                  memory: "24Gi",
+                  cpu: "6",
+                  memory: "16Gi",
                 },
                 limits: {
                   memory: "50Gi",
                 },
               },
+              // Garbage collection policy. IMPORTANT: maxUsedSpace bounds only the
+              // *reclaimable* BuildKit cache, NOT total dataset usage — metadata DBs
+              // (containerdmeta.db / metadata_v2.db), active leases, and in-flight exec
+              // mounts are uncounted. On 2026-06-08 the engine EDQUOT'd at the (then) 1 Ti
+              // ZFS quota mid-build (main CI build 3668) even though the cap was 600 GB.
+              // Live metrics post-expansion: 2 Ti capacity, ~1.06 Ti used — i.e. ~560 GB
+              // sits ABOVE the cache cap, so this number is NOT a reliable disk-usage
+              // ceiling. Keep absolute byte values (a `%`/default policy reads pool-level
+              // free space on this quota'd ZFS dataset and is unsafe). Raised 600 -> 800 GB
+              // (restoring the pre-2026-02 value; the emergency reduction to 600 was for a
+              // disk-I/O incident whose drivers — concurrency, compression — are now
+              // mitigated). Conservative on purpose given the large over-cap footprint;
+              // the DaggerEnginePVCStorage* alerts now provide steady-state visibility to
+              // tune further. See packages/docs/guides/2026-06-07_dagger-engine-pvc-resize.md.
               configJson: JSON.stringify({
                 gc: {
-                  maxUsedSpace: "600GB",
-                  reservedSpace: "100GB",
+                  maxUsedSpace: "800GB",
+                  reservedSpace: "200GB",
                   minFreeSpace: "20%",
                 },
               }),
@@ -316,8 +332,11 @@ echo "Done."`,
                       // 2 TiB cache. Engine PVC was hitting 72% on 1 TiB,
                       // triggering BuildKit GC churn (re-uploading evicted blobs).
                       // See dagger/dagger#7711, #10504. Storage class allows online
-                      // expansion; existing PVC needs `kubectl patch` since STS
-                      // volumeClaimTemplates are immutable in Kubernetes.
+                      // expansion, BUT changing this value alone does NOT resize the
+                      // live PVC — STS volumeClaimTemplates are immutable, so a manual
+                      // `kubectl patch pvc` is required (this drift caused the 2026-06-08
+                      // outage). Runbook + exact command:
+                      // packages/docs/guides/2026-06-07_dagger-engine-pvc-resize.md
                       storage: "2Ti",
                     },
                   },

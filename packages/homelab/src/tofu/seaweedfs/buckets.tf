@@ -7,10 +7,6 @@ resource "aws_s3_bucket" "clauderon" {
   bucket = "clauderon"
 }
 
-resource "aws_s3_bucket" "dpp_docs" {
-  bucket = "dpp-docs"
-}
-
 resource "aws_s3_bucket" "resume" {
   bucket = "resume"
 }
@@ -37,6 +33,63 @@ resource "aws_s3_bucket" "webring" {
 
 resource "aws_s3_bucket" "cook" {
   bucket = "cook"
+}
+
+# Public artifact bucket — served at https://public.sjer.red via Caddy s3proxy.
+# PR screenshots live under the `pr/assets/<number>/` prefix (365-day TTL, below);
+# the bucket root is seeded with a landing + 404 page so the static-site root
+# probe stays green.
+resource "aws_s3_bucket" "public_sjer_red" {
+  bucket = "public-sjer-red"
+}
+
+# Expire PR-asset objects after 365 days. Scoped to the `pr/assets/` prefix so
+# any other public artifacts dropped in this bucket are retained indefinitely.
+resource "terraform_data" "public_sjer_red_lifecycle" {
+  input = {
+    bucket       = aws_s3_bucket.public_sjer_red.id
+    expire_days  = 365
+    endpoint_url = "https://seaweedfs-s3.tailnet-1a49.ts.net"
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      aws s3api put-bucket-lifecycle-configuration \
+        --bucket "${self.input.bucket}" \
+        --endpoint-url "${self.input.endpoint_url}" \
+        --lifecycle-configuration '{
+          "Rules": [{
+            "ID": "expire-pr-assets",
+            "Status": "Enabled",
+            "Filter": {"Prefix": "pr/assets/"},
+            "Expiration": {"Days": ${self.input.expire_days}}
+          }]
+        }'
+    EOT
+  }
+}
+
+# Seed the bucket root with a landing + 404 page so `GET /` returns 200 (keeps
+# the static-site root blackbox probe green). Re-uploads whenever either file's
+# content changes via the filemd5 triggers in `input`.
+resource "terraform_data" "public_sjer_red_seed" {
+  input = {
+    bucket        = aws_s3_bucket.public_sjer_red.id
+    endpoint_url  = "https://seaweedfs-s3.tailnet-1a49.ts.net"
+    index_md5     = filemd5("${path.module}/public/index.html")
+    not_found_md5 = filemd5("${path.module}/public/404.html")
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      aws s3 cp "${path.module}/public/index.html" "s3://${self.input.bucket}/index.html" \
+        --endpoint-url "${self.input.endpoint_url}" \
+        --content-type "text/html; charset=utf-8"
+      aws s3 cp "${path.module}/public/404.html" "s3://${self.input.bucket}/404.html" \
+        --endpoint-url "${self.input.endpoint_url}" \
+        --content-type "text/html; charset=utf-8"
+    EOT
+  }
 }
 
 # Scout application storage

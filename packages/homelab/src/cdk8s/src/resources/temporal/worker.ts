@@ -331,16 +331,17 @@ export function createTemporalWorkerDeployment(
       // Sized for in-process claude -p invocations. The pr-agent activity
       // (review + summary) runs for a few minutes; the homelab-audit-daily
       // workflow runs ~25 min and shells out to kubectl / talosctl / curl
-      // alongside claude. 1500m/4Gi gives headroom without throttling
-      // either lifecycle.
+      // alongside claude. 30d working-set peak hit 3.9Gi against the old 4Gi
+      // limit (near-OOM), so the request reflects real usage and the limit
+      // has slack above the observed peak.
       resources: {
         cpu: {
           request: Cpu.millis(500),
           limit: Cpu.millis(1500),
         },
         memory: {
-          request: Size.mebibytes(512),
-          limit: Size.gibibytes(4),
+          request: Size.gibibytes(2),
+          limit: Size.gibibytes(6),
         },
       },
       envVariables: {
@@ -448,6 +449,12 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "CLAUDE_CODE_OAUTH_TOKEN",
         }),
+        // Master kill switch for the whole PR bot (review + summary). While "false"
+        // the GitHub webhook acks deliveries but posts no comments and starts no
+        // workflows. Disabled because every specialist pass was failing with HTTP 429
+        // rate_limit_error (swallowed, so the bot posted "0 findings" on every PR).
+        // Flip to "true" to re-enable. See packages/temporal/src/event-bridge/github-webhook.ts `isPrBotEnabled`.
+        PR_BOT_ENABLED: EnvValue.fromValue("false"),
         // Kill switch for the new pr-review pipeline's live posting. Set
         // "true" once the bot is dogfooded — every non-draft PR will then
         // receive a `<!-- pr-review-finding ... -->` comment. Flip back to
@@ -456,7 +463,6 @@ export function createTemporalWorkerDeployment(
         // runtime — see packages/temporal/src/activities/pr-review/post.ts
         // `isPostEnabled`.
         PR_REVIEW_POST_ENABLED: EnvValue.fromValue("true"),
-        PR_REVIEW_SPECIALIST_PASS_CONCURRENCY: EnvValue.fromValue("1"),
         PR_REVIEW_WORKER_MAX_CONCURRENT_ACTIVITIES: EnvValue.fromValue("1"),
         GITHUB_WEBHOOK_PORT: EnvValue.fromValue("9466"),
         AGENT_TASK_API_PORT: EnvValue.fromValue("9467"),

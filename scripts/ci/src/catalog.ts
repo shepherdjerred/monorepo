@@ -38,9 +38,16 @@ export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
     pushFn: "push-discord-plays-pokemon-image",
   },
   {
+    name: "discord-plays-mario-kart",
+    versionKey: "shepherdjerred/discord-plays-mario-kart",
+    buildFn: "build-discord-plays-mario-kart-image",
+    pushFn: "push-discord-plays-mario-kart-image",
+  },
+  {
     name: "starlight-karma-bot",
     versionKey: "shepherdjerred/starlight-karma-bot",
   },
+  { name: "streambot", versionKey: "shepherdjerred/streambot" },
   {
     name: "temporal-worker",
     package: "temporal",
@@ -194,21 +201,6 @@ export const DEPLOY_SITES: DeploySite[] = [
     buildCmd: "bun run build",
     distDir: "packages/better-skill-capped/dist",
   },
-  // discord-plays-pokemon docs uses MkDocs (Python), not bun — deployed via
-  // a dedicated mkdocs-build-and-deploy step, not the generic deploy-site function.
-];
-
-// Sites deployed via non-standard mechanisms (not the generic deploy-site function).
-export interface ExtraDeploySite {
-  name: string;
-  url: string;
-}
-
-export const EXTRA_DEPLOY_SITES: ExtraDeploySite[] = [
-  {
-    name: "discord-plays-pokemon docs",
-    url: "https://discord-plays-pokemon.com",
-  },
 ];
 
 /** Derived from NPM_PACKAGES — workspace packages whose changes should trigger npm publishes. */
@@ -269,7 +261,9 @@ export const HELM_CHARTS: string[] = [
   "syncthing",
   "golink",
   "freshrss",
+  "pinchtab",
   "pokemon",
+  "mario-kart",
   "gickup",
   "grafana-db",
   "mcp-gateway",
@@ -300,7 +294,6 @@ export const PACKAGE_TO_SITE: Record<string, string[]> = {
   "scout-for-lol": ["scout-frontend", "scout-frontend-beta"],
   "stocks-sjer-red": ["stocks-sjer-red"],
   "better-skill-capped": ["better-skill-capped"],
-  // discord-plays-pokemon docs deployed via dedicated mkdocs step, not deploy-site
 };
 
 // ---------------------------------------------------------------------------
@@ -324,6 +317,8 @@ export const ALL_PACKAGES: string[] = [
   "cooklang-for-obsidian",
   "cooklang-rich-preview",
   "discord-plays-pokemon",
+  "discord-plays-mario-kart",
+  "discord-video-stream",
   "docs",
   "dotfiles",
   "eslint-config",
@@ -338,6 +333,7 @@ export const ALL_PACKAGES: string[] = [
   "sjer.red",
   "starlight-karma-bot",
   "stocks-sjer-red",
+  "streambot",
   "tasknotes-server",
   "tasknotes-types",
   "temporal",
@@ -365,7 +361,11 @@ export const PACKAGE_RESOURCES: Record<string, ResourceTier> = {
   birmel: MEDIUM,
   "scout-for-lol": MEDIUM,
   "discord-plays-pokemon": MEDIUM,
+  "discord-plays-mario-kart": MEDIUM,
+  // Vendored fork; its `test` loads node-av's native ffmpeg, so give it headroom.
+  "discord-video-stream": MEDIUM,
   "starlight-karma-bot": MEDIUM,
+  streambot: MEDIUM,
   "tasknotes-server": MEDIUM,
   "better-skill-capped": MEDIUM,
   "sjer.red": MEDIUM,
@@ -485,6 +485,18 @@ export const DEPLOY_TARGETS: Record<string, DeployTarget> = {
     images: [imageByName("discord-plays-pokemon")],
     charts: ["pokemon"],
     argoApps: ["pokemon"],
+  },
+  media: {
+    name: "media",
+    images: [imageByName("streambot")],
+    charts: ["media"],
+    argoApps: ["media"],
+  },
+  "mario-kart": {
+    name: "mario-kart",
+    images: [imageByName("discord-plays-mario-kart")],
+    charts: ["mario-kart"],
+    argoApps: ["mario-kart"],
   },
   home: {
     name: "home",

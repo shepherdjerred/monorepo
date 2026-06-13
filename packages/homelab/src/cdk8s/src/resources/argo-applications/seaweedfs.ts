@@ -94,10 +94,19 @@ export function createSeaweedfsApp(chart: Chart) {
         },
       },
     },
+    // Baseline requests (no limits) so the storage layer isn't BestEffort —
+    // without them SeaweedFS is among the first evicted under memory pressure.
+    // Values are 30d steady-state usage.
     master: {
       enabled: true,
       replicas: 1,
       garbageThreshold: 0.3, // GC when 30% of volume is garbage
+      resources: {
+        requests: {
+          cpu: "25m",
+          memory: "128Mi",
+        },
+      },
       data: {
         type: "persistentVolumeClaim",
         size: Size.gibibytes(1).asString(),
@@ -110,6 +119,12 @@ export function createSeaweedfsApp(chart: Chart) {
     volume: {
       enabled: true,
       replicas: 1,
+      resources: {
+        requests: {
+          cpu: "50m",
+          memory: "256Mi",
+        },
+      },
       dataDirs: [
         {
           name: "data",
@@ -132,6 +147,12 @@ export function createSeaweedfsApp(chart: Chart) {
     filer: {
       enabled: true,
       replicas: 1,
+      resources: {
+        requests: {
+          cpu: "50m",
+          memory: "512Mi",
+        },
+      },
       data: {
         type: "persistentVolumeClaim",
         size: Size.gibibytes(1).asString(),
@@ -151,6 +172,12 @@ export function createSeaweedfsApp(chart: Chart) {
       replicas: 1,
       enableAuth: true,
       existingConfigSecret: "seaweedfs-s3-credentials",
+      resources: {
+        requests: {
+          cpu: "100m",
+          memory: "1Gi",
+        },
+      },
       logs: {
         type: "emptyDir",
       },

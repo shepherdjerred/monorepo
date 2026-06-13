@@ -1,4 +1,5 @@
 import {
+  Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
@@ -57,6 +58,18 @@ export function createBirmelDeployment(chart: Chart) {
     },
   });
 
+  // Shared "PinchTab" 1Password item synced into the birmel namespace so birmel
+  // and the in-cluster pinchtab service (pinchtab namespace) share one bearer
+  // token. Same item is referenced by resources/pinchtab/index.ts.
+  const pinchtabCreds = new OnePasswordItem(chart, "birmel-pinchtab-1p", {
+    spec: {
+      itemPath: vaultItemPath("t2dgtdx47yd2gegad6zeelzylu"),
+    },
+    metadata: {
+      name: "birmel-pinchtab-token",
+    },
+  });
+
   const localPathVolume = new ZfsNvmeVolume(chart, "birmel-pvc", {
     storage: Size.gibibytes(2),
   });
@@ -67,6 +80,16 @@ export function createBirmelDeployment(chart: Chart) {
       securityContext: {
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
+      },
+      // Baseline request (no limits) so the bot isn't BestEffort.
+      // 30d peak ~510m / ~1.6Gi; steady ~10m / ~450Mi.
+      resources: {
+        cpu: {
+          request: Cpu.millis(50),
+        },
+        memory: {
+          request: Size.mebibytes(512),
+        },
       },
       ports: [{ number: 4112, name: "oauth" }],
       volumeMounts: [
@@ -107,8 +130,10 @@ export function createBirmelDeployment(chart: Chart) {
           ),
           key: "OPENAI_API_KEY",
         }),
-        OPENAI_MODEL: EnvValue.fromValue("gpt-5.4-mini"),
+        OPENAI_MODEL: EnvValue.fromValue("gpt-5.5"),
         OPENAI_CLASSIFIER_MODEL: EnvValue.fromValue("gpt-5.4-nano"),
+        OPENAI_REASONING_EFFORT: EnvValue.fromValue("medium"),
+        OPENAI_TEXT_VERBOSITY: EnvValue.fromValue("low"),
 
         // Anthropic configuration
         ANTHROPIC_API_KEY: EnvValue.fromSecretValue({
@@ -179,6 +204,23 @@ export function createBirmelDeployment(chart: Chart) {
         LOG_LEVEL: EnvValue.fromValue("info"),
         VOICE_ENABLED: EnvValue.fromValue("true"),
         DAILY_POSTS_ENABLED: EnvValue.fromValue("true"),
+        WEB_SEARCH_PROVIDER: EnvValue.fromValue("openai"),
+        BROWSER_PROVIDER: EnvValue.fromValue("pinchtab"),
+        PINCHTAB_BASE_URL: EnvValue.fromValue(
+          "http://pinchtab.pinchtab.svc.cluster.local:9867",
+        ),
+        PINCHTAB_PROFILE: EnvValue.fromValue("birmel"),
+        // Token comes from the shared "PinchTab" 1Password item (synced into the
+        // birmel namespace via pinchtabCreds), the same item the in-cluster
+        // pinchtab service authenticates against.
+        PINCHTAB_TOKEN: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "birmel-pinchtab-token-secret",
+            pinchtabCreds.name,
+          ),
+          key: "PINCHTAB_TOKEN",
+        }),
 
         // Editor configuration
         EDITOR_ENABLED: EnvValue.fromValue("true"),

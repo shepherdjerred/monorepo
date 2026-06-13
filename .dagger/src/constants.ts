@@ -35,24 +35,51 @@ export const MAVEN_IMAGE =
   "maven:3.9.15-eclipse-temurin-25@sha256:1c3a703ab39fee7ac0880f46e6ccd22c0d701f17f0616e6e66a258ddc1c637d2";
 // renovate: datasource=docker depName=texlive/texlive
 export const TEXLIVE_IMAGE =
-  "texlive/texlive:TL2024-historic@sha256:fd576ce8b1cfd03cdabc15ca75682fb050eb10de5c057d81449883c2ad644855";
+  "texlive/texlive:TL2024-historic@sha256:7cf892aa62a923b3a2d9242a27e3f0d8b432385e8f76f34049ffad676aabcc1c";
 // renovate: datasource=docker depName=caddy
 export const CADDY_IMAGE =
   "caddy:2.11.3-alpine@sha256:86deaf5e3d3408a6ccec08fbb79989783dd26e206ae10bcf78a801dc8c9ab794";
 // renovate: datasource=docker depName=caddy
 export const CADDY_BUILDER_IMAGE =
-  "caddy:2.11.3-builder-alpine@sha256:52575959b1eeee9900869325a953d71e4c521ab9102dd5cce07d429ea8246b85";
-// renovate: datasource=docker depName=python
-export const PYTHON_IMAGE =
-  "python:3.14-slim@sha256:c845af9399020c7e562969a13689e929074a10fd057acd1b1fad06a2fb068e97";
-
+  "caddy:2.11.3-builder-alpine@sha256:3eae6b351ecdb05da6d16e341261a457692d344a435764c5ece7a60cf03a23f3";
+// xcaddy --with module for the S3 proxy plugin. The fork keeps the upstream
+// import path (existing Caddyfiles keep working) and adds HEAD support, the
+// 304-on-index fix, and 206/Accept-Ranges on byte-range responses (Safari
+// refuses to play video from origins that answer 200 to Range requests).
+// Not managed by renovate — bump the tag when the fork changes.
+export const CADDY_S3_PROXY_MODULE =
+  "github.com/lindenlab/caddy-s3-proxy=github.com/shepherdjerred/caddy-s3-proxy@v0.5.7-head2";
 // Base image for obsidian-headless container (uses Node, not Bun, due to native better-sqlite3 addon).
 // renovate: datasource=docker depName=node
 export const OBSIDIAN_HEADLESS_BASE_IMAGE =
   "node:24-slim@sha256:242549cd46785b480c832479a730f4f2a20865d61ea2e404fdb2a5c3d3b73ecf";
+// emscripten toolchain for the discord-plays-mario-kart N64Wasm core build.
+// Pinned to 2.0.7 — the exact toolchain the vendored parallel-n64 + angrylion
+// source (packages/discord-plays-mario-kart/wasm-src) is known to compile with.
+// Not Renovate-managed: a newer emsdk silently breaks the legacy SDL2/GLES2
+// build, so the version is intentionally frozen until the core is reworked.
+export const EMSCRIPTEN_IMAGE =
+  "emscripten/emsdk:2.0.7@sha256:cbeeb7cccd2e7915fe0596345f10bfdec5578cc0386aaa823ad6f1d41910619f";
 // renovate: datasource=docker depName=alpine/helm
 export const HELM_IMAGE =
   "alpine/helm:4.1.4@sha256:8edcaedab4d9864886b7f443d55731be87d4b5ec7dca714c24551455707a8aac";
+
+// Quality-step scanner images (used by .dagger/src/quality.ts).
+// Pinned with `@sha256:` digests to match every other image constant in
+// this file — a mutable tag would let an upstream registry mutation
+// silently alter the security tooling without a Renovate signal.
+// renovate: datasource=docker depName=aquasec/trivy
+export const TRIVY_IMAGE =
+  "aquasec/trivy:0.70.0@sha256:be1190afcb28352bfddc4ddeb71470835d16462af68d310f9f4bca710961a41e";
+// renovate: datasource=docker depName=semgrep/semgrep
+export const SEMGREP_IMAGE =
+  "semgrep/semgrep:1.162.0@sha256:9349edbadf90c3f3c0c3f55867625354e89680e6fa10d9034042af52fdb0e0d0";
+// renovate: datasource=docker depName=zricethezav/gitleaks
+export const GITLEAKS_IMAGE =
+  "zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f";
+// renovate: datasource=docker depName=koalaman/shellcheck-alpine
+export const SHELLCHECK_IMAGE =
+  "koalaman/shellcheck-alpine:v0.11.0@sha256:9955be09ea7f0dbf7ae942ac1f2094355bb30d96fffba0ec09f5432207544002";
 
 // Pinned Bun version for containers that install Bun manually (e.g. Playwright)
 // renovate: datasource=npm depName=bun

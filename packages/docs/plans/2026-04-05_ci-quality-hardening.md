@@ -4,6 +4,8 @@
 
 Active / Not Started. Knip, Trivy, and Semgrep are still soft-failing in CI.
 
+> **Stale-content note (2026-06-06):** the premise still holds (`trivy`/`semgrep`/`knip` remain `softFail: true`), but the quality steps moved from `.buildkite/scripts/*` into Dagger — the live code is `.dagger/src/quality.ts` (referenced below as `quality.ts:134/158`, now in `.dagger/src/`). The `--skip-dirs practice` subtask already landed (`.dagger/src/quality.ts:194`). Re-verify the file/line references before acting.
+
 ## Context
 
 All three quality tools are `softFail: true` in Buildkite CI. Goal: fix all findings and make them hard failures. Philosophy: **fix the code, don't suppress findings**. Only `archive/` and `practice/` may be excluded (genuinely non-production).

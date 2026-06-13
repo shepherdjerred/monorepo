@@ -29,6 +29,9 @@ const SUPPRESSION_PATTERNS = [
 
 // Files where suppression patterns are legitimate (config, the script itself, etc.)
 const EXCLUDED_FILES = [
+  // Vendored fork of @dank074/discord-video-stream — preserve upstream source as-is, including
+  // its @ts-expect-error comments (matched as a path prefix).
+  "packages/discord-video-stream/",
   "scripts/check-suppressions.ts",
   "scripts/quality-ratchet.sh",
   "CHANGELOG.md",
@@ -44,6 +47,10 @@ const EXCLUDED_FILES = [
   "packages/birmel/tests/agent-tools/tools/discord/channel-resolver.test.ts",
   // Intentional: Sentry ErrorBoundary class types incompatible with React 19
   "packages/discord-plays-pokemon/packages/frontend/src/main.tsx",
+  // Intentional: Sentry ErrorBoundary class types incompatible with React 19 (same issue as Pokemon)
+  "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx",
+  // Vendored third-party code: mupen64plus-core (GPL-2.0) — preserve upstream source as-is
+  "packages/discord-plays-mario-kart/wasm-src/code/src/mupen64plus-core/",
   // Intentional: public Firebase web API key (same as better-skill-capped fetcher)
   "packages/temporal/src/activities/fetcher.ts",
   // Intentional: ha-codegen emits `/* eslint-disable */` into the generated HA schema header
@@ -83,6 +90,9 @@ const EXCLUDED_FILES = [
   // The literal "x-access-token" is the username GitHub's HTTPS clone
   // expects when the password is a PAT; not a token-in-URL.
   "packages/temporal/src/lib/pr-review-workdir.ts",
+  // Same GIT_ASKPASS pattern as data-dragon.ts — emits "x-access-token" as the
+  // git username for the monthly pokeemerald.wasm refresh clone.
+  "packages/temporal/src/activities/pokeemerald-wasm.ts",
 ];
 
 type Finding = {

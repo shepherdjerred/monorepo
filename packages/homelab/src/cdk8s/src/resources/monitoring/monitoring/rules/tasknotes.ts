@@ -61,15 +61,20 @@ export function getTasknotesRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
-          alert: "TasknotesContainerRestarted",
+          // Alert on actual crash-looping, not single restarts. A routine
+          // GitOps image bump rolls the pod (one restart) but never enters
+          // CrashLoopBackOff, so this stays quiet on clean deploys while still
+          // catching a container that is genuinely failing to stay up
+          // (PagerDuty 5398).
+          alert: "TasknotesContainerCrashLooping",
           annotations: {
-            summary: "TaskNotes container restarted recently",
+            summary: "TaskNotes container is crash-looping",
             message: escapePrometheusTemplate(
-              "TaskNotes container {{ $labels.container }} restarted {{ $value | humanize }} time(s) in the last 15 minutes. Check logs and pod events.",
+              "TaskNotes container {{ $labels.container }} is in CrashLoopBackOff. Check logs and pod events.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'sum by (container) (increase(kube_pod_container_status_restarts_total{namespace="tasknotes"}[15m])) > 0',
+            'max by (namespace, pod, container) (kube_pod_container_status_waiting_reason{namespace="tasknotes", reason="CrashLoopBackOff"}) > 0',
           ),
           for: "5m",
           labels: {

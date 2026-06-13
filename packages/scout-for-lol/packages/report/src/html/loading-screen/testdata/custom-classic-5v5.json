@@ -1,0 +1,208 @@
+{
+  "gameId": 5576694431,
+  "queueType": "custom",
+  "queueDisplayName": "custom",
+  "isRanked": false,
+  "mapName": "Summoner's Rift",
+  "bans": [
+    {
+      "championId": 11,
+      "championName": "MasterYi",
+      "team": "blue"
+    },
+    {
+      "championId": 19,
+      "championName": "Warwick",
+      "team": "blue"
+    },
+    {
+      "championId": 79,
+      "championName": "Gragas",
+      "team": "blue"
+    },
+    {
+      "championId": 523,
+      "championName": "Aphelios",
+      "team": "blue"
+    },
+    {
+      "championId": 75,
+      "championName": "Nasus",
+      "team": "blue"
+    },
+    {
+      "championId": 266,
+      "championName": "Aatrox",
+      "team": "red"
+    },
+    {
+      "championId": 157,
+      "championName": "Yasuo",
+      "team": "red"
+    },
+    {
+      "championId": 147,
+      "championName": "Seraphine",
+      "team": "red"
+    },
+    {
+      "championId": 64,
+      "championName": "LeeSin",
+      "team": "red"
+    }
+  ],
+  "gameStartTime": 1780816258099,
+  "layout": "standard",
+  "participants": [
+    {
+      "puuid": "JZ2XKazbNNRRTMqlesIdG_1XSrrJvJzBID_kmTIKG-eAdfoxpCxmqjgnL2LRVrcDgUGFl6kShzHvQA",
+      "summonerName": "DarkinBunnygirl#Aatr",
+      "championId": 254,
+      "championName": "Vi",
+      "championDisplayName": "Vi",
+      "skinNum": 0,
+      "team": "blue",
+      "spell1Id": 11,
+      "spell2Id": 4,
+      "keystoneRuneId": 9923,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": false,
+      "lane": "jungle"
+    },
+    {
+      "puuid": null,
+      "summonerName": "Rakan",
+      "championId": 497,
+      "championName": "Rakan",
+      "championDisplayName": "Rakan",
+      "skinNum": 0,
+      "team": "blue",
+      "spell1Id": 4,
+      "spell2Id": 14,
+      "keystoneRuneId": 8351,
+      "secondaryTreeId": 8100,
+      "isTrackedPlayer": false,
+      "lane": "support"
+    },
+    {
+      "puuid": "HSLY2gc9LDSCRW4CjxVWZEWswX-hmhat3Z--LHMX60TMeNyZIN009clTFZ8jGxJw-LFZ9yHsVqHMkQ",
+      "summonerName": "Phaerix#NA1",
+      "championId": 2,
+      "championName": "Olaf",
+      "championDisplayName": "Olaf",
+      "skinNum": 0,
+      "team": "blue",
+      "spell1Id": 4,
+      "spell2Id": 6,
+      "keystoneRuneId": 8010,
+      "secondaryTreeId": 8300,
+      "isTrackedPlayer": false,
+      "lane": "top"
+    },
+    {
+      "puuid": "18bi42Gf97CI1VVbLW8sYK_m8kAjYYX3I_uxllKh8sC9PiG2Zzyk68XSvp9dYZOXO1m7vU-xiArtjA",
+      "summonerName": "Virmel#NA1",
+      "championId": 51,
+      "championName": "Caitlyn",
+      "championDisplayName": "Caitlyn",
+      "skinNum": 0,
+      "team": "blue",
+      "spell1Id": 21,
+      "spell2Id": 4,
+      "keystoneRuneId": 8008,
+      "secondaryTreeId": 8100,
+      "isTrackedPlayer": true,
+      "lane": "adc"
+    },
+    {
+      "puuid": "GksNHpwZi2ICy9ccgifFytu9DvPtRYxmGmnGxcbe8shr4IFwa0hajbgj0eblVRYyL6oaqil5znDgGg",
+      "summonerName": "Windcatcher#888",
+      "championId": 90,
+      "championName": "Malzahar",
+      "championDisplayName": "Malzahar",
+      "skinNum": 0,
+      "team": "blue",
+      "spell1Id": 12,
+      "spell2Id": 4,
+      "keystoneRuneId": 8992,
+      "secondaryTreeId": 8300,
+      "isTrackedPlayer": false,
+      "lane": "middle"
+    },
+    {
+      "puuid": "aLw-CHkfMnmlaeCR9Mdavh0UusuEitdttlIL-mBqW_NyhwXGbKuq1FVMNv2maN-imIa3r-xLHxRDGw",
+      "summonerName": "Snipzar#UW1",
+      "championId": 56,
+      "championName": "Nocturne",
+      "championDisplayName": "Nocturne",
+      "skinNum": 0,
+      "team": "red",
+      "spell1Id": 4,
+      "spell2Id": 11,
+      "keystoneRuneId": 8010,
+      "secondaryTreeId": 8100,
+      "isTrackedPlayer": false,
+      "lane": "jungle"
+    },
+    {
+      "puuid": "BxEyY6sX-bWFvtXtRD3IWIbmm5Wa7WFSfwOUjOsbhcxDknt8tK8VzfSTBsoGnllxsqqaIV8qTRr8nQ",
+      "summonerName": "FilpinoThug#NA1",
+      "championId": 39,
+      "championName": "Irelia",
+      "championDisplayName": "Irelia",
+      "skinNum": 0,
+      "team": "red",
+      "spell1Id": 3,
+      "spell2Id": 4,
+      "keystoneRuneId": 8010,
+      "secondaryTreeId": 8400,
+      "isTrackedPlayer": false,
+      "lane": "middle"
+    },
+    {
+      "puuid": "EjRmQ1H7E1md8UNw_9BwqcIxN3QqKMkP7aPQFLOrIcV5HoH5qulKRCBAT1ibn5EgrljZ82RT1sjccg",
+      "summonerName": "sjerred#sjerr",
+      "championId": 420,
+      "championName": "Illaoi",
+      "championDisplayName": "Illaoi",
+      "skinNum": 0,
+      "team": "red",
+      "spell1Id": 12,
+      "spell2Id": 4,
+      "keystoneRuneId": 8437,
+      "secondaryTreeId": 8000,
+      "isTrackedPlayer": true,
+      "lane": "top"
+    },
+    {
+      "puuid": "PFmOO4HVmc2U_UhEzEjgAiZORKxWRxpdu4YyqI0uEa9PZqSLhg7sABnCuGBiPHd7BwVl6x4OSEK-fQ",
+      "summonerName": "ZynZhao#NA2",
+      "championId": 34,
+      "championName": "Anivia",
+      "championDisplayName": "Anivia",
+      "skinNum": 0,
+      "team": "red",
+      "spell1Id": 4,
+      "spell2Id": 12,
+      "keystoneRuneId": 8112,
+      "secondaryTreeId": 8200,
+      "isTrackedPlayer": false,
+      "lane": "adc"
+    },
+    {
+      "puuid": null,
+      "summonerName": "Senna",
+      "championId": 235,
+      "championName": "Senna",
+      "championDisplayName": "Senna",
+      "skinNum": 0,
+      "team": "red",
+      "spell1Id": 4,
+      "spell2Id": 7,
+      "keystoneRuneId": 8992,
+      "secondaryTreeId": 8300,
+      "isTrackedPlayer": false,
+      "lane": "support"
+    }
+  ]
+}
