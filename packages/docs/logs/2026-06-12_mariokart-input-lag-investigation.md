@@ -59,6 +59,24 @@ Low-latency video feed in the web controller itself — WebRTC from the backend,
 H.264-over-WebSocket via WebCodecs (frames are already BGRA buffers in `pushFrame`). Discord
 stream remains for spectators. Discord-side tuning has little headroom left.
 
+## Post-deploy measurement runbook
+
+Once PR #1128 is deployed (remember the chart/image lag — confirm a catch-up build published a
+chart embedding the new image):
+
+1. Start a stream (join the voice channel), claim a seat, hold a button.
+2. **Glass-to-glass:** compare the on-stream `UTC HH:MM:SS.mmm` clock against `date -u` /
+   time.is/UTC. The difference is the Discord viewer latency.
+3. **Press→glass:** screen-record the stream while pressing a button; ms from keypress to the seat
+   digit lighting in the HUD (`UTC … 1..4`) is the full perceived input lag.
+4. **Metrics (Grafana → "Discord Plays — Stream Health", new rows):** input apply delay p95,
+   controller RTT p50/p95, ffmpeg speed ratio (<1 sustained = encode-bound), send frametime ratio
+   p95 + late sends, frame push interval/write p95.
+5. **Loki:** one `ffmpeg command` line per session start, `stream session summary` on stop
+   (frames, late %, last speed ratio); rate-limited warn if encode runs sub-realtime.
+6. Attribution: anything not accounted for by the above segments is Discord ingest + viewer
+   buffering.
+
 ## Session Log — 2026-06-12
 
 ### Done
@@ -69,18 +87,32 @@ stream remains for spectators. Discord-side tuning has little headroom left.
   Loki logs for the window; ruled out emulation slowdown, encoder backpressure, CPU throttling,
   and input-path delays.
 - Attributed perceived lag to Discord Go-Live viewer-side latency (only video feedback channel).
-- Implemented the timestamp overlay (`src/stream/overlay.ts` + tests, wired in `src/index.ts`,
-  eslint allowDefaultProject entry). 20/20 backend tests, typecheck and lint clean.
+- Implemented the timestamp overlay (`src/stream/overlay.ts` + tests, wired in `src/index.ts`),
+  PR #1128.
+- Implemented the full latency-attribution instrumentation per
+  `plans/2026-06-12_mk64-latency-instrumentation.md` (same PR): controller RTT reporting
+  (`latency-report` request kind + `controller_rtt_ms`), input receive→apply tracker
+  (`emulator_input_apply_delay_ms`), StreamObserver wiring (ffmpeg speed ratio/fps/bitrate,
+  send frametime ratio, late frames, hw-encode gauge), frame push interval/write histograms,
+  per-session summary log, per-seat input-echo HUD (`UTC … 1..4`), and two new Grafana rows on
+  the discord-plays dashboard (+ added it to the query-health test corpus).
+- All verified: mario-kart workspace tests (43 backend), typecheck, eslint, prettier; homelab
+  dashboard tests + cdk8s typecheck.
 
 ### Remaining
 
-- After deploy: play/watch a session, read latency off the stream vs `date -u`, record the number.
-- If multi-second (expected): decide on step 2 (WebRTC/WebCodecs feed in the controller SPA).
+- Run the post-deploy measurement runbook above after merge + deploy; record the numbers.
+- If glass-to-glass is multi-second (expected): step 2 is a WebRTC/WebCodecs feed in the
+  controller SPA so players don't depend on the Discord stream for feedback.
 
 ### Caveats
 
-- Discord-side latency was inferred by elimination; the overlay exists to confirm it.
-- The overlay is always-on for the stream. If it should be toggleable later, follow the
+- Discord-side latency was inferred by elimination; the overlay + instrumentation exist to
+  confirm and quantify it.
+- The HUD is always-on for the stream. If it should be toggleable later, follow the
   `STREAM_HARDWARE_ACCELERATION` env-override pattern in `src/index.ts`.
 - p95 emulate ~42ms means little headroom; a 60fps bump or busier scenes could push the emulator
   over budget. Watch `emulator_frame_late_ms` / `resync` if changing FPS.
+- New panels are empty for pokemon (mario-kart-only instrumentation, by choice).
+- Mid-session the homelab node rebooted (all tailnet devices offline at once, public sites
+  530/502) — unrelated to this work; uploads/queries resumed after recovery.
