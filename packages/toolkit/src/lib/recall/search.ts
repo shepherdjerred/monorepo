@@ -111,8 +111,8 @@ export async function hybridSearch(
       );
     }
 
-    // Candidates arrive sorted by distance, so the first chunk seen for a
-    // document is its best one. Cap at candidateLimit docs so both fusion
+    // Collapse chunk-level hits to one entry per document, keeping the
+    // highest-scoring chunk. Cap at candidateLimit docs so both fusion
     // lists have comparable rank depth.
     vectorResults = collapseToBestChunkPerDoc(
       vecCandidates.map((row) => {
@@ -236,13 +236,16 @@ function reciprocalRankFusion(
 }
 
 /**
- * Collapses chunk-level results (sorted best-first) to one entry per
- * document, keeping each document's best chunk.
+ * Collapses chunk-level results to one entry per document, keeping each
+ * document's best chunk (the one with the highest score, i.e. lowest
+ * vector distance). Order-independent: does not assume the caller has
+ * pre-sorted results.
  */
 function collapseToBestChunkPerDoc(results: SearchResult[]): SearchResult[] {
   const byDoc = new Map<string, SearchResult>();
   for (const result of results) {
-    if (!byDoc.has(result.path)) {
+    const existing = byDoc.get(result.path);
+    if (existing == null || result.score > existing.score) {
       byDoc.set(result.path, result);
     }
   }
