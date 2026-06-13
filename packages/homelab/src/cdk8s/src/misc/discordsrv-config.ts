@@ -6,11 +6,17 @@
  * - 1Password secret for bot token and channel IDs
  * - Environment variable substitution via itzg/minecraft-server
  *
- * Required 1Password fields (lowercase-kebab labels; all required — no optional
- * secrets, a missing field fails the pod at startup rather than booting with a
- * silent gap):
- * - discord-bot-token: The Discord bot token
- * - discord-channel-id: The main chat channel ID
+ * Required 1Password fields (canonical UPPERCASE_SNAKE names per the env-var
+ * naming convention; all required — no optional secrets, a missing field fails
+ * the pod at startup rather than booting with a silent gap):
+ * - DISCORD_BOT_TOKEN: The Discord bot token
+ * - DISCORD_CHANNEL_ID: The main chat channel ID
+ *
+ * NOTE: the 1P item's field labels are currently lowercase-kebab
+ * (`discord-bot-token` / `discord-channel-id`), so the synced secret keys are
+ * lowercase and these UPPERCASE refs do not resolve. minecraft-sjerred runs at
+ * 0 replicas so this is dormant; the fix is to relabel the 1P fields to the
+ * canonical UPPERCASE names (not to lowercase the code).
  *
  * Console channel + invite link are not wired (features unused) — the config
  * template sets them to empty strings.
@@ -81,15 +87,12 @@ export function getDiscordSrvExtraEnv(
   return {
     // Enable itzg's environment variable substitution for ${CFG_*} placeholders
     REPLACE_ENV_VARIABLES: "TRUE",
-    // DiscordSRV natively reads bot token from DISCORDSRV_TOKEN env var.
-    // Secret keys are lowercase-kebab (the 1P field labels are
-    // `discord-bot-token` / `discord-channel-id`), so reference them exactly —
-    // an uppercase key would not resolve and the required ref would crash-loop.
+    // DiscordSRV natively reads bot token from DISCORDSRV_TOKEN env var
     DISCORDSRV_TOKEN: {
       valueFrom: {
         secretKeyRef: {
           name: secretName,
-          key: "discord-bot-token",
+          key: "DISCORD_BOT_TOKEN",
         },
       },
     },
@@ -97,7 +100,7 @@ export function getDiscordSrvExtraEnv(
       valueFrom: {
         secretKeyRef: {
           name: secretName,
-          key: "discord-channel-id",
+          key: "DISCORD_CHANNEL_ID",
         },
       },
     },
