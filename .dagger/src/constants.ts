@@ -101,13 +101,13 @@ export const GOLANGCI_LINT_VERSION = "v2.12.2";
 export const GH_CLI_VERSION = "2.92.0";
 
 // renovate: datasource=github-releases depName=kubernetes/kubectl
-export const KUBECTL_VERSION = "v1.36.1";
+export const KUBECTL_VERSION = "v1.36.2";
 
 // renovate: datasource=github-releases depName=github/github-mcp-server
 export const GITHUB_MCP_SERVER_VERSION = "1.0.4";
 
 // renovate: datasource=github-releases depName=siderolabs/talos
-export const TALOSCTL_VERSION = "v1.13.3";
+export const TALOSCTL_VERSION = "v1.13.4";
 
 // renovate: datasource=github-releases depName=opentofu/opentofu
 export const TOFU_VERSION = "1.11.7";
