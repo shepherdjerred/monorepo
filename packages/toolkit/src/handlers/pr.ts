@@ -86,14 +86,19 @@ Subcommands:
   health [PR_NUMBER]         Check PR health (conflicts, CI, approval)
   logs <RUN_ID>              Get workflow run logs
   detect                     Detect PR for current branch
-  asset <PR> <FILE...>       Upload screenshots to public.sjer.red and print URLs
+  asset <PR> <FILE|DIR...>   Upload PR media (images, video, asciinema .cast,
+                             static demo-site dirs) to public.sjer.red and
+                             print URLs. Dirs need a root index.html; .cast
+                             files get a generated HTML player page.
 
 Options:
   --repo <owner/repo>   Repository (default: auto-detect)
   --json                Output as JSON
   --failed-only         (logs) Only show failed job logs
   --job <name>          (logs) Filter to specific job
-  --markdown            (asset) Emit markdown image tags instead of bare URLs
+  --markdown            (asset) Emit type-appropriate markdown (inline image
+                        tags for images, labeled links for video/demo/player
+                        pages) instead of bare URLs
   --profile <name>      (asset) AWS profile to use (overrides AWS_PROFILE)
 
 Credentials (asset):
