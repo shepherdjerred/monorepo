@@ -124,7 +124,10 @@ function withCogapp(container: Container): Container {
       "--break-system-packages",
       `cogapp==${COGAPP_VERSION}`,
     ])
-    .withExec(["cog", "--version"]);
+    // cogapp has no `--version` flag; `--help` exits 0 and proves the `cog`
+    // entrypoint installed onto PATH (reachable by UID 1000). The pinned
+    // version is already asserted by the `cogapp==` spec above.
+    .withExec(["cog", "--help"]);
 }
 
 /**
