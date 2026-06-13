@@ -250,7 +250,7 @@ This project packages a macOS cross-compilation toolchain so Linux hosts can bui
 
 ### [tips](https://github.com/shepherdjerred/monorepo/tree/main/archive/tips) (2026-05-22)
 
-*No description available.*
+QuickTip is a macOS menu bar application that surfaces daily productivity tips from bundled or external Markdown content and lets users browse them in dedicated SwiftUI windows. The app is built with Swift 6 and SwiftUI, pulling in SPM dependencies such as Yams and swift-markdown alongside macOS frameworks including CoreSpotlight, AppKit, and UserNotifications. A centralized `AppState` instance powers multiple scenes so the app can schedule daily tip notifications and keep the menu bar, tip window, and browse window in sync.
 
 ### [hn-enhancer](https://github.com/shepherdjerred/monorepo/tree/main/archive/hn-enhancer) (2026-05-22)
 

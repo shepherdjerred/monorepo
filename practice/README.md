@@ -291,7 +291,7 @@ This project implements a multithreaded Rust HTTP server that listens on 127.0.0
 
 ### [langchain](https://github.com/shepherdjerred/monorepo/tree/main/practice/langchain) (2024-08-30)
 
-_No description available._
+This project runs a LangChain-powered translation service that exposes a `/chain` HTTP endpoint for converting text into a target language. It is implemented in Python with FastAPI, LangChain Core, LangServe, the `langchain-anthropic` ChatAnthropic Claude 3 Sonnet model, StrOutputParser, and uvicorn. The app composes a ChatPromptTemplate → ChatAnthropic → StrOutputParser pipeline registered through LangServe while enabling LangSmith tracing and prompting for LangChain and Anthropic API credentials at startup.
 
 ### [leetcode](https://github.com/shepherdjerred/monorepo/tree/main/practice/leetcode) (2024-08-30)
 
