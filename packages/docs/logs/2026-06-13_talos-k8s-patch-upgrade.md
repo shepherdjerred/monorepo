@@ -82,3 +82,21 @@ Editing `image.yaml`'s extraKernelArgs/systemExtensions without regenerating the
 - `mcp-gateway` remains `CreateContainerConfigError` (missing `FASTMAIL_TOKEN` in `mcp-gateway/mcp-gateway-credentials`) — pre-existing, unrelated to this upgrade.
 - The apiserver volume-mount deadlock under reboot churn is worth knowing: if `upgrade-k8s` stalls on `config version mismatch` with the apiserver unreachable, `talosctl service kubelet restart` is the recovery.
 - The node's machine-config `install.image` still references the old `ef9feacc…` schematic (it isn't rewritten by `talosctl upgrade --image`); only matters on a full reinstall. The committed `patches/image.yaml` is now correct (`4560d31e…`), so a regenerated config would be right.
+
+## Session Log — 2026-06-13 (Greptile comment fixes)
+
+### Done
+
+- Fixed P1 Greptile comment (`PRRT_kwDOHf4r4c6JWDMG`): `packages/homelab/README.md:219` — the `upgrade-k8s` snippet already had `--endpoint https://torvalds:6443` added in commit `28e86e928` (which was in the worktree before this session); verified the README now reads `talosctl --nodes 192.168.1.81 --endpoint https://torvalds:6443 upgrade-k8s --to $VERSION`.
+- Fixed P2 Greptile comment (`PRRT_kwDOHf4r4c6JWDMV`): `packages/homelab/src/talos/update-image-id.ts:23` — expanded the comment on `parseSchematicId` to explicitly note the intentional AGENTS.md deviation (manual `typeof` guards instead of Zod, justified because the script must run without `bun install` in the CI quality container). Commit `f72bc3723`.
+- All hooks passed (prettier, eslint-homelab, quality-ratchet, homelab-typecheck, homelab tests).
+- Pushed both commits; remote advanced from `b504ef71c` to `f72bc3723`.
+- Resolved both Greptile threads via GraphQL mutation (both now `isResolved: true`).
+
+### Remaining
+
+- Nothing; PR #1145 greptile comments are addressed.
+
+### Caveats
+
+- The pre-commit `eslint-homelab` step requires `jiti` installed and `eslint-config` built; a fresh worktree will fail on first attempt without `bun install` in homelab and building `packages/eslint-config`. This session hit that on the first commit attempt (solved by installing deps then rebuilding eslint-config).
