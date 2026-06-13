@@ -100,3 +100,40 @@ PR); until then, a missing field surfaces as a pod crash-loop.
   but `scheduleRequiresConfigPause` in `register-schedules.ts` still checks for it.
   This means `pr-review-eval-nightly` schedule will always be paused (database env
   var never set). That's acceptable behavior since `PR_BOT_ENABLED=false`.
+
+## Session Log — 2026-06-13 (resolution: all secrets settled + live)
+
+### Done
+
+- **cancel-on-merge FIXED & LIVE.** Created a Buildkite token (verified `write_builds`),
+  `op`-added it to the temporal 1P item (`temporal-worker-secrets`), operator synced it,
+  restarted `temporal-temporal-worker` → new pod has the token; `BUILDKITE_API_TOKEN is
+required` errors went 100+/24h → **0**. Did not require PR #1163 to merge — the deployed
+  worker already referenced the (optional) env, so token + restart was enough.
+- **Refs removed instead of populated** (features off/unused — still zero optional secrets):
+  `VOYAGE_API_KEY`, `PR_REVIEW_EVAL_DATABASE_URL` (PR bot disabled); DiscordSRV
+  `DISCORD_CONSOLE_CHANNEL_ID` + `DISCORD_INVITE_LINK` (template now hardcodes empty);
+  `HOMELAB_AUDIT_ARCHIVE_BUCKET` (audit is email-only via agentTaskWorkflow). Updated the
+  `temporal-audit-tooling` + `streambot` synth tests.
+- **Pokemon goal-mode auth = `OPENAI_API_KEY`** (single method; dropped the CODEX\_\* refs).
+  User opted for the API key over a ChatGPT-sub `auth.json` mount (the sub route needs an
+  initContainer-copied writable auth.json + periodic re-login; not worth it here). Validated
+  the key (OpenAI `/v1/models` → 200), `op`-added to the Pokebot item, operator synced,
+  restarted the pokemon pod → has `OPENAI_API_KEY`.
+- **TMDB:** no action — the `streambot-tmdb` 1P item already carries `TMDB_API_KEY`; it
+  just isn't synced into the cluster yet because the `streambot-tmdb` OnePasswordItem isn't
+  deployed (predates current streambot). Syncs when the chart next deploys.
+
+### Remaining
+
+- Merge PR #1163 + ArgoCD sync. Every required secret now exists, so no crash-loops expected.
+- Optional security hardening: the Buildkite token was created with **full org scope**
+  (write_agents, delete_packages, graphql, …); cancel only needs `read_builds`+`write_builds`.
+  Regenerate a narrowly-scoped token and re-`op`-store when convenient.
+
+### Caveats
+
+- The active deploys for the cancel fix + pokemon key were applied to the **currently
+  running pods** (token/key in 1P + pod restart). PR #1163 makes the _code_ match (required
+  refs / removed refs) — until it merges, the running config and the branch differ only in
+  the optional→required flag and the removed dead refs.
