@@ -9,6 +9,7 @@ import {
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
 export function createBuildkiteApp(chart: Chart) {
   new Namespace(chart, "buildkite-namespace", {
@@ -100,8 +101,6 @@ export function createBuildkiteApp(chart: Chart) {
           versions["agent-stack-k8s"].split("@")[0] ??
           versions["agent-stack-k8s"],
         helm: {
-          // Untyped: this is an OCI-registry chart, not yet covered by
-          // HelmValuesForChart. See packages/docs/todos/oci-helm-chart-types.md.
           valuesObject: {
             agentStackSecret: "buildkite-agent-token",
             config: {
@@ -141,7 +140,7 @@ export function createBuildkiteApp(chart: Chart) {
                 ],
               },
             },
-          },
+          } satisfies HelmValuesForChart<"agent-stack-k8s">,
         },
       },
       destination: {
