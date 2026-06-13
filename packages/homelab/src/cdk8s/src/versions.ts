@@ -173,14 +173,14 @@ const versions = {
   "openebs/velero-plugin":
     "3.6.0@sha256:9ea3331d891e436a7239e37e68ca4c8888500cb122be7cdc9d8400f345555c76",
   // renovate: datasource=github-releases versioning=semver
-  "kubernetes/kubernetes": "v1.36.1",
+  "kubernetes/kubernetes": "v1.36.2",
   // renovate: datasource=custom.papermc versioning=semver
   paper: "26.1.2",
   // renovate: datasource=docker registryUrl=https://ghcr.io/recyclarr versioning=docker
   recyclarr:
     "8.6.0@sha256:3c38ceeb54438dd8327e4e65c9b48ba601a6d20fff833342d93c9b0bc4b1930b",
   // renovate: datasource=github-releases versioning=semver
-  "siderolabs/talos": "1.13.3",
+  "siderolabs/talos": "1.13.4",
   // renovate: datasource=helm registryUrl=https://opensource.zalando.com/postgres-operator/charts/postgres-operator versioning=semver
   "postgres-operator": "1.15.1",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver

@@ -109,6 +109,7 @@ import {
   trivyScanHelper,
   daggerHygieneHelper,
   tunnelDnsCoverageHelper,
+  talosSchematicSyncHelper,
   reactVersionSyncHelper,
   semgrepScanHelper,
   lockfileCheckHelper,
@@ -1299,6 +1300,12 @@ export class Monorepo {
   @func()
   async tunnelDnsCoverage(source: Directory): Promise<string> {
     return tunnelDnsCoverageHelper(source).stdout();
+  }
+
+  /** Verify the pinned Talos installer matches what image.yaml produces. */
+  @func()
+  async talosSchematicSync(source: Directory): Promise<string> {
+    return talosSchematicSyncHelper(source).stdout();
   }
 
   /** Verify react/react-dom (+ @types) resolve to matching versions in every bun.lock. */
