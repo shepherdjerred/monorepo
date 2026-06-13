@@ -104,6 +104,7 @@ import {
   markdownlintHelper,
   shellcheckHelper,
   qualityRatchetHelper,
+  checkTodosHelper,
   complianceCheckHelper,
   knipCheckHelper,
   gitleaksCheckHelper,
@@ -1371,6 +1372,12 @@ export class Monorepo {
   @func()
   async migrationGuard(source: Directory): Promise<string> {
     return migrationGuardHelper(source).stdout();
+  }
+
+  /** Enforce the source-marker → docs invariant for TODO/FIXME/XXX markers. */
+  @func()
+  async checkTodos(source: Directory): Promise<string> {
+    return checkTodosHelper(source).stdout();
   }
 
   /** Verify Scout's committed SQLite test template matches migrations + seeds. */

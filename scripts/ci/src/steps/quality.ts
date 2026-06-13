@@ -241,6 +241,20 @@ export function migrationGuardStep(): BuildkiteStep {
   });
 }
 
+/**
+ * Enforce the TODO source-marker → docs invariant (`scripts/check-todos.ts`).
+ * Runs in lefthook pre-commit; this gate makes it a CI merge requirement too,
+ * so a `--no-verify` commit can't slip an untracked marker past CI.
+ */
+export function checkTodosStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":clipboard: Check TODOs",
+    key: "check-todos",
+    daggerCmd: `${DAGGER_CALL} check-todos --source ${REPO_GIT_REF}`,
+    timeoutMinutes: 5,
+  });
+}
+
 export function mergeConflictStep(): BuildkiteStep {
   return daggerStep({
     label: ":no_entry: Merge Conflict Check",
