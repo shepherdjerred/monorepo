@@ -38,10 +38,11 @@ export type KyvernoHelmValuesGlobal = {
   extraEnvVars?: unknown[];
   /**
    * Global node labels for pod assignment. Non-global values will override the global value.
-   *
-   * @default {}
    */
-  nodeSelector?: KyvernoHelmValuesGlobalNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Global List of node taints to tolerate. Non-global values will override the global value.
+   */
   tolerations?: unknown[];
 };
 
@@ -74,8 +75,6 @@ export type KyvernoHelmValuesGlobalCaCertificates = {
 };
 
 export type KyvernoHelmValuesGlobalCaCertificatesVolume = object;
-
-export type KyvernoHelmValuesGlobalNodeSelector = object;
 
 export type KyvernoHelmValuesUpgrade = {
   /**
@@ -351,10 +350,11 @@ export type KyvernoHelmValuesCrdsMigration = {
   podSecurityContext?: KyvernoHelmValuesCrdsMigrationPodSecurityContext;
   /**
    * Node labels for pod assignment
-   *
-   * @default {}
    */
-  nodeSelector?: KyvernoHelmValuesCrdsMigrationNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * List of node taints to tolerate
+   */
   tolerations?: unknown[];
   /**
    * Pod anti affinity constraints.
@@ -424,8 +424,6 @@ export type KyvernoHelmValuesCrdsMigrationImage = {
 };
 
 export type KyvernoHelmValuesCrdsMigrationPodSecurityContext = object;
-
-export type KyvernoHelmValuesCrdsMigrationNodeSelector = object;
 
 export type KyvernoHelmValuesCrdsMigrationPodAntiAffinity = object;
 
@@ -875,9 +873,12 @@ export type KyvernoHelmValuesTest = {
   image?: KyvernoHelmValuesTestImage;
   imagePullSecrets?: unknown[];
   /**
-   * @default {"limits":{"cpu":"100m","memory":"256Mi"},"requests":{"cpu":"10m","memory":"64Mi"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: KyvernoHelmValuesTestResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Security context for the test containers
    *
@@ -901,14 +902,15 @@ export type KyvernoHelmValuesTest = {
   /**
    * Node labels for pod assignment
    * Additional Pod annotations
-   *
-   * @default {}
    */
-  nodeSelector?: KyvernoHelmValuesTestNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
    * @default {}
    */
   podAnnotations?: KyvernoHelmValuesTestPodAnnotations;
+  /**
+   * List of node taints to tolerate
+   */
   tolerations?: unknown[];
 };
 
@@ -927,43 +929,6 @@ export type KyvernoHelmValuesTestImage = {
   repository?: string;
   tag?: unknown;
   pullPolicy?: unknown;
-};
-
-export type KyvernoHelmValuesTestResources = {
-  /**
-   * Pod resource limits
-   *
-   * @default {"cpu":"100m","memory":"256Mi"}
-   */
-  limits?: KyvernoHelmValuesTestResourcesLimits;
-  /**
-   * Pod resource requests
-   *
-   * @default {"cpu":"10m","memory":"64Mi"}
-   */
-  requests?: KyvernoHelmValuesTestResourcesRequests;
-};
-
-export type KyvernoHelmValuesTestResourcesLimits = {
-  /**
-   * @default "100m"
-   */
-  cpu?: string;
-  /**
-   * @default "256Mi"
-   */
-  memory?: string;
-};
-
-export type KyvernoHelmValuesTestResourcesRequests = {
-  /**
-   * @default "10m"
-   */
-  cpu?: string;
-  /**
-   * @default "64Mi"
-   */
-  memory?: string;
 };
 
 export type KyvernoHelmValuesTestSecurityContext = {
@@ -1029,8 +994,6 @@ export type KyvernoHelmValuesTestProjectedServiceAccountToken = {
   audience?: string;
 };
 
-export type KyvernoHelmValuesTestNodeSelector = object;
-
 export type KyvernoHelmValuesTestPodAnnotations = object;
 
 export type KyvernoHelmValuesCustomLabels = object;
@@ -1055,10 +1018,11 @@ export type KyvernoHelmValuesWebhooksCleanup = {
   podSecurityContext?: KyvernoHelmValuesWebhooksCleanupPodSecurityContext;
   /**
    * Node labels for pod assignment
-   *
-   * @default {}
    */
-  nodeSelector?: KyvernoHelmValuesWebhooksCleanupNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * List of node taints to tolerate
+   */
   tolerations?: unknown[];
   /**
    * Pod anti affinity constraints.
@@ -1097,9 +1061,12 @@ export type KyvernoHelmValuesWebhooksCleanup = {
    */
   securityContext?: KyvernoHelmValuesWebhooksCleanupSecurityContext;
   /**
-   * @default {"limits":{"cpu":"100m","memory":"256Mi"},"requests":{"cpu":"10m","memory":"64Mi"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: KyvernoHelmValuesWebhooksCleanupResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {"automountServiceAccountToken":true,"projectedServiceAccountToken":{"expirationSeconds":3600,"audience":""}}
    */
@@ -1124,8 +1091,6 @@ export type KyvernoHelmValuesWebhooksCleanupImage = {
 };
 
 export type KyvernoHelmValuesWebhooksCleanupPodSecurityContext = object;
-
-export type KyvernoHelmValuesWebhooksCleanupNodeSelector = object;
 
 export type KyvernoHelmValuesWebhooksCleanupPodAntiAffinity = object;
 
@@ -1187,43 +1152,6 @@ export type KyvernoHelmValuesWebhooksCleanupSecurityContextSeccompProfile = {
    * @default "RuntimeDefault"
    */
   type?: string;
-};
-
-export type KyvernoHelmValuesWebhooksCleanupResources = {
-  /**
-   * Pod resource limits
-   *
-   * @default {"cpu":"100m","memory":"256Mi"}
-   */
-  limits?: KyvernoHelmValuesWebhooksCleanupResourcesLimits;
-  /**
-   * Pod resource requests
-   *
-   * @default {"cpu":"10m","memory":"64Mi"}
-   */
-  requests?: KyvernoHelmValuesWebhooksCleanupResourcesRequests;
-};
-
-export type KyvernoHelmValuesWebhooksCleanupResourcesLimits = {
-  /**
-   * @default "100m"
-   */
-  cpu?: string;
-  /**
-   * @default "256Mi"
-   */
-  memory?: string;
-};
-
-export type KyvernoHelmValuesWebhooksCleanupResourcesRequests = {
-  /**
-   * @default "10m"
-   */
-  cpu?: string;
-  /**
-   * @default "64Mi"
-   */
-  memory?: string;
 };
 
 export type KyvernoHelmValuesWebhooksCleanupServiceAccount = {
@@ -1884,10 +1812,11 @@ export type KyvernoHelmValuesAdmissionController = {
   readinessProbe?: KyvernoHelmValuesAdmissionControllerReadinessProbe;
   /**
    * Node labels for pod assignment
-   *
-   * @default {"kubernetes.io/os":"linux"}
    */
-  nodeSelector?: KyvernoHelmValuesAdmissionControllerNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * List of node taints to tolerate
+   */
   tolerations?: unknown[];
   /**
    * @default {"enabled":true}
@@ -2442,13 +2371,6 @@ export type KyvernoHelmValuesAdmissionControllerReadinessProbeHttpGet = {
   scheme?: string;
 };
 
-export type KyvernoHelmValuesAdmissionControllerNodeSelector = {
-  /**
-   * @default "linux"
-   */
-  "kubernetes.io/os"?: string;
-};
-
 export type KyvernoHelmValuesAdmissionControllerAntiAffinity = {
   /**
    * Pod antiAffinities toggle.
@@ -2564,9 +2486,12 @@ export type KyvernoHelmValuesAdmissionControllerInitContainer = {
    */
   image?: KyvernoHelmValuesAdmissionControllerInitContainerImage;
   /**
-   * @default {"limits":{"cpu":"100m","memory":"256Mi"},"requests":{"cpu":"10m","memory":"64Mi"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: KyvernoHelmValuesAdmissionControllerInitContainerResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Container security context
    *
@@ -2597,44 +2522,6 @@ export type KyvernoHelmValuesAdmissionControllerInitContainerImage = {
   tag?: unknown;
   pullPolicy?: unknown;
 };
-
-export type KyvernoHelmValuesAdmissionControllerInitContainerResources = {
-  /**
-   * Pod resource limits
-   *
-   * @default {"cpu":"100m","memory":"256Mi"}
-   */
-  limits?: KyvernoHelmValuesAdmissionControllerInitContainerResourcesLimits;
-  /**
-   * Pod resource requests
-   *
-   * @default {"cpu":"10m","memory":"64Mi"}
-   */
-  requests?: KyvernoHelmValuesAdmissionControllerInitContainerResourcesRequests;
-};
-
-export type KyvernoHelmValuesAdmissionControllerInitContainerResourcesLimits = {
-  /**
-   * @default "100m"
-   */
-  cpu?: string;
-  /**
-   * @default "256Mi"
-   */
-  memory?: string;
-};
-
-export type KyvernoHelmValuesAdmissionControllerInitContainerResourcesRequests =
-  {
-    /**
-     * @default "10m"
-     */
-    cpu?: string;
-    /**
-     * @default "64Mi"
-     */
-    memory?: string;
-  };
 
 export type KyvernoHelmValuesAdmissionControllerInitContainerSecurityContext = {
   /**
@@ -2692,9 +2579,12 @@ export type KyvernoHelmValuesAdmissionControllerContainer = {
    */
   image?: KyvernoHelmValuesAdmissionControllerContainerImage;
   /**
-   * @default {"limits":{"memory":"384Mi"},"requests":{"cpu":"100m","memory":"128Mi"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: KyvernoHelmValuesAdmissionControllerContainerResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Container security context
    *
@@ -2729,39 +2619,6 @@ export type KyvernoHelmValuesAdmissionControllerContainerImage = {
    * @default "IfNotPresent"
    */
   pullPolicy?: string;
-};
-
-export type KyvernoHelmValuesAdmissionControllerContainerResources = {
-  /**
-   * Pod resource limits
-   *
-   * @default {"memory":"384Mi"}
-   */
-  limits?: KyvernoHelmValuesAdmissionControllerContainerResourcesLimits;
-  /**
-   * Pod resource requests
-   *
-   * @default {"cpu":"100m","memory":"128Mi"}
-   */
-  requests?: KyvernoHelmValuesAdmissionControllerContainerResourcesRequests;
-};
-
-export type KyvernoHelmValuesAdmissionControllerContainerResourcesLimits = {
-  /**
-   * @default "384Mi"
-   */
-  memory?: string;
-};
-
-export type KyvernoHelmValuesAdmissionControllerContainerResourcesRequests = {
-  /**
-   * @default "100m"
-   */
-  cpu?: string;
-  /**
-   * @default "128Mi"
-   */
-  memory?: string;
 };
 
 export type KyvernoHelmValuesAdmissionControllerContainerSecurityContext = {
@@ -3135,15 +2992,19 @@ export type KyvernoHelmValuesBackgroundController = {
   extraArgs?: KyvernoHelmValuesBackgroundControllerExtraArgs;
   extraEnvVars?: unknown[];
   /**
-   * @default {"limits":{"memory":"128Mi"},"requests":{"cpu":"100m","memory":"64Mi"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: KyvernoHelmValuesBackgroundControllerResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Node labels for pod assignment
-   *
-   * @default {"kubernetes.io/os":"linux"}
    */
-  nodeSelector?: KyvernoHelmValuesBackgroundControllerNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * List of node taints to tolerate
+   */
   tolerations?: unknown[];
   /**
    * @default {"enabled":true}
@@ -3391,46 +3252,6 @@ export type KyvernoHelmValuesBackgroundControllerUpdateStrategyRollingUpdate = {
 export type KyvernoHelmValuesBackgroundControllerDnsConfig = object;
 
 export type KyvernoHelmValuesBackgroundControllerExtraArgs = object;
-
-export type KyvernoHelmValuesBackgroundControllerResources = {
-  /**
-   * Pod resource limits
-   *
-   * @default {"memory":"128Mi"}
-   */
-  limits?: KyvernoHelmValuesBackgroundControllerResourcesLimits;
-  /**
-   * Pod resource requests
-   *
-   * @default {"cpu":"100m","memory":"64Mi"}
-   */
-  requests?: KyvernoHelmValuesBackgroundControllerResourcesRequests;
-};
-
-export type KyvernoHelmValuesBackgroundControllerResourcesLimits = {
-  /**
-   * @default "128Mi"
-   */
-  memory?: string;
-};
-
-export type KyvernoHelmValuesBackgroundControllerResourcesRequests = {
-  /**
-   * @default "100m"
-   */
-  cpu?: string;
-  /**
-   * @default "64Mi"
-   */
-  memory?: string;
-};
-
-export type KyvernoHelmValuesBackgroundControllerNodeSelector = {
-  /**
-   * @default "linux"
-   */
-  "kubernetes.io/os"?: string;
-};
 
 export type KyvernoHelmValuesBackgroundControllerAntiAffinity = {
   /**
@@ -3907,9 +3728,12 @@ export type KyvernoHelmValuesCleanupController = {
   extraArgs?: KyvernoHelmValuesCleanupControllerExtraArgs;
   extraEnvVars?: unknown[];
   /**
-   * @default {"limits":{"memory":"128Mi"},"requests":{"cpu":"100m","memory":"64Mi"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: KyvernoHelmValuesCleanupControllerResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Startup probe.
    * The block is directly forwarded into the deployment, so you can use whatever startupProbes configuration you want.
@@ -3936,10 +3760,11 @@ export type KyvernoHelmValuesCleanupController = {
   readinessProbe?: KyvernoHelmValuesCleanupControllerReadinessProbe;
   /**
    * Node labels for pod assignment
-   *
-   * @default {"kubernetes.io/os":"linux"}
    */
-  nodeSelector?: KyvernoHelmValuesCleanupControllerNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * List of node taints to tolerate
+   */
   tolerations?: unknown[];
   /**
    * @default {"enabled":true}
@@ -4262,39 +4087,6 @@ export type KyvernoHelmValuesCleanupControllerDnsConfig = object;
 
 export type KyvernoHelmValuesCleanupControllerExtraArgs = object;
 
-export type KyvernoHelmValuesCleanupControllerResources = {
-  /**
-   * Pod resource limits
-   *
-   * @default {"memory":"128Mi"}
-   */
-  limits?: KyvernoHelmValuesCleanupControllerResourcesLimits;
-  /**
-   * Pod resource requests
-   *
-   * @default {"cpu":"100m","memory":"64Mi"}
-   */
-  requests?: KyvernoHelmValuesCleanupControllerResourcesRequests;
-};
-
-export type KyvernoHelmValuesCleanupControllerResourcesLimits = {
-  /**
-   * @default "128Mi"
-   */
-  memory?: string;
-};
-
-export type KyvernoHelmValuesCleanupControllerResourcesRequests = {
-  /**
-   * @default "100m"
-   */
-  cpu?: string;
-  /**
-   * @default "64Mi"
-   */
-  memory?: string;
-};
-
 export type KyvernoHelmValuesCleanupControllerStartupProbe = {
   /**
    * @default {"path":"/health/liveness","port":9443,"scheme":"HTTPS"}
@@ -4411,13 +4203,6 @@ export type KyvernoHelmValuesCleanupControllerReadinessProbeHttpGet = {
    * @default "HTTPS"
    */
   scheme?: string;
-};
-
-export type KyvernoHelmValuesCleanupControllerNodeSelector = {
-  /**
-   * @default "linux"
-   */
-  "kubernetes.io/os"?: string;
 };
 
 export type KyvernoHelmValuesCleanupControllerAntiAffinity = {
@@ -4889,15 +4674,19 @@ export type KyvernoHelmValuesReportsController = {
   extraArgs?: KyvernoHelmValuesReportsControllerExtraArgs;
   extraEnvVars?: unknown[];
   /**
-   * @default {"limits":{"memory":"128Mi"},"requests":{"cpu":"100m","memory":"64Mi"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: KyvernoHelmValuesReportsControllerResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Node labels for pod assignment
-   *
-   * @default {"kubernetes.io/os":"linux"}
    */
-  nodeSelector?: KyvernoHelmValuesReportsControllerNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * List of node taints to tolerate
+   */
   tolerations?: unknown[];
   /**
    * @default {"enabled":true}
@@ -5194,46 +4983,6 @@ export type KyvernoHelmValuesReportsControllerPriorityLevelConfigurationSpecLimi
 export type KyvernoHelmValuesReportsControllerDnsConfig = object;
 
 export type KyvernoHelmValuesReportsControllerExtraArgs = object;
-
-export type KyvernoHelmValuesReportsControllerResources = {
-  /**
-   * Pod resource limits
-   *
-   * @default {"memory":"128Mi"}
-   */
-  limits?: KyvernoHelmValuesReportsControllerResourcesLimits;
-  /**
-   * Pod resource requests
-   *
-   * @default {"cpu":"100m","memory":"64Mi"}
-   */
-  requests?: KyvernoHelmValuesReportsControllerResourcesRequests;
-};
-
-export type KyvernoHelmValuesReportsControllerResourcesLimits = {
-  /**
-   * @default "128Mi"
-   */
-  memory?: string;
-};
-
-export type KyvernoHelmValuesReportsControllerResourcesRequests = {
-  /**
-   * @default "100m"
-   */
-  cpu?: string;
-  /**
-   * @default "64Mi"
-   */
-  memory?: string;
-};
-
-export type KyvernoHelmValuesReportsControllerNodeSelector = {
-  /**
-   * @default "linux"
-   */
-  "kubernetes.io/os"?: string;
-};
 
 export type KyvernoHelmValuesReportsControllerAntiAffinity = {
   /**
@@ -5694,6 +5443,7 @@ export type KyvernoHelmParameters = {
   "global.caCertificates.data"?: string;
   "global.priorityClassName"?: string;
   "global.extraEnvVars"?: string;
+  "global.nodeSelector"?: string;
   "global.tolerations"?: string;
   nameOverride?: string;
   fullnameOverride?: string;
@@ -5738,6 +5488,7 @@ export type KyvernoHelmParameters = {
   "crds.migration.image.tag"?: string;
   "crds.migration.image.pullPolicy"?: string;
   "crds.migration.imagePullSecrets"?: string;
+  "crds.migration.nodeSelector"?: string;
   "crds.migration.tolerations"?: string;
   "crds.migration.securityContext.runAsUser"?: string;
   "crds.migration.securityContext.runAsGroup"?: string;
@@ -5803,10 +5554,7 @@ export type KyvernoHelmParameters = {
   "test.image.tag"?: string;
   "test.image.pullPolicy"?: string;
   "test.imagePullSecrets"?: string;
-  "test.resources.limits.cpu"?: string;
-  "test.resources.limits.memory"?: string;
-  "test.resources.requests.cpu"?: string;
-  "test.resources.requests.memory"?: string;
+  "test.resources"?: string;
   "test.securityContext.runAsUser"?: string;
   "test.securityContext.runAsGroup"?: string;
   "test.securityContext.runAsNonRoot"?: string;
@@ -5818,6 +5566,7 @@ export type KyvernoHelmParameters = {
   "test.automountServiceAccountToken"?: string;
   "test.projectedServiceAccountToken.expirationSeconds"?: string;
   "test.projectedServiceAccountToken.audience"?: string;
+  "test.nodeSelector"?: string;
   "test.tolerations"?: string;
   "webhooksCleanup.enabled"?: string;
   "webhooksCleanup.image.registry"?: string;
@@ -5825,6 +5574,7 @@ export type KyvernoHelmParameters = {
   "webhooksCleanup.image.tag"?: string;
   "webhooksCleanup.image.pullPolicy"?: string;
   "webhooksCleanup.imagePullSecrets"?: string;
+  "webhooksCleanup.nodeSelector"?: string;
   "webhooksCleanup.tolerations"?: string;
   "webhooksCleanup.securityContext.runAsUser"?: string;
   "webhooksCleanup.securityContext.runAsGroup"?: string;
@@ -5834,10 +5584,7 @@ export type KyvernoHelmParameters = {
   "webhooksCleanup.securityContext.readOnlyRootFilesystem"?: string;
   "webhooksCleanup.securityContext.capabilities.drop"?: string;
   "webhooksCleanup.securityContext.seccompProfile.type"?: string;
-  "webhooksCleanup.resources.limits.cpu"?: string;
-  "webhooksCleanup.resources.limits.memory"?: string;
-  "webhooksCleanup.resources.requests.cpu"?: string;
-  "webhooksCleanup.resources.requests.memory"?: string;
+  "webhooksCleanup.resources"?: string;
   "webhooksCleanup.serviceAccount.automountServiceAccountToken"?: string;
   "webhooksCleanup.serviceAccount.projectedServiceAccountToken.expirationSeconds"?: string;
   "webhooksCleanup.serviceAccount.projectedServiceAccountToken.audience"?: string;
@@ -5953,7 +5700,7 @@ export type KyvernoHelmParameters = {
   "admissionController.readinessProbe.timeoutSeconds"?: string;
   "admissionController.readinessProbe.failureThreshold"?: string;
   "admissionController.readinessProbe.successThreshold"?: string;
-  "admissionController.nodeSelector.kubernetes.io/os"?: string;
+  "admissionController.nodeSelector"?: string;
   "admissionController.tolerations"?: string;
   "admissionController.antiAffinity.enabled"?: string;
   "admissionController.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.weight"?: string;
@@ -5974,10 +5721,7 @@ export type KyvernoHelmParameters = {
   "admissionController.initContainer.image.repository"?: string;
   "admissionController.initContainer.image.tag"?: string;
   "admissionController.initContainer.image.pullPolicy"?: string;
-  "admissionController.initContainer.resources.limits.cpu"?: string;
-  "admissionController.initContainer.resources.limits.memory"?: string;
-  "admissionController.initContainer.resources.requests.cpu"?: string;
-  "admissionController.initContainer.resources.requests.memory"?: string;
+  "admissionController.initContainer.resources"?: string;
   "admissionController.initContainer.securityContext.runAsUser"?: string;
   "admissionController.initContainer.securityContext.runAsGroup"?: string;
   "admissionController.initContainer.securityContext.runAsNonRoot"?: string;
@@ -5992,9 +5736,7 @@ export type KyvernoHelmParameters = {
   "admissionController.container.image.repository"?: string;
   "admissionController.container.image.tag"?: string;
   "admissionController.container.image.pullPolicy"?: string;
-  "admissionController.container.resources.limits.memory"?: string;
-  "admissionController.container.resources.requests.cpu"?: string;
-  "admissionController.container.resources.requests.memory"?: string;
+  "admissionController.container.resources"?: string;
   "admissionController.container.securityContext.runAsUser"?: string;
   "admissionController.container.securityContext.runAsGroup"?: string;
   "admissionController.container.securityContext.runAsNonRoot"?: string;
@@ -6069,10 +5811,8 @@ export type KyvernoHelmParameters = {
   "backgroundController.hostNetwork"?: string;
   "backgroundController.dnsPolicy"?: string;
   "backgroundController.extraEnvVars"?: string;
-  "backgroundController.resources.limits.memory"?: string;
-  "backgroundController.resources.requests.cpu"?: string;
-  "backgroundController.resources.requests.memory"?: string;
-  "backgroundController.nodeSelector.kubernetes.io/os"?: string;
+  "backgroundController.resources"?: string;
+  "backgroundController.nodeSelector"?: string;
   "backgroundController.tolerations"?: string;
   "backgroundController.antiAffinity.enabled"?: string;
   "backgroundController.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.weight"?: string;
@@ -6163,9 +5903,7 @@ export type KyvernoHelmParameters = {
   "cleanupController.server.port"?: string;
   "cleanupController.dnsPolicy"?: string;
   "cleanupController.extraEnvVars"?: string;
-  "cleanupController.resources.limits.memory"?: string;
-  "cleanupController.resources.requests.cpu"?: string;
-  "cleanupController.resources.requests.memory"?: string;
+  "cleanupController.resources"?: string;
   "cleanupController.startupProbe.httpGet.path"?: string;
   "cleanupController.startupProbe.httpGet.port"?: string;
   "cleanupController.startupProbe.httpGet.scheme"?: string;
@@ -6188,7 +5926,7 @@ export type KyvernoHelmParameters = {
   "cleanupController.readinessProbe.timeoutSeconds"?: string;
   "cleanupController.readinessProbe.failureThreshold"?: string;
   "cleanupController.readinessProbe.successThreshold"?: string;
-  "cleanupController.nodeSelector.kubernetes.io/os"?: string;
+  "cleanupController.nodeSelector"?: string;
   "cleanupController.tolerations"?: string;
   "cleanupController.antiAffinity.enabled"?: string;
   "cleanupController.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.weight"?: string;
@@ -6275,10 +6013,8 @@ export type KyvernoHelmParameters = {
   "reportsController.hostNetwork"?: string;
   "reportsController.dnsPolicy"?: string;
   "reportsController.extraEnvVars"?: string;
-  "reportsController.resources.limits.memory"?: string;
-  "reportsController.resources.requests.cpu"?: string;
-  "reportsController.resources.requests.memory"?: string;
-  "reportsController.nodeSelector.kubernetes.io/os"?: string;
+  "reportsController.resources"?: string;
+  "reportsController.nodeSelector"?: string;
   "reportsController.tolerations"?: string;
   "reportsController.antiAffinity.enabled"?: string;
   "reportsController.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.weight"?: string;

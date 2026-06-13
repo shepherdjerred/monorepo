@@ -84,6 +84,9 @@ export function createPlausibleDeployment(
   // Init container to build DATABASE_URL from postgres-operator secret
   deployment.addInitContainer(
     withCommonProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
       name: "build-db-url",
       image: `library/busybox:${versions["library/busybox"]}`,
       command: ["/bin/sh", "-c"],

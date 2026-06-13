@@ -89,6 +89,11 @@ import type { RedisHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/he
 import type { SeaweedfsHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/seaweedfs.types";
 import type { PrometheusblackboxexporterHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/prometheus-blackbox-exporter.types";
 import type { McrouterHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/mc-router.types";
+import type { AlloyHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/alloy.types";
+import type { PyroscopeHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/pyroscope.types";
+import type { TempoHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/tempo.types";
+import type { KyvernoHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/kyverno.types";
+import type { MariadbHelmValues } from "@shepherdjerred/homelab/cdk8s/generated/helm/mariadb.types";
 
 type HelmChartValuesMap = {
   "argo-cd": ArgocdHelmValues;
@@ -110,6 +115,11 @@ type HelmChartValuesMap = {
   seaweedfs: SeaweedfsHelmValues;
   "prometheus-blackbox-exporter": PrometheusblackboxexporterHelmValues;
   "mc-router": McrouterHelmValues;
+  alloy: AlloyHelmValues;
+  pyroscope: PyroscopeHelmValues;
+  tempo: TempoHelmValues;
+  kyverno: KyvernoHelmValues;
+  mariadb: MariadbHelmValues;
 };
 
 export type HelmValuesForChart<TChart extends keyof HelmChartValuesMap> =

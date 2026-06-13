@@ -111,6 +111,9 @@ export async function createMcpGatewayDeployment(chart: Chart) {
   // `Authorization: <token>` from clients (mcpProxy.options.authTokens).
   deployment.addInitContainer(
     withCommonProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
       name: "render-config",
       image: `library/busybox:${versions["library/busybox"]}`,
       command: ["/bin/sh", "-c"],

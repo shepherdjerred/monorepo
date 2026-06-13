@@ -10,9 +10,13 @@ const commonEnv = {
   TZ: EnvValue.fromValue("America/Los_Angeles"),
 };
 
+// Deliberately NO `resources` here: a hidden `resources: {}` made every
+// container that didn't override it silently BestEffort. Each call site must
+// declare its own resources (enforced by the require-container-resources
+// ESLint rule); `resources: {}` at a call site is the visible BestEffort
+// opt-in.
 export const commonProps: Partial<ContainerProps> = {
   envVariables: commonEnv,
-  resources: {},
 };
 
 export function withCommonProps(props: ContainerProps): ContainerProps {

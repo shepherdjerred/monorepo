@@ -116,8 +116,6 @@ export type McrouterHelmValuesServicesMinecraft = {
 
 export type McrouterHelmValuesServicesExtraServiceSpec = object;
 
-export type McrouterHelmValuesResources = object;
-
 export type McrouterHelmValuesAutoscaling = {
   /**
    * @default false
@@ -136,10 +134,6 @@ export type McrouterHelmValuesAutoscaling = {
    */
   targetCPUUtilizationPercentage?: number;
 };
-
-export type McrouterHelmValuesNodeSelector = object;
-
-export type McrouterHelmValuesAffinity = object;
 
 export type McrouterHelmValuesExtraEnv = {
   /**
@@ -362,22 +356,28 @@ export type McrouterHelmValues = {
    */
   services?: McrouterHelmValuesServices;
   /**
-   * @default {}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: McrouterHelmValuesResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {...} (4 keys)
    */
   autoscaling?: McrouterHelmValuesAutoscaling;
   /**
-   * @default {}
+   * Kubernetes nodeSelector (arbitrary label key/value pairs)
    */
-  nodeSelector?: McrouterHelmValuesNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Kubernetes tolerations (standard Toleration objects)
+   */
   tolerations?: unknown[];
   /**
-   * @default {}
+   * Kubernetes affinity (standard Affinity object)
    */
-  affinity?: McrouterHelmValuesAffinity;
+  affinity?: Record<string, unknown>;
   extraVolumes?: unknown[];
   /**
    * - port=2049
@@ -420,11 +420,14 @@ export type McrouterHelmParameters = {
   "deploymentStrategy.type"?: string;
   "services.minecraft.type"?: string;
   "services.minecraft.port"?: string;
+  resources?: string;
   "autoscaling.enabled"?: string;
   "autoscaling.minReplicas"?: string;
   "autoscaling.maxReplicas"?: string;
   "autoscaling.targetCPUUtilizationPercentage"?: string;
+  nodeSelector?: string;
   tolerations?: string;
+  affinity?: string;
   extraVolumes?: string;
   extraDeploy?: string;
   "minecraftRouter.autoScale.up.enabled"?: string;

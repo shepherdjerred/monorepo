@@ -60,6 +60,8 @@ export function createKueueApp(chart: Chart) {
         chart: "kueue",
         targetRevision: versions.kueue.split("@")[0] ?? versions.kueue,
         helm: {
+          // Untyped: this is an OCI-registry chart, not yet covered by
+          // HelmValuesForChart. See packages/docs/todos/oci-helm-chart-types.md.
           valuesObject: {
             controllerManager: {
               manager: {

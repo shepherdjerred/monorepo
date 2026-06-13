@@ -66,6 +66,9 @@ export function createRecyclarrDeployment(chart: Chart) {
 
   deployment.addContainer(
     withCommonLinuxServerProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
       image: `ghcr.io/recyclarr/recyclarr:${versions.recyclarr}`,
       envVariables: {
         CRON_SCHEDULE: EnvValue.fromValue("@daily"),

@@ -15,6 +15,8 @@ export * from "./mc-router.types.ts";
 export * from "./loki.types.ts";
 export * from "./promtail.types.ts";
 export * from "./tempo.types.ts";
+export * from "./pyroscope.types.ts";
+export * from "./alloy.types.ts";
 export * from "./openebs.types.ts";
 export * from "./velero.types.ts";
 export * from "./kyverno.types.ts";

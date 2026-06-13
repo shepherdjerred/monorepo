@@ -269,6 +269,8 @@ echo "Done."`,
         chart: "dagger-helm",
         targetRevision: versions["dagger-helm"],
         helm: {
+          // Untyped: this is an OCI-registry chart, not yet covered by
+          // HelmValuesForChart. See packages/docs/todos/oci-helm-chart-types.md.
           valuesObject: {
             engine: {
               kind: "StatefulSet",

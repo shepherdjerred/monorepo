@@ -395,4 +395,63 @@ describe("Edge Cases", () => {
 
     expect(result.properties["objArr"]?.type).toContain("[]");
   });
+
+  describe("well-known Kubernetes fields (inference path)", () => {
+    test("resources gets a permissive ResourceRequirements type, not a defaults-derived one", () => {
+      // Mirrors the 1Password connect chart: only cpu present under requests.
+      const values = {
+        resources: {
+          requests: { cpu: 0.2 },
+          limits: { memory: "128Mi" },
+        },
+      };
+
+      const result = convertToTypeScriptInterface({
+        values,
+        interfaceName: "TestValues",
+      });
+
+      const resourcesType = result.properties["resources"]?.type ?? "";
+      // No nested defaults-derived interface, and both requests+limits accept
+      // arbitrary resource names with string|number values.
+      expect(result.properties["resources"]?.nested).toBeUndefined();
+      expect(resourcesType).toContain(
+        "requests?: Record<string, string | number>",
+      );
+      expect(resourcesType).toContain(
+        "limits?: Record<string, string | number>",
+      );
+    });
+
+    test("nodeSelector becomes Record<string, string>", () => {
+      const values = { nodeSelector: { "kubernetes.io/os": "linux" } };
+      const result = convertToTypeScriptInterface({
+        values,
+        interfaceName: "TestValues",
+      });
+      expect(result.properties["nodeSelector"]?.type).toBe(
+        "Record<string, string>",
+      );
+    });
+
+    test("tolerations becomes unknown[]", () => {
+      const values = { tolerations: [{ key: "x", operator: "Exists" }] };
+      const result = convertToTypeScriptInterface({
+        values,
+        interfaceName: "TestValues",
+      });
+      expect(result.properties["tolerations"]?.type).toBe("unknown[]");
+    });
+
+    test("an RBAC-style resources array is NOT treated as ResourceRequirements", () => {
+      // RBAC rules use `resources: ["secrets"]` — must stay an array type.
+      const values = { resources: ["secrets", "configmaps"] };
+      const result = convertToTypeScriptInterface({
+        values,
+        interfaceName: "TestValues",
+      });
+      expect(result.properties["resources"]?.type).toContain("[]");
+      expect(result.properties["resources"]?.type).not.toContain("requests");
+    });
+  });
 });

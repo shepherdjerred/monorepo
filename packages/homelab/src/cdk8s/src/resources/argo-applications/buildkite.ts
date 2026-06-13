@@ -100,6 +100,8 @@ export function createBuildkiteApp(chart: Chart) {
           versions["agent-stack-k8s"].split("@")[0] ??
           versions["agent-stack-k8s"],
         helm: {
+          // Untyped: this is an OCI-registry chart, not yet covered by
+          // HelmValuesForChart. See packages/docs/todos/oci-helm-chart-types.md.
           valuesObject: {
             agentStackSecret: "buildkite-agent-token",
             config: {

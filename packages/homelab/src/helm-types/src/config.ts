@@ -1,25 +1,68 @@
 /**
- * Well-known Kubernetes resource patterns.
- * When a property matches these patterns, we augment the type with standard K8s fields.
+ * Well-known Kubernetes fields whose shape is defined by the Kubernetes API,
+ * not by whatever subset a chart's values.yaml happens to set as defaults.
+ *
+ * Inferring these from defaults produces types that are too narrow — e.g. a
+ * chart defaulting `resources: {requests: {cpu: 0.2}}` would otherwise forbid
+ * setting a memory request at all. When a property matches one of these names
+ * AND its default value has a compatible shape, the canonical permissive type
+ * is emitted instead of a defaults-derived interface.
  */
-export const K8S_RESOURCE_SPEC_PATTERN = {
-  /**
-   * Property names that indicate a Kubernetes resource spec (requests/limits pattern)
-   */
-  resourceSpecNames: ["resources"],
-  /**
-   * Required sibling properties for a valid resource spec
-   */
-  resourceSpecFields: ["requests", "limits"] as const,
+const K8S_WELL_KNOWN_FIELDS: Record<
+  string,
+  { type: string; allowedShapes: ("object" | "array")[]; description: string }
+> = {
+  resources: {
+    type: "{ requests?: Record<string, string | number>; limits?: Record<string, string | number> }",
+    // RBAC rules also use a key named `resources`, but as an array of strings —
+    // the object guard keeps those out.
+    allowedShapes: ["object"],
+    description:
+      "Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)",
+  },
+  nodeselector: {
+    type: "Record<string, string>",
+    allowedShapes: ["object"],
+    description: "Kubernetes nodeSelector (arbitrary label key/value pairs)",
+  },
+  tolerations: {
+    type: "unknown[]",
+    allowedShapes: ["array"],
+    description: "Kubernetes tolerations (standard Toleration objects)",
+  },
+  affinity: {
+    type: "Record<string, unknown>",
+    allowedShapes: ["object"],
+    description: "Kubernetes affinity (standard Affinity object)",
+  },
 };
 
 /**
- * Check if a property name indicates a Kubernetes resource spec.
+ * Return the canonical type for a well-known Kubernetes field, or undefined if
+ * the property name doesn't match or the default value's shape is incompatible
+ * (e.g. an RBAC `resources: ["secrets"]` array, which must NOT become
+ * ResourceRequirements).
  */
-export function isK8sResourceSpec(propertyName: string): boolean {
-  return K8S_RESOURCE_SPEC_PATTERN.resourceSpecNames.includes(
-    propertyName.toLowerCase(),
-  );
+export function getWellKnownK8sFieldType(
+  propertyName: string,
+  value: unknown,
+): { type: string; description: string } | undefined {
+  const field = K8S_WELL_KNOWN_FIELDS[propertyName.toLowerCase()];
+  if (!field) {
+    return undefined;
+  }
+  // A null/undefined default carries no shape signal — trust the name.
+  if (value != null) {
+    const shape: "object" | "array" | "primitive" = Array.isArray(value)
+      ? "array"
+      : typeof value === "object"
+        ? "object"
+        : "primitive";
+    if (shape === "primitive" || !field.allowedShapes.includes(shape)) {
+      return undefined;
+    }
+  }
+  return { type: field.type, description: field.description };
 }
 
 /**

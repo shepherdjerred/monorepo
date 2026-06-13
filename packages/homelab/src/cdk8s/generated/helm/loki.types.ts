@@ -1310,16 +1310,15 @@ export type LokiHelmValuesEnterpriseProvisioner = {
   /**
    * Affinity for provisioner Pods
    * The value will be passed through tpl.
-   *
-   * @default {}
    */
-  affinity?: LokiHelmValuesEnterpriseProvisionerAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * Node selector for provisioner Pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesEnterpriseProvisionerNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Tolerations for provisioner Pods
+   */
   tolerations?: unknown[];
   priorityClassName?: unknown;
   /**
@@ -1359,10 +1358,6 @@ export type LokiHelmValuesEnterpriseProvisionerAnnotations = {
    */
   [key: string]: unknown;
 };
-
-export type LokiHelmValuesEnterpriseProvisionerAffinity = object;
-
-export type LokiHelmValuesEnterpriseProvisionerNodeSelector = object;
 
 export type LokiHelmValuesEnterpriseProvisionerSecurityContext = {
   /**
@@ -1554,10 +1549,11 @@ export type LokiHelmValuesLokiCanary = {
   extraVolumes?: unknown[];
   /**
    * Resource requests and limits for the canary
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesLokiCanaryResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * DNS config for canary pods
    *
@@ -1566,17 +1562,16 @@ export type LokiHelmValuesLokiCanary = {
   dnsConfig?: LokiHelmValuesLokiCanaryDnsConfig;
   /**
    * Node selector for canary pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesLokiCanaryNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Tolerations for canary pods
+   */
   tolerations?: unknown[];
   /**
    * Affinity for canary pods
-   *
-   * @default {}
    */
-  affinity?: LokiHelmValuesLokiCanaryAffinity;
+  affinity?: Record<string, unknown>;
   priorityClassName?: unknown;
   /**
    * Use the host's user namespace in loki-canary pods
@@ -1649,13 +1644,7 @@ export type LokiHelmValuesLokiCanaryServiceLabels = {
   [key: string]: unknown;
 };
 
-export type LokiHelmValuesLokiCanaryResources = object;
-
 export type LokiHelmValuesLokiCanaryDnsConfig = object;
-
-export type LokiHelmValuesLokiCanaryNodeSelector = object;
-
-export type LokiHelmValuesLokiCanaryAffinity = object;
 
 export type LokiHelmValuesLokiCanaryImage = {
   /**
@@ -2073,10 +2062,11 @@ export type LokiHelmValuesAdminApi = {
   /**
    * Request and limit Kubernetes resources
    * Values are defined in small.yaml and large.yaml
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesAdminApiResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   env?: unknown[];
   initContainers?: unknown[];
   extraContainers?: unknown[];
@@ -2085,17 +2075,16 @@ export type LokiHelmValuesAdminApi = {
   /**
    * Affinity for admin-api Pods
    * The value will be passed through tpl.
-   *
-   * @default {}
    */
-  affinity?: LokiHelmValuesAdminApiAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * Node selector for admin-api Pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesAdminApiNodeSelector;
+  nodeSelector?: Record<string, string>;
   topologySpreadConstraints?: unknown[];
+  /**
+   * Tolerations for admin-api Pods
+   */
   tolerations?: unknown[];
   /**
    * Grace period to allow the admin-api to shutdown before it is killed
@@ -2225,12 +2214,6 @@ export type LokiHelmValuesAdminApiReadinessProbeHttpGet = {
 
 export type LokiHelmValuesAdminApiStartupProbe = object;
 
-export type LokiHelmValuesAdminApiResources = object;
-
-export type LokiHelmValuesAdminApiAffinity = object;
-
-export type LokiHelmValuesAdminApiNodeSelector = object;
-
 export type LokiHelmValuesGateway = {
   /**
    * Specifies whether the gateway should be enabled
@@ -2318,10 +2301,11 @@ export type LokiHelmValuesGateway = {
   hostUsers?: string;
   /**
    * Resource requests and limits for the gateway
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesGatewayResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   extraContainers?: unknown[];
   /**
    * Grace period to allow the gateway to shutdown before it is killed
@@ -2332,10 +2316,8 @@ export type LokiHelmValuesGateway = {
   /**
    * Affinity for gateway pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"gateway","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesGatewayAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * DNS config for gateway pods
    *
@@ -2344,11 +2326,12 @@ export type LokiHelmValuesGateway = {
   dnsConfig?: LokiHelmValuesGatewayDnsConfig;
   /**
    * Node selector for gateway pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesGatewayNodeSelector;
+  nodeSelector?: Record<string, string>;
   topologySpreadConstraints?: unknown[];
+  /**
+   * Tolerations for gateway pods
+   */
   tolerations?: unknown[];
   /**
    * Gateway service configuration
@@ -2516,58 +2499,7 @@ export type LokiHelmValuesGatewayContainerSecurityContextCapabilities = {
   drop?: string[];
 };
 
-export type LokiHelmValuesGatewayResources = object;
-
-export type LokiHelmValuesGatewayAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"gateway","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesGatewayAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesGatewayAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"gateway","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"gateway","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "gateway"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
 export type LokiHelmValuesGatewayDnsConfig = object;
-
-export type LokiHelmValuesGatewayNodeSelector = object;
 
 export type LokiHelmValuesGatewayService = {
   /**
@@ -2891,10 +2823,11 @@ export type LokiHelmValuesEnterpriseGateway = {
   /**
    * Request and limit Kubernetes resources
    * Values are defined in small.yaml and large.yaml
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesEnterpriseGatewayResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   env?: unknown[];
   initContainers?: unknown[];
   extraContainers?: unknown[];
@@ -2903,17 +2836,16 @@ export type LokiHelmValuesEnterpriseGateway = {
   /**
    * Affinity for gateway Pods
    * The value will be passed through tpl.
-   *
-   * @default {}
    */
-  affinity?: LokiHelmValuesEnterpriseGatewayAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * Node selector for gateway Pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesEnterpriseGatewayNodeSelector;
+  nodeSelector?: Record<string, string>;
   topologySpreadConstraints?: unknown[];
+  /**
+   * Tolerations for gateway Pods
+   */
   tolerations?: unknown[];
   /**
    * Grace period to allow the gateway to shutdown before it is killed
@@ -3043,12 +2975,6 @@ export type LokiHelmValuesEnterpriseGatewayReadinessProbeHttpGet = {
 };
 
 export type LokiHelmValuesEnterpriseGatewayStartupProbe = object;
-
-export type LokiHelmValuesEnterpriseGatewayResources = object;
-
-export type LokiHelmValuesEnterpriseGatewayAffinity = object;
-
-export type LokiHelmValuesEnterpriseGatewayNodeSelector = object;
 
 export type LokiHelmValuesIngress = {
   /**
@@ -3188,10 +3114,11 @@ export type LokiHelmValuesSingleBinary = {
   extraVolumes?: unknown[];
   /**
    * Resource requests and limits for the single binary
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesSingleBinaryResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Grace period to allow the single binary to shutdown before it is killed
    *
@@ -3207,10 +3134,8 @@ export type LokiHelmValuesSingleBinary = {
   /**
    * Affinity for single binary pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"single-binary","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesSingleBinaryAffinity;
+  affinity?: Record<string, unknown>;
   topologySpreadConstraints?: unknown[];
   /**
    * DNS config for single binary pods
@@ -3220,10 +3145,11 @@ export type LokiHelmValuesSingleBinary = {
   dnsConfig?: LokiHelmValuesSingleBinaryDnsConfig;
   /**
    * Node selector for single binary pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesSingleBinaryNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Tolerations for single binary pods
+   */
   tolerations?: unknown[];
   /**
    * @default {...} (11 keys)
@@ -3322,58 +3248,7 @@ export type LokiHelmValuesSingleBinaryServiceLabels = {
   [key: string]: unknown;
 };
 
-export type LokiHelmValuesSingleBinaryResources = object;
-
-export type LokiHelmValuesSingleBinaryAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"single-binary","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesSingleBinaryAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesSingleBinaryAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesSingleBinaryAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesSingleBinaryAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"single-binary","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesSingleBinaryAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesSingleBinaryAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"single-binary","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesSingleBinaryAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesSingleBinaryAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "single-binary"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
 export type LokiHelmValuesSingleBinaryDnsConfig = object;
-
-export type LokiHelmValuesSingleBinaryNodeSelector = object;
 
 export type LokiHelmValuesSingleBinaryPersistence = {
   /**
@@ -3518,10 +3393,11 @@ export type LokiHelmValuesWrite = {
   extraVolumeClaimTemplates?: unknown[];
   /**
    * Resource requests and limits for the write
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesWriteResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Grace period to allow the write to shutdown before it is killed. Especially for the ingester,
    * this must be increased. It must be long enough so writes can be gracefully shutdown flushing/transferring
@@ -3539,10 +3415,8 @@ export type LokiHelmValuesWrite = {
   /**
    * Affinity for write pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"write","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesWriteAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * DNS config for write pods
    *
@@ -3557,11 +3431,12 @@ export type LokiHelmValuesWrite = {
   maxUnavailable?: number;
   /**
    * Node selector for write pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesWriteNodeSelector;
+  nodeSelector?: Record<string, string>;
   topologySpreadConstraints?: unknown[];
+  /**
+   * Tolerations for write pods
+   */
   tolerations?: unknown[];
   /**
    * The default is to deploy all pods in parallel.
@@ -3727,58 +3602,7 @@ export type LokiHelmValuesWriteServiceLabels = {
 
 export type LokiHelmValuesWriteLifecycle = object;
 
-export type LokiHelmValuesWriteResources = object;
-
-export type LokiHelmValuesWriteAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"write","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesWriteAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesWriteAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesWriteAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesWriteAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"write","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesWriteAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesWriteAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"write","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesWriteAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesWriteAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "write"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
 export type LokiHelmValuesWriteDnsConfig = object;
-
-export type LokiHelmValuesWriteNodeSelector = object;
 
 export type LokiHelmValuesWritePersistence = {
   /**
@@ -3937,10 +3761,11 @@ export type LokiHelmValuesRead = {
   extraVolumes?: unknown[];
   /**
    * Resource requests and limits for the read
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesReadResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * liveness probe settings for read pods. If empty, applies no livenessProbe
    * statup probe for the read pods. If empty, applies no startupProbe
@@ -3967,10 +3792,8 @@ export type LokiHelmValuesRead = {
   /**
    * Affinity for read pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"read","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesReadAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * DNS config for read pods
    *
@@ -3985,11 +3808,12 @@ export type LokiHelmValuesRead = {
   maxUnavailable?: number;
   /**
    * Node selector for read pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesReadNodeSelector;
+  nodeSelector?: Record<string, string>;
   topologySpreadConstraints?: unknown[];
+  /**
+   * Tolerations for read pods
+   */
   tolerations?: unknown[];
   /**
    * The default is to deploy all pods in parallel.
@@ -4104,62 +3928,11 @@ export type LokiHelmValuesReadServiceLabels = {
 
 export type LokiHelmValuesReadLifecycle = object;
 
-export type LokiHelmValuesReadResources = object;
-
 export type LokiHelmValuesReadLivenessProbe = object;
 
 export type LokiHelmValuesReadStartupProbe = object;
 
-export type LokiHelmValuesReadAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"read","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesReadAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesReadAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesReadAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesReadAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"read","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesReadAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesReadAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"read","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesReadAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesReadAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "read"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
 export type LokiHelmValuesReadDnsConfig = object;
-
-export type LokiHelmValuesReadNodeSelector = object;
 
 export type LokiHelmValuesReadPersistence = {
   /**
@@ -4272,10 +4045,11 @@ export type LokiHelmValuesBackend = {
   extraVolumes?: unknown[];
   /**
    * Resource requests and limits for the backend
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesBackendResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Grace period to allow the backend to shutdown before it is killed. Especially for the ingester,
    * this must be increased. It must be long enough so backends can be gracefully shutdown flushing/transferring
@@ -4293,10 +4067,8 @@ export type LokiHelmValuesBackend = {
   /**
    * Affinity for backend pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"backend","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesBackendAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * DNS config for backend pods
    *
@@ -4311,11 +4083,12 @@ export type LokiHelmValuesBackend = {
   maxUnavailable?: number;
   /**
    * Node selector for backend pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesBackendNodeSelector;
+  nodeSelector?: Record<string, string>;
   topologySpreadConstraints?: unknown[];
+  /**
+   * Tolerations for backend pods
+   */
   tolerations?: unknown[];
   /**
    * The default is to deploy all pods in parallel.
@@ -4426,58 +4199,7 @@ export type LokiHelmValuesBackendServiceLabels = {
   [key: string]: unknown;
 };
 
-export type LokiHelmValuesBackendResources = object;
-
-export type LokiHelmValuesBackendAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"backend","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesBackendAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesBackendAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesBackendAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesBackendAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"backend","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesBackendAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesBackendAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"backend","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesBackendAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesBackendAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "backend"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
 export type LokiHelmValuesBackendDnsConfig = object;
-
-export type LokiHelmValuesBackendNodeSelector = object;
 
 export type LokiHelmValuesBackendPersistence = {
   /**
@@ -4636,10 +4358,11 @@ export type LokiHelmValuesIngester = {
   extraVolumes?: unknown[];
   /**
    * Resource requests and limits for the ingester
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesIngesterResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   extraContainers?: unknown[];
   initContainers?: unknown[];
   /**
@@ -4660,10 +4383,8 @@ export type LokiHelmValuesIngester = {
   /**
    * Affinity for ingester pods. Ignored if zoneAwareReplication is enabled.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"ingester","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesIngesterAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * Pod Disruption Budget maxUnavailable
    *
@@ -4672,10 +4393,11 @@ export type LokiHelmValuesIngester = {
   maxUnavailable?: number;
   /**
    * Node selector for ingester pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesIngesterNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Tolerations for ingester pods
+   */
   tolerations?: unknown[];
   /**
    * readiness probe settings for ingester pods. If empty, use `loki.readinessProbe`
@@ -4821,8 +4543,6 @@ export type LokiHelmValuesIngesterServiceLabels = object;
 
 export type LokiHelmValuesIngesterServiceAnnotations = object;
 
-export type LokiHelmValuesIngesterResources = object;
-
 export type LokiHelmValuesIngesterLifecycle = object;
 
 export type LokiHelmValuesIngesterTopologySpreadConstraintsElement = {
@@ -4866,55 +4586,6 @@ export type LokiHelmValuesIngesterTopologySpreadConstraintsLabelSelectorMatchLab
      */
     "app.kubernetes.io/instance"?: string;
   };
-
-export type LokiHelmValuesIngesterAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"ingester","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesIngesterAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesIngesterAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesIngesterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesIngesterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"ingester","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesIngesterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesIngesterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"ingester","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesIngesterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesIngesterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "ingester"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
-export type LokiHelmValuesIngesterNodeSelector = object;
 
 export type LokiHelmValuesIngesterReadinessProbe = object;
 
@@ -5224,10 +4895,11 @@ export type LokiHelmValuesDistributor = {
   extraVolumes?: unknown[];
   /**
    * Resource requests and limits for the distributor
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesDistributorResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   initContainers?: unknown[];
   extraContainers?: unknown[];
   /**
@@ -5239,10 +4911,8 @@ export type LokiHelmValuesDistributor = {
   /**
    * Affinity for distributor pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"distributor","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesDistributorAffinity;
+  affinity?: Record<string, unknown>;
   maxUnavailable?: unknown;
   /**
    * Max Surge for distributor pods
@@ -5252,11 +4922,12 @@ export type LokiHelmValuesDistributor = {
   maxSurge?: number;
   /**
    * Node selector for distributor pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesDistributorNodeSelector;
+  nodeSelector?: Record<string, string>;
   topologySpreadConstraints?: unknown[];
+  /**
+   * Tolerations for distributor pods
+   */
   tolerations?: unknown[];
   /**
    * Adds the appProtocol field to the distributor service. This allows distributor to work with istio protocol selection.
@@ -5346,57 +5017,6 @@ export type LokiHelmValuesDistributorServiceLabels = object;
 
 export type LokiHelmValuesDistributorServiceAnnotations = object;
 
-export type LokiHelmValuesDistributorResources = object;
-
-export type LokiHelmValuesDistributorAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"distributor","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesDistributorAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesDistributorAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesDistributorAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesDistributorAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"distributor","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesDistributorAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesDistributorAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"distributor","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesDistributorAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesDistributorAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "distributor"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
-export type LokiHelmValuesDistributorNodeSelector = object;
-
 export type LokiHelmValuesDistributorAppProtocol = {
   /**
    * Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -5467,10 +5087,11 @@ export type LokiHelmValuesQuerier = {
   extraVolumes?: unknown[];
   /**
    * Resource requests and limits for the querier
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesQuerierResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   extraContainers?: unknown[];
   initContainers?: unknown[];
   /**
@@ -5483,10 +5104,8 @@ export type LokiHelmValuesQuerier = {
   /**
    * Affinity for querier pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"querier","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesQuerierAffinity;
+  affinity?: Record<string, unknown>;
   maxUnavailable?: unknown;
   /**
    * Max Surge for querier pods
@@ -5496,10 +5115,11 @@ export type LokiHelmValuesQuerier = {
   maxSurge?: number;
   /**
    * Node selector for querier pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesQuerierNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Tolerations for querier pods
+   */
   tolerations?: unknown[];
   /**
    * DNSConfig for querier pods
@@ -5593,8 +5213,6 @@ export type LokiHelmValuesQuerierServiceLabels = object;
 
 export type LokiHelmValuesQuerierServiceAnnotations = object;
 
-export type LokiHelmValuesQuerierResources = object;
-
 export type LokiHelmValuesQuerierTopologySpreadConstraintsElement = {
   /**
    * @default 1
@@ -5636,55 +5254,6 @@ export type LokiHelmValuesQuerierTopologySpreadConstraintsLabelSelectorMatchLabe
      */
     "app.kubernetes.io/instance"?: string;
   };
-
-export type LokiHelmValuesQuerierAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"querier","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesQuerierAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesQuerierAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesQuerierAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesQuerierAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"querier","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesQuerierAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesQuerierAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"querier","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesQuerierAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesQuerierAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "querier"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
-export type LokiHelmValuesQuerierNodeSelector = object;
 
 export type LokiHelmValuesQuerierDnsConfig = object;
 
@@ -5758,10 +5327,11 @@ export type LokiHelmValuesQueryFrontend = {
   extraVolumes?: unknown[];
   /**
    * Resource requests and limits for the query-frontend
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesQueryFrontendResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   initContainers?: unknown[];
   extraContainers?: unknown[];
   /**
@@ -5773,18 +5343,17 @@ export type LokiHelmValuesQueryFrontend = {
   /**
    * Affinity for query-frontend pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"query-frontend","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesQueryFrontendAffinity;
+  affinity?: Record<string, unknown>;
   maxUnavailable?: unknown;
   /**
    * Node selector for query-frontend pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesQueryFrontendNodeSelector;
+  nodeSelector?: Record<string, string>;
   topologySpreadConstraints?: unknown[];
+  /**
+   * Tolerations for query-frontend pods
+   */
   tolerations?: unknown[];
   /**
    * Adds the appProtocol field to the queryFrontend service. This allows queryFrontend to work with istio protocol selection.
@@ -5878,57 +5447,6 @@ export type LokiHelmValuesQueryFrontendServiceLabels = object;
 
 export type LokiHelmValuesQueryFrontendServiceAnnotations = object;
 
-export type LokiHelmValuesQueryFrontendResources = object;
-
-export type LokiHelmValuesQueryFrontendAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"query-frontend","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesQueryFrontendAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesQueryFrontendAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesQueryFrontendAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesQueryFrontendAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"query-frontend","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesQueryFrontendAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesQueryFrontendAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"query-frontend","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesQueryFrontendAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesQueryFrontendAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "query-frontend"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
-export type LokiHelmValuesQueryFrontendNodeSelector = object;
-
 export type LokiHelmValuesQueryFrontendAppProtocol = {
   /**
    * Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -6003,10 +5521,11 @@ export type LokiHelmValuesQueryScheduler = {
   extraVolumes?: unknown[];
   /**
    * Resource requests and limits for the query-scheduler
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesQuerySchedulerResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   initContainers?: unknown[];
   extraContainers?: unknown[];
   /**
@@ -6018,10 +5537,8 @@ export type LokiHelmValuesQueryScheduler = {
   /**
    * Affinity for query-scheduler pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"query-scheduler","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesQuerySchedulerAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * Pod Disruption Budget maxUnavailable
    *
@@ -6030,11 +5547,12 @@ export type LokiHelmValuesQueryScheduler = {
   maxUnavailable?: number;
   /**
    * Node selector for query-scheduler pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesQuerySchedulerNodeSelector;
+  nodeSelector?: Record<string, string>;
   topologySpreadConstraints?: unknown[];
+  /**
+   * Tolerations for query-scheduler pods
+   */
   tolerations?: unknown[];
   /**
    * Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -6065,57 +5583,6 @@ export type LokiHelmValuesQuerySchedulerPodAnnotations = object;
 export type LokiHelmValuesQuerySchedulerServiceLabels = object;
 
 export type LokiHelmValuesQuerySchedulerServiceAnnotations = object;
-
-export type LokiHelmValuesQuerySchedulerResources = object;
-
-export type LokiHelmValuesQuerySchedulerAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"query-scheduler","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesQuerySchedulerAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesQuerySchedulerAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesQuerySchedulerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesQuerySchedulerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"query-scheduler","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesQuerySchedulerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesQuerySchedulerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"query-scheduler","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesQuerySchedulerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesQuerySchedulerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "query-scheduler"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
-export type LokiHelmValuesQuerySchedulerNodeSelector = object;
 
 export type LokiHelmValuesQuerySchedulerAppProtocol = {
   /**
@@ -6192,10 +5659,11 @@ export type LokiHelmValuesIndexGateway = {
   extraVolumes?: unknown[];
   /**
    * Resource requests and limits for the index-gateway
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesIndexGatewayResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   extraContainers?: unknown[];
   initContainers?: unknown[];
   /**
@@ -6213,18 +5681,17 @@ export type LokiHelmValuesIndexGateway = {
   /**
    * Affinity for index-gateway pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"index-gateway","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesIndexGatewayAffinity;
+  affinity?: Record<string, unknown>;
   maxUnavailable?: unknown;
   /**
    * Node selector for index-gateway pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesIndexGatewayNodeSelector;
+  nodeSelector?: Record<string, string>;
   topologySpreadConstraints?: unknown[];
+  /**
+   * Tolerations for index-gateway pods
+   */
   tolerations?: unknown[];
   /**
    * @default {...} (11 keys)
@@ -6268,58 +5735,7 @@ export type LokiHelmValuesIndexGatewayServiceLabels = object;
 
 export type LokiHelmValuesIndexGatewayServiceAnnotations = object;
 
-export type LokiHelmValuesIndexGatewayResources = object;
-
 export type LokiHelmValuesIndexGatewayLifecycle = object;
-
-export type LokiHelmValuesIndexGatewayAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"index-gateway","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesIndexGatewayAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesIndexGatewayAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesIndexGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesIndexGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"index-gateway","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesIndexGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesIndexGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"index-gateway","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesIndexGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesIndexGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "index-gateway"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
-export type LokiHelmValuesIndexGatewayNodeSelector = object;
 
 export type LokiHelmValuesIndexGatewayPersistence = {
   /**
@@ -6454,10 +5870,8 @@ export type LokiHelmValuesCompactor = {
   /**
    * Affinity for compactor pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"compactor","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesCompactorAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * Labels for compactor service
    *
@@ -6501,10 +5915,11 @@ export type LokiHelmValuesCompactor = {
   startupProbe?: LokiHelmValuesCompactorStartupProbe;
   /**
    * Resource requests and limits for the compactor
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesCompactorResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   extraContainers?: unknown[];
   initContainers?: unknown[];
   /**
@@ -6515,10 +5930,11 @@ export type LokiHelmValuesCompactor = {
   terminationGracePeriodSeconds?: number;
   /**
    * Node selector for compactor pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesCompactorNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Tolerations for compactor pods
+   */
   tolerations?: unknown[];
   /**
    * Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -6571,68 +5987,6 @@ export type LokiHelmValuesCompactorPodAnnotations = {
   [key: string]: unknown;
 };
 
-export type LokiHelmValuesCompactorAffinity = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"compactor","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesCompactorAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesCompactorAffinityPodAntiAffinity = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesCompactorAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesCompactorAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * This type allows arbitrary additional properties beyond those defined below.
-     * This is common for config maps, custom settings, and extensible configurations.
-     */
-    [key: string]: unknown;
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"compactor","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesCompactorAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesCompactorAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"compactor","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesCompactorAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesCompactorAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "compactor"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
 export type LokiHelmValuesCompactorServiceLabels = {
   /**
    * This type allows arbitrary additional properties beyond those defined below.
@@ -6666,22 +6020,6 @@ export type LokiHelmValuesCompactorLivenessProbe = {
 };
 
 export type LokiHelmValuesCompactorStartupProbe = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
-
-export type LokiHelmValuesCompactorResources = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
-
-export type LokiHelmValuesCompactorNodeSelector = {
   /**
    * This type allows arbitrary additional properties beyond those defined below.
    * This is common for config maps, custom settings, and extensible configurations.
@@ -6834,10 +6172,8 @@ export type LokiHelmValuesBloomGateway = {
   /**
    * Affinity for bloom-gateway pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"bloom-gateway","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesBloomGatewayAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * Labels for bloom-gateway service
    *
@@ -6875,10 +6211,11 @@ export type LokiHelmValuesBloomGateway = {
   startupProbe?: LokiHelmValuesBloomGatewayStartupProbe;
   /**
    * Resource requests and limits for the bloom-gateway
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesBloomGatewayResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   extraContainers?: unknown[];
   initContainers?: unknown[];
   /**
@@ -6889,10 +6226,11 @@ export type LokiHelmValuesBloomGateway = {
   terminationGracePeriodSeconds?: number;
   /**
    * Node selector for bloom-gateway pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesBloomGatewayNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Tolerations for bloom-gateway pods
+   */
   tolerations?: unknown[];
   /**
    * Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -6922,53 +6260,6 @@ export type LokiHelmValuesBloomGatewayPodLabels = object;
 
 export type LokiHelmValuesBloomGatewayPodAnnotations = object;
 
-export type LokiHelmValuesBloomGatewayAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"bloom-gateway","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesBloomGatewayAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesBloomGatewayAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesBloomGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesBloomGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"bloom-gateway","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesBloomGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesBloomGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"bloom-gateway","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesBloomGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesBloomGatewayAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "bloom-gateway"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
 export type LokiHelmValuesBloomGatewayServiceLabels = object;
 
 export type LokiHelmValuesBloomGatewayServiceAnnotations = object;
@@ -6978,10 +6269,6 @@ export type LokiHelmValuesBloomGatewayReadinessProbe = object;
 export type LokiHelmValuesBloomGatewayLivenessProbe = object;
 
 export type LokiHelmValuesBloomGatewayStartupProbe = object;
-
-export type LokiHelmValuesBloomGatewayResources = object;
-
-export type LokiHelmValuesBloomGatewayNodeSelector = object;
 
 export type LokiHelmValuesBloomGatewayAppProtocol = {
   /**
@@ -7136,10 +6423,8 @@ export type LokiHelmValuesBloomPlanner = {
   /**
    * Affinity for bloom-planner pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"bloom-planner","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesBloomPlannerAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * Labels for bloom-planner service
    *
@@ -7177,10 +6462,11 @@ export type LokiHelmValuesBloomPlanner = {
   startupProbe?: LokiHelmValuesBloomPlannerStartupProbe;
   /**
    * Resource requests and limits for the bloom-planner
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesBloomPlannerResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   extraContainers?: unknown[];
   initContainers?: unknown[];
   /**
@@ -7191,10 +6477,11 @@ export type LokiHelmValuesBloomPlanner = {
   terminationGracePeriodSeconds?: number;
   /**
    * Node selector for bloom-planner pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesBloomPlannerNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Tolerations for bloom-planner pods
+   */
   tolerations?: unknown[];
   /**
    * Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -7224,53 +6511,6 @@ export type LokiHelmValuesBloomPlannerPodLabels = object;
 
 export type LokiHelmValuesBloomPlannerPodAnnotations = object;
 
-export type LokiHelmValuesBloomPlannerAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"bloom-planner","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesBloomPlannerAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesBloomPlannerAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesBloomPlannerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesBloomPlannerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"bloom-planner","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesBloomPlannerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesBloomPlannerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"bloom-planner","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesBloomPlannerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesBloomPlannerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "bloom-planner"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
 export type LokiHelmValuesBloomPlannerServiceLabels = object;
 
 export type LokiHelmValuesBloomPlannerServiceAnnotations = object;
@@ -7280,10 +6520,6 @@ export type LokiHelmValuesBloomPlannerReadinessProbe = object;
 export type LokiHelmValuesBloomPlannerLivenessProbe = object;
 
 export type LokiHelmValuesBloomPlannerStartupProbe = object;
-
-export type LokiHelmValuesBloomPlannerResources = object;
-
-export type LokiHelmValuesBloomPlannerNodeSelector = object;
 
 export type LokiHelmValuesBloomPlannerAppProtocol = {
   /**
@@ -7442,10 +6678,11 @@ export type LokiHelmValuesBloomBuilder = {
   extraVolumes?: unknown[];
   /**
    * Resource requests and limits for the bloom-builder
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesBloomBuilderResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   initContainers?: unknown[];
   extraContainers?: unknown[];
   /**
@@ -7457,17 +6694,16 @@ export type LokiHelmValuesBloomBuilder = {
   /**
    * Affinity for bloom-builder pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"bloom-builder","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesBloomBuilderAffinity;
+  affinity?: Record<string, unknown>;
   maxUnavailable?: unknown;
   /**
    * Node selector for bloom-builder pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesBloomBuilderNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Tolerations for bloom-builder pods
+   */
   tolerations?: unknown[];
   /**
    * Adds the appProtocol field to the queryFrontend service. This allows bloomBuilder to work with istio protocol selection.
@@ -7551,57 +6787,6 @@ export type LokiHelmValuesBloomBuilderServiceLabels = object;
 
 export type LokiHelmValuesBloomBuilderServiceAnnotations = object;
 
-export type LokiHelmValuesBloomBuilderResources = object;
-
-export type LokiHelmValuesBloomBuilderAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"bloom-builder","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesBloomBuilderAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesBloomBuilderAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesBloomBuilderAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesBloomBuilderAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"bloom-builder","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesBloomBuilderAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesBloomBuilderAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"bloom-builder","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesBloomBuilderAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesBloomBuilderAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "bloom-builder"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
-export type LokiHelmValuesBloomBuilderNodeSelector = object;
-
 export type LokiHelmValuesBloomBuilderAppProtocol = {
   /**
    * Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -7652,10 +6837,8 @@ export type LokiHelmValuesPatternIngester = {
   /**
    * Affinity for pattern ingester pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"pattern-ingester","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesPatternIngesterAffinity;
+  affinity?: Record<string, unknown>;
   maxUnavailable?: unknown;
   /**
    * Labels for pattern ingester service
@@ -7694,10 +6877,11 @@ export type LokiHelmValuesPatternIngester = {
   startupProbe?: LokiHelmValuesPatternIngesterStartupProbe;
   /**
    * Resource requests and limits for the pattern ingester
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesPatternIngesterResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   extraContainers?: unknown[];
   initContainers?: unknown[];
   /**
@@ -7708,11 +6892,12 @@ export type LokiHelmValuesPatternIngester = {
   terminationGracePeriodSeconds?: number;
   /**
    * Node selector for pattern ingester pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesPatternIngesterNodeSelector;
+  nodeSelector?: Record<string, string>;
   topologySpreadConstraints?: unknown[];
+  /**
+   * Tolerations for pattern ingester pods
+   */
   tolerations?: unknown[];
   /**
    * Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -7742,53 +6927,6 @@ export type LokiHelmValuesPatternIngesterPodLabels = object;
 
 export type LokiHelmValuesPatternIngesterPodAnnotations = object;
 
-export type LokiHelmValuesPatternIngesterAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"pattern-ingester","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesPatternIngesterAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesPatternIngesterAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesPatternIngesterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesPatternIngesterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"pattern-ingester","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesPatternIngesterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesPatternIngesterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"pattern-ingester","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesPatternIngesterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesPatternIngesterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "pattern-ingester"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
 export type LokiHelmValuesPatternIngesterServiceLabels = object;
 
 export type LokiHelmValuesPatternIngesterServiceAnnotations = object;
@@ -7798,10 +6936,6 @@ export type LokiHelmValuesPatternIngesterReadinessProbe = object;
 export type LokiHelmValuesPatternIngesterLivenessProbe = object;
 
 export type LokiHelmValuesPatternIngesterStartupProbe = object;
-
-export type LokiHelmValuesPatternIngesterResources = object;
-
-export type LokiHelmValuesPatternIngesterNodeSelector = object;
 
 export type LokiHelmValuesPatternIngesterAppProtocol = {
   /**
@@ -7967,10 +7101,11 @@ export type LokiHelmValuesRuler = {
   extraVolumes?: unknown[];
   /**
    * Resource requests and limits for the ruler
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesRulerResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   extraContainers?: unknown[];
   initContainers?: unknown[];
   /**
@@ -7982,18 +7117,17 @@ export type LokiHelmValuesRuler = {
   /**
    * Affinity for ruler pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"ruler","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesRulerAffinity;
+  affinity?: Record<string, unknown>;
   maxUnavailable?: unknown;
   /**
    * Node selector for ruler pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesRulerNodeSelector;
+  nodeSelector?: Record<string, string>;
   topologySpreadConstraints?: unknown[];
+  /**
+   * Tolerations for ruler pods
+   */
   tolerations?: unknown[];
   /**
    * DNSConfig for ruler pods
@@ -8032,57 +7166,6 @@ export type LokiHelmValuesRulerPodAnnotations = object;
 export type LokiHelmValuesRulerServiceLabels = object;
 
 export type LokiHelmValuesRulerServiceAnnotations = object;
-
-export type LokiHelmValuesRulerResources = object;
-
-export type LokiHelmValuesRulerAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"ruler","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesRulerAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesRulerAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesRulerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesRulerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"ruler","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesRulerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesRulerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"ruler","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesRulerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesRulerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "ruler"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
-export type LokiHelmValuesRulerNodeSelector = object;
 
 export type LokiHelmValuesRulerDnsConfig = object;
 
@@ -8209,10 +7292,11 @@ export type LokiHelmValuesOverridesExporter = {
   extraVolumes?: unknown[];
   /**
    * Resource requests and limits for the overrides-exporter
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesOverridesExporterResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   extraContainers?: unknown[];
   initContainers?: unknown[];
   /**
@@ -8224,18 +7308,17 @@ export type LokiHelmValuesOverridesExporter = {
   /**
    * Affinity for overrides-exporter pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"overrides-exporter","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesOverridesExporterAffinity;
+  affinity?: Record<string, unknown>;
   maxUnavailable?: unknown;
   /**
    * Node selector for overrides-exporter pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesOverridesExporterNodeSelector;
+  nodeSelector?: Record<string, string>;
   topologySpreadConstraints?: unknown[];
+  /**
+   * Tolerations for overrides-exporter pods
+   */
   tolerations?: unknown[];
   /**
    * Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
@@ -8260,57 +7343,6 @@ export type LokiHelmValuesOverridesExporterPodAnnotations = object;
 export type LokiHelmValuesOverridesExporterServiceLabels = object;
 
 export type LokiHelmValuesOverridesExporterServiceAnnotations = object;
-
-export type LokiHelmValuesOverridesExporterResources = object;
-
-export type LokiHelmValuesOverridesExporterAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"overrides-exporter","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesOverridesExporterAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesOverridesExporterAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesOverridesExporterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesOverridesExporterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"overrides-exporter","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesOverridesExporterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesOverridesExporterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"overrides-exporter","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesOverridesExporterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesOverridesExporterAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "overrides-exporter"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
-export type LokiHelmValuesOverridesExporterNodeSelector = object;
 
 export type LokiHelmValuesOverridesExporterAppProtocol = {
   /**
@@ -8496,9 +7528,12 @@ export type LokiHelmValuesMemcachedExporter = {
    */
   image?: LokiHelmValuesMemcachedExporterImage;
   /**
-   * @default {"requests":{},"limits":{}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: LokiHelmValuesMemcachedExporterResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * The SecurityContext for memcached exporter containers
    *
@@ -8548,21 +7583,6 @@ export type LokiHelmValuesMemcachedExporterImage = {
    */
   pullPolicy?: string;
 };
-
-export type LokiHelmValuesMemcachedExporterResources = {
-  /**
-   * @default {}
-   */
-  requests?: LokiHelmValuesMemcachedExporterResourcesRequests;
-  /**
-   * @default {}
-   */
-  limits?: LokiHelmValuesMemcachedExporterResourcesLimits;
-};
-
-export type LokiHelmValuesMemcachedExporterResourcesRequests = object;
-
-export type LokiHelmValuesMemcachedExporterResourcesLimits = object;
 
 export type LokiHelmValuesMemcachedExporterContainerSecurityContext = {
   /**
@@ -8744,17 +7764,16 @@ export type LokiHelmValuesResultsCache = {
   annotations?: LokiHelmValuesResultsCacheAnnotations;
   /**
    * Node selector for results-cache pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesResultsCacheNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
    * Affinity for results-cache pods
-   *
-   * @default {}
    */
-  affinity?: LokiHelmValuesResultsCacheAffinity;
+  affinity?: Record<string, unknown>;
   topologySpreadConstraints?: unknown[];
+  /**
+   * Tolerations for results-cache pods
+   */
   tolerations?: unknown[];
   /**
    * Pod Disruption Budget maxUnavailable
@@ -8844,10 +7863,6 @@ export type LokiHelmValuesResultsCacheAnnotations = {
    */
   [key: string]: unknown;
 };
-
-export type LokiHelmValuesResultsCacheNodeSelector = object;
-
-export type LokiHelmValuesResultsCacheAffinity = object;
 
 export type LokiHelmValuesResultsCacheDnsConfig = object;
 
@@ -9039,17 +8054,16 @@ export type LokiHelmValuesChunksCache = {
   annotations?: LokiHelmValuesChunksCacheAnnotations;
   /**
    * Node selector for chunks-cache pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesChunksCacheNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
    * Affinity for chunks-cache pods
-   *
-   * @default {}
    */
-  affinity?: LokiHelmValuesChunksCacheAffinity;
+  affinity?: Record<string, unknown>;
   topologySpreadConstraints?: unknown[];
+  /**
+   * Tolerations for chunks-cache pods
+   */
   tolerations?: unknown[];
   /**
    * Pod Disruption Budget maxUnavailable
@@ -9145,10 +8159,6 @@ export type LokiHelmValuesChunksCacheAnnotations = {
    */
   [key: string]: unknown;
 };
-
-export type LokiHelmValuesChunksCacheNodeSelector = object;
-
-export type LokiHelmValuesChunksCacheAffinity = object;
 
 export type LokiHelmValuesChunksCacheDnsConfig = object;
 
@@ -9345,17 +8355,16 @@ export type LokiHelmValuesChunksCacheL2 = {
   annotations?: LokiHelmValuesChunksCacheL2Annotations;
   /**
    * Node selector for chunks-cach-l2 pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesChunksCacheL2NodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
    * Affinity for chunks-cache-l2 pods
-   *
-   * @default {}
    */
-  affinity?: LokiHelmValuesChunksCacheL2Affinity;
+  affinity?: Record<string, unknown>;
   topologySpreadConstraints?: unknown[];
+  /**
+   * Tolerations for chunks-cache-l2 pods
+   */
   tolerations?: unknown[];
   /**
    * Pod Disruption Budget maxUnavailable
@@ -9445,10 +8454,6 @@ export type LokiHelmValuesChunksCacheL2Annotations = {
    */
   [key: string]: unknown;
 };
-
-export type LokiHelmValuesChunksCacheL2NodeSelector = object;
-
-export type LokiHelmValuesChunksCacheL2Affinity = object;
 
 export type LokiHelmValuesChunksCacheL2DnsConfig = object;
 
@@ -9647,9 +8652,12 @@ export type LokiHelmValuesMinio = {
    */
   persistence?: LokiHelmValuesMinioPersistence;
   /**
-   * @default {"requests":{"cpu":"100m","memory":"128Mi"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: LokiHelmValuesMinioResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   address?: unknown;
 };
 
@@ -9737,39 +8745,6 @@ export type LokiHelmValuesMinioPersistenceAnnotations = {
   [key: string]: unknown;
 };
 
-export type LokiHelmValuesMinioResources = {
-  /**
-   * @default {"cpu":"100m","memory":"128Mi"}
-   */
-  requests?: LokiHelmValuesMinioResourcesRequests;
-  /**
-   * Kubernetes resource limits (memory, cpu, etc.)
-   */
-  limits?: LokiHelmValuesMinioResourcesLimits;
-};
-
-export type LokiHelmValuesMinioResourcesRequests = {
-  /**
-   * @default "100m"
-   */
-  cpu?: string;
-  /**
-   * @default "128Mi"
-   */
-  memory?: string;
-};
-
-export type LokiHelmValuesMinioResourcesLimits = {
-  /**
-   * @default "100m"
-   */
-  cpu?: string;
-  /**
-   * @default "128Mi"
-   */
-  memory?: string;
-};
-
 export type LokiHelmValuesSidecar = {
   /**
    * @default {...} (5 keys)
@@ -9777,10 +8752,11 @@ export type LokiHelmValuesSidecar = {
   image?: LokiHelmValuesSidecarImage;
   /**
    * Resource requests and limits for the sidecar
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesSidecarResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * The SecurityContext for the sidecar.
    *
@@ -9859,8 +8835,6 @@ export type LokiHelmValuesSidecarImage = {
    */
   pullPolicy?: string;
 };
-
-export type LokiHelmValuesSidecarResources = object;
 
 export type LokiHelmValuesSidecarSecurityContext = {
   /**
@@ -10408,10 +9382,14 @@ export type LokiHelmValuesMonitoringSelfMonitoringGrafanaAgent = {
   priorityClassName?: unknown;
   /**
    * Resource requests and limits for the grafanaAgent pods
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesMonitoringSelfMonitoringGrafanaAgentResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
+  /**
+   * Tolerations for GrafanaAgent pods
+   */
   tolerations?: unknown[];
 };
 
@@ -10430,9 +9408,6 @@ export type LokiHelmValuesMonitoringSelfMonitoringGrafanaAgentLabels = {
    */
   [key: string]: unknown;
 };
-
-export type LokiHelmValuesMonitoringSelfMonitoringGrafanaAgentResources =
-  object;
 
 export type LokiHelmValuesMonitoringSelfMonitoringPodLogs = {
   /**
@@ -10547,10 +9522,11 @@ export type LokiHelmValuesTableManager = {
   extraVolumes?: unknown[];
   /**
    * Resource requests and limits for the table-manager
-   *
-   * @default {}
    */
-  resources?: LokiHelmValuesTableManagerResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   extraContainers?: unknown[];
   /**
    * Grace period to allow the table-manager to shutdown before it is killed
@@ -10567,10 +9543,8 @@ export type LokiHelmValuesTableManager = {
   /**
    * Affinity for table-manager pods.
    * The value will be passed through tpl.
-   *
-   * @default {"podAntiAffinity":{"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"table-manager","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}}
    */
-  affinity?: LokiHelmValuesTableManagerAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * DNS config table-manager pods
    *
@@ -10579,10 +9553,11 @@ export type LokiHelmValuesTableManager = {
   dnsConfig?: LokiHelmValuesTableManagerDnsConfig;
   /**
    * Node selector for table-manager pods
-   *
-   * @default {}
    */
-  nodeSelector?: LokiHelmValuesTableManagerNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Tolerations for table-manager pods
+   */
   tolerations?: unknown[];
   /**
    * Enable deletes by retention
@@ -10647,58 +9622,7 @@ export type LokiHelmValuesTableManagerServiceLabels = {
   [key: string]: unknown;
 };
 
-export type LokiHelmValuesTableManagerResources = object;
-
-export type LokiHelmValuesTableManagerAffinity = {
-  /**
-   * @default {"requiredDuringSchedulingIgnoredDuringExecution":[{"labelSelector":{"matchLabels":{"app.kubernetes.io/component":"table-manager","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}},"topologyKey":"kubernetes.io/hostname"}]}
-   */
-  podAntiAffinity?: LokiHelmValuesTableManagerAffinityPodAntiAffinity;
-};
-
-export type LokiHelmValuesTableManagerAffinityPodAntiAffinity = {
-  requiredDuringSchedulingIgnoredDuringExecution?: LokiHelmValuesTableManagerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement[];
-};
-
-export type LokiHelmValuesTableManagerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionElement =
-  {
-    /**
-     * @default {"matchLabels":{"app.kubernetes.io/component":"table-manager","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}}
-     */
-    labelSelector?: LokiHelmValuesTableManagerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector;
-    /**
-     * @default "kubernetes.io/hostname"
-     */
-    topologyKey?: string;
-  };
-
-export type LokiHelmValuesTableManagerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelector =
-  {
-    /**
-     * @default {"app.kubernetes.io/component":"table-manager","app.kubernetes.io/name":"{{ include \"loki.name\" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
-     */
-    matchLabels?: LokiHelmValuesTableManagerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels;
-  };
-
-export type LokiHelmValuesTableManagerAffinityPodAntiAffinityRequiredDuringSchedulingIgnoredDuringExecutionLabelSelectorMatchLabels =
-  {
-    /**
-     * @default "table-manager"
-     */
-    "app.kubernetes.io/component"?: string;
-    /**
-     * @default "{{ include "loki.name" . }}"
-     */
-    "app.kubernetes.io/name"?: string;
-    /**
-     * @default "{{ .Release.Name }}"
-     */
-    "app.kubernetes.io/instance"?: string;
-  };
-
 export type LokiHelmValuesTableManagerDnsConfig = object;
-
-export type LokiHelmValuesTableManagerNodeSelector = object;
 
 export type LokiHelmValues = {
   kubeVersionOverride?: unknown;
@@ -11143,6 +10067,8 @@ export type LokiHelmParameters = {
   "enterprise.provisioner.apiUrl"?: string;
   "enterprise.provisioner.additionalTenants"?: string;
   "enterprise.provisioner.env"?: string;
+  "enterprise.provisioner.affinity"?: string;
+  "enterprise.provisioner.nodeSelector"?: string;
   "enterprise.provisioner.tolerations"?: string;
   "enterprise.provisioner.priorityClassName"?: string;
   "enterprise.provisioner.hostUsers"?: string;
@@ -11177,7 +10103,10 @@ export type LokiHelmParameters = {
   "lokiCanary.extraEnvFrom"?: string;
   "lokiCanary.extraVolumeMounts"?: string;
   "lokiCanary.extraVolumes"?: string;
+  "lokiCanary.resources"?: string;
+  "lokiCanary.nodeSelector"?: string;
   "lokiCanary.tolerations"?: string;
+  "lokiCanary.affinity"?: string;
   "lokiCanary.priorityClassName"?: string;
   "lokiCanary.hostUsers"?: string;
   "lokiCanary.image.registry"?: string;
@@ -11226,11 +10155,14 @@ export type LokiHelmParameters = {
   "adminApi.readinessProbe.httpGet.path"?: string;
   "adminApi.readinessProbe.httpGet.port"?: string;
   "adminApi.readinessProbe.initialDelaySeconds"?: string;
+  "adminApi.resources"?: string;
   "adminApi.env"?: string;
   "adminApi.initContainers"?: string;
   "adminApi.extraContainers"?: string;
   "adminApi.extraVolumes"?: string;
   "adminApi.extraVolumeMounts"?: string;
+  "adminApi.affinity"?: string;
+  "adminApi.nodeSelector"?: string;
   "adminApi.topologySpreadConstraints"?: string;
   "adminApi.tolerations"?: string;
   "adminApi.terminationGracePeriodSeconds"?: string;
@@ -11264,12 +10196,11 @@ export type LokiHelmParameters = {
   "gateway.containerSecurityContext.capabilities.drop"?: string;
   "gateway.containerSecurityContext.allowPrivilegeEscalation"?: string;
   "gateway.hostUsers"?: string;
+  "gateway.resources"?: string;
   "gateway.extraContainers"?: string;
   "gateway.terminationGracePeriodSeconds"?: string;
-  "gateway.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "gateway.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "gateway.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "gateway.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "gateway.affinity"?: string;
+  "gateway.nodeSelector"?: string;
   "gateway.topologySpreadConstraints"?: string;
   "gateway.tolerations"?: string;
   "gateway.service.port"?: string;
@@ -11323,11 +10254,14 @@ export type LokiHelmParameters = {
   "enterpriseGateway.readinessProbe.httpGet.path"?: string;
   "enterpriseGateway.readinessProbe.httpGet.port"?: string;
   "enterpriseGateway.readinessProbe.initialDelaySeconds"?: string;
+  "enterpriseGateway.resources"?: string;
   "enterpriseGateway.env"?: string;
   "enterpriseGateway.initContainers"?: string;
   "enterpriseGateway.extraContainers"?: string;
   "enterpriseGateway.extraVolumes"?: string;
   "enterpriseGateway.extraVolumeMounts"?: string;
+  "enterpriseGateway.affinity"?: string;
+  "enterpriseGateway.nodeSelector"?: string;
   "enterpriseGateway.topologySpreadConstraints"?: string;
   "enterpriseGateway.tolerations"?: string;
   "enterpriseGateway.terminationGracePeriodSeconds"?: string;
@@ -11361,13 +10295,12 @@ export type LokiHelmParameters = {
   "singleBinary.initContainers"?: string;
   "singleBinary.extraVolumeMounts"?: string;
   "singleBinary.extraVolumes"?: string;
+  "singleBinary.resources"?: string;
   "singleBinary.terminationGracePeriodSeconds"?: string;
   "singleBinary.hostUsers"?: string;
-  "singleBinary.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "singleBinary.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "singleBinary.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "singleBinary.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "singleBinary.affinity"?: string;
   "singleBinary.topologySpreadConstraints"?: string;
+  "singleBinary.nodeSelector"?: string;
   "singleBinary.tolerations"?: string;
   "singleBinary.persistence.whenScaled"?: string;
   "singleBinary.persistence.whenDeleted"?: string;
@@ -11406,13 +10339,12 @@ export type LokiHelmParameters = {
   "write.extraVolumeMounts"?: string;
   "write.extraVolumes"?: string;
   "write.extraVolumeClaimTemplates"?: string;
+  "write.resources"?: string;
   "write.terminationGracePeriodSeconds"?: string;
   "write.hostUsers"?: string;
-  "write.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "write.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "write.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "write.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "write.affinity"?: string;
   "write.maxUnavailable"?: string;
+  "write.nodeSelector"?: string;
   "write.topologySpreadConstraints"?: string;
   "write.tolerations"?: string;
   "write.podManagementPolicy"?: string;
@@ -11444,13 +10376,12 @@ export type LokiHelmParameters = {
   "read.extraEnvFrom"?: string;
   "read.extraVolumeMounts"?: string;
   "read.extraVolumes"?: string;
+  "read.resources"?: string;
   "read.terminationGracePeriodSeconds"?: string;
   "read.hostUsers"?: string;
-  "read.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "read.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "read.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "read.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "read.affinity"?: string;
   "read.maxUnavailable"?: string;
+  "read.nodeSelector"?: string;
   "read.topologySpreadConstraints"?: string;
   "read.tolerations"?: string;
   "read.podManagementPolicy"?: string;
@@ -11480,13 +10411,12 @@ export type LokiHelmParameters = {
   "backend.extraContainers"?: string;
   "backend.extraVolumeMounts"?: string;
   "backend.extraVolumes"?: string;
+  "backend.resources"?: string;
   "backend.terminationGracePeriodSeconds"?: string;
   "backend.hostUsers"?: string;
-  "backend.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "backend.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "backend.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "backend.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "backend.affinity"?: string;
   "backend.maxUnavailable"?: string;
+  "backend.nodeSelector"?: string;
   "backend.topologySpreadConstraints"?: string;
   "backend.tolerations"?: string;
   "backend.podManagementPolicy"?: string;
@@ -11518,6 +10448,7 @@ export type LokiHelmParameters = {
   "ingester.extraEnvFrom"?: string;
   "ingester.extraVolumeMounts"?: string;
   "ingester.extraVolumes"?: string;
+  "ingester.resources"?: string;
   "ingester.extraContainers"?: string;
   "ingester.initContainers"?: string;
   "ingester.terminationGracePeriodSeconds"?: string;
@@ -11527,11 +10458,9 @@ export type LokiHelmParameters = {
   "ingester.topologySpreadConstraints.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
   "ingester.topologySpreadConstraints.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
   "ingester.topologySpreadConstraints.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "ingester.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "ingester.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "ingester.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "ingester.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "ingester.affinity"?: string;
   "ingester.maxUnavailable"?: string;
+  "ingester.nodeSelector"?: string;
   "ingester.tolerations"?: string;
   "ingester.updateStrategy.type"?: string;
   "ingester.persistence.enabled"?: string;
@@ -11578,15 +10507,14 @@ export type LokiHelmParameters = {
   "distributor.extraEnvFrom"?: string;
   "distributor.extraVolumeMounts"?: string;
   "distributor.extraVolumes"?: string;
+  "distributor.resources"?: string;
   "distributor.initContainers"?: string;
   "distributor.extraContainers"?: string;
   "distributor.terminationGracePeriodSeconds"?: string;
-  "distributor.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "distributor.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "distributor.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "distributor.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "distributor.affinity"?: string;
   "distributor.maxUnavailable"?: string;
   "distributor.maxSurge"?: string;
+  "distributor.nodeSelector"?: string;
   "distributor.topologySpreadConstraints"?: string;
   "distributor.tolerations"?: string;
   "distributor.appProtocol.grpc"?: string;
@@ -11612,6 +10540,7 @@ export type LokiHelmParameters = {
   "querier.extraEnvFrom"?: string;
   "querier.extraVolumeMounts"?: string;
   "querier.extraVolumes"?: string;
+  "querier.resources"?: string;
   "querier.extraContainers"?: string;
   "querier.initContainers"?: string;
   "querier.terminationGracePeriodSeconds"?: string;
@@ -11621,12 +10550,10 @@ export type LokiHelmParameters = {
   "querier.topologySpreadConstraints.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
   "querier.topologySpreadConstraints.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
   "querier.topologySpreadConstraints.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "querier.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "querier.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "querier.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "querier.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "querier.affinity"?: string;
   "querier.maxUnavailable"?: string;
   "querier.maxSurge"?: string;
+  "querier.nodeSelector"?: string;
   "querier.tolerations"?: string;
   "querier.appProtocol.grpc"?: string;
   "querier.trafficDistribution"?: string;
@@ -11651,14 +10578,13 @@ export type LokiHelmParameters = {
   "queryFrontend.extraEnvFrom"?: string;
   "queryFrontend.extraVolumeMounts"?: string;
   "queryFrontend.extraVolumes"?: string;
+  "queryFrontend.resources"?: string;
   "queryFrontend.initContainers"?: string;
   "queryFrontend.extraContainers"?: string;
   "queryFrontend.terminationGracePeriodSeconds"?: string;
-  "queryFrontend.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "queryFrontend.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "queryFrontend.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "queryFrontend.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "queryFrontend.affinity"?: string;
   "queryFrontend.maxUnavailable"?: string;
+  "queryFrontend.nodeSelector"?: string;
   "queryFrontend.topologySpreadConstraints"?: string;
   "queryFrontend.tolerations"?: string;
   "queryFrontend.appProtocol.grpc"?: string;
@@ -11676,14 +10602,13 @@ export type LokiHelmParameters = {
   "queryScheduler.extraEnvFrom"?: string;
   "queryScheduler.extraVolumeMounts"?: string;
   "queryScheduler.extraVolumes"?: string;
+  "queryScheduler.resources"?: string;
   "queryScheduler.initContainers"?: string;
   "queryScheduler.extraContainers"?: string;
   "queryScheduler.terminationGracePeriodSeconds"?: string;
-  "queryScheduler.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "queryScheduler.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "queryScheduler.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "queryScheduler.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "queryScheduler.affinity"?: string;
   "queryScheduler.maxUnavailable"?: string;
+  "queryScheduler.nodeSelector"?: string;
   "queryScheduler.topologySpreadConstraints"?: string;
   "queryScheduler.tolerations"?: string;
   "queryScheduler.appProtocol.grpc"?: string;
@@ -11702,14 +10627,13 @@ export type LokiHelmParameters = {
   "indexGateway.extraEnvFrom"?: string;
   "indexGateway.extraVolumeMounts"?: string;
   "indexGateway.extraVolumes"?: string;
+  "indexGateway.resources"?: string;
   "indexGateway.extraContainers"?: string;
   "indexGateway.initContainers"?: string;
   "indexGateway.terminationGracePeriodSeconds"?: string;
-  "indexGateway.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "indexGateway.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "indexGateway.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "indexGateway.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "indexGateway.affinity"?: string;
   "indexGateway.maxUnavailable"?: string;
+  "indexGateway.nodeSelector"?: string;
   "indexGateway.topologySpreadConstraints"?: string;
   "indexGateway.tolerations"?: string;
   "indexGateway.persistence.enabled"?: string;
@@ -11732,19 +10656,18 @@ export type LokiHelmParameters = {
   "compactor.image.tag"?: string;
   "compactor.command"?: string;
   "compactor.priorityClassName"?: string;
-  "compactor.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "compactor.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "compactor.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "compactor.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "compactor.affinity"?: string;
   "compactor.serviceType"?: string;
   "compactor.extraArgs"?: string;
   "compactor.extraEnv"?: string;
   "compactor.extraEnvFrom"?: string;
   "compactor.extraVolumeMounts"?: string;
   "compactor.extraVolumes"?: string;
+  "compactor.resources"?: string;
   "compactor.extraContainers"?: string;
   "compactor.initContainers"?: string;
   "compactor.terminationGracePeriodSeconds"?: string;
+  "compactor.nodeSelector"?: string;
   "compactor.tolerations"?: string;
   "compactor.appProtocol.grpc"?: string;
   "compactor.persistence.enabled"?: string;
@@ -11768,18 +10691,17 @@ export type LokiHelmParameters = {
   "bloomGateway.image.tag"?: string;
   "bloomGateway.command"?: string;
   "bloomGateway.priorityClassName"?: string;
-  "bloomGateway.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "bloomGateway.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "bloomGateway.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "bloomGateway.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "bloomGateway.affinity"?: string;
   "bloomGateway.extraArgs"?: string;
   "bloomGateway.extraEnv"?: string;
   "bloomGateway.extraEnvFrom"?: string;
   "bloomGateway.extraVolumeMounts"?: string;
   "bloomGateway.extraVolumes"?: string;
+  "bloomGateway.resources"?: string;
   "bloomGateway.extraContainers"?: string;
   "bloomGateway.initContainers"?: string;
   "bloomGateway.terminationGracePeriodSeconds"?: string;
+  "bloomGateway.nodeSelector"?: string;
   "bloomGateway.tolerations"?: string;
   "bloomGateway.appProtocol.grpc"?: string;
   "bloomGateway.persistence.enabled"?: string;
@@ -11803,18 +10725,17 @@ export type LokiHelmParameters = {
   "bloomPlanner.image.tag"?: string;
   "bloomPlanner.command"?: string;
   "bloomPlanner.priorityClassName"?: string;
-  "bloomPlanner.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "bloomPlanner.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "bloomPlanner.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "bloomPlanner.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "bloomPlanner.affinity"?: string;
   "bloomPlanner.extraArgs"?: string;
   "bloomPlanner.extraEnv"?: string;
   "bloomPlanner.extraEnvFrom"?: string;
   "bloomPlanner.extraVolumeMounts"?: string;
   "bloomPlanner.extraVolumes"?: string;
+  "bloomPlanner.resources"?: string;
   "bloomPlanner.extraContainers"?: string;
   "bloomPlanner.initContainers"?: string;
   "bloomPlanner.terminationGracePeriodSeconds"?: string;
+  "bloomPlanner.nodeSelector"?: string;
   "bloomPlanner.tolerations"?: string;
   "bloomPlanner.appProtocol.grpc"?: string;
   "bloomPlanner.persistence.enabled"?: string;
@@ -11850,14 +10771,13 @@ export type LokiHelmParameters = {
   "bloomBuilder.extraEnvFrom"?: string;
   "bloomBuilder.extraVolumeMounts"?: string;
   "bloomBuilder.extraVolumes"?: string;
+  "bloomBuilder.resources"?: string;
   "bloomBuilder.initContainers"?: string;
   "bloomBuilder.extraContainers"?: string;
   "bloomBuilder.terminationGracePeriodSeconds"?: string;
-  "bloomBuilder.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "bloomBuilder.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "bloomBuilder.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "bloomBuilder.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "bloomBuilder.affinity"?: string;
   "bloomBuilder.maxUnavailable"?: string;
+  "bloomBuilder.nodeSelector"?: string;
   "bloomBuilder.tolerations"?: string;
   "bloomBuilder.appProtocol.grpc"?: string;
   "patternIngester.replicas"?: string;
@@ -11868,19 +10788,18 @@ export type LokiHelmParameters = {
   "patternIngester.image.tag"?: string;
   "patternIngester.command"?: string;
   "patternIngester.priorityClassName"?: string;
-  "patternIngester.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "patternIngester.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "patternIngester.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "patternIngester.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "patternIngester.affinity"?: string;
   "patternIngester.maxUnavailable"?: string;
   "patternIngester.extraArgs"?: string;
   "patternIngester.extraEnv"?: string;
   "patternIngester.extraEnvFrom"?: string;
   "patternIngester.extraVolumeMounts"?: string;
   "patternIngester.extraVolumes"?: string;
+  "patternIngester.resources"?: string;
   "patternIngester.extraContainers"?: string;
   "patternIngester.initContainers"?: string;
   "patternIngester.terminationGracePeriodSeconds"?: string;
+  "patternIngester.nodeSelector"?: string;
   "patternIngester.topologySpreadConstraints"?: string;
   "patternIngester.tolerations"?: string;
   "patternIngester.appProtocol.grpc"?: string;
@@ -11914,14 +10833,13 @@ export type LokiHelmParameters = {
   "ruler.extraEnvFrom"?: string;
   "ruler.extraVolumeMounts"?: string;
   "ruler.extraVolumes"?: string;
+  "ruler.resources"?: string;
   "ruler.extraContainers"?: string;
   "ruler.initContainers"?: string;
   "ruler.terminationGracePeriodSeconds"?: string;
-  "ruler.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "ruler.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "ruler.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "ruler.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "ruler.affinity"?: string;
   "ruler.maxUnavailable"?: string;
+  "ruler.nodeSelector"?: string;
   "ruler.topologySpreadConstraints"?: string;
   "ruler.tolerations"?: string;
   "ruler.persistence.enabled"?: string;
@@ -11944,14 +10862,13 @@ export type LokiHelmParameters = {
   "overridesExporter.extraEnvFrom"?: string;
   "overridesExporter.extraVolumeMounts"?: string;
   "overridesExporter.extraVolumes"?: string;
+  "overridesExporter.resources"?: string;
   "overridesExporter.extraContainers"?: string;
   "overridesExporter.initContainers"?: string;
   "overridesExporter.terminationGracePeriodSeconds"?: string;
-  "overridesExporter.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "overridesExporter.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "overridesExporter.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "overridesExporter.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "overridesExporter.affinity"?: string;
   "overridesExporter.maxUnavailable"?: string;
+  "overridesExporter.nodeSelector"?: string;
   "overridesExporter.topologySpreadConstraints"?: string;
   "overridesExporter.tolerations"?: string;
   "overridesExporter.appProtocol.grpc"?: string;
@@ -11981,6 +10898,7 @@ export type LokiHelmParameters = {
   "memcachedExporter.image.repository"?: string;
   "memcachedExporter.image.tag"?: string;
   "memcachedExporter.image.pullPolicy"?: string;
+  "memcachedExporter.resources"?: string;
   "memcachedExporter.containerSecurityContext.readOnlyRootFilesystem"?: string;
   "memcachedExporter.containerSecurityContext.capabilities.drop"?: string;
   "memcachedExporter.containerSecurityContext.allowPrivilegeEscalation"?: string;
@@ -12010,6 +10928,8 @@ export type LokiHelmParameters = {
   "resultsCache.writebackBuffer"?: string;
   "resultsCache.writebackParallelism"?: string;
   "resultsCache.initContainers"?: string;
+  "resultsCache.nodeSelector"?: string;
+  "resultsCache.affinity"?: string;
   "resultsCache.topologySpreadConstraints"?: string;
   "resultsCache.tolerations"?: string;
   "resultsCache.maxUnavailable"?: string;
@@ -12045,6 +10965,8 @@ export type LokiHelmParameters = {
   "chunksCache.writebackBuffer"?: string;
   "chunksCache.writebackParallelism"?: string;
   "chunksCache.initContainers"?: string;
+  "chunksCache.nodeSelector"?: string;
+  "chunksCache.affinity"?: string;
   "chunksCache.topologySpreadConstraints"?: string;
   "chunksCache.tolerations"?: string;
   "chunksCache.maxUnavailable"?: string;
@@ -12081,6 +11003,8 @@ export type LokiHelmParameters = {
   "chunksCache.l2.writebackBuffer"?: string;
   "chunksCache.l2.writebackParallelism"?: string;
   "chunksCache.l2.initContainers"?: string;
+  "chunksCache.l2.nodeSelector"?: string;
+  "chunksCache.l2.affinity"?: string;
   "chunksCache.l2.topologySpreadConstraints"?: string;
   "chunksCache.l2.tolerations"?: string;
   "chunksCache.l2.maxUnavailable"?: string;
@@ -12126,10 +11050,7 @@ export type LokiHelmParameters = {
   "minio.buckets.policy"?: string;
   "minio.buckets.purge"?: string;
   "minio.persistence.size"?: string;
-  "minio.resources.requests.cpu"?: string;
-  "minio.resources.requests.memory"?: string;
-  "minio.resources.limits.cpu"?: string;
-  "minio.resources.limits.memory"?: string;
+  "minio.resources"?: string;
   "minio.address"?: string;
   extraObjects?: string;
   "sidecar.image.registry"?: string;
@@ -12137,6 +11058,7 @@ export type LokiHelmParameters = {
   "sidecar.image.tag"?: string;
   "sidecar.image.sha"?: string;
   "sidecar.image.pullPolicy"?: string;
+  "sidecar.resources"?: string;
   "sidecar.securityContext.readOnlyRootFilesystem"?: string;
   "sidecar.securityContext.capabilities.drop"?: string;
   "sidecar.securityContext.allowPrivilegeEscalation"?: string;
@@ -12199,6 +11121,7 @@ export type LokiHelmParameters = {
   "monitoring.selfMonitoring.grafanaAgent.installOperator"?: string;
   "monitoring.selfMonitoring.grafanaAgent.enableConfigReadAPI"?: string;
   "monitoring.selfMonitoring.grafanaAgent.priorityClassName"?: string;
+  "monitoring.selfMonitoring.grafanaAgent.resources"?: string;
   "monitoring.selfMonitoring.grafanaAgent.tolerations"?: string;
   "monitoring.selfMonitoring.podLogs.apiVersion"?: string;
   "monitoring.selfMonitoring.podLogs.relabelings"?: string;
@@ -12215,13 +11138,12 @@ export type LokiHelmParameters = {
   "tableManager.extraEnvFrom"?: string;
   "tableManager.extraVolumeMounts"?: string;
   "tableManager.extraVolumes"?: string;
+  "tableManager.resources"?: string;
   "tableManager.extraContainers"?: string;
   "tableManager.terminationGracePeriodSeconds"?: string;
   "tableManager.hostUsers"?: string;
-  "tableManager.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/component"?: string;
-  "tableManager.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/name"?: string;
-  "tableManager.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.labelSelector.matchLabels.app.kubernetes.io/instance"?: string;
-  "tableManager.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.topologyKey"?: string;
+  "tableManager.affinity"?: string;
+  "tableManager.nodeSelector"?: string;
   "tableManager.tolerations"?: string;
   "tableManager.retention_deletes_enabled"?: string;
   "tableManager.retention_period"?: string;

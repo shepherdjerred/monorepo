@@ -34,6 +34,9 @@ export function createDdnsDeployment(chart: Chart) {
 
   deployment.addContainer(
     withCommonProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
       image: `timothyjmiller/cloudflare-ddns:${versions["timothyjmiller/cloudflare-ddns"]}`,
       securityContext: {
         ensureNonRoot: false,

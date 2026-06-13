@@ -43,6 +43,9 @@ export function createGolinkDeployment(chart: Chart) {
 
   deployment.addContainer(
     withCommonProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
       image: `ghcr.io/shepherdjerred/golink:${versions["shepherdjerred/golink"]}`,
       envVariables: {
         TS_AUTHKEY: EnvValue.fromSecretValue({
