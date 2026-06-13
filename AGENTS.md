@@ -227,7 +227,7 @@ Always verify changes:
 
 ## Parallel Work — Use Worktrees
 
-When starting parallel feature work, hot-fixing while another change is in progress, or running multiple Claude agents in this repo concurrently, use `git worktree` to get an isolated working directory per branch.
+**Before your first edit on any non-trivial change, create a `git worktree` — don't edit in the main checkout.** "Non-trivial" = anything you'll open a PR for, anything touching more than one file, or any multi-step task. Only stay in the main checkout for a single-file, single-commit fix you won't PR (a typo, a one-line config tweak). **When unsure, make the worktree.** Each worktree gives a branch its own isolated working directory, so parallel work and concurrent agents never collide.
 
 ```bash
 # Create an isolated worktree on a new branch off main
@@ -242,7 +242,7 @@ bun run scripts/setup.ts
 
 After PR merge: `git worktree remove .claude/worktrees/<feature-slug>` and `git branch -d feature/<slug>` from the main checkout. Run `git worktree prune` to clean up stale entries.
 
-See the `worktree-workflow` skill for the full workflow. Trivial single-file edits don't need a worktree — those stay in the main checkout.
+See the `worktree-workflow` skill for the full workflow. `claude -w <slug>` creates and enters a worktree at launch; for Codex, create the worktree first and start it with `codex -C <dir>`. A `SessionStart` hook (`.claude/hooks/worktree-reminder.sh`, wired for both Claude Code and Codex) also reminds you whenever a session opens in the main checkout.
 
 **If you were started in a worktree, stay in that worktree.** Keep every command, search, and file operation scoped to the worktree path you were launched in. Do not `cd` into, read from, or write to the main checkout (the parent of the `.claude/worktrees/` directory you are in) — the worktree is a complete checkout with the same files, so there is no reason to reach outside it. The main checkout may hold the user's own in-progress work; only touch it when the user explicitly asks.
 
