@@ -54,9 +54,12 @@ export function blitBgra(
       } else if (a !== 0) {
         const inv = 255 - a;
         // label channels are premultiplied; dst scaled by inverse alpha.
-        data[fi] = (bgra[li] ?? 0) + (((data[fi] ?? 0) * inv) >> 8);
-        data[fi + 1] = (bgra[li + 1] ?? 0) + (((data[fi + 1] ?? 0) * inv) >> 8);
-        data[fi + 2] = (bgra[li + 2] ?? 0) + (((data[fi + 2] ?? 0) * inv) >> 8);
+        // Divide by 255 (not 256) to match the docstring formula exactly.
+        data[fi] = (bgra[li] ?? 0) + Math.round(((data[fi] ?? 0) * inv) / 255);
+        data[fi + 1] =
+          (bgra[li + 1] ?? 0) + Math.round(((data[fi + 1] ?? 0) * inv) / 255);
+        data[fi + 2] =
+          (bgra[li + 2] ?? 0) + Math.round(((data[fi + 2] ?? 0) * inv) / 255);
         data[fi + 3] = 0xff;
       }
       fi += 4;

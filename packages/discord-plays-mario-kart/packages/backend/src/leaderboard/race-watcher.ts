@@ -141,6 +141,7 @@ export class RaceWatcher {
   private isRecordable(snap: Mk64Snapshot): boolean {
     return (
       snap.gameMode !== "battle" &&
+      snap.gameMode !== "time-trials" &&
       snap.courseId >= 0 &&
       snap.courseId !== COURSE_AWARD_CEREMONY
     );

@@ -70,10 +70,10 @@ describe("blitBgra", () => {
       height: 1,
     };
     blitBgra(view(frame, 1, 1), label, 0, 0);
-    // out = 128 + 200 * (127 >> 8) -> 128 + floor(200*127/256) = 128 + 99 = 227
-    expect(frame[0]).toBe(227);
-    expect(frame[1]).toBe(227);
-    expect(frame[2]).toBe(227);
+    // out = 128 + round(200 * 127 / 255) = 128 + round(99.6) = 128 + 100 = 228
+    expect(frame[0]).toBe(228);
+    expect(frame[1]).toBe(228);
+    expect(frame[2]).toBe(228);
   });
 
   test("fully transparent label leaves the frame untouched", () => {
