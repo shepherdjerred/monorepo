@@ -42,6 +42,13 @@ export const CADDY_IMAGE =
 // renovate: datasource=docker depName=caddy
 export const CADDY_BUILDER_IMAGE =
   "caddy:2.11.3-builder-alpine@sha256:3eae6b351ecdb05da6d16e341261a457692d344a435764c5ece7a60cf03a23f3";
+// xcaddy --with module for the S3 proxy plugin. The fork keeps the upstream
+// import path (existing Caddyfiles keep working) and adds HEAD support, the
+// 304-on-index fix, and 206/Accept-Ranges on byte-range responses (Safari
+// refuses to play video from origins that answer 200 to Range requests).
+// Not managed by renovate — bump the tag when the fork changes.
+export const CADDY_S3_PROXY_MODULE =
+  "github.com/lindenlab/caddy-s3-proxy=github.com/shepherdjerred/caddy-s3-proxy@v0.5.7-head2";
 // Base image for obsidian-headless container (uses Node, not Bun, due to native better-sqlite3 addon).
 // renovate: datasource=docker depName=node
 export const OBSIDIAN_HEADLESS_BASE_IMAGE =

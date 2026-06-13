@@ -302,25 +302,51 @@ toolkit recall status            # Index stats, daemon health
 toolkit recall debug             # Full diagnostic check
 ```
 
-## PR Screenshots — `public.sjer.red`
+## PR Media & Demo Artifacts — `public.sjer.red`
 
-`gh` cannot upload images into a PR/issue body (drag-drop uses a private,
-session-only endpoint). To attach screenshots in a PR description/comment,
-upload them to the public artifact host and embed the returned URLs.
+A reviewer should be able to **see** that a change works without checking out
+the branch. Attach the **lightest artifact that proves the behavior** — most
+PRs (pure logic, refactors, types, infra config, dep bumps) need nothing
+beyond the diff; never attach media reflexively. A single visual state is a
+screenshot, not a video.
+
+| Change type                       | Artifact                                                                         |
+| --------------------------------- | -------------------------------------------------------------------------------- |
+| UI tweak, single state            | Screenshot (before/after where it applies)                                       |
+| UI flow / interaction / animation | Short GIF (renders inline) or short video (link)                                 |
+| Brand-new feature                 | End-to-end demo — **one short video per scenario**, not one long tour            |
+| CLI / TUI program                 | asciinema recording of a real terminal: `asciinema rec demo.cast -c "<command>"` |
+| Web page / component              | Small static demo site uploaded as a directory (root `index.html` required)      |
+| Metrics / logging / tracing       | Screenshot of Grafana/Loki showing the **new** data flowing end-to-end           |
+| Anything else                     | Only when seeing it communicates faster than reading the diff                    |
+
+Conventions: one artifact per scenario, a one-line caption saying what to
+look at, before/after pairs when changing existing behavior.
+
+`gh` cannot upload media into a PR/issue body (drag-drop uses a private,
+session-only endpoint). Upload to the public artifact host and embed the
+returned URLs:
 
 ```bash
-# Creds come from your AWS profile (~/.aws); no op wrapper needed:
-toolkit pr asset <PR_NUMBER> ./before.png ./after.png --profile seaweedfs --markdown
+# Creds come from your AWS profile (~/.aws); no op wrapper needed.
+# Mix files, recordings, and demo-site directories in one call:
+toolkit pr asset <PR_NUMBER> ./before.png ./flow.mp4 ./demo.cast ./demo-site --profile seaweedfs --markdown
 ```
 
 - Uploads to the `public-sjer-red` SeaweedFS bucket under `pr/assets/<PR_NUMBER>/`
-  and prints `https://public.sjer.red/pr/assets/<PR_NUMBER>/<file>` for each
-  (with `--markdown`, ready-to-paste `![file](url)` tags).
-- GitHub's image proxy fetches the public URL, so images render for reviewers
-  without checking out the branch.
+  and prints a `https://public.sjer.red/...` URL per argument (with
+  `--markdown`, ready-to-paste type-appropriate markdown).
+- **Embedding rules:** images/GIFs render inline via GitHub's image proxy
+  (`![file](url)`); GitHub **never embeds external video** — videos become
+  labeled links that play in a browser tab (served with a real video
+  content type); `.cast` uploads get a generated self-contained HTML player
+  page (`<name>.cast.html`) and the link points there; directories link to
+  their `index.html`.
+- Directories upload recursively to `pr/assets/<PR_NUMBER>/<dirname>/` and
+  must contain a root `index.html` (dotfiles are skipped).
 - Uses the standard AWS toolchain (`@aws-sdk/client-s3`, path-style): credentials,
   `endpoint_url`, and region come from `~/.aws/credentials` / `~/.aws/config`.
   Select the profile with `--profile <name>` or `AWS_PROFILE` (the `seaweedfs`
   profile points at `https://seaweedfs.sjer.red`).
 - Objects under `pr/assets/` expire after 365 days; the homelab must be up for
-  the images to load.
+  the artifacts to load.
