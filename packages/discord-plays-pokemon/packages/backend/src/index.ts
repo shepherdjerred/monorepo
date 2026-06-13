@@ -232,10 +232,15 @@ async function shutdown(): Promise<void> {
   emulator?.stop();
 }
 
+async function shutdownAndExit(): Promise<void> {
+  await shutdown();
+  process.exit(0);
+}
+
 process.once("SIGTERM", () => {
-  void shutdown();
+  void shutdownAndExit();
 });
 
 process.once("SIGINT", () => {
-  void shutdown();
+  void shutdownAndExit();
 });
