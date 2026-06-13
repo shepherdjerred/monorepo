@@ -387,11 +387,9 @@ export function createTemporalWorkerDeployment(
         AWS_DEFAULT_REGION: EnvValue.fromValue("us-east-1"),
         S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
         ...llmArchiveEnvVars(),
-        HOMELAB_AUDIT_ARCHIVE_BUCKET: EnvValue.fromSecretValue({
-          secret,
-          key: "HOMELAB_AUDIT_ARCHIVE_BUCKET",
-        }),
-        HOMELAB_AUDIT_ARCHIVE_PREFIX: EnvValue.fromValue("homelab-audits"),
+        // Homelab-audit S3 archiving is unused — the active audit runs via
+        // agentTaskWorkflow (email only) and never calls the archive activity.
+        // No HOMELAB_AUDIT_ARCHIVE_* env wired (no dead optional secret).
         AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
           secret,
           key: "AWS_ACCESS_KEY_ID",
