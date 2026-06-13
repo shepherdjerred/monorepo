@@ -143,6 +143,56 @@ export const changelog: ChangelogEntry[] = [
     date: "2026 05 23",
     banner: (
       <>
+        <strong>Lane-sorted prematch</strong>, Arena teams of 3, and scheduled{" "}
+        <strong>/report</strong> posts
+      </>
+    ),
+    text: (
+      <>
+        <ChangelogSection
+          title="Prematch"
+          color="teal"
+          items={[
+            "Summoner's Rift loading screens now infer lane order so champions appear top, jungle, mid, bottom, and support instead of random participant order",
+          ]}
+        />
+        <ChangelogSection
+          title="Post-Match Reports"
+          color="green"
+          className="mt-6"
+          items={[
+            "Draft and ranked post-match notifications now show champion icons",
+          ]}
+        />
+        <ChangelogSection
+          title="Arena"
+          color="purple"
+          className="mt-6"
+          items={[
+            "Full support for current Arena teams of 3 across 18-player matches",
+          ]}
+        />
+        <ChangelogSection
+          title="Scheduled Reports"
+          color="yellow"
+          className="mt-6"
+          items={[
+            "New /report commands can schedule recurring Discord posts from stored match history",
+            "Servers can build recurring tables and leaderboards for surrender trends, champion stats, pairing performance, and rank snapshots",
+          ]}
+        />
+      </>
+    ),
+    formatted: {
+      year: 2026,
+      month: 5,
+      day: 23,
+    },
+  },
+  {
+    date: "2026 05 23",
+    banner: (
+      <>
         <strong>Privacy policy update</strong> — clarified marketing and
         documentation use
       </>

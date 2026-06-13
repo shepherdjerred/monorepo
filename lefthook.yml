@@ -219,6 +219,9 @@ pre-commit:
                     - "node_modules/**"
                     - "**/node_modules/**"
                     - "**/Pods/**"
+                    # Vendored emscripten/C build tooling for discord-plays-mario-kart —
+                    # includes upstream mupen64plus-core scripts that pre-date shebang conventions
+                    - "**/wasm-src/**"
                   run: shellcheck --severity=warning {staged_files}
 
     # TIER 2: Conditional checks (parallel)
