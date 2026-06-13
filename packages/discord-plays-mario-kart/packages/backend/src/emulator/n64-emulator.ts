@@ -2,7 +2,7 @@ import path from "node:path";
 import { logger } from "#src/logger.ts";
 import { installBrowserStubs, getFakeCanvas } from "./wasm-host.ts";
 import { buildConfigTxt } from "./config-txt.ts";
-import { WIDTH, BUTTON_ORDER, MAX_SEATS } from "./constants.ts";
+import { WIDTH, HEIGHT, BUTTON_ORDER, MAX_SEATS } from "./constants.ts";
 import {
   emulateMs,
   copyMs,
@@ -10,6 +10,7 @@ import {
   ticksTotal,
   loopResyncTotal,
   inputApplyDelayMs,
+  emulatorRestartsTotal,
 } from "#src/observability/metrics.ts";
 import { InputLatencyTracker } from "#src/input/input-latency-tracker.ts";
 import type {
@@ -33,9 +34,12 @@ type Runtime = {
   videoBuffer: () => number;
   videoHeight: () => number;
   runMainLoop: () => void;
+  reset: () => void;
   heap: () => Uint8Array;
   send: SendControls;
 };
+
+export type EmulatorRestartReason = "stream_session_ended";
 
 export type N64EmulatorOptions = {
   wasmDir: string; // dir with n64wasm.js/.wasm + staged FS assets
@@ -156,6 +160,7 @@ export class N64Emulator {
     const videoBuffer = requireFn(mod, "_neilGetVideoBuffer");
     const videoHeight = requireFn(mod, "_neilGetVideoHeight");
     const runMainLoop = requireFn(mod, "_runMainLoop");
+    const reset = requireFn(mod, "_neil_reset");
     const callMain = requireFn(mod, "callMain");
     const cwrap = requireFn(mod, "cwrap");
     const fsWrite = requireFn(fs, "writeFile");
@@ -219,6 +224,9 @@ export class N64Emulator {
       runMainLoop: () => {
         runMainLoop();
       },
+      reset: () => {
+        reset();
+      },
       heap,
       send,
     };
@@ -268,6 +276,26 @@ export class N64Emulator {
     this.running = false;
     if (this.timer !== undefined) clearTimeout(this.timer);
     this.timer = undefined;
+  }
+
+  restartFromStartMenu(reason: EmulatorRestartReason): void {
+    const rt = this.rt;
+    if (rt === undefined) {
+      throw new Error("cannot restart emulator before runtime initialization");
+    }
+
+    const wasRunning = this.running;
+    this.stop();
+    for (let player = 0; player < MAX_SEATS; player++) {
+      this.clearPlayerInput(player);
+    }
+    rt.reset();
+    this.lastHeight = HEIGHT;
+    emulatorRestartsTotal.inc({ reason });
+    logger.info("n64 emulator restarted", { reason });
+    if (wasRunning) {
+      this.start();
+    }
   }
 
   /** Read the current frame as RGBA (for screenshots). */

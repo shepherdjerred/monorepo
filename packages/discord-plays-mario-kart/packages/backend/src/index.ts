@@ -66,6 +66,12 @@ if (config.stream.enabled) {
       Bun.env.STREAM_HARDWARE_ACCELERATION === "true" ||
       config.stream.video.hardware_acceleration,
     vaapiDevice: Bun.env.VAAPI_DEVICE ?? config.stream.video.vaapi_device,
+    onSessionEnded:
+      emulator === undefined
+        ? undefined
+        : () => {
+            emulator.restartFromStartMenu("stream_session_ended");
+          },
   });
   await streamer.login();
 
