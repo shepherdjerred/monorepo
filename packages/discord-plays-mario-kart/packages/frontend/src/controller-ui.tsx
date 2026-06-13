@@ -130,13 +130,9 @@ export function SeatPicker({
         const taken = occupied[i] ?? false;
         const mine = seat === i;
         const playerName = names[i] ?? null;
-        const label = mine
-          ? " (you)"
-          : playerName === null
-            ? taken
-              ? " (taken)"
-              : ""
-            : ` — ${playerName}`;
+        const sublabel = mine
+          ? "(you)"
+          : (playerName ?? (taken ? "(taken)" : null));
         return (
           <button
             key={i}
@@ -158,8 +154,12 @@ export function SeatPicker({
                 "border-zinc-700 bg-zinc-800 text-zinc-100 hover:border-red-300 hover:bg-red-400 hover:text-zinc-950",
             )}
           >
-            P{i + 1}
-            {label}
+            <span>P{i + 1}</span>
+            {sublabel !== null && (
+              <span className="block truncate text-xs font-normal opacity-75">
+                {sublabel}
+              </span>
+            )}
           </button>
         );
       })}

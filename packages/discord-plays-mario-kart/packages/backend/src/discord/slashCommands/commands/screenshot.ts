@@ -11,25 +11,29 @@ import {
 import client from "#src/discord/client.ts";
 import { getConfig } from "#src/config/index.ts";
 import type { N64Emulator } from "#src/emulator/n64-emulator.ts";
-import { encodePng } from "#src/emulator/png.ts";
+import { encodeScreenshotPng } from "#src/emulator/screenshot.ts";
 
 export const screenshotCommand = new SlashCommandBuilder()
   .setName("screenshot")
   .setDescription("Take a screenshot and upload it to the chat");
-
-const SCREENSHOT_SCALE = 2;
 
 export function makeScreenshot(emulator: N64Emulator) {
   return async function handleScreenshotCommand(
     interaction: CommandInteraction,
   ) {
     const frame = emulator.renderFrame();
-    const buffer = encodePng(
-      frame.rgba,
-      frame.width,
-      frame.height,
-      SCREENSHOT_SCALE,
-    );
+    // Before the emulator's first rendered frame, renderFrame() returns
+    // height 0; encodeScreenshotPng would then throw a RangeError out of this
+    // async handler. Mirror dispatch.ts's `frame.height === 0` guard and reply
+    // with a friendly message instead. (See handleRequest screenshot branch.)
+    if (frame.height === 0 || frame.width === 0) {
+      await interaction.reply({
+        ephemeral: true,
+        content: "No frame rendered yet, try again in a moment.",
+      });
+      return;
+    }
+    const buffer = encodeScreenshotPng(frame);
     const date = new Date();
     const attachment = new AttachmentBuilder(buffer, {
       name: "screenshot.png",
