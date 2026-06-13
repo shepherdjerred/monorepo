@@ -15,7 +15,7 @@
     "toolkit": "./src/index.ts"
   },
   "scripts": {
-    "build": "bun build ./src/index.ts --compile --outfile=dist/toolkit",
+    "build": "bun build ./src/index.ts --compile --external ffmpeg-static --outfile=dist/toolkit",
     "test": "true",
     "test:unit": "bun test test/recall test/fetch test/daemon test/bugsink test/s3 test/deployed --exclude '*integration*'",
     "test:integration": "bun test test/**/*integration*",
@@ -32,6 +32,9 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1001.0",
     "@lancedb/lancedb": "^0.27.2",
+    "debug": "^4.4.3",
+    "discord.js": "^14",
+    "discord.js-selfbot-v13": "^3.7",
     "gray-matter": "^4.0.3",
     "zod": "^4.4.3"
   }
