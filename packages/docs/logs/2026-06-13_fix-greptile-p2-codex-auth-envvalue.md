@@ -45,6 +45,29 @@ and call it from both signal handlers. Greptile's literal suggestion used `.then
 which the repo's custom ESLint rule `custom-rules/prefer-async-await` bans — so the fix uses
 an awaited helper instead of `.then()`.
 
+## Follow-up: Greptile P1 SECURITY — prompt-injection secret exfiltration
+
+`goal-manager.ts buildEnvironment` copied the entire `Bun.env` into the Codex
+subprocess (DISCORD_TOKEN, CODEX_API_KEY, every secret). The user-supplied goal
+is embedded verbatim in the Codex prompt, and `pokemonctl progress` relays text
+straight to Discord, so a prompt-injected goal could exfiltrate secrets.
+
+### Fix
+
+- Replaced the "copy all of `Bun.env`" loop with an explicit allowlist
+  (`inheritedEnvironmentAllowlist`): `PATH`, `HOME`, `CODEX_HOME`,
+  `CODEX_API_KEY`, `CODEX_ACCESS_TOKEN`, `OPENAI_API_KEY`. PATH and the
+  `POKEMONCTL_*` control vars are still injected explicitly in the return.
+- Secondary hardening: the goal is now clearly delimited as untrusted user input
+  in `buildPrompt` with an instruction not to follow embedded directions or
+  reveal secrets.
+- Added a regression test asserting `DISCORD_TOKEN` is NOT forwarded to the
+  spawned subprocess while the Codex credential still is.
+
+Note: this fix pushed `goal-manager.ts` over the 500-line `max-lines` ESLint cap;
+trimmed by collapsing prompt blank-line array entries into `\n`-embedded strings
+(rendered prompt unchanged) and folding multi-line warning prose into one entry.
+
 ## Session Log — 2026-06-13
 
 ### Done
@@ -55,8 +78,14 @@ an awaited helper instead of `.then()`.
 - Follow-up: fixed Greptile P1 in `packages/discord-plays-pokemon/packages/backend/src/index.ts`
   — signal handlers now exit the process after graceful shutdown
 - Committed as `3293fa78d` (fix(discord-plays-pokemon): exit process after SIGTERM shutdown)
-- Pushed to `feature/pokemon-goal-mode`
 - Resolved Greptile review thread `PRRT_kwDOHf4r4c6JWNFM` (confirmed `isResolved: true`)
+- Follow-up: fixed Greptile P1 SECURITY in
+  `packages/discord-plays-pokemon/packages/backend/src/goal/goal-manager.ts` —
+  Codex subprocess env now restricted to an allowlist + goal delimited as
+  untrusted; added regression test in `goal-manager.test.ts`
+- Committed as `e5dcc5e4e` (fix(discord-plays-pokemon): restrict codex subprocess env to an allowlist)
+- Pushed to `feature/pokemon-goal-mode`
+- Resolved Greptile review thread `PRRT_kwDOHf4r4c6JWRSx` (confirmed `isResolved: true`)
 
 ### Remaining
 
@@ -68,3 +97,5 @@ an awaited helper instead of `.then()`.
   the working tree (not yet committed). Committed and pushed that existing change.
 - The repo bans `.then()` chaining via `custom-rules/prefer-async-await`; do not paste Greptile
   suggestions that use `.then()` verbatim — convert to async/await first.
+- `goal-manager.ts` is now near the 500-line `max-lines` cap; further additions will need an
+  extraction (e.g. move `buildPrompt` to its own module) rather than inline growth.
