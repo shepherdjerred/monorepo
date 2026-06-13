@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress (implemented; PR open, not yet merged)
+Complete (PR #1105 merged 2026-06-08; post-merge Grafana verification still outstanding)
 
 ## Context
 

@@ -18,10 +18,7 @@ import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 
 const config = loadConfig({
   BOT_TOKEN: "bot-token",
-  TOKEN: "user-token",
-  GUILD_ID: "208425771172102144",
-  COMMAND_CHANNEL_ID: "692223827475824650",
-  VIDEO_CHANNEL_ID: "692223827475824650",
+  USER_TOKENS: "user-token",
   VIDEOS_DIR: "/tmp/videos",
 });
 

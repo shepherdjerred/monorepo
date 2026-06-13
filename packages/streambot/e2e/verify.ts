@@ -2,6 +2,7 @@ import { z } from "zod";
 import { REST, Routes } from "discord.js";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { fetchPoster } from "@shepherdjerred/streambot/metadata/tmdb.ts";
+import { ChannelIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
@@ -73,7 +74,8 @@ const ChannelMessageSchema = z.object({
  */
 export async function verifyNowPlayingEmbed(config: Config): Promise<void> {
   const rest = new REST().setToken(config.discord.botToken);
-  const channelId = config.discord.statusChannelId;
+  // Status channel is dynamic in production (the invoking text channel); the e2e pins one via env.
+  const channelId = ChannelIdSchema.parse(Bun.env["E2E_STATUS_CHANNEL_ID"]);
   const deadline = Date.now() + 20_000;
   for (;;) {
     let raw: unknown;
@@ -141,8 +143,8 @@ const AppCommandSchema = z.object({
 
 /**
  * Verify Discord actually accepted the new `/stream chapters` and `/stream chapter <number>`
- * subcommand definitions on the guild — only checkable with real creds, and catches command-schema
- * errors (bad option types, name rules) that nothing else would.
+ * subcommand definitions — only checkable with real creds, and catches command-schema errors (bad
+ * option types, name rules) that nothing else would. Commands are registered globally.
  */
 export async function verifyRegisteredCommands(config: Config): Promise<void> {
   const rest = new REST().setToken(config.discord.botToken);
@@ -151,14 +153,10 @@ export async function verifyRegisteredCommands(config: Config): Promise<void> {
     .parse(await rest.get(Routes.currentApplication()));
   const commands = z
     .array(AppCommandSchema)
-    .parse(
-      await rest.get(
-        Routes.applicationGuildCommands(app.id, config.discord.guildId),
-      ),
-    );
+    .parse(await rest.get(Routes.applicationCommands(app.id)));
   const stream = commands.find((command) => command.name === "stream");
   if (stream === undefined) {
-    throw new Error("/stream command not registered on the guild");
+    throw new Error("/stream command not registered");
   }
   const subcommands = new Set(stream.options.map((option) => option.name));
   for (const required of ["chapters", "chapter"]) {
