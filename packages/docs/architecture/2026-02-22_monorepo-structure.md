@@ -13,7 +13,7 @@ The root `package.json` owns only repo-level scripts and dev dependencies. Packa
 ### Not Workspace Members
 
 - `.dagger/` - Has its own `package.json`, runs independently
-- `archive/` - Legacy projects, do not modify
+- `sandbox/` - Personal scratch (not shipped): `archive/` (legacy, do not modify), `poc/` (experiments), `practice/` (coding practice)
 
 ## Key Packages
 
