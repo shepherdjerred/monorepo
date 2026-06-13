@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Complete (PR open; post-deploy verification pending — see Session Log)
 
 ## Context
 
@@ -22,10 +22,10 @@ Out of scope: PGS (image) subtitle burn-in; the crashlooping pod / stale image p
 
 Rank **all** candidates (sidecar + embedded) together: language pref → modifier (full 0 < hi/sdh/cc 1 < forced 2) → source (sidecar < embedded, tie-break only) → deterministic tie-break. Pinned modifier (`sublang:en.forced`) restricts the pool first, preserving the explicit-forced override.
 
-| File                                            | Change                                                                                                                                                                                                                                                                                                           |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/streambot/src/sources/subtitles.ts`   | Extend ffprobe Zod schema with `tags.title`, `disposition.hearing_impaired`. New: `SubtitleCandidate` union (`sidecar`/`embedded`), `embeddedSubtitleModifier()` (forced disp → `forced`; HI disp → `sdh`; title `/\bforced\b/i` → `forced`, `/\bsdh\b                                                           | hearing.?impaired/i`→`sdh`; else null), `toEmbeddedCandidates()`(text codecs only),`rankSubtitleCandidates()`(best-first, reuses`languageScore`/`modifierScore`). Reimplement `rankSidecars`+`pickEmbeddedSubtitle` as thin wrappers so rankers can't diverge. |
-| `packages/streambot/src/sources/subtitle-io.ts` | Restructure `resolveSubtitleForFile`: gather sidecar + ffprobe embedded candidates, rank together, walk the ranked list staging each until one succeeds. Split `extractEmbedded` into probe (candidates) + `extractEmbeddedTrack(config, filePath, subtitleIndex, signal)`. `resolveSubtitleForYtdlp` untouched. |
+| File                                            | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/streambot/src/sources/subtitles.ts`   | Extend ffprobe Zod schema with `tags.title`, `disposition.hearing_impaired`. New: `SubtitleCandidate` union (`sidecar`/`embedded`), `embeddedSubtitleModifier()` (dispositions, then SDH/FORCED title tags), `toEmbeddedCandidates()` (text codecs only), `rankSubtitleCandidates()` (best-first, reuses `languageScore`/`modifierScore`; language tags canonicalized so `en`/`eng`/`en-US` rank as one language). Reimplement `rankSidecars` + `pickEmbeddedSubtitle` as thin wrappers so rankers can't diverge. |
+| `packages/streambot/src/sources/subtitle-io.ts` | Restructure `resolveSubtitleForFile`: gather sidecar + ffprobe embedded candidates, rank together, walk the ranked list staging each until one succeeds. Split `extractEmbedded` into probe (candidates) + `extractEmbeddedTrack(config, filePath, subtitleIndex, signal)`. `resolveSubtitleForYtdlp` untouched.                                                                                                                                                                                                  |
 
 Endgame regression: embedded full eng (mod 0) now beats forced sidecar (mod 2). `sublang:en.forced` still picks forced.
 
@@ -115,3 +115,24 @@ globalOptions: -init_hw_device vaapi=va:<device> -filter_hw_device va   (sw-deco
 - Named-device refactor touches the working no-subs VAAPI path (regression risk; same retry covers it).
 - Cue boundaries snap to the 30fps canvas grid (≤33ms) — imperceptible.
 - Behavior changes: embedded full now beats forced sidecar (intended; `sublang:en.forced` preserved); SW-path subs after seek now correct (pre-existing bug fixed).
+
+## Session Log — 2026-06-12
+
+### Done
+
+- **Fork (`packages/discord-video-stream`)** — commit `7e5b29f9f`: new pure `src/media/videoGraph.ts` (`buildSoftwareVideoGraph`, `buildVaapiVideoGraph`, `escapeFilterPath`, `subtitlePtsSandwich`, `SOFTWARE_TONEMAP_CHAIN`); `PrepareStreamOptions` swaps `videoFilters` for `subtitleBurn` + `inputColor`; `hwPipeline.videoGraph` replaces `scaleFilter`; named VAAPI device (`-init_hw_device vaapi=va` + `-filter_hw_device va`) shared by decoder and filters; filter_complex path suppresses `-map 0:v`; `globalOptions` apply only off the hw pipeline. 34 unit tests (exact-string graph assertions).
+- **Streambot pipeline wiring** — commit `41fd848eb`: subtitles no longer force software; `ResolvedSource.hdr` threaded from `probeMedia` → `resolveSource` → `streamer.ts` `inputColor`; HW→SW retry untouched (safety net for `tonemap_vaapi`/`overlay_vaapi` on older iGPUs). New `test/streamer-pipeline.test.ts`.
+- **Cross-source subtitle ranking** — commit `fb502ce3c`: `rankSubtitleCandidates` ranks sidecar + embedded together (language → full/SDH/forced → source tie-break); language tags canonicalized (`eng`→`en`, region stripped) — without this the `en` forced sidecar still beat the `eng` embedded track via list-position scoring; embedded modifiers read `hearing_impaired` disposition + SDH/FORCED titles; `resolveSubtitleForFile` walks the ranked list with stage-failure fallthrough.
+- **Integration tests** (rewritten `integration/subtitles.integration.test.ts`): Endgame fixture (full embedded beats forced sidecar; `sublang:en.forced` still pins), seek PTS-compensation regression (cue at 4–6s, `-ss 5`: compensated graph renders it, naive graph provably misses it), software HDR tonemap chain → ffprobe `bt709`/`yuv420p`, GPU canvas branch via software `overlay` proxy. **All 12 pass inside the real image** (`dagger call smoke-test-streambot`, exit 0; smoke boot also green).
+- Docs: this plan mirrored from the harness plan; `packages/streambot/AGENTS.md` Subtitles section rewritten + new HDR section.
+
+### Remaining
+
+- Merge the PR (`feature/streambot-gpu-subs-hdr`), then post-deploy verification on torvalds: replay the Endgame remux and check (a) full English subs render, (b) colors not washed out, (c) Loki `ffmpeg command` shows `-filter_complex … overlay_vaapi` with `hwDecodeEngaged: true`, (d) `streambot_hw_fallback_total` does not increment, (e) no frame-send budget warnings.
+- The cluster ran image `2.0.0-3721` while `versions.ts` is also at `3721` but main's other images are at `3745+` — the streambot CI commit-back appears stale; worth checking the next image push picks this work up (out of scope per user: the config-schema crashloop of the running pod).
+
+### Caveats
+
+- `tonemap_vaapi`/`overlay_vaapi`/BGRA `hwupload` cannot be exercised in CI (no GPU in Dagger); their first real test is on the deployed iGPU. The HW→SW retry covers a failure, at software-encode speed (slow on 4K, but correct + tonemapped + subtitled).
+- Behavior change: a full embedded track now beats a forced-only sidecar by default; `sublang:en.forced` preserves the old behavior on request.
+- Pre-existing bug fixed in passing: burned subtitle cues were time-shifted after every `/stream seek` / resume (libass saw post-`-ss` re-stamped PTS). Both paths now wrap `subtitles=` in a `setpts` sandwich.
