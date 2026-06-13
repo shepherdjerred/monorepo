@@ -53,6 +53,13 @@ export const loopResyncTotal = new Counter({
   registers: [registry],
 });
 
+export const controllerRttMs = new Histogram({
+  name: "controller_rtt_ms",
+  help: "Socket round-trip time measured by the web controller and reported to the server, in ms",
+  buckets: [5, 10, 25, 50, 75, 100, 150, 250, 500, 1000, 2500],
+  registers: [registry],
+});
+
 export const sinkBufferBytes = new Gauge({
   name: "stream_sink_buffer_bytes",
   help: "Bytes buffered in the PassThrough feeding ffmpeg; a rising value means the encoder/send path is falling behind",
