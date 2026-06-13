@@ -1463,8 +1463,6 @@ export class Monorepo {
     userToken: Secret,
     guildId: string,
     videoChannelId: string,
-    commandChannelId: string,
-    tmdbApiKey: Secret | null = null,
     depNames: string[] = [],
     depDirs: Directory[] = [],
   ): Promise<string> {
@@ -1474,8 +1472,6 @@ export class Monorepo {
       userToken,
       guildId,
       videoChannelId,
-      commandChannelId,
-      tmdbApiKey,
       depNames,
       depDirs,
     );
