@@ -100,6 +100,30 @@ counting code points with a `for…of` loop and truncating via `Intl.Segmenter`
 describe arrow past the 200-line `max-lines-per-function` cap, so it lives in its
 own `describe("GoalManager final report")` block.
 
+## Follow-up: Greptile P1 — startGoal concurrency race
+
+`startGoal` had awaits (`hasCodexCredential`, `Bun.write`, `prepareRuntimeTools`)
+before `this.active` was assigned. Two `/goal` interactions arriving within ms
+both read `this.active === undefined`, both passed the lock check, both spawned a
+Codex process — but only the second was stored in `this.active`, orphaning the
+first (which kept pressing buttons and burning API credits with no kill handle).
+
+### Fix
+
+- Added a synchronous `this.starting` flag claimed at the top of `startGoal`,
+  before the first await. A second concurrent call sees it set and returns a new
+  `"busy"` `StartGoalResult` instead of spawning. JS is single-threaded, so the
+  check-and-set fully closes the window. Cleared in a `finally` so a failed/early
+  start never wedges the lock. The spawn path moved into `startGoalLocked`.
+- To stay under the 500-line `max-lines` cap, extracted `buildCodexArgs` /
+  `buildPrompt` into a new pure module `goal/codex-command.ts` (no GoalManager
+  state beyond the two config fields, passed as a small `CodexCommandConfig`).
+- Test (own `describe("GoalManager concurrency")` block): two near-simultaneous
+  `startGoal` calls now yield exactly one spawned process and a `"busy"` loser.
+
+The `"busy"` kind needed no consumer change — `discord/.../goal.ts` only reads
+`result.content`/`result.ephemeral`, not `kind`.
+
 ## Session Log — 2026-06-13
 
 ### Done
@@ -122,8 +146,14 @@ own `describe("GoalManager final report")` block.
   final report (and progress) now truncated to Discord's 2000-char limit via a new
   `goal/discord-message.ts` helper; added unit + integration tests
 - Committed as `7a583dd52` (fix(discord-plays-pokemon): truncate goal final report to Discord limit)
-- Pushed to `feature/pokemon-goal-mode`
 - Resolved Greptile review thread `PRRT_kwDOHf4r4c6JWbZh` (confirmed `isResolved: true`)
+- Follow-up: fixed Greptile P1 concurrency race in
+  `packages/discord-plays-pokemon/packages/backend/src/goal/goal-manager.ts` —
+  synchronous `this.starting` lock + new `"busy"` result; extracted
+  `buildCodexArgs`/`buildPrompt` to `goal/codex-command.ts`; added concurrency test
+- Committed as `fd38c9d79` (fix(discord-plays-pokemon): close startGoal concurrency race)
+- Pushed to `feature/pokemon-goal-mode`
+- Resolved Greptile review thread `PRRT_kwDOHf4r4c6JWg9n` (confirmed `isResolved: true`)
 
 ### Remaining
 
@@ -135,9 +165,10 @@ own `describe("GoalManager final report")` block.
   the working tree (not yet committed). Committed and pushed that existing change.
 - The repo bans `.then()` chaining via `custom-rules/prefer-async-await`; do not paste Greptile
   suggestions that use `.then()` verbatim — convert to async/await first.
-- `goal-manager.ts` sits right at the 500-line `max-lines` cap. `sanitizeDiscordText` +
-  `truncateForDiscord` now live in `goal/discord-message.ts`; further Discord-message logic
-  belongs there, not inline in goal-manager.
+- `goal-manager.ts` keeps bumping the 500-line `max-lines` cap; it's at ~489 now after
+  extractions. Discord-message helpers live in `goal/discord-message.ts`; Codex command/prompt
+  building lives in `goal/codex-command.ts`. Put new cohesive logic in a sibling module, not
+  inline — every addition to goal-manager risks re-crossing the cap.
 - Backend test files must be registered in `eslint.config.ts` `allowDefaultProject` (cap 10,
   currently 9) AND are excluded from tsconfig via `**/*.test.ts` — new backend tests need the
   allowDefaultProject entry or eslint errors "not found by the project service".
