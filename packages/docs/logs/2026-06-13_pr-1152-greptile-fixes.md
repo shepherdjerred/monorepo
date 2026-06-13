@@ -95,3 +95,33 @@ Nothing.
 - The setup-generated homelab helm types churn (deleted/modified files) was
   reverted with `git restore packages/homelab/src/cdk8s/generated/` before staging.
   This is expected behavior per `reference_setup_codegen_promtail_drift.md`.
+
+## Session Log — 2026-06-13 (conflict resolution)
+
+### Done
+
+- Merged `origin/main` into `feature/mk64-backend-reset-screenshots` resolving 3 conflicts:
+  - `packages/discord-plays-mario-kart/packages/backend/package.json`: union of both sides
+    (PR's `discord-stream-lifecycle`/`xstate`/`rxjs` + main's Prisma/`@libsql/client`/`sharp`/
+    `e2e:race`/`e2e:scenario`/`generate`/`db:push` scripts + `#generated/*` import alias)
+  - `packages/discord-plays-mario-kart/packages/backend/src/emulator/n64-emulator.ts`: both
+    `restartFromStartMenu()` (PR) and `rdram()` (main) placed sequentially; `Runtime` type
+    carries both `reset()` and `rdramBase()` fields; stray closing `}` from diff3 removed
+  - `packages/discord-plays-mario-kart/packages/frontend/src/app.tsx`: rerere auto-resolved to
+    N64 controller UI (PR) + `NameEntry`/`Leaderboard`/`names` state (main); required fixing
+    `SeatPicker` in `controller-ui.tsx` to accept optional `names?: (string | null)[]` prop
+- Ran `bun install` in `packages/discord-plays-mario-kart/packages/backend/` to regenerate
+  `packages/discord-plays-mario-kart/bun.lock` with merged deps; `--frozen-lockfile` passes
+- All pre-commit hooks passed: 93 backend tests pass, frontend typecheck clean, CI catalog
+  validated (33 packages)
+- Pushed merge commit `d1f8377a5` to `feature/mk64-backend-reset-screenshots`
+
+### Remaining
+
+Nothing.
+
+### Caveats
+
+- The `SeatPicker` component in `controller-ui.tsx` was extended to show player names under
+  the P-number (as a truncated block element); the names prop is optional so existing usages
+  without names continue to work unchanged.
