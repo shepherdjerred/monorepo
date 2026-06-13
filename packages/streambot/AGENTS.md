@@ -66,23 +66,36 @@ stream files/URLs directly with ffmpeg instead of automating a browser.
 Discord Go-Live is a single video track, so subtitles are **burned in** with ffmpeg's `subtitles=`
 (libass) filter. On by default (`SUBTITLES_ENABLED`), with per-request overrides on `/stream play` /
 `/stream playnext`: `subtitles:on|off` and `sublang:<lang>` (e.g. `en`, `es`, or `en.forced` to pin a
-modifier). Sources, in order:
+modifier). For local files, **sidecar and embedded text tracks compete in ONE cross-source ranking**:
+language preference (tags canonicalized so `en`/`eng`/`en-US` are one language) → modifier quality
+(full > hi/sdh/cc > forced) → source (sidecar preferred only as a tie-break). A forced-only sidecar
+therefore never shadows a full embedded track. Candidate sources:
 
-- **Local sidecar** (preferred): a sibling `<videobase>.<lang>[.forced|.hi|.sdh|.cc].{srt,ass,ssa,vtt}`
-  (Plex/Bazarr naming). Ranked by language pref, then full > hi/sdh > forced.
-- **Local embedded**: an embedded **text** track (subrip/ass/mov_text/…), extracted via ffmpeg. Image
-  subs (PGS/VobSub/DVB — common on Blu-ray Remux) can't be burned and are skipped (the sidecar covers
-  them).
-- **yt-dlp**: downloads the preferred subtitle track, falling back to auto-captions
-  (`SUBTITLES_INCLUDE_AUTO_GENERATED`).
+- **Local sidecar**: a sibling `<videobase>.<lang>[.forced|.hi|.sdh|.cc].{srt,ass,ssa,vtt}`
+  (Plex/Bazarr naming).
+- **Local embedded**: an embedded **text** track (subrip/ass/mov_text/…), extracted via ffmpeg;
+  modifiers come from dispositions (`forced`, `hearing_impaired`) and `SDH`/`FORCED` title tags. Image
+  subs (PGS/VobSub/DVB — common on Blu-ray Remux) can't be burned and are skipped.
+- **yt-dlp** (non-local sources): downloads the preferred subtitle track, falling back to
+  auto-captions (`SUBTITLES_INCLUDE_AUTO_GENERATED`).
 
 Every track is staged to a safe temp file (`$TMPDIR/streambot-subs/<uuid>.<ext>`) so the filter never
 references a user path with spaces/quotes; `runStream` unlinks it when the track ends, and startup
-sweeps orphans. **Burning forces software encoding** for that track (libass is a CPU filter that
-doesn't compose with the VAAPI hardware-frame graph); VAAPI is still used for subtitle-free videos.
-Subtitles survive `/stream seek` and the HW→SW retry because the seekable player re-applies the filter
-on every ffmpeg restart. Config: `SUBTITLES_ENABLED`, `SUBTITLE_LANGUAGES`,
-`SUBTITLES_INCLUDE_AUTO_GENERATED`, `FFPROBE_PATH`.
+sweeps orphans. **Burning no longer forces software encoding**: on the VAAPI pipeline the fork renders
+subtitles with libass onto a transparent BGRA canvas, `hwupload`s it, and composites with
+`overlay_vaapi`, so decode/scale/tonemap/encode all stay on the GPU. Subtitles survive `/stream seek`
+and the HW→SW retry because the seekable player re-applies the burn on every ffmpeg restart, and the
+graph PTS-compensates the `subtitles=` filter for the `-ss` offset (cues stay correct after seeks).
+Config: `SUBTITLES_ENABLED`, `SUBTITLE_LANGUAGES`, `SUBTITLES_INCLUDE_AUTO_GENERATED`, `FFPROBE_PATH`.
+
+## HDR
+
+`resolveSource` ffprobes every input; PQ/HLG (`smpte2084`/`arib-std-b67`) sets `ResolvedSource.hdr`,
+which `streamer.ts` passes to the fork as `inputColor: "hdr"`. The pipeline then tonemaps to BT.709
+SDR — `scale_vaapi=format=p010,tonemap_vaapi` on the GPU path, a zimg/Hable `zscale`+`tonemap` chain
+on the software path — so HDR remuxes no longer look washed out. If the iGPU lacks the HDR VPP
+(`tonemap_vaapi`) or `overlay_vaapi`, ffmpeg fails at graph init and the existing HW→SW retry
+resumes playback on the software chain (watch `streambot_hw_fallback_total`).
 
 ## Observability
 
