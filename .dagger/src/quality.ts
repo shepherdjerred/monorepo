@@ -105,6 +105,16 @@ export function qualityRatchetHelper(source: Directory): Container {
 }
 
 /**
+ * Enforce the source-marker → docs invariant for TODO/FIXME/XXX markers
+ * (`scripts/check-todos.ts`). This runs in the lefthook pre-commit hook; the
+ * Dagger wrapper adds the matching CI gate so a `--no-verify` commit can't
+ * bypass it.
+ */
+export function checkTodosHelper(source: Directory): Container {
+  return bunQualityBase(source).withExec(["bun", "scripts/check-todos.ts"]);
+}
+
+/**
  * Validate every package has the required scripts in its package.json.
  */
 export function complianceCheckHelper(source: Directory): Container {
