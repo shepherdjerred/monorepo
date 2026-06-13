@@ -26,6 +26,7 @@ import {
   GuildIdSchema,
   toUserId,
   type ChannelId,
+  type GuildId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
@@ -67,6 +68,14 @@ function toMessageOptions(message: Announcement): MessageCreateOptions {
     embed.setImage(message.embed.imageUrl);
   }
   return { content: message.content, embeds: [embed] };
+}
+
+function parseVoiceChannelId(raw: string | null): ChannelId | null {
+  if (raw === null) {
+    return null;
+  }
+  const parsed = ChannelIdSchema.safeParse(raw);
+  return parsed.success ? parsed.data : null;
 }
 
 /**
@@ -264,35 +273,93 @@ export class CommandBot {
     if (!guildId.success) {
       return;
     }
-    const candidates = new Set<string>();
-    if (oldState.channelId !== null) {
-      candidates.add(oldState.channelId);
+    const oldChannelId = parseVoiceChannelId(oldState.channelId);
+    const newChannelId = parseVoiceChannelId(newState.channelId);
+    if (
+      this.handleStreamerVoiceTopology(
+        guildId.data,
+        newState.id,
+        oldChannelId,
+        newChannelId,
+      )
+    ) {
+      return;
     }
-    if (newState.channelId !== null) {
-      candidates.add(newState.channelId);
+
+    const candidates = new Set<ChannelId>();
+    if (oldChannelId !== null) {
+      candidates.add(oldChannelId);
     }
-    for (const raw of candidates) {
-      const channelId = ChannelIdSchema.safeParse(raw);
-      if (!channelId.success) {
-        continue;
-      }
+    if (newChannelId !== null) {
+      candidates.add(newChannelId);
+    }
+    for (const channelId of candidates) {
       const meta = this.deps
         .getSessions()
-        .activeSessionByChannel(guildId.data, channelId.data);
+        .activeSessionByChannel(guildId.data, channelId);
       if (meta === null) {
         continue;
       }
       this.evaluateChannelOccupancy(
         guildId.data,
-        channelId.data,
+        channelId,
         newState,
         meta.userId,
       );
     }
   }
 
+  private handleStreamerVoiceTopology(
+    guildId: GuildId,
+    userId: string,
+    oldChannelId: ChannelId | null,
+    newChannelId: ChannelId | null,
+  ): boolean {
+    const sessions = this.deps.getSessions();
+    const oldMeta =
+      oldChannelId === null
+        ? null
+        : sessions.activeSessionByChannel(guildId, oldChannelId);
+    const newMeta =
+      newChannelId === null
+        ? null
+        : sessions.activeSessionByChannel(guildId, newChannelId);
+    if (oldMeta?.userId !== userId && newMeta?.userId !== userId) {
+      return false;
+    }
+
+    if (
+      oldChannelId !== null &&
+      newChannelId !== null &&
+      oldChannelId !== newChannelId
+    ) {
+      this.clearAloneTimer(`${guildId}:${oldChannelId}`);
+      this.clearAloneTimer(`${guildId}:${newChannelId}`);
+      sessions.moveSession({
+        guildId,
+        fromChannelId: oldChannelId,
+        toChannelId: newChannelId,
+      });
+      return true;
+    }
+
+    if (oldChannelId !== null && newChannelId === null) {
+      this.clearAloneTimer(`${guildId}:${oldChannelId}`);
+      sessions.getExisting(guildId, oldChannelId)?.dispatch({
+        type: "STREAMER_VOICE_DETACHED",
+        reason: "streamer disconnected or was kicked from voice",
+      });
+      return true;
+    }
+
+    if (newChannelId !== null) {
+      this.clearAloneTimer(`${guildId}:${newChannelId}`);
+    }
+    return true;
+  }
+
   private evaluateChannelOccupancy(
-    guildId: ReturnType<typeof GuildIdSchema.parse>,
+    guildId: GuildId,
     channelId: ChannelId,
     state: VoiceState,
     streamerId: string | null,

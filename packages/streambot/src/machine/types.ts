@@ -1,4 +1,9 @@
 import { z } from "zod";
+import type {
+  DiscordTopologyEvent,
+  GatewayHealthEvent,
+  ProducerHealthEvent,
+} from "@shepherdjerred/discord-stream-lifecycle/types.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
 import type {
@@ -87,7 +92,11 @@ export type PlaybackEvent =
   | { type: "MOVE"; from: number; to: number }
   | { type: "SHUFFLE" }
   | { type: "SET_LOOP"; mode: LoopMode }
-  | { type: "SET_VOLUME"; volume: number };
+  | { type: "SET_VOLUME"; volume: number }
+  | DiscordTopologyEvent
+  | GatewayHealthEvent
+  | ProducerHealthEvent
+  | { type: "SHUTDOWN" };
 
 export type PlaybackInput = {
   readonly guildId: GuildId;

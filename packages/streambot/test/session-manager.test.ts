@@ -238,6 +238,41 @@ describe("SessionManager", () => {
     await manager.destroyAll();
   });
 
+  test("moveSession rekeys a live session to the new voice channel", async () => {
+    const config = await makeConfig();
+    const pool = fakePool(1);
+    const { manager } = makeManager(config, pool.provider);
+
+    const handle = manager.ensureForPlay({
+      guildId: GUILD,
+      voiceChannelId: CHANNEL_A,
+      statusChannelId: STATUS,
+    });
+    handle?.dispatch({
+      type: "ADD",
+      source: { kind: "file", path: "/clip.mkv", title: "Clip" },
+      requesterId: USER,
+    });
+    await waitUntil(() => handle?.view().state === "streaming");
+
+    expect(
+      manager.moveSession({
+        guildId: GUILD,
+        fromChannelId: CHANNEL_A,
+        toChannelId: CHANNEL_B,
+      }),
+    ).toBe(true);
+
+    expect(manager.getExisting(GUILD, CHANNEL_A)).toBeNull();
+    expect(manager.getExisting(GUILD, CHANNEL_B)).not.toBeNull();
+
+    manager.getExisting(GUILD, CHANNEL_B)?.dispatch({ type: "STOP" });
+    await waitUntil(() => manager.getExisting(GUILD, CHANNEL_B) === null);
+    expect(pool.released.length).toBe(1);
+
+    await manager.destroyAll();
+  });
+
   test("STOP tears the session down and releases the userbot", async () => {
     const config = await makeConfig();
     const pool = fakePool(1);

@@ -18,6 +18,7 @@ const INPUT = {
   channelId: ChannelIdSchema.parse("100000000000000020"),
   idleTimeoutMs: 30,
 } as const;
+const MOVED_CHANNEL = ChannelIdSchema.parse("100000000000000021");
 const WAIT = { timeout: 2000 } as const;
 
 function fileSource(title: string): Source {
@@ -139,6 +140,47 @@ describe("playback machine", () => {
     actor.send({ type: "STOP" });
     await waitFor(actor, (s) => s.matches("idle"), WAIT);
     expect(actor.getSnapshot().context.queue).toHaveLength(0);
+  });
+
+  test("streamer detach leaves voice and clears the queue", async () => {
+    const stream = makeStreamController();
+    let leaveCalls = 0;
+    const actor = startActor(
+      makeActors({
+        runStream: stream.runStream,
+        leaveVoice: () => {
+          leaveCalls += 1;
+          return Promise.resolve();
+        },
+      }),
+    );
+    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
+    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+
+    actor.send({ type: "STREAMER_VOICE_DETACHED", reason: "kicked" });
+
+    await waitFor(actor, (s) => s.matches("idle"), WAIT);
+    expect(actor.getSnapshot().context.queue).toHaveLength(0);
+    expect(actor.getSnapshot().context.voice).toBeNull();
+    expect(actor.getSnapshot().context.lastError).toBe("kicked");
+    expect(leaveCalls).toBe(1);
+  });
+
+  test("admin voice move updates the active voice target without dropping playback", async () => {
+    const stream = makeStreamController();
+    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    actor.send({ type: "ADD", source: fileSource("movie"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+
+    actor.send({
+      type: "VOICE_TARGET_MOVED",
+      target: { guildId: INPUT.guildId, channelId: MOVED_CHANNEL },
+    });
+
+    expect(actor.getSnapshot().matches("streaming")).toBe(true);
+    expect(actor.getSnapshot().context.channelId).toBe(MOVED_CHANNEL);
+    expect(actor.getSnapshot().context.voice?.channelId).toBe(MOVED_CHANNEL);
   });
 
   test("loop=track replays the current item", async () => {

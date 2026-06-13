@@ -47,6 +47,12 @@ export type PlaybackActors = {
 
 const VOLUME_MIN = 0;
 const VOLUME_MAX = 200;
+const EXTERNAL_STOP_MESSAGES: ReadonlyMap<PlaybackEvent["type"], string> =
+  new Map([
+    ["GUILD_REMOVED", "guild removed"],
+    ["CHANNEL_DELETED", "voice channel deleted"],
+    ["SHUTDOWN", "shutdown"],
+  ]);
 
 function mustCurrent(
   context: PlaybackContext,
@@ -69,6 +75,16 @@ function mustResolved(context: PlaybackContext): ResolvedSource {
     throw new Error("invariant: no resolved source while streaming");
   }
   return context.resolved;
+}
+
+function externalStopMessage(event: PlaybackEvent): string {
+  if (event.type === "STREAMER_VOICE_DETACHED") {
+    return event.reason ?? "streamer voice detached";
+  }
+  if (event.type === "PRODUCER_FAILED") {
+    return event.reason;
+  }
+  return EXTERNAL_STOP_MESSAGES.get(event.type) ?? "external stream event";
 }
 
 /**
@@ -163,6 +179,32 @@ export function createPlaybackMachine(actors: PlaybackActors) {
       clearCurrent: assign({ current: null }),
       clearQueue: assign({ queue: [] }),
       resetPlayback: assign({ current: null, resolved: null, voice: null }),
+      recordExternalStop: assign({
+        lastError: ({ event }) => externalStopMessage(event),
+        lastErrorKind: "generic",
+      }),
+      moveVoiceTarget: assign({
+        guildId: ({ event, context }) =>
+          event.type === "VOICE_TARGET_MOVED"
+            ? GuildIdSchema.parse(event.target.guildId)
+            : context.guildId,
+        channelId: ({ event, context }) =>
+          event.type === "VOICE_TARGET_MOVED"
+            ? ChannelIdSchema.parse(event.target.channelId)
+            : context.channelId,
+        voice: ({ event, context }) => {
+          if (event.type !== "VOICE_TARGET_MOVED") {
+            return context.voice;
+          }
+          if (context.voice === null) {
+            return null;
+          }
+          return {
+            guildId: GuildIdSchema.parse(event.target.guildId),
+            channelId: ChannelIdSchema.parse(event.target.channelId),
+          };
+        },
+      }),
       // Consume the one-shot resume seek so only the first post-restart playthrough seeks; any
       // loop/replay of the same item starts from 0.
       consumeSeek: assign({ resumeSeekSeconds: 0 }),
@@ -230,6 +272,62 @@ export function createPlaybackMachine(actors: PlaybackActors) {
             Math.min(VOLUME_MAX, Math.max(VOLUME_MIN, event.volume)),
         }),
       },
+      VOICE_TARGET_MOVED: { actions: "moveVoiceTarget" },
+      STREAMER_VOICE_DETACHED: [
+        {
+          guard: "hasVoice",
+          target: "#playback.leaving",
+          actions: ["clearQueue", "recordExternalStop"],
+        },
+        {
+          target: "#playback.idle",
+          actions: ["clearQueue", "recordExternalStop"],
+        },
+      ],
+      GUILD_REMOVED: [
+        {
+          guard: "hasVoice",
+          target: "#playback.leaving",
+          actions: ["clearQueue", "recordExternalStop"],
+        },
+        {
+          target: "#playback.idle",
+          actions: ["clearQueue", "recordExternalStop"],
+        },
+      ],
+      CHANNEL_DELETED: [
+        {
+          guard: "hasVoice",
+          target: "#playback.leaving",
+          actions: ["clearQueue", "recordExternalStop"],
+        },
+        {
+          target: "#playback.idle",
+          actions: ["clearQueue", "recordExternalStop"],
+        },
+      ],
+      PRODUCER_FAILED: [
+        {
+          guard: "hasVoice",
+          target: "#playback.leaving",
+          actions: ["clearQueue", "recordExternalStop"],
+        },
+        {
+          target: "#playback.idle",
+          actions: ["clearQueue", "recordExternalStop"],
+        },
+      ],
+      SHUTDOWN: [
+        {
+          guard: "hasVoice",
+          target: "#playback.leaving",
+          actions: ["clearQueue", "recordExternalStop"],
+        },
+        {
+          target: "#playback.idle",
+          actions: ["clearQueue", "recordExternalStop"],
+        },
+      ],
     },
     states: {
       idle: {
