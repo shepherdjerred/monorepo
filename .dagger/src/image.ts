@@ -15,6 +15,7 @@ import {
   CADDY_IMAGE,
   CLAUDE_CODE_VERSION,
   CODEX_CLI_VERSION,
+  COGAPP_VERSION,
   EMSCRIPTEN_IMAGE,
   GH_CLI_VERSION,
   GITHUB_MCP_SERVER_VERSION,
@@ -66,7 +67,8 @@ function withGitHubCli(container: Container): Container {
  * `BUN_INSTALL=/usr/local` forces `bun add -g` to drop the `claude` binary
  * into `/usr/local/bin` (world-readable) instead of `/root/.bun/bin`, which
  * the container's non-root user (UID 1000) cannot reach. Without this the
- * docs-groom workflow fails with `Executable not found in $PATH: claude`.
+ * temporal-worker workflows that shell out to `claude` fail with
+ * `Executable not found in $PATH: claude`.
  */
 function withEditorClis(container: Container): Container {
   return withGitHubCli(container)
@@ -88,6 +90,41 @@ function withCodexCli(container: Container): Container {
     .withEnvVariable("BUN_INSTALL", "/usr/local")
     .withExec(["bun", "add", "-g", `@openai/codex@${CODEX_CLI_VERSION}`])
     .withExec(["codex", "--version"]);
+}
+
+/**
+ * Install the `cog` (cogapp) CLI into a Bun-based container.
+ *
+ * The temporal-worker's `readme-refresh-weekly` workflow shells out to
+ * `cog -r README.md practice/README.md archive/README.md` to regenerate the
+ * project-listing tables embedded in those READMEs. cog is a Python tool, so we
+ * add a Python interpreter and install cogapp system-wide. `pip3 install` with
+ * `--break-system-packages` drops the `cog` entrypoint into `/usr/local/bin`
+ * (world-readable), reachable by the container's non-root user (UID 1000) — the
+ * same reason `withEditorClis` forces `BUN_INSTALL=/usr/local` for `claude`.
+ */
+function withCogapp(container: Container): Container {
+  return container
+    .withExec(["apt-get", "update", "-qq"])
+    .withExec([
+      "apt-get",
+      "install",
+      "-y",
+      "-qq",
+      "--no-install-recommends",
+      "ca-certificates",
+      "python3",
+      "python3-pip",
+    ])
+    .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"])
+    .withExec([
+      "pip3",
+      "install",
+      "--no-cache-dir",
+      "--break-system-packages",
+      `cogapp==${COGAPP_VERSION}`,
+    ])
+    .withExec(["cog", "--version"]);
 }
 
 /**
@@ -864,8 +901,9 @@ export function buildTemporalWorkerImageHelper(
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE));
 
-  // The docs-groom workflow shells out to `gh` + `claude` from inside the
-  // worker pod, so the temporal-worker image must ship both binaries.
+  // The pr-agent activity (PR review + summary) and several PR-opening
+  // workflows shell out to `gh` + `claude` from inside the worker pod, so the
+  // temporal-worker image must ship both binaries — see `withEditorClis`.
   // The bugsink-housekeeping workflow shells out to `kubectl` for the same
   // reason — see the rationale on `withKubectl`.
   // The pr-agent activity (PR review + summary) launches `claude -p` with
@@ -876,9 +914,13 @@ export function buildTemporalWorkerImageHelper(
   // `withHomelabAuditClis`.
   // The helm-types-weekly-refresh workflow shells out to `helm pull` to
   // regenerate the cdk8s chart types — see `withHelm`.
-  container = withHelm(
-    withHomelabAuditClis(
-      withGithubMcpServer(withKubectl(withEditorClis(container))),
+  // The readme-refresh-weekly workflow shells out to `cog` (cogapp) to
+  // regenerate the README project listings — see `withCogapp`.
+  container = withCogapp(
+    withHelm(
+      withHomelabAuditClis(
+        withGithubMcpServer(withKubectl(withEditorClis(container))),
+      ),
     ),
   );
 

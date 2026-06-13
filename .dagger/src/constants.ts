@@ -104,6 +104,11 @@ export const CLAUDE_CODE_VERSION = "2.1.140";
 // renovate: datasource=npm depName=@openai/codex
 export const CODEX_CLI_VERSION = "0.130.0";
 
+// cogapp regenerates the README project-listing tables in the temporal-worker's
+// readme-refresh-weekly workflow (see withCogapp in image.ts).
+// renovate: datasource=pypi depName=cogapp
+export const COGAPP_VERSION = "3.6.0";
+
 // renovate: datasource=github-releases depName=golangci/golangci-lint
 export const GOLANGCI_LINT_VERSION = "v2.12.2";
 

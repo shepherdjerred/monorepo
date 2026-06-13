@@ -342,3 +342,7 @@ uvx --from cogapp cog -r README.md practice/README.md archive/README.md
 ```
 
 Summaries are cached in `_summary.md` files. Delete a summary to regenerate it.
+
+These listings are also regenerated automatically every Monday by the
+`readme-refresh-weekly` Temporal schedule (`packages/temporal`), which runs the
+same `cog -r` and opens a PR if anything drifted.
