@@ -10,8 +10,9 @@
  * field fails the pod at startup rather than booting with a silent gap):
  * - DISCORD_BOT_TOKEN: The Discord bot token
  * - DISCORD_CHANNEL_ID: The main chat channel ID
- * - DISCORD_CONSOLE_CHANNEL_ID: Console channel ID
- * - DISCORD_INVITE_LINK: Server invite link
+ *
+ * Console channel + invite link are not wired (features unused) — the config
+ * template sets them to empty strings.
  */
 
 export const DISCORDSRV_PLUGIN_URL =
@@ -96,21 +97,8 @@ export function getDiscordSrvExtraEnv(
         },
       },
     },
-    CFG_DISCORD_CONSOLE_CHANNEL_ID: {
-      valueFrom: {
-        secretKeyRef: {
-          name: secretName,
-          key: "DISCORD_CONSOLE_CHANNEL_ID",
-        },
-      },
-    },
-    CFG_DISCORD_INVITE_LINK: {
-      valueFrom: {
-        secretKeyRef: {
-          name: secretName,
-          key: "DISCORD_INVITE_LINK",
-        },
-      },
-    },
+    // Console channel + invite link are intentionally not wired — those
+    // DiscordSRV features are unused, so the config template hardcodes them to
+    // empty strings rather than referencing optional 1P fields.
   };
 }

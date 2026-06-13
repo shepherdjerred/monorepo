@@ -405,10 +405,6 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "PR_REVIEW_FIXTURES_REPO_URL",
         }),
-        PR_REVIEW_EVAL_DATABASE_URL: EnvValue.fromSecretValue({
-          secret,
-          key: "PR_REVIEW_EVAL_DATABASE_URL",
-        }),
         GITHUB_APP_ID: EnvValue.fromSecretValue({
           secret,
           key: "GITHUB_APP_ID",
@@ -472,18 +468,6 @@ export function createTemporalWorkerDeployment(
         REDIS_URL: EnvValue.fromValue(
           "redis://temporal-redis-master.temporal.svc.cluster.local:6379",
         ),
-        // Voyage AI API key for the pr-review-bot dedupe activity
-        // (Phase 9). Primary embedding provider for the dismissed-
-        // comments cosine-similarity match; @xenova/transformers
-        // `bge-small-en-v1.5` is the runtime fallback when Voyage is
-        // rate-limited or 5xx-ing. Both produce 384-d vectors so Redis
-        // entries are provider-agnostic. Required: the 1P item must
-        // carry this field (per `feedback_dont_modify_1p_items`, add
-        // it, never rename/duplicate) or the pod fails to start.
-        VOYAGE_API_KEY: EnvValue.fromSecretValue({
-          secret,
-          key: "VOYAGE_API_KEY",
-        }),
         // Comma-separated list of `owner/repo` pairs the pr-review
         // reaction-listener workflow polls every 15 min for
         // thumbs-down reactions + resolved-without-followup signals
