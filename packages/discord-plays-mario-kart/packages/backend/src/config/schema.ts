@@ -92,4 +92,21 @@ export const ConfigSchema = z.strictObject({
       enabled: z.boolean(),
     }),
   }),
+  // Race-result leaderboards + per-player name burn-in. The whole block has a
+  // default so existing config.toml files (1Password) keep validating before
+  // the `[leaderboard]` section is added.
+  leaderboard: z
+    .strictObject({
+      // Master switch: race recording + the leaderboard API.
+      enabled: z.boolean().default(false),
+      // SQLite file path; overridden by DATABASE_PATH / DATABASE_URL env.
+      db_path: z.string().min(1).default("data/leaderboard.db"),
+      // Burn player names into the stream at each viewport corner.
+      overlay_enabled: z.boolean().default(true),
+      // RDRAM race-state poll cadence in frames (~3 Hz at 30fps).
+      poll_every_n_frames: z.number().int().min(1).max(60).default(10),
+    })
+    // prefault (not default): run `{}` through the schema so the inner field
+    // defaults apply when the whole [leaderboard] block is omitted.
+    .prefault({}),
 });

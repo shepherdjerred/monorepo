@@ -61,6 +61,13 @@ export function createMarioKartDeployment(chart: Chart) {
     storage: Size.gibibytes(1),
   });
 
+  // Leaderboard SQLite DB. Separate from `saves` on purpose: wiping the
+  // emulator's mempak/eeprom saves to reset game state must not destroy the
+  // recorded race history. Velero backs it up automatically (<200 GiB).
+  const dataVolume = new ZfsNvmeVolume(chart, "mario-kart-data-volume", {
+    storage: Size.gibibytes(1),
+  });
+
   const item = new OnePasswordItem(chart, "mario-kart-config", {
     spec: {
       // "MK64 Config" — 1Password item with a `config.toml` field (server id,
@@ -95,6 +102,10 @@ export function createMarioKartDeployment(chart: Chart) {
         OTLP_ENDPOINT: EnvValue.fromValue(
           "http://tempo.tempo.svc.cluster.local:4318",
         ),
+        // Leaderboard SQLite DB on the persistent data volume (overrides the
+        // config's relative db_path). The image entrypoint runs `prisma db
+        // push` against this before start.
+        DATABASE_PATH: EnvValue.fromValue(`${APP_ROOT}/data/leaderboard.db`),
       },
       securityContext: {
         ensureNonRoot: false,
@@ -137,6 +148,14 @@ export function createMarioKartDeployment(chart: Chart) {
             chart,
             "mario-kart-rom-pvc",
             romVolume.claim,
+          ),
+        },
+        {
+          path: `${APP_ROOT}/data`,
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "mario-kart-data-pvc",
+            dataVolume.claim,
           ),
         },
         {

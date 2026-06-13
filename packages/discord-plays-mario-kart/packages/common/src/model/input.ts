@@ -86,5 +86,9 @@ export const SeatResponseSchema = z.strictObject({
 export type SeatsResponse = z.infer<typeof SeatsResponseSchema>;
 export const SeatsResponseSchema = z.strictObject({
   kind: z.literal("seats"),
-  value: z.strictObject({ occupied: z.array(z.boolean()) }),
+  value: z.strictObject({
+    occupied: z.array(z.boolean()),
+    // Display name per seat (index-aligned with `occupied`); null = unnamed.
+    names: z.array(z.string().nullable()),
+  }),
 });
