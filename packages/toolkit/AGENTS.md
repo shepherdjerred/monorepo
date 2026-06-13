@@ -60,14 +60,16 @@ src/
 
 ## Environment Variables
 
-| Variable          | Description                                                |
-| ----------------- | ---------------------------------------------------------- |
-| `PAGERDUTY_TOKEN` | PagerDuty API token                                        |
-| `BUGSINK_URL`     | Bugsink instance URL (e.g., `https://bugsink.example.com`) |
-| `BUGSINK_TOKEN`   | Bugsink API token                                          |
-| `GRAFANA_URL`     | Grafana instance URL                                       |
-| `GRAFANA_API_KEY` | Grafana API key or service account token                   |
-| `AWS_PROFILE`     | AWS profile for `pr asset` (or pass `--profile`)           |
+| Variable             | Description                                                      |
+| -------------------- | ---------------------------------------------------------------- |
+| `PAGERDUTY_TOKEN`    | PagerDuty API token                                              |
+| `BUGSINK_URL`        | Bugsink instance URL (e.g., `https://bugsink.example.com`)       |
+| `BUGSINK_TOKEN`      | Bugsink API token                                                |
+| `GRAFANA_URL`        | Grafana instance URL                                             |
+| `GRAFANA_API_KEY`    | Grafana API key or service account token                         |
+| `AWS_PROFILE`        | AWS profile for `pr asset` (or pass `--profile`)                 |
+| `DISCORD_BOT_TOKEN`  | Discord bot token for `discord daemon start` (optional)          |
+| `DISCORD_USER_TOKEN` | Discord user/selfbot token for `discord daemon start` (optional) |
 
 ## `deployed` — is my commit/service live on the homelab?
 
@@ -97,6 +99,44 @@ us and are encoded in the code:
 - The service registry lives in `src/lib/deployed/catalog.ts`; a drift test
   (`test/deployed/catalog.test.ts`) asserts every versionKey exists in the live
   `versions.ts`.
+
+## `discord` — act on Discord through a session daemon
+
+`toolkit discord` lets agents send/read messages, invoke other bots' slash
+commands, and join voice channels, for testing/iterating on Discord bots. It
+avoids the per-script `op` approval + gateway-login cost of one-off scripts by
+running a **session daemon** that logs in once and holds the gateway connections
+in memory; one-shot CLI commands talk to it over a unix socket.
+
+```bash
+# start once per session (tokens in env, one op call):
+export DISCORD_USER_TOKEN=$(op read "op://Personal/<item-id>/TOKEN")
+toolkit discord daemon start --ttl 30m      # also reads DISCORD_BOT_TOKEN if set
+toolkit discord send <channelId> "hello"
+toolkit discord slash <channelId> <botId> <command> [args...]   # userbot only
+toolkit discord voice join <channelId>      # presence persists between commands
+toolkit discord voice states <guildId>      # streaming flags (needs a bot token)
+toolkit discord daemon stop
+```
+
+Design notes encoded in the code:
+
+- **At least one of `DISCORD_BOT_TOKEN` / `DISCORD_USER_TOKEN`** must be set; each
+  client is optional and commands route to the identity they need (slash + voice
+  join are userbot-only; voice states is bot-only).
+- Tokens are passed to the detached daemon via **env, never argv** (not visible in
+  `ps`) and never written to the state file or logs.
+- State dir `~/.toolkit/discord/`: `daemon.sock` (0600), `state.json` (pid +
+  identities, no secrets), `logs/`. The daemon auto-exits after an idle TTL so a
+  selfbot is never left connected indefinitely.
+- Voice join is a **gateway VoiceStateUpdate (op 4)**, not the selfbot's
+  `joinChannel()` (which times out on deprecated voice encryption).
+- Use `pathExists()` (stat-based), not `Bun.file().exists()`, to test the socket —
+  the latter returns false for a unix socket.
+- Libs (`discord.js`, `discord.js-selfbot-v13`) bundle into the compiled binary
+  with `--external ffmpeg-static` (an optional native dep of a voice transitive).
+
+The agent-facing how-to lives in the `discord` skill.
 
 ## `pr asset` — PR screenshot host
 

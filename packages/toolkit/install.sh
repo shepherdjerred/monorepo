@@ -8,7 +8,7 @@ RECALL_DIR="${HOME}/.recall"
 
 echo "Building toolkit..."
 cd "$SCRIPT_DIR"
-bun build ./src/index.ts --compile --outfile=dist/toolkit
+bun build ./src/index.ts --compile --external ffmpeg-static --outfile=dist/toolkit
 
 echo "Installing binary to ${INSTALL_DIR}..."
 mkdir -p "$INSTALL_DIR"

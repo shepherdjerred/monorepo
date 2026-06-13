@@ -64,3 +64,29 @@ Findings baked into the skill as gotchas:
 - Per user direction, the skill does NOT restrict agents to the test server — any server the identity is in is allowed, and agents must ask the user which credentials/1P item and target guild to use (the streambot test setup is documented as one example). The userbot is a real account, so deliberation in shared servers is on the agent.
 - `discord.js-selfbot-v13` is archived upstream; if Discord changes the gateway, `sendSlash`/op-4 join may break with no upstream fix.
 - Voice join is presence-only (no media). Verifying _stream content_ (frames/audio) is not possible with this setup — only the `streaming` flag.
+
+## Phase 2 — `toolkit discord` daemon (tooling)
+
+The user asked to build tooling to reduce the friction of the script approach (one `op` approval per run, ~5s login per run, ~50 lines of boilerplate, no persistent voice presence). Added a `toolkit discord` subcommand: a **session daemon** that logs in once (one `op` call), holds the gateway connections + tokens in memory, and exposes one-shot CLI commands over a `~/.toolkit/discord/daemon.sock` unix socket.
+
+Design:
+
+- Detached `discord serve` process spawned from `daemon start`; tokens via **env, never argv**; state in `~/.toolkit/discord/` (`daemon.sock` 0600, `state.json` with no secrets, `logs/`). Idle TTL (default 4h) auto-exits so a selfbot is never left connected.
+- Either/both `DISCORD_BOT_TOKEN` / `DISCORD_USER_TOKEN`; commands route to the identity they need (slash + voice join → userbot; voice states → bot).
+- Commands: `daemon start|stop|status`, `whoami`, `guilds`, `channels`, `send`, `read`, `wait` (long-poll for a matching message), `slash`, `voice join|leave|states`. Markdown out, `--json` everywhere.
+- Files: `src/lib/discord/{ipc,handlers,serve,client,render}.ts`, `src/commands/discord/*.ts`, `src/handlers/discord.ts`, routing in `src/index.ts`; unit tests in `test/discord/`.
+
+### Phase 2 findings (encoded as code/docs)
+
+- `bun build --compile` needs `--external ffmpeg-static` (optional native dep of a voice transitive); both Discord libs otherwise bundle fine (verified by binary smoke test).
+- **`Bun.file(path).exists()` returns false for a unix socket** — it broke the daemon readiness poll and `whoami`/`stop` until replaced with a stat-based `pathExists()`. (Root cause of a confusing "daemon did not become ready" where the daemon was actually up and listening.)
+- selfbot `destroy()` throws on an already-closed socket — caught in the daemon's shutdown path.
+
+### Phase 2 verification (live, 2026-06-12, test userbot only)
+
+Started the daemon with only the user's dedicated test 1P item (userbot `derrej_`, no bot token). Verified end-to-end against the user's test guild: `whoami`, `guilds` (discovered 2 servers), `channels`, `send` (as user) → `read` round-trip, `voice join` → `whoami` shows **persistent** voice presence across separate CLI invocations → `voice leave`, `wait` round-trip (blocked then matched a sent message), `voice states` returns the correct "needs a bot identity" error, clean `daemon stop`. Confirmed the token never appears in `ps` args, `state.json`, or the logs.
+
+### Phase 2 caveats
+
+- `voice states` and reliable message-content reads need a **bot** token; the default test item is userbot-only.
+- Daemon is macOS/Linux (unix socket). Detached via `node:child_process` `detached + unref`.

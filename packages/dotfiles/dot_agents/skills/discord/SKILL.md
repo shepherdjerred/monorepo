@@ -1,52 +1,79 @@
 ---
 name: discord
 description: |
-  Interact with Discord live as an agent — send/read messages, invoke other bots' slash commands, join voice channels — by writing and running short TypeScript scripts with Bun.
+  Interact with Discord live as an agent — send/read messages, invoke other bots' slash commands, join voice channels. Use the `toolkit discord` daemon for common ops, or write a Bun/TypeScript script for anything it doesn't cover.
   Use when testing or iterating on Discord bots, verifying bot behavior on a real server, or when any task needs to act on Discord directly.
 ---
 
 # Discord Agent Access
 
-Interact with Discord by **writing short TypeScript scripts and running them with Bun** — there is no MCP server or wrapper CLI for this on purpose. All snippets below were verified live on 2026-06-12.
+Two ways to act on Discord, both verified live on 2026-06-12:
+
+1. **`toolkit discord`** (recommended for common ops) — a session daemon that logs in once, holds the gateway connections in memory, and exposes one-shot CLI commands. One `op` call per session; no boilerplate; voice presence persists between commands.
+2. **Write a Bun/TypeScript script** (escape hatch) — for anything the CLI doesn't cover. Same libraries underneath.
 
 ## Credentials — ask the user
 
-**Do not assume which Discord credentials to use.** Ask the user which 1Password item (or env vars) holds the right tokens for the task, and which server/channels to target. Different bots and tasks use different identities.
+**Do not assume which Discord credentials to use.** Ask the user which 1Password item (or env vars) holds the right tokens, and which server/channels to target. Different bots and tasks use different identities.
 
-Load all needed fields with **one** batched `op` call (each `op` invocation needs manual approval). Example shape — substitute the item/vault/field labels the user gives you:
+There is a **default test identity** (a throwaway Discord user account, userbot only) for quick checks:
 
 ```bash
-bash -c 'J=$(op item get <ITEM> --vault "<VAULT>" --format json --reveal) \
-  && export BOT_TOKEN=$(echo "$J" | jq -r ".fields[]|select((.label//.id)==\"BOT_TOKEN\").value") \
-  && export TOKEN=$(echo "$J" | jq -r ".fields[]|select((.label//.id)==\"TOKEN\").value") \
-  && bun run <your-script>.ts'
+export DISCORD_USER_TOKEN=$(op read "op://Personal/sskm6skq3mwnyqnhrmqwji6dne/TOKEN")
 ```
 
-Never write tokens to files or print them to logs — env vars only, loaded in the same command that runs the script.
+For a bot identity (needed for `voice states` and for reading message content reliably), ask the user for the bot token and export it as `DISCORD_BOT_TOKEN`. Never write tokens to files or print them to logs — env vars only, loaded in the same command that starts the daemon.
 
 ## Identities: userbot vs bot
 
-| Identity type | Library | Use for |
-| --- | --- | --- |
-| Userbot (selfbot, a real user account) | `discord.js-selfbot-v13` | Invoking **other bots' slash commands** (`sendSlash`), joining voice as a regular user, acting like a human tester |
-| Bot (application token) | `discord.js` v14 | Plain send/read, observing guild state (voice states, messages), registering throwaway slash commands |
+| Identity | Env var | Library | Use for |
+| --- | --- | --- | --- |
+| Userbot (selfbot, a real user account) | `DISCORD_USER_TOKEN` | `discord.js-selfbot-v13` | Invoking **other bots' slash commands** (`sendSlash`), joining voice as a regular user, acting like a human tester |
+| Bot (application token) | `DISCORD_BOT_TOKEN` | `discord.js` v14 | Plain send/read, observing voice states, registering throwaway slash commands |
 
-A bot **cannot** invoke another bot's slash commands or appear as a user in voice — that's what a userbot is for. The selfbot library is archived upstream (Oct 2025) but still works.
+A bot **cannot** invoke another bot's slash commands or appear as a user in voice — that's what a userbot is for. The selfbot library is archived upstream (Oct 2025) but still works. The daemon accepts either or both tokens (at least one required); commands route to whichever identity they need.
 
-Scripts may act on **any** server the chosen identity is in — confirm the target guild/channel IDs with the user. A userbot is a real account, so be deliberate in shared/production servers.
+## `toolkit discord` — the daemon
 
-## Where scripts live & how to run
+Start it once per session with the tokens in env (one `op` call). The daemon prints the logged-in identities and stays up until you stop it or it idles out (default 4h, `--ttl 30m` to shorten):
 
-Set up a throwaway scratch dir (the explicit `debug` is required — a transitive dep of the selfbot lib fails to declare it and fresh installs break without it):
+```bash
+bash -c 'export DISCORD_USER_TOKEN=$(op read "op://Personal/sskm6skq3mwnyqnhrmqwji6dne/TOKEN") \
+  && toolkit discord daemon start --ttl 30m'
+```
+
+Then every other command talks to the running daemon over a unix socket (no token, no login cost):
+
+```bash
+toolkit discord whoami                          # identities, uptime, voice presence
+toolkit discord guilds                          # servers per identity
+toolkit discord channels <guildId>              # channels (id, name, type)
+toolkit discord send <channelId> "hello"        # send (add --as user|bot to choose identity)
+toolkit discord read <channelId> -n 20          # recent messages, including embeds
+toolkit discord wait <channelId> --contains foo --timeout 30   # block until a matching message arrives
+toolkit discord slash <channelId> <botId> play "https://…"     # invoke another bot's slash command (userbot)
+toolkit discord voice join <channelId>          # userbot joins VC; presence persists across commands
+toolkit discord voice states <guildId>          # who's in VC + streaming/video flags (needs a bot identity)
+toolkit discord voice leave
+toolkit discord daemon stop
+```
+
+All commands print markdown by default; add `--json` for machine-readable output. The streambot test loop is just: `voice states <guild>` and check whose `streaming` flag is set.
+
+Daemon logs (structured JSON, no secrets) are in `~/.toolkit/discord/logs/`. If `daemon start` reports it didn't become ready, read that log for the real error.
+
+## Writing a script (escape hatch)
+
+When the CLI doesn't cover something, write a short Bun script. Set up a throwaway scratch dir (the explicit `debug` is required — a transitive dep of the selfbot lib, werift-rtp, fails to declare it and fresh installs break without it):
 
 ```bash
 mkdir -p /tmp/discord-scratch && cd /tmp/discord-scratch \
   && bun add discord.js@^14 discord.js-selfbot-v13@^3.7 debug
 ```
 
-Write your script there and run it with `bun run` (tokens via env, see above). If you're working inside a repo that already has these deps installed, a gitignored scratch dir inside that package works too.
+Run it with the tokens in env (`bash -c '… && bun run script.ts'`).
 
-## Script skeleton (login, teardown, watchdog)
+### Script skeleton (login, teardown, watchdog)
 
 ```typescript
 import { Client as BotClient, GatewayIntentBits } from "discord.js";
@@ -54,10 +81,10 @@ import { Client as UserClient } from "discord.js-selfbot-v13";
 
 const GUILD_ID = "<target guild — confirm with the user>";
 
-const botToken = Bun.env["BOT_TOKEN"];
-const userToken = Bun.env["TOKEN"];
-if (botToken === undefined || botToken === "" || userToken === undefined || userToken === "") {
-  throw new Error("BOT_TOKEN and TOKEN must be set");
+const botToken = Bun.env["DISCORD_BOT_TOKEN"];
+const userToken = Bun.env["DISCORD_USER_TOKEN"];
+if (userToken === undefined || userToken === "") {
+  throw new Error("DISCORD_USER_TOKEN must be set");
 }
 
 // Hard kill so a hung gateway never leaves the process dangling.
@@ -78,20 +105,9 @@ function waitForReady(client: { once: (event: string, fn: () => void) => unknown
   });
 }
 
-const bot = new BotClient({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent, // needed to read message content
-    GatewayIntentBits.GuildVoiceStates, // needed to observe voice states
-  ],
-});
 const user = new UserClient();
 
 try {
-  const botReady = waitForReady(bot, "bot");
-  await bot.login(botToken);
-  await botReady;
   const userReady = waitForReady(user, "userbot");
   await user.login(userToken);
   await userReady;
@@ -104,125 +120,59 @@ try {
   } catch (error) {
     console.error(`userbot destroy failed: ${String(error)}`);
   }
-  await bot.destroy();
   clearTimeout(watchdog);
 }
 ```
 
-Only log in the identity you need — most read-only checks need just the bot.
+Add a `BotClient` (intents `Guilds`, `GuildMessages`, `MessageContent`, `GuildVoiceStates`) only if you need the bot identity.
 
-## Send & read messages
+### Send & read
 
 ```typescript
-const TEXT_CHANNEL_ID = "<target channel>";
-
-// userbot sends (works the same with the bot client)
-const userChannel = await user.channels.fetch(TEXT_CHANNEL_ID);
+const userChannel = await user.channels.fetch("<channelId>");
 if (userChannel === null || !("send" in userChannel)) {
   throw new Error("channel not sendable");
 }
 await userChannel.send("hello from the agent");
 
-// bot reads recent history
-import { ChannelType } from "discord.js";
-const botChannel = await bot.channels.fetch(TEXT_CHANNEL_ID);
-if (botChannel === null || botChannel.type !== ChannelType.GuildText) {
-  throw new Error("not a guild text channel");
-}
-const recent = await botChannel.messages.fetch({ limit: 10 });
+const recent = await userChannel.messages.fetch({ limit: 10 });
 for (const message of recent.values()) {
-  console.log(`${message.author.tag}: ${message.content} [embeds: ${String(message.embeds.length)}]`);
+  console.log(`${message.author.tag}: ${message.content}`);
 }
 ```
 
-To wait for a bot's reply, listen for `Events.MessageCreate` (or `Events.InteractionCreate` on your own throwaway bot) with a `setTimeout` race.
-
-## Invoke another bot's slash command (userbot only)
+### Invoke another bot's slash command (userbot only)
 
 ```typescript
-const targetBotId = "<the bot's user id>";
 // command must already be registered in the target guild by the target bot
-await userChannel.sendSlash(targetBotId, "play", "https://example.com/video.mp4");
+await userChannel.sendSlash("<targetBotId>", "play", "https://example.com/video.mp4");
 ```
 
 - Args follow the command name positionally; subcommands go in the name string (`"queue list"`).
 - If the command was registered seconds ago, wait ~3s first — the command cache lags.
-- Errors like `Command not found` usually mean the target bot never registered the command **in that guild**.
+- `Command not found` usually means the target bot never registered it **in that guild**.
 
-For a fully self-contained round-trip test, register a throwaway command with your own bot first:
+### Join voice / verify a stream
 
-```typescript
-import { Events, REST, Routes, SlashCommandBuilder } from "discord.js";
-
-const rest = new REST().setToken(botToken);
-const command = new SlashCommandBuilder().setName("agent-ping").setDescription("test ping");
-const botUserId = bot.user?.id;
-if (botUserId === undefined) throw new Error("bot user not available after ready");
-await rest.put(Routes.applicationGuildCommands(botUserId, GUILD_ID), { body: [command.toJSON()] });
-
-const interactionSeen = new Promise<boolean>((resolve) => {
-  const timer = setTimeout(() => {
-    resolve(false);
-  }, 20_000);
-  bot.on(Events.InteractionCreate, (interaction) => {
-    if (interaction.isChatInputCommand() && interaction.commandName === "agent-ping") {
-      clearTimeout(timer);
-      void interaction.reply("pong");
-      resolve(true);
-    }
-  });
-});
-await new Promise((resolve) => setTimeout(resolve, 3_000)); // registration → cache lag
-await userChannel.sendSlash(botUserId, "agent-ping");
-console.log(`round-trip ok: ${String(await interactionSeen)}`);
-// cleanup so the guild stays tidy
-await rest.put(Routes.applicationGuildCommands(botUserId, GUILD_ID), { body: [] });
-```
-
-## Join voice / verify a stream
-
-Do **NOT** use `user.voice.joinChannel(...)` — it attempts a full media handshake with deprecated encryption modes and dies with `VOICE_CONNECTION_TIMEOUT`. To just *be present* in a voice channel (which is all you need to observe or trigger streaming behavior), send a raw gateway VoiceStateUpdate (op 4):
+Do **NOT** use `user.voice.joinChannel(...)` — it attempts a full media handshake with deprecated encryption modes and dies with `VOICE_CONNECTION_TIMEOUT`. To just *be present* in a voice channel, send a raw gateway VoiceStateUpdate (op 4):
 
 ```typescript
-const VOICE_CHANNEL_ID = "<target voice channel>";
-
-// join (presence only, no audio/video)
 user.ws.broadcast({
   op: 4,
-  d: {
-    guild_id: GUILD_ID,
-    channel_id: VOICE_CHANNEL_ID,
-    self_mute: true,
-    self_deaf: false,
-    self_video: false,
-  },
+  d: { guild_id: GUILD_ID, channel_id: "<voiceChannelId>", self_mute: true, self_deaf: false, self_video: false },
 });
-await new Promise((resolve) => setTimeout(resolve, 3_000)); // let the state propagate
-
-// observe voice states from the bot side (needs GuildVoiceStates intent)
-const guild = await bot.guilds.fetch(GUILD_ID);
-for (const [memberId, voiceState] of guild.voiceStates.cache) {
-  // voiceState.streaming === true → that member has a live Go-Live stream
-  console.log(`${memberId} in ${String(voiceState.channelId)} streaming=${String(voiceState.streaming)} video=${String(voiceState.selfVideo)}`);
-}
-
-// leave
-user.ws.broadcast({
-  op: 4,
-  d: { guild_id: GUILD_ID, channel_id: null, self_mute: true, self_deaf: false, self_video: false },
-});
+// to leave: same broadcast with channel_id: null
 ```
 
-To actually **send** video/audio into a channel, use `@shepherdjerred/discord-video-stream` (a maintained fork of `@dank074/discord-video-stream`) — its `Streamer` class drives the full media pipeline via ffmpeg. Usually the bot under test does the streaming while your script observes.
+Observe streaming from a **bot** client (needs `GuildVoiceStates`): `guild.voiceStates.cache` — `voiceState.streaming === true` means a live Go-Live stream. To actually send media into a channel, use `@shepherdjerred/discord-video-stream` (a maintained fork of `@dank074/discord-video-stream`); usually the bot under test does the streaming while you observe.
 
 ## Gotchas
 
-- Fresh installs of the selfbot lib fail at import time with `Cannot find package 'debug'` (undeclared transitive dep via werift-rtp) — always `bun add debug` alongside it.
-- discord.js v14 logs a `DeprecationWarning` about `ready` → `clientReady`; harmless, ignore it.
-- The selfbot lib's `destroy()` can throw (`this.connection.readyState` on null) — always wrap it (see skeleton).
-- Reading message *content* from the bot requires the privileged `MessageContent` intent (enabled per-application in the Discord developer portal).
-- Scripts that don't tear down both clients won't exit — Bun keeps the gateway sockets alive. Keep the watchdog.
-- One `op` call per session: fetch all fields you need in a single `op item get`.
+- Fresh installs of the selfbot lib fail at import with `Cannot find package 'debug'` (undeclared transitive dep via werift-rtp) — always `bun add debug` alongside it.
+- The selfbot lib's `destroy()` can throw (`this.connection.readyState` on null) — always wrap it.
+- Reading message *content* from a bot needs the privileged `MessageContent` intent (enabled per-application in the Discord developer portal).
+- A script that doesn't tear down its clients won't exit — Bun keeps the gateway sockets alive. Keep the watchdog.
+- One `op` call per session: load every token you need in a single command.
 
 ## Related
 
