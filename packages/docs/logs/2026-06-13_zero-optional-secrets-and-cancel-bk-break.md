@@ -2,7 +2,9 @@
 
 ## Status
 
-In Progress (code shipped as PR #1163; blocked on 1P field population before deploy)
+In Progress (PR #1163 open & ready to merge). **cancel-on-merge is already fixed
+& live** via 1P + worker restart; all 1P fields settled (see the resolution
+Session Log at the bottom — the mid-doc "must populate" table is superseded).
 
 ## What prompted this
 
