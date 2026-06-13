@@ -20,6 +20,7 @@ export function createGolinkApp(chart: Chart) {
       },
       syncPolicy: {
         automated: {},
+        syncOptions: ["ApplyOutOfSyncOnly=true"],
       },
     },
   });

@@ -2,11 +2,16 @@ import { Events } from "discord.js";
 import "./rest.ts";
 import client from "#src/discord/client.ts";
 import { makeScreenshot } from "./commands/screenshot.ts";
-import type { WebDriver } from "selenium-webdriver";
+import type { Emulator } from "#src/emulator/emulator.ts";
 import { help } from "./commands/help.ts";
 import { logger } from "#src/logger.ts";
+import { makeGoal } from "./commands/goal.ts";
+import type { GoalManager } from "#src/goal/goal-manager.ts";
 
-export function handleSlashCommands(driver: WebDriver) {
+export function handleSlashCommands(
+  emulator: Emulator,
+  goalManager?: GoalManager,
+) {
   logger.info("handling slash commands");
   client.on(Events.InteractionCreate, (interaction) => {
     void (async () => {
@@ -18,10 +23,14 @@ export function handleSlashCommands(driver: WebDriver) {
           case "start":
             break;
           case "screenshot":
-            await makeScreenshot(driver)(interaction);
+            await makeScreenshot(emulator)(interaction);
             break;
           case "help":
             await help(interaction);
+            break;
+          case "goal":
+            await makeGoal(goalManager)(interaction);
+            break;
         }
       } catch (error) {
         logger.error(error);

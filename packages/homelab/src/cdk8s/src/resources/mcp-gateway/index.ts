@@ -25,13 +25,44 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
 const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
 
+// Init-container script: substitute secret-backed tokens (from a Secret) into
+// the proxy config so they never live in the ConfigMap. Fails closed if any
+// token env is missing. Placeholders are plain identifiers (no sed escaping
+// needed): MCP_PROXY_AUTH_TOKEN is the gateway's own client auth token (generate
+// as hex, `openssl rand -hex 32`); FASTMAIL_TOKEN is the Bearer token for the
+// official Fastmail MCP server (https://api.fastmail.com/mcp, an `fmu1-…` API
+// token); HOMEASSISTANT_TOKEN is a Home Assistant long-lived access token used
+// as the Bearer for HA's /api/mcp endpoint. None contain sed metacharacters, so
+// the `#`-delimited seds are safe.
+const RENDER_CONFIG_SCRIPT = [
+  "set -eu",
+  'if [ -z "${MCP_PROXY_AUTH_TOKEN:-}" ]; then echo "MCP_PROXY_AUTH_TOKEN is required for the mcp-gateway client auth token" >&2; exit 1; fi',
+  'if [ -z "${FASTMAIL_TOKEN:-}" ]; then echo "FASTMAIL_TOKEN is required for the Fastmail MCP bearer token" >&2; exit 1; fi',
+  'if [ -z "${HOMEASSISTANT_TOKEN:-}" ]; then echo "HOMEASSISTANT_TOKEN is required for the Home Assistant MCP bearer token" >&2; exit 1; fi',
+  'sed -e "s#MCP_PROXY_AUTH_TOKEN_PLACEHOLDER#${MCP_PROXY_AUTH_TOKEN}#g" -e "s#FASTMAIL_TOKEN_PLACEHOLDER#${FASTMAIL_TOKEN}#g" -e "s#HOMEASSISTANT_TOKEN_PLACEHOLDER#${HOMEASSISTANT_TOKEN}#g" /config/config.json > /rendered/config.json',
+  'echo "rendered mcp-proxy config with client auth + fastmail + home-assistant tokens"',
+].join("\n");
+
 export async function createMcpGatewayDeployment(chart: Chart) {
   const UID = 65_534;
   const GID = 65_534;
 
-  // Load the mcp-proxy configuration from file.
+  // Load the mcp-proxy configuration from file, then substitute the pinned,
+  // Renovate-tracked downstream MCP server versions (from versions.ts) at synth
+  // time. Secret-backed tokens use *_PLACEHOLDER markers instead and are
+  // substituted at runtime by the init container (see RENDER_CONFIG_SCRIPT).
   const configPath = path.join(CURRENT_DIRNAME, "config.json");
-  const configContent = await Bun.file(configPath).text();
+  const rawConfig = await Bun.file(configPath).text();
+  const configContent = rawConfig
+    .replaceAll("CANVAS_MCP_VERSION", versions["@r-huijts/canvas-mcp"])
+    .replaceAll(
+      "GITHUB_MCP_VERSION",
+      versions["@modelcontextprotocol/server-github"],
+    )
+    .replaceAll(
+      "GMAIL_MCP_VERSION",
+      versions["@automatearmy/email-reader-mcp"],
+    );
 
   // Create ConfigMap for mcp-proxy configuration
   const mcpProxyConfig = new ConfigMap(chart, "mcp-proxy-config", {
@@ -81,10 +112,81 @@ export async function createMcpGatewayDeployment(chart: Chart) {
     },
   });
 
+  // Source config (ConfigMap, holds only the placeholder) and the rendered
+  // output (emptyDir, holds the real token after the init container runs).
+  const configVolume = Volume.fromConfigMap(
+    chart,
+    "mcp-proxy-config-volume",
+    mcpProxyConfig,
+  );
+  const renderedConfigVolume = Volume.fromEmptyDir(
+    chart,
+    "mcp-proxy-rendered-config-volume",
+    "rendered-config",
+  );
+
+  // Render config.json with the client auth token before the proxy starts, so
+  // the secret never lives in the ConfigMap. The proxy then requires
+  // `Authorization: <token>` from clients (mcpProxy.options.authTokens).
+  deployment.addInitContainer(
+    withCommonProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
+      name: "render-config",
+      image: `library/busybox:${versions["library/busybox"]}`,
+      command: ["/bin/sh", "-c"],
+      args: [RENDER_CONFIG_SCRIPT],
+      securityContext: {
+        user: UID,
+        group: GID,
+        ensureNonRoot: true,
+        allowPrivilegeEscalation: false,
+        readOnlyRootFilesystem: true,
+      },
+      envVariables: {
+        MCP_PROXY_AUTH_TOKEN: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "mcp-proxy-auth-token-secret",
+            mcpGatewayCredentials.name,
+          ),
+          key: "MCP_PROXY_AUTH_TOKEN",
+        }),
+        // Bearer token for the official Fastmail MCP server, substituted into
+        // the rendered config (see RENDER_CONFIG_SCRIPT) so it stays out of the
+        // ConfigMap.
+        FASTMAIL_TOKEN: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "fastmail-token-init-secret",
+            mcpGatewayCredentials.name,
+          ),
+          key: "FASTMAIL_TOKEN",
+        }),
+        // Home Assistant long-lived access token, substituted into the rendered
+        // config (see RENDER_CONFIG_SCRIPT) as the Bearer for HA's /api/mcp
+        // endpoint so it stays out of the ConfigMap.
+        HOMEASSISTANT_TOKEN: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "homeassistant-token-init-secret",
+            mcpGatewayCredentials.name,
+          ),
+          key: "HOMEASSISTANT_TOKEN",
+        }),
+      },
+      volumeMounts: [
+        { path: "/config", volume: configVolume, readOnly: true },
+        { path: "/rendered", volume: renderedConfigVolume },
+      ],
+    }),
+  );
+
   deployment.addContainer(
     withCommonProps({
       image: `ghcr.io/tbxark/mcp-proxy:${versions["tbxark/mcp-proxy"]}`,
-      args: ["--config", "/config/config.json"],
+      args: ["--config", "/rendered/config.json"],
       ports: [{ number: 9090, name: "http" }],
       securityContext: {
         user: UID,
@@ -95,11 +197,11 @@ export async function createMcpGatewayDeployment(chart: Chart) {
       },
       resources: {
         memory: {
-          request: Size.mebibytes(512),
+          request: Size.mebibytes(128),
           limit: Size.gibibytes(1),
         },
         cpu: {
-          request: Cpu.millis(200),
+          request: Cpu.millis(50),
           limit: Cpu.millis(500),
         },
       },
@@ -143,18 +245,10 @@ export async function createMcpGatewayDeployment(chart: Chart) {
           ),
           key: "GH_TOKEN",
         }),
-        // Fastmail JMAP configuration
-        JMAP_SESSION_URL: EnvValue.fromValue(
-          "https://api.fastmail.com/jmap/session",
-        ),
-        JMAP_TOKEN: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
-            chart,
-            "fastmail-jmap-token-secret",
-            mcpGatewayCredentials.name,
-          ),
-          key: "FASTMAIL_TOKEN",
-        }),
+        // Fastmail now uses the official remote MCP server
+        // (https://api.fastmail.com/mcp, a streamable-http client in
+        // config.json) authed with a Bearer token rendered into the config by
+        // the init container — so no JMAP env vars are needed here.
         // Gmail IMAP configuration - @automatearmy/email-reader-mcp expects USER_EMAIL and USER_PASS
         USER_EMAIL: EnvValue.fromValue("shepherdjerred@gmail.com"),
         USER_PASS: EnvValue.fromSecretValue({
@@ -168,12 +262,8 @@ export async function createMcpGatewayDeployment(chart: Chart) {
       },
       volumeMounts: [
         {
-          path: "/config",
-          volume: Volume.fromConfigMap(
-            chart,
-            "mcp-proxy-config-volume",
-            mcpProxyConfig,
-          ),
+          path: "/rendered",
+          volume: renderedConfigVolume,
         },
       ],
     }),

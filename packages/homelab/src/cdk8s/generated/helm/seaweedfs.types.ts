@@ -350,10 +350,11 @@ export type SeaweedfsHelmValuesMaster = {
    * should map directly to the value of the resources field for a PodSpec,
    * formatted as a multi-line string. By default no direct resource request
    * is made.
-   *
-   * @default {}
    */
-  resources?: SeaweedfsHelmValuesMasterResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * updatePartition is used to control a careful rolling update of SeaweedFS
    * masters.
@@ -500,8 +501,6 @@ export type SeaweedfsHelmValuesMasterAnnotations = {
    */
   [key: string]: unknown;
 };
-
-export type SeaweedfsHelmValuesMasterResources = object;
 
 export type SeaweedfsHelmValuesMasterPodSecurityContext = object;
 
@@ -814,10 +813,11 @@ export type SeaweedfsHelmValuesVolume = {
    * should map directly to the value of the resources field for a PodSpec,
    * formatted as a multi-line string. By default no direct resource request
    * is made.
-   *
-   * @default {}
    */
-  resources?: SeaweedfsHelmValuesVolumeResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Toleration Settings for server pods
    * This should be a multi-line string matching the Toleration array
@@ -939,8 +939,6 @@ export type SeaweedfsHelmValuesVolumeAnnotations = {
    */
   [key: string]: unknown;
 };
-
-export type SeaweedfsHelmValuesVolumeResources = object;
 
 export type SeaweedfsHelmValuesVolumePodSecurityContext = object;
 
@@ -1284,10 +1282,11 @@ export type SeaweedfsHelmValuesFiler = {
    * should map directly to the value of the resources field for a PodSpec,
    * formatted as a multi-line string. By default no direct resource request
    * is made.
-   *
-   * @default {}
    */
-  resources?: SeaweedfsHelmValuesFilerResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Toleration Settings for server pods
    * This should be a multi-line string matching the Toleration array
@@ -1426,8 +1425,6 @@ export type SeaweedfsHelmValuesFilerAnnotations = {
    */
   [key: string]: unknown;
 };
-
-export type SeaweedfsHelmValuesFilerResources = object;
 
 export type SeaweedfsHelmValuesFilerPodSecurityContext = object;
 
@@ -1675,12 +1672,13 @@ export type SeaweedfsHelmValuesFilerS3AuditLogConfig = object;
 
 export type SeaweedfsHelmValuesFilerS3CreateBucketsHook = {
   /**
-   * @default {}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: SeaweedfsHelmValuesFilerS3CreateBucketsHookResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
 };
-
-export type SeaweedfsHelmValuesFilerS3CreateBucketsHookResources = object;
 
 export type SeaweedfsHelmValuesS3 = {
   /**
@@ -1767,10 +1765,11 @@ export type SeaweedfsHelmValuesS3 = {
    * should map directly to the value of the resources field for a PodSpec,
    * formatted as a multi-line string. By default no direct resource request
    * is made.
-   *
-   * @default {}
    */
-  resources?: SeaweedfsHelmValuesS3Resources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Toleration Settings for server pods
    * This should be a multi-line string matching the Toleration array
@@ -1874,8 +1873,6 @@ export type SeaweedfsHelmValuesS3Annotations = {
    */
   [key: string]: unknown;
 };
-
-export type SeaweedfsHelmValuesS3Resources = object;
 
 export type SeaweedfsHelmValuesS3PodSecurityContext = object;
 
@@ -1986,12 +1983,13 @@ export type SeaweedfsHelmValuesS3ReadinessProbeHttpGet = {
 
 export type SeaweedfsHelmValuesS3CreateBucketsHook = {
   /**
-   * @default {}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: SeaweedfsHelmValuesS3CreateBucketsHookResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
 };
-
-export type SeaweedfsHelmValuesS3CreateBucketsHookResources = object;
 
 export type SeaweedfsHelmValuesS3Ingress = {
   /**
@@ -2201,9 +2199,12 @@ export type SeaweedfsHelmValuesSftp = {
    */
   annotations?: SeaweedfsHelmValuesSftpAnnotations;
   /**
-   * @default {}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: SeaweedfsHelmValuesSftpResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default ""
    */
@@ -2268,8 +2269,6 @@ export type SeaweedfsHelmValuesSftpAnnotations = {
    */
   [key: string]: unknown;
 };
-
-export type SeaweedfsHelmValuesSftpResources = object;
 
 export type SeaweedfsHelmValuesSftpPodSecurityContext = object;
 
@@ -2461,9 +2460,12 @@ export type SeaweedfsHelmValuesAdmin = {
    */
   topologySpreadConstraints?: string;
   /**
-   * @default {}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: SeaweedfsHelmValuesAdminResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default ""
    */
@@ -2639,8 +2641,6 @@ export type SeaweedfsHelmValuesAdminAnnotations = {
    */
   [key: string]: unknown;
 };
-
-export type SeaweedfsHelmValuesAdminResources = object;
 
 export type SeaweedfsHelmValuesAdminPodSecurityContext = object;
 
@@ -2907,9 +2907,12 @@ export type SeaweedfsHelmValuesWorker = {
    */
   topologySpreadConstraints?: string;
   /**
-   * @default {"requests":{"cpu":"500m","memory":"512Mi"},"limits":{"cpu":"2","memory":"2Gi"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: SeaweedfsHelmValuesWorkerResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default ""
    */
@@ -3006,39 +3009,6 @@ export type SeaweedfsHelmValuesWorkerAnnotations = {
    * This is common for config maps, custom settings, and extensible configurations.
    */
   [key: string]: unknown;
-};
-
-export type SeaweedfsHelmValuesWorkerResources = {
-  /**
-   * @default {"cpu":"500m","memory":"512Mi"}
-   */
-  requests?: SeaweedfsHelmValuesWorkerResourcesRequests;
-  /**
-   * @default {"cpu":"2","memory":"2Gi"}
-   */
-  limits?: SeaweedfsHelmValuesWorkerResourcesLimits;
-};
-
-export type SeaweedfsHelmValuesWorkerResourcesRequests = {
-  /**
-   * @default "500m"
-   */
-  cpu?: string;
-  /**
-   * @default "512Mi"
-   */
-  memory?: string;
-};
-
-export type SeaweedfsHelmValuesWorkerResourcesLimits = {
-  /**
-   * @default "2"
-   */
-  cpu?: number;
-  /**
-   * @default "2Gi"
-   */
-  memory?: string;
 };
 
 export type SeaweedfsHelmValuesWorkerPodSecurityContext = object;
@@ -3386,10 +3356,11 @@ export type SeaweedfsHelmValuesAllInOne = {
   containerSecurityContext?: SeaweedfsHelmValuesAllInOneContainerSecurityContext;
   /**
    * Resource management
-   *
-   * @default {"limits":{"cpu":"2","memory":"2Gi"},"requests":{"cpu":"500m","memory":"1Gi"}}
    */
-  resources?: SeaweedfsHelmValuesAllInOneResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
 };
 
 export type SeaweedfsHelmValuesAllInOneUpdateStrategy = {
@@ -3426,12 +3397,13 @@ export type SeaweedfsHelmValuesAllInOneS3 = {
 
 export type SeaweedfsHelmValuesAllInOneS3CreateBucketsHook = {
   /**
-   * @default {}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: SeaweedfsHelmValuesAllInOneS3CreateBucketsHookResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
 };
-
-export type SeaweedfsHelmValuesAllInOneS3CreateBucketsHookResources = object;
 
 export type SeaweedfsHelmValuesAllInOneSftp = {
   /**
@@ -3643,39 +3615,6 @@ export type SeaweedfsHelmValuesAllInOnePodSecurityContext = object;
 
 export type SeaweedfsHelmValuesAllInOneContainerSecurityContext = object;
 
-export type SeaweedfsHelmValuesAllInOneResources = {
-  /**
-   * @default {"cpu":"2","memory":"2Gi"}
-   */
-  limits?: SeaweedfsHelmValuesAllInOneResourcesLimits;
-  /**
-   * @default {"cpu":"500m","memory":"1Gi"}
-   */
-  requests?: SeaweedfsHelmValuesAllInOneResourcesRequests;
-};
-
-export type SeaweedfsHelmValuesAllInOneResourcesLimits = {
-  /**
-   * @default "2"
-   */
-  cpu?: number;
-  /**
-   * @default "2Gi"
-   */
-  memory?: string;
-};
-
-export type SeaweedfsHelmValuesAllInOneResourcesRequests = {
-  /**
-   * @default "500m"
-   */
-  cpu?: string;
-  /**
-   * @default "1Gi"
-   */
-  memory?: string;
-};
-
 export type SeaweedfsHelmValuesCosi = {
   /**
    * @default false
@@ -3739,10 +3678,11 @@ export type SeaweedfsHelmValuesCosi = {
    * should map directly to the value of the resources field for a PodSpec,
    * formatted as a multi-line string. By default no direct resource request
    * is made.
-   *
-   * @default {}
    */
-  resources?: SeaweedfsHelmValuesCosiResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
 };
 
 export type SeaweedfsHelmValuesCosiBucketClassParameters = object;
@@ -3757,19 +3697,16 @@ export type SeaweedfsHelmValuesCosiSidecar = {
    * should map directly to the value of the resources field for a PodSpec,
    * formatted as a multi-line string. By default no direct resource request
    * is made.
-   *
-   * @default {}
    */
-  resources?: SeaweedfsHelmValuesCosiSidecarResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
 };
-
-export type SeaweedfsHelmValuesCosiSidecarResources = object;
 
 export type SeaweedfsHelmValuesCosiPodSecurityContext = object;
 
 export type SeaweedfsHelmValuesCosiContainerSecurityContext = object;
-
-export type SeaweedfsHelmValuesCosiResources = object;
 
 export type SeaweedfsHelmValuesCertificates = {
   /**
@@ -3978,6 +3915,7 @@ export type SeaweedfsHelmParameters = {
   "master.extraVolumes"?: string;
   "master.extraVolumeMounts"?: string;
   "master.podManagementPolicy"?: string;
+  "master.resources"?: string;
   "master.updatePartition"?: string;
   "master.affinity"?: string;
   "master.topologySpreadConstraints"?: string;
@@ -4046,6 +3984,7 @@ export type SeaweedfsHelmParameters = {
   "volume.podManagementPolicy"?: string;
   "volume.affinity"?: string;
   "volume.topologySpreadConstraints"?: string;
+  "volume.resources"?: string;
   "volume.tolerations"?: string;
   "volume.nodeSelector"?: string;
   "volume.priorityClassName"?: string;
@@ -4114,6 +4053,7 @@ export type SeaweedfsHelmParameters = {
   "filer.affinity"?: string;
   "filer.topologySpreadConstraints"?: string;
   "filer.updatePartition"?: string;
+  "filer.resources"?: string;
   "filer.tolerations"?: string;
   "filer.nodeSelector"?: string;
   "filer.priorityClassName"?: string;
@@ -4156,6 +4096,7 @@ export type SeaweedfsHelmParameters = {
   "filer.s3.domainName"?: string;
   "filer.s3.enableAuth"?: string;
   "filer.s3.existingConfigSecret"?: string;
+  "filer.s3.createBucketsHook.resources"?: string;
   "s3.enabled"?: string;
   "s3.imageOverride"?: string;
   "s3.restartPolicy"?: string;
@@ -4174,6 +4115,7 @@ export type SeaweedfsHelmParameters = {
   "s3.initContainers"?: string;
   "s3.extraVolumes"?: string;
   "s3.extraVolumeMounts"?: string;
+  "s3.resources"?: string;
   "s3.tolerations"?: string;
   "s3.nodeSelector"?: string;
   "s3.priorityClassName"?: string;
@@ -4200,6 +4142,7 @@ export type SeaweedfsHelmParameters = {
   "s3.readinessProbe.successThreshold"?: string;
   "s3.readinessProbe.failureThreshold"?: string;
   "s3.readinessProbe.timeoutSeconds"?: string;
+  "s3.createBucketsHook.resources"?: string;
   "s3.ingress.enabled"?: string;
   "s3.ingress.className"?: string;
   "s3.ingress.host"?: string;
@@ -4239,6 +4182,7 @@ export type SeaweedfsHelmParameters = {
   "sftp.initContainers"?: string;
   "sftp.extraVolumes"?: string;
   "sftp.extraVolumeMounts"?: string;
+  "sftp.resources"?: string;
   "sftp.tolerations"?: string;
   "sftp.nodeSelector"?: string;
   "sftp.priorityClassName"?: string;
@@ -4291,6 +4235,7 @@ export type SeaweedfsHelmParameters = {
   "admin.podManagementPolicy"?: string;
   "admin.affinity"?: string;
   "admin.topologySpreadConstraints"?: string;
+  "admin.resources"?: string;
   "admin.tolerations"?: string;
   "admin.nodeSelector"?: string;
   "admin.priorityClassName"?: string;
@@ -4343,10 +4288,7 @@ export type SeaweedfsHelmParameters = {
   "worker.extraVolumeMounts"?: string;
   "worker.affinity"?: string;
   "worker.topologySpreadConstraints"?: string;
-  "worker.resources.requests.cpu"?: string;
-  "worker.resources.requests.memory"?: string;
-  "worker.resources.limits.cpu"?: string;
-  "worker.resources.limits.memory"?: string;
+  "worker.resources"?: string;
   "worker.tolerations"?: string;
   "worker.nodeSelector"?: string;
   "worker.priorityClassName"?: string;
@@ -4389,6 +4331,7 @@ export type SeaweedfsHelmParameters = {
   "allInOne.s3.existingConfigSecret"?: string;
   "allInOne.s3.auditLogConfig"?: string;
   "allInOne.s3.trafficDistribution"?: string;
+  "allInOne.s3.createBucketsHook.resources"?: string;
   "allInOne.sftp.enabled"?: string;
   "allInOne.sftp.port"?: string;
   "allInOne.sftp.sshPrivateKey"?: string;
@@ -4438,10 +4381,7 @@ export type SeaweedfsHelmParameters = {
   "allInOne.nodeSelector"?: string;
   "allInOne.priorityClassName"?: string;
   "allInOne.serviceAccountName"?: string;
-  "allInOne.resources.limits.cpu"?: string;
-  "allInOne.resources.limits.memory"?: string;
-  "allInOne.resources.requests.cpu"?: string;
-  "allInOne.resources.requests.memory"?: string;
+  "allInOne.resources"?: string;
   "cosi.enabled"?: string;
   "cosi.image"?: string;
   "cosi.driverName"?: string;
@@ -4449,10 +4389,12 @@ export type SeaweedfsHelmParameters = {
   "cosi.endpoint"?: string;
   "cosi.region"?: string;
   "cosi.sidecar.image"?: string;
+  "cosi.sidecar.resources"?: string;
   "cosi.enableAuth"?: string;
   "cosi.existingConfigSecret"?: string;
   "cosi.extraVolumes"?: string;
   "cosi.extraVolumeMounts"?: string;
+  "cosi.resources"?: string;
   "certificates.commonName"?: string;
   "certificates.ipAddresses"?: string;
   "certificates.keyAlgorithm"?: string;

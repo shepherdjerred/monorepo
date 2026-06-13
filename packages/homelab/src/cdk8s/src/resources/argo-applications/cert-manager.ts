@@ -11,6 +11,30 @@ export function createCertManagerApp(chart: Chart) {
         enabled: true,
       },
     },
+    // Baseline requests (no limits) so cert renewal isn't BestEffort.
+    // All three components idle under 10m / 150Mi (30d).
+    resources: {
+      requests: {
+        cpu: "10m",
+        memory: "128Mi",
+      },
+    },
+    webhook: {
+      resources: {
+        requests: {
+          cpu: "10m",
+          memory: "64Mi",
+        },
+      },
+    },
+    cainjector: {
+      resources: {
+        requests: {
+          cpu: "10m",
+          memory: "128Mi",
+        },
+      },
+    },
     // TODO: these were causing issues
     // webhook: {
     //   prometheus: {

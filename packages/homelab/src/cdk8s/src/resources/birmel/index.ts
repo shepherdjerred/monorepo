@@ -1,4 +1,5 @@
 import {
+  Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
@@ -57,6 +58,18 @@ export function createBirmelDeployment(chart: Chart) {
     },
   });
 
+  // Shared "PinchTab" 1Password item synced into the birmel namespace so birmel
+  // and the in-cluster pinchtab service (pinchtab namespace) share one bearer
+  // token. Same item is referenced by resources/pinchtab/index.ts.
+  const pinchtabCreds = new OnePasswordItem(chart, "birmel-pinchtab-1p", {
+    spec: {
+      itemPath: vaultItemPath("t2dgtdx47yd2gegad6zeelzylu"),
+    },
+    metadata: {
+      name: "birmel-pinchtab-token",
+    },
+  });
+
   const localPathVolume = new ZfsNvmeVolume(chart, "birmel-pvc", {
     storage: Size.gibibytes(2),
   });
@@ -67,6 +80,16 @@ export function createBirmelDeployment(chart: Chart) {
       securityContext: {
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
+      },
+      // Baseline request (no limits) so the bot isn't BestEffort.
+      // 30d peak ~510m / ~1.6Gi; steady ~10m / ~450Mi.
+      resources: {
+        cpu: {
+          request: Cpu.millis(50),
+        },
+        memory: {
+          request: Size.mebibytes(512),
+        },
       },
       ports: [{ number: 4112, name: "oauth" }],
       volumeMounts: [
@@ -187,11 +210,14 @@ export function createBirmelDeployment(chart: Chart) {
           "http://pinchtab.pinchtab.svc.cluster.local:9867",
         ),
         PINCHTAB_PROFILE: EnvValue.fromValue("birmel"),
+        // Token comes from the shared "PinchTab" 1Password item (synced into the
+        // birmel namespace via pinchtabCreds), the same item the in-cluster
+        // pinchtab service authenticates against.
         PINCHTAB_TOKEN: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
             "birmel-pinchtab-token-secret",
-            onePasswordItem.name,
+            pinchtabCreds.name,
           ),
           key: "PINCHTAB_TOKEN",
         }),

@@ -1,6 +1,9 @@
 {
   "name": "@discord-plays-pokemon/monorepo",
   "version": "1.0.0",
+  "bin": {
+    "pokemonctl": "packages/backend/src/goal/pokemonctl.ts"
+  },
   "scripts": {
     "start": "bun packages/backend/src/index.ts",
     "build": "bun run --filter '*' build",
@@ -22,5 +25,12 @@
   "overrides": {
     "js-cookie": "3.0.7",
     "tmp": "0.2.6"
-  }
+  },
+  "trustedDependencies": [
+    "@lng2004/node-datachannel",
+    "node-av",
+    "@snazzah/davey",
+    "sharp",
+    "@sentry/profiling-node"
+  ]
 }

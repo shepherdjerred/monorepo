@@ -9,7 +9,11 @@ import {
 } from "./catalog.ts";
 import type { ImageTarget } from "./catalog.ts";
 import type { AffectedPackages } from "./lib/types.ts";
-import type { PipelineStep, BuildkitePipeline } from "./lib/types.ts";
+import type {
+  BuildkiteStep,
+  PipelineStep,
+  BuildkitePipeline,
+} from "./lib/types.ts";
 import { perPackageSteps } from "./steps/per-package.ts";
 import {
   prettierStep,
@@ -24,6 +28,8 @@ import {
   semgrepScanStep,
   daggerHygieneStep,
   tunnelDnsCoverageStep,
+  talosSchematicSyncStep,
+  reactVersionSyncStep,
   caddyfileValidateStep,
   lockfileCheckStep,
   envVarNamesStep,
@@ -32,6 +38,7 @@ import {
   migrationGuardStep,
   mergeConflictStep,
   largeFileStep,
+  greptileReviewStep,
 } from "./steps/quality.ts";
 import { releasePleaseStep } from "./steps/release.ts";
 import {
@@ -40,11 +47,7 @@ import {
   allPushKeys,
 } from "./steps/images.ts";
 import { publishNpmGroup, filterNpmPackages } from "./steps/npm.ts";
-import {
-  deploySitesGroup,
-  filterSites,
-  mkdocsDeployStep,
-} from "./steps/sites.ts";
+import { deploySitesGroup, filterSites } from "./steps/sites.ts";
 import { cdk8sSynthStep, homelabHelmGroup } from "./steps/helm.ts";
 import { homelabTofuGroup, homelabTofuPlanGroup } from "./steps/tofu.ts";
 import { argoCdSyncStep, argoCdHealthStep } from "./steps/argocd.ts";
@@ -63,6 +66,32 @@ function isPullRequestBuild(): boolean {
   return pullRequest !== "" && pullRequest !== "false";
 }
 
+function greptileGateForPullRequest(): BuildkiteStep[] {
+  return isPullRequestBuild() ? [greptileReviewStep()] : [];
+}
+
+/**
+ * Minimal pipeline emitted for auto-triggered release-please PR builds (see
+ * {@link shouldSkipReleasePleasePrBuild}). It runs a single annotation step and
+ * intentionally omits the Greptile and `ci-complete` required gates, so the
+ * webhook build finishes in seconds and the PR stays un-mergeable until a real
+ * build is requested on purpose.
+ */
+export function buildReleasePleaseSkipPipeline(): BuildkitePipeline {
+  return {
+    agents: { queue: "default" },
+    steps: [
+      {
+        label: ":fast_forward: Release-please PR — CI auto-skipped",
+        key: "release-please-skip",
+        command:
+          'buildkite-agent annotate "Full CI is auto-skipped for release-please PRs. To run CI (and make this release mergeable), trigger a build manually in the Buildkite UI (New Build) or set RUN_RELEASE_CI=true." --style info --context release-please-skip',
+        plugins: [k8sPlugin()],
+      },
+    ],
+  };
+}
+
 export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   const steps: PipelineStep[] = [];
   const pullRequestBuild = isPullRequestBuild();
@@ -76,11 +105,13 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         "echo '.buildkite/ci-image/VERSION is updated by CI after ghcr.io/shepherdjerred/ci-base is published. Revert this file from the PR.' && exit 1",
       plugins: [k8sPlugin()],
     });
+    const greptileGates = greptileGateForPullRequest();
+    steps.push(...greptileGates);
     steps.push({
       label: ":white_check_mark: CI Complete",
       key: "ci-complete",
       command: "echo 'CI complete'",
-      depends_on: ["ci-base-version-guard"],
+      depends_on: ["ci-base-version-guard", ...greptileGates.map((s) => s.key)],
       plugins: [k8sPlugin()],
     });
     return { agents: { queue: "default" }, steps };
@@ -99,11 +130,13 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       command: "echo 'No affected targets detected, nothing to build.'",
       plugins: [k8sPlugin()],
     });
+    const greptileGates = greptileGateForPullRequest();
+    steps.push(...greptileGates);
     steps.push({
       label: ":white_check_mark: CI Complete",
       key: "ci-complete",
       command: "echo 'CI complete'",
-      depends_on: ["no-changes"],
+      depends_on: ["no-changes", ...greptileGates.map((s) => s.key)],
       plugins: [k8sPlugin()],
     });
     return { agents: { queue: "default" }, steps };
@@ -143,6 +176,8 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     migrationGuardStep(),
     mergeConflictStep(),
     largeFileStep(),
+    reactVersionSyncStep(),
+    ...(pullRequestBuild ? [greptileReviewStep()] : []),
   ];
   for (const gate of blockingGates) {
     steps.push(gate);
@@ -156,6 +191,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   steps.push(daggerHygieneStep());
   if (affected.buildAll || affected.homelabChanged) {
     steps.push(tunnelDnsCoverageStep());
+    steps.push(talosSchematicSyncStep());
   }
   steps.push(trivyScanStep());
   steps.push(semgrepScanStep());
@@ -193,14 +229,6 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     if (releaseBuild) {
       steps.push(releasePleaseStep(releaseDeps));
     }
-
-    // Helper: build deps array scoped to quality-gate + a specific package build
-    const scopedDeps = (pkg: string, extra: string[] = []): string[] => {
-      const deps = ["quality-gate", ...extra];
-      const pkgKey = pkgKeyMap.get(pkg);
-      if (pkgKey) deps.push(pkgKey);
-      return deps;
-    };
 
     // =======================================================================
     // BUILD PHASE — depends on quality-gate, runs before release
@@ -305,14 +333,6 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       const siteDeployDeps =
         affected.buildAll || affected.homelabChanged ? ["tofu-seaweedfs"] : [];
       steps.push(deploySitesGroup(sitesToDeploy, pkgKeyMap, siteDeployDeps));
-    }
-
-    // --- MkDocs deploy (discord-plays-pokemon docs, needs Python not Bun) ---
-    if (
-      releaseBuild &&
-      (affected.buildAll || affected.packages.has("discord-plays-pokemon"))
-    ) {
-      steps.push(mkdocsDeployStep(scopedDeps("discord-plays-pokemon")));
     }
 
     // --- Homelab Tofu Plan (runs on PRs for early feedback) ---

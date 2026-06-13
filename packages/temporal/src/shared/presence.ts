@@ -12,3 +12,12 @@ export const PRESENCE_COOLDOWN_SECONDS = 90;
 export function cooldownBucket(nowMs: number = Date.now()): string {
   return String(Math.floor(nowMs / (PRESENCE_COOLDOWN_SECONDS * 1000)));
 }
+
+// Desired front-door lock state as a pure function of household presence.
+// Lock only when nobody is in the home zone. `"home"` is the sole occupied
+// state; every other value (`"not_home"`, a named zone like `"Work"`, or
+// `"unknown"`) counts as away. Used by the reconcileLock workflow so the lock
+// is driven by settled occupancy rather than by individual presence edges.
+export function shouldLock(personStates: readonly string[]): boolean {
+  return personStates.every((state) => state !== "home");
+}

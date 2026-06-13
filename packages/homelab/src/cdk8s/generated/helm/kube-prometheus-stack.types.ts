@@ -38,26 +38,28 @@ export type KubeprometheusstackHelmValuesCrdsUpgradeJob = {
   /**
    * Define resources requests and limits for single Pods.
    * ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-   *
-   * @default {}
    */
-  resources?: KubeprometheusstackHelmValuesCrdsUpgradeJobResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   extraVolumes?: unknown[];
   extraVolumeMounts?: unknown[];
   /**
    * Define which Nodes the Pods are scheduled on.
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
-   *
-   * @default {}
    */
-  nodeSelector?: KubeprometheusstackHelmValuesCrdsUpgradeJobNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
    * Assign custom affinity rules to the upgrade-crd job
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-   *
-   * @default {}
    */
-  affinity?: KubeprometheusstackHelmValuesCrdsUpgradeJobAffinity;
+  affinity?: Record<string, unknown>;
+  /**
+   * - e2e-az2
+   * If specified, the pod's tolerations.
+   * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+   */
   tolerations?: unknown[];
   topologySpreadConstraints?: unknown[];
   /**
@@ -173,12 +175,6 @@ export type KubeprometheusstackHelmValuesCrdsUpgradeJobImageKubectl = {
 };
 
 export type KubeprometheusstackHelmValuesCrdsUpgradeJobEnv = object;
-
-export type KubeprometheusstackHelmValuesCrdsUpgradeJobResources = object;
-
-export type KubeprometheusstackHelmValuesCrdsUpgradeJobNodeSelector = object;
-
-export type KubeprometheusstackHelmValuesCrdsUpgradeJobAffinity = object;
 
 export type KubeprometheusstackHelmValuesCrdsUpgradeJobLabels = {
   /**
@@ -2161,17 +2157,16 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec = {
   /**
    * Define which Nodes the Pods are scheduled on.
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
-   *
-   * @default {}
    */
-  nodeSelector?: KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
    * Define resources requests and limits for single Pods.
    * ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-   *
-   * @default {}
    */
-  resources?: KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Pod anti-affinity can prevent the scheduler from placing Prometheus replicas on the same node.
    * The default value "soft" means that the scheduler should *prefer* to not schedule two replica pods onto the same node but no guarantee is provided.
@@ -2191,10 +2186,13 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec = {
   /**
    * Assign custom affinity rules to the alertmanager instance
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-   *
-   * @default {}
    */
-  affinity?: KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAffinity;
+  affinity?: Record<string, unknown>;
+  /**
+   * - e2e-az2
+   * If specified, the pod's tolerations.
+   * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+   */
   tolerations?: unknown[];
   topologySpreadConstraints?: unknown[];
   /**
@@ -2381,15 +2379,6 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecStorage = {
 };
 
 export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecTlsConfig =
-  object;
-
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecNodeSelector =
-  object;
-
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecResources =
-  object;
-
-export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAffinity =
   object;
 
 export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecSecurityContext =
@@ -4812,10 +4801,11 @@ export type KubeprometheusstackHelmValuesPrometheusOperator = {
   serviceMonitor?: KubeprometheusstackHelmValuesPrometheusOperatorServiceMonitor;
   /**
    * Resource limits & requests
-   *
-   * @default {}
    */
-  resources?: KubeprometheusstackHelmValuesPrometheusOperatorResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {"GOGC":"30"}
    */
@@ -4830,18 +4820,18 @@ export type KubeprometheusstackHelmValuesPrometheusOperator = {
   /**
    * Define which Nodes the Pods are scheduled on.
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
-   *
-   * @default {}
    */
-  nodeSelector?: KubeprometheusstackHelmValuesPrometheusOperatorNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Tolerations for use with node taints
+   * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+   */
   tolerations?: unknown[];
   /**
    * Assign custom affinity rules to the prometheus operator
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-   *
-   * @default {}
    */
-  affinity?: KubeprometheusstackHelmValuesPrometheusOperatorAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * @default {}
    */
@@ -5234,10 +5224,11 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDepl
     readinessProbe?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentReadinessProbe;
     /**
      * Resource limits & requests
-     *
-     * @default {}
      */
-    resources?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentResources;
+    resources?: {
+      requests?: Record<string, string | number>;
+      limits?: Record<string, string | number>;
+    };
     /**
      * Required for use in managed kubernetes clusters (such as AWS EKS) with custom CNI (such as calico),
      * because control-plane managed by AWS cannot communicate with pods' IP CIDR and admission webhooks are not working
@@ -5248,18 +5239,18 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDepl
     /**
      * Define which Nodes the Pods are scheduled on.
      * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
-     *
-     * @default {}
      */
-    nodeSelector?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentNodeSelector;
+    nodeSelector?: Record<string, string>;
+    /**
+     * Tolerations for use with node taints
+     * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+     */
     tolerations?: unknown[];
     /**
      * Assign custom affinity rules to the prometheus operator
      * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-     *
-     * @default {}
      */
-    affinity?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentAffinity;
+    affinity?: Record<string, unknown>;
     /**
      * @default {}
      */
@@ -5541,15 +5532,6 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDepl
     timeoutSeconds?: number;
   };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentResources =
-  object;
-
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentNodeSelector =
-  object;
-
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentAffinity =
-  object;
-
 export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentDnsConfig =
   object;
 
@@ -5617,9 +5599,12 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatc
      */
     image?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchImage;
     /**
-     * @default {}
+     * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
      */
-    resources?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchResources;
+    resources?: {
+      requests?: Record<string, string | number>;
+      limits?: Record<string, string | number>;
+    };
     /**
      * Provide a priority class name to the webhook patching job
      *
@@ -5642,13 +5627,16 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatc
      */
     podAnnotations?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchPodAnnotations;
     /**
-     * @default {}
+     * Kubernetes nodeSelector (arbitrary label key/value pairs)
      */
-    nodeSelector?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchNodeSelector;
+    nodeSelector?: Record<string, string>;
     /**
-     * @default {}
+     * Kubernetes affinity (standard Affinity object)
      */
-    affinity?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchAffinity;
+    affinity?: Record<string, unknown>;
+    /**
+     * Kubernetes tolerations (standard Toleration objects)
+     */
     tolerations?: unknown[];
     /**
      * SecurityContext holds pod-level security attributes and common container settings.
@@ -5691,9 +5679,6 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatc
     pullPolicy?: string;
   };
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchResources =
-  object;
-
 export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchAnnotations =
   {
     /**
@@ -5704,12 +5689,6 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatc
   };
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchPodAnnotations =
-  object;
-
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchNodeSelector =
-  object;
-
-export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchAffinity =
   object;
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatchSecurityContext =
@@ -6119,19 +6098,12 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorServiceMonitor = {
 export type KubeprometheusstackHelmValuesPrometheusOperatorServiceMonitorAdditionalLabels =
   object;
 
-export type KubeprometheusstackHelmValuesPrometheusOperatorResources = object;
-
 export type KubeprometheusstackHelmValuesPrometheusOperatorEnv = {
   /**
    * @default "30"
    */
   GOGC?: number;
 };
-
-export type KubeprometheusstackHelmValuesPrometheusOperatorNodeSelector =
-  object;
-
-export type KubeprometheusstackHelmValuesPrometheusOperatorAffinity = object;
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorDnsConfig = object;
 
@@ -6270,10 +6242,11 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorPrometheusConfigReloa
     enableProbe?: boolean;
     /**
      * resource config for prometheusConfigReloader
-     *
-     * @default {}
      */
-    resources?: KubeprometheusstackHelmValuesPrometheusOperatorPrometheusConfigReloaderResources;
+    resources?: {
+      requests?: Record<string, string | number>;
+      limits?: Record<string, string | number>;
+    };
   };
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorPrometheusConfigReloaderImage =
@@ -6297,9 +6270,6 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorPrometheusConfigReloa
      */
     sha?: string;
   };
-
-export type KubeprometheusstackHelmValuesPrometheusOperatorPrometheusConfigReloaderResources =
-  object;
 
 export type KubeprometheusstackHelmValuesPrometheusOperatorThanosImage = {
   /**
@@ -7521,6 +7491,10 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpec = {
    * @default {...} (5 keys)
    */
   image?: KubeprometheusstackHelmValuesPrometheusPrometheusSpecImage;
+  /**
+   * Tolerations for use with node taints
+   * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+   */
   tolerations?: unknown[];
   topologySpreadConstraints?: unknown[];
   /**
@@ -7575,10 +7549,8 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpec = {
   /**
    * Define which Nodes the Pods are scheduled on.
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
-   *
-   * @default {}
    */
-  nodeSelector?: KubeprometheusstackHelmValuesPrometheusPrometheusSpecNodeSelector;
+  nodeSelector?: Record<string, string>;
   secrets?: unknown[];
   configMaps?: unknown[];
   /**
@@ -7791,10 +7763,8 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpec = {
   /**
    * Assign custom affinity rules to the prometheus instance
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-   *
-   * @default {}
    */
-  affinity?: KubeprometheusstackHelmValuesPrometheusPrometheusSpecAffinity;
+  affinity?: Record<string, unknown>;
   remoteRead?: unknown[];
   additionalRemoteRead?: unknown[];
   remoteWrite?: unknown[];
@@ -7807,10 +7777,11 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpec = {
   remoteWriteDashboards?: boolean;
   /**
    * Resource limits & requests
-   *
-   * @default {}
    */
-  resources?: KubeprometheusstackHelmValuesPrometheusPrometheusSpecResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Prometheus StorageSpec for persistent data
    * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/platform/storage.md
@@ -8133,9 +8104,6 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecImage = {
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecExternalLabels =
   object;
 
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecNodeSelector =
-  object;
-
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecQuery = object;
 
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecRuleNamespaceSelector =
@@ -8176,12 +8144,6 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecTsdb = {
 };
 
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecPodMetadata =
-  object;
-
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecAffinity =
-  object;
-
-export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecResources =
   object;
 
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecStorageSpec = {
@@ -8801,17 +8763,16 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpec = {
   /**
    * Define which Nodes the Pods are scheduled on.
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
-   *
-   * @default {}
    */
-  nodeSelector?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
    * Define resources requests and limits for single Pods.
    * ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-   *
-   * @default {}
    */
-  resources?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Pod anti-affinity can prevent the scheduler from placing Prometheus replicas on the same node.
    * The default value "soft" means that the scheduler should *prefer* to not schedule two replica pods onto the same node but no guarantee is provided.
@@ -8831,10 +8792,13 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpec = {
   /**
    * Assign custom affinity rules to the thanosRuler instance
    * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-   *
-   * @default {}
    */
-  affinity?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAffinity;
+  affinity?: Record<string, unknown>;
+  /**
+   * - e2e-az2
+   * If specified, the pod's tolerations.
+   * ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+   */
   tolerations?: unknown[];
   topologySpreadConstraints?: unknown[];
   /**
@@ -9035,15 +8999,6 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecLabels = {
    */
   [key: string]: unknown;
 };
-
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecNodeSelector =
-  object;
-
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecResources =
-  object;
-
-export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAffinity =
-  object;
 
 export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecSecurityContext =
   {
@@ -9334,8 +9289,11 @@ export type KubeprometheusstackHelmParameters = {
   "crds.upgradeJob.image.kubectl.tag"?: string;
   "crds.upgradeJob.image.kubectl.sha"?: string;
   "crds.upgradeJob.image.kubectl.pullPolicy"?: string;
+  "crds.upgradeJob.resources"?: string;
   "crds.upgradeJob.extraVolumes"?: string;
   "crds.upgradeJob.extraVolumeMounts"?: string;
+  "crds.upgradeJob.nodeSelector"?: string;
+  "crds.upgradeJob.affinity"?: string;
   "crds.upgradeJob.tolerations"?: string;
   "crds.upgradeJob.topologySpreadConstraints"?: string;
   "crds.upgradeJob.serviceAccount.create"?: string;
@@ -9518,8 +9476,11 @@ export type KubeprometheusstackHelmParameters = {
   "alertmanager.alertmanagerSpec.routePrefix"?: string;
   "alertmanager.alertmanagerSpec.scheme"?: string;
   "alertmanager.alertmanagerSpec.paused"?: string;
+  "alertmanager.alertmanagerSpec.nodeSelector"?: string;
+  "alertmanager.alertmanagerSpec.resources"?: string;
   "alertmanager.alertmanagerSpec.podAntiAffinity"?: string;
   "alertmanager.alertmanagerSpec.podAntiAffinityTopologyKey"?: string;
+  "alertmanager.alertmanagerSpec.affinity"?: string;
   "alertmanager.alertmanagerSpec.tolerations"?: string;
   "alertmanager.alertmanagerSpec.topologySpreadConstraints"?: string;
   "alertmanager.alertmanagerSpec.securityContext.runAsGroup"?: string;
@@ -9918,8 +9879,11 @@ export type KubeprometheusstackHelmParameters = {
   "prometheusOperator.admissionWebhooks.deployment.readinessProbe.periodSeconds"?: string;
   "prometheusOperator.admissionWebhooks.deployment.readinessProbe.successThreshold"?: string;
   "prometheusOperator.admissionWebhooks.deployment.readinessProbe.timeoutSeconds"?: string;
+  "prometheusOperator.admissionWebhooks.deployment.resources"?: string;
   "prometheusOperator.admissionWebhooks.deployment.hostNetwork"?: string;
+  "prometheusOperator.admissionWebhooks.deployment.nodeSelector"?: string;
   "prometheusOperator.admissionWebhooks.deployment.tolerations"?: string;
+  "prometheusOperator.admissionWebhooks.deployment.affinity"?: string;
   "prometheusOperator.admissionWebhooks.deployment.securityContext.fsGroup"?: string;
   "prometheusOperator.admissionWebhooks.deployment.securityContext.runAsGroup"?: string;
   "prometheusOperator.admissionWebhooks.deployment.securityContext.runAsNonRoot"?: string;
@@ -9935,8 +9899,11 @@ export type KubeprometheusstackHelmParameters = {
   "prometheusOperator.admissionWebhooks.patch.image.tag"?: string;
   "prometheusOperator.admissionWebhooks.patch.image.sha"?: string;
   "prometheusOperator.admissionWebhooks.patch.image.pullPolicy"?: string;
+  "prometheusOperator.admissionWebhooks.patch.resources"?: string;
   "prometheusOperator.admissionWebhooks.patch.priorityClassName"?: string;
   "prometheusOperator.admissionWebhooks.patch.ttlSecondsAfterFinished"?: string;
+  "prometheusOperator.admissionWebhooks.patch.nodeSelector"?: string;
+  "prometheusOperator.admissionWebhooks.patch.affinity"?: string;
   "prometheusOperator.admissionWebhooks.patch.tolerations"?: string;
   "prometheusOperator.admissionWebhooks.patch.securityContext.runAsGroup"?: string;
   "prometheusOperator.admissionWebhooks.patch.securityContext.runAsNonRoot"?: string;
@@ -9998,9 +9965,12 @@ export type KubeprometheusstackHelmParameters = {
   "prometheusOperator.serviceMonitor.scrapeTimeout"?: string;
   "prometheusOperator.serviceMonitor.metricRelabelings"?: string;
   "prometheusOperator.serviceMonitor.relabelings"?: string;
+  "prometheusOperator.resources"?: string;
   "prometheusOperator.env.GOGC"?: string;
   "prometheusOperator.hostNetwork"?: string;
+  "prometheusOperator.nodeSelector"?: string;
   "prometheusOperator.tolerations"?: string;
+  "prometheusOperator.affinity"?: string;
   "prometheusOperator.securityContext.fsGroup"?: string;
   "prometheusOperator.securityContext.runAsGroup"?: string;
   "prometheusOperator.securityContext.runAsNonRoot"?: string;
@@ -10023,6 +9993,7 @@ export type KubeprometheusstackHelmParameters = {
   "prometheusOperator.prometheusConfigReloader.image.tag"?: string;
   "prometheusOperator.prometheusConfigReloader.image.sha"?: string;
   "prometheusOperator.prometheusConfigReloader.enableProbe"?: string;
+  "prometheusOperator.prometheusConfigReloader.resources"?: string;
   "prometheusOperator.thanosImage.registry"?: string;
   "prometheusOperator.thanosImage.repository"?: string;
   "prometheusOperator.thanosImage.tag"?: string;
@@ -10186,6 +10157,7 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.prometheusSpec.prometheusExternalLabelName"?: string;
   "prometheus.prometheusSpec.prometheusExternalLabelNameClear"?: string;
   "prometheus.prometheusSpec.externalUrl"?: string;
+  "prometheus.prometheusSpec.nodeSelector"?: string;
   "prometheus.prometheusSpec.secrets"?: string;
   "prometheus.prometheusSpec.configMaps"?: string;
   "prometheus.prometheusSpec.ruleSelectorNilUsesHelmValues"?: string;
@@ -10205,11 +10177,13 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.prometheusSpec.routePrefix"?: string;
   "prometheus.prometheusSpec.podAntiAffinity"?: string;
   "prometheus.prometheusSpec.podAntiAffinityTopologyKey"?: string;
+  "prometheus.prometheusSpec.affinity"?: string;
   "prometheus.prometheusSpec.remoteRead"?: string;
   "prometheus.prometheusSpec.additionalRemoteRead"?: string;
   "prometheus.prometheusSpec.remoteWrite"?: string;
   "prometheus.prometheusSpec.additionalRemoteWrite"?: string;
   "prometheus.prometheusSpec.remoteWriteDashboards"?: string;
+  "prometheus.prometheusSpec.resources"?: string;
   "prometheus.prometheusSpec.volumes"?: string;
   "prometheus.prometheusSpec.volumeMounts"?: string;
   "prometheus.prometheusSpec.additionalScrapeConfigs"?: string;
@@ -10321,8 +10295,11 @@ export type KubeprometheusstackHelmParameters = {
   "thanosRuler.thanosRulerSpec.queryEndpoints"?: string;
   "thanosRuler.thanosRulerSpec.paused"?: string;
   "thanosRuler.thanosRulerSpec.additionalArgs"?: string;
+  "thanosRuler.thanosRulerSpec.nodeSelector"?: string;
+  "thanosRuler.thanosRulerSpec.resources"?: string;
   "thanosRuler.thanosRulerSpec.podAntiAffinity"?: string;
   "thanosRuler.thanosRulerSpec.podAntiAffinityTopologyKey"?: string;
+  "thanosRuler.thanosRulerSpec.affinity"?: string;
   "thanosRuler.thanosRulerSpec.tolerations"?: string;
   "thanosRuler.thanosRulerSpec.topologySpreadConstraints"?: string;
   "thanosRuler.thanosRulerSpec.securityContext.runAsGroup"?: string;

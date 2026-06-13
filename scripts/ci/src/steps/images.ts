@@ -60,6 +60,8 @@ function imageBuildStep(
   const NO_SOURCE_BUILDS = new Set([
     "build-caddy-s-3-proxy-image",
     "build-obsidian-headless-image",
+    "build-mcp-gateway-image",
+    "build-redlib-image",
   ]);
 
   const flags = depFlags(pkg);
@@ -123,6 +125,8 @@ const SMOKE_TEST_FUNCTIONS: Record<string, string> = {
   "caddy-s3proxy": "smoke-test-caddy-s-3-proxy",
   "obsidian-headless": "smoke-test-obsidian-headless",
   "discord-plays-pokemon": "smoke-test-discord-plays-pokemon",
+  streambot: "smoke-test-streambot",
+  "discord-plays-mario-kart": "smoke-test-discord-plays-mario-kart",
   "trmnl-dashboard": "smoke-test-trmnl-dashboard",
 };
 
@@ -136,6 +140,8 @@ const SMOKE_NO_ARGS = new Set([
 const SMOKE_CUSTOM_INFRA = new Set([
   "smoke-test-scout-for-lol",
   "smoke-test-discord-plays-pokemon",
+  "smoke-test-discord-plays-mario-kart",
+  "smoke-test-streambot",
   "smoke-test-trmnl-dashboard",
 ]);
 
@@ -206,6 +212,8 @@ function imagePushStep(
   const NO_SOURCE_PUSHES = new Set([
     "push-caddy-s-3-proxy-image",
     "push-obsidian-headless-image",
+    "push-mcp-gateway-image",
+    "push-redlib-image",
   ]);
   const flags = depFlags(pkg);
 

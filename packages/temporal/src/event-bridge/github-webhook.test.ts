@@ -88,7 +88,7 @@ function makeBaseEvent(
       base: { ref: "main", sha: "00".repeat(20) },
       head: { ref: "feature/foo", sha: overrides.headSha ?? "ab".repeat(20) },
       user: {
-        login: overrides.authorLogin ?? "alice",
+        login: overrides.authorLogin ?? "shepherdjerred",
         type: overrides.userType ?? "User",
       },
     },
@@ -119,6 +119,48 @@ async function postWebhook(
     new Request("http://test/webhook", { method: "POST", headers, body }),
   );
 }
+
+describe("postWebhookStatus", () => {
+  it("posts draft-skipped status with a GitHub App installation token", async () => {
+    const previousPostEnabled = Bun.env["PR_REVIEW_POST_ENABLED"];
+    const previousGhToken = Bun.env["GH_TOKEN"];
+    Bun.env["PR_REVIEW_POST_ENABLED"] = "true";
+    Bun.env["GH_TOKEN"] = "";
+    const tokens: string[] = [];
+    const calls: { createdBodies: string[]; updateCommentIds: number[] } = {
+      createdBodies: [],
+      updateCommentIds: [],
+    };
+
+    try {
+      await postWebhookStatus(makePrInput(), "draft_skipped", {
+        createInstallationToken: async () => ({
+          token: "github-app-installation-token",
+          expiresAt: new Date(Date.now() + 60_000),
+        }),
+        createOctokit: (token) => {
+          tokens.push(token);
+          return makeStatusOctokit(calls);
+        },
+      });
+    } finally {
+      if (previousPostEnabled === undefined) {
+        delete Bun.env["PR_REVIEW_POST_ENABLED"];
+      } else {
+        Bun.env["PR_REVIEW_POST_ENABLED"] = previousPostEnabled;
+      }
+      if (previousGhToken === undefined) {
+        delete Bun.env["GH_TOKEN"];
+      } else {
+        Bun.env["GH_TOKEN"] = previousGhToken;
+      }
+    }
+
+    expect(tokens).toEqual(["github-app-installation-token"]);
+    expect(calls.createdBodies).toHaveLength(1);
+    expect(calls.createdBodies[0]).toContain("draft");
+  });
+});
 
 describe("buildWebhookApp", () => {
   it("returns 401 when X-Hub-Signature-256 is missing", async () => {
@@ -163,7 +205,7 @@ describe("buildWebhookApp", () => {
     expect(input.headRef).toBe("feature/foo");
     expect(input.baseRef).toBe("main");
     expect(input.commitSha).toBe("ab".repeat(20));
-    expect(input.prAuthor).toBe("alice");
+    expect(input.prAuthor).toBe("shepherdjerred");
   });
 
   it("foundation: passes through fields the pr-review pipeline derives its id from", async () => {
@@ -228,46 +270,6 @@ describe("buildWebhookApp", () => {
     expect(call[1]).toBe("draft_skipped");
   });
 
-  it("posts draft-skipped status with a GitHub App installation token", async () => {
-    const previousPostEnabled = Bun.env["PR_REVIEW_POST_ENABLED"];
-    const previousGhToken = Bun.env["GH_TOKEN"];
-    Bun.env["PR_REVIEW_POST_ENABLED"] = "true";
-    Bun.env["GH_TOKEN"] = "";
-    const tokens: string[] = [];
-    const calls: { createdBodies: string[]; updateCommentIds: number[] } = {
-      createdBodies: [],
-      updateCommentIds: [],
-    };
-
-    try {
-      await postWebhookStatus(makePrInput(), "draft_skipped", {
-        createInstallationToken: async () => ({
-          token: "github-app-installation-token",
-          expiresAt: new Date(Date.now() + 60_000),
-        }),
-        createOctokit: (token) => {
-          tokens.push(token);
-          return makeStatusOctokit(calls);
-        },
-      });
-    } finally {
-      if (previousPostEnabled === undefined) {
-        delete Bun.env["PR_REVIEW_POST_ENABLED"];
-      } else {
-        Bun.env["PR_REVIEW_POST_ENABLED"] = previousPostEnabled;
-      }
-      if (previousGhToken === undefined) {
-        delete Bun.env["GH_TOKEN"];
-      } else {
-        Bun.env["GH_TOKEN"] = previousGhToken;
-      }
-    }
-
-    expect(tokens).toEqual(["github-app-installation-token"]);
-    expect(calls.createdBodies).toHaveLength(1);
-    expect(calls.createdBodies[0]).toContain("draft");
-  });
-
   it("processes ready_for_review even when draft is true", async () => {
     const start = mock(noopStart);
     const app = buildWebhookApp(SECRET, start);
@@ -292,6 +294,19 @@ describe("buildWebhookApp", () => {
     expect(start).not.toHaveBeenCalled();
   });
 
+  it("skips PRs whose author is not the allowlisted owner", async () => {
+    const start = mock(noopStart);
+    const app = buildWebhookApp(SECRET, start);
+    const res = await postWebhook(
+      app,
+      makeBaseEvent({ authorLogin: "mallory" }),
+    );
+    expect(res.status).toBe(200);
+    const text = await res.text();
+    expect(text).toContain("untrusted");
+    expect(start).not.toHaveBeenCalled();
+  });
+
   it("ignores non-pull_request events", async () => {
     const start = mock(noopStart);
     const app = buildWebhookApp(SECRET, start);
@@ -308,6 +323,33 @@ describe("buildWebhookApp", () => {
     const app = buildWebhookApp(SECRET, start);
     const res = await postWebhook(app, makeBaseEvent());
     expect(res.status).toBe(500);
+  });
+
+  it("acks but skips all processing when PR_BOT_ENABLED=false", async () => {
+    const previous = Bun.env["PR_BOT_ENABLED"];
+    Bun.env["PR_BOT_ENABLED"] = "false";
+    try {
+      const start = mock(noopStart);
+      const statusCalls: StatusCall[] = [];
+      const postStatus = mock(
+        async (input: PrAgentInput, state: "draft_skipped") => {
+          statusCalls.push([input, state]);
+        },
+      );
+      const app = buildWebhookApp(SECRET, start, postStatus);
+      const res = await postWebhook(app, makeBaseEvent());
+      expect(res.status).toBe(200);
+      const text = await res.text();
+      expect(text).toContain("pr-bot disabled");
+      expect(start).not.toHaveBeenCalled();
+      expect(postStatus).not.toHaveBeenCalled();
+    } finally {
+      if (previous === undefined) {
+        delete Bun.env["PR_BOT_ENABLED"];
+      } else {
+        Bun.env["PR_BOT_ENABLED"] = previous;
+      }
+    }
   });
 });
 

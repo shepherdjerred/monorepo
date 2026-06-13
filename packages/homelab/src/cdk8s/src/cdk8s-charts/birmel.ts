@@ -79,6 +79,17 @@ export function createBirmelChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }],
         },
+        // PinchTab browser automation (pinchtab.pinchtab.svc.cluster.local:9867)
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "pinchtab" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(9867), protocol: "TCP" }],
+        },
         // External HTTPS (Discord, OpenAI, Anthropic, GitHub, Sentry)
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],

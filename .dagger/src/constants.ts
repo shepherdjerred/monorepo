@@ -35,21 +35,41 @@ export const MAVEN_IMAGE =
   "maven:3.9.15-eclipse-temurin-25@sha256:1c3a703ab39fee7ac0880f46e6ccd22c0d701f17f0616e6e66a258ddc1c637d2";
 // renovate: datasource=docker depName=texlive/texlive
 export const TEXLIVE_IMAGE =
-  "texlive/texlive:TL2024-historic@sha256:fd576ce8b1cfd03cdabc15ca75682fb050eb10de5c057d81449883c2ad644855";
+  "texlive/texlive:TL2024-historic@sha256:7cf892aa62a923b3a2d9242a27e3f0d8b432385e8f76f34049ffad676aabcc1c";
 // renovate: datasource=docker depName=caddy
 export const CADDY_IMAGE =
   "caddy:2.11.3-alpine@sha256:86deaf5e3d3408a6ccec08fbb79989783dd26e206ae10bcf78a801dc8c9ab794";
 // renovate: datasource=docker depName=caddy
 export const CADDY_BUILDER_IMAGE =
-  "caddy:2.11.3-builder-alpine@sha256:52575959b1eeee9900869325a953d71e4c521ab9102dd5cce07d429ea8246b85";
-// renovate: datasource=docker depName=python
-export const PYTHON_IMAGE =
-  "python:3.14-slim@sha256:c845af9399020c7e562969a13689e929074a10fd057acd1b1fad06a2fb068e97";
-
+  "caddy:2.11.3-builder-alpine@sha256:3eae6b351ecdb05da6d16e341261a457692d344a435764c5ece7a60cf03a23f3";
+// xcaddy --with module for the S3 proxy plugin. The fork keeps the upstream
+// import path (existing Caddyfiles keep working) and adds HEAD support, the
+// 304-on-index fix, and 206/Accept-Ranges on byte-range responses (Safari
+// refuses to play video from origins that answer 200 to Range requests).
+// Not managed by renovate — bump the tag when the fork changes.
+export const CADDY_S3_PROXY_MODULE =
+  "github.com/lindenlab/caddy-s3-proxy=github.com/shepherdjerred/caddy-s3-proxy@v0.5.7-head2";
+// redlib is built from source ourselves (Dockerfile.ubuntu) rather than pulled
+// from quay. Upstream only publishes a musl/Alpine image whose TLS fingerprint
+// Reddit now blocks during OAuth (redlib-org/redlib#551 — "Failed to create
+// OAuth client: 401 Unauthorized"); the glibc Dockerfile.ubuntu build works.
+// The fingerprint fixes live on `main` — the last GitHub release (v0.36.0,
+// 2025-03) predates them, and the numerically-newest tag (v3.0.0) is a 2021
+// libreddit-era relic — so we pin main's HEAD commit and let Renovate's
+// dedicated git-refs custom manager (see renovate.json) advance it as main moves.
+// renovate: datasource=git-refs depName=redlib-source branch=main
+export const REDLIB_SOURCE_REF = "a4d36e954cf1bd64f209cd8868c5a29edc81b374";
 // Base image for obsidian-headless container (uses Node, not Bun, due to native better-sqlite3 addon).
 // renovate: datasource=docker depName=node
 export const OBSIDIAN_HEADLESS_BASE_IMAGE =
   "node:24-slim@sha256:242549cd46785b480c832479a730f4f2a20865d61ea2e404fdb2a5c3d3b73ecf";
+// emscripten toolchain for the discord-plays-mario-kart N64Wasm core build.
+// Pinned to 2.0.7 — the exact toolchain the vendored parallel-n64 + angrylion
+// source (packages/discord-plays-mario-kart/wasm-src) is known to compile with.
+// Not Renovate-managed: a newer emsdk silently breaks the legacy SDL2/GLES2
+// build, so the version is intentionally frozen until the core is reworked.
+export const EMSCRIPTEN_IMAGE =
+  "emscripten/emsdk:2.0.7@sha256:cbeeb7cccd2e7915fe0596345f10bfdec5578cc0386aaa823ad6f1d41910619f";
 // renovate: datasource=docker depName=alpine/helm
 export const HELM_IMAGE =
   "alpine/helm:4.1.4@sha256:8edcaedab4d9864886b7f443d55731be87d4b5ec7dca714c24551455707a8aac";
@@ -91,13 +111,13 @@ export const GOLANGCI_LINT_VERSION = "v2.12.2";
 export const GH_CLI_VERSION = "2.92.0";
 
 // renovate: datasource=github-releases depName=kubernetes/kubectl
-export const KUBECTL_VERSION = "v1.36.1";
+export const KUBECTL_VERSION = "v1.36.2";
 
 // renovate: datasource=github-releases depName=github/github-mcp-server
 export const GITHUB_MCP_SERVER_VERSION = "1.0.4";
 
 // renovate: datasource=github-releases depName=siderolabs/talos
-export const TALOSCTL_VERSION = "v1.13.3";
+export const TALOSCTL_VERSION = "v1.13.4";
 
 // renovate: datasource=github-releases depName=opentofu/opentofu
 export const TOFU_VERSION = "1.11.7";

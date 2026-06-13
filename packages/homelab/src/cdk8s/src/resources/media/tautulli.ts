@@ -27,6 +27,9 @@ export function createTautulliDeployment(chart: Chart) {
 
   deployment.addContainer(
     withCommonLinuxServerProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
       image: `ghcr.io/linuxserver/tautulli:${versions["linuxserver/tautulli"]}`,
       portNumber: 8181,
       volumeMounts: [

@@ -14,6 +14,9 @@ paths = [
   '''Manifest\.lock$''',
   # Generated/vendored code
   '''generated/imports/''',
+  # Vendored N64Wasm emulator source (parallel-n64 + angrylion) — third-party
+  # C/C++; e.g. gles2rice chained `gRDP.keyR=...=0;` flagged as generic-api-key
+  '''packages/discord-plays-mario-kart/wasm-src/''',
   '''\.build/checkouts/''',
   '''debug/index/store/''',
   '''src/cdk8s/dist/''',

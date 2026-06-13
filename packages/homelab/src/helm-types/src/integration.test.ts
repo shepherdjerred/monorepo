@@ -232,9 +232,12 @@ describe("Integration Tests - K8s Manifests and Documentation", () => {
     expect(code).toContain("env?:");
     expect(code).toContain("Element[]");
 
-    // Verify dotted keys in nodeSelector
-    expect(code).toContain('"kubernetes.io/os"?: string;');
-    expect(code).toContain('"node.kubernetes.io/instance-type"?: string;');
+    // Well-known Kubernetes fields use canonical permissive types rather than
+    // types narrowly inferred from the chart's default subset.
+    expect(code).toContain("nodeSelector?: Record<string, string>");
+    expect(code).toContain(
+      "resources?: { requests?: Record<string, string | number>; limits?: Record<string, string | number> }",
+    );
   });
 
   test("should preserve multi-paragraph documentation", () => {

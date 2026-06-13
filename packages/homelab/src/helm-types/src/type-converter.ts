@@ -14,7 +14,10 @@ import {
   ActualNumberSchema,
   StringBooleanSchema,
 } from "./schemas.ts";
-import { shouldAllowArbitraryProps, isK8sResourceSpec } from "./config.ts";
+import {
+  shouldAllowArbitraryProps,
+  getWellKnownK8sFieldType,
+} from "./config.ts";
 import {
   sanitizePropertyName,
   sanitizeTypeName,
@@ -24,7 +27,6 @@ import type { PropertyConversionContext } from "./type-converter-helpers.ts";
 import {
   mergeDescriptions,
   inferPrimitiveType,
-  augmentK8sResourceSpec,
 } from "./type-converter-helpers.ts";
 
 /**
@@ -470,6 +472,23 @@ function convertValueToProperty(opts: PropertyConversionContext): TypeProperty {
     return { type: "unknown", optional: true };
   }
 
+  // Well-known Kubernetes fields (resources, nodeSelector, tolerations,
+  // affinity) have an API-defined shape. Inferring them from a chart's default
+  // subset produces types that are too narrow (e.g. resources.requests that
+  // only allow cpu). Emit the canonical permissive type instead — but only
+  // when the default value's shape is compatible, so RBAC `resources:
+  // ["secrets"]` arrays stay arrays.
+  if (propertyName != null && propertyName !== "") {
+    const wellKnown = getWellKnownK8sFieldType(propertyName, value);
+    if (wellKnown) {
+      return {
+        type: wellKnown.type,
+        optional: true,
+        description: yamlComment ?? wellKnown.description,
+      };
+    }
+  }
+
   // Check for array (before coercion checks)
   const arrayResult = ArraySchema.safeParse(value);
   if (arrayResult.success) {
@@ -486,14 +505,6 @@ function convertValueToProperty(opts: PropertyConversionContext): TypeProperty {
       keyPrefix: fullKey,
       chartName,
     });
-
-    if (
-      propertyName != null &&
-      propertyName !== "" &&
-      isK8sResourceSpec(propertyName)
-    ) {
-      augmentK8sResourceSpec(nestedInterface);
-    }
 
     return {
       type: nestedTypeName,

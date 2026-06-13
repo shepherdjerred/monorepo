@@ -160,6 +160,15 @@ resource "cloudflare_dns_record" "sjer_red_cname_pokebot" {
   proxied = true
 }
 
+resource "cloudflare_dns_record" "sjer_red_cname_mariokart" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "mariokart"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
 # Receives GitHub `pull_request` webhooks for the temporal worker's pr-agent
 # (prReview / prSummary workflows). TunnelBinding lives in cdk8s; this DNS
 # record completes the public path. See packages/temporal/AGENTS.md.
@@ -266,6 +275,15 @@ resource "cloudflare_dns_record" "sjer_red_cname_stocks" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
   name    = "stocks"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
+resource "cloudflare_dns_record" "sjer_red_cname_public" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "public"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true

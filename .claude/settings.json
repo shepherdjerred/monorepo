@@ -8,6 +8,16 @@
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/trust-mise.sh\"",
             "statusMessage": "Trusting mise configs"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/install-git-hooks.sh\"",
+            "statusMessage": "Installing git hooks"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/worktree-reminder.sh\"",
+            "statusMessage": "Worktree reminder"
           }
         ]
       }

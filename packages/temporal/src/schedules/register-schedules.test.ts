@@ -2,6 +2,7 @@ import { describe, test, expect } from "bun:test";
 import type { Duration } from "@temporalio/common";
 import { DataDragonWorkflowInputSchema } from "#activities/data-dragon.ts";
 import {
+  DELETED_SCHEDULE_IDS,
   SCHEDULES,
   scheduleRequiresConfigPause,
 } from "./register-schedules.ts";
@@ -38,10 +39,13 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runDnsAudit",
   "runHomelabAuditWorkflow",
   "agentTaskWorkflow",
-  // Fans out child workflows and emails a summary; no in-workflow sleep().
+  // Fan-out sweep: child workflows run in parallel; the sweep workflow itself
+  // only awaits their futures, no long sleeps of its own.
   "alertRemediationSweepWorkflow",
   "runScoutDataDragonVersionCheck",
   "runScoutDataDragonWeeklyRefresh",
+  "runPokeemeraldWasmUpdate",
+  "runHelmTypesRefresh",
   "runScoutSeasonRefreshWorkflow",
   "runZfsMaintenanceWorkflow",
   "runBugsinkHousekeepingWorkflow",
@@ -214,6 +218,15 @@ describe("PR review A/B weekly report schedule config", () => {
   });
 });
 
+describe("DELETED_SCHEDULE_IDS", () => {
+  test("none of the deleted ids appear in active SCHEDULES", () => {
+    const activeIds = SCHEDULES.map((s) => s.id);
+    for (const deletedId of DELETED_SCHEDULE_IDS) {
+      expect(activeIds).not.toContain(deletedId);
+    }
+  });
+});
+
 describe("homelab daily audit schedule config", () => {
   test("uses a bounded daily report input and timeout", () => {
     const schedule = SCHEDULES.find(
@@ -222,10 +235,10 @@ describe("homelab daily audit schedule config", () => {
     if (schedule === undefined) {
       throw new Error("Missing homelab-audit-daily schedule");
     }
-    expect(schedule.workflowExecutionTimeout).toBe("10 minutes");
+    expect(schedule.workflowExecutionTimeout).toBe("50 minutes");
     expect(schedule.args[0]).toMatchObject({
       maxTurns: 8,
-      agentTimeoutMinutes: 8,
+      agentTimeoutMinutes: 45,
     });
     expect(JSON.stringify(schedule.args[0])).toContain("Ignore Bugsink");
   });

@@ -87,6 +87,7 @@ export function shellcheckHelper(source: Directory): Container {
       [
         'find . -name "*.sh"',
         '-not -path "*/archive/*"',
+        '-not -path "*/wasm-src/*"',
         '-not -path "*/node_modules/*"',
         '-not -path "*/Pods/*"',
         '-not -path "*/target/*"',
@@ -168,6 +169,10 @@ export function suppressionCheckHelper(source: Directory): Container {
  * Trivy filesystem scan (HIGH + CRITICAL severities). Uses the upstream
  * aquasec/trivy image — CVE DB updates land via the image's
  * `trivy-db` baked layer + on first run. Exit 1 on any finding.
+ *
+ * The aquasec/trivy image's entrypoint is the `trivy` binary, but Dagger's
+ * `withExec` overrides the entrypoint — so we invoke the binary explicitly as
+ * the first arg (same as gitleaks/semgrep above).
  */
 export function trivyScanHelper(source: Directory): Container {
   return dag
@@ -176,6 +181,7 @@ export function trivyScanHelper(source: Directory): Container {
     .withWorkdir("/repo")
     .withDirectory("/repo", source, { exclude: SOURCE_EXCLUDES })
     .withExec([
+      "trivy",
       "fs",
       "--exit-code",
       "1",
@@ -205,6 +211,19 @@ export function daggerHygieneHelper(source: Directory): Container {
 }
 
 /**
+ * Verify `react`/`react-dom` (and their `@types`) resolve to matching versions
+ * in every `bun.lock`. A skew throws "Incompatible React versions" at runtime
+ * — invisible to typecheck/build/test. The script reads only `bun.lock` files
+ * from the mounted source; no `node_modules` install required.
+ */
+export function reactVersionSyncHelper(source: Directory): Container {
+  return bunQualityBase(source).withExec([
+    "bun",
+    "scripts/check-react-version-sync.ts",
+  ]);
+}
+
+/**
  * Verify every cdk8s `TunnelBinding` has a matching cdk8s+Tofu
  * `cloudflare_dns_record`. The script reads both cdk8s TypeScript and
  * Tofu HCL from the repo — both are inside the mounted source.
@@ -213,6 +232,22 @@ export function tunnelDnsCoverageHelper(source: Directory): Container {
   return bunQualityBase(source).withExec([
     "bun",
     "scripts/check-tunnel-dns-coverage.ts",
+  ]);
+}
+
+/**
+ * Verify the pinned Talos installer in `patches/image.yaml` matches what the
+ * `image.yaml` schematic produces (queries the Image Factory). Catches drift
+ * where `image.yaml`'s extraKernelArgs/systemExtensions change without
+ * regenerating the pin — which silently boots the old schematic (e.g. dropping
+ * `lockdown=integrity` and breaking eBPF profiling). The script is
+ * dependency-free, so it runs in the quality base without a node_modules install.
+ */
+export function talosSchematicSyncHelper(source: Directory): Container {
+  return bunQualityBase(source).withExec([
+    "bun",
+    "packages/homelab/src/talos/update-image-id.ts",
+    "--check",
   ]);
 }
 

@@ -204,8 +204,8 @@ kubectl exec pod/shell -n maintenance -- \
 ### Upgrade Talos
 
 ```bash {"interpreter":"/opt/homebrew/bin/bash"}
-VERSION=v1.13.3
-IMAGE=factory.talos.dev/metal-installer-secureboot/a0f205c1e29abaf83e16257c04c83267b5a54feac3861eedc1080edab9827fc3:$VERSION
+VERSION=v1.13.4
+IMAGE=factory.talos.dev/metal-installer-secureboot/4560d31e3c529f9808e0898c2804d25be14201992fe2792abd4a09618e0d39a9:$VERSION
 talosctl upgrade --nodes 192.168.1.81 \
   --image $IMAGE \
   --drain=false
@@ -214,6 +214,6 @@ talosctl upgrade --nodes 192.168.1.81 \
 ### Upgrade Kubernetes
 
 ```bash {"interpreter":"/opt/homebrew/bin/bash"}
-VERSION=1.36.1
-talosctl --nodes 192.168.1.81 upgrade-k8s --to $VERSION
+VERSION=1.36.2
+talosctl --nodes 192.168.1.81 --endpoint https://torvalds:6443 upgrade-k8s --to $VERSION
 ```

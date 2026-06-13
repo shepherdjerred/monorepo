@@ -6,25 +6,37 @@ Bun workspaces monorepo. Use `bun` commands exclusively (never npm/yarn/pnpm).
 
 ```
 packages/
-├── anki/                    # Anki flashcard tools
-├── astro-opengraph-images/  # Astro OpenGraph image generation
-├── better-skill-capped/     # Browser extension
-├── birmel/                  # Discord bot (VoltAgent + Claude AI)
-├── bun-decompile/           # Bun binary decompiler
-├── discord-plays-pokemon/   # Discord Plays Pokemon
-├── docs/                    # AI-maintained monorepo documentation
-├── dotfiles/                # Dotfiles & shell config
-├── eslint-config/           # Shared ESLint rules
-├── fonts/                   # Custom fonts
-├── homelab/                 # Homelab infrastructure (K8s, Tofu)
-├── resume/                  # Resume site
-├── scout-for-lol/           # League of Legends match analysis
-├── sjer.red/                # Personal website
-├── starlight-karma-bot/     # Discord karma bot
-├── toolkit/                 # CLI developer tools (fetch, recall, pr, pd, bugsink, grafana)
-├── webring/                 # Webring component
-scripts/ci/                  # TypeScript CI pipeline generator
-archive/                     # Legacy projects (do not modify), including castle-casters, clauderon, glance, hn-enhancer, macos-cross-compiler, tips
+├── anki/                       # Anki flashcard tools
+├── astro-opengraph-images/     # Astro OpenGraph image generation (npm)
+├── better-skill-capped/        # Browser extension
+├── birmel/                     # Discord bot (VoltAgent + Claude AI)
+├── cooklang-for-obsidian/      # Cooklang Obsidian plugin
+├── cooklang-rich-preview/      # Cooklang rich link preview site
+├── discord-plays-pokemon/      # Discord Plays Pokemon (headless emulator + Go-Live stream)
+├── docs/                       # AI-maintained monorepo documentation
+├── dotfiles/                   # Dotfiles & shell config (chezmoi source)
+├── eslint-config/              # Shared ESLint rules (npm)
+├── fonts/                      # Custom fonts
+├── home-assistant/             # Type-safe Home Assistant client + codegen
+├── homelab/                    # Homelab infrastructure (K8s, cdk8s, Tofu)
+├── leetcode/                   # LeetCode practice
+├── llm-observability/          # LLM tracing/metrics package
+├── monarch/                    # Transaction categorization pipeline
+├── resume/                     # Resume site
+├── scout-for-lol/              # League of Legends match analysis (backend + web app + desktop)
+├── sjer.red/                   # Personal website
+├── starlight-karma-bot/        # Discord karma bot
+├── stocks-sjer-red/            # Stocks static site
+├── tasknotes-server/           # TaskNotes sync server
+├── tasknotes-types/            # TaskNotes shared types
+├── tasks-for-obsidian/         # React Native task app
+├── temporal/                   # Temporal workflows, schedules, and agent-task scheduler
+├── terraform-provider-asuswrt/ # Terraform provider for AsusWRT
+├── toolkit/                    # CLI developer tools (fetch, recall, pr, pd, bugsink, grafana)
+├── trmnl-dashboard/            # TRMNL e-ink dashboard
+├── webring/                    # Webring component (npm)
+scripts/ci/                     # TypeScript CI pipeline generator
+archive/                        # Legacy projects (do not modify), including bun-decompile, castle-casters, clauderon, glance, hn-enhancer, macos-cross-compiler, tips
 ```
 
 ## Documentation Discipline — Per Session
@@ -70,6 +82,23 @@ Before ending any session, append a section to whichever file you produced (log 
 ```
 
 If a session spans multiple files, append a Session Log to each. **Also restate the same Done / Remaining / Caveats inline as the final chat message** so the user sees it without opening the file.
+
+### Workflow friction (optional — only if you hit some)
+
+**This is entirely optional and never required.** Most sessions should add nothing here. Only record an item when fixing it would be a **medium/high quality-of-life improvement** for future sessions, or a **low QOL improvement that is also low effort** to fix. Skip anything that is high-effort for low payoff, or a one-off that won't recur. An empty or padded section is worse than none.
+
+When you do hit something worth it, append a `## Workflow Friction` section to your log (logs only, not plans). For each item, describe what was painful and the concrete improvement, with file paths/commands so it can be acted on cold. Examples of the kind of thing worth recording:
+
+- It was hard to verify a change on Discord — a dedicated test Discord account/app would have helped.
+- I couldn't easily access test/dev credentials, so I ran `op` many times (a cached/scoped test credential set would have avoided this).
+- The `toolkit` CLI was missing a command I needed, or a flag behaved misleadingly.
+- This doc/AGENTS.md/skill was wrong or misleading (say which, and what's actually true).
+- I expected X to be in some location but it wasn't there — it actually lives at `<path>`.
+- I wanted to verify UI changes but couldn't effectively access a browser.
+- Task X was slower because I didn't have Y.
+- I hit roadblock X because there was no documentation about Y.
+
+If the fix is substantial or belongs to a future session, also file it as a `packages/docs/todos/<kebab-id>.md` per **TODO Documentation** below and link it from the section.
 
 ### When a plan is finished
 
@@ -198,7 +227,7 @@ Always verify changes:
 
 ## Parallel Work — Use Worktrees
 
-When starting parallel feature work, hot-fixing while another change is in progress, or running multiple Claude agents in this repo concurrently, use `git worktree` to get an isolated working directory per branch.
+**Before your first edit on any non-trivial change, create a `git worktree` — don't edit in the main checkout.** "Non-trivial" = anything you'll open a PR for, anything touching more than one file, or any multi-step task. Only stay in the main checkout for a single-file, single-commit fix you won't PR (a typo, a one-line config tweak). **When unsure, make the worktree.** Each worktree gives a branch its own isolated working directory, so parallel work and concurrent agents never collide.
 
 ```bash
 # Create an isolated worktree on a new branch off main
@@ -213,9 +242,11 @@ bun run scripts/setup.ts
 
 After PR merge: `git worktree remove .claude/worktrees/<feature-slug>` and `git branch -d feature/<slug>` from the main checkout. Run `git worktree prune` to clean up stale entries.
 
-See the `worktree-workflow` skill for the full workflow. Trivial single-file edits don't need a worktree — those stay in the main checkout.
+See the `worktree-workflow` skill for the full workflow. `claude -w <slug>` creates and enters a worktree at launch; for Codex, create the worktree first and start it with `codex -C <dir>`. A `SessionStart` hook (`.claude/hooks/worktree-reminder.sh`, wired for both Claude Code and Codex) also reminds you whenever a session opens in the main checkout.
 
 **If you were started in a worktree, stay in that worktree.** Keep every command, search, and file operation scoped to the worktree path you were launched in. Do not `cd` into, read from, or write to the main checkout (the parent of the `.claude/worktrees/` directory you are in) — the worktree is a complete checkout with the same files, so there is no reason to reach outside it. The main checkout may hold the user's own in-progress work; only touch it when the user explicitly asks.
+
+**Never trust an absolute path from a subagent (Explore/Plan/general-purpose) report.** Subagents search the entire repo and report main-checkout paths like `/…/monorepo/packages/<x>/…` — NOT your worktree path. The two trees share an identical relative layout, so a `Write`/`Edit` to a main-checkout absolute path **silently succeeds in the wrong tree** (your `git status` stays clean and you won't notice until much later). Before writing, **rebase every path onto your worktree root**: take the `packages/…`-relative portion and prepend `.claude/worktrees/<name>/`. A reliable check: the absolute target path of any `Write`/`Edit` MUST contain `/.claude/worktrees/<name>/`. If it doesn't, you're about to write to main — stop and fix the path. Prefer worktree-relative paths over absolute ones for exactly this reason.
 
 ## Package Notes
 
@@ -270,3 +301,52 @@ toolkit recall reindex           # Re-scan all watched directories
 toolkit recall status            # Index stats, daemon health
 toolkit recall debug             # Full diagnostic check
 ```
+
+## PR Media & Demo Artifacts — `public.sjer.red`
+
+A reviewer should be able to **see** that a change works without checking out
+the branch. Attach the **lightest artifact that proves the behavior** — most
+PRs (pure logic, refactors, types, infra config, dep bumps) need nothing
+beyond the diff; never attach media reflexively. A single visual state is a
+screenshot, not a video.
+
+| Change type                       | Artifact                                                                         |
+| --------------------------------- | -------------------------------------------------------------------------------- |
+| UI tweak, single state            | Screenshot (before/after where it applies)                                       |
+| UI flow / interaction / animation | Short GIF (renders inline) or short video (link)                                 |
+| Brand-new feature                 | End-to-end demo — **one short video per scenario**, not one long tour            |
+| CLI / TUI program                 | asciinema recording of a real terminal: `asciinema rec demo.cast -c "<command>"` |
+| Web page / component              | Small static demo site uploaded as a directory (root `index.html` required)      |
+| Metrics / logging / tracing       | Screenshot of Grafana/Loki showing the **new** data flowing end-to-end           |
+| Anything else                     | Only when seeing it communicates faster than reading the diff                    |
+
+Conventions: one artifact per scenario, a one-line caption saying what to
+look at, before/after pairs when changing existing behavior.
+
+`gh` cannot upload media into a PR/issue body (drag-drop uses a private,
+session-only endpoint). Upload to the public artifact host and embed the
+returned URLs:
+
+```bash
+# Creds come from your AWS profile (~/.aws); no op wrapper needed.
+# Mix files, recordings, and demo-site directories in one call:
+toolkit pr asset <PR_NUMBER> ./before.png ./flow.mp4 ./demo.cast ./demo-site --profile seaweedfs --markdown
+```
+
+- Uploads to the `public-sjer-red` SeaweedFS bucket under `pr/assets/<PR_NUMBER>/`
+  and prints a `https://public.sjer.red/...` URL per argument (with
+  `--markdown`, ready-to-paste type-appropriate markdown).
+- **Embedding rules:** images/GIFs render inline via GitHub's image proxy
+  (`![file](url)`); GitHub **never embeds external video** — videos become
+  labeled links that play in a browser tab (served with a real video
+  content type); `.cast` uploads get a generated self-contained HTML player
+  page (`<name>.cast.html`) and the link points there; directories link to
+  their `index.html`.
+- Directories upload recursively to `pr/assets/<PR_NUMBER>/<dirname>/` and
+  must contain a root `index.html` (dotfiles are skipped).
+- Uses the standard AWS toolchain (`@aws-sdk/client-s3`, path-style): credentials,
+  `endpoint_url`, and region come from `~/.aws/credentials` / `~/.aws/config`.
+  Select the profile with `--profile <name>` or `AWS_PROFILE` (the `seaweedfs`
+  profile points at `https://seaweedfs.sjer.red`).
+- Objects under `pr/assets/` expire after 365 days; the homelab must be up for
+  the artifacts to load.

@@ -67,6 +67,9 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
 
   deployment.addContainer(
     withCommonProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
       image: image,
       securityContext: {
         readOnlyRootFilesystem: false,

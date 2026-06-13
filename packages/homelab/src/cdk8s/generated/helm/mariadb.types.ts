@@ -542,16 +542,15 @@ explicit_defaults_fo..."
   nodeAffinityPreset?: MariadbHelmValuesPrimaryNodeAffinityPreset;
   /**
    * Affinity for MariaDB primary pods assignment
-   *
-   * @default {}
    */
-  affinity?: MariadbHelmValuesPrimaryAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-   *
-   * @default {}
    */
-  nodeSelector?: MariadbHelmValuesPrimaryNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+   */
   tolerations?: unknown[];
   /**
    * ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
@@ -617,10 +616,11 @@ explicit_defaults_fo..."
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * @default {}
    */
-  resources?: MariadbHelmValuesPrimaryResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {"openssl":""}
    */
@@ -762,10 +762,6 @@ export type MariadbHelmValuesPrimaryNodeAffinityPreset = {
   values?: unknown[];
 };
 
-export type MariadbHelmValuesPrimaryAffinity = object;
-
-export type MariadbHelmValuesPrimaryNodeSelector = object;
-
 export type MariadbHelmValuesPrimaryPodSecurityContext = {
   /**
    * Enable security context for MariaDB primary pods
@@ -863,8 +859,6 @@ export type MariadbHelmValuesPrimaryContainerSecurityContextSeccompProfile = {
    */
   type?: string;
 };
-
-export type MariadbHelmValuesPrimaryResources = object;
 
 export type MariadbHelmValuesPrimaryFips = {
   /**
@@ -1304,16 +1298,15 @@ explicit_defaults_fo..."
   nodeAffinityPreset?: MariadbHelmValuesSecondaryNodeAffinityPreset;
   /**
    * Affinity for MariaDB secondary pods assignment
-   *
-   * @default {}
    */
-  affinity?: MariadbHelmValuesSecondaryAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * Ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
-   *
-   * @default {}
    */
-  nodeSelector?: MariadbHelmValuesSecondaryNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+   */
   tolerations?: unknown[];
   topologySpreadConstraints?: unknown[];
   /**
@@ -1378,10 +1371,11 @@ explicit_defaults_fo..."
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * @default {}
    */
-  resources?: MariadbHelmValuesSecondaryResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Configure extra options for MariaDB Secondary containers' liveness, readiness and startup probes
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes)
@@ -1523,10 +1517,6 @@ export type MariadbHelmValuesSecondaryNodeAffinityPreset = {
   values?: unknown[];
 };
 
-export type MariadbHelmValuesSecondaryAffinity = object;
-
-export type MariadbHelmValuesSecondaryNodeSelector = object;
-
 export type MariadbHelmValuesSecondaryPodSecurityContext = {
   /**
    * Enable security context for MariaDB secondary pods
@@ -1624,8 +1614,6 @@ export type MariadbHelmValuesSecondaryContainerSecurityContextSeccompProfile = {
    */
   type?: string;
 };
-
-export type MariadbHelmValuesSecondaryResources = object;
 
 export type MariadbHelmValuesSecondaryStartupProbe = {
   /**
@@ -2066,10 +2054,11 @@ export type MariadbHelmValuesPasswordUpdateJob = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * @default {}
    */
-  resources?: MariadbHelmValuesPasswordUpdateJobResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Custom livenessProbe that overrides the default one
    *
@@ -2246,8 +2235,6 @@ export type MariadbHelmValuesPasswordUpdateJobPodSecurityContext = {
   fsGroup?: number;
 };
 
-export type MariadbHelmValuesPasswordUpdateJobResources = object;
-
 export type MariadbHelmValuesPasswordUpdateJobCustomLivenessProbe = object;
 
 export type MariadbHelmValuesPasswordUpdateJobCustomReadinessProbe = object;
@@ -2300,10 +2287,11 @@ export type MariadbHelmValuesVolumePermissions = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * @default {}
    */
-  resources?: MariadbHelmValuesVolumePermissionsResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {"openssl":""}
    */
@@ -2341,8 +2329,6 @@ export type MariadbHelmValuesVolumePermissionsImage = {
   pullPolicy?: string;
   pullSecrets?: unknown[];
 };
-
-export type MariadbHelmValuesVolumePermissionsResources = object;
 
 export type MariadbHelmValuesVolumePermissionsFips = {
   /**
@@ -2452,10 +2438,11 @@ export type MariadbHelmValuesMetrics = {
    * requests:
    * limits:
    * memory: 1024Mi
-   *
-   * @default {}
    */
-  resources?: MariadbHelmValuesMetricsResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {"openssl":"","golang":"relaxed"}
    */
@@ -2630,8 +2617,6 @@ export type MariadbHelmValuesMetricsContainerSecurityContextSeccompProfile = {
    */
   type?: string;
 };
-
-export type MariadbHelmValuesMetricsResources = object;
 
 export type MariadbHelmValuesMetricsFips = {
   /**
@@ -3123,6 +3108,8 @@ export type MariadbHelmParameters = {
   "primary.nodeAffinityPreset.type"?: string;
   "primary.nodeAffinityPreset.key"?: string;
   "primary.nodeAffinityPreset.values"?: string;
+  "primary.affinity"?: string;
+  "primary.nodeSelector"?: string;
   "primary.tolerations"?: string;
   "primary.schedulerName"?: string;
   "primary.terminationGracePeriodSeconds"?: string;
@@ -3145,6 +3132,7 @@ export type MariadbHelmParameters = {
   "primary.containerSecurityContext.capabilities.drop"?: string;
   "primary.containerSecurityContext.seccompProfile.type"?: string;
   "primary.resourcesPreset"?: string;
+  "primary.resources"?: string;
   "primary.fips.openssl"?: string;
   "primary.startupProbe.enabled"?: string;
   "primary.startupProbe.initialDelaySeconds"?: string;
@@ -3207,6 +3195,8 @@ export type MariadbHelmParameters = {
   "secondary.nodeAffinityPreset.type"?: string;
   "secondary.nodeAffinityPreset.key"?: string;
   "secondary.nodeAffinityPreset.values"?: string;
+  "secondary.affinity"?: string;
+  "secondary.nodeSelector"?: string;
   "secondary.tolerations"?: string;
   "secondary.topologySpreadConstraints"?: string;
   "secondary.priorityClassName"?: string;
@@ -3229,6 +3219,7 @@ export type MariadbHelmParameters = {
   "secondary.containerSecurityContext.capabilities.drop"?: string;
   "secondary.containerSecurityContext.seccompProfile.type"?: string;
   "secondary.resourcesPreset"?: string;
+  "secondary.resources"?: string;
   "secondary.startupProbe.enabled"?: string;
   "secondary.startupProbe.initialDelaySeconds"?: string;
   "secondary.startupProbe.periodSeconds"?: string;
@@ -3309,6 +3300,7 @@ export type MariadbHelmParameters = {
   "passwordUpdateJob.extraVolumeMounts"?: string;
   "passwordUpdateJob.initContainers"?: string;
   "passwordUpdateJob.resourcesPreset"?: string;
+  "passwordUpdateJob.resources"?: string;
   "passwordUpdateJob.automountServiceAccountToken"?: string;
   "passwordUpdateJob.hostAliases"?: string;
   "passwordUpdateJob.fips.openssl"?: string;
@@ -3320,6 +3312,7 @@ export type MariadbHelmParameters = {
   "volumePermissions.image.pullPolicy"?: string;
   "volumePermissions.image.pullSecrets"?: string;
   "volumePermissions.resourcesPreset"?: string;
+  "volumePermissions.resources"?: string;
   "volumePermissions.fips.openssl"?: string;
   "metrics.enabled"?: string;
   "metrics.image.registry"?: string;
@@ -3345,6 +3338,7 @@ export type MariadbHelmParameters = {
   "metrics.containerSecurityContext.capabilities.drop"?: string;
   "metrics.containerSecurityContext.seccompProfile.type"?: string;
   "metrics.resourcesPreset"?: string;
+  "metrics.resources"?: string;
   "metrics.fips.openssl"?: string;
   "metrics.fips.golang"?: string;
   "metrics.livenessProbe.enabled"?: string;

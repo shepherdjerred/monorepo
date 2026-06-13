@@ -1,7 +1,8 @@
 import type { Chart } from "cdk8s";
-import { Duration } from "cdk8s";
+import { Duration, Size } from "cdk8s";
 import {
   ConfigMap,
+  Cpu,
   DaemonSet,
   Volume,
   ServiceAccount,
@@ -117,6 +118,17 @@ export async function createZfsZpoolMonitoring(chart: Chart) {
       readOnlyRootFilesystem: false,
       user: 0,
       group: 0,
+    },
+    // Without this, cdk8s-plus defaults to a 1 CPU / 512Mi request — 30d peak is <20m / <50Mi.
+    resources: {
+      cpu: {
+        request: Cpu.millis(50),
+        limit: Cpu.millis(200),
+      },
+      memory: {
+        request: Size.mebibytes(64),
+        limit: Size.mebibytes(256),
+      },
     },
   });
 

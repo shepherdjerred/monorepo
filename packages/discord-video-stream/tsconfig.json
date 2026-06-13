@@ -1,0 +1,19 @@
+{
+  "//": "Standalone tsconfig (does NOT extend ../../tsconfig.base.json). This is vendored third-party code; it is type-checked under the upstream library's own conventions (NodeNext ESM with .js specifiers), not the monorepo's extra-strict flags.",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "lib": ["ESNext"],
+    "types": ["node"],
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noEmit": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

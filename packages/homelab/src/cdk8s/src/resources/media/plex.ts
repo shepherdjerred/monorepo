@@ -65,6 +65,9 @@ export function createPlexDeployment(
 
   deployment.addContainer(
     withCommonProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
       image: `plexinc/pms-docker:${versions["plexinc/pms-docker"]}`,
       envVariables: {
         // Comma-separated list of URLs Plex advertises to clients as Direct
@@ -194,6 +197,9 @@ export function createPlexDeployment(
   // Add Prometheus exporter for Plex metrics
   deployment.addContainer(
     withCommonProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
       name: "plex-exporter",
       image: `ghcr.io/jsclayton/prometheus-plex-exporter:${versions["jsclayton/prometheus-plex-exporter"]}`,
       ports: [{ number: 9000, name: "metrics" }],

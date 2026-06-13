@@ -337,9 +337,16 @@ async function processThumbsDownComment(
     return;
   }
 
+  // Security: only the trusted repository owner's 👎 may dismiss a finding.
+  // The repo is public, so any third party can react to a bot review comment;
+  // without this reactor check anyone could silence a finding (e.g. security).
   const hasThumbsDown = reactions.some((r) => {
     const parsed = ReactionSchema.safeParse(r);
-    return parsed.success && parsed.data.content === "-1";
+    return (
+      parsed.success &&
+      parsed.data.content === "-1" &&
+      parsed.data.user?.login === ctx.owner
+    );
   });
   if (!hasThumbsDown) return;
 

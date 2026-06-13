@@ -29,6 +29,9 @@ const SUPPRESSION_PATTERNS = [
 
 // Files where suppression patterns are legitimate (config, the script itself, etc.)
 const EXCLUDED_FILES = [
+  // Vendored fork of @dank074/discord-video-stream — preserve upstream source as-is, including
+  // its @ts-expect-error comments (matched as a path prefix).
+  "packages/discord-video-stream/",
   "scripts/check-suppressions.ts",
   "scripts/quality-ratchet.sh",
   "CHANGELOG.md",
@@ -83,6 +86,16 @@ const EXCLUDED_FILES = [
   // The literal "x-access-token" is the username GitHub's HTTPS clone
   // expects when the password is a PAT; not a token-in-URL.
   "packages/temporal/src/lib/pr-review-workdir.ts",
+  // Same GIT_ASKPASS pattern as data-dragon.ts — emits "x-access-token" as the
+  // git username for the monthly pokeemerald.wasm refresh clone.
+  "packages/temporal/src/activities/pokeemerald-wasm.ts",
+  // Intentional: Sentry ErrorBoundary class types incompatible with React 19
+  // (same pattern as discord-plays-pokemon/packages/frontend/src/main.tsx)
+  "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx",
+  // Upstream vendored mupen64plus build script — `2>/dev/null` is part of the
+  // original build system's install detection logic; not subject to the Dagger/CI
+  // hygiene ban which is scoped to .dagger/src/ and scripts/ci/src/.
+  "packages/discord-plays-mario-kart/wasm-src/code/src/mupen64plus-core/tools/install_binary_bundle.sh",
 ];
 
 type Finding = {

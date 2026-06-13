@@ -297,6 +297,14 @@ const DAG_TASKS: DagTask[] = [
     warnOnly: false,
   },
   {
+    id: "discord-video-stream",
+    label: "discord-video-stream build (d.ts)",
+    cmd: ["bun", "run", "build"],
+    cwd: "packages/discord-video-stream",
+    deps: [],
+    warnOnly: false,
+  },
+  {
     id: "helm-types-build",
     label: "helm-types build",
     cmd: ["bun", "run", "build"],
@@ -326,6 +334,14 @@ const DAG_TASKS: DagTask[] = [
     cmd: ["bun", "run", "generate"],
     cwd: "packages/scout-for-lol",
     deps: ["birmel-prisma"],
+    warnOnly: false,
+  },
+  {
+    id: "mario-kart-prisma",
+    label: "discord-plays-mario-kart prisma",
+    cmd: ["bunx", "--trust", "prisma", "generate"],
+    cwd: "packages/discord-plays-mario-kart/packages/backend",
+    deps: [],
     warnOnly: false,
   },
 ];
@@ -413,6 +429,10 @@ async function verifySetup(): Promise<void> {
       path: "packages/astro-opengraph-images/dist/index.js",
     },
     {
+      label: "discord-video-stream d.ts",
+      path: "packages/discord-video-stream/dist/index.d.ts",
+    },
+    {
       label: "helm-types dist",
       path: "packages/homelab/src/helm-types/dist/cli.js",
     },
@@ -423,6 +443,10 @@ async function verifySetup(): Promise<void> {
     {
       label: "scout-for-lol prisma client",
       path: "packages/scout-for-lol/packages/backend/generated/prisma/client",
+    },
+    {
+      label: "discord-plays-mario-kart prisma client",
+      path: "packages/discord-plays-mario-kart/packages/backend/generated/prisma/client",
     },
   ];
 

@@ -1,17 +1,5 @@
 // Generated TypeScript types for intel-device-plugins-operator Helm chart
 
-export type InteldevicepluginsoperatorHelmValuesNodeSelector = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-  /**
-   * @default "amd64"
-   */
-  "kubernetes.io/arch"?: string;
-};
-
 export type InteldevicepluginsoperatorHelmValuesManager = {
   /**
    * This type allows arbitrary additional properties beyond those defined below.
@@ -60,44 +48,6 @@ export type InteldevicepluginsoperatorHelmValuesPrivateRegistry = {
   registrySecret?: string;
 };
 
-export type InteldevicepluginsoperatorHelmValuesResources = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-  /**
-   * @default {"cpu":"100m","memory":"120Mi"}
-   */
-  limits?: InteldevicepluginsoperatorHelmValuesResourcesLimits;
-  /**
-   * @default {"cpu":"100m","memory":"100Mi"}
-   */
-  requests?: InteldevicepluginsoperatorHelmValuesResourcesRequests;
-};
-
-export type InteldevicepluginsoperatorHelmValuesResourcesLimits = {
-  /**
-   * @default "100m"
-   */
-  cpu?: string;
-  /**
-   * @default "120Mi"
-   */
-  memory?: string;
-};
-
-export type InteldevicepluginsoperatorHelmValuesResourcesRequests = {
-  /**
-   * @default "100m"
-   */
-  cpu?: string;
-  /**
-   * @default "100Mi"
-   */
-  memory?: string;
-};
-
 export type InteldevicepluginsoperatorHelmValues = {
   /**
    * This type allows arbitrary additional properties beyond those defined below.
@@ -105,9 +55,9 @@ export type InteldevicepluginsoperatorHelmValues = {
    */
   [key: string]: unknown;
   /**
-   * @default {"kubernetes.io/arch":"amd64"}
+   * Kubernetes nodeSelector (arbitrary label key/value pairs)
    */
-  nodeSelector?: InteldevicepluginsoperatorHelmValuesNodeSelector;
+  nodeSelector?: Record<string, string>;
   /**
    * @default {"image":{"hub":"intel","tag":"","pullPolicy":"IfNotPresent"},"devices":null}
    */
@@ -117,14 +67,20 @@ export type InteldevicepluginsoperatorHelmValues = {
    */
   privateRegistry?: InteldevicepluginsoperatorHelmValuesPrivateRegistry;
   /**
-   * @default {"limits":{"cpu":"100m","memory":"120Mi"},"requests":{"cpu":"100m","memory":"100Mi"}}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: InteldevicepluginsoperatorHelmValuesResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
+  /**
+   * Kubernetes tolerations (standard Toleration objects)
+   */
   tolerations?: unknown[];
 };
 
 export type InteldevicepluginsoperatorHelmParameters = {
-  "nodeSelector.kubernetes.io/arch"?: string;
+  nodeSelector?: string;
   "manager.image.hub"?: string;
   "manager.image.tag"?: string;
   "manager.image.pullPolicy"?: string;
@@ -132,9 +88,6 @@ export type InteldevicepluginsoperatorHelmParameters = {
   "privateRegistry.registryUrl"?: string;
   "privateRegistry.registryUser"?: string;
   "privateRegistry.registrySecret"?: string;
-  "resources.limits.cpu"?: string;
-  "resources.limits.memory"?: string;
-  "resources.requests.cpu"?: string;
-  "resources.requests.memory"?: string;
+  resources?: string;
   tolerations?: string;
 };

@@ -57,16 +57,20 @@ import {
   buildObsidianHeadlessImageHelper,
   buildScoutImageHelper,
   buildDiscordPlaysPokemonImageHelper,
+  buildDiscordPlaysMarioKartImageHelper,
   buildTemporalWorkerImageHelper,
   buildTrmnlDashboardImageHelper,
   pushCaddyS3ProxyImageHelper,
   pushObsidianHeadlessImageHelper,
   pushScoutImageHelper,
   pushDiscordPlaysPokemonImageHelper,
+  pushDiscordPlaysMarioKartImageHelper,
   pushTemporalWorkerImageHelper,
   pushTrmnlDashboardImageHelper,
   buildCiBaseImageHelper,
   pushCiBaseImageHelper,
+  buildRedlibImageHelper,
+  pushRedlibImageHelper,
 } from "./image";
 
 import { goBuildHelper, goTestHelper, goLintHelper } from "./golang";
@@ -80,7 +84,6 @@ import { playwrightTestHelper, playwrightUpdateHelper } from "./playwright";
 import { ciAllHelper } from "./ci";
 
 import {
-  mkdocsBuildHelper,
   caddyfileValidateHelper,
   smokeTestHelper,
   smokeTestScoutForLolHelper,
@@ -90,6 +93,9 @@ import {
   smokeTestCaddyS3ProxyHelper,
   smokeTestObsidianHeadlessHelper,
   smokeTestDiscordPlaysPokemonHelper,
+  smokeTestStreambotHelper,
+  e2eStreambotHelper,
+  smokeTestDiscordPlaysMarioKartHelper,
   smokeTestTrmnlDashboardHelper,
 } from "./misc";
 
@@ -105,6 +111,8 @@ import {
   trivyScanHelper,
   daggerHygieneHelper,
   tunnelDnsCoverageHelper,
+  talosSchematicSyncHelper,
+  reactVersionSyncHelper,
   semgrepScanHelper,
   lockfileCheckHelper,
   envVarNamesHelper,
@@ -437,6 +445,33 @@ export class Monorepo {
     );
   }
 
+  /** Build the redlib image from upstream's glibc Dockerfile.ubuntu at a pinned commit. */
+  @func()
+  buildRedlibImage(
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildRedlibImageHelper(version, gitSha);
+  }
+
+  /** Push a redlib image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushRedlibImage(
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushRedlibImageHelper(
+      tags,
+      registryUsername,
+      registryPassword,
+      version,
+      gitSha,
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Workspace-monorepo image operations (scout, discord-plays-pokemon, better-skill-capped)
   // ---------------------------------------------------------------------------
@@ -508,6 +543,48 @@ export class Monorepo {
     gitSha: string = "unknown",
   ): Promise<string> {
     return pushDiscordPlaysPokemonImageHelper(
+      pkgDir,
+      tags,
+      registryUsername,
+      registryPassword,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Build the discord-plays-mario-kart backend image (Bun workspace + N64Wasm) */
+  @func()
+  buildDiscordPlaysMarioKartImage(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildDiscordPlaysMarioKartImageHelper(
+      pkgDir,
+      depNames,
+      depDirs,
+      version,
+      gitSha,
+    );
+  }
+
+  /** Push a discord-plays-mario-kart image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushDiscordPlaysMarioKartImage(
+    pkgDir: Directory,
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushDiscordPlaysMarioKartImageHelper(
       pkgDir,
       tags,
       registryUsername,
@@ -758,16 +835,6 @@ export class Monorepo {
   @func()
   async latexBuild(pkgDir: Directory): Promise<string> {
     return latexBuildHelper(pkgDir).stdout();
-  }
-
-  // ---------------------------------------------------------------------------
-  // MkDocs operations
-  // ---------------------------------------------------------------------------
-
-  /** Build MkDocs documentation site and return the built site/ directory */
-  @func()
-  mkdocsBuild(source: Directory): Directory {
-    return mkdocsBuildHelper(source);
   }
 
   // ---------------------------------------------------------------------------
@@ -1272,6 +1339,18 @@ export class Monorepo {
     return tunnelDnsCoverageHelper(source).stdout();
   }
 
+  /** Verify the pinned Talos installer matches what image.yaml produces. */
+  @func()
+  async talosSchematicSync(source: Directory): Promise<string> {
+    return talosSchematicSyncHelper(source).stdout();
+  }
+
+  /** Verify react/react-dom (+ @types) resolve to matching versions in every bun.lock. */
+  @func()
+  async reactVersionSync(source: Directory): Promise<string> {
+    return reactVersionSyncHelper(source).stdout();
+  }
+
   /** Semgrep auto-config scan against the repo. */
   @func()
   async semgrepScan(source: Directory): Promise<string> {
@@ -1408,6 +1487,48 @@ export class Monorepo {
     depDirs: Directory[] = [],
   ): Promise<string> {
     return smokeTestDiscordPlaysPokemonHelper(pkgDir, depNames, depDirs);
+  }
+
+  /** Smoke test streambot: build image, verify ffmpeg + yt-dlp, boot machine, expect auth failure */
+  @func()
+  async smokeTestStreambot(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return smokeTestStreambotHelper(pkgDir, depNames, depDirs);
+  }
+
+  /** E2E streambot with real creds: streams a generated clip into the voice channel (manual run). */
+  @func()
+  async e2eStreambot(
+    pkgDir: Directory,
+    botToken: Secret,
+    userToken: Secret,
+    guildId: string,
+    videoChannelId: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return e2eStreambotHelper(
+      pkgDir,
+      botToken,
+      userToken,
+      guildId,
+      videoChannelId,
+      depNames,
+      depDirs,
+    );
+  }
+
+  /** Smoke test discord-plays-mario-kart: build production image (incl. wasm stage), boots app, expects Discord auth failure */
+  @func()
+  async smokeTestDiscordPlaysMarioKart(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return smokeTestDiscordPlaysMarioKartHelper(pkgDir, depNames, depDirs);
   }
 
   /** Smoke test trmnl-dashboard: builds image, boots Bun.serve, killed at timeout. */

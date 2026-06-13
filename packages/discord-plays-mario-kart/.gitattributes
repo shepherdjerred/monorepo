@@ -1,0 +1,14 @@
+# Vendored EmulatorJS build output: keep out of GitHub language stats + diffs.
+packages/frontend/public/emulatorjs/ linguist-generated=true
+
+# Vendored N64Wasm core: code/ is byte-pristine upstream (nbarkhina/N64Wasm; see
+# wasm-src/PATCHES.md). Mark ONLY the upstream tree as vendored so it drops out of
+# GitHub language stats while staying searchable/diffable. Our own files under
+# wasm-src/ (patches/, PATCHES.md, vendor-excludes.txt, run.reference.mjs) stay
+# attributed to us.
+wasm-src/code/** linguist-vendored=true
+# Vendored tree is uniformly LF text. Overrides the repo-root `*.vcxproj eol=crlf`
+# rule for this subtree so re-vendoring (scripts/vendor-n64wasm.sh writes LF) leaves
+# a clean working tree instead of CRLF eol churn. Kept as text (not `-text`) so the
+# C/C++ stays diffable and searchable.
+wasm-src/code/** text=auto eol=lf

@@ -24,6 +24,8 @@ import { createMcRouterApp } from "@shepherdjerred/homelab/cdk8s/src/resources/a
 import { createLokiApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/loki.ts";
 import { createPromtailApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/promtail.ts";
 import { createTempoApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/tempo.ts";
+import { createPyroscopeApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/pyroscope.ts";
+import { createAlloyApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/alloy.ts";
 import { Namespace } from "cdk8s-plus-31";
 import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import { createPriorityClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
@@ -50,7 +52,9 @@ import { createPostalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/arg
 import { createSyncthingApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/syncthing.ts";
 import { createGolinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/golink.ts";
 import { createFreshrssApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/freshrss.ts";
+import { createPinchtabApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/pinchtab.ts";
 import { createPokemonApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/pokemon.ts";
+import { createMarioKartApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/mario-kart.ts";
 import { createGickupApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/gickup.ts";
 import { createGrafanaDbApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/grafana-db.ts";
 import { createS3StaticSitesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/s3-static-sites.ts";
@@ -65,7 +69,6 @@ import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { createDaggerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/dagger.ts";
 import { createTemporalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/temporal.ts";
 import { createTrmnlDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/trmnl-dashboard.ts";
-import { createStreambotApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/streambot.ts";
 
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
@@ -120,13 +123,18 @@ export async function createAppsChart(app: App) {
   createLokiApp(chart);
   createPromtailApp(chart);
   createTempoApp(chart);
+  createPyroscopeApp(chart);
+  createAlloyApp(chart);
   createBuildkiteApp(chart);
   createKueueApp(chart);
   createKueueConfig(chart);
-  // Caps i9-13900K package power to reduce radiated heat into the physically
-  // adjacent NVMe slot. nvme1 Composite has crossed its 81.85 °C warning
-  // threshold; NAND has hit 103.85 °C. See packages/docs/logs/2026-05-24_torvalds-thermal-investigation.md.
-  createCpuPowerCap(chart, { pl1Watts: 95, pl2Watts: 140 });
+  // Enforces Intel stock package power limits (PL1 125 W / PL2 253 W). ASUS
+  // firmware defaults PL1 to unlimited, which drove sustained 100 °C TJMax and
+  // overheated the adjacent M.2 slots before the AIO cooler was installed
+  // (2026-05-26). The original emergency cap was 95/140; raised to stock once
+  // the AIO + per-drive NVMe cooling were verified.
+  // See packages/docs/logs/2026-05-24_torvalds-thermal-investigation.md.
+  createCpuPowerCap(chart, { pl1Watts: 125, pl2Watts: 253 });
   createVeleroApp(chart);
   createKyvernoApp(chart);
   createKyvernoPoliciesApp(chart);
@@ -160,7 +168,9 @@ export async function createAppsChart(app: App) {
   createSyncthingApp(chart);
   createGolinkApp(chart);
   createFreshrssApp(chart);
+  createPinchtabApp(chart);
   createPokemonApp(chart);
+  createMarioKartApp(chart);
   createGickupApp(chart);
   createGrafanaDbApp(chart);
   createMcpGatewayApp(chart);
@@ -169,7 +179,6 @@ export async function createAppsChart(app: App) {
   createDaggerApp(chart);
   createTemporalApp(chart);
   createTrmnlDashboardApp(chart);
-  createStreambotApp(chart);
 
   // ArgoCD AppProject
   createProject(chart);

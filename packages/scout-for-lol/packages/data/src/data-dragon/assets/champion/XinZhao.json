@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.11.1",
+  "version": "16.12.1",
   "data": {
     "XinZhao": {
       "id": "XinZhao",
@@ -565,13 +565,11 @@
             "label": [
               "Slash Damage",
               "Thrust Damage",
-              "@AbilityResourceName@ Cost",
               "Cooldown"
             ],
             "effect": [
               "{{ slashbasedamage }} -> {{ slashbasedamageNL }}",
               "{{ thrustbasedamage }} -> {{ thrustbasedamageNL }}",
-              "{{ cost }} -> {{ costNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -586,12 +584,12 @@
           "cooldownBurn": "12/11/10/9/8",
           "cost": [
             60,
-            55,
-            50,
-            45,
-            40
+            60,
+            60,
+            60,
+            60
           ],
-          "costBurn": "60/55/50/45/40",
+          "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
@@ -726,13 +724,13 @@
           ],
           "cooldownBurn": "11",
           "cost": [
-            50,
-            50,
-            50,
-            50,
-            50
+            60,
+            60,
+            60,
+            60,
+            60
           ],
-          "costBurn": "50",
+          "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,

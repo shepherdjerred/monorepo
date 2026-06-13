@@ -6,11 +6,18 @@
  * fetches source server-side, content-addressed by SHA — the BK pod itself
  * writes no source to disk.
  *
- * `plainStep` and the `buildkite-git-mirrors` mount were removed in PR2 of
- * the BK-pressure reduction plan
+ * The one exception is `greptileReviewStep`, a `plainStep` that runs repo
+ * scripts + `buildkite-agent` on the agent (so it keeps the agent-side
+ * checkout / `buildkite-git-mirrors` mount via `k8sPluginWithCheckout`). All
+ * other steps are Dagger git-URL refs per the BK-pressure reduction plan
  * (`packages/docs/plans/2026-05-31_bk-dagger-git-url-refactor.md`).
  */
-import { daggerStep, REPO_GIT_REF, DAGGER_CALL } from "../lib/buildkite.ts";
+import {
+  daggerStep,
+  plainStep,
+  REPO_GIT_REF,
+  DAGGER_CALL,
+} from "../lib/buildkite.ts";
 import type { BuildkiteStep } from "../lib/types.ts";
 
 /**
@@ -139,6 +146,36 @@ export function tunnelDnsCoverageStep(): BuildkiteStep {
   });
 }
 
+/**
+ * Verifies the pinned Talos installer in `patches/image.yaml` matches what the
+ * `image.yaml` schematic produces (queries the Image Factory). Drift means the
+ * node boots a stale schematic — e.g. silently dropping `lockdown=integrity`,
+ * which breaks eBPF profiling. See the 2026-06-13 talos/k8s upgrade log.
+ */
+export function talosSchematicSyncStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":talos: Talos Schematic Sync",
+    key: "talos-schematic-sync",
+    daggerCmd: `${DAGGER_CALL} talos-schematic-sync --source ${REPO_GIT_REF}`,
+    timeoutMinutes: 10,
+  });
+}
+
+/**
+ * Verifies `react`/`react-dom` (and their `@types`) resolve to matching
+ * versions in every `bun.lock`. A skew throws "Incompatible React versions" at
+ * runtime — invisible to typecheck/build/test. See the mariokart.sjer.red
+ * post-mortem in packages/docs/plans.
+ */
+export function reactVersionSyncStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":react: React Version Sync",
+    key: "react-version-sync",
+    daggerCmd: `${DAGGER_CALL} react-version-sync --source ${REPO_GIT_REF}`,
+    timeoutMinutes: 10,
+  });
+}
+
 export function semgrepScanStep(): BuildkiteStep {
   return daggerStep({
     label: ":mag: Semgrep Scan",
@@ -228,6 +265,28 @@ export function largeFileStep(): BuildkiteStep {
     daggerCmd: `${DAGGER_CALL} large-file-check --source ${REPO_GIT_REF}`,
     timeoutMinutes: 5,
     softFail: true,
+  });
+}
+
+/**
+ * PR-only gate: waits for Greptile to finish reviewing the head commit, then
+ * passes only once every Greptile review comment on the latest revision is
+ * resolved. Fails fast (with the list of unresolved comments) otherwise — see
+ * `scripts/ci/src/wait-for-greptile.ts`. Greptile's own status check is NOT
+ * sufficient: it goes green when the review completes, regardless of whether
+ * the comments were addressed.
+ */
+export function greptileReviewStep(): BuildkiteStep {
+  return plainStep({
+    label: ":mag: Greptile Review",
+    key: "greptile-review",
+    command: [
+      'echo "+++ :mag: Greptile Review"',
+      'export GH_TOKEN="$(bun packages/temporal/src/lib/github-app-token.ts)"',
+      'test -n "$$GH_TOKEN"',
+      "bun scripts/ci/src/wait-for-greptile.ts",
+    ].join(" && "),
+    timeoutMinutes: 25,
   });
 }
 
