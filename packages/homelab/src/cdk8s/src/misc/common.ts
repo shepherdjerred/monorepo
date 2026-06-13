@@ -10,11 +10,23 @@ const commonEnv = {
   TZ: EnvValue.fromValue("America/Los_Angeles"),
 };
 
+// Deliberately NO `resources` here: a hidden `resources: {}` made every
+// container that didn't override it silently BestEffort. Each call site must
+// declare its own resources (enforced by the require-container-resources
+// ESLint rule); `resources: {}` at a call site is the visible BestEffort
+// opt-in.
 export const commonProps: Partial<ContainerProps> = {
   envVariables: commonEnv,
-  resources: {},
 };
 
+/**
+ * Merge common container props with caller-supplied props.
+ *
+ * NOTE: This function name (`withCommonProps`) is registered in the
+ * `PROPS_WRAPPERS` set in `packages/eslint-config/src/rules/require-container-resources.ts`.
+ * If you rename this function or add a new wrapper, update that set too so the
+ * ESLint rule can look through the wrapper to find the props literal.
+ */
 export function withCommonProps(props: ContainerProps): ContainerProps {
   return merge({}, commonProps, props);
 }

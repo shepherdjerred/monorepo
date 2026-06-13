@@ -18,6 +18,7 @@ import {
   EMSCRIPTEN_IMAGE,
   GH_CLI_VERSION,
   GITHUB_MCP_SERVER_VERSION,
+  HELM_IMAGE,
   KUBECTL_VERSION,
   OBSIDIAN_HEADLESS_BASE_IMAGE,
   REDLIB_SOURCE_REF,
@@ -77,6 +78,14 @@ function withEditorClis(container: Container): Container {
       `@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}`,
     ])
     .withExec(["claude", "--version"])
+    .withExec(["bun", "add", "-g", `@openai/codex@${CODEX_CLI_VERSION}`])
+    .withExec(["codex", "--version"]);
+}
+
+/** Install only the Codex CLI for runtime agent loops such as Pokemon goal mode. */
+function withCodexCli(container: Container): Container {
+  return container
+    .withEnvVariable("BUN_INSTALL", "/usr/local")
     .withExec(["bun", "add", "-g", `@openai/codex@${CODEX_CLI_VERSION}`])
     .withExec(["codex", "--version"]);
 }
@@ -370,6 +379,19 @@ function withGithubMcpServer(container: Container): Container {
       ].join(" && "),
     ])
     .withExec(["github-mcp-server", "--version"]);
+}
+
+/**
+ * Install the helm CLI. Required by the helm-types-weekly-refresh workflow,
+ * which runs `bun run generate-helm-types` — that shells out to `helm pull`
+ * (incl. `helm pull oci://...`) for every chart in versions.ts. Copied from the
+ * pinned, SHA-addressed HELM_IMAGE (same source the CI test harness uses).
+ */
+function withHelm(container: Container): Container {
+  const helmBinary = dag.container().from(HELM_IMAGE).file("/usr/bin/helm");
+  return container
+    .withFile("/usr/local/bin/helm", helmBinary)
+    .withExec(["helm", "version", "--short"]);
 }
 
 /**
@@ -852,8 +874,12 @@ export function buildTemporalWorkerImageHelper(
   // The homelab-audit-daily workflow runs `claude -p` against the audit
   // runbook, which invokes talosctl / tofu / argocd / velero — see
   // `withHomelabAuditClis`.
-  container = withHomelabAuditClis(
-    withGithubMcpServer(withKubectl(withEditorClis(container))),
+  // The helm-types-weekly-refresh workflow shells out to `helm pull` to
+  // regenerate the cdk8s chart types — see `withHelm`.
+  container = withHelm(
+    withHomelabAuditClis(
+      withGithubMcpServer(withKubectl(withEditorClis(container))),
+    ),
   );
 
   container = container
@@ -1005,7 +1031,7 @@ export function buildDiscordPlaysPokemonImageHelper(
   // ffmpeg + libvips for discord-video-stream (fluent-ffmpeg encode path + sharp)
   // plus the Intel VAAPI stack so ffmpeg can hardware-encode on the iGPU. No
   // browser/desktop — this is a headless Bun service.
-  container = withDiscordPlaysRuntime(container)
+  container = withCodexCli(withDiscordPlaysRuntime(container))
     .withWorkdir("/workspace")
     .withDirectory(innerRoot, pkgDir, {
       exclude: excludes,
@@ -1031,6 +1057,15 @@ export function buildDiscordPlaysPokemonImageHelper(
       .withExec(["bun", "install", "--frozen-lockfile"])
       .withWorkdir(`${innerRoot}/packages/backend`)
       .withExec(["bun", "install", "--frozen-lockfile"])
+      .withExec([
+        "install",
+        "-D",
+        "-m",
+        "0755",
+        `${innerRoot}/packages/backend/src/goal/pokemonctl.ts`,
+        "/usr/local/bin/pokemonctl",
+      ])
+      .withExec(["pokemonctl", "--help"])
       // Build the web UI served by the backend web server (web.assets).
       .withWorkdir(`${innerRoot}/packages/frontend`)
       .withExec(["bun", "run", "build"])

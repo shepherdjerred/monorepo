@@ -3,6 +3,7 @@ import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
 /**
  * Grafana Pyroscope — continuous-profiling store. Profiles are pushed by the
@@ -15,7 +16,7 @@ import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/stora
  * are wired into Grafana as a datasource (grafana-values.ts).
  */
 export function createPyroscopeApp(chart: Chart) {
-  const pyroscopeValues = {
+  const pyroscopeValues: HelmValuesForChart<"pyroscope"> = {
     pyroscope: {
       // Default chart mode is the all-in-one "pyroscope" target — keep a single
       // replica for homelab scale.
@@ -33,8 +34,12 @@ export function createPyroscopeApp(chart: Chart) {
         },
       },
     },
-    // No separate agent — profiles arrive from the Alloy eBPF DaemonSet.
-    "alloy-stack": {
+    // No bundled agent — profiles arrive from our dedicated Alloy eBPF
+    // DaemonSet (alloy.ts). The chart's subchart key is `alloy`, not
+    // `alloy-stack`; the old key was a silent no-op, so the chart's default
+    // (alloy.enabled = true) left a redundant `pyroscope-alloy-0` StatefulSet
+    // running. Typing this values object surfaced the typo.
+    alloy: {
       enabled: false,
     },
   };

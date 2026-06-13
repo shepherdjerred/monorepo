@@ -18,6 +18,7 @@ import { preferStructuredLogging } from "./prefer-structured-logging.js";
 import { noShadcnThemeTokens } from "./no-shadcn-theme-tokens.js";
 import { knipUnused } from "./knip-unused.js";
 import { noCodeDuplication } from "./jscpd-duplication.js";
+import { requireContainerResources } from "./require-container-resources.js";
 
 /**
  * Custom ESLint plugin with all rules
@@ -44,6 +45,7 @@ export const customRulesPlugin = {
     "no-shadcn-theme-tokens": noShadcnThemeTokens,
     "knip-unused": knipUnused,
     "no-code-duplication": noCodeDuplication,
+    "require-container-resources": requireContainerResources,
   },
 };
 
@@ -69,4 +71,5 @@ export {
   noShadcnThemeTokens,
   knipUnused,
   noCodeDuplication,
+  requireContainerResources,
 };

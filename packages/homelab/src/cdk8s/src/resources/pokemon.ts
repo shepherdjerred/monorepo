@@ -33,7 +33,7 @@ export function createPokemonDeployment(chart: Chart) {
   const GID = 1000;
 
   const deployment = new Deployment(chart, "pokemon", {
-    replicas: 0,
+    replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     securityContext: {
       fsGroup: GID,
@@ -82,6 +82,18 @@ export function createPokemonDeployment(chart: Chart) {
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue("discord-plays-pokemon"),
         OTLP_ENDPOINT: EnvValue.fromValue(
           "http://tempo.tempo.svc.cluster.local:4318",
+        ),
+        CODEX_API_KEY: EnvValue.fromSecretValue(
+          { secret, key: "CODEX_API_KEY" },
+          { optional: true },
+        ),
+        CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue(
+          { secret, key: "CODEX_ACCESS_TOKEN" },
+          { optional: true },
+        ),
+        OPENAI_API_KEY: EnvValue.fromSecretValue(
+          { secret, key: "OPENAI_API_KEY" },
+          { optional: true },
         ),
       },
       securityContext: {

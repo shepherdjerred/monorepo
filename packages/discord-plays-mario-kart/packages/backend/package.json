@@ -29,7 +29,6 @@
     "db:push": "bunx prisma db push"
   },
   "dependencies": {
-    "@shepherdjerred/discord-video-stream": "file:../../../discord-video-stream",
     "@discord-plays-mario-kart/common": "file:../common",
     "@libsql/client": "0.17.3",
     "@opentelemetry/api": "^1.9.1",
@@ -42,6 +41,8 @@
     "@prisma/adapter-libsql": "7.8.0",
     "@prisma/client": "^7.8.0",
     "@prisma/client-runtime-utils": "7.8.0",
+    "@shepherdjerred/discord-stream-lifecycle": "file:../../../discord-stream-lifecycle",
+    "@shepherdjerred/discord-video-stream": "file:../../../discord-video-stream",
     "@sentry/bun": "^10.0.0",
     "cors": "^2.8.5",
     "discord.js": "^14.26.4",
@@ -55,6 +56,7 @@
     "socket.io": "^4.8.1",
     "ts-pattern": "^5.7.0",
     "winston": "^3.17.0",
+    "xstate": "^5.32.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -19,18 +19,18 @@ export function createOnePasswordApp(chart: Chart) {
       credentialsName: "op-credentials",
       credentialsKey: "1password-credentials.json",
       // Chart defaults each container to a 200m request; 30d pod peak is ~30m / ~30Mi.
-      // The generated api type only exposes a cpu request (mirrors chart defaults).
       api: {
         resources: {
           requests: {
-            cpu: 0.025,
+            cpu: "25m",
+            memory: "64Mi",
           },
         },
       },
       sync: {
         resources: {
           requests: {
-            cpu: 0.025,
+            cpu: "25m",
             memory: "64Mi",
           },
         },

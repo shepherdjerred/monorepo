@@ -32,18 +32,39 @@ Conclusion on load: load avg of ~46 looks alarming but actual CPU utilization is
 
 The many buildkite `Failed`-phase pods are terminated ephemeral CI job pods — normal churn, not a problem.
 
+## NVMe deep-dive + metric-stability fix (follow-up in same session)
+
+User pushed back: "are we 100% sure NVMe is OK?" — historically they struggle under CI load.
+
+- Drives: 2× **Samsung 990 PRO 4TB** (NVMe) + 6× Samsung 870 EVO 4TB (SATA, ZFS pool). Crit temp 84.85°C.
+- **~6 days ago (≈06-07)** both NVMe hit **93.85°C (nvme0) / 95.85°C (nvme1)** — ~10°C over critical — for ~3 min / ~56 min respectively; CPU pkg hit 84°C same day → whole-box heat-soak under heavy CI. Real thermal event, matches the user's memory.
+- **Resolved**: user added active+passive NVMe cooling **this week**. Since then 47–64°C even under load. Recent data = the fix working.
+- SMART health (via the cluster's own collector — see below) is clean: wear 10%/16%, spare 100%, 0 media errors, 0 critical warnings, firmware `4B2QJXD7` (past the buggy 990 PRO firmware). The 06-07 excursion left no measurable damage.
+
+**Metric stability fix → PR #1154** (`fix(homelab): identify SMART/NVMe metrics by serial, not unstable /dev path`):
+
+- User noted metrics are keyed by the dev path, unstable across reboots. Confirmed: the cluster emits SMART itself via two node-exporter textfile collectors — `smartmon.sh` (`smartmon_*`, `disk=/dev/nvme0`) and `nvme_metrics.py` (`nvme_*`, `device=nvme0n1`). Both key every per-drive metric on the unstable device path; stable `serial`/`model` live only on the `*_device_info` metrics.
+- Fixed the **consumers** (idiomatic info-metric join, no collector change): `nvme.ts` + `smartctl.ts` alert rules and the `smartctl-dashboard.ts`/`smartctl-panels.ts` Grafana dashboard now `group_left`-join `*_device_info` and key on `serial`/`serial_number`.
+- Also fixed `smartctl.ts` alerts that referenced **non-existent** labels (`{{ $labels.device }}`, `{{ $labels.model_name }}` → rendered blank) and a broken NVMe/SATA split (`device=~".*/nvme.*"` matched nothing; negation matched everything) → now uses the real `type` label; removed dead duplicate `SmartNvmeTemperature{High,Critical}`.
+- Verified: typecheck, eslint, `bun test` (252 pass), cdk8s synth + helm lint all green; joined queries return serial-labeled series live.
+
 ## Session Log — 2026-06-13
 
 ### Done
 
 - Pulled node CPU/mem/load/temps/disk/uptime + top pod consumers + pod health via `toolkit grafana query` (Prometheus default datasource).
 - Identified 3 crashlooping/misconfigured workloads (mario-kart, redlib, mcp-gateway).
+- NVMe thermal-history deep-dive; confirmed the 06-07 over-critical event and that the user's cooling mod resolved it; verified SMART health clean.
+- **Shipped PR #1154** — serial-stable SMART/NVMe alert rules + Grafana dashboard (info-metric join), plus fixes to blank-label annotations and the broken NVMe/SATA temp split. Follow-up commit also taught `smartmon.sh` to populate `device_model` for NVMe (parses `Model Number`) and fixed a GNU-only `sed \+` that no-ops on BSD/macOS (left parsed values padded + broke the health check).
 
 ### Remaining
 
-- User only asked for a check-in (read-only). No remediation performed. Next steps if desired: `kubectl -n mcp-gateway describe pod` to find the missing config key; inspect mario-kart + redlib crash logs (Loki: `{namespace="mario-kart"}` / `{namespace="redlib"}`).
+- 3 workload issues from the health check are unremediated (user only asked for a check-in): mcp-gateway `CreateContainerConfigError` (likely missing secret/configMap key — `kubectl -n mcp-gateway describe pod`), mario-kart + redlib crashloops (Loki `{namespace="mario-kart"}` / `{namespace="redlib"}`).
+- PR #1154 needs review/merge → ArgoCD sync before the new dashboard/alerts are live.
 
 ### Caveats
 
 - Node rebooted ~88 min ago; some restart counts may partly reflect post-reboot churn, but redlib's 44–46 lifetime restarts and mario-kart's active CrashLoopBackOff are genuine crashloops, not just reboot noise.
 - nct6775 motherboard sensors report several bogus values; only coretemp/nvme/drive temps are trustworthy.
+- The earlier `node_hwmon_temp_celsius{chip="nvme_nvme0"}` readings (node-exporter built-in) use the same unstable enumeration label; cross-reboot per-drive attribution there is uncertain. The cluster's own `nvme_*`/`smartmon_*` collectors (now serial-joined via PR #1154) are the canonical source.
+- Worktree friction: fresh worktree's `packages/homelab/` root lacked local eslint+jiti, so the `eslint-homelab` pre-commit hook (`bunx eslint` from that root) fell back to global eslint 10.4.1 and failed on jiti. Fix: `bun install` in `packages/homelab/` (root, not just `src/cdk8s`). `setup.ts` only installs the subpackages.

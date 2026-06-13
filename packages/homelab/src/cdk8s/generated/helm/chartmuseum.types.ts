@@ -293,8 +293,6 @@ export type ChartmuseumHelmValuesServiceMonitorLabels = {
   [key: string]: unknown;
 };
 
-export type ChartmuseumHelmValuesResources = object;
-
 export type ChartmuseumHelmValuesProbes = {
   /**
    * @default {...} (5 keys)
@@ -415,10 +413,6 @@ export type ChartmuseumHelmValuesSecurityContext = {
 };
 
 export type ChartmuseumHelmValuesContainerSecurityContext = object;
-
-export type ChartmuseumHelmValuesNodeSelector = object;
-
-export type ChartmuseumHelmValuesAffinity = object;
 
 export type ChartmuseumHelmValuesPersistence = {
   /**
@@ -700,9 +694,12 @@ export type ChartmuseumHelmValues = {
    */
   serviceMonitor?: ChartmuseumHelmValuesServiceMonitor;
   /**
-   * @default {}
+   * Kubernetes container resources (standard ResourceRequirements: arbitrary resource names, string or numeric quantities)
    */
-  resources?: ChartmuseumHelmValuesResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * @default {...} (4 keys)
    */
@@ -729,14 +726,17 @@ export type ChartmuseumHelmValues = {
    */
   priorityClassName?: string;
   /**
-   * @default {}
+   * Kubernetes nodeSelector (arbitrary label key/value pairs)
    */
-  nodeSelector?: ChartmuseumHelmValuesNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Kubernetes tolerations (standard Toleration objects)
+   */
   tolerations?: unknown[];
   /**
-   * @default {}
+   * Kubernetes affinity (standard Affinity object)
    */
-  affinity?: ChartmuseumHelmValuesAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * @default {...} (6 keys)
    */
@@ -831,6 +831,7 @@ export type ChartmuseumHelmParameters = {
   "service.nodePort"?: string;
   "serviceMonitor.enabled"?: string;
   "serviceMonitor.metricsPath"?: string;
+  resources?: string;
   "probes.liveness.initialDelaySeconds"?: string;
   "probes.liveness.periodSeconds"?: string;
   "probes.liveness.timeoutSeconds"?: string;
@@ -849,7 +850,9 @@ export type ChartmuseumHelmParameters = {
   "securityContext.enabled"?: string;
   "securityContext.fsGroup"?: string;
   priorityClassName?: string;
+  nodeSelector?: string;
   tolerations?: string;
+  affinity?: string;
   "persistence.enabled"?: string;
   "persistence.accessMode"?: string;
   "persistence.size"?: string;

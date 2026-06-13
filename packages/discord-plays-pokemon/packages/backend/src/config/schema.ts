@@ -1,6 +1,40 @@
 import { z } from "zod";
 
 export type Config = z.infer<typeof ConfigSchema>;
+
+const GoalConfigSchema = z
+  .strictObject({
+    enabled: z.boolean().default(false),
+    model: z.string().min(1).default("gpt-5.4-mini"),
+    codex_binary: z.string().min(1).default("codex"),
+    runtime_directory: z.string().min(1).default("."),
+    screenshot_dir: z.string().min(1).default("goal-screenshots"),
+    state_path: z.string().min(1).default("goal-state.json"),
+    control_host: z.string().min(1).default("127.0.0.1"),
+    control_port: z.number().int().min(1024).max(49_151).default(8082),
+    max_runtime_minutes: z.number().int().positive().max(30).default(30),
+    lock_minutes: z.number().int().positive().max(30).default(5),
+    progress_update_interval_seconds: z
+      .number()
+      .int()
+      .positive()
+      .max(600)
+      .default(60),
+  })
+  .default({
+    enabled: false,
+    model: "gpt-5.4-mini",
+    codex_binary: "codex",
+    runtime_directory: ".",
+    screenshot_dir: "goal-screenshots",
+    state_path: "goal-state.json",
+    control_host: "127.0.0.1",
+    control_port: 8082,
+    max_runtime_minutes: 30,
+    lock_minutes: 5,
+    progress_update_interval_seconds: 60,
+  });
+
 export const ConfigSchema = z.strictObject({
   server_id: z
     .string()
@@ -93,6 +127,7 @@ export const ConfigSchema = z.strictObject({
     wasm_path: z.string().min(1),
     // Optional path for the persisted 128 KiB flash save.
     save_path: z.string().min(1).optional(),
+    goal: GoalConfigSchema,
     commands: z.strictObject({
       enabled: z.boolean(),
       channel_id: z

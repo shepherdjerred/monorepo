@@ -15,7 +15,8 @@ tofu/
 │   ├── backend.tf       # S3 state backend (SeaweedFS)
 │   ├── providers.tf     # GitHub provider ~> 6.0
 │   ├── variables.tf     # Input variables
-│   └── repos.tf         # Repository definitions
+│   ├── repos.tf         # Repository definitions
+│   └── rulesets.tf      # Branch protection rulesets
 └── seaweedfs/           # SeaweedFS S3 bucket management
     ├── backend.tf       # S3 state backend (SeaweedFS)
     ├── providers.tf     # AWS provider ~> 5.0 (custom S3 endpoint)
@@ -77,7 +78,13 @@ Domains: `scout-for-lol.com`, `discord-plays-pokemon.com`, `better-skill-capped.
 
 ### GitHub
 
-The `homelab` repository settings: public visibility, squash-only merges, auto-delete branches on merge.
+Repository settings for `shepherdjerred/monorepo` and the `shepherdjerred` profile-README repo (`repos.tf`):
+public visibility, auto-delete branches on merge, auto-merge enabled. The `monorepo` repo is **squash-only**
+(`allow_squash_merge = true`, merge commits and rebase disabled), with the squashed commit's title taken from
+the PR title and its body from the list of squashed commits.
+
+The `monorepo` default-branch ruleset (`rulesets.tf`) enforces linear history, blocks deletion and
+non-fast-forward pushes, and requires the BuildKite CI-complete and Greptile review status checks.
 
 ### SeaweedFS
 

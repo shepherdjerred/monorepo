@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { PassThrough } from "node:stream";
 import { createActor, waitFor } from "xstate";
-import {
-  createStreamMachine,
-  type EncoderHandles,
-  type StreamMachineDeps,
-} from "./stream-machine.ts";
+import { createRawGoLiveMachine } from "@shepherdjerred/discord-stream-lifecycle";
+import type {
+  EncoderHandles,
+  RawGoLiveDeps,
+} from "@shepherdjerred/discord-stream-lifecycle/types.ts";
 
 // Resolves with a sentinel `true` rather than `void` — the repo's
 // no-invalid-void-type rule rejects `void` as a generic type argument.
@@ -23,7 +23,7 @@ function deferred<T>(): Deferred<T> {
 }
 
 type Harness = {
-  deps: StreamMachineDeps;
+  deps: RawGoLiveDeps;
   calls: string[];
   encoder: EncoderHandles;
   gates: {
@@ -40,9 +40,7 @@ type Harness = {
 // join/prepare/leave auto-resolve, run stays pending (so we settle in
 // `streaming` until explicitly told otherwise).
 function makeHarness(
-  overrides: Partial<
-    Pick<StreamMachineDeps, "maxRetries" | "retryDelayMs">
-  > = {},
+  overrides: Partial<Pick<RawGoLiveDeps, "retryDelayMs">> = {},
 ): Harness {
   const calls: string[] = [];
   const sink = new PassThrough();
@@ -62,8 +60,8 @@ function makeHarness(
   gates.leave.resolve(true);
   const signals: { join?: AbortSignal } = {};
 
-  const deps: StreamMachineDeps = {
-    joinVoice: async (signal) => {
+  const deps: RawGoLiveDeps = {
+    joinVoice: async (_input, signal) => {
       calls.push("joinVoice");
       signals.join = signal;
       await gates.join.promise;
@@ -80,17 +78,25 @@ function makeHarness(
       calls.push("leaveVoice");
       await gates.leave.promise;
     },
-    maxRetries: overrides.maxRetries ?? 3,
     retryDelayMs: overrides.retryDelayMs ?? 20,
   };
 
   return { deps, calls, encoder, gates, signals };
 }
 
+function createHarnessActor(h: Harness, maxRetries = 3) {
+  return createActor(createRawGoLiveMachine(h.deps), {
+    input: {
+      voiceTarget: { guildId: "guild-1", channelId: "channel-1" },
+      maxRetries,
+    },
+  });
+}
+
 describe("stream machine", () => {
   test("happy path: idle → streaming → idle, with frame sink wired only while streaming", async () => {
     const h = makeHarness();
-    const actor = createActor(createStreamMachine(h.deps));
+    const actor = createHarnessActor(h);
     actor.start();
 
     expect(actor.getSnapshot().value).toBe("idle");
@@ -112,9 +118,9 @@ describe("stream machine", () => {
 
   test("frame sink is non-null ONLY in the streaming state", async () => {
     const h = makeHarness();
-    // Keep join pending so we can observe `starting` with no sink.
+    // Keep join pending so we can observe `joining` with no sink.
     h.gates.join = deferred<true>();
-    const actor = createActor(createStreamMachine(h.deps));
+    const actor = createHarnessActor(h);
 
     const sinkByState = new Map<string, boolean>();
     actor.subscribe((s) => {
@@ -125,7 +131,7 @@ describe("stream machine", () => {
     actor.start();
 
     actor.send({ type: "START" });
-    await waitFor(actor, (s) => s.matches("starting"));
+    await waitFor(actor, (s) => s.matches("joining"));
     expect(actor.getSnapshot().context.frameSink).toBeNull();
 
     h.gates.join.resolve(true);
@@ -143,11 +149,11 @@ describe("stream machine", () => {
   test("STOP during voice join aborts and never reaches streaming", async () => {
     const h = makeHarness();
     h.gates.join = deferred<true>(); // join stays pending
-    const actor = createActor(createStreamMachine(h.deps));
+    const actor = createHarnessActor(h);
     actor.start();
 
     actor.send({ type: "START" });
-    await waitFor(actor, (s) => s.matches("starting"));
+    await waitFor(actor, (s) => s.matches("joining"));
 
     actor.send({ type: "STOP" });
     // The in-flight join is aborted by the actor's signal.
@@ -162,14 +168,17 @@ describe("stream machine", () => {
   });
 
   test("voice join failure goes to failed then retries", async () => {
-    const h = makeHarness({ maxRetries: 2, retryDelayMs: 10 });
+    const h = makeHarness({ retryDelayMs: 10 });
     let attempts = 0;
-    h.deps.joinVoice = async () => {
-      attempts += 1;
-      if (attempts === 1) throw new Error("voice join failed");
-      // second attempt succeeds
+    h.deps = {
+      ...h.deps,
+      joinVoice: async () => {
+        attempts += 1;
+        if (attempts === 1) throw new Error("voice join failed");
+        // second attempt succeeds
+      },
     };
-    const actor = createActor(createStreamMachine(h.deps));
+    const actor = createHarnessActor(h, 2);
     actor.start();
 
     actor.send({ type: "START" });
@@ -185,9 +194,12 @@ describe("stream machine", () => {
   });
 
   test("retries are bounded then fall back to idle", async () => {
-    const h = makeHarness({ maxRetries: 2, retryDelayMs: 5 });
-    h.deps.joinVoice = () => Promise.reject(new Error("always fails"));
-    const actor = createActor(createStreamMachine(h.deps));
+    const h = makeHarness({ retryDelayMs: 5 });
+    h.deps = {
+      ...h.deps,
+      joinVoice: () => Promise.reject(new Error("always fails")),
+    };
+    const actor = createHarnessActor(h, 2);
     actor.start();
 
     actor.send({ type: "START" });
@@ -201,8 +213,8 @@ describe("stream machine", () => {
   });
 
   test("an unexpected stream end is treated as a failure (reconnect path)", async () => {
-    const h = makeHarness({ maxRetries: 1, retryDelayMs: 1000 });
-    const actor = createActor(createStreamMachine(h.deps));
+    const h = makeHarness({ retryDelayMs: 1000 });
+    const actor = createHarnessActor(h, 1);
     actor.start();
 
     actor.send({ type: "START" });
@@ -218,9 +230,12 @@ describe("stream machine", () => {
   });
 
   test("STOP cancels a pending reconnect", async () => {
-    const h = makeHarness({ maxRetries: 5, retryDelayMs: 10_000 });
-    h.deps.joinVoice = () => Promise.reject(new Error("boom"));
-    const actor = createActor(createStreamMachine(h.deps));
+    const h = makeHarness({ retryDelayMs: 10_000 });
+    h.deps = {
+      ...h.deps,
+      joinVoice: () => Promise.reject(new Error("boom")),
+    };
+    const actor = createHarnessActor(h, 5);
     actor.start();
 
     actor.send({ type: "START" });

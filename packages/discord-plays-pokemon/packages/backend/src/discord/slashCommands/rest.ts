@@ -1,6 +1,7 @@
 import { REST, Routes } from "discord.js";
 import { screenshotCommand } from "./commands/screenshot.ts";
 import { helpCommand } from "./commands/help.ts";
+import { goalCommand } from "./commands/goal.ts";
 import { logger } from "#src/logger.ts";
 import { getConfig } from "#src/config/index.ts";
 
@@ -16,6 +17,11 @@ export async function registerSlashCommands() {
     if (getConfig().bot.commands.screenshot.enabled) {
       logger.info("screenshot command is enabled");
       commands = [...commands, screenshotCommand.toJSON()];
+    }
+
+    if (getConfig().game.goal.enabled) {
+      logger.info("goal command is enabled");
+      commands = [...commands, goalCommand.toJSON()];
     }
 
     await rest.put(Routes.applicationCommands(getConfig().bot.application_id), {

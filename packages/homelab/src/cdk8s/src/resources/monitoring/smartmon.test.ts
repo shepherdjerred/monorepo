@@ -67,6 +67,37 @@ ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_
     );
   });
 
+  const nvmeInfoOutput = `
+=== START OF INFORMATION SECTION ===
+Model Number:                       Samsung SSD 990 PRO 4TB
+Serial Number:                      SERIALEXAMPLE01
+Firmware Version:                   4B2QJXD7
+Total NVM Capacity:                 4,000,787,030,016 [4.00 TB]
+
+=== START OF SMART DATA SECTION ===
+SMART overall-health self-assessment test result: PASSED
+  `;
+
+  it("should parse the NVMe model number into device_model", async () => {
+    // NVMe `smartctl -i` reports the model as "Model Number"; SATA uses "Device
+    // Model". Both must populate device_model so device_info carries a model label.
+    const command = `bash -c "source ${scriptPath}; parse_smartctl_info /dev/nvme0 nvme"`;
+    const proc = Bun.spawn(["bash", "-c", command], {
+      stdout: "pipe",
+      stdin: "pipe",
+    });
+    await proc.stdin.write(nvmeInfoOutput);
+    await proc.stdin.end();
+    const result = await new Response(proc.stdout).text();
+
+    expect(result).toContain('device_model="Samsung SSD 990 PRO 4TB"');
+    expect(result).toContain('serial_number="SERIALEXAMPLE01"');
+    expect(result).toContain('firmware_version="4B2QJXD7"');
+    expect(result).toContain(
+      'device_smart_healthy{disk="/dev/nvme0",type="nvme"} 1',
+    );
+  });
+
   it("should correctly parse SATA drive attributes", async () => {
     const command = `bash -c "source ${scriptPath}; parse_smartctl_attributes /dev/sda sat"`;
     const proc = Bun.spawn(["bash", "-c", command], {

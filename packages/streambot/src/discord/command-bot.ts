@@ -26,6 +26,7 @@ import {
   GuildIdSchema,
   toUserId,
   type ChannelId,
+  type GuildId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
@@ -37,8 +38,8 @@ const ALONE_GRACE_MS = 30_000;
 
 /** Subcommands that start (or join) a session in the issuer's current voice channel. */
 const PLAY_SUBCOMMANDS = new Set(["play", "playnext"]);
-/** Subcommands that only read the media library — no session required. */
-const LIBRARY_SUBCOMMANDS = new Set(["list", "search"]);
+/** Subcommands answerable without a playback session (library/yt-dlp lookups + static help). */
+const STATELESS_SUBCOMMANDS = new Set(["list", "search", "sources", "help"]);
 
 export type CommandBotDeps = {
   readonly config: Config;
@@ -49,6 +50,7 @@ export type CommandBotDeps = {
     url: string,
     signal: AbortSignal,
   ) => Promise<PlaylistItem[]>;
+  readonly listSources: (signal: AbortSignal) => Promise<readonly string[]>;
 };
 
 /** Render a neutral {@link Announcement} into discord.js message options (text, optional poster embed). */
@@ -67,6 +69,14 @@ function toMessageOptions(message: Announcement): MessageCreateOptions {
     embed.setImage(message.embed.imageUrl);
   }
   return { content: message.content, embeds: [embed] };
+}
+
+function parseVoiceChannelId(raw: string | null): ChannelId | null {
+  if (raw === null) {
+    return null;
+  }
+  const parsed = ChannelIdSchema.safeParse(raw);
+  return parsed.success ? parsed.data : null;
 }
 
 /**
@@ -229,7 +239,7 @@ export class CommandBot {
         return;
       }
       announceChannel = statusChannelId;
-    } else if (LIBRARY_SUBCOMMANDS.has(sub)) {
+    } else if (STATELESS_SUBCOMMANDS.has(sub)) {
       handle = EMPTY_HANDLE;
     } else {
       const voiceChannelId = this.issuerVoiceChannel(interaction);
@@ -254,6 +264,7 @@ export class CommandBot {
       setVolume: handle.setVolume,
       seek: handle.seek,
       expandPlaylist: this.deps.expandPlaylist,
+      listSources: this.deps.listSources,
       announce: (message) => this.announce(announceChannel, message),
     });
     await handler.run(this.adapt(interaction));
@@ -264,35 +275,99 @@ export class CommandBot {
     if (!guildId.success) {
       return;
     }
-    const candidates = new Set<string>();
-    if (oldState.channelId !== null) {
-      candidates.add(oldState.channelId);
+    const oldChannelId = parseVoiceChannelId(oldState.channelId);
+    const newChannelId = parseVoiceChannelId(newState.channelId);
+    if (
+      this.handleStreamerVoiceTopology(
+        guildId.data,
+        newState.id,
+        oldChannelId,
+        newChannelId,
+      )
+    ) {
+      return;
     }
-    if (newState.channelId !== null) {
-      candidates.add(newState.channelId);
+
+    const candidates = new Set<ChannelId>();
+    if (oldChannelId !== null) {
+      candidates.add(oldChannelId);
     }
-    for (const raw of candidates) {
-      const channelId = ChannelIdSchema.safeParse(raw);
-      if (!channelId.success) {
-        continue;
-      }
+    if (newChannelId !== null) {
+      candidates.add(newChannelId);
+    }
+    for (const channelId of candidates) {
       const meta = this.deps
         .getSessions()
-        .activeSessionByChannel(guildId.data, channelId.data);
+        .activeSessionByChannel(guildId.data, channelId);
       if (meta === null) {
         continue;
       }
       this.evaluateChannelOccupancy(
         guildId.data,
-        channelId.data,
+        channelId,
         newState,
         meta.userId,
       );
     }
   }
 
+  private handleStreamerVoiceTopology(
+    guildId: GuildId,
+    userId: string,
+    oldChannelId: ChannelId | null,
+    newChannelId: ChannelId | null,
+  ): boolean {
+    const sessions = this.deps.getSessions();
+    const oldMeta =
+      oldChannelId === null
+        ? null
+        : sessions.activeSessionByChannel(guildId, oldChannelId);
+    const newMeta =
+      newChannelId === null
+        ? null
+        : sessions.activeSessionByChannel(guildId, newChannelId);
+    if (oldMeta?.userId !== userId && newMeta?.userId !== userId) {
+      return false;
+    }
+
+    if (
+      oldChannelId !== null &&
+      newChannelId !== null &&
+      oldChannelId !== newChannelId
+    ) {
+      // Clearing the source timer is always safe: this session is leaving oldChannelId (and on a
+      // collision it gets torn down). The destination timer must only be cleared on a SUCCESSFUL
+      // move — if moveSession returns false because newChannelId already hosts a different session,
+      // clearing its timer would strand that surviving session (alone but never leaving).
+      this.clearAloneTimer(`${guildId}:${oldChannelId}`);
+      const moved = sessions.moveSession({
+        guildId,
+        fromChannelId: oldChannelId,
+        toChannelId: newChannelId,
+      });
+      if (moved) {
+        this.clearAloneTimer(`${guildId}:${newChannelId}`);
+      }
+      return true;
+    }
+
+    if (oldChannelId !== null && newChannelId === null) {
+      this.clearAloneTimer(`${guildId}:${oldChannelId}`);
+      sessions.getExisting(guildId, oldChannelId)?.dispatch({
+        type: "STREAMER_VOICE_DETACHED",
+        reason: "streamer disconnected or was kicked from voice",
+      });
+      return true;
+    }
+
+    if (newChannelId !== null) {
+      this.clearAloneTimer(`${guildId}:${newChannelId}`);
+    }
+    return true;
+  }
+
   private evaluateChannelOccupancy(
-    guildId: ReturnType<typeof GuildIdSchema.parse>,
+    guildId: GuildId,
     channelId: ChannelId,
     state: VoiceState,
     streamerId: string | null,

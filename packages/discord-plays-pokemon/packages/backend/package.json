@@ -21,6 +21,7 @@
     "test:watch": "bun test --watch"
   },
   "dependencies": {
+    "@shepherdjerred/discord-stream-lifecycle": "file:../../../discord-stream-lifecycle",
     "@shepherdjerred/discord-video-stream": "file:../../../discord-video-stream",
     "@discord-plays-pokemon/common": "file:../common",
     "@opentelemetry/api": "^1.9.1",

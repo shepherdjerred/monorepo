@@ -5,6 +5,11 @@ import {
   type CommandInteraction,
   type PlaybackView,
 } from "@shepherdjerred/streambot/discord/command-handler.ts";
+import {
+  helpText,
+  sourcesText,
+} from "@shepherdjerred/streambot/discord/help-text.ts";
+import { commandJson } from "@shepherdjerred/streambot/discord/commands.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import type { PlaybackEvent } from "@shepherdjerred/streambot/machine/types.ts";
 import {
@@ -56,6 +61,7 @@ function makeHandler(over: {
   volumeApplied?: boolean;
   seekApplied?: boolean;
   playlistItems?: { url: string; title: string }[];
+  sources?: string[];
 }): Harness & { seeks: number[] } {
   const events: PlaybackEvent[] = [];
   const announces: string[] = [];
@@ -71,6 +77,7 @@ function makeHandler(over: {
       return Promise.resolve(over.seekApplied ?? true);
     },
     expandPlaylist: () => Promise.resolve(over.playlistItems ?? []),
+    listSources: () => Promise.resolve(over.sources ?? []),
     announce: (message) => {
       announces.push(message);
       return Promise.resolve();
@@ -560,5 +567,78 @@ describe("CommandHandler subtitles options", () => {
       if (event.type !== "ADD") throw new Error("expected ADD");
       expect(event.source.subtitles).toEqual({ enabled: true });
     }
+  });
+});
+
+describe("help", () => {
+  test("replies with the command reference and source note", async () => {
+    const h = makeHandler({});
+    const fake = fakeInteraction({ sub: "help" });
+    await h.handler.run(fake.interaction);
+    expect(h.events).toHaveLength(0);
+    const reply = fake.replies[0];
+    if (reply === undefined) throw new Error("expected a help reply");
+    expect(reply).toContain("/stream play");
+    expect(reply).toContain("Supported sources");
+    expect(reply).toContain("yt-dlp");
+    // Discord rejects messages over 2000 chars.
+    expect(reply.length).toBeLessThanOrEqual(2000);
+  });
+
+  test("lists every registered subcommand (drift guard)", () => {
+    const text = helpText();
+    const options = commandJson[0]?.options ?? [];
+    expect(options.length).toBeGreaterThan(0);
+    for (const option of options) {
+      // Each subcommand name must appear as a whole word (the help uses a compact
+      // `queue · nowplaying · …` layout, so names aren't all prefixed with `/stream`).
+      expect(text).toMatch(new RegExp(String.raw`\b${option.name}\b`));
+    }
+  });
+});
+
+describe("sources", () => {
+  test("bare sources defers and summarizes the count", async () => {
+    const h = makeHandler({ sources: ["youtube", "twitch:vod", "vimeo"] });
+    const fake = fakeInteraction({ sub: "sources" });
+    await h.handler.run(fake.interaction);
+    expect(fake.state.deferred).toBe(true);
+    const edit = fake.edits[0];
+    if (edit === undefined) throw new Error("expected an edited reply");
+    expect(edit).toContain("3 sources");
+    expect(edit).toContain("/stream sources");
+  });
+
+  test("filtered sources lists case-insensitive matches only", async () => {
+    const h = makeHandler({
+      sources: ["youtube", "twitch:vod", "twitch:clips", "vimeo"],
+    });
+    const fake = fakeInteraction({
+      sub: "sources",
+      strings: { query: "TWITCH" },
+    });
+    await h.handler.run(fake.interaction);
+    const edit = fake.edits[0];
+    if (edit === undefined) throw new Error("expected an edited reply");
+    expect(edit).toContain("twitch:vod");
+    expect(edit).toContain("twitch:clips");
+    expect(edit).not.toContain("vimeo");
+    expect(edit).toContain("2 source(s)");
+  });
+
+  test("filtered sources reports when nothing matches", async () => {
+    const h = makeHandler({ sources: ["youtube", "vimeo"] });
+    const fake = fakeInteraction({
+      sub: "sources",
+      strings: { query: "nope" },
+    });
+    await h.handler.run(fake.interaction);
+    expect(fake.edits[0]).toContain("No sources matching");
+  });
+
+  test("sourcesText truncates beyond the display cap", () => {
+    const many = Array.from({ length: 25 }, (_, i) => `site${String(i)}`);
+    const text = sourcesText(many, "site");
+    expect(text).toContain("…and 5 more");
   });
 });
