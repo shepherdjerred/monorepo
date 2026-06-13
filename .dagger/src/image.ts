@@ -11,6 +11,7 @@ import {
   BUN_CACHE,
   BUILDKITE_CLI_VERSION,
   CADDY_BUILDER_IMAGE,
+  CADDY_S3_PROXY_MODULE,
   CADDY_IMAGE,
   CLAUDE_CODE_VERSION,
   CODEX_CLI_VERSION,
@@ -678,8 +679,8 @@ export function buildImageHelper(
  *
  * Uses shepherdjerred/caddy-s3-proxy as a drop-in replacement for the upstream
  * lindenlab module — keeps the import path so existing Caddyfiles work, but
- * adds native HEAD support and fixes the 304-on-index regression. See
- * upstream PR (TBD) tracking the contribution back to lindenlab.
+ * adds native HEAD support, fixes the 304-on-index regression, and returns
+ * 206 + Accept-Ranges on byte-range requests. See CADDY_S3_PROXY_MODULE.
  */
 export function buildCaddyS3ProxyImageHelper(
   version: string = "dev",
@@ -689,12 +690,7 @@ export function buildCaddyS3ProxyImageHelper(
   const caddyBinary = dag
     .container()
     .from(CADDY_BUILDER_IMAGE)
-    .withExec([
-      "xcaddy",
-      "build",
-      "--with",
-      "github.com/lindenlab/caddy-s3-proxy=github.com/shepherdjerred/caddy-s3-proxy@v0.5.7-head1",
-    ])
+    .withExec(["xcaddy", "build", "--with", CADDY_S3_PROXY_MODULE])
     .file("/usr/bin/caddy");
 
   // Stage 2: Runtime image with the custom binary
