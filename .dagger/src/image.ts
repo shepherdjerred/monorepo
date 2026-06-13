@@ -124,10 +124,11 @@ function withCogapp(container: Container): Container {
       "--break-system-packages",
       `cogapp==${COGAPP_VERSION}`,
     ])
-    // cogapp has no `--version` flag; `--help` exits 0 and proves the `cog`
-    // entrypoint installed onto PATH (reachable by UID 1000). The pinned
-    // version is already asserted by the `cogapp==` spec above.
-    .withExec(["cog", "--help"]);
+    // cogapp's `cog` CLI uses `-v` for "print the version and exit"; it has no
+    // `--version` flag (that errors with exit 2 "option --version not
+    // recognized"). `cog -v` prints e.g. "Cog version 3.6.0" and exits 0,
+    // confirming the binary is installed and runnable on PATH.
+    .withExec(["cog", "-v"]);
 }
 
 /**

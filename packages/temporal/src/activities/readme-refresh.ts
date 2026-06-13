@@ -32,9 +32,11 @@ function isReadmeRefreshPath(path: string): boolean {
 
 // Parse `git status --porcelain` (v1). Columns 0-1 are the status code and
 // column 2 is a space, so the path starts at index 3. We deliberately do NOT
-// trim the leading status before slicing — an unstaged-only change is ` M path`
-// and a left-trim would eat into the filename.
-function parsePorcelainPaths(status: string): string[] {
+// trim the whole output before splitting — an unstaged-only change is ` M path`
+// (with a leading space) and a whole-string `.trim()` would strip that space
+// from the first line, making `slice(3)` mis-parse it into a mangled filename.
+// We split on "\n" directly and drop only empty trailing lines.
+export function parsePorcelainPaths(status: string): string[] {
   return status
     .split("\n")
     .filter((line) => line.length > 3)
@@ -95,8 +97,15 @@ export const readmeRefreshActivities = {
         outcome: "no-diff",
       };
 
+      // trimStdout: false — porcelain v1 uses leading whitespace in the 2-char
+      // status code (e.g. ` M` for an unstaged modification). A whole-string
+      // .trim() (runCommand's default) would strip that space from the first
+      // line and make parsePorcelainPaths mis-parse the first changed file.
       const regenerated = parsePorcelainPaths(
-        await runCommand(["git", "status", "--porcelain"], { cwd: repoDir }),
+        await runCommand(["git", "status", "--porcelain"], {
+          cwd: repoDir,
+          trimStdout: false,
+        }),
       ).filter((path) => isReadmeRefreshPath(path));
       if (regenerated.length === 0) {
         return noDiff;
@@ -117,7 +126,10 @@ export const readmeRefreshActivities = {
       });
 
       const files = parsePorcelainPaths(
-        await runCommand(["git", "status", "--porcelain"], { cwd: repoDir }),
+        await runCommand(["git", "status", "--porcelain"], {
+          cwd: repoDir,
+          trimStdout: false,
+        }),
       ).filter((path) => isReadmeRefreshPath(path));
       if (files.length === 0) {
         return noDiff;
