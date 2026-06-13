@@ -4,7 +4,9 @@ import { ApiObject } from "cdk8s";
 /**
  * Creates Kueue resource management configuration for the Buildkite namespace.
  *
- * Caps the buildkite namespace at 50% of node resources (16 CPU / 64Gi on a 32c/128Gi node).
+ * Caps the buildkite namespace at 7.5 CPU / 16Gi of requests (node is 32c/128Gi, but CPU requests
+ * from other namespaces leave only ~2.5 cores of schedulable headroom — raising this further just
+ * converts Kueue-suspended jobs into unschedulable Pending pods).
  * Jobs exceeding the quota are suspended (not rejected), eliminating FailedCreate event storms.
  */
 export function createKueueConfig(chart: Chart) {
@@ -41,11 +43,11 @@ export function createKueueConfig(chart: Chart) {
               resources: [
                 {
                   name: "cpu",
-                  nominalQuota: "5",
+                  nominalQuota: "7500m",
                 },
                 {
                   name: "memory",
-                  nominalQuota: "10Gi",
+                  nominalQuota: "16Gi",
                 },
               ],
             },
