@@ -1,7 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import {
+  drawHudOverlay,
   drawTextOverlay,
   drawTimestampOverlay,
+  formatSeatFlags,
   formatUtcTimestamp,
 } from "./overlay.ts";
 
@@ -100,6 +102,53 @@ describe("drawTextOverlay", () => {
       drawTextOverlay(tiny, WIDTH, "UTC 12:34:56.789");
     }).not.toThrow();
     expect(tiny.length).toBe(WIDTH * 3 * BYTES_PER_PIXEL);
+  });
+});
+
+describe("formatSeatFlags", () => {
+  it("lights the digit for held seats and dots the rest", () => {
+    expect(formatSeatFlags([true, false, false, true])).toBe("1..4");
+    expect(formatSeatFlags([false, false, false, false])).toBe("....");
+    expect(formatSeatFlags([true, true, true, true])).toBe("1234");
+  });
+
+  it("handles fewer than four seats", () => {
+    expect(formatSeatFlags([true, false])).toBe("1.");
+  });
+});
+
+describe("drawHudOverlay", () => {
+  const epochMs = Date.UTC(2026, 5, 12, 7, 8, 9, 45);
+
+  it("renders the clock plus seat flags", () => {
+    const direct = makeFrame();
+    const viaHud = makeFrame();
+    drawTextOverlay(
+      direct,
+      WIDTH,
+      `${formatUtcTimestamp(epochMs)} ${formatSeatFlags([true, false, false, false])}`,
+    );
+    drawHudOverlay(viaHud, WIDTH, epochMs, [true, false, false, false]);
+    expect(viaHud.equals(direct)).toBe(true);
+  });
+
+  it("a held seat changes pixels relative to all-idle", () => {
+    const idle = makeFrame();
+    const held = makeFrame();
+    drawHudOverlay(idle, WIDTH, epochMs, [false, false, false, false]);
+    drawHudOverlay(held, WIDTH, epochMs, [false, false, true, false]);
+    expect(held.equals(idle)).toBe(false);
+  });
+
+  it("still fits the 640px frame width", () => {
+    // If the HUD ever outgrows the frame, the box clips at the right edge and
+    // the trailing flags become unreadable — catch that here.
+    const frame = makeFrame();
+    drawHudOverlay(frame, WIDTH, epochMs, [true, true, true, true]);
+    // The rightmost column must be untouched (box ends before the edge).
+    expect(pixelAt(frame, WIDTH, WIDTH - 1, 10)).toEqual(
+      Buffer.from([0xab, 0xab, 0xab, 0xab]),
+    );
   });
 });
 
