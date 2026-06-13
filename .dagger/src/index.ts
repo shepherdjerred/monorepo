@@ -908,6 +908,8 @@ export class Monorepo {
     githubToken: Secret | null = null,
     cloudflareAccountId: Secret | null = null,
     cloudflareApiToken: Secret | null = null,
+    tailscaleOauthClientId: Secret | null = null,
+    tailscaleOauthClientSecret: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuApplyHelper(
@@ -918,6 +920,8 @@ export class Monorepo {
       githubToken,
       cloudflareAccountId,
       cloudflareApiToken,
+      tailscaleOauthClientId,
+      tailscaleOauthClientSecret,
       dryrun,
     ).stdout();
   }
@@ -932,6 +936,8 @@ export class Monorepo {
     githubToken: Secret | null = null,
     cloudflareAccountId: Secret | null = null,
     cloudflareApiToken: Secret | null = null,
+    tailscaleOauthClientId: Secret | null = null,
+    tailscaleOauthClientSecret: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuPlanHelper(
@@ -942,6 +948,8 @@ export class Monorepo {
       githubToken,
       cloudflareAccountId,
       cloudflareApiToken,
+      tailscaleOauthClientId,
+      tailscaleOauthClientSecret,
       dryrun,
     ).stdout();
   }

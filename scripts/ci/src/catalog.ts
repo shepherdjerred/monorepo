@@ -239,12 +239,18 @@ for (const pkg of NPM_PACKAGES) {
 // OpenTofu stacks
 // ---------------------------------------------------------------------------
 
-export const TOFU_STACKS = ["cloudflare", "github", "seaweedfs"] as const;
+export const TOFU_STACKS = [
+  "cloudflare",
+  "github",
+  "seaweedfs",
+  "tailscale",
+] as const;
 
 export const TOFU_STACK_LABELS: Record<string, string> = {
   cloudflare: "Cloudflare DNS",
   github: "GitHub Config",
   seaweedfs: "SeaweedFS Config",
+  tailscale: "Tailscale ACLs",
 };
 
 // ---------------------------------------------------------------------------
