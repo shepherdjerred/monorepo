@@ -5,8 +5,10 @@
 //
 // Run manually when the wasm is refreshed; the output is checked in. We pin a
 // commit ref so the generated data matches a known source revision.
+// Update REF to the exact commit SHA the pokeemerald.wasm binary was built from
+// whenever the wasm is refreshed.
 
-const REF = "master";
+const REF = "ed25aa7c5ae9c3c338cc9aa57c7150fc33255ad3";
 const RAW = `https://raw.githubusercontent.com/tripplyons/pokeemerald-wasm/${REF}`;
 
 async function fetchText(path: string): Promise<string> {
@@ -117,6 +119,16 @@ const outPath = new URL(
   import.meta.url,
 ).pathname;
 await Bun.write(outPath, header);
+
+// Format with Prettier so the checked-in file always passes the art-prettier CI job.
+const fmt = Bun.spawn(["bunx", "prettier", "--write", outPath], {
+  stdout: "inherit",
+  stderr: "inherit",
+});
+const fmtExit = await fmt.exited;
+if (fmtExit !== 0)
+  throw new Error(`prettier exited with code ${String(fmtExit)}`);
+
 const named = names.filter((n) => n !== "?").length;
 console.log(
   `wrote ${outPath}: ${String(numSpecies)} species, ${String(named)} named`,
