@@ -19,7 +19,7 @@ Building blocks that already existed:
 
 ## Deliverables
 
-1. **`discord` skill** — `packages/dotfiles/dot_agents/skills/discord/SKILL.md` (chezmoi source) + live copy at `~/.agents/skills/discord/SKILL.md`. Covers: identity selection (userbot vs bot), single-batched-`op` token loading, test-guild-only guardrail rules, scratch-script workflow, and live-verified examples (send/read, sendSlash round-trip, gateway-op4 voice join + voice-state verification), plus gotchas.
+1. **`discord` skill** — `packages/dotfiles/dot_agents/skills/discord/SKILL.md` (chezmoi source) + live copy at `~/.agents/skills/discord/SKILL.md`. Covers: identity selection (userbot vs bot), ask-the-user credential sourcing (single-batched-`op` loading), scratch-script workflow, and live-verified examples (send/read, sendSlash round-trip, gateway-op4 voice join + voice-state verification), plus gotchas. Agents may act on any server the chosen identity is in; the streambot test server is documented as one ready-made example.
 2. **Gitignore** — `packages/streambot/scratch/` added to root `.gitignore` (agent scratch scripts live there so Bun resolves the Discord deps).
 3. This plan doc.
 
@@ -51,6 +51,7 @@ Findings baked into the skill as gotchas:
 - Researched Discord MCP server landscape (none fit: slash-command invocation + voice-as-user require a userbot).
 - Wrote and live-verified `packages/streambot/scratch/verify-skill.ts` — all 3 checks passed against the test guild.
 - Authored `discord` skill: `packages/dotfiles/dot_agents/skills/discord/SKILL.md` + live copy in `~/.agents/skills/discord/`.
+- Revised per user feedback: removed the test-server-only restriction (any server is allowed; test server kept as an example) and made the skill instruct agents to ask the user for the correct credentials/1P item instead of assuming `streambot-config`.
 - Added `packages/streambot/scratch/` to root `.gitignore`.
 - This plan doc; PR from branch `feature/discord-agent-skill`.
 
@@ -60,6 +61,6 @@ Findings baked into the skill as gotchas:
 
 ### Caveats
 
-- The userbot is a real account present in production servers — the skill's test-guild-only rule is documentation, not enforcement. Scripts must hard-code the test guild.
+- Per user direction, the skill does NOT restrict agents to the test server — any server the identity is in is allowed, and agents must ask the user which credentials/1P item and target guild to use (the streambot test setup is documented as one example). The userbot is a real account, so deliberation in shared servers is on the agent.
 - `discord.js-selfbot-v13` is archived upstream; if Discord changes the gateway, `sendSlash`/op-4 join may break with no upstream fix.
 - Voice join is presence-only (no media). Verifying _stream content_ (frames/audio) is not possible with this setup — only the `streaming` flag.

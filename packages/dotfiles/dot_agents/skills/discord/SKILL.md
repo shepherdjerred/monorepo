@@ -9,39 +9,43 @@ description: |
 
 Interact with Discord by **writing short TypeScript scripts and running them with Bun** — there is no MCP server or wrapper CLI for this on purpose. All snippets below were verified live on 2026-06-12.
 
-## Identities
+## Credentials — ask the user
 
-| Identity | Token env var | Library | Use for |
-| --- | --- | --- | --- |
-| Userbot `glidiot_` (selfbot) | `TOKEN` | `discord.js-selfbot-v13` | Invoking **other bots' slash commands** (`sendSlash`), joining voice as a regular user, acting like a human tester |
-| Bot `Glidiot Helper#1544` | `BOT_TOKEN` | `discord.js` v14 | Plain send/read, observing guild state (voice states, messages), registering throwaway slash commands |
+**Do not assume which Discord credentials to use.** Ask the user which 1Password item (or env vars) holds the right tokens for the task, and which server/channels to target. Different bots and tasks use different identities.
 
-A bot **cannot** invoke another bot's slash commands or appear as a user in voice — that's what the userbot is for. The selfbot library is archived upstream (Oct 2025) but pinned and working in this repo.
+Load all needed fields with **one** batched `op` call (each `op` invocation needs manual approval). Example shape — substitute the item/vault/field labels the user gives you:
 
-## Test server — the ONLY place you may act
+```bash
+cd packages/streambot && bash -c 'J=$(op item get <ITEM> --vault "<VAULT>" --format json --reveal) \
+  && export BOT_TOKEN=$(echo "$J" | jq -r ".fields[]|select((.label//.id)==\"BOT_TOKEN\").value") \
+  && export TOKEN=$(echo "$J" | jq -r ".fields[]|select((.label//.id)==\"TOKEN\").value") \
+  && bun run scratch/<your-script>.ts'
+```
+
+Never write tokens to files or print them to logs — env vars only, loaded in the same command that runs the script.
+
+## Identities: userbot vs bot
+
+| Identity type | Library | Use for |
+| --- | --- | --- |
+| Userbot (selfbot, a real user account) | `discord.js-selfbot-v13` | Invoking **other bots' slash commands** (`sendSlash`), joining voice as a regular user, acting like a human tester |
+| Bot (application token) | `discord.js` v14 | Plain send/read, observing guild state (voice states, messages), registering throwaway slash commands |
+
+A bot **cannot** invoke another bot's slash commands or appear as a user in voice — that's what a userbot is for. The selfbot library is archived upstream (Oct 2025) but pinned and working in this repo.
+
+Scripts may act on **any** server the chosen identity is in — confirm the target guild/channel IDs with the user. A userbot is a real account, so be deliberate in shared/production servers.
+
+### Example: streambot test setup
+
+One ready-made option for bot testing — the dedicated test server used by the streambot e2e (tokens in the `streambot-config` 1P item, Homelab (Kubernetes) vault: `BOT_TOKEN` = bot `Glidiot Helper#1544`, `TOKEN` = userbot `glidiot_`):
 
 - Guild: `1337623164146155593`
 - Text channel: `1337631455085334650`
 - Voice channel: `1337623164955398253`
 
-**Rules (non-negotiable):**
-
-- Hard-code the test guild ID in every script. Never send messages, join voice, or mutate anything in any other guild — the userbot is a real account that is present in production servers.
-- Never write tokens to files or print them to logs. Load them from 1Password into env vars only.
-- To test a bot (streambot, birmel, …), run it pointed at the test guild or invite it there — don't poke the production deployment.
-
 ## Where scripts live & how to run
 
 Write scratch scripts in `packages/streambot/scratch/` (gitignored) — Bun resolves `discord.js` and `discord.js-selfbot-v13` from that package. If `packages/streambot/node_modules` is missing, run `bun install --frozen-lockfile` there first.
-
-Load both tokens with **one** `op` call and run in the same command:
-
-```bash
-cd packages/streambot && bash -c 'J=$(op item get streambot-config --vault "Homelab (Kubernetes)" --format json --reveal) \
-  && export BOT_TOKEN=$(echo "$J" | jq -r ".fields[]|select((.label//.id)==\"BOT_TOKEN\").value") \
-  && export TOKEN=$(echo "$J" | jq -r ".fields[]|select((.label//.id)==\"TOKEN\").value") \
-  && bun run scratch/<your-script>.ts'
-```
 
 ## Script skeleton (login, teardown, watchdog)
 
@@ -49,7 +53,7 @@ cd packages/streambot && bash -c 'J=$(op item get streambot-config --vault "Home
 import { Client as BotClient, GatewayIntentBits } from "discord.js";
 import { Client as UserClient } from "discord.js-selfbot-v13";
 
-const TEST_GUILD_ID = "1337623164146155593";
+const GUILD_ID = "<target guild — confirm with the user>";
 
 const botToken = process.env["BOT_TOKEN"];
 const userToken = process.env["TOKEN"];
@@ -111,7 +115,7 @@ Only log in the identity you need — most read-only checks need just the bot.
 ## Send & read messages
 
 ```typescript
-const TEXT_CHANNEL_ID = "1337631455085334650";
+const TEXT_CHANNEL_ID = "<target channel>";
 
 // userbot sends (works the same with the bot client)
 const userChannel = await user.channels.fetch(TEXT_CHANNEL_ID);
@@ -132,13 +136,13 @@ for (const message of recent.values()) {
 }
 ```
 
-To wait for a bot's reply, listen for `Events.MessageCreate` (or `Events.InteractionCreate` on your own throwaway bot) with a `setTimeout` race — see `scratch` example in this skill's verification script pattern below.
+To wait for a bot's reply, listen for `Events.MessageCreate` (or `Events.InteractionCreate` on your own throwaway bot) with a `setTimeout` race.
 
 ## Invoke another bot's slash command (userbot only)
 
 ```typescript
 const targetBotId = "<the bot's user id>";
-// command must already be registered in the test guild by the target bot
+// command must already be registered in the target guild by the target bot
 await userChannel.sendSlash(targetBotId, "play", "https://example.com/video.mp4");
 ```
 
@@ -153,7 +157,7 @@ import { Events, REST, Routes, SlashCommandBuilder } from "discord.js";
 
 const rest = new REST().setToken(botToken);
 const command = new SlashCommandBuilder().setName("agent-ping").setDescription("test ping");
-await rest.put(Routes.applicationGuildCommands(bot.user.id, TEST_GUILD_ID), { body: [command.toJSON()] });
+await rest.put(Routes.applicationGuildCommands(bot.user.id, GUILD_ID), { body: [command.toJSON()] });
 
 const interactionSeen = new Promise<boolean>((resolve) => {
   const timer = setTimeout(() => {
@@ -170,8 +174,8 @@ const interactionSeen = new Promise<boolean>((resolve) => {
 await new Promise((resolve) => setTimeout(resolve, 3_000)); // registration → cache lag
 await userChannel.sendSlash(bot.user.id, "agent-ping");
 console.log(`round-trip ok: ${String(await interactionSeen)}`);
-// cleanup so the test guild stays tidy
-await rest.put(Routes.applicationGuildCommands(bot.user.id, TEST_GUILD_ID), { body: [] });
+// cleanup so the guild stays tidy
+await rest.put(Routes.applicationGuildCommands(bot.user.id, GUILD_ID), { body: [] });
 ```
 
 ## Join voice / verify a stream (the streambot test loop)
@@ -179,13 +183,13 @@ await rest.put(Routes.applicationGuildCommands(bot.user.id, TEST_GUILD_ID), { bo
 Do **NOT** use `user.voice.joinChannel(...)` — it attempts a full media handshake with deprecated encryption modes and dies with `VOICE_CONNECTION_TIMEOUT`. To just *be present* in a voice channel (which is all you need to observe or trigger streaming), send a raw gateway VoiceStateUpdate (op 4) — the same mechanism `@shepherdjerred/discord-video-stream` uses:
 
 ```typescript
-const VOICE_CHANNEL_ID = "1337623164955398253";
+const VOICE_CHANNEL_ID = "<target voice channel>";
 
 // join (presence only, no audio/video)
 user.ws.broadcast({
   op: 4,
   d: {
-    guild_id: TEST_GUILD_ID,
+    guild_id: GUILD_ID,
     channel_id: VOICE_CHANNEL_ID,
     self_mute: true,
     self_deaf: false,
@@ -195,7 +199,7 @@ user.ws.broadcast({
 await new Promise((resolve) => setTimeout(resolve, 3_000)); // let the state propagate
 
 // observe voice states from the bot side (needs GuildVoiceStates intent)
-const guild = await bot.guilds.fetch(TEST_GUILD_ID);
+const guild = await bot.guilds.fetch(GUILD_ID);
 for (const [memberId, voiceState] of guild.voiceStates.cache) {
   // voiceState.streaming === true → that member has a live Go-Live stream (e.g. streambot's streamer)
   console.log(`${memberId} in ${String(voiceState.channelId)} streaming=${String(voiceState.streaming)} video=${String(voiceState.selfVideo)}`);
@@ -204,7 +208,7 @@ for (const [memberId, voiceState] of guild.voiceStates.cache) {
 // leave
 user.ws.broadcast({
   op: 4,
-  d: { guild_id: TEST_GUILD_ID, channel_id: null, self_mute: true, self_deaf: false, self_video: false },
+  d: { guild_id: GUILD_ID, channel_id: null, self_mute: true, self_deaf: false, self_video: false },
 });
 ```
 
@@ -214,9 +218,9 @@ To actually **send** video/audio into the channel, use the `Streamer` class from
 
 - discord.js v14 logs a `DeprecationWarning` about `ready` → `clientReady`; harmless, ignore it.
 - The selfbot lib's `destroy()` can throw (`this.connection.readyState` on null) — always wrap it (see skeleton).
-- Reading message *content* from the bot requires the privileged `MessageContent` intent (already enabled for the test bot).
+- Reading message *content* from the bot requires the privileged `MessageContent` intent (enabled per-application in the Discord developer portal).
 - Scripts that don't tear down both clients won't exit — Bun keeps the gateway sockets alive. Keep the watchdog.
-- One `op` call per session: fetch all fields from `streambot-config` in a single `op item get` (each call needs manual approval).
+- One `op` call per session: fetch all fields you need in a single `op item get`.
 
 ## Related
 
