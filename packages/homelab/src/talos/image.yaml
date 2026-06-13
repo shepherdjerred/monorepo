@@ -1,5 +1,12 @@
 customization:
   extraKernelArgs:
+    # Relax kernel lockdown from the SecureBoot default (confidentiality) to
+    # integrity: confidentiality disables bpf_probe_read*() helpers, which
+    # breaks the alloy eBPF profiler ("program of this type cannot use helper
+    # bpf_probe_read"). Integrity still prevents runtime kernel modification.
+    # See https://github.com/falcosecurity/libs/issues/2736
+    - -lockdown
+    - lockdown=integrity
     # Power saving for NAS workload
     - cpufreq.default_governor=powersave
     - intel_pstate=passive
