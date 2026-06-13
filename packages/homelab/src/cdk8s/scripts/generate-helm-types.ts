@@ -109,27 +109,27 @@ async function generateHelmTypes() {
   }
 
   if (indexFiles.length > 0) {
-    // Run prettier on generated files
+    // Format with the workspace's pinned prettier — the SAME prettier (and
+    // .prettierrc + plugins) that pre-commit and CI enforce, since the
+    // generated dir is covered by prettier (not excluded). This MUST succeed:
+    // leaving the raw interface generator output (which wraps differently)
+    // would commit files that fail the prettier gate and churn against the
+    // committed tree. Fail the run rather than continuing with unformatted
+    // output.
     console.log("\n🎨 Running prettier on generated files...");
-    try {
-      const prettierProc = Bun.spawn(
-        ["bun", "x", "prettier", "--write", OUTPUT_DIR],
-        {
-          stdio: ["inherit", "inherit", "inherit"],
-        },
+    const prettierProc = Bun.spawn(
+      ["bun", "x", "prettier", "--write", OUTPUT_DIR],
+      {
+        stdio: ["inherit", "inherit", "inherit"],
+      },
+    );
+    const prettierExitCode = await prettierProc.exited;
+    if (prettierExitCode !== 0) {
+      throw new Error(
+        `prettier failed (exit ${prettierExitCode.toString()}) — generated types would not match the repo's formatting`,
       );
-
-      const prettierExitCode = await prettierProc.exited;
-      if (prettierExitCode === 0) {
-        console.log("✅ Prettier formatting completed");
-      } else {
-        console.warn(
-          `Prettier failed with code ${prettierExitCode.toString()}, continuing...`,
-        );
-      }
-    } catch (error) {
-      console.warn(`Failed to run prettier: ${String(error)}, continuing...`);
     }
+    console.log("✅ Prettier formatting completed");
 
     // Run TypeScript compilation check
     console.log("\n🔧 Running TypeScript compilation check...");
