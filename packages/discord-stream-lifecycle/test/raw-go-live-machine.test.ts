@@ -195,4 +195,110 @@ describe("raw Go-Live machine", () => {
     expect(actor.getSnapshot().context.voiceTarget.channelId).toBe("channel-2");
     actor.stop();
   });
+
+  test("START while failed respects the retry budget instead of bypassing it", async () => {
+    // maxRetries=1: one auto-retry allowed. After it fails, retries reaches the cap, so a manual START
+    // (e.g. a forwarded SET_DESIRED:true) must give up to idle rather than jumping back to joining and
+    // bypassing canRetry.
+    const h = makeHarness({ retryDelayMs: 1000 });
+    h.deps = {
+      ...h.deps,
+      joinVoice: () => Promise.reject(new Error("voice join failed")),
+    };
+    const actor = createHarnessActor(h, 1);
+    actor.start();
+
+    actor.send({ type: "START" });
+    await waitFor(actor, (s) => s.matches("failed"));
+    expect(actor.getSnapshot().context.retries).toBe(1);
+    expect(actor.getSnapshot().context.retries).toBe(
+      actor.getSnapshot().context.maxRetries,
+    );
+
+    // Budget is exhausted — a manual START must not re-enter joining.
+    actor.send({ type: "START" });
+    await waitFor(actor, (s) => s.matches("idle"));
+    expect(actor.getSnapshot().value).toBe("idle");
+    actor.stop();
+  });
+
+  test("START while failed retries when budget remains", async () => {
+    const h = makeHarness({ retryDelayMs: 1000 });
+    let attempts = 0;
+    h.deps = {
+      ...h.deps,
+      joinVoice: async () => {
+        attempts += 1;
+        if (attempts === 1) {
+          throw new Error("voice join failed");
+        }
+      },
+    };
+    const actor = createHarnessActor(h, 2);
+    actor.start();
+
+    actor.send({ type: "START" });
+    await waitFor(actor, (s) => s.matches("failed"));
+    expect(actor.getSnapshot().context.retries).toBe(1);
+
+    // Budget remains (1 < 2): a manual START retries immediately without waiting for retryDelay.
+    actor.send({ type: "START" });
+    await waitFor(actor, (s) => s.matches("streaming"));
+    expect(attempts).toBe(2);
+    actor.stop();
+  });
+
+  test("VOICE_TARGET_MOVED during teardown keeps the new target for the next join", async () => {
+    const h = makeHarness();
+    h.gates.leave = deferred<true>();
+    const actor = createHarnessActor(h);
+    actor.start();
+
+    actor.send({ type: "START" });
+    await waitFor(actor, (s) => s.matches("streaming"));
+
+    // STOP enters stopping (a non-terminal teardown), leaveVoice is gated open.
+    actor.send({ type: "STOP" });
+    await waitFor(actor, (s) => s.matches("stopping"));
+
+    // A move arriving mid-teardown must update the target rather than being dropped.
+    actor.send({
+      type: "VOICE_TARGET_MOVED",
+      target: { guildId: "guild-1", channelId: "channel-9" },
+    });
+    expect(actor.getSnapshot().context.voiceTarget.channelId).toBe("channel-9");
+
+    // Finish teardown → idle, then start again: it must join the NEW channel.
+    h.gates.leave.resolve(true);
+    await waitFor(actor, (s) => s.matches("idle"));
+    expect(actor.getSnapshot().context.voiceTarget.channelId).toBe("channel-9");
+    actor.stop();
+  });
+
+  test("VOICE_TARGET_MOVED during a terminal teardown does not divert it from terminated", async () => {
+    const h = makeHarness();
+    h.gates.leave = deferred<true>();
+    const actor = createHarnessActor(h);
+    actor.start();
+
+    actor.send({ type: "START" });
+    await waitFor(actor, (s) => s.matches("streaming"));
+
+    // A terminal teardown (detach) enters stopping with teardownReason=voiceDetached.
+    actor.send({ type: "STREAMER_VOICE_DETACHED", reason: "kicked" });
+    await waitFor(actor, (s) => s.matches("stopping"));
+
+    // The move must update voiceTarget WITHOUT clobbering the in-flight teardownReason — otherwise
+    // stopping's onDone would route to idle instead of terminated.
+    actor.send({
+      type: "VOICE_TARGET_MOVED",
+      target: { guildId: "guild-1", channelId: "channel-9" },
+    });
+    expect(actor.getSnapshot().context.voiceTarget.channelId).toBe("channel-9");
+    expect(actor.getSnapshot().context.teardownReason).toBe("voiceDetached");
+
+    h.gates.leave.resolve(true);
+    await waitFor(actor, (s) => s.matches("terminated"));
+    actor.stop();
+  });
 });

@@ -333,13 +333,19 @@ export class CommandBot {
       newChannelId !== null &&
       oldChannelId !== newChannelId
     ) {
+      // Clearing the source timer is always safe: this session is leaving oldChannelId (and on a
+      // collision it gets torn down). The destination timer must only be cleared on a SUCCESSFUL
+      // move — if moveSession returns false because newChannelId already hosts a different session,
+      // clearing its timer would strand that surviving session (alone but never leaving).
       this.clearAloneTimer(`${guildId}:${oldChannelId}`);
-      this.clearAloneTimer(`${guildId}:${newChannelId}`);
-      sessions.moveSession({
+      const moved = sessions.moveSession({
         guildId,
         fromChannelId: oldChannelId,
         toChannelId: newChannelId,
       });
+      if (moved) {
+        this.clearAloneTimer(`${guildId}:${newChannelId}`);
+      }
       return true;
     }
 
