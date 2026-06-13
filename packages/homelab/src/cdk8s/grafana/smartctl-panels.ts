@@ -9,7 +9,7 @@ type Datasource = { type: string; uid: string };
 type BySerial = (metric: string) => string;
 
 // Legend that names the physical drive rather than its (unstable) /dev path.
-const DRIVE_LEGEND = "{{device_model}} {{serial_number}}";
+export const DRIVE_LEGEND = "{{device_model}} {{serial_number}}";
 
 /**
  * Add error tracking panels (UDMA CRC errors, raw read error rate)
