@@ -24,6 +24,7 @@ import { isBun, isDeno, isFiniteNonZero } from "../utils.js";
 import { AVCodecID } from "./LibavCodecId.js";
 import { createDecoder } from "./LibavDecoder.js";
 import { Encoders } from "./encoders/index.js";
+import { buildSoftwareVideoGraph } from "./videoGraph.js";
 
 import type { Request } from "zeromq";
 import type { SupportedVideoCodec } from "../utils.js";
@@ -120,13 +121,22 @@ export type PrepareStreamOptions = {
   customFfmpegFlags: string[];
 
   /**
-   * Extra video filters appended to the transcoding filter chain, immediately after the internal
-   * `scale` filter and before the encoder's own output filters (e.g.
-   * `["subtitles='/tmp/subs.srt'"]` to burn in subtitles). Ignored when `noTranscoding` is set.
-   * Composed into the same `-vf` chain as `scale`, so — unlike a raw `-vf` in `customFfmpegFlags` —
-   * it cannot collide with / clobber the built-in scale and encoder filters.
+   * Burn this subtitle file into the video. The graph is composed by `prepareStream` itself: on
+   * the GPU pipeline the subtitles are rendered by libass onto a transparent BGRA canvas,
+   * uploaded, and composited with `overlay_vaapi` (the whole video path stays on the GPU); on the
+   * software path a `subtitles=` burn is appended after any HDR tonemap. Either way the burn is
+   * PTS-compensated for `startTime`, so cues stay correct across seeks. Incompatible with
+   * `noTranscoding` (throws).
    */
-  videoFilters: string[];
+  subtitleBurn?: { path: string };
+
+  /**
+   * Color/transfer characteristics of the input. `"hdr"` (PQ/HLG sources) inserts a tonemap to
+   * BT.709 SDR — `tonemap_vaapi` on the GPU pipeline, a zimg/Hable chain on the software path —
+   * without which HDR output looks washed out. Ignored (with a warning) when `noTranscoding` is
+   * set. Default `"sdr"`.
+   */
+  inputColor: "sdr" | "hdr";
 
   /**
    * Start playback at this offset, in seconds (ffmpeg input `-ss` seek). Fast and accurate for
@@ -156,22 +166,6 @@ export type Controller = {
   setVolume(newVolume: number): Promise<boolean>;
 };
 
-/**
- * Assemble the ordered video filter chain for the transcoding path: the base `scale`, then any
- * caller-provided `videoFilters` (e.g. burned-in subtitles), then the encoder's own output filters.
- * Pure and order-preserving so the chain is unit-testable without spawning ffmpeg. Empty entries are
- * dropped so a missing encoder filter list doesn't leave a stray comma in the `-vf` spec.
- */
-export function buildVideoFilterChain(
-  scaleFilter: string,
-  videoFilters: readonly string[],
-  encoderOutFilters: readonly string[],
-): string[] {
-  return [scaleFilter, ...videoFilters, ...encoderOutFilters].filter(
-    (filter) => filter.length > 0,
-  );
-}
-
 export function prepareStream(
   input: string | Readable,
   options: Partial<PrepareStreamOptions> = {},
@@ -199,7 +193,8 @@ export function prepareStream(
     },
     customInputOptions: [],
     customFfmpegFlags: [],
-    videoFilters: [],
+    subtitleBurn: undefined,
+    inputColor: "sdr",
     startTime: undefined,
     pad: undefined,
   } satisfies PrepareStreamOptions;
@@ -256,7 +251,8 @@ export function prepareStream(
         opts.customInputOptions ?? defaultOptions.customInputOptions,
       customFfmpegFlags:
         opts.customFfmpegFlags ?? defaultOptions.customFfmpegFlags,
-      videoFilters: opts.videoFilters ?? defaultOptions.videoFilters,
+      subtitleBurn: opts.subtitleBurn ?? defaultOptions.subtitleBurn,
+      inputColor: opts.inputColor ?? defaultOptions.inputColor,
       startTime:
         isFiniteNonZero(opts.startTime) && opts.startTime > 0
           ? opts.startTime
@@ -394,29 +390,36 @@ export function prepareStream(
     bitrateVideoMax,
     videoCodec,
   } = mergedOptions;
-  command.addOutputOption("-map 0:v");
 
   if (noTranscoding) {
-    // `noTranscoding` passes the input video through unmodified, so a filter chain can't apply. Fail
-    // fast instead of silently dropping caller-provided filters (e.g. burned-in subtitles).
-    if (mergedOptions.videoFilters.length > 0) {
+    // `noTranscoding` passes the input video through unmodified, so a filter graph can't apply.
+    // Fail fast instead of silently dropping a requested subtitle burn; an HDR input merely keeps
+    // its original transfer (the caller opted out of transcoding), so warn rather than throw.
+    if (mergedOptions.subtitleBurn !== undefined) {
       throw new Error(
-        "videoFilters cannot be applied when noTranscoding is set: the input video stream is copied through unmodified. Disable noTranscoding to burn in subtitles or other filters.",
+        "subtitleBurn cannot be applied when noTranscoding is set: the input video stream is copied through unmodified. Disable noTranscoding to burn in subtitles.",
       );
     }
+    if (mergedOptions.inputColor === "hdr") {
+      new Log("prepareStream").warn(
+        "inputColor 'hdr' is ignored when noTranscoding is set: the video stream is copied through unmodified, so no tonemap can apply",
+      );
+    }
+    command.addOutputOption("-map 0:v");
     command.videoCodec("copy");
   } else {
     if (!encoderSettings)
       throw new Error(`Encoder settings not specified for ${videoCodec}`);
 
-    // One combined `-vf` chain: scale (GPU scale when the encoder declares a hardware pipeline, else
-    // software `scale`), then caller filters (e.g. burned subtitles), then the encoder's own output
-    // filters. Built by a pure helper so the ordering is unit-testable. On a GPU pipeline the frames
-    // are already hardware surfaces, so the encoder's upload/format outFilters are unnecessary.
+    // Build the whole video graph with the pure builders in videoGraph.ts (unit-testable without
+    // spawning ffmpeg): scale (GPU when the encoder declares a hardware pipeline, else software
+    // `scale`), HDR tonemap, subtitle burn, and — software path only — the encoder's own output
+    // filters (on a GPU pipeline the frames are already hardware surfaces, so upload/format
+    // outFilters are unnecessary).
     //
-    // On the software path an optional `pad` letterboxes/pillarboxes the scaled frame onto a centered
-    // black canvas (e.g. fit 4:3 content into a 16:9 output). It's folded into the scale step so it
-    // runs before the caller/encoder filters. `pad` is intentionally not supported on the GPU pipeline.
+    // On the software path an optional `pad` letterboxes/pillarboxes the scaled frame onto a
+    // centered black canvas (e.g. fit 4:3 content into a 16:9 output). `pad` is intentionally not
+    // supported on the GPU pipeline.
     const { pad } = mergedOptions;
     const padded = pad !== undefined && pad.width > 0 && pad.height > 0;
     if (padded && hwPipeline) {
@@ -427,18 +430,36 @@ export function prepareStream(
           "use the software path (hardwareAcceleratedDecoding: false) for padded output",
       );
     }
-    const scaleFilter = hwPipeline
-      ? hwPipeline.scaleFilter(width, height)
-      : padded
-        ? `scale=${width}:${height},pad=${pad.width}:${pad.height}:-1:-1:color=black`
-        : `scale=${width}:${height}`;
-    command.videoFilter(
-      buildVideoFilterChain(
-        scaleFilter,
-        mergedOptions.videoFilters,
-        hwPipeline ? [] : (encoderSettings.outFilters ?? []),
-      ),
-    );
+    const graphSpec = {
+      width,
+      height,
+      inputColor: mergedOptions.inputColor,
+      ...(frameRate !== undefined ? { frameRate } : {}),
+      ...(mergedOptions.subtitleBurn !== undefined
+        ? {
+            subtitle: {
+              path: mergedOptions.subtitleBurn.path,
+              startTime: mergedOptions.startTime ?? 0,
+            },
+          }
+        : {}),
+    };
+    const graph = hwPipeline
+      ? hwPipeline.videoGraph(graphSpec)
+      : buildSoftwareVideoGraph({
+          ...graphSpec,
+          ...(padded ? { pad } : {}),
+          encoderOutFilters: encoderSettings.outFilters ?? [],
+        });
+    if (graph.kind === "filterChain") {
+      command.addOutputOption("-map 0:v");
+      command.videoFilter(graph.filters);
+    } else {
+      // Multi-branch graph (GPU subtitle overlay): -filter_complex plus -map of its labeled
+      // output. `-map 0:v` must NOT be emitted alongside it — that would put a second, unfiltered
+      // video stream into the NUT output.
+      command.complexFilter(graph.graph, graph.mapLabel);
+    }
 
     if (frameRate) command.fpsOutput(frameRate);
 
@@ -461,7 +482,10 @@ export function prepareStream(
     command
       .videoCodec(encoderSettings.name)
       .outputOptions(encoderSettings.options)
-      .outputOptions(encoderSettings.globalOptions ?? []);
+      // `globalOptions` serve the software-decode path (device init for the outFilters hwupload).
+      // When the hardware pipeline is active its decodeOptions already initialized the same named
+      // device, and a second -init_hw_device with that name is a hard ffmpeg error.
+      .outputOptions(hwPipeline ? [] : (encoderSettings.globalOptions ?? []));
   }
 
   // audio setup
