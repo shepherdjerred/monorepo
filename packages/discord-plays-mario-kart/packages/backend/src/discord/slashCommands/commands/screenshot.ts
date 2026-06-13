@@ -11,25 +11,18 @@ import {
 import client from "#src/discord/client.ts";
 import { getConfig } from "#src/config/index.ts";
 import type { N64Emulator } from "#src/emulator/n64-emulator.ts";
-import { encodePng } from "#src/emulator/png.ts";
+import { encodeScreenshotPng } from "#src/emulator/screenshot.ts";
 
 export const screenshotCommand = new SlashCommandBuilder()
   .setName("screenshot")
   .setDescription("Take a screenshot and upload it to the chat");
-
-const SCREENSHOT_SCALE = 2;
 
 export function makeScreenshot(emulator: N64Emulator) {
   return async function handleScreenshotCommand(
     interaction: CommandInteraction,
   ) {
     const frame = emulator.renderFrame();
-    const buffer = encodePng(
-      frame.rgba,
-      frame.width,
-      frame.height,
-      SCREENSHOT_SCALE,
-    );
+    const buffer = encodeScreenshotPng(frame);
     const date = new Date();
     const attachment = new AttachmentBuilder(buffer, {
       name: "screenshot.png",

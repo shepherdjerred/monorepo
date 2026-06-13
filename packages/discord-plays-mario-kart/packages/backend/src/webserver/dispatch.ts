@@ -4,7 +4,7 @@
 // booting the emulator or the Discord/stream side.
 import { match } from "ts-pattern";
 import type { Socket } from "socket.io";
-import { encodePng } from "#src/emulator/png.ts";
+import { encodeScreenshotPng } from "#src/emulator/screenshot.ts";
 import type { SeatManager } from "#src/input/seat-manager.ts";
 import { controllerRttMs } from "#src/observability/metrics.ts";
 import type {
@@ -81,7 +81,7 @@ export function handleRequest(
       if (emulator === undefined) return;
       const frame = emulator.renderFrame();
       if (frame.height === 0) return;
-      const png = encodePng(frame.rgba, frame.width, frame.height, 2);
+      const png = encodeScreenshotPng(frame);
       const response: ScreenshotResponse = {
         kind: "screenshot",
         value: png.toString("base64"),

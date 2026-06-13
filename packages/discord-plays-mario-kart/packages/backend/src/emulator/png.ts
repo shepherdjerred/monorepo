@@ -35,17 +35,29 @@ export function encodePng(
   scale = 1,
 ): Buffer {
   const factor = Math.max(1, Math.floor(scale));
-  const outW = width * factor;
-  const outH = height * factor;
+  return encodePngToSize(
+    { rgba, width, height },
+    { width: width * factor, height: height * factor },
+  );
+}
 
+export function encodePngToSize(
+  frame: { rgba: Buffer; width: number; height: number },
+  target: { width: number; height: number },
+): Buffer {
+  const { rgba, width, height } = frame;
+  const { width: outW, height: outH } = target;
+  if (width <= 0 || height <= 0 || outW <= 0 || outH <= 0) {
+    throw new RangeError("PNG dimensions must be positive");
+  }
   const stride = outW * 3;
   const raw = Buffer.alloc((stride + 1) * outH);
   for (let y = 0; y < outH; y++) {
-    const srcY = Math.trunc(y / factor);
+    const srcY = Math.min(height - 1, Math.trunc((y * height) / outH));
     let pos = y * (stride + 1);
     raw[pos++] = 0; // filter: none
     for (let x = 0; x < outW; x++) {
-      const srcX = Math.trunc(x / factor);
+      const srcX = Math.min(width - 1, Math.trunc((x * width) / outW));
       const s = (srcY * width + srcX) * 4; // RGBA source: R,G,B,X
       raw[pos++] = rgba[s]; // R
       raw[pos++] = rgba[s + 1]; // G
