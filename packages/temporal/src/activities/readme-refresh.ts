@@ -81,25 +81,46 @@ export const readmeRefreshActivities = {
 
       // Regenerate the embedded listings. cog rewrites the three READMEs in
       // place and writes a `_summary.md` for any package missing one (calling
-      // the Codex CLI via the pod's OPENAI_API_KEY). Existing summaries are
-      // reused as a cache, so a steady-state run makes no Codex calls.
+      // the Codex CLI via the pod's OPENAI_API_KEY, with `project_doc_max_bytes=0`
+      // so codex ignores AGENTS.md and returns a plain project summary rather
+      // than agent session-log meta). Existing summaries are reused as a cache,
+      // so a steady-state run makes no Codex calls.
       await runCommand(["cog", "-r", ...COG_TARGETS], { cwd: repoDir });
 
-      const status = await runCommand(["git", "status", "--porcelain"], {
+      const noDiff: ReadmeRefreshResult = {
+        changedFiles: [],
+        branchName: undefined,
+        commitHash: undefined,
+        prUrl: undefined,
+        outcome: "no-diff",
+      };
+
+      const regenerated = parsePorcelainPaths(
+        await runCommand(["git", "status", "--porcelain"], { cwd: repoDir }),
+      ).filter((path) => isReadmeRefreshPath(path));
+      if (regenerated.length === 0) {
+        return noDiff;
+      }
+
+      // cog's raw output isn't prettier-clean (e.g. a missing blank line after
+      // the `]]]-->` marker), and the PR this opens runs through the normal
+      // prettier + markdownlint CI gates. Format the regenerated files with the
+      // repo's pinned prettier (installed via the frozen lockfile) so the PR is
+      // mergeable — the same approach helm-types-refresh takes for its generated
+      // output. In steady state cog un-formats and prettier re-formats back to
+      // the committed bytes, so this nets to no diff (and opens no PR).
+      await runCommand(["bun", "install", "--frozen-lockfile"], {
         cwd: repoDir,
       });
-      const files = parsePorcelainPaths(status).filter((path) =>
-        isReadmeRefreshPath(path),
-      );
+      await runCommand(["bunx", "prettier", "--write", ...regenerated], {
+        cwd: repoDir,
+      });
 
+      const files = parsePorcelainPaths(
+        await runCommand(["git", "status", "--porcelain"], { cwd: repoDir }),
+      ).filter((path) => isReadmeRefreshPath(path));
       if (files.length === 0) {
-        return {
-          changedFiles: [],
-          branchName: undefined,
-          commitHash: undefined,
-          prUrl: undefined,
-          outcome: "no-diff",
-        };
+        return noDiff;
       }
 
       const branch = `chore/readme-refresh-${id.slice(0, 8)}`;
