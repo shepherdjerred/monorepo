@@ -147,3 +147,26 @@ curl -sI https://public.sjer.red/pr/assets/99999/demo-site/index.html  # 200, te
 ```
 
 Open `demo.cast.html` in a browser to confirm the inlined player loads the cast via the relative ref.
+
+## Session Log — 2026-06-12
+
+### Done
+
+- Implemented everything in this plan in `packages/toolkit` on branch `feature/pr-media-assets` — PR [#1133](https://github.com/shepherdjerred/monorepo/pull/1133), commit `ad943539a`
+- `src/lib/s3/assets.ts`: content-type map (+`.cast`, css/js/wasm/fonts), `markdownForAsset` per-type emission, `dirFileKey`, segment-encoded `publicUrlForKey`, full-key `firstDuplicateKey` (replaces `firstDuplicateBasename`)
+- `src/lib/s3/cast-player.ts` (+ `src/types/asciinema-player-assets.d.ts`): self-contained player page; `asciinema-player@3.15.1` vendored via Bun text imports (verified: bundle is worker-free and supports asciicast v2+v3)
+- `src/commands/pr/asset.ts`: dir auto-detect (root `index.html` required), recursive walk skipping dotfiles/symlinks, atomic plan-then-upload, generated `.cast.html` joins the collision set
+- Tests: 49 pass; typecheck, eslint, `bun run build` (binary embeds the player) all clean
+- Guidance: root `AGENTS.md` § "PR Media & Demo Artifacts" (taxonomy + restraint rule), `packages/toolkit/AGENTS.md` § "pr asset — PR media host"
+- Live e2e against the real bucket under `pr/assets/1133/`: real `asciinema rec` cast, ffmpeg mp4, 3-file demo site — every URL HEAD 200 with correct content type; player playback and demo-site JS/CSS verified in real Chrome (screenshots on the PR)
+
+### Remaining
+
+- PR #1133 review + Buildkite CI + merge; after merge: `./install.sh` to refresh `~/.local/bin/toolkit`, archive this plan, remove the worktree
+- The e2e objects under `pr/assets/1133/` age out via the 365-day lifecycle rule; no cleanup needed
+
+### Caveats
+
+- asciinema 3.x records asciicast **v3**; player 3.15.1 handles v2+v3 but a future player downgrade would break v3 casts
+- GitHub never embeds external video — video/cast/demo links open in a browser tab by design; only images/GIFs render inline
+- `--markdown` output changed for non-image files (was always `![](url)`); that emission never rendered via camo, so this is a fix, not a regression
