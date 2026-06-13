@@ -2,7 +2,7 @@
 
 ## Status
 
-Complete
+In Progress
 
 ## Context
 
@@ -80,3 +80,32 @@ All pre-commit hooks passed on the final commit (tier-1 + tier-2, including
 - The two hook fixes (`check-suppressions` + `lefthook.yml`) are on the PR
   branch, not main — they will land when the PR merges, which is fine since
   main CI doesn't re-shellcheck already-committed files in that directory
+
+## Session Log — 2026-06-13 (round 2)
+
+### Done
+
+- Diagnosed that build 3870 (for commit `f9310ff10`) was failing with
+  "lockfile had changes, but lockfile is frozen" in `packages/temporal`
+  (not `scout-for-lol` as the prior task description suggested)
+- Ran `bun install` in `packages/temporal` to regenerate the lockfile;
+  the diff shows 4 insertions / 2 deletions: added `"overrides"` block
+  for `protobufjs ^7.5.7` and `sanitize-html ^2.17.4` that were missing
+  after the main merge
+- Verified all other failing CI packages (root, scout-for-lol, birmel,
+  homelab, toolkit, llm-observability, home-assistant) pass `--frozen-lockfile`
+- Committed `5103ca1ad` with only `packages/temporal/bun.lock` changed
+  (all pre-commit hooks passed)
+- Pushed to `codex/scout-marketing-news` — CI re-triggered
+
+### Remaining
+
+- Wait for the new Buildkite build to confirm green
+- Soft failures (large-file-check, trivy-scan) remain; those are
+  non-blocking per existing CI configuration
+
+### Caveats
+
+- The original CI failure description in the task mentioned `scout-for-lol`;
+  the actual failing package was `temporal` (the lockfile was missing the
+  `overrides` section after the merge with main)
