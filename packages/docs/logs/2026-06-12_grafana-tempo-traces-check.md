@@ -48,6 +48,13 @@ Grafana UI: `https://grafana.tailnet-1a49.ts.net` (Tailscale ingress, host `graf
 - Provisioned with `type: "grafanapyroscope"`, which is not a registered plugin (`/api/datasources/uid/pyroscope/health` → `plugin.notRegistered`). Profiles Drilldown showed "Missing Pyroscope data source" and all queries failed.
 - Correct plugin ID on Grafana v13 is `grafana-pyroscope-datasource`; fixed in `grafana-values.ts` (same PR #1130).
 
+### eBPF profiling — broken by kernel lockdown=confidentiality (fixed live by owner)
+
+- After today's Talos reinstall (secure boot), the kernel booted with `lockdown=confidentiality` (Talos appends it via `SecureBootArgs`, `pkg/machinery/kernel/kernel.go`). Confidentiality lockdown denies `LOCKDOWN_BPF_READ_KERNEL`, so the verifier rejects `bpf_probe_read*` helpers.
+- Failure chain in Alloy v1.16.1: cilium/ebpf's `haveProbeReadKernel` feature probe fails under lockdown → `fixupProbeReadKernel` silently rewrites helper #113 → legacy #4 → verifier error `program of this type cannot use helper bpf_probe_read#4` → `pyroscope.ebpf` component unhealthy, zero eBPF profiles.
+- The committed profiler bytecode is clean (18× `bpf_probe_read_kernel`, 0× legacy) — the legacy helper appears only via cilium/ebpf's load-time downgrade, which made the error message misleading.
+- Owner switched the node to `lockdown=integrity`; eBPF tracer then loaded ("eBPF tracer loaded" in alloy logs). Integrity mode still blocks kernel-memory _writes_ but permits BPF reads.
+
 ## Session Log — 2026-06-12
 
 ### Done
