@@ -163,10 +163,12 @@ Open `demo.cast.html` in a browser to confirm the inlined player loads the cast 
 ### Remaining
 
 - PR #1133 review + Buildkite CI + merge; after merge: `./install.sh` to refresh `~/.local/bin/toolkit`, archive this plan, remove the worktree
+- **Post-deploy (after the caddy-s3proxy image bump syncs):** `curl -sI -H "Range: bytes=0-99" "https://public.sjer.red/pr/assets/1133/sample-video.mp4?cb=1"` must return 206 + `content-range`, and the mp4 link must play in Safari
 - The e2e objects under `pr/assets/1133/` age out via the 365-day lifecycle rule; no cleanup needed
 
 ### Caveats
 
+- **mp4 playback was broken in Safari at first ship**: the `caddy-s3-proxy` plugin answered Range requests with 200/full-body (no 206, no `Accept-Ranges`). Fixed in the fork — `shepherdjerred/caddy-s3-proxy@v0.5.7-head2` (= head1 + fix, unit-tested; upstream issue #51, their PR #73 is wrong — writes status before headers). Monorepo commit `5f6a6be80` pins both xcaddy invocations to the shared `CADDY_S3_PROXY_MODULE` constant (the Caddyfile-validate helper had been building upstream unpinned)
 - asciinema 3.x records asciicast **v3**; player 3.15.1 handles v2+v3 but a future player downgrade would break v3 casts
 - GitHub never embeds external video — video/cast/demo links open in a browser tab by design; only images/GIFs render inline
 - `--markdown` output changed for non-image files (was always `![](url)`); that emission never rendered via camo, so this is a fix, not a regression
