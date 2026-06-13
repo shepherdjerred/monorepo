@@ -54,6 +54,7 @@ Grafana UI: `https://grafana.tailnet-1a49.ts.net` (Tailscale ingress, host `graf
 - Failure chain in Alloy v1.16.1: cilium/ebpf's `haveProbeReadKernel` feature probe fails under lockdown → `fixupProbeReadKernel` silently rewrites helper #113 → legacy #4 → verifier error `program of this type cannot use helper bpf_probe_read#4` → `pyroscope.ebpf` component unhealthy, zero eBPF profiles.
 - The committed profiler bytecode is clean (18× `bpf_probe_read_kernel`, 0× legacy) — the legacy helper appears only via cilium/ebpf's load-time downgrade, which made the error message misleading.
 - Owner switched the node to `lockdown=integrity`; eBPF tracer then loaded ("eBPF tracer loaded" in alloy logs). Integrity mode still blocks kernel-memory _writes_ but permits BPF reads.
+- Verified end-to-end: 103 services with profiles in Pyroscope within 10 minutes of the fix, zero push errors. (Initial `deadline_exceeded` push errors right after the fix were just pyroscope-0 restarting; they stopped once it passed readiness.)
 
 ## Session Log — 2026-06-12
 
