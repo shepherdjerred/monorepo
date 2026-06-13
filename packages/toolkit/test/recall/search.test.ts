@@ -38,6 +38,37 @@ class InspectableRecallDb extends RecallDb {
   }
 }
 
+type VectorRows = Awaited<ReturnType<RecallDb["vectorSearch"]>>;
+
+class CannedVectorRecallDb extends RecallDb {
+  private readonly cannedRows: VectorRows;
+
+  constructor(sqlitePath: string, cannedRows: VectorRows) {
+    super(sqlitePath);
+    this.cannedRows = cannedRows;
+  }
+
+  override async vectorSearch(
+    _queryVector: number[],
+    _limit: number,
+  ): Promise<VectorRows> {
+    return this.cannedRows;
+  }
+}
+
+function metadataFor(docPath: string, title: string) {
+  return {
+    path: docPath,
+    title,
+    tags: "test",
+    source: "unit-test",
+    content_hash: "hash",
+    mtime: 1,
+    chunk_count: 1,
+    indexed_at: new Date(0).toISOString(),
+  };
+}
+
 afterEach(async () => {
   for (const dir of tempDirs.splice(0)) {
     await rm(dir, { recursive: true, force: true });
@@ -198,5 +229,102 @@ describe("recall search", () => {
       mode: "semantic",
     });
     writableDb.close();
+  });
+});
+
+describe("recall hybrid fusion", () => {
+  test("ranks a document found by both methods above single-method documents", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "toolkit-recall-"));
+    tempDirs.push(tempDir);
+    const sqlitePath = path.join(tempDir, "recall.db");
+    const docBoth = path.join(tempDir, "both.md");
+    const docVecOnly = path.join(tempDir, "vec-only.md");
+    const docFtsOnly = path.join(tempDir, "fts-only.md");
+
+    // Vector list ranks the vector-only doc FIRST; fusion with FTS must
+    // still pull the doc found by both methods to the top.
+    const db = new CannedVectorRecallDb(sqlitePath, [
+      {
+        id: "vec:0",
+        doc_path: docVecOnly,
+        chunk_index: 0,
+        text: "vector only chunk",
+        _distance: 0.1,
+      },
+      {
+        id: "both:4",
+        doc_path: docBoth,
+        chunk_index: 4,
+        text: "fusion chunk excerpt",
+        _distance: 0.2,
+      },
+    ]);
+
+    db.upsertFts(docBoth, "Both Doc", "test", "fusion fusion fusion topic");
+    db.upsertFts(docFtsOnly, "FTS Doc", "test", "fusion mentioned once here");
+    db.upsertMetadata(metadataFor(docBoth, "Both Doc"));
+    db.upsertMetadata(metadataFor(docVecOnly, "Vec Doc"));
+    db.upsertMetadata(metadataFor(docFtsOnly, "FTS Doc"));
+
+    const results = await hybridSearch(db, new StaticEmbeddingClient(), {
+      query: "fusion",
+      limit: 5,
+      mode: "hybrid",
+      verbose: false,
+    });
+
+    expect(results).toHaveLength(3);
+    expect(results[0]).toMatchObject({
+      path: docBoth,
+      // The fused entry keeps the best vector chunk, not the FTS doc head
+      chunk: "fusion chunk excerpt",
+      chunkIndex: 4,
+    });
+
+    const topScore = results[0]?.score ?? 0;
+    for (const result of results.slice(1)) {
+      expect(topScore).toBeGreaterThan(result.score);
+    }
+    db.close();
+  });
+
+  test("collapses multiple vector chunks of one document to its best chunk", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "toolkit-recall-"));
+    tempDirs.push(tempDir);
+    const sqlitePath = path.join(tempDir, "recall.db");
+    const docPath = path.join(tempDir, "chunked.md");
+
+    const db = new CannedVectorRecallDb(sqlitePath, [
+      {
+        id: "doc:3",
+        doc_path: docPath,
+        chunk_index: 3,
+        text: "best chunk",
+        _distance: 0.1,
+      },
+      {
+        id: "doc:7",
+        doc_path: docPath,
+        chunk_index: 7,
+        text: "worse chunk",
+        _distance: 0.5,
+      },
+    ]);
+    db.upsertMetadata(metadataFor(docPath, "Chunked Doc"));
+
+    const results = await hybridSearch(db, new StaticEmbeddingClient(), {
+      query: "zzz-no-fts-match",
+      limit: 5,
+      mode: "hybrid",
+      verbose: false,
+    });
+
+    expect(results).toHaveLength(1);
+    expect(results[0]).toMatchObject({
+      path: docPath,
+      chunk: "best chunk",
+      chunkIndex: 3,
+    });
+    db.close();
   });
 });

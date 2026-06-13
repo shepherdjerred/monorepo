@@ -4,6 +4,7 @@ import { Container } from "./stories/container.tsx";
 import { socket } from "./socket.ts";
 import {
   type InputRequest,
+  type LatencyReportRequest,
   type Response,
   type SeatClaimRequest,
   type SeatReleaseRequest,
@@ -21,7 +22,15 @@ export function App() {
   useInterval(() => {
     const start = Date.now();
     socket.emit("ping", () => {
-      setLatency(Date.now() - start);
+      const rtt = Date.now() - start;
+      setLatency(rtt);
+      // Report the measurement so the server can export it as a metric
+      // (client-side timing avoids any clock-skew question).
+      const report: LatencyReportRequest = {
+        kind: "latency-report",
+        rttMs: rtt,
+      };
+      socket.emit("request", report);
     });
   }, 2000);
 

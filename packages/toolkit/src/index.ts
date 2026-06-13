@@ -67,6 +67,16 @@ Commands:
   grafana annotate <TEXT>    Create an annotation
   gf ...                     Alias for grafana
 
+  discord daemon start       Start session daemon (DISCORD_BOT_TOKEN / DISCORD_USER_TOKEN)
+  discord daemon stop|status Manage the daemon
+  discord send <CH> <MSG>    Send a message
+  discord read <CH> [-n 20]  Read recent messages (incl. embeds)
+  discord wait <CH>          Block until a matching message arrives
+  discord slash <CH> <BOT> <CMD> [ARGS...]  Invoke another bot's slash command
+  discord voice join|leave|states           Voice presence + who's streaming
+  discord guilds|channels    Discovery
+  discord whoami             Daemon identities + uptime
+
 Options:
   --version                  Print toolkit version
   --json                     Output as JSON
@@ -79,6 +89,8 @@ Environment Variables:
   GRAFANA_URL                Grafana instance URL
   GRAFANA_API_KEY            Grafana API key or service account token
   AWS_PROFILE                AWS profile for 'pr asset' (or use --profile)
+  DISCORD_BOT_TOKEN          Discord bot token (for 'discord daemon start')
+  DISCORD_USER_TOKEN         Discord user/selfbot token (for 'discord daemon start')
 
 Examples:
   toolkit fetch https://docs.lancedb.com/
@@ -151,6 +163,11 @@ async function main(): Promise<void> {
     case "gf": {
       const { handleGrafanaCommand } = await import("./handlers/grafana.ts");
       await handleGrafanaCommand(subcommand, args.slice(2));
+      break;
+    }
+    case "discord": {
+      const { handleDiscordCommand } = await import("./handlers/discord.ts");
+      await handleDiscordCommand(subcommand, args.slice(2));
       break;
     }
     default:

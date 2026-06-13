@@ -158,7 +158,11 @@ export function createGrafanaValues(
         name: "pyroscope",
         uid: "pyroscope",
         editable: false,
-        type: "grafanapyroscope",
+        // Must be the datasource plugin ID. "grafanapyroscope" is not a
+        // registered plugin (health check returns plugin.notRegistered), which
+        // left this datasource dead and Profiles Drilldown reporting "Missing
+        // Pyroscope data source".
+        type: "grafana-pyroscope-datasource",
         url: "http://pyroscope.pyroscope.svc.cluster.local:4040",
         version: 1,
       },

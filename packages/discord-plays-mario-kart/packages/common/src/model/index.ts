@@ -7,6 +7,7 @@ import {
 } from "./screenshot.ts";
 import {
   InputRequestSchema,
+  LatencyReportRequestSchema,
   SeatClaimRequestSchema,
   SeatReleaseRequestSchema,
   SeatResponseSchema,
@@ -17,6 +18,7 @@ export type Request = z.infer<typeof RequestSchema>;
 export const RequestSchema = z.discriminatedUnion("kind", [
   LoginRequestSchema,
   InputRequestSchema,
+  LatencyReportRequestSchema,
   SeatClaimRequestSchema,
   SeatReleaseRequestSchema,
   ScreenshotRequestSchema,
