@@ -83,6 +83,42 @@ function subtitlesSuffix(pref: SubtitlePref | undefined): string {
   return "";
 }
 
+/**
+ * The `/stream help` reference: a grouped command list plus a "Supported sources" note. Static
+ * (no playback state), so it's an exported pure function — the command-handler test asserts every
+ * registered subcommand name appears here, guarding against drift. Must stay under Discord's
+ * 2000-char message limit.
+ */
+export function helpText(): string {
+  return [
+    "🎬 **Streambot** — `/stream` commands",
+    "",
+    "**Playback**",
+    "• `/stream play <query>` — queue a video (library title, URL, playlist, or search)",
+    "• `/stream playnext <query>` — queue it to the front",
+    "• `/stream skip` — skip the current video",
+    "• `/stream stop` — stop & clear the queue _(admin)_",
+    "• `/stream seek <pos>` — jump to a timestamp (`90`, `1:30`, `1:02:03`)",
+    "",
+    "**Queue**",
+    "• `/stream queue` · `nowplaying` · `remove <index>` · `move <from> <to>`",
+    "• `/stream clear` _(admin)_ · `shuffle` · `loop <off|track|queue>` · `volume <0-200>`",
+    "",
+    "**Library & chapters**",
+    "• `/stream list [filter]` · `search <query>` · `chapters` · `chapter <n>`",
+    "",
+    "**Subtitles** — add `subtitles:on|off` and `sublang:<lang>` (e.g. `en`, `en.forced`) to `play`/`playnext`.",
+    "",
+    "📡 **Supported sources**",
+    "`/stream play` accepts a library title, search terms, or any public link yt-dlp can fetch " +
+      "without logging in — YouTube, Twitch, Vimeo, SoundCloud, Reddit, direct `.mp4`/HLS, and most " +
+      "public video sites. Playlist links expand automatically. Subscription/DRM (Netflix, Disney+…) " +
+      "and login-only sites won't work.",
+    "",
+    "• `/stream help` — show this message",
+  ].join("\n");
+}
+
 export type QueueItemView = {
   readonly title: string;
   readonly requesterId: UserId;
@@ -185,6 +221,8 @@ export class CommandHandler {
         return interaction.reply(
           this.listText(interaction.getStringRequired("query")),
         );
+      case "help":
+        return interaction.reply(helpText());
       default:
         return interaction.reply("Unknown command.");
     }

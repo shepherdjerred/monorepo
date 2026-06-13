@@ -1,10 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import {
   CommandHandler,
+  helpText,
   type CommandHandlerDeps,
   type CommandInteraction,
   type PlaybackView,
 } from "@shepherdjerred/streambot/discord/command-handler.ts";
+import { commandJson } from "@shepherdjerred/streambot/discord/commands.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import type { PlaybackEvent } from "@shepherdjerred/streambot/machine/types.ts";
 import {
@@ -559,6 +561,33 @@ describe("CommandHandler subtitles options", () => {
     for (const event of h.events) {
       if (event.type !== "ADD") throw new Error("expected ADD");
       expect(event.source.subtitles).toEqual({ enabled: true });
+    }
+  });
+});
+
+describe("help", () => {
+  test("replies with the command reference and source note", async () => {
+    const h = makeHandler({});
+    const fake = fakeInteraction({ sub: "help" });
+    await h.handler.run(fake.interaction);
+    expect(h.events).toHaveLength(0);
+    const reply = fake.replies[0];
+    if (reply === undefined) throw new Error("expected a help reply");
+    expect(reply).toContain("/stream play");
+    expect(reply).toContain("Supported sources");
+    expect(reply).toContain("yt-dlp");
+    // Discord rejects messages over 2000 chars.
+    expect(reply.length).toBeLessThanOrEqual(2000);
+  });
+
+  test("lists every registered subcommand (drift guard)", () => {
+    const text = helpText();
+    const options = commandJson[0]?.options ?? [];
+    expect(options.length).toBeGreaterThan(0);
+    for (const option of options) {
+      // Each subcommand name must appear as a whole word (the help uses a compact
+      // `queue · nowplaying · …` layout, so names aren't all prefixed with `/stream`).
+      expect(text).toMatch(new RegExp(String.raw`\b${option.name}\b`));
     }
   });
 });

@@ -51,6 +51,8 @@ stream files/URLs directly with ffmpeg instead of automating a browser.
 - `src/discord/` — command bot client + commands + routing. `status-reporter.ts` posts the
   now-playing line (with a TMDB poster embed for local files when configured). `/stream chapters`
   lists chapters; `/stream chapter <n>` seeks to one (reuses the live seek side-channel).
+  `/stream help` (`helpText()` in `command-handler.ts`) prints the command reference + a
+  "supported sources" note; a command-handler test asserts every registered subcommand appears in it.
 - `src/pool/` — userbot pool (login, membership snapshot, acquire/release).
 - `src/session/` — per-`(guild, channel)` session manager (actor lifecycle, resume, checkpointing).
 - `src/streamer/` — selfbot + `@dank074` stream driver.
