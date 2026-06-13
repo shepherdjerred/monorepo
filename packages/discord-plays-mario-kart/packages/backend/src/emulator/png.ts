@@ -50,6 +50,12 @@ export function encodePngToSize(
   if (width <= 0 || height <= 0 || outW <= 0 || outH <= 0) {
     throw new RangeError("PNG dimensions must be positive");
   }
+  const requiredBytes = width * height * 4;
+  if (rgba.length < requiredBytes) {
+    throw new RangeError(
+      `rgba buffer too small: need ${String(requiredBytes)} bytes for ${String(width)}x${String(height)} (got ${String(rgba.length)})`,
+    );
+  }
   const stride = outW * 3;
   const raw = Buffer.alloc((stride + 1) * outH);
   for (let y = 0; y < outH; y++) {
