@@ -35,20 +35,34 @@ Session started as a health check of ArgoCD / Kubernetes / Talos, then fixed the
 - `tsc --noEmit`, eslint, full pre-commit suite (helm lint, cdk8s tests) all green.
 - cdk8s synth inspected: alloy Namespace renders with the 3 PSA labels (same shape as buildkite's); minecraft Application specs render without `group: ""`.
 
+## Live testing (2026-06-12 evening) — onion peeled, three layers deep
+
+User asked to apply the fix live to test. Result: the PSA fix works, but alloy eBPF profiling is blocked by Talos kernel lockdown and **cannot work on this node without a Talos image change**.
+
+1. **PSA labels** (`kubectl label ns alloy pod-security.kubernetes.io/...=privileged` ×3): daemonset-controller was in a long failure backoff; nudged with a temporary DS annotation (since removed). Pod scheduled and ran 2/2. ✅ PSA fix verified.
+2. **Next blocker — kallsyms**: `failed to read kernel symbols: unable to read kallsyms addresses`. Talos KSPP default `kernel.kptr_restrict=2` hides kallsyms from everyone (capabilities cannot bypass 2). Added `packages/homelab/src/talos/patches/sysctls.yaml` setting it to `1` (CAP_SYSLOG holders can read; alloy is privileged). Applied live via `talosctl patch machineconfig` (no reboot). ✅ kallsyms error gone.
+3. **Next blocker — BPF verifier**: `program of this type cannot use helper bpf_probe_read#4`. Tested alloy chart 1.10.0 / app v1.17.0 (latest) live by patching the Application targetRevision — same error. Root cause (per falcosecurity/libs#2736, same Talos symptom): the SecureBoot Talos image boots with **kernel lockdown=confidentiality**, which disables `bpf_probe_read*()` kernel-memory helpers entirely. No alloy version can work under it.
+4. Fix per the Falco thread + siderolabs/talos#8535: regenerate the factory.talos.dev schematic with `extraKernelArgs: [-lockdown, lockdown=integrity]`, run `update-image-id.ts`, `talosctl upgrade` (node reboot). **Decision left to owner** — it relaxes kernel hardening and reboots the single-node cluster.
+
+Live state at session end: alloy ns has PSA labels, node has `kptr_restrict=1`, live alloy Application targetRevision=1.10.0 (matches the versions.ts bump in the PR, so no drift post-merge). Alloy pod Running but `pyroscope.ebpf` component unhealthy (lockdown).
+
 ## Session Log — 2026-06-12
 
 ### Done
 
 - Health check of Talos / K8s / ArgoCD (all findings above).
-- PR [#1126](https://github.com/shepherdjerred/monorepo/pull/1126) (`fix/alloy-psa-and-argocd-drift`): alloy namespace PSA labels + removal of `group: ""` from three minecraft `ignoreDifferences`, with corrected root-cause comments.
+- PR [#1126](https://github.com/shepherdjerred/monorepo/pull/1126) (`fix/alloy-psa-and-argocd-drift`): alloy namespace PSA labels, removal of `group: ""` from three minecraft `ignoreDifferences`, `sysctls.yaml` Talos patch (kptr_restrict=1, applied live), alloy chart bump 1.8.2 → 1.10.0 (matches live), Talos README docs.
+- Live-verified: PSA fix works (pod schedules/runs); minecraft drift fix needs no live action (live CRs already lack `group: ""`).
 
 ### Remaining
 
-- Merge #1126, wait for CI to publish the apps chart, then confirm: alloy DaemonSet 1/1 + app Healthy, `apps` app Synced.
+- **Owner decision**: change Talos kernel lockdown confidentiality → integrity (new image schematic + `talosctl upgrade` + reboot) to make alloy eBPF actually profile, or park/remove alloy. Until then the alloy app stays Progressing with an unhealthy `pyroscope.ebpf` component.
+- Merge #1126; post-merge confirm `apps` goes Synced and alloy stays as live-tested.
 - **mcp-gateway still Degraded** (missing `FASTMAIL_TOKEN` key in `mcp-gateway-credentials`) — separate fix needed, not in scope of this PR.
 
 ### Caveats
 
 - The rendered Namespace carries `namespace: argocd` metadata (chart default); harmless for cluster-scoped resources and identical to the working buildkite pattern.
-- The existing live `alloy` namespace was created bare by `CreateNamespace=true`; ArgoCD sync of the new Namespace manifest must add the labels to it. If the app doesn't recover after sync, check that the labels actually landed: `kubectl get ns alloy --show-labels`.
 - First fix attempt blamed the API server for dropping `group: ""`; live prometheus disproved that. Comments/PR describe the real omitempty round-trip mechanism.
+- `kptr_restrict=1` is a (mild) hardening relaxation that currently buys nothing while lockdown blocks eBPF; trivially revertible (`talosctl patch` back to "2" + delete sysctls.yaml) if alloy is dropped instead.
+- Alloy was Progressing since 2026-06-08 with zero pods and nothing alerted on it — a DaemonSet with desired>0/current=0 or an app stuck Progressing >1h may deserve an alert.
