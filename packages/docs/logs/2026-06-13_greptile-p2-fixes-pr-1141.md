@@ -2,7 +2,7 @@
 
 ## Status
 
-Complete
+Partially Complete
 
 ## Context
 
@@ -53,3 +53,20 @@ This creates a two-way breadcrumb: any developer adding a wrapper will see the i
 ### Caveats
 
 - The PROPS_WRAPPERS fix is documentation-only (no compile-time enforcement) since eslint-config cannot import homelab. This is the correct approach for cross-package registries.
+
+## Session Log — 2026-06-13 (conflict resolution)
+
+### Done
+
+- Resolved the `packages/homelab/src/cdk8s/src/resources/frontends/redlib.ts` merge conflict between `origin/main` and `feature/helm-types-hygiene`
+- Integration: kept PR's `resources: {}` BestEffort comment from `c3c268dbc` AND adopted main's `ghcr.io/shepherdjerred/redlib:${versions["shepherdjerred/redlib"]}` image from commit `22a54be55` (glibc fix for Reddit OAuth block)
+- Verified: `bun run --filter='./packages/homelab' typecheck` exits 0; ESLint clean on redlib.ts; all pre-commit hooks pass (tier-1 + tier-2)
+- Merge commit `b1190b826` pushed to `origin/feature/helm-types-hygiene`
+
+### Remaining
+
+- None
+
+### Caveats
+
+- None
