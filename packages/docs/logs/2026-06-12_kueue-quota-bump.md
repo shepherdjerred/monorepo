@@ -48,3 +48,10 @@ Deploys via ArgoCD on merge; no manual apply.
   the scheduler. Don't raise further without first reclaiming requests from other namespaces.
 - Buildkite agent-stack concurrency also gates parallelism; if bursts still queue, check that
   side before touching Kueue again.
+
+## Update — same day
+
+The "reclaim requests from other namespaces" caveat was actioned in the same PR: a full
+cluster right-sizing landed as the second commit. See
+[2026-06-12_k8s-resource-rightsizing](../plans/2026-06-12_k8s-resource-rightsizing.md) —
+node CPU requests drop from ~92% to ~60%, so the 7.5 CPU quota now has real headroom.

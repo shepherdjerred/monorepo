@@ -78,6 +78,14 @@ export function createGrafanaValues(
       },
     },
     defaultDashboardsEnabled: false,
+    // Baseline request (no limits) so dashboards aren't BestEffort.
+    // 30d peak ~55m / ~910Mi.
+    resources: {
+      requests: {
+        cpu: "50m",
+        memory: "512Mi",
+      },
+    },
     imageRenderer: {
       enabled: true,
       serverURL:

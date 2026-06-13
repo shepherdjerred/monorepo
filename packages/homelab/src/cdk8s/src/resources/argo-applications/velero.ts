@@ -78,6 +78,14 @@ export function createVeleroApp(chart: Chart) {
         },
       },
     },
+    // Baseline request (no limits) so the backup controller isn't BestEffort.
+    // 30d peak ~140m / ~470Mi.
+    resources: {
+      requests: {
+        cpu: "100m",
+        memory: "512Mi",
+      },
+    },
     configuration: {
       backupStorageLocation: [
         {

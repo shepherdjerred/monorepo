@@ -273,10 +273,12 @@ echo "Done."`,
             engine: {
               kind: "StatefulSet",
               port: 8080,
+              // No CPU limit on purpose — the engine bursts freely; the request is
+              // just the scheduling reservation. 30d peaks: 4.6 CPU / 14.4Gi.
               resources: {
                 requests: {
-                  cpu: "8",
-                  memory: "24Gi",
+                  cpu: "6",
+                  memory: "16Gi",
                 },
                 limits: {
                   memory: "50Gi",

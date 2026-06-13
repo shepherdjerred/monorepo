@@ -21,6 +21,14 @@ export function createPromtailApp(chart: Chart) {
         },
       ],
     },
+    // Baseline request (no limits) so log shipping isn't BestEffort.
+    // 30d peak ~315m / ~350Mi; request reflects steady state.
+    resources: {
+      requests: {
+        cpu: "100m",
+        memory: "256Mi",
+      },
+    },
   };
 
   return new Application(chart, "promtail-app", {

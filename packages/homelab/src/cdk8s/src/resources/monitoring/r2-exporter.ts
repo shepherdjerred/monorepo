@@ -1,7 +1,8 @@
 import type { Chart } from "cdk8s";
-import { Duration } from "cdk8s";
+import { Duration, Size } from "cdk8s";
 import {
   ConfigMap,
+  Cpu,
   Deployment,
   EnvValue,
   Probe,
@@ -115,6 +116,17 @@ export async function createR2ExporterMonitoring(chart: Chart) {
       readOnlyRootFilesystem: true,
       user: 65_534, // nobody user
       group: 65_534,
+    },
+    // Without this, cdk8s-plus defaults to a 1 CPU / 512Mi request — 30d peak is <1m / <30Mi.
+    resources: {
+      cpu: {
+        request: Cpu.millis(50),
+        limit: Cpu.millis(200),
+      },
+      memory: {
+        request: Size.mebibytes(64),
+        limit: Size.mebibytes(256),
+      },
     },
   });
 
