@@ -1,21 +1,15 @@
-// Local e2e: validate the MK64 RDRAM map (mk64-memory.ts) against a real ROM.
-//
-// Boots the real N64Emulator and logs the parsed Mk64Snapshot whenever any
-// interesting field changes (plus the raw core globals for debugging). The
+// Local e2e: validate the MK64 RDRAM map (mk64-memory.ts) against a real ROM by
+// streaming the parsed snapshot + raw core globals whenever they change. The
 // title-screen attract demo loads real courses with CPU karts, so course ids,
-// the endianness contract, and gamestate transitions can all be validated
-// without ever touching a controller. With `press=start-mash` it also drives
-// past the title screen so menu gamestates are observable.
+// the endianness contract, and gamestate transitions validate without touching
+// a controller; `start-mash` taps START to step through the menus.
 //
-// Determinism: same (rom, schedule) -> same frames, as in e2e-input.ts.
+// To drive into an actual (multiplayer) race and capture screenshots, use
+// scripts/e2e-scenario.ts instead.
 //
-// Usage:
-//   bun run scripts/e2e-race.ts <rom> [total-frames] [press]
-//     press : none | start-mash   (default none)
-//   DUMP_EVERY=300 bun run scripts/e2e-race.ts <rom> 5000   # also dump PNGs
-//
-// Not a CI test (needs a ROM, which is not in the repo). Run locally.
-import { N64Emulator } from "#src/emulator/n64-emulator.ts";
+// Determinism: same (rom, schedule) -> identical frames (see e2e-input.ts).
+// Needs a ROM (not in the repo) — run locally; never in CI.
+import { bootEmulator, resolveRom } from "./lib/harness.ts";
 import {
   readSnapshot,
   readS32,
@@ -23,51 +17,23 @@ import {
   MK64_ADDR,
   COURSE_NAMES,
 } from "#src/emulator/mk64-memory.ts";
-import type { ScreenMode } from "#src/emulator/mk64-memory.ts";
-import { encodePng } from "#src/emulator/png.ts";
-import { NameOverlay } from "#src/overlay/name-overlay.ts";
-import { createLabelRenderer } from "#src/overlay/label-renderer.ts";
 import { EMPTY_BUTTONS } from "@discord-plays-mario-kart/common";
 
 const out = (s: string): void => {
   process.stdout.write(s + "\n");
 };
 
-const rom = process.argv.at(2);
+// Usage: bun run scripts/e2e-race.ts [rom] [total-frames] [press]
+//   press : none | start-mash   (default none)
 const total = Number(process.argv.at(3) ?? 6000);
 const press = process.argv.at(4) ?? "none";
-if (rom === undefined || rom === "") {
-  throw new Error("usage: e2e-race.ts <rom> [total-frames] [press]");
-}
 
-const emu = new N64Emulator({
-  wasmDir: Bun.env.WASM_DIR ?? "assets/n64wasm",
-  romPath: rom,
-  fps: 1000, // sprint; pacing only, emulation is per-tick deterministic
-  software: true,
-  seats: 4,
-});
-
+const rom = await resolveRom(process.argv.at(2));
 out(`[e2e-race] booting (rom=${rom})…`);
-await emu.init();
+const emu = await bootEmulator({ rom, seats: 4 });
 
-const dumpEvery = Number(Bun.env.DUMP_EVERY ?? 0);
-// OVERLAY=1: burn demo player names into the dumped PNGs (white-on-black
-// labels are channel-symmetric, so they read correctly on the RGBA screenshot
-// path too) — produces the leaderboard name-overlay screenshots for review.
-const overlayEnabled = Bun.env.OVERLAY === "1";
-const overlay = overlayEnabled
-  ? new NameOverlay(createLabelRenderer(Bun.env.WASM_DIR ?? "assets/n64wasm"))
-  : undefined;
-if (overlay) {
-  overlay.setName(0, "Jerred");
-  overlay.setName(1, "Alice");
-  overlay.setName(2, "Bob");
-  overlay.setName(3, "Carol");
-}
 let frame = 0;
 let lastLine = "";
-let latestMode: ScreenMode = "1p";
 
 await new Promise<void>((resolve) => {
   emu.onFrame(() => {
@@ -77,23 +43,11 @@ await new Promise<void>((resolve) => {
       // Tap START on alternating 30-frame windows to step through title/menus.
       const buttons = { ...EMPTY_BUTTONS, start: frame % 60 < 30 };
       emu.setPlayerInput(0, { buttons, analogX: 0, analogY: 0 });
-    } else if (press === "race-nav" && frame > 300) {
-      // Drive the menus into a real race on defaults (Mario GP -> 50cc ->
-      // Mario -> Luigi Raceway): START taps past the title, then A taps to
-      // confirm every screen, then hold A to accelerate once racing.
-      const tap = frame % 60 < 15;
-      const buttons = {
-        ...EMPTY_BUTTONS,
-        start: frame < 600 && tap,
-        a: frame >= 600 && (frame >= 3000 || tap),
-      };
-      emu.setPlayerInput(0, { buttons, analogX: 0, analogY: 0 });
     }
 
     const mem = emu.rdram();
     if (mem !== undefined && frame % 10 === 0) {
       const snap = readSnapshot(mem);
-      latestMode = snap.screenMode;
       const gamestate = readS32(mem, MK64_ADDR.gGamestate);
       const phase = readS32(mem, MK64_ADDR.racePhase);
       const courseRaw = readS16(mem, MK64_ADDR.gCurrentCourseId);
@@ -111,17 +65,6 @@ await new Promise<void>((resolve) => {
         out(`[e2e-race] f=${String(frame).padStart(5, "0")} ${line}`);
         lastLine = line;
       }
-    }
-
-    if (dumpEvery > 0 && frame % dumpEvery === 0) {
-      const f = emu.renderFrame();
-      if (overlay && f.height > 0) {
-        overlay.apply(f.rgba, f.height, latestMode, 4);
-      }
-      void Bun.write(
-        `/tmp/mk_race_${String(frame).padStart(5, "0")}.png`,
-        encodePng(f.rgba, f.width, f.height, 2),
-      );
     }
 
     if (frame >= total) {
