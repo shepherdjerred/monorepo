@@ -644,13 +644,7 @@ function checkCiImageVersionChanges(changedFiles: string[]): boolean {
  * plan via `buildAll`.
  */
 function checkTofuChanges(changedFiles: string[]): boolean {
-  for (const f of changedFiles) {
-    if (f.startsWith("packages/homelab/src/tofu/")) {
-      console.error(`Tofu source changed: ${f}`);
-      return true;
-    }
-  }
-  return false;
+  return changedFiles.some((f) => f.startsWith("packages/homelab/src/tofu/"));
 }
 
 function extractPackageName(filePath: string): string | null {
