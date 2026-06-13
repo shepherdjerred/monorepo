@@ -17,6 +17,11 @@ import type {
 } from "@shepherdjerred/streambot/machine/types.ts";
 import { buildSubtitleFilter } from "@shepherdjerred/streambot/sources/subtitles.ts";
 import { computeElapsed } from "@shepherdjerred/streambot/streamer/elapsed.ts";
+import {
+  GuildIdSchema,
+  type GuildId,
+  type UserToken,
+} from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import { createStreamObserver } from "@shepherdjerred/streambot/observability/stream-observer.ts";
@@ -42,10 +47,31 @@ const log = logger.child("streamer");
 /** Factory for the seekable player — injectable so tests can drive playback without a live stream. */
 export type PlayerFactory = typeof createSeekablePlayer;
 
-export class StreambotStreamer {
+/**
+ * The streamer surface the pool/session layer depends on. Lets a {@link UserbotEntry} hold a real
+ * {@link StreambotStreamer} in production and a lightweight fake in tests without type assertions.
+ */
+export type StreamerLike = {
+  joinVoice: (
+    input: JoinVoiceInput,
+    signal: AbortSignal,
+  ) => Promise<VoiceHandle>;
+  runStream: (input: RunStreamInput, signal: AbortSignal) => Promise<void>;
+  leaveVoice: (input: LeaveVoiceInput, signal: AbortSignal) => Promise<void>;
+  setVolume: (percent: number) => Promise<boolean>;
+  seek: (seconds: number) => Promise<boolean>;
+  getPosition: () => number | null;
+  userId: () => string | null;
+  destroy: () => Promise<void>;
+};
+
+export class StreambotStreamer implements StreamerLike {
   private readonly client: Client;
   private readonly streamer: Streamer;
-  private readonly config: Config;
+  /** This userbot's account token (one per pool entry). */
+  private readonly userToken: UserToken;
+  /** Only `config.stream.*` is read here; the discord token comes from {@link userToken}. */
+  private readonly config: Pick<Config, "stream">;
   /** Injectable clock (ms) so position tracking is deterministic in tests. */
   private readonly now: () => number;
   /** Injectable player factory (defaults to the fork's real one) so tests can supply a fake. */
@@ -59,10 +85,12 @@ export class StreambotStreamer {
   private segmentStartedAtMs: number | null = null;
 
   constructor(
-    config: Config,
+    userToken: UserToken,
+    config: Pick<Config, "stream">,
     now: () => number = Date.now,
     createPlayer: PlayerFactory = createSeekablePlayer,
   ) {
+    this.userToken = userToken;
     this.config = config;
     this.now = now;
     this.createPlayer = createPlayer;
@@ -70,14 +98,35 @@ export class StreambotStreamer {
     this.streamer = new Streamer(this.client);
   }
 
+  /**
+   * Log in and wait for the gateway to finish hydrating — `client.guilds.cache` is empty until the
+   * `ready` event fires, so the pool's membership snapshot ({@link guildIds}) would be wrong if we
+   * resolved on login alone.
+   */
   async login(): Promise<void> {
-    await this.client.login(this.config.discord.userToken);
-    log.info("streamer logged in", { user: this.client.user?.username });
+    const ready = new Promise<void>((resolve) => {
+      this.client.once("ready", () => {
+        resolve();
+      });
+    });
+    await this.client.login(this.userToken);
+    await ready;
+    log.info("streamer logged in", {
+      user: this.client.user?.username,
+      guilds: this.client.guilds.cache.size,
+    });
   }
 
   /** Discord user id of the logged-in streamer (for the alone-in-VC check), or null. */
   userId(): string | null {
     return this.client.user?.id ?? null;
+  }
+
+  /** Guild ids this userbot is a member of (snapshot of the gateway cache after {@link login}). */
+  guildIds(): GuildId[] {
+    return [...this.client.guilds.cache.keys()].map((id) =>
+      GuildIdSchema.parse(id),
+    );
   }
 
   async destroy(): Promise<void> {

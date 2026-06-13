@@ -128,10 +128,13 @@ export async function createAppsChart(app: App) {
   createBuildkiteApp(chart);
   createKueueApp(chart);
   createKueueConfig(chart);
-  // Caps i9-13900K package power to reduce radiated heat into the physically
-  // adjacent NVMe slot. nvme1 Composite has crossed its 81.85 °C warning
-  // threshold; NAND has hit 103.85 °C. See packages/docs/logs/2026-05-24_torvalds-thermal-investigation.md.
-  createCpuPowerCap(chart, { pl1Watts: 95, pl2Watts: 140 });
+  // Enforces Intel stock package power limits (PL1 125 W / PL2 253 W). ASUS
+  // firmware defaults PL1 to unlimited, which drove sustained 100 °C TJMax and
+  // overheated the adjacent M.2 slots before the AIO cooler was installed
+  // (2026-05-26). The original emergency cap was 95/140; raised to stock once
+  // the AIO + per-drive NVMe cooling were verified.
+  // See packages/docs/logs/2026-05-24_torvalds-thermal-investigation.md.
+  createCpuPowerCap(chart, { pl1Watts: 125, pl2Watts: 253 });
   createVeleroApp(chart);
   createKyvernoApp(chart);
   createKyvernoPoliciesApp(chart);

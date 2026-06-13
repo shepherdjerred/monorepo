@@ -69,7 +69,7 @@ describe("full resume loop (machine + persistence)", () => {
   test("checkpoint → restart → resumes the same item at the saved position", async () => {
     const dir = await mkdtemp(path.join(tmpdir(), "streambot-loop-"));
     dirs.push(dir);
-    const file = stateFilePath(dir);
+    const file = stateFilePath(dir, BASE.guildId, BASE.channelId);
 
     // --- Run 1: play a movie with another item queued, then checkpoint mid-stream. ---
     const first = makeRecordingActors();
@@ -93,6 +93,7 @@ describe("full resume loop (machine + persistence)", () => {
       savedAt: 10_000,
       resumeKey: ctx.current ? resumeKeyFor(ctx.current.source) : null,
       resumeAttempts: 0,
+      statusChannelId: null,
     });
     await saveState(file, snapshot);
     a1.stop(); // simulate SIGTERM

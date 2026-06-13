@@ -1,4 +1,4 @@
-import { mkdir, rename } from "node:fs/promises";
+import { mkdir, readdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { SourceSchema } from "@shepherdjerred/streambot/sources/source.ts";
@@ -7,6 +7,8 @@ import {
   ChannelIdSchema,
   GuildIdSchema,
   UserIdSchema,
+  type ChannelId,
+  type GuildId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
@@ -32,16 +34,22 @@ export const PersistedCurrentSchema = z.strictObject({
 export type PersistedCurrent = z.infer<typeof PersistedCurrentSchema>;
 
 /**
- * On-disk resume state (schema v1). Deliberately stores the original {@link SourceSchema} (re-resolved
+ * On-disk resume state (schema v2). Deliberately stores the original {@link SourceSchema} (re-resolved
  * on boot) rather than the resolved ffmpeg input, because yt-dlp direct URLs are signed and expire.
- * `guildId`/`channelId` are kept only to validate against the live config on boot (don't resume into a
- * stale channel). `resumeAttempts`/`resumeKey` drive the crash-loop guard in `resume.ts`.
+ * `guildId`/`channelId` identify the session (one file per voice channel) and are validated against
+ * the file name / acquired userbot on boot. `statusChannelId` is where the "I'm back" announcement
+ * goes. `resumeAttempts`/`resumeKey` drive the crash-loop guard in `resume.ts`.
+ *
+ * v1 files (no `statusChannelId`, `version: 1`) fail to parse and are ignored — at most one missed
+ * resume across the cutover deploy.
  */
 export const PersistedStateSchema = z.strictObject({
-  version: z.literal(1),
+  version: z.literal(2),
   savedAt: z.number().int().nonnegative(),
   guildId: GuildIdSchema,
   channelId: ChannelIdSchema,
+  /** Text channel to post the back-online announcement to; null when unknown (e.g. legacy resume). */
+  statusChannelId: ChannelIdSchema.nullable().default(null),
   loop: LoopModeSchema,
   volume: z.number(),
   current: PersistedCurrentSchema.nullable(),
@@ -53,9 +61,66 @@ export const PersistedStateSchema = z.strictObject({
 });
 export type PersistedState = z.infer<typeof PersistedStateSchema>;
 
-/** Absolute path of the resume-state file inside a state directory. */
-export function stateFilePath(dir: string): string {
-  return path.join(dir, "playback-state.json");
+const STATE_FILE_RE = /^playback-state-(\d{17,20})-(\d{17,20})\.json$/u;
+
+/** Absolute path of a session's resume-state file (one per guild + voice channel). */
+export function stateFilePath(
+  dir: string,
+  guildId: GuildId,
+  channelId: ChannelId,
+): string {
+  return path.join(dir, `playback-state-${guildId}-${channelId}.json`);
+}
+
+/**
+ * Enumerate the `(guildId, channelId)` pairs that have a resume-state file in `dir`. Fail-soft:
+ * returns `[]` when the directory is missing or unreadable (nothing to resume), and skips any file
+ * whose name doesn't match the session pattern or whose ids aren't valid snowflakes.
+ */
+export async function listPersistedStateFiles(
+  dir: string,
+): Promise<{ guildId: GuildId; channelId: ChannelId }[]> {
+  let names: string[];
+  try {
+    names = await readdir(dir);
+  } catch (error) {
+    // A missing dir is the normal "nothing persisted yet" case. Anything else (permissions, I/O) is
+    // logged — resume stays best-effort (we return []), but the failure isn't silently swallowed.
+    if (
+      !(error instanceof Error && "code" in error && error.code === "ENOENT")
+    ) {
+      log.warn("could not list resume-state dir; skipping resume", {
+        dir,
+        error: getErrorMessage(error),
+      });
+    }
+    return [];
+  }
+  const sessions: { guildId: GuildId; channelId: ChannelId }[] = [];
+  for (const name of names) {
+    const match = STATE_FILE_RE.exec(name);
+    if (match === null) {
+      continue;
+    }
+    const guildId = GuildIdSchema.safeParse(match[1]);
+    const channelId = ChannelIdSchema.safeParse(match[2]);
+    if (guildId.success && channelId.success) {
+      sessions.push({ guildId: guildId.data, channelId: channelId.data });
+    }
+  }
+  return sessions;
+}
+
+/** Remove a session's resume-state file (best-effort; never throws). */
+export async function deleteState(filePath: string): Promise<void> {
+  try {
+    await rm(filePath, { force: true });
+  } catch (error) {
+    log.warn("failed to delete resume state", {
+      filePath,
+      error: getErrorMessage(error),
+    });
+  }
 }
 
 /**
