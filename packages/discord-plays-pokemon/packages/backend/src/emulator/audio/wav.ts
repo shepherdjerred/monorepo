@@ -49,7 +49,17 @@ export function encodeWav(
   buffer.writeUInt16LE(bitsPerSample, 34);
   buffer.writeUInt32LE(DATA, 36);
   buffer.writeUInt32LE(dataSize, 40);
-  Buffer.from(pcm).copy(buffer, 44);
+  if (bitsPerSample === 8) {
+    // WAV 8-bit PCM is unsigned (0=min, 128=silence, 255=max).
+    // Convert from signed s8 by biasing up by 128.
+    const src = pcm instanceof Buffer ? pcm : Buffer.from(pcm);
+    for (let i = 0; i < dataSize; i++) {
+      const byte = src.readUInt8(i);
+      buffer[44 + i] = (byte + 128) & 0xff;
+    }
+  } else {
+    Buffer.from(pcm).copy(buffer, 44);
+  }
   return buffer;
 }
 
