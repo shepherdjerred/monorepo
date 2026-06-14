@@ -40,6 +40,8 @@ function evaluate(input: {
   reviewCheck?: GreptileReviewCheck;
   threads?: GreptileThread[];
   maxBlockingPriority?: number;
+  elapsedMs?: number;
+  noCheckPassAfterMs?: number;
 }) {
   return evaluateGate({
     head: HEAD,
@@ -47,6 +49,10 @@ function evaluate(input: {
     threads: input.threads ?? [],
     greptileLogin: GREPTILE,
     maxBlockingPriority: input.maxBlockingPriority ?? 3,
+    ...(input.elapsedMs !== undefined && { elapsedMs: input.elapsedMs }),
+    ...(input.noCheckPassAfterMs !== undefined && {
+      noCheckPassAfterMs: input.noCheckPassAfterMs,
+    }),
   });
 }
 
@@ -94,6 +100,66 @@ describe("evaluateGate — review-check gating", () => {
       expect(result.state).toBe("passed");
     },
   );
+});
+
+describe("evaluateGate — early-pass when Greptile never posts a check-run", () => {
+  const noCheckReview: GreptileReviewCheck = {
+    found: false,
+    status: null,
+    conclusion: null,
+    url: null,
+  };
+
+  it("still waits when check is not found but elapsed time < noCheckPassAfterMs", () => {
+    const result = evaluate({
+      reviewCheck: noCheckReview,
+      threads: [],
+      elapsedMs: 5 * 60 * 1000, // 5 minutes
+      noCheckPassAfterMs: 10 * 60 * 1000, // 10 minutes threshold
+    });
+    expect(result.state).toBe("waiting");
+  });
+
+  it("passes when check is not found, elapsed >= threshold, and no blocking threads", () => {
+    const result = evaluate({
+      reviewCheck: noCheckReview,
+      threads: [],
+      elapsedMs: 11 * 60 * 1000, // 11 minutes
+      noCheckPassAfterMs: 10 * 60 * 1000, // 10 minutes threshold
+    });
+    expect(result.state).toBe("passed");
+    expect(result.message).toContain("no reviewable files");
+  });
+
+  it("still waits when check not found, elapsed >= threshold, but blocking threads exist", () => {
+    const result = evaluate({
+      reviewCheck: noCheckReview,
+      threads: [thread({ isResolved: false, isOutdated: false, priority: 1 })],
+      elapsedMs: 11 * 60 * 1000,
+      noCheckPassAfterMs: 10 * 60 * 1000,
+    });
+    expect(result.state).toBe("waiting");
+  });
+
+  it("passes when check not found after threshold with only outdated threads", () => {
+    const result = evaluate({
+      reviewCheck: noCheckReview,
+      threads: [thread({ isResolved: false, isOutdated: true, priority: 1 })],
+      elapsedMs: 11 * 60 * 1000,
+      noCheckPassAfterMs: 10 * 60 * 1000,
+    });
+    expect(result.state).toBe("passed");
+  });
+
+  it("does not trigger early-pass when noCheckPassAfterMs is undefined (legacy behaviour)", () => {
+    const result = evaluate({
+      reviewCheck: noCheckReview,
+      threads: [],
+      elapsedMs: 15 * 60 * 1000,
+      // noCheckPassAfterMs not provided
+    });
+    expect(result.state).toBe("waiting");
+  });
 });
 
 describe("evaluateGate — comment-resolution gating", () => {

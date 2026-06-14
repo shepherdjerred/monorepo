@@ -70,6 +70,14 @@ const DEFAULT_GREPTILE_LOGIN = "greptile-apps";
 const DEFAULT_CHECK_PATTERN = "greptile";
 const DEFAULT_TIMEOUT_SECONDS = 20 * 60;
 const DEFAULT_INTERVAL_SECONDS = 30;
+/**
+ * After this many seconds with no Greptile check-run found, pass if there are
+ * also no unresolved blocking Greptile threads.  This handles the case where
+ * Greptile does not post a check-run because all changed files are in its
+ * ignore list (e.g. bun.lock) — in that scenario the gate would otherwise
+ * spin until the 20-minute timeout.
+ */
+const DEFAULT_NO_CHECK_PASS_AFTER_SECONDS = 10 * 60;
 const GITHUB_API_VERSION = "2022-11-28";
 const GITHUB_API_URL = "https://api.github.com";
 
@@ -321,6 +329,15 @@ export function evaluateGate(input: {
   threads: readonly GreptileThread[];
   greptileLogin: string;
   maxBlockingPriority: number;
+  /** Milliseconds elapsed since the gate started polling. */
+  elapsedMs?: number;
+  /**
+   * If Greptile has not posted a check-run for the head commit within this
+   * many milliseconds AND there are no blocking threads, treat the gate as
+   * passed.  Handles the case where Greptile skips review because all changed
+   * files are in its ignorePatterns (e.g. bun.lock only diffs).
+   */
+  noCheckPassAfterMs?: number;
 }): GateDecision {
   const reviewState = classifyReviewCheck(input.reviewCheck);
 
@@ -328,6 +345,31 @@ export function evaluateGate(input: {
     const status = !input.reviewCheck.found
       ? "not started"
       : (input.reviewCheck.status ?? "pending");
+
+    // Early-pass: Greptile has not started reviewing after noCheckPassAfterMs.
+    // This happens when all changed files are in Greptile's ignorePatterns so
+    // it never posts a check-run.  If there are also no unresolved blocking
+    // threads, the gate can pass rather than spinning to the full timeout.
+    if (
+      !input.reviewCheck.found &&
+      input.noCheckPassAfterMs !== undefined &&
+      input.elapsedMs !== undefined &&
+      input.elapsedMs >= input.noCheckPassAfterMs
+    ) {
+      const blocking = input.threads.filter((thread) =>
+        isBlocking(thread, input.greptileLogin, input.maxBlockingPriority),
+      );
+      if (blocking.length === 0) {
+        return {
+          state: "passed",
+          message:
+            `Greptile has not reviewed ${input.head} after ` +
+            `${String(Math.round(input.elapsedMs / 1000))}s (likely no reviewable ` +
+            `files in this diff); no unresolved Greptile threads remain — passing.`,
+        };
+      }
+    }
+
     return {
       state: "waiting",
       message: `Waiting for Greptile to finish reviewing ${input.head} (review check: ${status}).`,
@@ -630,6 +672,11 @@ async function waitForGreptile(): Promise<void> {
     DEFAULT_INTERVAL_SECONDS,
   );
 
+  const noCheckPassAfterSeconds = parsePositiveIntegerEnv(
+    "GREPTILE_NO_CHECK_PASS_AFTER_SECONDS",
+    DEFAULT_NO_CHECK_PASS_AFTER_SECONDS,
+  );
+
   const maxBlockingPriorityRaw = process.env["GREPTILE_MAX_BLOCKING_PRIORITY"];
   const maxBlockingPriority = (() => {
     if (
@@ -647,7 +694,8 @@ async function waitForGreptile(): Promise<void> {
     return parsed;
   })();
 
-  const deadline = Date.now() + timeoutSeconds * 1000;
+  const startMs = Date.now();
+  const deadline = startMs + timeoutSeconds * 1000;
   let warnedMismatch = false;
 
   while (Date.now() <= deadline) {
@@ -673,6 +721,8 @@ async function waitForGreptile(): Promise<void> {
       threads: threadResult.threads,
       greptileLogin,
       maxBlockingPriority,
+      elapsedMs: Date.now() - startMs,
+      noCheckPassAfterMs: noCheckPassAfterSeconds * 1000,
     });
 
     if (decision.state === "passed") {
