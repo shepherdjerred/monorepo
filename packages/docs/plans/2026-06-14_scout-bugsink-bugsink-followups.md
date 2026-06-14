@@ -2,7 +2,57 @@
 
 ## Status
 
-Planning
+Complete (PR #1223)
+
+## Session Log — 2026-06-14
+
+### Done
+
+- Bugsink triage on the live scout-for-lol project: identified 6 unresolved
+  issues, fetched the actual spectator payload for the
+  "1 participant" hits (`s3://scout-beta/prematch/2026/06/12/5580574972/spectator-data.json`),
+  audited the 91 `captureException` sites for S3 traceability.
+- Fix 1 (commit `fc1994623`): `logErrors` now threads `jobName` from
+  `createCronJob` into the Sentry tag, so cron-driven Bugsink events stop
+  saying `function: "anonymous"`.
+- Fix 2 (commit `65880a303`): `inferStandardParticipants` in
+  `loading-screen-builder.ts` carries the full game-info context in its
+  message and throws `RecoverableLoadingScreenDataError`, so degraded
+  lobbies fall back to text-only without paging Sentry.
+- Fix 3 (commit `7dc91b48c`): `active-game-detection.ts` detects pre-start
+  custom lobbies, retries the spectator fetch 2× with a 2s delay, and skips
+  upsert+notify when still incomplete so the natural 30s cron cadence
+  re-evaluates. New `deferred_custom_prestart` value on
+  `prematch_detections_total`. Unit test exercises the deferred path using
+  the actual S3 payload shape.
+- Tests: 983 passing (959/24 skip/0 fail). Typecheck + eslint clean on all
+  touched files.
+- PR: <https://github.com/shepherdjerred/monorepo/pull/1223> opened with
+  links to the three Bugsink issue UUIDs.
+
+### Remaining
+
+- Post-deploy verification (see PR Test plan checklist): watch
+  `deferred_custom_prestart` vs `detected` counter ratios, watch for any
+  fresh hits on the three linked Bugsink issues, confirm new cron failures
+  carry a real `jobName` tag.
+
+### Caveats
+
+- ECONNREFUSED root cause is intentionally not investigated — Fix 1 just
+  makes the next occurrence diagnosable. If it re-clusters with a known
+  `jobName`, that's the time to dig.
+- Fix 3's retry uses `Bun.sleep(2000)` twice in-process inside the prematch
+  cron loop. The whole cron runs every 30s with a 3-minute lock, so adding
+  up to 4s of latency per pre-start-custom hit is acceptable; if many
+  custom lobbies pile up in a single tick this could push closer to the
+  lock timeout (currently 180s). Watch for `prematch-detection lock
+timeout` warnings.
+- Setup script failed during worktree creation (unrelated
+  `discord-plays-pokemon` lockfile drift). Worked around by
+  `bun install --filter` for just the scout-for-lol backend + data
+  packages and running `bun run db:generate` manually. Did not block this
+  work but is a fresh-worktree friction worth knowing.
 
 ## Context
 
