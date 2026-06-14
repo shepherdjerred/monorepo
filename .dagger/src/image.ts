@@ -104,31 +104,33 @@ function withCodexCli(container: Container): Container {
  * same reason `withEditorClis` forces `BUN_INSTALL=/usr/local` for `claude`.
  */
 function withCogapp(container: Container): Container {
-  return container
-    .withExec(["apt-get", "update", "-qq"])
-    .withExec([
-      "apt-get",
-      "install",
-      "-y",
-      "-qq",
-      "--no-install-recommends",
-      "ca-certificates",
-      "python3",
-      "python3-pip",
-    ])
-    .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"])
-    .withExec([
-      "pip3",
-      "install",
-      "--no-cache-dir",
-      "--break-system-packages",
-      `cogapp==${COGAPP_VERSION}`,
-    ])
-    // cogapp's `cog` CLI uses `-v` for "print the version and exit"; it has no
-    // `--version` flag (that errors with exit 2 "option --version not
-    // recognized"). `cog -v` prints e.g. "Cog version 3.6.0" and exits 0,
-    // confirming the binary is installed and runnable on PATH.
-    .withExec(["cog", "-v"]);
+  return (
+    container
+      .withExec(["apt-get", "update", "-qq"])
+      .withExec([
+        "apt-get",
+        "install",
+        "-y",
+        "-qq",
+        "--no-install-recommends",
+        "ca-certificates",
+        "python3",
+        "python3-pip",
+      ])
+      .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"])
+      .withExec([
+        "pip3",
+        "install",
+        "--no-cache-dir",
+        "--break-system-packages",
+        `cogapp==${COGAPP_VERSION}`,
+      ])
+      // cogapp's `cog` CLI uses `-v` for "print the version and exit"; it has no
+      // `--version` flag (that errors with exit 2 "option --version not
+      // recognized"). `cog -v` prints e.g. "Cog version 3.6.0" and exits 0,
+      // confirming the binary is installed and runnable on PATH.
+      .withExec(["cog", "-v"])
+  );
 }
 
 /**
