@@ -6,8 +6,10 @@ import {
 
 const DEFAULT_CLAUDE_MODEL = "claude-opus-4-8";
 const DEFAULT_CODEX_MODEL = "gpt-5.5";
-const CLAUDE_ALLOWED_TOOLS =
-  "Bash,Read,Grep,Glob,Edit,MultiEdit,Write,WebFetch";
+// WebFetch dropped 2026-06-14: it's the most plausible hang vector for a
+// 30-min activity wall (slow TLS / unbounded remote read), and the agent
+// triages alert JSON + local repo code — no real need to browse the open web.
+const CLAUDE_ALLOWED_TOOLS = "Bash,Read,Grep,Glob,Edit,MultiEdit,Write";
 
 export type AlertRemediationCommand = {
   args: string[];
