@@ -30,8 +30,13 @@ export function astroBuildHelper(
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
 ): Directory {
-  return astroBuildContainerHelper(pkgDir, pkg, depNames, depDirs, tsconfig)
-    .directory(`/workspace/packages/${pkg}/dist`);
+  return astroBuildContainerHelper(
+    pkgDir,
+    pkg,
+    depNames,
+    depDirs,
+    tsconfig,
+  ).directory(`/workspace/packages/${pkg}/dist`);
 }
 
 /**
