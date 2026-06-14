@@ -256,8 +256,6 @@ const versions = {
     "2.0.0-3993@sha256:a7caaabdb9a1b8fcf2a634df9440f7ae89ce8a64ce81be8a2b0263c5ae1abded",
   // Custom mcp-gateway image - tbxark/mcp-proxy + prebuilt edstem-mcp (rob-9/edstem-mcp)
   // not managed by renovate
-  // NOTE: placeholder digest — CI's version-commit-back fills the real tag@digest
-  // after the first build+push on main. Do not deploy until this is replaced.
   "shepherdjerred/mcp-gateway":
     "2.0.0-3993@sha256:dfa547084ddc763121fae9954563f7a1d906288bfbf633bbe08b628bdf85166b",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
