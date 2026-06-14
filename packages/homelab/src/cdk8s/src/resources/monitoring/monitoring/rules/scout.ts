@@ -189,7 +189,7 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
             runbook_url:
               "https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/scheduler.ts",
           },
-          // 8d1h grace. system_source=COMMON_DENOMINATOR uses 0 18 * * 0.
+          // 8d2h grace. system_source=COMMON_DENOMINATOR uses 0 18 * * 0.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             '(time() - scout_scheduled_report_last_success_timestamp_seconds{system_source="COMMON_DENOMINATOR"}) > 698400',
           ),
