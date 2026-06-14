@@ -2,7 +2,9 @@
 // reducer. Extracted from app.tsx so it can be unit-tested without the DOM.
 //
 // Driving keeps WASD-style controls while the arrow keys are reserved for the
-// N64 D-pad, which MK64 uses in menus such as class / CC selection.
+// N64 D-pad, which MK64 uses in menus such as class / CC selection. The N64
+// analog stick is 2D — A/D drive the X axis, R/F drive the Y axis. MK64 racing
+// only reads X, but Y matters in some menus and the wire protocol carries it.
 import {
   EMPTY_BUTTONS,
   type ButtonState,
@@ -27,6 +29,8 @@ export const KEYMAP: Record<string, Action | undefined> = {
   KeyS: { kind: "button", name: "b" },
   KeyA: { kind: "axis", axis: "x", value: -1 },
   KeyD: { kind: "axis", axis: "x", value: 1 },
+  KeyR: { kind: "axis", axis: "y", value: 1 },
+  KeyF: { kind: "axis", axis: "y", value: -1 },
   ArrowUp: { kind: "button", name: "up" },
   ArrowDown: { kind: "button", name: "down" },
   ArrowLeft: { kind: "button", name: "left" },
@@ -53,6 +57,10 @@ const KEY_FALLBACKS: Record<string, string | undefined> = {
   W: "KeyW",
   s: "KeyS",
   S: "KeyS",
+  r: "KeyR",
+  R: "KeyR",
+  f: "KeyF",
+  F: "KeyF",
   q: "KeyQ",
   Q: "KeyQ",
   e: "KeyE",
@@ -88,9 +96,14 @@ export function resolveKeyboardCode(event: {
   return KEY_FALLBACKS[event.key];
 }
 
-export const STICK_CONTROLS: ControlDefinition[] = [
+export const STICK_X_CONTROLS: ControlDefinition[] = [
   { code: "KeyA", label: "←", sublabel: "A" },
   { code: "KeyD", label: "→", sublabel: "D" },
+];
+
+export const STICK_Y_CONTROLS: ControlDefinition[] = [
+  { code: "KeyR", label: "↑", sublabel: "R" },
+  { code: "KeyF", label: "↓", sublabel: "F" },
 ];
 
 export const DPAD_CONTROLS: ControlDefinition[] = [
@@ -125,7 +138,8 @@ export const C_CONTROLS: ControlDefinition[] = [
 ];
 
 export const ALL_CONTROLS: ControlDefinition[] = [
-  ...STICK_CONTROLS,
+  ...STICK_X_CONTROLS,
+  ...STICK_Y_CONTROLS,
   ...DPAD_CONTROLS,
   ...FACE_CONTROLS,
   ...SHOULDER_CONTROLS,

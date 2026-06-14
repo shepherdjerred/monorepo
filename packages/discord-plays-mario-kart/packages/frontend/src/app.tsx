@@ -15,12 +15,12 @@ import {
   FACE_CONTROLS,
   KEYMAP,
   SHOULDER_CONTROLS,
-  STICK_CONTROLS,
+  STICK_X_CONTROLS,
+  STICK_Y_CONTROLS,
   computeState,
   resolveKeyboardCode,
 } from "./input-map.ts";
 import {
-  AnalogStick,
   ControlButton,
   ControlCluster,
   DpadControls,
@@ -30,6 +30,7 @@ import {
   SeatPicker,
   isControlPressed,
 } from "./controller-ui.tsx";
+import { AnalogStick } from "./analog-stick.tsx";
 import { NameEntry } from "./name-entry.tsx";
 import { Leaderboard } from "./leaderboard.tsx";
 
@@ -49,6 +50,16 @@ const BUTTON_LABELS = [
   ["cLeft", "C←"],
   ["cRight", "C→"],
 ] as const;
+
+// True when the keyboard event is targeted at a form control / contentEditable
+// region. Global key handlers must not preventDefault in that case, or typing
+// in the name input swallows any character that's also a KEYMAP binding.
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  const tag = target.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+}
 
 export function App() {
   const [seat, setSeat] = useState<number | null>(null);
@@ -133,12 +144,14 @@ export function App() {
   // state locally, but emit() is a no-op.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (isEditableTarget(event.target)) return;
       const code = resolveKeyboardCode(event);
       if (code === undefined || KEYMAP[code] === undefined) return;
       event.preventDefault();
       press(code);
     };
     const onKeyUp = (event: KeyboardEvent) => {
+      if (isEditableTarget(event.target)) return;
       const code = resolveKeyboardCode(event);
       if (code === undefined || KEYMAP[code] === undefined) return;
       event.preventDefault();
@@ -175,7 +188,8 @@ export function App() {
   ).map(([_name, label]) => label);
   const hasSeat = seat !== null;
   const statusTone = hasSeat ? "text-emerald-300" : "text-amber-300";
-  const [stickLeft, stickRight] = STICK_CONTROLS;
+  const [stickLeft, stickRight] = STICK_X_CONTROLS;
+  const [stickUp, stickDown] = STICK_Y_CONTROLS;
   const [faceA, faceB, zControl, startControl] = FACE_CONTROLS;
   const [shoulderL, shoulderR] = SHOULDER_CONTROLS;
 
@@ -254,7 +268,10 @@ export function App() {
                   <AnalogStick
                     leftControl={stickLeft}
                     rightControl={stickRight}
+                    upControl={stickUp}
+                    downControl={stickDown}
                     axisX={state.analogX}
+                    axisY={state.analogY}
                     pressedCodes={pressedCodes}
                     onPress={press}
                     onRelease={release}
@@ -325,7 +342,9 @@ export function App() {
                     Pressed
                   </p>
                   <div className="flex min-h-8 flex-wrap justify-center gap-1.5">
-                    {activeButtons.length === 0 && state.analogX === 0 ? (
+                    {activeButtons.length === 0 &&
+                    state.analogX === 0 &&
+                    state.analogY === 0 ? (
                       <span className="text-sm text-zinc-600">none</span>
                     ) : (
                       <>
@@ -334,6 +353,12 @@ export function App() {
                         ) : null}
                         {state.analogX > 0 ? (
                           <InputPill label="Stick →" />
+                        ) : null}
+                        {state.analogY > 0 ? (
+                          <InputPill label="Stick ↑" />
+                        ) : null}
+                        {state.analogY < 0 ? (
+                          <InputPill label="Stick ↓" />
                         ) : null}
                         {activeButtons.map((label) => (
                           <InputPill key={label} label={label} />
@@ -352,7 +377,8 @@ export function App() {
                     Mapping
                   </h2>
                   <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
-                    <MappingTerm label="Stick" value="A / D" />
+                    <MappingTerm label="Stick X" value="A / D" />
+                    <MappingTerm label="Stick Y" value="R / F" />
                     <MappingTerm label="D-pad" value="Arrow keys" />
                     <MappingTerm label="A" value="W / Space" />
                     <MappingTerm label="B" value="S" />
