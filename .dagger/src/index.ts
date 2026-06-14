@@ -77,7 +77,11 @@ import {
 
 import { goBuildHelper, goTestHelper, goLintHelper } from "./golang";
 
-import { homelabSynthHelper, helmTypesDriftCheckHelper, homelabOnePasswordLintHelper } from "./homelab";
+import {
+  homelabSynthHelper,
+  helmTypesDriftCheckHelper,
+  homelabOnePasswordLintHelper,
+} from "./homelab";
 
 import { swiftLintHelper } from "./swift";
 
