@@ -44,6 +44,7 @@ const JOB_TO_CI_STEP: Record<string, string> = {
   "quality-ratchet": "quality-ratchet",
   "scout-test-template-check": "scout-test-template-check",
   "react-version-sync": "react-version-sync",
+  "onepassword-items": "homelab-1password-items",
 };
 
 /**

@@ -886,6 +886,17 @@ export async function detectChanges(): Promise<AffectedPackages> {
       console.error(`Renovate fast-track: ${classification.kind}`);
 
       if (classification.kind === "noop") {
+        if (helmTypesInputsChanged) {
+          // versions.ts is a HELM_TYPES_INPUT_FILE — a Renovate chart-bump PR that
+          // only touches versions.ts still needs the drift-check step so that the CI
+          // gate fires on chart-version bumps (the main use-case this PR was built to
+          // cover). Emit a minimal scoped result with only the drift-check flag set;
+          // no package builds are needed.
+          console.error(
+            "Renovate noop, but helmTypesInputsChanged=true — emitting drift-check step",
+          );
+          return buildScopedResult(new Set(), false, false, false, false, true);
+        }
         console.error("Renovate: no builds needed");
         return emptyResult();
       }
@@ -1029,6 +1040,7 @@ export {
   checkCiImageChanges as _checkCiImageChanges,
   checkCiImageVersionChanges as _checkCiImageVersionChanges,
   checkTofuChanges as _checkTofuChanges,
+  checkHelmTypesInputChanges as _checkHelmTypesInputChanges,
   getBuildRejectionReason as _getBuildRejectionReason,
   getLastSuccessfulCommit as _getLastSuccessfulCommit,
   getBaseRevision as _getBaseRevision,
