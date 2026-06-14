@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { useInterval } from "react-use";
 import { Container } from "./stories/container.tsx";
 import { socket } from "./socket.ts";
@@ -25,7 +25,6 @@ import {
   ControlCluster,
   DpadControls,
   InputPill,
-  MappingTerm,
   N64ControllerShell,
   SeatPicker,
   isControlPressed,
@@ -50,6 +49,21 @@ const BUTTON_LABELS = [
   ["cLeft", "C←"],
   ["cRight", "C→"],
 ] as const;
+
+// Action → on-controller → keyboard. Ordered by frequency of use in MK64 so the
+// player sees the racing essentials first and the menu-only bindings last.
+const MAPPING_ROWS: readonly [string, string, string][] = [
+  ["Steer", "Stick X", "A / D"],
+  ["Accelerate", "A", "W / Space"],
+  ["Brake / Reverse", "B", "S"],
+  ["Hop / Drift", "R trigger", "Shift"],
+  ["Use item", "Z trigger", "E / Z"],
+  ["Pause / Confirm", "Start", "Enter / P"],
+  ["Menus", "D-pad", "Arrow keys"],
+  ["Camera angles", "C-buttons", "I J K L"],
+  ["Camera reset", "L trigger", "Q"],
+  ["Menu nav (vertical)", "Stick Y", "R / F"],
+];
 
 // True when the keyboard event is targeted at a form control / contentEditable
 // region. Global key handlers must not preventDefault in that case, or typing
@@ -259,11 +273,7 @@ export function App() {
                   />
                 </div>
 
-                <ControlCluster
-                  title="D-pad"
-                  className="absolute left-[18%] top-[38%] z-30"
-                  showTitle={false}
-                >
+                <div className="absolute left-[18%] top-[38%] z-30 flex flex-col items-center gap-1.5">
                   <DpadControls
                     controls={DPAD_CONTROLS}
                     pressedCodes={pressedCodes}
@@ -271,7 +281,10 @@ export function App() {
                     onRelease={release}
                     className="h-24 w-24 sm:h-28 sm:w-28"
                   />
-                </ControlCluster>
+                  <span className="rounded-full border border-zinc-700 bg-zinc-900/80 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-300 shadow-sm">
+                    Arrow keys
+                  </span>
+                </div>
 
                 <div className="absolute left-1/2 top-[55%] z-30 -translate-x-1/2">
                   <AnalogStick
@@ -375,17 +388,26 @@ export function App() {
                 <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-zinc-400">
                   Mapping
                 </h2>
-                <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
-                  <MappingTerm label="Stick X" value="A / D" />
-                  <MappingTerm label="Stick Y" value="R / F" />
-                  <MappingTerm label="D-pad" value="Arrow keys" />
-                  <MappingTerm label="A" value="W / Space" />
-                  <MappingTerm label="B" value="S" />
-                  <MappingTerm label="Start" value="Enter / P" />
-                  <MappingTerm label="Z" value="E / Z" />
-                  <MappingTerm label="L / R" value="Q / Shift" />
-                  <MappingTerm label="C" value="I J K L" />
-                </dl>
+                <div className="mt-3 grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1.5 text-sm">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-zinc-500">
+                    Action
+                  </div>
+                  <div className="text-[10px] font-black uppercase tracking-wider text-zinc-500">
+                    N64
+                  </div>
+                  <div className="text-[10px] font-black uppercase tracking-wider text-zinc-500">
+                    Keyboard
+                  </div>
+                  {MAPPING_ROWS.map(([action, n64, keys]) => (
+                    <Fragment key={action}>
+                      <span className="text-zinc-200">{action}</span>
+                      <span className="text-zinc-500">{n64}</span>
+                      <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-right font-mono text-xs font-semibold text-zinc-100">
+                        {keys}
+                      </span>
+                    </Fragment>
+                  ))}
+                </div>
               </div>
               <div className="rounded-lg border border-amber-400/20 bg-amber-400/10 p-3 text-sm text-amber-100">
                 {hasSeat

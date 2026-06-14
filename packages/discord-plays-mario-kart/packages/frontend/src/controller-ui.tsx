@@ -31,19 +31,19 @@ export function N64ControllerShell() {
     >
       <defs>
         <radialGradient id="n64Plastic" cx="50%" cy="28%" r="72%">
-          <stop offset="0%" stopColor="#d5d5da" />
-          <stop offset="45%" stopColor="#a9a9b0" />
-          <stop offset="100%" stopColor="#77777f" />
+          <stop offset="0%" stopColor="#eaeaec" />
+          <stop offset="45%" stopColor="#cfcfd2" />
+          <stop offset="100%" stopColor="#9d9da2" />
         </radialGradient>
         <linearGradient id="n64Edge" x1="0%" x2="0%" y1="0%" y2="100%">
-          <stop offset="0%" stopColor="#f2f2f4" stopOpacity="0.42" />
-          <stop offset="55%" stopColor="#85858d" stopOpacity="0.18" />
-          <stop offset="100%" stopColor="#202025" stopOpacity="0.38" />
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.42" />
+          <stop offset="55%" stopColor="#b0b0b6" stopOpacity="0.15" />
+          <stop offset="100%" stopColor="#202025" stopOpacity="0.35" />
         </linearGradient>
         <linearGradient id="n64Grip" x1="0%" x2="100%" y1="0%" y2="100%">
-          <stop offset="0%" stopColor="#c9c9cf" />
-          <stop offset="62%" stopColor="#9f9fa8" />
-          <stop offset="100%" stopColor="#70707a" />
+          <stop offset="0%" stopColor="#dfdfe2" />
+          <stop offset="62%" stopColor="#bababf" />
+          <stop offset="100%" stopColor="#8a8a90" />
         </linearGradient>
         <filter id="n64Drop" colorInterpolationFilters="sRGB">
           <feDropShadow dx="0" dy="14" stdDeviation="16" floodOpacity="0.42" />
