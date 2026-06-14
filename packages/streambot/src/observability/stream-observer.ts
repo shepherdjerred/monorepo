@@ -17,6 +17,8 @@ import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import {
   ffmpegBitrateKbps,
   ffmpegFps,
+  ffmpegOutTimeSecondsTotal,
+  ffmpegProgressAgeSeconds,
   ffmpegSpeedRatio,
   hwDecodeEngaged,
   sendFrametimeRatio,
@@ -52,23 +54,69 @@ export function commandUsesHardwareDecode(command: string): boolean {
   return /-hwaccel\s+vaapi/.test(command) || command.includes("scale_vaapi");
 }
 
+/** Return value of {@link createStreamObserver}: the observer wired to metrics, and a disposer. */
+export type StreamObserverHandle = {
+  /** Pass to the DVS player's `prepare` and `play` options. */
+  observer: StreamObserver;
+  /**
+   * Stop the internal progress-age timer. Call this whenever the streaming segment ends (in a
+   * `finally` block) so stale timers from old segments don't race on the shared gauge after a seek
+   * or track change.
+   */
+  dispose: () => void;
+};
+
 /**
  * Build a {@link StreamObserver} for one streaming segment. `hardware` labels the metrics with the
  * path the segment is attempting. `now` is injectable for deterministic tests.
+ *
+ * Always call the returned `dispose()` when the segment ends to stop the internal progress-age
+ * timer. Without it, each call leaves a live `setInterval` writing to the shared
+ * `ffmpegProgressAgeSeconds` gauge, causing stale timers from prior segments to race against the
+ * current one after seeks and track changes.
  */
 export function createStreamObserver(
   hardware: boolean,
   now: () => number = Date.now,
-): StreamObserver {
+): StreamObserverHandle {
   const hw = hardware ? "true" : "false";
   let prevMediaSeconds: number | undefined;
   let prevWallMs: number | undefined;
+  let lastProgressWallMs: number | undefined;
+  let progressAgeTimer: ReturnType<typeof setInterval> | undefined;
 
-  return {
+  // Drive the progress-age gauge on a 1s tick: a deadlocked subprocess (stdout+stderr both backed
+  // up, ffmpeg blocked on write) stops emitting progress entirely, so the only way the gauge can
+  // climb past 5 s — the alert threshold — is by an external timer.
+  const startProgressAgeTimer = () => {
+    if (progressAgeTimer !== undefined) return;
+    progressAgeTimer = setInterval(() => {
+      if (lastProgressWallMs === undefined) return;
+      ffmpegProgressAgeSeconds.set((now() - lastProgressWallMs) / 1000);
+    }, 1000);
+    progressAgeTimer.unref();
+  };
+
+  const dispose = () => {
+    if (progressAgeTimer !== undefined) {
+      clearInterval(progressAgeTimer);
+      progressAgeTimer = undefined;
+    }
+  };
+
+  const observer: StreamObserver = {
     onCommand: (command) => {
       const engaged = commandUsesHardwareDecode(command);
       hwDecodeEngaged.set(engaged ? 1 : 0);
       log.info("ffmpeg command", { command, hwDecodeEngaged: engaged });
+      // Treat command start as the initial progress sample so the age gauge is meaningful before
+      // the first onProgress callback (which can be > 1s out on a cold ffmpeg startup).
+      lastProgressWallMs = now();
+      ffmpegProgressAgeSeconds.set(0);
+      startProgressAgeTimer();
+    },
+    onProcessStart: (pid) => {
+      log.info("ffmpeg subprocess started", { pid });
     },
     onCodecData: (data) => {
       log.info("ffmpeg input codec", {
@@ -88,6 +136,8 @@ export function createStreamObserver(
       }
       const mediaSeconds = parseTimemarkSeconds(progress.timemark);
       const wallMs = now();
+      lastProgressWallMs = wallMs;
+      ffmpegProgressAgeSeconds.set(0);
       if (
         mediaSeconds !== undefined &&
         prevMediaSeconds !== undefined &&
@@ -100,6 +150,10 @@ export function createStreamObserver(
         // indistinguishable from "catastrophically behind realtime" on the dashboard.
         if (deltaWall > 0 && deltaMedia > 0) {
           ffmpegSpeedRatio.set({ hardware: hw }, deltaMedia / deltaWall);
+          // Increment the monotonic media-time counter by the same delta. rate() over this gives
+          // the producer's realtime rate even when ffmpeg's own `speed=` figure stalls — the
+          // canonical stall detector per the ffmpeg-user mailing list.
+          ffmpegOutTimeSecondsTotal.inc({ hardware: hw }, deltaMedia);
         }
       }
       if (mediaSeconds !== undefined) {
@@ -114,4 +168,6 @@ export function createStreamObserver(
       }
     },
   };
+
+  return { observer, dispose };
 }

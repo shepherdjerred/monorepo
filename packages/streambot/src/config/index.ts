@@ -60,6 +60,7 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       bitrateAudioKbps: num(env["STREAM_BITRATE_AUDIO_KBPS"]),
       hardwareAcceleration: bool(env["STREAM_HARDWARE_ACCELERATION"]),
       vaapiDevice: env["VAAPI_DEVICE"],
+      readrate: num(env["STREAM_READRATE"]),
     },
     subtitles: {
       enabled: bool(env["SUBTITLES_ENABLED"]),

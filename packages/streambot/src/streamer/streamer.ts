@@ -274,6 +274,11 @@ export class StreambotStreamer implements StreamerLike {
       videoCodec: Utils.normalizeVideoCodec("H264"),
       hardwareAcceleratedDecoding: useHardware,
       minimizeLatency: false,
+      // Bound ffmpeg's input demux to a multiple of realtime. Without this, a fast GPU encoder
+      // runs the source at 3-5× realtime and the NUT-pipe consumer cannot drain that fast,
+      // causing the downstream JS buffer pool to grow at ~25 MB/s until major GC pauses the
+      // send loop ≥ 200 ms and the Discord receiver's jitter buffer shows a ~1 s freeze.
+      readrate: stream.readrate,
       ...(startSeconds > 0 ? { startTime: startSeconds } : {}),
       ...(input.resolved.subtitle
         ? { subtitleBurn: { path: input.resolved.subtitle.path } }
@@ -294,7 +299,10 @@ export class StreambotStreamer implements StreamerLike {
 
     // Observability seam — forwards ffmpeg command/codec/progress and send-frametime stats to the
     // Prometheus metrics. Passed to both prepare (ffmpeg events) and play (send stats).
-    const observer = createStreamObserver(useHardware, this.now);
+    const { observer, dispose: disposeObserver } = createStreamObserver(
+      useHardware,
+      this.now,
+    );
 
     // The seekable player owns prepare+play on a single Go-Live connection. `finished` resolves at
     // the true end of playback (or on stop) and rejects on an ffmpeg/encode failure — folding in the
@@ -340,6 +348,10 @@ export class StreambotStreamer implements StreamerLike {
       throw error;
     } finally {
       signal.removeEventListener("abort", onAbort);
+      // Stop the progress-age timer so it doesn't keep writing to the shared gauge after this
+      // segment ends. Without this, each seek or track change leaks a live setInterval that races
+      // against the next segment's timer and can fire spurious StreambotProgressStalled alerts.
+      disposeObserver();
       // Capture where playback reached (incl. live seeks) before dropping the player, so a HW→SW
       // retry can resume there. Uses the wall-clock tracker, not the fork's segment-offset
       // `Player.position`, falling back to the requested offset if playback never started.

@@ -22,6 +22,7 @@ import { getZfsMaintenanceRuleGroups } from "./rules/zfs-maintenance.ts";
 import { getTemporalRuleGroups } from "./rules/temporal.ts";
 import { getPrReviewBotRuleGroups } from "./rules/pr-review-bot.ts";
 import { getDaggerEngineRuleGroups } from "./rules/dagger.ts";
+import { getStreambotRuleGroups } from "./rules/streambot.ts";
 
 export function createPrometheusMonitoring(chart: Chart) {
   // Create Home Assistant rules
@@ -287,6 +288,20 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getDaggerEngineRuleGroups(),
+    },
+  });
+
+  // Streambot pipeline-health rules (encoder progress, producer/consumer rate mismatch,
+  // JS-heap queue accumulation, late-frame send-path signals — authored 2026-06-14 after
+  // the 1 s freeze incident).
+  new PrometheusRule(chart, "prometheus-streambot-rules", {
+    metadata: {
+      name: "prometheus-streambot-rules",
+      namespace: "media",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getStreambotRuleGroups(),
     },
   });
 }
