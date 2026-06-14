@@ -13,6 +13,9 @@ import { parseCommandInput } from "#src/game/command/command-input.ts";
 import { parseChord } from "#src/game/command/chord.ts";
 import { isValid } from "#src/discord/chord-validator.ts";
 import { execute } from "#src/discord/chord-executor.ts";
+import { readGameSnapshot } from "#src/game/events/snapshot.ts";
+import { formatGameStateForPrompt } from "./game-state-summary.ts";
+import { formatHistoryForPrompt } from "./history-summary.ts";
 import type { GoalManager } from "./goal-manager.ts";
 
 type GoalControlServerOptions = {
@@ -79,6 +82,46 @@ function statusResponse(context: GoalControlContext): Response {
   return jsonResponse({
     frame: context.emulator.frame,
     goal: context.goalManager.getStatus(),
+  });
+}
+
+// The model reads /state's response as plain text and inlines it into its
+// reasoning. text/plain (not JSON) keeps the prompt tokens minimal — no
+// keys, no escaping, no quotes.
+function stateResponse(context: GoalControlContext): Response {
+  const snapshot = readGameSnapshot(
+    context.emulator.memoryReader(),
+    context.emulator.gameSymbols(),
+  );
+  return textResponse(formatGameStateForPrompt(snapshot));
+}
+
+const HistoryQuerySchema = z.strictObject({
+  limit: z.coerce.number().int().min(1).max(10).optional(),
+});
+
+function historyResponse(
+  context: GoalControlContext,
+  request: Request,
+): Response {
+  const url = new URL(request.url);
+  const params = Object.fromEntries(url.searchParams.entries());
+  const parsed = HistoryQuerySchema.safeParse(params);
+  if (!parsed.success) {
+    return jsonResponse(
+      { error: "limit must be an integer between 1 and 10" },
+      400,
+    );
+  }
+  const limit = parsed.data.limit ?? 3;
+  const entries = context.goalManager.getHistory(limit);
+  return textResponse(formatHistoryForPrompt(entries));
+}
+
+function textResponse(body: string): Response {
+  return new Response(body, {
+    status: 200,
+    headers: { "content-type": "text/plain; charset=utf-8" },
   });
 }
 
@@ -174,6 +217,10 @@ async function routeRequest(
   switch (`${request.method} ${url.pathname}`) {
     case "GET /status":
       return statusResponse(context);
+    case "GET /state":
+      return stateResponse(context);
+    case "GET /history":
+      return historyResponse(context, request);
     case "POST /screenshot":
       return await screenshotResponse(context);
     case "POST /press":

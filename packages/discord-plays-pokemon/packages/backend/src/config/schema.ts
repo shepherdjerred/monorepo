@@ -5,7 +5,7 @@ export type Config = z.infer<typeof ConfigSchema>;
 const GoalConfigSchema = z
   .strictObject({
     enabled: z.boolean().default(false),
-    model: z.string().min(1).default("gpt-5.4-mini"),
+    model: z.string().min(1).default("gpt-5.4-nano"),
     codex_binary: z.string().min(1).default("codex"),
     runtime_directory: z.string().min(1).default("."),
     screenshot_dir: z.string().min(1).default("goal-screenshots"),
@@ -23,7 +23,7 @@ const GoalConfigSchema = z
   })
   .default({
     enabled: false,
-    model: "gpt-5.4-mini",
+    model: "gpt-5.4-nano",
     codex_binary: "codex",
     runtime_directory: ".",
     screenshot_dir: "goal-screenshots",

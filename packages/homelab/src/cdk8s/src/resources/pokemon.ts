@@ -19,6 +19,8 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 // Headless Discord Plays Pokemon: pokeemerald-wasm runs in Bun, renders frames
@@ -66,6 +68,20 @@ export function createPokemonDeployment(chart: Chart) {
     item.name,
   );
 
+  // Mirror the shared SeaweedFS S3 credentials (same vault item used by
+  // s3-static-sites + birmel + scout) into the pokemon namespace so the
+  // LLM archive can PUT to s3://llm-archive without crossing namespaces.
+  // Field names on the vault item are SEAWEEDFS_*; remapped to AWS_* env
+  // vars at the container level below.
+  const seaweedfsCreds = new OnePasswordItem(chart, "pokemon-seaweedfs-1p", {
+    spec: {
+      itemPath: vaultItemPath("vet52jaeh75chsalu6lulugium"),
+    },
+    metadata: {
+      name: "pokemon-seaweedfs-s3-credentials",
+    },
+  });
+
   deployment.addContainer(
     withCommonProps({
       image: `ghcr.io/shepherdjerred/discord-plays-pokemon:${versions["shepherdjerred/discord-plays-pokemon"]}`,
@@ -92,6 +108,39 @@ export function createPokemonDeployment(chart: Chart) {
           secret,
           key: "OPENAI_API_KEY",
         }),
+        // LLM observability: every Codex goal turn, tool call, and screenshot
+        // gets archived to SeaweedFS by the LlmArchiveSpanProcessor wired in
+        // observability/tracing.ts. SeaweedFS S3 creds come from the shared
+        // seaweedfs-s3-credentials 1P item (same pattern as birmel + scout).
+        // Vault item exposes the keys as SEAWEEDFS_*; we remap to AWS_*.
+        AWS_ACCESS_KEY_ID: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "pokemon-aws-access-key-id",
+            seaweedfsCreds.name,
+          ),
+          key: "SEAWEEDFS_ACCESS_KEY_ID",
+        }),
+        AWS_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "pokemon-aws-secret-access-key",
+            seaweedfsCreds.name,
+          ),
+          key: "SEAWEEDFS_SECRET_ACCESS_KEY",
+        }),
+        AWS_ENDPOINT_URL: EnvValue.fromValue(
+          "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+        ),
+        S3_ENDPOINT: EnvValue.fromValue(
+          "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+        ),
+        S3_FORCE_PATH_STYLE: EnvValue.fromValue("true"),
+        AWS_REGION: EnvValue.fromValue("us-east-1"),
+        ...llmArchiveEnvVars(),
+        LLM_ARCHIVE_S3_PREFIX: EnvValue.fromValue(
+          "goals/discord-plays-pokemon",
+        ),
       },
       securityContext: {
         ensureNonRoot: false,
