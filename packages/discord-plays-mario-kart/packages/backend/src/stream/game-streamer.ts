@@ -21,6 +21,10 @@ import {
   DISPLAY_ASPECT,
 } from "#src/emulator/constants.ts";
 import {
+  createAudioTransport,
+  type AudioTransport,
+} from "#src/stream/audio-transport.ts";
+import {
   sinkBufferBytes,
   streamActive,
   streamFfmpegBitrateKbps,
@@ -77,6 +81,9 @@ export class GameStreamer {
   private readonly streamer: Streamer;
   private readonly actor: Actor<ReturnType<typeof createDesiredStreamMachine>>;
   private frameSink: PassThrough | null = null;
+  // Audio side: a loopback PCM transport (sink fed by pushAudio) piped to ffmpeg.
+  // Created with the encoder, torn down when the broadcast stops.
+  private audioTransport: AudioTransport | null = null;
   private session: SessionStats | undefined;
   private sessionStartedAt = 0;
   private lastPushAt: number | undefined;
@@ -96,7 +103,11 @@ export class GameStreamer {
       },
     });
     this.actor.subscribe((snapshot) => {
-      this.frameSink = snapshot.context.frameSink;
+      const next = snapshot.context.frameSink;
+      // The machine ends the video sink when a broadcast stops; tear the audio
+      // transport down in lockstep so its socket/server don't leak.
+      if (next === null) this.teardownAudio();
+      this.frameSink = next;
       streamActive.set(this.frameSink === null ? 0 : 1);
     });
     this.actor.start();
@@ -130,6 +141,11 @@ export class GameStreamer {
     }
   }
 
+  /** Feed resampled PCM (s16le/44.1 kHz/stereo) to the broadcast (no-op when idle). */
+  pushAudio(pcm: Buffer): void {
+    if (this.audioTransport !== null) this.audioTransport.sink.write(pcm);
+  }
+
   start(): Promise<void> {
     this.actor.send({ type: "SET_DESIRED", desired: true });
     return Promise.resolve();
@@ -143,7 +159,16 @@ export class GameStreamer {
   destroy(): void {
     this.actor.send({ type: "SHUTDOWN" });
     this.actor.stop();
+    this.teardownAudio();
     this.streamer.client.destroy();
+  }
+
+  /** Tear down the loopback audio transport (sink + socket + server). Idempotent. */
+  private teardownAudio(): void {
+    if (this.audioTransport !== null) {
+      this.audioTransport.close();
+      this.audioTransport = null;
+    }
   }
 
   // ---- side effects injected into the machine ----
@@ -161,9 +186,7 @@ export class GameStreamer {
           }
         }),
       prepareEncoder: () =>
-        withSpan("stream.prepareEncoder", () =>
-          Promise.resolve(this.buildEncoder()),
-        ),
+        withSpan("stream.prepareEncoder", () => this.buildEncoder()),
       runStream: ({ output, playing }) => this.runStream(output, playing),
       leaveVoice: (playing) =>
         withSpan("stream.leaveVoice", async () => {
@@ -195,7 +218,7 @@ export class GameStreamer {
     };
   }
 
-  private buildEncoder(): EncoderHandles {
+  private async buildEncoder(): Promise<EncoderHandles> {
     const bgra = new PassThrough();
     // Scale the 4:3 game into an aspect-correct content box, then pillarbox it onto
     // a black 16:9 canvas for Discord (see prepareStream `pad`).
@@ -210,6 +233,12 @@ export class GameStreamer {
     this.lastPushAt = undefined;
     this.streamObserver = observer;
 
+    // Stand up the loopback audio transport before ffmpeg launches so its client
+    // connect succeeds immediately. pushAudio writes into the transport sink; the
+    // (only) connection pipes it to ffmpeg's audio input.
+    const audioTransport = await createAudioTransport();
+    this.audioTransport = audioTransport;
+
     const { output, promise } = prepareStream(bgra, {
       observer,
       width: content.width,
@@ -219,7 +248,14 @@ export class GameStreamer {
       videoCodec: "H264",
       bitrateVideo: this.options.bitrateKbps,
       bitrateVideoMax: this.options.bitrateMaxKbps,
-      includeAudio: false,
+      includeAudio: true,
+      // Game audio arrives out-of-band as raw PCM (the emulator emits frames and
+      // samples on separate paths), so it can't ride the rawvideo input — ffmpeg
+      // reads it from the loopback socket and muxes it into the broadcast.
+      audioInput: {
+        source: audioTransport.source,
+        inputOptions: audioTransport.inputOptions,
+      },
       minimizeLatency: true,
       customInputOptions: [
         "-f",

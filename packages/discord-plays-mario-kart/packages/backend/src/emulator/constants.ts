@@ -17,6 +17,16 @@ export const N64_FPS = 30;
 // stream uses the *display* aspect, not the raw 640:240 pixel aspect.
 export const DISPLAY_ASPECT = 4 / 3;
 
+// Audio: the emscripten audio backend resamples the core's output to a fixed
+// 44.1 kHz / stereo / signed-16-bit ring buffer and exposes it to the host via
+// _neilGetSoundBufferResampledAddress() + _neilGetAudioWritePosition(). These
+// MUST match the C source (audio_backend_libretro.c): `resampled_out_buf` is
+// `int16_t[64000]` and the resampler targets 44100 Hz.
+export const AUDIO_SAMPLE_RATE = 44_100;
+export const AUDIO_CHANNELS = 2;
+// Ring-buffer capacity in int16 samples (interleaved L/R), i.e. resampled_out_buf's length.
+export const AUDIO_RING_SAMPLES = 64_000;
+
 // The per-player controls string passed to neil_send_mobile_controls_player:
 // 14 chars, '0'/'1', in this exact order (must match mymain.cpp).
 export const CONTROL_CHARS = 14;

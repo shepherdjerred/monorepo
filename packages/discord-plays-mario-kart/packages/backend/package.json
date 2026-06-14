@@ -25,6 +25,7 @@
     "e2e:input:check": "bun run scripts/e2e-input-assert.ts",
     "e2e:race": "bun run scripts/e2e-race.ts",
     "e2e:scenario": "bun run scripts/e2e-scenario.ts",
+    "e2e:audio": "bun run scripts/e2e-audio.ts",
     "generate": "bunx --trust prisma generate",
     "db:push": "bunx prisma db push"
   },
