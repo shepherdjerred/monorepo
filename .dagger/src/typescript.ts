@@ -9,6 +9,7 @@ import { ESLINT_CACHE, HELM_IMAGE } from "./constants";
 
 import { bunBaseContainer } from "./base";
 import { runBundle } from "./bundle";
+import { astroCheckHelper, astroBuildContainerHelper } from "./astro";
 
 /** Run the lint script on a bun container. */
 export function lintHelper(
@@ -200,6 +201,11 @@ export function generateAndTestHelper(
  * `haUrl` / `haToken`: when set, the typecheck sibling uses
  * `generateAndTypecheckWithSecretsHelper` (temporal: runs ha-codegen against a
  * live Home Assistant instance before tsc). Without them, plain typecheck.
+ *
+ * `includeAstroCheck` / `includeAstroBuild`: when set, astro check / build
+ * run as additional parallel siblings (sjer.red, cooklang-rich-preview).
+ * `includeBuild`: when set, `bun run build` runs as a parallel sibling
+ * (NPM_BUILD_PACKAGES — astro-opengraph-images, webring).
  */
 export async function lintTypecheckTestHelper(
   pkgDir: Directory,
@@ -210,13 +216,15 @@ export async function lintTypecheckTestHelper(
   needsHelm = false,
   haUrl: Secret | null = null,
   haToken: Secret | null = null,
+  includeAstroCheck = false,
+  includeAstroBuild = false,
+  includeBuild = false,
 ): Promise<string> {
   const useTypecheckSecrets = haUrl !== null || haToken !== null;
-  return runBundle([
+  const children: { name: string; run: () => Promise<string> }[] = [
     {
       name: "lint",
-      run: () =>
-        lintHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
+      run: () => lintHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
     },
     {
       name: "typecheck",
@@ -245,7 +253,34 @@ export async function lintTypecheckTestHelper(
           needsHelm,
         ).stdout(),
     },
-  ]);
+  ];
+  if (includeAstroCheck) {
+    children.push({
+      name: "astro-check",
+      run: () =>
+        astroCheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
+    });
+  }
+  if (includeAstroBuild) {
+    children.push({
+      name: "astro-build",
+      run: () =>
+        astroBuildContainerHelper(
+          pkgDir,
+          pkg,
+          depNames,
+          depDirs,
+          tsconfig,
+        ).stdout(),
+    });
+  }
+  if (includeBuild) {
+    children.push({
+      name: "build",
+      run: () => buildHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
+    });
+  }
+  return runBundle(children);
 }
 
 /**

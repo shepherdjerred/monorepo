@@ -96,23 +96,32 @@ export function perPackageSteps(
       ),
     );
   } else {
-    // Standard bun package — one bundled pod runs lint + typecheck + test in
-    // parallel. temporal: typecheck needs HASS_URL/HASS_TOKEN so ha-codegen
-    // runs against the live HA instance before tsc. Secrets come from
-    // `buildkite-ci-secrets` (mounted by the k8s plugin on every step).
-    // Inside the Dagger container the secrets are re-bound to HA_URL /
-    // HA_TOKEN (what the ha-codegen CLI reads); only the outer env lookup
-    // uses the HASS_ prefix.
+    // Standard bun package — one bundled pod runs lint + typecheck + test
+    // (plus optional astro / build siblings) in parallel.
+    //
+    // temporal: typecheck needs HASS_URL/HASS_TOKEN so ha-codegen runs
+    // against the live HA instance before tsc. Secrets come from
+    // `buildkite-ci-secrets` (mounted by the k8s plugin on every step);
+    // inside the Dagger container they're re-bound to HA_URL / HA_TOKEN.
+    //
+    // ASTRO_PACKAGES (sjer.red, cooklang-rich-preview): astro-check +
+    // astro-build run as additional parallel siblings inside the bundle.
+    // NPM_BUILD_PACKAGES (astro-opengraph-images, webring): `bun run build`
+    // runs as a parallel sibling to warm the Dagger cache for npm publish.
     const haFlags =
       pkg === "temporal"
         ? ` --ha-url env:HASS_URL --ha-token env:HASS_TOKEN`
         : "";
     const helmFlag = pkg === "homelab" ? ` --needs-helm` : "";
+    const astroFlags = ASTRO_PACKAGES.has(pkg)
+      ? ` --include-astro-check --include-astro-build`
+      : "";
+    const buildFlag = NPM_BUILD_PACKAGES.has(pkg) ? ` --include-build` : "";
     steps.push(
       daggerCallStep(
-        `:dagger_knife: Lint + Typecheck + Test`,
+        `:dagger_knife: pkg-check`,
         `pkg-check-${sk}`,
-        `${DAGGER_CALL} lint-typecheck-test ${pf}${helmFlag}${haFlags}`,
+        `${DAGGER_CALL} lint-typecheck-test ${pf}${helmFlag}${haFlags}${astroFlags}${buildFlag}`,
         resources,
       ),
     );
@@ -140,8 +149,7 @@ export function perPackageSteps(
     // to PRs that touch a generator input (versions.ts / the generate+parse
     // scripts / the helm-types lib) so the ~24-chart network fetch doesn't run
     // on unrelated cdk8s edits. Replaces the weekly helm-types-refresh Temporal
-    // workflow: a chart bump that wasn't regenerated now fails CI. Flags mirror
-    // `cdk8sSynthStep` (the `homelab-synth` Dagger func has no `--pkg` param).
+    // workflow: a chart bump that wasn't regenerated now fails CI.
     if (helmTypesInputsChanged) {
       const cdk8sDeps = WORKSPACE_DEPS["homelab/src/cdk8s"] ?? [];
       const cdk8sDepFlags = cdk8sDeps
@@ -159,36 +167,6 @@ export function perPackageSteps(
         ),
       );
     }
-  }
-
-  if (ASTRO_PACKAGES.has(pkg)) {
-    steps.push(
-      daggerCallStep(
-        `:rocket: Astro Check`,
-        `astro-check-${sk}`,
-        `${DAGGER_CALL} astro-check ${pf}`,
-        resources,
-      ),
-      daggerCallStep(
-        `:building_construction: Astro Build`,
-        `astro-build-${sk}`,
-        `${DAGGER_CALL} astro-build ${pf}`,
-        resources,
-      ),
-    );
-  }
-
-  // NPM-publishable packages: build to warm Dagger cache (npm publish rebuilds via cache hit).
-  // No Buildkite artifact upload — Dagger caching handles build output transfer.
-  if (NPM_BUILD_PACKAGES.has(pkg)) {
-    steps.push(
-      daggerCallStep(
-        `:building_construction: Build`,
-        `build-${sk}`,
-        `${DAGGER_CALL} build-package ${pf}`,
-        resources,
-      ),
-    );
   }
 
   return {

@@ -312,6 +312,8 @@ export class Monorepo {
    * content-address, so this collapses three BK steps into one without losing
    * intra-package parallelism. `haUrl`/`haToken` switch the typecheck branch
    * to the HA-secrets generate-and-typecheck variant (used by temporal).
+   * `includeAstroCheck`/`includeAstroBuild`/`includeBuild` add optional
+   * parallel siblings — used by astro packages and NPM_BUILD_PACKAGES.
    */
   @func()
   async lintTypecheckTest(
@@ -323,6 +325,9 @@ export class Monorepo {
     needsHelm = false,
     haUrl: Secret | null = null,
     haToken: Secret | null = null,
+    includeAstroCheck = false,
+    includeAstroBuild = false,
+    includeBuild = false,
   ): Promise<string> {
     return lintTypecheckTestHelper(
       pkgDir,
@@ -333,6 +338,9 @@ export class Monorepo {
       needsHelm,
       haUrl,
       haToken,
+      includeAstroCheck,
+      includeAstroBuild,
+      includeBuild,
     );
   }
 
