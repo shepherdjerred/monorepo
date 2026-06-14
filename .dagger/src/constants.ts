@@ -97,7 +97,7 @@ export const TRIVY_IMAGE =
   "aquasec/trivy:0.70.0@sha256:be1190afcb28352bfddc4ddeb71470835d16462af68d310f9f4bca710961a41e";
 // renovate: datasource=docker depName=semgrep/semgrep
 export const SEMGREP_IMAGE =
-  "semgrep/semgrep:1.162.0@sha256:9349edbadf90c3f3c0c3f55867625354e89680e6fa10d9034042af52fdb0e0d0";
+  "semgrep/semgrep:1.163.0@sha256:7cad2bc2d1e44f87f0bf4be6d1fa23aa90fb72015bebc89fb91385d813987a03";
 // renovate: datasource=docker depName=zricethezav/gitleaks
 export const GITLEAKS_IMAGE =
   "zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f";
