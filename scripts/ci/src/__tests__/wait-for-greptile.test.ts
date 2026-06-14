@@ -4,7 +4,9 @@ import {
   evaluateGate,
   parseLinkNext,
   parseGreptilePriority,
+  parseGreptileSkipSignal,
   type GreptileReviewCheck,
+  type GreptileSkipSignal,
   type GreptileThread,
 } from "../wait-for-greptile.ts";
 
@@ -40,6 +42,7 @@ function evaluate(input: {
   reviewCheck?: GreptileReviewCheck;
   threads?: GreptileThread[];
   maxBlockingPriority?: number;
+  skipSignal?: GreptileSkipSignal;
 }) {
   return evaluateGate({
     head: HEAD,
@@ -47,6 +50,7 @@ function evaluate(input: {
     threads: input.threads ?? [],
     greptileLogin: GREPTILE,
     maxBlockingPriority: input.maxBlockingPriority ?? 3,
+    ...(input.skipSignal === undefined ? {} : { skipSignal: input.skipSignal }),
   });
 }
 
@@ -275,5 +279,125 @@ describe("parseLinkNext", () => {
     const header =
       '<https://api.github.com/x?page=1>; rel="prev", <https://api.github.com/x?page=1>; rel="first"';
     expect(parseLinkNext(header)).toBeNull();
+  });
+});
+
+describe("evaluateGate — Greptile skip signal", () => {
+  it("passes immediately when Greptile declined to review (too many files)", () => {
+    const result = evaluate({
+      // Simulate the structural failure mode: no check-run on head AND no threads.
+      reviewCheck: { found: false, status: null, conclusion: null, url: null },
+      threads: [],
+      skipSignal: {
+        skipped: true,
+        message:
+          "<!-- greptile-status -->\nToo many files changed for review. (`3000 files found`, `500 file limit`)",
+        url: "https://github.com/shepherdjerred/monorepo/issues/1166#issuecomment-1",
+      },
+    });
+    expect(result.state).toBe("passed");
+    expect(result.message).toContain("declined to review");
+    expect(result.message).toContain("Too many files changed for review");
+    expect(result.message).toContain(
+      "https://github.com/shepherdjerred/monorepo/issues/1166#issuecomment-1",
+    );
+  });
+
+  it("skip signal short-circuits even when the review-check is errored", () => {
+    // We trust the skip comment over a stale errored check from a prior push:
+    // once Greptile decides the PR is too large it stops producing check-runs,
+    // and an old `failure` conclusion shouldn't keep the gate red.
+    const result = evaluate({
+      reviewCheck: reviewCheck({ conclusion: "failure" }),
+      skipSignal: {
+        skipped: true,
+        message: "<!-- greptile-status --> Too many files changed for review.",
+        url: null,
+      },
+    });
+    expect(result.state).toBe("passed");
+  });
+
+  it("ignores an inactive skip signal and evaluates the review-check normally", () => {
+    const result = evaluate({
+      skipSignal: { skipped: false, message: null, url: null },
+      threads: [thread({ isResolved: false, priority: 2 })],
+    });
+    expect(result.state).toBe("failed");
+    expect(result.message).toContain("unresolved Greptile comment");
+  });
+});
+
+describe("parseGreptileSkipSignal", () => {
+  function statusComment(
+    overrides: {
+      body?: string;
+      login?: string;
+      html_url?: string | null;
+    } = {},
+  ): Record<string, unknown> {
+    return {
+      user: { login: overrides.login ?? "greptile-apps[bot]" },
+      body:
+        overrides.body ??
+        "<!-- greptile-status -->\nToo many files changed for review. (`3000 files found`, `500 file limit`)",
+      html_url:
+        overrides.html_url ??
+        "https://github.com/shepherdjerred/monorepo/issues/1166#issuecomment-1",
+    };
+  }
+
+  it("detects the canonical `<!-- greptile-status -->` skip comment", () => {
+    const result = parseGreptileSkipSignal([statusComment()], "greptile-apps");
+    expect(result.skipped).toBe(true);
+    expect(result.message).toContain("Too many files changed");
+    expect(result.url).toContain("issuecomment-1");
+  });
+
+  it("strips the `[bot]` suffix from the comment author login", () => {
+    const result = parseGreptileSkipSignal(
+      [statusComment({ login: "greptile-apps[bot]" })],
+      "greptile-apps",
+    );
+    expect(result.skipped).toBe(true);
+  });
+
+  it("ignores prose that lacks the HTML status marker", () => {
+    const result = parseGreptileSkipSignal(
+      [
+        statusComment({
+          body: "Too many files changed for review. (3000 files found)",
+        }),
+      ],
+      "greptile-apps",
+    );
+    expect(result.skipped).toBe(false);
+  });
+
+  it("ignores comments from other authors", () => {
+    const result = parseGreptileSkipSignal(
+      [statusComment({ login: "shepherdjerred" })],
+      "greptile-apps",
+    );
+    expect(result.skipped).toBe(false);
+  });
+
+  it("ignores Greptile comments that do not match a known skip fragment", () => {
+    const result = parseGreptileSkipSignal(
+      [
+        statusComment({
+          body: "<!-- greptile-status -->\nReview in progress…",
+        }),
+      ],
+      "greptile-apps",
+    );
+    expect(result.skipped).toBe(false);
+  });
+
+  it("returns an inactive signal for an empty comment list", () => {
+    const result = parseGreptileSkipSignal([], "greptile-apps");
+    expect(result.skipped).toBe(false);
+    expect(result.message).toBeNull();
+    expect(result.url).toBeNull();
   });
 });

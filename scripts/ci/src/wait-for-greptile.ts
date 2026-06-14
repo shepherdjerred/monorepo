@@ -60,6 +60,24 @@ export type GreptileThread = {
   priority: number | null;
 };
 
+/**
+ * Greptile posts a sticky issue comment marked with `<!-- greptile-status -->`
+ * when it declines to review a PR — e.g. because the diff exceeds Greptile's
+ * per-PR file limit. When that happens, Greptile never produces a check-run on
+ * the head commit, so the normal `reviewCheck` polling loop would time out.
+ *
+ * We surface that as an explicit skip signal so the gate can pass instead of
+ * blocking the merge on a review that will never happen.
+ */
+export type GreptileSkipSignal = {
+  /** True if Greptile posted a `greptile-status` comment declining to review. */
+  skipped: boolean;
+  /** The original comment body, for diagnostic messages (null when not present). */
+  message: string | null;
+  /** The HTML URL of the status comment, for diagnostic messages. */
+  url: string | null;
+};
+
 export type GateDecision =
   | { state: "waiting"; message: string }
   | { state: "passed"; message: string }
@@ -321,7 +339,24 @@ export function evaluateGate(input: {
   threads: readonly GreptileThread[];
   greptileLogin: string;
   maxBlockingPriority: number;
+  skipSignal?: GreptileSkipSignal;
 }): GateDecision {
+  // If Greptile posted a `greptile-status` comment declining to review (e.g.
+  // because the diff exceeds its per-PR file limit), there is no review-check
+  // to wait for and no comments to block on. Pass the gate immediately rather
+  // than holding a CI agent for the full timeout.
+  if (input.skipSignal?.skipped === true) {
+    const detail = input.skipSignal.message ?? "(no detail provided)";
+    const where =
+      input.skipSignal.url === null ? "" : ` — ${input.skipSignal.url}`;
+    return {
+      state: "passed",
+      message:
+        `Greptile declined to review ${input.head} (${detail.replace(/\s+/gu, " ").trim()})${where}. ` +
+        `No review-check or comments are expected; passing gate.`,
+    };
+  }
+
   const reviewState = classifyReviewCheck(input.reviewCheck);
 
   if (reviewState === "reviewing") {
@@ -471,6 +506,68 @@ function pickLatestCheck(
     }
   }
   return chosen;
+}
+
+/**
+ * The marker Greptile uses on its sticky PR status comment. We match on the
+ * full HTML comment so we don't accidentally fire on prose that happens to
+ * mention "greptile-status".
+ */
+const GREPTILE_STATUS_MARKER = "<!-- greptile-status -->";
+
+/**
+ * Body fragments that indicate Greptile declined the review. We match
+ * case-insensitively and only require one substring to be present so the
+ * detection survives minor wording tweaks from Greptile.
+ */
+const GREPTILE_SKIP_FRAGMENTS = [/too many files changed/iu];
+
+/**
+ * Parse a list of PR issue-comment payloads for a Greptile skip signal. We
+ * keep this pure so the test suite can exercise it directly.
+ */
+export function parseGreptileSkipSignal(
+  comments: readonly unknown[],
+  greptileLogin: string,
+): GreptileSkipSignal {
+  for (const comment of comments) {
+    if (!isRecord(comment)) continue;
+    const user = recordField(comment, "user");
+    const login = user === null ? null : stringField(user, "login");
+    if (login === null) continue;
+    // GitHub App bot logins are reported as `<name>[bot]` on the REST API.
+    const normalised = login.replace(/\[bot\]$/u, "");
+    if (normalised !== greptileLogin) continue;
+    const body = stringField(comment, "body");
+    if (body === null || !body.includes(GREPTILE_STATUS_MARKER)) continue;
+    if (!GREPTILE_SKIP_FRAGMENTS.some((pattern) => pattern.test(body)))
+      continue;
+    return {
+      skipped: true,
+      message: body,
+      url: stringField(comment, "html_url"),
+    };
+  }
+  return { skipped: false, message: null, url: null };
+}
+
+async function fetchGreptileSkipSignal(input: {
+  repo: string;
+  number: number;
+  token: string;
+  greptileLogin: string;
+}): Promise<GreptileSkipSignal> {
+  let url: string | null =
+    `${GITHUB_API_URL}/repos/${input.repo}/issues/${String(input.number)}/comments?per_page=100`;
+  const comments: unknown[] = [];
+  while (url !== null) {
+    const { payload, linkNext } = await getJsonWithLink(url, input.token);
+    if (Array.isArray(payload)) {
+      comments.push(...payload);
+    }
+    url = linkNext;
+  }
+  return parseGreptileSkipSignal(comments, input.greptileLogin);
 }
 
 async function fetchGreptileReviewCheck(input: {
@@ -651,9 +748,10 @@ async function waitForGreptile(): Promise<void> {
   let warnedMismatch = false;
 
   while (Date.now() <= deadline) {
-    const [reviewCheck, threadResult] = await Promise.all([
+    const [reviewCheck, threadResult, skipSignal] = await Promise.all([
       fetchGreptileReviewCheck({ repo, head, token, pattern }),
       fetchGreptileThreads({ owner, name, number, token }),
+      fetchGreptileSkipSignal({ repo, number, token, greptileLogin }),
     ]);
 
     if (
@@ -673,6 +771,7 @@ async function waitForGreptile(): Promise<void> {
       threads: threadResult.threads,
       greptileLogin,
       maxBlockingPriority,
+      skipSignal,
     });
 
     if (decision.state === "passed") {
