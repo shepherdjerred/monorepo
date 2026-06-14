@@ -15,6 +15,9 @@ const config = [
         "src/game/events/watcher.test.ts",
         "src/game/events/saves.test.ts",
         "src/discord/event-notifier.test.ts",
+        "src/emulator/audio/analysis.test.ts",
+        "src/emulator/audio/audio-fingerprint.test.ts",
+        "src/emulator/audio/m4a-handlers-basic.test.ts",
         "src/emulator/buttons.test.ts",
         "src/emulator/emulator-symbols.integration.test.ts",
         "src/goal/codex-command.test.ts",
@@ -28,6 +31,7 @@ const config = [
         "src/goal/pricing.test.ts",
         "src/stream/stream-machine.test.ts",
         "src/stream/orchestrator-machine.test.ts",
+        "src/stream/audio-transport.test.ts",
       ],
       // Test files are excluded from tsconfig (bun test globals aren't visible
       // to tsc), so they fall to the default project; raise the cap.
