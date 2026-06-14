@@ -220,7 +220,7 @@ const versions = {
     "latest@sha256:56ddcb1b34c7ccd0779c2552123f44a69e4785c80c28ed0445e2703d933dfae6",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "library/debian":
-    "bookworm-slim@sha256:0104b334637a5f19aa9c983a91b54c89887c0984081f2068983107a6f6c21eeb",
+    "bookworm-slim@sha256:96e378d7e6531ac9a15ad505478fcc2e69f371b10f5cdf87857c4b8188404716",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "plausible/analytics":
     "v2.0.0@sha256:cd5f75e1399073669b13b4151cc603332a825324d0b8f13dfc9de9112a3c68a1",
