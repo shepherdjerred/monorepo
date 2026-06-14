@@ -159,6 +159,21 @@ export type PrepareStreamOptions = {
    * (`hardwareAcceleratedDecoding` + an encoder with `hwPipeline`) is active.
    */
   pad?: { width: number; height: number };
+
+  /**
+   * Optional separate audio input. The primary `input` carries video; this carries audio out of a
+   * second ffmpeg source, muxed into the output. Use for raw-video sources with no embedded audio
+   * track (e.g. an emulator that emits BGRA frames and PCM samples on separate paths). When set, the
+   * audio is mapped from this input (`-map 1:a:0`) instead of the primary input (`-map 0:a:0?`).
+   * Requires `includeAudio: true` — otherwise it is ignored.
+   *
+   * `source` is an ffmpeg input *string* (path / FIFO / URL such as `tcp://127.0.0.1:9000`), NOT a
+   * stream: fluent-ffmpeg can only pipe a single Readable (to stdin), which the primary `input`
+   * already uses, so a second live stream must reach ffmpeg over its own transport that the caller
+   * owns. `inputOptions` must fully describe the raw format, e.g.
+   * `["-f","s16le","-ar","44100","-ac","2"]`.
+   */
+  audioInput?: { readonly source: string; readonly inputOptions: string[] };
 };
 
 export type Controller = {
@@ -197,6 +212,7 @@ export function prepareStream(
     inputColor: "sdr",
     startTime: undefined,
     pad: undefined,
+    audioInput: undefined,
   } satisfies PrepareStreamOptions;
 
   function mergeOptions(opts: Partial<PrepareStreamOptions>) {
@@ -258,6 +274,7 @@ export function prepareStream(
           ? opts.startTime
           : defaultOptions.startTime,
       pad: opts.pad ?? defaultOptions.pad,
+      audioInput: opts.audioInput ?? defaultOptions.audioInput,
     } satisfies PrepareStreamOptions;
   }
 
@@ -377,6 +394,16 @@ export function prepareStream(
     command.inputOption("-scan_all_pmts 0");
   }
 
+  // Optional second input carrying audio (for raw-video sources with no embedded audio track).
+  // Added after every input-0 option above so its inputOptions bind to this input (fluent-ffmpeg
+  // applies inputOptions to the most recently added input). Mapped via `-map 1:a:0` in the audio
+  // setup below. Only wired when audio output is enabled.
+  if (mergedOptions.audioInput && mergedOptions.includeAudio) {
+    command
+      .input(mergedOptions.audioInput.source)
+      .inputOptions(mergedOptions.audioInput.inputOptions);
+  }
+
   // general output options
   command.output(output).outputFormat("nut");
 
@@ -489,10 +516,12 @@ export function prepareStream(
   }
 
   // audio setup
-  const { includeAudio, bitrateAudio } = mergedOptions;
+  const { includeAudio, bitrateAudio, audioInput } = mergedOptions;
   if (includeAudio)
     command
-      .addOutputOption("-map 0:a:0?")
+      // With a separate audio input, map its first audio stream (a required mapping — the caller
+      // promised a stream); otherwise take audio from the primary input if it has any (`?`).
+      .addOutputOption(audioInput ? "-map 1:a:0" : "-map 0:a:0?")
       .audioChannels(2)
       /*
        * I don't have much surround sound material to test this with,

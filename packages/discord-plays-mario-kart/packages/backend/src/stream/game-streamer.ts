@@ -1,4 +1,5 @@
 import { PassThrough, type Readable } from "node:stream";
+import { createServer, type Server, type Socket } from "node:net";
 import { Client } from "discord.js-selfbot-v13";
 import {
   Streamer,
@@ -19,6 +20,8 @@ import {
   HEIGHT,
   N64_FPS,
   DISPLAY_ASPECT,
+  AUDIO_SAMPLE_RATE,
+  AUDIO_CHANNELS,
 } from "#src/emulator/constants.ts";
 import {
   sinkBufferBytes,
@@ -66,6 +69,35 @@ export async function notifyStreamSessionEnded(
 // timestamps from this value, so it must match the emulator's actual tick rate.
 const SRC_FPS = N64_FPS;
 
+// The emulator emits resampled PCM (signed 16-bit LE, stereo, 44.1 kHz). ffmpeg
+// reads it raw over a loopback socket, so the format must be declared explicitly.
+const AUDIO_INPUT_OPTIONS = [
+  "-f",
+  "s16le",
+  "-ar",
+  String(AUDIO_SAMPLE_RATE),
+  "-ac",
+  String(AUDIO_CHANNELS),
+];
+
+// Bind a server to an ephemeral loopback port and resolve with the chosen port.
+// fluent-ffmpeg can only pipe one Readable (the video frames, to stdin), so the
+// second live input (audio) reaches ffmpeg over loopback TCP that ffmpeg dials
+// as a client (`tcp://127.0.0.1:<port>`).
+function listenOnLoopback(server: Server): Promise<number> {
+  return new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      if (address === null || typeof address === "string") {
+        reject(new Error("audio TCP server did not bind to a numeric port"));
+        return;
+      }
+      resolve(address.port);
+    });
+  });
+}
+
 // Streams the emulator's BGRA frames into a Discord voice channel as a Go-Live
 // broadcast, over the voice UDP path.
 //
@@ -77,6 +109,11 @@ export class GameStreamer {
   private readonly streamer: Streamer;
   private readonly actor: Actor<ReturnType<typeof createDesiredStreamMachine>>;
   private frameSink: PassThrough | null = null;
+  // Audio side: a PCM sink (fed by pushAudio) piped to ffmpeg over a loopback
+  // socket. Created with the encoder, torn down when the broadcast stops.
+  private audioSink: PassThrough | null = null;
+  private audioServer: Server | null = null;
+  private audioSocket: Socket | null = null;
   private session: SessionStats | undefined;
   private sessionStartedAt = 0;
   private lastPushAt: number | undefined;
@@ -96,7 +133,11 @@ export class GameStreamer {
       },
     });
     this.actor.subscribe((snapshot) => {
-      this.frameSink = snapshot.context.frameSink;
+      const next = snapshot.context.frameSink;
+      // The machine ends the video sink when a broadcast stops; tear the audio
+      // transport down in lockstep so its socket/server don't leak.
+      if (next === null) this.teardownAudio();
+      this.frameSink = next;
       streamActive.set(this.frameSink === null ? 0 : 1);
     });
     this.actor.start();
@@ -130,6 +171,11 @@ export class GameStreamer {
     }
   }
 
+  /** Feed resampled PCM (s16le/44.1 kHz/stereo) to the broadcast (no-op when idle). */
+  pushAudio(pcm: Buffer): void {
+    if (this.audioSink !== null) this.audioSink.write(pcm);
+  }
+
   start(): Promise<void> {
     this.actor.send({ type: "SET_DESIRED", desired: true });
     return Promise.resolve();
@@ -143,7 +189,24 @@ export class GameStreamer {
   destroy(): void {
     this.actor.send({ type: "SHUTDOWN" });
     this.actor.stop();
+    this.teardownAudio();
     this.streamer.client.destroy();
+  }
+
+  /** Close the audio sink, its loopback socket, and the listening server. Idempotent. */
+  private teardownAudio(): void {
+    if (this.audioSink !== null) {
+      this.audioSink.end();
+      this.audioSink = null;
+    }
+    if (this.audioSocket !== null) {
+      this.audioSocket.destroy();
+      this.audioSocket = null;
+    }
+    if (this.audioServer !== null) {
+      this.audioServer.close();
+      this.audioServer = null;
+    }
   }
 
   // ---- side effects injected into the machine ----
@@ -161,9 +224,7 @@ export class GameStreamer {
           }
         }),
       prepareEncoder: () =>
-        withSpan("stream.prepareEncoder", () =>
-          Promise.resolve(this.buildEncoder()),
-        ),
+        withSpan("stream.prepareEncoder", () => this.buildEncoder()),
       runStream: ({ output, playing }) => this.runStream(output, playing),
       leaveVoice: (playing) =>
         withSpan("stream.leaveVoice", async () => {
@@ -195,7 +256,7 @@ export class GameStreamer {
     };
   }
 
-  private buildEncoder(): EncoderHandles {
+  private async buildEncoder(): Promise<EncoderHandles> {
     const bgra = new PassThrough();
     // Scale the 4:3 game into an aspect-correct content box, then pillarbox it onto
     // a black 16:9 canvas for Discord (see prepareStream `pad`).
@@ -210,6 +271,23 @@ export class GameStreamer {
     this.lastPushAt = undefined;
     this.streamObserver = observer;
 
+    // Stand up the loopback audio transport before ffmpeg launches so its client
+    // connect (`tcp://127.0.0.1:<port>`) succeeds immediately. pushAudio writes
+    // into `pcm`; the first (only) connection pipes it to ffmpeg's audio input.
+    const pcm = new PassThrough();
+    this.audioSink = pcm;
+    const audioServer = createServer((socket) => {
+      this.audioSocket = socket;
+      // ffmpeg dropping the connection on stop surfaces as a socket error; the
+      // teardown path owns cleanup, so just keep it from crashing the process.
+      socket.on("error", () => {
+        /* ffmpeg closed the audio input; expected on stop */
+      });
+      pcm.pipe(socket);
+    });
+    this.audioServer = audioServer;
+    const audioPort = await listenOnLoopback(audioServer);
+
     const { output, promise } = prepareStream(bgra, {
       observer,
       width: content.width,
@@ -219,7 +297,14 @@ export class GameStreamer {
       videoCodec: "H264",
       bitrateVideo: this.options.bitrateKbps,
       bitrateVideoMax: this.options.bitrateMaxKbps,
-      includeAudio: false,
+      includeAudio: true,
+      // Game audio arrives out-of-band as raw PCM (the emulator emits frames and
+      // samples on separate paths), so it can't ride the rawvideo input — ffmpeg
+      // reads it from the loopback socket and muxes it into the broadcast.
+      audioInput: {
+        source: `tcp://127.0.0.1:${String(audioPort)}`,
+        inputOptions: AUDIO_INPUT_OPTIONS,
+      },
       minimizeLatency: true,
       customInputOptions: [
         "-f",
