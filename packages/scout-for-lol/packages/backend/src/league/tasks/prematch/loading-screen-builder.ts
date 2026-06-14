@@ -212,12 +212,50 @@ function buildStandardParticipant(
   };
 }
 
+function gameInfoContextSuffix(gameInfo: RawCurrentGameInfo): string {
+  return (
+    `gameId=${gameInfo.gameId.toString()}, ` +
+    `queueConfigId=${gameInfo.gameQueueConfigId.toString()}, ` +
+    `mapId=${gameInfo.mapId.toString()}, ` +
+    `gameMode=${gameInfo.gameMode}, ` +
+    `gameType=${gameInfo.gameType}, ` +
+    `gameLength=${gameInfo.gameLength.toString()}`
+  );
+}
+
+function buildIncompleteLobbyMessage(
+  participants: readonly RankedBuiltParticipant[],
+  gameInfo: RawCurrentGameInfo,
+): string {
+  const presentPuuids = gameInfo.participants
+    .map((p) => p.puuid ?? "scrubbed")
+    .join(",");
+  return (
+    `Standard loading screen requires exactly 10 participants; ` +
+    `received ${participants.length.toString()} ` +
+    `(${gameInfoContextSuffix(gameInfo)}, participants=[${presentPuuids}])`
+  );
+}
+
+function buildLopsidedTeamMessage(
+  team: string,
+  received: number,
+  gameInfo: RawCurrentGameInfo,
+): string {
+  return (
+    `Standard loading screen requires exactly 5 ${team} participants; ` +
+    `received ${received.toString()} ` +
+    `(${gameInfoContextSuffix(gameInfo)})`
+  );
+}
+
 function inferStandardParticipants(
   participants: readonly RankedBuiltParticipant[],
+  gameInfo: RawCurrentGameInfo,
 ): StandardLoadingScreenParticipant[] {
   if (participants.length !== 10) {
-    throw new Error(
-      `Standard loading screen requires exactly 10 participants; received ${participants.length.toString()}`,
+    throw new RecoverableLoadingScreenDataError(
+      buildIncompleteLobbyMessage(participants, gameInfo),
     );
   }
 
@@ -228,8 +266,8 @@ function inferStandardParticipants(
       .map((participant, index) => ({ participant, index }))
       .filter((entry) => entry.participant.team === team);
     if (indexedTeam.length !== 5) {
-      throw new Error(
-        `Standard loading screen requires exactly 5 ${team} participants; received ${indexedTeam.length.toString()}`,
+      throw new RecoverableLoadingScreenDataError(
+        buildLopsidedTeamMessage(team, indexedTeam.length, gameInfo),
       );
     }
 
@@ -365,7 +403,7 @@ export async function buildLoadingScreenData(
   );
   const participants: LoadingScreenParticipant[] =
     layout === "standard"
-      ? inferStandardParticipants(rankedParticipants)
+      ? inferStandardParticipants(rankedParticipants, gameInfo)
       : rankedParticipants;
 
   // Build bans (skip for ARAM/Arena which don't have bans)
