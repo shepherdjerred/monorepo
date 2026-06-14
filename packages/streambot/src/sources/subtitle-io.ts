@@ -281,8 +281,10 @@ async function extractEmbeddedTrack(
   try {
     await rename(staging, cachePath);
   } catch (error) {
-    // Couldn't publish to the cache (e.g. a concurrent extraction of the same file won the rename).
+    // Couldn't publish to the cache (e.g. disk-full, permission error, or cross-device rename).
     // Use the staged copy for this run as a one-shot temp; the cache fills on a later play.
+    // Note: on Linux, rename(2) atomically replaces an existing destination, so concurrent
+    // extractions of the same file do not cause a failure here — the last rename wins.
     log.warn(
       "could not publish subtitle to cache; using staged copy this run",
       {
