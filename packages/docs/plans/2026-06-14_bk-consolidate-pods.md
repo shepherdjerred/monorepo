@@ -197,6 +197,70 @@ categories where pod-overhead still dominates real work.
 - `lintTypecheckTestHelper` is extended (not replaced) with optional flags
   for the per-package roll-ins.
 
+## Wave 2 — shipped (99 → 86)
+
+### Done
+
+- `npm-publish-all` (3 NPM packages → 1 bundled pod per mode). Two bundle
+  steps on release-please merge (prod + dev) so a prod failure can't take
+  down dev publishing. `.dagger/src/release.ts:npmPublishAllHelper`,
+  `scripts/ci/src/steps/npm.ts:npmPublishAllStep`.
+- `argo-cd-sync-and-wait` (sync + health into one pod). Health-wait
+  failure caught Dagger-side to preserve the wave-1 `soft_fail` semantics
+  on the standalone argocd-health step.
+- `homelab-cdk8s-bundle` (cdk8s synth + 1Password lint as parallel siblings
+  in one pod). Shared `bunBaseContainer` prefix content-addressed.
+- `soft-fail-bundle` (`dagger-hygiene` + `large-file-check` in parallel,
+  BK step still soft-fail).
+- `go-lint-test-build` (terraform-provider-asuswrt go build + test + lint
+  collapsed to one pod via parallel siblings).
+- Per-package roll-ins: ASTRO_PACKAGES (sjer.red, cooklang-rich-preview)
+  now run `astro-check` + `astro-build` as parallel siblings inside
+  `pkg-check-<name>`; NPM_BUILD_PACKAGES (astro-opengraph-images, webring)
+  run `bun run build` as a sibling too. `lintTypecheckTestHelper` extended
+  with `--include-astro-check`, `--include-astro-build`, `--include-build`
+  flags. Saves 6 pods on buildAll (4 astro + 2 npm-build).
+
+**Effect:** 99 → 86 steps on full buildAll, 17 → 15 on a birmel-only PR.
+
+### Deferred (deliberate)
+
+- **`push-images-all`** (12 → 1, would save ~11 pods) — image push
+  helpers diverge per-image (`pushImageHelper` vs 5 custom service
+  helpers vs 4 no-source infra helpers). A unified dispatcher in
+  `pushImagesAllHelper` is doable but the switch has 11+ cases; the
+  complexity isn't worth the risk in this PR. Track separately.
+- **`deploy-sites-all`** (8 → 1, would save ~7 pods) — site specs
+  diverge non-uniformly (env-var live values vs placeholder values vs
+  none, distSubdir, playwright, etc.). Needs a structured `--site-spec`
+  JSON array passing scheme or per-site dispatch.
+- **`homelab-extras-bundle`** (caddyfile + tunnel-dns + talos: 3 → 1) —
+  bundling forces a gating decision (caddyfile is blocking; tunnel-dns
+  and talos are non-blocking today). Either tighten the gate (slow
+  releases on drift) or loosen (lose caddyfile release-block). Both
+  worse than 2 pods saved.
+- **Non-smokeable image builds** (`build-temporal-worker`,
+  `build-redlib`: 2 → 1) — minor (1 pod saved).
+- **Playwright / helm-types / ios-native-deps roll-ins** — different
+  containers / runtime args. Each is 1 pod; per-roll-in complexity
+  outweighs the win.
+- **Annotated scans** (knip + trivy + semgrep: 3 → 1) — each owns its own
+  BK `annotate --context <X>` lifecycle. Requires structured
+  per-context output separation. Tier 3 as planned.
+
+### Caveats
+
+- `lintTypecheckTestHelper` now takes 11 parameters (was 8) — three flag
+  additions for the per-package roll-ins. Resist further extensions
+  without separating the flag set.
+- `astroBuildContainerHelper` added alongside `astroBuildHelper` —
+  `astroBuildHelper` keeps its Directory return for callers that consume
+  `dist/`; the new `*Container` variant returns the Container so bundle
+  callers can `.stdout()` for pure validation.
+- The `homelab-extras-bundle` gating tradeoff and the `pushImagesAll`
+  dispatcher complexity are documented above in case a future wave 3
+  picks them up. Both are doable; both have non-trivial design choices.
+
 ## Session Log — 2026-06-14
 
 ### Done
