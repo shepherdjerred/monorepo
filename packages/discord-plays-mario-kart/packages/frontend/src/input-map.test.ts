@@ -50,6 +50,13 @@ describe("computeState", () => {
     expect(computeState(new Set(["KeyA", "KeyD"])).analogX).toBe(0);
   });
 
+  it("drives analogY up/down via R/F and clamps", () => {
+    expect(computeState(new Set(["KeyR"])).analogY).toBe(1);
+    expect(computeState(new Set(["KeyF"])).analogY).toBe(-1);
+    // up + down cancel to centered
+    expect(computeState(new Set(["KeyR", "KeyF"])).analogY).toBe(0);
+  });
+
   it("maps arrow keys to the D-pad for menus instead of analog steering", () => {
     const up = computeState(new Set(["ArrowUp"]));
     const down = computeState(new Set(["ArrowDown"]));

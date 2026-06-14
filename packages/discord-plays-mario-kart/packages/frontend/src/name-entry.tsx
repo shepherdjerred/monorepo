@@ -63,15 +63,16 @@ export function NameEntry({ seat }: { seat: number }) {
         onKeyDown={(e) => {
           if (e.key === "Enter") save();
         }}
-        className="px-3 py-1.5 rounded bg-slate-800 border border-slate-600 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 w-44"
+        className="w-44 rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm text-zinc-100 placeholder-zinc-500 focus:border-emerald-400 focus:outline-none"
       />
       <button
+        type="button"
         onClick={save}
         disabled={!valid}
-        className={`px-3 py-1.5 rounded font-semibold ${
+        className={`rounded-full px-3 py-1.5 text-sm font-semibold transition ${
           valid
-            ? "bg-emerald-600 hover:bg-emerald-500"
-            : "bg-slate-700 opacity-50 cursor-not-allowed"
+            ? "bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
+            : "cursor-not-allowed bg-zinc-800 text-zinc-500"
         }`}
       >
         Set name

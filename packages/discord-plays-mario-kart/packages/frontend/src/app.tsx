@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { useInterval } from "react-use";
 import { Container } from "./stories/container.tsx";
 import { socket } from "./socket.ts";
@@ -15,21 +15,21 @@ import {
   FACE_CONTROLS,
   KEYMAP,
   SHOULDER_CONTROLS,
-  STICK_CONTROLS,
+  STICK_X_CONTROLS,
+  STICK_Y_CONTROLS,
   computeState,
   resolveKeyboardCode,
 } from "./input-map.ts";
 import {
-  AnalogStick,
   ControlButton,
   ControlCluster,
   DpadControls,
   InputPill,
-  MappingTerm,
   N64ControllerShell,
   SeatPicker,
   isControlPressed,
 } from "./controller-ui.tsx";
+import { AnalogStick } from "./analog-stick.tsx";
 import { NameEntry } from "./name-entry.tsx";
 import { Leaderboard } from "./leaderboard.tsx";
 
@@ -55,6 +55,31 @@ const BUTTON_LABELS = [
   ["cLeft", "C←"],
   ["cRight", "C→"],
 ] as const;
+
+// Action → on-controller → keyboard. Ordered by frequency of use in MK64 so the
+// player sees the racing essentials first and the menu-only bindings last.
+const MAPPING_ROWS: readonly [string, string, string][] = [
+  ["Steer", "Stick X", "A / D"],
+  ["Accelerate", "A", "W / Space"],
+  ["Brake / Reverse", "B", "S"],
+  ["Hop / Drift", "R trigger", "Shift"],
+  ["Use item", "Z trigger", "E / Z"],
+  ["Pause / Confirm", "Start", "Enter / P"],
+  ["Menus", "D-pad", "Arrow keys"],
+  ["Camera angles", "C-buttons", "I J K L"],
+  ["Camera reset", "L trigger", "Q"],
+  ["Menu nav (vertical)", "Stick Y", "R / F"],
+];
+
+// True when the keyboard event is targeted at a form control / contentEditable
+// region. Global key handlers must not preventDefault in that case, or typing
+// in the name input swallows any character that's also a KEYMAP binding.
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  const tag = target.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+}
 
 export function App() {
   const [seat, setSeat] = useState<number | null>(null);
@@ -171,15 +196,19 @@ export function App() {
   // state locally, but emit() is a no-op.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (isEditableTarget(event.target)) return;
       const code = resolveKeyboardCode(event);
       if (code === undefined || KEYMAP[code] === undefined) return;
       event.preventDefault();
       press(code);
     };
     const onKeyUp = (event: KeyboardEvent) => {
+      // No isEditableTarget guard here: releasing a key can never produce
+      // unwanted typing, so we must always call release() to avoid a stuck-key
+      // if the player presses a control key, clicks into a text field, and
+      // releases while the field has focus.
       const code = resolveKeyboardCode(event);
       if (code === undefined || KEYMAP[code] === undefined) return;
-      event.preventDefault();
       release(code);
     };
     const onBlur = () => {
@@ -221,14 +250,18 @@ export function App() {
   ).map(([_name, label]) => label);
   const hasSeat = seat !== null;
   const statusTone = hasSeat ? "text-emerald-300" : "text-amber-300";
-  const [stickLeft, stickRight] = STICK_CONTROLS;
+  const [stickLeft, stickRight] = STICK_X_CONTROLS;
+  const [stickUp, stickDown] = STICK_Y_CONTROLS;
   const [faceA, faceB, zControl, startControl] = FACE_CONTROLS;
   const [shoulderL, shoulderR] = SHOULDER_CONTROLS;
 
+  const stickActive =
+    state.analogX !== 0 || state.analogY !== 0 || activeButtons.length > 0;
+
   return (
-    <div className="min-h-screen min-w-full bg-[#070709] text-zinc-100">
+    <div className="min-h-screen min-w-full bg-surface-page text-zinc-100">
       <Container>
-        <main className="flex min-h-screen flex-col gap-5 px-4 py-5 sm:px-0 lg:py-4">
+        <main className="flex min-h-screen flex-col gap-5 px-4 py-5 sm:px-0 lg:py-6">
           <header className="flex flex-col gap-4 border-b border-zinc-800 pb-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-red-300">
@@ -237,14 +270,20 @@ export function App() {
               <h1 className="text-2xl font-black leading-tight sm:text-3xl">
                 Mario Kart 64 controller
               </h1>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-400">
-                <span className={statusTone}>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-zinc-400">
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full bg-zinc-900 px-2.5 py-0.5 font-semibold ${statusTone}`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${hasSeat ? "bg-emerald-400" : "bg-amber-400"}`}
+                  />
                   {hasSeat ? `Driving as P${String(seat + 1)}` : "Preview mode"}
                 </span>
-                <span>
-                  Latency{" "}
-                  {latency === undefined ? "..." : `${String(latency)}ms`}
-                </span>
+                {latency !== undefined && (
+                  <span className="font-mono text-xs text-zinc-500">
+                    {String(latency)}ms
+                  </span>
+                )}
               </div>
               {hasSeat && <NameEntry seat={seat} />}
             </div>
@@ -258,12 +297,17 @@ export function App() {
             />
           </header>
 
-          <section className="grid gap-4 xl:grid-cols-[1fr_280px]">
+          <section className="grid gap-4 xl:grid-cols-[1fr_320px]">
             <div className="overflow-hidden rounded-[2rem] border border-zinc-800 bg-zinc-950/80 p-3 shadow-2xl shadow-black/40 sm:p-5">
-              <div className="relative mx-auto h-[650px] max-w-[880px] sm:h-[560px] lg:h-[460px]">
+              <div className="relative mx-auto aspect-[5/3] w-full">
                 <N64ControllerShell />
 
-                <div className="absolute left-[13%] right-[13%] top-[25%] z-20 grid grid-cols-2 gap-[48%]">
+                {/* Positions below are CENTER-based: left/top is the center
+                    point and -translate-x-1/2 -translate-y-1/2 anchors there.
+                    Coords mirror the SVG silhouette so each button lands in
+                    its matching molded depression. */}
+
+                <div className="absolute left-[24%] top-[12%] z-30 w-[15%] -translate-x-1/2 -translate-y-1/2">
                   <ControlButton
                     control={shoulderL}
                     pressed={isControlPressed(shoulderL, pressedCodes)}
@@ -272,6 +316,8 @@ export function App() {
                     variant="shoulder"
                     className="w-full"
                   />
+                </div>
+                <div className="absolute left-[76%] top-[12%] z-30 w-[15%] -translate-x-1/2 -translate-y-1/2">
                   <ControlButton
                     control={shoulderR}
                     pressed={isControlPressed(shoulderR, pressedCodes)}
@@ -282,11 +328,7 @@ export function App() {
                   />
                 </div>
 
-                <ControlCluster
-                  title="D-pad"
-                  className="absolute left-[18%] top-[39%] z-30 sm:left-[18%] sm:top-[38%]"
-                  showTitle={false}
-                >
+                <div className="absolute left-[23%] top-[49%] z-30 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5">
                   <DpadControls
                     controls={DPAD_CONTROLS}
                     pressedCodes={pressedCodes}
@@ -294,20 +336,12 @@ export function App() {
                     onRelease={release}
                     className="h-24 w-24 sm:h-28 sm:w-28"
                   />
-                </ControlCluster>
-
-                <div className="absolute left-1/2 top-[58%] z-30 -translate-x-1/2 sm:top-[57%]">
-                  <AnalogStick
-                    leftControl={stickLeft}
-                    rightControl={stickRight}
-                    axisX={state.analogX}
-                    pressedCodes={pressedCodes}
-                    onPress={press}
-                    onRelease={release}
-                  />
+                  <span className="rounded-full border border-zinc-700 bg-zinc-900/80 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-zinc-300 shadow-sm">
+                    Arrow keys
+                  </span>
                 </div>
 
-                <div className="absolute left-1/2 top-[43%] z-30 -translate-x-1/2 sm:top-[42%]">
+                <div className="absolute left-1/2 top-[45%] z-30 -translate-x-1/2 -translate-y-1/2">
                   <ControlButton
                     control={startControl}
                     pressed={isControlPressed(startControl, pressedCodes)}
@@ -317,20 +351,24 @@ export function App() {
                   />
                 </div>
 
-                <div className="absolute left-1/2 top-[70%] z-30 w-20 -translate-x-1/2 sm:top-[70%] sm:w-24">
-                  <ControlButton
-                    control={zControl}
-                    pressed={isControlPressed(zControl, pressedCodes)}
+                <ControlCluster
+                  title="C-buttons"
+                  className="absolute left-[83%] top-[45%] z-30 h-24 w-24 -translate-x-1/2 -translate-y-1/2 sm:h-28 sm:w-28"
+                  showTitle={false}
+                >
+                  <DpadControls
+                    controls={C_CONTROLS}
+                    pressedCodes={pressedCodes}
                     onPress={press}
                     onRelease={release}
-                    variant="z"
-                    className="w-full"
+                    variant="c"
+                    className="h-full w-full"
                   />
-                </div>
+                </ControlCluster>
 
                 <ControlCluster
                   title="A / B"
-                  className="absolute right-[22%] top-[50%] z-30 h-24 w-28 sm:right-[23%] sm:top-[49%] sm:h-28 sm:w-32"
+                  className="absolute left-[60%] top-[55%] z-30 h-20 w-24 -translate-x-1/2 -translate-y-1/2 sm:h-24 sm:w-28"
                   showTitle={false}
                 >
                   <ControlButton
@@ -351,70 +389,87 @@ export function App() {
                   />
                 </ControlCluster>
 
-                <ControlCluster
-                  title="C-buttons"
-                  className="absolute right-[7%] top-[37%] z-30 sm:right-[8%] sm:top-[36%]"
-                  showTitle={false}
-                >
-                  <DpadControls
-                    controls={C_CONTROLS}
+                <div className="absolute left-1/2 top-[70%] z-30 -translate-x-1/2 -translate-y-1/2">
+                  <AnalogStick
+                    leftControl={stickLeft}
+                    rightControl={stickRight}
+                    upControl={stickUp}
+                    downControl={stickDown}
+                    axisX={state.analogX}
+                    axisY={state.analogY}
                     pressedCodes={pressedCodes}
                     onPress={press}
                     onRelease={release}
-                    variant="c"
-                    className="h-24 w-24 sm:h-28 sm:w-28"
                   />
-                </ControlCluster>
+                </div>
 
-                <div className="absolute bottom-0 left-1/2 z-30 w-[min(92%,24rem)] -translate-x-1/2 rounded-2xl border border-zinc-800 bg-black/40 p-3 shadow-xl shadow-black/30 backdrop-blur">
-                  <p className="mb-2 text-center text-xs font-black uppercase tracking-[0.18em] text-zinc-500">
-                    Pressed
-                  </p>
-                  <div className="flex min-h-8 flex-wrap justify-center gap-1.5">
-                    {activeButtons.length === 0 && state.analogX === 0 ? (
-                      <span className="text-sm text-zinc-600">none</span>
-                    ) : (
-                      <>
-                        {state.analogX < 0 ? (
-                          <InputPill label="Stick ←" />
-                        ) : null}
-                        {state.analogX > 0 ? (
-                          <InputPill label="Stick →" />
-                        ) : null}
-                        {activeButtons.map((label) => (
-                          <InputPill key={label} label={label} />
-                        ))}
-                      </>
-                    )}
-                  </div>
+                <div className="absolute left-1/2 top-[94%] z-30 w-20 -translate-x-1/2 -translate-y-1/2 sm:w-24">
+                  <ControlButton
+                    control={zControl}
+                    pressed={isControlPressed(zControl, pressedCodes)}
+                    onPress={press}
+                    onRelease={release}
+                    variant="z"
+                    className="w-full"
+                  />
                 </div>
               </div>
             </div>
 
-            <aside className="rounded-lg border border-zinc-800 bg-zinc-900/80 p-4">
-              <div className="space-y-4">
-                <div>
-                  <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-zinc-400">
-                    Mapping
-                  </h2>
-                  <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
-                    <MappingTerm label="Stick" value="A / D" />
-                    <MappingTerm label="D-pad" value="Arrow keys" />
-                    <MappingTerm label="A" value="W / Space" />
-                    <MappingTerm label="B" value="S" />
-                    <MappingTerm label="Start" value="Enter / P" />
-                    <MappingTerm label="Z" value="E / Z" />
-                    <MappingTerm label="L / R" value="Q / Shift" />
-                    <MappingTerm label="C" value="I J K L" />
-                  </dl>
+            <aside className="space-y-4">
+              <div className="rounded-lg border border-zinc-800 bg-zinc-900/80 p-4">
+                <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-zinc-400">
+                  Live input
+                </h2>
+                <div className="mt-3 flex min-h-10 flex-wrap gap-1.5">
+                  {stickActive ? (
+                    <>
+                      {state.analogX < 0 ? <InputPill label="Stick ←" /> : null}
+                      {state.analogX > 0 ? <InputPill label="Stick →" /> : null}
+                      {state.analogY > 0 ? <InputPill label="Stick ↑" /> : null}
+                      {state.analogY < 0 ? <InputPill label="Stick ↓" /> : null}
+                      {activeButtons.map((label) => (
+                        <InputPill key={label} label={label} />
+                      ))}
+                    </>
+                  ) : (
+                    <span className="text-sm text-zinc-600">
+                      No keys pressed
+                    </span>
+                  )}
                 </div>
-                <div className="rounded-md border border-amber-400/20 bg-amber-400/10 p-3 text-sm text-amber-100">
-                  {hasSeat
-                    ? "Your inputs are being sent to the game."
-                    : "Claim a player slot when you are ready. Controls still light up here for testing."}
-                </div>
-                <Leaderboard />
               </div>
+              <div className="rounded-lg border border-zinc-800 bg-zinc-900/80 p-4">
+                <h2 className="text-sm font-bold uppercase tracking-[0.18em] text-zinc-400">
+                  Mapping
+                </h2>
+                <div className="mt-3 grid grid-cols-[1fr_auto_auto] gap-x-3 gap-y-1.5 text-sm">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-zinc-500">
+                    Action
+                  </div>
+                  <div className="text-[10px] font-black uppercase tracking-wider text-zinc-500">
+                    N64
+                  </div>
+                  <div className="text-[10px] font-black uppercase tracking-wider text-zinc-500">
+                    Keyboard
+                  </div>
+                  {MAPPING_ROWS.map(([action, n64, keys]) => (
+                    <Fragment key={action}>
+                      <span className="text-zinc-200">{action}</span>
+                      <span className="text-zinc-500">{n64}</span>
+                      <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-right font-mono text-xs font-semibold text-zinc-100">
+                        {keys}
+                      </span>
+                    </Fragment>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-lg border border-amber-400/20 bg-amber-400/10 p-3 text-sm text-amber-100">
+                {hasSeat
+                  ? "Your inputs are being sent to the game."
+                  : "Claim a player slot when you are ready. Controls still light up here for testing."}
+              </div>
+              <Leaderboard />
             </aside>
           </section>
         </main>

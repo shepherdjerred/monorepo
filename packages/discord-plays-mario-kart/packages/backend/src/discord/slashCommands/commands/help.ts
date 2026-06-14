@@ -14,22 +14,29 @@ export const helpCommand = new SlashCommandBuilder()
 
 export async function help(interaction: CommandInteraction) {
   const config = getConfig();
+  const seatCount = String(config.emulator.seats);
   const lines = [
     bold("Discord Plays Mario Kart 64"),
     `Watch the live game when ${userMention(
       config.stream.userbot.id,
     )} is streaming in the ${channelMention(config.stream.channel_id)} voice channel (Go-Live).`,
     ``,
-    bold("Controls"),
-    `Open the web controller, claim one of the ${String(
-      config.emulator.seats,
-    )} seats (P1–P${String(config.emulator.seats)}), and drive your kart in real time:`,
-    `* Steer: ${inlineCode("A")} / ${inlineCode("D")} (or ←/→)`,
-    `* Accelerate: ${inlineCode("W")} (A button) · Brake/Reverse: ${inlineCode("S")} (B button)`,
-    `* Hop/Drift: ${inlineCode("Shift")} (R) · Item: ${inlineCode("E")} (Z) · Start: ${inlineCode("Enter")}`,
-    `* Camera (C-buttons): ${inlineCode("I/J/K/L")}`,
+    `${bold("Play:")} https://mariokart.sjer.red`,
+    `Open the controller, claim one of the ${seatCount} seats (P1–P${seatCount}), and drive your kart in real time.`,
     ``,
-    `Players navigate the menus themselves — pick 1–4 player VS, characters, and a track using the seats you claim.`,
+    bold("Controls"),
+    `* Analog stick X (steer): ${inlineCode("A")} / ${inlineCode("D")}`,
+    `* Analog stick Y: ${inlineCode("R")} / ${inlineCode("F")}`,
+    `* D-pad (menus): ${inlineCode("←")} / ${inlineCode("↑")} / ${inlineCode("→")} / ${inlineCode("↓")}`,
+    `* A (accelerate): ${inlineCode("W")} or ${inlineCode("Space")}`,
+    `* B (brake/reverse): ${inlineCode("S")}`,
+    `* Z (item): ${inlineCode("E")} or ${inlineCode("Z")}`,
+    `* L (left trigger): ${inlineCode("Q")}`,
+    `* R (hop/drift): ${inlineCode("Shift")}`,
+    `* Start: ${inlineCode("Enter")} or ${inlineCode("P")}`,
+    `* C-buttons (camera): ${inlineCode("I")} / ${inlineCode("J")} / ${inlineCode("K")} / ${inlineCode("L")}`,
+    ``,
+    `Players navigate the menus themselves — pick 1–${seatCount} player VS, characters, and a track using the seats you claim.`,
     config.bot.commands.screenshot.enabled
       ? `\n${inlineCode("/screenshot")} posts a frame to ${channelMention(
           config.bot.notifications.channel_id,
