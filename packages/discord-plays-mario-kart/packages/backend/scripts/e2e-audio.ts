@@ -1,19 +1,29 @@
-// Manual e2e for the Go-Live audio path. Proves that PCM written to the audio
-// transport is actually muxed into prepareStream's broadcast output as a
-// non-silent opus track — the exact pipeline GameStreamer uses, minus Discord.
+// Manual e2e for the Go-Live audio path.
 //
-// Two modes:
-//   - synthetic (default): feeds a generated sine tone. Needs only ffmpeg/ffprobe
-//     (no ROM, no wasm), so it runs anywhere and exercises the transport + the
-//     real prepareStream + the in-repo discord-video-stream end to end.
-//   - --rom [path]: additionally boots the REAL emulator, drains its audio via
-//     onAudio for a few seconds, asserts the game produced non-silent sound, and
-//     pushes that real PCM through the same pipeline. Requires the built wasm core
-//     (bun run build:wasm) and the MK64 ROM.
+// Two modes — only the second is a real end-to-end test:
+//
+//   - synthetic (default): an INTEGRATION test for the transport + codec. Feeds a
+//     generated sine tone through the real createAudioTransport + real prepareStream
+//     + real ffmpeg and asserts the muxed NUT has a non-empty opus track that
+//     round-trips back to non-silent PCM. Proves the muxing works; says nothing
+//     about whether the real emulator can drive it. Needs only ffmpeg/ffprobe.
+//
+//   - --rom [path]: the REAL end-to-end test. Boots the headless MK64 emulator,
+//     drains real game audio via onAudio for ~20 s of game time, runs it through
+//     the same production pipeline, and writes three artifacts a human can
+//     actually LISTEN to in order to confirm MK64 sounds like MK64:
+//
+//       /tmp/mk64-audio-raw.wav      — raw PCM drained from the emulator
+//       /tmp/mk64-audio.nut          — the muxed broadcast container (play with mpv/VLC)
+//       /tmp/mk64-audio-decoded.wav  — the opus output round-tripped to WAV
+//
+//     Requires the built wasm core (bun run --cwd packages/backend build:wasm) and
+//     the MK64 ROM. Never runs in CI (ROM is copyrighted, same convention as
+//     e2e:scenario and e2e:race).
 //
 // Usage:
-//   bun run e2e:audio                 # synthetic only
-//   bun run e2e:audio --rom           # synthetic + real emulator (ROM auto-resolved)
+//   bun run e2e:audio                 # synthetic only (integration)
+//   bun run e2e:audio --rom           # synthetic + real emulator (full e2e)
 //   bun run e2e:audio --rom /path.z64
 //
 // Exits non-zero on any failed assertion.
@@ -30,7 +40,9 @@ import {
 } from "#src/emulator/constants.ts";
 import { bootEmulator, resolveRom } from "./lib/harness.ts";
 
-const TMP_NUT = "/tmp/mk64-audio-e2e.nut";
+const TMP_NUT = "/tmp/mk64-audio.nut";
+const TMP_RAW_WAV = "/tmp/mk64-audio-raw.wav";
+const TMP_DECODED_WAV = "/tmp/mk64-audio-decoded.wav";
 
 const out = (s: string): void => {
   process.stdout.write(`${s}\n`);
@@ -169,6 +181,47 @@ function decodedAudioRms(nut: string): number {
   return rms(Buffer.from(dec.stdout));
 }
 
+/** Wrap raw s16le stereo @ 44.1 kHz PCM in a WAV file (via ffmpeg, no manual header). */
+function writeWavFromPcm(pcm: Buffer, path: string): void {
+  const ff = spawnSync(
+    "ffmpeg",
+    [
+      "-y",
+      "-v",
+      "error",
+      "-f",
+      "s16le",
+      "-ar",
+      String(AUDIO_SAMPLE_RATE),
+      "-ac",
+      String(AUDIO_CHANNELS),
+      "-i",
+      "pipe:0",
+      path,
+    ],
+    { input: pcm, encoding: "buffer" },
+  );
+  if (ff.status !== 0) {
+    throw new Error(
+      `ffmpeg failed to write ${path}: ${ff.stderr.toString("utf8")}`,
+    );
+  }
+}
+
+/** Decode the muxed NUT's opus track straight to a WAV file. */
+function decodeNutToWav(nut: string, path: string): void {
+  const ff = spawnSync(
+    "ffmpeg",
+    ["-y", "-v", "error", "-i", nut, "-map", "0:a:0", path],
+    { encoding: "buffer" },
+  );
+  if (ff.status !== 0) {
+    throw new Error(
+      `ffmpeg failed to decode ${nut} -> ${path}: ${ff.stderr.toString("utf8")}`,
+    );
+  }
+}
+
 function assert(cond: boolean, message: string): void {
   if (!cond) {
     err(`x ${message}`);
@@ -220,21 +273,26 @@ async function runRom(romArg: string | undefined): Promise<void> {
   const wasm = `${Bun.env.WASM_DIR ?? "assets/n64wasm"}/n64wasm.wasm`;
   if (!(await Bun.file(wasm).exists())) {
     throw new Error(
-      `rom mode needs the built wasm core at ${wasm} (run: bun run build:wasm)`,
+      `rom mode needs the built wasm core at ${wasm} (run: bun run --cwd packages/backend build:wasm)`,
     );
   }
 
   const emu = await bootEmulator({ rom, seats: 1 });
   const chunks: Buffer[] = [];
-  emu.onAudio((pcm) => chunks.push(pcm));
+  emu.onAudio((pcm) => {
+    chunks.push(pcm);
+  });
 
-  // Let the attract demo / boot run a few hundred frames so the title/intro audio
-  // is generated, then stop and inspect what was drained.
+  // ~1200 wasm frames at the N64's ~30 fps = ~40 s of game time, enough to cover
+  // the Nintendo/N64 splash logos and the title-screen jingle. The harness boots
+  // the emulator in sprint mode (fps:1000) so this completes in a few seconds of
+  // wall clock.
+  const TARGET_FRAMES = 1200;
   await new Promise<void>((resolve) => {
     let frame = 0;
     emu.onFrame(() => {
       frame++;
-      if (frame >= 600) {
+      if (frame >= TARGET_FRAMES) {
         emu.stop();
         resolve();
       }
@@ -253,6 +311,10 @@ async function runRom(romArg: string | undefined): Promise<void> {
     `real game audio is non-silent (rms=${realRms.toFixed(0)})`,
   );
 
+  // Persist what the emulator actually produced BEFORE any encoding, so the user
+  // can A/B compare the raw and decoded artifacts if the round-trip sounds off.
+  writeWavFromPcm(realPcm, TMP_RAW_WAV);
+
   const nut = await renderBroadcast(realPcm);
   const packets = audioPacketCount(nut);
   assert(
@@ -264,6 +326,16 @@ async function runRom(romArg: string | undefined): Promise<void> {
     outRms > 10,
     `real audio is non-silent after opus round-trip (rms=${outRms.toFixed(0)})`,
   );
+
+  // Write the production-quality artifact: the broadcast's opus track, as it
+  // would reach Discord listeners, decoded back to WAV for local playback.
+  decodeNutToWav(nut, TMP_DECODED_WAV);
+
+  out("");
+  out("artifacts (listen and verify it sounds like MK64):");
+  out(`  raw emulator PCM       -> ${TMP_RAW_WAV}`);
+  out(`  muxed broadcast (NUT)  -> ${nut}`);
+  out(`  opus round-trip decode -> ${TMP_DECODED_WAV}`);
 }
 
 async function main(): Promise<void> {
@@ -282,7 +354,11 @@ async function main(): Promise<void> {
   await runSynthetic();
   if (wantRom) await runRom(romArg);
 
-  out("\nPASS: audio e2e");
+  out(
+    wantRom
+      ? "\nPASS: audio e2e (synthetic integration + real-emulator end-to-end)"
+      : "\nPASS: audio integration (synthetic only — re-run with --rom for the real e2e)",
+  );
   process.exit(0);
 }
 
