@@ -322,7 +322,7 @@ export function App() {
 
                 <ControlCluster
                   title="A / B"
-                  className="absolute left-[63%] top-[58%] z-30 h-20 w-24 -translate-x-1/2 -translate-y-1/2 sm:h-24 sm:w-28"
+                  className="absolute left-[60%] top-[55%] z-30 h-20 w-24 -translate-x-1/2 -translate-y-1/2 sm:h-24 sm:w-28"
                   showTitle={false}
                 >
                   <ControlButton

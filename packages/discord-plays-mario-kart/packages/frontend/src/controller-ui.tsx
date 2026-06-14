@@ -52,14 +52,10 @@ export function N64ControllerShell() {
         </filter>
       </defs>
 
-      {/* L / R shoulder humps — match the position the L/R button widgets
-          render at in app.tsx so they sit on the actual shoulders. */}
-      <rect x="155" y="48" width="135" height="32" rx="10" fill="#9a9aa0" />
-      <rect x="610" y="48" width="135" height="32" rx="10" fill="#9a9aa0" />
-
       {/* Whole-controller silhouette: body + central top hump + two chunky
           outer handles + a LONGER center prong (extends below the side
-          handles, matching the reference photo). Clockwise from top-left. */}
+          handles, matching the reference photo). Clockwise from top-left.
+          L/R shoulder visualization is the button widgets themselves. */}
       <path
         d="
           M 140 90
@@ -71,21 +67,21 @@ export function N64ControllerShell() {
           L 700 84
           C 735 84 755 86 760 90
           C 800 102 825 150 830 220
-          C 838 290 845 348 822 392
-          C 800 432 752 446 718 432
-          C 680 416 642 380 612 326
-          C 596 302 575 294 555 300
-          C 543 305 540 322 545 360
-          C 555 420 550 470 535 502
-          C 525 525 510 540 488 540
+          C 838 282 838 332 815 372
+          C 790 408 745 418 712 405
+          C 678 392 644 360 615 320
+          C 600 300 580 290 558 300
+          C 545 308 540 322 545 360
+          C 555 420 552 478 538 510
+          C 526 532 510 540 488 540
           L 412 540
-          C 390 540 375 525 365 502
-          C 350 470 345 420 355 360
-          C 360 322 357 305 345 300
-          C 325 294 304 302 288 326
-          C 258 380 220 416 182 432
-          C 148 446 100 432 78 392
-          C 55 348 62 290 70 220
+          C 390 540 374 532 362 510
+          C 348 478 345 420 355 360
+          C 360 322 355 308 342 300
+          C 320 290 300 300 285 320
+          C 256 360 222 392 188 405
+          C 155 418 110 408 85 372
+          C 62 332 62 282 70 220
           C 75 150 100 102 140 90
           Z
         "
@@ -93,40 +89,41 @@ export function N64ControllerShell() {
         filter="url(#n64Drop)"
       />
 
-      {/* Nintendo wordmark plate — sits on top of the central hump. */}
-      <rect
-        x="402"
-        y="38"
-        width="96"
-        height="24"
-        rx="6"
-        fill="#a8a9ad"
-        opacity="0.55"
+      {/* Nintendo wordmark — embossed plate on the central hump, styled to
+          look like the recessed silver oval on the real controller. */}
+      <ellipse
+        cx="450"
+        cy="55"
+        rx="62"
+        ry="14"
+        fill="#bcbcc0"
+        stroke="#878790"
+        strokeWidth="1"
+        opacity="0.85"
       />
       <text
         x="450"
-        y="54"
+        y="60"
         textAnchor="middle"
-        className="fill-zinc-700 text-[10px] font-black tracking-[0.18em]"
+        className="fill-zinc-700 text-[13px] font-bold italic"
+        style={{ fontFamily: "Georgia, serif" }}
       >
-        NINTENDO
+        Nintendo
       </text>
 
-      {/* Recessed wells — centered on the live button clusters so the
-          chevrons / face buttons sit inside the molded depressions. */}
-      <ellipse cx="207" cy="265" rx="82" ry="76" fill="url(#n64Well)" />
-      <ellipse cx="747" cy="243" rx="76" ry="72" fill="url(#n64Well)" />
-      <ellipse cx="594" cy="319" rx="66" ry="56" fill="url(#n64Well)" />
+      {/* Recessed wells — centered on the live button clusters (DOM-measured
+          centers, then mapped to SVG coords so the wells match the buttons). */}
+      <ellipse cx="207" cy="272" rx="84" ry="74" fill="url(#n64Well)" />
+      <ellipse cx="747" cy="268" rx="84" ry="74" fill="url(#n64Well)" />
+      <ellipse cx="540" cy="324" rx="78" ry="56" fill="url(#n64Well)" />
 
-      {/* Ring around the Start button. */}
-      <circle cx="450" cy="218" r="28" fill="url(#n64Well)" />
-
-      {/* Deep analog stick well — sits under the chevron stick on the upper
-          half of the center prong (not over Z, which sits below it). */}
+      {/* Deep analog stick well — sized to fully contain the stick chevrons
+          (the touch-zone buttons around the disc) so they don't appear to
+          float in the gray plastic. */}
       <circle
         cx="450"
-        cy="380"
-        r="58"
+        cy="400"
+        r="80"
         fill="url(#n64StickWell)"
         opacity="0.95"
       />
