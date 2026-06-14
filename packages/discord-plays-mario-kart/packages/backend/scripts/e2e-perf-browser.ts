@@ -5,7 +5,7 @@
 // backend; `--metrics-url <url>` decouples the scrape URL (use this when
 // --target is a public URL and you kubectl-port-forwarded the pod's 8081).
 // Writes a structured JSON summary; `--compare <baseline.json>` adds a
-// delta table. See packages/docs/plans/2026-06-13-mk64-test-harness.md.
+// delta table. See packages/docs/plans/2026-06-14_mk64-test-harness.md.
 
 import path from "node:path";
 import { z } from "zod";

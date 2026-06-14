@@ -71,6 +71,13 @@ export function compareSummaries(
   current: BenchSummary,
   relativeThreshold = 0.05,
 ): CompareRow[] {
+  if (baseline.version !== current.version) {
+    process.stderr.write(
+      `warn: comparing summaries with mismatched versions ` +
+        `(baseline v${String(baseline.version)} vs current v${String(current.version)}). ` +
+        `Metrics added or renamed between versions will appear as n/a.\n`,
+    );
+  }
   return METRIC_DEFS.map((def) => {
     const b = dig(baseline, def.path);
     const c = dig(current, def.path);
