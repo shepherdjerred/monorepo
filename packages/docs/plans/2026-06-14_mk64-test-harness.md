@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress — implementation landed (see Session Log below); awaiting human PR review + a post-merge live-cluster run.
+Partially Complete — CI green, PR ready for human review. Post-merge live-cluster verification still pending.
 
 ## Context
 
@@ -268,3 +268,30 @@ fixture, one test, one short README update at the top of the script.
   start/end. For a freshly-restarted pod or low-baseline window this is
   fine; for long-running pods the absolute quantile may dilute the
   window's signal. Worth revisiting if `--compare` results look noisy.
+
+## Session Log — 2026-06-13 (PR monitoring / Greptile fixes)
+
+### Done
+
+- Tended PR #1202 (`feature/mk64-test-harness`) through full CI green.
+- Identified and fixed 2 Greptile P2 inline comments on commit 7939465c:
+  1. Stale plan path in `e2e-perf-browser.ts` line 8: `2026-06-13-mk64-test-harness.md` →
+     `2026-06-14_mk64-test-harness.md` (wrong date + wrong separator).
+  2. Missing version mismatch warning in `compareSummaries()` in `bench-compare.ts`:
+     added a `process.stderr.write(...)` guard when `baseline.version !== current.version`.
+- Committed as `fix(discord-plays-mario-kart): address Greptile P2 review feedback`
+  (commit 2f8b3bf1), pushed to `feature/mk64-test-harness`.
+- Buildkite build #4174 passed in 8m28s (all checks green; knip soft-fail is expected/ignorable).
+- Greptile Review GitHub check: pass. No new inline comments on the head commit.
+- Merge state: `CLEAN` / `MERGEABLE`.
+
+### Remaining
+
+- **Human review + merge** — PR #1202 is ready.
+- **Post-merge live-cluster verification** (plan steps 3–5) — unchanged from original log above.
+
+### Caveats
+
+- The two Greptile inline comments from commit 7939465c are attached to the old commit
+  and will show as "unresolved" in the PR thread view, but they were addressed in 2f8b3bf1.
+  Greptile's own status check went green after reviewing the new head commit.
