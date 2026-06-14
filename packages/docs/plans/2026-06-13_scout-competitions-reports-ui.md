@@ -2,7 +2,7 @@
 
 ## Status
 
-Partially Complete — code shipped in PR #1170; live PinchTab e2e + screenshots pending (needs `dev:web` / op session)
+Complete — shipped in PR #1170; live PinchTab e2e done (screenshots posted as a PR comment). Pending merge.
 
 ## Context
 
@@ -278,10 +278,14 @@ Do steps in a **git worktree** (`feature/scout-competitions-reports`), commit + 
 - **Frontend** (commit `c41f22b`): Competitions + Reports nav tabs/routes; competition list/detail/form (+ leaderboard-panel, participants-panel, dates-fields, criteria-fields, form-fields); report list/detail/form (+ run-history, query-preview); shared `badge`/`textarea`/`status-badge`/`section`/`chart-image`/`criteria-summary`/`format`. Added `ts-pattern` to app deps. App typecheck + eslint clean; `vite build` compiles.
 - PR **#1170** opened (single PR for the whole feature).
 
+### Done (e2e — 2026-06-13)
+
+- Drove `dev:web` via PinchTab (real Discord OAuth login) on test guild `1337623164146155593`. Verified end-to-end: reports list (system reports + badges), competitions empty state, competition create form (channel/visibility/dates + conditional criteria queue field), create → DRAFT detail (info cards + standings empty + participants panel), competitions list with live participant count, and the report form's debounced live query preview (DSL parsed `games`/`win_rate` columns, executed 0 rows on the fresh guild). Dark mode confirmed. Screenshots posted to PR #1170 (`public.sjer.red/pr/assets/1170/`).
+- Cookie-authed `<img>` chart GETs: same-origin via the Vite proxy in dev; confirmed the SPA and API share an origin so no signed-URL fallback was needed.
+
 ### Remaining
 
-- **Live PinchTab e2e + PR screenshots** (one per scenario, light+dark). Blocked on: `op signin` (interactive), the BETA bot in a test guild where the operator is admin, and a one-time headed Discord OAuth login (HttpOnly `scout_session` cookie can't be scripted). Running `dev:web` also briefly disconnects the deployed beta bot. Drive the SPA at `http://localhost:5180/app/` once signed in.
-- Confirm at runtime: `scout_session` cookie `SameSite` + SPA/API same-origin so the `<img>` chart GETs authorize via cookie (else switch to signed URLs).
+- Not exercised live (fresh guild had no match data / linked players): leaderboard refresh output, report run-now rendered output, real-player invite. Backend paths are unit-tested; empty/loading states were shown. Worth a follow-up pass on a guild with real data.
 
 ### Caveats
 
