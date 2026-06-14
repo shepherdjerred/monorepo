@@ -44,6 +44,7 @@ const JOB_TO_CI_STEP: Record<string, string> = {
   "quality-ratchet": "quality-ratchet",
   "scout-test-template-check": "scout-test-template-check",
   "react-version-sync": "react-version-sync",
+  "onepassword-items": "homelab-1password-items",
 };
 
 /**
@@ -112,8 +113,10 @@ function fullBuild(): AffectedPackages {
     packages: new Set(ALL_PACKAGES),
     buildAll: true,
     homelabChanged: true,
+    tofuChanged: true,
     cooklangChanged: true,
     resumeChanged: true,
+    helmTypesInputsChanged: true,
     ciImageChanged: false,
     hasImagePackages: new Set(PACKAGES_WITH_IMAGES),
     hasSitePackages: new Set(Object.keys(PACKAGE_TO_SITE)),

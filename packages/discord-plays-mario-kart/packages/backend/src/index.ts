@@ -149,6 +149,14 @@ if (emulator) {
     // Always poll for race results, even when not streaming.
     raceTracker?.onFrame();
   });
+  // Feed the emulator's resampled PCM to the broadcast. Drained every tick (the
+  // sink no-ops until a Go-Live broadcast is active), so registering it here also
+  // snaps the audio read cursor to "now" and avoids flushing a startup backlog.
+  if (activeStreamer !== undefined) {
+    activeEmulator.onAudio((pcm) => {
+      activeStreamer.pushAudio(pcm);
+    });
+  }
 }
 
 // ---- web server: the up-to-4 virtual controllers ----

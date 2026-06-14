@@ -16,7 +16,7 @@ UV_VERSION="0.11.14"
 HELM_VERSION="v4.1.4"
 
 # renovate: datasource=github-tags depName=aws/aws-cli versioning=semver
-AWSCLI_VERSION="2.34.45"
+AWSCLI_VERSION="2.34.47"
 
 # renovate: datasource=github-releases depName=opentofu/opentofu
 OPENTOFU_VERSION="1.11.7"

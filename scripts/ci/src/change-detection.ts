@@ -647,6 +647,30 @@ function checkTofuChanges(changedFiles: string[]): boolean {
   return changedFiles.some((f) => f.startsWith("packages/homelab/src/tofu/"));
 }
 
+/**
+ * Inputs that change what `generate-helm-types` emits: the pinned chart
+ * versions, the generator/parser scripts, and the helm-types library. When any
+ * of these change we run the `helm-types-drift-check` gate (regenerate + diff vs
+ * committed). Scoped narrowly so the ~24-chart network fetch only runs on PRs
+ * that can actually change the generated tree — not on every homelab/cdk8s edit.
+ *
+ * Prettier/formatting drift of the committed tree is intentionally NOT included:
+ * the repo-wide `prettier --check` gate already catches that.
+ */
+const HELM_TYPES_INPUT_FILES = new Set([
+  "packages/homelab/src/cdk8s/src/versions.ts",
+  "packages/homelab/src/cdk8s/scripts/generate-helm-types.ts",
+  "packages/homelab/src/cdk8s/scripts/parse-helm-charts.ts",
+]);
+
+function checkHelmTypesInputChanges(changedFiles: string[]): boolean {
+  return changedFiles.some(
+    (f) =>
+      HELM_TYPES_INPUT_FILES.has(f) ||
+      f.startsWith("packages/homelab/src/helm-types/"),
+  );
+}
+
 function extractPackageName(filePath: string): string | null {
   if (!filePath.startsWith("packages/")) return null;
   const rest = filePath.slice("packages/".length);
@@ -753,6 +777,8 @@ function fullBuildResult(cooklangChanged: boolean): AffectedPackages {
     tofuChanged: true,
     cooklangChanged,
     resumeChanged: true,
+    // Full build rebuilds everything; run the drift gate too.
+    helmTypesInputsChanged: true,
     ciImageChanged: false,
     hasImagePackages: new Set(PACKAGES_WITH_IMAGES),
     hasSitePackages: new Set(Object.keys(PACKAGE_TO_SITE)),
@@ -772,6 +798,7 @@ function emptyResult(): AffectedPackages {
     tofuChanged: false,
     cooklangChanged: false,
     resumeChanged: false,
+    helmTypesInputsChanged: false,
     ciImageChanged: false,
     hasImagePackages: new Set(),
     hasSitePackages: new Set(),
@@ -789,6 +816,7 @@ function buildScopedResult(
   ciImageChanged: boolean,
   ciImageVersionChanged = false,
   tofuChanged = false,
+  helmTypesInputsChanged = false,
 ): AffectedPackages {
   const hasImagePackages = new Set<string>();
   const hasSitePackages = new Set<string>();
@@ -812,6 +840,7 @@ function buildScopedResult(
     tofuChanged,
     cooklangChanged,
     resumeChanged: allAffected.has("resume"),
+    helmTypesInputsChanged,
     ciImageChanged,
     hasImagePackages,
     hasSitePackages,
@@ -843,6 +872,11 @@ export async function detectChanges(): Promise<AffectedPackages> {
   const changedFiles = await getChangedFiles();
   const cooklangSourceChanged = hasCooklangSourceChange(changedFiles);
   const tofuChanged = checkTofuChanges(changedFiles);
+  // Over-triggers on any versions.ts change (it mixes image + chart versions),
+  // but never under-triggers on a chart bump — correctness over a little extra
+  // runtime. Image-digest commit-backs go through the version-commit-back path
+  // below, which keeps the default `false`.
+  const helmTypesInputsChanged = checkHelmTypesInputChanges(changedFiles);
 
   // Renovate fast-track: runs BEFORE infra check so that bun.lock/package.json
   // in INFRA_FILES don't short-circuit the fast path.
@@ -852,6 +886,26 @@ export async function detectChanges(): Promise<AffectedPackages> {
       console.error(`Renovate fast-track: ${classification.kind}`);
 
       if (classification.kind === "noop") {
+        if (helmTypesInputsChanged) {
+          // versions.ts is a HELM_TYPES_INPUT_FILE — a Renovate chart-bump PR that
+          // only touches versions.ts still needs the drift-check step so that the CI
+          // gate fires on chart-version bumps (the main use-case this PR was built to
+          // cover). Include "homelab" in the packages set so that the per-package loop
+          // in buildPipeline runs for homelab and emits the drift-check step via
+          // perPackageSteps("homelab", helmTypesInputsChanged=true). An empty set would
+          // hit the early-return guard in buildPipeline and skip the drift check.
+          console.error(
+            "Renovate noop, but helmTypesInputsChanged=true — emitting drift-check step for homelab",
+          );
+          return buildScopedResult(
+            new Set(["homelab"]),
+            false,
+            false,
+            false,
+            false,
+            true,
+          );
+        }
         console.error("Renovate: no builds needed");
         return emptyResult();
       }
@@ -886,6 +940,7 @@ export async function detectChanges(): Promise<AffectedPackages> {
         false,
         false,
         tofuChanged,
+        helmTypesInputsChanged,
       );
     }
 
@@ -973,6 +1028,7 @@ export async function detectChanges(): Promise<AffectedPackages> {
     ciImageChanged,
     ciImageVersionChanged,
     tofuChanged,
+    helmTypesInputsChanged,
   );
 }
 
@@ -993,6 +1049,7 @@ export {
   checkCiImageChanges as _checkCiImageChanges,
   checkCiImageVersionChanges as _checkCiImageVersionChanges,
   checkTofuChanges as _checkTofuChanges,
+  checkHelmTypesInputChanges as _checkHelmTypesInputChanges,
   getBuildRejectionReason as _getBuildRejectionReason,
   getLastSuccessfulCommit as _getLastSuccessfulCommit,
   getBaseRevision as _getBaseRevision,

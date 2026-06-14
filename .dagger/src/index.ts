@@ -77,7 +77,11 @@ import {
 
 import { goBuildHelper, goTestHelper, goLintHelper } from "./golang";
 
-import { homelabSynthHelper, homelabOnePasswordLintHelper } from "./homelab";
+import {
+  homelabSynthHelper,
+  helmTypesDriftCheckHelper,
+  homelabOnePasswordLintHelper,
+} from "./homelab";
 
 import { swiftLintHelper } from "./swift";
 
@@ -780,6 +784,26 @@ export class Monorepo {
     tsconfig: File | null = null,
   ): Directory {
     return homelabSynthHelper(pkgDir, depNames, depDirs, tsconfig);
+  }
+
+  /**
+   * Regenerate the cdk8s Helm value types and fail if they drift from the
+   * committed `generated/helm/` tree. This is the CI freshness gate (replaces
+   * the weekly helm-types-refresh Temporal workflow).
+   */
+  @func()
+  async helmTypesDriftCheck(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return helmTypesDriftCheckHelper(
+      pkgDir,
+      depNames,
+      depDirs,
+      tsconfig,
+    ).stdout();
   }
 
   /** Lint that every cdk8s OnePasswordItem reference + consumed field exists in the committed vault snapshot */
