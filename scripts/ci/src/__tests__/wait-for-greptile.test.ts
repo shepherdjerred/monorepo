@@ -4,8 +4,9 @@ import {
   evaluateGate,
   parseLinkNext,
   parseGreptilePriority,
-  parseGreptileNoReviewableFiles,
+  parseGreptileSkippedReview,
   type GreptileReviewCheck,
+  type GreptileSkipReason,
   type GreptileThread,
 } from "../wait-for-greptile.ts";
 
@@ -41,7 +42,7 @@ function evaluate(input: {
   reviewCheck?: GreptileReviewCheck;
   threads?: GreptileThread[];
   maxBlockingPriority?: number;
-  noReviewableFiles?: boolean;
+  skippedReview?: GreptileSkipReason | null;
 }) {
   return evaluateGate({
     head: HEAD,
@@ -49,55 +50,77 @@ function evaluate(input: {
     threads: input.threads ?? [],
     greptileLogin: GREPTILE,
     maxBlockingPriority: input.maxBlockingPriority ?? 3,
-    ...(input.noReviewableFiles !== undefined
-      ? { noReviewableFiles: input.noReviewableFiles }
+    ...(input.skippedReview !== undefined
+      ? { skippedReview: input.skippedReview }
       : {}),
   });
 }
 
-describe("evaluateGate — no-reviewable-files shortcut", () => {
-  it("passes when Greptile posted a no-reviewable-files comment and there are no blocking threads", () => {
+describe("evaluateGate — skipped-review shortcut", () => {
+  it("passes when Greptile reported no reviewable files and there are no blocking threads", () => {
     const result = evaluate({
-      // No check-run found; gate passes when noReviewableFiles is true and no blocking threads.
+      // No check-run found; gate passes when skippedReview is set and no blocking threads.
       reviewCheck: { found: false, status: null, conclusion: null, url: null },
-      noReviewableFiles: true,
+      skippedReview: "no-reviewable-files",
     });
     expect(result.state).toBe("passed");
     expect(result.message).toContain("no reviewable files");
     expect(result.message).toContain(HEAD);
   });
 
-  it("still blocks on unresolved threads from earlier commits even when noReviewableFiles is true", () => {
+  it("passes when Greptile skipped review due to too many files and there are no blocking threads", () => {
+    // PR #1166 (~6800 files) hit Greptile's 500-file limit; the gate must
+    // short-circuit on the "Too many files changed for review" comment.
+    const result = evaluate({
+      reviewCheck: { found: false, status: null, conclusion: null, url: null },
+      skippedReview: "too-many-files",
+    });
+    expect(result.state).toBe("passed");
+    expect(result.message).toContain("too many files");
+    expect(result.message).toContain(HEAD);
+  });
+
+  it("still blocks on unresolved threads from earlier commits even when skippedReview is set", () => {
     // An earlier commit may have produced unresolved Greptile threads; GitHub does
-    // not automatically mark them outdated when only ignored files change in the
-    // new commit.  The no-reviewable-files flag only bypasses the check-run wait.
+    // not automatically mark them outdated when only ignored / overflow files
+    // change in the new commit. The skip flag only bypasses the check-run wait.
     const result = evaluate({
       reviewCheck: { found: false, status: null, conclusion: null, url: null },
       threads: [thread({ isResolved: false })],
-      noReviewableFiles: true,
+      skippedReview: "no-reviewable-files",
     });
     expect(result.state).toBe("failed");
     expect(result.message).toContain("unresolved Greptile comment");
   });
 
-  it("passes when noReviewableFiles is true and the only threads are resolved", () => {
+  it("still blocks on unresolved threads when skipped due to too many files", () => {
+    const result = evaluate({
+      reviewCheck: { found: false, status: null, conclusion: null, url: null },
+      threads: [thread({ isResolved: false })],
+      skippedReview: "too-many-files",
+    });
+    expect(result.state).toBe("failed");
+    expect(result.message).toContain("unresolved Greptile comment");
+  });
+
+  it("passes when skippedReview is set and the only threads are resolved", () => {
     const result = evaluate({
       reviewCheck: { found: false, status: null, conclusion: null, url: null },
       threads: [thread({ isResolved: true })],
-      noReviewableFiles: true,
+      skippedReview: "no-reviewable-files",
     });
     expect(result.state).toBe("passed");
   });
 
-  it("does NOT short-circuit when noReviewableFiles is false", () => {
+  it("does NOT short-circuit when skippedReview is null", () => {
     const result = evaluate({
       reviewCheck: { found: false, status: null, conclusion: null, url: null },
-      noReviewableFiles: false,
+      skippedReview: null,
     });
     expect(result.state).toBe("waiting");
   });
 
-  it("does NOT short-circuit when noReviewableFiles is undefined", () => {
+  it("does NOT short-circuit when skippedReview is undefined", () => {
     const result = evaluate({
       reviewCheck: { found: false, status: null, conclusion: null, url: null },
     });
@@ -105,37 +128,64 @@ describe("evaluateGate — no-reviewable-files shortcut", () => {
   });
 });
 
-describe("parseGreptileNoReviewableFiles", () => {
-  it("returns true for the exact Greptile status comment body", () => {
+describe("parseGreptileSkippedReview", () => {
+  it('returns "no-reviewable-files" for the exact Greptile status comment body', () => {
     const body =
       "<!-- greptile-status -->\nNo reviewable files after applying ignore patterns.";
-    expect(parseGreptileNoReviewableFiles(body)).toBe(true);
+    expect(parseGreptileSkippedReview(body)).toBe("no-reviewable-files");
   });
 
-  it("returns true when both markers appear on the same line", () => {
+  it('returns "no-reviewable-files" when both markers appear on the same line', () => {
     const body =
       "<!-- greptile-status --> No reviewable files after applying ignore patterns.";
-    expect(parseGreptileNoReviewableFiles(body)).toBe(true);
+    expect(parseGreptileSkippedReview(body)).toBe("no-reviewable-files");
   });
 
-  it("returns false for a normal Greptile review comment", () => {
+  it('returns "too-many-files" for Greptile\'s observed too-many-files comment (PR #1166)', () => {
+    // Exact body Greptile posted on shepherdjerred/monorepo#1166:
+    //   <!-- greptile-status -->
+    //   Too many files changed for review. (`3000 files found`, `500 file limit`)
+    const body =
+      "<!-- greptile-status -->\nToo many files changed for review. (`3000 files found`, `500 file limit`)";
+    expect(parseGreptileSkippedReview(body)).toBe("too-many-files");
+  });
+
+  it('returns "too-many-files" when the marker and phrase share a line', () => {
+    const body =
+      "<!-- greptile-status --> Too many files changed for review. (`1000 files found`, `500 file limit`)";
+    expect(parseGreptileSkippedReview(body)).toBe("too-many-files");
+  });
+
+  it("returns null for a normal Greptile review comment", () => {
     const body =
       "<!-- greptile-status -->\n<h3>Greptile Summary</h3>\n\nThis PR updates dependencies.";
-    expect(parseGreptileNoReviewableFiles(body)).toBe(false);
+    expect(parseGreptileSkippedReview(body)).toBeNull();
   });
 
-  it("returns false for a comment with only the status marker", () => {
-    expect(parseGreptileNoReviewableFiles("<!-- greptile-status -->")).toBe(
-      false,
-    );
+  it("returns null for a comment with only the status marker", () => {
+    expect(parseGreptileSkippedReview("<!-- greptile-status -->")).toBeNull();
   });
 
-  it("returns false for a null body", () => {
-    expect(parseGreptileNoReviewableFiles(null)).toBe(false);
+  it("returns null when the skip phrase appears WITHOUT the greptile-status marker", () => {
+    // Defence-in-depth: a human/other bot quoting Greptile must not trip the gate.
+    expect(
+      parseGreptileSkippedReview(
+        "Heads-up: Greptile says 'Too many files changed for review' when diffs exceed 500 files.",
+      ),
+    ).toBeNull();
+    expect(
+      parseGreptileSkippedReview(
+        "I think we have No reviewable files in this directory.",
+      ),
+    ).toBeNull();
   });
 
-  it("returns false for an unrelated comment", () => {
-    expect(parseGreptileNoReviewableFiles("LGTM!")).toBe(false);
+  it("returns null for a null body", () => {
+    expect(parseGreptileSkippedReview(null)).toBeNull();
+  });
+
+  it("returns null for an unrelated comment", () => {
+    expect(parseGreptileSkippedReview("LGTM!")).toBeNull();
   });
 });
 
