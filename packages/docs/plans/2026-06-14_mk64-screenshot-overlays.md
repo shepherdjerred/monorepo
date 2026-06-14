@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Complete — PR #1182
 
 ## Context
 
@@ -73,3 +73,22 @@ PR #1152 already ships the 4:3 encoder; image `2.0.0-3960` already contains it. 
 
 - Removing the live-stream pillarbox (16:9 → native 4:3). The user complaint was the `/screenshot` artifact; the streamer keeps its 16:9 canvas.
 - Re-styling the name pill (font, colors).
+
+## Session Log — 2026-06-14
+
+### Done
+
+- Added `packages/discord-plays-mario-kart/packages/backend/src/overlay/composite.ts` with `applyStreamOverlays` + `StreamOverlayContext`.
+- Routed `/screenshot` (Discord slash command + web dispatch) through `applyStreamOverlays`; live-stream loop now uses the same helper.
+- Shrunk HUD clock: scale 2:1, padding 2:1, dropped `"UTC "` prefix and `U/T/C` glyphs.
+- Extended `webserver/dispatch.test.ts` with an overlay-vs-clean screenshot diff assertion; updated `stream/overlay.test.ts` timestamps.
+- Branch `feature/mk64-screenshot-overlays`, commit `271108f94`, PR #1182.
+
+### Remaining
+
+- Post-rollout smoke: visually confirm screenshot now shows names + smaller HUD clock once the next image bump lands.
+
+### Caveats
+
+- The `/screenshot` artifact only burns in names that have been claimed via the web UI (`setOverlayName`). Empty seats render no pill — by design, matching the live stream.
+- If the screenshot path runs while `nameOverlay` is undefined (overlay feature disabled in config), the HUD clock still applies — the helper short-circuits at `nameOverlay?.apply`.
