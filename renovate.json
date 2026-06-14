@@ -21,7 +21,6 @@
       "description": "CI tool versions in Buildkite scripts and standalone Dockerfiles",
       "managerFilePatterns": [
         ".buildkite/**",
-        "tools/oci/**/Dockerfile",
         "packages/tasks-for-obsidian/ios/ci_scripts/**"
       ],
       "matchStrings": [
@@ -120,7 +119,7 @@
     },
     {
       "description": "Disable updates for archived and practice projects",
-      "matchFileNames": ["archive/**", "practice/**"],
+      "matchFileNames": ["sandbox/archive/**", "sandbox/practice/**"],
       "enabled": false
     },
     {
@@ -160,5 +159,5 @@
   "schedule": ["after 3am on Sunday"],
   "prHourlyLimit": 5,
   "reviewers": ["shepherdjerred"],
-  "ignorePaths": ["practice/**", "archive/**"]
+  "ignorePaths": ["sandbox/practice/**", "sandbox/archive/**"]
 }

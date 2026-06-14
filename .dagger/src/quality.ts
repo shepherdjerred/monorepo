@@ -220,9 +220,9 @@ export function trivyScanHelper(source: Directory): Container {
       "--ignorefile",
       ".trivyignore",
       "--skip-dirs",
-      "archive",
+      "sandbox/archive",
       "--skip-dirs",
-      "practice",
+      "sandbox/practice",
       ".",
     ]);
 }

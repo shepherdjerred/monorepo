@@ -18,8 +18,8 @@
 *.targets           text eol=crlf
 
 # Entire Windows mobile target (catches NuGet.config, .gitignore, etc.)
-archive/clauderon/mobile/windows/**     text eol=crlf
-archive/clauderon/mobile/NuGet.config   text eol=crlf
+sandbox/archive/clauderon/mobile/windows/**     text eol=crlf
+sandbox/archive/clauderon/mobile/NuGet.config   text eol=crlf
 
 # --- Test fixtures: preserve byte-for-byte (real-world capture) ---
 packages/webring/src/testdata/rss-*.xml -text
@@ -52,5 +52,5 @@ packages/webring/src/testdata/rss-*.xml -text
 # --- Out-of-scope trees: preserve as-committed, never normalize ---
 # Both are read-only / frozen per CLAUDE.md. Place LAST so they override
 # every preceding pattern (gitattributes uses last-match-wins precedence).
-archive/** -text
-practice/** -text
+sandbox/archive/** -text
+sandbox/practice/** -text
