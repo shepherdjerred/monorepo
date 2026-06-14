@@ -23,10 +23,7 @@ function affineTerms(
 
 export type Bios = {
   refresh: (memory: WebAssembly.Memory) => void;
-  imports: (
-    module: WebAssembly.Module,
-    opts?: { extras?: Record<string, (args: number[]) => number> },
-  ) => WebAssembly.Imports;
+  imports: (module: WebAssembly.Module) => WebAssembly.Imports;
 };
 
 export function createBios(): Bios {
@@ -197,21 +194,12 @@ export function createBios(): Bios {
       u8 = new Uint8Array(memory.buffer);
       u16 = new Uint16Array(memory.buffer);
     },
-    imports(
-      module: WebAssembly.Module,
-      opts?: { extras?: Record<string, (args: number[]) => number> },
-    ): WebAssembly.Imports {
+    imports(module: WebAssembly.Module): WebAssembly.Imports {
       const env: Record<string, WebAssembly.ImportValue> = {};
-      const extras = opts?.extras ?? {};
       for (const item of WebAssembly.Module.imports(module)) {
         if (item.kind !== "function") continue;
         const name = item.name;
-        if (Object.hasOwn(extras, name)) {
-          const override = extras[name];
-          env[name] = (...args: number[]): number => override(args);
-        } else {
-          env[name] = (...args: number[]): number => dispatch(name, args);
-        }
+        env[name] = (...args: number[]): number => dispatch(name, args);
       }
       return { env };
     },

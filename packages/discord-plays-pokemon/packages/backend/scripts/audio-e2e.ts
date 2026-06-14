@@ -45,9 +45,9 @@ const WASM_PATH = new URL("../assets/pokeemerald.wasm", import.meta.url)
 logger.info(`booting ${WASM_PATH}`);
 const emulator = new Emulator({ wasmPath: WASM_PATH });
 await emulator.init();
-// The wasm doesn't initialise audio on its own — bootstrap the m4a engine so
-// we get PCM from frame 0 instead of waiting for the game to start music.
-emulator.initAudio();
+// ottohg's wasm boots its own m4a engine during AgbMain; no host-side init
+// call is needed. PCM starts flowing as soon as the title-screen track
+// loader runs (typically within the first few seconds of game time).
 
 const collected: DrainResult[] = [];
 let nativeRate = 0;

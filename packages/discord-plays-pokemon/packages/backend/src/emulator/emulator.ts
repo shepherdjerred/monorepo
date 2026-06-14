@@ -97,7 +97,7 @@ export class Emulator {
     const module = await WebAssembly.compile(bytes);
     const instance = await WebAssembly.instantiate(
       module,
-      this.bios.imports(module, { extras: this.audio.extras }),
+      this.bios.imports(module),
     );
 
     const memory = requireMemory(instance.exports);
@@ -132,24 +132,14 @@ export class Emulator {
   }
 
   /**
-   * Register a callback for PCM audio drained from the wasm-side m4a mixer
-   * after each emulated frame. The drained `DrainResult` includes the native
-   * sample rate (typically ~13379 Hz). The wasm's natural boot path does not
-   * initialise the mixer; call `initAudio()` after `init()` if you want PCM
-   * starting from the first frame instead of waiting for the game to start
-   * music on its own.
+   * Register a callback for PCM audio drained from the wasm's m4a engine after
+   * each emulated frame. The drained `DrainResult` includes the native sample
+   * rate (typically ~13379 Hz). The wasm's `AgbMain` runs `m4aSoundInit` for
+   * us during boot, so the callback may fire from frame 0 — but it's null
+   * until the title-screen track loader populates `pcmSamplesPerVBlank`.
    */
   onAudio(cb: (pcm: DrainResult) => void): void {
     this.onAudioCb = cb;
-  }
-
-  /**
-   * Bootstrap the wasm-side m4a engine (`SoundInit` + `m4aSoundMode` at
-   * 13379 Hz). Call once after `init()` if you want deterministic PCM from
-   * frame 0. Idempotent.
-   */
-  initAudio(): void {
-    this.audio.initEngine();
   }
 
   /**
@@ -254,13 +244,11 @@ export class Emulator {
     emulateMs.observe(performance.now() - emulateStart);
     this.currentFrame += 1;
 
-    // Always tick the mixer — m4aSoundMain must fire unconditionally every
-    // VBlank (it advances the track-command interpreter and per-channel state).
-    // Gating on onAudioCb would freeze the music engine for callers that don't
-    // register an audio consumer (video-only streams, graphics-only tests, etc).
-    const pcm = this.audio.tickAndDrain();
-    if (pcm !== null && this.onAudioCb !== undefined) {
-      this.onAudioCb(pcm);
+    // The wasm's mixer ran inside WasmRunFrame; we just read the freshly
+    // written PCM buffer out. Skip the copy when nobody's listening.
+    if (this.onAudioCb !== undefined) {
+      const pcm = this.audio.drain();
+      if (pcm !== null) this.onAudioCb(pcm);
     }
 
     if (this.onFrameCb !== undefined) {
