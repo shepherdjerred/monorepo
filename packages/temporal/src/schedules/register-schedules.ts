@@ -18,6 +18,11 @@ const SCHEDULE_TIMEZONE = "America/Los_Angeles";
 export const DELETED_SCHEDULE_IDS = [
   "good-morning-weekday-early",
   "good-morning-weekend-early",
+  // Replaced by the Buildkite `helm-types-drift-check` CI gate (the generated
+  // types are now verified on every PR that touches a generator input, instead
+  // of reconciled weekly). The workflow type was removed from the bundle, so
+  // this schedule must be deleted or it would keep firing a missing workflow.
+  "helm-types-weekly-refresh",
 ] as const;
 
 type ScheduleDefinition = {
@@ -184,24 +189,11 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Monthly refresh of the vendored pokeemerald.wasm emulator blob (opens a PR if it changed)",
   },
   {
-    id: "helm-types-weekly-refresh",
-    workflowType: "runHelmTypesRefresh",
-    args: [],
-    // 06:00 PT every Monday — after Renovate's "after 3am on Sunday" window, so
-    // it catches chart version bumps Renovate merged over the weekend.
-    cronExpression: "0 6 * * 1",
-    taskQueue: TASK_QUEUES.DEFAULT,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
-    memo: "Weekly regeneration of cdk8s generated/helm types (opens a PR if they drifted)",
-  },
-  {
     id: "readme-refresh-weekly",
     workflowType: "runReadmeRefresh",
     args: [],
-    // 08:00 PT every Monday — staggered after helm-types (06:00) and
-    // scout-season-refresh (07:00) so the three weekly PR-opening jobs don't
-    // contend for the worker pod at once.
+    // 08:00 PT every Monday — staggered after scout-season-refresh (07:00)
+    // so the two weekly PR-opening jobs don't contend for the worker pod at once.
     cronExpression: "0 8 * * 1",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
