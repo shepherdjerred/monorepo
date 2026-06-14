@@ -1,0 +1,293 @@
+# HELP process_cpu_user_seconds_total Total user CPU time spent in seconds.
+# TYPE process_cpu_user_seconds_total counter
+process_cpu_user_seconds_total 200.892149
+
+# HELP process_cpu_system_seconds_total Total system CPU time spent in seconds.
+# TYPE process_cpu_system_seconds_total counter
+process_cpu_system_seconds_total 12.567675
+
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 213.45982399999997
+
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1781414860
+
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 2254659584
+
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 79163817984
+
+# HELP process_heap_bytes Process heap size in bytes.
+# TYPE process_heap_bytes gauge
+process_heap_bytes 71154860032
+
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 36
+
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 1048576
+
+# HELP nodejs_eventloop_lag_seconds Lag of event loop in seconds.
+# TYPE nodejs_eventloop_lag_seconds gauge
+nodejs_eventloop_lag_seconds 0.015304979
+
+# HELP nodejs_eventloop_lag_min_seconds The minimum recorded event loop delay.
+# TYPE nodejs_eventloop_lag_min_seconds gauge
+nodejs_eventloop_lag_min_seconds 0.000012505
+
+# HELP nodejs_eventloop_lag_max_seconds The maximum recorded event loop delay.
+# TYPE nodejs_eventloop_lag_max_seconds gauge
+nodejs_eventloop_lag_max_seconds 0.055127802
+
+# HELP nodejs_eventloop_lag_mean_seconds The mean of the recorded event loop delays.
+# TYPE nodejs_eventloop_lag_mean_seconds gauge
+nodejs_eventloop_lag_mean_seconds 0.015700164512
+
+# HELP nodejs_eventloop_lag_stddev_seconds The standard deviation of the recorded event loop delays.
+# TYPE nodejs_eventloop_lag_stddev_seconds gauge
+nodejs_eventloop_lag_stddev_seconds 0.012475968964397668
+
+# HELP nodejs_eventloop_lag_p50_seconds The 50th percentile of the recorded event loop delays.
+# TYPE nodejs_eventloop_lag_p50_seconds gauge
+nodejs_eventloop_lag_p50_seconds 0.011517951
+
+# HELP nodejs_eventloop_lag_p90_seconds The 90th percentile of the recorded event loop delays.
+# TYPE nodejs_eventloop_lag_p90_seconds gauge
+nodejs_eventloop_lag_p90_seconds 0.032899071
+
+# HELP nodejs_eventloop_lag_p99_seconds The 99th percentile of the recorded event loop delays.
+# TYPE nodejs_eventloop_lag_p99_seconds gauge
+nodejs_eventloop_lag_p99_seconds 0.043024383
+
+# HELP nodejs_active_resources Number of active resources that are currently keeping the event loop alive, grouped by async resource type.
+# TYPE nodejs_active_resources gauge
+
+# HELP nodejs_active_resources_total Total number of active resources.
+# TYPE nodejs_active_resources_total gauge
+nodejs_active_resources_total 0
+
+# HELP nodejs_active_handles Number of active libuv handles grouped by handle type. Every handle type is C++ class name.
+# TYPE nodejs_active_handles gauge
+
+# HELP nodejs_active_handles_total Total number of active handles.
+# TYPE nodejs_active_handles_total gauge
+nodejs_active_handles_total 0
+
+# HELP nodejs_active_requests Number of active libuv requests grouped by request type. Every request type is C++ class name.
+# TYPE nodejs_active_requests gauge
+
+# HELP nodejs_active_requests_total Total number of active requests.
+# TYPE nodejs_active_requests_total gauge
+nodejs_active_requests_total 0
+
+# HELP nodejs_heap_size_total_bytes Process heap size from Node.js in bytes.
+# TYPE nodejs_heap_size_total_bytes gauge
+nodejs_heap_size_total_bytes 36951040
+
+# HELP nodejs_heap_size_used_bytes Process heap size used from Node.js in bytes.
+# TYPE nodejs_heap_size_used_bytes gauge
+nodejs_heap_size_used_bytes 2792359120
+
+# HELP nodejs_external_memory_bytes Node.js external memory size in bytes.
+# TYPE nodejs_external_memory_bytes gauge
+nodejs_external_memory_bytes 2765148768
+
+# HELP nodejs_version_info Node.js version info.
+# TYPE nodejs_version_info gauge
+nodejs_version_info{version="v24.3.0",major="24",minor="3",patch="0"} 1
+
+# HELP nodejs_gc_duration_seconds Garbage collection duration by kind, one of major, minor, incremental or weakcb.
+# TYPE nodejs_gc_duration_seconds histogram
+
+# HELP emulator_frame_emulate_ms Time to run one emulator frame (the wasm core step), in ms
+# TYPE emulator_frame_emulate_ms histogram
+emulator_frame_emulate_ms_bucket{le="0.25"} 0
+emulator_frame_emulate_ms_bucket{le="0.5"} 4
+emulator_frame_emulate_ms_bucket{le="1"} 156
+emulator_frame_emulate_ms_bucket{le="2"} 212
+emulator_frame_emulate_ms_bucket{le="4"} 393
+emulator_frame_emulate_ms_bucket{le="8"} 2499
+emulator_frame_emulate_ms_bucket{le="16"} 4633
+emulator_frame_emulate_ms_bucket{le="25"} 5312
+emulator_frame_emulate_ms_bucket{le="33"} 6486
+emulator_frame_emulate_ms_bucket{le="50"} 8137
+emulator_frame_emulate_ms_bucket{le="100"} 8494
+emulator_frame_emulate_ms_bucket{le="200"} 8500
+emulator_frame_emulate_ms_bucket{le="+Inf"} 8500
+emulator_frame_emulate_ms_sum 170827.43223500127
+emulator_frame_emulate_ms_count 8500
+
+# HELP emulator_frame_copy_ms Time to copy the frame out of wasm memory and hand it to the stream, in ms
+# TYPE emulator_frame_copy_ms histogram
+emulator_frame_copy_ms_bucket{le="0.25"} 570
+emulator_frame_copy_ms_bucket{le="0.5"} 2549
+emulator_frame_copy_ms_bucket{le="1"} 7901
+emulator_frame_copy_ms_bucket{le="2"} 8345
+emulator_frame_copy_ms_bucket{le="4"} 8433
+emulator_frame_copy_ms_bucket{le="8"} 8467
+emulator_frame_copy_ms_bucket{le="16"} 8472
+emulator_frame_copy_ms_bucket{le="25"} 8475
+emulator_frame_copy_ms_bucket{le="33"} 8476
+emulator_frame_copy_ms_bucket{le="50"} 8476
+emulator_frame_copy_ms_bucket{le="100"} 8476
+emulator_frame_copy_ms_bucket{le="200"} 8476
+emulator_frame_copy_ms_bucket{le="+Inf"} 8476
+emulator_frame_copy_ms_sum 5612.570085998633
+emulator_frame_copy_ms_count 8476
+
+# HELP emulator_frame_late_ms How far behind schedule the paced loop is at each tick, in ms (0 when on time)
+# TYPE emulator_frame_late_ms histogram
+emulator_frame_late_ms_bucket{le="0"} 5330
+emulator_frame_late_ms_bucket{le="1"} 5513
+emulator_frame_late_ms_bucket{le="2"} 5701
+emulator_frame_late_ms_bucket{le="4"} 6009
+emulator_frame_late_ms_bucket{le="8"} 6564
+emulator_frame_late_ms_bucket{le="16"} 7228
+emulator_frame_late_ms_bucket{le="33"} 7721
+emulator_frame_late_ms_bucket{le="66"} 8110
+emulator_frame_late_ms_bucket{le="133"} 8329
+emulator_frame_late_ms_bucket{le="250"} 8498
+emulator_frame_late_ms_bucket{le="+Inf"} 8500
+emulator_frame_late_ms_sum 91833.68559857398
+emulator_frame_late_ms_count 8500
+
+# HELP emulator_ticks_total Emulator ticks executed; rate() gives the achieved frame rate
+# TYPE emulator_ticks_total counter
+emulator_ticks_total 8500
+
+# HELP emulator_loop_resync_total Times the paced loop fell far enough behind to resync (dropping frames)
+# TYPE emulator_loop_resync_total counter
+emulator_loop_resync_total 2
+
+# HELP emulator_restarts_total Emulator restarts requested by backend lifecycle events
+# TYPE emulator_restarts_total counter
+
+# HELP emulator_input_apply_delay_ms Time from a controller input arriving at the backend to being latched into the emulator tick that applies it, in ms
+# TYPE emulator_input_apply_delay_ms histogram
+emulator_input_apply_delay_ms_bucket{le="1"} 0
+emulator_input_apply_delay_ms_bucket{le="2"} 0
+emulator_input_apply_delay_ms_bucket{le="4"} 0
+emulator_input_apply_delay_ms_bucket{le="8"} 0
+emulator_input_apply_delay_ms_bucket{le="16"} 0
+emulator_input_apply_delay_ms_bucket{le="25"} 0
+emulator_input_apply_delay_ms_bucket{le="33"} 0
+emulator_input_apply_delay_ms_bucket{le="50"} 0
+emulator_input_apply_delay_ms_bucket{le="100"} 0
+emulator_input_apply_delay_ms_bucket{le="250"} 0
+emulator_input_apply_delay_ms_bucket{le="+Inf"} 0
+emulator_input_apply_delay_ms_sum 0
+emulator_input_apply_delay_ms_count 0
+
+# HELP controller_rtt_ms Socket round-trip time measured by the web controller and reported to the server, in ms
+# TYPE controller_rtt_ms histogram
+controller_rtt_ms_bucket{le="5"} 0
+controller_rtt_ms_bucket{le="10"} 0
+controller_rtt_ms_bucket{le="25"} 0
+controller_rtt_ms_bucket{le="50"} 0
+controller_rtt_ms_bucket{le="75"} 0
+controller_rtt_ms_bucket{le="100"} 0
+controller_rtt_ms_bucket{le="150"} 0
+controller_rtt_ms_bucket{le="250"} 0
+controller_rtt_ms_bucket{le="500"} 0
+controller_rtt_ms_bucket{le="1000"} 0
+controller_rtt_ms_bucket{le="2500"} 0
+controller_rtt_ms_bucket{le="+Inf"} 0
+controller_rtt_ms_sum 0
+controller_rtt_ms_count 0
+
+# HELP stream_sink_buffer_bytes Bytes buffered in the PassThrough feeding ffmpeg; a rising value means the encoder/send path is falling behind
+# TYPE stream_sink_buffer_bytes gauge
+stream_sink_buffer_bytes 1644748800
+
+# HELP stream_active 1 while a Go-Live broadcast is running and accepting frames, else 0
+# TYPE stream_active gauge
+stream_active 1
+
+# HELP stream_frame_interval_ms Wall-clock gap between consecutive frames pushed to the encoder while streaming, in ms (jitter around the frame budget)
+# TYPE stream_frame_interval_ms histogram
+stream_frame_interval_ms_bucket{le="16"} 1394
+stream_frame_interval_ms_bucket{le="25"} 2343
+stream_frame_interval_ms_bucket{le="30"} 2553
+stream_frame_interval_ms_bucket{le="33"} 2675
+stream_frame_interval_ms_bucket{le="36"} 2866
+stream_frame_interval_ms_bucket{le="40"} 3128
+stream_frame_interval_ms_bucket{le="50"} 4016
+stream_frame_interval_ms_bucket{le="66"} 5262
+stream_frame_interval_ms_bucket{le="100"} 5348
+stream_frame_interval_ms_bucket{le="200"} 5357
+stream_frame_interval_ms_bucket{le="+Inf"} 5357
+stream_frame_interval_ms_sum 179040.48046499997
+stream_frame_interval_ms_count 5357
+
+# HELP stream_frame_write_ms Duration of the write handing a frame to the ffmpeg pipe, in ms; rises with backpressure before the sink buffer does
+# TYPE stream_frame_write_ms histogram
+stream_frame_write_ms_bucket{le="0.25"} 5352
+stream_frame_write_ms_bucket{le="0.5"} 5354
+stream_frame_write_ms_bucket{le="1"} 5356
+stream_frame_write_ms_bucket{le="2"} 5357
+stream_frame_write_ms_bucket{le="4"} 5358
+stream_frame_write_ms_bucket{le="8"} 5358
+stream_frame_write_ms_bucket{le="16"} 5358
+stream_frame_write_ms_bucket{le="25"} 5358
+stream_frame_write_ms_bucket{le="33"} 5358
+stream_frame_write_ms_bucket{le="50"} 5358
+stream_frame_write_ms_bucket{le="100"} 5358
+stream_frame_write_ms_bucket{le="200"} 5358
+stream_frame_write_ms_bucket{le="+Inf"} 5358
+stream_frame_write_ms_sum 106.4166220013285
+stream_frame_write_ms_count 5358
+
+# HELP stream_ffmpeg_speed_ratio Media seconds encoded per wall-clock second, derived from ffmpeg timemark advance; sustained <1 means the encoder cannot keep realtime
+# TYPE stream_ffmpeg_speed_ratio gauge
+stream_ffmpeg_speed_ratio 0.5691056910569129
+
+# HELP stream_ffmpeg_fps ffmpeg's reported output frame rate
+# TYPE stream_ffmpeg_fps gauge
+stream_ffmpeg_fps 16
+
+# HELP stream_ffmpeg_bitrate_kbps ffmpeg's reported output bitrate, in kbps
+# TYPE stream_ffmpeg_bitrate_kbps gauge
+stream_ffmpeg_bitrate_kbps 5063.9
+
+# HELP stream_hw_encode_engaged 1 if the running ffmpeg command uses the VAAPI hardware encoder, else 0
+# TYPE stream_hw_encode_engaged gauge
+stream_hw_encode_engaged 1
+
+# HELP stream_send_frametime_ratio Per-frame send time as a fraction of the frame's wall-clock budget; >1 means the frame was sent late
+# TYPE stream_send_frametime_ratio histogram
+stream_send_frametime_ratio_bucket{le="0.25",kind="audio"} 4397
+stream_send_frametime_ratio_bucket{le="0.5",kind="audio"} 4400
+stream_send_frametime_ratio_bucket{le="0.75",kind="audio"} 4401
+stream_send_frametime_ratio_bucket{le="0.9",kind="audio"} 4401
+stream_send_frametime_ratio_bucket{le="1",kind="audio"} 4401
+stream_send_frametime_ratio_bucket{le="1.1",kind="audio"} 4401
+stream_send_frametime_ratio_bucket{le="1.25",kind="audio"} 4401
+stream_send_frametime_ratio_bucket{le="1.5",kind="audio"} 4401
+stream_send_frametime_ratio_bucket{le="2",kind="audio"} 4401
+stream_send_frametime_ratio_bucket{le="3",kind="audio"} 4401
+stream_send_frametime_ratio_bucket{le="+Inf",kind="audio"} 4401
+stream_send_frametime_ratio_sum{kind="audio"} 21.53227334997652
+stream_send_frametime_ratio_count{kind="audio"} 4401
+stream_send_frametime_ratio_bucket{le="0.25",kind="video"} 2640
+stream_send_frametime_ratio_bucket{le="0.5",kind="video"} 2641
+stream_send_frametime_ratio_bucket{le="0.75",kind="video"} 2641
+stream_send_frametime_ratio_bucket{le="0.9",kind="video"} 2641
+stream_send_frametime_ratio_bucket{le="1",kind="video"} 2641
+stream_send_frametime_ratio_bucket{le="1.1",kind="video"} 2641
+stream_send_frametime_ratio_bucket{le="1.25",kind="video"} 2641
+stream_send_frametime_ratio_bucket{le="1.5",kind="video"} 2641
+stream_send_frametime_ratio_bucket{le="2",kind="video"} 2641
+stream_send_frametime_ratio_bucket{le="3",kind="video"} 2641
+stream_send_frametime_ratio_bucket{le="+Inf",kind="video"} 2641
+stream_send_frametime_ratio_sum{kind="video"} 21.79276815003968
+stream_send_frametime_ratio_count{kind="video"} 2641
+
+# HELP stream_send_late_frames_total Frames whose RTP send exceeded their frametime budget
+# TYPE stream_send_late_frames_total counter

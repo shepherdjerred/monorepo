@@ -72,6 +72,10 @@ packages/discord-plays-pokemon/packages/frontend/public/emulatorjs/
 # Vendored Data Dragon snapshot (League of Legends static data)
 packages/scout-for-lol/packages/data/src/data-dragon/assets/
 
+# Prometheus exposition-format fixture captured from the live mario-kart pod;
+# prettier has no parser for `.txt` and the snapshot must stay byte-for-byte.
+packages/discord-plays-mario-kart/packages/backend/scripts/__fixtures__/
+
 # prettier-plugin-astro@0.14.1 side-effect: prettier --check . tries to parse these
 # valid Astro/MDX files with a Babel-based parser that chokes on indented code
 # blocks inside JSX, HTML comments inside JSX expressions, and shebangs in code
