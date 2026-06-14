@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.4.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.3.0...helm-types-v1.4.0) (2026-06-14)
+
+
+### Features
+
+* **homelab:** type the OCI-registry helm charts (kueue, dagger, buildkite) ([6875ca3](https://github.com/shepherdjerred/monorepo/commit/6875ca3534526d7bb418d1a8c13e21a337153f4a))
+* **homelab:** type untyped helm charts, fix narrow generated types, enforce explicit container resources ([6b7bcfa](https://github.com/shepherdjerred/monorepo/commit/6b7bcfabb3bd495ea1584dff87b5b8c6278935b4))
+* **homelab:** type untyped helm charts, fix narrow generated types, enforce explicit container resources ([c3c268d](https://github.com/shepherdjerred/monorepo/commit/c3c268dbcca7622dd75ad544786d3011c90228bc))
+
+
+### Bug Fixes
+
+* **homelab:** make helm-types generator reliably produce repo-prettier output ([9409043](https://github.com/shepherdjerred/monorepo/commit/940904303284c662e3e8b9faa68c8cbe3bd80d13))
+* **root:** restore plainStep so Greptile review gate generates ([c0d3ff1](https://github.com/shepherdjerred/monorepo/commit/c0d3ff1eedfb305816f9770dcf5f99ee749ea596))
+
 ## [1.3.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.2.1...helm-types-v1.3.0) (2026-05-27)
 
 * Spawn errors from the chart fetcher now preserve the original error as `.cause`, so callers can inspect what `helm` or `git` actually failed with ([c285f88](https://github.com/shepherdjerred/monorepo/commit/c285f88a7387b679980e63dde07c8543a39cc217))
