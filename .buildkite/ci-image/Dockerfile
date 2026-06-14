@@ -69,7 +69,7 @@ RUN curl -fsSL "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz" | t
 
 # OpenTofu (covers install_tofu())
 # renovate: datasource=github-releases depName=opentofu/opentofu
-ARG OPENTOFU_VERSION=1.11.7
+ARG OPENTOFU_VERSION=1.12.0
 RUN curl -fsSL https://get.opentofu.org/install-opentofu.sh | \
     bash -s -- --install-method standalone --opentofu-version "${OPENTOFU_VERSION}"
 
