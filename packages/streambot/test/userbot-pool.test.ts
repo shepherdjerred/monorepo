@@ -20,7 +20,7 @@ const STREAM_CONFIG: Pick<Config, "stream"> = {
     bitrateAudioKbps: 128,
     hardwareAcceleration: false,
     vaapiDevice: "/dev/dri/renderD128",
-    readrate: 1.0,
+    readrate: 1,
   },
 };
 
