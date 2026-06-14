@@ -17,6 +17,7 @@ const config = [
         "src/discord/event-notifier.test.ts",
         "src/emulator/buttons.test.ts",
         "src/emulator/emulator-symbols.integration.test.ts",
+        "src/goal/codex-command.test.ts",
         "src/goal/discord-message.test.ts",
         "src/goal/goal-manager.test.ts",
         "src/stream/stream-machine.test.ts",

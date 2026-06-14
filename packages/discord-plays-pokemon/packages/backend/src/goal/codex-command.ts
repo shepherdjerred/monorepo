@@ -26,6 +26,18 @@ export function buildCodexArgs(
     "--dangerously-bypass-approvals-and-sandbox",
     "--config",
     'model_reasoning_effort="low"',
+    // gpt-5.4-nano rejects the tool_search tool that ships with apps/plugins/multi_agent
+    // (`Tool 'tool_search' is not supported with gpt-5.4-nano`). Disable them. Goal mode
+    // only needs the shell tool to drive pokemonctl, which stays on.
+    "--disable",
+    "apps",
+    "--disable",
+    "plugins",
+    "--disable",
+    "multi_agent",
+    // JSONL events on stdout. Goal-manager parses these for usage tokens (cost reporting)
+    // and to synthesize OTel spans for the llm-observability archival pipeline.
+    "--json",
     "--output-last-message",
     outputPath,
     "--cd",
