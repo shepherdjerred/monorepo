@@ -165,10 +165,12 @@ export function App() {
       press(code);
     };
     const onKeyUp = (event: KeyboardEvent) => {
-      if (isEditableTarget(event.target)) return;
+      // No isEditableTarget guard here: releasing a key can never produce
+      // unwanted typing, so we must always call release() to avoid a stuck-key
+      // if the player presses a control key, clicks into a text field, and
+      // releases while the field has focus.
       const code = resolveKeyboardCode(event);
       if (code === undefined || KEYMAP[code] === undefined) return;
-      event.preventDefault();
       release(code);
     };
     const onBlur = () => {
@@ -251,7 +253,7 @@ export function App() {
 
           <section className="grid gap-4 xl:grid-cols-[1fr_320px]">
             <div className="overflow-hidden rounded-[2rem] border border-zinc-800 bg-zinc-950/80 p-3 shadow-2xl shadow-black/40 sm:p-5">
-              <div className="relative mx-auto aspect-[900/540] w-full">
+              <div className="relative mx-auto aspect-[3/2] w-full">
                 <N64ControllerShell />
 
                 {/* Positions below are CENTER-based: left/top is the center
@@ -293,7 +295,7 @@ export function App() {
                   </span>
                 </div>
 
-                <div className="absolute left-1/2 top-[40%] z-30 -translate-x-1/2 -translate-y-1/2">
+                <div className="absolute left-1/2 top-[45%] z-30 -translate-x-1/2 -translate-y-1/2">
                   <ControlButton
                     control={startControl}
                     pressed={isControlPressed(startControl, pressedCodes)}
@@ -320,7 +322,7 @@ export function App() {
 
                 <ControlCluster
                   title="A / B"
-                  className="absolute left-[66%] top-[59%] z-30 h-20 w-24 -translate-x-1/2 -translate-y-1/2 sm:h-24 sm:w-28"
+                  className="absolute left-[63%] top-[58%] z-30 h-20 w-24 -translate-x-1/2 -translate-y-1/2 sm:h-24 sm:w-28"
                   showTitle={false}
                 >
                   <ControlButton
