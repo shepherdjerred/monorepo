@@ -265,6 +265,94 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
+          // Catches the alert-remediation pattern from 2026-06-14: every
+          // child workflow exits cleanly but with `decision: "failed",
+          // reason: "Activity task timed out"`. Temporal status shows
+          // Completed (so activity_task_fail is silent), but every alert
+          // is functionally unaddressed. Page when a strong majority of
+          // recent decisions came back failed.
+          alert: "AlertRemediationDecisionsAllFailing",
+          annotations: {
+            summary: "alert-remediation agent is failing on every alert",
+            description: escapePrometheusTemplate(
+              "Over half of alert-remediation decisions in the last hour returned `outcome=failed`. The agent is not reaching real verdicts — the subprocess is likely hitting the 30-min activity wall (SIGTERM) without producing a decision. Check Loki for `phase=soft-kill` log lines + the agent's `lastStderrLine`/`idleMs` fields to identify the hang.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            [
+              'sum(rate(alert_remediation_decisions_total{outcome="failed"}[1h]))',
+              " / clamp_min(sum(rate(alert_remediation_decisions_total[1h])), 1)",
+              " > 0.5",
+            ].join(""),
+          ),
+          for: "2h",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          // Sweep that hits its 2h workflowExecutionTimeout is a clear
+          // outage of the entire alert-remediation system — children get
+          // Terminated en masse. Page on any.
+          alert: "AlertRemediationSweepTimingOut",
+          annotations: {
+            summary: "alert-remediation hourly sweep is timing out",
+            description: escapePrometheusTemplate(
+              "The alertRemediationSweepWorkflow has hit its 2h workflowExecutionTimeout {{ $value }} time(s) in the last 2h. Children are getting Terminated en masse; no alert is being meaningfully processed. Check the Temporal UI and Loki for the agent subprocess hang signature.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'increase(workflow_completed_total{namespace="default",workflow_type="alertRemediationSweepWorkflow",status="TimedOut"}[2h]) > 0',
+          ),
+          for: "10m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          // Daily homelab-audit failing twice in a row — the agent is
+          // hitting the 45-min activity wall. The existing
+          // TemporalScheduledWorkflowFailingDaily covers activity_task_fail
+          // but the audit's symptom is a non-zero subprocess exit (SIGTERM
+          // at the wall), which our own counter captures directly.
+          alert: "HomelabAuditFailedTwoDays",
+          annotations: {
+            summary: "homelab-audit-daily failed two days in a row",
+            description: escapePrometheusTemplate(
+              "The homelab-audit subprocess has exited non-zero {{ $value }} time(s) in the last 48h. The runbook agent is hitting the 45-min activity wall. Check Loki for the agent's `phase=soft-kill` line + `lastStderrLine` to identify the long-poling step.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'increase(homelab_audit_subprocess_exit_total{exit_code!="0"}[48h]) >= 2',
+          ),
+          for: "30m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          // Soft-kills are the leading indicator of hung subprocesses: any
+          // tick means a SIGINT had to be sent because the wall was 90s
+          // away. Ticket (info), not page — the run still produces evidence
+          // and the existing failure alerts cover outage.
+          alert: "AgentSubprocessSoftKill",
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "Agent subprocess for {{ $labels.workflow_type }} was soft-killed",
+            ),
+            description: escapePrometheusTemplate(
+              "The activity sent SIGINT to its agent subprocess for {{ $labels.workflow_type }} {{ $value }} time(s) in the last 1h because Temporal's activity wall was 90s away. The corresponding run's `phase=soft-kill` Loki line is the diagnostic capture point.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "increase(agent_subprocess_soft_kills_total[1h]) > 0",
+          ),
+          for: "5m",
+          labels: {
+            severity: "info",
+          },
+        },
+        {
           // Catches the "low-volume daily schedule, fails consistently for
           // days, no one notices" pattern — exactly what kept Scout Data
           // Dragon broken silently from 2026-05-02 to 2026-05-08. Existing

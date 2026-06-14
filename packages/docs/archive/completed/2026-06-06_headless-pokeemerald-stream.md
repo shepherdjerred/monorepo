@@ -65,7 +65,7 @@ install the app imports cleanly; the Linux Docker image also installs system
 - **wasm provisioning:** the built `pokeemerald.wasm` (~12 MB) is **vendored
   in-repo** at `packages/backend/assets/pokeemerald.wasm` (un-ignored; allowlisted
   in the `large-files` pre-commit hook). It is refreshed **monthly** by the
-  Temporal `pokeemerald-wasm-monthly` schedule
+  Temporal `pokeemerald-wasm-weekly` schedule
   (`packages/temporal/src/workflows/pokeemerald-wasm.ts` +
   `activities/pokeemerald-wasm.ts`), which clones the repo, re-runs
   `fetch-wasm.ts`, and opens a PR if the blob changed — the same deterministic

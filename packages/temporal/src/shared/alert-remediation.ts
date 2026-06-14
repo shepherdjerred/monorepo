@@ -27,7 +27,7 @@ export const AlertRemediationSweepInputSchema = z.object({
   }),
   provider: z.enum(["claude", "codex"]).default("claude"),
   model: z.string().min(1).optional(),
-  maxTurns: z.number().int().positive().default(80),
+  maxTurns: z.number().int().positive().default(15),
   concurrency: z.number().int().positive().default(3),
   pagerDutyLimit: z.number().int().positive().default(100),
   bugsinkIssueLimit: z.number().int().positive().default(300),

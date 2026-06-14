@@ -9,7 +9,7 @@ error.png
 .tmp-earthly-out
 *.gba
 # Ignore generated/downloaded wasm, except the vendored emulator blob which is
-# committed and refreshed monthly by the Temporal "pokeemerald-wasm-monthly"
+# committed and refreshed weekly by the Temporal "pokeemerald-wasm-weekly"
 # schedule (packages/temporal/src/workflows/pokeemerald-wasm.ts).
 *.wasm
 !packages/backend/assets/pokeemerald.wasm

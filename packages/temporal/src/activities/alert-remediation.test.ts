@@ -4,7 +4,7 @@ import {
   normalizeBugsinkIssue,
   normalizePagerDutyIncident,
 } from "./alert-remediation-collect.ts";
-import { existingPrFromSearch } from "./alert-remediation.ts";
+import { existingPrFromSearch } from "./alert-remediation-find-pr.ts";
 import type { AlertRemediationRunCommandInput } from "./alert-remediation-runtime.ts";
 
 describe("alertRemediationActivities", () => {
