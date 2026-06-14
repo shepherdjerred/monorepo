@@ -1,3 +1,5 @@
+import { createAudioEngine } from "./audio/index.ts";
+import type { DrainResult } from "./audio/m4a-driver.ts";
 import { createBios } from "./bios.ts";
 import { createRenderer } from "./renderer.ts";
 import {
@@ -62,6 +64,7 @@ export type EmulatorOptions = {
 
 export class Emulator {
   private readonly bios = createBios();
+  private readonly audio = createAudioEngine();
   private readonly renderer = createRenderer();
   private readonly options: EmulatorOptions;
 
@@ -74,6 +77,7 @@ export class Emulator {
 
   private readonly queue: QueueStep[] = [];
   private onFrameCb: ((rgba: Buffer) => void) | undefined;
+  private onAudioCb: ((pcm: DrainResult) => void) | undefined;
   private readonly frameHooks: ((frame: number) => void)[] = [];
 
   private loopTimer: ReturnType<typeof setTimeout> | undefined;
@@ -93,7 +97,7 @@ export class Emulator {
     const module = await WebAssembly.compile(bytes);
     const instance = await WebAssembly.instantiate(
       module,
-      this.bios.imports(module),
+      this.bios.imports(module, { extras: this.audio.extras }),
     );
 
     const memory = requireMemory(instance.exports);
@@ -108,6 +112,8 @@ export class Emulator {
     // game code runs. The wasm linear memory is fixed-size and never grows, so
     // these views stay valid for the process lifetime.
     this.bios.refresh(memory);
+    this.audio.refresh(memory);
+    this.audio.bindExports(instance.exports);
     this.renderer.refresh(memory);
     this.u16 = new Uint16Array(memory.buffer);
 
@@ -123,6 +129,16 @@ export class Emulator {
 
   onFrame(cb: (rgba: Buffer) => void): void {
     this.onFrameCb = cb;
+  }
+
+  /**
+   * Register a callback for PCM audio drained from the wasm-side m4a mixer
+   * after each emulated frame. The drained `DrainResult` includes the native
+   * sample rate (typically ~13379 Hz). Phase 2a stubs most track handlers, so
+   * the PCM is silence until the full m4a handler set lands.
+   */
+  onAudio(cb: (pcm: DrainResult) => void): void {
+    this.onAudioCb = cb;
   }
 
   /**
@@ -226,6 +242,11 @@ export class Emulator {
     exports.runFrame();
     emulateMs.observe(performance.now() - emulateStart);
     this.currentFrame += 1;
+
+    if (this.onAudioCb !== undefined) {
+      const pcm = this.audio.tickAndDrain();
+      if (pcm !== null) this.onAudioCb(pcm);
+    }
 
     if (this.onFrameCb !== undefined) {
       const copyStart = performance.now();
