@@ -152,6 +152,20 @@ export function createPokemonDeployment(chart: Chart) {
           path: `${APP_ROOT}/logs`,
           volume: Volume.fromEmptyDir(chart, "pokemon-logs", "pokemon-logs"),
         },
+        // Goal mode (`/goal`) writes a `pokemonctl` wrapper into
+        // ${APP_ROOT}/.pokemon-goal-bin at runtime (GoalManager.prepareRuntimeTools),
+        // but APP_ROOT is root-owned and the pod runs as uid 1000 — a direct write
+        // there fails with EACCES. Mount a writable scratch volume so the Codex goal
+        // loop can bootstrap its helper. (screenshot_dir/state_path are pointed at the
+        // writable saves/ PVC via config.toml instead.)
+        {
+          path: `${APP_ROOT}/.pokemon-goal-bin`,
+          volume: Volume.fromEmptyDir(
+            chart,
+            "pokemon-goal-bin",
+            "pokemon-goal-bin",
+          ),
+        },
       ],
     }),
   );
