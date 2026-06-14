@@ -18,6 +18,7 @@ import {
 
 import {
   PRISMA_BUN_SERVICE_START_COMMAND,
+  MARIO_KART_ENTRYPOINT_COMMAND,
   buildImageHelper,
   buildCaddyS3ProxyImageHelper,
   buildObsidianHeadlessImageHelper,
@@ -690,10 +691,18 @@ enabled = false
       configToml,
     )
     .withWorkdir("/workspace/packages/discord-plays-mario-kart")
+    // Writable SQLite target for the `prisma db push` prelude (the real DB lives
+    // on a PVC in prod; here any writable path works).
+    .withEnvVariable("DATABASE_PATH", "/tmp/smoke-leaderboard.db")
+    // Run the REAL container entrypoint (incl. the `prisma db push` prelude),
+    // not just index.ts — otherwise a broken migration command in the entrypoint
+    // (e.g. an unsupported Prisma flag) sails through the smoke test. If the push
+    // fails, the container exits non-zero with the prisma error (no TokenInvalid)
+    // and runSmokeTest throws. `timeout` bounds the index.ts run that follows.
     .withExec([
       "sh",
       "-c",
-      "timeout 30s bun packages/backend/src/index.ts 2>&1",
+      `timeout 30s sh -c '${MARIO_KART_ENTRYPOINT_COMMAND}' 2>&1`,
     ]);
 
   return runSmokeTest(container, [

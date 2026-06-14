@@ -244,7 +244,8 @@ export class StreambotStreamer implements StreamerLike {
   private async cleanupSubtitle(
     subtitle: ResolvedSubtitle | undefined,
   ): Promise<void> {
-    if (subtitle === undefined) return;
+    // No cleanupPath → a persistent subtitle-cache entry shared across plays; never unlink it.
+    if (subtitle?.cleanupPath === undefined) return;
     try {
       await rm(subtitle.cleanupPath, { force: true });
     } catch (error) {
