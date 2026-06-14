@@ -35,7 +35,7 @@ const config = [
       ],
       // Test files are excluded from tsconfig (bun test globals aren't visible
       // to tsc), so they fall to the default project; raise the cap.
-      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 25,
+      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 40,
     },
   }),
   {
