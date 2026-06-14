@@ -47,8 +47,11 @@ const BUN_INSTALL_WITH_RETRY = [
   "i=1",
   "while [ $i -le 3 ]; do",
   "  if bun install --frozen-lockfile; then exit 0; fi",
-  '  echo "bun install failed (attempt $i/3), retrying in $((i*5))s..." >&2',
-  "  sleep $((i*5))",
+  // Skip the sleep + "retrying" log on the final attempt — no retry follows.
+  "  if [ $i -lt 3 ]; then",
+  '    echo "bun install failed (attempt $i/3), retrying in $((i*5))s..." >&2',
+  "    sleep $((i*5))",
+  "  fi",
   "  i=$((i+1))",
   "done",
   "exit 1",
