@@ -155,6 +155,27 @@ export function helmPackageHelper(
 // OpenTofu
 // ---------------------------------------------------------------------------
 
+/**
+ * `tofu init -input=false` wrapped in a bounded retry loop. `tofu init`
+ * itself only retries provider registry lookups twice before giving up; a
+ * single slow GitHub release CDN response (which is where OpenTofu fetches
+ * the provider SHA256SUMS from) is enough to fail the whole apply. Retry up
+ * to 5 attempts with linear backoff before propagating the failure.
+ *
+ * Build #4330's tailscale-acl apply failed on exactly this:
+ *   "Get https://github.com/tailscale/terraform-provider-tailscale/releases/download/v0.29.2/.../SHA256SUMS: context deadline exceeded"
+ */
+const TOFU_INIT_WITH_RETRY = [
+  "i=1",
+  "while [ $i -le 5 ]; do",
+  "  if tofu init -input=false; then exit 0; fi",
+  '  echo "tofu init failed (attempt $i/5), retrying in $((i*5))s..." >&2',
+  "  sleep $((i*5))",
+  "  i=$((i+1))",
+  "done",
+  "exit 1",
+].join(" ; ");
+
 /** Run tofu init + apply on a stack. */
 export function tofuApplyHelper(
   source: Directory,
@@ -233,7 +254,7 @@ export function tofuApplyHelper(
     );
   }
 
-  container = container.withExec(["tofu", "init", "-input=false"]);
+  container = container.withExec(["sh", "-c", TOFU_INIT_WITH_RETRY]);
 
   if (dryrun) {
     return container.withExec(["tofu", "plan", "-input=false"]);
@@ -300,7 +321,7 @@ export function tofuPlanHelper(
     );
   }
 
-  container = container.withExec(["tofu", "init", "-input=false"]);
+  container = container.withExec(["sh", "-c", TOFU_INIT_WITH_RETRY]);
 
   if (dryrun) {
     return container.withExec(["echo", "DRYRUN: would run tofu plan"]);
@@ -936,7 +957,7 @@ export function versionCommitBackHelper(
       `PR_NUMBER=$(gh pr list --repo ${MONOREPO_REPO} --head "${VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty')`,
       `if [ -z "$PR_NUMBER" ]; then gh pr create --repo ${MONOREPO_REPO} --base main --head "${VERSION_BUMP_BRANCH}" --title "chore: bump pending image versions" --body "Auto-generated version bump"; PR_NUMBER=$(gh pr view --repo ${MONOREPO_REPO} "${VERSION_BUMP_BRANCH}" --json number -q .number); fi`,
       `test -n "$PR_NUMBER" || { echo "ERROR: version commit-back PR number is empty" >&2; exit 1; }`,
-      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --rebase`,
+      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --squash`,
     ].join(" && "),
   ]);
 }
@@ -995,7 +1016,7 @@ export function ciBaseVersionCommitBackHelper(
       `PR_NUMBER=$(gh pr list --repo ${MONOREPO_REPO} --head "${CI_BASE_VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty')`,
       `if [ -z "$PR_NUMBER" ]; then gh pr create --repo ${MONOREPO_REPO} --base main --head "${CI_BASE_VERSION_BUMP_BRANCH}" --title "chore: bump ci-base image to ${version}" --body "Auto-generated ci-base version bump"; PR_NUMBER=$(gh pr view --repo ${MONOREPO_REPO} "${CI_BASE_VERSION_BUMP_BRANCH}" --json number -q .number); fi`,
       `test -n "$PR_NUMBER" || { echo "ERROR: ci-base version commit-back PR number is empty" >&2; exit 1; }`,
-      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --rebase`,
+      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --squash`,
     ].join(" && "),
   ]);
 }
@@ -1065,7 +1086,7 @@ export function cooklangVersionCommitBackHelper(
       `PR_NUMBER=$(gh pr list --repo ${MONOREPO_REPO} --head "${COOKLANG_VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty')`,
       `if [ -z "$PR_NUMBER" ]; then gh pr create --repo ${MONOREPO_REPO} --base main --head "${COOKLANG_VERSION_BUMP_BRANCH}" --title "chore(cooklang): bump plugin manifest version" --body "Auto-generated cooklang manifest version bump"; PR_NUMBER=$(gh pr view --repo ${MONOREPO_REPO} "${COOKLANG_VERSION_BUMP_BRANCH}" --json number -q .number); fi`,
       `test -n "$PR_NUMBER" || { echo "ERROR: cooklang version commit-back PR number is empty" >&2; exit 1; }`,
-      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --rebase`,
+      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --squash`,
     ].join(" && "),
   ]);
 }
