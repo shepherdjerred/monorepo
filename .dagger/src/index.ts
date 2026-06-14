@@ -86,6 +86,7 @@ import { goBuildHelper, goTestHelper, goLintHelper } from "./golang";
 
 import {
   homelabSynthHelper,
+  homelabCdk8sBundleHelper,
   helmTypesDriftCheckHelper,
   homelabOnePasswordLintHelper,
 } from "./homelab";
@@ -877,6 +878,21 @@ export class Monorepo {
       depDirs,
       tsconfig,
     ).stdout();
+  }
+
+  /**
+   * Bundle: cdk8s synth + 1Password lint in one pod, running as parallel
+   * siblings. Shared `bunBaseContainer` prefix de-dups the install layer
+   * by content-address — one source fetch, two parallel `withExec`s.
+   */
+  @func()
+  async homelabCdk8sBundle(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return homelabCdk8sBundleHelper(pkgDir, depNames, depDirs, tsconfig);
   }
 
   // ---------------------------------------------------------------------------

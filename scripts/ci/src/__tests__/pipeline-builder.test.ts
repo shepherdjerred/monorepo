@@ -1143,10 +1143,13 @@ describe("buildPipeline", () => {
       expect(steps.some((s) => s.key === "homelab-cdk8s")).toBe(true);
     });
 
-    it("includes the 1Password item/field lint gate", () => {
+    it("includes the 1Password item/field lint gate (bundled with cdk8s synth)", () => {
       const pipeline = buildPipeline(versionBumpAffected());
       const steps = pipeline.steps.filter(isStep);
-      expect(steps.some((s) => s.key === "homelab-1password-items")).toBe(true);
+      // Both checks now run inside the `homelab-cdk8s` bundle Dagger func.
+      const bundle = steps.find((s) => s.key === "homelab-cdk8s");
+      expect(bundle).toBeDefined();
+      expect(bundle?.command).toContain("homelab-cdk8s-bundle");
     });
 
     it("includes helm chart push so ArgoCD picks up new manifests", () => {

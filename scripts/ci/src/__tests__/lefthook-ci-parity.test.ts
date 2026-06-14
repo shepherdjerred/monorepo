@@ -51,7 +51,8 @@ const JOB_TO_CI_STEP: Record<string, string> = {
   "quality-ratchet": "quality-bundle",
   "scout-test-template-check": "quality-bundle",
   "react-version-sync": "quality-bundle",
-  "onepassword-items": "homelab-1password-items",
+  // cdk8s synth + 1Password lint collapse into one bundled step `homelab-cdk8s`.
+  "onepassword-items": "homelab-cdk8s",
 };
 
 /**

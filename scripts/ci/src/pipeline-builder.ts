@@ -36,8 +36,7 @@ import {
 import { publishNpmGroup, filterNpmPackages } from "./steps/npm.ts";
 import { deploySitesGroup, filterSites } from "./steps/sites.ts";
 import {
-  cdk8sSynthStep,
-  onePasswordItemsStep,
+  homelabCdk8sBundleStep,
   homelabHelmPushAllStep,
 } from "./steps/helm.ts";
 import {
@@ -290,16 +289,15 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       }
     }
 
-    // --- Build cdk8s manifests ---
+    // --- Build cdk8s manifests + 1Password item lint (bundled) ---
     if (affected.buildAll || affected.homelabChanged) {
       const homelabPkgKey = pkgKeyMap.get("homelab");
       const synthDeps = homelabPkgKey
         ? ["quality-gate", homelabPkgKey]
         : ["quality-gate"];
-      steps.push(cdk8sSynthStep(synthDeps));
-      // Blocking gate: every OnePasswordItem reference + consumed field must exist
-      // in the committed vault snapshot. Shares the synth environment.
-      steps.push(onePasswordItemsStep(synthDeps));
+      // cdk8s synth + 1Password lint share the same bunBaseContainer
+      // prefix — bundle into one pod via runBundle/Promise.all.
+      steps.push(homelabCdk8sBundleStep(synthDeps));
     }
 
     // =======================================================================

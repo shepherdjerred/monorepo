@@ -7,6 +7,7 @@ import { dag, Container, Directory, File } from "@dagger.io/dagger";
 
 import { HELM_IMAGE } from "./constants";
 import { bunBaseContainer } from "./base";
+import { runBundle } from "./bundle";
 
 /** Run cdk8s synth (bun run build) and return the output directory. */
 export function homelabSynthHelper(
@@ -75,4 +76,36 @@ export function homelabOnePasswordLintHelper(
     depDirs,
     tsconfig,
   ).withExec(["bun", "run", "scripts/check-1password-items.ts"]);
+}
+
+/**
+ * Bundle: cdk8s synth + 1Password lint in one pod. Both helpers share the
+ * same `bunBaseContainer` prefix (homelab/src/cdk8s), so the engine
+ * materialises the install layer once via content-addressing. Synth and
+ * 1password lint are independent (1password lint doesn't consume the synth
+ * output) — they run in parallel siblings via `runBundle`.
+ */
+export async function homelabCdk8sBundleHelper(
+  pkgDir: Directory,
+  depNames: string[],
+  depDirs: Directory[],
+  tsconfig: File | null,
+): Promise<string> {
+  const synthContainer = bunBaseContainer(
+    pkgDir,
+    "homelab/src/cdk8s",
+    depNames,
+    depDirs,
+    tsconfig,
+  ).withExec(["bun", "run", "build"]);
+  const opLint = homelabOnePasswordLintHelper(
+    pkgDir,
+    depNames,
+    depDirs,
+    tsconfig,
+  );
+  return runBundle([
+    { name: "cdk8s-synth", run: () => synthContainer.stdout() },
+    { name: "1password-lint", run: () => opLint.stdout() },
+  ]);
 }

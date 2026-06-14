@@ -24,12 +24,12 @@ import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
 /**
- * cdk8s synth step — pure validation, runs on every branch.
- * Used standalone for cdk8s manifest validation and for downstream steps
- * (e.g. ArgoCD sync) that need the manifests. No production side effect,
- * so PRs run it to catch synth regressions before they land on main.
+ * Bundle: cdk8s synth + 1Password item lint in one pod, running as parallel
+ * siblings (both share the same `bunBaseContainer` prefix, so the install
+ * layer is content-addressed and re-used). Pure validation, runs on every
+ * branch.
  */
-export function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
+export function homelabCdk8sBundleStep(dependsOn: string[]): BuildkiteStep {
   const deps = WORKSPACE_DEPS["homelab/src/cdk8s"] ?? [];
   const depFlags = deps
     .flatMap((d: string) => [
@@ -38,37 +38,10 @@ export function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
     ])
     .join(" ");
   return {
-    label: ":cdk8s: Build cdk8s Manifests",
+    label: ":cdk8s::1password: Synth + 1Password Lint",
     key: "homelab-cdk8s",
     depends_on: dependsOn,
-    command: `${DAGGER_CALL} homelab-synth --pkg-dir ${gitDir("packages/homelab/src/cdk8s")} ${depFlags} --tsconfig ${gitFile("tsconfig.base.json")}`,
-    timeout_in_minutes: 15,
-    priority: 1,
-    retry: RETRY,
-    env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi" })],
-  };
-}
-
-/**
- * 1Password item/field linter — offline, runs on every branch.
- * Verifies every cdk8s `OnePasswordItem` reference and consumed secret field exists in
- * the committed vault snapshot. Shares the cdk8s synth environment (in-memory synth), so
- * it takes the same pkg-dir + workspace deps as the synth step. No 1Password access.
- */
-export function onePasswordItemsStep(dependsOn: string[]): BuildkiteStep {
-  const deps = WORKSPACE_DEPS["homelab/src/cdk8s"] ?? [];
-  const depFlags = deps
-    .flatMap((d: string) => [
-      `--dep-names ${d}`,
-      `--dep-dirs ${gitDir(`packages/${d}`)}`,
-    ])
-    .join(" ");
-  return {
-    label: ":1password: 1Password Items",
-    key: "homelab-1password-items",
-    depends_on: dependsOn,
-    command: `${DAGGER_CALL} homelab-one-password-lint --pkg-dir ${gitDir("packages/homelab/src/cdk8s")} ${depFlags} --tsconfig ${gitFile("tsconfig.base.json")}`,
+    command: `${DAGGER_CALL} homelab-cdk8s-bundle --pkg-dir ${gitDir("packages/homelab/src/cdk8s")} ${depFlags} --tsconfig ${gitFile("tsconfig.base.json")}`,
     timeout_in_minutes: 15,
     priority: 1,
     retry: RETRY,
