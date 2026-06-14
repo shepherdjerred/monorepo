@@ -22,21 +22,25 @@ data hit prod.
 
 ## Fix
 
-`packages/better-skill-capped/src/parser/manifest.ts:49-51` — change each
-`rune{1,2,3}: z.string()` to `z.union([z.string(), z.number()]).transform(String)`.
-Same pattern already used for `k/d/a` (`z.coerce.number()`) when upstream data
-is unreliable; numeric IDs normalize to their string form, existing empty-string
-values still pass.
+Upstream Skill Capped is the source of truth for manifest shape, so the
+schema must accept what upstream actually sends rather than coerce it. The
+field is consumed by no downstream code (only parsed), so widening the type
+is safe.
 
-Added regression test in `manifest.test.ts` ("normalizes numeric rune field to
-string") that mutates the fixture to set `rune3 = 3008` and asserts the parsed
-result is `"3008"`.
+`packages/better-skill-capped/src/parser/manifest.ts:49-51` — change each
+`rune{1,2,3}: z.string()` to `z.union([z.string(), z.number()])`. No
+`.transform`, no coercion — numeric rune IDs land in the parsed object as
+numbers; empty strings stay empty strings.
+
+Regression test in `manifest.test.ts` ("accepts numeric rune field as-is")
+mutates a fixture commentary's `rune3` to the number `3008` and asserts the
+parsed value is the number `3008`.
 
 ## Verification
 
 - Downloaded the live `/data/manifest.json` (~2 MB, 3141 commentaries) and
   parsed it with the updated schema: `PARSE OK`, commentary 3108 `rune3 =
-"3008"`.
+3008` (number, preserved verbatim).
 - `bun test src/parser/manifest.test.ts` → 17 pass / 0 fail.
 - `bun run typecheck` clean.
 - `bunx eslint src/parser/manifest.ts` clean.
