@@ -6,11 +6,20 @@
  * - 1Password secret for bot token and channel IDs
  * - Environment variable substitution via itzg/minecraft-server
  *
- * Required 1Password fields:
+ * Required 1Password fields (canonical UPPERCASE_SNAKE names per the env-var
+ * naming convention; all required — no optional secrets, a missing field fails
+ * the pod at startup rather than booting with a silent gap):
  * - DISCORD_BOT_TOKEN: The Discord bot token
  * - DISCORD_CHANNEL_ID: The main chat channel ID
- * - DISCORD_CONSOLE_CHANNEL_ID: (optional) Console channel ID
- * - DISCORD_INVITE_LINK: (optional) Server invite link
+ *
+ * NOTE: the 1P item's field labels are currently lowercase-kebab
+ * (`discord-bot-token` / `discord-channel-id`), so the synced secret keys are
+ * lowercase and these UPPERCASE refs do not resolve. minecraft-sjerred runs at
+ * 0 replicas so this is dormant; the fix is to relabel the 1P fields to the
+ * canonical UPPERCASE names (not to lowercase the code).
+ *
+ * Console channel + invite link are not wired (features unused) — the config
+ * template sets them to empty strings.
  */
 
 export const DISCORDSRV_PLUGIN_URL =
@@ -95,23 +104,8 @@ export function getDiscordSrvExtraEnv(
         },
       },
     },
-    CFG_DISCORD_CONSOLE_CHANNEL_ID: {
-      valueFrom: {
-        secretKeyRef: {
-          name: secretName,
-          key: "DISCORD_CONSOLE_CHANNEL_ID",
-          optional: true,
-        },
-      },
-    },
-    CFG_DISCORD_INVITE_LINK: {
-      valueFrom: {
-        secretKeyRef: {
-          name: secretName,
-          key: "DISCORD_INVITE_LINK",
-          optional: true,
-        },
-      },
-    },
+    // Console channel + invite link are intentionally not wired — those
+    // DiscordSRV features are unused, so the config template hardcodes them to
+    // empty strings rather than referencing optional 1P fields.
   };
 }

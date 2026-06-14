@@ -450,6 +450,16 @@ pre-commit:
               - "packages/homelab/src/talos/patches/image.yaml"
             run: bun packages/homelab/src/talos/update-image-id.ts --check
 
+          # --- 1Password items & fields ---
+          # Every cdk8s OnePasswordItem reference + consumed secret field must exist
+          # in the committed vault snapshot. Offline, no 1Password access.
+          - name: onepassword-items
+            root: "packages/homelab/src/cdk8s/"
+            glob:
+              - "packages/homelab/src/cdk8s/src/**/*.ts"
+              - "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json"
+            run: bun run scripts/check-1password-items.ts
+
           # --- React version sync ---
           # react/react-dom (and their @types) must resolve to matching versions
           # in every bun.lock — a skew throws "Incompatible React versions" at

@@ -311,7 +311,6 @@ echo "Done."`,
                   name: "docker-config",
                   secret: {
                     secretName: "docker-hub-config",
-                    optional: true,
                     items: [{ key: "config.json", path: "config.json" }],
                   },
                 },

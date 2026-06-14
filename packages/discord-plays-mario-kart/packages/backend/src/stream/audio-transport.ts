@@ -53,6 +53,11 @@ export async function createAudioTransport(): Promise<AudioTransport> {
   let socket: Socket | null = null;
   const server = createServer((connection) => {
     socket = connection;
+    // Stop accepting new connections immediately after the first ffmpeg client
+    // connects. Leaving the server open would allow a second connect (e.g. an
+    // ffmpeg reconnect on error) to pipe the same sink to a second destination,
+    // duplicating audio bytes and leaking the first socket's lifetime.
+    server.close();
     // ffmpeg dropping the connection on stop surfaces as a socket error; the
     // close() path owns cleanup, so just keep it from crashing the process.
     connection.on("error", () => {

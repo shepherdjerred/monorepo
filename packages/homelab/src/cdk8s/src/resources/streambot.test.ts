@@ -152,7 +152,7 @@ describe("streambot deployment (media namespace)", () => {
     expect(stateDir?.value).toBe(STREAMBOT_STATE);
   });
 
-  it("wires TMDB_API_KEY as an optional secret ref (poster art, never crashes if absent)", () => {
+  it("wires TMDB_API_KEY as a required secret ref (no optional secrets; missing field fails the pod)", () => {
     const EnvFromSecretSchema = z.object({
       name: z.string(),
       valueFrom: z.object({
@@ -167,7 +167,8 @@ describe("streambot deployment (media namespace)", () => {
     );
     const parsed = EnvFromSecretSchema.parse(tmdb);
     expect(parsed.valueFrom.secretKeyRef.key).toBe("TMDB_API_KEY");
-    expect(parsed.valueFrom.secretKeyRef.optional).toBe(true);
+    // Required: cdk8s omits the `optional` field entirely when not optional.
+    expect(parsed.valueFrom.secretKeyRef.optional).toBeUndefined();
   });
 
   it("provisions a ReadWriteOnce state PVC", () => {

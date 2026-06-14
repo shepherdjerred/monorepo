@@ -83,18 +83,15 @@ export function createPokemonDeployment(chart: Chart) {
         OTLP_ENDPOINT: EnvValue.fromValue(
           "http://tempo.tempo.svc.cluster.local:4318",
         ),
-        CODEX_API_KEY: EnvValue.fromSecretValue(
-          { secret, key: "CODEX_API_KEY" },
-          { optional: true },
-        ),
-        CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue(
-          { secret, key: "CODEX_ACCESS_TOKEN" },
-          { optional: true },
-        ),
-        OPENAI_API_KEY: EnvValue.fromSecretValue(
-          { secret, key: "OPENAI_API_KEY" },
-          { optional: true },
-        ),
+        // Codex goal-mode auth. The app accepts CODEX_ACCESS_TOKEN (OAuth),
+        // CODEX_API_KEY / OPENAI_API_KEY (direct API, interchangeable via
+        // `CODEX_API_KEY ?? OPENAI_API_KEY`), or a mounted auth.json — any one
+        // suffices. We use OPENAI_API_KEY; it's wired as the single required
+        // secret (no optional secrets). To switch auth methods, swap this ref.
+        OPENAI_API_KEY: EnvValue.fromSecretValue({
+          secret,
+          key: "OPENAI_API_KEY",
+        }),
       },
       securityContext: {
         ensureNonRoot: false,
@@ -154,6 +151,20 @@ export function createPokemonDeployment(chart: Chart) {
         {
           path: `${APP_ROOT}/logs`,
           volume: Volume.fromEmptyDir(chart, "pokemon-logs", "pokemon-logs"),
+        },
+        // Goal mode (`/goal`) writes a `pokemonctl` wrapper into
+        // ${APP_ROOT}/.pokemon-goal-bin at runtime (GoalManager.prepareRuntimeTools),
+        // but APP_ROOT is root-owned and the pod runs as uid 1000 — a direct write
+        // there fails with EACCES. Mount a writable scratch volume so the Codex goal
+        // loop can bootstrap its helper. (screenshot_dir/state_path are pointed at the
+        // writable saves/ PVC via config.toml instead.)
+        {
+          path: `${APP_ROOT}/.pokemon-goal-bin`,
+          volume: Volume.fromEmptyDir(
+            chart,
+            "pokemon-goal-bin",
+            "pokemon-goal-bin",
+          ),
         },
       ],
     }),

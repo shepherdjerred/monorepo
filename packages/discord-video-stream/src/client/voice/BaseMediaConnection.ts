@@ -179,6 +179,7 @@ export abstract class BaseMediaConnection extends EventEmitter {
   handleReady(d: Message.Ready): void {
     // we hardcoded the STREAMS_SIMULCAST, which will always be array of 1
     const stream = d.streams[0];
+    if (stream === undefined) throw new Error("Voice READY had no stream");
     this._webRtcParams = {
       address: d.ip,
       port: d.port,
@@ -202,7 +203,10 @@ export abstract class BaseMediaConnection extends EventEmitter {
       candidate = "";
     for (const line of d.sdp.split("\n")) {
       if (line.startsWith("c=")) ip = line;
-      else if (line.startsWith("a=rtcp")) port = line.split(":")[1];
+      else if (line.startsWith("a=rtcp")) {
+        const rtcpPort = line.split(":")[1];
+        if (rtcpPort !== undefined) port = rtcpPort;
+      }
       else if (line.startsWith("a=ice-ufrag")) iceUsername = line;
       else if (line.startsWith("a=ice-pwd")) icePassword = line;
       else if (line.startsWith("a=fingerprint")) fingerprint = line;
