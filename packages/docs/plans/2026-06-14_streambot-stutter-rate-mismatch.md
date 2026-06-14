@@ -2,8 +2,7 @@
 
 ## Status
 
-In Progress — diagnosis confirmed via live telemetry + 5-agent research with
-~100 cited sources; awaiting plan-approval to ship fixes.
+In Progress — PR #1196 open, Dagger e2e passed, awaiting CI + merge + deploy soak.
 
 ## Context
 
@@ -300,3 +299,87 @@ All claims above trace to one of these via the per-section inline links.
 - **Node/Bun GC (agent 3)**: WebKit Riptide GC blog, V8 concurrent marking + Orinoco + trash talk, nodejs.org buffer/streams/cli/v8/perf_hooks, bun.sh runtime docs, oven-sh/bun issues, pipe and fcntl manpages, clinic.js docs
 - **Stutter playbook (agent 4)**: V8 concurrent marking, Chromium WebRTC paced sender, dank074/Discord-video-stream README + npm, NodeSource event-loop blog, four Kubernetes CFS-throttling write-ups (Last9, Causely, Roszigit, Medium), kernel.org PSI docs, Unixism PSI by example, Chris's Wiki PSI numbers, Bastide PSI deep-dive, Bufferbloat FAQ, ACM Queue sender-side buffers, Baeldung UDP socket buffer, BlogGeek TWCC + REMB, Forasoft WebRTC bandwidth estimation, getstream WebRTC buffers, webrtcHacks NetEQ, walterfan jitter buffer, three OBS forum threads
 - **dvs specifics (agent 5)**: ysdragon/StreamBot #112, #142, #146 (Bun-specific frame drops); Discord-RE PR #120 (backpressure intent) and #140 (readrateInitialBurst merge); dank074/Discord-video-stream issues #52 (the exact scenario), #115, #155, #190, #201 (Constant freezing), #210 (Bun + libav.js SIMD WASM); fluent-ffmpeg/node-fluent-ffmpeg #1129, #1215, #1324 (project archival); npm package page
+
+## Session Log — 2026-06-14
+
+### Done
+
+- Live diagnosis on `media/media-streambot-54bb94f8d5-98nnh`: producer/consumer rate
+  mismatch (ffmpeg 3.4× realtime) → 25 MB/s heap growth → JSC major-GC pauses →
+  Discord NetEQ jitter buffer amplifies to 1 s viewer-visible freeze
+- F0 mitigation: `kubectl rollout restart deploy/media-streambot` cleared the
+  6.4 GB heap (verified post-restart: heap 558 MB, external 807 MB)
+- 5-agent deep-research pass (~100 cited sources) covering GPU verification,
+  ffmpeg observability, Bun/Node GC, stutter playbook, and dvs-specific priors
+- PR #1196 (commit `88abdeaa5`, branch `feature/streambot-readrate-backpressure`):
+  - `packages/discord-video-stream/src/media/newApi.ts`: new `readrate` option;
+    emits `-readrate <value>` as input flag; new `onProcessStart(pid)` observer
+    callback with module-augmented fluent-ffmpeg types
+  - `packages/discord-video-stream/src/media/LibavDemuxer.ts`: fix Packet leak in
+    `readFrame` where `resume &&= vPipe.write(packet)` short-circuited subsequent
+    packets in the same filter-output array
+  - `packages/streambot/src/config/schema.ts` + `index.ts`: `STREAM_READRATE` env
+    knob, default `1.0`
+  - `packages/streambot/src/streamer/streamer.ts`: pass `readrate` in `prepareOpts`
+  - `packages/streambot/src/observability/metrics.ts`: three new metrics —
+    `ffmpeg_out_time_seconds_total`, `ffmpeg_progress_age_seconds`,
+    `gpu_engine_seconds_total{engine}`
+  - `packages/streambot/src/observability/gpu-collector.ts` (new): polls
+    `/proc/<pid>/fdinfo/<drm_fd>` for `drm-engine-*` counters; per-fd state map
+    handles ffmpeg respawns
+  - `packages/streambot/src/observability/stream-observer.ts`: wires new metrics
+    - 1 Hz progress-age timer
+  - `packages/streambot/src/index.ts`: starts GPU collector at boot
+  - `packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/streambot.ts`
+    (new): 8 PromQL alerts (encoder stalled, producer ahead, falling behind,
+    progress stalled, late frames, heap growing, external/heap > 0.5, eventloop
+    p99)
+- Verification: 313/313 unit tests pass (streambot 248, dvs 37, homelab
+  monitoring 28), typecheck + eslint + pre-commit hooks all green
+- **Live Dagger e2e (`e-2-e-streambot`) PASSED** against Diamond Dudes test server
+  (guild `1337623164146155593`, voice `1337623164955398253`): glidiot\_ joined
+  voice, streamed 30 s test asset twice across a resume cycle, `-readrate 1`
+  confirmed in the ffmpeg command line, `onProcessStart` callback fired with
+  PID, observability metrics gate PASS. Trace:
+  https://dagger.cloud/sjerred/traces/181ed6d8fef881a02e40d00032e5dca7
+- TODO doc captured for follow-up: `packages/docs/todos/dagger-engine-tempo-otlp.md`
+
+### Remaining
+
+- Wait for CI on PR #1196 (Buildkite); merge when green
+- Post-deploy soak verification per the Verification section above:
+  - `ffmpeg_speed_ratio` converges to ~1.0 on a 4K HDR remux over a 10-min window
+  - `nodejs_heap_size_used_bytes` plateaus under ~500 MB
+  - `nodejs_eventloop_lag_p99_seconds` stays under 10 ms
+  - Subjective: no 1 s freezes
+  - `gpu_engine_seconds_total{engine="video"}` is advancing
+- Address the `packages/docs/todos/dagger-engine-tempo-otlp.md` follow-up in a
+  separate PR (engine never had `OTEL_*` env vars; surfaced when this session's
+  e2e trace went to dagger.cloud instead of in-cluster Tempo)
+
+### Caveats
+
+- The 4 streambot integration-test failures (`subtitles=` filter missing) are
+  **pre-existing local-env issues** — local ffmpeg build lacks libass. CI's
+  ffmpeg image has it; these pass in CI.
+- The Bun-specific amplifier hypothesis (`ysdragon/StreamBot` #112, #142, #146)
+  is unverified. If post-deploy `ffmpeg_speed_ratio` does NOT converge to ~1.0
+  even with `-readrate 1`, run **F3** from the plan (Node runtime bisect) before
+  assuming the fix is sufficient.
+- The deployed pod (`media-streambot-55d759c8f8-wr8mn`) is still on PRE-PR code.
+  The metrics observed during this session reflect F0 reset + old code, NOT the
+  new code's behavior.
+
+## Workflow Friction
+
+- The plan-mode deep-research agents (3 of 5) re-ran the deep-research skill's
+  Phase 1 ("approve my plan") inside their own scope instead of executing,
+  costing two SendMessage round trips per agent before they produced real
+  output. The deep-research skill should detect when it's invoked from within
+  another agent context and skip Phase 1, OR the dispatcher should be aware of
+  this and brief sub-agents to bypass Phase 1 explicitly. Concrete fix point:
+  `/Users/jerred/.claude/skills/deep-research/SKILL.md` Phase 1 guidance.
+- One of those same agents (`ad3501502486d4f49`) refused to call WebSearch/WebFetch
+  on the (incorrect) belief that plan mode blocks read-only network tools — they
+  don't. The skill should clarify in its read-only-tool section that
+  WebSearch/WebFetch never mutate state and are allowed in plan mode.
