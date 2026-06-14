@@ -24,13 +24,13 @@ import { handleChannelUpdate } from "./discord/channel-handler.ts";
 import { createWebServer } from "./webserver/index.ts";
 import { handleRequest } from "./webserver/dispatch.ts";
 import type { LeaderboardDeps } from "./webserver/dispatch.ts";
+import type { StreamOverlayContextProvider } from "./overlay/composite.ts";
 import { logger } from "./logger.ts";
 import { getConfig } from "./config/index.ts";
 import { N64Emulator } from "./emulator/n64-emulator.ts";
-import { WIDTH } from "./emulator/constants.ts";
 import type { ScreenMode } from "./emulator/mk64-memory.ts";
 import { GameStreamer } from "./stream/game-streamer.ts";
-import { drawHudOverlay } from "./stream/overlay.ts";
+import { applyStreamOverlays } from "./overlay/composite.ts";
 import { SeatManager } from "./input/seat-manager.ts";
 import { createPrisma, databaseUrl } from "./database/index.ts";
 import { createPrismaLeaderboardStore } from "./leaderboard/store.ts";
@@ -124,26 +124,28 @@ if (config.leaderboard.enabled && emulator) {
 // ---- compose the per-frame pipeline (overlay → stream → race poll) ----
 // `raceTracker` is assigned later (it needs the socket server); the callback
 // reads it dynamically each frame, so it picks up the tracker once wired.
+//
+// The same applyStreamOverlays helper is also handed to the screenshot paths
+// (slash command + web) so /screenshot and the Go-Live frame stay visually
+// consistent — HUD clock + name pills, identical placement.
+const overlayContext: StreamOverlayContextProvider | undefined = emulator
+  ? () => ({
+      epochMs: Date.now(),
+      seatActivity: emulator.seatActivity(),
+      mode:
+        raceTracker?.latestScreenMode() ??
+        fallbackScreenMode(config.emulator.seats),
+      seats: config.emulator.seats,
+      nameOverlay,
+    })
+  : undefined;
+
 if (emulator) {
   const activeEmulator = emulator;
   const activeStreamer = streamer;
-  const overlay = nameOverlay;
   activeEmulator.onFrame((frame) => {
-    if (activeStreamer !== undefined) {
-      // HUD: capture-time wall clock (compare to `date -u` for glass-to-glass
-      // latency) + per-seat input echo (press→glass from a recording).
-      drawHudOverlay(frame, WIDTH, Date.now(), activeEmulator.seatActivity());
-      if (overlay !== undefined) {
-        const mode =
-          raceTracker?.latestScreenMode() ??
-          fallbackScreenMode(config.emulator.seats);
-        overlay.apply(
-          frame,
-          activeEmulator.height,
-          mode,
-          config.emulator.seats,
-        );
-      }
+    if (activeStreamer !== undefined && overlayContext !== undefined) {
+      applyStreamOverlays(frame, activeEmulator.height, overlayContext());
       activeStreamer.pushFrame(frame);
     }
     // Always poll for race results, even when not streaming.
@@ -213,6 +215,7 @@ if (config.web.enabled) {
         seatManager,
         emulator,
         leaderboard: leaderboardDeps,
+        overlayContext,
       });
     });
   }
@@ -223,7 +226,7 @@ if (emulator && config.bot.enabled && config.bot.commands.enabled) {
   if (config.bot.commands.update) {
     await registerSlashCommands();
   }
-  handleSlashCommands(emulator);
+  handleSlashCommands(emulator, overlayContext);
 }
 
 // ---- dynamic streaming: start/stop Go-Live with channel occupancy ----

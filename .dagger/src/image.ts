@@ -1162,14 +1162,16 @@ export function buildDiscordPlaysPokemonImageHelper(
 
   return (
     container
-      // Workspace install (covers backend + frontend) — runs the
+      // Workspace install (covers backend + frontend + common) — runs the
       // trustedDependencies postinstalls (node-datachannel, node-av). The
       // discord-video-stream fork lazy-loads sharp in source (no bun patch). The
       // committed packages/backend/assets/pokeemerald.wasm is copied in (not excluded).
+      // No separate backend install: bun workspaces installs all member deps at
+      // the root level. A second `bun install` in packages/backend causes bun to
+      // try to re-link file: deps already linked by the root install → EEXIST.
       .withWorkdir(innerRoot)
       .withExec(["bun", "install", "--frozen-lockfile"])
       .withWorkdir(`${innerRoot}/packages/backend`)
-      .withExec(["bun", "install", "--frozen-lockfile"])
       .withExec([
         "install",
         "-D",

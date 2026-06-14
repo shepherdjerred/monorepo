@@ -147,19 +147,20 @@ async function main(): Promise<void> {
   const codecData: { video: string | undefined; audio: string | undefined }[] =
     [];
   let progressCount = 0;
-  const base = createStreamObserver(false);
+  const { observer: baseObserver, dispose: disposeBase } =
+    createStreamObserver(false);
   const observer: StreamObserver = {
     onCommand: (c) => {
       commands.push(c);
-      base.onCommand?.(c);
+      baseObserver.onCommand?.(c);
     },
     onCodecData: (d) => {
       codecData.push({ video: d.video, audio: d.audio });
-      base.onCodecData?.(d);
+      baseObserver.onCodecData?.(d);
     },
     onProgress: (p) => {
       progressCount += 1;
-      base.onProgress?.(p);
+      baseObserver.onProgress?.(p);
     },
   };
 
@@ -171,6 +172,7 @@ async function main(): Promise<void> {
   // Drain the muxed output so ffmpeg makes progress (backpressure would otherwise stall it).
   output.resume();
   await promise;
+  disposeBase();
 
   check("observer received the ffmpeg command line", commands.length > 0);
   check(

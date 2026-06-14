@@ -86,7 +86,7 @@ export const EMSCRIPTEN_IMAGE =
   "emscripten/emsdk:2.0.7@sha256:cbeeb7cccd2e7915fe0596345f10bfdec5578cc0386aaa823ad6f1d41910619f";
 // renovate: datasource=docker depName=alpine/helm
 export const HELM_IMAGE =
-  "alpine/helm:4.1.4@sha256:8edcaedab4d9864886b7f443d55731be87d4b5ec7dca714c24551455707a8aac";
+  "alpine/helm:4.2.0@sha256:af08f75a3130d666a50b9fc150f40987ef20b885cf67659aabf4b83a5f2c5501";
 
 // Quality-step scanner images (used by .dagger/src/quality.ts).
 // Pinned with `@sha256:` digests to match every other image constant in
@@ -97,7 +97,7 @@ export const TRIVY_IMAGE =
   "aquasec/trivy:0.70.0@sha256:be1190afcb28352bfddc4ddeb71470835d16462af68d310f9f4bca710961a41e";
 // renovate: datasource=docker depName=semgrep/semgrep
 export const SEMGREP_IMAGE =
-  "semgrep/semgrep:1.162.0@sha256:9349edbadf90c3f3c0c3f55867625354e89680e6fa10d9034042af52fdb0e0d0";
+  "semgrep/semgrep:1.163.0@sha256:7cad2bc2d1e44f87f0bf4be6d1fa23aa90fb72015bebc89fb91385d813987a03";
 // renovate: datasource=docker depName=zricethezav/gitleaks
 export const GITLEAKS_IMAGE =
   "zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f";

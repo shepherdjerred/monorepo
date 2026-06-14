@@ -10,6 +10,8 @@ function usage(): string {
     '  pokemonctl chord "<commands>"',
     "  pokemonctl wait --seconds n",
     "  pokemonctl status",
+    "  pokemonctl state",
+    "  pokemonctl history [--limit n]",
     '  pokemonctl progress "message"',
   ].join("\n");
 }
@@ -84,6 +86,16 @@ async function main(): Promise<void> {
     case "status":
       printJsonText(await request("GET", "/status"));
       return;
+    case "state":
+      printJsonText(await request("GET", "/state"));
+      return;
+    case "history": {
+      const limit = readNumberFlag(args, "--limit");
+      const route =
+        limit === undefined ? "/history" : `/history?limit=${String(limit)}`;
+      printJsonText(await request("GET", route));
+      return;
+    }
     case "press": {
       const button = args.at(0);
       if (button === undefined) {

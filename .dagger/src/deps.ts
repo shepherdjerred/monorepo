@@ -59,6 +59,7 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
     "eslint-config",
     "discord-video-stream",
     "discord-stream-lifecycle",
+    "llm-observability",
   ],
   "discord-plays-mario-kart": [
     "eslint-config",

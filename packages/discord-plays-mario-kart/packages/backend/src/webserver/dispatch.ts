@@ -9,6 +9,8 @@ import type { SeatManager } from "#src/input/seat-manager.ts";
 import type { LeaderboardStore } from "#src/leaderboard/store.ts";
 import { logger } from "#src/logger.ts";
 import { controllerRttMs } from "#src/observability/metrics.ts";
+import { applyStreamOverlays } from "#src/overlay/composite.ts";
+import type { StreamOverlayContextProvider } from "#src/overlay/composite.ts";
 import type {
   PlayerInputState,
   Request,
@@ -39,6 +41,9 @@ export type DispatchDeps = {
   seatManager: SeatManager;
   emulator: EmulatorControls | undefined;
   leaderboard?: LeaderboardDeps;
+  /** Per-screenshot overlay state. Absent → screenshots stay clean (kept for
+   *  test ergonomics and for builds with the stream/overlay disabled). */
+  overlayContext?: StreamOverlayContextProvider;
 };
 
 export function broadcastSeats(sock: Socket, seatManager: SeatManager): void {
@@ -71,7 +76,7 @@ export function handleRequest(
   deps: DispatchDeps,
 ): void {
   const sock = event.socket;
-  const { seatManager, emulator, leaderboard } = deps;
+  const { seatManager, emulator, leaderboard, overlayContext } = deps;
   match(event)
     .with({ request: { kind: "seat-claim" } }, (e) => {
       const seat = seatManager.claim(sock.id, e.request.seat);
@@ -131,6 +136,10 @@ export function handleRequest(
       if (emulator === undefined) return;
       const frame = emulator.renderFrame();
       if (frame.height === 0) return;
+      const ctx = overlayContext?.();
+      if (ctx !== undefined) {
+        applyStreamOverlays(frame.rgba, frame.height, ctx);
+      }
       const png = encodeScreenshotPng(frame);
       const response: ScreenshotResponse = {
         kind: "screenshot",

@@ -22,6 +22,10 @@ import {
 import { sinkBufferBytes, streamActive } from "#src/observability/metrics.ts";
 import { withSpan } from "#src/observability/tracing.ts";
 import { logger } from "#src/logger.ts";
+import {
+  createAudioTransport,
+  type AudioTransport,
+} from "#src/stream/audio-transport.ts";
 
 export type GameStreamerOptions = {
   token: string;
@@ -59,6 +63,10 @@ export class GameStreamer {
   // Mirror of the machine's live frame sink, kept in sync via subscription so
   // the per-frame hot path is a single null check + write.
   private frameSink: PassThrough | null = null;
+  // Loopback PCM transport — sink fed by `pushAudio`, piped to ffmpeg. Created
+  // alongside the encoder and torn down when the broadcast stops; mirrors how
+  // discord-plays-mario-kart's GameStreamer handles its audio path.
+  private audioTransport: AudioTransport | null = null;
 
   constructor(options: GameStreamerOptions) {
     this.options = options;
@@ -74,7 +82,11 @@ export class GameStreamer {
       },
     });
     this.actor.subscribe((snapshot) => {
-      this.frameSink = snapshot.context.frameSink;
+      const next = snapshot.context.frameSink;
+      // The machine ends the video sink when a broadcast stops; tear the audio
+      // transport down in lockstep so its socket/server don't leak.
+      if (next === null) this.teardownAudio();
+      this.frameSink = next;
       streamActive.set(this.frameSink === null ? 0 : 1);
     });
     this.actor.start();
@@ -100,6 +112,13 @@ export class GameStreamer {
     }
   }
 
+  /** Feed Float32 LRLR PCM (interleaved, native ~13379 Hz) to the broadcast.
+   * No-op when idle. Buffer format matches what `Emulator#onAudio` provides
+   * (`DrainResult.pcm`). */
+  pushAudio(pcm: Buffer): void {
+    if (this.audioTransport !== null) this.audioTransport.sink.write(pcm);
+  }
+
   /** Request that the broadcast be running. Resolves immediately. */
   start(): Promise<void> {
     this.actor.send({ type: "SET_DESIRED", desired: true });
@@ -114,7 +133,16 @@ export class GameStreamer {
 
   destroy(): void {
     this.actor.stop();
+    this.teardownAudio();
     this.streamer.client.destroy();
+  }
+
+  /** Tear down the loopback audio transport (sink + socket + server). Idempotent. */
+  private teardownAudio(): void {
+    if (this.audioTransport !== null) {
+      this.audioTransport.close();
+      this.audioTransport = null;
+    }
   }
 
   // ---- side effects injected into the machine ----
@@ -132,9 +160,7 @@ export class GameStreamer {
           }
         }),
       prepareEncoder: () =>
-        withSpan("stream.prepareEncoder", () =>
-          Promise.resolve(this.buildEncoder()),
-        ),
+        withSpan("stream.prepareEncoder", () => this.buildEncoder()),
       runStream: ({ output, playing }) => this.runStream(output, playing),
       leaveVoice: (playing) =>
         withSpan("stream.leaveVoice", async () => {
@@ -158,7 +184,7 @@ export class GameStreamer {
     };
   }
 
-  private buildEncoder(): EncoderHandles {
+  private async buildEncoder(): Promise<EncoderHandles> {
     const rgba = new PassThrough();
     // Scale the 3:2 game into an aspect-correct content box, then pillarbox it onto
     // a black 16:9 canvas for Discord (see prepareStream `pad`).
@@ -166,6 +192,12 @@ export class GameStreamer {
       DISPLAY_ASPECT,
       this.options.canvasHeight,
     );
+    // Stand up the loopback audio transport before ffmpeg launches so its
+    // client connect succeeds immediately. pushAudio writes Float32 LRLR PCM
+    // into the transport sink; ffmpeg dials the loopback URL once and muxes
+    // the bytes into the broadcast.
+    const audioTransport = await createAudioTransport();
+    this.audioTransport = audioTransport;
     const { output, promise } = prepareStream(rgba, {
       width: content.width,
       height: content.height,
@@ -174,7 +206,15 @@ export class GameStreamer {
       videoCodec: "H264",
       bitrateVideo: this.options.bitrateKbps,
       bitrateVideoMax: this.options.bitrateMaxKbps,
-      includeAudio: false,
+      includeAudio: true,
+      // Game audio is the m4a engine's un-quantised Float32 mixer output (see
+      // `audio/m4a-driver.ts`); it can't ride the rawvideo stdin so ffmpeg
+      // reads it from the loopback socket and muxes it into the broadcast.
+      audioInput: {
+        source: audioTransport.source,
+        inputOptions: audioTransport.inputOptions,
+      },
+      bitrateAudio: 96,
       minimizeLatency: true,
       customInputOptions: [
         "-f",

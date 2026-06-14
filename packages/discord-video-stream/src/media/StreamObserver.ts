@@ -47,6 +47,12 @@ export type SendStats = {
 export type StreamObserver = {
   /** The full ffmpeg command line (fluent-ffmpeg `start` event) — reveals which decode/scale flags applied. */
   onCommand?: (command: string) => void;
+  /**
+   * The ffmpeg subprocess PID, once available. Lets the consumer attribute per-process resource
+   * counters that live on the host (e.g. `/proc/<pid>/fdinfo/<drm_fd>` `drm-engine-*` for per-pod
+   * GPU work attribution, when `/dev/dri/renderD128` is shared with other tenants).
+   */
+  onProcessStart?: (pid: number) => void;
   /** Input codec/resolution/duration (fluent-ffmpeg `codecData` event), once at stream start. */
   onCodecData?: (data: FfmpegCodecData) => void;
   /** Periodic transcode progress (fluent-ffmpeg `progress` event). */

@@ -24,6 +24,12 @@ export const FLASH_SIZE = 128 * 1024;
 export const GBA_FPS = 59.7275;
 export const FRAME_MS = 1000 / GBA_FPS;
 
+// m4a mixer native rate (SOUND_MODE_FREQ_13379, the Emerald default). The
+// streamer hands ffmpeg raw Float32 LRLR PCM at this rate; ffmpeg resamples
+// to 48 kHz for Opus.
+export const AUDIO_SAMPLE_RATE = 13_379;
+export const AUDIO_CHANNELS = 2;
+
 // Button bitmask (matches KEYINPUT layout, active-low in the register).
 export const BUTTON = {
   a: 1, // 1 << 0

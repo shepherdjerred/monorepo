@@ -13,13 +13,13 @@ KUBECTL_VERSION="v1.36.1"
 UV_VERSION="0.11.14"
 
 # renovate: datasource=github-releases depName=helm/helm
-HELM_VERSION="v4.1.4"
+HELM_VERSION="v4.2.0"
 
 # renovate: datasource=github-tags depName=aws/aws-cli versioning=semver
 AWSCLI_VERSION="2.34.47"
 
 # renovate: datasource=github-releases depName=opentofu/opentofu
-OPENTOFU_VERSION="1.11.7"
+OPENTOFU_VERSION="1.12.0"
 
 # renovate: datasource=github-releases depName=oven-sh/bun
 BUN_VERSION="1.3.13"

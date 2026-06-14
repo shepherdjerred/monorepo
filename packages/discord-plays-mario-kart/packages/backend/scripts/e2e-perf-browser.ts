@@ -1,45 +1,60 @@
-// Browser-driven variant of e2e-perf.ts. Same goal — measure server-side
-// frame-pacing health under input load — but uses PinchTab to drive 4 real
-// Chromium tabs against the actual frontend. Each tab claims a seat by
-// clicking the rendered seat-picker, then dispatches synthetic keydown /
-// keyup events at the React onKeyDown handler so input travels through the
-// real frontend pipeline: app.tsx press() -> emit() -> socket.io-client ->
-// Socket.IO websocket -> the production createSocket / handleRequest /
-// emulator chain. Use this when the synthetic socket.io-client load (the
-// other harness) can't reproduce a prod symptom that you suspect involves
-// the browser-side Socket.IO stack, multiple TCP sockets, or React-side
-// state churn.
-//
-// Topology: spawns the full backend in a child process (the real index.ts,
-// fully wired except the stream/bot are disabled in the perf config) and
-// drives it via PinchTab REST. /metrics is scraped over HTTP rather than
-// read in-process. Needs a real MK64 ROM (resolveRom) and a running
-// PinchTab daemon.
+// Browser-driven fix-validation harness. Drives 4 PinchTab Chromium tabs
+// against the frontend so input rides the full pipeline (app.tsx press →
+// socket.io-client → Socket.IO → createSocket/handleRequest → emulator).
+// Spawns the backend locally by default; `--target <url>` drives an existing
+// backend; `--metrics-url <url>` decouples the scrape URL (use this when
+// --target is a public URL and you kubectl-port-forwarded the pod's 8081).
+// Writes a structured JSON summary; `--compare <baseline.json>` adds a
+// delta table. See packages/docs/plans/2026-06-14_mk64-test-harness.md.
 
-import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
 import { $ } from "bun";
 import { resolveRom } from "./lib/harness.ts";
+import { compareSummaries, renderCompareTable } from "./lib/bench-compare.ts";
+import {
+  buildSummary,
+  emptyGaugePoll,
+  gitMetadata,
+  parseBenchSummary,
+  sampleGauges,
+  scrape,
+  type BenchSummary,
+} from "./lib/bench-metrics.ts";
+import { writePerfConfig } from "./lib/perf-config.ts";
 
 const PINCHTAB_BASE = "http://localhost:9867";
 const BACKEND_PORT = 8081;
 const MEASURE_SECONDS = 30;
 const WARMUP_SECONDS = 8;
 const SEATS = 4;
+const GAUGE_POLL_MS = 1000;
 
 // --target <url> drives an external backend (e.g. prod) and skips local
 // backend boot / config / ROM. Default is the local backend we spawn.
-const targetArgIdx = process.argv.indexOf("--target");
+function argValue(name: string): string | null {
+  const i = process.argv.indexOf(name);
+  if (i === -1) return null;
+  // `.at()` returns string|undefined, so the !v guard isn't tripped by
+  // strict array indexing returning string (which would make the check
+  // tautological).
+  const v = process.argv.at(i + 1);
+  if (v === undefined || v.startsWith("--")) {
+    throw new Error(`${name} requires a value`);
+  }
+  return v;
+}
+
 const TARGET =
-  targetArgIdx === -1
-    ? `http://localhost:${String(BACKEND_PORT)}`
-    : (process.argv[targetArgIdx + 1] ?? "");
+  argValue("--target") ?? `http://localhost:${String(BACKEND_PORT)}`;
 if (TARGET === "") {
   throw new Error("--target requires a URL");
 }
 const TARGET_URL = TARGET.replace(/\/$/, "");
 const IS_LOCAL = TARGET_URL.startsWith("http://localhost");
+const METRICS_URL = argValue("--metrics-url") ?? `${TARGET_URL}/metrics`;
+const OUT_PATH = argValue("--out");
+const COMPARE_PATH = argValue("--compare");
 const SKIP_NAV = process.argv.includes("--skip-nav");
 // Spam cadence in the page, in ms between keydown/keyup chord changes.
 // 10ms = 100 chord changes/sec/tab = 200 emit/sec/tab (down + up) -> 800/sec
@@ -73,90 +88,27 @@ async function ptFetch(
 
 // ---- backend lifecycle -----------------------------------------------------
 
-async function writePerfConfig(
-  rom: string,
-  wasmDir: string,
-  assets: string,
-): Promise<string> {
-  const raw =
-    await $`mktemp -d ${path.join(tmpdir(), "mk64-perf-browser-XXXXXX")}`.text();
-  const dir = raw.trim();
-  const cfg = `
-server_id = "0"
-
-[bot]
-enabled = false
-discord_token = "x"
-application_id = "0"
-
-[bot.commands]
-enabled = false
-update = false
-
-[bot.commands.screenshot]
-enabled = false
-
-[bot.notifications]
-enabled = false
-channel_id = "0"
-
-[stream]
-enabled = false
-channel_id = "0"
-dynamic_streaming = false
-minimum_in_channel = 0
-require_watching = false
-
-[stream.userbot]
-id = "0"
-token = "x"
-
-[stream.video]
-frame_rate = 30
-bitrate_kbps = 5000
-bitrate_max_kbps = 8000
-canvas_height = 720
-hardware_acceleration = false
-
-[emulator]
-enabled = true
-wasm_dir = ${JSON.stringify(wasmDir)}
-rom_path = ${JSON.stringify(rom)}
-fps = 30
-software_render = true
-seats = ${String(SEATS)}
-
-[web]
-enabled = true
-cors = true
-port = ${String(BACKEND_PORT)}
-assets = ${JSON.stringify(assets)}
-
-[web.api]
-enabled = true
-
-[leaderboard]
-enabled = false
-db_path = ${JSON.stringify(path.join(dir, "lb.db"))}
-overlay_enabled = false
-poll_every_n_frames = 10
-`;
-  await Bun.write(path.join(dir, "config.toml"), cfg);
-  return dir;
-}
-
 async function waitForBackend(): Promise<void> {
   const deadline = Date.now() + 60_000;
+  let lastErr: unknown = null;
   while (Date.now() < deadline) {
     try {
-      const r = await fetch(`${TARGET_URL}/metrics`);
+      const r = await fetch(METRICS_URL, { signal: AbortSignal.timeout(2000) });
       if (r.ok) return;
-    } catch {
-      /* not up yet */
+      lastErr = new Error(`HTTP ${String(r.status)}`);
+    } catch (error) {
+      lastErr = error;
     }
     await new Promise((r) => setTimeout(r, 500));
   }
-  throw new Error("backend never came up on /metrics");
+  const hint = METRICS_URL.startsWith("http://localhost")
+    ? "\nIf you're testing against the live cluster, port-forward first:\n" +
+      "  kubectl -n mario-kart port-forward svc/mario-kart-ui-service 18081:8081\n" +
+      "then re-run with --metrics-url http://localhost:18081/metrics"
+    : "";
+  throw new Error(
+    `backend never came up on ${METRICS_URL} (last error: ${String(lastErr)})${hint}`,
+  );
 }
 
 // ---- pinchtab driving ------------------------------------------------------
@@ -332,56 +284,39 @@ async function navigateToRace(tabIds: string[]): Promise<void> {
   );
 }
 
-// ---- metrics scraping ------------------------------------------------------
+// ---- metric collection -----------------------------------------------------
+//
+// Histograms + counters are read as start/end snapshots; gauges are polled
+// throughout the window so we can report min/mean/max instead of just a
+// last-sample value. All parsing is in `lib/bench-metrics.ts` (and tested
+// against a captured fixture there).
 
-async function metricsText(): Promise<string> {
-  const r = await fetch(`${TARGET_URL}/metrics`);
-  return r.text();
-}
-
-function counter(text: string, name: string): number {
-  // prom text format: "name <value>" (no labels for our counters).
-  const re = new RegExp(String.raw`^${name}\s+(\d+(?:\.\d+)?)`, "m");
-  const m = re.exec(text);
-  return m === null ? 0 : Number(m[1]);
-}
-
-function histogramP95(text: string, name: string): number {
-  const re = new RegExp(
-    String.raw`^${name}_bucket\{le="([^"]+)"\}\s+(\d+(?:\.\d+)?)`,
-    "gm",
-  );
-  const rows: { le: number; cum: number }[] = [];
-  let m: RegExpExecArray | null = re.exec(text);
-  while (m !== null) {
-    const le = m[1] === "+Inf" ? Number.POSITIVE_INFINITY : Number(m[1]);
-    rows.push({ le, cum: Number(m[2]) });
-    m = re.exec(text);
-  }
-  rows.sort((a, b) => a.le - b.le);
-  const last = rows.at(-1);
-  if (last === undefined || last.cum === 0) return 0;
-  const target = last.cum * 0.95;
-  for (const row of rows) if (row.cum >= target) return row.le;
-  return Number.POSITIVE_INFINITY;
-}
-
-type Snapshot = {
-  ticks: number;
-  resyncs: number;
-  emulateP95: number;
-  lateP95: number;
-  applyP95: number;
-};
-
-async function snapshot(): Promise<Snapshot> {
-  const text = await metricsText();
+function startGaugePoller(): {
+  poll: ReturnType<typeof emptyGaugePoll>;
+  stop: () => Promise<void>;
+} {
+  const poll = emptyGaugePoll();
+  // Use a mutable ref instead of a bare boolean so the eslint
+  // no-unnecessary-condition rule (which can't see the async mutation in
+  // the closure below) doesn't trip on `while (!stopped)`.
+  const state = { stopped: false };
+  const loop = (async (): Promise<void> => {
+    while (!state.stopped) {
+      try {
+        const m = await scrape(METRICS_URL);
+        sampleGauges(m, poll);
+      } catch {
+        // transient — let the next tick try again
+      }
+      await new Promise((r) => setTimeout(r, GAUGE_POLL_MS));
+    }
+  })();
   return {
-    ticks: counter(text, "emulator_ticks_total"),
-    resyncs: counter(text, "emulator_loop_resync_total"),
-    emulateP95: histogramP95(text, "emulator_frame_emulate_ms"),
-    lateP95: histogramP95(text, "emulator_frame_late_ms"),
-    applyP95: histogramP95(text, "emulator_input_apply_delay_ms"),
+    poll,
+    stop: async () => {
+      state.stopped = true;
+      await loop;
+    },
   };
 }
 
@@ -415,7 +350,13 @@ if (IS_LOCAL) {
     );
   }
 
-  workDir = await writePerfConfig(rom, wasmDir, assets);
+  workDir = await writePerfConfig({
+    rom,
+    wasmDir,
+    assets,
+    seats: SEATS,
+    backendPort: BACKEND_PORT,
+  });
   process.stderr.write(
     `[perf-browser] config -> ${workDir}/config.toml\n[perf-browser] starting backend…\n`,
   );
@@ -511,41 +452,89 @@ try {
   process.stderr.write(`[perf-browser] warmup ${String(WARMUP_SECONDS)}s…\n`);
   await new Promise((r) => setTimeout(r, WARMUP_SECONDS * 1000));
 
-  const before = await snapshot();
+  const benchStartedAt = new Date();
+  const startSnap = await scrape(METRICS_URL);
+  const poller = startGaugePoller();
   const t0 = performance.now();
   process.stderr.write(
     `[perf-browser] measuring ${String(MEASURE_SECONDS)}s…\n`,
   );
   await new Promise((r) => setTimeout(r, MEASURE_SECONDS * 1000));
-  const after = await snapshot();
+  const endSnap = await scrape(METRICS_URL);
+  await poller.stop();
   const wallSec = (performance.now() - t0) / 1000;
 
-  const ticks = after.ticks - before.ticks;
-  const resyncs = after.resyncs - before.resyncs;
-  const fps = ticks / wallSec;
+  const git = await gitMetadata();
+  const summary: BenchSummary = buildSummary({
+    target: TARGET_URL,
+    metricsUrl: METRICS_URL,
+    durationSec: MEASURE_SECONDS,
+    seats: SEATS,
+    git,
+    benchStartedAt,
+    start: startSnap,
+    end: endSnap,
+    poll: poller.poll,
+    wallSec,
+  });
+
+  const dash = (v: number | null | undefined, d = 2): string =>
+    v === null || v === undefined || !Number.isFinite(v)
+      ? "—"
+      : Math.abs(v) >= 1000
+        ? v.toFixed(0)
+        : v.toFixed(d);
 
   process.stdout.write(
     [
       "",
       "=== browser-driven perf (4 pinchtab tabs holding+steering) ===",
-      `  fps              = ${fps.toFixed(2)}   (target 30)`,
-      `  emulate_ms p95   = ${after.emulateP95.toFixed(1)}   (budget 33)`,
-      `  late_ms p95      = ${after.lateP95.toFixed(1)}   (target <10)`,
-      `  apply_ms p95     = ${after.applyP95.toFixed(1)}`,
-      `  resyncs (delta)  = ${String(resyncs)}   (target 0)`,
-      `  ticks  (delta)   = ${String(ticks)}`,
+      "emulator:",
+      `  fps_mean         = ${dash(summary.emulator.fps_mean)}   (target 30)`,
+      `  emulate_ms p95   = ${dash(summary.emulator.emulate_ms_p95, 1)}   (budget 33)`,
+      `  late_ms p95      = ${dash(summary.emulator.late_ms_p95, 1)}   (target <10)`,
+      `  apply_ms p95     = ${dash(summary.emulator.apply_ms_p95, 1)}`,
+      `  resyncs (delta)  = ${String(summary.emulator.resync_delta)}   (target 0)`,
+      `  ticks  (delta)   = ${String(summary.emulator.ticks_delta)}`,
+      "stream:",
+      `  active           = ${dash(summary.stream.active_last, 0)}`,
+      `  hw_encode        = ${dash(summary.stream.hw_encode_engaged, 0)}`,
+      `  ffmpeg_speed     = mean ${dash(summary.stream.ffmpeg_speed_ratio.mean)} (min ${dash(summary.stream.ffmpeg_speed_ratio.min)})`,
+      `  ffmpeg_fps       = mean ${dash(summary.stream.ffmpeg_fps.mean, 1)} (min ${dash(summary.stream.ffmpeg_fps.min, 1)})`,
+      `  ffmpeg_bitrate   = ${dash(summary.stream.ffmpeg_bitrate_kbps.mean, 0)} kbps mean`,
+      `  frame_interval   = p50 ${dash(summary.stream.frame_interval_ms_p50, 1)} / p95 ${dash(summary.stream.frame_interval_ms_p95, 1)} ms`,
+      `  frame_write p95  = ${dash(summary.stream.frame_write_ms_p95, 2)} ms`,
+      `  sink_buffer max  = ${dash(summary.stream.sink_buffer_bytes_max, 0)} bytes`,
+      `  send_ft.ratio    = video p95 ${dash(summary.stream.send_frametime_ratio_video_p95, 2)} / audio p95 ${dash(summary.stream.send_frametime_ratio_audio_p95, 2)}`,
+      `  send_late (delta)= video ${String(summary.stream.send_late_frames_video_delta)} / audio ${String(summary.stream.send_late_frames_audio_delta)}`,
+      "input:",
+      `  controller_rtt   = p50 ${dash(summary.input.controller_rtt_ms_p50, 1)} / p95 ${dash(summary.input.controller_rtt_ms_p95, 1)} ms`,
+      `  input_apply      = p50 ${dash(summary.input.input_apply_delay_ms_p50, 1)} / p95 ${dash(summary.input.input_apply_delay_ms_p95, 1)} ms`,
       "",
     ].join("\n"),
   );
 
-  const passed =
-    fps >= 29.5 &&
-    after.emulateP95 <= 33 &&
-    after.lateP95 <= 10 &&
-    resyncs === 0;
-  process.stdout.write(passed ? "PASS\n" : "FAIL\n");
+  const outPath =
+    OUT_PATH ??
+    `bench-${benchStartedAt.toISOString().replaceAll(/[:.]/g, "-")}.json`;
+  await Bun.write(outPath, `${JSON.stringify(summary, null, 2)}\n`);
+  process.stdout.write(`wrote ${outPath}\n`);
+
+  let compareFail = false;
+  if (COMPARE_PATH !== null) {
+    const baselineRaw: unknown = JSON.parse(
+      await Bun.file(COMPARE_PATH).text(),
+    );
+    const baseline: BenchSummary = parseBenchSummary(baselineRaw);
+    const rows = compareSummaries(baseline, summary);
+    process.stdout.write(
+      `\n=== compare vs ${COMPARE_PATH} ===\n${renderCompareTable(rows)}\n`,
+    );
+    compareFail = rows.some((r) => r.verdict === "regressed");
+  }
+
   await teardown();
-  process.exit(passed ? 0 : 1);
+  process.exit(compareFail ? 2 : 0);
 } catch (error) {
   process.stderr.write(`[perf-browser] error: ${String(error)}\n`);
   await teardown();

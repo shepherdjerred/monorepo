@@ -35,6 +35,7 @@ import { encodePng } from "./emulator/png.ts";
 import { GameStreamer } from "./stream/game-streamer.ts";
 import discordClient from "./discord/client.ts";
 import { createGameEventWatcher } from "./game/events/watcher.ts";
+import { readGameSnapshot } from "./game/events/snapshot.ts";
 import { createEventNotifier } from "./discord/event-notifier.ts";
 import type { EventToggles } from "./discord/event-notifier.ts";
 import { GoalManager, type GoalDiscordMessage } from "./goal/goal-manager.ts";
@@ -96,6 +97,9 @@ if (config.stream.enabled) {
     emulator.onFrame((frame) => {
       activeStreamer.pushFrame(frame);
     });
+    emulator.onAudio(({ pcm }) => {
+      activeStreamer.pushAudio(pcm);
+    });
   }
 
   if (!config.stream.dynamic_streaming) {
@@ -128,7 +132,10 @@ if (emulator && config.game.goal.enabled) {
     config: config.game.goal,
     controlToken,
     sendMessage: sendDiscordMessage,
+    snapshotProvider: () =>
+      readGameSnapshot(emulator.memoryReader(), emulator.gameSymbols()),
   });
+  await goalManager.initialize();
   goalControlServer = startGoalControlServer({
     emulator,
     goalManager,

@@ -1,35 +1,52 @@
 import path from "node:path";
+import { z } from "zod";
 import { logger } from "#src/logger.ts";
 import type { Config } from "#src/config/schema.ts";
-import {
-  buildCodexCredentialEnvironment,
-  hasCodexCredential,
-} from "./codex-auth.ts";
+import { hasCodexCredential } from "./codex-auth.ts";
+import { prepareRuntimeTools, buildEnvironment } from "./goal-runtime-env.ts";
+import type { GameSnapshot } from "#src/game/events/types.ts";
 import { buildCodexArgs } from "./codex-command.ts";
+import {
+  createCodexJsonlParser,
+  pumpCodexStdout,
+  type CodexJsonlParser,
+} from "./codex-jsonl.ts";
+import { attachCodexTrace, type CodexTrace } from "./codex-trace.ts";
 import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
+import { formatGameStateForPrompt } from "./game-state-summary.ts";
+import { formatHistoryForPrompt } from "./history-summary.ts";
+import { computeCost, formatCostLine } from "./pricing.ts";
 
-export type GoalStatus =
-  | "running"
-  | "completed"
-  | "failed"
-  | "timeout"
-  | "replaced"
-  | "shutdown";
+import {
+  appendToHistory,
+  HISTORY_LIMIT,
+  type CompletedGoal,
+} from "./goal-history.ts";
+import type { GoalState } from "./goal-types.ts";
 
-export type GoalState = {
-  id: string;
-  goal: string;
-  requestedBy: string;
-  channelId: string;
-  startedAt: string;
-  lockedUntil: string;
-  deadline: string;
-  status: GoalStatus;
-  lastProgress?: string;
-  finishedAt?: string;
-  finalReport?: string;
-  exitCode?: number;
-};
+// Validates the envelope written by persistState() so history is safely
+// deserialized on restart even if the file has an unexpected shape.
+const CompletedGoalSchema = z.object({
+  id: z.string(),
+  goal: z.string(),
+  requestedBy: z.string(),
+  startedAt: z.string(),
+  finishedAt: z.string(),
+  status: z.enum([
+    "running",
+    "completed",
+    "failed",
+    "timeout",
+    "replaced",
+    "shutdown",
+  ]),
+  finalReport: z.string().optional(),
+  exitCode: z.number().optional(),
+});
+
+const StateEnvelopeSchema = z.object({
+  history: z.array(CompletedGoalSchema).optional(),
+});
 
 type ActiveGoal = {
   state: GoalState;
@@ -37,6 +54,16 @@ type ActiveGoal = {
   timeout: ReturnType<typeof setTimeout>;
   lastProgressSentAt: number;
   outputPath: string;
+  // Streaming parser for Codex's `--json` stdout. Accumulates token usage so
+  // observeProcess() can build a cost line for the final Discord message.
+  jsonl: CodexJsonlParser;
+  // Promise for the stdout pump coroutine. Must be awaited in observeProcess()
+  // before reading jsonl.total() — the last turn.completed usage event may
+  // still be buffered in the pipe when process.exited resolves.
+  stdoutPump: Promise<void>;
+  // OTel span synthesis attached to the parser. The archive SpanProcessor
+  // (observability/tracing.ts) ships full request/response bodies to S3.
+  trace: CodexTrace;
 };
 
 export type GoalProcess = {
@@ -87,6 +114,13 @@ type GoalManagerOptions = {
   sendMessage: GoalMessageSender;
   spawner?: GoalProcessSpawner;
   now?: () => Date;
+  // Live snapshot reader. Called once at goal start to seed the prompt's
+  // "Current game state" block. The model can refresh at any time via
+  // `pokemonctl state` (T5), which reads through the same path on the
+  // control-server side. Returning null is fine (renders "unavailable").
+  // Optional so existing tests that don't exercise prompt context don't have
+  // to pass a stub.
+  snapshotProvider?: () => GameSnapshot | null;
 };
 
 function defaultSpawner(
@@ -131,6 +165,13 @@ export class GoalManager {
   private readonly sendMessage: GoalMessageSender;
   private readonly spawner: GoalProcessSpawner;
   private readonly now: () => Date;
+  private readonly snapshotProvider: () => GameSnapshot | null;
+  // Newest first. Persisted via persistState() so it survives restarts.
+  private history: CompletedGoal[] = [];
+  // Goal IDs we've already snapshot into history. Guards against double-record
+  // when stopActive() kills a process and its observeProcess() later resumes.
+  // Trimmed lazily inside recordCompletion when it grows past 2× HISTORY_LIMIT.
+  private readonly recordedIds = new Set<string>();
 
   constructor(options: GoalManagerOptions) {
     this.config = options.config;
@@ -138,10 +179,55 @@ export class GoalManager {
     this.sendMessage = options.sendMessage;
     this.spawner = options.spawner ?? defaultSpawner;
     this.now = options.now ?? (() => new Date());
+    this.snapshotProvider = options.snapshotProvider ?? (() => null);
+  }
+
+  /**
+   * Seed in-memory history from the persisted state file so goal history
+   * survives server restarts. Call once after constructing GoalManager,
+   * before the first startGoal(). No-ops silently if the file is absent or
+   * has an unexpected shape — the in-memory list simply starts empty.
+   */
+  async initialize(): Promise<void> {
+    const statePath = this.resolveRuntimePath(this.config.state_path);
+    const file = Bun.file(statePath);
+    if (!(await file.exists())) return;
+    let raw: unknown;
+    try {
+      raw = await file.json();
+    } catch (error) {
+      logger.warn(`goal-manager: could not parse state file: ${String(error)}`);
+      return;
+    }
+    const result = StateEnvelopeSchema.safeParse(raw);
+    if (!result.success) {
+      logger.warn(
+        `goal-manager: state file has unexpected shape, starting with empty history`,
+      );
+      return;
+    }
+    const loaded = (result.data.history ?? []).slice(0, HISTORY_LIMIT);
+    this.history = loaded;
+    for (const entry of loaded) {
+      this.recordedIds.add(entry.id);
+    }
+    logger.info(
+      `goal-manager: loaded ${String(loaded.length)} history entries from disk`,
+    );
   }
 
   getStatus(): GoalState | undefined {
     return this.active?.state;
+  }
+
+  /**
+   * Most-recent `limit` finished goals, newest first. Surfaced to the model via
+   * the new `pokemonctl history` subcommand (T5). Use `limit <= HISTORY_LIMIT`
+   * for accuracy; we never persist more than that.
+   */
+  getHistory(limit: number): CompletedGoal[] {
+    if (limit <= 0) return [];
+    return this.history.slice(0, limit);
   }
 
   async startGoal(input: StartGoalInput): Promise<StartGoalResult> {
@@ -225,20 +311,51 @@ export class GoalManager {
     await Bun.write(path.join(screenshotDirectory, ".keep"), "", {
       createPath: true,
     });
-    const helperDirectory = await this.prepareRuntimeTools(runtimeDirectory);
+    const helperDirectory = await prepareRuntimeTools(runtimeDirectory);
     const outputPath = path.join(screenshotDirectory, `${id}-final.txt`);
-    const args = buildCodexArgs(
-      { codexBinary: this.config.codex_binary, model: this.config.model },
+    // Snapshot + 3 most-recent goals as the static prompt context. The model
+    // can refresh both at any time via `pokemonctl state` / `pokemonctl history`.
+    const gameStateSummary = formatGameStateForPrompt(this.snapshotProvider());
+    const promptContext = {
+      gameStateSummary,
+      recentGoalsSummary: formatHistoryForPrompt(this.getHistory(3)),
+    };
+    const args = buildCodexArgs({
+      config: {
+        codexBinary: this.config.codex_binary,
+        model: this.config.model,
+      },
       goal,
       runtimeDirectory,
       outputPath,
-    );
+      context: promptContext,
+    });
 
     const process = this.spawner(args, {
       cwd: runtimeDirectory,
-      env: this.buildEnvironment(runtimeDirectory, helperDirectory),
+      env: buildEnvironment({
+        runtimeDirectory,
+        helperDirectory,
+        controlHost: this.config.control_host,
+        controlPort: this.config.control_port,
+        controlToken: this.controlToken,
+      }),
     });
-    void streamToLog(process.stdout, "stdout");
+    const jsonl = createCodexJsonlParser();
+    // Span synthesis: subscribe before stdout pumping starts so no events are
+    // missed. End the trace from every terminal path below.
+    const trace = attachCodexTrace(jsonl, {
+      goalId: id,
+      goal,
+      model: this.config.model,
+      requestedBy: input.requesterId,
+      gameStateSummary,
+      initialPrompt: `goal=${goal}\nstate=${gameStateSummary}`,
+    });
+    // Store the pump promise so observeProcess() can await it before reading
+    // jsonl.total(). The last turn.completed usage event is often the final
+    // line Codex writes; the pump must fully drain before we tally the cost.
+    const stdoutPump = pumpCodexStdout(process.stdout, jsonl);
     void streamToLog(process.stderr, "stderr");
 
     const state: GoalState = {
@@ -261,6 +378,9 @@ export class GoalManager {
       timeout,
       lastProgressSentAt: 0,
       outputPath,
+      jsonl,
+      stdoutPump,
+      trace,
     };
     await this.persistState(state);
     void this.observeProcess(id);
@@ -306,92 +426,6 @@ export class GoalManager {
     await this.stopActive("shutdown");
   }
 
-  private async prepareRuntimeTools(runtimeDirectory: string): Promise<string> {
-    const helperDirectory = path.join(runtimeDirectory, ".pokemon-goal-bin");
-    const helperPath = path.join(helperDirectory, "pokemonctl");
-    await Bun.write(
-      helperPath,
-      ["#!/bin/sh", 'exec bun "$POKEMONCTL_SCRIPT" "$@"', ""].join("\n"),
-      { createPath: true },
-    );
-
-    const chmod = Bun.spawn(["chmod", "0755", helperPath], {
-      stdout: "ignore",
-      stderr: "pipe",
-    });
-    const exitCode = await chmod.exited;
-    if (exitCode !== 0) {
-      const stderr = await new Response(chmod.stderr).text();
-      throw new Error(`Failed to prepare pokemonctl wrapper: ${stderr}`);
-    }
-
-    return helperDirectory;
-  }
-
-  // Only these variables are forwarded to the Codex subprocess. The goal text
-  // is attacker-controlled and Codex can read its own environment, so the
-  // subprocess must never inherit unrelated process secrets (DISCORD_TOKEN,
-  // etc.) that a prompt-injected goal could exfiltrate via `pokemonctl
-  // progress`. PATH/POKEMONCTL_* are injected explicitly below.
-  private static readonly inheritedEnvironmentAllowlist = [
-    "PATH",
-    "HOME",
-    "CODEX_HOME",
-    "CODEX_API_KEY",
-    "CODEX_ACCESS_TOKEN",
-    "OPENAI_API_KEY",
-  ];
-
-  private buildEnvironment(
-    runtimeDirectory: string,
-    helperDirectory: string,
-  ): Record<string, string> {
-    const inherited: Record<string, string> = {};
-    for (const key of GoalManager.inheritedEnvironmentAllowlist) {
-      const value = Bun.env[key];
-      if (value !== undefined && value.length > 0) {
-        inherited[key] = value;
-      }
-    }
-
-    const inheritedPath = Bun.env.PATH;
-    const pathParts = [
-      helperDirectory,
-      path.join(runtimeDirectory, "node_modules", ".bin"),
-      path.join(
-        runtimeDirectory,
-        "packages",
-        "backend",
-        "node_modules",
-        ".bin",
-      ),
-    ].filter((entry) => entry.length > 0);
-    if (inheritedPath !== undefined && inheritedPath.length > 0) {
-      pathParts.push(inheritedPath);
-    }
-
-    const codexCredentialEnvironment =
-      buildCodexCredentialEnvironment(inherited);
-
-    return {
-      ...inherited,
-      ...codexCredentialEnvironment,
-      PATH: pathParts.join(":"),
-      POKEMONCTL_URL: `http://${this.config.control_host}:${String(
-        this.config.control_port,
-      )}`,
-      POKEMONCTL_TOKEN: this.controlToken,
-      POKEMONCTL_SCRIPT: path.join(
-        runtimeDirectory,
-        "packages",
-        "backend",
-        "src",
-        "goal",
-        "pokemonctl.ts",
-      ),
-    };
-  }
-
   private async observeProcess(id: string): Promise<void> {
     const active = this.active;
     if (active?.state.id !== id) {
@@ -403,21 +437,33 @@ export class GoalManager {
       return;
     }
 
+    // Drain any remaining buffered stdout before reading token totals.
+    // The last turn.completed usage event is the final line Codex emits and
+    // may still be in the pipe when process.exited resolves.
+    await active.stdoutPump;
+
     clearTimeout(active.timeout);
     const report = await this.readFinalReport(active.outputPath);
     active.state.finishedAt = this.now().toISOString();
     active.state.exitCode = exitCode;
     active.state.status = exitCode === 0 ? "completed" : "failed";
     active.state.finalReport = report;
+    this.recordCompletion(active.state);
     await this.persistState(active.state);
+    active.trace.end();
     this.active = undefined;
 
+    const usage = active.jsonl.total();
+    const cost = computeCost(this.config.model, usage);
+    const costLine = formatCostLine(this.config.model, cost, usage);
+
+    // Cost line comes first so it is never cut by truncation on long reports.
     await this.sendMessage({
       channelId: active.state.channelId,
       content: truncateForDiscord(
         `<@${active.state.requestedBy}> goal ${
           exitCode === 0 ? "finished" : "stopped with an error"
-        }: ${sanitizeDiscordText(report)}`,
+        } (${costLine}): ${sanitizeDiscordText(report)}`,
       ),
       allowedUserIds: [active.state.requestedBy],
     });
@@ -433,7 +479,9 @@ export class GoalManager {
     active.state.status = "timeout";
     active.state.finishedAt = this.now().toISOString();
     active.state.finalReport = "Goal timed out before Codex finished.";
+    this.recordCompletion(active.state);
     await this.persistState(active.state);
+    active.trace.end();
     this.active = undefined;
     await this.sendMessage({
       channelId: active.state.channelId,
@@ -458,7 +506,9 @@ export class GoalManager {
       status === "replaced"
         ? "Goal was replaced by a newer goal."
         : "Goal was stopped during application shutdown.";
+    this.recordCompletion(active.state);
     await this.persistState(active.state);
+    active.trace.end();
     this.active = undefined;
   }
 
@@ -482,8 +532,19 @@ export class GoalManager {
 
   private async persistState(state: GoalState): Promise<void> {
     const statePath = this.resolveRuntimePath(this.config.state_path);
-    await Bun.write(statePath, `${JSON.stringify(state, undefined, 2)}\n`, {
+    const envelope = { current: state, history: this.history };
+    await Bun.write(statePath, `${JSON.stringify(envelope, undefined, 2)}\n`, {
       createPath: true,
     });
+  }
+
+  /**
+   * Snapshot a finished goal into the rolling history list and trim to
+   * HISTORY_LIMIT. Called from every terminal path (observeProcess,
+   * timeoutGoal, stopActive) so all of {completed, failed, timeout,
+   * replaced, shutdown} leave a trace.
+   */
+  private recordCompletion(state: GoalState): void {
+    this.history = [...appendToHistory(this.history, this.recordedIds, state)];
   }
 }

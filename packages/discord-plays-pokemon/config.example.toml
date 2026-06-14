@@ -91,9 +91,11 @@ save_path = "saves/pokeemerald.flash"
 [game.goal]
 # enable Codex goal mode and the /goal slash command
 enabled = false
-# runtime must provide CODEX_API_KEY, CODEX_ACCESS_TOKEN, OPENAI_API_KEY, or a mounted Codex auth cache
+# runtime must provide CODEX_API_KEY, CODEX_ACCESS_TOKEN, OPENAI_API_KEY, or a mounted Codex auth cache.
+# NOTE: gpt-5.4-nano requires API-key auth — Codex with a ChatGPT-account session 400s
+# with "The 'gpt-5.4-nano' model is not supported when using Codex with a ChatGPT account".
 # lower-cost model used by the long-running Codex loop
-model = "gpt-5.4-mini"
+model = "gpt-5.4-nano"
 codex_binary = "codex"
 # Codex runs from this directory; screenshots/state paths are relative to it
 runtime_directory = "."

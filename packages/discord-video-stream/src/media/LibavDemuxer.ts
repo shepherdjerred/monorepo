@@ -265,8 +265,14 @@ export async function demux(input: Readable, { format }: DemuxerOptions) {
           if (vInfo && vInfo.index === streamIndex) {
             loggerFrameVideo.trace("Received a video packet");
             const packets = await applyBitStreamFilters(inPacket.clone(), vbsf);
+            // Write every packet the filter chain produced, even after backpressure fires:
+            // short-circuiting on the first `false` would drop (and leak) every subsequent
+            // packet in this array. `resume &&= write(...)` would also short-circuit if
+            // `resume` was already false from an earlier iteration's audio write, silently
+            // dropping these video packets. Track backpressure separately.
             for (const packet of packets) {
-              if (packet) resume &&= vPipe.write(packet);
+              if (!packet) continue;
+              if (!vPipe.write(packet)) resume = false;
             }
           } else if (aInfo && aInfo.index === streamIndex) {
             const packet = inPacket.clone();
@@ -280,7 +286,7 @@ export async function demux(input: Readable, { format }: DemuxerOptions) {
               continue;
             }
             packet.duration ||= BigInt(parseOpusPacketDuration(packet.data));
-            resume &&= aPipe.write(packet);
+            if (!aPipe.write(packet)) resume = false;
           }
           inPacket.free();
         }
