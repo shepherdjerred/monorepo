@@ -96,6 +96,9 @@ if (config.stream.enabled) {
     emulator.onFrame((frame) => {
       activeStreamer.pushFrame(frame);
     });
+    emulator.onAudio(({ pcm }) => {
+      activeStreamer.pushAudio(pcm);
+    });
   }
 
   if (!config.stream.dynamic_streaming) {

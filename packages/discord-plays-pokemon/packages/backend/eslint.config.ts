@@ -24,6 +24,7 @@ const config = [
         "src/goal/goal-manager.test.ts",
         "src/stream/stream-machine.test.ts",
         "src/stream/orchestrator-machine.test.ts",
+        "src/stream/audio-transport.test.ts",
       ],
       // 15 test files are excluded from tsconfig (bun test globals aren't
       // visible to tsc), so they fall to the default project; raise the cap.
