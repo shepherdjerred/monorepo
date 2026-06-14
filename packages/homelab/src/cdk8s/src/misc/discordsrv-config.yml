@@ -9,11 +9,11 @@ BotToken: ""
 # The first channel is the default for all messages
 Channels: { "global": "${CFG_DISCORD_CHANNEL_ID}" }
 
-# Console channel for server logs and remote commands (set to empty string to disable)
-DiscordConsoleChannelId: "${CFG_DISCORD_CONSOLE_CHANNEL_ID}"
+# Console channel for server logs and remote commands (empty = disabled; feature unused)
+DiscordConsoleChannelId: ""
 
-# Discord invite link shown to players via /discord command
-DiscordInviteLink: "${CFG_DISCORD_INVITE_LINK}"
+# Discord invite link shown to players via /discord command (empty = unset; feature unused)
+DiscordInviteLink: ""
 
 # Enable bidirectional chat
 DiscordChatChannelDiscordToMinecraft: true
