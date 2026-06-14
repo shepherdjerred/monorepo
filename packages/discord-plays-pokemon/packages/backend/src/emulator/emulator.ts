@@ -254,9 +254,13 @@ export class Emulator {
     emulateMs.observe(performance.now() - emulateStart);
     this.currentFrame += 1;
 
-    if (this.onAudioCb !== undefined) {
-      const pcm = this.audio.tickAndDrain();
-      if (pcm !== null) this.onAudioCb(pcm);
+    // Always tick the mixer — m4aSoundMain must fire unconditionally every
+    // VBlank (it advances the track-command interpreter and per-channel state).
+    // Gating on onAudioCb would freeze the music engine for callers that don't
+    // register an audio consumer (video-only streams, graphics-only tests, etc).
+    const pcm = this.audio.tickAndDrain();
+    if (pcm !== null && this.onAudioCb !== undefined) {
+      this.onAudioCb(pcm);
     }
 
     if (this.onFrameCb !== undefined) {
