@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Complete
 
 ## Context
 
@@ -237,3 +237,29 @@ CI: **not run by default** — needs an API key + a ROM in Syncthing (per the ex
 - HTTPS-proxy archival of raw OpenAI request bodies — only needed if JSONL fidelity proves insufficient.
 - Grafana dashboard for per-goal token spend / tool-call heatmap.
 - Wiring `bun run e2e:goal` into CI on a nightly schedule (cost + ROM-distribution issue).
+
+## Session Log — 2026-06-13
+
+### Done
+
+- T1 (`bec40f9a2`) — default model → `gpt-5.4-nano`; codex args carry `--disable apps/plugins/multi_agent` + `--json`.
+- T2 (`4ac138ced`) — `pricing.ts` + `codex-jsonl.ts`; final Discord report ends with `Cost: $X.YY (Tokens: N in / M out)`.
+- T3 (`b7f28b641`) — `game-state-summary.ts` (party/badges/dex/last-catch formatter).
+- T4 (`4cb8795f9`) — rolling 10-entry history persisted to `goal-state.json` + `getHistory(limit)`.
+- T5 (`c66a7d509`) — `pokemonctl state` / `pokemonctl history` subcommands + control-server `/state` + `/history` routes.
+- T6 (`eba0aeaba`) — `buildPrompt` rewrite with Emerald primer + chord guidance + inlined state/history.
+- T7 (`05ed743f3`) — `codex-trace.ts` JSONL→OTel adapter; `tracing.ts` wraps the OTLP exporter in `LlmArchiveSpanProcessor`. Backend code ready; k8s env wiring documented in `packages/docs/todos/dpp-goal-llm-archive-creds.md`.
+- T8 (`676e2681c`) — `e2e-goal.integration.test.ts` (the `bun run e2e:goal` alias) drives the full T1-T7 surface via a stub codex spawner.
+- PR #1180 opened against `main`.
+
+### Remaining
+
+- Open follow-up todo `dpp-goal-llm-archive-creds` (committed in T7): add `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` to the pokemon-config 1P item, refresh the snapshot, then enable the homelab env-var wiring at the `TODO(todo:dpp-goal-llm-archive-creds)` marker in `packages/homelab/src/cdk8s/src/resources/pokemon.ts`.
+- Manual real-API smoke: trigger a `/goal` against prod once the next image rolls out, verify the cost line appears in Discord and the spans land in Tempo.
+
+### Caveats
+
+- `gpt-5.4-nano` rejects ChatGPT-account Codex auth ("not supported with a ChatGPT account"). Prod uses `OPENAI_API_KEY`, so prod is fine; local-dev needs the API key (documented in `config.example.toml`).
+- `pricing.ts` rates were copied from `packages/scout-for-lol/.../models.ts`. If OpenAI prices change, that table needs updating — the cost line will silently drop to "no list price on file" for unknown models, but mini/nano numbers are hardcoded.
+- E2E harness uses a stub spawner — it does NOT call the real OpenAI API. The matching real-API smoke (paid call, needs ROM + emulator + control-server) stays a manual pre-merge gate.
+- Backend code ships fine without the SeaweedFS S3 creds: `LlmArchiveSpanProcessor` no-ops when `LLM_OBSERVABILITY_ENABLED` is unset, so spans flow to Tempo but no S3 archive is created until the follow-up lands.
