@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.17.1](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.0...astro-opengraph-images-v1.17.1) (2026-06-14)
+
+No runtime behavior changes. The released code resolves to the same modules at runtime as 1.17.0.
+
+- Preset re-exports in `src/presets/index.ts` now reference the actual `.tsx` source files instead of the wrong `.ts` extension; resolution behavior is unchanged ([7a4ac9e](https://github.com/shepherdjerred/monorepo/commit/7a4ac9e5321bf2db97e3b244d9db3531e20e45bb))
+
 ## [1.17.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.16.1...astro-opengraph-images-v1.17.0) (2026-05-27)
 
 No library behavior changes. The shipped code is identical to 1.16.1; this release exists only because of repo-level housekeeping that release-please picked up.
