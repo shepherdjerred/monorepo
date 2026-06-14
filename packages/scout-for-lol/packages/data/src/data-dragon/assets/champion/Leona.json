@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "Leona": {
       "id": "Leona",
@@ -447,6 +447,54 @@
           "name": "Battle Lion Leona (Override)",
           "chromas": false,
           "parentSkin": 52
+        },
+        {
+          "id": "89064",
+          "num": 64,
+          "name": "Eternal Aspect Leona",
+          "chromas": true
+        },
+        {
+          "id": "89065",
+          "num": 65,
+          "name": "Eternal Aspect Leona (Ruby)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "89066",
+          "num": 66,
+          "name": "Eternal Aspect Leona (Turquoise)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "89067",
+          "num": 67,
+          "name": "Eternal Aspect Leona (Sapphire)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "89068",
+          "num": 68,
+          "name": "Eternal Aspect Leona (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "89069",
+          "num": 69,
+          "name": "Eternal Aspect Leona (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "89070",
+          "num": 70,
+          "name": "Eternal Aspect Leona (Pearl)",
+          "chromas": false,
+          "parentSkin": 64
         }
       ],
       "lore": "Imbued with the fire of the sun, Leona is a holy warrior of the Solari who defends Mount Targon with her Zenith Blade and the Shield of Daybreak. Her skin shimmers with starfire while her eyes burn with the power of the celestial Aspect within her. Armored in gold and bearing a terrible burden of ancient knowledge, Leona brings enlightenment to some, death to others.",

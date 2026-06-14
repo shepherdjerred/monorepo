@@ -2,7 +2,13 @@
 
 ## Status
 
-Active / Not Started. Knip, Trivy, and Semgrep are still soft-failing in CI.
+Partially Complete. Knip and Trivy were hardened in
+`packages/docs/plans/2026-06-13_strict-quality-checks.md`; Semgrep remains
+soft-failing and should be handled separately.
+
+> **Stale-content note (2026-06-13):** Knip and Trivy are no longer
+> soft-failing after `2026-06-13_strict-quality-checks.md`. The remaining
+> actionable portion of this plan is Semgrep.
 
 ## Context
 

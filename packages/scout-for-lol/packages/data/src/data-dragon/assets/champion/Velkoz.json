@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "Velkoz": {
       "id": "Velkoz",
@@ -213,6 +213,54 @@
           "name": "Bee'Koz (Turquoise)",
           "chromas": false,
           "parentSkin": 20
+        },
+        {
+          "id": "161029",
+          "num": 29,
+          "name": "Spaghetti alla Vel'Koz",
+          "chromas": true
+        },
+        {
+          "id": "161030",
+          "num": 30,
+          "name": "Spaghetti alla Vel'Koz (Ruby)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "161031",
+          "num": 31,
+          "name": "Spaghetti alla Vel'Koz (Pesto)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "161032",
+          "num": 32,
+          "name": "Spaghetti alla Vel'Koz (Dragon Fruit Noodle)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "161033",
+          "num": 33,
+          "name": "Spaghetti alla Vel'Koz (Strawberry Pasta)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "161034",
+          "num": 34,
+          "name": "Spaghetti alla Vel'Koz (Squid Ink Pasta)",
+          "chromas": false,
+          "parentSkin": 29
+        },
+        {
+          "id": "161035",
+          "num": 35,
+          "name": "Spaghetti alla Vel'Koz (Alfredo)",
+          "chromas": false,
+          "parentSkin": 29
         }
       ],
       "lore": "It is unclear if Vel'Koz was the first Void-spawn to emerge on Runeterra, but there has certainly never been another to match his level of cruel, calculating sentience. While his kin devour or defile everything around them, he seeks instead to scrutinize and study the physical realm—and the strange, warlike beings that dwell there—for any weakness the Void might exploit. But Vel'Koz is far from a passive observer, striking back at threats with deadly plasma, or by disrupting the very fabric of the world itself.",

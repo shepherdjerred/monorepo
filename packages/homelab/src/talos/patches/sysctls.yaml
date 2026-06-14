@@ -1,0 +1,11 @@
+# Kernel sysctls.
+#
+# kernel.kptr_restrict: Talos defaults this to 2 (KSPP hardening), which hides
+# /proc/kallsyms addresses from ALL readers — capabilities cannot bypass it, so
+# even the privileged alloy eBPF profiler cannot symbolize kernel stacks
+# ("unable to read kallsyms addresses - check capabilities"). Value 1 exposes
+# addresses only to CAP_SYSLOG holders (the alloy DaemonSet runs privileged and
+# qualifies); unprivileged readers still see zeros.
+machine:
+  sysctls:
+    kernel.kptr_restrict: "1"

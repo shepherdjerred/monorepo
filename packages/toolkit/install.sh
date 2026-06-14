@@ -8,12 +8,22 @@ RECALL_DIR="${HOME}/.recall"
 
 echo "Building toolkit..."
 cd "$SCRIPT_DIR"
-bun build ./src/index.ts --compile --outfile=dist/toolkit
+bun build ./src/index.ts --compile --external ffmpeg-static --outfile=dist/toolkit
 
 echo "Installing binary to ${INSTALL_DIR}..."
 mkdir -p "$INSTALL_DIR"
+# Unlink the destination before copying. If the previous binary is still running
+# (e.g. the recall daemon holds it mmap'd), overwriting the same inode corrupts
+# the code signature of the new copy and macOS kills it with "Killed: 9". rm
+# leaves the running process on its now-unlinked inode and gives us a fresh one.
+rm -f "$INSTALL_DIR/toolkit"
 cp dist/toolkit "$INSTALL_DIR/toolkit"
 chmod +x "$INSTALL_DIR/toolkit"
+# Re-apply an ad-hoc signature on macOS so a broken/missing signature never makes
+# the binary unrunnable (Bun --compile self-signs, but copies can lose it).
+if [[ "$(uname)" == "Darwin" ]]; then
+  codesign --force --sign - "$INSTALL_DIR/toolkit"
+fi
 
 echo "Installing skills to ${SKILL_DIR}..."
 mkdir -p "$SKILL_DIR/pr-health"

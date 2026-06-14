@@ -28,9 +28,20 @@ describe("AgentTaskInputSchema", () => {
       ...baseInput,
       cron: "0 9 * * 1",
       scheduleId: "weekly-recheck",
+      agentTimeoutMinutes: 8,
     });
     expect(parsed.cron).toBe("0 9 * * 1");
     expect(parsed.scheduleId).toBe("weekly-recheck");
+    expect(parsed.agentTimeoutMinutes).toBe(8);
+  });
+
+  it("rejects agent timeout values above the supported activity cap", () => {
+    expect(() =>
+      AgentTaskInputSchema.parse({
+        ...baseInput,
+        agentTimeoutMinutes: 91,
+      }),
+    ).toThrow();
   });
 
   it("rejects tasks that set both runAt and cron", () => {

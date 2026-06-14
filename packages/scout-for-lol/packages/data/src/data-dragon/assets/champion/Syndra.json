@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "Syndra": {
       "id": "Syndra",
@@ -546,7 +546,7 @@
         "difficulty": 8
       },
       "stats": {
-        "hp": 563,
+        "hp": 583,
         "hpperlevel": 100,
         "mp": 480,
         "mpperlevel": 40,

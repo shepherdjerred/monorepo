@@ -1,0 +1,23 @@
+dist
+node_modules
+coverage
+.cache
+config*.toml
+!config.example.toml
+!config.dev.toml
+error.png
+.tmp-earthly-out
+*.gba
+# The N64Wasm core is built from wasm-src/ in CI (Dagger emscripten stage) and
+# staged into the backend assets dir — never commit the binaries or generated
+# glue/assets. Local `scripts/build-wasm.sh` writes the same files for dev.
+*.wasm
+packages/backend/assets/n64wasm/
+logs
+saves
+data
+# Generated Prisma client (leaderboard) — codegen output, never committed.
+**/generated/
+.DS_Store
+.claude/settings.local.json
+wasm-src/dist/

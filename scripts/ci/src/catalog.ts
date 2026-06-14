@@ -38,9 +38,16 @@ export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
     pushFn: "push-discord-plays-pokemon-image",
   },
   {
+    name: "discord-plays-mario-kart",
+    versionKey: "shepherdjerred/discord-plays-mario-kart",
+    buildFn: "build-discord-plays-mario-kart-image",
+    pushFn: "push-discord-plays-mario-kart-image",
+  },
+  {
     name: "starlight-karma-bot",
     versionKey: "shepherdjerred/starlight-karma-bot",
   },
+  { name: "streambot", versionKey: "shepherdjerred/streambot" },
   {
     name: "temporal-worker",
     package: "temporal",
@@ -71,6 +78,20 @@ export const INFRA_PUSH_TARGETS: ImageTarget[] = [
     buildFn: "build-obsidian-headless-image",
     pushFn: "push-obsidian-headless-image",
   },
+  {
+    name: "mcp-gateway",
+    package: "homelab",
+    versionKey: "shepherdjerred/mcp-gateway",
+    buildFn: "build-mcp-gateway-image",
+    pushFn: "push-mcp-gateway-image",
+  },
+  {
+    name: "redlib",
+    package: "homelab",
+    versionKey: "shepherdjerred/redlib",
+    buildFn: "build-redlib-image",
+    pushFn: "push-redlib-image",
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -95,17 +116,28 @@ export const NPM_PACKAGES: NpmPackage[] = [
 // Static site deploys
 // ---------------------------------------------------------------------------
 
-export interface DeploySite {
+interface DeploySiteBase {
   bucket: string;
   name: string;
   url: string;
   buildDir: string;
   buildCmd: string;
   distDir: string;
-  buildEnvVars?: string[];
   needsPlaywright?: boolean;
   workspaceDeps?: string;
 }
+
+type DeploySiteBuildEnv =
+  | {
+      buildEnvVars?: string[];
+      buildEnvPlaceholders?: never;
+    }
+  | {
+      buildEnvVars?: never;
+      buildEnvPlaceholders?: Readonly<Record<string, string>>;
+    };
+
+export type DeploySite = DeploySiteBase & DeploySiteBuildEnv;
 
 export const DEPLOY_SITES: DeploySite[] = [
   {
@@ -143,13 +175,37 @@ export const DEPLOY_SITES: DeploySite[] = [
     distDir: "packages/cooklang-rich-preview/dist",
   },
   {
+    bucket: "stocks-sjer-red",
+    name: "stocks-sjer-red",
+    url: "https://stocks.sjer.red",
+    buildDir: "packages/stocks-sjer-red",
+    buildCmd: "bun run astro build",
+    distDir: "packages/stocks-sjer-red/dist",
+  },
+  {
     bucket: "scout-frontend",
-    name: "scout-for-lol frontend",
+    name: "scout-for-lol frontend + app (prod)",
     url: "https://scout-for-lol.com",
     buildDir: "packages/scout-for-lol",
-    buildCmd: "bun run --filter='./packages/frontend' build",
+    buildCmd: "bun run scripts/build-bucket.ts",
     distDir: "packages/scout-for-lol/packages/frontend/dist",
     buildEnvVars: ["PUBLIC_PINTEREST_TAG_ID", "PUBLIC_REDDIT_PIXEL_ID"],
+    workspaceDeps: "packages/frontend,packages/app",
+  },
+  {
+    bucket: "scout-frontend-beta",
+    name: "scout-for-lol frontend + app (beta)",
+    url: "https://beta.scout-for-lol.com",
+    buildDir: "packages/scout-for-lol",
+    buildCmd: "bun run scripts/build-bucket.ts",
+    distDir: "packages/scout-for-lol/packages/frontend/dist",
+    // Analytics pixels intentionally omitted for beta — beta traffic must
+    // not inflate prod Pinterest/Reddit conversion data.
+    buildEnvPlaceholders: {
+      PUBLIC_PINTEREST_TAG_ID: "beta-placeholder-pinterest-tag-id",
+      PUBLIC_REDDIT_PIXEL_ID: "beta-placeholder-reddit-pixel-id",
+    },
+    workspaceDeps: "packages/frontend,packages/app",
   },
   {
     bucket: "better-skill-capped",
@@ -158,21 +214,6 @@ export const DEPLOY_SITES: DeploySite[] = [
     buildDir: "packages/better-skill-capped",
     buildCmd: "bun run build",
     distDir: "packages/better-skill-capped/dist",
-  },
-  // discord-plays-pokemon docs uses MkDocs (Python), not bun — deployed via
-  // a dedicated mkdocs-build-and-deploy step, not the generic deploy-site function.
-];
-
-// Sites deployed via non-standard mechanisms (not the generic deploy-site function).
-export interface ExtraDeploySite {
-  name: string;
-  url: string;
-}
-
-export const EXTRA_DEPLOY_SITES: ExtraDeploySite[] = [
-  {
-    name: "discord-plays-pokemon docs",
-    url: "https://discord-plays-pokemon.com",
   },
 ];
 
@@ -205,12 +246,18 @@ for (const pkg of NPM_PACKAGES) {
 // OpenTofu stacks
 // ---------------------------------------------------------------------------
 
-export const TOFU_STACKS = ["cloudflare", "github", "seaweedfs"] as const;
+export const TOFU_STACKS = [
+  "cloudflare",
+  "github",
+  "seaweedfs",
+  "tailscale",
+] as const;
 
 export const TOFU_STACK_LABELS: Record<string, string> = {
   cloudflare: "Cloudflare DNS",
   github: "GitHub Config",
   seaweedfs: "SeaweedFS Config",
+  tailscale: "Tailscale ACLs",
 };
 
 // ---------------------------------------------------------------------------
@@ -234,7 +281,9 @@ export const HELM_CHARTS: string[] = [
   "syncthing",
   "golink",
   "freshrss",
+  "pinchtab",
   "pokemon",
+  "mario-kart",
   "gickup",
   "grafana-db",
   "mcp-gateway",
@@ -250,14 +299,21 @@ export const HELM_CHARTS: string[] = [
 // Package-to-site mapping (for change detection)
 // ---------------------------------------------------------------------------
 
-export const PACKAGE_TO_SITE: Record<string, string> = {
-  "sjer.red": "sjer-red",
-  resume: "resume",
-  webring: "webring",
-  "cooklang-rich-preview": "cook",
-  "scout-for-lol": "scout-frontend",
-  "better-skill-capped": "better-skill-capped",
-  // discord-plays-pokemon docs deployed via dedicated mkdocs step, not deploy-site
+/**
+ * Maps a workspace package name to the deploy buckets its changes should trigger.
+ *
+ * Most packages fan out to a single bucket. `scout-for-lol` fans out to both
+ * prod and beta buckets because the merged Astro + SPA build is deployed to
+ * both stages on every main merge.
+ */
+export const PACKAGE_TO_SITE: Record<string, string[]> = {
+  "sjer.red": ["sjer-red"],
+  resume: ["resume"],
+  webring: ["webring"],
+  "cooklang-rich-preview": ["cook"],
+  "scout-for-lol": ["scout-frontend", "scout-frontend-beta"],
+  "stocks-sjer-red": ["stocks-sjer-red"],
+  "better-skill-capped": ["better-skill-capped"],
 };
 
 // ---------------------------------------------------------------------------
@@ -281,6 +337,9 @@ export const ALL_PACKAGES: string[] = [
   "cooklang-for-obsidian",
   "cooklang-rich-preview",
   "discord-plays-pokemon",
+  "discord-plays-mario-kart",
+  "discord-stream-lifecycle",
+  "discord-video-stream",
   "docs",
   "dotfiles",
   "eslint-config",
@@ -294,6 +353,8 @@ export const ALL_PACKAGES: string[] = [
   "scout-for-lol",
   "sjer.red",
   "starlight-karma-bot",
+  "stocks-sjer-red",
+  "streambot",
   "tasknotes-server",
   "tasknotes-types",
   "temporal",
@@ -321,7 +382,11 @@ export const PACKAGE_RESOURCES: Record<string, ResourceTier> = {
   birmel: MEDIUM,
   "scout-for-lol": MEDIUM,
   "discord-plays-pokemon": MEDIUM,
+  "discord-plays-mario-kart": MEDIUM,
+  // Vendored fork; its `test` loads node-av's native ffmpeg, so give it headroom.
+  "discord-video-stream": MEDIUM,
   "starlight-karma-bot": MEDIUM,
+  streambot: MEDIUM,
   "tasknotes-server": MEDIUM,
   "better-skill-capped": MEDIUM,
   "sjer.red": MEDIUM,
@@ -349,6 +414,7 @@ export const SKIP_PACKAGES: Set<string> = new Set([
 export const PRISMA_PACKAGES: Set<string> = new Set([
   "birmel",
   "scout-for-lol",
+  "discord-plays-mario-kart",
 ]);
 
 /**
@@ -441,6 +507,18 @@ export const DEPLOY_TARGETS: Record<string, DeployTarget> = {
     images: [imageByName("discord-plays-pokemon")],
     charts: ["pokemon"],
     argoApps: ["pokemon"],
+  },
+  media: {
+    name: "media",
+    images: [imageByName("streambot")],
+    charts: ["media"],
+    argoApps: ["media"],
+  },
+  "mario-kart": {
+    name: "mario-kart",
+    images: [imageByName("discord-plays-mario-kart")],
+    charts: ["mario-kart"],
+    argoApps: ["mario-kart"],
   },
   home: {
     name: "home",

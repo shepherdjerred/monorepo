@@ -1,7 +1,7 @@
 import {
-  callService,
+  callServiceUnchecked,
   everyoneAway,
-  getEntityState,
+  getEntityStateUnchecked,
   sendNotification,
   setOutcome,
   shouldStartVacuum,
@@ -17,7 +17,7 @@ export async function runVacuumIfNotHome(): Promise<void> {
     return;
   }
 
-  const roomba = await getEntityState(ROOMBA);
+  const roomba = await getEntityStateUnchecked(ROOMBA);
   if (!shouldStartVacuum(roomba.state)) {
     console.warn(`Vacuum is ${roomba.state}, skipping`);
     await setOutcome("skipped", `vacuum-state-${roomba.state}`);
@@ -28,7 +28,7 @@ export async function runVacuumIfNotHome(): Promise<void> {
     "Vacuum Started",
     "The Roomba has started cleaning since no one is home.",
   );
-  await callService("vacuum", "start", { entity_id: ROOMBA });
+  await callServiceUnchecked("vacuum", "start", { entity_id: ROOMBA });
 
   await verifyState(
     ROOMBA,

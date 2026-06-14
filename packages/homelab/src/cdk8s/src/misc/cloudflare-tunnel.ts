@@ -1,8 +1,8 @@
-import type { Chart } from "cdk8s";
+import type { Construct } from "constructs";
 import {
   TunnelBinding,
   TunnelBindingTunnelRefKind,
-} from "@shepherdjerred/homelab/cdk8s/generated/imports/networking.cfargotunnel.com.ts";
+} from "@shepherdjerred/homelab/cdk8s/src/cdk8s-types/cfargotunnel.ts";
 
 // Secret name that the cloudflare-operator expects
 // Note: For ClusterTunnel, the secret must be in cloudflare-operator-system namespace
@@ -10,7 +10,7 @@ import {
 export const CLOUDFLARE_TUNNEL_SECRET_NAME = "cloudflare-tunnel-config";
 
 export function createCloudflareTunnelBinding(
-  chart: Chart,
+  scope: Construct,
   id: string,
   props: {
     serviceName: string;
@@ -31,7 +31,7 @@ export function createCloudflareTunnelBinding(
 ) {
   const fqdn = "fqdn" in props ? props.fqdn : `${props.subdomain}.sjer.red`;
 
-  return new TunnelBinding(chart, id, {
+  return new TunnelBinding(scope, id, {
     metadata: {
       ...(props.namespace === undefined ? {} : { namespace: props.namespace }),
       ...(props.annotations === undefined
@@ -59,7 +59,7 @@ export function createCloudflareTunnelBinding(
     tunnelRef: {
       kind: TunnelBindingTunnelRefKind.CLUSTER_TUNNEL,
       name: "homelab-tunnel",
-      disableDnsUpdates: props.disableDnsUpdates ?? true,
+      disableDNSUpdates: props.disableDnsUpdates ?? true,
     },
   });
 }

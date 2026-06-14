@@ -1,0 +1,6 @@
+apiVersion: v2
+name: pinchtab
+description: PinchTab browser automation server
+type: application
+version: "$version"
+appVersion: "$appVersion"

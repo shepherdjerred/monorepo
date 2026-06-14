@@ -2,13 +2,20 @@ import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import {
   AccountIdSchema,
   PlayerIdSchema,
+  type Rank,
   type LeaguePuuid,
 } from "@scout-for-lol/data";
+import { createCompetition } from "#src/database/competition/queries.ts";
 import {
   createTestDatabase,
   deleteIfExists,
 } from "#src/testing/test-database.ts";
-import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
+import {
+  testAccountId,
+  testChannelId,
+  testGuildId,
+  testPuuid,
+} from "#src/testing/test-ids.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
 
 const { prisma } = createTestDatabase("report-query-engine-test");
@@ -236,10 +243,103 @@ describe("executeReportQuery", () => {
   });
 });
 
+describe("executeReportQuery competition rank reports", () => {
+  test("formats highest-rank competition report scores as ranks", async () => {
+    const player = await prisma.player.create({
+      data: {
+        discordId: testAccountId("919191001"),
+        alias: "Ranked Player",
+        serverId,
+        creatorDiscordId: testAccountId("919191001"),
+        createdTime: now,
+        updatedTime: now,
+        accounts: {
+          create: [
+            {
+              puuid: testPuuid("report-rank-player"),
+              alias: "Ranked Player",
+              region: "AMERICA_NORTH",
+              serverId,
+              creatorDiscordId: testAccountId("919191001"),
+              createdTime: now,
+              updatedTime: now,
+            },
+          ],
+        },
+      },
+    });
+    const competition = await createCompetition(prisma, {
+      serverId,
+      ownerId: testAccountId("919191002"),
+      channelId: testChannelId("919191003"),
+      title: "Highest Rank Report",
+      description: "Rank display regression",
+      visibility: "OPEN",
+      maxParticipants: 10,
+      dates: {
+        type: "FIXED_DATES",
+        startDate: new Date("2026-05-01T00:00:00Z"),
+        endDate: new Date("2026-05-31T23:59:59Z"),
+      },
+      criteria: {
+        type: "HIGHEST_RANK",
+        queue: "SOLO",
+      },
+    });
+    await prisma.competitionParticipant.create({
+      data: {
+        competitionId: competition.id,
+        playerId: player.id,
+        status: "JOINED",
+        joinedAt: new Date("2026-05-01T00:00:00Z"),
+      },
+    });
+
+    const rank: Rank = {
+      tier: "gold",
+      division: 2,
+      lp: 75,
+      wins: 20,
+      losses: 15,
+    };
+    await prisma.competitionSnapshot.create({
+      data: {
+        competitionId: competition.id,
+        playerId: player.id,
+        snapshotType: "END",
+        snapshotData: JSON.stringify({ solo: rank }),
+        snapshotTime: new Date("2026-05-31T23:59:59Z"),
+      },
+    });
+
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText: `SELECT player, score FROM competition_rank WHERE competition_id = ${competition.id.toString()} GROUP BY player ORDER BY score DESC`,
+      lookbackDays: 30,
+      maxRows: 10,
+      sourceCompetitionId: competition.id,
+      now: new Date("2026-06-01T00:00:00Z"),
+    });
+
+    expect(result.columns).toEqual(["label", "rank"]);
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]?.label).toBe("Ranked Player");
+    expect(result.rows[0]?.values).toEqual([
+      { column: "rank", value: "Gold II, 75LP" },
+    ]);
+  });
+});
+
 async function cleanup(): Promise<void> {
+  await deleteIfExists(() => prisma.competitionSnapshot.deleteMany());
+  await deleteIfExists(() => prisma.competitionParticipant.deleteMany());
+  await deleteIfExists(() => prisma.competition.deleteMany());
   await deleteIfExists(() => prisma.prematchParticipantFact.deleteMany());
   await deleteIfExists(() => prisma.storedPrematch.deleteMany());
   await deleteIfExists(() => prisma.matchParticipantFact.deleteMany());
+  await deleteIfExists(() => prisma.account.deleteMany());
+  await deleteIfExists(() => prisma.player.deleteMany());
 }
 
 type FactInput = {

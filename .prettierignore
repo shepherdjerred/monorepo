@@ -29,6 +29,9 @@ pnpm-lock.yaml
 # Vendored
 packages/scout-for-lol/packages/frontend/public/emulatorjs/
 
+# Vendored N64Wasm emulator source (third-party C/C++/docs) — preserve formatting
+packages/discord-plays-mario-kart/wasm-src/
+
 # Generated
 packages/clauderon/mobile/src/types/generated/
 packages/clauderon/web/shared/src/generated/
@@ -59,12 +62,19 @@ packages/castle-casters/assets/
 # Legacy / archived projects — repo AGENTS.md marks archive/ as "do not modify"
 archive/
 
+# Vendored fork of @dank074/discord-video-stream — preserve upstream (biome) source formatting.
+packages/discord-video-stream/
+
 # Agent skills contain vendored/reference material whose source formatting is preserved.
 packages/dotfiles/dot_agents/skills/**
 packages/discord-plays-pokemon/packages/frontend/public/emulatorjs/
 
 # Vendored Data Dragon snapshot (League of Legends static data)
 packages/scout-for-lol/packages/data/src/data-dragon/assets/
+
+# Prometheus exposition-format fixture captured from the live mario-kart pod;
+# prettier has no parser for `.txt` and the snapshot must stay byte-for-byte.
+packages/discord-plays-mario-kart/packages/backend/scripts/__fixtures__/
 
 # prettier-plugin-astro@0.14.1 side-effect: prettier --check . tries to parse these
 # valid Astro/MDX files with a Babel-based parser that chokes on indented code

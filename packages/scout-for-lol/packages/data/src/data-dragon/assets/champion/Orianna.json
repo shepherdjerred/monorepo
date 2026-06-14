@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "Orianna": {
       "id": "Orianna",
@@ -309,7 +309,7 @@
         "difficulty": 7
       },
       "stats": {
-        "hp": 585,
+        "hp": 565,
         "hpperlevel": 110,
         "mp": 418,
         "mpperlevel": 25,

@@ -6,8 +6,39 @@ const config = [
   }),
   { rules: { "no-console": "off" } },
   {
+    // cdk8s-plus silently defaults omitted container resources to 1 CPU/512Mi
+    // requests; helpers that inject an empty object silently produce BestEffort
+    // pods. Force every container to state its resources (or `resources: {}`
+    // as a visible BestEffort opt-in).
+    files: ["src/**/*.ts"],
+    rules: { "custom-rules/require-container-resources": "error" },
+  },
+  {
     files: ["src/misc/modded-minecraft.ts"],
     rules: { "no-secrets/no-secrets": "off" },
+  },
+  {
+    files: ["src/**/*.ts"],
+    rules: {
+      // Imports of the loose CRD shim are silent strict-typing regressions —
+      // route through the strict types in src/cdk8s-types/cfargotunnel.ts.
+      // See packages/docs/plans/2026-05-26_cdk8s-cfargotunnel-strict-types.md.
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: [
+                "**/generated/imports/networking.cfargotunnel.com*",
+                "@shepherdjerred/homelab/cdk8s/generated/imports/networking.cfargotunnel.com*",
+              ],
+              message:
+                "Import from @shepherdjerred/homelab/cdk8s/src/cdk8s-types/cfargotunnel.ts instead — it provides strict types that catch CRD field casing typos at compile time.",
+            },
+          ],
+        },
+      ],
+    },
   },
   {
     ignores: ["generated/"],

@@ -40,6 +40,8 @@ export function createGrafanaPostgreSQLDatabase(chart: Chart) {
           max_wal_size: "4GB",
           log_statement: "none", // Reduce logging for performance
           log_min_duration_statement: "1000", // Log only slow queries
+          // Keep pg_hba auth and generated role password hashes aligned.
+          password_encryption: "scram-sha-256",
         },
       },
       volume: {
@@ -70,12 +72,12 @@ export function createGrafanaPostgreSQLDatabase(chart: Chart) {
           locale: "en_US.utf8",
           "data-checksums": "true",
         },
-        pgHba: [
+        pg_hba: [
           // Allow connections from within the cluster
-          "host grafana grafana all md5",
-          "host replication standby all md5",
+          "hostssl postgres postgres all md5",
+          "hostssl grafana grafana all scram-sha-256",
+          "hostssl replication standby all scram-sha-256",
           "local all all trust",
-          "host all all all md5",
         ],
         slots: {},
       },

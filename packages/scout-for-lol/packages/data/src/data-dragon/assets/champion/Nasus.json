@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "Nasus": {
       "id": "Nasus",
@@ -778,7 +778,7 @@
           "id": "NasusE",
           "name": "Spirit Fire",
           "description": "Nasus unleashes a spirit flame at a location, dealing damage and reducing the Armor of enemies who stand on it.",
-          "tooltip": "Nasus ignites a spirit flame, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage>. Enemies in the area lose <scaleArmor>{{ e2 }}% Armor</scaleArmor> and take <magicDamage>{{ totaldotdamage }} magic damage</magicDamage> over {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Nasus ignites a spirit flame, dealing <magicDamage>{{ initialdamage }} magic damage</magicDamage>. Enemies in the area lose <scaleArmor>{{ armorshredpercent*-100 }}% Armor</scaleArmor> and take <magicDamage>{{ totaldotdamage }} magic damage</magicDamage> over {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Initial Damage",
@@ -787,9 +787,9 @@
               "@AbilityResourceName@ Cost"
             ],
             "effect": [
-              "{{ e4 }} -> {{ e4NL }}",
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ effect2amount*-100.000000 }}% -> {{ effect2amountnl*-100.000000 }}%",
+              "{{ initialhitdamage }} -> {{ initialhitdamageNL }}",
+              "{{ damagepertick }} -> {{ damagepertickNL }}",
+              "{{ armorshredpercent*-100.000000 }}% -> {{ armorshredpercentnl*-100.000000 }}%",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
@@ -821,11 +821,11 @@
               34
             ],
             [
-              30,
-              35,
-              40,
-              45,
-              50
+              -0.3,
+              -0.35,
+              -0.4,
+              -0.45,
+              -0.5
             ],
             [
               5,
@@ -887,7 +887,7 @@
           "effectBurn": [
             null,
             "10/16/22/28/34",
-            "30/35/40/45/50",
+            "-0.3/-0.35/-0.4/-0.45/-0.5",
             "5",
             "50/80/110/140/170",
             "0",

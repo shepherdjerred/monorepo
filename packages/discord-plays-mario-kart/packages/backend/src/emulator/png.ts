@@ -1,0 +1,92 @@
+import { deflateSync } from "node:zlib";
+
+function crc32(bytes: Uint8Array): number {
+  let crc = 0xff_ff_ff_ff;
+  for (const byte of bytes) {
+    crc ^= byte;
+    for (let i = 0; i < 8; i++) {
+      crc = crc & 1 ? (crc >>> 1) ^ 0xed_b8_83_20 : crc >>> 1;
+    }
+  }
+  return (crc ^ 0xff_ff_ff_ff) >>> 0;
+}
+
+function chunk(type: string, data: Uint8Array): Buffer {
+  const length = Buffer.alloc(4);
+  length.writeUInt32BE(data.length, 0);
+  const typeBytes = Buffer.from(type, "ascii");
+  const body = Buffer.concat([typeBytes, Buffer.from(data)]);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(body), 0);
+  return Buffer.concat([length, body, crc]);
+}
+
+// Encode a width x height RGBA frame to PNG as RGB (no alpha), optionally
+// nearest-neighbour upscaled by an integer factor for legibility on Discord.
+// The screenshot frame's colours are already correct (R,G,B in bytes 0-2); its
+// 4th byte is undefined XRGB8888 padding, not a real alpha (see
+// wasm-src/PATCHES.md). Emitting an RGB (colour type 2) PNG drops that dead byte
+// — otherwise it leaks through as transparency. Source is read 4 bytes/pixel;
+// output is 3 bytes/pixel. Dependency-free.
+export function encodePng(
+  rgba: Buffer,
+  width: number,
+  height: number,
+  scale = 1,
+): Buffer {
+  const factor = Math.max(1, Math.floor(scale));
+  return encodePngToSize(
+    { rgba, width, height },
+    { width: width * factor, height: height * factor },
+  );
+}
+
+export function encodePngToSize(
+  frame: { rgba: Buffer; width: number; height: number },
+  target: { width: number; height: number },
+): Buffer {
+  const { rgba, width, height } = frame;
+  const { width: outW, height: outH } = target;
+  if (width <= 0 || height <= 0 || outW <= 0 || outH <= 0) {
+    throw new RangeError("PNG dimensions must be positive");
+  }
+  const requiredBytes = width * height * 4;
+  if (rgba.length < requiredBytes) {
+    throw new RangeError(
+      `rgba buffer too small: need ${String(requiredBytes)} bytes for ${String(width)}x${String(height)} (got ${String(rgba.length)})`,
+    );
+  }
+  const stride = outW * 3;
+  const raw = Buffer.alloc((stride + 1) * outH);
+  for (let y = 0; y < outH; y++) {
+    const srcY = Math.min(height - 1, Math.trunc((y * height) / outH));
+    let pos = y * (stride + 1);
+    raw[pos++] = 0; // filter: none
+    for (let x = 0; x < outW; x++) {
+      const srcX = Math.min(width - 1, Math.trunc((x * width) / outW));
+      const s = (srcY * width + srcX) * 4; // RGBA source: R,G,B,X
+      raw[pos++] = rgba[s]; // R
+      raw[pos++] = rgba[s + 1]; // G
+      raw[pos++] = rgba[s + 2]; // B
+    }
+  }
+
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(outW, 0);
+  ihdr.writeUInt32BE(outH, 4);
+  ihdr[8] = 8; // bit depth
+  ihdr[9] = 2; // colour type: RGB (no alpha)
+  ihdr[10] = 0; // compression
+  ihdr[11] = 0; // filter
+  ihdr[12] = 0; // interlace
+
+  const signature = Buffer.from([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+  ]);
+  return Buffer.concat([
+    signature,
+    chunk("IHDR", ihdr),
+    chunk("IDAT", deflateSync(raw)),
+    chunk("IEND", Buffer.alloc(0)),
+  ]);
+}

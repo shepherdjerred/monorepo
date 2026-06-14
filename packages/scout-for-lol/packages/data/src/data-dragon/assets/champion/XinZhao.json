@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "XinZhao": {
       "id": "XinZhao",
@@ -419,14 +419,14 @@
           "id": "XinZhaoQ",
           "name": "Three Talon Strike",
           "description": "Xin Zhao's next 3 standard attacks deal increased damage with the third attack knocking an opponent into the air.",
-          "tooltip": "Xin Zhao's next 3 Attacks deal an additional <physicalDamage>{{ bonusdamage }} physical damage</physicalDamage> and reduces his other Ability's Cooldowns by 1 second. The third Attack also <status>Knocks Up</status> for {{ e2 }} seconds.<br />{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Xin Zhao's next 3 Attacks deal an additional <physicalDamage>{{ bonusdamage }} physical damage</physicalDamage> and reduces his other Ability's Cooldowns by 1 second. The third Attack also <status>Knocks Up</status> for {{ knockupduration }} seconds.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Bonus Damage:",
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -451,18 +451,18 @@
           "effect": [
             null,
             [
-              15,
-              30,
-              45,
-              60,
-              75
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
-              0.75,
-              0.75,
-              0.75,
-              0.75,
-              0.75
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               0,
@@ -523,8 +523,8 @@
           ],
           "effectBurn": [
             null,
-            "15/30/45/60/75",
-            "0.75",
+            "0",
+            "0",
             "0",
             "0",
             "0",
@@ -565,13 +565,11 @@
             "label": [
               "Slash Damage",
               "Thrust Damage",
-              "@AbilityResourceName@ Cost",
               "Cooldown"
             ],
             "effect": [
               "{{ slashbasedamage }} -> {{ slashbasedamageNL }}",
               "{{ thrustbasedamage }} -> {{ thrustbasedamageNL }}",
-              "{{ cost }} -> {{ costNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -586,12 +584,12 @@
           "cooldownBurn": "12/11/10/9/8",
           "cost": [
             60,
-            55,
-            50,
-            45,
-            40
+            60,
+            60,
+            60,
+            60
           ],
-          "costBurn": "60/55/50/45/40",
+          "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,
@@ -726,13 +724,13 @@
           ],
           "cooldownBurn": "11",
           "cost": [
-            50,
-            50,
-            50,
-            50,
-            50
+            60,
+            60,
+            60,
+            60,
+            60
           ],
-          "costBurn": "50",
+          "costBurn": "60",
           "datavalues": {},
           "effect": [
             null,

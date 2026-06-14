@@ -124,7 +124,10 @@ export function createModdedMinecraftApp(
           ],
         },
         {
-          group: "",
+          // No `group` - Service is in the core API group. ArgoCD's Application
+          // Go types mark `group` as omitempty, so an explicit "" is dropped
+          // from the live CR and leaves the apps app-of-apps perpetually
+          // OutOfSync.
           kind: "Service",
           jsonPointers: [
             "/spec/clusterIP",
@@ -142,6 +145,7 @@ export function createModdedMinecraftApp(
           "CreateNamespace=true",
           "ServerSideApply=true",
           "RespectIgnoreDifferences=true",
+          "ApplyOutOfSyncOnly=true",
         ],
       },
     },

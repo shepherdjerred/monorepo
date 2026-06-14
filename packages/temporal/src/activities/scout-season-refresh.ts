@@ -31,7 +31,7 @@ const SEASONS_TEST_FILE =
 const SEASON_PATHS = [SEASONS_FILE, SEASONS_TEST_FILE] as const;
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
-const DEFAULT_MODEL = "claude-opus-4-7";
+const DEFAULT_MODEL = "claude-opus-4-8";
 const DEFAULT_MAX_TURNS = 40;
 
 const NO_DRIFT_SENTINEL = "NO_DRIFT";

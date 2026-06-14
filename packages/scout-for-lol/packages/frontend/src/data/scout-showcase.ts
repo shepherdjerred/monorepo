@@ -16,7 +16,12 @@ const BaseScoutShowcaseAssetSchema = z.strictObject({
 
 export const GeneratedScoutShowcaseAssetSchema =
   BaseScoutShowcaseAssetSchema.extend({
-    kind: z.enum(["s3-image", "competition-graph", "report-graph"]),
+    kind: z.enum([
+      "s3-image",
+      "discord-screenshot",
+      "competition-graph",
+      "report-graph",
+    ]),
     status: z.literal("generated"),
     fileName: z.string().min(1),
     src: z.string().min(1),
@@ -49,3 +54,13 @@ export const generatedScoutShowcaseAssets =
   scoutShowcaseAssetIndex.assets.flatMap((asset) =>
     asset.status === "generated" ? [asset] : [],
   );
+
+export function getGeneratedScoutShowcaseAssetSrc(id: string): string {
+  const asset = generatedScoutShowcaseAssets.find(
+    (candidate) => candidate.id === id,
+  );
+  if (asset === undefined) {
+    throw new Error(`Missing generated Scout showcase asset: ${id}`);
+  }
+  return asset.src;
+}

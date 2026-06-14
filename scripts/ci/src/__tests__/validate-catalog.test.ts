@@ -58,8 +58,10 @@ describe("catalog consistency", () => {
 
   it("PACKAGE_TO_SITE values match DEPLOY_SITES buckets", () => {
     const buckets = new Set(DEPLOY_SITES.map((s) => s.bucket));
-    for (const bucket of Object.values(PACKAGE_TO_SITE)) {
-      expect(buckets.has(bucket)).toBe(true);
+    for (const pkgBuckets of Object.values(PACKAGE_TO_SITE)) {
+      for (const bucket of pkgBuckets) {
+        expect(buckets.has(bucket)).toBe(true);
+      }
     }
   });
 

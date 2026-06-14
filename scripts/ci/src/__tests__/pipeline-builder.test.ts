@@ -1,5 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { buildPipeline } from "../pipeline-builder.ts";
+import {
+  buildPipeline,
+  buildReleasePleaseSkipPipeline,
+} from "../pipeline-builder.ts";
 import type { AffectedPackages } from "../lib/types.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 import {
@@ -15,8 +18,10 @@ function emptyAffected(): AffectedPackages {
     packages: new Set(),
     buildAll: false,
     homelabChanged: false,
+    tofuChanged: false,
     cooklangChanged: false,
     resumeChanged: false,
+    helmTypesInputsChanged: false,
     ciImageChanged: false,
     hasImagePackages: new Set(),
     hasSitePackages: new Set(),
@@ -33,8 +38,10 @@ function fullBuild(): AffectedPackages {
     packages: new Set(ALL_PACKAGES),
     buildAll: true,
     homelabChanged: true,
+    tofuChanged: true,
     cooklangChanged: true,
     resumeChanged: true,
+    helmTypesInputsChanged: true,
     ciImageChanged: false,
     hasImagePackages: new Set(PACKAGES_WITH_IMAGES),
     hasSitePackages: new Set(Object.keys(PACKAGE_TO_SITE)),
@@ -183,6 +190,30 @@ describe("buildPipeline", () => {
         expect(ciComplete.depends_on).toEqual(["no-changes"]);
       }
     });
+
+    it("includes Greptile review gate on no-change pull request builds", () => {
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(emptyAffected()),
+      );
+      expect(pipeline.steps).toHaveLength(3);
+      const steps = pipeline.steps.filter(isStep);
+      const greptile = steps.find((s) => s.key === "greptile-review");
+      const ciComplete = steps.find((s) => s.key === "ci-complete");
+
+      expect(greptile).toBeDefined();
+      expect(greptile?.command).toContain("github-app-token.ts");
+      expect(greptile?.command).toContain("wait-for-greptile.ts");
+      expect(ciComplete?.depends_on).toContain("greptile-review");
+    });
+
+    it("omits Greptile review gate on no-change main builds", () => {
+      const pipeline = withBuildkitePullRequest("false", () =>
+        buildPipeline(emptyAffected()),
+      );
+      const steps = pipeline.steps.filter(isStep);
+
+      expect(steps.some((s) => s.key === "greptile-review")).toBe(false);
+    });
   });
 
   describe("ci-base image changes", () => {
@@ -205,7 +236,12 @@ describe("buildPipeline", () => {
       expect(push?.if).toBe("build.branch == pipeline.default_branch");
       expect(push?.command).toContain("ghcr.io/shepherdjerred/ci-base:");
       expect(push?.command).toContain("--registry-password env:GHCR_TOKEN");
-      expect(push?.command).not.toContain("env:GH_TOKEN");
+      expect(push?.command).toContain(
+        "WARNING: GHCR_TOKEN unset, falling back to GH_TOKEN for GHCR push",
+      );
+      expect(push?.command).toContain(
+        'export GHCR_TOKEN="$${GHCR_TOKEN:-$${GH_TOKEN:-}}"',
+      );
       expect(commitBack).toBeDefined();
       expect(commitBack?.depends_on).toBe("push-ci-base");
       expect(commitBack?.concurrency_group).toBe(
@@ -304,6 +340,7 @@ describe("buildPipeline", () => {
         "dagger-hygiene",
         "trivy-scan",
         "semgrep-scan",
+        "large-file-check",
       ]) {
         expect(steps.find((s) => s.key === key)?.soft_fail).toBe(true);
       }
@@ -322,8 +359,13 @@ describe("buildPipeline", () => {
       );
 
       expect(nativeDepsStep).toBeDefined();
+      // After PR2's DAGGER_CALL refactor the command is
+      // `dagger -m <module-ref> call tasks-for-obsidian-ios-native-deps`.
+      expect(nativeDepsStep?.command).toMatch(
+        /dagger(\s+-[\w-]+\s+\S+)*\s+call\s+tasks-for-obsidian-ios-native-deps/,
+      );
       expect(nativeDepsStep?.command).toContain(
-        ".buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh",
+        "https://github.com/shepherdjerred/monorepo.git",
       );
       expect(nativeDepsStep?.soft_fail).toBeUndefined();
     });
@@ -368,6 +410,76 @@ describe("buildPipeline", () => {
     });
   });
 
+  describe("helm-types drift check", () => {
+    function homelabStepKeys(affected: AffectedPackages): string[] {
+      const pipeline = buildPipeline(affected);
+      const homelab = pipeline.steps
+        .filter(isGroup)
+        .find((g) => g.key === "pkg-homelab");
+      return (homelab?.steps ?? []).filter(isStep).map((s) => s.key);
+    }
+
+    it("emits the drift-check step when a generator input changed", () => {
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.homelabChanged = true;
+      affected.helmTypesInputsChanged = true;
+
+      const keys = homelabStepKeys(affected);
+      expect(keys).toContain("helm-types-drift-check");
+      // build-helm-types is unconditional for homelab; drift-check is the gate.
+      expect(keys).toContain("build-helm-types");
+    });
+
+    it("omits the drift-check step when no generator input changed", () => {
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.homelabChanged = true;
+
+      const keys = homelabStepKeys(affected);
+      expect(keys).not.toContain("helm-types-drift-check");
+      expect(keys).toContain("build-helm-types");
+    });
+
+    it("emits drift-check for Renovate noop+helmTypesInputsChanged (homelab in packages, empty otherwise)", () => {
+      // Simulates the Renovate chart-bump case: only versions.ts changed.
+      // change-detection returns buildScopedResult(new Set(["homelab"]), ..., helmTypesInputsChanged=true).
+      // buildPipeline must NOT hit the empty-packages early return and must emit the drift-check.
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.homelabChanged = true;
+      affected.helmTypesInputsChanged = true;
+      // All other flags false — simulates a Renovate noop path
+
+      const pipeline = buildPipeline(affected);
+      const homelabGroup = pipeline.steps
+        .filter(isGroup)
+        .find((g) => g.key === "pkg-homelab");
+      const stepKeys = (homelabGroup?.steps ?? [])
+        .filter(isStep)
+        .map((s) => s.key);
+
+      expect(stepKeys).toContain("helm-types-drift-check");
+    });
+
+    it("no-changes early return does NOT fire when helmTypesInputsChanged is true", () => {
+      // Defense-in-depth: even if packages is empty but helmTypesInputsChanged=true,
+      // the early return must be skipped. (change-detection ensures homelab is in
+      // packages, but pipeline-builder also guards independently.)
+      const affected = emptyAffected();
+      affected.helmTypesInputsChanged = true;
+      // packages.size === 0, buildAll=false, ciImageChanged=false — triggers early return
+      // without the helmTypesInputsChanged guard added in this PR
+
+      const pipeline = buildPipeline(affected);
+      // The pipeline must NOT contain the "no-changes" key
+      const noChangesStep = pipeline.steps
+        .filter(isStep)
+        .find((s) => s.key === "no-changes");
+      expect(noChangesStep).toBeUndefined();
+    });
+  });
+
   describe("full build", () => {
     it("includes all packages", () => {
       const pipeline = buildPipeline(fullBuild());
@@ -388,6 +500,7 @@ describe("buildPipeline", () => {
         "knip-check",
         "gitleaks-check",
         "suppression-check",
+        "scout-test-template-check",
       ];
       for (const key of qualityKeys) {
         expect(steps.some((s) => s.key === key)).toBe(true);
@@ -402,6 +515,7 @@ describe("buildPipeline", () => {
         "trivy-scan",
         "dagger-hygiene",
         "knip-check",
+        "large-file-check",
       ]) {
         const step = steps.find((s) => s.key === key);
         expect(step).toBeDefined();
@@ -436,13 +550,15 @@ describe("buildPipeline", () => {
       const blockingGateKeys = [
         "shellcheck",
         "quality-ratchet",
+        "check-todos",
         "compliance-check",
         "gitleaks-check",
         "suppression-check",
         "env-var-names",
+        "line-endings-check",
+        "scout-test-template-check",
         "migration-guard",
         "merge-conflict-check",
-        "large-file-check",
         "caddyfile-validate",
       ];
       for (const key of blockingGateKeys) {
@@ -456,6 +572,7 @@ describe("buildPipeline", () => {
         "dagger-hygiene",
         "trivy-scan",
         "semgrep-scan",
+        "large-file-check",
       ];
       for (const key of asyncKeys) {
         expect(Array.isArray(deps) ? deps : []).not.toContain(key);
@@ -552,8 +669,25 @@ describe("buildPipeline", () => {
       expect(planSteps.length).toBeGreaterThan(0);
       for (const s of planSteps) {
         expect(s.if).toBe("build.branch != pipeline.default_branch");
-        expect(s.command).toContain("--github-app-id env:GITHUB_APP_ID");
-        expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
+        // Plan is read-only and the backends have no state locking, so plan
+        // steps must NOT carry a concurrency group — they run in parallel.
+        expect(s.concurrency).toBeUndefined();
+        expect(s.concurrency_group).toBeUndefined();
+        if (s.key === "tofu-plan-github") {
+          expect(s.command).toContain("--github-token env:TOFU_GITHUB_TOKEN");
+        } else {
+          expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
+        }
+        if (s.key === "tofu-plan-tailscale") {
+          expect(s.command).toContain(
+            "--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID",
+          );
+          expect(s.command).toContain(
+            "--tailscale-oauth-client-secret env:TAILSCALE_OAUTH_CLIENT_SECRET",
+          );
+        } else {
+          expect(s.command).not.toContain("TAILSCALE_OAUTH_CLIENT_ID");
+        }
       }
     });
 
@@ -570,6 +704,7 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("build-images");
       expect(groupKeys).toContain("homelab-tofu-plan");
       expect(stepKeys).toContain("ci-complete");
+      expect(stepKeys).toContain("greptile-review");
 
       expect(groupKeys).not.toContain("push-images");
       expect(groupKeys).not.toContain("publish-npm");
@@ -585,6 +720,28 @@ describe("buildPipeline", () => {
       expect(stepKeys).not.toContain("build-summary");
     });
 
+    it("makes ci-complete depend on Greptile for pull request builds", () => {
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(fullBuild()),
+      );
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      const ciComplete = allSteps.find((s) => s.key === "ci-complete");
+
+      expect(ciComplete).toBeDefined();
+      expect(ciComplete?.depends_on).toContain("greptile-review");
+    });
+
+    it("does not include Greptile on main builds", () => {
+      const pipeline = withBuildkitePullRequest("false", () =>
+        buildPipeline(fullBuild()),
+      );
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      expect(allSteps.some((s) => s.key === "greptile-review")).toBe(false);
+    });
+
     it("includes image build/push, npm, cooklang, and sites groups", () => {
       const pipeline = buildPipeline(fullBuild());
       const groups = pipeline.steps.filter(isGroup);
@@ -597,7 +754,49 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("deploy-sites");
     });
 
-    it("uses GitHub App auth for release tasks and GHCR_TOKEN only for image pushes", () => {
+    it("omits cooklang release on auto-generated cooklang bumps", () => {
+      const affected = emptyAffected();
+      affected.packages.add("cooklang-for-obsidian");
+      affected.cooklangChanged = true;
+      affected.isAutoGenerated = true;
+
+      const pipeline = buildPipeline(affected);
+      const groups = pipeline.steps.filter(isGroup);
+      const groupKeys = groups.map((g) => g.key);
+
+      expect(groupKeys).not.toContain("cooklang-release");
+    });
+
+    it("omits cooklang release on a full build when cooklang did not change", () => {
+      // A full build (infra/lockfile change) rebuilds everything but must not
+      // publish a cooklang plugin version when no cooklang source changed —
+      // otherwise every unrelated full build opens a manifest-bump PR.
+      const affected = fullBuild();
+      affected.cooklangChanged = false;
+
+      const pipeline = buildPipeline(affected);
+      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
+
+      expect(groupKeys).not.toContain("cooklang-release");
+      // ...but the rest of the full-build release track still runs.
+      expect(groupKeys).toContain("build-images");
+      expect(groupKeys).toContain("push-images");
+      expect(groupKeys).toContain("publish-npm");
+      expect(groupKeys).toContain("deploy-sites");
+    });
+
+    it("includes cooklang release on a scoped build when cooklang changed", () => {
+      const affected = emptyAffected();
+      affected.packages.add("cooklang-for-obsidian");
+      affected.cooklangChanged = true;
+
+      const pipeline = buildPipeline(affected);
+      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
+
+      expect(groupKeys).toContain("cooklang-release");
+    });
+
+    it("uses GitHub App auth for release tasks and GHCR_TOKEN for image pushes with GH_TOKEN fallback", () => {
       const pipeline = buildPipeline(fullBuild());
       const allSteps: BuildkiteStep[] = [];
       collectSteps(pipeline.steps, allSteps);
@@ -617,6 +816,12 @@ describe("buildPipeline", () => {
         if (s.command.includes("--registry-password")) {
           expect(s.command).toContain("--registry-password env:GHCR_TOKEN");
           expect(s.command).not.toContain("--registry-password env:GH_TOKEN");
+          expect(s.command).toContain(
+            "WARNING: GHCR_TOKEN unset, falling back to GH_TOKEN for GHCR push",
+          );
+          expect(s.command).toContain(
+            'export GHCR_TOKEN="$${GHCR_TOKEN:-$${GH_TOKEN:-}}"',
+          );
         }
       }
     });
@@ -671,6 +876,32 @@ describe("buildPipeline", () => {
       );
     });
 
+    it("uses non-tracking Scout marketing placeholders for beta deploy builds", () => {
+      const pipeline = withBuildkiteBranchContext("main", "main", () =>
+        buildPipeline(fullBuild()),
+      );
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      const scoutBetaDeploy = allSteps.find(
+        (s) => s.key === "deploy-scout-frontend-beta",
+      );
+
+      expect(scoutBetaDeploy).toBeDefined();
+      expect(scoutBetaDeploy?.command).not.toContain(
+        "--build-env-values env:PUBLIC_PINTEREST_TAG_ID",
+      );
+      expect(scoutBetaDeploy?.command).not.toContain(
+        "--build-env-values env:PUBLIC_REDDIT_PIXEL_ID",
+      );
+      expect(scoutBetaDeploy?.command).toContain(
+        "PUBLIC_PINTEREST_TAG_ID='beta-placeholder-pinterest-tag-id'",
+      );
+      expect(scoutBetaDeploy?.command).toContain(
+        "PUBLIC_REDDIT_PIXEL_ID='beta-placeholder-reddit-pixel-id'",
+      );
+    });
+
     it("includes homelab track", () => {
       const pipeline = buildPipeline(fullBuild());
       const groups = pipeline.steps.filter(isGroup);
@@ -681,6 +912,40 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("push-images");
       expect(groupKeys).toContain("homelab-helm-push");
       expect(groupKeys).toContain("homelab-tofu");
+    });
+
+    it("waits for SeaweedFS bucket reconciliation before deploying sites", () => {
+      const pipeline = buildPipeline(fullBuild());
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      const scoutBetaDeploy = allSteps.find(
+        (s) => s.key === "deploy-scout-frontend-beta",
+      );
+
+      expect(scoutBetaDeploy).toBeDefined();
+      expect(scoutBetaDeploy?.depends_on).toContain("tofu-seaweedfs");
+    });
+
+    it("waits for SeaweedFS bucket reconciliation for partial homelab + site releases", () => {
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.packages.add("scout-for-lol");
+      affected.homelabChanged = true;
+      affected.hasSitePackages.add("scout-for-lol");
+
+      const pipeline = buildPipeline(affected);
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      const tofuSeaweedfs = allSteps.find((s) => s.key === "tofu-seaweedfs");
+      const scoutBetaDeploy = allSteps.find(
+        (s) => s.key === "deploy-scout-frontend-beta",
+      );
+
+      expect(tofuSeaweedfs).toBeDefined();
+      expect(scoutBetaDeploy).toBeDefined();
+      expect(scoutBetaDeploy?.depends_on).toContain("tofu-seaweedfs");
     });
 
     it("includes version commit-back", () => {
@@ -776,13 +1041,28 @@ describe("buildPipeline", () => {
       }
       collect(pipeline.steps);
 
-      const tofuSteps = allSteps.filter((s) => s.key.startsWith("tofu-"));
-      expect(tofuSteps.length).toBeGreaterThan(0);
-      for (const s of tofuSteps) {
+      // Only APPLY steps (tofu-<stack>) carry a concurrency group — they write
+      // state. PLAN steps (tofu-plan-<stack>) are read-only and intentionally
+      // have none (asserted in "tofu plan steps are PR-only").
+      const tofuApplySteps = allSteps.filter(
+        (s) => s.key.startsWith("tofu-") && !s.key.startsWith("tofu-plan-"),
+      );
+      expect(tofuApplySteps.length).toBeGreaterThan(0);
+      for (const s of tofuApplySteps) {
         expect(s.concurrency).toBe(1);
         expect(s.concurrency_group).toContain("monorepo/tofu-");
-        expect(s.command).toContain("--github-app-id env:GITHUB_APP_ID");
-        expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
+        if (s.key === "tofu-github") {
+          expect(s.command).toContain("--github-token env:TOFU_GITHUB_TOKEN");
+        } else {
+          expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
+        }
+        if (s.key === "tofu-tailscale" || s.key === "tofu-plan-tailscale") {
+          expect(s.command).toContain(
+            "--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID",
+          );
+        } else {
+          expect(s.command).not.toContain("TAILSCALE_OAUTH_CLIENT_ID");
+        }
       }
 
       const argoSteps = allSteps.filter((s) =>
@@ -809,6 +1089,12 @@ describe("buildPipeline", () => {
       const pipeline = buildPipeline(versionBumpAffected());
       const steps = pipeline.steps.filter(isStep);
       expect(steps.some((s) => s.key === "homelab-cdk8s")).toBe(true);
+    });
+
+    it("includes the 1Password item/field lint gate", () => {
+      const pipeline = buildPipeline(versionBumpAffected());
+      const steps = pipeline.steps.filter(isStep);
+      expect(steps.some((s) => s.key === "homelab-1password-items")).toBe(true);
     });
 
     it("includes helm chart push so ArgoCD picks up new manifests", () => {
@@ -918,6 +1204,35 @@ describe("buildPipeline", () => {
     });
   });
 
+  describe("tofu plan gating (PR builds)", () => {
+    it("omits the tofu plan group for a cdk8s-only homelab PR", () => {
+      // homelab changed (e.g. cdk8s) but no tofu source files changed
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.homelabChanged = true;
+      affected.tofuChanged = false;
+
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(affected),
+      );
+      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
+      expect(groupKeys).not.toContain("homelab-tofu-plan");
+    });
+
+    it("includes the tofu plan group when tofu source changed", () => {
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.homelabChanged = true;
+      affected.tofuChanged = true;
+
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(affected),
+      );
+      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
+      expect(groupKeys).toContain("homelab-tofu-plan");
+    });
+  });
+
   describe("structural validation", () => {
     it("has unique step keys across the full build", () => {
       const pipeline = buildPipeline(fullBuild());
@@ -1003,6 +1318,7 @@ describe("buildPipeline", () => {
         "compliance-check",
         "env-var-names",
         "line-endings-check",
+        "scout-test-template-check",
         "migration-guard",
         "dagger-hygiene",
         "merge-conflict-check",
@@ -1026,8 +1342,13 @@ describe("buildPipeline", () => {
           if (typeof obj["command"] === "string") {
             const cmd = obj["command"] as string;
             const key = obj["key"];
+            // Dagger CLI invocations may have flags between `dagger` and `call`
+            // (e.g. `dagger -m <module-ref> call`) so we look for both tokens
+            // rather than the literal substring.
+            const isDaggerCall =
+              /(^|\s)dagger(\s+-[\w-]+(\s+\S+)?)*\s+call(\s|$)/.test(cmd);
             if (
-              !cmd.includes("dagger call") &&
+              !isDaggerCall &&
               !cmd.includes("echo ") &&
               !cmd.includes("buildkite-agent") &&
               !(typeof key === "string" && PLAIN_STEP_KEYS.has(key))
@@ -1170,5 +1491,20 @@ describe("buildPipeline", () => {
         expect(step.command).toMatch(/--pkg-path \S+/);
       }
     });
+  });
+});
+
+describe("buildReleasePleaseSkipPipeline", () => {
+  it("emits a single annotation step and no required gates", () => {
+    const pipeline = buildReleasePleaseSkipPipeline();
+    const steps = pipeline.steps.filter(isStep);
+    expect(steps).toHaveLength(1);
+    expect(steps[0]!.key).toBe("release-please-skip");
+    expect(steps[0]!.command).toContain("buildkite-agent annotate");
+    const keys = pipeline.steps.map((s) => ("key" in s ? s.key : undefined));
+    // The skip pipeline must NOT post the required merge gates, so the PR stays
+    // un-mergeable until a real build is requested on purpose.
+    expect(keys).not.toContain("ci-complete");
+    expect(keys).not.toContain("greptile-review");
   });
 });

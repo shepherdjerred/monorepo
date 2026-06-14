@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "Brand": {
       "id": "Brand",
@@ -375,6 +375,12 @@
           "name": "Zombie Brand (Doom)",
           "chromas": false,
           "parentSkin": 4
+        },
+        {
+          "id": "63053",
+          "num": 53,
+          "name": "Sinful Shores Brand",
+          "chromas": false
         }
       ],
       "lore": "Once a tribesman of the icy Freljord named Kegan Rodhe, the creature known as Brand is a lesson in the temptation of greater power. Seeking one of the legendary World Runes, Kegan betrayed his companions and seized it for himself—and, in an instant, the man was no more. His soul burned away, his body a vessel of living flame, Brand now roams Valoran in search of other Runes, swearing revenge for wrongs he could never possibly have suffered in a dozen mortal lifetimes.",
@@ -406,7 +412,7 @@
         "mp": 469,
         "mpperlevel": 21,
         "movespeed": 340,
-        "armor": 27,
+        "armor": 24,
         "armorperlevel": 4.2,
         "spellblock": 30,
         "spellblockperlevel": 1.3,

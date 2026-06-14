@@ -29,10 +29,10 @@ import {
 import { createLogger } from "#src/logger.ts";
 import {
   classifyOpenAIProviderIssue,
-  PROVIDER_ISSUE_KINDS,
   recordProviderIssue,
   resolveProviderIssue,
 } from "#src/alerts/provider-metrics.ts";
+import { PROVIDER_ISSUE_KINDS } from "#src/alerts/provider-issue-kinds.ts";
 
 const logger = createLogger("generator");
 

@@ -151,6 +151,13 @@ describe("ManifestSchema", () => {
     expect(result.commentaries[0].d).toBe(0);
   });
 
+  test("normalizes numeric rune field to string", () => {
+    const data = structuredClone(fixture);
+    (data.commentaries[0] as Record<string, unknown>).rune3 = 3008;
+    const result = ManifestSchema.parse(data);
+    expect(result.commentaries[0].rune3).toBe("3008");
+  });
+
   test("rejects commentary with role 'all'", () => {
     const bad = structuredClone(fixture);
     (bad.commentaries[0] as Record<string, unknown>).role = "all";

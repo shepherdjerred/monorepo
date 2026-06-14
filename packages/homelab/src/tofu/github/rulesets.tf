@@ -27,6 +27,14 @@ resource "github_repository_ruleset" "monorepo_main" {
       required_check {
         context = "buildkite/monorepo/pr/white-check-mark-ci-complete"
       }
+
+      # Greptile review gate: green only once Greptile has reviewed the head
+      # commit and every P3-or-more-severe Greptile comment is resolved
+      # (scripts/ci/src/wait-for-greptile.ts). ci-complete already depends on
+      # this step, so this is an explicit belt-and-suspenders requirement.
+      required_check {
+        context = "buildkite/monorepo/pr/mag-greptile-review"
+      }
     }
   }
 

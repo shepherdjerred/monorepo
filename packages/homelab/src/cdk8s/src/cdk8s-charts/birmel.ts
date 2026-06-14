@@ -48,7 +48,7 @@ export function createBirmelChart(app: App) {
     },
   });
 
-  // NetworkPolicy: Allow egress to DNS, Tempo (OTLP), and external HTTPS
+  // NetworkPolicy: Allow egress to DNS, Tempo (OTLP), external HTTPS, and Discord voice UDP
   new KubeNetworkPolicy(chart, "birmel-egress-netpol", {
     metadata: { name: "birmel-egress-netpol" },
     spec: {
@@ -79,10 +79,32 @@ export function createBirmelChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }],
         },
+        // PinchTab browser automation (pinchtab.pinchtab.svc.cluster.local:9867)
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "pinchtab" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(9867), protocol: "TCP" }],
+        },
         // External HTTPS (Discord, OpenAI, Anthropic, GitHub, Sentry)
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
           ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
+        },
+        // Discord voice media negotiates UDP ports in the high ephemeral range.
+        {
+          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
+          ports: [
+            {
+              port: IntOrString.fromNumber(50_000),
+              endPort: 65_535,
+              protocol: "UDP",
+            },
+          ],
         },
       ],
     },

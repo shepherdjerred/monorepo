@@ -3,8 +3,12 @@ export interface AffectedPackages {
   packages: Set<string>;
   buildAll: boolean;
   homelabChanged: boolean;
+  /** True when a file under `packages/homelab/src/tofu/` changed. Gates the PR tofu *plan* group specifically — narrower than `homelabChanged` so cdk8s-only homelab PRs skip the plan jobs. */
+  tofuChanged: boolean;
   cooklangChanged: boolean;
   resumeChanged: boolean;
+  /** True when a generator input (cdk8s versions.ts, the generate/parse scripts, or the helm-types lib) changed. Gates the `helm-types-drift-check` step so its ~24-chart network fetch only runs when the generated tree can actually change. */
+  helmTypesInputsChanged: boolean;
   ciImageChanged: boolean;
   hasImagePackages: Set<string>;
   hasSitePackages: Set<string>;

@@ -21,6 +21,8 @@ import { getEtcdCustomRuleGroups } from "./rules/etcd-custom.ts";
 import { getZfsMaintenanceRuleGroups } from "./rules/zfs-maintenance.ts";
 import { getTemporalRuleGroups } from "./rules/temporal.ts";
 import { getPrReviewBotRuleGroups } from "./rules/pr-review-bot.ts";
+import { getDaggerEngineRuleGroups } from "./rules/dagger.ts";
+import { getStreambotRuleGroups } from "./rules/streambot.ts";
 
 export function createPrometheusMonitoring(chart: Chart) {
   // Create Home Assistant rules
@@ -274,6 +276,32 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getPrReviewBotRuleGroups(),
+    },
+  });
+
+  // Create Dagger engine rules (CI build-cache PVC quota early-warning)
+  new PrometheusRule(chart, "prometheus-dagger-engine-rules", {
+    metadata: {
+      name: "prometheus-dagger-engine-rules",
+      namespace: "dagger",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getDaggerEngineRuleGroups(),
+    },
+  });
+
+  // Streambot pipeline-health rules (encoder progress, producer/consumer rate mismatch,
+  // JS-heap queue accumulation, late-frame send-path signals — authored 2026-06-14 after
+  // the 1 s freeze incident).
+  new PrometheusRule(chart, "prometheus-streambot-rules", {
+    metadata: {
+      name: "prometheus-streambot-rules",
+      namespace: "media",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getStreambotRuleGroups(),
     },
   });
 }

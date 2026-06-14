@@ -42,6 +42,9 @@ export function createArgoCdApp(chart: Chart) {
     global: {
       domain: "argocd.tailnet-1a49.ts.net",
     },
+    // Baseline requests (no limits) so ArgoCD isn't BestEffort — without them the
+    // GitOps layer is first in line for eviction under memory pressure. Values
+    // are 30d steady-state usage.
     controller: {
       metrics: {
         enabled: true,
@@ -50,6 +53,12 @@ export function createArgoCdApp(chart: Chart) {
           additionalLabels: {
             release: "prometheus",
           },
+        },
+      },
+      resources: {
+        requests: {
+          cpu: "250m",
+          memory: "1Gi",
         },
       },
     },
@@ -66,12 +75,24 @@ export function createArgoCdApp(chart: Chart) {
           },
         },
       },
+      resources: {
+        requests: {
+          cpu: "25m",
+          memory: "64Mi",
+        },
+      },
     },
     server: {
       metrics: {
         enabled: true,
         serviceMonitor: {
           enabled: true,
+        },
+      },
+      resources: {
+        requests: {
+          cpu: "50m",
+          memory: "256Mi",
         },
       },
     },
@@ -85,6 +106,12 @@ export function createArgoCdApp(chart: Chart) {
           },
         },
       },
+      resources: {
+        requests: {
+          cpu: "25m",
+          memory: "256Mi",
+        },
+      },
     },
     notifications: {
       metrics: {
@@ -96,6 +123,12 @@ export function createArgoCdApp(chart: Chart) {
           },
         },
       },
+      resources: {
+        requests: {
+          cpu: "10m",
+          memory: "128Mi",
+        },
+      },
     },
     repoServer: {
       metrics: {
@@ -105,6 +138,20 @@ export function createArgoCdApp(chart: Chart) {
           additionalLabels: {
             release: "prometheus",
           },
+        },
+      },
+      resources: {
+        requests: {
+          cpu: "100m",
+          memory: "512Mi",
+        },
+      },
+    },
+    dex: {
+      resources: {
+        requests: {
+          cpu: "10m",
+          memory: "128Mi",
         },
       },
     },

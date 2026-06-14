@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "Shen": {
       "id": "Shen",
@@ -424,7 +424,7 @@
           "id": "ShenQ",
           "name": "Twilight Assault",
           "description": "Shen recalls his spirit blade to attack with it, dealing damage based on the target's max health. The attacks are greatly empowered if it collides with an enemy champion, and all collided enemies are slowed while running away from Shen.",
-          "tooltip": "Shen recalls his <keywordMajor>Spirit Blade</keywordMajor>. Enemies hit by the pull are <status>Slowed</status> by {{ e4 }}% while moving away from Shen for the next {{ e5 }} seconds.<br /><br />Additionally, Shen's next {{ e3 }} Attacks deal an additional <magicDamage>{{ baseflatdamage }}</magicDamage> plus <magicDamage>{{ basepercenthealth }} max Health magic damage</magicDamage>. If Shen hit an enemy champion with the <keywordMajor>Spirit Blade</keywordMajor>, the damage is increased to <magicDamage>{{ baseflatdamage }}</magicDamage> plus <magicDamage>{{ emppercenthealth }} max Health magic damage</magicDamage> and he gains <attackSpeed>{{ e9 }}% Attack Speed</attackSpeed> for those Attacks.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Shen recalls his <keywordMajor>Spirit Blade</keywordMajor>. Enemies hit by the pull are <status>Slowed</status> by {{ slowpercent }}% while moving away from Shen for the next {{ slowduration }} seconds.<br /><br />Additionally, Shen's next {{ numenhancedattacks }} Attacks deal an additional <magicDamage>{{ baseflatdamage }}</magicDamage> plus <magicDamage>{{ basepercenthealth }} max Health magic damage</magicDamage>. If Shen hit an enemy champion with the <keywordMajor>Spirit Blade</keywordMajor>, the damage is increased to <magicDamage>{{ baseflatdamage }}</magicDamage> plus <magicDamage>{{ emppercenthealth }} max Health magic damage</magicDamage> and he gains <attackSpeed>{{ steroidas }}% Attack Speed</attackSpeed> for those Attacks.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Base Percent Damage",
@@ -435,11 +435,11 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e2 }}% -> {{ e2NL }}%",
-              "{{ e6 }}% -> {{ e6NL }}%",
-              "{{ e4 }}% -> {{ e4NL }}%",
+              "{{ basepercentdamage }}% -> {{ basepercentdamageNL }}%",
+              "{{ enhancedpercentdamage }}% -> {{ enhancedpercentdamageNL }}%",
+              "{{ slowpercent }}% -> {{ slowpercentNL }}%",
               "{{ cost }} -> {{ costNL }}",
-              "{{ e7 }} -> {{ e7NL }}",
+              "{{ miniondamagecap }} -> {{ miniondamagecapNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -573,7 +573,7 @@
           "id": "ShenW",
           "name": "Spirit's Refuge",
           "description": "Attacks that would hit Shen or his allies near his spirit blade are blocked.",
-          "tooltip": "Shen creates a defensive zone at his <keywordMajor>Spirit Blade</keywordMajor> for {{ e1 }} seconds. Attacks against allied champions in the zone are blocked. <br /><br />If there are no champions to protect in the zone when it starts, it will wait for up to {{ e2 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Shen creates a defensive zone at his <keywordMajor>Spirit Blade</keywordMajor> for {{ zoneduration }} seconds. Attacks against allied champions in the zone are blocked. <br /><br />If there are no champions to protect in the zone when it starts, it will wait for up to {{ zonedelay }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown"

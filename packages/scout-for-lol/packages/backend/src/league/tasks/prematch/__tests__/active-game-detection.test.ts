@@ -73,6 +73,7 @@ const notificationCalls: {
   gameId: number;
   trackedPlayers: PlayerConfigEntry[];
 }[] = [];
+const reportStoreCalls: { gameId: number }[] = [];
 
 // Mocks target leaf functions only — checkActiveGames imports each of
 // these names directly. We deliberately do NOT spread the real module:
@@ -87,6 +88,7 @@ const notificationCalls: {
 // test file mocks — otherwise sibling tests that ran first leave a partial
 // mock in place that hides exports our SUT needs.
 await mock.module("#src/database/index.ts", () => ({
+  prisma: {},
   getAccountsWithState: () => Promise.resolve(mockAccounts),
   getChannelsSubscribedToPlayers: () => Promise.resolve([]),
 }));
@@ -124,6 +126,17 @@ await mock.module(
   }),
 );
 
+await mock.module("#src/report-store/live-ingest.ts", () => ({
+  recordPrematchForReportStore: ({
+    gameInfo,
+  }: {
+    gameInfo: RawCurrentGameInfo;
+  }) => {
+    reportStoreCalls.push({ gameId: gameInfo.gameId });
+    return Promise.resolve();
+  },
+}));
+
 // Import AFTER mocks so the function under test wires up to the mocked deps
 const { checkActiveGames } =
   await import("#src/league/tasks/prematch/active-game-detection.ts");
@@ -135,6 +148,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
     mockSpectatorResponses = new Map();
     upsertCalls.length = 0;
     notificationCalls.length = 0;
+    reportStoreCalls.length = 0;
   });
 
   test("polls a player who has a non-expired ActiveGame row and detects a NEW gameId", async () => {
@@ -162,8 +176,55 @@ describe("checkActiveGames — subsequent-match polling", () => {
     // no notification. Post-fix: P1 is polled, G2 is detected, both fire.
     expect(upsertCalls).toHaveLength(1);
     expect(upsertCalls[0]).toEqual({ gameId: G2, puuids: [P1] });
+    expect(reportStoreCalls).toEqual([{ gameId: G2 }]);
     expect(notificationCalls).toHaveLength(1);
     expect(notificationCalls[0]?.gameId).toBe(G2);
+  });
+
+  test("defers a custom pre-start lobby (gameType=CUSTOM, <10 participants) — no upsert, no notification", async () => {
+    mockAccounts = [mkAccount(P1)];
+    // Synthesise the exact shape we pulled from S3 for Bugsink event
+    // 46053b15 — a custom 5v5 SR lobby with only the creator present.
+    const incomplete = RawCurrentGameInfoSchema.parse({
+      gameId: 5_580_574_972,
+      gameType: "CUSTOM",
+      gameStartTime: Date.now(),
+      mapId: 11,
+      gameLength: -104,
+      platformId: "NA1",
+      gameMode: "CLASSIC",
+      bannedChampions: [],
+      gameQueueConfigId: 3100,
+      observers: { encryptionKey: "" },
+      participants: [
+        {
+          puuid: P1,
+          teamId: 100,
+          spell1Id: 4,
+          spell2Id: 12,
+          championId: 63,
+          lastSelectedSkinIndex: 0,
+          profileIconId: 505,
+          riotId: "Phaerix#NA1",
+          bot: false,
+          gameCustomizationObjects: [],
+          perks: { perkIds: [], perkStyle: 0, perkSubStyle: 0 },
+        },
+      ],
+    });
+    mockSpectatorResponses.set(P1, {
+      game: incomplete,
+      upstreamError: false,
+    });
+
+    // Pass retryDelayMs=0 to skip the real 2×2s sleep in the retry loop.
+    await checkActiveGames(0);
+
+    // Pre-start custom lobby must NOT be committed: the next 30s cron
+    // tick gets a clean shot once the other players load in.
+    expect(upsertCalls).toHaveLength(0);
+    expect(notificationCalls).toHaveLength(0);
+    expect(reportStoreCalls).toHaveLength(0);
   });
 
   test("dedupes when Spectator returns the SAME gameId already in ActiveGame", async () => {
@@ -187,6 +248,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
 
     // gameId-based dedup at line 181 must prevent a duplicate notification
     expect(upsertCalls).toHaveLength(0);
+    expect(reportStoreCalls).toHaveLength(0);
     expect(notificationCalls).toHaveLength(0);
   });
 });

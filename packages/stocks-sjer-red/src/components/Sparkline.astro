@@ -1,0 +1,22 @@
+---
+import StockChart from "./StockChart.astro";
+import type { PricePoint } from "@data/schema";
+
+interface Props {
+  history: readonly PricePoint[];
+  ariaLabel: string;
+}
+
+const { history, ariaLabel } = Astro.props;
+---
+
+<div class="w-32 h-10">
+  <StockChart
+    history={history}
+    width={128}
+    height={40}
+    showAxis={false}
+    interactive={false}
+    ariaLabel={ariaLabel}
+  />
+</div>

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "Quinn": {
       "id": "Quinn",
@@ -294,7 +294,7 @@
           "id": "QuinnQ",
           "name": "Blinding Assault",
           "description": "Quinn calls Valor to mark an enemy and hinder its vision before damaging all enemies in the immediate area.",
-          "tooltip": "Quinn orders Valor to dive, making the first enemy hit <keywordMajor>Vulnerable</keywordMajor>, reducing their vision radius for {{ visionreductionduration }} seconds and dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to all surrounding enemies.<br /><br />If the first enemy struck is not a champion, it is <status>Disarmed</status> for {{ visionreductionduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Quinn orders Valor to dive, making the first enemy hit with <keywordMajor>Harrier</keywordMajor>, reducing their vision radius for {{ visionreductionduration }} seconds and dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to all surrounding enemies.<br /><br />If the first enemy struck is not a champion, it is <status>Disarmed</status> for {{ visionreductionduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -438,8 +438,8 @@
         {
           "id": "QuinnW",
           "name": "Heightened Senses",
-          "description": "Passively grants Quinn Attack Speed and Move Speed after she attacks a <font color='#FFF673'>Vulnerable</font> target. Activate to have Valor reveal a large area nearby.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Attacking a <keywordMajor>Vulnerable</keywordMajor> target grants Quinn <attackSpeed>{{ attackspeedbonus*100 }}% Attack Speed</attackSpeed> and <speed>{{ movespeedamount*100 }}% Move Speed</speed> for {{ buffduration }} seconds.<br /><br /><spellActive>Active:</spellActive> Valor reveals a large area nearby for {{ visionduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "description": "Passively grants Quinn Attack Speed and Move Speed after she attacks a <keywordMajor>Harrier</keywordMajor> target. Activate to have Valor reveal a large area nearby.",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Attacking a <keywordMajor>Harrier</keywordMajor> target grants Quinn <attackSpeed>{{ attackspeedbonus*100 }}% Attack Speed</attackSpeed> and <speed>{{ movespeedamount*100 }}% Move Speed</speed> for {{ buffduration }} seconds.<br /><br /><spellActive>Active:</spellActive> Valor reveals a large area nearby for {{ visionduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Attack Speed",
@@ -582,7 +582,7 @@
           "id": "QuinnE",
           "name": "Vault",
           "description": "Quinn dashes to an enemy, dealing physical damage and slowing the target's Move Speed. Upon reaching the target, she leaps off the target, briefly interrupting it, and lands near her maximum Attack Range away from the target.",
-          "tooltip": "Quinn dashes to an enemy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and marking them <keywordMajor>Vulnerable</keywordMajor>. Quinn then leaps backwards from the target, slightly <status>Knocking</status> them <status>Back</status> and <status>Slowing</status> them by {{ slowamount*100 }}%, decaying over {{ slowdecaytime }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Quinn dashes to an enemy, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and marking them with <keywordMajor>Harrier</keywordMajor>. Quinn then leaps backwards from the target, slightly <status>Knocking</status> them <status>Back</status> and <status>Slowing</status> them by {{ slowamount*100 }}%, decaying over {{ slowdecaytime }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -722,8 +722,8 @@
         {
           "id": "QuinnR",
           "name": "Behind Enemy Lines",
-          "description": "Quinn and Valor team up to fly around at great speed.  Ending the ability casts Skystrike, which deals damage to nearby enemies and marks champions as Vulnerable.",
-          "tooltip": "Quinn calls to Valor, pairing up after channeling for 2 seconds gaining <speed>{{ movementspeedmod*100 }}% Move Speed</speed> and allowing her to <recast>Recast</recast> this Ability. Attacking or using <spellName>Blinding Assault</spellName> or <spellName>Vault</spellName> automatically <recast>Recasts</recast> this Ability.<br /><br /><recast>Recast</recast>: Quinn and Valor perform an aerial maneuver, dealing <physicalDamage>{{ damage }} physical damage</physicalDamage>, marking champions as <keywordMajor>Vulnerable</keywordMajor>, and ending this Ability.{{ spellmodifierdescriptionappend }}",
+          "description": "Quinn and Valor team up to fly around at great speed.  Ending the ability casts Skystrike, which deals damage to nearby enemies and marks champions with Harrier.",
+          "tooltip": "Quinn calls to Valor, pairing up after channeling for 2 seconds gaining <speed>{{ movementspeedmod*100 }}% Move Speed</speed> and allowing her to <recast>Recast</recast> this Ability. Attacking or using <spellName>Blinding Assault</spellName> or <spellName>Vault</spellName> automatically <recast>Recasts</recast> this Ability.<br /><br /><recast>Recast</recast>: Quinn and Valor perform an aerial maneuver, dealing <physicalDamage>{{ damage }} physical damage</physicalDamage>, marking champions with <keywordMajor>Harrier</keywordMajor>, and ending this Ability.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -839,7 +839,7 @@
       ],
       "passive": {
         "name": "Harrier",
-        "description": "Valor, Quinn's Demacian eagle, periodically marks enemies as <font color='#FFF673'>Vulnerable</font>. Quinn's first basic attack against <font color='#FFF673'>Vulnerable</font> targets will deal bonus physical damage.",
+        "description": "Valor, Quinn's Demacian eagle, periodically marks enemies with <keywordMajor>Harrier</keywordMajor>. Quinn's first basic attack against <keywordMajor>Harrier</keywordMajor> targets will deal bonus physical damage.",
         "image": {
           "full": "Quinn_Passive.png",
           "sprite": "passive3.png",

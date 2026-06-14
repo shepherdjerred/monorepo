@@ -11,6 +11,20 @@ import type { AgentTaskInput } from "#shared/agent-task.ts";
 // All cron expressions below are wall-clock local time for the homelab.
 const SCHEDULE_TIMEZONE = "America/Los_Angeles";
 
+// Schedules whose workflow type was removed from the bundle. registerSchedules
+// deletes these on startup so they stop firing and failing. Explicit removal
+// allow-list — NOT a blind prune of "anything not in SCHEDULES", which would
+// also delete the ad-hoc/cron agent-task schedules created via the /agent-tasks API.
+export const DELETED_SCHEDULE_IDS = [
+  "good-morning-weekday-early",
+  "good-morning-weekend-early",
+  // Replaced by the Buildkite `helm-types-drift-check` CI gate (the generated
+  // types are now verified on every PR that touches a generator input, instead
+  // of reconciled weekly). The workflow type was removed from the bundle, so
+  // this schedule must be deleted or it would keep firing a missing workflow.
+  "helm-types-weekly-refresh",
+] as const;
+
 type ScheduleDefinition = {
   id: string;
   workflowType: string;
@@ -23,9 +37,13 @@ type ScheduleDefinition = {
 };
 
 const PR_REVIEW_EVAL_SCHEDULE_ID = "pr-review-eval-nightly";
+const PR_REVIEW_AB_WEEKLY_REPORT_SCHEDULE_ID = "pr-review-ab-weekly-report";
 const PR_REVIEW_FIXTURES_REPO_URL_ENV = "PR_REVIEW_FIXTURES_REPO_URL";
+const PR_REVIEW_EVAL_DATABASE_URL_ENV = "PR_REVIEW_EVAL_DATABASE_URL";
 const PR_REVIEW_EVAL_PAUSE_REASON =
   "Paused because PR_REVIEW_FIXTURES_REPO_URL is not configured on the Temporal worker";
+const PR_REVIEW_EVAL_DATABASE_PAUSE_REASON =
+  "Paused because PR_REVIEW_EVAL_DATABASE_URL is not configured on the Temporal worker";
 
 const SCOUT_LANE_PRIOR_UPDATE_CONFIG = {
   lanePriors: {
@@ -51,22 +69,31 @@ const HOMELAB_AUDIT_AGENT_TASK: AgentTaskInput = {
   },
   scheduleId: "homelab-audit-daily",
   allowSelfCancel: false,
-  maxTurns: 35,
+  maxTurns: 8,
+  // The audit's 8 turns take ~25 min end-to-end; the old 8-min timeout killed it mid-run.
+  agentTimeoutMinutes: 45,
   emailSubjectPrefix: "Homelab Audit",
   source: {
     docPath: "packages/docs/guides/2026-04-04_homelab-audit-runbook.md",
   },
   prompt: [
-    "Run the daily homelab health audit using the runbook at",
-    "`packages/docs/guides/2026-04-04_homelab-audit-runbook.md` in the checked-out repo.",
-    "Use live read-only evidence from the cluster and observability tools named in the runbook.",
+    "Run a bounded daily homelab health check. The runbook at",
+    "`packages/docs/guides/2026-04-04_homelab-audit-runbook.md` is command reference only;",
+    "do not execute the full runbook or build the full application matrix.",
+    "Use live read-only evidence from the cluster and observability tools.",
     "Do not mutate Kubernetes, GitHub, PagerDuty, Grafana, Bugsink, Cloudflare, files, or git state.",
-    "Keep the run bounded: prioritize active incidents, firing alerts, failed Temporal workflows,",
-    "and changed deltas over exhaustive historical sweeps. Avoid broad unbounded log queries.",
-    "If a tool is slow or a section would exceed the useful audit window, skip that section,",
-    "state exactly what was skipped, and return a partial report instead of continuing indefinitely.",
-    "Return a concise markdown report suitable for email. Include current status, notable regressions,",
-    "resolved items, remaining action items, and exact evidence links or commands where useful.",
+    "Ignore Bugsink entirely for this daily report.",
+    "Finish in 5-10 minutes. Use narrow commands only, and wrap slow shell commands with timeout",
+    "when available, usually 30-60 seconds. Do not run broad Loki scans, full app inventories,",
+    "or exhaustive historical sweeps.",
+    "Check exactly these areas: firing Prometheus alerts, open PagerDuty incidents, failed/stuck",
+    "Temporal workflows and schedules, unhealthy Kubernetes pods/workloads, ArgoCD degraded or",
+    "sync-error apps, and Buildkite main failures.",
+    "Emit progress markers in the report for each area as Checked, Skipped, or Failed so the",
+    "next timeout shows the last completed category. If a tool is slow, skip it and return a",
+    "partial report instead of continuing.",
+    "Return concise markdown suitable for email with current status, notable regressions,",
+    "remaining action items, and exact evidence commands where useful.",
   ].join(" "),
 };
 
@@ -110,8 +137,24 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "30 6 * * *",
     taskQueue: TASK_QUEUES.AGENT_TASK,
     overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "50 minutes",
+    memo: "Bounded daily homelab health check email via generic report-only agent task (Claude -> Postal)",
+  },
+  {
+    id: "alert-remediation-hourly",
+    workflowType: "alertRemediationSweepWorkflow",
+    args: [
+      {
+        repo: { fullName: "shepherdjerred/monorepo", ref: "main" },
+        provider: "claude",
+        concurrency: 3,
+      },
+    ],
+    cronExpression: "0 * * * *",
+    taskQueue: TASK_QUEUES.AGENT_TASK,
+    overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "2 hours",
-    memo: "Daily homelab health audit email via generic report-only agent task (Claude -> Postal)",
+    memo: "Hourly PagerDuty/Bugsink alert remediation fan-out. Child workflows may create draft PRs for straightforward repo-only fixes.",
   },
   {
     id: "scout-data-dragon-version-check",
@@ -132,6 +175,30 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "3 hours",
     memo: "Weekly Scout Data Dragon refresh even when version is unchanged",
+  },
+  {
+    id: "pokeemerald-wasm-monthly",
+    workflowType: "runPokeemeraldWasmUpdate",
+    args: [],
+    // 06:00 PT on the 1st of each month. Monthly keeps git-history growth from
+    // the ~12 MB blob bounded.
+    cronExpression: "0 6 1 * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Monthly refresh of the vendored pokeemerald.wasm emulator blob (opens a PR if it changed)",
+  },
+  {
+    id: "readme-refresh-weekly",
+    workflowType: "runReadmeRefresh",
+    args: [],
+    // 08:00 PT every Monday — staggered after scout-season-refresh (07:00)
+    // so the two weekly PR-opening jobs don't contend for the worker pod at once.
+    cronExpression: "0 8 * * 1",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Weekly README project-listing regeneration via cog (opens a PR if listings drifted)",
   },
   {
     id: "scout-season-refresh-weekly",
@@ -247,25 +314,15 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Run vacuum if no one is home (5 PM)",
   },
   {
-    id: "good-morning-weekday-early",
-    workflowType: "goodMorningEarly",
-    args: [],
-    cronExpression: "0 7 * * 1-5",
-    taskQueue: TASK_QUEUES.DEFAULT,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    // goodMorningEarly does a 60-minute sleep (MORNING_HEAT_DURATION); needs > 60m + slack
-    workflowExecutionTimeout: "75 minutes",
-    memo: "Good morning pre-wake (weekdays 7 AM)",
-  },
-  {
     id: "good-morning-weekday-wake",
     workflowType: "goodMorningWakeUp",
     args: [],
     cronExpression: "0 8 * * 1-5",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
-    memo: "Good morning wake-up (weekdays 8 AM)",
+    // goodMorningWakeUp now runs the 60-minute heat cycle (MORNING_HEAT_DURATION); needs > 60m + slack
+    workflowExecutionTimeout: "75 minutes",
+    memo: "Good morning wake-up + bathroom heat (weekdays 8 AM)",
   },
   {
     id: "good-morning-weekday-up",
@@ -278,25 +335,15 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Good morning get-up (weekdays 8:15 AM)",
   },
   {
-    id: "good-morning-weekend-early",
-    workflowType: "goodMorningEarly",
-    args: [],
-    cronExpression: "0 8 * * 0,6",
-    taskQueue: TASK_QUEUES.DEFAULT,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    // goodMorningEarly does a 60-minute sleep (MORNING_HEAT_DURATION); needs > 60m + slack
-    workflowExecutionTimeout: "75 minutes",
-    memo: "Good morning pre-wake (weekends 8 AM)",
-  },
-  {
     id: "good-morning-weekend-wake",
     workflowType: "goodMorningWakeUp",
     args: [],
     cronExpression: "0 9 * * 0,6",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
-    memo: "Good morning wake-up (weekends 9 AM)",
+    // goodMorningWakeUp now runs the 60-minute heat cycle (MORNING_HEAT_DURATION); needs > 60m + slack
+    workflowExecutionTimeout: "75 minutes",
+    memo: "Good morning wake-up + bathroom heat (weekends 9 AM)",
   },
   {
     id: "good-morning-weekend-up",
@@ -316,17 +363,32 @@ export function prReviewEvalFixturesConfigured(
   return (env[PR_REVIEW_FIXTURES_REPO_URL_ENV]?.trim() ?? "").length > 0;
 }
 
+export function prReviewEvalDatabaseConfigured(
+  env: Record<string, string | undefined> = Bun.env,
+): boolean {
+  return (env[PR_REVIEW_EVAL_DATABASE_URL_ENV]?.trim() ?? "").length > 0;
+}
+
 export function scheduleRequiresConfigPause(
   schedule: ScheduleDefinition,
   env: Record<string, string | undefined> = Bun.env,
 ): { paused: boolean; reason: string | undefined } {
-  if (schedule.id !== PR_REVIEW_EVAL_SCHEDULE_ID) {
+  if (schedule.id === PR_REVIEW_EVAL_SCHEDULE_ID) {
+    if (!prReviewEvalFixturesConfigured(env)) {
+      return { paused: true, reason: PR_REVIEW_EVAL_PAUSE_REASON };
+    }
+    if (!prReviewEvalDatabaseConfigured(env)) {
+      return { paused: true, reason: PR_REVIEW_EVAL_DATABASE_PAUSE_REASON };
+    }
     return { paused: false, reason: undefined };
   }
-  if (prReviewEvalFixturesConfigured(env)) {
+  if (schedule.id === PR_REVIEW_AB_WEEKLY_REPORT_SCHEDULE_ID) {
+    if (!prReviewEvalDatabaseConfigured(env)) {
+      return { paused: true, reason: PR_REVIEW_EVAL_DATABASE_PAUSE_REASON };
+    }
     return { paused: false, reason: undefined };
   }
-  return { paused: true, reason: PR_REVIEW_EVAL_PAUSE_REASON };
+  return { paused: false, reason: undefined };
 }
 
 async function reconcileSchedulePauseState(
@@ -339,9 +401,12 @@ async function reconcileSchedulePauseState(
     console.warn(`Paused schedule: ${schedule.id} (${desired.reason ?? ""})`);
     return;
   }
-  if (schedule.id === PR_REVIEW_EVAL_SCHEDULE_ID) {
+  if (
+    schedule.id === PR_REVIEW_EVAL_SCHEDULE_ID ||
+    schedule.id === PR_REVIEW_AB_WEEKLY_REPORT_SCHEDULE_ID
+  ) {
     await handle.unpause(
-      `${PR_REVIEW_FIXTURES_REPO_URL_ENV} is configured; eval schedule enabled`,
+      `Required PR review eval configuration is present; ${schedule.id} enabled`,
     );
     console.warn(`Unpaused schedule: ${schedule.id}`);
   }
@@ -349,6 +414,17 @@ async function reconcileSchedulePauseState(
 
 export async function registerSchedules(client: Client): Promise<void> {
   const scheduleClient = client.schedule;
+
+  for (const scheduleId of DELETED_SCHEDULE_IDS) {
+    try {
+      await scheduleClient.getHandle(scheduleId).delete();
+      console.warn(`Deleted orphaned schedule: ${scheduleId}`);
+    } catch (error: unknown) {
+      if (!(error instanceof ScheduleNotFoundError)) {
+        throw error;
+      }
+    }
+  }
 
   for (const schedule of SCHEDULES) {
     let handle = scheduleClient.getHandle(schedule.id);

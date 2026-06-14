@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "Kassadin": {
       "id": "Kassadin",
@@ -300,13 +300,13 @@
           },
           "maxrank": 5,
           "cooldown": [
-            10,
-            9.5,
             9,
             8.5,
-            8
+            8,
+            7.5,
+            7
           ],
-          "cooldownBurn": "10/9.5/9/8.5/8",
+          "cooldownBurn": "9/8.5/8/7.5/7",
           "cost": [
             60,
             65,
@@ -469,11 +469,11 @@
               6
             ],
             [
-              20,
-              20,
-              20,
-              20,
-              20
+              25,
+              25,
+              25,
+              25,
+              25
             ],
             [
               50,
@@ -535,7 +535,7 @@
           "effectBurn": [
             null,
             "4/4.5/5/5.5/6",
-            "20",
+            "25",
             "50/75/100/125/150",
             "20/22.5/25/27.5/30",
             "0",
@@ -571,7 +571,7 @@
           "id": "ForcePulse",
           "name": "Force Pulse",
           "description": "Kassadin draws energy from spells cast in his vicinity. Upon charging up, Kassadin can use Force Pulse to damage and slow enemies in a cone in front of him.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> <spellName>Force Pulse's</spellName> Cooldown is reduced by {{ reductionperspellcast }} second whenever any Ability is used near Kassadin.<br /><br /><spellActive>Active:</spellActive> Kassadin unleashes a void pulse, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ e2 }}% for {{ e3 }} second.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> <spellName>Force Pulse's</spellName> Cooldown is reduced by {{ reductionperspellcast }} second whenever any Ability is used near Kassadin.<br /><br /><spellActive>Active:</spellActive> Kassadin unleashes a void pulse, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ slowamount }}% for {{ slowduration }} second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -581,7 +581,7 @@
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ e2 }}% -> {{ e2NL }}%",
+              "{{ slowamount }}% -> {{ slowamountNL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "Tristana": {
       "id": "Tristana",
@@ -627,13 +627,13 @@
           ],
           "cooldownBurn": "20/19/18/17/16",
           "cost": [
+            15,
+            20,
+            25,
             30,
-            35,
-            40,
-            45,
-            50
+            35
           ],
-          "costBurn": "30/35/40/45/50",
+          "costBurn": "15/20/25/30/35",
           "datavalues": {},
           "effect": [
             null,

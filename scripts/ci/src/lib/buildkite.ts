@@ -1,10 +1,61 @@
 import type { BuildkiteStep } from "./types.ts";
-import { k8sPlugin } from "./k8s-plugin.ts";
+import { k8sPlugin, k8sPluginWithCheckout } from "./k8s-plugin.ts";
 
 /** Convert a name to a Buildkite-safe step key. */
 export function safeKey(name: string): string {
   return name.replace(/[^a-zA-Z0-9_:-]/g, "-");
 }
+
+// ---------------------------------------------------------------------------
+// Git-URL Directory refs — eliminate per-pod checkout cost
+// ---------------------------------------------------------------------------
+//
+// Each Buildkite pod used to clone the repo into its emptyDir (1.3 GiB per
+// pod × ~1,100 pods/hr = 92% of writes to the system NVMe). Dagger accepts
+// `Directory`/`File` arguments as git URL refs of the form
+// `https://github.com/<owner>/<repo>.git#<commit>:<subpath>`. The engine
+// resolves them server-side (content-addressed by SHA, fetched once per
+// unique SHA), so the BK pod does NO local clone. Per-pod writes drop from
+// ~1.3 GiB to ~10–30 MiB.
+//
+// Combined with `kubernetes.checkout: { skip: true }` in `k8s-plugin.ts`,
+// this is the PR1 of the BK-pressure reduction plan (see
+// packages/docs/plans/2026-05-31_bk-dagger-git-url-refactor.md).
+
+/** Public monorepo URL — used to build Dagger CLI git-URL Directory args. */
+export const REPO_GIT_URL = "https://github.com/shepherdjerred/monorepo.git";
+
+/**
+ * Git-URL ref interpolated by `buildkite-agent pipeline upload` at upload
+ * time. Single `$` so the agent substitutes the real SHA into each step's
+ * command before baking it into the rendered pipeline YAML. (See
+ * `OTEL_RESOURCE_ATTRIBUTES` below for the same precedent.)
+ */
+export const REPO_GIT_REF = `${REPO_GIT_URL}#$BUILDKITE_COMMIT`;
+
+/** Build a Dagger `Directory` arg pointing at a subdir of the repo at `$BUILDKITE_COMMIT`. */
+export function gitDir(subdir: string): string {
+  return `${REPO_GIT_REF}:${subdir}`;
+}
+
+/** Build a Dagger `File` arg pointing at a file in the repo at `$BUILDKITE_COMMIT`. */
+export function gitFile(path: string): string {
+  return `${REPO_GIT_REF}:${path}`;
+}
+
+/**
+ * Dagger module ref used by every BK pod's `dagger call`. With
+ * `checkout: { skip: true }` there's no local `dagger.json` for the CLI
+ * to discover — without `-m` the CLI errors with
+ * `unknown command "<fn>" for "dagger call"`. The module-ref form uses
+ * `@<ref>` (not `#<ref>` like Directory args), and the trailing `/.dagger`
+ * matches `source` in our `dagger.json`.
+ */
+export const DAGGER_MOD_REF = `github.com/shepherdjerred/monorepo/.dagger@$BUILDKITE_COMMIT`;
+
+/** Canonical `dagger call` prefix for BK steps. Use everywhere instead of
+ *  bare `dagger call`. */
+export const DAGGER_CALL = `dagger -m ${DAGGER_MOD_REF} call`;
 
 /** Standard retry configuration for CI steps. */
 export const RETRY = {
@@ -43,6 +94,17 @@ export const GITHUB_APP_SECRET_ARGS = [
   "--github-app-private-key env:GITHUB_APP_PRIVATE_KEY",
 ].join(" ");
 
+export const TOFU_GITHUB_TOKEN_ARG = "--github-token env:TOFU_GITHUB_TOKEN";
+
+/**
+ * Claude Code subscription token used by CI steps that invoke `claude -p`.
+ * Sourced from the `buildkite-ci-secrets` k8s secret (1Password-synced — the
+ * `CLAUDE_CODE_OAUTH_TOKEN` field must exist on item
+ * `rzk3lawpk4yspyyu5rxlz44ssi` for the env var to be present in the agent pod).
+ */
+export const CLAUDE_OAUTH_SECRET_ARG =
+  "--claude-oauth-token env:CLAUDE_CODE_OAUTH_TOKEN";
+
 /** Dagger environment variables for CI steps. */
 export const DAGGER_ENV: Record<string, string> = {
   DAGGER_NO_NAG: "1",
@@ -70,44 +132,6 @@ export const DAGGER_ENV: Record<string, string> = {
   // http/protobuf and http/json content types.
   OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "http://loki-gateway.loki/otlp/v1/logs",
 };
-
-/**
- * Create a plain Buildkite step that runs directly on the CI agent pod.
- *
- * Use for checks that only need bash/bun/git (all in ci-base image) and
- * operate on the repo checkout. Avoids the overhead of copying the entire
- * repo into a Dagger container when no specialized toolchain is needed.
- */
-export function plainStep(opts: {
-  label: string;
-  key: string;
-  command: string;
-  timeoutMinutes?: number;
-  dependsOn?: string | string[];
-  softFail?: boolean;
-  artifactPaths?: string[];
-}): BuildkiteStep {
-  const step: BuildkiteStep = {
-    label: opts.label,
-    key: opts.key,
-    command: opts.command,
-    timeout_in_minutes: opts.timeoutMinutes ?? 10,
-    retry: RETRY,
-    plugins: [k8sPlugin()],
-  };
-
-  if (opts.dependsOn !== undefined) {
-    step.depends_on = opts.dependsOn;
-  }
-  if (opts.softFail !== undefined) {
-    step.soft_fail = opts.softFail;
-  }
-  if (opts.artifactPaths !== undefined) {
-    step.artifact_paths = opts.artifactPaths;
-  }
-
-  return step;
-}
 
 /** Create a basic Buildkite step using dagger call. */
 export function daggerStep(opts: {
@@ -187,6 +211,43 @@ export function daggerStep(opts: {
   }
   if (opts.priority !== undefined) {
     step.priority = opts.priority;
+  }
+
+  return step;
+}
+
+/**
+ * A plain command step that runs on the BK agent with the repo checked out
+ * (via {@link k8sPluginWithCheckout}). Use only when a step must execute repo
+ * scripts or `buildkite-agent` directly on the agent rather than through a
+ * Dagger git-URL ref — currently just the Greptile PR gate.
+ */
+export function plainStep(opts: {
+  label: string;
+  key: string;
+  command: string;
+  timeoutMinutes?: number;
+  dependsOn?: string | string[];
+  softFail?: boolean;
+  artifactPaths?: string[];
+}): BuildkiteStep {
+  const step: BuildkiteStep = {
+    label: opts.label,
+    key: opts.key,
+    command: opts.command,
+    timeout_in_minutes: opts.timeoutMinutes ?? 10,
+    retry: RETRY,
+    plugins: [k8sPluginWithCheckout()],
+  };
+
+  if (opts.dependsOn !== undefined) {
+    step.depends_on = opts.dependsOn;
+  }
+  if (opts.softFail !== undefined) {
+    step.soft_fail = opts.softFail;
+  }
+  if (opts.artifactPaths !== undefined) {
+    step.artifact_paths = opts.artifactPaths;
   }
 
   return step;

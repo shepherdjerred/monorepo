@@ -43,8 +43,10 @@ function loadCoreConfig() {
     },
     openai: {
       apiKey: Bun.env["OPENAI_API_KEY"] ?? "",
-      model: Bun.env["OPENAI_MODEL"] ?? "gpt-5.4-mini",
+      model: Bun.env["OPENAI_MODEL"] ?? "gpt-5.5",
       classifierModel: Bun.env["OPENAI_CLASSIFIER_MODEL"] ?? "gpt-5.4-nano",
+      reasoningEffort: Bun.env["OPENAI_REASONING_EFFORT"] ?? "medium",
+      textVerbosity: Bun.env["OPENAI_TEXT_VERBOSITY"] ?? "low",
       maxTokens: parseNumber(Bun.env["OPENAI_MAX_TOKENS"], 4096),
     },
     agent: {
@@ -72,6 +74,7 @@ function loadCoreConfig() {
     externalApis: {
       newsApiKey: Bun.env["NEWS_API_KEY"],
       riotApiKey: Bun.env["RIOT_API_KEY"],
+      webSearchProvider: Bun.env["WEB_SEARCH_PROVIDER"] ?? "openai",
     },
     logging: {
       level: Bun.env["LOG_LEVEL"] ?? "info",
@@ -95,6 +98,25 @@ function loadFeatureConfig() {
       defaultPersona: Bun.env["PERSONA_DEFAULT"] ?? "virmel",
       styleModel: Bun.env["PERSONA_STYLE_MODEL"] ?? "gpt-5.4-nano",
     },
+    responder: {
+      enabled: parseBoolean(Bun.env["RESPONDER_ENABLED"], true),
+      engagementWindowMs: parseNumber(
+        Bun.env["RESPONDER_ENGAGEMENT_WINDOW_MS"],
+        180_000,
+      ),
+      transcriptMinMessages: parseNumber(
+        Bun.env["RESPONDER_TRANSCRIPT_MIN_MESSAGES"],
+        25,
+      ),
+      transcriptWindowMs: parseNumber(
+        Bun.env["RESPONDER_TRANSCRIPT_WINDOW_MS"],
+        3_600_000,
+      ),
+      transcriptMaxMessages: parseNumber(
+        Bun.env["RESPONDER_TRANSCRIPT_MAX_MESSAGES"],
+        100,
+      ),
+    },
     shell: {
       enabled: parseBoolean(Bun.env["SHELL_ENABLED"], true),
       defaultTimeout: parseNumber(Bun.env["SHELL_DEFAULT_TIMEOUT"], 30_000),
@@ -113,6 +135,7 @@ function loadFeatureConfig() {
     },
     browser: {
       enabled: parseBoolean(Bun.env["BROWSER_ENABLED"], true),
+      provider: Bun.env["BROWSER_PROVIDER"] ?? "pinchtab",
       headless: parseBoolean(Bun.env["BROWSER_HEADLESS"], true),
       viewportWidth: parseNumber(Bun.env["BROWSER_VIEWPORT_WIDTH"], 1280),
       viewportHeight: parseNumber(Bun.env["BROWSER_VIEWPORT_HEIGHT"], 720),
@@ -122,6 +145,9 @@ function loadFeatureConfig() {
         300_000,
       ),
       userAgent: Bun.env["BROWSER_USER_AGENT"],
+      pinchtabBaseUrl: Bun.env["PINCHTAB_BASE_URL"] ?? "http://localhost:9867",
+      pinchtabToken: Bun.env["PINCHTAB_TOKEN"],
+      pinchtabProfile: Bun.env["PINCHTAB_PROFILE"] ?? "default",
     },
     birthdays: {
       enabled: parseBoolean(Bun.env["BIRTHDAYS_ENABLED"], true),

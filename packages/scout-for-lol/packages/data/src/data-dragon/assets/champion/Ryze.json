@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "Ryze": {
       "id": "Ryze",
@@ -300,7 +300,7 @@
         "difficulty": 7
       },
       "stats": {
-        "hp": 645,
+        "hp": 620,
         "hpperlevel": 124,
         "mp": 300,
         "mpperlevel": 70,
@@ -316,7 +316,7 @@
         "mpregenperlevel": 1,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 58,
+        "attackdamage": 55,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 2.11,
         "attackspeed": 0.658

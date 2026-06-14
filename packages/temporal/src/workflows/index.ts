@@ -6,13 +6,13 @@ import { generateDependencySummary as _generateDependencySummary } from "./deps-
 import { runDnsAudit as _runDnsAudit } from "./dns-audit.ts";
 import { syncGolinks as _syncGolinks } from "./golink-sync.ts";
 import {
-  goodMorningEarly as _goodMorningEarly,
   goodMorningGetUp as _goodMorningGetUp,
   goodMorningWakeUp as _goodMorningWakeUp,
 } from "./ha/good-morning.ts";
 import { goodNight as _goodNight } from "./ha/good-night.ts";
 import { welcomeHome as _welcomeHome } from "./ha/welcome-home.ts";
 import { leavingHome as _leavingHome } from "./ha/leaving-home.ts";
+import { reconcileLock as _reconcileLock } from "./ha/reconcile-lock.ts";
 import { runVacuumIfNotHome as _runVacuumIfNotHome } from "./ha/run-vacuum-if-not-home.ts";
 import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./zfs-maintenance.ts";
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
@@ -22,6 +22,10 @@ import type {
   DataDragonUpdateResult,
   DataDragonWorkflowInput,
 } from "#activities/data-dragon.ts";
+import { runPokeemeraldWasmUpdate as _runPokeemeraldWasmUpdate } from "./pokeemerald-wasm.ts";
+import type { PokeemeraldWasmUpdateResult } from "#activities/pokeemerald-wasm.ts";
+import { runReadmeRefresh as _runReadmeRefresh } from "./readme-refresh.ts";
+import type { ReadmeRefreshResult } from "#activities/readme-refresh.ts";
 import { runScoutSeasonRefreshWorkflow as _runScoutSeasonRefreshWorkflow } from "./scout-season-refresh.ts";
 import type {
   ScoutSeasonRefreshInput,
@@ -46,10 +50,25 @@ import {
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab-audit.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
 import { agentTaskWorkflow as _agentTaskWorkflow } from "./agent-task.ts";
-import type { PrReviewPipelineInput, PrSummaryInput } from "#shared/schemas.ts";
+import {
+  alertRemediationChildWorkflow as _alertRemediationChildWorkflow,
+  alertRemediationSweepWorkflow as _alertRemediationSweepWorkflow,
+} from "./alert-remediation.ts";
+import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from "./cancel-buildkite-builds.ts";
+import type {
+  CancelBuildkiteBuildsInput,
+  PrReviewPipelineInput,
+  PrSummaryInput,
+} from "#shared/schemas.ts";
 import type { PrReviewPipelineResult } from "./pr-review/index.ts";
 import type { RunSummaryResult } from "#activities/pr-review/summary.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
+import type {
+  AlertRemediationChildInput,
+  AlertRemediationChildResult,
+  AlertRemediationSweepRawInput,
+  AlertRemediationSweepResult,
+} from "#shared/alert-remediation.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
@@ -67,10 +86,6 @@ export async function syncGolinks(): Promise<void> {
   return _syncGolinks();
 }
 
-export async function goodMorningEarly(): Promise<void> {
-  return _goodMorningEarly();
-}
-
 export async function goodMorningWakeUp(): Promise<void> {
   return _goodMorningWakeUp();
 }
@@ -83,12 +98,16 @@ export async function goodNight(): Promise<void> {
   return _goodNight();
 }
 
-export async function welcomeHome(): Promise<void> {
-  return _welcomeHome();
+export async function welcomeHome(firstArrival = true): Promise<void> {
+  return _welcomeHome(firstArrival);
 }
 
 export async function leavingHome(): Promise<void> {
   return _leavingHome();
+}
+
+export async function reconcileLock(): Promise<void> {
+  return _reconcileLock();
 }
 
 export async function runVacuumIfNotHome(): Promise<void> {
@@ -119,6 +138,14 @@ export async function runScoutDataDragonWeeklyRefresh(
   return _runScoutDataDragonUpdate("weekly-refresh", input);
 }
 
+export async function runReadmeRefresh(): Promise<ReadmeRefreshResult> {
+  return _runReadmeRefresh();
+}
+
+export async function runPokeemeraldWasmUpdate(): Promise<PokeemeraldWasmUpdateResult> {
+  return _runPokeemeraldWasmUpdate();
+}
+
 export async function runScoutSeasonRefreshWorkflow(
   input: ScoutSeasonRefreshInput = {},
 ): Promise<ScoutSeasonRefreshResult> {
@@ -147,6 +174,18 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   return _agentTaskWorkflow(input);
 }
 
+export async function alertRemediationSweepWorkflow(
+  input: AlertRemediationSweepRawInput = {},
+): Promise<AlertRemediationSweepResult> {
+  return _alertRemediationSweepWorkflow(input);
+}
+
+export async function alertRemediationChildWorkflow(
+  input: AlertRemediationChildInput,
+): Promise<AlertRemediationChildResult> {
+  return _alertRemediationChildWorkflow(input);
+}
+
 export async function prReviewEvalWorkflow(
   input: PrReviewEvalWorkflowInput,
 ): Promise<PrReviewEvalWorkflowResult> {
@@ -163,4 +202,10 @@ export async function prReactionListener(
   input: PrReactionListenerInput,
 ): Promise<void> {
   return _prReactionListener(input);
+}
+
+export async function cancelBuildkiteBuildsWorkflow(
+  input: CancelBuildkiteBuildsInput,
+): Promise<void> {
+  return _cancelBuildkiteBuildsWorkflow(input);
 }

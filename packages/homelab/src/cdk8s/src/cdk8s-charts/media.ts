@@ -15,6 +15,7 @@ import { createProwlarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/reso
 import { createMaintainerrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/maintainerr.ts";
 import { createRecyclarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/recyclarr.ts";
 import { createWhisperbridgeDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/whisperbridge.ts";
+import { createStreambotDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/streambot.ts";
 import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 
 export function createMediaChart(app: App) {
@@ -66,6 +67,12 @@ export function createMediaChart(app: App) {
   createMaintainerrDeployment(chart);
   createRecyclarrDeployment(chart);
   createWhisperbridgeDeployment(chart);
+
+  // streambot (packages/streambot) lives here so it can read-only mount the movies/tv libraries.
+  createStreambotDeployment(chart, {
+    movies: moviesVolume.claim,
+    tv: tvVolume.claim,
+  });
 
   // NetworkPolicy: Default deny ingress from outside namespace
   // Allows Tailscale, Cloudflare tunnel, intra-namespace, and Prometheus

@@ -113,11 +113,10 @@ describe("buildLoadingScreenData with real spectator payload", () => {
     // Check bans (9 valid bans, 1 with championId=-1 filtered out)
     expect(parsed.bans.length).toBeGreaterThanOrEqual(9);
 
-    // Check skin resolution uses lastSelectedSkinIndex
-    const akaliPlayer = parsed.participants.find(
-      (p) => p.summonerName === "Cain#3276",
+    // Prematch loading screens intentionally use default champion skins.
+    expect(parsed.participants.map((p) => p.skinNum)).toEqual(
+      Array.from({ length: parsed.participants.length }, () => 0),
     );
-    expect(akaliPlayer?.skinNum).toBe(70);
 
     // Snapshot the full structure
     expect(parsed).toMatchSnapshot();
@@ -189,6 +188,66 @@ describe("buildLoadingScreenData layout variants", () => {
       expect(parsed.mapName).toBe("Howling Abyss");
     },
   );
+
+  test("real custom Summoner's Rift game (queue 3110, gameType CUSTOM) renders as standard", async () => {
+    // Regression for game 5576694431: a custom SR draft reported an unmapped
+    // gameQueueConfigId (3110), which previously made buildLoadingScreenData
+    // throw and the prematch notification fall back to a plain text embed.
+    const gameInfo = await loadSpectatorPayload(
+      `${currentDir}testdata/spectator-custom-classic.json`,
+    );
+
+    // Two tracked friends from the real lobby.
+    const trackedPuuids = new Set([
+      "EjRmQ1H7E1md8UNw_9BwqcIxN3QqKMkP7aPQFLOrIcV5HoH5qulKRCBAT1ibn5EgrljZ82RT1sjccg", // sjerred#sjerr (Illaoi)
+      "18bi42Gf97CI1VVbLW8sYK_m8kAjYYX3I_uxllKh8sC9PiG2Zzyk68XSvp9dYZOXO1m7vU-xiArtjA", // Virmel#NA1 (Caitlyn)
+    ]);
+
+    // Must not throw — this is the core regression.
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      trackedPuuids,
+      "AMERICA_NORTH",
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+
+    expect(Number(parsed.gameId)).toBe(5_576_694_431);
+    expect(parsed.queueType).toBe("custom");
+    expect(String(parsed.queueDisplayName)).toBe("custom");
+    expect(parsed.layout).toBe("standard");
+    expect(parsed.isRanked).toBe(false);
+    expect(parsed.mapName).toBe("Summoner's Rift");
+    if (parsed.layout !== "standard") {
+      throw new Error("Expected standard loading screen data");
+    }
+
+    // Clean 5v5.
+    expect(parsed.participants).toHaveLength(10);
+    expect(parsed.participants.filter((p) => p.team === "blue")).toHaveLength(
+      5,
+    );
+    expect(parsed.participants.filter((p) => p.team === "red")).toHaveLength(5);
+
+    // Draft bans are preserved (championId === -1 slots filtered out).
+    expect(parsed.bans.length).toBeGreaterThanOrEqual(9);
+
+    // Tracked friends are flagged; an untracked player is not.
+    const illaoi = parsed.participants.find(
+      (p) => p.summonerName === "sjerred#sjerr",
+    );
+    const caitlyn = parsed.participants.find(
+      (p) => p.summonerName === "Virmel#NA1",
+    );
+    expect(illaoi?.isTrackedPlayer).toBe(true);
+    expect(illaoi?.championName).toBe("Illaoi");
+    expect(caitlyn?.isTrackedPlayer).toBe(true);
+    expect(caitlyn?.championName).toBe("Caitlyn");
+    const untracked = parsed.participants.find(
+      (p) => p.summonerName === "DarkinBunnygirl#Aatr",
+    );
+    expect(untracked?.isTrackedPlayer).toBe(false);
+  });
 
   test("queue 3100 (Custom) resolves to standard layout", async () => {
     const baseGameInfo = await loadSpectatorPayload(

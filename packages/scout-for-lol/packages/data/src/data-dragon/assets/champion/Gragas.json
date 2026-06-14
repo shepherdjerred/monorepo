@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "Gragas": {
       "id": "Gragas",
@@ -389,7 +389,7 @@
           "id": "GragasQ",
           "name": "Barrel Roll",
           "description": "Gragas rolls his cask to a location, which can be activated to explode or will explode on its own after 4 seconds. The potency of the explosion increases over time. Enemies struck by the blast have their Move Speed slowed.",
-          "tooltip": "Gragas rolls a cask that explodes after {{ e4 }} seconds, dealing between <magicDamage>{{ mindamage }} magic damage</magicDamage> and <magicDamage>{{ maxdamage }} magic damage</magicDamage> and <status>Slowing</status> for between {{ e2 }} and {{ effect2amount*1.5 }}% for {{ e3 }} seconds. The damage and <status>Slow</status> increase with time the cask spent before exploding. <br /><br />Gragas can <recast>Recast</recast> to detonate the cask early.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Gragas rolls a cask that explodes after {{ barrelmaxduration }} seconds, dealing between <magicDamage>{{ mindamage }} magic damage</magicDamage> and <magicDamage>{{ maxdamage }} magic damage</magicDamage> and <status>Slowing</status> for between {{ slowpercent }} and {{ slowpercent*1.5 }}% for {{ slowduration }} seconds. The damage and <status>Slow</status> increase with time the cask spent before exploding. <br /><br />Gragas can <recast>Recast</recast> to detonate the cask early.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -397,8 +397,8 @@
               "Cooldown"
             ],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ e2 }} -> {{ e2NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ slowpercent }} -> {{ slowpercentNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -712,11 +712,11 @@
               0
             ],
             [
-              1,
-              1,
-              1,
-              1,
-              1
+              0,
+              0,
+              0,
+              0,
+              0
             ],
             [
               0,
@@ -778,7 +778,7 @@
           "effectBurn": [
             null,
             "0",
-            "1",
+            "0",
             "0",
             "0",
             "0",

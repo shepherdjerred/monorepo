@@ -2,6 +2,7 @@ import { describe, test, expect } from "bun:test";
 import type { Duration } from "@temporalio/common";
 import { DataDragonWorkflowInputSchema } from "#activities/data-dragon.ts";
 import {
+  DELETED_SCHEDULE_IDS,
   SCHEDULES,
   scheduleRequiresConfigPause,
 } from "./register-schedules.ts";
@@ -23,10 +24,8 @@ const ONE_MINUTE = 60 * 1000;
 const ONE_HOUR = 60 * ONE_MINUTE;
 
 const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
-  // good-morning.ts: MORNING_HEAT_DURATION = 60 minutes
-  goodMorningEarly: 60 * ONE_MINUTE,
-  // wake-up: ~5+2 sec + 4 × 5-second volume steps = ~30 seconds, well under 1m
-  goodMorningWakeUp: ONE_MINUTE,
+  // wake-up: ~30 sec of media ramp + MORNING_HEAT_DURATION (60 minutes) heat hold
+  goodMorningWakeUp: 60 * ONE_MINUTE,
   // get-up: ~5 sec sleep between volume ramps; <1m total
   goodMorningGetUp: ONE_MINUTE,
   // run-vacuum: verifyState delaySeconds=180 + 3 inter-attempt retry sleeps.
@@ -40,8 +39,13 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runDnsAudit",
   "runHomelabAuditWorkflow",
   "agentTaskWorkflow",
+  // Fan-out sweep: child workflows run in parallel; the sweep workflow itself
+  // only awaits their futures, no long sleeps of its own.
+  "alertRemediationSweepWorkflow",
   "runScoutDataDragonVersionCheck",
   "runScoutDataDragonWeeklyRefresh",
+  "runPokeemeraldWasmUpdate",
+  "runReadmeRefresh",
   "runScoutSeasonRefreshWorkflow",
   "runZfsMaintenanceWorkflow",
   "runBugsinkHousekeepingWorkflow",
@@ -160,7 +164,82 @@ describe("PR review eval schedule config", () => {
     expect(
       scheduleRequiresConfigPause(schedule, {
         PR_REVIEW_FIXTURES_REPO_URL: "https://github.com/example/private.git",
+        PR_REVIEW_EVAL_DATABASE_URL: "postgres://example",
       }),
     ).toEqual({ paused: false, reason: undefined });
+  });
+
+  test("pauses nightly eval when the eval database URL is absent", () => {
+    const schedule = SCHEDULES.find(
+      (candidate) => candidate.id === "pr-review-eval-nightly",
+    );
+    if (schedule === undefined) {
+      throw new Error("Missing pr-review-eval-nightly schedule");
+    }
+    expect(
+      scheduleRequiresConfigPause(schedule, {
+        PR_REVIEW_FIXTURES_REPO_URL: "https://github.com/example/private.git",
+      }),
+    ).toEqual({
+      paused: true,
+      reason:
+        "Paused because PR_REVIEW_EVAL_DATABASE_URL is not configured on the Temporal worker",
+    });
+  });
+});
+
+describe("PR review A/B weekly report schedule config", () => {
+  test("pauses the weekly report when the eval database URL is absent", () => {
+    const schedule = SCHEDULES.find(
+      (candidate) => candidate.id === "pr-review-ab-weekly-report",
+    );
+    if (schedule === undefined) {
+      throw new Error("Missing pr-review-ab-weekly-report schedule");
+    }
+    expect(scheduleRequiresConfigPause(schedule, {})).toEqual({
+      paused: true,
+      reason:
+        "Paused because PR_REVIEW_EVAL_DATABASE_URL is not configured on the Temporal worker",
+    });
+  });
+
+  test("does not pause the weekly report when the eval database URL is present", () => {
+    const schedule = SCHEDULES.find(
+      (candidate) => candidate.id === "pr-review-ab-weekly-report",
+    );
+    if (schedule === undefined) {
+      throw new Error("Missing pr-review-ab-weekly-report schedule");
+    }
+    expect(
+      scheduleRequiresConfigPause(schedule, {
+        PR_REVIEW_EVAL_DATABASE_URL: "postgres://example",
+      }),
+    ).toEqual({ paused: false, reason: undefined });
+  });
+});
+
+describe("DELETED_SCHEDULE_IDS", () => {
+  test("none of the deleted ids appear in active SCHEDULES", () => {
+    const activeIds = SCHEDULES.map((s) => s.id);
+    for (const deletedId of DELETED_SCHEDULE_IDS) {
+      expect(activeIds).not.toContain(deletedId);
+    }
+  });
+});
+
+describe("homelab daily audit schedule config", () => {
+  test("uses a bounded daily report input and timeout", () => {
+    const schedule = SCHEDULES.find(
+      (candidate) => candidate.id === "homelab-audit-daily",
+    );
+    if (schedule === undefined) {
+      throw new Error("Missing homelab-audit-daily schedule");
+    }
+    expect(schedule.workflowExecutionTimeout).toBe("50 minutes");
+    expect(schedule.args[0]).toMatchObject({
+      maxTurns: 8,
+      agentTimeoutMinutes: 45,
+    });
+    expect(JSON.stringify(schedule.args[0])).toContain("Ignore Bugsink");
   });
 });

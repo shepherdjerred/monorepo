@@ -63,7 +63,7 @@ export function createCronJob(config: CronJobConfig): CronJob {
         cronJobDuration.observe({ job_name: jobName }, executionTimeSeconds);
         throw error;
       }
-    }),
+    }, jobName),
     null,
     true,
     timezone,

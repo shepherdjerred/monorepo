@@ -54,7 +54,7 @@ export function createGrafanaValues(
         host: "grafana-postgresql:5432",
         name: "grafana",
         user: "grafana",
-        ssl_mode: "disable",
+        ssl_mode: "require",
         password: "$__file{/etc/secrets/postgres/password}",
       },
       feature_toggles: {
@@ -78,6 +78,14 @@ export function createGrafanaValues(
       },
     },
     defaultDashboardsEnabled: false,
+    // Baseline request (no limits) so dashboards aren't BestEffort.
+    // 30d peak ~55m / ~910Mi.
+    resources: {
+      requests: {
+        cpu: "50m",
+        memory: "512Mi",
+      },
+    },
     imageRenderer: {
       enabled: true,
       serverURL:
@@ -87,14 +95,6 @@ export function createGrafanaValues(
         HTTP_HOST: "0.0.0.0",
         XDG_CONFIG_HOME: "/tmp/.chromium",
         XDG_CACHE_HOME: "/tmp/.chromium",
-      },
-      envValueFrom: {
-        AUTH_TOKEN: {
-          secretKeyRef: {
-            name: rendererSecretName,
-            key: GRAFANA_RENDERER_TOKEN_KEY,
-          },
-        },
       },
     },
     extraSecretMounts: [
@@ -159,6 +159,22 @@ export function createGrafanaValues(
           serviceMap: { datasourceUid: "prometheus" },
           nodeGraph: { enabled: true },
         },
+      },
+      {
+        // Continuous profiling store fed by the Alloy eBPF DaemonSet. Flame
+        // graphs are grouped by service_name = <namespace>/<container>.
+        name: "pyroscope",
+        uid: "pyroscope",
+        editable: false,
+        // Must be the datasource plugin ID. "grafanapyroscope" is not a
+        // registered plugin (health check returns plugin.notRegistered), which
+        // left this datasource dead and Profiles Drilldown reporting "Missing
+        // Pyroscope data source".
+        type: "grafana-pyroscope-datasource",
+        url: "http://pyroscope.pyroscope.svc.cluster.local:4040",
+        // Bump above the live Grafana DB version when changing provisioned
+        // datasource identity fields, or Grafana leaves the stale row in place.
+        version: 3,
       },
     ],
   };

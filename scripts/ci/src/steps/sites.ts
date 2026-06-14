@@ -8,7 +8,15 @@
  */
 import type { DeploySite } from "../catalog.ts";
 import { DEPLOY_SITES, PACKAGE_TO_SITE } from "../catalog.ts";
-import { safeKey, RETRY, DAGGER_ENV, DRYRUN_FLAG } from "../lib/buildkite.ts";
+import {
+  safeKey,
+  RETRY,
+  DAGGER_ENV,
+  DRYRUN_FLAG,
+  gitDir,
+  gitFile,
+  DAGGER_CALL,
+} from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
@@ -32,11 +40,18 @@ function shellQuote(value: string): string {
 }
 
 function dryrunBuildEnvPrefix(buildEnvVars: string[]): string {
+  return buildEnvPrefix(buildEnvVars, DRYRUN_BUILD_ENV_VALUES);
+}
+
+function buildEnvPrefix(
+  buildEnvVars: string[],
+  values: Readonly<Record<string, string>>,
+): string {
   return buildEnvVars
     .map((name) => {
-      const value = DRYRUN_BUILD_ENV_VALUES[name];
+      const value = values[name];
       if (value === undefined) {
-        throw new Error(`Missing dry-run build env placeholder for ${name}`);
+        throw new Error(`Missing build env placeholder for ${name}`);
       }
       return `${name}=${shellQuote(value)}`;
     })
@@ -50,11 +65,17 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
   const pkgPath = site.buildDir.replace("packages/", "");
   const deps = WORKSPACE_DEPS[pkgPath] ?? [];
   const depFlags = deps
-    .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
+    .flatMap((d: string) => [
+      `--dep-names ${d}`,
+      `--dep-dirs ${gitDir(`packages/${d}`)}`,
+    ])
     .join(" ");
-  const buildEnvVars = site.buildEnvVars ?? [];
+  const buildEnvVars =
+    site.buildEnvVars ?? Object.keys(site.buildEnvPlaceholders ?? {});
+  const hasBuildEnvPlaceholders = site.buildEnvPlaceholders !== undefined;
   const useDryrunBuildEnv = isDryrunBuild() && buildEnvVars.length > 0;
-  const buildEnvFlags = useDryrunBuildEnv
+  const usePlaceholderBuildEnv = hasBuildEnvPlaceholders || useDryrunBuildEnv;
+  const buildEnvFlags = usePlaceholderBuildEnv
     ? ""
     : buildEnvVars
         .flatMap((name) => [
@@ -62,8 +83,13 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
           `--build-env-values env:${name}`,
         ])
         .join(" ");
-  const buildCmd = useDryrunBuildEnv
-    ? `${dryrunBuildEnvPrefix(buildEnvVars)} ${site.buildCmd}`
+  const placeholderBuildEnvPrefix = usePlaceholderBuildEnv
+    ? site.buildEnvPlaceholders !== undefined
+      ? buildEnvPrefix(buildEnvVars, site.buildEnvPlaceholders)
+      : dryrunBuildEnvPrefix(buildEnvVars)
+    : "";
+  const buildCmd = usePlaceholderBuildEnv
+    ? `${placeholderBuildEnvPrefix} ${site.buildCmd}`
     : site.buildCmd;
 
   // Compute dist subdir relative to package dir
@@ -72,9 +98,9 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
       ? "."
       : site.distDir.replace(site.buildDir + "/", "");
 
-  // Build dagger call command for deploy-site
+  // Build the dagger call command for deploy-site
   const args = [
-    `dagger call deploy-site --pkg-dir ./${site.buildDir}`,
+    `${DAGGER_CALL} deploy-site --pkg-dir ${gitDir(site.buildDir)}`,
     `--pkg ${pkgPath}`,
     depFlags,
     buildEnvFlags,
@@ -84,7 +110,7 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
     `--target seaweedfs`,
     `--aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID`,
     `--aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
-    `--tsconfig ./tsconfig.base.json`,
+    `--tsconfig ${gitFile("tsconfig.base.json")}`,
     site.needsPlaywright ? `--needs-playwright` : "",
   ].filter(Boolean);
 
@@ -104,6 +130,7 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
 export function deploySitesGroup(
   sites: DeploySite[],
   pkgKeyMap?: Map<string, string>,
+  extraDependsOn: string[] = [],
 ): BuildkiteGroup {
   return {
     group: ":ship: Deploy Sites",
@@ -112,40 +139,10 @@ export function deploySitesGroup(
       // Resolve the package name from the build dir (e.g. "packages/sjer.red" → "sjer.red")
       const pkg = s.buildDir.replace("packages/", "").split("/")[0] ?? "";
       const pkgKey = pkgKeyMap?.get(pkg);
-      const deps = ["quality-gate"];
+      const deps = ["quality-gate", ...extraDependsOn];
       if (pkgKey) deps.push(pkgKey);
       return deploySiteStep(s, deps);
     }),
-  };
-}
-
-/**
- * MkDocs docs deploy — build with mkdocs (Python), export, then deploy via deploy-site (awscli inside Dagger).
- * Two-step pipeline: mkdocs-build produces the site/, then deploy-site syncs to S3.
- */
-export function mkdocsDeployStep(dependsOn: string[]): BuildkiteStep {
-  return {
-    label: ":book: Deploy discord-plays-pokemon docs",
-    key: "deploy-discord-plays-pokemon-docs",
-    depends_on: dependsOn,
-    command:
-      [
-        // Step 1: Build with mkdocs (Python container), export built site to local path
-        `dagger call mkdocs-build --source . export --path /tmp/mkdocs-site`,
-        // Step 2: Deploy pre-built HTML via deploy-static-site (no bun install needed)
-        `dagger call deploy-static-site --site-dir /tmp/mkdocs-site --bucket dpp-docs --target seaweedfs --aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID --aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
-      ].join(" && ") + DRYRUN_FLAG,
-    timeout_in_minutes: 15,
-    priority: 1,
-    retry: RETRY,
-    env: DAGGER_ENV,
-    plugins: [
-      k8sPlugin({
-        cpu: "250m",
-        memory: "512Mi",
-        secrets: ["buildkite-argocd-token"],
-      }),
-    ],
   };
 }
 
@@ -156,8 +153,10 @@ export function filterSites(
   if (buildAll) return DEPLOY_SITES;
   const siteBuckets = new Set<string>();
   for (const pkg of affectedSitePackages) {
-    const bucket = PACKAGE_TO_SITE[pkg];
-    if (bucket) siteBuckets.add(bucket);
+    const buckets = PACKAGE_TO_SITE[pkg];
+    if (buckets) {
+      for (const bucket of buckets) siteBuckets.add(bucket);
+    }
   }
   return DEPLOY_SITES.filter((s) => siteBuckets.has(s.bucket));
 }

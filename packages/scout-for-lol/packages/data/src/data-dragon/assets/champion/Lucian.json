@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "Lucian": {
       "id": "Lucian",
@@ -709,7 +709,7 @@
           "id": "LucianW",
           "name": "Ardent Blaze",
           "description": "Lucian shoots a missile that explodes in a star shape, marking and briefly revealing enemies. Lucian gains Move Speed for attacking marked enemies.",
-          "tooltip": "Lucian fires a shot that explodes at the end of its range or on the first enemy hit, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, briefly revealing enemies and marking them for 6 seconds.<br /><br />When Lucian or an ally damages a marked enemy, Lucian gains <speed>{{ e2 }} Move Speed</speed> for 1 second. Allies triggering this effect will also grant Lucian <attention>Vigilance</attention>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Lucian fires a shot that explodes at the end of its range or on the first enemy hit, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>, briefly revealing enemies and marking them for 6 seconds.<br /><br />When Lucian or an ally damages a marked enemy, Lucian gains <speed>{{ movespeedamount }} Move Speed</speed> for 1 second. Allies triggering this effect will also grant Lucian <attention>Vigilance</attention>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -718,7 +718,7 @@
             ],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ e2 }} -> {{ e2NL }}",
+              "{{ movespeedamount }} -> {{ movespeedamountNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
@@ -852,7 +852,7 @@
           "id": "LucianE",
           "name": "Relentless Pursuit",
           "description": "Lucian quickly dashes a short distance. Lightslinger attacks reduce Relentless Pursuit's cooldown.",
-          "tooltip": "Lucian dashes.<br /><br />Cooldown is reduced by {{ e1 }} second whenever Lucian hits an enemy with <spellName>Lightslinger</spellName> ({{ e2 }} seconds for champions). {{ spellmodifierdescriptionappend }}",
+          "tooltip": "Lucian dashes.<br /><br />Cooldown is reduced by {{ cdrefundbase }} second whenever Lucian hits an enemy with <spellName>Lightslinger</spellName> ({{ cdrefundchampion }} seconds for champions). {{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Cooldown",

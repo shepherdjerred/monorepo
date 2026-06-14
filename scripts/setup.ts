@@ -75,6 +75,23 @@ function hasTool(name: string): boolean {
   return which(name) !== null;
 }
 
+// Extract a human-readable detail from a thrown shell/command error without
+// using a type assertion (Bun's $ throws a ShellError carrying stderr/stdout).
+function shellErrorDetail(error: unknown): string | undefined {
+  if (typeof error === "object" && error !== null) {
+    if ("stderr" in error && error.stderr instanceof Buffer) {
+      const s = error.stderr.toString().trim();
+      if (s) return s;
+    }
+    if ("stdout" in error && error.stdout instanceof Buffer) {
+      const s = error.stdout.toString().trim();
+      if (s) return s;
+    }
+  }
+  if (error instanceof Error) return error.message;
+  return undefined;
+}
+
 async function findLockfileDirs(): Promise<string[]> {
   const dirs: string[] = [];
   const skip = new Set([
@@ -191,23 +208,37 @@ async function ensureTools(): Promise<void> {
 // ── Phase 2: Dependencies ──────────────────────────────────────────────
 
 async function installDependencies(): Promise<void> {
-  await exec("Deps", "root bun install", ["bun", "install"]);
+  await exec("Deps", "root bun install", [
+    "bun",
+    "install",
+    "--frozen-lockfile",
+  ]);
 
   const lockfileDirs = await findLockfileDirs();
   log("Deps", `Found ${String(lockfileDirs.length)} packages with bun.lock`);
 
   const concurrency = 6;
+  const maxAttempts = 3;
   const failures: Array<{ dir: string; error: unknown }> = [];
   let completed = 0;
 
   async function installOne(dir: string): Promise<void> {
     const label = relative(ROOT, dir);
-    try {
-      await $`bun install`.cwd(dir).quiet();
-      completed++;
-    } catch (error) {
-      failures.push({ dir: label, error });
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await $`bun install --frozen-lockfile`.cwd(dir).quiet();
+        completed++;
+        return;
+      } catch (error) {
+        lastError = error;
+        // Concurrent installs occasionally contend on the shared bun cache;
+        // back off briefly and retry before giving up (individual installs
+        // succeed in seconds when not racing each other).
+        if (attempt < maxAttempts) await Bun.sleep(attempt * 250);
+      }
     }
+    failures.push({ dir: label, error: lastError });
   }
 
   for (let i = 0; i < lockfileDirs.length; i += concurrency) {
@@ -224,6 +255,12 @@ async function installDependencies(): Promise<void> {
     console.error(`  [Deps] ${String(failures.length)} package(s) failed:`);
     for (const f of failures) {
       console.error(`           - ${f.dir}`);
+      const detail = shellErrorDetail(f.error);
+      if (detail) {
+        for (const line of detail.split("\n")) {
+          console.error(`             ${line}`);
+        }
+      }
     }
     throw new Error("Dependency installation failed");
   }
@@ -297,6 +334,14 @@ const DAG_TASKS: DagTask[] = [
     warnOnly: false,
   },
   {
+    id: "discord-video-stream",
+    label: "discord-video-stream build (d.ts)",
+    cmd: ["bun", "run", "build"],
+    cwd: "packages/discord-video-stream",
+    deps: [],
+    warnOnly: false,
+  },
+  {
     id: "helm-types-build",
     label: "helm-types build",
     cmd: ["bun", "run", "build"],
@@ -304,14 +349,13 @@ const DAG_TASKS: DagTask[] = [
     deps: [],
     warnOnly: false,
   },
-  {
-    id: "helm-types-gen",
-    label: "helm-types codegen",
-    cmd: ["bun", "run", "generate-helm-types"],
-    cwd: "packages/homelab/src/cdk8s",
-    deps: ["helm-types-build"],
-    warnOnly: true,
-  },
+  // NOTE: We intentionally do NOT regenerate helm types here. The generated
+  // types in packages/homelab/src/cdk8s/generated/helm are committed to the
+  // repo and are the source of truth. Regenerating them requires a network
+  // round-trip per chart (`helm pull`), which dominated setup time (~2 min) and
+  // caused churn/drift. The "helm-types-weekly-refresh" Temporal schedule
+  // (packages/temporal/src/schedules/register-schedules.ts) regenerates them
+  // from the live charts weekly and opens a PR if they drifted.
   {
     id: "birmel-prisma",
     label: "birmel prisma",
@@ -326,6 +370,14 @@ const DAG_TASKS: DagTask[] = [
     cmd: ["bun", "run", "generate"],
     cwd: "packages/scout-for-lol",
     deps: ["birmel-prisma"],
+    warnOnly: false,
+  },
+  {
+    id: "mario-kart-prisma",
+    label: "discord-plays-mario-kart prisma",
+    cmd: ["bunx", "--trust", "prisma", "generate"],
+    cwd: "packages/discord-plays-mario-kart/packages/backend",
+    deps: [],
     warnOnly: false,
   },
 ];
@@ -413,6 +465,10 @@ async function verifySetup(): Promise<void> {
       path: "packages/astro-opengraph-images/dist/index.js",
     },
     {
+      label: "discord-video-stream d.ts",
+      path: "packages/discord-video-stream/dist/index.d.ts",
+    },
+    {
       label: "helm-types dist",
       path: "packages/homelab/src/helm-types/dist/cli.js",
     },
@@ -423,6 +479,10 @@ async function verifySetup(): Promise<void> {
     {
       label: "scout-for-lol prisma client",
       path: "packages/scout-for-lol/packages/backend/generated/prisma/client",
+    },
+    {
+      label: "discord-plays-mario-kart prisma client",
+      path: "packages/discord-plays-mario-kart/packages/backend/generated/prisma/client",
     },
   ];
 

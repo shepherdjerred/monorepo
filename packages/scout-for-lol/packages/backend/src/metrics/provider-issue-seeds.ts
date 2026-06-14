@@ -1,5 +1,5 @@
 import type { Counter, Gauge } from "prom-client";
-import { PROVIDER_ISSUE_KINDS } from "#src/alerts/provider-metrics.ts";
+import { PROVIDER_ISSUE_KINDS } from "#src/alerts/provider-issue-kinds.ts";
 
 type ProviderIssueLabel = "app" | "provider" | "kind" | "source";
 

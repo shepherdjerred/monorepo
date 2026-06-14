@@ -38,8 +38,14 @@ test-results/
 packages/dpp/
 
 # Claude Code local session files (root level only)
-/.claude/
+# Ignore everything under .claude/ except the checked-in project config + hooks.
+/.claude/*
 !/.claude/settings.json
+!/.claude/hooks/
+/.claude/hooks/*
+!/.claude/hooks/trust-mise.sh
+!/.claude/hooks/install-git-hooks.sh
+!/.claude/hooks/worktree-reminder.sh
 /.claude.json
 /.claude.json.*
 
@@ -112,3 +118,6 @@ packages/eslint-config/local.js
 packages/eslint-config/local.js.map
 packages/eslint-config/local.d.ts
 packages/eslint-config/local.d.ts.map
+
+# Agent scratch scripts for live Discord interaction (see discord skill)
+packages/streambot/scratch/

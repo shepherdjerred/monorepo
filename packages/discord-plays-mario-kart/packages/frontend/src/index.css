@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+/* Design tokens for the MK64 controller UI. The palette draws from the iconic
+ * N64 button colors (sky A, emerald B, yellow C-buttons, red Start) on a
+ * near-black charcoal page so the buttons pop. Spacing/shadows are extracted
+ * here so individual components stop inlining one-off gradient strings.
+ */
+@theme {
+  --color-surface-page: #070709;
+  --color-surface-card: #0f0f12;
+  --color-surface-raised: #181820;
+  --color-border-subtle: #27272a;
+  --color-border-strong: #3f3f46;
+
+  --color-accent-a: #38bdf8;
+  --color-accent-b: #34d399;
+  --color-accent-c: #facc15;
+  --color-accent-start: #ef4444;
+  --color-accent-z: #a1a1aa;
+
+  --shadow-card: 0 12px 28px rgba(0, 0, 0, 0.45);
+  --shadow-button-rest: 0 4px 0 rgb(24 24 27), 0 8px 12px rgba(0, 0, 0, 0.28);
+  --shadow-button-press: 0 1px 0 rgb(24 24 27), 0 3px 6px rgba(0, 0, 0, 0.28);
+}
+
+:root {
+  color-scheme: dark;
+  background: var(--color-surface-page);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+  background: var(--color-surface-page);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

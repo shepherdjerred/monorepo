@@ -11,5 +11,5 @@ terraform {
 
 provider "github" {
   owner = "shepherdjerred"
-  app_auth {}
+  token = var.github_token
 }

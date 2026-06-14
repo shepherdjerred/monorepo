@@ -1,0 +1,131 @@
+diff --git a/code/mymain.cpp b/code/mymain.cpp
+--- a/code/mymain.cpp
++++ b/code/mymain.cpp
+@@ -27,6 +27,29 @@ extern "C" {
+ #include "neil.h"
+ 
+ int angryVerticalResolution = 240;
++
++// Headless framebuffer access: expose the angrylion software-rendered frame
++// (640 x angryVerticalResolution, RGBA) so a Node/Bun host can read it straight
++// out of wasm memory (the pokeemerald-VRAM pattern). No GPU / canvas needed.
++EMSCRIPTEN_KEEPALIVE int neilGetVideoBuffer() { return (int)(intptr_t)get_video_buffer(); }
++EMSCRIPTEN_KEEPALIVE int neilGetVideoHeight() { return angryVerticalResolution; }
++
++// Headless ROM injection (bypasses fopen/fseek which traps under Node).
++// volatile: the bytes are set externally via the exported neilSetRom, so LTO
++// must not assume g_injectedRomSize stays 0 (it would fold the check + DCE the
++// inject path, falling back to the trapping fseek read).
++uint8_t* volatile g_injectedRom = 0;
++volatile int g_injectedRomSize = 0;
++EMSCRIPTEN_KEEPALIVE void neilSetRom(int ptr, int size) { g_injectedRom = (uint8_t*)(intptr_t)ptr; g_injectedRomSize = size; }
++
++// Headless host controller state (Discord Plays Mario Kart). Set by JS via
++// neil_send_mobile_controls_player() each tick. It MUST persist across the
++// per-frame resetNeilButtons() (called at the top of mainLoopInner): the host
++// injects input BEFORE _runMainLoop(), so a direct write to neilbuttons[*] is
++// wiped before retro_run() ever polls it. We instead latch the input here and
++// re-apply it via applyHostControls() after every reset, right before retro_run.
++struct NeilHostPad { bool buttons[14]; int axis0; int axis1; bool active; };
++static NeilHostPad g_neilHostPads[4];
+ int mouseX = 0;
+ int mouseY = 0;
+ int mousePressed = 0;
+@@ -727,14 +750,21 @@ int main(int argc, char* argv[])
+     readConfig();
+     readCheats();
+ 
+-    FILE* f = fopen(rom_name, "rb");
+-    fseek(f, 0, SEEK_END);
+-    int fsize = ftell(f);
+-    fseek(f, 0, SEEK_SET);  /* same as rewind(f); */
+-
+-    uint8_t* filecontent = (uint8_t*)malloc(fsize);
+-    fread(filecontent, 1, fsize, f);
+-    fclose(f);
++    uint8_t* filecontent; int fsize;
++    if (g_injectedRomSize > 0) {
++        // Headless (Node/Bun): ROM bytes injected via neilSetRom(), bypassing
++        // fopen/fseek (emscripten musl stdio seek traps outside the browser).
++        filecontent = g_injectedRom;
++        fsize = g_injectedRomSize;
++    } else {
++        FILE* f = fopen(rom_name, "rb");
++        fseek(f, 0, SEEK_END);
++        fsize = ftell(f);
++        fseek(f, 0, SEEK_SET);  /* same as rewind(f); */
++        filecontent = (uint8_t*)malloc(fsize);
++        fread(filecontent, 1, fsize, f);
++        fclose(f);
++    }
+ 
+     bool loaded = retro_load_game_new(filecontent, fsize, loadEep, loadSra, loadFla);
+     if (!loaded)
+@@ -815,6 +845,33 @@ void resetNeilButtons()
+ 
+ }
+ 
++// Re-apply the host-latched controller state into neilbuttons[*]. Must run AFTER
++// resetNeilButtons()/overlay reset and BEFORE retro_run() in mainLoopInner.
++void applyHostControls()
++{
++    for (int player = 0; player < NEILNUMCONTROLLERS; player++)
++    {
++        NeilHostPad& pad = g_neilHostPads[player];
++        if (!pad.active) continue;
++        if (pad.buttons[0])  neilbuttons[player].upKey    = true;
++        if (pad.buttons[1])  neilbuttons[player].downKey  = true;
++        if (pad.buttons[2])  neilbuttons[player].leftKey  = true;
++        if (pad.buttons[3])  neilbuttons[player].rightKey = true;
++        if (pad.buttons[4])  neilbuttons[player].aKey     = true;
++        if (pad.buttons[5])  neilbuttons[player].bKey     = true;
++        if (pad.buttons[6])  neilbuttons[player].startKey = true;
++        if (pad.buttons[7])  neilbuttons[player].zKey     = true;
++        if (pad.buttons[8])  neilbuttons[player].lKey     = true;
++        if (pad.buttons[9])  neilbuttons[player].rKey     = true;
++        if (pad.buttons[10]) neilbuttons[player].cbUp     = true;
++        if (pad.buttons[11]) neilbuttons[player].cbDown   = true;
++        if (pad.buttons[12]) neilbuttons[player].cbLeft   = true;
++        if (pad.buttons[13]) neilbuttons[player].cbRight  = true;
++        neilbuttons[player].axis0 = pad.axis0;
++        neilbuttons[player].axis1 = pad.axis1;
++    }
++}
++
+ void drawAngryOpenGL();
+ 
+ double fpsInterval = 1000.0 / 60.0;
+@@ -1155,6 +1212,10 @@ void mainLoopInner()
+         processMenuItemButtons();
+     }
+ 
++    // Headless host (Discord Plays Mario Kart): re-apply the latched controller
++    // state AFTER every reset above, so retro_run() below actually polls it.
++    applyHostControls();
++
+ 
+     if (SDL_PollEvent(&windowEvent) != 0)
+     {
+@@ -1901,6 +1962,22 @@ extern "C" {
+ 
+ 	}
+ 
++    // Per-player variant for headless multi-controller input (Discord Plays
++    // Mario Kart). `player` indexes g_neilHostPads[0..3]. Called by the host
++    // each tick BEFORE _runMainLoop(); we only LATCH here (a direct write to
++    // neilbuttons[player] would be wiped by resetNeilButtons() at the top of
++    // mainLoopInner before retro_run() polls it). applyHostControls() re-applies
++    // the latched state after the resets, immediately before retro_run().
++    void neil_send_mobile_controls_player(int player, char* controls, char* axis0, char* axis1)
++	{
++        if (player < 0 || player >= NEILNUMCONTROLLERS) return;
++        NeilHostPad& pad = g_neilHostPads[player];
++        for (int i = 0; i < 14; i++) pad.buttons[i] = (controls[i] == '1');
++        pad.axis0 =  (int)((float)32000 * std::stof(std::string(axis0)));
++        pad.axis1 = -(int)((float)32000 * std::stof(std::string(axis1)));
++        pad.active = true;
++	}
++
+     void neil_set_buffer_remaining(int remaining)
+ 	{
+ 		fpsAudioRemaining = remaining;

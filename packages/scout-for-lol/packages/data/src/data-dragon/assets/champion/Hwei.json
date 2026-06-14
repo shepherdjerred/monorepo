@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "Hwei": {
       "id": "Hwei",
@@ -161,6 +161,12 @@
           "name": "Spirit Blossom Hwei (Paragon)",
           "chromas": false,
           "parentSkin": 11
+        },
+        {
+          "id": "910021",
+          "num": 21,
+          "name": "Sinful Shores Hwei",
+          "chromas": false
         }
       ],
       "lore": "Hwei is a brooding painter who creates brilliant art in order to confront Ionia's criminals and comfort their victims. Beneath his melancholy roils a torn, emotional mind—haunted by both the vibrant visions of his imagination and the gruesome memories of his temple's massacre. Hwei seeks to understand this light and dark, which drives him inevitably toward the artist who unraveled him. With paintbrush and palette, Hwei shapes endless possibilities as he draws ever closer to earning closure or embracing despair.",
@@ -541,13 +547,13 @@
           },
           "maxrank": 5,
           "cooldown": [
-            13,
-            12.5,
             12,
             11.5,
-            11
+            11,
+            10.5,
+            10
           ],
-          "cooldownBurn": "13/12.5/12/11.5/11",
+          "cooldownBurn": "12/11.5/11/10.5/10",
           "cost": [
             50,
             55,

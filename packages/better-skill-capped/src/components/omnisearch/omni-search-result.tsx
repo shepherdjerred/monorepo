@@ -3,7 +3,7 @@ import type { Bookmarkable } from "#src/model/bookmark";
 import { CourseSearchResult } from "./course-search-result.tsx";
 import type { Watchable } from "#src/model/watch-status";
 import { VideoSearchResult } from "./video-search-result.tsx";
-import type OmniSearchable from "./omni-searchable.tsx";
+import type OmniSearchable from "./omni-searchable.ts";
 import { CommentarySearchResult } from "./commentary-search-result.tsx";
 
 export type OmniSearchResultProps = {

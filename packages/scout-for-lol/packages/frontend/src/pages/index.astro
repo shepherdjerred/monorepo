@@ -7,23 +7,54 @@ import Hero from "../components/Hero.astro";
 import SectionHeader from "../components/SectionHeader.astro";
 import FeatureCard from "../components/FeatureCard.astro";
 import FeatureGrid from "../components/FeatureGrid.astro";
-import FeatureWithImage from "../components/FeatureWithImage.astro";
-import StatCard from "../components/StatCard.astro";
 import CTA from "../components/CTA.astro";
 import GalleryItem from "../components/GalleryItem.astro";
 import BenefitCard from "../components/BenefitCard.astro";
 import ProcessStep from "../components/ProcessStep.astro";
-import { generatedScoutShowcaseAssets } from "../data/scout-showcase";
+import {
+  generatedScoutShowcaseAssets,
+  getGeneratedScoutShowcaseAssetSrc,
+} from "../data/scout-showcase";
 import {
   DISCORD_INSTALL_CLICK_EVENT,
   DISCORD_INVITE_URL,
 } from "#src/lib/marketing-constants.ts";
 
 const matchImg = "/match.png";
-const loadingScreenImg = "/loading-screen.png";
-const arenaDiscordImg = "/arena-discord.png";
-const soloDiscordImg = "/solo-discord.png";
-const leaderboardLpImg = "/leaderboard-lp.png";
+
+type GeneratedScoutShowcaseAsset =
+  (typeof generatedScoutShowcaseAssets)[number];
+
+const findShowcaseAsset = (
+  id: string,
+): GeneratedScoutShowcaseAsset | undefined =>
+  generatedScoutShowcaseAssets.find((asset) => asset.id === id);
+
+const requireShowcaseAsset = (id: string): GeneratedScoutShowcaseAsset => {
+  const src = getGeneratedScoutShowcaseAssetSrc(id);
+  const asset = generatedScoutShowcaseAssets.find(
+    (candidate) => candidate.id === id && candidate.src === src,
+  );
+
+  if (asset === undefined) {
+    throw new Error(`Missing generated Scout showcase asset: ${id}`);
+  }
+
+  return asset;
+};
+
+const showcasePreviews = [
+  requireShowcaseAsset("arena-discord"),
+  ..."arena-3-postmatch aram-postmatch ranked-solo-1-postmatch"
+    .split(" ")
+    .flatMap((assetId) => {
+      const asset = findShowcaseAsset(assetId);
+
+      return asset ? [asset] : [];
+    }),
+];
+
+const initialShowcasePreview = showcasePreviews.at(0);
 ---
 
 <Layout>
@@ -139,156 +170,171 @@ const leaderboardLpImg = "/leaderboard-lp.png";
     <!-- Features Gallery Section -->
     <div class="bg-white dark:bg-gray-900 py-24 sm:py-32">
       <div class="mx-auto max-w-7xl px-6 lg:px-8">
-        <SectionHeader
-          badge="Feature Showcase"
-          title="See Scout in Action"
-          subtitle="Beautiful reports, leaderboards, and notifications that keep your community engaged with League of Legends."
-        />
+        <SectionHeader badge="Feature Showcase" title="See Scout in Action" />
 
-        <div class="space-y-16 mt-16">
+        <div
+          class="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+        >
           {
-            generatedScoutShowcaseAssets.length > 0 && (
-              <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {generatedScoutShowcaseAssets.map((asset) => (
-                  <figure class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                    <img
-                      src={asset.src}
-                      alt={asset.title}
-                      loading="lazy"
-                      class="aspect-video w-full bg-gray-950 object-contain"
-                    />
-                    <figcaption class="border-t border-gray-200 px-4 py-3 dark:border-gray-700">
-                      <div class="text-sm font-semibold text-gray-900 dark:text-white">
-                        {asset.title}
-                      </div>
-                      <div class="mt-1 text-xs text-gray-600 dark:text-gray-300">
-                        {asset.group}
-                        {asset.state ? ` · ${asset.state}` : ""}
-                        {asset.playerCount
-                          ? ` · ${asset.playerCount.toString()} player${asset.playerCount === 1 ? "" : "s"}`
-                          : ""}
-                      </div>
-                    </figcaption>
-                  </figure>
-                ))}
-              </div>
-            )
+            showcasePreviews.map((preview) => (
+              <button
+                type="button"
+                class="group mx-auto block w-full max-w-sm cursor-zoom-in rounded-md text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-4 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900"
+                data-scout-lightbox-trigger
+                data-lightbox-src={preview.src}
+                data-lightbox-alt={preview.title}
+                aria-label={`View ${preview.title} larger`}
+              >
+                <img
+                  src={preview.src}
+                  alt={preview.title}
+                  loading="lazy"
+                  class="h-auto w-full rounded-md transition duration-200 group-hover:opacity-90"
+                />
+              </button>
+            ))
           }
-
-          <!-- Pre-Match Loading Screens -->
-          <FeatureWithImage
-            title="Pre-Match Loading Screens"
-            description="Scout detects when tracked players enter a game and posts a full loading-screen preview to your Discord channel — complete with champion splash art, summoner spells, runes, and live rank badges for every player on both teams."
-            imageSrc={loadingScreenImg}
-            imageAlt="Pre-match loading screen showing both teams' champion picks, runes, summoner spells, and ranks for a ranked flex game"
-            imagePosition="right"
-            badge={{
-              text: "New Feature",
-              icon: "heroicons:sparkles",
-              color: "green",
-            }}
-            checklist={[
-              "Full 5v5 splash art preview with bans for ranked and draft",
-              "Summoner spells, keystone runes, and live ranks for every player",
-              "ARAM and Arena layouts supported alongside Summoner's Rift",
-              "One notification per game, even with multiple tracked players",
-            ]}
-          />
-
-          <!-- Arena Mode Reports -->
-          <FeatureWithImage
-            title="Complete Arena Coverage"
-            description="Full support for League's Arena mode with detailed stats for 18-player 3v3 matches, augments tracking, and placement results. Scout automatically detects Arena matches, including CHERRY games that Riot reports as custom, and still renders legacy duo reports."
-            imageSrc={arenaDiscordImg}
-            imageAlt="Arena mode match notification in Discord showing detailed stats, augments, and placements"
-            imagePosition="left"
-            badge={{
-              text: "Arena Mode",
-              icon: "heroicons:bolt",
-              color: "purple",
-            }}
-            checklist={[
-              "Track all 18 players across six teams of three",
-              "See augment selections and synergies",
-              "Beautiful placement and ranking display",
-            ]}
-          />
-
-          <!-- Ranked Notifications -->
-          <FeatureWithImage
-            title="Real-Time Match Notifications"
-            description="Get instant notifications when your friends finish their ranked games. See their performance, LP gains/losses, and rank changes in beautiful, easy-to-read Discord messages."
-            imageSrc={soloDiscordImg}
-            imageAlt="Ranked match notification showing player stats, KDA, and LP gains in Discord"
-            imagePosition="right"
-            badge={{
-              text: "Ranked Tracking",
-              icon: "heroicons:bell",
-              color: "blue",
-            }}
-            checklist={[
-              "Instant notifications for Solo Queue and Flex",
-              "LP tracking and rank change indicators",
-              "Comprehensive stats and performance metrics",
-            ]}
-          />
-
-          <!-- Leaderboards -->
-          <FeatureWithImage
-            title="Custom Leaderboards"
-            description="Create competitions and recurring report posts for your server with flexible criteria and time periods. Track LP gains, most wins, champion mastery, surrender trends, and more."
-            imageSrc={leaderboardLpImg}
-            imageAlt="Server leaderboard showing LP competition rankings"
-            imagePosition="left"
-            badge={{
-              text: "Competitions",
-              icon: "heroicons:trophy",
-              color: "yellow",
-            }}
-            checklist={[
-              "Flexible competition criteria (LP, wins, games played)",
-              "Scheduled SQL-style reports for recurring Discord updates",
-              "Support for all game modes including Arena",
-              "Use League seasons, custom date ranges, or rolling lookbacks",
-            ]}
-          />
-
-          <!-- All Queue Types -->
-          <div
-            class="bg-linear-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-8 lg:p-12"
-          >
-            <div class="text-center mb-12">
-              <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-                Support for All Queue Types
-              </h3>
-              <p class="text-lg text-gray-600 dark:text-gray-300">
-                Scout tracks matches across all League of Legends game modes
-              </p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <StatCard
-                title="Ranked Queues"
-                description="Solo/Duo and Flex Queue with full rank tracking and LP history"
-                gradient="yellow"
-                icon="heroicons:trophy"
-              />
-              <StatCard
-                title="Arena Mode"
-                description="Complete Arena coverage with augments and placements"
-                gradient="purple"
-                icon="heroicons:bolt"
-              />
-              <StatCard
-                title="Normal Games"
-                description="Track normal draft and blind pick games with the same great reports"
-                gradient="blue"
-                icon="heroicons:users"
-              />
-            </div>
-          </div>
         </div>
+
+        {
+          showcasePreviews.length === 0 && (
+            <div class="mt-8 rounded-lg border border-gray-200 bg-gray-50 px-5 py-4 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+              Scout showcase examples are unavailable right now.
+            </div>
+          )
+        }
+
+        {
+          initialShowcasePreview && (
+            <div
+              class="fixed inset-0 z-50 hidden items-center justify-center bg-gray-950/90 p-4 backdrop-blur-sm"
+              data-scout-lightbox
+              role="dialog"
+              aria-modal="true"
+              aria-label="Scout report preview"
+            >
+              <button
+                type="button"
+                class="absolute top-4 right-4 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                data-scout-lightbox-close
+              >
+                Close
+              </button>
+              <img
+                alt=""
+                loading="lazy"
+                class="max-h-[88vh] max-w-[95vw] rounded-md shadow-2xl"
+                data-scout-lightbox-image
+              />
+            </div>
+          )
+        }
       </div>
     </div>
+
+    <script>
+      const lightbox = document.querySelector("[data-scout-lightbox]");
+      const lightboxImage = document.querySelector(
+        "[data-scout-lightbox-image]",
+      );
+      const closeButtons = document.querySelectorAll(
+        "[data-scout-lightbox-close]",
+      );
+      const triggers = document.querySelectorAll(
+        "[data-scout-lightbox-trigger]",
+      );
+      let previousFocus: HTMLElement | null = null;
+
+      const isLightboxOpen = () =>
+        lightbox instanceof HTMLElement &&
+        lightbox.classList.contains("flex") &&
+        !lightbox.classList.contains("hidden");
+
+      const closeLightbox = () => {
+        if (!(lightbox instanceof HTMLElement)) {
+          return;
+        }
+
+        lightbox.classList.add("hidden");
+        lightbox.classList.remove("flex");
+        document.documentElement.classList.remove("overflow-hidden");
+
+        if (previousFocus instanceof HTMLElement) {
+          previousFocus.focus();
+        }
+
+        previousFocus = null;
+      };
+
+      const openLightbox = (trigger: Element) => {
+        if (
+          !(trigger instanceof HTMLButtonElement) ||
+          !(lightbox instanceof HTMLElement) ||
+          !(lightboxImage instanceof HTMLImageElement)
+        ) {
+          return;
+        }
+
+        const src = trigger.dataset["lightboxSrc"];
+        const alt = trigger.dataset["lightboxAlt"];
+
+        if (!src || !alt) {
+          return;
+        }
+
+        previousFocus = trigger;
+        lightboxImage.src = src;
+        lightboxImage.alt = alt;
+        lightbox.classList.remove("hidden");
+        lightbox.classList.add("flex");
+        document.documentElement.classList.add("overflow-hidden");
+
+        const closeButton = lightbox.querySelector(
+          "[data-scout-lightbox-close]",
+        );
+        if (closeButton instanceof HTMLButtonElement) {
+          closeButton.focus();
+        }
+      };
+
+      triggers.forEach((trigger) => {
+        trigger.addEventListener("click", () => {
+          openLightbox(trigger);
+        });
+      });
+
+      closeButtons.forEach((button) => {
+        button.addEventListener("click", closeLightbox);
+      });
+
+      lightbox?.addEventListener("click", (event) => {
+        if (event.target === lightbox) {
+          closeLightbox();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          closeLightbox();
+          return;
+        }
+
+        if (event.key !== "Tab" || !isLightboxOpen()) {
+          return;
+        }
+
+        const closeButton = lightbox?.querySelector(
+          "[data-scout-lightbox-close]",
+        );
+
+        if (!(closeButton instanceof HTMLButtonElement)) {
+          return;
+        }
+
+        event.preventDefault();
+        closeButton.focus();
+      });
+    </script>
 
     <!-- How it works -->
     <div class="bg-gray-50 dark:bg-gray-800 py-24 sm:py-32">

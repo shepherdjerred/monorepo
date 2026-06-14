@@ -160,17 +160,16 @@ export type ArgocdHelmValuesGlobal = {
   priorityClassName?: string;
   /**
    * Default node selector for all components
-   *
-   * @default {"kubernetes.io/os":"linux"}
    */
-  nodeSelector?: ArgocdHelmValuesGlobalNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Default tolerations for all components
+   */
   tolerations?: unknown[];
   /**
    * Default affinity preset for all components
-   *
-   * @default {"podAntiAffinity":"soft","nodeAffinity":{"type":"hard","matchExpressions":[]}}
    */
-  affinity?: ArgocdHelmValuesGlobalAffinity;
+  affinity?: Record<string, unknown>;
   topologySpreadConstraints?: unknown[];
   /**
    * Deployment strategy for the all deployed Deployments
@@ -265,43 +264,6 @@ export type ArgocdHelmValuesGlobalNetworkPolicy = {
    * @default false
    */
   defaultDenyIngress?: boolean;
-};
-
-export type ArgocdHelmValuesGlobalNodeSelector = {
-  /**
-   * @default "linux"
-   */
-  "kubernetes.io/os"?: string;
-};
-
-export type ArgocdHelmValuesGlobalAffinity = {
-  /**
-   * Default pod anti-affinity rules. Either: `none`, `soft` or `hard`
-   *
-   * @default "soft"
-   */
-  podAntiAffinity?: string;
-  /**
-   * Node affinity rules
-   *
-   * @default {"type":"hard","matchExpressions":[]}
-   */
-  nodeAffinity?: ArgocdHelmValuesGlobalAffinityNodeAffinity;
-};
-
-export type ArgocdHelmValuesGlobalAffinityNodeAffinity = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-  /**
-   * Default node affinity rules. Either: `none`, `soft` or `hard`
-   *
-   * @default "hard"
-   */
-  type?: string;
-  matchExpressions?: unknown[];
 };
 
 export type ArgocdHelmValuesGlobalDeploymentStrategy = object;
@@ -1009,10 +971,11 @@ export type ArgocdHelmValuesController = {
   podLabels?: ArgocdHelmValuesControllerPodLabels;
   /**
    * Resource limits and requests for the application controller pods
-   *
-   * @default {}
    */
-  resources?: ArgocdHelmValuesControllerResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Application controller container ports
    *
@@ -1064,17 +1027,16 @@ export type ArgocdHelmValuesController = {
   priorityClassName?: string;
   /**
    * [Node selector]
-   *
-   * @default {}
    */
-  nodeSelector?: ArgocdHelmValuesControllerNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * [Tolerations] for use with node taints
+   */
   tolerations?: unknown[];
   /**
    * Assign custom [affinity] rules to the deployment
-   *
-   * @default {}
    */
-  affinity?: ArgocdHelmValuesControllerAffinity;
+  affinity?: Record<string, unknown>;
   topologySpreadConstraints?: unknown[];
   /**
    * Automount API credentials for the Service Account into the pod.
@@ -1247,8 +1209,6 @@ export type ArgocdHelmValuesControllerPodAnnotations = object;
 
 export type ArgocdHelmValuesControllerPodLabels = object;
 
-export type ArgocdHelmValuesControllerResources = object;
-
 export type ArgocdHelmValuesControllerContainerPorts = {
   /**
    * Metrics container port
@@ -1326,10 +1286,6 @@ export type ArgocdHelmValuesControllerReadinessProbe = {
    */
   timeoutSeconds?: number;
 };
-
-export type ArgocdHelmValuesControllerNodeSelector = object;
-
-export type ArgocdHelmValuesControllerAffinity = object;
 
 export type ArgocdHelmValuesControllerServiceAccount = {
   /**
@@ -1713,10 +1669,11 @@ export type ArgocdHelmValuesDex = {
   podLabels?: ArgocdHelmValuesDexPodLabels;
   /**
    * Resource limits and requests for dex
-   *
-   * @default {}
    */
-  resources?: ArgocdHelmValuesDexResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Dex container ports
    * NOTE: These ports are currently hardcoded and cannot be changed
@@ -1807,17 +1764,16 @@ export type ArgocdHelmValuesDex = {
   priorityClassName?: string;
   /**
    * [Node selector]
-   *
-   * @default {}
    */
-  nodeSelector?: ArgocdHelmValuesDexNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * [Tolerations] for use with node taints
+   */
   tolerations?: unknown[];
   /**
    * Assign custom [affinity] rules to the deployment
-   *
-   * @default {}
    */
-  affinity?: ArgocdHelmValuesDexAffinity;
+  affinity?: Record<string, unknown>;
   topologySpreadConstraints?: unknown[];
   /**
    * Deployment strategy to be added to the Dex server Deployment
@@ -2103,13 +2059,12 @@ export type ArgocdHelmValuesDexInitImage = {
   imagePullPolicy?: string;
   /**
    * Argo CD init image resources
-   *
-   * @default {}
    */
-  resources?: ArgocdHelmValuesDexInitImageResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
 };
-
-export type ArgocdHelmValuesDexInitImageResources = object;
 
 export type ArgocdHelmValuesDexEmptyDir = {
   /**
@@ -2182,8 +2137,6 @@ export type ArgocdHelmValuesDexDeploymentLabels = object;
 export type ArgocdHelmValuesDexPodAnnotations = object;
 
 export type ArgocdHelmValuesDexPodLabels = object;
-
-export type ArgocdHelmValuesDexResources = object;
 
 export type ArgocdHelmValuesDexContainerPorts = {
   /**
@@ -2395,10 +2348,6 @@ export type ArgocdHelmValuesDexServiceAccountAnnotations = {
   [key: string]: unknown;
 };
 
-export type ArgocdHelmValuesDexNodeSelector = object;
-
-export type ArgocdHelmValuesDexAffinity = object;
-
 export type ArgocdHelmValuesDexDeploymentStrategy = object;
 
 export type ArgocdHelmValuesDexNetworkPolicy = {
@@ -2500,10 +2449,11 @@ export type ArgocdHelmValuesRedis = {
   podLabels?: ArgocdHelmValuesRedisPodLabels;
   /**
    * Resource limits and requests for redis
-   *
-   * @default {}
    */
-  resources?: ArgocdHelmValuesRedisResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Redis pod-level security context
    *
@@ -2548,17 +2498,16 @@ export type ArgocdHelmValuesRedis = {
   priorityClassName?: string;
   /**
    * [Node selector]
-   *
-   * @default {}
    */
-  nodeSelector?: ArgocdHelmValuesRedisNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * [Tolerations] for use with node taints
+   */
   tolerations?: unknown[];
   /**
    * Assign custom [affinity] rules to the deployment
-   *
-   * @default {}
    */
-  affinity?: ArgocdHelmValuesRedisAffinity;
+  affinity?: Record<string, unknown>;
   topologySpreadConstraints?: unknown[];
   /**
    * terminationGracePeriodSeconds for container lifecycle hook
@@ -2747,10 +2696,11 @@ export type ArgocdHelmValuesRedisExporter = {
   livenessProbe?: ArgocdHelmValuesRedisExporterLivenessProbe;
   /**
    * Resource limits and requests for redis-exporter sidecar
-   *
-   * @default {}
    */
-  resources?: ArgocdHelmValuesRedisExporterResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
 };
 
 export type ArgocdHelmValuesRedisExporterImage = {
@@ -2888,8 +2838,6 @@ export type ArgocdHelmValuesRedisExporterLivenessProbe = {
   failureThreshold?: number;
 };
 
-export type ArgocdHelmValuesRedisExporterResources = object;
-
 export type ArgocdHelmValuesRedisReadinessProbe = {
   /**
    * Enable Kubernetes liveness probe for Redis server
@@ -2976,8 +2924,6 @@ export type ArgocdHelmValuesRedisPodAnnotations = object;
 
 export type ArgocdHelmValuesRedisPodLabels = object;
 
-export type ArgocdHelmValuesRedisResources = object;
-
 export type ArgocdHelmValuesRedisSecurityContext = {
   /**
    * @default true
@@ -3035,10 +2981,6 @@ export type ArgocdHelmValuesRedisContainerSecurityContext = {
 export type ArgocdHelmValuesRedisContainerSecurityContextCapabilities = {
   drop?: string[];
 };
-
-export type ArgocdHelmValuesRedisNodeSelector = object;
-
-export type ArgocdHelmValuesRedisAffinity = object;
 
 export type ArgocdHelmValuesRedisServiceAccount = {
   /**
@@ -3329,6 +3271,9 @@ export type ArgocdHelmValuesRedisha = {
    * @default ""
    */
   affinity?: string;
+  /**
+   * [Tolerations] for use with node taints for Redis pods.
+   */
   tolerations?: unknown[];
   /**
    * Assign custom [TopologySpreadConstraints] rules to the Redis pods.
@@ -3459,6 +3404,9 @@ export type ArgocdHelmValuesRedishaHaproxy = {
    * @default ""
    */
   affinity?: string;
+  /**
+   * [Tolerations] for use with node taints for haproxy pods.
+   */
   tolerations?: unknown[];
   /**
    * HAProxy container-level security context
@@ -3630,10 +3578,11 @@ export type ArgocdHelmValuesRedisSecretInit = {
   podLabels?: ArgocdHelmValuesRedisSecretInitPodLabels;
   /**
    * Resource limits and requests for Redis secret-init Job
-   *
-   * @default {}
    */
-  resources?: ArgocdHelmValuesRedisSecretInitResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Application controller container-level security context
    *
@@ -3658,16 +3607,15 @@ export type ArgocdHelmValuesRedisSecretInit = {
   priorityClassName?: string;
   /**
    * Assign custom [affinity] rules to the Redis secret-init Job
-   *
-   * @default {}
    */
-  affinity?: ArgocdHelmValuesRedisSecretInitAffinity;
+  affinity?: Record<string, unknown>;
   /**
    * Node selector to be added to the Redis secret-init Job
-   *
-   * @default {}
    */
-  nodeSelector?: ArgocdHelmValuesRedisSecretInitNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * Tolerations to be added to the Redis secret-init Job
+   */
   tolerations?: unknown[];
 };
 
@@ -3699,8 +3647,6 @@ export type ArgocdHelmValuesRedisSecretInitJobAnnotations = object;
 export type ArgocdHelmValuesRedisSecretInitPodAnnotations = object;
 
 export type ArgocdHelmValuesRedisSecretInitPodLabels = object;
-
-export type ArgocdHelmValuesRedisSecretInitResources = object;
 
 export type ArgocdHelmValuesRedisSecretInitContainerSecurityContext = {
   /**
@@ -3774,10 +3720,6 @@ export type ArgocdHelmValuesRedisSecretInitServiceAccountAnnotations = {
    */
   [key: string]: unknown;
 };
-
-export type ArgocdHelmValuesRedisSecretInitAffinity = object;
-
-export type ArgocdHelmValuesRedisSecretInitNodeSelector = object;
 
 export type ArgocdHelmValuesServer = {
   /**
@@ -3880,10 +3822,11 @@ export type ArgocdHelmValuesServer = {
   podLabels?: ArgocdHelmValuesServerPodLabels;
   /**
    * Resource limits and requests for the Argo CD server
-   *
-   * @default {}
    */
-  resources?: ArgocdHelmValuesServerResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Server container ports
    *
@@ -3939,17 +3882,16 @@ export type ArgocdHelmValuesServer = {
   priorityClassName?: string;
   /**
    * [Node selector]
-   *
-   * @default {}
    */
-  nodeSelector?: ArgocdHelmValuesServerNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * [Tolerations] for use with node taints
+   */
   tolerations?: unknown[];
   /**
    * Assign custom [affinity] rules to the deployment
-   *
-   * @default {}
    */
-  affinity?: ArgocdHelmValuesServerAffinity;
+  affinity?: Record<string, unknown>;
   topologySpreadConstraints?: unknown[];
   /**
    * Deployment strategy to be added to the server Deployment
@@ -4234,10 +4176,11 @@ export type ArgocdHelmValuesServerExtensions = {
   containerSecurityContext?: ArgocdHelmValuesServerExtensionsContainerSecurityContext;
   /**
    * Resource limits and requests for the argocd-extensions container
-   *
-   * @default {}
    */
-  resources?: ArgocdHelmValuesServerExtensionsResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
 };
 
 export type ArgocdHelmValuesServerExtensionsImage = {
@@ -4301,8 +4244,6 @@ export type ArgocdHelmValuesServerExtensionsContainerSecurityContextCapabilities
     drop?: string[];
   };
 
-export type ArgocdHelmValuesServerExtensionsResources = object;
-
 export type ArgocdHelmValuesServerEmptyDir = {
   /**
    * EmptyDir size limit for the Argo CD server
@@ -4319,8 +4260,6 @@ export type ArgocdHelmValuesServerDeploymentLabels = object;
 export type ArgocdHelmValuesServerPodAnnotations = object;
 
 export type ArgocdHelmValuesServerPodLabels = object;
-
-export type ArgocdHelmValuesServerResources = object;
 
 export type ArgocdHelmValuesServerContainerPorts = {
   /**
@@ -4450,10 +4389,6 @@ export type ArgocdHelmValuesServerLivenessProbe = {
    */
   timeoutSeconds?: number;
 };
-
-export type ArgocdHelmValuesServerNodeSelector = object;
-
-export type ArgocdHelmValuesServerAffinity = object;
 
 export type ArgocdHelmValuesServerDeploymentStrategy = object;
 
@@ -5497,10 +5432,11 @@ export type ArgocdHelmValuesRepoServer = {
   podLabels?: ArgocdHelmValuesRepoServerPodLabels;
   /**
    * Resource limits and requests for the repo server pods
-   *
-   * @default {}
    */
-  resources?: ArgocdHelmValuesRepoServerResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Repo server container ports
    *
@@ -5549,17 +5485,16 @@ export type ArgocdHelmValuesRepoServer = {
   terminationGracePeriodSeconds?: number;
   /**
    * [Node selector]
-   *
-   * @default {}
    */
-  nodeSelector?: ArgocdHelmValuesRepoServerNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * [Tolerations] for use with node taints
+   */
   tolerations?: unknown[];
   /**
    * Assign custom [affinity] rules to the deployment
-   *
-   * @default {}
    */
-  affinity?: ArgocdHelmValuesRepoServerAffinity;
+  affinity?: Record<string, unknown>;
   topologySpreadConstraints?: unknown[];
   /**
    * Deployment strategy to be added to the repo server Deployment
@@ -5793,13 +5728,12 @@ export type ArgocdHelmValuesRepoServerCopyutil = {
   extraArgs?: string;
   /**
    * Resource limits and requests for the repo server copyutil initContainer
-   *
-   * @default {}
    */
-  resources?: ArgocdHelmValuesRepoServerCopyutilResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
 };
-
-export type ArgocdHelmValuesRepoServerCopyutilResources = object;
 
 export type ArgocdHelmValuesRepoServerExistingVolumes = object;
 
@@ -5819,8 +5753,6 @@ export type ArgocdHelmValuesRepoServerDeploymentLabels = object;
 export type ArgocdHelmValuesRepoServerPodAnnotations = object;
 
 export type ArgocdHelmValuesRepoServerPodLabels = object;
-
-export type ArgocdHelmValuesRepoServerResources = object;
 
 export type ArgocdHelmValuesRepoServerContainerPorts = {
   /**
@@ -5950,10 +5882,6 @@ export type ArgocdHelmValuesRepoServerLivenessProbe = {
    */
   timeoutSeconds?: number;
 };
-
-export type ArgocdHelmValuesRepoServerNodeSelector = object;
-
-export type ArgocdHelmValuesRepoServerAffinity = object;
 
 export type ArgocdHelmValuesRepoServerDeploymentStrategy = object;
 
@@ -6384,10 +6312,11 @@ export type ArgocdHelmValuesApplicationSet = {
   podLabels?: ArgocdHelmValuesApplicationSetPodLabels;
   /**
    * Resource limits and requests for the ApplicationSet controller pods.
-   *
-   * @default {}
    */
-  resources?: ArgocdHelmValuesApplicationSetResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * ApplicationSet controller container ports
    *
@@ -6431,17 +6360,16 @@ export type ArgocdHelmValuesApplicationSet = {
   terminationGracePeriodSeconds?: number;
   /**
    * [Node selector]
-   *
-   * @default {}
    */
-  nodeSelector?: ArgocdHelmValuesApplicationSetNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * [Tolerations] for use with node taints
+   */
   tolerations?: unknown[];
   /**
    * Assign custom [affinity] rules
-   *
-   * @default {}
    */
-  affinity?: ArgocdHelmValuesApplicationSetAffinity;
+  affinity?: Record<string, unknown>;
   topologySpreadConstraints?: unknown[];
   /**
    * Deployment strategy to be added to the ApplicationSet controller Deployment
@@ -6879,8 +6807,6 @@ export type ArgocdHelmValuesApplicationSetPodAnnotations = object;
 
 export type ArgocdHelmValuesApplicationSetPodLabels = object;
 
-export type ArgocdHelmValuesApplicationSetResources = object;
-
 export type ArgocdHelmValuesApplicationSetContainerPorts = {
   /**
    * Metrics container port
@@ -7017,10 +6943,6 @@ export type ArgocdHelmValuesApplicationSetLivenessProbe = {
    */
   failureThreshold?: number;
 };
-
-export type ArgocdHelmValuesApplicationSetNodeSelector = object;
-
-export type ArgocdHelmValuesApplicationSetAffinity = object;
 
 export type ArgocdHelmValuesApplicationSetDeploymentStrategy = object;
 
@@ -7372,10 +7294,11 @@ export type ArgocdHelmValuesNotifications = {
   podLabels?: ArgocdHelmValuesNotificationsPodLabels;
   /**
    * Resource limits and requests for the notifications controller
-   *
-   * @default {}
    */
-  resources?: ArgocdHelmValuesNotificationsResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * Notification controller container ports
    *
@@ -7419,17 +7342,16 @@ export type ArgocdHelmValuesNotifications = {
   terminationGracePeriodSeconds?: number;
   /**
    * [Node selector]
-   *
-   * @default {}
    */
-  nodeSelector?: ArgocdHelmValuesNotificationsNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * [Tolerations] for use with node taints
+   */
   tolerations?: unknown[];
   /**
    * Assign custom [affinity] rules
-   *
-   * @default {}
    */
-  affinity?: ArgocdHelmValuesNotificationsAffinity;
+  affinity?: Record<string, unknown>;
   topologySpreadConstraints?: unknown[];
   /**
    * Deployment strategy to be added to the notifications controller Deployment
@@ -7810,8 +7732,6 @@ export type ArgocdHelmValuesNotificationsPodAnnotations = object;
 
 export type ArgocdHelmValuesNotificationsPodLabels = object;
 
-export type ArgocdHelmValuesNotificationsResources = object;
-
 export type ArgocdHelmValuesNotificationsContainerPorts = {
   /**
    * Metrics container port
@@ -7936,10 +7856,6 @@ export type ArgocdHelmValuesNotificationsLivenessProbe = {
    */
   failureThreshold?: number;
 };
-
-export type ArgocdHelmValuesNotificationsNodeSelector = object;
-
-export type ArgocdHelmValuesNotificationsAffinity = object;
 
 export type ArgocdHelmValuesNotificationsDeploymentStrategy = {
   /**
@@ -8104,10 +8020,11 @@ export type ArgocdHelmValuesCommitServer = {
   podLabels?: ArgocdHelmValuesCommitServerPodLabels;
   /**
    * Resource limits and requests for the commit server pods.
-   *
-   * @default {}
    */
-  resources?: ArgocdHelmValuesCommitServerResources;
+  resources?: {
+    requests?: Record<string, string | number>;
+    limits?: Record<string, string | number>;
+  };
   /**
    * [DNS configuration]
    *
@@ -8145,17 +8062,16 @@ export type ArgocdHelmValuesCommitServer = {
   terminationGracePeriodSeconds?: number;
   /**
    * [Node selector]
-   *
-   * @default {}
    */
-  nodeSelector?: ArgocdHelmValuesCommitServerNodeSelector;
+  nodeSelector?: Record<string, string>;
+  /**
+   * [Tolerations] for use with node taints
+   */
   tolerations?: unknown[];
   /**
    * Assign custom [affinity] rules
-   *
-   * @default {}
    */
-  affinity?: ArgocdHelmValuesCommitServerAffinity;
+  affinity?: Record<string, unknown>;
   topologySpreadConstraints?: unknown[];
   /**
    * Deployment strategy to be added to the commit server Deployment
@@ -8373,8 +8289,6 @@ export type ArgocdHelmValuesCommitServerPodAnnotations = object;
 
 export type ArgocdHelmValuesCommitServerPodLabels = object;
 
-export type ArgocdHelmValuesCommitServerResources = object;
-
 export type ArgocdHelmValuesCommitServerDnsConfig = object;
 
 export type ArgocdHelmValuesCommitServerContainerSecurityContext = {
@@ -8477,10 +8391,6 @@ export type ArgocdHelmValuesCommitServerLivenessProbe = {
    */
   failureThreshold?: number;
 };
-
-export type ArgocdHelmValuesCommitServerNodeSelector = object;
-
-export type ArgocdHelmValuesCommitServerAffinity = object;
 
 export type ArgocdHelmValuesCommitServerDeploymentStrategy = object;
 
@@ -8715,11 +8625,9 @@ export type ArgocdHelmParameters = {
   "global.networkPolicy.create"?: string;
   "global.networkPolicy.defaultDenyIngress"?: string;
   "global.priorityClassName"?: string;
-  "global.nodeSelector.kubernetes.io/os"?: string;
+  "global.nodeSelector"?: string;
   "global.tolerations"?: string;
-  "global.affinity.podAntiAffinity"?: string;
-  "global.affinity.nodeAffinity.type"?: string;
-  "global.affinity.nodeAffinity.matchExpressions"?: string;
+  "global.affinity"?: string;
   "global.topologySpreadConstraints"?: string;
   "global.env"?: string;
   "global.extraVolumes"?: string;
@@ -8788,6 +8696,7 @@ export type ArgocdHelmParameters = {
   "controller.volumeMounts"?: string;
   "controller.volumes"?: string;
   "controller.emptyDir.sizeLimit"?: string;
+  "controller.resources"?: string;
   "controller.containerPorts.metrics"?: string;
   "controller.hostNetwork"?: string;
   "controller.dnsPolicy"?: string;
@@ -8803,7 +8712,9 @@ export type ArgocdHelmParameters = {
   "controller.readinessProbe.timeoutSeconds"?: string;
   "controller.terminationGracePeriodSeconds"?: string;
   "controller.priorityClassName"?: string;
+  "controller.nodeSelector"?: string;
   "controller.tolerations"?: string;
+  "controller.affinity"?: string;
   "controller.topologySpreadConstraints"?: string;
   "controller.automountServiceAccountToken"?: string;
   "controller.serviceAccount.create"?: string;
@@ -8856,6 +8767,7 @@ export type ArgocdHelmParameters = {
   "dex.initImage.repository"?: string;
   "dex.initImage.tag"?: string;
   "dex.initImage.imagePullPolicy"?: string;
+  "dex.initImage.resources"?: string;
   "dex.env"?: string;
   "dex.envFrom"?: string;
   "dex.extraContainers"?: string;
@@ -8867,6 +8779,7 @@ export type ArgocdHelmParameters = {
   "dex.certificateSecret.ca"?: string;
   "dex.certificateSecret.key"?: string;
   "dex.certificateSecret.crt"?: string;
+  "dex.resources"?: string;
   "dex.containerPorts.http"?: string;
   "dex.containerPorts.grpc"?: string;
   "dex.containerPorts.metrics"?: string;
@@ -8906,7 +8819,9 @@ export type ArgocdHelmParameters = {
   "dex.servicePortGrpcName"?: string;
   "dex.servicePortMetrics"?: string;
   "dex.priorityClassName"?: string;
+  "dex.nodeSelector"?: string;
   "dex.tolerations"?: string;
+  "dex.affinity"?: string;
   "dex.topologySpreadConstraints"?: string;
   "dex.networkPolicy.create"?: string;
   "redis.enabled"?: string;
@@ -8942,6 +8857,7 @@ export type ArgocdHelmParameters = {
   "redis.exporter.livenessProbe.timeoutSeconds"?: string;
   "redis.exporter.livenessProbe.successThreshold"?: string;
   "redis.exporter.livenessProbe.failureThreshold"?: string;
+  "redis.exporter.resources"?: string;
   "redis.imagePullSecrets"?: string;
   "redis.extraArgs"?: string;
   "redis.env"?: string;
@@ -8962,6 +8878,7 @@ export type ArgocdHelmParameters = {
   "redis.initContainers"?: string;
   "redis.volumeMounts"?: string;
   "redis.volumes"?: string;
+  "redis.resources"?: string;
   "redis.securityContext.runAsNonRoot"?: string;
   "redis.securityContext.runAsUser"?: string;
   "redis.securityContext.seccompProfile.type"?: string;
@@ -8973,7 +8890,9 @@ export type ArgocdHelmParameters = {
   "redis.containerSecurityContext.capabilities.drop"?: string;
   "redis.servicePort"?: string;
   "redis.priorityClassName"?: string;
+  "redis.nodeSelector"?: string;
   "redis.tolerations"?: string;
+  "redis.affinity"?: string;
   "redis.topologySpreadConstraints"?: string;
   "redis.terminationGracePeriodSeconds"?: string;
   "redis.automountServiceAccountToken"?: string;
@@ -9033,6 +8952,7 @@ export type ArgocdHelmParameters = {
   "redisSecretInit.extraArgs"?: string;
   "redisSecretInit.imagePullSecrets"?: string;
   "redisSecretInit.runtimeClassName"?: string;
+  "redisSecretInit.resources"?: string;
   "redisSecretInit.containerSecurityContext.allowPrivilegeEscalation"?: string;
   "redisSecretInit.containerSecurityContext.capabilities.drop"?: string;
   "redisSecretInit.containerSecurityContext.readOnlyRootFilesystem"?: string;
@@ -9042,6 +8962,8 @@ export type ArgocdHelmParameters = {
   "redisSecretInit.serviceAccount.name"?: string;
   "redisSecretInit.serviceAccount.automountServiceAccountToken"?: string;
   "redisSecretInit.priorityClassName"?: string;
+  "redisSecretInit.affinity"?: string;
+  "redisSecretInit.nodeSelector"?: string;
   "redisSecretInit.tolerations"?: string;
   "server.name"?: string;
   "server.replicas"?: string;
@@ -9075,11 +8997,13 @@ export type ArgocdHelmParameters = {
   "server.extensions.containerSecurityContext.runAsUser"?: string;
   "server.extensions.containerSecurityContext.seccompProfile.type"?: string;
   "server.extensions.containerSecurityContext.capabilities.drop"?: string;
+  "server.extensions.resources"?: string;
   "server.extraContainers"?: string;
   "server.initContainers"?: string;
   "server.volumeMounts"?: string;
   "server.volumes"?: string;
   "server.emptyDir.sizeLimit"?: string;
+  "server.resources"?: string;
   "server.containerPorts.server"?: string;
   "server.containerPorts.metrics"?: string;
   "server.hostNetwork"?: string;
@@ -9103,7 +9027,9 @@ export type ArgocdHelmParameters = {
   "server.livenessProbe.timeoutSeconds"?: string;
   "server.terminationGracePeriodSeconds"?: string;
   "server.priorityClassName"?: string;
+  "server.nodeSelector"?: string;
   "server.tolerations"?: string;
+  "server.affinity"?: string;
   "server.topologySpreadConstraints"?: string;
   "server.certificate.enabled"?: string;
   "server.certificate.domain"?: string;
@@ -9219,10 +9145,12 @@ export type ArgocdHelmParameters = {
   "repoServer.extraContainers"?: string;
   "repoServer.initContainers"?: string;
   "repoServer.copyutil.extraArgs"?: string;
+  "repoServer.copyutil.resources"?: string;
   "repoServer.volumeMounts"?: string;
   "repoServer.volumes"?: string;
   "repoServer.emptyDir.sizeLimit"?: string;
   "repoServer.useEphemeralHelmWorkingDir"?: string;
+  "repoServer.resources"?: string;
   "repoServer.containerPorts.server"?: string;
   "repoServer.containerPorts.metrics"?: string;
   "repoServer.hostNetwork"?: string;
@@ -9245,7 +9173,9 @@ export type ArgocdHelmParameters = {
   "repoServer.livenessProbe.successThreshold"?: string;
   "repoServer.livenessProbe.timeoutSeconds"?: string;
   "repoServer.terminationGracePeriodSeconds"?: string;
+  "repoServer.nodeSelector"?: string;
   "repoServer.tolerations"?: string;
+  "repoServer.affinity"?: string;
   "repoServer.topologySpreadConstraints"?: string;
   "repoServer.priorityClassName"?: string;
   "repoServer.certificateSecret.enabled"?: string;
@@ -9316,6 +9246,7 @@ export type ArgocdHelmParameters = {
   "applicationSet.serviceAccount.create"?: string;
   "applicationSet.serviceAccount.name"?: string;
   "applicationSet.serviceAccount.automountServiceAccountToken"?: string;
+  "applicationSet.resources"?: string;
   "applicationSet.containerPorts.metrics"?: string;
   "applicationSet.containerPorts.probe"?: string;
   "applicationSet.containerPorts.webhook"?: string;
@@ -9338,7 +9269,9 @@ export type ArgocdHelmParameters = {
   "applicationSet.livenessProbe.successThreshold"?: string;
   "applicationSet.livenessProbe.failureThreshold"?: string;
   "applicationSet.terminationGracePeriodSeconds"?: string;
+  "applicationSet.nodeSelector"?: string;
   "applicationSet.tolerations"?: string;
+  "applicationSet.affinity"?: string;
   "applicationSet.topologySpreadConstraints"?: string;
   "applicationSet.priorityClassName"?: string;
   "applicationSet.certificate.enabled"?: string;
@@ -9402,6 +9335,7 @@ export type ArgocdHelmParameters = {
   "notifications.metrics.serviceMonitor.honorLabels"?: string;
   "notifications.metrics.serviceMonitor.relabelings"?: string;
   "notifications.metrics.serviceMonitor.metricRelabelings"?: string;
+  "notifications.resources"?: string;
   "notifications.containerPorts.metrics"?: string;
   "notifications.dnsPolicy"?: string;
   "notifications.containerSecurityContext.runAsNonRoot"?: string;
@@ -9422,7 +9356,9 @@ export type ArgocdHelmParameters = {
   "notifications.livenessProbe.successThreshold"?: string;
   "notifications.livenessProbe.failureThreshold"?: string;
   "notifications.terminationGracePeriodSeconds"?: string;
+  "notifications.nodeSelector"?: string;
   "notifications.tolerations"?: string;
+  "notifications.affinity"?: string;
   "notifications.topologySpreadConstraints"?: string;
   "notifications.deploymentStrategy.type"?: string;
   "notifications.priorityClassName"?: string;
@@ -9456,6 +9392,7 @@ export type ArgocdHelmParameters = {
   "commitServer.serviceAccount.create"?: string;
   "commitServer.serviceAccount.name"?: string;
   "commitServer.serviceAccount.automountServiceAccountToken"?: string;
+  "commitServer.resources"?: string;
   "commitServer.dnsPolicy"?: string;
   "commitServer.containerSecurityContext.runAsNonRoot"?: string;
   "commitServer.containerSecurityContext.readOnlyRootFilesystem"?: string;
@@ -9473,7 +9410,9 @@ export type ArgocdHelmParameters = {
   "commitServer.livenessProbe.timeoutSeconds"?: string;
   "commitServer.livenessProbe.failureThreshold"?: string;
   "commitServer.terminationGracePeriodSeconds"?: string;
+  "commitServer.nodeSelector"?: string;
   "commitServer.tolerations"?: string;
+  "commitServer.affinity"?: string;
   "commitServer.topologySpreadConstraints"?: string;
   "commitServer.priorityClassName"?: string;
   "commitServer.networkPolicy.create"?: string;

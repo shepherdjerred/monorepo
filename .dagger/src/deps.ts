@@ -10,6 +10,8 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   "eslint-config": [],
   leetcode: [],
   resume: [],
+  // Vendored fork of @dank074/discord-video-stream; standalone (no file: deps of its own).
+  "discord-video-stream": [],
 
   // eslint-config only
   "astro-opengraph-images": ["eslint-config"],
@@ -22,6 +24,14 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   birmel: ["eslint-config", "llm-observability"],
   "llm-observability": ["eslint-config"],
   "starlight-karma-bot": ["eslint-config"],
+  // Shared XState stream lifecycle machine; consumed via file: deps by
+  // streambot and the discord-plays-* backends below.
+  "discord-stream-lifecycle": ["eslint-config"],
+  streambot: [
+    "eslint-config",
+    "discord-video-stream",
+    "discord-stream-lifecycle",
+  ],
   "tasknotes-types": ["eslint-config"],
   "home-assistant": ["eslint-config"],
   "trmnl-dashboard": ["eslint-config", "home-assistant"],
@@ -41,8 +51,21 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   "homelab/src/cdk8s": ["eslint-config", "homelab/src/helm-types"],
   "homelab/src/helm-types": ["eslint-config"],
 
-  // Nested workspace packages (sub-packages are inside parent dir)
-  "discord-plays-pokemon": ["eslint-config"],
+  // Nested workspace packages (sub-packages are inside parent dir).
+  // The nested */packages/backend consume discord-stream-lifecycle via
+  // file:../../../discord-stream-lifecycle, which resolves to the dep mounted
+  // at /workspace/packages/discord-stream-lifecycle.
+  "discord-plays-pokemon": [
+    "eslint-config",
+    "discord-video-stream",
+    "discord-stream-lifecycle",
+    "llm-observability",
+  ],
+  "discord-plays-mario-kart": [
+    "eslint-config",
+    "discord-video-stream",
+    "discord-stream-lifecycle",
+  ],
   "scout-for-lol": ["eslint-config", "llm-observability"],
   "scout-for-lol/packages/frontend": [
     "eslint-config",
@@ -62,4 +85,6 @@ export const BUILD_TIME_DEPS: string[] = [
   "astro-opengraph-images",
   "webring",
   "tasknotes-types",
+  // Emits dist/*.d.ts (declaration-only) so dependents' tsc resolves its types; bun runs its src.
+  "discord-video-stream",
 ];

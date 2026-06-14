@@ -20,7 +20,16 @@ import {
 const GITHUB_APP_TOKEN_SCRIPT = "packages/temporal/src/lib/github-app-token.ts";
 const GITHUB_APP_TOKEN_SCRIPT_PATH = "/usr/local/bin/github-app-token.ts";
 const MONOREPO_REPO = "shepherdjerred/monorepo";
-const MONOREPO_WRITE_URL = `https://git@github.com/${MONOREPO_REPO}.git`;
+const MONOREPO_WRITE_URL = `https://github.com/${MONOREPO_REPO}.git`;
+
+function withAptPackages(container: Container, packages: string[]): Container {
+  const packageList = packages.join(" ");
+  return container.withExec([
+    "sh",
+    "-c",
+    `apt-get update -qq && apt-get install -y -qq --no-install-recommends ${packageList} && rm -rf /var/lib/apt/lists/*`,
+  ]);
+}
 
 /**
  * Inject the github-app-token mint script + the secret env vars needed to
@@ -54,15 +63,12 @@ function withGithubAppCredentials(
  * and export `GIT_ASKPASS` + `GH_TOKEN` for the current shell. Returns a
  * `&&`-chained command suitable for prepending to the caller's git ops.
  *
- * The minted token lives only in the `GH_TOKEN` environment variable — it is
- * never persisted to disk. The askpass helper script is plain shell text
- * (single-quoted in the outer printf so `$GH_TOKEN` stays literal in the
- * file content), and at git's invocation time the askpass subprocess inherits
- * `GH_TOKEN` from the parent shell and `printf`s it back as the password.
- * Git callers must use an HTTPS URL with an explicit username, e.g.
- * `https://git@github.com/owner/repo.git`, so git never prompts for a
- * username. This keeps the `.dagger/src/**` "no writing tokens to files"
- * rule intact.
+ * The minted token lives only in the `GH_TOKEN` environment variable; it is
+ * never persisted to disk. The askpass helper script is plain shell text, and
+ * at git's invocation time the askpass subprocess inherits `GH_TOKEN` from the
+ * parent shell. It returns GitHub's expected token username for username
+ * prompts and `GH_TOKEN` for password prompts. Git callers should use plain
+ * HTTPS URLs so credentials never appear in URLs.
  *
  * Includes a one-line diagnostic so any future "No anonymous write access"
  * or "Bad credentials" failure is debuggable from the CI log without
@@ -83,7 +89,7 @@ function mintGithubAppTokenAndSetupGitAuth(
   ];
   if (withAskpass) {
     steps.push(
-      `printf '#!/bin/sh\\nprintf "%s\\\\n" "$GH_TOKEN"\\n' > /usr/local/bin/git-askpass`,
+      `printf '%s\\n' '#!/bin/sh' 'case "$1" in' '  *Username*) printf "%s%s%s\\\\n" "x-access" "-" "token" ;;' '  *) printf "%s\\\\n" "$GH_TOKEN" ;;' 'esac' > /usr/local/bin/git-askpass`,
       `chmod +x /usr/local/bin/git-askpass`,
       `export GIT_ASKPASS=/usr/local/bin/git-askpass`,
       `echo "git-auth-setup: $(ls -l /usr/local/bin/git-askpass | awk '{print $1, $3, $5}'), GIT_ASKPASS=$GIT_ASKPASS, token-bytes=$(printf %s \"$GH_TOKEN\" | wc -c)"`,
@@ -155,26 +161,49 @@ export function tofuApplyHelper(
   stack: string,
   awsAccessKeyId: Secret,
   awsSecretAccessKey: Secret,
-  githubAppId: Secret,
-  githubAppInstallationId: Secret,
-  githubAppPrivateKey: Secret,
+  githubToken: Secret | null = null,
   cloudflareAccountId: Secret | null = null,
   cloudflareApiToken: Secret | null = null,
+  tailscaleOauthClientId: Secret | null = null,
+  tailscaleOauthClientSecret: Secret | null = null,
   dryrun = false,
 ): Container {
-  let container = dag
-    .container()
-    .from(TOFU_IMAGE)
+  let container = dag.container().from(TOFU_IMAGE);
+
+  // The seaweedfs stack uses `local-exec` provisioners that shell out to the
+  // AWS CLI (S3 bucket lifecycle config + object seeding against SeaweedFS's S3
+  // gateway — see packages/homelab/src/tofu/seaweedfs/buckets.tf). The base
+  // OpenTofu image ships only `tofu`, so the CLI must be installed for apply to
+  // succeed. Done before mounting the source so the layer caches independently.
+  if (stack === "seaweedfs") {
+    container = container
+      .withExec(["apk", "add", "--no-cache", "aws-cli"])
+      // SeaweedFS S3 requires s3v4 signing; pin the region to avoid mismatches
+      // with newer AWS CLI versions that use CRT-based signing. The
+      // WHEN_REQUIRED checksum settings suppress the checksum headers AWS CLI
+      // v2 sends by default but SeaweedFS does not understand — without them the
+      // local-exec `s3api`/`s3 cp` calls fail. Matches deploySiteHelper and
+      // deployStaticSiteHelper below.
+      .withEnvVariable("AWS_DEFAULT_REGION", "us-east-1")
+      .withEnvVariable("AWS_REQUEST_CHECKSUM_CALCULATION", "WHEN_REQUIRED")
+      .withEnvVariable("AWS_RESPONSE_CHECKSUM_VALIDATION", "WHEN_REQUIRED");
+  }
+
+  container = container
     .withWorkdir("/workspace")
     .withDirectory(
       "/workspace",
       source.directory(`packages/homelab/src/tofu/${stack}`),
     )
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
-    .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
-    .withSecretVariable("GITHUB_APP_ID", githubAppId)
-    .withSecretVariable("GITHUB_APP_INSTALLATION_ID", githubAppInstallationId)
-    .withSecretVariable("GITHUB_APP_PEM_FILE", githubAppPrivateKey);
+    .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey);
+
+  if (githubToken != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_github_token",
+      githubToken,
+    );
+  }
 
   if (cloudflareAccountId != null) {
     container = container.withSecretVariable(
@@ -187,6 +216,20 @@ export function tofuApplyHelper(
     container = container.withSecretVariable(
       "CLOUDFLARE_API_TOKEN",
       cloudflareApiToken,
+    );
+  }
+
+  if (tailscaleOauthClientId != null) {
+    container = container.withSecretVariable(
+      "TAILSCALE_OAUTH_CLIENT_ID",
+      tailscaleOauthClientId,
+    );
+  }
+
+  if (tailscaleOauthClientSecret != null) {
+    container = container.withSecretVariable(
+      "TAILSCALE_OAUTH_CLIENT_SECRET",
+      tailscaleOauthClientSecret,
     );
   }
 
@@ -204,11 +247,11 @@ export function tofuPlanHelper(
   stack: string,
   awsAccessKeyId: Secret,
   awsSecretAccessKey: Secret,
-  githubAppId: Secret,
-  githubAppInstallationId: Secret,
-  githubAppPrivateKey: Secret,
+  githubToken: Secret | null = null,
   cloudflareAccountId: Secret | null = null,
   cloudflareApiToken: Secret | null = null,
+  tailscaleOauthClientId: Secret | null = null,
+  tailscaleOauthClientSecret: Secret | null = null,
   dryrun = false,
 ): Container {
   let container = dag
@@ -220,10 +263,14 @@ export function tofuPlanHelper(
       source.directory(`packages/homelab/src/tofu/${stack}`),
     )
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
-    .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey)
-    .withSecretVariable("GITHUB_APP_ID", githubAppId)
-    .withSecretVariable("GITHUB_APP_INSTALLATION_ID", githubAppInstallationId)
-    .withSecretVariable("GITHUB_APP_PEM_FILE", githubAppPrivateKey);
+    .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey);
+
+  if (githubToken != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_github_token",
+      githubToken,
+    );
+  }
 
   if (cloudflareAccountId != null) {
     container = container.withSecretVariable(
@@ -236,6 +283,20 @@ export function tofuPlanHelper(
     container = container.withSecretVariable(
       "CLOUDFLARE_API_TOKEN",
       cloudflareApiToken,
+    );
+  }
+
+  if (tailscaleOauthClientId != null) {
+    container = container.withSecretVariable(
+      "TAILSCALE_OAUTH_CLIENT_ID",
+      tailscaleOauthClientId,
+    );
+  }
+
+  if (tailscaleOauthClientSecret != null) {
+    container = container.withSecretVariable(
+      "TAILSCALE_OAUTH_CLIENT_SECRET",
+      tailscaleOauthClientSecret,
     );
   }
 
@@ -411,18 +472,7 @@ export function deploySiteHelper(
     );
   }
 
-  let container = dag
-    .container()
-    .from(BUN_IMAGE)
-    .withExec(["apt-get", "update", "-qq"])
-    .withExec([
-      "apt-get",
-      "install",
-      "-y",
-      "-qq",
-      "--no-install-recommends",
-      "awscli",
-    ])
+  let container = withAptPackages(dag.container().from(BUN_IMAGE), ["awscli"])
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
     .withWorkdir(`/workspace/packages/${pkg}`)
     .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
@@ -722,21 +772,12 @@ export function cooklangPublishHelper(
   dryrun = false,
 ): Container {
   const cooklangPluginRepo = validateGitHubRepoSlug(pluginRepo, "pluginRepo");
-  const container = dag
-    .container()
-    .from(BUN_IMAGE)
-    .withExec(["apt-get", "update", "-qq"])
-    .withExec([
-      "apt-get",
-      "install",
-      "-y",
-      "-qq",
-      "--no-install-recommends",
-      "curl",
-      "git",
-      "jq",
-      "ca-certificates",
-    ])
+  const container = withAptPackages(dag.container().from(BUN_IMAGE), [
+    "curl",
+    "git",
+    "jq",
+    "ca-certificates",
+  ])
     .withExec([
       "sh",
       "-c",
@@ -786,7 +827,7 @@ export function cooklangPublishHelper(
       `export GIT_TERMINAL_PROMPT=0`,
       mintGithubAppTokenAndSetupGitAuth(),
       // Clone plugin repo
-      `git clone https://git@github.com/${cooklangPluginRepo}.git /repo`,
+      `git clone https://github.com/${cooklangPluginRepo}.git /repo`,
       `cd /repo`,
       `git config user.email "ci@sjer.red"`,
       `git config user.name "CI Bot"`,
@@ -835,25 +876,15 @@ export function versionCommitBackHelper(
   githubAppPrivateKey: Secret,
   dryrun = false,
 ): Container {
-  const container = dag
-    .container()
-    .from(BUN_IMAGE)
-    .withExec(["apt-get", "update", "-qq"])
-    .withExec([
-      "apt-get",
-      "install",
-      "-y",
-      "-qq",
-      "--no-install-recommends",
-      "git",
-      "curl",
-      "ca-certificates",
-    ])
-    .withExec([
-      "sh",
-      "-c",
-      `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
-    ]);
+  const container = withAptPackages(dag.container().from(BUN_IMAGE), [
+    "git",
+    "curl",
+    "ca-certificates",
+  ]).withExec([
+    "sh",
+    "-c",
+    `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
+  ]);
 
   if (dryrun) {
     return container.withExec([
@@ -905,7 +936,7 @@ export function versionCommitBackHelper(
       `PR_NUMBER=$(gh pr list --repo ${MONOREPO_REPO} --head "${VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty')`,
       `if [ -z "$PR_NUMBER" ]; then gh pr create --repo ${MONOREPO_REPO} --base main --head "${VERSION_BUMP_BRANCH}" --title "chore: bump pending image versions" --body "Auto-generated version bump"; PR_NUMBER=$(gh pr view --repo ${MONOREPO_REPO} "${VERSION_BUMP_BRANCH}" --json number -q .number); fi`,
       `test -n "$PR_NUMBER" || { echo "ERROR: version commit-back PR number is empty" >&2; exit 1; }`,
-      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --merge`,
+      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --rebase`,
     ].join(" && "),
   ]);
 }
@@ -919,25 +950,15 @@ export function ciBaseVersionCommitBackHelper(
   githubAppPrivateKey: Secret,
   dryrun = false,
 ): Container {
-  const container = dag
-    .container()
-    .from(BUN_IMAGE)
-    .withExec(["apt-get", "update", "-qq"])
-    .withExec([
-      "apt-get",
-      "install",
-      "-y",
-      "-qq",
-      "--no-install-recommends",
-      "git",
-      "curl",
-      "ca-certificates",
-    ])
-    .withExec([
-      "sh",
-      "-c",
-      `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
-    ]);
+  const container = withAptPackages(dag.container().from(BUN_IMAGE), [
+    "git",
+    "curl",
+    "ca-certificates",
+  ]).withExec([
+    "sh",
+    "-c",
+    `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
+  ]);
 
   if (dryrun) {
     return container.withExec([
@@ -974,7 +995,7 @@ export function ciBaseVersionCommitBackHelper(
       `PR_NUMBER=$(gh pr list --repo ${MONOREPO_REPO} --head "${CI_BASE_VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty')`,
       `if [ -z "$PR_NUMBER" ]; then gh pr create --repo ${MONOREPO_REPO} --base main --head "${CI_BASE_VERSION_BUMP_BRANCH}" --title "chore: bump ci-base image to ${version}" --body "Auto-generated ci-base version bump"; PR_NUMBER=$(gh pr view --repo ${MONOREPO_REPO} "${CI_BASE_VERSION_BUMP_BRANCH}" --json number -q .number); fi`,
       `test -n "$PR_NUMBER" || { echo "ERROR: ci-base version commit-back PR number is empty" >&2; exit 1; }`,
-      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --merge`,
+      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --rebase`,
     ].join(" && "),
   ]);
 }
@@ -994,26 +1015,16 @@ export function cooklangVersionCommitBackHelper(
   githubAppPrivateKey: Secret,
   dryrun = false,
 ): Container {
-  const container = dag
-    .container()
-    .from(BUN_IMAGE)
-    .withExec(["apt-get", "update", "-qq"])
-    .withExec([
-      "apt-get",
-      "install",
-      "-y",
-      "-qq",
-      "--no-install-recommends",
-      "git",
-      "curl",
-      "ca-certificates",
-      "jq",
-    ])
-    .withExec([
-      "sh",
-      "-c",
-      `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
-    ]);
+  const container = withAptPackages(dag.container().from(BUN_IMAGE), [
+    "git",
+    "curl",
+    "ca-certificates",
+    "jq",
+  ]).withExec([
+    "sh",
+    "-c",
+    `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
+  ]);
 
   if (dryrun) {
     return container.withExec([
@@ -1054,7 +1065,7 @@ export function cooklangVersionCommitBackHelper(
       `PR_NUMBER=$(gh pr list --repo ${MONOREPO_REPO} --head "${COOKLANG_VERSION_BUMP_BRANCH}" --state open --json number -q '.[0].number // empty')`,
       `if [ -z "$PR_NUMBER" ]; then gh pr create --repo ${MONOREPO_REPO} --base main --head "${COOKLANG_VERSION_BUMP_BRANCH}" --title "chore(cooklang): bump plugin manifest version" --body "Auto-generated cooklang manifest version bump"; PR_NUMBER=$(gh pr view --repo ${MONOREPO_REPO} "${COOKLANG_VERSION_BUMP_BRANCH}" --json number -q .number); fi`,
       `test -n "$PR_NUMBER" || { echo "ERROR: cooklang version commit-back PR number is empty" >&2; exit 1; }`,
-      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --merge`,
+      `gh pr merge --repo ${MONOREPO_REPO} "$PR_NUMBER" --auto --rebase`,
     ].join(" && "),
   ]);
 }
@@ -1063,34 +1074,63 @@ export function cooklangVersionCommitBackHelper(
 // Release-please
 // ---------------------------------------------------------------------------
 
-/** Run release-please to create release PRs and GitHub releases. */
+/**
+ * Run release-please to create release PRs and GitHub releases, then run a
+ * Claude agent to refine the auto-generated CHANGELOGs to a library-consumer
+ * view.
+ *
+ * Pipeline order is intentional: release-pr → refine → github-release.
+ * The refine step targets the just-created PR; github-release is a no-op
+ * while a release PR is open (it only fires on merge), so its position
+ * relative to refine doesn't matter functionally.
+ */
 export function releasePleaseHelper(
   source: Directory,
   githubAppId: Secret,
   githubAppInstallationId: Secret,
   githubAppPrivateKey: Secret,
+  claudeOauthToken: Secret,
   dryrun = false,
 ): Container {
-  const container = dag
-    .container()
-    .from(BUN_IMAGE)
-    .withExec(["apt-get", "update", "-qq"])
+  // BUN_INSTALL=/usr/local forces `bun add -g` to drop binaries (claude,
+  // release-please) into /usr/local/bin where everything in PATH can find them
+  // even when the container runs as a non-root user.
+  const container = withAptPackages(dag.container().from(BUN_IMAGE), [
+    "git",
+    "ca-certificates",
+    "curl",
+  ])
     .withExec([
-      "apt-get",
-      "install",
-      "-y",
-      "-qq",
-      "--no-install-recommends",
-      "git",
+      "sh",
+      "-c",
+      `curl -fsSL https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz | tar xz -C /usr/local/bin --strip-components=2 gh_${GH_CLI_VERSION}_linux_amd64/bin/gh`,
     ])
+    .withEnvVariable("BUN_INSTALL", "/usr/local")
     .withExec(["bun", "add", "-g", `release-please@${RELEASE_PLEASE_VERSION}`])
+    .withExec([
+      "bun",
+      "add",
+      "-g",
+      `@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}`,
+    ])
+    .withExec(["claude", "--version"])
+    // This container runs as root (the gh download, apt packages, the
+    // `> /usr/local/bin/git-askpass` write in mintGithubAppTokenAndSetupGitAuth,
+    // and the root-owned /workspace mount all depend on it), but recent Claude
+    // Code releases refuse `--dangerously-skip-permissions` under uid 0 with
+    // "cannot be used with root/sudo privileges for security reasons". IS_SANDBOX=1
+    // is Claude Code's documented escape hatch for trusted, ephemeral automation
+    // containers: this one runs a fixed, code-reviewed prompt
+    // (.dagger/prompts/refine-release-please.md) scoped only by the GitHub App
+    // token, which is exactly the sandbox case the flag is meant for.
+    .withEnvVariable("IS_SANDBOX", "1")
     .withWorkdir("/workspace")
     .withDirectory("/workspace", source, { exclude: SOURCE_EXCLUDES });
 
   if (dryrun) {
     return container.withExec([
       "echo",
-      "DRYRUN: would run release-please (release-pr + github-release)",
+      "DRYRUN: would run release-please (release-pr + refine + github-release)",
     ]);
   }
   const authedContainer = withGithubAppCredentials(
@@ -1099,15 +1139,32 @@ export function releasePleaseHelper(
     githubAppId,
     githubAppInstallationId,
     githubAppPrivateKey,
-  );
+  ).withSecretVariable("CLAUDE_CODE_OAUTH_TOKEN", claudeOauthToken);
 
   return authedContainer.withExec([
     "sh",
     "-c",
     [
-      mintGithubAppTokenAndSetupGitAuth({ withAskpass: false }),
-      `release-please release-pr --token="$GH_TOKEN" --repo-url=shepherdjerred/monorepo --target-branch=main`,
-      `release-please github-release --token="$GH_TOKEN" --repo-url=shepherdjerred/monorepo --target-branch=main`,
+      // Mint a fresh GH App installation token. withAskpass=true is required
+      // here (was false for the old release-please-only pipeline) because the
+      // refine agent runs `git clone` + `git push` over HTTPS and needs git's
+      // askpass dance to inject credentials.
+      mintGithubAppTokenAndSetupGitAuth({ withAskpass: true }),
+      `release-please release-pr --token="$GH_TOKEN" --repo-url=${MONOREPO_REPO} --target-branch=main`,
+      // Refine the just-generated CHANGELOGs. The prompt at
+      // .dagger/prompts/refine-release-please.md is the source of truth for
+      // the agent's behavior. It exits 0 with a status envelope when there
+      // is no open release PR, no bumped packages, or nothing to refine.
+      `REFINE_PROMPT="$(cat /workspace/.dagger/prompts/refine-release-please.md)"`,
+      // The agent must run arbitrary `git`/`gh` Bash commands non-interactively,
+      // so it runs with --dangerously-skip-permissions. That flag fully overrides
+      // --permission-mode, so we don't pass acceptEdits (it would be dead config
+      // that misleads readers into thinking the agent is scoped to file edits).
+      // The agent's write access is therefore bounded only by the fixed,
+      // code-reviewed prompt at .dagger/prompts/refine-release-please.md and the
+      // GitHub App token's repo scope — re-evaluate if the prompt becomes dynamic.
+      `claude -p "$REFINE_PROMPT" --output-format json --allowed-tools Bash,Read,Edit,Write,Grep,Glob --dangerously-skip-permissions --max-turns 80 --model claude-opus-4-7`,
+      `release-please github-release --token="$GH_TOKEN" --repo-url=${MONOREPO_REPO} --target-branch=main`,
     ].join(" && "),
   ]);
 }

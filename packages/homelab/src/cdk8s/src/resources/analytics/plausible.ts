@@ -84,6 +84,9 @@ export function createPlausibleDeployment(
   // Init container to build DATABASE_URL from postgres-operator secret
   deployment.addInitContainer(
     withCommonProps({
+      // Deliberately BestEffort (no requests/limits) — negligible or
+      // non-critical usage; see the 2026-06-12 right-sizing plan.
+      resources: {},
       name: "build-db-url",
       image: `library/busybox:${versions["library/busybox"]}`,
       command: ["/bin/sh", "-c"],
@@ -92,6 +95,7 @@ export function createPlausibleDeployment(
           "plausible-postgresql:5432",
           "plausible_db",
           "/db-url/url",
+          "ssl=true",
         ),
       ],
       securityContext: {
@@ -171,11 +175,11 @@ export function createPlausibleDeployment(
       ],
       resources: {
         cpu: {
-          request: Cpu.millis(250),
+          request: Cpu.millis(100),
           limit: Cpu.millis(1000),
         },
         memory: {
-          request: Size.mebibytes(512),
+          request: Size.mebibytes(384),
           limit: Size.gibibytes(2),
         },
       },

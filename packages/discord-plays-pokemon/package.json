@@ -1,12 +1,16 @@
 {
   "name": "@discord-plays-pokemon/monorepo",
   "version": "1.0.0",
+  "bin": {
+    "pokemonctl": "packages/backend/src/goal/pokemonctl.ts"
+  },
   "scripts": {
     "start": "bun packages/backend/src/index.ts",
     "build": "bun run --filter '*' build",
     "test": "bun run --filter '*' test",
     "lint": "bun run --filter '*' lint",
-    "typecheck": "bun run --filter '*' typecheck"
+    "typecheck": "bun run --filter '*' typecheck",
+    "e2e:goal": "bun test --filter '@discord-plays-pokemon/backend' packages/backend/src/goal/e2e-goal.integration.test.ts"
   },
   "workspaces": [
     "packages/common",
@@ -20,6 +24,14 @@
   },
   "dependencies": {},
   "overrides": {
-    "js-cookie": "3.0.7"
-  }
+    "js-cookie": "3.0.7",
+    "tmp": "0.2.6"
+  },
+  "trustedDependencies": [
+    "@lng2004/node-datachannel",
+    "node-av",
+    "@snazzah/davey",
+    "sharp",
+    "@sentry/profiling-node"
+  ]
 }

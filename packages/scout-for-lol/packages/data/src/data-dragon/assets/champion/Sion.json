@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "Sion": {
       "id": "Sion",
@@ -356,6 +356,68 @@
           "num": 49,
           "name": "Grand Reckoning Sion",
           "chromas": false
+        },
+        {
+          "id": "14050",
+          "num": 50,
+          "name": "Pizza Chef Sion",
+          "chromas": true
+        },
+        {
+          "id": "14051",
+          "num": 51,
+          "name": "Pizza Chef Sion (Ruby)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "14052",
+          "num": 52,
+          "name": "Pizza Chef Sion (Catseye)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "14053",
+          "num": 53,
+          "name": "Pizza Chef Sion (Emerald)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "14054",
+          "num": 54,
+          "name": "Pizza Chef Sion (Sapphire)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "14055",
+          "num": 55,
+          "name": "Pizza Chef Sion (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "14056",
+          "num": 56,
+          "name": "Pizza Chef Sion (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "14057",
+          "num": 57,
+          "name": "Pizza Chef Sion (Pearl)",
+          "chromas": false,
+          "parentSkin": 50
+        },
+        {
+          "id": "14058",
+          "num": 58,
+          "name": "Pizza Chef Sion (Obsidian)",
+          "chromas": false,
+          "parentSkin": 50
         }
       ],
       "lore": "A war hero from a bygone era, Sion was revered in Noxus for choking the life out of a Demacian king with his bare hands—but, denied oblivion, he was resurrected to serve his empire even in death. His indiscriminate slaughter claimed all who stood in his way, regardless of allegiance, proving he no longer retained his former humanity. Even so, with crude armor bolted onto rotten flesh, Sion continues to charge into battle with reckless abandon, struggling to remember his true self between the swings of his mighty axe.",

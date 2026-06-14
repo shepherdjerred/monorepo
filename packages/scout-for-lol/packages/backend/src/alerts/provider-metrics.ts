@@ -3,14 +3,9 @@ import {
   aiProviderErrorsTotal,
   aiProviderIssueActive,
 } from "#src/metrics/index.ts";
+import { PROVIDER_ISSUE_KINDS } from "#src/alerts/provider-issue-kinds.ts";
 
 const ProviderSchema = z.enum(["openai", "gemini"]);
-export const PROVIDER_ISSUE_KINDS = [
-  "quota",
-  "rate_limit",
-  "budget_exceeded",
-  "context_limit",
-] as const;
 const ProviderIssueKindSchema = z.enum(PROVIDER_ISSUE_KINDS);
 
 export type ProviderIssueKind = z.infer<typeof ProviderIssueKindSchema>;

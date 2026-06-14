@@ -15,7 +15,7 @@ Grade coding interview practice solutions against OpenAI's interviewer evaluatio
 
 ## When to Use
 
-User solutions are typically in `practice/leetcode/src/main/java/sjer/red/openai/` with progressive parts (P1, P2, P3+). Works for any coding problem, not just OAI-specific ones. The user writes Java.
+User solutions are typically in `sandbox/practice/leetcode/src/main/java/sjer/red/openai/` with progressive parts (P1, P2, P3+). Works for any coding problem, not just OAI-specific ones. The user writes Java.
 
 ## Evaluation Workflow
 

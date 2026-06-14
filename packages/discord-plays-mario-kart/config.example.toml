@@ -1,0 +1,70 @@
+# Discord Plays Mario Kart 64 — example config.
+# Copy to config.toml and fill in. Leaving the IDs/tokens empty makes this file
+# fail validation on purpose (so it can't be run as-is).
+
+server_id = ""  # Discord guild (server) ID
+
+[bot]
+# Optional Discord *bot* (for /screenshot, /help, presence). Not used for video.
+enabled = false
+discord_token = ""
+application_id = ""
+
+[bot.commands]
+enabled = false
+update = false
+
+[bot.commands.screenshot]
+enabled = true
+
+[bot.notifications]
+enabled = false
+channel_id = ""
+
+[stream]
+enabled = true
+channel_id = ""          # voice channel to Go-Live in
+dynamic_streaming = true # start/stop the stream with channel occupancy
+minimum_in_channel = 0
+require_watching = false
+
+[stream.userbot]
+# Discord USER (self) account — Discord blocks video from bot tokens, so a user
+# token is required. Use a DEDICATED throwaway account (this violates Discord
+# ToS and risks a ban). Token invalidates on password change.
+id = ""
+token = ""
+
+[stream.video]
+canvas_height = 720       # 16:9 output canvas height (-> 1280x720); 4:3 game pillarboxed onto black
+frame_rate = 30
+bitrate_kbps = 5000
+bitrate_max_kbps = 8000
+hardware_acceleration = false  # VAAPI h264 on an Intel iGPU; also via STREAM_HARDWARE_ACCELERATION env
+vaapi_device = "/dev/dri/renderD128"
+
+[emulator]
+enabled = true
+# Built N64Wasm assets (bundled in the image). Override for local dev.
+wasm_dir = "packages/backend/assets/n64wasm"
+# Your Mario Kart 64 ROM (.z64/.v64). Provided at runtime via a volume — never
+# baked into the image. You must supply your own copy.
+rom_path = "roms/mariokart64.z64"
+fps = 30
+software_render = true
+seats = 4
+
+[web]
+enabled = true
+cors = true
+port = 8081
+assets = "packages/frontend/dist"
+
+[web.api]
+enabled = true
+
+[leaderboard]
+enabled = true                      # race-result recording + the leaderboard API
+db_path = "data/leaderboard.db"     # overridden by DATABASE_PATH / DATABASE_URL env
+overlay_enabled = true              # burn player names into the stream per viewport
+poll_every_n_frames = 10            # RDRAM race-state poll cadence (~3 Hz at 30fps)

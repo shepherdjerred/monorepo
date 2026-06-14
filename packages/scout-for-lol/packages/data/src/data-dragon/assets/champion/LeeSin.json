@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "LeeSin": {
       "id": "LeeSin",
@@ -341,7 +341,7 @@
         {
           "id": "64050",
           "num": 50,
-          "name": "Storm Dragon Lee Sin Mythic Chroma",
+          "name": "Storm Dragon Lee Sin (Mythic)",
           "chromas": false,
           "parentSkin": 31
         },
@@ -550,6 +550,13 @@
           "name": "Inkshadow Lee Sin (Turquoise)",
           "chromas": false,
           "parentSkin": 72
+        },
+        {
+          "id": "64081",
+          "num": 81,
+          "name": "Storm Dragon Lee Sin (Beacon)",
+          "chromas": false,
+          "parentSkin": 31
         }
       ],
       "lore": "A master of Ionia's ancient martial arts, Lee Sin is a principled fighter who channels the essence of the dragon spirit to face any challenge. Though he lost his sight many years ago, the warrior-monk has devoted his life to protecting his homeland against any who would dare upset its sacred balance. Enemies who underestimate his meditative demeanor will endure his fabled burning fists and blazing roundhouse kicks.",
@@ -747,7 +754,7 @@
           "id": "LeeSinWOne",
           "name": "Safeguard / Iron Will",
           "description": "Safeguard: Lee Sin rushes to target ally, shielding himself from damage. If the ally is a champion, they are also shielded. After using Safeguard, Lee Sin can cast Iron Will.<br>Iron Will: Lee Sin's intense training allows him to thrive in battle. Lee Sin gains Omnivamp.",
-          "tooltip": "Lee Sin dashes to an ally or ward. If the target is a champion, Lee Sin grants them and himself <shield>{{ shieldamount }} Shield</shield> for {{ shieldduration }}. Lee Sin may <recast>Recast</recast> for the next {{ w1reactivatetime }} seconds.<br /><br /><recast>Recast:</recast> Lee Sin gains {{ lifestealandspellvamp }}% Omnivamp for {{ lifestealandspellvamptime }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Lee Sin dashes to an ally or ward. If the target is a champion, Lee Sin grants them and himself <shield>{{ shieldamount }} Shield</shield> for {{ shieldduration }} seconds. Lee Sin may <recast>Recast</recast> for the next {{ w1reactivatetime }} seconds.<br /><br /><recast>Recast:</recast> Lee Sin gains {{ lifestealandspellvamp }}% Omnivamp for {{ lifestealandspellvamptime }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Safeguard Shield Absorption",

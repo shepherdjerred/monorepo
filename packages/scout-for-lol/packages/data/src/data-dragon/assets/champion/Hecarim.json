@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.10.1",
+  "version": "16.12.1",
   "data": {
     "Hecarim": {
       "id": "Hecarim",
@@ -404,7 +404,7 @@
           "id": "HecarimRapidSlash",
           "name": "Rampage",
           "description": "Hecarim cleaves nearby enemies dealing physical damage. If Hecarim damages at least one enemy, he increases the damage and lowers the cooldown of subsequent Rampages.",
-          "tooltip": "Hecarim cleaves nearby enemies for <physicalDamage>{{ damage }} physical damage</physicalDamage>. If this Ability hits, he gains a stack that decreases its Cooldown by {{ rampagecooldownreduction }} seconds and increases its damage by {{ rampagebonusdamageperc }}% for {{ e6 }} seconds. Stacks up to {{ e2 }} times.<br />{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Hecarim cleaves nearby enemies for <physicalDamage>{{ damage }} physical damage</physicalDamage>. If this Ability hits, he gains a stack that decreases its Cooldown by {{ rampagecooldownreduction }} seconds and increases its damage by {{ rampagebonusdamageperc }}% for {{ buffduration }} seconds. Stacks up to {{ maxstacks }} times.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",
@@ -690,7 +690,7 @@
           "id": "HecarimRamp",
           "name": "Devastating Charge",
           "description": "Hecarim gains increasing Move Speed and can move through units for a short duration. His next attack knocks the target back and deals additional physical damage based on the distance he has traveled since activating the ability.",
-          "tooltip": "Hecarim becomes Ghosted and gains <speed>{{ minmovespeed*100 }}% Move Speed</speed> increasing to <speed>{{ maxmovespeed*100 }}%</speed> over {{ e5 }} seconds. His next Attack <status>Knocks Back</status> and deals between <physicalDamage>{{ mindamage }}</physicalDamage> and <physicalDamage>{{ maxdamage }} physical damage</physicalDamage>. <status>Knock Back</status> distance and damage scales with distance travelled during this Ability.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Hecarim becomes Ghosted and gains <speed>{{ minmovespeed*100 }}% Move Speed</speed> increasing to <speed>{{ maxmovespeed*100 }}%</speed> over {{ duration }} seconds. His next Attack <status>Knocks Back</status> and deals between <physicalDamage>{{ mindamage }}</physicalDamage> and <physicalDamage>{{ maxdamage }} physical damage</physicalDamage>. <status>Knock Back</status> distance and damage scales with distance travelled during this Ability.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Minimum Damage",

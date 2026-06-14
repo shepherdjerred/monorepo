@@ -7,6 +7,8 @@ export type RequestContext = {
   sourceMessageId: string;
   /** The guild where the request originated */
   guildId: string;
+  /** Voice channel the requesting user was in, when available */
+  voiceChannelId?: string;
   /** The user who sent the message */
   userId: string;
   /** Whether a reply has already been sent for this request (prevents spam) */

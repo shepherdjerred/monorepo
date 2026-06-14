@@ -1,0 +1,6 @@
+[diff]
+  external = difft --background=light
+[difftool "difftastic"]
+  cmd = difft --background=light "$LOCAL" "$REMOTE"
+[delta]
+  features = catppuccin-latte

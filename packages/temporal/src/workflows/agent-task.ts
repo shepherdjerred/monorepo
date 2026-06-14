@@ -12,16 +12,31 @@ const RETRY = {
   maximumInterval: "10 minutes" as const,
 };
 
+const BOUNDED_AGENT_RETRY = {
+  maximumAttempts: 1,
+};
+
 const workdirActivities = proxyActivities<AgentTaskActivities>({
   startToCloseTimeout: "10 minutes",
   retry: RETRY,
 });
 
-const agentActivities = proxyActivities<AgentTaskActivities>({
-  startToCloseTimeout: "90 minutes",
-  heartbeatTimeout: "60 seconds",
-  retry: RETRY,
-});
+export function agentActivityRetryFor(
+  input: Pick<AgentTaskInput, "agentTimeoutMinutes">,
+): typeof RETRY | typeof BOUNDED_AGENT_RETRY {
+  return input.agentTimeoutMinutes === undefined ? RETRY : BOUNDED_AGENT_RETRY;
+}
+
+function agentActivitiesFor(
+  input: AgentTaskInput,
+): Pick<AgentTaskActivities, "runAgentTask"> {
+  const timeoutMinutes = input.agentTimeoutMinutes ?? 90;
+  return proxyActivities<AgentTaskActivities>({
+    startToCloseTimeout: timeoutMinutes * 60 * 1000,
+    heartbeatTimeout: "60 seconds",
+    retry: agentActivityRetryFor(input),
+  });
+}
 
 const emailActivities = proxyActivities<AgentTaskActivities>({
   startToCloseTimeout: "2 minutes",
@@ -68,7 +83,7 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   const workdir = await workdirActivities.prepareAgentTaskWorkdir({ input });
 
   try {
-    const result = await agentActivities.runAgentTask({
+    const result = await agentActivitiesFor(input).runAgentTask({
       input,
       workdir: workdir.workdir,
     });

@@ -15,7 +15,13 @@ import {
   PRISMA_PACKAGES,
   EDITOR_CLI_PACKAGES,
 } from "../catalog.ts";
-import { safeKey, RETRY, DAGGER_ENV } from "../lib/buildkite.ts";
+import {
+  safeKey,
+  RETRY,
+  DAGGER_ENV,
+  gitDir,
+  DAGGER_CALL,
+} from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
 import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
@@ -32,7 +38,10 @@ const VERSION_FLAGS = `--version "2.0.0-$BUILDKITE_BUILD_NUMBER" --git-sha "$BUI
 function depFlags(pkg: string): string {
   const deps = WORKSPACE_DEPS[pkg] ?? [];
   return deps
-    .flatMap((d: string) => [`--dep-names ${d}`, `--dep-dirs ./packages/${d}`])
+    .flatMap((d: string) => [
+      `--dep-names ${d}`,
+      `--dep-dirs ${gitDir(`packages/${d}`)}`,
+    ])
     .join(" ");
 }
 
@@ -51,16 +60,18 @@ function imageBuildStep(
   const NO_SOURCE_BUILDS = new Set([
     "build-caddy-s-3-proxy-image",
     "build-obsidian-headless-image",
+    "build-mcp-gateway-image",
+    "build-redlib-image",
   ]);
 
   const flags = depFlags(pkg);
   let cmd: string;
   if (img.buildFn && NO_SOURCE_BUILDS.has(buildFn)) {
-    cmd = [`dagger call ${buildFn}`, VERSION_FLAGS].join(" ");
+    cmd = [`${DAGGER_CALL} ${buildFn}`, VERSION_FLAGS].join(" ");
   } else if (img.buildFn) {
     // Custom build functions take --pkg-dir + dep flags (no --pkg)
     cmd = [
-      `dagger call ${buildFn} --pkg-dir ./packages/${pkg}`,
+      `${DAGGER_CALL} ${buildFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
       flags,
       VERSION_FLAGS,
     ]
@@ -73,7 +84,7 @@ function imageBuildStep(
       ? "--install-editor-clis"
       : "";
     cmd = [
-      `dagger call ${buildFn} --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
+      `${DAGGER_CALL} ${buildFn} --pkg-dir ${gitDir(`packages/${pkg}`)} --pkg ${img.name}`,
       prismaFlag,
       editorClisFlag,
       flags,
@@ -113,7 +124,10 @@ const SMOKE_TEST_FUNCTIONS: Record<string, string> = {
   "tasknotes-server": "smoke-test-tasknotes-server",
   "caddy-s3proxy": "smoke-test-caddy-s-3-proxy",
   "obsidian-headless": "smoke-test-obsidian-headless",
+  "mcp-gateway": "smoke-test-mcp-gateway",
   "discord-plays-pokemon": "smoke-test-discord-plays-pokemon",
+  streambot: "smoke-test-streambot",
+  "discord-plays-mario-kart": "smoke-test-discord-plays-mario-kart",
   "trmnl-dashboard": "smoke-test-trmnl-dashboard",
 };
 
@@ -121,12 +135,15 @@ const SMOKE_TEST_FUNCTIONS: Record<string, string> = {
 const SMOKE_NO_ARGS = new Set([
   "smoke-test-caddy-s-3-proxy",
   "smoke-test-obsidian-headless",
+  "smoke-test-mcp-gateway",
 ]);
 
 // Smoke test functions that take --pkg-dir + dep flags but no --pkg (custom infra images / workspace monorepos)
 const SMOKE_CUSTOM_INFRA = new Set([
   "smoke-test-scout-for-lol",
   "smoke-test-discord-plays-pokemon",
+  "smoke-test-discord-plays-mario-kart",
+  "smoke-test-streambot",
   "smoke-test-trmnl-dashboard",
 ]);
 
@@ -141,15 +158,18 @@ function smokeTestStep(
 
   let cmd: string;
   if (SMOKE_NO_ARGS.has(daggerFn)) {
-    cmd = `dagger call ${daggerFn}`;
+    cmd = `${DAGGER_CALL} ${daggerFn}`;
   } else if (SMOKE_CUSTOM_INFRA.has(daggerFn)) {
-    cmd = [`dagger call ${daggerFn} --pkg-dir ./packages/${pkg}`, flags]
+    cmd = [
+      `${DAGGER_CALL} ${daggerFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
+      flags,
+    ]
       .filter(Boolean)
       .join(" ");
   } else {
     cmd = [
-      `dagger call ${daggerFn}`,
-      `--pkg-dir ./packages/${pkg} --pkg ${img.name}`,
+      `${DAGGER_CALL} ${daggerFn}`,
+      `--pkg-dir ${gitDir(`packages/${pkg}`)} --pkg ${img.name}`,
       flags,
     ]
       .filter(Boolean)
@@ -194,6 +214,8 @@ function imagePushStep(
   const NO_SOURCE_PUSHES = new Set([
     "push-caddy-s-3-proxy-image",
     "push-obsidian-headless-image",
+    "push-mcp-gateway-image",
+    "push-redlib-image",
   ]);
   const flags = depFlags(pkg);
 
@@ -203,7 +225,7 @@ function imagePushStep(
   } else if (img.pushFn) {
     // Custom push functions take --pkg-dir + dep flags + tags + registry creds
     pushCall = [
-      `${pushFn} --pkg-dir ./packages/${pkg}`,
+      `${pushFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
       flags,
       tagFlags,
       VERSION_FLAGS,
@@ -218,7 +240,7 @@ function imagePushStep(
       ? "--install-editor-clis"
       : "";
     pushCall = [
-      `push-image --pkg-dir ./packages/${pkg} --pkg ${img.name}`,
+      `push-image --pkg-dir ${gitDir(`packages/${pkg}`)} --pkg ${img.name}`,
       prismaFlag,
       editorClisFlag,
       flags,
@@ -230,10 +252,13 @@ function imagePushStep(
   }
 
   const cmd = [
+    `if [ -z "$$GHCR_TOKEN" ] && [ -n "$$GH_TOKEN" ]; then echo "WARNING: GHCR_TOKEN unset, falling back to GH_TOKEN for GHCR push" >&2; fi`,
+    '&& export GHCR_TOKEN="$${GHCR_TOKEN:-$${GH_TOKEN:-}}"',
+    `&& if [ -z "$$GHCR_TOKEN" ]; then echo "ERROR: GHCR_TOKEN is empty and GH_TOKEN fallback is unavailable" >&2; exit 1; fi`,
     // $$ escapes survive Buildkite interpolation so bash sees $DIGEST at runtime.
     // Dagger outputs ANSI escape codes even with DAGGER_PROGRESS=dots/plain,
     // so we strip them before grepping for the sha256 digest.
-    `RAW=$$(dagger call ${pushCall})`,
+    `&& RAW=$$(${DAGGER_CALL} ${pushCall})`,
     `&& CLEAN=$$(printf '%s' "$$RAW" | sed 's/\\x1b\\[[0-9;]*[a-zA-Z]//g' | tr -d '\\r')`,
     `&& DIGEST=$$(echo "$$CLEAN" | grep -oE 'sha256:[a-f0-9]+' | head -1)`,
     `&& if [ -z "$$DIGEST" ]; then echo "ERROR: empty digest for ${img.name} — raw output was: $$RAW" >&2; exit 1; fi`,

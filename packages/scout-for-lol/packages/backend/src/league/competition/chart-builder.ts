@@ -196,10 +196,10 @@ function resolveTimeWindow(
  *
  * The chart is best-effort. A missing chart never blocks the daily update.
  */
-export async function buildCompetitionChartAttachment(
+export async function renderCompetitionChartBuffer(
   competition: CompetitionWithCriteria,
   currentLeaderboard: RankedLeaderboardEntry[],
-): Promise<AttachmentBuilder | null> {
+): Promise<{ data: Buffer; chartType: "bar" | "line" } | null> {
   const criteriaType = competition.criteria.type;
   const start = Date.now();
 
@@ -286,16 +286,12 @@ export async function buildCompetitionChartAttachment(
       buffer.length,
     );
 
-    const attachment = new DiscordAttachmentBuilder(buffer, {
-      name: `competition-${competition.id.toString()}-${chartType === "bar" ? "standings" : "trend"}.png`,
-    });
-
     observe("success");
     inc("success");
     logger.info(
       `[CompetitionChart] ✅ Rendered ${chartType} chart for ${topEntries.length.toString()} players, ${(Date.now() - start).toString()}ms, ${buffer.length.toString()} bytes`,
     );
-    return attachment;
+    return { data: buffer, chartType };
   } catch (error) {
     observe("error");
     inc("error");
@@ -321,4 +317,27 @@ export async function buildCompetitionChartAttachment(
     );
     return null;
   }
+}
+
+/**
+ * Build a Discord PNG attachment of the competition's leaderboard chart.
+ *
+ * Thin wrapper over {@link renderCompetitionChartBuffer} that wraps the raw
+ * bytes in a Discord {@link AttachmentBuilder}. Returns `null` whenever the
+ * underlying render is skipped or fails (see that function's contract).
+ */
+export async function buildCompetitionChartAttachment(
+  competition: CompetitionWithCriteria,
+  currentLeaderboard: RankedLeaderboardEntry[],
+): Promise<AttachmentBuilder | null> {
+  const rendered = await renderCompetitionChartBuffer(
+    competition,
+    currentLeaderboard,
+  );
+  if (rendered === null) {
+    return null;
+  }
+  return new DiscordAttachmentBuilder(rendered.data, {
+    name: `competition-${competition.id.toString()}-${rendered.chartType === "bar" ? "standings" : "trend"}.png`,
+  });
 }

@@ -22,15 +22,35 @@ export const SERVER_MEMORY_TEMPLATE = `# Server Rules
 `;
 
 /**
- * Working memory template for owner-specific preferences (switches when ownership changes).
+ * Working memory template for persona-specific preferences. Each persona has
+ * its own memory; it switches when ownership/persona changes. (Historically
+ * called "owner" memory — the conversationId still uses `:owner:` to preserve
+ * already-stored data.)
  */
-export const OWNER_MEMORY_TEMPLATE = `# Owner Rules
+export const PERSONA_MEMORY_TEMPLATE = `# Persona Rules
 - (none yet)
 
-# Owner Preferences
+# Persona Preferences
 - (none yet)
 
-# Owner Notes
+# Persona Notes
+- (none yet)
+`;
+
+/** @deprecated Use {@link PERSONA_MEMORY_TEMPLATE}. */
+export const OWNER_MEMORY_TEMPLATE = PERSONA_MEMORY_TEMPLATE;
+
+/**
+ * Working memory template for channel-specific saved memory (shared by all
+ * users and personas in a channel; not keyed per persona).
+ */
+export const CHANNEL_MEMORY_TEMPLATE = `# Channel Rules
+- (none yet)
+
+# Channel Preferences
+- (none yet)
+
+# Channel Notes
 - (none yet)
 `;
 
@@ -81,23 +101,40 @@ export function getServerConversationId(guildId: string): string {
 }
 
 /**
- * OWNER MEMORY — owner-specific preferences and rules.
- * Tied to the current elected owner; switches when ownership changes.
+ * PERSONA MEMORY — persona-specific preferences and rules.
+ * Each persona has its own memory; switches when ownership/persona changes.
+ * NOTE: the id keeps the historical `:owner:` segment so existing stored
+ * memory is preserved across this rename.
  */
-export function getOwnerConversationId(
+export function getPersonaConversationId(
   guildId: string,
-  ownerPersona: string,
+  persona: string,
 ): string {
-  return `guild:${guildId}:owner:${ownerPersona}`;
+  return `guild:${guildId}:owner:${persona}`;
 }
 
+/** @deprecated Use {@link getPersonaConversationId}. */
+export const getOwnerConversationId = getPersonaConversationId;
+
 /**
- * CHANNEL MEMORY — per-channel conversation context.
- * Shared by all users in a channel. Tracks the channel's conversation.
- * VoltAgent auto-manages this via conversationId in streamText calls.
+ * CHANNEL CONVERSATION (transcript) — per-channel conversation context.
+ * Shared by all users in a channel. VoltAgent auto-manages this via the
+ * conversationId passed to streamText calls.
  */
 export function getChannelConversationId(channelId: string): string {
   return `channel:${channelId}`;
+}
+
+/**
+ * CHANNEL MEMORY — explicit, agent-saved per-channel memory (rules / prefs /
+ * notes). Shared by all users and personas in a channel (not persona-keyed).
+ *
+ * IMPORTANT: this id is deliberately DISTINCT from
+ * {@link getChannelConversationId} (`channel:<id>`) so the saved working memory
+ * does not collide with VoltAgent's auto-managed conversation history.
+ */
+export function getChannelMemoryConversationId(channelId: string): string {
+  return `channel:${channelId}:memory`;
 }
 
 // =============================================================================
@@ -154,17 +191,17 @@ export async function updateServerWorkingMemory(
 }
 
 /**
- * Get owner working memory for a guild.
+ * Get persona working memory for a guild.
  *
  * Same `null` semantics as {@link getServerWorkingMemory}: missing data is
  * normal, but storage errors are logged at warn level rather than swallowed.
  */
-export async function getOwnerWorkingMemory(
+export async function getPersonaWorkingMemory(
   guildId: string,
   persona: string,
 ): Promise<string | null> {
   const memory = getMemory();
-  const conversationId = getOwnerConversationId(guildId, persona);
+  const conversationId = getPersonaConversationId(guildId, persona);
 
   try {
     const result = await memory.getWorkingMemory({
@@ -173,7 +210,7 @@ export async function getOwnerWorkingMemory(
     });
     return result ?? null;
   } catch (error) {
-    logger.warn("Failed to read owner working memory", {
+    logger.warn("Failed to read persona working memory", {
       guildId,
       persona,
       conversationId,
@@ -184,15 +221,64 @@ export async function getOwnerWorkingMemory(
 }
 
 /**
- * Update owner working memory for a guild.
+ * Update persona working memory for a guild.
  */
-export async function updateOwnerWorkingMemory(
+export async function updatePersonaWorkingMemory(
   guildId: string,
   persona: string,
   content: string,
 ): Promise<void> {
   const memory = getMemory();
-  const conversationId = getOwnerConversationId(guildId, persona);
+  const conversationId = getPersonaConversationId(guildId, persona);
+
+  await memory.updateWorkingMemory({
+    conversationId,
+    userId: SYSTEM_USER_ID,
+    content,
+  });
+}
+
+/** @deprecated Use {@link getPersonaWorkingMemory}. */
+export const getOwnerWorkingMemory = getPersonaWorkingMemory;
+/** @deprecated Use {@link updatePersonaWorkingMemory}. */
+export const updateOwnerWorkingMemory = updatePersonaWorkingMemory;
+
+/**
+ * Get channel working memory (explicit saved memory, not transcript).
+ *
+ * Same `null` semantics as {@link getServerWorkingMemory}.
+ */
+export async function getChannelWorkingMemory(
+  channelId: string,
+): Promise<string | null> {
+  const memory = getMemory();
+  const conversationId = getChannelMemoryConversationId(channelId);
+
+  try {
+    const result = await memory.getWorkingMemory({
+      conversationId,
+      userId: SYSTEM_USER_ID,
+    });
+    return result ?? null;
+  } catch (error) {
+    logger.warn("Failed to read channel working memory", {
+      channelId,
+      conversationId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
+/**
+ * Update channel working memory.
+ */
+export async function updateChannelWorkingMemory(
+  channelId: string,
+  content: string,
+): Promise<void> {
+  const memory = getMemory();
+  const conversationId = getChannelMemoryConversationId(channelId);
 
   await memory.updateWorkingMemory({
     conversationId,

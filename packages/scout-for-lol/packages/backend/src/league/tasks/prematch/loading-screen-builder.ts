@@ -31,7 +31,6 @@ import {
   resolveChampionKey,
 } from "#src/utils/champion.ts";
 import { getRankByPuuid } from "#src/league/model/rank.ts";
-import { resolveSkinNum } from "#src/league/tasks/prematch/skin-resolver.ts";
 import { createLogger } from "#src/logger.ts";
 import { match } from "ts-pattern";
 
@@ -39,6 +38,7 @@ const logger = createLogger("prematch-loading-screen-builder");
 
 const RANKED_SOLO_QUEUE_ID = 420;
 const RANKED_FLEX_QUEUE_ID = 440;
+const DEFAULT_LOADING_SCREEN_SKIN_NUM = 0;
 
 export class RecoverableLoadingScreenDataError extends Error {
   constructor(message: string) {
@@ -65,31 +65,59 @@ function determineLayout(gameInfo: RawCurrentGameInfo): LoadingScreenLayout {
     return "arena";
   }
 
-  return match(gameInfo.gameQueueConfigId)
-    .with(450, () => "aram" as const) // ARAM
-    .with(720, () => "aram" as const) // ARAM Clash
-    .with(2400, () => "aram" as const) // ARAM: Mayhem
-    .with(3200, () => "aram" as const) // ARAM: Mayhem MMR variant
-    .with(3270, () => "aram" as const) // ARAM: Mayhem
-    .with(0, () => "standard" as const) // Custom
-    .with(3100, () => "standard" as const) // Custom
-    .with(400, () => "standard" as const) // Draft Pick
-    .with(RANKED_SOLO_QUEUE_ID, () => "standard" as const) // Ranked Solo
-    .with(RANKED_FLEX_QUEUE_ID, () => "standard" as const) // Ranked Flex
-    .with(480, () => "standard" as const) // Swiftplay
-    .with(490, () => "standard" as const) // Quickplay
-    .with(700, () => "standard" as const) // Clash
-    .with(900, () => "standard" as const) // ARURF
-    .with(1900, () => "standard" as const) // URF
-    .with(2300, () => "standard" as const) // Brawl
-    .with(3130, () => "standard" as const) // Easy Doom Bots
-    .with(4220, () => "standard" as const) // Normal Doom Bots
-    .with(4250, () => "standard" as const) // Hard Doom Bots
-    .otherwise((id) => {
-      throw new Error(
-        `Unknown queue config ID ${id.toString()} — cannot determine loading screen layout (gameId=${gameInfo.gameId.toString()}, mapId=${gameInfo.mapId.toString()}, gameMode=${gameInfo.gameMode})`,
-      );
-    });
+  return (
+    match(gameInfo.gameQueueConfigId)
+      .with(450, () => "aram" as const) // ARAM
+      .with(720, () => "aram" as const) // ARAM Clash
+      .with(2400, () => "aram" as const) // ARAM: Mayhem
+      .with(3200, () => "aram" as const) // ARAM: Mayhem MMR variant
+      .with(3270, () => "aram" as const) // ARAM: Mayhem
+      .with(0, () => "standard" as const) // Custom
+      .with(3100, () => "standard" as const) // Custom
+      .with(400, () => "standard" as const) // Draft Pick
+      .with(RANKED_SOLO_QUEUE_ID, () => "standard" as const) // Ranked Solo
+      .with(RANKED_FLEX_QUEUE_ID, () => "standard" as const) // Ranked Flex
+      .with(480, () => "standard" as const) // Swiftplay
+      .with(490, () => "standard" as const) // Quickplay
+      .with(700, () => "standard" as const) // Clash
+      .with(900, () => "standard" as const) // ARURF
+      .with(1900, () => "standard" as const) // URF
+      .with(2300, () => "standard" as const) // Brawl
+      .with(3130, () => "standard" as const) // Easy Doom Bots
+      .with(4220, () => "standard" as const) // Normal Doom Bots
+      .with(4250, () => "standard" as const) // Hard Doom Bots
+      // Unknown queue ID (e.g. custom games, which carry ad-hoc queue IDs like
+      // 3110 that are absent from queues.json): fall back to the game mode + map
+      // to pick a layout, so custom games on standard maps still render.
+      .otherwise(() => layoutFromModeAndMap(gameInfo))
+  );
+}
+
+const ARAM_MAP_ID = 12;
+const SUMMONERS_RIFT_MAP_ID = 11;
+
+/**
+ * Derive a layout from game mode and map for queue IDs that aren't enumerated
+ * above. Custom games are structurally identical to their ranked/normal
+ * counterparts (a custom Summoner's Rift draft is a 5v5; a custom ARAM is an
+ * ARAM), so the mode/map is a reliable signal. Arena is already handled by the
+ * `isArenaQueueOrMode` check at the top of `determineLayout`.
+ */
+function layoutFromModeAndMap(
+  gameInfo: RawCurrentGameInfo,
+): LoadingScreenLayout {
+  if (gameInfo.gameMode === "ARAM" || gameInfo.mapId === ARAM_MAP_ID) {
+    return "aram";
+  }
+  if (
+    gameInfo.gameMode === "CLASSIC" ||
+    gameInfo.mapId === SUMMONERS_RIFT_MAP_ID
+  ) {
+    return "standard";
+  }
+  throw new Error(
+    `Unknown queue config ID ${gameInfo.gameQueueConfigId.toString()} — cannot determine loading screen layout (gameId=${gameInfo.gameId.toString()}, mapId=${gameInfo.mapId.toString()}, gameMode=${gameInfo.gameMode})`,
+  );
 }
 
 /**
@@ -122,13 +150,12 @@ function resolveTeam(
  * Convert a spectator API participant to a loading screen participant.
  * Ranks are fetched separately and injected afterward.
  */
-async function buildParticipant(
+function buildParticipant(
   participant: RawCurrentGameParticipant,
   context: BuildParticipantContext,
-): Promise<BaseBuiltParticipant> {
+): BaseBuiltParticipant {
   const championName = resolveChampionKey(participant.championId);
   const championDisplayName = getChampionDisplayName(participant.championId);
-  const skinNum = await resolveSkinNum(participant, championName);
 
   const puuid =
     participant.puuid === null
@@ -141,7 +168,7 @@ async function buildParticipant(
     championId: LoadingScreenChampionIdSchema.parse(participant.championId),
     championName,
     championDisplayName,
-    skinNum,
+    skinNum: DEFAULT_LOADING_SCREEN_SKIN_NUM,
     team: resolveTeam(participant, context.layout),
     spell1Id: SummonerSpellIdSchema.parse(participant.spell1Id),
     spell2Id: SummonerSpellIdSchema.parse(participant.spell2Id),
@@ -153,6 +180,14 @@ async function buildParticipant(
       participant.perks?.perkSubStyle === undefined
         ? undefined
         : RuneIdSchema.parse(participant.perks.perkSubStyle),
+    // Tracked players can only be matched by puuid. KNOWN LIMITATION: Riot's
+    // Spectator-V5 returns `puuid: null` for privacy-scrubbed participants (and
+    // their `riotId` is just the champion name, not a real Riot ID), so a
+    // tracked player who has privacy enabled is unidentifiable here and is
+    // intentionally absent from the pre-match image. They still appear
+    // post-match because Match-V5 always returns full puuids. We accept this
+    // data loss — there is no usable identity to match on. See
+    // packages/docs/decisions/2026-06-07_scout-arena-prematch-scrubbed-players.md
     isTrackedPlayer: puuid !== null && context.trackedPuuids.has(puuid),
   };
 }
@@ -177,12 +212,50 @@ function buildStandardParticipant(
   };
 }
 
+function gameInfoContextSuffix(gameInfo: RawCurrentGameInfo): string {
+  return (
+    `gameId=${gameInfo.gameId.toString()}, ` +
+    `queueConfigId=${gameInfo.gameQueueConfigId.toString()}, ` +
+    `mapId=${gameInfo.mapId.toString()}, ` +
+    `gameMode=${gameInfo.gameMode}, ` +
+    `gameType=${gameInfo.gameType}, ` +
+    `gameLength=${gameInfo.gameLength.toString()}`
+  );
+}
+
+function buildIncompleteLobbyMessage(
+  participants: readonly RankedBuiltParticipant[],
+  gameInfo: RawCurrentGameInfo,
+): string {
+  const presentPuuids = gameInfo.participants
+    .map((p) => p.puuid ?? "scrubbed")
+    .join(",");
+  return (
+    `Standard loading screen requires exactly 10 participants; ` +
+    `received ${participants.length.toString()} ` +
+    `(${gameInfoContextSuffix(gameInfo)}, participants=[${presentPuuids}])`
+  );
+}
+
+function buildLopsidedTeamMessage(
+  team: string,
+  received: number,
+  gameInfo: RawCurrentGameInfo,
+): string {
+  return (
+    `Standard loading screen requires exactly 5 ${team} participants; ` +
+    `received ${received.toString()} ` +
+    `(${gameInfoContextSuffix(gameInfo)})`
+  );
+}
+
 function inferStandardParticipants(
   participants: readonly RankedBuiltParticipant[],
+  gameInfo: RawCurrentGameInfo,
 ): StandardLoadingScreenParticipant[] {
   if (participants.length !== 10) {
-    throw new Error(
-      `Standard loading screen requires exactly 10 participants; received ${participants.length.toString()}`,
+    throw new RecoverableLoadingScreenDataError(
+      buildIncompleteLobbyMessage(participants, gameInfo),
     );
   }
 
@@ -193,8 +266,8 @@ function inferStandardParticipants(
       .map((participant, index) => ({ participant, index }))
       .filter((entry) => entry.participant.team === team);
     if (indexedTeam.length !== 5) {
-      throw new Error(
-        `Standard loading screen requires exactly 5 ${team} participants; received ${indexedTeam.length.toString()}`,
+      throw new RecoverableLoadingScreenDataError(
+        buildLopsidedTeamMessage(team, indexedTeam.length, gameInfo),
       );
     }
 
@@ -275,10 +348,11 @@ export async function buildLoadingScreenData(
   const queueType = resolveQueueTypeFromGame(
     gameInfo.gameQueueConfigId,
     gameInfo.gameMode,
+    gameInfo.gameType,
   );
   if (queueType === undefined) {
     throw new Error(
-      `Unknown queue type for queue config ID ${gameInfo.gameQueueConfigId.toString()} (gameId=${gameInfo.gameId.toString()}, mapId=${gameInfo.mapId.toString()}, gameMode=${gameInfo.gameMode})`,
+      `Unknown queue type for queue config ID ${gameInfo.gameQueueConfigId.toString()} (gameId=${gameInfo.gameId.toString()}, mapId=${gameInfo.mapId.toString()}, gameMode=${gameInfo.gameMode}, gameType=${gameInfo.gameType})`,
     );
   }
 
@@ -298,13 +372,11 @@ export async function buildLoadingScreenData(
   }
 
   // Build base participant data (without ranks)
-  const baseParticipants = await Promise.all(
-    gameInfo.participants.map((p) =>
-      buildParticipant(p, {
-        trackedPuuids,
-        layout,
-      }),
-    ),
+  const baseParticipants = gameInfo.participants.map((p) =>
+    buildParticipant(p, {
+      trackedPuuids,
+      layout,
+    }),
   );
 
   // Fetch ranks for all participants in parallel
@@ -331,7 +403,7 @@ export async function buildLoadingScreenData(
   );
   const participants: LoadingScreenParticipant[] =
     layout === "standard"
-      ? inferStandardParticipants(rankedParticipants)
+      ? inferStandardParticipants(rankedParticipants, gameInfo)
       : rankedParticipants;
 
   // Build bans (skip for ARAM/Arena which don't have bans)

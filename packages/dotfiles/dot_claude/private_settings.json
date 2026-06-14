@@ -7,8 +7,7 @@
       "Write(*)",
       "WebSearch",
       "ListMcpResourcesTool",
-      "ReadMcpResourceTool",
-      "mcp__*"
+      "ReadMcpResourceTool"
     ],
     "deny": [
       "Bash(sudo *)",
@@ -127,6 +126,7 @@
     ],
     "defaultMode": "bypassPermissions"
   },
+  "model": "opus[1m]",
   "hooks": {},
   "enabledPlugins": {
     "gopls-lsp@claude-plugins-official": true,
@@ -146,7 +146,8 @@
   "alwaysThinkingEnabled": true,
   "effortLevel": "xhigh",
   "skipDangerousModePermissionPrompt": true,
-  "theme": "dark",
+  "skipWorkflowUsageWarning": true,
+  "theme": "auto",
   "editorMode": "vim",
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,

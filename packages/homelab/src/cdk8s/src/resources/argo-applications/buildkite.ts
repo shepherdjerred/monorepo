@@ -9,6 +9,7 @@ import {
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
 export function createBuildkiteApp(chart: Chart) {
   new Namespace(chart, "buildkite-namespace", {
@@ -64,6 +65,19 @@ export function createBuildkiteApp(chart: Chart) {
     },
   });
 
+  // The `buildkite-git-mirrors` PVC + `default-checkout-params.gitMirrors`
+  // Helm value are intentionally retained even after PR2: the bootstrap
+  // pipeline-upload step in `.buildkite/pipeline.yml` is the only BK pod
+  // that still checks out the repo (it runs `bun src/main.ts` against the
+  // local tree). The BK k8s agent stack auto-configures the bootstrap
+  // pod's checkout to use these mirrors via the alternates path
+  // `/buildkite/git-mirrors/<encoded-url>/objects` — without the mount,
+  // git fetch fails with "unable to normalize alternate object path".
+  // PR3 of the BK-pressure plan will move pipeline generation itself into
+  // Dagger, at which point these can be deleted; until then they cost
+  // ~1.3 GiB once per build, which is negligible compared to the per-step
+  // savings PR1 + PR2 already deliver. See
+  // packages/docs/plans/2026-05-31_bk-dagger-git-url-refactor.md.
   new KubePersistentVolumeClaim(chart, "buildkite-git-mirrors-pvc", {
     metadata: { name: "buildkite-git-mirrors", namespace: "buildkite" },
     spec: {
@@ -91,8 +105,20 @@ export function createBuildkiteApp(chart: Chart) {
             agentStackSecret: "buildkite-agent-token",
             config: {
               queue: "default",
-              "max-in-flight": 20,
+              // Cluster-wide cap on concurrently-scheduled CI jobs. This is a
+              // secondary count gate; the resource-aware gate is the Kueue
+              // ClusterQueue (7.5 CPU / 16Gi, see kueue-config.ts). At the
+              // observed average step request (~234m), 24 jobs fit inside the
+              // Kueue CPU quota (~5.6 of 7.5 cores), so this bump is admitted
+              // without re-tuning Kueue. Raising past ~30 also needs a higher
+              // Kueue CPU nominalQuota. Bounded by node CPU (peaks ~93%) and
+              // CPU package temp (peaks ~90°C) under heavy multi-branch load.
+              "max-in-flight": 24,
               "empty-job-grace-period": "5m",
+              // gitMirrors is intentionally retained for the bootstrap
+              // pipeline-upload step. See the long comment on the PVC
+              // declaration above for why removing this and the PVC was
+              // deferred to a follow-up PR.
               "default-checkout-params": {
                 gitMirrors: {
                   volume: {
@@ -122,7 +148,7 @@ export function createBuildkiteApp(chart: Chart) {
                 ],
               },
             },
-          },
+          } satisfies HelmValuesForChart<"agent-stack-k8s">,
         },
       },
       destination: {

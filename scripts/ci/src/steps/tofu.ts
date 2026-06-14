@@ -6,7 +6,9 @@ import {
   RETRY,
   DAGGER_ENV,
   DRYRUN_FLAG,
-  GITHUB_APP_SECRET_ARGS,
+  TOFU_GITHUB_TOKEN_ARG,
+  REPO_GIT_REF,
+  DAGGER_CALL,
 } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
@@ -26,13 +28,19 @@ function tofuStackStep(stack: string, homelabPkgKey?: string): BuildkiteStep {
     depends_on: dependsOn,
     command:
       [
-        `dagger call tofu-apply --source . --stack ${stack}`,
+        `${DAGGER_CALL} tofu-apply --source ${REPO_GIT_REF} --stack ${stack}`,
         `--aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID`,
         `--aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
-        GITHUB_APP_SECRET_ARGS,
+        stack === "github" ? TOFU_GITHUB_TOKEN_ARG : "",
         `--cloudflare-account-id env:CLOUDFLARE_ACCOUNT_ID`,
         stack === "cloudflare"
           ? `--cloudflare-api-token env:CLOUDFLARE_API_TOKEN`
+          : "",
+        stack === "tailscale"
+          ? `--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID`
+          : "",
+        stack === "tailscale"
+          ? `--tailscale-oauth-client-secret env:TAILSCALE_OAUTH_CLIENT_SECRET`
           : "",
       ]
         .filter(Boolean)
@@ -61,20 +69,29 @@ function tofuPlanStep(stack: string): BuildkiteStep {
     if: PR_ONLY,
     command:
       [
-        `dagger call tofu-plan --source . --stack ${stack}`,
+        `${DAGGER_CALL} tofu-plan --source ${REPO_GIT_REF} --stack ${stack}`,
         `--aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID`,
         `--aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,
-        GITHUB_APP_SECRET_ARGS,
+        stack === "github" ? TOFU_GITHUB_TOKEN_ARG : "",
         `--cloudflare-account-id env:CLOUDFLARE_ACCOUNT_ID`,
         stack === "cloudflare"
           ? `--cloudflare-api-token env:CLOUDFLARE_API_TOKEN`
+          : "",
+        stack === "tailscale"
+          ? `--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID`
+          : "",
+        stack === "tailscale"
+          ? `--tailscale-oauth-client-secret env:TAILSCALE_OAUTH_CLIENT_SECRET`
           : "",
       ]
         .filter(Boolean)
         .join(" ") + DRYRUN_FLAG,
     timeout_in_minutes: 15,
-    concurrency: 1,
-    concurrency_group: `monorepo/tofu-plan-${stack}`,
+    // No concurrency group: `tofu plan` is read-only (never writes state) and the
+    // S3 backends configure no locking (no dynamodb_table / use_lockfile), so
+    // concurrent plans across branches are safe. Serializing them here only made
+    // green PRs queue for an hour behind every other branch's plans. The `apply`
+    // step (tofuStackStep) keeps concurrency:1 — applies DO write state.
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [

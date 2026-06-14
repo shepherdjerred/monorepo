@@ -1,4 +1,9 @@
-import type { PlayerConfigEntry } from "@scout-for-lol/data/index.ts";
+import type {
+  LeaguePuuid,
+  PlayerConfigEntry,
+  RawCurrentGameInfo,
+} from "@scout-for-lol/data/index.ts";
+import { isArenaQueueOrMode } from "@scout-for-lol/data/index.ts";
 import { getAccountsWithState, prisma } from "#src/database/index.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
 import {
@@ -33,6 +38,74 @@ const spectatorCircuit = new CircuitBreaker("spectator-api");
 let isCheckInProgress = false;
 let checkStartTime: number | undefined;
 const CHECK_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
+
+/**
+ * Constants for the "pre-start custom lobby" defer path.
+ *
+ * Riot's Spectator API surfaces a custom 5v5 Summoner's Rift game as soon as
+ * the lobby creator clicks Play; if the other players haven't joined yet the
+ * payload arrives with fewer than 10 participants and `gameLength < 0`
+ * (countdown). Building a standard loading-screen image off that snapshot
+ * throws inside `buildLoadingScreenData`, which used to look like a real
+ * detection error in Bugsink. The fix: detect this state early, retry the
+ * spectator fetch a couple of times in-process, and if the lobby still
+ * hasn't filled, skip the upsert+notify path entirely so the next 30s cron
+ * tick re-evaluates from scratch.
+ */
+const STANDARD_PARTICIPANT_COUNT = 10;
+const SUMMONERS_RIFT_MAP_ID = 11;
+const CUSTOM_LOBBY_RETRY_LIMIT = 2;
+const CUSTOM_LOBBY_RETRY_DELAY_MS = 2000;
+
+function isLikelyPreStartCustomLobby(gameInfo: RawCurrentGameInfo): boolean {
+  const isCustom = gameInfo.gameType.toUpperCase().startsWith("CUSTOM");
+  if (!isCustom) return false;
+  if (gameInfo.participants.length >= STANDARD_PARTICIPANT_COUNT) return false;
+  if (isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode)) {
+    return false;
+  }
+  return (
+    gameInfo.gameMode === "CLASSIC" || gameInfo.mapId === SUMMONERS_RIFT_MAP_ID
+  );
+}
+
+async function refetchCustomLobbyUntilFilled(
+  initial: RawCurrentGameInfo,
+  puuid: LeaguePuuid,
+  region: PlayerConfigEntry["league"]["leagueAccount"]["region"],
+  retryDelayMs: number = CUSTOM_LOBBY_RETRY_DELAY_MS,
+): Promise<RawCurrentGameInfo> {
+  let latest = initial;
+  for (let attempt = 1; attempt <= CUSTOM_LOBBY_RETRY_LIMIT; attempt++) {
+    if (!isLikelyPreStartCustomLobby(latest)) {
+      return latest;
+    }
+    logger.info(
+      `[custom-prestart] gameId=${latest.gameId.toString()} only ${latest.participants.length.toString()}/10 participants — retry ${attempt.toString()}/${CUSTOM_LOBBY_RETRY_LIMIT.toString()} in ${retryDelayMs.toString()}ms`,
+    );
+    await Bun.sleep(retryDelayMs);
+    const retry = await getActiveGame(puuid, region);
+    // If the API errors mid-retry, record the failure in the circuit breaker
+    // so repeated failures during the retry window trip the breaker for
+    // subsequent players in the same cron tick.
+    if (retry.upstreamError) {
+      spectatorCircuit.recordFailure(
+        new Error(
+          `Spectator API upstream error during custom-lobby retry for ${puuid}`,
+        ),
+        { source: "spectator-retry", puuid, region },
+      );
+      return latest;
+    }
+    // Player left the lobby between retries — fall back to the most recent
+    // payload so the caller's outer logic decides.
+    if (!retry.game) {
+      return latest;
+    }
+    latest = retry.game;
+  }
+  return latest;
+}
 
 function shouldSkipCheck(): boolean {
   if (!isCheckInProgress) {
@@ -69,8 +142,14 @@ function shouldSkipCheck(): boolean {
  *
  * Detects when tracked players enter a game and sends a single notification
  * per game, listing all tracked players in that game.
+ *
+ * @param customLobbyRetryDelayMs - Override the retry delay for custom lobby
+ *   refetch attempts. Defaults to CUSTOM_LOBBY_RETRY_DELAY_MS (2000ms).
+ *   Pass 0 in tests to skip the real-time sleep.
  */
-export async function checkActiveGames(): Promise<void> {
+export async function checkActiveGames(
+  customLobbyRetryDelayMs: number = CUSTOM_LOBBY_RETRY_DELAY_MS,
+): Promise<void> {
   if (shouldSkipCheck()) {
     return;
   }
@@ -175,10 +254,8 @@ export async function checkActiveGames(): Promise<void> {
       }
 
       try {
-        const { game: gameInfo, upstreamError } = await getActiveGame(
-          puuid,
-          region,
-        );
+        const initial = await getActiveGame(puuid, region);
+        const { upstreamError } = initial;
 
         if (upstreamError) {
           // Feed the failure into the circuit breaker (rate-limited Sentry reporting)
@@ -192,7 +269,27 @@ export async function checkActiveGames(): Promise<void> {
         // Any non-upstream response (success, 404, validation error) means the API is reachable
         spectatorCircuit.recordSuccess();
 
-        if (!gameInfo) {
+        if (!initial.game) {
+          continue;
+        }
+
+        // Custom 5v5 SR lobbies surface in Spectator before all 10 players
+        // have joined. Retry a couple of times in-process; if still
+        // incomplete, defer to the next 30s cron tick (do NOT upsert).
+        const gameInfo = isLikelyPreStartCustomLobby(initial.game)
+          ? await refetchCustomLobbyUntilFilled(
+              initial.game,
+              puuid,
+              region,
+              customLobbyRetryDelayMs,
+            )
+          : initial.game;
+
+        if (isLikelyPreStartCustomLobby(gameInfo)) {
+          logger.info(
+            `[${player.alias}] ⏳ Deferring custom-game gameId=${gameInfo.gameId.toString()} — only ${gameInfo.participants.length.toString()}/10 participants present (gameLength=${gameInfo.gameLength.toString()}); next cron tick will retry`,
+          );
+          prematchDetectionsTotal.inc({ status: "deferred_custom_prestart" });
           continue;
         }
 
@@ -202,7 +299,11 @@ export async function checkActiveGames(): Promise<void> {
           continue;
         }
 
-        // Find ALL tracked players in this game's participants
+        // Find ALL tracked players in this game's participants.
+        // KNOWN LIMITATION: matched by puuid only, so privacy-scrubbed players
+        // (null puuid in Spectator-V5) are not matched here and are dropped from
+        // the pre-match notification/image. Accepted data loss — see
+        // packages/docs/decisions/2026-06-07_scout-arena-prematch-scrubbed-players.md
         const trackedPlayersInGame: PlayerConfigEntry[] =
           allPlayerConfigs.filter((p) =>
             gameInfo.participants.some(

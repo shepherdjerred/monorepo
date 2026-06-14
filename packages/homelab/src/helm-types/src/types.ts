@@ -5,6 +5,9 @@ export type ChartInfo = {
   repoUrl: string;
   version: string;
   chartName: string; // The actual chart name (may differ from versions.ts key)
+  // When true, the chart is served from an OCI registry: fetch via
+  // `helm pull oci://<repoUrl>/<chartName>` instead of `helm repo add` + pull.
+  oci?: boolean;
 };
 
 export type JSONSchemaProperty = {

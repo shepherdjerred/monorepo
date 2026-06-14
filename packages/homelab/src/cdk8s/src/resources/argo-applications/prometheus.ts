@@ -35,6 +35,13 @@ export async function createPrometheusApp(chart: Chart) {
     hosts: ["prometheus"],
   });
 
+  createIngress(chart, "grafana-ingress", {
+    namespace: "prometheus",
+    service: "prometheus-grafana",
+    port: 80,
+    hosts: ["grafana"],
+  });
+
   const alertmanagerSecrets = new OnePasswordItem(
     chart,
     "alertmanager-secrets-onepassword",
@@ -182,8 +189,19 @@ export async function createPrometheusApp(chart: Chart) {
                 routing_key_file: `/etc/alertmanager/secrets/${alertmanagerSecrets.name}/PAGERDUTY_TOKEN`,
                 // Alertmanager will evaluate this Go template when sending to PagerDuty
                 // kube-prometheus-stack chart passes config values through without template processing
+                //
+                // NOTE: use a real newline between alerts, not a literal `\n`. Go's
+                // text/template does not interpret backslash escapes in literal template
+                // text (only inside quoted action strings), so `\n` would reach PagerDuty
+                // as the two characters "\n" and clutter the incident title.
+                //
+                // NOTE: include the namespace and fall back from `.message` to
+                // `.description`. Different rule families use different detail
+                // annotations (Velero/HA rules use `message`; createSensorAlert uses
+                // `description`). Without the fallback, message-based alerts page with
+                // only the static summary, making distinct incidents look like duplicates.
                 description: escapeHelmGoTemplate(
-                  String.raw`{{ range .Alerts }}{{ .Annotations.summary }}\n{{ .Annotations.description }}\n{{ end }}`,
+                  `{{ range .Alerts }}{{ .Annotations.summary }}{{ if .Labels.namespace }} ({{ .Labels.namespace }}){{ end }}: {{ if .Annotations.message }}{{ .Annotations.message }}{{ else }}{{ .Annotations.description }}{{ end }}\n{{ end }}`,
                 ),
                 // Map alert severity label to PagerDuty severity (critical/warning/error/info)
                 // Check if GroupLabels exists first (nil during helm lint)
@@ -294,6 +312,15 @@ export async function createPrometheusApp(chart: Chart) {
         externalUrl: "https://prometheus.tailnet-1a49.ts.net",
         retention: "365d", // Keep data for 1 year
         retentionSize: "200GB", // Safety limit - keep headroom below PVC usage alerts
+        // Baseline request so Prometheus isn't BestEffort (first evicted under
+        // memory pressure). Steady ~1.9Gi, 30d spike to ~17.6Gi (compaction/big
+        // queries) — request covers steady state; deliberately no limit.
+        resources: {
+          requests: {
+            cpu: "200m",
+            memory: "4Gi",
+          },
+        },
         // Required so Tempo's metrics-generator can push service-graph,
         // span-metrics, and local-blocks samples to Prometheus via remote_write.
         enableRemoteWriteReceiver: true,
@@ -369,6 +396,16 @@ export async function createPrometheusApp(chart: Chart) {
           name: "prometheus-grafana",
           namespace: "prometheus",
           jsonPointers: ["/data/admin-password"],
+        },
+        {
+          // The grafana subchart regenerates this image-renderer token on
+          // every helm render (randAlphaNum), so it can never converge.
+          // The live token is the source of truth; never reconcile it.
+          group: "",
+          kind: "Secret",
+          name: "prometheus-grafana-image-renderer",
+          namespace: "prometheus",
+          jsonPointers: ["/data/token"],
         },
         {
           group: "apps",
