@@ -12,12 +12,17 @@ import client from "#src/discord/client.ts";
 import { getConfig } from "#src/config/index.ts";
 import type { N64Emulator } from "#src/emulator/n64-emulator.ts";
 import { encodeScreenshotPng } from "#src/emulator/screenshot.ts";
+import { applyStreamOverlays } from "#src/overlay/composite.ts";
+import type { StreamOverlayContextProvider } from "#src/webserver/dispatch.ts";
 
 export const screenshotCommand = new SlashCommandBuilder()
   .setName("screenshot")
   .setDescription("Take a screenshot and upload it to the chat");
 
-export function makeScreenshot(emulator: N64Emulator) {
+export function makeScreenshot(
+  emulator: N64Emulator,
+  overlayContext?: StreamOverlayContextProvider,
+) {
   return async function handleScreenshotCommand(
     interaction: CommandInteraction,
   ) {
@@ -32,6 +37,10 @@ export function makeScreenshot(emulator: N64Emulator) {
         content: "No frame rendered yet, try again in a moment.",
       });
       return;
+    }
+    const ctx = overlayContext?.();
+    if (ctx !== undefined) {
+      applyStreamOverlays(frame.rgba, frame.height, ctx);
     }
     const buffer = encodeScreenshotPng(frame);
     const date = new Date();

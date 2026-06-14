@@ -25,13 +25,13 @@ describe("formatUtcTimestamp", () => {
   it("formats epoch milliseconds as UTC with millisecond precision", () => {
     // 2026-06-12T07:08:09.045Z
     expect(formatUtcTimestamp(Date.UTC(2026, 5, 12, 7, 8, 9, 45))).toBe(
-      "UTC 07:08:09.045",
+      "07:08:09.045",
     );
   });
 
   it("zero-pads every field", () => {
     expect(formatUtcTimestamp(Date.UTC(2026, 0, 1, 0, 0, 0, 0))).toBe(
-      "UTC 00:00:00.000",
+      "00:00:00.000",
     );
   });
 });
