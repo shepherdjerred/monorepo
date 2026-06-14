@@ -217,7 +217,8 @@ describe("checkActiveGames — subsequent-match polling", () => {
       upstreamError: false,
     });
 
-    await checkActiveGames();
+    // Pass retryDelayMs=0 to skip the real 2×2s sleep in the retry loop.
+    await checkActiveGames(0);
 
     // Pre-start custom lobby must NOT be committed: the next 30s cron
     // tick gets a clean shot once the other players load in.

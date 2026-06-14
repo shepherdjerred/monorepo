@@ -73,6 +73,7 @@ async function refetchCustomLobbyUntilFilled(
   initial: RawCurrentGameInfo,
   puuid: LeaguePuuid,
   region: PlayerConfigEntry["league"]["leagueAccount"]["region"],
+  retryDelayMs: number = CUSTOM_LOBBY_RETRY_DELAY_MS,
 ): Promise<RawCurrentGameInfo> {
   let latest = initial;
   for (let attempt = 1; attempt <= CUSTOM_LOBBY_RETRY_LIMIT; attempt++) {
@@ -80,13 +81,25 @@ async function refetchCustomLobbyUntilFilled(
       return latest;
     }
     logger.info(
-      `[custom-prestart] gameId=${latest.gameId.toString()} only ${latest.participants.length.toString()}/10 participants — retry ${attempt.toString()}/${CUSTOM_LOBBY_RETRY_LIMIT.toString()} in ${CUSTOM_LOBBY_RETRY_DELAY_MS.toString()}ms`,
+      `[custom-prestart] gameId=${latest.gameId.toString()} only ${latest.participants.length.toString()}/10 participants — retry ${attempt.toString()}/${CUSTOM_LOBBY_RETRY_LIMIT.toString()} in ${retryDelayMs.toString()}ms`,
     );
-    await Bun.sleep(CUSTOM_LOBBY_RETRY_DELAY_MS);
+    await Bun.sleep(retryDelayMs);
     const retry = await getActiveGame(puuid, region);
-    // If the player has left the lobby or the API errors mid-retry, fall
-    // back to the most recent payload so the caller's outer logic decides.
-    if (retry.upstreamError || !retry.game) {
+    // If the API errors mid-retry, record the failure in the circuit breaker
+    // so repeated failures during the retry window trip the breaker for
+    // subsequent players in the same cron tick.
+    if (retry.upstreamError) {
+      spectatorCircuit.recordFailure(
+        new Error(
+          `Spectator API upstream error during custom-lobby retry for ${puuid}`,
+        ),
+        { source: "spectator-retry", puuid, region },
+      );
+      return latest;
+    }
+    // Player left the lobby between retries — fall back to the most recent
+    // payload so the caller's outer logic decides.
+    if (!retry.game) {
       return latest;
     }
     latest = retry.game;
@@ -129,8 +142,14 @@ function shouldSkipCheck(): boolean {
  *
  * Detects when tracked players enter a game and sends a single notification
  * per game, listing all tracked players in that game.
+ *
+ * @param customLobbyRetryDelayMs - Override the retry delay for custom lobby
+ *   refetch attempts. Defaults to CUSTOM_LOBBY_RETRY_DELAY_MS (2000ms).
+ *   Pass 0 in tests to skip the real-time sleep.
  */
-export async function checkActiveGames(): Promise<void> {
+export async function checkActiveGames(
+  customLobbyRetryDelayMs: number = CUSTOM_LOBBY_RETRY_DELAY_MS,
+): Promise<void> {
   if (shouldSkipCheck()) {
     return;
   }
@@ -258,7 +277,12 @@ export async function checkActiveGames(): Promise<void> {
         // have joined. Retry a couple of times in-process; if still
         // incomplete, defer to the next 30s cron tick (do NOT upsert).
         const gameInfo = isLikelyPreStartCustomLobby(initial.game)
-          ? await refetchCustomLobbyUntilFilled(initial.game, puuid, region)
+          ? await refetchCustomLobbyUntilFilled(
+              initial.game,
+              puuid,
+              region,
+              customLobbyRetryDelayMs,
+            )
           : initial.game;
 
         if (isLikelyPreStartCustomLobby(gameInfo)) {
