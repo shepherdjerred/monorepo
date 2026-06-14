@@ -68,6 +68,15 @@ export function createStreambotDeployment(
     storage: Size.gibibytes(1),
   });
 
+  // Small persistent cache of extracted embedded subtitle tracks (a few MB of .srt per title).
+  // Extracting an embedded sub from a large remux needs a full demux pass (tens of seconds for a 4K
+  // Blu-ray); caching the result makes every repeat play start instantly. Kept separate from /state
+  // so resume state and the subtitle cache can be sized and cleared independently. RWO is safe here
+  // for the same reason as /state: the Recreate strategy detaches the old pod before the new attaches.
+  const subsCacheVolume = new ZfsNvmeVolume(chart, "streambot-subs-cache-pvc", {
+    storage: Size.gibibytes(2),
+  });
+
   const deployment = new Deployment(chart, "streambot", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
@@ -104,6 +113,8 @@ export function createStreambotDeployment(
         MEDIA_DIRS: EnvValue.fromValue("/media/movies,/media/tv"),
         // Resume state lives on the persistent volume mounted at /state.
         STATE_DIR: EnvValue.fromValue("/state"),
+        // Extracted embedded subtitles are cached on the persistent volume mounted at /subs-cache.
+        SUBS_CACHE_DIR: EnvValue.fromValue("/subs-cache"),
         STREAM_WIDTH: EnvValue.fromValue("1920"),
         STREAM_HEIGHT: EnvValue.fromValue("1080"),
         STREAM_FPS: EnvValue.fromValue("30"),
@@ -155,6 +166,15 @@ export function createStreambotDeployment(
             chart,
             "streambot-state-volume",
             stateVolume.claim,
+          ),
+        },
+        {
+          // Persistent cache of extracted embedded subtitle .srt files, reused across plays/restarts.
+          path: "/subs-cache",
+          volume: Volume.fromPersistentVolumeClaim(
+            chart,
+            "streambot-subs-cache-volume",
+            subsCacheVolume.claim,
           ),
         },
         {

@@ -1,5 +1,5 @@
-import { randomUUID } from "node:crypto";
-import { copyFile, mkdir, readdir, rm } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
+import { copyFile, mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
@@ -21,8 +21,10 @@ import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 /**
  * Subtitle I/O glue: temp staging + ffprobe/ffmpeg/yt-dlp. Pure logic (ranking, parsing, escaping)
- * lives in {@link file://./subtitles.ts}. Every resolved subtitle is staged to a safe temp file under
- * `os.tmpdir()/streambot-subs/`, so the `subtitles=` filter never references a user path.
+ * lives in {@link file://./subtitles.ts}. Sidecars and yt-dlp downloads are staged to a safe temp
+ * file under `os.tmpdir()/streambot-subs/`; extracted embedded tracks are persisted to
+ * `config.subtitles.cacheDir` when set (reused across plays) and fall back to the same temp dir
+ * otherwise — so the `subtitles=` filter never references a user path either way.
  */
 
 const log = logger.child("subtitles");
@@ -166,7 +168,42 @@ async function probeEmbeddedCandidates(
   return candidates;
 }
 
-/** Extract one embedded text track (by subtitle-relative index) to a staged SRT temp file. */
+/**
+ * Cheap, content-free cache key for an extracted embedded track: SHA-256 over the file's identity
+ * (absolute path + byte size + mtime) and the subtitle-relative stream index. Deliberately does NOT
+ * hash the file's bytes — a remux is tens of GB, so hashing it would cost more than the extraction
+ * this key exists to skip. Size+mtime invalidate the entry when the file is replaced or re-encoded,
+ * the same approach Plex/Jellyfin use. Returns null if the file can't be stat'd (caller falls back
+ * to an uncached temp extraction). The `s<i>` separator keeps multi-track files from colliding.
+ */
+async function embeddedCacheKey(
+  filePath: string,
+  subtitleIndex: number,
+): Promise<string | null> {
+  try {
+    const st = await stat(filePath);
+    return createHash("sha256")
+      .update(
+        `${filePath}\0${String(st.size)}\0${String(Math.trunc(st.mtimeMs))}\0s${String(subtitleIndex)}`,
+      )
+      .digest("hex");
+  } catch (error) {
+    log.warn("could not stat file for subtitle cache key", {
+      file: filePath,
+      error: getErrorMessage(error),
+    });
+    return null;
+  }
+}
+
+/**
+ * Extract one embedded text track (by subtitle-relative index) to an SRT file. When
+ * `config.subtitles.cacheDir` is set, the result is cached there keyed by {@link embeddedCacheKey} so
+ * the slow full-demux extraction runs once per file and every later play reuses it instantly; a
+ * cached entry has no `cleanupPath` (the streamer must not unlink the shared copy). Without a cache
+ * dir (or if its directory is unwritable / the file can't be stat'd) it falls back to the old
+ * behaviour: a one-shot temp file in the swept temp dir.
+ */
 async function extractEmbeddedTrack(
   config: Config,
   filePath: string,
@@ -174,8 +211,41 @@ async function extractEmbeddedTrack(
   signal: AbortSignal,
 ): Promise<ResolvedSubtitle | undefined> {
   const { subtitleIndex, codec } = track;
-  const dir = await ensureTempDir();
-  const dest = tempFile(dir, "srt");
+
+  // Resolve the cache target up front. cachePath stays null when caching is disabled, the file
+  // can't be stat'd, or the cache dir can't be created — each falls back to an uncached extraction.
+  let cachePath: string | null = null;
+  if (config.subtitles.cacheDir !== undefined) {
+    const key = await embeddedCacheKey(filePath, subtitleIndex);
+    if (key !== null) {
+      const cacheDir = config.subtitles.cacheDir;
+      try {
+        await mkdir(cacheDir, { recursive: true });
+        cachePath = path.join(cacheDir, `${key}.srt`);
+      } catch (error) {
+        log.warn("subtitle cache dir unavailable; extracting to temp instead", {
+          dir: cacheDir,
+          error: getErrorMessage(error),
+        });
+      }
+    }
+  }
+
+  if (cachePath !== null && (await Bun.file(cachePath).exists())) {
+    log.info("embedded subtitle cache hit", {
+      file: filePath,
+      stream: subtitleIndex,
+      codec,
+    });
+    return { path: cachePath };
+  }
+
+  // Extract to a staging file: a temp-dir file when uncached, or a sibling temp in the cache dir (so
+  // the publish rename is atomic and a crashed/aborted ffmpeg never leaves a truncated cache entry).
+  const staging =
+    cachePath === null
+      ? tempFile(await ensureTempDir(), "srt")
+      : path.join(path.dirname(cachePath), `.${randomUUID()}.srt.tmp`);
   const extract = await run(
     [
       config.ffmpegPath,
@@ -186,23 +256,49 @@ async function extractEmbeddedTrack(
       `0:s:${String(subtitleIndex)}`,
       "-c:s",
       "srt",
-      dest,
+      staging,
     ],
     signal,
   );
   if (!extract.ok) {
+    await rm(staging, { force: true });
     log.warn("embedded subtitle extraction failed", {
       file: filePath,
       stderr: extract.stderr.trim().slice(-500),
     });
     return undefined;
   }
-  log.info("extracted embedded subtitle", {
+
+  if (cachePath === null) {
+    log.info("extracted embedded subtitle", {
+      file: filePath,
+      stream: subtitleIndex,
+      codec,
+    });
+    return { path: staging, cleanupPath: staging };
+  }
+
+  try {
+    await rename(staging, cachePath);
+  } catch (error) {
+    // Couldn't publish to the cache (e.g. a concurrent extraction of the same file won the rename).
+    // Use the staged copy for this run as a one-shot temp; the cache fills on a later play.
+    log.warn(
+      "could not publish subtitle to cache; using staged copy this run",
+      {
+        cachePath,
+        error: getErrorMessage(error),
+      },
+    );
+    return { path: staging, cleanupPath: staging };
+  }
+  log.info("extracted embedded subtitle (cached)", {
     file: filePath,
     stream: subtitleIndex,
     codec,
+    cachePath,
   });
-  return { path: dest, cleanupPath: dest };
+  return { path: cachePath };
 }
 
 /**
