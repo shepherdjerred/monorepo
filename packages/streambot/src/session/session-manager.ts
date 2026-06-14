@@ -21,6 +21,7 @@ import type {
   ResolveSourceInput,
 } from "@shepherdjerred/streambot/machine/types.ts";
 import { buildPlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
+import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
 import {
   playbackPositionSeconds,
   queueLength,
@@ -377,11 +378,15 @@ export class SessionManager {
         typeof stateValue === "string"
           ? stateValue
           : JSON.stringify(stateValue);
+      const currentSource = snapshot.context.current?.source ?? null;
       const snap: StatusSnapshot = {
         state: stateName,
         currentTitle: snapshot.context.resolved?.title ?? null,
         currentRequester: snapshot.context.current?.requesterId ?? null,
-        currentKind: snapshot.context.current?.source.kind ?? null,
+        currentKind: currentSource?.kind ?? null,
+        // Available during `resolving` (before a title is known) so the "preparing…" notice can name it.
+        currentSourceLabel:
+          currentSource === null ? null : sourceLabel(currentSource),
         blockedNonce: snapshot.context.blockedNonce,
         blockedRequester: snapshot.context.lastBlockedRequester,
       };
