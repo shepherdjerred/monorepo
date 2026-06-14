@@ -251,10 +251,15 @@ export function App() {
 
           <section className="grid gap-4 xl:grid-cols-[1fr_320px]">
             <div className="overflow-hidden rounded-[2rem] border border-zinc-800 bg-zinc-950/80 p-3 shadow-2xl shadow-black/40 sm:p-5">
-              <div className="relative mx-auto h-[620px] max-w-[880px] sm:h-[540px] lg:h-[500px]">
+              <div className="relative mx-auto aspect-[900/540] w-full">
                 <N64ControllerShell />
 
-                <div className="absolute left-[13%] right-[13%] top-[22%] z-20 grid grid-cols-2 gap-[48%]">
+                {/* Positions below are CENTER-based: left/top is the center
+                    point and -translate-x-1/2 -translate-y-1/2 anchors there.
+                    Coords mirror the SVG silhouette so each button lands in
+                    its matching molded depression. */}
+
+                <div className="absolute left-[24%] top-[12%] z-30 w-[15%] -translate-x-1/2 -translate-y-1/2">
                   <ControlButton
                     control={shoulderL}
                     pressed={isControlPressed(shoulderL, pressedCodes)}
@@ -263,6 +268,8 @@ export function App() {
                     variant="shoulder"
                     className="w-full"
                   />
+                </div>
+                <div className="absolute left-[76%] top-[12%] z-30 w-[15%] -translate-x-1/2 -translate-y-1/2">
                   <ControlButton
                     control={shoulderR}
                     pressed={isControlPressed(shoulderR, pressedCodes)}
@@ -273,7 +280,7 @@ export function App() {
                   />
                 </div>
 
-                <div className="absolute left-[18%] top-[38%] z-30 flex flex-col items-center gap-1.5">
+                <div className="absolute left-[23%] top-[49%] z-30 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1.5">
                   <DpadControls
                     controls={DPAD_CONTROLS}
                     pressedCodes={pressedCodes}
@@ -286,21 +293,7 @@ export function App() {
                   </span>
                 </div>
 
-                <div className="absolute left-1/2 top-[55%] z-30 -translate-x-1/2">
-                  <AnalogStick
-                    leftControl={stickLeft}
-                    rightControl={stickRight}
-                    upControl={stickUp}
-                    downControl={stickDown}
-                    axisX={state.analogX}
-                    axisY={state.analogY}
-                    pressedCodes={pressedCodes}
-                    onPress={press}
-                    onRelease={release}
-                  />
-                </div>
-
-                <div className="absolute left-1/2 top-[40%] z-30 -translate-x-1/2">
+                <div className="absolute left-1/2 top-[40%] z-30 -translate-x-1/2 -translate-y-1/2">
                   <ControlButton
                     control={startControl}
                     pressed={isControlPressed(startControl, pressedCodes)}
@@ -310,20 +303,24 @@ export function App() {
                   />
                 </div>
 
-                <div className="absolute left-1/2 top-[78%] z-30 w-20 -translate-x-1/2 sm:w-24">
-                  <ControlButton
-                    control={zControl}
-                    pressed={isControlPressed(zControl, pressedCodes)}
+                <ControlCluster
+                  title="C-buttons"
+                  className="absolute left-[83%] top-[45%] z-30 h-24 w-24 -translate-x-1/2 -translate-y-1/2 sm:h-28 sm:w-28"
+                  showTitle={false}
+                >
+                  <DpadControls
+                    controls={C_CONTROLS}
+                    pressedCodes={pressedCodes}
                     onPress={press}
                     onRelease={release}
-                    variant="z"
-                    className="w-full"
+                    variant="c"
+                    className="h-full w-full"
                   />
-                </div>
+                </ControlCluster>
 
                 <ControlCluster
                   title="A / B"
-                  className="absolute right-[22%] top-[48%] z-30 h-24 w-28 sm:right-[23%] sm:top-[47%] sm:h-28 sm:w-32"
+                  className="absolute left-[66%] top-[59%] z-30 h-20 w-24 -translate-x-1/2 -translate-y-1/2 sm:h-24 sm:w-28"
                   showTitle={false}
                 >
                   <ControlButton
@@ -344,20 +341,30 @@ export function App() {
                   />
                 </ControlCluster>
 
-                <ControlCluster
-                  title="C-buttons"
-                  className="absolute right-[7%] top-[35%] z-30 sm:right-[8%]"
-                  showTitle={false}
-                >
-                  <DpadControls
-                    controls={C_CONTROLS}
+                <div className="absolute left-1/2 top-[70%] z-30 -translate-x-1/2 -translate-y-1/2">
+                  <AnalogStick
+                    leftControl={stickLeft}
+                    rightControl={stickRight}
+                    upControl={stickUp}
+                    downControl={stickDown}
+                    axisX={state.analogX}
+                    axisY={state.analogY}
                     pressedCodes={pressedCodes}
                     onPress={press}
                     onRelease={release}
-                    variant="c"
-                    className="h-24 w-24 sm:h-28 sm:w-28"
                   />
-                </ControlCluster>
+                </div>
+
+                <div className="absolute left-1/2 top-[94%] z-30 w-20 -translate-x-1/2 -translate-y-1/2 sm:w-24">
+                  <ControlButton
+                    control={zControl}
+                    pressed={isControlPressed(zControl, pressedCodes)}
+                    onPress={press}
+                    onRelease={release}
+                    variant="z"
+                    className="w-full"
+                  />
+                </div>
               </div>
             </div>
 

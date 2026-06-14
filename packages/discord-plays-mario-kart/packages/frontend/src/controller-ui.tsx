@@ -52,12 +52,14 @@ export function N64ControllerShell() {
         </filter>
       </defs>
 
-      {/* L / R shoulder humps — tiny dark protrusions at the back-top corners. */}
-      <rect x="155" y="62" width="115" height="22" rx="6" fill="#a8a9ad" />
-      <rect x="630" y="62" width="115" height="22" rx="6" fill="#a8a9ad" />
+      {/* L / R shoulder humps — match the position the L/R button widgets
+          render at in app.tsx so they sit on the actual shoulders. */}
+      <rect x="155" y="48" width="135" height="32" rx="10" fill="#9a9aa0" />
+      <rect x="610" y="48" width="135" height="32" rx="10" fill="#9a9aa0" />
 
-      {/* Whole-controller silhouette: body + central top hump + two outer
-          handles + center prong, one continuous path clockwise from top-left. */}
+      {/* Whole-controller silhouette: body + central top hump + two chunky
+          outer handles + a LONGER center prong (extends below the side
+          handles, matching the reference photo). Clockwise from top-left. */}
       <path
         d="
           M 140 90
@@ -69,20 +71,21 @@ export function N64ControllerShell() {
           L 700 84
           C 735 84 755 86 760 90
           C 800 102 825 150 830 220
-          C 838 290 845 350 825 410
-          C 805 470 760 482 720 472
-          C 680 462 640 432 605 360
-          C 590 330 568 320 545 322
-          C 535 324 532 340 538 380
-          C 544 432 528 480 500 502
-          C 482 516 466 520 450 520
-          C 434 520 418 516 400 502
-          C 372 480 356 432 362 380
-          C 368 340 365 324 355 322
-          C 332 320 310 330 295 360
-          C 260 432 220 462 180 472
-          C 140 482 95 470 75 410
-          C 55 350 62 290 70 220
+          C 838 290 845 348 822 392
+          C 800 432 752 446 718 432
+          C 680 416 642 380 612 326
+          C 596 302 575 294 555 300
+          C 543 305 540 322 545 360
+          C 555 420 550 470 535 502
+          C 525 525 510 540 488 540
+          L 412 540
+          C 390 540 375 525 365 502
+          C 350 470 345 420 355 360
+          C 360 322 357 305 345 300
+          C 325 294 304 302 288 326
+          C 258 380 220 416 182 432
+          C 148 446 100 432 78 392
+          C 55 348 62 290 70 220
           C 75 150 100 102 140 90
           Z
         "
@@ -109,22 +112,23 @@ export function N64ControllerShell() {
         NINTENDO
       </text>
 
-      {/* Recessed button wells — darker depressions under the D-pad, the
-          C-buttons cluster, and the A/B cluster. */}
-      <ellipse cx="225" cy="215" rx="92" ry="82" fill="url(#n64Well)" />
-      <ellipse cx="680" cy="200" rx="92" ry="80" fill="url(#n64Well)" />
-      <ellipse cx="640" cy="290" rx="68" ry="56" fill="url(#n64Well)" />
+      {/* Recessed wells — centered on the live button clusters so the
+          chevrons / face buttons sit inside the molded depressions. */}
+      <ellipse cx="207" cy="265" rx="82" ry="76" fill="url(#n64Well)" />
+      <ellipse cx="747" cy="243" rx="76" ry="72" fill="url(#n64Well)" />
+      <ellipse cx="594" cy="319" rx="66" ry="56" fill="url(#n64Well)" />
 
-      {/* Tiny ring around the Start button. */}
-      <circle cx="450" cy="218" r="26" fill="url(#n64Well)" />
+      {/* Ring around the Start button. */}
+      <circle cx="450" cy="218" r="28" fill="url(#n64Well)" />
 
-      {/* Deep analog stick well — the chunky dark hex boot on the center prong. */}
+      {/* Deep analog stick well — sits under the chevron stick on the upper
+          half of the center prong (not over Z, which sits below it). */}
       <circle
         cx="450"
-        cy="400"
-        r="76"
+        cy="380"
+        r="58"
         fill="url(#n64StickWell)"
-        opacity="0.92"
+        opacity="0.95"
       />
     </svg>
   );
@@ -349,7 +353,7 @@ export function ControlButton({
     faceB: "h-11 w-11 rounded-full px-2 py-2 sm:h-12 sm:w-12",
     c: "rounded-full px-2 py-2",
     shoulder: "min-h-8 rounded-t-2xl rounded-b-md px-4 py-1 sm:min-h-9",
-    start: "h-8 w-8 rounded-full px-1 py-1 sm:h-9 sm:w-9",
+    start: "h-12 w-12 rounded-full px-1 py-1 sm:h-14 sm:w-14",
     z: "min-h-8 rounded-[0.85rem] px-4 py-1 sm:min-h-9",
   }[variant];
   return (
@@ -387,7 +391,7 @@ export function ControlButton({
           "text-lg font-black leading-none drop-shadow-sm sm:text-xl",
           variant === "c" && "text-base sm:text-lg",
           variant === "shoulder" && "text-lg sm:text-xl",
-          variant === "start" && "text-[9px] uppercase sm:text-[10px]",
+          variant === "start" && "text-[10px] uppercase sm:text-xs",
           variant === "z" && "text-base sm:text-lg",
           labelClassName,
         )}
