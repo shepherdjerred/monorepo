@@ -440,6 +440,44 @@ describe("buildPipeline", () => {
       expect(keys).not.toContain("helm-types-drift-check");
       expect(keys).toContain("build-helm-types");
     });
+
+    it("emits drift-check for Renovate noop+helmTypesInputsChanged (homelab in packages, empty otherwise)", () => {
+      // Simulates the Renovate chart-bump case: only versions.ts changed.
+      // change-detection returns buildScopedResult(new Set(["homelab"]), ..., helmTypesInputsChanged=true).
+      // buildPipeline must NOT hit the empty-packages early return and must emit the drift-check.
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.homelabChanged = true;
+      affected.helmTypesInputsChanged = true;
+      // All other flags false — simulates a Renovate noop path
+
+      const pipeline = buildPipeline(affected);
+      const homelabGroup = pipeline.steps
+        .filter(isGroup)
+        .find((g) => g.key === "pkg-homelab");
+      const stepKeys = (homelabGroup?.steps ?? [])
+        .filter(isStep)
+        .map((s) => s.key);
+
+      expect(stepKeys).toContain("helm-types-drift-check");
+    });
+
+    it("no-changes early return does NOT fire when helmTypesInputsChanged is true", () => {
+      // Defense-in-depth: even if packages is empty but helmTypesInputsChanged=true,
+      // the early return must be skipped. (change-detection ensures homelab is in
+      // packages, but pipeline-builder also guards independently.)
+      const affected = emptyAffected();
+      affected.helmTypesInputsChanged = true;
+      // packages.size === 0, buildAll=false, ciImageChanged=false — triggers early return
+      // without the helmTypesInputsChanged guard added in this PR
+
+      const pipeline = buildPipeline(affected);
+      // The pipeline must NOT contain the "no-changes" key
+      const noChangesStep = pipeline.steps
+        .filter(isStep)
+        .find((s) => s.key === "no-changes");
+      expect(noChangesStep).toBeUndefined();
+    });
   });
 
   describe("full build", () => {

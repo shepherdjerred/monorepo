@@ -890,12 +890,21 @@ export async function detectChanges(): Promise<AffectedPackages> {
           // versions.ts is a HELM_TYPES_INPUT_FILE — a Renovate chart-bump PR that
           // only touches versions.ts still needs the drift-check step so that the CI
           // gate fires on chart-version bumps (the main use-case this PR was built to
-          // cover). Emit a minimal scoped result with only the drift-check flag set;
-          // no package builds are needed.
+          // cover). Include "homelab" in the packages set so that the per-package loop
+          // in buildPipeline runs for homelab and emits the drift-check step via
+          // perPackageSteps("homelab", helmTypesInputsChanged=true). An empty set would
+          // hit the early-return guard in buildPipeline and skip the drift check.
           console.error(
-            "Renovate noop, but helmTypesInputsChanged=true — emitting drift-check step",
+            "Renovate noop, but helmTypesInputsChanged=true — emitting drift-check step for homelab",
           );
-          return buildScopedResult(new Set(), false, false, false, false, true);
+          return buildScopedResult(
+            new Set(["homelab"]),
+            false,
+            false,
+            false,
+            false,
+            true,
+          );
         }
         console.error("Renovate: no builds needed");
         return emptyResult();
