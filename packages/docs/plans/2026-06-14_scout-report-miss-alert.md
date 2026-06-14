@@ -204,3 +204,50 @@ fixing how an existing column is written).
   per-minute polling loop stays; we're just making it work correctly.
 - We are NOT adding a synthetic-fire endpoint for testing in prod. The alert
   test in step 5 above uses a one-off SQLite nudge.
+
+## Session Log — 2026-06-14
+
+### Done
+
+- Diagnosed the silent skip live on `scout-beta` (caught the 18:00:00 UTC
+  cron tick advancing all 7 COMMON_DENOMINATOR reports' next-fire from
+  today→next-Sunday with no `ReportRun` row).
+- Implemented Bug A fix in `system-reports.ts` (only recompute
+  `nextScheduledRunAt` on cron change).
+- Implemented Bug B fix in `scheduler.ts` (`finally{}` always writes
+  `lastScheduledRunAt`; new info logs for dispatched vs early-failed).
+- Added `scout_scheduled_report_last_success_timestamp_seconds` gauge in
+  `metrics/report-runs.ts`; set on SCHEDULED-trigger SUCCESS in
+  `runner.ts` only.
+- New `schedule-metric-seed.ts` seeds the gauge from `ReportRun` history
+  at startup; wired into `index.ts` before `startCronJobs`.
+- Added `ScoutScheduledReportMissed{Daily,Weekly}` PrometheusRule in
+  `homelab/monitoring/rules/scout.ts`, both `severity: critical`.
+- Tests: extended `system-reports.integration.test.ts` (preservation +
+  cron-change recompute); new `scheduler.integration.test.ts` (no-due,
+  Bug B regression, gauge isolation). 7/7 new tests + 963 backend +
+  136 cdk8s tests green.
+- PR #1228: <https://github.com/shepherdjerred/monorepo/pull/1228>
+
+### Remaining
+
+- Post-merge verification on `scout-beta` per the steps above; expect
+  the first page from the 7 COMMON_DENOMINATOR reports until
+  next Sunday 2026-06-21 18:00 UTC clears them.
+- Move this plan to `archive/completed/` once the fire on 2026-06-21
+  is verified.
+
+### Caveats
+
+- The first commit attempt failed silently because prettier rewrote
+  two files and lefthook's coloring made it hard to spot — fixed by
+  re-staging and recommitting. Memory entry
+  `reference_lefthook_prettier_green_coloring.md` already documents
+  this footgun.
+- The freshness gauge labels include `title`, so renaming a report
+  in `system-reports.ts` (e.g. changing one of the Common Denominator
+  titles) will produce two label series — the old one frozen at the
+  pre-rename timestamp, the new one ticking forward. The old series
+  will keep firing the staleness alert until prom-client's TTL drops
+  it, or until the deploy restarts the pod. Acceptable today (no
+  pending renames); flag if a rename is queued.
