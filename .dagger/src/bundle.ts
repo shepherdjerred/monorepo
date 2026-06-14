@@ -11,7 +11,39 @@
  * containers that share `bunBaseContainer` (or any other common prefix) collapse
  * to one install/source-fetch — three parallel containers, one materialisation.
  */
-import { ExecError } from "@dagger.io/dagger";
+/**
+ * Duck-type detection for Dagger's exec-error shape — the TypeScript SDK
+ * exports the class under different names across versions (and at one point
+ * not at all from `@dagger.io/dagger`), so we sniff for the diagnostic
+ * fields directly rather than `instanceof ExecError`. The fields we care
+ * about (`exitCode`, `stdout`, `stderr`, `cmd`) have been stable since the
+ * SDK started exposing exec failures.
+ */
+function execErrorFields(reason: unknown): {
+  exitCode?: number | string;
+  cmd?: string;
+  stdout?: string;
+  stderr?: string;
+} | null {
+  if (reason === null || typeof reason !== "object") return null;
+  const r = reason as Record<string, unknown>;
+  if (
+    typeof r["exitCode"] === "undefined" &&
+    typeof r["stdout"] === "undefined" &&
+    typeof r["stderr"] === "undefined"
+  ) {
+    return null;
+  }
+  return {
+    exitCode:
+      typeof r["exitCode"] === "number" || typeof r["exitCode"] === "string"
+        ? r["exitCode"]
+        : undefined,
+    cmd: typeof r["cmd"] === "string" ? r["cmd"] : undefined,
+    stdout: typeof r["stdout"] === "string" ? r["stdout"] : undefined,
+    stderr: typeof r["stderr"] === "string" ? r["stderr"] : undefined,
+  };
+}
 
 function formatSection(
   name: string,
@@ -21,12 +53,15 @@ function formatSection(
     return `--- :white_check_mark: ${name}\n${result.value}`;
   }
   const reason = result.reason;
-  if (reason instanceof ExecError) {
+  const fields = execErrorFields(reason);
+  if (fields !== null) {
+    const exitStr =
+      fields.exitCode !== undefined ? ` (exit ${String(fields.exitCode)})` : "";
     return [
-      `+++ :x: ${name} (exit ${reason.exitCode})`,
-      `command: ${reason.cmd}`,
-      reason.stdout,
-      reason.stderr,
+      `+++ :x: ${name}${exitStr}`,
+      fields.cmd !== undefined ? `command: ${fields.cmd}` : "",
+      fields.stdout ?? "",
+      fields.stderr ?? "",
     ]
       .filter((s) => s !== "")
       .join("\n");
