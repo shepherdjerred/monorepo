@@ -28,22 +28,29 @@ const LEFTHOOK_PATH = resolve(import.meta.dir, "../../../../lefthook.yml");
  * Repo-wide checks → the `key` of their generated CI step. Each value is
  * asserted to exist in a full pipeline, so renaming/removing a CI step without
  * updating this map fails the test.
+ *
+ * Many lefthook checks now collapse into one bundled CI step `quality-bundle`
+ * (one BK pod runs all 15 children in parallel via Dagger Promise.all). The
+ * source of truth for the bundle's children is
+ * `.dagger/src/quality.ts:qualityBundleHelper` — removing a child there
+ * silently drops it from CI, so this parity test treats the bundle as the
+ * single mapped step. The bundle either runs every child or fails atomically.
  */
 const JOB_TO_CI_STEP: Record<string, string> = {
-  gitleaks: "gitleaks-check",
-  "env-var-names": "env-var-names",
-  "merge-conflicts": "merge-conflict-check",
+  gitleaks: "quality-bundle",
+  "env-var-names": "quality-bundle",
+  "merge-conflicts": "quality-bundle",
   "large-files": "large-file-check",
-  "line-endings": "line-endings-check",
-  "check-suppressions": "suppression-check",
-  "check-todos": "check-todos",
-  "migration-guard": "migration-guard",
-  "lockfile-check": "lockfile-check",
-  shellcheck: "shellcheck",
-  "compliance-check": "compliance-check",
-  "quality-ratchet": "quality-ratchet",
-  "scout-test-template-check": "scout-test-template-check",
-  "react-version-sync": "react-version-sync",
+  "line-endings": "quality-bundle",
+  "check-suppressions": "quality-bundle",
+  "check-todos": "quality-bundle",
+  "migration-guard": "quality-bundle",
+  "lockfile-check": "quality-bundle",
+  shellcheck: "quality-bundle",
+  "compliance-check": "quality-bundle",
+  "quality-ratchet": "quality-bundle",
+  "scout-test-template-check": "quality-bundle",
+  "react-version-sync": "quality-bundle",
   "onepassword-items": "homelab-1password-items",
 };
 
@@ -73,8 +80,9 @@ const PER_PACKAGE_JOBS = new Set<string>([
  * they're acknowledged rather than flagged as drift.
  */
 const ASYNC_OR_SOFT_CI: Record<string, string> = {
-  prettier: "prettier",
-  markdownlint: "markdownlint",
+  // prettier + markdownlint moved into `quality-bundle` (still blocking).
+  prettier: "quality-bundle",
+  markdownlint: "quality-bundle",
   "dagger-hygiene": "dagger-hygiene",
   "tunnel-dns-coverage": "tunnel-dns-coverage",
   "talos-schematic-sync": "talos-schematic-sync",
@@ -189,10 +197,11 @@ describe("lefthook ↔ CI parity", () => {
 
   it("check-todos specifically is now a CI gate (regression guard)", () => {
     expect(leaves).toContain("check-todos");
-    expect(JOB_TO_CI_STEP["check-todos"]).toBe("check-todos");
+    // check-todos runs inside the bundled `quality-bundle` step.
+    expect(JOB_TO_CI_STEP["check-todos"]).toBe("quality-bundle");
     const pipeline = buildPipeline(fullBuild());
     const keys = new Set<string>();
     collectStepKeys(pipeline.steps, keys);
-    expect(keys.has("check-todos")).toBe(true);
+    expect(keys.has("quality-bundle")).toBe(true);
   });
 });

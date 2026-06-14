@@ -134,6 +134,7 @@ import {
   mergeConflictCheckHelper,
   largeFileCheckHelper,
   tasksForObsidianIosNativeDepsHelper,
+  qualityBundleHelper,
 } from "./quality";
 
 function requireRecord(
@@ -1579,6 +1580,17 @@ export class Monorepo {
   @func()
   async tasksForObsidianIosNativeDeps(source: Directory): Promise<string> {
     return tasksForObsidianIosNativeDepsHelper(source).stdout();
+  }
+
+  /**
+   * Quality bundle: 15 blocking source-only checks run in parallel from one
+   * BK pod via Promise.all on sibling containers. Replaces 15 separate BK
+   * steps. See {@link qualityBundleHelper} for the child list and the
+   * separately-emitted exceptions.
+   */
+  @func()
+  async qualityBundle(source: Directory): Promise<string> {
+    return qualityBundleHelper(source);
   }
 
   // ---------------------------------------------------------------------------

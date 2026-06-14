@@ -41,6 +41,29 @@ function annotatedDaggerScan(
   ].join("; ");
 }
 
+/**
+ * Bundled quality gate: one BK pod runs 15 source-only blocking checks in
+ * parallel via `qualityBundle` (Dagger `Promise.all` on sibling containers).
+ * Replaces a fan-out of 15 separate `daggerStep` calls. Bundle wall time is
+ * the slowest child; pod count drops from 15 to 1.
+ *
+ * Checks NOT included (stay as their own step): `knip-check`, `trivy-scan`,
+ * `semgrep-scan` (each needs per-context BK annotation lifecycle),
+ * `large-file-check`, `dagger-hygiene` (soft-fail, kept separate for
+ * granular soft-fail tracking), `greptile-review` (PR-only),
+ * `caddyfile-validate`, `tunnel-dns-coverage`, `talos-schematic-sync` (each
+ * gated by file change-detection), `bun-lock-drift-check` (runtime `--seeds`
+ * arg derived from change-detection).
+ */
+export function qualityBundleStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":shield: Quality Bundle (15 checks)",
+    key: "quality-bundle",
+    daggerCmd: `${DAGGER_CALL} quality-bundle --source ${REPO_GIT_REF}`,
+    timeoutMinutes: 15,
+  });
+}
+
 export function prettierStep(): BuildkiteStep {
   return daggerStep({
     label: ":art: Prettier",

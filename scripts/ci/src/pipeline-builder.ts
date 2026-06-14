@@ -16,29 +16,15 @@ import type {
 } from "./lib/types.ts";
 import { perPackageSteps } from "./steps/per-package.ts";
 import {
-  prettierStep,
-  markdownlintStep,
-  shellcheckStep,
-  qualityRatchetStep,
-  checkTodosStep,
-  complianceCheckStep,
+  qualityBundleStep,
   knipCheckStep,
-  gitleaksCheckStep,
-  suppressionCheckStep,
   trivyScanStep,
   semgrepScanStep,
   daggerHygieneStep,
   tunnelDnsCoverageStep,
   talosSchematicSyncStep,
-  reactVersionSyncStep,
   caddyfileValidateStep,
-  lockfileCheckStep,
   bunLockDriftCheckStep,
-  envVarNamesStep,
-  lineEndingsCheckStep,
-  scoutTestTemplateCheckStep,
-  migrationGuardStep,
-  mergeConflictStep,
   largeFileStep,
   greptileReviewStep,
 } from "./steps/quality.ts";
@@ -195,21 +181,17 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     !affected.buildAll && driftSeeds.length > 0
       ? [bunLockDriftCheckStep(driftSeeds)]
       : [];
+  // 15 source-only blocking checks (shellcheck, ratchet, todos, compliance,
+  // gitleaks, suppression, env-var-names, line-endings, scout-test-template,
+  // migration-guard, merge-conflict, react-version-sync, lockfile-check,
+  // prettier, markdownlint) collapse into one bundled BK pod via
+  // `qualityBundle`. The bundle's Dagger function fans them out in parallel
+  // with Promise.all on sibling containers — the engine de-dups the shared
+  // source fetch by SHA. driftGate stays separate (runtime --seeds arg);
+  // greptile stays separate (PR-only authenticated review wait).
   const blockingGates = [
-    lockfileCheckStep(),
+    qualityBundleStep(),
     ...driftGate,
-    shellcheckStep(),
-    qualityRatchetStep(),
-    checkTodosStep(),
-    complianceCheckStep(),
-    gitleaksCheckStep(),
-    suppressionCheckStep(),
-    envVarNamesStep(),
-    lineEndingsCheckStep(),
-    scoutTestTemplateCheckStep(),
-    migrationGuardStep(),
-    mergeConflictStep(),
-    reactVersionSyncStep(),
     ...(pullRequestBuild ? [greptileReviewStep()] : []),
   ];
   for (const gate of blockingGates) {
@@ -218,8 +200,6 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   }
 
   // --- Async quality checks (soft_fail, run in parallel with release track) ---
-  steps.push(prettierStep());
-  steps.push(markdownlintStep());
   steps.push(knipCheckStep());
   steps.push(daggerHygieneStep());
   if (affected.buildAll || affected.homelabChanged) {

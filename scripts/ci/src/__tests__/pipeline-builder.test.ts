@@ -315,9 +315,8 @@ describe("buildPipeline", () => {
         : [];
       // Should include the package build group
       expect(deps).toContain("pkg-webring");
-      // Should include blocking quality gates
-      expect(deps).toContain("lockfile-check");
-      expect(deps).toContain("shellcheck");
+      // Should include the bundled blocking quality gates step
+      expect(deps).toContain("quality-bundle");
     });
 
     it("includes async quality checks even without main steps", () => {
@@ -327,8 +326,9 @@ describe("buildPipeline", () => {
       const pipeline = buildPipeline(affected);
       const steps = pipeline.steps.filter(isStep);
       // All async checks should be present
+      // (prettier + markdownlint live inside the quality-bundle now)
       for (const key of [
-        "prettier",
+        "quality-bundle",
         "knip-check",
         "dagger-hygiene",
         "trivy-scan",
@@ -571,16 +571,10 @@ describe("buildPipeline", () => {
     it("includes quality gates", () => {
       const pipeline = buildPipeline(fullBuild());
       const steps = pipeline.steps.filter(isStep);
-      const qualityKeys = [
-        "prettier",
-        "shellcheck",
-        "quality-ratchet",
-        "compliance-check",
-        "knip-check",
-        "gitleaks-check",
-        "suppression-check",
-        "scout-test-template-check",
-      ];
+      // 15 source-only blocking checks are bundled into one `quality-bundle`
+      // step now — see `.dagger/src/quality.ts:qualityBundleHelper`. The
+      // soft-fail / annotated scans stay separate.
+      const qualityKeys = ["quality-bundle", "knip-check"];
       for (const key of qualityKeys) {
         expect(steps.some((s) => s.key === key)).toBe(true);
       }
@@ -625,28 +619,15 @@ describe("buildPipeline", () => {
         expect(Array.isArray(deps) ? deps : []).not.toContain(g.key);
       }
 
-      // depends_on includes blocking quality gate keys
-      const blockingGateKeys = [
-        "shellcheck",
-        "quality-ratchet",
-        "check-todos",
-        "compliance-check",
-        "gitleaks-check",
-        "suppression-check",
-        "env-var-names",
-        "line-endings-check",
-        "scout-test-template-check",
-        "migration-guard",
-        "merge-conflict-check",
-        "caddyfile-validate",
-      ];
+      // depends_on includes the bundled quality gate + the remaining
+      // separate blocking gates (change-detection conditional)
+      const blockingGateKeys = ["quality-bundle", "caddyfile-validate"];
       for (const key of blockingGateKeys) {
         expect(Array.isArray(deps) ? deps : []).toContain(key);
       }
 
       // depends_on does NOT include async (soft_fail) check keys
       const asyncKeys = [
-        "prettier",
         "knip-check",
         "dagger-hygiene",
         "trivy-scan",
@@ -1072,9 +1053,8 @@ describe("buildPipeline", () => {
       const deps = Array.isArray(ciComplete?.depends_on)
         ? ciComplete.depends_on
         : [];
-      // Should include blocking quality gates
-      expect(deps).toContain("lockfile-check");
-      expect(deps).toContain("shellcheck");
+      // Should include the bundled blocking quality gates step
+      expect(deps).toContain("quality-bundle");
       // Should include per-package build keys
       expect(deps.some((d: string) => d.startsWith("pkg-"))).toBe(true);
     });

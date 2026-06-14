@@ -18,7 +18,7 @@ import {
   DAGGER_CALL,
 } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
-import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
+import type { BuildkiteStep } from "../lib/types.ts";
 import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
