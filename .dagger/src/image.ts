@@ -44,8 +44,7 @@ export const MARIO_KART_INNER_ROOT =
 // the app from the inner root. NOTE: Prisma 7's `db push` no longer accepts
 // `--skip-generate` (generate is decoupled) — passing it crashes the container on
 // boot. Shared with the smoke test so the two cannot drift.
-export const MARIO_KART_ENTRYPOINT_COMMAND =
-  `cd packages/backend && bunx prisma db push && cd ${MARIO_KART_INNER_ROOT} && exec bun packages/backend/src/index.ts`;
+export const MARIO_KART_ENTRYPOINT_COMMAND = `cd packages/backend && bunx prisma db push && cd ${MARIO_KART_INNER_ROOT} && exec bun packages/backend/src/index.ts`;
 
 function withGitHubCli(container: Container): Container {
   return container
