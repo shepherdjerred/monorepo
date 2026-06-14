@@ -46,6 +46,6 @@ export async function GET(context: APIContext) {
         link: `/blog/${post.id}/`,
         content: sanitizeHtml(parser.render(post.body ?? "")),
       })),
-    stylesheet: "/rss/styles.xsl",
+    stylesheet: "/rss-styles.xsl",
   });
 }
