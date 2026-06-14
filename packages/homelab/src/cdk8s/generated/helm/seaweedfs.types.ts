@@ -48,6 +48,8 @@ export type SeaweedfsHelmValuesGlobalSeaweedfs = {
   enableSecurity?: boolean;
   masterServer?: unknown;
   /**
+   * enableSecurity (mTLS); required for the Admin UI Users tab.
+   *
    * @default {"jwtSigning":{"volumeWrite":true,"volumeRead":false,"filerWrite":false,"filerRead":false}}
    */
   securityConfig?: SeaweedfsHelmValuesGlobalSeaweedfsSecurityConfig;

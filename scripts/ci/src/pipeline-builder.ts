@@ -33,6 +33,7 @@ import {
   reactVersionSyncStep,
   caddyfileValidateStep,
   lockfileCheckStep,
+  bunLockDriftCheckStep,
   envVarNamesStep,
   lineEndingsCheckStep,
   scoutTestTemplateCheckStep,
@@ -173,8 +174,30 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   }
 
   // --- Quality gates (blocking — must pass before releases) ---
+  // The per-package `bun.lock` drift gate runs only when there's a scoped
+  // affected set with at least one directly-changed package: on `buildAll`,
+  // every per-package Dagger job already runs `bun install --frozen-lockfile`
+  // so the gate adds no signal; on the no-changes path we short-circuited
+  // above. For scoped Renovate-style PRs the gate is the fastest signal we
+  // get on transitive `file:`-dep drift.
+  //
+  // We pass `affected.directlyChanged` (the diff-seeds), NOT `packages` (the
+  // closure). `change-detection.transitiveClosure` only reads top-level
+  // `packages/<X>/package.json`, so a nested-workspace edge — like dpp's
+  // `file:../../../llm-observability` in
+  // `packages/discord-plays-pokemon/packages/backend/package.json` — is
+  // invisible to it. The drift script re-expands the closure using a
+  // nested-aware graph (`--seeds` mode), so dpp gets pulled in when
+  // `llm-observability` is bumped, which is exactly the PR #1213 scenario
+  // this gate was built to catch.
+  const driftSeeds = [...affected.directlyChanged].sort();
+  const driftGate: BuildkiteStep[] =
+    !affected.buildAll && driftSeeds.length > 0
+      ? [bunLockDriftCheckStep(driftSeeds)]
+      : [];
   const blockingGates = [
     lockfileCheckStep(),
+    ...driftGate,
     shellcheckStep(),
     qualityRatchetStep(),
     checkTodosStep(),

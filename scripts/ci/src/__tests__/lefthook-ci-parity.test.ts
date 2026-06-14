@@ -111,6 +111,7 @@ function leafJobNames(yaml: string): string[] {
 function fullBuild(): AffectedPackages {
   return {
     packages: new Set(ALL_PACKAGES),
+    directlyChanged: new Set(),
     buildAll: true,
     homelabChanged: true,
     tofuChanged: true,

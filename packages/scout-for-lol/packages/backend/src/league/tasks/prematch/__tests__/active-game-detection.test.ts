@@ -181,6 +181,52 @@ describe("checkActiveGames — subsequent-match polling", () => {
     expect(notificationCalls[0]?.gameId).toBe(G2);
   });
 
+  test("defers a custom pre-start lobby (gameType=CUSTOM, <10 participants) — no upsert, no notification", async () => {
+    mockAccounts = [mkAccount(P1)];
+    // Synthesise the exact shape we pulled from S3 for Bugsink event
+    // 46053b15 — a custom 5v5 SR lobby with only the creator present.
+    const incomplete = RawCurrentGameInfoSchema.parse({
+      gameId: 5_580_574_972,
+      gameType: "CUSTOM",
+      gameStartTime: Date.now(),
+      mapId: 11,
+      gameLength: -104,
+      platformId: "NA1",
+      gameMode: "CLASSIC",
+      bannedChampions: [],
+      gameQueueConfigId: 3100,
+      observers: { encryptionKey: "" },
+      participants: [
+        {
+          puuid: P1,
+          teamId: 100,
+          spell1Id: 4,
+          spell2Id: 12,
+          championId: 63,
+          lastSelectedSkinIndex: 0,
+          profileIconId: 505,
+          riotId: "Phaerix#NA1",
+          bot: false,
+          gameCustomizationObjects: [],
+          perks: { perkIds: [], perkStyle: 0, perkSubStyle: 0 },
+        },
+      ],
+    });
+    mockSpectatorResponses.set(P1, {
+      game: incomplete,
+      upstreamError: false,
+    });
+
+    // Pass retryDelayMs=0 to skip the real 2×2s sleep in the retry loop.
+    await checkActiveGames(0);
+
+    // Pre-start custom lobby must NOT be committed: the next 30s cron
+    // tick gets a clean shot once the other players load in.
+    expect(upsertCalls).toHaveLength(0);
+    expect(notificationCalls).toHaveLength(0);
+    expect(reportStoreCalls).toHaveLength(0);
+  });
+
   test("dedupes when Spectator returns the SAME gameId already in ActiveGame", async () => {
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
     mockActiveGames = [

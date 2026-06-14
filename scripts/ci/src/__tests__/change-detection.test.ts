@@ -328,12 +328,13 @@ describe("hasCooklangSourceChange", () => {
     ).toBe(true);
   });
 
-  it("returns true for cooklang-rich-preview source", () => {
+  it("returns false for cooklang-rich-preview source (it is the site, not the plugin)", () => {
     expect(
       _hasCooklangSourceChange([
         "packages/cooklang-rich-preview/src/pages/index.astro",
+        "packages/cooklang-rich-preview/bun.lock",
       ]),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("returns false when only the auto-bump manifest changed", () => {
@@ -353,6 +354,12 @@ describe("hasCooklangSourceChange", () => {
     ).toBe(false);
   });
 
+  it("returns false when only the cog-generated _summary.md changed", () => {
+    expect(
+      _hasCooklangSourceChange(["packages/cooklang-for-obsidian/_summary.md"]),
+    ).toBe(false);
+  });
+
   it("returns false for unrelated infra/full-build files", () => {
     expect(
       _hasCooklangSourceChange([
@@ -367,6 +374,15 @@ describe("hasCooklangSourceChange", () => {
     expect(
       _hasCooklangSourceChange([
         "packages/cooklang-for-obsidian/manifest.json",
+        "packages/cooklang-for-obsidian/src/main.ts",
+      ]),
+    ).toBe(true);
+  });
+
+  it("returns true when a real source change accompanies a _summary.md refresh", () => {
+    expect(
+      _hasCooklangSourceChange([
+        "packages/cooklang-for-obsidian/_summary.md",
         "packages/cooklang-for-obsidian/src/main.ts",
       ]),
     ).toBe(true);

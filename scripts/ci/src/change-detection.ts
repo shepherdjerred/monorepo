@@ -35,11 +35,29 @@ const COOKLANG_VERSION_COMMIT_BACK_FILES = new Set([
   "packages/cooklang-for-obsidian/versions.json",
 ]);
 
-/** Package directories whose source changes warrant a cooklang plugin release. */
-const COOKLANG_PACKAGE_PREFIXES = [
-  "packages/cooklang-for-obsidian/",
-  "packages/cooklang-rich-preview/",
-];
+/**
+ * Package directories whose source changes warrant a cooklang plugin release.
+ *
+ * Only the Obsidian plugin itself — `cooklang-rich-preview/` is the rich-preview
+ * Astro site and is never published as part of the Obsidian plugin release, so
+ * edits there must not cut a plugin version.
+ */
+const COOKLANG_PACKAGE_PREFIXES = ["packages/cooklang-for-obsidian/"];
+
+/**
+ * Files under {@link COOKLANG_PACKAGE_PREFIXES} that do NOT count as plugin
+ * source for the release gate. Includes the auto-bump artifacts
+ * (`manifest.json` / `versions.json`) plus cog-generated docs (`_summary.md`),
+ * which is rewritten weekly by the `readme-refresh-weekly` Temporal schedule
+ * and would otherwise trip the gate every Monday.
+ *
+ * Kept separate from {@link COOKLANG_VERSION_COMMIT_BACK_FILES} so that the
+ * commit-back fast-track keeps its strict "only manifest/versions" meaning.
+ */
+const COOKLANG_NON_SOURCE_FILES = new Set([
+  ...COOKLANG_VERSION_COMMIT_BACK_FILES,
+  "packages/cooklang-for-obsidian/_summary.md",
+]);
 
 // ---------------------------------------------------------------------------
 // Version commit-back fast-track
@@ -73,8 +91,8 @@ function isCooklangVersionCommitBackOnly(changedFiles: string[]): boolean {
 
 /**
  * True when a real cooklang *source* file changed — a file under a cooklang
- * package that is NOT one of the auto-generated version-bump artifacts
- * (`manifest.json` / `versions.json`).
+ * package that is NOT one of the auto-generated / cog-generated non-source
+ * artifacts (see {@link COOKLANG_NON_SOURCE_FILES}).
  *
  * The release gate keys off this rather than "any cooklang file changed" so
  * that bot-authored manifest bumps — and infra/full builds that don't touch
@@ -86,7 +104,7 @@ function hasCooklangSourceChange(changedFiles: string[]): boolean {
   return changedFiles.some(
     (file) =>
       COOKLANG_PACKAGE_PREFIXES.some((prefix) => file.startsWith(prefix)) &&
-      !COOKLANG_VERSION_COMMIT_BACK_FILES.has(file),
+      !COOKLANG_NON_SOURCE_FILES.has(file),
   );
 }
 
@@ -772,6 +790,9 @@ function transitiveClosure(
 function fullBuildResult(cooklangChanged: boolean): AffectedPackages {
   return {
     packages: new Set(ALL_PACKAGES),
+    // On a full build the drift gate is skipped (every per-package job runs
+    // `bun install --frozen-lockfile`), so seeds don't need to be tracked.
+    directlyChanged: new Set(),
     buildAll: true,
     homelabChanged: true,
     tofuChanged: true,
@@ -793,6 +814,7 @@ function fullBuildResult(cooklangChanged: boolean): AffectedPackages {
 function emptyResult(): AffectedPackages {
   return {
     packages: new Set(),
+    directlyChanged: new Set(),
     buildAll: false,
     homelabChanged: false,
     tofuChanged: false,
@@ -812,6 +834,7 @@ function emptyResult(): AffectedPackages {
 
 function buildScopedResult(
   allAffected: Set<string>,
+  directlyChanged: Set<string>,
   cooklangChanged: boolean,
   ciImageChanged: boolean,
   ciImageVersionChanged = false,
@@ -835,6 +858,7 @@ function buildScopedResult(
 
   return {
     packages: allAffected,
+    directlyChanged,
     buildAll: false,
     homelabChanged: allAffected.has("homelab"),
     tofuChanged,
@@ -899,6 +923,10 @@ export async function detectChanges(): Promise<AffectedPackages> {
           );
           return buildScopedResult(
             new Set(["homelab"]),
+            // No top-level package files changed (only versions.ts); the
+            // drift gate has nothing to expand from. The closure {homelab} is
+            // still emitted to drive the helm-types drift step.
+            new Set(),
             false,
             false,
             false,
@@ -936,6 +964,7 @@ export async function detectChanges(): Promise<AffectedPackages> {
 
       return buildScopedResult(
         allAffected,
+        directlyChanged,
         cooklangSourceChanged,
         false,
         false,
@@ -962,6 +991,9 @@ export async function detectChanges(): Promise<AffectedPackages> {
       );
       const result = buildScopedResult(
         new Set(["homelab"]),
+        // Version commit-back touches only versions.ts; no top-level
+        // package.json/bun.lock changes for the drift gate to seed from.
+        new Set(),
         cooklangSourceChanged,
         false,
         false,
@@ -1024,6 +1056,7 @@ export async function detectChanges(): Promise<AffectedPackages> {
 
   return buildScopedResult(
     allAffected,
+    directlyChanged,
     cooklangSourceChanged,
     ciImageChanged,
     ciImageVersionChanged,
