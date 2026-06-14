@@ -34,6 +34,26 @@ import versions from "./versions";
 export const PRISMA_BUN_SERVICE_START_COMMAND =
   "bunx --trust prisma generate && bunx prisma db push && bun run src/index.ts";
 
+// `bun install --frozen-lockfile` wrapped in a 3-attempt retry. Two recurring
+// flakes motivate this:
+//   - Intermittent EEXIST on `file:` symlink creation when many nested workspace
+//     members reference the same local dep (build-discord-plays-pokemon, #4336).
+//   - Transient npm-CDN tarball-extract failures (build-temporal-worker, #4336
+//     hit `Fail extracting tarball for "firebase"`).
+// Retry is safe: `bun install --frozen-lockfile` is deterministic and the
+// surviving partial node_modules is what bun would create on success anyway.
+// Join with newlines, not "; " — busybox sh rejects `do ;` / `then ;` / `done ;`.
+const BUN_INSTALL_WITH_RETRY = [
+  "i=1",
+  "while [ $i -le 3 ]; do",
+  "  if bun install --frozen-lockfile; then exit 0; fi",
+  '  echo "bun install failed (attempt $i/3), retrying in $((i*5))s..." >&2',
+  "  sleep $((i*5))",
+  "  i=$((i+1))",
+  "done",
+  "exit 1",
+].join("\n");
+
 // Inner-monorepo root the discord-plays-mario-kart app runs from (config.toml,
 // n64wasm assets, saves/ resolve relative to this CWD).
 export const MARIO_KART_INNER_ROOT =
@@ -1011,7 +1031,7 @@ export function buildTemporalWorkerImageHelper(
 
   container = container
     .withWorkdir("/workspace/packages/temporal")
-    .withExec(["bun", "install", "--frozen-lockfile"]);
+    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
 
   // Compile the in-tree toolkit CLI into a static binary if its source is
   // mounted. The temporal-worker WORKSPACE_DEPS list opts into this by
@@ -1169,8 +1189,11 @@ export function buildDiscordPlaysPokemonImageHelper(
       // No separate backend install: bun workspaces installs all member deps at
       // the root level. A second `bun install` in packages/backend causes bun to
       // try to re-link file: deps already linked by the root install → EEXIST.
+      // Wrapped in retry because bun's worker pool also races on `file:` symlinks
+      // *within* a single install when the same dep (eslint-config) is referenced
+      // by 4+ nested package.jsons (#4336).
       .withWorkdir(innerRoot)
-      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
       .withWorkdir(`${innerRoot}/packages/backend`)
       .withExec([
         "install",

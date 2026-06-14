@@ -174,7 +174,8 @@ const TOFU_INIT_WITH_RETRY = [
   "  i=$((i+1))",
   "done",
   "exit 1",
-].join(" ; ");
+  // Join with newlines, not "; " — busybox sh rejects `do ;` / `then ;` / `done ;`.
+].join("\n");
 
 /** Run tofu init + apply on a stack. */
 export function tofuApplyHelper(
