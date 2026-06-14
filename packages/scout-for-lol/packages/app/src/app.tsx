@@ -6,6 +6,12 @@ import { GuildAudit } from "#src/routes/guild-audit.tsx";
 import { GuildWorkspace } from "#src/routes/guild-workspace.tsx";
 import { PlayerList } from "#src/routes/player-list.tsx";
 import { PlayerDetail } from "#src/routes/player-detail.tsx";
+import { CompetitionList } from "#src/routes/competition-list.tsx";
+import { CompetitionDetail } from "#src/routes/competition-detail.tsx";
+import { CompetitionForm } from "#src/routes/competition-form.tsx";
+import { ReportList } from "#src/routes/report-list.tsx";
+import { ReportDetail } from "#src/routes/report-detail.tsx";
+import { ReportForm } from "#src/routes/report-form.tsx";
 import { AdminTools } from "#src/routes/admin-tools.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
 import { ThemeToggle } from "#src/components/ui/theme-toggle.tsx";
@@ -25,6 +31,20 @@ export function App() {
             <Route path="subscriptions" element={<GuildSubscriptions />} />
             <Route path="players" element={<PlayerList />} />
             <Route path="players/:alias" element={<PlayerDetail />} />
+            <Route path="competitions" element={<CompetitionList />} />
+            <Route path="competitions/new" element={<CompetitionForm />} />
+            <Route
+              path="competitions/:competitionId"
+              element={<CompetitionDetail />}
+            />
+            <Route
+              path="competitions/:competitionId/edit"
+              element={<CompetitionForm />}
+            />
+            <Route path="reports" element={<ReportList />} />
+            <Route path="reports/new" element={<ReportForm />} />
+            <Route path="reports/:reportId" element={<ReportDetail />} />
+            <Route path="reports/:reportId/edit" element={<ReportForm />} />
             <Route path="admin" element={<AdminTools />} />
             <Route path="audit" element={<GuildAudit />} />
           </Route>
