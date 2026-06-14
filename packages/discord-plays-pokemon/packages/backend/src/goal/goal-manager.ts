@@ -6,7 +6,13 @@ import {
   hasCodexCredential,
 } from "./codex-auth.ts";
 import { buildCodexArgs } from "./codex-command.ts";
+import {
+  createCodexJsonlParser,
+  pumpCodexStdout,
+  type CodexJsonlParser,
+} from "./codex-jsonl.ts";
 import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
+import { computeCost, formatCostLine } from "./pricing.ts";
 
 export type GoalStatus =
   | "running"
@@ -37,6 +43,9 @@ type ActiveGoal = {
   timeout: ReturnType<typeof setTimeout>;
   lastProgressSentAt: number;
   outputPath: string;
+  // Streaming parser for Codex's `--json` stdout. Accumulates token usage so
+  // observeProcess() can build a cost line for the final Discord message.
+  jsonl: CodexJsonlParser;
 };
 
 export type GoalProcess = {
@@ -238,7 +247,8 @@ export class GoalManager {
       cwd: runtimeDirectory,
       env: this.buildEnvironment(runtimeDirectory, helperDirectory),
     });
-    void streamToLog(process.stdout, "stdout");
+    const jsonl = createCodexJsonlParser();
+    void pumpCodexStdout(process.stdout, jsonl);
     void streamToLog(process.stderr, "stderr");
 
     const state: GoalState = {
@@ -261,6 +271,7 @@ export class GoalManager {
       timeout,
       lastProgressSentAt: 0,
       outputPath,
+      jsonl,
     };
     await this.persistState(state);
     void this.observeProcess(id);
@@ -412,12 +423,16 @@ export class GoalManager {
     await this.persistState(active.state);
     this.active = undefined;
 
+    const usage = active.jsonl.total();
+    const cost = computeCost(this.config.model, usage);
+    const costLine = formatCostLine(this.config.model, cost, usage);
+
     await this.sendMessage({
       channelId: active.state.channelId,
       content: truncateForDiscord(
         `<@${active.state.requestedBy}> goal ${
           exitCode === 0 ? "finished" : "stopped with an error"
-        }: ${sanitizeDiscordText(report)}`,
+        }: ${sanitizeDiscordText(report)}\n${costLine}`,
       ),
       allowedUserIds: [active.state.requestedBy],
     });

@@ -1,0 +1,203 @@
+// Streaming parser for Codex CLI's `--json` stdout (one JSON event per line).
+// Two consumers subscribe via the event-bus: goal-manager (cost + final message)
+// and codex-trace (OTel span synthesis). The parser is intentionally schema-
+// permissive: Codex's event names change between CLI versions, so we extract
+// the few fields we care about with Zod and pass everything else through as
+// the raw record for downstream code that wants more.
+
+import { z } from "zod";
+import { logger } from "#src/logger.ts";
+import { addUsage, EMPTY_USAGE, type TurnUsage } from "./pricing.ts";
+
+// Discriminator + fields we depend on. Unknown events still land on the bus
+// as `raw` so codex-trace can fan them out into span events.
+const TurnUsageSchema = z
+  .object({
+    input_tokens: z.number().int().nonnegative(),
+    cached_input_tokens: z.number().int().nonnegative(),
+    output_tokens: z.number().int().nonnegative(),
+    reasoning_output_tokens: z.number().int().nonnegative(),
+  })
+  .partial();
+
+const TurnCompletedSchema = z.object({
+  type: z.literal("turn.completed"),
+  usage: TurnUsageSchema.optional(),
+});
+
+const ItemCompletedSchema = z.object({
+  type: z.literal("item.completed"),
+  item: z.looseObject({
+    id: z.string().optional(),
+    type: z.string().optional(),
+    text: z.string().optional(),
+  }),
+});
+
+const TypedEventSchema = z.looseObject({
+  type: z.string(),
+});
+
+export type CodexEvent =
+  | { kind: "turn.started"; raw: unknown }
+  | { kind: "turn.completed"; usage: TurnUsage; raw: unknown }
+  | { kind: "agent_message"; text: string; raw: unknown }
+  | { kind: "other"; type: string; raw: unknown }
+  | { kind: "parse_error"; line: string; error: unknown };
+
+export type CodexEventListener = (event: CodexEvent) => void;
+
+type ParserState = {
+  total: TurnUsage;
+  listeners: CodexEventListener[];
+};
+
+export type CodexJsonlParser = {
+  push: (chunk: string) => void;
+  finish: () => void;
+  total: () => TurnUsage;
+  subscribe: (listener: CodexEventListener) => () => void;
+};
+
+export function createCodexJsonlParser(): CodexJsonlParser {
+  const state: ParserState = {
+    total: { ...EMPTY_USAGE },
+    listeners: [],
+  };
+  let buffer = "";
+
+  const emit = (event: CodexEvent): void => {
+    for (const listener of state.listeners) {
+      try {
+        listener(event);
+      } catch (error) {
+        logger.warn(`codex jsonl listener threw: ${stringifyError(error)}`);
+      }
+    }
+  };
+
+  const consumeLine = (line: string): void => {
+    const trimmed = line.trim();
+    if (trimmed.length === 0) return;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch (error) {
+      emit({ kind: "parse_error", line: trimmed, error });
+      logger.info(`goal codex stdout (non-json): ${trimmed}`);
+      return;
+    }
+
+    const typed = TypedEventSchema.safeParse(parsed);
+    if (!typed.success) {
+      emit({ kind: "other", type: "<unknown>", raw: parsed });
+      return;
+    }
+
+    switch (typed.data.type) {
+      case "turn.started":
+        emit({ kind: "turn.started", raw: parsed });
+        return;
+      case "turn.completed": {
+        const completed = TurnCompletedSchema.safeParse(parsed);
+        const usage = normalizeUsage(
+          completed.success ? completed.data.usage : undefined,
+        );
+        state.total = addUsage(state.total, usage);
+        emit({ kind: "turn.completed", usage, raw: parsed });
+        return;
+      }
+      case "item.completed": {
+        const item = ItemCompletedSchema.safeParse(parsed);
+        if (
+          item.success &&
+          item.data.item.type === "agent_message" &&
+          typeof item.data.item.text === "string"
+        ) {
+          const text = item.data.item.text;
+          logger.info(`goal codex agent_message: ${truncate(text, 1000)}`);
+          emit({ kind: "agent_message", text, raw: parsed });
+          return;
+        }
+        emit({ kind: "other", type: typed.data.type, raw: parsed });
+        return;
+      }
+      default:
+        emit({ kind: "other", type: typed.data.type, raw: parsed });
+    }
+  };
+
+  return {
+    push(chunk: string): void {
+      buffer += chunk;
+      let newlineIndex = buffer.indexOf("\n");
+      while (newlineIndex !== -1) {
+        const line = buffer.slice(0, newlineIndex);
+        buffer = buffer.slice(newlineIndex + 1);
+        consumeLine(line);
+        newlineIndex = buffer.indexOf("\n");
+      }
+    },
+    finish(): void {
+      if (buffer.length > 0) {
+        consumeLine(buffer);
+        buffer = "";
+      }
+    },
+    total(): TurnUsage {
+      return { ...state.total };
+    },
+    subscribe(listener: CodexEventListener): () => void {
+      state.listeners.push(listener);
+      return () => {
+        const index = state.listeners.indexOf(listener);
+        if (index !== -1) state.listeners.splice(index, 1);
+      };
+    },
+  };
+}
+
+function normalizeUsage(
+  raw: z.infer<typeof TurnUsageSchema> | undefined,
+): TurnUsage {
+  return {
+    inputTokens: raw?.input_tokens ?? 0,
+    cachedInputTokens: raw?.cached_input_tokens ?? 0,
+    outputTokens: raw?.output_tokens ?? 0,
+    reasoningOutputTokens: raw?.reasoning_output_tokens ?? 0,
+  };
+}
+
+export async function pumpCodexStdout(
+  stream: ReadableStream<Uint8Array> | null,
+  parser: CodexJsonlParser,
+): Promise<void> {
+  if (stream === null) return;
+  const decoder = new TextDecoder("utf-8");
+  const reader = stream.getReader();
+  try {
+    for (;;) {
+      const result = await reader.read();
+      if (result.done) break;
+      parser.push(decoder.decode(result.value, { stream: true }));
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  parser.push(decoder.decode());
+  parser.finish();
+}
+
+function truncate(value: string, limit: number): string {
+  if (value.length <= limit) return value;
+  return `${value.slice(0, limit)}… (${String(value.length - limit)} more chars)`;
+}
+
+function stringifyError(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
