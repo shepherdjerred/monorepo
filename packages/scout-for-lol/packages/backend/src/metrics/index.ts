@@ -208,7 +208,8 @@ export const matchHistoryPollingSkipsTotal = new Counter({
 export const prematchDetectionsTotal = new Counter({
   name: "prematch_detections_total",
   help: "Total pre-match game detections",
-  labelNames: ["status"] as const, // "detected", "already_tracked"
+  // Status values: "detected", "already_tracked", "deferred_custom_prestart"
+  labelNames: ["status"] as const,
   registers: [registry],
 });
 
