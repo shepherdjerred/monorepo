@@ -77,7 +77,7 @@ import {
 
 import { goBuildHelper, goTestHelper, goLintHelper } from "./golang";
 
-import { homelabSynthHelper } from "./homelab";
+import { homelabSynthHelper, homelabOnePasswordLintHelper } from "./homelab";
 
 import { swiftLintHelper } from "./swift";
 
@@ -780,6 +780,22 @@ export class Monorepo {
     tsconfig: File | null = null,
   ): Directory {
     return homelabSynthHelper(pkgDir, depNames, depDirs, tsconfig);
+  }
+
+  /** Lint that every cdk8s OnePasswordItem reference + consumed field exists in the committed vault snapshot */
+  @func()
+  async homelabOnePasswordLint(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return homelabOnePasswordLintHelper(
+      pkgDir,
+      depNames,
+      depDirs,
+      tsconfig,
+    ).stdout();
   }
 
   // ---------------------------------------------------------------------------
