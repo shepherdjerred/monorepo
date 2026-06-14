@@ -22,6 +22,11 @@ export function isControlPressed(
 }
 
 export function N64ControllerShell() {
+  // Top-down silhouette of an N64 controller. The whole outline is a single
+  // continuous path: the body up top, then three prongs descending — wider
+  // side handles fanning out left/right and a narrower center prong.
+  // Skeuomorphic touches (radial gradient, drop shadow, recessed wells) sell
+  // the molded-plastic feel without obscuring the live buttons on top.
   return (
     <svg
       aria-hidden="true"
@@ -30,80 +35,118 @@ export function N64ControllerShell() {
       preserveAspectRatio="xMidYMid meet"
     >
       <defs>
-        <radialGradient id="n64Plastic" cx="50%" cy="28%" r="72%">
-          <stop offset="0%" stopColor="#eaeaec" />
-          <stop offset="45%" stopColor="#cfcfd2" />
-          <stop offset="100%" stopColor="#9d9da2" />
+        <radialGradient id="n64Plastic" cx="50%" cy="22%" r="80%">
+          <stop offset="0%" stopColor="#eeeff1" />
+          <stop offset="55%" stopColor="#cccdd1" />
+          <stop offset="100%" stopColor="#9a9aa0" />
         </radialGradient>
-        <linearGradient id="n64Edge" x1="0%" x2="0%" y1="0%" y2="100%">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.42" />
-          <stop offset="55%" stopColor="#b0b0b6" stopOpacity="0.15" />
-          <stop offset="100%" stopColor="#202025" stopOpacity="0.35" />
-        </linearGradient>
-        <linearGradient id="n64Grip" x1="0%" x2="100%" y1="0%" y2="100%">
-          <stop offset="0%" stopColor="#dfdfe2" />
-          <stop offset="62%" stopColor="#bababf" />
-          <stop offset="100%" stopColor="#8a8a90" />
-        </linearGradient>
+        <radialGradient id="n64Well" cx="50%" cy="40%" r="65%">
+          <stop offset="0%" stopColor="#2e2e32" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#0a0a0c" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="n64StickWell" cx="50%" cy="38%" r="60%">
+          <stop offset="0%" stopColor="#141417" />
+          <stop offset="100%" stopColor="#33333a" />
+        </radialGradient>
         <filter id="n64Drop" colorInterpolationFilters="sRGB">
-          <feDropShadow dx="0" dy="14" stdDeviation="16" floodOpacity="0.42" />
+          <feDropShadow dx="0" dy="12" stdDeviation="14" floodOpacity="0.42" />
         </filter>
       </defs>
 
-      <g transform="translate(450 0) scale(1.42 1) translate(-450 0)">
-        <path
-          d="M207 198 C196 120 253 85 352 109 C389 118 410 77 450 77 C490 77 511 118 548 109 C647 85 704 120 693 198 C682 282 635 334 579 323 C552 318 529 302 514 276 C497 289 476 296 450 296 C424 296 403 289 386 276 C371 302 348 318 321 323 C265 334 218 282 207 198 Z"
-          fill="url(#n64Plastic)"
-          filter="url(#n64Drop)"
-        />
-        <path
-          d="M207 198 C196 120 253 85 352 109 C389 118 410 77 450 77 C490 77 511 118 548 109 C647 85 704 120 693 198 C682 282 635 334 579 323 C552 318 529 302 514 276 C497 289 476 296 450 296 C424 296 403 289 386 276 C371 302 348 318 321 323 C265 334 218 282 207 198 Z"
-          fill="url(#n64Edge)"
-          opacity="0.8"
-        />
-        <path
-          d="M263 273 C214 303 189 432 242 477 C290 517 346 419 356 281 C324 299 291 294 263 273 Z"
-          fill="url(#n64Grip)"
-          filter="url(#n64Drop)"
-        />
-        <path
-          d="M637 273 C686 303 711 432 658 477 C610 517 554 419 544 281 C576 299 609 294 637 273 Z"
-          fill="url(#n64Grip)"
-          filter="url(#n64Drop)"
-        />
-        <path
-          d="M392 285 C418 305 482 305 508 285 C507 352 495 440 478 505 C459 520 441 520 422 505 C405 440 393 352 392 285 Z"
-          fill="url(#n64Grip)"
-          filter="url(#n64Drop)"
-        />
-        <path
-          d="M371 103 L529 103 L548 138 L352 138 Z"
-          fill="#bfc0c6"
-          opacity="0.38"
-        />
-        <rect
-          x="409"
-          y="113"
-          width="82"
-          height="19"
-          rx="9.5"
-          fill="#909098"
-          opacity="0.32"
-        />
-        <text
-          x="450"
-          y="127"
-          textAnchor="middle"
-          className="fill-zinc-600 text-[10px] font-black"
-        >
-          Nintendo
-        </text>
-      </g>
+      {/* Whole-controller silhouette: body + 3 prongs, single path so they
+          merge seamlessly. Clockwise from top-left. */}
       <path
-        d="M449 36 C449 20 451 10 456 0"
-        stroke="#101012"
-        strokeWidth="16"
+        d="
+          M 195 78
+          C 175 78 160 96 160 116
+          L 160 200
+          C 130 210 102 245 92 295
+          C 80 365 100 440 150 460
+          C 195 478 240 458 270 410
+          C 295 370 320 350 360 348
+          L 360 380
+          C 362 432 380 478 410 502
+          C 425 514 440 518 450 518
+          C 460 518 475 514 490 502
+          C 520 478 538 432 540 380
+          L 540 348
+          C 580 350 605 370 630 410
+          C 660 458 705 478 750 460
+          C 800 440 820 365 808 295
+          C 798 245 770 210 740 200
+          L 740 116
+          C 740 96 725 78 705 78
+          Z
+        "
+        fill="url(#n64Plastic)"
+        filter="url(#n64Drop)"
+      />
+
+      {/* L / R shoulder humps — small protrusions off the back top edge. */}
+      <path
+        d="
+          M 175 78
+          C 175 60 195 50 220 50
+          L 305 50
+          C 320 50 325 62 325 78
+          Z
+        "
+        fill="url(#n64Plastic)"
+      />
+      <path
+        d="
+          M 725 78
+          C 725 60 705 50 680 50
+          L 595 50
+          C 580 50 575 62 575 78
+          Z
+        "
+        fill="url(#n64Plastic)"
+      />
+
+      {/* Cord tail off the top center. */}
+      <path
+        d="M 450 70 C 450 50 452 36 456 18"
+        stroke="#1a1a1d"
+        strokeWidth="14"
         strokeLinecap="round"
+        fill="none"
+      />
+
+      {/* Nintendo wordmark — embossed on the back of the body. */}
+      <rect
+        x="402"
+        y="100"
+        width="96"
+        height="22"
+        rx="11"
+        fill="#a8a9ad"
+        opacity="0.4"
+      />
+      <text
+        x="450"
+        y="115"
+        textAnchor="middle"
+        className="fill-zinc-700 text-[10px] font-black tracking-[0.16em]"
+      >
+        NINTENDO
+      </text>
+
+      {/* Recessed button wells — darker circles that read as molded
+          depressions for the D-pad (left), C-buttons (top-right), and
+          A/B (mid-right). */}
+      <ellipse cx="225" cy="215" rx="88" ry="78" fill="url(#n64Well)" />
+      <ellipse cx="680" cy="210" rx="92" ry="78" fill="url(#n64Well)" />
+      <ellipse cx="640" cy="295" rx="65" ry="55" fill="url(#n64Well)" />
+      <circle cx="450" cy="218" r="26" fill="url(#n64Well)" />
+
+      {/* Deep analog stick well on the center prong. */}
+      <circle
+        cx="450"
+        cy="400"
+        r="72"
+        fill="url(#n64StickWell)"
+        opacity="0.92"
       />
     </svg>
   );
