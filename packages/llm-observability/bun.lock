@@ -13,7 +13,7 @@
       },
       "devDependencies": {
         "@anthropic-ai/claude-agent-sdk": "^0.3.145",
-        "@anthropic-ai/sdk": "^0.95.1",
+        "@anthropic-ai/sdk": "^0.96.0",
         "@google/generative-ai": "^0.24.1",
         "@opentelemetry/context-async-hooks": "^2.7.1",
         "@opentelemetry/exporter-trace-otlp-http": "^0.218.0",
@@ -30,7 +30,7 @@
       "peerDependencies": {
         "@ai-sdk/otel": "^1.0.0-beta.6",
         "@anthropic-ai/claude-agent-sdk": "^0.3.0",
-        "@anthropic-ai/sdk": "^0.95.0",
+        "@anthropic-ai/sdk": "^0.95.0 || ^0.96.0",
         "@google/generative-ai": "^0.24.0",
         "openai": "^6.0.0",
       },
@@ -62,7 +62,7 @@
 
     "@anthropic-ai/claude-agent-sdk-win32-x64": ["@anthropic-ai/claude-agent-sdk-win32-x64@0.3.145", "", { "os": "win32", "cpu": "x64" }, "sha512-he1MwHnkZDxNUqqHst0QPvmOnPf/8xJuP+12s+SBAAgx8WW2EmFGsd9t3TcRxrrrQKMCmdwwa2av+86gBhZ5Og=="],
 
-    "@anthropic-ai/sdk": ["@anthropic-ai/sdk@0.95.2", "", { "dependencies": { "json-schema-to-ts": "^3.1.1", "standardwebhooks": "^1.0.0" }, "peerDependencies": { "zod": "^3.25.0 || ^4.0.0" }, "optionalPeers": ["zod"], "bin": { "anthropic-ai-sdk": "bin/cli" } }, "sha512-Egddwo3sheo1PzUrMkZnH6VkQYwS0h/b/i8vSK8Ta9M45UQipAMeDFH57dYuDAfXMEUUGeKw6CMlremgMZgrSQ=="],
+    "@anthropic-ai/sdk": ["@anthropic-ai/sdk@0.96.0", "", { "dependencies": { "json-schema-to-ts": "^3.1.1", "standardwebhooks": "^1.0.0" }, "peerDependencies": { "zod": "^3.25.0 || ^4.0.0" }, "optionalPeers": ["zod"], "bin": { "anthropic-ai-sdk": "bin/cli" } }, "sha512-KlCsODtTyb17bLUVCSDC2HtSvAbJf60sEiPEax9dInF+aDF92vS4TZJ5XD7YCQXNb1/5icYaw8Y7wMjPlIV9Zg=="],
 
     "@astrojs/compiler": ["@astrojs/compiler@3.0.1", "", {}, "sha512-z97oYbdebO5aoWzuJ/8q5hLK232+17KcLZ7cJ8BCWk6+qNzVxn/gftC0KzMBUTD8WAaBkPpNSQK6PXLnNrZ0CA=="],
 
