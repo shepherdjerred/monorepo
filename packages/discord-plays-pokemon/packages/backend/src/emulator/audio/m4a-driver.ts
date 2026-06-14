@@ -12,6 +12,7 @@
 //   - `gSoundInfo.pcmFreq` is the integer sample rate (e.g. 13379 Hz).
 
 import type { M4aMemory } from "./m4a-memory.ts";
+import { sampleFreqSet } from "./m4a-handlers-ext.ts";
 import { PCM_DMA_BUF_SIZE, SI } from "./m4a-structs.ts";
 
 export type DrainResult = {
@@ -26,6 +27,16 @@ export type DrainResult = {
 export type M4aDriver = {
   /** Bind the wasm exports we need; call once after instantiation. */
   bindExports: (exports: WebAssembly.Exports) => void;
+  /** Linear-memory address of `gSoundInfo`. Valid after `bindExports`. Returns
+   * 0 before binding so callers can detect that case. */
+  gSoundInfoAddr: () => number;
+  /** Force-initialise the wasm-side audio engine by calling its exported
+   * `SoundInit` + `m4aSoundMode` (with the Emerald-default 13379 Hz mode).
+   * The wasm's natural boot path does NOT do this — the game starts audio
+   * only when transitioning to a music-playing screen — so callers that want
+   * deterministic PCM from the first frame should invoke this once after
+   * `bindExports`. Idempotent. */
+  initEngine: () => void;
   /** Run one mixer tick (call after `WasmRunFrame`) and return one frame of
    * PCM. Returns null if the engine has not produced a valid SoundInfo yet
    * (e.g. before `SoundInit` runs during boot). */
@@ -64,13 +75,54 @@ function readGlobalNumber(exports: WebAssembly.Exports, name: string): number {
   return raw;
 }
 
+function requireFunctionWithArg(
+  exports: WebAssembly.Exports,
+  name: string,
+): (arg: number) => void {
+  const value = exports[name];
+  if (typeof value !== "function") {
+    throw new TypeError(
+      `wasm module is missing required audio export: ${name}`,
+    );
+  }
+  return (arg) => {
+    Reflect.apply(value, undefined, [arg]);
+  };
+}
+
 export function createM4aDriver(mem: M4aMemory): M4aDriver {
   let m4aSoundMain: (() => void) | undefined;
+  let soundInit: ((arg: number) => void) | undefined;
+  let m4aSoundMode: ((arg: number) => void) | undefined;
   let gSoundInfoAddr = 0;
 
   function bindExports(exports: WebAssembly.Exports): void {
     m4aSoundMain = requireFunction(exports, "m4aSoundMain");
+    soundInit = requireFunctionWithArg(exports, "SoundInit");
+    m4aSoundMode = requireFunctionWithArg(exports, "m4aSoundMode");
     gSoundInfoAddr = readGlobalNumber(exports, "gSoundInfo");
+  }
+
+  // SOUND_MODE_FREQ_13379 — see pret/pokeemerald include/gba/m4a_internal.h:21.
+  // Emerald's default; gives the canonical 13379 Hz / 224 samples-per-VBlank
+  // mixing the title-screen BGM was tuned for.
+  const SOUND_MODE_FREQ_13379 = 0x4_00_00;
+
+  function initEngine(): void {
+    if (soundInit === undefined || m4aSoundMode === undefined) {
+      throw new Error("initEngine called before bindExports");
+    }
+    // SoundInit stamps `ident` + jump-table, but does NOT set pcmFreq /
+    // samplesPerVBlank — those come from m4aSoundMode → SampleFreqSet. The
+    // wasm's `m4aSoundMode` writes through an internal SOUND_INFO_PTR alias
+    // that's invisible to our (gSoundInfo-addressed) handler, so calling it
+    // alone leaves the driver-visible struct empty. We therefore also write
+    // the freq fields directly via our `sampleFreqSet` handler so the
+    // driver's `tickAndDrain` sees a valid struct from frame 0.
+    soundInit(gSoundInfoAddr);
+    m4aSoundMode(SOUND_MODE_FREQ_13379);
+    // Index 4 = 13379 Hz; matches what m4aSoundMode would request.
+    sampleFreqSet(mem, gSoundInfoAddr, 4);
   }
 
   function tickAndDrain(): DrainResult | null {
@@ -107,5 +159,10 @@ export function createM4aDriver(mem: M4aMemory): M4aDriver {
     return { pcm: out, freqHz, frames: samplesPerVBlank };
   }
 
-  return { bindExports, tickAndDrain };
+  return {
+    bindExports,
+    gSoundInfoAddr: () => gSoundInfoAddr,
+    initEngine,
+    tickAndDrain,
+  };
 }

@@ -134,11 +134,22 @@ export class Emulator {
   /**
    * Register a callback for PCM audio drained from the wasm-side m4a mixer
    * after each emulated frame. The drained `DrainResult` includes the native
-   * sample rate (typically ~13379 Hz). Phase 2a stubs most track handlers, so
-   * the PCM is silence until the full m4a handler set lands.
+   * sample rate (typically ~13379 Hz). The wasm's natural boot path does not
+   * initialise the mixer; call `initAudio()` after `init()` if you want PCM
+   * starting from the first frame instead of waiting for the game to start
+   * music on its own.
    */
   onAudio(cb: (pcm: DrainResult) => void): void {
     this.onAudioCb = cb;
+  }
+
+  /**
+   * Bootstrap the wasm-side m4a engine (`SoundInit` + `m4aSoundMode` at
+   * 13379 Hz). Call once after `init()` if you want deterministic PCM from
+   * frame 0. Idempotent.
+   */
+  initAudio(): void {
+    this.audio.initEngine();
   }
 
   /**

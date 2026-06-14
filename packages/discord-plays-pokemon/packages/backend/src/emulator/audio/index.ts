@@ -9,16 +9,35 @@
 //     mixer and drains the produced PCM out of `SoundMainRAM_Buffer`. See
 //     `m4a-driver.ts`.
 //
-// Status: Phase 2a — simple parameter setters only. Complex handlers (control
-// flow, envelope/note state machines, voice/ADSR, extended ops) are stubbed
-// with no-op returns and tracked under `packages/docs/todos/dpp-audio-handlers.md`.
-// The engine compiles and the pipeline runs; audio output is silent until the
-// handler set is complete.
+// Status: all wasm-side audio imports have a real impl, stubbed approximation,
+// or arg-consuming no-op (every variant explicitly comments its fidelity). The
+// note-on / per-channel pitch path is the lowest-fidelity area and the most
+// likely to need iteration before BGM is recognizable.
 
 import type { DrainResult } from "./m4a-driver.ts";
 import { createM4aDriver } from "./m4a-driver.ts";
 import type { M4aMemory } from "./m4a-memory.ts";
 import { createM4aMemory } from "./m4a-memory.ts";
+import { fadeOutBody, plyPort } from "./m4a-handlers-env.ts";
+import {
+  plyXcmd,
+  plyXcmd0D,
+  plyXiecl,
+  plyXiecv,
+  plyXleng,
+  plyXswee,
+  plyXwait,
+  plyXxx,
+  sampleFreqSet,
+} from "./m4a-handlers-ext.ts";
+import {
+  plyGoto,
+  plyMemacc,
+  plyPatt,
+  plyPend,
+  plyRept,
+  trackStop,
+} from "./m4a-handlers-flow.ts";
 import {
   plyBend,
   plyBendr,
@@ -34,12 +53,27 @@ import {
   plyTune,
   plyVol,
 } from "./m4a-handlers-basic.ts";
+import {
+  plyEndtie,
+  plyVoice,
+  plyXatta,
+  plyXdeca,
+  plyXrele,
+  plyXsust,
+  plyXtype,
+  plyXwave,
+  trkVolPitSet,
+} from "./m4a-handlers-note.ts";
+import { plyNote } from "./m4a-handlers-note-on.ts";
 
 export type AudioExtras = Record<string, (args: number[]) => number>;
 
 export type AudioEngine = {
   refresh: (memory: WebAssembly.Memory) => void;
   bindExports: (exports: WebAssembly.Exports) => void;
+  /** Bootstrap the wasm-side audio engine (`SoundInit` + `m4aSoundMode`). The
+   * wasm doesn't do this on its own — see `m4a-driver.ts:initEngine`. */
+  initEngine: () => void;
   /** Import overrides keyed by symbol name. Pass into `bios.imports(...)`. */
   extras: AudioExtras;
   tickAndDrain: () => DrainResult | null;
@@ -47,10 +81,10 @@ export type AudioEngine = {
 
 type TrackHandler = (mem: M4aMemory, mp: number, track: number) => void;
 
-// Wasm-side import-key strings (matching the GBA m4a opcode names) mapped to
-// our JS handler functions. Keys MUST match the wasm imports literally; the
-// JS function names are normal camelCase.
-const TRACK_HANDLER_NAMES: { name: string; fn: TrackHandler }[] = [
+// Handlers with the standard `(MusicPlayerInfo*, MusicPlayerTrack*)` C
+// signature — wasm passes args[0]=mp, args[1]=t.
+const TRACK_HANDLERS: { name: string; fn: TrackHandler }[] = [
+  // basic
   { name: "ply_fine", fn: plyFine },
   { name: "ply_vol", fn: plyVol },
   { name: "ply_pan", fn: plyPan },
@@ -64,43 +98,40 @@ const TRACK_HANDLER_NAMES: { name: string; fn: TrackHandler }[] = [
   { name: "ply_mod", fn: plyMod },
   { name: "ply_modt", fn: plyModt },
   { name: "ply_tempo", fn: plyTempo },
+  // flow
+  { name: "ply_goto", fn: plyGoto },
+  { name: "ply_patt", fn: plyPatt },
+  { name: "ply_pend", fn: plyPend },
+  { name: "ply_rept", fn: plyRept },
+  { name: "ply_memacc", fn: plyMemacc },
+  { name: "TrackStop", fn: trackStop },
+  // env / port
+  { name: "ply_port", fn: plyPort },
+  { name: "FadeOutBody", fn: fadeOutBody },
+  // voice / ADSR / endtie / TrkVolPitSet
+  { name: "ply_voice", fn: plyVoice },
+  { name: "ply_xwave", fn: plyXwave },
+  { name: "ply_xtype", fn: plyXtype },
+  { name: "ply_xatta", fn: plyXatta },
+  { name: "ply_xdeca", fn: plyXdeca },
+  { name: "ply_xsust", fn: plyXsust },
+  { name: "ply_xrele", fn: plyXrele },
+  { name: "ply_endtie", fn: plyEndtie },
+  { name: "TrkVolPitSet", fn: trkVolPitSet },
+  // extended ops
+  { name: "ply_xxx", fn: plyXxx },
+  { name: "ply_xcmd", fn: plyXcmd },
+  { name: "ply_xiecv", fn: plyXiecv },
+  { name: "ply_xiecl", fn: plyXiecl },
+  { name: "ply_xleng", fn: plyXleng },
+  { name: "ply_xswee", fn: plyXswee },
+  { name: "ply_xwait", fn: plyXwait },
+  { name: "ply_xcmd_0D", fn: plyXcmd0D },
 ];
 
-// Stub handlers — return 0 so the wasm's track interpreter and the mixer don't
-// crash. Audible consequence is silence; tracked at
-// `packages/docs/todos/dpp-audio-handlers.md`.
-const NOOP_NAMES = [
-  // Control flow + memacc.
-  "ply_goto",
-  "ply_patt",
-  "ply_pend",
-  "ply_rept",
-  "ply_memacc",
-  // Notes + voice + ADSR + extended ops.
-  "ply_voice",
-  "ply_port",
-  "ply_xcmd",
-  "ply_endtie",
-  "ply_xxx",
-  "ply_xwave",
-  "ply_xtype",
-  "ply_xatta",
-  "ply_xdeca",
-  "ply_xsust",
-  "ply_xrele",
-  "ply_xiecv",
-  "ply_xiecl",
-  "ply_xleng",
-  "ply_xswee",
-  "ply_xwait",
-  "ply_xcmd_0D",
-  // Engine control.
-  "TrackStop",
-  "FadeOutBody",
-  "TrkVolPitSet",
-  "SampleFreqSet",
-  // Pokémon cry family. `IsPokemonCryPlaying` returns 0 so callers don't spin
-  // forever; cry-task code in the game has timeout fallbacks.
+// Pokémon-cry family: the wasm imports them but they don't drive BGM. Stub
+// as no-ops; `IsPokemonCryPlaying` returns 0 so callers don't spin.
+const CRY_NAMES = [
   "SetPokemonCryVolume",
   "SetPokemonCryPanpot",
   "SetPokemonCryPitch",
@@ -121,16 +152,31 @@ function noop(): number {
 export function createAudioEngine(): AudioEngine {
   const mem = createM4aMemory();
   const driver = createM4aDriver(mem);
+  // Bound at `bindExports`; SampleFreqSet needs `gSoundInfo`'s address to
+  // write the freq fields the driver later reads.
+  let gSoundInfoAddr = 0;
 
   const extras: AudioExtras = {};
-  for (const { name, fn } of TRACK_HANDLER_NAMES) {
+  for (const { name, fn } of TRACK_HANDLERS) {
     extras[name] = (args) => {
-      // m4a track-cmd handler signature: (MusicPlayerInfo*, MusicPlayerTrack*).
       fn(mem, args[0], args[1]);
       return 0;
     };
   }
-  for (const name of NOOP_NAMES) extras[name] = noop;
+
+  // ply_note has a non-standard signature: (u32 note_cmd, MPI*, MPT*).
+  extras.ply_note = (args) => {
+    plyNote(mem, args[0], args[1], args[2]);
+    return 0;
+  };
+
+  // SampleFreqSet(u32 freq) — one arg, no track context.
+  extras.SampleFreqSet = (args) => {
+    sampleFreqSet(mem, gSoundInfoAddr, args[0]);
+    return 0;
+  };
+
+  for (const name of CRY_NAMES) extras[name] = noop;
 
   return {
     refresh: (memory) => {
@@ -138,6 +184,10 @@ export function createAudioEngine(): AudioEngine {
     },
     bindExports: (exports) => {
       driver.bindExports(exports);
+      gSoundInfoAddr = driver.gSoundInfoAddr();
+    },
+    initEngine: () => {
+      driver.initEngine();
     },
     extras,
     tickAndDrain: () => driver.tickAndDrain(),

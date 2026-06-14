@@ -211,3 +211,18 @@ export const MPT_FLG_EXIST = 0x80;
 
 // Center value for PAN, BEND, and TUNE — see m4a_internal.h:10.
 export const C_V = 0x40;
+
+// Fade-out volume range — see m4a_internal.h:322-325.
+export const FADE_VOL_MAX = 64;
+
+// Sound channel status-flag bits — see m4a_internal.h:70-79.
+export const SC_SF_START = 0x80;
+export const SC_SF_STOP = 0x40;
+export const SC_SF_LOOP = 0x10;
+export const SC_SF_IEC = 0x04;
+export const SC_SF_ENV = 0x03;
+export const SC_SF_ENV_ATTACK = 0x03;
+export const SC_SF_ENV_DECAY = 0x02;
+export const SC_SF_ENV_SUSTAIN = 0x01;
+export const SC_SF_ENV_RELEASE = 0x00;
+export const SC_SF_ON = SC_SF_START | SC_SF_STOP | SC_SF_IEC | SC_SF_ENV;
