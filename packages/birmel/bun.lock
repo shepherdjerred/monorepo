@@ -56,7 +56,7 @@
     "axios": "1.16.1",
     "esbuild": "0.28.1",
     "fast-uri": "3.1.2",
-    "protobufjs": "8.0.3",
+    "protobufjs": "8.3.0",
   },
   "packages": {
     "@ai-sdk/amazon-bedrock": ["@ai-sdk/amazon-bedrock@3.0.93", "", { "dependencies": { "@ai-sdk/anthropic": "2.0.74", "@ai-sdk/provider": "2.0.1", "@ai-sdk/provider-utils": "3.0.23", "@smithy/eventstream-codec": "^4.0.1", "@smithy/util-utf8": "^4.0.0", "aws4fetch": "^1.0.20" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-57cP3Ume6DdQP05xPYl2g554EqPrQgKRW/eE3BGm1ktK1k71e35HGzNl1GZHIYKct82QrY/iQuheanSonI88Dg=="],
@@ -1865,7 +1865,7 @@
 
     "proper-lockfile": ["proper-lockfile@4.1.2", "", { "dependencies": { "graceful-fs": "^4.2.4", "retry": "^0.12.0", "signal-exit": "^3.0.2" } }, "sha512-TjNPblN4BwAWMXU8s9AEz4JmQxnD1NNL7bNOY/AKUzyamc379FWASUhc/K1pL2noVb+XmZKLL68cjzLsiOAMaA=="],
 
-    "protobufjs": ["protobufjs@8.0.3", "", { "dependencies": { "@types/node": ">=13.7.0", "long": "^5.0.0" } }, "sha512-LBYnMWkKLB8fE/ljROPDbCl7mgLSlI+oBe1fAAr5MTqFg4TIi0tYrVVurJvQggOjnUYMQtEZBjrej59ojMNTHQ=="],
+    "protobufjs": ["protobufjs@8.3.0", "", { "dependencies": { "long": "^5.0.0" } }, "sha512-JpJpFaR7yKNb6WqKvJJ1MLbiuIQWQnbUUb06nDtf2/i8YWYYLEfP6xf9BwSJoJQg1wAy61EQB8dssQg64oX4aA=="],
 
     "proxy-addr": ["proxy-addr@2.0.7", "", { "dependencies": { "forwarded": "0.2.0", "ipaddr.js": "1.9.1" } }, "sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg=="],
 
