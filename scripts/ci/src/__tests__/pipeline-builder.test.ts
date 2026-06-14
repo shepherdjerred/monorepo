@@ -789,9 +789,9 @@ describe("buildPipeline", () => {
       expect(groupKeys).not.toContain("publish-npm");
       expect(groupKeys).not.toContain("cooklang-release");
       expect(groupKeys).not.toContain("deploy-sites");
-      expect(groupKeys).not.toContain("homelab-helm-push");
       expect(groupKeys).not.toContain("homelab-tofu");
 
+      expect(stepKeys).not.toContain("helm-push-all");
       expect(stepKeys).not.toContain("release-please");
       expect(stepKeys).not.toContain("deploy-argocd");
       expect(stepKeys).not.toContain("argocd-health");
@@ -983,13 +983,16 @@ describe("buildPipeline", () => {
 
     it("includes homelab track", () => {
       const pipeline = buildPipeline(fullBuild());
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
       const groups = pipeline.steps.filter(isGroup);
       const groupKeys = groups.map((g) => g.key);
+      const stepKeys = allSteps.map((s) => s.key);
 
       // Homelab images are now part of the unified build/push groups
       expect(groupKeys).toContain("build-images");
       expect(groupKeys).toContain("push-images");
-      expect(groupKeys).toContain("homelab-helm-push");
+      expect(stepKeys).toContain("helm-push-all");
       expect(groupKeys).toContain("homelab-tofu");
     });
 
@@ -1178,8 +1181,9 @@ describe("buildPipeline", () => {
 
     it("includes helm chart push so ArgoCD picks up new manifests", () => {
       const pipeline = buildPipeline(versionBumpAffected());
-      const groups = pipeline.steps.filter(isGroup);
-      expect(groups.some((g) => g.key === "homelab-helm-push")).toBe(true);
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      expect(allSteps.some((s) => s.key === "helm-push-all")).toBe(true);
     });
 
     it("includes tofu apply", () => {
@@ -1230,7 +1234,7 @@ describe("buildPipeline", () => {
       const deps = Array.isArray(argoSync?.depends_on)
         ? argoSync.depends_on
         : [];
-      expect(deps).toContain("homelab-helm-push");
+      expect(deps).toContain("helm-push-all");
       // Should NOT depend on any push-* image keys
       const imagePushDeps = deps.filter((d: string) => d.startsWith("push-"));
       expect(imagePushDeps).toHaveLength(0);
@@ -1271,13 +1275,16 @@ describe("buildPipeline", () => {
       affected.homelabChanged = true;
 
       const pipeline = buildPipeline(affected);
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
       const groups = pipeline.steps.filter(isGroup);
       const groupKeys = groups.map((g) => g.key);
+      const stepKeys = allSteps.map((s) => s.key);
 
       // Homelab images are part of the unified build/push groups
       expect(groupKeys).toContain("build-images");
       expect(groupKeys).toContain("push-images");
-      expect(groupKeys).toContain("homelab-helm-push");
+      expect(stepKeys).toContain("helm-push-all");
       expect(groupKeys).toContain("homelab-tofu");
       expect(groupKeys).not.toContain("cooklang-release");
     });

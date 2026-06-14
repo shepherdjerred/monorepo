@@ -53,7 +53,7 @@ import { deploySitesGroup, filterSites } from "./steps/sites.ts";
 import {
   cdk8sSynthStep,
   onePasswordItemsStep,
-  homelabHelmGroup,
+  homelabHelmPushAllStep,
 } from "./steps/helm.ts";
 import { homelabTofuGroup, homelabTofuPlanGroup } from "./steps/tofu.ts";
 import { argoCdSyncStep, argoCdHealthStep } from "./steps/argocd.ts";
@@ -382,8 +382,9 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
 
     // --- Homelab Helm + Tofu release track ---
     if (releaseBuild && (affected.buildAll || affected.homelabChanged)) {
-      // Helm charts (push only — cdk8s synth already ran in build phase)
-      steps.push(homelabHelmGroup());
+      // Helm charts — one pod fans out per-chart in Dagger via Promise.all.
+      // Shared cdk8s synth is content-addressed, so all charts share one synth.
+      steps.push(homelabHelmPushAllStep());
 
       // Homelab Tofu: 3 parallel stacks
       steps.push(homelabTofuGroup(pkgKeyMap.get("homelab")));
@@ -400,7 +401,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       }
       if (affected.buildAll || affected.homelabChanged) {
         argocdDeps.push(
-          "homelab-helm-push",
+          "helm-push-all",
           ...TOFU_STACKS.map((s) => `tofu-${s}`),
         );
       }

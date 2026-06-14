@@ -17,6 +17,9 @@ import {
   GH_CLI_VERSION,
 } from "./constants";
 
+import { homelabSynthHelper } from "./homelab";
+import { runBundle } from "./bundle";
+
 const GITHUB_APP_TOKEN_SCRIPT = "packages/temporal/src/lib/github-app-token.ts";
 const GITHUB_APP_TOKEN_SCRIPT_PATH = "/usr/local/bin/github-app-token.ts";
 const MONOREPO_REPO = "shepherdjerred/monorepo";
@@ -149,6 +152,48 @@ export function helmPackageHelper(
     "-c",
     `curl -sf -u "${chartMuseumUsername}:$CHARTMUSEUM_PASSWORD" --data-binary @$(ls *.tgz) https://chartmuseum.sjer.red/api/charts`,
   ]);
+}
+
+/**
+ * Synth cdk8s manifests once and package + push every Helm chart in parallel.
+ * Replaces the per-chart `helm-synth-and-package` BK step explosion (28 pods
+ * each ~25 s, dominated by sidecar overhead) with one pod whose engine-side
+ * graph forks per chart after the shared `homelabSynthHelper` call. The synth
+ * Directory is content-addressed, so all charts share one synth run.
+ */
+export async function helmPushAllHelper(
+  source: Directory,
+  synthPkgDir: Directory,
+  synthDepNames: string[],
+  synthDepDirs: Directory[],
+  tsconfig: File | null,
+  chartNames: string[],
+  version: string,
+  chartMuseumUsername: string,
+  chartMuseumPassword: Secret,
+  dryrun: boolean,
+): Promise<string> {
+  const cdk8sDist = homelabSynthHelper(
+    synthPkgDir,
+    synthDepNames,
+    synthDepDirs,
+    tsconfig,
+  );
+  return runBundle(
+    chartNames.map((chart) => ({
+      name: chart,
+      run: () =>
+        helmPackageHelper(
+          source,
+          cdk8sDist,
+          chart,
+          version,
+          chartMuseumUsername,
+          chartMuseumPassword,
+          dryrun,
+        ).stdout(),
+    })),
+  );
 }
 
 // ---------------------------------------------------------------------------

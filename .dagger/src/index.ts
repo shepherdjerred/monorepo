@@ -22,6 +22,7 @@ import { latexBuildHelper } from "./latex";
 
 import {
   helmPackageHelper,
+  helmPushAllHelper,
   tofuApplyHelper,
   tofuPlanHelper,
   publishNpmHelper,
@@ -1017,6 +1018,39 @@ export class Monorepo {
       chartMuseumPassword,
       dryrun,
     ).stdout();
+  }
+
+  /**
+   * Synth + package + push every Helm chart in parallel from one pod.
+   * Replaces the 28-step per-chart `helm-push-<chart>` BK fan-out (each ~25 s,
+   * mostly sidecar overhead). The synth Directory is content-addressed, so
+   * all charts share one synth result.
+   */
+  @func({ cache: "never" })
+  async helmPushAll(
+    source: Directory,
+    synthPkgDir: Directory,
+    synthDepNames: string[] = [],
+    synthDepDirs: Directory[] = [],
+    tsconfig: File | null = null,
+    chartNames: string[],
+    version: string,
+    chartMuseumUsername: string,
+    chartMuseumPassword: Secret,
+    dryrun = false,
+  ): Promise<string> {
+    return helmPushAllHelper(
+      source,
+      synthPkgDir,
+      synthDepNames,
+      synthDepDirs,
+      tsconfig,
+      chartNames,
+      version,
+      chartMuseumUsername,
+      chartMuseumPassword,
+      dryrun,
+    );
   }
 
   /** Run tofu init + apply on an infrastructure stack */
