@@ -33,6 +33,7 @@ import {
   deployStaticSiteHelper,
   argoCdSyncHelper,
   argoCdHealthWaitHelper,
+  argoCdSyncAndWaitHelper,
   cooklangBuildHelper,
   cooklangPublishHelper,
   cooklangVersionCommitBackHelper,
@@ -1314,6 +1315,29 @@ export class Monorepo {
       serverUrl,
       dryrun,
     ).stdout();
+  }
+
+  /**
+   * Sync an ArgoCD app and wait for it to become healthy from one pod.
+   * Sync failure throws (BK step turns red). Health-wait failure is caught
+   * inside the Dagger function so it doesn't fail the bundle — matching the
+   * wave-1 `soft_fail: true` on the standalone argocd-health step.
+   */
+  @func({ cache: "never" })
+  async argoCdSyncAndWait(
+    appName: string,
+    argoCdToken: Secret,
+    timeoutSeconds: number = 300,
+    serverUrl: string = "https://argocd.sjer.red",
+    dryrun = false,
+  ): Promise<string> {
+    return argoCdSyncAndWaitHelper(
+      appName,
+      argoCdToken,
+      timeoutSeconds,
+      serverUrl,
+      dryrun,
+    );
   }
 
   /** Build cooklang-for-obsidian plugin and return artifacts (main.js, manifest.json, styles.css) */

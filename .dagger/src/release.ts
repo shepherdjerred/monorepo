@@ -892,6 +892,47 @@ exit 1`,
     ]);
 }
 
+/**
+ * Sync ArgoCD and then poll for healthy state in one pod. Sync failure
+ * throws (BK step turns red); health-wait failure is caught and reported
+ * inline — matches the wave-1 split where `argocd-health` was BK
+ * `soft_fail: true`. The bundle step keeps sync's concurrency_group at the
+ * BK layer because applies can race across branches.
+ */
+export async function argoCdSyncAndWaitHelper(
+  appName: string,
+  argoCdToken: Secret,
+  timeoutSeconds: number,
+  serverUrl: string,
+  dryrun: boolean,
+): Promise<string> {
+  const syncOut = await argoCdSyncHelper(
+    appName,
+    argoCdToken,
+    serverUrl,
+    dryrun,
+  ).stdout();
+  let healthOut: string;
+  try {
+    healthOut = await argoCdHealthWaitHelper(
+      appName,
+      argoCdToken,
+      timeoutSeconds,
+      serverUrl,
+      dryrun,
+    ).stdout();
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    healthOut = `+++ :warning: health-wait failed (soft-fail): ${msg}`;
+  }
+  return [
+    `--- :argocd: sync (${appName})`,
+    syncOut,
+    `--- :heart: health-wait (${appName})`,
+    healthOut,
+  ].join("\n");
+}
+
 // ---------------------------------------------------------------------------
 // Cooklang
 // ---------------------------------------------------------------------------

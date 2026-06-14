@@ -1163,11 +1163,13 @@ describe("buildPipeline", () => {
       expect(allSteps.some((s) => s.key === "tofu-apply-all")).toBe(true);
     });
 
-    it("includes ArgoCD sync and health check", () => {
+    it("includes one bundled ArgoCD sync + health step", () => {
       const pipeline = buildPipeline(versionBumpAffected());
       const steps = pipeline.steps.filter(isStep);
+      // Sync + health-wait collapsed into one BK pod via
+      // `argo-cd-sync-and-wait`; health-wait failure is caught Dagger-side.
       expect(steps.some((s) => s.key === "deploy-argocd")).toBe(true);
-      expect(steps.some((s) => s.key === "argocd-health")).toBe(true);
+      expect(steps.some((s) => s.key === "argocd-health")).toBe(false);
     });
 
     it("does NOT build any images (they were already pushed)", () => {

@@ -44,7 +44,7 @@ import {
   homelabTofuApplyAllStep,
   homelabTofuPlanAllStep,
 } from "./steps/tofu.ts";
-import { argoCdSyncStep, argoCdHealthStep } from "./steps/argocd.ts";
+import { argoCdSyncAndWaitStep } from "./steps/argocd.ts";
 import { cooklangReleaseGroup } from "./steps/cooklang.ts";
 import { versionCommitBackStep } from "./steps/version.ts";
 import {
@@ -387,12 +387,12 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       if (affected.buildAll || affected.homelabChanged) {
         argocdDeps.push("helm-push-all", "tofu-apply-all");
       }
+      // Sync + health-wait now run in one bundled BK pod (the Dagger
+      // function catches health-wait failures internally — same soft-fail
+      // semantics as the wave-1 standalone argocd-health step).
       steps.push(
-        argoCdSyncStep(argocdDeps, { key: "deploy-argocd", app: "apps" }),
-      );
-      steps.push(
-        argoCdHealthStep("deploy-argocd", {
-          key: "argocd-health",
+        argoCdSyncAndWaitStep(argocdDeps, {
+          key: "deploy-argocd",
           app: "apps",
         }),
       );
@@ -420,7 +420,11 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         );
       }
       if (needsArgoSync) {
-        summaryDeps.push("argocd-health");
+        // Build summary now waits on the bundled argo sync+health step
+        // (`deploy-argocd`). The standalone `argocd-health` step no longer
+        // exists; health-wait soft-fail semantics are preserved inside the
+        // Dagger function.
+        summaryDeps.push("deploy-argocd");
       }
       steps.push(buildSummaryStep(summaryDeps));
     }
