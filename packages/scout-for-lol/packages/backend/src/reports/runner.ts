@@ -16,6 +16,7 @@ import {
   scheduledReportRunsTotal,
   scheduledReportRowsReturnedTotal,
   scheduledReportRowsScannedTotal,
+  scoutScheduledReportLastSuccessTimestamp,
 } from "#src/metrics/report-runs.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
 import {
@@ -113,6 +114,7 @@ export async function runReport(
       durationMs,
       rowsReturned: result.rows.length,
       rowsScanned: result.rowsScanned,
+      startedAt,
     });
 
     return {
@@ -148,6 +150,7 @@ export async function runReport(
       durationMs: completedAt.getTime() - startedAt.getTime(),
       rowsReturned: 0,
       rowsScanned: 0,
+      startedAt,
     });
     throw error;
   }
@@ -160,6 +163,7 @@ function recordReportMetrics(params: {
   durationMs: number;
   rowsReturned: number;
   rowsScanned: number;
+  startedAt: Date;
 }): void {
   const labels = {
     status: params.status,
@@ -177,6 +181,20 @@ function recordReportMetrics(params: {
       output_format: params.report.outputFormat,
       system_source: params.report.systemSource ?? "USER",
     });
+  }
+  // Drive the staleness alert: only SCHEDULED-trigger SUCCESS counts. A
+  // user's MANUAL /run must NOT silence the alert, because the bug we
+  // care about is "the dispatcher never fires the schedule" — a manual
+  // run wouldn't clear that.
+  if (params.status === "SUCCESS" && params.trigger === "SCHEDULED") {
+    scoutScheduledReportLastSuccessTimestamp.set(
+      {
+        report_id: params.report.id.toString(),
+        system_source: params.report.systemSource ?? "USER",
+        title: params.report.title,
+      },
+      params.startedAt.getTime() / 1000,
+    );
   }
   scheduledReportRowsReturnedTotal.inc(
     {

@@ -86,3 +86,16 @@ export const scheduledReportRowsTotal = new Counter({
   labelNames: ["trigger", "output_format", "system_source"] as const,
   registers: [registry],
 });
+
+// Unix-seconds timestamp of the last SCHEDULED-trigger SUCCESS for a given
+// report. Drives the PagerDuty `ScoutScheduledReportMissed*` alerts:
+// `time() - scout_scheduled_report_last_success_timestamp_seconds` is the
+// staleness, compared against the cron's expected interval + 1h grace.
+// Seeded from the DB on startup so the alert is meaningful after a deploy
+// without waiting for the next scheduled fire.
+export const scoutScheduledReportLastSuccessTimestamp = new Gauge({
+  name: "scout_scheduled_report_last_success_timestamp_seconds",
+  help: "Unix-seconds timestamp of the last successful scheduled run of this report.",
+  labelNames: ["report_id", "system_source", "title"] as const,
+  registers: [registry],
+});
