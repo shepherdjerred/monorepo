@@ -63,7 +63,7 @@ export const REDLIB_SOURCE_REF = "a4d36e954cf1bd64f209cd8868c5a29edc81b374";
 // Also reused as the Node builder stage for the custom mcp-gateway image (edstem-mcp build).
 // renovate: datasource=docker depName=node
 export const OBSIDIAN_HEADLESS_BASE_IMAGE =
-  "node:24-slim@sha256:242549cd46785b480c832479a730f4f2a20865d61ea2e404fdb2a5c3d3b73ecf";
+  "node:24-slim@sha256:2c87ef9bd3c6a3bd4b472b4bec2ce9d16354b0c574f736c476489d09f560a203";
 
 // Base image for the custom mcp-gateway image. Layered with a prebuilt edstem-mcp
 // (rob-9/edstem-mcp is git-only, has no committed dist, and no build-on-install,
