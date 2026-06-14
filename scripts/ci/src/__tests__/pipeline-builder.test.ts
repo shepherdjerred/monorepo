@@ -1497,58 +1497,52 @@ describe("buildPipeline", () => {
       return affected;
     }
 
-    it("generates both prod and dev npm publish steps", () => {
+    it("generates both prod and dev npm publish bundle steps", () => {
       const pipeline = buildPipeline(releasePleaseAffected());
       const groups = pipeline.steps.filter(isGroup);
       const npmGroup = groups.find((g) => g.key === "publish-npm");
       expect(npmGroup).toBeDefined();
       const steps = npmGroup!.steps;
-      // Should have prod + dev for each npm package (3 packages × 2 = 6 steps)
-      expect(steps.length).toBe(6);
-      const prodSteps = steps.filter((s) => s.key.endsWith("-prod"));
-      const devSteps = steps.filter((s) => !s.key.endsWith("-prod"));
-      expect(prodSteps.length).toBe(3);
-      expect(devSteps.length).toBe(3);
+      // Every package is published from ONE bundled pod per mode; with
+      // release-please merge, both prod and dev modes apply.
+      expect(steps.length).toBe(2);
+      expect(steps.some((s) => s.key === "npm-publish-all-prod")).toBe(true);
+      expect(steps.some((s) => s.key === "npm-publish-all")).toBe(true);
     });
 
-    it("prod steps do not have --dev-suffix flag", () => {
+    it("prod bundle does not carry --dev-suffix flag", () => {
       const pipeline = buildPipeline(releasePleaseAffected());
       const groups = pipeline.steps.filter(isGroup);
       const npmGroup = groups.find((g) => g.key === "publish-npm");
-      const prodSteps = npmGroup!.steps.filter((s) => s.key.endsWith("-prod"));
-      for (const step of prodSteps) {
-        expect(step.command).not.toContain("--dev-suffix");
-      }
+      const prod = npmGroup!.steps.find(
+        (s) => s.key === "npm-publish-all-prod",
+      );
+      expect(prod?.command).not.toContain("--dev-suffix");
     });
 
-    it("dev steps have --dev-suffix flag", () => {
+    it("dev bundle carries --dev-suffix flag", () => {
       const pipeline = buildPipeline(releasePleaseAffected());
       const groups = pipeline.steps.filter(isGroup);
       const npmGroup = groups.find((g) => g.key === "publish-npm");
-      const devSteps = npmGroup!.steps.filter((s) => !s.key.endsWith("-prod"));
-      for (const step of devSteps) {
-        expect(step.command).toContain("--dev-suffix");
-      }
+      const dev = npmGroup!.steps.find((s) => s.key === "npm-publish-all");
+      expect(dev?.command).toContain("--dev-suffix");
     });
   });
 
   describe("publish step mount paths", () => {
-    it("passes --pkg-path equal to on-disk dir for every npm package", () => {
+    it("bundle carries one --pkg-paths flag per package on-disk dir", () => {
       const pipeline = buildPipeline(fullBuild());
       const groups = pipeline.steps.filter(isGroup);
       const npmGroup = groups.find((g) => g.key === "publish-npm");
       expect(npmGroup).toBeDefined();
-      const helmTypes = npmGroup!.steps.find((s) =>
-        s.label?.includes("@shepherdjerred/helm-types"),
-      );
-      expect(helmTypes).toBeDefined();
-      // Scoped/nested package: npm name and dir disagree, so --pkg-path is
+      const dev = npmGroup!.steps.find((s) => s.key === "npm-publish-all");
+      expect(dev).toBeDefined();
+      // Scoped/nested package: npm name and dir disagree, so --pkg-paths is
       // load-bearing for file: workspace dep resolution inside the container.
-      expect(helmTypes!.command).toContain("--pkg-path homelab/src/helm-types");
-      // Sanity: every dev publish step carries the flag.
-      for (const step of npmGroup!.steps) {
-        expect(step.command).toMatch(/--pkg-path \S+/);
-      }
+      expect(dev!.command).toContain("--pkg-paths homelab/src/helm-types");
+      // Top-level packages keep their dir name as the pkg-path.
+      expect(dev!.command).toContain("--pkg-paths webring");
+      expect(dev!.command).toContain("--pkg-paths astro-opengraph-images");
     });
   });
 });

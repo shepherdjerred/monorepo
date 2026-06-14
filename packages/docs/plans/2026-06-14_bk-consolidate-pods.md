@@ -152,6 +152,51 @@ Log markers (`--- :name`) separate child output for navigation.
 3. Failure surface check — induce a child failure, confirm log clarity.
 4. Side-by-side BK comparison after merge; re-run bucket script.
 
+---
+
+## Wave 2 — 99 → ~58
+
+Wave 1 landed (~175 → 99). Wave 2 targets the 99 remaining, focused on
+categories where pod-overhead still dominates real work.
+
+### Tier 1 — high impact, low risk (in this PR)
+
+| #   | bundle                                                   | pods saved | files                                                     |
+| --- | -------------------------------------------------------- | ---------: | --------------------------------------------------------- |
+| 1   | `push-images-all`                                        |     12 → 1 | `scripts/ci/src/steps/images.ts`, `.dagger/src/image.ts`  |
+| 2   | `deploy-sites-all`                                       |      8 → 1 | `scripts/ci/src/steps/sites.ts`, `.dagger/src/release.ts` |
+| 3   | `npm-publish-all`                                        |    3-6 → 1 | `scripts/ci/src/steps/npm.ts`                             |
+| 4   | `homelab-cdk8s-bundle`                                   |      2 → 1 | `scripts/ci/src/steps/helm.ts`                            |
+| 5   | `homelab-extras-bundle` (caddyfile + tunnel-dns + talos) |      3 → 1 | `scripts/ci/src/steps/quality.ts`                         |
+| 6   | `soft-fail-bundle` (dagger-hygiene + large-file)         |      2 → 1 | `scripts/ci/src/steps/quality.ts`                         |
+| 7   | `argocd-sync-and-wait`                                   |      2 → 1 | `scripts/ci/src/steps/argocd.ts`                          |
+| 8   | go-pkg bundle                                            |      3 → 1 | `scripts/ci/src/steps/per-package.ts`                     |
+
+### Tier 2 — per-package roll-ins (in this PR if Tier 1 ships clean)
+
+| #   | bundle                                                  | notes                                               |
+| --- | ------------------------------------------------------- | --------------------------------------------------- |
+| 9   | astro into `pkg-check-<x>` (sjer.red, cooklang)         | new `lintTypecheckTestWithAstro` Dagger func        |
+| 10  | playwright into `pkg-check-sjer-red`                    | bundles lint + typecheck + astro-build + playwright |
+| 11  | helm-types build + drift-check into `pkg-check-homelab` | `--include-helm-types[-drift-check]` flags          |
+| 12  | ios-native-deps into `pkg-check-tasks-for-obsidian`     | `--include-ios-native-deps` flag                    |
+| 13  | NPM_BUILD_PACKAGES build into pkg-check                 | `--include-build` flag                              |
+| 14  | non-smokeable `build-<img>` (temporal-worker, redlib)   | small bundle                                        |
+
+### Tier 3 — deferred (complexity vs payoff)
+
+- **Annotated scans** (knip + trivy + semgrep) — each owns a BK-side
+  per-context `annotate --context X` lifecycle. Bundling needs per-context
+  output separation, structured Dagger return, BK parsing. Only saves 2
+  pods. Defer.
+
+### Reuse from Wave 1
+
+- `.dagger/src/bundle.ts:runBundle` is the foundation for every new bundle.
+- `helmPushAllHelper` is the template — every per-item bundle is a clone.
+- `lintTypecheckTestHelper` is extended (not replaced) with optional flags
+  for the per-package roll-ins.
+
 ## Session Log — 2026-06-14
 
 ### Done

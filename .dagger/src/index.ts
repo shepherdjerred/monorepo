@@ -28,6 +28,7 @@ import {
   tofuApplyAllHelper,
   tofuPlanAllHelper,
   publishNpmHelper,
+  npmPublishAllHelper,
   deploySiteHelper,
   deployStaticSiteHelper,
   argoCdSyncHelper,
@@ -1197,6 +1198,33 @@ export class Monorepo {
       devSuffix,
       pkgPath,
     ).stdout();
+  }
+
+  /**
+   * Publish every npm package in parallel from one pod. Bundle's children
+   * share a `devSuffix` — pass the build number for dev (per-build) publishes
+   * or leave empty for prod (release-please merge) publishes. Run as two
+   * separate bundle invocations from the BK side when both modes apply.
+   */
+  @func({ cache: "never" })
+  async npmPublishAll(
+    source: Directory,
+    pkgs: string[],
+    pkgPaths: string[],
+    npmToken: Secret,
+    tsconfig: File | null = null,
+    devSuffix: string = "",
+    dryrun = false,
+  ): Promise<string> {
+    return npmPublishAllHelper(
+      source,
+      pkgs,
+      pkgPaths,
+      npmToken,
+      tsconfig,
+      devSuffix,
+      dryrun,
+    );
   }
 
   /** Build and deploy a static site to S3 or R2 */

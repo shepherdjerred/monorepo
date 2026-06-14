@@ -10,49 +10,58 @@
 import { NPM_PACKAGES, PACKAGE_TO_NPM } from "../catalog.ts";
 import type { NpmPackage } from "../catalog.ts";
 import {
-  safeKey,
   RETRY,
   DAGGER_ENV,
   DRYRUN_FLAG,
-  gitDir,
   gitFile,
   DAGGER_CALL,
+  REPO_GIT_REF,
 } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
-import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
-function npmPublishStep(
-  pkg: { name: string; dir: string },
-  pkgKeyMap?: Map<string, string>,
-  mode: "dev" | "prod" = "dev",
+/**
+ * One BK pod publishes every npm package in parallel via `npm-publish-all`.
+ * Bundle's children share the same `devSuffix`, so on release-please merges
+ * we emit TWO bundle steps (`npm-publish-all-prod` + `npm-publish-all-dev`);
+ * on every other main build, only the dev step.
+ */
+function npmPublishAllStep(
+  packages: NpmPackage[],
+  pkgKeyMap: Map<string, string> | undefined,
+  mode: "dev" | "prod",
 ): BuildkiteStep {
-  // WORKSPACE_DEPS is keyed by directory path (e.g. "homelab/src/helm-types"),
-  // not npm package name — keep this consumer consistent with per-package.ts,
-  // sites.ts, images.ts so scoped packages like @shepherdjerred/helm-types
-  // pick up their `file:` workspace deps for mounting.
-  const depsKey = pkg.dir.replace(/^packages\//, "");
-  const deps = WORKSPACE_DEPS[depsKey] ?? [];
-  const depFlags = deps
-    .flatMap((d: string) => [
-      `--dep-names ${d}`,
-      `--dep-dirs ${gitDir(`packages/${d}`)}`,
-    ])
+  const suffix = mode === "prod" ? "-prod" : "";
+  const labelSuffix = mode === "prod" ? "latest" : "dev";
+  // pkg-path = on-disk path under packages/. Required so the Dagger function
+  // mounts each package at its real source-tree location, otherwise `file:`
+  // refs in package.json (which are written relative to the source layout)
+  // resolve to wrong paths inside the container.
+  const pkgFlags = packages.map((p) => `--pkgs ${p.name}`).join(" ");
+  const pkgPathFlags = packages
+    .map((p) => `--pkg-paths ${p.dir.replace(/^packages\//, "")}`)
     .join(" ");
   const devSuffixFlag =
     mode === "dev" ? ` --dev-suffix "$BUILDKITE_BUILD_NUMBER"` : "";
-  // pkg-path = on-disk path under packages/. Required so the Dagger function
-  // mounts the package at its real source-tree location, otherwise `file:`
-  // refs in package.json (which are written relative to the source layout)
-  // resolve to wrong paths inside the container — see release.ts:publishNpmHelper.
-  const pkgPath = pkg.dir.replace(/^packages\//, "");
+
+  // depends_on: every package's pkg-check key (collected so the bundle waits
+  // for every NPM package's pre-publish validation to land).
+  const pkgDeps = packages
+    .flatMap((p) => {
+      const parentPkg = p.dir.replace("packages/", "").split("/")[0] ?? "";
+      const k = pkgKeyMap?.get(p.name) ?? pkgKeyMap?.get(parentPkg);
+      return k !== undefined ? [k] : [];
+    })
+    .filter((v, i, a) => a.indexOf(v) === i);
+  const dependsOn = ["quality-gate", ...pkgDeps];
+
   const cmd =
     [
-      `${DAGGER_CALL} publish-npm --pkg-dir ${gitDir(pkg.dir)} --pkg ${pkg.name}`,
-      `--pkg-path ${pkgPath}`,
-      depFlags,
+      `${DAGGER_CALL} npm-publish-all --source ${REPO_GIT_REF}`,
+      pkgFlags,
+      pkgPathFlags,
       `--npm-token env:NPM_TOKEN`,
       `--tsconfig ${gitFile("tsconfig.base.json")}`,
     ]
@@ -60,22 +69,18 @@ function npmPublishStep(
       .join(" ") +
     devSuffixFlag +
     DRYRUN_FLAG;
-  const parentPkg = pkg.dir.replace("packages/", "").split("/")[0] ?? "";
-  const pkgKey = pkgKeyMap?.get(pkg.name) ?? pkgKeyMap?.get(parentPkg);
-  const dependsOn = pkgKey ? ["quality-gate", pkgKey] : ["quality-gate"];
-  const suffix = mode === "prod" ? "-prod" : "";
-  const labelSuffix = mode === "prod" ? " (latest)" : " (dev)";
+
   return {
-    label: `:npm: Publish ${pkg.name}${labelSuffix}`,
-    key: `npm-${safeKey(pkg.name)}${suffix}`,
+    label: `:npm: Publish NPM (${String(packages.length)} packages, ${labelSuffix})`,
+    key: `npm-publish-all${suffix}`,
     if: MAIN_ONLY,
     depends_on: dependsOn,
     command: cmd,
-    timeout_in_minutes: 10,
+    timeout_in_minutes: 15,
     priority: 1,
     retry: RETRY,
     env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi" })],
+    plugins: [k8sPlugin({ cpu: "500m", memory: "1Gi" })],
   };
 }
 
@@ -100,12 +105,10 @@ export function publishNpmGroup(
   releasePleaseMerge = false,
 ): BuildkiteGroup {
   const steps: BuildkiteStep[] = [];
-  for (const pkg of packages) {
-    if (releasePleaseMerge) {
-      steps.push(npmPublishStep(pkg, pkgKeyMap, "prod"));
-    }
-    steps.push(npmPublishStep(pkg, pkgKeyMap, "dev"));
+  if (releasePleaseMerge) {
+    steps.push(npmPublishAllStep(packages, pkgKeyMap, "prod"));
   }
+  steps.push(npmPublishAllStep(packages, pkgKeyMap, "dev"));
   return {
     group: ":npm: Publish NPM",
     key: "publish-npm",

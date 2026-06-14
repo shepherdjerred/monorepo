@@ -19,6 +19,7 @@ import {
 
 import { homelabSynthHelper } from "./homelab";
 import { runBundle } from "./bundle";
+import { WORKSPACE_DEPS } from "./deps";
 
 const GITHUB_APP_TOKEN_SCRIPT = "packages/temporal/src/lib/github-app-token.ts";
 const GITHUB_APP_TOKEN_SCRIPT_PATH = "/usr/local/bin/github-app-token.ts";
@@ -459,6 +460,52 @@ export async function tofuPlanAllHelper(
 // ---------------------------------------------------------------------------
 // NPM publish
 // ---------------------------------------------------------------------------
+
+/**
+ * Publish every npm package in parallel from one pod. All packages in a
+ * single call share the same `devSuffix` — pass the build number for dev
+ * publishes, leave empty for the prod (release-please merge) tag. Per-package
+ * deps come from `WORKSPACE_DEPS`.
+ */
+export async function npmPublishAllHelper(
+  source: Directory,
+  pkgs: string[],
+  pkgPaths: string[],
+  npmToken: Secret,
+  tsconfig: File | null,
+  devSuffix: string,
+  dryrun: boolean,
+): Promise<string> {
+  if (pkgs.length !== pkgPaths.length) {
+    throw new Error(
+      "npmPublishAllHelper: pkgs/pkgPaths array length mismatch " +
+        `(${pkgs.length.toString()} vs ${pkgPaths.length.toString()})`,
+    );
+  }
+  return runBundle(
+    pkgs.map((pkg, i) => {
+      const pkgPath = pkgPaths[i] ?? pkg;
+      return {
+        name: pkg,
+        run: () => {
+          const deps = WORKSPACE_DEPS[pkgPath] ?? [];
+          const depDirs = deps.map((d) => source.directory(`packages/${d}`));
+          return publishNpmHelper(
+            source.directory(`packages/${pkgPath}`),
+            pkg,
+            npmToken,
+            deps,
+            depDirs,
+            dryrun,
+            tsconfig,
+            devSuffix,
+            pkgPath,
+          ).stdout();
+        },
+      };
+    }),
+  );
+}
 
 /**
  * Publish an npm package via bun publish.
