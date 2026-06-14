@@ -1,12 +1,20 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
   "workspaces": {
+    ".": {
+      "entry": ["scripts/**/*.ts", ".buildkite/scripts/**/*.ts"],
+      "project": ["scripts/**/*.ts", ".buildkite/scripts/**/*.ts"]
+    },
     "packages/birmel": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
-    "packages/tools": {
-      "entry": ["src/index.ts"],
+    ".dagger": {
+      "entry": ["src/index.ts", "src/__tests__/**/*.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "scripts/ci": {
+      "entry": ["src/main.ts", "src/__tests__/**/*.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/eslint-config": {
@@ -14,8 +22,8 @@
       "project": ["src/**/*.ts"]
     },
     "packages/astro-opengraph-images": {
-      "entry": ["src/index.ts"],
-      "project": ["src/**/*.ts"]
+      "entry": ["src/index.ts", "src/presets/render-examples.ts"],
+      "project": ["src/**/*.{ts,tsx}"]
     },
     "packages/better-skill-capped": {
       "entry": ["src/index.tsx"],
@@ -30,6 +38,14 @@
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
+    "packages/home-assistant": {
+      "entry": ["src/index.ts", "src/codegen/cli.ts", "test/**/*.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts"]
+    },
+    "packages/llm-observability": {
+      "entry": ["src/index.ts", "test/**/*.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts"]
+    },
     "packages/starlight-karma-bot": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
@@ -43,7 +59,7 @@
       "project": ["src/**/*.ts"]
     },
     "packages/discord-plays-pokemon/packages/backend": {
-      "entry": ["src/index.ts"],
+      "entry": ["src/index.ts", "src/**/*.test.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/discord-plays-pokemon/packages/common": {
@@ -51,15 +67,45 @@
       "project": ["src/**/*.ts"]
     },
     "packages/discord-plays-pokemon/packages/frontend": {
-      "entry": ["src/main.tsx", "vite.config.ts"],
+      "entry": [
+        "src/main.tsx",
+        "src/**/*.test.ts",
+        "src/stories/**/*.tsx",
+        "vite.config.ts"
+      ],
+      "project": ["src/**/*.{ts,tsx}", "*.ts"]
+    },
+    "packages/discord-plays-pokemon": {
+      "entry": ["scripts/**/*.ts"],
+      "project": ["scripts/**/*.ts"]
+    },
+    "packages/discord-plays-mario-kart": {
+      "entry": ["scripts/**/*.ts", "wasm-src/**/*.mjs"],
+      "project": ["scripts/**/*.ts", "wasm-src/**/*.mjs"]
+    },
+    "packages/discord-plays-mario-kart/packages/backend": {
+      "entry": ["src/index.ts", "src/**/*.test.ts", "scripts/**/*.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts"]
+    },
+    "packages/discord-plays-mario-kart/packages/common": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/discord-plays-mario-kart/packages/frontend": {
+      "entry": [
+        "src/main.tsx",
+        "src/**/*.test.ts",
+        "src/stories/**/*.tsx",
+        "vite.config.ts"
+      ],
       "project": ["src/**/*.{ts,tsx}", "*.ts"]
     },
     "packages/scout-for-lol/packages/backend": {
-      "entry": ["src/index.ts", "scripts/**/*.ts"],
+      "entry": ["src/index.ts", "src/**/*.test.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/scout-for-lol/packages/data": {
-      "entry": ["src/index.ts"],
+      "entry": ["src/index.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/scout-for-lol/packages/report": {
@@ -69,6 +115,15 @@
     "packages/scout-for-lol/packages/frontend": {
       "entry": ["astro.config.ts", "src/**/*.tsx", "src/*-stub.ts"],
       "project": ["src/**/*.{ts,tsx,astro}", "*.ts"]
+    },
+    "packages/scout-for-lol/packages/app": {
+      "entry": [
+        "src/main.tsx",
+        "vite.config.ts",
+        "index.html",
+        "public/**/*.js"
+      ],
+      "project": ["src/**/*.{ts,tsx}", "*.ts", "public/**/*.js"]
     },
     "packages/scout-for-lol/packages/desktop": {
       "entry": ["src/main.tsx"],
@@ -80,13 +135,53 @@
       "entry": ["src/index.ts"],
       "project": ["src/**/*.{ts,tsx}"]
     },
+    "packages/scout-for-lol": {
+      "entry": ["scripts/**/*.ts"],
+      "project": ["scripts/**/*.ts"]
+    },
     "packages/cooklang-rich-preview": {
       "entry": ["astro.config.mjs", "src/**/*.astro"],
       "project": ["src/**/*.{ts,tsx,astro}", "*.ts"]
     },
     "packages/monarch": {
-      "entry": ["src/index.ts", "src/lib/*/classify.ts", "scripts/**/*.ts"],
+      "entry": [
+        "src/index.ts",
+        "src/**/*.test.ts",
+        "src/lib/*/classify.ts",
+        "scripts/**/*.ts"
+      ],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
+    },
+    "packages/stocks-sjer-red": {
+      "entry": ["astro.config.ts", "src/**/*.astro"],
+      "project": ["src/**/*.{ts,astro}", "*.ts"]
+    },
+    "packages/streambot": {
+      "entry": [
+        "src/index.ts",
+        "test/**/*.ts",
+        "integration/**/*.ts",
+        "e2e/**/*.ts"
+      ],
+      "project": [
+        "src/**/*.ts",
+        "test/**/*.ts",
+        "integration/**/*.ts",
+        "e2e/**/*.ts"
+      ]
+    },
+    "packages/temporal": {
+      "entry": [
+        "src/worker.ts",
+        "src/client.ts",
+        "src/**/*.test.ts",
+        "scripts/**/*.ts"
+      ],
+      "project": ["src/**/*.ts", "scripts/**/*.ts"]
+    },
+    "packages/trmnl-dashboard": {
+      "entry": ["src/index.ts", "src/__tests__/**/*.ts"],
+      "project": ["src/**/*.ts"]
     },
     "packages/leetcode": {
       "entry": ["src/**/*.ts"],
@@ -111,26 +206,29 @@
   },
   "ignoreExportsUsedInFile": true,
   "rules": {
-    "files": "warn",
-    "dependencies": "warn",
-    "devDependencies": "warn",
-    "exports": "warn",
+    "files": "error",
+    "dependencies": "error",
+    "devDependencies": "error",
+    "exports": "error",
+    "optionalPeerDependencies": "error",
+    "catalog": "error",
     "duplicates": "off",
     "types": "off",
     "nsExports": "off",
     "nsTypes": "off",
     "enumMembers": "off",
-    "unresolved": "warn",
-    "unlisted": "off",
-    "binaries": "off"
+    "namespaceMembers": "off",
+    "unresolved": "error",
+    "unlisted": "error",
+    "binaries": "error"
   },
+  "ignoreUnresolved": ["^#generated/ha-schema\\.ts$", "^~icons/"],
   "ignore": [
     "**/eslint.config.ts",
     "**/postcss.config.ts",
     "**/generated/**",
     "**/dist/**",
     "archive/**",
-    ".dagger/**",
     "practice/**",
     "packages/discord-video-stream/**",
     "packages/resume/**",
@@ -141,9 +239,186 @@
     "packages/cooklang-for-obsidian/**",
     "packages/tasks-for-obsidian/**",
     "packages/bun-decompile/**",
-    "packages/scout-for-lol/scripts/**",
     "packages/docs/**",
     "poc/**",
-    "scripts/**"
+    "scripts/observability/local-stack/**"
+  ],
+  "ignoreDependencies": [
+    "@anthropic-ai/claude-agent-sdk",
+    "@anthropic-ai/sdk",
+    "@astrojs/tailwind",
+    "@commitlint/types",
+    "@dagger.io/dagger",
+    "@eslint-community/eslint-plugin-eslint-comments",
+    "@eslint/compat",
+    "@eslint/eslintrc",
+    "@eslint/js",
+    "@fontsource/roboto",
+    "@fortawesome/fontawesome-free",
+    "@google/generative-ai",
+    "@grafana/grafana-foundation-sdk",
+    "@iconify-json/carbon",
+    "@iconify-json/heroicons",
+    "@iconify-json/mdi",
+    "@iconify-json/simple-icons",
+    "@iconify/json",
+    "@libsql/client",
+    "@opentelemetry/core",
+    "@opentelemetry/sdk-node",
+    "@opentelemetry/sdk-trace-base",
+    "@opentelemetry/semantic-conventions",
+    "@prisma/client",
+    "@resvg/resvg-js",
+    "@scout-for-lol/data",
+    "@scout-for-lol/ui",
+    "@shepherdjerred/eslint-config",
+    "@snazzah/davey",
+    "@svgr/plugin-jsx",
+    "@tailwindcss/forms",
+    "@tailwindcss/postcss",
+    "@tailwindcss/typography",
+    "@tanstack/eslint-plugin-query",
+    "@tauri-apps/api",
+    "@tauri-apps/plugin-dialog",
+    "@tauri-apps/plugin-fs",
+    "@temporalio/testing",
+    "@total-typescript/ts-reset",
+    "@types/eslint-plugin-jsx-a11y",
+    "@types/express",
+    "@types/lodash",
+    "@types/react",
+    "@types/react-router-dom",
+    "@typescript-eslint/eslint-plugin",
+    "@typescript-eslint/parser",
+    "@typescript-eslint/utils",
+    "@vitejs/plugin-react",
+    "@vitejs/plugin-react-swc",
+    "@vscode/tree-sitter-wasm",
+    "autoprefixer",
+    "bulma",
+    "cron-parser",
+    "debug",
+    "eslint-config-prettier",
+    "eslint-import-resolver-typescript-bun",
+    "eslint-plugin-astro",
+    "eslint-plugin-jsx-a11y",
+    "eslint-plugin-react",
+    "eslint-plugin-react-hooks",
+    "eslint-plugin-react-refresh",
+    "eslint-plugin-regexp",
+    "eslint-plugin-unicorn",
+    "express",
+    "ffmpeg-static",
+    "glob",
+    "globals",
+    "jiti",
+    "keyboardjs",
+    "lodash",
+    "openai",
+    "postcss",
+    "prism-media",
+    "react",
+    "react-redux",
+    "react-scripts",
+    "remeda",
+    "sass",
+    "sodium-native",
+    "tailwindcss",
+    "ts-morph",
+    "ts-pattern",
+    "tslib",
+    "twisted",
+    "typescript-eslint",
+    "uuid",
+    "vite-tsconfig-paths",
+    "vitest",
+    "yoga-wasm-web",
+    "youtubei.js",
+    "zod"
+  ],
+  "ignoreFiles": [
+    ".dagger/src/timing.ts",
+    "packages/better-skill-capped/src/datastore/content-datastore.ts",
+    "packages/discord-plays-mario-kart/packages/frontend/src/model/connection.ts",
+    "packages/discord-plays-mario-kart/packages/frontend/src/util.ts",
+    "packages/discord-plays-pokemon/packages/frontend/src/util.ts",
+    "packages/monarch/src/lib/costco/receipt-parser.ts",
+    "packages/scout-for-lol/packages/frontend/src/components/FeatureWithImage.astro",
+    "packages/scout-for-lol/packages/frontend/src/components/StatCard.astro"
+  ],
+  "ignoreIssues": {
+    ".dagger/src/base.ts": ["exports"],
+    "packages/better-skill-capped/src/utils/url-utilities.ts": ["exports"],
+    "packages/discord-plays-mario-kart/packages/backend/src/observability/tracing.ts": [
+      "exports"
+    ],
+    "packages/discord-plays-mario-kart/packages/backend/src/util.ts": [
+      "exports"
+    ],
+    "packages/discord-plays-pokemon/packages/backend/src/discord/message-handler.ts": [
+      "exports"
+    ],
+    "packages/discord-plays-pokemon/packages/backend/src/emulator/constants.ts": [
+      "exports"
+    ],
+    "packages/discord-plays-pokemon/packages/backend/src/game/command/command.ts": [
+      "exports"
+    ],
+    "packages/discord-plays-pokemon/packages/backend/src/observability/tracing.ts": [
+      "exports"
+    ],
+    "packages/eslint-config/src/rules/shared/tool-cache.ts": ["exports"],
+    "packages/home-assistant/src/codegen/introspect.ts": ["exports"],
+    "packages/monarch/src/lib/classifier/cache.ts": ["exports"],
+    "packages/monarch/src/lib/classifier/claude.ts": ["exports"],
+    "packages/monarch/src/lib/conservice/client.ts": ["exports"],
+    "packages/monarch/src/lib/enrichment.ts": ["exports"],
+    "packages/monarch/src/lib/monarch/api.ts": ["exports"],
+    "packages/scout-for-lol/packages/app/src/components/ui/dialog.tsx": [
+      "exports"
+    ],
+    "packages/scout-for-lol/packages/app/src/components/ui/select.tsx": [
+      "exports"
+    ],
+    "packages/scout-for-lol/packages/desktop/src/components/ui/card.tsx": [
+      "exports"
+    ],
+    "packages/scout-for-lol/packages/frontend/src/lib/review-tool/reset-defaults.ts": [
+      "exports"
+    ],
+    "packages/tasknotes-server/src/sentry.ts": ["exports"],
+    "packages/temporal/src/activities/alert-remediation.ts": ["exports"],
+    "packages/temporal/src/activities/pr-review/ingest-dismissals.ts": [
+      "exports"
+    ],
+    "packages/temporal/src/activities/pr-review/specialists.ts": ["exports"],
+    "packages/temporal/src/activities/pr-review/specialists/convention.ts": [
+      "exports"
+    ],
+    "packages/temporal/src/activities/pr-review/specialists/deps.ts": [
+      "exports"
+    ],
+    "packages/temporal/src/activities/pr-review/specialists/perf.ts": [
+      "exports"
+    ],
+    "packages/temporal/src/activities/pr-review/specialists/security.ts": [
+      "exports"
+    ],
+    "packages/temporal/src/observability/pr-review-metrics.ts": ["exports"],
+    "packages/temporal/src/observability/tracing.ts": ["exports"],
+    "packages/temporal/src/workflows/ha/util.ts": ["exports"],
+    "scripts/ci/src/catalog.ts": ["exports"],
+    "scripts/ci/src/steps/images.ts": ["exports"]
+  },
+  "ignoreBinaries": [
+    "HEAD",
+    "argocd",
+    "gh",
+    "kubectl",
+    "lefthook",
+    "op",
+    "rg",
+    "tsc",
+    "velero"
   ]
 }

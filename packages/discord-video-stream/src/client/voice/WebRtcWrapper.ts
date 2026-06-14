@@ -12,7 +12,6 @@ import {
   RtcpSrReporter,
   type Track,
 } from "@lng2004/node-datachannel";
-import { Codec, MediaType } from "@snazzah/davey";
 import { CodecPayloadType } from "./CodecPayloadType.js";
 import { normalizeVideoCodec, type SupportedVideoCodec } from "../../utils.js";
 import {
@@ -23,6 +22,16 @@ import {
 } from "../processing/AnnexBHelper.js";
 import { rewriteSPSVUI } from "../processing/SPSVUIRewriter.js";
 import type { BaseMediaConnection } from "./BaseMediaConnection.js";
+
+const DAVE_MEDIA_TYPE_VIDEO = 1;
+const DAVE_CODEC = {
+  UNKNOWN: 0,
+  VP8: 2,
+  VP9: 3,
+  H264: 4,
+  H265: 5,
+  AV1: 6,
+} as const;
 
 export class WebRtcConnWrapper {
   private _mediaConn: BaseMediaConnection;
@@ -129,30 +138,27 @@ export class WebRtcConnWrapper {
       if (spsRewritten)
         frame = Buffer.concat(nalus.flatMap((el) => [startCode3, el]));
     }
-    if (this.mediaConnection.daveReady) {
-      let daveCodec = Codec.UNKNOWN;
+    const daveSession = this.mediaConnection.daveSession;
+    if (this.mediaConnection.daveReady && daveSession) {
+      let daveCodec: number = DAVE_CODEC.UNKNOWN;
       switch (this._videoCodec) {
         case "H264":
-          daveCodec = Codec.H264;
+          daveCodec = DAVE_CODEC.H264;
           break;
         case "H265":
-          daveCodec = Codec.H265;
+          daveCodec = DAVE_CODEC.H265;
           break;
         case "VP8":
-          daveCodec = Codec.VP8;
+          daveCodec = DAVE_CODEC.VP8;
           break;
         case "VP9":
-          daveCodec = Codec.VP9;
+          daveCodec = DAVE_CODEC.VP9;
           break;
         case "AV1":
-          daveCodec = Codec.AV1;
+          daveCodec = DAVE_CODEC.AV1;
           break;
       }
-      frame = this.mediaConnection.daveSession!.encrypt(
-        MediaType.VIDEO,
-        daveCodec,
-        frame,
-      );
+      frame = daveSession.encrypt(DAVE_MEDIA_TYPE_VIDEO, daveCodec, frame);
     }
     this._videoTrack?.sendMessageBinary(frame);
     rtpConfig.timestamp += Math.round((frametime * clockRate) / 1000);

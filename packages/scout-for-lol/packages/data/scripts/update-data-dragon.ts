@@ -23,6 +23,8 @@ import { getChampionName } from "twisted/dist/constants/champions.js";
 const ASSETS_DIR = `${import.meta.dir}/../src/data-dragon/assets`;
 const IMG_DIR = `${ASSETS_DIR}/img`;
 const BASE_URL = "https://ddragon.leagueoflegends.com";
+const BYTES_PER_MIB = 1024 * 1024;
+const MAX_LOADING_SCREEN_IMAGE_BYTES = 1 * BYTES_PER_MIB;
 
 function getCommunityDragonVersion(dataDragonVersion: string): string {
   const parts = dataDragonVersion.split(".");
@@ -140,6 +142,23 @@ async function downloadImage(url: string, outputPath: string): Promise<void> {
   }
   const buffer = await response.arrayBuffer();
   await Bun.write(outputPath, buffer);
+}
+
+function formatMib(bytes: number): string {
+  return `${(bytes / BYTES_PER_MIB).toFixed(2)} MiB`;
+}
+
+function assertFileSizeAtMost(
+  path: string,
+  maxBytes: number,
+  description: string,
+): void {
+  const size = Bun.file(path).size;
+  if (size > maxBytes) {
+    throw new Error(
+      `${description} is ${formatMib(size)}, which exceeds ${formatMib(maxBytes)}: ${path}`,
+    );
+  }
 }
 
 async function downloadImagesInBatches(
@@ -420,6 +439,11 @@ async function downloadLoadingScreenSkin(
     if (response.ok) {
       const buffer = await response.arrayBuffer();
       await Bun.write(outputPath, buffer);
+      assertFileSizeAtMost(
+        outputPath,
+        MAX_LOADING_SCREEN_IMAGE_BYTES,
+        `Data Dragon loading screen ${championName}_${String(skinNum)}`,
+      );
       return { status: "success", source: "ddragon" };
     }
   } catch {
@@ -447,6 +471,11 @@ async function downloadLoadingScreenSkin(
     }
     const buffer = await response.arrayBuffer();
     await Bun.write(outputPath, buffer);
+    assertFileSizeAtMost(
+      outputPath,
+      MAX_LOADING_SCREEN_IMAGE_BYTES,
+      `CommunityDragon loading screen ${championName}_${String(skinNum)}`,
+    );
     return { status: "success", source: "cdragon" };
   } catch {
     return { status: "failed" };

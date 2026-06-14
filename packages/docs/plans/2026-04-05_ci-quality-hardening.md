@@ -2,9 +2,13 @@
 
 ## Status
 
-Active / Not Started. Knip, Trivy, and Semgrep are still soft-failing in CI.
+Partially Complete. Knip and Trivy were hardened in
+`packages/docs/plans/2026-06-13_strict-quality-checks.md`; Semgrep remains
+soft-failing and should be handled separately.
 
-> **Stale-content note (2026-06-06):** the premise still holds (`trivy`/`semgrep`/`knip` remain `softFail: true`), but the quality steps moved from `.buildkite/scripts/*` into Dagger — the live code is `.dagger/src/quality.ts` (referenced below as `quality.ts:134/158`, now in `.dagger/src/`). The `--skip-dirs practice` subtask already landed (`.dagger/src/quality.ts:194`). Re-verify the file/line references before acting.
+> **Stale-content note (2026-06-13):** Knip and Trivy are no longer
+> soft-failing after `2026-06-13_strict-quality-checks.md`. The remaining
+> actionable portion of this plan is Semgrep.
 
 ## Context
 

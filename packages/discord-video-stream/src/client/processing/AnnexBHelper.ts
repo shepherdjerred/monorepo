@@ -90,9 +90,15 @@ export interface AnnexBHelpers {
   isAUD(unitType: number): boolean;
 }
 
+function readByte(frame: Buffer, offset: number): number {
+  const byte = frame[offset];
+  if (byte === undefined) throw new Error("Bad Annex-B frame");
+  return byte;
+}
+
 export const H264Helpers: AnnexBHelpers = {
   getUnitType(frame) {
-    return frame[0] & 0x1f;
+    return readByte(frame, 0) & 0x1f;
   },
   splitHeader(frame) {
     return [frame.subarray(0, 1), frame.subarray(1)];
@@ -104,7 +110,7 @@ export const H264Helpers: AnnexBHelpers = {
 
 export const H265Helpers: AnnexBHelpers = {
   getUnitType(frame) {
-    return (frame[0] >> 1) & 0x3f;
+    return (readByte(frame, 0) >> 1) & 0x3f;
   },
   splitHeader(frame) {
     return [frame.subarray(0, 2), frame.subarray(2)];

@@ -1,6 +1,6 @@
 import React from "react";
 import RoleSelector from "./role-selector.tsx";
-import type { Filters } from "./filters.tsx";
+import type { Filters } from "./filters.ts";
 import type { Role } from "#src/model/role";
 import WatchStatusSelector from "./watch-status-selector.tsx";
 import BookmarkStatusSelector from "./bookmark-status-selector.tsx";

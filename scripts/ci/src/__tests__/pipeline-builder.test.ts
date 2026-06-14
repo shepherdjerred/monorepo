@@ -338,6 +338,7 @@ describe("buildPipeline", () => {
         "dagger-hygiene",
         "trivy-scan",
         "semgrep-scan",
+        "large-file-check",
       ]) {
         expect(steps.find((s) => s.key === key)?.soft_fail).toBe(true);
       }
@@ -442,6 +443,7 @@ describe("buildPipeline", () => {
         "trivy-scan",
         "dagger-hygiene",
         "knip-check",
+        "large-file-check",
       ]) {
         const step = steps.find((s) => s.key === key);
         expect(step).toBeDefined();
@@ -485,7 +487,6 @@ describe("buildPipeline", () => {
         "scout-test-template-check",
         "migration-guard",
         "merge-conflict-check",
-        "large-file-check",
         "caddyfile-validate",
       ];
       for (const key of blockingGateKeys) {
@@ -499,6 +500,7 @@ describe("buildPipeline", () => {
         "dagger-hygiene",
         "trivy-scan",
         "semgrep-scan",
+        "large-file-check",
       ];
       for (const key of asyncKeys) {
         expect(Array.isArray(deps) ? deps : []).not.toContain(key);
