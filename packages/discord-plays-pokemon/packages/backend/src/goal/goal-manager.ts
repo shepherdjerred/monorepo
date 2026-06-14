@@ -1,4 +1,5 @@
 import path from "node:path";
+import { z } from "zod";
 import { logger } from "#src/logger.ts";
 import type { Config } from "#src/config/schema.ts";
 import { hasCodexCredential } from "./codex-auth.ts";
@@ -16,8 +17,36 @@ import { formatGameStateForPrompt } from "./game-state-summary.ts";
 import { formatHistoryForPrompt } from "./history-summary.ts";
 import { computeCost, formatCostLine } from "./pricing.ts";
 
-import { appendToHistory, type CompletedGoal } from "./goal-history.ts";
+import {
+  appendToHistory,
+  HISTORY_LIMIT,
+  type CompletedGoal,
+} from "./goal-history.ts";
 import type { GoalState } from "./goal-types.ts";
+
+// Validates the envelope written by persistState() so history is safely
+// deserialized on restart even if the file has an unexpected shape.
+const CompletedGoalSchema = z.object({
+  id: z.string(),
+  goal: z.string(),
+  requestedBy: z.string(),
+  startedAt: z.string(),
+  finishedAt: z.string(),
+  status: z.enum([
+    "running",
+    "completed",
+    "failed",
+    "timeout",
+    "replaced",
+    "shutdown",
+  ]),
+  finalReport: z.string().optional(),
+  exitCode: z.number().optional(),
+});
+
+const StateEnvelopeSchema = z.object({
+  history: z.array(CompletedGoalSchema).optional(),
+});
 
 type ActiveGoal = {
   state: GoalState;
@@ -28,6 +57,10 @@ type ActiveGoal = {
   // Streaming parser for Codex's `--json` stdout. Accumulates token usage so
   // observeProcess() can build a cost line for the final Discord message.
   jsonl: CodexJsonlParser;
+  // Promise for the stdout pump coroutine. Must be awaited in observeProcess()
+  // before reading jsonl.total() — the last turn.completed usage event may
+  // still be buffered in the pipe when process.exited resolves.
+  stdoutPump: Promise<void>;
   // OTel span synthesis attached to the parser. The archive SpanProcessor
   // (observability/tracing.ts) ships full request/response bodies to S3.
   trace: CodexTrace;
@@ -147,6 +180,40 @@ export class GoalManager {
     this.spawner = options.spawner ?? defaultSpawner;
     this.now = options.now ?? (() => new Date());
     this.snapshotProvider = options.snapshotProvider ?? (() => null);
+  }
+
+  /**
+   * Seed in-memory history from the persisted state file so goal history
+   * survives server restarts. Call once after constructing GoalManager,
+   * before the first startGoal(). No-ops silently if the file is absent or
+   * has an unexpected shape — the in-memory list simply starts empty.
+   */
+  async initialize(): Promise<void> {
+    const statePath = this.resolveRuntimePath(this.config.state_path);
+    const file = Bun.file(statePath);
+    if (!(await file.exists())) return;
+    let raw: unknown;
+    try {
+      raw = await file.json();
+    } catch (error) {
+      logger.warn(`goal-manager: could not parse state file: ${String(error)}`);
+      return;
+    }
+    const result = StateEnvelopeSchema.safeParse(raw);
+    if (!result.success) {
+      logger.warn(
+        `goal-manager: state file has unexpected shape, starting with empty history`,
+      );
+      return;
+    }
+    const loaded = (result.data.history ?? []).slice(0, HISTORY_LIMIT);
+    this.history = loaded;
+    for (const entry of loaded) {
+      this.recordedIds.add(entry.id);
+    }
+    logger.info(
+      `goal-manager: loaded ${String(loaded.length)} history entries from disk`,
+    );
   }
 
   getStatus(): GoalState | undefined {
@@ -285,7 +352,10 @@ export class GoalManager {
       gameStateSummary,
       initialPrompt: `goal=${goal}\nstate=${gameStateSummary}`,
     });
-    void pumpCodexStdout(process.stdout, jsonl);
+    // Store the pump promise so observeProcess() can await it before reading
+    // jsonl.total(). The last turn.completed usage event is often the final
+    // line Codex writes; the pump must fully drain before we tally the cost.
+    const stdoutPump = pumpCodexStdout(process.stdout, jsonl);
     void streamToLog(process.stderr, "stderr");
 
     const state: GoalState = {
@@ -309,6 +379,7 @@ export class GoalManager {
       lastProgressSentAt: 0,
       outputPath,
       jsonl,
+      stdoutPump,
       trace,
     };
     await this.persistState(state);
@@ -366,6 +437,11 @@ export class GoalManager {
       return;
     }
 
+    // Drain any remaining buffered stdout before reading token totals.
+    // The last turn.completed usage event is the final line Codex emits and
+    // may still be in the pipe when process.exited resolves.
+    await active.stdoutPump;
+
     clearTimeout(active.timeout);
     const report = await this.readFinalReport(active.outputPath);
     active.state.finishedAt = this.now().toISOString();
@@ -381,12 +457,13 @@ export class GoalManager {
     const cost = computeCost(this.config.model, usage);
     const costLine = formatCostLine(this.config.model, cost, usage);
 
+    // Cost line comes first so it is never cut by truncation on long reports.
     await this.sendMessage({
       channelId: active.state.channelId,
       content: truncateForDiscord(
         `<@${active.state.requestedBy}> goal ${
           exitCode === 0 ? "finished" : "stopped with an error"
-        }: ${sanitizeDiscordText(report)}\n${costLine}`,
+        } (${costLine}): ${sanitizeDiscordText(report)}`,
       ),
       allowedUserIds: [active.state.requestedBy],
     });

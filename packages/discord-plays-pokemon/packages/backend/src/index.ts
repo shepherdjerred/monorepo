@@ -132,6 +132,7 @@ if (emulator && config.game.goal.enabled) {
     snapshotProvider: () =>
       readGameSnapshot(emulator.memoryReader(), emulator.gameSymbols()),
   });
+  await goalManager.initialize();
   goalControlServer = startGoalControlServer({
     emulator,
     goalManager,
