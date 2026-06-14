@@ -160,7 +160,7 @@ const versions = {
     "0.17.2@sha256:70df8358acb05a89bb9b9123278183d9b054851d65601498f5c42b1513cc878b",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "library/python":
-    "3.14-alpine@sha256:5a824eb82cc75361f98611f3cfc5091ea33f10a6ccea4d4ebdabbc523b9a1614",
+    "3.14-alpine@sha256:003970a263347645cd23d4f90929ad16ba7ce7d808ee4674ffcc93cb21cc289f",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "bitnamilegacy/kubectl":
     "1.33.4@sha256:ed0b31a0508da84ee655c5c6e01bd3897fc56ad6cf69debb27fa1893a06d2246",
