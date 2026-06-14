@@ -401,3 +401,151 @@ describe("GoalManager concurrency", () => {
     await manager.shutdown();
   });
 });
+
+// Spawner that returns the next process from an injectable slot, so the test
+// can grab it back and complete it from outside the manager.
+function spawnerWithSlot(): {
+  spawner: GoalProcessSpawner;
+  nextProcess: () => ReturnType<typeof makeProcess>;
+} {
+  let nextProc: ReturnType<typeof makeProcess> | undefined;
+  return {
+    spawner: () => {
+      const proc = makeProcess();
+      nextProc = proc;
+      return proc;
+    },
+    nextProcess: () => {
+      if (nextProc === undefined) {
+        throw new Error("spawner has not been called yet");
+      }
+      return nextProc;
+    },
+  };
+}
+
+async function runAndComplete(
+  manager: GoalManager,
+  nextProcess: () => ReturnType<typeof makeProcess>,
+  goal: string,
+): Promise<void> {
+  const start = await manager.startGoal({
+    goal,
+    requesterId: "user-a",
+    channelId: "channel",
+  });
+  expect(start.kind).toBe("started");
+  nextProcess().finish(0);
+  // observeProcess writes history+state after process exit; poll briefly.
+  for (let attempt = 0; attempt < 200; attempt += 1) {
+    if (manager.getHistory(20).some((entry) => entry.goal === goal)) return;
+    await Bun.sleep(1);
+  }
+  throw new Error(`Goal ${goal} never landed in history`);
+}
+
+describe("GoalManager history", () => {
+  const originalOpenAiKey = Bun.env.OPENAI_API_KEY;
+
+  beforeEach(() => {
+    Bun.env.OPENAI_API_KEY = "test-key";
+  });
+
+  afterEach(() => {
+    if (originalOpenAiKey === undefined) {
+      delete Bun.env.OPENAI_API_KEY;
+    } else {
+      Bun.env.OPENAI_API_KEY = originalOpenAiKey;
+    }
+  });
+
+  test("appends finished goals newest-first to the rolling history", async () => {
+    const runtimeDirectory = await createRuntimeDirectory();
+    const { spawner, nextProcess } = spawnerWithSlot();
+    const manager = new GoalManager({
+      config: makeGoalConfig(runtimeDirectory),
+      controlToken: "token",
+      spawner,
+      sendMessage: noopSendMessage,
+      now: () => new Date("2026-06-13T00:00:00.000Z"),
+    });
+
+    expect(manager.getHistory(5)).toEqual([]);
+
+    await runAndComplete(manager, nextProcess, "Goal A");
+    await runAndComplete(manager, nextProcess, "Goal B");
+    await runAndComplete(manager, nextProcess, "Goal C");
+
+    const history = manager.getHistory(10);
+    expect(history.map((entry) => entry.goal)).toEqual([
+      "Goal C",
+      "Goal B",
+      "Goal A",
+    ]);
+    expect(history[0]?.status).toBe("completed");
+    expect(history[0]?.exitCode).toBe(0);
+    await manager.shutdown();
+  });
+
+  test("trims history to the last 10 entries", async () => {
+    const runtimeDirectory = await createRuntimeDirectory();
+    const { spawner, nextProcess } = spawnerWithSlot();
+    const manager = new GoalManager({
+      config: makeGoalConfig(runtimeDirectory),
+      controlToken: "token",
+      spawner,
+      sendMessage: noopSendMessage,
+      now: () => new Date("2026-06-13T00:00:00.000Z"),
+    });
+
+    for (let i = 0; i < 15; i += 1) {
+      await runAndComplete(manager, nextProcess, `Goal ${String(i)}`);
+    }
+
+    const history = manager.getHistory(20);
+    expect(history).toHaveLength(10);
+    expect(history[0]?.goal).toBe("Goal 14");
+    expect(history.at(-1)?.goal).toBe("Goal 5");
+    await manager.shutdown();
+  });
+
+  test("persists current goal + history into goal-state.json", async () => {
+    const runtimeDirectory = await createRuntimeDirectory();
+    const config = makeGoalConfig(runtimeDirectory);
+    const { spawner, nextProcess } = spawnerWithSlot();
+    const manager = new GoalManager({
+      config,
+      controlToken: "token",
+      spawner,
+      sendMessage: noopSendMessage,
+      now: () => new Date("2026-06-13T00:00:00.000Z"),
+    });
+
+    await runAndComplete(manager, nextProcess, "Goal A");
+
+    const statePath = path.resolve(runtimeDirectory, config.state_path);
+    const persisted = await Bun.file(statePath).json();
+    expect(persisted).toHaveProperty("current");
+    expect(persisted).toHaveProperty("history");
+    expect(persisted.history).toHaveLength(1);
+    expect(persisted.history[0].goal).toBe("Goal A");
+    await manager.shutdown();
+  });
+
+  test("getHistory(0) returns empty without touching state", async () => {
+    const runtimeDirectory = await createRuntimeDirectory();
+    const { spawner, nextProcess } = spawnerWithSlot();
+    const manager = new GoalManager({
+      config: makeGoalConfig(runtimeDirectory),
+      controlToken: "token",
+      spawner,
+      sendMessage: noopSendMessage,
+      now: () => new Date("2026-06-13T00:00:00.000Z"),
+    });
+
+    await runAndComplete(manager, nextProcess, "Goal A");
+    expect(manager.getHistory(0)).toEqual([]);
+    expect(manager.getHistory(-5)).toEqual([]);
+    await manager.shutdown();
+  });
+});

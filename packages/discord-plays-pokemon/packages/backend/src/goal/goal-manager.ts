@@ -14,28 +14,8 @@ import {
 import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
 import { computeCost, formatCostLine } from "./pricing.ts";
 
-export type GoalStatus =
-  | "running"
-  | "completed"
-  | "failed"
-  | "timeout"
-  | "replaced"
-  | "shutdown";
-
-export type GoalState = {
-  id: string;
-  goal: string;
-  requestedBy: string;
-  channelId: string;
-  startedAt: string;
-  lockedUntil: string;
-  deadline: string;
-  status: GoalStatus;
-  lastProgress?: string;
-  finishedAt?: string;
-  finalReport?: string;
-  exitCode?: number;
-};
+import { appendToHistory, type CompletedGoal } from "./goal-history.ts";
+import type { GoalState } from "./goal-types.ts";
 
 type ActiveGoal = {
   state: GoalState;
@@ -140,6 +120,12 @@ export class GoalManager {
   private readonly sendMessage: GoalMessageSender;
   private readonly spawner: GoalProcessSpawner;
   private readonly now: () => Date;
+  // Newest first. Persisted via persistState() so it survives restarts.
+  private history: CompletedGoal[] = [];
+  // Goal IDs we've already snapshot into history. Guards against double-record
+  // when stopActive() kills a process and its observeProcess() later resumes.
+  // Trimmed lazily inside recordCompletion when it grows past 2× HISTORY_LIMIT.
+  private readonly recordedIds = new Set<string>();
 
   constructor(options: GoalManagerOptions) {
     this.config = options.config;
@@ -151,6 +137,16 @@ export class GoalManager {
 
   getStatus(): GoalState | undefined {
     return this.active?.state;
+  }
+
+  /**
+   * Most-recent `limit` finished goals, newest first. Surfaced to the model via
+   * the new `pokemonctl history` subcommand (T5). Use `limit <= HISTORY_LIMIT`
+   * for accuracy; we never persist more than that.
+   */
+  getHistory(limit: number): CompletedGoal[] {
+    if (limit <= 0) return [];
+    return this.history.slice(0, limit);
   }
 
   async startGoal(input: StartGoalInput): Promise<StartGoalResult> {
@@ -420,6 +416,7 @@ export class GoalManager {
     active.state.exitCode = exitCode;
     active.state.status = exitCode === 0 ? "completed" : "failed";
     active.state.finalReport = report;
+    this.recordCompletion(active.state);
     await this.persistState(active.state);
     this.active = undefined;
 
@@ -448,6 +445,7 @@ export class GoalManager {
     active.state.status = "timeout";
     active.state.finishedAt = this.now().toISOString();
     active.state.finalReport = "Goal timed out before Codex finished.";
+    this.recordCompletion(active.state);
     await this.persistState(active.state);
     this.active = undefined;
     await this.sendMessage({
@@ -473,6 +471,7 @@ export class GoalManager {
       status === "replaced"
         ? "Goal was replaced by a newer goal."
         : "Goal was stopped during application shutdown.";
+    this.recordCompletion(active.state);
     await this.persistState(active.state);
     this.active = undefined;
   }
@@ -497,8 +496,19 @@ export class GoalManager {
 
   private async persistState(state: GoalState): Promise<void> {
     const statePath = this.resolveRuntimePath(this.config.state_path);
-    await Bun.write(statePath, `${JSON.stringify(state, undefined, 2)}\n`, {
+    const envelope = { current: state, history: this.history };
+    await Bun.write(statePath, `${JSON.stringify(envelope, undefined, 2)}\n`, {
       createPath: true,
     });
+  }
+
+  /**
+   * Snapshot a finished goal into the rolling history list and trim to
+   * HISTORY_LIMIT. Called from every terminal path (observeProcess,
+   * timeoutGoal, stopActive) so all of {completed, failed, timeout,
+   * replaced, shutdown} leave a trace.
+   */
+  private recordCompletion(state: GoalState): void {
+    this.history = [...appendToHistory(this.history, this.recordedIds, state)];
   }
 }
