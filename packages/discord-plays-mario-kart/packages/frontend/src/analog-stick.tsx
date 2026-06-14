@@ -36,8 +36,13 @@ function StickChevron({
       onPointerCancel={() => {
         onRelease(control.code);
       }}
-      onPointerLeave={() => {
-        onRelease(control.code);
+      onPointerLeave={(event) => {
+        // Only release if the pointer is not captured; with capture active the
+        // browser already delivers pointerup, and a post-release pointerleave
+        // would fire onRelease a second time.
+        if (!event.currentTarget.hasPointerCapture(event.pointerId)) {
+          onRelease(control.code);
+        }
       }}
       className={cx(
         "absolute z-40 flex h-6 w-6 touch-none flex-col items-center justify-center rounded-md border text-[10px] font-black leading-none transition active:translate-y-0 sm:h-7 sm:w-7",
