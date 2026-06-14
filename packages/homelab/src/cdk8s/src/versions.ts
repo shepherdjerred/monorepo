@@ -197,7 +197,7 @@ const versions = {
   // renovate: datasource=helm registryUrl=https://charts.bitnami.com/bitnami versioning=semver
   redis: "25.5.3",
   // renovate: datasource=helm registryUrl=https://seaweedfs.github.io/seaweedfs/helm versioning=semver
-  seaweedfs: "4.25.0",
+  seaweedfs: "4.25.1",
   // renovate: datasource=helm registryUrl=https://charts.bitnami.com/bitnami versioning=semver
   mariadb: "25.1.2",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
