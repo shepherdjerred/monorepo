@@ -67,77 +67,55 @@ export function perPackageSteps(
   const pf = daggerPkgFlags(pkg);
 
   if (PRISMA_PACKAGES.has(pkg)) {
-    // Prisma: combined generate+action in a single dagger pipeline (avoids nested CLI calls)
+    // Prisma: one bundled pod runs generate-and-{lint,typecheck,test} in
+    // parallel via Promise.all. The engine de-dups the shared generate layer.
     steps.push(
       daggerCallStep(
-        `:eslint: Lint`,
-        `lint-${sk}`,
-        `${DAGGER_CALL} generate-and-lint ${pf}`,
+        `:dagger_knife: Lint + Typecheck + Test`,
+        `pkg-check-${sk}`,
+        `${DAGGER_CALL} generate-and-lint-typecheck-test ${pf}`,
+        resources,
+      ),
+    );
+  } else if (PLAYWRIGHT_PACKAGES.has(pkg)) {
+    // Playwright runs in a different base container (PLAYWRIGHT_IMAGE) and
+    // needs a full astro build first — keep it as its own step. Bundle the
+    // bun-base lint + typecheck into one pod.
+    steps.push(
+      daggerCallStep(
+        `:dagger_knife: Lint + Typecheck`,
+        `pkg-check-${sk}`,
+        `${DAGGER_CALL} lint-typecheck-test ${pf}`,
         resources,
       ),
       daggerCallStep(
-        `:typescript: Typecheck`,
-        `typecheck-${sk}`,
-        `${DAGGER_CALL} generate-and-typecheck ${pf}`,
-        resources,
-      ),
-      daggerCallStep(
-        `:test_tube: Test`,
-        `test-${sk}`,
-        `${DAGGER_CALL} generate-and-test ${pf}`,
+        `:performing_arts: Playwright Test`,
+        `playwright-test-${sk}`,
+        `${DAGGER_CALL} playwright-test ${pf}`,
         resources,
       ),
     );
   } else {
-    // temporal: typecheck needs HASS_URL/HASS_TOKEN to run ha-codegen against
-    // the live Home Assistant instance and produce the typed schema before
-    // tsc. Without secrets the generate script falls back to the committed
-    // stub (loose types). Secrets come from `buildkite-ci-secrets` (mounted
-    // by the k8s plugin on every step) — add HASS_URL / HASS_TOKEN fields to
-    // the 1Password item backing that secret to enable strict CI typing.
+    // Standard bun package — one bundled pod runs lint + typecheck + test in
+    // parallel. temporal: typecheck needs HASS_URL/HASS_TOKEN so ha-codegen
+    // runs against the live HA instance before tsc. Secrets come from
+    // `buildkite-ci-secrets` (mounted by the k8s plugin on every step).
     // Inside the Dagger container the secrets are re-bound to HA_URL /
     // HA_TOKEN (what the ha-codegen CLI reads); only the outer env lookup
     // uses the HASS_ prefix.
-    const typecheckCmd =
+    const haFlags =
       pkg === "temporal"
-        ? `${DAGGER_CALL} generate-and-typecheck-with-secrets ${pf} --ha-url env:HASS_URL --ha-token env:HASS_TOKEN`
-        : `${DAGGER_CALL} typecheck ${pf}`;
+        ? ` --ha-url env:HASS_URL --ha-token env:HASS_TOKEN`
+        : "";
+    const helmFlag = pkg === "homelab" ? ` --needs-helm` : "";
     steps.push(
       daggerCallStep(
-        `:eslint: Lint`,
-        `lint-${sk}`,
-        `${DAGGER_CALL} lint ${pf}`,
-        resources,
-      ),
-      daggerCallStep(
-        `:typescript: Typecheck`,
-        `typecheck-${sk}`,
-        typecheckCmd,
+        `:dagger_knife: Lint + Typecheck + Test`,
+        `pkg-check-${sk}`,
+        `${DAGGER_CALL} lint-typecheck-test ${pf}${helmFlag}${haFlags}`,
         resources,
       ),
     );
-
-    if (PLAYWRIGHT_PACKAGES.has(pkg)) {
-      // Playwright tests need a browser container, not bunBase
-      steps.push(
-        daggerCallStep(
-          `:performing_arts: Playwright Test`,
-          `playwright-test-${sk}`,
-          `${DAGGER_CALL} playwright-test ${pf}`,
-          resources,
-        ),
-      );
-    } else {
-      const needsHelm = pkg === "homelab" ? " --needs-helm" : "";
-      steps.push(
-        daggerCallStep(
-          `:test_tube: Test`,
-          `test-${sk}`,
-          `${DAGGER_CALL} test ${pf}${needsHelm}`,
-          resources,
-        ),
-      );
-    }
   }
 
   if (pkg === "tasks-for-obsidian") {

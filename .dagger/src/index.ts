@@ -46,6 +46,8 @@ import {
   generateAndTypecheckHelper,
   generateAndTestHelper,
   generateAndTypecheckWithSecretsHelper,
+  lintTypecheckTestHelper,
+  generateAndLintTypecheckTestHelper,
 } from "./typescript";
 
 import { astroCheckHelper, astroBuildHelper, viteBuildHelper } from "./astro";
@@ -289,6 +291,54 @@ export class Monorepo {
       depDirs,
       tsconfig,
     ).stdout();
+  }
+
+  /**
+   * Per-package bundle: run lint + typecheck + test in parallel as sibling
+   * containers from one pod. The engine de-dups the shared install layer by
+   * content-address, so this collapses three BK steps into one without losing
+   * intra-package parallelism. `haUrl`/`haToken` switch the typecheck branch
+   * to the HA-secrets generate-and-typecheck variant (used by temporal).
+   */
+  @func()
+  async lintTypecheckTest(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+    needsHelm = false,
+    haUrl: Secret | null = null,
+    haToken: Secret | null = null,
+  ): Promise<string> {
+    return lintTypecheckTestHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+      needsHelm,
+      haUrl,
+      haToken,
+    );
+  }
+
+  /** Prisma variant of {@link lintTypecheckTest} — each sibling generates first. */
+  @func()
+  async generateAndLintTypecheckTest(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return generateAndLintTypecheckTestHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+    );
   }
 
   // ---------------------------------------------------------------------------
