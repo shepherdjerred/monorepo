@@ -53,3 +53,23 @@ Reproduced locally before opening the PR:
 - **Renovate `postUpgradeTasks`** — auto-regenerate every dependent `bun.lock` at PR creation, so drift never reaches CI.
 - **Auto-merge gate** — Renovate currently auto-merges on Greptile alone if Buildkite is canceled (PR #1213 pre-condition). The branch ruleset (`packages/homelab/src/tofu/github/rulesets.tf`) should require a successful Buildkite build for the head SHA.
 - **Nightly full-sweep on main** — catches drift introduced without a `package.json` change (bun upgrade, registry republish). Trivial reuse of `--all` mode.
+
+## Session Log — 2026-06-14
+
+### Done
+
+- Opened PR [#1218](https://github.com/shepherdjerred/monorepo/pull/1218) — `fix(discord-plays-pokemon): regenerate bun.lock for @anthropic-ai/sdk 0.96.0`. Unblocks main from the immediate `:eslint: Lint` / `:typescript: Typecheck` / `:test_tube: Test` failures since build #4233.
+- Opened PR [#1222](https://github.com/shepherdjerred/monorepo/pull/1222) — `feat(ci): per-package bun.lock drift gate`. New `:lock: Lockfile Drift Check` step in `blockingGates`. Implementation matches this plan with one correction noted in "Departure from the harness plan".
+
+### Remaining
+
+- Buildkite green on #1222 (must show the new `:lock: Lockfile Drift Check` step passing on its own PR).
+- After merge, watch the next Renovate PR fan-out to confirm the gate actually fires red-then-green on real drift.
+- Move this plan to `packages/docs/archive/completed/` when #1222 lands.
+- Follow-ups (Renovate `postUpgradeTasks`, branch-ruleset Buildkite requirement, nightly full sweep on main) — separate PRs.
+
+### Caveats
+
+- The gate currently does NOT catch drift introduced without a `packages/*/package.json` or `packages/*/bun.lock` change (bun-version upgrade, registry republish). Acceptable for v1; the "nightly full sweep" follow-up closes the gap.
+- The reverse-closure walker reads the actual `workspaces` field of each top-level manifest, but if a future package adds a `file:` dep from a path the manifest's `workspaces` glob doesn't cover, that edge is invisible. There is no existing case like this in the repo.
+- The `:lock: Lockfile Drift Check` step name is intentionally distinct from `:lock: Lockfile Check` (root `bun.lock` only). They're complementary; both stay.
