@@ -35,11 +35,29 @@ const COOKLANG_VERSION_COMMIT_BACK_FILES = new Set([
   "packages/cooklang-for-obsidian/versions.json",
 ]);
 
-/** Package directories whose source changes warrant a cooklang plugin release. */
-const COOKLANG_PACKAGE_PREFIXES = [
-  "packages/cooklang-for-obsidian/",
-  "packages/cooklang-rich-preview/",
-];
+/**
+ * Package directories whose source changes warrant a cooklang plugin release.
+ *
+ * Only the Obsidian plugin itself — `cooklang-rich-preview/` is the rich-preview
+ * Astro site and is never published as part of the Obsidian plugin release, so
+ * edits there must not cut a plugin version.
+ */
+const COOKLANG_PACKAGE_PREFIXES = ["packages/cooklang-for-obsidian/"];
+
+/**
+ * Files under {@link COOKLANG_PACKAGE_PREFIXES} that do NOT count as plugin
+ * source for the release gate. Includes the auto-bump artifacts
+ * (`manifest.json` / `versions.json`) plus cog-generated docs (`_summary.md`),
+ * which is rewritten weekly by the `readme-refresh-weekly` Temporal schedule
+ * and would otherwise trip the gate every Monday.
+ *
+ * Kept separate from {@link COOKLANG_VERSION_COMMIT_BACK_FILES} so that the
+ * commit-back fast-track keeps its strict "only manifest/versions" meaning.
+ */
+const COOKLANG_NON_SOURCE_FILES = new Set([
+  ...COOKLANG_VERSION_COMMIT_BACK_FILES,
+  "packages/cooklang-for-obsidian/_summary.md",
+]);
 
 // ---------------------------------------------------------------------------
 // Version commit-back fast-track
@@ -73,8 +91,8 @@ function isCooklangVersionCommitBackOnly(changedFiles: string[]): boolean {
 
 /**
  * True when a real cooklang *source* file changed — a file under a cooklang
- * package that is NOT one of the auto-generated version-bump artifacts
- * (`manifest.json` / `versions.json`).
+ * package that is NOT one of the auto-generated / cog-generated non-source
+ * artifacts (see {@link COOKLANG_NON_SOURCE_FILES}).
  *
  * The release gate keys off this rather than "any cooklang file changed" so
  * that bot-authored manifest bumps — and infra/full builds that don't touch
@@ -86,7 +104,7 @@ function hasCooklangSourceChange(changedFiles: string[]): boolean {
   return changedFiles.some(
     (file) =>
       COOKLANG_PACKAGE_PREFIXES.some((prefix) => file.startsWith(prefix)) &&
-      !COOKLANG_VERSION_COMMIT_BACK_FILES.has(file),
+      !COOKLANG_NON_SOURCE_FILES.has(file),
   );
 }
 
