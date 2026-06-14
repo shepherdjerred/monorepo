@@ -1445,10 +1445,7 @@ export class Monorepo {
    * lockfile via its nested `file:` edge.
    */
   @func()
-  async bunLockDriftCheck(
-    source: Directory,
-    seeds: string,
-  ): Promise<string> {
+  async bunLockDriftCheck(source: Directory, seeds: string): Promise<string> {
     return bunLockDriftCheckHelper(source, seeds).stdout();
   }
 
