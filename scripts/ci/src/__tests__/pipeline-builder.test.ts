@@ -690,15 +690,21 @@ describe("buildPipeline", () => {
       }
       collect(pipeline.steps);
 
-      // Smoke tests depend on their build step
+      // Build+smoke is now a single bundled step (no standalone build-<img>
+      // for smokeable images). Each smoke step depends on quality-gate (and
+      // its per-package pkg-check step if one exists) directly.
       const smokeSteps = allSteps.filter((s) => s.key.startsWith("smoke-"));
       expect(smokeSteps.length).toBeGreaterThan(0);
       for (const s of smokeSteps) {
         const deps = Array.isArray(s.depends_on)
           ? s.depends_on
           : [s.depends_on];
+        expect(deps).toContain("quality-gate");
         const imgName = s.key.replace("smoke-", "");
-        expect(deps).toContain(`build-${imgName}`);
+        // The standalone build step should NOT exist for smokeable images.
+        expect(
+          allSteps.find((step) => step.key === `build-${imgName}`),
+        ).toBeUndefined();
       }
 
       // Push steps with smoke tests depend on their smoke step
