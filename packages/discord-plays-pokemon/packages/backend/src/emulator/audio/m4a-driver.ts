@@ -103,26 +103,42 @@ export function createM4aDriver(mem: M4aMemory): M4aDriver {
     gSoundInfoAddr = readGlobalNumber(exports, "gSoundInfo");
   }
 
-  // SOUND_MODE_FREQ_13379 — see pret/pokeemerald include/gba/m4a_internal.h:21.
-  // Emerald's default; gives the canonical 13379 Hz / 224 samples-per-VBlank
-  // mixing the title-screen BGM was tuned for.
-  const SOUND_MODE_FREQ_13379 = 0x4_00_00;
+  // pokeemerald's m4aSoundInit() calls m4aSoundMode with the full mode word
+  // covering reverb (SET bit + value 0x50), maxChans 8, masterVolume 15
+  // (the loudest setting), and freq index 4 (13379 Hz). Calling with just
+  // FREQ_13379 leaves maxChans/masterVolume/reverb at 0, which silences the
+  // mixer regardless of channel state. See m4a_internal.h:11-37 for the
+  // SOUND_MODE_* bit layout.
+  const SOUND_MODE_REVERB_SET = 0x80;
+  const SOUND_MODE_REVERB_VAL_DEFAULT = 0x50;
+  const SOUND_MODE_MAXCHN_8 = 8 << 8;
+  const SOUND_MODE_MASVOL_15 = 15 << 12;
+  const SOUND_MODE_FREQ_13379 = 4 << 16;
+  const EMERALD_SOUND_MODE =
+    SOUND_MODE_REVERB_SET |
+    SOUND_MODE_REVERB_VAL_DEFAULT |
+    SOUND_MODE_MAXCHN_8 |
+    SOUND_MODE_MASVOL_15 |
+    SOUND_MODE_FREQ_13379;
 
   function initEngine(): void {
     if (soundInit === undefined || m4aSoundMode === undefined) {
       throw new Error("initEngine called before bindExports");
     }
-    // SoundInit stamps `ident` + jump-table, but does NOT set pcmFreq /
-    // samplesPerVBlank — those come from m4aSoundMode → SampleFreqSet. The
-    // wasm's `m4aSoundMode` writes through an internal SOUND_INFO_PTR alias
-    // that's invisible to our (gSoundInfo-addressed) handler, so calling it
-    // alone leaves the driver-visible struct empty. We therefore also write
-    // the freq fields directly via our `sampleFreqSet` handler so the
-    // driver's `tickAndDrain` sees a valid struct from frame 0.
+    // SoundInit stamps `ident` but doesn't populate maxChans / masterVolume /
+    // pcmFreq / pcmSamplesPerVBlank — those come from m4aSoundMode.
+    // m4aSoundMode in the wasm appears to write its updates through an
+    // internal SOUND_INFO_PTR alias that's invisible to our handler, so we
+    // also write the freq fields directly via sampleFreqSet AND mirror
+    // m4aSoundMode's other writes (maxChans, masterVolume, reverb,
+    // pcmDmaPeriod) directly so the driver-visible struct ends up correct.
     soundInit(gSoundInfoAddr);
-    m4aSoundMode(SOUND_MODE_FREQ_13379);
-    // Index 4 = 13379 Hz; matches what m4aSoundMode would request.
+    m4aSoundMode(EMERALD_SOUND_MODE);
     sampleFreqSet(mem, gSoundInfoAddr, 4);
+    mem.writeU8(gSoundInfoAddr, SI.maxChans, 8);
+    mem.writeU8(gSoundInfoAddr, SI.masterVolume, 15);
+    mem.writeU8(gSoundInfoAddr, SI.reverb, SOUND_MODE_REVERB_VAL_DEFAULT);
+    mem.writeU8(gSoundInfoAddr, SI.pcmDmaPeriod, 7);
   }
 
   function tickAndDrain(): DrainResult | null {
@@ -133,10 +149,13 @@ export function createM4aDriver(mem: M4aMemory): M4aDriver {
     const samplesPerVBlank = mem.s32(gSoundInfoAddr, SI.pcmSamplesPerVBlank);
     if (freqHz <= 0 || samplesPerVBlank <= 0) return null;
 
-    // The mixer writes into the half NOT being DMA'd. After m4aSoundMain
-    // returns, the buffer half indicated by `pcmDmaCounter` is the freshly
-    // written one. (Either half being treated as "just produced" depends on
-    // the runtime; ffmpeg's jitter buffer absorbs occasional 1-frame skew.)
+    // pcmDmaCounter convention: the wasm's m4aSoundMain increments the
+    // counter internally before writing, so by the time it returns the
+    // counter already points at the half it just wrote. We therefore read
+    // pcmDmaCounter post-call and use it directly as the freshly-written
+    // half index. (On real GBA hardware the DMA consumes the counter-indexed
+    // half and the mixer writes the other; the wasm emulates this by
+    // flipping the counter itself before mixing.)
     const dmaCounter = mem.u8(gSoundInfoAddr, SI.pcmDmaCounter);
     const halfOffset = (dmaCounter & 1) === 0 ? 0 : samplesPerVBlank;
 
@@ -148,8 +167,9 @@ export function createM4aDriver(mem: M4aMemory): M4aDriver {
       samplesPerVBlank,
     );
 
-    // Interleave R/L into LRLR... for ffmpeg's `-f s8 -ac 2` reader. m4a's
-    // native buffer is deinterleaved; the join happens here once per frame.
+    // Interleave the deinterleaved L/R channels into LRLR for ffmpeg's
+    // `-f s8 -ac 2` reader (channel 0 = left). m4a's native buffer is
+    // deinterleaved; the join happens here once per frame.
     const out = Buffer.alloc(samplesPerVBlank * 2);
     for (let i = 0; i < samplesPerVBlank; i++) {
       out[i * 2] = left[i];

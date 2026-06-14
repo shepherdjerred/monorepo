@@ -8,7 +8,15 @@
 // to ipatix/agbplay's MP2K sequencer.
 
 import type { M4aMemory } from "./m4a-memory.ts";
-import { MPT } from "./m4a-structs.ts";
+import {
+  MPT,
+  SC,
+  SC_SF_ENV,
+  SC_SF_IEC,
+  SC_SF_LOOP,
+  SC_SF_START,
+  SC_SF_STOP,
+} from "./m4a-structs.ts";
 
 // Read a little-endian u32 starting at `cmdPtr`, advance cmdPtr by 4.
 function readArgU32(mem: M4aMemory, track: number): number {
@@ -110,12 +118,20 @@ export function plyMemacc(mem: M4aMemory, _mp: number, t: number): void {
 // clear its flags so the dispatcher stops scheduling it, and zero the
 // channel pointer so any in-flight per-channel routines fast-bail.
 export function trackStop(mem: M4aMemory, _mp: number, t: number): void {
-  // If the track has an active channel, mark it stopped (statusFlags &= ~SF_ON).
+  // If the track has an active channel, mark it stopped. Clear all active
+  // status bits — SF_START | SF_STOP | SF_LOOP | SF_IEC | SF_ENV — then set
+  // SF_STOP so the channel mixer knows the channel has been stopped. Including
+  // SF_IEC is required; without it a channel playing with pseudo-echo (SF_IEC
+  // set) would continue generating echo samples after TrackStop.
   const chanPtr = mem.u32(t, MPT.chan);
   if (chanPtr !== 0) {
-    // SoundChannel.statusFlags is at offset 0; SF_STOP=0x40 + clear SF_ON bits.
-    const sf = mem.u8(chanPtr, 0);
-    mem.writeU8(chanPtr, 0, (sf & ~0xd3) | 0x40);
+    const sf = mem.u8(chanPtr, SC.statusFlags);
+    mem.writeU8(
+      chanPtr,
+      SC.statusFlags,
+      (sf & ~(SC_SF_START | SC_SF_STOP | SC_SF_LOOP | SC_SF_IEC | SC_SF_ENV)) |
+        SC_SF_STOP,
+    );
   }
   mem.writeU8(t, MPT.flags, 0);
   mem.writeU32(t, MPT.chan, 0);

@@ -10,5 +10,5 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "exclude": ["**/*.test.ts", "eslint.config.ts"]
+  "exclude": ["**/*.test.ts", "eslint.config.ts", "scripts/probe-mixer.ts"]
 }

@@ -46,7 +46,10 @@ export function createM4aMemory(): M4aMemory {
       u8[ptr + off] = v & 0xff;
     },
     writeS8: (ptr, off, v) => {
-      dv.setInt8(ptr + off, ((v + 128) & 0xff) - 128);
+      // DataView.setInt8 already coerces via signed 8-bit truncation; pass v
+      // directly rather than pre-normalizing with ((v + 128) & 0xff) - 128,
+      // which produces the same bit pattern but obscures the intent.
+      dv.setInt8(ptr + off, v);
     },
     writeU16: (ptr, off, v) => {
       dv.setUint16(ptr + off, v & 0xff_ff, true);
