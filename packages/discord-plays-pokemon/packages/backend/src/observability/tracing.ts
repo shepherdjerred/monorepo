@@ -20,6 +20,7 @@ import {
 } from "@opentelemetry/api";
 import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
+import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
 import { logger } from "#src/logger.ts";
 
 const DEFAULT_OTLP_ENDPOINT = "http://tempo.tempo.svc.cluster.local:4318";
@@ -81,19 +82,26 @@ export function initializeTracing(): void {
     url: `${otlpEndpoint}/v1/traces`,
   });
 
+  const batchProcessor = new BatchSpanProcessor(exporter, {
+    scheduledDelayMillis: 2000,
+    maxExportBatchSize: 512,
+    maxQueueSize: 4096,
+    exportTimeoutMillis: 30_000,
+  });
+
+  // Wrap the batch processor with the LLM archive layer. Spans carrying
+  // gen_ai.* body attributes get their bodies gzipped to SeaweedFS and
+  // replaced with a ref before the slim span reaches Tempo (so Tempo holds
+  // just the trace skeleton + `llm.archive.url`). No-op when
+  // LLM_OBSERVABILITY_ENABLED=false. Same shape as birmel / scout / temporal.
+  const rootProcessor = buildArchiveSpanProcessor({ inner: batchProcessor });
+
   sdk = new NodeSDK({
     resource: resourceFromAttributes({
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: serviceVersion,
     }),
-    spanProcessors: [
-      new BatchSpanProcessor(exporter, {
-        scheduledDelayMillis: 2000,
-        maxExportBatchSize: 512,
-        maxQueueSize: 4096,
-        exportTimeoutMillis: 30_000,
-      }),
-    ],
+    spanProcessors: [rootProcessor],
   });
 
   sdk.start();

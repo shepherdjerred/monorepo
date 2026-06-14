@@ -19,6 +19,7 @@ const config = [
         "src/emulator/emulator-symbols.integration.test.ts",
         "src/goal/codex-command.test.ts",
         "src/goal/codex-jsonl.test.ts",
+        "src/goal/codex-trace.test.ts",
         "src/goal/discord-message.test.ts",
         "src/goal/game-state-summary.test.ts",
         "src/goal/goal-manager.test.ts",

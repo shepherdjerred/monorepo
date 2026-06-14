@@ -92,6 +92,18 @@ export function createPokemonDeployment(chart: Chart) {
           secret,
           key: "OPENAI_API_KEY",
         }),
+        // TODO(todo:dpp-goal-llm-archive-creds): Wire SeaweedFS S3 creds for
+        // llm-observability so /goal codex turns + screenshots archive to S3.
+        // Pre-req: add AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY to the
+        // pokemon-config 1P item (vaults/v64ocnykdqju4ui6j6pua56xw4/items/
+        // hwyhh64dyu3s7w37q7oj7r4qn4), then refresh the snapshot. Then add:
+        //   AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY: EnvValue.fromSecretValue({secret, key})
+        //   AWS_ENDPOINT_URL/S3_ENDPOINT/S3_FORCE_PATH_STYLE/AWS_REGION
+        //   ...llmArchiveEnvVars()
+        //   LLM_ARCHIVE_S3_PREFIX: "goals/discord-plays-pokemon"
+        // Span synthesis already lands in T7 — without these env vars, the
+        // archive span processor no-ops gracefully (LlmArchiveSpanProcessor
+        // gates on LLM_OBSERVABILITY_ENABLED).
       },
       securityContext: {
         ensureNonRoot: false,

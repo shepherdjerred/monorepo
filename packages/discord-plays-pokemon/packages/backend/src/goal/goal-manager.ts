@@ -1,10 +1,8 @@
 import path from "node:path";
 import { logger } from "#src/logger.ts";
 import type { Config } from "#src/config/schema.ts";
-import {
-  buildCodexCredentialEnvironment,
-  hasCodexCredential,
-} from "./codex-auth.ts";
+import { hasCodexCredential } from "./codex-auth.ts";
+import { prepareRuntimeTools, buildEnvironment } from "./goal-runtime-env.ts";
 import type { GameSnapshot } from "#src/game/events/types.ts";
 import { buildCodexArgs } from "./codex-command.ts";
 import {
@@ -12,6 +10,7 @@ import {
   pumpCodexStdout,
   type CodexJsonlParser,
 } from "./codex-jsonl.ts";
+import { attachCodexTrace, type CodexTrace } from "./codex-trace.ts";
 import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
 import { formatGameStateForPrompt } from "./game-state-summary.ts";
 import { formatHistoryForPrompt } from "./history-summary.ts";
@@ -29,6 +28,9 @@ type ActiveGoal = {
   // Streaming parser for Codex's `--json` stdout. Accumulates token usage so
   // observeProcess() can build a cost line for the final Discord message.
   jsonl: CodexJsonlParser;
+  // OTel span synthesis attached to the parser. The archive SpanProcessor
+  // (observability/tracing.ts) ships full request/response bodies to S3.
+  trace: CodexTrace;
 };
 
 export type GoalProcess = {
@@ -242,10 +244,15 @@ export class GoalManager {
     await Bun.write(path.join(screenshotDirectory, ".keep"), "", {
       createPath: true,
     });
-    const helperDirectory = await this.prepareRuntimeTools(runtimeDirectory);
+    const helperDirectory = await prepareRuntimeTools(runtimeDirectory);
     const outputPath = path.join(screenshotDirectory, `${id}-final.txt`);
     // Snapshot + 3 most-recent goals as the static prompt context. The model
     // can refresh both at any time via `pokemonctl state` / `pokemonctl history`.
+    const gameStateSummary = formatGameStateForPrompt(this.snapshotProvider());
+    const promptContext = {
+      gameStateSummary,
+      recentGoalsSummary: formatHistoryForPrompt(this.getHistory(3)),
+    };
     const args = buildCodexArgs({
       config: {
         codexBinary: this.config.codex_binary,
@@ -254,17 +261,30 @@ export class GoalManager {
       goal,
       runtimeDirectory,
       outputPath,
-      context: {
-        gameStateSummary: formatGameStateForPrompt(this.snapshotProvider()),
-        recentGoalsSummary: formatHistoryForPrompt(this.getHistory(3)),
-      },
+      context: promptContext,
     });
 
     const process = this.spawner(args, {
       cwd: runtimeDirectory,
-      env: this.buildEnvironment(runtimeDirectory, helperDirectory),
+      env: buildEnvironment({
+        runtimeDirectory,
+        helperDirectory,
+        controlHost: this.config.control_host,
+        controlPort: this.config.control_port,
+        controlToken: this.controlToken,
+      }),
     });
     const jsonl = createCodexJsonlParser();
+    // Span synthesis: subscribe before stdout pumping starts so no events are
+    // missed. End the trace from every terminal path below.
+    const trace = attachCodexTrace(jsonl, {
+      goalId: id,
+      goal,
+      model: this.config.model,
+      requestedBy: input.requesterId,
+      gameStateSummary,
+      initialPrompt: `goal=${goal}\nstate=${gameStateSummary}`,
+    });
     void pumpCodexStdout(process.stdout, jsonl);
     void streamToLog(process.stderr, "stderr");
 
@@ -289,6 +309,7 @@ export class GoalManager {
       lastProgressSentAt: 0,
       outputPath,
       jsonl,
+      trace,
     };
     await this.persistState(state);
     void this.observeProcess(id);
@@ -334,92 +355,6 @@ export class GoalManager {
     await this.stopActive("shutdown");
   }
 
-  private async prepareRuntimeTools(runtimeDirectory: string): Promise<string> {
-    const helperDirectory = path.join(runtimeDirectory, ".pokemon-goal-bin");
-    const helperPath = path.join(helperDirectory, "pokemonctl");
-    await Bun.write(
-      helperPath,
-      ["#!/bin/sh", 'exec bun "$POKEMONCTL_SCRIPT" "$@"', ""].join("\n"),
-      { createPath: true },
-    );
-
-    const chmod = Bun.spawn(["chmod", "0755", helperPath], {
-      stdout: "ignore",
-      stderr: "pipe",
-    });
-    const exitCode = await chmod.exited;
-    if (exitCode !== 0) {
-      const stderr = await new Response(chmod.stderr).text();
-      throw new Error(`Failed to prepare pokemonctl wrapper: ${stderr}`);
-    }
-
-    return helperDirectory;
-  }
-
-  // Only these variables are forwarded to the Codex subprocess. The goal text
-  // is attacker-controlled and Codex can read its own environment, so the
-  // subprocess must never inherit unrelated process secrets (DISCORD_TOKEN,
-  // etc.) that a prompt-injected goal could exfiltrate via `pokemonctl
-  // progress`. PATH/POKEMONCTL_* are injected explicitly below.
-  private static readonly inheritedEnvironmentAllowlist = [
-    "PATH",
-    "HOME",
-    "CODEX_HOME",
-    "CODEX_API_KEY",
-    "CODEX_ACCESS_TOKEN",
-    "OPENAI_API_KEY",
-  ];
-
-  private buildEnvironment(
-    runtimeDirectory: string,
-    helperDirectory: string,
-  ): Record<string, string> {
-    const inherited: Record<string, string> = {};
-    for (const key of GoalManager.inheritedEnvironmentAllowlist) {
-      const value = Bun.env[key];
-      if (value !== undefined && value.length > 0) {
-        inherited[key] = value;
-      }
-    }
-
-    const inheritedPath = Bun.env.PATH;
-    const pathParts = [
-      helperDirectory,
-      path.join(runtimeDirectory, "node_modules", ".bin"),
-      path.join(
-        runtimeDirectory,
-        "packages",
-        "backend",
-        "node_modules",
-        ".bin",
-      ),
-    ].filter((entry) => entry.length > 0);
-    if (inheritedPath !== undefined && inheritedPath.length > 0) {
-      pathParts.push(inheritedPath);
-    }
-
-    const codexCredentialEnvironment =
-      buildCodexCredentialEnvironment(inherited);
-
-    return {
-      ...inherited,
-      ...codexCredentialEnvironment,
-      PATH: pathParts.join(":"),
-      POKEMONCTL_URL: `http://${this.config.control_host}:${String(
-        this.config.control_port,
-      )}`,
-      POKEMONCTL_TOKEN: this.controlToken,
-      POKEMONCTL_SCRIPT: path.join(
-        runtimeDirectory,
-        "packages",
-        "backend",
-        "src",
-        "goal",
-        "pokemonctl.ts",
-      ),
-    };
-  }
-
   private async observeProcess(id: string): Promise<void> {
     const active = this.active;
     if (active?.state.id !== id) {
@@ -439,6 +374,7 @@ export class GoalManager {
     active.state.finalReport = report;
     this.recordCompletion(active.state);
     await this.persistState(active.state);
+    active.trace.end();
     this.active = undefined;
 
     const usage = active.jsonl.total();
@@ -468,6 +404,7 @@ export class GoalManager {
     active.state.finalReport = "Goal timed out before Codex finished.";
     this.recordCompletion(active.state);
     await this.persistState(active.state);
+    active.trace.end();
     this.active = undefined;
     await this.sendMessage({
       channelId: active.state.channelId,
@@ -494,6 +431,7 @@ export class GoalManager {
         : "Goal was stopped during application shutdown.";
     this.recordCompletion(active.state);
     await this.persistState(active.state);
+    active.trace.end();
     this.active = undefined;
   }
 
