@@ -19,7 +19,7 @@ HELM_VERSION="v4.2.0"
 AWSCLI_VERSION="2.34.47"
 
 # renovate: datasource=github-releases depName=opentofu/opentofu
-OPENTOFU_VERSION="1.11.7"
+OPENTOFU_VERSION="1.12.0"
 
 # renovate: datasource=github-releases depName=oven-sh/bun
 BUN_VERSION="1.3.13"
