@@ -253,7 +253,7 @@ export function App() {
 
           <section className="grid gap-4 xl:grid-cols-[1fr_320px]">
             <div className="overflow-hidden rounded-[2rem] border border-zinc-800 bg-zinc-950/80 p-3 shadow-2xl shadow-black/40 sm:p-5">
-              <div className="relative mx-auto aspect-[3/2] w-full">
+              <div className="relative mx-auto aspect-[5/3] w-full">
                 <N64ControllerShell />
 
                 {/* Positions below are CENTER-based: left/top is the center
