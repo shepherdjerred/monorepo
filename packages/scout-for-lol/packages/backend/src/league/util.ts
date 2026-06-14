@@ -4,9 +4,9 @@ import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("league-util");
 
-export function logErrors(fn: () => Promise<unknown>) {
+export function logErrors(fn: () => Promise<unknown>, jobName?: string) {
   return async () => {
-    const functionName = fn.name || "anonymous";
+    const functionName = jobName ?? (fn.name || "anonymous");
     logger.info(`🔄 Executing function: ${functionName}`);
 
     try {
@@ -37,10 +37,13 @@ export function logErrors(fn: () => Promise<unknown>) {
         }
       }
 
-      // Send to Sentry with additional context
+      // When createCronJob hands us its jobName, surface it as a Sentry
+      // tag so triage can identify which cron failed. The legacy `function`
+      // tag stays for back-compat with existing Bugsink filters.
       Sentry.captureException(error, {
         tags: {
           function: functionName,
+          jobName: jobName ?? functionName,
           source: "cron-job",
         },
       });
