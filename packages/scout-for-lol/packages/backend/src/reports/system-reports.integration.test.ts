@@ -57,6 +57,84 @@ describe("syncSystemReports", () => {
     }
   });
 
+  // Regression for the silent-skip bug observed 2026-06-14: every minute the
+  // dispatcher would call `syncSystemReports`, which used to spread
+  // `nextScheduledRunAt: computeNextScheduledUpdateAt(...)` into the update.
+  // For COMMON_DENOMINATOR that advanced past the current fire window before
+  // `runDueReports` ran. After this fix, re-sync at a later time must leave
+  // the existing `nextScheduledRunAt` alone.
+  test("re-syncing preserves existing nextScheduledRunAt for COMMON_DENOMINATOR", async () => {
+    const t1 = new Date(Date.UTC(2026, 4, 17, 12, 0, 0));
+    await syncSystemReports({ prisma, now: t1 });
+    const initial = await prisma.report.findMany({
+      where: {
+        serverId: MY_SERVER,
+        systemSource: "COMMON_DENOMINATOR",
+      },
+      orderBy: { title: "asc" },
+      select: { id: true, title: true, nextScheduledRunAt: true },
+    });
+    expect(initial.length).toBeGreaterThan(0);
+
+    const t2 = new Date(t1.getTime() + 60_000);
+    await syncSystemReports({ prisma, now: t2 });
+    const after = await prisma.report.findMany({
+      where: {
+        serverId: MY_SERVER,
+        systemSource: "COMMON_DENOMINATOR",
+      },
+      orderBy: { title: "asc" },
+      select: { id: true, title: true, nextScheduledRunAt: true },
+    });
+
+    for (const [index, report] of after.entries()) {
+      expect(report.nextScheduledRunAt?.getTime()).toBe(
+        initial[index]?.nextScheduledRunAt?.getTime(),
+      );
+    }
+  });
+
+  // We DO want sync to recompute nextScheduledRunAt when the cron itself
+  // changes — otherwise a code-deploy that retunes COMMON_DENOMINATOR_CRON
+  // would never take effect.
+  test("re-syncing recomputes nextScheduledRunAt when cronExpression changes", async () => {
+    const t1 = new Date(Date.UTC(2026, 4, 17, 12, 0, 0));
+    await syncSystemReports({ prisma, now: t1 });
+    const target = await prisma.report.findFirstOrThrow({
+      where: {
+        serverId: MY_SERVER,
+        systemSource: "COMMON_DENOMINATOR",
+      },
+      orderBy: { title: "asc" },
+    });
+
+    // Simulate a cron drift by hand-overwriting both the stored
+    // expression and the next-fire to values the definition will NOT
+    // match. After the next sync, the recompute path must restore the
+    // definition's cron and recompute `nextScheduledRunAt` against it.
+    const fictionalNext = new Date(t1.getTime() + 365 * 24 * 60 * 60 * 1000);
+    await prisma.report.update({
+      where: { id: target.id },
+      data: {
+        cronExpression: "0 12 * * 1",
+        nextScheduledRunAt: fictionalNext,
+      },
+    });
+
+    const t2 = new Date(t1.getTime() + 60_000);
+    await syncSystemReports({ prisma, now: t2 });
+    const after = await prisma.report.findUniqueOrThrow({
+      where: { id: target.id },
+      select: { cronExpression: true, nextScheduledRunAt: true },
+    });
+    expect(after.cronExpression).toBe("0 18 * * 0");
+    // The hand-set fictional next must have been overwritten — the recompute
+    // returns the real next-Sunday-18:00 UTC, not our 1-year-out marker.
+    expect(after.nextScheduledRunAt?.getTime()).not.toBe(
+      fictionalNext.getTime(),
+    );
+  });
+
   test("caps system competition bar charts to top 10 rows", async () => {
     const now = new Date();
     const competition = await createCompetition(prisma, {

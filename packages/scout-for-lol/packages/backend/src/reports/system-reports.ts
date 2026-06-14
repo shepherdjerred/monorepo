@@ -362,13 +362,30 @@ async function updateSystemReport(
   definition: SystemReportDefinition,
   now: Date,
 ): Promise<void> {
+  // `nextScheduledRunAt` is scheduler state, not definition state — the
+  // dispatcher's `runDueReports` advances it after each fire. If sync
+  // overwrites it every minute, COMMON_DENOMINATOR fires get silently
+  // skipped (the next-fire is recomputed past the current minute before
+  // the dispatcher reads it). Only recompute when the cron itself changed.
+  const existing = await prisma.report.findUniqueOrThrow({
+    where: { id: reportId },
+    select: { cronExpression: true },
+  });
+  const cronChanged = existing.cronExpression !== definition.cronExpression;
+  const {
+    nextScheduledRunAt: definitionNextScheduledRunAt,
+    ...definitionWithoutSchedule
+  } = definition;
   await prisma.report.update({
     where: { id: reportId },
     data: {
-      ...definition,
+      ...definitionWithoutSchedule,
       isEnabled: true,
       isSystemManaged: true,
       updatedTime: now,
+      ...(cronChanged
+        ? { nextScheduledRunAt: definitionNextScheduledRunAt }
+        : {}),
     },
   });
 }

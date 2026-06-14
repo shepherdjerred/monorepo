@@ -48,7 +48,13 @@ export async function runDueReports(
   scheduledReportsActive.set(activeReports);
   const reports = await getDueReports(params.prisma, now, limit);
   scheduledReportsDueTotal.inc(reports.length);
+  if (reports.length > 0) {
+    logger.info(
+      `[ReportScheduler] Found ${reports.length.toString()} due report(s)`,
+    );
+  }
   const dispatched: ScheduledReportDispatch[] = [];
+  let earlyFailures = 0;
 
   for (const report of reports) {
     try {
@@ -60,6 +66,7 @@ export async function runDueReports(
       });
       dispatched.push({ report, result });
     } catch (error) {
+      earlyFailures++;
       logger.error(
         `[ReportScheduler] Failed to run report ${report.id.toString()}:`,
         error,
@@ -77,10 +84,15 @@ export async function runDueReports(
         report.cronExpression,
         now,
       );
+      // Always set `lastScheduledRunAt = now` even if `runReport` threw
+      // before reaching `runner.ts`'s success/failure branches — that's
+      // the only signal the staleness alert has that the dispatcher
+      // actually attempted this fire.
       await params.prisma.report.update({
         where: { id: report.id },
         data: {
           nextScheduledRunAt,
+          lastScheduledRunAt: now,
           updatedTime: new Date(),
         },
       });
@@ -94,6 +106,12 @@ export async function runDueReports(
         });
       }
     }
+  }
+
+  if (reports.length > 0) {
+    logger.info(
+      `[ReportScheduler] Dispatched ${dispatched.length.toString()}, early-failed ${earlyFailures.toString()} of ${reports.length.toString()}`,
+    );
   }
 
   return dispatched;

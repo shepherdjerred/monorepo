@@ -144,5 +144,61 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
         },
       ],
     },
+    {
+      // Detects the failure mode that bit us 2026-06-14: the dispatcher
+      // silently skipped 7 COMMON_DENOMINATOR reports for ~1 month because
+      // syncSystemReports overwrote nextScheduledRunAt past the fire window
+      // every minute. No `reports_failed_total` increment, no error log —
+      // runReport was never called. The freshness gauge
+      // `scout_scheduled_report_last_success_timestamp_seconds` (set on
+      // SCHEDULED-trigger SUCCESS only, seeded from DB on startup) is the
+      // only signal that catches that class of bug. Both alerts page
+      // (severity=critical).
+      name: "scout-scheduled-reports-stale",
+      rules: [
+        {
+          alert: "ScoutScheduledReportMissedDaily",
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "Scout daily scheduled report {{ $labels.title }} has not fired",
+            ),
+            message: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} report {{ $labels.title }} (id={{ $labels.report_id }}, source={{ $labels.system_source }}) has not successfully run on schedule for {{ $value | humanizeDuration }}. Expected daily.",
+            ),
+            runbook_url:
+              "https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/scheduler.ts",
+          },
+          // 25h = one day + 1h grace. system_source=COMPETITION uses 0 0 * * *.
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            '(time() - scout_scheduled_report_last_success_timestamp_seconds{system_source="COMPETITION"}) > 90000',
+          ),
+          for: "10m",
+          labels: {
+            severity: "critical",
+          },
+        },
+        {
+          alert: "ScoutScheduledReportMissedWeekly",
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "Scout weekly scheduled report {{ $labels.title }} has not fired",
+            ),
+            message: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} report {{ $labels.title }} (id={{ $labels.report_id }}, source={{ $labels.system_source }}) has not successfully run on schedule for {{ $value | humanizeDuration }}. Expected weekly (Sunday).",
+            ),
+            runbook_url:
+              "https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/scheduler.ts",
+          },
+          // 8d1h grace. system_source=COMMON_DENOMINATOR uses 0 18 * * 0.
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            '(time() - scout_scheduled_report_last_success_timestamp_seconds{system_source="COMMON_DENOMINATOR"}) > 698400',
+          ),
+          for: "10m",
+          labels: {
+            severity: "critical",
+          },
+        },
+      ],
+    },
   ];
 }
