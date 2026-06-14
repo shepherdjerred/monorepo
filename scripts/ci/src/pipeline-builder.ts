@@ -40,6 +40,7 @@ import {
 } from "./steps/helm.ts";
 import {
   homelabTofuApplyAllStep,
+  homelabTofuApplyGithubStep,
   homelabTofuPlanAllStep,
 } from "./steps/tofu.ts";
 import { argoCdSyncAndWaitStep } from "./steps/argocd.ts";
@@ -368,8 +369,10 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       // Shared cdk8s synth is content-addressed, so all charts share one synth.
       steps.push(homelabHelmPushAllStep());
 
-      // Homelab Tofu — every stack applies in parallel from one pod.
+      // Homelab Tofu — non-github stacks apply in parallel from one pod.
+      // github stays in its own non-retrying pod (see tofu.ts).
       steps.push(homelabTofuApplyAllStep(pkgKeyMap.get("homelab")));
+      steps.push(homelabTofuApplyGithubStep(pkgKeyMap.get("homelab")));
     }
 
     // --- Unified ArgoCD sync (depends on whatever upstream steps ran) ---
@@ -382,7 +385,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         argocdDeps.push(...imagePushKeys);
       }
       if (affected.buildAll || affected.homelabChanged) {
-        argocdDeps.push("helm-push-all", "tofu-apply-all");
+        argocdDeps.push("helm-push-all", "tofu-apply-all", "tofu-apply-github");
       }
       // Sync + health-wait now run in one bundled BK pod (the Dagger
       // function catches health-wait failures internally — same soft-fail

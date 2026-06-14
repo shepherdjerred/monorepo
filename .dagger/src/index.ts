@@ -328,6 +328,7 @@ export class Monorepo {
     includeAstroCheck = false,
     includeAstroBuild = false,
     includeBuild = false,
+    skipTest = false,
   ): Promise<string> {
     return lintTypecheckTestHelper(
       pkgDir,
@@ -341,6 +342,7 @@ export class Monorepo {
       includeAstroCheck,
       includeAstroBuild,
       includeBuild,
+      skipTest,
     );
   }
 

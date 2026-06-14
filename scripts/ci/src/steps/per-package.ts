@@ -79,13 +79,15 @@ export function perPackageSteps(
     );
   } else if (PLAYWRIGHT_PACKAGES.has(pkg)) {
     // Playwright runs in a different base container (PLAYWRIGHT_IMAGE) and
-    // needs a full astro build first — keep it as its own step. Bundle the
-    // bun-base lint + typecheck into one pod.
+    // needs a full astro build first — keep it as its own step. Bundle just
+    // the bun-base lint + typecheck into one pod (--skip-test, because
+    // sjer.red's `bun run test` chains an astro build + playwright that
+    // belong on the playwright container, not bunBase).
     steps.push(
       daggerCallStep(
         `:dagger_knife: Lint + Typecheck`,
         `pkg-check-${sk}`,
-        `${DAGGER_CALL} lint-typecheck-test ${pf}`,
+        `${DAGGER_CALL} lint-typecheck-test ${pf} --skip-test`,
         resources,
       ),
       daggerCallStep(

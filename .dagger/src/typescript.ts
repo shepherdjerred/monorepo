@@ -219,6 +219,7 @@ export async function lintTypecheckTestHelper(
   includeAstroCheck = false,
   includeAstroBuild = false,
   includeBuild = false,
+  skipTest = false,
 ): Promise<string> {
   const useTypecheckSecrets = haUrl !== null || haToken !== null;
   const children: { name: string; run: () => Promise<string> }[] = [
@@ -241,7 +242,13 @@ export async function lintTypecheckTestHelper(
             ).stdout()
           : typecheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
     },
-    {
+  ];
+  if (!skipTest) {
+    // PLAYWRIGHT_PACKAGES (sjer.red) override `bun run test` to
+    // `bun run build && bunx playwright test`, which needs a Playwright
+    // browser install — separate from this bun-base bundle. For those
+    // packages, the dedicated `playwright-test-<pkg>` BK step covers test.
+    children.push({
       name: "test",
       run: () =>
         testHelper(
@@ -252,8 +259,8 @@ export async function lintTypecheckTestHelper(
           tsconfig,
           needsHelm,
         ).stdout(),
-    },
-  ];
+    });
+  }
   if (includeAstroCheck) {
     children.push({
       name: "astro-check",
