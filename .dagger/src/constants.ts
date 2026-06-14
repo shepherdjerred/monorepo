@@ -86,7 +86,7 @@ export const EMSCRIPTEN_IMAGE =
   "emscripten/emsdk:2.0.7@sha256:cbeeb7cccd2e7915fe0596345f10bfdec5578cc0386aaa823ad6f1d41910619f";
 // renovate: datasource=docker depName=alpine/helm
 export const HELM_IMAGE =
-  "alpine/helm:4.1.4@sha256:8edcaedab4d9864886b7f443d55731be87d4b5ec7dca714c24551455707a8aac";
+  "alpine/helm:4.2.0@sha256:af08f75a3130d666a50b9fc150f40987ef20b885cf67659aabf4b83a5f2c5501";
 
 // Quality-step scanner images (used by .dagger/src/quality.ts).
 // Pinned with `@sha256:` digests to match every other image constant in
