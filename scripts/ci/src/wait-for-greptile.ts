@@ -649,12 +649,17 @@ async function waitForGreptile(): Promise<void> {
 
   const deadline = Date.now() + timeoutSeconds * 1000;
   let warnedMismatch = false;
+  let lastReviewCheck: GreptileReviewCheck | undefined;
+  let lastThreads: readonly GreptileThread[] | undefined;
 
   while (Date.now() <= deadline) {
     const [reviewCheck, threadResult] = await Promise.all([
       fetchGreptileReviewCheck({ repo, head, token, pattern }),
       fetchGreptileThreads({ owner, name, number, token }),
     ]);
+
+    lastReviewCheck = reviewCheck;
+    lastThreads = threadResult.threads;
 
     if (
       !warnedMismatch &&
@@ -685,6 +690,25 @@ async function waitForGreptile(): Promise<void> {
 
     console.log(decision.message);
     await Bun.sleep(intervalSeconds * 1000);
+  }
+
+  // Greptile never started reviewing this commit (no check-run found).
+  // This happens when every changed file is in Greptile's ignorePatterns
+  // (e.g. bun.lock, poc/**). In that case there is nothing for Greptile to
+  // review, so no check is ever created. Treat as passed if there are also
+  // no unresolved Greptile threads from a prior revision.
+  if (lastReviewCheck !== undefined && !lastReviewCheck.found) {
+    const blocking = (lastThreads ?? []).filter((thread) =>
+      isBlocking(thread, greptileLogin, maxBlockingPriority),
+    );
+    if (blocking.length === 0) {
+      console.log(
+        `Greptile did not review ${head} within ${String(timeoutSeconds)}s. ` +
+          `All changed files appear to be in Greptile's ignore list; ` +
+          `treating as no reviewable changes (no unresolved Greptile threads).`,
+      );
+      return;
+    }
   }
 
   throw new Error(
