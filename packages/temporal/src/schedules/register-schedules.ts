@@ -189,6 +189,18 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Monthly refresh of the vendored pokeemerald.wasm emulator blob (opens a PR if it changed)",
   },
   {
+    id: "readme-refresh-weekly",
+    workflowType: "runReadmeRefresh",
+    args: [],
+    // 08:00 PT every Monday — staggered after scout-season-refresh (07:00)
+    // so the two weekly PR-opening jobs don't contend for the worker pod at once.
+    cronExpression: "0 8 * * 1",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Weekly README project-listing regeneration via cog (opens a PR if listings drifted)",
+  },
+  {
     id: "scout-season-refresh-weekly",
     workflowType: "runScoutSeasonRefreshWorkflow",
     args: [],

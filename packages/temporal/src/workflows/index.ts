@@ -24,6 +24,8 @@ import type {
 } from "#activities/data-dragon.ts";
 import { runPokeemeraldWasmUpdate as _runPokeemeraldWasmUpdate } from "./pokeemerald-wasm.ts";
 import type { PokeemeraldWasmUpdateResult } from "#activities/pokeemerald-wasm.ts";
+import { runReadmeRefresh as _runReadmeRefresh } from "./readme-refresh.ts";
+import type { ReadmeRefreshResult } from "#activities/readme-refresh.ts";
 import { runScoutSeasonRefreshWorkflow as _runScoutSeasonRefreshWorkflow } from "./scout-season-refresh.ts";
 import type {
   ScoutSeasonRefreshInput,
@@ -134,6 +136,10 @@ export async function runScoutDataDragonWeeklyRefresh(
   input: DataDragonWorkflowInput,
 ): Promise<DataDragonUpdateResult | undefined> {
   return _runScoutDataDragonUpdate("weekly-refresh", input);
+}
+
+export async function runReadmeRefresh(): Promise<ReadmeRefreshResult> {
+  return _runReadmeRefresh();
 }
 
 export async function runPokeemeraldWasmUpdate(): Promise<PokeemeraldWasmUpdateResult> {
