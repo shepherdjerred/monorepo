@@ -55,3 +55,24 @@ No changes needed in `.dagger/src/release.ts` or `pipeline-builder.ts` — they 
 
 - Cleaning up the **published** plugin versions on the external repo — the `cooklang-for-obsidian` release repo will retain v1.0.22–v1.0.32; no harm leaving them.
 - Tightening `cooklang-for-obsidian/` further (allow-list of build inputs only). Skip until we see another false trigger; the current prefix-based check matches the existing tests' expectations for `package.json` dep bumps.
+
+## Session Log — 2026-06-14
+
+### Done
+
+- Diagnosed PR #1210 root cause: `hasCooklangSourceChange` was too loose. `_summary.md` (weekly cog refresh from PR #1164) + `cooklang-rich-preview/` lockfile bumps (e.g. PR #1151) were both counting as plugin source.
+- Edited `scripts/ci/src/change-detection.ts`: dropped `cooklang-rich-preview/` from `COOKLANG_PACKAGE_PREFIXES`; added `COOKLANG_NON_SOURCE_FILES` (manifest + versions + `_summary.md`) used only by `hasCooklangSourceChange`; left `COOKLANG_VERSION_COMMIT_BACK_FILES` strict so the commit-back fast-track keeps its original meaning.
+- Updated `scripts/ci/src/__tests__/change-detection.test.ts`: flipped the rich-preview-source case to assert `false`; added `_summary.md`-only false case + `_summary.md`+source true case.
+- Verified: `bun test` in `scripts/ci/` → 268 pass / 0 fail. Replayed PR #1164 and PR #1151 file lists through `_hasCooklangSourceChange` — both `false`; real `src/main.ts` change still `true`.
+- Opened https://github.com/shepherdjerred/monorepo/pull/1221 (`feature/cooklang-gate`).
+
+### Remaining
+
+- Land PR #1221.
+- Merge or close PR #1210 so the current bump loop is fully cleared (gate fix doesn't retroactively touch the in-flight PR).
+- Monday 2026-06-16 morning: confirm the `readme-refresh-weekly` Temporal schedule did **not** open a fresh `chore(cooklang): bump plugin manifest version` PR. If it did, the gate still has a hole.
+
+### Caveats
+
+- `BUILDKITE_MESSAGE` for a squash-merged PR #1210 carries the PR title (`chore(cooklang): bump plugin manifest version (#1210)`), which does **not** match either branch of `isCooklangVersionCommitBack`. The merge happens to be safe today only because the merge's only changed file is `manifest.json` (in `COOKLANG_VERSION_COMMIT_BACK_FILES`), so `hasCooklangSourceChange` also returns false. That's incidental — if the bump PR ever carries a multi-file payload it would break. Worth a follow-up to widen `isCooklangVersionCommitBack` to also match the squash-merge title.
+- Did not tighten `cooklang-for-obsidian/` further to a strict allow-list of build inputs. The current behaviour intentionally still triggers a release on `package.json` / `bun.lock` dep bumps inside the plugin package (one of the existing tests asserts this) — leave it until we see another false trigger.
