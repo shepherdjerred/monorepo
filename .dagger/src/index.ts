@@ -82,7 +82,12 @@ import {
   pushRedlibImageHelper,
 } from "./image";
 
-import { goBuildHelper, goTestHelper, goLintHelper } from "./golang";
+import {
+  goBuildHelper,
+  goTestHelper,
+  goLintHelper,
+  goLintTestBuildHelper,
+} from "./golang";
 
 import {
   homelabSynthHelper,
@@ -828,6 +833,15 @@ export class Monorepo {
   @func()
   async goLint(pkgDir: Directory): Promise<string> {
     return goLintHelper(pkgDir).stdout();
+  }
+
+  /**
+   * Bundle: go lint + test + build in one pod, parallel siblings sharing
+   * the `goBaseContainer` prefix.
+   */
+  @func()
+  async goLintTestBuild(pkgDir: Directory): Promise<string> {
+    return goLintTestBuildHelper(pkgDir);
   }
 
   // ---------------------------------------------------------------------------

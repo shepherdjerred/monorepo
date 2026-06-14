@@ -205,21 +205,9 @@ function goPackageGroup(sk: string): BuildkiteGroup {
     key: `pkg-${sk}`,
     steps: [
       daggerCallStep(
-        `:building_construction: Build`,
-        `build-${sk}`,
-        `${DAGGER_CALL} go-build --pkg-dir ${goPkgDir}`,
-        DEFAULT_RESOURCES,
-      ),
-      daggerCallStep(
-        `:test_tube: Test`,
-        `test-${sk}`,
-        `${DAGGER_CALL} go-test --pkg-dir ${goPkgDir}`,
-        DEFAULT_RESOURCES,
-      ),
-      daggerCallStep(
-        `:mag: Lint`,
-        `lint-${sk}`,
-        `${DAGGER_CALL} go-lint --pkg-dir ${goPkgDir}`,
+        `:dagger_knife: Lint + Test + Build`,
+        `pkg-check-${sk}`,
+        `${DAGGER_CALL} go-lint-test-build --pkg-dir ${goPkgDir}`,
         DEFAULT_RESOURCES,
       ),
     ],
