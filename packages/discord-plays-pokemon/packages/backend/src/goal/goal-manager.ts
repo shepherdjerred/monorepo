@@ -5,6 +5,7 @@ import {
   buildCodexCredentialEnvironment,
   hasCodexCredential,
 } from "./codex-auth.ts";
+import type { GameSnapshot } from "#src/game/events/types.ts";
 import { buildCodexArgs } from "./codex-command.ts";
 import {
   createCodexJsonlParser,
@@ -12,6 +13,8 @@ import {
   type CodexJsonlParser,
 } from "./codex-jsonl.ts";
 import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
+import { formatGameStateForPrompt } from "./game-state-summary.ts";
+import { formatHistoryForPrompt } from "./history-summary.ts";
 import { computeCost, formatCostLine } from "./pricing.ts";
 
 import { appendToHistory, type CompletedGoal } from "./goal-history.ts";
@@ -76,6 +79,13 @@ type GoalManagerOptions = {
   sendMessage: GoalMessageSender;
   spawner?: GoalProcessSpawner;
   now?: () => Date;
+  // Live snapshot reader. Called once at goal start to seed the prompt's
+  // "Current game state" block. The model can refresh at any time via
+  // `pokemonctl state` (T5), which reads through the same path on the
+  // control-server side. Returning null is fine (renders "unavailable").
+  // Optional so existing tests that don't exercise prompt context don't have
+  // to pass a stub.
+  snapshotProvider?: () => GameSnapshot | null;
 };
 
 function defaultSpawner(
@@ -120,6 +130,7 @@ export class GoalManager {
   private readonly sendMessage: GoalMessageSender;
   private readonly spawner: GoalProcessSpawner;
   private readonly now: () => Date;
+  private readonly snapshotProvider: () => GameSnapshot | null;
   // Newest first. Persisted via persistState() so it survives restarts.
   private history: CompletedGoal[] = [];
   // Goal IDs we've already snapshot into history. Guards against double-record
@@ -133,6 +144,7 @@ export class GoalManager {
     this.sendMessage = options.sendMessage;
     this.spawner = options.spawner ?? defaultSpawner;
     this.now = options.now ?? (() => new Date());
+    this.snapshotProvider = options.snapshotProvider ?? (() => null);
   }
 
   getStatus(): GoalState | undefined {
@@ -232,12 +244,21 @@ export class GoalManager {
     });
     const helperDirectory = await this.prepareRuntimeTools(runtimeDirectory);
     const outputPath = path.join(screenshotDirectory, `${id}-final.txt`);
-    const args = buildCodexArgs(
-      { codexBinary: this.config.codex_binary, model: this.config.model },
+    // Snapshot + 3 most-recent goals as the static prompt context. The model
+    // can refresh both at any time via `pokemonctl state` / `pokemonctl history`.
+    const args = buildCodexArgs({
+      config: {
+        codexBinary: this.config.codex_binary,
+        model: this.config.model,
+      },
       goal,
       runtimeDirectory,
       outputPath,
-    );
+      context: {
+        gameStateSummary: formatGameStateForPrompt(this.snapshotProvider()),
+        recentGoalsSummary: formatHistoryForPrompt(this.getHistory(3)),
+      },
+    });
 
     const process = this.spawner(args, {
       cwd: runtimeDirectory,
