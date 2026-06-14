@@ -200,6 +200,26 @@ export function lockfileCheckStep(): BuildkiteStep {
   });
 }
 
+/**
+ * Per-package `bun.lock` drift gate — runs `bun install --frozen-lockfile
+ * --dry-run` across `packages` (a sorted, comma-separated list of top-level
+ * workspace dirs that the pipeline generator has identified as potentially
+ * affected by the diff). Catches the class of drift where a Renovate PR
+ * regenerates one workspace's `bun.lock` but leaves a `file:`-dependent
+ * workspace's `bun.lock` stale (see PR #1213 → discord-plays-pokemon
+ * post-mortem). Pairs with `lockfileCheckStep`, which only validates the
+ * root `bun.lock`.
+ */
+export function bunLockDriftCheckStep(packages: string[]): BuildkiteStep {
+  const list = packages.slice().sort().join(",");
+  return daggerStep({
+    label: ":lock: Lockfile Drift Check",
+    key: "bun-lock-drift-check",
+    daggerCmd: `${DAGGER_CALL} bun-lock-drift-check --source ${REPO_GIT_REF} --packages ${list}`,
+    timeoutMinutes: 5,
+  });
+}
+
 export function envVarNamesStep(): BuildkiteStep {
   return daggerStep({
     label: ":label: Env Var Names",

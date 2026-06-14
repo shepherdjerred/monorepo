@@ -123,6 +123,7 @@ import {
   reactVersionSyncHelper,
   semgrepScanHelper,
   lockfileCheckHelper,
+  bunLockDriftCheckHelper,
   envVarNamesHelper,
   lineEndingsCheckHelper,
   migrationGuardHelper,
@@ -1432,6 +1433,19 @@ export class Monorepo {
   @func()
   async lockfileCheck(source: Directory): Promise<string> {
     return lockfileCheckHelper(source).stdout();
+  }
+
+  /**
+   * Per-package `bun.lock` drift check across the given workspace dirs.
+   * `packages` is a comma-separated list (e.g. "birmel,dpp,scout-for-lol");
+   * the script runs `bun install --frozen-lockfile --dry-run` in each.
+   */
+  @func()
+  async bunLockDriftCheck(
+    source: Directory,
+    packages: string,
+  ): Promise<string> {
+    return bunLockDriftCheckHelper(source, packages).stdout();
   }
 
   /** Env-var naming convention check across staged-style file types. */

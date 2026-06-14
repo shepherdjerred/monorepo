@@ -33,6 +33,7 @@ import {
   reactVersionSyncStep,
   caddyfileValidateStep,
   lockfileCheckStep,
+  bunLockDriftCheckStep,
   envVarNamesStep,
   lineEndingsCheckStep,
   scoutTestTemplateCheckStep,
@@ -173,8 +174,18 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   }
 
   // --- Quality gates (blocking — must pass before releases) ---
+  // The per-package `bun.lock` drift gate runs only when there's a scoped
+  // affected set: on `buildAll`, every per-package Dagger job already runs
+  // `bun install --frozen-lockfile` so the gate adds no signal; on the
+  // no-changes path we short-circuited above. For scoped Renovate-style PRs
+  // the gate is the fastest signal we get on transitive `file:`-dep drift.
+  const driftGate: BuildkiteStep[] =
+    !affected.buildAll && packages.length > 0
+      ? [bunLockDriftCheckStep(packages)]
+      : [];
   const blockingGates = [
     lockfileCheckStep(),
+    ...driftGate,
     shellcheckStep(),
     qualityRatchetStep(),
     checkTodosStep(),
