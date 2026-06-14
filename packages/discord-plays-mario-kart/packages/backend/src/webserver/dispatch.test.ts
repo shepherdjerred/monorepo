@@ -24,6 +24,7 @@ import {
   type EmulatorControls,
   type LeaderboardDeps,
 } from "./dispatch.ts";
+import type { StreamOverlayContext } from "#src/overlay/composite.ts";
 import type { LeaderboardStore } from "#src/leaderboard/store.ts";
 import { SeatManager } from "#src/input/seat-manager.ts";
 import { registry } from "#src/observability/metrics.ts";
@@ -69,16 +70,21 @@ let http: HttpServer;
 let seatManager: SeatManager;
 let sub: Subscription;
 let port: number;
+// Per-test overlay context. The subscribe handler reads this lazily on every
+// event, so tests can flip it before emitting a screenshot request.
+let testOverlayCtx: StreamOverlayContext | undefined;
 
 beforeAll(async () => {
   http = createServer();
   seatManager = new SeatManager(4);
   const obs = createSocket({ server: http, isCorsEnabled: false });
   sub = obs.events.subscribe((event) => {
+    const captured = testOverlayCtx;
     handleRequest(event, {
       seatManager,
       emulator: fakeEmu,
       leaderboard: fakeLeaderboard,
+      overlayContext: captured === undefined ? undefined : () => captured,
     });
   });
   await new Promise<void>((resolve) => http.listen(0, resolve));
@@ -94,6 +100,7 @@ beforeEach(() => {
   // async disconnect handler from a previous test's closed socket.
   seatManager = new SeatManager(4);
   fakeFrame = { rgba: Buffer.alloc(0), width: 640, height: 0 };
+  testOverlayCtx = undefined;
 });
 
 afterAll(() => {
@@ -396,5 +403,52 @@ describe("web controller dispatch (socket -> handleRequest -> emulator)", () => 
     if (lb.kind !== "leaderboard") throw new Error("expected leaderboard");
     expect(lb.value.entries).toEqual(fakeEntries);
     client.close();
+  });
+});
+
+// Solid-grey full-size fake frame; HUD's white-on-black overlay drops it to
+// bytes that differ from the clean baseline.
+function greyFrame(): { rgba: Buffer; width: number; height: number } {
+  const width = 640;
+  const height = 240;
+  const rgba = Buffer.alloc(width * height * 4, 0x88);
+  for (let i = 3; i < rgba.length; i += 4) rgba[i] = 0xff;
+  return { rgba, width, height };
+}
+
+async function captureScreenshot(): Promise<string> {
+  const client = await connect();
+  const resp = nextResponse(client, "screenshot");
+  client.emit("request", { kind: "screenshot" });
+  const screenshot = await resp;
+  client.close();
+  if (screenshot.kind !== "screenshot") {
+    throw new Error(`expected screenshot, got ${screenshot.kind}`);
+  }
+  return screenshot.value;
+}
+
+describe("screenshot overlays", () => {
+  it("burns the HUD overlay into the screenshot when overlayContext is wired", async () => {
+    fakeFrame = greyFrame();
+    testOverlayCtx = undefined;
+    const clean = await captureScreenshot();
+
+    // Refill: the dispatch mutates fakeFrame.rgba in place.
+    fakeFrame = greyFrame();
+    testOverlayCtx = {
+      epochMs: Date.UTC(2026, 5, 13, 7, 8, 9, 45),
+      seatActivity: [false, false, false, false],
+      mode: "1p",
+      seats: 1,
+      nameOverlay: undefined,
+    };
+    const overlayed = await captureScreenshot();
+
+    expect(overlayed).not.toEqual(clean);
+    expect(pngDimensions(Buffer.from(overlayed, "base64"))).toEqual({
+      width: SCREENSHOT_WIDTH,
+      height: SCREENSHOT_HEIGHT,
+    });
   });
 });

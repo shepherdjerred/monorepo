@@ -1,9 +1,10 @@
-// Wall-clock timestamp overlay for the Go-Live stream, used to measure
-// glass-to-glass latency: every streamed frame is stamped with the UTC time it
-// was captured from the emulator, so comparing the on-screen clock against a
-// real clock (`date -u`) reads the Discord viewer delay directly off the
-// stream. Dependency-free, drawn straight into the BGRA frame copy on the
-// stream path only — `/screenshot` frames are a separate copy and stay clean.
+// Wall-clock timestamp overlay for the Go-Live stream (and the `/screenshot`
+// artifact, which now goes through the same overlay pipeline). Every frame is
+// stamped with the UTC time it was captured from the emulator, so comparing
+// the on-screen clock against a real clock (`date -u`) reads the Discord
+// viewer delay directly off the stream. Dependency-free, drawn straight into
+// the BGRA frame copy (overlays write greyscale — channel order is irrelevant,
+// so this is safe on the screenshot's RGBX buffer too).
 //
 // The framebuffer is a horizontally-doubled 320x240 (see constants.ts), so
 // glyphs are drawn twice as wide as tall (GLYPH_SCALE_X = 2 * GLYPH_SCALE_Y)
@@ -28,19 +29,19 @@ const GLYPHS = new Map<string, readonly number[]>([
   ["9", [0b0_1110, 0b1_0001, 0b1_0001, 0b0_1111, 0b0_0001, 0b0_0010, 0b0_1100]],
   [":", [0b0_0000, 0b0_1100, 0b0_1100, 0b0_0000, 0b0_1100, 0b0_1100, 0b0_0000]],
   [".", [0b0_0000, 0b0_0000, 0b0_0000, 0b0_0000, 0b0_0000, 0b0_1100, 0b0_1100]],
-  ["U", [0b1_0001, 0b1_0001, 0b1_0001, 0b1_0001, 0b1_0001, 0b1_0001, 0b0_1110]],
-  ["T", [0b1_1111, 0b0_0100, 0b0_0100, 0b0_0100, 0b0_0100, 0b0_0100, 0b0_0100]],
-  ["C", [0b0_1110, 0b1_0001, 0b1_0000, 0b1_0000, 0b1_0000, 0b1_0001, 0b0_1110]],
 ]);
 
 const GLYPH_COLS = 5;
 const GLYPH_ROWS = 7;
 // One blank column between glyphs.
 const CELL_COLS = GLYPH_COLS + 1;
-const GLYPH_SCALE_X = 4;
-const GLYPH_SCALE_Y = 2;
-const PAD_X = 4;
-const PAD_Y = 2;
+// Glyph cell scale: 2:1 keeps each dot square once the 640x240 framebuffer is
+// displayed at 4:3. At the prior 4:2 the HUD was a banner covering ~84% of the
+// frame width; 2:1 lands it at ~17% — a small top-left corner badge.
+const GLYPH_SCALE_X = 2;
+const GLYPH_SCALE_Y = 1;
+const PAD_X = 2;
+const PAD_Y = 1;
 const MARGIN_X = 8;
 const MARGIN_Y = 4;
 const BYTES_PER_PIXEL = 4;
@@ -49,11 +50,13 @@ function pad2(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-/** "UTC HH:MM:SS.mmm" for an epoch-milliseconds value. */
+/** "HH:MM:SS.mmm" (UTC) for an epoch-milliseconds value. The "UTC " prefix and
+ *  its glyphs were dropped to shrink the HUD badge — the timestamp is still
+ *  UTC, the colon-separated `HH:MM:SS.mmm` makes it self-evidently a clock. */
 export function formatUtcTimestamp(epochMs: number): string {
   const d = new Date(epochMs);
   const ms = String(d.getUTCMilliseconds()).padStart(3, "0");
-  return `UTC ${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}:${pad2(d.getUTCSeconds())}.${ms}`;
+  return `${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}:${pad2(d.getUTCSeconds())}.${ms}`;
 }
 
 function writePixel(frame: Buffer, offset: number, value: number): void {
