@@ -22,11 +22,10 @@ export function isControlPressed(
 }
 
 export function N64ControllerShell() {
-  // Top-down silhouette of an N64 controller. The whole outline is a single
-  // continuous path: the body up top, then three prongs descending — wider
-  // side handles fanning out left/right and a narrower center prong.
-  // Skeuomorphic touches (radial gradient, drop shadow, recessed wells) sell
-  // the molded-plastic feel without obscuring the live buttons on top.
+  // Top-down silhouette of an N64 controller, traced from the reference photo:
+  // wide body with a central hump for the Nintendo plate, two chunky outer
+  // handles, one narrower center prong with the analog stick well, and tiny
+  // L/R shoulder humps peeking off the back-top corners.
   return (
     <svg
       aria-hidden="true"
@@ -53,98 +52,77 @@ export function N64ControllerShell() {
         </filter>
       </defs>
 
-      {/* Whole-controller silhouette: body + 3 prongs, single path so they
-          merge seamlessly. Clockwise from top-left. */}
+      {/* L / R shoulder humps — tiny dark protrusions at the back-top corners. */}
+      <rect x="155" y="62" width="115" height="22" rx="6" fill="#a8a9ad" />
+      <rect x="630" y="62" width="115" height="22" rx="6" fill="#a8a9ad" />
+
+      {/* Whole-controller silhouette: body + central top hump + two outer
+          handles + center prong, one continuous path clockwise from top-left. */}
       <path
         d="
-          M 195 78
-          C 175 78 160 96 160 116
-          L 160 200
-          C 130 210 102 245 92 295
-          C 80 365 100 440 150 460
-          C 195 478 240 458 270 410
-          C 295 370 320 350 360 348
-          L 360 380
-          C 362 432 380 478 410 502
-          C 425 514 440 518 450 518
-          C 460 518 475 514 490 502
-          C 520 478 538 432 540 380
-          L 540 348
-          C 580 350 605 370 630 410
-          C 660 458 705 478 750 460
-          C 800 440 820 365 808 295
-          C 798 245 770 210 740 200
-          L 740 116
-          C 740 96 725 78 705 78
+          M 140 90
+          C 145 86 165 84 200 84
+          L 380 84
+          C 388 70 396 48 415 30
+          C 432 22 468 22 485 30
+          C 504 48 512 70 520 84
+          L 700 84
+          C 735 84 755 86 760 90
+          C 800 102 825 150 830 220
+          C 838 290 845 350 825 410
+          C 805 470 760 482 720 472
+          C 680 462 640 432 605 360
+          C 590 330 568 320 545 322
+          C 535 324 532 340 538 380
+          C 544 432 528 480 500 502
+          C 482 516 466 520 450 520
+          C 434 520 418 516 400 502
+          C 372 480 356 432 362 380
+          C 368 340 365 324 355 322
+          C 332 320 310 330 295 360
+          C 260 432 220 462 180 472
+          C 140 482 95 470 75 410
+          C 55 350 62 290 70 220
+          C 75 150 100 102 140 90
           Z
         "
         fill="url(#n64Plastic)"
         filter="url(#n64Drop)"
       />
 
-      {/* L / R shoulder humps — small protrusions off the back top edge. */}
-      <path
-        d="
-          M 175 78
-          C 175 60 195 50 220 50
-          L 305 50
-          C 320 50 325 62 325 78
-          Z
-        "
-        fill="url(#n64Plastic)"
-      />
-      <path
-        d="
-          M 725 78
-          C 725 60 705 50 680 50
-          L 595 50
-          C 580 50 575 62 575 78
-          Z
-        "
-        fill="url(#n64Plastic)"
-      />
-
-      {/* Cord tail off the top center. */}
-      <path
-        d="M 450 70 C 450 50 452 36 456 18"
-        stroke="#1a1a1d"
-        strokeWidth="14"
-        strokeLinecap="round"
-        fill="none"
-      />
-
-      {/* Nintendo wordmark — embossed on the back of the body. */}
+      {/* Nintendo wordmark plate — sits on top of the central hump. */}
       <rect
         x="402"
-        y="100"
+        y="38"
         width="96"
-        height="22"
-        rx="11"
+        height="24"
+        rx="6"
         fill="#a8a9ad"
-        opacity="0.4"
+        opacity="0.55"
       />
       <text
         x="450"
-        y="115"
+        y="54"
         textAnchor="middle"
-        className="fill-zinc-700 text-[10px] font-black tracking-[0.16em]"
+        className="fill-zinc-700 text-[10px] font-black tracking-[0.18em]"
       >
         NINTENDO
       </text>
 
-      {/* Recessed button wells — darker circles that read as molded
-          depressions for the D-pad (left), C-buttons (top-right), and
-          A/B (mid-right). */}
-      <ellipse cx="225" cy="215" rx="88" ry="78" fill="url(#n64Well)" />
-      <ellipse cx="680" cy="210" rx="92" ry="78" fill="url(#n64Well)" />
-      <ellipse cx="640" cy="295" rx="65" ry="55" fill="url(#n64Well)" />
+      {/* Recessed button wells — darker depressions under the D-pad, the
+          C-buttons cluster, and the A/B cluster. */}
+      <ellipse cx="225" cy="215" rx="92" ry="82" fill="url(#n64Well)" />
+      <ellipse cx="680" cy="200" rx="92" ry="80" fill="url(#n64Well)" />
+      <ellipse cx="640" cy="290" rx="68" ry="56" fill="url(#n64Well)" />
+
+      {/* Tiny ring around the Start button. */}
       <circle cx="450" cy="218" r="26" fill="url(#n64Well)" />
 
-      {/* Deep analog stick well on the center prong. */}
+      {/* Deep analog stick well — the chunky dark hex boot on the center prong. */}
       <circle
         cx="450"
         cy="400"
-        r="72"
+        r="76"
         fill="url(#n64StickWell)"
         opacity="0.92"
       />
