@@ -1,24 +1,37 @@
-// Minimal WAV file writer/reader for the audio e2e harness. PCM only; no
-// compressed formats. Reads and writes signed-16-bit and signed-8-bit
-// stereo, which is enough for both the m4a engine's native s8 output and
-// the fingerprint baseline.
+// Minimal WAV file writer/reader for the audio e2e harness. Supports s8 PCM,
+// s16le PCM (format code 1), and 32-bit IEEE float (format code 3). 32-bit
+// float is what the m4a engine actually produces; the integer paths are kept
+// for analysis-side conversions (s16 in particular is the canonical mono
+// reference format).
 
 const RIFF = 0x46_46_49_52; // "RIFF" (LE)
 const WAVE = 0x45_56_41_57; // "WAVE"
 const FMT = 0x20_74_6d_66; // "fmt "
 const DATA = 0x61_74_61_64; // "data"
 
-export type WavWriteOptions = {
-  sampleRate: number;
-  channels: number;
-  bitsPerSample: 8 | 16;
-};
+const FORMAT_PCM = 1;
+const FORMAT_IEEE_FLOAT = 3;
+
+export type WavWriteOptions =
+  | {
+      sampleRate: number;
+      channels: number;
+      bitsPerSample: 8 | 16;
+      format?: "pcm";
+    }
+  | {
+      sampleRate: number;
+      channels: number;
+      bitsPerSample: 32;
+      format: "float";
+    };
 
 export function encodeWav(
   pcm: Buffer | Uint8Array,
   opts: WavWriteOptions,
 ): Buffer {
   const { sampleRate, channels, bitsPerSample } = opts;
+  const formatCode = opts.format === "float" ? FORMAT_IEEE_FLOAT : FORMAT_PCM;
   const byteRate = (sampleRate * channels * bitsPerSample) / 8;
   const blockAlign = (channels * bitsPerSample) / 8;
   const dataSize = pcm.length;
@@ -28,7 +41,7 @@ export function encodeWav(
   buffer.writeUInt32LE(WAVE, 8);
   buffer.writeUInt32LE(FMT, 12);
   buffer.writeUInt32LE(16, 16); // fmt chunk size
-  buffer.writeUInt16LE(1, 20); // PCM format
+  buffer.writeUInt16LE(formatCode, 20);
   buffer.writeUInt16LE(channels, 22);
   buffer.writeUInt32LE(sampleRate, 24);
   buffer.writeUInt32LE(byteRate, 28);
@@ -44,6 +57,7 @@ export type WavReadResult = {
   sampleRate: number;
   channels: number;
   bitsPerSample: number;
+  formatCode: number;
   pcm: Buffer;
 };
 
@@ -57,6 +71,7 @@ export function decodeWav(file: Buffer): WavReadResult {
     sampleRate: number;
     channels: number;
     bitsPerSample: number;
+    formatCode: number;
   } | null = null;
   let pcm: Buffer | null = null;
   while (cur + 8 <= file.length) {
@@ -64,6 +79,7 @@ export function decodeWav(file: Buffer): WavReadResult {
     const size = file.readUInt32LE(cur + 4);
     if (id === FMT) {
       fmt = {
+        formatCode: file.readUInt16LE(cur + 8),
         channels: file.readUInt16LE(cur + 10),
         sampleRate: file.readUInt32LE(cur + 12),
         bitsPerSample: file.readUInt16LE(cur + 22),
@@ -79,8 +95,7 @@ export function decodeWav(file: Buffer): WavReadResult {
   return { ...fmt, pcm };
 }
 
-/** Convert interleaved s8 stereo PCM to a flat mono Float64Array (averaged).
- * Used by the analysis pipeline which only looks at one channel. */
+/** Convert interleaved s8 stereo PCM to a flat mono Float64Array (averaged). */
 export function s8StereoToMonoF64(pcm: Buffer | Uint8Array): Float64Array {
   const stereo = Buffer.isBuffer(pcm) ? pcm : Buffer.from(pcm);
   const frames = stereo.length / 2;
@@ -102,6 +117,20 @@ export function s16StereoToMonoF64(pcm: Buffer): Float64Array {
     const l = pcm.readInt16LE(i * 4);
     const r = pcm.readInt16LE(i * 4 + 2);
     out[i] = (l + r) / 2 / 32_768;
+  }
+  return out;
+}
+
+/** Convert interleaved Float32 stereo PCM (LRLR…) to a flat mono Float64Array
+ * (averaged). The m4a engine's `gWasmPcmL`/`gWasmPcmR` buffers, after
+ * interleaving, arrive in this format. */
+export function f32StereoToMonoF64(pcm: Buffer): Float64Array {
+  const frames = pcm.length / 8;
+  const out = new Float64Array(frames);
+  for (let i = 0; i < frames; i++) {
+    const l = pcm.readFloatLE(i * 8);
+    const r = pcm.readFloatLE(i * 8 + 4);
+    out[i] = (l + r) / 2;
   }
   return out;
 }

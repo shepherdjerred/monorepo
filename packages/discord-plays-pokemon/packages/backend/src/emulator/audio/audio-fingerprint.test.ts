@@ -34,14 +34,16 @@ import {
   rms,
   stft,
 } from "#src/emulator/audio/analysis.ts";
-import { decodeWav, s8StereoToMonoF64 } from "#src/emulator/audio/wav.ts";
+import { decodeWav, f32StereoToMonoF64 } from "#src/emulator/audio/wav.ts";
 
 // Capture parameters tuned to overlap the baseline window (15 s of game
 // time → ~12 s of music after the silent intro). The fingerprint metrics
 // look at the first `COMPARE_SECONDS` seconds of trimmed audio.
 const CAPTURE_FRAMES = 900;
 const COMPARE_SECONDS = 8;
-const SILENCE_THRESHOLD_S8 = 4;
+// Float32 ±1.0 silence floor — matches what scripts/audio-e2e.ts uses to
+// trim the silent intro before saving the baseline.
+const SILENCE_THRESHOLD_F32 = 0.03;
 // Mel/chroma + onset thresholds. Mel is the loudest signal (catches "wrong
 // song"); chroma is invariant to gain (catches "right notes but quieter");
 // onset is robust to tonal drift (catches "right notes wrong tempo").
@@ -82,14 +84,17 @@ async function captureClip(frames: number): Promise<{
     };
     tick();
   });
-  // Trim leading silence.
+  // Trim leading silence (intro logos before the title BGM kicks in).
   const firstNoisy = drains.findIndex((r) => {
     let peak = 0;
-    for (const v of r.pcm) {
-      const a = Math.abs((v << 24) >> 24);
-      if (a > peak) peak = a;
+    const fr = r.pcm.length / 8;
+    for (let i = 0; i < fr; i++) {
+      const l = Math.abs(r.pcm.readFloatLE(i * 8));
+      const rr = Math.abs(r.pcm.readFloatLE(i * 8 + 4));
+      if (l > peak) peak = l;
+      if (rr > peak) peak = rr;
     }
-    return peak > SILENCE_THRESHOLD_S8;
+    return peak > SILENCE_THRESHOLD_F32;
   });
   const start = firstNoisy === -1 ? 0 : firstNoisy;
   const trimmed = drains.slice(start);
@@ -97,17 +102,7 @@ async function captureClip(frames: number): Promise<{
     throw new Error(`no audible PCM after ${String(frames)} frames`);
   }
   const concat = Buffer.concat(trimmed.map((r) => r.pcm));
-  return { mono: s8StereoMonoF64(concat), sampleRate: rate };
-}
-
-function s8StereoMonoF64(pcm: Buffer): Float64Array {
-  const out = new Float64Array(pcm.length / 2);
-  for (let i = 0; i < out.length; i++) {
-    const l = (pcm[i * 2] << 24) >> 24;
-    const r = (pcm[i * 2 + 1] << 24) >> 24;
-    out[i] = (l + r) / 2 / 128;
-  }
-  return out;
+  return { mono: f32StereoToMonoF64(concat), sampleRate: rate };
 }
 
 async function loadBaseline(): Promise<{
@@ -120,7 +115,7 @@ async function loadBaseline(): Promise<{
   ).pathname;
   const bytes = await Bun.file(path).bytes();
   const wav = decodeWav(Buffer.from(bytes));
-  return { mono: s8StereoToMonoF64(wav.pcm), sampleRate: wav.sampleRate };
+  return { mono: f32StereoToMonoF64(wav.pcm), sampleRate: wav.sampleRate };
 }
 
 function melFingerprint(

@@ -15,7 +15,9 @@
 //                                                # fixture from this run
 //
 // Outputs land in `scripts/out/`:
-//   - audio-e2e-source.wav      (s8 stereo at native ~13379 Hz)
+//   - audio-e2e-source.wav      (Float32 stereo at native ~13379 Hz —
+//                                the un-quantised mixer output, ~40 dB
+//                                cleaner than the s8 pcmBuffer)
 //   - audio-e2e-opus.opus       (Opus packet stream)
 //   - audio-e2e-roundtrip.wav   (Opus decoded back to s16 for listening)
 
@@ -79,33 +81,36 @@ if (collected.length === 0) {
 }
 
 const totalBytes = collected.reduce((acc, r) => acc + r.pcm.length, 0);
+// Float32 stereo = 8 bytes per stereo frame; divide once more to get seconds.
 logger.info(
   `captured ${String(collected.length)} frames of PCM @ ${String(nativeRate)} Hz` +
-    ` (${String(totalBytes)} bytes total, ${(totalBytes / nativeRate / 2).toFixed(2)}s)`,
+    ` (${String(totalBytes)} bytes total, ${(totalBytes / nativeRate / 8).toFixed(2)}s)`,
 );
 
 const sourcePcm = Buffer.concat(collected.map((r) => r.pcm));
 const sourceWav = encodeWav(sourcePcm, {
   sampleRate: nativeRate,
   channels: 2,
-  bitsPerSample: 8,
+  bitsPerSample: 32,
+  format: "float",
 });
 const sourceWavPath = `${OUT_DIR}audio-e2e-source.wav`;
 await Bun.write(sourceWavPath, sourceWav);
 logger.info(`wrote ${sourceWavPath}`);
 
-// Sanity-check the source: RMS over the whole clip. If this is below ~5 (out
-// of 127) on the s8 scale, the engine is producing silence and Opus encode
-// won't change that. Surface it so the operator doesn't waste time listening
-// to nothing.
-let rms = 0;
-for (const element of sourcePcm) {
-  const v = (element << 24) >> 24;
-  rms += v * v;
+// Sanity-check the source: RMS of the interleaved Float32 stream. A typical
+// game audio signal lands ~0.05–0.20 RMS; below ~0.005 means the engine is
+// producing silence and Opus encode won't change that.
+let rmsAcc = 0;
+const frames = sourcePcm.length / 8;
+for (let i = 0; i < frames; i++) {
+  const l = sourcePcm.readFloatLE(i * 8);
+  const r = sourcePcm.readFloatLE(i * 8 + 4);
+  rmsAcc += l * l + r * r;
 }
-rms = Math.sqrt(rms / sourcePcm.length);
-logger.info(`source PCM RMS: ${rms.toFixed(2)} (s8 scale, 0..127)`);
-if (rms < 1) {
+const sourceRms = Math.sqrt(rmsAcc / (frames * 2));
+logger.info(`source PCM RMS: ${sourceRms.toFixed(4)} (Float32, ±1.0)`);
+if (sourceRms < 0.005) {
   logger.warn(
     "source PCM is effectively silent — engine handlers likely need polish.",
   );
@@ -172,15 +177,20 @@ if (UPDATE_BASELINE) {
   // Trim the leading silence (the wasm boots its m4a engine partway through
   // AgbMain; the first ~2s is pure intro before BGM starts) so the baseline
   // is a clean musical signal, not "two seconds of zeros, then music."
-  const SILENCE_THRESHOLD = 4; // 4/127 on s8 scale
+  // Float32 ±1.0 peak threshold: 0.03 = ~-30 dBFS, well below any real music
+  // but well above the all-zero pre-init state.
+  const SILENCE_THRESHOLD_F32 = 0.03;
   const samplesPerFrame = collected[0]?.frames ?? nativeRate / 60;
   const firstNoisyFrame = collected.findIndex((r) => {
     let peak = 0;
-    for (const v of r.pcm) {
-      const a = Math.abs((v << 24) >> 24);
-      if (a > peak) peak = a;
+    const fr = r.pcm.length / 8;
+    for (let i = 0; i < fr; i++) {
+      const l = Math.abs(r.pcm.readFloatLE(i * 8));
+      const rr = Math.abs(r.pcm.readFloatLE(i * 8 + 4));
+      if (l > peak) peak = l;
+      if (rr > peak) peak = rr;
     }
-    return peak > SILENCE_THRESHOLD;
+    return peak > SILENCE_THRESHOLD_F32;
   });
   const startFrame = firstNoisyFrame === -1 ? 0 : firstNoisyFrame;
   const trimmedFrames = collected.slice(startFrame);
@@ -188,7 +198,8 @@ if (UPDATE_BASELINE) {
   const trimmedWav = encodeWav(trimmedPcm, {
     sampleRate: nativeRate,
     channels: 2,
-    bitsPerSample: 8,
+    bitsPerSample: 32,
+    format: "float",
   });
   const baselinePath = `${FIXTURE_DIR}title-bgm-baseline.wav`;
   await Bun.write(baselinePath, trimmedWav);
