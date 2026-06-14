@@ -307,13 +307,35 @@ function describeThread(thread: GreptileThread): string {
 }
 
 /**
- * Pure decision: given the head commit, Greptile's review-check state, and the
- * PR's review threads, decide whether the gate should pass, keep waiting, or
- * fail.
+ * Return true if the issue-level comment body contains Greptile's
+ * "no reviewable files" marker.  Greptile posts this when every file in the
+ * diff matches the ignore patterns defined in `.greptile/config.json`, so it
+ * never creates a check-run.  We must detect it here to avoid a 1200s timeout.
+ *
+ * The marker is the HTML comment `<!-- greptile-status -->` followed (on the
+ * same or next line) by the literal phrase "No reviewable files".
+ */
+export function parseGreptileNoReviewableFiles(body: string | null): boolean {
+  if (body === null) return false;
+  return (
+    body.includes("<!-- greptile-status -->") &&
+    body.includes("No reviewable files")
+  );
+}
+
+/**
+ * Pure decision: given the head commit, Greptile's review-check state, the
+ * PR's review threads, and whether Greptile explicitly reported no reviewable
+ * files, decide whether the gate should pass, keep waiting, or fail.
  *
  * `maxBlockingPriority` controls which priority levels are blocking:
  * a thread blocks when its priority (0=most severe…3=least severe) is ≤ this
  * threshold. Threads with no priority badge are never blocking.
+ *
+ * `noReviewableFiles` is true when Greptile posted a "No reviewable files"
+ * status comment on the issue.  In that case the gate passes immediately
+ * without waiting for a check-run (Greptile never creates one in this
+ * scenario).
  */
 export function evaluateGate(input: {
   head: string;
@@ -321,7 +343,17 @@ export function evaluateGate(input: {
   threads: readonly GreptileThread[];
   greptileLogin: string;
   maxBlockingPriority: number;
+  noReviewableFiles?: boolean;
 }): GateDecision {
+  if (input.noReviewableFiles === true) {
+    return {
+      state: "passed",
+      message:
+        `Greptile reported no reviewable files for ${input.head} after applying ignore patterns; ` +
+        `gate passes automatically.`,
+    };
+  }
+
   const reviewState = classifyReviewCheck(input.reviewCheck);
 
   if (reviewState === "reviewing") {
@@ -588,6 +620,37 @@ async function fetchGreptileThreads(input: {
   return { threads, headRefOid };
 }
 
+/**
+ * Check whether Greptile has posted a "No reviewable files" status comment on
+ * the PR issue.  Greptile uses this instead of a check-run when every file in
+ * the diff is excluded by `.greptile/config.json` ignore patterns.
+ */
+async function fetchGreptileNoReviewableFiles(input: {
+  repo: string;
+  number: number;
+  greptileLogin: string;
+  token: string;
+}): Promise<boolean> {
+  let url: string | null =
+    `${GITHUB_API_URL}/repos/${input.repo}/issues/${String(input.number)}/comments?per_page=100`;
+  while (url !== null) {
+    const { payload, linkNext } = await getJsonWithLink(url, input.token);
+    // The REST response for /issues/:number/comments is a top-level array.
+    const commentArray = Array.isArray(payload) ? payload : [];
+    for (const item of commentArray) {
+      if (!isRecord(item)) continue;
+      const userRecord = recordField(item, "user");
+      const login =
+        userRecord === null ? null : stringField(userRecord, "login");
+      if (login !== input.greptileLogin) continue;
+      const body = stringField(item, "body");
+      if (parseGreptileNoReviewableFiles(body)) return true;
+    }
+    url = linkNext;
+  }
+  return false;
+}
+
 async function waitForGreptile(): Promise<void> {
   const pullRequest = process.env["BUILDKITE_PULL_REQUEST"];
   if (
@@ -651,9 +714,10 @@ async function waitForGreptile(): Promise<void> {
   let warnedMismatch = false;
 
   while (Date.now() <= deadline) {
-    const [reviewCheck, threadResult] = await Promise.all([
+    const [reviewCheck, threadResult, noReviewableFiles] = await Promise.all([
       fetchGreptileReviewCheck({ repo, head, token, pattern }),
       fetchGreptileThreads({ owner, name, number, token }),
+      fetchGreptileNoReviewableFiles({ repo, number, greptileLogin, token }),
     ]);
 
     if (
@@ -673,6 +737,7 @@ async function waitForGreptile(): Promise<void> {
       threads: threadResult.threads,
       greptileLogin,
       maxBlockingPriority,
+      noReviewableFiles,
     });
 
     if (decision.state === "passed") {

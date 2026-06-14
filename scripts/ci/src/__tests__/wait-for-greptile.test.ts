@@ -4,6 +4,7 @@ import {
   evaluateGate,
   parseLinkNext,
   parseGreptilePriority,
+  parseGreptileNoReviewableFiles,
   type GreptileReviewCheck,
   type GreptileThread,
 } from "../wait-for-greptile.ts";
@@ -40,6 +41,7 @@ function evaluate(input: {
   reviewCheck?: GreptileReviewCheck;
   threads?: GreptileThread[];
   maxBlockingPriority?: number;
+  noReviewableFiles?: boolean;
 }) {
   return evaluateGate({
     head: HEAD,
@@ -47,8 +49,84 @@ function evaluate(input: {
     threads: input.threads ?? [],
     greptileLogin: GREPTILE,
     maxBlockingPriority: input.maxBlockingPriority ?? 3,
+    ...(input.noReviewableFiles !== undefined
+      ? { noReviewableFiles: input.noReviewableFiles }
+      : {}),
   });
 }
+
+describe("evaluateGate — no-reviewable-files shortcut", () => {
+  it("passes immediately when Greptile posted a no-reviewable-files comment", () => {
+    const result = evaluate({
+      // Even with no check-run found, gate passes when noReviewableFiles is true.
+      reviewCheck: { found: false, status: null, conclusion: null, url: null },
+      noReviewableFiles: true,
+    });
+    expect(result.state).toBe("passed");
+    expect(result.message).toContain("no reviewable files");
+    expect(result.message).toContain(HEAD);
+  });
+
+  it("passes even if there are open threads when Greptile found no reviewable files", () => {
+    // Greptile can't post review threads on a PR it skipped reviewing, but guard
+    // the short-circuit so it always wins if the flag is set.
+    const result = evaluate({
+      reviewCheck: { found: false, status: null, conclusion: null, url: null },
+      threads: [thread({ isResolved: false })],
+      noReviewableFiles: true,
+    });
+    expect(result.state).toBe("passed");
+  });
+
+  it("does NOT short-circuit when noReviewableFiles is false", () => {
+    const result = evaluate({
+      reviewCheck: { found: false, status: null, conclusion: null, url: null },
+      noReviewableFiles: false,
+    });
+    expect(result.state).toBe("waiting");
+  });
+
+  it("does NOT short-circuit when noReviewableFiles is undefined", () => {
+    const result = evaluate({
+      reviewCheck: { found: false, status: null, conclusion: null, url: null },
+    });
+    expect(result.state).toBe("waiting");
+  });
+});
+
+describe("parseGreptileNoReviewableFiles", () => {
+  it("returns true for the exact Greptile status comment body", () => {
+    const body =
+      "<!-- greptile-status -->\nNo reviewable files after applying ignore patterns.";
+    expect(parseGreptileNoReviewableFiles(body)).toBe(true);
+  });
+
+  it("returns true when both markers appear on the same line", () => {
+    const body =
+      "<!-- greptile-status --> No reviewable files after applying ignore patterns.";
+    expect(parseGreptileNoReviewableFiles(body)).toBe(true);
+  });
+
+  it("returns false for a normal Greptile review comment", () => {
+    const body =
+      "<!-- greptile-status -->\n<h3>Greptile Summary</h3>\n\nThis PR updates dependencies.";
+    expect(parseGreptileNoReviewableFiles(body)).toBe(false);
+  });
+
+  it("returns false for a comment with only the status marker", () => {
+    expect(parseGreptileNoReviewableFiles("<!-- greptile-status -->")).toBe(
+      false,
+    );
+  });
+
+  it("returns false for a null body", () => {
+    expect(parseGreptileNoReviewableFiles(null)).toBe(false);
+  });
+
+  it("returns false for an unrelated comment", () => {
+    expect(parseGreptileNoReviewableFiles("LGTM!")).toBe(false);
+  });
+});
 
 describe("evaluateGate — review-check gating", () => {
   it("waits while Greptile has not started reviewing the head commit", () => {
