@@ -1,0 +1,1 @@
+This project delivers the marketing site promoting the Cooklang Rich Preview Obsidian plugin. It is built with Astro, Tailwind CSS, PostCSS, and TypeScript-driven tooling such as `astro-icon` and `@iconify-json/heroicons`. The Astro configuration links `.astro/types` through `src/env.d.ts`, giving the site strongly typed component and environment support.

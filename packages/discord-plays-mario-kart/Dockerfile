@@ -49,4 +49,4 @@ RUN cd packages/frontend && bun run build
 # The save + data directories are created on demand (data holds the leaderboard
 # SQLite DB; `prisma db push` applies the schema before start, idempotently).
 ENV NODE_ENV=production
-CMD ["sh", "-c", "cd packages/backend && bunx prisma db push --skip-generate && cd /app && exec bun packages/backend/src/index.ts"]
+CMD ["sh", "-c", "cd packages/backend && bunx prisma db push && cd /app && exec bun packages/backend/src/index.ts"]

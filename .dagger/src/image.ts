@@ -17,6 +17,7 @@ import {
   MCP_PROXY_BASE_IMAGE,
   EDSTEM_MCP_COMMIT,
   CODEX_CLI_VERSION,
+  COGAPP_VERSION,
   EMSCRIPTEN_IMAGE,
   GH_CLI_VERSION,
   GITHUB_MCP_SERVER_VERSION,
@@ -33,6 +34,18 @@ import versions from "./versions";
 
 export const PRISMA_BUN_SERVICE_START_COMMAND =
   "bunx --trust prisma generate && bunx prisma db push && bun run src/index.ts";
+
+// Inner-monorepo root the discord-plays-mario-kart app runs from (config.toml,
+// n64wasm assets, saves/ resolve relative to this CWD).
+export const MARIO_KART_INNER_ROOT =
+  "/workspace/packages/discord-plays-mario-kart";
+
+// The real container entrypoint command for discord-plays-mario-kart. Applies the
+// leaderboard schema to the (persistent-volume) SQLite DB before start, then execs
+// the app from the inner root. NOTE: Prisma 7's `db push` no longer accepts
+// `--skip-generate` (generate is decoupled) — passing it crashes the container on
+// boot. Shared with the smoke test so the two cannot drift.
+export const MARIO_KART_ENTRYPOINT_COMMAND = `cd packages/backend && bunx prisma db push && cd ${MARIO_KART_INNER_ROOT} && exec bun packages/backend/src/index.ts`;
 
 function withGitHubCli(container: Container): Container {
   return container
@@ -68,7 +81,8 @@ function withGitHubCli(container: Container): Container {
  * `BUN_INSTALL=/usr/local` forces `bun add -g` to drop the `claude` binary
  * into `/usr/local/bin` (world-readable) instead of `/root/.bun/bin`, which
  * the container's non-root user (UID 1000) cannot reach. Without this the
- * docs-groom workflow fails with `Executable not found in $PATH: claude`.
+ * temporal-worker workflows that shell out to `claude` fail with
+ * `Executable not found in $PATH: claude`.
  */
 function withEditorClis(container: Container): Container {
   return withGitHubCli(container)
@@ -90,6 +104,47 @@ function withCodexCli(container: Container): Container {
     .withEnvVariable("BUN_INSTALL", "/usr/local")
     .withExec(["bun", "add", "-g", `@openai/codex@${CODEX_CLI_VERSION}`])
     .withExec(["codex", "--version"]);
+}
+
+/**
+ * Install the `cog` (cogapp) CLI into a Bun-based container.
+ *
+ * The temporal-worker's `readme-refresh-weekly` workflow shells out to
+ * `cog -r README.md practice/README.md archive/README.md` to regenerate the
+ * project-listing tables embedded in those READMEs. cog is a Python tool, so we
+ * add a Python interpreter and install cogapp system-wide. `pip3 install` with
+ * `--break-system-packages` drops the `cog` entrypoint into `/usr/local/bin`
+ * (world-readable), reachable by the container's non-root user (UID 1000) — the
+ * same reason `withEditorClis` forces `BUN_INSTALL=/usr/local` for `claude`.
+ */
+function withCogapp(container: Container): Container {
+  return (
+    container
+      .withExec(["apt-get", "update", "-qq"])
+      .withExec([
+        "apt-get",
+        "install",
+        "-y",
+        "-qq",
+        "--no-install-recommends",
+        "ca-certificates",
+        "python3",
+        "python3-pip",
+      ])
+      .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"])
+      .withExec([
+        "pip3",
+        "install",
+        "--no-cache-dir",
+        "--break-system-packages",
+        `cogapp==${COGAPP_VERSION}`,
+      ])
+      // cogapp's `cog` CLI uses `-v` for "print the version and exit"; it has no
+      // `--version` flag (that errors with exit 2 "option --version not
+      // recognized"). `cog -v` prints e.g. "Cog version 3.6.0" and exits 0,
+      // confirming the binary is installed and runnable on PATH.
+      .withExec(["cog", "-v"])
+  );
 }
 
 /**
@@ -935,8 +990,9 @@ export function buildTemporalWorkerImageHelper(
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE));
 
-  // The docs-groom workflow shells out to `gh` + `claude` from inside the
-  // worker pod, so the temporal-worker image must ship both binaries.
+  // The pr-agent activity (PR review + summary) and several PR-opening
+  // workflows shell out to `gh` + `claude` from inside the worker pod, so the
+  // temporal-worker image must ship both binaries — see `withEditorClis`.
   // The bugsink-housekeeping workflow shells out to `kubectl` for the same
   // reason — see the rationale on `withKubectl`.
   // The pr-agent activity (PR review + summary) launches `claude -p` with
@@ -947,9 +1003,13 @@ export function buildTemporalWorkerImageHelper(
   // `withHomelabAuditClis`.
   // The helm-types-weekly-refresh workflow shells out to `helm pull` to
   // regenerate the cdk8s chart types — see `withHelm`.
-  container = withHelm(
-    withHomelabAuditClis(
-      withGithubMcpServer(withKubectl(withEditorClis(container))),
+  // The readme-refresh-weekly workflow shells out to `cog` (cogapp) to
+  // regenerate the README project listings — see `withCogapp`.
+  container = withCogapp(
+    withHelm(
+      withHomelabAuditClis(
+        withGithubMcpServer(withKubectl(withEditorClis(container))),
+      ),
     ),
   );
 
@@ -1237,7 +1297,7 @@ export function buildDiscordPlaysMarioKartImageHelper(
   gitSha: string = "unknown",
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
-  const innerRoot = "/workspace/packages/discord-plays-mario-kart";
+  const innerRoot = MARIO_KART_INNER_ROOT;
   const assetsDir = `${innerRoot}/packages/backend/assets/n64wasm`;
 
   // Stage 1: compile the N64Wasm core in the pinned emscripten toolchain.
@@ -1343,13 +1403,7 @@ export function buildDiscordPlaysMarioKartImageHelper(
       // leaderboard schema to the (persistent-volume) SQLite DB before start —
       // idempotent, birmel-style; harmless when leaderboards are disabled.
       .withWorkdir(innerRoot)
-      .withEntrypoint([
-        "sh",
-        "-c",
-        "cd packages/backend && bunx prisma db push --skip-generate && cd " +
-          innerRoot +
-          " && exec bun packages/backend/src/index.ts",
-      ])
+      .withEntrypoint(["sh", "-c", MARIO_KART_ENTRYPOINT_COMMAND])
   );
 }
 

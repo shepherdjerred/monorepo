@@ -136,6 +136,17 @@ Set `RUNBOOK_PATH=packages/docs/guides/2026-04-04_homelab-audit-runbook.md` in `
 
 **Cluster RBAC** — the worker SA gets a cluster-wide read-only `temporal-worker-audit-reader` ClusterRole (see `packages/homelab/src/cdk8s/src/resources/temporal/audit-rbac.ts`). No `pods/exec`, no write verbs.
 
+## Weekly README refresh
+
+`readme-refresh-weekly` (cron `0 8 * * 1` PT) runs `runReadmeRefresh` on the `default` queue. The activity (`src/activities/readme-refresh.ts`) mirrors `helm-types-refresh`: clone the monorepo (full blobless history — the cog blocks sort packages by first-commit date), run `cog -r README.md practice/README.md archive/README.md` to regenerate the embedded project-listing tables, format the output with the repo's pinned prettier (see below), stage only the three READMEs + any new per-package `_summary.md`, and open a PR via `openSeasonRefreshPr` if anything drifted (no diff → no PR). This replaced the old `.buildkite/scripts/update-readmes.sh` Buildkite scheduled build.
+
+`cog` is a Python tool, so the worker image installs cogapp via `withCogapp` in `.dagger/src/image.ts` (pinned by `COGAPP_VERSION` in `.dagger/src/constants.ts`). Per-package summaries are cached as committed `_summary.md` files, so a steady-state run makes no Codex calls; only a brand-new package without a committed summary triggers `bunx @openai/codex` (authed via the pod's `OPENAI_API_KEY`).
+
+Two non-obvious bits the cog blocks + activity handle, learned the hard way (PR #1164):
+
+- **codex must ignore `AGENTS.md`.** `codex exec` runs in the repo root and, left alone, obeys the repo agent docs ("every session must produce a session log") and dumps `**Done**/**Remaining**/**Caveats**` meta into the summary. The cog blocks pass `-c project_doc_max_bytes=0` so codex returns a plain project summary. Without it, ~8/21 generated summaries came out contaminated.
+- **cog output isn't prettier-clean.** Its raw markdown (e.g. a missing blank line after `]]]-->`) fails the repo's prettier gate, so an unformatted auto-PR would never pass CI. The activity runs `bun install --frozen-lockfile` + `bunx prettier --write` on the regenerated files before opening the PR. In steady state cog un-formats and prettier re-formats back to the committed bytes, netting no diff. (markdownlint only checks the root `README.md`; `archive/**`, `practice/**`, and `**/_summary.md` are ignored — and clean single-paragraph summaries don't trip MD032.)
+
 ## PR review / summary bot
 
 Per webhook delivery, the Hono server in `src/event-bridge/github-webhook.ts` starts four workflows in parallel:

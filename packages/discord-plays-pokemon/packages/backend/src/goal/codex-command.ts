@@ -16,10 +16,14 @@ export function buildCodexArgs(
   return [
     config.codexBinary,
     "exec",
-    "--sandbox",
-    "workspace-write",
-    "--config",
-    'approval_policy="never"',
+    // Codex's default `workspace-write` sandbox uses bubblewrap, which needs
+    // unprivileged user namespaces. The prod pod runs on Talos with
+    // lockdown=integrity (kernel.unprivileged_userns_clone disabled), so bwrap
+    // fails before pokemonctl can run. We are already externally sandboxed
+    // (uid 1000, no caps, restricted PSS) — which is the documented use case
+    // for this flag — so bypass codex's own sandboxing here. The flag also
+    // implies approval_policy=never, so we no longer need to set that.
+    "--dangerously-bypass-approvals-and-sandbox",
     "--config",
     'model_reasoning_effort="low"',
     "--output-last-message",

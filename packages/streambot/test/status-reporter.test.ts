@@ -12,13 +12,36 @@ const REQUESTER = UserIdSchema.parse("100000000000000001");
 function collector(): {
   reporter: StatusReporter;
   messages: Announcement[];
+  /** Fire the pending "preparing…" notice timer (the injected scheduler defers it deterministically). */
+  fireNotice: () => void;
 } {
   const messages: Announcement[] = [];
-  const reporter = new StatusReporter((message) => {
-    messages.push(message);
-    return Promise.resolve();
-  });
-  return { reporter, messages };
+  let pending: (() => void) | null = null;
+  const reporter = new StatusReporter(
+    (message) => {
+      messages.push(message);
+      return Promise.resolve();
+    },
+    {
+      schedule: (fn) => {
+        pending = fn;
+        return () => {
+          if (pending === fn) {
+            pending = null;
+          }
+        };
+      },
+    },
+  );
+  return {
+    reporter,
+    messages,
+    fireNotice: () => {
+      const fn = pending;
+      pending = null;
+      fn?.();
+    },
+  };
 }
 
 function streaming(
@@ -30,6 +53,22 @@ function streaming(
     currentTitle: title,
     currentRequester: REQUESTER,
     currentKind: kind,
+    currentSourceLabel: title,
+    blockedNonce: 0,
+    blockedRequester: null,
+  };
+}
+
+function resolving(
+  label: string,
+  kind: StatusSnapshot["currentKind"] = "file",
+): StatusSnapshot {
+  return {
+    state: "resolving",
+    currentTitle: null,
+    currentRequester: REQUESTER,
+    currentKind: kind,
+    currentSourceLabel: label,
     blockedNonce: 0,
     blockedRequester: null,
   };
@@ -61,6 +100,7 @@ describe("StatusReporter now-playing", () => {
       currentTitle: null,
       currentRequester: null,
       currentKind: null,
+      currentSourceLabel: null,
       blockedNonce: 0,
       blockedRequester: null,
     });
@@ -68,17 +108,52 @@ describe("StatusReporter now-playing", () => {
     expect(messages).toHaveLength(2);
   });
 
-  test("does not announce when not streaming", () => {
+  test("does not announce now-playing while still resolving", () => {
     const { reporter, messages } = collector();
-    reporter.handle({
-      state: "resolving",
-      currentTitle: "Song A",
-      currentRequester: REQUESTER,
-      currentKind: "file",
-      blockedNonce: 0,
-      blockedRequester: null,
-    });
+    reporter.handle(resolving("Song A"));
     expect(messages).toHaveLength(0);
+  });
+});
+
+describe("StatusReporter preparing notice", () => {
+  test("posts a preparing notice when a local file resolves slowly", () => {
+    const { reporter, messages, fireNotice } = collector();
+    reporter.handle(resolving("Avengers - Endgame (2019)"));
+    // Nothing is posted until the delay elapses.
+    expect(messages).toHaveLength(0);
+    fireNotice();
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toBe(
+      "⏳ Preparing **Avengers - Endgame (2019)** — extracting subtitles from a large file, " +
+        "which can take up to a minute. Playback will start automatically when it's ready.",
+    );
+  });
+
+  test("cancels the notice when resolving finishes before the delay", () => {
+    const { reporter, messages, fireNotice } = collector();
+    reporter.handle(resolving("Song A", "file"));
+    // Stream starts before the notice timer fires → the notice is cancelled.
+    reporter.handle(streaming("Song A", "file"));
+    fireNotice();
+    expect(messages).toEqual([
+      `▶️ Now playing **Song A** (requested by <@${REQUESTER}>)`,
+    ]);
+  });
+
+  test("does not post a preparing notice for non-file (yt-dlp) sources", () => {
+    const { reporter, messages, fireNotice } = collector();
+    reporter.handle(resolving("https://youtu.be/abc", "url"));
+    fireNotice();
+    expect(messages).toHaveLength(0);
+  });
+
+  test("de-dupes the notice across re-rendered resolving snapshots", () => {
+    const { reporter, messages, fireNotice } = collector();
+    reporter.handle(resolving("Song A"));
+    reporter.handle(resolving("Song A"));
+    reporter.handle(resolving("Song A"));
+    fireNotice();
+    expect(messages).toHaveLength(1);
   });
 });
 
@@ -166,6 +241,7 @@ describe("StatusReporter blocked shaming", () => {
       currentTitle: null,
       currentRequester: null,
       currentKind: null,
+      currentSourceLabel: null,
       blockedNonce: 1,
       blockedRequester: REQUESTER,
     });
@@ -180,6 +256,7 @@ describe("StatusReporter blocked shaming", () => {
       currentTitle: null,
       currentRequester: null,
       currentKind: null,
+      currentSourceLabel: null,
       blockedNonce: 1,
       blockedRequester: REQUESTER,
     };
@@ -202,6 +279,7 @@ describe("StatusReporter blocked shaming", () => {
       currentTitle: null,
       currentRequester: null,
       currentKind: null,
+      currentSourceLabel: null,
       blockedNonce: 1,
       blockedRequester: REQUESTER,
     });
