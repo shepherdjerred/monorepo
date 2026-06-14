@@ -50,6 +50,14 @@ describe("saveReportRunImage", () => {
     expect(command.input.Key).toBe("reports/report-7/runs/42.png");
     expect(command.input.ContentType).toBe("image/png");
   });
+
+  test("returns null (not an error) when the S3 upload throws", async () => {
+    s3Mock.on(PutObjectCommand).rejects(new Error("S3 network error"));
+
+    const key = await saveReportRunImage(7, 42, Buffer.from("fake-png"));
+
+    expect(key).toBeNull();
+  });
 });
 
 describe("loadReportRunImage", () => {

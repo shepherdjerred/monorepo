@@ -42,19 +42,34 @@ export async function saveReportRunImage(
 
   const key = generateReportRunImageKey(reportId, runId);
   const client = createS3Client();
-  await client.send(
-    new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: png,
-      ContentType: "image/png",
-      Metadata: {
+  try {
+    await client.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        Body: png,
+        ContentType: "image/png",
+        Metadata: {
+          reportId: reportId.toString(),
+          runId: runId.toString(),
+          uploadedAt: new Date().toISOString(),
+        },
+      }),
+    );
+  } catch (error) {
+    logger.error(
+      `[S3ReportRun] ❌ Failed to upload report run image ${key} — image will be missing but run continues:`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: {
+        source: "s3-report-run-image-upload",
         reportId: reportId.toString(),
         runId: runId.toString(),
-        uploadedAt: new Date().toISOString(),
       },
-    }),
-  );
+    });
+    return null;
+  }
   logger.info(
     `[S3ReportRun] ✅ Stored report run image ${key} (${png.length.toString()} bytes)`,
   );
