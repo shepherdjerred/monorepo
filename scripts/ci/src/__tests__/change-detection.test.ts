@@ -16,6 +16,7 @@ import {
   _checkCiImageChanges,
   _checkCiImageVersionChanges,
   _checkTofuChanges,
+  _checkHelmTypesInputChanges,
   _getBaseRevision,
   _getChangedFiles,
   _getBuildRejectionReason,
@@ -736,6 +737,52 @@ describe("tofu source change detection", () => {
 
   it("returns false for an empty change set", () => {
     expect(_checkTofuChanges([])).toBe(false);
+  });
+});
+
+describe("checkHelmTypesInputChanges", () => {
+  it("detects versions.ts changes (Renovate chart-bump path)", () => {
+    expect(
+      _checkHelmTypesInputChanges([
+        "packages/homelab/src/cdk8s/src/versions.ts",
+      ]),
+    ).toBe(true);
+  });
+
+  it("detects generate-helm-types.ts generator script changes", () => {
+    expect(
+      _checkHelmTypesInputChanges([
+        "packages/homelab/src/cdk8s/scripts/generate-helm-types.ts",
+      ]),
+    ).toBe(true);
+  });
+
+  it("detects parse-helm-charts.ts parser script changes", () => {
+    expect(
+      _checkHelmTypesInputChanges([
+        "packages/homelab/src/cdk8s/scripts/parse-helm-charts.ts",
+      ]),
+    ).toBe(true);
+  });
+
+  it("detects changes under packages/homelab/src/helm-types/", () => {
+    expect(
+      _checkHelmTypesInputChanges([
+        "packages/homelab/src/helm-types/some-helper.ts",
+      ]),
+    ).toBe(true);
+  });
+
+  it("ignores unrelated homelab changes", () => {
+    expect(
+      _checkHelmTypesInputChanges([
+        "packages/homelab/src/cdk8s/src/resources/birmel.ts",
+      ]),
+    ).toBe(false);
+  });
+
+  it("returns false for an empty change set", () => {
+    expect(_checkHelmTypesInputChanges([])).toBe(false);
   });
 });
 

@@ -2,7 +2,14 @@ import path from "node:path";
 import { logger } from "#src/logger.ts";
 import { installBrowserStubs, getFakeCanvas } from "./wasm-host.ts";
 import { buildConfigTxt } from "./config-txt.ts";
-import { WIDTH, HEIGHT, BUTTON_ORDER, MAX_SEATS } from "./constants.ts";
+import { drainRing } from "./audio-ring.ts";
+import {
+  WIDTH,
+  HEIGHT,
+  BUTTON_ORDER,
+  MAX_SEATS,
+  AUDIO_RING_SAMPLES,
+} from "./constants.ts";
 import {
   emulateMs,
   copyMs,
@@ -34,11 +41,19 @@ type Runtime = {
   videoBuffer: () => number;
   videoHeight: () => number;
   rdramBase: () => number;
+  // Byte address of the emscripten audio backend's resampled ring buffer (s16le,
+  // 44.1 kHz, stereo) in wasm linear memory, and the current write index into it
+  // (in int16 samples). See audio_backend_libretro.c.
+  soundBuffer: () => number;
+  audioWritePos: () => number;
   runMainLoop: () => void;
   reset: () => void;
   heap: () => Uint8Array;
   send: SendControls;
 };
+
+// A reusable empty PCM result so an idle tick (no new audio) allocates nothing.
+const EMPTY_PCM = Buffer.alloc(0);
 
 export type EmulatorRestartReason = "stream_session_ended";
 
@@ -92,10 +107,13 @@ export class N64Emulator {
   private readonly inputs: PlayerInputState[];
   private readonly inputLatency = new InputLatencyTracker(MAX_SEATS);
   private onFrameCb: ((rgba: Buffer) => void) | undefined;
+  private onAudioCb: ((pcm: Buffer) => void) | undefined;
+  // Ring-buffer read cursor (int16 sample index) — how far we've drained audio.
+  private audioReadPos = 0;
   private running = false;
   private timer: ReturnType<typeof setTimeout> | undefined;
   private nextAt = 0;
-  private readonly frameMs: number;
+  private frameMs: number;
   private lastHeight = 240;
 
   constructor(opts: N64EmulatorOptions) {
@@ -161,6 +179,8 @@ export class N64Emulator {
     const videoBuffer = requireFn(mod, "_neilGetVideoBuffer");
     const videoHeight = requireFn(mod, "_neilGetVideoHeight");
     const rdramBase = requireFn(mod, "_neilGetRdram");
+    const soundBuffer = requireFn(mod, "_neilGetSoundBufferResampledAddress");
+    const audioWritePos = requireFn(mod, "_neilGetAudioWritePosition");
     const runMainLoop = requireFn(mod, "_runMainLoop");
     const reset = requireFn(mod, "_neil_reset");
     const callMain = requireFn(mod, "callMain");
@@ -224,6 +244,8 @@ export class N64Emulator {
       videoBuffer: () => asNumber(videoBuffer()),
       videoHeight: () => asNumber(videoHeight()),
       rdramBase: () => asNumber(rdramBase()),
+      soundBuffer: () => asNumber(soundBuffer()),
+      audioWritePos: () => asNumber(audioWritePos()),
       runMainLoop: () => {
         runMainLoop();
       },
@@ -242,10 +264,58 @@ export class N64Emulator {
     this.onFrameCb = cb;
   }
 
+  /**
+   * Register a sink for resampled PCM (s16le, 44.1 kHz, stereo). Called once per
+   * tick after the frame advances, with the audio the core produced this step.
+   * Subscribing snaps the read cursor to the current write head so the first tick
+   * doesn't flush a backlog of pre-subscription samples (which would leave audio
+   * permanently leading video).
+   */
+  onAudio(cb: (pcm: Buffer) => void): void {
+    this.onAudioCb = cb;
+    this.resyncAudioCursor();
+  }
+
+  /** Snap the audio read cursor to the core's current write position. */
+  private resyncAudioCursor(): void {
+    const rt = this.rt;
+    if (rt !== undefined) this.audioReadPos = rt.audioWritePos();
+  }
+
+  /**
+   * Drain the resampled audio ring buffer from `audioReadPos` up to the core's
+   * current write head, returning interleaved s16le stereo PCM. The wraparound
+   * math lives in the pure {@link drainRing} (unit-tested in audio-ring.test.ts).
+   */
+  private drainAudio(): Buffer {
+    const rt = this.rt;
+    if (rt === undefined) return EMPTY_PCM;
+    const base = rt.soundBuffer();
+    if (!base) return EMPTY_PCM;
+    const { pcm, readPos } = drainRing({
+      heap: rt.heap(),
+      base,
+      ringSamples: AUDIO_RING_SAMPLES,
+      readPos: this.audioReadPos,
+      writePos: rt.audioWritePos(),
+    });
+    this.audioReadPos = readPos;
+    return pcm;
+  }
+
   setPlayerInput(player: number, state: PlayerInputState): void {
     if (player < 0 || player >= MAX_SEATS) return;
     this.inputs[player] = state;
     this.inputLatency.record(player);
+  }
+
+  /**
+   * Re-pace the tick loop. Used by the perf harness to navigate menus in
+   * sprint mode then switch to realtime for the measurement window — production
+   * is constructed once at the target fps and never calls this.
+   */
+  setFps(fps: number): void {
+    this.frameMs = 1000 / fps;
   }
 
   /** Zero a player's input (e.g. on disconnect) so a held key doesn't stick. */
@@ -294,6 +364,9 @@ export class N64Emulator {
     }
     rt.reset();
     this.lastHeight = HEIGHT;
+    // The loop was stopped across reset(), so audio kept being written without
+    // being drained; snap the cursor forward so we don't dump that gap on resume.
+    this.resyncAudioCursor();
     emulatorRestartsTotal.inc({ reason });
     logger.info("n64 emulator restarted", { reason });
     if (wasRunning) {
@@ -368,6 +441,16 @@ export class N64Emulator {
         cb(Buffer.from(rt.heap().subarray(vbuf, vbuf + WIDTH * h * 4)));
         copyMs.observe(performance.now() - copyStart);
       }
+    }
+
+    // Drain the audio the core produced this tick (after runMainLoop). Always
+    // drained while subscribed — even when the stream sink is idle — so the read
+    // cursor tracks the write head and a later stream start doesn't flush a
+    // backlog. The sink is a no-op until a broadcast is live.
+    const audioCb = this.onAudioCb;
+    if (audioCb !== undefined) {
+      const pcm = this.drainAudio();
+      if (pcm.length > 0) audioCb(pcm);
     }
     ticksTotal.inc();
   }

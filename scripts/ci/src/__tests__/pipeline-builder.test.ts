@@ -21,6 +21,7 @@ function emptyAffected(): AffectedPackages {
     tofuChanged: false,
     cooklangChanged: false,
     resumeChanged: false,
+    helmTypesInputsChanged: false,
     ciImageChanged: false,
     hasImagePackages: new Set(),
     hasSitePackages: new Set(),
@@ -40,6 +41,7 @@ function fullBuild(): AffectedPackages {
     tofuChanged: true,
     cooklangChanged: true,
     resumeChanged: true,
+    helmTypesInputsChanged: true,
     ciImageChanged: false,
     hasImagePackages: new Set(PACKAGES_WITH_IMAGES),
     hasSitePackages: new Set(Object.keys(PACKAGE_TO_SITE)),
@@ -405,6 +407,76 @@ describe("buildPipeline", () => {
         .filter((k): k is string => typeof k === "string");
       expect(pushKeys.some((k) => k.includes("temporal-worker"))).toBe(true);
       expect(pushKeys.some((k) => k.includes("birmel"))).toBe(false);
+    });
+  });
+
+  describe("helm-types drift check", () => {
+    function homelabStepKeys(affected: AffectedPackages): string[] {
+      const pipeline = buildPipeline(affected);
+      const homelab = pipeline.steps
+        .filter(isGroup)
+        .find((g) => g.key === "pkg-homelab");
+      return (homelab?.steps ?? []).filter(isStep).map((s) => s.key);
+    }
+
+    it("emits the drift-check step when a generator input changed", () => {
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.homelabChanged = true;
+      affected.helmTypesInputsChanged = true;
+
+      const keys = homelabStepKeys(affected);
+      expect(keys).toContain("helm-types-drift-check");
+      // build-helm-types is unconditional for homelab; drift-check is the gate.
+      expect(keys).toContain("build-helm-types");
+    });
+
+    it("omits the drift-check step when no generator input changed", () => {
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.homelabChanged = true;
+
+      const keys = homelabStepKeys(affected);
+      expect(keys).not.toContain("helm-types-drift-check");
+      expect(keys).toContain("build-helm-types");
+    });
+
+    it("emits drift-check for Renovate noop+helmTypesInputsChanged (homelab in packages, empty otherwise)", () => {
+      // Simulates the Renovate chart-bump case: only versions.ts changed.
+      // change-detection returns buildScopedResult(new Set(["homelab"]), ..., helmTypesInputsChanged=true).
+      // buildPipeline must NOT hit the empty-packages early return and must emit the drift-check.
+      const affected = emptyAffected();
+      affected.packages.add("homelab");
+      affected.homelabChanged = true;
+      affected.helmTypesInputsChanged = true;
+      // All other flags false — simulates a Renovate noop path
+
+      const pipeline = buildPipeline(affected);
+      const homelabGroup = pipeline.steps
+        .filter(isGroup)
+        .find((g) => g.key === "pkg-homelab");
+      const stepKeys = (homelabGroup?.steps ?? [])
+        .filter(isStep)
+        .map((s) => s.key);
+
+      expect(stepKeys).toContain("helm-types-drift-check");
+    });
+
+    it("no-changes early return does NOT fire when helmTypesInputsChanged is true", () => {
+      // Defense-in-depth: even if packages is empty but helmTypesInputsChanged=true,
+      // the early return must be skipped. (change-detection ensures homelab is in
+      // packages, but pipeline-builder also guards independently.)
+      const affected = emptyAffected();
+      affected.helmTypesInputsChanged = true;
+      // packages.size === 0, buildAll=false, ciImageChanged=false — triggers early return
+      // without the helmTypesInputsChanged guard added in this PR
+
+      const pipeline = buildPipeline(affected);
+      // The pipeline must NOT contain the "no-changes" key
+      const noChangesStep = pipeline.steps
+        .filter(isStep)
+        .find((s) => s.key === "no-changes");
+      expect(noChangesStep).toBeUndefined();
     });
   });
 
