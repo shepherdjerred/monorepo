@@ -28,34 +28,34 @@ export function Leaderboard() {
   }, []);
 
   return (
-    <div className="w-full max-w-md rounded-lg border border-slate-700 bg-slate-800/60 p-4">
-      <h2 className="mb-2 text-lg font-bold text-emerald-400">Leaderboard</h2>
+    <div className="w-full rounded-lg border border-zinc-800 bg-zinc-950/60 p-4">
+      <h2 className="mb-2 text-sm font-black uppercase tracking-[0.18em] text-zinc-400">
+        Leaderboard
+      </h2>
       {loaded ? (
         entries.length === 0 ? (
-          <p className="text-sm text-slate-400">
-            No races recorded yet. Set a name and race to get on the board!
+          <p className="text-sm text-zinc-500">
+            No races recorded yet. Set a name and race to get on the board.
           </p>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-slate-400">
-                <th className="w-8 font-medium">#</th>
-                <th className="font-medium">Player</th>
-                <th className="w-12 text-right font-medium">Wins</th>
-                <th className="w-14 text-right font-medium">Races</th>
-                <th className="w-14 text-right font-medium">Win %</th>
+              <tr className="text-left text-xs uppercase tracking-wider text-zinc-500">
+                <th className="w-8 font-semibold">#</th>
+                <th className="font-semibold">Player</th>
+                <th className="w-10 text-right font-semibold">W</th>
+                <th className="w-12 text-right font-semibold">R</th>
+                <th className="w-14 text-right font-semibold">%</th>
               </tr>
             </thead>
             <tbody>
               {entries.map((e, i) => (
-                <tr key={e.name} className="border-t border-slate-700/60">
-                  <td className="py-1 text-slate-500">{i + 1}</td>
-                  <td className="py-1 font-semibold text-slate-100">
-                    {e.name}
-                  </td>
+                <tr key={e.name} className="border-t border-zinc-800/60">
+                  <td className="py-1 text-zinc-500">{i + 1}</td>
+                  <td className="py-1 font-semibold text-zinc-100">{e.name}</td>
                   <td className="py-1 text-right text-emerald-400">{e.wins}</td>
-                  <td className="py-1 text-right text-slate-300">{e.races}</td>
-                  <td className="py-1 text-right text-slate-300">
+                  <td className="py-1 text-right text-zinc-300">{e.races}</td>
+                  <td className="py-1 text-right text-zinc-300">
                     {Math.round(e.winRate * 100)}%
                   </td>
                 </tr>
@@ -64,7 +64,7 @@ export function Leaderboard() {
           </table>
         )
       ) : (
-        <p className="text-sm text-slate-400">Loading…</p>
+        <p className="text-sm text-zinc-500">Loading…</p>
       )}
     </div>
   );

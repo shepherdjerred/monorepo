@@ -40,10 +40,10 @@ function StickChevron({
         onRelease(control.code);
       }}
       className={cx(
-        "absolute z-40 flex h-7 w-7 touch-none items-center justify-center rounded-full border text-[11px] font-black leading-none transition active:translate-y-0",
+        "absolute z-40 flex h-5 w-5 touch-none items-center justify-center rounded-full border text-[10px] font-black leading-none transition active:translate-y-0 sm:h-6 sm:w-6",
         pressed
-          ? "border-white bg-white text-zinc-950 shadow-[0_0_18px_rgba(255,255,255,0.55)]"
-          : "border-zinc-900 bg-zinc-800/85 text-zinc-100 shadow-[inset_0_1px_2px_rgba(255,255,255,0.18),0_3px_6px_rgba(0,0,0,0.45)] hover:bg-zinc-700/85",
+          ? "border-white bg-white text-zinc-950 shadow-[0_0_14px_rgba(255,255,255,0.55)]"
+          : "border-zinc-900 bg-zinc-800/85 text-zinc-100 shadow-[inset_0_1px_2px_rgba(255,255,255,0.18),0_2px_4px_rgba(0,0,0,0.45)] hover:bg-zinc-700/85",
         className,
       )}
     >
@@ -82,8 +82,8 @@ export function AnalogStick({
   const downPressed = isControlPressed(downControl, pressedCodes);
   const anyPressed = leftPressed || rightPressed || upPressed || downPressed;
   return (
-    <div className="relative h-32 w-32 sm:h-36 sm:w-36">
-      <div className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 sm:h-28 sm:w-28">
+    <div className="relative h-24 w-24 sm:h-28 sm:w-28">
+      <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 sm:h-20 sm:w-20">
         <div
           className={cx(
             "absolute inset-0 rounded-full border border-zinc-950 bg-gradient-to-br from-zinc-800 via-zinc-950 to-black shadow-[inset_0_8px_18px_rgba(0,0,0,0.82),0_9px_16px_rgba(0,0,0,0.36)]",
@@ -91,7 +91,7 @@ export function AnalogStick({
           )}
         />
         <div
-          className="pointer-events-none absolute left-1/2 top-1/2 z-20 h-12 w-12 rounded-full border border-zinc-950 bg-gradient-to-br from-zinc-200 via-zinc-400 to-zinc-700 shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),0_7px_14px_rgba(0,0,0,0.58)] sm:h-14 sm:w-14"
+          className="pointer-events-none absolute left-1/2 top-1/2 z-20 h-10 w-10 rounded-full border border-zinc-950 bg-gradient-to-br from-zinc-200 via-zinc-400 to-zinc-700 shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),0_7px_14px_rgba(0,0,0,0.58)] sm:h-12 sm:w-12"
           style={{
             transform: `translate(calc(-50% + ${knobShiftX}), calc(-50% + ${knobShiftY}))`,
           }}
