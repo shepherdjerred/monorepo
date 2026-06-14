@@ -299,7 +299,10 @@ export class StreambotStreamer implements StreamerLike {
 
     // Observability seam — forwards ffmpeg command/codec/progress and send-frametime stats to the
     // Prometheus metrics. Passed to both prepare (ffmpeg events) and play (send stats).
-    const observer = createStreamObserver(useHardware, this.now);
+    const { observer, dispose: disposeObserver } = createStreamObserver(
+      useHardware,
+      this.now,
+    );
 
     // The seekable player owns prepare+play on a single Go-Live connection. `finished` resolves at
     // the true end of playback (or on stop) and rejects on an ffmpeg/encode failure — folding in the
@@ -345,6 +348,10 @@ export class StreambotStreamer implements StreamerLike {
       throw error;
     } finally {
       signal.removeEventListener("abort", onAbort);
+      // Stop the progress-age timer so it doesn't keep writing to the shared gauge after this
+      // segment ends. Without this, each seek or track change leaks a live setInterval that races
+      // against the next segment's timer and can fire spurious StreambotProgressStalled alerts.
+      disposeObserver();
       // Capture where playback reached (incl. live seeks) before dropping the player, so a HW→SW
       // retry can resume there. Uses the wall-clock tracker, not the fork's segment-offset
       // `Player.position`, falling back to the requested offset if playback never started.

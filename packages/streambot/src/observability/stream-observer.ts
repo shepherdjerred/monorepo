@@ -54,14 +54,31 @@ export function commandUsesHardwareDecode(command: string): boolean {
   return /-hwaccel\s+vaapi/.test(command) || command.includes("scale_vaapi");
 }
 
+/** Return value of {@link createStreamObserver}: the observer wired to metrics, and a disposer. */
+export type StreamObserverHandle = {
+  /** Pass to the DVS player's `prepare` and `play` options. */
+  observer: StreamObserver;
+  /**
+   * Stop the internal progress-age timer. Call this whenever the streaming segment ends (in a
+   * `finally` block) so stale timers from old segments don't race on the shared gauge after a seek
+   * or track change.
+   */
+  dispose: () => void;
+};
+
 /**
  * Build a {@link StreamObserver} for one streaming segment. `hardware` labels the metrics with the
  * path the segment is attempting. `now` is injectable for deterministic tests.
+ *
+ * Always call the returned `dispose()` when the segment ends to stop the internal progress-age
+ * timer. Without it, each call leaves a live `setInterval` writing to the shared
+ * `ffmpegProgressAgeSeconds` gauge, causing stale timers from prior segments to race against the
+ * current one after seeks and track changes.
  */
 export function createStreamObserver(
   hardware: boolean,
   now: () => number = Date.now,
-): StreamObserver {
+): StreamObserverHandle {
   const hw = hardware ? "true" : "false";
   let prevMediaSeconds: number | undefined;
   let prevWallMs: number | undefined;
@@ -80,7 +97,14 @@ export function createStreamObserver(
     progressAgeTimer.unref();
   };
 
-  return {
+  const dispose = () => {
+    if (progressAgeTimer !== undefined) {
+      clearInterval(progressAgeTimer);
+      progressAgeTimer = undefined;
+    }
+  };
+
+  const observer: StreamObserver = {
     onCommand: (command) => {
       const engaged = commandUsesHardwareDecode(command);
       hwDecodeEngaged.set(engaged ? 1 : 0);
@@ -144,4 +168,6 @@ export function createStreamObserver(
       }
     },
   };
+
+  return { observer, dispose };
 }

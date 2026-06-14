@@ -39,7 +39,7 @@ describe("commandUsesHardwareDecode", () => {
 describe("createStreamObserver", () => {
   test("derives the realtime ratio from timemark advance vs wall-clock", async () => {
     let wall = 1000;
-    const observer = createStreamObserver(true, () => wall);
+    const { observer, dispose } = createStreamObserver(true, () => wall);
     // First progress establishes the baseline (no ratio yet).
     observer.onProgress?.({ timemark: "00:00:10.00" });
     // 5 media-seconds advance over 10 wall-seconds => ratio 0.5 (behind realtime).
@@ -48,23 +48,25 @@ describe("createStreamObserver", () => {
     const speed = await ffmpegSpeedRatio.get();
     const sample = speed.values.find((v) => v.labels.hardware === "true");
     expect(sample?.value).toBeCloseTo(0.5, 3);
+    dispose();
   });
 
   test("onCommand sets hw-decode engaged", async () => {
-    const observer = createStreamObserver(false);
+    const { observer, dispose } = createStreamObserver(false);
     observer.onCommand?.("ffmpeg -hwaccel vaapi -i in.mkv out");
     const engaged = await hwDecodeEngaged.get();
     expect(engaged.values[0]?.value).toBe(1);
     observer.onCommand?.("ffmpeg -i in.mkv out");
     const disengaged = await hwDecodeEngaged.get();
     expect(disengaged.values[0]?.value).toBe(0);
+    dispose();
   });
 
   test("onSendStats counts late frames only when ratio > 1", async () => {
     const beforeMetric = await sendLateFramesTotal.get();
     const before =
       beforeMetric.values.find((v) => v.labels.kind === "video")?.value ?? 0;
-    const observer = createStreamObserver(true);
+    const { observer, dispose } = createStreamObserver(true);
     observer.onSendStats?.({
       kind: "video",
       ratio: 0.5,
@@ -81,5 +83,18 @@ describe("createStreamObserver", () => {
     const after =
       afterMetric.values.find((v) => v.labels.kind === "video")?.value ?? 0;
     expect(after - before).toBe(1);
+    dispose();
+  });
+
+  test("dispose stops the progress-age timer so stale segments don't race on the gauge", async () => {
+    let wall = 1000;
+    const { observer, dispose } = createStreamObserver(true, () => wall);
+    observer.onCommand?.("ffmpeg -i in.mkv out");
+    // Advance wall time well past the stall threshold.
+    wall += 10_000;
+    // dispose before the interval fires.
+    dispose();
+    // A second call to dispose must be safe (idempotent).
+    dispose();
   });
 });

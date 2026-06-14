@@ -47,8 +47,8 @@ export const ConfigSchema = z.strictObject({
      * Cap ffmpeg's input demux to this multiple of realtime. `1.0` = realtime (the producer matches
      * the 30 fps send loop; bounded JS-side buffers; no GC-driven stutter). Higher values let the
      * encoder run ahead, which on a 4K HDR remux accumulates 25 MB/s of buffer pressure and triggers
-     * multi-hundred-ms major GC pauses on Bun. Set to 0 / negative to disable (not recommended for
-     * pre-recorded sources).
+     * multi-hundred-ms major GC pauses on Bun. Unset the env var (or remove the config key) to
+     * disable entirely — `positive()` validation rejects 0 and negative values.
      */
     readrate: z.number().positive().default(1),
   }),
