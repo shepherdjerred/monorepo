@@ -169,9 +169,33 @@ logger.info(`wrote ${opusPath}`);
 logger.info(`wrote ${roundtripPath}`);
 
 if (UPDATE_BASELINE) {
+  // Trim the leading silence (the wasm boots its m4a engine partway through
+  // AgbMain; the first ~2s is pure intro before BGM starts) so the baseline
+  // is a clean musical signal, not "two seconds of zeros, then music."
+  const SILENCE_THRESHOLD = 4; // 4/127 on s8 scale
+  const samplesPerFrame = collected[0]?.frames ?? nativeRate / 60;
+  const firstNoisyFrame = collected.findIndex((r) => {
+    let peak = 0;
+    for (const v of r.pcm) {
+      const a = Math.abs((v << 24) >> 24);
+      if (a > peak) peak = a;
+    }
+    return peak > SILENCE_THRESHOLD;
+  });
+  const startFrame = firstNoisyFrame === -1 ? 0 : firstNoisyFrame;
+  const trimmedFrames = collected.slice(startFrame);
+  const trimmedPcm = Buffer.concat(trimmedFrames.map((r) => r.pcm));
+  const trimmedWav = encodeWav(trimmedPcm, {
+    sampleRate: nativeRate,
+    channels: 2,
+    bitsPerSample: 8,
+  });
   const baselinePath = `${FIXTURE_DIR}title-bgm-baseline.wav`;
-  await Bun.write(baselinePath, sourceWav);
-  logger.info(`updated baseline at ${baselinePath}`);
+  await Bun.write(baselinePath, trimmedWav);
+  logger.info(
+    `updated baseline at ${baselinePath} (skipped ${String(startFrame)} silent` +
+      ` frames = ${(startFrame * (samplesPerFrame / nativeRate)).toFixed(2)}s)`,
+  );
 }
 
 if (SHOULD_PLAY) {
