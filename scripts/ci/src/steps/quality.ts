@@ -160,6 +160,21 @@ export function daggerHygieneStep(): BuildkiteStep {
 }
 
 /**
+ * Bundled soft-fail step: dagger-hygiene + large-file-check in one BK pod.
+ * Replaces two separate soft-fail BK steps with one. Both children today
+ * run unconditionally, so the bundle does too.
+ */
+export function softFailBundleStep(): BuildkiteStep {
+  return daggerStep({
+    label: ":broom::warning: Soft-fail Bundle (hygiene + large-file)",
+    key: "soft-fail-bundle",
+    daggerCmd: `${DAGGER_CALL} soft-fail-bundle --source ${REPO_GIT_REF}`,
+    timeoutMinutes: 10,
+    softFail: true,
+  });
+}
+
+/**
  * Verifies every cdk8s `TunnelBinding` has a matching
  * `cloudflare_dns_record` in Tofu. Without DNS, the tunnel hostname silently
  * fails to resolve — see prReview/prSummary outage on 2026-05-02.

@@ -508,6 +508,22 @@ export function tasksForObsidianIosNativeDepsHelper(
 }
 
 /**
+ * Soft-fail bundle: `dagger-hygiene` + `large-file-check` in parallel.
+ * Both checks are unconditional and soft-fail individually today; bundled
+ * they stay soft-fail at the BK layer (the bundle Dagger function still
+ * throws on a real child failure — soft_fail handling moves to BK).
+ */
+export async function softFailBundleHelper(source: Directory): Promise<string> {
+  return runBundle([
+    { name: "dagger-hygiene", run: () => daggerHygieneHelper(source).stdout() },
+    {
+      name: "large-file-check",
+      run: () => largeFileCheckHelper(source).stdout(),
+    },
+  ]);
+}
+
+/**
  * Quality bundle: 15 blocking source-only checks fan out from one pod in
  * parallel via `runBundle`/`Promise.all`. Each child runs as its own sibling
  * container — the engine de-dups the shared `source` materialisation

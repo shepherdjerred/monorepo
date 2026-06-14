@@ -140,6 +140,7 @@ import {
   largeFileCheckHelper,
   tasksForObsidianIosNativeDepsHelper,
   qualityBundleHelper,
+  softFailBundleHelper,
 } from "./quality";
 
 function requireRecord(
@@ -1722,6 +1723,16 @@ export class Monorepo {
   @func()
   async qualityBundle(source: Directory): Promise<string> {
     return qualityBundleHelper(source);
+  }
+
+  /**
+   * Soft-fail bundle: `dagger-hygiene` + `large-file-check` in parallel.
+   * BK step carries `soft_fail: true`; the bundle Dagger function still
+   * throws on a real child failure (so retries don't loop forever).
+   */
+  @func()
+  async softFailBundle(source: Directory): Promise<string> {
+    return softFailBundleHelper(source);
   }
 
   // ---------------------------------------------------------------------------

@@ -19,12 +19,11 @@ import {
   knipCheckStep,
   trivyScanStep,
   semgrepScanStep,
-  daggerHygieneStep,
+  softFailBundleStep,
   tunnelDnsCoverageStep,
   talosSchematicSyncStep,
   caddyfileValidateStep,
   bunLockDriftCheckStep,
-  largeFileStep,
   greptileReviewStep,
 } from "./steps/quality.ts";
 import { releasePleaseStep } from "./steps/release.ts";
@@ -202,14 +201,14 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
 
   // --- Async quality checks (soft_fail, run in parallel with release track) ---
   steps.push(knipCheckStep());
-  steps.push(daggerHygieneStep());
+  // dagger-hygiene + large-file-check share a bundled soft-fail step.
+  steps.push(softFailBundleStep());
   if (affected.buildAll || affected.homelabChanged) {
     steps.push(tunnelDnsCoverageStep());
     steps.push(talosSchematicSyncStep());
   }
   steps.push(trivyScanStep());
   steps.push(semgrepScanStep());
-  steps.push(largeFileStep());
 
   // --- Caddyfile validation (blocking, only when homelab changes) ---
   if (affected.buildAll || affected.homelabChanged) {

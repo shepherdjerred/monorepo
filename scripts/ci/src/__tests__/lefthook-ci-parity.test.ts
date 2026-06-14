@@ -40,7 +40,7 @@ const JOB_TO_CI_STEP: Record<string, string> = {
   gitleaks: "quality-bundle",
   "env-var-names": "quality-bundle",
   "merge-conflicts": "quality-bundle",
-  "large-files": "large-file-check",
+  "large-files": "soft-fail-bundle",
   "line-endings": "quality-bundle",
   "check-suppressions": "quality-bundle",
   "check-todos": "quality-bundle",
@@ -84,7 +84,7 @@ const ASYNC_OR_SOFT_CI: Record<string, string> = {
   // prettier + markdownlint moved into `quality-bundle` (still blocking).
   prettier: "quality-bundle",
   markdownlint: "quality-bundle",
-  "dagger-hygiene": "dagger-hygiene",
+  "dagger-hygiene": "soft-fail-bundle",
   "tunnel-dns-coverage": "tunnel-dns-coverage",
   "talos-schematic-sync": "talos-schematic-sync",
 };

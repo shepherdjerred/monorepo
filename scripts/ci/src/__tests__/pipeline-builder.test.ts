@@ -325,12 +325,13 @@ describe("buildPipeline", () => {
 
       const pipeline = buildPipeline(affected);
       const steps = pipeline.steps.filter(isStep);
-      // All async checks should be present
-      // (prettier + markdownlint live inside the quality-bundle now)
+      // All async checks should be present.
+      // - prettier + markdownlint live inside `quality-bundle`
+      // - dagger-hygiene + large-file-check live inside `soft-fail-bundle`
       for (const key of [
         "quality-bundle",
         "knip-check",
-        "dagger-hygiene",
+        "soft-fail-bundle",
         "trivy-scan",
         "semgrep-scan",
       ]) {
@@ -339,10 +340,9 @@ describe("buildPipeline", () => {
       // These specific checks should be soft_fail
       for (const key of [
         "knip-check",
-        "dagger-hygiene",
+        "soft-fail-bundle",
         "trivy-scan",
         "semgrep-scan",
-        "large-file-check",
       ]) {
         expect(steps.find((s) => s.key === key)?.soft_fail).toBe(true);
       }
@@ -583,12 +583,12 @@ describe("buildPipeline", () => {
     it("includes security and quality scans with soft_fail", () => {
       const pipeline = buildPipeline(fullBuild());
       const steps = pipeline.steps.filter(isStep);
+      // dagger-hygiene + large-file-check now run inside `soft-fail-bundle`.
       for (const key of [
         "semgrep-scan",
         "trivy-scan",
-        "dagger-hygiene",
+        "soft-fail-bundle",
         "knip-check",
-        "large-file-check",
       ]) {
         const step = steps.find((s) => s.key === key);
         expect(step).toBeDefined();
@@ -629,10 +629,9 @@ describe("buildPipeline", () => {
       // depends_on does NOT include async (soft_fail) check keys
       const asyncKeys = [
         "knip-check",
-        "dagger-hygiene",
+        "soft-fail-bundle",
         "trivy-scan",
         "semgrep-scan",
-        "large-file-check",
       ];
       for (const key of asyncKeys) {
         expect(Array.isArray(deps) ? deps : []).not.toContain(key);
