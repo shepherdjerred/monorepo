@@ -48,6 +48,52 @@ export const ffmpegBitrateKbps = new Gauge({
   registers: [register],
 });
 
+/**
+ * Monotonic counter of ffmpeg media-time produced (in seconds). `rate()` of this in PromQL is the
+ * producer's realtime rate (media-seconds emitted per wall-clock second). The canonical encoder-stall
+ * detector: `rate(streambot_ffmpeg_out_time_seconds_total[1m]) < 0.5 for 30s` ⇒ encoder is no longer
+ * making forward progress (works even when ffmpeg's own `speed=` figure stalls or stops being
+ * reported, which it does on non-monotonic DTS / pipe deadlock).
+ */
+export const ffmpegOutTimeSecondsTotal = new Counter({
+  name: "streambot_ffmpeg_out_time_seconds_total",
+  help: "Monotonic counter of media-time produced by ffmpeg (seconds). rate() yields the producer's realtime rate; alert when below ~0.5 to catch encoder stalls",
+  labelNames: ["hardware"] as const,
+  registers: [register],
+});
+
+/**
+ * Wall-clock seconds since the last fluent-ffmpeg `progress` event. Detects pipe deadlock and silent
+ * subprocess hangs that `out_time` cannot catch: when ffmpeg's stdout AND stderr both deadlock (a
+ * common dvs/Bun failure mode), `out_time` simply stops being reported. This gauge keeps climbing.
+ * Alert: > 5 ⇒ either the encoder process died, the stderr buffer is unread, or stdout consumer is
+ * deeply backed up.
+ */
+export const ffmpegProgressAgeSeconds = new Gauge({
+  name: "streambot_ffmpeg_progress_age_seconds",
+  help: "Wall-clock seconds since the last ffmpeg progress event; > 5 = stderr deadlock or subprocess died",
+  registers: [register],
+});
+
+/**
+ * Per-pod GPU engine utilization, polled from `/proc/PID/fdinfo/<drm_fd>` `drm-engine-<engine>:` counters
+ * (kernel ABI stable since 5.19). Resolves the per-pod attribution problem when `/dev/dri/renderD128`
+ * is shared with Plex / Jellyfin tenants: the standard `intel_gpu_top` is GPU-global AND broken on
+ * Gen 12+ Raptor Lake (always reports 0% on the Video engine due to the i915 PMU bug —
+ * github.com/intel/media-driver#1376, github.com/blakeblackshear/frigate/discussions/16619). fdinfo
+ * is the canonical workaround. Unit: nanoseconds of engine wall-clock time, monotonic per fd.
+ *
+ * - `render` (RCS): scale_vaapi, tonemap_vaapi, overlay_vaapi
+ * - `video` (VCS): hevc/h264 decode + h264_vaapi encode
+ * - `copy` (BCS): DMA between system and GPU memory; > 0 means hwdownload/hwupload roundtrips
+ */
+export const gpuEngineSecondsTotal = new Counter({
+  name: "streambot_gpu_engine_seconds_total",
+  help: "Monotonic per-pod GPU engine wall-clock time, scraped from /proc/PID/fdinfo/<drm_fd> drm-engine-* counters; canonical Gen 12+ alternative to the broken intel_gpu_top PMU path",
+  labelNames: ["engine"] as const,
+  registers: [register],
+});
+
 // --- send path --------------------------------------------------------------
 
 /** Per-frame send time / frame budget. >1 means the realtime send path is behind. */

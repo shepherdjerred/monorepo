@@ -1,5 +1,15 @@
 import ffmpeg from "fluent-ffmpeg";
+import type { ChildProcess } from "node:child_process";
 import pDebounce from "p-debounce";
+
+// Module augmentation: fluent-ffmpeg's @types/fluent-ffmpeg omits the `ffmpegProc` property that the
+// runtime attaches to the FfmpegCommand instance once `start` fires. We need it to surface the child
+// PID for out-of-process per-process collectors (e.g. /proc/<pid>/fdinfo GPU-engine attribution).
+declare module "fluent-ffmpeg" {
+  interface FfmpegCommand {
+    ffmpegProc?: ChildProcess;
+  }
+}
 import { createRequire as __createRequire } from "node:module";
 import Log from "debug-level";
 
@@ -107,6 +117,19 @@ export type PrepareStreamOptions = {
    * Custom headers for HTTP requests
    */
   customHeaders: Record<string, string>;
+
+  /**
+   * Cap ffmpeg's input read rate as a multiple of realtime. `1.0` matches realtime (equivalent to
+   * `-re`); `2.0` reads twice as fast, etc. Use with seekable/pre-recorded sources to prevent the
+   * encoder from running far ahead of the downstream RTP send loop — without this, a fast GPU
+   * encoder can produce frames at 3-5× realtime, causing the NUT output to accumulate in the
+   * consumer's JS-side buffers until V8/JSC major GC stop-the-world pauses the send loop. Maps to
+   * ffmpeg's input `-readrate <value>` flag (added in 2021). Do NOT set when reading from a live
+   * source / grab device — ffmpeg's own docs warn it can cause packet loss in that case.
+   *
+   * See https://ffmpeg.org/ffmpeg.html#:~:text=%2Dreadrate
+   */
+  readrate?: number;
 
   /**
    * Custom input options to pass directly to ffmpeg
@@ -221,6 +244,10 @@ export function prepareStream(
       isFiniteNonZero(opts.startTime) && opts.startTime > 0
         ? opts.startTime
         : undefined;
+    const readrate =
+      isFiniteNonZero(opts.readrate) && opts.readrate > 0
+        ? opts.readrate
+        : undefined;
 
     return {
       noTranscoding: opts.noTranscoding ?? defaultOptions.noTranscoding,
@@ -234,6 +261,8 @@ export function prepareStream(
         : defaultOptions.height,
 
       ...(frameRate !== undefined ? { frameRate } : {}),
+
+      ...(readrate !== undefined ? { readrate } : {}),
 
       videoCodec: opts.videoCodec ?? defaultOptions.videoCodec,
 
@@ -305,6 +334,15 @@ export function prepareStream(
   if (observer?.onCommand) {
     command.on("start", (commandLine) => observer.onCommand?.(commandLine));
   }
+  if (observer?.onProcessStart) {
+    // Hook fluent-ffmpeg's `start` to surface the child PID separately. The PID is needed by
+    // out-of-process collectors (e.g. /proc/<pid>/fdinfo for per-pod GPU attribution via the
+    // i915 `drm-engine-video` counter) that cannot inspect the subprocess from inside fluent-ffmpeg.
+    command.on("start", () => {
+      const pid = command.ffmpegProc?.pid;
+      if (typeof pid === "number") observer.onProcessStart?.(pid);
+    });
+  }
   if (observer?.onCodecData) {
     command.on("codecData", (data) => {
       observer.onCodecData?.({
@@ -334,6 +372,18 @@ export function prepareStream(
   // input seek: `-ss` before `-i` is a fast, accurate input seek for seekable sources.
   if (mergedOptions.startTime !== undefined) {
     command.inputOption("-ss", String(mergedOptions.startTime));
+  }
+
+  // Cap input demux rate as a multiple of realtime to prevent the encoder from running ahead of
+  // the downstream send loop. Producer overrun is the dominant cause of unbounded NUT-side buffer
+  // accumulation in the consumer process. Skip for live inputs (HTTP HLS, SRT, raw audio input)
+  // where ffmpeg's own docs warn `-readrate` can cause packet loss.
+  if (
+    mergedOptions.readrate !== undefined &&
+    !isHls &&
+    !isSrt
+  ) {
+    command.inputOption("-readrate", String(mergedOptions.readrate));
   }
 
   // input options

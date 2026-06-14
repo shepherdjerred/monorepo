@@ -20,6 +20,7 @@ import {
   startMetricsServer,
   stopMetricsServer,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
+import { startGpuCollector } from "@shepherdjerred/streambot/observability/gpu-collector.ts";
 
 const LIBRARY_REFRESH_MS = 5 * 60 * 1000;
 
@@ -34,6 +35,10 @@ async function main(): Promise<void> {
   });
 
   startMetricsServer(config.observability.metricsPort);
+  // GPU per-pod attribution via /proc/<pid>/fdinfo polling. Resolves the shared-renderD128
+  // attribution problem (streambot + Plex + Jellyfin on the same node) without needing the broken
+  // intel_gpu_top PMU path on Gen 12+ Raptor Lake.
+  startGpuCollector();
 
   // Clear any subtitle temp files orphaned by a previous run (e.g. a resolve that was aborted before
   // the stream cleaned up after itself).

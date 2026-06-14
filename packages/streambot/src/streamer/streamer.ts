@@ -274,6 +274,11 @@ export class StreambotStreamer implements StreamerLike {
       videoCodec: Utils.normalizeVideoCodec("H264"),
       hardwareAcceleratedDecoding: useHardware,
       minimizeLatency: false,
+      // Bound ffmpeg's input demux to a multiple of realtime. Without this, a fast GPU encoder
+      // runs the source at 3-5× realtime and the NUT-pipe consumer cannot drain that fast,
+      // causing the downstream JS buffer pool to grow at ~25 MB/s until major GC pauses the
+      // send loop ≥ 200 ms and the Discord receiver's jitter buffer shows a ~1 s freeze.
+      readrate: stream.readrate,
       ...(startSeconds > 0 ? { startTime: startSeconds } : {}),
       ...(input.resolved.subtitle
         ? { subtitleBurn: { path: input.resolved.subtitle.path } }

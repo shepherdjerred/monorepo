@@ -17,6 +17,8 @@ import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import {
   ffmpegBitrateKbps,
   ffmpegFps,
+  ffmpegOutTimeSecondsTotal,
+  ffmpegProgressAgeSeconds,
   ffmpegSpeedRatio,
   hwDecodeEngaged,
   sendFrametimeRatio,
@@ -63,12 +65,34 @@ export function createStreamObserver(
   const hw = hardware ? "true" : "false";
   let prevMediaSeconds: number | undefined;
   let prevWallMs: number | undefined;
+  let lastProgressWallMs: number | undefined;
+  let progressAgeTimer: ReturnType<typeof setInterval> | undefined;
+
+  // Drive the progress-age gauge on a 1s tick: a deadlocked subprocess (stdout+stderr both backed
+  // up, ffmpeg blocked on write) stops emitting progress entirely, so the only way the gauge can
+  // climb past 5 s — the alert threshold — is by an external timer.
+  const startProgressAgeTimer = () => {
+    if (progressAgeTimer !== undefined) return;
+    progressAgeTimer = setInterval(() => {
+      if (lastProgressWallMs === undefined) return;
+      ffmpegProgressAgeSeconds.set((now() - lastProgressWallMs) / 1000);
+    }, 1000);
+    progressAgeTimer.unref();
+  };
 
   return {
     onCommand: (command) => {
       const engaged = commandUsesHardwareDecode(command);
       hwDecodeEngaged.set(engaged ? 1 : 0);
       log.info("ffmpeg command", { command, hwDecodeEngaged: engaged });
+      // Treat command start as the initial progress sample so the age gauge is meaningful before
+      // the first onProgress callback (which can be > 1s out on a cold ffmpeg startup).
+      lastProgressWallMs = now();
+      ffmpegProgressAgeSeconds.set(0);
+      startProgressAgeTimer();
+    },
+    onProcessStart: (pid) => {
+      log.info("ffmpeg subprocess started", { pid });
     },
     onCodecData: (data) => {
       log.info("ffmpeg input codec", {
@@ -88,6 +112,8 @@ export function createStreamObserver(
       }
       const mediaSeconds = parseTimemarkSeconds(progress.timemark);
       const wallMs = now();
+      lastProgressWallMs = wallMs;
+      ffmpegProgressAgeSeconds.set(0);
       if (
         mediaSeconds !== undefined &&
         prevMediaSeconds !== undefined &&
@@ -100,6 +126,10 @@ export function createStreamObserver(
         // indistinguishable from "catastrophically behind realtime" on the dashboard.
         if (deltaWall > 0 && deltaMedia > 0) {
           ffmpegSpeedRatio.set({ hardware: hw }, deltaMedia / deltaWall);
+          // Increment the monotonic media-time counter by the same delta. rate() over this gives
+          // the producer's realtime rate even when ffmpeg's own `speed=` figure stalls — the
+          // canonical stall detector per the ffmpeg-user mailing list.
+          ffmpegOutTimeSecondsTotal.inc({ hardware: hw }, deltaMedia);
         }
       }
       if (mediaSeconds !== undefined) {
