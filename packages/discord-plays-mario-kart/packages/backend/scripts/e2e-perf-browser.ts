@@ -404,8 +404,16 @@ if (IS_LOCAL) {
   );
   const assets = path.join(pkgRoot, "packages", "frontend", "dist");
 
-  await Bun.file(`${wasmDir}/n64wasm.wasm`).exists();
-  await Bun.file(`${assets}/index.html`).exists();
+  if (!(await Bun.file(`${wasmDir}/n64wasm.wasm`).exists())) {
+    throw new Error(
+      `WASM binary not found: ${wasmDir}/n64wasm.wasm — run bun run build:wasm first`,
+    );
+  }
+  if (!(await Bun.file(`${assets}/index.html`).exists())) {
+    throw new Error(
+      `Frontend dist not found: ${assets}/index.html — run bun run build in packages/frontend first`,
+    );
+  }
 
   workDir = await writePerfConfig(rom, wasmDir, assets);
   process.stderr.write(

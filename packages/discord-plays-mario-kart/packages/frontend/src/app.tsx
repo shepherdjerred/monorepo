@@ -33,6 +33,12 @@ import {
 import { NameEntry } from "./name-entry.tsx";
 import { Leaderboard } from "./leaderboard.tsx";
 
+// Input emit coalesce window: schedule one flush ~16ms after the first edge
+// so at most ~60 socket messages/sec/seat reach the backend. Static constant
+// at module scope so the value is stable across renders and won't confuse
+// react-hooks/exhaustive-deps.
+const EMIT_COALESCE_MS = 16;
+
 const BUTTON_LABELS = [
   ["up", "D↑"],
   ["down", "D↓"],
@@ -88,7 +94,6 @@ export function App() {
   // would silently break controllers when the user switches tabs. blur
   // flushes synchronously so a lost-focus event lands before any pending
   // schedule fires. See packages/docs/plans/2026-06-13_mk64-perf-test.md.
-  const EMIT_COALESCE_MS = 16;
   const emitDirty = useRef(false);
   const emitTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
@@ -187,6 +192,14 @@ export function App() {
       globalThis.removeEventListener("keydown", onKeyDown);
       globalThis.removeEventListener("keyup", onKeyUp);
       globalThis.removeEventListener("blur", onBlur);
+      // Cancel any pending coalesce timer so it cannot fire a stale
+      // socket.emit after this effect tears down. releaseAll() only flushes
+      // when keys are currently held; this guard covers the case where all
+      // keys were released individually but the 16ms timer hasn't fired yet.
+      if (emitTimer.current !== undefined) {
+        clearTimeout(emitTimer.current);
+        emitTimer.current = undefined;
+      }
       releaseAll();
     };
   }, [press, release, releaseAll]);
