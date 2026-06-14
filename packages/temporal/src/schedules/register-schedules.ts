@@ -196,6 +196,19 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Weekly regeneration of cdk8s generated/helm types (opens a PR if they drifted)",
   },
   {
+    id: "readme-refresh-weekly",
+    workflowType: "runReadmeRefresh",
+    args: [],
+    // 08:00 PT every Monday — staggered after helm-types (06:00) and
+    // scout-season-refresh (07:00) so the three weekly PR-opening jobs don't
+    // contend for the worker pod at once.
+    cronExpression: "0 8 * * 1",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Weekly README project-listing regeneration via cog (opens a PR if listings drifted)",
+  },
+  {
     id: "scout-season-refresh-weekly",
     workflowType: "runScoutSeasonRefreshWorkflow",
     args: [],
