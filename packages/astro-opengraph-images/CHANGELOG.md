@@ -2,10 +2,9 @@
 
 ## [1.17.1](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.17.0...astro-opengraph-images-v1.17.1) (2026-06-14)
 
+No runtime behavior changes. The released code resolves to the same modules at runtime as 1.17.0.
 
-### Bug Fixes
-
-* **root:** restore plainStep so Greptile review gate generates ([c0d3ff1](https://github.com/shepherdjerred/monorepo/commit/c0d3ff1eedfb305816f9770dcf5f99ee749ea596))
+- Preset re-exports in `src/presets/index.ts` now reference the actual `.tsx` source files instead of the wrong `.ts` extension; resolution behavior is unchanged ([7a4ac9e](https://github.com/shepherdjerred/monorepo/commit/7a4ac9e5321bf2db97e3b244d9db3531e20e45bb))
 
 ## [1.17.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.16.1...astro-opengraph-images-v1.17.0) (2026-05-27)
 

@@ -2,18 +2,13 @@
 
 ## [1.4.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.3.0...helm-types-v1.4.0) (2026-06-14)
 
+Adds OCI-registry support to the chart fetcher and emits broader, more permissive generated types for well-known Kubernetes fields.
 
-### Features
-
-* **homelab:** type the OCI-registry helm charts (kueue, dagger, buildkite) ([6875ca3](https://github.com/shepherdjerred/monorepo/commit/6875ca3534526d7bb418d1a8c13e21a337153f4a))
-* **homelab:** type untyped helm charts, fix narrow generated types, enforce explicit container resources ([6b7bcfa](https://github.com/shepherdjerred/monorepo/commit/6b7bcfabb3bd495ea1584dff87b5b8c6278935b4))
-* **homelab:** type untyped helm charts, fix narrow generated types, enforce explicit container resources ([c3c268d](https://github.com/shepherdjerred/monorepo/commit/c3c268dbcca7622dd75ad544786d3011c90228bc))
-
-
-### Bug Fixes
-
-* **homelab:** make helm-types generator reliably produce repo-prettier output ([9409043](https://github.com/shepherdjerred/monorepo/commit/940904303284c662e3e8b9faa68c8cbe3bd80d13))
-* **root:** restore plainStep so Greptile review gate generates ([c0d3ff1](https://github.com/shepherdjerred/monorepo/commit/c0d3ff1eedfb305816f9770dcf5f99ee749ea596))
+- `ChartInfo` gains an optional `oci?: boolean` flag; when true, `fetchHelmChart` pulls via `helm pull oci://<repoUrl>/<chartName>` instead of `helm repo add` + pull. The untarred chart directory is resolved by scanning for the extracted `Chart.yaml`, so charts whose untar directory name differs from `chartName` (e.g. `kueue/charts/kueue` extracting to `kueue/`) now work ([6875ca3](https://github.com/shepherdjerred/monorepo/commit/6875ca3534526d7bb418d1a8c13e21a337153f4a))
+- Generated types for the well-known Kubernetes fields `resources`, `nodeSelector`, `tolerations`, and `affinity` now use canonical permissive shapes (e.g. `{ requests?: Record<string, string | number>; limits?: Record<string, string | number> }` for `resources`) instead of narrow shapes inferred from a chart's default subset. The narrow types previously blocked setting valid keys a chart didn't happen to default. A shape guard keeps RBAC-style `resources: ["secrets"]` arrays as arrays ([c3c268d](https://github.com/shepherdjerred/monorepo/commit/c3c268dbcca7622dd75ad544786d3011c90228bc))
+- `EXTENSIBLE_TYPE_PATTERNS` gains entries for `dagger-helm.engine` and `agent-stack-k8s.config`, whose `values.yaml` documents valid keys only as commented-out examples that inference-from-defaults can't see ([6875ca3](https://github.com/shepherdjerred/monorepo/commit/6875ca3534526d7bb418d1a8c13e21a337153f4a))
+- HTTP-repo fetches now run `helm repo update <repoName>` against the just-added repo only, instead of refreshing every locally-configured helm repo, so a single unrelated stale repo (e.g. the retired public bitnami repo) no longer aborts an otherwise-fine fetch ([9409043](https://github.com/shepherdjerred/monorepo/commit/940904303284c662e3e8b9faa68c8cbe3bd80d13))
+- `config.ts` no longer exports `K8S_RESOURCE_SPEC_PATTERN` or `isK8sResourceSpec`; the new entry point is `getWellKnownK8sFieldType(propertyName, value)`, which returns the canonical type string and description (or `undefined`) ([c3c268d](https://github.com/shepherdjerred/monorepo/commit/c3c268dbcca7622dd75ad544786d3011c90228bc))
 
 ## [1.3.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.2.1...helm-types-v1.3.0) (2026-05-27)
 
