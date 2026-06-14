@@ -22,6 +22,7 @@ const config = [
         "src/goal/discord-message.test.ts",
         "src/goal/game-state-summary.test.ts",
         "src/goal/goal-manager.test.ts",
+        "src/goal/history-summary.test.ts",
         "src/goal/pricing.test.ts",
         "src/stream/stream-machine.test.ts",
         "src/stream/orchestrator-machine.test.ts",
