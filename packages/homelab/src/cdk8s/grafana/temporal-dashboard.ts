@@ -299,12 +299,12 @@ export function createTemporalDashboard() {
       }),
       timeseriesPanel({
         id: 302,
-        title: "Agent Subprocess Max Idle Seconds",
+        title: "Agent Subprocess Max Idle Seconds (p95, 1h)",
         description:
-          "Longest stretch (in seconds) within a single agent subprocess run where no stderr was emitted. A subprocess that's working emits stderr periodically; a wedged tool call (slow WebFetch / hung kubectl / API retry loop) is silent. A growing max-idle is the leading indicator of a hang — drill down via Loki on the `lastStderrLine` field to see what was last running before the silence.",
+          "p95 of the longest stderr-silent stretch per agent subprocess run over the last hour. A subprocess that's working emits stderr periodically; a wedged tool call (slow WebFetch / hung kubectl / API retry loop) is silent. Histogram-backed so concurrent runs (alert-remediation has `concurrency=3`) all contribute observations instead of overwriting one another. Drill down via Loki on the `lastStderrLine` field to see what was last running before the silence.",
         targets: [
           {
-            expr: "max by (workflow_type) (agent_subprocess_idle_seconds) or on() vector(0)",
+            expr: "histogram_quantile(0.95, sum by (workflow_type, le) (rate(agent_subprocess_idle_seconds_bucket[1h]))) or on() vector(0)",
             legend: "{{workflow_type}}",
           },
         ],

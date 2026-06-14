@@ -177,8 +177,12 @@ export const agentTaskEmailSentTotal = new Counter({
 //   * `agent_subprocess_idle_seconds` is the longest stretch within a single
 //     subprocess run where no stderr was seen. A subprocess that's working
 //     emits stderr periodically; a wedged tool call (slow WebFetch / hung
-//     kubectl pipe / API retry loop) is silent. Heat-mapping this exposes
-//     the tail.
+//     kubectl pipe / API retry loop) is silent. Modeled as a Histogram (not
+//     a Gauge) because alert-remediation runs up to `concurrency=3` children
+//     in parallel — a Gauge would last-writer-wins and silently drop the
+//     other two observations. The Histogram accumulates every run's max-idle
+//     so the dashboard p95 reflects the worst real hang across all
+//     concurrent runs.
 //
 //   * `agent_subprocess_soft_kills_total` ticks when the activity itself
 //     sends SIGINT before Temporal's startToCloseTimeout SIGTERM lands. The
@@ -186,10 +190,11 @@ export const agentTaskEmailSentTotal = new Counter({
 //     makes that path alertable.
 // ---------------------------------------------------------------------------
 
-export const agentSubprocessIdleSeconds = new Gauge({
+export const agentSubprocessIdleSeconds = new Histogram({
   name: "agent_subprocess_idle_seconds",
-  help: "Longest stretch (in seconds) of subprocess silence (no stderr) observed during the most recent agent subprocess run, by workflow_type. Reset per run.",
+  help: "Longest stretch (in seconds) of subprocess silence (no stderr) observed during a single agent subprocess run, by workflow_type. One observation per run; histogram-shaped so concurrent runs don't clobber each other.",
   labelNames: ["workflow_type"] as const,
+  buckets: [5, 15, 30, 60, 120, 300, 600, 1200, 1800],
   registers: [register],
 });
 

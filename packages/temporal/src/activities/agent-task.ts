@@ -292,7 +292,7 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
       );
 
       const cancelled = result.signal === "SIGTERM";
-      agentSubprocessIdleSeconds.set(
+      agentSubprocessIdleSeconds.observe(
         { workflow_type: workflowType },
         result.maxIdleMs / 1000,
       );

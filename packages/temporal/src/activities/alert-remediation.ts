@@ -312,7 +312,7 @@ async function runAgent(
         redactSecrets,
       );
 
-      agentSubprocessIdleSeconds.set(
+      agentSubprocessIdleSeconds.observe(
         { workflow_type: workflowType },
         result.maxIdleMs / 1000,
       );
@@ -338,6 +338,17 @@ async function runAgent(
       });
 
       if (result.exitCode !== 0) {
+        // Tick the failed-outcome counter BEFORE throwing so the
+        // `AlertRemediationDecisionsAllFailing` rule (which sums
+        // `outcome="failed"`) actually sees the regression. Without this the
+        // counter only ever ticks on the happy path and the rule is
+        // permanently silent — the exact gap that hid the 14-day all-failed
+        // regression this PR was opened to close.
+        alertRemediationDecisionsTotal.inc({
+          decision: "failed",
+          outcome: "failed",
+          source: parsed.alert.source,
+        });
         const error = new Error(
           `alert-remediation agent exited with code ${String(result.exitCode)} (signal=${result.signal}, durationMs=${String(result.durationMs)})`,
         );
@@ -363,6 +374,11 @@ async function runAgent(
                   : await Bun.file(command.outputPath).text(),
               );
       } catch (error: unknown) {
+        alertRemediationDecisionsTotal.inc({
+          decision: "failed",
+          outcome: "failed",
+          source: parsed.alert.source,
+        });
         captureWithContext(error, parsed.alert, {
           durationMs: result.durationMs,
           stage: "parse-output",
