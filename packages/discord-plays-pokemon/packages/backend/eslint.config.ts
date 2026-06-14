@@ -21,6 +21,7 @@ const config = [
         "src/goal/codex-jsonl.test.ts",
         "src/goal/codex-trace.test.ts",
         "src/goal/discord-message.test.ts",
+        "src/goal/e2e-goal.integration.test.ts",
         "src/goal/game-state-summary.test.ts",
         "src/goal/goal-manager.test.ts",
         "src/goal/history-summary.test.ts",
