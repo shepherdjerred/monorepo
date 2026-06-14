@@ -1,5 +1,5 @@
 /**
- * Homelab operation helper functions (cdk8s synth, helm-types drift check).
+ * Homelab operation helper functions (cdk8s synth, helm-types drift check, 1Password lint).
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
@@ -54,4 +54,25 @@ export function helmTypesDriftCheckHelper(
   )
     .withFile("/usr/local/bin/helm", helmBinary)
     .withExec(["bun", "run", "generate-helm-types", "--check"]);
+}
+
+/**
+ * Lint that every cdk8s `OnePasswordItem` reference and every consumed secret field
+ * exists in the committed vault snapshot (`onepassword-vault-snapshot.json`). Fully
+ * offline — synthesizes in-memory and checks against the snapshot, no 1Password access.
+ * Reuses the same prepared cdk8s workspace as `homelabSynthHelper`.
+ */
+export function homelabOnePasswordLintHelper(
+  pkgDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  tsconfig: File | null = null,
+): Container {
+  return bunBaseContainer(
+    pkgDir,
+    "homelab/src/cdk8s",
+    depNames,
+    depDirs,
+    tsconfig,
+  ).withExec(["bun", "run", "scripts/check-1password-items.ts"]);
 }

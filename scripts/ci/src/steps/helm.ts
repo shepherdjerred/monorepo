@@ -51,6 +51,33 @@ export function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
 }
 
 /**
+ * 1Password item/field linter — offline, runs on every branch.
+ * Verifies every cdk8s `OnePasswordItem` reference and consumed secret field exists in
+ * the committed vault snapshot. Shares the cdk8s synth environment (in-memory synth), so
+ * it takes the same pkg-dir + workspace deps as the synth step. No 1Password access.
+ */
+export function onePasswordItemsStep(dependsOn: string[]): BuildkiteStep {
+  const deps = WORKSPACE_DEPS["homelab/src/cdk8s"] ?? [];
+  const depFlags = deps
+    .flatMap((d: string) => [
+      `--dep-names ${d}`,
+      `--dep-dirs ${gitDir(`packages/${d}`)}`,
+    ])
+    .join(" ");
+  return {
+    label: ":1password: 1Password Items",
+    key: "homelab-1password-items",
+    depends_on: dependsOn,
+    command: `${DAGGER_CALL} homelab-one-password-lint --pkg-dir ${gitDir("packages/homelab/src/cdk8s")} ${depFlags} --tsconfig ${gitFile("tsconfig.base.json")}`,
+    timeout_in_minutes: 15,
+    priority: 1,
+    retry: RETRY,
+    env: DAGGER_ENV,
+    plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi" })],
+  };
+}
+
+/**
  * Each helm push does synth + package in one Dagger call via helmSynthAndPackage.
  * Dagger caches the synth Directory — only the first chart incurs synth cost.
  */

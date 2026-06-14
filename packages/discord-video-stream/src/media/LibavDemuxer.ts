@@ -8,9 +8,7 @@ import {
 import { Log } from "debug-level";
 import { randomUUID } from "node:crypto";
 import { AVCodecID } from "./LibavCodecId.js";
-import { once } from "node:events";
 import { PassThrough } from "node:stream";
-import { finished } from "node:stream/promises";
 import type { CodecParameters, Packet } from "node-av";
 import type { Readable } from "node:stream";
 
@@ -42,6 +40,9 @@ const allowedVideoCodec = new Set([
 const allowedAudioCodec = new Set([AVCodecID.AV_CODEC_ID_OPUS]);
 
 function parseOpusPacketDuration(frame: Uint8Array) {
+  const toc = frame[0];
+  if (toc === undefined) throw new Error("Cannot parse an empty Opus packet");
+
   // https://datatracker.ietf.org/doc/html/rfc6716#section-3.1
   const frameSizes = [
     // SILK only, narrow band
@@ -72,10 +73,12 @@ function parseOpusPacketDuration(frame: Uint8Array) {
     2.5, 5, 10, 20,
   ];
 
-  const frameSize = (48000 / 1000) * frameSizes[frame[0] >> 3];
+  const size = frameSizes[toc >> 3];
+  if (size === undefined) throw new Error("Invalid Opus packet TOC byte");
+  const frameSize = (48000 / 1000) * size;
 
   let frameCount = 0;
-  const c = frame[0] & 0b11;
+  const c = toc & 0b11;
   switch (c) {
     case 0:
       frameCount = 1;
@@ -87,7 +90,12 @@ function parseOpusPacketDuration(frame: Uint8Array) {
       break;
 
     case 3:
-      frameCount = frame[1] & 0b111111;
+      {
+        const countByte = frame[1];
+        if (countByte === undefined)
+          throw new Error("Invalid Opus code 3 packet");
+        frameCount = countByte & 0b111111;
+      }
       break;
   }
 
@@ -178,7 +186,7 @@ export async function demux(input: Readable, { format }: DemuxerOptions) {
     } catch (e) {
       cleanup();
       throw new Error(`Failed to construct bitstream filterchain`, {
-        cause: (e as Error).cause,
+        cause: e instanceof Error ? e.cause : e,
       });
     }
 
@@ -261,8 +269,17 @@ export async function demux(input: Readable, { format }: DemuxerOptions) {
               if (packet) resume &&= vPipe.write(packet);
             }
           } else if (aInfo && aInfo.index === streamIndex) {
-            const packet = inPacket.clone()!;
-            packet.duration ||= BigInt(parseOpusPacketDuration(packet.data!));
+            const packet = inPacket.clone();
+            if (!packet) {
+              inPacket.free();
+              continue;
+            }
+            if (!packet.data) {
+              packet.free();
+              inPacket.free();
+              continue;
+            }
+            packet.duration ||= BigInt(parseOpusPacketDuration(packet.data));
             resume &&= aPipe.write(packet);
           }
           inPacket.free();

@@ -2,7 +2,7 @@ import { BaseMediaConnection } from "./BaseMediaConnection.js";
 import type { StreamConnection } from "./StreamConnection.js";
 
 export class VoiceConnection extends BaseMediaConnection {
-  public streamConnection?: StreamConnection;
+  public streamConnection: StreamConnection | undefined;
 
   public override get daveChannelId() {
     return this.channelId;

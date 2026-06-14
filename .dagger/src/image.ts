@@ -14,6 +14,8 @@ import {
   CADDY_S3_PROXY_MODULE,
   CADDY_IMAGE,
   CLAUDE_CODE_VERSION,
+  MCP_PROXY_BASE_IMAGE,
+  EDSTEM_MCP_COMMIT,
   CODEX_CLI_VERSION,
   EMSCRIPTEN_IMAGE,
   GH_CLI_VERSION,
@@ -820,6 +822,75 @@ export async function pushObsidianHeadlessImageHelper(
   gitSha: string = "unknown",
 ): Promise<string> {
   const container = buildObsidianHeadlessImageHelper(version, gitSha);
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
+}
+
+/**
+ * Build the custom mcp-gateway image.
+ * Multi-stage: a Node builder clones + builds edstem-mcp (rob-9/edstem-mcp) at a
+ * pinned commit (it is git-only, has no committed dist, and no build-on-install,
+ * so npx-from-git fails), then the prebuilt server is copied into the
+ * tbxark/mcp-proxy runtime image. The gateway config runs it via
+ * `node /opt/edstem-mcp/dist/index.js`. The base already ships node + python/uv,
+ * so the other servers keep running via npx/uvx at runtime.
+ */
+export function buildMcpGatewayImageHelper(
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Container {
+  // Stage 1 — clone + build edstem-mcp into /opt/edstem-mcp.
+  const edstemDist = dag
+    .container()
+    .from(OBSIDIAN_HEADLESS_BASE_IMAGE)
+    .withExec([
+      "sh",
+      "-c",
+      "apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*",
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      [
+        "set -e",
+        "git clone https://github.com/rob-9/edstem-mcp /opt/edstem-mcp",
+        "cd /opt/edstem-mcp",
+        `git checkout ${EDSTEM_MCP_COMMIT}`,
+        "npm ci",
+        "npm run build",
+        "npm prune --omit=dev",
+      ].join(" && "),
+    ])
+    .directory("/opt/edstem-mcp");
+
+  // Stage 2 — bake the prebuilt server into the mcp-proxy runtime image.
+  return dag
+    .container()
+    .from(MCP_PROXY_BASE_IMAGE)
+    .withDirectory("/opt/edstem-mcp", edstemDist)
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/shepherdjerred/monorepo",
+    )
+    .withLabel("org.opencontainers.image.version", version)
+    .withLabel("org.opencontainers.image.revision", gitSha)
+    .withEnvVariable("VERSION", version)
+    .withEnvVariable("GIT_SHA", gitSha);
+}
+
+/** Push a custom mcp-gateway image to a registry. */
+export async function pushMcpGatewayImageHelper(
+  tags: string[],
+  registryUsername: string,
+  registryPassword: Secret,
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Promise<string> {
+  const container = buildMcpGatewayImageHelper(version, gitSha);
   return pushContainerHelper(
     container,
     tags,

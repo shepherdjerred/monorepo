@@ -32,7 +32,7 @@ import type { Streamer } from "../client/index.js";
 import type { EncoderSettingsGetter } from "./encoders/index.js";
 import type { VideoStreamInfo } from "./LibavDemuxer.js";
 import type { WebRtcConnWrapper } from "../client/voice/WebRtcWrapper.js";
-import type { StreamObserver } from "./StreamObserver.js";
+import type { FfmpegProgress, StreamObserver } from "./StreamObserver.js";
 
 export type PrepareStreamOptions = {
   /**
@@ -177,7 +177,6 @@ export function prepareStream(
     // negative values = resize by aspect ratio, see https://trac.ffmpeg.org/wiki/Scaling
     width: -2,
     height: -2,
-    frameRate: undefined,
     videoCodec: "H264",
     bitrateVideo: 5000,
     bitrateVideoMax: 7000,
@@ -193,13 +192,21 @@ export function prepareStream(
     },
     customInputOptions: [],
     customFfmpegFlags: [],
-    subtitleBurn: undefined,
     inputColor: "sdr",
-    startTime: undefined,
-    pad: undefined,
   } satisfies PrepareStreamOptions;
 
-  function mergeOptions(opts: Partial<PrepareStreamOptions>) {
+  function mergeOptions(
+    opts: Partial<PrepareStreamOptions>,
+  ): PrepareStreamOptions {
+    const frameRate =
+      isFiniteNonZero(opts.frameRate) && opts.frameRate > 0
+        ? opts.frameRate
+        : undefined;
+    const startTime =
+      isFiniteNonZero(opts.startTime) && opts.startTime > 0
+        ? opts.startTime
+        : undefined;
+
     return {
       noTranscoding: opts.noTranscoding ?? defaultOptions.noTranscoding,
 
@@ -211,10 +218,7 @@ export function prepareStream(
         ? Math.round(opts.height)
         : defaultOptions.height,
 
-      frameRate:
-        isFiniteNonZero(opts.frameRate) && opts.frameRate > 0
-          ? opts.frameRate
-          : defaultOptions.frameRate,
+      ...(frameRate !== undefined ? { frameRate } : {}),
 
       videoCodec: opts.videoCodec ?? defaultOptions.videoCodec,
 
@@ -251,13 +255,13 @@ export function prepareStream(
         opts.customInputOptions ?? defaultOptions.customInputOptions,
       customFfmpegFlags:
         opts.customFfmpegFlags ?? defaultOptions.customFfmpegFlags,
-      subtitleBurn: opts.subtitleBurn ?? defaultOptions.subtitleBurn,
       inputColor: opts.inputColor ?? defaultOptions.inputColor,
-      startTime:
-        isFiniteNonZero(opts.startTime) && opts.startTime > 0
-          ? opts.startTime
-          : defaultOptions.startTime,
-      pad: opts.pad ?? defaultOptions.pad,
+      ...(opts.subtitleBurn !== undefined
+        ? { subtitleBurn: opts.subtitleBurn }
+        : {}),
+      ...(startTime !== undefined ? { startTime } : {}),
+      ...(opts.observer !== undefined ? { observer: opts.observer } : {}),
+      ...(opts.pad !== undefined ? { pad: opts.pad } : {}),
     } satisfies PrepareStreamOptions;
   }
 
@@ -299,14 +303,15 @@ export function prepareStream(
   }
   if (observer?.onProgress) {
     command.on("progress", (progress) => {
-      observer.onProgress?.({
+      const progressUpdate: FfmpegProgress = {
         frames: progress.frames,
         currentFps: progress.currentFps,
         currentKbps: progress.currentKbps,
         targetSize: progress.targetSize,
         timemark: progress.timemark,
-        percent: progress.percent,
-      });
+      };
+      if (progress.percent !== undefined) progressUpdate.percent = progress.percent;
+      observer.onProgress?.(progressUpdate);
     });
   }
 
@@ -576,6 +581,7 @@ export function prepareStream(
           const client = await zmqClientPromise;
           await client.send(`volume@internal_lib volume ${newVolume}`);
           const [res] = await client.receive();
+          if (res === undefined) return false;
           if (res.toString("utf-8").split(" ")[0] !== "0") return false;
           currentVolume = newVolume;
           return true;
@@ -686,7 +692,7 @@ export function mergePlayStreamOptions(
 
     streamPreview: opts.streamPreview ?? playStreamDefaultOptions.streamPreview,
 
-    observer: opts.observer,
+    ...(opts.observer !== undefined ? { observer: opts.observer } : {}),
   } satisfies PlayStreamOptions;
 }
 
@@ -739,7 +745,10 @@ export async function attachPipeline(
   };
 
   if (options.configureConn) {
-    conn.setPacketizer(videoCodecMap[video.codec]);
+    const videoCodec = videoCodecMap[video.codec];
+    if (videoCodec === undefined)
+      throw new Error(`Unsupported video codec ID: ${String(video.codec)}`);
+    conn.setPacketizer(videoCodec);
     conn.mediaConnection.setSpeaking(true);
     const { width, height, frameRate } = options;
     conn.mediaConnection.setVideoAttributes(true, {
@@ -802,6 +811,7 @@ export async function attachPipeline(
         const decodeEnd = performance.now();
         previewLogger.debug(`Decoding a frame took ${decodeEnd - decodeStart}ms`);
         const frame = frames[0];
+        if (frame === undefined) return;
 
         return sharp(frame.toBuffer(), {
           raw: {

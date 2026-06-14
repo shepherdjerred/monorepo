@@ -26,13 +26,17 @@ import type { BuildkiteStep } from "../lib/types.ts";
  * Knip / Trivy / Semgrep — annotation lifecycle stays BK-side because
  * `buildkite-agent` is only available in the agent pod.
  */
-function annotatedDaggerScan(daggerFn: string, context: string): string {
+function annotatedDaggerScan(
+  daggerFn: string,
+  context: string,
+  annotationStyle: "error" | "warning" = "warning",
+): string {
   const outFile = `/tmp/${context}.txt`;
   return [
     `set -o pipefail`,
     `${DAGGER_CALL} ${daggerFn} --source ${REPO_GIT_REF} 2>&1 | tee ${outFile}`,
     `status=$$?`,
-    `if [ $$status -ne 0 ] && [ -s ${outFile} ]; then buildkite-agent annotate --style warning --context ${context} < ${outFile}; fi`,
+    `if [ $$status -ne 0 ] && [ -s ${outFile} ]; then buildkite-agent annotate --style ${annotationStyle} --context ${context} < ${outFile}; fi`,
     `exit $$status`,
   ].join("; ");
 }
@@ -266,11 +270,7 @@ export function mergeConflictStep(): BuildkiteStep {
 
 /**
  * Surfaces files >5 MB so they can be moved to LFS or removed. **Soft-fail**:
- * PR2 of the BK-pressure plan moved this check from a plain step (whose
- * `[ -n "$large" ]` test was a silent no-op because `buildkite-agent
- * pipeline upload` interpolated `$large` to empty at upload time) to a
- * real Dagger function. The fix surfaces 8 pre-existing large files —
- * cleaning them up is a separate task (see `packages/docs/todos/`).
+ * findings are surfaced as annotations but do not block the build.
  */
 export function largeFileStep(): BuildkiteStep {
   return daggerStep({

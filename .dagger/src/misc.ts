@@ -21,6 +21,7 @@ import {
   buildImageHelper,
   buildCaddyS3ProxyImageHelper,
   buildObsidianHeadlessImageHelper,
+  buildMcpGatewayImageHelper,
   buildScoutImageHelper,
   buildDiscordPlaysPokemonImageHelper,
   buildDiscordPlaysMarioKartImageHelper,
@@ -444,6 +445,50 @@ export async function smokeTestObsidianHeadlessHelper(): Promise<string> {
     // Layer 4 — CLI sync/store init path works offline.
     .withExec(["mkdir", "-p", "/vault"])
     .withExec(["ob", "sync-list-local"]);
+
+  return runSmokeTest(container, []);
+}
+
+/**
+ * Smoke test the custom mcp-gateway image.
+ * Verifies the runtime has Node, the prebuilt edstem-mcp entrypoint is present
+ * and parses, and every production dependency survived `npm prune --omit=dev`.
+ */
+export async function smokeTestMcpGatewayHelper(): Promise<string> {
+  const container = buildMcpGatewayImageHelper()
+    .withEntrypoint([])
+    // Layer 1 — Node runtime present (needed for `node /opt/edstem-mcp/dist/index.js`).
+    .withExec(["node", "--version"])
+    // Layer 2 — edstem-mcp entrypoint exists and parses.
+    .withExec([
+      "sh",
+      "-c",
+      [
+        "set -e",
+        "test -f /opt/edstem-mcp/dist/index.js",
+        "node --check /opt/edstem-mcp/dist/index.js",
+        'echo "edstem-mcp entrypoint OK"',
+      ].join("\n"),
+    ])
+    // Layer 3 — every production dependency survived `npm prune --omit=dev`.
+    // `node --check` only parses the entry; it never exercises the import graph,
+    // so a prod dep misclassified as a devDependency upstream would pass syntax
+    // checks yet crash the container on first real invocation. edstem-mcp is ESM,
+    // so we verify dep presence directly rather than require()-ing the server
+    // (which would start the stdio process and hang).
+    .withExec([
+      "node",
+      "--input-type=module",
+      "-e",
+      [
+        "import { readFileSync, existsSync } from 'node:fs';",
+        "const pkg = JSON.parse(readFileSync('/opt/edstem-mcp/package.json', 'utf8'));",
+        "const deps = Object.keys(pkg.dependencies ?? {});",
+        "const missing = deps.filter((d) => !existsSync(`/opt/edstem-mcp/node_modules/${d}`));",
+        "if (missing.length) { console.error('missing prod deps after prune:', missing); process.exit(1); }",
+        "console.log(`all ${deps.length} prod deps present after prune`);",
+      ].join("\n"),
+    ]);
 
   return runSmokeTest(container, []);
 }

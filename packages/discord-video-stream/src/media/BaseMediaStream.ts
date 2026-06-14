@@ -5,20 +5,20 @@ import type { Packet } from "node-av";
 import type { SendStats, StreamObserver } from "./StreamObserver.js";
 
 export class BaseMediaStream extends Writable {
-  private _pts?: number;
+  private _pts: number | undefined;
   private _syncTolerance = 20;
   private _loggerSend: Log;
   private _loggerSync: Log;
   private _loggerSleep: Log;
 
   private _noSleep: boolean;
-  private _startTime?: number;
-  private _startPts?: number;
+  private _startTime: number | undefined;
+  private _startPts: number | undefined;
   private _sync = true;
-  private _syncStream?: BaseMediaStream;
+  private _syncStream: BaseMediaStream | undefined;
   /** "video" | "audio" — the stream kind, reused as the {@link SendStats} label. */
   private _kind: SendStats["kind"];
-  private _observer?: StreamObserver;
+  private _observer: StreamObserver | undefined;
 
   constructor(type: SendStats["kind"], noSleep = false, observer?: StreamObserver) {
     super({ objectMode: true, highWaterMark: 0 });
@@ -93,7 +93,7 @@ export class BaseMediaStream extends Writable {
   private resetTimingCompensation() {
     this._startTime = this._startPts = undefined;
   }
-  async _write(
+  override async _write(
     frame: Packet,
     _: BufferEncoding,
     callback: (error?: Error | null) => void,
@@ -200,7 +200,7 @@ export class BaseMediaStream extends Writable {
     }
     frame.free();
   }
-  _destroy(
+  override _destroy(
     error: Error | null,
     callback: (error?: Error | null) => void,
   ): void {

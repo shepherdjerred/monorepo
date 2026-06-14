@@ -340,6 +340,7 @@ describe("buildPipeline", () => {
         "dagger-hygiene",
         "trivy-scan",
         "semgrep-scan",
+        "large-file-check",
       ]) {
         expect(steps.find((s) => s.key === key)?.soft_fail).toBe(true);
       }
@@ -476,6 +477,7 @@ describe("buildPipeline", () => {
         "trivy-scan",
         "dagger-hygiene",
         "knip-check",
+        "large-file-check",
       ]) {
         const step = steps.find((s) => s.key === key);
         expect(step).toBeDefined();
@@ -519,7 +521,6 @@ describe("buildPipeline", () => {
         "scout-test-template-check",
         "migration-guard",
         "merge-conflict-check",
-        "large-file-check",
         "caddyfile-validate",
       ];
       for (const key of blockingGateKeys) {
@@ -533,6 +534,7 @@ describe("buildPipeline", () => {
         "dagger-hygiene",
         "trivy-scan",
         "semgrep-scan",
+        "large-file-check",
       ];
       for (const key of asyncKeys) {
         expect(Array.isArray(deps) ? deps : []).not.toContain(key);
@@ -637,6 +639,16 @@ describe("buildPipeline", () => {
           expect(s.command).toContain("--github-token env:TOFU_GITHUB_TOKEN");
         } else {
           expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
+        }
+        if (s.key === "tofu-plan-tailscale") {
+          expect(s.command).toContain(
+            "--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID",
+          );
+          expect(s.command).toContain(
+            "--tailscale-oauth-client-secret env:TAILSCALE_OAUTH_CLIENT_SECRET",
+          );
+        } else {
+          expect(s.command).not.toContain("TAILSCALE_OAUTH_CLIENT_ID");
         }
       }
     });
@@ -1006,6 +1018,13 @@ describe("buildPipeline", () => {
         } else {
           expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
         }
+        if (s.key === "tofu-tailscale" || s.key === "tofu-plan-tailscale") {
+          expect(s.command).toContain(
+            "--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID",
+          );
+        } else {
+          expect(s.command).not.toContain("TAILSCALE_OAUTH_CLIENT_ID");
+        }
       }
 
       const argoSteps = allSteps.filter((s) =>
@@ -1032,6 +1051,12 @@ describe("buildPipeline", () => {
       const pipeline = buildPipeline(versionBumpAffected());
       const steps = pipeline.steps.filter(isStep);
       expect(steps.some((s) => s.key === "homelab-cdk8s")).toBe(true);
+    });
+
+    it("includes the 1Password item/field lint gate", () => {
+      const pipeline = buildPipeline(versionBumpAffected());
+      const steps = pipeline.steps.filter(isStep);
+      expect(steps.some((s) => s.key === "homelab-1password-items")).toBe(true);
     });
 
     it("includes helm chart push so ArgoCD picks up new manifests", () => {
