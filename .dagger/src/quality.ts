@@ -314,21 +314,26 @@ export function lockfileCheckHelper(source: Directory): Container {
  * its own `bun.lock` but a `file:`-dependent workspace's `bun.lock` is left
  * stale (see PR #1213 → dpp post-mortem).
  *
- * `packages` is a comma-separated list of top-level workspace dirs (the
- * pipeline generator passes `affected.packages`). Empty string → no-op.
- * The check uses `bun install --frozen-lockfile --dry-run` per package
- * (resolve-only, no download/link), so the cost stays in milliseconds even
- * on cold-cache runs against the persistent `BUN_CACHE` mount.
+ * `seeds` is a comma-separated list of top-level workspace dirs whose own
+ * files changed (the pipeline generator passes `affected.directlyChanged`).
+ * The drift script expands the reverse `file:`-dep closure across nested
+ * workspaces — this is the key step the CI change detector cannot do, since
+ * its closure reads only top-level manifests.
+ *
+ * The check uses `bun install --frozen-lockfile --dry-run` per package in
+ * the closure (resolve-only, no download/link), so the cost stays in
+ * milliseconds even on cold-cache runs against the persistent `BUN_CACHE`
+ * mount.
  */
 export function bunLockDriftCheckHelper(
   source: Directory,
-  packages: string,
+  seeds: string,
 ): Container {
   return bunQualityBase(source).withExec([
     "bun",
     "scripts/check-bun-lock-drift.ts",
-    "--packages",
-    packages,
+    "--seeds",
+    seeds,
   ]);
 }
 

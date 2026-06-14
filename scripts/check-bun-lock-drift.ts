@@ -21,14 +21,23 @@
  * dep graph.
  *
  * Modes:
- *   --packages a,b,c   Check only these packages. Used in CI: the pipeline
- *                      generator already computed the affected-packages
- *                      closure via change-detection.ts and passes it here.
+ *   --seeds a,b,c      Used in CI. Take these directly-changed packages, walk
+ *                      the reverse `file:`-dep closure across **nested
+ *                      workspaces** (so a `file:` edge declared in e.g.
+ *                      `packages/discord-plays-pokemon/packages/backend/package.json`
+ *                      is correctly attributed back to `discord-plays-pokemon`),
+ *                      then dry-run-check the full closure. This is the
+ *                      load-bearing behavior for the gate: the CI change
+ *                      detector's transitive closure only reads top-level
+ *                      manifests, so it would silently miss the dpp case the
+ *                      gate was built to catch. We re-expand here from the
+ *                      raw seeds with the nested-aware graph.
+ *   --packages a,b,c   Check **exactly** these packages, no closure expansion.
+ *                      Debug / advanced use only. CI must not use this mode.
  *   --base <ref>       Local mode. Diff `packages/<X>/package.json` and
- *                      `packages/<X>/bun.lock` vs `<ref>`, walk the reverse
- *                      `file:`-dep closure (read from each
- *                      `packages/<X>/package.json`), then dry-run-check the
- *                      closure. Default `origin/main`.
+ *                      `packages/<X>/bun.lock` vs `<ref>`, walk the same
+ *                      nested-aware reverse `file:`-dep closure, then
+ *                      dry-run-check it. Default `origin/main`.
  *   --all              Sweep every `packages/<X>/bun.lock`. Debug / nightly.
  */
 
@@ -40,7 +49,7 @@ import { Glob } from "bun";
 const PACKAGES_DIR = "packages";
 
 interface Args {
-  mode: "packages" | "base" | "all";
+  mode: "seeds" | "packages" | "base" | "all";
   packages: string[];
   base: string;
 }
@@ -49,7 +58,14 @@ function parseArgs(argv: string[]): Args {
   const args: Args = { mode: "all", packages: [], base: "origin/main" };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === "--packages") {
+    if (a === "--seeds") {
+      const list = argv[++i] ?? "";
+      args.packages = list
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+      args.mode = "seeds";
+    } else if (a === "--packages") {
       const list = argv[++i] ?? "";
       args.packages = list
         .split(",")
@@ -63,7 +79,7 @@ function parseArgs(argv: string[]): Args {
       args.mode = "all";
     } else if (a === "--help" || a === "-h") {
       console.log(
-        "Usage: bun scripts/check-bun-lock-drift.ts [--packages a,b,c | --base <ref> | --all]",
+        "Usage: bun scripts/check-bun-lock-drift.ts [--seeds a,b,c | --packages a,b,c | --base <ref> | --all]",
       );
       process.exit(0);
     }
@@ -227,6 +243,18 @@ async function main(): Promise<void> {
     toCheck = await listPackagesWithLock();
   } else if (args.mode === "packages") {
     toCheck = args.packages;
+  } else if (args.mode === "seeds") {
+    if (args.packages.length === 0) {
+      console.log("No seed packages provided; nothing to check.");
+      return;
+    }
+    const all = await listPackagesWithLock();
+    const deps = await readWorkspaceDeps(all);
+    const closure = reverseClosure(new Set(args.packages), deps);
+    toCheck = [...closure].sort();
+    console.error(
+      `Seeds: ${args.packages.slice().sort().join(", ")} → closure (${String(toCheck.length)}): ${toCheck.join(", ")}`,
+    );
   } else {
     const all = await listPackagesWithLock();
     const seeds = diffTouchedPackages(args.base);

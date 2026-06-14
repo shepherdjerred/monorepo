@@ -772,6 +772,9 @@ function transitiveClosure(
 function fullBuildResult(cooklangChanged: boolean): AffectedPackages {
   return {
     packages: new Set(ALL_PACKAGES),
+    // On a full build the drift gate is skipped (every per-package job runs
+    // `bun install --frozen-lockfile`), so seeds don't need to be tracked.
+    directlyChanged: new Set(),
     buildAll: true,
     homelabChanged: true,
     tofuChanged: true,
@@ -793,6 +796,7 @@ function fullBuildResult(cooklangChanged: boolean): AffectedPackages {
 function emptyResult(): AffectedPackages {
   return {
     packages: new Set(),
+    directlyChanged: new Set(),
     buildAll: false,
     homelabChanged: false,
     tofuChanged: false,
@@ -812,6 +816,7 @@ function emptyResult(): AffectedPackages {
 
 function buildScopedResult(
   allAffected: Set<string>,
+  directlyChanged: Set<string>,
   cooklangChanged: boolean,
   ciImageChanged: boolean,
   ciImageVersionChanged = false,
@@ -835,6 +840,7 @@ function buildScopedResult(
 
   return {
     packages: allAffected,
+    directlyChanged,
     buildAll: false,
     homelabChanged: allAffected.has("homelab"),
     tofuChanged,
@@ -899,6 +905,10 @@ export async function detectChanges(): Promise<AffectedPackages> {
           );
           return buildScopedResult(
             new Set(["homelab"]),
+            // No top-level package files changed (only versions.ts); the
+            // drift gate has nothing to expand from. The closure {homelab} is
+            // still emitted to drive the helm-types drift step.
+            new Set(),
             false,
             false,
             false,
@@ -936,6 +946,7 @@ export async function detectChanges(): Promise<AffectedPackages> {
 
       return buildScopedResult(
         allAffected,
+        directlyChanged,
         cooklangSourceChanged,
         false,
         false,
@@ -962,6 +973,9 @@ export async function detectChanges(): Promise<AffectedPackages> {
       );
       const result = buildScopedResult(
         new Set(["homelab"]),
+        // Version commit-back touches only versions.ts; no top-level
+        // package.json/bun.lock changes for the drift gate to seed from.
+        new Set(),
         cooklangSourceChanged,
         false,
         false,
@@ -1024,6 +1038,7 @@ export async function detectChanges(): Promise<AffectedPackages> {
 
   return buildScopedResult(
     allAffected,
+    directlyChanged,
     cooklangSourceChanged,
     ciImageChanged,
     ciImageVersionChanged,

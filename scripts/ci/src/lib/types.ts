@@ -1,6 +1,18 @@
 /** Affected packages result from change detection. */
 export interface AffectedPackages {
   packages: Set<string>;
+  /**
+   * The seed set used to compute `packages` — the top-level package dirs whose
+   * own files actually changed (before transitive closure). Carried separately
+   * because some downstream gates re-expand the closure with their own graph
+   * (e.g. the `bun.lock` drift gate must walk **nested** workspace manifests,
+   * whereas `change-detection.transitiveClosure` only reads top-level manifests
+   * and would silently miss the dpp/llm-observability case from PR #1213).
+   *
+   * Empty when no packages were directly changed (full build, infra-only,
+   * version-bump-only, etc.).
+   */
+  directlyChanged: Set<string>;
   buildAll: boolean;
   homelabChanged: boolean;
   /** True when a file under `packages/homelab/src/tofu/` changed. Gates the PR tofu *plan* group specifically — narrower than `homelabChanged` so cdk8s-only homelab PRs skip the plan jobs. */

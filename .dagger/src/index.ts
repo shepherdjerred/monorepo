@@ -1436,16 +1436,20 @@ export class Monorepo {
   }
 
   /**
-   * Per-package `bun.lock` drift check across the given workspace dirs.
-   * `packages` is a comma-separated list (e.g. "birmel,dpp,scout-for-lol");
-   * the script runs `bun install --frozen-lockfile --dry-run` in each.
+   * Per-package `bun.lock` drift check. `seeds` is a comma-separated list of
+   * directly-changed top-level workspace dirs (e.g.
+   * "birmel,llm-observability"). The script expands the reverse `file:`-dep
+   * closure across nested workspaces and runs `bun install --frozen-lockfile
+   * --dry-run` in each package in the closure. This catches the PR #1213
+   * scenario where a bump to `llm-observability` should also re-check dpp's
+   * lockfile via its nested `file:` edge.
    */
   @func()
   async bunLockDriftCheck(
     source: Directory,
-    packages: string,
+    seeds: string,
   ): Promise<string> {
-    return bunLockDriftCheckHelper(source, packages).stdout();
+    return bunLockDriftCheckHelper(source, seeds).stdout();
   }
 
   /** Env-var naming convention check across staged-style file types. */
