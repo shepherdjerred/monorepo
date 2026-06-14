@@ -56,9 +56,9 @@ function evaluate(input: {
 }
 
 describe("evaluateGate — no-reviewable-files shortcut", () => {
-  it("passes immediately when Greptile posted a no-reviewable-files comment", () => {
+  it("passes when Greptile posted a no-reviewable-files comment and there are no blocking threads", () => {
     const result = evaluate({
-      // Even with no check-run found, gate passes when noReviewableFiles is true.
+      // No check-run found; gate passes when noReviewableFiles is true and no blocking threads.
       reviewCheck: { found: false, status: null, conclusion: null, url: null },
       noReviewableFiles: true,
     });
@@ -67,12 +67,23 @@ describe("evaluateGate — no-reviewable-files shortcut", () => {
     expect(result.message).toContain(HEAD);
   });
 
-  it("passes even if there are open threads when Greptile found no reviewable files", () => {
-    // Greptile can't post review threads on a PR it skipped reviewing, but guard
-    // the short-circuit so it always wins if the flag is set.
+  it("still blocks on unresolved threads from earlier commits even when noReviewableFiles is true", () => {
+    // An earlier commit may have produced unresolved Greptile threads; GitHub does
+    // not automatically mark them outdated when only ignored files change in the
+    // new commit.  The no-reviewable-files flag only bypasses the check-run wait.
     const result = evaluate({
       reviewCheck: { found: false, status: null, conclusion: null, url: null },
       threads: [thread({ isResolved: false })],
+      noReviewableFiles: true,
+    });
+    expect(result.state).toBe("failed");
+    expect(result.message).toContain("unresolved Greptile comment");
+  });
+
+  it("passes when noReviewableFiles is true and the only threads are resolved", () => {
+    const result = evaluate({
+      reviewCheck: { found: false, status: null, conclusion: null, url: null },
+      threads: [thread({ isResolved: true })],
       noReviewableFiles: true,
     });
     expect(result.state).toBe("passed");

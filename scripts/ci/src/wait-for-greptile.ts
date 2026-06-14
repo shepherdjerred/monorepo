@@ -333,9 +333,11 @@ export function parseGreptileNoReviewableFiles(body: string | null): boolean {
  * threshold. Threads with no priority badge are never blocking.
  *
  * `noReviewableFiles` is true when Greptile posted a "No reviewable files"
- * status comment on the issue.  In that case the gate passes immediately
- * without waiting for a check-run (Greptile never creates one in this
- * scenario).
+ * status comment on the issue.  In that case the check-run wait is skipped
+ * (Greptile never creates one when all diff files match ignore patterns), but
+ * thread resolution is still evaluated — earlier commits on the same PR may
+ * have produced unresolved Greptile threads that GitHub does not automatically
+ * mark as outdated when only ignored files change.
  */
 export function evaluateGate(input: {
   head: string;
@@ -345,16 +347,14 @@ export function evaluateGate(input: {
   maxBlockingPriority: number;
   noReviewableFiles?: boolean;
 }): GateDecision {
-  if (input.noReviewableFiles === true) {
-    return {
-      state: "passed",
-      message:
-        `Greptile reported no reviewable files for ${input.head} after applying ignore patterns; ` +
-        `gate passes automatically.`,
-    };
-  }
-
-  const reviewState = classifyReviewCheck(input.reviewCheck);
+  // When Greptile skips review entirely (no reviewable files in diff), there
+  // is no check-run to wait for.  We bypass the check-run gate and fall
+  // through to thread evaluation, which still catches unresolved threads left
+  // by Greptile on earlier commits of the same PR.
+  const reviewState =
+    input.noReviewableFiles === true
+      ? "reviewed"
+      : classifyReviewCheck(input.reviewCheck);
 
   if (reviewState === "reviewing") {
     const status = !input.reviewCheck.found
@@ -381,10 +381,14 @@ export function evaluateGate(input: {
   );
 
   if (blocking.length === 0) {
+    const prefix =
+      input.noReviewableFiles === true
+        ? `Greptile reported no reviewable files for ${input.head} after applying ignore patterns`
+        : `Greptile reviewed ${input.head}`;
     return {
       state: "passed",
       message:
-        `Greptile reviewed ${input.head}; no unresolved Greptile comments at priority ` +
+        `${prefix}; no unresolved Greptile comments at priority ` +
         `P${String(input.maxBlockingPriority)} or more severe remain.`,
     };
   }
@@ -714,11 +718,23 @@ async function waitForGreptile(): Promise<void> {
   let warnedMismatch = false;
 
   while (Date.now() <= deadline) {
-    const [reviewCheck, threadResult, noReviewableFiles] = await Promise.all([
+    const [reviewCheck, threadResult] = await Promise.all([
       fetchGreptileReviewCheck({ repo, head, token, pattern }),
       fetchGreptileThreads({ owner, name, number, token }),
-      fetchGreptileNoReviewableFiles({ repo, number, greptileLogin, token }),
     ]);
+
+    // Only check for the "No reviewable files" comment when Greptile has not
+    // created a check-run for this head.  If a check-run exists, Greptile IS
+    // reviewing (or has reviewed) the diff, so the issue-comment path is
+    // irrelevant — avoid an unnecessary paginated REST call on every poll.
+    const noReviewableFiles =
+      !reviewCheck.found &&
+      (await fetchGreptileNoReviewableFiles({
+        repo,
+        number,
+        greptileLogin,
+        token,
+      }));
 
     if (
       !warnedMismatch &&
