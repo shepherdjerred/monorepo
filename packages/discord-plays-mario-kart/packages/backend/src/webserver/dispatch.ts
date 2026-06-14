@@ -10,7 +10,7 @@ import type { LeaderboardStore } from "#src/leaderboard/store.ts";
 import { logger } from "#src/logger.ts";
 import { controllerRttMs } from "#src/observability/metrics.ts";
 import { applyStreamOverlays } from "#src/overlay/composite.ts";
-import type { StreamOverlayContext } from "#src/overlay/composite.ts";
+import type { StreamOverlayContextProvider } from "#src/overlay/composite.ts";
 import type {
   PlayerInputState,
   Request,
@@ -36,12 +36,6 @@ export type LeaderboardDeps = {
   /** Push the seat's name into the stream overlay (or clear with null). */
   setOverlayName?: (seat: number, name: string | null) => void;
 };
-
-/** Resolves the live overlay context at screenshot time, so each call reads
- *  the current mode + seat-activity flags. The provider itself is optional
- *  (absent → screenshots stay clean); when present it always returns a real
- *  context. */
-export type StreamOverlayContextProvider = () => StreamOverlayContext;
 
 export type DispatchDeps = {
   seatManager: SeatManager;

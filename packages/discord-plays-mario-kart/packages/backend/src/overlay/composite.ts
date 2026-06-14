@@ -17,6 +17,17 @@ export type StreamOverlayContext = {
 };
 
 /**
+ * Resolves the live overlay context at screenshot time, so each call reads the
+ * current mode + seat-activity flags. The provider itself is optional (absent →
+ * screenshots stay clean); when present it always returns a real context.
+ *
+ * Defined here alongside `StreamOverlayContext` so that Discord command modules
+ * and the webserver dispatch layer can both import it from the overlay layer
+ * rather than reaching across into `webserver/dispatch.ts`.
+ */
+export type StreamOverlayContextProvider = () => StreamOverlayContext;
+
+/**
  * Mutate `frame` (BGRA *or* RGBX — both overlays write greyscale, so channel
  * order is irrelevant) by drawing the HUD clock and seat-echo flags, then
  * blitting cached per-seat name pills.

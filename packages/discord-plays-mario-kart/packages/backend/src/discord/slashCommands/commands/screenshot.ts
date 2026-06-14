@@ -12,8 +12,10 @@ import client from "#src/discord/client.ts";
 import { getConfig } from "#src/config/index.ts";
 import type { N64Emulator } from "#src/emulator/n64-emulator.ts";
 import { encodeScreenshotPng } from "#src/emulator/screenshot.ts";
-import { applyStreamOverlays } from "#src/overlay/composite.ts";
-import type { StreamOverlayContextProvider } from "#src/webserver/dispatch.ts";
+import {
+  applyStreamOverlays,
+  type StreamOverlayContextProvider,
+} from "#src/overlay/composite.ts";
 
 export const screenshotCommand = new SlashCommandBuilder()
   .setName("screenshot")

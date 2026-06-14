@@ -3,7 +3,7 @@ import "./rest.ts";
 import client from "#src/discord/client.ts";
 import { makeScreenshot } from "./commands/screenshot.ts";
 import type { N64Emulator } from "#src/emulator/n64-emulator.ts";
-import type { StreamOverlayContextProvider } from "#src/webserver/dispatch.ts";
+import type { StreamOverlayContextProvider } from "#src/overlay/composite.ts";
 import { help } from "./commands/help.ts";
 import { logger } from "#src/logger.ts";
 

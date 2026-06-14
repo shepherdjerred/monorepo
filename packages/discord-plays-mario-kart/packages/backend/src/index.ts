@@ -23,10 +23,8 @@ import { registerSlashCommands } from "./discord/slashCommands/rest.ts";
 import { handleChannelUpdate } from "./discord/channel-handler.ts";
 import { createWebServer } from "./webserver/index.ts";
 import { handleRequest } from "./webserver/dispatch.ts";
-import type {
-  LeaderboardDeps,
-  StreamOverlayContextProvider,
-} from "./webserver/dispatch.ts";
+import type { LeaderboardDeps } from "./webserver/dispatch.ts";
+import type { StreamOverlayContextProvider } from "./overlay/composite.ts";
 import { logger } from "./logger.ts";
 import { getConfig } from "./config/index.ts";
 import { N64Emulator } from "./emulator/n64-emulator.ts";
