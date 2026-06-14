@@ -8,5 +8,13 @@ sandbox/archive/castle-casters/assets/videos/game-intro.mp4
 packages/sjer.red/src/content/blog/2024/pokemon/demo.mp4
 packages/sjer.red/src/content/blog/2024/pokemon/demo2.mp4
 
+# XState blog demo video — intentionally embedded in the article and approved
+# as a large-file exception for this cleanup.
+packages/sjer.red/src/content/blog/2023/xstate/simulation.mp4
+
+# Discord Plays Pokemon runtime WASM — vendored emulator artifact refreshed by
+# scripts/fetch-wasm.ts and verified by its checked-in SHA sidecar.
+packages/discord-plays-pokemon/packages/backend/assets/pokeemerald.wasm
+
 # Webring RSS test fixture — large feed used to exercise the parser.
 packages/webring/src/testdata/rss-3.xml

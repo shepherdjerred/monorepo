@@ -22,6 +22,7 @@ import {
   renderReportOutput,
   type RenderedReportOutput,
 } from "#src/reports/output.ts";
+import { saveReportRunImage } from "#src/storage/s3-report-run.ts";
 
 export type ReportRunResult = {
   output: RenderedReportOutput;
@@ -74,6 +75,15 @@ export async function runReport(
     const completedAt = new Date();
     const durationMs = completedAt.getTime() - startedAt.getTime();
 
+    // Archive the rendered output so the web "view posted reports" history is
+    // faithful. The PNG (chart formats only) goes to S3; the text body and the
+    // S3 key are persisted on the run row. Both are best-effort — a missing
+    // image never fails the run.
+    const imageS3Key =
+      output.image === null
+        ? null
+        : await saveReportRunImage(params.report.id, run.id, output.image.data);
+
     await params.prisma.reportRun.update({
       where: { id: run.id },
       data: {
@@ -82,6 +92,9 @@ export async function runReport(
         durationMs,
         rowsReturned: result.rows.length,
         rowsScanned: result.rowsScanned,
+        renderedContent: output.content,
+        imageS3Key,
+        imageByteSize: output.image?.data.length ?? null,
       },
     });
     await params.prisma.report.update({

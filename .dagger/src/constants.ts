@@ -60,9 +60,23 @@ export const CADDY_S3_PROXY_MODULE =
 // renovate: datasource=git-refs depName=redlib-source branch=main
 export const REDLIB_SOURCE_REF = "a4d36e954cf1bd64f209cd8868c5a29edc81b374";
 // Base image for obsidian-headless container (uses Node, not Bun, due to native better-sqlite3 addon).
+// Also reused as the Node builder stage for the custom mcp-gateway image (edstem-mcp build).
 // renovate: datasource=docker depName=node
 export const OBSIDIAN_HEADLESS_BASE_IMAGE =
   "node:24-slim@sha256:242549cd46785b480c832479a730f4f2a20865d61ea2e404fdb2a5c3d3b73ecf";
+
+// Base image for the custom mcp-gateway image. Layered with a prebuilt edstem-mcp
+// (rob-9/edstem-mcp is git-only, has no committed dist, and no build-on-install,
+// so plain npx-from-git fails). Keep this digest in sync with the
+// "tbxark/mcp-proxy" entry in packages/homelab/src/cdk8s/src/versions.ts.
+// renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
+export const MCP_PROXY_BASE_IMAGE =
+  "ghcr.io/tbxark/mcp-proxy:v0.43.2@sha256:1c43164a910a4f74a3ce48d95cb2ef792de8d467296555e63944fa798f0a44bd";
+
+// Pinned commit of rob-9/edstem-mcp baked into the custom mcp-gateway image.
+// Bump to pick up upstream fixes (changes the Dagger build cache key).
+export const EDSTEM_MCP_COMMIT = "661a3c498c82f47b1d352410b53fa06c6806c949";
+
 // emscripten toolchain for the discord-plays-mario-kart N64Wasm core build.
 // Pinned to 2.0.7 — the exact toolchain the vendored parallel-n64 + angrylion
 // source (packages/discord-plays-mario-kart/wasm-src) is known to compile with.
@@ -103,6 +117,11 @@ export const CLAUDE_CODE_VERSION = "2.1.140";
 
 // renovate: datasource=npm depName=@openai/codex
 export const CODEX_CLI_VERSION = "0.130.0";
+
+// cogapp regenerates the README project-listing tables in the temporal-worker's
+// readme-refresh-weekly workflow (see withCogapp in image.ts).
+// renovate: datasource=pypi depName=cogapp
+export const COGAPP_VERSION = "3.6.0";
 
 // renovate: datasource=github-releases depName=golangci/golangci-lint
 export const GOLANGCI_LINT_VERSION = "v2.12.2";

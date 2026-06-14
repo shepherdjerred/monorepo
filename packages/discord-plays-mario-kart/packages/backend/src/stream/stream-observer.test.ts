@@ -5,6 +5,7 @@ import {
   newSessionStats,
   parseTimemarkSeconds,
 } from "./stream-observer.ts";
+import { notifyStreamSessionEnded } from "./game-streamer.ts";
 import { registry } from "#src/observability/metrics.ts";
 import { logger } from "#src/logger.ts";
 
@@ -73,6 +74,34 @@ describe("commandUsesHardwareEncode", () => {
         "ffmpeg -f rawvideo -i pipe:0 -c:v libx264 -preset ultrafast -tune zerolatency out",
       ),
     ).toBe(false);
+  });
+});
+
+describe("notifyStreamSessionEnded", () => {
+  it("notifies when a real Go-Live session ended", async () => {
+    let calls = 0;
+    await notifyStreamSessionEnded(true, () => {
+      calls++;
+    });
+    expect(calls).toBe(1);
+  });
+
+  it("awaits async restart hooks", async () => {
+    const events: string[] = [];
+    await notifyStreamSessionEnded(true, async () => {
+      await Promise.resolve();
+      events.push("done");
+    });
+    expect(events).toEqual(["done"]);
+  });
+
+  it("does not notify when leave runs before a session starts", async () => {
+    let calls = 0;
+    await notifyStreamSessionEnded(false, () => {
+      calls++;
+    });
+    await notifyStreamSessionEnded(true);
+    expect(calls).toBe(0);
   });
 });
 

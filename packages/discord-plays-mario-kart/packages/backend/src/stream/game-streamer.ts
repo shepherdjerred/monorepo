@@ -50,7 +50,17 @@ export type GameStreamerOptions = {
   // VAAPI hardware H.264 encoding on an Intel iGPU; falls back to libx264 when off.
   hardwareAcceleration: boolean;
   vaapiDevice: string;
+  onSessionEnded?: () => void | Promise<void>;
 };
+
+export async function notifyStreamSessionEnded(
+  hadSession: boolean,
+  onSessionEnded?: () => void | Promise<void>,
+): Promise<void> {
+  if (hadSession && onSessionEnded !== undefined) {
+    await onSessionEnded();
+  }
+}
 
 // rawvideo input framerate handed to ffmpeg — it assigns presentation
 // timestamps from this value, so it must match the emulator's actual tick rate.
@@ -167,8 +177,13 @@ export class GameStreamer {
           }
           this.streamer.leaveVoice();
           this.resetStreamMetrics();
+          const hadSession = this.session !== undefined;
           this.logSessionSummary();
           logger.info("Go-Live stream stopped");
+          await notifyStreamSessionEnded(
+            hadSession,
+            this.options.onSessionEnded,
+          );
         }),
       onFailure: ({ attempt, maxRetries, error }) => {
         logger.error(

@@ -124,6 +124,7 @@ const SMOKE_TEST_FUNCTIONS: Record<string, string> = {
   "tasknotes-server": "smoke-test-tasknotes-server",
   "caddy-s3proxy": "smoke-test-caddy-s-3-proxy",
   "obsidian-headless": "smoke-test-obsidian-headless",
+  "mcp-gateway": "smoke-test-mcp-gateway",
   "discord-plays-pokemon": "smoke-test-discord-plays-pokemon",
   streambot: "smoke-test-streambot",
   "discord-plays-mario-kart": "smoke-test-discord-plays-mario-kart",
@@ -134,6 +135,7 @@ const SMOKE_TEST_FUNCTIONS: Record<string, string> = {
 const SMOKE_NO_ARGS = new Set([
   "smoke-test-caddy-s-3-proxy",
   "smoke-test-obsidian-headless",
+  "smoke-test-mcp-gateway",
 ]);
 
 // Smoke test functions that take --pkg-dir + dep flags but no --pkg (custom infra images / workspace monorepos)

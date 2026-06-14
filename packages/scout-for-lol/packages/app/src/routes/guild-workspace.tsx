@@ -4,6 +4,8 @@ import { cn } from "#src/lib/cn.ts";
 const NAV_ITEMS = [
   { to: "subscriptions", label: "Subscriptions" },
   { to: "players", label: "Players" },
+  { to: "competitions", label: "Competitions" },
+  { to: "reports", label: "Reports" },
   { to: "admin", label: "Admin" },
   { to: "audit", label: "Audit" },
 ] as const;

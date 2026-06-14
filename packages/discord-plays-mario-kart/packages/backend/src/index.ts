@@ -82,6 +82,22 @@ if (config.stream.enabled) {
       Bun.env.STREAM_HARDWARE_ACCELERATION === "true" ||
       config.stream.video.hardware_acceleration,
     vaapiDevice: Bun.env.VAAPI_DEVICE ?? config.stream.video.vaapi_device,
+    onSessionEnded:
+      emulator === undefined
+        ? undefined
+        : () => {
+            // Guard against a WASM trap/panic in reset(): a synchronous throw here
+            // propagates through `await onSessionEnded()` in notifyStreamSessionEnded
+            // as a rejected promise, which would surface as an unhandled rejection in
+            // leaveVoice and leave the XState lifecycle machine stuck. Catch and log
+            // instead so the machine can reach its terminal state cleanly.
+            try {
+              emulator.restartFromStartMenu("stream_session_ended");
+            } catch (error) {
+              logger.error("emulator reset after stream session failed", error);
+              Sentry.captureException(error);
+            }
+          },
   });
   await streamer.login();
 

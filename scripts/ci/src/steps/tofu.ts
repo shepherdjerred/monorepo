@@ -36,6 +36,12 @@ function tofuStackStep(stack: string, homelabPkgKey?: string): BuildkiteStep {
         stack === "cloudflare"
           ? `--cloudflare-api-token env:CLOUDFLARE_API_TOKEN`
           : "",
+        stack === "tailscale"
+          ? `--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID`
+          : "",
+        stack === "tailscale"
+          ? `--tailscale-oauth-client-secret env:TAILSCALE_OAUTH_CLIENT_SECRET`
+          : "",
       ]
         .filter(Boolean)
         .join(" ") + DRYRUN_FLAG,
@@ -70,6 +76,12 @@ function tofuPlanStep(stack: string): BuildkiteStep {
         `--cloudflare-account-id env:CLOUDFLARE_ACCOUNT_ID`,
         stack === "cloudflare"
           ? `--cloudflare-api-token env:CLOUDFLARE_API_TOKEN`
+          : "",
+        stack === "tailscale"
+          ? `--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID`
+          : "",
+        stack === "tailscale"
+          ? `--tailscale-oauth-client-secret env:TAILSCALE_OAUTH_CLIENT_SECRET`
           : "",
       ]
         .filter(Boolean)

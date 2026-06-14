@@ -55,6 +55,7 @@ import {
   pushImageHelper,
   buildCaddyS3ProxyImageHelper,
   buildObsidianHeadlessImageHelper,
+  buildMcpGatewayImageHelper,
   buildScoutImageHelper,
   buildDiscordPlaysPokemonImageHelper,
   buildDiscordPlaysMarioKartImageHelper,
@@ -62,6 +63,7 @@ import {
   buildTrmnlDashboardImageHelper,
   pushCaddyS3ProxyImageHelper,
   pushObsidianHeadlessImageHelper,
+  pushMcpGatewayImageHelper,
   pushScoutImageHelper,
   pushDiscordPlaysPokemonImageHelper,
   pushDiscordPlaysMarioKartImageHelper,
@@ -75,7 +77,7 @@ import {
 
 import { goBuildHelper, goTestHelper, goLintHelper } from "./golang";
 
-import { homelabSynthHelper } from "./homelab";
+import { homelabSynthHelper, homelabOnePasswordLintHelper } from "./homelab";
 
 import { swiftLintHelper } from "./swift";
 
@@ -92,6 +94,7 @@ import {
   smokeTestTasknotesServerHelper,
   smokeTestCaddyS3ProxyHelper,
   smokeTestObsidianHeadlessHelper,
+  smokeTestMcpGatewayHelper,
   smokeTestDiscordPlaysPokemonHelper,
   smokeTestStreambotHelper,
   e2eStreambotHelper,
@@ -446,6 +449,33 @@ export class Monorepo {
     );
   }
 
+  /** Build the custom mcp-gateway image (tbxark/mcp-proxy + prebuilt edstem-mcp) */
+  @func()
+  buildMcpGatewayImage(
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Container {
+    return buildMcpGatewayImageHelper(version, gitSha);
+  }
+
+  /** Push a custom mcp-gateway image to a registry. Returns digest. */
+  @func({ cache: "never" })
+  async pushMcpGatewayImage(
+    tags: string[],
+    registryUsername: string,
+    registryPassword: Secret,
+    version: string = "dev",
+    gitSha: string = "unknown",
+  ): Promise<string> {
+    return pushMcpGatewayImageHelper(
+      tags,
+      registryUsername,
+      registryPassword,
+      version,
+      gitSha,
+    );
+  }
+
   /** Build the redlib image from upstream's glibc Dockerfile.ubuntu at a pinned commit. */
   @func()
   buildRedlibImage(
@@ -752,6 +782,22 @@ export class Monorepo {
     return homelabSynthHelper(pkgDir, depNames, depDirs, tsconfig);
   }
 
+  /** Lint that every cdk8s OnePasswordItem reference + consumed field exists in the committed vault snapshot */
+  @func()
+  async homelabOnePasswordLint(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return homelabOnePasswordLintHelper(
+      pkgDir,
+      depNames,
+      depDirs,
+      tsconfig,
+    ).stdout();
+  }
+
   // ---------------------------------------------------------------------------
   // Swift operations (lint only — build/test require macOS)
   // ---------------------------------------------------------------------------
@@ -908,6 +954,8 @@ export class Monorepo {
     githubToken: Secret | null = null,
     cloudflareAccountId: Secret | null = null,
     cloudflareApiToken: Secret | null = null,
+    tailscaleOauthClientId: Secret | null = null,
+    tailscaleOauthClientSecret: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuApplyHelper(
@@ -918,6 +966,8 @@ export class Monorepo {
       githubToken,
       cloudflareAccountId,
       cloudflareApiToken,
+      tailscaleOauthClientId,
+      tailscaleOauthClientSecret,
       dryrun,
     ).stdout();
   }
@@ -932,6 +982,8 @@ export class Monorepo {
     githubToken: Secret | null = null,
     cloudflareAccountId: Secret | null = null,
     cloudflareApiToken: Secret | null = null,
+    tailscaleOauthClientId: Secret | null = null,
+    tailscaleOauthClientSecret: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuPlanHelper(
@@ -942,6 +994,8 @@ export class Monorepo {
       githubToken,
       cloudflareAccountId,
       cloudflareApiToken,
+      tailscaleOauthClientId,
+      tailscaleOauthClientSecret,
       dryrun,
     ).stdout();
   }
@@ -1476,6 +1530,12 @@ export class Monorepo {
   @func()
   async smokeTestObsidianHeadless(): Promise<string> {
     return smokeTestObsidianHeadlessHelper();
+  }
+
+  /** Smoke test mcp-gateway: verifies Node runtime + prebuilt edstem-mcp entrypoint */
+  @func()
+  async smokeTestMcpGateway(): Promise<string> {
+    return smokeTestMcpGatewayHelper();
   }
 
   /** Smoke test discord-plays-pokemon: build production image, boots app, expects Discord auth failure */

@@ -35,7 +35,7 @@ function parseResources(yaml: string): z.infer<typeof ResourceSchema>[] {
 }
 
 describe("temporal homelab audit tooling", () => {
-  it("injects Buildkite, Bugsink, and audit archive configuration", async () => {
+  it("injects Buildkite and Bugsink configuration", async () => {
     const yaml = await synthesizeApp();
 
     expect(yaml).toContain("name: BUGSINK_URL");
@@ -45,9 +45,9 @@ describe("temporal homelab audit tooling", () => {
     expect(yaml).toContain("value: sjerred");
     expect(yaml).toContain("name: BUILDKITE_PIPELINE_SLUG");
     expect(yaml).toContain("value: monorepo");
-    expect(yaml).toContain("name: HOMELAB_AUDIT_ARCHIVE_BUCKET");
-    expect(yaml).toContain("name: HOMELAB_AUDIT_ARCHIVE_PREFIX");
-    expect(yaml).toContain("value: homelab-audits");
+    // Homelab-audit S3 archiving is unused; HOMELAB_AUDIT_ARCHIVE_* env vars are
+    // intentionally not wired (no dead optional secret).
+    expect(yaml).not.toContain("name: HOMELAB_AUDIT_ARCHIVE_BUCKET");
   });
 
   it("enables Temporal worker observability dynamic config with v1.29 key casing", async () => {

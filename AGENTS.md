@@ -214,8 +214,8 @@ The setup script runs 5 phases:
 
 1. **Tools** — `mise trust` for repo configs, `mise install`, and optional tool warnings
 2. **Dependencies** — root + per-package `bun install --frozen-lockfile`
-3. **Shared Builds** — eslint-config, webring, astro-opengraph-images, helm-types
-4. **Code Generation** — Prisma (birmel, scout-for-lol), helm-types codegen, HA types
+3. **Shared Builds** — eslint-config, webring, astro-opengraph-images, discord-video-stream, helm-types
+4. **Code Generation** — Prisma (birmel, scout-for-lol, discord-plays-mario-kart). Helm value types are **not** regenerated here: the committed types in `packages/homelab/src/cdk8s/generated/helm` are the source of truth, refreshed weekly by the `helm-types-weekly-refresh` Temporal schedule (which opens a PR if they drifted).
 5. **Verify** — checks critical build artifacts exist
 
 Optional tools (warned if missing): helm, swift, swiftlint, swiftformat, typeshare, go, golangci-lint, mvn, gitleaks, shellcheck.

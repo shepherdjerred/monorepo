@@ -14,7 +14,10 @@ import {
   CADDY_S3_PROXY_MODULE,
   CADDY_IMAGE,
   CLAUDE_CODE_VERSION,
+  MCP_PROXY_BASE_IMAGE,
+  EDSTEM_MCP_COMMIT,
   CODEX_CLI_VERSION,
+  COGAPP_VERSION,
   EMSCRIPTEN_IMAGE,
   GH_CLI_VERSION,
   GITHUB_MCP_SERVER_VERSION,
@@ -66,7 +69,8 @@ function withGitHubCli(container: Container): Container {
  * `BUN_INSTALL=/usr/local` forces `bun add -g` to drop the `claude` binary
  * into `/usr/local/bin` (world-readable) instead of `/root/.bun/bin`, which
  * the container's non-root user (UID 1000) cannot reach. Without this the
- * docs-groom workflow fails with `Executable not found in $PATH: claude`.
+ * temporal-worker workflows that shell out to `claude` fail with
+ * `Executable not found in $PATH: claude`.
  */
 function withEditorClis(container: Container): Container {
   return withGitHubCli(container)
@@ -88,6 +92,47 @@ function withCodexCli(container: Container): Container {
     .withEnvVariable("BUN_INSTALL", "/usr/local")
     .withExec(["bun", "add", "-g", `@openai/codex@${CODEX_CLI_VERSION}`])
     .withExec(["codex", "--version"]);
+}
+
+/**
+ * Install the `cog` (cogapp) CLI into a Bun-based container.
+ *
+ * The temporal-worker's `readme-refresh-weekly` workflow shells out to
+ * `cog -r README.md practice/README.md archive/README.md` to regenerate the
+ * project-listing tables embedded in those READMEs. cog is a Python tool, so we
+ * add a Python interpreter and install cogapp system-wide. `pip3 install` with
+ * `--break-system-packages` drops the `cog` entrypoint into `/usr/local/bin`
+ * (world-readable), reachable by the container's non-root user (UID 1000) — the
+ * same reason `withEditorClis` forces `BUN_INSTALL=/usr/local` for `claude`.
+ */
+function withCogapp(container: Container): Container {
+  return (
+    container
+      .withExec(["apt-get", "update", "-qq"])
+      .withExec([
+        "apt-get",
+        "install",
+        "-y",
+        "-qq",
+        "--no-install-recommends",
+        "ca-certificates",
+        "python3",
+        "python3-pip",
+      ])
+      .withExec(["sh", "-c", "rm -rf /var/lib/apt/lists/*"])
+      .withExec([
+        "pip3",
+        "install",
+        "--no-cache-dir",
+        "--break-system-packages",
+        `cogapp==${COGAPP_VERSION}`,
+      ])
+      // cogapp's `cog` CLI uses `-v` for "print the version and exit"; it has no
+      // `--version` flag (that errors with exit 2 "option --version not
+      // recognized"). `cog -v` prints e.g. "Cog version 3.6.0" and exits 0,
+      // confirming the binary is installed and runnable on PATH.
+      .withExec(["cog", "-v"])
+  );
 }
 
 /**
@@ -842,6 +887,75 @@ export async function pushObsidianHeadlessImageHelper(
   );
 }
 
+/**
+ * Build the custom mcp-gateway image.
+ * Multi-stage: a Node builder clones + builds edstem-mcp (rob-9/edstem-mcp) at a
+ * pinned commit (it is git-only, has no committed dist, and no build-on-install,
+ * so npx-from-git fails), then the prebuilt server is copied into the
+ * tbxark/mcp-proxy runtime image. The gateway config runs it via
+ * `node /opt/edstem-mcp/dist/index.js`. The base already ships node + python/uv,
+ * so the other servers keep running via npx/uvx at runtime.
+ */
+export function buildMcpGatewayImageHelper(
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Container {
+  // Stage 1 — clone + build edstem-mcp into /opt/edstem-mcp.
+  const edstemDist = dag
+    .container()
+    .from(OBSIDIAN_HEADLESS_BASE_IMAGE)
+    .withExec([
+      "sh",
+      "-c",
+      "apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*",
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      [
+        "set -e",
+        "git clone https://github.com/rob-9/edstem-mcp /opt/edstem-mcp",
+        "cd /opt/edstem-mcp",
+        `git checkout ${EDSTEM_MCP_COMMIT}`,
+        "npm ci",
+        "npm run build",
+        "npm prune --omit=dev",
+      ].join(" && "),
+    ])
+    .directory("/opt/edstem-mcp");
+
+  // Stage 2 — bake the prebuilt server into the mcp-proxy runtime image.
+  return dag
+    .container()
+    .from(MCP_PROXY_BASE_IMAGE)
+    .withDirectory("/opt/edstem-mcp", edstemDist)
+    .withLabel(
+      "org.opencontainers.image.source",
+      "https://github.com/shepherdjerred/monorepo",
+    )
+    .withLabel("org.opencontainers.image.version", version)
+    .withLabel("org.opencontainers.image.revision", gitSha)
+    .withEnvVariable("VERSION", version)
+    .withEnvVariable("GIT_SHA", gitSha);
+}
+
+/** Push a custom mcp-gateway image to a registry. */
+export async function pushMcpGatewayImageHelper(
+  tags: string[],
+  registryUsername: string,
+  registryPassword: Secret,
+  version: string = "dev",
+  gitSha: string = "unknown",
+): Promise<string> {
+  const container = buildMcpGatewayImageHelper(version, gitSha);
+  return pushContainerHelper(
+    container,
+    tags,
+    registryUsername,
+    registryPassword,
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Temporal worker image builder
 // ---------------------------------------------------------------------------
@@ -864,8 +978,9 @@ export function buildTemporalWorkerImageHelper(
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE));
 
-  // The docs-groom workflow shells out to `gh` + `claude` from inside the
-  // worker pod, so the temporal-worker image must ship both binaries.
+  // The pr-agent activity (PR review + summary) and several PR-opening
+  // workflows shell out to `gh` + `claude` from inside the worker pod, so the
+  // temporal-worker image must ship both binaries — see `withEditorClis`.
   // The bugsink-housekeeping workflow shells out to `kubectl` for the same
   // reason — see the rationale on `withKubectl`.
   // The pr-agent activity (PR review + summary) launches `claude -p` with
@@ -876,9 +991,13 @@ export function buildTemporalWorkerImageHelper(
   // `withHomelabAuditClis`.
   // The helm-types-weekly-refresh workflow shells out to `helm pull` to
   // regenerate the cdk8s chart types — see `withHelm`.
-  container = withHelm(
-    withHomelabAuditClis(
-      withGithubMcpServer(withKubectl(withEditorClis(container))),
+  // The readme-refresh-weekly workflow shells out to `cog` (cogapp) to
+  // regenerate the README project listings — see `withCogapp`.
+  container = withCogapp(
+    withHelm(
+      withHomelabAuditClis(
+        withGithubMcpServer(withKubectl(withEditorClis(container))),
+      ),
     ),
   );
 

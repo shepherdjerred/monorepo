@@ -1,6 +1,5 @@
 import {
   getCompetitionStatus,
-  type CachedLeaderboard,
   type CompetitionWithCriteria,
 } from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
@@ -14,8 +13,7 @@ import {
   send as sendChannelMessage,
   ChannelSendError,
 } from "#src/league/discord/channel.ts";
-import { saveCachedLeaderboard } from "#src/storage/s3-leaderboard.ts";
-import { buildCompetitionChartAttachment } from "#src/league/competition/chart-builder.ts";
+import { cacheLeaderboardArtifacts } from "#src/league/competition/refresh.ts";
 import {
   createSnapshot,
   getSnapshot,
@@ -245,37 +243,15 @@ export async function postLeaderboardUpdate(
       return { success: false };
     }
 
-    const cachedLeaderboard: CachedLeaderboard = {
-      version: "v1",
-      competitionId: competition.id,
-      calculatedAt: new Date().toISOString(),
+    // Persist standings JSON + chart PNG to S3 (best-effort; never blocks the
+    // Discord post) and reuse the rendered chart as the message attachment.
+    const { chartAttachment } = await cacheLeaderboardArtifacts({
+      competition,
       entries: leaderboard,
-    };
-
-    try {
-      await saveCachedLeaderboard(cachedLeaderboard);
-      logger.info(
-        `[DailyLeaderboard] ✅ Cached leaderboard to S3 for competition ${competition.id.toString()}`,
-      );
-    } catch (error) {
-      logger.error(
-        `[DailyLeaderboard] ⚠️  Failed to cache leaderboard to S3 for competition ${competition.id.toString()}:`,
-        error,
-      );
-      Sentry.captureException(error, {
-        tags: {
-          source: "cache-leaderboard-s3",
-          competitionId: competition.id.toString(),
-        },
-      });
-      // Caching failure must not block the Discord post.
-    }
+      calculatedAt: new Date(),
+    });
 
     const embed = generateLeaderboardEmbed(competition, leaderboard);
-    const chartAttachment = await buildCompetitionChartAttachment(
-      competition,
-      leaderboard,
-    );
 
     logNotification("DAILY_LEADERBOARD", "daily-update:postLeaderboardUpdate", {
       competitionId: competition.id,

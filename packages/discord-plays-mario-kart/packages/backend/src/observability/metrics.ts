@@ -53,6 +53,13 @@ export const loopResyncTotal = new Counter({
   registers: [registry],
 });
 
+export const emulatorRestartsTotal = new Counter({
+  name: "emulator_restarts_total",
+  help: "Emulator restarts requested by backend lifecycle events",
+  labelNames: ["reason"],
+  registers: [registry],
+});
+
 export const inputApplyDelayMs = new Histogram({
   name: "emulator_input_apply_delay_ms",
   help: "Time from a controller input arriving at the backend to being latched into the emulator tick that applies it, in ms",

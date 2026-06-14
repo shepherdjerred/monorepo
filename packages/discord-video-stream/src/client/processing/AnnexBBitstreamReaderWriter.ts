@@ -6,6 +6,13 @@ export class AnnexBBitstreamReader {
   constructor(buffer: Buffer) {
     this._buffer = buffer;
   }
+
+  private readByte(offset: number): number {
+    const byte = this._buffer[offset];
+    if (byte === undefined) throw new Error("Bad byte offset");
+    return byte;
+  }
+
   public readBits(count: number) {
     if (count === 0) return 0;
     let result = 0;
@@ -15,23 +22,24 @@ export class AnnexBBitstreamReader {
       if (
         this._bitOffset === 0 &&
         this._byteOffset >= 2 &&
-        this._buffer[this._byteOffset - 2] === 0 &&
-        this._buffer[this._byteOffset - 1] === 0 &&
-        this._buffer[this._byteOffset] === 3
+        this.readByte(this._byteOffset - 2) === 0 &&
+        this.readByte(this._byteOffset - 1) === 0 &&
+        this.readByte(this._byteOffset) === 3
       ) {
         // Skip over emulation prevention
         this._byteOffset++;
       }
       if (this._bitOffset === 0 && count >= 8) {
         // We're byte aligned, read whole bytes and push in
-        result = (result << 8) | this._buffer[this._byteOffset++];
+        result = (result << 8) | this.readByte(this._byteOffset);
+        this._byteOffset++;
         count -= 8;
       } else {
         // Read just enough to get us to the next byte
         const numBitsToRead = Math.min(count, 8 - this._bitOffset);
         const mask = (1 << numBitsToRead) - 1;
         const newBits =
-          (this._buffer[this._byteOffset] >>
+          (this.readByte(this._byteOffset) >>
             (8 - this._bitOffset - numBitsToRead)) &
           mask;
         result = (result << numBitsToRead) | newBits;

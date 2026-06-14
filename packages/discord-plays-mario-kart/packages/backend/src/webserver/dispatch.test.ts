@@ -28,6 +28,10 @@ import type { LeaderboardStore } from "#src/leaderboard/store.ts";
 import { SeatManager } from "#src/input/seat-manager.ts";
 import { registry } from "#src/observability/metrics.ts";
 import {
+  SCREENSHOT_HEIGHT,
+  SCREENSHOT_WIDTH,
+} from "#src/emulator/screenshot.ts";
+import {
   EMPTY_BUTTONS,
   ResponseSchema,
   type LeaderboardEntry,
@@ -37,10 +41,15 @@ import {
 
 const recorded: { seat: number; state: PlayerInputState }[] = [];
 const cleared: number[] = [];
+let fakeFrame: { rgba: Buffer; width: number; height: number } = {
+  rgba: Buffer.alloc(0),
+  width: 640,
+  height: 0,
+};
 const fakeEmu: EmulatorControls = {
   setPlayerInput: (seat, state) => recorded.push({ seat, state }),
   clearPlayerInput: (seat) => cleared.push(seat),
-  renderFrame: () => ({ rgba: Buffer.alloc(0), width: 640, height: 0 }),
+  renderFrame: () => fakeFrame,
 };
 
 const overlayNames: { seat: number; name: string | null }[] = [];
@@ -84,6 +93,7 @@ beforeEach(() => {
   // Fresh seat state per test so seat reuse across tests can't race on the
   // async disconnect handler from a previous test's closed socket.
   seatManager = new SeatManager(4);
+  fakeFrame = { rgba: Buffer.alloc(0), width: 640, height: 0 };
 });
 
 afterAll(() => {
@@ -131,6 +141,33 @@ function pressState(
   analogX = 0,
 ): PlayerInputState {
   return { buttons: { ...EMPTY_BUTTONS, ...overrides }, analogX, analogY: 0 };
+}
+
+function rgbaFrom(pixels: [number, number, number][]): Buffer {
+  const buf = Buffer.alloc(pixels.length * 4);
+  pixels.forEach(([r, g, b], i) => {
+    buf[i * 4] = r;
+    buf[i * 4 + 1] = g;
+    buf[i * 4 + 2] = b;
+  });
+  return buf;
+}
+
+function pngDimensions(png: Buffer): { width: number; height: number } {
+  const signature = Buffer.from([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+  ]);
+  if (!png.subarray(0, 8).equals(signature)) {
+    throw new Error("bad PNG signature");
+  }
+  const ihdrType = png.toString("ascii", 12, 16);
+  if (ihdrType !== "IHDR") {
+    throw new Error("expected IHDR first");
+  }
+  return {
+    width: png.readUInt32BE(16),
+    height: png.readUInt32BE(20),
+  };
 }
 
 // Observation count of the controller_rtt_ms histogram. The registry is shared
@@ -240,6 +277,30 @@ describe("web controller dispatch (socket -> handleRequest -> emulator)", () => 
       await new Promise((r) => setTimeout(r, 10));
     }
     expect(await rttSampleCount()).toBe(before + 1);
+    client.close();
+  });
+
+  it("returns screenshots as 4:3 PNG images", async () => {
+    fakeFrame = {
+      rgba: rgbaFrom([
+        [255, 0, 0],
+        [0, 0, 255],
+      ]),
+      width: 2,
+      height: 1,
+    };
+    const client = await connect();
+    const screenshotResp = nextResponse(client, "screenshot");
+    client.emit("request", { kind: "screenshot" });
+    const screenshot = await screenshotResp;
+    if (screenshot.kind !== "screenshot") {
+      throw new Error(`expected screenshot, got ${screenshot.kind}`);
+    }
+    const dimensions = pngDimensions(Buffer.from(screenshot.value, "base64"));
+    expect(dimensions).toEqual({
+      width: SCREENSHOT_WIDTH,
+      height: SCREENSHOT_HEIGHT,
+    });
     client.close();
   });
 
