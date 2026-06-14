@@ -22,25 +22,26 @@ data hit prod.
 
 ## Fix
 
-Upstream Skill Capped is the source of truth for manifest shape, so the
-schema must accept what upstream actually sends rather than coerce it. The
-field is consumed by no downstream code (only parsed), so widening the type
-is safe.
+Upstream Skill Capped is the source of truth — we're at their mercy for what
+shape data arrives in and can't expect them to fix a bad row. So the schema
+has to accept what they send, and we normalize on our side so consumers see a
+single type.
 
 `packages/better-skill-capped/src/parser/manifest.ts:49-51` — change each
-`rune{1,2,3}: z.string()` to `z.union([z.string(), z.number()])`. No
-`.transform`, no coercion — numeric rune IDs land in the parsed object as
-numbers; empty strings stay empty strings.
+`rune{1,2,3}: z.string()` to
+`z.union([z.string(), z.number()]).transform(String)`. Numeric rune IDs are
+coerced to their string form; existing empty strings still pass through.
+Mirrors the `k/d/a` coercion already in the schema for the same reason.
 
-Regression test in `manifest.test.ts` ("accepts numeric rune field as-is")
-mutates a fixture commentary's `rune3` to the number `3008` and asserts the
-parsed value is the number `3008`.
+Regression test in `manifest.test.ts` ("normalizes numeric rune field to
+string") mutates a fixture commentary's `rune3` to the number `3008` and
+asserts the parsed value is `"3008"`.
 
 ## Verification
 
 - Downloaded the live `/data/manifest.json` (~2 MB, 3141 commentaries) and
-  parsed it with the updated schema: `PARSE OK`, commentary 3108 `rune3 =
-3008` (number, preserved verbatim).
+  parsed it with the updated schema: `PARSE OK`, commentary 3108
+  `rune3 = "3008"` (normalized to string).
 - `bun test src/parser/manifest.test.ts` → 17 pass / 0 fail.
 - `bun run typecheck` clean.
 - `bunx eslint src/parser/manifest.ts` clean.
@@ -63,6 +64,6 @@ parsed value is the number `3008`.
 ### Caveats
 
 - The Firestore→S3 manifest refresh runs daily at 05:00 PT
-  (`fetcher-skill-capped` Temporal schedule). If upstream Skill Capped fixes
-  the bad row, the schema fix is still correct — it just becomes a defence
-  against future drift.
+  (`fetcher-skill-capped` Temporal schedule). We're at upstream Skill
+  Capped's mercy for the manifest shape — they may or may not ever fix the
+  bad row, so the defensive schema stays regardless.
