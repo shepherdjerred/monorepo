@@ -95,7 +95,7 @@ export class N64Emulator {
   private running = false;
   private timer: ReturnType<typeof setTimeout> | undefined;
   private nextAt = 0;
-  private readonly frameMs: number;
+  private frameMs: number;
   private lastHeight = 240;
 
   constructor(opts: N64EmulatorOptions) {
@@ -246,6 +246,15 @@ export class N64Emulator {
     if (player < 0 || player >= MAX_SEATS) return;
     this.inputs[player] = state;
     this.inputLatency.record(player);
+  }
+
+  /**
+   * Re-pace the tick loop. Used by the perf harness to navigate menus in
+   * sprint mode then switch to realtime for the measurement window — production
+   * is constructed once at the target fps and never calls this.
+   */
+  setFps(fps: number): void {
+    this.frameMs = 1000 / fps;
   }
 
   /** Zero a player's input (e.g. on disconnect) so a held key doesn't stick. */

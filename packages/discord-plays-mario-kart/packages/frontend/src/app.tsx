@@ -77,7 +77,26 @@ export function App() {
     });
   }, 2000);
 
-  const emit = useCallback(() => {
+  // Input emit is setTimeout-coalesced: press/release schedule one flush
+  // ~16ms later and snapshot the FINAL pressed set at flush time. A user
+  // mashing buttons (or pointer-event bursts across many controller buttons)
+  // generates at most ~60 socket messages/sec/seat instead of one per raw
+  // edge — the emulator only samples input once per 33ms frame, so anything
+  // above ~30/sec is pure event-loop tax on the backend. Uses setTimeout
+  // (not requestAnimationFrame) so background/inactive tabs still emit input
+  // — Chromium throttles rAF to ~1Hz or pauses it in hidden tabs, which
+  // would silently break controllers when the user switches tabs. blur
+  // flushes synchronously so a lost-focus event lands before any pending
+  // schedule fires. See packages/docs/plans/2026-06-13_mk64-perf-test.md.
+  const EMIT_COALESCE_MS = 16;
+  const emitDirty = useRef(false);
+  const emitTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const flushEmit = useCallback(() => {
+    emitTimer.current = undefined;
+    if (!emitDirty.current) return;
+    emitDirty.current = false;
     const s = seatRef.current;
     if (s === null) return;
     const request: InputRequest = {
@@ -87,30 +106,44 @@ export function App() {
     };
     socket.emit("request", request);
   }, []);
+  const scheduleEmit = useCallback(() => {
+    emitDirty.current = true;
+    if (emitTimer.current !== undefined) return;
+    emitTimer.current = setTimeout(flushEmit, EMIT_COALESCE_MS);
+  }, [flushEmit]);
+  const flushNow = useCallback(() => {
+    if (emitTimer.current !== undefined) {
+      clearTimeout(emitTimer.current);
+      emitTimer.current = undefined;
+    }
+    if (!emitDirty.current) return;
+    flushEmit();
+  }, [flushEmit]);
 
   const press = useCallback(
     (code: string) => {
       if (pressed.current.has(code)) return;
       pressed.current.add(code);
       setPressedCodes(new Set(pressed.current));
-      emit();
+      scheduleEmit();
     },
-    [emit],
+    [scheduleEmit],
   );
   const release = useCallback(
     (code: string) => {
       if (!pressed.current.delete(code)) return;
       setPressedCodes(new Set(pressed.current));
-      emit();
+      scheduleEmit();
     },
-    [emit],
+    [scheduleEmit],
   );
   const releaseAll = useCallback(() => {
     if (pressed.current.size === 0) return;
     pressed.current.clear();
     setPressedCodes(new Set());
-    emit();
-  }, [emit]);
+    emitDirty.current = true;
+    flushNow();
+  }, [flushNow]);
 
   // Subscribe to server responses (seat assignment + occupancy).
   useEffect(() => {
