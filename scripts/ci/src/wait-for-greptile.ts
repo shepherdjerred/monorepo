@@ -60,24 +60,6 @@ export type GreptileThread = {
   priority: number | null;
 };
 
-/**
- * Greptile posts a sticky issue comment marked with `<!-- greptile-status -->`
- * when it declines to review a PR — e.g. because the diff exceeds Greptile's
- * per-PR file limit. When that happens, Greptile never produces a check-run on
- * the head commit, so the normal `reviewCheck` polling loop would time out.
- *
- * We surface that as an explicit skip signal so the gate can pass instead of
- * blocking the merge on a review that will never happen.
- */
-export type GreptileSkipSignal = {
-  /** True if Greptile posted a `greptile-status` comment declining to review. */
-  skipped: boolean;
-  /** The original comment body, for diagnostic messages (null when not present). */
-  message: string | null;
-  /** The HTML URL of the status comment, for diagnostic messages. */
-  url: string | null;
-};
-
 export type GateDecision =
   | { state: "waiting"; message: string }
   | { state: "passed"; message: string }
@@ -325,13 +307,37 @@ function describeThread(thread: GreptileThread): string {
 }
 
 /**
- * Pure decision: given the head commit, Greptile's review-check state, and the
- * PR's review threads, decide whether the gate should pass, keep waiting, or
- * fail.
+ * Return true if the issue-level comment body contains Greptile's
+ * "no reviewable files" marker.  Greptile posts this when every file in the
+ * diff matches the ignore patterns defined in `.greptile/config.json`, so it
+ * never creates a check-run.  We must detect it here to avoid a 1200s timeout.
+ *
+ * The marker is the HTML comment `<!-- greptile-status -->` followed (on the
+ * same or next line) by the literal phrase "No reviewable files".
+ */
+export function parseGreptileNoReviewableFiles(body: string | null): boolean {
+  if (body === null) return false;
+  return (
+    body.includes("<!-- greptile-status -->") &&
+    body.includes("No reviewable files")
+  );
+}
+
+/**
+ * Pure decision: given the head commit, Greptile's review-check state, the
+ * PR's review threads, and whether Greptile explicitly reported no reviewable
+ * files, decide whether the gate should pass, keep waiting, or fail.
  *
  * `maxBlockingPriority` controls which priority levels are blocking:
  * a thread blocks when its priority (0=most severe…3=least severe) is ≤ this
  * threshold. Threads with no priority badge are never blocking.
+ *
+ * `noReviewableFiles` is true when Greptile posted a "No reviewable files"
+ * status comment on the issue.  In that case the check-run wait is skipped
+ * (Greptile never creates one when all diff files match ignore patterns), but
+ * thread resolution is still evaluated — earlier commits on the same PR may
+ * have produced unresolved Greptile threads that GitHub does not automatically
+ * mark as outdated when only ignored files change.
  */
 export function evaluateGate(input: {
   head: string;
@@ -339,25 +345,16 @@ export function evaluateGate(input: {
   threads: readonly GreptileThread[];
   greptileLogin: string;
   maxBlockingPriority: number;
-  skipSignal?: GreptileSkipSignal;
+  noReviewableFiles?: boolean;
 }): GateDecision {
-  // If Greptile posted a `greptile-status` comment declining to review (e.g.
-  // because the diff exceeds its per-PR file limit), there is no review-check
-  // to wait for and no comments to block on. Pass the gate immediately rather
-  // than holding a CI agent for the full timeout.
-  if (input.skipSignal?.skipped === true) {
-    const detail = input.skipSignal.message ?? "(no detail provided)";
-    const where =
-      input.skipSignal.url === null ? "" : ` — ${input.skipSignal.url}`;
-    return {
-      state: "passed",
-      message:
-        `Greptile declined to review ${input.head} (${detail.replace(/\s+/gu, " ").trim()})${where}. ` +
-        `No review-check or comments are expected; passing gate.`,
-    };
-  }
-
-  const reviewState = classifyReviewCheck(input.reviewCheck);
+  // When Greptile skips review entirely (no reviewable files in diff), there
+  // is no check-run to wait for.  We bypass the check-run gate and fall
+  // through to thread evaluation, which still catches unresolved threads left
+  // by Greptile on earlier commits of the same PR.
+  const reviewState =
+    input.noReviewableFiles === true
+      ? "reviewed"
+      : classifyReviewCheck(input.reviewCheck);
 
   if (reviewState === "reviewing") {
     const status = !input.reviewCheck.found
@@ -384,10 +381,14 @@ export function evaluateGate(input: {
   );
 
   if (blocking.length === 0) {
+    const prefix =
+      input.noReviewableFiles === true
+        ? `Greptile reported no reviewable files for ${input.head} after applying ignore patterns`
+        : `Greptile reviewed ${input.head}`;
     return {
       state: "passed",
       message:
-        `Greptile reviewed ${input.head}; no unresolved Greptile comments at priority ` +
+        `${prefix}; no unresolved Greptile comments at priority ` +
         `P${String(input.maxBlockingPriority)} or more severe remain.`,
     };
   }
@@ -508,68 +509,6 @@ function pickLatestCheck(
   return chosen;
 }
 
-/**
- * The marker Greptile uses on its sticky PR status comment. We match on the
- * full HTML comment so we don't accidentally fire on prose that happens to
- * mention "greptile-status".
- */
-const GREPTILE_STATUS_MARKER = "<!-- greptile-status -->";
-
-/**
- * Body fragments that indicate Greptile declined the review. We match
- * case-insensitively and only require one substring to be present so the
- * detection survives minor wording tweaks from Greptile.
- */
-const GREPTILE_SKIP_FRAGMENTS = [/too many files changed/iu];
-
-/**
- * Parse a list of PR issue-comment payloads for a Greptile skip signal. We
- * keep this pure so the test suite can exercise it directly.
- */
-export function parseGreptileSkipSignal(
-  comments: readonly unknown[],
-  greptileLogin: string,
-): GreptileSkipSignal {
-  for (const comment of comments) {
-    if (!isRecord(comment)) continue;
-    const user = recordField(comment, "user");
-    const login = user === null ? null : stringField(user, "login");
-    if (login === null) continue;
-    // GitHub App bot logins are reported as `<name>[bot]` on the REST API.
-    const normalised = login.replace(/\[bot\]$/u, "");
-    if (normalised !== greptileLogin) continue;
-    const body = stringField(comment, "body");
-    if (body === null || !body.includes(GREPTILE_STATUS_MARKER)) continue;
-    if (!GREPTILE_SKIP_FRAGMENTS.some((pattern) => pattern.test(body)))
-      continue;
-    return {
-      skipped: true,
-      message: body,
-      url: stringField(comment, "html_url"),
-    };
-  }
-  return { skipped: false, message: null, url: null };
-}
-
-async function fetchGreptileSkipSignal(input: {
-  repo: string;
-  number: number;
-  token: string;
-  greptileLogin: string;
-}): Promise<GreptileSkipSignal> {
-  let url: string | null =
-    `${GITHUB_API_URL}/repos/${input.repo}/issues/${String(input.number)}/comments?per_page=100`;
-  const comments: unknown[] = [];
-  while (url !== null) {
-    const { payload, linkNext } = await getJsonWithLink(url, input.token);
-    if (Array.isArray(payload)) {
-      comments.push(...payload);
-    }
-    url = linkNext;
-  }
-  return parseGreptileSkipSignal(comments, input.greptileLogin);
-}
-
 async function fetchGreptileReviewCheck(input: {
   repo: string;
   head: string;
@@ -685,6 +624,37 @@ async function fetchGreptileThreads(input: {
   return { threads, headRefOid };
 }
 
+/**
+ * Check whether Greptile has posted a "No reviewable files" status comment on
+ * the PR issue.  Greptile uses this instead of a check-run when every file in
+ * the diff is excluded by `.greptile/config.json` ignore patterns.
+ */
+async function fetchGreptileNoReviewableFiles(input: {
+  repo: string;
+  number: number;
+  greptileLogin: string;
+  token: string;
+}): Promise<boolean> {
+  let url: string | null =
+    `${GITHUB_API_URL}/repos/${input.repo}/issues/${String(input.number)}/comments?per_page=100`;
+  while (url !== null) {
+    const { payload, linkNext } = await getJsonWithLink(url, input.token);
+    // The REST response for /issues/:number/comments is a top-level array.
+    const commentArray = Array.isArray(payload) ? payload : [];
+    for (const item of commentArray) {
+      if (!isRecord(item)) continue;
+      const userRecord = recordField(item, "user");
+      const login =
+        userRecord === null ? null : stringField(userRecord, "login");
+      if (login !== input.greptileLogin) continue;
+      const body = stringField(item, "body");
+      if (parseGreptileNoReviewableFiles(body)) return true;
+    }
+    url = linkNext;
+  }
+  return false;
+}
+
 async function waitForGreptile(): Promise<void> {
   const pullRequest = process.env["BUILDKITE_PULL_REQUEST"];
   if (
@@ -748,11 +718,23 @@ async function waitForGreptile(): Promise<void> {
   let warnedMismatch = false;
 
   while (Date.now() <= deadline) {
-    const [reviewCheck, threadResult, skipSignal] = await Promise.all([
+    const [reviewCheck, threadResult] = await Promise.all([
       fetchGreptileReviewCheck({ repo, head, token, pattern }),
       fetchGreptileThreads({ owner, name, number, token }),
-      fetchGreptileSkipSignal({ repo, number, token, greptileLogin }),
     ]);
+
+    // Only check for the "No reviewable files" comment when Greptile has not
+    // created a check-run for this head.  If a check-run exists, Greptile IS
+    // reviewing (or has reviewed) the diff, so the issue-comment path is
+    // irrelevant — avoid an unnecessary paginated REST call on every poll.
+    const noReviewableFiles =
+      !reviewCheck.found &&
+      (await fetchGreptileNoReviewableFiles({
+        repo,
+        number,
+        greptileLogin,
+        token,
+      }));
 
     if (
       !warnedMismatch &&
@@ -771,7 +753,7 @@ async function waitForGreptile(): Promise<void> {
       threads: threadResult.threads,
       greptileLogin,
       maxBlockingPriority,
-      skipSignal,
+      noReviewableFiles,
     });
 
     if (decision.state === "passed") {

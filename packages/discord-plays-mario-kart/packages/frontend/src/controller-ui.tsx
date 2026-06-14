@@ -22,6 +22,10 @@ export function isControlPressed(
 }
 
 export function N64ControllerShell() {
+  // Top-down silhouette of an N64 controller, traced from the reference photo:
+  // wide body with a central hump for the Nintendo plate, two chunky outer
+  // handles, one narrower center prong with the analog stick well, and tiny
+  // L/R shoulder humps peeking off the back-top corners.
   return (
     <svg
       aria-hidden="true"
@@ -30,80 +34,98 @@ export function N64ControllerShell() {
       preserveAspectRatio="xMidYMid meet"
     >
       <defs>
-        <radialGradient id="n64Plastic" cx="50%" cy="28%" r="72%">
-          <stop offset="0%" stopColor="#d5d5da" />
-          <stop offset="45%" stopColor="#a9a9b0" />
-          <stop offset="100%" stopColor="#77777f" />
+        <radialGradient id="n64Plastic" cx="50%" cy="22%" r="80%">
+          <stop offset="0%" stopColor="#eeeff1" />
+          <stop offset="55%" stopColor="#cccdd1" />
+          <stop offset="100%" stopColor="#9a9aa0" />
         </radialGradient>
-        <linearGradient id="n64Edge" x1="0%" x2="0%" y1="0%" y2="100%">
-          <stop offset="0%" stopColor="#f2f2f4" stopOpacity="0.42" />
-          <stop offset="55%" stopColor="#85858d" stopOpacity="0.18" />
-          <stop offset="100%" stopColor="#202025" stopOpacity="0.38" />
-        </linearGradient>
-        <linearGradient id="n64Grip" x1="0%" x2="100%" y1="0%" y2="100%">
-          <stop offset="0%" stopColor="#c9c9cf" />
-          <stop offset="62%" stopColor="#9f9fa8" />
-          <stop offset="100%" stopColor="#70707a" />
-        </linearGradient>
+        <radialGradient id="n64Well" cx="50%" cy="40%" r="65%">
+          <stop offset="0%" stopColor="#2e2e32" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#0a0a0c" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="n64StickWell" cx="50%" cy="38%" r="60%">
+          <stop offset="0%" stopColor="#141417" />
+          <stop offset="100%" stopColor="#33333a" />
+        </radialGradient>
         <filter id="n64Drop" colorInterpolationFilters="sRGB">
-          <feDropShadow dx="0" dy="14" stdDeviation="16" floodOpacity="0.42" />
+          <feDropShadow dx="0" dy="12" stdDeviation="14" floodOpacity="0.42" />
         </filter>
       </defs>
 
-      <g transform="translate(450 0) scale(1.42 1) translate(-450 0)">
-        <path
-          d="M207 198 C196 120 253 85 352 109 C389 118 410 77 450 77 C490 77 511 118 548 109 C647 85 704 120 693 198 C682 282 635 334 579 323 C552 318 529 302 514 276 C497 289 476 296 450 296 C424 296 403 289 386 276 C371 302 348 318 321 323 C265 334 218 282 207 198 Z"
-          fill="url(#n64Plastic)"
-          filter="url(#n64Drop)"
-        />
-        <path
-          d="M207 198 C196 120 253 85 352 109 C389 118 410 77 450 77 C490 77 511 118 548 109 C647 85 704 120 693 198 C682 282 635 334 579 323 C552 318 529 302 514 276 C497 289 476 296 450 296 C424 296 403 289 386 276 C371 302 348 318 321 323 C265 334 218 282 207 198 Z"
-          fill="url(#n64Edge)"
-          opacity="0.8"
-        />
-        <path
-          d="M263 273 C214 303 189 432 242 477 C290 517 346 419 356 281 C324 299 291 294 263 273 Z"
-          fill="url(#n64Grip)"
-          filter="url(#n64Drop)"
-        />
-        <path
-          d="M637 273 C686 303 711 432 658 477 C610 517 554 419 544 281 C576 299 609 294 637 273 Z"
-          fill="url(#n64Grip)"
-          filter="url(#n64Drop)"
-        />
-        <path
-          d="M392 285 C418 305 482 305 508 285 C507 352 495 440 478 505 C459 520 441 520 422 505 C405 440 393 352 392 285 Z"
-          fill="url(#n64Grip)"
-          filter="url(#n64Drop)"
-        />
-        <path
-          d="M371 103 L529 103 L548 138 L352 138 Z"
-          fill="#bfc0c6"
-          opacity="0.38"
-        />
-        <rect
-          x="409"
-          y="113"
-          width="82"
-          height="19"
-          rx="9.5"
-          fill="#909098"
-          opacity="0.32"
-        />
-        <text
-          x="450"
-          y="127"
-          textAnchor="middle"
-          className="fill-zinc-600 text-[10px] font-black"
-        >
-          Nintendo
-        </text>
-      </g>
+      {/* Whole-controller silhouette: body + central top hump + two chunky
+          outer handles + a LONGER center prong (extends below the side
+          handles, matching the reference photo). Clockwise from top-left.
+          L/R shoulder visualization is the button widgets themselves. */}
       <path
-        d="M449 36 C449 20 451 10 456 0"
-        stroke="#101012"
-        strokeWidth="16"
-        strokeLinecap="round"
+        d="
+          M 140 90
+          C 145 86 165 84 200 84
+          L 380 84
+          C 388 70 396 48 415 30
+          C 432 22 468 22 485 30
+          C 504 48 512 70 520 84
+          L 700 84
+          C 735 84 755 86 760 90
+          C 800 102 825 150 830 220
+          C 838 282 838 332 815 372
+          C 790 408 745 418 712 405
+          C 678 392 644 360 615 320
+          C 600 300 580 290 558 300
+          C 545 308 540 322 545 360
+          C 555 420 552 478 538 510
+          C 526 532 510 540 488 540
+          L 412 540
+          C 390 540 374 532 362 510
+          C 348 478 345 420 355 360
+          C 360 322 355 308 342 300
+          C 320 290 300 300 285 320
+          C 256 360 222 392 188 405
+          C 155 418 110 408 85 372
+          C 62 332 62 282 70 220
+          C 75 150 100 102 140 90
+          Z
+        "
+        fill="url(#n64Plastic)"
+        filter="url(#n64Drop)"
+      />
+
+      {/* Nintendo wordmark — embossed plate on the central hump, styled to
+          look like the recessed silver oval on the real controller. */}
+      <ellipse
+        cx="450"
+        cy="55"
+        rx="62"
+        ry="14"
+        fill="#bcbcc0"
+        stroke="#878790"
+        strokeWidth="1"
+        opacity="0.85"
+      />
+      <text
+        x="450"
+        y="60"
+        textAnchor="middle"
+        className="fill-zinc-700 text-[13px] font-bold italic"
+        style={{ fontFamily: "Georgia, serif" }}
+      >
+        Nintendo
+      </text>
+
+      {/* Recessed wells — centered on the live button clusters (DOM-measured
+          centers, then mapped to SVG coords so the wells match the buttons). */}
+      <ellipse cx="207" cy="272" rx="84" ry="74" fill="url(#n64Well)" />
+      <ellipse cx="747" cy="268" rx="84" ry="74" fill="url(#n64Well)" />
+      <ellipse cx="540" cy="324" rx="78" ry="56" fill="url(#n64Well)" />
+
+      {/* Deep analog stick well — sized to fully contain the stick chevrons
+          (the touch-zone buttons around the disc) so they don't appear to
+          float in the gray plastic. */}
+      <circle
+        cx="450"
+        cy="400"
+        r="80"
+        fill="url(#n64StickWell)"
+        opacity="0.95"
       />
     </svg>
   );
@@ -190,86 +212,6 @@ export function ControlCluster({
       </h2>
       {children}
     </section>
-  );
-}
-
-export function AnalogStick({
-  leftControl,
-  rightControl,
-  axisX,
-  pressedCodes,
-  onPress,
-  onRelease,
-}: {
-  leftControl: ControlDefinition;
-  rightControl: ControlDefinition;
-  axisX: number;
-  pressedCodes: Set<string>;
-  onPress: (code: string) => void;
-  onRelease: (code: string) => void;
-}) {
-  const knobOffset = `${String(axisX * 20)}px`;
-  const leftPressed = isControlPressed(leftControl, pressedCodes);
-  const rightPressed = isControlPressed(rightControl, pressedCodes);
-  return (
-    <div className="relative h-24 w-24 sm:h-28 sm:w-28">
-      <div
-        className={cx(
-          "absolute inset-0 rounded-full border border-zinc-950 bg-gradient-to-br from-zinc-800 via-zinc-950 to-black shadow-[inset_0_8px_18px_rgba(0,0,0,0.82),0_9px_16px_rgba(0,0,0,0.36)]",
-          (leftPressed || rightPressed) && "ring-2 ring-white/45",
-        )}
-      />
-      <div
-        className="pointer-events-none absolute left-1/2 top-1/2 z-20 h-12 w-12 -translate-y-1/2 rounded-full border border-zinc-950 bg-gradient-to-br from-zinc-200 via-zinc-400 to-zinc-700 shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),0_7px_14px_rgba(0,0,0,0.58)] sm:h-14 sm:w-14"
-        style={{ transform: `translate(calc(-50% + ${knobOffset}), -50%)` }}
-      />
-      <button
-        type="button"
-        aria-label={`${leftControl.label} ${leftControl.sublabel}`}
-        aria-pressed={leftPressed}
-        onPointerDown={() => {
-          onPress(leftControl.code);
-        }}
-        onPointerUp={() => {
-          onRelease(leftControl.code);
-        }}
-        onPointerCancel={() => {
-          onRelease(leftControl.code);
-        }}
-        onPointerLeave={() => {
-          onRelease(leftControl.code);
-        }}
-        className="absolute left-0 top-0 z-30 h-full w-1/2 touch-none rounded-l-full"
-      >
-        <span className="sr-only">{leftControl.sublabel}</span>
-      </button>
-      <button
-        type="button"
-        aria-label={`${rightControl.label} ${rightControl.sublabel}`}
-        aria-pressed={rightPressed}
-        onPointerDown={() => {
-          onPress(rightControl.code);
-        }}
-        onPointerUp={() => {
-          onRelease(rightControl.code);
-        }}
-        onPointerCancel={() => {
-          onRelease(rightControl.code);
-        }}
-        onPointerLeave={() => {
-          onRelease(rightControl.code);
-        }}
-        className="absolute right-0 top-0 z-30 h-full w-1/2 touch-none rounded-r-full"
-      >
-        <span className="sr-only">{rightControl.sublabel}</span>
-      </button>
-      <span className="absolute -bottom-5 left-3 rounded bg-black/45 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-zinc-300">
-        A
-      </span>
-      <span className="absolute -bottom-5 right-3 rounded bg-black/45 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-zinc-300">
-        D
-      </span>
-    </div>
   );
 }
 
@@ -408,7 +350,7 @@ export function ControlButton({
     faceB: "h-11 w-11 rounded-full px-2 py-2 sm:h-12 sm:w-12",
     c: "rounded-full px-2 py-2",
     shoulder: "min-h-8 rounded-t-2xl rounded-b-md px-4 py-1 sm:min-h-9",
-    start: "h-8 w-8 rounded-full px-1 py-1 sm:h-9 sm:w-9",
+    start: "h-12 w-12 rounded-full px-1 py-1 sm:h-14 sm:w-14",
     z: "min-h-8 rounded-[0.85rem] px-4 py-1 sm:min-h-9",
   }[variant];
   return (
@@ -446,7 +388,7 @@ export function ControlButton({
           "text-lg font-black leading-none drop-shadow-sm sm:text-xl",
           variant === "c" && "text-base sm:text-lg",
           variant === "shoulder" && "text-lg sm:text-xl",
-          variant === "start" && "text-[9px] uppercase sm:text-[10px]",
+          variant === "start" && "text-[10px] uppercase sm:text-xs",
           variant === "z" && "text-base sm:text-lg",
           labelClassName,
         )}
