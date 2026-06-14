@@ -717,13 +717,13 @@ describe("buildPipeline", () => {
       }
     });
 
-    it("tofu plan steps are PR-only", () => {
+    it("tofu plan bundle is PR-only", () => {
       const mainPipeline = withBuildkitePullRequest("false", () =>
         buildPipeline(fullBuild()),
       );
       const mainSteps: BuildkiteStep[] = [];
       collectSteps(mainPipeline.steps, mainSteps);
-      expect(mainSteps.some((s) => s.key.startsWith("tofu-plan-"))).toBe(false);
+      expect(mainSteps.some((s) => s.key === "tofu-plan-all")).toBe(false);
 
       const pipeline = withBuildkitePullRequest("123", () =>
         buildPipeline(fullBuild()),
@@ -731,30 +731,22 @@ describe("buildPipeline", () => {
       const allSteps: BuildkiteStep[] = [];
       collectSteps(pipeline.steps, allSteps);
 
-      const planSteps = allSteps.filter((s) => s.key.startsWith("tofu-plan-"));
-      expect(planSteps.length).toBeGreaterThan(0);
-      for (const s of planSteps) {
-        expect(s.if).toBe("build.branch != pipeline.default_branch");
-        // Plan is read-only and the backends have no state locking, so plan
-        // steps must NOT carry a concurrency group — they run in parallel.
-        expect(s.concurrency).toBeUndefined();
-        expect(s.concurrency_group).toBeUndefined();
-        if (s.key === "tofu-plan-github") {
-          expect(s.command).toContain("--github-token env:TOFU_GITHUB_TOKEN");
-        } else {
-          expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
-        }
-        if (s.key === "tofu-plan-tailscale") {
-          expect(s.command).toContain(
-            "--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID",
-          );
-          expect(s.command).toContain(
-            "--tailscale-oauth-client-secret env:TAILSCALE_OAUTH_CLIENT_SECRET",
-          );
-        } else {
-          expect(s.command).not.toContain("TAILSCALE_OAUTH_CLIENT_ID");
-        }
-      }
+      const planAll = allSteps.find((s) => s.key === "tofu-plan-all");
+      expect(planAll).toBeDefined();
+      expect(planAll?.if).toBe("build.branch != pipeline.default_branch");
+      // Plan is read-only — no per-step concurrency group on the bundle.
+      expect(planAll?.concurrency).toBeUndefined();
+      expect(planAll?.concurrency_group).toBeUndefined();
+      // Bundle command carries every stack-relevant secret; the underlying
+      // Dagger helpers conditionally bind only the secrets each stack needs.
+      const cmdStr = planAll?.command ?? "";
+      expect(cmdStr).toContain("--github-token env:TOFU_GITHUB_TOKEN");
+      expect(cmdStr).toContain(
+        "--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID",
+      );
+      expect(cmdStr).toContain(
+        "--tailscale-oauth-client-secret env:TAILSCALE_OAUTH_CLIENT_SECRET",
+      );
     });
 
     it("omits main-only release and deploy graph from pull request builds", () => {
@@ -768,7 +760,7 @@ describe("buildPipeline", () => {
       const stepKeys = allSteps.map((s) => s.key);
 
       expect(groupKeys).toContain("build-images");
-      expect(groupKeys).toContain("homelab-tofu-plan");
+      expect(stepKeys).toContain("tofu-plan-all");
       expect(stepKeys).toContain("ci-complete");
       expect(stepKeys).toContain("greptile-review");
 
@@ -776,9 +768,9 @@ describe("buildPipeline", () => {
       expect(groupKeys).not.toContain("publish-npm");
       expect(groupKeys).not.toContain("cooklang-release");
       expect(groupKeys).not.toContain("deploy-sites");
-      expect(groupKeys).not.toContain("homelab-tofu");
 
       expect(stepKeys).not.toContain("helm-push-all");
+      expect(stepKeys).not.toContain("tofu-apply-all");
       expect(stepKeys).not.toContain("release-please");
       expect(stepKeys).not.toContain("deploy-argocd");
       expect(stepKeys).not.toContain("argocd-health");
@@ -980,7 +972,7 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("build-images");
       expect(groupKeys).toContain("push-images");
       expect(stepKeys).toContain("helm-push-all");
-      expect(groupKeys).toContain("homelab-tofu");
+      expect(stepKeys).toContain("tofu-apply-all");
     });
 
     it("waits for SeaweedFS bucket reconciliation before deploying sites", () => {
@@ -993,7 +985,7 @@ describe("buildPipeline", () => {
       );
 
       expect(scoutBetaDeploy).toBeDefined();
-      expect(scoutBetaDeploy?.depends_on).toContain("tofu-seaweedfs");
+      expect(scoutBetaDeploy?.depends_on).toContain("tofu-apply-all");
     });
 
     it("waits for SeaweedFS bucket reconciliation for partial homelab + site releases", () => {
@@ -1007,14 +999,14 @@ describe("buildPipeline", () => {
       const allSteps: BuildkiteStep[] = [];
       collectSteps(pipeline.steps, allSteps);
 
-      const tofuSeaweedfs = allSteps.find((s) => s.key === "tofu-seaweedfs");
+      const tofuApplyAll = allSteps.find((s) => s.key === "tofu-apply-all");
       const scoutBetaDeploy = allSteps.find(
         (s) => s.key === "deploy-scout-frontend-beta",
       );
 
-      expect(tofuSeaweedfs).toBeDefined();
+      expect(tofuApplyAll).toBeDefined();
       expect(scoutBetaDeploy).toBeDefined();
-      expect(scoutBetaDeploy?.depends_on).toContain("tofu-seaweedfs");
+      expect(scoutBetaDeploy?.depends_on).toContain("tofu-apply-all");
     });
 
     it("includes version commit-back", () => {
@@ -1109,29 +1101,21 @@ describe("buildPipeline", () => {
       }
       collect(pipeline.steps);
 
-      // Only APPLY steps (tofu-<stack>) carry a concurrency group — they write
-      // state. PLAN steps (tofu-plan-<stack>) are read-only and intentionally
-      // have none (asserted in "tofu plan steps are PR-only").
-      const tofuApplySteps = allSteps.filter(
-        (s) => s.key.startsWith("tofu-") && !s.key.startsWith("tofu-plan-"),
+      // tofu-apply-all is the bundled step that applies every stack in
+      // parallel inside one Dagger call. It carries no BK concurrency group
+      // — each stack has its own S3 state lock, so concurrent applies are
+      // safe at the backend layer. The bundle command carries every secret;
+      // the underlying Dagger helpers conditionally bind only the secrets
+      // the stack consumes.
+      const tofuApplyAll = allSteps.find((s) => s.key === "tofu-apply-all");
+      expect(tofuApplyAll).toBeDefined();
+      expect(tofuApplyAll?.concurrency).toBeUndefined();
+      expect(tofuApplyAll?.concurrency_group).toBeUndefined();
+      const cmdStr = tofuApplyAll?.command ?? "";
+      expect(cmdStr).toContain("--github-token env:TOFU_GITHUB_TOKEN");
+      expect(cmdStr).toContain(
+        "--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID",
       );
-      expect(tofuApplySteps.length).toBeGreaterThan(0);
-      for (const s of tofuApplySteps) {
-        expect(s.concurrency).toBe(1);
-        expect(s.concurrency_group).toContain("monorepo/tofu-");
-        if (s.key === "tofu-github") {
-          expect(s.command).toContain("--github-token env:TOFU_GITHUB_TOKEN");
-        } else {
-          expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
-        }
-        if (s.key === "tofu-tailscale" || s.key === "tofu-plan-tailscale") {
-          expect(s.command).toContain(
-            "--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID",
-          );
-        } else {
-          expect(s.command).not.toContain("TAILSCALE_OAUTH_CLIENT_ID");
-        }
-      }
 
       const argoSteps = allSteps.filter((s) =>
         s.key.startsWith("deploy-argocd"),
@@ -1174,8 +1158,9 @@ describe("buildPipeline", () => {
 
     it("includes tofu apply", () => {
       const pipeline = buildPipeline(versionBumpAffected());
-      const groups = pipeline.steps.filter(isGroup);
-      expect(groups.some((g) => g.key === "homelab-tofu")).toBe(true);
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      expect(allSteps.some((s) => s.key === "tofu-apply-all")).toBe(true);
     });
 
     it("includes ArgoCD sync and health check", () => {
@@ -1271,13 +1256,13 @@ describe("buildPipeline", () => {
       expect(groupKeys).toContain("build-images");
       expect(groupKeys).toContain("push-images");
       expect(stepKeys).toContain("helm-push-all");
-      expect(groupKeys).toContain("homelab-tofu");
+      expect(stepKeys).toContain("tofu-apply-all");
       expect(groupKeys).not.toContain("cooklang-release");
     });
   });
 
   describe("tofu plan gating (PR builds)", () => {
-    it("omits the tofu plan group for a cdk8s-only homelab PR", () => {
+    it("omits the tofu plan bundle for a cdk8s-only homelab PR", () => {
       // homelab changed (e.g. cdk8s) but no tofu source files changed
       const affected = emptyAffected();
       affected.packages.add("homelab");
@@ -1287,11 +1272,12 @@ describe("buildPipeline", () => {
       const pipeline = withBuildkitePullRequest("123", () =>
         buildPipeline(affected),
       );
-      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
-      expect(groupKeys).not.toContain("homelab-tofu-plan");
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      expect(allSteps.some((s) => s.key === "tofu-plan-all")).toBe(false);
     });
 
-    it("includes the tofu plan group when tofu source changed", () => {
+    it("includes the tofu plan bundle when tofu source changed", () => {
       const affected = emptyAffected();
       affected.packages.add("homelab");
       affected.homelabChanged = true;
@@ -1300,8 +1286,9 @@ describe("buildPipeline", () => {
       const pipeline = withBuildkitePullRequest("123", () =>
         buildPipeline(affected),
       );
-      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
-      expect(groupKeys).toContain("homelab-tofu-plan");
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      expect(allSteps.some((s) => s.key === "tofu-plan-all")).toBe(true);
     });
   });
 

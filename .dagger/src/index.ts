@@ -25,6 +25,8 @@ import {
   helmPushAllHelper,
   tofuApplyHelper,
   tofuPlanHelper,
+  tofuApplyAllHelper,
+  tofuPlanAllHelper,
   publishNpmHelper,
   deploySiteHelper,
   deployStaticSiteHelper,
@@ -1108,6 +1110,67 @@ export class Monorepo {
       tailscaleOauthClientSecret,
       dryrun,
     ).stdout();
+  }
+
+  /**
+   * Apply every OpenTofu stack in parallel from one pod. Each stack has its
+   * own S3 backend + state lock, so concurrent applies are safe. Stack-
+   * irrelevant secrets pass through and are ignored by `tofuApplyHelper`'s
+   * conditional `withSecretVariable` checks.
+   */
+  @func({ cache: "never" })
+  async tofuApplyAll(
+    source: Directory,
+    stacks: string[],
+    awsAccessKeyId: Secret,
+    awsSecretAccessKey: Secret,
+    githubToken: Secret | null = null,
+    cloudflareAccountId: Secret | null = null,
+    cloudflareApiToken: Secret | null = null,
+    tailscaleOauthClientId: Secret | null = null,
+    tailscaleOauthClientSecret: Secret | null = null,
+    dryrun = false,
+  ): Promise<string> {
+    return tofuApplyAllHelper(
+      source,
+      stacks,
+      awsAccessKeyId,
+      awsSecretAccessKey,
+      githubToken,
+      cloudflareAccountId,
+      cloudflareApiToken,
+      tailscaleOauthClientId,
+      tailscaleOauthClientSecret,
+      dryrun,
+    );
+  }
+
+  /** Plan every OpenTofu stack in parallel from one pod. Read-only. */
+  @func({ cache: "never" })
+  async tofuPlanAll(
+    source: Directory,
+    stacks: string[],
+    awsAccessKeyId: Secret,
+    awsSecretAccessKey: Secret,
+    githubToken: Secret | null = null,
+    cloudflareAccountId: Secret | null = null,
+    cloudflareApiToken: Secret | null = null,
+    tailscaleOauthClientId: Secret | null = null,
+    tailscaleOauthClientSecret: Secret | null = null,
+    dryrun = false,
+  ): Promise<string> {
+    return tofuPlanAllHelper(
+      source,
+      stacks,
+      awsAccessKeyId,
+      awsSecretAccessKey,
+      githubToken,
+      cloudflareAccountId,
+      cloudflareApiToken,
+      tailscaleOauthClientId,
+      tailscaleOauthClientSecret,
+      dryrun,
+    );
   }
 
   /** Publish an npm package. Set devSuffix for dev releases (--tag dev, version becomes <pkg-version>-dev.<suffix>), leave empty for prod (--tag latest). Set pkgPath to the on-disk path under packages/ (e.g. "homelab/src/helm-types") when the npm name differs from the directory layout — required so `file:` workspace deps resolve correctly. */

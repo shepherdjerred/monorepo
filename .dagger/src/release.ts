@@ -379,6 +379,83 @@ export function tofuPlanHelper(
   ]);
 }
 
+/**
+ * Apply every OpenTofu stack in parallel from one pod. Each stack writes to
+ * its own backend (separate S3 prefix per stack), so parallel applies are
+ * safe — the prior per-stack BK `concurrency: 1` only serialised against
+ * other branches touching the SAME stack, which Tofu's S3 backend already
+ * handles via state lock. Stack-irrelevant secrets (cloudflare-api-token
+ * on the github stack etc.) are passed but ignored by the underlying
+ * helper's conditional `withSecretVariable` checks.
+ */
+export async function tofuApplyAllHelper(
+  source: Directory,
+  stacks: string[],
+  awsAccessKeyId: Secret,
+  awsSecretAccessKey: Secret,
+  githubToken: Secret | null,
+  cloudflareAccountId: Secret | null,
+  cloudflareApiToken: Secret | null,
+  tailscaleOauthClientId: Secret | null,
+  tailscaleOauthClientSecret: Secret | null,
+  dryrun: boolean,
+): Promise<string> {
+  return runBundle(
+    stacks.map((stack) => ({
+      name: stack,
+      run: () =>
+        tofuApplyHelper(
+          source,
+          stack,
+          awsAccessKeyId,
+          awsSecretAccessKey,
+          githubToken,
+          cloudflareAccountId,
+          cloudflareApiToken,
+          tailscaleOauthClientId,
+          tailscaleOauthClientSecret,
+          dryrun,
+        ).stdout(),
+    })),
+  );
+}
+
+/**
+ * Plan every OpenTofu stack in parallel from one pod. Read-only; safe to run
+ * concurrent against any other branch.
+ */
+export async function tofuPlanAllHelper(
+  source: Directory,
+  stacks: string[],
+  awsAccessKeyId: Secret,
+  awsSecretAccessKey: Secret,
+  githubToken: Secret | null,
+  cloudflareAccountId: Secret | null,
+  cloudflareApiToken: Secret | null,
+  tailscaleOauthClientId: Secret | null,
+  tailscaleOauthClientSecret: Secret | null,
+  dryrun: boolean,
+): Promise<string> {
+  return runBundle(
+    stacks.map((stack) => ({
+      name: stack,
+      run: () =>
+        tofuPlanHelper(
+          source,
+          stack,
+          awsAccessKeyId,
+          awsSecretAccessKey,
+          githubToken,
+          cloudflareAccountId,
+          cloudflareApiToken,
+          tailscaleOauthClientId,
+          tailscaleOauthClientSecret,
+          dryrun,
+        ).stdout(),
+    })),
+  );
+}
+
 // ---------------------------------------------------------------------------
 // NPM publish
 // ---------------------------------------------------------------------------

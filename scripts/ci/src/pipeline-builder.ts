@@ -5,7 +5,6 @@ import {
   ALL_PACKAGES,
   IMAGE_PUSH_TARGETS,
   INFRA_PUSH_TARGETS,
-  TOFU_STACKS,
 } from "./catalog.ts";
 import type { ImageTarget } from "./catalog.ts";
 import type { AffectedPackages } from "./lib/types.ts";
@@ -41,7 +40,10 @@ import {
   onePasswordItemsStep,
   homelabHelmPushAllStep,
 } from "./steps/helm.ts";
-import { homelabTofuGroup, homelabTofuPlanGroup } from "./steps/tofu.ts";
+import {
+  homelabTofuApplyAllStep,
+  homelabTofuPlanAllStep,
+} from "./steps/tofu.ts";
 import { argoCdSyncStep, argoCdHealthStep } from "./steps/argocd.ts";
 import { cooklangReleaseGroup } from "./steps/cooklang.ts";
 import { versionCommitBackStep } from "./steps/version.ts";
@@ -347,8 +349,11 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         affected.hasSitePackages,
         affected.buildAll,
       );
+      // Site deploys upload to SeaweedFS buckets that Tofu (seaweedfs stack)
+      // declares. Wait for the bundled tofu-apply-all step so the bucket
+      // exists before we sync into it.
       const siteDeployDeps =
-        affected.buildAll || affected.homelabChanged ? ["tofu-seaweedfs"] : [];
+        affected.buildAll || affected.homelabChanged ? ["tofu-apply-all"] : [];
       steps.push(deploySitesGroup(sitesToDeploy, pkgKeyMap, siteDeployDeps));
     }
 
@@ -357,7 +362,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     // don't run plans that yield no signal for them. `.dagger/` and `scripts/ci/`
     // changes trigger a full build, which runs the plan via `buildAll`.
     if (pullRequestBuild && (affected.buildAll || affected.tofuChanged)) {
-      steps.push(homelabTofuPlanGroup());
+      steps.push(homelabTofuPlanAllStep());
     }
 
     // --- Homelab Helm + Tofu release track ---
@@ -366,8 +371,8 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       // Shared cdk8s synth is content-addressed, so all charts share one synth.
       steps.push(homelabHelmPushAllStep());
 
-      // Homelab Tofu: 3 parallel stacks
-      steps.push(homelabTofuGroup(pkgKeyMap.get("homelab")));
+      // Homelab Tofu — every stack applies in parallel from one pod.
+      steps.push(homelabTofuApplyAllStep(pkgKeyMap.get("homelab")));
     }
 
     // --- Unified ArgoCD sync (depends on whatever upstream steps ran) ---
@@ -380,10 +385,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         argocdDeps.push(...imagePushKeys);
       }
       if (affected.buildAll || affected.homelabChanged) {
-        argocdDeps.push(
-          "helm-push-all",
-          ...TOFU_STACKS.map((s) => `tofu-${s}`),
-        );
+        argocdDeps.push("helm-push-all", "tofu-apply-all");
       }
       steps.push(
         argoCdSyncStep(argocdDeps, { key: "deploy-argocd", app: "apps" }),
