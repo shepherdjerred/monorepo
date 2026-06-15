@@ -39,22 +39,12 @@ import type {
 
 const config = getConfig();
 
-// Derive the userbot token pool: prefer `stream.userbot_tokens`; fall back to the
-// legacy single `stream.userbot.token` so existing deployments keep working.
-const userbotTokens =
-  config.stream.userbot_tokens.length > 0
-    ? config.stream.userbot_tokens
-    : config.stream.userbot === undefined
-      ? []
-      : [config.stream.userbot.token];
-
-if (userbotTokens.length === 0) {
-  throw new Error(
-    "No userbot tokens configured. Set stream.userbot_tokens or the legacy stream.userbot.token.",
-  );
-}
-
 // ---- bot + pool + session manager + driver ----
+// One userbot, one emulator, one game at a time. The "pool" in the shared lib is
+// general-purpose (Streambot uses it for many concurrent streams); for this single-slot
+// game-bot we just feed it the single configured userbot token.
+const userbotTokens = [config.stream.userbot.token];
+
 const driver = new PokemonGameDriver({ config });
 
 const runtime = createGameBot({

@@ -74,13 +74,18 @@ export function createMarioKartDeployment(chart: Chart) {
       // pokebot-mk64-pool refactor, the backend runs on-demand via /play: the
       // emulator only boots when someone runs /play in their voice channel,
       // and the per-guild Race leaderboard is keyed via Prisma's `guildId`
-      // column. The new config.toml schema accepts:
+      // column. Config.toml shape:
       //
-      //   [stream]
-      //   userbot_tokens = ["selfbot-token-1", "selfbot-token-2", ...]
-      //   # ...legacy server_id, channel_id, userbot.token stay optional + ignored.
+      //   [stream.userbot]
+      //   id    = "<selfbot user id>"
+      //   token = "<selfbot token>"
+      //   # The single userbot account that joins voice channels and streams.
+      //   # One userbot, one emulator, one game at a time — no pool of accounts.
       //
       //   state_root_dir = "saves"   # default
+      //
+      // Multi-guild service: same userbot account, just invited into every
+      // Discord server you want this deployment to serve.
       //
       // Lives in the Homelab (Kubernetes) vault alongside the Pokebot config —
       // see packages/discord-plays-mario-kart/README.md.

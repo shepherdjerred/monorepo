@@ -115,24 +115,19 @@ export const ConfigSchema = z.strictObject({
     minimum_in_channel: z.number().nonnegative(),
     require_watching: z.boolean(),
     /**
-     * Legacy single-userbot field; superseded by `userbot_tokens`. Optional so
-     * existing config.toml files validate. If `userbot_tokens` is empty/missing,
-     * the runtime falls back to this token as a single-element pool.
+     * The selfbot account that joins voice channels and streams the game. ONE
+     * userbot per deployment — the emulator is a single-slot resource (at most
+     * one active game at a time per pod), so there's nothing to gain from a
+     * pool of N userbots here. The account just needs to be a member of every
+     * Discord server you want this deployment to serve.
      */
-    userbot: z
-      .strictObject({
-        id: z
-          .string()
-          .regex(/\d*/, "IDs must only have numeric characters")
-          .min(1),
-        token: z.string().min(1),
-      })
-      .optional(),
-    /**
-     * Pool of selfbot tokens. The bot picks any token whose account is a member of
-     * the requesting guild on each `/play`. Minimum 1.
-     */
-    userbot_tokens: z.array(z.string().min(1)).default([]),
+    userbot: z.strictObject({
+      id: z
+        .string()
+        .regex(/\d*/, "IDs must only have numeric characters")
+        .min(1),
+      token: z.string().min(1),
+    }),
     video: z.strictObject({
       // @deprecated Superseded by the 16:9 letterbox (canvas_height + display
       // aspect). Retained, optional, so existing config.toml files still validate;
