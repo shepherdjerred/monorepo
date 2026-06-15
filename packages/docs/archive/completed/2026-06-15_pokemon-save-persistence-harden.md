@@ -70,6 +70,20 @@ No homelab / cdk8s / 1Password / config-schema changes.
   on Grafana (should stay at 0), and `kubectl exec` to check the PVC for
   `pokeemerald.flash` mtime updates whenever Codex hits SAVE.
 
+<!-- temporal-agent-task
+{
+  "title": "Verify discord-plays-pokemon flash-save hardening post-deploy",
+  "provider": "claude",
+  "mode": "report-only",
+  "runAt": "2026-06-20T09:00:00-07:00",
+  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "source": {
+    "docPath": "packages/docs/archive/completed/2026-06-15_pokemon-save-persistence-harden.md"
+  },
+  "prompt": "Verify the discord-plays-pokemon flash-save hardening (PR #1249) is healthy in production. Check two things and email findings with evidence/links:\n1. Query Prometheus / Grafana for the `flash_save_load_invalid_total` counter — it should stay at 0. Any non-zero value means a boot hit a corrupt or truncated `pokeemerald.flash` and silently fell back.\n2. Use `kubectl exec` against the discord-plays-pokemon pod to `stat` the flash file at `${APP_ROOT}/saves/pokeemerald.flash` and confirm the mtime is updating (i.e., Codex is actually issuing in-game SAVE during goal runs). Compare against the pod start time — if mtime is close to pod start after several hours of uptime, the Codex prompt change is not taking effect and we should consider plan-option-(b) (flash_save_stale_seconds metric)."
+}
+-->
+
 ## Session Log — 2026-06-15
 
 ### Done
