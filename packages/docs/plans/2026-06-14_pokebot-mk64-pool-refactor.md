@@ -2,18 +2,25 @@
 
 ## Status
 
-**Partially Complete** — branch `feature/pokebot-mk64-pool`.
+**Complete** (pending manual e2e verification) — branch `feature/pokebot-mk64-pool`, PR #1251.
 
-Phases 1-2 shipped on this branch:
+All six phases of the plan shipped on this branch:
 
-- **Phase 1 (done)** — `@shepherdjerred/discord-stream-lifecycle` gained generic `UserbotPool<T>`, `SingleSlotSessionManager`, `AloneInVoiceWatcher`, `/play` + `/stop` slash command builders, `sessionDir()` per-guild path helper, `GameDriver` interface, and `createGameBot()` wiring. 39 tests; typecheck + ESLint clean. Commit `741f54719`.
-- **Phase 2 (done)** — Streambot's `UserbotPool` is now a thin wrapper around the shared lib's generic pool. `StreambotStreamer` implements `PooledUserbot`. `entry.streamer` renamed to `entry.userbot` across streambot. Streambot's session-manager / command-bot / queue / resume / ffmpeg pipeline stay in streambot (those are streambot-specific). Commit `884f634f7`.
+- **Phase 1** — `@shepherdjerred/discord-stream-lifecycle` gained generic `UserbotPool<T>`, `SingleSlotSessionManager`, `AloneInVoiceWatcher`, `/play` + `/stop` slash command builders, `sessionDir()` per-guild path helper, `GameDriver` interface, and `createGameBot()` wiring. 39 tests. Commit `741f54719`.
+- **Phase 2** — Streambot's `UserbotPool` is a thin wrapper around the shared lib's generic pool. `StreambotStreamer` implements `PooledUserbot`. `entry.streamer` renamed to `entry.userbot`. Streambot's session-manager / command-bot / queue / resume / ffmpeg pipeline stay in streambot. Commit `884f634f7`.
+- **Phase 3** — Pokemon backend boots no emulator at startup. `/play` triggers `PokemonGameDriver.onSessionStart` which creates the emulator (per-guild `saves/<guildId>/pokeemerald.flash`), GameStreamer (using the pool's selfbot client), goal manager (per-guild `saves/<guildId>/goal-state.json`), event notifier (bound to the session's `textChannelId`), and goal control server. Slash commands `/screenshot` + `/goal` reject when no session is active. Legacy single-tenant wiring deleted: `discord/client.ts`, `discord/channel-handler.ts`, `slashCommands/rest.ts`. All 152 backend tests pass. Commit `cb392ff5d`.
+- **Phase 4** — MK64 backend boots no emulator at startup. `/play` triggers `MarioKartGameDriver.onSessionStart` which creates the emulator, streamer, seat manager, name overlay, race tracker. Prisma `Race` gained a `guildId String` column with an index; `LeaderboardStore.forGuild(guildId)` scopes every read/write so server A's leaderboard never sees server B's. Slash commands gated on active session. Legacy single-tenant wiring deleted. All 109 backend tests pass. Commit `fbe3ea4bf`.
+- **Phase 5** — Homelab cdk8s `pokemon.ts` + `mario-kart.ts` documentation comments describe the new `stream.userbot_tokens` and `state_root_dir` keys. The cdk8s shape itself doesn't change (config.toml is operator-owned in 1P); the schema layer accepts the new keys and back-compat-deprecates the old ones. Commit `d8d416739`.
+- **Phase 6** — Manual e2e verification + PR finalization (this status block).
 
-Phases 3-6 (pokemon + MK64 driver implementations + cdk8s + 1P + PR open) are
-deferred to follow-up sessions. The foundation is in place — each game-bot
-just needs its `GameDriver` written and `index.ts` rewritten to call
-`createGameBot()`. See the per-package change tables below for the file-level
-checklist.
+**Remaining manual verification before merge:**
+
+1. Update the pokemon + MK64 1Password items to add `stream.userbot_tokens = [...]` (or leave legacy `stream.userbot.token` and it still works as a 1-token pool).
+2. From server A: `/play`, confirm userbot joins VC and emulator boots; type text commands; `/screenshot`; `/goal` (pokemon); `/stop` and confirm save flushed under `saves/<A>/`.
+3. From server B (different Discord server): `/play` while A is active → confirm "in use" rejection. After A `/stop`s, B `/play` → confirm fresh emulator under `saves/<B>/`.
+4. All humans leave VC → 30s grace → confirm auto-stop fires.
+
+**Known caveat (Phase 4):** Per-guild MK64 emulator save isolation (mempak/eeprom under `session.sessionDir/emulator/`) is not wired into `N64Emulator` yet — that needs an `N64Emulator` constructor extension. The Prisma leaderboard already hard-isolates server A from server B at the user-visible level; emulator save isolation is a follow-up.
 
 ## Context
 
