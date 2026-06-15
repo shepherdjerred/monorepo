@@ -16,6 +16,7 @@ import {
   CommandHandler,
   type CommandInteraction,
 } from "@shepherdjerred/streambot/discord/command-handler.ts";
+import { sendPaginatedReply } from "@shepherdjerred/streambot/discord/pagination.ts";
 import { commandJson } from "@shepherdjerred/streambot/discord/commands.ts";
 import type { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
 import { EMPTY_HANDLE } from "@shepherdjerred/streambot/session/session-manager.ts";
@@ -427,6 +428,9 @@ export class CommandBot {
       },
       editReply: async (content) => {
         await interaction.editReply(content);
+      },
+      replyPaginated: async (payload) => {
+        await sendPaginatedReply(interaction, payload);
       },
     };
   }

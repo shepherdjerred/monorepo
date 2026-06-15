@@ -17,7 +17,8 @@ import {
 } from "@shepherdjerred/streambot/discord/timecode.ts";
 import {
   helpText,
-  sourcesText,
+  sourcesPages,
+  type SourcesPages,
 } from "@shepherdjerred/streambot/discord/help-text.ts";
 import {
   sourceLabel,
@@ -124,6 +125,12 @@ export type CommandInteraction = {
   /** Defer (ephemeral) for a slow op, then `editReply`. */
   defer: () => Promise<void>;
   editReply: (content: string) => Promise<void>;
+  /**
+   * Edit the deferred reply to show page 1 and attach Prev/Next/First/Last buttons (when
+   * `pages.length > 1`); the adapter drives the collector so handlers stay discord.js-free.
+   * For a single-page result, this just edits in the one message with no buttons.
+   */
+  replyPaginated: (payload: SourcesPages) => Promise<void>;
 };
 
 export type CommandHandlerDeps = {
@@ -263,7 +270,7 @@ export class CommandHandler {
     const sources = await this.deps.listSources(
       AbortSignal.timeout(SOURCES_TIMEOUT_MS),
     );
-    await interaction.editReply(sourcesText(sources, query));
+    await interaction.replyPaginated(sourcesPages(sources, query));
   }
 
   private async handleSkip(interaction: CommandInteraction): Promise<void> {
