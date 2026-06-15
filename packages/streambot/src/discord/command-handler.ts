@@ -24,7 +24,10 @@ import {
   type Source,
   type SubtitlePref,
 } from "@shepherdjerred/streambot/sources/source.ts";
-import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
+import {
+  findChapterAt,
+  type Chapter,
+} from "@shepherdjerred/streambot/sources/chapters.ts";
 import {
   searchLibrary,
   type LibraryEntry,
@@ -100,6 +103,8 @@ export type PlaybackView = {
   readonly queue: readonly QueueItemView[];
   readonly loop: string;
   readonly volume: number;
+  /** Live elapsed seconds since playback began (segment offset + wall-clock). Null when idle/between segments. */
+  readonly positionSeconds: number | null;
 };
 
 /**
@@ -437,7 +442,23 @@ export class CommandHandler {
     if (view.current === null) {
       return "Nothing is playing.";
     }
-    return `**Now playing:** ${view.current.title} (requested by <@${view.current.requesterId}>)\n**Loop:** ${view.loop} · **Volume:** ${String(view.volume)}%`;
+    const lines = [
+      `**Now playing:** ${view.current.title} (requested by <@${view.current.requesterId}>)`,
+    ];
+    if (view.positionSeconds !== null) {
+      const time = formatTimecode(view.positionSeconds);
+      const chapter = findChapterAt(
+        view.current.chapters,
+        view.positionSeconds,
+      );
+      lines.push(
+        chapter === null
+          ? `**Position:** ${time}`
+          : `**Position:** ${time} — Chapter ${String(chapter.index)}: ${chapter.title}`,
+      );
+    }
+    lines.push(`**Loop:** ${view.loop} · **Volume:** ${String(view.volume)}%`);
+    return lines.join("\n");
   }
 
   private queueText(): string {

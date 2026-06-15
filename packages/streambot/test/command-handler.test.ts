@@ -46,6 +46,7 @@ const EMPTY_VIEW: PlaybackView = {
   queue: [],
   loop: "off",
   volume: 100,
+  positionSeconds: null,
 };
 
 type Harness = {
@@ -194,6 +195,62 @@ describe("CommandHandler routing + acks", () => {
     const np = fakeInteraction({ sub: "nowplaying" });
     await h.handler.run(np.interaction);
     expect(np.replies[0]).toContain("**Now playing:** Current Song");
+  });
+
+  test("nowplaying reports nothing playing when idle", async () => {
+    const h = makeHandler({ view: EMPTY_VIEW });
+    const { interaction, replies } = fakeInteraction({ sub: "nowplaying" });
+    await h.handler.run(interaction);
+    expect(replies[0]).toBe("Nothing is playing.");
+  });
+
+  test("nowplaying omits the position line when position is null", async () => {
+    const h = makeHandler({ view: viewWithCurrent(REQUESTER) });
+    const { interaction, replies } = fakeInteraction({ sub: "nowplaying" });
+    await h.handler.run(interaction);
+    expect(replies[0]).not.toContain("Position:");
+  });
+
+  test("nowplaying renders position alone when there are no chapters", async () => {
+    const view: PlaybackView = {
+      ...viewWithCurrent(REQUESTER),
+      positionSeconds: 95,
+    };
+    const h = makeHandler({ view });
+    const { interaction, replies } = fakeInteraction({ sub: "nowplaying" });
+    await h.handler.run(interaction);
+    expect(replies[0]).toContain("**Position:** 1:35");
+    expect(replies[0]).not.toContain("Chapter");
+  });
+
+  test("nowplaying renders position + current chapter when both are known", async () => {
+    const view: PlaybackView = {
+      ...viewWithChapters(REQUESTER),
+      positionSeconds: 200,
+    };
+    const h = makeHandler({ view });
+    const { interaction, replies } = fakeInteraction({ sub: "nowplaying" });
+    await h.handler.run(interaction);
+    expect(replies[0]).toContain("**Position:** 3:20 — Chapter 2: The Heist");
+  });
+
+  test("nowplaying skips the chapter clause when position is before the first chapter", async () => {
+    const view: PlaybackView = {
+      ...viewWithChapters(REQUESTER),
+      current: {
+        title: "Current Movie",
+        requesterId: uid(REQUESTER),
+        chapters: [
+          { index: 1, title: "Intro", startSeconds: 30, endSeconds: 90 },
+        ],
+      },
+      positionSeconds: 10,
+    };
+    const h = makeHandler({ view });
+    const { interaction, replies } = fakeInteraction({ sub: "nowplaying" });
+    await h.handler.run(interaction);
+    expect(replies[0]).toContain("**Position:** 0:10");
+    expect(replies[0]).not.toContain("Chapter");
   });
 });
 
