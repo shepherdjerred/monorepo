@@ -50,6 +50,8 @@ resource "github_repository_ruleset" "monorepo_main" {
       #   (2) a one-off `kind: "all-prs"` workflow run has been kicked off in
       #       Temporal to backfill statuses on every currently-open PR.
       # Applying earlier blocks every open PR on a missing required check.
+      # Ships in the same `tofu apply` as the `push` event subscription in
+      # webhooks.tf — both gate "ci/merge-conflict" being meaningful.
       required_check {
         context = "ci/merge-conflict"
       }

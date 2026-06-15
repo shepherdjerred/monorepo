@@ -46,6 +46,7 @@ Both triggers run the same workflow type with a discriminated input.
 | `packages/temporal/src/shared/schemas.ts`                            | `CheckPrMergeConflictsInputSchema` — discriminated union: `{ kind: "all-prs", owner, repo, mainSha }` or `{ kind: "single-pr", owner, repo, prNumber, headSha, baseRef }`                                                                                                                                                                |
 | `packages/temporal/src/observability/metrics.ts`                     | Counters: `pr_merge_conflict_check_total{trigger="main\|pr", result="success\|failure\|errored"}`, histogram `pr_merge_conflict_check_duration_seconds{trigger}`                                                                                                                                                                         |
 | `packages/homelab/src/tofu/github/rulesets.tf`                       | Add `required_check { context = "ci/merge-conflict" }` to the `monorepo_main` ruleset. **Apply only after step 2 of the rollout ordering below**                                                                                                                                                                                         |
+| `packages/homelab/src/tofu/github/webhooks.tf` (new)                 | Import Buildkite + pr-bot repo webhooks; add `push` to pr-bot subscription so the temporal worker starts receiving main-push events. Same `tofu apply` as the ruleset edit; HMAC secrets `ignore_changes`'d.                                                                                                                             |
 
 ## Activity logic — local conflict detection
 
@@ -182,18 +183,18 @@ The existing `bypass_actors` block (admin RepositoryRole, always-bypass) carries
 
 **Critical rollout ordering** — applying the ruleset _before_ statuses exist will block every open PR on a missing check. Sequence is:
 
-1. Ship the worker code (webhook + workflow + activity), feature-flag default `true`. PRs get statuses on every PR-event and every main push.
+1. Ship the worker code (webhook + workflow + activity) — this PR. PRs get statuses on every PR-event the worker already receives. Push events do NOT yet flow.
 2. Manually trigger a one-off `kind: "all-prs"` workflow run via Temporal UI (or the agent-task HTTP API) to paint every currently-open PR with a `ci/merge-conflict` status.
 3. Confirm all open PRs show the check row.
-4. Only then `tofu apply` the ruleset change.
+4. Run `tofu apply` against `packages/homelab/src/tofu/github/` — this single apply enables BOTH the `push` event delivery to the worker (so subsequent main pushes re-evaluate every PR) AND the required-status-check entry in the ruleset.
 
 Step 2 is the lever the kill switch + dry-run flags from Phase 0d give us: we can validate the painting works before the ruleset is enforcing.
 
 ## External prerequisite (one-time, manual)
 
-The GitHub App's webhook event subscriptions are configured in the **GitHub App UI**, not Tofu (`packages/homelab/src/tofu/github/` only manages repos + rulesets). Need to tick **"Push"** alongside the existing **"Pull request"** on `https://github.com/settings/apps/<your-app>/permissions`. PR description will call this out.
+The temporal worker's pr-bot webhook is a **repo webhook**, now managed by OpenTofu in `packages/homelab/src/tofu/github/webhooks.tf`. The `push` event subscription ships in the same `tofu apply` as the ruleset edit — see the rollout ordering below; nothing to click in the GitHub UI.
 
-App permissions also need **"Commits → read & write"** (a.k.a. "Commit statuses: read & write") if not already granted — required for `POST /repos/{owner}/{repo}/statuses/{sha}`.
+**GitHub App `Commits: write` permission** — granted on 2026-06-14. App token can now `POST /repos/{owner}/{repo}/statuses/{sha}`. (Not tofu-manageable; GitHub provides no API for App permission mutations.)
 
 ## Phase 0 — De-risk before building (do these first)
 
