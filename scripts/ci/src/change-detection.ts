@@ -471,6 +471,7 @@ async function getLastSuccessfulCommit(
   }
 
   const skipped = new Map<BuildRejectionReason, number>();
+  let buildsScanned = 0;
   let pagesWalked = 0;
 
   for (let page = 1; page <= LAST_SUCCESS_MAX_PAGES; page++) {
@@ -500,6 +501,7 @@ async function getLastSuccessfulCommit(
     }
 
     const builds = parseBuildkiteBuilds(await resp.json());
+    buildsScanned += builds.length;
     pagesWalked = page;
 
     for (const build of builds) {
@@ -536,9 +538,8 @@ async function getLastSuccessfulCommit(
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([reason, count]) => `${reason}: ${count}`)
     .join(", ");
-  const scanned = pagesWalked * LAST_SUCCESS_PAGE_SIZE;
   throw new Error(
-    `No qualifying successful main build found in last ${scanned} builds (${pagesWalked} pages); ` +
+    `No qualifying successful main build found in last ${buildsScanned} builds (${pagesWalked} pages); ` +
       `cannot scope this build safely${reasonSummary ? ` (${reasonSummary})` : ""}. ` +
       `Set LAST_SUCCESSFUL_COMMIT_OVERRIDE on a rebuild to manually unstick main CI.`,
   );

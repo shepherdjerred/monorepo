@@ -1089,6 +1089,37 @@ describe("fail-fast base detection", () => {
     expect(calls[1]).toMatch(/[?&]page=2\b/);
   });
 
+  it("reports the exact builds scanned (not full-page * pages) when the last page is partial", async () => {
+    process.env["BUILDKITE_API_TOKEN"] = "api-token";
+
+    // Page 1 is full (100 builds), page 2 has only 5 — all rejected.
+    const PAGE_SIZE = 100;
+    const fullPage = Array.from({ length: PAGE_SIZE }, (_unused, i) => ({
+      number: 200 - i,
+      commit: `failed-p1-${String(i)}`,
+      state: "canceled" as const,
+      jobs: buildkiteBootstrapJobs(),
+    }));
+    const partialPage = Array.from({ length: 5 }, (_unused, i) => ({
+      number: 5 - i,
+      commit: `failed-p2-${String(i)}`,
+      state: "canceled" as const,
+      jobs: buildkiteBootstrapJobs(),
+    }));
+
+    const fetchFn = async (input: Parameters<typeof fetch>[0]) => {
+      const url = typeof input === "string" ? input : String(input);
+      if (/[?&]page=2\b/.test(url)) {
+        return new Response(JSON.stringify(partialPage), { status: 200 });
+      }
+      return new Response(JSON.stringify(fullPage), { status: 200 });
+    };
+
+    await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow(
+      `No qualifying successful main build found in last ${String(PAGE_SIZE + 5)} builds`,
+    );
+  });
+
   it("stops paginating once a page returns fewer than per_page builds (end of history)", async () => {
     process.env["BUILDKITE_API_TOKEN"] = "api-token";
 
