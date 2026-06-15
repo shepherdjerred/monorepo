@@ -287,3 +287,25 @@ broken between commits:
 - State migration of existing pokemon save + MK64 leaderboard — clean slate.
 - `/play` queueing when busy — return "try later" for v1.
 - Web SPA per-guild auth — anyone with the URL can play, as today.
+
+## Session Log — 2026-06-14
+
+### Done
+
+- Phase 1: shared lib in `packages/discord-stream-lifecycle/` — pool/, session/, discord/, persistence/, lifecycle/ modules with 39 passing tests. Commit `741f54719`.
+- Phase 2: streambot's pool consumes the shared lib's generic `UserbotPool<T>`; `StreambotStreamer implements PooledUserbot`; `entry.streamer` → `entry.userbot` across streambot. Commit `884f634f7`.
+- Plan mirrored to `packages/docs/plans/2026-06-14_pokebot-mk64-pool-refactor.md`.
+- Draft PR opened: https://github.com/shepherdjerred/monorepo/pull/1251
+
+### Remaining
+
+- Phase 3 — `discord-plays-pokemon`: write `PokemonGameDriver`, rewrite `index.ts` to call `createGameBot()`, refactor `emulator.ts` + `goal-manager.ts` to take per-session paths, modify `GameStreamer` to accept an external selfbot client (not a token), gate `/screenshot` + `/goal` on active session, drop `server_id` + `channel_id` config keys, SPA reads `?g=<guildId>`.
+- Phase 4 — `discord-plays-mario-kart`: mirror Phase 3 + Prisma `guildId` column on `Race` and `LeaderboardStore.forGuild()`.
+- Phase 5 — `packages/homelab` cdk8s + 1P updates: render `[[stream.userbots]]` array, drop `server_id`/`channel_id` from `config.toml`, refresh 1P offline-linter snapshot.
+- Phase 6 — manual e2e per the verification section, then merge.
+
+### Caveats
+
+- The streambot pool migration (Phase 2) does NOT touch streambot's `SessionManager` — that class is 545 lines deeply wired into the xstate playback machine, TMDB metadata, resume-state checkpointing. The plan called for shrinking it to wrap the shared `SingleSlotSessionManager`, but streambot's model is multi-session per `(guild, channel)` pair, not single-slot. The shared lib's `SingleSlotSessionManager` is the right abstraction for pokemon/MK64 (one emulator, one active game at a time), not for streambot's queue-driven multi-tenant streaming. Streambot keeps its own session manager.
+- The 4 pre-existing streambot test failures (`Cannot find module '../../../build/Release/node_datachannel.node'`) are infra — `node_datachannel.node` is a native binary not built in the worktree. Memory `reference_dvs_dist_node_modules_stale.md` covers this. Unrelated to the pool swap.
+- Pre-commit `prettier` lefthook step paints failures in green per memory `reference_lefthook_prettier_green_coloring.md`. I hit this twice in this session — trust `git status` post-commit, not the hook colors.
