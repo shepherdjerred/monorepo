@@ -2,7 +2,7 @@
 
 ## Status
 
-Partially Complete — Code shipped in PR #1246; deployment wiring of `peer_userbot_ids` via Helm/1P still pending.
+Complete — Code shipped in PR #1246. Peer IDs wired via homelab cdk8s `userbot-ids.ts` + `PEER_USERBOT_IDS` env var (no Helm/1P wiring needed; homelab cdk8s populates each bot's peers from `USERBOT_IDS`). All Greptile P1/P2 threads resolved.
 
 ## Session Log — 2026-06-14
 
@@ -36,6 +36,23 @@ Partially Complete — Code shipped in PR #1246; deployment wiring of `peer_user
 - Streambot has 4 pre-existing failing tests in `integration/subtitles.integration.test.ts` / `test/video-graph.test.ts`. These are local-ffmpeg environment failures ("No such filter: 'subtitles'" — missing libass) and unrelated to this PR.
 - `KNOWN_USERBOT_IDS` in `viewer-presence.ts` is the new source of truth for peer exclusion — no Helm wiring needed. Add future userbots to that constant.
 - The `peerUserbotIds` option in `ViewerPresenceOptions` is preserved for override/test scenarios; passing it suppresses the Go-Live heuristic (intentional — explicit list means operators have named every peer).
+
+## Session Log — 2026-06-15 (CI fix)
+
+### Done
+
+- Fixed `@typescript-eslint/dot-notation` lint error in `packages/discord-plays-mario-kart/packages/backend/src/discord/channel-handler.ts` — `Bun.env["PEER_USERBOT_IDS"]` → `Bun.env.PEER_USERBOT_IDS` (commit `3617adfdb`).
+- Confirmed all 5 Greptile P1/P2 threads are already `isResolved: true` on GitHub (addressed by earlier commits).
+- Updated plan status from "Partially Complete" to "Complete".
+
+### Remaining
+
+- None — PR ready for merge once CI is green.
+
+### Caveats
+
+- The `dagger-knife-lint-plus-typecheck-plus-test` CI job was failing on `discord-plays-mario-kart/backend` lint due to the dot-notation issue introduced by the peer presence feature. Fixed in this session.
+- All Greptile threads were already resolved; the PR comments showed them as "open" but GitHub GraphQL confirmed `isResolved: true` for all 5.
 
 ## Context
 
