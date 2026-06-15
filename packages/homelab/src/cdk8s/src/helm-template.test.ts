@@ -126,29 +126,40 @@ describe("Helm Escaping - Denylist Check (dist/)", () => {
 });
 
 describe("Helm Escaping - helm template (dist/)", () => {
-  it("should render all charts with helm template without errors", async () => {
-    const glob = new Glob("*/Chart.yaml");
-    const chartNames: string[] = [];
-    for await (const entry of glob.scan(HELM_DIR)) {
-      chartNames.push(path.dirname(entry));
-    }
+  // Renders ~24 helm charts sequentially via `helm template` subprocess.
+  // Each chart takes 50-200ms on a quiet machine but >5s wall under
+  // concurrent CI load on torvalds (single-node). The default 5s timeout
+  // flakes regularly (PR #1249 build 4402 + retry both at ~5010ms). 60s is
+  // plenty of headroom while still catching a genuine hang.
+  const HELM_TEMPLATE_TIMEOUT_MS = 60_000;
 
-    const failures: { chart: string; error: string }[] = [];
-
-    for (const chartName of chartNames) {
-      const result = await helmTemplateChart(chartName);
-      if (result.exitCode !== 0) {
-        failures.push({ chart: chartName, error: result.stderr.trim() });
+  it(
+    "should render all charts with helm template without errors",
+    async () => {
+      const glob = new Glob("*/Chart.yaml");
+      const chartNames: string[] = [];
+      for await (const entry of glob.scan(HELM_DIR)) {
+        chartNames.push(path.dirname(entry));
       }
-    }
 
-    if (failures.length > 0) {
-      const msg = failures.map((f) => `  ${f.chart}: ${f.error}`).join("\n");
-      throw new Error(
-        `helm template failed for ${String(failures.length)} chart(s):\n${msg}`,
-      );
-    }
-  });
+      const failures: { chart: string; error: string }[] = [];
+
+      for (const chartName of chartNames) {
+        const result = await helmTemplateChart(chartName);
+        if (result.exitCode !== 0) {
+          failures.push({ chart: chartName, error: result.stderr.trim() });
+        }
+      }
+
+      if (failures.length > 0) {
+        const msg = failures.map((f) => `  ${f.chart}: ${f.error}`).join("\n");
+        throw new Error(
+          `helm template failed for ${String(failures.length)} chart(s):\n${msg}`,
+        );
+      }
+    },
+    HELM_TEMPLATE_TIMEOUT_MS,
+  );
 });
 
 describe("Helm Escaping - E2E Content Verification (dist/)", () => {

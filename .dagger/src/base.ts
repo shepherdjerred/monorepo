@@ -20,6 +20,39 @@ import {
 import { BUILD_TIME_DEPS } from "./deps";
 
 /**
+ * `bun install --frozen-lockfile` wrapped in a 3-attempt retry. Four recurring
+ * flakes motivate this:
+ *   - Intermittent EEXIST on `file:` symlink creation when many nested workspace
+ *     members reference the same local dep (build-discord-plays-pokemon, #4336).
+ *   - Re-running install in a child workdir of a workspace that already linked
+ *     the same `file:` dep at the root level — bun then tries to re-link an
+ *     already-linked path and fails with EEXIST (`pkg-check` for
+ *     discord-plays-pokemon hit this on 4398 even though 4393 of the same branch
+ *     passed; deterministic-on-its-own, races against itself across siblings).
+ *   - Transient npm-CDN tarball-extract failures (build-temporal-worker, #4336
+ *     hit `Fail extracting tarball for "firebase"`).
+ *   - Postinstall network flakes — e.g. `@lng2004/node-datachannel`'s
+ *     `prebuild-install` timing out and falling back to a `npm`-driven source
+ *     build that can't run (no npm in oven/bun image), exit 127 (#4359 main).
+ * Retry is safe: `bun install --frozen-lockfile` is deterministic and the
+ * surviving partial node_modules is what bun would create on success anyway.
+ * Join with newlines, not "; " — busybox sh rejects `do ;` / `then ;` / `done ;`.
+ */
+export const BUN_INSTALL_WITH_RETRY = [
+  "i=1",
+  "while [ $i -le 3 ]; do",
+  "  if bun install --frozen-lockfile; then exit 0; fi",
+  // Skip the sleep + "retrying" log on the final attempt — no retry follows.
+  "  if [ $i -lt 3 ]; then",
+  '    echo "bun install failed (attempt $i/3), retrying in $((i*5))s..." >&2',
+  "    sleep $((i*5))",
+  "  fi",
+  "  i=$((i+1))",
+  "done",
+  "exit 1",
+].join("\n");
+
+/**
  * Bun container with dependencies installed from individual directory params.
  * Each directory is passed separately for optimal Dagger caching.
  */
@@ -74,7 +107,7 @@ export function bunBaseContainer(
     if (depNames.includes(dep)) {
       container = container
         .withWorkdir(`/workspace/packages/${dep}`)
-        .withExec(["bun", "install", "--frozen-lockfile"])
+        .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
         .withExec(["bun", "run", "build"]);
     }
   }
@@ -89,12 +122,12 @@ export function bunBaseContainer(
     }
     container = container
       .withWorkdir(`/workspace/packages/${dep}`)
-      .withExec(["bun", "install", "--frozen-lockfile"]);
+      .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
   }
 
   container = container
     .withWorkdir(`/workspace/packages/${pkg}`)
-    .withExec(["bun", "install", "--frozen-lockfile"]);
+    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
 
   return container;
 }
