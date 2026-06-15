@@ -34,12 +34,15 @@ import versions from "./versions";
 export const PRISMA_BUN_SERVICE_START_COMMAND =
   "bunx --trust prisma generate && bunx prisma db push && bun run src/index.ts";
 
-// `bun install --frozen-lockfile` wrapped in a 3-attempt retry. Two recurring
+// `bun install --frozen-lockfile` wrapped in a 3-attempt retry. Three recurring
 // flakes motivate this:
 //   - Intermittent EEXIST on `file:` symlink creation when many nested workspace
 //     members reference the same local dep (build-discord-plays-pokemon, #4336).
 //   - Transient npm-CDN tarball-extract failures (build-temporal-worker, #4336
 //     hit `Fail extracting tarball for "firebase"`).
+//   - Postinstall network flakes — e.g. `@lng2004/node-datachannel`'s
+//     `prebuild-install` timing out and falling back to a `npm`-driven source
+//     build that can't run (no npm in oven/bun image), exit 127 (#4359 main).
 // Retry is safe: `bun install --frozen-lockfile` is deterministic and the
 // surviving partial node_modules is what bun would create on success anyway.
 // Join with newlines, not "; " — busybox sh rejects `do ;` / `then ;` / `done ;`.
@@ -649,7 +652,7 @@ function withHomelabAuditClis(container: Container): Container {
 function withToolkit(container: Container): Container {
   return container
     .withWorkdir("/workspace/packages/toolkit")
-    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
     .withExec([
       "bun",
       "build",
@@ -681,7 +684,7 @@ function withForkRuntimeDeps(
   if (!depNames.includes("discord-video-stream")) return container;
   return container
     .withWorkdir("/workspace/packages/discord-video-stream")
-    .withExec(["bun", "install", "--frozen-lockfile"]);
+    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
 }
 
 /**
@@ -740,7 +743,7 @@ export function buildImageHelper(
   // Install deps then set up the final image
   let image = container
     .withWorkdir(`/workspace/packages/${pkg}`)
-    .withExec(["bun", "install", "--frozen-lockfile"]);
+    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
 
   if (pkg === "birmel") {
     // youtube-dl-exec resolves its binary at <pkg>/bin/yt-dlp (constants.YOUTUBE_DL_PATH),
@@ -1126,7 +1129,7 @@ export function buildScoutImageHelper(
 
   return container
     .withWorkdir("/workspace/packages/scout-for-lol")
-    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
     .withWorkdir("/workspace/packages/scout-for-lol/packages/backend")
     .withExec(["bunx", "--trust", "prisma", "generate"])
     .withLabel(
@@ -1391,9 +1394,9 @@ export function buildDiscordPlaysMarioKartImageHelper(
       // postinstalls. The discord-video-stream fork lazy-loads sharp in source
       // (no bun patch).
       .withWorkdir(innerRoot)
-      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
       .withWorkdir(`${innerRoot}/packages/backend`)
-      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
       // Generate the Prisma client for the leaderboard DB (output is gitignored,
       // so it must be produced in the image). Mirrors the birmel/scout flow.
       .withExec(["bunx", "--trust", "prisma", "generate"])
@@ -1476,7 +1479,7 @@ export function buildTrmnlDashboardImageHelper(
 
   return container
     .withWorkdir("/workspace/packages/trmnl-dashboard")
-    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
     .withLabel(
       "org.opencontainers.image.source",
       "https://github.com/shepherdjerred/monorepo",
