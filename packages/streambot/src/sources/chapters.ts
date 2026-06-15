@@ -49,6 +49,8 @@ export function findChapterAt(
       return chapter;
     }
   }
+  // Unreachable: the early guard above ensures seconds >= first.startSeconds,
+  // so i=0 always matches. TypeScript requires an explicit return path here.
   return null;
 }
 
