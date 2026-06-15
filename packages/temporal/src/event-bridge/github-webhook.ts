@@ -170,7 +170,9 @@ async function handlePushEvent(args: PushHandlerArgs): Promise<Response> {
   try {
     parsed = PushEventSchema.parse(JSON.parse(payload));
   } catch (error: unknown) {
-    prWebhookSkippedTotal.inc({ reason: "schema-parse-failed" });
+    // Use a push-namespaced reason so dashboards can tell push vs pull_request
+    // parse failures apart — same convention as `push:non-main-ref` below.
+    prWebhookSkippedTotal.inc({ reason: "push:schema-parse-failed" });
     jsonLog("warning", "Failed to parse push payload", {
       deliveryId,
       error: error instanceof Error ? error.message : String(error),

@@ -15,6 +15,22 @@
 ################################################################################
 
 # Buildkite webhook — drives Buildkite CI builds.
+#
+# DELIVERY-URL TOKEN — INTENTIONALLY IN VERSION CONTROL.
+# The URL embeds Buildkite's delivery token (the trailing hex string). This
+# token is not a credential; Buildkite verifies the HMAC signature
+# (`X-Buildkite-Signature`) on every delivery using a separate shared secret
+# (the `ignore_changes`'d `configuration[0].secret` field below — owned by
+# Buildkite, synced to the GitHub webhook by Buildkite's UI). Knowledge of
+# the delivery URL alone is not enough to forge a delivery.
+#
+# This URL has lived in the repo's GitHub webhook settings since the
+# Buildkite integration was set up; committing it here only mirrors that
+# pre-existing state into tofu so the event subscription list is
+# version-controlled. The trade-off (token in git history forever) is
+# accepted: if Buildkite's verification model ever changed to make the URL
+# alone exploitable, rotating it is the same one-click operation as
+# regenerating any other Buildkite-side secret.
 import {
   to = github_repository_webhook.buildkite
   id = "monorepo/597363792"

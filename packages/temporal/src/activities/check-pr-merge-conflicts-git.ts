@@ -58,37 +58,47 @@ export async function defaultPrepareWorkDir(input: {
     GIT_TERMINAL_PROMPT: "0",
   };
   const cloneUrl = `https://github.com/${input.owner}/${input.repo}.git`;
-  await runCommand(
-    [
-      "git",
-      "clone",
-      "--filter=blob:none",
-      "--no-checkout",
-      "--bare",
-      cloneUrl,
-      workDir,
-    ],
-    { cwd: "/tmp", env: gitEnv, redactOutput: true },
-  );
-  if (input.prNumbers.length > 0) {
-    const refspecs = input.prNumbers.map(
-      (n) => `refs/pull/${String(n)}/head:refs/pull/${String(n)}/head`,
-    );
-    // Refresh main alongside the PR heads — between the clone and the per-PR
-    // merge-base/merge-tree calls a few seconds can pass, and we want to
-    // compare against the freshest main this activity invocation saw.
+  // Wrap the clone + fetch in try/catch so a failure cleans up `askpassDir`
+  // (and any partially-cloned `workDir`) instead of leaking them into /tmp
+  // for the lifetime of the pod. On success the returned `cleanup` closure
+  // covers both dirs; on failure the caller never sees a closure, so we have
+  // to do the cleanup here before re-throwing.
+  try {
     await runCommand(
       [
         "git",
-        "fetch",
+        "clone",
         "--filter=blob:none",
-        "--no-tags",
-        "origin",
-        "refs/heads/main:refs/heads/main",
-        ...refspecs,
+        "--no-checkout",
+        "--bare",
+        cloneUrl,
+        workDir,
       ],
-      { cwd: workDir, env: gitEnv, redactOutput: true },
+      { cwd: "/tmp", env: gitEnv, redactOutput: true },
     );
+    if (input.prNumbers.length > 0) {
+      const refspecs = input.prNumbers.map(
+        (n) => `refs/pull/${String(n)}/head:refs/pull/${String(n)}/head`,
+      );
+      // Refresh main alongside the PR heads — between the clone and the per-PR
+      // merge-base/merge-tree calls a few seconds can pass, and we want to
+      // compare against the freshest main this activity invocation saw.
+      await runCommand(
+        [
+          "git",
+          "fetch",
+          "--filter=blob:none",
+          "--no-tags",
+          "origin",
+          "refs/heads/main:refs/heads/main",
+          ...refspecs,
+        ],
+        { cwd: workDir, env: gitEnv, redactOutput: true },
+      );
+    }
+  } catch (error) {
+    await Bun.$`rm -rf ${workDir} ${askpassDir}`.quiet();
+    throw error;
   }
   return {
     workDir,
