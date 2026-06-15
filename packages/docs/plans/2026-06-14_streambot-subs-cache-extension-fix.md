@@ -121,3 +121,24 @@ Action when triggered: `git revert <merge-commit>` first, debug second. Don't tr
 ### Caveats
 
 - This is the first time the embedded-subtitle cache path will actually execute in prod; if any perf characteristic regresses (startup latency, CPU during burn-in, PV growth) the user wants a revert before a forward-fix.
+
+## Session Log — 2026-06-15 (PR tending)
+
+### Done
+
+- Identified Greptile P2 inline comment on plan doc: `## Status` read "Complete" while post-deploy e2e was still unchecked.
+- Changed plan status from `Complete` → `Partially Complete` in commit `b566b4fb3`.
+- Pushed to `origin/fix/streambot-subs-ext` and replied to the Greptile comment.
+- Buildkite build #4382 passed all hard checks: `pkg-check`, `Quality Bundle (15 checks)`, `Quality Gate`, `CI Complete`, `Build + Smoke streambot`, Greptile Review, Semgrep, Trivy, Lockfile Drift.
+- Knip soft-failed (exit 1, `soft_failed=true`) — expected and non-blocking.
+- No merge conflicts with `origin/main`.
+
+### Remaining
+
+- Merge + deploy + manual e2e on Endgame (see Verification above).
+- After e2e passes, move plan to `packages/docs/archive/completed/` and update status to Complete.
+
+### Caveats
+
+- Greptile re-reviewed after the push and the greptile-review CI step passed (exit 0).
+- Knip failure is pre-existing soft-fail; not introduced by this PR.
