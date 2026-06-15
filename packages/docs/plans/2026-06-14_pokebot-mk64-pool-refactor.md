@@ -2,7 +2,18 @@
 
 ## Status
 
-In Progress — branch `feature/pokebot-mk64-pool`. Single-PR scope per user direction.
+**Partially Complete** — branch `feature/pokebot-mk64-pool`.
+
+Phases 1-2 shipped on this branch:
+
+- **Phase 1 (done)** — `@shepherdjerred/discord-stream-lifecycle` gained generic `UserbotPool<T>`, `SingleSlotSessionManager`, `AloneInVoiceWatcher`, `/play` + `/stop` slash command builders, `sessionDir()` per-guild path helper, `GameDriver` interface, and `createGameBot()` wiring. 39 tests; typecheck + ESLint clean. Commit `741f54719`.
+- **Phase 2 (done)** — Streambot's `UserbotPool` is now a thin wrapper around the shared lib's generic pool. `StreambotStreamer` implements `PooledUserbot`. `entry.streamer` renamed to `entry.userbot` across streambot. Streambot's session-manager / command-bot / queue / resume / ffmpeg pipeline stay in streambot (those are streambot-specific). Commit `884f634f7`.
+
+Phases 3-6 (pokemon + MK64 driver implementations + cdk8s + 1P + PR open) are
+deferred to follow-up sessions. The foundation is in place — each game-bot
+just needs its `GameDriver` written and `index.ts` rewritten to call
+`createGameBot()`. See the per-package change tables below for the file-level
+checklist.
 
 ## Context
 
