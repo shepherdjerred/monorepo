@@ -24,8 +24,8 @@ const VALID_TYPES: readonly string[] = [
 ];
 
 // Scopes beyond the auto-derived `packages/*` directory names.
-// - practice: the top-level `practice/` dir (outside packages/)
-// - archive: legacy projects under `archive/`
+// - practice: coding-practice projects under `sandbox/practice/` (outside packages/)
+// - archive: legacy projects under `sandbox/archive/`
 // - root: cross-cutting changes (scripts/, root configs, lockfiles)
 // - dagger: `.dagger/` CI pipeline definitions
 // - deps: dependency bumps (Renovate's `chore(deps):` convention)

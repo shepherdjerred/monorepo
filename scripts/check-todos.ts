@@ -50,13 +50,13 @@ interface Error_ {
 
 async function scanSourceMarkers(): Promise<SourceMarker[]> {
   // Use ripgrep for speed; restrict to tracked files. Exclude:
-  //   - archive/**           (frozen)
+  //   - sandbox/archive/**   (frozen)
   //   - **/node_modules/**   (vendored)
   //   - packages/docs/**     (the convention itself uses the literal text as examples)
   //   - scripts/check-todos.ts (this file's regex source contains the literal pattern)
   //   - AGENTS.md, CLAUDE.md (root convention docs use the literal pattern)
   const excludeGlobs = [
-    "!archive/**",
+    "!sandbox/archive/**",
     "!**/node_modules/**",
     "!packages/docs/**",
     "!scripts/check-todos.ts",

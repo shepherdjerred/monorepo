@@ -22,7 +22,7 @@ pre-commit:
                 - name: env-var-names
                   glob: "**/*.{ts,rs,py,fish,tmpl,yaml,yml,env,md,sh,swift}"
                   exclude:
-                    - "archive/**"
+                    - "sandbox/archive/**"
                     - "**/generated/**"
                     - "**/node_modules/**"
                   run: bash scripts/check-env-var-names.sh {staged_files}
@@ -40,7 +40,7 @@ pre-commit:
                     # purpose, e.g. the pokeemerald.wasm emulator blob).
                     allow="packages/discord-plays-pokemon/packages/backend/assets/pokeemerald.wasm"
                     large=$(git diff --staged --name-only --diff-filter=d | while read -r f; do
-                      if [ "${f#archive/}" != "$f" ]; then
+                      if [ "${f#sandbox/archive/}" != "$f" ]; then
                         continue
                       fi
                       if [ "$f" = "$allow" ]; then
@@ -82,17 +82,20 @@ pre-commit:
                 - name: prettier
                   glob: "**/*.{ts,tsx,js,jsx,json,jsonc,yaml,yml,md,css,astro,html,graphql}"
                   exclude:
-                    - "archive/**"
+                    - "sandbox/archive/**"
                     - "**/node_modules/**"
                     - "**/generated/**"
                     - "**/.dagger/**"
+                    # CLAUDE.md is a symlink to AGENTS.md everywhere; prettier
+                    # errors on explicitly-passed symlinks. AGENTS.md is linted.
+                    - "**/CLAUDE.md"
                   run: bunx prettier --check {staged_files}
 
                 # --- markdownlint (repo-wide, staged files) ---
                 - name: markdownlint
                   glob: "**/*.md"
                   exclude:
-                    - "archive/**"
+                    - "sandbox/archive/**"
                     - "**/node_modules/**"
                     - "**/generated/**"
                   run: bunx markdownlint-cli2 {staged_files}
@@ -219,6 +222,9 @@ pre-commit:
                     - "node_modules/**"
                     - "**/node_modules/**"
                     - "**/Pods/**"
+                    # Frozen legacy scripts (intentional CRLF, -text in
+                    # .gitattributes); CI shellcheck also skips */archive/*.
+                    - "sandbox/archive/**"
                     # Vendored emscripten/C build tooling for discord-plays-mario-kart —
                     # includes upstream mupen64plus-core scripts that pre-date shebang conventions
                     - "**/wasm-src/**"
@@ -470,7 +476,7 @@ pre-commit:
               - "**/package.json"
               - "**/bun.lock"
             exclude:
-              - "archive/**"
+              - "sandbox/archive/**"
               - "**/node_modules/**"
             run: bun scripts/check-react-version-sync.ts
 

@@ -21,7 +21,7 @@
     "link-fragments": false,
   },
   "ignores": [
-    "archive/**",
+    "sandbox/archive/**",
     "**/node_modules/**",
     "**/generated/**",
     "**/dist/**",
@@ -36,7 +36,7 @@
     "**/CHANGELOG.md",
     "packages/discord-plays-pokemon/packages/frontend/public/emulatorjs/**",
     "**/wasm-src/**",
-    "practice/**",
+    "sandbox/practice/**",
     "**/.terraform/**",
     "packages/dotfiles/dot_agents/skills/**",
     "packages/discord-video-stream/**",

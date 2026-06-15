@@ -38,7 +38,7 @@ const LOCKSTEP_PAIRS: { a: string; b: string; match: "exact" | "major" }[] = [
   { a: "@types/react", b: "@types/react-dom", match: "major" },
 ];
 
-const EXCLUDE_GLOBS = ["**/node_modules/**", "archive/**"];
+const EXCLUDE_GLOBS = ["**/node_modules/**", "sandbox/archive/**"];
 
 interface Violation {
   file: string;

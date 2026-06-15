@@ -1,8 +1,6 @@
 import { executeChild, proxyActivities } from "@temporalio/workflow";
-import type {
-  AlertRemediationActivities,
-  FindExistingAlertRemediationPrResult,
-} from "#activities/alert-remediation.ts";
+import type { AlertRemediationActivities } from "#activities/alert-remediation.ts";
+import type { FindExistingAlertRemediationPrResult } from "#activities/alert-remediation-find-pr.ts";
 import {
   AlertRemediationChildInputSchema,
   AlertRemediationSweepInputSchema,

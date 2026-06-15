@@ -41,7 +41,7 @@ Boot sequence after workers are created: install Temporal SDK runtime + Promethe
 2. For each entry in the `SCHEDULES` array: `handle.update(...)` if it exists, else `create(...)` (catching `ScheduleNotFoundError`). All crons are `America/Los_Angeles` wall-clock; overlap policy is `SKIP`.
 3. Reconciles pause state via `reconcileSchedulePauseState` — the two PR-review-eval schedules pause/unpause based on env presence.
 
-Each `ScheduleDefinition` carries `id`, `workflowType` (must match an `index.ts` export), `args`, `cronExpression`, `taskQueue`, `overlap`, optional `workflowExecutionTimeout`, and a `memo`. Notable IDs: `fetcher-skill-capped`, `deps-summary-weekly`, `dns-audit-daily`, `homelab-audit-daily`, `alert-remediation-hourly`, `scout-data-dragon-version-check`, `pokeemerald-wasm-monthly`, `zfs-maintenance-weekly`, `velero-orphan-audit`, `golink-sync`, `vacuum-{9am,12pm,5pm}`, `good-morning-week{day,end}-{wake,up}`, plus the two `pr-review-*` eval schedules.
+Each `ScheduleDefinition` carries `id`, `workflowType` (must match an `index.ts` export), `args`, `cronExpression`, `taskQueue`, `overlap`, optional `workflowExecutionTimeout`, and a `memo`. Notable IDs: `fetcher-skill-capped`, `deps-summary-weekly`, `dns-audit-daily`, `homelab-audit-daily`, `alert-remediation-hourly`, `scout-data-dragon-version-check`, `pokeemerald-wasm-weekly`, `zfs-maintenance-weekly`, `velero-orphan-audit`, `golink-sync`, `vacuum-{9am,12pm,5pm}`, `good-morning-week{day,end}-{wake,up}`, plus the two `pr-review-*` eval schedules.
 
 ## Agent-task scheduler, report-only mode & the `/agent-tasks` API
 

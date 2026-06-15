@@ -141,7 +141,7 @@ Test: `xcrun simctl openurl booted "tasknotes://today"`
 - **Error types**: NetworkError, ApiError, ValidationError, NotFoundError, ConnectionError
 - **Native bridges** use Zod to validate NativeModules at runtime, silently no-op when unavailable
 - **No logging in source code** — the codebase has zero console.log calls. Errors surface via UI (Alerts, ConnectionBanner) or Sentry (production only)
-- Follows the archived `archive/clauderon/mobile/` conventions: bare React Native, context-based state, class-based API client
+- Follows the archived `sandbox/archive/clauderon/mobile/` conventions: bare React Native, context-based state, class-based API client
 - Strict tsconfig: noUncheckedIndexedAccess, exactOptionalPropertyTypes, noPropertyAccessFromIndexSignature
 
 ## iOS Native Features

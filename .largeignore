@@ -1,5 +1,5 @@
 # Castle Casters game assets
-archive/castle-casters/assets/videos/game-intro.mp4
+sandbox/archive/castle-casters/assets/videos/game-intro.mp4
 
 # Pokemon blog post demo videos — embedded MP4 demos in blog content.
 # Originally undetected because the old plain step's `[ -n "" ]` check

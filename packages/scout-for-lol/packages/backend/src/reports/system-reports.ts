@@ -74,7 +74,13 @@ export async function syncSystemReports(params: {
       await createSystemReport(params.prisma, definition, now);
       created++;
     } else {
-      await updateSystemReport(params.prisma, existing.id, definition, now);
+      await updateSystemReport({
+        prisma: params.prisma,
+        reportId: existing.id,
+        existingCronExpression: existing.cronExpression,
+        definition,
+        now,
+      });
       updated++;
     }
   }
@@ -356,19 +362,37 @@ async function createSystemReport(
   });
 }
 
-async function updateSystemReport(
-  prisma: ExtendedPrismaClient,
-  reportId: number,
-  definition: SystemReportDefinition,
-  now: Date,
-): Promise<void> {
-  await prisma.report.update({
-    where: { id: reportId },
+async function updateSystemReport(params: {
+  prisma: ExtendedPrismaClient;
+  reportId: number;
+  existingCronExpression: string;
+  definition: SystemReportDefinition;
+  now: Date;
+}): Promise<void> {
+  // `nextScheduledRunAt` is scheduler state, not definition state — the
+  // dispatcher's `runDueReports` advances it after each fire. If sync
+  // overwrites it every minute, COMMON_DENOMINATOR fires get silently
+  // skipped (the next-fire is recomputed past the current minute before
+  // the dispatcher reads it). Only recompute when the cron itself changed.
+  // `existingCronExpression` is threaded through from the caller's
+  // `findSystemReport` row to avoid an extra round-trip per report per
+  // sync tick.
+  const cronChanged =
+    params.existingCronExpression !== params.definition.cronExpression;
+  const {
+    nextScheduledRunAt: definitionNextScheduledRunAt,
+    ...definitionWithoutSchedule
+  } = params.definition;
+  await params.prisma.report.update({
+    where: { id: params.reportId },
     data: {
-      ...definition,
+      ...definitionWithoutSchedule,
       isEnabled: true,
       isSystemManaged: true,
-      updatedTime: now,
+      updatedTime: params.now,
+      ...(cronChanged
+        ? { nextScheduledRunAt: definitionNextScheduledRunAt }
+        : {}),
     },
   });
 }

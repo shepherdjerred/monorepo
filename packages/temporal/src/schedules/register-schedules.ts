@@ -148,6 +148,10 @@ export const SCHEDULES: ScheduleDefinition[] = [
         repo: { fullName: "shepherdjerred/monorepo", ref: "main" },
         provider: "claude",
         concurrency: 3,
+        // Schema default also dropped from 80 → 15; pinning here so the
+        // intent (defense-in-depth against the 30-min activity wall) lives
+        // at the call site too.
+        maxTurns: 15,
       },
     ],
     cronExpression: "0 * * * *",
@@ -177,16 +181,16 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Weekly Scout Data Dragon refresh even when version is unchanged",
   },
   {
-    id: "pokeemerald-wasm-monthly",
+    id: "pokeemerald-wasm-weekly",
     workflowType: "runPokeemeraldWasmUpdate",
     args: [],
-    // 06:00 PT on the 1st of each month. Monthly keeps git-history growth from
-    // the ~12 MB blob bounded.
-    cronExpression: "0 6 1 * *",
+    // 06:00 PT every Monday. The blob only changes on upstream releases so most
+    // weeks are no-op; weekly cadence catches new releases inside ~7 days.
+    cronExpression: "0 6 * * 1",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
-    memo: "Monthly refresh of the vendored pokeemerald.wasm emulator blob (opens a PR if it changed)",
+    memo: "Weekly refresh of the vendored pokeemerald.wasm emulator blob (opens a PR if it changed)",
   },
   {
     id: "readme-refresh-weekly",

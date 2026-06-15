@@ -59,6 +59,10 @@ import { prisma } from "#src/database/index.ts";
 import { seedSeasons } from "#src/database/season-seeder.ts";
 await seedSeasons(prisma);
 
+logger.info("📈 Seeding scheduled-report freshness gauge from DB");
+import { seedScheduledReportLastSuccessMetric } from "#src/reports/schedule-metric-seed.ts";
+await seedScheduledReportLastSuccessMetric(prisma);
+
 logger.info("⏰ Starting cron job scheduler");
 import { startCronJobs } from "#src/league/cron.ts";
 void startCronJobs();

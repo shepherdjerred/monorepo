@@ -1,34 +1,37 @@
 import { Context } from "@temporalio/activity";
 import * as Sentry from "@sentry/bun";
-import { createTemporalClient } from "#client";
 import {
-  agentTaskEmailSentTotal,
+  agentSubprocessIdleSeconds,
+  agentSubprocessSoftKillsTotal,
   agentTaskRunsTotal,
   agentTaskSubprocessDurationSeconds,
   agentTaskSubprocessExitTotal,
 } from "#observability/metrics.ts";
-import { getTraceContext } from "#observability/tracing.ts";
-import { cleanupWorkdir, provisionWorkdir } from "#lib/pr-review-workdir.ts";
+import { getTraceContext, withSpan } from "#observability/tracing.ts";
+import { provisionWorkdir } from "#lib/pr-review-workdir.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
-import { startOrScheduleAgentTask } from "#lib/agent-task-scheduler.ts";
 import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
+import { runTrackedAgentSubprocess } from "#shared/agent-subprocess.ts";
 import { parseClaudeResultMessage } from "#shared/claude-result.ts";
 import {
   AgentTaskInputSchema,
   AgentTaskResultPayloadSchema,
-  type AgentTaskFollowUp,
   type AgentTaskInput,
   type AgentTaskProvider,
   type AgentTaskResultPayload,
-  type AgentTaskStartResult,
 } from "#shared/agent-task.ts";
-import { renderAuditMarkdownToHtml } from "#shared/markdown-to-html.ts";
-import { resolvePostalAddresses, sendPostalEmail } from "#shared/postal.ts";
 import { redactSecrets } from "#shared/redact.ts";
+import {
+  cleanup,
+  pauseSchedule,
+  scheduleFollowUp,
+  sendEmail,
+} from "./agent-task-side-activities.ts";
 
 const COMPONENT = "agent-task";
 const HEARTBEAT_INTERVAL_MS = 10_000;
+const DEFAULT_WORKFLOW_TYPE = "agentTaskWorkflow";
 
 export type PrepareAgentTaskWorkdirInput = {
   input: AgentTaskInput;
@@ -47,27 +50,6 @@ export type RunAgentTaskResult = AgentTaskResultPayload & {
   provider: AgentTaskProvider;
   model: string;
   durationMs: number;
-};
-
-export type SendAgentTaskEmailInput = {
-  input: AgentTaskInput;
-  result: RunAgentTaskResult;
-};
-
-export type SendAgentTaskEmailResult = {
-  subject: string;
-  messageId: string;
-  recipientId: number | "unknown";
-};
-
-export type ScheduleAgentTaskFollowUpInput = {
-  parent: AgentTaskInput;
-  followUp: AgentTaskFollowUp;
-};
-
-export type PauseAgentTaskScheduleInput = {
-  scheduleId: string;
-  reason: string;
 };
 
 function jsonLog(
@@ -135,6 +117,22 @@ function activityCancellationSignalOrUndefined(): AbortSignal | undefined {
   }
 }
 
+function currentWorkflowType(): string {
+  try {
+    return Context.current().info.workflowType ?? DEFAULT_WORKFLOW_TYPE;
+  } catch {
+    return DEFAULT_WORKFLOW_TYPE;
+  }
+}
+
+function startToCloseTimeoutMsOrUndefined(): number | undefined {
+  try {
+    return Context.current().info.startToCloseTimeoutMs;
+  } catch {
+    return undefined;
+  }
+}
+
 function workflowId(): string {
   try {
     return (
@@ -190,47 +188,6 @@ function envForProvider(
   return env;
 }
 
-async function pumpStderr(
-  stream: ReadableStream<Uint8Array>,
-  tokens: readonly (string | undefined)[],
-  provider: AgentTaskProvider,
-): Promise<void> {
-  const reader = stream.getReader();
-  const decoder = new TextDecoder();
-  let buf = "";
-  try {
-    for (;;) {
-      const { value, done } = await reader.read();
-      if (done) {
-        break;
-      }
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split("\n");
-      buf = lines.pop() ?? "";
-      for (const line of lines) {
-        if (line.length === 0) {
-          continue;
-        }
-        jsonLog("info", "agent stderr", {
-          provider,
-          line: redactSecrets(line, tokens),
-        });
-      }
-    }
-    if (buf.length > 0) {
-      jsonLog("info", "agent stderr", {
-        provider,
-        line: redactSecrets(buf, tokens),
-      });
-    }
-  } catch (error: unknown) {
-    jsonLog("warning", "stderr pump error", {
-      provider,
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
-}
-
 function splitRepo(fullName: string): { owner: string; repo: string } {
   const [owner, repo, extra] = fullName.split("/");
   if (owner === undefined || repo === undefined || extra !== undefined) {
@@ -254,122 +211,189 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
   const parsed = AgentTaskInputSchema.parse(input.input);
   const provider = parsed.provider;
   const command = await buildAgentTaskCommand(parsed, input.workdir);
+  const workflowType = currentWorkflowType();
 
-  jsonLog("info", "Invoking agent task", {
-    provider,
-    title: parsed.title,
-    model: command.model,
-    workdir: input.workdir,
-    agentTimeoutMinutes: parsed.agentTimeoutMinutes,
-    maxTurns: parsed.maxTurns,
-  });
-
-  const githubTokenResult = await createGitHubAppInstallationToken();
-  const startMs = Date.now();
-  const proc = Bun.spawn(command.args, {
-    stdin: "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
-    cwd: input.workdir,
-    env: envForProvider(provider, githubTokenResult.token),
-  });
-  const heartbeat = setInterval(() => {
-    safeHeartbeat({ phase: "agent", elapsedMs: Date.now() - startMs });
-  }, HEARTBEAT_INTERVAL_MS);
-  const cancellationSignal = activityCancellationSignalOrUndefined();
-  const abort = (): void => {
-    jsonLog(
-      "warning",
-      "Agent task cancellation requested; killing subprocess",
-      {
+  return withSpan(
+    "agent-task.run-agent",
+    {
+      "agent.provider": provider,
+      "agent.title": parsed.title,
+      "agent.model": command.model,
+      "agent.workdir": input.workdir,
+      "agent.timeout_minutes": parsed.agentTimeoutMinutes ?? 0,
+      "agent.max_turns": parsed.maxTurns ?? 0,
+    },
+    async (span) => {
+      jsonLog("info", "Invoking agent task", {
+        phase: "spawn",
         provider,
         title: parsed.title,
         model: command.model,
-        elapsedMs: Date.now() - startMs,
-      },
-    );
-    proc.kill();
-  };
-  cancellationSignal?.addEventListener("abort", abort, { once: true });
+        workdir: input.workdir,
+        agentTimeoutMinutes: parsed.agentTimeoutMinutes,
+        maxTurns: parsed.maxTurns,
+      });
 
-  let stdout: string;
-  let exitCode: number;
-  try {
-    [stdout, , exitCode] = await Promise.all([
-      new Response(proc.stdout).text(),
-      pumpStderr(proc.stderr, secretTokens(githubTokenResult.token), provider),
-      proc.exited,
-    ]);
-  } finally {
-    clearInterval(heartbeat);
-    cancellationSignal?.removeEventListener("abort", abort);
-  }
-
-  const durationMs = Date.now() - startMs;
-  const cancelled = cancellationSignal?.aborted === true;
-  agentTaskSubprocessDurationSeconds.observe(
-    {
-      provider,
-      model: command.model,
-      exit_code: cancelled ? "cancelled" : String(exitCode),
-    },
-    durationMs / 1000,
-  );
-  agentTaskSubprocessExitTotal.inc({
-    provider,
-    exit_code: cancelled ? "cancelled" : String(exitCode),
-  });
-
-  if (cancelled) {
-    agentTaskRunsTotal.inc({ provider, outcome: "cancelled" });
-    const error = new Error(`${provider} agent task cancelled`);
-    captureWithContext(error, { provider, durationMs });
-    throw error;
-  }
-
-  if (exitCode !== 0) {
-    agentTaskRunsTotal.inc({ provider, outcome: "subprocess_failed" });
-    const error = new Error(
-      `${provider} agent task exited with code ${String(exitCode)}`,
-    );
-    captureWithContext(error, { provider, durationMs });
-    throw error;
-  }
-
-  let payload: AgentTaskResultPayload;
-  try {
-    if (provider === "claude") {
-      payload = parseAgentPayload(
-        parseClaudeResultMessage(stdout).result ?? "",
+      const githubTokenResult = await createGitHubAppInstallationToken();
+      const result = await runTrackedAgentSubprocess(
+        {
+          command: command.args,
+          cwd: input.workdir,
+          env: envForProvider(provider, githubTokenResult.token),
+          redactTokens: secretTokens(githubTokenResult.token),
+          startToCloseTimeoutMs: startToCloseTimeoutMsOrUndefined(),
+          cancellationSignal: activityCancellationSignalOrUndefined(),
+          heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
+          onHeartbeat: (beat) => {
+            safeHeartbeat({ phase: "agent", provider, ...beat });
+            jsonLog("info", "agent heartbeat", {
+              phase: "agent",
+              provider,
+              ...beat,
+            });
+            span.addEvent("agent.heartbeat", {
+              elapsedMs: beat.elapsedMs,
+              idleMs: beat.idleMs,
+            });
+          },
+          onSoftKill: (event) => {
+            jsonLog("warning", "agent soft-kill", {
+              phase: "soft-kill",
+              provider,
+              ...event,
+            });
+            span.addEvent("agent.soft-kill", {
+              elapsedMs: event.elapsedMs,
+              idleMs: event.idleMs,
+              maxIdleMs: event.maxIdleMs,
+            });
+            agentSubprocessSoftKillsTotal.inc({
+              workflow_type: workflowType,
+              reason: "pre_temporal_timeout",
+            });
+          },
+          onStderrLine: (line) => {
+            jsonLog("info", "agent stderr", { provider, line });
+          },
+          onCancellation: (state) => {
+            jsonLog(
+              "warning",
+              "Agent task cancellation requested; killing subprocess",
+              {
+                provider,
+                title: parsed.title,
+                model: command.model,
+                ...state,
+              },
+            );
+          },
+        },
+        redactSecrets,
       );
-    } else {
-      if (command.outputPath === undefined) {
-        throw new Error("Codex agent task completed without an output path");
+
+      const cancelled = result.signal === "SIGTERM";
+      agentSubprocessIdleSeconds.observe(
+        { workflow_type: workflowType },
+        result.maxIdleMs / 1000,
+      );
+      agentTaskSubprocessDurationSeconds.observe(
+        {
+          provider,
+          model: command.model,
+          exit_code: cancelled ? "cancelled" : String(result.exitCode),
+        },
+        result.durationMs / 1000,
+      );
+      agentTaskSubprocessExitTotal.inc({
+        provider,
+        exit_code: cancelled ? "cancelled" : String(result.exitCode),
+      });
+      span.setAttribute("agent.duration_ms", result.durationMs);
+      span.setAttribute("agent.max_idle_ms", result.maxIdleMs);
+      span.setAttribute("agent.exit_code", result.exitCode);
+      span.setAttribute("agent.signal", result.signal);
+
+      jsonLog("info", "agent exited", {
+        phase: "exited",
+        provider,
+        elapsedMs: result.durationMs,
+        exitCode: result.exitCode,
+        signal: result.signal,
+        maxIdleMs: result.maxIdleMs,
+      });
+
+      if (cancelled) {
+        agentTaskRunsTotal.inc({ provider, outcome: "cancelled" });
+        const error = new Error(`${provider} agent task cancelled`);
+        captureWithContext(error, {
+          provider,
+          durationMs: result.durationMs,
+          maxIdleMs: result.maxIdleMs,
+          signal: result.signal,
+          lastStderrLine: result.lastStderrLine,
+        });
+        throw error;
       }
-      payload = parseAgentPayload(await Bun.file(command.outputPath).text());
-    }
-  } catch (error: unknown) {
-    agentTaskRunsTotal.inc({ provider, outcome: "parse_failed" });
-    captureWithContext(error, { provider, durationMs, phase: "parse-output" });
-    throw error;
-  }
-  agentTaskRunsTotal.inc({ provider, outcome: "success" });
 
-  jsonLog("info", "Agent task completed", {
-    provider,
-    title: parsed.title,
-    durationMs,
-    markdownLength: payload.markdown.length,
-    requestedFollowUp: payload.followUp !== undefined,
-    requestedCancelCron: payload.cancelCron === true,
-  });
+      if (result.exitCode !== 0) {
+        agentTaskRunsTotal.inc({ provider, outcome: "subprocess_failed" });
+        const error = new Error(
+          `${provider} agent task exited with code ${String(result.exitCode)} (signal=${result.signal}, durationMs=${String(result.durationMs)})`,
+        );
+        captureWithContext(error, {
+          provider,
+          durationMs: result.durationMs,
+          maxIdleMs: result.maxIdleMs,
+          signal: result.signal,
+          lastStderrLine: result.lastStderrLine,
+        });
+        throw error;
+      }
 
-  return {
-    ...payload,
-    provider,
-    model: command.model,
-    durationMs,
-  };
+      let payload: AgentTaskResultPayload;
+      try {
+        if (provider === "claude") {
+          payload = parseAgentPayload(
+            parseClaudeResultMessage(result.stdout).result ?? "",
+          );
+        } else {
+          if (command.outputPath === undefined) {
+            throw new Error(
+              "Codex agent task completed without an output path",
+            );
+          }
+          payload = parseAgentPayload(
+            await Bun.file(command.outputPath).text(),
+          );
+        }
+      } catch (error: unknown) {
+        agentTaskRunsTotal.inc({ provider, outcome: "parse_failed" });
+        captureWithContext(error, {
+          provider,
+          durationMs: result.durationMs,
+          phase: "parse-output",
+        });
+        throw error;
+      }
+      agentTaskRunsTotal.inc({ provider, outcome: "success" });
+
+      jsonLog("info", "Agent task completed", {
+        provider,
+        title: parsed.title,
+        durationMs: result.durationMs,
+        markdownLength: payload.markdown.length,
+        requestedFollowUp: payload.followUp !== undefined,
+        requestedCancelCron: payload.cancelCron === true,
+      });
+
+      return {
+        ...payload,
+        provider,
+        model: command.model,
+        durationMs: result.durationMs,
+      };
+    },
+  );
 }
 
 async function prepareWorkdir(
@@ -386,87 +410,6 @@ async function prepareWorkdir(
     env: { GH_TOKEN: tokenResult.token },
   });
   return { workdir };
-}
-
-async function sendEmail(
-  input: SendAgentTaskEmailInput,
-): Promise<SendAgentTaskEmailResult> {
-  const { recipient, sender } = resolvePostalAddresses();
-  const date = new Date().toISOString().slice(0, 10);
-  const prefix = input.input.emailSubjectPrefix ?? "Agent Task";
-  const subject = `${prefix}: ${input.input.title} (${date})`;
-  const body = [
-    `# ${input.input.title}`,
-    "",
-    `Provider: ${input.result.provider}`,
-    `Model: ${input.result.model}`,
-    `Duration: ${String(Math.round(input.result.durationMs / 1000))}s`,
-    "",
-    input.result.markdown,
-  ].join("\n");
-
-  try {
-    const result = await sendPostalEmail({
-      to: recipient,
-      from: sender,
-      subject,
-      htmlBody: renderAuditMarkdownToHtml(body),
-      tag: "agent-task",
-    });
-    agentTaskEmailSentTotal.inc({ outcome: "success" });
-    return {
-      subject: result.subject,
-      messageId: result.messageId,
-      recipientId: result.recipientId,
-    };
-  } catch (error: unknown) {
-    agentTaskEmailSentTotal.inc({ outcome: "failure" });
-    agentTaskRunsTotal.inc({
-      provider: input.result.provider,
-      outcome: "email_failed",
-    });
-    captureWithContext(error, { subject });
-    throw error;
-  }
-}
-
-async function scheduleFollowUp(
-  input: ScheduleAgentTaskFollowUpInput,
-): Promise<AgentTaskStartResult> {
-  const task = AgentTaskInputSchema.parse({
-    title: input.followUp.title,
-    prompt: input.followUp.prompt,
-    provider: input.followUp.provider ?? input.parent.provider,
-    mode: "report-only",
-    repo: input.parent.repo,
-    runAt: input.followUp.runAt,
-    cron: input.followUp.cron,
-    source: input.parent.source,
-    model: input.followUp.model ?? input.parent.model,
-    maxTurns: input.followUp.maxTurns ?? input.parent.maxTurns,
-    agentTimeoutMinutes:
-      input.followUp.agentTimeoutMinutes ?? input.parent.agentTimeoutMinutes,
-    allowSelfCancel: false,
-    emailSubjectPrefix: input.parent.emailSubjectPrefix,
-  });
-  const client = await createTemporalClient();
-  return await startOrScheduleAgentTask(client, task);
-}
-
-async function pauseSchedule(
-  input: PauseAgentTaskScheduleInput,
-): Promise<void> {
-  const client = await createTemporalClient();
-  const handle = client.schedule.getHandle(input.scheduleId);
-  await handle.pause(input.reason);
-  jsonLog("info", "Paused agent task schedule", {
-    scheduleId: input.scheduleId,
-    reason: input.reason,
-  });
-}
-
-async function cleanup(input: PrepareAgentTaskWorkdirResult): Promise<void> {
-  await cleanupWorkdir(input.workdir);
 }
 
 export type AgentTaskActivities = typeof agentTaskActivities;
