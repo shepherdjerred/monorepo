@@ -61,6 +61,10 @@ dynamic_streaming = true
 minimum_in_channel = 2
 # only those watching the stream can send commands
 require_watching = true
+# User IDs of peer userbots that share this voice channel (Glitter Kart,
+# Streambot, ...). Peer userbots are real Discord user accounts, so without
+# this list they'd be counted as real viewers and this bot would never leave.
+peer_userbot_ids = []
 
 [stream.userbot]
 # the Discord user ID of the account that will stream video
