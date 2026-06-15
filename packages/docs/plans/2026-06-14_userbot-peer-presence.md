@@ -2,7 +2,29 @@
 
 ## Status
 
-In Progress
+Partially Complete — PR open, deployment wiring of `peer_userbot_ids` still pending.
+
+## Session Log — 2026-06-14
+
+### Done
+
+- Added pure `viewer-presence` helper (`packages/discord-stream-lifecycle/src/viewer-presence.ts`) + unit tests (`test/viewer-presence.test.ts`, 12 cases).
+- Wired all three userbots to consume `countRealViewers`:
+  - `packages/discord-plays-pokemon/packages/backend/src/discord/channel-handler.ts` + `config/schema.ts` (`peer_userbot_ids`).
+  - `packages/discord-plays-mario-kart/packages/backend/src/discord/channel-handler.ts` + `config/schema.ts` (`peer_userbot_ids`).
+  - `packages/streambot/src/discord/command-bot.ts` (`evaluateChannelOccupancy`) + `config/schema.ts` (`discord.peerUserbotIds`).
+- All four packages green on `tsc --noEmit`, lint, and tests.
+- PR #1246 opened.
+
+### Remaining
+
+- Populate `peer_userbot_ids` in each bot's deployment values (1P/Helm) with the IDs of the other two userbots. The Go Live fingerprint covers the bug in the meantime, but the explicit list is the more reliable signal once configured.
+- Live end-to-end verification in the homelab (human leaves shared VC → all three bots disconnect within their respective grace windows).
+
+### Caveats
+
+- Streambot has 4 pre-existing failing tests in `integration/subtitles.integration.test.ts` / `test/video-graph.test.ts`. These are local-ffmpeg environment failures ("No such filter: 'subtitles'" — missing libass) and unrelated to this PR.
+- Streambot's config field is camelCase (`peerUserbotIds`) to match the rest of `discord.*`; the two game bots use snake_case (`peer_userbot_ids`) to match their TOML schema convention.
 
 ## Context
 
