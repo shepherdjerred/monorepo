@@ -27,15 +27,15 @@ export function makeGoal(goalManager: GoalManager | undefined) {
     }
 
     const goal = interaction.options.getString("goal", true);
+    await interaction.deferReply();
     const result = await goalManager.startGoal({
       goal,
       requesterId: interaction.user.id,
       channelId: interaction.channelId,
     });
 
-    await interaction.reply({
+    await interaction.editReply({
       content: result.content,
-      ephemeral: result.ephemeral,
       allowedMentions: result.ephemeral
         ? undefined
         : { users: [interaction.user.id] },
