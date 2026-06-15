@@ -55,6 +55,21 @@ export function createPokemonDeployment(chart: Chart) {
     storage: Size.gibibytes(8),
   });
 
+  // The synced secret is mounted at APP_ROOT/config.toml below. The backend now uses
+  // an on-demand /play model (PR shipping the pokebot-mk64-pool refactor): the
+  // emulator boots only when a user runs /play in their voice channel, and saves
+  // are keyed per-guild under saves/<guildId>/. The new config.toml schema accepts:
+  //
+  //   [stream]
+  //   userbot_tokens = ["selfbot-token-1", "selfbot-token-2", ...]  # pool of N tokens
+  //   # ... legacy fields (server_id, channel_id, userbot.token) stay supported but
+  //   # are now optional + ignored at runtime.
+  //
+  //   state_root_dir = "saves"   # root of per-guild dirs (default "saves")
+  //
+  // To enable multi-guild service from this deployment, populate userbot_tokens with
+  // a comma-separated list in the 1P item; each token's selfbot account must be a
+  // member of every guild you want to serve.
   const item = new OnePasswordItem(chart, "pokemon-config", {
     spec: {
       itemPath:
