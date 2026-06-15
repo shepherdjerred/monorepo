@@ -46,7 +46,6 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       // backward compatibility with the pre-pool deployment.
       userTokens: list(env["USER_TOKENS"]) ?? list(env["TOKEN"]),
       adminIds: list(env["ADMIN_IDS"]),
-      peerUserbotIds: list(env["PEER_USERBOT_IDS"]),
     },
     library: {
       videosDir: env["VIDEOS_DIR"],

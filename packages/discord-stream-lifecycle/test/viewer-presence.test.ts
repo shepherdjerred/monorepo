@@ -2,12 +2,15 @@ import { describe, expect, it } from "bun:test";
 import {
   countRealViewers,
   isRealViewer,
+  KNOWN_USERBOT_IDS,
   type ViewerCandidate,
 } from "@shepherdjerred/discord-stream-lifecycle/viewer-presence.ts";
 
 const SELF = "self-userbot-id";
 const PEER_A = "peer-a-id";
 const PEER_B = "peer-b-id";
+// A real in-tree userbot ID, used to verify KNOWN_USERBOT_IDS exclusion.
+const POKEBOT_ID = KNOWN_USERBOT_IDS[0]!;
 
 function candidate(overrides: Partial<ViewerCandidate>): ViewerCandidate {
   return {
@@ -44,7 +47,7 @@ describe("isRealViewer", () => {
     ).toBe(true);
   });
 
-  it("excludes peer userbots by id", () => {
+  it("excludes peer userbots by explicit peerUserbotIds", () => {
     expect(
       isRealViewer(candidate({ id: PEER_A }), {
         selfUserId: SELF,
@@ -53,17 +56,10 @@ describe("isRealViewer", () => {
     ).toBe(false);
   });
 
-  it("excludes go-live userbot fingerprint (streaming + selfDeaf + selfMute)", () => {
+  it("excludes in-tree userbots via KNOWN_USERBOT_IDS", () => {
+    // KNOWN_USERBOT_IDS is checked unconditionally — no config needed.
     expect(
-      isRealViewer(
-        candidate({
-          id: "unknown-userbot",
-          streaming: true,
-          selfDeaf: true,
-          selfMute: true,
-        }),
-        { selfUserId: SELF },
-      ),
+      isRealViewer(candidate({ id: POKEBOT_ID }), { selfUserId: SELF }),
     ).toBe(false);
   });
 
@@ -95,7 +91,9 @@ describe("isRealViewer", () => {
     );
   });
 
-  it("keeps the go-live fingerprint when excludeLikelyUserbots is false", () => {
+  it("excludes go-live userbot fingerprint by default (no explicit peerUserbotIds)", () => {
+    // Without an explicit peerUserbotIds list, the heuristic is active as a catch-all
+    // for any 4th userbot not yet registered in KNOWN_USERBOT_IDS.
     expect(
       isRealViewer(
         candidate({
@@ -104,9 +102,31 @@ describe("isRealViewer", () => {
           selfDeaf: true,
           selfMute: true,
         }),
-        { selfUserId: SELF, excludeLikelyUserbots: false },
+        { selfUserId: SELF },
+      ),
+    ).toBe(false);
+  });
+
+  it("does NOT apply go-live heuristic when an explicit peerUserbotIds list is provided", () => {
+    // When the caller supplies an explicit peer list, they have named every known peer;
+    // the heuristic is suppressed so a human streaming while self-muted and self-deafened
+    // is not silently excluded.
+    expect(
+      isRealViewer(
+        candidate({
+          id: "human-streaming",
+          streaming: true,
+          selfDeaf: true,
+          selfMute: true,
+        }),
+        { selfUserId: SELF, peerUserbotIds: [PEER_A] },
       ),
     ).toBe(true);
+  });
+
+  it("counts normally when selfUserId is omitted", () => {
+    // When no selfUserId is provided, no member is excluded via self-check.
+    expect(isRealViewer(candidate({ id: "human-1" }), {})).toBe(true);
   });
 });
 
@@ -140,20 +160,14 @@ describe("countRealViewers", () => {
     ).toBe(0);
   });
 
-  it("catches an unknown peer userbot via the go-live fingerprint", () => {
+  it("excludes in-tree userbot peers via KNOWN_USERBOT_IDS without any config", () => {
+    // When the two peers are real in-tree userbots, KNOWN_USERBOT_IDS catches them
+    // automatically — no peerUserbotIds config needed.
     const members: ViewerCandidate[] = [
-      candidate({
-        id: SELF,
-        streaming: true,
-        selfDeaf: true,
-        selfMute: true,
-      }),
-      candidate({
-        id: "unconfigured-userbot",
-        streaming: true,
-        selfDeaf: true,
-        selfMute: true,
-      }),
+      candidate({ id: SELF }),
+      ...KNOWN_USERBOT_IDS.filter((id) => id !== SELF).map((id) =>
+        candidate({ id }),
+      ),
     ];
     expect(countRealViewers(members, { selfUserId: SELF })).toBe(0);
   });

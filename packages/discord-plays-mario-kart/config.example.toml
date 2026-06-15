@@ -27,10 +27,6 @@ channel_id = ""          # voice channel to Go-Live in
 dynamic_streaming = true # start/stop the stream with channel occupancy
 minimum_in_channel = 0
 require_watching = false
-# User IDs of peer userbots that share this voice channel (Pokébot, Streambot, ...).
-# Peer userbots are real Discord user accounts, so without this list they'd be
-# counted as real viewers and this bot would never leave.
-peer_userbot_ids = []
 
 [stream.userbot]
 # Discord USER (self) account — Discord blocks video from bot tokens, so a user

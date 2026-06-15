@@ -37,7 +37,6 @@ export function handleChannelUpdate(
         if (channel?.isVoiceBased() === true) {
           const participants = countRealViewers(toViewerCandidates(channel), {
             selfUserId: config.stream.userbot.id,
-            peerUserbotIds: config.stream.peer_userbot_ids,
           });
           logger.info(`real viewers in channel: ${String(participants)}`);
           await updateFn(participants);

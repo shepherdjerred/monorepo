@@ -38,7 +38,6 @@ export function handleChannelUpdate(
           logger.info("calling updateFn");
           const participants = countRealViewers(toViewerCandidates(channel), {
             selfUserId: config.stream.userbot.id,
-            peerUserbotIds: config.stream.peer_userbot_ids,
           });
           logger.info(`real viewers in channel: ${String(participants)}`);
           await updateFn(participants);

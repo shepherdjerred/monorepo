@@ -2,7 +2,7 @@
 
 ## Status
 
-Partially Complete — PR open, deployment wiring of `peer_userbot_ids` still pending.
+Partially Complete — Code shipped in PR #1246; deployment wiring of `peer_userbot_ids` via Helm/1P still pending.
 
 ## Session Log — 2026-06-14
 
