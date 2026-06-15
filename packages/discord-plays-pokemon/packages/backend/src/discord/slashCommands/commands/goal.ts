@@ -28,17 +28,24 @@ export function makeGoal(goalManager: GoalManager | undefined) {
 
     const goal = interaction.options.getString("goal", true);
     await interaction.deferReply();
-    const result = await goalManager.startGoal({
-      goal,
-      requesterId: interaction.user.id,
-      channelId: interaction.channelId,
-    });
+    try {
+      const result = await goalManager.startGoal({
+        goal,
+        requesterId: interaction.user.id,
+        channelId: interaction.channelId,
+      });
 
-    await interaction.editReply({
-      content: result.content,
-      allowedMentions: result.ephemeral
-        ? undefined
-        : { users: [interaction.user.id] },
-    });
+      await interaction.editReply({
+        content: result.content,
+        allowedMentions: result.ephemeral
+          ? undefined
+          : { users: [interaction.user.id] },
+      });
+    } catch (error) {
+      await interaction.editReply({
+        content: "An unexpected error occurred while processing your goal.",
+      });
+      throw error;
+    }
   };
 }
