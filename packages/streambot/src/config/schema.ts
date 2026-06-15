@@ -23,6 +23,14 @@ export const ConfigSchema = z.strictObject({
     userTokens: z.array(UserTokenSchema).min(1),
     /** User ids permitted to run admin commands (stop/clear, and skip/remove of others). */
     adminIds: z.array(UserIdSchema).default([]),
+    /**
+     * Discord user IDs of peer userbots that share voice channels with this streamer (e.g.
+     * Pokébot, Glitter Kart). Peer userbots are real Discord user accounts, so `user.bot`
+     * is false for them — without this list the streamer would treat them as humans and
+     * never leave an empty channel. The canonical list lives in homelab cdk8s and is
+     * passed in via the `PEER_USERBOT_IDS` env (comma-separated).
+     */
+    peerUserbotIds: z.array(UserIdSchema).default([]),
   }),
   library: z.strictObject({
     /** Writable directory scanned for ad-hoc videos. */

@@ -22,6 +22,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
 
 // Headless Discord Plays Pokemon: pokeemerald-wasm runs in Bun, renders frames
 // in software, and streams to a Discord voice channel via the voice UDP path.
@@ -87,6 +88,10 @@ export function createPokemonDeployment(chart: Chart) {
       image: `ghcr.io/shepherdjerred/discord-plays-pokemon:${versions["shepherdjerred/discord-plays-pokemon"]}`,
       envVariables: {
         NODE_ENV: EnvValue.fromValue("production"),
+        // Peer userbot Discord user IDs (Glitter Kart + Streambot) so the channel-handler
+        // excludes them from the "real viewers" count and leaves an otherwise-empty VC.
+        // Sourced from the canonical map in resources/userbot-ids.ts.
+        PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("pokemon")),
         // VAAPI hardware H.264 encoding on the Intel iGPU (requested below). The
         // app reads STREAM_HARDWARE_ACCELERATION/VAAPI_DEVICE; ffmpeg reads
         // LIBVA_DRIVER_NAME. Falls back to software libx264 if the device is absent.
