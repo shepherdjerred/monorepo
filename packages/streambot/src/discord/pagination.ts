@@ -52,10 +52,12 @@ export async function sendPaginatedReply(
   }
 
   const message = await interaction.fetchReply();
+  // Note: no collector `filter` — authorization happens in `handlePaginationClick` so
+  // non-invoker clicks get the explanatory "not for you" ephemeral reply instead of
+  // discord.js dropping the interaction (which would surface as "Interaction Failed").
   const collector = message.createMessageComponentCollector({
     componentType: ComponentType.Button,
     time: PAGINATION_TIMEOUT_MS,
-    filter: (i) => i.user.id === interaction.user.id,
   });
 
   collector.on("collect", (button: ButtonInteraction) => {
