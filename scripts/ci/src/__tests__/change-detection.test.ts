@@ -814,6 +814,7 @@ describe("fail-fast base detection", () => {
     "BUILDKITE_PULL_REQUEST",
     "BUILDKITE_MESSAGE",
     "FULL_BUILD",
+    "LAST_SUCCESSFUL_COMMIT_OVERRIDE",
   ];
 
   beforeEach(() => {
@@ -1010,6 +1011,136 @@ describe("fail-fast base detection", () => {
       );
 
     await expect(_getLastSuccessfulCommit(fetchFn)).resolves.toBe("good-base");
+  });
+
+  it("honors LAST_SUCCESSFUL_COMMIT_OVERRIDE and skips the Buildkite API entirely", async () => {
+    process.env["LAST_SUCCESSFUL_COMMIT_OVERRIDE"] = "manual-override-sha";
+    // No BUILDKITE_API_TOKEN, no org/pipeline — proves we never hit any of them.
+    const fetchFn = async () => {
+      throw new Error("fetch should not be called when override is set");
+    };
+
+    await expect(_getLastSuccessfulCommit(fetchFn)).resolves.toBe(
+      "manual-override-sha",
+    );
+  });
+
+  it("ignores an empty LAST_SUCCESSFUL_COMMIT_OVERRIDE and falls through to API", async () => {
+    process.env["LAST_SUCCESSFUL_COMMIT_OVERRIDE"] = "";
+    process.env["BUILDKITE_API_TOKEN"] = "api-token";
+    const fetchFn = async () =>
+      new Response(
+        JSON.stringify([
+          {
+            number: 99,
+            commit: "real-base",
+            state: "passed",
+            jobs: buildkiteBootstrapJobs(),
+          },
+        ]),
+        { status: 200 },
+      );
+
+    await expect(_getLastSuccessfulCommit(fetchFn)).resolves.toBe("real-base");
+  });
+
+  it("paginates to subsequent pages when page 1 has only rejected builds", async () => {
+    process.env["BUILDKITE_API_TOKEN"] = "api-token";
+
+    const PAGE_SIZE = 100;
+    const page1: object[] = [];
+    for (let i = 0; i < PAGE_SIZE; i++) {
+      page1.push({
+        number: 200 - i,
+        commit: `failed-${String(i)}`,
+        state: "canceled",
+        jobs: buildkiteBootstrapJobs(),
+      });
+    }
+    const page2 = [
+      {
+        number: 99,
+        commit: "older-good-base",
+        state: "passed",
+        jobs: buildkiteBootstrapJobs(),
+      },
+    ];
+
+    const calls: string[] = [];
+    const fetchFn = async (input: Parameters<typeof fetch>[0]) => {
+      const url = typeof input === "string" ? input : String(input);
+      calls.push(url);
+      // Match the ?page= or &page= query param specifically, NOT the
+      // per_page=100 substring (which contains "page=1").
+      if (/[?&]page=1\b/.test(url)) {
+        return new Response(JSON.stringify(page1), { status: 200 });
+      }
+      if (/[?&]page=2\b/.test(url)) {
+        return new Response(JSON.stringify(page2), { status: 200 });
+      }
+      throw new Error(`unexpected page request: ${url}`);
+    };
+
+    await expect(_getLastSuccessfulCommit(fetchFn)).resolves.toBe(
+      "older-good-base",
+    );
+    expect(calls.length).toBe(2);
+    expect(calls[0]).toMatch(/[?&]page=1\b/);
+    expect(calls[1]).toMatch(/[?&]page=2\b/);
+  });
+
+  it("stops paginating once a page returns fewer than per_page builds (end of history)", async () => {
+    process.env["BUILDKITE_API_TOKEN"] = "api-token";
+
+    // Only 5 main builds exist total — all rejected. We must NOT request page 2.
+    const page1 = Array.from({ length: 5 }, (_unused, i) => ({
+      number: 5 - i,
+      commit: `failed-${String(i)}`,
+      state: "canceled" as const,
+      jobs: buildkiteBootstrapJobs(),
+    }));
+
+    const calls: string[] = [];
+    const fetchFn = async (input: Parameters<typeof fetch>[0]) => {
+      const url = typeof input === "string" ? input : String(input);
+      calls.push(url);
+      return new Response(JSON.stringify(page1), { status: 200 });
+    };
+
+    await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow(
+      "No qualifying successful main build found",
+    );
+    expect(calls.length).toBe(1);
+  });
+
+  it("gives up after the page cap is exhausted with a descriptive error", async () => {
+    process.env["BUILDKITE_API_TOKEN"] = "api-token";
+
+    const PAGE_SIZE = 100;
+    const MAX_PAGES = 10;
+    const fullPage = Array.from({ length: PAGE_SIZE }, (_unused, i) => ({
+      number: 1000 - i,
+      commit: `failed-${String(i)}`,
+      state: "canceled" as const,
+      jobs: buildkiteBootstrapJobs(),
+    }));
+
+    const calls: string[] = [];
+    const fetchFn = async (input: Parameters<typeof fetch>[0]) => {
+      const url = typeof input === "string" ? input : String(input);
+      calls.push(url);
+      return new Response(JSON.stringify(fullPage), { status: 200 });
+    };
+
+    await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow(
+      `No qualifying successful main build found in last ${String(
+        PAGE_SIZE * MAX_PAGES,
+      )} builds`,
+    );
+    expect(calls.length).toBe(MAX_PAGES);
+    await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow(
+      "LAST_SUCCESSFUL_COMMIT_OVERRIDE",
+    );
   });
 
   it("rejects hard-failed non-exempt jobs", () => {

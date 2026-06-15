@@ -432,9 +432,27 @@ function parseBuildkiteBuilds(value: unknown): BuildkiteBuild[] {
   return builds;
 }
 
+/**
+ * Maximum pages of Buildkite history to walk when searching for the last
+ * successful main build. With `per_page=100` this is 1 000 builds — enough to
+ * survive any realistic streak of cancellations + failures (we have seen 100+)
+ * while still bounding the recovery cost. Beyond this we surface the
+ * underlying CI rot rather than walking arbitrarily far back.
+ */
+const LAST_SUCCESS_MAX_PAGES = 10;
+const LAST_SUCCESS_PAGE_SIZE = 100;
+
 async function getLastSuccessfulCommit(
   fetchFn: FetchFn = fetch,
 ): Promise<string> {
+  const override = process.env["LAST_SUCCESSFUL_COMMIT_OVERRIDE"];
+  if (override !== undefined && override !== "") {
+    console.error(
+      `LAST_SUCCESSFUL_COMMIT_OVERRIDE set; using ${override.slice(0, 10)} as base (skipping Buildkite lookup)`,
+    );
+    return override;
+  }
+
   const token = process.env["BUILDKITE_API_TOKEN"];
   if (!token) {
     throw new Error(
@@ -452,64 +470,77 @@ async function getLastSuccessfulCommit(
     );
   }
 
-  const url =
-    `https://api.buildkite.com/v2/organizations/${org}` +
-    `/pipelines/${pipeline}/builds` +
-    `?branch=main&per_page=100`;
-
-  let resp: Response;
-  try {
-    resp = await fetchFn(url, {
-      headers: { Authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(15_000),
-    });
-  } catch (e) {
-    throw new Error(`Buildkite API request failed: ${errorMessage(e)}`);
-  }
-
-  if (resp.status === 401 || resp.status === 403) {
-    throw new Error(
-      "Buildkite API token is not authorized; expected REST API token with read_builds scope",
-    );
-  }
-
-  if (!resp.ok) {
-    throw new Error(`Buildkite API failed with HTTP ${resp.status}`);
-  }
-
-  const builds = parseBuildkiteBuilds(await resp.json());
   const skipped = new Map<BuildRejectionReason, number>();
+  let pagesWalked = 0;
 
-  for (const build of builds) {
-    if (String(build.number) === currentBuild) continue;
+  for (let page = 1; page <= LAST_SUCCESS_MAX_PAGES; page++) {
+    const url =
+      `https://api.buildkite.com/v2/organizations/${org}` +
+      `/pipelines/${pipeline}/builds` +
+      `?branch=main&per_page=${LAST_SUCCESS_PAGE_SIZE}&page=${page}`;
 
-    const rejectionReason = getBuildRejectionReason(build);
-    if (rejectionReason !== null) {
-      skipped.set(rejectionReason, (skipped.get(rejectionReason) ?? 0) + 1);
-      console.error(`Build #${build.number} skipped: ${rejectionReason}`);
-      continue;
+    let resp: Response;
+    try {
+      resp = await fetchFn(url, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: AbortSignal.timeout(15_000),
+      });
+    } catch (e) {
+      throw new Error(`Buildkite API request failed: ${errorMessage(e)}`);
     }
 
-    const commit = build.commit ?? "";
-    if (!commit) {
+    if (resp.status === 401 || resp.status === 403) {
       throw new Error(
-        `Build #${build.number} qualified as successful but did not include a commit SHA`,
+        "Buildkite API token is not authorized; expected REST API token with read_builds scope",
       );
     }
 
-    const scriptJobCount = (build.jobs ?? []).filter(isScriptJob).length;
-    console.error(
-      `Last successful base build: #${build.number} (${scriptJobCount} script jobs, commit ${commit.slice(0, 10)})`,
-    );
-    return commit;
+    if (!resp.ok) {
+      throw new Error(`Buildkite API failed with HTTP ${resp.status}`);
+    }
+
+    const builds = parseBuildkiteBuilds(await resp.json());
+    pagesWalked = page;
+
+    for (const build of builds) {
+      if (String(build.number) === currentBuild) continue;
+
+      const rejectionReason = getBuildRejectionReason(build);
+      if (rejectionReason !== null) {
+        skipped.set(rejectionReason, (skipped.get(rejectionReason) ?? 0) + 1);
+        console.error(`Build #${build.number} skipped: ${rejectionReason}`);
+        continue;
+      }
+
+      const commit = build.commit ?? "";
+      if (!commit) {
+        throw new Error(
+          `Build #${build.number} qualified as successful but did not include a commit SHA`,
+        );
+      }
+
+      const scriptJobCount = (build.jobs ?? []).filter(isScriptJob).length;
+      console.error(
+        `Last successful base build: #${build.number} (${scriptJobCount} script jobs, commit ${commit.slice(0, 10)}, page ${page})`,
+      );
+      return commit;
+    }
+
+    if (builds.length < LAST_SUCCESS_PAGE_SIZE) {
+      // Reached end of history — no point requesting further pages.
+      break;
+    }
   }
 
   const reasonSummary = [...skipped]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([reason, count]) => `${reason}: ${count}`)
     .join(", ");
+  const scanned = pagesWalked * LAST_SUCCESS_PAGE_SIZE;
   throw new Error(
-    `No qualifying successful main build found; cannot scope this build safely${reasonSummary ? ` (${reasonSummary})` : ""}`,
+    `No qualifying successful main build found in last ${scanned} builds (${pagesWalked} pages); ` +
+      `cannot scope this build safely${reasonSummary ? ` (${reasonSummary})` : ""}. ` +
+      `Set LAST_SUCCESSFUL_COMMIT_OVERRIDE on a rebuild to manually unstick main CI.`,
   );
 }
 
