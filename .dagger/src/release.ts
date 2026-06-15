@@ -169,12 +169,16 @@ const TOFU_INIT_WITH_RETRY = [
   "i=1",
   "while [ $i -le 5 ]; do",
   "  if tofu init -input=false; then exit 0; fi",
-  '  echo "tofu init failed (attempt $i/5), retrying in $((i*5))s..." >&2',
-  "  sleep $((i*5))",
+  // Skip the sleep + "retrying" log on the final attempt — no retry follows.
+  "  if [ $i -lt 5 ]; then",
+  '    echo "tofu init failed (attempt $i/5), retrying in $((i*5))s..." >&2',
+  "    sleep $((i*5))",
+  "  fi",
   "  i=$((i+1))",
   "done",
   "exit 1",
-].join(" ; ");
+  // Join with newlines, not "; " — busybox sh rejects `do ;` / `then ;` / `done ;`.
+].join("\n");
 
 /** Run tofu init + apply on a stack. */
 export function tofuApplyHelper(
