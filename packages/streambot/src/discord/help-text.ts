@@ -4,8 +4,18 @@
  * command-handler test asserts every registered subcommand appears in {@link helpText}).
  */
 
-/** Max source names shown for a `/stream sources <query>` result before truncating. */
-const MAX_SOURCES = 20;
+/** Source names per page of `/stream sources` output (browse + filtered). */
+const SOURCES_PER_PAGE = 30;
+
+/**
+ * The result of {@link sourcesPages}: a header line describing the full result set, and one
+ * Discord-message-sized body chunk per page. The adapter renders Prev/Next/First/Last buttons
+ * when `pages.length > 1`; when it's 1 it just sends the single message.
+ */
+export type SourcesPages = {
+  readonly header: string;
+  readonly pages: readonly string[];
+};
 
 /**
  * The `/stream help` reference: a grouped command list plus a "Supported sources" note. Static (no
@@ -43,30 +53,51 @@ export function helpText(): string {
 }
 
 /**
- * Render `/stream sources`: a count + popular highlights when called bare, or up to
- * {@link MAX_SOURCES} filtered matches when given a query.
+ * Render `/stream sources` as a paginated, browseable list. Bare call paginates all sources;
+ * a `query` paginates only the case-insensitive substring matches. When nothing matches, returns
+ * a single page with an explanatory line and no entries. The adapter wires Prev/Next buttons
+ * on top when `pages.length > 1`.
  */
-export function sourcesText(
+export function sourcesPages(
   sources: readonly string[],
   query: string | null,
-): string {
+): SourcesPages {
   const trimmed = query?.trim() ?? "";
-  if (trimmed.length === 0) {
-    return [
-      `📡 **yt-dlp supports ${String(sources.length)} sources** — any public link it can fetch without a login.`,
-      "Popular: YouTube · Twitch · Vimeo · SoundCloud · Reddit · Bandcamp · archive.org · direct `.mp4`/HLS.",
-      "Search the full list with `/stream sources <query>` — e.g. `/stream sources twitch`.",
-    ].join("\n");
+  const isFiltered = trimmed.length > 0;
+  const matched = isFiltered
+    ? sources.filter((name) =>
+        name.toLowerCase().includes(trimmed.toLowerCase()),
+      )
+    : sources;
+
+  if (isFiltered && matched.length === 0) {
+    return {
+      header: `📡 No sources matching \`${trimmed}\``,
+      pages: [
+        "You can still try `/stream play <url>` with a direct link — any public link yt-dlp can fetch without a login should work.",
+      ],
+    };
   }
-  const needle = trimmed.toLowerCase();
-  const matched = sources.filter((name) => name.toLowerCase().includes(needle));
-  if (matched.length === 0) {
-    return `No sources matching \`${trimmed}\`. You can still try \`/stream play <url>\` with a direct link.`;
+
+  const pages = paginate(matched, SOURCES_PER_PAGE);
+  const header = isFiltered
+    ? `📡 **${String(matched.length)} source(s) matching \`${trimmed}\`**`
+    : `📡 **yt-dlp supports ${String(matched.length)} sources** — any public link it can fetch without a login. Popular: YouTube · Twitch · Vimeo · SoundCloud · Reddit · Bandcamp · archive.org · direct \`.mp4\`/HLS.`;
+
+  return { header, pages };
+}
+
+function paginate(
+  names: readonly string[],
+  perPage: number,
+): readonly string[] {
+  if (names.length === 0) {
+    return ["_(no sources)_"];
   }
-  const shown = matched.slice(0, MAX_SOURCES).map((name) => `\`${name}\``);
-  const suffix =
-    matched.length > MAX_SOURCES
-      ? `\n…and ${String(matched.length - MAX_SOURCES)} more`
-      : "";
-  return `**${String(matched.length)} source(s) matching \`${trimmed}\`:**\n${shown.join(" · ")}${suffix}`;
+  const pages: string[] = [];
+  for (let i = 0; i < names.length; i += perPage) {
+    const slice = names.slice(i, i + perPage).map((name) => `\`${name}\``);
+    pages.push(slice.join(" · "));
+  }
+  return pages;
 }
