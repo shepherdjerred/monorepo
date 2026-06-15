@@ -11,7 +11,7 @@ source_marker: false
 
 The `protobufjs: ^7.5.7` override in `packages/temporal/package.json` is load-bearing — it forces the entire Bun workspace onto protobufjs v7 because `@temporalio/proto@1.18.1` (current latest) pins `protobufjs: 7.5.8` exact, and `@temporalio/worker` / `@grpc/proto-loader` / `proto3-json-serializer` all use `^7.x`. Forcing v8 (Edition-2024 rewrite, breaking) via the override would silently replace the v7 build that `@temporalio/proto` was compiled against and break Temporal payload (de)serialization at runtime — no source code in `packages/temporal/src` imports protobufjs directly, so typecheck/lint won't catch it. The previous attempt landed as PR #1215 (`bca5ef7fc`) and was reverted by `acc7320dc fix(temporal): keep protobufjs override at ^7.5.7 — v8 incompatible with Temporal SDK`. PR #1227 is Renovate reopening the same upgrade.
 
-A `renovate.json` packageRule (`allowedVersions: "<8"`, `dependencyDashboardApproval: true`) now stops Renovate from auto-opening this PR every Sunday and keeps it visible on the Dependency Dashboard issue as a passive backstop.
+A `renovate.json` packageRule (`allowedVersions: "<8"`) now stops Renovate from auto-opening this PR every Sunday. The v8 bump surfaces on the Dependency Dashboard issue as an ignored entry — passive backstop visibility without gating v7 patches.
 
 The agent task below polls `https://registry.npmjs.org/@temporalio/proto/latest` weekly and emails only when the pin moves off `7.x`.
 

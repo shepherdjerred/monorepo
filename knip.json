@@ -59,8 +59,8 @@
       "project": ["src/**/*.ts"]
     },
     "packages/discord-plays-pokemon/packages/backend": {
-      "entry": ["src/index.ts", "src/**/*.test.ts"],
-      "project": ["src/**/*.ts"]
+      "entry": ["src/index.ts", "src/**/*.test.ts", "scripts/**/*.ts"],
+      "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/discord-plays-pokemon/packages/common": {
       "entry": ["src/index.ts"],
@@ -222,7 +222,11 @@
     "unlisted": "error",
     "binaries": "error"
   },
-  "ignoreUnresolved": ["^#generated/ha-schema\\.ts$", "^~icons/"],
+  "ignoreUnresolved": [
+    "^#generated/ha-schema\\.ts$",
+    "^#generated/prisma/",
+    "^~icons/"
+  ],
   "ignore": [
     "**/eslint.config.ts",
     "**/postcss.config.ts",
@@ -268,6 +272,7 @@
     "@opentelemetry/sdk-trace-base",
     "@opentelemetry/semantic-conventions",
     "@prisma/client",
+    "@prisma/client-runtime-utils",
     "@resvg/resvg-js",
     "@scout-for-lol/data",
     "@scout-for-lol/ui",
@@ -355,6 +360,15 @@
     "packages/discord-plays-mario-kart/packages/backend/src/util.ts": [
       "exports"
     ],
+    "packages/discord-plays-mario-kart/packages/frontend/src/controller-ui.tsx": [
+      "exports"
+    ],
+    "packages/discord-plays-pokemon/packages/backend/src/emulator/audio/wav.ts": [
+      "exports"
+    ],
+    "packages/discord-plays-pokemon/packages/backend/src/game/events/pokemon-struct.ts": [
+      "exports"
+    ],
     "packages/discord-plays-pokemon/packages/backend/src/discord/message-handler.ts": [
       "exports"
     ],
@@ -416,6 +430,7 @@
     "gh",
     "kubectl",
     "lefthook",
+    "mktemp",
     "op",
     "rg",
     "tsc",
