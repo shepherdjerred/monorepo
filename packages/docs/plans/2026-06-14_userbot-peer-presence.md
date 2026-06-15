@@ -16,15 +16,26 @@ Partially Complete — Code shipped in PR #1246; deployment wiring of `peer_user
 - All four packages green on `tsc --noEmit`, lint, and tests.
 - PR #1246 opened.
 
+### Done (PR tending session — 2026-06-15)
+
+- Addressed all 5 Greptile P1/P2 comments via commit `097612f25`:
+  - P1: Go-Live heuristic now disabled when explicit peer list is configured; `KNOWN_USERBOT_IDS` hardcodes all three in-tree userbot IDs as the canonical baseline.
+  - P2 (mario-kart + pokemon schemas): replaced unanchored `/\d*/` with anchored `/^\d{17,20}$/` for `peer_userbot_ids`; then simplified further by removing `peer_userbot_ids` from schemas entirely (covered by `KNOWN_USERBOT_IDS`).
+  - P2 (command-bot.ts): changed `streamerId ?? ""` to `streamerId` (null passed directly, `selfUserId` now optional `string | null`).
+  - P2 (plan status): updated plan status line.
+- Updated test suite to cover new `KNOWN_USERBOT_IDS`-based behavior + heuristic-suppression-when-peerUserbotIds-provided.
+- All 5 Greptile review threads resolved on GitHub. `mag-greptile-review` CI step passed.
+- All hard CI checks green (Buildkite build #4392): lint+typecheck+test, pkg-check, quality bundle (15 checks), greptile review, trivy, semgrep.
+
 ### Remaining
 
-- Populate `peer_userbot_ids` in each bot's deployment values (1P/Helm) with the IDs of the other two userbots. The Go Live fingerprint covers the bug in the meantime, but the explicit list is the more reliable signal once configured.
 - Live end-to-end verification in the homelab (human leaves shared VC → all three bots disconnect within their respective grace windows).
 
 ### Caveats
 
 - Streambot has 4 pre-existing failing tests in `integration/subtitles.integration.test.ts` / `test/video-graph.test.ts`. These are local-ffmpeg environment failures ("No such filter: 'subtitles'" — missing libass) and unrelated to this PR.
-- Streambot's config field is camelCase (`peerUserbotIds`) to match the rest of `discord.*`; the two game bots use snake_case (`peer_userbot_ids`) to match their TOML schema convention.
+- `KNOWN_USERBOT_IDS` in `viewer-presence.ts` is the new source of truth for peer exclusion — no Helm wiring needed. Add future userbots to that constant.
+- The `peerUserbotIds` option in `ViewerPresenceOptions` is preserved for override/test scenarios; passing it suppresses the Go-Live heuristic (intentional — explicit list means operators have named every peer).
 
 ## Context
 
