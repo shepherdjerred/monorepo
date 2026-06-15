@@ -14,6 +14,7 @@ DROP TABLE IF EXISTS "RaceResult";
 DROP TABLE IF EXISTS "Race";
 CREATE TABLE "Race" (
   "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+  "guildId" TEXT NOT NULL,
   "finishedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "courseId" INTEGER NOT NULL,
   "gameMode" TEXT NOT NULL,
@@ -51,7 +52,7 @@ beforeEach(async () => {
     .filter(Boolean)) {
     await prisma.$executeRawUnsafe(stmt);
   }
-  store = createPrismaLeaderboardStore(prisma);
+  store = createPrismaLeaderboardStore(prisma).forGuild("100000000000000001");
 });
 
 afterEach(async () => {

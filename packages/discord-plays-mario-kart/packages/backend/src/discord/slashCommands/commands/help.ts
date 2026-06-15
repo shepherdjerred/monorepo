@@ -1,10 +1,9 @@
-import type { CommandInteraction } from "discord.js";
+import type { ChatInputCommandInteraction } from "discord.js";
 import {
   SlashCommandBuilder,
   bold,
-  channelMention,
   inlineCode,
-  userMention,
+  MessageFlags,
 } from "discord.js";
 import { getConfig } from "#src/config/index.ts";
 
@@ -12,14 +11,15 @@ export const helpCommand = new SlashCommandBuilder()
   .setName("help")
   .setDescription("View Discord Plays Mario Kart 64 help");
 
-export async function help(interaction: CommandInteraction) {
+export async function help(
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
   const config = getConfig();
   const seatCount = String(config.emulator.seats);
   const lines = [
     bold("Discord Plays Mario Kart 64"),
-    `Watch the live game when ${userMention(
-      config.stream.userbot.id,
-    )} is streaming in the ${channelMention(config.stream.channel_id)} voice channel (Go-Live).`,
+    `Run ${inlineCode("/play")} from a voice channel to start a Mario Kart session. The bot will join your voice channel and stream the game live.`,
+    `Run ${inlineCode("/stop")} to end the session.`,
     ``,
     `${bold("Play:")} https://mariokart.sjer.red`,
     `Open the controller, claim one of the ${seatCount} seats (P1–P${seatCount}), and drive your kart in real time.`,
@@ -38,13 +38,11 @@ export async function help(interaction: CommandInteraction) {
     ``,
     `Players navigate the menus themselves — pick 1–${seatCount} player VS, characters, and a track using the seats you claim.`,
     config.bot.commands.screenshot.enabled
-      ? `\n${inlineCode("/screenshot")} posts a frame to ${channelMention(
-          config.bot.notifications.channel_id,
-        )}.`
+      ? `\n${inlineCode("/screenshot")} posts a frame to the game channel.`
       : "",
   ];
   await interaction.reply({
     content: lines.join("\n"),
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }

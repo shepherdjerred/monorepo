@@ -2,10 +2,18 @@ import { z } from "zod";
 
 export type Config = z.infer<typeof ConfigSchema>;
 export const ConfigSchema = z.strictObject({
+  /**
+   * Legacy single-tenant guild id. MK64 is multi-tenant now — the active session's
+   * guildId comes from the `/play` interaction, not config. Field stays optional so
+   * existing config.toml files validate; the runtime ignores it.
+   */
   server_id: z
     .string()
     .regex(/\d*/, "IDs must only have numeric characters")
-    .min(1),
+    .min(1)
+    .optional(),
+  /** Root directory under which per-guild session dirs are created. Defaults to "saves". */
+  state_root_dir: z.string().min(1).default("saves"),
   bot: z.strictObject({
     enabled: z.boolean(),
     discord_token: z.string().min(1),
@@ -21,31 +29,51 @@ export const ConfigSchema = z.strictObject({
       }),
     }),
     notifications: z.strictObject({
+      /**
+       * Legacy notifications channel id. Notifications now target the session's bound
+       * text channel (the channel `/play` was invoked in). Optional + ignored.
+       */
       channel_id: z
         .string()
         .regex(/\d*/, "IDs must only have numeric characters")
-        .min(1),
+        .min(1)
+        .optional(),
       enabled: z.boolean(),
     }),
   }),
   stream: z.strictObject({
     enabled: z.boolean(),
+    /**
+     * Legacy voice channel id. The voice channel comes from the caller's voice state
+     * on `/play`. Optional + ignored.
+     */
     channel_id: z
       .string()
       .regex(/\d*/, "IDs must only have numeric characters")
-      .min(1),
+      .min(1)
+      .optional(),
     dynamic_streaming: z.boolean(),
     minimum_in_channel: z.number().nonnegative(),
     require_watching: z.boolean(),
-    userbot: z.strictObject({
-      id: z
-        .string()
-        .regex(/\d*/, "IDs must only have numeric characters")
-        .min(1),
-      // Discord user (selfbot) token for the streaming account. Required
-      // because Discord blocks video from bot tokens.
-      token: z.string().min(1),
-    }),
+    /**
+     * Legacy single-userbot field; superseded by `userbot_tokens`. Optional so
+     * existing config.toml files validate. If `userbot_tokens` is empty/missing,
+     * the runtime falls back to this token as a single-element pool.
+     */
+    userbot: z
+      .strictObject({
+        id: z
+          .string()
+          .regex(/\d*/, "IDs must only have numeric characters")
+          .min(1),
+        token: z.string().min(1),
+      })
+      .optional(),
+    /**
+     * Pool of selfbot tokens. The bot picks any token whose account is a member of
+     * the requesting guild on each `/play`. Minimum 1.
+     */
+    userbot_tokens: z.array(z.string().min(1)).default([]),
     video: z.strictObject({
       // @deprecated Superseded by the 16:9 letterbox (canvas_height + display
       // aspect). Retained, optional, so existing config.toml files still validate;

@@ -1,33 +1,40 @@
-import { Events } from "discord.js";
-import "./rest.ts";
-import client from "#src/discord/client.ts";
-import { makeScreenshot } from "./commands/screenshot.ts";
-import type { N64Emulator } from "#src/emulator/n64-emulator.ts";
-import type { StreamOverlayContextProvider } from "#src/overlay/composite.ts";
-import { help } from "./commands/help.ts";
-import { logger } from "#src/logger.ts";
+import type { Client, Interaction } from "discord.js";
+import type { ExtraSlashCommand } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot.ts";
+import { makeScreenshot, screenshotCommand } from "./commands/screenshot.ts";
+import { help, helpCommand } from "./commands/help.ts";
+import type { MarioKartGameDriver } from "#src/lifecycle/mario-kart-driver.ts";
 
-export function handleSlashCommands(
-  emulator: N64Emulator,
-  overlayContext?: StreamOverlayContextProvider,
-) {
-  logger.info("handling slash commands");
-  client.on(Events.InteractionCreate, (interaction) => {
-    void (async () => {
-      try {
+/**
+ * Build the game-specific slash commands for MK64. `/play` and `/stop` are owned by
+ * the shared lib's `createGameBot` and are not declared here.
+ */
+export function buildMarioKartExtraCommands(params: {
+  driver: MarioKartGameDriver;
+  botClient: Client;
+  screenshotEnabled: boolean;
+}): ExtraSlashCommand[] {
+  const commands: ExtraSlashCommand[] = [
+    {
+      builder: helpCommand,
+      handle: async (interaction: Interaction) => {
         if (!interaction.isChatInputCommand()) {
           return;
         }
-        switch (interaction.commandName) {
-          case "screenshot":
-            await makeScreenshot(emulator, overlayContext)(interaction);
-            break;
-          case "help":
-            await help(interaction);
+        await help(interaction);
+      },
+    },
+  ];
+  if (params.screenshotEnabled) {
+    const handler = makeScreenshot(params.driver, params.botClient);
+    commands.push({
+      builder: screenshotCommand,
+      handle: async (interaction: Interaction) => {
+        if (!interaction.isChatInputCommand()) {
+          return;
         }
-      } catch (error) {
-        logger.error(error);
-      }
-    })();
-  });
+        await handler(interaction);
+      },
+    });
+  }
+  return commands;
 }
