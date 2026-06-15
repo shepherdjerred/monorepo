@@ -271,3 +271,23 @@ Phase 0 gates passed — implementation can proceed.
 
 - The fixture PR (#1240) must never be merged or closed; closure breaks the smoke-test path and the standing GREEN status. Document in the eventual feature PR's description.
 - The status spike used a user PAT for convenience; App-token permission gap will be a real risk during implementation. Mitigation: surface and fix before merging the activity.
+
+## Session Log — 2026-06-14 (PR #1252 review-thread fixes)
+
+### Done
+
+- Addressed 3 unresolved Greptile P2 threads on PR #1252 (commit `2ca2e4ffd`):
+  - `packages/temporal/src/activities/check-pr-merge-conflicts-git.ts:44` — wrapped clone+fetch in try/catch so `askpassDir` (and any partially-cloned `workDir`) get `rm -rf`'d on clone failure instead of leaking into `/tmp` until pod restart. Steady-state cleanup still flows through the returned closure.
+  - `packages/temporal/src/event-bridge/github-webhook.ts:173` — renamed push schema-parse-failed reason to `push:schema-parse-failed`, matching the adjacent `push:non-main-ref` convention so dashboards can disambiguate push vs pull_request schema failures.
+  - `packages/homelab/src/tofu/github/webhooks.tf:23` — expanded the Buildkite hook comment to explicitly confirm the delivery-URL token trade-off (URL pre-existed in repo webhook settings; HMAC secret verified separately; rotation is a Buildkite-side one-click op). No code change to the URL itself.
+- Replied + resolved all 3 review threads via GraphQL.
+- Verified clean: `bun run typecheck`, `bun run lint`, `bun test src/event-bridge/github-webhook` (29 pass), `bun test src/activities/check-pr-merge-conflicts` (10 pass), `tofu -chdir=github validate`.
+- No merge conflicts with `origin/main` (verified via `git merge-tree`).
+
+### Remaining
+
+- Wait for buildkite/monorepo/pr build #4416 to complete (in flight, monitoring).
+
+### Caveats
+
+- The Buildkite delivery-URL token decision is now documented in-source rather than asking the reviewer to re-derive it; if the security model ever changes, rotation remains a one-click op.
