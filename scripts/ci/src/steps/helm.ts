@@ -41,7 +41,10 @@ export function homelabCdk8sBundleStep(dependsOn: string[]): BuildkiteStep {
     label: ":cdk8s::1password: Synth + 1Password Lint",
     key: "homelab-cdk8s",
     depends_on: dependsOn,
-    command: `${DAGGER_CALL} homelab-cdk8s-bundle --pkg-dir ${gitDir("packages/homelab/src/cdk8s")} ${depFlags} --tsconfig ${gitFile("tsconfig.base.json")}`,
+    // Dagger's camelCase→kebab converter splits numbers as word boundaries
+    // (e.g. caddyS3Proxy → caddy-s-3-proxy), so homelabCdk8sBundle registers
+    // as `homelab-cdk-8-s-bundle` at the CLI layer, not `homelab-cdk8s-bundle`.
+    command: `${DAGGER_CALL} homelab-cdk-8-s-bundle --pkg-dir ${gitDir("packages/homelab/src/cdk8s")} ${depFlags} --tsconfig ${gitFile("tsconfig.base.json")}`,
     timeout_in_minutes: 15,
     priority: 1,
     retry: RETRY,
