@@ -95,6 +95,7 @@ export function buildPrompt(goal: string, context: PromptContext): string {
     "- Prefer `chord` over repeated `press` calls. Each call costs tokens; a 5-step chord is one tool round trip instead of five.",
     "- Use `pokemonctl screenshot` after every action that should change the screen. Read the image; don't assume.",
     "- If you're stuck (same screenshot 3+ times), try `pokemonctl state` to re-check party/badges/inventory, then change strategy — don't keep mashing A.",
+    "- Save in-game regularly: only progress committed via START → SAVE → YES is persisted across restarts. Save after any major milestone (badge earned, new species caught, level milestone, important item obtained) and whenever you've made ~30 in-game minutes of progress since the last save. Saving from the overworld is safest; don't save inside menus, battles, or scripted cutscenes.",
     "",
     "Current game state (read at goal start; re-read with `pokemonctl state`):",
     context.gameStateSummary,
