@@ -37,6 +37,13 @@ export const ConfigSchema = z.strictObject({
     dynamic_streaming: z.boolean(),
     minimum_in_channel: z.number().nonnegative(),
     require_watching: z.boolean(),
+    // User IDs of peer userbots (other Go Live userbots that share this voice
+    // channel — e.g. Pokébot, Streambot). Peer userbots are real Discord user
+    // accounts, so `user.bot` is false for them; without this list they would
+    // be counted as real viewers and keep this bot streaming forever.
+    peer_userbot_ids: z
+      .array(z.string().regex(/\d*/, "IDs must only have numeric characters"))
+      .default([]),
     userbot: z.strictObject({
       id: z
         .string()

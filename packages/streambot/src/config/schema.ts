@@ -23,6 +23,13 @@ export const ConfigSchema = z.strictObject({
     userTokens: z.array(UserTokenSchema).min(1),
     /** User ids permitted to run admin commands (stop/clear, and skip/remove of others). */
     adminIds: z.array(UserIdSchema).default([]),
+    /**
+     * User IDs of peer userbots that share voice channels with the streamer userbots (e.g.
+     * Pokébot, Glitter Kart). Peer userbots are real Discord user accounts, so `user.bot`
+     * is false for them; without this list they would be counted as humans and the streamer
+     * would never leave an empty voice channel.
+     */
+    peerUserbotIds: z.array(UserIdSchema).default([]),
   }),
   library: z.strictObject({
     /** Writable directory scanned for ad-hoc videos. */

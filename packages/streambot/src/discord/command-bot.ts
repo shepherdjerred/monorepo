@@ -10,6 +10,7 @@ import {
   Routes,
   type VoiceState,
 } from "discord.js";
+import { countRealViewers } from "@shepherdjerred/discord-stream-lifecycle/viewer-presence.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { Announcement } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import {
@@ -376,11 +377,25 @@ export class CommandBot {
     if (channel?.isVoiceBased() !== true) {
       return;
     }
-    const humans = channel.members.filter(
-      (member) => !member.user.bot && member.id !== streamerId,
+    const voiceStates = channel.guild.voiceStates.cache;
+    const humanCount = countRealViewers(
+      channel.members.map((member) => {
+        const memberState = voiceStates.get(member.id);
+        return {
+          id: member.id,
+          isBot: member.user.bot,
+          streaming: memberState?.streaming ?? false,
+          selfDeaf: memberState?.selfDeaf ?? false,
+          selfMute: memberState?.selfMute ?? false,
+        };
+      }),
+      {
+        selfUserId: streamerId ?? "",
+        peerUserbotIds: this.deps.config.discord.peerUserbotIds,
+      },
     );
     const key = `${guildId}:${channelId}`;
-    if (humans.size > 0) {
+    if (humanCount > 0) {
       this.clearAloneTimer(key);
       return;
     }
