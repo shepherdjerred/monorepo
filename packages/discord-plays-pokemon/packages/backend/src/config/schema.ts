@@ -36,10 +36,18 @@ const GoalConfigSchema = z
   });
 
 export const ConfigSchema = z.strictObject({
+  /**
+   * @deprecated Pokemon is multi-tenant now — the active session's guildId comes from the
+   * `/play` interaction, not config. Field stays optional so existing config.toml files
+   * validate without churn; the runtime ignores it.
+   */
   server_id: z
     .string()
     .regex(/\d*/, "IDs must only have numeric characters")
-    .min(1),
+    .min(1)
+    .optional(),
+  /** Root directory under which per-guild session dirs are created. Defaults to "saves". */
+  state_root_dir: z.string().min(1).default("saves"),
   bot: z.strictObject({
     enabled: z.boolean(),
     discord_token: z.string().min(1),
@@ -55,10 +63,16 @@ export const ConfigSchema = z.strictObject({
       }),
     }),
     notifications: z.strictObject({
+      /**
+       * @deprecated Notifications now target the session's bound text channel (the channel
+       * `/play` was invoked in). Field stays optional so existing config.toml files validate;
+       * the runtime ignores it.
+       */
       channel_id: z
         .string()
         .regex(/\d*/, "IDs must only have numeric characters")
-        .min(1),
+        .min(1)
+        .optional(),
       enabled: z.boolean(),
       // Notifications for in-game events detected by polling emulator memory
       // (faints, badges, evolutions, catches, ...). All defaulted so existing
@@ -88,22 +102,37 @@ export const ConfigSchema = z.strictObject({
   }),
   stream: z.strictObject({
     enabled: z.boolean(),
+    /**
+     * @deprecated The voice channel comes from the caller's voice state on `/play`.
+     * Optional so existing config.toml files validate.
+     */
     channel_id: z
       .string()
       .regex(/\d*/, "IDs must only have numeric characters")
-      .min(1),
+      .min(1)
+      .optional(),
     dynamic_streaming: z.boolean(),
     minimum_in_channel: z.number().nonnegative(),
     require_watching: z.boolean(),
-    userbot: z.strictObject({
-      id: z
-        .string()
-        .regex(/\d*/, "IDs must only have numeric characters")
-        .min(1),
-      // Discord user (selfbot) token for the streaming account. Required
-      // because Discord blocks video from bot tokens.
-      token: z.string().min(1),
-    }),
+    /**
+     * Legacy single-userbot field; superseded by `userbot_tokens`. Optional so
+     * existing config.toml files validate. If `userbot_tokens` is empty/missing,
+     * the runtime falls back to this token as a single-element pool.
+     */
+    userbot: z
+      .strictObject({
+        id: z
+          .string()
+          .regex(/\d*/, "IDs must only have numeric characters")
+          .min(1),
+        token: z.string().min(1),
+      })
+      .optional(),
+    /**
+     * Pool of selfbot tokens. The bot picks any token whose account is a member of
+     * the requesting guild on each `/play`. Minimum 1.
+     */
+    userbot_tokens: z.array(z.string().min(1)).default([]),
     video: z.strictObject({
       // @deprecated Superseded by the 16:9 letterbox (canvas_height + display
       // aspect). Retained, optional, so existing config.toml files still validate;
@@ -130,10 +159,15 @@ export const ConfigSchema = z.strictObject({
     goal: GoalConfigSchema,
     commands: z.strictObject({
       enabled: z.boolean(),
+      /**
+       * @deprecated Text commands are now accepted in whatever text channel `/play`
+       * was invoked in. Optional so existing config.toml files validate.
+       */
       channel_id: z
         .string()
         .regex(/\d*/, "IDs must only have numeric characters")
-        .min(1),
+        .min(1)
+        .optional(),
       max_actions_per_command: z.number().nonnegative(),
       max_quantity_per_action: z.number().nonnegative(),
       key_press_duration_in_milliseconds: z.number().nonnegative(),

@@ -49,8 +49,15 @@ export type CreateGameBotOptions<TUserbot extends PooledUserbot> = {
   readonly driver: GameDriver<TUserbot>;
   /** Root dir under which `<guildId>/` session dirs live. */
   readonly stateRootDir: string;
-  /** Extra per-game slash commands (`/screenshot`, `/goal`, ...). */
-  readonly extraCommands?: readonly ExtraSlashCommand[];
+  /**
+   * Extra per-game slash commands (`/screenshot`, `/goal`, ...). Either a static array
+   * or a factory invoked at `start()` time (after the bot client is constructed) — the
+   * factory form lets each command's handler close over `bot` without bootstrap order
+   * gymnastics.
+   */
+  readonly extraCommands?:
+    | readonly ExtraSlashCommand[]
+    | ((bot: BotClient) => readonly ExtraSlashCommand[]);
   /** Who can run `/stop`? Default: anyMember. */
   readonly stopPermission?: StopPermissionMode;
   /** Grace period when the voice channel goes empty before firing `aloneInVoice` stop. */
@@ -125,20 +132,24 @@ export function createGameBot<TUserbot extends PooledUserbot>(
     aloneWatcher,
     start: async () => {
       await pool.start();
+      const resolvedExtras: readonly ExtraSlashCommand[] =
+        typeof options.extraCommands === "function"
+          ? options.extraCommands(bot)
+          : (options.extraCommands ?? []);
       await registerGameBotCommands({
         applicationId: options.applicationId,
         token: options.botToken,
         commands: [
           buildPlayCommand({}),
           buildStopCommand({}),
-          ...(options.extraCommands?.map((cmd) => cmd.builder) ?? []),
+          ...resolvedExtras.map((cmd) => cmd.builder),
         ],
       });
       bot.on(Events.InteractionCreate, (interaction) => {
         void handleInteraction(
           interaction,
           sessionManager,
-          options.extraCommands ?? [],
+          resolvedExtras,
           options.stopPermission ?? "anyMember",
         );
       });

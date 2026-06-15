@@ -1,12 +1,13 @@
 import {
+  MessageFlags,
   SlashCommandBuilder,
   type ChatInputCommandInteraction,
 } from "discord.js";
-import type { GoalManager } from "#src/goal/goal-manager.ts";
+import type { PokemonGameDriver } from "#src/lifecycle/pokemon-driver.ts";
 
 export const goalCommand = new SlashCommandBuilder()
   .setName("goal")
-  .setDescription("Ask Codex to work toward a Pokemon goal")
+  .setDescription("Ask Codex to work toward a Pokemon goal.")
   .addStringOption((option) =>
     option
       .setName("goal")
@@ -16,26 +17,40 @@ export const goalCommand = new SlashCommandBuilder()
       .setMaxLength(1000),
   );
 
-export function makeGoal(goalManager: GoalManager | undefined) {
+export function makeGoal(driver: PokemonGameDriver) {
   return async (interaction: ChatInputCommandInteraction): Promise<void> => {
-    if (goalManager === undefined) {
+    if (!interaction.inGuild()) {
       await interaction.reply({
-        content: "Goal mode is not enabled for this Pokemon instance.",
-        ephemeral: true,
+        content: "`/goal` must be used in a server.",
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
-
+    const runtime = driver.getActiveRuntime();
+    if (runtime?.session.guildId !== interaction.guildId) {
+      await interaction.reply({
+        content:
+          "No Pokémon session is active in this server. Run `/play` first.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+    if (runtime.goalManager === undefined) {
+      await interaction.reply({
+        content: "Goal mode is not enabled for this Pokemon instance.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
     const goal = interaction.options.getString("goal", true);
-    const result = await goalManager.startGoal({
+    const result = await runtime.goalManager.startGoal({
       goal,
       requesterId: interaction.user.id,
-      channelId: interaction.channelId,
+      channelId: runtime.session.textChannelId,
     });
-
     await interaction.reply({
       content: result.content,
-      ephemeral: result.ephemeral,
+      flags: result.ephemeral ? MessageFlags.Ephemeral : undefined,
       allowedMentions: result.ephemeral
         ? undefined
         : { users: [interaction.user.id] },

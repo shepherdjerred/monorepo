@@ -1,5 +1,5 @@
 import { PassThrough, type Readable } from "node:stream";
-import { Client } from "discord.js-selfbot-v13";
+import type { Client } from "discord.js-selfbot-v13";
 import {
   Streamer,
   prepareStream,
@@ -28,7 +28,12 @@ import {
 } from "#src/stream/audio-transport.ts";
 
 export type GameStreamerOptions = {
-  token: string;
+  /**
+   * Pre-built, already-logged-in `discord.js-selfbot-v13` client (typically supplied
+   * by the userbot pool). The streamer drives voice/video through this client and
+   * does not own its lifecycle — callers manage login/destroy.
+   */
+  selfbotClient: Client;
   guildId: string;
   channelId: string;
   // Height of the 16:9 output canvas; the 3:2 game is pillarboxed onto it.
@@ -70,7 +75,7 @@ export class GameStreamer {
 
   constructor(options: GameStreamerOptions) {
     this.options = options;
-    this.streamer = new Streamer(new Client());
+    this.streamer = new Streamer(options.selfbotClient);
 
     const machine = createDesiredStreamMachine(this.deps());
     this.actor = createActor(machine, {
@@ -92,10 +97,16 @@ export class GameStreamer {
     this.actor.start();
   }
 
+  /**
+   * Selfbot login is owned by the userbot pool now — this no-op shim remains so
+   * existing callers don't change shape during the migration.
+   */
   async login(): Promise<void> {
-    await this.streamer.client.login(this.options.token);
     const user = this.streamer.client.user;
-    logger.info(`stream account logged in as ${user?.tag ?? "unknown"}`);
+    logger.info(
+      `stream account already logged in as ${user?.tag ?? "unknown"}`,
+    );
+    await Promise.resolve();
   }
 
   /** True while a Go-Live broadcast is live and accepting frames. */
