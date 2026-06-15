@@ -149,7 +149,12 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   // Used to scope downstream steps to their own package build only.
   const pkgKeyMap = new Map<string, string>();
 
-  // Release depends only on repo-wide quality gates, NOT per-package builds.
+  // Release is gated on every per-package pkg-check AND the repo-wide quality
+  // gates below. Release-train rule: main red ⇒ nothing ships. Per-package
+  // gating alone (a pkg-check only blocking its own image build at
+  // images.ts:309-311) is not enough — a single failed pkg-check would
+  // otherwise let the other 12+ images and the helm chart push under a red
+  // commit (see build #4369).
   const releaseDeps: string[] = [];
 
   for (const pkg of packages) {
@@ -157,6 +162,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     if (group) {
       steps.push(group);
       pkgKeyMap.set(pkg, group.key);
+      releaseDeps.push(group.key);
     }
   }
 
