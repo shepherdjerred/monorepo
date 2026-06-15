@@ -25,7 +25,7 @@ function toViewerCandidates(channel: VoiceBasedChannel): ViewerCandidate[] {
 // canonical list and passes each bot its peers as "all - self" via PEER_USERBOT_IDS).
 // Empty when running locally; the Go-Live heuristic then catches peer userbots instead.
 function readPeerUserbotIds(): readonly string[] {
-  const raw = Bun.env["PEER_USERBOT_IDS"];
+  const raw = Bun.env.PEER_USERBOT_IDS;
   if (raw === undefined) {
     return [];
   }
