@@ -40,6 +40,8 @@ const RESOLVED: ResolvedSource = {
 /** Fake streamer: joins/leaves instantly; runStream parks until the machine aborts it (SKIP/STOP). */
 function fakeStreamer(): StreamerLike {
   return {
+    login: () => Promise.resolve(),
+    guildIds: () => [GUILD],
     joinVoice: (input) =>
       Promise.resolve({ guildId: input.guildId, channelId: input.channelId }),
     runStream: (_input, signal) =>
@@ -64,7 +66,7 @@ function fakeStreamer(): StreamerLike {
 /** A fake pool with a fixed number of interchangeable userbots, tracking acquire/release. */
 function fakePool(size: number) {
   const entries: UserbotEntry[] = Array.from({ length: size }, () => ({
-    streamer: fakeStreamer(),
+    userbot: fakeStreamer(),
     guildIds: new Set([GUILD]),
     busy: false,
   }));

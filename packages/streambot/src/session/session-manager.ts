@@ -204,7 +204,7 @@ export class SessionManager {
     }
     return {
       voiceChannelId: session.voiceChannelId,
-      userId: session.entry.streamer.userId(),
+      userId: session.entry.userbot.userId(),
     };
   }
 
@@ -337,10 +337,10 @@ export class SessionManager {
   }): Session {
     const { entry } = params;
     const actors: PlaybackActors = {
-      joinVoice: entry.streamer.joinVoice,
+      joinVoice: entry.userbot.joinVoice,
       resolveSource: this.deps.resolveSource,
-      runStream: entry.streamer.runStream,
-      leaveVoice: entry.streamer.leaveVoice,
+      runStream: entry.userbot.runStream,
+      leaveVoice: entry.userbot.leaveVoice,
     };
     const actor = createActor(createPlaybackMachine(actors), {
       input: params.input,
@@ -420,8 +420,8 @@ export class SessionManager {
         session.actor.send(event);
       },
       view: () => buildPlaybackView(session.actor.getSnapshot()),
-      setVolume: (percent) => session.entry.streamer.setVolume(percent),
-      seek: (seconds) => session.entry.streamer.seek(seconds),
+      setVolume: (percent) => session.entry.userbot.setVolume(percent),
+      seek: (seconds) => session.entry.userbot.seek(seconds),
     };
   }
 
@@ -498,7 +498,7 @@ export class SessionManager {
       return;
     }
     const { context } = session.actor.getSnapshot();
-    const live = session.entry.streamer.getPosition();
+    const live = session.entry.userbot.getPosition();
     if (context.current === null) {
       session.lastKnownPositionSeconds = 0;
     } else if (live !== null) {
