@@ -1,3 +1,4 @@
+import path from "node:path";
 import * as Sentry from "@sentry/bun";
 import type { Client as BotClient } from "discord.js";
 import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver.ts";
@@ -87,17 +88,18 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
     const seats = config.emulator.seats;
     const seatManager = new SeatManager(seats);
 
-    // NOTE: per-guild emulator save isolation (mempak/eeprom under
-    // `session.sessionDir/emulator/`) is not yet wired into N64Emulator — see
-    // mario-kart-driver TODO. The leaderboard IS per-guild (via store.forGuild
-    // above), so cross-server progress already can't leak through the public
-    // race history.
+    // Per-guild emulator save isolation: N64Emulator snapshots MEMFS into
+    // savesDir on stop and rehydrates from it on init. Server A's mempak/EEPROM
+    // can never leak into server B's because each lives under its own
+    // saves/<guildId>/emulator/ tree.
+    const savesDir = path.join(session.sessionDir, "emulator");
     const emulator = new N64Emulator({
       wasmDir: config.emulator.wasm_dir,
       romPath: config.emulator.rom_path,
       fps: config.emulator.fps,
       software: config.emulator.software_render,
       seats,
+      savesDir,
     });
     await emulator.init();
     emulator.start();
@@ -209,6 +211,15 @@ export class MarioKartGameDriver implements GameDriver<SelfbotPooledUserbot> {
       runtime.streamer.destroy();
     } catch (error) {
       logger.error("streamer destroy failed", error);
+    }
+    // Snapshot MEMFS → host BEFORE stopping the emulator: once stop() tears the
+    // wasm down the FS facade is unreachable. A failure here is logged but
+    // shouldn't block the userbot release; the leaderboard (in Prisma) is
+    // already durable.
+    try {
+      await runtime.emulator.persistSaves();
+    } catch (error) {
+      logger.error("emulator persistSaves failed", error);
     }
     try {
       runtime.emulator.stop();

@@ -20,7 +20,10 @@ All six phases of the plan shipped on this branch:
 3. From server B (different Discord server): `/play` while A is active → confirm "in use" rejection. After A `/stop`s, B `/play` → confirm fresh emulator under `saves/<B>/`.
 4. All humans leave VC → 30s grace → confirm auto-stop fires.
 
-**Known caveat (Phase 4):** Per-guild MK64 emulator save isolation (mempak/eeprom under `session.sessionDir/emulator/`) is not wired into `N64Emulator` yet — that needs an `N64Emulator` constructor extension. The Prisma leaderboard already hard-isolates server A from server B at the user-visible level; emulator save isolation is a follow-up.
+**Full per-guild isolation now in place** (both pokemon and MK64):
+
+- Pokemon — emulator save (`pokeemerald.flash`) + goal state (`goal-state.json`) live under `saves/<guildId>/`; constructor already supported `savePath`, driver wires it.
+- MK64 — emulator save state (mempak/EEPROM/SRAM — anything the wasm writes into MEMFS that isn't a staged asset) snapshots to `saves/<guildId>/emulator/` on session stop and rehydrates on the next session start. The Prisma `Race` rows are tagged `guildId`. Implementation: `N64Emulator.persistSaves()` walks MEMFS via the new `save-persistence.ts` helpers, skipping the staged-asset allowlist; `init()` restores from host BEFORE `callMain`. 7 unit tests in `save-persistence.test.ts` cover the round-trip + allowlist + cross-guild non-leak case.
 
 ## Context
 
