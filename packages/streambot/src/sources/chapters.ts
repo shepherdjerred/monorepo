@@ -29,6 +29,29 @@ const FfprobeOutputSchema = z.object({
   chapters: z.array(FfprobeChapterSchema).default([]),
 });
 
+/**
+ * Pick the chapter containing `seconds`, scanning by ascending `startSeconds`. Returns null for an
+ * empty list, or when `seconds` falls before the first chapter — the caller treats that as "no
+ * current chapter" rather than guessing. Open right-hand boundary: a chapter owns `[start, next)`,
+ * and the last chapter extends to infinity (its `endSeconds` is advisory).
+ */
+export function findChapterAt(
+  chapters: readonly Chapter[],
+  seconds: number,
+): Chapter | null {
+  const first = chapters[0];
+  if (first === undefined || seconds < first.startSeconds) {
+    return null;
+  }
+  for (let i = chapters.length - 1; i >= 0; i--) {
+    const chapter = chapters[i];
+    if (chapter !== undefined && seconds >= chapter.startSeconds) {
+      return chapter;
+    }
+  }
+  return null;
+}
+
 /** Map validated ffprobe/yt-dlp rows (start/end seconds + optional title) to 1-based {@link Chapter}s. */
 export function toChapters(
   rows: readonly {
