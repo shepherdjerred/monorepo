@@ -75,6 +75,7 @@ The handler builds pure page strings; the adapter renders buttons + drives the c
 - `command-bot.ts` adapter delegates `replyPaginated` → `sendPaginatedReply`.
 - Reworked `test/command-handler.test.ts` `describe("sources", …)`: fake interaction captures paginated payloads; 5 cases cover bare paginate-all, filter-only matches, empty-match single page, 30-per-page split, multi-page filter exclusion.
 - Verified: `bun run typecheck` clean, `bunx eslint . --fix` clean, `bun test test/command-handler.test.ts` 37 pass, full `bun test` 258 pass (4 pre-existing real-ffmpeg subtitle integration failures unrelated; require libass-backed ffmpeg per `packages/streambot/AGENTS.md`).
+- Post-review fix (Greptile P1, commit `c1fdd8b96`): dropped the collector `filter` option — discord.js was silently dropping non-invoker clicks, so the "These buttons aren't for you" reply at `handlePaginationClick` was unreachable and other users got "Interaction Failed". Authorization now happens entirely in the click handler.
 
 ### Remaining
 
