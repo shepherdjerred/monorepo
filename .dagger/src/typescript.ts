@@ -8,6 +8,8 @@ import { dag, Container, Directory, File, Secret } from "@dagger.io/dagger";
 import { ESLINT_CACHE, HELM_IMAGE } from "./constants";
 
 import { bunBaseContainer } from "./base";
+import { runBundle } from "./bundle";
+import { astroCheckHelper, astroBuildContainerHelper } from "./astro";
 
 /** Run the lint script on a bun container. */
 export function lintHelper(
@@ -187,5 +189,153 @@ export function generateAndTestHelper(
     "bun",
     "run",
     "test",
+  ]);
+}
+
+/**
+ * Run lint, typecheck, and test in parallel via the engine. Three sibling
+ * containers share their `bunBaseContainer` prefix by content-address, so
+ * the install layer is materialised once and reused. Replaces three separate
+ * BK steps with a single bundled step.
+ *
+ * `haUrl` / `haToken`: when set, the typecheck sibling uses
+ * `generateAndTypecheckWithSecretsHelper` (temporal: runs ha-codegen against a
+ * live Home Assistant instance before tsc). Without them, plain typecheck.
+ *
+ * `includeAstroCheck` / `includeAstroBuild`: when set, astro check / build
+ * run as additional parallel siblings (sjer.red, cooklang-rich-preview).
+ * `includeBuild`: when set, `bun run build` runs as a parallel sibling
+ * (NPM_BUILD_PACKAGES — astro-opengraph-images, webring).
+ */
+export async function lintTypecheckTestHelper(
+  pkgDir: Directory,
+  pkg: string,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  tsconfig: File | null = null,
+  needsHelm = false,
+  haUrl: Secret | null = null,
+  haToken: Secret | null = null,
+  includeAstroCheck = false,
+  includeAstroBuild = false,
+  includeBuild = false,
+  skipTest = false,
+): Promise<string> {
+  const useTypecheckSecrets = haUrl !== null || haToken !== null;
+  const children: { name: string; run: () => Promise<string> }[] = [
+    {
+      name: "lint",
+      run: () => lintHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
+    },
+    {
+      name: "typecheck",
+      run: () =>
+        useTypecheckSecrets
+          ? generateAndTypecheckWithSecretsHelper(
+              pkgDir,
+              pkg,
+              depNames,
+              depDirs,
+              tsconfig,
+              haUrl,
+              haToken,
+            ).stdout()
+          : typecheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
+    },
+  ];
+  if (!skipTest) {
+    // PLAYWRIGHT_PACKAGES (sjer.red) override `bun run test` to
+    // `bun run build && bunx playwright test`, which needs a Playwright
+    // browser install — separate from this bun-base bundle. For those
+    // packages, the dedicated `playwright-test-<pkg>` BK step covers test.
+    children.push({
+      name: "test",
+      run: () =>
+        testHelper(
+          pkgDir,
+          pkg,
+          depNames,
+          depDirs,
+          tsconfig,
+          needsHelm,
+        ).stdout(),
+    });
+  }
+  if (includeAstroCheck) {
+    children.push({
+      name: "astro-check",
+      run: () =>
+        astroCheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
+    });
+  }
+  if (includeAstroBuild) {
+    children.push({
+      name: "astro-build",
+      run: () =>
+        astroBuildContainerHelper(
+          pkgDir,
+          pkg,
+          depNames,
+          depDirs,
+          tsconfig,
+        ).stdout(),
+    });
+  }
+  if (includeBuild) {
+    children.push({
+      name: "build",
+      run: () => buildHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
+    });
+  }
+  return runBundle(children);
+}
+
+/**
+ * Prisma variant of {@link lintTypecheckTestHelper}: each sibling does
+ * `bun run generate` first (against the materialised package) before its
+ * action. The generate container chain is content-addressed identically for
+ * all three siblings, so the engine reuses one generate result.
+ */
+export async function generateAndLintTypecheckTestHelper(
+  pkgDir: Directory,
+  pkg: string,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  tsconfig: File | null = null,
+): Promise<string> {
+  return runBundle([
+    {
+      name: "lint",
+      run: () =>
+        generateAndLintHelper(
+          pkgDir,
+          pkg,
+          depNames,
+          depDirs,
+          tsconfig,
+        ).stdout(),
+    },
+    {
+      name: "typecheck",
+      run: () =>
+        generateAndTypecheckHelper(
+          pkgDir,
+          pkg,
+          depNames,
+          depDirs,
+          tsconfig,
+        ).stdout(),
+    },
+    {
+      name: "test",
+      run: () =>
+        generateAndTestHelper(
+          pkgDir,
+          pkg,
+          depNames,
+          depDirs,
+          tsconfig,
+        ).stdout(),
+    },
   ]);
 }

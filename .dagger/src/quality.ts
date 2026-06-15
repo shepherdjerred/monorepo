@@ -15,6 +15,8 @@
  */
 import { dag, Container, Directory } from "@dagger.io/dagger";
 
+import { runBundle } from "./bundle";
+
 import {
   BUN_IMAGE,
   GITLEAKS_IMAGE,
@@ -503,4 +505,81 @@ export function tasksForObsidianIosNativeDepsHelper(
     .withWorkdir("/repo/packages/tasks-for-obsidian")
     .withExec(["bun", "install", "--frozen-lockfile", "--linker", "hoisted"])
     .withExec(["bun", "run", "check:ios-native-deps"]);
+}
+
+/**
+ * Soft-fail bundle: `dagger-hygiene` + `large-file-check` in parallel.
+ * Both checks are unconditional and soft-fail individually today; bundled
+ * they stay soft-fail at the BK layer (the bundle Dagger function still
+ * throws on a real child failure — soft_fail handling moves to BK).
+ */
+export async function softFailBundleHelper(source: Directory): Promise<string> {
+  return runBundle([
+    { name: "dagger-hygiene", run: () => daggerHygieneHelper(source).stdout() },
+    {
+      name: "large-file-check",
+      run: () => largeFileCheckHelper(source).stdout(),
+    },
+  ]);
+}
+
+/**
+ * Quality bundle: 15 blocking source-only checks fan out from one pod in
+ * parallel via `runBundle`/`Promise.all`. Each child runs as its own sibling
+ * container — the engine de-dups the shared `source` materialisation
+ * content-addressed by SHA, so we get N parallel checks for one fetch.
+ *
+ * Replaces 15 separate Buildkite steps (each paying its own pod sidecar
+ * overhead ~10-30 s, despite mostly ~60-80 s of real work). Bundle wall time
+ * matches the slowest child — within Kueue's 7.5 CPU budget, that's a strict
+ * improvement over 15 pods serialising through admission.
+ *
+ * Stays separate (need per-context BK annotations / change-detection
+ * gating / runtime args): `knip-check`, `trivy-scan`, `semgrep-scan`,
+ * `large-file-check`, `dagger-hygiene`, `greptile-review`,
+ * `caddyfile-validate`, `tunnel-dns-coverage`, `talos-schematic-sync`,
+ * `bun-lock-drift-check`.
+ */
+export async function qualityBundleHelper(source: Directory): Promise<string> {
+  return runBundle([
+    { name: "shellcheck", run: () => shellcheckHelper(source).stdout() },
+    {
+      name: "quality-ratchet",
+      run: () => qualityRatchetHelper(source).stdout(),
+    },
+    { name: "check-todos", run: () => checkTodosHelper(source).stdout() },
+    {
+      name: "compliance-check",
+      run: () => complianceCheckHelper(source).stdout(),
+    },
+    { name: "gitleaks", run: () => gitleaksCheckHelper(source).stdout() },
+    {
+      name: "suppression-check",
+      run: () => suppressionCheckHelper(source).stdout(),
+    },
+    { name: "env-var-names", run: () => envVarNamesHelper(source).stdout() },
+    {
+      name: "line-endings",
+      run: () => lineEndingsCheckHelper(source).stdout(),
+    },
+    {
+      name: "scout-test-template",
+      run: () => scoutTestTemplateCheckHelper(source).stdout(),
+    },
+    {
+      name: "migration-guard",
+      run: () => migrationGuardHelper(source).stdout(),
+    },
+    {
+      name: "merge-conflict",
+      run: () => mergeConflictCheckHelper(source).stdout(),
+    },
+    {
+      name: "react-version-sync",
+      run: () => reactVersionSyncHelper(source).stdout(),
+    },
+    { name: "lockfile-check", run: () => lockfileCheckHelper(source).stdout() },
+    { name: "prettier", run: () => prettierHelper(source).stdout() },
+    { name: "markdownlint", run: () => markdownlintHelper(source).stdout() },
+  ]);
 }

@@ -17,6 +17,10 @@ import {
   GH_CLI_VERSION,
 } from "./constants";
 
+import { homelabSynthHelper } from "./homelab";
+import { runBundle } from "./bundle";
+import { WORKSPACE_DEPS } from "./deps";
+
 const GITHUB_APP_TOKEN_SCRIPT = "packages/temporal/src/lib/github-app-token.ts";
 const GITHUB_APP_TOKEN_SCRIPT_PATH = "/usr/local/bin/github-app-token.ts";
 const MONOREPO_REPO = "shepherdjerred/monorepo";
@@ -149,6 +153,48 @@ export function helmPackageHelper(
     "-c",
     `curl -sf -u "${chartMuseumUsername}:$CHARTMUSEUM_PASSWORD" --data-binary @$(ls *.tgz) https://chartmuseum.sjer.red/api/charts`,
   ]);
+}
+
+/**
+ * Synth cdk8s manifests once and package + push every Helm chart in parallel.
+ * Replaces the per-chart `helm-synth-and-package` BK step explosion (28 pods
+ * each ~25 s, dominated by sidecar overhead) with one pod whose engine-side
+ * graph forks per chart after the shared `homelabSynthHelper` call. The synth
+ * Directory is content-addressed, so all charts share one synth run.
+ */
+export async function helmPushAllHelper(
+  source: Directory,
+  synthPkgDir: Directory,
+  synthDepNames: string[],
+  synthDepDirs: Directory[],
+  tsconfig: File | null,
+  chartNames: string[],
+  version: string,
+  chartMuseumUsername: string,
+  chartMuseumPassword: Secret,
+  dryrun: boolean,
+): Promise<string> {
+  const cdk8sDist = homelabSynthHelper(
+    synthPkgDir,
+    synthDepNames,
+    synthDepDirs,
+    tsconfig,
+  );
+  return runBundle(
+    chartNames.map((chart) => ({
+      name: chart,
+      run: () =>
+        helmPackageHelper(
+          source,
+          cdk8sDist,
+          chart,
+          version,
+          chartMuseumUsername,
+          chartMuseumPassword,
+          dryrun,
+        ).stdout(),
+    })),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -338,9 +384,132 @@ export function tofuPlanHelper(
   ]);
 }
 
+/**
+ * Apply every OpenTofu stack in parallel from one pod. Each stack writes to
+ * its own backend (separate S3 prefix per stack), so parallel applies are
+ * safe — the prior per-stack BK `concurrency: 1` only serialised against
+ * other branches touching the SAME stack, which Tofu's S3 backend already
+ * handles via state lock. Stack-irrelevant secrets (cloudflare-api-token
+ * on the github stack etc.) are passed but ignored by the underlying
+ * helper's conditional `withSecretVariable` checks.
+ */
+export async function tofuApplyAllHelper(
+  source: Directory,
+  stacks: string[],
+  awsAccessKeyId: Secret,
+  awsSecretAccessKey: Secret,
+  githubToken: Secret | null,
+  cloudflareAccountId: Secret | null,
+  cloudflareApiToken: Secret | null,
+  tailscaleOauthClientId: Secret | null,
+  tailscaleOauthClientSecret: Secret | null,
+  dryrun: boolean,
+): Promise<string> {
+  return runBundle(
+    stacks.map((stack) => ({
+      name: stack,
+      run: () =>
+        tofuApplyHelper(
+          source,
+          stack,
+          awsAccessKeyId,
+          awsSecretAccessKey,
+          githubToken,
+          cloudflareAccountId,
+          cloudflareApiToken,
+          tailscaleOauthClientId,
+          tailscaleOauthClientSecret,
+          dryrun,
+        ).stdout(),
+    })),
+  );
+}
+
+/**
+ * Plan every OpenTofu stack in parallel from one pod. Read-only; safe to run
+ * concurrent against any other branch.
+ */
+export async function tofuPlanAllHelper(
+  source: Directory,
+  stacks: string[],
+  awsAccessKeyId: Secret,
+  awsSecretAccessKey: Secret,
+  githubToken: Secret | null,
+  cloudflareAccountId: Secret | null,
+  cloudflareApiToken: Secret | null,
+  tailscaleOauthClientId: Secret | null,
+  tailscaleOauthClientSecret: Secret | null,
+  dryrun: boolean,
+): Promise<string> {
+  return runBundle(
+    stacks.map((stack) => ({
+      name: stack,
+      run: () =>
+        tofuPlanHelper(
+          source,
+          stack,
+          awsAccessKeyId,
+          awsSecretAccessKey,
+          githubToken,
+          cloudflareAccountId,
+          cloudflareApiToken,
+          tailscaleOauthClientId,
+          tailscaleOauthClientSecret,
+          dryrun,
+        ).stdout(),
+    })),
+  );
+}
+
 // ---------------------------------------------------------------------------
 // NPM publish
 // ---------------------------------------------------------------------------
+
+/**
+ * Publish every npm package in parallel from one pod. All packages in a
+ * single call share the same `devSuffix` — pass the build number for dev
+ * publishes, leave empty for the prod (release-please merge) tag. Per-package
+ * deps come from `WORKSPACE_DEPS`.
+ */
+export async function npmPublishAllHelper(
+  source: Directory,
+  pkgs: string[],
+  pkgPaths: string[],
+  npmToken: Secret,
+  tsconfig: File | null,
+  devSuffix: string,
+  dryrun: boolean,
+): Promise<string> {
+  if (pkgs.length !== pkgPaths.length) {
+    throw new Error(
+      "npmPublishAllHelper: pkgs/pkgPaths array length mismatch " +
+        `(${pkgs.length.toString()} vs ${pkgPaths.length.toString()})`,
+    );
+  }
+  return runBundle(
+    pkgs.map((pkg, i) => {
+      const pkgPath = pkgPaths[i] ?? pkg;
+      return {
+        name: pkg,
+        run: () => {
+          const deps = WORKSPACE_DEPS[pkgPath] ?? [];
+          const depDirs = deps.map((d) => source.directory(`packages/${d}`));
+          return publishNpmHelper(
+            source.directory(`packages/${pkgPath}`),
+            pkg,
+            npmToken,
+            deps,
+            depDirs,
+            dryrun,
+            tsconfig,
+            devSuffix,
+            pkgPath,
+          ).stdout();
+        },
+      };
+    }),
+  );
+}
 
 /**
  * Publish an npm package via bun publish.
@@ -725,6 +894,47 @@ done
 echo "Timeout: ${appName} did not become Healthy within ${timeoutSeconds}s"
 exit 1`,
     ]);
+}
+
+/**
+ * Sync ArgoCD and then poll for healthy state in one pod. Sync failure
+ * throws (BK step turns red); health-wait failure is caught and reported
+ * inline — matches the wave-1 split where `argocd-health` was BK
+ * `soft_fail: true`. The bundle step keeps sync's concurrency_group at the
+ * BK layer because applies can race across branches.
+ */
+export async function argoCdSyncAndWaitHelper(
+  appName: string,
+  argoCdToken: Secret,
+  timeoutSeconds: number,
+  serverUrl: string,
+  dryrun: boolean,
+): Promise<string> {
+  const syncOut = await argoCdSyncHelper(
+    appName,
+    argoCdToken,
+    serverUrl,
+    dryrun,
+  ).stdout();
+  let healthOut: string;
+  try {
+    healthOut = await argoCdHealthWaitHelper(
+      appName,
+      argoCdToken,
+      timeoutSeconds,
+      serverUrl,
+      dryrun,
+    ).stdout();
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    healthOut = `+++ :warning: health-wait failed (soft-fail): ${msg}`;
+  }
+  return [
+    `--- :argocd: sync (${appName})`,
+    syncOut,
+    `--- :heart: health-wait (${appName})`,
+    healthOut,
+  ].join("\n");
 }
 
 // ---------------------------------------------------------------------------

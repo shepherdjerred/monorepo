@@ -18,18 +18,18 @@ import {
   DAGGER_CALL,
 } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
-import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
+import type { BuildkiteStep } from "../lib/types.ts";
 import { WORKSPACE_DEPS } from "../../../../.dagger/src/deps.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
 /**
- * cdk8s synth step — pure validation, runs on every branch.
- * Used standalone for cdk8s manifest validation and for downstream steps
- * (e.g. ArgoCD sync) that need the manifests. No production side effect,
- * so PRs run it to catch synth regressions before they land on main.
+ * Bundle: cdk8s synth + 1Password item lint in one pod, running as parallel
+ * siblings (both share the same `bunBaseContainer` prefix, so the install
+ * layer is content-addressed and re-used). Pure validation, runs on every
+ * branch.
  */
-export function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
+export function homelabCdk8sBundleStep(dependsOn: string[]): BuildkiteStep {
   const deps = WORKSPACE_DEPS["homelab/src/cdk8s"] ?? [];
   const depFlags = deps
     .flatMap((d: string) => [
@@ -38,10 +38,13 @@ export function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
     ])
     .join(" ");
   return {
-    label: ":cdk8s: Build cdk8s Manifests",
+    label: ":cdk8s::1password: Synth + 1Password Lint",
     key: "homelab-cdk8s",
     depends_on: dependsOn,
-    command: `${DAGGER_CALL} homelab-synth --pkg-dir ${gitDir("packages/homelab/src/cdk8s")} ${depFlags} --tsconfig ${gitFile("tsconfig.base.json")}`,
+    // Dagger's camelCase→kebab converter splits numbers as word boundaries
+    // (e.g. caddyS3Proxy → caddy-s-3-proxy), so homelabCdk8sBundle registers
+    // as `homelab-cdk-8-s-bundle` at the CLI layer, not `homelab-cdk8s-bundle`.
+    command: `${DAGGER_CALL} homelab-cdk-8-s-bundle --pkg-dir ${gitDir("packages/homelab/src/cdk8s")} ${depFlags} --tsconfig ${gitFile("tsconfig.base.json")}`,
     timeout_in_minutes: 15,
     priority: 1,
     retry: RETRY,
@@ -51,37 +54,17 @@ export function cdk8sSynthStep(dependsOn: string[]): BuildkiteStep {
 }
 
 /**
- * 1Password item/field linter — offline, runs on every branch.
- * Verifies every cdk8s `OnePasswordItem` reference and consumed secret field exists in
- * the committed vault snapshot. Shares the cdk8s synth environment (in-memory synth), so
- * it takes the same pkg-dir + workspace deps as the synth step. No 1Password access.
+ * One bundled step that synth's cdk8s and pushes every chart in parallel via
+ * `helmPushAll`. The shared synth Directory is content-addressed by the
+ * engine, so all charts share one synth run. Replaces a per-chart fan-out
+ * (28 pods × ~25 s each) with one pod that runs the same engine-side graph.
+ *
+ * On success, sets a single `helm-pushed-all` BK meta-data flag so
+ * `buildSummaryStep` can report the bundle status. If any chart fails the
+ * bundle rejects, the BK step goes red, and the BK log contains every
+ * chart's section (`--- :white_check_mark: <chart>` / `+++ :x: <chart>`).
  */
-export function onePasswordItemsStep(dependsOn: string[]): BuildkiteStep {
-  const deps = WORKSPACE_DEPS["homelab/src/cdk8s"] ?? [];
-  const depFlags = deps
-    .flatMap((d: string) => [
-      `--dep-names ${d}`,
-      `--dep-dirs ${gitDir(`packages/${d}`)}`,
-    ])
-    .join(" ");
-  return {
-    label: ":1password: 1Password Items",
-    key: "homelab-1password-items",
-    depends_on: dependsOn,
-    command: `${DAGGER_CALL} homelab-one-password-lint --pkg-dir ${gitDir("packages/homelab/src/cdk8s")} ${depFlags} --tsconfig ${gitFile("tsconfig.base.json")}`,
-    timeout_in_minutes: 15,
-    priority: 1,
-    retry: RETRY,
-    env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi" })],
-  };
-}
-
-/**
- * Each helm push does synth + package in one Dagger call via helmSynthAndPackage.
- * Dagger caches the synth Directory — only the first chart incurs synth cost.
- */
-function helmPushStep(chartName: string): BuildkiteStep {
+export function homelabHelmPushAllStep(): BuildkiteStep {
   const deps = WORKSPACE_DEPS["homelab/src/cdk8s"] ?? [];
   const synthDepFlags = deps
     .flatMap((d: string) => [
@@ -89,19 +72,20 @@ function helmPushStep(chartName: string): BuildkiteStep {
       `--synth-dep-dirs ${gitDir(`packages/${d}`)}`,
     ])
     .join(" ");
+  const chartFlags = HELM_CHARTS.map((c) => `--chart-names ${c}`).join(" ");
   return {
-    label: `:helm: Push ${chartName}`,
-    key: `helm-push-${chartName}`,
+    label: `:helm: Push ${String(HELM_CHARTS.length)} Helm Charts`,
+    key: "helm-push-all",
     if: MAIN_ONLY,
     depends_on: ["quality-gate"],
     command:
       [
-        `${DAGGER_CALL} helm-synth-and-package`,
+        `${DAGGER_CALL} helm-push-all`,
         `--source ${REPO_GIT_REF}`,
         `--synth-pkg-dir ${gitDir("packages/homelab/src/cdk8s")}`,
         synthDepFlags,
         `--tsconfig ${gitFile("tsconfig.base.json")}`,
-        `--chart-name ${chartName}`,
+        chartFlags,
         // Semver prerelease: 2.0.0-BUILD. ArgoCD ~2.0.0-0 auto-updates to latest.
         `--version "2.0.0-$BUILDKITE_BUILD_NUMBER"`,
         `--chart-museum-username "$CHARTMUSEUM_USERNAME"`,
@@ -110,19 +94,11 @@ function helmPushStep(chartName: string): BuildkiteStep {
         .filter(Boolean)
         .join(" ") +
       DRYRUN_FLAG +
-      ` && buildkite-agent meta-data set "helm-pushed:${chartName}" "1"`,
-    timeout_in_minutes: 10,
+      ` && buildkite-agent meta-data set "helm-pushed-all" "1"`,
+    timeout_in_minutes: 20,
     priority: 1,
     retry: RETRY,
     env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: "250m", memory: "512Mi" })],
-  };
-}
-
-export function homelabHelmGroup(): BuildkiteGroup {
-  return {
-    group: ":helm: Homelab Helm",
-    key: "homelab-helm-push",
-    steps: HELM_CHARTS.map((chart) => helmPushStep(chart)),
+    plugins: [k8sPlugin({ cpu: "500m", memory: "1Gi" })],
   };
 }
