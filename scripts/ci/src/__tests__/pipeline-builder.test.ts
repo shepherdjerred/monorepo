@@ -315,9 +315,8 @@ describe("buildPipeline", () => {
         : [];
       // Should include the package build group
       expect(deps).toContain("pkg-webring");
-      // Should include blocking quality gates
-      expect(deps).toContain("lockfile-check");
-      expect(deps).toContain("shellcheck");
+      // Should include the bundled blocking quality gates step
+      expect(deps).toContain("quality-bundle");
     });
 
     it("includes async quality checks even without main steps", () => {
@@ -326,11 +325,13 @@ describe("buildPipeline", () => {
 
       const pipeline = buildPipeline(affected);
       const steps = pipeline.steps.filter(isStep);
-      // All async checks should be present
+      // All async checks should be present.
+      // - prettier + markdownlint live inside `quality-bundle`
+      // - dagger-hygiene + large-file-check live inside `soft-fail-bundle`
       for (const key of [
-        "prettier",
+        "quality-bundle",
         "knip-check",
-        "dagger-hygiene",
+        "soft-fail-bundle",
         "trivy-scan",
         "semgrep-scan",
       ]) {
@@ -339,10 +340,9 @@ describe("buildPipeline", () => {
       // These specific checks should be soft_fail
       for (const key of [
         "knip-check",
-        "dagger-hygiene",
+        "soft-fail-bundle",
         "trivy-scan",
         "semgrep-scan",
-        "large-file-check",
       ]) {
         expect(steps.find((s) => s.key === key)?.soft_fail).toBe(true);
       }
@@ -571,16 +571,10 @@ describe("buildPipeline", () => {
     it("includes quality gates", () => {
       const pipeline = buildPipeline(fullBuild());
       const steps = pipeline.steps.filter(isStep);
-      const qualityKeys = [
-        "prettier",
-        "shellcheck",
-        "quality-ratchet",
-        "compliance-check",
-        "knip-check",
-        "gitleaks-check",
-        "suppression-check",
-        "scout-test-template-check",
-      ];
+      // 15 source-only blocking checks are bundled into one `quality-bundle`
+      // step now — see `.dagger/src/quality.ts:qualityBundleHelper`. The
+      // soft-fail / annotated scans stay separate.
+      const qualityKeys = ["quality-bundle", "knip-check"];
       for (const key of qualityKeys) {
         expect(steps.some((s) => s.key === key)).toBe(true);
       }
@@ -589,12 +583,12 @@ describe("buildPipeline", () => {
     it("includes security and quality scans with soft_fail", () => {
       const pipeline = buildPipeline(fullBuild());
       const steps = pipeline.steps.filter(isStep);
+      // dagger-hygiene + large-file-check now run inside `soft-fail-bundle`.
       for (const key of [
         "semgrep-scan",
         "trivy-scan",
-        "dagger-hygiene",
+        "soft-fail-bundle",
         "knip-check",
-        "large-file-check",
       ]) {
         const step = steps.find((s) => s.key === key);
         expect(step).toBeDefined();
@@ -625,33 +619,19 @@ describe("buildPipeline", () => {
         expect(Array.isArray(deps) ? deps : []).not.toContain(g.key);
       }
 
-      // depends_on includes blocking quality gate keys
-      const blockingGateKeys = [
-        "shellcheck",
-        "quality-ratchet",
-        "check-todos",
-        "compliance-check",
-        "gitleaks-check",
-        "suppression-check",
-        "env-var-names",
-        "line-endings-check",
-        "scout-test-template-check",
-        "migration-guard",
-        "merge-conflict-check",
-        "caddyfile-validate",
-      ];
+      // depends_on includes the bundled quality gate + the remaining
+      // separate blocking gates (change-detection conditional)
+      const blockingGateKeys = ["quality-bundle", "caddyfile-validate"];
       for (const key of blockingGateKeys) {
         expect(Array.isArray(deps) ? deps : []).toContain(key);
       }
 
       // depends_on does NOT include async (soft_fail) check keys
       const asyncKeys = [
-        "prettier",
         "knip-check",
-        "dagger-hygiene",
+        "soft-fail-bundle",
         "trivy-scan",
         "semgrep-scan",
-        "large-file-check",
       ];
       for (const key of asyncKeys) {
         expect(Array.isArray(deps) ? deps : []).not.toContain(key);
@@ -690,15 +670,21 @@ describe("buildPipeline", () => {
       }
       collect(pipeline.steps);
 
-      // Smoke tests depend on their build step
+      // Build+smoke is now a single bundled step (no standalone build-<img>
+      // for smokeable images). Each smoke step depends on quality-gate (and
+      // its per-package pkg-check step if one exists) directly.
       const smokeSteps = allSteps.filter((s) => s.key.startsWith("smoke-"));
       expect(smokeSteps.length).toBeGreaterThan(0);
       for (const s of smokeSteps) {
         const deps = Array.isArray(s.depends_on)
           ? s.depends_on
           : [s.depends_on];
+        expect(deps).toContain("quality-gate");
         const imgName = s.key.replace("smoke-", "");
-        expect(deps).toContain(`build-${imgName}`);
+        // The standalone build step should NOT exist for smokeable images.
+        expect(
+          allSteps.find((step) => step.key === `build-${imgName}`),
+        ).toBeUndefined();
       }
 
       // Push steps with smoke tests depend on their smoke step
@@ -730,13 +716,13 @@ describe("buildPipeline", () => {
       }
     });
 
-    it("tofu plan steps are PR-only", () => {
+    it("tofu plan bundle is PR-only", () => {
       const mainPipeline = withBuildkitePullRequest("false", () =>
         buildPipeline(fullBuild()),
       );
       const mainSteps: BuildkiteStep[] = [];
       collectSteps(mainPipeline.steps, mainSteps);
-      expect(mainSteps.some((s) => s.key.startsWith("tofu-plan-"))).toBe(false);
+      expect(mainSteps.some((s) => s.key === "tofu-plan-all")).toBe(false);
 
       const pipeline = withBuildkitePullRequest("123", () =>
         buildPipeline(fullBuild()),
@@ -744,30 +730,22 @@ describe("buildPipeline", () => {
       const allSteps: BuildkiteStep[] = [];
       collectSteps(pipeline.steps, allSteps);
 
-      const planSteps = allSteps.filter((s) => s.key.startsWith("tofu-plan-"));
-      expect(planSteps.length).toBeGreaterThan(0);
-      for (const s of planSteps) {
-        expect(s.if).toBe("build.branch != pipeline.default_branch");
-        // Plan is read-only and the backends have no state locking, so plan
-        // steps must NOT carry a concurrency group — they run in parallel.
-        expect(s.concurrency).toBeUndefined();
-        expect(s.concurrency_group).toBeUndefined();
-        if (s.key === "tofu-plan-github") {
-          expect(s.command).toContain("--github-token env:TOFU_GITHUB_TOKEN");
-        } else {
-          expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
-        }
-        if (s.key === "tofu-plan-tailscale") {
-          expect(s.command).toContain(
-            "--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID",
-          );
-          expect(s.command).toContain(
-            "--tailscale-oauth-client-secret env:TAILSCALE_OAUTH_CLIENT_SECRET",
-          );
-        } else {
-          expect(s.command).not.toContain("TAILSCALE_OAUTH_CLIENT_ID");
-        }
-      }
+      const planAll = allSteps.find((s) => s.key === "tofu-plan-all");
+      expect(planAll).toBeDefined();
+      expect(planAll?.if).toBe("build.branch != pipeline.default_branch");
+      // Plan is read-only — no per-step concurrency group on the bundle.
+      expect(planAll?.concurrency).toBeUndefined();
+      expect(planAll?.concurrency_group).toBeUndefined();
+      // Bundle command carries every stack-relevant secret; the underlying
+      // Dagger helpers conditionally bind only the secrets each stack needs.
+      const cmdStr = planAll?.command ?? "";
+      expect(cmdStr).toContain("--github-token env:TOFU_GITHUB_TOKEN");
+      expect(cmdStr).toContain(
+        "--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID",
+      );
+      expect(cmdStr).toContain(
+        "--tailscale-oauth-client-secret env:TAILSCALE_OAUTH_CLIENT_SECRET",
+      );
     });
 
     it("omits main-only release and deploy graph from pull request builds", () => {
@@ -781,7 +759,7 @@ describe("buildPipeline", () => {
       const stepKeys = allSteps.map((s) => s.key);
 
       expect(groupKeys).toContain("build-images");
-      expect(groupKeys).toContain("homelab-tofu-plan");
+      expect(stepKeys).toContain("tofu-plan-all");
       expect(stepKeys).toContain("ci-complete");
       expect(stepKeys).toContain("greptile-review");
 
@@ -789,9 +767,9 @@ describe("buildPipeline", () => {
       expect(groupKeys).not.toContain("publish-npm");
       expect(groupKeys).not.toContain("cooklang-release");
       expect(groupKeys).not.toContain("deploy-sites");
-      expect(groupKeys).not.toContain("homelab-helm-push");
-      expect(groupKeys).not.toContain("homelab-tofu");
 
+      expect(stepKeys).not.toContain("helm-push-all");
+      expect(stepKeys).not.toContain("tofu-apply-all");
       expect(stepKeys).not.toContain("release-please");
       expect(stepKeys).not.toContain("deploy-argocd");
       expect(stepKeys).not.toContain("argocd-health");
@@ -983,14 +961,17 @@ describe("buildPipeline", () => {
 
     it("includes homelab track", () => {
       const pipeline = buildPipeline(fullBuild());
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
       const groups = pipeline.steps.filter(isGroup);
       const groupKeys = groups.map((g) => g.key);
+      const stepKeys = allSteps.map((s) => s.key);
 
       // Homelab images are now part of the unified build/push groups
       expect(groupKeys).toContain("build-images");
       expect(groupKeys).toContain("push-images");
-      expect(groupKeys).toContain("homelab-helm-push");
-      expect(groupKeys).toContain("homelab-tofu");
+      expect(stepKeys).toContain("helm-push-all");
+      expect(stepKeys).toContain("tofu-apply-all");
     });
 
     it("waits for SeaweedFS bucket reconciliation before deploying sites", () => {
@@ -1003,7 +984,7 @@ describe("buildPipeline", () => {
       );
 
       expect(scoutBetaDeploy).toBeDefined();
-      expect(scoutBetaDeploy?.depends_on).toContain("tofu-seaweedfs");
+      expect(scoutBetaDeploy?.depends_on).toContain("tofu-apply-all");
     });
 
     it("waits for SeaweedFS bucket reconciliation for partial homelab + site releases", () => {
@@ -1017,14 +998,14 @@ describe("buildPipeline", () => {
       const allSteps: BuildkiteStep[] = [];
       collectSteps(pipeline.steps, allSteps);
 
-      const tofuSeaweedfs = allSteps.find((s) => s.key === "tofu-seaweedfs");
+      const tofuApplyAll = allSteps.find((s) => s.key === "tofu-apply-all");
       const scoutBetaDeploy = allSteps.find(
         (s) => s.key === "deploy-scout-frontend-beta",
       );
 
-      expect(tofuSeaweedfs).toBeDefined();
+      expect(tofuApplyAll).toBeDefined();
       expect(scoutBetaDeploy).toBeDefined();
-      expect(scoutBetaDeploy?.depends_on).toContain("tofu-seaweedfs");
+      expect(scoutBetaDeploy?.depends_on).toContain("tofu-apply-all");
     });
 
     it("includes version commit-back", () => {
@@ -1063,9 +1044,8 @@ describe("buildPipeline", () => {
       const deps = Array.isArray(ciComplete?.depends_on)
         ? ciComplete.depends_on
         : [];
-      // Should include blocking quality gates
-      expect(deps).toContain("lockfile-check");
-      expect(deps).toContain("shellcheck");
+      // Should include the bundled blocking quality gates step
+      expect(deps).toContain("quality-bundle");
       // Should include per-package build keys
       expect(deps.some((d: string) => d.startsWith("pkg-"))).toBe(true);
     });
@@ -1120,29 +1100,21 @@ describe("buildPipeline", () => {
       }
       collect(pipeline.steps);
 
-      // Only APPLY steps (tofu-<stack>) carry a concurrency group — they write
-      // state. PLAN steps (tofu-plan-<stack>) are read-only and intentionally
-      // have none (asserted in "tofu plan steps are PR-only").
-      const tofuApplySteps = allSteps.filter(
-        (s) => s.key.startsWith("tofu-") && !s.key.startsWith("tofu-plan-"),
+      // tofu-apply-all is the bundled step that applies every stack in
+      // parallel inside one Dagger call. It carries no BK concurrency group
+      // — each stack has its own S3 state lock, so concurrent applies are
+      // safe at the backend layer. The bundle command carries every secret;
+      // the underlying Dagger helpers conditionally bind only the secrets
+      // the stack consumes.
+      const tofuApplyAll = allSteps.find((s) => s.key === "tofu-apply-all");
+      expect(tofuApplyAll).toBeDefined();
+      expect(tofuApplyAll?.concurrency).toBeUndefined();
+      expect(tofuApplyAll?.concurrency_group).toBeUndefined();
+      const cmdStr = tofuApplyAll?.command ?? "";
+      expect(cmdStr).toContain("--github-token env:TOFU_GITHUB_TOKEN");
+      expect(cmdStr).toContain(
+        "--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID",
       );
-      expect(tofuApplySteps.length).toBeGreaterThan(0);
-      for (const s of tofuApplySteps) {
-        expect(s.concurrency).toBe(1);
-        expect(s.concurrency_group).toContain("monorepo/tofu-");
-        if (s.key === "tofu-github") {
-          expect(s.command).toContain("--github-token env:TOFU_GITHUB_TOKEN");
-        } else {
-          expect(s.command).not.toContain("TOFU_GITHUB_TOKEN");
-        }
-        if (s.key === "tofu-tailscale" || s.key === "tofu-plan-tailscale") {
-          expect(s.command).toContain(
-            "--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID",
-          );
-        } else {
-          expect(s.command).not.toContain("TAILSCALE_OAUTH_CLIENT_ID");
-        }
-      }
 
       const argoSteps = allSteps.filter((s) =>
         s.key.startsWith("deploy-argocd"),
@@ -1170,29 +1142,36 @@ describe("buildPipeline", () => {
       expect(steps.some((s) => s.key === "homelab-cdk8s")).toBe(true);
     });
 
-    it("includes the 1Password item/field lint gate", () => {
+    it("includes the 1Password item/field lint gate (bundled with cdk8s synth)", () => {
       const pipeline = buildPipeline(versionBumpAffected());
       const steps = pipeline.steps.filter(isStep);
-      expect(steps.some((s) => s.key === "homelab-1password-items")).toBe(true);
+      // Both checks now run inside the `homelab-cdk8s` bundle Dagger func.
+      const bundle = steps.find((s) => s.key === "homelab-cdk8s");
+      expect(bundle).toBeDefined();
+      expect(bundle?.command).toContain("homelab-cdk8s-bundle");
     });
 
     it("includes helm chart push so ArgoCD picks up new manifests", () => {
       const pipeline = buildPipeline(versionBumpAffected());
-      const groups = pipeline.steps.filter(isGroup);
-      expect(groups.some((g) => g.key === "homelab-helm-push")).toBe(true);
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      expect(allSteps.some((s) => s.key === "helm-push-all")).toBe(true);
     });
 
     it("includes tofu apply", () => {
       const pipeline = buildPipeline(versionBumpAffected());
-      const groups = pipeline.steps.filter(isGroup);
-      expect(groups.some((g) => g.key === "homelab-tofu")).toBe(true);
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      expect(allSteps.some((s) => s.key === "tofu-apply-all")).toBe(true);
     });
 
-    it("includes ArgoCD sync and health check", () => {
+    it("includes one bundled ArgoCD sync + health step", () => {
       const pipeline = buildPipeline(versionBumpAffected());
       const steps = pipeline.steps.filter(isStep);
+      // Sync + health-wait collapsed into one BK pod via
+      // `argo-cd-sync-and-wait`; health-wait failure is caught Dagger-side.
       expect(steps.some((s) => s.key === "deploy-argocd")).toBe(true);
-      expect(steps.some((s) => s.key === "argocd-health")).toBe(true);
+      expect(steps.some((s) => s.key === "argocd-health")).toBe(false);
     });
 
     it("does NOT build any images (they were already pushed)", () => {
@@ -1230,7 +1209,7 @@ describe("buildPipeline", () => {
       const deps = Array.isArray(argoSync?.depends_on)
         ? argoSync.depends_on
         : [];
-      expect(deps).toContain("homelab-helm-push");
+      expect(deps).toContain("helm-push-all");
       // Should NOT depend on any push-* image keys
       const imagePushDeps = deps.filter((d: string) => d.startsWith("push-"));
       expect(imagePushDeps).toHaveLength(0);
@@ -1271,20 +1250,23 @@ describe("buildPipeline", () => {
       affected.homelabChanged = true;
 
       const pipeline = buildPipeline(affected);
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
       const groups = pipeline.steps.filter(isGroup);
       const groupKeys = groups.map((g) => g.key);
+      const stepKeys = allSteps.map((s) => s.key);
 
       // Homelab images are part of the unified build/push groups
       expect(groupKeys).toContain("build-images");
       expect(groupKeys).toContain("push-images");
-      expect(groupKeys).toContain("homelab-helm-push");
-      expect(groupKeys).toContain("homelab-tofu");
+      expect(stepKeys).toContain("helm-push-all");
+      expect(stepKeys).toContain("tofu-apply-all");
       expect(groupKeys).not.toContain("cooklang-release");
     });
   });
 
   describe("tofu plan gating (PR builds)", () => {
-    it("omits the tofu plan group for a cdk8s-only homelab PR", () => {
+    it("omits the tofu plan bundle for a cdk8s-only homelab PR", () => {
       // homelab changed (e.g. cdk8s) but no tofu source files changed
       const affected = emptyAffected();
       affected.packages.add("homelab");
@@ -1294,11 +1276,12 @@ describe("buildPipeline", () => {
       const pipeline = withBuildkitePullRequest("123", () =>
         buildPipeline(affected),
       );
-      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
-      expect(groupKeys).not.toContain("homelab-tofu-plan");
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      expect(allSteps.some((s) => s.key === "tofu-plan-all")).toBe(false);
     });
 
-    it("includes the tofu plan group when tofu source changed", () => {
+    it("includes the tofu plan bundle when tofu source changed", () => {
       const affected = emptyAffected();
       affected.packages.add("homelab");
       affected.homelabChanged = true;
@@ -1307,8 +1290,9 @@ describe("buildPipeline", () => {
       const pipeline = withBuildkitePullRequest("123", () =>
         buildPipeline(affected),
       );
-      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
-      expect(groupKeys).toContain("homelab-tofu-plan");
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      expect(allSteps.some((s) => s.key === "tofu-plan-all")).toBe(true);
     });
   });
 
@@ -1517,58 +1501,52 @@ describe("buildPipeline", () => {
       return affected;
     }
 
-    it("generates both prod and dev npm publish steps", () => {
+    it("generates both prod and dev npm publish bundle steps", () => {
       const pipeline = buildPipeline(releasePleaseAffected());
       const groups = pipeline.steps.filter(isGroup);
       const npmGroup = groups.find((g) => g.key === "publish-npm");
       expect(npmGroup).toBeDefined();
       const steps = npmGroup!.steps;
-      // Should have prod + dev for each npm package (3 packages × 2 = 6 steps)
-      expect(steps.length).toBe(6);
-      const prodSteps = steps.filter((s) => s.key.endsWith("-prod"));
-      const devSteps = steps.filter((s) => !s.key.endsWith("-prod"));
-      expect(prodSteps.length).toBe(3);
-      expect(devSteps.length).toBe(3);
+      // Every package is published from ONE bundled pod per mode; with
+      // release-please merge, both prod and dev modes apply.
+      expect(steps.length).toBe(2);
+      expect(steps.some((s) => s.key === "npm-publish-all-prod")).toBe(true);
+      expect(steps.some((s) => s.key === "npm-publish-all")).toBe(true);
     });
 
-    it("prod steps do not have --dev-suffix flag", () => {
+    it("prod bundle does not carry --dev-suffix flag", () => {
       const pipeline = buildPipeline(releasePleaseAffected());
       const groups = pipeline.steps.filter(isGroup);
       const npmGroup = groups.find((g) => g.key === "publish-npm");
-      const prodSteps = npmGroup!.steps.filter((s) => s.key.endsWith("-prod"));
-      for (const step of prodSteps) {
-        expect(step.command).not.toContain("--dev-suffix");
-      }
+      const prod = npmGroup!.steps.find(
+        (s) => s.key === "npm-publish-all-prod",
+      );
+      expect(prod?.command).not.toContain("--dev-suffix");
     });
 
-    it("dev steps have --dev-suffix flag", () => {
+    it("dev bundle carries --dev-suffix flag", () => {
       const pipeline = buildPipeline(releasePleaseAffected());
       const groups = pipeline.steps.filter(isGroup);
       const npmGroup = groups.find((g) => g.key === "publish-npm");
-      const devSteps = npmGroup!.steps.filter((s) => !s.key.endsWith("-prod"));
-      for (const step of devSteps) {
-        expect(step.command).toContain("--dev-suffix");
-      }
+      const dev = npmGroup!.steps.find((s) => s.key === "npm-publish-all");
+      expect(dev?.command).toContain("--dev-suffix");
     });
   });
 
   describe("publish step mount paths", () => {
-    it("passes --pkg-path equal to on-disk dir for every npm package", () => {
+    it("bundle carries one --pkg-paths flag per package on-disk dir", () => {
       const pipeline = buildPipeline(fullBuild());
       const groups = pipeline.steps.filter(isGroup);
       const npmGroup = groups.find((g) => g.key === "publish-npm");
       expect(npmGroup).toBeDefined();
-      const helmTypes = npmGroup!.steps.find((s) =>
-        s.label?.includes("@shepherdjerred/helm-types"),
-      );
-      expect(helmTypes).toBeDefined();
-      // Scoped/nested package: npm name and dir disagree, so --pkg-path is
+      const dev = npmGroup!.steps.find((s) => s.key === "npm-publish-all");
+      expect(dev).toBeDefined();
+      // Scoped/nested package: npm name and dir disagree, so --pkg-paths is
       // load-bearing for file: workspace dep resolution inside the container.
-      expect(helmTypes!.command).toContain("--pkg-path homelab/src/helm-types");
-      // Sanity: every dev publish step carries the flag.
-      for (const step of npmGroup!.steps) {
-        expect(step.command).toMatch(/--pkg-path \S+/);
-      }
+      expect(dev!.command).toContain("--pkg-paths homelab/src/helm-types");
+      // Top-level packages keep their dir name as the pkg-path.
+      expect(dev!.command).toContain("--pkg-paths webring");
+      expect(dev!.command).toContain("--pkg-paths astro-opengraph-images");
     });
   });
 });

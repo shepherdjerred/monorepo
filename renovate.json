@@ -152,6 +152,11 @@
       "description": "Ignore bogus LinuxServer qBittorrent OS tags such as 20.04.1; those are old Ubuntu-based image tags, not qBittorrent app versions",
       "matchPackageNames": ["linuxserver/qbittorrent"],
       "allowedVersions": "/^[0-9]+\\.[0-9]+\\.[0-9]+$/"
+    },
+    {
+      "description": "Pin protobufjs to v7 until @temporalio/proto widens its pin off 7.5.x. The override in packages/temporal/package.json is load-bearing for Temporal payload (de)serialization — see packages/docs/todos/protobufjs-v8-watch.md and the revert in commit acc7320dc. allowedVersions:<8 keeps v8 off the auto-PR list (it surfaces on the Dependency Dashboard as ignored) without gating v7 patches.",
+      "matchPackageNames": ["protobufjs"],
+      "allowedVersions": "<8"
     }
   ],
   "minimumReleaseAge": "30 days",

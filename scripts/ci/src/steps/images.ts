@@ -147,6 +147,15 @@ const SMOKE_CUSTOM_INFRA = new Set([
   "smoke-test-trmnl-dashboard",
 ]);
 
+/**
+ * Combined "build + smoke" step. Each smoke `@func()` in `.dagger/src/`
+ * already builds its image internally before running the smoke verification,
+ * so the engine de-dups against the standalone build (one engine-side build
+ * either way). Bundling them at the BK layer drops a pod and a sidecar tax
+ * per smokeable image. For images without a smoke test we still emit a plain
+ * `build-<img>` step in {@link buildImagesWithSmokeGroup} so build failures
+ * are caught early.
+ */
 function smokeTestStep(
   img: ImageTarget,
   dependsOn: string | string[],
@@ -177,17 +186,17 @@ function smokeTestStep(
   }
 
   return {
-    label: `:heartbeat: Smoke ${img.name}`,
+    label: `:package::heartbeat: Build + Smoke ${img.name}`,
     key: `smoke-${safeKey(img.name)}`,
     depends_on: dependsOn,
     command: cmd,
-    timeout_in_minutes: 10,
+    timeout_in_minutes: 15,
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [
       k8sPlugin({
-        cpu: "100m",
-        memory: "256Mi",
+        cpu: "150m",
+        memory: "384Mi",
       }),
     ],
   };
@@ -301,12 +310,14 @@ export function buildImagesWithSmokeGroup(
       ? ["quality-gate", pkgKey]
       : ["quality-gate"];
 
-    const build = imageBuildStep(img, buildDeps);
-    steps.push(build);
-
-    const smoke = smokeTestStep(img, `build-${safeKey(img.name)}`);
+    // For smokeable images, the smoke step already builds + smokes in one
+    // Dagger call — skip the standalone `build-<img>` BK step. For
+    // non-smokeable images, emit the build step alone so failures surface.
+    const smoke = smokeTestStep(img, buildDeps);
     if (smoke) {
       steps.push(smoke);
+    } else {
+      steps.push(imageBuildStep(img, buildDeps));
     }
   }
   return {

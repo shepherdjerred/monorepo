@@ -22,13 +22,18 @@ import { latexBuildHelper } from "./latex";
 
 import {
   helmPackageHelper,
+  helmPushAllHelper,
   tofuApplyHelper,
   tofuPlanHelper,
+  tofuApplyAllHelper,
+  tofuPlanAllHelper,
   publishNpmHelper,
+  npmPublishAllHelper,
   deploySiteHelper,
   deployStaticSiteHelper,
   argoCdSyncHelper,
   argoCdHealthWaitHelper,
+  argoCdSyncAndWaitHelper,
   cooklangBuildHelper,
   cooklangPublishHelper,
   cooklangVersionCommitBackHelper,
@@ -46,6 +51,8 @@ import {
   generateAndTypecheckHelper,
   generateAndTestHelper,
   generateAndTypecheckWithSecretsHelper,
+  lintTypecheckTestHelper,
+  generateAndLintTypecheckTestHelper,
 } from "./typescript";
 
 import { astroCheckHelper, astroBuildHelper, viteBuildHelper } from "./astro";
@@ -75,10 +82,16 @@ import {
   pushRedlibImageHelper,
 } from "./image";
 
-import { goBuildHelper, goTestHelper, goLintHelper } from "./golang";
+import {
+  goBuildHelper,
+  goTestHelper,
+  goLintHelper,
+  goLintTestBuildHelper,
+} from "./golang";
 
 import {
   homelabSynthHelper,
+  homelabCdk8sBundleHelper,
   helmTypesDriftCheckHelper,
   homelabOnePasswordLintHelper,
 } from "./homelab";
@@ -131,6 +144,8 @@ import {
   mergeConflictCheckHelper,
   largeFileCheckHelper,
   tasksForObsidianIosNativeDepsHelper,
+  qualityBundleHelper,
+  softFailBundleHelper,
 } from "./quality";
 
 function requireRecord(
@@ -289,6 +304,64 @@ export class Monorepo {
       depDirs,
       tsconfig,
     ).stdout();
+  }
+
+  /**
+   * Per-package bundle: run lint + typecheck + test in parallel as sibling
+   * containers from one pod. The engine de-dups the shared install layer by
+   * content-address, so this collapses three BK steps into one without losing
+   * intra-package parallelism. `haUrl`/`haToken` switch the typecheck branch
+   * to the HA-secrets generate-and-typecheck variant (used by temporal).
+   * `includeAstroCheck`/`includeAstroBuild`/`includeBuild` add optional
+   * parallel siblings — used by astro packages and NPM_BUILD_PACKAGES.
+   */
+  @func()
+  async lintTypecheckTest(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+    needsHelm = false,
+    haUrl: Secret | null = null,
+    haToken: Secret | null = null,
+    includeAstroCheck = false,
+    includeAstroBuild = false,
+    includeBuild = false,
+    skipTest = false,
+  ): Promise<string> {
+    return lintTypecheckTestHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+      needsHelm,
+      haUrl,
+      haToken,
+      includeAstroCheck,
+      includeAstroBuild,
+      includeBuild,
+      skipTest,
+    );
+  }
+
+  /** Prisma variant of {@link lintTypecheckTest} — each sibling generates first. */
+  @func()
+  async generateAndLintTypecheckTest(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return generateAndLintTypecheckTestHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -772,6 +845,15 @@ export class Monorepo {
     return goLintHelper(pkgDir).stdout();
   }
 
+  /**
+   * Bundle: go lint + test + build in one pod, parallel siblings sharing
+   * the `goBaseContainer` prefix.
+   */
+  @func()
+  async goLintTestBuild(pkgDir: Directory): Promise<string> {
+    return goLintTestBuildHelper(pkgDir);
+  }
+
   // ---------------------------------------------------------------------------
   // Homelab operations
   // ---------------------------------------------------------------------------
@@ -821,6 +903,21 @@ export class Monorepo {
       depDirs,
       tsconfig,
     ).stdout();
+  }
+
+  /**
+   * Bundle: cdk8s synth + 1Password lint in one pod, running as parallel
+   * siblings. Shared `bunBaseContainer` prefix de-dups the install layer
+   * by content-address — one source fetch, two parallel `withExec`s.
+   */
+  @func()
+  async homelabCdk8sBundle(
+    pkgDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return homelabCdk8sBundleHelper(pkgDir, depNames, depDirs, tsconfig);
   }
 
   // ---------------------------------------------------------------------------
@@ -969,6 +1066,39 @@ export class Monorepo {
     ).stdout();
   }
 
+  /**
+   * Synth + package + push every Helm chart in parallel from one pod.
+   * Replaces the 28-step per-chart `helm-push-<chart>` BK fan-out (each ~25 s,
+   * mostly sidecar overhead). The synth Directory is content-addressed, so
+   * all charts share one synth result.
+   */
+  @func({ cache: "never" })
+  async helmPushAll(
+    source: Directory,
+    synthPkgDir: Directory,
+    synthDepNames: string[] = [],
+    synthDepDirs: Directory[] = [],
+    tsconfig: File | null = null,
+    chartNames: string[],
+    version: string,
+    chartMuseumUsername: string,
+    chartMuseumPassword: Secret,
+    dryrun = false,
+  ): Promise<string> {
+    return helmPushAllHelper(
+      source,
+      synthPkgDir,
+      synthDepNames,
+      synthDepDirs,
+      tsconfig,
+      chartNames,
+      version,
+      chartMuseumUsername,
+      chartMuseumPassword,
+      dryrun,
+    );
+  }
+
   /** Run tofu init + apply on an infrastructure stack */
   @func({ cache: "never" })
   async tofuApply(
@@ -1025,6 +1155,67 @@ export class Monorepo {
     ).stdout();
   }
 
+  /**
+   * Apply every OpenTofu stack in parallel from one pod. Each stack has its
+   * own S3 backend + state lock, so concurrent applies are safe. Stack-
+   * irrelevant secrets pass through and are ignored by `tofuApplyHelper`'s
+   * conditional `withSecretVariable` checks.
+   */
+  @func({ cache: "never" })
+  async tofuApplyAll(
+    source: Directory,
+    stacks: string[],
+    awsAccessKeyId: Secret,
+    awsSecretAccessKey: Secret,
+    githubToken: Secret | null = null,
+    cloudflareAccountId: Secret | null = null,
+    cloudflareApiToken: Secret | null = null,
+    tailscaleOauthClientId: Secret | null = null,
+    tailscaleOauthClientSecret: Secret | null = null,
+    dryrun = false,
+  ): Promise<string> {
+    return tofuApplyAllHelper(
+      source,
+      stacks,
+      awsAccessKeyId,
+      awsSecretAccessKey,
+      githubToken,
+      cloudflareAccountId,
+      cloudflareApiToken,
+      tailscaleOauthClientId,
+      tailscaleOauthClientSecret,
+      dryrun,
+    );
+  }
+
+  /** Plan every OpenTofu stack in parallel from one pod. Read-only. */
+  @func({ cache: "never" })
+  async tofuPlanAll(
+    source: Directory,
+    stacks: string[],
+    awsAccessKeyId: Secret,
+    awsSecretAccessKey: Secret,
+    githubToken: Secret | null = null,
+    cloudflareAccountId: Secret | null = null,
+    cloudflareApiToken: Secret | null = null,
+    tailscaleOauthClientId: Secret | null = null,
+    tailscaleOauthClientSecret: Secret | null = null,
+    dryrun = false,
+  ): Promise<string> {
+    return tofuPlanAllHelper(
+      source,
+      stacks,
+      awsAccessKeyId,
+      awsSecretAccessKey,
+      githubToken,
+      cloudflareAccountId,
+      cloudflareApiToken,
+      tailscaleOauthClientId,
+      tailscaleOauthClientSecret,
+      dryrun,
+    );
+  }
+
   /** Publish an npm package. Set devSuffix for dev releases (--tag dev, version becomes <pkg-version>-dev.<suffix>), leave empty for prod (--tag latest). Set pkgPath to the on-disk path under packages/ (e.g. "homelab/src/helm-types") when the npm name differs from the directory layout — required so `file:` workspace deps resolve correctly. */
   @func({ cache: "never" })
   async publishNpm(
@@ -1049,6 +1240,33 @@ export class Monorepo {
       devSuffix,
       pkgPath,
     ).stdout();
+  }
+
+  /**
+   * Publish every npm package in parallel from one pod. Bundle's children
+   * share a `devSuffix` — pass the build number for dev (per-build) publishes
+   * or leave empty for prod (release-please merge) publishes. Run as two
+   * separate bundle invocations from the BK side when both modes apply.
+   */
+  @func({ cache: "never" })
+  async npmPublishAll(
+    source: Directory,
+    pkgs: string[],
+    pkgPaths: string[],
+    npmToken: Secret,
+    tsconfig: File | null = null,
+    devSuffix: string = "",
+    dryrun = false,
+  ): Promise<string> {
+    return npmPublishAllHelper(
+      source,
+      pkgs,
+      pkgPaths,
+      npmToken,
+      tsconfig,
+      devSuffix,
+      dryrun,
+    );
   }
 
   /** Build and deploy a static site to S3 or R2 */
@@ -1138,6 +1356,29 @@ export class Monorepo {
       serverUrl,
       dryrun,
     ).stdout();
+  }
+
+  /**
+   * Sync an ArgoCD app and wait for it to become healthy from one pod.
+   * Sync failure throws (BK step turns red). Health-wait failure is caught
+   * inside the Dagger function so it doesn't fail the bundle — matching the
+   * wave-1 `soft_fail: true` on the standalone argocd-health step.
+   */
+  @func({ cache: "never" })
+  async argoCdSyncAndWait(
+    appName: string,
+    argoCdToken: Secret,
+    timeoutSeconds: number = 300,
+    serverUrl: string = "https://argocd.sjer.red",
+    dryrun = false,
+  ): Promise<string> {
+    return argoCdSyncAndWaitHelper(
+      appName,
+      argoCdToken,
+      timeoutSeconds,
+      serverUrl,
+      dryrun,
+    );
   }
 
   /** Build cooklang-for-obsidian plugin and return artifacts (main.js, manifest.json, styles.css) */
@@ -1495,6 +1736,27 @@ export class Monorepo {
   @func()
   async tasksForObsidianIosNativeDeps(source: Directory): Promise<string> {
     return tasksForObsidianIosNativeDepsHelper(source).stdout();
+  }
+
+  /**
+   * Quality bundle: 15 blocking source-only checks run in parallel from one
+   * BK pod via Promise.all on sibling containers. Replaces 15 separate BK
+   * steps. See {@link qualityBundleHelper} for the child list and the
+   * separately-emitted exceptions.
+   */
+  @func()
+  async qualityBundle(source: Directory): Promise<string> {
+    return qualityBundleHelper(source);
+  }
+
+  /**
+   * Soft-fail bundle: `dagger-hygiene` + `large-file-check` in parallel.
+   * BK step carries `soft_fail: true`; the bundle Dagger function still
+   * throws on a real child failure (so retries don't loop forever).
+   */
+  @func()
+  async softFailBundle(source: Directory): Promise<string> {
+    return softFailBundleHelper(source);
   }
 
   // ---------------------------------------------------------------------------

@@ -52,31 +52,25 @@ function buildSummaryScript(): string {
     );
   }
 
-  // Helm charts — check per-chart metadata to report actual push status
+  // Helm charts — the bundled `helm-push-all` step pushes every chart in
+  // parallel from one pod. It either fully succeeds (sets `helm-pushed-all=1`)
+  // or fails — per-chart status comes from the failed step's BK log, not the
+  // summary. Charts are listed for navigation; their statuses match the
+  // bundle.
   lines.push(
     `echo "" >> $$SUMMARY`,
     `echo "### :helm: Helm Charts" >> $$SUMMARY`,
     `echo "" >> $$SUMMARY`,
-    `HELM_OK=0`,
-    `HELM_FAIL=0`,
-  );
-  for (const chart of HELM_CHARTS) {
-    lines.push(
-      `HELM_STATUS=$$(buildkite-agent meta-data get "helm-pushed:${chart}" --default "")`,
-      `if [ "$$HELM_STATUS" = "1" ]; then HELM_OK=$$((HELM_OK + 1)); else HELM_FAIL=$$((HELM_FAIL + 1)); fi`,
-    );
-  }
-  lines.push(
-    `echo "Published $$HELM_OK / ${String(HELM_CHARTS.length)} charts to [ChartMuseum](https://chartmuseum.sjer.red)" >> $$SUMMARY`,
-    `if [ "$$HELM_FAIL" -gt 0 ]; then echo "" >> $$SUMMARY; echo ":warning: $$HELM_FAIL chart(s) failed to push" >> $$SUMMARY; fi`,
+    `HELM_STATUS=$$(buildkite-agent meta-data get "helm-pushed-all" --default "")`,
+    `if [ "$$HELM_STATUS" = "1" ]; then HELM_ICON=":white_check_mark:"; HELM_MSG="${String(HELM_CHARTS.length)} / ${String(HELM_CHARTS.length)} charts pushed to [ChartMuseum](https://chartmuseum.sjer.red)"; else HELM_ICON=":x:"; HELM_MSG="bundle failed — see the helm-push-all step log for the per-chart breakdown"; fi`,
+    `echo "$$HELM_ICON $$HELM_MSG" >> $$SUMMARY`,
     `echo "" >> $$SUMMARY`,
     `echo "<details><summary>Chart list</summary>" >> $$SUMMARY`,
     `echo "" >> $$SUMMARY`,
   );
   for (const chart of HELM_CHARTS) {
     lines.push(
-      `HELM_STATUS=$$(buildkite-agent meta-data get "helm-pushed:${chart}" --default "")`,
-      `if [ "$$HELM_STATUS" = "1" ]; then echo "- :white_check_mark: ${chart}" >> $$SUMMARY; else echo "- :x: ${chart}" >> $$SUMMARY; fi`,
+      `if [ "$$HELM_STATUS" = "1" ]; then echo "- :white_check_mark: ${chart}" >> $$SUMMARY; else echo "- :grey_question: ${chart}" >> $$SUMMARY; fi`,
     );
   }
   lines.push(`echo "" >> $$SUMMARY`, `echo "</details>" >> $$SUMMARY`);

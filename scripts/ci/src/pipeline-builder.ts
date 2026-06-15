@@ -5,7 +5,6 @@ import {
   ALL_PACKAGES,
   IMAGE_PUSH_TARGETS,
   INFRA_PUSH_TARGETS,
-  TOFU_STACKS,
 } from "./catalog.ts";
 import type { ImageTarget } from "./catalog.ts";
 import type { AffectedPackages } from "./lib/types.ts";
@@ -16,30 +15,15 @@ import type {
 } from "./lib/types.ts";
 import { perPackageSteps } from "./steps/per-package.ts";
 import {
-  prettierStep,
-  markdownlintStep,
-  shellcheckStep,
-  qualityRatchetStep,
-  checkTodosStep,
-  complianceCheckStep,
+  qualityBundleStep,
   knipCheckStep,
-  gitleaksCheckStep,
-  suppressionCheckStep,
   trivyScanStep,
   semgrepScanStep,
-  daggerHygieneStep,
+  softFailBundleStep,
   tunnelDnsCoverageStep,
   talosSchematicSyncStep,
-  reactVersionSyncStep,
   caddyfileValidateStep,
-  lockfileCheckStep,
   bunLockDriftCheckStep,
-  envVarNamesStep,
-  lineEndingsCheckStep,
-  scoutTestTemplateCheckStep,
-  migrationGuardStep,
-  mergeConflictStep,
-  largeFileStep,
   greptileReviewStep,
 } from "./steps/quality.ts";
 import { releasePleaseStep } from "./steps/release.ts";
@@ -51,12 +35,15 @@ import {
 import { publishNpmGroup, filterNpmPackages } from "./steps/npm.ts";
 import { deploySitesGroup, filterSites } from "./steps/sites.ts";
 import {
-  cdk8sSynthStep,
-  onePasswordItemsStep,
-  homelabHelmGroup,
+  homelabCdk8sBundleStep,
+  homelabHelmPushAllStep,
 } from "./steps/helm.ts";
-import { homelabTofuGroup, homelabTofuPlanGroup } from "./steps/tofu.ts";
-import { argoCdSyncStep, argoCdHealthStep } from "./steps/argocd.ts";
+import {
+  homelabTofuApplyAllStep,
+  homelabTofuApplyGithubStep,
+  homelabTofuPlanAllStep,
+} from "./steps/tofu.ts";
+import { argoCdSyncAndWaitStep } from "./steps/argocd.ts";
 import { cooklangReleaseGroup } from "./steps/cooklang.ts";
 import { versionCommitBackStep } from "./steps/version.ts";
 import {
@@ -195,21 +182,17 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     !affected.buildAll && driftSeeds.length > 0
       ? [bunLockDriftCheckStep(driftSeeds)]
       : [];
+  // 15 source-only blocking checks (shellcheck, ratchet, todos, compliance,
+  // gitleaks, suppression, env-var-names, line-endings, scout-test-template,
+  // migration-guard, merge-conflict, react-version-sync, lockfile-check,
+  // prettier, markdownlint) collapse into one bundled BK pod via
+  // `qualityBundle`. The bundle's Dagger function fans them out in parallel
+  // with Promise.all on sibling containers — the engine de-dups the shared
+  // source fetch by SHA. driftGate stays separate (runtime --seeds arg);
+  // greptile stays separate (PR-only authenticated review wait).
   const blockingGates = [
-    lockfileCheckStep(),
+    qualityBundleStep(),
     ...driftGate,
-    shellcheckStep(),
-    qualityRatchetStep(),
-    checkTodosStep(),
-    complianceCheckStep(),
-    gitleaksCheckStep(),
-    suppressionCheckStep(),
-    envVarNamesStep(),
-    lineEndingsCheckStep(),
-    scoutTestTemplateCheckStep(),
-    migrationGuardStep(),
-    mergeConflictStep(),
-    reactVersionSyncStep(),
     ...(pullRequestBuild ? [greptileReviewStep()] : []),
   ];
   for (const gate of blockingGates) {
@@ -218,17 +201,15 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   }
 
   // --- Async quality checks (soft_fail, run in parallel with release track) ---
-  steps.push(prettierStep());
-  steps.push(markdownlintStep());
   steps.push(knipCheckStep());
-  steps.push(daggerHygieneStep());
+  // dagger-hygiene + large-file-check share a bundled soft-fail step.
+  steps.push(softFailBundleStep());
   if (affected.buildAll || affected.homelabChanged) {
     steps.push(tunnelDnsCoverageStep());
     steps.push(talosSchematicSyncStep());
   }
   steps.push(trivyScanStep());
   steps.push(semgrepScanStep());
-  steps.push(largeFileStep());
 
   // --- Caddyfile validation (blocking, only when homelab changes) ---
   if (affected.buildAll || affected.homelabChanged) {
@@ -308,16 +289,15 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       }
     }
 
-    // --- Build cdk8s manifests ---
+    // --- Build cdk8s manifests + 1Password item lint (bundled) ---
     if (affected.buildAll || affected.homelabChanged) {
       const homelabPkgKey = pkgKeyMap.get("homelab");
       const synthDeps = homelabPkgKey
         ? ["quality-gate", homelabPkgKey]
         : ["quality-gate"];
-      steps.push(cdk8sSynthStep(synthDeps));
-      // Blocking gate: every OnePasswordItem reference + consumed field must exist
-      // in the committed vault snapshot. Shares the synth environment.
-      steps.push(onePasswordItemsStep(synthDeps));
+      // cdk8s synth + 1Password lint share the same bunBaseContainer
+      // prefix — bundle into one pod via runBundle/Promise.all.
+      steps.push(homelabCdk8sBundleStep(synthDeps));
     }
 
     // =======================================================================
@@ -367,8 +347,11 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         affected.hasSitePackages,
         affected.buildAll,
       );
+      // Site deploys upload to SeaweedFS buckets that Tofu (seaweedfs stack)
+      // declares. Wait for the bundled tofu-apply-all step so the bucket
+      // exists before we sync into it.
       const siteDeployDeps =
-        affected.buildAll || affected.homelabChanged ? ["tofu-seaweedfs"] : [];
+        affected.buildAll || affected.homelabChanged ? ["tofu-apply-all"] : [];
       steps.push(deploySitesGroup(sitesToDeploy, pkgKeyMap, siteDeployDeps));
     }
 
@@ -377,16 +360,19 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     // don't run plans that yield no signal for them. `.dagger/` and `scripts/ci/`
     // changes trigger a full build, which runs the plan via `buildAll`.
     if (pullRequestBuild && (affected.buildAll || affected.tofuChanged)) {
-      steps.push(homelabTofuPlanGroup());
+      steps.push(homelabTofuPlanAllStep());
     }
 
     // --- Homelab Helm + Tofu release track ---
     if (releaseBuild && (affected.buildAll || affected.homelabChanged)) {
-      // Helm charts (push only — cdk8s synth already ran in build phase)
-      steps.push(homelabHelmGroup());
+      // Helm charts — one pod fans out per-chart in Dagger via Promise.all.
+      // Shared cdk8s synth is content-addressed, so all charts share one synth.
+      steps.push(homelabHelmPushAllStep());
 
-      // Homelab Tofu: 3 parallel stacks
-      steps.push(homelabTofuGroup(pkgKeyMap.get("homelab")));
+      // Homelab Tofu — non-github stacks apply in parallel from one pod.
+      // github stays in its own non-retrying pod (see tofu.ts).
+      steps.push(homelabTofuApplyAllStep(pkgKeyMap.get("homelab")));
+      steps.push(homelabTofuApplyGithubStep(pkgKeyMap.get("homelab")));
     }
 
     // --- Unified ArgoCD sync (depends on whatever upstream steps ran) ---
@@ -399,17 +385,14 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         argocdDeps.push(...imagePushKeys);
       }
       if (affected.buildAll || affected.homelabChanged) {
-        argocdDeps.push(
-          "homelab-helm-push",
-          ...TOFU_STACKS.map((s) => `tofu-${s}`),
-        );
+        argocdDeps.push("helm-push-all", "tofu-apply-all", "tofu-apply-github");
       }
+      // Sync + health-wait now run in one bundled BK pod (the Dagger
+      // function catches health-wait failures internally — same soft-fail
+      // semantics as the wave-1 standalone argocd-health step).
       steps.push(
-        argoCdSyncStep(argocdDeps, { key: "deploy-argocd", app: "apps" }),
-      );
-      steps.push(
-        argoCdHealthStep("deploy-argocd", {
-          key: "argocd-health",
+        argoCdSyncAndWaitStep(argocdDeps, {
+          key: "deploy-argocd",
           app: "apps",
         }),
       );
@@ -437,7 +420,11 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         );
       }
       if (needsArgoSync) {
-        summaryDeps.push("argocd-health");
+        // Build summary now waits on the bundled argo sync+health step
+        // (`deploy-argocd`). The standalone `argocd-health` step no longer
+        // exists; health-wait soft-fail semantics are preserved inside the
+        // Dagger function.
+        summaryDeps.push("deploy-argocd");
       }
       steps.push(buildSummaryStep(summaryDeps));
     }
