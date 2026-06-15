@@ -27,6 +27,24 @@ export function makeGoal(goalManager: GoalManager | undefined) {
     }
 
     const goal = interaction.options.getString("goal", true);
+
+    // Validate the goal string before deferring: deferReply() locks ephemerality
+    // to public, so any reply that should be ephemeral must go out before the
+    // defer. A whitespace-only goal passes Discord's setMinLength(1) but would
+    // be rejected by startGoal, so surface it here as an ephemeral error.
+    if (goal.trim().length === 0) {
+      await interaction.reply({
+        content: "Goal cannot be empty.",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    // Defer now that we know we need the slow startGoal path. The remaining
+    // result kinds are all acceptable as public: started (public by design),
+    // busy/locked/missing_credential (race conditions / config issues), and
+    // disabled (unreachable in practice — GoalManager is only constructed when
+    // config.game.goal.enabled is true).
     await interaction.deferReply();
     try {
       const result = await goalManager.startGoal({
