@@ -2,15 +2,12 @@ import { describe, expect, it } from "bun:test";
 import {
   countRealViewers,
   isRealViewer,
-  KNOWN_USERBOT_IDS,
   type ViewerCandidate,
 } from "@shepherdjerred/discord-stream-lifecycle/viewer-presence.ts";
 
 const SELF = "self-userbot-id";
 const PEER_A = "peer-a-id";
 const PEER_B = "peer-b-id";
-// A real in-tree userbot ID, used to verify KNOWN_USERBOT_IDS exclusion.
-const POKEBOT_ID = KNOWN_USERBOT_IDS[0]!;
 
 function candidate(overrides: Partial<ViewerCandidate>): ViewerCandidate {
   return {
@@ -56,13 +53,6 @@ describe("isRealViewer", () => {
     ).toBe(false);
   });
 
-  it("excludes in-tree userbots via KNOWN_USERBOT_IDS", () => {
-    // KNOWN_USERBOT_IDS is checked unconditionally — no config needed.
-    expect(
-      isRealViewer(candidate({ id: POKEBOT_ID }), { selfUserId: SELF }),
-    ).toBe(false);
-  });
-
   it("does NOT exclude a human who is just self-deafened", () => {
     expect(
       isRealViewer(candidate({ id: "afk-human", selfDeaf: true }), {
@@ -91,9 +81,9 @@ describe("isRealViewer", () => {
     );
   });
 
-  it("excludes go-live userbot fingerprint by default (no explicit peerUserbotIds)", () => {
+  it("excludes go-live userbot fingerprint by default (no peerUserbotIds)", () => {
     // Without an explicit peerUserbotIds list, the heuristic is active as a catch-all
-    // for any 4th userbot not yet registered in KNOWN_USERBOT_IDS.
+    // for any userbot the deployment forgot to register.
     expect(
       isRealViewer(
         candidate({
@@ -158,18 +148,6 @@ describe("countRealViewers", () => {
         peerUserbotIds: [PEER_A, PEER_B],
       }),
     ).toBe(0);
-  });
-
-  it("excludes in-tree userbot peers via KNOWN_USERBOT_IDS without any config", () => {
-    // When the two peers are real in-tree userbots, KNOWN_USERBOT_IDS catches them
-    // automatically — no peerUserbotIds config needed.
-    const members: ViewerCandidate[] = [
-      candidate({ id: SELF }),
-      ...KNOWN_USERBOT_IDS.filter((id) => id !== SELF).map((id) =>
-        candidate({ id }),
-      ),
-    ];
-    expect(countRealViewers(members, { selfUserId: SELF })).toBe(0);
   });
 
   it("counts only the human when humans + bots + peers share a channel", () => {

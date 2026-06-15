@@ -389,7 +389,10 @@ export class CommandBot {
           selfMute: memberState?.selfMute ?? false,
         };
       }),
-      { selfUserId: streamerId },
+      {
+        selfUserId: streamerId,
+        peerUserbotIds: this.deps.config.discord.peerUserbotIds,
+      },
     );
     const key = `${guildId}:${channelId}`;
     if (humanCount > 0) {

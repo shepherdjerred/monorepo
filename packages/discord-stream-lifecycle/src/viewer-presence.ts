@@ -7,26 +7,15 @@
  * "occupied" forever.
  *
  * This helper combines two exclusions:
- *  1. The canonical {@link KNOWN_USERBOT_IDS} list — every userbot in this monorepo registers
- *     its Discord user ID here. Each consumer subtracts its own `selfUserId` at runtime.
+ *  1. A caller-supplied `peerUserbotIds` list — the reliable signal. Each deployment owns
+ *     the canonical list (in this monorepo: homelab cdk8s defines it and passes each bot
+ *     its peers via the `PEER_USERBOT_IDS` env var). This library has no opinion on the
+ *     contents.
  *  2. A Go-Live-userbot fingerprint (streaming + selfDeaf + selfMute) — only active when
- *     `KNOWN_USERBOT_IDS` (and any caller-supplied `peerUserbotIds` override) is empty. Once
- *     the canonical list is populated the heuristic is disabled so that a human streaming
- *     while self-muted and self-deafened is not silently counted as zero real viewers.
+ *     `peerUserbotIds` is **not** supplied (or is empty). When the caller has named every
+ *     peer the heuristic is disabled so a human streaming while self-muted and self-deafened
+ *     is not silently excluded.
  */
-
-/**
- * Canonical list of every userbot Discord user ID across this monorepo. Each consumer
- * subtracts its own `selfUserId` and the rest are excluded from the "real viewers" tally.
- *
- * Add new userbots here when they're introduced — this is the single source of truth. Discord
- * user IDs are not secrets, so keeping them in source avoids any 1Password/Helm/cdk8s wiring.
- */
-export const KNOWN_USERBOT_IDS: readonly string[] = [
-  "1094072953580310669", // Pokébot
-  "1513020384797266004", // Glitter Kart (Mario Kart)
-  "1512972411639955466", // Streambot
-];
 
 export type ViewerCandidate = {
   readonly id: string;
@@ -48,9 +37,9 @@ export type ViewerPresenceOptions = {
    */
   readonly selfUserId?: string | null;
   /**
-   * Additional peer userbot IDs beyond {@link KNOWN_USERBOT_IDS} (e.g. for tests or ad-hoc
-   * overrides). The canonical list already covers the in-tree userbots — most callers can
-   * omit this.
+   * User IDs of peer userbots that share this voice channel. The deployment owns the
+   * canonical list (e.g. defined in homelab cdk8s and passed via `PEER_USERBOT_IDS` env)
+   * and supplies it here at runtime; this library has no opinion on its contents.
    */
   readonly peerUserbotIds?: readonly string[];
   /** Exclude `user.bot === true` members (regular bot applications). Default `true`. */
@@ -59,10 +48,10 @@ export type ViewerPresenceOptions = {
    * Exclude members that look like Go Live userbots: streaming with both self-mute and
    * self-deaf set.
    *
-   * Defaults to `true` **only when no explicit `peerUserbotIds` is supplied** — the
-   * heuristic then catches any userbot that isn't in {@link KNOWN_USERBOT_IDS} either.
-   * When the caller provides `peerUserbotIds` the heuristic is off, so a human streaming
-   * while self-muted and self-deafened is not silently excluded.
+   * Defaults to `true` **only when no `peerUserbotIds` is supplied** (or it's empty) — the
+   * heuristic then acts as a catch-all for any userbot the deployment forgot to register.
+   * When `peerUserbotIds` is non-empty the heuristic is off, so a human streaming while
+   * self-muted and self-deafened is not silently excluded.
    *
    * Set explicitly to `true` to force the heuristic regardless.
    */
@@ -80,17 +69,14 @@ export function isRealViewer(
   if ((opts.excludeBots ?? true) && candidate.isBot) {
     return false;
   }
-  if (KNOWN_USERBOT_IDS.includes(candidate.id)) {
-    return false;
-  }
   if (opts.peerUserbotIds?.includes(candidate.id) === true) {
     return false;
   }
-  // The Go-Live fingerprint is the default catch-all for any 4th userbot not yet
-  // registered in `KNOWN_USERBOT_IDS`. It's only suppressed when the caller supplies an
-  // explicit `peerUserbotIds` — that signals "I've named every peer myself", at which
-  // point the heuristic risks excluding a human streaming while self-muted/self-deafened.
-  // Callers can also force the heuristic explicitly via `excludeLikelyUserbots`.
+  // The Go-Live fingerprint is the default catch-all for any peer userbot the deployment
+  // didn't register. It's suppressed when `peerUserbotIds` is non-empty — that signals
+  // "I've named every peer", at which point the heuristic risks excluding a human
+  // streaming while self-muted/self-deafened. Callers can also force it explicitly via
+  // `excludeLikelyUserbots`.
   const hasPeerList =
     opts.peerUserbotIds !== undefined && opts.peerUserbotIds.length > 0;
   const useHeuristic = opts.excludeLikelyUserbots ?? !hasPeerList;
