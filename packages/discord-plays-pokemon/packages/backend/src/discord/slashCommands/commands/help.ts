@@ -1,10 +1,9 @@
-import type { CommandInteraction } from "discord.js";
+import type { ChatInputCommandInteraction } from "discord.js";
 import {
   SlashCommandBuilder,
   bold,
-  channelMention,
   inlineCode,
-  userMention,
+  MessageFlags,
 } from "discord.js";
 import {
   a,
@@ -23,16 +22,16 @@ export const helpCommand = new SlashCommandBuilder()
   .setName("help")
   .setDescription("View Pokébot help");
 
-export async function help(interaction: CommandInteraction) {
+export async function help(
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
   const modifiers = [
     `Hold a button down: ${hold.join(", ")}`,
     `Burst/rapid-press a button: ${burst.join("\n")}`,
     `Hold the B button while pressing another button: ${holdB.join("\n")}`,
   ];
   const modifiersString = modifiers
-    .map((modifier) => {
-      return `* ${modifier}`;
-    })
+    .map((modifier) => `* ${modifier}`)
     .join("\n");
   const commands = [
     `Up: ${up.join(", ")}`,
@@ -44,11 +43,7 @@ export async function help(interaction: CommandInteraction) {
     `Start: ${start.join(", ")}`,
     `Select: ${select.join(", ")}`,
   ];
-  const commandString = commands
-    .map((command) => {
-      return `* ${command}`;
-    })
-    .join("\n");
+  const commandString = commands.map((command) => `* ${command}`).join("\n");
   const config = getConfig();
   const maxQuantity = String(config.game.commands.max_quantity_per_action);
   const maxCommands = String(config.game.commands.chord.max_commands);
@@ -63,18 +58,12 @@ export async function help(interaction: CommandInteraction) {
   );
   const lines = [
     bold("Pokébot Help"),
-    `The Pokébot is available when ${userMention(
-      config.stream.userbot.id,
-    )} is online and streaming in the ${channelMention(config.stream.channel_id)} channel.`,
-    `When the bot is online, you can send commands in the ${channelMention(
-      config.game.commands.channel_id,
-    )} channel.`,
-    `Notifications will be posted in ${channelMention(config.bot.notifications.channel_id)}.`,
+    `Run ${inlineCode("/play")} from a voice channel to start a Pokémon session. The bot will join your voice channel and stream the game live.`,
+    `Once a session is active, send commands in the channel where ${inlineCode("/play")} was invoked.`,
+    `Run ${inlineCode("/stop")} to end the session.`,
     ``,
     bold("Commands"),
-    `Commands are messages sent to the ${channelMention(
-      config.game.commands.channel_id,
-    )}. The command format is ${inlineCode("[QUANTITY][MODIFIER][ACTION]")}. Quantity is a number from 0-${maxQuantity}. You can perform multiple commands in the same message by putting a space between each command; for example, sending the message ${inlineCode(
+    `The command format is ${inlineCode("[QUANTITY][MODIFIER][ACTION]")}. Quantity is a number from 0-${maxQuantity}. You can perform multiple commands in the same message by putting a space between each command; for example, sending the message ${inlineCode(
       "a b",
     )} will send both ${inlineCode("a")} and ${inlineCode("b")}. This is referred to as a chord.`,
     `Each chord can perform up to ${maxCommands} commands.`,
@@ -99,11 +88,7 @@ export async function help(interaction: CommandInteraction) {
     ``,
     bold("Extras:"),
     config.bot.commands.screenshot.enabled
-      ? `The ${inlineCode(
-          "/screenshot",
-        )} command can be used to take a screenshot and upload it to the ${channelMention(
-          config.bot.notifications.channel_id,
-        )} channel.`
+      ? `The ${inlineCode("/screenshot")} command takes a screenshot of the active game.`
       : "",
     config.game.goal.enabled
       ? `The ${inlineCode(
@@ -115,6 +100,6 @@ export async function help(interaction: CommandInteraction) {
   ];
   await interaction.reply({
     content: lines.join("\n"),
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }

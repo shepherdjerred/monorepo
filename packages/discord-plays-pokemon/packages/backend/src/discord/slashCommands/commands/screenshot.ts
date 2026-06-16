@@ -1,29 +1,43 @@
-import type { CommandInteraction } from "discord.js";
+import type { ChatInputCommandInteraction, Client } from "discord.js";
 import {
   SlashCommandBuilder,
   AttachmentBuilder,
   EmbedBuilder,
-  channelMention,
-  userMention,
-  time,
   ChannelType,
+  MessageFlags,
+  time,
+  userMention,
 } from "discord.js";
-import client from "#src/discord/client.ts";
-import { getConfig } from "#src/config/index.ts";
-import type { Emulator } from "#src/emulator/emulator.ts";
 import { encodePng } from "#src/emulator/png.ts";
+import type { PokemonGameDriver } from "#src/lifecycle/pokemon-driver.ts";
 
 export const screenshotCommand = new SlashCommandBuilder()
   .setName("screenshot")
-  .setDescription("Take a screenshot and upload it to the chat");
+  .setDescription("Take a screenshot and upload it to the game channel.");
 
 const SCREENSHOT_SCALE = 3;
 
-export function makeScreenshot(emulator: Emulator) {
+export function makeScreenshot(driver: PokemonGameDriver, botClient: Client) {
   return async function handleScreenshotCommand(
-    interaction: CommandInteraction,
-  ) {
-    const buffer = encodePng(emulator.renderFrame(), SCREENSHOT_SCALE);
+    interaction: ChatInputCommandInteraction,
+  ): Promise<void> {
+    if (!interaction.inGuild()) {
+      await interaction.reply({
+        content: "`/screenshot` must be used in a server.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+    const runtime = driver.getActiveRuntime();
+    if (runtime?.session.guildId !== interaction.guildId) {
+      await interaction.reply({
+        content:
+          "No Pokémon session is active in this server. Run `/play` first.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+    const buffer = encodePng(runtime.emulator.renderFrame(), SCREENSHOT_SCALE);
     const date = new Date();
     const attachment = new AttachmentBuilder(buffer, {
       name: "screenshot.png",
@@ -33,22 +47,19 @@ export function makeScreenshot(emulator: Emulator) {
       .setTitle("Pokémon Screenshot")
       .setImage("attachment://screenshot.png");
     await interaction.reply({
-      content: `Screenshot sent to ${channelMention(getConfig().bot.notifications.channel_id)}`,
-      ephemeral: true,
+      content: "Screenshot sent to the game channel.",
+      flags: MessageFlags.Ephemeral,
     });
 
-    const channel = client.channels.cache.get(
-      getConfig().bot.notifications.channel_id,
+    const channel = await botClient.channels.fetch(
+      runtime.session.textChannelId,
     );
-    await (channel?.type === ChannelType.GuildText
-      ? channel.send({
-          content: `Screenshot taken by ${userMention(interaction.user.id)} at ${time(date)}`,
-          embeds: [embed],
-          files: [attachment],
-        })
-      : interaction.reply({
-          ephemeral: true,
-          content: "There was an error",
-        }));
+    if (channel?.type === ChannelType.GuildText) {
+      await channel.send({
+        content: `Screenshot taken by ${userMention(interaction.user.id)} at ${time(date)}`,
+        embeds: [embed],
+        files: [attachment],
+      });
+    }
   };
 }
