@@ -23,6 +23,7 @@ import {
 } from "#src/goal/control-server.ts";
 import { createGameEventWatcher } from "#src/game/events/watcher.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
+import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 import {
   createEventNotifier,
   type EventToggles,
@@ -137,6 +138,8 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
         sendMessage,
         snapshotProvider: () =>
           readGameSnapshot(emulator.memoryReader(), emulator.gameSymbols()),
+        spatialSnapshotProvider: () =>
+          readSpatialSnapshot(emulator.memoryReader(), emulator.gameSymbols()),
       });
       await goalManager.initialize();
       goalControlServer = startGoalControlServer({

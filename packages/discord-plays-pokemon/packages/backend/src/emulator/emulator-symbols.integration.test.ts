@@ -1,5 +1,6 @@
 import { Emulator } from "./emulator.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
+import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 
 // Boots the real checked-in pokeemerald.wasm and asserts the game-state symbols
 // still resolve and a snapshot read doesn't throw. The wasm is sha-pinned, so
@@ -26,9 +27,10 @@ describe("emulator game symbols (real wasm)", () => {
     }
 
     const reader = emulator.memoryReader();
-    // Fresh boot: no save loaded yet, so this is expected to be null — the
+    // Fresh boot: no save loaded yet, so these are expected to be null — the
     // contract is "doesn't throw", which is what the watcher relies on.
     expect(() => readGameSnapshot(reader, symbols)).not.toThrow();
+    expect(() => readSpatialSnapshot(reader, symbols)).not.toThrow();
 
     // Run a few hundred frames and confirm reads stay safe as the game runs.
     emulator.start();
@@ -41,5 +43,6 @@ describe("emulator game symbols (real wasm)", () => {
 
     expect(emulator.frame).toBeGreaterThan(target - 1);
     expect(() => readGameSnapshot(reader, symbols)).not.toThrow();
+    expect(() => readSpatialSnapshot(reader, symbols)).not.toThrow();
   }, 30_000);
 });
