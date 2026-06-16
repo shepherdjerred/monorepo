@@ -64,51 +64,6 @@ export function qualityBundleStep(): BuildkiteStep {
   });
 }
 
-export function prettierStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":art: Prettier",
-    key: "prettier",
-    daggerCmd: `${DAGGER_CALL} prettier --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 10,
-  });
-}
-
-export function markdownlintStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":pencil: Markdownlint",
-    key: "markdownlint",
-    daggerCmd: `${DAGGER_CALL} markdownlint --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 10,
-  });
-}
-
-export function shellcheckStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":shell: Shellcheck",
-    key: "shellcheck",
-    daggerCmd: `${DAGGER_CALL} shellcheck --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 10,
-  });
-}
-
-export function qualityRatchetStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":chart_with_upwards_trend: Quality Ratchet",
-    key: "quality-ratchet",
-    daggerCmd: `${DAGGER_CALL} quality-ratchet --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 10,
-  });
-}
-
-export function complianceCheckStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":clipboard: Compliance Check",
-    key: "compliance-check",
-    daggerCmd: `${DAGGER_CALL} compliance-check --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 10,
-  });
-}
-
 export function knipCheckStep(): BuildkiteStep {
   return daggerStep({
     label: ":scissors: Knip",
@@ -120,24 +75,6 @@ export function knipCheckStep(): BuildkiteStep {
   });
 }
 
-export function gitleaksCheckStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":lock: Gitleaks",
-    key: "gitleaks-check",
-    daggerCmd: `${DAGGER_CALL} gitleaks-check --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 10,
-  });
-}
-
-export function suppressionCheckStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":no_entry_sign: Suppression Check",
-    key: "suppression-check",
-    daggerCmd: `${DAGGER_CALL} suppression-check --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 10,
-  });
-}
-
 export function trivyScanStep(): BuildkiteStep {
   return daggerStep({
     label: ":shield: Trivy Scan",
@@ -146,16 +83,6 @@ export function trivyScanStep(): BuildkiteStep {
     timeoutMinutes: 15,
     softFail: true,
     artifactPaths: ["/tmp/trivy.txt"],
-  });
-}
-
-export function daggerHygieneStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":broom: Dagger Hygiene",
-    key: "dagger-hygiene",
-    daggerCmd: `${DAGGER_CALL} dagger-hygiene --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 10,
-    softFail: true,
   });
 }
 
@@ -203,21 +130,6 @@ export function talosSchematicSyncStep(): BuildkiteStep {
   });
 }
 
-/**
- * Verifies `react`/`react-dom` (and their `@types`) resolve to matching
- * versions in every `bun.lock`. A skew throws "Incompatible React versions" at
- * runtime — invisible to typecheck/build/test. See the mariokart.sjer.red
- * post-mortem in packages/docs/plans.
- */
-export function reactVersionSyncStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":react: React Version Sync",
-    key: "react-version-sync",
-    daggerCmd: `${DAGGER_CALL} react-version-sync --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 10,
-  });
-}
-
 export function semgrepScanStep(): BuildkiteStep {
   return daggerStep({
     label: ":mag: Semgrep Scan",
@@ -226,15 +138,6 @@ export function semgrepScanStep(): BuildkiteStep {
     timeoutMinutes: 15,
     softFail: true,
     artifactPaths: ["/tmp/semgrep.txt"],
-  });
-}
-
-export function lockfileCheckStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":lock: Lockfile Check",
-    key: "lockfile-check",
-    daggerCmd: `${DAGGER_CALL} lockfile-check --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 5,
   });
 }
 
@@ -262,88 +165,6 @@ export function bunLockDriftCheckStep(seeds: string[]): BuildkiteStep {
     key: "bun-lock-drift-check",
     daggerCmd: `${DAGGER_CALL} bun-lock-drift-check --source ${REPO_GIT_REF} --seeds ${list}`,
     timeoutMinutes: 5,
-  });
-}
-
-export function envVarNamesStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":label: Env Var Names",
-    key: "env-var-names",
-    daggerCmd: `${DAGGER_CALL} env-var-names --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 10,
-  });
-}
-
-/**
- * Verifies every tracked file's index line endings match its `.gitattributes`
- * declaration. Catches the class of bug from renovate-481 where a file with
- * mixed CRLF/LF leaked into a Unix-only path and nothing flagged it pre-merge.
- */
-export function lineEndingsCheckStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":scroll: Line Endings",
-    key: "line-endings-check",
-    daggerCmd: `${DAGGER_CALL} line-endings-check --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 5,
-  });
-}
-
-/**
- * Verify Scout's committed SQLite test template matches migrations + seeds.
- * Migrated to Dagger in PR2 of the BK-pressure plan.
- */
-export function scoutTestTemplateCheckStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":floppy_disk: Scout Test Template",
-    key: "scout-test-template-check",
-    daggerCmd: `${DAGGER_CALL} scout-test-template-check --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 10,
-  });
-}
-
-export function migrationGuardStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":shield: Migration Guard",
-    key: "migration-guard",
-    daggerCmd: `${DAGGER_CALL} migration-guard --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 10,
-  });
-}
-
-/**
- * Enforce the TODO source-marker → docs invariant (`scripts/check-todos.ts`).
- * Runs in lefthook pre-commit; this gate makes it a CI merge requirement too,
- * so a `--no-verify` commit can't slip an untracked marker past CI.
- */
-export function checkTodosStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":clipboard: Check TODOs",
-    key: "check-todos",
-    daggerCmd: `${DAGGER_CALL} check-todos --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 5,
-  });
-}
-
-export function mergeConflictStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":no_entry: Merge Conflict Check",
-    key: "merge-conflict-check",
-    daggerCmd: `${DAGGER_CALL} merge-conflict-check --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 5,
-  });
-}
-
-/**
- * Surfaces files >5 MB so they can be moved to LFS or removed. **Soft-fail**:
- * findings are surfaced as annotations but do not block the build.
- */
-export function largeFileStep(): BuildkiteStep {
-  return daggerStep({
-    label: ":warning: Large File Check",
-    key: "large-file-check",
-    daggerCmd: `${DAGGER_CALL} large-file-check --source ${REPO_GIT_REF}`,
-    timeoutMinutes: 5,
-    softFail: true,
   });
 }
 

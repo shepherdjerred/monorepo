@@ -29,36 +29,11 @@ import {
   TOFU_VERSION,
   VELERO_CLI_VERSION,
 } from "./constants";
+import { BUN_INSTALL_WITH_RETRY } from "./base";
 import versions from "./versions";
 
 export const PRISMA_BUN_SERVICE_START_COMMAND =
   "bunx --trust prisma generate && bunx prisma db push && bun run src/index.ts";
-
-// `bun install --frozen-lockfile` wrapped in a 3-attempt retry. Three recurring
-// flakes motivate this:
-//   - Intermittent EEXIST on `file:` symlink creation when many nested workspace
-//     members reference the same local dep (build-discord-plays-pokemon, #4336).
-//   - Transient npm-CDN tarball-extract failures (build-temporal-worker, #4336
-//     hit `Fail extracting tarball for "firebase"`).
-//   - Postinstall network flakes — e.g. `@lng2004/node-datachannel`'s
-//     `prebuild-install` timing out and falling back to a `npm`-driven source
-//     build that can't run (no npm in oven/bun image), exit 127 (#4359 main).
-// Retry is safe: `bun install --frozen-lockfile` is deterministic and the
-// surviving partial node_modules is what bun would create on success anyway.
-// Join with newlines, not "; " — busybox sh rejects `do ;` / `then ;` / `done ;`.
-const BUN_INSTALL_WITH_RETRY = [
-  "i=1",
-  "while [ $i -le 3 ]; do",
-  "  if bun install --frozen-lockfile; then exit 0; fi",
-  // Skip the sleep + "retrying" log on the final attempt — no retry follows.
-  "  if [ $i -lt 3 ]; then",
-  '    echo "bun install failed (attempt $i/3), retrying in $((i*5))s..." >&2',
-  "    sleep $((i*5))",
-  "  fi",
-  "  i=$((i+1))",
-  "done",
-  "exit 1",
-].join("\n");
 
 // Inner-monorepo root the discord-plays-mario-kart app runs from (config.toml,
 // n64wasm assets, saves/ resolve relative to this CWD).

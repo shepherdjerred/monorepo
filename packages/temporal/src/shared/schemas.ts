@@ -76,6 +76,39 @@ export const CancelBuildkiteBuildsInputSchema = z.object({
   merged: z.boolean(),
 });
 
+/**
+ * Input for `checkPrMergeConflictsWorkflow`. Two shapes:
+ *
+ * - `kind: "all-prs"` — fired by the `push to main` webhook. Walks every open
+ *   PR whose base is `main` and posts a `ci/merge-conflict` status per PR
+ *   computed from a local `git merge-tree`. `mainSha` is the post-push HEAD;
+ *   used only for the workflow's `target_url` so reviewers can correlate the
+ *   status with the main commit that triggered it.
+ * - `kind: "single-pr"` — fired by the per-PR `pull_request` events
+ *   (`opened` / `synchronize` / `reopened` / `edited`). Same logic but
+ *   scoped to one PR so a fresh head SHA isn't left status-less until the
+ *   next main push.
+ *
+ * The conflict result is computed locally — the activity NEVER reads
+ * GitHub's `mergeable` field. See packages/docs/plans/2026-06-14_pr-merge-conflict-check.md.
+ */
+export const CheckPrMergeConflictsInputSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("all-prs"),
+    owner: z.string().min(1),
+    repo: z.string().min(1),
+    mainSha: z.string().min(1),
+  }),
+  z.object({
+    kind: z.literal("single-pr"),
+    owner: z.string().min(1),
+    repo: z.string().min(1),
+    prNumber: z.number().int().positive(),
+    headSha: z.string().min(1),
+    baseRef: z.string().min(1),
+  }),
+]);
+
 export type FetcherInput = z.infer<typeof FetcherInputSchema>;
 export type DepsSummaryInput = z.infer<typeof DepsSummaryInputSchema>;
 export type DnsAuditInput = z.infer<typeof DnsAuditInputSchema>;
@@ -86,4 +119,7 @@ export type PrReviewPipelineInput = z.infer<typeof PrReviewPipelineInputSchema>;
 export type PrSummaryInput = z.infer<typeof PrSummaryInputSchema>;
 export type CancelBuildkiteBuildsInput = z.infer<
   typeof CancelBuildkiteBuildsInputSchema
+>;
+export type CheckPrMergeConflictsInput = z.infer<
+  typeof CheckPrMergeConflictsInputSchema
 >;

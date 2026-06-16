@@ -7,7 +7,8 @@ import {
 } from "@shepherdjerred/streambot/discord/command-handler.ts";
 import {
   helpText,
-  sourcesText,
+  sourcesPages,
+  type SourcesPages,
 } from "@shepherdjerred/streambot/discord/help-text.ts";
 import { commandJson } from "@shepherdjerred/streambot/discord/commands.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
@@ -46,6 +47,7 @@ const EMPTY_VIEW: PlaybackView = {
   queue: [],
   loop: "off",
   volume: 100,
+  positionSeconds: null,
 };
 
 type Harness = {
@@ -97,10 +99,12 @@ function fakeInteraction(opts: FakeOpts): {
   interaction: CommandInteraction;
   replies: string[];
   edits: string[];
+  paginated: SourcesPages[];
   state: { deferred: boolean };
 } {
   const replies: string[] = [];
   const edits: string[] = [];
+  const paginated: SourcesPages[] = [];
   const state = { deferred: false };
   const interaction: CommandInteraction = {
     userId: uid(opts.userId ?? REQUESTER),
@@ -132,8 +136,12 @@ function fakeInteraction(opts: FakeOpts): {
       edits.push(content);
       return Promise.resolve();
     },
+    replyPaginated: (payload) => {
+      paginated.push(payload);
+      return Promise.resolve();
+    },
   };
-  return { interaction, replies, edits, state };
+  return { interaction, replies, edits, paginated, state };
 }
 
 function viewWithCurrent(requesterId: string): PlaybackView {
@@ -194,6 +202,62 @@ describe("CommandHandler routing + acks", () => {
     const np = fakeInteraction({ sub: "nowplaying" });
     await h.handler.run(np.interaction);
     expect(np.replies[0]).toContain("**Now playing:** Current Song");
+  });
+
+  test("nowplaying reports nothing playing when idle", async () => {
+    const h = makeHandler({ view: EMPTY_VIEW });
+    const { interaction, replies } = fakeInteraction({ sub: "nowplaying" });
+    await h.handler.run(interaction);
+    expect(replies[0]).toBe("Nothing is playing.");
+  });
+
+  test("nowplaying omits the position line when position is null", async () => {
+    const h = makeHandler({ view: viewWithCurrent(REQUESTER) });
+    const { interaction, replies } = fakeInteraction({ sub: "nowplaying" });
+    await h.handler.run(interaction);
+    expect(replies[0]).not.toContain("Position:");
+  });
+
+  test("nowplaying renders position alone when there are no chapters", async () => {
+    const view: PlaybackView = {
+      ...viewWithCurrent(REQUESTER),
+      positionSeconds: 95,
+    };
+    const h = makeHandler({ view });
+    const { interaction, replies } = fakeInteraction({ sub: "nowplaying" });
+    await h.handler.run(interaction);
+    expect(replies[0]).toContain("**Position:** 1:35");
+    expect(replies[0]).not.toContain("Chapter");
+  });
+
+  test("nowplaying renders position + current chapter when both are known", async () => {
+    const view: PlaybackView = {
+      ...viewWithChapters(REQUESTER),
+      positionSeconds: 200,
+    };
+    const h = makeHandler({ view });
+    const { interaction, replies } = fakeInteraction({ sub: "nowplaying" });
+    await h.handler.run(interaction);
+    expect(replies[0]).toContain("**Position:** 3:20 — Chapter 2: The Heist");
+  });
+
+  test("nowplaying skips the chapter clause when position is before the first chapter", async () => {
+    const view: PlaybackView = {
+      ...viewWithChapters(REQUESTER),
+      current: {
+        title: "Current Movie",
+        requesterId: uid(REQUESTER),
+        chapters: [
+          { index: 1, title: "Intro", startSeconds: 30, endSeconds: 90 },
+        ],
+      },
+      positionSeconds: 10,
+    };
+    const h = makeHandler({ view });
+    const { interaction, replies } = fakeInteraction({ sub: "nowplaying" });
+    await h.handler.run(interaction);
+    expect(replies[0]).toContain("**Position:** 0:10");
+    expect(replies[0]).not.toContain("Chapter");
   });
 });
 
@@ -598,18 +662,22 @@ describe("help", () => {
 });
 
 describe("sources", () => {
-  test("bare sources defers and summarizes the count", async () => {
+  test("bare sources defers and paginates the full list", async () => {
     const h = makeHandler({ sources: ["youtube", "twitch:vod", "vimeo"] });
     const fake = fakeInteraction({ sub: "sources" });
     await h.handler.run(fake.interaction);
     expect(fake.state.deferred).toBe(true);
-    const edit = fake.edits[0];
-    if (edit === undefined) throw new Error("expected an edited reply");
-    expect(edit).toContain("3 sources");
-    expect(edit).toContain("/stream sources");
+    const payload = fake.paginated[0];
+    if (payload === undefined)
+      throw new Error("expected a paginated reply payload");
+    expect(payload.header).toContain("3 sources");
+    expect(payload.pages).toHaveLength(1);
+    expect(payload.pages[0]).toContain("`youtube`");
+    expect(payload.pages[0]).toContain("`twitch:vod`");
+    expect(payload.pages[0]).toContain("`vimeo`");
   });
 
-  test("filtered sources lists case-insensitive matches only", async () => {
+  test("filtered sources paginate over matches only", async () => {
     const h = makeHandler({
       sources: ["youtube", "twitch:vod", "twitch:clips", "vimeo"],
     });
@@ -618,27 +686,57 @@ describe("sources", () => {
       strings: { query: "TWITCH" },
     });
     await h.handler.run(fake.interaction);
-    const edit = fake.edits[0];
-    if (edit === undefined) throw new Error("expected an edited reply");
-    expect(edit).toContain("twitch:vod");
-    expect(edit).toContain("twitch:clips");
-    expect(edit).not.toContain("vimeo");
-    expect(edit).toContain("2 source(s)");
+    const payload = fake.paginated[0];
+    if (payload === undefined)
+      throw new Error("expected a paginated reply payload");
+    expect(payload.header).toContain("2 source(s) matching `TWITCH`");
+    expect(payload.pages).toHaveLength(1);
+    const body = payload.pages[0] ?? "";
+    expect(body).toContain("`twitch:vod`");
+    expect(body).toContain("`twitch:clips`");
+    expect(body).not.toContain("`vimeo`");
   });
 
-  test("filtered sources reports when nothing matches", async () => {
+  test("filtered sources with no matches return a single explanatory page", async () => {
     const h = makeHandler({ sources: ["youtube", "vimeo"] });
     const fake = fakeInteraction({
       sub: "sources",
       strings: { query: "nope" },
     });
     await h.handler.run(fake.interaction);
-    expect(fake.edits[0]).toContain("No sources matching");
+    const payload = fake.paginated[0];
+    if (payload === undefined)
+      throw new Error("expected a paginated reply payload");
+    expect(payload.header).toContain("No sources matching `nope`");
+    expect(payload.pages).toHaveLength(1);
   });
 
-  test("sourcesText truncates beyond the display cap", () => {
-    const many = Array.from({ length: 25 }, (_, i) => `site${String(i)}`);
-    const text = sourcesText(many, "site");
-    expect(text).toContain("…and 5 more");
+  test("large source sets split into multiple pages", () => {
+    const many = Array.from({ length: 73 }, (_, i) => `site${String(i)}`);
+    const { header, pages } = sourcesPages(many, null);
+    expect(header).toContain("yt-dlp supports 73 sources");
+    // 73 entries at SOURCES_PER_PAGE = 30 → 3 pages (30 + 30 + 13).
+    expect(pages).toHaveLength(3);
+    expect(pages[0]).toContain("`site0`");
+    expect(pages[0]).toContain("`site29`");
+    expect(pages[1]).toContain("`site30`");
+    expect(pages[2]).toContain("`site72`");
+    // Each page stays well under Discord's 2000-char limit.
+    for (const page of pages) {
+      expect(page.length).toBeLessThanOrEqual(2000);
+    }
+  });
+
+  test("filter paginates across many matches", () => {
+    const sources = [
+      ...Array.from({ length: 50 }, (_, i) => `twitch_${String(i)}`),
+      "vimeo",
+    ];
+    const { header, pages } = sourcesPages(sources, "twitch");
+    expect(header).toContain("50 source(s) matching `twitch`");
+    expect(pages).toHaveLength(2);
+    for (const page of pages) {
+      expect(page).not.toContain("vimeo");
+    }
   });
 });

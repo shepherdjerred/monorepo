@@ -242,10 +242,14 @@ async function extractEmbeddedTrack(
 
   // Extract to a staging file: a temp-dir file when uncached, or a sibling temp in the cache dir (so
   // the publish rename is atomic and a crashed/aborted ffmpeg never leaves a truncated cache entry).
+  // The staging name keeps `.srt` as the FINAL extension — ffmpeg picks the muxer from the trailing
+  // extension and rejects anything it doesn't know (PR #1172 used `.srt.tmp` and silently broke every
+  // extraction with "Unable to choose an output format"). `-f srt` below pins the muxer regardless,
+  // so a future filename refactor can't reintroduce the same bug.
   const staging =
     cachePath === null
       ? tempFile(await ensureTempDir(), "srt")
-      : path.join(path.dirname(cachePath), `.${randomUUID()}.srt.tmp`);
+      : path.join(path.dirname(cachePath), `.${randomUUID()}.tmp.srt`);
   const extract = await run(
     [
       config.ffmpegPath,
@@ -255,6 +259,8 @@ async function extractEmbeddedTrack(
       "-map",
       `0:s:${String(subtitleIndex)}`,
       "-c:s",
+      "srt",
+      "-f",
       "srt",
       staging,
     ],

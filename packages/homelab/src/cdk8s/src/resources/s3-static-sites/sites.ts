@@ -5,8 +5,9 @@ import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3
  *
  * - `script-src 'self'` is satisfied because the first-paint dark-mode setup
  *   was extracted into `/app/init-theme.js` (see scout `app/index.html`).
- * - `img-src` allows `https://cdn.discordapp.com` for guild icons and `data:`
- *   for inlined icons.
+ * - `img-src` allows `https://cdn.discordapp.com` for guild icons, `data:` for
+ *   inlined icons, and `blob:` for chart PNGs fetched with credentials and
+ *   rendered via `URL.createObjectURL` (see `app/src/components/chart-image.tsx`).
  * - `form-action 'self' https://discord.com` covers the
  *   `/api/auth/discord/start` → `discord.com/oauth2/authorize` redirect chain.
  * - `frame-ancestors 'none'` blocks clickjacking; this matches the
@@ -16,7 +17,7 @@ const scoutCsp = [
   "default-src 'self'",
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' https://cdn.discordapp.com data:",
+  "img-src 'self' https://cdn.discordapp.com data: blob:",
   "connect-src 'self'",
   "frame-ancestors 'none'",
   "base-uri 'self'",

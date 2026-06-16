@@ -1,3 +1,4 @@
+import { rename } from "node:fs/promises";
 import { createAudioEngine } from "./audio/index.ts";
 import type { DrainResult } from "./audio/m4a-driver.ts";
 import { createBios } from "./bios.ts";
@@ -16,6 +17,7 @@ import {
   ticksTotal,
   loopResyncTotal,
   frameHookErrorsTotal,
+  flashSaveLoadInvalidTotal,
 } from "#src/observability/metrics.ts";
 import { logger } from "#src/logger.ts";
 import { createMemoryReader, type MemoryReader } from "./memory.ts";
@@ -311,6 +313,7 @@ export class Emulator {
           flash.set(saved);
           logger.info(`loaded flash save from ${path}`);
         } else {
+          flashSaveLoadInvalidTotal.inc();
           logger.warn(
             `ignoring flash save at ${path}: wrong size ${String(saved.length)}`,
           );
@@ -333,8 +336,13 @@ export class Emulator {
   }
 
   private async persist(path: string, data: Uint8Array): Promise<void> {
+    // Atomic write: stage to a sibling tmp file in the same directory, then
+    // rename(2) — POSIX guarantees atomicity. A kill -9 mid-write at worst
+    // leaves the tmp around; the real save is never torn.
+    const tmp = `${path}.tmp`;
     try {
-      await Bun.write(path, data);
+      await Bun.write(tmp, data);
+      await rename(tmp, path);
     } catch (error) {
       logger.error("failed to persist flash save", error);
     }

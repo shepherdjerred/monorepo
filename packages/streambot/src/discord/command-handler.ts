@@ -17,14 +17,18 @@ import {
 } from "@shepherdjerred/streambot/discord/timecode.ts";
 import {
   helpText,
-  sourcesText,
+  sourcesPages,
+  type SourcesPages,
 } from "@shepherdjerred/streambot/discord/help-text.ts";
 import {
   sourceLabel,
   type Source,
   type SubtitlePref,
 } from "@shepherdjerred/streambot/sources/source.ts";
-import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
+import {
+  findChapterAt,
+  type Chapter,
+} from "@shepherdjerred/streambot/sources/chapters.ts";
 import {
   searchLibrary,
   type LibraryEntry,
@@ -100,6 +104,8 @@ export type PlaybackView = {
   readonly queue: readonly QueueItemView[];
   readonly loop: string;
   readonly volume: number;
+  /** Live elapsed seconds since playback began (segment offset + wall-clock). Null when idle/between segments. */
+  readonly positionSeconds: number | null;
 };
 
 /**
@@ -119,6 +125,12 @@ export type CommandInteraction = {
   /** Defer (ephemeral) for a slow op, then `editReply`. */
   defer: () => Promise<void>;
   editReply: (content: string) => Promise<void>;
+  /**
+   * Edit the deferred reply to show page 1 and attach Prev/Next/First/Last buttons (when
+   * `pages.length > 1`); the adapter drives the collector so handlers stay discord.js-free.
+   * For a single-page result, this just edits in the one message with no buttons.
+   */
+  replyPaginated: (payload: SourcesPages) => Promise<void>;
 };
 
 export type CommandHandlerDeps = {
@@ -258,7 +270,7 @@ export class CommandHandler {
     const sources = await this.deps.listSources(
       AbortSignal.timeout(SOURCES_TIMEOUT_MS),
     );
-    await interaction.editReply(sourcesText(sources, query));
+    await interaction.replyPaginated(sourcesPages(sources, query));
   }
 
   private async handleSkip(interaction: CommandInteraction): Promise<void> {
@@ -437,7 +449,23 @@ export class CommandHandler {
     if (view.current === null) {
       return "Nothing is playing.";
     }
-    return `**Now playing:** ${view.current.title} (requested by <@${view.current.requesterId}>)\n**Loop:** ${view.loop} · **Volume:** ${String(view.volume)}%`;
+    const lines = [
+      `**Now playing:** ${view.current.title} (requested by <@${view.current.requesterId}>)`,
+    ];
+    if (view.positionSeconds !== null) {
+      const time = formatTimecode(view.positionSeconds);
+      const chapter = findChapterAt(
+        view.current.chapters,
+        view.positionSeconds,
+      );
+      lines.push(
+        chapter === null
+          ? `**Position:** ${time}`
+          : `**Position:** ${time} — Chapter ${String(chapter.index)}: ${chapter.title}`,
+      );
+    }
+    lines.push(`**Loop:** ${view.loop} · **Volume:** ${String(view.volume)}%`);
+    return lines.join("\n");
   }
 
   private queueText(): string {
