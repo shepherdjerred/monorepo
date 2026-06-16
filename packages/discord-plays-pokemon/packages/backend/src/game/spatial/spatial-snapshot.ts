@@ -117,29 +117,21 @@ function decodeFacing(raw: number): Facing {
   }
 }
 
-// include/constants/field_player_avatar.h — the PLAYER_AVATAR_FLAG_* bits.
-// We only care about the visible distinct modes for the prompt; everything
-// else collapses to "on foot".
+// include/constants/field_player_avatar.h — the PLAYER_AVATAR_FLAG_* bits we
+// surface. The ON_FOOT / CONTROLLABLE / FORCED flags exist on the same byte
+// but all collapse to "on foot" in our label set (the AI only cares about
+// the visible distinct modes), so we don't pull them in here.
 const PA_FLAG_MACH_BIKE = 0x01;
 const PA_FLAG_ACRO_BIKE = 0x02;
 const PA_FLAG_SURFING = 0x04;
 const PA_FLAG_UNDERWATER = 0x08;
-const PA_FLAG_CONTROLLABLE = 0x10;
-const PA_FLAG_FORCED = 0x20;
 const PA_FLAG_DASH = 0x40;
-const PA_FLAG_ON_FOOT = 0x80;
 
 function describeMovementMode(flags: number): string {
   if ((flags & PA_FLAG_SURFING) !== 0) return "surfing";
   if ((flags & PA_FLAG_UNDERWATER) !== 0) return "diving";
   if ((flags & (PA_FLAG_MACH_BIKE | PA_FLAG_ACRO_BIKE)) !== 0) return "biking";
   if ((flags & PA_FLAG_DASH) !== 0) return "running";
-  if (
-    (flags & (PA_FLAG_ON_FOOT | PA_FLAG_CONTROLLABLE | PA_FLAG_FORCED)) !==
-    0
-  ) {
-    return "on foot";
-  }
   return "on foot";
 }
 

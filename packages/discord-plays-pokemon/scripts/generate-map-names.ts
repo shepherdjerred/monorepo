@@ -30,16 +30,9 @@ async function fetchJson<T>(path: string): Promise<T> {
 // "PetalburgCity_Gym" → "Petalburg City: Gym".
 // "Route101" → "Route 101".
 function humanize(rawName: string): string {
-  const segments = rawName.split("_");
-  const labeled = segments.map((seg, i) => {
-    if (i === 0) {
-      // Top-level location like LittlerootTown or PetalburgCity or Route101.
-      return splitPascal(seg);
-    }
-    return splitPascal(seg);
-  });
-  if (labeled.length === 1) return labeled[0];
-  return `${labeled[0]}: ${labeled.slice(1).join(" — ")}`;
+  const segments = rawName.split("_").map((seg) => splitPascal(seg));
+  if (segments.length === 1) return segments[0];
+  return `${segments[0]}: ${segments.slice(1).join(" — ")}`;
 }
 
 function splitPascal(s: string): string {
