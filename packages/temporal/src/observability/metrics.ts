@@ -422,6 +422,28 @@ export const prReviewVerifyFindingsTotal = new Counter({
   registers: [register],
 });
 
+// ---------------------------------------------------------------------------
+// PR merge-conflict check (`ci/merge-conflict` status on every open PR).
+// Triggered by push-to-main (kind=all-prs) and PR events (kind=single-pr).
+// One observation per posted commit-status (the unit the PR UI shows). See
+// packages/docs/plans/2026-06-14_pr-merge-conflict-check.md.
+// ---------------------------------------------------------------------------
+
+export const prMergeConflictCheckTotal = new Counter({
+  name: "pr_merge_conflict_check_total",
+  help: "Commit statuses posted by the merge-conflict checker, by trigger (main push / per-PR event) and result (success=clean | failure=conflict | errored=per-PR exception)",
+  labelNames: ["trigger", "result"] as const,
+  registers: [register],
+});
+
+export const prMergeConflictCheckDurationSeconds = new Histogram({
+  name: "pr_merge_conflict_check_duration_seconds",
+  help: "Wall-clock duration of a single runCheckPrMergeConflicts activity invocation, by trigger",
+  labelNames: ["trigger"] as const,
+  buckets: [1, 5, 10, 20, 30, 60, 120, 300],
+  registers: [register],
+});
+
 let server: ReturnType<typeof Bun.serve> | undefined;
 
 function jsonLog(
