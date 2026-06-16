@@ -215,6 +215,14 @@ export const DEPLOY_SITES: DeploySite[] = [
     buildCmd: "bun run build",
     distDir: "packages/better-skill-capped/dist",
   },
+  {
+    bucket: "glitter-boys-ppl",
+    name: "glitter",
+    url: "https://ppl.glitter-boys.com",
+    buildDir: "packages/glitter",
+    buildCmd: "true",
+    distDir: "packages/glitter/public",
+  },
 ];
 
 /** Derived from NPM_PACKAGES — workspace packages whose changes should trigger npm publishes. */
@@ -314,6 +322,7 @@ export const PACKAGE_TO_SITE: Record<string, string[]> = {
   "scout-for-lol": ["scout-frontend", "scout-frontend-beta"],
   "stocks-sjer-red": ["stocks-sjer-red"],
   "better-skill-capped": ["better-skill-capped"],
+  glitter: ["glitter-boys-ppl"],
 };
 
 // ---------------------------------------------------------------------------
@@ -344,6 +353,7 @@ export const ALL_PACKAGES: string[] = [
   "dotfiles",
   "eslint-config",
   "fonts",
+  "glitter",
   "home-assistant",
   "homelab",
   "leetcode",
