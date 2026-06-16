@@ -93,12 +93,16 @@ async function helmTemplateChart(chartName: string): Promise<{
       manifestFile,
     );
 
-    const result = Bun.spawnSync(["helm", "template", "test-release", tempDir]);
-    return {
-      exitCode: result.exitCode,
-      stdout: result.stdout.toString(),
-      stderr: result.stderr.toString(),
-    };
+    const proc = Bun.spawn(["helm", "template", "test-release", tempDir], {
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+      proc.exited,
+    ]);
+    return { exitCode, stdout, stderr };
   } finally {
     const proc = Bun.spawnSync(["rm", "-rf", tempDir]);
     if (proc.exitCode !== 0) {
@@ -126,29 +130,46 @@ describe("Helm Escaping - Denylist Check (dist/)", () => {
 });
 
 describe("Helm Escaping - helm template (dist/)", () => {
-  it("should render all charts with helm template without errors", async () => {
-    const glob = new Glob("*/Chart.yaml");
-    const chartNames: string[] = [];
-    for await (const entry of glob.scan(HELM_DIR)) {
-      chartNames.push(path.dirname(entry));
-    }
+  // Renders ~24 helm charts concurrently via `helm template` subprocesses.
+  // Each chart takes 50-200ms on a quiet machine; rendered in parallel the
+  // whole test wraps in ~1s locally. PR #1249 raised this to 60s after the
+  // serial loop kept tipping over the default 5s under concurrent CI load on
+  // torvalds (single-node). Parallelization keeps wall time well under that
+  // ceiling even when load slows individual subprocesses.
+  const HELM_TEMPLATE_TIMEOUT_MS = 60_000;
 
-    const failures: { chart: string; error: string }[] = [];
-
-    for (const chartName of chartNames) {
-      const result = await helmTemplateChart(chartName);
-      if (result.exitCode !== 0) {
-        failures.push({ chart: chartName, error: result.stderr.trim() });
+  it(
+    "should render all charts with helm template without errors",
+    async () => {
+      const glob = new Glob("*/Chart.yaml");
+      const chartNames: string[] = [];
+      for await (const entry of glob.scan(HELM_DIR)) {
+        chartNames.push(path.dirname(entry));
       }
-    }
 
-    if (failures.length > 0) {
-      const msg = failures.map((f) => `  ${f.chart}: ${f.error}`).join("\n");
-      throw new Error(
-        `helm template failed for ${String(failures.length)} chart(s):\n${msg}`,
+      const results = await Promise.all(
+        chartNames.map(async (chartName) => ({
+          chart: chartName,
+          result: await helmTemplateChart(chartName),
+        })),
       );
-    }
-  });
+
+      const failures = results
+        .filter(({ result }) => result.exitCode !== 0)
+        .map(({ chart, result }) => ({
+          chart,
+          error: result.stderr.trim(),
+        }));
+
+      if (failures.length > 0) {
+        const msg = failures.map((f) => `  ${f.chart}: ${f.error}`).join("\n");
+        throw new Error(
+          `helm template failed for ${String(failures.length)} chart(s):\n${msg}`,
+        );
+      }
+    },
+    HELM_TEMPLATE_TIMEOUT_MS,
+  );
 });
 
 describe("Helm Escaping - E2E Content Verification (dist/)", () => {

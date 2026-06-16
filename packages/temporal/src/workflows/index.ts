@@ -55,8 +55,10 @@ import {
   alertRemediationSweepWorkflow as _alertRemediationSweepWorkflow,
 } from "./alert-remediation.ts";
 import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from "./cancel-buildkite-builds.ts";
+import { checkPrMergeConflictsWorkflow as _checkPrMergeConflictsWorkflow } from "./check-pr-merge-conflicts.ts";
 import type {
   CancelBuildkiteBuildsInput,
+  CheckPrMergeConflictsInput,
   PrReviewPipelineInput,
   PrSummaryInput,
 } from "#shared/schemas.ts";
@@ -208,4 +210,10 @@ export async function cancelBuildkiteBuildsWorkflow(
   input: CancelBuildkiteBuildsInput,
 ): Promise<void> {
   return _cancelBuildkiteBuildsWorkflow(input);
+}
+
+export async function checkPrMergeConflictsWorkflow(
+  input: CheckPrMergeConflictsInput,
+): Promise<void> {
+  return _checkPrMergeConflictsWorkflow(input);
 }

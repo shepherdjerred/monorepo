@@ -84,6 +84,12 @@ export const snapshotInvalidTotal = new Counter({
   registers: [registry],
 });
 
+export const flashSaveLoadInvalidTotal = new Counter({
+  name: "flash_save_load_invalid_total",
+  help: "Boots where the on-disk flash save existed but was the wrong size (corrupt / torn / format change) and was ignored",
+  registers: [registry],
+});
+
 export const notificationSendErrorsTotal = new Counter({
   name: "notification_send_errors_total",
   help: "Failures sending game event notifications to Discord",

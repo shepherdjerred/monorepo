@@ -596,7 +596,7 @@ describe("buildPipeline", () => {
       }
     });
 
-    it("quality gate depends only on quality checks, not per-package builds", () => {
+    it("quality gate depends on every per-package pkg-check + repo-wide hard-fail checks (but not soft-fail checks)", () => {
       const pipeline = buildPipeline(fullBuild());
 
       // No wait steps — quality-gate uses explicit depends_on
@@ -609,24 +609,28 @@ describe("buildPipeline", () => {
       expect(gate).toBeDefined();
       expect(Array.isArray(gate?.depends_on)).toBe(true);
       const deps = gate?.depends_on;
-      expect(Array.isArray(deps) ? deps : []).not.toHaveLength(0);
+      const depList = Array.isArray(deps) ? deps : [];
+      expect(depList).not.toHaveLength(0);
 
-      // depends_on does NOT include per-package group keys
+      // Release-train rule: every per-package pkg-* group key gates release,
+      // so a single failing pkg-check blocks every image/helm/site push.
       const pkgGroups = pipeline.steps
         .filter(isGroup)
         .filter((g) => g.key.startsWith("pkg-"));
+      expect(pkgGroups.length).toBeGreaterThan(0);
       for (const g of pkgGroups) {
-        expect(Array.isArray(deps) ? deps : []).not.toContain(g.key);
+        expect(depList).toContain(g.key);
       }
 
-      // depends_on includes the bundled quality gate + the remaining
-      // separate blocking gates (change-detection conditional)
+      // depends_on includes the bundled hard-fail quality gates + the
+      // change-detection conditional gates.
       const blockingGateKeys = ["quality-bundle", "caddyfile-validate"];
       for (const key of blockingGateKeys) {
-        expect(Array.isArray(deps) ? deps : []).toContain(key);
+        expect(depList).toContain(key);
       }
 
-      // depends_on does NOT include async (soft_fail) check keys
+      // depends_on does NOT include async (soft_fail) check keys — those
+      // are advisory by design (see quality.ts knipCheckStep softFail: true).
       const asyncKeys = [
         "knip-check",
         "soft-fail-bundle",
@@ -634,7 +638,7 @@ describe("buildPipeline", () => {
         "semgrep-scan",
       ];
       for (const key of asyncKeys) {
-        expect(Array.isArray(deps) ? deps : []).not.toContain(key);
+        expect(depList).not.toContain(key);
       }
     });
 
@@ -1148,7 +1152,9 @@ describe("buildPipeline", () => {
       // Both checks now run inside the `homelab-cdk8s` bundle Dagger func.
       const bundle = steps.find((s) => s.key === "homelab-cdk8s");
       expect(bundle).toBeDefined();
-      expect(bundle?.command).toContain("homelab-cdk8s-bundle");
+      // Dagger CLI kebab-cases the method name `homelabCdk8sBundle` →
+      // `homelab-cdk-8-s-bundle` (digit boundary; see helm.ts:46-47).
+      expect(bundle?.command).toContain("homelab-cdk-8-s-bundle");
     });
 
     it("includes helm chart push so ArgoCD picks up new manifests", () => {

@@ -1,19 +1,15 @@
 import { Hono, type Context } from "hono";
 import { verify } from "@octokit/webhooks-methods";
-import { Octokit } from "octokit";
 import * as Sentry from "@sentry/bun";
 import type { Client } from "@temporalio/client";
-import {
-  PrAgentInputSchema,
-  type PrAgentInput,
-  type PrReviewPipelineInput,
-} from "#shared/schemas.ts";
+import { PrAgentInputSchema, type PrAgentInput } from "#shared/schemas.ts";
 import {
   handleClosedPr,
   startCancelBuildkiteBuilds,
   type CancelStartFn,
 } from "./pr-closed.ts";
 import { COMPONENT, jsonLog } from "./webhook-log.ts";
+import { postWebhookStatus } from "./pr-draft-skipped-status.ts";
 import { startPrWorkflows } from "./pr-pipeline-starts.ts";
 import {
   prWebhookReceivedTotal,
@@ -21,28 +17,17 @@ import {
   prWebhookSkippedTotal,
 } from "#observability/metrics.ts";
 import {
-  DRY_RUN_COMMENT_ID,
-  isPostEnabled,
-  runPostReviewStatus,
-} from "#activities/pr-review/post.ts";
-import { STATUS_COMMENT_MARKER } from "#activities/pr-review/post-render.ts";
-import {
-  renderStatusCommentBody,
-  type PostReviewStatusInput,
-} from "#activities/pr-review/post-status-render.ts";
-import {
-  type PostReviewOctokit,
-  type PostReviewStatusResult,
-} from "#activities/pr-review/post-github.ts";
-import {
-  createGitHubAppInstallationToken,
-  type GitHubAppTokenResult,
-} from "#lib/github-app-token.ts";
-import {
+  CONFLICT_CHECK_ACTIONS,
   PullRequestEventSchema,
+  PushEventSchema,
   RELEVANT_ACTIONS,
   disallowedAuthorReason,
 } from "./github-webhook-schema.ts";
+import {
+  captureConflictCheckStartError,
+  startCheckPrMergeConflictsForMain,
+  startCheckPrMergeConflictsForPr,
+} from "./conflict-check-starts.ts";
 
 const DEFAULT_PORT = 9466;
 
@@ -53,77 +38,21 @@ export type WebhookHandle = {
 
 type StartFn = (input: PrAgentInput) => Promise<void>;
 type StatusFn = (input: PrAgentInput, state: "draft_skipped") => Promise<void>;
+export type ConflictCheckMainStartFn = (args: {
+  owner: string;
+  repo: string;
+  mainSha: string;
+}) => Promise<void>;
+export type ConflictCheckPrStartFn = (args: {
+  owner: string;
+  repo: string;
+  prNumber: number;
+  headSha: string;
+  baseRef: string;
+}) => Promise<void>;
 const noopCancel: CancelStartFn = () => Promise.resolve();
-type WebhookStatusDeps = {
-  createInstallationToken?: () => Promise<GitHubAppTokenResult>;
-  createOctokit?: (token: string) => PostReviewOctokit;
-};
-
-function toPipelineInput(input: PrAgentInput): PrReviewPipelineInput {
-  return {
-    owner: input.owner,
-    repo: input.repo,
-    prNumber: input.prNumber,
-    commitSha: input.commitSha,
-    baseRef: input.baseRef,
-    headRef: input.headRef,
-    prTitle: input.prTitle,
-    prAuthor: input.prAuthor,
-  };
-}
-
-export async function postWebhookStatus(
-  input: PrAgentInput,
-  state: "draft_skipped",
-  deps: WebhookStatusDeps = {},
-): Promise<void> {
-  const statusInput: PostReviewStatusInput = {
-    pipeline: toPipelineInput(input),
-    state,
-    workflowId: `pr-review-webhook-${input.owner}-${input.repo}-${String(input.prNumber)}-${input.commitSha}`,
-  };
-
-  if (!isPostEnabled(Bun.env["PR_REVIEW_POST_ENABLED"])) {
-    const body = renderStatusCommentBody(statusInput, STATUS_COMMENT_MARKER);
-    jsonLog("info", "PR review webhook status suppressed", {
-      prNumber: input.prNumber,
-      state,
-      syntheticCommentId: DRY_RUN_COMMENT_ID,
-      bodyBytes: body.length,
-    });
-    return;
-  }
-
-  const tokenResult = await (
-    deps.createInstallationToken ?? createGitHubAppInstallationToken
-  )();
-  const octokit =
-    deps.createOctokit?.(tokenResult.token) ??
-    new Octokit({ auth: tokenResult.token });
-  const result: PostReviewStatusResult = await runPostReviewStatus(
-    octokit,
-    statusInput,
-    (error, extra) => {
-      Sentry.withScope((scope) => {
-        scope.setTag("component", COMPONENT);
-        scope.setContext("webhookStatus", {
-          owner: input.owner,
-          repo: input.repo,
-          prNumber: input.prNumber,
-          state,
-          ...extra,
-        });
-        Sentry.captureException(error);
-      });
-    },
-  );
-  jsonLog("info", "Posted PR review webhook status", {
-    prNumber: input.prNumber,
-    state,
-    commentId: result.commentId,
-    created: result.created,
-  });
-}
+const noopConflictMain: ConflictCheckMainStartFn = () => Promise.resolve();
+const noopConflictPr: ConflictCheckPrStartFn = () => Promise.resolve();
 
 // Master kill switch for the PR bot (review + summary). Defaults enabled; set
 // PR_BOT_ENABLED=false to make the webhook ack deliveries (200) without posting
@@ -215,6 +144,89 @@ async function verifyWebhookSignature(
   return null;
 }
 
+type PushHandlerArgs = {
+  c: Context;
+  secret: string;
+  payload: string;
+  signature: string;
+  deliveryId: string;
+  startConflictCheckMain: ConflictCheckMainStartFn;
+};
+
+async function handlePushEvent(args: PushHandlerArgs): Promise<Response> {
+  const { c, secret, payload, signature, deliveryId, startConflictCheckMain } =
+    args;
+  const sigFailure = await verifyWebhookSignature(
+    secret,
+    payload,
+    signature,
+    deliveryId,
+  );
+  if (sigFailure !== null) {
+    return sigFailure;
+  }
+
+  let parsed;
+  try {
+    parsed = PushEventSchema.parse(JSON.parse(payload));
+  } catch (error: unknown) {
+    // Use a push-namespaced reason so dashboards can tell push vs pull_request
+    // parse failures apart — same convention as `push:non-main-ref` below.
+    prWebhookSkippedTotal.inc({ reason: "push:schema-parse-failed" });
+    jsonLog("warning", "Failed to parse push payload", {
+      deliveryId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return c.text("bad payload\n", 400);
+  }
+
+  prWebhookReceivedTotal.inc({ event: "push", action: "push" });
+
+  if (parsed.ref !== "refs/heads/main") {
+    prWebhookSkippedTotal.inc({ reason: "push:non-main-ref" });
+    jsonLog("info", "Ignoring push to non-main ref", {
+      deliveryId,
+      ref: parsed.ref,
+    });
+    return c.text("ignored: non-main ref\n");
+  }
+
+  try {
+    await startConflictCheckMain({
+      owner: parsed.repository.owner.login,
+      repo: parsed.repository.name,
+      mainSha: parsed.after,
+    });
+  } catch (error: unknown) {
+    captureConflictCheckStartError(error, {
+      deliveryId,
+      trigger: "push-to-main",
+      owner: parsed.repository.owner.login,
+      repo: parsed.repository.name,
+      mainSha: parsed.after,
+    });
+    return c.text("conflict-check start failed\n", 500);
+  }
+
+  jsonLog("info", "Started merge-conflict check from push to main", {
+    deliveryId,
+    mainSha: parsed.after,
+  });
+  return c.text("started\n");
+}
+
+/**
+ * Optional hooks supplied to `buildWebhookApp` — bundled so the test-time
+ * call sites stay legible and the function signature stays under the params
+ * cap. Production wires every hook; tests opt in to the ones they need.
+ */
+export type WebhookHooks = {
+  postStatus?: StatusFn;
+  startCancel?: CancelStartFn;
+  startConflictCheckMain?: ConflictCheckMainStartFn;
+  startConflictCheckPr?: ConflictCheckPrStartFn;
+};
+
 /**
  * Pure handler — kept separate from Bun.serve so tests can drive it
  * directly without binding a real port.
@@ -222,9 +234,13 @@ async function verifyWebhookSignature(
 export function buildWebhookApp(
   secret: string,
   startWorkflows: StartFn,
-  postStatus: StatusFn = postWebhookStatus,
-  startCancel: CancelStartFn = noopCancel,
+  hooks: WebhookHooks = {},
 ): Hono {
+  const postStatus = hooks.postStatus ?? postWebhookStatus;
+  const startCancel = hooks.startCancel ?? noopCancel;
+  const startConflictCheckMain =
+    hooks.startConflictCheckMain ?? noopConflictMain;
+  const startConflictCheckPr = hooks.startConflictCheckPr ?? noopConflictPr;
   const app = new Hono();
 
   app.get("/healthz", (c) => c.text("ok\n"));
@@ -238,6 +254,17 @@ export function buildWebhookApp(
     if (event === "ping") {
       jsonLog("info", "Received ping", { deliveryId });
       return c.text("pong\n");
+    }
+
+    if (event === "push") {
+      return handlePushEvent({
+        c,
+        secret,
+        payload,
+        signature,
+        deliveryId,
+        startConflictCheckMain,
+      });
     }
 
     if (event !== "pull_request") {
@@ -277,6 +304,32 @@ export function buildWebhookApp(
     // review/summary RELEVANT_ACTIONS gate.
     if (action === "closed") {
       return handleClosedPr(parsed, deliveryId, startCancel);
+    }
+
+    // Merge-conflict check — runs on opened/synchronize/reopened/edited
+    // regardless of draft state, author, or PR_BOT_ENABLED. The kill
+    // switch lives on the activity itself (MERGE_CONFLICT_CHECK_ENABLED).
+    // Failure here logs to Sentry but does NOT poison the review/summary
+    // pipeline below.
+    if (CONFLICT_CHECK_ACTIONS.has(action)) {
+      try {
+        await startConflictCheckPr({
+          owner: parsed.repository.owner.login,
+          repo: parsed.repository.name,
+          prNumber: parsed.pull_request.number,
+          headSha: parsed.pull_request.head.sha,
+          baseRef: parsed.pull_request.base.ref,
+        });
+      } catch (error: unknown) {
+        captureConflictCheckStartError(error, {
+          deliveryId,
+          trigger: "pull_request",
+          action,
+          owner: parsed.repository.owner.login,
+          repo: parsed.repository.name,
+          prNumber: parsed.pull_request.number,
+        });
+      }
     }
 
     if (!RELEVANT_ACTIONS.has(action)) {
@@ -373,8 +426,14 @@ export function startGithubWebhook(client: Client): WebhookHandle {
   const app = buildWebhookApp(
     secret,
     (input) => startPrWorkflows(client, input),
-    postWebhookStatus,
-    (input) => startCancelBuildkiteBuilds(client, input),
+    {
+      postStatus: postWebhookStatus,
+      startCancel: (input) => startCancelBuildkiteBuilds(client, input),
+      startConflictCheckMain: (args) =>
+        startCheckPrMergeConflictsForMain(client, args),
+      startConflictCheckPr: (args) =>
+        startCheckPrMergeConflictsForPr(client, args),
+    },
   );
 
   const server = Bun.serve({

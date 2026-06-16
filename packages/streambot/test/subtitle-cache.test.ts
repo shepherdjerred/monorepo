@@ -69,12 +69,15 @@ async function setup(withCache: boolean): Promise<Fakes> {
     ffprobeLog,
     `printf '{"streams":[{"codec_name":"subrip","tags":{"language":"eng"}}]}'`,
   );
-  // Write a minimal SRT to the dest (the last positional arg), mimicking `-c:s srt <dest>`.
+  // Write a minimal SRT to the dest (the last positional arg), mimicking `-c:s srt <dest>`. The
+  // dest-must-end-in-`.srt` guard mirrors real ffmpeg's muxer auto-detect: it picks the output format
+  // from the trailing extension and errors on anything unknown (PR #1172 shipped `.srt.tmp` and broke
+  // every cached extraction in prod). Keep this guard — it's the regression test for that class of bug.
   const ffmpeg = await fakeBin(
     bin,
     "ffmpeg",
     ffmpegLog,
-    `for dest in "$@"; do :; done\nprintf '1\\n00:00:01,000 --> 00:00:02,000\\nhi\\n' > "$dest"`,
+    `for dest in "$@"; do :; done\ncase "$dest" in *.srt) ;; *) echo "fake-ffmpeg: dest must end in .srt, got: $dest" >&2; exit 1 ;; esac\nprintf '1\\n00:00:01,000 --> 00:00:02,000\\nhi\\n' > "$dest"`,
   );
 
   const moviePath = path.join(media, "Movie.mkv");

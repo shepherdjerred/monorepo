@@ -37,6 +37,20 @@ const userbotTokens = [config.stream.userbot.token];
 
 const driver = new MarioKartGameDriver({ config });
 
+// Peer userbot Discord user IDs supplied by the deployment (homelab cdk8s defines the
+// canonical list and passes each bot its peers as "all - self" via PEER_USERBOT_IDS).
+// Empty when running locally; the Go-Live heuristic then catches peer userbots instead.
+function readPeerUserbotIds(): readonly string[] {
+  const raw = Bun.env.PEER_USERBOT_IDS;
+  if (raw === undefined) {
+    return [];
+  }
+  return raw
+    .split(",")
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0);
+}
+
 const runtime = createGameBot({
   botToken: config.bot.discord_token,
   applicationId: config.bot.application_id,
@@ -51,6 +65,7 @@ const runtime = createGameBot({
       screenshotEnabled: config.bot.commands.screenshot.enabled,
     }),
   aloneGraceMs: 30_000,
+  peerUserbotIds: readPeerUserbotIds(),
   logger: {
     info: (message, metadata) => {
       logger.info(message, metadata);

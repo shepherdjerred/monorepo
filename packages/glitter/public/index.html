@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Glitter Graph</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #fafafa;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      #chart {
+        width: 100vw;
+        height: 100vh;
+        display: block;
+      }
+      .link {
+        stroke: #999;
+        stroke-opacity: 0.55;
+      }
+      .link.bi {
+        stroke: #5a6dba;
+        stroke-opacity: 0.7;
+      }
+      .link-label {
+        font-size: 10px;
+        fill: #555;
+        pointer-events: none;
+        paint-order: stroke;
+        stroke: #fafafa;
+        stroke-width: 3px;
+      }
+      .node circle {
+        stroke: #fff;
+        stroke-width: 1.5px;
+        cursor: grab;
+      }
+      .node.group circle {
+        stroke: #333;
+        stroke-width: 2px;
+      }
+      .node text {
+        font-size: 12px;
+        pointer-events: none;
+        paint-order: stroke;
+        stroke: #fafafa;
+        stroke-width: 3px;
+        fill: #222;
+      }
+      .node.group text {
+        font-weight: 600;
+      }
+      .controls {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-size: 13px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        z-index: 10;
+        max-width: 280px;
+      }
+      .controls label {
+        display: block;
+        margin: 4px 0;
+      }
+      .controls input[type="range"] {
+        width: 140px;
+        vertical-align: middle;
+      }
+      .legend-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 6px;
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="controls">
+      <strong>Glitter</strong>
+      <div style="margin-top: 6px">
+        <span
+          class="legend-dot"
+          style="background: #f4c542; border: 2px solid #333"
+        ></span
+        >group
+        <span
+          class="legend-dot"
+          style="background: #4a90e2; margin-left: 10px"
+        ></span
+        >person
+      </div>
+      <label
+        >charge
+        <input id="charge" type="range" min="-1200" max="-50" value="-350"
+      /></label>
+      <label
+        >link distance
+        <input id="dist" type="range" min="20" max="200" value="70"
+      /></label>
+      <label><input id="labels" type="checkbox" checked /> edge labels</label>
+      <div style="color: #888; font-size: 11px; margin-top: 6px">
+        drag nodes • scroll to zoom
+      </div>
+    </div>
+    <svg id="chart"></svg>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+      const groupNodes = [
+        { id: "SPU", label: "SPU" },
+        { id: "HighSchool", label: "High School (Edward's)" },
+        { id: "COD", label: "Modern Warfares" },
+        { id: "DesertHotSprings", label: "Desert Hot Springs" },
+        { id: "SeattleU", label: "Seattle U" },
+        { id: "Google", label: "Google" },
+        { id: "Elementary", label: "Elementary (Justin's)" },
+        { id: "HighSchool3", label: "High School (Hirza's)" },
+        { id: "UW1", label: "UW" },
+        { id: "Roommates", label: "UW Roommates" },
+        { id: "Truongs", label: "Truong Family" },
+        { id: "OtherHighSchool", label: "High School (Richard's)" },
+        { id: "Kims", label: "Kim Family" },
+        { id: "MiddleSchool", label: "Middle School" },
+        { id: "Elementary2", label: "Elementary (Esther's)" },
+      ];
+
+      const labeledPeople = {
+        DanielTruong: "Daniel",
+        DavidTruong: "David",
+        DanKim: "Dan Kim",
+        SamKim: "Sam Kim",
+        EstherKim: "Esther Kim",
+        Kowun: "Ko-wun",
+      };
+
+      const linksRaw = [
+        ["Mark", "SPU"],
+        ["Matt", "SPU"],
+        ["Erkin", "SPU"],
+        ["Virmel", "SPU"],
+        ["Emily", "SPU"],
+        ["Sean", "SPU"],
+        ["Andrew", "SPU"],
+        ["Edward", "HighSchool"],
+        ["Joel", "HighSchool"],
+        ["Wyatt", "HighSchool"],
+        ["Danny", "HighSchool"],
+        ["Virmel", "HighSchool"],
+        ["Edward", "Cjay", "Cousins", true],
+        ["Edward", "Lawrence", "Brothers", true],
+        ["Edward", "Chadwick", "Coworkers @ Lakes HS", true],
+        ["Joel", "Zach", "Roommates", true],
+        ["Danny", "Hannah", "WWU", true],
+        ["Matt", "Jerred", "Church", true],
+        ["Jerred", "Shuxin", "Dating", true],
+        ["Erkin", "Aaron", "Cousins", true],
+        ["Virmel", "COD"],
+        ["Jake", "COD"],
+        ["Brian", "COD"],
+        ["Eddie", "COD"],
+        ["Nathan", "COD"],
+        ["Eddie", "DesertHotSprings"],
+        ["Jordy", "DesertHotSprings"],
+        ["James", "DesertHotSprings"],
+        ["GayRyan", "DesertHotSprings"],
+        ["Santana", "DesertHotSprings"],
+        ["Juan", "DesertHotSprings"],
+        ["Virmel", "SeattleU"],
+        ["Justin", "SeattleU"],
+        ["Justin", "Google"],
+        ["Kowun", "Google"],
+        ["Joanne", "Google"],
+        ["Adrian", "Joanne", "Married", true],
+        ["Justin", "Colin", "Hood", true],
+        ["Justin", "Elementary"],
+        ["Hirza", "Elementary"],
+        ["Hirza", "Irfan", "Favela Neighbors", true],
+        ["Hirza", "HighSchool3"],
+        ["SamKim", "HighSchool3"],
+        ["Justin", "UW1"],
+        ["Hirza", "UW1"],
+        ["Irfan", "UW1"],
+        ["SamKim", "UW1"],
+        ["Justin", "Roommates"],
+        ["SamKim", "Roommates"],
+        ["DanielTruong", "Roommates"],
+        ["DanielTruong", "Truongs"],
+        ["DavidTruong", "Truongs"],
+        ["DanielTruong", "UW1"],
+        ["DavidTruong", "Sarah", "Dating", true],
+        ["DanielTruong", "Caitlyn", "Elementary", true],
+        ["Caitlyn", "Richard", "Exes", true],
+        ["Richard", "Cole"],
+        ["Richard", "Kevin"],
+        ["Richard", "OtherHighSchool"],
+        ["NekoRyan", "OtherHighSchool"],
+        ["Lisa", "OtherHighSchool"],
+        ["Lisa", "Spencer", "Married", true],
+        ["Lisa", "Teddy", "Coworkers", true],
+        ["Lisa", "Zack", "Salsa", true],
+        ["NekoRyan", "Olivia", "IG Meetup", true],
+        ["Sarah", "Alyza", "Best Friends", true],
+        ["SamKim", "MiddleSchool"],
+        ["Justin", "MiddleSchool"],
+        ["DanKim", "Kims"],
+        ["SamKim", "Kims"],
+        ["EstherKim", "Kims"],
+        ["EstherKim", "Elementary2"],
+        ["Long", "Elementary2"],
+        ["Long", "Aaron", "Friends", true],
+        ["DanielTruong", "Irfan", "Enemies", true],
+        ["Sydney", "NekoRyan", "Skating", true],
+        ["Andrea", "Edward", '"Friends"', false],
+        ["Allison", "Andrea"],
+        ["NekoRyan", "Allison", "Not the father", true],
+      ];
+
+      const groupIds = new Set(groupNodes.map((g) => g.id));
+      const nodeMap = new Map();
+      for (const g of groupNodes) {
+        nodeMap.set(g.id, { id: g.id, label: g.label, group: true });
+      }
+      for (const [id, label] of Object.entries(labeledPeople)) {
+        nodeMap.set(id, { id, label, group: false });
+      }
+      for (const link of linksRaw) {
+        for (const id of [link[0], link[1]]) {
+          if (!nodeMap.has(id))
+            nodeMap.set(id, { id, label: id, group: false });
+        }
+      }
+
+      const nodes = [...nodeMap.values()];
+      const links = linksRaw.map((l) => ({
+        source: l[0],
+        target: l[1],
+        label: l[2] || "",
+        bidir: !!l[3],
+      }));
+
+      const svg = d3.select("#chart");
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      svg.attr("viewBox", [0, 0, width, height]);
+
+      const container = svg.append("g");
+
+      svg.call(
+        d3
+          .zoom()
+          .scaleExtent([0.2, 4])
+          .on("zoom", (e) => container.attr("transform", e.transform)),
+      );
+
+      svg
+        .append("defs")
+        .append("marker")
+        .attr("id", "arrow")
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 18)
+        .attr("refY", 0)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .attr("orient", "auto")
+        .append("path")
+        .attr("d", "M0,-5L10,0L0,5")
+        .attr("fill", "#999");
+
+      const sim = d3
+        .forceSimulation(nodes)
+        .force(
+          "link",
+          d3
+            .forceLink(links)
+            .id((d) => d.id)
+            .distance(70)
+            .strength(0.7),
+        )
+        .force("charge", d3.forceManyBody().strength(-350))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force(
+          "collide",
+          d3.forceCollide().radius((d) => (d.group ? 38 : 22)),
+        );
+
+      const link = container
+        .append("g")
+        .selectAll("line")
+        .data(links)
+        .join("line")
+        .attr("class", (d) => "link" + (d.bidir ? " bi" : ""))
+        .attr("stroke-width", 1.4)
+        .attr("marker-end", (d) => (d.bidir ? null : "url(#arrow)"));
+
+      const linkLabel = container
+        .append("g")
+        .selectAll("text")
+        .data(links.filter((d) => d.label))
+        .join("text")
+        .attr("class", "link-label")
+        .attr("text-anchor", "middle")
+        .text((d) => d.label);
+
+      const node = container
+        .append("g")
+        .selectAll("g")
+        .data(nodes)
+        .join("g")
+        .attr("class", (d) => "node" + (d.group ? " group" : ""))
+        .call(
+          d3
+            .drag()
+            .on("start", (e, d) => {
+              if (!e.active) sim.alphaTarget(0.3).restart();
+              d.fx = d.x;
+              d.fy = d.y;
+            })
+            .on("drag", (e, d) => {
+              d.fx = e.x;
+              d.fy = e.y;
+            })
+            .on("end", (e, d) => {
+              if (!e.active) sim.alphaTarget(0);
+              d.fx = null;
+              d.fy = null;
+            }),
+        );
+
+      node
+        .append("circle")
+        .attr("r", (d) => (d.group ? 14 : 7))
+        .attr("fill", (d) => (d.group ? "#f4c542" : "#4a90e2"));
+
+      node
+        .append("text")
+        .attr("x", (d) => (d.group ? 18 : 10))
+        .attr("y", 4)
+        .text((d) => d.label);
+
+      sim.on("tick", () => {
+        link
+          .attr("x1", (d) => d.source.x)
+          .attr("y1", (d) => d.source.y)
+          .attr("x2", (d) => d.target.x)
+          .attr("y2", (d) => d.target.y);
+        linkLabel
+          .attr("x", (d) => (d.source.x + d.target.x) / 2)
+          .attr("y", (d) => (d.source.y + d.target.y) / 2);
+        node.attr("transform", (d) => `translate(${d.x},${d.y})`);
+      });
+
+      d3.select("#charge").on("input", function () {
+        sim.force("charge").strength(+this.value);
+        sim.alpha(0.6).restart();
+      });
+      d3.select("#dist").on("input", function () {
+        sim.force("link").distance(+this.value);
+        sim.alpha(0.6).restart();
+      });
+      d3.select("#labels").on("change", function () {
+        linkLabel.style("display", this.checked ? null : "none");
+      });
+
+      window.addEventListener("resize", () => {
+        const w = window.innerWidth,
+          h = window.innerHeight;
+        svg.attr("viewBox", [0, 0, w, h]);
+        sim
+          .force("center", d3.forceCenter(w / 2, h / 2))
+          .alpha(0.3)
+          .restart();
+      });
+    </script>
+  </body>
+</html>

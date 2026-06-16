@@ -20,6 +20,7 @@ import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
 
 // Headless Discord Plays Mario Kart 64: a patched N64Wasm core (parallel-n64 +
 // angrylion software RDP) runs in Bun, renders frames in software, and streams
@@ -105,6 +106,10 @@ export function createMarioKartDeployment(chart: Chart) {
       image: `ghcr.io/shepherdjerred/discord-plays-mario-kart:${versions["shepherdjerred/discord-plays-mario-kart"]}`,
       envVariables: {
         NODE_ENV: EnvValue.fromValue("production"),
+        // Peer userbot Discord user IDs (Pokébot + Streambot) so the channel-handler
+        // excludes them from the "real viewers" count and leaves an otherwise-empty VC.
+        // Sourced from the canonical map in resources/userbot-ids.ts.
+        PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("marioKart")),
         // VAAPI hardware H.264 encoding on the Intel iGPU (requested below). The
         // app reads STREAM_HARDWARE_ACCELERATION/VAAPI_DEVICE; ffmpeg reads
         // LIBVA_DRIVER_NAME. Falls back to software libx264 if the device is absent.

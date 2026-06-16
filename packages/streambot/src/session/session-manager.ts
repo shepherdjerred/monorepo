@@ -115,6 +115,7 @@ const IDLE_VIEW: PlaybackView = {
   queue: [],
   loop: "off",
   volume: 100,
+  positionSeconds: null,
 };
 
 /** A no-op handle for commands that target a guild/channel with no active session. */
@@ -419,7 +420,11 @@ export class SessionManager {
       dispatch: (event) => {
         session.actor.send(event);
       },
-      view: () => buildPlaybackView(session.actor.getSnapshot()),
+      view: () =>
+        buildPlaybackView(
+          session.actor.getSnapshot(),
+          session.entry.userbot.getPosition(),
+        ),
       setVolume: (percent) => session.entry.userbot.setVolume(percent),
       seek: (seconds) => session.entry.userbot.seek(seconds),
     };

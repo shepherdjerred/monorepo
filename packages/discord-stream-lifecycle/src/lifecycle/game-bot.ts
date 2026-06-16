@@ -26,6 +26,7 @@ import {
   AloneInVoiceWatcher,
   type VoiceOccupancySnapshot,
 } from "@shepherdjerred/discord-stream-lifecycle/session/auto-leave.ts";
+import { countRealViewers } from "@shepherdjerred/discord-stream-lifecycle/viewer-presence.ts";
 import {
   SingleSlotSessionManager,
   type SessionManagerLogger,
@@ -62,6 +63,17 @@ export type CreateGameBotOptions<TUserbot extends PooledUserbot> = {
   readonly stopPermission?: StopPermissionMode;
   /** Grace period when the voice channel goes empty before firing `aloneInVoice` stop. */
   readonly aloneGraceMs?: number;
+  /**
+   * User IDs of peer userbots (Discord selfbot accounts) that may share this bot's voice
+   * channel. They have `user.bot === false` (real-account selfbots), so the default voice
+   * member filter cannot tell them apart from humans. The deployment owns the canonical
+   * list (in this monorepo: homelab cdk8s passes it as `PEER_USERBOT_IDS`).
+   *
+   * Without this list, two userbots in the same channel keep each other "occupied" forever
+   * after the last human leaves. When empty, a Go-Live fingerprint heuristic catches
+   * unregistered peer userbots instead — see {@link countRealViewers}.
+   */
+  readonly peerUserbotIds?: readonly string[];
   /** Optional logger. */
   readonly logger?: SessionManagerLogger;
 };
@@ -159,6 +171,7 @@ export function createGameBot<TUserbot extends PooledUserbot>(
           newState,
           sessionManager,
           aloneWatcher,
+          options.peerUserbotIds ?? [],
         );
       });
       await bot.login(options.botToken);
@@ -216,6 +229,7 @@ function handleVoiceStateUpdate<TUserbot extends PooledUserbot>(
   newState: VoiceState,
   sessionManager: SingleSlotSessionManager<TUserbot>,
   aloneWatcher: AloneInVoiceWatcher,
+  peerUserbotIds: readonly string[],
 ): void {
   const session = sessionManager.getActiveSession();
   if (session === null) {
@@ -233,9 +247,27 @@ function handleVoiceStateUpdate<TUserbot extends PooledUserbot>(
     return;
   }
   const userbotId = session.userbotEntry.userbot.userId();
-  const humanMemberCount = [...channel.members.values()].filter(
-    (member) => !member.user.bot && member.id !== userbotId,
-  ).length;
+  // countRealViewers excludes (a) self, (b) `user.bot === true` apps, (c) explicit peer
+  // userbot IDs from the deployment, and (d) Go-Live-userbot fingerprints (streaming +
+  // selfDeaf + selfMute) — the last two together cover peer selfbots whose `user.bot` is
+  // false. Without this filter, peers keep each other "occupied" forever.
+  const voiceStates = oldState.guild.voiceStates.cache;
+  const humanMemberCount = countRealViewers(
+    [...channel.members.values()].map((member) => {
+      const state = voiceStates.get(member.id);
+      return {
+        id: member.id,
+        isBot: member.user.bot,
+        streaming: state?.streaming ?? false,
+        selfDeaf: state?.selfDeaf ?? false,
+        selfMute: state?.selfMute ?? false,
+      };
+    }),
+    {
+      selfUserId: userbotId,
+      peerUserbotIds,
+    },
+  );
   const snapshot: VoiceOccupancySnapshot = {
     guildId: session.guildId,
     voiceChannelId: session.voiceChannelId,

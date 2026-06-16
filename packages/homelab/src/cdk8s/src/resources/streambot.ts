@@ -18,6 +18,7 @@ import {
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
+import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 const STREAMBOT_UID = 1000;
@@ -102,6 +103,10 @@ export function createStreambotDeployment(
         // so GUILD_ID/VIDEO_CHANNEL_ID/COMMAND_CHANNEL_ID are no longer needed.
         USER_TOKENS: fromSecret("USER_TOKENS"),
         ADMIN_IDS: fromSecret("ADMIN_IDS"),
+        // Peer userbot Discord user IDs (Pokébot + Glitter Kart) so the alone-channel
+        // detector excludes them from the "real viewers" count and leaves once the
+        // last human exits. Sourced from the canonical map in resources/userbot-ids.ts.
+        PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("streambot")),
         // Enables movie/TV poster art on the now-playing embed for local files. Sourced from the
         // dedicated streambot-tmdb item. Required — the item must carry TMDB_API_KEY or the pod
         // fails to start (fail-fast; no silently-missing secrets).

@@ -35,6 +35,10 @@ resource "aws_s3_bucket" "cook" {
   bucket = "cook"
 }
 
+resource "aws_s3_bucket" "glitter_boys_ppl" {
+  bucket = "glitter-boys-ppl"
+}
+
 # Public artifact bucket — served at https://public.sjer.red via Caddy s3proxy.
 # PR screenshots live under the `pr/assets/<number>/` prefix (365-day TTL, below);
 # the bucket root is seeded with a landing + 404 page so the static-site root
