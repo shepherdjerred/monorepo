@@ -22,6 +22,16 @@ resource "cloudflare_dns_record" "glitter_boys_com_cname_prod" {
   proxied = false
 }
 
+# Homelab static site: Cloudflare Tunnel → s3-static-sites Caddy → glitter-boys-ppl bucket
+resource "cloudflare_dns_record" "glitter_boys_com_cname_ppl" {
+  zone_id = cloudflare_zone.glitter_boys_com.id
+  ttl     = 1
+  name    = "ppl"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
 # Email security
 resource "cloudflare_dns_record" "glitter_boys_com_spf" {
   zone_id = cloudflare_zone.glitter_boys_com.id
