@@ -23,6 +23,7 @@ import { createWebServer } from "./webserver/index.ts";
 import { handleRequest, type LeaderboardDeps } from "./webserver/dispatch.ts";
 import { logger } from "./logger.ts";
 import { getConfig } from "./config/index.ts";
+import { disconnectPrisma } from "./database/index.ts";
 import type { LeaderboardResponse } from "@discord-plays-mario-kart/common";
 
 /** When no session is active, expose a zero-seat manager so claims are rejected. */
@@ -134,6 +135,11 @@ if (config.web.enabled) {
 
 async function shutdown(): Promise<void> {
   await runtime.shutdown();
+  try {
+    await disconnectPrisma();
+  } catch (error) {
+    logger.error("disconnectPrisma failed", error);
+  }
 }
 
 async function shutdownAndExit(): Promise<void> {

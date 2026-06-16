@@ -1,9 +1,10 @@
 import { PrismaClient } from "#generated/prisma/client/index.js";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-// Singleton pattern for Prisma client using a well-known key (birmel pattern):
-// hot-reload (`bun --watch`) re-evaluates modules but keeps globalThis, so the
-// libSQL connection is reused instead of leaking one per reload.
+// Singleton pattern for Prisma client using a well-known key (birmel pattern).
+// `createPrisma()` is called per `/play` session, so this MUST cache in production
+// too — otherwise every `/play`->`/stop` cycle would leak a libSQL engine connection
+// (PR #1251 P1 fix). The hot-reload (`bun --watch`) benefit is the secondary motivator.
 const PRISMA_KEY = "__dpmk_prisma__";
 
 function getGlobalPrisma(): PrismaClient | undefined {
@@ -48,8 +49,19 @@ export function createPrisma(url: string): PrismaClient {
         ? ["query", "info", "warn", "error"]
         : ["error"],
   });
-  if (Bun.env.NODE_ENV !== "production") {
-    setGlobalPrisma(client);
-  }
+  // Always cache. Production calls this per `/play`; without caching it leaks a
+  // libSQL engine connection per session. Dev/hot-reload also benefits because
+  // `globalThis` survives module re-evals.
+  setGlobalPrisma(client);
   return client;
+}
+
+/** Disconnect the cached Prisma client (if any) and clear the cache. */
+export async function disconnectPrisma(): Promise<void> {
+  const existing = getGlobalPrisma();
+  if (existing === undefined) return;
+  await existing.$disconnect();
+  if (PRISMA_KEY in globalThis) {
+    Reflect.deleteProperty(globalThis, PRISMA_KEY);
+  }
 }
