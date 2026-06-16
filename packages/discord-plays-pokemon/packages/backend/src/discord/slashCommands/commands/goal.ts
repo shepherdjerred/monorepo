@@ -60,9 +60,20 @@ export function makeGoal(goalManager: GoalManager | undefined) {
           : { users: [interaction.user.id] },
       });
     } catch (error) {
-      await interaction.editReply({
-        content: "An unexpected error occurred while processing your goal.",
-      });
+      // Best-effort: inform the user something went wrong. If editReply itself
+      // fails (e.g. the interaction token has expired), log that secondary
+      // failure to stderr but still re-throw the original error so callers see
+      // the root cause rather than the Discord API rejection.
+      await interaction
+        .editReply({
+          content: "An unexpected error occurred while processing your goal.",
+        })
+        .catch((replyError: unknown) => {
+          console.error(
+            "Failed to send error reply to interaction:",
+            replyError,
+          );
+        });
       throw error;
     }
   };
