@@ -71,10 +71,25 @@ export function createMarioKartDeployment(chart: Chart) {
 
   const item = new OnePasswordItem(chart, "mario-kart-config", {
     spec: {
-      // "MK64 Config" — 1Password item with a `config.toml` field (server id,
-      // [bot], [stream] + [stream.userbot] selfbot token/ids, [stream.video],
-      // [emulator], [web]). Lives in the Homelab (Kubernetes) vault alongside
-      // the Pokebot config — see packages/discord-plays-mario-kart/README.md.
+      // "MK64 Config" — 1Password item with a `config.toml` field. As of the
+      // pokebot-mk64-pool refactor, the backend runs on-demand via /play: the
+      // emulator only boots when someone runs /play in their voice channel,
+      // and the per-guild Race leaderboard is keyed via Prisma's `guildId`
+      // column. Config.toml shape:
+      //
+      //   [stream.userbot]
+      //   id    = "<selfbot user id>"
+      //   token = "<selfbot token>"
+      //   # The single userbot account that joins voice channels and streams.
+      //   # One userbot, one emulator, one game at a time — no pool of accounts.
+      //
+      //   state_root_dir = "saves"   # default
+      //
+      // Multi-guild service: same userbot account, just invited into every
+      // Discord server you want this deployment to serve.
+      //
+      // Lives in the Homelab (Kubernetes) vault alongside the Pokebot config —
+      // see packages/discord-plays-mario-kart/README.md.
       itemPath:
         "vaults/v64ocnykdqju4ui6j6pua56xw4/items/fcugoc3kohpmfwzfvko4hgysyq",
     },

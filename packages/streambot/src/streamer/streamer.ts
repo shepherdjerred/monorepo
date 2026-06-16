@@ -7,6 +7,7 @@ import {
   createSeekablePlayer,
   type Player,
 } from "@shepherdjerred/discord-video-stream";
+import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type {
   JoinVoiceInput,
@@ -47,10 +48,12 @@ const log = logger.child("streamer");
 export type PlayerFactory = typeof createSeekablePlayer;
 
 /**
- * The streamer surface the pool/session layer depends on. Lets a {@link UserbotEntry} hold a real
- * {@link StreambotStreamer} in production and a lightweight fake in tests without type assertions.
+ * The streamer surface the pool/session layer depends on. Extends `PooledUserbot` (the
+ * shared lib's minimum) with streambot's video-streaming methods. Lets a `UserbotEntry`
+ * hold a real {@link StreambotStreamer} in production and a lightweight fake in tests
+ * without type assertions.
  */
-export type StreamerLike = {
+export type StreamerLike = PooledUserbot & {
   joinVoice: (
     input: JoinVoiceInput,
     signal: AbortSignal,
@@ -60,8 +63,6 @@ export type StreamerLike = {
   setVolume: (percent: number) => Promise<boolean>;
   seek: (seconds: number) => Promise<boolean>;
   getPosition: () => number | null;
-  userId: () => string | null;
-  destroy: () => Promise<void>;
 };
 
 export class StreambotStreamer implements StreamerLike {
@@ -116,9 +117,17 @@ export class StreambotStreamer implements StreamerLike {
     });
   }
 
-  /** Discord user id of the logged-in streamer (for the alone-in-VC check), or null. */
-  userId(): string | null {
-    return this.client.user?.id ?? null;
+  /**
+   * Discord user id of the logged-in streamer (for the alone-in-VC check). Throws if
+   * called before {@link login} resolves — `login` awaits the gateway `ready` event,
+   * so `userId` is only safe to call afterward.
+   */
+  userId(): string {
+    const id = this.client.user?.id;
+    if (id === undefined) {
+      throw new Error("StreambotStreamer.userId() called before login");
+    }
+    return id;
   }
 
   /** Guild ids this userbot is a member of (snapshot of the gateway cache after {@link login}). */

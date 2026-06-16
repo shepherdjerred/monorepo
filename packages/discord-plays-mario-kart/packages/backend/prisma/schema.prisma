@@ -12,6 +12,9 @@ datasource db {
 // One completed (non-battle) race, with one RaceResult row per human seat.
 model Race {
   id         Int          @id @default(autoincrement())
+  // Discord guild this race was played in. Leaderboards are per-server: queries
+  // always filter on `guildId` so server A's standings never leak into server B's.
+  guildId    String
   finishedAt DateTime     @default(now())
   // MK64 internal course id (0x00..0x13); names live in mk64-memory.ts.
   courseId   Int
@@ -21,6 +24,8 @@ model Race {
   // Humans in the race (1..4) at race start.
   humanCount Int
   results    RaceResult[]
+
+  @@index([guildId])
 }
 
 model RaceResult {

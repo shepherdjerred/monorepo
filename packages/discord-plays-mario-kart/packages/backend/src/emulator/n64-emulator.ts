@@ -1,5 +1,10 @@
 import path from "node:path";
 import { logger } from "#src/logger.ts";
+import {
+  persistMemfsToHost,
+  restoreHostToMemfs,
+  type FsModule,
+} from "./save-persistence.ts";
 import { installBrowserStubs, getFakeCanvas } from "./wasm-host.ts";
 import { buildConfigTxt } from "./config-txt.ts";
 import { drainRing } from "./audio-ring.ts";
@@ -63,6 +68,21 @@ export type N64EmulatorOptions = {
   fps: number;
   software: boolean; // angrylion
   seats: number; // 1..4
+  /**
+   * Directory on the host filesystem where per-session emulator save state
+   * (mempak/eeprom/SRAM — whatever the core writes into MEMFS that isn't a
+   * staged asset) is persisted. When provided:
+   *  - On `init()`, any files already in this directory are written into MEMFS
+   *    BEFORE `callMain` so the core picks up the prior session's state.
+   *  - On `persistSaves()`, MEMFS is walked and any file NOT in the known-asset
+   *    allowlist (config.txt, shaders, custom.v64, overlay.png, res/*) is
+   *    written to this directory.
+   *
+   * Set to a per-guild path (`saves/<guildId>/emulator`) to hard-isolate save
+   * state across Discord servers. When omitted, save state lives only in MEMFS
+   * and dies with the wasm module (the pre-pool legacy behaviour).
+   */
+  savesDir?: string;
 };
 
 function requireObject(u: unknown, what: string): object {
@@ -104,6 +124,8 @@ function encodeButtons(b: ButtonState): string {
 export class N64Emulator {
   private readonly opts: N64EmulatorOptions;
   private rt: Runtime | undefined;
+  /** The emscripten FS object — captured during init so persistSaves can walk it. */
+  private fs: FsModule | undefined;
   private readonly inputs: PlayerInputState[];
   private readonly inputLatency = new InputLatencyTracker(MAX_SEATS);
   private onFrameCb: ((rgba: Buffer) => void) | undefined;
@@ -187,6 +209,55 @@ export class N64Emulator {
     const cwrap = requireFn(mod, "cwrap");
     const fsWrite = requireFn(fs, "writeFile");
     const fsMkdir = requireFn(fs, "mkdir");
+    const fsReadFile = requireFn(fs, "readFile");
+    const fsReaddir = requireFn(fs, "readdir");
+    const fsStat = requireFn(fs, "stat");
+    // Build the typed FS facade for save persistence APIs.
+    const fsFacade: FsModule = {
+      writeFile: (p, data) => {
+        fsWrite(p, data);
+      },
+      readFile: (p) => {
+        const bytes = fsReadFile(p);
+        if (!(bytes instanceof Uint8Array)) {
+          throw new TypeError(`FS.readFile(${p}) did not return Uint8Array`);
+        }
+        return bytes;
+      },
+      readdir: (p) => {
+        const entries = fsReaddir(p);
+        if (!Array.isArray(entries)) {
+          throw new TypeError(`FS.readdir(${p}) did not return an array`);
+        }
+        const safe: string[] = [];
+        for (const e of entries) {
+          if (typeof e !== "string") {
+            throw new TypeError(`FS.readdir(${p}) yielded non-string`);
+          }
+          safe.push(e);
+        }
+        return safe;
+      },
+      mkdir: (p) => {
+        try {
+          fsMkdir(p);
+        } catch {
+          /* already exists */
+        }
+      },
+      stat: (p) => {
+        const s = fsStat(p);
+        if (typeof s !== "object" || s === null) {
+          throw new TypeError(`FS.stat(${p}) did not return an object`);
+        }
+        const mode: unknown = Reflect.get(s, "mode");
+        if (typeof mode !== "number") {
+          throw new TypeError(`FS.stat(${p}).mode is not a number`);
+        }
+        return { mode };
+      },
+    };
+    this.fs = fsFacade;
 
     // angrylion software-renderer config.
     fsWrite("config.txt", buildConfigTxt({ angrylion: software }));
@@ -216,6 +287,13 @@ export class N64Emulator {
       } catch {
         /* optional asset */
       }
+    }
+
+    // Restore any previously-persisted save state into MEMFS BEFORE the core
+    // boots. The first time a guild plays its savesDir is empty so this is a
+    // no-op; subsequent sessions for the same guild pick up where they left off.
+    if (this.opts.savesDir !== undefined) {
+      await restoreHostToMemfs(fsFacade, this.opts.savesDir);
     }
 
     // Inject the ROM (bypasses the Node fseek trap).
@@ -323,6 +401,20 @@ export class N64Emulator {
     if (player < 0 || player >= MAX_SEATS) return;
     this.inputs[player] = structuredClone(EMPTY_INPUT);
     this.inputLatency.clear(player);
+  }
+
+  /**
+   * Snapshot MEMFS into `savesDir` on the host so a subsequent `init()` for
+   * the same guild can restore in-game progress. No-op when `savesDir` was not
+   * provided or `init()` hasn't run yet. See {@link persistMemfsToHost} for
+   * the file-by-file semantics.
+   */
+  async persistSaves(): Promise<void> {
+    const dir = this.opts.savesDir;
+    if (dir === undefined) return;
+    const fs = this.fs;
+    if (fs === undefined) return;
+    await persistMemfsToHost(fs, dir);
   }
 
   /** Per-seat "any control held" flags (buttons or analog deflection), for the

@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import {
   UserbotPool,
-  type PooledStreamer,
   type StreamerFactory,
 } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
+import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import {
   GuildIdSchema,
@@ -31,7 +31,7 @@ const GUILD_C = GuildIdSchema.parse("100000000000000003");
 /** A fake pooled streamer that records destroy and reports a fixed guild membership. */
 function fakeStreamer(guilds: GuildId[], onLogin?: () => Promise<void>) {
   let destroyed = false;
-  const streamer: PooledStreamer = {
+  const streamer: StreamerLike = {
     login: () => onLogin?.() ?? Promise.resolve(),
     guildIds: () => guilds,
     joinVoice: (input) =>
