@@ -47,6 +47,16 @@ export type SessionManagerOptions<TUserbot extends PooledUserbot> = {
   /** Root directory under which `<guildId>/` session dirs are created. */
   readonly stateRootDir: string;
   readonly logger?: SessionManagerLogger;
+  /**
+   * Invoked after each session ends (any reason), AFTER the driver's `onSessionStop`
+   * and userbot release. Synchronous, must not throw — exceptions are swallowed.
+   * Use for cross-cutting cleanup that doesn't belong to the driver, e.g. cancelling
+   * the alone-in-voice grace timer so a stale firing can't stop the next session.
+   */
+  readonly onSessionStopped?: (
+    session: Session<TUserbot>,
+    reason: SessionStopReason,
+  ) => void;
 };
 
 /**
@@ -63,6 +73,9 @@ export class SingleSlotSessionManager<TUserbot extends PooledUserbot> {
   private readonly driver: GameDriver<TUserbot>;
   private readonly stateRootDir: string;
   private readonly log: SessionManagerLogger;
+  private readonly onSessionStopped:
+    | ((session: Session<TUserbot>, reason: SessionStopReason) => void)
+    | undefined;
   private active: Session<TUserbot> | null = null;
   /** Set while a start/stop is mid-flight so concurrent calls don't race. */
   private inFlight: Promise<unknown> | null = null;
@@ -72,6 +85,7 @@ export class SingleSlotSessionManager<TUserbot extends PooledUserbot> {
     this.driver = options.driver;
     this.stateRootDir = options.stateRootDir;
     this.log = options.logger ?? noopLogger;
+    this.onSessionStopped = options.onSessionStopped;
   }
 
   /** Current session, or null if idle. */
@@ -185,6 +199,17 @@ export class SingleSlotSessionManager<TUserbot extends PooledUserbot> {
         guildId: session.guildId,
         reason,
       });
+      if (this.onSessionStopped !== undefined) {
+        try {
+          this.onSessionStopped(session, reason);
+        } catch (error) {
+          this.log.error("onSessionStopped hook threw; ignoring", {
+            guildId: session.guildId,
+            reason,
+            error: toError(error).message,
+          });
+        }
+      }
     });
   }
 

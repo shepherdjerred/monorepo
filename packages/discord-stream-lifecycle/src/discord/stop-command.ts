@@ -25,6 +25,19 @@ export function buildStopCommand(params: {
     .setContexts(InteractionContextType.Guild);
 }
 
+export type StopCommandOptions = {
+  readonly permissionMode?: StopPermissionMode;
+  /**
+   * Final acknowledgement shown to the user after the session stops. The Pokémon
+   * driver flushes a save file on stop, so its default ("`Save flushed.`") is
+   * emulator-flavored; other drivers (Mario Kart, future game-bots) override this
+   * with something appropriate to their teardown semantics. The driver name is
+   * always prepended ("`<Driver> stopped. <stoppedMessage>`") so the user always
+   * sees what stopped.
+   */
+  readonly stoppedMessage?: string;
+};
+
 /**
  * Handle a `/stop` slash interaction by tearing down the active session for the
  * caller's guild (if any). No-op if idle. Honors the permission mode for who can stop.
@@ -32,7 +45,7 @@ export function buildStopCommand(params: {
 export async function handleStopCommand<TUserbot extends PooledUserbot>(
   interaction: ChatInputCommandInteraction,
   sessionManager: SingleSlotSessionManager<TUserbot>,
-  options: { readonly permissionMode?: StopPermissionMode } = {},
+  options: StopCommandOptions = {},
 ): Promise<void> {
   if (!interaction.inGuild()) {
     await interaction.reply({
@@ -62,7 +75,8 @@ export async function handleStopCommand<TUserbot extends PooledUserbot>(
   }
   await interaction.deferReply();
   await sessionManager.stop("userStop");
+  const tail = options.stoppedMessage ?? "Save flushed.";
   await interaction.editReply({
-    content: `${sessionManager.driverName()} stopped. Save flushed.`,
+    content: `${sessionManager.driverName()} stopped. ${tail}`,
   });
 }

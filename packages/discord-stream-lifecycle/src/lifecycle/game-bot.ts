@@ -61,6 +61,13 @@ export type CreateGameBotOptions<TUserbot extends PooledUserbot> = {
     | ((bot: BotClient) => readonly ExtraSlashCommand[]);
   /** Who can run `/stop`? Default: anyMember. */
   readonly stopPermission?: StopPermissionMode;
+  /**
+   * Trailing message in the `/stop` ack, appended after `"<Driver> stopped. "`.
+   * Defaults to `"Save flushed."` (Pokémon-flavored, since that driver writes a save
+   * on stop). Drivers without a save step should override (e.g. MK64 -> `undefined`
+   * trimmed away, or a leaderboard summary).
+   */
+  readonly stoppedMessage?: string;
   /** Grace period when the voice channel goes empty before firing `aloneInVoice` stop. */
   readonly aloneGraceMs?: number;
   /**
@@ -125,17 +132,22 @@ export function createGameBot<TUserbot extends PooledUserbot>(
     factory: options.userbotFactory,
     logger: log,
   });
-  const sessionManager = new SingleSlotSessionManager<TUserbot>({
-    pool,
-    driver: options.driver,
-    stateRootDir: options.stateRootDir,
-    logger: log,
-  });
   const aloneWatcher = new AloneInVoiceWatcher(
     options.aloneGraceMs === undefined
       ? { logger: log }
       : { aloneGraceMs: options.aloneGraceMs, logger: log },
   );
+  const sessionManager = new SingleSlotSessionManager<TUserbot>({
+    pool,
+    driver: options.driver,
+    stateRootDir: options.stateRootDir,
+    logger: log,
+    // Cancel the alone-in-voice grace timer whenever a session ends, so a stale
+    // timer armed during session A cannot stop a freshly-started session B.
+    onSessionStopped: () => {
+      aloneWatcher.cancel();
+    },
+  });
 
   const runtime: GameBotRuntime<TUserbot> = {
     bot,
@@ -158,21 +170,21 @@ export function createGameBot<TUserbot extends PooledUserbot>(
         ],
       });
       bot.on(Events.InteractionCreate, (interaction) => {
-        void handleInteraction(
-          interaction,
+        void handleInteraction(interaction, {
           sessionManager,
-          resolvedExtras,
-          options.stopPermission ?? "anyMember",
-        );
+          extraCommands: resolvedExtras,
+          stopPermission: options.stopPermission ?? "anyMember",
+          stoppedMessage: options.stoppedMessage,
+        });
       });
       bot.on(Events.VoiceStateUpdate, (oldState, newState) => {
-        handleVoiceStateUpdate(
+        handleVoiceStateUpdate({
           oldState,
           newState,
           sessionManager,
           aloneWatcher,
-          options.peerUserbotIds ?? [],
-        );
+          peerUserbotIds: options.peerUserbotIds ?? [],
+        });
       });
       await bot.login(options.botToken);
       log.info("game bot ready", {
@@ -195,26 +207,38 @@ export function createGameBot<TUserbot extends PooledUserbot>(
   return runtime;
 }
 
+type InteractionHandlerOptions<TUserbot extends PooledUserbot> = {
+  readonly sessionManager: SingleSlotSessionManager<TUserbot>;
+  readonly extraCommands: readonly ExtraSlashCommand[];
+  readonly stopPermission: StopPermissionMode;
+  readonly stoppedMessage: string | undefined;
+};
+
 async function handleInteraction<TUserbot extends PooledUserbot>(
   interaction: Interaction,
-  sessionManager: SingleSlotSessionManager<TUserbot>,
-  extraCommands: readonly ExtraSlashCommand[],
-  stopPermission: StopPermissionMode,
+  options: InteractionHandlerOptions<TUserbot>,
 ): Promise<void> {
   if (!interaction.isChatInputCommand()) {
     return;
   }
   switch (interaction.commandName) {
     case "play":
-      await handlePlayCommand(interaction, sessionManager);
+      await handlePlayCommand(interaction, options.sessionManager);
       return;
     case "stop":
-      await handleStopCommand(interaction, sessionManager, {
-        permissionMode: stopPermission,
-      });
+      await handleStopCommand(
+        interaction,
+        options.sessionManager,
+        options.stoppedMessage === undefined
+          ? { permissionMode: options.stopPermission }
+          : {
+              permissionMode: options.stopPermission,
+              stoppedMessage: options.stoppedMessage,
+            },
+      );
       return;
     default: {
-      const extra = extraCommands.find(
+      const extra = options.extraCommands.find(
         (cmd) => cmd.builder.name === interaction.commandName,
       );
       if (extra !== undefined) {
@@ -224,13 +248,19 @@ async function handleInteraction<TUserbot extends PooledUserbot>(
   }
 }
 
+type VoiceStateUpdateOptions<TUserbot extends PooledUserbot> = {
+  readonly oldState: VoiceState;
+  readonly newState: VoiceState;
+  readonly sessionManager: SingleSlotSessionManager<TUserbot>;
+  readonly aloneWatcher: AloneInVoiceWatcher;
+  readonly peerUserbotIds: readonly string[];
+};
+
 function handleVoiceStateUpdate<TUserbot extends PooledUserbot>(
-  oldState: VoiceState,
-  newState: VoiceState,
-  sessionManager: SingleSlotSessionManager<TUserbot>,
-  aloneWatcher: AloneInVoiceWatcher,
-  peerUserbotIds: readonly string[],
+  params: VoiceStateUpdateOptions<TUserbot>,
 ): void {
+  const { oldState, newState, sessionManager, aloneWatcher, peerUserbotIds } =
+    params;
   const session = sessionManager.getActiveSession();
   if (session === null) {
     return;
@@ -273,7 +303,20 @@ function handleVoiceStateUpdate<TUserbot extends PooledUserbot>(
     voiceChannelId: session.voiceChannelId,
     humanMemberCount,
   };
+  // Capture the session reference in the closure so a stale timer (armed for session
+  // A, never cancelled when A ended via `/stop`) cannot stop a freshly-started
+  // session B — we only fire `aloneInVoice` if the same session that armed the timer
+  // is still the active one. (AloneInVoiceWatcher also tracks `armedForSessionStartedAt`,
+  // but that comparison happens against the arm-time token, not the *current* session,
+  // so the watcher alone does not catch cross-session leaks.)
+  const armedSession = session;
   aloneWatcher.evaluate(session, snapshot, () => {
+    const currentSession = sessionManager.getActiveSession();
+    if (
+      currentSession?.startedAt.getTime() !== armedSession.startedAt.getTime()
+    ) {
+      return;
+    }
     void sessionManager.stop("aloneInVoice");
   });
   // Suppress unused-param warning for newState (kept for future expansion to detect moves).
