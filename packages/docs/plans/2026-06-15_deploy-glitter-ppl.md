@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress — code changes landed in `feature/glitter-ppl`; tofu apply + manual HTML upload pending.
+Partially Complete — tofu applied (bucket + DNS live), HTML uploaded, PR #1257 open awaiting merge for ArgoCD to sync the Caddy route.
 
 ## Context
 
@@ -117,3 +117,34 @@ op run --env-file=.env -- aws s3 cp \
 - **HSTS already covers the new subdomain.** The zone's `security_header` setting has `include_subdomains = true` and `max_age = 86400` — so anyone whose browser has visited `glitter-boys.com` will require HTTPS for `ppl.` too. With `proxied = true`, CF edge serves HTTPS natively, so this is fine.
 - **No interaction with the Fly.io `beta.`/`prod.` records.** Those keep pointing at `*.fly.dev` (unproxied) and are unaffected.
 - **One-shot upload means manual updates.** Re-uploading the HTML in the future is another `aws s3 cp`. If the user later wants edits versioned, the migration is straightforward: add a `packages/glitter-boys/` source dir, register it in `scripts/ci/src/catalog.ts` `DEPLOY_SITES` and `PACKAGE_TO_SITE`, and CI auto-syncs the bucket on merge (the `better-skill-capped` pattern at `catalog.ts:210-217`).
+
+## Session Log — 2026-06-15
+
+### Done
+
+- Worktree `.claude/worktrees/glitter-ppl` on branch `feature/glitter-ppl` (off `origin/main`).
+- Edits committed in `bd55e9f55`:
+  - `packages/homelab/src/tofu/seaweedfs/buckets.tf` — `aws_s3_bucket.glitter_boys_ppl`
+  - `packages/homelab/src/tofu/cloudflare/glitter-boys-com.tf` — `cloudflare_dns_record.glitter_boys_com_cname_ppl` (proxied → cfargotunnel)
+  - `packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts` — appended `{ hostname: "ppl.glitter-boys.com", bucket: "glitter-boys-ppl" }`
+  - This plan, copied from `~/.claude/plans/i-want-to-take-shiny-twilight.md`.
+- PR opened: [#1257](https://github.com/shepherdjerred/monorepo/pull/1257) — status `MERGEABLE` / `BLOCKED` (most CI green; a few buildkite jobs still pending at hand-off).
+- Tofu applied (full plan, user-chosen):
+  - `seaweedfs`: 1 add (bucket).
+  - `cloudflare`: 1 add (CNAME) + 36 in-place DNSSEC-schema-refresh updates (pre-existing drift, no real DNS rotation).
+- HTML uploaded: `aws s3 cp ~/Downloads/glitter.html s3://glitter-boys-ppl/index.html --content-type "text/html; charset=utf-8"` → `s3://glitter-boys-ppl/index.html` (8,966 bytes).
+- DNS verified resolving: `dig +short ppl.glitter-boys.com` → CF proxy IPs `172.67.178.195`, `104.21.56.57`.
+
+### Remaining
+
+- **Merge PR #1257** so ArgoCD syncs the Caddy `s3-static-sites` configmap with the new `ppl.glitter-boys.com` route.
+- After ArgoCD sync, re-run verification:
+  - `curl -sSI https://ppl.glitter-boys.com/` → should return `200`, `content-type: text/html`, full default response headers (X-Frame-Options DENY, Referrer-Policy, Permissions-Policy).
+  - Browser load → D3 graph renders without CSP block.
+- Move this plan to `packages/docs/archive/completed/` once Status flips to Complete.
+
+### Caveats
+
+- **Right now `https://ppl.glitter-boys.com/` returns `404` from Cloudflare** — this is expected. The tunnel reaches the homelab but Caddy hasn't been updated with the new route until the cdk8s change is merged + ArgoCD-synced.
+- **The 36 DNSSEC in-place updates were applied as part of the cloudflare apply.** They were state-refresh-only (`algorithm`, `digest`, `status` going to `(known after apply)`/`null` because of a provider schema diff). No DNSSEC keys were rotated; all zones still resolve normally.
+- **One-shot upload = no CI sync.** Future HTML edits are another `aws s3 cp` from the laptop. The plan describes the catalog migration if that ever becomes annoying.
