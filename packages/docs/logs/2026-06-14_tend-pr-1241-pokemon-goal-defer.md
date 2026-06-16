@@ -2,7 +2,7 @@
 
 ## Status
 
-Complete (follow-up: PR #1250)
+Complete (follow-up: PR #1250, PR #1254)
 
 ## Context
 
@@ -62,3 +62,20 @@ Wrapped the `startGoal` + `editReply` block in a try/catch in
 
 - The P2 bug from Greptile's thread now exists in merged `main` code until PR #1250 lands
 - The `disabled` result kind from `startGoal` is unreachable in practice (GoalManager only constructed when `config.game.goal.enabled` is true), so only the `invalid` pre-check was needed
+
+## Session Log — 2026-06-15 (conflict resolution agent)
+
+### Done
+
+- Resolved merge conflict in `goal.ts`: took main's content (which includes all defer + ephemeral fixes from #1241 + #1250) and layered the error-preservation pattern from branch commit `12eca6450` on top
+- Error-preservation fix: catch block's `editReply` call wrapped with `.catch((replyError: unknown) => console.error(..., replyError))` so the original error always re-throws without being replaced by a Discord API rejection
+- Resolved add/add conflict in this log file: merged both versions chronologically (main's richer history + this session entry)
+- Verified the fix is NOT redundant — main's catch block used plain `await editReply(...)` which could replace the original error; branch's `.catch(...)` pattern is the unique contribution of PR #1254
+
+### Remaining
+
+- PR #1254 needs CI to go green and Greptile review threads resolved
+
+### Caveats
+
+- The branch is a nested worktree at `.claude/worktrees/pr-merge-conflict-check/.claude/worktrees/pokemon-defer-v2/`
