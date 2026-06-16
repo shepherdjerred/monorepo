@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Complete (waiting on review/merge of PR #1261)
 
 ## Context
 
@@ -218,3 +218,44 @@ No homelab/cdk8s changes (prompt is bundled at image build time; data exposure i
 - **Map-name table size:** Hoenn has ~300 map IDs; the literal table is ~10 KB committed. Fine.
 - **Prompt token bloat:** at ~6000 chars (~1500 tokens) prompt is still <1% of mini's context. Cost per turn rises proportionally — watch the next 24 h of cost lines; if untenable, trim the sidequest section first (highest-bytes, lowest-impact-per-byte).
 - **Follow-up (not this PR):** annotated screenshot overlays — render a debug grid + position marker onto the screenshot before the AI reads it. Strictly better than text-only state for spatial reasoning, but requires graphics work in `pokemonctl screenshot`. File a TODO once this lands.
+
+## Session Log — 2026-06-15
+
+### Done
+
+- 1Password swap: pokemon `[game.goal] model` from `gpt-5.4-nano` → `gpt-5.4-mini` (vault `v64ocnykdqju4ui6j6pua56xw4`, item `hwyhh64dyu3s7w37q7oj7r4qn4`), cleaned up a duplicate sectioned `config.toml` field accidentally created by the dot-escape gotcha, K8s secret + pod rollout confirmed live.
+- Spatial state surfaced from `pokeemerald-wasm`:
+  - `symbols.ts` — added `gPlayerAvatar`, `gObjectEvents` to the resolved record (`gMapHeader` is NOT exported by the current wasm; downgrade noted).
+  - New `src/game/spatial/spatial-snapshot.ts` reads player position (`s16` x/y), facing (4-bit DIR*\*), movement mode (PA_FLAG*\* bits), map id, current-tile metatile behavior, and nearby ObjectEvents (≤5-tile manhattan radius, sorted, classified into NPC / ITEM_BALL / CUTTABLE_TREE / BREAKABLE_ROCK).
+  - New `src/game/spatial/metatile-behaviors.ts` decodes the ~60 MB\_\* enum values that change action selection (warp arrows, ledges, tall grass, doors, water, PCs, berry soil…).
+  - New `src/game/spatial/generated/map-names.ts` (~600-line generated table) covers all Hoenn maps; generator at `scripts/generate-map-names.ts` parses pokeemerald's `data/maps/map_groups.json`. Pinned to the same `tripplyons/pokeemerald-wasm` rev `species.generated.ts` uses (`ed25aa7c5ae9c3c338cc9aa57c7150fc33255ad3`).
+  - `MemoryReader` got `s16` (the engine's coord type is `s16`).
+- Goal-state plumbing: `formatGameStateForPrompt` accepts an optional `SpatialSnapshot` second arg; renders `Location:`, `Standing on:`, `Nearby objects:` blocks. `GoalManager` + `control-server` + `index.ts` plumbed through with a new `spatialSnapshotProvider`. `goal-process-helpers.ts` extracted to keep `goal-manager.ts` under the per-file line cap.
+- `buildPrompt` rewrite — 14 sections covering controls, movement (with first-press-turns as rule #1), screenshot anatomy, combat, Hoenn story skeleton, sidequests, counter-intuitive gotcha catalog (stairs / ledges / surf / Cut / dialog Yes/No / bike / HMs), and stuck-recovery heuristics.
+- Tests:
+  - `game-state-summary.test.ts` — 7 new cases for spatial lines (no-spatial path, location, standing-on, nearby empty/populated/classified).
+  - `codex-command.test.ts` — 7 new prompt-content assertions (tile grid, first-press-turns, face-adjacent-A, stair-warp rule, dialog Yes/No, sidequest terms, spatial-field docs).
+  - `emulator-symbols.integration.test.ts` — now also exercises `readSpatialSnapshot` against the real wasm across 200 frames.
+- 165/165 backend tests pass; typecheck + lint + prettier all green.
+- PR #1261 opened: https://github.com/shepherdjerred/monorepo/pull/1261
+
+### Remaining
+
+- Verify live behavior after Argo deploys the new image:
+  - `/goal Walk downstairs to the lobby` (replicate the user's stair-screenshot case)
+  - `/goal Talk to Professor Birch in his lab` (face-adjacent-A interaction)
+  - `/goal Walk into tall grass and battle one wild Pokémon` (held-direction)
+- Follow-up: upstream PR against `tripplyons/pokeemerald-wasm` to export `gMapHeader` (would unlock tile-AHEAD metatile lookups, not just standing-on).
+- Follow-up: annotated screenshot overlays — render grid + position marker onto the PNG before the AI reads it. Strictly better than text-only spatial state but needs graphics work in `pokemonctl screenshot`.
+
+### Caveats
+
+- `gMapHeader` is NOT exported by the current wasm. We can read the player's CURRENT-tile behavior but NOT arbitrary tile-ahead behavior. The prompt's "press UP to enter a down-stair" rule is the primary defense for the stair case; standing-on catches the moment the AI has already stepped onto the warp arrow.
+- Struct offsets are hard-coded against `tripplyons/pokeemerald-wasm@ed25aa7c5ae9c3c338cc9aa57c7150fc33255ad3`. A wasm rebuild against a different fork or a struct reorder will break reads. The `emulator-symbols.integration.test` is the canary — it boots the actual checked-in wasm and asserts the spatial snapshot read doesn't throw.
+- Prompt cost: now ~14k chars (~3500 tokens) up from ~1.5k chars. For `gpt-5.4-mini`, that's ~$0.0009 per goal start, mostly cached on subsequent turns. Watch the next 24h of cost lines; if untenable, trim the sidequest section first.
+- Map-name table is ~10 KB committed (well under the 5 MB pre-commit large-files threshold).
+- The 1Password gotcha around `op item edit "config.toml[text]=…"` — the dot is parsed as a section separator and creates a NEW sectioned field instead of editing the existing top-level one. Memory `reference_op_item_create_dot_label` updated with the new wrinkle.
+
+## Workflow Friction
+
+- `git commit` looked like it was passing pre-commit hooks (✔️ on every step listed in the lefthook summary) but silently failed to produce a commit because prettier was failing on two files with the same green color as a pass. Per existing memory `reference_lefthook_prettier_green_coloring`: a failed prettier step shows the same green as a pass, and the only signal is the missing "[<branch> <sha>] <subject>" line. The 🥊 emoji in the summary is the only thing differing from the ✔️ on success — that's the actual fail indicator. Worth adding a `lefthook.yml` post-hook that exits nonzero on any 🥊 instead of relying on visual diff between two near-identical glyphs.
