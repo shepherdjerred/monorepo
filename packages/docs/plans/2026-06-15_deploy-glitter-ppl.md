@@ -2,7 +2,9 @@
 
 ## Status
 
-Partially Complete — tofu applied (bucket + DNS live), HTML uploaded, PR #1257 open awaiting merge for ArgoCD to sync the Caddy route.
+Partially Complete — tofu applied (bucket + DNS live), HTML committed under `packages/glitter/` with CI auto-deploy wiring, PR #1257 open awaiting merge for ArgoCD to sync the Caddy route.
+
+The plan originally called for one-shot manual upload. Mid-implementation the user asked to version-control the HTML under a new `packages/glitter/` package so it deploys via CI — that addendum is captured in the Session Log below.
 
 ## Context
 
@@ -143,8 +145,20 @@ op run --env-file=.env -- aws s3 cp \
   - Browser load → D3 graph renders without CSP block.
 - Move this plan to `packages/docs/archive/completed/` once Status flips to Complete.
 
+### Addendum: in-repo source dir + CI auto-deploy
+
+Per user request after the initial commit, promoted from one-shot upload to version-controlled. Commit `cccd29b18`:
+
+- `packages/glitter/package.json` — minimal workspace package (no-op `build`/`test`/`typecheck`/`lint`).
+- `packages/glitter/public/index.html` — the deployable artifact (prettier-formatted; pre-commit reformatted on commit).
+- `scripts/ci/src/catalog.ts` — added to `DEPLOY_SITES` (`buildCmd: "true"`, `distDir: "packages/glitter/public"`), `PACKAGE_TO_SITE`, and `ALL_PACKAGES`. On future merges that touch `packages/glitter/`, CI runs `aws s3 sync packages/glitter/public/ s3://glitter-boys-ppl/ --delete` automatically.
+
+### Aws-chunked content-encoding gotcha
+
+The first manual upload (`aws s3 cp`) persisted `Content-Encoding: aws-chunked` on the object — that's the AWS CLI v2 default checksum/chunked-signing transport leaking into object metadata via SeaweedFS. Browsers don't recognize `aws-chunked` and download instead of render. Fix: prefix the call with `AWS_REQUEST_CHECKSUM_CALCULATION=when_required`. The object now has no `ContentEncoding`, just `text/html`. (The CI deploy path uses `aws s3 sync` which doesn't hit this — only `put-object`/`cp` do.)
+
 ### Caveats
 
 - **Right now `https://ppl.glitter-boys.com/` returns `404` from Cloudflare** — this is expected. The tunnel reaches the homelab but Caddy hasn't been updated with the new route until the cdk8s change is merged + ArgoCD-synced.
 - **The 36 DNSSEC in-place updates were applied as part of the cloudflare apply.** They were state-refresh-only (`algorithm`, `digest`, `status` going to `(known after apply)`/`null` because of a provider schema diff). No DNSSEC keys were rotated; all zones still resolve normally.
-- **One-shot upload = no CI sync.** Future HTML edits are another `aws s3 cp` from the laptop. The plan describes the catalog migration if that ever becomes annoying.
+- **The bucket has the prettier-formatted HTML now.** CI will re-sync the same content on merge; future HTML edits go in `packages/glitter/public/index.html` and ship via CI.
