@@ -139,7 +139,7 @@ const versions = {
     "2.0.0-4423@sha256:29a30940936b352dfa8f242f4323a607cd9a99992f49702a4bc95e28c2a4f775",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-4423@sha256:f036a8d4e6056bbaa07ae8963e9ddec5b1568b6a72d4070dd9feb26ded508d6a",
+    "2.0.0-4439@sha256:513fe77f19d5fbfec8caf33a1809a00a33f3c0a725637ee61958e822cb2dc875",
   // not managed by renovate — placeholder digest; CI version-commit-back fills
   // the real digest after the first successful image push.
   "shepherdjerred/discord-plays-mario-kart":
