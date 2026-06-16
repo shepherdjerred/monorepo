@@ -9,6 +9,8 @@ const GAME_SYMBOL_NAMES = [
   "gPlayerParty",
   "gPlayerPartyCount",
   "gBattleResults",
+  "gPlayerAvatar",
+  "gObjectEvents",
 ] as const;
 
 type GameSymbolName = (typeof GAME_SYMBOL_NAMES)[number];
@@ -59,5 +61,7 @@ export function createGameSymbols(exports: WebAssembly.Exports): GameSymbols {
     gPlayerParty: addressOf("gPlayerParty"),
     gPlayerPartyCount: addressOf("gPlayerPartyCount"),
     gBattleResults: addressOf("gBattleResults"),
+    gPlayerAvatar: addressOf("gPlayerAvatar"),
+    gObjectEvents: addressOf("gObjectEvents"),
   };
 }

@@ -123,4 +123,61 @@ describe("buildPrompt", () => {
     expect(prompt).toContain("[1] (completed) Buy potions");
     expect(prompt).toContain("report: done.");
   });
+
+  test("teaches the tile-grid model and screenshot anatomy", () => {
+    const prompt = buildPrompt("Reach Petalburg", baseContext);
+    expect(prompt).toContain("16×16");
+    expect(prompt).toContain("tile-quantized");
+    expect(prompt).toContain("240×160");
+  });
+
+  test("teaches the first-press-turns / blocked-vs-turned movement rules", () => {
+    const prompt = buildPrompt("Reach Petalburg", baseContext);
+    // The TURN ONLY phrasing is the load-bearing copy for the "spinning in
+    // place" failure mode.
+    expect(prompt).toContain("TURN ONLY");
+    expect(prompt).toContain("blocked");
+  });
+
+  test("teaches the face → adjacent → A interaction recipe", () => {
+    const prompt = buildPrompt("Talk to Birch", baseContext);
+    expect(prompt.toLowerCase()).toContain("face");
+    expect(prompt.toLowerCase()).toContain("adjacent");
+    expect(prompt).toContain("Press A");
+    expect(prompt).toContain("Diagonals don't count");
+  });
+
+  test("teaches the counter-intuitive stair / warp-arrow rule (the user's screenshot case)", () => {
+    const prompt = buildPrompt("Walk downstairs", baseContext);
+    // The phrasing the AI is supposed to apply when state says Standing on
+    // a warp-arrow tile. This is the load-bearing copy for the stair case.
+    expect(prompt.toLowerCase()).toContain("warp arrow");
+    expect(prompt.toLowerCase()).toContain("stair");
+    // "pressing UP" / "press UP" — the load-bearing copy is that the AI
+    // learns to press UP (north) to enter a down-going staircase from below.
+    expect(prompt).toMatch(/press(ing)? UP/);
+  });
+
+  test("warns against mashing A through Yes/No prompts", () => {
+    const prompt = buildPrompt("Save the game", baseContext);
+    expect(prompt.toLowerCase()).toContain("yes/no");
+    expect(prompt).toMatch(/don'?t mash a/i);
+  });
+
+  test("primes the AI with Hoenn story beats and at least one sidequest", () => {
+    const prompt = buildPrompt("Reach Petalburg", baseContext);
+    // Story-skeleton landmarks.
+    expect(prompt).toContain("Devon");
+    expect(prompt).toContain("Sootopolis");
+    // A representative sidequest term.
+    expect(prompt.toLowerCase()).toContain("contest");
+    expect(prompt.toLowerCase()).toContain("secret base");
+  });
+
+  test("documents the new spatial fields surfaced by pokemonctl state", () => {
+    const prompt = buildPrompt("Reach Petalburg", baseContext);
+    expect(prompt).toContain("Location");
+    expect(prompt).toContain("Standing-on");
+    expect(prompt).toContain("Nearby objects");
+  });
 });

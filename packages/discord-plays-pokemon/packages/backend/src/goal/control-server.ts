@@ -14,6 +14,7 @@ import { parseChord } from "#src/game/command/chord.ts";
 import { isValid } from "#src/discord/chord-validator.ts";
 import { execute } from "#src/discord/chord-executor.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
+import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 import { formatGameStateForPrompt } from "./game-state-summary.ts";
 import { formatHistoryForPrompt } from "./history-summary.ts";
 import type { GoalManager } from "./goal-manager.ts";
@@ -89,11 +90,11 @@ function statusResponse(context: GoalControlContext): Response {
 // reasoning. text/plain (not JSON) keeps the prompt tokens minimal — no
 // keys, no escaping, no quotes.
 function stateResponse(context: GoalControlContext): Response {
-  const snapshot = readGameSnapshot(
-    context.emulator.memoryReader(),
-    context.emulator.gameSymbols(),
-  );
-  return textResponse(formatGameStateForPrompt(snapshot));
+  const reader = context.emulator.memoryReader();
+  const symbols = context.emulator.gameSymbols();
+  const snapshot = readGameSnapshot(reader, symbols);
+  const spatial = readSpatialSnapshot(reader, symbols);
+  return textResponse(formatGameStateForPrompt(snapshot, spatial));
 }
 
 const HistoryQuerySchema = z.strictObject({

@@ -5,6 +5,7 @@ import type { Config } from "#src/config/schema.ts";
 import { hasCodexCredential } from "./codex-auth.ts";
 import { prepareRuntimeTools, buildEnvironment } from "./goal-runtime-env.ts";
 import type { GameSnapshot } from "#src/game/events/types.ts";
+import type { SpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 import { buildCodexArgs } from "./codex-command.ts";
 import {
   createCodexJsonlParser,
@@ -114,44 +115,15 @@ type GoalManagerOptions = {
   sendMessage: GoalMessageSender;
   spawner?: GoalProcessSpawner;
   now?: () => Date;
-  // Live snapshot reader. Called once at goal start to seed the prompt's
-  // "Current game state" block. The model can refresh at any time via
-  // `pokemonctl state` (T5), which reads through the same path on the
-  // control-server side. Returning null is fine (renders "unavailable").
-  // Optional so existing tests that don't exercise prompt context don't have
-  // to pass a stub.
+  // Live snapshot readers called once at goal start to seed the prompt's
+  // game-state + spatial blocks. Model refreshes via `pokemonctl state`,
+  // which reads through the same path on the control-server side. Optional
+  // so tests that don't exercise prompt context don't have to pass a stub.
   snapshotProvider?: () => GameSnapshot | null;
+  spatialSnapshotProvider?: () => SpatialSnapshot | null;
 };
 
-function defaultSpawner(
-  args: string[],
-  options: {
-    cwd: string;
-    env: Record<string, string>;
-  },
-): GoalProcess {
-  return Bun.spawn(args, {
-    cwd: options.cwd,
-    env: options.env,
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-}
-
-async function streamToLog(
-  stream: ReadableStream<Uint8Array> | null,
-  label: string,
-): Promise<void> {
-  if (stream === null) {
-    return;
-  }
-
-  const text = await new Response(stream).text();
-  const trimmed = text.trim();
-  if (trimmed.length > 0) {
-    logger.info(`goal codex ${label}: ${trimmed}`);
-  }
-}
+import { defaultSpawner, streamToLog } from "./goal-process-helpers.ts";
 
 export class GoalManager {
   private active: ActiveGoal | undefined;
@@ -166,6 +138,7 @@ export class GoalManager {
   private readonly spawner: GoalProcessSpawner;
   private readonly now: () => Date;
   private readonly snapshotProvider: () => GameSnapshot | null;
+  private readonly spatialSnapshotProvider: () => SpatialSnapshot | null;
   // Newest first. Persisted via persistState() so it survives restarts.
   private history: CompletedGoal[] = [];
   // Goal IDs we've already snapshot into history. Guards against double-record
@@ -180,6 +153,8 @@ export class GoalManager {
     this.spawner = options.spawner ?? defaultSpawner;
     this.now = options.now ?? (() => new Date());
     this.snapshotProvider = options.snapshotProvider ?? (() => null);
+    this.spatialSnapshotProvider =
+      options.spatialSnapshotProvider ?? (() => null);
   }
 
   /**
@@ -315,7 +290,10 @@ export class GoalManager {
     const outputPath = path.join(screenshotDirectory, `${id}-final.txt`);
     // Snapshot + 3 most-recent goals as the static prompt context. The model
     // can refresh both at any time via `pokemonctl state` / `pokemonctl history`.
-    const gameStateSummary = formatGameStateForPrompt(this.snapshotProvider());
+    const gameStateSummary = formatGameStateForPrompt(
+      this.snapshotProvider(),
+      this.spatialSnapshotProvider(),
+    );
     const promptContext = {
       gameStateSummary,
       recentGoalsSummary: formatHistoryForPrompt(this.getHistory(3)),

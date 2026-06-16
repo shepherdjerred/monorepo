@@ -36,6 +36,7 @@ import { GameStreamer } from "./stream/game-streamer.ts";
 import discordClient from "./discord/client.ts";
 import { createGameEventWatcher } from "./game/events/watcher.ts";
 import { readGameSnapshot } from "./game/events/snapshot.ts";
+import { readSpatialSnapshot } from "./game/spatial/spatial-snapshot.ts";
 import { createEventNotifier } from "./discord/event-notifier.ts";
 import type { EventToggles } from "./discord/event-notifier.ts";
 import { GoalManager, type GoalDiscordMessage } from "./goal/goal-manager.ts";
@@ -134,6 +135,8 @@ if (emulator && config.game.goal.enabled) {
     sendMessage: sendDiscordMessage,
     snapshotProvider: () =>
       readGameSnapshot(emulator.memoryReader(), emulator.gameSymbols()),
+    spatialSnapshotProvider: () =>
+      readSpatialSnapshot(emulator.memoryReader(), emulator.gameSymbols()),
   });
   await goalManager.initialize();
   goalControlServer = startGoalControlServer({
