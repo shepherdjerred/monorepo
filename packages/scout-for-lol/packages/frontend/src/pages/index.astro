@@ -16,8 +16,8 @@ import {
   getGeneratedScoutShowcaseAssetSrc,
 } from "../data/scout-showcase";
 import {
-  DISCORD_INSTALL_CLICK_EVENT,
-  DISCORD_INVITE_URL,
+  APP_DASHBOARD_URL,
+  GET_STARTED_CLICK_EVENT,
 } from "#src/lib/marketing-constants.ts";
 
 const matchImg = "/match.png";
@@ -64,14 +64,14 @@ const initialShowcasePreview = showcasePreviews.at(0);
 
     <Hero
       title="Scout for League of Legends"
-      subtitle="Get notified when your friends start League matches and receive beautiful post-match reports with detailed stats, all delivered directly to your Discord server."
+      subtitle="Get notified when your friends start League matches and receive beautiful post-match reports with detailed stats — set it all up from a sleek web dashboard and delivered straight to your Discord server."
       showGradient={true}
       ctaButtons={[
         {
-          text: "Add to Discord",
-          href: DISCORD_INVITE_URL,
+          text: "Get Started",
+          href: APP_DASHBOARD_URL,
           variant: "primary",
-          trackingEvent: DISCORD_INSTALL_CLICK_EVENT,
+          trackingEvent: GET_STARTED_CLICK_EVENT,
           trackingLocation: "home_hero",
         },
         { text: "View Documentation", href: "/docs", variant: "secondary" },
@@ -348,22 +348,23 @@ const initialShowcasePreview = showcasePreviews.at(0);
           <dl
             class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3"
           >
-            <ProcessStep number={1} title="Add Scout to your server">
+            <ProcessStep number={1} title="Sign in with Discord">
               <p class="text-gray-600 dark:text-gray-300">
-                Click 'Add to Discord' and authorize Scout with the necessary
-                permissions to send messages to your channels.
+                Open the dashboard and sign in with your Discord account — no
+                passwords, no setup commands.
               </p>
             </ProcessStep>
-            <ProcessStep number={2} title="Subscribe to players">
+            <ProcessStep number={2} title="Add Scout to your server">
               <p class="text-gray-600 dark:text-gray-300">
-                Use /subscription add to add League players you want to track.
-                Specify their Riot ID, region, and a friendly alias.
+                One click adds the bot to your server and sends you right back
+                to the dashboard.
               </p>
             </ProcessStep>
-            <ProcessStep number={3} title="Enjoy automatic updates">
+            <ProcessStep number={3} title="Configure in the dashboard">
               <p class="text-gray-600 dark:text-gray-300">
-                Scout will automatically notify your channel when tracked
-                players start matches and post detailed reports when games end.
+                Pick channels, add the players you want to track, and set up
+                competitions — all from a sleek web UI. No slash commands
+                required.
               </p>
             </ProcessStep>
           </dl>
@@ -375,13 +376,13 @@ const initialShowcasePreview = showcasePreviews.at(0);
     <CTA
       variant="indigo"
       title="Ready to track your friends' League matches?"
-      description="Add Scout to your Discord server and never miss another epic play or hilarious fail from your League friends."
+      description="Sign in, add Scout to your server, and set everything up from the dashboard — never miss another epic play or hilarious fail from your League friends."
       buttons={[
         {
-          text: "Add to Discord",
-          href: DISCORD_INVITE_URL,
+          text: "Get Started",
+          href: APP_DASHBOARD_URL,
           variant: "primary",
-          trackingEvent: DISCORD_INSTALL_CLICK_EVENT,
+          trackingEvent: GET_STARTED_CLICK_EVENT,
           trackingLocation: "home_final_cta",
         },
         { text: "Read the docs", href: "/docs", variant: "secondary" },

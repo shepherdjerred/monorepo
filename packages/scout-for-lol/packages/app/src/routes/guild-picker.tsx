@@ -1,12 +1,35 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { Button } from "#src/components/ui/button.tsx";
 import {
   Card,
+  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "#src/components/ui/card.tsx";
+
+/**
+ * Kicks off the bot-install flow. Points at the backend route (not an
+ * SPA route), which 302s to Discord's add-to-server screen and returns
+ * the admin to /app/installed?guild_id=… — see handleDiscordInstall.
+ */
+const INSTALL_URL = "/api/discord/install";
+
+function AddServerButton({
+  variant = "default",
+  children,
+}: {
+  variant?: "default" | "outline";
+  children: React.ReactNode;
+}) {
+  return (
+    <Button asChild variant={variant}>
+      <a href={INSTALL_URL}>{children}</a>
+    </Button>
+  );
+}
 
 export function GuildPicker() {
   const trpc = useTRPC();
@@ -37,12 +60,16 @@ export function GuildPicker() {
       <Shell>
         <Card>
           <CardHeader>
-            <CardTitle>No manageable guilds</CardTitle>
+            <CardTitle>Add Scout to your server</CardTitle>
             <CardDescription>
-              You need to be a Discord Administrator in a server where Scout is
-              installed. Invite Scout, then come back here.
+              You need to be a Discord Administrator in a server with Scout
+              installed. Add Scout below — you&apos;ll come right back here to
+              configure it.
             </CardDescription>
           </CardHeader>
+          <CardContent>
+            <AddServerButton>Add Scout to a server</AddServerButton>
+          </CardContent>
         </Card>
       </Shell>
     );
@@ -50,7 +77,10 @@ export function GuildPicker() {
 
   return (
     <Shell>
-      <h2 className="text-xl font-semibold tracking-tight">Pick a guild</h2>
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-xl font-semibold tracking-tight">Pick a guild</h2>
+        <AddServerButton variant="outline">Add another server</AddServerButton>
+      </div>
       <ul className="grid gap-2">
         {data.map((g) => (
           <li key={g.id}>

@@ -2,8 +2,8 @@
 import { ClientNavigation } from "#src/components/client-navigation.tsx";
 import { ClientMobileNav } from "#src/components/client-mobile-nav.tsx";
 import {
-  DISCORD_INSTALL_CLICK_EVENT,
-  DISCORD_INVITE_URL,
+  APP_DASHBOARD_URL,
+  GET_STARTED_CLICK_EVENT,
 } from "#src/lib/marketing-constants.ts";
 
 interface Props {
@@ -42,7 +42,7 @@ const mobileNavItems = [
   },
 ];
 
-const discordLink = DISCORD_INVITE_URL;
+const dashboardLink = APP_DASHBOARD_URL;
 ---
 
 <header class="absolute inset-x-0 top-0 z-50 bg-white dark:bg-gray-900">
@@ -64,7 +64,7 @@ const discordLink = DISCORD_INVITE_URL;
       <ClientMobileNav
         items={mobileNavItems}
         activePage={activePage}
-        discordLink={discordLink}
+        ctaHref={dashboardLink}
         client:load
       />
     </div>
@@ -73,12 +73,12 @@ const discordLink = DISCORD_INVITE_URL;
     </div>
     <div class="hidden lg:flex lg:flex-1 lg:justify-end">
       <a
-        href={discordLink}
-        data-scout-conversion={DISCORD_INSTALL_CLICK_EVENT}
+        href={dashboardLink}
+        data-scout-conversion={GET_STARTED_CLICK_EVENT}
         data-scout-cta-location="navbar"
         class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
       >
-        Add to Discord
+        Get Started
       </a>
     </div>
   </nav>

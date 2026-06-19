@@ -7,6 +7,7 @@ import { appRouter } from "#src/trpc/router/index.ts";
 import { createContext } from "#src/trpc/context.ts";
 import {
   handleDiscordCallback,
+  handleDiscordInstall,
   handleDiscordStart,
   handleWebLogout,
 } from "#src/trpc/auth-web.ts";
@@ -195,6 +196,23 @@ const server = Bun.serve({
         logger.error("❌ OAuth start error:", error);
         Sentry.captureException(error, { tags: { source: "auth-web-start" } });
         return new Response("OAuth start failed", {
+          status: 500,
+          headers: { "Content-Type": "text/plain" },
+        });
+      }
+    }
+
+    // Bot install: 302 to Discord's add-to-server screen for a
+    // signed-in admin, returning to /app/installed with guild_id.
+    if (url.pathname === "/api/discord/install") {
+      try {
+        return handleDiscordInstall(request);
+      } catch (error) {
+        logger.error("❌ Bot install redirect error:", error);
+        Sentry.captureException(error, {
+          tags: { source: "auth-web-install" },
+        });
+        return new Response("Bot install redirect failed", {
           status: 500,
           headers: { "Content-Type": "text/plain" },
         });

@@ -8,8 +8,8 @@ import CommandBox from "../components/CommandBox.astro";
 import FAQItem from "../components/FAQItem.astro";
 import { POLLING_TIERS } from "@scout-for-lol/data/polling-config.ts";
 import {
-  DISCORD_INSTALL_CLICK_EVENT,
-  DISCORD_INVITE_URL,
+  APP_DASHBOARD_URL,
+  GET_STARTED_CLICK_EVENT,
 } from "#src/lib/marketing-constants.ts";
 
 const maxTier = POLLING_TIERS[POLLING_TIERS.length - 1]!;
@@ -86,7 +86,20 @@ const maxTier = POLLING_TIERS[POLLING_TIERS.length - 1]!;
             Bot Commands
           </h2>
 
-          <div class="space-y-8">
+          <InfoBox variant="info" title="Slash commands are optional">
+            <p>
+              The <a
+                href="/app/"
+                class="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+                >web dashboard</a
+              > is the primary way to configure Scout — manage subscriptions, competitions,
+              and reports from a UI instead of typing commands. The slash commands
+              below are an equivalent option for anyone who prefers to stay in Discord;
+              they require the same Discord Administrator rights as the dashboard.
+            </p>
+          </InfoBox>
+
+          <div class="mt-8 space-y-8">
             <!-- Me Command -->
             <div
               class="border border-gray-200 dark:border-gray-700 rounded-lg p-6"
@@ -1086,7 +1099,8 @@ const maxTier = POLLING_TIERS[POLLING_TIERS.length - 1]!;
 
             <InfoBox variant="warning" title="⚠️ Important">
               <p>
-                Only users with Administrator permissions can use the <code
+                Configuring subscriptions requires Discord Administrator
+                permissions — both in the web dashboard and via the <code
                   class="bg-yellow-100 dark:bg-yellow-800/50 px-1 rounded"
                   >/subscription add</code
                 > and <code
@@ -1469,12 +1483,12 @@ const maxTier = POLLING_TIERS[POLLING_TIERS.length - 1]!;
             Can't find what you're looking for? We're here to help!
           </p>
           <a
-            href={DISCORD_INVITE_URL}
-            data-scout-conversion={DISCORD_INSTALL_CLICK_EVENT}
+            href={APP_DASHBOARD_URL}
+            data-scout-conversion={GET_STARTED_CLICK_EVENT}
             data-scout-cta-location="docs"
             class="inline-flex items-center rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
-            Add Scout to Discord
+            Get Started
           </a>
         </div>
       </div>
