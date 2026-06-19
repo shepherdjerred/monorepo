@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/bun";
 Sentry.init({
   dsn:
     Bun.env.SENTRY_DSN ??
-    "https://9c905c2bb5924e55b4dea32e2a95f0d1@bugsink.sjer.red/8",
+    "https://c2f90a5857e940e1997b49791d9fc684@bugsink.sjer.red/13",
   environment: Bun.env.NODE_ENV ?? "development",
   // Don't let Sentry register the global OTel TracerProvider/Propagator/
   // ContextManager. See the matching comment in discord-plays-pokemon's index.ts.
