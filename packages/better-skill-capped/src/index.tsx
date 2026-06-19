@@ -20,10 +20,18 @@ globalThis
   .matchMedia("(prefers-color-scheme: dark)")
   .addEventListener("change", setupTheme);
 
+// VITE_SENTRY_RELEASE is injected at build time by the CI site-deploy step
+// (2.0.0-<build>). Guard the untyped env access so `release` is
+// `string | undefined`, never `any`.
+const sentryRelease =
+  typeof import.meta.env.VITE_SENTRY_RELEASE === "string"
+    ? import.meta.env.VITE_SENTRY_RELEASE
+    : undefined;
+
 Sentry.init({
   dsn: "https://34fcb766ca0f49499b001635c5cc5cb2@bugsink.sjer.red/3",
-  // release: process.env.REACT_APP_TRAVIS_COMMIT,
-  // environment: process.env.NODE_ENV,
+  release: sentryRelease,
+  environment: import.meta.env.MODE,
 });
 
 const container = document.querySelector("#root");
