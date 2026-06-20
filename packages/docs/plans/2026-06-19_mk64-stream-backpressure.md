@@ -83,3 +83,33 @@ drops there can be minor A/V drift; acceptable and minimized once the event loop
 - `packages/discord-plays-mario-kart/packages/backend/src/observability/metrics.ts`
 - `packages/discord-plays-mario-kart/packages/backend/src/emulator/n64-emulator.ts`
 - `packages/discord-plays-mario-kart/packages/backend/src/stream/game-streamer.test.ts` (new)
+
+## Session Log — 2026-06-19
+
+### Done
+
+- Diagnosed the regression end-to-end against prod (Grafana/Prometheus, pod logs, in-pod
+  ffmpeg benchmarks). Confirmed: emulator healthy (~30 ticks/s), encoder healthy
+  (VAAPI 16.7× standalone / 1.02× realtime-fed), bottleneck = single-thread starvation +
+  unbounded frame queue (3.47 GB / ~188s backlog).
+- Implemented the fix on `feature/mk64-stream-backpressure` (PR #1274): bounded frame
+  queue + `stream_frames_dropped_total` + `shouldDropFrame()` unit test; `destroy()` leak
+  guard; `seatActivity()` allocation trim.
+- Green locally: `bun run typecheck`, `bun run test` (120 pass), `bunx eslint .`.
+
+### Remaining
+
+- **Post-deploy verification (waiting):** after PR #1274 ships, watch a real `/play` — Grafana
+  `stream_sink_buffer_bytes` near 0, `stream_frames_dropped_total` rising only under load,
+  controller→screen lag ~sub-second, A/V acceptable.
+- **Conditional follow-up:** if delivered fps still sits well below 30 under load, move the
+  emulator to a Worker thread — `todos/mk64-emulator-worker-thread.md`.
+
+### Caveats
+
+- Kept `-framerate 30`; under _sustained_ frame drops there can be minor A/V drift. The drop
+  policy still bounds the input lag (the reported symptom); drift is minimized once the event
+  loop regains headroom (worker-thread follow-up).
+- The `e2e:perf` harness can't validate the stream sink locally (it registers an empty
+  `onFrame`), and the wasm isn't built in the worktree — so the stream-path validation is
+  the post-deploy step above, covered by the new unit test for the drop logic itself.
