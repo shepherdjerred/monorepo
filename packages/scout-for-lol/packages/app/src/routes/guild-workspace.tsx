@@ -8,7 +8,6 @@ const NAV_ITEMS = [
   { to: "players", label: "Players" },
   { to: "competitions", label: "Competitions" },
   { to: "reports", label: "Reports" },
-  { to: "admin", label: "Admin" },
   { to: "audit", label: "Audit" },
 ] as const;
 
@@ -37,14 +36,8 @@ export function GuildWorkspace() {
               Guild
             </p>
             <h1 className="text-lg font-semibold tracking-tight">
-              {guild?.name ?? guildId}
+              {guild?.name ?? "…"}
             </h1>
-            <p
-              className="font-mono text-xs text-muted-foreground"
-              title={guildId}
-            >
-              {guildId}
-            </p>
           </div>
           <NavLink
             to="/"

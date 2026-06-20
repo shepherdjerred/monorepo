@@ -143,14 +143,16 @@ export function AddSubscriptionDialog(props: Props) {
               Riot ID <span className="text-muted-foreground">(name#TAG)</span>
             </Label>
             <RiotIdCombobox
+              id="add-sub-riot-id"
               guildId={props.guildId}
+              region={region}
               value={riotIdInput}
               onValueChange={setRiotIdInput}
               onSelectAccount={({ region: accountRegion }) => {
                 const match = findRegion(accountRegion);
                 if (match !== null) setRegion(match);
               }}
-              placeholder="example#NA1 (or search known accounts)"
+              placeholder="Search a name or type name#TAG"
             />
           </div>
 

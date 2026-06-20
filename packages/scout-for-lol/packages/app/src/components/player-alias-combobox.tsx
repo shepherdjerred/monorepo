@@ -46,7 +46,6 @@ export function PlayerAliasCombobox(props: {
       }}
       disabled={props.disabled}
       placeholder={props.placeholder ?? "Search players"}
-      emptyText="No matching players."
       className={props.className}
       id={props.id}
       renderItem={(player) => <span className="truncate">{player.alias}</span>}

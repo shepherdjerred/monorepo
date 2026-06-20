@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
-import { findRegion } from "#src/lib/regions.ts";
+import { findRegion, type RegionValue } from "#src/lib/regions.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import {
   Card,
@@ -10,38 +10,27 @@ import {
   CardHeader,
   CardTitle,
 } from "#src/components/ui/card.tsx";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "#src/components/ui/table.tsx";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import {
   CompetitionSection,
   PlayerAccountsTable,
+  PlayerSubscriptionsTable,
   Section,
 } from "#src/components/player-detail-sections.tsx";
 import { RenamePlayerDialog } from "#src/components/rename-player-dialog.tsx";
 import { LinkDiscordDialog } from "#src/components/link-discord-dialog.tsx";
 import { AddAccountDialog } from "#src/components/add-account-dialog.tsx";
 import { EditAccountDialog } from "#src/components/edit-account-dialog.tsx";
+import { MergePlayersDialog } from "#src/components/merge-players-dialog.tsx";
+import { TransferAccountDialog } from "#src/components/transfer-account-dialog.tsx";
 
 type EditableAccount = { id: number; alias: string; region: string };
+
+type TransferableAccount = { riotId: string; region: RegionValue };
 
 function formatDate(value: Date | string | null): string {
   if (value === null) return "—";
   return new Date(value).toLocaleString();
-}
-
-function channelLabel(
-  channels: { id: string; name: string }[] | undefined,
-  channelId: string,
-): string {
-  const channel = channels?.find((candidate) => candidate.id === channelId);
-  return channel === undefined ? channelId : `#${channel.name}`;
 }
 
 function isActiveCompetition(competition: {
@@ -61,9 +50,12 @@ export function PlayerDetail() {
   const safeGuildId = guildId ?? "";
   const safeAlias = alias ?? "";
   const [renameOpen, setRenameOpen] = useState(false);
+  const [mergeOpen, setMergeOpen] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
   const [addAccountOpen, setAddAccountOpen] = useState(false);
   const [editAccount, setEditAccount] = useState<EditableAccount | null>(null);
+  const [transferAccount, setTransferAccount] =
+    useState<TransferableAccount | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const playerKey = trpc.player.getPlayer.queryKey({
@@ -109,6 +101,16 @@ export function PlayerDetail() {
       },
     }),
   );
+  const deletePlayerMutation = useMutation(
+    trpc.player.deletePlayer.mutationOptions({
+      onSuccess: () => {
+        void navigate(`/g/${safeGuildId}/players`);
+      },
+      onError: (err) => {
+        setActionError(err.message);
+      },
+    }),
+  );
 
   if (guildId === undefined || alias === undefined) {
     return (
@@ -136,24 +138,54 @@ export function PlayerDetail() {
             </p>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {player && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setRenameOpen(true);
-              }}
-            >
-              Rename
-            </Button>
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setRenameOpen(true);
+                }}
+              >
+                Rename
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setMergeOpen(true);
+                }}
+              >
+                Merge
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                disabled={deletePlayerMutation.isPending}
+                onClick={() => {
+                  if (
+                    !globalThis.confirm(
+                      `Delete "${safeAlias}" and all linked accounts/subscriptions?`,
+                    )
+                  ) {
+                    return;
+                  }
+                  deletePlayerMutation.mutate({
+                    guildId,
+                    alias: safeAlias,
+                  });
+                }}
+              >
+                Delete
+              </Button>
+            </>
           )}
           <Button asChild variant="outline" size="sm">
             <Link to={`/g/${guildId}/players`}>Players</Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link to={`/g/${guildId}/admin`}>Admin</Link>
           </Button>
         </div>
       </div>
@@ -288,13 +320,23 @@ export function PlayerDetail() {
                   region: account.region,
                 });
               }}
+              onTransfer={(account) => {
+                if (account.riotGameName === null) return;
+                const region = findRegion(account.region);
+                if (region === null) {
+                  setActionError(`Unknown region "${account.region}".`);
+                  return;
+                }
+                setTransferAccount({
+                  riotId: `${account.riotGameName}#${account.riotTagLine ?? ""}`,
+                  region,
+                });
+              }}
               onDelete={(account) => {
                 if (account.riotGameName === null) return;
                 const region = findRegion(account.region);
                 if (region === null) {
-                  setActionError(
-                    `Unknown region "${account.region}" — delete from the Admin page.`,
-                  );
+                  setActionError(`Unknown region "${account.region}".`);
                   return;
                 }
                 const riotId = `${account.riotGameName}#${account.riotTagLine ?? ""}`;
@@ -311,40 +353,10 @@ export function PlayerDetail() {
           </Section>
 
           <Section title="Subscriptions">
-            {player.subscriptions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No subscriptions.</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Channel</TableHead>
-                    <TableHead>Created by</TableHead>
-                    <TableHead>Created</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {player.subscriptions.map((subscription) => (
-                    <TableRow key={subscription.id}>
-                      <TableCell>
-                        {channelLabel(
-                          channelsQuery.data,
-                          subscription.channelId,
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <DiscordUser
-                          id={subscription.creatorDiscordId}
-                          name={subscription.creatorDiscordUser}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {formatDate(subscription.createdTime)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
+            <PlayerSubscriptionsTable
+              subscriptions={player.subscriptions}
+              channels={channelsQuery.data}
+            />
           </Section>
 
           <CompetitionSection
@@ -368,6 +380,34 @@ export function PlayerDetail() {
               );
             }}
           />
+          <MergePlayersDialog
+            guildId={guildId}
+            sourceAlias={safeAlias}
+            open={mergeOpen}
+            onOpenChange={setMergeOpen}
+            onMerged={(targetAlias) => {
+              setMergeOpen(false);
+              void navigate(
+                `/g/${guildId}/players/${encodeURIComponent(targetAlias)}`,
+              );
+            }}
+          />
+          {transferAccount !== null && (
+            <TransferAccountDialog
+              guildId={guildId}
+              account={transferAccount}
+              open
+              onOpenChange={(open) => {
+                if (!open) setTransferAccount(null);
+              }}
+              onTransferred={(toPlayerAlias) => {
+                setTransferAccount(null);
+                void navigate(
+                  `/g/${guildId}/players/${encodeURIComponent(toPlayerAlias)}`,
+                );
+              }}
+            />
+          )}
           <LinkDiscordDialog
             guildId={guildId}
             playerAlias={safeAlias}

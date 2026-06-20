@@ -23,7 +23,6 @@ export function Combobox<T>(props: {
   renderItem: (item: T) => React.ReactNode;
   onSelect: (item: T) => void;
   placeholder?: string | undefined;
-  emptyText?: string | undefined;
   disabled?: boolean | undefined;
   className?: string | undefined;
   id?: string | undefined;
@@ -31,7 +30,10 @@ export function Combobox<T>(props: {
   const [open, setOpen] = useState(false);
   const listId = useId();
   const hasQuery = props.value.trim().length > 0;
-  const showPopover = open && hasQuery;
+  // Only show the popover while searching or when there are results — never an
+  // empty "no results" box.
+  const showPopover =
+    open && hasQuery && (props.isLoading || props.items.length > 0);
 
   return (
     <Popover open={showPopover} onOpenChange={setOpen}>
@@ -63,13 +65,9 @@ export function Combobox<T>(props: {
         }}
         className="max-h-72 overflow-y-auto p-1"
       >
-        {props.isLoading ? (
+        {props.isLoading && props.items.length === 0 ? (
           <p className="px-2 py-1.5 text-sm text-muted-foreground">
             Searching…
-          </p>
-        ) : props.items.length === 0 ? (
-          <p className="px-2 py-1.5 text-sm text-muted-foreground">
-            {props.emptyText ?? "No results."}
           </p>
         ) : (
           <ul>

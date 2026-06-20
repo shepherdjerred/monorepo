@@ -27,10 +27,63 @@ function formatDate(value: Date | string | null): string {
   return new Date(value).toLocaleString();
 }
 
+function channelLabel(
+  channels: { id: string; name: string }[] | undefined,
+  channelId: string,
+): string {
+  const channel = channels?.find((candidate) => candidate.id === channelId);
+  return channel === undefined ? channelId : `#${channel.name}`;
+}
+
+export function PlayerSubscriptionsTable(props: {
+  subscriptions: {
+    id: number;
+    channelId: string;
+    creatorDiscordId: string;
+    creatorDiscordUser: DiscordName;
+    createdTime: Date | string;
+  }[];
+  channels: { id: string; name: string }[] | undefined;
+}) {
+  if (props.subscriptions.length === 0) {
+    return (
+      <p className="p-3 text-sm text-muted-foreground">No subscriptions.</p>
+    );
+  }
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Channel</TableHead>
+          <TableHead>Created by</TableHead>
+          <TableHead>Created</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {props.subscriptions.map((subscription) => (
+          <TableRow key={subscription.id}>
+            <TableCell>
+              {channelLabel(props.channels, subscription.channelId)}
+            </TableCell>
+            <TableCell>
+              <DiscordUser
+                id={subscription.creatorDiscordId}
+                name={subscription.creatorDiscordUser}
+              />
+            </TableCell>
+            <TableCell>{formatDate(subscription.createdTime)}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
 export function PlayerAccountsTable(props: {
   accounts: AccountRow[];
   deletePending: boolean;
   onEdit: (account: AccountRow) => void;
+  onTransfer: (account: AccountRow) => void;
   onDelete: (account: AccountRow) => void;
 }) {
   if (props.accounts.length === 0) {
@@ -82,6 +135,22 @@ export function PlayerAccountsTable(props: {
                   }}
                 >
                   Edit
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={account.riotGameName === null}
+                  title={
+                    account.riotGameName === null
+                      ? "Riot ID not resolved yet — reload to enable transfer"
+                      : undefined
+                  }
+                  onClick={() => {
+                    props.onTransfer(account);
+                  }}
+                >
+                  Transfer
                 </Button>
                 <Button
                   type="button"

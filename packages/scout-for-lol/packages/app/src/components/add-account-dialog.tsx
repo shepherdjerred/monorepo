@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { RiotIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
-import type { RegionValue } from "#src/lib/regions.ts";
+import { findRegion, type RegionValue } from "#src/lib/regions.ts";
 import { Button } from "#src/components/ui/button.tsx";
-import { RiotAccountFields } from "#src/components/admin-form-controls.tsx";
+import { Label } from "#src/components/ui/label.tsx";
+import { RegionSelect } from "#src/components/region-select.tsx";
+import { RiotIdCombobox } from "#src/components/riot-id-combobox.tsx";
 import {
   Dialog,
   DialogContent,
@@ -65,15 +67,28 @@ export function AddAccountDialog(props: {
             </DialogDescription>
           </DialogHeader>
 
-          <RiotAccountFields
-            riotIdInputId="add-account-dialog-riot"
-            regionInputId="add-account-dialog-region"
-            riotId={riotId}
-            region={region}
-            onRiotIdChange={setRiotId}
-            onRegionChange={setRegion}
-            guildId={props.guildId}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="add-account-dialog-riot">Riot ID</Label>
+            <RiotIdCombobox
+              id="add-account-dialog-riot"
+              guildId={props.guildId}
+              region={region}
+              value={riotId}
+              onValueChange={setRiotId}
+              onSelectAccount={({ region: accountRegion }) => {
+                const match = findRegion(accountRegion);
+                if (match !== null) setRegion(match);
+              }}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="add-account-dialog-region">Region</Label>
+            <RegionSelect
+              id="add-account-dialog-region"
+              value={region}
+              onValueChange={setRegion}
+            />
+          </div>
 
           {error !== null && (
             <p className="text-sm text-destructive">{error}</p>

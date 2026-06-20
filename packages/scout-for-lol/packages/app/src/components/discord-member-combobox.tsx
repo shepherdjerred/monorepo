@@ -59,7 +59,6 @@ export function DiscordMemberCombobox(props: {
       }}
       disabled={props.disabled}
       placeholder={props.placeholder ?? "Search members or paste a user ID"}
-      emptyText="No matching members."
       className={props.className}
       id={props.id}
       renderItem={(member) => (

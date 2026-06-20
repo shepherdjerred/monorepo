@@ -12,7 +12,6 @@ import { CompetitionForm } from "#src/routes/competition-form.tsx";
 import { ReportList } from "#src/routes/report-list.tsx";
 import { ReportDetail } from "#src/routes/report-detail.tsx";
 import { ReportForm } from "#src/routes/report-form.tsx";
-import { AdminTools } from "#src/routes/admin-tools.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
 
 export function App() {
@@ -41,7 +40,6 @@ export function App() {
             <Route path="reports/new" element={<ReportForm />} />
             <Route path="reports/:reportId" element={<ReportDetail />} />
             <Route path="reports/:reportId/edit" element={<ReportForm />} />
-            <Route path="admin" element={<AdminTools />} />
             <Route path="audit" element={<GuildAudit />} />
           </Route>
         </Route>
