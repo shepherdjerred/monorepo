@@ -82,7 +82,6 @@ export function ReportList() {
             <TableHeader>
               <TableRow>
                 <TableHead>Report</TableHead>
-                <TableHead>Format</TableHead>
                 <TableHead>Schedule</TableHead>
                 <TableHead>Enabled</TableHead>
                 <TableHead>Last run</TableHead>
@@ -99,9 +98,6 @@ export function ReportList() {
                     >
                       {report.title}
                     </Link>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {report.outputFormat}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {cronLabel(report.cronExpression)}

@@ -1,4 +1,12 @@
 import { z } from "zod";
+import {
+  DEFAULT_RENDER_SPEC,
+  ReportRenderSpecSchema,
+  type ReportChartOptions,
+  type ReportOutputFormat,
+  type ReportRenderChannel,
+  type ReportRenderSpec,
+} from "@scout-for-lol/data";
 
 export type ReportSource = z.infer<typeof ReportSourceSchema>;
 export const ReportSourceSchema = z.enum([
@@ -51,6 +59,9 @@ export const ReportQueryPlanSchema = z.object({
   orderBy: z.union([ReportMetricSchema, z.literal("label")]).default("games"),
   orderDirection: ReportOrderDirectionSchema.default("desc"),
   limit: z.number().int().positive().optional(),
+  // Declarative display spec parsed from the query's trailing RENDER clause.
+  // Always present: queries without a clause default to a TABLE render.
+  render: ReportRenderSpecSchema.default(DEFAULT_RENDER_SPEC),
 });
 
 const QueryGroupsSchema = z.object({
@@ -61,6 +72,8 @@ const QueryGroupsSchema = z.object({
   orderBy: z.string().optional(),
   direction: z.string().optional(),
   limit: z.string().optional(),
+  // Raw text after the `RENDER ` keyword (e.g. `bar_chart with (y = win_rate)`).
+  render: z.string().optional(),
 });
 
 const QueueFilterGroupsSchema = z.object({
@@ -101,6 +114,7 @@ export function parseReportQuery(queryText: string): ReportQueryPlan {
     groups.limit === undefined
       ? undefined
       : z.coerce.number().int().positive().parse(groups.limit);
+  const render = parseRenderClause(groups.render, metrics, groupBy);
 
   return ReportQueryPlanSchema.parse({
     source,
@@ -113,6 +127,7 @@ export function parseReportQuery(queryText: string): ReportQueryPlan {
     orderBy,
     orderDirection,
     limit,
+    render,
   });
 }
 
@@ -130,18 +145,22 @@ function parseQueryGroups(queryText: string) {
     throwInvalidQuery();
   }
 
-  const whereIndex = lower.indexOf(" where ", fromIndex);
-  const orderByIndex = lower.indexOf(" order by ", groupByIndex);
-  const limitIndex = lower.indexOf(" limit ", groupByIndex);
+  // The display clause is the tail: `… RENDER <kind> [WITH (…)]`. Split it off
+  // first so the SELECT/…/LIMIT slicing below never trips over keywords that
+  // appear inside a quoted option value (e.g. `title = "no limit"`).
+  const renderIndex = lower.indexOf(" render ", groupByIndex);
+  const queryEnd = renderIndex === -1 ? lower.length : renderIndex;
+  const inQuery = (index: number): number =>
+    index !== -1 && index < queryEnd ? index : -1;
+
+  const whereIndex = inQuery(lower.indexOf(" where ", fromIndex));
+  const orderByIndex = inQuery(lower.indexOf(" order by ", groupByIndex));
+  const limitIndex = inQuery(lower.indexOf(" limit ", groupByIndex));
   const sourceEnd =
     whereIndex !== -1 && whereIndex < groupByIndex ? whereIndex : groupByIndex;
-  const groupByEnd = firstPositiveIndex([
-    orderByIndex,
-    limitIndex,
-    lower.length,
-  ]);
+  const groupByEnd = firstPositiveIndex([orderByIndex, limitIndex, queryEnd]);
   const orderByEnd =
-    orderByIndex === -1 ? -1 : firstPositiveIndex([limitIndex, lower.length]);
+    orderByIndex === -1 ? -1 : firstPositiveIndex([limitIndex, queryEnd]);
 
   const orderParts =
     orderByIndex === -1
@@ -164,7 +183,11 @@ function parseQueryGroups(queryText: string) {
     limit:
       limitIndex === -1
         ? undefined
-        : normalized.slice(limitIndex + " limit ".length).trim(),
+        : normalized.slice(limitIndex + " limit ".length, queryEnd).trim(),
+    render:
+      renderIndex === -1
+        ? undefined
+        : normalized.slice(renderIndex + " render ".length).trim(),
   });
 }
 
@@ -267,4 +290,175 @@ function normalizeQueueValue(value: string): string {
     return normalized.slice(1, -1);
   }
   return normalized;
+}
+
+const RENDER_KIND_BY_TOKEN: Record<string, ReportOutputFormat> = {
+  bar_chart: "BAR_CHART",
+  line_chart: "LINE_CHART",
+  table: "TABLE",
+  list: "LIST",
+  leaderboard: "LEADERBOARD",
+};
+
+const CHART_RENDER_KINDS = new Set<ReportOutputFormat>([
+  "BAR_CHART",
+  "LINE_CHART",
+]);
+
+// `with ( … )` wrapper around the comma-separated channel/option pairs.
+const RENDER_WITH_PATTERN = /^with\s*\((?<body>.*)\)$/iu;
+// A single `key = value` pair; the value is a quoted string or a bareword that
+// runs to the next comma/paren. Iterated globally across the WITH body.
+const RENDER_PAIR_PATTERN =
+  /(?<key>[a-z_]+)\s*=\s*(?<value>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^,()]+)/giu;
+
+const RenderPairSchema = z.object({ key: z.string(), value: z.string() });
+
+/**
+ * Parse the trailing `RENDER <kind> [WITH (…)]` clause into a fully-validated
+ * render spec. `undefined` (no clause) yields the default TABLE spec. Channel
+ * references (`x`/`y`) are validated against the columns the query produces —
+ * `label` (the GROUP BY dimension) and the SELECTed metrics — so a typo fails
+ * fast at parse time instead of silently rendering an empty chart.
+ */
+export function parseRenderClause(
+  clauseText: string | undefined,
+  metrics: ReportMetric[],
+  groupBy: ReportGroupBy,
+): ReportRenderSpec {
+  if (clauseText === undefined || clauseText.length === 0) {
+    return DEFAULT_RENDER_SPEC;
+  }
+
+  const firstSpace = clauseText.indexOf(" ");
+  const kindToken =
+    firstSpace === -1 ? clauseText : clauseText.slice(0, firstSpace);
+  const withText =
+    firstSpace === -1 ? "" : clauseText.slice(firstSpace + 1).trim();
+
+  const kind = RENDER_KIND_BY_TOKEN[normalizeToken(kindToken)];
+  if (kind === undefined) {
+    throw new Error(
+      `Unknown RENDER kind "${kindToken}". Expected one of: ${Object.keys(
+        RENDER_KIND_BY_TOKEN,
+      ).join(", ")}.`,
+    );
+  }
+
+  if (!CHART_RENDER_KINDS.has(kind)) {
+    if (withText.length > 0) {
+      throw new Error(
+        `RENDER ${normalizeToken(kindToken)} does not take a WITH clause.`,
+      );
+    }
+    return ReportRenderSpecSchema.parse({ kind });
+  }
+
+  const { encoding, options } = parseRenderWith(withText, metrics, groupBy);
+  return ReportRenderSpecSchema.parse({ kind, encoding, options });
+}
+
+function parseRenderWith(
+  withText: string,
+  metrics: ReportMetric[],
+  groupBy: ReportGroupBy,
+): { encoding: ReportRenderChannel; options: ReportChartOptions } {
+  const encoding: ReportRenderChannel = {};
+  const options: ReportChartOptions = {};
+  if (withText.length === 0) {
+    return { encoding, options };
+  }
+
+  const withMatch = RENDER_WITH_PATTERN.exec(withText);
+  if (withMatch?.groups === undefined) {
+    throw new Error(
+      'Invalid RENDER options. Expected: WITH (x = <col>, y = <col>, title = "…", y_axis = "…").',
+    );
+  }
+
+  const body = withMatch.groups["body"] ?? "";
+  for (const match of body.matchAll(RENDER_PAIR_PATTERN)) {
+    const { key, value } = RenderPairSchema.parse(match.groups);
+    const normalizedKey = normalizeToken(key);
+    switch (normalizedKey) {
+      case "x": {
+        encoding.x = assertRenderColumn(
+          normalizeColumnRef(value),
+          metrics,
+          groupBy,
+          "x",
+        );
+
+        break;
+      }
+      case "y": {
+        encoding.y = assertRenderColumn(
+          normalizeColumnRef(value),
+          metrics,
+          groupBy,
+          "y",
+        );
+
+        break;
+      }
+      case "title": {
+        options.title = stripRenderQuotes(value);
+
+        break;
+      }
+      case "y_axis": {
+        options.yAxisLabel = stripRenderQuotes(value);
+
+        break;
+      }
+      default: {
+        throw new Error(
+          `Unknown RENDER option "${key}". Expected: x, y, title, y_axis.`,
+        );
+      }
+    }
+  }
+
+  return { encoding, options };
+}
+
+function assertRenderColumn(
+  column: string,
+  metrics: ReportMetric[],
+  groupBy: ReportGroupBy,
+  channel: "x" | "y",
+): string {
+  if (channel === "x") {
+    if (column === "label" || column === groupBy) {
+      return column;
+    }
+    throw new Error(
+      `RENDER x = "${column}" is not a known dimension. Expected "label" or "${groupBy}".`,
+    );
+  }
+  const metricResult = ReportMetricSchema.safeParse(column);
+  if (metricResult.success && metrics.includes(metricResult.data)) {
+    return column;
+  }
+  throw new Error(
+    `RENDER y = "${column}" is not a SELECTed metric. Available: ${metrics.join(
+      ", ",
+    )}.`,
+  );
+}
+
+function normalizeColumnRef(value: string): string {
+  return normalizeToken(stripRenderQuotes(value));
+}
+
+function stripRenderQuotes(raw: string): string {
+  const value = raw.trim();
+  if (
+    value.length >= 2 &&
+    ((value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'")))
+  ) {
+    return value.slice(1, -1).replaceAll(/\\(["'])/gu, "$1");
+  }
+  return value;
 }

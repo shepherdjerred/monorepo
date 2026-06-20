@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
@@ -7,7 +7,6 @@ import {
   REPORT_MAX_ROWS_LIMIT,
   ReportIdSchema,
   ReportOutputFormatSchema,
-  type ReportOutputFormat,
 } from "@scout-for-lol/data";
 import { CronPresets } from "@scout-for-lol/data/model/competition-cron.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
@@ -25,7 +24,54 @@ import {
 import { ReportQueryPreview } from "#src/components/report-query-preview.tsx";
 
 const EXAMPLE_QUERY =
-  "select games, win_rate from match_participants where queue in (ranked_solo) group by player order by games desc";
+  "select games, win_rate from match_participants where queue in (ranked_solo) group by player order by games desc render bar_chart with (y = win_rate)";
+
+// The display lives in the query's trailing RENDER clause. These light helpers
+// let the builder read/replace that clause without re-implementing the parser;
+// the textarea remains the source of truth (and stays hand-editable).
+const RENDER_KEYWORD = /(?:^|\s)render\s/i;
+const RENDER_KIND =
+  /(?:^|\s)render\s+(bar_chart|line_chart|table|list|leaderboard)\b/i;
+const RENDER_Y =
+  /(?:^|\s)render\s+\w+\s+with\s*\([^)]*\by\s*=\s*['"]?(\w+)['"]?/i;
+
+function renderKindFromQuery(queryText: string): string {
+  const kind = RENDER_KIND.exec(queryText)?.[1];
+  return kind === undefined ? "TABLE" : kind.toUpperCase();
+}
+
+function renderYFromQuery(queryText: string): string {
+  return RENDER_Y.exec(queryText)?.[1] ?? "";
+}
+
+function isChartKind(kind: string): boolean {
+  return kind === "BAR_CHART" || kind === "LINE_CHART";
+}
+
+function buildRenderClause(kind: string, yMetric: string): string {
+  const token = kind.toLowerCase();
+  if (isChartKind(kind) && yMetric.length > 0) {
+    return `RENDER ${token} WITH (y = ${yMetric})`;
+  }
+  return `RENDER ${token}`;
+}
+
+function upsertRenderClause(queryText: string, clause: string): string {
+  const match = RENDER_KEYWORD.exec(queryText);
+  const base =
+    match === null
+      ? queryText.trimEnd()
+      : queryText.slice(0, match.index).trimEnd();
+  return base.length === 0 ? clause : `${base} ${clause}`;
+}
+
+function numberOr(value: string, fallback: number): number {
+  return Number(value) || fallback;
+}
+
+function previewTitle(title: string): string {
+  return title === "" ? "Preview" : title;
+}
 
 type FormState = {
   title: string;
@@ -34,7 +80,6 @@ type FormState = {
   queryText: string;
   lookbackDays: string;
   maxRows: string;
-  outputFormat: ReportOutputFormat;
   cronExpression: string;
 };
 
@@ -45,7 +90,6 @@ const EMPTY_STATE: FormState = {
   queryText: "",
   lookbackDays: "30",
   maxRows: "10",
-  outputFormat: "TABLE",
   cronExpression: DEFAULT_REPORT_CRON,
 };
 
@@ -64,6 +108,11 @@ export function ReportForm() {
   const [state, setState] = useState<FormState>(EMPTY_STATE);
   const [prefilled, setPrefilled] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewColumns, setPreviewColumns] = useState<string[]>([]);
+
+  const handleColumns = useCallback((columns: string[]) => {
+    setPreviewColumns(columns);
+  }, []);
 
   const channelsQuery = useQuery(
     trpc.guild.listChannels.queryOptions(
@@ -89,7 +138,6 @@ export function ReportForm() {
       queryText: existing.queryText,
       lookbackDays: existing.lookbackDays.toString(),
       maxRows: existing.maxRows.toString(),
-      outputFormat: ReportOutputFormatSchema.parse(existing.outputFormat),
       cronExpression: existing.cronExpression,
     });
     setPrefilled(true);
@@ -136,7 +184,6 @@ export function ReportForm() {
       queryText: state.queryText,
       lookbackDays,
       maxRows,
-      outputFormat: state.outputFormat,
       cronExpression: state.cronExpression,
     };
     if (isEdit) {
@@ -146,7 +193,31 @@ export function ReportForm() {
     createMutation.mutate({ guildId: safeGuildId, isEnabled: true, ...shared });
   }
 
+  function setRenderKind(kind: string) {
+    setState((prev) => ({
+      ...prev,
+      queryText: upsertRenderClause(
+        prev.queryText,
+        buildRenderClause(kind, renderYFromQuery(prev.queryText)),
+      ),
+    }));
+  }
+
+  function setRenderY(yMetric: string) {
+    setState((prev) => ({
+      ...prev,
+      queryText: upsertRenderClause(
+        prev.queryText,
+        buildRenderClause(renderKindFromQuery(prev.queryText), yMetric),
+      ),
+    }));
+  }
+
   const pending = createMutation.isPending || updateMutation.isPending;
+  const currentKind = renderKindFromQuery(state.queryText);
+  const currentY = renderYFromQuery(state.queryText);
+  // Drop "label" (the GROUP BY dimension) — only metrics are plottable on Y.
+  const metricOptions = previewColumns.slice(1);
 
   return (
     <div className="space-y-4">
@@ -223,24 +294,17 @@ export function ReportForm() {
               }}
               required
             />
+            <p className="text-xs text-muted-foreground">
+              End the query with a <code>RENDER &lt;kind&gt;</code> clause to
+              set the display. The builder below edits that clause for you.
+            </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="report-format">Output format</Label>
-              <Select
-                value={state.outputFormat}
-                onValueChange={(next) => {
-                  const parsed = ReportOutputFormatSchema.safeParse(next);
-                  if (parsed.success) {
-                    setState((prev) => ({
-                      ...prev,
-                      outputFormat: parsed.data,
-                    }));
-                  }
-                }}
-              >
-                <SelectTrigger id="report-format">
+              <Label htmlFor="report-display">Display</Label>
+              <Select value={currentKind} onValueChange={setRenderKind}>
+                <SelectTrigger id="report-display">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -273,6 +337,30 @@ export function ReportForm() {
               </Select>
             </div>
           </div>
+
+          {isChartKind(currentKind) && (
+            <div className="space-y-2">
+              <Label htmlFor="report-y">Plot metric (Y axis)</Label>
+              <Select value={currentY} onValueChange={setRenderY}>
+                <SelectTrigger id="report-y">
+                  <SelectValue placeholder="First SELECTed metric (default)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {metricOptions.map((column) => (
+                    <SelectItem key={column} value={column}>
+                      {column}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Choices come from the live preview. Leave unset to plot the
+                first SELECTed metric. For a custom title or axis label, edit
+                the RENDER clause directly (e.g.{" "}
+                <code>title = &quot;Win %&quot;</code>).
+              </p>
+            </div>
+          )}
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
@@ -330,8 +418,10 @@ export function ReportForm() {
         <ReportQueryPreview
           guildId={guildId}
           queryText={state.queryText}
-          lookbackDays={Number(state.lookbackDays) || 30}
-          maxRows={Number(state.maxRows) || 10}
+          title={previewTitle(state.title)}
+          lookbackDays={numberOr(state.lookbackDays, 30)}
+          maxRows={numberOr(state.maxRows, 10)}
+          onColumns={handleColumns}
         />
       </form>
     </div>
