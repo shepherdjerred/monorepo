@@ -337,8 +337,13 @@ async function main(): Promise<void> {
 
       if (SEND_MODE) {
         const userId = DiscordAccountIdSchema.parse(user.discordId);
-        const sent = await sendDM(client, userId, user.message);
-        if (sent) {
+        const status = await sendDM({
+          client,
+          userId,
+          message: user.message,
+          kind: "outreach_manual",
+        });
+        if (status === "sent") {
           totalSent++;
           logger.info(`  ✅ Sent`);
         } else {

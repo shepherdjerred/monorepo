@@ -126,6 +126,14 @@ await mock.module(
   }),
 );
 
+// `active-game-detection.ts` imports getActiveServerIds, which pulls in the
+// Discord client singleton (and its whole command tree). Mock it so the client
+// module is never loaded under the partial database mock above. The return value
+// is irrelevant here since getAccountsWithState is mocked to ignore its filter.
+await mock.module("#src/discord/utils/guild-membership.ts", () => ({
+  getActiveServerIds: () => new Set<string>(),
+}));
+
 await mock.module("#src/report-store/live-ingest.ts", () => ({
   recordPrematchForReportStore: ({
     gameInfo,

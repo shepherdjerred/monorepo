@@ -1,7 +1,12 @@
 import type { Channel, Client, User } from "discord.js";
 import { ChannelType, PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
+import {
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 import { getErrorMessage } from "#src/utils/errors.ts";
+import { sendDM } from "#src/discord/utils/dm.ts";
 import {
   discordPermissionErrorsTotal,
   discordOwnerNotificationsTotal,
@@ -181,21 +186,35 @@ export async function notifyServerOwnerAboutPermissionError(
       reason !== undefined && reason.length > 0 ? "explicit" : "generic",
   });
 
+  // Resolve the guild owner. This requires the bot to still be a member of the
+  // guild; if it isn't (e.g. it was removed), we cannot DM the owner at all.
+  let ownerId: string;
+  let ownerTag: string;
+  let guildName: string;
   try {
-    // Fetch the guild
     const guild = await client.guilds.fetch(serverId);
-
-    // Fetch the guild owner
     const owner = await guild.fetchOwner();
+    ownerId = owner.id;
+    ownerTag = owner.user.tag;
+    guildName = guild.name;
+  } catch (error) {
+    logger.warn(
+      `[PermissionNotify] Could not resolve owner for guild ${serverId} (bot likely no longer a member): ${getErrorMessage(error)}`,
+    );
+    discordOwnerNotificationsTotal.inc({
+      guild_id: serverId,
+      status: "dm_failed",
+    });
+    return;
+  }
 
-    // Construct the DM message
-    const reasonText =
-      reason !== undefined && reason.length > 0
-        ? `\n\n**Reason:** ${reason}`
-        : "";
-    const message = `⚠️ **Bot Permission Issue**
+  const reasonText =
+    reason !== undefined && reason.length > 0
+      ? `\n\n**Reason:** ${reason}`
+      : "";
+  const message = `⚠️ **Bot Permission Issue**
 
-Hello! I'm having trouble posting messages in your server **${guild.name}**.
+Hello! I'm having trouble posting messages in your server **${guildName}**.
 
 **Channel:** <#${channelId}>
 **Issue:** Missing permissions to send messages${reasonText}
@@ -209,34 +228,22 @@ Hello! I'm having trouble posting messages in your server **${guild.name}**.
 
 Need help? Check Discord's permission guide or contact your bot administrator.`;
 
-    // Try to send DM
-    await owner.send(message);
-    logger.info(
-      `[PermissionNotify] ✅ Notified server owner ${owner.user.tag} about permission error in guild ${serverId}`,
-    );
-    discordOwnerNotificationsTotal.inc({
-      guild_id: serverId,
-      status: "success",
-    });
-  } catch (error) {
-    // DM failures are expected (user may have DMs disabled) - don't escalate
-    const errorMsg = getErrorMessage(error);
-    if (errorMsg.includes("Cannot send messages to this user")) {
-      logger.info(
-        `[PermissionNotify] Server owner for guild ${serverId} has DMs disabled - cannot notify about permission error`,
-      );
-      discordOwnerNotificationsTotal.inc({
-        guild_id: serverId,
-        status: "dm_disabled",
-      });
-    } else {
-      logger.warn(
-        `[PermissionNotify] Failed to notify server owner for guild ${serverId}: ${errorMsg}`,
-      );
-      discordOwnerNotificationsTotal.inc({
-        guild_id: serverId,
-        status: "dm_failed",
-      });
-    }
-  }
+  const status = await sendDM({
+    client,
+    userId: DiscordAccountIdSchema.parse(ownerId),
+    message,
+    kind: "permission_error",
+    guildId: DiscordGuildIdSchema.parse(serverId),
+    recipientTag: ownerTag,
+  });
+
+  const metricStatus = {
+    sent: "success",
+    dm_disabled: "dm_disabled",
+    failed: "dm_failed",
+  }[status];
+  discordOwnerNotificationsTotal.inc({
+    guild_id: serverId,
+    status: metricStatus,
+  });
 }

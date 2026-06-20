@@ -562,3 +562,56 @@ describe("Permission Error Workflow", () => {
     expect(stillAbandoned).toHaveLength(0);
   });
 });
+
+describe("recordPermissionError - first-in-streak signal", () => {
+  test("returns true on the first error, false while the streak continues", async () => {
+    const serverId = testGuildId("99001");
+    const channelId = testChannelId("99002");
+
+    const first = await recordPermissionError(prisma, {
+      serverId,
+      channelId,
+      errorType: "api_error",
+    });
+    expect(first).toBe(true);
+
+    const second = await recordPermissionError(prisma, {
+      serverId,
+      channelId,
+      errorType: "api_error",
+    });
+    expect(second).toBe(false);
+
+    const third = await recordPermissionError(prisma, {
+      serverId,
+      channelId,
+      errorType: "api_error",
+    });
+    expect(third).toBe(false);
+  });
+
+  test("returns true again after a successful send resets the streak", async () => {
+    const serverId = testGuildId("99003");
+    const channelId = testChannelId("99004");
+
+    expect(
+      await recordPermissionError(prisma, {
+        serverId,
+        channelId,
+        errorType: "api_error",
+      }),
+    ).toBe(true);
+
+    // A success resets consecutiveErrorCount to 0.
+    await recordSuccessfulSend(prisma, serverId, channelId);
+
+    // The next error begins a new streak -> notify again.
+    expect(
+      await recordPermissionError(prisma, {
+        serverId,
+        channelId,
+        errorType: "api_error",
+      }),
+    ).toBe(true);
+  });
+});

@@ -1,40 +1,58 @@
 import { describe, expect, test } from "bun:test";
 import { notifyServerOwnerAboutPermissionError } from "#src/discord/utils/permissions.ts";
 import { mockClient } from "#src/testing/discord-mocks.ts";
+import {
+  testGuildId,
+  testAccountId,
+  testChannelId,
+} from "#src/testing/test-ids.ts";
+
+const serverId = testGuildId("123");
+const channelId = testChannelId("456");
+const ownerId = testAccountId("789");
+
+/**
+ * Build a client whose guild owner is resolvable and whose DM send is captured.
+ * The DM now flows through `sendDM` -> `client.users.fetch(ownerId).send()`, so
+ * the recipient's `send` (not the GuildMember's) is what actually delivers.
+ */
+function clientCapturingDm(send: (message: string) => Promise<unknown>) {
+  return mockClient({
+    guilds: {
+      fetch: async () => ({
+        name: "Test Server",
+        fetchOwner: async () => ({
+          id: ownerId,
+          user: { tag: "TestOwner#1234" },
+        }),
+      }),
+    },
+    users: {
+      cache: new Map(),
+      fetch: async () => ({ tag: "TestOwner#1234", send }),
+    },
+  });
+}
 
 describe("notifyServerOwnerAboutPermissionError", () => {
   test("sends DM to server owner with permission error details", async () => {
-    const sentMessages: { user: string; message: string }[] = [];
-
-    // Mock Discord client - test double with minimal required methods
-    const client = mockClient({
-      guilds: {
-        fetch: async () => ({
-          name: "Test Server",
-          fetchOwner: async () => ({
-            user: { tag: "TestOwner#1234" },
-            send: async (message: string) => {
-              sentMessages.push({ user: "TestOwner#1234", message });
-            },
-          }),
-        }),
-      },
+    const sentMessages: string[] = [];
+    const client = clientCapturingDm(async (message: string) => {
+      sentMessages.push(message);
     });
 
     await notifyServerOwnerAboutPermissionError(
       client,
-      "server-123",
-      "channel-456",
+      serverId,
+      channelId,
       "Missing Send Messages permission",
     );
 
     expect(sentMessages).toHaveLength(1);
-    expect(sentMessages[0]?.message).toContain("Bot Permission Issue");
-    expect(sentMessages[0]?.message).toContain("Test Server");
-    expect(sentMessages[0]?.message).toContain("<#channel-456>");
-    expect(sentMessages[0]?.message).toContain(
-      "Missing Send Messages permission",
-    );
+    expect(sentMessages[0]).toContain("Bot Permission Issue");
+    expect(sentMessages[0]).toContain("Test Server");
+    expect(sentMessages[0]).toContain(`<#${channelId}>`);
+    expect(sentMessages[0]).toContain("Missing Send Messages permission");
   });
 
   test("handles case when guild is not found", async () => {
@@ -44,13 +62,8 @@ describe("notifyServerOwnerAboutPermissionError", () => {
       },
     });
 
-    // Should not throw
     await expect(
-      notifyServerOwnerAboutPermissionError(
-        client,
-        "server-123",
-        "channel-456",
-      ),
+      notifyServerOwnerAboutPermissionError(client, serverId, channelId),
     ).resolves.toBeUndefined();
   });
 
@@ -64,118 +77,57 @@ describe("notifyServerOwnerAboutPermissionError", () => {
       },
     });
 
-    // Should not throw
     await expect(
-      notifyServerOwnerAboutPermissionError(
-        client,
-        "server-123",
-        "channel-456",
-      ),
+      notifyServerOwnerAboutPermissionError(client, serverId, channelId),
     ).resolves.toBeUndefined();
   });
 
   test("handles case when DM send fails (user has DMs disabled)", async () => {
-    const client = mockClient({
-      guilds: {
-        fetch: async () => ({
-          name: "Test Server",
-          fetchOwner: async () => ({
-            user: { tag: "TestOwner#1234" },
-            send: async () => {
-              throw new Error("Cannot send messages to this user");
-            },
-          }),
-        }),
-      },
+    const client = clientCapturingDm(() => {
+      throw new Error("Cannot send messages to this user");
     });
 
-    // Should not throw - gracefully handles DM failures
     await expect(
-      notifyServerOwnerAboutPermissionError(
-        client,
-        "server-123",
-        "channel-456",
-      ),
+      notifyServerOwnerAboutPermissionError(client, serverId, channelId),
     ).resolves.toBeUndefined();
   });
 
   test("handles generic error during DM send", async () => {
-    const client = mockClient({
-      guilds: {
-        fetch: async () => ({
-          name: "Test Server",
-          fetchOwner: async () => ({
-            user: { tag: "TestOwner#1234" },
-            send: async () => {
-              throw new Error("Network error");
-            },
-          }),
-        }),
-      },
+    const client = clientCapturingDm(() => {
+      throw new Error("Network error");
     });
 
-    // Should not throw - gracefully handles all errors
     await expect(
-      notifyServerOwnerAboutPermissionError(
-        client,
-        "server-123",
-        "channel-456",
-      ),
+      notifyServerOwnerAboutPermissionError(client, serverId, channelId),
     ).resolves.toBeUndefined();
   });
 
   test("includes reason in message when provided", async () => {
-    const sentMessages: { user: string; message: string }[] = [];
-
-    const client = mockClient({
-      guilds: {
-        fetch: async () => ({
-          name: "Test Server",
-          fetchOwner: async () => ({
-            user: { tag: "TestOwner#1234" },
-            send: async (message: string) => {
-              sentMessages.push({ user: "TestOwner#1234", message });
-            },
-          }),
-        }),
-      },
+    const sentMessages: string[] = [];
+    const client = clientCapturingDm(async (message: string) => {
+      sentMessages.push(message);
     });
 
     await notifyServerOwnerAboutPermissionError(
       client,
-      "server-123",
-      "channel-456",
+      serverId,
+      channelId,
       "Custom error reason",
     );
 
-    expect(sentMessages[0]?.message).toContain("Custom error reason");
+    expect(sentMessages[0]).toContain("Custom error reason");
   });
 
   test("works without reason parameter", async () => {
-    const sentMessages: { user: string; message: string }[] = [];
-
-    const client = mockClient({
-      guilds: {
-        fetch: async () => ({
-          name: "Test Server",
-          fetchOwner: async () => ({
-            user: { tag: "TestOwner#1234" },
-            send: async (message: string) => {
-              sentMessages.push({ user: "TestOwner#1234", message });
-            },
-          }),
-        }),
-      },
+    const sentMessages: string[] = [];
+    const client = clientCapturingDm(async (message: string) => {
+      sentMessages.push(message);
     });
 
-    await notifyServerOwnerAboutPermissionError(
-      client,
-      "server-123",
-      "channel-456",
-    );
+    await notifyServerOwnerAboutPermissionError(client, serverId, channelId);
 
     expect(sentMessages).toHaveLength(1);
-    expect(sentMessages[0]?.message).toContain("Bot Permission Issue");
-    expect(sentMessages[0]?.message).not.toContain("**Reason:**");
+    expect(sentMessages[0]).toContain("Bot Permission Issue");
+    expect(sentMessages[0]).not.toContain("**Reason:**");
   });
 });

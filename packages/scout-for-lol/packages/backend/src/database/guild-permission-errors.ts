@@ -6,8 +6,12 @@ import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { subDays } from "date-fns";
 
 /**
- * Record a permission error for a guild/channel
- * Updates existing record or creates new one
+ * Record a permission error for a guild/channel.
+ * Updates existing record or creates new one.
+ *
+ * @returns `true` when this is the FIRST error of a new streak (no prior record,
+ *   or the previous streak had been reset by a successful send). Callers use this
+ *   to notify the owner only once per streak instead of on every failed send.
  */
 export async function recordPermissionError(
   prisma: ExtendedPrismaClient,
@@ -17,7 +21,7 @@ export async function recordPermissionError(
     errorType: string;
     errorReason?: string;
   },
-): Promise<void> {
+): Promise<boolean> {
   const { serverId, channelId, errorType, errorReason } = params;
   const now = new Date();
 
@@ -30,6 +34,8 @@ export async function recordPermissionError(
       },
     },
   });
+
+  const isFirstInStreak = !existing || existing.consecutiveErrorCount === 0;
 
   await (existing
     ? prisma.guildPermissionError.update({
@@ -57,6 +63,8 @@ export async function recordPermissionError(
           consecutiveErrorCount: 1,
         },
       }));
+
+  return isFirstInStreak;
 }
 
 /**

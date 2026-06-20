@@ -429,6 +429,25 @@ model GuildPermissionError {
   @@index([lastOccurrence])
 }
 
+// Central audit log of every direct message (DM) the bot sends to a user.
+// All DMs MUST flow through `sendDM` (discord/utils/dm.ts), which writes one
+// row here per attempt so DMs are fully traceable. Append-only.
+model DmAuditLog {
+  id           Int      @id @default(autoincrement())
+  recipientId  String // Discord user (snowflake) the DM was addressed to
+  recipientTag String? // Discord tag at send time, when resolvable
+  guildId      String? // Guild this DM relates to, when applicable
+  kind           String // Category, e.g. "permission_error" | "abandonment" | "feedback_request" | "competition_invite" | "prune_notice"
+  content        String // The message body that was (attempted to be) sent
+  deliveryStatus String // "sent" | "dm_disabled" | "failed"
+  errorMessage   String? // Failure detail when delivery != "sent"
+  createdAt    DateTime @default(now())
+
+  @@index([recipientId, createdAt])
+  @@index([kind, createdAt])
+  @@index([guildId, createdAt])
+}
+
 // =============================================================================
 // Desktop Voice Notification System
 // =============================================================================

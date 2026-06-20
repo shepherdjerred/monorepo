@@ -1,4 +1,4 @@
-import type { Client } from "discord.js";
+import type { Client, Guild } from "discord.js";
 import { prisma } from "#src/database/index.ts";
 import {
   getAbandonedGuilds,
@@ -10,10 +10,16 @@ import {
   abandonedGuildsDetectedTotal,
   guildsLeftTotal,
   abandonmentNotificationsTotal,
-  guildDataCleanupTotal,
 } from "#src/metrics/index.ts";
-import type { DiscordGuildId } from "@scout-for-lol/data/index.ts";
+import {
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/data/index.ts";
 import { differenceInCalendarDays } from "date-fns";
+import { cleanupRemovedGuild } from "#src/league/tasks/cleanup/remove-guild.ts";
+import { sendDM } from "#src/discord/utils/dm.ts";
+import { getFeedbackUrl } from "#src/discord/utils/feedback.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("cleanup-abandoned-guilds");
@@ -105,15 +111,19 @@ async function handleAbandonedGuild(
     guild = await client.guilds.fetch(serverId);
   } catch (_error) {
     logger.warn(
-      `[AbandonedGuilds] Could not fetch guild ${serverId} - may have already been removed. Error details: ${getErrorMessage(_error)}`,
+      `[AbandonedGuilds] Could not fetch guild ${serverId} - already removed. Error details: ${getErrorMessage(_error)}`,
     );
-    // Mark as notified so we don't keep trying
+    // The bot is no longer in this guild: fully clean up its orphaned data so we
+    // stop dispatching/polling/erroring for it, then mark notified so we don't
+    // keep retrying. (The guildDelete handler would normally do this, but if the
+    // removal predates this code path nothing fired - so do it here.)
+    await cleanupRemovedGuild(prisma, serverId);
     await markGuildAsNotified(prisma, serverId);
     return;
   }
 
-  // Try to notify the server owner
-  await notifyOwnerOfAbandonment(guild, firstOccurrence, errorCount);
+  // Try to notify the server owner (while still a member, so the DM can land)
+  await notifyOwnerOfAbandonment(client, guild, firstOccurrence, errorCount);
 
   // Leave the guild
   try {
@@ -137,8 +147,10 @@ async function handleAbandonedGuild(
   // Mark as notified to prevent repeated attempts
   await markGuildAsNotified(prisma, serverId);
 
-  // Clean up database records for this guild
-  await cleanupGuildData(serverId);
+  // Clean up all database records for this guild. `guild.leave()` also fires the
+  // guildDelete handler (which runs the same idempotent cleanup), but we run it
+  // directly here so cleanup is deterministic regardless of event timing.
+  await cleanupRemovedGuild(prisma, serverId);
 
   logger.info(
     `[AbandonedGuilds] ✅ Completed processing for guild ${guild.name} (${serverId})`,
@@ -146,26 +158,33 @@ async function handleAbandonedGuild(
 }
 
 /**
- * Notify server owner that bot is leaving due to persistent permission errors
+ * Notify the server owner that the bot is leaving due to persistent permission
+ * errors. Routed through the audited `sendDM` so the attempt is recorded.
  */
 async function notifyOwnerOfAbandonment(
-  guild: {
-    id: string;
-    name: string;
-    fetchOwner: () => Promise<{ send: (message: string) => Promise<unknown> }>;
-  },
+  client: Client,
+  guild: Guild,
   firstErrorDate: Date,
   errorCount: number,
 ): Promise<void> {
+  let ownerId: string;
   try {
     const owner = await guild.fetchOwner();
-
-    const daysSinceFirstError = differenceInCalendarDays(
-      new Date(),
-      firstErrorDate,
+    ownerId = owner.id;
+  } catch (error) {
+    logger.warn(
+      `[AbandonedGuilds] Could not resolve owner of guild ${guild.id}: ${getErrorMessage(error)}`,
     );
+    abandonmentNotificationsTotal.inc({ status: "failed" });
+    return;
+  }
 
-    const message = `👋 **Scout for LoL - Server Departure Notice**
+  const daysSinceFirstError = differenceInCalendarDays(
+    new Date(),
+    firstErrorDate,
+  );
+
+  const message = `👋 **Scout for LoL - Server Departure Notice**
 
 Hello! I'm writing to let you know that I'll be leaving your server **${guild.name}**.
 
@@ -179,88 +198,34 @@ This usually means:
 
 **What happens now?**
 • I'll automatically leave the server to clean up unused resources
-• All data associated with your server will be preserved for 30 days
-• You can re-invite me at any time if you want to use the bot again
+• Your server's tracking data (players, subscriptions, competitions) will be removed
+• You can re-invite me at any time and set things back up with \`/subscription add\`
 
-**Want to keep using the bot?**
-If this was a mistake and you want to keep using Scout for LoL:
-1. Re-invite the bot to your server
-2. Make sure I have these permissions:
-   • View Channels
-   • Send Messages
-   • Embed Links (for match reports)
-3. Set up your subscriptions again with \`/subscription add\`
+**Got a moment?** I'd love to know what went wrong - your feedback helps:
+${getFeedbackUrl()}
 
-Thank you for using Scout for LoL! Feel free to reach out if you have any questions.
+Thank you for trying Scout for LoL!
 
 *This is an automated message. Replies to this DM won't be monitored.*`;
 
-    await owner.send(message);
+  const status = await sendDM({
+    client,
+    userId: DiscordAccountIdSchema.parse(ownerId),
+    message,
+    kind: "abandonment",
+    guildId: DiscordGuildIdSchema.parse(guild.id),
+  });
+
+  if (status === "sent") {
     logger.info(
       `[AbandonedGuilds] ✅ Notified owner of guild ${guild.id} about departure`,
     );
-
-    // Record successful notification
-    abandonmentNotificationsTotal.inc({ status: "success" });
-  } catch (error) {
-    // DM failures are expected (user may have DMs disabled)
-    const errorMsg = getErrorMessage(error);
-    if (errorMsg.includes("Cannot send messages to this user")) {
-      logger.info(
-        `[AbandonedGuilds] Owner of guild ${guild.id} has DMs disabled - cannot notify`,
-      );
-      abandonmentNotificationsTotal.inc({ status: "dm_disabled" });
-    } else {
-      logger.warn(
-        `[AbandonedGuilds] Failed to notify owner of guild ${guild.id}:`,
-        errorMsg,
-      );
-      abandonmentNotificationsTotal.inc({ status: "failed" });
-    }
-    // Don't throw - we should still leave the guild even if we can't notify
-  }
-}
-
-/**
- * Clean up database records for an abandoned guild
- * Note: This preserves data for potential re-invite, but marks it for future cleanup
- */
-async function cleanupGuildData(serverId: DiscordGuildId): Promise<void> {
-  logger.info(`[AbandonedGuilds] Cleaning up data for guild ${serverId}`);
-
-  try {
-    // Delete subscriptions (bot can't post to them anyway)
-    const deletedSubs = await prisma.subscription.deleteMany({
-      where: { serverId },
-    });
+  } else {
     logger.info(
-      `[AbandonedGuilds] Deleted ${deletedSubs.count.toString()} subscriptions`,
+      `[AbandonedGuilds] Owner of guild ${guild.id} not notified about departure: ${status}`,
     );
-    guildDataCleanupTotal.inc({
-      data_type: "subscriptions",
-      status: "success",
-    });
-
-    // Delete server permissions
-    const deletedPerms = await prisma.serverPermission.deleteMany({
-      where: { serverId },
-    });
-    logger.info(
-      `[AbandonedGuilds] Deleted ${deletedPerms.count.toString()} server permissions`,
-    );
-    guildDataCleanupTotal.inc({ data_type: "permissions", status: "success" });
-
-    // Note: We keep Player, Account, Competition, and related data
-    // Users can re-invite the bot and their data will still be there
-    // These will be cleaned up by the existing pruning jobs after 30 days if unused
-
-    logger.info(`[AbandonedGuilds] ✅ Cleanup complete for guild ${serverId}`);
-  } catch (error) {
-    logger.error(
-      `[AbandonedGuilds] Error during cleanup for guild ${serverId}:`,
-      getErrorMessage(error),
-    );
-    guildDataCleanupTotal.inc({ data_type: "all", status: "failed" });
-    // Don't throw - we've already left the guild
   }
+  abandonmentNotificationsTotal.inc({
+    status: status === "sent" ? "success" : status,
+  });
 }

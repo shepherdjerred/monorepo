@@ -88,9 +88,15 @@ async function runThreeDayOutreach(client: Client): Promise<void> {
       );
     } else {
       const userId = DiscordAccountIdSchema.parse(guild.addedByDiscordId);
-      const sent = await sendDM(client, userId, message);
+      const status = await sendDM({
+        client,
+        userId,
+        message,
+        kind: "outreach_3d",
+        guildId: DiscordGuildIdSchema.parse(guild.serverId),
+      });
       logger.info(
-        `[Outreach] 3-day DM to ${guild.addedByDiscordId} for ${guild.serverName}: ${sent ? "sent" : "failed"}`,
+        `[Outreach] 3-day DM to ${guild.addedByDiscordId} for ${guild.serverName}: ${status}`,
       );
     }
 
@@ -134,9 +140,15 @@ async function runFourteenDayOutreach(client: Client): Promise<void> {
       );
 
       const userId = DiscordAccountIdSchema.parse(guild.addedByDiscordId);
-      const sent = await sendDM(client, userId, message);
+      const status = await sendDM({
+        client,
+        userId,
+        message,
+        kind: "outreach_14d",
+        guildId,
+      });
       logger.info(
-        `[Outreach] 14-day DM to ${guild.addedByDiscordId} for ${guild.serverName}: ${sent ? "sent" : "failed"}`,
+        `[Outreach] 14-day DM to ${guild.addedByDiscordId} for ${guild.serverName}: ${status}`,
       );
     } else {
       logger.info(

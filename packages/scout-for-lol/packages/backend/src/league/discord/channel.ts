@@ -178,7 +178,7 @@ export async function send(
       if (serverId) {
         void (async () => {
           try {
-            await recordPermissionError(prisma, {
+            const isFirstInStreak = await recordPermissionError(prisma, {
               serverId,
               channelId,
               errorType: "api_error",
@@ -186,6 +186,18 @@ export async function send(
                 ? { errorReason: permissionReason }
                 : {}),
             });
+
+            // Notify the owner only on the first error of a streak so we don't
+            // DM them on every failed send. Persistent failures escalate via the
+            // abandoned-guild sweep instead. (notify tracks its own metrics.)
+            if (isFirstInStreak) {
+              await notifyServerOwnerAboutPermissionError(
+                client,
+                serverId,
+                channelId,
+                permissionReason,
+              );
+            }
           } catch (dbError) {
             logger.error(
               `[ChannelSend] Failed to record permission error in DB:`,
@@ -196,14 +208,6 @@ export async function send(
             });
           }
         })();
-
-        // Notify server owner (this will also track metrics)
-        void notifyServerOwnerAboutPermissionError(
-          client,
-          serverId,
-          channelId,
-          permissionReason,
-        );
       }
     } else {
       logger.error(`[ChannelSend] ${errorMessage}`);
