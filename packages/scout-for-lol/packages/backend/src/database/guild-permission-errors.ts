@@ -4,6 +4,7 @@ import {
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { DeliveryFailureKind } from "#src/discord/utils/permissions.ts";
 import { subDays } from "date-fns";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -76,7 +77,7 @@ export async function recordPermissionError(
   params: {
     serverId: DiscordGuildId;
     channelId: DiscordChannelId;
-    errorType: string;
+    errorType: DeliveryFailureKind;
     errorReason?: string;
   },
 ): Promise<PermissionNotifyDecision> {

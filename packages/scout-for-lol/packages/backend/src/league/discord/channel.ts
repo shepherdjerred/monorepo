@@ -93,6 +93,51 @@ function escalateDeliveryFailure(opts: {
 }
 
 /**
+ * Diagnose a post-send failure that was NOT itself a recognizable permission
+ * (50013/50001) or missing-channel (10003/10004) error, by re-fetching the
+ * channel:
+ *
+ * - The re-fetch THROWS a missing-channel error (10003/10004), or RESOLVES to
+ *   `null` → the channel is genuinely gone → `channel_missing`.
+ * - The re-fetch succeeds but the bot lacks send permission → `permission`
+ *   (with the human-readable reason for the owner DM).
+ * - The re-fetch succeeds and the bot still has permission → `other`
+ *   (the original failure was transient/unknown — operator domain).
+ * - The re-fetch THROWS anything else (network blip, a rate limit on the
+ *   channels endpoint, an outage) → `other`. We deliberately do NOT collapse an
+ *   ambiguous re-fetch failure into `channel_missing`: that would DM the owner a
+ *   false "your channel was deleted" alert. Fail safe to the operator instead.
+ */
+async function diagnoseSendFailure(channelId: DiscordChannelId): Promise<{
+  kind: DeliveryFailureKind | "other";
+  permissionReason: string | undefined;
+}> {
+  let refetched: Awaited<ReturnType<typeof client.channels.fetch>>;
+  try {
+    refetched = await client.channels.fetch(channelId);
+  } catch (refetchError) {
+    return {
+      kind: isMissingChannelError(refetchError) ? "channel_missing" : "other",
+      permissionReason: undefined,
+    };
+  }
+
+  if (refetched === null) {
+    // REST lookup resolved with no channel → genuinely gone.
+    return { kind: "channel_missing", permissionReason: undefined };
+  }
+
+  const permissionCheck = await checkSendMessagePermission(
+    refetched,
+    client.user,
+  );
+  if (permissionCheck.hasPermission) {
+    return { kind: "other", permissionReason: undefined };
+  }
+  return { kind: "permission", permissionReason: permissionCheck.reason };
+}
+
+/**
  * Build (and side-effect on) a pre-send "can't reach this channel" failure: a
  * deleted / non-text / inaccessible channel. Escalates to the owner when we know
  * the guild; otherwise captures to Sentry. Returns the error for the caller to
@@ -209,25 +254,11 @@ export async function send(
     } else if (isMissingChannelError(error)) {
       kind = "channel_missing";
     } else {
-      // Re-fetch to diagnose: gone → channel_missing; reachable but no perms →
-      // permission; otherwise treat as a transient/unknown error.
-      const refetched = await client.channels
-        .fetch(channelId)
-        .catch(() => null);
-      if (refetched === null) {
-        kind = "channel_missing";
-      } else {
-        const permissionCheck = await checkSendMessagePermission(
-          refetched,
-          client.user,
-        );
-        if (permissionCheck.hasPermission) {
-          kind = "other";
-        } else {
-          kind = "permission";
-          permissionReason = permissionCheck.reason;
-        }
-      }
+      // Re-fetch to diagnose, then fall through to the shared logging /
+      // escalation / throw below with the classified `kind`.
+      const diagnosis = await diagnoseSendFailure(channelId);
+      kind = diagnosis.kind;
+      permissionReason = diagnosis.permissionReason;
     }
 
     const errorMessage = formatPermissionErrorForLog(

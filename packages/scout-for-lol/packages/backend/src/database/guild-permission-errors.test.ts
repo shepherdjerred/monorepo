@@ -24,7 +24,7 @@ describe("recordPermissionError", () => {
     await recordPermissionError(prisma, {
       serverId: testGuildId("12300000000"),
       channelId: testChannelId("456000000"),
-      errorType: "proactive_check",
+      errorType: "permission",
       errorReason: "Missing Send Messages",
     });
 
@@ -40,7 +40,7 @@ describe("recordPermissionError", () => {
     expect(record).toBeDefined();
     expect(record?.serverId).toBe(testGuildId("12300000000"));
     expect(record?.channelId).toBe(testChannelId("456000000"));
-    expect(record?.errorType).toBe("proactive_check");
+    expect(record?.errorType).toBe("permission");
     expect(record?.errorReason).toBe("Missing Send Messages");
     expect(record?.consecutiveErrorCount).toBe(1);
     expect(record?.firstOccurrence).toBeDefined();
@@ -52,14 +52,14 @@ describe("recordPermissionError", () => {
     await recordPermissionError(prisma, {
       serverId: testGuildId("12300000000"),
       channelId: testChannelId("456000000"),
-      errorType: "proactive_check",
+      errorType: "permission",
     });
 
     // Second error
     await recordPermissionError(prisma, {
       serverId: testGuildId("12300000000"),
       channelId: testChannelId("456000000"),
-      errorType: "api_error",
+      errorType: "channel_missing",
     });
 
     const record = await prisma.guildPermissionError.findUnique({
@@ -72,19 +72,19 @@ describe("recordPermissionError", () => {
     });
 
     expect(record?.consecutiveErrorCount).toBe(2);
-    expect(record?.errorType).toBe("api_error"); // Updates to latest error type
+    expect(record?.errorType).toBe("channel_missing"); // Updates to latest error type
   });
 
   test("tracks separate errors for different channels in same guild", async () => {
     await recordPermissionError(prisma, {
       serverId: testGuildId("12300000000"),
       channelId: testChannelId("1000000001"),
-      errorType: "proactive_check",
+      errorType: "permission",
     });
     await recordPermissionError(prisma, {
       serverId: testGuildId("12300000000"),
       channelId: testChannelId("2000000002"),
-      errorType: "proactive_check",
+      errorType: "permission",
     });
 
     const errors = await prisma.guildPermissionError.findMany({
@@ -101,12 +101,12 @@ describe("recordSuccessfulSend", () => {
     await recordPermissionError(prisma, {
       serverId: testGuildId("12300000000"),
       channelId: testChannelId("456000000"),
-      errorType: "proactive_check",
+      errorType: "permission",
     });
     await recordPermissionError(prisma, {
       serverId: testGuildId("12300000000"),
       channelId: testChannelId("456000000"),
-      errorType: "api_error",
+      errorType: "channel_missing",
     });
 
     // Record successful send
@@ -234,7 +234,7 @@ describe("Permission Error Workflow", () => {
     await recordPermissionError(prisma, {
       serverId,
       channelId,
-      errorType: "proactive_check",
+      errorType: "permission",
     });
     let record = await prisma.guildPermissionError.findUnique({
       where: { serverId_channelId: { serverId, channelId } },
@@ -245,12 +245,12 @@ describe("Permission Error Workflow", () => {
     await recordPermissionError(prisma, {
       serverId,
       channelId,
-      errorType: "api_error",
+      errorType: "channel_missing",
     });
     await recordPermissionError(prisma, {
       serverId,
       channelId,
-      errorType: "api_error",
+      errorType: "channel_missing",
     });
     record = await prisma.guildPermissionError.findUnique({
       where: { serverId_channelId: { serverId, channelId } },
@@ -305,7 +305,7 @@ describe("recordPermissionError - escalation decisions", () => {
       await recordPermissionError(prisma, {
         serverId,
         channelId,
-        errorType: "api_error",
+        errorType: "channel_missing",
       }),
     ).toBe("immediate");
 
@@ -314,7 +314,7 @@ describe("recordPermissionError - escalation decisions", () => {
       await recordPermissionError(prisma, {
         serverId,
         channelId,
-        errorType: "api_error",
+        errorType: "channel_missing",
       }),
     ).toBe("none");
   });
@@ -334,7 +334,7 @@ describe("recordPermissionError - escalation decisions", () => {
       await recordPermissionError(prisma, {
         serverId,
         channelId,
-        errorType: "api_error",
+        errorType: "channel_missing",
       }),
     ).toBe("week");
   });
@@ -354,7 +354,7 @@ describe("recordPermissionError - escalation decisions", () => {
       await recordPermissionError(prisma, {
         serverId,
         channelId,
-        errorType: "api_error",
+        errorType: "channel_missing",
       }),
     ).toBe("month");
 
@@ -363,7 +363,7 @@ describe("recordPermissionError - escalation decisions", () => {
       await recordPermissionError(prisma, {
         serverId,
         channelId,
-        errorType: "api_error",
+        errorType: "channel_missing",
       }),
     ).toBe("none");
   });
@@ -376,7 +376,7 @@ describe("recordPermissionError - escalation decisions", () => {
       await recordPermissionError(prisma, {
         serverId,
         channelId,
-        errorType: "api_error",
+        errorType: "channel_missing",
       }),
     ).toBe("immediate");
 
@@ -386,7 +386,7 @@ describe("recordPermissionError - escalation decisions", () => {
       await recordPermissionError(prisma, {
         serverId,
         channelId,
-        errorType: "api_error",
+        errorType: "channel_missing",
       }),
     ).toBe("immediate");
   });
@@ -409,7 +409,7 @@ describe("recordPermissionError - escalation decisions", () => {
       await recordPermissionError(prisma, {
         serverId,
         channelId,
-        errorType: "api_error",
+        errorType: "channel_missing",
       }),
     ).toBe("immediate");
   });

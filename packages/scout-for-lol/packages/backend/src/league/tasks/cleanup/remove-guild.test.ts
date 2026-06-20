@@ -115,7 +115,7 @@ async function seedGuild(
   await recordPermissionError(db, {
     serverId,
     channelId,
-    errorType: "api_error",
+    errorType: "channel_missing",
   });
 
   return player.id;
