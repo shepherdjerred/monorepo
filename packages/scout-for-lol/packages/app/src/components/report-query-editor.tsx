@@ -63,6 +63,9 @@ export default function ReportQueryEditor(props: {
           folding: false,
           renderLineHighlight: "none",
           quickSuggestions: { other: true, comments: false, strings: true },
+          // Render suggest/hover popups in a fixed layer on <body> so the small,
+          // overflow-hidden editor container doesn't clip them.
+          fixedOverflowWidgets: true,
         }}
       />
     </div>
