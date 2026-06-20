@@ -10,6 +10,8 @@ import {
   SubmitButton,
   TextField,
 } from "#src/components/admin-form-controls.tsx";
+import { PlayerAliasCombobox } from "#src/components/player-alias-combobox.tsx";
+import { Label } from "#src/components/ui/label.tsx";
 
 type Props = {
   guildId: string;
@@ -121,6 +123,7 @@ export function AccountAdminForms(props: Props) {
             region={addAccountRegion}
             onRiotIdChange={setAddAccountRiotId}
             onRegionChange={setAddAccountRegion}
+            guildId={props.guildId}
           />
           <SubmitButton pending={addAccountMutation.isPending} label="Add" />
         </form>
@@ -148,6 +151,7 @@ export function AccountAdminForms(props: Props) {
             region={deleteAccountRegion}
             onRiotIdChange={setDeleteAccountRiotId}
             onRegionChange={setDeleteAccountRegion}
+            guildId={props.guildId}
           />
           <SubmitButton
             pending={deleteAccountMutation.isPending}
@@ -183,13 +187,17 @@ export function AccountAdminForms(props: Props) {
             region={transferAccountRegion}
             onRiotIdChange={setTransferAccountRiotId}
             onRegionChange={setTransferAccountRegion}
+            guildId={props.guildId}
           />
-          <TextField
-            id="transfer-target"
-            label="Target alias"
-            value={transferTargetAlias}
-            onChange={setTransferTargetAlias}
-          />
+          <div className="space-y-2">
+            <Label htmlFor="transfer-target">Target player</Label>
+            <PlayerAliasCombobox
+              id="transfer-target"
+              guildId={props.guildId}
+              value={transferTargetAlias}
+              onChange={setTransferTargetAlias}
+            />
+          </div>
           <SubmitButton
             pending={transferAccountMutation.isPending}
             label="Transfer"

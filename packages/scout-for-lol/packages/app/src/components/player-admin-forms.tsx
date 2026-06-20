@@ -4,6 +4,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import {
   AdminCard,
+  AliasField,
+  DiscordUserField,
   SubmitButton,
   TextField,
 } from "#src/components/admin-form-controls.tsx";
@@ -119,9 +121,10 @@ export function PlayerAdminForms(props: Props) {
             });
           }}
         >
-          <TextField
+          <AliasField
             id="rename-current"
             label="Current alias"
+            guildId={props.guildId}
             value={renameCurrentAlias}
             onChange={setRenameCurrentAlias}
           />
@@ -157,15 +160,17 @@ export function PlayerAdminForms(props: Props) {
             });
           }}
         >
-          <TextField
+          <AliasField
             id="merge-source"
             label="Source alias"
+            guildId={props.guildId}
             value={mergeSourceAlias}
             onChange={setMergeSourceAlias}
           />
-          <TextField
+          <AliasField
             id="merge-target"
             label="Target alias"
+            guildId={props.guildId}
             value={mergeTargetAlias}
             onChange={setMergeTargetAlias}
           />
@@ -186,9 +191,10 @@ export function PlayerAdminForms(props: Props) {
             deletePlayerMutation.mutate({ guildId: props.guildId, alias });
           }}
         >
-          <TextField
+          <AliasField
             id="delete-player"
             label="Alias"
+            guildId={props.guildId}
             value={deleteAlias}
             onChange={setDeleteAlias}
           />
@@ -218,15 +224,17 @@ export function PlayerAdminForms(props: Props) {
             });
           }}
         >
-          <TextField
+          <AliasField
             id="link-alias"
             label="Alias"
+            guildId={props.guildId}
             value={linkAlias}
             onChange={setLinkAlias}
           />
-          <TextField
+          <DiscordUserField
             id="link-discord"
-            label="Discord user ID"
+            label="Discord user"
+            guildId={props.guildId}
             value={linkDiscordId}
             onChange={setLinkDiscordId}
           />
@@ -244,9 +252,10 @@ export function PlayerAdminForms(props: Props) {
             unlinkMutation.mutate({ guildId: props.guildId, playerAlias });
           }}
         >
-          <TextField
+          <AliasField
             id="unlink-alias"
             label="Alias"
+            guildId={props.guildId}
             value={unlinkAlias}
             onChange={setUnlinkAlias}
           />

@@ -11,6 +11,7 @@ import {
   getActiveCompetitions,
   getCompetitionById,
   getCompetitionsByServer,
+  getCompetitionsByServerPaginated,
 } from "#src/database/competition/queries.ts";
 import { ChampionIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
@@ -183,6 +184,44 @@ describe("getCompetitionsByServer", () => {
       testGuildId("123456789012345678"),
     );
     expect(competitions).toHaveLength(3);
+  });
+
+  test("paginates with a cursor and never repeats rows", async () => {
+    for (let i = 0; i < 3; i++) {
+      await createCompetition(prisma, {
+        serverId: testGuildId("123456789012345678"),
+        ownerId: testAccountId("987654321098765432"),
+        channelId: testChannelId("111222333444555666"),
+        title: `Competition ${i.toString()}`,
+        description: "Test",
+        visibility: "OPEN",
+        maxParticipants: 50,
+        dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
+        criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+      });
+    }
+
+    const first = await getCompetitionsByServerPaginated(
+      prisma,
+      testGuildId("123456789012345678"),
+      { limit: 2 },
+    );
+    expect(first.items).toHaveLength(2);
+    expect(first.nextCursor).not.toBeNull();
+
+    expect(first.nextCursor).not.toBeNull();
+    const second = await getCompetitionsByServerPaginated(
+      prisma,
+      testGuildId("123456789012345678"),
+      { limit: 2, cursor: first.nextCursor ?? 0 },
+    );
+    expect(second.items).toHaveLength(1);
+    expect(second.nextCursor).toBeNull();
+
+    const firstIds = first.items.map((c) => c.id);
+    const secondIds = second.items.map((c) => c.id);
+    expect(firstIds).not.toContain(secondIds[0]);
+    expect(new Set([...firstIds, ...secondIds]).size).toBe(3);
   });
 
   test("filters by activeOnly", async () => {

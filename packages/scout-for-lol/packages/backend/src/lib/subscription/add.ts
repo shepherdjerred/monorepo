@@ -35,8 +35,15 @@ async function commitSubscription(params: {
   db: Db;
 }): Promise<AddSubscriptionResult> {
   const { input, puuid, db } = params;
-  const { guildId, channelId, region, alias, discordUserId, creatorDiscordId } =
-    input;
+  const {
+    guildId,
+    channelId,
+    region,
+    riotId,
+    alias,
+    discordUserId,
+    creatorDiscordId,
+  } = input;
   const now = new Date();
 
   const existingPlayer = await db.player.findUnique({
@@ -75,6 +82,10 @@ async function commitSubscription(params: {
       alias,
       puuid,
       region,
+      // Seed the cached Riot ID from input; refreshed/canonicalized on read.
+      riotGameName: riotId.game_name,
+      riotTagLine: riotId.tag_line,
+      riotIdUpdatedAt: now,
       serverId: guildId,
       creatorDiscordId,
       player: {

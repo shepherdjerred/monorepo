@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { RiotIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
-import type { RegionValue } from "#src/lib/regions.ts";
+import { findRegion, type RegionValue } from "#src/lib/regions.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import { RegionSelect } from "#src/components/region-select.tsx";
+import { RiotIdCombobox } from "#src/components/riot-id-combobox.tsx";
+import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.tsx";
 import {
   Dialog,
   DialogContent,
@@ -140,14 +142,15 @@ export function AddSubscriptionDialog(props: Props) {
             <Label htmlFor="add-sub-riot-id">
               Riot ID <span className="text-muted-foreground">(name#TAG)</span>
             </Label>
-            <Input
-              id="add-sub-riot-id"
+            <RiotIdCombobox
+              guildId={props.guildId}
               value={riotIdInput}
-              onChange={(e) => {
-                setRiotIdInput(e.target.value);
+              onValueChange={setRiotIdInput}
+              onSelectAccount={({ region: accountRegion }) => {
+                const match = findRegion(accountRegion);
+                if (match !== null) setRegion(match);
               }}
-              placeholder="example#NA1"
-              required
+              placeholder="example#NA1 (or search known accounts)"
             />
           </div>
 
@@ -166,16 +169,13 @@ export function AddSubscriptionDialog(props: Props) {
 
           <div className="space-y-2">
             <Label htmlFor="add-sub-discord">
-              Discord user ID{" "}
+              Discord user{" "}
               <span className="text-muted-foreground">(optional)</span>
             </Label>
-            <Input
-              id="add-sub-discord"
+            <DiscordMemberCombobox
+              guildId={props.guildId}
               value={discordUserId}
-              onChange={(e) => {
-                setDiscordUserId(e.target.value);
-              }}
-              placeholder="123456789012345678"
+              onChange={setDiscordUserId}
             />
           </div>
 

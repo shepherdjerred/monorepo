@@ -6,6 +6,7 @@ import {
   RegionSchema,
   RiotIdSchema,
 } from "@scout-for-lol/data/index.ts";
+import type { ResolvedDiscordUser } from "#src/lib/discord/resolve-users.ts";
 
 export const AddSubscriptionInputSchema = z.object({
   guildId: DiscordGuildIdSchema,
@@ -49,6 +50,8 @@ export type AddSubscriptionChannelInput = z.infer<
 
 export const ListSubscriptionsInputSchema = z.object({
   guildId: DiscordGuildIdSchema,
+  limit: z.number().int().min(1).max(100).default(50),
+  cursor: z.number().int().min(1).optional(),
 });
 export type ListSubscriptionsInput = z.infer<
   typeof ListSubscriptionsInputSchema
@@ -122,13 +125,17 @@ export type SubscriptionListItem = {
     id: number;
     alias: string;
     discordId: string | null;
+    discordUser: ResolvedDiscordUser | null;
     accounts: {
       id: number;
       alias: string;
       region: string;
       puuid: string;
+      riotGameName: string | null;
+      riotTagLine: string | null;
     }[];
   };
   creatorDiscordId: string;
+  creatorDiscordUser: ResolvedDiscordUser | null;
   createdTime: Date;
 };

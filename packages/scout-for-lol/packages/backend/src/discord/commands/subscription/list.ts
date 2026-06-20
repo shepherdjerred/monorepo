@@ -2,6 +2,7 @@ import { type ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
 import { listSubscriptions } from "#src/lib/subscription/list.ts";
+import type { SubscriptionListItem } from "#src/lib/subscription/types.ts";
 
 export async function executeSubscriptionList(
   interaction: ChatInputCommandInteraction,
@@ -19,7 +20,18 @@ export async function executeSubscriptionList(
   const guildId = DiscordGuildIdSchema.parse(interaction.guildId);
   await interaction.deferReply({ ephemeral: true });
 
-  const subscriptions = await listSubscriptions({ guildId });
+  // Gather every page — the Discord embed shows the full server roster.
+  const subscriptions: SubscriptionListItem[] = [];
+  let cursor: number | undefined;
+  do {
+    const page = await listSubscriptions({
+      guildId,
+      limit: 100,
+      ...(cursor === undefined ? {} : { cursor }),
+    });
+    subscriptions.push(...page.items);
+    cursor = page.nextCursor ?? undefined;
+  } while (cursor !== undefined);
 
   if (subscriptions.length === 0) {
     await interaction.editReply({

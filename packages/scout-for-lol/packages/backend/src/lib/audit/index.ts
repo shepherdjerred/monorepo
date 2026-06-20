@@ -22,6 +22,7 @@ export const AuditActionSchema = z.enum([
   "ACCOUNT_ADD",
   "ACCOUNT_DELETE",
   "ACCOUNT_TRANSFER",
+  "ACCOUNT_UPDATE",
 ]);
 export type AuditAction = z.infer<typeof AuditActionSchema>;
 

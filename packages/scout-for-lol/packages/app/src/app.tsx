@@ -14,14 +14,10 @@ import { ReportDetail } from "#src/routes/report-detail.tsx";
 import { ReportForm } from "#src/routes/report-form.tsx";
 import { AdminTools } from "#src/routes/admin-tools.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
-import { ThemeToggle } from "#src/components/ui/theme-toggle.tsx";
 
 export function App() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="fixed right-4 top-4 z-40">
-        <ThemeToggle />
-      </div>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route element={<RequireSession />}>

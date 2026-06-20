@@ -1,6 +1,8 @@
-import { Link, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { findRegion } from "#src/lib/regions.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import {
   Card,
@@ -16,6 +18,18 @@ import {
   TableHeader,
   TableRow,
 } from "#src/components/ui/table.tsx";
+import { DiscordUser } from "#src/components/discord-user.tsx";
+import {
+  CompetitionSection,
+  PlayerAccountsTable,
+  Section,
+} from "#src/components/player-detail-sections.tsx";
+import { RenamePlayerDialog } from "#src/components/rename-player-dialog.tsx";
+import { LinkDiscordDialog } from "#src/components/link-discord-dialog.tsx";
+import { AddAccountDialog } from "#src/components/add-account-dialog.tsx";
+import { EditAccountDialog } from "#src/components/edit-account-dialog.tsx";
+
+type EditableAccount = { id: number; alias: string; region: string };
 
 function formatDate(value: Date | string | null): string {
   if (value === null) return "—";
@@ -42,8 +56,20 @@ function isActiveCompetition(competition: {
 export function PlayerDetail() {
   const { guildId, alias } = useParams();
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const safeGuildId = guildId ?? "";
   const safeAlias = alias ?? "";
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [addAccountOpen, setAddAccountOpen] = useState(false);
+  const [editAccount, setEditAccount] = useState<EditableAccount | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const playerKey = trpc.player.getPlayer.queryKey({
+    guildId: safeGuildId,
+    alias: safeAlias,
+  });
   const playerQuery = useQuery(
     trpc.player.getPlayer.queryOptions(
       { guildId: safeGuildId, alias: safeAlias },
@@ -55,6 +81,33 @@ export function PlayerDetail() {
       { guildId: safeGuildId },
       { enabled: guildId !== undefined },
     ),
+  );
+
+  function refresh() {
+    void queryClient.invalidateQueries({ queryKey: playerKey });
+  }
+
+  const unlinkMutation = useMutation(
+    trpc.player.unlinkDiscord.mutationOptions({
+      onSuccess: () => {
+        setActionError(null);
+        refresh();
+      },
+      onError: (err) => {
+        setActionError(err.message);
+      },
+    }),
+  );
+  const deleteAccountMutation = useMutation(
+    trpc.player.deleteAccount.mutationOptions({
+      onSuccess: () => {
+        setActionError(null);
+        refresh();
+      },
+      onError: (err) => {
+        setActionError(err.message);
+      },
+    }),
   );
 
   if (guildId === undefined || alias === undefined) {
@@ -84,6 +137,18 @@ export function PlayerDetail() {
           )}
         </div>
         <div className="flex gap-2">
+          {player && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setRenameOpen(true);
+              }}
+            >
+              Rename
+            </Button>
+          )}
           <Button asChild variant="outline" size="sm">
             <Link to={`/g/${guildId}/players`}>Players</Link>
           </Button>
@@ -101,6 +166,9 @@ export function PlayerDetail() {
           Failed to load: {playerQuery.error.message}
         </p>
       )}
+      {actionError !== null && (
+        <p className="text-sm text-destructive">{actionError}</p>
+      )}
 
       {player && (
         <>
@@ -112,11 +180,57 @@ export function PlayerDetail() {
               <CardContent className="space-y-2 text-sm">
                 <div>
                   <span className="text-muted-foreground">Linked user</span>
-                  <p className="font-mono text-xs">{player.discordId ?? "—"}</p>
+                  <p>
+                    <DiscordUser
+                      id={player.discordId}
+                      name={player.discordUser}
+                    />
+                  </p>
+                  <div className="pt-1">
+                    {player.discordId === null ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setLinkOpen(true);
+                        }}
+                      >
+                        Link Discord
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={unlinkMutation.isPending}
+                        onClick={() => {
+                          if (
+                            !globalThis.confirm(
+                              `Unlink Discord from "${safeAlias}"?`,
+                            )
+                          ) {
+                            return;
+                          }
+                          unlinkMutation.mutate({
+                            guildId,
+                            playerAlias: safeAlias,
+                          });
+                        }}
+                      >
+                        Unlink
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Created by</span>
-                  <p className="font-mono text-xs">{player.creatorDiscordId}</p>
+                  <p>
+                    <DiscordUser
+                      id={player.creatorDiscordId}
+                      name={player.creatorDiscordUser}
+                    />
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -149,37 +263,51 @@ export function PlayerDetail() {
             </Card>
           </div>
 
-          <Section title="Riot accounts">
-            {player.accounts.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No accounts.</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Alias</TableHead>
-                    <TableHead>Region</TableHead>
-                    <TableHead>PUUID</TableHead>
-                    <TableHead>Last match</TableHead>
-                    <TableHead>Last checked</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {player.accounts.map((account) => (
-                    <TableRow key={account.id}>
-                      <TableCell className="font-medium">
-                        {account.alias}
-                      </TableCell>
-                      <TableCell>{account.region}</TableCell>
-                      <TableCell className="max-w-72 truncate font-mono text-xs text-muted-foreground">
-                        {account.puuid}
-                      </TableCell>
-                      <TableCell>{formatDate(account.lastMatchTime)}</TableCell>
-                      <TableCell>{formatDate(account.lastCheckedAt)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
+          <Section
+            title="Riot accounts"
+            action={
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setAddAccountOpen(true);
+                }}
+              >
+                + Add account
+              </Button>
+            }
+          >
+            <PlayerAccountsTable
+              accounts={player.accounts}
+              deletePending={deleteAccountMutation.isPending}
+              onEdit={(account) => {
+                setEditAccount({
+                  id: account.id,
+                  alias: account.alias,
+                  region: account.region,
+                });
+              }}
+              onDelete={(account) => {
+                if (account.riotGameName === null) return;
+                const region = findRegion(account.region);
+                if (region === null) {
+                  setActionError(
+                    `Unknown region "${account.region}" — delete from the Admin page.`,
+                  );
+                  return;
+                }
+                const riotId = `${account.riotGameName}#${account.riotTagLine ?? ""}`;
+                if (
+                  !globalThis.confirm(
+                    `Delete account ${riotId} from "${safeAlias}"?`,
+                  )
+                ) {
+                  return;
+                }
+                deleteAccountMutation.mutate({ guildId, riotId, region });
+              }}
+            />
           </Section>
 
           <Section title="Subscriptions">
@@ -203,8 +331,11 @@ export function PlayerDetail() {
                           subscription.channelId,
                         )}
                       </TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">
-                        {subscription.creatorDiscordId}
+                      <TableCell>
+                        <DiscordUser
+                          id={subscription.creatorDiscordId}
+                          name={subscription.creatorDiscordUser}
+                        />
                       </TableCell>
                       <TableCell>
                         {formatDate(subscription.createdTime)}
@@ -224,77 +355,55 @@ export function PlayerDetail() {
             title="Past competitions"
             rows={pastCompetitions}
           />
+
+          <RenamePlayerDialog
+            guildId={guildId}
+            currentAlias={safeAlias}
+            open={renameOpen}
+            onOpenChange={setRenameOpen}
+            onRenamed={(newAlias) => {
+              setRenameOpen(false);
+              void navigate(
+                `/g/${guildId}/players/${encodeURIComponent(newAlias)}`,
+              );
+            }}
+          />
+          <LinkDiscordDialog
+            guildId={guildId}
+            playerAlias={safeAlias}
+            open={linkOpen}
+            onOpenChange={setLinkOpen}
+            onLinked={() => {
+              setLinkOpen(false);
+              refresh();
+            }}
+          />
+          <AddAccountDialog
+            guildId={guildId}
+            playerAlias={safeAlias}
+            open={addAccountOpen}
+            onOpenChange={setAddAccountOpen}
+            onAdded={() => {
+              setAddAccountOpen(false);
+              refresh();
+            }}
+          />
+          {editAccount !== null && (
+            <EditAccountDialog
+              guildId={guildId}
+              account={editAccount}
+              open
+              onOpenChange={(open) => {
+                if (!open) setEditAccount(null);
+              }}
+              onSaved={() => {
+                setEditAccount(null);
+                refresh();
+              }}
+            />
+          )}
         </>
       )}
     </div>
-  );
-}
-
-function Section(props: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-2">
-      <h3 className="text-base font-semibold">{props.title}</h3>
-      <div className="rounded-md border border-border">{props.children}</div>
-    </section>
-  );
-}
-
-function CompetitionSection(props: {
-  title: string;
-  rows: {
-    id: number;
-    status: string;
-    invitedBy: string | null;
-    invitedAt: Date | string | null;
-    joinedAt: Date | string | null;
-    leftAt: Date | string | null;
-    competition: {
-      id: number;
-      title: string;
-      visibility: string;
-      isCancelled: boolean;
-      startDate: Date | string | null;
-      endDate: Date | string | null;
-    };
-  }[];
-}) {
-  return (
-    <Section title={props.title}>
-      {props.rows.length === 0 ? (
-        <p className="p-3 text-sm text-muted-foreground">None.</p>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Competition</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Visibility</TableHead>
-              <TableHead>Dates</TableHead>
-              <TableHead>Invite</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {props.rows.map((participant) => (
-              <TableRow key={participant.id}>
-                <TableCell className="font-medium">
-                  {participant.competition.title}
-                  {participant.competition.isCancelled ? " (cancelled)" : ""}
-                </TableCell>
-                <TableCell>{participant.status}</TableCell>
-                <TableCell>{participant.competition.visibility}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {formatDate(participant.competition.startDate)} to{" "}
-                  {formatDate(participant.competition.endDate)}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {participant.invitedBy ?? "—"} /{" "}
-                  {formatDate(participant.invitedAt)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
-    </Section>
   );
 }

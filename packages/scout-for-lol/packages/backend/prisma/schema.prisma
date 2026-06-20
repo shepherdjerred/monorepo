@@ -43,11 +43,17 @@ model Player {
 model Account {
   id       Int    @id @default(autoincrement())
   alias    String
-  // TODO(https://github.com/shepherdjerred/monorepo/issues/186): store riot ID for the sake of easier understanding
   puuid    String
   region   String
   playerId Int
   player   Player @relation(fields: [playerId], references: [id])
+
+  // Cached Riot ID (gameName#tagLine) resolved from the PUUID. Nullable
+  // until first resolved; refreshed on read when older than 24h. Lets the
+  // web UI show the real Riot ID instead of the user-chosen alias.
+  riotGameName    String?
+  riotTagLine     String?
+  riotIdUpdatedAt DateTime?
 
   // Match processing tracking
   lastProcessedMatchId String? // Track last match we've processed to avoid duplicates
