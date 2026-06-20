@@ -5,7 +5,7 @@ const MarketingTrackingEnvSchema = z.object({
   PUBLIC_REDDIT_PIXEL_ID: z.string().trim().min(1),
 });
 
-export const DiscordCtaLocationSchema = z.enum([
+export const CtaLocationSchema = z.enum([
   "navbar",
   "home_hero",
   "home_final_cta",
@@ -14,7 +14,7 @@ export const DiscordCtaLocationSchema = z.enum([
   "whatsnew",
 ]);
 
-export type DiscordCtaLocation = z.infer<typeof DiscordCtaLocationSchema>;
+export type CtaLocation = z.infer<typeof CtaLocationSchema>;
 
 const rawPinterestTagId: unknown = import.meta.env["PUBLIC_PINTEREST_TAG_ID"];
 const rawRedditPixelId: unknown = import.meta.env["PUBLIC_REDDIT_PIXEL_ID"];

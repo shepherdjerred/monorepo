@@ -30,6 +30,7 @@ const DM_FOOTER =
   SUPPORT_USER +
   " directly -- happy to help!";
 const GETTING_STARTED = "https://scout-for-lol.com/getting-started/";
+const DASHBOARD = "https://scout-for-lol.com/app/";
 const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 
@@ -69,14 +70,14 @@ async function runThreeDayOutreach(client: Client): Promise<void> {
     if (subCount === 0) {
       message = truncateDiscordMessage(
         `👋 Hey there! Thanks for adding Scout for LoL to **${guild.serverName}**. ` +
-          `Need help getting started? Use \`/subscription add\` to track your first player, ` +
-          `or check out the getting started guide: ${GETTING_STARTED}` +
+          `Add your first player from the dashboard at ${DASHBOARD} ` +
+          `(or with \`/subscription add\` in Discord). New here? ${GETTING_STARTED}` +
           DM_FOOTER,
       );
     } else if (subCount <= 2) {
       message = truncateDiscordMessage(
         `👋 Hey there! You've started setting up Scout for LoL on **${guild.serverName}**, nice! ` +
-          `You can add more players with \`/subscription add\`.` +
+          `You can add more players from the dashboard at ${DASHBOARD} or with \`/subscription add\`.` +
           DM_FOOTER,
       );
     }
