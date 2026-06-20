@@ -73,6 +73,20 @@ gone and `alert-remediation-daily` exists with spec `0 8 * * *`
 - After the worker redeploys, verify in Temporal UI that the hourly schedule is
   gone and the daily one exists (cron `0 8 * * *`).
 
+<!-- temporal-agent-task
+{
+  "title": "Verify alert-remediation-hourly is gone and alert-remediation-daily is active",
+  "provider": "claude",
+  "mode": "report-only",
+  "runAt": "2026-06-21T09:00:00-07:00",
+  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "source": {
+    "docPath": "packages/docs/plans/2026-06-19_alert-remediation-throttle-daily.md"
+  },
+  "prompt": "Post-deploy verification for the alert-remediation throttle change (PR #1279). Check the Temporal UI / CLI: (1) confirm that the schedule `alert-remediation-hourly` no longer exists; (2) confirm that `alert-remediation-daily` exists, is active, and has cron spec `0 8 * * *` (America/Los_Angeles). Email the result with evidence (schedule list output or UI screenshots). Do NOT edit files or mutate any system state."
+}
+-->
+
 ### Caveats
 
 - Existing tests cover this transparently (`register-schedules.test.ts` keys timeout
