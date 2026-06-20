@@ -149,7 +149,9 @@ describe("GoalMemory session logs", () => {
       "Pressed UP onto the warp arrow to descend.",
     );
     expect(id).toContain("climb-the-stairs");
-    const text = await Bun.file(logPath).text();
+    // logPath is relative to the memory root — verify it looks right and is readable.
+    expect(logPath).toMatch(/^logs\//);
+    const text = await memory.read(logPath);
     expect(text).toContain('goal: "Climb the stairs"');
     expect(text).toContain('status: "completed"');
     expect(text).toContain("warp arrow");

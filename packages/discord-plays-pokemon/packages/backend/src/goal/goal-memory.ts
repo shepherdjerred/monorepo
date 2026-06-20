@@ -87,13 +87,15 @@ export function buildSessionLogMeta(state: GoalState): SessionLogMeta {
 }
 
 export type MemoryWriteResult = {
+  // Path relative to the memory root (e.g. "MEMORY.md").
   path: string;
   chars: number;
-  // The archive snapshot of the prior MEMORY.md, if one was made.
+  // The archive snapshot of the prior MEMORY.md (relative to the memory root), if one was made.
   archivedPath?: string;
 };
 
 export type SessionLogWriteResult = {
+  // Path relative to the memory root (e.g. "logs/2026-…-goal.md").
   path: string;
   id: string;
 };
@@ -163,7 +165,7 @@ export class GoalMemory {
     const target = this.memoryPath();
     await Bun.write(target, `${trimmed}\n`, { createPath: true });
     return {
-      path: target,
+      path: this.toRel(target),
       chars: trimmed.length,
       ...(archivedPath !== undefined && { archivedPath }),
     };
@@ -177,7 +179,7 @@ export class GoalMemory {
     const archivePath = path.join(this.directory, ARCHIVE_DIR, `${stamp}.md`);
     await Bun.write(archivePath, `${current}\n`, { createPath: true });
     await this.prune(path.join(this.directory, ARCHIVE_DIR), ARCHIVE_KEEP);
-    return archivePath;
+    return this.toRel(archivePath);
   }
 
   /**
@@ -203,7 +205,7 @@ export class GoalMemory {
       { createPath: true },
     );
     await this.prune(path.join(this.directory, LOGS_DIR), LOGS_KEEP);
-    return { path: target, id };
+    return { path: this.toRel(target), id };
   }
 
   /** List a directory (default = root). A file path lists just that file. */
