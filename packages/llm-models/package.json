@@ -17,6 +17,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json && cp src/catalog.json dist/catalog.json",
+    "sync": "bun run scripts/sync-from-upstreams.ts",
     "typecheck": "bunx tsc --noEmit",
     "lint": "bunx eslint --cache .",
     "test": "bun test test"
