@@ -1,6 +1,9 @@
 import { Button } from "#src/components/ui/button.tsx";
 import { Card, CardContent } from "#src/components/ui/card.tsx";
-import { DISCORD_INVITE_URL } from "#src/lib/discord-invite.ts";
+import {
+  DISCORD_INVITE_URL,
+  DISCORD_INSTALL_REDIRECTS_BACK,
+} from "#src/lib/discord-invite.ts";
 import { OnboardingShell } from "#src/components/onboarding/onboarding-shell.tsx";
 
 export function OnboardingInstallStep(props: {
@@ -22,13 +25,28 @@ export function OnboardingInstallStep(props: {
         <Card>
           <CardContent className="space-y-3 p-4">
             <p className="text-sm text-muted-foreground">
-              Opens Discord in a new tab. Pick a server and approve permissions
-              (you need <strong>Manage Server</strong>). Discord won&apos;t send
-              you back automatically — once you&apos;ve added Scout, return to
-              this tab and your server shows up below.
+              {DISCORD_INSTALL_REDIRECTS_BACK ? (
+                <>
+                  Pick a server and approve permissions (you need{" "}
+                  <strong>Manage Server</strong>). Discord brings you right back
+                  here when you&apos;re done.
+                </>
+              ) : (
+                <>
+                  Opens Discord in a new tab. Pick a server and approve
+                  permissions (you need <strong>Manage Server</strong>). Once
+                  you&apos;ve added Scout, return to this tab and your server
+                  shows up below.
+                </>
+              )}
             </p>
             <Button asChild>
-              <a href={DISCORD_INVITE_URL} target="_blank" rel="noreferrer">
+              <a
+                href={DISCORD_INVITE_URL}
+                {...(DISCORD_INSTALL_REDIRECTS_BACK
+                  ? {}
+                  : { target: "_blank", rel: "noreferrer" })}
+              >
                 Add Scout to Discord
               </a>
             </Button>
