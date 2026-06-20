@@ -693,6 +693,7 @@ export function deploySiteHelper(
   // directly — they don't ship a dist/.
   const SKIP_BUILD_DEPS: ReadonlySet<string> = new Set([
     "eslint-config",
+    "llm-models",
     "llm-observability",
   ]);
   const buildDeps = depNames.filter((d) => !SKIP_BUILD_DEPS.has(d));

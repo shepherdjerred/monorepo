@@ -1,0 +1,31 @@
+{
+  "name": "@shepherdjerred/llm-models",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#src/*": "./src/*",
+    "#catalog.json": "./catalog.json"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./catalog.json": "./catalog.json"
+  },
+  "scripts": {
+    "build": "true",
+    "typecheck": "bunx tsc --noEmit",
+    "lint": "bunx eslint --cache .",
+    "test": "bun test test"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@tsconfig/node-lts": "^24.0.0",
+    "@tsconfig/recommended": "^1.0.13",
+    "@tsconfig/strictest": "^2.0.8",
+    "@types/bun": "^1.2.0",
+    "typescript": "^6.0.0"
+  }
+}

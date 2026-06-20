@@ -22,6 +22,7 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   "cooklang-rich-preview": ["eslint-config"],
   "better-skill-capped": ["eslint-config"],
   birmel: ["eslint-config", "llm-observability"],
+  "llm-models": ["eslint-config"],
   "llm-observability": ["eslint-config"],
   "starlight-karma-bot": ["eslint-config"],
   // Shared XState stream lifecycle machine; consumed via file: deps by
