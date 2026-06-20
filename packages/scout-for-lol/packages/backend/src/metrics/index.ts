@@ -105,35 +105,6 @@ export const discordOwnerNotificationsTotal = new Counter({
 });
 
 /**
- * Total number of abandoned guilds detected
- */
-export const abandonedGuildsDetectedTotal = new Counter({
-  name: "abandoned_guilds_detected_total",
-  help: "Total number of guilds detected as abandoned due to persistent permission errors",
-  registers: [registry],
-});
-
-/**
- * Total number of guilds the bot has left
- */
-export const guildsLeftTotal = new Counter({
-  name: "guilds_left_total",
-  help: "Total number of guilds the bot has left",
-  labelNames: ["reason"] as const,
-  registers: [registry],
-});
-
-/**
- * Total number of abandonment notifications sent to guild owners
- */
-export const abandonmentNotificationsTotal = new Counter({
-  name: "abandonment_notifications_total",
-  help: "Total number of abandonment notifications sent to guild owners",
-  labelNames: ["status"] as const,
-  registers: [registry],
-});
-
-/**
  * Total number of guild data cleanup operations
  */
 export const guildDataCleanupTotal = new Counter({
@@ -447,6 +418,8 @@ export const avgAccountsPerPlayer = new Gauge({
   help: "Average number of accounts per player",
   registers: [registry],
 });
+
+// Guild-health gauges live in #src/metrics/guild-health.ts (file-length cap).
 
 // =======================
 // Riot API Metrics

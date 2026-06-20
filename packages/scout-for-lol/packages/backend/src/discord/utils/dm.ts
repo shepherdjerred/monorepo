@@ -27,7 +27,6 @@ const CANNOT_DM_USER_CODE = 50_007;
  */
 export const DmKindSchema = z.enum([
   "permission_error",
-  "abandonment",
   "feedback_request",
   "competition_invite",
   "prune_notice",

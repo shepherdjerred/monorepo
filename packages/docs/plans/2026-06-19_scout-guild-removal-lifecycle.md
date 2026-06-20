@@ -44,7 +44,34 @@ Plus two owner requirements: **a feedback-request DM on removal**, and **a centr
 - `bun run typecheck` ✅ · `bun test` (975 pass / 0 fail) ✅ · `bunx eslint .` ✅ · `knip` (no new findings) ✅
 - New tests: `remove-guild.test.ts` (cleanup correctness + idempotency + cross-guild isolation), `dm.test.ts` (sent/dm_disabled/failed audit rows), `get-accounts-with-state.test.ts` (membership filter), `feedback.test.ts`, `guild-permission-errors.test.ts` (first-in-streak), updated `permissions-notify.test.ts`.
 
+## Phase 2 — Escalating notifications + remove auto-leave + guild-health dashboards
+
+Refinement on the same branch after PR-1, per owner feedback ("backed-off retry" + Grafana tracking):
+
+- **Backed-off owner notifications** replace notify-once-per-streak. `GuildPermissionError` gains `notificationStage` + `lastNotifiedAt`; `recordPermissionError` returns `none | immediate | week | month` (immediate on first failure, week at +7d, month at +30d after that, then silent). Anchored on `lastNotifiedAt` (not `firstOccurrence`) so **existing mid-streak guilds** restart cleanly at `immediate` instead of jumping to `month`. Stage-specific DM copy in `permissions.ts` (`notifyServerOwnerAboutPermissionError` is now an options object taking `stage`).
+- **Removed the 7-day auto-leave.** The bot never leaves on its own; `checkAbandonedGuilds` is replaced by `reconcileRemovedGuilds` (cleanup-only sweep for guilds the bot was removed from while offline). Deleted `getAbandonedGuilds`/`markGuildAsNotified`/`notifyOwnerOfAbandonment`, the `abandonment` DM kind, and the abandoned-\* metrics. Cleanup + feedback DM now happen only on real uninstall (`guildDelete`).
+- **Guild-health observability.** New gauges in `metrics/guild-health.ts` set every 5 min in `updateUsageMetrics`: `guild_send_blocked{server_id}`+`_total`, `competition_unhealthy{server_id,competition_id}`+`_total`, `guild_info{server_id,server_name}`. New "Guild health" row in the homelab scout dashboard (`scout-dashboard-health-panels.ts`): two stat panels + two name-joined table panels.
+- **Verification:** backend `typecheck` ✅ · `bun test` (970 pass / 0 fail) ✅ · `eslint` ✅ · `knip` (no new findings) ✅; homelab `typecheck` ✅ · `eslint` ✅ · grafana tests (14 pass) ✅ · dashboard JSON exports with all new panels. New/updated tests: escalation stage transitions incl. the existing-guild case, `reconcile-removed-guilds.test.ts`, `usage.test.ts` (health gauges); abandoned-guild tests removed.
+
 ## Remaining (post-deploy)
 
-1. After the image deploys, run `cleanupRemovedGuild(prisma, "1345142904942760018")` in the `scout-prod` pod (`ownerNotified=1` means the abandoned sweep won't pick it up). Verify no new Bugsink events after the next `00:00 UTC`, then resolve Bugsink issue `b0de3030-c8b3-4cdb-bb93-7e908ee67920`.
-2. Optional follow-up: ESLint guard forbidding raw `.send(` on a `User` outside `dm.ts`.
+1. After the image deploys, run `cleanupRemovedGuild(prisma, "1345142904942760018")` in the `scout-prod` pod. Verify no new Bugsink events after the next `00:00 UTC`, then resolve Bugsink issue `b0de3030-c8b3-4cdb-bb93-7e908ee67920`. Note: with the auto-leave removed, that guild is no longer swept automatically, so the explicit one-time cleanup is required.
+2. Existing failing guilds will each receive one fresh `immediate` permission DM on their next failed send after deploy (then week/month). Expected and intended; watch `guild_send_blocked_total` on the new dashboard row to gauge the population.
+3. Optional follow-up: ESLint guard forbidding raw `.send(` on a `User` outside `dm.ts`.
+
+## Session Log — 2026-06-19
+
+### Done
+
+- PR-1 (commit `1b3040688`): DM audit log, `guildDelete` cleanup, dispatcher hardening, polling filter, feedback DM.
+- Phase 2 (this session): escalating owner notifications (`immediate`/`week`/`month`), removed the 7-day auto-leave in favor of `reconcileRemovedGuilds`, guild-health metrics + Grafana "Guild health" row. Existing-guild deploy behavior handled by `lastNotifiedAt` anchoring + an explicit test.
+
+### Remaining
+
+- Push the branch + open the PR (not yet done).
+- Post-deploy one-time prod cleanup + Bugsink resolve (see `packages/docs/todos/scout-orphan-guild-prod-cleanup.md`).
+
+### Caveats
+
+- `ownerNotified` column is now unused (deprecated; left in place to avoid a SQLite table-rebuild migration).
+- Escalation is tracked per `(serverId, channelId)`; a guild with multiple failing channels gets one track each (guild-level dedupe is a possible future refinement).

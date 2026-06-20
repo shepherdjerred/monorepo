@@ -178,7 +178,7 @@ export async function send(
       if (serverId) {
         void (async () => {
           try {
-            const isFirstInStreak = await recordPermissionError(prisma, {
+            const notifyDecision = await recordPermissionError(prisma, {
               serverId,
               channelId,
               errorType: "api_error",
@@ -187,16 +187,19 @@ export async function send(
                 : {}),
             });
 
-            // Notify the owner only on the first error of a streak so we don't
-            // DM them on every failed send. Persistent failures escalate via the
-            // abandoned-guild sweep instead. (notify tracks its own metrics.)
-            if (isFirstInStreak) {
-              await notifyServerOwnerAboutPermissionError(
+            // Backed-off escalation: DM the owner immediately on the first
+            // failure of a streak, again ~1 week later, again ~1 month after
+            // that, then stay silent. (notify tracks its own metrics.)
+            if (notifyDecision !== "none") {
+              await notifyServerOwnerAboutPermissionError({
                 client,
                 serverId,
                 channelId,
-                permissionReason,
-              );
+                stage: notifyDecision,
+                ...(permissionReason === undefined
+                  ? {}
+                  : { reason: permissionReason }),
+              });
             }
           } catch (dbError) {
             logger.error(

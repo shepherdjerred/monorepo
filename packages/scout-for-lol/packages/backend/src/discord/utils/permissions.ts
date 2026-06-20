@@ -1,12 +1,15 @@
 import type { Channel, Client, User } from "discord.js";
 import { ChannelType, PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
+import { match } from "ts-pattern";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { sendDM } from "#src/discord/utils/dm.ts";
+import { getFeedbackUrl } from "#src/discord/utils/feedback.ts";
+import type { PermissionNotifyStage } from "#src/database/guild-permission-errors.ts";
 import {
   discordPermissionErrorsTotal,
   discordOwnerNotificationsTotal,
@@ -161,24 +164,75 @@ export function formatPermissionErrorForLog(
   return `Failed to send message to channel ${channelId}${permissionCheck}${errorDetail}`;
 }
 
+const FIX_STEPS = `**To fix this:**
+1. Go to Server Settings → Roles
+2. Find my role or check channel permissions
+3. Ensure I have these permissions:
+   • View Channel
+   • Send Messages`;
+
 /**
- * Notify server owner about a permission error via DM
- *
- * This function attempts to DM the server owner when the bot lacks permissions
- * to post in a channel. It handles failures gracefully and never throws.
- * Also tracks metrics for monitoring permission issues.
- *
- * @param client - Discord client instance
- * @param serverId - The Discord guild (server) ID
- * @param channelId - The channel where the permission error occurred
- * @param reason - Optional detailed reason for the permission error
+ * Build the stage-appropriate permission-error DM body (backed-off escalation).
  */
-export async function notifyServerOwnerAboutPermissionError(
-  client: Client,
-  serverId: string,
+function buildPermissionMessage(
+  stage: PermissionNotifyStage,
+  guildName: string,
   channelId: string,
-  reason?: string,
-): Promise<void> {
+  reasonText: string,
+): string {
+  return match(stage)
+    .with(
+      "immediate",
+      () => `⚠️ **Bot Permission Issue**
+
+Hello! I'm having trouble posting messages in your server **${guildName}**.
+
+**Channel:** <#${channelId}>
+**Issue:** Missing permissions to send messages${reasonText}
+
+${FIX_STEPS}
+
+Need help? Check Discord's permission guide or contact your bot administrator.`,
+    )
+    .with(
+      "week",
+      () => `⚠️ **Still can't post in ${guildName}**
+
+It's been about a week and I still can't deliver messages to **<#${channelId}>**.${reasonText}
+
+${FIX_STEPS}
+
+If you no longer want Scout here that's totally fine — you can remove me any time.`,
+    )
+    .with(
+      "month",
+      () => `⚠️ **Final reminder — Scout can't post in ${guildName}**
+
+I've been unable to post to **<#${channelId}>** for about a month, so this is the last reminder I'll send about it (I'll stop nagging after this).${reasonText}
+
+${FIX_STEPS}
+
+If Scout isn't a fit, no hard feelings — you can remove me, and I'd love to hear why: ${getFeedbackUrl()}`,
+    )
+    .exhaustive();
+}
+
+/**
+ * Notify a server owner about a permission error via DM.
+ *
+ * Attempts to DM the guild owner when the bot lacks permissions to post. Handles
+ * failures gracefully (never throws) and tracks metrics. The `stage` selects the
+ * backed-off escalation copy (immediate / 1-week / final 1-month reminder).
+ */
+export async function notifyServerOwnerAboutPermissionError(options: {
+  client: Client;
+  serverId: string;
+  channelId: string;
+  stage: PermissionNotifyStage;
+  reason?: string;
+}): Promise<void> {
+  const { client, serverId, channelId, stage, reason } = options;
+
   // Track permission error occurrence
   discordPermissionErrorsTotal.inc({
     guild_id: serverId,
@@ -212,21 +266,12 @@ export async function notifyServerOwnerAboutPermissionError(
     reason !== undefined && reason.length > 0
       ? `\n\n**Reason:** ${reason}`
       : "";
-  const message = `⚠️ **Bot Permission Issue**
-
-Hello! I'm having trouble posting messages in your server **${guildName}**.
-
-**Channel:** <#${channelId}>
-**Issue:** Missing permissions to send messages${reasonText}
-
-**To fix this:**
-1. Go to Server Settings → Roles
-2. Find my role or check channel permissions
-3. Ensure I have these permissions:
-   • View Channel
-   • Send Messages
-
-Need help? Check Discord's permission guide or contact your bot administrator.`;
+  const message = buildPermissionMessage(
+    stage,
+    guildName,
+    channelId,
+    reasonText,
+  );
 
   const status = await sendDM({
     client,

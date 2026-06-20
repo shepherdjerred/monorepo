@@ -73,8 +73,8 @@ describe("sendDM", () => {
     const status = await sendDM({
       client,
       userId: recipientId,
-      message: "departure notice",
-      kind: "abandonment",
+      message: "prune notice",
+      kind: "prune_notice",
       prisma,
     });
 
@@ -83,7 +83,7 @@ describe("sendDM", () => {
     const rows = await prisma.dmAuditLog.findMany();
     expect(rows).toHaveLength(1);
     expect(rows[0]?.deliveryStatus).toBe("dm_disabled");
-    expect(rows[0]?.kind).toBe("abandonment");
+    expect(rows[0]?.kind).toBe("prune_notice");
     expect(rows[0]?.errorMessage).toContain(
       "Cannot send messages to this user",
     );

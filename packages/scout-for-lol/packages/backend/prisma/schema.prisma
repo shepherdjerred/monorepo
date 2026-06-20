@@ -420,7 +420,13 @@ model GuildPermissionError {
   lastOccurrence        DateTime // Most recent occurrence
   consecutiveErrorCount Int       @default(1) // Number of consecutive errors
   lastSuccessfulSend    DateTime? // Last time a message was successfully sent to this server
-  ownerNotified         Boolean   @default(false) // Whether owner was notified about abandonment
+  ownerNotified         Boolean   @default(false) // DEPRECATED (was the abandoned-guild latch); unused since notificationStage replaced it
+  // Backed-off owner notification escalation for the current failure streak.
+  // notificationStage: 0 = none sent, 1 = immediate sent, 2 = +1w sent, 3 = +1mo sent (terminal).
+  // lastNotifiedAt anchors the next stage's delay (NOT firstOccurrence) so existing
+  // mid-streak rows restart cleanly at "immediate" instead of jumping to "month".
+  notificationStage     Int       @default(0)
+  lastNotifiedAt        DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 

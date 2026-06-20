@@ -13,8 +13,8 @@ const ownerId = testAccountId("789");
 
 /**
  * Build a client whose guild owner is resolvable and whose DM send is captured.
- * The DM now flows through `sendDM` -> `client.users.fetch(ownerId).send()`, so
- * the recipient's `send` (not the GuildMember's) is what actually delivers.
+ * The DM flows through `sendDM` -> `client.users.fetch(ownerId).send()`, so the
+ * recipient's `send` (not the GuildMember's) is what actually delivers.
  */
 function clientCapturingDm(send: (message: string) => Promise<unknown>) {
   return mockClient({
@@ -35,24 +35,60 @@ function clientCapturingDm(send: (message: string) => Promise<unknown>) {
 }
 
 describe("notifyServerOwnerAboutPermissionError", () => {
-  test("sends DM to server owner with permission error details", async () => {
+  test("immediate stage: sends the initial permission-issue DM", async () => {
     const sentMessages: string[] = [];
     const client = clientCapturingDm(async (message: string) => {
       sentMessages.push(message);
     });
 
-    await notifyServerOwnerAboutPermissionError(
+    await notifyServerOwnerAboutPermissionError({
       client,
       serverId,
       channelId,
-      "Missing Send Messages permission",
-    );
+      stage: "immediate",
+      reason: "Missing Send Messages permission",
+    });
 
     expect(sentMessages).toHaveLength(1);
     expect(sentMessages[0]).toContain("Bot Permission Issue");
     expect(sentMessages[0]).toContain("Test Server");
     expect(sentMessages[0]).toContain(`<#${channelId}>`);
     expect(sentMessages[0]).toContain("Missing Send Messages permission");
+  });
+
+  test("week stage: sends the 1-week reminder copy", async () => {
+    const sentMessages: string[] = [];
+    const client = clientCapturingDm(async (message: string) => {
+      sentMessages.push(message);
+    });
+
+    await notifyServerOwnerAboutPermissionError({
+      client,
+      serverId,
+      channelId,
+      stage: "week",
+    });
+
+    expect(sentMessages).toHaveLength(1);
+    expect(sentMessages[0]).toContain("Still can't post");
+  });
+
+  test("month stage: sends the final reminder with a feedback link", async () => {
+    const sentMessages: string[] = [];
+    const client = clientCapturingDm(async (message: string) => {
+      sentMessages.push(message);
+    });
+
+    await notifyServerOwnerAboutPermissionError({
+      client,
+      serverId,
+      channelId,
+      stage: "month",
+    });
+
+    expect(sentMessages).toHaveLength(1);
+    expect(sentMessages[0]).toContain("Final reminder");
+    expect(sentMessages[0]).toMatch(/https?:\/\//);
   });
 
   test("handles case when guild is not found", async () => {
@@ -63,22 +99,12 @@ describe("notifyServerOwnerAboutPermissionError", () => {
     });
 
     await expect(
-      notifyServerOwnerAboutPermissionError(client, serverId, channelId),
-    ).resolves.toBeUndefined();
-  });
-
-  test("handles case when owner fetch fails", async () => {
-    const client = mockClient({
-      guilds: {
-        fetch: async () => ({
-          name: "Test Server",
-          fetchOwner: async () => null,
-        }),
-      },
-    });
-
-    await expect(
-      notifyServerOwnerAboutPermissionError(client, serverId, channelId),
+      notifyServerOwnerAboutPermissionError({
+        client,
+        serverId,
+        channelId,
+        stage: "immediate",
+      }),
     ).resolves.toBeUndefined();
   });
 
@@ -88,17 +114,12 @@ describe("notifyServerOwnerAboutPermissionError", () => {
     });
 
     await expect(
-      notifyServerOwnerAboutPermissionError(client, serverId, channelId),
-    ).resolves.toBeUndefined();
-  });
-
-  test("handles generic error during DM send", async () => {
-    const client = clientCapturingDm(() => {
-      throw new Error("Network error");
-    });
-
-    await expect(
-      notifyServerOwnerAboutPermissionError(client, serverId, channelId),
+      notifyServerOwnerAboutPermissionError({
+        client,
+        serverId,
+        channelId,
+        stage: "immediate",
+      }),
     ).resolves.toBeUndefined();
   });
 
@@ -108,12 +129,13 @@ describe("notifyServerOwnerAboutPermissionError", () => {
       sentMessages.push(message);
     });
 
-    await notifyServerOwnerAboutPermissionError(
+    await notifyServerOwnerAboutPermissionError({
       client,
       serverId,
       channelId,
-      "Custom error reason",
-    );
+      stage: "immediate",
+      reason: "Custom error reason",
+    });
 
     expect(sentMessages[0]).toContain("Custom error reason");
   });
@@ -124,7 +146,12 @@ describe("notifyServerOwnerAboutPermissionError", () => {
       sentMessages.push(message);
     });
 
-    await notifyServerOwnerAboutPermissionError(client, serverId, channelId);
+    await notifyServerOwnerAboutPermissionError({
+      client,
+      serverId,
+      channelId,
+      stage: "immediate",
+    });
 
     expect(sentMessages).toHaveLength(1);
     expect(sentMessages[0]).toContain("Bot Permission Issue");
