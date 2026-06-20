@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
@@ -14,7 +14,6 @@ import { useTRPC } from "#src/lib/trpc.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import { Input } from "#src/components/ui/input.tsx";
 import { Label } from "#src/components/ui/label.tsx";
-import { Textarea } from "#src/components/ui/textarea.tsx";
 import {
   Select,
   SelectContent,
@@ -25,8 +24,10 @@ import {
 import { ReportQueryPreview } from "#src/components/report-query-preview.tsx";
 import { ReportQueryDocs } from "#src/components/report-query-docs.tsx";
 
-const EXAMPLE_QUERY =
-  "select games, win_rate from match_participants where queue in (solo) group by player order by games desc";
+// Lazy so Monaco is split out of the main bundle and only loaded on this form.
+const ReportQueryEditor = lazy(
+  () => import("#src/components/report-query-editor.tsx"),
+);
 
 type FormState = {
   title: string;
@@ -130,6 +131,10 @@ export function ReportForm() {
       setError("Lookback days and max rows must be whole numbers.");
       return;
     }
+    if (state.queryText.trim() === "") {
+      setError("Query is required.");
+      return;
+    }
     const shared = {
       title: state.title,
       description: state.description.trim() === "" ? null : state.description,
@@ -217,18 +222,20 @@ export function ReportForm() {
                 <Link to={`/g/${guildId}/reports/help`}>Full reference</Link>
               </Button>
             </div>
-            <Textarea
-              id="report-query"
-              value={state.queryText}
-              placeholder={EXAMPLE_QUERY}
-              onChange={(event) => {
-                setState((prev) => ({
-                  ...prev,
-                  queryText: event.target.value,
-                }));
-              }}
-              required
-            />
+            <Suspense
+              fallback={
+                <div className="flex h-[180px] items-center justify-center rounded-md border border-border text-sm text-muted-foreground">
+                  Loading editor…
+                </div>
+              }
+            >
+              <ReportQueryEditor
+                value={state.queryText}
+                onChange={(value) => {
+                  setState((prev) => ({ ...prev, queryText: value }));
+                }}
+              />
+            </Suspense>
             <details className="rounded-md border border-border">
               <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-muted-foreground">
                 Query reference
