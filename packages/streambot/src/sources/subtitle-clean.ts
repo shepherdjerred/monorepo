@@ -25,6 +25,15 @@ const SHORT_CUE_MS = 200;
 /** Compare each cue's lines against the last N emitted lines — the size of YouTube's visible window. */
 const VISIBLE_WINDOW = 2;
 
+/**
+ * Max on-screen time for a cleaned caption. Each line otherwise shows until the next one appears, which
+ * is right for continuous speech but leaves a short line lingering through a long pause or `[Music]`
+ * (real captures hit ~10 s). 5 s is comfortably within subtitle norms (a single rolling line reads in
+ * ~2–3 s; Netflix/BBC cap around 6–7 s) and only clips that stale tail — the normal 1–4 s majority is
+ * untouched, so there's no extra flicker.
+ */
+const MAX_CUE_MS = 5000;
+
 const SRT_TIME = /(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})/u;
 const SRT_TIMING_LINE =
   /(\d{1,2}:\d{2}:\d{2}[,.]\d{1,3})\s*-->\s*(\d{1,2}:\d{2}:\d{2}[,.]\d{1,3})/u;
@@ -166,7 +175,8 @@ export function looksLikeRollingCaptions(cues: readonly SrtCue[]): boolean {
  * lines top→bottom and emits a line only when it isn't one of the last {@link VISIBLE_WINDOW} emitted
  * lines — so the carried-over (already-shown) line is dropped whether YouTube places new content on the
  * top or bottom row, while a phrase repeated much later still survives. Each emitted line starts at its
- * cue's start and ends when the next emitted line begins (the final line keeps its source end), giving
+ * cue's start and ends when the next emitted line begins (the final line keeps its source end), capped at
+ * {@link MAX_CUE_MS} so a caption clears during a long pause instead of lingering — giving
  * non-overlapping, one-line-at-a-time captions.
  */
 export function collapseRollingCaptions(cues: readonly SrtCue[]): SrtCue[] {
@@ -184,11 +194,14 @@ export function collapseRollingCaptions(cues: readonly SrtCue[]): SrtCue[] {
   }
   return emitted.map((e, i) => {
     const next = emitted[i + 1];
-    // End when the next line appears; never produce a zero/negative span for same-start lines.
-    const endMs =
+    // End when the next line appears (or, for the last line, at its source end) — but never linger past
+    // MAX_CUE_MS, so a caption clears during a long pause / `[Music]` instead of sitting stale. The +1ms
+    // floor keeps same-start lines from producing a zero/negative span.
+    const rawEnd =
       next === undefined
         ? e.sourceEndMs
         : Math.max(next.startMs, e.startMs + 1);
+    const endMs = Math.min(rawEnd, e.startMs + MAX_CUE_MS);
     return { startMs: e.startMs, endMs, lines: [e.text] };
   });
 }

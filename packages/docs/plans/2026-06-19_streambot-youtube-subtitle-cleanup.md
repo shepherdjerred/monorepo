@@ -84,3 +84,33 @@ untouched. It operates on the SRT yt-dlp already produces — no yt-dlp arg chan
   but unusual tracks could still slip — tune `SHORT_CUE_MS` / ratios in `subtitle-clean.ts` if needed.
 - Collapsing uses SRT cue-level timing (adequate for burned display), not per-word VTT timing. A
   legitimately repeated phrase within the 2-line window collapses (rare; acceptable for ASR captions).
+
+## Phase 2 — Evidence-driven hardening (2026-06-19)
+
+Closed the "validate against a real _rolling_ ASR track end-to-end" gap. How the ecosystem handles this:
+yt-dlp core never fixes it (issues #1734/#6274/#3352); the de-facto fix is the `bindestriche/srt_fix`
+postprocessor, whose `dedupe_yt_srt()` uses the **same** cue-level approach we do. Higher tiers exist —
+`srv3`/`json3` word-level rebuild (`yttml`, `ytdl2transcript`) and Whisper/WhisperX re-transcription — but
+both are wrong for realtime burn-in (viewer-invisible precision / heavy GPU latency), so we stay at Tier 1.
+
+Captured a **real** rolling ASR track (YouTube `aircAruvnKk`, 3Blue1Brown — 491 `<c>` word tags; `ffmpeg`
+vtt→srt produced 992 doubled cues). Ran it through `cleanRollingSrt`:
+
+- Detected as rolling (true positive); collapsed to **500 clean single-line cues**.
+- **0 degenerate ≤1 ms cues, 0 multi-line cues, 0 adjacent duplicates**; `[Music]` preserved; min cue
+  duration 1041 ms (p50 2081 ms) — nothing choppy.
+- The 14 ≤2-word cues are all natural sentence endings ("digits.", "multiplication.") shown 1–4 s, so the
+  time-aware fragment-merge would _hurt_ readability — **not added**.
+- Duration distribution: 90 %+ of cues are ≤3 s (normal subtitle timing), but a small tail lingered — a
+  short line held until the next caption, so during a pause / `[Music]` it sat up to ~10 s.
+
+Two changes resulted (no detection/threshold change — detection fired correctly, no choppy fragments):
+
+1. **Grounded the regression suite**: a trimmed slice of the real capture is now a committed fixture in
+   `test/subtitle-clean.test.ts`.
+2. **Capped on-screen time** at `MAX_CUE_MS` (5 s) in `collapseRollingCaptions`, so a caption clears
+   during a long pause instead of lingering stale; the normal 1–4 s majority is untouched (no extra
+   flicker). This addresses a review question about long single-word display times.
+
+Decided against (reasons in the harness plan): Tier 2 srv3 rebuild, `srt_fix`'s timing-blind fragment
+merge, and Whisper.

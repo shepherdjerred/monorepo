@@ -136,6 +136,25 @@ describe("collapseRollingCaptions", () => {
     ]);
   });
 
+  test("caps on-screen time so a caption clears during a long pause", () => {
+    // A phrase followed by an 8 s gap (pause / music) must not linger the whole gap; it's capped at 5 s.
+    const out = collapseRollingCaptions([
+      { startMs: 0, endMs: 2000, lines: ["hey"] },
+      { startMs: 8000, endMs: 9000, lines: ["hello"] },
+    ]);
+    expect(out[0]).toEqual({ startMs: 0, endMs: 5000, lines: ["hey"] });
+    // The final line's source end is also capped (a trailing [Music] won't sit for 10 s).
+    expect(
+      collapseRollingCaptions([
+        { startMs: 0, endMs: 20_000, lines: ["bye"] },
+      ])[0],
+    ).toEqual({
+      startMs: 0,
+      endMs: 5000,
+      lines: ["bye"],
+    });
+  });
+
   test("preserves a phrase legitimately repeated far apart", () => {
     const cues: SrtCue[] = [
       { startMs: 0, endMs: 1000, lines: ["yeah"] },
@@ -205,6 +224,92 @@ we are in front
 3
 00:00:04,000 --> 00:00:06,000
 of the elephants
+`);
+  });
+
+  test("collapses a real captured YouTube ASR auto-caption (3Blue1Brown)", () => {
+    // Ground truth: the first 11 cues of a real `yt-dlp --write-auto-subs … --convert-subs srt` capture
+    // (video aircAruvnKk), with `[Music]`, blank-padding lines, and the rolling doubling. The full
+    // 992-cue file collapsed cleanly (500 single-line cues, 0 degenerate/multi-line/duplicate); this
+    // slice locks that behaviour in. Whitespace-only padding lines were normalized to empty for embedding.
+    const realSrt = `1
+00:00:00,000 --> 00:00:04,390
+
+[Music]
+
+2
+00:00:04,390 --> 00:00:04,400
+
+
+
+3
+00:00:04,400 --> 00:00:06,869
+
+This is a three. It's sloppily written
+
+4
+00:00:06,869 --> 00:00:06,879
+This is a three. It's sloppily written
+
+
+5
+00:00:06,879 --> 00:00:08,549
+This is a three. It's sloppily written
+and rendered at an extremely low
+
+6
+00:00:08,549 --> 00:00:08,559
+and rendered at an extremely low
+
+
+7
+00:00:08,559 --> 00:00:11,430
+and rendered at an extremely low
+resolution of 28x 28 pixels. But your
+
+8
+00:00:11,430 --> 00:00:11,440
+resolution of 28x 28 pixels. But your
+
+
+9
+00:00:11,440 --> 00:00:13,509
+resolution of 28x 28 pixels. But your
+brain has no trouble recognizing it as a
+
+10
+00:00:13,509 --> 00:00:13,519
+brain has no trouble recognizing it as a
+
+
+11
+00:00:13,519 --> 00:00:15,350
+brain has no trouble recognizing it as a
+three. And I want you to take a moment
+`;
+    expect(cleanRollingSrt(realSrt)).toBe(`1
+00:00:00,000 --> 00:00:04,400
+[Music]
+
+2
+00:00:04,400 --> 00:00:06,879
+This is a three. It's sloppily written
+
+3
+00:00:06,879 --> 00:00:08,559
+and rendered at an extremely low
+
+4
+00:00:08,559 --> 00:00:11,440
+resolution of 28x 28 pixels. But your
+
+5
+00:00:11,440 --> 00:00:13,519
+brain has no trouble recognizing it as a
+
+6
+00:00:13,519 --> 00:00:15,350
+three. And I want you to take a moment
 `);
   });
 
