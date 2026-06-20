@@ -74,7 +74,8 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
     "discord-video-stream",
     "discord-stream-lifecycle",
   ],
-  "scout-for-lol": ["eslint-config", "llm-observability"],
+  "scout-for-lol": ["eslint-config", "llm-models", "llm-observability"],
+  "scout-for-lol/packages/data": ["llm-models"],
   "scout-for-lol/packages/frontend": [
     "eslint-config",
     "scout-for-lol/packages/backend",

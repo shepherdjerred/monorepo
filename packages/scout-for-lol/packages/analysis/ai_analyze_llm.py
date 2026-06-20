@@ -2,6 +2,7 @@
 # /// script
 # dependencies = [
 #     "openai>=1.30.0",
+#     "pydantic>=2.0",
 #     "tiktoken>=0.7.0",
 # ]
 # ///
@@ -29,41 +30,67 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
 
 from openai import OpenAI
+from pydantic import BaseModel, TypeAdapter
 import tiktoken
 
+# Central model catalog (single source of truth) — see packages/llm-models.
+_CATALOG_PATH = (
+    Path(__file__).resolve().parents[3] / "llm-models" / "src" / "catalog.json"
+)
+
+
+class _CatalogPricing(BaseModel):
+    input: float | None = None
+    output: float | None = None
+
+
+class _CatalogEntry(BaseModel):
+    pricing: _CatalogPricing
+    contextWindow: int | None = None
+
+
+def _load_catalog() -> Dict[str, _CatalogEntry]:
+    raw = json.loads(_CATALOG_PATH.read_text(encoding="utf-8"))
+    return TypeAdapter(Dict[str, _CatalogEntry]).validate_python(raw)
+
+
+_CATALOG = _load_catalog()
+
+
+def _per_token_prices(model: str) -> Tuple[float, float]:
+    """(input, output) USD per token from the catalog; (0, 0) if unknown."""
+    entry = _CATALOG.get(model)
+    if entry and entry.pricing.input is not None and entry.pricing.output is not None:
+        return entry.pricing.input / 1_000_000, entry.pricing.output / 1_000_000
+    return 0.0, 0.0
+
+
+def _mode_config(model: str, temperature: float) -> Dict[str, object]:
+    in_price, out_price = _per_token_prices(model)
+    return {
+        "model": model,
+        "input_price": in_price,
+        "output_price": out_price,
+        "temperature": temperature,
+    }
+
+
 DEFAULT_MODEL = "gpt-5.4-nano"
+
+# Context-window limits, derived from the catalog (id -> contextWindow).
 MODEL_CONTEXT_LIMITS = {
-    "gpt-4o-mini": 128_000,
-    "gpt-4o": 128_000,
-    "gpt-4-turbo": 128_000,
-    "o1": 200_000,
-    "o1-mini": 128_000,
-    "gpt-5-nano": 100_000,
-    "gpt-5-mini": 400_000,
-    "gpt-5.1": 400_000,
-    "gpt-5.4-nano": 100_000,
-    "gpt-5.4-mini": 200_000,
-    "gpt-5.4": 400_000,
+    model_id: entry.contextWindow
+    for model_id, entry in _CATALOG.items()
+    if entry.contextWindow is not None
 }
 
 MODE_CONFIGS = {
-    "test": {
-        "model": "gpt-5.4-nano",
-        "input_price": 0.05 / 1_000_000,
-        "output_price": 0.40 / 1_000_000,
-        "temperature": 0.3,
-    },
-    "prod": {
-        "model": "gpt-5.4",
-        "input_price": 1.25 / 1_000_000,
-        "output_price": 10.0 / 1_000_000,
-        "temperature": 1.0,
-    },
+    "test": _mode_config("gpt-5.4-nano", 0.3),
+    "prod": _mode_config("gpt-5.5", 1.0),
 }
 
-# Prices for gpt-5.4-nano (USD per token); adjust with CLI flags if pricing changes.
-INPUT_PRICE_PER_TOKEN = 0.05 / 1_000_000
-OUTPUT_PRICE_PER_TOKEN = 0.40 / 1_000_000
+# Fallback per-token prices for DEFAULT_MODEL (overridable via CLI flags).
+INPUT_PRICE_PER_TOKEN, OUTPUT_PRICE_PER_TOKEN = _per_token_prices(DEFAULT_MODEL)
 
 # Optional manual overrides for how author IDs should be displayed in output.
 # Example: {"123456789012345678": "Alice"}
@@ -138,14 +165,18 @@ def read_csv_messages(
                 except ValueError:
                     timestamp = None
             raw_author_name = (
-                row[col("author.global_name")]
-                if col("author.global_name") is not None
-                else None
-            ) or (
-                row[col("author.username")]
-                if col("author.username") is not None
-                else None
-            ) or "Unknown"
+                (
+                    row[col("author.global_name")]
+                    if col("author.global_name") is not None
+                    else None
+                )
+                or (
+                    row[col("author.username")]
+                    if col("author.username") is not None
+                    else None
+                )
+                or "Unknown"
+            )
             author_id = (
                 row[col("author.id")] if col("author.id") is not None else "unknown"
             )
@@ -191,7 +222,9 @@ def truncate_corpus(
     return kept, tokens_used
 
 
-def estimate_cost(input_tokens: int, output_tokens: int, args: argparse.Namespace) -> float:
+def estimate_cost(
+    input_tokens: int, output_tokens: int, args: argparse.Namespace
+) -> float:
     in_price = args.input_price or INPUT_PRICE_PER_TOKEN
     out_price = args.output_price or OUTPUT_PRICE_PER_TOKEN
     return (input_tokens * in_price) + (output_tokens * out_price)
@@ -208,17 +241,18 @@ def format_corpus(messages: List[Message]) -> List[str]:
     return lines
 
 
-def build_user_prompt(author: str, stats: Dict[str, object], corpus_lines: List[str]) -> str:
-    top_tokens_text = ", ".join(
-        f"{tok} ({cnt})" for tok, cnt in stats["top_tokens"]
-    ) or "-"
+def build_user_prompt(
+    author: str, stats: Dict[str, object], corpus_lines: List[str]
+) -> str:
+    top_tokens_text = (
+        ", ".join(f"{tok} ({cnt})" for tok, cnt in stats["top_tokens"]) or "-"
+    )
     return (
         f"User: {author}\n"
         f"Messages: {stats['messages']} spanning {stats['date_range']}\n"
         f"Words: avg {stats['avg_words']:.1f}, median {stats['median_words']:.1f}\n"
         f"Top tokens: {top_tokens_text}\n"
-        "Chat log (one line per message):\n"
-        + "\n".join(corpus_lines)
+        "Chat log (one line per message):\n" + "\n".join(corpus_lines)
     )
 
 
@@ -287,7 +321,11 @@ def pick_authors(
     id_aliases: Dict[str, str],
 ) -> List[str]:
     authors = sorted(
-        [aid for aid, msgs in messages_by_author.items() if len(msgs) >= args.min_messages],
+        [
+            aid
+            for aid, msgs in messages_by_author.items()
+            if len(msgs) >= args.min_messages
+        ],
         key=lambda aid: len(messages_by_author[aid]),
         reverse=True,
     )
@@ -304,7 +342,9 @@ def pick_authors(
             aid
             for aid in authors
             if aid.lower() in wanted
-            or any(uid.lower() in wanted for uid in author_ids_by_author.get(aid, set()))
+            or any(
+                uid.lower() in wanted for uid in author_ids_by_author.get(aid, set())
+            )
         ]
     if args.user:
         needle = args.user.lower()
@@ -315,33 +355,77 @@ def pick_authors(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="LLM-based style analyzer with test/prod modes.")
-    parser.add_argument("--guild", "-g", default="all", help='Guild directory under ./data (default: "all")')
-    parser.add_argument("--all", action="store_true", help="Analyze all guilds under ./data")
-    parser.add_argument("--user", type=str, default=None, help="Substring filter for author names")
+    parser = argparse.ArgumentParser(
+        description="LLM-based style analyzer with test/prod modes."
+    )
+    parser.add_argument(
+        "--guild",
+        "-g",
+        default="all",
+        help='Guild directory under ./data (default: "all")',
+    )
+    parser.add_argument(
+        "--all", action="store_true", help="Analyze all guilds under ./data"
+    )
+    parser.add_argument(
+        "--user", type=str, default=None, help="Substring filter for author names"
+    )
     parser.add_argument(
         "--users",
         nargs="+",
         default=None,
         help="Explicit author names to include (case-insensitive, space-separated list)",
     )
-    parser.add_argument("--top", type=int, default=10, help="Max authors to analyze (after filtering)")
-    parser.add_argument("--min-messages", type=int, default=50, help="Skip authors with fewer messages")
+    parser.add_argument(
+        "--top", type=int, default=10, help="Max authors to analyze (after filtering)"
+    )
+    parser.add_argument(
+        "--min-messages", type=int, default=50, help="Skip authors with fewer messages"
+    )
     parser.add_argument("--include-bots", action="store_true", help="Include bot users")
     parser.add_argument(
         "--mode",
         choices=["test", "prod"],
         default="test",
-        help="Mode: 'test' uses gpt-5.4-nano (cheap), 'prod' uses gpt-5.4 (better)"
+        help="Mode: 'test' uses gpt-5.4-nano (cheap), 'prod' uses gpt-5.4 (better)",
     )
-    parser.add_argument("--model", default=None, help="OpenAI model name (overrides --mode default)")
-    parser.add_argument("--max-input-tokens", type=int, default=115_000, help="Cap tokens for corpus (system prompt + metadata overhead reserved)")
-    parser.add_argument("--max-output-tokens", type=int, default=9_000, help="Cap response tokens")
-    parser.add_argument("--budget", type=float, default=5.0, help="Abort if projected spend exceeds this (USD)")
-    parser.add_argument("--input-price", type=float, default=INPUT_PRICE_PER_TOKEN, help="Override input price per token (USD)")
-    parser.add_argument("--output-price", type=float, default=OUTPUT_PRICE_PER_TOKEN, help="Override output price per token (USD)")
+    parser.add_argument(
+        "--model", default=None, help="OpenAI model name (overrides --mode default)"
+    )
+    parser.add_argument(
+        "--max-input-tokens",
+        type=int,
+        default=115_000,
+        help="Cap tokens for corpus (system prompt + metadata overhead reserved)",
+    )
+    parser.add_argument(
+        "--max-output-tokens", type=int, default=9_000, help="Cap response tokens"
+    )
+    parser.add_argument(
+        "--budget",
+        type=float,
+        default=5.0,
+        help="Abort if projected spend exceeds this (USD)",
+    )
+    parser.add_argument(
+        "--input-price",
+        type=float,
+        default=INPUT_PRICE_PER_TOKEN,
+        help="Override input price per token (USD)",
+    )
+    parser.add_argument(
+        "--output-price",
+        type=float,
+        default=OUTPUT_PRICE_PER_TOKEN,
+        help="Override output price per token (USD)",
+    )
     parser.add_argument("--temperature", type=float, default=0.3)
-    parser.add_argument("--save-dir", type=str, default="llm-out", help="Write per-user JSON outputs to this directory")
+    parser.add_argument(
+        "--save-dir",
+        type=str,
+        default="llm-out",
+        help="Write per-user JSON outputs to this directory",
+    )
     parser.add_argument(
         "--id-alias-file",
         type=str,
@@ -354,7 +438,11 @@ def main() -> None:
         default=None,
         help="Inline JSON string mapping author.id -> display name (overrides CSV names/aliases)",
     )
-    parser.add_argument("--dry-run", action="store_true", help="Estimate cost and payload sizes without calling the API")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Estimate cost and payload sizes without calling the API",
+    )
     args = parser.parse_args()
 
     # Apply mode configuration defaults (can be overridden by explicit flags)
@@ -377,7 +465,14 @@ def main() -> None:
         if not alias_path.exists():
             raise SystemExit(f"ID alias file not found: {alias_path}")
         try:
-            id_aliases.update({str(k): str(v) for k, v in json.loads(alias_path.read_text(encoding="utf-8")).items()})
+            id_aliases.update(
+                {
+                    str(k): str(v)
+                    for k, v in json.loads(
+                        alias_path.read_text(encoding="utf-8")
+                    ).items()
+                }
+            )
         except Exception as exc:  # pragma: no cover
             raise SystemExit(f"Failed to parse ID alias file: {exc}")
     if args.id_alias:
@@ -398,7 +493,9 @@ def main() -> None:
     messages_by_author: Dict[str, List[Message]] = defaultdict(list)
     author_ids_by_author: Dict[str, set[str]] = defaultdict(set)
     for csv_path in csv_files:
-        for msg in read_csv_messages(csv_path, include_bots=args.include_bots, id_aliases=id_aliases):
+        for msg in read_csv_messages(
+            csv_path, include_bots=args.include_bots, id_aliases=id_aliases
+        ):
             key = msg.author_name
             messages_by_author[key].append(msg)
             if msg.author_id:
@@ -409,9 +506,16 @@ def main() -> None:
 
     # Try to get encoding for model, fall back to cl100k_base (used by GPT-4/5)
     try:
-        encoding = tiktoken.encoding_for_model(args.model) if args.model else tiktoken.get_encoding("cl100k_base")
+        encoding = (
+            tiktoken.encoding_for_model(args.model)
+            if args.model
+            else tiktoken.get_encoding("cl100k_base")
+        )
     except KeyError:
-        print(f"Warning: No tokenizer found for {args.model}, using cl100k_base encoding", file=sys.stderr)
+        print(
+            f"Warning: No tokenizer found for {args.model}, using cl100k_base encoding",
+            file=sys.stderr,
+        )
         encoding = tiktoken.get_encoding("cl100k_base")
     authors = pick_authors(messages_by_author, author_ids_by_author, args, id_aliases)
     if not authors:
@@ -461,16 +565,16 @@ def main() -> None:
             "Lower --top, --max-input-tokens, or --max-output-tokens."
         )
 
-    print(
-        f"Mode: {args.mode} (model: {args.model})"
-    )
+    print(f"Mode: {args.mode} (model: {args.model})")
     print(
         f"Preparing {len(requests)} request(s) with projected cost ${planned_cost:.2f} "
         f"(budget ${args.budget:.2f})."
     )
     if args.dry_run:
         for author, _, _, tokens in requests:
-            print(f"- {author}: ~{tokens} input tokens + {args.max_output_tokens} output tokens")
+            print(
+                f"- {author}: ~{tokens} input tokens + {args.max_output_tokens} output tokens"
+            )
         return
 
     client = OpenAI()
@@ -478,7 +582,9 @@ def main() -> None:
 
     for author, stats, prompt, input_tokens in requests:
         print(f"\n=== {author} ({stats['messages']} msgs) ===")
-        print(f"Input tokens ~{input_tokens}, output cap {args.max_output_tokens}, est cost ${estimate_cost(input_tokens, args.max_output_tokens, args):.4f}")
+        print(
+            f"Input tokens ~{input_tokens}, output cap {args.max_output_tokens}, est cost ${estimate_cost(input_tokens, args.max_output_tokens, args):.4f}"
+        )
 
         # Build API call params (o1 models don't support temperature or response_format)
         api_params = {
@@ -509,7 +615,9 @@ def main() -> None:
             canonical_id = next(iter(author_ids_by_author.get(author, [])), None)
             alias_name = id_aliases.get(canonical_id) if canonical_id else None
             fname_base = alias_name or author or canonical_id
-            safe_name = re.sub(r"[^A-Za-z0-9._-]+", "_", str(fname_base)).strip("_") or "user"
+            safe_name = (
+                re.sub(r"[^A-Za-z0-9._-]+", "_", str(fname_base)).strip("_") or "user"
+            )
             out_path = save_dir / f"{safe_name.lower()}_style.json"
             out_path.write_text(content, encoding="utf-8")
 
