@@ -1,17 +1,25 @@
 -- Reports now carry their display spec inside the query DSL via a trailing
 -- `RENDER <kind> [WITH (...)]` clause, instead of a separate `outputFormat`
--- column. This migration:
---   1. Backfills every existing Report.queryText with a `RENDER <kind>` clause
---      derived from its current outputFormat (only the kind is needed; channel
---      defaults — x=label, y=first metric — resolve at render time, so this
---      reproduces the prior rendering exactly).
---   2. Drops Report.outputFormat and ReportRun.outputFormat.
--- The backfill runs inside the table rebuild's INSERT...SELECT, while the old
--- table (and its outputFormat column) is still readable.
+-- column. This migration does the data SEED and the schema MIGRATE in one file:
+--
+--   1. SEED  — backfill a `RENDER <kind>` clause into every existing report,
+--              derived from its legacy outputFormat. Only the kind is needed;
+--              channel defaults (x=label, y=first metric) resolve at render
+--              time, reproducing the prior rendering exactly. Runs BEFORE the
+--              column is dropped, while outputFormat is still readable.
+--   2. MIGRATE — drop Report.outputFormat and ReportRun.outputFormat.
+
+-- 1. Seed: append the RENDER clause to any report that doesn't already have one.
+UPDATE "Report"
+SET "queryText" = "queryText" || ' RENDER ' || LOWER("outputFormat")
+WHERE lower("queryText") NOT LIKE '% render %';
+
+-- 2. Migrate: drop the now-redundant outputFormat columns (SQLite table rebuild).
+--    The Report INSERT...SELECT is a plain queryText copy — step 1 already seeded.
 PRAGMA defer_foreign_keys=ON;
 PRAGMA foreign_keys=OFF;
 
--- RedefineTable: Report (drop outputFormat, backfill RENDER clause)
+-- RedefineTable: Report (drop outputFormat)
 CREATE TABLE "new_Report" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "serverId" TEXT NOT NULL,
@@ -35,12 +43,7 @@ CREATE TABLE "new_Report" (
     "updatedTime" DATETIME NOT NULL
 );
 INSERT INTO "new_Report" ("id", "serverId", "ownerId", "channelId", "title", "description", "queryText", "lookbackDays", "maxRows", "isEnabled", "isSystemManaged", "systemSource", "sourceCompetitionId", "cronExpression", "nextScheduledRunAt", "lastScheduledRunAt", "lastRunStatus", "lastRunError", "createdTime", "updatedTime")
-SELECT "id", "serverId", "ownerId", "channelId", "title", "description",
-    CASE
-        WHEN lower("queryText") LIKE '% render %' THEN "queryText"
-        ELSE "queryText" || ' RENDER ' || LOWER("outputFormat")
-    END,
-    "lookbackDays", "maxRows", "isEnabled", "isSystemManaged", "systemSource", "sourceCompetitionId", "cronExpression", "nextScheduledRunAt", "lastScheduledRunAt", "lastRunStatus", "lastRunError", "createdTime", "updatedTime"
+SELECT "id", "serverId", "ownerId", "channelId", "title", "description", "queryText", "lookbackDays", "maxRows", "isEnabled", "isSystemManaged", "systemSource", "sourceCompetitionId", "cronExpression", "nextScheduledRunAt", "lastScheduledRunAt", "lastRunStatus", "lastRunError", "createdTime", "updatedTime"
 FROM "Report";
 DROP TABLE "Report";
 ALTER TABLE "new_Report" RENAME TO "Report";

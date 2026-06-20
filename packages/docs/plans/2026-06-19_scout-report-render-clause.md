@@ -58,9 +58,12 @@ RENDER bar_chart WITH (y = win_rate, title = "Win %")
   `assertRenderColumn` validate channels against the SELECTed metrics — typos fail fast.
 - **Render** (`backend/src/reports/output.ts`): drives off `result.plan.render`; resolves
   the Y metric/title/axis from the encoding (Y re-parsed to `ReportMetric`). `competition-chart.ts` untouched.
-- **Migration** (`backend/prisma/migrations/20260619000000_reports_render_clause/`): backfills
-  each `Report.queryText` with `RENDER <kind>` from its old `outputFormat` (inside the table
-  rebuild's INSERT…SELECT — atomic, no DSL parsing in SQL), then drops both columns.
+- **Migration** (`backend/prisma/migrations/20260619000000_reports_render_clause/`): one Prisma
+  migration with two explicit steps — (1) **seed**: an `UPDATE` that appends `RENDER <kind>` to
+  each `Report.queryText` from its legacy `outputFormat`; (2) **migrate**: drop both `outputFormat`
+  columns (SQLite rebuild). Runs once on startup via `migrate deploy`; no app-level backfill, no
+  kept column (an expand/contract detour was considered and rejected). Verified end-to-end against
+  the real `migration.sql` on seeded rows (existing clause untouched, columns dropped, runs preserved).
 - **Runner/metrics**: `output_format` metric label now derived from `plan.render.kind`.
 - **System reports** (`system-reports.ts`): emit `RENDER <kind>` in generated queries.
 - **Router** (`report.router.ts`): create/update drop `outputFormat` I/O; `previewQuery`
