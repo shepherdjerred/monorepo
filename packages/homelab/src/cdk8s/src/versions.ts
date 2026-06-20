@@ -30,7 +30,7 @@ const versions = {
   // CI's version commit-back fills the real tag@digest after the first image
   // push; the seed digest below is a placeholder until then.
   "shepherdjerred/redlib":
-    "2.0.0-4542@sha256:a3a72df549fc935158097f2b10dc8ad2476755b7769b019bee2247235ef69c0e",
+    "2.0.0-4547@sha256:7a579f57835999a444c5706f1d78dd19f0b10dfb084cb636febb28ed85ee656d",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "itzg/minecraft-server":
     "2026.6.0-java21@sha256:496ee192e5f680e8c20bc51da90160fb294d37db98319fad3ecb82e852766e08",
@@ -136,10 +136,10 @@ const versions = {
     "2.0.0-4334@sha256:9b92dead16a9bf07e795f3b70c6b3caf80a156c408eb4701d15660998c771f65",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-4537@sha256:c0ff956ccc2f3a2f373c2c0f0b470d286fe101c00d8ae9de694031d184e57a78",
+    "2.0.0-4547@sha256:36fd7e08a16b9ea17002899136672eb88ecc43f3177efcf9d08da78c73486d86",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-4537@sha256:4a12c829b0d82290dd1ca7cdb97801fe44f21b25cabcd03de5123797bdbc8a44",
+    "2.0.0-4547@sha256:16c10b166c5bf5b6b996e468b3a34c5ae575b3b10110fad85ddb510597c85bb4",
   // not managed by renovate — placeholder digest; CI version-commit-back fills
   // the real digest after the first successful image push.
   "shepherdjerred/discord-plays-mario-kart":
@@ -245,7 +245,7 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-4542@sha256:fde76c266af3900b7d81b464397c0dca0b35c686400323f7bc0d68a296e66952",
+    "2.0.0-4547@sha256:695208741da09c893a9a3021f8d6b78d3fae64f6bd756f0c45e77fe20b5efb9d",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
@@ -253,11 +253,11 @@ const versions = {
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-4542@sha256:0f0056200a37e1e9f0a47e17db8a3b04eaf8f6e0bc995122236396edf7a7d4b3",
+    "2.0.0-4547@sha256:77dded0dab4aaca5d87dbe4ff66df2ce838e72e5454859ff82fb581d16f877a4",
   // Custom mcp-gateway image - tbxark/mcp-proxy + prebuilt edstem-mcp (rob-9/edstem-mcp)
   // not managed by renovate
   "shepherdjerred/mcp-gateway":
-    "2.0.0-4542@sha256:b107673e0d29bbd2f36bae63c40590f9749eec9963ea201f66a8b7b41e0e2d73",
+    "2.0.0-4547@sha256:30ef2eb3e1a470815b727dc22e12b568a0e73d8169c9ad2ea74a29f7dc120ca6",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.6@sha256:1263120feed69d82e4ca23b8ca6f1d702c3029fe70714e382966d0192318eab6",
