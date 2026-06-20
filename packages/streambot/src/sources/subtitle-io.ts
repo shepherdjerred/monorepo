@@ -5,6 +5,7 @@ import path from "node:path";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { SubtitlePref } from "@shepherdjerred/streambot/sources/source.ts";
 import type { ResolvedSubtitle } from "@shepherdjerred/streambot/machine/types.ts";
+import { cleanRollingSrt } from "@shepherdjerred/streambot/sources/subtitle-clean.ts";
 import {
   effectiveSubtitleConfig,
   parseFfprobeSubtitles,
@@ -414,6 +415,30 @@ export async function resolveSubtitleForYtdlp(
     return undefined;
   }
   const full = path.join(dir, picked);
+  await cleanRollingSubtitleFile(full);
   log.info("downloaded subtitle for source", { target, file: picked });
   return { path: full, cleanupPath: full };
+}
+
+/**
+ * Best-effort in-place cleanup of YouTube auto-caption "rolling" duplication on a staged `.srt`, so
+ * libass burns one clean line at a time instead of the doubled/stale two-line scroll. Only `.srt` (the
+ * format yt-dlp converts to) is considered; {@link cleanRollingSrt} returns null for an already-clean
+ * track and any read/parse/write failure leaves the original file untouched (subtitles never abort
+ * playback).
+ */
+async function cleanRollingSubtitleFile(file: string): Promise<void> {
+  if (path.extname(file).toLowerCase() !== ".srt") return;
+  try {
+    const original = await Bun.file(file).text();
+    const cleaned = cleanRollingSrt(original);
+    if (cleaned === null) return;
+    await Bun.write(file, cleaned);
+    log.info("collapsed rolling auto-caption subtitle", { file });
+  } catch (error) {
+    log.warn("failed to clean rolling subtitle; using original", {
+      file,
+      error: getErrorMessage(error),
+    });
+  }
 }

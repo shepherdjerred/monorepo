@@ -11,6 +11,7 @@ import {
   sweepSubtitleTempDir,
 } from "@shepherdjerred/streambot/sources/subtitle-io.ts";
 import { probeMedia } from "@shepherdjerred/streambot/sources/probe.ts";
+import { cleanRollingSrt } from "@shepherdjerred/streambot/sources/subtitle-clean.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 
 /**
@@ -534,5 +535,70 @@ describe("VAAPI graph canvas branch (real ffmpeg, GPU stages swapped for softwar
       1,
     );
     expect(Buffer.compare(withOverlay, without)).not.toBe(0);
+  });
+});
+
+describe("rolling auto-caption cleanup (real libass)", () => {
+  // A rolling YouTube auto-caption SRT (build-up → ~10 ms finalization → two-line carry-over scroll).
+  const ROLLING = `1
+00:00:00,000 --> 00:00:01,000
+hey
+
+2
+00:00:01,000 --> 00:00:01,010
+hey
+
+3
+00:00:01,010 --> 00:00:02,000
+hey
+hello
+
+4
+00:00:02,000 --> 00:00:02,010
+hello
+
+5
+00:00:02,010 --> 00:00:03,000
+hello
+hi
+
+6
+00:00:03,000 --> 00:00:03,500
+hi
+`;
+
+  test("the collapsed single-line SRT is well-formed and renders through libass", async () => {
+    // cleanRollingSrt is unit-tested for content; here we prove its SERIALIZED output (comma stamps,
+    // blank-line separators, no trailing markup) is something real libass accepts and burns — a class
+    // of bug the pure test can't see.
+    const cleaned = cleanRollingSrt(ROLLING);
+    if (cleaned === null)
+      throw new Error("expected the rolling SRT to be cleaned");
+    const cleanedPath = path.join(dir, "cleaned-rolling.srt");
+    await writeFile(cleanedPath, cleaned, "utf8");
+
+    const graph = buildSoftwareVideoGraph({
+      width: 320,
+      height: 240,
+      inputColor: "sdr",
+      subtitle: { path: cleanedPath, startTime: 0 },
+      encoderOutFilters: [],
+    });
+    if (graph.kind !== "filterChain") throw new Error("expected -vf chain");
+
+    // t=1s lands inside the cleaned "hey" cue (00:00:00,000 → 00:00:01,010).
+    const withSubs = await grabFrame(
+      plainClip,
+      graph.filters,
+      path.join(dir, "cleaned-with.png"),
+      1,
+    );
+    const without = await grabFrame(
+      plainClip,
+      ["scale=320:240"],
+      path.join(dir, "cleaned-without.png"),
+      1,
+    );
+    expect(Buffer.compare(withSubs, without)).not.toBe(0);
   });
 });
