@@ -1,9 +1,15 @@
 # Pokémon goal bot — persistent memory + session logs
 
+> **Partly superseded** by `plans/2026-06-19_pokemon-goal-fs-and-limits.md` (same
+> branch): the `pokemonctl memory show/write` + `session list/search/read/write`
+> surface described below was reshaped into a scoped `list`/`read`/`grep`/`write`
+> filesystem, and per-session logs became system-written. The per-guild + curated
+> MEMORY.md design here still holds.
+
 ## Status
 
-Complete (implemented + committed on `feature/pokemon-goal-memory`; not yet
-pushed/merged)
+Complete (implemented + committed on `feature/pokemon-goal-memory`; the tooling
+was reshaped in a follow-up — see the note above)
 
 ## Goal
 

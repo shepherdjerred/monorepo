@@ -11,20 +11,14 @@ import {
 import { encodePng } from "#src/emulator/png.ts";
 import { parseCommandInput } from "#src/game/command/command-input.ts";
 import { parseChord } from "#src/game/command/chord.ts";
-import { isValid } from "#src/discord/chord-validator.ts";
+import { isValid, type ChordLimits } from "#src/discord/chord-validator.ts";
 import { execute } from "#src/discord/chord-executor.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 import { formatGameStateForPrompt } from "./game-state-summary.ts";
 import { formatHistoryForPrompt } from "./history-summary.ts";
 import type { GoalManager } from "./goal-manager.ts";
-import {
-  buildSessionLogMeta,
-  SESSION_LIST_DEFAULT,
-  SESSION_LIST_MAX,
-  type SessionLogSearchHit,
-  type SessionLogSummary,
-} from "./goal-memory.ts";
+import type { FsEntry, GrepMatch } from "./goal-memory.ts";
 
 type GoalControlServerOptions = {
   emulator: Emulator;
@@ -33,9 +27,25 @@ type GoalControlServerOptions = {
   token: string;
 };
 
+// Per-session control state. The server is recreated per goal session, so
+// memoryRead resets naturally — it gates WRITE(MEMORY.md) on a prior READ.
+type FsSessionState = {
+  memoryRead: boolean;
+};
+
 type GoalControlContext = GoalControlServerOptions & {
   timing: CommandTiming;
+  fs: FsSessionState;
 };
+
+function goalChordLimits(goal: Config["game"]["goal"]): ChordLimits {
+  const limits = goal.command_limits;
+  return {
+    maxCommands: limits.chord_max_commands,
+    maxTotal: limits.chord_max_total,
+    maxQuantityPerAction: limits.max_quantity_per_action,
+  };
+}
 
 export type GoalControlServer = ReturnType<typeof Bun.serve>;
 
@@ -53,28 +63,24 @@ const ProgressRequestSchema = z.strictObject({
   message: z.string().min(1).max(1000),
 });
 
+// Scoped memory filesystem (LIST/READ/GREP/WRITE). Paths are relative to the
+// per-guild memory root and resolved inside it by GoalMemory.
+const PathQuerySchema = z.strictObject({
+  // Optional for list/grep (default = root); required for read.
+  path: z.string().optional(),
+});
+
+const GrepQuerySchema = z.strictObject({
+  q: z.string().min(1),
+  path: z.string().optional(),
+});
+
 // Content cap is deliberately above GoalMemory's own char cap so its clearer
 // "too long (N chars; keep it under M)" error reaches the agent instead of a
 // generic schema rejection.
-const MemoryWriteSchema = z.strictObject({
+const WriteRequestSchema = z.strictObject({
+  path: z.string().min(1),
   content: z.string().min(1).max(64_000),
-});
-
-const SessionWriteSchema = z.strictObject({
-  content: z.string().min(1).max(64_000),
-});
-
-const SessionListQuerySchema = z.strictObject({
-  limit: z.coerce.number().int().min(1).max(SESSION_LIST_MAX).optional(),
-});
-
-const SessionSearchQuerySchema = z.strictObject({
-  q: z.string().min(1),
-  limit: z.coerce.number().int().min(1).max(SESSION_LIST_MAX).optional(),
-});
-
-const SessionReadQuerySchema = z.strictObject({
-  id: z.string().min(1),
 });
 
 function timingFromConfig(config: Config): CommandTiming {
@@ -161,115 +167,107 @@ function queryParams(request: Request): Record<string, string> {
   return Object.fromEntries(new URL(request.url).searchParams.entries());
 }
 
-// ── Persistent-memory routes (`pokemonctl memory` / `pokemonctl session`). ────
+// ── Scoped memory filesystem (`pokemonctl list/read/grep/write`). ────────────
 
-async function memoryShowResponse(
-  context: GoalControlContext,
-): Promise<Response> {
-  const memory = await context.goalManager.memory.readMemory();
-  return textResponse(
-    memory.length > 0
-      ? memory
-      : "(no saved memory yet — write it with `pokemonctl memory write`)",
-  );
-}
-
-async function memoryWriteResponse(
+async function listResponse(
   context: GoalControlContext,
   request: Request,
 ): Promise<Response> {
-  const parsed = MemoryWriteSchema.parse(await parseJsonBody(request));
-  const result = await context.goalManager.memory.writeMemory(parsed.content);
-  return jsonResponse({ ok: true, path: result.path, chars: result.chars });
+  const parsed = PathQuerySchema.safeParse(queryParams(request));
+  if (!parsed.success) {
+    return jsonResponse({ error: "invalid path" }, 400);
+  }
+  const entries = await context.goalManager.memory.list(parsed.data.path ?? "");
+  return textResponse(formatList(entries));
 }
 
-async function sessionListResponse(
+async function readResponse(
   context: GoalControlContext,
   request: Request,
 ): Promise<Response> {
-  const parsed = SessionListQuerySchema.safeParse(queryParams(request));
+  const parsed = PathQuerySchema.safeParse(queryParams(request));
+  if (!parsed.success || parsed.data.path === undefined) {
+    return jsonResponse({ error: "read requires a path parameter" }, 400);
+  }
+  const memory = context.goalManager.memory;
+  // Reading MEMORY.md satisfies the read-before-write guard for this session.
+  // It reads through readMemory() so an as-yet-unwritten MEMORY.md returns empty
+  // (not "not found") — otherwise the first-ever curate could never satisfy the
+  // gate.
+  if (memory.isMemoryPath(parsed.data.path)) {
+    context.fs.memoryRead = true;
+    const memoryText = await memory.readMemory();
+    return textResponse(
+      memoryText.length > 0
+        ? memoryText
+        : "(MEMORY.md is empty — write your first curated memory)",
+    );
+  }
+  const text = await memory.read(parsed.data.path);
+  return textResponse(text);
+}
+
+async function grepResponse(
+  context: GoalControlContext,
+  request: Request,
+): Promise<Response> {
+  const parsed = GrepQuerySchema.safeParse(queryParams(request));
   if (!parsed.success) {
     return jsonResponse(
-      {
-        error: `limit must be an integer between 1 and ${String(SESSION_LIST_MAX)}`,
-      },
+      { error: "grep requires a non-empty q parameter" },
       400,
     );
   }
-  const limit = parsed.data.limit ?? SESSION_LIST_DEFAULT;
-  const logs = await context.goalManager.memory.listSessionLogs(limit);
-  return textResponse(formatSessionList(logs));
-}
-
-async function sessionSearchResponse(
-  context: GoalControlContext,
-  request: Request,
-): Promise<Response> {
-  const parsed = SessionSearchQuerySchema.safeParse(queryParams(request));
-  if (!parsed.success) {
-    return jsonResponse(
-      { error: "search requires a non-empty q parameter" },
-      400,
-    );
-  }
-  const limit = parsed.data.limit ?? SESSION_LIST_DEFAULT;
-  const hits = await context.goalManager.memory.searchSessionLogs(
+  const matches = await context.goalManager.memory.grep(
     parsed.data.q,
-    limit,
+    parsed.data.path ?? "",
   );
-  return textResponse(formatSessionSearch(hits, parsed.data.q));
+  return textResponse(formatGrep(matches, parsed.data.q));
 }
 
-async function sessionReadResponse(
+async function writeResponse(
   context: GoalControlContext,
   request: Request,
 ): Promise<Response> {
-  const parsed = SessionReadQuerySchema.safeParse(queryParams(request));
-  if (!parsed.success) {
-    return jsonResponse({ error: "read requires an id parameter" }, 400);
+  const parsed = WriteRequestSchema.parse(await parseJsonBody(request));
+  const memory = context.goalManager.memory;
+  if (!memory.isMemoryPath(parsed.path)) {
+    return jsonResponse(
+      { error: "only MEMORY.md is writable (logs/archives are read-only)" },
+      400,
+    );
   }
-  const log = await context.goalManager.memory.readSessionLog(parsed.data.id);
-  return textResponse(log);
+  if (!context.fs.memoryRead) {
+    return jsonResponse(
+      { error: "read MEMORY.md before writing it (read-before-write)" },
+      409,
+    );
+  }
+  const result = await memory.writeMemory(parsed.content);
+  return jsonResponse({
+    ok: true,
+    path: result.path,
+    chars: result.chars,
+    archived: result.archivedPath,
+  });
 }
 
-async function sessionWriteResponse(
-  context: GoalControlContext,
-  request: Request,
-): Promise<Response> {
-  const parsed = SessionWriteSchema.parse(await parseJsonBody(request));
-  const state = context.goalManager.getStatus();
-  if (state === undefined) {
-    return jsonResponse({ error: "no active goal to write a log for" }, 409);
+function formatList(entries: readonly FsEntry[]): string {
+  if (entries.length === 0) {
+    return "(empty)";
   }
-  const result = await context.goalManager.memory.writeSessionLog(
-    buildSessionLogMeta(state),
-    parsed.content,
-  );
-  return jsonResponse({ ok: true, path: result.path, id: result.id });
-}
-
-function formatSessionList(logs: readonly SessionLogSummary[]): string {
-  if (logs.length === 0) {
-    return "No session logs yet for this save.";
-  }
-  return logs.map((log) => formatSessionSummary(log)).join("\n");
-}
-
-function formatSessionSearch(
-  hits: readonly SessionLogSearchHit[],
-  query: string,
-): string {
-  if (hits.length === 0) {
-    return `No session logs match "${query}".`;
-  }
-  return hits
-    .map((hit) => `${formatSessionSummary(hit)}\n      …${hit.snippet}`)
+  return entries
+    .map((entry) => `${entry.kind === "dir" ? "dir " : "file"}  ${entry.path}`)
     .join("\n");
 }
 
-function formatSessionSummary(log: SessionLogSummary): string {
-  const when = log.startedAt === undefined ? "" : ` (started ${log.startedAt})`;
-  return `[${log.id}]${when} ${log.goal}`;
+function formatGrep(matches: readonly GrepMatch[], query: string): string {
+  if (matches.length === 0) {
+    return `No matches for "${query}".`;
+  }
+  return matches
+    .map((match) => `${match.path}:${String(match.line)}: ${match.text}`)
+    .join("\n");
 }
 
 async function screenshotResponse(
@@ -298,7 +296,9 @@ async function pressResponse(
   }
 
   const quantity = parsed.quantity ?? 1;
-  if (quantity > context.config.game.commands.max_quantity_per_action) {
+  if (
+    quantity > context.config.game.goal.command_limits.max_quantity_per_action
+  ) {
     return jsonResponse({ error: "quantity too high" }, 400);
   }
 
@@ -331,7 +331,10 @@ async function chordResponse(
 ): Promise<Response> {
   const parsed = ChordRequestSchema.parse(await parseJsonBody(request));
   const chord = parseChord(parsed.value);
-  if (chord === undefined || !isValid(chord)) {
+  if (
+    chord === undefined ||
+    !isValid(chord, goalChordLimits(context.config.game.goal))
+  ) {
     return jsonResponse({ error: "invalid chord" }, 400);
   }
 
@@ -376,18 +379,14 @@ async function routeRequest(
       return await chordResponse(context, request);
     case "POST /progress":
       return await progressResponse(context, request);
-    case "GET /memory":
-      return await memoryShowResponse(context);
-    case "POST /memory":
-      return await memoryWriteResponse(context, request);
-    case "GET /sessions":
-      return await sessionListResponse(context, request);
-    case "GET /sessions/search":
-      return await sessionSearchResponse(context, request);
-    case "GET /sessions/read":
-      return await sessionReadResponse(context, request);
-    case "POST /sessions":
-      return await sessionWriteResponse(context, request);
+    case "GET /list":
+      return await listResponse(context, request);
+    case "GET /read":
+      return await readResponse(context, request);
+    case "GET /grep":
+      return await grepResponse(context, request);
+    case "POST /write":
+      return await writeResponse(context, request);
     default:
       return jsonResponse({ error: "not found" }, 404);
   }
@@ -397,7 +396,11 @@ export function startGoalControlServer(
   options: GoalControlServerOptions,
 ): GoalControlServer {
   const timing = timingFromConfig(options.config);
-  const context: GoalControlContext = { ...options, timing };
+  const context: GoalControlContext = {
+    ...options,
+    timing,
+    fs: { memoryRead: false },
+  };
 
   const server = Bun.serve({
     hostname: options.config.game.goal.control_host,

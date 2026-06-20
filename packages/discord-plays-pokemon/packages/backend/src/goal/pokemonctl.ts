@@ -13,12 +13,10 @@ function usage(): string {
     "  pokemonctl state",
     "  pokemonctl history [--limit n]",
     '  pokemonctl progress "message"',
-    "  pokemonctl memory show",
-    '  pokemonctl memory write "<markdown>"',
-    '  pokemonctl session write "<markdown>"',
-    "  pokemonctl session list [--limit n]",
-    '  pokemonctl session search "<query>" [--limit n]',
-    "  pokemonctl session read <id>",
+    "  pokemonctl list [path]",
+    "  pokemonctl read <path>",
+    '  pokemonctl grep "<pattern>" [path]',
+    '  pokemonctl write MEMORY.md "<content>"',
   ].join("\n");
 }
 
@@ -74,9 +72,8 @@ async function request(
   return text.length > 0 ? text : "null";
 }
 
-// Body text for `memory write` / `session write`. Prefer a single quoted
-// argument (newlines preserved); fall back to stdin so long markdown can be
-// heredoc-piped.
+// Body text for `write`. Prefer a single quoted argument (newlines preserved);
+// fall back to stdin so long markdown can be heredoc-piped.
 async function readContentArg(parts: string[]): Promise<string> {
   const joined = parts.join(" ").trim();
   if (joined.length > 0) {
@@ -92,7 +89,14 @@ async function readContentArg(parts: string[]): Promise<string> {
   return stdin;
 }
 
-// Split out of main() so its switch stays under the complexity cap.
+function printJson(value: unknown): void {
+  process.stdout.write(`${JSON.stringify(value, undefined, 2)}\n`);
+}
+
+function printJsonText(value: string): void {
+  process.stdout.write(`${value}\n`);
+}
+
 async function handlePress(args: string[]): Promise<void> {
   const button = args.at(0);
   if (button === undefined) {
@@ -109,137 +113,130 @@ async function handlePress(args: string[]): Promise<void> {
   );
 }
 
-// `pokemonctl memory <show|write …>`. Split out of main() to keep its complexity
-// in check and avoid a non-exhaustive inner switch.
-async function handleMemory(args: string[]): Promise<void> {
-  const sub = args.at(0);
-  if (sub === "show") {
-    printJsonText(await request("GET", "/memory"));
-    return;
+async function handleChord(args: string[]): Promise<void> {
+  const value = args.at(0);
+  if (value === undefined) {
+    throw new Error("chord requires a command string");
   }
-  if (sub === "write") {
-    const content = await readContentArg(args.slice(1));
-    printJsonText(await request("POST", "/memory", { content }));
-    return;
-  }
-  throw new Error(`unknown memory subcommand: ${String(sub)}\n${usage()}`);
+  printJsonText(await request("POST", "/chord", { value }));
 }
 
-// `pokemonctl session <list|search|read|write …>`.
-async function handleSession(args: string[]): Promise<void> {
-  const sub = args.at(0);
-  if (sub === "list") {
-    const limit = readNumberFlag(args, "--limit");
-    const route =
-      limit === undefined ? "/sessions" : `/sessions?limit=${String(limit)}`;
-    printJsonText(await request("GET", route));
-    return;
+async function handleWait(args: string[]): Promise<void> {
+  const seconds = readNumberFlag(args, "--seconds");
+  if (seconds === undefined) {
+    throw new Error("wait requires --seconds");
   }
-  if (sub === "search") {
-    const query = args.at(1);
-    if (query === undefined || query.startsWith("--")) {
-      throw new Error(
-        'session search requires a query, e.g. session search "warp arrow"',
-      );
-    }
-    const limit = readNumberFlag(args, "--limit");
-    const params = new URLSearchParams({ q: query });
-    if (limit !== undefined) {
-      params.set("limit", String(limit));
-    }
-    printJsonText(
-      await request("GET", `/sessions/search?${params.toString()}`),
-    );
-    return;
-  }
-  if (sub === "read") {
-    const id = args.at(1);
-    if (id === undefined) {
-      throw new Error("session read requires an id (see session list)");
-    }
-    const params = new URLSearchParams({ id });
-    printJsonText(await request("GET", `/sessions/read?${params.toString()}`));
-    return;
-  }
-  if (sub === "write") {
-    const content = await readContentArg(args.slice(1));
-    printJsonText(await request("POST", "/sessions", { content }));
-    return;
-  }
-  throw new Error(`unknown session subcommand: ${String(sub)}\n${usage()}`);
+  await Bun.sleep(seconds * 1000);
+  printJson({ ok: true, waitedSeconds: seconds });
 }
 
-function printJson(value: unknown): void {
-  process.stdout.write(`${JSON.stringify(value, undefined, 2)}\n`);
+async function handleHistory(args: string[]): Promise<void> {
+  const limit = readNumberFlag(args, "--limit");
+  const route =
+    limit === undefined ? "/history" : `/history?limit=${String(limit)}`;
+  printJsonText(await request("GET", route));
 }
 
-function printJsonText(value: string): void {
-  process.stdout.write(`${value}\n`);
+async function handleProgress(args: string[]): Promise<void> {
+  const message = args.join(" ").trim();
+  if (message.length === 0) {
+    throw new Error("progress requires a message");
+  }
+  printJsonText(await request("POST", "/progress", { message }));
 }
+
+// ── Scoped memory filesystem (LIST / READ / GREP / WRITE). ────────────────────
+
+async function handleList(args: string[]): Promise<void> {
+  const target = args.at(0);
+  const route =
+    target === undefined
+      ? "/list"
+      : `/list?${new URLSearchParams({ path: target }).toString()}`;
+  printJsonText(await request("GET", route));
+}
+
+async function handleRead(args: string[]): Promise<void> {
+  const target = args.at(0);
+  if (target === undefined) {
+    throw new Error("read requires a path (e.g. read MEMORY.md)");
+  }
+  printJsonText(
+    await request(
+      "GET",
+      `/read?${new URLSearchParams({ path: target }).toString()}`,
+    ),
+  );
+}
+
+async function handleGrep(args: string[]): Promise<void> {
+  const pattern = args.at(0);
+  if (pattern === undefined) {
+    throw new Error('grep requires a pattern (e.g. grep "warp arrow")');
+  }
+  const params = new URLSearchParams({ q: pattern });
+  const target = args.at(1);
+  if (target !== undefined && !target.startsWith("--")) {
+    params.set("path", target);
+  }
+  printJsonText(await request("GET", `/grep?${params.toString()}`));
+}
+
+async function handleWrite(args: string[]): Promise<void> {
+  const target = args.at(0);
+  if (target === undefined) {
+    throw new Error("write requires a path (only MEMORY.md is writable)");
+  }
+  const content = await readContentArg(args.slice(1));
+  printJsonText(await request("POST", "/write", { path: target, content }));
+}
+
+const HANDLERS = new Map<string, (args: string[]) => Promise<void>>([
+  [
+    "screenshot",
+    async () => {
+      printJsonText(await request("POST", "/screenshot"));
+    },
+  ],
+  [
+    "status",
+    async () => {
+      printJsonText(await request("GET", "/status"));
+    },
+  ],
+  [
+    "state",
+    async () => {
+      printJsonText(await request("GET", "/state"));
+    },
+  ],
+  ["history", handleHistory],
+  ["press", handlePress],
+  ["chord", handleChord],
+  ["wait", handleWait],
+  ["progress", handleProgress],
+  ["list", handleList],
+  ["read", handleRead],
+  ["grep", handleGrep],
+  ["write", handleWrite],
+]);
 
 async function main(): Promise<void> {
   const command = Bun.argv.at(2);
-  const args = Bun.argv.slice(3);
-  switch (command) {
-    case "screenshot":
-      printJsonText(await request("POST", "/screenshot"));
-      return;
-    case "status":
-      printJsonText(await request("GET", "/status"));
-      return;
-    case "state":
-      printJsonText(await request("GET", "/state"));
-      return;
-    case "history": {
-      const limit = readNumberFlag(args, "--limit");
-      const route =
-        limit === undefined ? "/history" : `/history?limit=${String(limit)}`;
-      printJsonText(await request("GET", route));
-      return;
-    }
-    case "press":
-      await handlePress(args);
-      return;
-    case "chord": {
-      const value = args.at(0);
-      if (value === undefined) {
-        throw new Error("chord requires a command string");
-      }
-      printJsonText(await request("POST", "/chord", { value }));
-      return;
-    }
-    case "wait": {
-      const seconds = readNumberFlag(args, "--seconds");
-      if (seconds === undefined) {
-        throw new Error("wait requires --seconds");
-      }
-      await Bun.sleep(seconds * 1000);
-      printJson({ ok: true, waitedSeconds: seconds });
-      return;
-    }
-    case "progress": {
-      const message = args.join(" ").trim();
-      if (message.length === 0) {
-        throw new Error("progress requires a message");
-      }
-      printJsonText(await request("POST", "/progress", { message }));
-      return;
-    }
-    case "memory":
-      await handleMemory(args);
-      return;
-    case "session":
-      await handleSession(args);
-      return;
-    case undefined:
-    case "help":
-    case "--help":
-    case "-h":
-      process.stdout.write(`${usage()}\n`);
-      return;
-    default:
-      throw new Error(`unknown command: ${command}\n${usage()}`);
+  if (
+    command === undefined ||
+    command === "help" ||
+    command === "--help" ||
+    command === "-h"
+  ) {
+    process.stdout.write(`${usage()}\n`);
+    return;
   }
+  const handler = HANDLERS.get(command);
+  if (handler === undefined) {
+    throw new Error(`unknown command: ${command}\n${usage()}`);
+  }
+  await handler(Bun.argv.slice(3));
 }
 
 try {

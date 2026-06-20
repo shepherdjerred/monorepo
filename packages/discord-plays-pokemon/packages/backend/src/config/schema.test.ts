@@ -89,6 +89,27 @@ describe("ConfigSchema goal config", () => {
       max_runtime_minutes: 30,
       lock_minutes: 5,
       progress_update_interval_seconds: 60,
+      command_limits: {
+        max_quantity_per_action: 60,
+        chord_max_commands: 32,
+        chord_max_total: 200,
+      },
+    });
+  });
+
+  test("fills command_limits defaults from a partial table", () => {
+    const config = validConfigWithoutGoal();
+    const parsed = ConfigSchema.parse({
+      ...config,
+      game: {
+        ...config.game,
+        goal: { command_limits: { chord_max_total: 500 } },
+      },
+    });
+    expect(parsed.game.goal.command_limits).toEqual({
+      max_quantity_per_action: 60,
+      chord_max_commands: 32,
+      chord_max_total: 500,
     });
   });
 

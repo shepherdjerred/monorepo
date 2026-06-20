@@ -10,7 +10,7 @@ import type { GoalState } from "./goal-types.ts";
 
 const directories: string[] = [];
 
-async function tempMemory(now?: () => Date): Promise<GoalMemory> {
+function tempMemory(now?: () => Date): GoalMemory {
   const directory = path.join(
     Bun.env.TMPDIR ?? "/tmp",
     `pokemon-goal-memory-${crypto.randomUUID()}`,
@@ -37,108 +37,126 @@ afterEach(async () => {
 
 describe("GoalMemory MEMORY.md", () => {
   test("returns empty string before anything is written", async () => {
-    const memory = await tempMemory();
+    const memory = tempMemory();
     expect(await memory.readMemory()).toBe("");
   });
 
   test("round-trips a curated write and overwrites (does not append)", async () => {
-    const memory = await tempMemory();
+    const memory = tempMemory();
     await memory.writeMemory("First lesson.");
     expect(await memory.readMemory()).toBe("First lesson.");
 
     await memory.writeMemory("Rewritten and curated.");
-    const text = await memory.readMemory();
-    expect(text).toBe("Rewritten and curated.");
-    expect(text).not.toContain("First lesson.");
+    expect(await memory.readMemory()).toBe("Rewritten and curated.");
   });
 
   test("rejects empty content so accumulated lessons can't be wiped", async () => {
-    const memory = await tempMemory();
+    const memory = tempMemory();
     await memory.writeMemory("Keep me.");
     await expect(memory.writeMemory("   ")).rejects.toThrow(/empty/);
     expect(await memory.readMemory()).toBe("Keep me.");
   });
 
   test("rejects content past the cap", async () => {
-    const memory = await tempMemory();
+    const memory = tempMemory();
     await expect(memory.writeMemory("x".repeat(16_001))).rejects.toThrow(
       /too long/,
     );
   });
 });
 
-describe("GoalMemory session logs", () => {
-  test("writes a log with frontmatter + reflection body", async () => {
-    const memory = await tempMemory(() => new Date("2026-06-19T12:30:00.000Z"));
-    const { id, path: logPath } = await memory.writeSessionLog(
-      meta(),
-      "Did X. Hard part: stairs. Learned: press UP onto warp arrows.",
-    );
-    expect(id).toBe("2026-06-19T12-00-00-000-aaaaaaaa");
-    const text = await Bun.file(logPath).text();
-    expect(text).toContain('goal: "Reach Petalburg"');
-    expect(text).toContain('written: "2026-06-19T12:30:00.000Z"');
-    expect(text).toContain("Hard part: stairs.");
+describe("GoalMemory archive-on-write", () => {
+  test("snapshots the prior MEMORY.md, and the old text stays grep-able", async () => {
+    const memory = tempMemory(() => new Date("2026-06-19T12:30:00.000Z"));
+    const first = await memory.writeMemory("Old lesson: Mudkip at Route 102.");
+    expect(first.archivedPath).toBeUndefined();
+
+    const second = await memory.writeMemory("New lesson: SAVE before rivals.");
+    expect(second.archivedPath).toBeDefined();
+
+    // Current memory is the new content; the old line lives under archived-memory.
+    expect(await memory.readMemory()).toContain("SAVE before rivals");
+    const hits = await memory.grep("route 102");
+    expect(hits).toHaveLength(1);
+    expect(hits[0]?.path).toContain("archived-memory/");
   });
 
-  test("rewriting the same session id refines one file (idempotent)", async () => {
-    const memory = await tempMemory();
-    await memory.writeSessionLog(meta(), "draft");
-    await memory.writeSessionLog(meta(), "final reflection");
-    const logs = await memory.listSessionLogs(10);
-    expect(logs).toHaveLength(1);
-    expect(await memory.readSessionLog(logs[0]?.id)).toContain(
-      "final reflection",
-    );
+  test("an identical rewrite does not archive", async () => {
+    const memory = tempMemory();
+    await memory.writeMemory("Same text.");
+    const again = await memory.writeMemory("Same text.");
+    expect(again.archivedPath).toBeUndefined();
+    const archive = await memory.list("archived-memory");
+    expect(archive).toEqual([]);
+  });
+});
+
+describe("GoalMemory scoped filesystem", () => {
+  test("list root shows MEMORY.md + logs/ + archived-memory/", async () => {
+    const memory = tempMemory();
+    await memory.writeMemory("v1");
+    await memory.writeMemory("v2"); // creates archived-memory/
+    await memory.writeSessionLog(meta(), "did things"); // creates logs/
+
+    const entries = await memory.list("");
+    const byName = new Map(entries.map((entry) => [entry.name, entry.kind]));
+    expect(byName.get("MEMORY.md")).toBe("file");
+    expect(byName.get("logs")).toBe("dir");
+    expect(byName.get("archived-memory")).toBe("dir");
   });
 
-  test("lists newest first and honors the limit", async () => {
-    const memory = await tempMemory();
-    await memory.writeSessionLog(
-      meta({ id: "2026-06-19T10-00-00-000-aaaaaaaa", goal: "Older" }),
-      "older",
-    );
-    await memory.writeSessionLog(
-      meta({ id: "2026-06-19T11-00-00-000-bbbbbbbb", goal: "Newer" }),
-      "newer",
-    );
-    const all = await memory.listSessionLogs(10);
-    expect(all.map((entry) => entry.goal)).toEqual(["Newer", "Older"]);
-    expect(await memory.listSessionLogs(1)).toHaveLength(1);
+  test("read round-trips a file and rejects missing/traversal/escape", async () => {
+    const memory = tempMemory();
+    await memory.writeMemory("hello memory");
+    expect(await memory.read("MEMORY.md")).toBe("hello memory");
+    // Leading slash is tolerated (resolved inside root).
+    expect(await memory.read("/MEMORY.md")).toBe("hello memory");
+    await expect(memory.read("nope.md")).rejects.toThrow(/not found/);
+    await expect(memory.read("../../etc/passwd")).rejects.toThrow(/escapes/);
   });
 
-  test("searches log bodies case-insensitively with a snippet", async () => {
-    const memory = await tempMemory();
+  test("grep searches MEMORY.md + logs case-insensitively with path:line", async () => {
+    const memory = tempMemory();
+    await memory.writeMemory("Roxanne uses Rock types.");
     await memory.writeSessionLog(
-      meta({ id: "2026-06-19T10-00-00-000-aaaaaaaa", goal: "Stairs goal" }),
+      meta({ goal: "Climb the stairs" }),
       "The WARP ARROW staircase tripped me up.",
     );
-    await memory.writeSessionLog(
-      meta({ id: "2026-06-19T11-00-00-000-bbbbbbbb", goal: "Catch goal" }),
-      "Threw three poke balls.",
-    );
-    const hits = await memory.searchSessionLogs("warp arrow", 10);
+    const hits = await memory.grep("warp arrow");
     expect(hits).toHaveLength(1);
-    expect(hits[0]?.goal).toBe("Stairs goal");
-    expect(hits[0]?.snippet.toLowerCase()).toContain("warp arrow");
+    expect(hits[0]?.path).toContain("logs/");
+    expect(hits[0]?.line).toBeGreaterThan(0);
+    expect(hits[0]?.text.toLowerCase()).toContain("warp arrow");
+
+    expect(await memory.grep("rock types")).toHaveLength(1);
+    expect(await memory.grep("nothing-here")).toEqual([]);
   });
 
-  test("read rejects path traversal ids", async () => {
-    const memory = await tempMemory();
-    await expect(memory.readSessionLog("../../etc/passwd")).rejects.toThrow(
-      /invalid session log id/,
+  test("isMemoryPath only matches MEMORY.md", () => {
+    const memory = tempMemory();
+    expect(memory.isMemoryPath("MEMORY.md")).toBe(true);
+    expect(memory.isMemoryPath("/MEMORY.md")).toBe(true);
+    expect(memory.isMemoryPath("logs/x.md")).toBe(false);
+    expect(memory.isMemoryPath("../escape")).toBe(false);
+  });
+});
+
+describe("GoalMemory session logs", () => {
+  test("writes a readable, slugged log file with frontmatter", async () => {
+    const memory = tempMemory(() => new Date("2026-06-19T12:30:00.000Z"));
+    const { id, path: logPath } = await memory.writeSessionLog(
+      meta({ goal: "Climb the stairs", status: "completed" }),
+      "Pressed UP onto the warp arrow to descend.",
     );
-  });
+    expect(id).toContain("climb-the-stairs");
+    const text = await Bun.file(logPath).text();
+    expect(text).toContain('goal: "Climb the stairs"');
+    expect(text).toContain('status: "completed"');
+    expect(text).toContain("warp arrow");
 
-  test("list/search are empty before any log exists", async () => {
-    const memory = await tempMemory();
-    expect(await memory.listSessionLogs(5)).toEqual([]);
-    expect(await memory.searchSessionLogs("anything", 5)).toEqual([]);
-  });
-
-  test("rejects empty reflection content", async () => {
-    const memory = await tempMemory();
-    await expect(memory.writeSessionLog(meta(), "  ")).rejects.toThrow(/empty/);
+    const logs = await memory.list("logs");
+    expect(logs).toHaveLength(1);
+    expect(await memory.read(logs[0]?.path ?? "")).toContain("warp arrow");
   });
 });
 
@@ -151,27 +169,17 @@ describe("buildSessionLogMeta", () => {
     startedAt: "2026-06-19T12:30:45.678Z",
     lockedUntil: "2026-06-19T12:35:45.678Z",
     deadline: "2026-06-19T13:00:45.678Z",
-    status: "running",
+    status: "completed",
+    finishedAt: "2026-06-19T12:45:00.000Z",
+    exitCode: 0,
   };
 
-  test("derives a filesystem-safe, sortable id from start time + goal id", () => {
+  test("derives a filesystem-safe, sortable id + carries status/exit", () => {
     const built = buildSessionLogMeta(state);
     expect(built.id).toBe("2026-06-19T12-30-45-678-abcdef12");
     expect(built.id).not.toContain(":");
-    expect(built.goalId).toBe(state.id);
     expect(built.goal).toBe("Climb the stairs");
-    expect(built.startedAt).toBe(state.startedAt);
-  });
-
-  test("the built meta round-trips through writeSessionLog → list/read", async () => {
-    const memory = await tempMemory();
-    const { id } = await memory.writeSessionLog(
-      buildSessionLogMeta(state),
-      "Pressed UP onto the warp arrow to descend.",
-    );
-    const logs = await memory.listSessionLogs(5);
-    expect(logs[0]?.id).toBe(id);
-    expect(logs[0]?.goal).toBe("Climb the stairs");
-    expect(await memory.readSessionLog(id)).toContain("warp arrow");
+    expect(built.status).toBe("completed");
+    expect(built.exitCode).toBe(0);
   });
 });

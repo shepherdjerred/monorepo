@@ -184,19 +184,29 @@ describe("buildPrompt", () => {
     expect(prompt).toContain("Nearby objects");
   });
 
-  test("documents the memory + session-log subcommands", () => {
+  test("documents the scoped memory filesystem subcommands", () => {
     const prompt = buildPrompt("Reach Petalburg", baseContext);
-    expect(prompt).toContain("pokemonctl memory write");
-    expect(prompt).toContain("pokemonctl session write");
-    expect(prompt).toContain("pokemonctl session search");
+    expect(prompt).toContain("pokemonctl list");
+    expect(prompt).toContain("pokemonctl read");
+    expect(prompt).toContain("pokemonctl grep");
+    expect(prompt).toContain("pokemonctl write MEMORY.md");
   });
 
-  test("instructs the agent to record a session log and curate MEMORY.md", () => {
+  test("documents the higher goal-bot chord limits", () => {
+    const prompt = buildPrompt("Reach Petalburg", baseContext);
+    expect(prompt).toContain("60_d");
+    expect(prompt.toLowerCase()).toContain("above the discord chat limits");
+  });
+
+  test("instructs read-before-write curation of MEMORY.md", () => {
     const prompt = buildPrompt("Reach Petalburg", baseContext);
     expect(prompt).toContain("END-OF-SESSION MEMORY");
     expect(prompt.toLowerCase()).toContain("what was hard");
     // Curated rewrite, not append.
     expect(prompt.toLowerCase()).toContain("do not just append");
+    // Read-before-write guard.
+    expect(prompt).toContain("read MEMORY.md");
+    expect(prompt.toLowerCase()).toContain("required before you may write");
   });
 
   test("shows the empty-memory placeholder when nothing is saved", () => {

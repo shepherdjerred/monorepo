@@ -32,6 +32,11 @@ function makeGoalConfig(runtimeDirectory: string): Config["game"]["goal"] {
     max_runtime_minutes: 30,
     lock_minutes: 5,
     progress_update_interval_seconds: 60,
+    command_limits: {
+      max_quantity_per_action: 60,
+      chord_max_commands: 32,
+      chord_max_total: 200,
+    },
   };
 }
 
