@@ -1,0 +1,553 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import InfoBox from "../components/InfoBox.astro";
+import CommandBox from "../components/CommandBox.astro";
+import { APP_DASHBOARD_URL } from "#src/lib/marketing-constants.ts";
+---
+
+<Layout>
+  <div class="bg-white dark:bg-gray-900">
+    <Navbar activePage="commands" />
+
+    <!-- Main Content -->
+    <div class="relative px-6 pt-14 lg:px-8">
+      <div class="mx-auto max-w-4xl py-32 sm:py-48 lg:py-56">
+        <Header
+          variant="page"
+          title="Slash Commands"
+          subtitle="Every Scout action is also a slash command. The web dashboard does the same thing — these are here if you'd rather stay in Discord."
+        >
+          <div class="mt-6 flex flex-wrap gap-x-6 gap-y-2">
+            <a
+              href={APP_DASHBOARD_URL}
+              class="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+              >Open the dashboard →</a
+            >
+            <a
+              href="/getting-started"
+              class="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+              >New to Scout? Getting Started →</a
+            >
+          </div>
+        </Header>
+
+        <div class="space-y-8">
+          <!-- Me Command -->
+          <div
+            class="border border-gray-200 dark:border-gray-700 rounded-lg p-6"
+          >
+            <h3
+              class="text-xl font-semibold text-gray-900 dark:text-white mb-3"
+            >
+              /me <span
+                class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/50 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-300"
+                >New</span
+              >
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">
+              Look up your own or any player's connected accounts, active
+              subscriptions, and competition participation. No admin permissions
+              required.
+            </p>
+
+            <CommandBox command="/me alias:[nickname]" />
+
+            <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+              Optional Parameters:
+            </h4>
+            <ul
+              class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-1"
+            >
+              <li>
+                <strong>alias:</strong> Player alias to look up (leave empty to look
+                up your own account)
+              </li>
+            </ul>
+          </div>
+
+          <!-- Subscription Add Command -->
+          <div
+            class="border border-gray-200 dark:border-gray-700 rounded-lg p-6"
+          >
+            <h3
+              class="text-xl font-semibold text-gray-900 dark:text-white mb-3"
+            >
+              /subscription add
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">
+              Subscribe to notifications for a League of Legends player.
+            </p>
+
+            <CommandBox
+              command="/subscription add channel:[#channel] region:[region] riot-id:[name#tag] alias:[nickname] user:[@user]"
+            />
+
+            <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+              Required Parameters:
+            </h4>
+            <ul
+              class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 mb-4 space-y-1"
+            >
+              <li>
+                <strong>channel:</strong> Discord channel for notifications
+              </li>
+              <li><strong>region:</strong> Player's League region</li>
+              <li><strong>riot-id:</strong> Riot ID (GameName#TagLine)</li>
+              <li><strong>alias:</strong> Display name for notifications</li>
+            </ul>
+
+            <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+              Optional Parameters:
+            </h4>
+            <ul
+              class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300"
+            >
+              <li><strong>user:</strong> Associated Discord user</li>
+            </ul>
+          </div>
+
+          <!-- Subscription Add Channel Command -->
+          <div
+            class="border border-gray-200 dark:border-gray-700 rounded-lg p-6"
+          >
+            <h3
+              class="text-xl font-semibold text-gray-900 dark:text-white mb-3"
+            >
+              /subscription add-channel <span
+                class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/50 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-300"
+                >New</span
+              >
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">
+              Add a player to an additional Discord channel without creating a
+              new subscription. Useful when you want the same player's matches
+              posted to multiple channels.
+            </p>
+
+            <CommandBox
+              command="/subscription add-channel alias:[nickname] channel:[#channel]"
+            />
+
+            <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+              Required Parameters:
+            </h4>
+            <ul
+              class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-1"
+            >
+              <li>
+                <strong>alias:</strong> The player's alias
+              </li>
+              <li>
+                <strong>channel:</strong> The additional Discord channel for notifications
+              </li>
+            </ul>
+          </div>
+
+          <!-- Subscription Move Command -->
+          <div
+            class="border border-gray-200 dark:border-gray-700 rounded-lg p-6"
+          >
+            <h3
+              class="text-xl font-semibold text-gray-900 dark:text-white mb-3"
+            >
+              /subscription move <span
+                class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/50 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-300"
+                >New</span
+              >
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">
+              Move a player's subscription from one channel to another.
+            </p>
+
+            <CommandBox
+              command="/subscription move alias:[nickname] from-channel:[#old] to-channel:[#new]"
+            />
+
+            <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+              Required Parameters:
+            </h4>
+            <ul
+              class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-1"
+            >
+              <li>
+                <strong>alias:</strong> The player's alias
+              </li>
+              <li>
+                <strong>from-channel:</strong> The current channel
+              </li>
+              <li>
+                <strong>to-channel:</strong> The destination channel
+              </li>
+            </ul>
+          </div>
+
+          <!-- Subscription Delete Command -->
+          <div
+            class="border border-gray-200 dark:border-gray-700 rounded-lg p-6"
+          >
+            <h3
+              class="text-xl font-semibold text-gray-900 dark:text-white mb-3"
+            >
+              /subscription delete
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">
+              Remove a player subscription from your server.
+            </p>
+
+            <CommandBox command="/subscription delete alias:[nickname]" />
+          </div>
+
+          <!-- Subscription List Command -->
+          <div
+            class="border border-gray-200 dark:border-gray-700 rounded-lg p-6"
+          >
+            <h3
+              class="text-xl font-semibold text-gray-900 dark:text-white mb-3"
+            >
+              /subscription list
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">
+              View all active player subscriptions in your server.
+            </p>
+
+            <CommandBox command="/subscription list" />
+          </div>
+
+          <!-- Competition Commands -->
+          <div
+            class="border border-indigo-300 dark:border-indigo-700 rounded-lg p-6 bg-indigo-50 dark:bg-indigo-900/30"
+          >
+            <h3
+              class="text-xl font-semibold text-gray-900 dark:text-white mb-3"
+            >
+              /competition
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">
+              Manage competitions and leaderboards for your server.
+            </p>
+
+            <div class="space-y-4">
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /competition create
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Create a new competition with custom criteria, dates, and
+                  settings. You can use fixed dates or select a League season.
+                </p>
+                <CommandBox
+                  command="/competition create title:[name] description:[desc] criteria-type:[type] channel:[#channel] season:[season]"
+                  variant="light"
+                />
+                <p class="text-xs text-gray-500 dark:text-gray-400 italic mt-2">
+                  Examples: Most Games Played, Highest Rank, Most Rank Climb,
+                  Most Wins (Player/Champion), Highest Win Rate
+                </p>
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /competition edit
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Edit an existing competition. You can always change title,
+                  description, and channel. Other settings can only be changed
+                  before the competition starts.
+                </p>
+                <CommandBox
+                  command="/competition edit competition-id:[id] title:[new-title]"
+                  variant="light"
+                />
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /competition list
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  View all competitions in your server, with optional filters.
+                </p>
+                <CommandBox
+                  command="/competition list active-only:[true] my-competitions:[true]"
+                  variant="light"
+                />
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /competition view
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  View competition details and current leaderboard standings.
+                </p>
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /competition join
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Join an open competition to compete on the leaderboard.
+                </p>
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /competition leave
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Leave a competition you've joined.
+                </p>
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /competition cancel
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Cancel a competition (competition owner only).
+                </p>
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /competition grant-permission
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Grant permission to create competitions to another user (admin
+                  only).
+                </p>
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /competition invite
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Invite a user to join your invite-only competition.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Report Commands -->
+          <div
+            class="border border-sky-300 dark:border-sky-700 rounded-lg p-6 bg-sky-50 dark:bg-sky-900/30"
+          >
+            <h3
+              class="text-xl font-semibold text-gray-900 dark:text-white mb-3"
+            >
+              /report
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">
+              Create recurring SQL-style reports that post lists, tables, or
+              charts to a Discord channel.
+            </p>
+
+            <div class="space-y-4">
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /report create
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Schedule a report from stored match facts. Choose a channel,
+                  CRON schedule, row limit, lookback window, and output format.
+                </p>
+                <CommandBox
+                  command='/report create title:"Weekly Surrenders" query:"SELECT player, games, surrenders, surrender_rate FROM match_participants WHERE queue IN (&apos;solo&apos;, &apos;flex&apos;) AND games >= 10 GROUP BY player ORDER BY surrender_rate DESC LIMIT 10" cron:"0 18 * * 0" channel:#reports output-format:BAR_CHART'
+                  variant="light"
+                />
+                <p class="text-xs text-gray-500 dark:text-gray-400 italic mt-2">
+                  Sources include match_participants, prematch_participants, and
+                  player_pairs. Output formats include list, table, leaderboard,
+                  bar chart, and line chart.
+                </p>
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /report run
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Run a configured report immediately and post it to its
+                  configured channel.
+                </p>
+                <CommandBox
+                  command="/report run report-id:[id]"
+                  variant="light"
+                />
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /report list
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  List report schedules for the current server, including
+                  system-managed competition and Common Denominator reports.
+                </p>
+                <CommandBox command="/report list" variant="light" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Admin Commands -->
+          <div
+            class="border border-red-300 dark:border-red-700 rounded-lg p-6 bg-red-50 dark:bg-red-900/20"
+          >
+            <h3
+              class="text-xl font-semibold text-gray-900 dark:text-white mb-3"
+            >
+              /admin
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">
+              Advanced player and account management commands for server
+              administrators.
+            </p>
+
+            <InfoBox variant="warning" title="⚠️ Administrator Only">
+              <p>
+                These commands require Discord Administrator permissions and
+                should be used carefully as some actions cannot be undone.
+              </p>
+            </InfoBox>
+
+            <div class="space-y-4 mt-4">
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /admin player-edit
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Change a player's display alias in your server.
+                </p>
+                <CommandBox
+                  command="/admin player-edit current-alias:[old] new-alias:[new]"
+                  variant="light"
+                />
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /admin account-delete
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Remove a specific Riot account from a player. Useful when
+                  someone changes their main account or a smurf is no longer
+                  used.
+                </p>
+                <CommandBox
+                  command="/admin account-delete riot-id:[name#tag] region:[region]"
+                  variant="light"
+                />
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /admin account-transfer
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Transfer an account from one player to another. Perfect for
+                  when an account was added to the wrong player.
+                </p>
+                <CommandBox
+                  command="/admin account-transfer riot-id:[name#tag] region:[region] to-player-alias:[alias]"
+                  variant="light"
+                />
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /admin player-merge
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Merge two players into one, combining all their accounts and
+                  subscriptions. Useful for consolidating duplicate players.
+                </p>
+                <CommandBox
+                  command="/admin player-merge source-alias:[from] target-alias:[to]"
+                  variant="light"
+                />
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /admin player-delete
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Permanently delete a player and all their accounts and
+                  subscriptions.
+                  <strong class="text-red-600 dark:text-red-400"
+                    >This action cannot be undone!</strong
+                  >
+                </p>
+                <CommandBox
+                  command="/admin player-delete alias:[alias] confirm:[true]"
+                  variant="light"
+                />
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /admin player-link-discord
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Link a Discord user to a player profile.
+                </p>
+                <CommandBox
+                  command="/admin player-link-discord player-alias:[alias] discord-user:[@user]"
+                  variant="light"
+                />
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /admin player-unlink-discord
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Unlink a Discord user from a player profile.
+                </p>
+                <CommandBox
+                  command="/admin player-unlink-discord player-alias:[alias]"
+                  variant="light"
+                />
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /admin player-view
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  View detailed information about a player including accounts,
+                  subscriptions, and competitions.
+                </p>
+                <CommandBox
+                  command="/admin player-view alias:[alias]"
+                  variant="light"
+                />
+              </div>
+
+              <div>
+                <h4 class="font-medium text-gray-900 dark:text-white mb-2">
+                  /admin player-list <span
+                    class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/50 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:text-green-300"
+                    >New</span
+                  >
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  List all tracked players in your server with their account and
+                  subscription counts.
+                </p>
+                <CommandBox command="/admin player-list" variant="light" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <Footer variant="homepage" />
+  </div>
+</Layout>

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-31T07:29:26.984Z",
+  "generatedAt": "2026-06-20T02:58:45.303Z",
   "assets": [
     {
       "id": "draft-prematch",
@@ -10,14 +10,14 @@
       "queue": "draft pick",
       "playerCount": 1,
       "sourceKeys": [
-        "prematch/2026/05/01/7838961918/loading-screen.png",
-        "prematch/2026/05/01/7838961918/spectator-data.json"
+        "prematch/2026/06/18/5584777006/loading-screen.png",
+        "prematch/2026/06/18/5584777006/spectator-data.json"
       ],
       "kind": "s3-image",
       "status": "generated",
       "fileName": "draft-prematch.png",
       "src": "/generated/scout-showcase/draft-prematch.png",
-      "byteLength": 2811182
+      "byteLength": 2973710
     },
     {
       "id": "draft-postmatch",
@@ -27,14 +27,14 @@
       "queue": "draft pick",
       "playerCount": 1,
       "sourceKeys": [
-        "games/2026/05/09/EUW1_7848291077/report.png",
-        "games/2026/05/09/EUW1_7848291077/match.json"
+        "games/2026/06/19/NA1_5584777006/report.png",
+        "games/2026/06/19/NA1_5584777006/match.json"
       ],
       "kind": "s3-image",
       "status": "generated",
       "fileName": "draft-postmatch.png",
       "src": "/generated/scout-showcase/draft-postmatch.png",
-      "byteLength": 2602274
+      "byteLength": 3781150
     },
     {
       "id": "ranked-solo-1-prematch",
@@ -44,14 +44,14 @@
       "queue": "solo",
       "playerCount": 1,
       "sourceKeys": [
-        "prematch/2026/05/01/3236099094/loading-screen.png",
-        "prematch/2026/05/01/3236099094/spectator-data.json"
+        "prematch/2026/06/19/8265530852/loading-screen.png",
+        "prematch/2026/06/19/8265530852/spectator-data.json"
       ],
       "kind": "s3-image",
       "status": "generated",
       "fileName": "ranked-solo-1-prematch.png",
       "src": "/generated/scout-showcase/ranked-solo-1-prematch.png",
-      "byteLength": 2890603
+      "byteLength": 2791209
     },
     {
       "id": "ranked-solo-1-postmatch",
@@ -61,14 +61,14 @@
       "queue": "solo",
       "playerCount": 1,
       "sourceKeys": [
-        "games/2026/05/05/BR1_3238117495/report.png",
-        "games/2026/05/05/BR1_3238117495/match.json"
+        "games/2026/06/19/SG2_159780129/report.png",
+        "games/2026/06/19/SG2_159780129/match.json"
       ],
       "kind": "s3-image",
       "status": "generated",
       "fileName": "ranked-solo-1-postmatch.png",
       "src": "/generated/scout-showcase/ranked-solo-1-postmatch.png",
-      "byteLength": 1972733
+      "byteLength": 3850989
     },
     {
       "id": "ranked-solo-2-prematch",
@@ -78,14 +78,14 @@
       "queue": "solo",
       "playerCount": 2,
       "sourceKeys": [
-        "prematch/2026/05/02/7840568137/loading-screen.png",
-        "prematch/2026/05/02/7840568137/spectator-data.json"
+        "prematch/2026/06/09/8252677004/loading-screen.png",
+        "prematch/2026/06/09/8252677004/spectator-data.json"
       ],
       "kind": "s3-image",
       "status": "generated",
       "fileName": "ranked-solo-2-prematch.png",
       "src": "/generated/scout-showcase/ranked-solo-2-prematch.png",
-      "byteLength": 2943633
+      "byteLength": 2952425
     },
     {
       "id": "ranked-solo-2-postmatch",
@@ -95,14 +95,14 @@
       "queue": "solo",
       "playerCount": 2,
       "sourceKeys": [
-        "games/2026/05/05/EUW1_7844076957/report.png",
-        "games/2026/05/05/EUW1_7844076957/match.json"
+        "games/2026/06/09/KR_8252677004/report.png",
+        "games/2026/06/09/KR_8252677004/match.json"
       ],
       "kind": "s3-image",
       "status": "generated",
       "fileName": "ranked-solo-2-postmatch.png",
       "src": "/generated/scout-showcase/ranked-solo-2-postmatch.png",
-      "byteLength": 1933150
+      "byteLength": 3680520
     },
     {
       "id": "ranked-flex-1-prematch",
@@ -112,14 +112,14 @@
       "queue": "flex",
       "playerCount": 1,
       "sourceKeys": [
-        "prematch/2026/05/01/7838530315/loading-screen.png",
-        "prematch/2026/05/01/7838530315/spectator-data.json"
+        "prematch/2026/06/19/3253854232/loading-screen.png",
+        "prematch/2026/06/19/3253854232/spectator-data.json"
       ],
       "kind": "s3-image",
       "status": "generated",
       "fileName": "ranked-flex-1-prematch.png",
       "src": "/generated/scout-showcase/ranked-flex-1-prematch.png",
-      "byteLength": 2888136
+      "byteLength": 2941499
     },
     {
       "id": "ranked-flex-1-postmatch",
@@ -129,14 +129,14 @@
       "queue": "flex",
       "playerCount": 1,
       "sourceKeys": [
-        "games/2026/05/06/EUW1_7844662430/report.png",
-        "games/2026/05/06/EUW1_7844662430/match.json"
+        "games/2026/06/19/BR1_3253854232/report.png",
+        "games/2026/06/19/BR1_3253854232/match.json"
       ],
       "kind": "s3-image",
       "status": "generated",
       "fileName": "ranked-flex-1-postmatch.png",
       "src": "/generated/scout-showcase/ranked-flex-1-postmatch.png",
-      "byteLength": 3804948
+      "byteLength": 3919765
     },
     {
       "id": "ranked-flex-2-prematch",
@@ -146,14 +146,14 @@
       "queue": "flex",
       "playerCount": 2,
       "sourceKeys": [
-        "prematch/2026/05/05/7843871591/loading-screen.png",
-        "prematch/2026/05/05/7843871591/spectator-data.json"
+        "prematch/2026/06/18/7891648956/loading-screen.png",
+        "prematch/2026/06/18/7891648956/spectator-data.json"
       ],
       "kind": "s3-image",
       "status": "generated",
       "fileName": "ranked-flex-2-prematch.png",
       "src": "/generated/scout-showcase/ranked-flex-2-prematch.png",
-      "byteLength": 3000971
+      "byteLength": 2869188
     },
     {
       "id": "ranked-flex-2-postmatch",
@@ -163,14 +163,14 @@
       "queue": "flex",
       "playerCount": 2,
       "sourceKeys": [
-        "games/2026/05/16/EUW1_7856317368/report.png",
-        "games/2026/05/16/EUW1_7856317368/match.json"
+        "games/2026/06/18/EUW1_7891648956/report.png",
+        "games/2026/06/18/EUW1_7891648956/match.json"
       ],
       "kind": "s3-image",
       "status": "generated",
       "fileName": "ranked-flex-2-postmatch.png",
       "src": "/generated/scout-showcase/ranked-flex-2-postmatch.png",
-      "byteLength": 3391920
+      "byteLength": 3778858
     },
     {
       "id": "ranked-flex-3-prematch",
@@ -197,14 +197,14 @@
       "queue": "flex",
       "playerCount": 3,
       "sourceKeys": [
-        "games/2026/05/10/EUW1_7848919840/report.png",
-        "games/2026/05/10/EUW1_7848919840/match.json"
+        "games/2026/05/26/EUW1_7867077494/report.png",
+        "games/2026/05/26/EUW1_7867077494/match.json"
       ],
       "kind": "s3-image",
       "status": "generated",
       "fileName": "ranked-flex-3-postmatch.png",
       "src": "/generated/scout-showcase/ranked-flex-3-postmatch.png",
-      "byteLength": 3385639
+      "byteLength": 3463644
     },
     {
       "id": "ranked-flex-4-prematch",
@@ -256,50 +256,37 @@
     },
     {
       "id": "arena-3-prematch",
-      "title": "Arena Pre-Match, Teams of 3",
+      "title": "Arena Pre-Match",
       "group": "Arena",
       "state": "prematch",
       "queue": "arena",
       "playerCount": 3,
-      "sourceKeys": [],
-      "kind": "unsupported",
-      "status": "unsupported",
-      "reason": "No real arena prematch S3 object was found for 3 tracked player(s)."
+      "sourceKeys": [
+        "prematch/2026/06/11/8255087092/loading-screen.png",
+        "prematch/2026/06/11/8255087092/spectator-data.json"
+      ],
+      "kind": "s3-image",
+      "status": "generated",
+      "fileName": "arena-3-prematch.png",
+      "src": "/generated/scout-showcase/arena-3-prematch.png",
+      "byteLength": 904290
     },
     {
       "id": "arena-3-postmatch",
-      "title": "Arena Post-Match, Teams of 3",
+      "title": "Arena Post-Match",
       "group": "Arena",
       "state": "postmatch",
       "queue": "arena",
       "playerCount": 3,
       "sourceKeys": [
-        "games/2026/05/07/EUW1_7845790456/report.png",
-        "games/2026/05/07/EUW1_7845790456/match.json"
+        "games/2026/06/11/KR_8255087092/report.png",
+        "games/2026/06/11/KR_8255087092/match.json"
       ],
       "kind": "s3-image",
       "status": "generated",
       "fileName": "arena-3-postmatch.png",
       "src": "/generated/scout-showcase/arena-3-postmatch.png",
-      "byteLength": 506922
-    },
-    {
-      "id": "arena-discord",
-      "title": "Arena Discord Screenshot",
-      "group": "Arena",
-      "description": "Discord message preview for a generated Arena post-match report.",
-      "state": "postmatch",
-      "queue": "arena",
-      "playerCount": 3,
-      "sourceKeys": [
-        "games/2026/05/07/EUW1_7845790456/report.png",
-        "games/2026/05/07/EUW1_7845790456/match.json"
-      ],
-      "kind": "discord-screenshot",
-      "status": "generated",
-      "fileName": "arena-discord.png",
-      "src": "/generated/scout-showcase/arena-discord.png",
-      "byteLength": 232185
+      "byteLength": 467623
     },
     {
       "id": "aram-prematch",
@@ -309,14 +296,14 @@
       "queue": "aram",
       "playerCount": 1,
       "sourceKeys": [
-        "prematch/2026/05/14/3241274591/loading-screen.png",
-        "prematch/2026/05/14/3241274591/spectator-data.json"
+        "prematch/2026/05/30/3247144652/loading-screen.png",
+        "prematch/2026/05/30/3247144652/spectator-data.json"
       ],
       "kind": "s3-image",
       "status": "generated",
       "fileName": "aram-prematch.png",
       "src": "/generated/scout-showcase/aram-prematch.png",
-      "byteLength": 2727298
+      "byteLength": 2888284
     },
     {
       "id": "aram-postmatch",
@@ -326,14 +313,14 @@
       "queue": "aram",
       "playerCount": 1,
       "sourceKeys": [
-        "games/2026/05/14/BR1_3241274591/report.png",
-        "games/2026/05/14/BR1_3241274591/match.json"
+        "games/2026/05/30/BR1_3247144652/report.png",
+        "games/2026/05/30/BR1_3247144652/match.json"
       ],
       "kind": "s3-image",
       "status": "generated",
       "fileName": "aram-postmatch.png",
       "src": "/generated/scout-showcase/aram-postmatch.png",
-      "byteLength": 3066087
+      "byteLength": 3917942
     },
     {
       "id": "aram-mayhem-prematch",
@@ -343,14 +330,14 @@
       "queue": "aram mayhem",
       "playerCount": 1,
       "sourceKeys": [
-        "prematch/2026/05/01/150231326/loading-screen.png",
-        "prematch/2026/05/01/150231326/spectator-data.json"
+        "prematch/2026/06/19/7892744393/loading-screen.png",
+        "prematch/2026/06/19/7892744393/spectator-data.json"
       ],
       "kind": "s3-image",
       "status": "generated",
       "fileName": "aram-mayhem-prematch.png",
       "src": "/generated/scout-showcase/aram-mayhem-prematch.png",
-      "byteLength": 2856524
+      "byteLength": 2730486
     },
     {
       "id": "aram-mayhem-postmatch",
@@ -365,52 +352,108 @@
       "reason": "No real aram mayhem postmatch S3 object was found for 1 tracked player(s)."
     },
     {
+      "id": "arena-discord",
+      "title": "Arena Discord Screenshot",
+      "group": "Arena",
+      "description": "Discord message preview for a generated Arena post-match report.",
+      "state": "postmatch",
+      "queue": "arena",
+      "playerCount": 3,
+      "sourceKeys": [
+        "games/2026/06/11/KR_8255087092/report.png",
+        "games/2026/06/11/KR_8255087092/match.json"
+      ],
+      "kind": "discord-screenshot",
+      "status": "generated",
+      "fileName": "arena-discord.png",
+      "src": "/generated/scout-showcase/arena-discord.png",
+      "byteLength": 409226
+    },
+    {
+      "id": "ranked-solo-discord",
+      "title": "Ranked Solo/Duo Discord Screenshot",
+      "group": "Ranked Solo",
+      "description": "Discord message preview for a generated Ranked Solo/Duo post-match report.",
+      "state": "postmatch",
+      "queue": "solo",
+      "playerCount": 1,
+      "sourceKeys": [
+        "games/2026/06/19/SG2_159780129/report.png",
+        "games/2026/06/19/SG2_159780129/match.json"
+      ],
+      "kind": "discord-screenshot",
+      "status": "generated",
+      "fileName": "ranked-solo-discord.png",
+      "src": "/generated/scout-showcase/ranked-solo-discord.png",
+      "byteLength": 288532
+    },
+    {
+      "id": "aram-discord",
+      "title": "ARAM Discord Screenshot",
+      "group": "ARAM",
+      "description": "Discord message preview for a generated ARAM post-match report.",
+      "state": "postmatch",
+      "queue": "aram",
+      "playerCount": 1,
+      "sourceKeys": [
+        "games/2026/05/30/BR1_3247144652/report.png",
+        "games/2026/05/30/BR1_3247144652/match.json"
+      ],
+      "kind": "discord-screenshot",
+      "status": "generated",
+      "fileName": "aram-discord.png",
+      "src": "/generated/scout-showcase/aram-discord.png",
+      "byteLength": 304528
+    },
+    {
       "id": "competition-graph",
       "title": "Competition Progress",
       "group": "Graphs",
-      "description": "Real leaderboard snapshots rendered as a marketing chart.",
+      "description": "How your group's ranks moved across the season.",
       "sourceKeys": [
-        "leaderboards/competition-9/snapshots/2026-05-11.json",
-        "leaderboards/competition-9/snapshots/2026-05-12.json",
-        "leaderboards/competition-9/snapshots/2026-05-16.json",
-        "leaderboards/competition-9/snapshots/2026-05-17.json",
-        "leaderboards/competition-9/snapshots/2026-05-18.json",
-        "leaderboards/competition-9/snapshots/2026-05-19.json",
-        "leaderboards/competition-9/snapshots/2026-05-20.json",
-        "leaderboards/competition-9/snapshots/2026-05-21.json",
-        "leaderboards/competition-9/snapshots/2026-05-22.json",
-        "leaderboards/competition-9/snapshots/2026-05-23.json"
+        "leaderboards/competition-3/snapshots/2026-01-08.json",
+        "leaderboards/competition-3/snapshots/2026-01-23.json",
+        "leaderboards/competition-3/snapshots/2026-02-03.json",
+        "leaderboards/competition-3/snapshots/2026-02-15.json",
+        "leaderboards/competition-3/snapshots/2026-02-27.json",
+        "leaderboards/competition-3/snapshots/2026-03-13.json",
+        "leaderboards/competition-3/snapshots/2026-03-24.json",
+        "leaderboards/competition-3/snapshots/2026-04-03.json",
+        "leaderboards/competition-3/snapshots/2026-04-20.json",
+        "leaderboards/competition-3/snapshots/2026-05-01.json",
+        "leaderboards/competition-3/snapshots/2026-05-16.json",
+        "leaderboards/competition-3/snapshots/2026-05-26.json"
       ],
       "kind": "competition-graph",
       "status": "generated",
       "fileName": "competition-graph.png",
       "src": "/generated/scout-showcase/competition-graph.png",
-      "byteLength": 36593
+      "byteLength": 84597
     },
     {
       "id": "report-graph",
       "title": "Scheduled Report Damage",
       "group": "Graphs",
-      "description": "Real match payloads aggregated into a scheduled-report chart.",
+      "description": "Damage to champions across your group's recent games.",
       "sourceKeys": [
-        "games/2026/05/05/BR1_3238117495/match.json",
-        "games/2026/05/05/EUW1_7844076957/match.json",
-        "games/2026/05/05/EUW1_7844082996/match.json",
-        "games/2026/05/05/NA1_5554308050/match.json",
-        "games/2026/05/05/NA1_5554393951/match.json",
-        "games/2026/05/06/BR1_3238272017/match.json",
-        "games/2026/05/06/BR1_3238339892/match.json",
-        "games/2026/05/06/BR1_3238385665/match.json",
-        "games/2026/05/06/BR1_3238401169/match.json",
-        "games/2026/05/06/EUW1_7844238363/match.json",
-        "games/2026/05/06/EUW1_7844249421/match.json",
-        "games/2026/05/06/EUW1_7844291702/match.json"
+        "games/2026/06/19/SG2_159780129/match.json",
+        "games/2026/06/19/NA1_5585223425/match.json",
+        "games/2026/06/19/NA1_5585136555/match.json",
+        "games/2026/06/19/NA1_5585117341/match.json",
+        "games/2026/06/19/NA1_5584777006/match.json",
+        "games/2026/06/19/KR_8265530852/match.json",
+        "games/2026/06/19/KR_8265455467/match.json",
+        "games/2026/06/19/KR_8265419481/match.json",
+        "games/2026/06/19/KR_8265390134/match.json",
+        "games/2026/06/19/KR_8265351671/match.json",
+        "games/2026/06/19/KR_8265281667/match.json",
+        "games/2026/06/19/KR_8265247249/match.json"
       ],
       "kind": "report-graph",
       "status": "generated",
       "fileName": "report-graph.png",
       "src": "/generated/scout-showcase/report-graph.png",
-      "byteLength": 77916
+      "byteLength": 73902
     }
   ]
 }

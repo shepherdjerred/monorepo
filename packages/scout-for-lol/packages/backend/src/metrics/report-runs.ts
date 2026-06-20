@@ -1,5 +1,5 @@
 import { Counter, Gauge, Histogram } from "prom-client";
-import { registry } from "#src/metrics/index.ts";
+import { registry } from "#src/metrics/registry.ts";
 
 export const scheduledReportsDueTotal = new Counter({
   name: "scheduled_reports_due_total",

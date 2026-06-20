@@ -1,12 +1,12 @@
 ---
 import Button from "#src/components/Button.astro";
-import type { DiscordCtaLocation } from "#src/lib/marketing.ts";
-import type { DiscordInstallClickEvent } from "#src/lib/marketing-constants.ts";
+import type { CtaLocation } from "#src/lib/marketing.ts";
+import type { GetStartedClickEvent } from "#src/lib/marketing-constants.ts";
 
 type TrackingButtonProps =
   | {
-      trackingEvent: DiscordInstallClickEvent;
-      trackingLocation: DiscordCtaLocation;
+      trackingEvent: GetStartedClickEvent;
+      trackingLocation: CtaLocation;
     }
   | {
       trackingEvent?: undefined;

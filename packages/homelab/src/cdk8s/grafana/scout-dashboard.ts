@@ -7,6 +7,7 @@ import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
 import { addPreMatchRow } from "./scout-dashboard-prematch-panels.ts";
 import { addApiAndCompetitionRows } from "./scout-dashboard-api-competition-rows.ts";
 import { addScheduledReportRows } from "./scout-dashboard-scheduled-report-panels.ts";
+import { addGuildHealthRows } from "./scout-dashboard-health-panels.ts";
 
 // Helper function to build filter expression
 function buildFilter() {
@@ -323,6 +324,10 @@ export function createScoutDashboard() {
   // shared by user-managed reports, competition reports, and Common
   // Denominator reports.
   addScheduledReportRows(builder, prometheusDatasource);
+
+  // Row 8: Guild health — servers the bot can't deliver to + unhealthy
+  // competitions.
+  addGuildHealthRows(builder, prometheusDatasource);
 
   return builder.build();
 }

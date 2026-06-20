@@ -26,6 +26,16 @@ const DRYRUN_BUILD_ENV_VALUES: Readonly<Record<string, string>> = {
   PUBLIC_REDDIT_PIXEL_ID: "dev-reddit-pixel-id",
 };
 
+// Sentry release stamped into every static-site build so browser events are
+// attributable to a deploy. The version scheme matches container images
+// (2.0.0-<build>, see steps/images.ts). $BUILDKITE_BUILD_NUMBER is expanded by
+// the BK agent shell when it assembles the `dagger call --build-cmd "..."`
+// string, so the container receives the literal value. Vite reads VITE_*,
+// Astro reads PUBLIC_*; sites without Sentry simply ignore the unused vars.
+const SENTRY_RELEASE_ENV_PREFIX =
+  "VITE_SENTRY_RELEASE=2.0.0-$BUILDKITE_BUILD_NUMBER " +
+  "PUBLIC_SENTRY_RELEASE=2.0.0-$BUILDKITE_BUILD_NUMBER";
+
 function isDryrunBuild(): boolean {
   const branch = process.env["BUILDKITE_BRANCH"];
   const defaultBranch = process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"];
@@ -89,8 +99,8 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
       : dryrunBuildEnvPrefix(buildEnvVars)
     : "";
   const buildCmd = usePlaceholderBuildEnv
-    ? `${placeholderBuildEnvPrefix} ${site.buildCmd}`
-    : site.buildCmd;
+    ? `${SENTRY_RELEASE_ENV_PREFIX} ${placeholderBuildEnvPrefix} ${site.buildCmd}`
+    : `${SENTRY_RELEASE_ENV_PREFIX} ${site.buildCmd}`;
 
   // Compute dist subdir relative to package dir
   const distSubdir =

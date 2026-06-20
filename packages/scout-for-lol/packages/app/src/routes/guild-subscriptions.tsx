@@ -138,8 +138,12 @@ export function GuildSubscriptions() {
 
       {subsQuery.data && subscriptions.length === 0 && (
         <p className="text-sm text-muted-foreground">
-          No subscriptions yet — click &quot;Add subscription&quot; to get
-          started.
+          No subscriptions yet — click &quot;Add subscription&quot;, or follow
+          the{" "}
+          <Link to="/welcome" className="underline">
+            setup guide
+          </Link>
+          .
         </p>
       )}
 

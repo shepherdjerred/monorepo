@@ -12,6 +12,8 @@ import { CompetitionForm } from "#src/routes/competition-form.tsx";
 import { ReportList } from "#src/routes/report-list.tsx";
 import { ReportDetail } from "#src/routes/report-detail.tsx";
 import { ReportForm } from "#src/routes/report-form.tsx";
+import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
+import { InstallLanding } from "#src/routes/install-landing.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
 
 export function App() {
@@ -21,6 +23,8 @@ export function App() {
         <Route path="/login" element={<Login />} />
         <Route element={<RequireSession />}>
           <Route path="/" element={<GuildPicker />} />
+          <Route path="/welcome" element={<OnboardingWizard />} />
+          <Route path="/installed" element={<InstallLanding />} />
           <Route path="/g/:guildId" element={<GuildWorkspace />}>
             <Route index element={<Navigate to="subscriptions" replace />} />
             <Route path="subscriptions" element={<GuildSubscriptions />} />

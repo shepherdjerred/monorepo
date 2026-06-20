@@ -275,13 +275,19 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "alert-remediation agent is failing on every alert",
             description: escapePrometheusTemplate(
-              "Over half of alert-remediation decisions in the last hour returned `outcome=failed`. The agent is not reaching real verdicts — the subprocess is likely hitting the 30-min activity wall (SIGTERM) without producing a decision. Check Loki for `phase=soft-kill` log lines + the agent's `lastStderrLine`/`idleMs` fields to identify the hang.",
+              "Over half of alert-remediation decisions in the last hour returned `outcome=failed`. The agent is not reaching real verdicts. Check Loki for `phase=agent-event` (live agent activity), `phase=exited` (with `firstOutputLatencyMs`/`maxIdleMs`/`lastLine`), and `phase=soft-kill`/`phase=sigkill` to see whether a run is wedged and on what.",
             ),
           },
+          // increase() (counts over the window), NOT rate() (per-second):
+          // with rate(), both numerator and denominator are tiny per-second
+          // values (~0.002), and clamp_min(denom, 1) floors the denominator
+          // at 1, collapsing the ratio to ~the numerator — so the rule could
+          // never exceed 0.5 and never fired even at 100% failure. increase()
+          // yields real counts (>1 over an hour) so the ratio is meaningful.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             [
-              'sum(rate(alert_remediation_decisions_total{outcome="failed"}[1h]))',
-              " / clamp_min(sum(rate(alert_remediation_decisions_total[1h])), 1)",
+              'sum(increase(alert_remediation_decisions_total{outcome="failed"}[1h]))',
+              " / clamp_min(sum(increase(alert_remediation_decisions_total[1h])), 1)",
               " > 0.5",
             ].join(""),
           ),

@@ -444,13 +444,38 @@ model GuildPermissionError {
   lastOccurrence        DateTime // Most recent occurrence
   consecutiveErrorCount Int       @default(1) // Number of consecutive errors
   lastSuccessfulSend    DateTime? // Last time a message was successfully sent to this server
-  ownerNotified         Boolean   @default(false) // Whether owner was notified about abandonment
+  ownerNotified         Boolean   @default(false) // DEPRECATED (was the abandoned-guild latch); unused since notificationStage replaced it
+  // Backed-off owner notification escalation for the current failure streak.
+  // notificationStage: 0 = none sent, 1 = immediate sent, 2 = +1w sent, 3 = +1mo sent (terminal).
+  // lastNotifiedAt anchors the next stage's delay (NOT firstOccurrence) so existing
+  // mid-streak rows restart cleanly at "immediate" instead of jumping to "month".
+  notificationStage     Int       @default(0)
+  lastNotifiedAt        DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
   @@unique([serverId, channelId])
   @@index([serverId, consecutiveErrorCount])
   @@index([lastOccurrence])
+}
+
+// Central audit log of every direct message (DM) the bot sends to a user.
+// All DMs MUST flow through `sendDM` (discord/utils/dm.ts), which writes one
+// row here per attempt so DMs are fully traceable. Append-only.
+model DmAuditLog {
+  id           Int      @id @default(autoincrement())
+  recipientId  String // Discord user (snowflake) the DM was addressed to
+  recipientTag String? // Discord tag at send time, when resolvable
+  guildId      String? // Guild this DM relates to, when applicable
+  kind           String // Category, e.g. "permission_error" | "abandonment" | "feedback_request" | "competition_invite" | "prune_notice"
+  content        String // The message body that was (attempted to be) sent
+  deliveryStatus String // "sent" | "dm_disabled" | "failed"
+  errorMessage   String? // Failure detail when delivery != "sent"
+  createdAt    DateTime @default(now())
+
+  @@index([recipientId, createdAt])
+  @@index([kind, createdAt])
+  @@index([guildId, createdAt])
 }
 
 // =============================================================================
@@ -555,6 +580,7 @@ model GuildInstall {
   installedAt       DateTime
   outreach3dSentAt  DateTime? // null = not yet sent
   outreach14dSentAt DateTime? // null = not yet sent
+  outreach30dSentAt DateTime? // 30-day "still not configured" nudge; null = not yet sent
 
   @@index([installedAt])
 }

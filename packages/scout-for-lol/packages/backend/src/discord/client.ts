@@ -8,6 +8,7 @@ import {
   discordLatency,
 } from "#src/metrics/index.ts";
 import { handleGuildCreate } from "#src/discord/events/guild-create.ts";
+import { handleGuildDelete } from "#src/discord/events/guild-delete.ts";
 import { voiceManager } from "#src/voice/index.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
@@ -56,18 +57,25 @@ client.on("reconnecting", () => {
   discordConnectionStatus.set(0);
 });
 
-logger.info("🔑 Logging into Discord");
-try {
-  await client.login(configuration.discordToken);
-  logger.info("✅ Successfully logged into Discord");
-} catch (error) {
-  logger.error("❌ Failed to login to Discord:", error);
-  Sentry.captureException(error, {
-    tags: {
-      source: "discord-login",
-    },
-  });
-  throw error;
+// Skip the real Discord login under tests so importing this module (e.g. via
+// the report dispatcher or guild-membership helper) is side-effect free. Tests
+// that need client behavior mock it; production/dev/beta log in as normal.
+if (Bun.env.NODE_ENV === "test") {
+  logger.info("🧪 NODE_ENV=test — skipping Discord login");
+} else {
+  logger.info("🔑 Logging into Discord");
+  try {
+    await client.login(configuration.discordToken);
+    logger.info("✅ Successfully logged into Discord");
+  } catch (error) {
+    logger.error("❌ Failed to login to Discord:", error);
+    Sentry.captureException(error, {
+      tags: {
+        source: "discord-login",
+      },
+    });
+    throw error;
+  }
 }
 
 client.on("ready", (readyClient) => {
@@ -106,6 +114,13 @@ client.on("guildCreate", (guild) => {
   logger.info(`[Guild Create] Bot added to new server: ${guild.name}`);
   discordGuildsGauge.set(client.guilds.cache.size);
   void handleGuildCreate(guild);
+});
+
+// Handle bot being removed from servers (kicked, banned, or guild deleted)
+client.on("guildDelete", (guild) => {
+  logger.info(`[Guild Delete] Bot removed from server: ${guild.name}`);
+  discordGuildsGauge.set(client.guilds.cache.size);
+  void handleGuildDelete(guild);
 });
 
 export { client };

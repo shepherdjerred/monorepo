@@ -48,6 +48,8 @@ describe("handleGuildCreate", () => {
     }
     const { content } = result.data;
     expect(content).toContain("Thanks for adding Scout");
+    // Leads with the web dashboard; slash commands are the optional path.
+    expect(content).toContain("https://scout-for-lol.com/app/");
     expect(content).toContain("https://scout-for-lol.com/getting-started");
     expect(content).toContain("/help");
     expect(content).toContain("/subscription add");

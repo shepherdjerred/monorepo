@@ -2,22 +2,85 @@ import {
   type DiscordChannelId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
+import { z } from "zod";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { DeliveryFailureKind } from "#src/discord/utils/permissions.ts";
 import { subDays } from "date-fns";
 
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const MONTH_MS = 30 * 24 * 60 * 60 * 1000;
+
 /**
- * Record a permission error for a guild/channel
- * Updates existing record or creates new one
+ * Which (if any) owner notification a failed send should trigger. Backed-off
+ * escalation: immediate on the first failure of a streak, again 1 week later,
+ * again 1 month after that, then silent.
+ */
+export const PermissionNotifyDecisionSchema = z.enum([
+  "none",
+  "immediate",
+  "week",
+  "month",
+]);
+export type PermissionNotifyDecision = z.infer<
+  typeof PermissionNotifyDecisionSchema
+>;
+
+/** The non-silent escalation stages (what an owner notification can be about). */
+export type PermissionNotifyStage = Exclude<PermissionNotifyDecision, "none">;
+
+const STAGE_FOR_DECISION: Record<
+  Exclude<PermissionNotifyDecision, "none">,
+  number
+> = {
+  immediate: 1,
+  week: 2,
+  month: 3,
+};
+
+/**
+ * Decide which escalation notification (if any) is due for the current state.
+ * Anchored on `notificationStage` + `lastNotifiedAt` (NOT `firstOccurrence`) so
+ * that pre-existing mid-streak rows (which migrate in at stage 0) restart at
+ * "immediate" rather than jumping straight to "month".
+ */
+function computeNotifyDecision(
+  existing: { notificationStage: number; lastNotifiedAt: Date | null } | null,
+  now: Date,
+): PermissionNotifyDecision {
+  // Brand-new row, or a streak that hasn't notified yet (incl. legacy rows).
+  if (!existing || existing.notificationStage === 0) {
+    return "immediate";
+  }
+  const sinceLast =
+    existing.lastNotifiedAt === null
+      ? Infinity
+      : now.getTime() - existing.lastNotifiedAt.getTime();
+  if (existing.notificationStage === 1 && sinceLast >= WEEK_MS) {
+    return "week";
+  }
+  if (existing.notificationStage === 2 && sinceLast >= MONTH_MS) {
+    return "month";
+  }
+  return "none";
+}
+
+/**
+ * Record a permission error for a guild/channel.
+ * Updates existing record or creates new one.
+ *
+ * @returns the escalation notification (if any) the caller should send to the
+ *   owner now: `"immediate"` on the first failure of a streak, `"week"` ~1 week
+ *   later, `"month"` ~1 month after that, then `"none"` (silent).
  */
 export async function recordPermissionError(
   prisma: ExtendedPrismaClient,
   params: {
     serverId: DiscordGuildId;
     channelId: DiscordChannelId;
-    errorType: string;
+    errorType: DeliveryFailureKind;
     errorReason?: string;
   },
-): Promise<void> {
+): Promise<PermissionNotifyDecision> {
   const { serverId, channelId, errorType, errorReason } = params;
   const now = new Date();
 
@@ -30,6 +93,17 @@ export async function recordPermissionError(
       },
     },
   });
+
+  const decision = computeNotifyDecision(existing, now);
+  // When we notify, advance the stage and stamp lastNotifiedAt; otherwise leave
+  // the escalation state untouched.
+  const notifyData =
+    decision === "none"
+      ? {}
+      : {
+          notificationStage: STAGE_FOR_DECISION[decision],
+          lastNotifiedAt: now,
+        };
 
   await (existing
     ? prisma.guildPermissionError.update({
@@ -44,6 +118,7 @@ export async function recordPermissionError(
           consecutiveErrorCount: existing.consecutiveErrorCount + 1,
           errorType,
           errorReason: errorReason ?? existing.errorReason,
+          ...notifyData,
         },
       })
     : prisma.guildPermissionError.create({
@@ -55,8 +130,11 @@ export async function recordPermissionError(
           firstOccurrence: now,
           lastOccurrence: now,
           consecutiveErrorCount: 1,
+          ...notifyData,
         },
       }));
+
+  return decision;
 }
 
 /**
@@ -90,6 +168,9 @@ export async function recordSuccessfulSend(
         data: {
           consecutiveErrorCount: 0,
           lastSuccessfulSend: now,
+          // Streak resolved: a later failure starts a fresh "immediate".
+          notificationStage: 0,
+          lastNotifiedAt: null,
         },
       })
     : prisma.guildPermissionError.create({
@@ -103,125 +184,6 @@ export async function recordSuccessfulSend(
           lastSuccessfulSend: now,
         },
       }));
-}
-
-/**
- * Get guilds that have had consecutive permission errors for more than a specified duration
- * Only returns guilds where ALL channels have errors and there are NO working channels
- * @param minDays - Minimum number of days of consecutive errors (default: 7)
- * @returns List of abandoned guilds
- */
-export async function getAbandonedGuilds(
-  prisma: ExtendedPrismaClient,
-  minDays = 7,
-): Promise<
-  {
-    serverId: DiscordGuildId;
-    firstOccurrence: Date;
-    lastOccurrence: Date;
-    errorCount: number;
-  }[]
-> {
-  const cutoffDate = subDays(new Date(), minDays);
-
-  const errors = await prisma.guildPermissionError.findMany({
-    where: {
-      // Has errors
-      consecutiveErrorCount: {
-        gt: 0,
-      },
-      // First error was more than minDays ago
-      firstOccurrence: {
-        lte: cutoffDate,
-      },
-      // Has NOT been successfully sent to recently (or never)
-      OR: [
-        {
-          lastSuccessfulSend: null,
-        },
-        {
-          lastSuccessfulSend: {
-            lte: cutoffDate,
-          },
-        },
-      ],
-      // Owner hasn't been notified about abandonment yet
-      ownerNotified: false,
-    },
-  });
-
-  // Group by serverId and aggregate
-  const guilds: Record<
-    string,
-    {
-      serverId: DiscordGuildId;
-      firstOccurrence: Date;
-      lastOccurrence: Date;
-      errorCount: number;
-    }
-  > = {};
-
-  for (const error of errors) {
-    const existing = guilds[error.serverId];
-    if (existing) {
-      // Update with earliest first occurrence and latest last occurrence
-      if (error.firstOccurrence < existing.firstOccurrence) {
-        existing.firstOccurrence = error.firstOccurrence;
-      }
-      if (error.lastOccurrence > existing.lastOccurrence) {
-        existing.lastOccurrence = error.lastOccurrence;
-      }
-      existing.errorCount += error.consecutiveErrorCount;
-    } else {
-      guilds[error.serverId] = {
-        serverId: error.serverId,
-        firstOccurrence: error.firstOccurrence,
-        lastOccurrence: error.lastOccurrence,
-        errorCount: error.consecutiveErrorCount,
-      };
-    }
-  }
-
-  // Filter out guilds that have any working channels
-  // Only abandon if ALL channels have errors
-  const abandonedGuilds: typeof guilds = {};
-
-  for (const [serverId, guildInfo] of Object.entries(guilds)) {
-    // Check if this guild has ANY channels with recent successful sends
-    const workingChannels = await prisma.guildPermissionError.findFirst({
-      where: {
-        serverId: guildInfo.serverId,
-        consecutiveErrorCount: 0,
-        lastSuccessfulSend: {
-          gte: cutoffDate,
-        },
-      },
-    });
-
-    // Only include guild if it has NO working channels
-    if (!workingChannels) {
-      abandonedGuilds[serverId] = guildInfo;
-    }
-  }
-
-  return Object.values(abandonedGuilds);
-}
-
-/**
- * Mark a guild as having been notified about abandonment
- */
-export async function markGuildAsNotified(
-  prisma: ExtendedPrismaClient,
-  serverId: DiscordGuildId,
-): Promise<void> {
-  await prisma.guildPermissionError.updateMany({
-    where: {
-      serverId,
-    },
-    data: {
-      ownerNotified: true,
-    },
-  });
 }
 
 /**
