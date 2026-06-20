@@ -53,9 +53,7 @@ export function OnboardingSubscribeStep(props: {
   const step: OnboardingStepKind =
     props.mode === "self" ? "subscribe-self" : "subscribe-more";
   const title =
-    props.mode === "self"
-      ? "Track your own account"
-      : "Add teammates (optional)";
+    props.mode === "self" ? "Track your own account" : "Add friends";
   const description =
     props.mode === "self"
       ? "Add your League account so you get a report after every game you play."
@@ -117,29 +115,22 @@ export function OnboardingSubscribeStep(props: {
               ← Back
             </Button>
             <div className="flex gap-2">
-              {props.mode === "self" ? (
-                <>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={props.onContinue}
-                  >
-                    Skip this step
-                  </Button>
-                  <Button type="submit" disabled={isPending}>
-                    {isPending ? "Adding…" : "Track me"}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button type="submit" variant="outline" disabled={isPending}>
-                    {isPending ? "Adding…" : "Add another"}
-                  </Button>
-                  <Button type="button" onClick={props.onContinue}>
-                    Continue
-                  </Button>
-                </>
-              )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={props.onContinue}
+              >
+                Skip
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {props.mode === "self"
+                  ? isPending
+                    ? "Adding…"
+                    : "Track me"
+                  : isPending
+                    ? "Adding…"
+                    : "Add friend"}
+              </Button>
             </div>
           </div>
         </form>

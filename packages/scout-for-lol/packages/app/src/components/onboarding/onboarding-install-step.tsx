@@ -22,8 +22,10 @@ export function OnboardingInstallStep(props: {
         <Card>
           <CardContent className="space-y-3 p-4">
             <p className="text-sm text-muted-foreground">
-              You&apos;ll pick a server and approve permissions on Discord. You
-              need the <strong>Manage Server</strong> permission there.
+              Opens Discord in a new tab. Pick a server and approve permissions
+              (you need <strong>Manage Server</strong>). Discord won&apos;t send
+              you back automatically — once you&apos;ve added Scout, return to
+              this tab and your server shows up below.
             </p>
             <Button asChild>
               <a href={DISCORD_INVITE_URL} target="_blank" rel="noreferrer">
