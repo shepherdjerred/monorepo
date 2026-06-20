@@ -263,9 +263,35 @@ function toSuggestions(
 }
 
 /**
+ * Kick off action-id re-discovery in the background (non-blocking).
+ *
+ * Discovery can take 30s+ (crawl homepage + webpack + chunks, then probe each
+ * candidate id sequentially), so it must never run on the request path — that
+ * would hang the user's autocomplete. We fire-and-forget here: the current
+ * request fails-soft to `[]`, and once discovery heals `cachedActionId` the
+ * *next* request benefits. Cooldown- and in-flight-guarded so a burst of stale
+ * hits only crawls once.
+ */
+function triggerBackgroundDiscovery(): void {
+  if (Date.now() - lastDiscoveryAt <= DISCOVERY_COOLDOWN_MS) return;
+  lastDiscoveryAt = Date.now();
+  void (async () => {
+    const fresh = await discoverActionId();
+    if (fresh !== null && fresh !== cachedActionId) {
+      cachedActionId = fresh;
+      logger.info("OP.GG action id healed in background", { id: fresh });
+    }
+  })();
+}
+
+/**
  * Search OP.GG for summoners whose name starts with `query` in `region` (our
  * RegionSchema value). Fail-soft: returns `[]` on any error/timeout/parse
- * failure / unmappable region. Self-heals a rotated action id.
+ * failure / unmappable region.
+ *
+ * Self-heals a rotated action id *without blocking*: a stale cached id makes
+ * this request return `[]` immediately while discovery runs in the background
+ * for the next request (see `triggerBackgroundDiscovery`).
  */
 export async function opggSearch(
   query: string,
@@ -275,17 +301,10 @@ export async function opggSearch(
   const opggRegion = REGION_TO_OPGG[region];
   if (trimmed.length < 2 || opggRegion === undefined) return [];
 
-  let outcome = await runSearch(cachedActionId, opggRegion, trimmed);
-  if (
-    outcome.kind === "stale" &&
-    Date.now() - lastDiscoveryAt > DISCOVERY_COOLDOWN_MS
-  ) {
-    lastDiscoveryAt = Date.now();
-    const fresh = await discoverActionId();
-    if (fresh !== null && fresh !== cachedActionId) {
-      cachedActionId = fresh;
-      outcome = await runSearch(cachedActionId, opggRegion, trimmed);
-    }
+  const outcome = await runSearch(cachedActionId, opggRegion, trimmed);
+  if (outcome.kind === "stale") {
+    // Don't await — discovery is far slower than the request budget.
+    triggerBackgroundDiscovery();
   }
   return outcome.kind === "ok" ? toSuggestions(outcome.summoners, region) : [];
 }

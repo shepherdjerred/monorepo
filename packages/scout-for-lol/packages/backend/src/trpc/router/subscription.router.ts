@@ -125,6 +125,12 @@ export const subscriptionRouter = router({
         return notFound;
       }
       const puuid = puuidResult.puuid;
+      // Seed the stored Riot ID from Riot's canonical casing (surfaced by the
+      // resolve above), not the user-typed input.
+      const canonicalRiotId = {
+        game_name: puuidResult.gameName,
+        tag_line: puuidResult.tagLine,
+      };
 
       const result = await prisma.$transaction(async (tx) => {
         const r = await addSubscription(
@@ -132,7 +138,7 @@ export const subscriptionRouter = router({
             guildId: input.guildId,
             channelId: input.channelId,
             region: input.region,
-            riotId: input.riotId,
+            riotId: canonicalRiotId,
             alias: input.alias,
             discordUserId: input.discordUserId,
             creatorDiscordId: actorDiscordId,

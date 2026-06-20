@@ -11,7 +11,13 @@ import { recordRiotResolution } from "#src/lib/riot/summoner-index.ts";
 const logger = createLogger("subscription-resolve");
 
 export type ResolveRiotIdResult =
-  | { kind: "ok"; puuid: string }
+  | {
+      kind: "ok";
+      puuid: string;
+      /** Riot-canonical casing from the Account API (not the typed input). */
+      gameName: string;
+      tagLine: string;
+    }
   | { kind: "not-found"; message: string };
 
 export async function resolveRiotIdToPuuid(
@@ -38,19 +44,21 @@ export async function resolveRiotIdToPuuid(
 
     const apiTime = Date.now() - apiStartTime;
     const puuid = account.response.puuid;
+    // Riot-canonical casing from the Account API (not the typed input).
+    const gameName = account.response.gameName;
+    const tagLine = account.response.tagLine;
 
     logger.info(
       `✅ Resolved Riot ID to PUUID: ${puuid} (${apiTime.toString()}ms)`,
     );
-    // Maintain the summoner index: confirmed hit → upsert. Use the canonical
-    // casing Riot returns when present.
+    // Maintain the summoner index: confirmed hit → upsert with canonical casing.
     void recordRiotResolution({
-      gameName: account.response.gameName,
-      tagLine: account.response.tagLine,
+      gameName,
+      tagLine,
       region,
       puuid,
     });
-    return { kind: "ok", puuid };
+    return { kind: "ok", puuid, gameName, tagLine };
   } catch (error) {
     logger.error(
       `❌ Failed to resolve Riot ID ${riotId.game_name}#${riotId.tag_line}:`,

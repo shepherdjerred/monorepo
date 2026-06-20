@@ -33,10 +33,12 @@ export async function resolveRiotIdExact(
   if (result.kind !== "ok") {
     return { kind: "not-found", message: result.message };
   }
+  // Use Riot's canonical casing (surfaced by resolveRiotIdToPuuid) rather than
+  // the user-typed input, so the displayed/stored Riot ID matches Riot.
   return {
     kind: "ok",
     puuid: result.puuid,
-    gameName: input.riotId.game_name,
-    tagLine: input.riotId.tag_line,
+    gameName: result.gameName,
+    tagLine: result.tagLine,
   };
 }

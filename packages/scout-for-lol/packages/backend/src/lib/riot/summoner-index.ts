@@ -123,7 +123,10 @@ export async function recordRiotResolution(params: {
   }
 }
 
+/** Rows inserted into the index per `createMany`. */
 const BACKFILL_BATCH_SIZE = 500;
+/** Rows read per cursor page when streaming PrematchParticipantFact. */
+const BACKFILL_SCAN_BATCH_SIZE = 5000;
 
 /**
  * Seed the index from data we already have: every resolved `Account` plus
@@ -184,16 +187,32 @@ export async function backfillFromExisting(): Promise<{
     );
   }
 
-  const facts = await prisma.prematchParticipantFact.findMany({
-    where: { region: { not: null } },
-    select: { puuid: true, riotId: true, region: true },
-    distinct: ["puuid"],
-  });
-  for (const fact of facts) {
-    if (fact.region === null) continue;
-    const parsed = parseRiotId(fact.riotId);
-    if (parsed === null) continue;
-    consider(fact.puuid, parsed.gameName, parsed.tagLine, fact.region);
+  // Stream PrematchParticipantFact rows in id-ordered cursor batches rather
+  // than `findMany({ distinct: ["puuid"] })`, which would hash/sort the whole
+  // matching set and hold every distinct row in memory at once. `consider`
+  // already de-dups per PUUID, so plain pagination is sufficient; memory stays
+  // bounded by the page size plus the set of *new* PUUIDs.
+  let factsScanned = 0;
+  let cursorId: number | undefined;
+  for (;;) {
+    const page = await prisma.prematchParticipantFact.findMany({
+      where: { region: { not: null } },
+      select: { id: true, puuid: true, riotId: true, region: true },
+      orderBy: { id: "asc" },
+      take: BACKFILL_SCAN_BATCH_SIZE,
+      ...(cursorId !== undefined && { cursor: { id: cursorId }, skip: 1 }),
+    });
+    if (page.length === 0) break;
+    for (const fact of page) {
+      factsScanned++;
+      if (fact.region === null) continue;
+      const parsed = parseRiotId(fact.riotId);
+      if (parsed === null) continue;
+      consider(fact.puuid, parsed.gameName, parsed.tagLine, fact.region);
+    }
+    const last = page.at(-1);
+    if (last === undefined || page.length < BACKFILL_SCAN_BATCH_SIZE) break;
+    cursorId = last.id;
   }
 
   const rows = [...toCreate.values()];
@@ -203,7 +222,7 @@ export async function backfillFromExisting(): Promise<{
     });
   }
 
-  const scanned = accounts.length + facts.length;
+  const scanned = accounts.length + factsScanned;
   logger.info("Summoner index backfill complete", {
     inserted: rows.length,
     scanned,
