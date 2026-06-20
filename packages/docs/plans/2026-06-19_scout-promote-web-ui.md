@@ -78,3 +78,30 @@ Register `redirect_uri` on both apps or Discord rejects `invalid redirect_uri`:
 - Analytics: the tracked conversion event was renamed `discord_install_click` → `get_started_click`; any Plausible/Pinterest/Reddit goals keyed on the old name need reconfiguring.
 - The dashboard workspace header renders the raw guild ID (and briefly raw channel IDs until names resolve) — minor UI polish opportunity, visible in `dashboard-subscriptions.png`.
 - Frontend build requires `PUBLIC_PINTEREST_TAG_ID` + `PUBLIC_REDDIT_PIXEL_ID` (CI-set); locally pass dummy values.
+
+## Addendum — Marketing image regeneration (2026-06-19)
+
+Follow-up on the same PR: regenerated **all** product imagery from the showcase pipeline, made `discover` fast, and added Discord-message composites.
+
+### How to run the pipeline (local)
+
+From `packages/scout-for-lol/packages/backend`, with `AWS_PROFILE=seaweedfs AWS_ENDPOINT_URL=https://seaweedfs.sjer.red`:
+
+```bash
+bun run discover:marketing-showcase --bucket scout-prod \
+  --prev ../../showcase/marketing-showcase.manifest.json \
+  --out  ../../showcase/marketing-showcase.manifest.json   # ~18s
+bun run generate:marketing-showcase --bucket scout-prod \
+  --manifest ../../showcase/marketing-showcase.manifest.json \
+  --out ../../packages/frontend/public/generated/scout-showcase \
+  --asset-index ../../packages/frontend/src/data/generated/scout-showcase-assets.json
+```
+
+### Key facts / gotchas
+
+- **SeaweedFS public ingress (`seaweedfs.sjer.red`) 403s `HeadObject` and ranged GETs** but serves plain `GetObject`/`ListObjectsV2` fine. `discover` now reads object metadata via a plain `GetObject` + immediate body-cancel (`objectMetadata`). Any future S3 metadata reads against this endpoint must avoid HEAD/Range.
+- **Fast discover design** (`discover-marketing-showcase.ts`): list newest-first, `GetObject` metadata until the frequent `solo-1`/`flex-1` combos are seen (early-exit) or `--max-head` (default 800); everything else (Arena, ARAM, multi-player, draft, rotating modes) is best-effort and **falls back to `--prev`** so `validateRequiredShowcaseCoverage` never regresses. ~104 reads / ~18s vs the old ~16K-HeadObject full scan (~30 min).
+- **3 Discord composites** (`arena-discord`, `ranked-solo-discord`, `aram-discord`) are emitted from `src/showcase/discord-templates.ts` (curated chrome + chat; fresh report swapped in per run). They're in `REQUIRED_SHOWCASE_VARIANT_IDS`.
+- **`generate` tolerates a missing `match.json`** (recent matches upload the report image first) via `readS3JsonOptional` — needed because `discover` picks the newest match, which may be mid-upload.
+- `generate.ts` was at the 500-line cap; the graph generators were split into `competition-graph.ts` / `report-graph.ts` + shared `generate-types.ts` (510 → 260 lines).
+- Marketing pages reference gallery assets via `getGeneratedScoutShowcaseAssetSrc(id)` (throws if not `generated`); the showcase grid covers Arena ×2 / Flex / Solo / ARAM. The 9 standalone `public/*.png|webp` were deleted; dashboard UI screenshots stay (not gallery-generatable).
