@@ -1398,7 +1398,7 @@ export function releasePleaseHelper(
       // The agent's write access is therefore bounded only by the fixed,
       // code-reviewed prompt at .dagger/prompts/refine-release-please.md and the
       // GitHub App token's repo scope — re-evaluate if the prompt becomes dynamic.
-      `claude -p "$REFINE_PROMPT" --output-format json --allowed-tools Bash,Read,Edit,Write,Grep,Glob --dangerously-skip-permissions --max-turns 80 --model claude-opus-4-7`,
+      `claude -p "$REFINE_PROMPT" --output-format json --allowed-tools Bash,Read,Edit,Write,Grep,Glob --dangerously-skip-permissions --max-turns 80 --model claude-opus-4-8`,
       `release-please github-release --token="$GH_TOKEN" --repo-url=${MONOREPO_REPO} --target-branch=main`,
     ].join(" && "),
   ]);

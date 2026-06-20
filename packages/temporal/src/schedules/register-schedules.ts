@@ -23,6 +23,13 @@ export const DELETED_SCHEDULE_IDS = [
   // of reconciled weekly). The workflow type was removed from the bundle, so
   // this schedule must be deleted or it would keep firing a missing workflow.
   "helm-types-weekly-refresh",
+  // Renamed to `alert-remediation-daily` and throttled hourly → once a day
+  // while the `claude -p` startup hang is investigated (every hourly run was
+  // pegging the 30-min activity timeout; see
+  // packages/docs/logs/2026-06-19_bugsink-temporal-checkin-alert-remediation-hang.md).
+  // Schedules are keyed by id, so the renamed schedule is a NEW one — this
+  // entry deletes the old hourly schedule on startup so it stops firing.
+  "alert-remediation-hourly",
 ] as const;
 
 type ScheduleDefinition = {
@@ -141,7 +148,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Bounded daily homelab health check email via generic report-only agent task (Claude -> Postal)",
   },
   {
-    id: "alert-remediation-hourly",
+    id: "alert-remediation-daily",
     workflowType: "alertRemediationSweepWorkflow",
     args: [
       {
@@ -154,11 +161,15 @@ export const SCHEDULES: ScheduleDefinition[] = [
         maxTurns: 15,
       },
     ],
-    cronExpression: "0 * * * *",
+    // 08:00 PT daily — throttled from hourly (the old `alert-remediation-hourly`
+    // schedule, now in DELETED_SCHEDULE_IDS) while the `claude -p` startup hang
+    // is investigated. Staggered clear of homelab-audit-daily (06:30), the only
+    // other AGENT_TASK-queue cron.
+    cronExpression: "0 8 * * *",
     taskQueue: TASK_QUEUES.AGENT_TASK,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "2 hours",
-    memo: "Hourly PagerDuty/Bugsink alert remediation fan-out. Child workflows may create draft PRs for straightforward repo-only fixes.",
+    memo: "Daily PagerDuty/Bugsink alert remediation fan-out (08:00 PT). Child workflows may create draft PRs for straightforward repo-only fixes.",
   },
   {
     id: "scout-data-dragon-version-check",

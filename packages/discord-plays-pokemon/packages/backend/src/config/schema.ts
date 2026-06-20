@@ -10,6 +10,10 @@ const GoalConfigSchema = z
     runtime_directory: z.string().min(1).default("."),
     screenshot_dir: z.string().min(1).default("goal-screenshots"),
     state_path: z.string().min(1).default("goal-state.json"),
+    // Per-guild persistent memory (MEMORY.md + logs/ + archived-memory/) lives
+    // here. The driver overrides this to saves/<guildId>/goal-memory at runtime,
+    // same as state_path/screenshot_dir, so memory survives restarts on the PVC.
+    memory_dir: z.string().min(1).default("goal-memory"),
     control_host: z.string().min(1).default("127.0.0.1"),
     control_port: z.number().int().min(1024).max(49_151).default(8082),
     max_runtime_minutes: z.number().int().positive().max(30).default(30),
@@ -20,6 +24,20 @@ const GoalConfigSchema = z
       .positive()
       .max(600)
       .default(60),
+    // The goal bot is trusted/operator-driven and behind the authed control
+    // server, so it gets higher input caps than casual Discord chat users (who
+    // stay on game.commands.*). Bigger chords also cut LLM tool round-trips.
+    command_limits: z
+      .strictObject({
+        max_quantity_per_action: z.number().int().positive().default(60),
+        chord_max_commands: z.number().int().positive().default(32),
+        chord_max_total: z.number().int().positive().default(200),
+      })
+      .default({
+        max_quantity_per_action: 60,
+        chord_max_commands: 32,
+        chord_max_total: 200,
+      }),
   })
   .default({
     enabled: false,
@@ -28,11 +46,17 @@ const GoalConfigSchema = z
     runtime_directory: ".",
     screenshot_dir: "goal-screenshots",
     state_path: "goal-state.json",
+    memory_dir: "goal-memory",
     control_host: "127.0.0.1",
     control_port: 8082,
     max_runtime_minutes: 30,
     lock_minutes: 5,
     progress_update_interval_seconds: 60,
+    command_limits: {
+      max_quantity_per_action: 60,
+      chord_max_commands: 32,
+      chord_max_total: 200,
+    },
   });
 
 export const ConfigSchema = z.strictObject({
