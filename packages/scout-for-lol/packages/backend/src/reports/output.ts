@@ -102,17 +102,40 @@ function formatReportValue(value: number | string): string {
   return value.toFixed(2);
 }
 
+// Human-friendly axis labels + value formatting per metric. Rate metrics are
+// stored as 0..1 ratios; they render as whole-number percentages (e.g. 0.71 →
+// "71%"). The label is the default Y-axis title (overridable via `y_axis`).
+type MetricDisplay = { label: string; percent: boolean };
+const METRIC_DISPLAY: Record<ReportMetric, MetricDisplay> = {
+  games: { label: "Games", percent: false },
+  wins: { label: "Wins", percent: false },
+  losses: { label: "Losses", percent: false },
+  surrenders: { label: "Surrenders", percent: false },
+  surrender_rate: { label: "Surrender Rate", percent: true },
+  win_rate: { label: "Win Rate", percent: true },
+  kills: { label: "Kills", percent: false },
+  deaths: { label: "Deaths", percent: false },
+  assists: { label: "Assists", percent: false },
+  kda: { label: "KDA", percent: false },
+  creep_score: { label: "Creep Score", percent: false },
+  damage_to_champions: { label: "Damage to Champions", percent: false },
+  prematches: { label: "Prematches", percent: false },
+  score: { label: "Score", percent: false },
+};
+
 type ResolvedChart = {
   title: string;
   yAxisLabel: string;
+  valueSuffix: string;
   values: { label: string; value: number }[];
 };
 
 /**
  * Resolve the declarative chart encoding into concrete plot inputs. The Y
  * channel selects which SELECTed metric is plotted (default: the first metric,
- * matching the pre-DSL behavior); title/axis fall back to the report title and
- * the metric name. The X channel is the row dimension (`label`).
+ * matching the pre-DSL behavior); the axis label and value formatting come from
+ * the metric's display metadata (overridable via the `y_axis` option). The X
+ * channel is the row dimension (`label`).
  */
 function resolveChart(
   params: RenderReportOutputParams,
@@ -129,12 +152,16 @@ function resolveChart(
   const yMetric: ReportMetric =
     yColumn === undefined ? firstMetric : ReportMetricSchema.parse(yColumn);
   const yIndex = Math.max(0, metrics.indexOf(yMetric));
+  const display = METRIC_DISPLAY[yMetric];
   return {
     title: render.options.title ?? params.title,
-    yAxisLabel: render.options.yAxisLabel ?? yMetric,
+    yAxisLabel: render.options.yAxisLabel ?? display.label,
+    valueSuffix: display.percent ? "%" : "",
     values: params.result.rows.map((row) => ({
       label: row.label,
-      value: numericValue(row, yIndex),
+      value: display.percent
+        ? Math.round(numericValue(row, yIndex) * 100)
+        : numericValue(row, yIndex),
     })),
   };
 }
@@ -148,6 +175,7 @@ async function renderBarChart(
     chartType: "bar",
     title: chart.title,
     yAxisLabel: chart.yAxisLabel,
+    valueSuffix: chart.valueSuffix,
     bars: chart.values.map((entry) => ({
       playerName: entry.label,
       value: entry.value,
@@ -169,6 +197,7 @@ async function renderLineChart(
     chartType: "line",
     title: chart.title,
     yAxisLabel: chart.yAxisLabel,
+    valueSuffix: chart.valueSuffix,
     startDate: params.startedAt,
     endDate: params.startedAt,
     series: chart.values.map((entry) => ({
