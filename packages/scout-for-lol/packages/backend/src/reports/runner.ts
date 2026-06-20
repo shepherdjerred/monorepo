@@ -4,6 +4,10 @@ import {
   type ReportOutputFormat,
   type ReportRunTrigger,
 } from "@scout-for-lol/data";
+
+// The `output_format` metric label is the parsed RENDER kind, or `UNKNOWN` when
+// the stored query failed to parse before the kind could be derived.
+type ReportMetricLabel = ReportOutputFormat | "UNKNOWN";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { parseReportQuery } from "#src/reports/query-language.ts";
 import {
@@ -43,10 +47,11 @@ export async function runReport(
   params: RunReportParams,
 ): Promise<ReportRunResult> {
   const trigger = ReportRunTriggerSchema.parse(params.trigger);
-  // The render kind lives in the query's RENDER clause; derive it for the
-  // `output_format` metric label (and surface a malformed stored query early).
-  const renderKind = parseReportQuery(params.report.queryText).render.kind;
   const startedAt = params.now ?? new Date();
+  // Record the run row up front so any failure — including a malformed stored
+  // query whose RENDER clause won't parse — is captured as a FAILED run rather
+  // than thrown before the run is ever recorded. The `output_format` metric
+  // label is only known once the query parses; until then it stays UNKNOWN.
   const run = await params.prisma.reportRun.create({
     data: {
       reportId: params.report.id,
@@ -56,8 +61,13 @@ export async function runReport(
       startedAt,
     },
   });
+  let renderKind: ReportMetricLabel = "UNKNOWN";
 
   try {
+    // The render kind lives in the query's RENDER clause; deriving it here (a)
+    // surfaces a malformed stored query through the error-handled path and (b)
+    // yields the `output_format` metric label.
+    renderKind = parseReportQuery(params.report.queryText).render.kind;
     const result = await executeReportQuery({
       prisma: params.prisma,
       serverId: params.report.serverId,
@@ -159,7 +169,7 @@ export async function runReport(
 
 function recordReportMetrics(params: {
   report: Report;
-  outputFormat: ReportOutputFormat;
+  outputFormat: ReportMetricLabel;
   trigger: ReportRunTrigger;
   status: "SUCCESS" | "FAILED";
   durationMs: number;

@@ -190,6 +190,41 @@ describe("RENDER clause — full runner pipeline", () => {
     expect(run.status).toBe("SUCCESS");
     expect(run.rowsReturned).toBe(2);
   });
+
+  test("a malformed RENDER clause records a FAILED run (no silent bypass)", async () => {
+    await seedFacts();
+    const report = await prisma.report.create({
+      data: {
+        serverId,
+        ownerId: testAccountId("717171003"),
+        channelId: testChannelId("717171004"),
+        title: "Broken Render",
+        description: null,
+        // `not_a_metric` is not a SELECTed column → parseReportQuery throws.
+        queryText: `${BASE_QUERY} RENDER bar_chart WITH (y = not_a_metric)`,
+        lookbackDays: 30,
+        maxRows: 10,
+        isEnabled: true,
+        isSystemManaged: false,
+        cronExpression: "0 0 * * *",
+        nextScheduledRunAt: now,
+        createdTime: now,
+        updatedTime: now,
+      },
+    });
+
+    await expect(
+      runReport({ prisma, report, trigger: "MANUAL", now }),
+    ).rejects.toThrow();
+
+    // The failure must be recorded, not bypassed: the run row exists, is marked
+    // FAILED, and carries the parse error.
+    const run = await prisma.reportRun.findFirstOrThrow({
+      where: { reportId: report.id },
+    });
+    expect(run.status).toBe("FAILED");
+    expect(run.errorMessage).not.toBeNull();
+  });
 });
 
 async function cleanup(): Promise<void> {

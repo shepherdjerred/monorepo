@@ -151,7 +151,18 @@ function resolveChart(
   const yColumn = render.encoding.y;
   const yMetric: ReportMetric =
     yColumn === undefined ? firstMetric : ReportMetricSchema.parse(yColumn);
-  const yIndex = Math.max(0, metrics.indexOf(yMetric));
+  // The parser already validated `y` against the SELECTed metrics, so the
+  // column must be present here. Fail fast on the "cannot happen" state rather
+  // than silently defaulting to index 0 (the first metric) and plotting the
+  // wrong series.
+  const yIndex = metrics.indexOf(yMetric);
+  if (yIndex === -1) {
+    throw new Error(
+      `RENDER y = "${yMetric}" is not among the SELECTed metrics [${metrics.join(
+        ", ",
+      )}]`,
+    );
+  }
   const display = METRIC_DISPLAY[yMetric];
   return {
     title: render.options.title ?? params.title,
