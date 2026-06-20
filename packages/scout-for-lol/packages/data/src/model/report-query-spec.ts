@@ -64,3 +64,54 @@ export const ReportOrderBySchema = z.union([
   ReportMetricSchema,
   z.literal("label"),
 ]);
+
+// ── Editor-facing AST + diagnostics ──────────────────────────────────────────
+// The parser produces a lenient AST (raw lowercased values + source spans) plus
+// diagnostics, so the Monaco editor can show squiggles and the executor can
+// compile a strict ReportQueryPlan from the same parse.
+
+// Half-open character offset range [start, end) into the original query text.
+export type ReportQuerySpan = { start: number; end: number };
+
+export type ReportDiagnosticSeverity = z.infer<
+  typeof ReportDiagnosticSeveritySchema
+>;
+export const ReportDiagnosticSeveritySchema = z.enum([
+  "error",
+  "warning",
+  "info",
+]);
+
+export type ReportDiagnostic = {
+  message: string;
+  severity: ReportDiagnosticSeverity;
+  span: ReportQuerySpan;
+};
+
+export type ReportQueryItem = { value: string; span: ReportQuerySpan };
+
+export type ReportWhereClause =
+  | { kind: "queue"; values: string[]; span: ReportQuerySpan }
+  | { kind: "champion_id"; value: number; span: ReportQuerySpan }
+  | { kind: "min_games"; value: number; span: ReportQuerySpan }
+  | { kind: "competition_id"; value: number; span: ReportQuerySpan }
+  | { kind: "unsupported"; text: string; span: ReportQuerySpan };
+
+export type ReportQueryOrderBy = {
+  metric: ReportQueryItem;
+  direction?: ReportQueryItem | undefined;
+};
+
+export type ReportQueryAst = {
+  select: ReportQueryItem[];
+  source?: ReportQueryItem | undefined;
+  where: ReportWhereClause[];
+  groupBy?: ReportQueryItem | undefined;
+  orderBy?: ReportQueryOrderBy | undefined;
+  limit?: ReportQueryItem | undefined;
+};
+
+export type ReportParseResult = {
+  ast: ReportQueryAst;
+  diagnostics: ReportDiagnostic[];
+};
