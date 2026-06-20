@@ -1,7 +1,7 @@
 import { Button } from "#src/components/ui/button.tsx";
 import { Card, CardContent } from "#src/components/ui/card.tsx";
 import {
-  DISCORD_INVITE_URL,
+  discordInviteUrl,
   DISCORD_INSTALL_REDIRECTS_BACK,
 } from "#src/lib/discord-invite.ts";
 import { OnboardingShell } from "#src/components/onboarding/onboarding-shell.tsx";
@@ -40,15 +40,19 @@ export function OnboardingInstallStep(props: {
                 </>
               )}
             </p>
-            <Button asChild>
-              <a
-                href={DISCORD_INVITE_URL}
-                {...(DISCORD_INSTALL_REDIRECTS_BACK
-                  ? {}
-                  : { target: "_blank", rel: "noreferrer" })}
-              >
-                Add Scout to Discord
-              </a>
+            <Button
+              onClick={() => {
+                // Build the URL at click time so the `state` nonce is minted
+                // fresh (and `window`/`crypto` aren't touched on render).
+                const url = discordInviteUrl();
+                if (DISCORD_INSTALL_REDIRECTS_BACK) {
+                  globalThis.window.location.assign(url);
+                } else {
+                  globalThis.window.open(url, "_blank", "noreferrer");
+                }
+              }}
+            >
+              Add Scout to Discord
             </Button>
           </CardContent>
         </Card>

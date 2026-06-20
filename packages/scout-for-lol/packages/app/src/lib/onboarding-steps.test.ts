@@ -10,8 +10,9 @@ import {
 function state(
   step: OnboardingStepKind,
   selectedGuildId: string | null = "g",
+  conceptsBack: OnboardingStepKind = "install",
 ): OnboardingState {
-  return { step, selectedGuildId, selectedExampleId: null };
+  return { step, selectedGuildId, selectedExampleId: null, conceptsBack };
 }
 
 describe("onboardingReducer", () => {
@@ -20,10 +21,11 @@ describe("onboardingReducer", () => {
       step: "install",
       selectedGuildId: null,
       selectedExampleId: null,
+      conceptsBack: "install",
     });
   });
 
-  test("select-guild sets the guild and jumps to concepts", () => {
+  test("select-guild from install sets the guild and jumps to concepts", () => {
     const next = onboardingReducer(initialOnboardingState, {
       type: "select-guild",
       guildId: "guild-123",
@@ -32,7 +34,35 @@ describe("onboardingReducer", () => {
       step: "concepts",
       selectedGuildId: "guild-123",
       selectedExampleId: null,
+      // Single-guild path skips pick-guild, so concepts backs to install.
+      conceptsBack: "install",
     });
+  });
+
+  test("multi-guild: back from concepts returns to pick-guild", () => {
+    const picking = onboardingReducer(initialOnboardingState, {
+      type: "goto",
+      step: "pick-guild",
+    });
+    expect(picking.step).toBe("pick-guild");
+    const concepts = onboardingReducer(picking, {
+      type: "select-guild",
+      guildId: "guild-abc",
+    });
+    expect(concepts.step).toBe("concepts");
+    expect(concepts.conceptsBack).toBe("pick-guild");
+    const back = onboardingReducer(concepts, { type: "back" });
+    expect(back.step).toBe("pick-guild");
+  });
+
+  test("single-guild: back from concepts returns to install", () => {
+    const concepts = onboardingReducer(initialOnboardingState, {
+      type: "select-guild",
+      guildId: "guild-only",
+    });
+    expect(concepts.step).toBe("concepts");
+    const back = onboardingReducer(concepts, { type: "back" });
+    expect(back.step).toBe("install");
   });
 
   test("goto pick-guild then back returns to install", () => {

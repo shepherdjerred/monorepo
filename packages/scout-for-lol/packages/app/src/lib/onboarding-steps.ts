@@ -25,6 +25,11 @@ export type OnboardingState = {
   // Example preset picked on the "Report or competition?" page, used to
   // seed the build form.
   selectedExampleId: string | null;
+  // Which step `back` from `concepts` should return to. `concepts` is
+  // reachable from `install` (single-guild / deep-link) *or* `pick-guild`
+  // (multi-guild), so the back target is path-dependent and can't live in the
+  // static BACK table — `select-guild` records the origin step here.
+  conceptsBack: OnboardingStepKind;
 };
 
 export type OnboardingEvent =
@@ -38,6 +43,7 @@ export const initialOnboardingState: OnboardingState = {
   step: "install",
   selectedGuildId: null,
   selectedExampleId: null,
+  conceptsBack: "install",
 };
 
 // Steps reached via the linear "next" button. `install` / `pick-guild`
@@ -55,10 +61,14 @@ const FORWARD: Record<OnboardingStepKind, OnboardingStepKind | null> = {
   "build-competition": null,
 };
 
-const BACK: Record<OnboardingStepKind, OnboardingStepKind | null> = {
+// `concepts` is intentionally absent: its back target is path-dependent
+// (`install` vs `pick-guild`) and read from `state.conceptsBack` instead.
+const BACK: Record<
+  Exclude<OnboardingStepKind, "concepts">,
+  OnboardingStepKind | null
+> = {
   install: null,
   "pick-guild": "install",
-  concepts: "install",
   "subscribe-self": "concepts",
   "subscribe-more": "subscribe-self",
   done: "subscribe-more",
@@ -77,7 +87,8 @@ export function onboardingReducer(
       return next === null ? state : { ...state, step: next };
     })
     .with({ type: "back" }, (): OnboardingState => {
-      const prev = BACK[state.step];
+      const prev =
+        state.step === "concepts" ? state.conceptsBack : BACK[state.step];
       return prev === null ? state : { ...state, step: prev };
     })
     .with(
@@ -90,6 +101,9 @@ export function onboardingReducer(
         ...state,
         step: "concepts",
         selectedGuildId: e.guildId,
+        // Remember where we picked the guild so `back` from concepts returns
+        // there: `pick-guild` (multi-guild) or `install` (single-guild).
+        conceptsBack: state.step === "pick-guild" ? "pick-guild" : "install",
       }),
     )
     .with(

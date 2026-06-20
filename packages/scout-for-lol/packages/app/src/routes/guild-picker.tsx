@@ -51,12 +51,16 @@ export function GuildPicker() {
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
   // First sign-in for this user: send them through the guided setup once.
+  // The install-redirect flow (Discord → /installed → /welcome) finishes the
+  // wizard without ever passing through here, so `seen` can still be false
+  // while `complete` is already true. Bail out in that case (and just record
+  // `seen`) so a finished user isn't bounced back into the wizard.
   useEffect(() => {
     if (discordId === null) return;
-    if (!isOnboardingSeen(discordId)) {
-      markOnboardingSeen(discordId);
-      void navigate("/welcome", { replace: true });
-    }
+    if (isOnboardingSeen(discordId)) return;
+    markOnboardingSeen(discordId);
+    if (isOnboardingComplete(discordId)) return;
+    void navigate("/welcome", { replace: true });
   }, [discordId, navigate]);
 
   const showBanner =

@@ -31,7 +31,14 @@ export function OnboardingWizard() {
     (guild): OnboardingState =>
       guild === null
         ? initialOnboardingState
-        : { step: "concepts", selectedGuildId: guild, selectedExampleId: null },
+        : {
+            step: "concepts",
+            selectedGuildId: guild,
+            selectedExampleId: null,
+            // Deep-linked in from /installed — no pick-guild step was shown,
+            // so back from concepts goes to install.
+            conceptsBack: "install",
+          },
   );
   const guildId = state.selectedGuildId;
 

@@ -34,7 +34,42 @@ const id = clientId();
  */
 export const DISCORD_INSTALL_REDIRECTS_BACK = id === BETA_CLIENT_ID;
 
-function buildInviteUrl(): string {
+// sessionStorage key for the CSRF nonce echoed back via Discord's `state`
+// param on the redirect-back flow. Lets the landing page tell a real install
+// completion apart from a hand-crafted `/installed?guild_id=…` link.
+const INSTALL_STATE_KEY = "scout_install_state";
+
+/**
+ * Mint a fresh install nonce and stash it in sessionStorage. Returned so the
+ * caller can hand it to Discord as `state`; the landing page compares it with
+ * {@link consumeInstallState}.
+ */
+function issueInstallState(): string {
+  const nonce = globalThis.crypto.randomUUID();
+  globalThis.window.sessionStorage.setItem(INSTALL_STATE_KEY, nonce);
+  return nonce;
+}
+
+/**
+ * Read and clear the install nonce. Returns `true` only when `received`
+ * matches the value we issued, so a fabricated landing URL (no matching
+ * sessionStorage entry) is rejected. Single-use: the key is removed on read.
+ */
+export function consumeInstallState(received: string | null): boolean {
+  const stored = globalThis.window.sessionStorage.getItem(INSTALL_STATE_KEY);
+  globalThis.window.sessionStorage.removeItem(INSTALL_STATE_KEY);
+  return received !== null && received.length > 0 && received === stored;
+}
+
+/**
+ * Build the Discord bot-install URL. Evaluated lazily (not at module load) so
+ * `window`/`crypto` are only touched in a browser at click time — importing
+ * this module from a non-DOM context (e.g. a Bun unit test) stays safe.
+ *
+ * In the redirect-back (beta) flow we attach a single-use `state` nonce; the
+ * `/installed` landing route validates it via {@link consumeInstallState}.
+ */
+export function discordInviteUrl(): string {
   if (!DISCORD_INSTALL_REDIRECTS_BACK) {
     return `https://discord.com/oauth2/authorize?client_id=${id}`;
   }
@@ -43,9 +78,8 @@ function buildInviteUrl(): string {
     scope: INSTALL_SCOPES,
     permissions: INSTALL_PERMISSIONS,
     response_type: "code",
+    state: issueInstallState(),
     redirect_uri: `${globalThis.window.location.origin}/app/installed`,
   });
   return `https://discord.com/oauth2/authorize?${params.toString()}`;
 }
-
-export const DISCORD_INVITE_URL = buildInviteUrl();
