@@ -147,7 +147,6 @@ async function renderBarChart(
   const data = await competitionChartToImage({
     chartType: "bar",
     title: chart.title,
-    subtitle: reportSubtitle(params.result),
     yAxisLabel: chart.yAxisLabel,
     bars: chart.values.map((entry) => ({
       playerName: entry.label,
@@ -169,7 +168,6 @@ async function renderLineChart(
   const data = await competitionChartToImage({
     chartType: "line",
     title: chart.title,
-    subtitle: reportSubtitle(params.result),
     yAxisLabel: chart.yAxisLabel,
     startDate: params.startedAt,
     endDate: params.startedAt,
@@ -188,8 +186,4 @@ async function renderLineChart(
 function numericValue(row: ReportResultRow, index: number): number {
   const value = row.values[index]?.value ?? 0;
   return typeof value === "number" ? value : 0;
-}
-
-function reportSubtitle(result: ReportQueryResult): string {
-  return `${result.rows.length.toString()} row(s), ${result.rowsScanned.toString()} fact row(s) scanned`;
 }
