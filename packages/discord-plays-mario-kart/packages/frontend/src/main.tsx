@@ -22,7 +22,7 @@ const sentryRelease =
     : undefined;
 
 Sentry.init({
-  dsn: "https://9c905c2bb5924e55b4dea32e2a95f0d1@bugsink.sjer.red/8",
+  dsn: "https://c2f90a5857e940e1997b49791d9fc684@bugsink.sjer.red/13",
   release: sentryRelease,
   environment: import.meta.env.MODE,
 });

@@ -143,7 +143,7 @@ const versions = {
   // not managed by renovate — placeholder digest; CI version-commit-back fills
   // the real digest after the first successful image push.
   "shepherdjerred/discord-plays-mario-kart":
-    "2.0.0-4447@sha256:8c5ae96523696dea1de99805348d15afe4da2c7226109645d58da53f18a1f431",
+    "2.0.0-4461@sha256:c1505a4e2f28a94ca801c6c0e06c69243f25f2532a94ae7e0cc4c038ea232b0c",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.29.0@sha256:cca8988d05cd449e1c6c69405971b1e6fc2c2116ceeb45c9fa3fc33837997a75",
