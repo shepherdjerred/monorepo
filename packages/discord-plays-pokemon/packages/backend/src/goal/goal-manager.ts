@@ -24,6 +24,7 @@ import {
   type CompletedGoal,
 } from "./goal-history.ts";
 import type { GoalState } from "./goal-types.ts";
+import { GoalMemory, buildSessionLogMeta } from "./goal-memory.ts";
 
 // Validates the envelope written by persistState() so history is safely
 // deserialized on restart even if the file has an unexpected shape.
@@ -139,6 +140,11 @@ export class GoalManager {
   private readonly now: () => Date;
   private readonly snapshotProvider: () => GameSnapshot | null;
   private readonly spatialSnapshotProvider: () => SpatialSnapshot | null;
+  // Per-guild persistent memory: the curated MEMORY.md fed into every prompt,
+  // system-written session logs, and MEMORY.md archives. Backed by
+  // config.memory_dir (the driver points it under saves/<guildId>/). Exposed to
+  // the control server for the `pokemonctl list/read/grep/write` subcommands.
+  readonly memory: GoalMemory;
   // Newest first. Persisted via persistState() so it survives restarts.
   private history: CompletedGoal[] = [];
   // Goal IDs we've already snapshot into history. Guards against double-record
@@ -155,6 +161,10 @@ export class GoalManager {
     this.snapshotProvider = options.snapshotProvider ?? (() => null);
     this.spatialSnapshotProvider =
       options.spatialSnapshotProvider ?? (() => null);
+    this.memory = new GoalMemory(
+      this.resolveRuntimePath(this.config.memory_dir),
+      this.now,
+    );
   }
 
   /**
@@ -297,6 +307,9 @@ export class GoalManager {
     const promptContext = {
       gameStateSummary,
       recentGoalsSummary: formatHistoryForPrompt(this.getHistory(3)),
+      // Curated long-term memory for THIS save, injected verbatim. Empty until
+      // a session writes it; buildPrompt renders the placeholder in that case.
+      memory: await this.memory.readMemory(),
     };
     const args = buildCodexArgs({
       config: {
@@ -428,7 +441,7 @@ export class GoalManager {
     active.state.exitCode = exitCode;
     active.state.status = exitCode === 0 ? "completed" : "failed";
     active.state.finalReport = report;
-    this.recordCompletion(active.state);
+    await this.recordCompletion(active.state);
     await this.persistState(active.state);
     active.trace.end();
     this.active = undefined;
@@ -459,7 +472,7 @@ export class GoalManager {
     active.state.status = "timeout";
     active.state.finishedAt = this.now().toISOString();
     active.state.finalReport = "Goal timed out before Codex finished.";
-    this.recordCompletion(active.state);
+    await this.recordCompletion(active.state);
     await this.persistState(active.state);
     active.trace.end();
     this.active = undefined;
@@ -486,7 +499,7 @@ export class GoalManager {
       status === "replaced"
         ? "Goal was replaced by a newer goal."
         : "Goal was stopped during application shutdown.";
-    this.recordCompletion(active.state);
+    await this.recordCompletion(active.state);
     await this.persistState(active.state);
     active.trace.end();
     this.active = undefined;
@@ -519,12 +532,23 @@ export class GoalManager {
   }
 
   /**
-   * Snapshot a finished goal into the rolling history list and trim to
-   * HISTORY_LIMIT. Called from every terminal path (observeProcess,
-   * timeoutGoal, stopActive) so all of {completed, failed, timeout,
-   * replaced, shutdown} leave a trace.
+   * Snapshot a finished goal into the rolling history list (trimmed to
+   * HISTORY_LIMIT) and write its session log to the memory PVC. Called from
+   * every terminal path (observeProcess, timeoutGoal, stopActive) so all of
+   * {completed, failed, timeout, replaced, shutdown} leave a browsable log.
+   * A memory-write failure is logged, never thrown — teardown must not fail.
    */
-  private recordCompletion(state: GoalState): void {
+  private async recordCompletion(state: GoalState): Promise<void> {
     this.history = [...appendToHistory(this.history, this.recordedIds, state)];
+    try {
+      await this.memory.writeSessionLog(
+        buildSessionLogMeta(state),
+        state.finalReport ?? "(no final report)",
+      );
+    } catch (error) {
+      logger.warn(
+        `goal-manager: failed to write session log: ${String(error)}`,
+      );
+    }
   }
 }

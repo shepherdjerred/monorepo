@@ -84,7 +84,13 @@ async function handleMessage(
     return;
   }
 
-  if (isValid(chord)) {
+  const commands = getConfig().game.commands;
+  const chatLimits = {
+    maxCommands: commands.chord.max_commands,
+    maxTotal: commands.chord.max_total,
+    maxQuantityPerAction: commands.max_quantity_per_action,
+  };
+  if (isValid(chord, chatLimits)) {
     await execute(chord, fn);
     await event.react(`👍`);
     lastCommand = new Date();
