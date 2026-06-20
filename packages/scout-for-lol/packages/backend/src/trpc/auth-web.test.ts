@@ -1,7 +1,4 @@
-import { describe, expect, test } from "bun:test";
-import { handleDiscordInstall } from "#src/trpc/auth-web.ts";
-import { SESSION_COOKIE } from "#src/trpc/context.ts";
-import { signSession } from "#src/trpc/jwt.ts";
+import { describe, expect, mock, test } from "bun:test";
 
 /**
  * The bot-install endpoint must be gated by the same session cookie the
@@ -12,6 +9,58 @@ import { signSession } from "#src/trpc/jwt.ts";
  * the login page instead, and only a valid session may proceed to
  * Discord's bot-authorize screen.
  */
+
+/**
+ * Pin a COMPLETE `configuration` for this file before importing the
+ * modules under test.
+ *
+ * `handleDiscordInstall` (auth-web.ts) and `signSession`/`verifySession`
+ * (jwt.ts) read `configuration.default.{applicationId, webAppOrigin,
+ * jwtSigningSecret, discordClientSecret}` lazily at call time. Several
+ * sibling test files install a *partial* `mock.module("#src/configuration.ts")`
+ * (only `version`/`gitSha`/`s3BucketName`/…) at their top level, and Bun's
+ * `mock.module` is process-wide, retroactive, and never restored between
+ * files. If one of those evaluated before this file in the full suite, our
+ * code would read an undefined `webAppOrigin`/`jwtSigningSecret` and throw —
+ * which is exactly why these tests passed in isolation but failed in CI.
+ *
+ * Installing our own fully-populated mock here (last-write-wins, retroactive)
+ * makes this file order-independent, and because every field is present it
+ * can't break a later file that reads configuration.
+ */
+const TEST_APP_ORIGIN = "https://scout-for-lol.com";
+// Non-numeric placeholder so gitleaks doesn't read an 18-digit snowflake as
+// a real discord-client-id. The handler only echoes this into the client_id
+// query param; the tests don't assert on it, so any string works.
+const TEST_APPLICATION_ID = "test-application-id";
+// Reuse the throwaway HS256 signing key the test preload (test-setup.ts)
+// already exports via JWT_SIGNING_SECRET — single source of truth, and it
+// keeps a high-entropy literal out of this file (gitleaks reads such a
+// literal as a generic-api-key). jwt.ts#getKey requires >= 32 chars; the
+// fallback (built from benign words) clears that bar without looking like a
+// real key.
+const TEST_JWT_SIGNING_SECRET =
+  Bun.env["JWT_SIGNING_SECRET"] ??
+  "scout-for-lol-test-signing-key-not-a-real-key";
+
+void mock.module("#src/configuration.ts", () => ({
+  default: {
+    version: "test",
+    gitSha: "test",
+    environment: "dev",
+    sentryDsn: undefined,
+    s3BucketName: "test-bucket",
+    applicationId: TEST_APPLICATION_ID,
+    webAppOrigin: TEST_APP_ORIGIN,
+    jwtSigningSecret: TEST_JWT_SIGNING_SECRET,
+    discordClientSecret: undefined,
+  },
+}));
+
+const { handleDiscordInstall } = await import("#src/trpc/auth-web.ts");
+const { SESSION_COOKIE } = await import("#src/trpc/context.ts");
+const { signSession } = await import("#src/trpc/jwt.ts");
+
 const INSTALL_URL = "https://scout.example/api/discord/install";
 
 function installRequest(cookieHeader?: string): Request {
@@ -68,7 +117,7 @@ describe("handleDiscordInstall", () => {
     expect(target.searchParams.get("scope")).toBe("bot applications.commands");
     expect(target.searchParams.get("permissions")).not.toBeNull();
     expect(target.searchParams.get("redirect_uri")).toBe(
-      "https://scout-for-lol.com/app/installed",
+      `${TEST_APP_ORIGIN}/app/installed`,
     );
     // No response_type=code: this is a pure bot install, not a token grant.
     expect(target.searchParams.get("response_type")).toBeNull();
