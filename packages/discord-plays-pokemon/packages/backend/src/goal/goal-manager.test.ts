@@ -26,11 +26,17 @@ function makeGoalConfig(runtimeDirectory: string): Config["game"]["goal"] {
     runtime_directory: runtimeDirectory,
     screenshot_dir: "screenshots",
     state_path: "goal-state.json",
+    memory_dir: "goal-memory",
     control_host: "127.0.0.1",
     control_port: 8082,
     max_runtime_minutes: 30,
     lock_minutes: 5,
     progress_update_interval_seconds: 60,
+    command_limits: {
+      max_quantity_per_action: 60,
+      chord_max_commands: 32,
+      chord_max_total: 200,
+    },
   };
 }
 
@@ -282,7 +288,13 @@ describe("GoalManager", () => {
     currentTime = 60_000;
     expect(await manager.publishProgress("I am now walking north")).toBe(true);
     expect(messages).toHaveLength(1);
-    expect(messages[0]?.content).toContain("I am now walking north");
+    // Mid-session updates are audience-facing narration: the message is the
+    // model's text verbatim, with no requester mention or "goal update:" prefix,
+    // and nobody is pinged.
+    expect(messages[0]?.content).toBe("I am now walking north");
+    expect(messages[0]?.content).not.toContain("<@user-a>");
+    expect(messages[0]?.content).not.toContain("goal update:");
+    expect(messages[0]?.allowedUserIds).toEqual([]);
     await manager.shutdown();
   });
 });
@@ -547,5 +559,29 @@ describe("GoalManager history", () => {
     expect(manager.getHistory(0)).toEqual([]);
     expect(manager.getHistory(-5)).toEqual([]);
     await manager.shutdown();
+  });
+
+  test("exposes a per-guild GoalMemory rooted under the runtime directory", async () => {
+    const runtimeDirectory = await createRuntimeDirectory();
+    const manager = new GoalManager({
+      config: makeGoalConfig(runtimeDirectory),
+      controlToken: "token",
+      spawner: () => makeProcess(),
+      sendMessage: noopSendMessage,
+    });
+
+    expect(await manager.memory.readMemory()).toBe("");
+    await manager.memory.writeMemory(
+      "Roxanne uses Rock types — bring a Grass/Water mon.",
+    );
+    expect(await manager.memory.readMemory()).toContain(
+      "bring a Grass/Water mon",
+    );
+    // memory_dir resolves relative to runtime_directory, like state_path.
+    expect(
+      await Bun.file(
+        path.join(runtimeDirectory, "goal-memory", "MEMORY.md"),
+      ).exists(),
+    ).toBe(true);
   });
 });

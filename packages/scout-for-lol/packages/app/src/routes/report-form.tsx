@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ReportIdSchema, ReportOutputFormatSchema } from "@scout-for-lol/data";
+import { ReportIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { Button } from "#src/components/ui/button.tsx";
 import { ReportQueryPreview } from "#src/components/report-query-preview.tsx";
@@ -11,6 +11,14 @@ import {
   ReportFormFields,
   type ReportFormState,
 } from "#src/components/report-form-fields.tsx";
+
+function numberOr(value: string, fallback: number): number {
+  return Number(value) || fallback;
+}
+
+function previewTitle(title: string): string {
+  return title === "" ? "Preview" : title;
+}
 
 export function ReportForm() {
   const { guildId, reportId: idParam } = useParams();
@@ -27,6 +35,11 @@ export function ReportForm() {
   const [state, setState] = useState<ReportFormState>(EMPTY_REPORT_STATE);
   const [prefilled, setPrefilled] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewColumns, setPreviewColumns] = useState<string[]>([]);
+
+  const handleColumns = useCallback((columns: string[]) => {
+    setPreviewColumns(columns);
+  }, []);
 
   const channelsQuery = useQuery(
     trpc.guild.listChannels.queryOptions(
@@ -52,7 +65,6 @@ export function ReportForm() {
       queryText: existing.queryText,
       lookbackDays: existing.lookbackDays.toString(),
       maxRows: existing.maxRows.toString(),
-      outputFormat: ReportOutputFormatSchema.parse(existing.outputFormat),
       cronExpression: existing.cronExpression,
     });
     setPrefilled(true);
@@ -107,6 +119,8 @@ export function ReportForm() {
   }
 
   const pending = createMutation.isPending || updateMutation.isPending;
+  // Drop "label" (the GROUP BY dimension) — only metrics are plottable on Y.
+  const metricOptions = previewColumns.slice(1);
 
   return (
     <div className="space-y-4">
@@ -125,6 +139,7 @@ export function ReportForm() {
             state={state}
             setState={setState}
             channels={channelsQuery.data}
+            metricOptions={metricOptions}
           />
 
           {error !== null && (
@@ -144,8 +159,10 @@ export function ReportForm() {
         <ReportQueryPreview
           guildId={guildId}
           queryText={state.queryText}
-          lookbackDays={Number(state.lookbackDays) || 30}
-          maxRows={Number(state.maxRows) || 10}
+          title={previewTitle(state.title)}
+          lookbackDays={numberOr(state.lookbackDays, 30)}
+          maxRows={numberOr(state.maxRows, 10)}
+          onColumns={handleColumns}
         />
       </form>
     </div>

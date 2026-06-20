@@ -26,6 +26,13 @@ export const ReportRunIdSchema = z
   .positive()
   .brand("ReportRunId");
 
+/**
+ * The set of visualizations a report can produce. Formerly stored as the
+ * standalone `outputFormat` column; it is now the discriminant (`kind`) of the
+ * declarative `RENDER` clause embedded in the query DSL itself (parsed in
+ * backend `query-language.ts`). The enum name is retained since the values are
+ * unchanged and still describe a report's output format.
+ */
 export type ReportOutputFormat = z.infer<typeof ReportOutputFormatSchema>;
 export const ReportOutputFormatSchema = z.enum([
   "LIST",
@@ -34,6 +41,55 @@ export const ReportOutputFormatSchema = z.enum([
   "BAR_CHART",
   "LINE_CHART",
 ]);
+
+/**
+ * Channel encodings for chart kinds — a deliberately small slice of the
+ * grammar-of-graphics (à la Vega-Lite). Each channel references a column the
+ * query *produces*: `label` (the GROUP BY dimension) or a SELECTed metric.
+ * Both are optional; defaults (`x = label`, `y = first metric`) are resolved at
+ * render time so a bare `RENDER bar_chart` reproduces the pre-DSL behavior.
+ */
+export type ReportRenderChannel = z.infer<typeof ReportRenderChannelSchema>;
+export const ReportRenderChannelSchema = z
+  .object({
+    x: z.string().min(1).optional(),
+    y: z.string().min(1).optional(),
+  })
+  .strict();
+
+export type ReportChartOptions = z.infer<typeof ReportChartOptionsSchema>;
+export const ReportChartOptionsSchema = z
+  .object({
+    title: z.string().min(1).optional(),
+    yAxisLabel: z.string().min(1).optional(),
+  })
+  .strict();
+
+/**
+ * Declarative display spec parsed from a query's trailing `RENDER` clause.
+ * Discriminated on `kind`: text kinds carry no encoding; chart kinds carry
+ * optional channel encodings + options. This is the single source of truth for
+ * how a report renders — there is no separate `outputFormat` column.
+ */
+export type ReportRenderSpec = z.infer<typeof ReportRenderSpecSchema>;
+export const ReportRenderSpecSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("LIST") }),
+  z.object({ kind: z.literal("TABLE") }),
+  z.object({ kind: z.literal("LEADERBOARD") }),
+  z.object({
+    kind: z.literal("BAR_CHART"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  z.object({
+    kind: z.literal("LINE_CHART"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+]);
+
+/** Fallback render spec when a query carries no `RENDER` clause. */
+export const DEFAULT_RENDER_SPEC: ReportRenderSpec = { kind: "TABLE" };
 
 export type ReportRunStatus = z.infer<typeof ReportRunStatusSchema>;
 export const ReportRunStatusSchema = z.enum(["RUNNING", "SUCCESS", "FAILED"]);
@@ -83,7 +139,6 @@ export type Report = {
   queryText: string;
   lookbackDays: number;
   maxRows: number;
-  outputFormat: ReportOutputFormat;
   isEnabled: boolean;
   isSystemManaged: boolean;
   systemSource: ReportSystemSource | null;
@@ -103,7 +158,6 @@ export type ReportRun = {
   serverId: DiscordGuildId;
   trigger: ReportRunTrigger;
   status: ReportRunStatus;
-  outputFormat: ReportOutputFormat;
   startedAt: Date;
   completedAt: Date | null;
   durationMs: number | null;
@@ -120,7 +174,6 @@ export const ReportCreateInputSchema = z.object({
   queryText: ReportQueryTextSchema,
   lookbackDays: ReportLookbackDaysSchema,
   maxRows: ReportMaxRowsSchema,
-  outputFormat: ReportOutputFormatSchema.default("TABLE"),
   cronExpression: CompetitionCronSchema.default(DEFAULT_REPORT_CRON),
   isEnabled: z.boolean().default(true),
 });

@@ -15,38 +15,54 @@ const DEBOUNCE_MS = 500;
 export function ReportQueryPreview(props: {
   guildId: string;
   queryText: string;
+  title: string;
   lookbackDays: number;
   maxRows: number;
+  onColumns?: (columns: string[]) => void;
 }) {
-  const { guildId, queryText, lookbackDays, maxRows } = props;
+  const { guildId, queryText, title, lookbackDays, maxRows, onColumns } = props;
   const trpc = useTRPC();
   const previewMutation = useMutation(
     trpc.report.previewQuery.mutationOptions(),
   );
-  const [debounced, setDebounced] = useState(queryText);
+  const [debounced, setDebounced] = useState({ queryText, title });
 
   useEffect(() => {
     const handle = setTimeout(() => {
-      setDebounced(queryText);
+      setDebounced({ queryText, title });
     }, DEBOUNCE_MS);
     return () => {
       clearTimeout(handle);
     };
-  }, [queryText]);
+  }, [queryText, title]);
 
-  // Re-run whenever the debounced query (or limits) change.
+  // Re-run whenever the debounced query/title (or limits) change.
   const { mutate } = previewMutation;
   useEffect(() => {
-    if (debounced.trim().length === 0) return;
-    mutate({ guildId, queryText: debounced, lookbackDays, maxRows });
+    if (debounced.queryText.trim().length === 0) return;
+    mutate({
+      guildId,
+      queryText: debounced.queryText,
+      title: debounced.title,
+      lookbackDays,
+      maxRows,
+    });
   }, [mutate, guildId, debounced, lookbackDays, maxRows]);
 
   const result = previewMutation.data;
 
+  // Lift the produced columns so the form's display builder can offer them as
+  // chart channels (the GROUP BY dimension is "label"; the rest are metrics).
+  useEffect(() => {
+    if (result !== undefined && onColumns !== undefined) {
+      onColumns(result.columns);
+    }
+  }, [result, onColumns]);
+
   return (
     <div className="space-y-2">
       <h3 className="text-sm font-semibold">Live preview</h3>
-      {debounced.trim().length === 0 && (
+      {debounced.queryText.trim().length === 0 && (
         <p className="text-sm text-muted-foreground">
           Write a query to preview its results.
         </p>
@@ -61,6 +77,13 @@ export function ReportQueryPreview(props: {
       )}
       {result && (
         <>
+          {result.imageBase64 !== null && (
+            <img
+              className="w-full rounded-md border border-border"
+              src={`data:image/png;base64,${result.imageBase64}`}
+              alt={`${result.renderKind} preview`}
+            />
+          )}
           <div className="rounded-md border border-border">
             <Table>
               <TableHeader>

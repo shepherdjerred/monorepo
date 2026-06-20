@@ -276,7 +276,6 @@ model Report {
   queryText           String
   lookbackDays        Int       @default(30)
   maxRows             Int       @default(10)
-  outputFormat        String    @default("LEADERBOARD")
   isEnabled           Boolean   @default(true)
   isSystemManaged     Boolean   @default(false)
   systemSource        String?
@@ -303,7 +302,6 @@ model ReportRun {
   serverId     String
   trigger      String
   status       String
-  outputFormat String
   startedAt    DateTime
   completedAt  DateTime?
   durationMs   Int?
