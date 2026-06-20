@@ -12,7 +12,11 @@ import {
   alertRemediationSubprocessExitTotal,
 } from "#observability/metrics.ts";
 import { getTraceContext, withSpan } from "#observability/tracing.ts";
-import { parseClaudeResultMessage } from "#shared/claude-result.ts";
+import {
+  extractJsonPayload,
+  parseClaudeResultMessage,
+  summarizeClaudeStreamLine,
+} from "#shared/claude-result.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import {
   AlertRemediationAgentPayloadSchema,
@@ -208,7 +212,9 @@ function agentEnv(githubAppToken: string): Record<string, string> {
 
 function parseAgentPayload(raw: string): AlertRemediationAgentPayload {
   try {
-    const payload = AlertRemediationAgentPayloadSchema.parse(JSON.parse(raw));
+    const payload = AlertRemediationAgentPayloadSchema.parse(
+      extractJsonPayload(raw),
+    );
     if (payload.outcome === "pr-created" && payload.prUrl === undefined) {
       throw new Error("pr-created output must include prUrl");
     }
@@ -298,6 +304,26 @@ async function runAgent(
               reason: "pre_temporal_timeout",
             });
           },
+          onSigkillEscalation: (event) => {
+            jsonLog("warning", "agent sigkill escalation", {
+              phase: "sigkill",
+              ...event,
+            });
+            agentSubprocessSoftKillsTotal.inc({
+              workflow_type: workflowType,
+              reason: "escalated_sigkill",
+            });
+          },
+          onStdoutLine: (line) => {
+            const event = summarizeClaudeStreamLine(line);
+            if (event !== undefined) {
+              jsonLog("info", "agent event", {
+                phase: "agent-event",
+                ...event,
+              });
+              span.addEvent("agent.event", { type: event.type });
+            }
+          },
           onStderrLine: (line) => {
             jsonLog("info", "agent stderr", { line });
           },
@@ -335,6 +361,9 @@ async function runAgent(
         exitCode: result.exitCode,
         signal: result.signal,
         maxIdleMs: result.maxIdleMs,
+        firstOutputLatencyMs: result.firstOutputLatencyMs,
+        sigkillEscalated: result.sigkillEscalated,
+        lastLine: result.lastLine,
       });
 
       if (result.exitCode !== 0) {
@@ -355,8 +384,9 @@ async function runAgent(
         captureWithContext(error, parsed.alert, {
           durationMs: result.durationMs,
           maxIdleMs: result.maxIdleMs,
+          firstOutputLatencyMs: result.firstOutputLatencyMs,
           signal: result.signal,
-          lastStderrLine: result.lastStderrLine,
+          lastLine: result.lastLine,
         });
         throw error;
       }

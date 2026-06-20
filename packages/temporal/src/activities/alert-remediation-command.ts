@@ -40,7 +40,7 @@ export function buildAlertRemediationPrompt(
     "- If verification fails, do not open a PR. Return outcome=verification-failed with the commands and failure summary.",
     "- If the alert requires live ops, destructive cleanup, credentials, broad refactors, secret changes, Kubernetes mutation, PagerDuty resolution, Bugsink mute/resolve, or unclear judgment, do not mutate. Return outcome=not-straightforward or report-only.",
     "- Never resolve PagerDuty incidents, mute or resolve Bugsink issues, merge PRs, edit secrets, or mutate live systems.",
-    "- Return only JSON matching the provided schema.",
+    "- Return only a single raw JSON object matching the output schema below — no markdown code fences, no prose before or after.",
     "",
     "Draft PR policy:",
     `- Branch name: ${branch}`,
@@ -56,6 +56,9 @@ export function buildAlertRemediationPrompt(
     "",
     "Alert JSON:",
     alertJson(input),
+    "",
+    "Output schema — your final message must be ONLY a JSON object matching this (no code fences, no commentary):",
+    JSON.stringify(ALERT_REMEDIATION_OUTPUT_JSON_SCHEMA, null, 2),
   ].join("\n");
 }
 
@@ -66,18 +69,22 @@ async function writeOutputSchema(path: string): Promise<void> {
   );
 }
 
-async function claudeCommand(
+// `--json-schema` is deliberately NOT passed to claude: that flag wedges
+// claude-code (it produces zero output until killed — the root cause of the
+// alert-remediation 30-min SIGTERM hangs). The required output shape is
+// embedded in the prompt instead (see buildAlertRemediationPrompt) and
+// validated app-side by parseAgentPayload. `stream-json --verbose` streams
+// NDJSON so the run is observable line-by-line.
+function claudeCommand(
   input: AlertRemediationChildInput,
   workdir: string,
-): Promise<AlertRemediationCommand> {
+): AlertRemediationCommand {
   const token = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
   if (token === undefined || token === "") {
     throw new Error(
       "CLAUDE_CODE_OAUTH_TOKEN is required for alert remediation",
     );
   }
-  const schemaPath = `${workdir}/alert-remediation-output.schema.json`;
-  await writeOutputSchema(schemaPath);
   const model = input.model ?? DEFAULT_CLAUDE_MODEL;
   return {
     args: [
@@ -85,9 +92,8 @@ async function claudeCommand(
       "-p",
       buildAlertRemediationPrompt(input, workdir),
       "--output-format",
-      "json",
-      "--json-schema",
-      schemaPath,
+      "stream-json",
+      "--verbose",
       "--allowed-tools",
       CLAUDE_ALLOWED_TOOLS,
       "--permission-mode",
@@ -146,6 +152,6 @@ export async function buildAlertRemediationCommand(
   workdir: string,
 ): Promise<AlertRemediationCommand> {
   return input.provider === "claude"
-    ? await claudeCommand(input, workdir)
+    ? claudeCommand(input, workdir)
     : await codexCommand(input, workdir);
 }

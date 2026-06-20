@@ -13,7 +13,11 @@ import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import { runTrackedAgentSubprocess } from "#shared/agent-subprocess.ts";
-import { parseClaudeResultMessage } from "#shared/claude-result.ts";
+import {
+  extractJsonPayload,
+  parseClaudeResultMessage,
+  summarizeClaudeStreamLine,
+} from "#shared/claude-result.ts";
 import {
   AgentTaskInputSchema,
   AgentTaskResultPayloadSchema,
@@ -198,7 +202,7 @@ function splitRepo(fullName: string): { owner: string; repo: string } {
 
 function parseAgentPayload(raw: string): AgentTaskResultPayload {
   try {
-    return AgentTaskResultPayloadSchema.parse(JSON.parse(raw));
+    return AgentTaskResultPayloadSchema.parse(extractJsonPayload(raw));
   } catch (error: unknown) {
     throw new Error(
       `Failed to parse agent task JSON payload: ${error instanceof Error ? error.message : String(error)}`,
@@ -272,6 +276,28 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
               reason: "pre_temporal_timeout",
             });
           },
+          onSigkillEscalation: (event) => {
+            jsonLog("warning", "agent sigkill escalation", {
+              phase: "sigkill",
+              provider,
+              ...event,
+            });
+            agentSubprocessSoftKillsTotal.inc({
+              workflow_type: workflowType,
+              reason: "escalated_sigkill",
+            });
+          },
+          onStdoutLine: (line) => {
+            const event = summarizeClaudeStreamLine(line);
+            if (event !== undefined) {
+              jsonLog("info", "agent event", {
+                phase: "agent-event",
+                provider,
+                ...event,
+              });
+              span.addEvent("agent.event", { type: event.type });
+            }
+          },
           onStderrLine: (line) => {
             jsonLog("info", "agent stderr", { provider, line });
           },
@@ -320,6 +346,9 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
         exitCode: result.exitCode,
         signal: result.signal,
         maxIdleMs: result.maxIdleMs,
+        firstOutputLatencyMs: result.firstOutputLatencyMs,
+        sigkillEscalated: result.sigkillEscalated,
+        lastLine: result.lastLine,
       });
 
       if (cancelled) {
@@ -329,8 +358,9 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
           provider,
           durationMs: result.durationMs,
           maxIdleMs: result.maxIdleMs,
+          firstOutputLatencyMs: result.firstOutputLatencyMs,
           signal: result.signal,
-          lastStderrLine: result.lastStderrLine,
+          lastLine: result.lastLine,
         });
         throw error;
       }
@@ -344,8 +374,9 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
           provider,
           durationMs: result.durationMs,
           maxIdleMs: result.maxIdleMs,
+          firstOutputLatencyMs: result.firstOutputLatencyMs,
           signal: result.signal,
-          lastStderrLine: result.lastStderrLine,
+          lastLine: result.lastLine,
         });
         throw error;
       }

@@ -19,18 +19,21 @@ async function writeOutputSchema(path: string): Promise<void> {
   await Bun.write(path, JSON.stringify(AGENT_TASK_OUTPUT_JSON_SCHEMA, null, 2));
 }
 
-async function claudeCommand(
+// `--json-schema` is deliberately NOT passed to claude: that flag wedges
+// claude-code (zero output until killed — the alert-remediation/agent-task
+// 30-min SIGTERM hang). The output shape is embedded in reportOnlyPrompt
+// and validated app-side by parseAgentPayload. `stream-json --verbose`
+// streams NDJSON so the run is observable line-by-line.
+function claudeCommand(
   input: AgentTaskInput,
   workdir: string,
-): Promise<AgentTaskCommand> {
+): AgentTaskCommand {
   const token = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
   if (token === undefined || token === "") {
     throw new Error(
       "CLAUDE_CODE_OAUTH_TOKEN is required for Claude agent tasks",
     );
   }
-  const schemaPath = `${workdir}/agent-task-output.schema.json`;
-  await writeOutputSchema(schemaPath);
   const model = input.model ?? DEFAULT_CLAUDE_MODEL;
   const maxTurns = input.maxTurns ?? DEFAULT_MAX_TURNS;
   return {
@@ -39,9 +42,8 @@ async function claudeCommand(
       "-p",
       reportOnlyPrompt(input, workdir),
       "--output-format",
-      "json",
-      "--json-schema",
-      schemaPath,
+      "stream-json",
+      "--verbose",
       "--allowed-tools",
       CLAUDE_ALLOWED_TOOLS,
       "--permission-mode",
@@ -100,6 +102,6 @@ export async function buildAgentTaskCommand(
   workdir: string,
 ): Promise<AgentTaskCommand> {
   return input.provider === "claude"
-    ? await claudeCommand(input, workdir)
+    ? claudeCommand(input, workdir)
     : await codexCommand(input, workdir);
 }
