@@ -70,8 +70,8 @@ async function runThreeDayOutreach(client: Client): Promise<void> {
     if (subCount === 0) {
       message = truncateDiscordMessage(
         `👋 Hey there! Thanks for adding Scout for LoL to **${guild.serverName}**. ` +
-          `Add your first player from the dashboard — ${DASHBOARD} — no commands needed ` +
-          `(or use \`/subscription add\` in Discord). New here? ${GETTING_STARTED}` +
+          `Add your first player from the dashboard at ${DASHBOARD} ` +
+          `(or with \`/subscription add\` in Discord). New here? ${GETTING_STARTED}` +
           DM_FOOTER,
       );
     } else if (subCount <= 2) {
