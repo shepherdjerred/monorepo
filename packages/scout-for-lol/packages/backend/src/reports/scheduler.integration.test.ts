@@ -31,7 +31,6 @@ const REPORT_DEFAULTS = {
     "SELECT player, score FROM competition_rank WHERE competition_id = 0 GROUP BY player ORDER BY score DESC",
   lookbackDays: 30,
   maxRows: 10,
-  outputFormat: "LEADERBOARD",
   isEnabled: true,
   isSystemManaged: false,
   systemSource: null,

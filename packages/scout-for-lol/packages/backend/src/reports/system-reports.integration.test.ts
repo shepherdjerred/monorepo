@@ -168,7 +168,7 @@ describe("syncSystemReports", () => {
         systemSource: "COMPETITION",
       },
     });
-    expect(report.outputFormat).toBe("BAR_CHART");
+    expect(report.queryText).toContain("RENDER bar_chart");
     expect(report.maxRows).toBe(10);
   });
 });

@@ -16,7 +16,6 @@ import { ReportRunHistory } from "#src/components/report-run-history.tsx";
 type ReportRow = {
   description: string | null;
   channelId: string;
-  outputFormat: string;
   lookbackDays: number;
   maxRows: number;
   cronExpression: string;
@@ -91,10 +90,6 @@ function ReportDefinitionCards(props: {
           <p>
             <span className="text-muted-foreground">Channel:</span>{" "}
             {channelLabel(channels, report.channelId)}
-          </p>
-          <p>
-            <span className="text-muted-foreground">Format:</span>{" "}
-            {report.outputFormat}
           </p>
           <p>
             <span className="text-muted-foreground">Lookback:</span>{" "}

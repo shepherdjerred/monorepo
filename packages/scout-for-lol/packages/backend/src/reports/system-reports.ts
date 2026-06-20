@@ -49,7 +49,6 @@ type SystemReportDefinition = {
   queryText: string;
   lookbackDays: number;
   maxRows: number;
-  outputFormat: ReportOutputFormat;
   systemSource: "COMMON_DENOMINATOR" | "COMPETITION";
   sourceCompetitionId: CompetitionId | null;
   cronExpression: string;
@@ -108,20 +107,22 @@ async function competitionReportDefinitions(
     .map((competition) => {
       const cronExpression =
         competition.updateCronExpression ?? DEFAULT_COMPETITION_CRON;
-      const outputFormat = competitionOutputFormat(competition.criteria);
+      const renderKind = competitionRenderKind(competition.criteria);
       return {
         serverId: DiscordGuildIdSchema.parse(competition.serverId),
         ownerId: competition.ownerId,
         channelId: competition.channelId,
         title: competition.title,
         description: competition.description,
-        queryText: competitionReportQuery(competition.id, competition.criteria),
+        queryText: `${competitionReportQuery(
+          competition.id,
+          competition.criteria,
+        )} ${renderClauseFor(renderKind)}`,
         lookbackDays: 30,
         maxRows: competitionReportMaxRows(
           competition.maxParticipants,
-          outputFormat,
+          renderKind,
         ),
-        outputFormat,
         systemSource: "COMPETITION",
         sourceCompetitionId: CompetitionIdSchema.parse(competition.id),
         cronExpression,
@@ -202,10 +203,9 @@ function commonDenominatorReport(params: {
     channelId: COMMON_DENOMINATOR_CHANNEL_ID,
     title: params.title,
     description: "Seeded replacement for the legacy Common Denominator cron.",
-    queryText: params.queryText,
+    queryText: `${params.queryText} RENDER leaderboard`,
     lookbackDays: COMMON_DENOMINATOR_LOOKBACK_DAYS,
     maxRows: params.maxRows,
-    outputFormat: "LEADERBOARD",
     systemSource: "COMMON_DENOMINATOR",
     sourceCompetitionId: null,
     cronExpression: COMMON_DENOMINATOR_CRON,
@@ -312,7 +312,7 @@ function queueWhereClause(queue: CompetitionQueueType): string | undefined {
   return `queue IN (${queues.map((value) => `'${value}'`).join(", ")})`;
 }
 
-function competitionOutputFormat(
+function competitionRenderKind(
   criteria: CompetitionCriteria,
 ): ReportOutputFormat {
   if (criteria.type === "HIGHEST_RANK" || criteria.type === "MOST_RANK_CLIMB") {
@@ -321,12 +321,18 @@ function competitionOutputFormat(
   return "BAR_CHART";
 }
 
+// Build the trailing display clause for a generated query, e.g. the bare
+// `RENDER bar_chart` whose channels (x=label, y=first metric) default at render.
+function renderClauseFor(kind: ReportOutputFormat): string {
+  return `RENDER ${kind.toLowerCase()}`;
+}
+
 function competitionReportMaxRows(
   maxParticipants: number,
-  outputFormat: ReportOutputFormat,
+  renderKind: ReportOutputFormat,
 ): number {
   const outputLimit =
-    outputFormat === "BAR_CHART"
+    renderKind === "BAR_CHART"
       ? COMPETITION_REPORT_TOP_ROWS
       : REPORT_MAX_ROWS_LIMIT;
   return Math.min(maxParticipants, outputLimit, REPORT_MAX_ROWS_LIMIT);
