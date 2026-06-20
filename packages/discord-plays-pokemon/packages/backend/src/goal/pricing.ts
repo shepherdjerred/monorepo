@@ -29,9 +29,10 @@ type ModelRate = {
 // same 10% rule until we see one.
 // Partial<Record<...>> so indexing with an unknown model returns ModelRate | undefined.
 const MODEL_RATES: Partial<Record<string, ModelRate>> = {
-  "gpt-5.4-nano": { input: 0.05, cachedInput: 0.005, output: 0.4 },
-  "gpt-5.4-mini": { input: 0.25, cachedInput: 0.025, output: 2 },
-  "gpt-5.4": { input: 1.25, cachedInput: 0.125, output: 10 },
+  "gpt-5.4-nano": { input: 0.2, cachedInput: 0.02, output: 1.25 },
+  "gpt-5.4-mini": { input: 0.75, cachedInput: 0.075, output: 4.5 },
+  "gpt-5.4": { input: 2.5, cachedInput: 0.25, output: 15 },
+  "gpt-5.5": { input: 5, cachedInput: 0.5, output: 30 },
 };
 
 export function addUsage(left: TurnUsage, right: TurnUsage): TurnUsage {
