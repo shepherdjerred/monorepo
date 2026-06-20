@@ -535,8 +535,21 @@ describe("GoalManager history", () => {
 
     await runAndComplete(manager, nextProcess, "Goal A");
 
+    // runAndComplete resolves once the goal lands in *in-memory* history, but
+    // observeProcess() updates that in-memory list (and does an async session-log
+    // write) BEFORE persistState() flushes goal-state.json. Poll the file so we
+    // assert the post-completion envelope rather than racing the empty-history
+    // snapshot persisted at startGoal (the source of CI flake build #4532).
     const statePath = path.resolve(runtimeDirectory, config.state_path);
-    const persisted = await Bun.file(statePath).json();
+    let persisted = await Bun.file(statePath).json();
+    for (
+      let attempt = 0;
+      attempt < 200 && (persisted.history?.length ?? 0) < 1;
+      attempt += 1
+    ) {
+      await Bun.sleep(1);
+      persisted = await Bun.file(statePath).json();
+    }
     expect(persisted).toHaveProperty("current");
     expect(persisted).toHaveProperty("history");
     expect(persisted.history).toHaveLength(1);
