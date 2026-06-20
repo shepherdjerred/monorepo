@@ -1,4 +1,4 @@
-import type { DiscordGuildId } from "@scout-for-lol/data";
+import type { DiscordGuildId, ReportQueryPlan } from "@scout-for-lol/data";
 import {
   CompetitionIdSchema,
   RankSchema,
@@ -16,10 +16,7 @@ import {
   rowsFromAggregates,
   type MatchParticipantFactRow,
 } from "#src/reports/query-aggregates.ts";
-import {
-  parseReportQuery,
-  type ReportQueryPlan,
-} from "#src/reports/query-language.ts";
+import { parseReportQuery } from "#src/reports/query-language.ts";
 
 export type ReportResultValue = {
   column: string;

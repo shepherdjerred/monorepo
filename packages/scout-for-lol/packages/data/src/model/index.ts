@@ -14,6 +14,8 @@ export * from "./player.ts";
 export * from "./player-config.ts";
 export * from "./rank.ts";
 export * from "./report.ts";
+export * from "./report-query-spec.ts";
+export * from "./report-query-registry.ts";
 export * from "./roster.ts";
 export * from "./state.ts";
 export * from "./team.ts";
