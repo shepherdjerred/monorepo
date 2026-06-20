@@ -36,6 +36,7 @@ import { prisma } from "#src/database/index.ts";
 import { canCreateAnotherUserReport } from "#src/discord/commands/report/authorization.ts";
 import { parseReportQuery } from "#src/reports/query-language.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
+import { renderReportPreview } from "#src/reports/output.ts";
 import { runReport } from "#src/reports/runner.ts";
 import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
 
@@ -300,6 +301,7 @@ export const reportRouter = router({
         queryText: ReportQueryTextSchema,
         lookbackDays: ReportLookbackDaysSchema,
         maxRows: ReportMaxRowsSchema,
+        outputFormat: ReportOutputFormatSchema.default("TABLE"),
         sourceCompetitionId: z
           .number()
           .int()
@@ -319,10 +321,17 @@ export const reportRouter = router({
           maxRows: input.maxRows,
           sourceCompetitionId: input.sourceCompetitionId,
         });
+        const output = renderReportPreview({
+          title: "Preview",
+          outputFormat: input.outputFormat,
+          result,
+          startedAt: new Date(),
+        });
         return {
           columns: result.columns,
           rows: result.rows,
           rowsScanned: result.rowsScanned,
+          output,
         };
       } catch (error) {
         asBadRequest(error);
