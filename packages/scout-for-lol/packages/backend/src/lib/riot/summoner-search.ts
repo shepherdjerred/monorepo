@@ -12,10 +12,21 @@ export type SummonerSearchItem = {
   tagLine: string;
   region: string;
   tier: string | null;
+  /** Same-origin proxied profile-icon path, or null (own-index rows). */
+  avatar: string | null;
   source: "index" | "opgg";
 };
 
 const MAX_RESULTS = 15;
+
+/**
+ * Wrap an OP.GG profile-icon URL in our same-origin proxy so the browser
+ * never hotlinks OP.GG's CDN. The route re-validates the host.
+ */
+function proxiedIconUrl(raw: string | null): string | null {
+  if (raw === null) return null;
+  return `/api/summoner-icon?u=${encodeURIComponent(raw)}`;
+}
 
 export async function searchSummoners(
   query: string,
@@ -43,10 +54,10 @@ export async function searchSummoners(
 
   // Our own index ranks first (already Riot-verified at some point).
   for (const row of indexResults) {
-    add({ ...row, tier: null }, "index");
+    add({ ...row, tier: null, avatar: null }, "index");
   }
   for (const row of opggResults) {
-    add(row, "opgg");
+    add({ ...row, avatar: proxiedIconUrl(row.avatar) }, "opgg");
   }
   return merged.slice(0, MAX_RESULTS);
 }

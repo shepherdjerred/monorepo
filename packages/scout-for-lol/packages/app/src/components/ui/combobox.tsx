@@ -40,13 +40,22 @@ export function Combobox<T>(props: {
       <PopoverAnchor asChild>
         <Input
           id={props.id}
+          // Randomized name so Chrome has no saved form-history to offer —
+          // `autoComplete="off"` alone doesn't suppress the native dropdown.
+          name={`cbx-${listId}`}
           value={props.value}
           disabled={props.disabled}
           placeholder={props.placeholder}
           role="combobox"
           aria-expanded={showPopover}
           aria-controls={listId}
+          aria-autocomplete="list"
           autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          data-1p-ignore=""
+          data-lpignore="true"
           className={props.className}
           onChange={(event) => {
             props.onValueChange(event.target.value);

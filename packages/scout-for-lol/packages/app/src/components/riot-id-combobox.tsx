@@ -13,6 +13,7 @@ type RiotItem =
       tagLine: string;
       region: string;
       tier: string | null;
+      avatar: string | null;
     };
 
 function itemRiotId(item: RiotItem): string {
@@ -96,18 +97,35 @@ export function RiotIdCombobox(props: {
       id={props.id}
       renderItem={(item) =>
         item.kind === "resolved" ? (
-          <span className="truncate">
-            <span className="text-emerald-600 dark:text-emerald-400">✓ </span>
-            {item.gameName}
-            <span className="text-muted-foreground">#{item.tagLine}</span>
+          <span className="flex items-center gap-2 truncate">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center text-emerald-600 dark:text-emerald-400">
+              ✓
+            </span>
+            <span className="truncate">
+              {item.gameName}
+              <span className="text-muted-foreground">#{item.tagLine}</span>
+            </span>
           </span>
         ) : (
-          <span className="truncate">
-            {item.gameName}
-            <span className="text-muted-foreground">#{item.tagLine}</span>
-            {item.tier !== null && (
-              <span className="text-muted-foreground"> · {item.tier}</span>
+          <span className="flex items-center gap-2 truncate">
+            {item.avatar === null ? (
+              <span className="h-5 w-5 shrink-0 rounded-full bg-muted" />
+            ) : (
+              <img
+                src={item.avatar}
+                alt=""
+                width={20}
+                height={20}
+                className="h-5 w-5 shrink-0 rounded-full"
+              />
             )}
+            <span className="truncate">
+              {item.gameName}
+              <span className="text-muted-foreground">#{item.tagLine}</span>
+              {item.tier !== null && (
+                <span className="text-muted-foreground"> · {item.tier}</span>
+              )}
+            </span>
           </span>
         )
       }
