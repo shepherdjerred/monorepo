@@ -29,8 +29,8 @@ export type ModelInfo = {
 
 /**
  * Comprehensive list of OpenAI models with their capabilities
- * Pricing verified from https://platform.openai.com/pricing
- * Last updated: April 2026
+ * Pricing verified from https://platform.openai.com/docs/pricing (Standard tier)
+ * Last updated: June 2026
  */
 export const OPENAI_MODELS: Record<string, ModelInfo> = {
   // GPT-4o Series (Most capable, multimodal)
@@ -287,18 +287,34 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
     deprecated: true,
   },
 
-  // GPT-5.4 Series (Latest - no temperature/topP support)
-  "gpt-5.4": {
-    id: "gpt-5.4",
-    name: "GPT-5.4",
+  // GPT-5.5 / GPT-5.4 Series (Latest - no temperature/topP support)
+  // Prices are the Standard, short-context tier (per 1M tokens) verified from
+  // https://platform.openai.com/docs/pricing (gpt-5.5 is the current flagship).
+  "gpt-5.5": {
+    id: "gpt-5.5",
+    name: "GPT-5.5",
     description:
-      "🚀 Latest GPT-5.4 • 400k context • $1.25 input / $10 output per 1M tokens • No temp control",
+      "🚀 Latest flagship • $5 input / $30 output per 1M tokens • No temp control",
     capabilities: {
       supportsTemperature: false,
       supportsTopP: false,
       maxTokens: 400_000,
-      costPer1MInputTokens: 1.25,
-      costPer1MOutputTokens: 10,
+      costPer1MInputTokens: 5,
+      costPer1MOutputTokens: 30,
+    },
+    category: "other",
+  },
+  "gpt-5.4": {
+    id: "gpt-5.4",
+    name: "GPT-5.4",
+    description:
+      "🧠 Previous flagship • $2.50 input / $15 output per 1M tokens • No temp control",
+    capabilities: {
+      supportsTemperature: false,
+      supportsTopP: false,
+      maxTokens: 400_000,
+      costPer1MInputTokens: 2.5,
+      costPer1MOutputTokens: 15,
     },
     category: "other",
   },
@@ -306,13 +322,13 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
     id: "gpt-5.4-mini",
     name: "GPT-5.4 Mini",
     description:
-      "💰 Balanced GPT-5.4 variant • $0.25 input / $2 output per 1M tokens • No temp control",
+      "💰 Balanced GPT-5.4 variant • $0.75 input / $4.50 output per 1M tokens • No temp control",
     capabilities: {
       supportsTemperature: false,
       supportsTopP: false,
       maxTokens: 200_000,
-      costPer1MInputTokens: 0.25,
-      costPer1MOutputTokens: 2,
+      costPer1MInputTokens: 0.75,
+      costPer1MOutputTokens: 4.5,
     },
     category: "other",
   },
@@ -320,13 +336,13 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
     id: "gpt-5.4-nano",
     name: "GPT-5.4 Nano",
     description:
-      "⚡ Fastest, most cost-effective • $0.05 input / $0.40 output per 1M tokens • No temp control",
+      "⚡ Fastest, most cost-effective • $0.20 input / $1.25 output per 1M tokens • No temp control",
     capabilities: {
       supportsTemperature: false,
       supportsTopP: false,
       maxTokens: 100_000,
-      costPer1MInputTokens: 0.05,
-      costPer1MOutputTokens: 0.4,
+      costPer1MInputTokens: 0.2,
+      costPer1MOutputTokens: 1.25,
     },
     category: "other",
   },
@@ -334,15 +350,20 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
 
 /**
  * Gemini/Imagen pricing (per image)
- * Verified from https://ai.google.dev/pricing
- * Last updated: April 2026
+ * Verified from https://ai.google.dev/gemini-api/docs/pricing
+ * Last updated: June 2026
+ *
+ * NOTE: Gemini image output is priced per token and is resolution-dependent.
+ * The flat per-image rates below are the Standard tier at 1K–2K resolution
+ * (4K costs more — e.g. gemini-3-pro-image is $0.24/img at 4K). The pipeline
+ * generates at ≤2K, so the 1K–2K rate is the correct estimate.
  */
 export const GEMINI_PRICING = {
   // Gemini 2.5 image models (current stable)
-  "gemini-2.5-flash-image": 0.03, // $0.03 per image (Nano Banana stable)
-  // Preview image models
-  "gemini-3-pro-image-preview": 0.15, // $0.15 per image (Nano Banana Pro - estimated, no official pricing)
-  "gemini-3.1-flash-image-preview": 0.03, // $0.03 per image (Nano Banana 2 - estimated)
+  "gemini-2.5-flash-image": 0.039, // ~$0.039 per image (Nano Banana, 1024px)
+  // Current image models (now GA — official per-image rates at 1K–2K)
+  "gemini-3-pro-image-preview": 0.134, // $0.134 per image (Nano Banana Pro, 1K–2K)
+  "gemini-3.1-flash-image-preview": 0.067, // $0.067 per image (Nano Banana 2, 1K)
   // Deprecated models (gemini-2.0-flash shut down)
   "gemini-2.0-flash-exp": 0.03, // deprecated
   "gemini-2.0-flash": 0.03, // deprecated

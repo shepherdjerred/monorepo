@@ -162,7 +162,7 @@ export const DEFAULT_MATCH_SUMMARY_MODEL: ModelConfig = {
  * Default model config for review text (Stage 2)
  */
 export const DEFAULT_REVIEW_TEXT_MODEL: ModelConfig = {
-  model: "gpt-5.4",
+  model: "gpt-5.5",
   maxTokens: 3000,
 };
 
@@ -170,7 +170,7 @@ export const DEFAULT_REVIEW_TEXT_MODEL: ModelConfig = {
  * Default model config for image description (Stage 3)
  */
 export const DEFAULT_IMAGE_DESCRIPTION_MODEL: ModelConfig = {
-  model: "gpt-5.4",
+  model: "gpt-5.5",
   maxTokens: 1800,
   temperature: 0.8,
 };
