@@ -383,16 +383,18 @@
       "description": "Real leaderboard snapshots rendered as a marketing chart.",
       "kind": "competition-graph",
       "snapshotKeys": [
-        "leaderboards/competition-9/snapshots/2026-05-17.json",
-        "leaderboards/competition-9/snapshots/2026-05-18.json",
-        "leaderboards/competition-9/snapshots/2026-05-19.json",
-        "leaderboards/competition-9/snapshots/2026-05-20.json",
-        "leaderboards/competition-9/snapshots/2026-05-21.json",
-        "leaderboards/competition-9/snapshots/2026-05-22.json",
-        "leaderboards/competition-9/snapshots/2026-05-23.json",
-        "leaderboards/competition-9/snapshots/2026-05-24.json",
-        "leaderboards/competition-9/snapshots/2026-05-25.json",
-        "leaderboards/competition-9/snapshots/2026-05-26.json"
+        "leaderboards/competition-3/snapshots/2026-01-08.json",
+        "leaderboards/competition-3/snapshots/2026-01-23.json",
+        "leaderboards/competition-3/snapshots/2026-02-03.json",
+        "leaderboards/competition-3/snapshots/2026-02-15.json",
+        "leaderboards/competition-3/snapshots/2026-02-27.json",
+        "leaderboards/competition-3/snapshots/2026-03-13.json",
+        "leaderboards/competition-3/snapshots/2026-03-24.json",
+        "leaderboards/competition-3/snapshots/2026-04-03.json",
+        "leaderboards/competition-3/snapshots/2026-04-20.json",
+        "leaderboards/competition-3/snapshots/2026-05-01.json",
+        "leaderboards/competition-3/snapshots/2026-05-16.json",
+        "leaderboards/competition-3/snapshots/2026-05-26.json"
       ],
       "chartType": "line",
       "yAxisLabel": "Score"
@@ -405,6 +407,7 @@
       "kind": "report-graph",
       "matchKeys": [
         "games/2026/06/19/SG2_159780129/match.json",
+        "games/2026/06/19/NA1_5585223425/match.json",
         "games/2026/06/19/NA1_5585136555/match.json",
         "games/2026/06/19/NA1_5585117341/match.json",
         "games/2026/06/19/NA1_5584777006/match.json",
@@ -414,8 +417,7 @@
         "games/2026/06/19/KR_8265390134/match.json",
         "games/2026/06/19/KR_8265351671/match.json",
         "games/2026/06/19/KR_8265281667/match.json",
-        "games/2026/06/19/KR_8265247249/match.json",
-        "games/2026/06/19/KR_8265205349/match.json"
+        "games/2026/06/19/KR_8265247249/match.json"
       ],
       "metric": "damage_to_champions",
       "yAxisLabel": "Damage to Champions"

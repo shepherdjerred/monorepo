@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-06-20T02:34:08.485Z",
+  "generatedAt": "2026-06-20T02:49:14.397Z",
   "assets": [
     {
       "id": "draft-prematch",
@@ -411,22 +411,24 @@
       "group": "Graphs",
       "description": "Real leaderboard snapshots rendered as a marketing chart.",
       "sourceKeys": [
-        "leaderboards/competition-9/snapshots/2026-05-17.json",
-        "leaderboards/competition-9/snapshots/2026-05-18.json",
-        "leaderboards/competition-9/snapshots/2026-05-19.json",
-        "leaderboards/competition-9/snapshots/2026-05-20.json",
-        "leaderboards/competition-9/snapshots/2026-05-21.json",
-        "leaderboards/competition-9/snapshots/2026-05-22.json",
-        "leaderboards/competition-9/snapshots/2026-05-23.json",
-        "leaderboards/competition-9/snapshots/2026-05-24.json",
-        "leaderboards/competition-9/snapshots/2026-05-25.json",
-        "leaderboards/competition-9/snapshots/2026-05-26.json"
+        "leaderboards/competition-3/snapshots/2026-01-08.json",
+        "leaderboards/competition-3/snapshots/2026-01-23.json",
+        "leaderboards/competition-3/snapshots/2026-02-03.json",
+        "leaderboards/competition-3/snapshots/2026-02-15.json",
+        "leaderboards/competition-3/snapshots/2026-02-27.json",
+        "leaderboards/competition-3/snapshots/2026-03-13.json",
+        "leaderboards/competition-3/snapshots/2026-03-24.json",
+        "leaderboards/competition-3/snapshots/2026-04-03.json",
+        "leaderboards/competition-3/snapshots/2026-04-20.json",
+        "leaderboards/competition-3/snapshots/2026-05-01.json",
+        "leaderboards/competition-3/snapshots/2026-05-16.json",
+        "leaderboards/competition-3/snapshots/2026-05-26.json"
       ],
       "kind": "competition-graph",
       "status": "generated",
       "fileName": "competition-graph.png",
       "src": "/generated/scout-showcase/competition-graph.png",
-      "byteLength": 35082
+      "byteLength": 85540
     },
     {
       "id": "report-graph",
@@ -435,6 +437,7 @@
       "description": "Real match payloads aggregated into a scheduled-report chart.",
       "sourceKeys": [
         "games/2026/06/19/SG2_159780129/match.json",
+        "games/2026/06/19/NA1_5585223425/match.json",
         "games/2026/06/19/NA1_5585136555/match.json",
         "games/2026/06/19/NA1_5585117341/match.json",
         "games/2026/06/19/NA1_5584777006/match.json",
@@ -444,14 +447,13 @@
         "games/2026/06/19/KR_8265390134/match.json",
         "games/2026/06/19/KR_8265351671/match.json",
         "games/2026/06/19/KR_8265281667/match.json",
-        "games/2026/06/19/KR_8265247249/match.json",
-        "games/2026/06/19/KR_8265205349/match.json"
+        "games/2026/06/19/KR_8265247249/match.json"
       ],
       "kind": "report-graph",
       "status": "generated",
       "fileName": "report-graph.png",
       "src": "/generated/scout-showcase/report-graph.png",
-      "byteLength": 72773
+      "byteLength": 74640
     }
   ]
 }

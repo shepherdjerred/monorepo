@@ -60,7 +60,14 @@ function competitionLineChartProps(params: {
     throw new Error("Cannot render line chart without snapshots");
   }
 
-  const topEntries = latestSnapshot(sorted).entries.slice(0, 10);
+  // Pick the players to plot from the most-populated snapshot, not strictly
+  // the latest — a leaderboard whose final snapshot emptied out would
+  // otherwise yield an empty chart.
+  const richestSnapshot =
+    sorted.toSorted(
+      (left, right) => right.entries.length - left.entries.length,
+    )[0] ?? first;
+  const topEntries = richestSnapshot.entries.slice(0, 10);
   return {
     chartType: "line",
     title: params.entry.title,

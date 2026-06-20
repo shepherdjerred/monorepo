@@ -14,6 +14,7 @@ import {
   DISCORD_SHOWCASE_TEMPLATES,
   discordScreenshotEntry,
 } from "#src/showcase/discord-templates.ts";
+import { readS3JsonOptional } from "#src/showcase/s3.ts";
 
 const CliFlagNameSchema = z.enum([
   "bucket",
@@ -496,38 +497,87 @@ function leaderboardSnapshotGroups(keys: string[]): Map<string, string[]> {
   return groups;
 }
 
-function competitionGraphEntry(
-  keys: string[],
-  prevById: Map<string, ShowcaseEntry>,
-): ShowcaseEntry {
-  const groups = leaderboardSnapshotGroups(keys);
-  const selected = [...groups.values()]
-    .filter((group) => group.length > 1)
-    .toSorted((left, right) => right.length - left.length)[0];
+const SnapshotEntriesSchema = z.object({ entries: z.array(z.unknown()) });
 
-  if (selected === undefined) {
-    return (
-      prevById.get("competition-graph") ?? {
-        kind: "unsupported",
-        id: "competition-graph",
-        title: "Competition Graph",
-        group: "Graphs",
-        reason:
-          "No leaderboard snapshot series with at least two points was found.",
-      }
-    );
+/**
+ * Evenly sample up to `count` keys across the full sorted range so the chart
+ * spans the whole competition (showing real movement) rather than just the
+ * recent — often flat — tail.
+ */
+function sampleEvenly(sortedKeys: string[], count: number): string[] {
+  if (sortedKeys.length <= count) {
+    return sortedKeys;
+  }
+  const step = (sortedKeys.length - 1) / (count - 1);
+  const picked: string[] = [];
+  for (let index = 0; index < count; index += 1) {
+    const key = sortedKeys[Math.round(index * step)];
+    if (key !== undefined && !picked.includes(key)) {
+      picked.push(key);
+    }
+  }
+  return picked;
+}
+
+async function snapshotHasEntries(params: {
+  client: S3Client;
+  bucket: string;
+  key: string;
+}): Promise<boolean> {
+  const json = await readS3JsonOptional(params);
+  const parsed = SnapshotEntriesSchema.safeParse(json);
+  return parsed.success && parsed.data.entries.length > 0;
+}
+
+async function competitionGraphEntry(params: {
+  client: S3Client;
+  bucket: string;
+  keys: string[];
+  prevById: Map<string, ShowcaseEntry>;
+}): Promise<ShowcaseEntry> {
+  // Prefer the competition with the most snapshots whose *latest* snapshot is
+  // actually populated — a dead/cleared leaderboard has snapshots but no
+  // entries, which renders as an empty chart.
+  const candidates = [...leaderboardSnapshotGroups(params.keys).values()]
+    .filter((group) => group.length > 1)
+    .toSorted((left, right) => right.length - left.length);
+
+  for (const group of candidates) {
+    const snapshotKeys = group.toSorted();
+    const latestKey = snapshotKeys.at(-1);
+    if (latestKey === undefined) {
+      continue;
+    }
+    if (
+      !(await snapshotHasEntries({
+        client: params.client,
+        bucket: params.bucket,
+        key: latestKey,
+      }))
+    ) {
+      continue;
+    }
+    return {
+      kind: "competition-graph",
+      id: "competition-graph",
+      title: "Competition Progress",
+      group: "Graphs",
+      description: "Real leaderboard snapshots rendered as a marketing chart.",
+      snapshotKeys: sampleEvenly(snapshotKeys, 12),
+      chartType: "line",
+      yAxisLabel: "Score",
+    };
   }
 
-  return {
-    kind: "competition-graph",
-    id: "competition-graph",
-    title: "Competition Progress",
-    group: "Graphs",
-    description: "Real leaderboard snapshots rendered as a marketing chart.",
-    snapshotKeys: selected.toSorted().slice(-10),
-    chartType: "line",
-    yAxisLabel: "Score",
-  };
+  return (
+    params.prevById.get("competition-graph") ?? {
+      kind: "unsupported",
+      id: "competition-graph",
+      title: "Competition Graph",
+      group: "Graphs",
+      reason: "No competition with a populated recent leaderboard was found.",
+    }
+  );
 }
 
 function reportGraphEntry(
@@ -619,6 +669,13 @@ process.stderr.write(
   `Headed ${postmatch.headCount.toString()} postmatch + ${prematch.headCount.toString()} prematch object(s) (budget ${maxHead.toString()}).\n`,
 );
 
+const competitionEntry = await competitionGraphEntry({
+  client,
+  bucket,
+  keys: leaderboardKeys,
+  prevById,
+});
+
 const manifest = ShowcaseManifestSchema.parse({
   version: 1,
   entries: [
@@ -629,7 +686,7 @@ const manifest = ShowcaseManifestSchema.parse({
       prevById,
     }),
     ...discordEntries(postmatch.candidates, prevById),
-    competitionGraphEntry(leaderboardKeys, prevById),
+    competitionEntry,
     reportGraphEntry(postmatch.candidates, prevById),
   ],
 });
