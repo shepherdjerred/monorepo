@@ -63,6 +63,9 @@ export default {
     "WEB_APP_ORIGIN",
     "https://scout-for-lol.com",
   ),
+  // Where owners are pointed to leave feedback when the bot is removed from
+  // their server. Defaults to the marketing site; override to a dedicated form.
+  feedbackUrl: getOptionalEnvVar("FEEDBACK_URL", "https://scout-for-lol.com"),
   riotApiToken: getRequiredEnvVar("RIOT_API_KEY"),
   databaseUrl: getRequiredEnvVar("DATABASE_URL"),
   port: env.get("PORT").default("3000").asPortNumber(),

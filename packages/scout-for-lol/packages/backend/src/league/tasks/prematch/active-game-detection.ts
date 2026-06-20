@@ -5,6 +5,7 @@ import type {
 } from "@scout-for-lol/data/index.ts";
 import { isArenaQueueOrMode } from "@scout-for-lol/data/index.ts";
 import { getAccountsWithState, prisma } from "#src/database/index.ts";
+import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
 import {
   getActiveGames,
@@ -160,7 +161,10 @@ export async function checkActiveGames(
   logger.info("🔍 Starting pre-match active game check");
 
   try {
-    const accountsWithState = await getAccountsWithState();
+    const accountsWithState = await getAccountsWithState(
+      prisma,
+      getActiveServerIds(),
+    );
     logger.info(
       `📊 Found ${accountsWithState.length.toString()} total player account(s)`,
     );

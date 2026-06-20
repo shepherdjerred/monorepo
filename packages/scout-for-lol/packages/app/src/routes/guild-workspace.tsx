@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useParams } from "react-router-dom";
+import { Link, NavLink, Outlet, useParams } from "react-router-dom";
 import { cn } from "#src/lib/cn.ts";
 
 const NAV_ITEMS = [
@@ -33,12 +33,20 @@ export function GuildWorkspace() {
               {guildId}
             </h1>
           </div>
-          <NavLink
-            to="/"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
-            Change guild
-          </NavLink>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/welcome"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              Setup guide
+            </Link>
+            <NavLink
+              to="/"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              Change guild
+            </NavLink>
+          </div>
         </div>
         <nav className="flex flex-wrap gap-2 border-b border-border pb-2">
           {NAV_ITEMS.map((item) => (

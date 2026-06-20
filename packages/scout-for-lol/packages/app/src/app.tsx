@@ -14,6 +14,8 @@ import { ReportDetail } from "#src/routes/report-detail.tsx";
 import { ReportForm } from "#src/routes/report-form.tsx";
 import { ReportHelp } from "#src/routes/report-help.tsx";
 import { AdminTools } from "#src/routes/admin-tools.tsx";
+import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
+import { InstallLanding } from "#src/routes/install-landing.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
 import { ThemeToggle } from "#src/components/ui/theme-toggle.tsx";
 
@@ -27,6 +29,8 @@ export function App() {
         <Route path="/login" element={<Login />} />
         <Route element={<RequireSession />}>
           <Route path="/" element={<GuildPicker />} />
+          <Route path="/welcome" element={<OnboardingWizard />} />
+          <Route path="/installed" element={<InstallLanding />} />
           <Route path="/g/:guildId" element={<GuildWorkspace />}>
             <Route index element={<Navigate to="subscriptions" replace />} />
             <Route path="subscriptions" element={<GuildSubscriptions />} />

@@ -82,7 +82,12 @@ therefore never shadows a full embedded track. Candidate sources:
   modifiers come from dispositions (`forced`, `hearing_impaired`) and `SDH`/`FORCED` title tags. Image
   subs (PGS/VobSub/DVB — common on Blu-ray Remux) can't be burned and are skipped.
 - **yt-dlp** (non-local sources): downloads the preferred subtitle track, falling back to
-  auto-captions (`SUBTITLES_INCLUDE_AUTO_GENERATED`).
+  auto-captions (`SUBTITLES_INCLUDE_AUTO_GENERATED`). YouTube **auto-generated** captions use a
+  "rolling" format (each phrase emitted several times — built up word-by-word, a ~10 ms finalization
+  cue, then carried as the top line while the next builds), which libass would burn as a doubled,
+  stale, sometimes-reversed two-line scroll. `cleanRollingSrt` (`sources/subtitle-clean.ts`) detects
+  that signature on the staged `.srt` and collapses it to clean, one-line-at-a-time cues; clean tracks
+  (manual captions, sidecars) are left untouched.
 
 Every track is staged to a safe temp file (`$TMPDIR/streambot-subs/<uuid>.<ext>`) so the filter never
 references a user path with spaces/quotes; `runStream` unlinks it when the track ends, and startup

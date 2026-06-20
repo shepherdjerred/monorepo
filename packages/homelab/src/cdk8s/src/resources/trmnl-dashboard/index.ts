@@ -120,6 +120,16 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
           secret,
           key: "PAGERDUTY_TOKEN",
         }),
+        // Sentry error reporting → Bugsink project 15 (TRMNL Dashboard). This
+        // is the dashboard's OWN error tracking, distinct from BUGSINK_URL/TOKEN
+        // which it queries to render the homelab error panel. Required
+        // (fail-fast): the item must carry SENTRY_DSN. VERSION is baked into the
+        // image; both surface as the Sentry release/environment.
+        SENTRY_DSN: EnvValue.fromSecretValue({
+          secret,
+          key: "SENTRY_DSN",
+        }),
+        ENVIRONMENT: EnvValue.fromValue("production"),
       },
       resources: {
         cpu: {

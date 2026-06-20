@@ -20,6 +20,7 @@
     "@monaco-editor/react": "^4.6.0",
     "@scout-for-lol/backend": "file:../backend",
     "@scout-for-lol/data": "file:../data",
+    "@sentry/react": "^10.0.0",
     "@tanstack/react-query": "^5.62.0",
     "@trpc/client": "^11.17.0",
     "@trpc/tanstack-react-query": "^11.17.0",

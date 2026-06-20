@@ -22,6 +22,7 @@ import {
 /** Aggregates over one Go-Live session, logged as a summary on stop. */
 export type SessionStats = {
   framesPushed: number;
+  framesDropped: number;
   videoFramesSent: number;
   lateVideoFrames: number;
   lastSpeedRatio: number | undefined;
@@ -30,6 +31,7 @@ export type SessionStats = {
 export function newSessionStats(): SessionStats {
   return {
     framesPushed: 0,
+    framesDropped: 0,
     videoFramesSent: 0,
     lateVideoFrames: 0,
     lastSpeedRatio: undefined,

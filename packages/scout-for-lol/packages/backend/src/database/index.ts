@@ -117,13 +117,22 @@ export async function getChannelsSubscribedToPlayers(
  */
 export async function getAccountsWithState(
   prismaClient: ExtendedPrismaClient = prisma,
+  activeServerIds?: Set<string>,
 ): Promise<PlayerAccountWithState[]> {
   logger.info("🔍 Fetching all player accounts with state");
 
   try {
     const startTime = Date.now();
 
+    // When a set of active guild ids is provided, only poll players whose guild
+    // the bot is still a member of - this avoids burning Riot API calls on
+    // guilds the bot has been removed from. Callers must omit this (rather than
+    // pass an empty set) when the client is not ready, so polling is not skipped
+    // wholesale during startup/outages.
     const players = await prismaClient.player.findMany({
+      ...(activeServerIds
+        ? { where: { serverId: { in: [...activeServerIds] } } }
+        : {}),
       include: {
         accounts: true,
       },

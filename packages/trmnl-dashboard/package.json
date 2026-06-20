@@ -18,6 +18,7 @@
     "lint": "bunx eslint . --max-warnings=0"
   },
   "dependencies": {
+    "@sentry/bun": "^10.49.0",
     "@shepherdjerred/home-assistant": "file:../home-assistant",
     "zod": "^4.4.3"
   },

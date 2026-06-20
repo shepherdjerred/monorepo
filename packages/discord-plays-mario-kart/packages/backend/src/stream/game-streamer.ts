@@ -31,6 +31,7 @@ import {
   streamFfmpegFps,
   streamFfmpegSpeedRatio,
   streamFrameIntervalMs,
+  streamFramesDroppedTotal,
   streamFrameWriteMs,
   streamHwEncodeEngaged,
 } from "#src/observability/metrics.ts";
@@ -74,6 +75,28 @@ export async function notifyStreamSessionEnded(
 // rawvideo input framerate handed to ffmpeg — it assigns presentation
 // timestamps from this value, so it must match the emulator's actual tick rate.
 const SRC_FPS = N64_FPS;
+
+// Cap on the bytes allowed to sit in the PassThrough feeding ffmpeg before
+// pushFrame starts dropping the newest frame. The emulator produces frames at a
+// fixed rate; if the encode/Discord-send path dips below realtime (e.g. the single
+// JS event loop is busy emulating), an *unbounded* queue pushes the broadcast
+// seconds — even minutes — behind live (a 3.5 GB / ~3 min backlog was observed in
+// prod), so controller input lag grows without bound and the pod risks OOM against
+// its memory limit. Bounding the queue trades frame rate for latency: under a slow
+// consumer the stream degrades to fewer fps at low lag instead of staying
+// real-time-rate but ever further behind. ~3 frames ≈ 100 ms at 30 fps.
+export const MAX_SINK_BUFFER_BYTES = WIDTH * HEIGHT * 4 * 3;
+
+/**
+ * Whether to drop a new frame rather than enqueue it: true once the bytes already
+ * waiting in the ffmpeg input PassThrough are at/above the latency budget. Exported
+ * for tests. (The PassThrough's highWaterMark is far below one frame, so `write()`'s
+ * own backpressure return is always `false` and unusable as a signal — the queued
+ * byte count is.)
+ */
+export function shouldDropFrame(queuedBytes: number): boolean {
+  return queuedBytes >= MAX_SINK_BUFFER_BYTES;
+}
 
 // Streams the emulator's BGRA frames into a Discord voice channel as a Go-Live
 // broadcast, over the voice UDP path.
@@ -133,19 +156,28 @@ export class GameStreamer {
 
   /** Feed one BGRA frame (no-op unless a broadcast is active). */
   pushFrame(frame: Buffer): void {
-    if (this.frameSink) {
-      const pushAt = performance.now();
-      if (this.lastPushAt !== undefined) {
-        streamFrameIntervalMs.observe(pushAt - this.lastPushAt);
-      }
-      this.lastPushAt = pushAt;
-      this.frameSink.write(frame);
-      // A slow write is backpressure showing up before the buffer gauge moves.
-      streamFrameWriteMs.observe(performance.now() - pushAt);
-      if (this.session) this.session.framesPushed++;
-      // Rising buffered bytes ⇒ ffmpeg/encode can't keep up with the frame rate.
-      sinkBufferBytes.set(this.frameSink.writableLength);
+    const sink = this.frameSink;
+    if (!sink) return;
+    // Drop the newest frame once the queue exceeds its latency budget, so input lag
+    // can't run away when the encode/send path falls below realtime. See
+    // shouldDropFrame / MAX_SINK_BUFFER_BYTES.
+    if (shouldDropFrame(sink.writableLength)) {
+      streamFramesDroppedTotal.inc();
+      if (this.session) this.session.framesDropped++;
+      sinkBufferBytes.set(sink.writableLength);
+      return;
     }
+    const pushAt = performance.now();
+    if (this.lastPushAt !== undefined) {
+      streamFrameIntervalMs.observe(pushAt - this.lastPushAt);
+    }
+    this.lastPushAt = pushAt;
+    sink.write(frame);
+    // A slow write is backpressure showing up before the buffer gauge moves.
+    streamFrameWriteMs.observe(performance.now() - pushAt);
+    if (this.session) this.session.framesPushed++;
+    // Rising buffered bytes ⇒ ffmpeg/encode can't keep up with the frame rate.
+    sinkBufferBytes.set(sink.writableLength);
   }
 
   /** Feed resampled PCM (s16le/44.1 kHz/stereo) to the broadcast (no-op when idle). */
@@ -167,7 +199,20 @@ export class GameStreamer {
     this.actor.send({ type: "SHUTDOWN" });
     this.actor.stop();
     this.teardownAudio();
-    this.streamer.client.destroy();
+    // discord.js-selfbot-v13's client.destroy() dereferences `this.connection`
+    // on each shard, which is null when the gateway never fully connected (or was
+    // already torn down) — it throws "null is not an object (this.connection.
+    // readyState)". Left unguarded that abort propagates out of session teardown
+    // (`safeDriverStop`), so the userbot/voice/ffmpeg handles for the just-ended
+    // /play session are never released and pile up across sessions. Swallow it:
+    // destroy() is best-effort cleanup and there's nothing to recover here.
+    try {
+      this.streamer.client.destroy();
+    } catch (error) {
+      logger.warn("selfbot client destroy failed (ignored)", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   /** Tear down the loopback audio transport (sink + socket + server). Idempotent. */
@@ -308,9 +353,15 @@ export class GameStreamer {
     if (!session) return;
 
     const durationS = (performance.now() - this.sessionStartedAt) / 1000;
+    const totalFrames = session.framesPushed + session.framesDropped;
     logger.info("stream session summary", {
       durationS: Math.round(durationS),
       framesPushed: session.framesPushed,
+      framesDropped: session.framesDropped,
+      droppedPct:
+        totalFrames > 0
+          ? Math.round((session.framesDropped / totalFrames) * 1000) / 10
+          : 0,
       pushedFps:
         durationS > 0
           ? Math.round((session.framesPushed / durationS) * 10) / 10
