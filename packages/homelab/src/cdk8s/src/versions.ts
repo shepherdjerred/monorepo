@@ -127,7 +127,7 @@ const versions = {
     "2.0.0-4537@sha256:c3112975f3da477403fc72f621508b4ffd32b0ace90f481de87c9387b6f8e6ba",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
-    "2.0.0-4537@sha256:cccd7d07612f7a8864e04a8b4d31bddab4c7ff406e8b310c9a79a17acce8c004",
+    "2.0.0-4537@sha256:c3112975f3da477403fc72f621508b4ffd32b0ace90f481de87c9387b6f8e6ba",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
     "2.0.0-4537@sha256:cccd7d07612f7a8864e04a8b4d31bddab4c7ff406e8b310c9a79a17acce8c004",
