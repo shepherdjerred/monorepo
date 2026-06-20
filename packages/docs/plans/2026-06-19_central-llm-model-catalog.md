@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress — all phases delivered in one PR (#1281) on `feature/llm-models-catalog`. Supersedes PR #1272 (its pricing fixes are subsumed by the catalog).
+Complete — all phases delivered in one PR (#1281) on `feature/llm-models-catalog`. Supersedes PR #1272 (its pricing fixes are subsumed by the catalog).
 
 ## Context
 
@@ -39,14 +39,16 @@ SKIP_BUILD_DEPS`, `knip.json`. Verified: typecheck, 12 tests, eslint, Pydantic
 validation, validate-catalog test (35 pkgs), full pre-commit gate.
 
 Catalog shape: token prices USD/1M, image prices USD/image, discriminated by
-modality. `#catalog.json` internal subpath import (no `../`); tsconfig uses
-`nodenext` (JSON import attributes).
+modality. **Built package** (`dist/` + `.d.ts`): `src/index.ts` statically
+imports `src/catalog.json` (bundler-inlined in browsers, resolved by Bun in
+Node), so consumers typecheck the declarations rather than the source. Built in
+`setup.ts`' DAG + consumer copies refreshed (mirrors webring); not in
+`SKIP_BUILD_DEPS`.
 
-## Phase 2 — migrate consumers (TODO)
+## Phase 2 — migrate consumers (DONE)
 
-After Phase 1 + PR #1272 land. Each TS consumer: add `file:` dep, append the
-`.dagger/src/deps.ts` edge, delete its local map, point its helper at the
-catalog, refresh `bun.lock`.
+Each TS consumer: add `file:` dep, append the `.dagger/src/deps.ts` edge, delete
+its local map, point its helper at the catalog, refresh `bun.lock`.
 
 - scout data `review/models.ts` — rewrite as a thin adapter keeping every exported name/signature; drop legacy/deprecated rows.
 - temporal `pr-review/summary-cost.ts` — `estimateCostUsd` → `costForTextUsage("claude-haiku-4-5-20251001", …)`.
@@ -55,7 +57,7 @@ catalog, refresh `bun.lock`.
 - scout Python `ai_analyze_llm.py` — load `catalog.json` with Pydantic; replace context-limit + price constants.
 - Add a cross-consumer parity guard (every referenced model id ∈ catalog).
 
-## Phase 3 — deterministic cross-checked refresh (TODO)
+## Phase 3 — deterministic cross-checked refresh (DONE)
 
 `packages/llm-models/scripts/sync-from-upstreams.ts`: fetch models.dev
 `api.json` and the LiteLLM JSON (normalize keys/units), diff each catalog model,
@@ -69,13 +71,19 @@ no scraping).
 
 ### Done
 
-- Shipped Phase 1: created `@shepherdjerred/llm-models` (catalog.json + Zod loader + Pydantic validator + tests + full build wiring). Commit `aeea75adb` on `feature/llm-models-catalog`. All local checks + pre-commit green.
+All three phases shipped in PR #1281 (`feature/llm-models-catalog`):
+
+- **Phase 1** — `@shepherdjerred/llm-models` built package: `src/catalog.json` (active models only, all 3 providers), Zod loader + accessors, Pydantic validator, tests, full wiring (`ALL_PACKAGES`, `WORKSPACE_DEPS`, `setup.ts` DAG + refresh, `knip.json`).
+- **Phase 2** — migrated every consumer off its local map: monarch `usage.ts`, temporal `summary-cost.ts`, dpp `goal/pricing.ts`, scout `data/review/models.ts` (adapter, legacy rows dropped) + flagship bump `gpt-5.4→gpt-5.5`, scout Python `ai_analyze_llm.py` (Pydantic).
+- **Phase 3** — `scripts/sync-from-upstreams.ts` deterministic cross-check vs models.dev + LiteLLM (`bun run sync`) + Temporal `llm-catalog-refresh-weekly` workflow (opens a PR on drift via `openSeasonRefreshPr`).
+- Verified throughout: per-package typecheck/eslint/tests (scout data 339, scout frontend astro-check + **full browser build**, dpp + monarch + temporal incl. workflow-bundle smoke test), `generate-deps` consistent, live `sync --check` (no drift), Pydantic load.
 
 ### Remaining
 
-- Phases 2 (migrate consumers) and 3 (Temporal refresh) land in this same PR (#1281), per the "all work in one PR" directive. This branch is off `main` (pre-#1272) and the catalog carries the corrected values, so migrating the consumers delivers the pricing fix too — **PR #1272 is subsumed and should be closed**.
+- Merge #1281; **close #1272** (subsumed). After merge: `git worktree remove .claude/worktrees/llm-models-catalog`.
 
 ### Caveats
 
-- Catalog seeded with the values verified in PR #1272 + the claude-api catalog + Google docs. Context windows for the gpt-5.x family are best-effort (400k); the Phase 3 cross-check will validate against models.dev + LiteLLM.
-- `gpt-5.5` and the Gemini image models are absent from both community datasets today, so they will remain "overlay-only" (manually maintained) until upstreams add them — the Phase 3 refresh report surfaces this each run.
+- The catalog is a **built** `file:` dep: after editing it, consumers need `bun install --force` to re-copy `dist/` (handled by `setup.ts`' refresh phase + the Temporal refresh activity; locally re-run setup or the per-consumer `bun install --force`).
+- `gpt-5.5` + the Gemini image models are absent from / priced differently by the community datasets, so they stay "overlay-only" (manually maintained); the weekly refresh report surfaces them each run.
+- A collaborator commit (`81e940580`, plain Gemini display names + Google test coverage) was rebased in and preserved.
