@@ -76,6 +76,11 @@ RENDER bar_chart WITH (y = win_rate, title = "Win %")
 - `bun test`: parser (12), data render-spec (16), backend reports + discord report (31),
   brand-prisma-types (4) — all green. Integration tests run against the migrated template DB
   (`system-reports.integration` asserts competition reports get `RENDER bar_chart`).
+- **End-to-end** (`report-render.integration.test.ts`, 9 tests): seeds real SQLite facts and
+  runs parse → aggregate → render for every kind. Proves chart rendering (echarts → PNG)
+  works in tests and is deterministic — a bare `RENDER bar_chart` is byte-identical to
+  `y = games` (back-compat) while `y = games` ≠ `y = win_rate` (Y channel load-bearing) — plus
+  a full `runReport` path writing a SUCCESS run.
 - `eslint --fix` clean on all changed files.
 - Migration backfill SQL verified on sample rows (chart→`RENDER bar_chart`, leaderboard→
   `RENDER leaderboard`, rows with an existing clause untouched).
@@ -100,7 +105,9 @@ RENDER bar_chart WITH (y = win_rate, title = "Win %")
   `.claude/worktrees/scout-render-clause`). ~23 source files + 1 migration + regenerated
   `template.db`.
 - Added tests: parser RENDER cases (`query-language.test.ts`), render-spec schema
-  (`data/.../report.test.ts`); updated brand-prisma + integration fixtures.
+  (`data/.../report.test.ts`), and an end-to-end suite
+  (`report-render.integration.test.ts`) covering facts → render for all kinds; updated
+  brand-prisma + integration fixtures.
 - Verified: typecheck clean, all touched test suites green, lint clean, migration backfill
   proven on sample rows.
 
