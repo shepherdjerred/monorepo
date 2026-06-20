@@ -82,7 +82,11 @@ export function SubscriptionFields(props: {
             // Fires right after onValueChange(riotId); rebuild from the
             // selected Riot ID so the region update doesn't clobber it.
             const match = findRegion(accountRegion);
-            onChange({ ...value, riotId, ...(match !== null && { region: match }) });
+            onChange({
+              ...value,
+              riotId,
+              ...(match !== null && { region: match }),
+            });
           }}
           placeholder="Search a name or type name#TAG"
         />
@@ -103,8 +107,7 @@ export function SubscriptionFields(props: {
 
       <div className="space-y-2">
         <Label htmlFor={`${idPrefix}-discord`}>
-          Discord user{" "}
-          <span className="text-muted-foreground">(optional)</span>
+          Discord user <span className="text-muted-foreground">(optional)</span>
         </Label>
         <DiscordMemberCombobox
           id={`${idPrefix}-discord`}
