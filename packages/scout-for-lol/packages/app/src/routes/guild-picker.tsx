@@ -1,18 +1,58 @@
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { Button } from "#src/components/ui/button.tsx";
 import {
   Card,
+  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "#src/components/ui/card.tsx";
+import { DISCORD_INVITE_URL } from "#src/lib/discord-invite.ts";
+import {
+  isOnboardingComplete,
+  isOnboardingSeen,
+  markOnboardingComplete,
+  markOnboardingSeen,
+} from "#src/lib/onboarding-storage.ts";
 
 export function GuildPicker() {
   const trpc = useTRPC();
+  const navigate = useNavigate();
+  const meQuery = useQuery(
+    trpc.auth.meWeb.queryOptions(undefined, { retry: false }),
+  );
   const { data, isLoading, error } = useQuery(
     trpc.guild.listManageable.queryOptions(),
   );
+  const discordId = meQuery.data?.discordId ?? null;
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  // First sign-in for this user: send them through the guided setup once.
+  useEffect(() => {
+    if (discordId === null) return;
+    if (!isOnboardingSeen(discordId)) {
+      markOnboardingSeen(discordId);
+      void navigate("/welcome", { replace: true });
+    }
+  }, [discordId, navigate]);
+
+  const showBanner =
+    discordId !== null &&
+    isOnboardingSeen(discordId) &&
+    !isOnboardingComplete(discordId) &&
+    !bannerDismissed;
+
+  const banner = showBanner ? (
+    <GetStartedBanner
+      onDismiss={() => {
+        markOnboardingComplete(discordId);
+        setBannerDismissed(true);
+      }}
+    />
+  ) : null;
 
   if (isLoading) {
     return (
@@ -35,14 +75,25 @@ export function GuildPicker() {
   if (data === undefined || data.length === 0) {
     return (
       <Shell>
+        {banner}
         <Card>
           <CardHeader>
             <CardTitle>No manageable guilds</CardTitle>
             <CardDescription>
               You need to be a Discord Administrator in a server where Scout is
-              installed. Invite Scout, then come back here.
+              installed. Add Scout, then come back here.
             </CardDescription>
           </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button asChild>
+              <a href={DISCORD_INVITE_URL} target="_blank" rel="noreferrer">
+                Add Scout to Discord
+              </a>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/welcome">Open setup guide</Link>
+            </Button>
+          </CardContent>
         </Card>
       </Shell>
     );
@@ -50,7 +101,16 @@ export function GuildPicker() {
 
   return (
     <Shell>
-      <h2 className="text-xl font-semibold tracking-tight">Pick a guild</h2>
+      {banner}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold tracking-tight">Pick a guild</h2>
+        <Link
+          to="/welcome"
+          className="text-sm text-muted-foreground hover:text-foreground"
+        >
+          Setup guide
+        </Link>
+      </div>
       <ul className="grid gap-2">
         {data.map((g) => (
           <li key={g.id}>
@@ -78,6 +138,28 @@ export function GuildPicker() {
         ))}
       </ul>
     </Shell>
+  );
+}
+
+function GetStartedBanner(props: { onDismiss: () => void }) {
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">New to Scout?</CardTitle>
+        <CardDescription>
+          Take the quick setup guide to track your first player and learn the
+          basics.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex gap-2 pt-0">
+        <Button asChild size="sm">
+          <Link to="/welcome">Start setup guide</Link>
+        </Button>
+        <Button variant="ghost" size="sm" onClick={props.onDismiss}>
+          Dismiss
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 

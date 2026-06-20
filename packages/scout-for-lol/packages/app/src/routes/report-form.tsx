@@ -1,53 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-  DEFAULT_REPORT_CRON,
-  REPORT_MAX_LOOKBACK_DAYS,
-  REPORT_MAX_ROWS_LIMIT,
-  ReportIdSchema,
-  ReportOutputFormatSchema,
-  type ReportOutputFormat,
-} from "@scout-for-lol/data";
-import { CronPresets } from "@scout-for-lol/data/model/competition-cron.ts";
+import { ReportIdSchema, ReportOutputFormatSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { Button } from "#src/components/ui/button.tsx";
-import { Input } from "#src/components/ui/input.tsx";
-import { Label } from "#src/components/ui/label.tsx";
-import { Textarea } from "#src/components/ui/textarea.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "#src/components/ui/select.tsx";
 import { ReportQueryPreview } from "#src/components/report-query-preview.tsx";
-
-const EXAMPLE_QUERY =
-  "select games, win_rate from match_participants where queue in (ranked_solo) group by player order by games desc";
-
-type FormState = {
-  title: string;
-  description: string;
-  channelId: string;
-  queryText: string;
-  lookbackDays: string;
-  maxRows: string;
-  outputFormat: ReportOutputFormat;
-  cronExpression: string;
-};
-
-const EMPTY_STATE: FormState = {
-  title: "",
-  description: "",
-  channelId: "",
-  queryText: "",
-  lookbackDays: "30",
-  maxRows: "10",
-  outputFormat: "TABLE",
-  cronExpression: DEFAULT_REPORT_CRON,
-};
+import {
+  buildReportPayload,
+  EMPTY_REPORT_STATE,
+  ReportFormFields,
+  type ReportFormState,
+} from "#src/components/report-form-fields.tsx";
 
 export function ReportForm() {
   const { guildId, reportId: idParam } = useParams();
@@ -61,7 +24,7 @@ export function ReportForm() {
   const reportId =
     idResult?.success === true ? idResult.data : ReportIdSchema.parse(1);
 
-  const [state, setState] = useState<FormState>(EMPTY_STATE);
+  const [state, setState] = useState<ReportFormState>(EMPTY_REPORT_STATE);
   const [prefilled, setPrefilled] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -123,27 +86,24 @@ export function ReportForm() {
   function handleSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setError(null);
-    const lookbackDays = Number(state.lookbackDays);
-    const maxRows = Number(state.maxRows);
-    if (!Number.isInteger(lookbackDays) || !Number.isInteger(maxRows)) {
-      setError("Lookback days and max rows must be whole numbers.");
+    const built = buildReportPayload(state);
+    if (!built.ok) {
+      setError(built.message);
       return;
     }
-    const shared = {
-      title: state.title,
-      description: state.description.trim() === "" ? null : state.description,
-      channelId: state.channelId,
-      queryText: state.queryText,
-      lookbackDays,
-      maxRows,
-      outputFormat: state.outputFormat,
-      cronExpression: state.cronExpression,
-    };
     if (isEdit) {
-      updateMutation.mutate({ guildId: safeGuildId, reportId, ...shared });
+      updateMutation.mutate({
+        guildId: safeGuildId,
+        reportId,
+        ...built.payload,
+      });
       return;
     }
-    createMutation.mutate({ guildId: safeGuildId, isEnabled: true, ...shared });
+    createMutation.mutate({
+      guildId: safeGuildId,
+      isEnabled: true,
+      ...built.payload,
+    });
   }
 
   const pending = createMutation.isPending || updateMutation.isPending;
@@ -161,157 +121,11 @@ export function ReportForm() {
 
       <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="report-title">Title</Label>
-            <Input
-              id="report-title"
-              value={state.title}
-              onChange={(event) => {
-                setState((prev) => ({ ...prev, title: event.target.value }));
-              }}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="report-description">Description (optional)</Label>
-            <Input
-              id="report-description"
-              value={state.description}
-              onChange={(event) => {
-                setState((prev) => ({
-                  ...prev,
-                  description: event.target.value,
-                }));
-              }}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="report-channel">Channel</Label>
-            <Select
-              value={state.channelId}
-              onValueChange={(next) => {
-                setState((prev) => ({ ...prev, channelId: next }));
-              }}
-              required
-            >
-              <SelectTrigger id="report-channel">
-                <SelectValue placeholder="Pick a channel" />
-              </SelectTrigger>
-              <SelectContent>
-                {(channelsQuery.data ?? []).map((channel) => (
-                  <SelectItem key={channel.id} value={channel.id}>
-                    #{channel.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="report-query">Query</Label>
-            <Textarea
-              id="report-query"
-              value={state.queryText}
-              placeholder={EXAMPLE_QUERY}
-              onChange={(event) => {
-                setState((prev) => ({
-                  ...prev,
-                  queryText: event.target.value,
-                }));
-              }}
-              required
-            />
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="report-format">Output format</Label>
-              <Select
-                value={state.outputFormat}
-                onValueChange={(next) => {
-                  const parsed = ReportOutputFormatSchema.safeParse(next);
-                  if (parsed.success) {
-                    setState((prev) => ({
-                      ...prev,
-                      outputFormat: parsed.data,
-                    }));
-                  }
-                }}
-              >
-                <SelectTrigger id="report-format">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ReportOutputFormatSchema.options.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="report-cron">Schedule</Label>
-              <Select
-                value={state.cronExpression}
-                onValueChange={(next) => {
-                  setState((prev) => ({ ...prev, cronExpression: next }));
-                }}
-              >
-                <SelectTrigger id="report-cron">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CronPresets.map((preset) => (
-                    <SelectItem key={preset.value} value={preset.value}>
-                      {preset.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="report-lookback">
-                Lookback days (max {REPORT_MAX_LOOKBACK_DAYS})
-              </Label>
-              <Input
-                id="report-lookback"
-                type="number"
-                min={1}
-                max={REPORT_MAX_LOOKBACK_DAYS}
-                value={state.lookbackDays}
-                onChange={(event) => {
-                  setState((prev) => ({
-                    ...prev,
-                    lookbackDays: event.target.value,
-                  }));
-                }}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="report-max-rows">
-                Max rows (max {REPORT_MAX_ROWS_LIMIT})
-              </Label>
-              <Input
-                id="report-max-rows"
-                type="number"
-                min={1}
-                max={REPORT_MAX_ROWS_LIMIT}
-                value={state.maxRows}
-                onChange={(event) => {
-                  setState((prev) => ({
-                    ...prev,
-                    maxRows: event.target.value,
-                  }));
-                }}
-              />
-            </div>
-          </div>
+          <ReportFormFields
+            state={state}
+            setState={setState}
+            channels={channelsQuery.data}
+          />
 
           {error !== null && (
             <p className="text-sm text-destructive">{error}</p>
