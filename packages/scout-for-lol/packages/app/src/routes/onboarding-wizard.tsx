@@ -1,5 +1,5 @@
 import { useReducer, type ReactElement } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { match } from "ts-pattern";
 import { useTRPC } from "#src/lib/trpc.ts";
@@ -7,6 +7,7 @@ import { Button } from "#src/components/ui/button.tsx";
 import {
   initialOnboardingState,
   onboardingReducer,
+  type OnboardingState,
 } from "#src/lib/onboarding-steps.ts";
 import { markOnboardingComplete } from "#src/lib/onboarding-storage.ts";
 import { OnboardingInstallStep } from "#src/components/onboarding/onboarding-install-step.tsx";
@@ -21,9 +22,16 @@ import { OnboardingCompetitionStep } from "#src/components/onboarding/onboarding
 export function OnboardingWizard() {
   const trpc = useTRPC();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  // Arriving from the post-install /installed page (?guild=…) skips the
+  // install + pick-guild steps and lands on concepts (step 2).
   const [state, dispatch] = useReducer(
     onboardingReducer,
-    initialOnboardingState,
+    searchParams.get("guild"),
+    (guild): OnboardingState =>
+      guild === null
+        ? initialOnboardingState
+        : { step: "concepts", selectedGuildId: guild, selectedExampleId: null },
   );
   const guildId = state.selectedGuildId;
 
@@ -126,6 +134,7 @@ export function OnboardingWizard() {
     .with("subscribe-self", () =>
       requireGuild((gid) => (
         <OnboardingSubscribeStep
+          key={state.step}
           mode="self"
           guildId={gid}
           channels={channels}
@@ -148,6 +157,7 @@ export function OnboardingWizard() {
     .with("subscribe-more", () =>
       requireGuild((gid) => (
         <OnboardingSubscribeStep
+          key={state.step}
           mode="more"
           guildId={gid}
           channels={channels}
@@ -184,8 +194,8 @@ export function OnboardingWizard() {
     ))
     .with("choose-extra", () => (
       <OnboardingChooseExtraStep
-        onChoose={(extra) => {
-          dispatch({ type: "choose", extra });
+        onChoose={(extra, exampleId) => {
+          dispatch({ type: "choose", extra, exampleId });
         }}
         onBack={() => {
           dispatch({ type: "back" });
@@ -198,6 +208,7 @@ export function OnboardingWizard() {
         <OnboardingReportStep
           guildId={gid}
           channels={channels}
+          exampleId={state.selectedExampleId}
           onCreated={(reportId) => {
             finishTo(`/g/${gid}/reports/${reportId.toString()}`);
           }}
@@ -213,6 +224,7 @@ export function OnboardingWizard() {
         <OnboardingCompetitionStep
           guildId={gid}
           channels={channels}
+          exampleId={state.selectedExampleId}
           onCreated={(competitionId) => {
             finishTo(`/g/${gid}/competitions/${competitionId.toString()}`);
           }}

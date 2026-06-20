@@ -22,6 +22,9 @@ export type ExtraChoice = "report" | "competition";
 export type OnboardingState = {
   step: OnboardingStepKind;
   selectedGuildId: string | null;
+  // Example preset picked on the "Report or competition?" page, used to
+  // seed the build form.
+  selectedExampleId: string | null;
 };
 
 export type OnboardingEvent =
@@ -29,11 +32,12 @@ export type OnboardingEvent =
   | { type: "back" }
   | { type: "goto"; step: OnboardingStepKind }
   | { type: "select-guild"; guildId: string }
-  | { type: "choose"; extra: ExtraChoice };
+  | { type: "choose"; extra: ExtraChoice; exampleId: string };
 
 export const initialOnboardingState: OnboardingState = {
   step: "install",
   selectedGuildId: null,
+  selectedExampleId: null,
 };
 
 // Steps reached via the linear "next" button. `install` / `pick-guild`
@@ -83,6 +87,7 @@ export function onboardingReducer(
     .with(
       { type: "select-guild" },
       (e): OnboardingState => ({
+        ...state,
         step: "concepts",
         selectedGuildId: e.guildId,
       }),
@@ -92,6 +97,7 @@ export function onboardingReducer(
       (e): OnboardingState => ({
         ...state,
         step: e.extra === "report" ? "build-report" : "build-competition",
+        selectedExampleId: e.exampleId,
       }),
     )
     .exhaustive();
@@ -115,7 +121,7 @@ export function progressLabel(step: OnboardingStepKind): string {
     .with("install", "pick-guild", () => "Add Scout")
     .with("concepts", () => "How it works")
     .with("subscribe-self", () => "Track yourself")
-    .with("subscribe-more", () => "Add teammates")
+    .with("subscribe-more", () => "Add friends")
     .with(
       "done",
       "choose-extra",

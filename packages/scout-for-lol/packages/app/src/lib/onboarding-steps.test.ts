@@ -7,11 +7,19 @@ import {
   type OnboardingStepKind,
 } from "#src/lib/onboarding-steps.ts";
 
+function state(
+  step: OnboardingStepKind,
+  selectedGuildId: string | null = "g",
+): OnboardingState {
+  return { step, selectedGuildId, selectedExampleId: null };
+}
+
 describe("onboardingReducer", () => {
   test("starts on install with no guild", () => {
     expect(initialOnboardingState).toEqual({
       step: "install",
       selectedGuildId: null,
+      selectedExampleId: null,
     });
   });
 
@@ -20,7 +28,11 @@ describe("onboardingReducer", () => {
       type: "select-guild",
       guildId: "guild-123",
     });
-    expect(next).toEqual({ step: "concepts", selectedGuildId: "guild-123" });
+    expect(next).toEqual({
+      step: "concepts",
+      selectedGuildId: "guild-123",
+      selectedExampleId: null,
+    });
   });
 
   test("goto pick-guild then back returns to install", () => {
@@ -34,11 +46,7 @@ describe("onboardingReducer", () => {
   });
 
   test("linear next chain advances concepts → done", () => {
-    const start: OnboardingState = {
-      step: "concepts",
-      selectedGuildId: "g",
-    };
-    const a = onboardingReducer(start, { type: "next" });
+    const a = onboardingReducer(state("concepts"), { type: "next" });
     expect(a.step).toBe("subscribe-self");
     const b = onboardingReducer(a, { type: "next" });
     expect(b.step).toBe("subscribe-more");
@@ -58,10 +66,10 @@ describe("onboardingReducer", () => {
       "concepts",
       "install",
     ];
-    let state: OnboardingState = { step: "done", selectedGuildId: "g" };
+    let current: OnboardingState = state("done");
     for (const expected of steps) {
-      state = onboardingReducer(state, { type: "back" });
-      expect(state.step).toBe(expected);
+      current = onboardingReducer(current, { type: "back" });
+      expect(current.step).toBe(expected);
     }
   });
 
@@ -70,43 +78,35 @@ describe("onboardingReducer", () => {
     expect(next).toEqual(initialOnboardingState);
   });
 
-  test("choose report routes to build-report", () => {
-    const fromChoose: OnboardingState = {
-      step: "choose-extra",
-      selectedGuildId: "g",
-    };
+  test("choose routes to the build step and records the example", () => {
+    const fromChoose = state("choose-extra");
     const report = onboardingReducer(fromChoose, {
       type: "choose",
       extra: "report",
+      exampleId: "surrender",
     });
     expect(report.step).toBe("build-report");
+    expect(report.selectedExampleId).toBe("surrender");
     const competition = onboardingReducer(fromChoose, {
       type: "choose",
       extra: "competition",
+      exampleId: "yuumi",
     });
     expect(competition.step).toBe("build-competition");
+    expect(competition.selectedExampleId).toBe("yuumi");
   });
 
   test("build steps go back to choose-extra", () => {
-    const report: OnboardingState = {
-      step: "build-report",
-      selectedGuildId: "g",
-    };
-    expect(onboardingReducer(report, { type: "back" }).step).toBe(
-      "choose-extra",
-    );
-    const competition: OnboardingState = {
-      step: "build-competition",
-      selectedGuildId: "g",
-    };
-    expect(onboardingReducer(competition, { type: "back" }).step).toBe(
-      "choose-extra",
-    );
+    expect(
+      onboardingReducer(state("build-report"), { type: "back" }).step,
+    ).toBe("choose-extra");
+    expect(
+      onboardingReducer(state("build-competition"), { type: "back" }).step,
+    ).toBe("choose-extra");
   });
 
   test("done → choose-extra via goto, back returns to done", () => {
-    const done: OnboardingState = { step: "done", selectedGuildId: "g" };
-    const choose = onboardingReducer(done, {
+    const choose = onboardingReducer(state("done"), {
       type: "goto",
       step: "choose-extra",
     });

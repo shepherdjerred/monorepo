@@ -16,6 +16,12 @@ import {
 export function InstallLanding() {
   const [params] = useSearchParams();
   const guildId = params.get("guild_id");
+  // Carry the freshly-installed guild into the wizard so "Continue setup"
+  // skips the install step and lands on step 2 (concepts).
+  const continueTo =
+    guildId === null
+      ? "/welcome"
+      : `/welcome?guild=${encodeURIComponent(guildId)}`;
 
   return (
     <div className="mx-auto max-w-md space-y-4 px-4 py-12">
@@ -30,7 +36,7 @@ export function InstallLanding() {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           <Button asChild>
-            <Link to="/welcome">Continue setup</Link>
+            <Link to={continueTo}>Continue setup</Link>
           </Button>
           <Button asChild variant="outline">
             <Link to="/">Go to dashboard</Link>
