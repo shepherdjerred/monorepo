@@ -1,6 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Login } from "#src/routes/login.tsx";
-import { Installed } from "#src/routes/installed.tsx";
 import { GuildPicker } from "#src/routes/guild-picker.tsx";
 import { GuildSubscriptions } from "#src/routes/guild-subscriptions.tsx";
 import { GuildAudit } from "#src/routes/guild-audit.tsx";
@@ -14,6 +13,8 @@ import { ReportList } from "#src/routes/report-list.tsx";
 import { ReportDetail } from "#src/routes/report-detail.tsx";
 import { ReportForm } from "#src/routes/report-form.tsx";
 import { AdminTools } from "#src/routes/admin-tools.tsx";
+import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
+import { InstallLanding } from "#src/routes/install-landing.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
 import { ThemeToggle } from "#src/components/ui/theme-toggle.tsx";
 
@@ -27,7 +28,8 @@ export function App() {
         <Route path="/login" element={<Login />} />
         <Route element={<RequireSession />}>
           <Route path="/" element={<GuildPicker />} />
-          <Route path="/installed" element={<Installed />} />
+          <Route path="/welcome" element={<OnboardingWizard />} />
+          <Route path="/installed" element={<InstallLanding />} />
           <Route path="/g/:guildId" element={<GuildWorkspace />}>
             <Route index element={<Navigate to="subscriptions" replace />} />
             <Route path="subscriptions" element={<GuildSubscriptions />} />
