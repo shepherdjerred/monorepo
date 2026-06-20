@@ -20,6 +20,8 @@ import {
   competitionUnhealthy,
   competitionUnhealthyTotal,
   guildInfo,
+  guildUnconfigured,
+  guildUnconfiguredTotal,
 } from "#src/metrics/guild-health.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -158,6 +160,32 @@ export async function updateUsageMetrics(
         1,
       );
     }
+
+    // Installed-but-unconfigured guilds: have the bot, but no subscriptions and
+    // no active competitions, so nothing will ever post.
+    const [subscribedGuilds, competitionGuilds] = await Promise.all([
+      prisma.subscription.findMany({
+        select: { serverId: true },
+        distinct: ["serverId"],
+      }),
+      prisma.competition.findMany({
+        where: { isCancelled: false },
+        select: { serverId: true },
+        distinct: ["serverId"],
+      }),
+    ]);
+    const configuredServerIds = new Set([
+      ...subscribedGuilds.map((row) => row.serverId),
+      ...competitionGuilds.map((row) => row.serverId),
+    ]);
+    const unconfigured = installs.filter(
+      (install) => !configuredServerIds.has(install.serverId),
+    );
+    guildUnconfigured.reset();
+    for (const install of unconfigured) {
+      guildUnconfigured.set({ server_id: install.serverId }, 1);
+    }
+    guildUnconfiguredTotal.set(unconfigured.length);
   } catch (error) {
     logger.error("❌ Error updating usage metrics:", error);
     // Don't throw - we don't want metrics collection to crash the app

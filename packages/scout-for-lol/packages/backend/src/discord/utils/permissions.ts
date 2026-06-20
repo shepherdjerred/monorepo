@@ -41,6 +41,25 @@ export function isPermissionError(error: unknown): boolean {
 }
 
 /**
+ * Check if an error means the target channel (or its guild) no longer exists /
+ * is unreachable — i.e. the bot can't deliver because the channel is gone, not
+ * because of a permission issue.
+ */
+export function isMissingChannelError(error: unknown): boolean {
+  const result = DiscordAPIErrorSchema.safeParse(error);
+  if (!result.success) {
+    return false;
+  }
+  // 10003 = Unknown Channel, 10004 = Unknown Guild
+  return result.data.code === 10_003 || result.data.code === 10_004;
+}
+
+/**
+ * How a delivery failed, for tailoring the owner notification copy.
+ */
+export type DeliveryFailureKind = "permission" | "channel_missing";
+
+/**
  * Check if the bot has permission to send messages in a channel
  *
  * @param channel - The channel to check permissions for
@@ -217,21 +236,70 @@ If Scout isn't a fit, no hard feelings — you can remove me, and I'd love to he
     .exhaustive();
 }
 
+const CHANNEL_MISSING_FIX = `**To fix this:**
+• Re-create the channel, or
+• Point Scout at a channel I can post in by setting things up again (e.g. \`/subscription add\`).`;
+
 /**
- * Notify a server owner about a permission error via DM.
+ * Build the stage-appropriate DM body for a channel that's gone / unreachable
+ * (deleted, or the bot lost access) — a different fix than a permission issue.
+ */
+function buildChannelMissingMessage(
+  stage: PermissionNotifyStage,
+  guildName: string,
+  channelId: string,
+  reasonText: string,
+): string {
+  return match(stage)
+    .with(
+      "immediate",
+      () => `⚠️ **Scout can't reach a channel in ${guildName}**
+
+Hello! I can't find the channel **<#${channelId}>** I was posting to in your server **${guildName}** — it looks like it was deleted or I lost access to it, so your reports/match updates aren't being delivered.${reasonText}
+
+${CHANNEL_MISSING_FIX}`,
+    )
+    .with(
+      "week",
+      () => `⚠️ **Still can't reach a channel in ${guildName}**
+
+It's been about a week and the channel **<#${channelId}>** is still unreachable, so nothing is being delivered.${reasonText}
+
+${CHANNEL_MISSING_FIX}
+
+If you no longer want Scout here that's totally fine — you can remove me any time.`,
+    )
+    .with(
+      "month",
+      () => `⚠️ **Final reminder — Scout can't reach a channel in ${guildName}**
+
+The channel **<#${channelId}>** has been unreachable for about a month, so this is the last reminder I'll send about it (I'll stop nagging after this).${reasonText}
+
+${CHANNEL_MISSING_FIX}
+
+If Scout isn't a fit, no hard feelings — you can remove me, and I'd love to hear why: ${getFeedbackUrl()}`,
+    )
+    .exhaustive();
+}
+
+/**
+ * Notify a server owner that the bot can't deliver to a channel, via DM.
  *
- * Attempts to DM the guild owner when the bot lacks permissions to post. Handles
- * failures gracefully (never throws) and tracks metrics. The `stage` selects the
- * backed-off escalation copy (immediate / 1-week / final 1-month reminder).
+ * Handles owner resolution + DM failure gracefully (never throws) and tracks
+ * metrics. `stage` selects the backed-off escalation copy (immediate / 1-week /
+ * final 1-month reminder); `kind` selects permission-issue vs missing-channel
+ * copy. Defaults to `"permission"` for back-compat.
  */
 export async function notifyServerOwnerAboutPermissionError(options: {
   client: Client;
   serverId: string;
   channelId: string;
   stage: PermissionNotifyStage;
+  kind?: DeliveryFailureKind;
   reason?: string;
 }): Promise<void> {
   const { client, serverId, channelId, stage, reason } = options;
+  const kind = options.kind ?? "permission";
 
   // Track permission error occurrence
   discordPermissionErrorsTotal.inc({
@@ -266,12 +334,10 @@ export async function notifyServerOwnerAboutPermissionError(options: {
     reason !== undefined && reason.length > 0
       ? `\n\n**Reason:** ${reason}`
       : "";
-  const message = buildPermissionMessage(
-    stage,
-    guildName,
-    channelId,
-    reasonText,
-  );
+  const message =
+    kind === "channel_missing"
+      ? buildChannelMissingMessage(stage, guildName, channelId, reasonText)
+      : buildPermissionMessage(stage, guildName, channelId, reasonText);
 
   const status = await sendDM({
     client,

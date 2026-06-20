@@ -1,17 +1,12 @@
-import { Registry, Counter, Gauge, Histogram } from "prom-client";
+import { Counter, Gauge, Histogram } from "prom-client";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
+import { registry } from "#src/metrics/registry.ts";
 import { seedProviderIssueMetrics } from "#src/metrics/provider-issue-seeds.ts";
 
 const logger = createLogger("metrics");
 
 logger.info("📊 Initializing Prometheus metrics");
-
-/**
- * Custom Prometheus registry for Scout for LoL metrics
- * Internal - accessed via getMetrics() function
- */
-export const registry = new Registry();
 
 /**
  * Add default labels to all metrics

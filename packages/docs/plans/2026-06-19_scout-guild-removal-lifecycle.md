@@ -53,6 +53,17 @@ Refinement on the same branch after PR-1, per owner feedback ("backed-off retry"
 - **Guild-health observability.** New gauges in `metrics/guild-health.ts` set every 5 min in `updateUsageMetrics`: `guild_send_blocked{server_id}`+`_total`, `competition_unhealthy{server_id,competition_id}`+`_total`, `guild_info{server_id,server_name}`. New "Guild health" row in the homelab scout dashboard (`scout-dashboard-health-panels.ts`): two stat panels + two name-joined table panels.
 - **Verification:** backend `typecheck` ✅ · `bun test` (970 pass / 0 fail) ✅ · `eslint` ✅ · `knip` (no new findings) ✅; homelab `typecheck` ✅ · `eslint` ✅ · grafana tests (14 pass) ✅ · dashboard JSON exports with all new panels. New/updated tests: escalation stage transitions incl. the existing-guild case, `reconcile-removed-guilds.test.ts`, `usage.test.ts` (health gauges); abandoned-guild tests removed.
 
+## Phase 3 — close the silent-non-delivery gaps
+
+A gap audit (3 Explore agents over send paths, generation/scheduler paths, and homelab alerting) found cases where the bot stops posting and nobody is told. Closed the high-value ones:
+
+- **A — channel deleted / unreachable now escalates to the owner.** `channel.ts` unifies all "can't deliver to this channel" outcomes (missing perms, **channel not-found / Unknown Channel 10003 / Unknown Guild 10004 / not-text**) into one record+escalate path keyed by `errorType` (`permission` vs `channel_missing`), reusing the backed-off stages. `permissions.ts` gained `isMissingChannelError` + a `channel_missing` DM copy variant. Previously a deleted channel was Sentry-only.
+- **C — operator PagerDuty alerts** (homelab `rules/scout.ts`, new `scout-bot-health` group): `ScoutDiscordDisconnected` (whole-bot-down, critical/5m — was unalerted), `ScoutCronJobStale` (a stalled cron, per `job_name`, 25h), `ScoutGuildDeliveryBlockedSpike` (>5 blocked guilds/2h — individual blocks are a user problem handled by the escalation DMs, so only a spike pages).
+- **D — idle / never-configured guilds:** new `guild_unconfigured{server_id}` + `_total` gauges (installed, 0 subs & 0 active comps), a dashboard stat panel, and a one-time **30-day** outreach nudge (`GuildInstall.outreach30dSentAt` + migration; `runThirtyDayOutreach`).
+- **Bonus:** extracted the Prometheus `registry` into `metrics/registry.ts` to break a latent import cycle (`index.ts` → `usage.ts` → `guild-health.ts` → `registry`) that surfaced as a TDZ in some test orderings.
+- **Deferred (rationale in the plan):** transient send errors (operator domain), broken-PUUID polling staleness (ambiguous vs inactive), DMs-closed fallback, and the optional owner-DM-on-repeated-generation-failure (B).
+- **Verification:** backend `typecheck`/`eslint`/`knip` ✅ · `bun test` (974 pass / 0 fail) ✅; homelab `typecheck`/`eslint` ✅ · scout-rules + grafana tests (18 pass) ✅ · dashboard exports the new panel. New tests: `isMissingChannelError`, `channel_missing` DM copy, `guild_unconfigured` gauge, `scout.test.ts` alert synthesis.
+
 ## Remaining (post-deploy)
 
 1. After the image deploys, run `cleanupRemovedGuild(prisma, "1345142904942760018")` in the `scout-prod` pod. Verify no new Bugsink events after the next `00:00 UTC`, then resolve Bugsink issue `b0de3030-c8b3-4cdb-bb93-7e908ee67920`. Note: with the auto-leave removed, that guild is no longer swept automatically, so the explicit one-time cleanup is required.
@@ -64,7 +75,8 @@ Refinement on the same branch after PR-1, per owner feedback ("backed-off retry"
 ### Done
 
 - PR-1 (commit `1b3040688`): DM audit log, `guildDelete` cleanup, dispatcher hardening, polling filter, feedback DM.
-- Phase 2 (this session): escalating owner notifications (`immediate`/`week`/`month`), removed the 7-day auto-leave in favor of `reconcileRemovedGuilds`, guild-health metrics + Grafana "Guild health" row. Existing-guild deploy behavior handled by `lastNotifiedAt` anchoring + an explicit test.
+- Phase 2 (`99f777e54`): escalating owner notifications (`immediate`/`week`/`month`), removed the 7-day auto-leave in favor of `reconcileRemovedGuilds`, guild-health metrics + Grafana "Guild health" row. Existing-guild deploy behavior handled by `lastNotifiedAt` anchoring + an explicit test.
+- Phase 3 (this session): channel-deleted/unreachable now escalates to the owner; operator PagerDuty alerts (disconnect / cron-stall / delivery-spike); idle-guild metric + 30-day nudge; extracted `metrics/registry.ts` to break an import cycle.
 
 ### Remaining
 

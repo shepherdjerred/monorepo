@@ -6,7 +6,7 @@
  */
 
 import { Gauge } from "prom-client";
-import { registry } from "#src/metrics/index.ts";
+import { registry } from "#src/metrics/registry.ts";
 
 /**
  * 1 per guild that currently has an active send-failure streak (the bot is
@@ -52,5 +52,23 @@ export const guildInfo = new Gauge({
   name: "guild_info",
   help: "Static info series mapping server_id to server_name",
   labelNames: ["server_id", "server_name"] as const,
+  registers: [registry],
+});
+
+/**
+ * 1 per guild that has the bot installed but has configured nothing — no
+ * subscriptions and no active competitions — so nothing will ever post.
+ */
+export const guildUnconfigured = new Gauge({
+  name: "guild_unconfigured",
+  help: "1 for each installed guild with zero subscriptions and zero active competitions",
+  labelNames: ["server_id"] as const,
+  registers: [registry],
+});
+
+/** Count of installed-but-unconfigured guilds (headline number). */
+export const guildUnconfiguredTotal = new Gauge({
+  name: "guild_unconfigured_total",
+  help: "Number of installed guilds with zero subscriptions and zero active competitions",
   registers: [registry],
 });

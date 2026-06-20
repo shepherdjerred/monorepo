@@ -32,6 +32,7 @@ const DM_FOOTER =
 const GETTING_STARTED = "https://scout-for-lol.com/getting-started/";
 const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 async function getSubscriptionCount(serverId: DiscordGuildId): Promise<number> {
   return prisma.subscription.count({ where: { serverId } });
@@ -165,7 +166,68 @@ async function runFourteenDayOutreach(client: Client): Promise<void> {
 }
 
 /**
- * Main outreach task — runs both passes
+ * 30-day "still not configured" nudge: a guild that has had the bot for a month
+ * but has zero subscriptions AND zero active competitions never posts anything.
+ * One-time nudge so the owner knows it isn't working (or can remove it).
+ */
+async function runThirtyDayOutreach(client: Client): Promise<void> {
+  const cutoff = new Date(Date.now() - THIRTY_DAYS_MS);
+
+  const guilds = await prisma.guildInstall.findMany({
+    where: {
+      installedAt: { lte: cutoff },
+      outreach30dSentAt: null,
+    },
+  });
+
+  logger.info(
+    `[Outreach] 30-day check: ${guilds.length.toString()} guild(s) eligible`,
+  );
+
+  for (const guild of guilds) {
+    const guildId = DiscordGuildIdSchema.parse(guild.serverId);
+    const [subCount, compCount] = await Promise.all([
+      getSubscriptionCount(guildId),
+      getCompetitionCount(guildId),
+    ]);
+
+    // Only nudge guilds that have configured nothing at all.
+    if (subCount === 0 && compCount === 0) {
+      const message = truncateDiscordMessage(
+        `👋 It's been about a month since Scout for LoL was added to **${guild.serverName}**, ` +
+          `but nothing is set up yet — so it isn't posting anything. ` +
+          `Track a player with \`/subscription add\` (guide: ${GETTING_STARTED}). ` +
+          `If Scout isn't what you're after, no worries — you can remove it any time.` +
+          DM_FOOTER,
+      );
+
+      const userId = DiscordAccountIdSchema.parse(guild.addedByDiscordId);
+      const status = await sendDM({
+        client,
+        userId,
+        message,
+        kind: "outreach_30d",
+        guildId,
+      });
+      logger.info(
+        `[Outreach] 30-day DM to ${guild.addedByDiscordId} for ${guild.serverName}: ${status}`,
+      );
+    } else {
+      logger.info(
+        `[Outreach] 30-day skip for ${guild.serverName}: ${subCount.toString()} subs / ${compCount.toString()} comps (configured)`,
+      );
+    }
+
+    // Mark as sent regardless (don't retry).
+    await prisma.guildInstall.update({
+      where: { id: guild.id },
+      data: { outreach30dSentAt: new Date() },
+    });
+  }
+}
+
+/**
+ * Main outreach task — runs all passes
  */
 export async function runOutreach(client: Client): Promise<void> {
   logger.info("[Outreach] Starting outreach check");
@@ -173,6 +235,7 @@ export async function runOutreach(client: Client): Promise<void> {
 
   await runThreeDayOutreach(client);
   await runFourteenDayOutreach(client);
+  await runThirtyDayOutreach(client);
 
   const duration = Date.now() - startTime;
   logger.info(

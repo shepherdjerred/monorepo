@@ -4,6 +4,7 @@ import {
   guildSendBlockedTotal,
   competitionUnhealthyTotal,
   guildInfo,
+  guildUnconfiguredTotal,
 } from "#src/metrics/guild-health.ts";
 import {
   testGuildId,
@@ -28,6 +29,9 @@ beforeEach(async () => {
   await prisma.guildPermissionError.deleteMany();
   await prisma.report.deleteMany();
   await prisma.guildInstall.deleteMany();
+  await prisma.subscription.deleteMany();
+  await prisma.account.deleteMany();
+  await prisma.player.deleteMany();
 });
 
 afterAll(async () => {
@@ -96,5 +100,52 @@ describe("updateUsageMetrics - guild health gauges", () => {
     await updateUsageMetrics(prisma);
     expect(await totalValue(guildSendBlockedTotal)).toBe(0);
     expect(await totalValue(competitionUnhealthyTotal)).toBe(0);
+  });
+
+  test("counts installed-but-unconfigured guilds (0 subs + 0 competitions)", async () => {
+    const now = new Date();
+    const unconfigured = testGuildId("640000000000000004");
+    const configured = testGuildId("650000000000000005");
+
+    for (const [serverId, name] of [
+      [unconfigured, "Empty Guild"],
+      [configured, "Active Guild"],
+    ] as const) {
+      await prisma.guildInstall.create({
+        data: {
+          serverId,
+          serverName: name,
+          ownerDiscordId: testAccountId("900"),
+          addedByDiscordId: testAccountId("900"),
+          memberCount: 5,
+          installedAt: now,
+        },
+      });
+    }
+
+    // Give the "configured" guild a subscription so it doesn't count.
+    const player = await prisma.player.create({
+      data: {
+        alias: "p",
+        serverId: configured,
+        creatorDiscordId: testAccountId("900"),
+        createdTime: now,
+        updatedTime: now,
+      },
+    });
+    await prisma.subscription.create({
+      data: {
+        playerId: player.id,
+        channelId: testChannelId("100"),
+        serverId: configured,
+        creatorDiscordId: testAccountId("900"),
+        createdTime: now,
+        updatedTime: now,
+      },
+    });
+
+    await updateUsageMetrics(prisma);
+
+    expect(await totalValue(guildUnconfiguredTotal)).toBe(1);
   });
 });

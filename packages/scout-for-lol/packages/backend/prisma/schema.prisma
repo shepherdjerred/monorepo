@@ -556,6 +556,7 @@ model GuildInstall {
   installedAt       DateTime
   outreach3dSentAt  DateTime? // null = not yet sent
   outreach14dSentAt DateTime? // null = not yet sent
+  outreach30dSentAt DateTime? // 30-day "still not configured" nudge; null = not yet sent
 
   @@index([installedAt])
 }

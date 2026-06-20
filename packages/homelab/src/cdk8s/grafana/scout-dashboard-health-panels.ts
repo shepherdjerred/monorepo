@@ -67,6 +67,26 @@ export function addGuildHealthRows(
       .gridPos({ x: 6, y: 131, w: 6, h: 4 }),
   );
 
+  builder.withPanel(
+    new stat.PanelBuilder()
+      .title("Guilds — unconfigured")
+      .description(
+        "Guilds that have the bot installed but no subscriptions and no active competitions — nothing will ever post.",
+      )
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            `sum by (environment) (guild_unconfigured_total{${buildFilter()}}) or on() vector(0)`,
+          )
+          .legendFormat("{{environment}}"),
+      )
+      .unit("short")
+      .colorMode(common.BigValueColorMode.Value)
+      .graphMode(common.BigValueGraphMode.Area)
+      .gridPos({ x: 12, y: 131, w: 6, h: 4 }),
+  );
+
   // Drill-down tables (joined to server names via guild_info).
   builder.withPanel(
     new table.PanelBuilder()

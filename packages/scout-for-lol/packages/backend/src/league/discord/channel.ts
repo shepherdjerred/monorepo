@@ -6,8 +6,10 @@ import { asTextChannel } from "#src/discord/utils/channel.ts";
 import {
   checkSendMessagePermission,
   isPermissionError,
+  isMissingChannelError,
   formatPermissionErrorForLog,
   notifyServerOwnerAboutPermissionError,
+  type DeliveryFailureKind,
 } from "#src/discord/utils/permissions.ts";
 import { discordPermissionErrorsTotal } from "#src/metrics/index.ts";
 import { prisma } from "#src/database/index.ts";
@@ -42,6 +44,78 @@ export class ChannelSendError extends Error {
 const ChannelSendErrorSchema = z.instanceof(ChannelSendError);
 
 /**
+ * Record an escalatable delivery failure (missing permission OR a deleted /
+ * unreachable channel) against the guild's streak and run the backed-off owner
+ * notification. Fire-and-forget; never throws into the caller.
+ */
+function escalateDeliveryFailure(opts: {
+  kind: DeliveryFailureKind;
+  serverId: DiscordGuildId;
+  channelId: DiscordChannelId;
+  permissionReason?: string;
+}): void {
+  const { kind, serverId, channelId, permissionReason } = opts;
+  void (async () => {
+    try {
+      const notifyDecision = await recordPermissionError(prisma, {
+        serverId,
+        channelId,
+        errorType: kind,
+        ...(permissionReason !== undefined && permissionReason.length > 0
+          ? { errorReason: permissionReason }
+          : {}),
+      });
+
+      // Backed-off escalation: DM the owner immediately on the first failure of
+      // a streak, again ~1 week later, again ~1 month after that, then silent.
+      if (notifyDecision !== "none") {
+        await notifyServerOwnerAboutPermissionError({
+          client,
+          serverId,
+          channelId,
+          stage: notifyDecision,
+          kind,
+          ...(permissionReason === undefined
+            ? {}
+            : { reason: permissionReason }),
+        });
+      }
+    } catch (dbError) {
+      logger.error(
+        `[ChannelSend] Failed to record delivery error in DB:`,
+        dbError,
+      );
+      Sentry.captureException(dbError, {
+        tags: { source: "channel-delivery-db-record", channelId },
+      });
+    }
+  })();
+}
+
+/**
+ * Build (and side-effect on) a pre-send "can't reach this channel" failure: a
+ * deleted / non-text / inaccessible channel. Escalates to the owner when we know
+ * the guild; otherwise captures to Sentry. Returns the error for the caller to
+ * throw (marked permissionError=true so callers treat it as handled).
+ */
+function failChannelMissing(
+  message: string,
+  channelId: DiscordChannelId,
+  serverId: DiscordGuildId | undefined,
+  sentryReason: string,
+): ChannelSendError {
+  logger.warn(`[ChannelSend] ${message} - channel: ${channelId}`);
+  if (serverId) {
+    escalateDeliveryFailure({ kind: "channel_missing", serverId, channelId });
+  } else {
+    Sentry.captureException(new ChannelSendError(message, channelId, true), {
+      tags: { source: "channel-send", channelId, reason: sentryReason },
+    });
+  }
+  return new ChannelSendError(message, channelId, true);
+}
+
+/**
  * Send a message to a Discord channel with graceful error handling
  *
  * This function handles common failure cases:
@@ -67,31 +141,23 @@ export async function send(
     // Fetch the channel
     const fetchedChannel = await client.channels.fetch(channelId);
     if (!fetchedChannel) {
-      const error = new ChannelSendError(
+      throw failChannelMissing(
         "Channel not found or bot cannot access it",
         channelId,
-        false,
+        serverId,
+        "not-found",
       );
-      logger.error(`[ChannelSend] ${error.message} - channel: ${channelId}`);
-      Sentry.captureException(error, {
-        tags: { source: "channel-send", channelId, reason: "not-found" },
-      });
-      throw error;
     }
 
     // Check if channel is text-based
     const channel = asTextChannel(fetchedChannel);
     if (!channel) {
-      const error = new ChannelSendError(
-        "Channel is not text-based",
+      throw failChannelMissing(
+        "Channel is not a text channel I can post in",
         channelId,
-        false,
+        serverId,
+        "not-text-based",
       );
-      logger.error(`[ChannelSend] ${error.message} - channel: ${channelId}`);
-      Sentry.captureException(error, {
-        tags: { source: "channel-send", channelId, reason: "not-text-based" },
-      });
-      throw error;
     }
 
     // Log message info - only log string messages to avoid object stringification
@@ -128,98 +194,79 @@ export async function send(
 
     return sentMessage;
   } catch (error) {
-    // If it's already a ChannelSendError, re-throw it
+    // If it's already a ChannelSendError (pre-send checks), it has already been
+    // handled — re-throw as-is.
     if (ChannelSendErrorSchema.safeParse(error).success) {
       throw error;
     }
 
-    // Check if it's a Discord permission error
-    let isPermError = isPermissionError(error);
-    let errorMessage = formatPermissionErrorForLog(channelId, error);
+    // Classify the failure: a permission issue, an unreachable/deleted channel,
+    // or some other (likely transient) error.
+    let kind: DeliveryFailureKind | "other";
     let permissionReason: string | undefined;
-
-    // If not a Discord API permission error, check permissions to provide better diagnostics
-    if (!isPermError) {
-      // Fetch channel to check permissions
-      const fetchedChannel = await client.channels
+    if (isPermissionError(error)) {
+      kind = "permission";
+    } else if (isMissingChannelError(error)) {
+      kind = "channel_missing";
+    } else {
+      // Re-fetch to diagnose: gone → channel_missing; reachable but no perms →
+      // permission; otherwise treat as a transient/unknown error.
+      const refetched = await client.channels
         .fetch(channelId)
         .catch(() => null);
-      if (fetchedChannel) {
+      if (refetched === null) {
+        kind = "channel_missing";
+      } else {
         const permissionCheck = await checkSendMessagePermission(
-          fetchedChannel,
+          refetched,
           client.user,
         );
-        if (!permissionCheck.hasPermission) {
-          // It was actually a permission issue even though Discord didn't return a permission error
-          isPermError = true;
+        if (permissionCheck.hasPermission) {
+          kind = "other";
+        } else {
+          kind = "permission";
           permissionReason = permissionCheck.reason;
-          errorMessage = formatPermissionErrorForLog(
-            channelId,
-            error,
-            permissionCheck.reason,
-          );
         }
       }
     }
 
-    // Log appropriately based on error type
-    if (isPermError) {
-      logger.warn(`[ChannelSend] ${errorMessage}`);
+    const errorMessage = formatPermissionErrorForLog(
+      channelId,
+      error,
+      permissionReason,
+    );
 
-      // Track permission error in metrics (only if serverId not provided to avoid duplication)
-      if (!serverId) {
-        discordPermissionErrorsTotal.inc({
-          guild_id: "unknown",
-          error_type: "api_error",
-        });
-      }
-
-      // Record permission error in database and notify owner if serverId is provided
-      if (serverId) {
-        void (async () => {
-          try {
-            const notifyDecision = await recordPermissionError(prisma, {
-              serverId,
-              channelId,
-              errorType: "api_error",
-              ...(permissionReason !== undefined && permissionReason.length > 0
-                ? { errorReason: permissionReason }
-                : {}),
-            });
-
-            // Backed-off escalation: DM the owner immediately on the first
-            // failure of a streak, again ~1 week later, again ~1 month after
-            // that, then stay silent. (notify tracks its own metrics.)
-            if (notifyDecision !== "none") {
-              await notifyServerOwnerAboutPermissionError({
-                client,
-                serverId,
-                channelId,
-                stage: notifyDecision,
-                ...(permissionReason === undefined
-                  ? {}
-                  : { reason: permissionReason }),
-              });
-            }
-          } catch (dbError) {
-            logger.error(
-              `[ChannelSend] Failed to record permission error in DB:`,
-              dbError,
-            );
-            Sentry.captureException(dbError, {
-              tags: { source: "channel-permission-db-record", channelId },
-            });
-          }
-        })();
-      }
-    } else {
+    if (kind === "other") {
+      // Unknown / transient (rate limit, timeout, outage): operator domain.
       logger.error(`[ChannelSend] ${errorMessage}`);
       Sentry.captureException(error, {
         tags: { source: "channel-send", channelId, isPermissionError: "false" },
       });
+    } else {
+      // Permission or deleted-channel: a delivery problem the owner can fix.
+      logger.warn(`[ChannelSend] ${errorMessage} (${kind})`);
+      if (serverId) {
+        escalateDeliveryFailure({
+          kind,
+          serverId,
+          channelId,
+          ...(permissionReason === undefined ? {} : { permissionReason }),
+        });
+      } else {
+        discordPermissionErrorsTotal.inc({
+          guild_id: "unknown",
+          error_type: kind,
+        });
+      }
     }
 
-    // Wrap in ChannelSendError
-    throw new ChannelSendError(errorMessage, channelId, isPermError, error);
+    // permissionError=true marks "handled delivery problem" so callers don't
+    // double-report it; false for genuinely-unexpected errors.
+    throw new ChannelSendError(
+      errorMessage,
+      channelId,
+      kind !== "other",
+      error,
+    );
   }
 }

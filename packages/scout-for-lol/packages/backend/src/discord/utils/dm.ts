@@ -32,6 +32,7 @@ export const DmKindSchema = z.enum([
   "prune_notice",
   "outreach_3d",
   "outreach_14d",
+  "outreach_30d",
   "outreach_manual",
   "data_validation",
 ]);

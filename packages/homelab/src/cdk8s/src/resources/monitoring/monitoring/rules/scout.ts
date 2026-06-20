@@ -200,5 +200,70 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
         },
       ],
     },
+    {
+      name: "scout-bot-health",
+      rules: [
+        {
+          // Whole-bot outage: if Scout drops off Discord nothing posts at all.
+          // Previously only caught indirectly (and slowly) by the report-missed
+          // alert; this pages within minutes.
+          alert: "ScoutDiscordDisconnected",
+          annotations: {
+            summary: "Scout is disconnected from Discord",
+            message: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} has been disconnected from the Discord gateway for >5m. No reports, match updates, or competitions are posting. Check the pod and Discord status.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "min by (environment) (discord_connection_status) == 0",
+          ),
+          for: "5m",
+          labels: {
+            severity: "critical",
+          },
+        },
+        {
+          // A cron task (polling, dispatch, outreach, cleanup) that stops
+          // succeeding entirely produces nothing and throws nothing. The
+          // per-job last-success timestamp is the only signal. 25h backstop —
+          // every scout cron runs at least daily, so a 25h gap means stalled.
+          alert: "ScoutCronJobStale",
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "Scout cron job {{ $labels.job_name }} is stalled",
+            ),
+            message: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} cron job {{ $labels.job_name }} has not succeeded in {{ $value | humanizeDuration }}. It may have stopped running (deadlock, unhandled rejection, or scheduler death).",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "(time() - max by (environment, job_name) (cron_job_last_success_timestamp)) > 90000",
+          ),
+          for: "10m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          // Individual blocked guilds are a USER problem (the owner is DM'd via
+          // the backed-off escalation), so don't page on one or two. A spike in
+          // blocked guilds at once instead points at a bot-side delivery bug.
+          alert: "ScoutGuildDeliveryBlockedSpike",
+          annotations: {
+            summary: "Many Scout guilds can't be delivered to",
+            message: escapePrometheusTemplate(
+              "Scout {{ $labels.environment }} has {{ $value }} guilds where delivery is currently blocked. A handful is normal (deleted channels / revoked perms, owners are notified), but a spike suggests a bot-side delivery problem.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "max by (environment) (guild_send_blocked_total) > 5",
+          ),
+          for: "2h",
+          labels: {
+            severity: "warning",
+          },
+        },
+      ],
+    },
   ];
 }

@@ -73,6 +73,25 @@ describe("notifyServerOwnerAboutPermissionError", () => {
     expect(sentMessages[0]).toContain("Still can't post");
   });
 
+  test("channel_missing kind: sends deleted-channel copy, not permission copy", async () => {
+    const sentMessages: string[] = [];
+    const client = clientCapturingDm(async (message: string) => {
+      sentMessages.push(message);
+    });
+
+    await notifyServerOwnerAboutPermissionError({
+      client,
+      serverId,
+      channelId,
+      stage: "immediate",
+      kind: "channel_missing",
+    });
+
+    expect(sentMessages).toHaveLength(1);
+    expect(sentMessages[0]).toContain("can't reach");
+    expect(sentMessages[0]).not.toContain("Bot Permission Issue");
+  });
+
   test("month stage: sends the final reminder with a feedback link", async () => {
     const sentMessages: string[] = [];
     const client = clientCapturingDm(async (message: string) => {
