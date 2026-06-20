@@ -10,6 +10,7 @@ import * as Sentry from "@sentry/bun";
 export function initializeSentry(): void {
   const dsn = Bun.env["SENTRY_DSN"];
   if (dsn === undefined || dsn === "") {
+    console.log("Sentry disabled: SENTRY_DSN not set");
     return;
   }
 
