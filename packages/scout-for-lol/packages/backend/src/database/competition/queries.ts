@@ -180,6 +180,49 @@ export async function getCompetitionsByServer(
 }
 
 /**
+ * Cursor-paginated variant of {@link getCompetitionsByServer} for the web UI.
+ * Kept separate so Discord/cron callers that expect a bare array are
+ * unaffected. Cursor is the competition `id`; `id desc` is the stable
+ * tiebreaker alongside the `createdTime desc` ordering.
+ */
+export async function getCompetitionsByServerPaginated(
+  prisma: ExtendedPrismaClient,
+  serverId: DiscordGuildId,
+  options: {
+    activeOnly?: boolean;
+    ownerId?: DiscordAccountId;
+    limit: number;
+    cursor?: number;
+  },
+): Promise<{ items: CompetitionWithCriteria[]; nextCursor: number | null }> {
+  const now = new Date();
+
+  const raw = await prisma.competition.findMany({
+    where: {
+      serverId,
+      ...(options.ownerId && { ownerId: options.ownerId }),
+      ...(options.activeOnly === true && activeOnlyWhere(now)),
+    },
+    orderBy: [{ createdTime: "desc" }, { id: "desc" }],
+    include: competitionWithSeasonInclude,
+    take: options.limit + 1,
+    ...(options.cursor === undefined
+      ? {}
+      : { cursor: { id: options.cursor }, skip: 1 }),
+  });
+
+  const page = raw.slice(0, options.limit);
+  const hasMore = raw.length > options.limit;
+  // Cursor must be the LAST returned row's id: the next page uses
+  // `cursor + skip:1` to resume strictly after it. Using the peeked overflow
+  // row would skip that row entirely.
+  return {
+    items: page.map((item) => parseCompetition(item)),
+    nextCursor: hasMore ? (page.at(-1)?.id ?? null) : null,
+  };
+}
+
+/**
  * Get all active competitions across all servers
  * Used for cron jobs that need to process all active competitions
  *

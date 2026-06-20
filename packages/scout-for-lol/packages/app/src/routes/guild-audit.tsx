@@ -1,6 +1,9 @@
 import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { DiscordUser } from "#src/components/discord-user.tsx";
+import { LoadMore } from "#src/components/load-more.tsx";
+import { useDiscordNames } from "#src/hooks/use-discord-names.ts";
 import {
   Table,
   TableBody,
@@ -14,12 +17,19 @@ export function GuildAudit() {
   const { guildId } = useParams();
   const trpc = useTRPC();
   const safeGuildId = guildId ?? "";
-  const { data, isLoading, error } = useQuery(
-    trpc.subscription.listAuditLog.queryOptions(
-      { guildId: safeGuildId, limit: 100 },
-      { enabled: guildId !== undefined },
+  const query = useInfiniteQuery(
+    trpc.subscription.listAuditLog.infiniteQueryOptions(
+      { guildId: safeGuildId, limit: 50 },
+      {
+        enabled: guildId !== undefined,
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
     ),
   );
+  const rows = query.data?.pages.flatMap((page) => page.items) ?? [];
+  // Audit actors aren't necessarily stored players, so resolve their names
+  // via the batch hook rather than relying on payload enrichment.
+  const names = useDiscordNames(rows.map((row) => row.actorDiscordId));
 
   if (guildId === undefined) {
     return (
@@ -33,18 +43,20 @@ export function GuildAudit() {
     <div className="space-y-4">
       <h2 className="text-xl font-semibold tracking-tight">Audit log</h2>
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
-      {error && (
+      {query.isLoading && (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      )}
+      {query.error && (
         <p className="text-sm text-destructive">
-          Failed to load: {error.message}
+          Failed to load: {query.error.message}
         </p>
       )}
 
-      {data && data.length === 0 && (
+      {query.data && rows.length === 0 && (
         <p className="text-sm text-muted-foreground">No audit entries yet.</p>
       )}
 
-      {data && data.length > 0 && (
+      {query.data && rows.length > 0 && (
         <div className="rounded-md border border-border">
           <Table>
             <TableHeader>
@@ -59,13 +71,16 @@ export function GuildAudit() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((row) => (
+              {rows.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell className="whitespace-nowrap text-muted-foreground">
                     {new Date(row.createdAt).toLocaleString()}
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {row.actorDiscordId}
+                  <TableCell>
+                    <DiscordUser
+                      id={row.actorDiscordId}
+                      name={names.resolve(row.actorDiscordId)}
+                    />
                   </TableCell>
                   <TableCell className="font-medium">{row.action}</TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">
@@ -88,6 +103,14 @@ export function GuildAudit() {
           </Table>
         </div>
       )}
+
+      <LoadMore
+        hasNextPage={query.hasNextPage}
+        isFetchingNextPage={query.isFetchingNextPage}
+        onLoadMore={() => {
+          void query.fetchNextPage();
+        }}
+      />
     </div>
   );
 }

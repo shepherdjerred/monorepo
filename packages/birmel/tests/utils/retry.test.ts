@@ -103,17 +103,15 @@ describe("retry", () => {
     });
 
     test("respects maxDelayMs", async () => {
+      // Capture the *requested* backoff delays via an injected sleep rather
+      // than measuring wall-clock time, which is flaky under CI load (a
+      // setTimeout(100) can fire hundreds of ms late when the event loop is
+      // starved). This asserts the capping logic deterministically.
       const delays: number[] = [];
-      let lastTime = Date.now();
 
       await expect(
         retry(
           () => {
-            const now = Date.now();
-            if (lastTime !== now) {
-              delays.push(now - lastTime);
-            }
-            lastTime = now;
             throw new Error("fail");
           },
           {
@@ -121,13 +119,19 @@ describe("retry", () => {
             initialDelayMs: 50,
             maxDelayMs: 100,
             backoffMultiplier: 3,
+            sleep: (ms) => {
+              delays.push(ms);
+              return Promise.resolve();
+            },
           },
         ),
       ).rejects.toThrow();
 
-      // All delays should be capped at maxDelayMs (with tolerance)
+      // 5 attempts → 4 waits. Backoff: 50, then 50*3=150→100 (capped),
+      // 100*3=300→100, 100*3=300→100. Every delay is <= maxDelayMs.
+      expect(delays).toEqual([50, 100, 100, 100]);
       for (const delay of delays) {
-        expect(delay).toBeLessThanOrEqual(150);
+        expect(delay).toBeLessThanOrEqual(100);
       }
     });
   });

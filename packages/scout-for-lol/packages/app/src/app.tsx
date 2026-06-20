@@ -12,18 +12,13 @@ import { CompetitionForm } from "#src/routes/competition-form.tsx";
 import { ReportList } from "#src/routes/report-list.tsx";
 import { ReportDetail } from "#src/routes/report-detail.tsx";
 import { ReportForm } from "#src/routes/report-form.tsx";
-import { AdminTools } from "#src/routes/admin-tools.tsx";
 import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
 import { InstallLanding } from "#src/routes/install-landing.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
-import { ThemeToggle } from "#src/components/ui/theme-toggle.tsx";
 
 export function App() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="fixed right-4 top-4 z-40">
-        <ThemeToggle />
-      </div>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route element={<RequireSession />}>
@@ -49,7 +44,6 @@ export function App() {
             <Route path="reports/new" element={<ReportForm />} />
             <Route path="reports/:reportId" element={<ReportDetail />} />
             <Route path="reports/:reportId/edit" element={<ReportForm />} />
-            <Route path="admin" element={<AdminTools />} />
             <Route path="audit" element={<GuildAudit />} />
           </Route>
         </Route>
