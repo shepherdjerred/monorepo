@@ -13,7 +13,6 @@ import {
 } from "#observability/metrics.ts";
 import { getTraceContext, withSpan } from "#observability/tracing.ts";
 import {
-  extractJsonPayload,
   parseClaudeResultMessage,
   summarizeClaudeStreamLine,
 } from "#shared/claude-result.ts";
@@ -210,11 +209,17 @@ function agentEnv(githubAppToken: string): Record<string, string> {
   return env;
 }
 
-function parseAgentPayload(raw: string): AlertRemediationAgentPayload {
-  try {
-    const payload = AlertRemediationAgentPayloadSchema.parse(
-      extractJsonPayload(raw),
+// `raw` is claude's `structured_output` object (from `--json-schema`) or
+// codex's `--output-last-message` file text (a JSON string).
+function parseAgentPayload(raw: unknown): AlertRemediationAgentPayload {
+  if (raw === undefined || raw === "") {
+    throw new Error(
+      "agent produced no structured output (expected --json-schema structured_output / --output-schema file)",
     );
+  }
+  try {
+    const obj: unknown = typeof raw === "string" ? JSON.parse(raw) : raw;
+    const payload = AlertRemediationAgentPayloadSchema.parse(obj);
     if (payload.outcome === "pr-created" && payload.prUrl === undefined) {
       throw new Error("pr-created output must include prUrl");
     }
@@ -396,7 +401,7 @@ async function runAgent(
         payload =
           parsed.provider === "claude"
             ? parseAgentPayload(
-                parseClaudeResultMessage(result.stdout).result ?? "",
+                parseClaudeResultMessage(result.stdout).structured_output,
               )
             : parseAgentPayload(
                 command.outputPath === undefined

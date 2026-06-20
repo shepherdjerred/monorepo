@@ -207,7 +207,7 @@ export function reportOnlyPrompt(
     "- Revalidate the source context first; if the task is already resolved, report that clearly.",
     "- If a recurring schedule is no longer useful, set cancelCron=true and explain why in cancelReason.",
     "- If one future report-only follow-up is needed, set followUp with either runAt or cron.",
-    "- Return only a single raw JSON object matching the output schema below — no markdown code fences, no prose before or after.",
+    "- Return only JSON matching the provided schema.",
     "",
     ...runtimeLines,
     `Task title: ${input.title}`,
@@ -216,9 +216,6 @@ export function reportOnlyPrompt(
     ...sourceLines,
     "User prompt:",
     input.prompt,
-    "",
-    "Output schema — your final message must be ONLY a JSON object matching this (no code fences, no commentary):",
-    JSON.stringify(AGENT_TASK_OUTPUT_JSON_SCHEMA, null, 2),
   ].join("\n");
 }
 

@@ -14,7 +14,6 @@ import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import { runTrackedAgentSubprocess } from "#shared/agent-subprocess.ts";
 import {
-  extractJsonPayload,
   parseClaudeResultMessage,
   summarizeClaudeStreamLine,
 } from "#shared/claude-result.ts";
@@ -200,9 +199,17 @@ function splitRepo(fullName: string): { owner: string; repo: string } {
   return { owner, repo };
 }
 
-function parseAgentPayload(raw: string): AgentTaskResultPayload {
+// `raw` is claude's `structured_output` object (from `--json-schema`) or
+// codex's `--output-last-message` file text (a JSON string).
+function parseAgentPayload(raw: unknown): AgentTaskResultPayload {
+  if (raw === undefined || raw === "") {
+    throw new Error(
+      "agent produced no structured output (expected --json-schema structured_output / --output-schema file)",
+    );
+  }
   try {
-    return AgentTaskResultPayloadSchema.parse(extractJsonPayload(raw));
+    const obj: unknown = typeof raw === "string" ? JSON.parse(raw) : raw;
+    return AgentTaskResultPayloadSchema.parse(obj);
   } catch (error: unknown) {
     throw new Error(
       `Failed to parse agent task JSON payload: ${error instanceof Error ? error.message : String(error)}`,
@@ -385,7 +392,7 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
       try {
         if (provider === "claude") {
           payload = parseAgentPayload(
-            parseClaudeResultMessage(result.stdout).result ?? "",
+            parseClaudeResultMessage(result.stdout).structured_output,
           );
         } else {
           if (command.outputPath === undefined) {

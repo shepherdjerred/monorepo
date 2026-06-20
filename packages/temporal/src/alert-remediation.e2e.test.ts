@@ -62,7 +62,10 @@ async function writeFakeClaude(dir: string): Promise<void> {
       subtype: "success",
       is_error: false,
       num_turns: 1,
-      result: JSON.stringify(AGENT_PAYLOAD),
+      // `--json-schema` puts the validated object in `structured_output`;
+      // `result` is the model's prose.
+      result: "Diagnosed the synthetic alert — report only.",
+      structured_output: AGENT_PAYLOAD,
     }),
   ];
   // Single-quoted heredoc → the JSON (with its escaped quotes) is emitted

@@ -1,6 +1,5 @@
 import { describe, expect, it } from "bun:test";
 import {
-  extractJsonPayload,
   parseClaudeResultMessage,
   summarizeClaudeStreamLine,
 } from "./claude-result.ts";
@@ -26,6 +25,25 @@ describe("parseClaudeResultMessage", () => {
     const msg = parseClaudeResultMessage(stdout);
     expect(msg.result).toBe("done");
     expect(msg.num_turns).toBe(2);
+  });
+
+  it("surfaces structured_output from the result message (--json-schema)", () => {
+    const stdout = [
+      '{"type":"system","subtype":"init"}',
+      JSON.stringify({
+        type: "result",
+        subtype: "success",
+        is_error: false,
+        result: "prose summary",
+        structured_output: { outcome: "report-only", reason: "no fix needed" },
+      }),
+    ].join("\n");
+    const msg = parseClaudeResultMessage(stdout);
+    expect(msg.result).toBe("prose summary");
+    expect(msg.structured_output).toEqual({
+      outcome: "report-only",
+      reason: "no fix needed",
+    });
   });
 
   it("returns the LAST result line when several are present", () => {
@@ -92,32 +110,5 @@ describe("summarizeClaudeStreamLine", () => {
 
   it("returns undefined for a non-JSON line", () => {
     expect(summarizeClaudeStreamLine("not json at all")).toBeUndefined();
-  });
-});
-
-describe("extractJsonPayload", () => {
-  it("parses a bare JSON object", () => {
-    expect(extractJsonPayload('{"outcome":"report-only"}')).toEqual({
-      outcome: "report-only",
-    });
-  });
-
-  it("strips a ```json fenced block", () => {
-    const raw = '```json\n{"outcome":"diagnosed"}\n```';
-    expect(extractJsonPayload(raw)).toEqual({ outcome: "diagnosed" });
-  });
-
-  it("strips a bare ``` fence", () => {
-    const raw = '```\n{"a":1}\n```';
-    expect(extractJsonPayload(raw)).toEqual({ a: 1 });
-  });
-
-  it("falls back to the outermost object span amid prose", () => {
-    const raw = 'Here is the result:\n{"a":1,"b":2}\nThanks!';
-    expect(extractJsonPayload(raw)).toEqual({ a: 1, b: 2 });
-  });
-
-  it("throws when no JSON object is present", () => {
-    expect(() => extractJsonPayload("no json here")).toThrow(/no JSON object/);
   });
 });

@@ -21,6 +21,9 @@ export const ClaudeResultMessage = z.object({
       cache_read_input_tokens: z.number().int().nonnegative().optional(),
     })
     .optional(),
+  // Schema-validated structured output, populated by `--json-schema`. This —
+  // NOT `result` (which is the model's prose) — is the agent's payload.
+  structured_output: z.record(z.string(), z.unknown()).optional(),
 });
 export type ClaudeResultMessage = z.infer<typeof ClaudeResultMessage>;
 
@@ -32,36 +35,6 @@ function tryParseJson(text: string): unknown {
   } catch {
     return undefined;
   }
-}
-
-/**
- * Extract a single JSON object from an agent's free-text result. We no
- * longer pass `--json-schema` to claude (that flag wedges the CLI — it
- * produces zero output until killed), so the agent returns JSON per the
- * prompt instructions, which can arrive wrapped in ```json fences or with
- * incidental surrounding prose. Strips a fenced block if present, then
- * falls back to the outermost `{ … }` span. Throws if no object is found.
- */
-export function extractJsonPayload(raw: string): unknown {
-  const trimmed = raw.trim();
-  // Strip a ```json … ``` (or bare ``` … ```) fence if present. Two anchored
-  // replaces avoid the super-linear backtracking a single wrapping regex hits.
-  const candidate = trimmed.startsWith("```")
-    ? trimmed
-        .replace(/^```(?:json)?[ \t]*\r?\n?/, "")
-        .replace(/\r?\n?```$/, "")
-        .trim()
-    : trimmed;
-  const direct = tryParseJson(candidate);
-  if (direct !== undefined) {
-    return direct;
-  }
-  const first = candidate.indexOf("{");
-  const last = candidate.lastIndexOf("}");
-  if (first !== -1 && last > first) {
-    return JSON.parse(candidate.slice(first, last + 1));
-  }
-  throw new Error("no JSON object found in agent result");
 }
 
 /**

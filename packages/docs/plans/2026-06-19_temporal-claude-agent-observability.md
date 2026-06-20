@@ -16,18 +16,23 @@ _wrapper_ instrumentation while the subprocess stayed a black box (#1230 was exp
 
 ### Root cause (found this session, proven in-pod)
 
-`--json-schema` **wedges claude-code 2.1.143**. Reproduced in the worker pod:
+We passed `--json-schema` a **file path**, but the flag takes the **schema JSON inline**.
+claude-code wedges on the path string (zero output until killed). `--json-schema` itself
+is **not** broken — it works when given the schema content inline. Reproduced in the
+worker pod:
 
-| Output config                                                | Result                     |
-| ------------------------------------------------------------ | -------------------------- |
-| `--output-format json --json-schema` (**exact prod config**) | 30s, **zero output**, hang |
-| `--output-format json` (no schema)                           | 2s, 986 B ✓                |
-| `--output-format stream-json --verbose` (no schema)          | 2s, 3150 B ✓               |
+| Invocation                                              | Result                                          |
+| ------------------------------------------------------- | ----------------------------------------------- |
+| `--json-schema schema.json` (file path — **prod code**) | 30s, **zero output**, hang                      |
+| `--json-schema '{...inline...}'` (real alert schema)    | 26s real work, `is_error:false`, valid output ✓ |
 
-On a trivial prompt the hang caps at ~30s; in production (15 turns + tools) it ran to
-the 30-min activity wall. `--json-schema` was present in the _original_ alert-remediation
-commit (`c2cfca589`) — the agents never worked. Both hanging paths (alert-remediation +
-agent-task) used `--json-schema`; the dormant bespoke homelab-audit path didn't.
+Second fact: the schema-validated object comes back in the result message's
+**`structured_output`** field, **not** `result` (the model's prose). Our code read
+`.result` — also wrong. Both bugs were present in the _original_ alert-remediation commit
+(`c2cfca589`), so the agents never worked. On a trivial prompt the file-path hang caps at
+~30s; in production (15 turns + tools) it ran to the 30-min activity wall. Both hanging
+paths (alert-remediation + agent-task) used the file path; the dormant bespoke
+homelab-audit path didn't.
 
 A second, independent bug: the page meant to catch this,
 `AlertRemediationDecisionsAllFailing`, used `rate()` + `clamp_min(denom, 1)` and
@@ -41,15 +46,16 @@ working or hung). We were blind to the subprocess entirely.
 
 ## What shipped
 
-**Cure**
+**Cure** (use the native feature correctly — not drop it)
 
-- Dropped `--json-schema` from both claude command builders
-  (`activities/alert-remediation-command.ts`, `activities/agent-task-command.ts`); the
-  required output shape is now embedded in the prompt (`buildAlertRemediationPrompt`,
-  `reportOnlyPrompt`) and validated app-side by `parseAgentPayload` (Zod). Codex keeps
-  its file-based `--output-schema`.
-- `extractJsonPayload` (`shared/claude-result.ts`) tolerates ```json fences / surrounding
-  prose now that the CLI no longer forces raw JSON.
+- Pass `--json-schema` **inline** (`JSON.stringify(<SCHEMA>)`, never a file path) in both
+  claude command builders (`activities/alert-remediation-command.ts`,
+  `activities/agent-task-command.ts`). Codex keeps its file-based `--output-schema`.
+- Read the validated object from the result message's **`structured_output`** field
+  (`shared/claude-result.ts` adds it to `ClaudeResultMessage`); `parseAgentPayload`
+  validates it with the existing Zod schema and fails fast if it's absent. Codex still
+  reads its `--output-last-message` file. (An interim "drop the flag + prompt-coax JSON +
+  `extractJsonPayload`" approach was abandoned once the inline fix was found.)
 
 **Observability** (shared, benefits both active `claude -p` activities)
 
@@ -81,18 +87,27 @@ working or hung). We were blind to the subprocess entirely.
 
 ## Verification
 
-- temporal: `bun run typecheck` ✓, `bun test` (575) ✓, `bun run test:e2e` ✓, eslint ✓.
-- homelab: `bun run typecheck` ✓, `cd src/cdk8s && bun test` (141) ✓, eslint ✓; both
-  changes confirmed in `dist/temporal.k8s.yaml` + `dist/apps.k8s.yaml`.
-- In-pod repro proved `--json-schema` is the hang and `stream-json` works.
+- temporal: `bun run typecheck` ✓, `bun run test` (571) ✓, `bun run test:e2e` ✓, eslint ✓.
+  (Bare `bun test` shows false failures: it pulls in `integration.test.ts`, which needs a
+  live `localhost:7233`, and the e2e file, whose `mock.module` leaks into
+  `github-app-token.test.ts`. CI runs `bun run test`, which excludes both.)
+- homelab: `bun run typecheck` ✓, `bun run test` ✓, eslint ✓; both changes confirmed in
+  `dist/temporal.k8s.yaml` + `dist/apps.k8s.yaml`.
+- In-pod repro proved the real root cause (file-path-vs-inline) and that inline
+  `--json-schema` + `stream-json` works end-to-end with `structured_output`.
 
 ## Session Log — 2026-06-19
 
 ### Done
 
-- Found + proved the root cause (`--json-schema` wedges claude); shipped the drop + the
-  stream-json observability overhaul + SIGKILL escalation + the page `rate→increase` fix +
-  the local-Temporal e2e test and two harness scripts. All gates green (see Verification).
+- Found + proved the root cause: `--json-schema` was handed a **file path** (it needs the
+  schema **inline**) AND we read `.result` instead of `.structured_output`. Shipped the
+  correct native usage (inline `--json-schema` + read `structured_output`) plus the
+  orthogonal wins — stream-json observability overhaul, SIGKILL escalation, the page
+  `rate→increase` fix, the local-Temporal e2e test, and two harness scripts. PR #1264.
+  (An interim "drop the flag" approach was committed first, then corrected once the inline
+  fix was found — the user flagged that dropping a working native feature over our own bug
+  was the wrong call.)
 
 ### Remaining
 

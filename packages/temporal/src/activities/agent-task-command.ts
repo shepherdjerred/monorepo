@@ -19,10 +19,10 @@ async function writeOutputSchema(path: string): Promise<void> {
   await Bun.write(path, JSON.stringify(AGENT_TASK_OUTPUT_JSON_SCHEMA, null, 2));
 }
 
-// `--json-schema` is deliberately NOT passed to claude: that flag wedges
-// claude-code (zero output until killed — the alert-remediation/agent-task
-// 30-min SIGTERM hang). The output shape is embedded in reportOnlyPrompt
-// and validated app-side by parseAgentPayload. `stream-json --verbose`
+// `--json-schema` MUST be the inline schema JSON, never a file path: claude
+// wedges (zero output until killed) on a path, but works given the schema
+// content inline. The validated object comes back in the result message's
+// `structured_output` field (see parseAgentPayload). `stream-json --verbose`
 // streams NDJSON so the run is observable line-by-line.
 function claudeCommand(
   input: AgentTaskInput,
@@ -44,6 +44,8 @@ function claudeCommand(
       "--output-format",
       "stream-json",
       "--verbose",
+      "--json-schema",
+      JSON.stringify(AGENT_TASK_OUTPUT_JSON_SCHEMA),
       "--allowed-tools",
       CLAUDE_ALLOWED_TOOLS,
       "--permission-mode",

@@ -40,7 +40,7 @@ export function buildAlertRemediationPrompt(
     "- If verification fails, do not open a PR. Return outcome=verification-failed with the commands and failure summary.",
     "- If the alert requires live ops, destructive cleanup, credentials, broad refactors, secret changes, Kubernetes mutation, PagerDuty resolution, Bugsink mute/resolve, or unclear judgment, do not mutate. Return outcome=not-straightforward or report-only.",
     "- Never resolve PagerDuty incidents, mute or resolve Bugsink issues, merge PRs, edit secrets, or mutate live systems.",
-    "- Return only a single raw JSON object matching the output schema below — no markdown code fences, no prose before or after.",
+    "- Return only JSON matching the provided schema.",
     "",
     "Draft PR policy:",
     `- Branch name: ${branch}`,
@@ -56,9 +56,6 @@ export function buildAlertRemediationPrompt(
     "",
     "Alert JSON:",
     alertJson(input),
-    "",
-    "Output schema — your final message must be ONLY a JSON object matching this (no code fences, no commentary):",
-    JSON.stringify(ALERT_REMEDIATION_OUTPUT_JSON_SCHEMA, null, 2),
   ].join("\n");
 }
 
@@ -69,12 +66,12 @@ async function writeOutputSchema(path: string): Promise<void> {
   );
 }
 
-// `--json-schema` is deliberately NOT passed to claude: that flag wedges
-// claude-code (it produces zero output until killed — the root cause of the
-// alert-remediation 30-min SIGTERM hangs). The required output shape is
-// embedded in the prompt instead (see buildAlertRemediationPrompt) and
-// validated app-side by parseAgentPayload. `stream-json --verbose` streams
-// NDJSON so the run is observable line-by-line.
+// `--json-schema` MUST be the inline schema JSON, never a file path: claude
+// wedges (zero output until killed — the root cause of the 30-min SIGTERM
+// hangs) when handed a path, but works when given the schema content inline.
+// The validated object then comes back in the result message's
+// `structured_output` field (see parseAgentPayload). `stream-json --verbose`
+// streams NDJSON so the run is observable line-by-line.
 function claudeCommand(
   input: AlertRemediationChildInput,
   workdir: string,
@@ -94,6 +91,8 @@ function claudeCommand(
       "--output-format",
       "stream-json",
       "--verbose",
+      "--json-schema",
+      JSON.stringify(ALERT_REMEDIATION_OUTPUT_JSON_SCHEMA),
       "--allowed-tools",
       CLAUDE_ALLOWED_TOOLS,
       "--permission-mode",
