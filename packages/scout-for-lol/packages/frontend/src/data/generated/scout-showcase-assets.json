@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-06-20T02:49:14.397Z",
+  "generatedAt": "2026-06-20T02:58:45.303Z",
   "assets": [
     {
       "id": "draft-prematch",
@@ -409,7 +409,7 @@
       "id": "competition-graph",
       "title": "Competition Progress",
       "group": "Graphs",
-      "description": "Real leaderboard snapshots rendered as a marketing chart.",
+      "description": "How your group's ranks moved across the season.",
       "sourceKeys": [
         "leaderboards/competition-3/snapshots/2026-01-08.json",
         "leaderboards/competition-3/snapshots/2026-01-23.json",
@@ -428,13 +428,13 @@
       "status": "generated",
       "fileName": "competition-graph.png",
       "src": "/generated/scout-showcase/competition-graph.png",
-      "byteLength": 85540
+      "byteLength": 84597
     },
     {
       "id": "report-graph",
       "title": "Scheduled Report Damage",
       "group": "Graphs",
-      "description": "Real match payloads aggregated into a scheduled-report chart.",
+      "description": "Damage to champions across your group's recent games.",
       "sourceKeys": [
         "games/2026/06/19/SG2_159780129/match.json",
         "games/2026/06/19/NA1_5585223425/match.json",
@@ -453,7 +453,7 @@
       "status": "generated",
       "fileName": "report-graph.png",
       "src": "/generated/scout-showcase/report-graph.png",
-      "byteLength": 74640
+      "byteLength": 73902
     }
   ]
 }

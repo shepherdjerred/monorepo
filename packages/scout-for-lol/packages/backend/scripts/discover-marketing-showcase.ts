@@ -562,7 +562,7 @@ async function competitionGraphEntry(params: {
       id: "competition-graph",
       title: "Competition Progress",
       group: "Graphs",
-      description: "Real leaderboard snapshots rendered as a marketing chart.",
+      description: "How your group's ranks moved across the season.",
       snapshotKeys: sampleEvenly(snapshotKeys, 12),
       chartType: "line",
       yAxisLabel: "Score",
@@ -606,8 +606,7 @@ function reportGraphEntry(
     id: "report-graph",
     title: "Scheduled Report Damage",
     group: "Graphs",
-    description:
-      "Real match payloads aggregated into a scheduled-report chart.",
+    description: "Damage to champions across your group's recent games.",
     matchKeys,
     metric: "damage_to_champions",
     yAxisLabel: "Damage to Champions",

@@ -380,7 +380,7 @@
       "id": "competition-graph",
       "title": "Competition Progress",
       "group": "Graphs",
-      "description": "Real leaderboard snapshots rendered as a marketing chart.",
+      "description": "How your group's ranks moved across the season.",
       "kind": "competition-graph",
       "snapshotKeys": [
         "leaderboards/competition-3/snapshots/2026-01-08.json",
@@ -403,7 +403,7 @@
       "id": "report-graph",
       "title": "Scheduled Report Damage",
       "group": "Graphs",
-      "description": "Real match payloads aggregated into a scheduled-report chart.",
+      "description": "Damage to champions across your group's recent games.",
       "kind": "report-graph",
       "matchKeys": [
         "games/2026/06/19/SG2_159780129/match.json",
