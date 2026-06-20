@@ -13,8 +13,17 @@ const ErrorBoundary = Sentry.ErrorBoundary as unknown as React.ComponentType<
   ErrorBoundaryProps & { children: React.ReactNode }
 >;
 
+// VITE_SENTRY_RELEASE is injected at image-build time (before `bun run build`
+// in buildDiscordPlaysMarioKartImageHelper). Guard the untyped env access so
+// `release` is `string | undefined`, never `any`.
+const sentryRelease =
+  typeof import.meta.env.VITE_SENTRY_RELEASE === "string"
+    ? import.meta.env.VITE_SENTRY_RELEASE
+    : undefined;
+
 Sentry.init({
   dsn: "https://c2f90a5857e940e1997b49791d9fc684@bugsink.sjer.red/13",
+  release: sentryRelease,
   environment: import.meta.env.MODE,
 });
 

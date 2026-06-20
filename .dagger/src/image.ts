@@ -1186,6 +1186,9 @@ export function buildDiscordPlaysPokemonImageHelper(
       ])
       .withExec(["pokemonctl", "--help"])
       // Build the web UI served by the backend web server (web.assets).
+      // Expose the release to Vite BEFORE the build so the SPA's Sentry.init
+      // tags events with `release` (import.meta.env.VITE_SENTRY_RELEASE).
+      .withEnvVariable("VITE_SENTRY_RELEASE", version)
       .withWorkdir(`${innerRoot}/packages/frontend`)
       .withExec(["bun", "run", "build"])
       .withLabel(
@@ -1376,6 +1379,9 @@ export function buildDiscordPlaysMarioKartImageHelper(
       // so it must be produced in the image). Mirrors the birmel/scout flow.
       .withExec(["bunx", "--trust", "prisma", "generate"])
       // Build the web UI served by the backend web server (web.assets).
+      // Expose the release to Vite BEFORE the build so the SPA's Sentry.init
+      // tags events with `release` (import.meta.env.VITE_SENTRY_RELEASE).
+      .withEnvVariable("VITE_SENTRY_RELEASE", version)
       .withWorkdir(`${innerRoot}/packages/frontend`)
       .withExec(["bun", "run", "build"])
       .withLabel(

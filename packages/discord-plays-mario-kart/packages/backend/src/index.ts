@@ -5,6 +5,8 @@ Sentry.init({
     Bun.env.SENTRY_DSN ??
     "https://c2f90a5857e940e1997b49791d9fc684@bugsink.sjer.red/13",
   environment: Bun.env.NODE_ENV ?? "development",
+  // VERSION is baked into the image at build time (buildDiscordPlaysMarioKartImageHelper).
+  release: Bun.env.VERSION,
   // Don't let Sentry register the global OTel TracerProvider/Propagator/
   // ContextManager. See the matching comment in discord-plays-pokemon's index.ts.
   skipOpenTelemetrySetup: true,
