@@ -62,11 +62,37 @@ The query syntax is expected to grow (joins, expressions, functions), so the lan
 - **Phase 5** (`4810761b6` + `ad10bc349`): lazy-loaded Monaco editor with Monarch highlighting + parser-driven completion/hover/diagnostics; Monaco bundled locally via `editor.api` + base worker; `worker-src 'self' blob:` added to scout CSP (homelab).
 - Plan mirrored (`c100ae9a2`). PR: #1273. Verified: `bun run typecheck` (7 packages clean), `bun run test` (green), `vite build` (Monaco in a lazy chunk, same-origin worker, no CDN/blob).
 
+### Post-inspection fixes (2026-06-19, verified in a real browser)
+
+Two editor bugs found by driving the live editor in headless Chromium (a throwaway
+unauthenticated `/_dev/query-studio` harness mounting `ReportQueryEditor` + docs,
+since the real form is auth-gated) and fixed:
+
+- `fix(scout-for-lol)` `c18f50e46` — Monaco imported via bare `editor.api` (core +
+  tokenization only) → highlighting worked but autocomplete/hover/`triggerSuggest`
+  were missing. Switched to importing `edcore.main` for its contributions side
+  effects + typed namespace from `editor.api`.
+- `fix(scout-for-lol)` `541fcf213` — suggest/hover popups clipped by the small
+  `overflow-hidden` editor container → enabled `fixedOverflowWidgets`.
+
+Verified end-to-end in Chromium, **including under the exact production CSP**
+(served the built `dist` behind `default-src/script-src/connect-src 'self'` +
+`worker-src 'self' blob:`): worker loads, autocomplete (13 items), positioned
+error+warning diagnostics, hover docs, all 6 sources after FROM, queue values
+inside `queue in (` — **zero CSP violations**. Bundle confirmed: main `index.js`
+1.48 MB (no Monaco), Monaco isolated in the lazy `report-query-editor` chunk
+(~830 KB gzip). Screenshots posted to PR #1273. CI hard gates green
+(lint/typecheck/test/build); Greptile review pending.
+
 ### Remaining
 
-- **Manual e2e + screenshots** via `bun run --filter='./packages/scout-for-lol' dev:web` (needs `op signin`; disconnects beta bot): editor highlighting/autocomplete/hover/squiggles (incl. unknown-queue warning), each output-format preview, fixed data table, `/reports/help`, XSS spot-check (`</text><script>` alias). Attach to PR per the PR-media convention.
-- Buildkite CI on PR #1273.
-- Merge; then `git mv` this plan to `packages/docs/archive/completed/`.
+- **Live-preview visual e2e** (the one unverified UX): the actual `/reports/new`
+  form's server-exact preview (chart SVG / markdown by output format) — covered by
+  backend tests + typed tRPC, but not yet _seen_ in the running app (needs
+  `dev:web` → `op signin`, disconnects beta bot).
+- Greptile automated review (auto-completes; may post comments to address).
+- Human review + merge PR #1273; then `git mv` this plan to
+  `packages/docs/archive/completed/`.
 
 ### Caveats
 
