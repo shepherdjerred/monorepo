@@ -184,8 +184,8 @@ export function ReportFormFields(props: {
           required
         />
         <p className="text-xs text-muted-foreground">
-          End the query with a <code>RENDER &lt;kind&gt;</code> clause to set the
-          display. The builder below edits that clause for you.
+          End the query with a <code>RENDER &lt;kind&gt;</code> clause to set
+          the display. The builder below edits that clause for you.
         </p>
       </div>
 

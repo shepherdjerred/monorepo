@@ -39,9 +39,9 @@ describe("renderKindFromQuery", () => {
 
 describe("renderYFromQuery", () => {
   test("extracts the y channel", () => {
-    expect(renderYFromQuery(`${BASE} render bar_chart with (y = win_rate)`)).toBe(
-      "win_rate",
-    );
+    expect(
+      renderYFromQuery(`${BASE} render bar_chart with (y = win_rate)`),
+    ).toBe("win_rate");
   });
 
   test("returns empty when absent", () => {

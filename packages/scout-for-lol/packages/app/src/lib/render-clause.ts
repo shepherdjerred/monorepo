@@ -30,7 +30,8 @@ function renderClauseIndex(queryText: string): number {
   const groupByIndex = lower.indexOf(" group by ");
   // Without a GROUP BY there is no well-formed clause tail to anchor on; treat
   // any "render" as body text and report "no clause".
-  const searchFrom = groupByIndex === -1 ? -1 : groupByIndex + " group by ".length;
+  const searchFrom =
+    groupByIndex === -1 ? -1 : groupByIndex + " group by ".length;
   if (searchFrom === -1) return -1;
   return lower.indexOf(" render ", searchFrom);
 }
