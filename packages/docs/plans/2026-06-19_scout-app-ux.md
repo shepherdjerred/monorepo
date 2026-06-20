@@ -90,3 +90,17 @@ After clicking through round 1, the owner asked for four refinements:
 
 - **OP.GG dependency is unofficial + ToS-gray** (owner-approved). Contained to one module, fail-soft, never persisted unverified.
 - `SummonerIndex` is global (cross-guild); the `searchSummoners` procedure that reads it is guild-admin gated.
+
+## Round 3 — Riot ID search polish (commit `19fa41261`)
+
+1. **Browser autocomplete suppressed** — `components/ui/combobox.tsx` input now uses a randomized `name` (+ autoCorrect/spellCheck off, 1p/lp ignore) so Chrome's form-history dropdown no longer overlaps our suggestions.
+2. **League profile icon in suggestions, proxied** — OP.GG returns a `thumbnail`; rather than hotlink OP.GG's CDN we proxy via a new `GET /api/summoner-icon?u=…` route (`src/trpc/image-routes.ts`): session-gated, strictly host-allowlisted (`opgg-static.akamaized.net`), `image/*`-only, 24h cache, fail-soft. `summoner-search.ts` returns `avatar` as that proxied path; `riot-id-combobox.tsx` renders a 20px icon per suggestion.
+3. **OP.GG action-id self-heal (best-effort)** — `opgg-search.ts` keeps the seed id but, on a stale id (cooldown-gated), re-discovers a current one by crawling OP.GG's webpack chunk map and extracting `createServerReference("<id>")` literals, then probing. **Key finding:** OP.GG keeps _old_ action ids working across deploys (the seed still resolved after OP.GG shipped a new bundle), so the seed is itself resilient; discovery is a fallback that may not always recover (a new build can need params we don't derive), and the field always degrades to our own index + Riot exact-resolve.
+
+### Round 3 — verified
+
+`tsc` + `eslint` clean (app + backend); backend `bun test` 975 pass / 0 fail (added thumbnail + `extractActionIdCandidates` tests); `opggSearch` confirmed live (returns proxied-able thumbnails); discovery building blocks validated against the live bundle. Dev server restarted.
+
+### Round 3 — caveat
+
+The icon-proxy host allowlist currently has only `opgg-static.akamaized.net`; if OP.GG serves icons from another host, add it (otherwise that icon falls back to the placeholder). Discovery's probe uses the (stable) seed router-state; a future OP.GG that changes both the action id _and_ its router-state/params would defeat discovery → fail-soft `[]` + re-capture the constants.
