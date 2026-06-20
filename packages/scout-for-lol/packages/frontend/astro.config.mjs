@@ -21,6 +21,13 @@ export default defineConfig({
         context: "client",
         access: "public",
       }),
+      // Injected at build time by the CI site-deploy step (2.0.0-<build>).
+      // Optional: unset in local/dev builds, where Sentry release stays undefined.
+      PUBLIC_SENTRY_RELEASE: envField.string({
+        context: "client",
+        access: "public",
+        optional: true,
+      }),
     },
   },
   integrations: [mdx(), react(), icon()],

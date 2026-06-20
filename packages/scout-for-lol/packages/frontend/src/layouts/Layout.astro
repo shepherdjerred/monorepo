@@ -30,8 +30,17 @@ import MarketingTracking from "#src/components/MarketingTracking.astro";
       src="https://plausible.sjer.red/js/script.js"></script>
     <script>
       import * as Sentry from "@sentry/browser";
+      // PUBLIC_SENTRY_RELEASE is injected at build time by the CI site-deploy
+      // step (2.0.0-<build>). Guard the untyped env access so `release` stays
+      // `string | undefined`, never `any`.
+      const sentryRelease =
+        typeof import.meta.env["PUBLIC_SENTRY_RELEASE"] === "string"
+          ? import.meta.env["PUBLIC_SENTRY_RELEASE"]
+          : undefined;
       Sentry.init({
         dsn: "https://337945d2208840dca4a573be311a1bbb@bugsink.sjer.red/1",
+        release: sentryRelease,
+        environment: import.meta.env.MODE,
         beforeSend(event) {
           // Drop third-party Pinterest conversion-tag fetch failures. The
           // tag's request to ct.pinterest.com fails whenever an ad-blocker or

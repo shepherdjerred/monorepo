@@ -10,13 +10,33 @@ import {
   CardHeader,
   CardTitle,
 } from "#src/components/ui/card.tsx";
-import { DISCORD_INVITE_URL } from "#src/lib/discord-invite.ts";
 import {
   isOnboardingComplete,
   isOnboardingSeen,
   markOnboardingComplete,
   markOnboardingSeen,
 } from "#src/lib/onboarding-storage.ts";
+
+/**
+ * Kicks off the bot-install flow. Points at the backend route (not an
+ * SPA route), which 302s to Discord's add-to-server screen and returns
+ * the admin to /app/installed?guild_id=… — see handleDiscordInstall.
+ */
+const INSTALL_URL = "/api/discord/install";
+
+function AddServerButton({
+  variant = "default",
+  children,
+}: {
+  variant?: "default" | "outline";
+  children: React.ReactNode;
+}) {
+  return (
+    <Button asChild variant={variant}>
+      <a href={INSTALL_URL}>{children}</a>
+    </Button>
+  );
+}
 
 export function GuildPicker() {
   const trpc = useTRPC();
@@ -78,18 +98,15 @@ export function GuildPicker() {
         {banner}
         <Card>
           <CardHeader>
-            <CardTitle>No manageable guilds</CardTitle>
+            <CardTitle>Add Scout to your server</CardTitle>
             <CardDescription>
-              You need to be a Discord Administrator in a server where Scout is
-              installed. Add Scout, then come back here.
+              You need to be a Discord Administrator in a server with Scout
+              installed. Add Scout below — you&apos;ll come right back here to
+              configure it.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            <Button asChild>
-              <a href={DISCORD_INVITE_URL} target="_blank" rel="noreferrer">
-                Add Scout to Discord
-              </a>
-            </Button>
+            <AddServerButton>Add Scout to a server</AddServerButton>
             <Button asChild variant="outline">
               <Link to="/welcome">Open setup guide</Link>
             </Button>
@@ -102,14 +119,19 @@ export function GuildPicker() {
   return (
     <Shell>
       {banner}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <h2 className="text-xl font-semibold tracking-tight">Pick a guild</h2>
-        <Link
-          to="/welcome"
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          Setup guide
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/welcome"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Setup guide
+          </Link>
+          <AddServerButton variant="outline">
+            Add another server
+          </AddServerButton>
+        </div>
       </div>
       <ul className="grid gap-2">
         {data.map((g) => (

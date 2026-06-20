@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   isPermissionError,
+  isMissingChannelError,
   checkSendMessagePermission,
   getPermissionErrorMessage,
   formatPermissionErrorForLog,
@@ -38,6 +39,25 @@ describe("isPermissionError", () => {
     expect(isPermissionError(123)).toBe(false);
     expect(isPermissionError(null)).toBe(false);
     expect(isPermissionError(void 0)).toBe(false);
+  });
+});
+
+describe("isMissingChannelError", () => {
+  test("returns true for Unknown Channel (10003) and Unknown Guild (10004)", () => {
+    expect(
+      isMissingChannelError({ code: 10_003, message: "Unknown Channel" }),
+    ).toBe(true);
+    expect(
+      isMissingChannelError({ code: 10_004, message: "Unknown Guild" }),
+    ).toBe(true);
+  });
+
+  test("returns false for permission errors and non-Discord errors", () => {
+    expect(
+      isMissingChannelError({ code: 50_013, message: "Missing Permissions" }),
+    ).toBe(false);
+    expect(isMissingChannelError(new Error("boom"))).toBe(false);
+    expect(isMissingChannelError(null)).toBe(false);
   });
 });
 

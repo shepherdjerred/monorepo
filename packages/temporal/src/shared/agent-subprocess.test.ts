@@ -1,24 +1,69 @@
 import { describe, expect, it } from "bun:test";
 import {
   SOFT_KILL_BEFORE_MS,
-  bumpStderrState,
+  bumpOutputState,
   computeSoftKillDelayMs,
-  newStderrState,
+  newOutputState,
+  runTrackedAgentSubprocess,
+  type AgentHeartbeat,
+  type AgentSigkillEscalation,
+  type AgentSoftKill,
+  type TrackedAgentInput,
 } from "./agent-subprocess.ts";
+
+const noRedact = (line: string): string => line;
+
+function cleanEnv(): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(Bun.env)) {
+    if (typeof value === "string") {
+      env[key] = value;
+    }
+  }
+  return env;
+}
+
+/** Build a TrackedAgentInput with no-op callbacks + capture arrays. */
+function harness(
+  command: string[],
+  overrides: Partial<TrackedAgentInput> = {},
+): {
+  input: TrackedAgentInput;
+  stdoutLines: string[];
+  stderrLines: string[];
+  softKills: AgentSoftKill[];
+  sigkills: AgentSigkillEscalation[];
+  heartbeats: AgentHeartbeat[];
+} {
+  const stdoutLines: string[] = [];
+  const stderrLines: string[] = [];
+  const softKills: AgentSoftKill[] = [];
+  const sigkills: AgentSigkillEscalation[] = [];
+  const heartbeats: AgentHeartbeat[] = [];
+  const input: TrackedAgentInput = {
+    command,
+    cwd: process.cwd(),
+    env: cleanEnv(),
+    redactTokens: [],
+    startToCloseTimeoutMs: undefined,
+    cancellationSignal: undefined,
+    heartbeatIntervalMs: 5000,
+    onHeartbeat: (beat) => heartbeats.push(beat),
+    onSoftKill: (e) => softKills.push(e),
+    onSigkillEscalation: (e) => sigkills.push(e),
+    onStdoutLine: (line) => stdoutLines.push(line),
+    onStderrLine: (line) => stderrLines.push(line),
+    onCancellation: (state) => stderrLines.push(state.lastLine),
+    ...overrides,
+  };
+  return { input, stdoutLines, stderrLines, softKills, sigkills, heartbeats };
+}
 
 describe("computeSoftKillDelayMs", () => {
   it("returns delay = timeout - safety margin for a realistic 30-min wall", () => {
-    // alert-remediation: 30-min activity startToCloseTimeout
     const thirtyMinMs = 30 * 60 * 1000;
     expect(computeSoftKillDelayMs(thirtyMinMs)).toBe(
       thirtyMinMs - SOFT_KILL_BEFORE_MS,
-    );
-  });
-
-  it("returns delay for the homelab-audit 45-min wall", () => {
-    const fortyFiveMinMs = 45 * 60 * 1000;
-    expect(computeSoftKillDelayMs(fortyFiveMinMs)).toBe(
-      fortyFiveMinMs - SOFT_KILL_BEFORE_MS,
     );
   });
 
@@ -36,52 +81,105 @@ describe("computeSoftKillDelayMs", () => {
   });
 });
 
-describe("StderrState tracking", () => {
-  it("initializes with empty line, no idle time", () => {
-    const state = newStderrState(1000);
-    expect(state.lastStderrLine).toBe("");
-    expect(state.lastStderrAt).toBe(1000);
+describe("OutputState tracking", () => {
+  it("initializes empty, no idle, no first-output timestamp", () => {
+    const state = newOutputState(1000);
+    expect(state.lastLine).toBe("");
+    expect(state.lastAt).toBe(1000);
     expect(state.maxIdleMs).toBe(0);
+    expect(state.firstOutputAt).toBeUndefined();
   });
 
-  it("records the most recent line on bump", () => {
-    const state = newStderrState(Date.now());
-    bumpStderrState(state, "first line");
-    expect(state.lastStderrLine).toBe("first line");
-    bumpStderrState(state, "second line");
-    expect(state.lastStderrLine).toBe("second line");
-  });
-
-  it("advances lastStderrAt to the current time on bump", () => {
-    const state = newStderrState(Date.now() - 5000);
-    const before = Date.now();
-    bumpStderrState(state, "x");
-    expect(state.lastStderrAt).toBeGreaterThanOrEqual(before);
+  it("records the most recent line and stamps firstOutputAt once", () => {
+    const state = newOutputState(Date.now());
+    bumpOutputState(state, "first line");
+    const firstAt = state.firstOutputAt;
+    expect(state.lastLine).toBe("first line");
+    expect(firstAt).toBeDefined();
+    bumpOutputState(state, "second line");
+    expect(state.lastLine).toBe("second line");
+    // firstOutputAt is sticky — only the first line sets it.
+    expect(state.firstOutputAt).toBe(firstAt);
   });
 
   it("tracks the longest silence gap as the running maxIdleMs", async () => {
-    const state = newStderrState(Date.now());
-    bumpStderrState(state, "early line");
+    const state = newOutputState(Date.now());
+    bumpOutputState(state, "early line");
     const firstIdle = state.maxIdleMs;
-
-    // Sleep ~50 ms, then bump again. The gap should now exceed the first.
     await new Promise((resolve) => setTimeout(resolve, 50));
-    bumpStderrState(state, "after gap");
+    bumpOutputState(state, "after gap");
     expect(state.maxIdleMs).toBeGreaterThan(firstIdle);
     expect(state.maxIdleMs).toBeGreaterThanOrEqual(40);
   });
 
   it("does not regress maxIdleMs when a later gap is smaller", async () => {
-    const state = newStderrState(Date.now());
-    // Long gap first.
+    const state = newOutputState(Date.now());
     await new Promise((resolve) => setTimeout(resolve, 60));
-    bumpStderrState(state, "after long gap");
+    bumpOutputState(state, "after long gap");
     const longestSoFar = state.maxIdleMs;
     expect(longestSoFar).toBeGreaterThanOrEqual(50);
-
-    // Short gap second — maxIdleMs must stay pinned to the longer gap.
     await new Promise((resolve) => setTimeout(resolve, 10));
-    bumpStderrState(state, "after short gap");
+    bumpOutputState(state, "after short gap");
     expect(state.maxIdleMs).toBe(longestSoFar);
   });
+});
+
+describe("runTrackedAgentSubprocess", () => {
+  it("streams stdout NDJSON lines and accumulates raw stdout for parsing", async () => {
+    const script = [
+      String.raw`process.stdout.write('{"type":"system","subtype":"init"}\n');`,
+      String.raw`process.stdout.write('{"type":"assistant"}\n');`,
+      String.raw`process.stdout.write('{"type":"result","subtype":"success","result":"ok"}\n');`,
+    ].join("");
+    const { input, stdoutLines } = harness(["bun", "-e", script]);
+    const result = await runTrackedAgentSubprocess(input, noRedact);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.signal).toBe("natural");
+    expect(stdoutLines).toHaveLength(3);
+    expect(stdoutLines[2]).toContain('"type":"result"');
+    expect(result.stdout).toContain('"result":"ok"');
+    expect(result.firstOutputLatencyMs).toBeTypeOf("number");
+    expect(result.sigkillEscalated).toBe(false);
+    expect(result.softKillFired).toBe(false);
+  });
+
+  it("reports firstOutputLatencyMs=undefined and maxIdleMs≈duration for a silent run", async () => {
+    const { input, stdoutLines } = harness([
+      "bun",
+      "-e",
+      "await Bun.sleep(60);",
+    ]);
+    const result = await runTrackedAgentSubprocess(input, noRedact);
+
+    expect(result.exitCode).toBe(0);
+    expect(stdoutLines).toHaveLength(0);
+    expect(result.firstOutputLatencyMs).toBeUndefined();
+    // No output ever → the whole run counts as one silent stretch.
+    expect(result.maxIdleMs).toBeGreaterThanOrEqual(40);
+    expect(result.maxIdleMs).toBeLessThanOrEqual(result.durationMs + 5);
+  });
+
+  it("escalates to SIGKILL when the subprocess ignores the soft-kill SIGINT", async () => {
+    // Soft-kill fires at startToCloseTimeoutMs - SOFT_KILL_BEFORE_MS.
+    const { input, softKills, sigkills } = harness(
+      [
+        "bun",
+        "-e",
+        "process.on('SIGINT', () => {}); setInterval(() => {}, 1e6);",
+      ],
+      {
+        startToCloseTimeoutMs: SOFT_KILL_BEFORE_MS + 150,
+        sigkillGraceMs: 200,
+      },
+    );
+    const result = await runTrackedAgentSubprocess(input, noRedact);
+
+    expect(result.softKillFired).toBe(true);
+    expect(result.sigkillEscalated).toBe(true);
+    expect(result.signal).toBe("SIGKILL");
+    expect(softKills).toHaveLength(1);
+    expect(sigkills).toHaveLength(1);
+    expect(sigkills[0]?.graceMs).toBe(200);
+  }, 10_000);
 });

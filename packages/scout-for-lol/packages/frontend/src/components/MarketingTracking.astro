@@ -1,14 +1,14 @@
 ---
 import { marketingTrackingConfig } from "#src/lib/marketing.ts";
-import { DISCORD_INSTALL_CLICK_EVENT } from "#src/lib/marketing-constants.ts";
+import { GET_STARTED_CLICK_EVENT } from "#src/lib/marketing-constants.ts";
 
 const { pinterestTagId, redditPixelId } = marketingTrackingConfig;
-const discordInstallClickEvent = DISCORD_INSTALL_CLICK_EVENT;
+const getStartedClickEvent = GET_STARTED_CLICK_EVENT;
 ---
 
 <script
   is:inline
-  define:vars={{ pinterestTagId, redditPixelId, discordInstallClickEvent }}
+  define:vars={{ pinterestTagId, redditPixelId, getStartedClickEvent }}
 >
   function insertBeforeFirstScript(script) {
     var firstScript = document.getElementsByTagName("script")[0];
@@ -84,7 +84,7 @@ const discordInstallClickEvent = DISCORD_INSTALL_CLICK_EVENT;
       }
 
       var ctaElement = event.target.closest(
-        "[data-scout-conversion='" + discordInstallClickEvent + "']",
+        "[data-scout-conversion='" + getStartedClickEvent + "']",
       );
       if (!(ctaElement instanceof HTMLElement)) {
         return;
@@ -92,7 +92,7 @@ const discordInstallClickEvent = DISCORD_INSTALL_CLICK_EVENT;
 
       var ctaLocation = ctaElement.dataset.scoutCtaLocation;
       if (!ctaLocation) {
-        console.error("Tracked Scout Discord CTA is missing a location");
+        console.error("Tracked Scout CTA is missing a location");
         return;
       }
 
@@ -109,14 +109,14 @@ const discordInstallClickEvent = DISCORD_INSTALL_CLICK_EVENT;
       window.dispatchEvent(
         new CustomEvent("scout:conversion", {
           detail: {
-            event: discordInstallClickEvent,
+            event: getStartedClickEvent,
             properties: eventProperties,
           },
         }),
       );
 
       if (typeof window.plausible === "function") {
-        window.plausible(discordInstallClickEvent, {
+        window.plausible(getStartedClickEvent, {
           props: eventProperties,
         });
       }
@@ -125,7 +125,7 @@ const discordInstallClickEvent = DISCORD_INSTALL_CLICK_EVENT;
         window.pintrk("track", "Lead", {
           cta_location: ctaLocation,
           event_id: eventId,
-          lead_type: discordInstallClickEvent,
+          lead_type: getStartedClickEvent,
         });
       }
 
@@ -133,7 +133,7 @@ const discordInstallClickEvent = DISCORD_INSTALL_CLICK_EVENT;
         window.rdt("track", "Lead", {
           conversionId: eventId,
           cta_location: ctaLocation,
-          customEventName: discordInstallClickEvent,
+          customEventName: getStartedClickEvent,
         });
       }
     },

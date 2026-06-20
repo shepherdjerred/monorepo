@@ -1,7 +1,7 @@
 ---
 import { cn } from "#src/lib/utils.ts";
-import type { DiscordCtaLocation } from "#src/lib/marketing.ts";
-import type { DiscordInstallClickEvent } from "#src/lib/marketing-constants.ts";
+import type { CtaLocation } from "#src/lib/marketing.ts";
+import type { GetStartedClickEvent } from "#src/lib/marketing-constants.ts";
 
 interface BaseProps {
   href: string;
@@ -14,8 +14,8 @@ interface BaseProps {
 
 type TrackingProps =
   | {
-      trackingEvent: DiscordInstallClickEvent;
-      trackingLocation: DiscordCtaLocation;
+      trackingEvent: GetStartedClickEvent;
+      trackingLocation: CtaLocation;
     }
   | {
       trackingEvent?: undefined;

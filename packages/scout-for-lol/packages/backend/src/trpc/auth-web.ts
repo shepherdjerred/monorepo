@@ -20,7 +20,7 @@
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
 import { CSRF_COOKIE, SESSION_COOKIE } from "#src/trpc/context.ts";
-import { signSession } from "#src/trpc/jwt.ts";
+import { signSession, verifySession } from "#src/trpc/jwt.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import configuration from "#src/configuration.ts";
@@ -31,6 +31,24 @@ const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60;
 /** Pre-auth state cookie TTL — long enough for the Discord round-trip, short enough to limit replay. */
 const OAUTH_STATE_TTL_SECONDS = 5 * 60;
 const OAUTH_STATE_COOKIE = "scout_oauth_state";
+
+/**
+ * Permissions Scout's bot needs in a guild, mirroring the "Required
+ * Permissions" section of the docs site. The `applications.commands`
+ * scope (requested in the install URL) covers slash-command
+ * registration, so it is NOT a permission bit here.
+ *
+ *   View Channel    1 << 10
+ *   Send Messages   1 << 11
+ *   Embed Links     1 << 14   (rich match-report embeds)
+ *   Attach Files    1 << 15   (post-match report images)
+ */
+const BOT_INSTALL_PERMISSIONS = (
+  (1n << 10n) |
+  (1n << 11n) |
+  (1n << 14n) |
+  (1n << 15n)
+).toString();
 
 const DiscordTokenResponseSchema = z.object({
   access_token: z.string(),
@@ -165,6 +183,77 @@ export function handleDiscordStart(request: Request): Response {
       sameSite: "Lax",
     }),
   );
+  headers.set(
+    "Location",
+    `https://discord.com/api/oauth2/authorize?${params.toString()}`,
+  );
+
+  return new Response(null, { status: 302, headers });
+}
+
+/**
+ * GET /api/discord/install
+ *
+ * 302s the browser to Discord's bot-authorization screen so a
+ * signed-in admin can add Scout to one of their servers. We build the
+ * URL server-side to keep the application ID and the required
+ * permission bits out of the SPA bundle.
+ *
+ * `redirect_uri` points at the SPA's /app/installed landing route;
+ * Discord appends `guild_id` (and `permissions`) on success, letting
+ * the app deep-link straight into that guild's config. The redirect URI
+ * must be registered in the Discord Developer Portal for this app or
+ * Discord rejects the request with `invalid redirect_uri`.
+ *
+ * Unlike the login flow there is no `response_type=code` and no state
+ * cookie: this is a pure bot install, not a user-token grant.
+ *
+ * The caller MUST be authenticated: the post-install landing route
+ * (/app/installed) is gated by the SPA's RequireSession, so an
+ * unauthenticated install would bounce through Discord only to land on
+ * /app/login with the `guild_id` deep-link silently dropped. We enforce
+ * the same session cookie the rest of the web app uses up front and, on
+ * a missing/invalid session, 302 straight to /app/login with a
+ * `returnTo` so the user comes back to the guild picker after signing
+ * in (instead of being sent on a pointless round-trip to Discord).
+ */
+export async function handleDiscordInstall(
+  request: Request,
+): Promise<Response> {
+  const appOrigin = getAppOrigin();
+
+  // Authenticate via the same signed session cookie the tRPC API and
+  // image routes use. The bot-install flow is admin-only; an
+  // unauthenticated caller must sign in first.
+  const cookies = parseCookies(request.headers.get("Cookie"));
+  const sessionJwt = cookies.get(SESSION_COOKIE);
+  const claims =
+    sessionJwt !== undefined && sessionJwt.length > 0
+      ? await verifySession(sessionJwt)
+      : null;
+
+  if (claims === null) {
+    logger.info(
+      "Bot install requested without a valid session — redirecting to login",
+    );
+    const headers = new Headers();
+    // Return the user to the guild picker, where the install button
+    // lives, once they've signed in. /app/ is a safe same-app path.
+    headers.set(
+      "Location",
+      `${appOrigin}/app/login?returnTo=${encodeURIComponent("/app/")}`,
+    );
+    return new Response(null, { status: 302, headers });
+  }
+
+  const params = new URLSearchParams({
+    client_id: configuration.applicationId,
+    scope: ["bot", "applications.commands"].join(" "),
+    permissions: BOT_INSTALL_PERMISSIONS,
+    redirect_uri: `${appOrigin}/app/installed`,
+  });
+
+  const headers = new Headers();
   headers.set(
     "Location",
     `https://discord.com/api/oauth2/authorize?${params.toString()}`,

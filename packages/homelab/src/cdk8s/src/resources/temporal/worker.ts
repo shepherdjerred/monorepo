@@ -348,6 +348,13 @@ export function createTemporalWorkerDeployment(
         TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
         TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
         ENVIRONMENT: EnvValue.fromValue("production"),
+        // Headless hygiene for the `claude -p` agent subprocesses: don't let
+        // startup block on statsig/telemetry fetches or an auto-update check.
+        // Defensive only — the historical 30-min hang was the `--json-schema`
+        // CLI flag (now removed), not these; keep them off for a clean headless
+        // run regardless.
+        CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: EnvValue.fromValue("1"),
+        DISABLE_AUTOUPDATER: EnvValue.fromValue("1"),
         // OpenTelemetry tracing → Tempo. initializeTracing() in worker.ts
         // gates on TELEMETRY_ENABLED.
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),
