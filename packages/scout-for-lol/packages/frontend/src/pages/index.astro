@@ -372,6 +372,35 @@ const initialShowcasePreview = showcasePreviews.at(0);
       </div>
     </div>
 
+    <!-- Dashboard showcase -->
+    <div class="py-24 sm:py-32">
+      <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <SectionHeader
+          badge="No commands required"
+          title="Set it up from a sleek dashboard"
+          subtitle="Sign in with Discord and manage everything — tracked players, channels, competitions, and reports — from a fast web UI. Slash commands are still there if you prefer them."
+          centered={true}
+        />
+        <div class="mx-auto mt-16 max-w-4xl space-y-12">
+          <GalleryItem
+            imageSrc="/dashboard-add-subscription.png"
+            imageAlt="Scout dashboard 'Add subscription' dialog with channel, region, Riot ID, and alias fields"
+            caption="Add a player to track in seconds — pick a channel, paste a Riot ID, set an alias."
+          />
+          <GalleryItem
+            imageSrc="/dashboard-subscriptions.png"
+            imageAlt="Scout dashboard subscriptions table listing tracked players and their channels"
+            caption="Manage every tracked player and channel from one table."
+          />
+          <GalleryItem
+            imageSrc="/dashboard-competition.png"
+            imageAlt="Scout dashboard competition setup form with criteria, queue, and schedule"
+            caption="Spin up competitions and leaderboards with a guided form."
+          />
+        </div>
+      </div>
+    </div>
+
     <!-- CTA Section -->
     <CTA
       variant="indigo"
