@@ -152,8 +152,8 @@
   "gemini-3-pro-image-preview": {
     "id": "gemini-3-pro-image-preview",
     "provider": "google",
-    "displayName": "Gemini 3 Pro Image (Nano Banana Pro)",
-    "description": "State-of-the-art image generation. Per-image rate is the Standard 1K-2K tier (4K is higher).",
+    "displayName": "Gemini 3 Pro Image",
+    "description": "State-of-the-art image generation (codename: Nano Banana Pro). Per-image rate is the Standard 1K-2K tier (4K is higher).",
     "pricing": { "modality": "image", "perImage": 0.134 },
     "capabilities": { "supportsTemperature": false, "supportsTopP": false },
     "status": "preview"
@@ -161,8 +161,8 @@
   "gemini-3.1-flash-image-preview": {
     "id": "gemini-3.1-flash-image-preview",
     "provider": "google",
-    "displayName": "Gemini 3.1 Flash Image (Nano Banana 2)",
-    "description": "High-efficiency image generation. Per-image rate is the Standard 1K tier.",
+    "displayName": "Gemini 3.1 Flash Image",
+    "description": "High-efficiency image generation (codename: Nano Banana 2). Per-image rate is the Standard 1K tier.",
     "pricing": { "modality": "image", "perImage": 0.067 },
     "capabilities": { "supportsTemperature": false, "supportsTopP": false },
     "status": "preview"
@@ -170,8 +170,8 @@
   "gemini-2.5-flash-image": {
     "id": "gemini-2.5-flash-image",
     "provider": "google",
-    "displayName": "Gemini 2.5 Flash Image (Nano Banana)",
-    "description": "Fast image generation (1024px).",
+    "displayName": "Gemini 2.5 Flash Image",
+    "description": "Fast image generation (1024px, codename: Nano Banana).",
     "pricing": { "modality": "image", "perImage": 0.039 },
     "capabilities": { "supportsTemperature": false, "supportsTopP": false },
     "status": "current"

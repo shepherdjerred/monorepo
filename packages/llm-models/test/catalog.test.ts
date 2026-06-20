@@ -42,6 +42,8 @@ describe("catalog integrity", () => {
       "claude-haiku-4-5-20251001",
       // Google
       "gemini-3-pro-image-preview",
+      "gemini-3.1-flash-image-preview",
+      "gemini-2.5-flash-image",
     ];
     for (const id of required) {
       expect(isModelId(id)).toBe(true);
