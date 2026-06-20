@@ -1,3 +1,4 @@
+import { match } from "ts-pattern";
 import { z } from "zod";
 import {
   ReportGroupBySchema,
@@ -76,27 +77,23 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
 function compileWhere(clauses: ReportWhereClause[]): WhereFilters {
   const filters: WhereFilters = {};
   for (const clause of clauses) {
-    switch (clause.kind) {
-      case "unsupported": {
+    match(clause)
+      .with({ kind: "unsupported" }, () => {
         throw new Error(UNSUPPORTED_WHERE_MESSAGE);
-      }
-      case "queue": {
-        filters.queueFilter = clause.values;
-        break;
-      }
-      case "champion_id": {
-        filters.championId = PositiveIntSchema.parse(clause.value);
-        break;
-      }
-      case "min_games": {
-        filters.minGames = PositiveIntSchema.parse(clause.value);
-        break;
-      }
-      case "competition_id": {
-        filters.competitionId = PositiveIntSchema.parse(clause.value);
-        break;
-      }
-    }
+      })
+      .with({ kind: "queue" }, (c) => {
+        filters.queueFilter = c.values;
+      })
+      .with({ kind: "champion_id" }, (c) => {
+        filters.championId = PositiveIntSchema.parse(c.value);
+      })
+      .with({ kind: "min_games" }, (c) => {
+        filters.minGames = PositiveIntSchema.parse(c.value);
+      })
+      .with({ kind: "competition_id" }, (c) => {
+        filters.competitionId = PositiveIntSchema.parse(c.value);
+      })
+      .exhaustive();
   }
   return filters;
 }

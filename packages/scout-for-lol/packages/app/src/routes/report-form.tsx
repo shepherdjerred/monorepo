@@ -217,7 +217,7 @@ export function ReportForm() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="report-query">Query</Label>
+              <Label>Query</Label>
               <Button asChild variant="link" size="sm">
                 <Link to={`/g/${guildId}/reports/help`}>Full reference</Link>
               </Button>
