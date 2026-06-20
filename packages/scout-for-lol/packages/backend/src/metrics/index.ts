@@ -1,17 +1,12 @@
-import { Registry, Counter, Gauge, Histogram } from "prom-client";
+import { Counter, Gauge, Histogram } from "prom-client";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
+import { registry } from "#src/metrics/registry.ts";
 import { seedProviderIssueMetrics } from "#src/metrics/provider-issue-seeds.ts";
 
 const logger = createLogger("metrics");
 
 logger.info("📊 Initializing Prometheus metrics");
-
-/**
- * Custom Prometheus registry for Scout for LoL metrics
- * Internal - accessed via getMetrics() function
- */
-export const registry = new Registry();
 
 /**
  * Add default labels to all metrics
@@ -101,35 +96,6 @@ export const discordOwnerNotificationsTotal = new Counter({
   name: "discord_owner_notifications_total",
   help: "Total number of server owner notifications sent for permission errors",
   labelNames: ["guild_id", "status"] as const,
-  registers: [registry],
-});
-
-/**
- * Total number of abandoned guilds detected
- */
-export const abandonedGuildsDetectedTotal = new Counter({
-  name: "abandoned_guilds_detected_total",
-  help: "Total number of guilds detected as abandoned due to persistent permission errors",
-  registers: [registry],
-});
-
-/**
- * Total number of guilds the bot has left
- */
-export const guildsLeftTotal = new Counter({
-  name: "guilds_left_total",
-  help: "Total number of guilds the bot has left",
-  labelNames: ["reason"] as const,
-  registers: [registry],
-});
-
-/**
- * Total number of abandonment notifications sent to guild owners
- */
-export const abandonmentNotificationsTotal = new Counter({
-  name: "abandonment_notifications_total",
-  help: "Total number of abandonment notifications sent to guild owners",
-  labelNames: ["status"] as const,
   registers: [registry],
 });
 
@@ -447,6 +413,8 @@ export const avgAccountsPerPlayer = new Gauge({
   help: "Average number of accounts per player",
   registers: [registry],
 });
+
+// Guild-health gauges live in #src/metrics/guild-health.ts (file-length cap).
 
 // =======================
 // Riot API Metrics
