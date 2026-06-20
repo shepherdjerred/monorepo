@@ -25,16 +25,16 @@ const leaderboardLpImg = "/leaderboard-lp.png";
       <div class="mx-auto max-w-3xl py-32 sm:py-48 lg:py-56">
         <PageHeader
           title="Getting Started with Scout"
-          subtitle="Sign in, add Scout to your server, and configure everything from the web dashboard — no slash commands required."
+          subtitle="Add Scout to your server and start tracking your friends' League matches in minutes."
         />
 
         <!-- Step 1: Sign in to the dashboard -->
         <ProcessStep number={1} title="Sign in to the dashboard">
           <div class="prose max-w-none mb-6 mt-6">
             <p class="text-lg text-gray-700 dark:text-gray-300 mb-4">
-              Open the Scout dashboard and sign in with your Discord account.
-              There are no passwords and no setup commands — Scout uses Discord
-              to confirm which servers you manage.
+              Open the Scout dashboard and sign in with your Discord account —
+              Scout uses it to confirm which servers you manage. No password
+              required.
             </p>
           </div>
 
@@ -92,8 +92,7 @@ const leaderboardLpImg = "/leaderboard-lp.png";
         <ProcessStep number={3} title="Configure in the dashboard">
           <div class="prose max-w-none mb-6">
             <p class="text-lg text-gray-700 dark:text-gray-300 mb-4">
-              Everything happens in the UI — no commands to memorize. From your
-              server's dashboard you can:
+              From your server's dashboard you can:
             </p>
             <ul class="space-y-3 text-gray-700 dark:text-gray-300">
               <li>
@@ -122,7 +121,7 @@ const leaderboardLpImg = "/leaderboard-lp.png";
             <GalleryItem
               imageSrc="/dashboard-add-subscription.png"
               imageAlt="Scout dashboard 'Add subscription' dialog with channel, region, Riot ID, and alias fields"
-              caption="Add a player to track from a simple form — pick a channel, paste a Riot ID, done. No slash commands."
+              caption="Add a player to track from a simple form — pick a channel, paste a Riot ID, done."
             />
             <GalleryItem
               imageSrc="/dashboard-subscriptions.png"
@@ -225,15 +224,14 @@ const leaderboardLpImg = "/leaderboard-lp.png";
           </div>
         </ProcessStep>
 
-        <!-- Optional: Slash commands -->
+        <!-- Slash commands -->
         <section class="mb-16">
           <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-3">
-            Prefer slash commands?
+            Slash commands
           </h2>
           <p class="text-gray-700 dark:text-gray-300 mb-6">
-            The dashboard is the easiest way to manage Scout, but every action
-            also has an equivalent slash command if you'd rather stay in
-            Discord. For example, you can add a subscription with <code
+            Every action is also available as a slash command in Discord. For
+            example, add a subscription with <code
               class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm"
               >/subscription add</code
             >:
@@ -362,10 +360,7 @@ const leaderboardLpImg = "/leaderboard-lp.png";
 
         <!-- Quick Reference -->
         <section class="bg-gray-900 dark:bg-gray-950 rounded-lg p-8 text-white">
-          <h2 class="text-2xl font-bold mb-2">Quick Command Reference</h2>
-          <p class="text-gray-400 mb-6 text-sm">
-            Optional — every command below has an equivalent in the dashboard.
-          </p>
+          <h2 class="text-2xl font-bold mb-6">Quick Command Reference</h2>
 
           <div class="space-y-4">
             <div>
