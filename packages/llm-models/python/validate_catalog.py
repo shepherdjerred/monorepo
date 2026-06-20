@@ -21,7 +21,7 @@ from typing import Annotated, Literal, Optional
 
 from pydantic import BaseModel, Field, TypeAdapter
 
-CATALOG_PATH = Path(__file__).resolve().parent.parent / "catalog.json"
+CATALOG_PATH = Path(__file__).resolve().parent.parent / "src" / "catalog.json"
 
 
 class TextPricing(BaseModel):

@@ -282,6 +282,15 @@ async function refreshBuiltFileDependencies(): Promise<void> {
       label: "sjer.red local package artifacts",
       cwd: "packages/sjer.red",
     },
+    // Consumers of the built @shepherdjerred/llm-models file: dep — re-copy its
+    // dist after the build above.
+    { label: "monarch llm-models", cwd: "packages/monarch" },
+    { label: "temporal llm-models", cwd: "packages/temporal" },
+    {
+      label: "discord-plays-pokemon backend llm-models",
+      cwd: "packages/discord-plays-pokemon/packages/backend",
+    },
+    { label: "scout-for-lol llm-models", cwd: "packages/scout-for-lol" },
   ];
 
   for (const dir of refreshDirs) {
@@ -322,6 +331,14 @@ const DAG_TASKS: DagTask[] = [
     label: "webring build",
     cmd: ["bun", "run", "build"],
     cwd: "packages/webring",
+    deps: [],
+    warnOnly: false,
+  },
+  {
+    id: "llm-models",
+    label: "llm-models build",
+    cmd: ["bun", "run", "build"],
+    cwd: "packages/llm-models",
     deps: [],
     warnOnly: false,
   },

@@ -3,15 +3,20 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "imports": {
     "#src/*": "./src/*"
   },
   "exports": {
-    ".": "./src/index.ts",
-    "./catalog.json": "./catalog.json"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./catalog.json": "./src/catalog.json"
   },
   "scripts": {
-    "build": "true",
+    "build": "tsc -p tsconfig.build.json && cp src/catalog.json dist/catalog.json",
     "typecheck": "bunx tsc --noEmit",
     "lint": "bunx eslint --cache .",
     "test": "bun test test"

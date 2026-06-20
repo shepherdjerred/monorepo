@@ -6,8 +6,9 @@
   ],
   "compilerOptions": {
     "types": ["@types/bun"],
-    "moduleResolution": "Node16",
-    "module": "Node16",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "resolveJsonModule": true,
     "noEmit": true,
     "allowImportingTsExtensions": true
   }

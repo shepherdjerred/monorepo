@@ -9,8 +9,8 @@
  * Units: token prices are **USD per 1,000,000 tokens**; image prices are
  * **USD per image**.
  */
-import { readFileSync } from "node:fs";
 import { z } from "zod";
+import catalogJson from "./catalog.json" with { type: "json" };
 
 export const ProviderSchema = z.enum(["openai", "anthropic", "google"]);
 export type Provider = z.infer<typeof ProviderSchema>;
@@ -74,15 +74,8 @@ export const CatalogSchema = z
   );
 export type Catalog = z.infer<typeof CatalogSchema>;
 
-// Read the JSON source of truth at runtime (rather than a static JSON import)
-// so this source compiles cleanly under every consumer's tsconfig, regardless
-// of their `module`/`resolveJsonModule` settings.
-const catalogRaw: unknown = JSON.parse(
-  readFileSync(new URL("../catalog.json", import.meta.url), "utf8"),
-);
-
 /** The validated catalog, keyed by model id. Throws at import time if `catalog.json` is malformed. */
-export const MODELS: Catalog = CatalogSchema.parse(catalogRaw);
+export const MODELS: Catalog = CatalogSchema.parse(catalogJson);
 
 /** A model id known to the catalog. Validated at runtime (no compile-time literal union — the source is JSON). */
 export type ModelId = string;
