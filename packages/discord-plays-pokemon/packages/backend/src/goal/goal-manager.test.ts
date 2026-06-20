@@ -282,7 +282,13 @@ describe("GoalManager", () => {
     currentTime = 60_000;
     expect(await manager.publishProgress("I am now walking north")).toBe(true);
     expect(messages).toHaveLength(1);
-    expect(messages[0]?.content).toContain("I am now walking north");
+    // Mid-session updates are audience-facing narration: the message is the
+    // model's text verbatim, with no requester mention or "goal update:" prefix,
+    // and nobody is pinged.
+    expect(messages[0]?.content).toBe("I am now walking north");
+    expect(messages[0]?.content).not.toContain("<@user-a>");
+    expect(messages[0]?.content).not.toContain("goal update:");
+    expect(messages[0]?.allowedUserIds).toEqual([]);
     await manager.shutdown();
   });
 });
