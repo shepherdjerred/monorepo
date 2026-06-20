@@ -15,4 +15,11 @@ Bun.env["S3_BUCKET_NAME"] = "test-bucket";
 // with PrismaClientInitializationError before any mock can intercept them.
 Bun.env["DATABASE_URL"] = Bun.env["DATABASE_URL"] ?? "file:./test.db";
 
+// Deterministic HS256 signing secret for session-JWT tests (auth-web,
+// jwt). Must be >= 32 chars (jwt.ts#getKey refuses shorter) and must be
+// set before `configuration.ts` is imported, since it captures the value
+// once at module load. This is a throwaway test key, never a real secret.
+Bun.env["JWT_SIGNING_SECRET"] =
+  Bun.env["JWT_SIGNING_SECRET"] ?? "test-jwt-signing-secret-0123456789abcdef";
+
 // Any global test configuration can go here

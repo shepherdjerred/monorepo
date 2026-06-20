@@ -20,7 +20,7 @@
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
 import { CSRF_COOKIE, SESSION_COOKIE } from "#src/trpc/context.ts";
-import { signSession } from "#src/trpc/jwt.ts";
+import { signSession, verifySession } from "#src/trpc/jwt.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import configuration from "#src/configuration.ts";
@@ -206,15 +206,51 @@ export function handleDiscordStart(request: Request): Response {
  * Discord rejects the request with `invalid redirect_uri`.
  *
  * Unlike the login flow there is no `response_type=code` and no state
- * cookie: this is a pure bot install, not a user-token grant, and the
- * caller is already authenticated via their session cookie.
+ * cookie: this is a pure bot install, not a user-token grant.
+ *
+ * The caller MUST be authenticated: the post-install landing route
+ * (/app/installed) is gated by the SPA's RequireSession, so an
+ * unauthenticated install would bounce through Discord only to land on
+ * /app/login with the `guild_id` deep-link silently dropped. We enforce
+ * the same session cookie the rest of the web app uses up front and, on
+ * a missing/invalid session, 302 straight to /app/login with a
+ * `returnTo` so the user comes back to the guild picker after signing
+ * in (instead of being sent on a pointless round-trip to Discord).
  */
-export function handleDiscordInstall(_request: Request): Response {
+export async function handleDiscordInstall(
+  request: Request,
+): Promise<Response> {
+  const appOrigin = getAppOrigin();
+
+  // Authenticate via the same signed session cookie the tRPC API and
+  // image routes use. The bot-install flow is admin-only; an
+  // unauthenticated caller must sign in first.
+  const cookies = parseCookies(request.headers.get("Cookie"));
+  const sessionJwt = cookies.get(SESSION_COOKIE);
+  const claims =
+    sessionJwt !== undefined && sessionJwt.length > 0
+      ? await verifySession(sessionJwt)
+      : null;
+
+  if (claims === null) {
+    logger.info(
+      "Bot install requested without a valid session — redirecting to login",
+    );
+    const headers = new Headers();
+    // Return the user to the guild picker, where the install button
+    // lives, once they've signed in. /app/ is a safe same-app path.
+    headers.set(
+      "Location",
+      `${appOrigin}/app/login?returnTo=${encodeURIComponent("/app/")}`,
+    );
+    return new Response(null, { status: 302, headers });
+  }
+
   const params = new URLSearchParams({
     client_id: configuration.applicationId,
     scope: ["bot", "applications.commands"].join(" "),
     permissions: BOT_INSTALL_PERMISSIONS,
-    redirect_uri: `${getAppOrigin()}/app/installed`,
+    redirect_uri: `${appOrigin}/app/installed`,
   });
 
   const headers = new Headers();

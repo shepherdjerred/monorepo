@@ -206,7 +206,7 @@ const server = Bun.serve({
     // signed-in admin, returning to /app/installed with guild_id.
     if (url.pathname === "/api/discord/install") {
       try {
-        return handleDiscordInstall(request);
+        return await handleDiscordInstall(request);
       } catch (error) {
         logger.error("❌ Bot install redirect error:", error);
         Sentry.captureException(error, {
