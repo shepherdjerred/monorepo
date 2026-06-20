@@ -66,18 +66,22 @@ async function writeOutputSchema(path: string): Promise<void> {
   );
 }
 
-async function claudeCommand(
+// `--json-schema` MUST be the inline schema JSON, never a file path: claude
+// wedges (zero output until killed — the root cause of the 30-min SIGTERM
+// hangs) when handed a path, but works when given the schema content inline.
+// The validated object then comes back in the result message's
+// `structured_output` field (see parseAgentPayload). `stream-json --verbose`
+// streams NDJSON so the run is observable line-by-line.
+function claudeCommand(
   input: AlertRemediationChildInput,
   workdir: string,
-): Promise<AlertRemediationCommand> {
+): AlertRemediationCommand {
   const token = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
   if (token === undefined || token === "") {
     throw new Error(
       "CLAUDE_CODE_OAUTH_TOKEN is required for alert remediation",
     );
   }
-  const schemaPath = `${workdir}/alert-remediation-output.schema.json`;
-  await writeOutputSchema(schemaPath);
   const model = input.model ?? DEFAULT_CLAUDE_MODEL;
   return {
     args: [
@@ -85,9 +89,10 @@ async function claudeCommand(
       "-p",
       buildAlertRemediationPrompt(input, workdir),
       "--output-format",
-      "json",
+      "stream-json",
+      "--verbose",
       "--json-schema",
-      schemaPath,
+      JSON.stringify(ALERT_REMEDIATION_OUTPUT_JSON_SCHEMA),
       "--allowed-tools",
       CLAUDE_ALLOWED_TOOLS,
       "--permission-mode",
@@ -146,6 +151,6 @@ export async function buildAlertRemediationCommand(
   workdir: string,
 ): Promise<AlertRemediationCommand> {
   return input.provider === "claude"
-    ? await claudeCommand(input, workdir)
+    ? claudeCommand(input, workdir)
     : await codexCommand(input, workdir);
 }

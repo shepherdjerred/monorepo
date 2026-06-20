@@ -6,8 +6,8 @@ import Hero from "../components/Hero.astro";
 import CTA from "../components/CTA.astro";
 import { changelog, formatChangelogDate, renderChangelogToHtml } from "../data/changelog";
 import {
-  DISCORD_INSTALL_CLICK_EVENT,
-  DISCORD_INVITE_URL,
+  APP_DASHBOARD_URL,
+  GET_STARTED_CLICK_EVENT,
 } from "#src/lib/marketing-constants.ts";
 ---
 
@@ -59,13 +59,13 @@ import {
     <CTA
       variant="indigo"
       title="Ready to get Scout?"
-      description="Add Scout to your Discord server and start tracking your friends' League matches today."
+      description="Sign in, add Scout to your server, and start tracking your friends' League matches from the dashboard today."
       buttons={[
         {
-          text: "Add to Discord",
-          href: DISCORD_INVITE_URL,
+          text: "Get Started",
+          href: APP_DASHBOARD_URL,
           variant: "primary",
-          trackingEvent: DISCORD_INSTALL_CLICK_EVENT,
+          trackingEvent: GET_STARTED_CLICK_EVENT,
           trackingLocation: "whatsnew",
         },
         { text: 'Read the docs', href: '/docs', variant: 'secondary' }

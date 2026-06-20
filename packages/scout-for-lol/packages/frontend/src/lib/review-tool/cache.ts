@@ -109,7 +109,7 @@ function generateCacheKey(
   params: Record<string, unknown>,
 ): string {
   const sortedParams = Object.keys(params)
-    .toSorted()
+    .sort()
     .reduce<Record<string, unknown>>((acc, key) => {
       acc[key] = params[key];
       return acc;
@@ -259,7 +259,7 @@ async function evictOldCacheEntries(
     });
 
     // Sort: expired first, then by oldest timestamp
-    const sortedEntries = entries.toSorted((a, b) => {
+    const sortedEntries = [...entries].sort((a, b) => {
       if (a.expired !== b.expired) {
         return a.expired ? -1 : 1;
       }

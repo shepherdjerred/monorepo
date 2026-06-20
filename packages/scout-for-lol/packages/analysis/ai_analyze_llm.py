@@ -44,26 +44,29 @@ MODEL_CONTEXT_LIMITS = {
     "gpt-5.4-nano": 100_000,
     "gpt-5.4-mini": 200_000,
     "gpt-5.4": 400_000,
+    "gpt-5.5": 400_000,
 }
 
+# Prices are the Standard tier (USD per 1M tokens) from
+# https://platform.openai.com/docs/pricing.
 MODE_CONFIGS = {
     "test": {
         "model": "gpt-5.4-nano",
-        "input_price": 0.05 / 1_000_000,
-        "output_price": 0.40 / 1_000_000,
+        "input_price": 0.20 / 1_000_000,
+        "output_price": 1.25 / 1_000_000,
         "temperature": 0.3,
     },
     "prod": {
-        "model": "gpt-5.4",
-        "input_price": 1.25 / 1_000_000,
-        "output_price": 10.0 / 1_000_000,
+        "model": "gpt-5.5",
+        "input_price": 5.0 / 1_000_000,
+        "output_price": 30.0 / 1_000_000,
         "temperature": 1.0,
     },
 }
 
 # Prices for gpt-5.4-nano (USD per token); adjust with CLI flags if pricing changes.
-INPUT_PRICE_PER_TOKEN = 0.05 / 1_000_000
-OUTPUT_PRICE_PER_TOKEN = 0.40 / 1_000_000
+INPUT_PRICE_PER_TOKEN = 0.20 / 1_000_000
+OUTPUT_PRICE_PER_TOKEN = 1.25 / 1_000_000
 
 # Optional manual overrides for how author IDs should be displayed in output.
 # Example: {"123456789012345678": "Alice"}

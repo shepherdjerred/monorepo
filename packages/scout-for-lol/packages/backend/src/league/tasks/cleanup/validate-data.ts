@@ -333,8 +333,13 @@ The ${competitions.length > 1 ? "channels may" : "channel may"} have been delete
 If you have any questions, feel free to reach out for support.`;
 
         const parsedOwnerId = DiscordAccountIdSchema.parse(ownerId);
-        const success = await sendDM(client, parsedOwnerId, message);
-        if (success) {
+        const status = await sendDM({
+          client,
+          userId: parsedOwnerId,
+          message,
+          kind: "data_validation",
+        });
+        if (status === "sent") {
           logger.info(
             `[DataValidation]   Notified owner ${ownerId} about ${competitions.length.toString()} competition(s)`,
           );

@@ -23,6 +23,7 @@ import {
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data/index.ts";
 import { send, ChannelSendError } from "#src/league/discord/channel.ts";
+import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import {
   shouldCheckPlayer,
   calculatePollingInterval,
@@ -404,7 +405,10 @@ export async function checkMatchHistory(): Promise<void> {
 
   try {
     // Get all tracked player accounts with their polling state
-    const accountsWithState = await getAccountsWithState();
+    const accountsWithState = await getAccountsWithState(
+      prisma,
+      getActiveServerIds(),
+    );
     logger.info(
       `📊 Found ${accountsWithState.length.toString()} total player account(s)`,
     );

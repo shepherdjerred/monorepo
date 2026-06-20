@@ -1,5 +1,5 @@
 import { Counter } from "prom-client";
-import { registry } from "#src/metrics/index.ts";
+import { registry } from "#src/metrics/registry.ts";
 
 export const reportStoreIngestTotal = new Counter({
   name: "report_store_ingest_total",

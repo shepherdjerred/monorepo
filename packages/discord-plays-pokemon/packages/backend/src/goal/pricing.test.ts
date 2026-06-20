@@ -21,16 +21,16 @@ describe("computeCost", () => {
 
   test("bills uncached input tokens at the full input rate", () => {
     const cost = computeCost("gpt-5.4-nano", usage({ inputTokens: 1_000_000 }));
-    expect(cost).toBeCloseTo(0.05, 6);
+    expect(cost).toBeCloseTo(0.2, 6);
   });
 
   test("bills cached input tokens at the cached rate (10% of full)", () => {
-    // 1M input tokens, all cached → $0.005 instead of $0.05.
+    // 1M input tokens, all cached → $0.02 instead of $0.20.
     const cost = computeCost(
       "gpt-5.4-nano",
       usage({ inputTokens: 1_000_000, cachedInputTokens: 1_000_000 }),
     );
-    expect(cost).toBeCloseTo(0.005, 6);
+    expect(cost).toBeCloseTo(0.02, 6);
   });
 
   test("bills output + reasoning tokens at the output rate", () => {
@@ -38,7 +38,7 @@ describe("computeCost", () => {
       "gpt-5.4-nano",
       usage({ outputTokens: 500_000, reasoningOutputTokens: 500_000 }),
     );
-    expect(cost).toBeCloseTo(0.4, 6);
+    expect(cost).toBeCloseTo(1.25, 6);
   });
 
   test("mixed turn ≈ matches hand math for gpt-5.4-nano", () => {
@@ -52,11 +52,11 @@ describe("computeCost", () => {
         reasoningOutputTokens: 500,
       }),
     );
-    // (15_000 * 0.05 + 5_000 * 0.005 + 1_500 * 0.40) / 1e6
-    expect(cost).toBeCloseTo(0.001_375, 6);
+    // (15_000 * 0.20 + 5_000 * 0.02 + 1_500 * 1.25) / 1e6
+    expect(cost).toBeCloseTo(0.004_975, 6);
   });
 
-  test("mini is 5× more expensive than nano for the same workload", () => {
+  test("mini is ~3.7× more expensive than nano for the same workload", () => {
     const fixed = usage({
       inputTokens: 100_000,
       cachedInputTokens: 10_000,
@@ -69,7 +69,7 @@ describe("computeCost", () => {
     if (nano === null || mini === null) {
       throw new Error("unreachable: computeCost returned null for known model");
     }
-    expect(mini / nano).toBeCloseTo(5, 1);
+    expect(mini / nano).toBeCloseTo(3.71, 1);
   });
 });
 

@@ -8,6 +8,11 @@ import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { prisma } from "#src/database/index.ts";
 import type { Client } from "discord.js";
 import { groupBy } from "remeda";
+import {
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
+import { sendDM } from "#src/discord/utils/dm.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("cleanup-prune-players");
@@ -83,8 +88,10 @@ async function notifyServerOwner(
       0,
     );
 
-    await owner.send({
-      content: `🧹 **Automatic Player Cleanup Report**
+    const status = await sendDM({
+      client: discordClient,
+      userId: DiscordAccountIdSchema.parse(owner.id),
+      message: `🧹 **Automatic Player Cleanup Report**
 
 Your server had **${playerDetails.length.toString()} player(s)** and **${totalAccounts.toString()} account(s)** automatically removed from Scout for LoL's database because they were no longer being tracked.
 
@@ -101,11 +108,20 @@ Players are automatically pruned when:
 If you want to track these players again, simply re-subscribe to them using \`/subscription add\`.
 
 *This is an automated cleanup to keep the database efficient.*`,
+      kind: "prune_notice",
+      guildId: DiscordGuildIdSchema.parse(serverId),
+      recipientTag: owner.user.tag,
     });
 
-    logger.info(
-      `[PlayerPruning] ✅ Successfully notified owner of server ${serverId}`,
-    );
+    if (status === "sent") {
+      logger.info(
+        `[PlayerPruning] ✅ Successfully notified owner of server ${serverId}`,
+      );
+    } else {
+      logger.warn(
+        `[PlayerPruning] Owner of server ${serverId} not notified: ${status}`,
+      );
+    }
   } catch (error) {
     logger.warn(
       `[PlayerPruning] Failed to notify owner of server ${serverId}:`,

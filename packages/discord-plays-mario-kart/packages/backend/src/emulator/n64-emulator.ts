@@ -418,16 +418,25 @@ export class N64Emulator {
   }
 
   /** Per-seat "any control held" flags (buttons or analog deflection), for the
-   *  stream HUD's input-echo indicators. */
+   *  stream HUD's input-echo indicators. Runs once per emulated frame on the hot
+   *  loop, so it avoids the per-seat `slice()`/`Object.values()` allocations and
+   *  scans `BUTTON_ORDER` in place instead. */
   seatActivity(): boolean[] {
-    return this.inputs
-      .slice(0, this.opts.seats)
-      .map(
-        (s) =>
-          Object.values(s.buttons).some(Boolean) ||
-          Math.abs(s.analogX) > 0.25 ||
-          Math.abs(s.analogY) > 0.25,
-      );
+    const active: boolean[] = [];
+    for (let i = 0; i < this.opts.seats; i++) {
+      const s = this.inputs[i];
+      let held = Math.abs(s.analogX) > 0.25 || Math.abs(s.analogY) > 0.25;
+      if (!held) {
+        for (const name of BUTTON_ORDER) {
+          if (s.buttons[name]) {
+            held = true;
+            break;
+          }
+        }
+      }
+      active.push(held);
+    }
+    return active;
   }
 
   start(): void {
