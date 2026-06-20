@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Partially Complete (all code shipped in PR #1273; manual e2e + screenshots pending)
 
 > Mirror of the approved harness plan (`~/.claude/plans/ok-i-want-to-refactored-flame.md`). See that file for the full rationale; this is the repo-tracked copy.
 
@@ -50,3 +50,27 @@ The query syntax is expected to grow (joins, expressions, functions), so the lan
 ## Verification
 
 `bun run typecheck`, `bun run lint`, `bun test` (differential + parser), then `bun run --filter='./packages/scout-for-lol' dev:web` for manual checks (highlighting, autocomplete, hover, multi-error squiggles incl. invalid queue, format-aware preview, raw table correctness, `/reports/help`, XSS check on a `</text><script>` alias). PR with screenshots per the PR-media convention.
+
+## Session Log — 2026-06-19
+
+### Done
+
+- **Phase 1** (`7b41da762`): moved report-query enums to `@scout-for-lol/data` (`report-query-spec.ts`) + added `report-query-registry.ts` (friendly names, queue values, examples); backend imports enums from data.
+- **Phase 2** (`ecd718043`): `output.ts` extracts `buildReportChartProps`; adds `renderReportPreview` ({text|chart}); `previewQuery` takes `outputFormat`, returns server-exact `output`; friendly column headers in `formatTable`.
+- **Phase 3** (`09976bbf1`): format-aware preview (text `<pre>` / chart `<img>` data URI), fixed the duplicate-`LABEL`/blank-column table (now `columnLabels`-driven + collapsible), `report-query-docs.tsx`, `/reports/help` route, fixed `ranked_solo`→`solo` example.
+- **Phase 4** (`62db9d5fa`): Chevrotain lexer + hand-written parser + AST/spans + `compileReportQuery`/`parseAndCompile` + `lintReportQuery` + `completeReportQuery` in data; swapped executor + Discord/web validators to `parseAndCompile`; deleted legacy `query-language.ts` after a 33-query differential test proved byte-identical plans.
+- **Phase 5** (`4810761b6` + `ad10bc349`): lazy-loaded Monaco editor with Monarch highlighting + parser-driven completion/hover/diagnostics; Monaco bundled locally via `editor.api` + base worker; `worker-src 'self' blob:` added to scout CSP (homelab).
+- Plan mirrored (`c100ae9a2`). PR: #1273. Verified: `bun run typecheck` (7 packages clean), `bun run test` (green), `vite build` (Monaco in a lazy chunk, same-origin worker, no CDN/blob).
+
+### Remaining
+
+- **Manual e2e + screenshots** via `bun run --filter='./packages/scout-for-lol' dev:web` (needs `op signin`; disconnects beta bot): editor highlighting/autocomplete/hover/squiggles (incl. unknown-queue warning), each output-format preview, fixed data table, `/reports/help`, XSS spot-check (`</text><script>` alias). Attach to PR per the PR-media convention.
+- Buildkite CI on PR #1273.
+- Merge; then `git mv` this plan to `packages/docs/archive/completed/`.
+
+### Caveats
+
+- **`file:` dep copies**: editing `@scout-for-lol/data` requires `bun install` at `packages/scout-for-lol/` to propagate into the backend/app `node_modules` copies (bun materializes `file:` deps, not symlinks) — otherwise typecheck/tests see stale exports.
+- **lefthook prettier**: a failing prettier step is colored green but still aborts the commit; prettier all touched files before committing.
+- **CSP delta is defensive**: same-origin Monaco worker is already allowed by `default-src 'self'`; `worker-src 'self' blob:` is explicit + covers blob-wrapped worker paths. Verify on beta before prod (shared CSP).
+- Queue-value linting is a **warning** (executor accepts any string but unknown queues match nothing); parser stays permissive for executor equivalence.
