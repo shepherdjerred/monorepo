@@ -91,6 +91,11 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
  */
 export const BUILD_TIME_DEPS: string[] = [
   "eslint-config",
+  // Built package (browser+node safe): package.json `main`/`types`/`exports`
+  // resolve to dist/, so consumers (temporal, monarch, scout, discord-plays-*)
+  // can't resolve the module until `bun run build` emits dist/. Must come after
+  // eslint-config (its only build-time dep).
+  "llm-models",
   "astro-opengraph-images",
   "webring",
   "tasknotes-types",
