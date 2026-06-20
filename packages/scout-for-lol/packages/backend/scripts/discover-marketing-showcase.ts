@@ -1,5 +1,5 @@
 import {
-  HeadObjectCommand,
+  GetObjectCommand,
   ListObjectsV2Command,
   type S3Client,
 } from "@aws-sdk/client-s3";
@@ -10,6 +10,10 @@ import {
   ShowcaseManifestSchema,
   type ShowcaseEntry,
 } from "#src/showcase/manifest.ts";
+import {
+  DISCORD_SHOWCASE_TEMPLATES,
+  discordScreenshotEntry,
+} from "#src/showcase/discord-templates.ts";
 
 const CliFlagNameSchema = z.enum([
   "bucket",
@@ -17,6 +21,8 @@ const CliFlagNameSchema = z.enum([
   "prematch-prefix",
   "leaderboard-prefix",
   "out",
+  "prev",
+  "max-head",
 ]);
 
 const CliValuesSchema = z.strictObject({
@@ -25,7 +31,12 @@ const CliValuesSchema = z.strictObject({
   "prematch-prefix": z.string().optional(),
   "leaderboard-prefix": z.string().optional(),
   out: z.string().optional(),
+  prev: z.string().optional(),
+  "max-head": z.string().optional(),
 });
+
+/** Safety cap on metadata reads per prefix if a wanted combo is unexpectedly scarce. */
+const DEFAULT_MAX_HEAD = 800;
 
 function parseCliValues(args: string[]): z.infer<typeof CliValuesSchema> {
   const entries: [string, string][] = [];
@@ -127,13 +138,17 @@ async function objectMetadata(params: {
   bucket: string;
   key: string;
 }): Promise<Map<string, string>> {
+  // SeaweedFS's public S3 ingress 403s HeadObject and ranged GETs, so we
+  // read user metadata from a plain GetObject's response headers and cancel
+  // the body stream before the image payload is transferred.
   const response = await params.client.send(
-    new HeadObjectCommand({
+    new GetObjectCommand({
       Bucket: params.bucket,
       Key: params.key,
     }),
   );
   const metadata = MetadataSchema.parse(response.Metadata ?? {});
+  await response.Body?.transformToWebStream().cancel();
   return new Map(
     Object.entries(metadata).map(([key, value]) => [key.toLowerCase(), value]),
   );
@@ -159,28 +174,49 @@ function prematchDataKey(imageKey: string): string {
   return imageKey.replace(/\/loading-screen\.png$/, "/spectator-data.json");
 }
 
+function comboKey(queue: QueueType, playerCount: number): string {
+  return `${queue}:${playerCount.toString()}`;
+}
+
+/**
+ * Walk the prefix newest-first (date-partitioned keys sort lexicographically),
+ * HeadObject-ing each report to read its queue/tracked-player metadata, and
+ * stop as soon as every wanted `(queue, playerCount)` combo has been seen — or
+ * a head budget is hit. This avoids a full ~16K-object scan: common combos are
+ * found within the newest few hundred objects.
+ */
 async function discoverImageCandidates(params: {
   client: S3Client;
   bucket: string;
   prefix: string;
   imageSuffix: "/report.png" | "/loading-screen.png";
-}): Promise<ImageCandidate[]> {
-  const keys = await listKeys(params);
-  const candidates: ImageCandidate[] = [];
+  wantedCombos: Set<string>;
+  maxHead: number;
+}): Promise<{ candidates: ImageCandidate[]; headCount: number }> {
+  const keys = (await listKeys(params))
+    .filter((candidate) => candidate.endsWith(params.imageSuffix))
+    .toSorted((left, right) => right.localeCompare(left));
 
-  for (const key of keys.filter((candidate) =>
-    candidate.endsWith(params.imageSuffix),
-  )) {
+  const candidates: ImageCandidate[] = [];
+  const remaining = new Set(params.wantedCombos);
+  let headCount = 0;
+
+  for (const key of keys) {
+    if (remaining.size === 0 || headCount >= params.maxHead) {
+      break;
+    }
     const metadata = await objectMetadata({
       client: params.client,
       bucket: params.bucket,
       key,
     });
+    headCount += 1;
     const queueParseResult = QueueTypeSchema.safeParse(queueType(metadata));
     if (!queueParseResult.success) {
       continue;
     }
 
+    const tracked = trackedPlayerCount(metadata);
     candidates.push({
       key,
       dataKey:
@@ -188,23 +224,25 @@ async function discoverImageCandidates(params: {
           ? postmatchDataKey(key)
           : prematchDataKey(key),
       queueType: queueParseResult.data,
-      trackedPlayerCount: trackedPlayerCount(metadata),
+      trackedPlayerCount: tracked,
     });
+    remaining.delete(comboKey(queueParseResult.data, tracked));
   }
 
-  return candidates;
+  return { candidates, headCount };
 }
 
-function findCandidate(params: {
-  candidates: ImageCandidate[];
-  spec: VariantSpec;
-}): ImageCandidate | undefined {
-  return params.candidates
+function findCandidate(
+  candidates: ImageCandidate[],
+  queue: QueueType,
+  playerCount: number,
+): ImageCandidate | undefined {
+  return candidates
     .toSorted((left, right) => right.key.localeCompare(left.key))
     .find(
       (candidate) =>
-        candidate.queueType === params.spec.queue &&
-        candidate.trackedPlayerCount === params.spec.playerCount,
+        candidate.queueType === queue &&
+        candidate.trackedPlayerCount === playerCount,
     );
 }
 
@@ -238,10 +276,25 @@ function s3Entry(params: {
   };
 }
 
+/**
+ * Use a freshly-found entry if available, else fall back to the previous
+ * manifest's entry (preserving an older-but-valid image so required coverage
+ * never regresses), else mark unsupported.
+ */
+function withFallback(
+  id: string,
+  fresh: ShowcaseEntry | undefined,
+  prevById: Map<string, ShowcaseEntry>,
+  unsupported: ShowcaseEntry,
+): ShowcaseEntry {
+  return fresh ?? prevById.get(id) ?? unsupported;
+}
+
 function buildEntries(params: {
   specs: VariantSpec[];
   prematchCandidates: ImageCandidate[];
   postmatchCandidates: ImageCandidate[];
+  prevById: Map<string, ShowcaseEntry>;
 }): ShowcaseEntry[] {
   return params.specs.map((spec) => {
     if (spec.id.includes("ranked-flex-4")) {
@@ -262,15 +315,67 @@ function buildEntries(params: {
       spec.state === "prematch"
         ? params.prematchCandidates
         : params.postmatchCandidates;
-    const candidate = findCandidate({ candidates, spec });
-    if (candidate === undefined) {
-      return unsupportedEntry(
+    const candidate = findCandidate(candidates, spec.queue, spec.playerCount);
+    return withFallback(
+      spec.id,
+      candidate === undefined ? undefined : s3Entry({ spec, candidate }),
+      params.prevById,
+      unsupportedEntry(
         spec,
-        `No real ${spec.queue} ${spec.state} S3 object was found for ${spec.playerCount.toString()} tracked player(s).`,
-      );
-    }
-    return s3Entry({ spec, candidate });
+        `No recent ${spec.queue} ${spec.state} report was found within the head budget for ${spec.playerCount.toString()} tracked player(s).`,
+      ),
+    );
   });
+}
+
+/**
+ * One `discord-screenshot` entry per curated template, sourced from the
+ * most-recent matching postmatch report (fresh, else previous, else
+ * unsupported).
+ */
+function discordEntries(
+  postmatchCandidates: ImageCandidate[],
+  prevById: Map<string, ShowcaseEntry>,
+): ShowcaseEntry[] {
+  return DISCORD_SHOWCASE_TEMPLATES.map((template) => {
+    const candidate = findCandidate(
+      postmatchCandidates,
+      template.queue,
+      template.playerCount,
+    );
+    return withFallback(
+      template.id,
+      candidate === undefined
+        ? undefined
+        : discordScreenshotEntry(template, {
+            imageKey: candidate.key,
+            dataKey: candidate.dataKey,
+          }),
+      prevById,
+      {
+        kind: "unsupported",
+        id: template.id,
+        title: template.title,
+        group: template.group,
+        reason: `No recent ${template.queue} postmatch report was found for the Discord composite.`,
+      },
+    );
+  });
+}
+
+async function loadPrevEntries(
+  path: string | undefined,
+): Promise<Map<string, ShowcaseEntry>> {
+  if (path === undefined || path.length === 0) {
+    return new Map();
+  }
+  const file = Bun.file(path);
+  if (!(await file.exists())) {
+    return new Map();
+  }
+  const parsed: unknown = JSON.parse(await file.text());
+  const manifest = ShowcaseManifestSchema.parse(parsed);
+  return new Map(manifest.entries.map((entry) => [entry.id, entry]));
 }
 
 const SHOWCASE_STATES = ["prematch", "postmatch"] as const;
@@ -391,21 +496,26 @@ function leaderboardSnapshotGroups(keys: string[]): Map<string, string[]> {
   return groups;
 }
 
-function competitionGraphEntry(keys: string[]): ShowcaseEntry {
+function competitionGraphEntry(
+  keys: string[],
+  prevById: Map<string, ShowcaseEntry>,
+): ShowcaseEntry {
   const groups = leaderboardSnapshotGroups(keys);
   const selected = [...groups.values()]
     .filter((group) => group.length > 1)
     .toSorted((left, right) => right.length - left.length)[0];
 
   if (selected === undefined) {
-    return {
-      kind: "unsupported",
-      id: "competition-graph",
-      title: "Competition Graph",
-      group: "Graphs",
-      reason:
-        "No leaderboard snapshot series with at least two points was found.",
-    };
+    return (
+      prevById.get("competition-graph") ?? {
+        kind: "unsupported",
+        id: "competition-graph",
+        title: "Competition Graph",
+        group: "Graphs",
+        reason:
+          "No leaderboard snapshot series with at least two points was found.",
+      }
+    );
   }
 
   return {
@@ -422,19 +532,23 @@ function competitionGraphEntry(keys: string[]): ShowcaseEntry {
 
 function reportGraphEntry(
   postmatchCandidates: ImageCandidate[],
+  prevById: Map<string, ShowcaseEntry>,
 ): ShowcaseEntry {
   const matchKeys = postmatchCandidates
     .map((candidate) => candidate.dataKey)
     .slice(0, 12);
 
   if (matchKeys.length === 0) {
-    return {
-      kind: "unsupported",
-      id: "report-graph",
-      title: "Report Graph",
-      group: "Graphs",
-      reason: "No postmatch match.json keys were found for report graph input.",
-    };
+    return (
+      prevById.get("report-graph") ?? {
+        kind: "unsupported",
+        id: "report-graph",
+        title: "Report Graph",
+        group: "Graphs",
+        reason:
+          "No postmatch match.json keys were found for report graph input.",
+      }
+    );
   }
 
   return {
@@ -455,34 +569,68 @@ const client = createS3Client();
 const postPrefix = values["post-prefix"] ?? "games/";
 const prematchPrefix = values["prematch-prefix"] ?? "prematch/";
 const leaderboardPrefix = values["leaderboard-prefix"] ?? "leaderboards/";
+const maxHead = z.coerce
+  .number()
+  .int()
+  .positive()
+  .catch(DEFAULT_MAX_HEAD)
+  .parse(values["max-head"] ?? DEFAULT_MAX_HEAD);
 
-const [postmatchCandidates, prematchCandidates, leaderboardKeys] =
-  await Promise.all([
-    discoverImageCandidates({
-      client,
-      bucket,
-      prefix: postPrefix,
-      imageSuffix: "/report.png",
-    }),
-    discoverImageCandidates({
-      client,
-      bucket,
-      prefix: prematchPrefix,
-      imageSuffix: "/loading-screen.png",
-    }),
-    listKeys({ client, bucket, prefix: leaderboardPrefix }),
-  ]);
+// Stop scanning once these reliably-frequent combos are seen (single tracked
+// player in Ranked Solo + Flex appear within the newest few dozen reports).
+// Everything else — multi-player parties, Arena, ARAM, rotating modes — is
+// best-effort within the budget and otherwise preserved from the previous
+// manifest, so the scan stays in the newest objects instead of the whole
+// bucket. This is what keeps discover fast (seconds, not minutes).
+const wantedCombos = new Set(
+  variantSpecs()
+    .filter(
+      (spec) =>
+        spec.state === "postmatch" &&
+        spec.playerCount === 1 &&
+        (spec.queue === "solo" || spec.queue === "flex"),
+    )
+    .map((spec) => comboKey(spec.queue, spec.playerCount)),
+);
+
+const prevById = await loadPrevEntries(values.prev);
+
+const [postmatch, prematch, leaderboardKeys] = await Promise.all([
+  discoverImageCandidates({
+    client,
+    bucket,
+    prefix: postPrefix,
+    imageSuffix: "/report.png",
+    wantedCombos,
+    maxHead,
+  }),
+  discoverImageCandidates({
+    client,
+    bucket,
+    prefix: prematchPrefix,
+    imageSuffix: "/loading-screen.png",
+    wantedCombos,
+    maxHead,
+  }),
+  listKeys({ client, bucket, prefix: leaderboardPrefix }),
+]);
+
+process.stderr.write(
+  `Headed ${postmatch.headCount.toString()} postmatch + ${prematch.headCount.toString()} prematch object(s) (budget ${maxHead.toString()}).\n`,
+);
 
 const manifest = ShowcaseManifestSchema.parse({
   version: 1,
   entries: [
     ...buildEntries({
       specs: variantSpecs(),
-      prematchCandidates,
-      postmatchCandidates,
+      prematchCandidates: prematch.candidates,
+      postmatchCandidates: postmatch.candidates,
+      prevById,
     }),
-    competitionGraphEntry(leaderboardKeys),
-    reportGraphEntry(postmatchCandidates),
+    ...discordEntries(postmatch.candidates, prevById),
+    competitionGraphEntry(leaderboardKeys, prevById),
+    reportGraphEntry(postmatch.candidates, prevById),
   ],
 });
 

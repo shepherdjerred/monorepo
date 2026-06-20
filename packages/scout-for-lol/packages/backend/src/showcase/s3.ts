@@ -42,3 +42,26 @@ export async function readS3Json(params: ReadS3ObjectParams): Promise<unknown> {
   const parsed: unknown = JSON.parse(text);
   return parsed;
 }
+
+/** True for an S3 "object not found" error (NoSuchKey / 404). */
+export function isMissingS3Object(error: unknown): boolean {
+  return error instanceof Error && error.name === "NoSuchKey";
+}
+
+/**
+ * Like {@link readS3Json}, but returns `undefined` when the key doesn't exist.
+ * Recent matches can have their report image uploaded before the match.json,
+ * so callers tolerate a missing payload rather than fail the whole gallery.
+ */
+export async function readS3JsonOptional(
+  params: ReadS3ObjectParams,
+): Promise<unknown> {
+  try {
+    return await readS3Json(params);
+  } catch (error) {
+    if (isMissingS3Object(error)) {
+      return undefined;
+    }
+    throw error;
+  }
+}

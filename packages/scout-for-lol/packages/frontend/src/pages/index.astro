@@ -20,15 +20,10 @@ import {
   GET_STARTED_CLICK_EVENT,
 } from "#src/lib/marketing-constants.ts";
 
-const matchImg = "/match.png";
+const matchImg = getGeneratedScoutShowcaseAssetSrc("ranked-solo-1-postmatch");
 
 type GeneratedScoutShowcaseAsset =
   (typeof generatedScoutShowcaseAssets)[number];
-
-const findShowcaseAsset = (
-  id: string,
-): GeneratedScoutShowcaseAsset | undefined =>
-  generatedScoutShowcaseAssets.find((asset) => asset.id === id);
 
 const requireShowcaseAsset = (id: string): GeneratedScoutShowcaseAsset => {
   const src = getGeneratedScoutShowcaseAssetSrc(id);
@@ -43,15 +38,14 @@ const requireShowcaseAsset = (id: string): GeneratedScoutShowcaseAsset => {
   return asset;
 };
 
+// Cover the main queues — Arena (×2), Ranked Flex, Ranked Solo/Duo, ARAM —
+// leading with the "report inside Discord" composites.
 const showcasePreviews = [
   requireShowcaseAsset("arena-discord"),
-  ..."arena-3-postmatch aram-postmatch ranked-solo-1-postmatch"
-    .split(" ")
-    .flatMap((assetId) => {
-      const asset = findShowcaseAsset(assetId);
-
-      return asset ? [asset] : [];
-    }),
+  requireShowcaseAsset("ranked-solo-discord"),
+  requireShowcaseAsset("aram-discord"),
+  requireShowcaseAsset("ranked-flex-1-postmatch"),
+  requireShowcaseAsset("arena-3-postmatch"),
 ];
 
 const initialShowcasePreview = showcasePreviews.at(0);

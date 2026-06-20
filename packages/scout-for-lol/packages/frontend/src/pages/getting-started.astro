@@ -7,13 +7,14 @@ import ProcessStep from "../components/ProcessStep.astro";
 import InfoBox from "../components/InfoBox.astro";
 import CommandBox from "../components/CommandBox.astro";
 import GalleryItem from "../components/GalleryItem.astro";
+import { getGeneratedScoutShowcaseAssetSrc } from "../data/scout-showcase";
 import {
   APP_DASHBOARD_URL,
   GET_STARTED_CLICK_EVENT,
 } from "#src/lib/marketing-constants.ts";
 
-const soloDiscordImg = "/solo-discord.png";
-const leaderboardLpImg = "/leaderboard-lp.png";
+const soloDiscordImg = getGeneratedScoutShowcaseAssetSrc("ranked-solo-discord");
+const leaderboardLpImg = getGeneratedScoutShowcaseAssetSrc("competition-graph");
 ---
 
 <Layout>
@@ -297,7 +298,7 @@ const leaderboardLpImg = "/leaderboard-lp.png";
               <div class="mt-4 mb-4">
                 <img
                   src={leaderboardLpImg}
-                  alt="Example of a Scout competition leaderboard showing LP rankings"
+                  alt="Example of a Scout competition progress chart tracking LP over time"
                   class="w-full h-auto rounded-lg shadow-md ring-1 ring-gray-400/10 dark:ring-gray-600"
                   loading="lazy"
                 />

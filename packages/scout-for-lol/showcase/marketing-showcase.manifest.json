@@ -9,8 +9,8 @@
       "queue": "draft pick",
       "playerCount": 1,
       "kind": "s3-image",
-      "imageKey": "prematch/2026/05/01/7838961918/loading-screen.png",
-      "dataKey": "prematch/2026/05/01/7838961918/spectator-data.json"
+      "imageKey": "prematch/2026/06/18/5584777006/loading-screen.png",
+      "dataKey": "prematch/2026/06/18/5584777006/spectator-data.json"
     },
     {
       "id": "draft-postmatch",
@@ -20,8 +20,8 @@
       "queue": "draft pick",
       "playerCount": 1,
       "kind": "s3-image",
-      "imageKey": "games/2026/05/09/EUW1_7848291077/report.png",
-      "dataKey": "games/2026/05/09/EUW1_7848291077/match.json"
+      "imageKey": "games/2026/06/19/NA1_5584777006/report.png",
+      "dataKey": "games/2026/06/19/NA1_5584777006/match.json"
     },
     {
       "id": "ranked-solo-1-prematch",
@@ -31,8 +31,8 @@
       "queue": "solo",
       "playerCount": 1,
       "kind": "s3-image",
-      "imageKey": "prematch/2026/05/01/3236099094/loading-screen.png",
-      "dataKey": "prematch/2026/05/01/3236099094/spectator-data.json"
+      "imageKey": "prematch/2026/06/19/8265530852/loading-screen.png",
+      "dataKey": "prematch/2026/06/19/8265530852/spectator-data.json"
     },
     {
       "id": "ranked-solo-1-postmatch",
@@ -42,8 +42,8 @@
       "queue": "solo",
       "playerCount": 1,
       "kind": "s3-image",
-      "imageKey": "games/2026/05/05/BR1_3238117495/report.png",
-      "dataKey": "games/2026/05/05/BR1_3238117495/match.json"
+      "imageKey": "games/2026/06/19/SG2_159780129/report.png",
+      "dataKey": "games/2026/06/19/SG2_159780129/match.json"
     },
     {
       "id": "ranked-solo-2-prematch",
@@ -53,8 +53,8 @@
       "queue": "solo",
       "playerCount": 2,
       "kind": "s3-image",
-      "imageKey": "prematch/2026/05/02/7840568137/loading-screen.png",
-      "dataKey": "prematch/2026/05/02/7840568137/spectator-data.json"
+      "imageKey": "prematch/2026/06/09/8252677004/loading-screen.png",
+      "dataKey": "prematch/2026/06/09/8252677004/spectator-data.json"
     },
     {
       "id": "ranked-solo-2-postmatch",
@@ -64,8 +64,8 @@
       "queue": "solo",
       "playerCount": 2,
       "kind": "s3-image",
-      "imageKey": "games/2026/05/05/EUW1_7844076957/report.png",
-      "dataKey": "games/2026/05/05/EUW1_7844076957/match.json"
+      "imageKey": "games/2026/06/09/KR_8252677004/report.png",
+      "dataKey": "games/2026/06/09/KR_8252677004/match.json"
     },
     {
       "id": "ranked-flex-1-prematch",
@@ -75,8 +75,8 @@
       "queue": "flex",
       "playerCount": 1,
       "kind": "s3-image",
-      "imageKey": "prematch/2026/05/01/7838530315/loading-screen.png",
-      "dataKey": "prematch/2026/05/01/7838530315/spectator-data.json"
+      "imageKey": "prematch/2026/06/19/3253854232/loading-screen.png",
+      "dataKey": "prematch/2026/06/19/3253854232/spectator-data.json"
     },
     {
       "id": "ranked-flex-1-postmatch",
@@ -86,8 +86,8 @@
       "queue": "flex",
       "playerCount": 1,
       "kind": "s3-image",
-      "imageKey": "games/2026/05/06/EUW1_7844662430/report.png",
-      "dataKey": "games/2026/05/06/EUW1_7844662430/match.json"
+      "imageKey": "games/2026/06/19/BR1_3253854232/report.png",
+      "dataKey": "games/2026/06/19/BR1_3253854232/match.json"
     },
     {
       "id": "ranked-flex-2-prematch",
@@ -97,8 +97,8 @@
       "queue": "flex",
       "playerCount": 2,
       "kind": "s3-image",
-      "imageKey": "prematch/2026/05/05/7843871591/loading-screen.png",
-      "dataKey": "prematch/2026/05/05/7843871591/spectator-data.json"
+      "imageKey": "prematch/2026/06/18/7891648956/loading-screen.png",
+      "dataKey": "prematch/2026/06/18/7891648956/spectator-data.json"
     },
     {
       "id": "ranked-flex-2-postmatch",
@@ -108,8 +108,8 @@
       "queue": "flex",
       "playerCount": 2,
       "kind": "s3-image",
-      "imageKey": "games/2026/05/16/EUW1_7856317368/report.png",
-      "dataKey": "games/2026/05/16/EUW1_7856317368/match.json"
+      "imageKey": "games/2026/06/18/EUW1_7891648956/report.png",
+      "dataKey": "games/2026/06/18/EUW1_7891648956/match.json"
     },
     {
       "id": "ranked-flex-3-prematch",
@@ -130,8 +130,8 @@
       "queue": "flex",
       "playerCount": 3,
       "kind": "s3-image",
-      "imageKey": "games/2026/05/10/EUW1_7848919840/report.png",
-      "dataKey": "games/2026/05/10/EUW1_7848919840/match.json"
+      "imageKey": "games/2026/05/26/EUW1_7867077494/report.png",
+      "dataKey": "games/2026/05/26/EUW1_7867077494/match.json"
     },
     {
       "id": "ranked-flex-4-prematch",
@@ -175,70 +175,25 @@
     },
     {
       "id": "arena-3-prematch",
-      "title": "Arena Pre-Match, Teams of 3",
+      "title": "Arena Pre-Match",
       "group": "Arena",
       "state": "prematch",
       "queue": "arena",
       "playerCount": 3,
-      "kind": "unsupported",
-      "reason": "No real arena prematch S3 object was found for 3 tracked player(s)."
+      "kind": "s3-image",
+      "imageKey": "prematch/2026/06/11/8255087092/loading-screen.png",
+      "dataKey": "prematch/2026/06/11/8255087092/spectator-data.json"
     },
     {
       "id": "arena-3-postmatch",
-      "title": "Arena Post-Match, Teams of 3",
+      "title": "Arena Post-Match",
       "group": "Arena",
       "state": "postmatch",
       "queue": "arena",
       "playerCount": 3,
       "kind": "s3-image",
-      "imageKey": "games/2026/05/07/EUW1_7845790456/report.png",
-      "dataKey": "games/2026/05/07/EUW1_7845790456/match.json"
-    },
-    {
-      "id": "arena-discord",
-      "title": "Arena Discord Screenshot",
-      "group": "Arena",
-      "description": "Discord message preview for a generated Arena post-match report.",
-      "state": "postmatch",
-      "queue": "arena",
-      "playerCount": 3,
-      "kind": "discord-screenshot",
-      "imageKey": "games/2026/05/07/EUW1_7845790456/report.png",
-      "dataKey": "games/2026/05/07/EUW1_7845790456/match.json",
-      "timestamp": "5:23 AM",
-      "appName": "Scout for LoL",
-      "appNameColor": "#ff5a1f",
-      "botMessage": "posted an Arena recap",
-      "botAvatarText": "S",
-      "botAvatarColor": "#1f2937",
-      "embedImageWidth": 940,
-      "chatMessagesBeforeEmbed": [
-        {
-          "timestamp": "5:22 AM",
-          "author": "rangedtop",
-          "authorColor": "#23a559",
-          "avatarText": "R",
-          "avatarColor": "#23a559",
-          "content": "drop the arena recap"
-        }
-      ],
-      "chatMessagesAfterEmbed": [
-        {
-          "timestamp": "5:24 AM",
-          "author": "Jerred",
-          "authorColor": "#ffd400",
-          "avatarText": "J",
-          "avatarColor": "#475569",
-          "content": "we take those"
-        },
-        {
-          "author": "Jerred",
-          "authorColor": "#ffd400",
-          "avatarText": "J",
-          "avatarColor": "#475569",
-          "content": "damage chart checks out"
-        }
-      ]
+      "imageKey": "games/2026/06/11/KR_8255087092/report.png",
+      "dataKey": "games/2026/06/11/KR_8255087092/match.json"
     },
     {
       "id": "aram-prematch",
@@ -248,8 +203,8 @@
       "queue": "aram",
       "playerCount": 1,
       "kind": "s3-image",
-      "imageKey": "prematch/2026/05/14/3241274591/loading-screen.png",
-      "dataKey": "prematch/2026/05/14/3241274591/spectator-data.json"
+      "imageKey": "prematch/2026/05/30/3247144652/loading-screen.png",
+      "dataKey": "prematch/2026/05/30/3247144652/spectator-data.json"
     },
     {
       "id": "aram-postmatch",
@@ -259,8 +214,8 @@
       "queue": "aram",
       "playerCount": 1,
       "kind": "s3-image",
-      "imageKey": "games/2026/05/14/BR1_3241274591/report.png",
-      "dataKey": "games/2026/05/14/BR1_3241274591/match.json"
+      "imageKey": "games/2026/05/30/BR1_3247144652/report.png",
+      "dataKey": "games/2026/05/30/BR1_3247144652/match.json"
     },
     {
       "id": "aram-mayhem-prematch",
@@ -270,8 +225,8 @@
       "queue": "aram mayhem",
       "playerCount": 1,
       "kind": "s3-image",
-      "imageKey": "prematch/2026/05/01/150231326/loading-screen.png",
-      "dataKey": "prematch/2026/05/01/150231326/spectator-data.json"
+      "imageKey": "prematch/2026/06/19/7892744393/loading-screen.png",
+      "dataKey": "prematch/2026/06/19/7892744393/spectator-data.json"
     },
     {
       "id": "aram-mayhem-postmatch",
@@ -284,22 +239,160 @@
       "reason": "No real aram mayhem postmatch S3 object was found for 1 tracked player(s)."
     },
     {
+      "id": "arena-discord",
+      "title": "Arena Discord Screenshot",
+      "group": "Arena",
+      "description": "Discord message preview for a generated Arena post-match report.",
+      "state": "postmatch",
+      "queue": "arena",
+      "playerCount": 3,
+      "kind": "discord-screenshot",
+      "imageKey": "games/2026/06/11/KR_8255087092/report.png",
+      "dataKey": "games/2026/06/11/KR_8255087092/match.json",
+      "timestamp": "5:23 AM",
+      "appName": "Scout for LoL",
+      "appNameColor": "#ff5a1f",
+      "botMessage": "posted an Arena recap",
+      "botAvatarText": "S",
+      "botAvatarColor": "#1f2937",
+      "embedImageWidth": 940,
+      "chatMessagesBeforeEmbed": [
+        {
+          "author": "rangedtop",
+          "content": "drop the arena recap",
+          "timestamp": "5:22 AM",
+          "authorColor": "#23a559",
+          "avatarText": "R",
+          "avatarColor": "#23a559"
+        }
+      ],
+      "chatMessagesAfterEmbed": [
+        {
+          "author": "Jerred",
+          "content": "we take those",
+          "timestamp": "5:24 AM",
+          "authorColor": "#ffd400",
+          "avatarText": "J",
+          "avatarColor": "#475569"
+        },
+        {
+          "author": "Jerred",
+          "content": "damage chart checks out",
+          "authorColor": "#ffd400",
+          "avatarText": "J",
+          "avatarColor": "#475569"
+        }
+      ]
+    },
+    {
+      "id": "ranked-solo-discord",
+      "title": "Ranked Solo/Duo Discord Screenshot",
+      "group": "Ranked Solo",
+      "description": "Discord message preview for a generated Ranked Solo/Duo post-match report.",
+      "state": "postmatch",
+      "queue": "solo",
+      "playerCount": 1,
+      "kind": "discord-screenshot",
+      "imageKey": "games/2026/06/19/SG2_159780129/report.png",
+      "dataKey": "games/2026/06/19/SG2_159780129/match.json",
+      "timestamp": "11:48 PM",
+      "appName": "Scout for LoL",
+      "appNameColor": "#ff5a1f",
+      "botMessage": "posted a Ranked recap",
+      "botAvatarText": "S",
+      "botAvatarColor": "#1f2937",
+      "embedImageWidth": 940,
+      "chatMessagesBeforeEmbed": [
+        {
+          "author": "tankmommy",
+          "content": "how'd promos go",
+          "timestamp": "11:47 PM",
+          "authorColor": "#5865f2",
+          "avatarText": "T",
+          "avatarColor": "#5865f2"
+        }
+      ],
+      "chatMessagesAfterEmbed": [
+        {
+          "author": "Jerred",
+          "content": "ranked up 📈",
+          "timestamp": "11:49 PM",
+          "authorColor": "#ffd400",
+          "avatarText": "J",
+          "avatarColor": "#475569"
+        },
+        {
+          "author": "Jerred",
+          "content": "the scoreboard doesn't lie",
+          "authorColor": "#ffd400",
+          "avatarText": "J",
+          "avatarColor": "#475569"
+        }
+      ]
+    },
+    {
+      "id": "aram-discord",
+      "title": "ARAM Discord Screenshot",
+      "group": "ARAM",
+      "description": "Discord message preview for a generated ARAM post-match report.",
+      "state": "postmatch",
+      "queue": "aram",
+      "playerCount": 1,
+      "kind": "discord-screenshot",
+      "imageKey": "games/2026/05/30/BR1_3247144652/report.png",
+      "dataKey": "games/2026/05/30/BR1_3247144652/match.json",
+      "timestamp": "9:02 PM",
+      "appName": "Scout for LoL",
+      "appNameColor": "#ff5a1f",
+      "botMessage": "posted an ARAM recap",
+      "botAvatarText": "S",
+      "botAvatarColor": "#1f2937",
+      "embedImageWidth": 940,
+      "chatMessagesBeforeEmbed": [
+        {
+          "author": "poromancer",
+          "content": "aram or feed",
+          "timestamp": "9:01 PM",
+          "authorColor": "#eb459e",
+          "avatarText": "P",
+          "avatarColor": "#eb459e"
+        }
+      ],
+      "chatMessagesAfterEmbed": [
+        {
+          "author": "Jerred",
+          "content": "aram diff",
+          "timestamp": "9:03 PM",
+          "authorColor": "#ffd400",
+          "avatarText": "J",
+          "avatarColor": "#475569"
+        },
+        {
+          "author": "Jerred",
+          "content": "poke comp went brr",
+          "authorColor": "#ffd400",
+          "avatarText": "J",
+          "avatarColor": "#475569"
+        }
+      ]
+    },
+    {
       "id": "competition-graph",
       "title": "Competition Progress",
       "group": "Graphs",
       "description": "Real leaderboard snapshots rendered as a marketing chart.",
       "kind": "competition-graph",
       "snapshotKeys": [
-        "leaderboards/competition-9/snapshots/2026-05-11.json",
-        "leaderboards/competition-9/snapshots/2026-05-12.json",
-        "leaderboards/competition-9/snapshots/2026-05-16.json",
         "leaderboards/competition-9/snapshots/2026-05-17.json",
         "leaderboards/competition-9/snapshots/2026-05-18.json",
         "leaderboards/competition-9/snapshots/2026-05-19.json",
         "leaderboards/competition-9/snapshots/2026-05-20.json",
         "leaderboards/competition-9/snapshots/2026-05-21.json",
         "leaderboards/competition-9/snapshots/2026-05-22.json",
-        "leaderboards/competition-9/snapshots/2026-05-23.json"
+        "leaderboards/competition-9/snapshots/2026-05-23.json",
+        "leaderboards/competition-9/snapshots/2026-05-24.json",
+        "leaderboards/competition-9/snapshots/2026-05-25.json",
+        "leaderboards/competition-9/snapshots/2026-05-26.json"
       ],
       "chartType": "line",
       "yAxisLabel": "Score"
@@ -311,18 +404,18 @@
       "description": "Real match payloads aggregated into a scheduled-report chart.",
       "kind": "report-graph",
       "matchKeys": [
-        "games/2026/05/05/BR1_3238117495/match.json",
-        "games/2026/05/05/EUW1_7844076957/match.json",
-        "games/2026/05/05/EUW1_7844082996/match.json",
-        "games/2026/05/05/NA1_5554308050/match.json",
-        "games/2026/05/05/NA1_5554393951/match.json",
-        "games/2026/05/06/BR1_3238272017/match.json",
-        "games/2026/05/06/BR1_3238339892/match.json",
-        "games/2026/05/06/BR1_3238385665/match.json",
-        "games/2026/05/06/BR1_3238401169/match.json",
-        "games/2026/05/06/EUW1_7844238363/match.json",
-        "games/2026/05/06/EUW1_7844249421/match.json",
-        "games/2026/05/06/EUW1_7844291702/match.json"
+        "games/2026/06/19/SG2_159780129/match.json",
+        "games/2026/06/19/NA1_5585136555/match.json",
+        "games/2026/06/19/NA1_5585117341/match.json",
+        "games/2026/06/19/NA1_5584777006/match.json",
+        "games/2026/06/19/KR_8265530852/match.json",
+        "games/2026/06/19/KR_8265455467/match.json",
+        "games/2026/06/19/KR_8265419481/match.json",
+        "games/2026/06/19/KR_8265390134/match.json",
+        "games/2026/06/19/KR_8265351671/match.json",
+        "games/2026/06/19/KR_8265281667/match.json",
+        "games/2026/06/19/KR_8265247249/match.json",
+        "games/2026/06/19/KR_8265205349/match.json"
       ],
       "metric": "damage_to_champions",
       "yAxisLabel": "Damage to Champions"
