@@ -102,6 +102,12 @@ export const streamFrameWriteMs = new Histogram({
   registers: [registry],
 });
 
+export const streamFramesDroppedTotal = new Counter({
+  name: "stream_frames_dropped_total",
+  help: "Frames dropped before the ffmpeg pipe because the input queue exceeded its latency budget (encode/send path below realtime); keeps end-to-end lag bounded",
+  registers: [registry],
+});
+
 // ---- ffmpeg encode health (from the discord-video-stream StreamObserver) ----
 
 export const streamFfmpegSpeedRatio = new Gauge({
