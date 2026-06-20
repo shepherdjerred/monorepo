@@ -390,12 +390,14 @@ export class GoalManager {
     active.lastProgressSentAt = now;
     active.state.lastProgress = trimmed;
     await this.persistState(active.state);
+    // Mid-session updates are audience-facing narration for the livestream, not
+    // a reply to the requester — post the message verbatim with no mention/prefix
+    // so it reads naturally to viewers. (sanitizeDiscordText still defangs any @
+    // the model emits; allowedUserIds is empty so nobody is pinged.)
     await this.sendMessage({
       channelId: active.state.channelId,
-      content: truncateForDiscord(
-        `<@${active.state.requestedBy}> goal update: ${sanitizeDiscordText(trimmed)}`,
-      ),
-      allowedUserIds: [active.state.requestedBy],
+      content: truncateForDiscord(sanitizeDiscordText(trimmed)),
+      allowedUserIds: [],
     });
     return true;
   }
