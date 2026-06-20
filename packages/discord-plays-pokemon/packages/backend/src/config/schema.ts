@@ -10,6 +10,10 @@ const GoalConfigSchema = z
     runtime_directory: z.string().min(1).default("."),
     screenshot_dir: z.string().min(1).default("goal-screenshots"),
     state_path: z.string().min(1).default("goal-state.json"),
+    // Per-guild persistent memory (MEMORY.md + sessions/) lives here. The driver
+    // overrides this to saves/<guildId>/goal-memory at runtime, same as
+    // state_path/screenshot_dir, so memory survives restarts on the saves PVC.
+    memory_dir: z.string().min(1).default("goal-memory"),
     control_host: z.string().min(1).default("127.0.0.1"),
     control_port: z.number().int().min(1024).max(49_151).default(8082),
     max_runtime_minutes: z.number().int().positive().max(30).default(30),
@@ -28,6 +32,7 @@ const GoalConfigSchema = z
     runtime_directory: ".",
     screenshot_dir: "goal-screenshots",
     state_path: "goal-state.json",
+    memory_dir: "goal-memory",
     control_host: "127.0.0.1",
     control_port: 8082,
     max_runtime_minutes: 30,

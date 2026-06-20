@@ -14,6 +14,10 @@ export type PromptContext = {
   // Pre-formatted recent goals via formatHistoryForPrompt (T5). Pass empty
   // string for the "no history" placeholder.
   recentGoalsSummary: string;
+  // Curated MEMORY.md for this save (GoalMemory.readMemory). Empty string when
+  // nothing has been written yet — buildPrompt renders a placeholder + a nudge
+  // to start recording lessons.
+  memory: string;
 };
 
 export type BuildCodexArgsInput = {
@@ -218,6 +222,12 @@ export function buildPrompt(goal: string, context: PromptContext): string {
     "- pokemonctl wait --seconds n — let the emulator advance without input (animations, scripted scenes, battle text).",
     '- pokemonctl progress "I am now trying to do X to achieve Y" — reports visible progress to Discord. Send whenever your immediate plan changes.',
     "- pokemonctl status — current frame + active goal metadata.",
+    "- pokemonctl memory show — reprint the persistent MEMORY.md (already included below; use after you edit it).",
+    '- pokemonctl memory write "<markdown>" — REPLACE MEMORY.md with a curated, improved version. Do this near the end of the session (see END-OF-SESSION MEMORY below).',
+    '- pokemonctl session write "<markdown>" — save THIS session\'s log: what you did, what was hard or slow, and what you learned / would do differently. One quoted argument; newlines are fine.',
+    "- pokemonctl session list [--limit n] — list past session logs (newest first), with their ids.",
+    '- pokemonctl session search "<query>" [--limit n] — full-text search past session logs.',
+    "- pokemonctl session read <id> — print a past session log in full (ids come from list/search).",
     "",
     // ─────────────────────────────────────────────────────────────────────
     // 14. Operational guidance + recap
@@ -228,12 +238,37 @@ export function buildPrompt(goal: string, context: PromptContext): string {
     "- BEFORE deciding the next direction, check `Location:` and `Standing on:` in state. If state says you're on a warp-arrow tile, you can use the staircase by pressing in the direction of the arrow.",
     "- If you've taken 3+ screenshots without progress, run `pokemonctl state` for spatial context, then change strategy — don't keep mashing A.",
     "",
+    // ─────────────────────────────────────────────────────────────────────
+    // 15. Persistent memory discipline
+    // ─────────────────────────────────────────────────────────────────────
+    "END-OF-SESSION MEMORY (do this before your final answer — it is part of the job)",
+    "You have a persistent memory for this save that carries across goal sessions. Two parts:",
+    "- PERSISTENT MEMORY below = a single curated MEMORY.md, injected into every future goal prompt. It is the highest-leverage thing you can leave for your future self.",
+    "- Per-session logs = an append-only journal of past sessions, searchable with `pokemonctl session list/search/read`. Mine them when a goal resembles past work.",
+    "Before you finish, ALWAYS:",
+    '1. `pokemonctl session write "<markdown>"` — log THIS session: what you did, what was hard or slow (and why), and what you learned or would do differently next time. Be concrete and honest; this is how you get better.',
+    '2. `pokemonctl memory write "<markdown>"` — rewrite MEMORY.md into an improved, curated version: fold in any durable lesson worth keeping (map routes, gym strategies, recurring pitfalls and their fixes, where you saved). REWRITE it cleanly — do not just append. Keep it concise and high-signal; preserve still-useful lessons and drop stale or one-off notes. If you genuinely learned nothing new, leave MEMORY.md as-is.',
+    "Consult past logs EARLY too: if MEMORY.md or the goal hints this has been attempted, `pokemonctl session search` before re-deriving the same route.",
+    "",
     "Current game state (read at goal start; re-read with `pokemonctl state`):",
     context.gameStateSummary,
     "",
     "Recent completed goals (full list available via `pokemonctl history --limit 10`):",
     context.recentGoalsSummary,
     "",
-    "Continue until the goal is met or you can no longer make useful progress. Your final answer must summarize what you achieved, what remains, and the latest game state you observed.",
+    "PERSISTENT MEMORY (curated lessons from prior goal sessions for THIS save; update it before you finish via `pokemonctl memory write`):",
+    formatMemoryForPrompt(context.memory),
+    "",
+    "Continue until the goal is met or you can no longer make useful progress. Before your final answer, write your session log and update MEMORY.md (see END-OF-SESSION MEMORY). Your final answer must summarize what you achieved, what remains, and the latest game state you observed.",
   ].join("\n");
+}
+
+// Renders MEMORY.md for the prompt, substituting a nudge when nothing has been
+// saved for this save yet so an early session knows the surface exists.
+export function formatMemoryForPrompt(memory: string): string {
+  const trimmed = memory.trim();
+  if (trimmed.length === 0) {
+    return "(no saved memory yet for this save — once you make progress, record durable lessons with `pokemonctl memory write`)";
+  }
+  return trimmed;
 }

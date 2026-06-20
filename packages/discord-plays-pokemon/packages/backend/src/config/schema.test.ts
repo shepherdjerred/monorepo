@@ -83,6 +83,7 @@ describe("ConfigSchema goal config", () => {
       runtime_directory: ".",
       screenshot_dir: "goal-screenshots",
       state_path: "goal-state.json",
+      memory_dir: "goal-memory",
       control_host: "127.0.0.1",
       control_port: 8082,
       max_runtime_minutes: 30,

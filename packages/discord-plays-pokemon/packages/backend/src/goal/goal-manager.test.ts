@@ -26,6 +26,7 @@ function makeGoalConfig(runtimeDirectory: string): Config["game"]["goal"] {
     runtime_directory: runtimeDirectory,
     screenshot_dir: "screenshots",
     state_path: "goal-state.json",
+    memory_dir: "goal-memory",
     control_host: "127.0.0.1",
     control_port: 8082,
     max_runtime_minutes: 30,
@@ -547,5 +548,29 @@ describe("GoalManager history", () => {
     expect(manager.getHistory(0)).toEqual([]);
     expect(manager.getHistory(-5)).toEqual([]);
     await manager.shutdown();
+  });
+
+  test("exposes a per-guild GoalMemory rooted under the runtime directory", async () => {
+    const runtimeDirectory = await createRuntimeDirectory();
+    const manager = new GoalManager({
+      config: makeGoalConfig(runtimeDirectory),
+      controlToken: "token",
+      spawner: () => makeProcess(),
+      sendMessage: noopSendMessage,
+    });
+
+    expect(await manager.memory.readMemory()).toBe("");
+    await manager.memory.writeMemory(
+      "Roxanne uses Rock types — bring a Grass/Water mon.",
+    );
+    expect(await manager.memory.readMemory()).toContain(
+      "bring a Grass/Water mon",
+    );
+    // memory_dir resolves relative to runtime_directory, like state_path.
+    expect(
+      await Bun.file(
+        path.join(runtimeDirectory, "goal-memory", "MEMORY.md"),
+      ).exists(),
+    ).toBe(true);
   });
 });

@@ -151,6 +151,7 @@ function makeGoalConfig(runtimeDirectory: string): Config["game"]["goal"] {
     runtime_directory: runtimeDirectory,
     screenshot_dir: "screenshots",
     state_path: "goal-state.json",
+    memory_dir: "goal-memory",
     control_host: "127.0.0.1",
     control_port: 8082,
     max_runtime_minutes: 1,

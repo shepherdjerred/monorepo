@@ -18,6 +18,13 @@ import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 import { formatGameStateForPrompt } from "./game-state-summary.ts";
 import { formatHistoryForPrompt } from "./history-summary.ts";
 import type { GoalManager } from "./goal-manager.ts";
+import {
+  buildSessionLogMeta,
+  SESSION_LIST_DEFAULT,
+  SESSION_LIST_MAX,
+  type SessionLogSearchHit,
+  type SessionLogSummary,
+} from "./goal-memory.ts";
 
 type GoalControlServerOptions = {
   emulator: Emulator;
@@ -44,6 +51,30 @@ const ChordRequestSchema = z.strictObject({
 
 const ProgressRequestSchema = z.strictObject({
   message: z.string().min(1).max(1000),
+});
+
+// Content cap is deliberately above GoalMemory's own char cap so its clearer
+// "too long (N chars; keep it under M)" error reaches the agent instead of a
+// generic schema rejection.
+const MemoryWriteSchema = z.strictObject({
+  content: z.string().min(1).max(64_000),
+});
+
+const SessionWriteSchema = z.strictObject({
+  content: z.string().min(1).max(64_000),
+});
+
+const SessionListQuerySchema = z.strictObject({
+  limit: z.coerce.number().int().min(1).max(SESSION_LIST_MAX).optional(),
+});
+
+const SessionSearchQuerySchema = z.strictObject({
+  q: z.string().min(1),
+  limit: z.coerce.number().int().min(1).max(SESSION_LIST_MAX).optional(),
+});
+
+const SessionReadQuerySchema = z.strictObject({
+  id: z.string().min(1),
 });
 
 function timingFromConfig(config: Config): CommandTiming {
@@ -124,6 +155,121 @@ function textResponse(body: string): Response {
     status: 200,
     headers: { "content-type": "text/plain; charset=utf-8" },
   });
+}
+
+function queryParams(request: Request): Record<string, string> {
+  return Object.fromEntries(new URL(request.url).searchParams.entries());
+}
+
+// ── Persistent-memory routes (`pokemonctl memory` / `pokemonctl session`). ────
+
+async function memoryShowResponse(
+  context: GoalControlContext,
+): Promise<Response> {
+  const memory = await context.goalManager.memory.readMemory();
+  return textResponse(
+    memory.length > 0
+      ? memory
+      : "(no saved memory yet — write it with `pokemonctl memory write`)",
+  );
+}
+
+async function memoryWriteResponse(
+  context: GoalControlContext,
+  request: Request,
+): Promise<Response> {
+  const parsed = MemoryWriteSchema.parse(await parseJsonBody(request));
+  const result = await context.goalManager.memory.writeMemory(parsed.content);
+  return jsonResponse({ ok: true, path: result.path, chars: result.chars });
+}
+
+async function sessionListResponse(
+  context: GoalControlContext,
+  request: Request,
+): Promise<Response> {
+  const parsed = SessionListQuerySchema.safeParse(queryParams(request));
+  if (!parsed.success) {
+    return jsonResponse(
+      {
+        error: `limit must be an integer between 1 and ${String(SESSION_LIST_MAX)}`,
+      },
+      400,
+    );
+  }
+  const limit = parsed.data.limit ?? SESSION_LIST_DEFAULT;
+  const logs = await context.goalManager.memory.listSessionLogs(limit);
+  return textResponse(formatSessionList(logs));
+}
+
+async function sessionSearchResponse(
+  context: GoalControlContext,
+  request: Request,
+): Promise<Response> {
+  const parsed = SessionSearchQuerySchema.safeParse(queryParams(request));
+  if (!parsed.success) {
+    return jsonResponse(
+      { error: "search requires a non-empty q parameter" },
+      400,
+    );
+  }
+  const limit = parsed.data.limit ?? SESSION_LIST_DEFAULT;
+  const hits = await context.goalManager.memory.searchSessionLogs(
+    parsed.data.q,
+    limit,
+  );
+  return textResponse(formatSessionSearch(hits, parsed.data.q));
+}
+
+async function sessionReadResponse(
+  context: GoalControlContext,
+  request: Request,
+): Promise<Response> {
+  const parsed = SessionReadQuerySchema.safeParse(queryParams(request));
+  if (!parsed.success) {
+    return jsonResponse({ error: "read requires an id parameter" }, 400);
+  }
+  const log = await context.goalManager.memory.readSessionLog(parsed.data.id);
+  return textResponse(log);
+}
+
+async function sessionWriteResponse(
+  context: GoalControlContext,
+  request: Request,
+): Promise<Response> {
+  const parsed = SessionWriteSchema.parse(await parseJsonBody(request));
+  const state = context.goalManager.getStatus();
+  if (state === undefined) {
+    return jsonResponse({ error: "no active goal to write a log for" }, 409);
+  }
+  const result = await context.goalManager.memory.writeSessionLog(
+    buildSessionLogMeta(state),
+    parsed.content,
+  );
+  return jsonResponse({ ok: true, path: result.path, id: result.id });
+}
+
+function formatSessionList(logs: readonly SessionLogSummary[]): string {
+  if (logs.length === 0) {
+    return "No session logs yet for this save.";
+  }
+  return logs.map((log) => formatSessionSummary(log)).join("\n");
+}
+
+function formatSessionSearch(
+  hits: readonly SessionLogSearchHit[],
+  query: string,
+): string {
+  if (hits.length === 0) {
+    return `No session logs match "${query}".`;
+  }
+  return hits
+    .map((hit) => `${formatSessionSummary(hit)}\n      …${hit.snippet}`)
+    .join("\n");
+}
+
+function formatSessionSummary(log: SessionLogSummary): string {
+  const when = log.startedAt === undefined ? "" : ` (started ${log.startedAt})`;
+  return `[${log.id}]${when} ${log.goal}`;
 }
 
 async function screenshotResponse(
@@ -230,6 +376,18 @@ async function routeRequest(
       return await chordResponse(context, request);
     case "POST /progress":
       return await progressResponse(context, request);
+    case "GET /memory":
+      return await memoryShowResponse(context);
+    case "POST /memory":
+      return await memoryWriteResponse(context, request);
+    case "GET /sessions":
+      return await sessionListResponse(context, request);
+    case "GET /sessions/search":
+      return await sessionSearchResponse(context, request);
+    case "GET /sessions/read":
+      return await sessionReadResponse(context, request);
+    case "POST /sessions":
+      return await sessionWriteResponse(context, request);
     default:
       return jsonResponse({ error: "not found" }, 404);
   }

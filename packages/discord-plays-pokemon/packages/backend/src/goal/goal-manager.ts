@@ -24,6 +24,7 @@ import {
   type CompletedGoal,
 } from "./goal-history.ts";
 import type { GoalState } from "./goal-types.ts";
+import { GoalMemory } from "./goal-memory.ts";
 
 // Validates the envelope written by persistState() so history is safely
 // deserialized on restart even if the file has an unexpected shape.
@@ -139,6 +140,11 @@ export class GoalManager {
   private readonly now: () => Date;
   private readonly snapshotProvider: () => GameSnapshot | null;
   private readonly spatialSnapshotProvider: () => SpatialSnapshot | null;
+  // Per-guild persistent memory: the curated MEMORY.md fed into every prompt and
+  // the per-session reflection logs. Backed by config.memory_dir (the driver
+  // points it under saves/<guildId>/). Exposed to the control server for the
+  // `pokemonctl memory` / `pokemonctl session` subcommands.
+  readonly memory: GoalMemory;
   // Newest first. Persisted via persistState() so it survives restarts.
   private history: CompletedGoal[] = [];
   // Goal IDs we've already snapshot into history. Guards against double-record
@@ -155,6 +161,10 @@ export class GoalManager {
     this.snapshotProvider = options.snapshotProvider ?? (() => null);
     this.spatialSnapshotProvider =
       options.spatialSnapshotProvider ?? (() => null);
+    this.memory = new GoalMemory(
+      this.resolveRuntimePath(this.config.memory_dir),
+      this.now,
+    );
   }
 
   /**
@@ -297,6 +307,9 @@ export class GoalManager {
     const promptContext = {
       gameStateSummary,
       recentGoalsSummary: formatHistoryForPrompt(this.getHistory(3)),
+      // Curated long-term memory for THIS save, injected verbatim. Empty until
+      // a session writes it; buildPrompt renders the placeholder in that case.
+      memory: await this.memory.readMemory(),
     };
     const args = buildCodexArgs({
       config: {
