@@ -7,7 +7,13 @@ import {
 } from "#src/lib/marketing-constants.ts";
 
 interface Props {
-  activePage?: "home" | "getting-started" | "docs" | "support" | "whatsnew";
+  activePage?:
+    | "home"
+    | "getting-started"
+    | "docs"
+    | "commands"
+    | "support"
+    | "whatsnew";
 }
 
 const { activePage } = Astro.props;
@@ -16,6 +22,7 @@ const navItems = [
   { href: "/", label: "Home" },
   { href: "/getting-started", label: "Getting Started" },
   { href: "/docs", label: "Documentation" },
+  { href: "/commands", label: "Commands" },
   { href: "/whatsnew", label: "What's New" },
   { href: "/support", label: "Support" },
   {
@@ -33,6 +40,7 @@ const mobileNavItems = [
     currentPage: "getting-started",
   },
   { href: "/docs", label: "Documentation", currentPage: "docs" },
+  { href: "/commands", label: "Commands", currentPage: "commands" },
   { href: "/whatsnew", label: "What's New", currentPage: "whatsnew" },
   { href: "/support", label: "Support", currentPage: "support" },
   {
