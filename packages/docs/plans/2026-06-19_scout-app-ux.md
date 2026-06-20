@@ -61,3 +61,32 @@ The Scout-for-LoL **web app** (`packages/scout-for-lol/packages/app/`, a Vite + 
 - **Inline account Delete** is keyed by the cached Riot ID (`gameName#tagLine`); it's disabled until the Riot ID resolves and falls back to the Admin page for accounts with an unparseable region. Inline **Transfer** still lives on the `/admin` route (uses `transferAccount`); not surfaced on the detail page.
 - `@radix-ui/react-popover@1.1.17` added to `packages/scout-for-lol/packages/app/package.json` (+ `bun.lock`); Renovate-tracked.
 - `subscription.list` / `competition.list` return shape changed from array → `{items, nextCursor}`; the Discord `/subscription list` command and all web callers were updated in the same change.
+
+## Round 2 — post-demo feedback (commit `ef197f948`)
+
+After clicking through round 1, the owner asked for four refinements:
+
+1. **Navbar dropdown** — left = brand "Scout" + "Guilds"; right = `@username` dropdown (`components/user-menu.tsx` on the Popover) holding the theme selector, "Report a bug", and "Sign out".
+2. **Hide guild ID** — the workspace header shows only the guild name; the raw snowflake is never rendered.
+3. **Three-source Riot ID search** — researched that the Riot API has **no** partial-name search (only exact `by-riot-id`); OP.GG autocompletes from its own crawled index. Implemented all three sources:
+   - **Own index** — new `SummonerIndex` table (global cache; prefix `startsWith` on `gameName`). Populated by `recordRiotResolution` on every confirmed Riot lookup + a `backfillFromExisting` (Account + `PrematchParticipantFact.riotId`) one-off (`scripts/backfill-summoner-index.ts`). Self-heals: evicted on a genuine 404 (via `extractHttpStatus`), never on transient errors.
+   - **OP.GG** — `src/lib/riot/opgg-search.ts` proxies OP.GG's **Next.js server action** (POST `/` with `next-action` id + RSC response), Zod-parsed, fail-soft to `[]`, TTL-cached. Verified live (`sjerred#sjerr` → Platinum 4).
+   - **Riot** — existing `resolveRiotId` verifies/canonicalizes the picked Riot ID; the add flow re-verifies before storage.
+   - `riot.searchSummoners` merges index (first) + OP.GG, de-duped. The combobox popover now only opens with results (no empty "no results" box). Removed the now-superseded `searchKnownAccounts`.
+4. **Removed the Admin tab** — rename/merge/delete-player, link/unlink Discord, and add/edit/delete/**transfer** account are all inline on the player detail page now (new `merge-players-dialog.tsx`, `transfer-account-dialog.tsx`; `PlayerAccountsTable` gained `onTransfer`). Deleted `admin-tools.tsx`, `player-admin-forms.tsx`, `account-admin-forms.tsx`, `admin-form-controls.tsx` (`RiotAccountFields` inlined into `add-account-dialog.tsx`).
+
+### Round 2 — Verification done
+
+- `tsc` + `eslint` clean (app + backend); `knip` clean (no orphans from the admin deletions). Backend `bun test`: 973 pass / 0 fail (incl. new `opgg-search`/`parseRiotId` tests). `opggSearch` verified live. Dev server restarted with the new migration applied.
+
+### Round 2 — Remaining
+
+- **OP.GG action id is build-tied** — `OPGG_ACTION_ID`/`OPGG_ROUTER_STATE` in `opgg-search.ts` were captured 2026-06-19. When OP.GG redeploys these go stale and OP.GG suggestions silently stop (the field still works via our index + Riot resolve). Re-capture from op.gg devtools (Network → the POST to `/` with `next-action`) and update the constants.
+- Run `scripts/backfill-summoner-index.ts` once in prod to seed the index from existing data.
+- Optional: a periodic re-verify cron to evict renamed-but-never-requeried index entries.
+- Manual e2e of the navbar dropdown, hidden guild id, 3-source typeahead, and the inline player ops; PR screenshots.
+
+### Round 2 — Caveats
+
+- **OP.GG dependency is unofficial + ToS-gray** (owner-approved). Contained to one module, fail-soft, never persisted unverified.
+- `SummonerIndex` is global (cross-guild); the `searchSummoners` procedure that reads it is guild-admin gated.
