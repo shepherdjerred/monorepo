@@ -23,9 +23,10 @@ import {
   SelectValue,
 } from "#src/components/ui/select.tsx";
 import { ReportQueryPreview } from "#src/components/report-query-preview.tsx";
+import { ReportQueryDocs } from "#src/components/report-query-docs.tsx";
 
 const EXAMPLE_QUERY =
-  "select games, win_rate from match_participants where queue in (ranked_solo) group by player order by games desc";
+  "select games, win_rate from match_participants where queue in (solo) group by player order by games desc";
 
 type FormState = {
   title: string;
@@ -210,7 +211,12 @@ export function ReportForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="report-query">Query</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="report-query">Query</Label>
+              <Button asChild variant="link" size="sm">
+                <Link to={`/g/${guildId}/reports/help`}>Full reference</Link>
+              </Button>
+            </div>
             <Textarea
               id="report-query"
               value={state.queryText}
@@ -223,6 +229,18 @@ export function ReportForm() {
               }}
               required
             />
+            <details className="rounded-md border border-border">
+              <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-muted-foreground">
+                Query reference
+              </summary>
+              <div className="border-t border-border p-3">
+                <ReportQueryDocs
+                  onUseExample={(query) => {
+                    setState((prev) => ({ ...prev, queryText: query }));
+                  }}
+                />
+              </div>
+            </details>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -332,6 +350,7 @@ export function ReportForm() {
           queryText={state.queryText}
           lookbackDays={Number(state.lookbackDays) || 30}
           maxRows={Number(state.maxRows) || 10}
+          outputFormat={state.outputFormat}
         />
       </form>
     </div>

@@ -21,6 +21,7 @@ import {
   ReportMaxRowsSchema,
   ReportOutputFormatSchema,
   ReportQueryTextSchema,
+  reportColumnLabel,
   type DiscordGuildId,
   type ReportId,
 } from "@scout-for-lol/data";
@@ -329,6 +330,9 @@ export const reportRouter = router({
         });
         return {
           columns: result.columns,
+          columnLabels: result.columns.map((column) =>
+            reportColumnLabel(column, result.plan.groupBy),
+          ),
           rows: result.rows,
           rowsScanned: result.rowsScanned,
           output,
