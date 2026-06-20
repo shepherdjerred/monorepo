@@ -1,7 +1,6 @@
 /**
- * One-off: seed the SummonerIndex from data we already have (resolved Accounts
- * + players seen in tracked games via PrematchParticipantFact). Idempotent —
- * safe to re-run; upserts by PUUID.
+ * Manual run of the SummonerIndex seed (it also runs automatically on backend
+ * startup). Incremental + idempotent — inserts only PUUIDs not already indexed.
  *
  *   DATABASE_URL=... bun run scripts/backfill-summoner-index.ts
  */
@@ -14,7 +13,7 @@ const logger = createLogger("backfill-summoner-index");
 
 const result = await backfillFromExisting();
 logger.info(
-  `✅ Seeded summoner index: ${result.accounts.toString()} account(s), ${result.prematch.toString()} prematch participant(s).`,
+  `✅ Seeded summoner index: ${result.inserted.toString()} new of ${result.scanned.toString()} scanned.`,
 );
 
 await prisma.$disconnect();

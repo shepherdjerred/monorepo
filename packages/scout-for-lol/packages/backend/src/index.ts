@@ -67,6 +67,21 @@ logger.info("⏰ Starting cron job scheduler");
 import { startCronJobs } from "#src/league/cron.ts";
 void startCronJobs();
 
+// Incrementally seed the summoner-search index from existing data. Idempotent
+// and cheap to re-run (inserts only new PUUIDs); background so it never blocks
+// boot or request serving.
+import { backfillFromExisting } from "#src/lib/riot/summoner-index.ts";
+void (async () => {
+  try {
+    const result = await backfillFromExisting();
+    logger.info(
+      `🗂️  Summoner index seeded: ${result.inserted.toString()} new of ${result.scanned.toString()} scanned`,
+    );
+  } catch (error) {
+    logger.warn("Summoner index backfill failed (non-fatal)", { error });
+  }
+})();
+
 logger.info("✅ Backend application startup complete");
 
 // Handle graceful shutdown

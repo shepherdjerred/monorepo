@@ -9,6 +9,7 @@
  */
 
 import { LeaguePuuidSchema, RegionSchema } from "@scout-for-lol/data";
+import type { Prisma } from "#generated/prisma/client/index.js";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -122,16 +123,48 @@ export async function recordRiotResolution(params: {
   }
 }
 
+const BACKFILL_BATCH_SIZE = 500;
+
 /**
- * One-off seed of the index from data we already have: every resolved
- * `Account` plus every distinct player observed in a tracked game
- * (`PrematchParticipantFact.riotId`, which is real Riot data from the
- * spectator API). Idempotent (upsert by PUUID).
+ * Seed the index from data we already have: every resolved `Account` plus
+ * every distinct player observed in a tracked game (`PrematchParticipantFact
+ * .riotId`, which is real Riot data from the spectator API).
+ *
+ * **Incremental + idempotent**: only PUUIDs not already indexed are inserted,
+ * so it's cheap to re-run (it runs automatically on each backend startup).
  */
 export async function backfillFromExisting(): Promise<{
-  accounts: number;
-  prematch: number;
+  inserted: number;
+  scanned: number;
 }> {
+  const indexed = await prisma.summonerIndex.findMany({
+    select: { puuid: true },
+  });
+  const existing = new Set<string>(indexed.map((row) => row.puuid));
+
+  const now = new Date();
+  const toCreate = new Map<string, Prisma.SummonerIndexCreateManyInput>();
+  const consider = (
+    puuid: string,
+    gameName: string,
+    tagLine: string,
+    region: string,
+  ) => {
+    if (existing.has(puuid) || toCreate.has(puuid)) return;
+    const parsedPuuid = LeaguePuuidSchema.safeParse(puuid);
+    const parsedRegion = RegionSchema.safeParse(region);
+    if (!parsedPuuid.success || !parsedRegion.success) return;
+    toCreate.set(puuid, {
+      puuid: parsedPuuid.data,
+      gameName,
+      tagLine,
+      region: parsedRegion.data,
+      lastVerifiedAt: now,
+      createdTime: now,
+      updatedTime: now,
+    });
+  };
+
   const accounts = await prisma.account.findMany({
     where: { riotGameName: { not: null }, riotTagLine: { not: null } },
     select: {
@@ -141,16 +174,14 @@ export async function backfillFromExisting(): Promise<{
       region: true,
     },
   });
-  let accountCount = 0;
   for (const account of accounts) {
     if (account.riotGameName === null || account.riotTagLine === null) continue;
-    await upsertSummoner({
-      puuid: account.puuid,
-      gameName: account.riotGameName,
-      tagLine: account.riotTagLine,
-      region: account.region,
-    });
-    accountCount++;
+    consider(
+      account.puuid,
+      account.riotGameName,
+      account.riotTagLine,
+      account.region,
+    );
   }
 
   const facts = await prisma.prematchParticipantFact.findMany({
@@ -158,23 +189,25 @@ export async function backfillFromExisting(): Promise<{
     select: { puuid: true, riotId: true, region: true },
     distinct: ["puuid"],
   });
-  let prematchCount = 0;
   for (const fact of facts) {
     if (fact.region === null) continue;
     const parsed = parseRiotId(fact.riotId);
     if (parsed === null) continue;
-    await upsertSummoner({
-      puuid: fact.puuid,
-      gameName: parsed.gameName,
-      tagLine: parsed.tagLine,
-      region: fact.region,
-    });
-    prematchCount++;
+    consider(fact.puuid, parsed.gameName, parsed.tagLine, fact.region);
   }
 
+  const rows = [...toCreate.values()];
+  for (let i = 0; i < rows.length; i += BACKFILL_BATCH_SIZE) {
+    await prisma.summonerIndex.createMany({
+      data: rows.slice(i, i + BACKFILL_BATCH_SIZE),
+    });
+  }
+
+  const scanned = accounts.length + facts.length;
   logger.info("Summoner index backfill complete", {
-    accounts: accountCount,
-    prematch: prematchCount,
+    inserted: rows.length,
+    scanned,
+    alreadyIndexed: existing.size,
   });
-  return { accounts: accountCount, prematch: prematchCount };
+  return { inserted: rows.length, scanned };
 }
