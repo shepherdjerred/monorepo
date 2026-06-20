@@ -35,8 +35,15 @@ async function commitSubscription(params: {
   db: Db;
 }): Promise<AddSubscriptionResult> {
   const { input, puuid, db } = params;
-  const { guildId, channelId, region, alias, discordUserId, creatorDiscordId } =
-    input;
+  const {
+    guildId,
+    channelId,
+    region,
+    riotId,
+    alias,
+    discordUserId,
+    creatorDiscordId,
+  } = input;
   const now = new Date();
 
   const existingPlayer = await db.player.findUnique({
@@ -75,6 +82,10 @@ async function commitSubscription(params: {
       alias,
       puuid,
       region,
+      // Seed the cached Riot ID from input; refreshed/canonicalized on read.
+      riotGameName: riotId.game_name,
+      riotTagLine: riotId.tag_line,
+      riotIdUpdatedAt: now,
       serverId: guildId,
       creatorDiscordId,
       player: {
@@ -178,14 +189,21 @@ export async function resolveSubscriptionPuuid(
   riotId: AddSubscriptionInput["riotId"],
   region: AddSubscriptionInput["region"],
 ): Promise<
-  | { kind: "ok"; puuid: LeaguePuuid }
+  | { kind: "ok"; puuid: LeaguePuuid; gameName: string; tagLine: string }
   | { kind: "riot-id-not-found"; message: string }
 > {
   const resolved = await resolveRiotIdToPuuid(riotId, region);
   if (resolved.kind !== "ok") {
     return { kind: "riot-id-not-found", message: resolved.message };
   }
-  return { kind: "ok", puuid: LeaguePuuidSchema.parse(resolved.puuid) };
+  // Surface Riot's canonical casing so the caller seeds the stored Riot ID
+  // (Account.riotGameName/riotTagLine) from Riot rather than user input.
+  return {
+    kind: "ok",
+    puuid: LeaguePuuidSchema.parse(resolved.puuid),
+    gameName: resolved.gameName,
+    tagLine: resolved.tagLine,
+  };
 }
 
 /**

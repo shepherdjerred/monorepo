@@ -43,11 +43,17 @@ model Player {
 model Account {
   id       Int    @id @default(autoincrement())
   alias    String
-  // TODO(https://github.com/shepherdjerred/monorepo/issues/186): store riot ID for the sake of easier understanding
   puuid    String
   region   String
   playerId Int
   player   Player @relation(fields: [playerId], references: [id])
+
+  // Cached Riot ID (gameName#tagLine) resolved from the PUUID. Nullable
+  // until first resolved; refreshed on read when older than 24h. Lets the
+  // web UI show the real Riot ID instead of the user-chosen alias.
+  riotGameName    String?
+  riotTagLine     String?
+  riotIdUpdatedAt DateTime?
 
   // Match processing tracking
   lastProcessedMatchId String? // Track last match we've processed to avoid duplicates
@@ -61,6 +67,24 @@ model Account {
   updatedTime      DateTime
 
   @@unique([serverId, puuid])
+}
+
+// Global, self-maintaining cache of known summoners (Riot IDs are public).
+// Powers fast prefix autocomplete in the web "add player" flow. Populated on
+// confirmed Riot resolutions + backfill from Account/PrematchParticipantFact;
+// an entry is evicted when Riot can no longer resolve it (rename/deletion).
+model SummonerIndex {
+  id             Int      @id @default(autoincrement())
+  puuid          String   @unique
+  gameName       String
+  tagLine        String
+  region         String
+  lastVerifiedAt DateTime
+  createdTime    DateTime
+  updatedTime    DateTime
+
+  // Prefix-autocomplete on gameName (SQLite LIKE 'q%', ASCII case-insensitive).
+  @@index([gameName])
 }
 
 model MatchRankHistory {

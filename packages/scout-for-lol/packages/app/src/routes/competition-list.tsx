@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { visibilityToString } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { formatDate } from "#src/lib/format.ts";
 import { summarizeCriteria } from "#src/lib/criteria-summary.ts";
 import { Button } from "#src/components/ui/button.tsx";
+import { LoadMore } from "#src/components/load-more.tsx";
 import { CompetitionStatusBadge } from "#src/components/status-badge.tsx";
 import {
   Table,
@@ -22,10 +23,13 @@ export function CompetitionList() {
   const [activeOnly, setActiveOnly] = useState(false);
   const safeGuildId = guildId ?? "";
 
-  const competitionsQuery = useQuery(
-    trpc.competition.list.queryOptions(
-      { guildId: safeGuildId, activeOnly },
-      { enabled: guildId !== undefined },
+  const competitionsQuery = useInfiniteQuery(
+    trpc.competition.list.infiniteQueryOptions(
+      { guildId: safeGuildId, activeOnly, limit: 50 },
+      {
+        enabled: guildId !== undefined,
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
     ),
   );
 
@@ -33,7 +37,8 @@ export function CompetitionList() {
     return <p className="text-sm text-destructive">Missing guild id</p>;
   }
 
-  const competitions = competitionsQuery.data ?? [];
+  const competitions =
+    competitionsQuery.data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
     <div className="space-y-4">
@@ -116,6 +121,14 @@ export function CompetitionList() {
           </Table>
         </div>
       )}
+
+      <LoadMore
+        hasNextPage={competitionsQuery.hasNextPage}
+        isFetchingNextPage={competitionsQuery.isFetchingNextPage}
+        onLoadMore={() => {
+          void competitionsQuery.fetchNextPage();
+        }}
+      />
     </div>
   );
 }

@@ -101,6 +101,7 @@ export function OnboardingSubscribeStep(props: {
         <form onSubmit={handleSubmit} className="space-y-4">
           <SubscriptionFields
             idPrefix={props.mode === "self" ? "onb-self" : "onb-more"}
+            guildId={props.guildId}
             channels={props.channels}
             value={value}
             onChange={setValue}

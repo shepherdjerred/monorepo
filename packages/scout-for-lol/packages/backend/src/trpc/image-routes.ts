@@ -48,6 +48,10 @@ export async function handleImageRoute(
   url: URL,
   cors: Cors,
 ): Promise<Response | null> {
+  if (url.pathname === "/api/summoner-icon") {
+    return handleSummonerIcon(request, url, cors);
+  }
+
   const competitionMatch = COMPETITION_LEADERBOARD_RE.exec(url.pathname);
   const reportRunMatch = REPORT_RUN_RE.exec(url.pathname);
   if (competitionMatch === null && reportRunMatch === null) {
@@ -99,5 +103,70 @@ export async function handleImageRoute(
     // aren't an admin of the owning guild. Don't leak which case it was.
     logger.warn("Image route authorization rejected:", error);
     return new Response("Forbidden", { status: 403, headers: cors });
+  }
+}
+
+/** OP.GG static hosts we'll proxy summoner profile icons from. */
+const ALLOWED_ICON_HOSTS = new Set(["opgg-static.akamaized.net"]);
+const ICON_FETCH_TIMEOUT_MS = 5000;
+
+/**
+ * `GET /api/summoner-icon?u=<encoded url>` — proxy a League profile icon so the
+ * browser never hotlinks OP.GG's CDN (referer/CORS, privacy). Session-gated and
+ * strictly host-allowlisted (not an open proxy); only `image/*` is relayed.
+ */
+async function handleSummonerIcon(
+  request: Request,
+  url: URL,
+  cors: Cors,
+): Promise<Response> {
+  if (request.method !== "GET") {
+    return new Response("Method Not Allowed", { status: 405, headers: cors });
+  }
+  const ctx = await createContext(request);
+  if (ctx.user === null) {
+    return new Response("Unauthorized", { status: 401, headers: cors });
+  }
+
+  const raw = url.searchParams.get("u");
+  if (raw === null) return notFound(cors);
+  let target: URL;
+  try {
+    target = new URL(raw);
+  } catch {
+    return notFound(cors);
+  }
+  if (
+    target.protocol !== "https:" ||
+    !ALLOWED_ICON_HOSTS.has(target.hostname)
+  ) {
+    return new Response("Forbidden", { status: 403, headers: cors });
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => {
+    controller.abort();
+  }, ICON_FETCH_TIMEOUT_MS);
+  try {
+    const upstream = await fetch(target.toString(), {
+      signal: controller.signal,
+    });
+    if (!upstream.ok) return notFound(cors);
+    const contentType = upstream.headers.get("content-type") ?? "";
+    if (!contentType.startsWith("image/")) return notFound(cors);
+    const bytes = await upstream.arrayBuffer();
+    return new Response(bytes, {
+      status: 200,
+      headers: {
+        "Content-Type": contentType,
+        "Cache-Control": "private, max-age=86400",
+        ...cors,
+      },
+    });
+  } catch (error) {
+    logger.warn("Summoner icon proxy failed:", error);
+    return notFound(cors);
+  } finally {
+    clearTimeout(timer);
   }
 }

@@ -1,6 +1,7 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { UserMenu } from "#src/components/user-menu.tsx";
 
 /**
  * Route guard that redirects to /login if the user has no valid web
@@ -32,49 +33,26 @@ export function RequireSession() {
   }
 
   return (
-    <div
-      style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
-    >
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          padding: "0.75rem 1rem",
-          borderBottom: "1px solid #ddd",
-        }}
-      >
-        <strong>Scout for LoL — Manage</strong>
-        <div>
-          Signed in as <strong>{data.username}</strong> ·{" "}
-          <a href="/app/" style={{ marginRight: "0.5rem" }}>
-            Guilds
-          </a>
-          <button
-            type="button"
-            onClick={() => {
-              void logout();
-            }}
-          >
-            Sign out
-          </button>
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+          <div className="flex items-center gap-4">
+            <Link to="/" className="font-semibold tracking-tight">
+              Scout
+            </Link>
+            <Link
+              to="/"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              Guilds
+            </Link>
+          </div>
+          <UserMenu username={data.username} />
         </div>
       </header>
-      <main style={{ padding: "1rem", flex: 1 }}>
+      <main className="flex-1">
         <Outlet />
       </main>
     </div>
   );
-}
-
-async function logout() {
-  // Always navigate to /app/login, even if the fetch fails — the user
-  // expects "Sign out" to land them on the login page regardless.
-  try {
-    await fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include",
-    });
-  } finally {
-    globalThis.location.assign("/app/login");
-  }
 }

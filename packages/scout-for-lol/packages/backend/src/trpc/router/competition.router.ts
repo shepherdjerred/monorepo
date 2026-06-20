@@ -38,7 +38,7 @@ import {
   cancelCompetition,
   createCompetition,
   getCompetitionById,
-  getCompetitionsByServer,
+  getCompetitionsByServerPaginated,
   updateCompetition,
   type UpdateCompetitionInput,
 } from "#src/database/competition/queries.ts";
@@ -108,18 +108,28 @@ async function loadCompetitionOr404(
 
 export const competitionRouter = router({
   list: webProcedure
-    .input(GuildInput.extend({ activeOnly: z.boolean().default(false) }))
+    .input(
+      GuildInput.extend({
+        activeOnly: z.boolean().default(false),
+        limit: z.number().int().min(1).max(100).default(50),
+        cursor: z.number().int().min(1).optional(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
       await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
-      const competitions = await getCompetitionsByServer(
+      const { items, nextCursor } = await getCompetitionsByServerPaginated(
         prisma,
         input.guildId,
-        { activeOnly: input.activeOnly },
+        {
+          activeOnly: input.activeOnly,
+          limit: input.limit,
+          ...(input.cursor === undefined ? {} : { cursor: input.cursor }),
+        },
       );
       const participantCounts = await prisma.competitionParticipant.groupBy({
         by: ["competitionId"],
         where: {
-          competitionId: { in: competitions.map((c) => c.id) },
+          competitionId: { in: items.map((c) => c.id) },
           status: { not: "LEFT" },
         },
         _count: { _all: true },
@@ -127,11 +137,14 @@ export const competitionRouter = router({
       const countByCompetition = new Map(
         participantCounts.map((row) => [row.competitionId, row._count._all]),
       );
-      return competitions.map((competition) => ({
-        ...competition,
-        status: getCompetitionStatus(competition),
-        participantCount: countByCompetition.get(competition.id) ?? 0,
-      }));
+      return {
+        items: items.map((competition) => ({
+          ...competition,
+          status: getCompetitionStatus(competition),
+          participantCount: countByCompetition.get(competition.id) ?? 0,
+        })),
+        nextCursor,
+      };
     }),
 
   get: webProcedure.input(CompetitionIdInput).query(async ({ ctx, input }) => {
