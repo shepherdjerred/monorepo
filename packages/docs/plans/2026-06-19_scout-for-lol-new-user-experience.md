@@ -46,17 +46,26 @@ Top-level route `/welcome` → `OnboardingWizard`. Step state is a discriminated
 
 ## Session Log — 2026-06-19
 
+User tested the wizard live against the beta bot (`dev:web`) and iterated. Four commits on `feature/scout-nue`:
+
+1. `6dc6991` — the wizard + shared-form extractions.
+2. `eab60a5` — 3 example presets per build step + clearer subscribe footer (Skip + single Add) + "Add friends".
+3. `7eb9ce4` — **redirect back after bot install** (beta only): install link uses the OAuth bot-add flow with `redirect_uri=<origin>/app/installed` (perms `2148352` read from the app's `install_params`); new `/installed` landing route; prod keeps the bare modern link. No Discord config change — `/app/installed` was already registered on the beta app.
+4. `835bc2d` — examples moved onto the "Report or competition?" page (3 buttons per option → jump into the pre-filled form); subscribe form reset between people via `key={state.step}`; post-install "Continue setup" carries `guild_id` → `/welcome?guild=…` so the wizard starts at concepts (step 2).
+
 ### Done
 
-- Implemented the full wizard + shared-form extractions on `feature/scout-nue` (see file list above).
-- Green: typecheck, eslint, `bun test` (10/10 reducer cases), vite build.
+- Full guided wizard, verified green each round: `tsc` ✓, `eslint src` ✓, `bun test` ✓ (10/10), vite build ✓.
+- Confirmed live in the browser by the user ("looks great"): example buttons on the choose page, no Riot-ID carry-over, post-install lands on step 2, Discord redirect-back works.
 
 ### Remaining
 
-- Open PR; capture per-step screenshots + a short GIF via the `dev:web` stack and attach with `toolkit pr asset`.
-- Manual e2e against the beta bot in a test guild (needs `op signin`).
+- Open PR; capture per-step screenshots + a short GIF and attach with `toolkit pr asset`.
+- Shut down the local `dev:web` server (frees the beta bot's Discord gateway).
 
 ### Caveats
 
-- Onboarding completion is tracked **per browser** (localStorage), not server-side — a returning admin on a new device with zero subscriptions will be auto-redirected once. Intentional (keeps it light, no schema migration).
+- Onboarding completion is tracked **per browser** (localStorage), not server-side — a returning admin on a new device with zero subscriptions is auto-redirected once. Intentional (no schema migration).
+- **Redirect-back is beta-only.** The prod app (`1182…`) keeps the bare modern install link; to enable redirect-back in prod, register `https://<prod-origin>/app/installed` on the prod Discord app, then the same code path (`discord-invite.ts`, gated on the beta client id) lights up. `response_type=code` bot-add redirect is the legacy flow — re-verify if Discord changes it.
+- A **concurrent `scout-app-ux` session** also touches this app + registered `/app/installed`; watch for merge overlap (its branch likely adds its own `/installed` route).
 - The build-competition step reuses `CompetitionFormFields`, whose footer "Cancel" links to the competitions list (leaves the wizard without marking complete); the step also offers "← Back" and the shell "Skip setup".
