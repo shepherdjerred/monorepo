@@ -4,8 +4,7 @@
   "private": true,
   "type": "module",
   "imports": {
-    "#src/*": "./src/*",
-    "#catalog.json": "./catalog.json"
+    "#src/*": "./src/*"
   },
   "exports": {
     ".": "./src/index.ts",

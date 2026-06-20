@@ -23,6 +23,7 @@
   "dependencies": {
     "@shepherdjerred/discord-stream-lifecycle": "file:../../../discord-stream-lifecycle",
     "@shepherdjerred/discord-video-stream": "file:../../../discord-video-stream",
+    "@shepherdjerred/llm-models": "file:../../../llm-models",
     "@shepherdjerred/llm-observability": "file:../../../llm-observability",
     "@discord-plays-pokemon/common": "file:../common",
     "@opentelemetry/api": "^1.9.1",

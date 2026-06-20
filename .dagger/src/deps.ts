@@ -17,7 +17,7 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   "astro-opengraph-images": ["eslint-config"],
   webring: ["eslint-config"],
   toolkit: ["eslint-config"],
-  monarch: ["eslint-config"],
+  monarch: ["eslint-config", "llm-models"],
   "cooklang-for-obsidian": ["eslint-config"],
   "cooklang-rich-preview": ["eslint-config"],
   "better-skill-capped": ["eslint-config"],
@@ -40,7 +40,13 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   // mounted so the worker-image build can compile the toolkit CLI into a
   // single static binary at /usr/local/bin/toolkit. Required by the
   // homelab-audit-daily workflow (runbook §5/§6/§9 use `toolkit gf|pd|bugsink`).
-  temporal: ["eslint-config", "home-assistant", "toolkit", "llm-observability"],
+  temporal: [
+    "eslint-config",
+    "home-assistant",
+    "toolkit",
+    "llm-models",
+    "llm-observability",
+  ],
 
   // Multi-dep packages
   "tasknotes-server": ["eslint-config", "tasknotes-types"],
@@ -60,6 +66,7 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
     "eslint-config",
     "discord-video-stream",
     "discord-stream-lifecycle",
+    "llm-models",
     "llm-observability",
   ],
   "discord-plays-mario-kart": [
