@@ -26,6 +26,8 @@ import { runPokeemeraldWasmUpdate as _runPokeemeraldWasmUpdate } from "./pokeeme
 import type { PokeemeraldWasmUpdateResult } from "#activities/pokeemerald-wasm.ts";
 import { runReadmeRefresh as _runReadmeRefresh } from "./readme-refresh.ts";
 import type { ReadmeRefreshResult } from "#activities/readme-refresh.ts";
+import { runLlmCatalogRefresh as _runLlmCatalogRefresh } from "./llm-catalog-refresh.ts";
+import type { LlmCatalogRefreshResult } from "#activities/llm-catalog-refresh.ts";
 import { runScoutSeasonRefreshWorkflow as _runScoutSeasonRefreshWorkflow } from "./scout-season-refresh.ts";
 import type {
   ScoutSeasonRefreshInput,
@@ -142,6 +144,10 @@ export async function runScoutDataDragonWeeklyRefresh(
 
 export async function runReadmeRefresh(): Promise<ReadmeRefreshResult> {
   return _runReadmeRefresh();
+}
+
+export async function runLlmCatalogRefresh(): Promise<LlmCatalogRefreshResult> {
+  return _runLlmCatalogRefresh();
 }
 
 export async function runPokeemeraldWasmUpdate(): Promise<PokeemeraldWasmUpdateResult> {

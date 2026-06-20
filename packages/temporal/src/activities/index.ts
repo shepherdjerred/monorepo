@@ -19,6 +19,7 @@ import { outcomeActivities } from "./outcome.ts";
 import { cancelBuildkiteBuildsActivities } from "./cancel-buildkite-builds.ts";
 import { checkPrMergeConflictsActivities } from "./check-pr-merge-conflicts.ts";
 import { readmeRefreshActivities } from "./readme-refresh.ts";
+import { llmCatalogRefreshActivities } from "./llm-catalog-refresh.ts";
 
 export const activities = {
   ...fetcherActivities,
@@ -42,4 +43,5 @@ export const activities = {
   ...cancelBuildkiteBuildsActivities,
   ...checkPrMergeConflictsActivities,
   ...readmeRefreshActivities,
+  ...llmCatalogRefreshActivities,
 };
