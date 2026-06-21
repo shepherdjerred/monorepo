@@ -214,7 +214,7 @@ const versions = {
     "latest@sha256:fd8d9aa63ba2f0982b5304e1ee8d3b90a210bc1ffb5314d980eb6962f1a9715d",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "library/alpine":
-    "latest@sha256:a2d49ea686c2adfe3c992e47dc3b5e7fa6e6b5055609400dc2acaeb241c829f4",
+    "latest@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "mccloud/bazarr-openai-whisperbridge":
     "latest@sha256:10212b643245b97d0369d1be3448cc35e61f7df78b4861cf7df90608e9c803d3",
