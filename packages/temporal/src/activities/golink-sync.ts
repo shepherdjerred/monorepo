@@ -3,6 +3,15 @@ import { ApplicationFailure } from "@temporalio/activity";
 import { z } from "zod/v4";
 import type { GolinkEntry } from "#shared/types.ts";
 
+// Per-request ceiling for every golink HTTP call. golink normally responds in
+// milliseconds, so this only ever fires when the tailnet path to golink is
+// broken — in which case `fetch` would otherwise hang ~130s (observed during
+// the 2026-06 deny-by-default Tailscale ACL outage), blowing past the activity
+// startToCloseTimeout and the 4-minute workflow execution timeout. Aborting at
+// 20s lets each attempt fail fast with the real error instead of a opaque
+// workflow TimedOut.
+const GOLINK_FETCH_TIMEOUT_MS = 20_000;
+
 function getK8sClient(): k8s.NetworkingV1Api {
   const kc = new k8s.KubeConfig();
   kc.loadFromCluster();
@@ -15,7 +24,10 @@ function getK8sClient(): k8s.NetworkingV1Api {
 // strips the form, so the token fetch must use Accept: text/html and omit
 // Sec-Golink. The POST itself still uses Sec-Golink to flag it as API traffic.
 async function fetchXsrfToken(pageUrl: string): Promise<string> {
-  const response = await fetch(pageUrl, { headers: { Accept: "text/html" } });
+  const response = await fetch(pageUrl, {
+    headers: { Accept: "text/html" },
+    signal: AbortSignal.timeout(GOLINK_FETCH_TIMEOUT_MS),
+  });
   if (!response.ok) {
     throw new Error(
       `Failed to fetch XSRF token from ${pageUrl}: ${String(response.status)}`,
@@ -58,6 +70,7 @@ export const golinkSyncActivities = {
   async getExistingGolinks(golinkUrl: string): Promise<GolinkEntry[]> {
     const response = await fetch(`${golinkUrl}/.export`, {
       headers: { "Sec-Golink": "1" },
+      signal: AbortSignal.timeout(GOLINK_FETCH_TIMEOUT_MS),
     });
 
     if (!response.ok) {
@@ -111,6 +124,7 @@ export const golinkSyncActivities = {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: `short=${encodeURIComponent(short)}&long=${encodeURIComponent(long)}&xsrf=${encodeURIComponent(xsrfToken)}`,
+      signal: AbortSignal.timeout(GOLINK_FETCH_TIMEOUT_MS),
     });
 
     if (!response.ok) {
@@ -134,6 +148,7 @@ export const golinkSyncActivities = {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: `xsrf=${encodeURIComponent(xsrfToken)}`,
+      signal: AbortSignal.timeout(GOLINK_FETCH_TIMEOUT_MS),
     });
 
     if (!deleteResponse.ok) {
