@@ -146,7 +146,7 @@ const versions = {
     "2.0.0-4582@sha256:58023a4907e2f065348031c3d06130a9b76eb559a4a5d4f530f14fca1142e6ed",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
-    "1.29.0@sha256:cca8988d05cd449e1c6c69405971b1e6fc2c2116ceeb45c9fa3fc33837997a75",
+    "1.29.1@sha256:ab6b363102ccdbc39f6a62db926f567c61a5289bf25ba460f1c34423d8cc1a4d",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "pinchtab/pinchtab":
     "0.13.2@sha256:9cf0d94352f3e322e9897e61030b5bb90693334f8e5aa1b25a572d892fb3b13c",
