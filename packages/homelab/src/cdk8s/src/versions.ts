@@ -30,7 +30,7 @@ const versions = {
   // CI's version commit-back fills the real tag@digest after the first image
   // push; the seed digest below is a placeholder until then.
   "shepherdjerred/redlib":
-    "2.0.0-4547@sha256:7a579f57835999a444c5706f1d78dd19f0b10dfb084cb636febb28ed85ee656d",
+    "2.0.0-4553@sha256:8895a4c9c717e8ee6ca844df983db219c13331b297a39d9578f7c666e231f18d",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "itzg/minecraft-server":
     "2026.6.0-java21@sha256:496ee192e5f680e8c20bc51da90160fb294d37db98319fad3ecb82e852766e08",
@@ -124,7 +124,7 @@ const versions = {
   openebs: "4.4.0",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-4537@sha256:c3112975f3da477403fc72f621508b4ffd32b0ace90f481de87c9387b6f8e6ba",
+    "2.0.0-4553@sha256:581159ac0f12059c53f50294cae612badcb02a91edb38064b4d8154ced04a8db",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
     "2.0.0-4537@sha256:c3112975f3da477403fc72f621508b4ffd32b0ace90f481de87c9387b6f8e6ba",
@@ -245,7 +245,7 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-4547@sha256:695208741da09c893a9a3021f8d6b78d3fae64f6bd756f0c45e77fe20b5efb9d",
+    "2.0.0-4553@sha256:40e9e050e7cb156a9d98dc5a1828f0442d34071575a11996c0a4f026868a0813",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
@@ -253,11 +253,11 @@ const versions = {
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-4547@sha256:77dded0dab4aaca5d87dbe4ff66df2ce838e72e5454859ff82fb581d16f877a4",
+    "2.0.0-4553@sha256:fc6af94bdc27d55bbbdac30c216d0a804b43fef8ad15207a1604f296c857e67c",
   // Custom mcp-gateway image - tbxark/mcp-proxy + prebuilt edstem-mcp (rob-9/edstem-mcp)
   // not managed by renovate
   "shepherdjerred/mcp-gateway":
-    "2.0.0-4547@sha256:30ef2eb3e1a470815b727dc22e12b568a0e73d8169c9ad2ea74a29f7dc120ca6",
+    "2.0.0-4553@sha256:57e8867081b9f67fd7d22d68b2ae85b629b37b859054c22757932ba409405185",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.6@sha256:1263120feed69d82e4ca23b8ca6f1d702c3029fe70714e382966d0192318eab6",
