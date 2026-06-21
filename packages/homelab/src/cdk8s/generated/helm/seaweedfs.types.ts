@@ -671,6 +671,15 @@ export type SeaweedfsHelmValuesVolume = {
   imageOverride?: unknown;
   restartPolicy?: unknown;
   /**
+   * Run the Rust volume server (/usr/bin/weed-volume) instead of the Go one.
+   * Requires an image that ships the Rust binary (amd64/arm64). The Go-only
+   * log flags (-logtostderr/-logdir/-v) and -pulseSeconds are dropped; set log
+   * level via the RUST_LOG env var in extraEnvironmentVars if needed.
+   *
+   * @default false
+   */
+  rust?: boolean;
+  /**
    * @default 8080
    */
   port?: number;
@@ -2497,6 +2506,12 @@ export type SeaweedfsHelmValuesAdmin = {
    */
   extraEnvironmentVars?: SeaweedfsHelmValuesAdminExtraEnvironmentVars;
   /**
+   * secret env variables (e.g. for injecting OIDC client secret from a Kubernetes Secret)
+   *
+   * @default {}
+   */
+  secretExtraEnvironmentVars?: SeaweedfsHelmValuesAdminSecretExtraEnvironmentVars;
+  /**
    * Health checks
    *
    * @default {...} (7 keys)
@@ -2649,6 +2664,8 @@ export type SeaweedfsHelmValuesAdminPodSecurityContext = object;
 export type SeaweedfsHelmValuesAdminContainerSecurityContext = object;
 
 export type SeaweedfsHelmValuesAdminExtraEnvironmentVars = object;
+
+export type SeaweedfsHelmValuesAdminSecretExtraEnvironmentVars = object;
 
 export type SeaweedfsHelmValuesAdminLivenessProbe = {
   /**
@@ -3790,7 +3807,7 @@ export type SeaweedfsHelmValues = {
    */
   master?: SeaweedfsHelmValuesMaster;
   /**
-   * @default {...} (48 keys)
+   * @default {...} (49 keys)
    */
   volume?: SeaweedfsHelmValuesVolume;
   /**
@@ -3812,7 +3829,7 @@ export type SeaweedfsHelmValues = {
    */
   sftp?: SeaweedfsHelmValuesSftp;
   /**
-   * @default {...} (37 keys)
+   * @default {...} (38 keys)
    */
   admin?: SeaweedfsHelmValuesAdmin;
   /**
@@ -3954,6 +3971,7 @@ export type SeaweedfsHelmParameters = {
   "volume.enabled"?: string;
   "volume.imageOverride"?: string;
   "volume.restartPolicy"?: string;
+  "volume.rust"?: string;
   "volume.port"?: string;
   "volume.grpcPort"?: string;
   "volume.metricsPort"?: string;
