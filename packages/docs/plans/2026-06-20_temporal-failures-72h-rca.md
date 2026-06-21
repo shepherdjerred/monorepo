@@ -2,8 +2,10 @@
 
 ## Status
 
-In Progress — diagnosis complete & verified live; fixes implemented on `fix/temporal-failures`.
-golink ACL grant applies via CI `tofu-apply-all` on merge. Awaiting merge + post-deploy verification.
+In Progress — diagnosis complete & verified live; all fixes shipped in PR #1287
+(`fix/temporal-failures`). **scout-data-dragon verified recovered** (re-triggered run Completed,
+downloaded Renata 31 / Zed 69). **golink** fix awaits PR merge so CI `tofu-apply-all` applies the
+Tailscale ACL; recovery is verifiable only post-merge.
 
 ## Context
 
@@ -72,3 +74,38 @@ not `.structured_output`. Fixed by PR #1264 + #1279 (throttle hourly→daily). L
 - Post-merge: ACL applies → from worker pod `fetch(go.tailnet/.export)` → HTTP 200 → trigger
   `golink-sync` → Completed. Re-trigger data-dragon → Completed. 24–48h: no new TimedOut/Failed for
   golink-sync / agent-task / alert-remediation.
+
+## Session Log — 2026-06-20
+
+### Done
+
+- Diagnosed all last-72h Temporal failures against the live server (3 independent causes; Cause 1
+  already fixed by #1264/#1279 and live-confirmed recovered).
+- Shipped PR #1287 (`fix/temporal-failures`, 4 commits):
+  - `fix(homelab)` — `tag:k8s → tag:k8s-operator:443` ACL grant + guard test in
+    `packages/homelab/src/tofu/tailscale/acl.tf` (applied by CI `tofu-apply-all` on merge).
+  - `fix(temporal)` — `AbortSignal.timeout(20_000)` on all 4 fetches in
+    `packages/temporal/src/activities/golink-sync.ts`.
+  - `fix(scout-for-lol)` — `fetchWithRetry` + cdragon cache-poison fix + `retryFailedLoadingScreens`
+    propagation-lag pass in `update-data-dragon.ts`.
+  - `docs(docs)` — this plan.
+- Verified locally: typecheck (temporal + data) clean, `golink-sync.test.ts` + `update-data-dragon.test.ts`
+  pass, `tofu fmt -check` clean.
+- Re-triggered `scout-data-dragon-weekly-refresh` → **Completed** in ~3 min; result downloaded
+  Renata 31 / Zed 69 (the 06-20 failures), `outcome: image-only-diff` (no PR, email sent). Recovered.
+
+### Remaining
+
+- **golink-sync recovery is verifiable only after PR #1287 merges** and CI `tofu-apply-all` applies the
+  Tailscale ACL. Then: from the worker pod, `fetch(https://go.tailnet-1a49.ts.net/.export)` should
+  return HTTP 200; trigger `golink-sync` and confirm `Completed`.
+- 24–48h regression watch: no new `TimedOut`/`Failed` for golink-sync / agent-task / alert-remediation.
+
+### Caveats
+
+- The ACL grant `tag:k8s → tag:k8s-operator:443` is intentionally minimal; golink is currently the only
+  `tag:k8s-operator` app. A cleaner least-privilege option (dedicated `tag:golink`) was deferred.
+- `update-data-dragon.ts` lives in an eslint-ignored `scripts/` dir and already exceeds `max-lines`
+  (pre-existing); `--no-ignore` shows only pre-existing issues, none from this change.
+- The data-dragon in-script retry adds up to 3×30s sleeps; safe because the `updateDataDragon` activity
+  heartbeats every 10s independently (startToClose 90m).
