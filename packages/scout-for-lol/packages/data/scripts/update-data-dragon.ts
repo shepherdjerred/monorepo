@@ -90,6 +90,10 @@ async function fetchWithRetry(
         return response;
       }
       lastError = new Error(`HTTP ${String(response.status)} from ${url}`);
+      // Discard the 5xx body so the TCP connection returns to the pool
+      // immediately instead of waiting on GC — matters across the many
+      // requests this script makes when several 5xx land in a retry window.
+      void response.body?.cancel();
     } catch (error) {
       lastError = error;
     }
