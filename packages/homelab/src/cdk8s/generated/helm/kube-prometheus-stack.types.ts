@@ -363,6 +363,16 @@ export type KubeprometheusstackHelmValuesDefaultRules = {
    */
   runbookUrl?: string;
   /**
+   * Thresholds for kubelet certificate expiration alerts (in seconds)
+   *
+   * @default {"warning":604800,"critical":86400}
+   */
+  kubeletServerCertificateExpiration?: KubeprometheusstackHelmValuesDefaultRulesKubeletServerCertificateExpiration;
+  /**
+   * @default {"warning":604800,"critical":86400}
+   */
+  kubeletClientCertificateExpiration?: KubeprometheusstackHelmValuesDefaultRulesKubeletClientCertificateExpiration;
+  /**
    * @default {"fsSelector":"fstype!=\"\""}
    */
   node?: KubeprometheusstackHelmValuesDefaultRulesNode;
@@ -1002,6 +1012,38 @@ export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotati
 
 export type KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleGroupAnnotationsPrometheusOperator =
   object;
+
+export type KubeprometheusstackHelmValuesDefaultRulesKubeletServerCertificateExpiration =
+  {
+    /**
+     * 7 days
+     *
+     * @default 604800
+     */
+    warning?: number;
+    /**
+     * 1 day
+     *
+     * @default 86400
+     */
+    critical?: number;
+  };
+
+export type KubeprometheusstackHelmValuesDefaultRulesKubeletClientCertificateExpiration =
+  {
+    /**
+     * 7 days
+     *
+     * @default 604800
+     */
+    warning?: number;
+    /**
+     * 1 day
+     *
+     * @default 86400
+     */
+    critical?: number;
+  };
 
 export type KubeprometheusstackHelmValuesDefaultRulesNode = {
   /**
@@ -5666,7 +5708,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatc
      */
     repository?: string;
     /**
-     * @default "1.8.2"
+     * @default "1.8.3"
      */
     tag?: string;
     /**
@@ -8269,7 +8311,7 @@ export type KubeprometheusstackHelmValuesThanosRuler = {
    */
   serviceMonitor?: KubeprometheusstackHelmValuesThanosRulerServiceMonitor;
   /**
-   * @default {...} (45 keys)
+   * @default {...} (46 keys)
    */
   thanosRulerSpec?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpec;
   /**
@@ -8818,6 +8860,7 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpec = {
    */
   listenLocal?: boolean;
   containers?: unknown[];
+  extraEnv?: unknown[];
   volumes?: unknown[];
   volumeMounts?: unknown[];
   initContainers?: unknown[];
@@ -9124,7 +9167,7 @@ export type KubeprometheusstackHelmValues = {
   /**
    * Create default rules for monitoring the cluster
    *
-   * @default {...} (15 keys)
+   * @default {...} (17 keys)
    */
   defaultRules?: KubeprometheusstackHelmValuesDefaultRules;
   /**
@@ -9348,6 +9391,10 @@ export type KubeprometheusstackHelmParameters = {
   "defaultRules.keepFiringFor"?: string;
   "defaultRules.additionalAggregationLabels"?: string;
   "defaultRules.runbookUrl"?: string;
+  "defaultRules.kubeletServerCertificateExpiration.warning"?: string;
+  "defaultRules.kubeletServerCertificateExpiration.critical"?: string;
+  "defaultRules.kubeletClientCertificateExpiration.warning"?: string;
+  "defaultRules.kubeletClientCertificateExpiration.critical"?: string;
   "defaultRules.node.fsSelector"?: string;
   "global.rbac.create"?: string;
   "global.rbac.createAggregateClusterRoles"?: string;
@@ -10310,6 +10357,7 @@ export type KubeprometheusstackHelmParameters = {
   "thanosRuler.thanosRulerSpec.hostUsers"?: string;
   "thanosRuler.thanosRulerSpec.listenLocal"?: string;
   "thanosRuler.thanosRulerSpec.containers"?: string;
+  "thanosRuler.thanosRulerSpec.extraEnv"?: string;
   "thanosRuler.thanosRulerSpec.volumes"?: string;
   "thanosRuler.thanosRulerSpec.volumeMounts"?: string;
   "thanosRuler.thanosRulerSpec.initContainers"?: string;
