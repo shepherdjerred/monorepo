@@ -36,7 +36,7 @@
 # =============================================================================
 # Stage 1: Builder - Install everything as target user
 # =============================================================================
-FROM ubuntu:26.04@sha256:f3d28607ddd78734bb7f71f117f3c6706c666b8b76cbff7c9ff6e5718d46ff64 AS builder
+FROM ubuntu:26.04@sha256:53958ec7b67c2c9355df922dd08dbf0360611f8c3cdb656875e81873db9ffdba AS builder
 
 ARG USER_UID=1000
 ARG USER_GID=1000
@@ -184,7 +184,7 @@ RUN printf '#!/bin/bash\nexport PATH="$HOME/.local/bin:/home/linuxbrew/.linuxbre
 # =============================================================================
 # Stage 2: Runtime - Fresh image with only needed artifacts
 # =============================================================================
-FROM ubuntu:26.04@sha256:f3d28607ddd78734bb7f71f117f3c6706c666b8b76cbff7c9ff6e5718d46ff64 AS runtime
+FROM ubuntu:26.04@sha256:53958ec7b67c2c9355df922dd08dbf0360611f8c3cdb656875e81873db9ffdba AS runtime
 
 ARG USER_UID=1000
 ARG USER_GID=1000
