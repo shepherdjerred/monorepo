@@ -277,13 +277,30 @@ function classifyReviewCheck(check: GreptileReviewCheck): ReviewState {
   }
 }
 
+/**
+ * Normalise a GitHub author login for comparison.
+ *
+ * GitHub reports the SAME App identity with two different logins depending on
+ * the API surface: the GraphQL `Bot.login` is the bare app slug (e.g.
+ * `greptile-apps`), while the REST `user.login` appends a `[bot]` suffix
+ * (`greptile-apps[bot]`). The review-thread path reads logins via GraphQL and
+ * the skip-comment path via REST, so a raw `===` against the configured login
+ * (`greptile-apps`) silently fails for REST-sourced comments — which is exactly
+ * how a "No reviewable files" skip went undetected and the gate timed out on
+ * lockfile-only PRs. Strip a trailing `[bot]` so both forms compare equal.
+ */
+export function normalizeLogin(login: string | null): string | null {
+  if (login === null) return null;
+  return login.endsWith("[bot]") ? login.slice(0, -"[bot]".length) : login;
+}
+
 function isBlocking(
   thread: GreptileThread,
   greptileLogin: string,
   maxBlockingPriority: number,
 ): boolean {
   return (
-    thread.authorLogin === greptileLogin &&
+    normalizeLogin(thread.authorLogin) === normalizeLogin(greptileLogin) &&
     !thread.isResolved &&
     !thread.isOutdated &&
     thread.priority !== null &&
@@ -673,7 +690,11 @@ async function fetchGreptileSkippedReview(input: {
       const userRecord = recordField(item, "user");
       const login =
         userRecord === null ? null : stringField(userRecord, "login");
-      if (login !== input.greptileLogin) continue;
+      // REST returns `greptile-apps[bot]`; the configured login is the bare
+      // `greptile-apps`. Normalise both before comparing (see normalizeLogin).
+      if (normalizeLogin(login) !== normalizeLogin(input.greptileLogin)) {
+        continue;
+      }
       const reason = parseGreptileSkippedReview(stringField(item, "body"));
       if (reason !== null) return reason;
     }

@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
   compileCheckPattern,
   evaluateGate,
+  normalizeLogin,
   parseLinkNext,
   parseGreptilePriority,
   parseGreptileSkippedReview,
@@ -125,6 +126,44 @@ describe("evaluateGate — skipped-review shortcut", () => {
       reviewCheck: { found: false, status: null, conclusion: null, url: null },
     });
     expect(result.state).toBe("waiting");
+  });
+});
+
+describe("normalizeLogin", () => {
+  it("strips a trailing [bot] suffix (REST App login form)", () => {
+    // REST `user.login` returns `greptile-apps[bot]`; GraphQL `Bot.login`
+    // returns the bare `greptile-apps`. They must compare equal.
+    expect(normalizeLogin("greptile-apps[bot]")).toBe("greptile-apps");
+  });
+
+  it("leaves a bare login (GraphQL Bot.login form) unchanged", () => {
+    expect(normalizeLogin("greptile-apps")).toBe("greptile-apps");
+  });
+
+  it("only strips a [bot] suffix at the end, not mid-string", () => {
+    expect(normalizeLogin("not[bot]real")).toBe("not[bot]real");
+  });
+
+  it("passes null through", () => {
+    expect(normalizeLogin(null)).toBeNull();
+  });
+
+  it("makes the REST and GraphQL forms of the same App compare equal", () => {
+    expect(normalizeLogin("greptile-apps[bot]")).toBe(
+      normalizeLogin("greptile-apps"),
+    );
+  });
+});
+
+describe("evaluateGate — [bot]-suffixed thread authors", () => {
+  it("blocks an unresolved thread authored as `<login>[bot]` (REST form)", () => {
+    // Regression: a thread whose author login carries the `[bot]` suffix must
+    // still be recognised as Greptile-authored and block the gate.
+    const result = evaluate({
+      threads: [thread({ authorLogin: `${GREPTILE}[bot]` })],
+    });
+    expect(result.state).toBe("failed");
+    expect(result.message).toContain("unresolved Greptile comment");
   });
 });
 
