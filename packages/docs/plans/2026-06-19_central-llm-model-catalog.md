@@ -50,7 +50,7 @@ Node), so consumers typecheck the declarations rather than the source. Built in
 Each TS consumer: add `file:` dep, append the `.dagger/src/deps.ts` edge, delete
 its local map, point its helper at the catalog, refresh `bun.lock`.
 
-- scout data `review/models.ts` — rewrite as a thin adapter keeping every exported name/signature; drop legacy/deprecated rows.
+- scout data `review/models.ts` — rewrite as a thin adapter keeping every exported name/signature; drop legacy/deprecated rows. **The catalog `file:` dep is declared at the scout _workspace root_, not in `data`** — declaring it in `data` (consumed via `file:` by 6 siblings) hits a bun 1.3.14 bug that makes `--frozen-lockfile` unsatisfiable; root-hoisting resolves it for `data/review/models.ts`. See `logs/2026-06-20_pr-1281-scout-frozen-lockfile.md`.
 - temporal `pr-review/summary-cost.ts` — `estimateCostUsd` → `costForTextUsage("claude-haiku-4-5-20251001", …)`.
 - dpp `goal/pricing.ts` — `computeCost` reads `getPricing`.
 - monarch `lib/usage.ts` — `createUsageTracker` → `getPerTokenPricing(...) ?? getPerTokenPricing("claude-sonnet-4-6")`.
