@@ -1,6 +1,9 @@
 # CI base image: minimal host with Dagger CLI + Bun for pipeline generation.
 # All heavy lifting (builds, tests, lints) runs inside Dagger containers.
-# Version is tracked in .buildkite/ci-image/VERSION — bump it when changing this file.
+# Version is tracked in .buildkite/ci-image/VERSION and is bumped AUTOMATICALLY by CI
+# (the ci-base-version-commit-back step) after this image is rebuilt and published on
+# main. Do NOT edit VERSION in a PR — the ci-base-version-guard step fails any PR that
+# changes it. Just change this Dockerfile; CI handles the version bump on merge.
 # Build: docker build -t ghcr.io/shepherdjerred/ci-base:$(cat .buildkite/ci-image/VERSION) .buildkite/ci-image/
 # Push:  docker push ghcr.io/shepherdjerred/ci-base:$(cat .buildkite/ci-image/VERSION)
 #
@@ -27,7 +30,7 @@ RUN apt-get update -qq && \
 
 # Node.js (required by Dagger TypeScript SDK runtime)
 # renovate: datasource=node-version depName=node
-ARG NODE_VERSION=24.15.0
+ARG NODE_VERSION=24.16.0
 RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
     | tar xJ -C /usr/local --strip-components=1
 
