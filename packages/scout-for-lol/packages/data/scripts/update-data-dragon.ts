@@ -67,6 +67,41 @@ export function resolveCDragonAssetUrl(loadScreenPath: string): string {
   return `${CDRAGON_LOL_GAME_DATA_BASE}${stripped}`;
 }
 
+/**
+ * `fetch` with bounded retries for transient failures (network errors and 5xx).
+ * Data Dragon / CommunityDragon occasionally blip during a fresh patch release;
+ * a single attempt turns that into a hard failure. 4xx responses are returned
+ * as-is (not retried) — callers decide what a 404 means (e.g. the two-tier
+ * loading-screen fallback, or the propagation-lag retry pass below), and fast
+ * retries don't help a "not yet published" asset anyway.
+ */
+async function fetchWithRetry(
+  url: string,
+  init?: RequestInit,
+  options: { attempts?: number; baseDelayMs?: number } = {},
+): Promise<Response> {
+  const attempts = options.attempts ?? 3;
+  const baseDelayMs = options.baseDelayMs ?? 1000;
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      const response = await fetch(url, init);
+      if (response.status < 500) {
+        return response;
+      }
+      lastError = new Error(`HTTP ${String(response.status)} from ${url}`);
+    } catch (error) {
+      lastError = error;
+    }
+    if (attempt < attempts) {
+      await Bun.sleep(baseDelayMs * 2 ** (attempt - 1));
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error(`fetch failed for ${url}: ${String(lastError)}`);
+}
+
 const cdragonChampionCache = new Map<number, CDragonChampion | undefined>();
 
 /**
@@ -80,8 +115,11 @@ async function fetchCDragonChampion(
     return cdragonChampionCache.get(championId);
   }
   try {
-    const response = await fetch(getCDragonChampionJsonUrl(championId));
+    const response = await fetchWithRetry(
+      getCDragonChampionJsonUrl(championId),
+    );
     if (!response.ok) {
+      // Definitive miss (e.g. 404) — safe to cache so we don't re-request it.
       cdragonChampionCache.set(championId, undefined);
       return undefined;
     }
@@ -90,7 +128,10 @@ async function fetchCDragonChampion(
     cdragonChampionCache.set(championId, parsed);
     return parsed;
   } catch {
-    cdragonChampionCache.set(championId, undefined);
+    // Transient (network error after retries, or a parse blip during fresh-patch
+    // propagation). Do NOT cache `undefined` — caching it here would blank the
+    // CommunityDragon fallback for EVERY skin of this champion for the whole run.
+    // Leaving it uncached lets the loading-screen propagation-lag retry re-fetch.
     return undefined;
   }
 }
@@ -101,7 +142,7 @@ async function ensureDir(path: string): Promise<void> {
 
 async function getLatestVersion(): Promise<string> {
   console.log("Fetching latest version...");
-  const response = await fetch(`${BASE_URL}/api/versions.json`);
+  const response = await fetchWithRetry(`${BASE_URL}/api/versions.json`);
   const data: unknown = await response.json();
   const versions = z.array(z.string()).parse(data);
   const latestVersion = first(versions);
@@ -119,7 +160,7 @@ async function downloadAsset<T>(
   const url = `${BASE_URL}/cdn/${version}/data/en_US/${filename}`;
   console.log(`Downloading ${filename} from ${url}...`);
 
-  const response = await fetch(url);
+  const response = await fetchWithRetry(url);
   if (!response.ok) {
     throw new Error(
       `Failed to fetch ${filename}: ${String(response.status)} ${response.statusText}`,
@@ -136,7 +177,7 @@ async function downloadAsset<T>(
 }
 
 async function downloadImage(url: string, outputPath: string): Promise<void> {
-  const response = await fetch(url);
+  const response = await fetchWithRetry(url);
   if (!response.ok) {
     throw new Error(`Failed to fetch image ${url}: ${String(response.status)}`);
   }
@@ -233,7 +274,7 @@ async function writeJsonAssets(
 async function fetchChampionList(version: string): Promise<ChampionListData> {
   console.log("\nFetching champion list...");
   const championListUrl = `${BASE_URL}/cdn/${version}/data/en_US/champion.json`;
-  const championListResponse = await fetch(championListUrl);
+  const championListResponse = await fetchWithRetry(championListUrl);
   const data: unknown = await championListResponse.json();
   const championListData = ChampionListSchema.parse(data);
   const championNames = Object.keys(championListData.data);
@@ -382,7 +423,7 @@ async function downloadChampionData(
   for (const championName of championNames) {
     try {
       const url = `${BASE_URL}/cdn/${version}/data/en_US/champion/${championName}.json`;
-      const response = await fetch(url);
+      const response = await fetchWithRetry(url);
       if (response.ok) {
         const data: unknown = await response.json();
         await Bun.write(
@@ -435,7 +476,7 @@ async function downloadLoadingScreenSkin(
   // Tier 1: Data Dragon
   const ddragonUrl = `${BASE_URL}/cdn/img/champion/loading/${championName}_${String(skinNum)}.jpg`;
   try {
-    const response = await fetch(ddragonUrl);
+    const response = await fetchWithRetry(ddragonUrl);
     if (response.ok) {
       const buffer = await response.arrayBuffer();
       await Bun.write(outputPath, buffer);
@@ -465,7 +506,7 @@ async function downloadLoadingScreenSkin(
   }
   const cdragonUrl = resolveCDragonAssetUrl(skinEntry.loadScreenPath);
   try {
-    const response = await fetch(cdragonUrl);
+    const response = await fetchWithRetry(cdragonUrl);
     if (!response.ok) {
       return { status: "failed" };
     }
@@ -480,6 +521,61 @@ async function downloadLoadingScreenSkin(
   } catch {
     return { status: "failed" };
   }
+}
+
+type LoadingScreenFailure = {
+  championName: string;
+  championId: number;
+  skinNum: number;
+};
+
+/**
+ * Re-attempt loading screens that failed BOTH sources on the first pass.
+ *
+ * A freshly-released patch frequently has a handful of new skins missing from
+ * the Data Dragon CDN *and* CommunityDragon for a few minutes after release;
+ * the first pass loses that race and would otherwise hard-fail the entire
+ * refresh (exactly what failed the 2026-06-20 weekly run on patch 16.12.1 —
+ * Renata 31 / Zed 69 were on both CDNs hours later). Each round drops the
+ * cached CDragon champion JSON so Tier 2 re-resolves, waits out propagation,
+ * then retries only the still-missing skins. Genuinely-missing assets still
+ * fail after every round, preserving the loud hard-fail downstream.
+ */
+async function retryFailedLoadingScreens(
+  failures: LoadingScreenFailure[],
+  onSuccess: (
+    failure: LoadingScreenFailure,
+    source: "ddragon" | "cdragon",
+  ) => void,
+): Promise<LoadingScreenFailure[]> {
+  const ROUNDS = 3;
+  const DELAY_MS = 30_000;
+  let pending = failures;
+  for (let round = 1; round <= ROUNDS && pending.length > 0; round++) {
+    console.warn(
+      `\n⏳ ${String(pending.length)} loading screen(s) missing from both sources — retry ${String(round)}/${String(ROUNDS)} after ${String(DELAY_MS / 1000)}s (likely fresh-patch CDN propagation lag)...`,
+    );
+    await Bun.sleep(DELAY_MS);
+    // Force Tier 2 to re-resolve: the champion JSON itself may have been absent.
+    for (const failure of pending) {
+      cdragonChampionCache.delete(failure.championId);
+    }
+    const stillFailing: LoadingScreenFailure[] = [];
+    for (const failure of pending) {
+      const result = await downloadLoadingScreenSkin(
+        failure.championName,
+        failure.championId,
+        failure.skinNum,
+      );
+      if (result.status === "success") {
+        onSuccess(failure, result.source);
+      } else {
+        stillFailing.push(failure);
+      }
+    }
+    pending = stillFailing;
+  }
+  return pending;
 }
 
 /**
@@ -509,11 +605,11 @@ async function downloadChampionLoadingImages(
   // Per-source counters for the summary
   let ddragonCount = 0;
   let cdragonCount = 0;
-  let failedCount = 0;
   // championName → list of skinNums sourced from CDragon (for the summary)
   const cdragonByChampion: Record<string, number[]> = {};
-  // championName → list of skinNums where both sources failed (loud warn)
-  const failedByChampion: Record<string, number[]> = {};
+  // Skins that failed BOTH sources on the first pass — retried below (fresh
+  // patches lag both CDNs) before any of them count as a hard failure.
+  const failedSkins: LoadingScreenFailure[] = [];
 
   for (const [championName, listEntry] of championEntries) {
     let intendedSkins: number[] = [];
@@ -568,8 +664,7 @@ async function downloadChampionLoadingImages(
           (cdragonByChampion[championName] ??= []).push(skinNum);
         }
       } else {
-        failedCount++;
-        (failedByChampion[championName] ??= []).push(skinNum);
+        failedSkins.push({ championName, championId, skinNum });
       }
     }
 
@@ -577,6 +672,36 @@ async function downloadChampionLoadingImages(
     if (Object.keys(chromaMap).length > 0) {
       chromaToParent[championName] = chromaMap;
     }
+  }
+
+  // Propagation-lag retry: give freshly-released skins a few more chances on
+  // both CDNs before declaring them permanently missing. Successes are folded
+  // back into baseSkins + the per-source counters; whatever is still missing
+  // afterward is a real failure that hard-throws below.
+  const retriedChampions = new Set<string>();
+  const stillMissing = await retryFailedLoadingScreens(
+    failedSkins,
+    (failure, source) => {
+      (baseSkins[failure.championName] ??= []).push(failure.skinNum);
+      retriedChampions.add(failure.championName);
+      if (source === "ddragon") {
+        ddragonCount++;
+      } else {
+        cdragonCount++;
+        (cdragonByChampion[failure.championName] ??= []).push(failure.skinNum);
+      }
+    },
+  );
+  // Restore ascending skin order for champions that gained late retries.
+  for (const championName of retriedChampions) {
+    baseSkins[championName] = (baseSkins[championName] ?? []).toSorted(
+      (a, b) => a - b,
+    );
+  }
+  const failedCount = stillMissing.length;
+  const failedByChampion: Record<string, number[]> = {};
+  for (const failure of stillMissing) {
+    (failedByChampion[failure.championName] ??= []).push(failure.skinNum);
   }
 
   // Write champion-skins.json — contents reflect what's actually on disk
@@ -686,7 +811,7 @@ async function fetchAndSaveArenaAugments(arenaAugmentsUrl: string): Promise<{
 }> {
   console.log("\nFetching Arena augments from CommunityDragon...");
 
-  const response = await fetch(arenaAugmentsUrl);
+  const response = await fetchWithRetry(arenaAugmentsUrl);
   if (!response.ok) {
     throw new Error(
       `Failed to fetch Arena augments: ${String(response.status)} ${response.statusText}`,
