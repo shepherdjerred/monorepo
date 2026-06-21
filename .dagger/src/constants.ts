@@ -145,7 +145,7 @@ export const TOFU_VERSION = "1.11.7";
 export const ARGOCD_CLI_VERSION = "v3.4.2";
 
 // renovate: datasource=github-releases depName=vmware-tanzu/velero
-export const VELERO_CLI_VERSION = "v1.18.0";
+export const VELERO_CLI_VERSION = "v1.18.1";
 
 // renovate: datasource=github-releases depName=buildkite/cli
 export const BUILDKITE_CLI_VERSION = "3.42.0";
