@@ -229,7 +229,7 @@ export const REPORT_KEYWORDS: ReportKeywordInfo[] = [
   {
     keyword: "WITH",
     description:
-      "Set chart channels/options, e.g. WITH (y = win_rate, title = \"…\").",
+      'Set chart channels/options, e.g. WITH (y = win_rate, title = "…").',
   },
 ];
 
@@ -243,8 +243,18 @@ export type ReportRenderKindInfo = {
 // The display kinds accepted by the trailing `RENDER <kind>` clause. Chart kinds
 // additionally accept a `WITH (…)` clause to pick channels/options.
 export const REPORT_RENDER_KINDS: ReportRenderKindInfo[] = [
-  { id: "table", label: "Table", description: "Plain data table.", isChart: false },
-  { id: "list", label: "List", description: "Bulleted text list.", isChart: false },
+  {
+    id: "table",
+    label: "Table",
+    description: "Plain data table.",
+    isChart: false,
+  },
+  {
+    id: "list",
+    label: "List",
+    description: "Bulleted text list.",
+    isChart: false,
+  },
   {
     id: "leaderboard",
     label: "Leaderboard",

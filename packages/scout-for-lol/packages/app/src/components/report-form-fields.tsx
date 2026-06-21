@@ -167,9 +167,9 @@ export function ReportFormFields(props: {
           />
         </Suspense>
         <p className="text-xs text-muted-foreground">
-          End the query with a <code>RENDER &lt;kind&gt;</code> clause to set the
-          display, e.g. <code>RENDER bar_chart with (y = win_rate)</code>. The
-          editor autocompletes the kinds and options.
+          End the query with a <code>RENDER &lt;kind&gt;</code> clause to set
+          the display, e.g. <code>RENDER bar_chart with (y = win_rate)</code>.
+          The editor autocompletes the kinds and options.
         </p>
         <details className="rounded-md border border-border">
           <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-muted-foreground">

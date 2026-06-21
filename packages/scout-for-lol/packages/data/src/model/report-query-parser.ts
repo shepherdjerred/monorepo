@@ -71,8 +71,15 @@ export function parseReportQuery(text: string): ReportParseResult {
   const tokens = lex.tokens;
   const diagnostics: ReportDiagnostic[] = [];
 
-  const { selectIdx, fromIdx, groupIdx, whereIdx, orderIdx, limitIdx, renderIdx } =
-    locateClauses(tokens);
+  const {
+    selectIdx,
+    fromIdx,
+    groupIdx,
+    whereIdx,
+    orderIdx,
+    limitIdx,
+    renderIdx,
+  } = locateClauses(tokens);
   const structurallyValid =
     selectIdx === 0 && fromIdx !== -1 && groupIdx !== -1 && groupIdx > fromIdx;
 
