@@ -36,7 +36,6 @@ export namespace Prisma {
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: number
-      outputFormat: string
       lastRunStatus: string | null
       sourceCompetitionId: number | null
       title: string
@@ -112,7 +111,7 @@ export namespace Prisma {
 }
 `;
 
-const EXPECTED_TRANSFORM_COUNT = 46;
+const EXPECTED_TRANSFORM_COUNT = 45;
 const SPEED_FIXTURE_REPEAT_COUNT = 400;
 const SPEED_LIMIT_MS = 750;
 
@@ -137,7 +136,7 @@ describe("brand-prisma-types", () => {
 
     expect(result.count).toBe(EXPECTED_TRANSFORM_COUNT);
     expect(result.text).toContain(
-      'import { CompetitionId, DiscordAccountId, DiscordGuildId, LeaguePuuid, MatchId, PlayerId, Region, ReportId, ReportOutputFormat, ReportRunStatus } from "@scout-for-lol/data";',
+      'import { CompetitionId, DiscordAccountId, DiscordGuildId, LeaguePuuid, MatchId, PlayerId, Region, ReportId, ReportRunStatus } from "@scout-for-lol/data";',
     );
     expect(result.text).toContain(
       "export type Player = $Result.DefaultSelection<Prisma.$PlayerPayload<$Extensions.DefaultArgs>>",
@@ -165,7 +164,6 @@ describe("brand-prisma-types", () => {
     expect(result.text).toContain(
       'readonly serverId: FieldRef<"Player", DiscordGuildId>',
     );
-    expect(result.text).toContain("outputFormat: ReportOutputFormat");
     expect(result.text).toContain("lastRunStatus: ReportRunStatus | null");
     expect(result.text).toContain("sourceCompetitionId: CompetitionId | null");
     expect(result.text).not.toContain("id: number");
@@ -198,7 +196,7 @@ describe("brand-prisma-types", () => {
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: number
-      outputFormat: string
+      lastRunStatus: string | null
     }, ExtArgs["result"]["report"]>
     composites: {}
   }
@@ -208,12 +206,9 @@ describe("brand-prisma-types", () => {
     const reportResult = brandPrismaTypesText(reportOnlyFixture);
 
     expect(playerResult.importedTypes).toContain("PlayerId");
-    expect(reportResult.importedTypes).toEqual([
-      "ReportId",
-      "ReportOutputFormat",
-    ]);
+    expect(reportResult.importedTypes).toEqual(["ReportId", "ReportRunStatus"]);
     expect(reportResult.text).toContain(
-      'import { ReportId, ReportOutputFormat } from "@scout-for-lol/data";',
+      'import { ReportId, ReportRunStatus } from "@scout-for-lol/data";',
     );
     expect(reportResult.text).not.toContain("PlayerId");
   });

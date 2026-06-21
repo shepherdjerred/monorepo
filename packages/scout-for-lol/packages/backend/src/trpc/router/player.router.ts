@@ -13,9 +13,11 @@ import {
 import {
   AddAccountInput,
   TransferAccountInput,
+  UpdateAccountInput,
   addAccount,
   deleteAccount,
   transferAccount,
+  updateAccount,
 } from "#src/lib/player-admin/account-mutations.ts";
 import {
   LinkDiscordInput,
@@ -73,4 +75,8 @@ export const playerRouter = router({
   transferAccount: webMutationProcedure
     .input(TransferAccountInput)
     .mutation(async ({ ctx, input }) => transferAccount(ctx, input)),
+
+  updateAccount: webMutationProcedure
+    .input(UpdateAccountInput)
+    .mutation(async ({ ctx, input }) => updateAccount(ctx, input)),
 });

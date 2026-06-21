@@ -20,6 +20,7 @@ import {
   LParen,
   NumberLiteral,
   Order,
+  Render,
   RParen,
   Select,
   tokenizeReportQuery,
@@ -36,15 +37,42 @@ const UNSUPPORTED_WHERE_MESSAGE = "Unsupported report WHERE clause.";
 // checks (unknown sources/metrics/queues) live in report-query-lint.ts; strict
 // compilation lives in report-query-compile.ts. Never throws — the editor needs
 // a best-effort parse of incomplete input.
+// Locates each clause keyword's token index (or -1 when absent). The display
+// clause (`… RENDER <kind> [WITH (…)]`) is the tail; keywords inside a quoted
+// option value lex as a single StringLiteral, so they cannot be mistaken for a
+// clause boundary.
+function locateClauses(tokens: IToken[]): {
+  selectIdx: number;
+  fromIdx: number;
+  groupIdx: number;
+  whereIdx: number;
+  orderIdx: number;
+  limitIdx: number;
+  renderIdx: number;
+} {
+  const fromIdx = indexOfType(tokens, From, 0);
+  const groupIdx = indexOfGroupBy(tokens, 0);
+  const afterGroup = (type: TokenType): number =>
+    groupIdx === -1 ? -1 : indexOfType(tokens, type, groupIdx + 1);
+  return {
+    selectIdx: tokens[0]?.tokenType === Select ? 0 : -1,
+    fromIdx,
+    groupIdx,
+    whereIdx: fromIdx === -1 ? -1 : indexOfType(tokens, Where, fromIdx),
+    orderIdx:
+      groupIdx === -1 ? -1 : indexOfGroupBy(tokens, groupIdx + 1, Order),
+    limitIdx: afterGroup(Limit),
+    renderIdx: afterGroup(Render),
+  };
+}
+
 export function parseReportQuery(text: string): ReportParseResult {
   const lex = tokenizeReportQuery(text);
   const tokens = lex.tokens;
   const diagnostics: ReportDiagnostic[] = [];
 
-  const selectIdx = tokens[0]?.tokenType === Select ? 0 : -1;
-  const fromIdx = indexOfType(tokens, From, 0);
-  const groupIdx = indexOfGroupBy(tokens, 0);
-  const whereIdx = fromIdx === -1 ? -1 : indexOfType(tokens, Where, fromIdx);
+  const { selectIdx, fromIdx, groupIdx, whereIdx, orderIdx, limitIdx, renderIdx } =
+    locateClauses(tokens);
   const structurallyValid =
     selectIdx === 0 && fromIdx !== -1 && groupIdx !== -1 && groupIdx > fromIdx;
 
@@ -58,10 +86,6 @@ export function parseReportQuery(text: string): ReportParseResult {
 
   const whereActive =
     whereIdx !== -1 && (groupIdx === -1 || whereIdx < groupIdx);
-  const orderIdx =
-    groupIdx === -1 ? -1 : indexOfGroupBy(tokens, groupIdx + 1, Order);
-  const limitIdx =
-    groupIdx === -1 ? -1 : indexOfType(tokens, Limit, groupIdx + 1);
 
   const selectEnd = fromIdx === -1 ? tokens.length : fromIdx;
   const select = parseItems(tokens, selectIdx + 1, selectEnd);
@@ -86,12 +110,17 @@ export function parseReportQuery(text: string): ReportParseResult {
       )
     : [];
 
-  const groupByEnd = firstPositive([orderIdx, limitIdx], tokens.length);
+  const groupByEnd = firstPositive(
+    [orderIdx, limitIdx, renderIdx],
+    tokens.length,
+  );
   const groupBy =
     groupIdx === -1 ? undefined : joinItem(tokens, groupIdx + 2, groupByEnd);
 
-  const orderBy = parseOrderBy(tokens, orderIdx, limitIdx);
+  const orderByEnd = firstPositive([limitIdx, renderIdx], tokens.length);
+  const orderBy = parseOrderBy(tokens, orderIdx, orderByEnd);
   const limit = limitIdx === -1 ? undefined : tokenItem(tokens[limitIdx + 1]);
+  const render = parseRenderItem(text, tokens, renderIdx);
 
   const ast: ReportQueryAst = {
     select,
@@ -100,19 +129,43 @@ export function parseReportQuery(text: string): ReportParseResult {
     groupBy,
     orderBy,
     limit,
+    render,
   };
   return { ast, diagnostics };
+}
+
+// Captures the raw `RENDER` clause tail (the text after the `RENDER` keyword)
+// for the compiler to validate. Whitespace is collapsed but case is preserved
+// so chart titles survive; the compiler's regex tolerates the single spaces.
+function parseRenderItem(
+  text: string,
+  tokens: IToken[],
+  renderIdx: number,
+): ReportQueryItem | undefined {
+  if (renderIdx === -1) {
+    return undefined;
+  }
+  const renderToken = tokens[renderIdx];
+  if (renderToken === undefined) {
+    return undefined;
+  }
+  const clauseStart = (renderToken.endOffset ?? renderToken.startOffset) + 1;
+  const value = text.slice(clauseStart).trim().split(/\s+/u).join(" ");
+  const last = tokens.at(-1) ?? renderToken;
+  return {
+    value,
+    span: { start: renderToken.startOffset, end: tokenSpan(last).end },
+  };
 }
 
 function parseOrderBy(
   tokens: IToken[],
   orderIdx: number,
-  limitIdx: number,
+  sectionEnd: number,
 ): ReportQueryAst["orderBy"] {
   if (orderIdx === -1) {
     return undefined;
   }
-  const sectionEnd = limitIdx === -1 ? tokens.length : limitIdx;
   const metricIdx = orderIdx + 2;
   if (metricIdx >= sectionEnd) {
     return undefined;

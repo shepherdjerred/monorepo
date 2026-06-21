@@ -1,9 +1,14 @@
 import {
-  ReportOutputFormatSchema,
+  parseAndCompile,
   ReportRunTriggerSchema,
   type Report,
+  type ReportOutputFormat,
   type ReportRunTrigger,
 } from "@scout-for-lol/data";
+
+// The `output_format` metric label is the parsed RENDER kind, or `UNKNOWN` when
+// the stored query failed to parse before the kind could be derived.
+type ReportMetricLabel = ReportOutputFormat | "UNKNOWN";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   scheduledReportRowsTotal,
@@ -42,22 +47,27 @@ export async function runReport(
   params: RunReportParams,
 ): Promise<ReportRunResult> {
   const trigger = ReportRunTriggerSchema.parse(params.trigger);
-  const outputFormat = ReportOutputFormatSchema.parse(
-    params.report.outputFormat,
-  );
   const startedAt = params.now ?? new Date();
+  // Record the run row up front so any failure — including a malformed stored
+  // query whose RENDER clause won't parse — is captured as a FAILED run rather
+  // than thrown before the run is ever recorded. The `output_format` metric
+  // label is only known once the query parses; until then it stays UNKNOWN.
   const run = await params.prisma.reportRun.create({
     data: {
       reportId: params.report.id,
       serverId: params.report.serverId,
       trigger,
       status: "RUNNING",
-      outputFormat,
       startedAt,
     },
   });
+  let renderKind: ReportMetricLabel = "UNKNOWN";
 
   try {
+    // The render kind lives in the query's RENDER clause; deriving it here (a)
+    // surfaces a malformed stored query through the error-handled path and (b)
+    // yields the `output_format` metric label.
+    renderKind = parseAndCompile(params.report.queryText).render.kind;
     const result = await executeReportQuery({
       prisma: params.prisma,
       serverId: params.report.serverId,
@@ -69,7 +79,6 @@ export async function runReport(
     });
     const output = await renderReportOutput({
       title: params.report.title,
-      outputFormat,
       result,
       startedAt,
     });
@@ -109,6 +118,7 @@ export async function runReport(
     });
     recordReportMetrics({
       report: params.report,
+      outputFormat: renderKind,
       trigger,
       status: "SUCCESS",
       durationMs,
@@ -145,6 +155,7 @@ export async function runReport(
     });
     recordReportMetrics({
       report: params.report,
+      outputFormat: renderKind,
       trigger,
       status: "FAILED",
       durationMs: completedAt.getTime() - startedAt.getTime(),
@@ -158,6 +169,7 @@ export async function runReport(
 
 function recordReportMetrics(params: {
   report: Report;
+  outputFormat: ReportMetricLabel;
   trigger: ReportRunTrigger;
   status: "SUCCESS" | "FAILED";
   durationMs: number;
@@ -168,7 +180,7 @@ function recordReportMetrics(params: {
   const labels = {
     status: params.status,
     trigger: params.trigger,
-    output_format: params.report.outputFormat,
+    output_format: params.outputFormat,
     system_source: params.report.systemSource ?? "USER",
   };
   scheduledReportRunsTotal.inc(labels);
@@ -178,7 +190,7 @@ function recordReportMetrics(params: {
   if (params.status === "FAILED") {
     scheduledReportsFailedTotal.inc({
       trigger: params.trigger,
-      output_format: params.report.outputFormat,
+      output_format: params.outputFormat,
       system_source: params.report.systemSource ?? "USER",
     });
   }
@@ -199,7 +211,7 @@ function recordReportMetrics(params: {
   scheduledReportRowsReturnedTotal.inc(
     {
       trigger: params.trigger,
-      output_format: params.report.outputFormat,
+      output_format: params.outputFormat,
       system_source: params.report.systemSource ?? "USER",
     },
     params.rowsReturned,
@@ -207,7 +219,7 @@ function recordReportMetrics(params: {
   scheduledReportsRowsReturnedTotal.inc(
     {
       trigger: params.trigger,
-      output_format: params.report.outputFormat,
+      output_format: params.outputFormat,
       system_source: params.report.systemSource ?? "USER",
     },
     params.rowsReturned,
@@ -215,7 +227,7 @@ function recordReportMetrics(params: {
   scheduledReportRowsTotal.inc(
     {
       trigger: params.trigger,
-      output_format: params.report.outputFormat,
+      output_format: params.outputFormat,
       system_source: params.report.systemSource ?? "USER",
     },
     params.rowsReturned,
@@ -223,7 +235,7 @@ function recordReportMetrics(params: {
   scheduledReportRowsScannedTotal.inc(
     {
       trigger: params.trigger,
-      output_format: params.report.outputFormat,
+      output_format: params.outputFormat,
       system_source: params.report.systemSource ?? "USER",
     },
     params.rowsScanned,
@@ -231,7 +243,7 @@ function recordReportMetrics(params: {
   scheduledReportsRowsScannedTotal.inc(
     {
       trigger: params.trigger,
-      output_format: params.report.outputFormat,
+      output_format: params.outputFormat,
       system_source: params.report.systemSource ?? "USER",
     },
     params.rowsScanned,

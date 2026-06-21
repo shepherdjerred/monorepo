@@ -15,14 +15,12 @@ import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
+  parseAndCompile,
   ReportCreateInputSchema,
   ReportIdSchema,
   ReportLookbackDaysSchema,
   ReportMaxRowsSchema,
-  ReportOutputFormatSchema,
   ReportQueryTextSchema,
-  parseAndCompile,
-  reportColumnLabel,
   type DiscordGuildId,
   type ReportId,
 } from "@scout-for-lol/data";
@@ -37,7 +35,7 @@ import {
 import { prisma } from "#src/database/index.ts";
 import { canCreateAnotherUserReport } from "#src/discord/commands/report/authorization.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
-import { renderReportPreview } from "#src/reports/output.ts";
+import { renderReportOutput } from "#src/reports/output.ts";
 import { runReport } from "#src/reports/runner.ts";
 import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
 
@@ -100,7 +98,6 @@ export const reportRouter = router({
           id: run.id,
           trigger: run.trigger,
           status: run.status,
-          outputFormat: run.outputFormat,
           startedAt: run.startedAt,
           completedAt: run.completedAt,
           durationMs: run.durationMs,
@@ -149,7 +146,6 @@ export const reportRouter = router({
           queryText: input.queryText,
           lookbackDays: input.lookbackDays,
           maxRows: input.maxRows,
-          outputFormat: input.outputFormat,
           isEnabled: input.isEnabled,
           isSystemManaged: false,
           cronExpression: input.cronExpression,
@@ -172,7 +168,6 @@ export const reportRouter = router({
         queryText: ReportQueryTextSchema.optional(),
         lookbackDays: ReportLookbackDaysSchema.optional(),
         maxRows: ReportMaxRowsSchema.optional(),
-        outputFormat: ReportOutputFormatSchema.optional(),
         cronExpression: CompetitionCronSchema.optional(),
       }),
     )
@@ -213,9 +208,6 @@ export const reportRouter = router({
             ? {}
             : { lookbackDays: input.lookbackDays }),
           ...(input.maxRows === undefined ? {} : { maxRows: input.maxRows }),
-          ...(input.outputFormat === undefined
-            ? {}
-            : { outputFormat: input.outputFormat }),
           ...(input.cronExpression === undefined
             ? {}
             : {
@@ -302,7 +294,7 @@ export const reportRouter = router({
         queryText: ReportQueryTextSchema,
         lookbackDays: ReportLookbackDaysSchema,
         maxRows: ReportMaxRowsSchema,
-        outputFormat: ReportOutputFormatSchema.default("TABLE"),
+        title: z.string().trim().min(1).max(100).default("Preview"),
         sourceCompetitionId: z
           .number()
           .int()
@@ -322,20 +314,24 @@ export const reportRouter = router({
           maxRows: input.maxRows,
           sourceCompetitionId: input.sourceCompetitionId,
         });
-        const output = renderReportPreview({
-          title: "Preview",
-          outputFormat: input.outputFormat,
-          result,
-          startedAt: new Date(),
-        });
+        // Render the actual chart PNG so the form preview is true WYSIWYG; text
+        // kinds (table/list/leaderboard) preview as the data table on the client.
+        const render = result.plan.render;
+        const output =
+          render.kind === "BAR_CHART" || render.kind === "LINE_CHART"
+            ? await renderReportOutput({
+                title: input.title,
+                result,
+                startedAt: new Date(),
+              })
+            : null;
+        const image = output === null ? null : output.image;
         return {
           columns: result.columns,
-          columnLabels: result.columns.map((column) =>
-            reportColumnLabel(column, result.plan.groupBy),
-          ),
           rows: result.rows,
           rowsScanned: result.rowsScanned,
-          output,
+          renderKind: render.kind,
+          imageBase64: image === null ? null : image.data.toString("base64"),
         };
       } catch (error) {
         asBadRequest(error);

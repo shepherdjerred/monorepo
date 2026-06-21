@@ -1,4 +1,6 @@
 import { Link, NavLink, Outlet, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useTRPC } from "#src/lib/trpc.ts";
 import { cn } from "#src/lib/cn.ts";
 
 const NAV_ITEMS = [
@@ -6,12 +8,16 @@ const NAV_ITEMS = [
   { to: "players", label: "Players" },
   { to: "competitions", label: "Competitions" },
   { to: "reports", label: "Reports" },
-  { to: "admin", label: "Admin" },
   { to: "audit", label: "Audit" },
 ] as const;
 
 export function GuildWorkspace() {
   const { guildId } = useParams();
+  const trpc = useTRPC();
+  // Reuse the guild list already fetched by the picker (same query key →
+  // served from cache; auto-fetches if the user deep-linked here).
+  const { data: guilds } = useQuery(trpc.guild.listManageable.queryOptions());
+  const guild = guilds?.find((g) => g.id === guildId);
 
   if (guildId === undefined) {
     return (
@@ -29,8 +35,8 @@ export function GuildWorkspace() {
             <p className="text-xs font-medium uppercase text-muted-foreground">
               Guild
             </p>
-            <h1 className="font-mono text-lg font-semibold tracking-tight">
-              {guildId}
+            <h1 className="text-lg font-semibold tracking-tight">
+              {guild?.name ?? "…"}
             </h1>
           </div>
           <div className="flex items-center gap-3">

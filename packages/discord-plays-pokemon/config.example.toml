@@ -101,6 +101,11 @@ codex_binary = "codex"
 runtime_directory = "."
 screenshot_dir = "goal-screenshots"
 state_path = "goal-state.json"
+# Per-guild persistent memory (MEMORY.md fed into every goal prompt + logs/ +
+# archived-memory/). In the deployed bot the driver points this under
+# saves/<guildId>/ so it persists across restarts; this default only applies to
+# standalone/dev runs.
+memory_dir = "goal-memory"
 control_host = "127.0.0.1"
 control_port = 8082
 # hard cap; schema rejects values above 30
@@ -108,6 +113,14 @@ max_runtime_minutes = 30
 # another user can replace the goal after this lock expires
 lock_minutes = 5
 progress_update_interval_seconds = 60
+
+# The goal bot is trusted/operator-driven and behind the authed control server,
+# so it gets higher input caps than casual Discord chat users (who stay on the
+# [game.commands] values below). Bigger chords also cut LLM tool round-trips.
+[game.goal.command_limits]
+max_quantity_per_action = 60
+chord_max_commands = 32
+chord_max_total = 200
 
 [game.commands]
 # should chat commands be enabled

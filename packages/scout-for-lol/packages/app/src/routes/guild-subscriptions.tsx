@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { AddSubscriptionDialog } from "#src/components/add-subscription-dialog.tsx";
 import {
@@ -8,6 +13,7 @@ import {
   type SubscriptionChannelAction,
 } from "#src/components/subscription-channel-dialog.tsx";
 import { Button } from "#src/components/ui/button.tsx";
+import { LoadMore } from "#src/components/load-more.tsx";
 import {
   Table,
   TableBody,
@@ -16,6 +22,19 @@ import {
   TableHeader,
   TableRow,
 } from "#src/components/ui/table.tsx";
+
+function accountLabel(account: {
+  alias: string;
+  region: string;
+  riotGameName: string | null;
+  riotTagLine: string | null;
+}): string {
+  const name =
+    account.riotGameName === null
+      ? account.alias
+      : `${account.riotGameName}#${account.riotTagLine ?? ""}`;
+  return `${name} (${account.region})`;
+}
 
 export function GuildSubscriptions() {
   const { guildId } = useParams();
@@ -28,13 +47,20 @@ export function GuildSubscriptions() {
   const [error, setError] = useState<string | null>(null);
 
   const safeGuildId = guildId ?? "";
-  const subsKey = trpc.subscription.list.queryKey({ guildId: safeGuildId });
-  const subsQuery = useQuery(
-    trpc.subscription.list.queryOptions(
-      { guildId: safeGuildId },
-      { enabled: guildId !== undefined },
+  // pathKey matches both the regular and infinite query caches for this
+  // procedure, so invalidation refreshes the paginated list.
+  const subsKey = trpc.subscription.list.pathKey();
+  const subsQuery = useInfiniteQuery(
+    trpc.subscription.list.infiniteQueryOptions(
+      { guildId: safeGuildId, limit: 50 },
+      {
+        enabled: guildId !== undefined,
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
     ),
   );
+  const subscriptions =
+    subsQuery.data?.pages.flatMap((page) => page.items) ?? [];
   const channelsQuery = useQuery(
     trpc.guild.listChannels.queryOptions(
       { guildId: safeGuildId },
@@ -110,7 +136,7 @@ export function GuildSubscriptions() {
         <p className="text-sm text-muted-foreground">{message}</p>
       )}
 
-      {subsQuery.data && subsQuery.data.length === 0 && (
+      {subsQuery.data && subscriptions.length === 0 && (
         <p className="text-sm text-muted-foreground">
           No subscriptions yet — click &quot;Add subscription&quot;, or follow
           the{" "}
@@ -121,7 +147,7 @@ export function GuildSubscriptions() {
         </p>
       )}
 
-      {subsQuery.data && subsQuery.data.length > 0 && (
+      {subsQuery.data && subscriptions.length > 0 && (
         <div className="rounded-md border border-border">
           <Table>
             <TableHeader>
@@ -133,7 +159,7 @@ export function GuildSubscriptions() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {subsQuery.data.map((sub) => {
+              {subscriptions.map((sub) => {
                 const channel = channelsQuery.data?.find(
                   (c) => c.id === sub.channelId,
                 );
@@ -149,7 +175,7 @@ export function GuildSubscriptions() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {sub.player.accounts
-                        .map((a) => `${a.alias} (${a.region})`)
+                        .map((account) => accountLabel(account))
                         .join(", ")}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
@@ -217,6 +243,14 @@ export function GuildSubscriptions() {
           </Table>
         </div>
       )}
+
+      <LoadMore
+        hasNextPage={subsQuery.hasNextPage}
+        isFetchingNextPage={subsQuery.isFetchingNextPage}
+        onLoadMore={() => {
+          void subsQuery.fetchNextPage();
+        }}
+      />
 
       <AddSubscriptionDialog
         guildId={guildId}

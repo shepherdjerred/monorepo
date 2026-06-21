@@ -8,6 +8,7 @@ import {
   Limit,
   LParen,
   Order,
+  Render,
   RParen,
   Select,
   tokenizeReportQuery,
@@ -19,6 +20,7 @@ import {
   REPORT_GROUP_BYS,
   REPORT_KEYWORDS,
   REPORT_METRICS,
+  REPORT_RENDER_KINDS,
   REPORT_SOURCES,
   reportQueueValues,
 } from "#src/model/report-query-registry.ts";
@@ -45,7 +47,8 @@ type Region =
   | "queueValues"
   | "groupBy"
   | "orderBy"
-  | "limit";
+  | "limit"
+  | "render";
 
 // Context-aware completions for the editor: combines grammar position (which
 // clause the cursor sits in) with registry-driven identifier suggestions.
@@ -60,14 +63,16 @@ export function completeReportQuery(
     .with("source", () => sourceItems())
     .with("where", () => whereStarterItems())
     .with("queueValues", () => queueItems())
-    .with("groupBy", () => fieldItems())
+    .with("groupBy", () => [...fieldItems(), keywordItem("RENDER")])
     .with("orderBy", () => [
       ...metricItems(),
       labelItem(),
       keywordItem("ASC"),
       keywordItem("DESC"),
+      keywordItem("RENDER"),
     ])
-    .with("limit", () => [])
+    .with("limit", () => [keywordItem("RENDER")])
+    .with("render", () => renderItems())
     .exhaustive();
 }
 
@@ -82,6 +87,7 @@ function currentRegion(tokens: IToken[], offset: number): Region {
     ["groupBy", twoWordKeywordEnd(tokens, Group)],
     ["orderBy", twoWordKeywordEnd(tokens, Order)],
     ["limit", keywordEnd(tokens, Limit)],
+    ["render", keywordEnd(tokens, Render)],
   ] satisfies [Region, number][];
 
   const markers = candidates.filter(([, at]) => at !== -1 && at <= offset);
@@ -170,6 +176,16 @@ function queueItems(): ReportCompletionItem[] {
     detail: queue.label,
     kind: "queue",
   }));
+}
+
+function renderItems(): ReportCompletionItem[] {
+  const kinds: ReportCompletionItem[] = REPORT_RENDER_KINDS.map((kind) => ({
+    label: kind.id,
+    insertText: kind.id,
+    detail: kind.description,
+    kind: "keyword",
+  }));
+  return [...kinds, keywordItem("WITH")];
 }
 
 function labelItem(): ReportCompletionItem {

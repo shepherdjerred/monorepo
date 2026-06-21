@@ -52,6 +52,7 @@ export function AddSubscriptionDialog(props: Props) {
 
           <SubscriptionFields
             idPrefix="add-sub"
+            guildId={props.guildId}
             channels={props.channels}
             value={value}
             onChange={setValue}

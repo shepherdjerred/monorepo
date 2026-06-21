@@ -6,11 +6,13 @@ import {
   ReportOrderDirectionSchema,
   ReportSourceSchema,
   type ReportDiagnostic,
+  type ReportMetric,
   type ReportQueryAst,
   type ReportQuerySpan,
   type ReportWhereClause,
 } from "#src/model/report-query-spec.ts";
 import { parseReportQuery } from "#src/model/report-query-parser.ts";
+import { parseRenderClause } from "#src/model/report-query-compile.ts";
 import { tokenizeReportQuery } from "#src/model/report-query-lexer.ts";
 import { QueueTypeSchema } from "#src/model/state.ts";
 
@@ -43,7 +45,36 @@ export function lintReportQuery(text: string): ReportDiagnostic[] {
   diagnostics.push(...metricDiagnostics(ast));
   diagnostics.push(...orderAndLimitDiagnostics(ast));
   diagnostics.push(...whereDiagnostics(ast.where));
+  diagnostics.push(...renderDiagnostics(ast));
   return diagnostics;
+}
+
+// Validates the RENDER clause the same way the compiler does, but surfaces the
+// failure as a positioned diagnostic instead of throwing. Skipped when GROUP BY
+// is invalid (channel validation needs a known dimension).
+function renderDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
+  if (ast.render === undefined) {
+    return [];
+  }
+  const groupByResult = ReportGroupBySchema.safeParse(ast.groupBy?.value);
+  if (!groupByResult.success) {
+    return [];
+  }
+  const metrics: ReportMetric[] = [];
+  for (const item of ast.select) {
+    const parsed = ReportMetricSchema.safeParse(item.value);
+    if (parsed.success) {
+      metrics.push(parsed.data);
+    }
+  }
+  try {
+    parseRenderClause(ast.render.value, metrics, groupByResult.data);
+    return [];
+  } catch (renderError) {
+    const message =
+      renderError instanceof Error ? renderError.message : String(renderError);
+    return [error(message, ast.render.span)];
+  }
 }
 
 function sourceAndGroupDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {

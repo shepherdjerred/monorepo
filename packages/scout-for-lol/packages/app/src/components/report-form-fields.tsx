@@ -4,8 +4,6 @@ import {
   DEFAULT_REPORT_CRON,
   REPORT_MAX_LOOKBACK_DAYS,
   REPORT_MAX_ROWS_LIMIT,
-  ReportOutputFormatSchema,
-  type ReportOutputFormat,
 } from "@scout-for-lol/data";
 import { CronPresets } from "@scout-for-lol/data/model/competition-cron.ts";
 import { Button } from "#src/components/ui/button.tsx";
@@ -32,7 +30,6 @@ export type ReportFormState = {
   queryText: string;
   lookbackDays: string;
   maxRows: string;
-  outputFormat: ReportOutputFormat;
   cronExpression: string;
 };
 
@@ -43,7 +40,6 @@ export const EMPTY_REPORT_STATE: ReportFormState = {
   queryText: "",
   lookbackDays: "30",
   maxRows: "10",
-  outputFormat: "TABLE",
   cronExpression: DEFAULT_REPORT_CRON,
 };
 
@@ -54,14 +50,14 @@ export type ReportPayload = {
   queryText: string;
   lookbackDays: number;
   maxRows: number;
-  outputFormat: ReportOutputFormat;
   cronExpression: string;
 };
 
 /**
  * Parse + validate the string-backed form state into a payload ready for
  * `report.create` / `report.update`. Shared by the report route and the
- * onboarding wizard.
+ * onboarding wizard. The display lives in the query's trailing `RENDER`
+ * clause, so there is no separate `outputFormat` field.
  */
 export function buildReportPayload(
   state: ReportFormState,
@@ -86,7 +82,6 @@ export function buildReportPayload(
       queryText: state.queryText,
       lookbackDays,
       maxRows,
-      outputFormat: state.outputFormat,
       cronExpression: state.cronExpression,
     },
   };
@@ -171,6 +166,11 @@ export function ReportFormFields(props: {
             }}
           />
         </Suspense>
+        <p className="text-xs text-muted-foreground">
+          End the query with a <code>RENDER &lt;kind&gt;</code> clause to set the
+          display, e.g. <code>RENDER bar_chart with (y = win_rate)</code>. The
+          editor autocompletes the kinds and options.
+        </p>
         <details className="rounded-md border border-border">
           <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-muted-foreground">
             Query reference
@@ -185,50 +185,25 @@ export function ReportFormFields(props: {
         </details>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="report-format">Output format</Label>
-          <Select
-            value={state.outputFormat}
-            onValueChange={(next) => {
-              const parsed = ReportOutputFormatSchema.safeParse(next);
-              if (parsed.success) {
-                setState((prev) => ({ ...prev, outputFormat: parsed.data }));
-              }
-            }}
-          >
-            <SelectTrigger id="report-format">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ReportOutputFormatSchema.options.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="report-cron">Schedule</Label>
-          <Select
-            value={state.cronExpression}
-            onValueChange={(next) => {
-              setState((prev) => ({ ...prev, cronExpression: next }));
-            }}
-          >
-            <SelectTrigger id="report-cron">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {CronPresets.map((preset) => (
-                <SelectItem key={preset.value} value={preset.value}>
-                  {preset.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="report-cron">Schedule</Label>
+        <Select
+          value={state.cronExpression}
+          onValueChange={(next) => {
+            setState((prev) => ({ ...prev, cronExpression: next }));
+          }}
+        >
+          <SelectTrigger id="report-cron">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {CronPresets.map((preset) => (
+              <SelectItem key={preset.value} value={preset.value}>
+                {preset.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">

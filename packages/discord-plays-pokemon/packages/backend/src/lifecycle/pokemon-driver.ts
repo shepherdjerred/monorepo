@@ -75,6 +75,7 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
     const savePath = path.join(session.sessionDir, "pokeemerald.flash");
     const goalStatePath = path.join(session.sessionDir, "goal-state.json");
     const goalScreenshotDir = path.join(session.sessionDir, "goal-screenshots");
+    const goalMemoryDir = path.join(session.sessionDir, "goal-memory");
 
     const emulator = new Emulator({
       wasmPath: config.game.wasm_path,
@@ -130,6 +131,7 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
         ...config.game.goal,
         state_path: goalStatePath,
         screenshot_dir: goalScreenshotDir,
+        memory_dir: goalMemoryDir,
       };
       const controlToken = crypto.randomUUID();
       goalManager = new GoalManager({

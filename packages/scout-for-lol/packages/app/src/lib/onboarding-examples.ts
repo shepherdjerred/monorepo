@@ -34,8 +34,7 @@ export const REPORT_EXAMPLES: ReportExample[] = [
       title: "Best duo pairings",
       channelId,
       queryText:
-        "select pair, games, win_rate from player_pairs where games >= 5 group by pair order by win_rate desc",
-      outputFormat: "LEADERBOARD",
+        "select pair, games, win_rate from player_pairs where games >= 5 group by pair order by win_rate desc render leaderboard",
     }),
   },
   {
@@ -46,8 +45,7 @@ export const REPORT_EXAMPLES: ReportExample[] = [
       title: "Highest surrender %",
       channelId,
       queryText:
-        "select player, games, surrender_rate from match_participants group by player order by surrender_rate desc",
-      outputFormat: "LEADERBOARD",
+        "select player, games, surrender_rate from match_participants group by player order by surrender_rate desc render leaderboard",
     }),
   },
   {
@@ -58,8 +56,7 @@ export const REPORT_EXAMPLES: ReportExample[] = [
       title: "Most games played",
       channelId,
       queryText:
-        "select player, games from match_participants group by player order by games desc",
-      outputFormat: "LEADERBOARD",
+        "select player, games from match_participants group by player order by games desc render leaderboard",
     }),
   },
 ];

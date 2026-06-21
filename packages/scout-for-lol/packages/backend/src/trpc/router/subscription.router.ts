@@ -33,30 +33,40 @@ import { removeSubscription } from "#src/lib/subscription/remove.ts";
 import { moveSubscription } from "#src/lib/subscription/move.ts";
 import { addSubscriptionChannel } from "#src/lib/subscription/add-channel.ts";
 import { listSubscriptions } from "#src/lib/subscription/list.ts";
+import { ListSubscriptionsInputSchema } from "#src/lib/subscription/types.ts";
 import { recordAudit, AuditActionSchema } from "#src/lib/audit/index.ts";
 
 const GuildIdInput = z.object({ guildId: DiscordGuildIdSchema });
 
 export const subscriptionRouter = router({
-  list: webProcedure.input(GuildIdInput).query(async ({ ctx, input }) => {
-    await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
-    return listSubscriptions({ guildId: input.guildId });
-  }),
+  list: webProcedure
+    .input(ListSubscriptionsInputSchema)
+    .query(async ({ ctx, input }) => {
+      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+      return listSubscriptions(input);
+    }),
 
   listAuditLog: webProcedure
     .input(
       GuildIdInput.extend({
-        limit: z.number().int().min(1).max(500).default(100),
+        limit: z.number().int().min(1).max(500).default(50),
+        cursor: z.number().int().min(1).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
       const rows = await prisma.auditLog.findMany({
         where: { serverId: input.guildId },
-        orderBy: { createdAt: "desc" },
-        take: input.limit,
+        // `id desc` is the stable tiebreaker for cursor pagination.
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        take: input.limit + 1,
+        ...(input.cursor === undefined
+          ? {}
+          : { cursor: { id: input.cursor }, skip: 1 }),
       });
-      return rows.map((r) => {
+      const page = rows.slice(0, input.limit);
+      const hasMore = rows.length > input.limit;
+      const items = page.map((r) => {
         // AuditLog.payload is a free-form JSON string. Old / malformed
         // rows must not break the whole list — fall back to a synthetic
         // object so a single bad payload doesn't take the whole page down.
@@ -78,6 +88,7 @@ export const subscriptionRouter = router({
           payload,
         };
       });
+      return { items, nextCursor: hasMore ? (page.at(-1)?.id ?? null) : null };
     }),
 
   add: webMutationProcedure
@@ -114,6 +125,12 @@ export const subscriptionRouter = router({
         return notFound;
       }
       const puuid = puuidResult.puuid;
+      // Seed the stored Riot ID from Riot's canonical casing (surfaced by the
+      // resolve above), not the user-typed input.
+      const canonicalRiotId = {
+        game_name: puuidResult.gameName,
+        tag_line: puuidResult.tagLine,
+      };
 
       const result = await prisma.$transaction(async (tx) => {
         const r = await addSubscription(
@@ -121,7 +138,7 @@ export const subscriptionRouter = router({
             guildId: input.guildId,
             channelId: input.channelId,
             region: input.region,
-            riotId: input.riotId,
+            riotId: canonicalRiotId,
             alias: input.alias,
             discordUserId: input.discordUserId,
             creatorDiscordId: actorDiscordId,

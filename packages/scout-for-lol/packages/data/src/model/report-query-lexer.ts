@@ -55,6 +55,8 @@ export const And = keyword("And", "and");
 export const In = keyword("In", "in");
 export const Asc = keyword("Asc", "asc");
 export const Desc = keyword("Desc", "desc");
+export const Render = keyword("Render", "render");
+export const With = keyword("With", "with");
 
 // Order matters: multi-char operators before single, keywords before Identifier.
 export const reportQueryTokenTypes: TokenType[] = [
@@ -77,6 +79,8 @@ export const reportQueryTokenTypes: TokenType[] = [
   In,
   Asc,
   Desc,
+  Render,
+  With,
   Identifier,
 ];
 

@@ -26,6 +26,7 @@ describe("parseAndCompile", () => {
       orderBy: "surrender_rate",
       orderDirection: "desc",
       limit: 10,
+      render: { kind: "TABLE" },
     });
   });
 
@@ -72,6 +73,91 @@ describe("parseAndCompile", () => {
     expect(() => parseAndCompile("SELECT games")).toThrow(
       "Invalid report query",
     );
+  });
+});
+
+describe("RENDER clause", () => {
+  test("defaults render to TABLE when no clause is present", () => {
+    const plan = parseAndCompile(
+      "SELECT player, games FROM match_participants GROUP BY player",
+    );
+    expect(plan.render).toEqual({ kind: "TABLE" });
+  });
+
+  test("parses a bare chart render clause (defaults resolve at render)", () => {
+    const plan = parseAndCompile(
+      "SELECT player, win_rate FROM match_participants GROUP BY player ORDER BY win_rate DESC RENDER bar_chart",
+    );
+    expect(plan.render).toEqual({
+      kind: "BAR_CHART",
+      encoding: {},
+      options: {},
+    });
+  });
+
+  test("parses chart channels and options in the WITH clause", () => {
+    const plan = parseAndCompile(
+      'SELECT player, games, win_rate FROM match_participants GROUP BY player LIMIT 5 RENDER line_chart WITH (x = label, y = win_rate, title = "Win %", y_axis = "Rate")',
+    );
+    expect(plan.render).toEqual({
+      kind: "LINE_CHART",
+      encoding: { x: "label", y: "win_rate" },
+      options: { title: "Win %", yAxisLabel: "Rate" },
+    });
+  });
+
+  test("parses a text render kind without a WITH clause", () => {
+    const plan = parseAndCompile(
+      "SELECT player, games FROM match_participants GROUP BY player RENDER leaderboard",
+    );
+    expect(plan.render).toEqual({ kind: "LEADERBOARD" });
+  });
+
+  test("ignores keywords inside a quoted render title", () => {
+    const plan = parseAndCompile(
+      'SELECT player, games FROM match_participants GROUP BY player ORDER BY games DESC LIMIT 3 RENDER bar_chart WITH (title = "no limit here")',
+    );
+    expect(plan.limit).toBe(3);
+    expect(plan.orderBy).toBe("games");
+    expect(plan.render).toEqual({
+      kind: "BAR_CHART",
+      encoding: {},
+      options: { title: "no limit here" },
+    });
+  });
+
+  test("rejects an unknown render kind", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT player, games FROM match_participants GROUP BY player RENDER pie_chart",
+      ),
+    ).toThrow("Unknown RENDER kind");
+  });
+
+  test("rejects a y channel that is not a SELECTed metric", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT player, games FROM match_participants GROUP BY player RENDER bar_chart WITH (y = win_rate)",
+      ),
+    ).toThrow('RENDER y = "win_rate" is not a SELECTed metric');
+  });
+
+  test("rejects a WITH clause on a text render kind", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT player, games FROM match_participants GROUP BY player RENDER table WITH (y = games)",
+      ),
+    ).toThrow("does not take a WITH clause");
+  });
+
+  test("lints an unknown render kind with a positioned error", () => {
+    const text =
+      "select player, games from match_participants group by player render pie_chart";
+    const diagnostics = lintReportQuery(text);
+    const renderError = diagnostics.find((d) =>
+      d.message.includes("Unknown RENDER kind"),
+    );
+    expect(renderError?.severity).toBe("error");
   });
 });
 

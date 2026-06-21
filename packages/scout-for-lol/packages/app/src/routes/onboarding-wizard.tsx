@@ -61,7 +61,9 @@ export function OnboardingWizard() {
 
   const guilds = guildsQuery.data ?? [];
   const channels = channelsQuery.data ?? [];
-  const subs = subsQuery.data ?? [];
+  // subscription.list is paginated ({ items, nextCursor }); the onboarding
+  // wizard only needs the first page's items for its "tracking so far" list.
+  const subs = subsQuery.data?.items ?? [];
 
   function complete(): void {
     if (meQuery.data !== undefined) {

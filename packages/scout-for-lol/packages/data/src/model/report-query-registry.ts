@@ -222,6 +222,47 @@ export const REPORT_KEYWORDS: ReportKeywordInfo[] = [
   },
   { keyword: "ASC", description: "Sort ascending." },
   { keyword: "DESC", description: "Sort descending (default)." },
+  {
+    keyword: "RENDER",
+    description: "Choose how the report displays, e.g. RENDER bar_chart.",
+  },
+  {
+    keyword: "WITH",
+    description:
+      "Set chart channels/options, e.g. WITH (y = win_rate, title = \"…\").",
+  },
+];
+
+export type ReportRenderKindInfo = {
+  id: string;
+  label: string;
+  description: string;
+  isChart: boolean;
+};
+
+// The display kinds accepted by the trailing `RENDER <kind>` clause. Chart kinds
+// additionally accept a `WITH (…)` clause to pick channels/options.
+export const REPORT_RENDER_KINDS: ReportRenderKindInfo[] = [
+  { id: "table", label: "Table", description: "Plain data table.", isChart: false },
+  { id: "list", label: "List", description: "Bulleted text list.", isChart: false },
+  {
+    id: "leaderboard",
+    label: "Leaderboard",
+    description: "Ranked leaderboard text.",
+    isChart: false,
+  },
+  {
+    id: "bar_chart",
+    label: "Bar chart",
+    description: "Bar chart image; WITH (y = <metric>) picks the series.",
+    isChart: true,
+  },
+  {
+    id: "line_chart",
+    label: "Line chart",
+    description: "Line chart image; WITH (y = <metric>) picks the series.",
+    isChart: true,
+  },
 ];
 
 export const REPORT_FILTERS: ReportFilterInfo[] = [
@@ -251,17 +292,17 @@ export const REPORT_EXAMPLES: ReportExampleInfo[] = [
   {
     title: "Most games played",
     query:
-      "select games, win_rate from match_participants group by player order by games desc limit 10",
+      "select games, win_rate from match_participants group by player order by games desc limit 10 render leaderboard",
   },
   {
     title: "Best win rate (ranked solo, min 10 games)",
     query:
-      "select games, win_rate from match_participants where queue in (solo) and games >= 10 group by player order by win_rate desc",
+      "select games, win_rate from match_participants where queue in (solo) and games >= 10 group by player order by win_rate desc render bar_chart with (y = win_rate)",
   },
   {
     title: "Surrender-happy champions",
     query:
-      "select games, surrender_rate from match_participants group by champion order by surrender_rate desc limit 10",
+      "select games, surrender_rate from match_participants group by champion order by surrender_rate desc limit 10 render leaderboard",
   },
 ];
 

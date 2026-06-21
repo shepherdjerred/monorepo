@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  DEFAULT_RENDER_SPEC,
+  ReportRenderSpecSchema,
+} from "#src/model/report.ts";
 
 // ── Report query language: schema enums + query plan ─────────────────────────
 // Single source of truth for the bespoke SQL-like report query language. Shared
@@ -56,6 +60,9 @@ export const ReportQueryPlanSchema = z.object({
   orderBy: z.union([ReportMetricSchema, z.literal("label")]).default("games"),
   orderDirection: ReportOrderDirectionSchema.default("desc"),
   limit: z.number().int().positive().optional(),
+  // The trailing `RENDER <kind> [WITH (...)]` clause; absent clauses default to
+  // a TABLE render so a plain query reproduces the pre-DSL behavior.
+  render: ReportRenderSpecSchema.default(DEFAULT_RENDER_SPEC),
 });
 
 // The order-by target is any metric, or the special "label" grouping column.
@@ -109,6 +116,9 @@ export type ReportQueryAst = {
   groupBy?: ReportQueryItem | undefined;
   orderBy?: ReportQueryOrderBy | undefined;
   limit?: ReportQueryItem | undefined;
+  // Raw text of the trailing RENDER clause (the part after the `RENDER` keyword,
+  // e.g. `bar_chart with (y = win_rate)`); compiled to a ReportRenderSpec.
+  render?: ReportQueryItem | undefined;
 };
 
 export type ReportParseResult = {

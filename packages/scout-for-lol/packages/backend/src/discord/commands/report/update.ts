@@ -10,8 +10,6 @@ import {
   ReportIdSchema,
   ReportLookbackDaysSchema,
   ReportMaxRowsSchema,
-  type ReportOutputFormat,
-  ReportOutputFormatSchema,
   ReportQueryTextSchema,
   parseAndCompile,
 } from "@scout-for-lol/data";
@@ -33,7 +31,6 @@ type ReportUpdateOptions = {
   cronExpression?: string;
   lookbackDays?: number;
   maxRows?: number;
-  outputFormat?: ReportOutputFormat;
   channelId?: DiscordChannelId;
   enabled?: boolean;
 };
@@ -131,7 +128,6 @@ function readReportUpdateOptions(
     readCronOption(interaction),
     readLookbackDaysOption(interaction),
     readMaxRowsOption(interaction),
-    readOutputFormatOption(interaction),
   );
   if (channel !== null) {
     options.channelId = DiscordChannelIdSchema.parse(channel.id);
@@ -191,16 +187,6 @@ function readMaxRowsOption(
     return undefined;
   }
   return { maxRows: ReportMaxRowsSchema.parse(value) };
-}
-
-function readOutputFormatOption(
-  interaction: ChatInputCommandInteraction,
-): Pick<ReportUpdateOptions, "outputFormat"> | undefined {
-  const value = interaction.options.getString("output-format");
-  if (value === null) {
-    return undefined;
-  }
-  return { outputFormat: ReportOutputFormatSchema.parse(value) };
 }
 
 function readQueryOption(
@@ -265,9 +251,6 @@ function buildReportUpdateData(
       ? {}
       : { lookbackDays: options.lookbackDays }),
     ...(options.maxRows === undefined ? {} : { maxRows: options.maxRows }),
-    ...(options.outputFormat === undefined
-      ? {}
-      : { outputFormat: options.outputFormat }),
     ...(options.enabled === undefined ? {} : { isEnabled: options.enabled }),
     ...(options.cronExpression === undefined
       ? {}
