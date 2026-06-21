@@ -167,7 +167,7 @@ const versions = {
   // renovate: datasource=helm registryUrl=https://vmware-tanzu.github.io/helm-charts versioning=semver
   velero: "12.0.1",
   // renovate: datasource=helm registryUrl=https://kyverno.github.io/kyverno versioning=semver
-  kyverno: "3.8.0",
+  kyverno: "3.8.1",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "velero/velero-plugin-for-aws":
     "v1.14.0@sha256:7e82f717f44e89671212e0dfce7e061321c386ea84a33bca64a671670ca6c278",
