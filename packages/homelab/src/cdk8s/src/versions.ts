@@ -170,7 +170,7 @@ const versions = {
   kyverno: "3.8.1",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "velero/velero-plugin-for-aws":
-    "v1.14.0@sha256:7e82f717f44e89671212e0dfce7e061321c386ea84a33bca64a671670ca6c278",
+    "v1.14.1@sha256:1493a0039cd5cb31004cfbb52f8a1990bc0ed81497ce72516bc76fa9e21506c1",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "openebs/velero-plugin":
     "3.6.0@sha256:9ea3331d891e436a7239e37e68ca4c8888500cb122be7cdc9d8400f345555c76",
