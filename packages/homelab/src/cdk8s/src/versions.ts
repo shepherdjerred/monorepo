@@ -42,7 +42,7 @@ const versions = {
     "2.17.1@sha256:f13b3e7d6798e62eef6f9a9e65513d2e0a8f468524432c2d753b7b458b1876d4",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
   "linuxserver/bazarr":
-    "1.5.6@sha256:4b5e510042bf471c8bafab89cada9774fba2fb25f16ec64235151cacbe847c10",
+    "1.5.6@sha256:8e48a2950e3806a2a914fe031fa21b1c0a0f2824eede4ea747e26213e941fbf2",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
   // Kept alongside Seerr during the migration; remove once Seerr fully owns the request flow.
   "linuxserver/overseerr":
