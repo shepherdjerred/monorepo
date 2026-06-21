@@ -19,7 +19,6 @@
     "update-data-dragon": "bun run scripts/update-data-dragon.ts"
   },
   "dependencies": {
-    "@shepherdjerred/llm-models": "file:../../../llm-models",
     "cron-parser": "^5.5.0",
     "date-fns": "^4.1.0",
     "remeda": "^2.21.2",

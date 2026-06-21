@@ -47,6 +47,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@shepherdjerred/llm-models": "file:../llm-models",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-dialog": "^2.7.0",
     "autoprefixer": "^10.5.0",
