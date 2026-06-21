@@ -3,7 +3,7 @@ import type {
   ReportGroupBy,
   ReportMetric,
   ReportQueryPlan,
-} from "#src/reports/query-language.ts";
+} from "@scout-for-lol/data";
 import type { ReportQueryResult } from "#src/reports/query-engine.ts";
 
 export type MatchParticipantFactRow = {

@@ -1,7 +1,8 @@
-import type { DiscordGuildId } from "@scout-for-lol/data";
+import type { DiscordGuildId, ReportQueryPlan } from "@scout-for-lol/data";
 import {
   CompetitionIdSchema,
   RankSchema,
+  parseAndCompile,
   parseCompetition,
   rankToString,
   rankToLeaguePoints,
@@ -16,11 +17,6 @@ import {
   rowsFromAggregates,
   type MatchParticipantFactRow,
 } from "#src/reports/query-aggregates.ts";
-import {
-  parseReportQuery,
-  type ReportQueryPlan,
-} from "#src/reports/query-language.ts";
-
 export type ReportResultValue = {
   column: string;
   value: number | string;
@@ -52,7 +48,7 @@ type ExecuteReportQueryParams = {
 export async function executeReportQuery(
   params: ExecuteReportQueryParams,
 ): Promise<ReportQueryResult> {
-  const plan = parseReportQuery(params.queryText);
+  const plan = parseAndCompile(params.queryText);
 
   if (plan.source === "competition_rank" || plan.source === "rank_current") {
     return await executeCompetitionRankReport(params, plan);

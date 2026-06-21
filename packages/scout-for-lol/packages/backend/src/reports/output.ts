@@ -1,9 +1,10 @@
-import type { ReportOutputFormat, ReportRenderSpec } from "@scout-for-lol/data";
-import { competitionChartToImage } from "@scout-for-lol/report";
 import {
   ReportMetricSchema,
   type ReportMetric,
-} from "#src/reports/query-language.ts";
+  type ReportOutputFormat,
+  type ReportRenderSpec,
+} from "@scout-for-lol/data";
+import { competitionChartToImage } from "@scout-for-lol/report";
 import type {
   ReportQueryResult,
   ReportResultRow,

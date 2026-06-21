@@ -6,8 +6,12 @@ import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3
  * - `script-src 'self'` is satisfied because the first-paint dark-mode setup
  *   was extracted into `/app/init-theme.js` (see scout `app/index.html`).
  * - `img-src` allows `https://cdn.discordapp.com` for guild icons, `data:` for
- *   inlined icons, and `blob:` for chart PNGs fetched with credentials and
- *   rendered via `URL.createObjectURL` (see `app/src/components/chart-image.tsx`).
+ *   inlined icons + SVG report-query previews, and `blob:` for chart PNGs fetched
+ *   with credentials and rendered via `URL.createObjectURL`
+ *   (see `app/src/components/chart-image.tsx`).
+ * - `worker-src 'self' blob:` lets the Monaco editor (report query studio) spawn
+ *   its bundled, same-origin web worker (`/app/assets/editor.worker-*.js`); the
+ *   `blob:` fallback covers Monaco's blob-wrapped worker path.
  * - `form-action 'self' https://discord.com` covers the
  *   `/api/auth/discord/start` → `discord.com/oauth2/authorize` redirect chain.
  * - `frame-ancestors 'none'` blocks clickjacking; this matches the
@@ -16,6 +20,7 @@ import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3
 const scoutCsp = [
   "default-src 'self'",
   "script-src 'self'",
+  "worker-src 'self' blob:",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' https://cdn.discordapp.com data: blob:",
   "connect-src 'self'",

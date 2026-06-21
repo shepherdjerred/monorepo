@@ -11,6 +11,7 @@ import {
   ReportLookbackDaysSchema,
   ReportMaxRowsSchema,
   ReportQueryTextSchema,
+  parseAndCompile,
 } from "@scout-for-lol/data";
 import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competition-cron.ts";
 import { CompetitionCronSchema } from "@scout-for-lol/data/model/competition-cron.ts";
@@ -19,7 +20,6 @@ import {
   canCreateAnotherUserReport,
   isReportManager,
 } from "#src/discord/commands/report/authorization.ts";
-import { parseReportQuery } from "#src/reports/query-language.ts";
 
 const ReportTitleSchema = z.string().trim().min(1).max(100);
 const ReportDescriptionSchema = z.string().trim().max(500);
@@ -197,7 +197,7 @@ function readQueryOption(
     return undefined;
   }
   const queryText = ReportQueryTextSchema.parse(query);
-  parseReportQuery(queryText);
+  parseAndCompile(queryText);
   return { queryText };
 }
 

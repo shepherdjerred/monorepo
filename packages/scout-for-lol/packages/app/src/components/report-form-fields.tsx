@@ -1,21 +1,14 @@
-import type { Dispatch, SetStateAction } from "react";
+import { lazy, Suspense, type Dispatch, type SetStateAction } from "react";
+import { Link } from "react-router-dom";
 import {
   DEFAULT_REPORT_CRON,
   REPORT_MAX_LOOKBACK_DAYS,
   REPORT_MAX_ROWS_LIMIT,
-  ReportOutputFormatSchema,
 } from "@scout-for-lol/data";
 import { CronPresets } from "@scout-for-lol/data/model/competition-cron.ts";
-import {
-  buildRenderClause,
-  isChartKind,
-  renderKindFromQuery,
-  renderYFromQuery,
-  upsertRenderClause,
-} from "#src/lib/render-clause.ts";
+import { Button } from "#src/components/ui/button.tsx";
 import { Input } from "#src/components/ui/input.tsx";
 import { Label } from "#src/components/ui/label.tsx";
-import { Textarea } from "#src/components/ui/textarea.tsx";
 import {
   Select,
   SelectContent,
@@ -23,9 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#src/components/ui/select.tsx";
+import { ReportQueryDocs } from "#src/components/report-query-docs.tsx";
 
-export const EXAMPLE_QUERY =
-  "select games, win_rate from match_participants where queue in (ranked_solo) group by player order by games desc render bar_chart with (y = win_rate)";
+// Lazy so Monaco is split out of the main bundle and only loaded with this form.
+const ReportQueryEditor = lazy(
+  () => import("#src/components/report-query-editor.tsx"),
+);
 
 export type ReportFormState = {
   title: string;
@@ -66,6 +62,9 @@ export type ReportPayload = {
 export function buildReportPayload(
   state: ReportFormState,
 ): { ok: true; payload: ReportPayload } | { ok: false; message: string } {
+  if (state.queryText.trim() === "") {
+    return { ok: false, message: "Query is required." };
+  }
   const lookbackDays = Number(state.lookbackDays);
   const maxRows = Number(state.maxRows);
   if (!Number.isInteger(lookbackDays) || !Number.isInteger(maxRows)) {
@@ -92,39 +91,11 @@ export function ReportFormFields(props: {
   state: ReportFormState;
   setState: Dispatch<SetStateAction<ReportFormState>>;
   channels: { id: string; name: string }[] | undefined;
-  /**
-   * Metric columns offered as Y-axis choices for chart kinds, sourced from the
-   * live preview's result columns. When omitted (e.g. the onboarding wizard has
-   * no preview), the Y picker is hidden — the query's existing `RENDER` clause
-   * still drives the display, and the first SELECTed metric is plotted.
-   */
-  metricOptions?: string[];
+  // When provided, renders a "Full reference" link next to the Query label
+  // (the report route passes its guild-scoped help route; onboarding omits it).
+  queryHelpHref?: string;
 }) {
-  const { state, setState } = props;
-  const currentKind = renderKindFromQuery(state.queryText);
-  const currentY = renderYFromQuery(state.queryText);
-  const metricOptions = props.metricOptions;
-
-  function setRenderKind(kind: string): void {
-    setState((prev) => ({
-      ...prev,
-      queryText: upsertRenderClause(
-        prev.queryText,
-        buildRenderClause(kind, renderYFromQuery(prev.queryText)),
-      ),
-    }));
-  }
-
-  function setRenderY(yMetric: string): void {
-    setState((prev) => ({
-      ...prev,
-      queryText: upsertRenderClause(
-        prev.queryText,
-        buildRenderClause(renderKindFromQuery(prev.queryText), yMetric),
-      ),
-    }));
-  }
-
+  const { state, setState, queryHelpHref } = props;
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -173,82 +144,67 @@ export function ReportFormFields(props: {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="report-query">Query</Label>
-        <Textarea
-          id="report-query"
-          value={state.queryText}
-          placeholder={EXAMPLE_QUERY}
-          onChange={(event) => {
-            setState((prev) => ({ ...prev, queryText: event.target.value }));
-          }}
-          required
-        />
+        <div className="flex items-center justify-between">
+          <Label>Query</Label>
+          {queryHelpHref !== undefined && (
+            <Button asChild variant="link" size="sm">
+              <Link to={queryHelpHref}>Full reference</Link>
+            </Button>
+          )}
+        </div>
+        <Suspense
+          fallback={
+            <div className="flex h-[180px] items-center justify-center rounded-md border border-border text-sm text-muted-foreground">
+              Loading editor…
+            </div>
+          }
+        >
+          <ReportQueryEditor
+            value={state.queryText}
+            onChange={(value) => {
+              setState((prev) => ({ ...prev, queryText: value }));
+            }}
+          />
+        </Suspense>
         <p className="text-xs text-muted-foreground">
           End the query with a <code>RENDER &lt;kind&gt;</code> clause to set
-          the display. The builder below edits that clause for you.
+          the display, e.g. <code>RENDER bar_chart with (y = win_rate)</code>.
+          The editor autocompletes the kinds and options.
         </p>
+        <details className="rounded-md border border-border">
+          <summary className="cursor-pointer px-3 py-2 text-xs font-medium text-muted-foreground">
+            Query reference
+          </summary>
+          <div className="border-t border-border p-3">
+            <ReportQueryDocs
+              onUseExample={(query) => {
+                setState((prev) => ({ ...prev, queryText: query }));
+              }}
+            />
+          </div>
+        </details>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="report-display">Display</Label>
-          <Select value={currentKind} onValueChange={setRenderKind}>
-            <SelectTrigger id="report-display">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ReportOutputFormatSchema.options.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="report-cron">Schedule</Label>
-          <Select
-            value={state.cronExpression}
-            onValueChange={(next) => {
-              setState((prev) => ({ ...prev, cronExpression: next }));
-            }}
-          >
-            <SelectTrigger id="report-cron">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {CronPresets.map((preset) => (
-                <SelectItem key={preset.value} value={preset.value}>
-                  {preset.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="report-cron">Schedule</Label>
+        <Select
+          value={state.cronExpression}
+          onValueChange={(next) => {
+            setState((prev) => ({ ...prev, cronExpression: next }));
+          }}
+        >
+          <SelectTrigger id="report-cron">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {CronPresets.map((preset) => (
+              <SelectItem key={preset.value} value={preset.value}>
+                {preset.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
-
-      {isChartKind(currentKind) && metricOptions !== undefined && (
-        <div className="space-y-2">
-          <Label htmlFor="report-y">Plot metric (Y axis)</Label>
-          <Select value={currentY} onValueChange={setRenderY}>
-            <SelectTrigger id="report-y">
-              <SelectValue placeholder="First SELECTed metric (default)" />
-            </SelectTrigger>
-            <SelectContent>
-              {metricOptions.map((column) => (
-                <SelectItem key={column} value={column}>
-                  {column}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground">
-            Choices come from the live preview. Leave unset to plot the first
-            SELECTed metric. For a custom title or axis label, edit the RENDER
-            clause directly (e.g. <code>title = &quot;Win %&quot;</code>).
-          </p>
-        </div>
-      )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">

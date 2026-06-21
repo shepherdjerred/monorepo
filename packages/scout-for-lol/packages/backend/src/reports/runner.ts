@@ -1,4 +1,5 @@
 import {
+  parseAndCompile,
   ReportRunTriggerSchema,
   type Report,
   type ReportOutputFormat,
@@ -9,7 +10,6 @@ import {
 // the stored query failed to parse before the kind could be derived.
 type ReportMetricLabel = ReportOutputFormat | "UNKNOWN";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import { parseReportQuery } from "#src/reports/query-language.ts";
 import {
   scheduledReportRowsTotal,
   scheduledReportRunDurationSeconds,
@@ -67,7 +67,7 @@ export async function runReport(
     // The render kind lives in the query's RENDER clause; deriving it here (a)
     // surfaces a malformed stored query through the error-handled path and (b)
     // yields the `output_format` metric label.
-    renderKind = parseReportQuery(params.report.queryText).render.kind;
+    renderKind = parseAndCompile(params.report.queryText).render.kind;
     const result = await executeReportQuery({
       prisma: params.prisma,
       serverId: params.report.serverId,

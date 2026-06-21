@@ -18,9 +18,8 @@ export function ReportQueryPreview(props: {
   title: string;
   lookbackDays: number;
   maxRows: number;
-  onColumns?: (columns: string[]) => void;
 }) {
-  const { guildId, queryText, title, lookbackDays, maxRows, onColumns } = props;
+  const { guildId, queryText, title, lookbackDays, maxRows } = props;
   const trpc = useTRPC();
   const previewMutation = useMutation(
     trpc.report.previewQuery.mutationOptions(),
@@ -36,7 +35,8 @@ export function ReportQueryPreview(props: {
     };
   }, [queryText, title]);
 
-  // Re-run whenever the debounced query/title (or limits) change.
+  // Re-run whenever the debounced query/title (or limits) change. The display
+  // format comes from the query's RENDER clause, parsed server-side.
   const { mutate } = previewMutation;
   useEffect(() => {
     if (debounced.queryText.trim().length === 0) return;
@@ -50,14 +50,6 @@ export function ReportQueryPreview(props: {
   }, [mutate, guildId, debounced, lookbackDays, maxRows]);
 
   const result = previewMutation.data;
-
-  // Lift the produced columns so the form's display builder can offer them as
-  // chart channels (the GROUP BY dimension is "label"; the rest are metrics).
-  useEffect(() => {
-    if (result !== undefined && onColumns !== undefined) {
-      onColumns(result.columns);
-    }
-  }, [result, onColumns]);
 
   return (
     <div className="space-y-2">

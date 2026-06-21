@@ -12,6 +12,7 @@ import { CompetitionForm } from "#src/routes/competition-form.tsx";
 import { ReportList } from "#src/routes/report-list.tsx";
 import { ReportDetail } from "#src/routes/report-detail.tsx";
 import { ReportForm } from "#src/routes/report-form.tsx";
+import { ReportHelp } from "#src/routes/report-help.tsx";
 import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
 import { InstallLanding } from "#src/routes/install-landing.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
@@ -41,6 +42,7 @@ export function App() {
               element={<CompetitionForm />}
             />
             <Route path="reports" element={<ReportList />} />
+            <Route path="reports/help" element={<ReportHelp />} />
             <Route path="reports/new" element={<ReportForm />} />
             <Route path="reports/:reportId" element={<ReportDetail />} />
             <Route path="reports/:reportId/edit" element={<ReportForm />} />

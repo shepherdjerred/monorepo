@@ -15,6 +15,7 @@ import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
+  parseAndCompile,
   ReportCreateInputSchema,
   ReportIdSchema,
   ReportLookbackDaysSchema,
@@ -33,7 +34,6 @@ import {
 } from "#src/trpc/guild-guard.ts";
 import { prisma } from "#src/database/index.ts";
 import { canCreateAnotherUserReport } from "#src/discord/commands/report/authorization.ts";
-import { parseReportQuery } from "#src/reports/query-language.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
 import { renderReportOutput } from "#src/reports/output.ts";
 import { runReport } from "#src/reports/runner.ts";
@@ -131,7 +131,7 @@ export const reportRouter = router({
         });
       }
       try {
-        parseReportQuery(input.queryText);
+        parseAndCompile(input.queryText);
       } catch (error) {
         asBadRequest(error);
       }
@@ -184,7 +184,7 @@ export const reportRouter = router({
       }
       if (input.queryText !== undefined) {
         try {
-          parseReportQuery(input.queryText);
+          parseAndCompile(input.queryText);
         } catch (error) {
           asBadRequest(error);
         }

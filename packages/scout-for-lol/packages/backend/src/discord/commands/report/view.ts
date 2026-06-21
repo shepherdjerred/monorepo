@@ -1,5 +1,6 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import {
+  parseAndCompile,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   ReportIdSchema,
@@ -7,7 +8,6 @@ import {
 import { prisma } from "#src/database/index.ts";
 import { isReportManager } from "#src/discord/commands/report/authorization.ts";
 import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
-import { parseReportQuery } from "#src/reports/query-language.ts";
 
 export async function executeReportView(
   interaction: ChatInputCommandInteraction,
@@ -75,7 +75,7 @@ export async function executeReportView(
 // block inspecting it (the raw query is shown below for diagnosis).
 function safeRenderKind(queryText: string): string {
   try {
-    return parseReportQuery(queryText).render.kind;
+    return parseAndCompile(queryText).render.kind;
   } catch {
     return "unparseable";
   }

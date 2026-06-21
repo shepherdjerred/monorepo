@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ReportIdSchema } from "@scout-for-lol/data";
@@ -35,11 +35,6 @@ export function ReportForm() {
   const [state, setState] = useState<ReportFormState>(EMPTY_REPORT_STATE);
   const [prefilled, setPrefilled] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [previewColumns, setPreviewColumns] = useState<string[]>([]);
-
-  const handleColumns = useCallback((columns: string[]) => {
-    setPreviewColumns(columns);
-  }, []);
 
   const channelsQuery = useQuery(
     trpc.guild.listChannels.queryOptions(
@@ -119,8 +114,6 @@ export function ReportForm() {
   }
 
   const pending = createMutation.isPending || updateMutation.isPending;
-  // Drop "label" (the GROUP BY dimension) — only metrics are plottable on Y.
-  const metricOptions = previewColumns.slice(1);
 
   return (
     <div className="space-y-4">
@@ -139,7 +132,7 @@ export function ReportForm() {
             state={state}
             setState={setState}
             channels={channelsQuery.data}
-            metricOptions={metricOptions}
+            queryHelpHref={`/g/${guildId}/reports/help`}
           />
 
           {error !== null && (
@@ -162,7 +155,6 @@ export function ReportForm() {
           title={previewTitle(state.title)}
           lookbackDays={numberOr(state.lookbackDays, 30)}
           maxRows={numberOr(state.maxRows, 10)}
-          onColumns={handleColumns}
         />
       </form>
     </div>
