@@ -14,10 +14,10 @@ await mock.module("@sentry/bun", () => ({
 }));
 
 // Import AFTER the mock so the breaker binds to the spied captureException.
-const { CircuitBreaker } = await import("#src/utils/circuit-breaker.ts");
-
-// Mirror of the module-private OPEN_THRESHOLD constant.
-const OPEN_THRESHOLD = 5;
+// Pull OPEN_THRESHOLD from the module too so the tests and the implementation
+// share a single source of truth and can't silently drift apart.
+const { CircuitBreaker, OPEN_THRESHOLD } =
+  await import("#src/utils/circuit-breaker.ts");
 
 describe("CircuitBreaker", () => {
   beforeEach(() => {

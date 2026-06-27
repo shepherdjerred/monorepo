@@ -12,8 +12,11 @@ const SENTRY_REPORT_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 
 /**
  * Number of consecutive failures before the circuit opens.
+ *
+ * Exported so tests assert against the same source of truth rather than
+ * mirroring a hardcoded copy that could silently drift.
  */
-const OPEN_THRESHOLD = 5;
+export const OPEN_THRESHOLD = 5;
 
 /**
  * How long (ms) the circuit stays open before allowing a single probe request.
