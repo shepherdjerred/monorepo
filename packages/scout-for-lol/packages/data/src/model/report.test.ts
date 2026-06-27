@@ -90,6 +90,25 @@ describe("Report limits", () => {
     ).toBe(false);
   });
 
+  test("validates the Discord channel snowflake at the boundary", () => {
+    // A valid 17-20 digit snowflake passes.
+    expect(
+      ReportCreateInputSchema.safeParse({
+        ...baseInput(),
+        channelId: "12345678901234567",
+      }).success,
+    ).toBe(true);
+    // Malformed channel IDs that the old `z.string().min(1)` accepted (and that
+    // then threw a BAD_REQUEST deeper in the handler) are now rejected at the
+    // input boundary as a field-level error.
+    for (const bad of ["", "123", "not-a-number", "1234567890123456789012"]) {
+      expect(
+        ReportCreateInputSchema.safeParse({ ...baseInput(), channelId: bad })
+          .success,
+      ).toBe(false);
+    }
+  });
+
   test("default and cap lookback days", () => {
     expect(ReportLookbackDaysSchema.parse(missingValue)).toBe(
       REPORT_DEFAULT_LOOKBACK_DAYS,
