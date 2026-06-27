@@ -20,6 +20,7 @@ describe("parseQueueType", () => {
     [480, "swiftplay"],
     [490, "quickplay"],
     [700, "clash"],
+    [710, "ranked 5s"],
     [720, "aram clash"],
     [900, "arurf"],
     [1700, "arena"],
@@ -27,6 +28,7 @@ describe("parseQueueType", () => {
     [2300, "brawl"],
     [2400, "aram mayhem"],
     [3200, "aram mayhem"],
+    [3220, "aram mayhem"],
     [3270, "aram mayhem"],
     [3100, "custom"],
     [3130, "easy doom bots"],
@@ -94,6 +96,7 @@ describe("queueTypeToDisplayString", () => {
   const cases: readonly (readonly [QueueType, string])[] = [
     ["solo", "ranked solo"],
     ["flex", "ranked flex"],
+    ["ranked 5s", "ranked 5s"],
     ["clash", "clash"],
     ["aram clash", "ARAM clash"],
     ["aram", "ARAM"],

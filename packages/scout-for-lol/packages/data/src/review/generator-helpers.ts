@@ -262,6 +262,8 @@ function buildQueueContext(queueType: string | undefined): string {
       return "This is a Solo/Duo Ranked game - the most competitive standard queue where players climb the ranked ladder. Games are taken seriously and LP is on the line.";
     case "flex":
       return "This is a Flex Ranked game - a ranked queue that allows groups of any size. Generally more relaxed than Solo/Duo but still competitive since LP is on the line.";
+    case "ranked 5s":
+      return "This is a Ranked 5s game - the revived premade 5v5 ranked team queue on Summoner's Rift. Pre-made teams climb a dedicated ranked ladder, so games are highly coordinated and competitive with team compositions and communication planned in advance.";
     case "clash":
       return "This is a CLASH game - a competitive tournament mode where teams sign up in advance and play bracket-style matches. Clash games are typically more serious and strategic than regular games, with coordinated team compositions and communication. The stakes feel higher and players often try harder.";
     case "aram clash":

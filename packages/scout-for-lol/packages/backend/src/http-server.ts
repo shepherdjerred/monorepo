@@ -18,6 +18,31 @@ const logger = createLogger("http-server");
 logger.info("🌐 Initializing HTTP server");
 
 /**
+ * tRPC error codes that represent expected client/user faults (bad input,
+ * auth, not-found, rate limits) rather than server bugs. These are surfaced to
+ * the caller as 4xx responses but must NOT be shipped to Sentry/Bugsink — they
+ * are noise (e.g. a stale guild that the user just left → FORBIDDEN, a
+ * malformed channelId or unparseable report query → BAD_REQUEST). Only genuine
+ * server faults (INTERNAL_SERVER_ERROR and other 5xx codes) are real bugs.
+ */
+const EXPECTED_CLIENT_ERROR_CODES = new Set<string>([
+  "PARSE_ERROR",
+  "BAD_REQUEST",
+  "UNAUTHORIZED",
+  "FORBIDDEN",
+  "NOT_FOUND",
+  "METHOD_NOT_SUPPORTED",
+  "TIMEOUT",
+  "CONFLICT",
+  "PRECONDITION_FAILED",
+  "PAYLOAD_TOO_LARGE",
+  "UNSUPPORTED_MEDIA_TYPE",
+  "UNPROCESSABLE_CONTENT",
+  "TOO_MANY_REQUESTS",
+  "CLIENT_CLOSED_REQUEST",
+]);
+
+/**
  * CORS headers for API responses.
  *
  * We only emit CORS headers when the request's `Origin` matches the
@@ -260,7 +285,9 @@ const server = Bun.serve({
           createContext: () => createContext(request),
           onError({ error, path }) {
             logger.error(`tRPC error on ${path ?? "unknown"}:`, error);
-            if (error.code !== "UNAUTHORIZED" && error.code !== "NOT_FOUND") {
+            // Only report genuine server faults; expected client errors (bad
+            // input, auth, not-found, rate limits) are not bugs.
+            if (!EXPECTED_CLIENT_ERROR_CODES.has(error.code)) {
               Sentry.captureException(error, {
                 tags: { source: "trpc", path },
               });
