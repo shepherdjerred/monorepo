@@ -1,7 +1,7 @@
-// Cost estimation for Codex goal runs. Rates are matched against the configured
-// `[game.goal] model` string; if there's no rate for the model we still surface the
-// raw token counts but skip the price line. Update MODEL_RATES when OpenAI list
-// prices change. Cross-check: packages/scout-for-lol/packages/data/src/review/models.ts.
+// Cost estimation for Codex goal runs. Pricing comes from the central catalog
+// (@shepherdjerred/llm-models); if the model isn't in the catalog we still
+// surface the raw token counts but skip the price line.
+import { costForTextUsage } from "@shepherdjerred/llm-models";
 
 export type TurnUsage = {
   inputTokens: number;
@@ -17,24 +17,6 @@ export const EMPTY_USAGE: TurnUsage = {
   reasoningOutputTokens: 0,
 };
 
-type ModelRate = {
-  // Dollars per 1M tokens.
-  input: number;
-  cachedInput: number;
-  output: number;
-};
-
-// OpenAI's published cached-input discount for gpt-5 family is ~10% of the base
-// input rate. No public list price for nano-specific cache rate yet; we use the
-// same 10% rule until we see one.
-// Partial<Record<...>> so indexing with an unknown model returns ModelRate | undefined.
-const MODEL_RATES: Partial<Record<string, ModelRate>> = {
-  "gpt-5.4-nano": { input: 0.2, cachedInput: 0.02, output: 1.25 },
-  "gpt-5.4-mini": { input: 0.75, cachedInput: 0.075, output: 4.5 },
-  "gpt-5.4": { input: 2.5, cachedInput: 0.25, output: 15 },
-  "gpt-5.5": { input: 5, cachedInput: 0.5, output: 30 },
-};
-
 export function addUsage(left: TurnUsage, right: TurnUsage): TurnUsage {
   return {
     inputTokens: left.inputTokens + right.inputTokens,
@@ -45,26 +27,16 @@ export function addUsage(left: TurnUsage, right: TurnUsage): TurnUsage {
   };
 }
 
-// Returns dollars, or null if we don't have a rate for this model.
-// Cached-input tokens are billed at the cached rate; the remaining input
-// tokens (raw - cached) are billed at the full input rate. Output and
-// reasoning output share the same rate (OpenAI bills reasoning as output).
+// Returns dollars, or null if the model isn't in the catalog (or isn't a text
+// model). Reasoning output is billed at the output rate (OpenAI bills reasoning
+// as output), so it is folded into outputTokens.
 export function computeCost(model: string, usage: TurnUsage): number | null {
-  const rate = MODEL_RATES[model];
-  if (rate === undefined) {
-    return null;
-  }
-
-  const uncachedInputTokens = Math.max(
-    0,
-    usage.inputTokens - usage.cachedInputTokens,
-  );
-  const billedOutputTokens = usage.outputTokens + usage.reasoningOutputTokens;
-  const perMillion = 1_000_000;
   return (
-    (uncachedInputTokens * rate.input) / perMillion +
-    (usage.cachedInputTokens * rate.cachedInput) / perMillion +
-    (billedOutputTokens * rate.output) / perMillion
+    costForTextUsage(model, {
+      inputTokens: usage.inputTokens,
+      cachedInputTokens: usage.cachedInputTokens,
+      outputTokens: usage.outputTokens + usage.reasoningOutputTokens,
+    }) ?? null
   );
 }
 

@@ -1,0 +1,36 @@
+{
+  "name": "@shepherdjerred/llm-models",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./catalog.json": "./src/catalog.json"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && cp src/catalog.json dist/catalog.json",
+    "sync": "bun run scripts/sync-from-upstreams.ts",
+    "typecheck": "bunx tsc --noEmit",
+    "lint": "bunx eslint --cache .",
+    "test": "bun test test"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@tsconfig/node-lts": "^24.0.0",
+    "@tsconfig/recommended": "^1.0.13",
+    "@tsconfig/strictest": "^2.0.8",
+    "@types/bun": "^1.2.0",
+    "typescript": "^6.0.0"
+  }
+}

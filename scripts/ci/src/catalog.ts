@@ -357,6 +357,7 @@ export const ALL_PACKAGES: string[] = [
   "home-assistant",
   "homelab",
   "leetcode",
+  "llm-models",
   "llm-observability",
   "monarch",
   "resume",

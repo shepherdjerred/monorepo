@@ -42,6 +42,10 @@
       "entry": ["src/index.ts", "src/codegen/cli.ts", "test/**/*.ts"],
       "project": ["src/**/*.ts", "test/**/*.ts"]
     },
+    "packages/llm-models": {
+      "entry": ["src/index.ts", "test/**/*.ts"],
+      "project": ["src/**/*.ts", "test/**/*.ts"]
+    },
     "packages/llm-observability": {
       "entry": ["src/index.ts", "test/**/*.ts"],
       "project": ["src/**/*.ts", "test/**/*.ts"]
