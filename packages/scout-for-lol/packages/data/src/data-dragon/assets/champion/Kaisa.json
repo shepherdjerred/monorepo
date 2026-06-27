@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Kaisa": {
       "id": "Kaisa",
@@ -762,13 +762,13 @@
           },
           "maxrank": 5,
           "cooldown": [
-            22,
             20,
-            18,
-            16,
+            18.5,
+            17,
+            15.5,
             14
           ],
-          "cooldownBurn": "22/20/18/16/14",
+          "cooldownBurn": "20/18.5/17/15.5/14",
           "cost": [
             55,
             60,

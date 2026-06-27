@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Vi": {
       "id": "Vi",
@@ -12,7 +12,7 @@
         "full": "Vi.png",
         "sprite": "champion5.png",
         "group": "champion",
-        "x": 0,
+        "x": 48,
         "y": 0,
         "w": 48,
         "h": 48
@@ -546,8 +546,8 @@
             "full": "ViQ.png",
             "sprite": "spell15.png",
             "group": "spell",
-            "x": 384,
-            "y": 48,
+            "x": 96,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -687,8 +687,8 @@
             "full": "ViW.png",
             "sprite": "spell15.png",
             "group": "spell",
-            "x": 432,
-            "y": 48,
+            "x": 144,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -830,7 +830,7 @@
             "full": "ViE.png",
             "sprite": "spell15.png",
             "group": "spell",
-            "x": 0,
+            "x": 192,
             "y": 96,
             "w": 48,
             "h": 48
@@ -945,7 +945,7 @@
             "full": "ViR.png",
             "sprite": "spell15.png",
             "group": "spell",
-            "x": 48,
+            "x": 240,
             "y": 96,
             "w": 48,
             "h": 48
@@ -960,7 +960,7 @@
           "full": "ViPassive.png",
           "sprite": "passive5.png",
           "group": "passive",
-          "x": 0,
+          "x": 48,
           "y": 0,
           "w": 48,
           "h": 48

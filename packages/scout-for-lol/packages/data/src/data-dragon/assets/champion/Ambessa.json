@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Ambessa": {
       "id": "Ambessa",
@@ -118,16 +118,16 @@
           "tooltip": "<spellActive>Cunning Sweep</spellActive>: Ambessa sweeps her blades forward, dealing <physicalDamage>{{ calc_damage_1_max }} + {{ calc_damage_1_percent_max }} max Health physical damage</physicalDamage> to enemies at the edge of the strike. All other enemies take {{ calc_damage_1_min_ratio }} damage. Striking an enemy readies a <spellActive>Sundering Slam</spellActive>.<br /><br /><spellActive>Sundering Slam</spellActive>: Ambessa slams her blades down, dealing <physicalDamage>{{ calc_damage_2_max }} + {{ calc_damage_2_percent_max }} max Health physical damage</physicalDamage> against the first enemy hit. All other enemies take {{ calc_damage_2_min_ratio }} damage.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
+              "Cooldown",
               "Cunning Sweep | Damage",
               "Cunning Sweep | Max Health Damage",
-              "Cooldown",
               "Sundering Slam | Damage",
               "Sundering Slam | Max Health Damage"
             ],
             "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ damage_1_base }} -> {{ damage_1_baseNL }}",
               "{{ damage_1_percent*100.000000 }}% -> {{ damage_1_percentnl*100.000000 }}%",
-              "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ damage_2_base }} -> {{ damage_2_baseNL }}",
               "{{ damage_1_percent*100.000000 }}% -> {{ damage_1_percentnl*100.000000 }}%"
             ]

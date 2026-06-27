@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Ornn": {
       "id": "Ornn",
@@ -12,7 +12,7 @@
         "full": "Ornn.png",
         "sprite": "champion3.png",
         "group": "champion",
-        "x": 384,
+        "x": 432,
         "y": 0,
         "w": 48,
         "h": 48
@@ -457,7 +457,7 @@
             "full": "OrnnQ.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 0,
+            "x": 192,
             "y": 48,
             "w": 48,
             "h": 48
@@ -604,7 +604,7 @@
             "full": "OrnnW.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 48,
+            "x": 240,
             "y": 48,
             "w": 48,
             "h": 48
@@ -747,7 +747,7 @@
             "full": "OrnnE.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 96,
+            "x": 288,
             "y": 48,
             "w": 48,
             "h": 48
@@ -864,7 +864,7 @@
             "full": "OrnnR.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 144,
+            "x": 336,
             "y": 48,
             "w": 48,
             "h": 48
@@ -879,7 +879,7 @@
           "full": "OrnnP.png",
           "sprite": "passive3.png",
           "group": "passive",
-          "x": 384,
+          "x": 432,
           "y": 0,
           "w": 48,
           "h": 48

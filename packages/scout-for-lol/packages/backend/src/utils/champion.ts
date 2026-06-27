@@ -2,7 +2,7 @@ import {
   Champions,
   getChampionName,
 } from "twisted/dist/constants/champions.js";
-import { normalizeChampionName } from "@scout-for-lol/data";
+import { getChampionKeyById, normalizeChampionName } from "@scout-for-lol/data";
 import { z } from "zod";
 
 /**
@@ -159,7 +159,12 @@ export function resolveChampionKey(championId: number): string {
   try {
     const rawName = getChampionName(championId);
     if (!rawName || rawName === "") {
-      return `Champion${championId.toString()}`;
+      // twisted's hardcoded champion enum lags Data Dragon (e.g. it had no
+      // entry for 805/Locke). Fall back to the bundled champion.json id→key
+      // map before giving up on a `Champion<id>` placeholder.
+      return (
+        getChampionKeyById(championId) ?? `Champion${championId.toString()}`
+      );
     }
 
     // twisted returns SCREAMING_SNAKE_CASE like "LEE_SIN"
@@ -171,6 +176,6 @@ export function resolveChampionKey(championId: number): string {
 
     return normalizeChampionName(pascalCase);
   } catch {
-    return `Champion${championId.toString()}`;
+    return getChampionKeyById(championId) ?? `Champion${championId.toString()}`;
   }
 }

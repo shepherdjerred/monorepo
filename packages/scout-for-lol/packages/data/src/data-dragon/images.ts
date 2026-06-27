@@ -14,6 +14,29 @@ const canonicalChampionNames: Record<string, string> = Object.fromEntries(
   Object.keys(championList.data).map((key) => [key.toLowerCase(), key]),
 );
 
+// Numeric champion id → canonical Data Dragon key (the on-disk filename stem),
+// built once at module init from the bundled `champion.json`. This is the
+// authoritative, self-updating id→key source: `twisted`'s hardcoded champion
+// enum lags Data Dragon by weeks (e.g. it had no entry for 805/Locke, so
+// `resolveChampionKey` fell back to `Champion805` and the loading-screen image
+// 404'd). Refreshing assets via `update-data-dragon` keeps this map current
+// for every new champion without a code change.
+const championKeyById: Record<number, string> = Object.fromEntries(
+  Object.entries(championList.data).map(([key, champion]) => [
+    Number(champion.key),
+    key,
+  ]),
+);
+
+/**
+ * Resolve a numeric champion id to its canonical Data Dragon key using the
+ * bundled `champion.json`. Returns `undefined` if the id is absent (the assets
+ * are out of date — run `update-data-dragon`).
+ */
+export function getChampionKeyById(championId: number): string | undefined {
+  return championKeyById[championId];
+}
+
 const championDisplayNameAliases: Record<string, string> = {
   "nunu & willump": "Nunu",
 };

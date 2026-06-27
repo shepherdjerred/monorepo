@@ -1,0 +1,693 @@
+{
+  "type": "champion",
+  "format": "standAloneComplex",
+  "version": "16.13.1",
+  "data": {
+    "Locke": {
+      "id": "Locke",
+      "key": "805",
+      "name": "Locke",
+      "title": "the Ashen Exorcist",
+      "image": {
+        "full": "Locke.png",
+        "sprite": "champion2.png",
+        "group": "champion",
+        "x": 192,
+        "y": 48,
+        "w": 48,
+        "h": 48
+      },
+      "skins": [
+        {
+          "id": "805000",
+          "num": 0,
+          "name": "default",
+          "chromas": false
+        },
+        {
+          "id": "805001",
+          "num": 1,
+          "name": "High Noon Locke",
+          "chromas": true
+        },
+        {
+          "id": "805002",
+          "num": 2,
+          "name": "High Noon Locke (Ruby)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "805003",
+          "num": 3,
+          "name": "High Noon Locke (Sapphire)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "805004",
+          "num": 4,
+          "name": "High Noon Locke (Amethyst)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "805005",
+          "num": 5,
+          "name": "High Noon Locke (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "805006",
+          "num": 6,
+          "name": "High Noon Locke (Emerald)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "805007",
+          "num": 7,
+          "name": "High Noon Locke (Catseye)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "805008",
+          "num": 8,
+          "name": "High Noon Locke (Pearl)",
+          "chromas": false,
+          "parentSkin": 1
+        },
+        {
+          "id": "805009",
+          "num": 9,
+          "name": "High Noon Locke (Obsidian)",
+          "chromas": false,
+          "parentSkin": 1
+        }
+      ],
+      "lore": "A nail-slinging exorcist versed in forbidden rites, Corvin Locke is the progeny of Demacian occultists. Born into lies and hypocrisy, he learned young that demons aren't the cause of humanity's darkness, but the consequence. Now, Locke tears through every soul, exposing its darkness, intent on making the world a more honest place… one exorcism at a time.",
+      "blurb": "A nail-slinging exorcist versed in forbidden rites, Corvin Locke is the progeny of Demacian occultists. Born into lies and hypocrisy, he learned young that demons aren't the cause of humanity's darkness, but the consequence. Now, Locke tears through...",
+      "allytips": [],
+      "enemytips": [],
+      "tags": [
+        "Assassin",
+        "Mage"
+      ],
+      "partype": "Mana",
+      "info": {
+        "attack": 6,
+        "defense": 4,
+        "magic": 2,
+        "difficulty": 5
+      },
+      "stats": {
+        "hp": 655,
+        "hpperlevel": 109,
+        "mp": 280,
+        "mpperlevel": 70,
+        "movespeed": 340,
+        "armor": 32,
+        "armorperlevel": 4.2,
+        "spellblock": 32,
+        "spellblockperlevel": 2.05,
+        "attackrange": 125,
+        "hpregen": 9,
+        "hpregenperlevel": 0.9,
+        "mpregen": 7,
+        "mpregenperlevel": 0.8,
+        "crit": 0,
+        "critperlevel": 0,
+        "attackdamage": 58,
+        "attackdamageperlevel": 0,
+        "attackspeedperlevel": 3.3,
+        "attackspeed": 0.688
+      },
+      "spells": [
+        {
+          "id": "LockeQ",
+          "name": "Ritual Nails",
+          "description": "Locke readies a set of Soul Nails to throw, dealing damage to and marking enemies hit. Locke can consume the marks to deal bonus damage with his attacks.",
+          "tooltip": "Locke readies a set of <keywordMajor>Soul Nails</keywordMajor> to throw, dealing <magicDamage>{{ missiledamage }} magic damage</magicDamage> and marking enemies hit. Nails apply a {{ slowamount1*100 }}/{{ slowamount2*100 }}/{{ slowamount3*100 }}% <status>Slow</status> for {{ slowduration1 }}/{{ slowduration2 }}/{{ slowduration3 }} seconds, stacking with the amount of nails hit.<br /><br />Attacking the enemy consumes the <keywordMajor>Soul Nails</keywordMajor>, dealing <magicDamage>{{ naildamage }} magic damage</magicDamage> per stack, increased by {{ twomarkbonuspercent }}% and {{ threemarkbonuspercent }}% for two and three nails respectively.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Damage",
+              "Cooldown",
+              "Damage per Stack"
+            ],
+            "effect": [
+              "{{ basemissiledamage }} -> {{ basemissiledamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ markdamage }} -> {{ markdamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            10,
+            9,
+            8,
+            7,
+            6
+          ],
+          "cooldownBurn": "10/9/8/7/6",
+          "cost": [
+            70,
+            70,
+            70,
+            70,
+            70
+          ],
+          "costBurn": "70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            950,
+            950,
+            950,
+            950,
+            950
+          ],
+          "rangeBurn": "950",
+          "image": {
+            "full": "LockeQ.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 192,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "LockeW",
+          "name": "Soul Ignition",
+          "description": "Locke ignites his soul, gaining Attack Speed and Move Speed, and dealing damage to himself. At the end of the duration, Locke will heal back a portion of the damage he takes during the effect.",
+          "tooltip": "Locke ignites his own soul, gaining <attackSpeed>{{ attackspeed }} Attack Speed</attackSpeed> and <speed>{{ movespeed }} Move Speed</speed> that decays over {{ decaytimehelper }} seconds.<br /><br />For {{ baseduration }} seconds, he suffers <trueDamage>{{ healthcost*100 }}% current Health true damage</trueDamage> per second but <healing>Heals</healing> back the last <healing>{{ damagerestoreamount }}</healing> damage taken, and an additional <healing>{{ additionalheal }} Health</healing> based on missing Health and time passed, up to a maximum of <healing>{{ maxhealingthreshold }} Health remaining</healing>.<br /><br />Can be <recast>Recast</recast> to end early.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Cooldown",
+              "Damage Restored",
+              "Move Speed",
+              "@AbilityResourceName@ Cost"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamagerestoreamount }} -> {{ basedamagerestoreamountNL }}",
+              "{{ basemovespeed*100.000000 }}% -> {{ basemovespeednl*100.000000 }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            18,
+            17,
+            16,
+            15,
+            14
+          ],
+          "cooldownBurn": "18/17/16/15/14",
+          "cost": [
+            50,
+            55,
+            60,
+            65,
+            70
+          ],
+          "costBurn": "50/55/60/65/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " Mana and {{ healthcost*100 }}% Current Health Per Second",
+          "maxammo": "-1",
+          "range": [
+            250,
+            250,
+            250,
+            250,
+            250
+          ],
+          "rangeBurn": "250",
+          "image": {
+            "full": "LockeW.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 240,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} Mana and {{ healthcost*100 }}% Current Health Per Second"
+        },
+        {
+          "id": "LockeE",
+          "name": "Ashen Pursuit",
+          "description": "Locke teleports to a location before dashing to attack his next target, dealing damage to enemies passed through.",
+          "tooltip": "Locke teleports to a location, dealing <magicDamage>{{ onhitdamage }} magic damage</magicDamage> to nearby enemies on arrival. <br /><br />On his next Attack, he dashes to his target, dealing <magicDamage>{{ dashdamage }} magic damage</magicDamage> to all enemies in his path. Each hit consumes <keywordMajor>Soul Nails</keywordMajor>.<br /><br />If Locke scores a takedown, the Cooldown of this Ability is reset.{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "@AbilityResourceName@ Cost",
+              "Teleport Damage",
+              "Dash Damage"
+            ],
+            "effect": [
+              "{{ cost }} -> {{ costNL }}",
+              "{{ baseonhitdamage }} -> {{ baseonhitdamageNL }}",
+              "{{ basedashdamage }} -> {{ basedashdamageNL }}"
+            ]
+          },
+          "maxrank": 5,
+          "cooldown": [
+            10,
+            10,
+            10,
+            10,
+            10
+          ],
+          "cooldownBurn": "10",
+          "cost": [
+            30,
+            40,
+            50,
+            60,
+            70
+          ],
+          "costBurn": "30/40/50/60/70",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            425,
+            425,
+            425,
+            425,
+            425
+          ],
+          "rangeBurn": "425",
+          "image": {
+            "full": "LockeE.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 288,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        },
+        {
+          "id": "LockeR",
+          "name": "Purgatory",
+          "description": "Locke throws a binding artifact that deals damage and potentially executes enemies hit. Locke gains additional power for sealing away enemy champions.",
+          "tooltip": "Locke throws a binding artifact to a location, dealing <magicDamage>{{ damage }} magic damage</magicDamage> and <status>Slowing</status> enemies in the area by {{ slowamount*100 }}%, decaying over {{ slowduration }} seconds. The artifact marks enemies hit for {{ duration }} seconds, sealing away marked enemy champions brought below {{ executionthreshold*100 }}%, and resetting the duration of the mark on other affected champions.<br /><br />After the duration ends, if at least one champion was sealed, the artifact lands on the ground. Locke can pick up the artifact to permanently increase its execution threshold by {{ executethresholdperstack*100 }}%, and refund {{ cooldownreduction }}% of his current Cooldown, for each champion sealed.<br />{{ spellmodifierdescriptionappend }}",
+          "leveltip": {
+            "label": [
+              "Cooldown",
+              "Damage",
+              "Execute Threshold"
+            ],
+            "effect": [
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ executionthreshold*100.000000 }}% -> {{ executionthresholdnl*100.000000 }}%"
+            ]
+          },
+          "maxrank": 3,
+          "cooldown": [
+            120,
+            100,
+            80
+          ],
+          "cooldownBurn": "120/100/80",
+          "cost": [
+            100,
+            100,
+            100
+          ],
+          "costBurn": "100",
+          "datavalues": {},
+          "effect": [
+            null,
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ]
+          ],
+          "effectBurn": [
+            null,
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "vars": [],
+          "costType": " {{ abilityresourcename }}",
+          "maxammo": "-1",
+          "range": [
+            1000,
+            1000,
+            1000
+          ],
+          "rangeBurn": "1000",
+          "image": {
+            "full": "LockeR.png",
+            "sprite": "spell7.png",
+            "group": "spell",
+            "x": 336,
+            "y": 144,
+            "w": 48,
+            "h": 48
+          },
+          "resource": "{{ cost }} {{ abilityresourcename }}"
+        }
+      ],
+      "passive": {
+        "name": "Silver Stake",
+        "description": "Locke's attacks deal additional magic damage On-Hit, increased based on enemy missing Health.",
+        "image": {
+          "full": "Locke_Passive.Locke.png",
+          "sprite": "passive2.png",
+          "group": "passive",
+          "x": 192,
+          "y": 48,
+          "w": 48,
+          "h": 48
+        }
+      },
+      "recommended": []
+    }
+  }
+}

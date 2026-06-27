@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Darius": {
       "id": "Darius",
@@ -373,7 +373,7 @@
         {
           "id": "122053",
           "num": 53,
-          "name": "Dunkmaster Darius Mythic Chroma",
+          "name": "Dunkmaster Darius (Mythic)",
           "chromas": false,
           "parentSkin": 4
         },

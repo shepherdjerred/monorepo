@@ -145,6 +145,7 @@ export {
   validateLaneIcon,
   validateChampionLoadingImage,
   normalizeChampionName,
+  getChampionKeyById,
 } from "./data-dragon/images.ts";
 export type { SkinFallbackEvent } from "./data-dragon/images.ts";
 

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "MissFortune": {
       "id": "MissFortune",
@@ -12,7 +12,7 @@
         "full": "MissFortune.png",
         "sprite": "champion2.png",
         "group": "champion",
-        "x": 144,
+        "x": 192,
         "y": 96,
         "w": 48,
         "h": 48
@@ -658,7 +658,7 @@
             "full": "MissFortuneRicochetShot.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 0,
+            "x": 192,
             "y": 144,
             "w": 48,
             "h": 48
@@ -801,7 +801,7 @@
             "full": "MissFortuneViciousStrikes.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 48,
+            "x": 240,
             "y": 144,
             "w": 48,
             "h": 48
@@ -942,7 +942,7 @@
             "full": "MissFortuneScattershot.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 96,
+            "x": 288,
             "y": 144,
             "w": 48,
             "h": 48
@@ -1057,7 +1057,7 @@
             "full": "MissFortuneBulletTime.png",
             "sprite": "spell8.png",
             "group": "spell",
-            "x": 144,
+            "x": 336,
             "y": 144,
             "w": 48,
             "h": 48
@@ -1072,7 +1072,7 @@
           "full": "MissFortune_W.png",
           "sprite": "passive2.png",
           "group": "passive",
-          "x": 144,
+          "x": 192,
           "y": 96,
           "w": 48,
           "h": 48

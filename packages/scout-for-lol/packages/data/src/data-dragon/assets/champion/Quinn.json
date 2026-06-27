@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Quinn": {
       "id": "Quinn",
@@ -12,7 +12,7 @@
         "full": "Quinn.png",
         "sprite": "champion3.png",
         "group": "champion",
-        "x": 144,
+        "x": 192,
         "y": 48,
         "w": 48,
         "h": 48
@@ -428,7 +428,7 @@
             "full": "QuinnQ.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 0,
+            "x": 192,
             "y": 144,
             "w": 48,
             "h": 48
@@ -571,7 +571,7 @@
             "full": "QuinnW.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 48,
+            "x": 240,
             "y": 144,
             "w": 48,
             "h": 48
@@ -712,7 +712,7 @@
             "full": "QuinnE.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 96,
+            "x": 288,
             "y": 144,
             "w": 48,
             "h": 48
@@ -829,7 +829,7 @@
             "full": "QuinnR.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 144,
+            "x": 336,
             "y": 144,
             "w": 48,
             "h": 48
@@ -844,7 +844,7 @@
           "full": "Quinn_Passive.png",
           "sprite": "passive3.png",
           "group": "passive",
-          "x": 144,
+          "x": 192,
           "y": 48,
           "w": 48,
           "h": 48

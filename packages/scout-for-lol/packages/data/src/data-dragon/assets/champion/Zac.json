@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Zac": {
       "id": "Zac",
@@ -12,7 +12,7 @@
         "full": "Zac.png",
         "sprite": "champion5.png",
         "group": "champion",
-        "x": 240,
+        "x": 288,
         "y": 48,
         "w": 48,
         "h": 48
@@ -483,10 +483,10 @@
           "rangeBurn": "800",
           "image": {
             "full": "ZacQ.png",
-            "sprite": "spell16.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 384,
-            "y": 144,
+            "x": 96,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -624,10 +624,10 @@
           "rangeBurn": "350",
           "image": {
             "full": "ZacW.png",
-            "sprite": "spell16.png",
+            "sprite": "spell17.png",
             "group": "spell",
-            "x": 432,
-            "y": 144,
+            "x": 144,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -769,7 +769,7 @@
             "full": "ZacE.png",
             "sprite": "spell17.png",
             "group": "spell",
-            "x": 0,
+            "x": 192,
             "y": 0,
             "w": 48,
             "h": 48
@@ -884,7 +884,7 @@
             "full": "ZacR.png",
             "sprite": "spell17.png",
             "group": "spell",
-            "x": 48,
+            "x": 240,
             "y": 0,
             "w": 48,
             "h": 48
@@ -899,7 +899,7 @@
           "full": "ZacPassive.png",
           "sprite": "passive5.png",
           "group": "passive",
-          "x": 240,
+          "x": 288,
           "y": 48,
           "w": 48,
           "h": 48

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Thresh": {
       "id": "Thresh",
@@ -12,7 +12,7 @@
         "full": "Thresh.png",
         "sprite": "champion4.png",
         "group": "champion",
-        "x": 336,
+        "x": 384,
         "y": 48,
         "w": 48,
         "h": 48
@@ -658,8 +658,8 @@
             "full": "ThreshQ.png",
             "sprite": "spell14.png",
             "group": "spell",
-            "x": 288,
-            "y": 0,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -801,8 +801,8 @@
             "full": "ThreshW.png",
             "sprite": "spell14.png",
             "group": "spell",
-            "x": 336,
-            "y": 0,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -948,8 +948,8 @@
             "full": "ThreshE.png",
             "sprite": "spell14.png",
             "group": "spell",
-            "x": 384,
-            "y": 0,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1063,8 +1063,8 @@
             "full": "ThreshRPenta.png",
             "sprite": "spell14.png",
             "group": "spell",
-            "x": 432,
-            "y": 0,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -1078,7 +1078,7 @@
           "full": "Thresh_Passive.png",
           "sprite": "passive4.png",
           "group": "passive",
-          "x": 336,
+          "x": 384,
           "y": 48,
           "w": 48,
           "h": 48
