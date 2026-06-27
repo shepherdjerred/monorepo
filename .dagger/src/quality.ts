@@ -396,9 +396,19 @@ export function migrationGuardHelper(source: Directory): Container {
  *
  * scout-for-lol is a nested Bun workspace, so the install runs from its own
  * root before descending into `packages/backend`.
+ *
+ * `@shepherdjerred/llm-models` is a *built* package (its package.json
+ * `main`/`exports` resolve to `dist/`, which is gitignored), and scout's `data`
+ * package imports it. Unlike the per-package Dagger jobs, this shared quality
+ * base does not build BUILD_TIME_DEPS, so the catalog must be compiled here —
+ * before scout's frozen install copies it into the `file:` store — otherwise
+ * `check:test-template` dies with `Cannot find module '@shepherdjerred/llm-models'`.
  */
 export function scoutTestTemplateCheckHelper(source: Directory): Container {
   return bunQualityBase(source)
+    .withWorkdir("/repo/packages/llm-models")
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withExec(["bun", "run", "build"])
     .withWorkdir("/repo/packages/scout-for-lol")
     .withExec(["bun", "install", "--frozen-lockfile"])
     .withWorkdir("/repo/packages/scout-for-lol/packages/backend")

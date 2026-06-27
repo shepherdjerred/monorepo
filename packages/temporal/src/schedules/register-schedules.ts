@@ -260,6 +260,18 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Weekly README project-listing regeneration via cog (opens a PR if listings drifted)",
   },
   {
+    id: "llm-catalog-refresh-weekly",
+    workflowType: "runLlmCatalogRefresh",
+    args: [],
+    // 09:00 PT every Monday — staggered after scout-season-refresh (07:00) and
+    // readme-refresh (08:00) so the weekly PR-opening jobs don't contend.
+    cronExpression: "0 9 * * 1",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Weekly LLM model-catalog pricing cross-check vs models.dev + LiteLLM (opens a PR on drift)",
+  },
+  {
     id: "scout-season-refresh-weekly",
     workflowType: "runScoutSeasonRefreshWorkflow",
     args: [],

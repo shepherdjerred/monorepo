@@ -1,3 +1,5 @@
+import { getPerTokenPricing } from "@shepherdjerred/llm-models";
+
 export type UsageSummary = {
   calls: number;
   cachedCalls: number;
@@ -12,17 +14,18 @@ type UsageTracker = {
   getSummary: () => UsageSummary;
 };
 
-const PRICING: Record<string, { input: number; output: number }> = {
-  "claude-opus-4-8": { input: 5 / 1_000_000, output: 25 / 1_000_000 },
-  "claude-sonnet-4-6": { input: 3 / 1_000_000, output: 15 / 1_000_000 },
-  "claude-haiku-4-5": { input: 1 / 1_000_000, output: 5 / 1_000_000 },
-  "claude-haiku-4-5-20251001": { input: 1 / 1_000_000, output: 5 / 1_000_000 },
-};
-
-const DEFAULT_PRICING = { input: 3 / 1_000_000, output: 15 / 1_000_000 };
+// Pricing comes from the central catalog (@shepherdjerred/llm-models).
+// Monarch defaults to Sonnet; fall back to its pricing for unknown models.
+const FALLBACK_MODEL = "claude-sonnet-4-6";
 
 export function createUsageTracker(model: string): UsageTracker {
-  const pricing = PRICING[model] ?? DEFAULT_PRICING;
+  const pricing =
+    getPerTokenPricing(model) ?? getPerTokenPricing(FALLBACK_MODEL);
+  if (pricing === undefined) {
+    throw new Error(
+      `No catalog pricing for model "${model}" or fallback "${FALLBACK_MODEL}"`,
+    );
+  }
   let calls = 0;
   let cachedCalls = 0;
   let totalInput = 0;

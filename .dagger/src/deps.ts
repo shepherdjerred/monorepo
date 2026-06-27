@@ -17,11 +17,12 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   "astro-opengraph-images": ["eslint-config"],
   webring: ["eslint-config"],
   toolkit: ["eslint-config"],
-  monarch: ["eslint-config"],
+  monarch: ["eslint-config", "llm-models"],
   "cooklang-for-obsidian": ["eslint-config"],
   "cooklang-rich-preview": ["eslint-config"],
   "better-skill-capped": ["eslint-config"],
   birmel: ["eslint-config", "llm-observability"],
+  "llm-models": ["eslint-config"],
   "llm-observability": ["eslint-config"],
   "starlight-karma-bot": ["eslint-config"],
   // Shared XState stream lifecycle machine; consumed via file: deps by
@@ -39,7 +40,13 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   // mounted so the worker-image build can compile the toolkit CLI into a
   // single static binary at /usr/local/bin/toolkit. Required by the
   // homelab-audit-daily workflow (runbook §5/§6/§9 use `toolkit gf|pd|bugsink`).
-  temporal: ["eslint-config", "home-assistant", "toolkit", "llm-observability"],
+  temporal: [
+    "eslint-config",
+    "home-assistant",
+    "toolkit",
+    "llm-models",
+    "llm-observability",
+  ],
 
   // Multi-dep packages
   "tasknotes-server": ["eslint-config", "tasknotes-types"],
@@ -59,6 +66,7 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
     "eslint-config",
     "discord-video-stream",
     "discord-stream-lifecycle",
+    "llm-models",
     "llm-observability",
   ],
   "discord-plays-mario-kart": [
@@ -66,7 +74,8 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
     "discord-video-stream",
     "discord-stream-lifecycle",
   ],
-  "scout-for-lol": ["eslint-config", "llm-observability"],
+  "scout-for-lol": ["eslint-config", "llm-models", "llm-observability"],
+  "scout-for-lol/packages/data": ["llm-models"],
   "scout-for-lol/packages/frontend": [
     "eslint-config",
     "scout-for-lol/packages/backend",
@@ -82,6 +91,11 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
  */
 export const BUILD_TIME_DEPS: string[] = [
   "eslint-config",
+  // Built package (browser+node safe): package.json `main`/`types`/`exports`
+  // resolve to dist/, so consumers (temporal, monarch, scout, discord-plays-*)
+  // can't resolve the module until `bun run build` emits dist/. Must come after
+  // eslint-config (its only build-time dep).
+  "llm-models",
   "astro-opengraph-images",
   "webring",
   "tasknotes-types",

@@ -663,6 +663,28 @@ function withForkRuntimeDeps(
 }
 
 /**
+ * Build `@shepherdjerred/llm-models` when it's a mounted dep, so its `dist/`
+ * exists before a consumer's frozen install copies it through the `file:` ref.
+ * The catalog's package.json `main`/`exports` resolve to gitignored `dist/`, so
+ * consumers (scout, discord-plays-pokemon, temporal-worker) that import it crash
+ * at startup with `Cannot find module '@shepherdjerred/llm-models'` unless the
+ * catalog is compiled first. Image/smoke builders install the consumer directly,
+ * skipping the per-dep build loop in `bunBaseContainer` (base.ts) — this restores
+ * that step just for the catalog. Uses the install-retry wrapper because the
+ * eslint-config `file:` link races under bun's worker pool (#4336).
+ */
+function withBuiltLlmModels(
+  container: Container,
+  depNames: string[],
+): Container {
+  if (!depNames.includes("llm-models")) return container;
+  return container
+    .withWorkdir("/workspace/packages/llm-models")
+    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
+    .withExec(["bun", "run", "build"]);
+}
+
+/**
  * Build a Bun service OCI image. Constructs a minimal workspace with
  * only the target package and its workspace deps — no file modification.
  *
@@ -1010,6 +1032,8 @@ export function buildTemporalWorkerImageHelper(
     );
   }
 
+  container = withBuiltLlmModels(container, depNames);
+
   container = container
     .withWorkdir("/workspace/packages/temporal")
     .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
@@ -1102,6 +1126,8 @@ export function buildScoutImageHelper(
     );
   }
 
+  container = withBuiltLlmModels(container, depNames);
+
   return container
     .withWorkdir("/workspace/packages/scout-for-lol")
     .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
@@ -1160,6 +1186,7 @@ export function buildDiscordPlaysPokemonImageHelper(
   }
 
   container = withForkRuntimeDeps(container, depNames);
+  container = withBuiltLlmModels(container, depNames);
 
   return (
     container
