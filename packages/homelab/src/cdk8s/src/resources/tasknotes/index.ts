@@ -139,7 +139,9 @@ export function createTasknotesDeployment(chart: Chart) {
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
       },
-      liveness: Probe.fromCommand(["test", "-f", "/proc/1/status"], {
+      // Check that sync-setup has run and created the .obsidian directory.
+      // Proves the CLI ran successfully, not just that the shell process exists.
+      liveness: Probe.fromCommand(["test", "-d", "/vault/.obsidian"], {
         periodSeconds: Duration.seconds(30),
         failureThreshold: 6,
       }),
