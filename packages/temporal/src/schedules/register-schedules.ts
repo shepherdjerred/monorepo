@@ -7,9 +7,41 @@ import type { Duration } from "@temporalio/common";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { EVAL_FIXTURES_PIN } from "#shared/pr-review/eval-fixture.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
+import { detectOrphanSchedules } from "./orphan-detection.ts";
 
 // All cron expressions below are wall-clock local time for the homelab.
 const SCHEDULE_TIMEZONE = "America/Los_Angeles";
+
+// `catchupWindow` controls replay after the Temporal SERVER was down/unavailable
+// across a scheduled time and then recovers (the "backfill" of missed runs). A
+// normal worker restart/deploy does NOT drop runs — the server still creates the
+// action on time and it queues until a worker is free. Two tiers, by intent:
+//
+//   * CATCHUP_TIGHT — time-of-day home automation (vacuum, good-morning). If the
+//     server missed the slot by more than a few minutes, skip rather than fire
+//     late; running the vacuum or a wake-up routine an hour late is worse than
+//     not running. (Does not cover a long *worker* outage executing a late run;
+//     that needs a staleness guard inside the workflow.)
+//   * CATCHUP_RELAXED (default) — reports / maintenance / data jobs. The intent
+//     is "ran this cycle," so running late after a server outage is acceptable.
+//
+// Inferred string-literal types, NOT `: Duration`. `Duration` is
+// `StringValue | number`, and under Dagger's per-package Node16 install the canary
+// `ms` resolves with no usable `StringValue` (its `exports` map has no `types`
+// condition, so TS falls through to `@types/ms`, which never exported StringValue),
+// leaving `Duration` partly error-typed. Any value whose static type is `Duration`
+// then trips @typescript-eslint/no-unsafe-assignment in CI (green locally, where a
+// StringValue-bearing `ms` resolves). Keeping these as literals — and typing the
+// catchupWindow field as the CatchupWindow union below rather than `Duration` —
+// keeps every catchup value off the error-typed `Duration` path entirely.
+const CATCHUP_TIGHT = "5 minutes";
+const CATCHUP_RELAXED = "1 hour";
+
+// The two declared catchup tiers as a literal union (not `Duration`), so reading
+// the optional schedule field in buildSchedulePolicies can never yield an
+// error-typed value. Both literals are valid Temporal `Duration`s at the policies
+// call site.
+type CatchupWindow = typeof CATCHUP_TIGHT | typeof CATCHUP_RELAXED;
 
 // Schedules whose workflow type was removed from the bundle. registerSchedules
 // deletes these on startup so they stop firing and failing. Explicit removal
@@ -30,6 +62,12 @@ export const DELETED_SCHEDULE_IDS = [
   // Schedules are keyed by id, so the renamed schedule is a NEW one — this
   // entry deletes the old hourly schedule on startup so it stops firing.
   "alert-remediation-hourly",
+  // Renamed to `pokeemerald-wasm-weekly` (monthly → weekly cadence). The old
+  // monthly schedule was never removed and kept firing a redundant run of the
+  // same `runPokeemeraldWasmUpdate` workflow on the 1st of each month (could
+  // open a duplicate PR). Found by the live-vs-source audit on 2026-06-26;
+  // delete it on startup. The orphan-detection gauge below catches the next one.
+  "pokeemerald-wasm-monthly",
 ] as const;
 
 type ScheduleDefinition = {
@@ -41,6 +79,12 @@ type ScheduleDefinition = {
   overlap: ScheduleOverlapPolicy;
   memo: string;
   workflowExecutionTimeout?: Duration;
+  // Server-outage replay margin. Omit to inherit CATCHUP_RELAXED; set
+  // CATCHUP_TIGHT on time-of-day home automation that should skip rather than
+  // fire late. See the CATCHUP_* constants above. Typed as the CatchupWindow
+  // literal union (not `Duration`) to stay off the error-typed `Duration` path
+  // under CI's Node16 `ms` resolution — see the constants' comment.
+  catchupWindow?: CatchupWindow;
 };
 
 const PR_REVIEW_EVAL_SCHEDULE_ID = "pr-review-eval-nightly";
@@ -304,6 +348,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
     workflowExecutionTimeout: "15 minutes",
+    catchupWindow: CATCHUP_TIGHT,
     memo: "Run vacuum if no one is home (9 AM)",
   },
   {
@@ -315,6 +360,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
     workflowExecutionTimeout: "15 minutes",
+    catchupWindow: CATCHUP_TIGHT,
     memo: "Run vacuum if no one is home (12 PM)",
   },
   {
@@ -326,6 +372,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
     workflowExecutionTimeout: "15 minutes",
+    catchupWindow: CATCHUP_TIGHT,
     memo: "Run vacuum if no one is home (5 PM)",
   },
   {
@@ -337,6 +384,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     // goodMorningWakeUp now runs the 60-minute heat cycle (MORNING_HEAT_DURATION); needs > 60m + slack
     workflowExecutionTimeout: "75 minutes",
+    catchupWindow: CATCHUP_TIGHT,
     memo: "Good morning wake-up + bathroom heat (weekdays 8 AM)",
   },
   {
@@ -347,6 +395,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
+    catchupWindow: CATCHUP_TIGHT,
     memo: "Good morning get-up (weekdays 8:15 AM)",
   },
   {
@@ -358,6 +407,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     // goodMorningWakeUp now runs the 60-minute heat cycle (MORNING_HEAT_DURATION); needs > 60m + slack
     workflowExecutionTimeout: "75 minutes",
+    catchupWindow: CATCHUP_TIGHT,
     memo: "Good morning wake-up + bathroom heat (weekends 9 AM)",
   },
   {
@@ -368,6 +418,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
+    catchupWindow: CATCHUP_TIGHT,
     memo: "Good morning get-up (weekends 9:15 AM)",
   },
 ];
@@ -427,6 +478,19 @@ async function reconcileSchedulePauseState(
   }
 }
 
+export function buildSchedulePolicies(schedule: ScheduleDefinition): {
+  overlap: ScheduleOverlapPolicy;
+  // CatchupWindow (not `Duration`): the resolved value is always one of the two
+  // literal tiers, and `Duration` is error-typed under CI's Node16 `ms`
+  // resolution. Both literals are valid Temporal Durations at the call site.
+  catchupWindow: CatchupWindow;
+} {
+  return {
+    overlap: schedule.overlap,
+    catchupWindow: schedule.catchupWindow ?? CATCHUP_RELAXED,
+  };
+}
+
 export async function registerSchedules(client: Client): Promise<void> {
   const scheduleClient = client.schedule;
 
@@ -460,9 +524,7 @@ export async function registerSchedules(client: Client): Promise<void> {
             ? {}
             : { workflowExecutionTimeout: schedule.workflowExecutionTimeout }),
         },
-        policies: {
-          overlap: schedule.overlap,
-        },
+        policies: buildSchedulePolicies(schedule),
       }));
 
       console.warn(`Updated schedule: ${schedule.id}`);
@@ -486,9 +548,7 @@ export async function registerSchedules(client: Client): Promise<void> {
             ? {}
             : { workflowExecutionTimeout: schedule.workflowExecutionTimeout }),
         },
-        policies: {
-          overlap: schedule.overlap,
-        },
+        policies: buildSchedulePolicies(schedule),
         memo: { description: schedule.memo },
       });
 
@@ -497,4 +557,13 @@ export async function registerSchedules(client: Client): Promise<void> {
     }
     await reconcileSchedulePauseState(handle, schedule);
   }
+
+  // After reconciling the declared set, surface any live schedule that is no
+  // longer represented in source (renamed/removed but not added to the delete
+  // list). Non-fatal — see detectOrphanSchedules.
+  await detectOrphanSchedules(
+    scheduleClient,
+    new Set(SCHEDULES.map((schedule) => schedule.id)),
+    new Set(DELETED_SCHEDULE_IDS),
+  );
 }

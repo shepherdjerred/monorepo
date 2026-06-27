@@ -27,6 +27,59 @@ src/
 - **Activities** do the real work (HTTP calls, DB queries, file I/O). They run outside the sandbox.
 - **Schedules** replace K8s CronJobs — managed by Temporal, visible in the UI.
 
+## Schedules (`src/schedules/register-schedules.ts`)
+
+`registerSchedules()` upserts every entry in the `SCHEDULES` array on each worker startup
+(create-or-update), deletes the explicit `DELETED_SCHEDULE_IDS` allow-list, and reconciles
+pause state. The **declaration** of a schedule (its existence, cron, workflow, args, policy)
+is source-controlled here; its **on/off pause state** is runtime/dynamic (see below).
+
+### Disabling / pausing a schedule (live, no deploy)
+
+Pause/unpause in the **Temporal Web UI** — `https://temporal-ui.tailnet-1a49.ts.net`
+(Tailscale-gated) → **Schedules** → pick the schedule → **Pause**. A pause **persists across
+worker restarts**: `registerSchedules` preserves live pause state on update and only ever
+auto-unpauses the two env-gated `pr-review-*` schedules. This is intentional — pause is the
+one dynamic knob; everything else about a schedule lives in source. Don't add a declarative
+`enabled` flag, it would fight the UI.
+
+| To stop…             | Pause schedule id(s)                                                                                 |
+| -------------------- | ---------------------------------------------------------------------------------------------------- |
+| Wake-up (heat)       | `good-morning-weekday-wake`, `good-morning-weekend-wake`                                             |
+| Get-up (volume ramp) | `good-morning-weekday-up`, `good-morning-weekend-up`                                                 |
+| Vacuum               | `vacuum-9am`, `vacuum-12pm`, `vacuum-5pm`                                                            |
+| LoL / Scout data     | `scout-data-dragon-version-check`, `scout-data-dragon-weekly-refresh`, `scout-season-refresh-weekly` |
+
+### Catchup window (missed-run replay after a SERVER outage)
+
+`catchupWindow` controls whether a run missed while the Temporal **server** was down gets
+replayed on recovery. (A worker restart/deploy does **not** drop runs — the server still
+creates the action on time and it queues.) Two tiers, set in `buildSchedulePolicies`:
+
+- `CATCHUP_TIGHT` (5 min) on time-of-day home automation (vacuum, good-morning): skip rather
+  than fire a wake-up/vacuum hours late.
+- `CATCHUP_RELAXED` (1 hour, the default for everything else): reports/maintenance still run
+  late after an outage. Override per-schedule via the optional `catchupWindow` field.
+
+Caveat: a long _worker_ outage can still execute a home run late (the server already created
+it on time); fully preventing that needs a staleness guard inside the workflow.
+
+### Orphan detection
+
+The reconciler is upsert-only and trusts the hand-maintained `DELETED_SCHEDULE_IDS`, so a
+renamed/removed schedule that isn't added there keeps firing silently (has happened 4×).
+`detectOrphanSchedules` (`src/schedules/orphan-detection.ts`) lists live schedules on startup
+and sets the `temporal_schedule_orphans` gauge + logs any that are neither declared, nor on
+the delete list, nor a dynamic agent-task schedule. A schedule counts as dynamic only via the
+`agent-task-` id prefix (auto-generated ids) or the `dynamicAgentTask` memo marker stamped at
+creation by the `/agent-tasks` API — **not** by `workflowType === "agentTaskWorkflow"`, which
+would also exempt declared schedules running that workflow (e.g. `homelab-audit-daily`) and
+silently hide them if they were ever removed from `SCHEDULES`. **Alert on
+`temporal_schedule_orphans > 0`**, then add the id to `DELETED_SCHEDULE_IDS` (if removed) or
+back to `SCHEDULES` (if still wanted). The gauge is set to `-1` if the live-schedule listing
+itself fails (count unknown) — **alert on `< 0` separately**, since a failed scan otherwise
+stays at 0 and is indistinguishable from a clean "no orphans" result.
+
 ## Commands
 
 ```bash
