@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress — revising open PR #1328 (`fix/seaweedfs-asset-loading`) into the full fix.
+In Progress — all phases implemented and pushed to PR #1328 (`fix/seaweedfs-asset-loading`); pending CI + merge.
 
 ## Context
 
@@ -73,3 +73,27 @@ Factor a reusable local module under `tofu/cloudflare/modules/static-cache/`: `c
 - Upstream SeaweedFS SigV4 root cause; caddy-s3-proxy retry-on-403.
 - Deploy-time sync endpoint off the Cloudflare hairpin.
 - API-route caching (tRPC `no-store`/`private`; anonymous-GET `s-maxage`+SWR).
+
+## Session Log — 2026-06-27
+
+### Done
+
+- **cdk8s** (`40af57e3c`): removed #1328's `@immutableAssets` Caddy path-matcher (`immutableAssetPaths`/`DEFAULT_IMMUTABLE_ASSET_PATHS`/`IMMUTABLE_CACHE_CONTROL`/`renderImmutableAssetBlock` + tests) from `s3-static-site.ts`/`sites.ts`; kept the in-cluster `S3_ENDPOINT`. 31 unit tests pass.
+- **Deploy 2-pass sync** (`b0bba7f06`): new `s3SyncStaticSite` in `.dagger/src/release.ts` (pass 1 hashed→immutable no-delete, pass 2 rest→no-cache+delete); `immutablePrefixes` threaded through `catalog.ts` → `steps/sites.ts` → `index.ts` → helper. Verified generated deploy commands per site (scout `_astro/ app/assets/`, bsc `assets/`, others default `_astro/`).
+- **SeaweedFS lifecycle** (`c28710843`): `terraform_data.static_site_asset_lifecycle` (for_each, 90d, per hashed prefix) in `tofu/seaweedfs/buckets.tf`. `tofu validate` clean.
+- **scout app** (`255beaa33`): `vite:preloadError` reload-once recovery (sessionStorage-guarded) in `app/src/main.tsx`. typecheck + eslint clean.
+- **Cloudflare** (`f442ab075`): new `tofu/cloudflare/modules/static-cache` (cache ruleset respect_origin on hashed prefixes + serve-stale + Smart Tiered Cache); wired into scout-for-lol.com, sjer.red, better-skill-capped.com. `tofu validate` clean vs provider v5.19.1.
+- Verified: homelab cdk8s 140 pass / 0 fail; scripts/ci 301 pass + typecheck; dagger hygiene clean; **`dagger call caddyfile-validate` → "Valid configuration"**. PR #1328 title + body updated.
+
+### Remaining
+
+- CI (Buildkite) green + merge. Run the **Post-deploy checks** above once ArgoCD applies + a deploy runs (curl immutable/no-cache/304/404; `get-bucket-lifecycle-configuration`; confirm `cf-cache-status: HIT` on a warm hashed asset).
+- When merged + shipped, flip Status to `Complete` and `git mv` this plan to `archive/completed/`.
+
+### Caveats
+
+- **`no-cache` on non-hashed sites**: resume/webring/glitter (no hashed prefix) now sync everything `no-cache` (was: no header → CF 4h default). Correct (revalidates), slightly more origin hits; negligible traffic.
+- **`stocks-sjer-red`** gets `_astro/` immutable on deploy but has **no lifecycle rule** (no tofu bucket resource) → old hashes accumulate. Minor storage leak; add a bucket+lifecycle if it matters.
+- **Lifecycle-by-age safety** rests on CI rebuilds writing fresh mtimes so `aws s3 sync` re-uploads current hashed assets each deploy (resetting their age). True for the Dagger container builds; a site that goes >90d without deploying could in theory expire a still-current hash — all listed buckets deploy far more often.
+- **Cloudflare changes touch live zones** — `tofu validate` passed but a real `tofu plan` (needs creds via `op run`) should be eyeballed before apply, especially Smart Tiered Cache + the new ruleset.
+- `tofu fmt -check` flags a **pre-existing** `backend.tf` formatting nit (not touched here).
