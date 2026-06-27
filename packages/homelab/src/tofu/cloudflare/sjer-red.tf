@@ -855,3 +855,12 @@ resource "cloudflare_dns_record" "sjer_red_tlsrpt" {
   type    = "TXT"
   content = "v=TLSRPTv1; rua=mailto:dmarc@sjer.red"
 }
+
+# ── Static-asset caching: respect the immutable Cache-Control the deploy sets on
+# content-hashed assets (sjer.red + the cook./stocks. Astro subdomains in this
+# zone all emit `/_astro/`) + Smart Tiered Cache (origin shielding). ───────────
+module "sjer_red_static_cache" {
+  source         = "./modules/static-cache"
+  zone_id        = cloudflare_zone.sjer_red.id
+  asset_prefixes = ["/_astro/"]
+}

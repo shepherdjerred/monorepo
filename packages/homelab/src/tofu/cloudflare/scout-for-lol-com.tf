@@ -145,3 +145,11 @@ resource "cloudflare_zone_setting" "scout_for_lol_com_security_header" {
     }
   }
 }
+
+# ── Static-asset caching: respect the immutable Cache-Control the deploy sets on
+# content-hashed assets + Smart Tiered Cache (origin shielding). ───────────────
+module "scout_for_lol_com_static_cache" {
+  source         = "./modules/static-cache"
+  zone_id        = cloudflare_zone.scout_for_lol_com.id
+  asset_prefixes = ["/_astro/", "/app/assets/"]
+}
