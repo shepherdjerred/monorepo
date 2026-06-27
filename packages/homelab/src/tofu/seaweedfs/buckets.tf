@@ -35,6 +35,17 @@ resource "aws_s3_bucket" "cook" {
   bucket = "cook"
 }
 
+# stocks.sjer.red. This bucket predates its IaC declaration: when stocks was
+# wired into the deploy (commit 6d0aa524b) it was added to CI + Caddy + the Astro
+# app but never to this file, and SeaweedFS's S3 gateway auto-created it on the
+# first deploy sync (it auto-creates a bucket on first PutObject, unlike AWS S3).
+# Because the bucket already exists, import it once before the first apply rather
+# than letting Tofu try to CreateBucket over it:
+#   tofu import aws_s3_bucket.stocks_sjer_red stocks-sjer-red
+resource "aws_s3_bucket" "stocks_sjer_red" {
+  bucket = "stocks-sjer-red"
+}
+
 resource "aws_s3_bucket" "glitter_boys_ppl" {
   bucket = "glitter-boys-ppl"
 }
@@ -54,6 +65,7 @@ locals {
     "scout-frontend-beta" = ["app/assets/", "_astro/"]
     "sjer-red"            = ["_astro/"]
     "cook"                = ["_astro/"]
+    "stocks-sjer-red"     = ["_astro/"]
     "better-skill-capped" = ["assets/"]
   }
 }
@@ -67,6 +79,7 @@ resource "terraform_data" "static_site_asset_lifecycle" {
     aws_s3_bucket.scout_frontend_beta,
     aws_s3_bucket.sjer_red,
     aws_s3_bucket.cook,
+    aws_s3_bucket.stocks_sjer_red,
     aws_s3_bucket.better_skill_capped,
   ]
 

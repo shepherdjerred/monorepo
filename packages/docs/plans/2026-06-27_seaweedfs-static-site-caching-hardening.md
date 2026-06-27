@@ -93,7 +93,7 @@ Factor a reusable local module under `tofu/cloudflare/modules/static-cache/`: `c
 ### Caveats
 
 - **`no-cache` on non-hashed sites**: resume/webring/glitter (no hashed prefix) now sync everything `no-cache` (was: no header → CF 4h default). Correct (revalidates), slightly more origin hits; negligible traffic.
-- **`stocks-sjer-red`** gets `_astro/` immutable on deploy but has **no lifecycle rule** (no tofu bucket resource) → old hashes accumulate. Minor storage leak; add a bucket+lifecycle if it matters.
+- **`stocks-sjer-red`** was the lone deploy target with no `aws_s3_bucket` in `buckets.tf` — it was wired into CI/Caddy/app (commit `6d0aa524b`) but never declared in tofu, and SeaweedFS auto-created it on first deploy sync. Now declared + given a lifecycle rule. **Operator step:** because the bucket already exists, `tofu import aws_s3_bucket.stocks_sjer_red stocks-sjer-red` before the next `seaweedfs` apply (or the apply will try to CreateBucket over it). Aside: SeaweedFS's auto-create-on-PutObject means the other `aws_s3_bucket` resources are partly belt-and-suspenders — left as-is.
 - **Lifecycle-by-age safety** rests on CI rebuilds writing fresh mtimes so `aws s3 sync` re-uploads current hashed assets each deploy (resetting their age). True for the Dagger container builds; a site that goes >90d without deploying could in theory expire a still-current hash — all listed buckets deploy far more often.
 - **Cloudflare changes touch live zones** — `tofu validate` passed but a real `tofu plan` (needs creds via `op run`) should be eyeballed before apply, especially Smart Tiered Cache + the new ruleset.
 - `tofu fmt -check` flags a **pre-existing** `backend.tf` formatting nit (not touched here).
