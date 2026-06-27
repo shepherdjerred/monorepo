@@ -31,7 +31,7 @@ Boot sequence after workers are created: install Temporal SDK runtime + Promethe
 - **Alert remediation** — `alertRemediationSweepWorkflow` (`alert-remediation-daily`, cron `0 8 * * *`, `AGENT_TASK` queue) fans out PagerDuty/Bugsink alerts to `alertRemediationChildWorkflow` children (`executeChild`, bounded per-agent timeout); children may open **draft** PRs for straightforward repo-only fixes. (Throttled from hourly on 2026-06-19 while the `claude -p` startup hang is investigated; the old `alert-remediation-hourly` id is in `DELETED_SCHEDULE_IDS`.)
 - **Home Assistant** — `goodMorningWakeUp`/`goodMorningGetUp`, `runVacuumIfNotHome` (×3 cron times), plus event-driven `welcomeHome`/`leavingHome`/`reconcileLock` (presence debounce model documented in `packages/temporal/CLAUDE.md`).
 - **Scout / LoL** — `runScoutDataDragonVersionCheck`, `runScoutDataDragonWeeklyRefresh`, `runScoutSeasonRefreshWorkflow` (claude `-p` → PR on drift).
-- **Maintenance / misc** — `runZfsMaintenanceWorkflow`, `runVeleroOrphanAuditWorkflow` (emits orphan-snapshot Prom metrics), `runBugsinkHousekeepingWorkflow`, `runDnsAudit`, `generateDependencySummary`, `fetchSkillCappedManifest`, `syncGolinks`, `runPokeemeraldWasmUpdate`, `cancelBuildkiteBuildsWorkflow` (triggered on PR close).
+- **Maintenance / misc** — `runZfsMaintenanceWorkflow`, `runVeleroOrphanAuditWorkflow` (emits orphan-snapshot Prom metrics), `runBugsinkHousekeepingWorkflow`, `runDnsAudit`, `generateDependencySummary`, `fetchSkillCappedManifest`, `syncGolinks`, `cancelBuildkiteBuildsWorkflow` (triggered on PR close).
 
 ## Schedules
 
@@ -41,7 +41,7 @@ Boot sequence after workers are created: install Temporal SDK runtime + Promethe
 2. For each entry in the `SCHEDULES` array: `handle.update(...)` if it exists, else `create(...)` (catching `ScheduleNotFoundError`). All crons are `America/Los_Angeles` wall-clock; overlap policy is `SKIP`.
 3. Reconciles pause state via `reconcileSchedulePauseState` — the two PR-review-eval schedules pause/unpause based on env presence.
 
-Each `ScheduleDefinition` carries `id`, `workflowType` (must match an `index.ts` export), `args`, `cronExpression`, `taskQueue`, `overlap`, optional `workflowExecutionTimeout`, and a `memo`. Notable IDs: `fetcher-skill-capped`, `deps-summary-weekly`, `dns-audit-daily`, `homelab-audit-daily`, `alert-remediation-daily`, `scout-data-dragon-version-check`, `pokeemerald-wasm-weekly`, `zfs-maintenance-weekly`, `velero-orphan-audit`, `golink-sync`, `vacuum-{9am,12pm,5pm}`, `good-morning-week{day,end}-{wake,up}`, plus the two `pr-review-*` eval schedules.
+Each `ScheduleDefinition` carries `id`, `workflowType` (must match an `index.ts` export), `args`, `cronExpression`, `taskQueue`, `overlap`, optional `workflowExecutionTimeout`, and a `memo`. Notable IDs: `fetcher-skill-capped`, `deps-summary-weekly`, `dns-audit-daily`, `homelab-audit-daily`, `alert-remediation-daily`, `scout-data-dragon-version-check`, `zfs-maintenance-weekly`, `velero-orphan-audit`, `golink-sync`, `vacuum-{9am,12pm,5pm}`, `good-morning-week{day,end}-{wake,up}`, plus the two `pr-review-*` eval schedules.
 
 ## Agent-task scheduler, report-only mode & the `/agent-tasks` API
 

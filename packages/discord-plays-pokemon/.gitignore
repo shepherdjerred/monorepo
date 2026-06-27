@@ -8,11 +8,9 @@ config*.toml
 error.png
 .tmp-earthly-out
 *.gba
-# Ignore generated/downloaded wasm, except the vendored emulator blob which is
-# committed and refreshed weekly by the Temporal "pokeemerald-wasm-weekly"
-# schedule (packages/temporal/src/workflows/pokeemerald-wasm.ts).
+# The emulator wasm is built from source (scripts/build-wasm.sh locally, the
+# Dagger image build in CI) and never committed.
 *.wasm
-!packages/backend/assets/pokeemerald.wasm
 logs
 saves
 .DS_Store

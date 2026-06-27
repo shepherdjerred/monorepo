@@ -59,7 +59,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "alertRemediationSweepWorkflow",
   "runScoutDataDragonVersionCheck",
   "runScoutDataDragonWeeklyRefresh",
-  "runPokeemeraldWasmUpdate",
   "runReadmeRefresh",
   "runScoutSeasonRefreshWorkflow",
   "runZfsMaintenanceWorkflow",
@@ -309,14 +308,18 @@ describe("orphan schedule detection", () => {
   const declaredIds = new Set(SCHEDULES.map((schedule) => schedule.id));
   const deletedIds = new Set<string>(DELETED_SCHEDULE_IDS);
 
-  test("the renamed pokeemerald monthly schedule is queued for deletion", () => {
-    // The live-vs-source audit (2026-06-26) found `pokeemerald-wasm-monthly`
-    // still firing after the monthly → weekly rename.
-    expect(DELETED_SCHEDULE_IDS).toContain("pokeemerald-wasm-monthly");
-    expect(SCHEDULES.map((s) => s.id)).not.toContain(
+  test("both pokeemerald wasm schedules are queued for deletion", () => {
+    // The pokeemerald.wasm download workflow is gone — the wasm is built from
+    // source in the Dagger image build. Both the weekly and the older monthly
+    // schedule must be deleted (and absent from SCHEDULES) so neither keeps
+    // firing a workflow that's no longer in the bundle.
+    for (const id of [
+      "pokeemerald-wasm-weekly",
       "pokeemerald-wasm-monthly",
-    );
-    expect(SCHEDULES.map((s) => s.id)).toContain("pokeemerald-wasm-weekly");
+    ] as const) {
+      expect(DELETED_SCHEDULE_IDS).toContain(id);
+      expect(SCHEDULES.map((s) => s.id)).not.toContain(id);
+    }
   });
 
   test("declared schedules are never flagged as orphans", () => {

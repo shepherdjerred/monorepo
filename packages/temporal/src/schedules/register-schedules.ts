@@ -62,11 +62,13 @@ export const DELETED_SCHEDULE_IDS = [
   // Schedules are keyed by id, so the renamed schedule is a NEW one — this
   // entry deletes the old hourly schedule on startup so it stops firing.
   "alert-remediation-hourly",
-  // Renamed to `pokeemerald-wasm-weekly` (monthly → weekly cadence). The old
-  // monthly schedule was never removed and kept firing a redundant run of the
-  // same `runPokeemeraldWasmUpdate` workflow on the 1st of each month (could
-  // open a duplicate PR). Found by the live-vs-source audit on 2026-06-26;
-  // delete it on startup. The orphan-detection gauge below catches the next one.
+  // The pokeemerald.wasm download workflow (`runPokeemeraldWasmUpdate`) is gone:
+  // the wasm is now built from source in the Dagger image build with our
+  // customizations (the download fetched an audio-stubbed upstream that lacked
+  // them). Delete BOTH the live weekly schedule and the never-removed monthly
+  // one (a monthly→weekly rename relic the 2026-06-26 audit caught) so neither
+  // keeps firing a workflow that no longer exists in the bundle.
+  "pokeemerald-wasm-weekly",
   "pokeemerald-wasm-monthly",
 ] as const;
 
@@ -234,18 +236,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "3 hours",
     memo: "Weekly Scout Data Dragon refresh even when version is unchanged",
-  },
-  {
-    id: "pokeemerald-wasm-weekly",
-    workflowType: "runPokeemeraldWasmUpdate",
-    args: [],
-    // 06:00 PT every Monday. The blob only changes on upstream releases so most
-    // weeks are no-op; weekly cadence catches new releases inside ~7 days.
-    cronExpression: "0 6 * * 1",
-    taskQueue: TASK_QUEUES.DEFAULT,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
-    memo: "Weekly refresh of the vendored pokeemerald.wasm emulator blob (opens a PR if it changed)",
   },
   {
     id: "readme-refresh-weekly",

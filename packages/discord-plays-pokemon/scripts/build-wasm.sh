@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Build pokeemerald.wasm from ottohg/pokeemerald-wasm at a pinned commit and
-# stage it at packages/backend/assets/pokeemerald.wasm.
+# stage it at packages/backend/assets/pokeemerald.wasm. This is the LOCAL-dev
+# path; CI builds the identical wasm from source in the Dagger image build
+# (`buildPokeemeraldWasm` in .dagger/src/image.ts). Keep the two in sync — both
+# read the pin from POKEEMERALD_SOURCE_REF and apply the same patch series.
 #
 # ottohg's fork adds a full C reimplementation of the m4a audio engine
 # (`src/m4a_wasm.c`) plus extra exports so the host can read mixed PCM
@@ -11,7 +14,8 @@
 # game-state reader needs (`gSaveBlock2Ptr`, `gPlayerParty`,
 # `gPlayerPartyCount`, `gBattleResults`) — ottohg's link line is a curated
 # list, not `--export-all`, so without this our `symbols.ts` resolver
-# returns null for everything except `gSaveBlock1Ptr`.
+# returns null for everything except `gSaveBlock1Ptr`. The patch lives at
+# `wasm-src/patches/` (see wasm-src/PATCHES.md).
 #
 # Prerequisites:
 #   - `clang` with `wasm32-unknown-unknown` target (homebrew LLVM works:
@@ -26,16 +30,17 @@
 
 set -euo pipefail
 
-# Pin the upstream SHA. Bump when picking up new ottohg fixes — see
-# packages/docs/plans/2026-06-13_dpp-audio-v2.md for the upgrade workflow.
+# Pin the upstream SHA. The source of truth is POKEEMERALD_SOURCE_REF in
+# .dagger/src/constants.ts (advanced by Renovate's git-refs manager); keep this
+# in lockstep when bumping. See wasm-src/PATCHES.md for the upgrade workflow.
 OTTOHG_REPO="https://github.com/ottohg/pokeemerald-wasm.git"
-OTTOHG_SHA="ee8b964"
+OTTOHG_SHA="ee8b9644375640fdb947b48a0d682adc35e0c297"
 
 WORKDIR="${WORKDIR:-${TMPDIR:-/tmp}/pokeemerald-wasm-build}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ASSETS_DIR="$SCRIPT_DIR/../packages/backend/assets"
+PATCHES_DIR="$SCRIPT_DIR/../wasm-src/patches"
 WASM_OUT="$ASSETS_DIR/pokeemerald.wasm"
-SHA_OUT="$WASM_OUT.sha256"
 
 WASM_CC="${WASM_CC:-$(command -v /opt/homebrew/opt/llvm/bin/clang || command -v /usr/local/opt/llvm/bin/clang || command -v clang)}"
 WASM_LD="${WASM_LD:-$(command -v wasm-ld || command -v /opt/homebrew/opt/llvm/bin/wasm-ld)}"
@@ -68,13 +73,14 @@ if ! git -C "$WORKDIR" rev-parse --verify --quiet "${OTTOHG_SHA}^{commit}" >/dev
 fi
 git -C "$WORKDIR" checkout --detach "$OTTOHG_SHA"
 
-# Local patch: ottohg's wasm-ld link line is a curated list, not
-# --export-all. Add the four extra g* globals our symbols.ts reads.
+# Apply our patch series (currently just the extra game-state exports — see
+# wasm-src/PATCHES.md). Idempotent: skip if already applied so re-runs against an
+# existing WORKDIR don't fail on an already-patched tree.
 if ! grep -q "export=gSaveBlock2Ptr" "$WORKDIR/Makefile"; then
-  sed -i.bak \
-    's/--export=gSoundInfo --export=gWasmPcmL --export=gWasmPcmR/--export=gSoundInfo --export=gWasmPcmL --export=gWasmPcmR --export=gSaveBlock2Ptr --export=gPlayerParty --export=gPlayerPartyCount --export=gBattleResults/' \
-    "$WORKDIR/Makefile"
-  echo "[build-wasm] patched Makefile with extra exports for game-state reader"
+  for p in "$PATCHES_DIR"/*.patch; do
+    echo "[build-wasm] applying $(basename "$p")"
+    patch -p1 --no-backup-if-mismatch -d "$WORKDIR" < "$p"
+  done
 fi
 
 # Generate map headers / layouts / groups. The Makefile only builds these as
@@ -108,8 +114,5 @@ make -C "$WORKDIR" wasm
 
 mkdir -p "$ASSETS_DIR"
 cp "$WORKDIR/build/wasm/pokeemerald.wasm" "$WASM_OUT"
-SHA=$(shasum -a 256 "$WASM_OUT" | awk '{print $1}')
-echo "$SHA" > "$SHA_OUT"
 BYTES=$(wc -c < "$WASM_OUT" | tr -d ' ')
 echo "[build-wasm] wrote $WASM_OUT (${BYTES} bytes)"
-echo "[build-wasm] sha256: $SHA"

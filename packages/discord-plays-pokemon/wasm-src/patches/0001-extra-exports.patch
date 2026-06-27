@@ -1,0 +1,13 @@
+diff --git a/Makefile b/Makefile
+index 829e603..2ed7f2c 100644
+--- a/Makefile
++++ b/Makefile
+@@ -281,7 +281,7 @@ $(WASM): Makefile $(WASM_C_OBJS) $(WASM_DATA_OBJS) $(WASM_SOUND_OBJS)
+ 	$(WASM_LD) --no-entry --allow-undefined --initial-memory=268435456 --max-memory=268435456 \
+ 		--export=AgbMain --export=WasmRunFrame \
+ 		--export=gSaveBlock1Ptr --export=gPlayerAvatar --export=gObjectEvents --export=VarGet \
+-		--export=gSoundInfo --export=gWasmPcmL --export=gWasmPcmR \
++		--export=gSoundInfo --export=gWasmPcmL --export=gWasmPcmR --export=gSaveBlock2Ptr --export=gPlayerParty --export=gPlayerPartyCount --export=gBattleResults \
+ 		-o $@ $(filter %.o,$^)
+ 
+ # m4a sound tables / voicegroups / samples (data/sound_data.s) -> wasm object.

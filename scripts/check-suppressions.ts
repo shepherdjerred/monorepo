@@ -91,9 +91,6 @@ const EXCLUDED_FILES = [
   // expects when the password is a PAT; not a token-in-URL.
   "packages/temporal/src/lib/pr-review-workdir.ts",
   // Same GIT_ASKPASS pattern as data-dragon.ts — emits "x-access-token" as the
-  // git username for the monthly pokeemerald.wasm refresh clone.
-  "packages/temporal/src/activities/pokeemerald-wasm.ts",
-  // Same GIT_ASKPASS pattern as data-dragon.ts — emits "x-access-token" as the
   // git username for the bare blobless clone the ci/merge-conflict checker uses
   // to fetch refs/heads/main + refs/pull/*/head before running merge-tree.
   "packages/temporal/src/activities/check-pr-merge-conflicts-git.ts",

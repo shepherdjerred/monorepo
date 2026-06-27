@@ -3,7 +3,14 @@
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
-import { dag, Container, Directory, Platform, Secret } from "@dagger.io/dagger";
+import {
+  dag,
+  Container,
+  Directory,
+  File,
+  Platform,
+  Secret,
+} from "@dagger.io/dagger";
 
 import {
   ARGOCD_CLI_VERSION,
@@ -23,6 +30,8 @@ import {
   GITHUB_MCP_SERVER_VERSION,
   KUBECTL_VERSION,
   OBSIDIAN_HEADLESS_BASE_IMAGE,
+  POKEEMERALD_SOURCE_REF,
+  POKEEMERALD_WASM_TOOLCHAIN_IMAGE,
   REDLIB_SOURCE_REF,
   TALOSCTL_VERSION,
   TEMPORAL_CLI_VERSION,
@@ -1122,6 +1131,92 @@ export function buildScoutImageHelper(
     ]);
 }
 
+const OTTOHG_POKEEMERALD_REPO =
+  "https://github.com/ottohg/pokeemerald-wasm.git";
+
+/**
+ * Build `pokeemerald.wasm` from source — ottohg/pokeemerald-wasm pinned at
+ * POKEEMERALD_SOURCE_REF plus our checked-in export patch — mirroring
+ * `scripts/build-wasm.sh`. ottohg's fork adds the full C m4a audio engine
+ * (`src/m4a_wasm.c`) and the host-PCM exports tripplyons's upstream stubs out;
+ * `wasm-src/patches/0001-extra-exports.patch` adds the four game-state exports
+ * `symbols.ts` reads. NO binary is committed — the build is reproducible from
+ * source (the source-from-download path that fetched the audio-stubbed upstream
+ * is gone).
+ *
+ * The build uses clang `wasm32-unknown-unknown` + `wasm-ld` (LLVM), NOT
+ * emscripten — bookworm's clang-14 links a wasm Bun/JSC rejects, so the
+ * toolchain image is pinned to trixie (clang-19), see
+ * POKEEMERALD_WASM_TOOLCHAIN_IMAGE. `dag.git().commit().tree()` is
+ * content-addressed and the toolchain layers sit ahead of the source copy, so a
+ * pin/patch bump reuses the toolchain and only recompiles; Renovate's git-refs
+ * manager advances the pin as ottohg `master` moves (see constants.ts).
+ */
+function buildPokeemeraldWasm(patchesDir: Directory): File {
+  const source = dag
+    .git(OTTOHG_POKEEMERALD_REPO)
+    .commit(POKEEMERALD_SOURCE_REF)
+    .tree();
+  return (
+    dag
+      .container()
+      .from(POKEEMERALD_WASM_TOOLCHAIN_IMAGE)
+      .withMountedCache(
+        "/var/cache/apt",
+        dag.cacheVolume("apt-cache-pokeemerald-wasm"),
+      )
+      // Toolchain (rarely changes → cached across pin bumps): modern LLVM for the
+      // wasm32 clang + wasm-ld, build-essential for the decomp host tools,
+      // libpng/zlib + pkg-config for gbagfx, python3 + uv for the sound tooling.
+      // Drop docker-clean so the mounted apt cache actually persists debs.
+      .withExec([
+        "sh",
+        "-c",
+        "rm -f /etc/apt/apt.conf.d/docker-clean && apt-get update && " +
+          "apt-get install -y --no-install-recommends " +
+          "clang lld llvm build-essential libpng-dev zlib1g-dev pkg-config " +
+          "git make ca-certificates python3 python3-pip",
+      ])
+      .withExec(["pip3", "install", "--break-system-packages", "uv"])
+      // Source + patch come AFTER the toolchain so a pin/patch bump reuses the
+      // toolchain layers and only re-runs the compile.
+      .withDirectory("/src", source)
+      .withDirectory("/patches", patchesDir)
+      .withWorkdir("/src")
+      .withExec([
+        "sh",
+        "-c",
+        'for p in /patches/*.patch; do echo "applying $p"; patch -p1 --no-backup-if-mismatch < "$p"; done',
+      ])
+      .withExec(["make", "tools"])
+      // The Makefile only builds map headers as a side effect of the GBA `maps.o`
+      // recipe (which the wasm target never runs), so drive mapjson ourselves —
+      // mirrors scripts/build-wasm.sh.
+      .withExec([
+        "sh",
+        "-c",
+        [
+          "tools/mapjson/mapjson groups emerald data/maps/map_groups.json data/maps include",
+          "tools/mapjson/mapjson layouts emerald data/layouts/layouts.json data/layouts include",
+          'for d in data/maps/*/; do n=$(basename "$d"); ' +
+            '[ "$n" = _unused ] && continue; [ -f "$d/map.json" ] || continue; ' +
+            'tools/mapjson/mapjson map emerald "$d/map.json" data/layouts/layouts.json "$d"; done',
+        ].join("\n"),
+      ])
+      .withEnvVariable("WASM_CC", "clang")
+      .withEnvVariable("WASM_LD", "wasm-ld")
+      .withExec(["make", "wasm"])
+      // Fail fast if the link/codegen produced an implausibly small binary
+      // (the real artifact is ~14 MB).
+      .withExec([
+        "sh",
+        "-c",
+        'test "$(wc -c < build/wasm/pokeemerald.wasm)" -gt 10000000',
+      ])
+      .file("/src/build/wasm/pokeemerald.wasm")
+  );
+}
+
 /**
  * Build the discord-plays-pokemon backend image.
  * Similar workspace structure — mount the full package, install deps at root,
@@ -1147,8 +1242,10 @@ export function buildDiscordPlaysPokemonImageHelper(
   // browser/desktop — this is a headless Bun service.
   container = withCodexCli(withDiscordPlaysRuntime(container))
     .withWorkdir("/workspace")
+    // wasm-src is a build input for buildPokeemeraldWasm only (patches applied to
+    // the cloned upstream); keep it out of the runtime image.
     .withDirectory(innerRoot, pkgDir, {
-      exclude: excludes,
+      exclude: [...excludes, "wasm-src"],
     });
 
   for (let i = 0; i < depNames.length; i++) {
@@ -1163,10 +1260,17 @@ export function buildDiscordPlaysPokemonImageHelper(
 
   return (
     container
+      // Build pokeemerald.wasm from source (ottohg pin + our export patch) and
+      // stage it where the emulator expects it. Staged AFTER the package mount so
+      // it wins over any locally-built copy a dev may have on disk; the committed
+      // blob and the Temporal download path are both gone.
+      .withFile(
+        `${innerRoot}/packages/backend/assets/pokeemerald.wasm`,
+        buildPokeemeraldWasm(pkgDir.directory("wasm-src/patches")),
+      )
       // Workspace install (covers backend + frontend + common) — runs the
       // trustedDependencies postinstalls (node-datachannel, node-av). The
-      // discord-video-stream fork lazy-loads sharp in source (no bun patch). The
-      // committed packages/backend/assets/pokeemerald.wasm is copied in (not excluded).
+      // discord-video-stream fork lazy-loads sharp in source (no bun patch).
       // No separate backend install: bun workspaces installs all member deps at
       // the root level. A second `bun install` in packages/backend causes bun to
       // try to re-link file: deps already linked by the root install → EEXIST.
@@ -1176,6 +1280,18 @@ export function buildDiscordPlaysPokemonImageHelper(
       .withWorkdir(innerRoot)
       .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
       .withWorkdir(`${innerRoot}/packages/backend`)
+      // Verify the from-source wasm is behaviorally equivalent to what shipped
+      // before: the symbol reader resolves all game-state globals, and the audio
+      // matches the committed fingerprint baseline. This gates the actual
+      // artifact that ships, so a regressive upstream pin bump (Renovate) fails
+      // the image build. Both tests are pure-TS (no ffmpeg) and need the staged
+      // wasm + installed node_modules, both present by here.
+      .withExec([
+        "bun",
+        "test",
+        "src/emulator/emulator-symbols.integration.test.ts",
+        "src/emulator/audio/audio-fingerprint.test.ts",
+      ])
       .withExec([
         "install",
         "-D",

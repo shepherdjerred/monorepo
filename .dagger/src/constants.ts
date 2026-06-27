@@ -84,6 +84,26 @@ export const EDSTEM_MCP_COMMIT = "661a3c498c82f47b1d352410b53fa06c6806c949";
 // build, so the version is intentionally frozen until the core is reworked.
 export const EMSCRIPTEN_IMAGE =
   "emscripten/emsdk:2.0.7@sha256:cbeeb7cccd2e7915fe0596345f10bfdec5578cc0386aaa823ad6f1d41910619f";
+
+// Toolchain image for the discord-plays-pokemon pokeemerald.wasm build. The
+// build uses clang `wasm32-unknown-unknown` + `wasm-ld` (NOT emscripten), so it
+// needs a modern LLVM plus the GBA-decomp host-tool deps (libpng/zlib for
+// gbagfx, python/uv for the sound-data tooling). bookworm's clang-14 links a
+// wasm JSC/Bun rejects ("function index exceeds function index space"); trixie's
+// clang-19 produces a Bun-loadable, behaviorally-equivalent binary.
+// renovate: datasource=docker depName=debian
+export const POKEEMERALD_WASM_TOOLCHAIN_IMAGE =
+  "debian:trixie-slim@sha256:28de0877c2189802884ccd20f15ee41c203573bd87bb6b883f5f46362d24c5c2";
+
+// Pinned commit of ottohg/pokeemerald-wasm built from source into the
+// discord-plays-pokemon backend image (.dagger/src/image.ts). ottohg's fork adds
+// the full C m4a audio engine + the host-PCM exports tripplyons's upstream stubs
+// out; a checked-in patch (packages/discord-plays-pokemon/wasm-src/patches) adds
+// the four game-state exports our symbols.ts reads. Pinned for reproducibility;
+// the git-refs custom manager below advances it as ottohg `master` moves.
+// renovate: datasource=git-refs depName=pokeemerald-source branch=master
+export const POKEEMERALD_SOURCE_REF =
+  "ee8b9644375640fdb947b48a0d682adc35e0c297";
 // renovate: datasource=docker depName=alpine/helm
 export const HELM_IMAGE =
   "alpine/helm:4.2.0@sha256:af08f75a3130d666a50b9fc150f40987ef20b885cf67659aabf4b83a5f2c5501";
