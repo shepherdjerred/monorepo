@@ -55,6 +55,14 @@ export function createScryptedDeployment(chart: Chart) {
           number: 10_443,
           protocol: Protocol.TCP,
         },
+        {
+          // Scrypted's plaintext HTTP port. The Tailscale ingress terminates TLS
+          // at the tailnet edge and proxies to the backend over HTTP, so it must
+          // target this port — proxying HTTP to the HTTPS-only 10443 port 502s.
+          name: "http",
+          number: 11_080,
+          protocol: Protocol.TCP,
+        },
       ],
       volumeMounts: [
         {
@@ -103,12 +111,17 @@ export function createScryptedDeployment(chart: Chart) {
       labels: { app: "scrypted" },
     },
     selector: deployment,
-    ports: [{ name: "https", port: 10_443 }],
+    ports: [
+      { name: "https", port: 10_443 },
+      { name: "http", port: 11_080 },
+    ],
   });
 
   new TailscaleIngress(chart, "scrypted-tailscale-ingress", {
     service,
     host: "scrypted",
-    port: 10_443,
+    // Target the plaintext HTTP port: the Tailscale ingress proxies to the
+    // backend over HTTP, so pointing it at Scrypted's HTTPS-only 10443 502s.
+    port: 11_080,
   });
 }
