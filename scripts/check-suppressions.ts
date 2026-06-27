@@ -97,6 +97,9 @@ const EXCLUDED_FILES = [
   // git username for the bare blobless clone the ci/merge-conflict checker uses
   // to fetch refs/heads/main + refs/pull/*/head before running merge-tree.
   "packages/temporal/src/activities/check-pr-merge-conflicts-git.ts",
+  // Same GIT_ASKPASS pattern as data-dragon.ts — emits "x-access-token" as the
+  // git username for the PR babysitter's persistent per-PR workdir clone.
+  "packages/temporal/src/activities/pr-babysit/ensure-workdir.ts",
   // Intentional: Sentry ErrorBoundary class types incompatible with React 19
   // (same pattern as discord-plays-pokemon/packages/frontend/src/main.tsx)
   "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx",
