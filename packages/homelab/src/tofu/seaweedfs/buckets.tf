@@ -39,6 +39,63 @@ resource "aws_s3_bucket" "glitter_boys_ppl" {
   bucket = "glitter-boys-ppl"
 }
 
+# Expire old content-hashed assets 90 days after they were last written. The
+# deploy (`deploySiteHelper`, .dagger/src/release.ts) uploads these prefixes with
+# a 1-year `immutable` Cache-Control and WITHOUT `--delete`, so a deploy never
+# 404s a hashed chunk that a still-open browser tab references. Every deploy
+# re-uploads the current build's hashed files (fresh mtime resets their age), so
+# only *prior* builds' hashes — no longer referenced by any live shell — age out.
+# Prefixes mirror `immutablePrefixes` in scripts/ci/src/catalog.ts. Only buckets
+# actively deployed by CI are listed; non-hashed sites (resume, webring, glitter)
+# and buckets we don't deploy to are intentionally omitted.
+locals {
+  static_site_immutable_prefixes = {
+    "scout-frontend"      = ["app/assets/", "_astro/"]
+    "scout-frontend-beta" = ["app/assets/", "_astro/"]
+    "sjer-red"            = ["_astro/"]
+    "cook"                = ["_astro/"]
+    "better-skill-capped" = ["assets/"]
+  }
+}
+
+resource "terraform_data" "static_site_asset_lifecycle" {
+  for_each = local.static_site_immutable_prefixes
+
+  # Ensure the bucket exists before configuring its lifecycle.
+  depends_on = [
+    aws_s3_bucket.scout_frontend,
+    aws_s3_bucket.scout_frontend_beta,
+    aws_s3_bucket.sjer_red,
+    aws_s3_bucket.cook,
+    aws_s3_bucket.better_skill_capped,
+  ]
+
+  input = {
+    bucket       = each.key
+    endpoint_url = "https://seaweedfs-s3.tailnet-1a49.ts.net"
+    # Re-runs the provisioner whenever the prefix set or TTL changes.
+    rules = jsonencode({
+      Rules = [
+        for idx, prefix in each.value : {
+          ID         = "expire-old-hashed-${idx}"
+          Status     = "Enabled"
+          Filter     = { Prefix = prefix }
+          Expiration = { Days = 90 }
+        }
+      ]
+    })
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      aws s3api put-bucket-lifecycle-configuration \
+        --bucket "${self.input.bucket}" \
+        --endpoint-url "${self.input.endpoint_url}" \
+        --lifecycle-configuration '${self.input.rules}'
+    EOT
+  }
+}
+
 # Public artifact bucket — served at https://public.sjer.red via Caddy s3proxy.
 # PR screenshots live under the `pr/assets/<number>/` prefix (365-day TTL, below);
 # the bucket root is seeded with a landing + 404 page so the static-site root
