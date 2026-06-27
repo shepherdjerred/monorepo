@@ -313,12 +313,12 @@
     },
     "1120": {
       "name": "Doran's Helm",
-      "description": "<mainText><stats><attention>140</attention> Health<br><attention>10</attention> Armor<br><attention>10</attention> Magic Resist</stats><br><br><passive>Helping Hand</passive><br>Attacks deal <physicalDamage>5 bonus physical damage</physicalDamage> to minions.</mainText>",
+      "description": "<mainText><stats><attention>150</attention> Health<br><attention>8</attention> Armor<br><attention>8</attention> Magic Resist</stats><br><br><passive>Helping Hand</passive><br>Attacks deal <physicalDamage>5 bonus physical damage</physicalDamage> to minions.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatSpellBlockMod": 10,
-        "FlatHPPoolMod": 140,
-        "FlatArmorMod": 10
+        "FlatSpellBlockMod": 8,
+        "FlatHPPoolMod": 150,
+        "FlatArmorMod": 8
       }
     },
     "1200": {
@@ -2325,10 +2325,10 @@
     },
     "4005": {
       "name": "Imperial Mandate",
-      "description": "<mainText><stats><attention>65</attention> Ability Power<br><attention>15</attention> Ability Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Control</passive><br>Gain 15 Ability Haste for your abilities with <keyword>Immobilizing</keyword> effects.<br><br><passive>Command</passive><br>On <keyword>Immobilizing</keyword> an enemy champion, mark them as 6% <Keyword>Vulnerable</Keyword> for 4 seconds.<br></mainText>",
+      "description": "<mainText><stats><attention>60</attention> Ability Power<br><attention>15</attention> Ability Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Control</passive><br>Gain 20 Ability Haste for your abilities with <keyword>Immobilizing</keyword> effects.<br><br><passive>Command</passive><br>On <keyword>Immobilizing</keyword> an enemy champion, mark them as 7% <Keyword>Vulnerable</Keyword> for 4 seconds.<br></mainText>",
       "plaintext": "Defer damage until later.",
       "stats": {
-        "FlatMagicDamageMod": 65
+        "FlatMagicDamageMod": 60
       }
     },
     "4010": {
@@ -2380,7 +2380,7 @@
     },
     "4015": {
       "name": "Perplexity",
-      "description": "<mainText><stats><attention>60</attention> Ability Power<br><attention>5%</attention> Move Speed<br><attention>22%</attention> Armor Penetration<br><attention>30%</attention> Magic Penetration</stats><br><br><passive>Giant Slayer</passive><br>Deal up to 15% bonus damage against champions with greater max Health than you.<br><br><rules>Max damage increase reached when Health difference is greater than 2500.</rules></mainText>",
+      "description": "<mainText><stats><attention>60</attention> Ability Power<br><attention>5%</attention> Move Speed<br><attention>22%</attention> Armor Penetration<br><attention>30%</attention> Magic Penetration</stats><br><br><passive>Giant Slayer</passive><br>Deal up to 15% bonus damage against champions with greater max Health than you.<br><br><rules>Max damage increase reached when Health difference is greater than 3000.</rules></mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 60,
@@ -2389,7 +2389,7 @@
     },
     "4016": {
       "name": "Wordless Promise",
-      "description": "<mainText><stats><attention>50</attention> Ability Power<br><attention>15%</attention> Heal and Shield Power<br><attention>25</attention> Ability Haste</stats><br><br><passive>Promise</passive><br>Gain 15% of your <attention>Promised</attention> <scaleAP>ally's Ability Power</scaleAP>, and grant your <attention>Promised</attention> ally 15% of your Ability Haste.<br><br><active>ACTIVE</active> (0s)<br><active>Promise</active><br>Make a <attention>Promise</attention> to an ally.</mainText>",
+      "description": "<mainText><stats><attention>50</attention> Ability Power<br><attention>15%</attention> Heal and Shield Power<br><attention>25</attention> Ability Haste</stats><br><br><passive>Promise</passive><br>Gain 10% of your <attention>Promised</attention> <scaleAP>ally's Ability Power</scaleAP>, and grant your <attention>Promised</attention> ally 10% of your Ability Haste.<br><br><active>ACTIVE</active> (0s)<br><active>Promise</active><br>Make a <attention>Promise</attention> to an ally.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 50
@@ -2397,10 +2397,10 @@
     },
     "4017": {
       "name": "Hellfire Hatchet",
-      "description": "<mainText><stats><attention>35</attention> Attack Damage<br><attention>12</attention> Lethality</stats><br><br><passive>Char</passive> (0s) per target<br>Your next Ability hit <keywordMajor>Burns</keywordMajor> enemies for <scaleAD> to  current Health physical damage</scaleAD> over 4 seconds, based on how much more <scaleHealth>max Health</scaleHealth> they have than you.<br><br><rules>Bonus damage maximum is reached at 3000 health difference</rules></mainText>",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>12</attention> Lethality</stats><br><br><passive>Char</passive> (0s) per target<br>Your next Ability hit <keywordMajor>Burns</keywordMajor> enemies for <scaleAD> to  current Health physical damage</scaleAD> over 4 seconds, based on how much more <scaleHealth>max Health</scaleHealth> they have than you.<br><br><rules>Bonus damage maximum is reached at 3000 health difference</rules></mainText>",
       "plaintext": "",
       "stats": {
-        "FlatPhysicalDamageMod": 35
+        "FlatPhysicalDamageMod": 40
       }
     },
     "4401": {
@@ -3873,7 +3873,7 @@
     },
     "223069": {
       "name": "Void Immolation",
-      "description": "<mainText><stats><attention>1000</attention> Health<br><attention>100</attention> Armor<br><attention>80</attention> Magic Resist<br><attention>25</attention> Ability Haste<br><attention>200%</attention> Base Health Regen</stats><br><br><passive>Immolate</passive><br>After taking or dealing damage, deal <magicDamage> magic damage</magicDamage> per second to nearby enemies for 5 seconds. </mainText>",
+      "description": "<mainText><stats><attention>1000</attention> Health<br><attention>100</attention> Armor<br><attention>80</attention> Magic Resist<br><attention>25</attention> Ability Haste<br><attention>200%</attention> Base Health Regen</stats><br><br><passive>Immolate</passive><br>After taking or dealing damage, deal <magicDamage> magic damage</magicDamage> per second to nearby enemies for 5 seconds. <br><br><passive>Desolate</passive><br>Killing an enemy deals <magicDamage>magic damage</magicDamage> around them.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 80,
@@ -4728,10 +4728,10 @@
     },
     "226692": {
       "name": "Eclipse",
-      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>10</attention> Ability Haste</stats><br><br><passive>Ever Rising Moon</passive><br>Hitting a champion with 2 separate Attacks or Abilities within 2 seconds grants you a <shield>Shield</shield> for 2 seconds.</mainText>",
+      "description": "<mainText><stats><attention>60</attention> Attack Damage<br><attention>15</attention> Ability Haste</stats><br><br><passive>Ever Rising Moon</passive><br>Hitting a champion with 2 separate Attacks or Abilities within 2 seconds grants you a <shield>Shield</shield> for 2 seconds.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatPhysicalDamageMod": 50
+        "FlatPhysicalDamageMod": 60
       }
     },
     "226693": {
@@ -5057,7 +5057,7 @@
     },
     "324005": {
       "name": "Imperial Mandate",
-      "description": "<mainText><stats><attention>65</attention> Ability Power<br><attention>15</attention> Ability Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Control</passive><br>Gain 15 Ability Haste for your abilities with <keyword>Immobilizing</keyword> effects.<br><br><passive>Command</passive><br>On <keyword>Immobilizing</keyword> an enemy champion, mark them as 6% <Keyword>Vulnerable</Keyword> for 4 seconds.<br></mainText>",
+      "description": "<mainText><stats><attention>65</attention> Ability Power<br><attention>15</attention> Ability Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Control</passive><br>Gain 20 Ability Haste for your abilities with <keyword>Immobilizing</keyword> effects.<br><br><passive>Command</passive><br>On <keyword>Immobilizing</keyword> an enemy champion, mark them as 7% <Keyword>Vulnerable</Keyword> for 4 seconds.<br></mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 65

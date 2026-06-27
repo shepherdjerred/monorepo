@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Talon": {
       "id": "Talon",
@@ -12,7 +12,7 @@
         "full": "Talon.png",
         "sprite": "champion4.png",
         "group": "champion",
-        "x": 192,
+        "x": 240,
         "y": 48,
         "w": 48,
         "h": 48
@@ -605,7 +605,7 @@
             "full": "TalonQ.png",
             "sprite": "spell13.png",
             "group": "spell",
-            "x": 192,
+            "x": 384,
             "y": 144,
             "w": 48,
             "h": 48
@@ -752,7 +752,7 @@
             "full": "TalonW.png",
             "sprite": "spell13.png",
             "group": "spell",
-            "x": 240,
+            "x": 432,
             "y": 144,
             "w": 48,
             "h": 48
@@ -889,10 +889,10 @@
           "rangeBurn": "725",
           "image": {
             "full": "TalonE.png",
-            "sprite": "spell13.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1006,10 +1006,10 @@
           "rangeBurn": "550",
           "image": {
             "full": "TalonR.png",
-            "sprite": "spell13.png",
+            "sprite": "spell14.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1023,7 +1023,7 @@
           "full": "TalonP.png",
           "sprite": "passive4.png",
           "group": "passive",
-          "x": 192,
+          "x": 240,
           "y": 48,
           "w": 48,
           "h": 48

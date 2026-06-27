@@ -88,6 +88,10 @@ describe("Champion utilities", () => {
       [421, "RekSai"],
       [897, "KSante"],
       [888, "Renata"],
+      // 805 (Locke) is newer than twisted's champion enum (caps at 804). The
+      // champion.json id→key fallback must still resolve it so the prematch
+      // loading screen finds Locke.png instead of a Champion805.png 404.
+      [805, "Locke"],
     ];
 
     test.each(cases)("resolveChampionKey(%i) === %s", (id, expected) => {

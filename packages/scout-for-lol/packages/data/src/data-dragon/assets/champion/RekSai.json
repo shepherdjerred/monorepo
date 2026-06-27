@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "RekSai": {
       "id": "RekSai",
@@ -12,7 +12,7 @@
         "full": "RekSai.png",
         "sprite": "champion3.png",
         "group": "champion",
-        "x": 288,
+        "x": 336,
         "y": 48,
         "w": 48,
         "h": 48
@@ -447,7 +447,7 @@
             "full": "RekSaiQ.png",
             "sprite": "spell11.png",
             "group": "spell",
-            "x": 96,
+            "x": 288,
             "y": 0,
             "w": 48,
             "h": 48
@@ -590,7 +590,7 @@
             "full": "RekSaiW.png",
             "sprite": "spell11.png",
             "group": "spell",
-            "x": 144,
+            "x": 336,
             "y": 0,
             "w": 48,
             "h": 48
@@ -601,7 +601,7 @@
           "id": "RekSaiE",
           "name": "Furious Bite / Tunnel",
           "description": "Rek'Sai bites her target, dealing physical damage, or bonus true damage if she has max Fury.<br><br>While Burrowed, Rek'Sai creates a re-usable, long lasting tunnel. Enemies can destroy it by standing on top of either entrance.",
-          "tooltip": "<keywordMajor>Unburrowed:</keywordMajor> Rek'Sai bites a target, dealing <physicalDamage>{{ spell.reksaie:basedamage }} physical damage</physicalDamage>. At max <keywordMajor>Fury</keywordMajor>, the bite deals <trueDamage>{{ spell.reksaie:empowereddamage }} true damage</trueDamage> instead.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<keywordMajor>Unburrowed:</keywordMajor> Rek'Sai bites a target, dealing <physicalDamage>{{ spell.reksaie:basedamagecalculation }} physical damage</physicalDamage>. At max <keywordMajor>Fury</keywordMajor>, the bite deals <trueDamage>{{ spell.reksaie:empowereddamagecalculation }} true damage</trueDamage> instead.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Base Damage",
@@ -610,8 +610,8 @@
               "Tunnel Use Cooldown"
             ],
             "effect": [
-              "{{ empoweredbasedamage*0.800000 }} -> {{ empoweredbasedamagenl*0.800000 }}",
-              "{{ empoweredbasedamage }} -> {{ empoweredbasedamageNL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ basedamage*1.200000 }} -> {{ basedamagenl*1.200000 }}",
               "{{ dashcooldown }} -> {{ dashcooldownNL }}",
               "{{ tunnelreusecooldown }} -> {{ tunnelreusecooldownNL }}"
             ]
@@ -735,7 +735,7 @@
             "full": "RekSaiE.png",
             "sprite": "spell11.png",
             "group": "spell",
-            "x": 192,
+            "x": 384,
             "y": 0,
             "w": 48,
             "h": 48
@@ -852,7 +852,7 @@
             "full": "RekSaiR.png",
             "sprite": "spell11.png",
             "group": "spell",
-            "x": 240,
+            "x": 432,
             "y": 0,
             "w": 48,
             "h": 48
@@ -867,7 +867,7 @@
           "full": "RekSai_Passive.png",
           "sprite": "passive3.png",
           "group": "passive",
-          "x": 288,
+          "x": 336,
           "y": 48,
           "w": 48,
           "h": 48

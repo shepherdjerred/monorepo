@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Pyke": {
       "id": "Pyke",
@@ -12,7 +12,7 @@
         "full": "Pyke.png",
         "sprite": "champion3.png",
         "group": "champion",
-        "x": 48,
+        "x": 96,
         "y": 48,
         "w": 48,
         "h": 48
@@ -784,7 +784,7 @@
             "full": "PykeQ.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 96,
+            "x": 288,
             "y": 96,
             "w": 48,
             "h": 48
@@ -923,7 +923,7 @@
             "full": "PykeW.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 144,
+            "x": 336,
             "y": 96,
             "w": 48,
             "h": 48
@@ -1064,7 +1064,7 @@
             "full": "PykeE.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 192,
+            "x": 384,
             "y": 96,
             "w": 48,
             "h": 48
@@ -1177,7 +1177,7 @@
             "full": "PykeR.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 240,
+            "x": 432,
             "y": 96,
             "w": 48,
             "h": 48
@@ -1192,7 +1192,7 @@
           "full": "PykePassive.png",
           "sprite": "passive3.png",
           "group": "passive",
-          "x": 48,
+          "x": 96,
           "y": 48,
           "w": 48,
           "h": 48

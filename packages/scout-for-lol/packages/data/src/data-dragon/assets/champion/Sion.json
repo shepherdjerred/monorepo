@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Sion": {
       "id": "Sion",
@@ -12,7 +12,7 @@
         "full": "Sion.png",
         "sprite": "champion4.png",
         "group": "champion",
-        "x": 144,
+        "x": 192,
         "y": 0,
         "w": 48,
         "h": 48
@@ -605,7 +605,7 @@
             "full": "SionQ.png",
             "sprite": "spell12.png",
             "group": "spell",
-            "x": 0,
+            "x": 192,
             "y": 144,
             "w": 48,
             "h": 48
@@ -643,13 +643,13 @@
           ],
           "cooldownBurn": "15/14/13/12/11",
           "cost": [
-            65,
-            70,
             75,
             80,
-            85
+            85,
+            90,
+            95
           ],
-          "costBurn": "65/70/75/80/85",
+          "costBurn": "75/80/85/90/95",
           "datavalues": {},
           "effect": [
             null,
@@ -752,7 +752,7 @@
             "full": "SionW.png",
             "sprite": "spell12.png",
             "group": "spell",
-            "x": 48,
+            "x": 240,
             "y": 144,
             "w": 48,
             "h": 48
@@ -897,7 +897,7 @@
             "full": "SionE.png",
             "sprite": "spell12.png",
             "group": "spell",
-            "x": 96,
+            "x": 288,
             "y": 144,
             "w": 48,
             "h": 48
@@ -1016,7 +1016,7 @@
             "full": "SionR.png",
             "sprite": "spell12.png",
             "group": "spell",
-            "x": 144,
+            "x": 336,
             "y": 144,
             "w": 48,
             "h": 48
@@ -1031,7 +1031,7 @@
           "full": "Sion_Passive1.png",
           "sprite": "passive4.png",
           "group": "passive",
-          "x": 144,
+          "x": 192,
           "y": 0,
           "w": 48,
           "h": 48

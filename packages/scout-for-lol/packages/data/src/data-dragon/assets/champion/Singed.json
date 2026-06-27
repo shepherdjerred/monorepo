@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Singed": {
       "id": "Singed",
@@ -12,7 +12,7 @@
         "full": "Singed.png",
         "sprite": "champion4.png",
         "group": "champion",
-        "x": 96,
+        "x": 144,
         "y": 0,
         "w": 48,
         "h": 48
@@ -387,8 +387,8 @@
             "full": "PoisonTrail.png",
             "sprite": "spell12.png",
             "group": "spell",
-            "x": 288,
-            "y": 96,
+            "x": 0,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -530,8 +530,8 @@
             "full": "MegaAdhesive.png",
             "sprite": "spell12.png",
             "group": "spell",
-            "x": 336,
-            "y": 96,
+            "x": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -677,8 +677,8 @@
             "full": "Fling.png",
             "sprite": "spell12.png",
             "group": "spell",
-            "x": 384,
-            "y": 96,
+            "x": 96,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -790,8 +790,8 @@
             "full": "InsanityPotion.png",
             "sprite": "spell12.png",
             "group": "spell",
-            "x": 432,
-            "y": 96,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -805,7 +805,7 @@
           "full": "Singed_Passive.png",
           "sprite": "passive4.png",
           "group": "passive",
-          "x": 96,
+          "x": 144,
           "y": 0,
           "w": 48,
           "h": 48

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Riven": {
       "id": "Riven",
@@ -12,7 +12,7 @@
         "full": "Riven.png",
         "sprite": "champion3.png",
         "group": "champion",
-        "x": 48,
+        "x": 96,
         "y": 96,
         "w": 48,
         "h": 48
@@ -691,7 +691,7 @@
             "full": "RivenTriCleave.png",
             "sprite": "spell11.png",
             "group": "spell",
-            "x": 96,
+            "x": 288,
             "y": 96,
             "w": 48,
             "h": 48
@@ -832,7 +832,7 @@
             "full": "RivenMartyr.png",
             "sprite": "spell11.png",
             "group": "spell",
-            "x": 144,
+            "x": 336,
             "y": 96,
             "w": 48,
             "h": 48
@@ -973,7 +973,7 @@
             "full": "RivenFeint.png",
             "sprite": "spell11.png",
             "group": "spell",
-            "x": 192,
+            "x": 384,
             "y": 96,
             "w": 48,
             "h": 48
@@ -1090,7 +1090,7 @@
             "full": "RivenFengShuiEngine.png",
             "sprite": "spell11.png",
             "group": "spell",
-            "x": 240,
+            "x": 432,
             "y": 96,
             "w": 48,
             "h": 48
@@ -1105,7 +1105,7 @@
           "full": "RivenRunicBlades.png",
           "sprite": "passive3.png",
           "group": "passive",
-          "x": 48,
+          "x": 96,
           "y": 96,
           "w": 48,
           "h": 48

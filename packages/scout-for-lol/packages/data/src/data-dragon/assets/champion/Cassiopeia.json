@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Cassiopeia": {
       "id": "Cassiopeia",
@@ -297,7 +297,7 @@
       },
       "stats": {
         "hp": 630,
-        "hpperlevel": 104,
+        "hpperlevel": 98,
         "mp": 480,
         "mpperlevel": 40,
         "movespeed": 335,
