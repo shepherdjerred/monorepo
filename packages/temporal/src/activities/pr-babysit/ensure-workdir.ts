@@ -59,11 +59,44 @@ export type EnsureBabysitWorkdirResult = {
   headSha: string;
 };
 
+/** Transient git network failures worth retrying (server-side timeouts etc.). */
+function isTransientGitError(error: unknown): boolean {
+  const msg = error instanceof Error ? error.message : String(error);
+  return /\b408\b|RPC failed|could not fetch|early EOF|Connection reset|timed out|TLS|unexpected disconnect|fetch-pack/i.test(
+    msg,
+  );
+}
+
+async function runWithGitRetry(
+  command: readonly string[],
+  options: { cwd?: string; env?: Record<string, string> },
+  attempts = 3,
+): Promise<void> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      await run(command, options);
+      return;
+    } catch (error: unknown) {
+      lastError = error;
+      if (attempt === attempts - 1 || !isTransientGitError(error)) {
+        throw error;
+      }
+      await Bun.sleep(2000 * (attempt + 1));
+    }
+  }
+  throw lastError;
+}
+
 export async function ensureBabysitWorkdir(
   input: EnsureBabysitWorkdirInput,
 ): Promise<EnsureBabysitWorkdirResult> {
   const workdir = babysitWorkdirPath(input.workflowId);
   const cloneUrl = `https://github.com/${input.owner}/${input.repo}.git`;
+
+  // Create the workdir root BEFORE writing the askpass helper into it (the
+  // askpass write targets WORKDIR_ROOT, so the directory must exist first).
+  await run(["mkdir", "-p", WORKDIR_ROOT]);
 
   const gitEnv: Record<string, string> =
     input.token === undefined
@@ -75,18 +108,47 @@ export async function ensureBabysitWorkdir(
         };
   const opts = { cwd: workdir, env: gitEnv };
 
-  await run(["mkdir", "-p", WORKDIR_ROOT]);
-
   const hasGit = await Bun.file(`${workdir}/.git/HEAD`).exists();
   if (!hasGit) {
-    await run(["rm", "-rf", workdir]);
-    await run(["git", "clone", "--filter=blob:none", cloneUrl, workdir], {
-      env: gitEnv,
-    });
+    // `--no-checkout` keeps the heavy on-demand blob fetch OFF the clone and on
+    // the targeted `checkout` below, so a transient server timeout can be
+    // retried without re-downloading the whole repository. rm-then-clone each
+    // attempt so a partial clone never wedges the retry.
+    let cloned = false;
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 3 && !cloned; attempt += 1) {
+      await run(["rm", "-rf", workdir]);
+      try {
+        await run(
+          [
+            "git",
+            "clone",
+            "--filter=blob:none",
+            "--no-checkout",
+            cloneUrl,
+            workdir,
+          ],
+          { env: gitEnv },
+        );
+        cloned = true;
+      } catch (error: unknown) {
+        lastError = error;
+        if (attempt === 2 || !isTransientGitError(error)) {
+          throw error;
+        }
+        await Bun.sleep(3000 * (attempt + 1));
+      }
+    }
+    if (!cloned) {
+      throw lastError;
+    }
   }
 
-  await run(["git", "fetch", "origin", input.headRef, input.baseRef], opts);
-  await run(
+  await runWithGitRetry(
+    ["git", "fetch", "origin", input.headRef, input.baseRef],
+    opts,
+  );
+  await runWithGitRetry(
     ["git", "checkout", "-B", input.headRef, `origin/${input.headRef}`],
     opts,
   );
