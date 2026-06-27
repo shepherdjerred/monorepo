@@ -140,7 +140,8 @@ export const reportRouter = router({
         data: {
           serverId: input.guildId,
           ownerId,
-          channelId: DiscordChannelIdSchema.parse(input.channelId),
+          // Already validated by ReportCreateInputSchema's DiscordChannelIdSchema.
+          channelId: input.channelId,
           title: input.title,
           description: input.description,
           queryText: input.queryText,

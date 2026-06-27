@@ -6,6 +6,7 @@ import type {
   DiscordChannelId,
   DiscordGuildId,
 } from "#src/model/discord.ts";
+import { DiscordChannelIdSchema } from "#src/model/discord.ts";
 
 export const REPORT_QUERY_MAX_LENGTH = 4000;
 export const REPORT_DEFAULT_LOOKBACK_DAYS = 30;
@@ -170,7 +171,11 @@ export type ReportRun = {
 export const ReportCreateInputSchema = z.object({
   title: z.string().trim().min(1).max(100),
   description: z.string().trim().max(500).nullable().default(null),
-  channelId: z.string().min(1),
+  // Validate the Discord channel snowflake at the boundary (17-20 digits)
+  // rather than accepting any non-empty string and re-checking deeper — a
+  // malformed channelId now fails as a field-level input error instead of a
+  // BAD_REQUEST thrown from the handler. See discord.ts DiscordChannelIdSchema.
+  channelId: DiscordChannelIdSchema,
   queryText: ReportQueryTextSchema,
   lookbackDays: ReportLookbackDaysSchema,
   maxRows: ReportMaxRowsSchema,
