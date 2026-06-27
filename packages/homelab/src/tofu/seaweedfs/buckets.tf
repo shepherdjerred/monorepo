@@ -39,9 +39,17 @@ resource "aws_s3_bucket" "cook" {
 # wired into the deploy (commit 6d0aa524b) it was added to CI + Caddy + the Astro
 # app but never to this file, and SeaweedFS's S3 gateway auto-created it on the
 # first deploy sync (it auto-creates a bucket on first PutObject, unlike AWS S3).
-# Because the bucket already exists, import it once before the first apply rather
-# than letting Tofu try to CreateBucket over it:
-#   tofu import aws_s3_bucket.stocks_sjer_red stocks-sjer-red
+# The bucket already exists, so the `import` block adopts it into state on the
+# next apply rather than letting Tofu try to CreateBucket over it. This is
+# declarative (no manual `tofu import`) and safe because the resource + import
+# land on main together — a manual pre-merge import would leave state ahead of
+# config and the next apply would destroy the bucket. The block is a no-op once
+# the bucket is in state and may be removed after the first successful apply.
+import {
+  to = aws_s3_bucket.stocks_sjer_red
+  id = "stocks-sjer-red"
+}
+
 resource "aws_s3_bucket" "stocks_sjer_red" {
   bucket = "stocks-sjer-red"
 }
