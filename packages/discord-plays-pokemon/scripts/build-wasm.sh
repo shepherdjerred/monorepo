@@ -2,8 +2,9 @@
 # Build pokeemerald.wasm from ottohg/pokeemerald-wasm at a pinned commit and
 # stage it at packages/backend/assets/pokeemerald.wasm. This is the LOCAL-dev
 # path; CI builds the identical wasm from source in the Dagger image build
-# (`buildPokeemeraldWasm` in .dagger/src/image.ts). Keep the two in sync — both
-# read the pin from POKEEMERALD_SOURCE_REF and apply the same patch series.
+# (`buildPokeemeraldWasm` in .dagger/src/image.ts). The two stay in sync
+# automatically — both read the commit from POKEEMERALD_SOURCE_REF in
+# .dagger/src/constants.ts and apply the same patch series.
 #
 # ottohg's fork adds a full C reimplementation of the m4a audio engine
 # (`src/m4a_wasm.c`) plus extra exports so the host can read mixed PCM
@@ -30,14 +31,32 @@
 
 set -euo pipefail
 
-# Pin the upstream SHA. The source of truth is POKEEMERALD_SOURCE_REF in
-# .dagger/src/constants.ts (advanced by Renovate's git-refs manager); keep this
-# in lockstep when bumping. See wasm-src/PATCHES.md for the upgrade workflow.
+# The upstream repo. The pinned commit (OTTOHG_SHA) is read just below from the
+# single source of truth — POKEEMERALD_SOURCE_REF in .dagger/src/constants.ts —
+# so this local build can never drift from the CI/Dagger build.
 OTTOHG_REPO="https://github.com/ottohg/pokeemerald-wasm.git"
-OTTOHG_SHA="ee8b9644375640fdb947b48a0d682adc35e0c297"
 
 WORKDIR="${WORKDIR:-${TMPDIR:-/tmp}/pokeemerald-wasm-build}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Read the pinned upstream SHA from the single source of truth:
+# POKEEMERALD_SOURCE_REF in .dagger/src/constants.ts, which Renovate's git-refs
+# custom manager advances as ottohg `master` moves. The Dagger image build
+# (.dagger/src/image.ts buildPokeemeraldWasm) reads the same constant, so
+# reading it here keeps the local build in lockstep automatically — a Renovate
+# bump can no longer leave this script building a stale emulator. See
+# wasm-src/PATCHES.md for the upgrade workflow.
+CONSTANTS_TS="$SCRIPT_DIR/../../../.dagger/src/constants.ts"
+if [[ ! -f "$CONSTANTS_TS" ]]; then
+  echo "error: cannot find $CONSTANTS_TS to read POKEEMERALD_SOURCE_REF" >&2
+  exit 1
+fi
+OTTOHG_SHA="$(awk '/export const POKEEMERALD_SOURCE_REF/{f=1} f && match($0, /[0-9a-f]{40}/){print substr($0, RSTART, RLENGTH); exit}' "$CONSTANTS_TS")"
+if [[ ! "$OTTOHG_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "error: could not parse a 40-hex POKEEMERALD_SOURCE_REF from $CONSTANTS_TS" >&2
+  exit 1
+fi
+
 ASSETS_DIR="$SCRIPT_DIR/../packages/backend/assets"
 PATCHES_DIR="$SCRIPT_DIR/../wasm-src/patches"
 WASM_OUT="$ASSETS_DIR/pokeemerald.wasm"
@@ -57,6 +76,7 @@ echo "[build-wasm] toolchain:"
 echo "  WASM_CC=$WASM_CC"
 echo "  WASM_LD=$WASM_LD"
 echo "  WORKDIR=$WORKDIR"
+echo "  OTTOHG_SHA=$OTTOHG_SHA (from POKEEMERALD_SOURCE_REF)"
 
 # Clone (or refresh) the pinned fork. Use `clone -b` against the default
 # branch on a fresh checkout, then fetch the exact SHA into an existing

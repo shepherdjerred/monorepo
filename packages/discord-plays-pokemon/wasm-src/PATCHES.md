@@ -20,11 +20,14 @@ wasm-src/
 ## Pin
 
 - **Upstream:** https://github.com/ottohg/pokeemerald-wasm (default branch `master`)
-- **Pinned commit:** `POKEEMERALD_SOURCE_REF` in `.dagger/src/constants.ts`
-  (and `OTTOHG_SHA` in `scripts/build-wasm.sh` — keep in lockstep).
+- **Pinned commit:** `POKEEMERALD_SOURCE_REF` in `.dagger/src/constants.ts` — the
+  single source of truth. The local `scripts/build-wasm.sh` reads this value
+  directly (no separate pin to keep in sync), and the CI build
+  (`buildPokeemeraldWasm` in `.dagger/src/image.ts`) imports the same constant.
 - Renovate's `git-refs` custom manager (`renovate.json`) advances the pin as
   `master` moves and opens a review PR; the in-image verification gate (below)
-  re-runs on each bump.
+  re-runs on each bump. Because both build paths derive from the one constant, a
+  Renovate bump can never leave the local script building a stale emulator.
 
 ## Patches (`patches/`)
 
@@ -63,8 +66,9 @@ checkout); they run for real in the image build and locally after
 
 A Renovate PR will normally bump the pin for you. To do it by hand:
 
-1. Set `POKEEMERALD_SOURCE_REF` (`.dagger/src/constants.ts`) and `OTTOHG_SHA`
-   (`scripts/build-wasm.sh`) to the new commit.
+1. Set `POKEEMERALD_SOURCE_REF` (`.dagger/src/constants.ts`) to the new commit.
+   `scripts/build-wasm.sh` reads that constant automatically, so there is no
+   second pin to touch.
 2. `scripts/build-wasm.sh` — if a patch no longer applies, `patch` stops and
    names it; re-base that `.patch` against the new source.
 3. Run the verification tests (or let the image build / Renovate PR run them):
