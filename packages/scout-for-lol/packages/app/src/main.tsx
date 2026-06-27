@@ -24,6 +24,26 @@ Sentry.init({
   tracesSampleRate: 0,
 });
 
+// Recover from a stale dynamic-import chunk after a deploy. A still-open tab can
+// reference a content-hashed chunk that a later deploy has aged out; Vite fires
+// `vite:preloadError` when such an import fails. Reload once to pull the fresh
+// shell + chunk graph, guarded by a short timestamp window so a genuinely broken
+// chunk can't cause a reload loop. (The deploy keeps old hashes for a grace
+// period so most stale imports still resolve — this is the last resort.)
+const PRELOAD_RELOAD_KEY = "scout:preload-reloaded-at";
+globalThis.addEventListener("vite:preloadError", () => {
+  const lastReload = Number(sessionStorage.getItem(PRELOAD_RELOAD_KEY) ?? "0");
+  if (Date.now() - lastReload < 10_000) {
+    return; // already reloaded moments ago — the chunk is gone for good, stop.
+  }
+  sessionStorage.setItem(PRELOAD_RELOAD_KEY, String(Date.now()));
+  Sentry.captureMessage(
+    "vite:preloadError — reloading to recover a stale chunk after deploy",
+    "warning",
+  );
+  globalThis.location.reload();
+});
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { retry: 1, staleTime: 30_000 },
