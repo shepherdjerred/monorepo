@@ -71,32 +71,6 @@ export type StaticSiteConfig = {
    * through `reverseProxies` upstreams.
    */
   responseHeaders?: Record<string, string | null>;
-  /**
-   * Path globs whose responses get a long-lived immutable `Cache-Control` so
-   * Cloudflare and browsers can cache them indefinitely. ONLY use this for
-   * content-hashed (fingerprinted) assets whose filename changes on every
-   * rebuild — never for `index.html` or any path that's updated in place, or
-   * deploys won't take effect.
-   *
-   * Defaults to {@link DEFAULT_IMMUTABLE_ASSET_PATHS} (`/_astro/*` — Astro's
-   * hashed output dir; harmless on non-Astro sites since the path won't exist).
-   * SPA sites override this to add their bundler's hashed dir (e.g. Vite's
-   * `/app/assets/*`). Set to `[]` to disable.
-   *
-   * Caution when a glob overlaps a {@link StaticSiteSpaFallback} prefix (e.g.
-   * `/app/assets/*` sits under the `/app/*` SPA fallback): the matcher stamps the
-   * immutable `Cache-Control` on *every* matching response by request path —
-   * including the 200 `index.html` the fallback serves for a missing key. So the
-   * bucket must never prune old content-hashed objects under such a glob, or a
-   * request for a deleted asset would cache `index.html` at that asset URL for a
-   * year. Content-hashed builds keep every build's output, so this invariant holds
-   * in practice.
-   *
-   * Caching these at the edge is the primary mitigation for intermittent
-   * SeaweedFS `SignatureDoesNotMatch` 403s: once cached, repeat visits never
-   * hit the origin, so the origin race almost never reaches a user.
-   */
-  immutableAssetPaths?: string[];
 };
 
 /**
@@ -117,34 +91,6 @@ export const defaultResponseHeaders: Record<string, string> = {
   "Permissions-Policy":
     "camera=(), microphone=(), geolocation=(), interest-cohort=()",
 };
-
-/**
- * Default immutable-asset path globs (see `StaticSiteConfig.immutableAssetPaths`).
- * `/_astro/*` is Astro's content-hashed output directory — every site built with
- * Astro emits fingerprinted assets there, and non-Astro sites simply have no such
- * path, so applying this everywhere is safe.
- */
-export const DEFAULT_IMMUTABLE_ASSET_PATHS: string[] = ["/_astro/*"];
-
-/**
- * `Cache-Control` value for content-hashed assets. One year + `immutable` is the
- * standard for fingerprinted files: the filename changes on every rebuild, so the
- * cached copy is never stale and revalidation is never needed.
- */
-export const IMMUTABLE_CACHE_CONTROL = "public, max-age=31536000, immutable";
-
-/**
- * Render the `@immutableAssets` matcher + `header` directive that stamps
- * {@link IMMUTABLE_CACHE_CONTROL} onto the given path globs. Returns an empty
- * string when there are no paths (caching disabled for the site).
- *
- * Like the global header block, a `header` directive with a path matcher applies
- * to all matching responses — including those served by the `s3proxy` handler.
- */
-export function renderImmutableAssetBlock(paths: string[]): string {
-  if (paths.length === 0) return "";
-  return `\t@immutableAssets path ${paths.join(" ")}\n\theader @immutableAssets Cache-Control "${IMMUTABLE_CACHE_CONTROL}"`;
-}
 
 /**
  * Render the merged-and-per-site Caddyfile `header { ... }` block for one site.
@@ -278,12 +224,9 @@ ${renderS3Proxy(spa.fallbackPath)}
 \t}`;
 
     const headerBlock = renderHeaderBlock(site.responseHeaders);
-    const immutableBlock = renderImmutableAssetBlock(
-      site.immutableAssetPaths ?? DEFAULT_IMMUTABLE_ASSET_PATHS,
-    );
 
     blocks.push(`${address} {
-${headerBlock ? `${headerBlock}\n\n` : ""}${immutableBlock ? `${immutableBlock}\n\n` : ""}\t# Redirect directory-style paths to include trailing slash
+${headerBlock ? `${headerBlock}\n\n` : ""}\t# Redirect directory-style paths to include trailing slash
 	# Matches paths like /foo/bar but not /foo/bar/ or /foo/bar.html
 ${noTrailingSlashMatcher}
 	redir @noTrailingSlash {uri}/ 301

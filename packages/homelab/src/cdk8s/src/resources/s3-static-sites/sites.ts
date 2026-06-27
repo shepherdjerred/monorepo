@@ -68,17 +68,6 @@ export const staticSites: StaticSiteConfig[] = [
     ],
     spaFallbacks: [{ pathPrefix: "/app/*", fallbackPath: "/app/index.html" }],
     responseHeaders: { "Content-Security-Policy": scoutCsp },
-    // `/_astro/*` (marketing) + `/app/assets/*` (the Vite SPA bundle, incl. the
-    // ~1.6 MB hashed index JS) are content-hashed, so cache them immutably. The
-    // SPA's `/app/index.html` is intentionally excluded so deploys take effect.
-    //
-    // Bucket-lifecycle invariant: never prune old `/app/assets/*` objects. The
-    // `/app/*` SPA fallback serves `/app/index.html` (200) for any missing key
-    // under `/app/*`, and the immutable matcher stamps the 1-year `Cache-Control`
-    // on that response too — so a request for a *pruned* hashed asset would cache
-    // HTML at a `.js` URL at the edge for a year. Content-hashed builds keep every
-    // build's output, so this holds as long as the deploy never deletes old hashes.
-    immutableAssetPaths: ["/_astro/*", "/app/assets/*"],
   },
   {
     hostname: "beta.scout-for-lol.com",
@@ -104,17 +93,6 @@ export const staticSites: StaticSiteConfig[] = [
     ],
     spaFallbacks: [{ pathPrefix: "/app/*", fallbackPath: "/app/index.html" }],
     responseHeaders: { "Content-Security-Policy": scoutCsp },
-    // `/_astro/*` (marketing) + `/app/assets/*` (the Vite SPA bundle, incl. the
-    // ~1.6 MB hashed index JS) are content-hashed, so cache them immutably. The
-    // SPA's `/app/index.html` is intentionally excluded so deploys take effect.
-    //
-    // Bucket-lifecycle invariant: never prune old `/app/assets/*` objects. The
-    // `/app/*` SPA fallback serves `/app/index.html` (200) for any missing key
-    // under `/app/*`, and the immutable matcher stamps the 1-year `Cache-Control`
-    // on that response too — so a request for a *pruned* hashed asset would cache
-    // HTML at a `.js` URL at the edge for a year. Content-hashed builds keep every
-    // build's output, so this holds as long as the deploy never deletes old hashes.
-    immutableAssetPaths: ["/_astro/*", "/app/assets/*"],
   },
   { hostname: "better-skill-capped.com", bucket: "better-skill-capped" },
   { hostname: "clauderon.com", bucket: "clauderon" },

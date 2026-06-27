@@ -3,11 +3,8 @@ import { App, Chart } from "cdk8s";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import {
-  DEFAULT_IMMUTABLE_ASSET_PATHS,
   generateCaddyfile,
-  IMMUTABLE_CACHE_CONTROL,
   renderHeaderBlock,
-  renderImmutableAssetBlock,
   S3StaticSites,
 } from "./s3-static-site.ts";
 
@@ -517,73 +514,6 @@ describe("response headers", () => {
     });
     expect(block).toContain(
       String.raw`X-Test-Header "value with \"quote\" and \\backslash"`,
-    );
-  });
-});
-
-describe("immutable asset caching", () => {
-  it("stamps the default /_astro/* immutable Cache-Control on every site", () => {
-    const out = generateCaddyfile({
-      sites: [{ hostname: "static.test", bucket: "static" }],
-      s3Endpoint: "https://s3.example.test",
-    });
-    expect(out).toContain("@immutableAssets path /_astro/*");
-    expect(out).toContain(
-      `header @immutableAssets Cache-Control "${IMMUTABLE_CACHE_CONTROL}"`,
-    );
-    expect(IMMUTABLE_CACHE_CONTROL).toBe("public, max-age=31536000, immutable");
-    expect(DEFAULT_IMMUTABLE_ASSET_PATHS).toEqual(["/_astro/*"]);
-  });
-
-  it("honors a per-site immutableAssetPaths override (e.g. a Vite SPA)", () => {
-    const out = generateCaddyfile({
-      sites: [
-        {
-          hostname: "spa.test",
-          bucket: "spa",
-          immutableAssetPaths: ["/_astro/*", "/app/assets/*"],
-        },
-      ],
-      s3Endpoint: "https://s3.example.test",
-    });
-    expect(out).toContain("@immutableAssets path /_astro/* /app/assets/*");
-    // The SPA shell must NOT be immutable-cached, or deploys never take effect.
-    expect(out).not.toContain("/app/index.html Cache-Control");
-  });
-
-  it("omits the immutable block when immutableAssetPaths is empty", () => {
-    const out = generateCaddyfile({
-      sites: [
-        { hostname: "none.test", bucket: "none", immutableAssetPaths: [] },
-      ],
-      s3Endpoint: "https://s3.example.test",
-    });
-    expect(out).not.toContain("@immutableAssets");
-    expect(out).not.toContain("Cache-Control");
-  });
-
-  it("renders the immutable block AFTER headers but BEFORE the redirect", () => {
-    const out = generateCaddyfile({
-      sites: [{ hostname: "static.test", bucket: "static" }],
-      s3Endpoint: "https://s3.example.test",
-    });
-    const headerIdx = out.indexOf("header {");
-    const immutableIdx = out.indexOf("@immutableAssets");
-    const redirIdx = out.indexOf("redir @noTrailingSlash");
-    expect(headerIdx).toBeGreaterThan(-1);
-    expect(immutableIdx).toBeGreaterThan(headerIdx);
-    expect(redirIdx).toBeGreaterThan(immutableIdx);
-  });
-
-  it("renderImmutableAssetBlock returns empty string for no paths", () => {
-    expect(renderImmutableAssetBlock([])).toBe("");
-  });
-
-  it("renderImmutableAssetBlock joins multiple globs into one matcher", () => {
-    const block = renderImmutableAssetBlock(["/_astro/*", "/assets/*"]);
-    expect(block).toContain("@immutableAssets path /_astro/* /assets/*");
-    expect(block).toContain(
-      `header @immutableAssets Cache-Control "${IMMUTABLE_CACHE_CONTROL}"`,
     );
   });
 });
