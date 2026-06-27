@@ -25,15 +25,23 @@ const SCHEDULE_TIMEZONE = "America/Los_Angeles";
 //   * CATCHUP_RELAXED (default) — reports / maintenance / data jobs. The intent
 //     is "ran this cycle," so running late after a server outage is acceptable.
 //
-// Left unannotated (inferred string-literal types) rather than `: Duration`.
-// `Duration` is `StringValue | number`, and `ms`'s `StringValue` template-literal
-// type can resolve to an error type under Dagger's per-package Node16 install
-// (the canary `ms` ships an `exports` map with no `types` condition), which would
-// poison a `: Duration` const and trip @typescript-eslint/no-unsafe-assignment at
-// every use site. The literals are still validated against `Duration` where they
-// are assigned to the `catchupWindow?: Duration` fields below.
+// Inferred string-literal types, NOT `: Duration`. `Duration` is
+// `StringValue | number`, and under Dagger's per-package Node16 install the canary
+// `ms` resolves with no usable `StringValue` (its `exports` map has no `types`
+// condition, so TS falls through to `@types/ms`, which never exported StringValue),
+// leaving `Duration` partly error-typed. Any value whose static type is `Duration`
+// then trips @typescript-eslint/no-unsafe-assignment in CI (green locally, where a
+// StringValue-bearing `ms` resolves). Keeping these as literals — and typing the
+// catchupWindow field as the CatchupWindow union below rather than `Duration` —
+// keeps every catchup value off the error-typed `Duration` path entirely.
 const CATCHUP_TIGHT = "5 minutes";
 const CATCHUP_RELAXED = "1 hour";
+
+// The two declared catchup tiers as a literal union (not `Duration`), so reading
+// the optional schedule field in buildSchedulePolicies can never yield an
+// error-typed value. Both literals are valid Temporal `Duration`s at the policies
+// call site.
+type CatchupWindow = typeof CATCHUP_TIGHT | typeof CATCHUP_RELAXED;
 
 // Schedules whose workflow type was removed from the bundle. registerSchedules
 // deletes these on startup so they stop firing and failing. Explicit removal
@@ -73,8 +81,10 @@ type ScheduleDefinition = {
   workflowExecutionTimeout?: Duration;
   // Server-outage replay margin. Omit to inherit CATCHUP_RELAXED; set
   // CATCHUP_TIGHT on time-of-day home automation that should skip rather than
-  // fire late. See the CATCHUP_* constants above.
-  catchupWindow?: Duration;
+  // fire late. See the CATCHUP_* constants above. Typed as the CatchupWindow
+  // literal union (not `Duration`) to stay off the error-typed `Duration` path
+  // under CI's Node16 `ms` resolution — see the constants' comment.
+  catchupWindow?: CatchupWindow;
 };
 
 const PR_REVIEW_EVAL_SCHEDULE_ID = "pr-review-eval-nightly";
@@ -470,7 +480,10 @@ async function reconcileSchedulePauseState(
 
 export function buildSchedulePolicies(schedule: ScheduleDefinition): {
   overlap: ScheduleOverlapPolicy;
-  catchupWindow: Duration;
+  // CatchupWindow (not `Duration`): the resolved value is always one of the two
+  // literal tiers, and `Duration` is error-typed under CI's Node16 `ms`
+  // resolution. Both literals are valid Temporal Durations at the call site.
+  catchupWindow: CatchupWindow;
 } {
   return {
     overlap: schedule.overlap,
