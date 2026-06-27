@@ -12834,7 +12834,7 @@
       ]
     },
     "calculations": {
-      "{903f4f4f}": {
+      "LevelableAugmentCount": {
         "__type": "GameCalculation",
         "mFormulaParts": [
           {
