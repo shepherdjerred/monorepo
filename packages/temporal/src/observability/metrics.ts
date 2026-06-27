@@ -454,11 +454,14 @@ export const prMergeConflictCheckDurationSeconds = new Histogram({
 // (this has happened 4×, most recently `pokeemerald-wasm-monthly`). This gauge
 // is set once per worker startup to the count of live schedules that are
 // neither declared nor a known dynamic agent-task schedule. Alert on `> 0`.
+// A value of -1 (ORPHAN_DETECTION_FAILED) means the live-schedule listing
+// itself failed, so the count is unknown — alert on `< 0` separately, since a
+// failed scan otherwise leaves the gauge at 0 and looks identical to "clean".
 // ---------------------------------------------------------------------------
 
 export const scheduleOrphans = new Gauge({
   name: "temporal_schedule_orphans",
-  help: "Live Temporal schedules not declared in register-schedules.ts (excluding dynamic agent-task schedules). >0 means a removed/renamed schedule was never added to DELETED_SCHEDULE_IDS and is still firing.",
+  help: "Live Temporal schedules not declared in register-schedules.ts (excluding dynamic agent-task schedules). >0 means a removed/renamed schedule was never added to DELETED_SCHEDULE_IDS and is still firing. -1 means orphan detection failed to list schedules (count unknown).",
   registers: [register],
 });
 

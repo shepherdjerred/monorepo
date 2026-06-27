@@ -58,10 +58,11 @@ used by both the create and update branches:
 
 `detectOrphanSchedules()` runs at the end of `registerSchedules`, lists live schedules, and
 sets the new `temporal_schedule_orphans` gauge (`src/observability/metrics.ts`) + warns for
-any id that is neither declared, nor on the delete list, nor a dynamic
-`agentTaskWorkflow`/`agent-task-*` schedule. Non-destructive (auto-delete is unsafe given the
-dynamic `/agent-tasks` schedules); detection failure is logged, never fatal. **Alert on
-`temporal_schedule_orphans > 0`.**
+any id that is neither declared, nor on the delete list, nor a dynamic agent-task schedule
+(`agent-task-` id prefix or `dynamicAgentTask` memo marker — not the workflow type, which a
+declared schedule can share). Non-destructive (auto-delete is unsafe given the dynamic
+`/agent-tasks` schedules); detection failure is logged + sets the gauge to `-1`, never fatal.
+**Alert on `temporal_schedule_orphans > 0` (orphan found) and `< 0` (detection failed).**
 
 ### Docs / tests
 
@@ -118,6 +119,13 @@ because authoritative reconcile would revert live UI pauses.
 - `catchupWindow` only addresses **server**-outage replay; a long worker outage can still run
   a home schedule late (server created the action on time). Documented; staleness-guard
   follow-up noted.
-- Orphan classifier treats any `agentTaskWorkflow` (or `agent-task-*` id) as a legitimate
-  dynamic schedule; a future declared `agentTaskWorkflow` schedule removed from source would
-  not be flagged (acceptable — those are also caught by the existing delete-list discipline).
+- Orphan classifier no longer treats `workflowType === "agentTaskWorkflow"` as proof of a
+  dynamic schedule (that gap would have silently exempted the declared `homelab-audit-daily`
+  if it were ever removed from source). A schedule is dynamic only via the `agent-task-` id
+  prefix or the `dynamicAgentTask` memo marker stamped at creation by the `/agent-tasks` API.
+  Trade-off: a **custom-id** dynamic schedule created before this marker existed (no prefix,
+  no marker) will surface as an orphan once until it is re-created; this is non-destructive
+  (gauge + log only) and self-corrects on the next API call for that schedule.
+- `temporal_schedule_orphans = -1` is a sentinel meaning the live-schedule listing failed
+  (count unknown), so a detection outage is distinguishable from a clean "no orphans" result.
+  Alert on `< 0` in addition to `> 0`.

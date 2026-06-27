@@ -9,6 +9,7 @@ import type { Duration } from "@temporalio/common";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   AgentTaskInputSchema,
+  DYNAMIC_AGENT_TASK_MEMO_KEY,
   agentTaskScheduleId,
   agentTaskWorkflowId,
   type AgentTaskInput,
@@ -79,9 +80,15 @@ export async function startOrScheduleAgentTask(
         policies: {
           overlap: ScheduleOverlapPolicy.SKIP,
         },
+        // Schedule memo is immutable after creation (ScheduleUpdateOptions omits
+        // it), so the dynamic marker can only be stamped here, on create. The
+        // update branch above relies on `...prev` preserving this memo, and
+        // orphan detection falls back to the `agent-task-` id prefix for any
+        // auto-generated schedule that predates this marker.
         memo: {
           description: `Agent task: ${input.title}`,
           source: input.source,
+          [DYNAMIC_AGENT_TASK_MEMO_KEY]: true,
         },
       });
     }

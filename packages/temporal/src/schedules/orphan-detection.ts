@@ -1,17 +1,32 @@
 import type { Client } from "@temporalio/client";
+import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task.ts";
 import { scheduleOrphans } from "#observability/metrics.ts";
 
+// Gauge value written when `scheduleClient.list()` itself fails. Distinct from
+// 0 ("detection ran cleanly, found no orphans") so a monitoring rule can tell a
+// healthy empty result apart from a detection outage — without it, a failed
+// list leaves the gauge at its 0 initial value and the `> 0` orphan alert can
+// never fire. Alert separately on `temporal_schedule_orphans < 0`.
+export const ORPHAN_DETECTION_FAILED = -1;
+
 // Dynamic schedules created via the authenticated /agent-tasks API are NOT
-// declared in SCHEDULES by design, so orphan detection must not flag them. They
-// all run `agentTaskWorkflow`; the auto-generated ones also use an `agent-task-`
-// id prefix (see agentTaskScheduleId). Either signal marks one as dynamic.
+// declared in SCHEDULES by design, so orphan detection must not flag them. Two
+// signals mark one as dynamic:
+//   * an `agent-task-` id prefix — every auto-generated id carries it (see
+//     agentTaskScheduleId), including schedules created before the memo marker
+//     existed; and
+//   * the DYNAMIC_AGENT_TASK_MEMO_KEY memo marker, stamped at creation on every
+//     API-created schedule (auto- or custom-id).
+// Crucially this no longer trusts `workflowType === "agentTaskWorkflow"`: that
+// also matches *declared* schedules running the same workflow (homelab-audit-daily),
+// which would silently exempt them from drift detection if they were ever
+// removed from SCHEDULES without being delete-listed.
 export function isDynamicAgentTaskSchedule(
   scheduleId: string,
-  workflowType: string | undefined,
+  memo: Record<string, unknown> | undefined,
 ): boolean {
-  return (
-    workflowType === "agentTaskWorkflow" || scheduleId.startsWith("agent-task-")
-  );
+  if (scheduleId.startsWith("agent-task-")) return true;
+  return memo?.[DYNAMIC_AGENT_TASK_MEMO_KEY] === true;
 }
 
 // A live schedule is an orphan when it is neither declared in SCHEDULES, nor in
@@ -21,13 +36,13 @@ export function isDynamicAgentTaskSchedule(
 // register-schedules) to keep this module free of a circular import.
 export function isOrphanSchedule(
   scheduleId: string,
-  workflowType: string | undefined,
+  memo: Record<string, unknown> | undefined,
   declaredIds: ReadonlySet<string>,
   deletedIds: ReadonlySet<string>,
 ): boolean {
   if (declaredIds.has(scheduleId)) return false;
   if (deletedIds.has(scheduleId)) return false;
-  if (isDynamicAgentTaskSchedule(scheduleId, workflowType)) return false;
+  if (isDynamicAgentTaskSchedule(scheduleId, memo)) return false;
   return true;
 }
 
@@ -35,7 +50,9 @@ export function isOrphanSchedule(
 // via a warning + the `temporal_schedule_orphans` gauge (alert on > 0). This is
 // non-destructive — auto-deleting would be unsafe because the dynamic agent-task
 // schedules are legitimately undeclared. Detection failure must never crash the
-// worker, so its error is logged (not swallowed) and startup continues.
+// worker, so its error is logged (not swallowed), the gauge is set to the
+// ORPHAN_DETECTION_FAILED sentinel so a failed scan is not mistaken for "zero
+// orphans", and startup continues.
 export async function detectOrphanSchedules(
   scheduleClient: Client["schedule"],
   declaredIds: ReadonlySet<string>,
@@ -47,7 +64,7 @@ export async function detectOrphanSchedules(
       if (
         isOrphanSchedule(
           summary.scheduleId,
-          summary.action?.workflowType,
+          summary.memo,
           declaredIds,
           deletedIds,
         )
@@ -62,6 +79,7 @@ export async function detectOrphanSchedules(
       );
     }
   } catch (error: unknown) {
+    scheduleOrphans.set(ORPHAN_DETECTION_FAILED);
     console.error("Orphan schedule detection failed", error);
   }
 }

@@ -70,9 +70,15 @@ The reconciler is upsert-only and trusts the hand-maintained `DELETED_SCHEDULE_I
 renamed/removed schedule that isn't added there keeps firing silently (has happened 4×).
 `detectOrphanSchedules` (`src/schedules/orphan-detection.ts`) lists live schedules on startup
 and sets the `temporal_schedule_orphans` gauge + logs any that are neither declared, nor on
-the delete list, nor a dynamic `agentTaskWorkflow`/`agent-task-*` schedule. **Alert on
+the delete list, nor a dynamic agent-task schedule. A schedule counts as dynamic only via the
+`agent-task-` id prefix (auto-generated ids) or the `dynamicAgentTask` memo marker stamped at
+creation by the `/agent-tasks` API — **not** by `workflowType === "agentTaskWorkflow"`, which
+would also exempt declared schedules running that workflow (e.g. `homelab-audit-daily`) and
+silently hide them if they were ever removed from `SCHEDULES`. **Alert on
 `temporal_schedule_orphans > 0`**, then add the id to `DELETED_SCHEDULE_IDS` (if removed) or
-back to `SCHEDULES` (if still wanted).
+back to `SCHEDULES` (if still wanted). The gauge is set to `-1` if the live-schedule listing
+itself fails (count unknown) — **alert on `< 0` separately**, since a failed scan otherwise
+stays at 0 and is indistinguishable from a clean "no orphans" result.
 
 ## Commands
 

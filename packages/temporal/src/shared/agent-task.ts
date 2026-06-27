@@ -248,6 +248,16 @@ export async function agentTaskWorkflowId(
   return `agent-task-${prefix}-${await shortSha256(key)}`;
 }
 
+// Memo marker set on every schedule created via the /agent-tasks API (see
+// startOrScheduleAgentTask). Orphan detection uses it to tell a dynamic,
+// legitimately-undeclared agent-task schedule apart from a *declared*,
+// source-controlled schedule that also runs `agentTaskWorkflow` (today that is
+// homelab-audit-daily). Without this marker, keying off the workflow type alone
+// would silently exempt a declared agent-task schedule that was removed from
+// SCHEDULES without being added to DELETED_SCHEDULE_IDS — the exact drift the
+// orphan gauge exists to catch.
+export const DYNAMIC_AGENT_TASK_MEMO_KEY = "dynamicAgentTask";
+
 export async function agentTaskScheduleId(
   input: AgentTaskInput,
 ): Promise<string> {

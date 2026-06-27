@@ -1,6 +1,7 @@
 import { describe, test, expect } from "bun:test";
 import type { Duration } from "@temporalio/common";
 import { DataDragonWorkflowInputSchema } from "#activities/data-dragon.ts";
+import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task.ts";
 import {
   DELETED_SCHEDULE_IDS,
   SCHEDULES,
@@ -8,6 +9,10 @@ import {
   scheduleRequiresConfigPause,
 } from "./register-schedules.ts";
 import { isOrphanSchedule } from "./orphan-detection.ts";
+
+const DYNAMIC_AGENT_TASK_MEMO = {
+  [DYNAMIC_AGENT_TASK_MEMO_KEY]: true,
+} as const;
 
 function findScheduleById(id: string) {
   const schedule = SCHEDULES.find((candidate) => candidate.id === id);
@@ -317,12 +322,7 @@ describe("orphan schedule detection", () => {
   test("declared schedules are never flagged as orphans", () => {
     for (const schedule of SCHEDULES) {
       expect(
-        isOrphanSchedule(
-          schedule.id,
-          schedule.workflowType,
-          declaredIds,
-          deletedIds,
-        ),
+        isOrphanSchedule(schedule.id, undefined, declaredIds, deletedIds),
       ).toBe(false);
     }
   });
@@ -336,32 +336,63 @@ describe("orphan schedule detection", () => {
   });
 
   test("dynamic agent-task schedules are never flagged as orphans", () => {
-    // Auto-generated id prefix (agentTaskScheduleId).
+    // Auto-generated id prefix (agentTaskScheduleId) — exempt even without memo,
+    // covering schedules created before the dynamic memo marker existed.
     expect(
       isOrphanSchedule(
         "agent-task-foo-abc123",
-        "agentTaskWorkflow",
+        undefined,
         declaredIds,
         deletedIds,
       ),
     ).toBe(false);
-    // A custom scheduleId passed via the /agent-tasks API still runs the
-    // agentTaskWorkflow, so the workflow type alone keeps it un-flagged.
+    // A custom scheduleId passed via the /agent-tasks API has no `agent-task-`
+    // prefix, so it relies on the dynamic memo marker stamped at creation.
     expect(
       isOrphanSchedule(
         "recheck-birmel-metrics",
-        "agentTaskWorkflow",
+        DYNAMIC_AGENT_TASK_MEMO,
         declaredIds,
         deletedIds,
       ),
     ).toBe(false);
   });
 
+  test("a declared agent-task schedule removed from SCHEDULES is still flagged", () => {
+    // Regression guard: a *declared*, source-controlled schedule that runs
+    // agentTaskWorkflow (homelab-audit-daily) must NOT be silently exempted just
+    // because of its workflow type. If it were removed from SCHEDULES without
+    // being added to DELETED_SCHEDULE_IDS — and it carries no `agent-task-`
+    // prefix and no dynamic memo marker — the orphan gauge must catch it.
+    expect(
+      isOrphanSchedule(
+        "homelab-audit-daily",
+        undefined,
+        new Set<string>(),
+        new Set<string>(),
+      ),
+    ).toBe(true);
+  });
+
+  test("a custom-id agent-task schedule without the memo marker is flagged", () => {
+    // The workflow type alone no longer exempts a schedule; a custom-id dynamic
+    // schedule that predates (or is missing) the marker surfaces as an orphan so
+    // the gap that hid declared agent-task schedules can't reopen.
+    expect(
+      isOrphanSchedule(
+        "recheck-birmel-metrics",
+        undefined,
+        declaredIds,
+        deletedIds,
+      ),
+    ).toBe(true);
+  });
+
   test("a live schedule absent from source and the delete list is an orphan", () => {
     expect(
       isOrphanSchedule(
         "some-removed-schedule",
-        "someRemovedWorkflow",
+        undefined,
         declaredIds,
         deletedIds,
       ),
