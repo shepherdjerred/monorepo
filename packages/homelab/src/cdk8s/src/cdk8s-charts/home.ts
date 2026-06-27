@@ -61,14 +61,15 @@ export async function createHomeChart(app: App) {
             },
           ],
         },
-        // Allow HomeKit from LAN (mDNS discovery + Home Assistant bridge ports)
+        // Allow HomeKit from LAN (mDNS discovery + Home Assistant bridge ports).
+        // 21063 = HA1, 21064 = HA2 lights. The front-door doorbell accessory
+        // (21065) was retired in favor of Scrypted's HomeKit Secure Video.
         {
           from: [{ ipBlock: { cidr: "192.168.1.0/24" } }],
           ports: [
             { port: IntOrString.fromNumber(5353), protocol: "UDP" },
             { port: IntOrString.fromNumber(21_063), protocol: "TCP" },
             { port: IntOrString.fromNumber(21_064), protocol: "TCP" },
-            { port: IntOrString.fromNumber(21_065), protocol: "TCP" },
           ],
         },
       ],
