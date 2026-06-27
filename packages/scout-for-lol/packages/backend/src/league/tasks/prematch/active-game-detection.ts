@@ -41,48 +41,53 @@ let checkStartTime: number | undefined;
 const CHECK_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
 
 /**
- * Constants for the "pre-start custom lobby" defer path.
+ * Constants for the "pre-start / partial-roster lobby" defer path.
  *
- * Riot's Spectator API surfaces a custom 5v5 Summoner's Rift game as soon as
- * the lobby creator clicks Play; if the other players haven't joined yet the
- * payload arrives with fewer than 10 participants and `gameLength < 0`
- * (countdown). Building a standard loading-screen image off that snapshot
- * throws inside `buildLoadingScreenData`, which used to look like a real
- * detection error in Bugsink. The fix: detect this state early, retry the
- * spectator fetch a couple of times in-process, and if the lobby still
- * hasn't filled, skip the upsert+notify path entirely so the next 30s cron
- * tick re-evaluates from scratch.
+ * Riot's Spectator API surfaces a game during its pre-game countdown — for a
+ * custom 5v5 as soon as the creator clicks Play, and for matched games as the
+ * lobby forms. In that window the payload reports `gameLength < 0` and fewer
+ * than 10 participants because not everyone has loaded in yet. This is NOT
+ * custom-only: matched event modes (ARAM: Mayhem / event ARAM, queues
+ * 3200/3220/3270) routinely arrive with 2-4 of 10 participants (confirmed from
+ * archived spectator payloads — gameLength of -17 to -58s). Building a
+ * loading-screen image off that partial snapshot throws inside
+ * `buildLoadingScreenData` (the layout schema requires a full roster), which
+ * used to look like a real detection error in Bugsink. The fix: detect this
+ * state, retry the spectator fetch a couple of times in-process, and if the
+ * roster still hasn't filled, skip the upsert+notify path so the next 30s cron
+ * tick re-evaluates once the game has actually started.
  */
 const STANDARD_PARTICIPANT_COUNT = 10;
-const SUMMONERS_RIFT_MAP_ID = 11;
-const CUSTOM_LOBBY_RETRY_LIMIT = 2;
-const CUSTOM_LOBBY_RETRY_DELAY_MS = 2000;
+const LOBBY_RETRY_LIMIT = 2;
+const LOBBY_RETRY_DELAY_MS = 2000;
 
-function isLikelyPreStartCustomLobby(gameInfo: RawCurrentGameInfo): boolean {
-  const isCustom = gameInfo.gameType.toUpperCase().startsWith("CUSTOM");
-  if (!isCustom) return false;
-  if (gameInfo.participants.length >= STANDARD_PARTICIPANT_COUNT) return false;
+/**
+ * A standard or ARAM roster is exactly 10 players; Arena is 16/18 and is
+ * validated by its own schema. Any other non-Arena game reporting fewer than
+ * 10 participants is an incomplete Spectator snapshot — almost always the
+ * pre-game countdown (`gameLength < 0`), though we also defer the rare
+ * started-but-undersized lobby rather than throw on it.
+ */
+function isLikelyPreStartLobby(gameInfo: RawCurrentGameInfo): boolean {
   if (isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode)) {
     return false;
   }
-  return (
-    gameInfo.gameMode === "CLASSIC" || gameInfo.mapId === SUMMONERS_RIFT_MAP_ID
-  );
+  return gameInfo.participants.length < STANDARD_PARTICIPANT_COUNT;
 }
 
-async function refetchCustomLobbyUntilFilled(
+async function refetchLobbyUntilFilled(
   initial: RawCurrentGameInfo,
   puuid: LeaguePuuid,
   region: PlayerConfigEntry["league"]["leagueAccount"]["region"],
-  retryDelayMs: number = CUSTOM_LOBBY_RETRY_DELAY_MS,
+  retryDelayMs: number = LOBBY_RETRY_DELAY_MS,
 ): Promise<RawCurrentGameInfo> {
   let latest = initial;
-  for (let attempt = 1; attempt <= CUSTOM_LOBBY_RETRY_LIMIT; attempt++) {
-    if (!isLikelyPreStartCustomLobby(latest)) {
+  for (let attempt = 1; attempt <= LOBBY_RETRY_LIMIT; attempt++) {
+    if (!isLikelyPreStartLobby(latest)) {
       return latest;
     }
     logger.info(
-      `[custom-prestart] gameId=${latest.gameId.toString()} only ${latest.participants.length.toString()}/10 participants — retry ${attempt.toString()}/${CUSTOM_LOBBY_RETRY_LIMIT.toString()} in ${retryDelayMs.toString()}ms`,
+      `[prestart-lobby] gameId=${latest.gameId.toString()} only ${latest.participants.length.toString()}/10 participants — retry ${attempt.toString()}/${LOBBY_RETRY_LIMIT.toString()} in ${retryDelayMs.toString()}ms`,
     );
     await Bun.sleep(retryDelayMs);
     const retry = await getActiveGame(puuid, region);
@@ -92,7 +97,7 @@ async function refetchCustomLobbyUntilFilled(
     if (retry.upstreamError) {
       spectatorCircuit.recordFailure(
         new Error(
-          `Spectator API upstream error during custom-lobby retry for ${puuid}`,
+          `Spectator API upstream error during pre-start lobby retry for ${puuid}`,
         ),
         { source: "spectator-retry", puuid, region },
       );
@@ -144,12 +149,12 @@ function shouldSkipCheck(): boolean {
  * Detects when tracked players enter a game and sends a single notification
  * per game, listing all tracked players in that game.
  *
- * @param customLobbyRetryDelayMs - Override the retry delay for custom lobby
- *   refetch attempts. Defaults to CUSTOM_LOBBY_RETRY_DELAY_MS (2000ms).
+ * @param lobbyRetryDelayMs - Override the retry delay for pre-start lobby
+ *   refetch attempts. Defaults to LOBBY_RETRY_DELAY_MS (2000ms).
  *   Pass 0 in tests to skip the real-time sleep.
  */
 export async function checkActiveGames(
-  customLobbyRetryDelayMs: number = CUSTOM_LOBBY_RETRY_DELAY_MS,
+  lobbyRetryDelayMs: number = LOBBY_RETRY_DELAY_MS,
 ): Promise<void> {
   if (shouldSkipCheck()) {
     return;
@@ -277,22 +282,24 @@ export async function checkActiveGames(
           continue;
         }
 
-        // Custom 5v5 SR lobbies surface in Spectator before all 10 players
-        // have joined. Retry a couple of times in-process; if still
-        // incomplete, defer to the next 30s cron tick (do NOT upsert).
-        const gameInfo = isLikelyPreStartCustomLobby(initial.game)
-          ? await refetchCustomLobbyUntilFilled(
+        // Lobbies (custom 5v5 SR and matched event modes alike) surface in
+        // Spectator before all 10 players have loaded in. Retry a couple of
+        // times in-process; if still incomplete, defer to the next 30s cron
+        // tick (do NOT upsert) so a partial roster never reaches the builder.
+        const gameInfo = isLikelyPreStartLobby(initial.game)
+          ? await refetchLobbyUntilFilled(
               initial.game,
               puuid,
               region,
-              customLobbyRetryDelayMs,
+              lobbyRetryDelayMs,
             )
           : initial.game;
 
-        if (isLikelyPreStartCustomLobby(gameInfo)) {
+        if (isLikelyPreStartLobby(gameInfo)) {
           logger.info(
-            `[${player.alias}] ⏳ Deferring custom-game gameId=${gameInfo.gameId.toString()} — only ${gameInfo.participants.length.toString()}/10 participants present (gameLength=${gameInfo.gameLength.toString()}); next cron tick will retry`,
+            `[${player.alias}] ⏳ Deferring pre-start gameId=${gameInfo.gameId.toString()} — only ${gameInfo.participants.length.toString()}/10 participants present (gameLength=${gameInfo.gameLength.toString()}); next cron tick will retry`,
           );
+          // Metric label kept as-is for Grafana dashboard continuity.
           prematchDetectionsTotal.inc({ status: "deferred_custom_prestart" });
           continue;
         }

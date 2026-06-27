@@ -38,6 +38,7 @@ const logger = createLogger("prematch-loading-screen-builder");
 
 const RANKED_SOLO_QUEUE_ID = 420;
 const RANKED_FLEX_QUEUE_ID = 440;
+const RANKED_5S_QUEUE_ID = 710;
 const DEFAULT_LOADING_SCREEN_SKIN_NUM = 0;
 
 export class RecoverableLoadingScreenDataError extends Error {
@@ -80,6 +81,7 @@ function determineLayout(gameInfo: RawCurrentGameInfo): LoadingScreenLayout {
       .with(480, () => "standard" as const) // Swiftplay
       .with(490, () => "standard" as const) // Quickplay
       .with(700, () => "standard" as const) // Clash
+      .with(710, () => "standard" as const) // Ranked 5s (premade SR 5v5)
       .with(900, () => "standard" as const) // ARURF
       .with(1900, () => "standard" as const) // URF
       .with(2300, () => "standard" as const) // Brawl
@@ -359,7 +361,8 @@ export async function buildLoadingScreenData(
   const queueDisplayName = makeQueueDisplayName(queueType);
   const isRanked =
     gameInfo.gameQueueConfigId === RANKED_SOLO_QUEUE_ID ||
-    gameInfo.gameQueueConfigId === RANKED_FLEX_QUEUE_ID;
+    gameInfo.gameQueueConfigId === RANKED_FLEX_QUEUE_ID ||
+    gameInfo.gameQueueConfigId === RANKED_5S_QUEUE_ID;
   const layout = determineLayout(gameInfo);
   let mapName: ReturnType<typeof mapIdToName>;
   try {

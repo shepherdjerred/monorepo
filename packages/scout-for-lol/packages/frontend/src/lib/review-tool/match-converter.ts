@@ -31,6 +31,7 @@ function getBaseMatch(
       return getExampleMatch("aram");
     case "solo":
     case "flex":
+    case "ranked 5s":
       return getExampleMatch("ranked");
     case "clash":
     case "aram clash":

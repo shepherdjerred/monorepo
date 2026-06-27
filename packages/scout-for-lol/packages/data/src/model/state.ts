@@ -5,6 +5,7 @@ export type QueueType = z.infer<typeof QueueTypeSchema>;
 export const QueueTypeSchema = z.enum([
   "solo",
   "flex",
+  "ranked 5s",
   "clash",
   "aram clash",
   "aram",
@@ -25,9 +26,10 @@ export const QueueTypeSchema = z.enum([
 const ARENA_QUEUE_ID = 1700;
 const ARENA_GAME_MODE = "CHERRY";
 
-// Most queue IDs come from Riot's queues.json. Queue 3200 is currently absent
-// from that file, but live Spectator payloads report it for ARAM: Mayhem games
-// on Howling Abyss.
+// Most queue IDs come from Riot's queues.json. Some are absent from that file
+// but show up in live Spectator payloads: 3200/3220 for ARAM: Mayhem on Howling
+// Abyss, and 710 — the revived premade "Ranked 5s" queue on Summoner's Rift,
+// which Riot's published queues.json still labels as the long-defunct original.
 export function parseQueueType(input: number): QueueType | undefined {
   return match(input)
     .returnType<QueueType | undefined>()
@@ -37,6 +39,7 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(440, () => "flex")
     .with(450, () => "aram")
     .with(700, () => "clash")
+    .with(710, () => "ranked 5s")
     .with(720, () => "aram clash")
     .with(480, () => "swiftplay")
     .with(490, () => "quickplay")
@@ -45,6 +48,7 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(2300, () => "brawl")
     .with(2400, () => "aram mayhem")
     .with(3200, () => "aram mayhem")
+    .with(3220, () => "aram mayhem")
     .with(3270, () => "aram mayhem")
     .with(3100, () => "custom")
     .with(1900, () => "urf")
@@ -96,6 +100,7 @@ export function queueTypeToDisplayString(queueType: QueueType): string {
     .returnType<string>()
     .with("solo", () => "ranked solo")
     .with("flex", () => "ranked flex")
+    .with("ranked 5s", () => "ranked 5s")
     .with("clash", () => "clash")
     .with("aram clash", () => "ARAM clash")
     .with("aram", () => "ARAM")
