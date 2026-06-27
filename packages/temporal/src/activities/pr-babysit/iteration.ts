@@ -71,10 +71,14 @@ function secretTokens(): readonly (string | undefined)[] {
 export async function runBabysitIteration(
   args: RunBabysitIterationInput,
 ): Promise<RunBabysitIterationResult> {
-  const token = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
-  if (token === undefined || token === "") {
+  // The `claude` CLI accepts either the subscription OAuth token or a direct
+  // API key; require at least one so the agent can authenticate.
+  const hasClaudeAuth =
+    (Bun.env["CLAUDE_CODE_OAUTH_TOKEN"] ?? "") !== "" ||
+    (Bun.env["ANTHROPIC_API_KEY"] ?? "") !== "";
+  if (!hasClaudeAuth) {
     throw new Error(
-      "CLAUDE_CODE_OAUTH_TOKEN is required for babysit iterations",
+      "claude auth required: set CLAUDE_CODE_OAUTH_TOKEN (subscription) or ANTHROPIC_API_KEY",
     );
   }
 
