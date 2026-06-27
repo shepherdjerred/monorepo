@@ -4,8 +4,18 @@ import { DataDragonWorkflowInputSchema } from "#activities/data-dragon.ts";
 import {
   DELETED_SCHEDULE_IDS,
   SCHEDULES,
+  buildSchedulePolicies,
   scheduleRequiresConfigPause,
 } from "./register-schedules.ts";
+import { isOrphanSchedule } from "./orphan-detection.ts";
+
+function findScheduleById(id: string) {
+  const schedule = SCHEDULES.find((candidate) => candidate.id === id);
+  if (schedule === undefined) {
+    throw new Error(`Missing schedule ${id}`);
+  }
+  return schedule;
+}
 
 // ---------------------------------------------------------------------------
 // Maximum total sleep time per workflow type, in milliseconds.
@@ -241,5 +251,120 @@ describe("homelab daily audit schedule config", () => {
       agentTimeoutMinutes: 45,
     });
     expect(JSON.stringify(schedule.args[0])).toContain("Ignore Bugsink");
+  });
+});
+
+describe("catchup window policy", () => {
+  test.each([
+    "vacuum-9am",
+    "vacuum-12pm",
+    "vacuum-5pm",
+    "good-morning-weekday-wake",
+    "good-morning-weekday-up",
+    "good-morning-weekend-wake",
+    "good-morning-weekend-up",
+  ])("time-of-day home schedule %s gets the tight 5-minute window", (id) => {
+    expect(buildSchedulePolicies(findScheduleById(id)).catchupWindow).toBe(
+      "5 minutes",
+    );
+  });
+
+  test.each([
+    "dns-audit-daily",
+    "homelab-audit-daily",
+    "zfs-maintenance-weekly",
+    "deps-summary-weekly",
+    "scout-data-dragon-version-check",
+  ])("report/maintenance schedule %s inherits the relaxed window", (id) => {
+    expect(buildSchedulePolicies(findScheduleById(id)).catchupWindow).toBe(
+      "1 hour",
+    );
+  });
+
+  test("tight window is strictly shorter than the relaxed default", () => {
+    const tight = buildSchedulePolicies(
+      findScheduleById("vacuum-9am"),
+    ).catchupWindow;
+    const relaxed = buildSchedulePolicies(
+      findScheduleById("dns-audit-daily"),
+    ).catchupWindow;
+    expect(durationToMs(tight)).toBeLessThan(durationToMs(relaxed));
+  });
+
+  test("every schedule resolves to a positive catchup window", () => {
+    for (const schedule of SCHEDULES) {
+      expect(
+        durationToMs(buildSchedulePolicies(schedule).catchupWindow),
+      ).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("orphan schedule detection", () => {
+  const declaredIds = new Set(SCHEDULES.map((schedule) => schedule.id));
+  const deletedIds = new Set<string>(DELETED_SCHEDULE_IDS);
+
+  test("the renamed pokeemerald monthly schedule is queued for deletion", () => {
+    // The live-vs-source audit (2026-06-26) found `pokeemerald-wasm-monthly`
+    // still firing after the monthly → weekly rename.
+    expect(DELETED_SCHEDULE_IDS).toContain("pokeemerald-wasm-monthly");
+    expect(SCHEDULES.map((s) => s.id)).not.toContain(
+      "pokeemerald-wasm-monthly",
+    );
+    expect(SCHEDULES.map((s) => s.id)).toContain("pokeemerald-wasm-weekly");
+  });
+
+  test("declared schedules are never flagged as orphans", () => {
+    for (const schedule of SCHEDULES) {
+      expect(
+        isOrphanSchedule(
+          schedule.id,
+          schedule.workflowType,
+          declaredIds,
+          deletedIds,
+        ),
+      ).toBe(false);
+    }
+  });
+
+  test("ids on the delete allow-list are never flagged as orphans", () => {
+    for (const id of DELETED_SCHEDULE_IDS) {
+      expect(isOrphanSchedule(id, undefined, declaredIds, deletedIds)).toBe(
+        false,
+      );
+    }
+  });
+
+  test("dynamic agent-task schedules are never flagged as orphans", () => {
+    // Auto-generated id prefix (agentTaskScheduleId).
+    expect(
+      isOrphanSchedule(
+        "agent-task-foo-abc123",
+        "agentTaskWorkflow",
+        declaredIds,
+        deletedIds,
+      ),
+    ).toBe(false);
+    // A custom scheduleId passed via the /agent-tasks API still runs the
+    // agentTaskWorkflow, so the workflow type alone keeps it un-flagged.
+    expect(
+      isOrphanSchedule(
+        "recheck-birmel-metrics",
+        "agentTaskWorkflow",
+        declaredIds,
+        deletedIds,
+      ),
+    ).toBe(false);
+  });
+
+  test("a live schedule absent from source and the delete list is an orphan", () => {
+    expect(
+      isOrphanSchedule(
+        "some-removed-schedule",
+        "someRemovedWorkflow",
+        declaredIds,
+        deletedIds,
+      ),
+    ).toBe(true);
   });
 });
