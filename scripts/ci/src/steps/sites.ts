@@ -108,6 +108,11 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
       ? "."
       : site.distDir.replace(site.buildDir + "/", "");
 
+  // Content-hashed asset prefixes synced as immutable (default: Astro's `_astro/`).
+  const immutablePrefixFlags = (site.immutablePrefixes ?? ["_astro/"])
+    .map((prefix) => `--immutable-prefixes ${prefix}`)
+    .join(" ");
+
   // Build the dagger call command for deploy-site
   const args = [
     `${DAGGER_CALL} deploy-site --pkg-dir ${gitDir(site.buildDir)}`,
@@ -117,6 +122,7 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
     `--build-cmd "${buildCmd}"`,
     `--bucket ${site.bucket}`,
     `--dist-subdir ${distSubdir}`,
+    immutablePrefixFlags,
     `--target seaweedfs`,
     `--aws-access-key-id env:SEAWEEDFS_ACCESS_KEY_ID`,
     `--aws-secret-access-key env:SEAWEEDFS_SECRET_ACCESS_KEY`,

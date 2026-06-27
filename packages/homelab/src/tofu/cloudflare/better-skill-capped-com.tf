@@ -136,3 +136,11 @@ resource "cloudflare_zone_setting" "better_skill_capped_com_security_header" {
     }
   }
 }
+
+# ── Static-asset caching: respect the immutable Cache-Control the deploy sets on
+# content-hashed assets + Smart Tiered Cache (origin shielding). ───────────────
+module "better_skill_capped_com_static_cache" {
+  source         = "./modules/static-cache"
+  zone_id        = cloudflare_zone.better_skill_capped_com.id
+  asset_prefixes = ["/assets/"]
+}
