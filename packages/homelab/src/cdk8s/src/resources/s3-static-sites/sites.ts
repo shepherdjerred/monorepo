@@ -68,6 +68,10 @@ export const staticSites: StaticSiteConfig[] = [
     ],
     spaFallbacks: [{ pathPrefix: "/app/*", fallbackPath: "/app/index.html" }],
     responseHeaders: { "Content-Security-Policy": scoutCsp },
+    // `/_astro/*` (marketing) + `/app/assets/*` (the Vite SPA bundle, incl. the
+    // ~1.6 MB hashed index JS) are content-hashed, so cache them immutably. The
+    // SPA's `/app/index.html` is intentionally excluded so deploys take effect.
+    immutableAssetPaths: ["/_astro/*", "/app/assets/*"],
   },
   {
     hostname: "beta.scout-for-lol.com",
@@ -93,6 +97,10 @@ export const staticSites: StaticSiteConfig[] = [
     ],
     spaFallbacks: [{ pathPrefix: "/app/*", fallbackPath: "/app/index.html" }],
     responseHeaders: { "Content-Security-Policy": scoutCsp },
+    // `/_astro/*` (marketing) + `/app/assets/*` (the Vite SPA bundle, incl. the
+    // ~1.6 MB hashed index JS) are content-hashed, so cache them immutably. The
+    // SPA's `/app/index.html` is intentionally excluded so deploys take effect.
+    immutableAssetPaths: ["/_astro/*", "/app/assets/*"],
   },
   { hostname: "better-skill-capped.com", bucket: "better-skill-capped" },
   { hostname: "clauderon.com", bucket: "clauderon" },
@@ -105,5 +113,13 @@ export const staticSites: StaticSiteConfig[] = [
   { hostname: "public.sjer.red", bucket: "public-sjer-red" },
 ];
 
-export const S3_ENDPOINT = "https://seaweedfs.sjer.red";
+// In-cluster SeaweedFS S3 gateway. Caddy/s3proxy runs in this cluster, so it must
+// reach SeaweedFS directly via the Kubernetes service — NOT via the public
+// `https://seaweedfs.sjer.red` Cloudflare ingress, which hairpins every asset fetch
+// out to Cloudflare and back. That hairpin doubled latency, made internal serving
+// depend on Cloudflare being up, and is a SigV4-behind-a-reverse-proxy hazard
+// (intermittent `SignatureDoesNotMatch` 403s → broken assets that need a refresh).
+// This matches the canonical internal endpoint used by scout/birmel/pokemon.
+export const S3_ENDPOINT =
+  "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333";
 export const S3_CREDENTIALS_SECRET_NAME = "seaweedfs-s3-credentials";
