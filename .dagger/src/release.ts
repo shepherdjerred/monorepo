@@ -642,6 +642,87 @@ export function publishNpmHelper(
 // ---------------------------------------------------------------------------
 
 /** Build and deploy a static site to S3 (SeaweedFS) or R2 (Cloudflare). */
+/**
+ * Append the static-site upload to `container` as a two-pass `aws s3 sync`,
+ * setting `Cache-Control` as S3 object metadata (caddy-s3-proxy passes it
+ * through to the browser/CDN unchanged).
+ *
+ * Pass 1 uploads content-hashed/fingerprinted assets — the `immutablePrefixes`
+ * (e.g. `_astro/`, `app/assets/`) — with a 1-year `immutable` Cache-Control and
+ * WITHOUT `--delete`, so prior builds' hashed files survive for already-loaded
+ * tabs (a deploy mid-session must not 404 a still-referenced chunk). Old hashes
+ * are pruned later by the SeaweedFS bucket-lifecycle rule, not on every deploy.
+ *
+ * Pass 2 uploads everything else with `Cache-Control: no-cache` (mutable shells,
+ * favicons, … — always revalidated so deploys take effect immediately) and
+ * `--delete`. The hashed prefixes are `--exclude`d; `aws s3 sync --delete` never
+ * deletes excluded keys, so the retained old hashed assets are left in place.
+ *
+ * When `immutablePrefixes` is empty (a site with no fingerprinted assets) a
+ * single `no-cache` + `--delete` pass is used.
+ */
+function s3SyncStaticSite(
+  container: Container,
+  source: string,
+  bucket: string,
+  endpoint: string,
+  immutablePrefixes: string[],
+  dryrun: boolean,
+): Container {
+  const dest = `s3://${bucket}/`;
+
+  if (dryrun) {
+    const plan =
+      immutablePrefixes.length > 0
+        ? `pass 1 [${immutablePrefixes.join(", ")}] immutable (no --delete); pass 2 everything else no-cache (--delete)`
+        : `single pass no-cache (--delete)`;
+    return container.withExec([
+      "echo",
+      `DRYRUN: would sync ${source} to ${dest} via ${endpoint} — ${plan}`,
+    ]);
+  }
+
+  let result = container;
+  if (immutablePrefixes.length > 0) {
+    const includeFlags = immutablePrefixes.flatMap((prefix) => [
+      "--include",
+      `${prefix}*`,
+    ]);
+    result = result.withExec([
+      "aws",
+      "s3",
+      "sync",
+      source,
+      dest,
+      "--endpoint-url",
+      endpoint,
+      "--exclude",
+      "*",
+      ...includeFlags,
+      "--cache-control",
+      "public, max-age=31536000, immutable",
+    ]);
+  }
+
+  const excludeFlags = immutablePrefixes.flatMap((prefix) => [
+    "--exclude",
+    `${prefix}*`,
+  ]);
+  return result.withExec([
+    "aws",
+    "s3",
+    "sync",
+    source,
+    dest,
+    "--endpoint-url",
+    endpoint,
+    ...excludeFlags,
+    "--cache-control",
+    "no-cache",
+    "--delete",
+  ]);
+}
+
 export function deploySiteHelper(
   pkgDir: Directory,
   pkg: string,
@@ -659,6 +740,7 @@ export function deploySiteHelper(
   dryrun = false,
   tsconfig: File | null = null,
   needsPlaywright = false,
+  immutablePrefixes: string[] = [],
 ): Container {
   if (buildEnvNames.length !== buildEnvValues.length) {
     throw new Error(
@@ -747,22 +829,14 @@ export function deploySiteHelper(
       ? `https://${cloudflareAccountId}.r2.cloudflarestorage.com`
       : "https://seaweedfs.sjer.red";
 
-  if (dryrun) {
-    return container.withExec([
-      "echo",
-      `DRYRUN: would sync ${distSubdir} to s3://${bucket}/ via ${endpoint}`,
-    ]);
-  }
-  return container.withExec([
-    "aws",
-    "s3",
-    "sync",
+  return s3SyncStaticSite(
+    container,
     distSubdir,
-    `s3://${bucket}/`,
-    "--endpoint-url",
+    bucket,
     endpoint,
-    "--delete",
-  ]);
+    immutablePrefixes,
+    dryrun,
+  );
 }
 
 /** Deploy a pre-built static site directory to S3. No bun install or build step. */
@@ -773,6 +847,7 @@ export function deployStaticSiteHelper(
   awsAccessKeyId: Secret,
   awsSecretAccessKey: Secret,
   dryrun = false,
+  immutablePrefixes: string[] = [],
 ): Container {
   const endpoint =
     target === "r2"
@@ -791,22 +866,14 @@ export function deployStaticSiteHelper(
     .withEnvVariable("AWS_REQUEST_CHECKSUM_CALCULATION", "WHEN_REQUIRED")
     .withEnvVariable("AWS_RESPONSE_CHECKSUM_VALIDATION", "WHEN_REQUIRED");
 
-  if (dryrun) {
-    return container.withExec([
-      "echo",
-      `DRYRUN: would sync /site to s3://${bucket}/ via ${endpoint}`,
-    ]);
-  }
-  return container.withExec([
-    "aws",
-    "s3",
-    "sync",
+  return s3SyncStaticSite(
+    container,
     ".",
-    `s3://${bucket}/`,
-    "--endpoint-url",
+    bucket,
     endpoint,
-    "--delete",
-  ]);
+    immutablePrefixes,
+    dryrun,
+  );
 }
 
 // ---------------------------------------------------------------------------

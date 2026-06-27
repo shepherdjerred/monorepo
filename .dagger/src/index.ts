@@ -1288,6 +1288,7 @@ export class Monorepo {
     dryrun = false,
     tsconfig: File | null = null,
     needsPlaywright = false,
+    immutablePrefixes: string[] = [],
   ): Promise<string> {
     return deploySiteHelper(
       pkgDir,
@@ -1306,6 +1307,7 @@ export class Monorepo {
       dryrun,
       tsconfig,
       needsPlaywright,
+      immutablePrefixes,
     ).stdout();
   }
 
@@ -1318,6 +1320,7 @@ export class Monorepo {
     awsAccessKeyId: Secret,
     awsSecretAccessKey: Secret,
     dryrun = false,
+    immutablePrefixes: string[] = [],
   ): Promise<string> {
     return deployStaticSiteHelper(
       siteDir,
@@ -1326,6 +1329,7 @@ export class Monorepo {
       awsAccessKeyId,
       awsSecretAccessKey,
       dryrun,
+      immutablePrefixes,
     ).stdout();
   }
 

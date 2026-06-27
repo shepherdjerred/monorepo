@@ -125,6 +125,16 @@ interface DeploySiteBase {
   distDir: string;
   needsPlaywright?: boolean;
   workspaceDeps?: string;
+  /**
+   * Bucket-key prefixes (relative to `distDir`, trailing slash) holding
+   * content-hashed/fingerprinted assets. The deploy syncs these with a 1-year
+   * `immutable` Cache-Control and never `--delete`s them (a SeaweedFS lifecycle
+   * rule prunes old hashes by age); everything else is synced `no-cache` +
+   * `--delete`. Defaults to `["_astro/"]` (Astro's hashed output dir). Set `[]`
+   * for sites with no fingerprinted assets, or a bundler-specific dir (Vite's
+   * `assets/`, the scout SPA's `app/assets/`).
+   */
+  immutablePrefixes?: string[];
 }
 
 type DeploySiteBuildEnv =
@@ -191,6 +201,10 @@ export const DEPLOY_SITES: DeploySite[] = [
     distDir: "packages/scout-for-lol/packages/frontend/dist",
     buildEnvVars: ["PUBLIC_PINTEREST_TAG_ID", "PUBLIC_REDDIT_PIXEL_ID"],
     workspaceDeps: "packages/frontend,packages/app",
+    // Astro marketing (`_astro/`) + the Vite SPA bundle (`app/assets/`) are
+    // content-hashed → immutable. The SPA shell `app/index.html` is in pass 2
+    // (no-cache) so deploys take effect.
+    immutablePrefixes: ["_astro/", "app/assets/"],
   },
   {
     bucket: "scout-frontend-beta",
@@ -206,6 +220,10 @@ export const DEPLOY_SITES: DeploySite[] = [
       PUBLIC_REDDIT_PIXEL_ID: "beta-placeholder-reddit-pixel-id",
     },
     workspaceDeps: "packages/frontend,packages/app",
+    // Astro marketing (`_astro/`) + the Vite SPA bundle (`app/assets/`) are
+    // content-hashed → immutable. The SPA shell `app/index.html` is in pass 2
+    // (no-cache) so deploys take effect.
+    immutablePrefixes: ["_astro/", "app/assets/"],
   },
   {
     bucket: "better-skill-capped",
@@ -214,6 +232,8 @@ export const DEPLOY_SITES: DeploySite[] = [
     buildDir: "packages/better-skill-capped",
     buildCmd: "bun run build",
     distDir: "packages/better-skill-capped/dist",
+    // Vite SPA — content-hashed bundles live under `assets/`, not `_astro/`.
+    immutablePrefixes: ["assets/"],
   },
   {
     bucket: "glitter-boys-ppl",
