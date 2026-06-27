@@ -24,8 +24,16 @@ const SCHEDULE_TIMEZONE = "America/Los_Angeles";
 //     that needs a staleness guard inside the workflow.)
 //   * CATCHUP_RELAXED (default) — reports / maintenance / data jobs. The intent
 //     is "ran this cycle," so running late after a server outage is acceptable.
-const CATCHUP_TIGHT: Duration = "5 minutes";
-const CATCHUP_RELAXED: Duration = "1 hour";
+//
+// Left unannotated (inferred string-literal types) rather than `: Duration`.
+// `Duration` is `StringValue | number`, and `ms`'s `StringValue` template-literal
+// type can resolve to an error type under Dagger's per-package Node16 install
+// (the canary `ms` ships an `exports` map with no `types` condition), which would
+// poison a `: Duration` const and trip @typescript-eslint/no-unsafe-assignment at
+// every use site. The literals are still validated against `Duration` where they
+// are assigned to the `catchupWindow?: Duration` fields below.
+const CATCHUP_TIGHT = "5 minutes";
+const CATCHUP_RELAXED = "1 hour";
 
 // Schedules whose workflow type was removed from the bundle. registerSchedules
 // deletes these on startup so they stop firing and failing. Explicit removal
