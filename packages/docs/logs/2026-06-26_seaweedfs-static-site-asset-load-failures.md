@@ -75,6 +75,12 @@ Scope chosen by owner: **edge-cache immutable assets + use the in-cluster S3 end
   Defaults to `["/_astro/*"]` (Astro's hashed dir; harmless on non-Astro sites). The two
   scout sites add `/app/assets/*` (the Vite SPA bundle). `/app/index.html` and other
   mutable paths are deliberately excluded so deploys still take effect.
+- Bucket-lifecycle invariant (documented in `sites.ts` + the `immutableAssetPaths` JSDoc,
+  per Greptile review): never prune old `/app/assets/*` objects. The `/app/*` SPA fallback
+  serves `/app/index.html` (200) for any missing key under `/app/*`, and the immutable
+  matcher stamps the 1-year `Cache-Control` on that response too — so a request for a
+  pruned hashed asset would cache HTML at a `.js` URL at the edge for a year. Content-hashed
+  builds keep every build's output, so the condition can't arise in practice.
 - Tests added in `s3-static-site.test.ts` (default header, per-site override, disable,
   ordering, helper unit tests).
 

@@ -83,6 +83,15 @@ export type StaticSiteConfig = {
    * SPA sites override this to add their bundler's hashed dir (e.g. Vite's
    * `/app/assets/*`). Set to `[]` to disable.
    *
+   * Caution when a glob overlaps a {@link StaticSiteSpaFallback} prefix (e.g.
+   * `/app/assets/*` sits under the `/app/*` SPA fallback): the matcher stamps the
+   * immutable `Cache-Control` on *every* matching response by request path —
+   * including the 200 `index.html` the fallback serves for a missing key. So the
+   * bucket must never prune old content-hashed objects under such a glob, or a
+   * request for a deleted asset would cache `index.html` at that asset URL for a
+   * year. Content-hashed builds keep every build's output, so this invariant holds
+   * in practice.
+   *
    * Caching these at the edge is the primary mitigation for intermittent
    * SeaweedFS `SignatureDoesNotMatch` 403s: once cached, repeat visits never
    * hit the origin, so the origin race almost never reaches a user.
