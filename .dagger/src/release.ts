@@ -880,6 +880,70 @@ export function deployStaticSiteHelper(
 // ArgoCD
 // ---------------------------------------------------------------------------
 
+/**
+ * Poll the ArgoCD resource API until the specified resource is fully deleted
+ * (i.e., the endpoint returns 404, meaning the finalizer has run and the K8s
+ * object is gone). Use this after a sync that prunes a resource with a
+ * finalizer to confirm the finalizer has completed before downstream steps
+ * that depend on the resource being gone.
+ */
+export function waitForArgoCdResourceDeletionHelper(
+  appName: string,
+  group: string,
+  version: string,
+  kind: string,
+  namespace: string,
+  resourceName: string,
+  argoCdToken: Secret,
+  timeoutSeconds: number = 120,
+  serverUrl: string = "https://argocd.sjer.red",
+  dryrun = false,
+): Container {
+  if (dryrun) {
+    return dag
+      .container()
+      .from(ALPINE_IMAGE)
+      .withExec([
+        "echo",
+        `DRYRUN: would wait for ${kind}/${resourceName} in ${namespace} to be deleted from ArgoCD app ${appName}`,
+      ]);
+  }
+  // NOTE: The URL is constructed in TypeScript and embedded as a literal in the
+  // shell script to avoid shell quoting issues with query string parameters.
+  const resourceUrl =
+    `${serverUrl}/api/v1/applications/${appName}/resource` +
+    `?group=${encodeURIComponent(group)}&version=${encodeURIComponent(version)}&kind=${encodeURIComponent(kind)}&namespace=${encodeURIComponent(namespace)}&resourceName=${encodeURIComponent(resourceName)}`;
+  return dag
+    .container()
+    .from(ALPINE_IMAGE)
+    .withExec(["apk", "add", "--no-cache", "curl"])
+    .withSecretVariable("ARGOCD_TOKEN", argoCdToken)
+    .withExec([
+      "sh",
+      "-c",
+      `set -eu
+elapsed=0
+while [ "$elapsed" -lt ${timeoutSeconds} ]; do
+  http=$(curl -sS --max-redirs 3 -o /dev/null -w '%{http_code}' \\
+    -H "Authorization: Bearer $ARGOCD_TOKEN" \\
+    "${resourceUrl}") || { echo "curl error (elapsed=$elapsed)"; exit 1; }
+  echo "${kind}/${resourceName} in ${namespace}: HTTP $http ($elapsed/${timeoutSeconds}s)"
+  if [ "$http" = "404" ]; then
+    echo "${kind}/${resourceName} is fully deleted."
+    exit 0
+  fi
+  if [ "$http" != "200" ]; then
+    echo "ERROR: unexpected HTTP $http from ArgoCD — failing fast"
+    exit 1
+  fi
+  sleep 10
+  elapsed=$((elapsed + 10))
+done
+echo "Timeout: ${kind}/${resourceName} in ${namespace} was not deleted within ${timeoutSeconds}s"
+exit 1`,
+    ]);
+}
+
 /** Trigger an ArgoCD sync for an application. */
 export function argoCdSyncHelper(
   appName: string,

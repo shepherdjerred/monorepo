@@ -31,6 +31,7 @@ import {
   npmPublishAllHelper,
   deploySiteHelper,
   deployStaticSiteHelper,
+  waitForArgoCdResourceDeletionHelper,
   argoCdSyncHelper,
   argoCdHealthWaitHelper,
   argoCdSyncAndWaitHelper,
@@ -1355,6 +1356,40 @@ export class Monorepo {
   ): Promise<string> {
     return argoCdHealthWaitHelper(
       appName,
+      argoCdToken,
+      timeoutSeconds,
+      serverUrl,
+      dryrun,
+    ).stdout();
+  }
+
+  /**
+   * Poll the ArgoCD resource API until the specified resource returns 404
+   * (i.e., fully deleted including finalizer completion). Fail if it is still
+   * present after timeoutSeconds. Use between an ArgoCD sync step that prunes
+   * a resource with a finalizer and any downstream step that depends on the
+   * resource being gone.
+   */
+  @func({ cache: "never" })
+  async argoCdWaitForResourceDeletion(
+    appName: string,
+    group: string,
+    version: string,
+    kind: string,
+    namespace: string,
+    resourceName: string,
+    argoCdToken: Secret,
+    timeoutSeconds: number = 120,
+    serverUrl: string = "https://argocd.sjer.red",
+    dryrun = false,
+  ): Promise<string> {
+    return waitForArgoCdResourceDeletionHelper(
+      appName,
+      group,
+      version,
+      kind,
+      namespace,
+      resourceName,
       argoCdToken,
       timeoutSeconds,
       serverUrl,

@@ -88,21 +88,20 @@ export function homelabTofuApplyAllStep(homelabPkgKey?: string): BuildkiteStep {
 }
 
 /**
- * Cloudflare DNS apply runs in its own step, sequenced AFTER the ArgoCD sync
- * step that confirms tunnel operator finalizers have run. This prevents a race
- * where a DNS record pointing at a Cloudflare tunnel hostname is deleted before
- * the tunnel ingress route is actually pruned, which would leave the route
- * reachable via the raw tunnel UUID during the window between DNS removal and
- * tunnel route removal.
+ * Cloudflare DNS apply runs in its own step, sequenced AFTER an explicit
+ * TunnelBinding-deletion check (waitForTunnelBindingDeletionStep) that confirms
+ * the Cloudflare tunnel operator's finalizer has run. This provides a fail-closed
+ * ordering guarantee: DNS changes that remove a tunnel hostname can only proceed
+ * once ArgoCD confirms the tunnel ingress route is gone.
  */
 export function homelabTofuApplyCloudflareStep(
-  argocdKey: string,
+  tunnelWaitKey: string,
 ): BuildkiteStep {
   return {
     label: `:terraform: Apply ${TOFU_STACK_LABELS["cloudflare"] ?? "Cloudflare DNS"}`,
     key: "tofu-apply-cloudflare",
     if: MAIN_ONLY,
-    depends_on: argocdKey,
+    depends_on: tunnelWaitKey,
     command:
       `${DAGGER_CALL} tofu-apply-all --source ${REPO_GIT_REF} ${tofuSecretFlags(["cloudflare"])}` +
       DRYRUN_FLAG,

@@ -44,7 +44,10 @@ import {
   homelabTofuApplyGithubStep,
   homelabTofuPlanAllStep,
 } from "./steps/tofu.ts";
-import { argoCdSyncAndWaitStep } from "./steps/argocd.ts";
+import {
+  argoCdSyncAndWaitStep,
+  waitForTunnelBindingDeletionStep,
+} from "./steps/argocd.ts";
 import { cooklangReleaseGroup } from "./steps/cooklang.ts";
 import { versionCommitBackStep } from "./steps/version.ts";
 import {
@@ -404,12 +407,18 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         }),
       );
 
-      // Cloudflare DNS apply runs AFTER ArgoCD sync to guarantee the Cloudflare
-      // tunnel operator finalizer has run (i.e. the tunnel ingress route is
-      // removed) before any DNS records pointing at that tunnel are deleted.
-      // See tofu.ts homelabTofuApplyCloudflareStep for full rationale.
+      // Explicit fail-closed check that the SeaweedFS S3 TunnelBinding finalizer
+      // has completed before Cloudflare DNS is modified. ArgoCD's health-wait
+      // does not guarantee finalizers on pruned resources have run; this step
+      // explicitly polls the ArgoCD resource API until TunnelBinding returns 404.
+      // See argocd.ts waitForTunnelBindingDeletionStep for full rationale.
       if (affected.buildAll || affected.homelabChanged) {
-        steps.push(homelabTofuApplyCloudflareStep("deploy-argocd"));
+        steps.push(waitForTunnelBindingDeletionStep("deploy-argocd"));
+        // Cloudflare DNS apply depends on the tunnel deletion check, not directly
+        // on deploy-argocd, ensuring the tunnel route is gone before DNS is modified.
+        steps.push(
+          homelabTofuApplyCloudflareStep("wait-tunnel-binding-deletion"),
+        );
       }
     }
 
@@ -440,7 +449,8 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         // exists; health-wait soft-fail semantics are preserved inside the
         // Dagger function.
         summaryDeps.push("deploy-argocd");
-        // Also wait for the cloudflare DNS apply (which runs after deploy-argocd).
+        // Also wait for the full cloudflare DNS sequencing chain:
+        // deploy-argocd → wait-tunnel-binding-deletion → tofu-apply-cloudflare.
         if (affected.buildAll || affected.homelabChanged) {
           summaryDeps.push("tofu-apply-cloudflare");
         }
