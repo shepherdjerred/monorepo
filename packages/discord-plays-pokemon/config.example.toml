@@ -83,7 +83,7 @@ vaapi_device = "/dev/dri/renderD128"
 [game]
 # should the emulator + game components be enabled
 enabled = true
-# path to the built pokeemerald.wasm (run `bun scripts/fetch-wasm.ts`)
+# path to the built pokeemerald.wasm (build it with `scripts/build-wasm.sh`)
 wasm_path = "packages/backend/assets/pokeemerald.wasm"
 # optional path for the persisted 128 KiB flash save
 save_path = "saves/pokeemerald.flash"

@@ -171,7 +171,8 @@ export const ConfigSchema = z.strictObject({
   }),
   game: z.strictObject({
     enabled: z.boolean(),
-    // Path to the built pokeemerald.wasm (see scripts/fetch-wasm.ts).
+    // Path to the built pokeemerald.wasm (built from source; see
+    // scripts/build-wasm.sh and the Dagger image build in .dagger/src/image.ts).
     wasm_path: z.string().min(1),
     // Optional path for the persisted 128 KiB flash save.
     save_path: z.string().min(1).optional(),
