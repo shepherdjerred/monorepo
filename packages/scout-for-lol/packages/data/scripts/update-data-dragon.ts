@@ -25,6 +25,7 @@ import {
   isMinorVersionBump,
   minorVersionKey,
 } from "./update-changelog.ts";
+import { fetchPatches, selectPatchByMinor } from "./riot-patch.ts";
 
 const ASSETS_DIR = `${import.meta.dir}/../src/data-dragon/assets`;
 const IMG_DIR = `${ASSETS_DIR}/img`;
@@ -915,10 +916,15 @@ async function readPreviousVersion(): Promise<string | undefined> {
 }
 
 /**
- * Append a templated "What's New" entry to the frontend changelog — but only on
- * a minor-version bump (16.13.x → 16.14.x). Micro-bumps, unchanged weekly
+ * Append a "What's New" entry to the frontend changelog — but only on a
+ * minor-version bump (16.13.x → 16.14.x). Micro-bumps, unchanged weekly
  * refreshes, and first-ever runs skip it, so the auto-merged Data Dragon PR
  * never spams the changelog.
+ *
+ * The entry references the REAL player-facing patch number (e.g. "26.13") pulled
+ * from Riot's patch-notes feed, not the Data Dragon version ("16.13"). A
+ * network/parse failure throws (fail fast); a not-yet-posted matching patch is
+ * an expected timing case that skips the entry without blocking the asset PR.
  */
 async function maybeAppendChangelogEntry(
   previousVersion: string | undefined,
@@ -935,13 +941,29 @@ async function maybeAppendChangelogEntry(
     return;
   }
 
+  const minor = Number(minorVersionKey(version).split(".")[1]);
   console.log(
-    `\n📝 Adding "What's New" entry for patch ${minorVersionKey(version)}...`,
+    `\n📝 Resolving Riot patch notes for Data Dragon ${version} (minor .${String(minor)})...`,
+  );
+  const patches = await fetchPatches();
+  const patch = selectPatchByMinor(patches, minor);
+  if (patch === undefined) {
+    // Riot hasn't posted the matching patch yet (Data Dragon led the news).
+    // Expected timing, not a failure: skip the entry; the assets still update
+    // and a later run adds it once the notes are live.
+    console.warn(
+      `\n⚠ Riot has not posted patch notes for .${String(minor)} yet (latest: ${patches[0]?.patch ?? "unknown"}). Skipping changelog entry; assets still updated.`,
+    );
+    return;
+  }
+
+  console.log(
+    `📝 Adding "What's New" entry for League patch ${patch.patch}...`,
   );
   const source = await Bun.file(CHANGELOG_FILE).text();
   const updated = insertChangelogEntry(
     source,
-    buildPatchChangelogEntryLiteral(version, new Date()),
+    buildPatchChangelogEntryLiteral(patch, new Date()),
   );
   await Bun.write(CHANGELOG_FILE, updated);
 
@@ -954,7 +976,7 @@ async function maybeAppendChangelogEntry(
       `prettier failed to format changelog.tsx (exit ${String(result.exitCode)}): ${result.stderr.toString()}`,
     );
   }
-  console.log(`✓ Added changelog entry for patch ${minorVersionKey(version)}`);
+  console.log(`✓ Added changelog entry for League patch ${patch.patch}`);
 }
 
 async function main(): Promise<void> {

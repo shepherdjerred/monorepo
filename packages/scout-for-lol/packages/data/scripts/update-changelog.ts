@@ -5,6 +5,8 @@
 // source-rewriting logic is unit-testable. `update-data-dragon.ts` reads the
 // file, calls these, writes it back, and runs prettier.
 
+import type { RiotPatch } from "./riot-patch.ts";
+
 /**
  * Color palette for a changelog section. Mirrors `ChangelogColor` in
  * packages/frontend/src/data/changelog.tsx — keep in sync. The frontend
@@ -26,11 +28,18 @@ export type ChangelogSectionInput = {
   items: string[];
 };
 
+export type ChangelogLinkInput = {
+  label: string;
+  href: string;
+};
+
 export type ChangelogEntryInput = {
   /** Display date in `"YYYY MM DD"` form. */
   date: string;
   banner: string;
   sections: ChangelogSectionInput[];
+  /** Optional external link rendered below the sections (e.g. Riot patch notes). */
+  link?: ChangelogLinkInput;
 };
 
 const CHANGELOG_ANCHOR = "export const changelog: ChangelogEntry[] = [";
@@ -86,15 +95,24 @@ export function buildChangelogEntryLiteral(input: ChangelogEntryInput): string {
       ].join("\n"),
     )
     .join("\n");
-  return [
+  const lines = [
     "  buildChangelogEntry({",
     `    date: ${JSON.stringify(input.date)},`,
     `    banner: ${JSON.stringify(input.banner)},`,
     "    sections: [",
     sections,
     "    ],",
-    "  }),",
-  ].join("\n");
+  ];
+  if (input.link !== undefined) {
+    lines.push(
+      "    link: {",
+      `      label: ${JSON.stringify(input.link.label)},`,
+      `      href: ${JSON.stringify(input.link.href)},`,
+      "    },",
+    );
+  }
+  lines.push("  }),");
+  return lines.join("\n");
 }
 
 /**
@@ -117,25 +135,30 @@ export function insertChangelogEntry(
 }
 
 /**
- * Build the templated changelog entry literal for a Data Dragon patch bump.
- * Banner/section copy is intentionally minimal — this rides the auto-merged PR.
+ * Build the templated changelog entry literal for a Data Dragon patch bump,
+ * using the REAL player-facing patch from Riot (e.g. "26.13") — not the Data
+ * Dragon version ("16.13"). Copy is intentionally minimal and factual since
+ * this rides the auto-merged PR.
  */
 export function buildPatchChangelogEntryLiteral(
-  version: string,
+  patch: RiotPatch,
   date: Date,
 ): string {
-  const minor = minorVersionKey(version);
   return buildChangelogEntryLiteral({
     date: formatDateForChangelog(date),
-    banner: `Patch ${minor} support — latest champion, item, and rune data`,
+    banner: `Updated for League patch ${patch.patch}`,
     sections: [
       {
         title: "Game Data",
         color: "indigo",
         items: [
-          `Updated champion, item, summoner spell, and rune data to League patch ${minor}`,
+          `Champion, item, summoner spell, and rune data refreshed for League patch ${patch.patch}`,
         ],
       },
     ],
+    link: {
+      label: `Read Riot's full Patch ${patch.patch} notes`,
+      href: patch.url,
+    },
   });
 }

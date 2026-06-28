@@ -7,6 +7,16 @@ import {
   isMinorVersionBump,
   minorVersionKey,
 } from "./update-changelog.ts";
+import type { RiotPatch } from "./riot-patch.ts";
+
+const SAMPLE_PATCH: RiotPatch = {
+  patch: "26.14",
+  major: 26,
+  minor: 14,
+  title: "League of Legends Patch 26.14 Notes",
+  tagline: "Big things this patch",
+  url: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-14-notes",
+};
 
 const SAMPLE_SOURCE = `import type { ReactNode } from "react";
 
@@ -93,17 +103,38 @@ describe("buildChangelogEntryLiteral", () => {
       }),
     ).toThrow();
   });
+
+  test("omits the link block when no link is given", () => {
+    const literal = buildChangelogEntryLiteral({
+      date: "2026 06 28",
+      banner: "x",
+      sections: [{ title: "T", color: "blue", items: ["a"] }],
+    });
+    expect(literal).not.toContain("link:");
+  });
+
+  test("emits a link block when a link is given", () => {
+    const literal = buildChangelogEntryLiteral({
+      date: "2026 06 28",
+      banner: "x",
+      sections: [{ title: "T", color: "blue", items: ["a"] }],
+      link: { label: "Read more", href: "https://example.com/notes" },
+    });
+    expect(literal).toContain("link: {");
+    expect(literal).toContain('label: "Read more"');
+    expect(literal).toContain('href: "https://example.com/notes"');
+  });
 });
 
 describe("insertChangelogEntry", () => {
   test("inserts the entry at the top of the array, before existing entries", () => {
     const literal = buildPatchChangelogEntryLiteral(
-      "16.14.1",
+      SAMPLE_PATCH,
       new Date(2026, 5, 28),
     );
     const updated = insertChangelogEntry(SAMPLE_SOURCE, literal);
 
-    const newIndex = updated.indexOf("Patch 16.14 support");
+    const newIndex = updated.indexOf("Updated for League patch 26.14");
     const existingIndex = updated.indexOf("2026 05 23");
     expect(newIndex).toBeGreaterThan(-1);
     expect(existingIndex).toBeGreaterThan(-1);
@@ -121,15 +152,27 @@ describe("insertChangelogEntry", () => {
 });
 
 describe("buildPatchChangelogEntryLiteral", () => {
-  test("uses the minor key in the banner and section copy", () => {
+  test("uses the REAL Riot patch number (26.x), not the Data Dragon version", () => {
     const literal = buildPatchChangelogEntryLiteral(
-      "16.14.3",
+      SAMPLE_PATCH,
       new Date(2026, 5, 28),
     );
-    expect(literal).toContain("Patch 16.14 support");
+    expect(literal).toContain("Updated for League patch 26.14");
     expect(literal).toContain('date: "2026 06 28"');
     expect(literal).toContain('color: "indigo"');
-    expect(literal).toContain("League patch 16.14");
+    expect(literal).toContain("refreshed for League patch 26.14");
+    // Must not leak the Data Dragon major (16) into player-facing copy.
+    expect(literal).not.toContain("16.14");
+  });
+
+  test("includes a direct link to the Riot patch notes", () => {
+    const literal = buildPatchChangelogEntryLiteral(
+      SAMPLE_PATCH,
+      new Date(2026, 5, 28),
+    );
+    expect(literal).toContain("link: {");
+    expect(literal).toContain('label: "Read Riot\'s full Patch 26.14 notes"');
+    expect(literal).toContain(`href: ${JSON.stringify(SAMPLE_PATCH.url)}`);
   });
 });
 
@@ -145,7 +188,7 @@ describe("patch gating end-to-end", () => {
     }
     return insertChangelogEntry(
       source,
-      buildPatchChangelogEntryLiteral(next, new Date(2026, 5, 28)),
+      buildPatchChangelogEntryLiteral(SAMPLE_PATCH, new Date(2026, 5, 28)),
     );
   }
 
