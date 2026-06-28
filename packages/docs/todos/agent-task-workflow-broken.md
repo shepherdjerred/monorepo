@@ -1,11 +1,31 @@
 ---
 id: agent-task-workflow-broken
-status: waiting-on-verification
+status: active
 origin: packages/docs/logs/2026-06-14_protobufjs-v8-pr-1227.md
 source_marker: false
 ---
 
-# Verify `agentTaskWorkflow` recovers after PR #1230 deploys
+# `agentTaskWorkflow` (homelab-audit-daily) still failing — needs a fix, not just verification
+
+## Verification (2026-06-28) — STILL BROKEN
+
+Live Temporal check (`homelab-audit-daily`, `{"Workflow":"agentTaskWorkflow"}`, not paused):
+recent runs are **Failed almost every day** — 6/28, 6/27, 6/24, 6/23, 6/22, 6/21, 6/19, 6/18,
+6/17; only **6/20 Completed**. Latest failure reason:
+
+```
+ActivityTaskFailed → WorkflowExecutionFailed
+Message: claude agent task exited with code 1 (signal=natural, durationMs=74445)
+```
+
+So PR #1230's observability uplift **worked** — the failure is now fast + explicit (exit code 1
+at ~74 s) instead of a silent ~45 m StartToClose timeout — but the underlying `claude -p`
+subprocess (`runAgentTask`) **still exits non-zero**, so the daily audit has been red for a week+.
+This is the same `claude -p` failure class as the alert-remediation hang
+(see `packages/docs/archive/completed/2026-06-19_temporal-claude-agent-observability.md` /
+the json-schema-hang root cause). Promoted from `waiting-on-verification` to `active`: it needs a
+code fix to the agent invocation, not a passive wait. (By contrast `alertRemediationSweepWorkflow`
+and its child workflows Completed cleanly 6 h ago — the runtime/scheduler/worker are healthy.)
 
 ## What
 
