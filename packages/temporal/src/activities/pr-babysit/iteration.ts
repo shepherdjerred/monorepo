@@ -71,14 +71,16 @@ function secretTokens(): readonly (string | undefined)[] {
 export async function runBabysitIteration(
   args: RunBabysitIterationInput,
 ): Promise<RunBabysitIterationResult> {
-  // The `claude` CLI accepts either the subscription OAuth token or a direct
-  // API key; require at least one so the agent can authenticate.
-  const hasClaudeAuth =
-    (Bun.env["CLAUDE_CODE_OAUTH_TOKEN"] ?? "") !== "" ||
-    (Bun.env["ANTHROPIC_API_KEY"] ?? "") !== "";
-  if (!hasClaudeAuth) {
+  // Require the subscription OAuth token for the babysitter subprocess.
+  // ANTHROPIC_API_KEY is deliberately never forwarded: it is a long-lived
+  // deployment credential that injected PR or CI content could exfiltrate via
+  // the subprocess's Bash + WebFetch tools. Fail closed rather than falling
+  // back to the API key if the OAuth token is absent.
+  const oauthToken = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
+  if (typeof oauthToken !== "string" || oauthToken === "") {
     throw new Error(
-      "claude auth required: set CLAUDE_CODE_OAUTH_TOKEN (subscription) or ANTHROPIC_API_KEY",
+      "babysitter subprocess requires CLAUDE_CODE_OAUTH_TOKEN; ANTHROPIC_API_KEY is " +
+        "not forwarded to the agent subprocess to limit credential exposure via prompt injection",
     );
   }
 
@@ -108,12 +110,45 @@ export async function runBabysitIteration(
     workdir: args.workdir,
   });
 
+  // Build a minimal environment for the Claude subprocess. Passing the full
+  // worker env would expose deployment secrets (GITHUB_APP_PRIVATE_KEY,
+  // GITHUB_WEBHOOK_SECRET, POSTAL_API_KEY, etc.) to a prompt-injected process
+  // that has Bash + WebFetch tools. Instead, forward only:
+  //   1. Safe system vars (PATH, HOME, locale, tmp, terminal identity)
+  //   2. CLAUDE_CODE_OAUTH_TOKEN only — already validated above. ANTHROPIC_API_KEY
+  //      is never forwarded (see the guard above).
+  //   3. Caller-scoped overrides (GH_TOKEN, GIT_ASKPASS, GIT_TERMINAL_PROMPT)
+  const SYSTEM_ENV_ALLOWLIST: ReadonlySet<string> = new Set([
+    "PATH",
+    "HOME",
+    "USER",
+    "USERNAME",
+    "LOGNAME",
+    "SHELL",
+    "TMPDIR",
+    "TEMP",
+    "TMP",
+    "LANG",
+    "LC_ALL",
+    "LC_CTYPE",
+    "TERM",
+    "TERM_PROGRAM",
+    "COLORTERM",
+    "XDG_CACHE_HOME",
+    "XDG_CONFIG_HOME",
+    "XDG_DATA_HOME",
+    "XDG_RUNTIME_DIR",
+  ]);
   const env: Record<string, string> = {};
-  for (const [key, value] of Object.entries(Bun.env)) {
+  for (const key of SYSTEM_ENV_ALLOWLIST) {
+    const value = Bun.env[key];
     if (typeof value === "string") {
       env[key] = value;
     }
   }
+  // oauthToken was validated above (throws if absent/empty).
+  env["CLAUDE_CODE_OAUTH_TOKEN"] = oauthToken;
+  // Caller provides GH_TOKEN, GIT_ASKPASS, GIT_TERMINAL_PROMPT.
   Object.assign(env, args.env ?? {});
   const result = await runTrackedAgentSubprocess(
     {
