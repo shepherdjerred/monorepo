@@ -141,13 +141,13 @@ type LoopContext = {
   owner: string;
   repo: string;
   input: PrBabysitInput;
-  workdir: string;
+  workflowId: string;
   args: Args;
 };
 
 /** Drive the assess → act → push → wait loop until a terminal decision. */
 async function runBabysitLoop(ctx: LoopContext): Promise<void> {
-  const { owner, repo, input, workdir, args } = ctx;
+  const { owner, repo, input, workflowId, args } = ctx;
   const start = Date.now();
   const state: {
     iterationsTotal: number;
@@ -158,8 +158,25 @@ async function runBabysitLoop(ctx: LoopContext): Promise<void> {
     costUsd: 0,
     recentSignatures: [],
   };
+  let announced = false;
 
   for (;;) {
+    // Start every iteration from a clean reset to origin/<headRef> so a prior
+    // remote-moved push (a human pushed mid-iteration) is reconciled — we never
+    // assess or fix against stale local state.
+    const { workdir } = await ensureBabysitWorkdir({
+      owner,
+      repo,
+      headRef: input.headRef,
+      baseRef: input.baseRef,
+      workflowId,
+      isCrossRepository: false,
+    });
+    if (!announced) {
+      log("workdir ready", { workdir });
+      announced = true;
+    }
+
     const verdict = await evaluateBabysitDoD({
       owner,
       repo,
@@ -235,16 +252,17 @@ async function runBabysitLoop(ctx: LoopContext): Promise<void> {
       return;
     }
 
-    await pushIfCommitted(result, ctx);
+    await pushIfCommitted(result, workdir, ctx);
   }
 }
 
 /** Push the iteration's commit (if any) and wait for CI to register. */
 async function pushIfCommitted(
   result: { committed: boolean; changedPaths: string[] },
+  workdir: string,
   ctx: LoopContext,
 ): Promise<void> {
-  const { input, workdir, args } = ctx;
+  const { input, args } = ctx;
   if (result.committed && args.dryRun) {
     log("dry-run: skipping push (agent committed locally)", {
       changedPaths: result.changedPaths,
@@ -306,20 +324,7 @@ async function main(): Promise<void> {
   });
 
   const workflowId = `pr-babysit-${owner}-${repoName}-${String(args.prNumber)}`;
-  const { workdir } = await ensureBabysitWorkdir({
-    owner,
-    repo: repoName,
-    headRef: input.headRef,
-    baseRef: input.baseRef,
-    workflowId,
-    isCrossRepository: snapshot.isCrossRepository,
-    ...(snapshot.headRepoOwner === null
-      ? {}
-      : { headRepoOwner: snapshot.headRepoOwner }),
-  });
-  log("workdir ready", { workdir });
-
-  await runBabysitLoop({ owner, repo: repoName, input, workdir, args });
+  await runBabysitLoop({ owner, repo: repoName, input, workflowId, args });
 }
 
 void (async (): Promise<void> => {
