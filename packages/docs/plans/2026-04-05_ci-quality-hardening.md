@@ -32,13 +32,13 @@ All three quality tools are `softFail: true` in Buildkite CI. Goal: fix all find
 
 - **Action:** Add `--skip-dirs practice` to trivy command. Delete all 19 CVE lines. New practice CVEs won't need manual suppression.
 
-**Remove `softFail: true`** from `trivyScanStep()` at `quality.ts:134`.
+**Remove `softFail: true`** from `trivyScanStep()` at `quality.ts:84`.
 
 ### Files
 
 - `.buildkite/scripts/trivy-scan.sh` — add `--skip-dirs practice`
 - `.trivyignore` — remove all entries
-- `scripts/ci/src/steps/quality.ts:134` — remove softFail
+- `scripts/ci/src/steps/quality.ts:84` — remove softFail
 
 ## Phase 2: Semgrep
 
@@ -53,14 +53,14 @@ poc/
 node_modules/
 ```
 
-**Remove `softFail: true`** from `semgrepScanStep()` at `quality.ts:158`.
+**Remove `softFail: true`** from `semgrepScanStep()` at `quality.ts:139`.
 
 Push, see what semgrep finds, fix actual findings.
 
 ### Files
 
 - `.semgrepignore` — create
-- `scripts/ci/src/steps/quality.ts:158` — remove softFail
+- `scripts/ci/src/steps/quality.ts:139` — remove softFail
 
 ## Phase 3: Knip
 
@@ -151,9 +151,9 @@ All verified dead via grep — remove all 29 unused exports, 13 unused types, an
 
 Remove `softFail: true` from all three steps in `scripts/ci/src/steps/quality.ts`:
 
-- `knipCheckStep()` line 99
-- `trivyScanStep()` line 134
-- `semgrepScanStep()` line 158
+- `knipCheckStep()` line 73
+- `trivyScanStep()` line 84
+- `semgrepScanStep()` line 139
 
 ## Critical Files
 
