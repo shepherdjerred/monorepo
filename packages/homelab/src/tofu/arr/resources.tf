@@ -16,33 +16,35 @@ resource "radarr_root_folder" "movies" {
 
 # __generated__ by OpenTofu from "1"
 resource "radarr_download_client" "qbittorrent" {
-  add_paused                 = null
-  add_stopped                = null
-  additional_tags            = []
-  api_key                    = null # sensitive
-  api_url                    = null
-  app_id                     = null
-  app_token                  = null # sensitive
-  category                   = null
-  config_contract            = "QBittorrentSettings"
-  destination                = null
-  destination_directory      = null
-  enable                     = true
-  field_tags                 = []
-  first_and_last             = false
-  host                       = "media-qbittorrent-service"
-  implementation             = "QBittorrent"
-  initial_state              = 0
-  intial_state               = null
-  magnet_file_extension      = null
-  movie_category             = "radarr"
-  movie_directory            = null
-  movie_imported_category    = null
-  name                       = "qBittorrent"
-  nzb_folder                 = null
-  older_movie_priority       = 0
-  older_priority             = null
-  password                   = null # sensitive
+  add_paused              = null
+  add_stopped             = null
+  additional_tags         = []
+  api_key                 = null # sensitive
+  api_url                 = null
+  app_id                  = null
+  app_token               = null # sensitive
+  category                = null
+  config_contract         = "QBittorrentSettings"
+  destination             = null
+  destination_directory   = null
+  enable                  = true
+  field_tags              = []
+  first_and_last          = false
+  host                    = "media-qbittorrent-service"
+  implementation          = "QBittorrent"
+  initial_state           = 0
+  intial_state            = null
+  magnet_file_extension   = null
+  movie_category          = "radarr"
+  movie_directory         = null
+  movie_imported_category = null
+  name                    = "qBittorrent"
+  nzb_folder              = null
+  older_movie_priority    = 0
+  older_priority          = null
+  # qBittorrent WebUI password (user "jerred"), sourced from 1Password via
+  # arr_api_keys so an apply never nulls the download-client credential.
+  password                   = local.arr_api_keys["qbittorrent"]
   port                       = 8080
   post_import_tags           = []
   priority                   = 1
@@ -68,25 +70,27 @@ resource "radarr_download_client" "qbittorrent" {
 
 # __generated__ by OpenTofu from "1"
 resource "sonarr_download_client" "qbittorrent" {
-  add_paused                 = null
-  add_stopped                = null
-  additional_tags            = []
-  api_key                    = null # sensitive
-  category                   = null
-  config_contract            = "QBittorrentSettings"
-  destination                = null
-  enable                     = true
-  field_tags                 = []
-  first_and_last             = false
-  host                       = "media-qbittorrent-service"
-  implementation             = "QBittorrent"
-  initial_state              = 0
-  intial_state               = null
-  magnet_file_extension      = null
-  name                       = "qBittorrent"
-  nzb_folder                 = null
-  older_tv_priority          = 0
-  password                   = null # sensitive
+  add_paused            = null
+  add_stopped           = null
+  additional_tags       = []
+  api_key               = null # sensitive
+  category              = null
+  config_contract       = "QBittorrentSettings"
+  destination           = null
+  enable                = true
+  field_tags            = []
+  first_and_last        = false
+  host                  = "media-qbittorrent-service"
+  implementation        = "QBittorrent"
+  initial_state         = 0
+  intial_state          = null
+  magnet_file_extension = null
+  name                  = "qBittorrent"
+  nzb_folder            = null
+  older_tv_priority     = 0
+  # qBittorrent WebUI password (user "jerred"), sourced from 1Password via
+  # arr_api_keys so an apply never nulls the download-client credential.
+  password                   = local.arr_api_keys["qbittorrent"]
   port                       = 8080
   post_import_tags           = []
   priority                   = 1
@@ -251,24 +255,26 @@ resource "prowlarr_download_client" "qbittorrent" {
   magnet_file_extension = null
   name                  = "qBittorrent"
   nzb_folder            = null
-  password              = null # sensitive
-  port                  = 8080
-  post_im_tags          = []
-  priority              = 1
-  protocol              = "torrent"
-  read_only             = null
-  rpc_path              = null
-  save_magnet_files     = null
-  secret_token          = null # sensitive
-  start_on_add          = null
-  station_directory     = null
-  strm_folder           = null
-  tags                  = []
-  torrent_folder        = null
-  tv_imported_category  = null
-  url_base              = null
-  use_ssl               = false
-  username              = "jerred"
+  # qBittorrent WebUI password (user "jerred"), sourced from 1Password via
+  # arr_api_keys so an apply never nulls the download-client credential.
+  password             = local.arr_api_keys["qbittorrent"]
+  port                 = 8080
+  post_im_tags         = []
+  priority             = 1
+  protocol             = "torrent"
+  read_only            = null
+  rpc_path             = null
+  save_magnet_files    = null
+  secret_token         = null # sensitive
+  start_on_add         = null
+  station_directory    = null
+  strm_folder          = null
+  tags                 = []
+  torrent_folder       = null
+  tv_imported_category = null
+  url_base             = null
+  use_ssl              = false
+  username             = "jerred"
 }
 
 # __generated__ by OpenTofu from "3"
@@ -372,18 +378,21 @@ resource "prowlarr_indexer" "privatehd" {
       text_value      = "https://privatehd.to/"
     },
     {
-      bool_value      = null
-      name            = "password"
+      bool_value = null
+      name       = "password"
+      # PrivateHD account password, sourced from 1Password via arr_api_keys so an
+      # apply never nulls the indexer credential.
       number_value    = null
-      sensitive_value = null # sensitive
+      sensitive_value = local.arr_api_keys["privatehd_password"]
       set_value       = null
       text_value      = null
     },
     {
-      bool_value      = null
-      name            = "pid"
+      bool_value = null
+      name       = "pid"
+      # PrivateHD PID (AvisTaz per-user token), sourced from 1Password.
       number_value    = null
-      sensitive_value = null # sensitive
+      sensitive_value = local.arr_api_keys["privatehd_pid"]
       set_value       = null
       text_value      = null
     },
