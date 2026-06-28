@@ -30,7 +30,7 @@ const versions = {
   // CI's version commit-back fills the real tag@digest after the first image
   // push; the seed digest below is a placeholder until then.
   "shepherdjerred/redlib":
-    "2.0.0-4729@sha256:e824235eb5bf37bb5cfd5ec8be4f3115a306adaef5ae88c2941a50b9f52eebee",
+    "2.0.0-4757@sha256:ab132ed692b5585afbf0b54d1251adcd8619861267663d7f836d2eb6f1e374a3",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "itzg/minecraft-server":
     "2026.6.0-java21@sha256:496ee192e5f680e8c20bc51da90160fb294d37db98319fad3ecb82e852766e08",
@@ -255,7 +255,7 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-4729@sha256:e80e99c9516cb88955c17c68c6c9f6831b68a015ae404c4f5379a083806f8120",
+    "2.0.0-4757@sha256:5a49808d4585f05f1c0ce0108b24508331ddb2d5eebf71f7efeba164ef83789d",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
@@ -263,11 +263,11 @@ const versions = {
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-4729@sha256:7f226d3d93652c55d0b5555423e1a7ccf31a44e15f06579ccec1b4a5a2dfd04a",
+    "2.0.0-4757@sha256:bf868de64b08532d0001e659bb6e50abbf84c828cd14bc49c635a96ca96a8366",
   // Custom mcp-gateway image - tbxark/mcp-proxy + prebuilt edstem-mcp (rob-9/edstem-mcp)
   // not managed by renovate
   "shepherdjerred/mcp-gateway":
-    "2.0.0-4729@sha256:0ac70ce62efc213b84f34383ea5f1219d45204ec6470b022c754d1c45d09e8e0",
+    "2.0.0-4757@sha256:37c74f8b430cd009d847ea42246a405f8fd62ad101dc6a6d2decc6fbb0e7bfec",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.6@sha256:1263120feed69d82e4ca23b8ca6f1d702c3029fe70714e382966d0192318eab6",
@@ -280,7 +280,7 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-4729@sha256:459a747496442900e6f50036dcbbd357673e17e727cd26417c47760faf81e98d",
+    "2.0.0-4757@sha256:3986697720e6c59fde73ecaf5ec508410688a44e9967a39ca24ae7c398acd25b",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/trmnl-dashboard":
