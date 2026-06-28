@@ -1,7 +1,7 @@
 ---
 id: disable-buildkite-readme-schedule
 status: waiting-on-verification
-origin: packages/docs/plans/2026-06-13_temporal-readme-refresh.md
+origin: packages/docs/archive/completed/2026-06-13_temporal-readme-refresh.md
 source_marker: false
 ---
 

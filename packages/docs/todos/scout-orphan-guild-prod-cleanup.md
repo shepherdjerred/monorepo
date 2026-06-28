@@ -1,7 +1,7 @@
 ---
 id: scout-orphan-guild-prod-cleanup
 status: waiting-on-verification
-origin: packages/docs/plans/2026-06-19_scout-guild-removal-lifecycle.md
+origin: packages/docs/archive/completed/2026-06-19_scout-guild-removal-lifecycle.md
 source_marker: false
 ---
 

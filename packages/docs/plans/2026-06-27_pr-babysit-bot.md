@@ -329,8 +329,10 @@ per-iteration + cumulative `$` — those numbers set the Phase-4 budget defaults
 
 - **Run the Phase 0 PoC against a real failing-CI PR** (owner action; needs `CLAUDE_CODE_OAUTH_TOKEN`)
   to validate convergence + measure `$/PR`. This is the Phase 0 gate.
-- Phases 1–5 (Temporal `prBabysitWorkflow` + signals/budget/continueAsNew; `issue_comment` ingress +
-  authz; tofu event subscription; live test; enable) — not started.
+- _Update (2026-06-28): Phases 0–3 subsequently landed in PR #1334 (Temporal `prBabysitWorkflow` +
+  `PR_BABYSIT` queue + `issue_comment` webhook ingress + authz, all dormant behind
+  `PR_BABYSIT_ENABLED`). Remaining: **Phase 4** (live test against a real PR) and **Phase 5** (enable
+  the kill switch) — both owner actions._
 - Greptile "comments outside of diff" coverage — see `packages/docs/todos/babysit-greptile-outside-diff.md`.
 
 ### Caveats
