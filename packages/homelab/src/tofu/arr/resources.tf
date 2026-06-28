@@ -120,29 +120,33 @@ resource "sonarr_root_folder" "tv" {
 # __generated__ by OpenTofu from "2"
 resource "prowlarr_application" "sonarr" {
   anime_sync_categories = [5070]
-  api_key               = null # sensitive
-  base_url              = "http://media-sonarr-service:8989"
-  config_contract       = "SonarrSettings"
-  implementation        = "Sonarr"
-  name                  = "Sonarr"
-  prowlarr_url          = "http://media-prowlarr-service:9696"
-  sync_categories       = [5000, 5010, 5020, 5030, 5040, 5045, 5050, 5090]
-  sync_level            = "fullSync"
-  tags                  = []
+  # Prowlarr's Sonarr API key, sourced from 1Password via arr_api_keys (Sonarr's
+  # own REST key). Managed so an apply never nulls the sync credential.
+  api_key         = local.arr_api_keys["sonarr"]
+  base_url        = "http://media-sonarr-service:8989"
+  config_contract = "SonarrSettings"
+  implementation  = "Sonarr"
+  name            = "Sonarr"
+  prowlarr_url    = "http://media-prowlarr-service:9696"
+  sync_categories = [5000, 5010, 5020, 5030, 5040, 5045, 5050, 5090]
+  sync_level      = "fullSync"
+  tags            = []
 }
 
 # __generated__ by OpenTofu from "1"
 resource "prowlarr_application" "radarr" {
   anime_sync_categories = []
-  api_key               = null # sensitive
-  base_url              = "http://media-radarr-service:7878"
-  config_contract       = "RadarrSettings"
-  implementation        = "Radarr"
-  name                  = "Radarr"
-  prowlarr_url          = "http://media-prowlarr-service:9696"
-  sync_categories       = [2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060, 2070, 2080, 2090]
-  sync_level            = "fullSync"
-  tags                  = []
+  # Prowlarr's Radarr API key, sourced from 1Password via arr_api_keys (Radarr's
+  # own REST key). Managed so an apply never nulls the sync credential.
+  api_key         = local.arr_api_keys["radarr"]
+  base_url        = "http://media-radarr-service:7878"
+  config_contract = "RadarrSettings"
+  implementation  = "Radarr"
+  name            = "Radarr"
+  prowlarr_url    = "http://media-prowlarr-service:9696"
+  sync_categories = [2000, 2010, 2020, 2030, 2040, 2045, 2050, 2060, 2070, 2080, 2090]
+  sync_level      = "fullSync"
+  tags            = []
 }
 
 # __generated__ by OpenTofu from "6"
