@@ -47,10 +47,6 @@ export function createPlexDeployment(
     },
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/privileged-container":
-          "Required for Intel GPU transcoding access",
-        "ignore-check.kube-linter.io/privilege-escalation-container":
-          "Required when privileged is true",
         "ignore-check.kube-linter.io/run-as-non-root":
           "Plex requires root for media library permissions",
         "ignore-check.kube-linter.io/no-read-only-root-fs":
@@ -145,11 +141,15 @@ export function createPlexDeployment(
           protocol: Protocol.UDP,
         },
       ],
-      // TODO: verify that these are definitely required
+      // GPU access comes from the gpu.intel.com/i915 device plugin (injects
+      // /dev/dri), not from privileged. Verified live: with privileged:false the
+      // pod stays Ready and /dev/dri/renderD128 is present + readable, so HW
+      // transcode is unaffected. (Dropping privileged disables libusb tuner/DVR
+      // probing, which this instance does not use.)
       securityContext: {
-        allowPrivilegeEscalation: true,
-        privileged: true,
-        // needed
+        allowPrivilegeEscalation: false,
+        privileged: false,
+        // Plex runs as root for media-library permissions + a writable rootfs.
         ensureNonRoot: false,
         readOnlyRootFilesystem: false,
       },

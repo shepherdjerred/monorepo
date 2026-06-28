@@ -29,10 +29,6 @@ export async function createHomeAssistantDeployment(chart: Chart) {
     strategy: DeploymentStrategy.recreate(),
     metadata: {
       annotations: {
-        "ignore-check.kube-linter.io/privileged-container":
-          "Required for USB device and hardware access",
-        "ignore-check.kube-linter.io/privilege-escalation-container":
-          "Required when privileged is true",
         "ignore-check.kube-linter.io/host-network":
           "Required for mDNS and local network device discovery",
         "ignore-check.kube-linter.io/run-as-non-root":
@@ -137,10 +133,13 @@ echo "installed eufy_security $VERSION"
         ensureNonRoot: false,
         user: ROOT_UID,
         group: ROOT_GID,
-        // required
+        // HA runs as root with a writable rootfs, but is NOT privileged: it
+        // mounts no host devices (no GPU/USB/serial passthrough). Dropping
+        // privileged removes blanket host /dev access. Verified live: pod
+        // boots, HTTP 200, no device/permission errors.
         readOnlyRootFilesystem: false,
-        privileged: true,
-        allowPrivilegeEscalation: true,
+        privileged: false,
+        allowPrivilegeEscalation: false,
       },
       image: `ghcr.io/home-assistant/home-assistant:${versions["home-assistant/home-assistant"]}`,
       ports: [
