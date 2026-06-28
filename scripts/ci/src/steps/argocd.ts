@@ -73,7 +73,7 @@ export function waitForTunnelBindingDeletionStep(
       `${DAGGER_CALL} argo-cd-wait-for-resource-deletion` +
       ` --app-name apps` +
       ` --group networking.cfargotunnel.com` +
-      ` --version v1` +
+      ` --version v1alpha1` +
       ` --kind TunnelBinding` +
       ` --namespace seaweedfs` +
       ` --resource-name seaweedfs-s3-cf-tunnel` +
