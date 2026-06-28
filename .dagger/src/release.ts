@@ -238,7 +238,12 @@ export function tofuApplyHelper(
   tailscaleOauthClientId: Secret | null = null,
   tailscaleOauthClientSecret: Secret | null = null,
   buildkiteApiToken: Secret | null = null,
-  arrApiKeys: Secret | null = null,
+  radarrApiKey: Secret | null = null,
+  sonarrApiKey: Secret | null = null,
+  prowlarrApiKey: Secret | null = null,
+  qbittorrentPassword: Secret | null = null,
+  privatehdPassword: Secret | null = null,
+  privatehdPid: Secret | null = null,
   pagerdutyToken: Secret | null = null,
   dryrun = false,
 ): Container {
@@ -314,8 +319,41 @@ export function tofuApplyHelper(
     );
   }
 
-  if (arrApiKeys != null) {
-    container = container.withSecretVariable("TF_VAR_arr_api_keys", arrApiKeys);
+  if (radarrApiKey != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_radarr_api_key",
+      radarrApiKey,
+    );
+  }
+  if (sonarrApiKey != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_sonarr_api_key",
+      sonarrApiKey,
+    );
+  }
+  if (prowlarrApiKey != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_prowlarr_api_key",
+      prowlarrApiKey,
+    );
+  }
+  if (qbittorrentPassword != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_qbittorrent_password",
+      qbittorrentPassword,
+    );
+  }
+  if (privatehdPassword != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_privatehd_password",
+      privatehdPassword,
+    );
+  }
+  if (privatehdPid != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_privatehd_pid",
+      privatehdPid,
+    );
   }
 
   if (pagerdutyToken != null) {
@@ -345,7 +383,12 @@ export function tofuPlanHelper(
   tailscaleOauthClientId: Secret | null = null,
   tailscaleOauthClientSecret: Secret | null = null,
   buildkiteApiToken: Secret | null = null,
-  arrApiKeys: Secret | null = null,
+  radarrApiKey: Secret | null = null,
+  sonarrApiKey: Secret | null = null,
+  prowlarrApiKey: Secret | null = null,
+  qbittorrentPassword: Secret | null = null,
+  privatehdPassword: Secret | null = null,
+  privatehdPid: Secret | null = null,
   pagerdutyToken: Secret | null = null,
   dryrun = false,
 ): Container {
@@ -402,8 +445,41 @@ export function tofuPlanHelper(
     );
   }
 
-  if (arrApiKeys != null) {
-    container = container.withSecretVariable("TF_VAR_arr_api_keys", arrApiKeys);
+  if (radarrApiKey != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_radarr_api_key",
+      radarrApiKey,
+    );
+  }
+  if (sonarrApiKey != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_sonarr_api_key",
+      sonarrApiKey,
+    );
+  }
+  if (prowlarrApiKey != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_prowlarr_api_key",
+      prowlarrApiKey,
+    );
+  }
+  if (qbittorrentPassword != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_qbittorrent_password",
+      qbittorrentPassword,
+    );
+  }
+  if (privatehdPassword != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_privatehd_password",
+      privatehdPassword,
+    );
+  }
+  if (privatehdPid != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_privatehd_pid",
+      privatehdPid,
+    );
   }
 
   if (pagerdutyToken != null) {
@@ -446,7 +522,12 @@ export async function tofuApplyAllHelper(
   tailscaleOauthClientId: Secret | null,
   tailscaleOauthClientSecret: Secret | null,
   buildkiteApiToken: Secret | null,
-  arrApiKeys: Secret | null,
+  radarrApiKey: Secret | null,
+  sonarrApiKey: Secret | null,
+  prowlarrApiKey: Secret | null,
+  qbittorrentPassword: Secret | null,
+  privatehdPassword: Secret | null,
+  privatehdPid: Secret | null,
   pagerdutyToken: Secret | null,
   dryrun: boolean,
 ): Promise<string> {
@@ -465,7 +546,12 @@ export async function tofuApplyAllHelper(
           tailscaleOauthClientId,
           tailscaleOauthClientSecret,
           buildkiteApiToken,
-          arrApiKeys,
+          radarrApiKey,
+          sonarrApiKey,
+          prowlarrApiKey,
+          qbittorrentPassword,
+          privatehdPassword,
+          privatehdPid,
           pagerdutyToken,
           dryrun,
         ).stdout(),
@@ -488,7 +574,12 @@ export async function tofuPlanAllHelper(
   tailscaleOauthClientId: Secret | null,
   tailscaleOauthClientSecret: Secret | null,
   buildkiteApiToken: Secret | null,
-  arrApiKeys: Secret | null,
+  radarrApiKey: Secret | null,
+  sonarrApiKey: Secret | null,
+  prowlarrApiKey: Secret | null,
+  qbittorrentPassword: Secret | null,
+  privatehdPassword: Secret | null,
+  privatehdPid: Secret | null,
   pagerdutyToken: Secret | null,
   dryrun: boolean,
 ): Promise<string> {
@@ -507,7 +598,12 @@ export async function tofuPlanAllHelper(
           tailscaleOauthClientId,
           tailscaleOauthClientSecret,
           buildkiteApiToken,
-          arrApiKeys,
+          radarrApiKey,
+          sonarrApiKey,
+          prowlarrApiKey,
+          qbittorrentPassword,
+          privatehdPassword,
+          privatehdPid,
           pagerdutyToken,
           dryrun,
         ).stdout(),

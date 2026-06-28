@@ -1,29 +1,65 @@
-variable "arr_api_keys" {
-  description = <<-EOT
-    JSON object string of the secrets this stack needs, e.g.
-    {"radarr":"...","sonarr":"...","prowlarr":"...","qbittorrent":"..."}.
-    radarr/sonarr/prowlarr are the *arr REST API keys (provider auth +
-    Prowlarr application sync); qbittorrent is the qBittorrent WebUI password
-    used by the Radarr/Sonarr/Prowlarr download clients. Declared as a raw
-    string (not map(string)) on purpose: a map-typed variable is HCL-decoded
-    from ARR_API_KEYS / TF_VAR_arr_api_keys *before* validation runs, so a
-    malformed bare-string secret fails with an opaque "Variables not allowed"
-    error before the friendly validation below can fire. Taking it as a string
-    lets the validation catch the bad shape; locals.tf jsondecode()s it.
-  EOT
+# Per-secret variables (one CI secret / 1Password field each). locals.tf
+# assembles them into local.arr_api_keys so the resource files stay unchanged.
+# Each is fail-fast validated non-empty: a missing/blank CI secret should error
+# clearly here rather than deep in a provider call.
+
+variable "radarr_api_key" {
+  description = "Radarr REST API key (provider auth + Prowlarr application sync)."
   type        = string
   sensitive   = true
-
   validation {
-    # Runs before locals.tf decodes the value, because a string var accepts the
-    # raw secret verbatim (no pre-validation type decode). can(jsondecode(...))
-    # turns a non-JSON secret into a clean failure; the alltrue() with try()
-    # also rejects valid-but-wrong-shape JSON (array, scalar, or missing key).
-    condition = can(jsondecode(var.arr_api_keys)) && alltrue([
-      for slug in ["radarr", "sonarr", "prowlarr", "qbittorrent"] :
-      try(length(jsondecode(var.arr_api_keys)[slug]) > 0, false)
-    ])
-    error_message = "ARR_API_KEYS / TF_VAR_arr_api_keys must be a JSON object string with non-empty radarr, sonarr, prowlarr, and qbittorrent keys, e.g. {\"radarr\":\"...\",\"sonarr\":\"...\",\"prowlarr\":\"...\",\"qbittorrent\":\"...\"}."
+    condition     = length(var.radarr_api_key) > 0
+    error_message = "radarr_api_key must be non-empty (set RADARR_API_KEY / TF_VAR_radarr_api_key)."
+  }
+}
+
+variable "sonarr_api_key" {
+  description = "Sonarr REST API key (provider auth + Prowlarr application sync)."
+  type        = string
+  sensitive   = true
+  validation {
+    condition     = length(var.sonarr_api_key) > 0
+    error_message = "sonarr_api_key must be non-empty (set SONARR_API_KEY / TF_VAR_sonarr_api_key)."
+  }
+}
+
+variable "prowlarr_api_key" {
+  description = "Prowlarr REST API key (provider auth)."
+  type        = string
+  sensitive   = true
+  validation {
+    condition     = length(var.prowlarr_api_key) > 0
+    error_message = "prowlarr_api_key must be non-empty (set PROWLARR_API_KEY / TF_VAR_prowlarr_api_key)."
+  }
+}
+
+variable "qbittorrent_password" {
+  description = "qBittorrent WebUI password (user \"jerred\") used by the Radarr/Sonarr/Prowlarr download clients."
+  type        = string
+  sensitive   = true
+  validation {
+    condition     = length(var.qbittorrent_password) > 0
+    error_message = "qbittorrent_password must be non-empty (set QBITTORRENT_PASSWORD / TF_VAR_qbittorrent_password)."
+  }
+}
+
+variable "privatehd_password" {
+  description = "PrivateHD account password for the Prowlarr PrivateHD indexer."
+  type        = string
+  sensitive   = true
+  validation {
+    condition     = length(var.privatehd_password) > 0
+    error_message = "privatehd_password must be non-empty (set PRIVATEHD_PASSWORD / TF_VAR_privatehd_password)."
+  }
+}
+
+variable "privatehd_pid" {
+  description = "PrivateHD PID (AvisTaz per-user token) for the Prowlarr PrivateHD indexer."
+  type        = string
+  sensitive   = true
+  validation {
+    condition     = length(var.privatehd_pid) > 0
+    error_message = "privatehd_pid must be non-empty (set PRIVATEHD_PID / TF_VAR_privatehd_pid)."
   }
 }
 
