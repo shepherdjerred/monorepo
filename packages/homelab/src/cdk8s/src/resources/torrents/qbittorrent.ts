@@ -100,14 +100,19 @@ export function createQBitTorrentDeployment(
   );
 
   // Runs as root so it can write to a fresh, root-owned PVC during disaster
-  // recovery, then hands ownership to the LinuxServer PUID/PGID (1000:1000).
+  // recovery. Seeding (the cp) is conditional — seed-if-absent so a live conf
+  // is never clobbered — but the ownership repair (chown -R) runs every
+  // reconcile, idempotently: an existing PVC whose /config/qBittorrent is still
+  // root:root (e.g. from a partial restore or an earlier seed attempt) gets
+  // handed to the LinuxServer PUID/PGID (1000:1000) so qBittorrent can create
+  // sibling log/lock/backup files there.
   deployment.addInitContainer({
     name: "qbittorrent-config-seed",
     image: `ghcr.io/linuxserver/qbittorrent:${versions["linuxserver/qbittorrent"]}`,
     command: [
       "/bin/sh",
       "-c",
-      "mkdir -p /config/qBittorrent && if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then cp /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf && chown -R 1000:1000 /config/qBittorrent && chmod 600 /config/qBittorrent/qBittorrent.conf; fi",
+      "mkdir -p /config/qBittorrent && if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then cp /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf; fi && chown -R 1000:1000 /config/qBittorrent && chmod 600 /config/qBittorrent/qBittorrent.conf",
     ],
     resources: {},
     securityContext: {
