@@ -84,7 +84,11 @@ export function createQBitTorrentDeployment(
   //   drift is never silently tolerated.
   // Only keys we declare are enforced; keys qBittorrent writes on its own
   // (WebUI\Password_PBKDF2, Network\Cookies, ...) are ignored, so the guard never
-  // false-positives on the app's runtime churn. The WebUI password hash is
+  // false-positives on the app's runtime churn. A few engine-owned keys that DO
+  // appear in the committed seed (Meta\MigrationVersion, bumped by the image on a
+  // qBittorrent upgrade) are also excluded from enforcement so a version bump
+  // can't crash-loop the pod — see the exclusion list in check-config-drift.sh.
+  // The WebUI password hash is
   // deliberately NOT in the committed file — qBittorrent generates a temporary
   // password (logged) on a fresh start, which is then reset.
   const qbittorrentConfig = new ConfigMap(chart, "qbittorrent-config", {

@@ -12,6 +12,12 @@
 # Network\Cookies) are ignored, so the guard never false-positives on the app's
 # own runtime churn.
 #
+# A small set of ENGINE-OWNED keys are excluded from enforcement even though they
+# appear in the committed seed (see the `excluded` list in the awk program below):
+# qBittorrent/the linuxserver image mutates them without user intent, so enforcing
+# them would crash-loop the pod on a routine version upgrade rather than flag a
+# real config change.
+#
 # Usage: check-config-drift.sh <committed-seed-conf> <live-conf>
 #   exit 0 -> in sync (or live config absent: nothing to compare yet)
 #   exit 3 -> drift detected (offending keys printed to stderr)
@@ -35,6 +41,16 @@ fi
 report=$(
   awk -v seedfile="$SEED" '
     function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
+
+    # Engine-owned keys excluded from drift enforcement. These are mutated by
+    # qBittorrent / the linuxserver image itself (not by the operator), so
+    # enforcing them would crash-loop the pod on a routine version upgrade
+    # instead of catching a real config change:
+    #   Meta\MigrationVersion - bumped when the image migrates the on-disk config
+    #                           format after a qBittorrent version bump.
+    # They stay in the committed seed (so a fresh PVC is seeded with a complete,
+    # representative config) but are skipped in the comparison below.
+    BEGIN { excluded["Meta" SUBSEP "MigrationVersion"] = 1 }
 
     # Reset the section at the start of each file (robust even if a file does
     # not open with a section header). Files are distinguished by FILENAME, not
@@ -64,6 +80,7 @@ report=$(
     END {
       drift = 0
       for (k in managed) {
+        if (k in excluded) { continue }
         split(k, a, SUBSEP)
         if (!(k in haveLive)) {
           printf("  - [%s] %s : missing from live config (declared=<%s>)\n", a[1], a[2], seed[k])
@@ -84,14 +101,15 @@ if [ "$rc" -eq 0 ]; then
 fi
 
 if [ "$rc" -eq 3 ]; then
-  echo "ERROR: qBittorrent live config has drifted from the committed declaration." >&2
+  echo "ERROR: qBittorrent config drift detected." >&2
   echo "The committed qBittorrent.conf is the source of truth; drift is not tolerated." >&2
-  echo "Drifted managed keys (declared vs live):" >&2
+  echo "Drifted managed keys (committed vs live):" >&2
   printf '%s\n' "$report" >&2
-  echo "Reconcile by committing the change to:" >&2
+  echo "Reconcile by updating" >&2
   echo "  packages/homelab/src/cdk8s/src/resources/configs/qbittorrent/qBittorrent.conf" >&2
-  echo "then redeploy. Only keys present in that committed file are enforced;" >&2
-  echo "qBittorrent's own runtime-managed keys are ignored." >&2
+  echo "to match the live value (or revert the live change) and commit, then redeploy." >&2
+  echo "Only keys present in that committed file are enforced; qBittorrent's own" >&2
+  echo "runtime-managed and engine-owned keys are ignored." >&2
   exit 3
 fi
 

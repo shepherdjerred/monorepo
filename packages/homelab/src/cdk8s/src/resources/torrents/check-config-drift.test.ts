@@ -122,6 +122,26 @@ describe("check-config-drift.sh", () => {
     expect(stderr).toContain("missing from live config");
   });
 
+  it(
+    String.raw`ignores engine-owned keys (Meta\MigrationVersion) even when they drift`,
+    async () => {
+      // Meta\MigrationVersion is in the committed seed but is bumped by the
+      // linuxserver image on a qBittorrent version upgrade. It must NOT fail the
+      // guard, otherwise a routine upgrade would crash-loop the pod.
+      const seed = write(
+        "seed-meta.conf",
+        `${SEED}\n[Meta]\nMigrationVersion=8\n`,
+      );
+      const live = write(
+        "live-meta.conf",
+        `${LIVE_IN_SYNC}\n[Meta]\nMigrationVersion=9\n`,
+      );
+      const { code, stderr } = await runGuard(seed, live);
+      expect(code).toBe(0);
+      expect(stderr).not.toContain("MigrationVersion");
+    },
+  );
+
   it("passes when the live conf does not exist yet (fresh PVC)", async () => {
     const seed = write("seed5.conf", SEED);
     const { code } = await runGuard(seed, path.join(dir, "no-such-file.conf"));
