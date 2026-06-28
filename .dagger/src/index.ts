@@ -1111,6 +1111,7 @@ export class Monorepo {
     cloudflareApiToken: Secret | null = null,
     tailscaleOauthClientId: Secret | null = null,
     tailscaleOauthClientSecret: Secret | null = null,
+    buildkiteApiToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuApplyHelper(
@@ -1123,6 +1124,7 @@ export class Monorepo {
       cloudflareApiToken,
       tailscaleOauthClientId,
       tailscaleOauthClientSecret,
+      buildkiteApiToken,
       dryrun,
     ).stdout();
   }
@@ -1139,6 +1141,7 @@ export class Monorepo {
     cloudflareApiToken: Secret | null = null,
     tailscaleOauthClientId: Secret | null = null,
     tailscaleOauthClientSecret: Secret | null = null,
+    buildkiteApiToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuPlanHelper(
@@ -1151,6 +1154,7 @@ export class Monorepo {
       cloudflareApiToken,
       tailscaleOauthClientId,
       tailscaleOauthClientSecret,
+      buildkiteApiToken,
       dryrun,
     ).stdout();
   }
@@ -1172,6 +1176,7 @@ export class Monorepo {
     cloudflareApiToken: Secret | null = null,
     tailscaleOauthClientId: Secret | null = null,
     tailscaleOauthClientSecret: Secret | null = null,
+    buildkiteApiToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuApplyAllHelper(
@@ -1184,6 +1189,7 @@ export class Monorepo {
       cloudflareApiToken,
       tailscaleOauthClientId,
       tailscaleOauthClientSecret,
+      buildkiteApiToken,
       dryrun,
     );
   }
@@ -1200,6 +1206,7 @@ export class Monorepo {
     cloudflareApiToken: Secret | null = null,
     tailscaleOauthClientId: Secret | null = null,
     tailscaleOauthClientSecret: Secret | null = null,
+    buildkiteApiToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuPlanAllHelper(
@@ -1212,6 +1219,7 @@ export class Monorepo {
       cloudflareApiToken,
       tailscaleOauthClientId,
       tailscaleOauthClientSecret,
+      buildkiteApiToken,
       dryrun,
     );
   }

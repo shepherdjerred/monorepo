@@ -237,6 +237,7 @@ export function tofuApplyHelper(
   cloudflareApiToken: Secret | null = null,
   tailscaleOauthClientId: Secret | null = null,
   tailscaleOauthClientSecret: Secret | null = null,
+  buildkiteApiToken: Secret | null = null,
   dryrun = false,
 ): Container {
   let container = dag.container().from(TOFU_IMAGE);
@@ -304,6 +305,13 @@ export function tofuApplyHelper(
     );
   }
 
+  if (buildkiteApiToken != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_buildkite_api_token",
+      buildkiteApiToken,
+    );
+  }
+
   container = container.withExec(["sh", "-c", TOFU_INIT_WITH_RETRY]);
 
   if (dryrun) {
@@ -323,6 +331,7 @@ export function tofuPlanHelper(
   cloudflareApiToken: Secret | null = null,
   tailscaleOauthClientId: Secret | null = null,
   tailscaleOauthClientSecret: Secret | null = null,
+  buildkiteApiToken: Secret | null = null,
   dryrun = false,
 ): Container {
   let container = dag
@@ -371,6 +380,13 @@ export function tofuPlanHelper(
     );
   }
 
+  if (buildkiteApiToken != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_buildkite_api_token",
+      buildkiteApiToken,
+    );
+  }
+
   container = container.withExec(["sh", "-c", TOFU_INIT_WITH_RETRY]);
 
   if (dryrun) {
@@ -403,6 +419,7 @@ export async function tofuApplyAllHelper(
   cloudflareApiToken: Secret | null,
   tailscaleOauthClientId: Secret | null,
   tailscaleOauthClientSecret: Secret | null,
+  buildkiteApiToken: Secret | null,
   dryrun: boolean,
 ): Promise<string> {
   return runBundle(
@@ -419,6 +436,7 @@ export async function tofuApplyAllHelper(
           cloudflareApiToken,
           tailscaleOauthClientId,
           tailscaleOauthClientSecret,
+          buildkiteApiToken,
           dryrun,
         ).stdout(),
     })),
@@ -439,6 +457,7 @@ export async function tofuPlanAllHelper(
   cloudflareApiToken: Secret | null,
   tailscaleOauthClientId: Secret | null,
   tailscaleOauthClientSecret: Secret | null,
+  buildkiteApiToken: Secret | null,
   dryrun: boolean,
 ): Promise<string> {
   return runBundle(
@@ -455,6 +474,7 @@ export async function tofuPlanAllHelper(
           cloudflareApiToken,
           tailscaleOauthClientId,
           tailscaleOauthClientSecret,
+          buildkiteApiToken,
           dryrun,
         ).stdout(),
     })),
