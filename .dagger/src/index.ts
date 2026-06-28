@@ -1113,6 +1113,7 @@ export class Monorepo {
     tailscaleOauthClientSecret: Secret | null = null,
     buildkiteApiToken: Secret | null = null,
     arrApiKeys: Secret | null = null,
+    pagerdutyToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuApplyHelper(
@@ -1127,6 +1128,7 @@ export class Monorepo {
       tailscaleOauthClientSecret,
       buildkiteApiToken,
       arrApiKeys,
+      pagerdutyToken,
       dryrun,
     ).stdout();
   }
@@ -1145,6 +1147,7 @@ export class Monorepo {
     tailscaleOauthClientSecret: Secret | null = null,
     buildkiteApiToken: Secret | null = null,
     arrApiKeys: Secret | null = null,
+    pagerdutyToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuPlanHelper(
@@ -1159,6 +1162,7 @@ export class Monorepo {
       tailscaleOauthClientSecret,
       buildkiteApiToken,
       arrApiKeys,
+      pagerdutyToken,
       dryrun,
     ).stdout();
   }
@@ -1182,6 +1186,7 @@ export class Monorepo {
     tailscaleOauthClientSecret: Secret | null = null,
     buildkiteApiToken: Secret | null = null,
     arrApiKeys: Secret | null = null,
+    pagerdutyToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuApplyAllHelper(
@@ -1196,6 +1201,7 @@ export class Monorepo {
       tailscaleOauthClientSecret,
       buildkiteApiToken,
       arrApiKeys,
+      pagerdutyToken,
       dryrun,
     );
   }
@@ -1214,6 +1220,7 @@ export class Monorepo {
     tailscaleOauthClientSecret: Secret | null = null,
     buildkiteApiToken: Secret | null = null,
     arrApiKeys: Secret | null = null,
+    pagerdutyToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuPlanAllHelper(
@@ -1228,6 +1235,7 @@ export class Monorepo {
       tailscaleOauthClientSecret,
       buildkiteApiToken,
       arrApiKeys,
+      pagerdutyToken,
       dryrun,
     );
   }

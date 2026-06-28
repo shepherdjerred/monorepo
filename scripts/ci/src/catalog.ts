@@ -281,6 +281,7 @@ export const TOFU_STACKS = [
   "tailscale",
   "buildkite",
   "arr",
+  "pagerduty",
 ] as const;
 
 export const TOFU_STACK_LABELS: Record<string, string> = {
@@ -290,6 +291,7 @@ export const TOFU_STACK_LABELS: Record<string, string> = {
   tailscale: "Tailscale ACLs",
   buildkite: "Buildkite Config",
   arr: "*arr Config",
+  pagerduty: "PagerDuty Config",
 };
 
 // ---------------------------------------------------------------------------

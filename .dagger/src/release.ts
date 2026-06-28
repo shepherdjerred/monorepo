@@ -239,6 +239,7 @@ export function tofuApplyHelper(
   tailscaleOauthClientSecret: Secret | null = null,
   buildkiteApiToken: Secret | null = null,
   arrApiKeys: Secret | null = null,
+  pagerdutyToken: Secret | null = null,
   dryrun = false,
 ): Container {
   let container = dag.container().from(TOFU_IMAGE);
@@ -317,6 +318,13 @@ export function tofuApplyHelper(
     container = container.withSecretVariable("TF_VAR_arr_api_keys", arrApiKeys);
   }
 
+  if (pagerdutyToken != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_pagerduty_token",
+      pagerdutyToken,
+    );
+  }
+
   container = container.withExec(["sh", "-c", TOFU_INIT_WITH_RETRY]);
 
   if (dryrun) {
@@ -338,6 +346,7 @@ export function tofuPlanHelper(
   tailscaleOauthClientSecret: Secret | null = null,
   buildkiteApiToken: Secret | null = null,
   arrApiKeys: Secret | null = null,
+  pagerdutyToken: Secret | null = null,
   dryrun = false,
 ): Container {
   let container = dag
@@ -397,6 +406,13 @@ export function tofuPlanHelper(
     container = container.withSecretVariable("TF_VAR_arr_api_keys", arrApiKeys);
   }
 
+  if (pagerdutyToken != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_pagerduty_token",
+      pagerdutyToken,
+    );
+  }
+
   container = container.withExec(["sh", "-c", TOFU_INIT_WITH_RETRY]);
 
   if (dryrun) {
@@ -431,6 +447,7 @@ export async function tofuApplyAllHelper(
   tailscaleOauthClientSecret: Secret | null,
   buildkiteApiToken: Secret | null,
   arrApiKeys: Secret | null,
+  pagerdutyToken: Secret | null,
   dryrun: boolean,
 ): Promise<string> {
   return runBundle(
@@ -449,6 +466,7 @@ export async function tofuApplyAllHelper(
           tailscaleOauthClientSecret,
           buildkiteApiToken,
           arrApiKeys,
+          pagerdutyToken,
           dryrun,
         ).stdout(),
     })),
@@ -471,6 +489,7 @@ export async function tofuPlanAllHelper(
   tailscaleOauthClientSecret: Secret | null,
   buildkiteApiToken: Secret | null,
   arrApiKeys: Secret | null,
+  pagerdutyToken: Secret | null,
   dryrun: boolean,
 ): Promise<string> {
   return runBundle(
@@ -489,6 +508,7 @@ export async function tofuPlanAllHelper(
           tailscaleOauthClientSecret,
           buildkiteApiToken,
           arrApiKeys,
+          pagerdutyToken,
           dryrun,
         ).stdout(),
     })),

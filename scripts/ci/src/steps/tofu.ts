@@ -34,6 +34,7 @@ function tofuSecretFlags(stacks: readonly string[]): string {
     `--tailscale-oauth-client-secret env:TAILSCALE_OAUTH_CLIENT_SECRET`,
     `--buildkite-api-token env:BUILDKITE_API_TOKEN`,
     `--arr-api-keys env:ARR_API_KEYS`,
+    `--pagerduty-token env:PAGERDUTY_TOKEN`,
   ]
     .filter(Boolean)
     .join(" ");
