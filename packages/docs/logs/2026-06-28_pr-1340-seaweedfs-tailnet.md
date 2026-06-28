@@ -81,21 +81,27 @@ thread has `priority <= 3`, `isResolved == false`, `isOutdated == false`.
 - Diagnosed Greptile P1 root cause: timing-window comment at `seaweedfs.ts:54`
 - Implemented real pipeline sequencing fix: `cloudflare` excluded from `TOFU_BUNDLE_STACKS`,
   new `homelabTofuApplyCloudflareStep` sequenced after `deploy-argocd` (commit c03236873)
-- All pre-commit hooks pass: typecheck, ESLint, prettier, onepassword-items, dagger-hygiene,
-  tunnel-dns-coverage, quality-ratchet, homelab tests (140 pass, 5 skip)
-- Pushed to `feature/seaweedfs-tailnet-only`; Build #4740 running
+- Greptile re-reviewed and posted a new P1 at `steps/tofu.ts:105`: ArgoCD health-wait does
+  not prove the TunnelBinding finalizer has completed
+- Implemented explicit fail-closed deletion check: new `waitForArgoCdResourceDeletionHelper`
+  Dagger function polls ArgoCD resource API until resource returns 404; new
+  `waitForTunnelBindingDeletionStep` Buildkite step between `deploy-argocd` and
+  `tofu-apply-cloudflare` (commit 21ba154fd, with namespace fix 1a8c554f4 and version fix
+  f55d3f748 based on Greptile's subsequent P1s identifying wrong namespace/CRD version)
+- Final pipeline chain: `deploy-argocd` → `wait-tunnel-binding-deletion` → `tofu-apply-cloudflare`
+- Build #4748: `mag-greptile-review` passes, all hard gates pass, 0 unresolved Greptile threads
+- Session log committed with working code
 
 ### Remaining
 
-- Wait for Greptile to re-review commit c03236873 and confirm no new P1/P2/P3 threads
-- Confirm Build #4740 passes `mag-greptile-review` gate and all other CI checks
-- Report completion to team-lead
+- Nothing. PR #1340 is CI-green and Greptile-clean. Owner approval required to merge.
 
 ### Caveats
 
-- The `homelabTofuApplyCloudflareStep` uses `secrets: ["buildkite-argocd-token"]` in its
-  k8s plugin — this is inherited from the existing pattern; the cloudflare apply itself
-  doesn't need an ArgoCD token but the pod spec is consistent with other tofu steps.
-- Greptile re-review takes ~3 minutes after a push; if it posts another concern,
-  the remaining fix scope is small (both the pipeline sequencing and comment are already
-  correct — any new thread would be cosmetic at most).
+- The `wait-tunnel-binding-deletion` step will succeed immediately (first-poll 404) after
+  this PR is deployed and the TunnelBinding is permanently gone from the cluster.
+- The overall `buildkite/monorepo/pr` context shows "failed" because knip and trivy are soft-fail
+  steps — this is normal for all PRs and does NOT block merging (required checks are step-level).
+- Greptile caught two real bugs in my initial implementation (wrong namespace `cloudflare-tunnel`
+  instead of `seaweedfs`, wrong CRD version `v1` instead of `v1alpha1`). Both were fixed before
+  the final green build.
