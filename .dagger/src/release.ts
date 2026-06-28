@@ -238,6 +238,7 @@ export function tofuApplyHelper(
   tailscaleOauthClientId: Secret | null = null,
   tailscaleOauthClientSecret: Secret | null = null,
   buildkiteApiToken: Secret | null = null,
+  arrApiKeys: Secret | null = null,
   dryrun = false,
 ): Container {
   let container = dag.container().from(TOFU_IMAGE);
@@ -312,6 +313,10 @@ export function tofuApplyHelper(
     );
   }
 
+  if (arrApiKeys != null) {
+    container = container.withSecretVariable("TF_VAR_arr_api_keys", arrApiKeys);
+  }
+
   container = container.withExec(["sh", "-c", TOFU_INIT_WITH_RETRY]);
 
   if (dryrun) {
@@ -332,6 +337,7 @@ export function tofuPlanHelper(
   tailscaleOauthClientId: Secret | null = null,
   tailscaleOauthClientSecret: Secret | null = null,
   buildkiteApiToken: Secret | null = null,
+  arrApiKeys: Secret | null = null,
   dryrun = false,
 ): Container {
   let container = dag
@@ -387,6 +393,10 @@ export function tofuPlanHelper(
     );
   }
 
+  if (arrApiKeys != null) {
+    container = container.withSecretVariable("TF_VAR_arr_api_keys", arrApiKeys);
+  }
+
   container = container.withExec(["sh", "-c", TOFU_INIT_WITH_RETRY]);
 
   if (dryrun) {
@@ -420,6 +430,7 @@ export async function tofuApplyAllHelper(
   tailscaleOauthClientId: Secret | null,
   tailscaleOauthClientSecret: Secret | null,
   buildkiteApiToken: Secret | null,
+  arrApiKeys: Secret | null,
   dryrun: boolean,
 ): Promise<string> {
   return runBundle(
@@ -437,6 +448,7 @@ export async function tofuApplyAllHelper(
           tailscaleOauthClientId,
           tailscaleOauthClientSecret,
           buildkiteApiToken,
+          arrApiKeys,
           dryrun,
         ).stdout(),
     })),
@@ -458,6 +470,7 @@ export async function tofuPlanAllHelper(
   tailscaleOauthClientId: Secret | null,
   tailscaleOauthClientSecret: Secret | null,
   buildkiteApiToken: Secret | null,
+  arrApiKeys: Secret | null,
   dryrun: boolean,
 ): Promise<string> {
   return runBundle(
@@ -475,6 +488,7 @@ export async function tofuPlanAllHelper(
           tailscaleOauthClientId,
           tailscaleOauthClientSecret,
           buildkiteApiToken,
+          arrApiKeys,
           dryrun,
         ).stdout(),
     })),

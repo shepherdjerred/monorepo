@@ -280,6 +280,7 @@ export const TOFU_STACKS = [
   "seaweedfs",
   "tailscale",
   "buildkite",
+  "arr",
 ] as const;
 
 export const TOFU_STACK_LABELS: Record<string, string> = {
@@ -288,6 +289,7 @@ export const TOFU_STACK_LABELS: Record<string, string> = {
   seaweedfs: "SeaweedFS Config",
   tailscale: "Tailscale ACLs",
   buildkite: "Buildkite Config",
+  arr: "*arr Config",
 };
 
 // ---------------------------------------------------------------------------
