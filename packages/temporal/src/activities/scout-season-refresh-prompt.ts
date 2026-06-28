@@ -3,6 +3,7 @@ export type SeasonRefreshPromptInput = {
   workdir: string;
   seasonsFile: string;
   seasonsTestFile: string;
+  changelogFile: string;
   noDriftSentinel: string;
   driftedSentinel: string;
 };
@@ -10,6 +11,8 @@ export type SeasonRefreshPromptInput = {
 export function buildSeasonRefreshPrompt(
   input: SeasonRefreshPromptInput,
 ): string {
+  // Changelog dates are space-separated ("YYYY MM DD"); `today` is "YYYY-MM-DD".
+  const todaySpaced = input.today.replaceAll("-", " ");
   return [
     "You are refreshing Scout for LoL's hard-coded League of Legends season schedule.",
     "",
@@ -19,6 +22,8 @@ export function buildSeasonRefreshPrompt(
     "",
     `- ${input.seasonsFile} — the SEASONS record and SeasonIdSchema Zod enum.`,
     `- ${input.seasonsTestFile} — keep the valid-IDs list in sync.`,
+    `- ${input.changelogFile} — marketing "What's New" feed (only edited when a`,
+    "  brand-new season/act is added; see step 5).",
     "",
     "## Task",
     "",
@@ -41,11 +46,27 @@ export function buildSeasonRefreshPrompt(
     "     daylight time, -08:00 in standard time).",
     "   - Display names follow the convention 'Season Name (Act N)'.",
     `   - Also extend the valid-IDs list in ${input.seasonsTestFile}.`,
-    "5. Verify your edit by running:",
+    "5. ONLY when you ADD a brand-new season/act ID in step 4 (NOT for date-only",
+    `   corrections), also add a "What's New" entry to the marketing changelog at`,
+    `   ${input.changelogFile}:`,
+    "   - Prepend a new entry at the TOP of the `changelog` array (it is",
+    "     newest-first) using the buildChangelogEntry({ date, banner, sections })",
+    "     helper already exported from that file. Shape:",
+    "       buildChangelogEntry({",
+    `         date: "${todaySpaced}",`,
+    '         banner: "Season <Name> support",',
+    "         sections: [",
+    '           { title: "Seasons", color: "indigo", items: ["Added support for <Season Name (Act N)>"] },',
+    "         ],",
+    "       }),",
+    '   - date is "YYYY MM DD" (space-separated). Write a concise, player-facing',
+    "     banner and one section naming the newly supported season(s). Do NOT",
+    "     touch or reword any existing changelog entry.",
+    "6. Verify your edit by running:",
     `      cd ${input.workdir}/packages/scout-for-lol/packages/data`,
     "      bun test src/seasons.test.ts",
     "   If tests fail, fix them. Do NOT skip tests, do NOT weaken assertions.",
-    "6. Your final response MUST end with one of these sentinel lines exactly:",
+    "7. Your final response MUST end with one of these sentinel lines exactly:",
     `   - ${input.noDriftSentinel}   (file was already accurate, no edits)`,
     `   - ${input.driftedSentinel}   (file was edited)`,
     `   Before the sentinel, when ${input.driftedSentinel}, list each change`,
@@ -56,7 +77,8 @@ export function buildSeasonRefreshPrompt(
     "- Never invent season dates. If you cannot find a confirmed date from a",
     "  primary source (Riot, LoL wiki), do NOT add the season. Print",
     `  ${input.noDriftSentinel} and leave it for next week's run.`,
-    "- Never modify any file outside seasons.ts and seasons.test.ts.",
+    "- Never modify any file outside seasons.ts, seasons.test.ts, and (only when",
+    "  adding a new season) the changelog file named above.",
     "- Never run git commands — the calling activity handles git state.",
     "- Never push to origin or open PRs — same reason.",
   ].join("\n");

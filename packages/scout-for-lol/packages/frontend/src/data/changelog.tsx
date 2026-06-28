@@ -16,7 +16,7 @@ export function renderChangelogToHtml(content: ReactNode): string {
   return renderToStaticMarkup(content);
 }
 
-type ColorScheme =
+export type ColorScheme =
   | "yellow"
   | "indigo"
   | "blue"
@@ -25,6 +25,9 @@ type ColorScheme =
   | "red"
   | "pink"
   | "teal";
+
+/** Public alias for the changelog section color palette. */
+export type ChangelogColor = ColorScheme;
 
 type ChangelogSectionProps = {
   title: string;
@@ -431,4 +434,66 @@ export function formatChangelogDate(entry: ChangelogEntry): string {
     month: "long",
     day: "numeric",
   });
+}
+
+export type ChangelogSectionInput = {
+  title: string;
+  color: ChangelogColor;
+  items: string[];
+};
+
+export type ChangelogEntryInput = {
+  /** Display date in `"YYYY MM DD"` form, matching the entries above. */
+  date: string;
+  /** Plain-text banner shown on the homepage banner + as the entry heading. */
+  banner: string;
+  sections: ChangelogSectionInput[];
+};
+
+/**
+ * Build a {@link ChangelogEntry} from plain structured data.
+ *
+ * Both humans and the Data Dragon / season-refresh automations use this so
+ * auto-generated "What's New" entries share one format with the hand-authored
+ * rich-JSX entries above. The automations insert a `buildChangelogEntry({...})`
+ * call at the top of the `changelog` array.
+ */
+export function buildChangelogEntry(
+  input: ChangelogEntryInput,
+): ChangelogEntry {
+  const match = /^(\d{4}) (\d{2}) (\d{2})$/.exec(input.date);
+  if (match === null) {
+    throw new Error(
+      `Invalid changelog date ${JSON.stringify(input.date)} — expected "YYYY MM DD"`,
+    );
+  }
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) {
+    throw new Error(
+      `Invalid changelog date ${JSON.stringify(input.date)} — month/day out of range`,
+    );
+  }
+  if (input.sections.length === 0) {
+    throw new Error("Changelog entry must have at least one section");
+  }
+  return {
+    date: input.date,
+    banner: <>{input.banner}</>,
+    text: (
+      <>
+        {input.sections.map((section, index) => (
+          <ChangelogSection
+            key={index}
+            title={section.title}
+            color={section.color}
+            items={section.items}
+            className={index > 0 ? "mt-6" : ""}
+          />
+        ))}
+      </>
+    ),
+    formatted: { year, month, day },
+  };
 }

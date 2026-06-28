@@ -22,6 +22,7 @@ export type ClaudeRunInput = {
   maxTurns: number;
   seasonsFile: string;
   seasonsTestFile: string;
+  changelogFile: string;
   noDriftSentinel: string;
   driftedSentinel: string;
 };
@@ -194,6 +195,7 @@ export async function runClaude(
     workdir: input.workdir,
     seasonsFile: input.seasonsFile,
     seasonsTestFile: input.seasonsTestFile,
+    changelogFile: input.changelogFile,
     noDriftSentinel: input.noDriftSentinel,
     driftedSentinel: input.driftedSentinel,
   });

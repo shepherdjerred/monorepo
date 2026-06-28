@@ -19,9 +19,19 @@ import {
   type CDragonChampion,
 } from "./update-data-dragon-schemas.ts";
 import { getChampionName } from "twisted/dist/constants/champions.js";
+import {
+  buildPatchChangelogEntryLiteral,
+  insertChangelogEntry,
+  isMinorVersionBump,
+  minorVersionKey,
+} from "./update-changelog.ts";
 
 const ASSETS_DIR = `${import.meta.dir}/../src/data-dragon/assets`;
 const IMG_DIR = `${ASSETS_DIR}/img`;
+// scout-for-lol/packages/data/scripts → scout-for-lol/packages/frontend/...
+const CHANGELOG_FILE = `${import.meta.dir}/../../frontend/src/data/changelog.tsx`;
+// scout-for-lol/packages/data/scripts → monorepo root (for resolving prettier).
+const MONOREPO_ROOT = `${import.meta.dir}/../../../../..`;
 const BASE_URL = "https://ddragon.leagueoflegends.com";
 const BYTES_PER_MIB = 1024 * 1024;
 const MAX_LOADING_SCREEN_IMAGE_BYTES = 1 * BYTES_PER_MIB;
@@ -887,10 +897,73 @@ async function downloadAugmentImages(
   }
 }
 
+const VersionFileSchema = z.object({ version: z.string().min(1) });
+
+/**
+ * Read the version currently committed on disk, before this run overwrites it.
+ * Returns undefined on a first-ever run or an unparseable file so the changelog
+ * step simply no-ops rather than guessing.
+ */
+async function readPreviousVersion(): Promise<string | undefined> {
+  const file = Bun.file(`${ASSETS_DIR}/version.json`);
+  if (!(await file.exists())) {
+    return undefined;
+  }
+  const data: unknown = await file.json();
+  const parsed = VersionFileSchema.safeParse(data);
+  return parsed.success ? parsed.data.version : undefined;
+}
+
+/**
+ * Append a templated "What's New" entry to the frontend changelog — but only on
+ * a minor-version bump (16.13.x → 16.14.x). Micro-bumps, unchanged weekly
+ * refreshes, and first-ever runs skip it, so the auto-merged Data Dragon PR
+ * never spams the changelog.
+ */
+async function maybeAppendChangelogEntry(
+  previousVersion: string | undefined,
+  version: string,
+): Promise<void> {
+  if (previousVersion === undefined) {
+    console.log("\nℹ No previous version.json — skipping changelog entry");
+    return;
+  }
+  if (!isMinorVersionBump(previousVersion, version)) {
+    console.log(
+      `\nℹ ${previousVersion} → ${version} is not a minor bump — skipping changelog entry`,
+    );
+    return;
+  }
+
+  console.log(
+    `\n📝 Adding "What's New" entry for patch ${minorVersionKey(version)}...`,
+  );
+  const source = await Bun.file(CHANGELOG_FILE).text();
+  const updated = insertChangelogEntry(
+    source,
+    buildPatchChangelogEntryLiteral(version, new Date()),
+  );
+  await Bun.write(CHANGELOG_FILE, updated);
+
+  // The prettier gate covers changelog.tsx, so format the edit before commit or
+  // the auto-merged PR fails CI. Resolve prettier from the monorepo root.
+  const result =
+    await $`cd ${MONOREPO_ROOT} && bunx prettier --write ${CHANGELOG_FILE}`.quiet();
+  if (result.exitCode !== 0) {
+    throw new Error(
+      `prettier failed to format changelog.tsx (exit ${String(result.exitCode)}): ${result.stderr.toString()}`,
+    );
+  }
+  console.log(`✓ Added changelog entry for patch ${minorVersionKey(version)}`);
+}
+
 async function main(): Promise<void> {
   try {
     // Get version from command line or fetch latest
     const version = process.argv[2] ?? (await getLatestVersion());
+    // Capture the on-disk version BEFORE writeJsonAssets overwrites it so the
+    // changelog step can detect a minor-version bump.
+    const previousVersion = await readPreviousVersion();
     const cdVersion = getCommunityDragonVersion(version);
     const communityDragonUrl = getCommunityDragonUrl(cdVersion);
     const communityDragonPositionsUrl =
@@ -984,6 +1057,9 @@ async function main(): Promise<void> {
     console.log("\n📸 Updating snapshots...");
     await updateSnapshots();
     console.log("✅ Snapshots updated");
+
+    // Add a "What's New" entry to the marketing site on minor-version bumps.
+    await maybeAppendChangelogEntry(previousVersion, version);
   } catch (error) {
     console.error("\n❌ Error updating Data Dragon assets:");
     console.error(error);
