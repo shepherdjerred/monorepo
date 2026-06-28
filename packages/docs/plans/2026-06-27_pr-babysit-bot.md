@@ -2,9 +2,24 @@
 
 ## Status
 
-In Progress — Phase 0 (local PoC + reusable core) implemented and verified
-(typecheck + 34 unit tests + lint + workflow-bundle smoke all green); not yet
-run against a live PR (needs `CLAUDE_CODE_OAUTH_TOKEN`). Phases 1–5 not started.
+In Progress — **Phases 0–3 implemented**, all in one PR (#1334), the whole
+feature landing **dormant** behind `PR_BABYSIT_ENABLED` (default off):
+
+- **Phase 0** — local PoC + reusable core; validated by dogfooding on #1334
+  itself (the babysitter autonomously fixed two P1s + resolved its own review
+  threads). 48 unit tests.
+- **Phase 1** — durable `prBabysitWorkflow` on a dedicated `PR_BABYSIT` queue
+  (signals/query, `decideNextAction` reused, guidance blocking, budget + stuck
+  guards, `continueAsNew`); 5th worker registered.
+- **Phase 2** — `issue_comment` ingress + owner-only authz + command parser
+  (`@temporal-worker help|stop|status`) + start/signal/query routing + 👍 ack +
+  single marker status comment; gated by `PR_BABYSIT_ENABLED`.
+- **Phase 3** — tofu subscribes `pr_bot` to `issue_comment`; worker env adds
+  the kill switch (off) + handle/login + concurrency cap.
+
+Phases 4–5 are **operational, post-merge** (live test on a throwaway PR, then
+flip `PR_BABYSIT_ENABLED=true`) — not PR content. Run-time gate verified green
+across temporal (655 tests) + homelab (typecheck/lint/1P-linter/tofu fmt).
 
 ## Context
 
