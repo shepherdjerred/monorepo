@@ -169,8 +169,15 @@ const versions = {
   // renovate: datasource=helm registryUrl=https://kyverno.github.io/kyverno versioning=semver
   kyverno: "3.8.1",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
+  // PINNED to v1.14.0 — v1.14.1 sends an empty `x-amz-tagging` header on every PutObject,
+  // which Cloudflare R2 (our backup store) rejects with `501 NotImplemented` ("Header
+  // 'x-amz-tagging' with value '' not implemented"). That fails Velero's backup-metadata
+  // upload, so every backup since the v1.14.1 deploy (2026-06-21, PR #1307) is marked Failed
+  // and leaves orphaned ZFS snapshots + R2 data behind (PagerDuty #5860, #5849). The Renovate
+  // bump back to >=v1.14.1 is blocked in renovate.json until upstream R2 compat is confirmed.
+  // See packages/docs/todos/velero-aws-plugin-r2-tagging.md.
   "velero/velero-plugin-for-aws":
-    "v1.14.1@sha256:1493a0039cd5cb31004cfbb52f8a1990bc0ed81497ce72516bc76fa9e21506c1",
+    "v1.14.0@sha256:7e82f717f44e89671212e0dfce7e061321c386ea84a33bca64a671670ca6c278",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "openebs/velero-plugin":
     "3.6.0@sha256:9ea3331d891e436a7239e37e68ca4c8888500cb122be7cdc9d8400f345555c76",
