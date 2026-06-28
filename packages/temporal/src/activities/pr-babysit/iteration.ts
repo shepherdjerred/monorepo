@@ -113,7 +113,10 @@ export async function runBabysitIteration(
   // GITHUB_WEBHOOK_SECRET, POSTAL_API_KEY, etc.) to a prompt-injected process
   // that has Bash + WebFetch tools. Instead, forward only:
   //   1. Safe system vars (PATH, HOME, locale, tmp, terminal identity)
-  //   2. Claude auth (subscription OAuth token or direct API key)
+  //   2. Exactly one Claude auth credential — prefer the subscription OAuth
+  //      token (shorter-lived, revocable) and only fall back to ANTHROPIC_API_KEY
+  //      when the OAuth token is absent, so the long-lived API key is never
+  //      forwarded when a subscription token is available.
   //   3. Caller-scoped overrides (GH_TOKEN, GIT_ASKPASS, GIT_TERMINAL_PROMPT)
   const SYSTEM_ENV_ALLOWLIST: ReadonlySet<string> = new Set([
     "PATH",
@@ -136,10 +139,6 @@ export async function runBabysitIteration(
     "XDG_DATA_HOME",
     "XDG_RUNTIME_DIR",
   ]);
-  const CLAUDE_AUTH_VARS: readonly string[] = [
-    "CLAUDE_CODE_OAUTH_TOKEN",
-    "ANTHROPIC_API_KEY",
-  ];
   const env: Record<string, string> = {};
   for (const key of SYSTEM_ENV_ALLOWLIST) {
     const value = Bun.env[key];
@@ -147,10 +146,16 @@ export async function runBabysitIteration(
       env[key] = value;
     }
   }
-  for (const key of CLAUDE_AUTH_VARS) {
-    const value = Bun.env[key];
-    if (typeof value === "string") {
-      env[key] = value;
+  // Prefer the subscription OAuth token (shorter-lived) so ANTHROPIC_API_KEY
+  // is never forwarded when an OAuth token is already present. This limits
+  // the blast radius if a prompt-injected agent reads the subprocess env.
+  const oauthToken = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
+  if (typeof oauthToken === "string" && oauthToken !== "") {
+    env["CLAUDE_CODE_OAUTH_TOKEN"] = oauthToken;
+  } else {
+    const apiKey = Bun.env["ANTHROPIC_API_KEY"];
+    if (typeof apiKey === "string" && apiKey !== "") {
+      env["ANTHROPIC_API_KEY"] = apiKey;
     }
   }
   // Caller provides GH_TOKEN, GIT_ASKPASS, GIT_TERMINAL_PROMPT.
