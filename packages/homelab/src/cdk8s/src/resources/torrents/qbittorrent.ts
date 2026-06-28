@@ -156,7 +156,10 @@ export function createQBitTorrentDeployment(
       envVariables: {
         QBITTORRENT_HOST: EnvValue.fromValue("localhost"),
         QBITTORRENT_PORT: EnvValue.fromValue("8080"),
-        QBITTORRENT_USER: EnvValue.fromValue("admin"),
+        // Must match the qBittorrent WebUI username (WebUI\Username in the
+        // /config PVC), otherwise every scrape fails auth, reports
+        // qbittorrent_up=0, and bans the pod's localhost IP for repeated bad logins.
+        QBITTORRENT_USER: EnvValue.fromValue("jerred"),
         QBITTORRENT_PASS: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,
