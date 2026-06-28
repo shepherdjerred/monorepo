@@ -76,20 +76,25 @@ export function createQBitTorrentDeployment(
     localPathVolume.claim,
   );
 
-  // Config-as-code: a committed baseline qBittorrent.conf seeded into the PVC on
-  // first boot. qBittorrent rewrites its conf at runtime, so this is a
-  // seed-if-absent (not enforce): on an existing PVC the live conf is left
-  // untouched; on a fresh PVC (disaster recovery / new deploy) the committed
-  // settings are restored. The WebUI password hash is deliberately NOT in the
-  // committed file — qBittorrent generates a temporary password (logged) on a
-  // fresh start, which is then reset.
+  // Config-as-code: the committed qBittorrent.conf is the source of truth.
+  // - Fresh PVC (no live conf): seed it from the committed file.
+  // - Existing PVC: assert the live conf still MATCHES the committed declaration
+  //   (see check-config-drift.sh). Any drift on a managed key fails the init
+  //   container so the operator must reconcile by committing the change — config
+  //   drift is never silently tolerated.
+  // Only keys we declare are enforced; keys qBittorrent writes on its own
+  // (WebUI\Password_PBKDF2, Network\Cookies, ...) are ignored, so the guard never
+  // false-positives on the app's runtime churn. The WebUI password hash is
+  // deliberately NOT in the committed file — qBittorrent generates a temporary
+  // password (logged) on a fresh start, which is then reset.
   const qbittorrentConfig = new ConfigMap(chart, "qbittorrent-config", {
     metadata: {
       name: "qbittorrent-config",
     },
   });
   // addDirectory reads the committed dir synchronously at synth time and adds
-  // each file as a ConfigMap key, so the key is exactly "qBittorrent.conf".
+  // each file as a ConfigMap key: "qBittorrent.conf" (the seed) and
+  // "check-config-drift.sh" (the fail-on-drift guard). Both are mounted at /seed.
   qbittorrentConfig.addDirectory(
     path.join(CURRENT_DIRNAME, "..", "configs", "qbittorrent"),
   );
@@ -112,7 +117,20 @@ export function createQBitTorrentDeployment(
     command: [
       "/bin/sh",
       "-c",
-      "mkdir -p /config/qBittorrent && if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then cp /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf; fi && chown -R 1000:1000 /config/qBittorrent && chmod 600 /config/qBittorrent/qBittorrent.conf",
+      // `set -e` propagates the drift guard's non-zero exit so the init
+      // container (and thus the pod) fails fast when the live conf has drifted
+      // from the committed declaration.
+      [
+        "set -e",
+        "mkdir -p /config/qBittorrent",
+        "if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then",
+        "  cp /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf",
+        "else",
+        "  sh /seed/check-config-drift.sh /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf",
+        "fi",
+        "chown -R 1000:1000 /config/qBittorrent",
+        "chmod 600 /config/qBittorrent/qBittorrent.conf",
+      ].join("\n"),
     ],
     resources: {},
     securityContext: {
