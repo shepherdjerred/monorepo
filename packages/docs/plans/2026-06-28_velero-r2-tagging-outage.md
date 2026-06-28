@@ -11,8 +11,12 @@ backup health turned out to be **one root cause**, found by live investigation o
 
 - **PR #1307 (`dd66cb2d6`, 2026-06-21)** bumped `velero/velero-plugin-for-aws`
   **v1.14.0 → v1.14.1** (Renovate).
-- v1.14.1 sends an empty `x-amz-tagging` header on every `PutObject`. **Cloudflare R2
-  returns `501 NotImplemented`** (R2 has no object-tagging API); v1.14.0 did not send it.
+- The plugin always sets a (often empty) `Tagging` field on `PutObject`; v1.14.1's dependency
+  bump pulled a newer `aws-sdk-go-v2` that emits an **empty `x-amz-tagging` header on the
+  wire**, which **Cloudflare R2 rejects with `501 NotImplemented`** (R2 has no object-tagging
+  API). v1.14.0's older SDK didn't emit the empty header. (v1.14.2 is _not_ a fix — same
+  unconditional `Tagging`; the upstream guard `velero-io/velero-plugin-for-aws#299` is
+  main-only, unreleased.)
 - Result: **every backup since `daily-backup-20260622` is `Failed`.** Last good backup is
   `weekly-backup-20260615` (13 days stale at time of discovery). The ZFS data blob still
   uploads (openebs plugin, separate uploader), but Velero's metadata tarball write fails →

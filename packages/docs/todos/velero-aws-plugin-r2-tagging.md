@@ -13,9 +13,11 @@ source_marker: false
 `packages/homelab/src/cdk8s/src/versions.ts`, with a Renovate `allowedVersions: "<1.14.1"`
 rule in `renovate.json` blocking the auto-bump.
 
-**Why:** v1.14.1 sends an empty `x-amz-tagging` header on every `PutObject`. Cloudflare R2
-(our Velero backup store, bucket `homelab`) does not implement object tagging and returns
-`501 NotImplemented: Header 'x-amz-tagging' with value '' not implemented`. This fails
+**Why:** the plugin always sets a `Tagging` field on `PutObject` (often empty). v1.14.1's
+dependency bump pulled a newer `aws-sdk-go-v2` that emits an **empty `x-amz-tagging` header
+on the wire**; Cloudflare R2 (our Velero backup store, bucket `homelab`) does not implement
+object tagging and returns `501 NotImplemented: Header 'x-amz-tagging' with value '' not
+implemented`. (v1.14.0's older SDK didn't emit the empty header, so it works.) This fails
 Velero's backup-metadata upload, so **every backup after the v1.14.1 deploy
 (PR #1307, `dd66cb2d6`, 2026-06-21) was marked `Failed`** — last good backup
 `weekly-backup-20260615`. Because the metadata tarball was never written, expiry-time
