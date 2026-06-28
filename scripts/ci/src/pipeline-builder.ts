@@ -40,6 +40,7 @@ import {
 } from "./steps/helm.ts";
 import {
   homelabTofuApplyAllStep,
+  homelabTofuApplyCloudflareStep,
   homelabTofuApplyGithubStep,
   homelabTofuPlanAllStep,
 } from "./steps/tofu.ts";
@@ -402,6 +403,14 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
           app: "apps",
         }),
       );
+
+      // Cloudflare DNS apply runs AFTER ArgoCD sync to guarantee the Cloudflare
+      // tunnel operator finalizer has run (i.e. the tunnel ingress route is
+      // removed) before any DNS records pointing at that tunnel are deleted.
+      // See tofu.ts homelabTofuApplyCloudflareStep for full rationale.
+      if (affected.buildAll || affected.homelabChanged) {
+        steps.push(homelabTofuApplyCloudflareStep("deploy-argocd"));
+      }
     }
 
     // --- Version Commit-Back ---
@@ -431,6 +440,10 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
         // exists; health-wait soft-fail semantics are preserved inside the
         // Dagger function.
         summaryDeps.push("deploy-argocd");
+        // Also wait for the cloudflare DNS apply (which runs after deploy-argocd).
+        if (affected.buildAll || affected.homelabChanged) {
+          summaryDeps.push("tofu-apply-cloudflare");
+        }
       }
       steps.push(buildSummaryStep(summaryDeps));
     }

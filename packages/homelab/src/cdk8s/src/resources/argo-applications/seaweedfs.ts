@@ -47,11 +47,10 @@ export function createSeaweedfsApp(chart: Chart) {
   //   - Tofu backends (homelab/src/tofu/*/backend.tf) use seaweedfs-s3.tailnet-1a49.ts.net
   //
   // Deployment note: removing this TunnelBinding triggers the Cloudflare tunnel operator's
-  // finalizer to remove the ingress route from the shared tunnel. The Tofu cloudflare stack
-  // (which removes the seaweedfs.sjer.red DNS record) is applied in the same CI run as this
-  // ArgoCD sync. During the brief window between DNS removal and tunnel-route removal, the
-  // tunnel UUID is technically reachable directly — but the public DNS hostname is already
-  // gone, so this window is invisible to clients using standard name resolution.
+  // finalizer to remove the ingress route from the shared tunnel. The CI pipeline sequences
+  // the Cloudflare Tofu apply (which removes the seaweedfs.sjer.red DNS record) to run AFTER
+  // this ArgoCD sync completes, ensuring the tunnel route is fully pruned before the DNS
+  // record is deleted. See scripts/ci/src/steps/tofu.ts (homelabTofuApplyCloudflareStep).
   createIngress(chart, "seaweedfs-s3-ingress", {
     namespace: "seaweedfs",
     service: "seaweedfs-s3",

@@ -38,14 +38,25 @@ function tofuSecretFlags(stacks: readonly string[]): string {
 }
 
 /**
- * Apply non-github Tofu stacks in parallel from one pod via `tofu-apply-all`.
- * Each stack writes to its own S3 backend, so concurrent applies are safe.
- * The github stack stays in its own (non-retrying) step — see
+ * Apply non-github, non-cloudflare Tofu stacks in parallel from one pod via
+ * `tofu-apply-all`. Each stack writes to its own S3 backend, so concurrent
+ * applies are safe.
+ *
+ * `github` stays in its own (non-retrying) step — see
  * {@link homelabTofuApplyGithubStep} — because github API mutations are not
- * always idempotent on partial failure, so the original `retry: {}` policy
- * for that stack is preserved deliberately rather than swept into the bundle.
+ * always idempotent on partial failure.
+ *
+ * `cloudflare` stays in its own step — see {@link homelabTofuApplyCloudflareStep}
+ * — because Cloudflare DNS changes that remove hostname→tunnel routes must
+ * happen AFTER the ArgoCD sync has confirmed the Cloudflare tunnel operator
+ * finalizer ran (i.e. the tunnel ingress route is actually gone). Applying
+ * cloudflare DNS changes in the same parallel bundle as the cdk8s sync creates
+ * a race where the DNS record can be deleted before the tunnel route is pruned,
+ * leaving the S3 API reachable via the raw tunnel UUID during that window.
  */
-const TOFU_BUNDLE_STACKS = TOFU_STACKS.filter((s) => s !== "github");
+const TOFU_BUNDLE_STACKS = TOFU_STACKS.filter(
+  (s) => s !== "github" && s !== "cloudflare",
+);
 
 export function homelabTofuApplyAllStep(homelabPkgKey?: string): BuildkiteStep {
   const dependsOn = homelabPkgKey
@@ -70,6 +81,39 @@ export function homelabTofuApplyAllStep(homelabPkgKey?: string): BuildkiteStep {
       k8sPlugin({
         cpu: "500m",
         memory: "1Gi",
+        secrets: ["buildkite-argocd-token"],
+      }),
+    ],
+  };
+}
+
+/**
+ * Cloudflare DNS apply runs in its own step, sequenced AFTER the ArgoCD sync
+ * step that confirms tunnel operator finalizers have run. This prevents a race
+ * where a DNS record pointing at a Cloudflare tunnel hostname is deleted before
+ * the tunnel ingress route is actually pruned, which would leave the route
+ * reachable via the raw tunnel UUID during the window between DNS removal and
+ * tunnel route removal.
+ */
+export function homelabTofuApplyCloudflareStep(
+  argocdKey: string,
+): BuildkiteStep {
+  return {
+    label: `:terraform: Apply ${TOFU_STACK_LABELS["cloudflare"] ?? "Cloudflare DNS"}`,
+    key: "tofu-apply-cloudflare",
+    if: MAIN_ONLY,
+    depends_on: argocdKey,
+    command:
+      `${DAGGER_CALL} tofu-apply-all --source ${REPO_GIT_REF} ${tofuSecretFlags(["cloudflare"])}` +
+      DRYRUN_FLAG,
+    timeout_in_minutes: 10,
+    priority: 1,
+    retry: RETRY,
+    env: DAGGER_ENV,
+    plugins: [
+      k8sPlugin({
+        cpu: "250m",
+        memory: "512Mi",
         secrets: ["buildkite-argocd-token"],
       }),
     ],
