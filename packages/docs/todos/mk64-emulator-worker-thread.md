@@ -1,7 +1,7 @@
 ---
 id: mk64-emulator-worker-thread
 status: waiting-on-verification
-origin: packages/docs/plans/2026-06-19_mk64-stream-backpressure.md
+origin: packages/docs/archive/completed/2026-06-19_mk64-stream-backpressure.md
 source_marker: false
 ---
 

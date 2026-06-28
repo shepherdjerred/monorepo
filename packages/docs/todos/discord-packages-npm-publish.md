@@ -1,6 +1,6 @@
 ---
 id: discord-packages-npm-publish
-status: blocked
+status: active
 origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
@@ -21,11 +21,12 @@ discord-plays + streambot work:
    lifecycle machines (`createRawGoLiveMachine`, `createDesiredStreamMachine`)
    that sit above discord-video-stream.
 
-## Why it's blocked
+## Status
 
-`discord-stream-lifecycle` is **not on `main`** — its source lives on branch
-`feature/stream-lifecycle-xstate` (only a stale `node_modules/` directory exists
-in the working tree on main). It must land on main before it can be published.
+Unblocked as of 2026-06-28 — `discord-stream-lifecycle` **is now on `main`**
+(`packages/discord-stream-lifecycle`, shipped in PR #1146 and consumed by streambot).
+Both packages are still `private: true` and unpublished, so this is now plain `active`
+publish work, not blocked.
 
 ## Done when
 

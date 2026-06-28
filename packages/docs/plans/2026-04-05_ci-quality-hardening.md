@@ -2,13 +2,10 @@
 
 ## Status
 
-Partially Complete. Knip and Trivy were hardened in
-`packages/docs/plans/2026-06-13_strict-quality-checks.md`; Semgrep remains
-soft-failing and should be handled separately.
-
-> **Stale-content note (2026-06-13):** Knip and Trivy are no longer
-> soft-failing after `2026-06-13_strict-quality-checks.md`. The remaining
-> actionable portion of this plan is Semgrep.
+Partially Complete. Findings have been triaged (`.trivyignore` is minimal), but on `main` all three —
+knip, Trivy, **and** Semgrep — are still `softFail: true` in `scripts/ci/src/steps/quality.ts` (lines
+73, 84, 139). None has been promoted to a hard failure; the earlier "Knip and Trivy hardened" note was
+inaccurate (verified 2026-06-28). Remaining work: decide which of the three should hard-fail and flip them.
 
 ## Context
 

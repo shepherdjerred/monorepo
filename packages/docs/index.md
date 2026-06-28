@@ -28,6 +28,7 @@ AI-maintained knowledge base for the monorepo.
 - [Velero Orphan-Snapshot Prevention](decisions/2026-05-05_velero-orphan-snapshot-prevention.md) - Why we chose detection + manual remediation over self-healing for Velero orphan ZFS snapshots and R2 objects
 - [ZFS Fragmentation Acceptance](decisions/2026-05-05_zfs-fragmentation-acceptance.md) - Why we raised the fragmentation alert thresholds on SSD pools instead of mitigating
 - [Scout Arena Pre-match Scrubbed Players](decisions/2026-06-07_scout-arena-prematch-scrubbed-players.md) - Privacy-scrubbed players have no usable identity in Spectator-V5, so they're dropped from the pre-match image; accepted data loss
+- [Dagger Engine GC Semantics & PVC-Drift Hardening](decisions/2026-06-07_dagger-gc-and-pvc-drift.md) - Why the engine GC thresholds and PVC sizing were chosen to prevent cache-disk drift
 
 ## Plans
 
@@ -59,6 +60,10 @@ General issue tracking — deferred work, acceptance-testing gaps, post-merge ve
 - [Homelab Health Audit (2026-05-08)](guides/2026-05-08_homelab-health-audit.md) - Current cluster health audit snapshot
 - [Homelab Issue Investigation (2026-05-08)](guides/2026-05-08_homelab-issue-investigation.md) - Root-cause deep dive on every Yellow row, PD incident, and Bugsink issue from the audit
 - [Temporal Post-Deploy Quality Checklist](guides/2026-05-22_temporal-post-deploy-quality-checklist.md) - Standard verification steps to run after a Temporal deploy
+- [Tailscale ACLs Runbook](guides/2026-06-06_tailscale-acls-runbook.md) - Enablement runbook for Tailscale ACLs (tofu-managed policy)
+- [Dagger Engine Cache PVC Resize](guides/2026-06-07_dagger-engine-pvc-resize.md) - Living runbook for resizing the Dagger engine cache PVC
+- [Discord Plays Pokémon Audio Research](guides/2026-06-13_dpp-audio-research.md) - Investigation notes on the DPP audio pipeline
+- [Streambot Autonomous Perf-Debug Runbook](guides/2026-06-14_streambot-autonomous-perf-debug-runbook.md) - End-to-end perf-debugging loop for streambot
 - [\*arr Stack Subtitle Strategy](guides/2026-06-27_arr-stack-subtitle-strategy.md) - Bazarr providers, forced/EN/zh targets, scoring, bilingual, Whisper & Lingarr — cited research
 
 ## Archive
@@ -67,10 +72,10 @@ Historical docs preserved for reference. These are no longer actively maintained
 
 - [`archive/bazel/`](archive/bazel/) - 12 docs from the Bazel era
 - [`archive/changelogs/`](archive/changelogs/) - 1 historical changelog
-- [`archive/completed/`](archive/completed/) - 87 plans whose work has shipped (preserves design context)
+- [`archive/completed/`](archive/completed/) - 177 plans whose work has shipped (preserves design context)
 - [`archive/dagger-migration/`](archive/dagger-migration/) - 18 Dagger migration plans and audits
 - [`archive/homelab-audits/`](archive/homelab-audits/) - 9 superseded homelab health audit snapshots
 - [`archive/on-hold/`](archive/on-hold/) - 4 on-hold Sentinel architecture and implementation docs
 - [`archive/scout-followups/`](archive/scout-followups/) - 1 time-boxed Scout follow-up checklist
 - [`archive/stale/`](archive/stale/) - 8 stale operational snapshots and superseded plans
-- [`archive/superseded/`](archive/superseded/) - 9 plans/guides replaced by newer versions
+- [`archive/superseded/`](archive/superseded/) - 10 plans/guides replaced by newer versions

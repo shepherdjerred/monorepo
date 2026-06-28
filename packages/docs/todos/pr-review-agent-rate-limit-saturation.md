@@ -1,7 +1,7 @@
 ---
 id: pr-review-agent-rate-limit-saturation
 status: active
-origin: packages/docs/plans/2026-05-30_temporal-workflow-remediation.md
+origin: packages/docs/archive/completed/2026-05-30_temporal-workflow-remediation.md
 source_marker: false
 ---
 
