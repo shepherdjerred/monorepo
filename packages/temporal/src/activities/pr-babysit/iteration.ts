@@ -136,7 +136,7 @@ export async function runBabysitIteration(
     "XDG_DATA_HOME",
     "XDG_RUNTIME_DIR",
   ]);
-  const CLAUDE_AUTH_VARS: ReadonlyArray<string> = [
+  const CLAUDE_AUTH_VARS: readonly string[] = [
     "CLAUDE_CODE_OAUTH_TOKEN",
     "ANTHROPIC_API_KEY",
   ];
