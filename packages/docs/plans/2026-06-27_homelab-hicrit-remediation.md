@@ -1,6 +1,11 @@
 # Homelab HIGH/CRITICAL security remediation (2026-06-27)
 
-## Status: Complete (PRs open)
+## Status: In Progress
+
+Remediation code is written and verified, but the plan stays **active** (in `plans/`) until both PRs
+merge and post-deploy verification passes — so future sessions still see the remaining merge and
+verification steps. Once PRs #1336 and #1338 are merged and post-deploy checks are green, flip this to
+`Complete` and `git mv` the doc to `packages/docs/archive/completed/`.
 
 Remediation of the live HIGH/CRITICAL findings from the 2026-06-27 deep security audit. Detailed
 findings (with exploit chains) are kept **local only** since this repo is public; this doc records the
