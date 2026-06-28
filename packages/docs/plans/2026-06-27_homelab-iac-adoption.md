@@ -5,8 +5,9 @@
 Complete (PR open, pending merge)
 
 All four subsystems were built, imported from live state to a **zero-change**
-`tofu plan`, and wired into CI. The new secrets (`ARR_API_KEYS`,
-`PAGERDUTY_TOKEN`) are stored in the `Buildkite CI Secrets` 1Password item and
+`tofu plan`, and wired into CI. The new secrets (`BUILDKITE_API_TOKEN`,
+`PAGERDUTY_TOKEN`, `RADARR_API_KEY`, `SONARR_API_KEY`, `PROWLARR_API_KEY`,
+`QBITTORRENT_PASSWORD`, `PRIVATEHD_PASSWORD`, and `PRIVATEHD_PID`) are stored in the `Buildkite CI Secrets` 1Password item and
 confirmed synced into the `buildkite-ci-secrets` k8s secret, so the post-merge
 `tofu-apply-all` is a no-op. See the Session Log at the bottom for specifics.
 
@@ -34,14 +35,14 @@ Several homelab subsystems are configured by hand in web GUIs, so settings aren'
 
 Central CI bundle = `Buildkite CI Secrets` (`rzk3lawpk4yspyyu5rxlz44ssi`, vault _Homelab (Kubernetes)_).
 
-| Need                                | Status                                                                                                                                                                          |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Buildkite API token (provider)      | ✅ `Buildkite CI Secrets` → `BUILDKITE_API_TOKEN` (verify write scope)                                                                                                          |
-| Buildkite agent token (import)      | ✅ `Buildkite Agent Token` → `BUILDKITE_AGENT_TOKEN`                                                                                                                            |
-| PagerDuty REST API token (provider) | ❌ MISSING — owner must mint (PD → Integrations → API Access Keys, read/write) → add to CI bundle as `PAGERDUTY_TOKEN (CI bundle field; distinct 1P item from the routing key)` |
-| PagerDuty Events-v2 routing key     | ✅ `AlertManager secrets` → `PAGERDUTY_TOKEN` (import integration so it's unchanged)                                                                                            |
-| \*arr API keys                      | ✅ embedded in `Recyclarr` → `recyclarr.yaml`                                                                                                                                   |
-| qBittorrent                         | ✅ no new cred                                                                                                                                                                  |
+| Need                                | Status                                                                                                                                                                                                                       |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Buildkite API token (provider)      | ✅ `Buildkite CI Secrets` → `BUILDKITE_API_TOKEN` (verify write scope)                                                                                                                                                       |
+| Buildkite agent token (import)      | ✅ `Buildkite Agent Token` → `BUILDKITE_AGENT_TOKEN`                                                                                                                                                                         |
+| PagerDuty REST API token (provider) | ❌ MISSING — owner must mint (PD → Integrations → API Access Keys, read/write) → add to CI bundle as `PAGERDUTY_TOKEN (CI bundle field; distinct 1P item from the routing key)`                                              |
+| PagerDuty Events-v2 routing key     | ✅ `AlertManager secrets` → `PAGERDUTY_TOKEN` (import integration so it's unchanged)                                                                                                                                         |
+| \*arr API keys                      | ✅ source values in `Recyclarr` → `recyclarr.yaml`; copied into the CI bundle as six discrete fields (`RADARR_API_KEY`, `SONARR_API_KEY`, `PROWLARR_API_KEY`, `QBITTORRENT_PASSWORD`, `PRIVATEHD_PASSWORD`, `PRIVATEHD_PID`) |
+| qBittorrent                         | ✅ no new cred                                                                                                                                                                                                               |
 
 ## Conventions reused
 
