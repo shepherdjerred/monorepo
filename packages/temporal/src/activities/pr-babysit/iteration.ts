@@ -108,12 +108,52 @@ export async function runBabysitIteration(
     workdir: args.workdir,
   });
 
+  // Build a minimal environment for the Claude subprocess. Passing the full
+  // worker env would expose deployment secrets (GITHUB_APP_PRIVATE_KEY,
+  // GITHUB_WEBHOOK_SECRET, POSTAL_API_KEY, etc.) to a prompt-injected process
+  // that has Bash + WebFetch tools. Instead, forward only:
+  //   1. Safe system vars (PATH, HOME, locale, tmp, terminal identity)
+  //   2. Claude auth (subscription OAuth token or direct API key)
+  //   3. Caller-scoped overrides (GH_TOKEN, GIT_ASKPASS, GIT_TERMINAL_PROMPT)
+  const SYSTEM_ENV_ALLOWLIST: ReadonlySet<string> = new Set([
+    "PATH",
+    "HOME",
+    "USER",
+    "USERNAME",
+    "LOGNAME",
+    "SHELL",
+    "TMPDIR",
+    "TEMP",
+    "TMP",
+    "LANG",
+    "LC_ALL",
+    "LC_CTYPE",
+    "TERM",
+    "TERM_PROGRAM",
+    "COLORTERM",
+    "XDG_CACHE_HOME",
+    "XDG_CONFIG_HOME",
+    "XDG_DATA_HOME",
+    "XDG_RUNTIME_DIR",
+  ]);
+  const CLAUDE_AUTH_VARS: ReadonlyArray<string> = [
+    "CLAUDE_CODE_OAUTH_TOKEN",
+    "ANTHROPIC_API_KEY",
+  ];
   const env: Record<string, string> = {};
-  for (const [key, value] of Object.entries(Bun.env)) {
+  for (const key of SYSTEM_ENV_ALLOWLIST) {
+    const value = Bun.env[key];
     if (typeof value === "string") {
       env[key] = value;
     }
   }
+  for (const key of CLAUDE_AUTH_VARS) {
+    const value = Bun.env[key];
+    if (typeof value === "string") {
+      env[key] = value;
+    }
+  }
+  // Caller provides GH_TOKEN, GIT_ASKPASS, GIT_TERMINAL_PROMPT.
   Object.assign(env, args.env ?? {});
   const result = await runTrackedAgentSubprocess(
     {
