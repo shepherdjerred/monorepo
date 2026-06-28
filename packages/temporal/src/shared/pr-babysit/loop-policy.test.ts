@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   awaitingCiRegistration,
+  awaitingRequiredChecks,
   decideNextAction,
   onlyPendingCi,
   type BudgetState,
@@ -21,6 +22,7 @@ const GREEN_CI: CiVerdict = {
   pending: [],
   ignoredSoft: [],
   noChecksReported: false,
+  missingRequired: [],
 };
 const FAILING_CI: CiVerdict = {
   green: false,
@@ -28,6 +30,7 @@ const FAILING_CI: CiVerdict = {
   pending: [],
   ignoredSoft: [],
   noChecksReported: false,
+  missingRequired: [],
 };
 const PENDING_CI: CiVerdict = {
   green: false,
@@ -35,6 +38,7 @@ const PENDING_CI: CiVerdict = {
   pending: ["buildkite/pr"],
   ignoredSoft: [],
   noChecksReported: false,
+  missingRequired: [],
 };
 const NO_CHECKS_CI: CiVerdict = {
   green: false,
@@ -42,6 +46,15 @@ const NO_CHECKS_CI: CiVerdict = {
   pending: [],
   ignoredSoft: [],
   noChecksReported: true,
+  missingRequired: [],
+};
+const MISSING_REQUIRED_CI: CiVerdict = {
+  green: false,
+  failing: [],
+  pending: [],
+  ignoredSoft: [],
+  noChecksReported: false,
+  missingRequired: ["buildkite/monorepo/pr/white-check-mark-ci-complete"],
 };
 const CLEAN: ConflictVerdict = { clean: true, paths: [], baseRef: "main" };
 const RESOLVED: ReviewVerdict = {
@@ -183,6 +196,7 @@ describe("onlyPendingCi", () => {
             pending: ["y"],
             ignoredSoft: [],
             noChecksReported: false,
+            missingRequired: [],
           },
         }),
       ),
@@ -208,9 +222,29 @@ describe("awaitingCiRegistration", () => {
             pending: [],
             ignoredSoft: [],
             noChecksReported: true,
+            missingRequired: [],
           },
         }),
       ),
     ).toBe(false);
+  });
+});
+
+describe("awaitingRequiredChecks", () => {
+  test("true when a required check has not registered/passed and nothing else is actionable", () => {
+    expect(awaitingRequiredChecks(verdict({ ci: MISSING_REQUIRED_CI }))).toBe(
+      true,
+    );
+  });
+  test("false when no required checks are missing", () => {
+    expect(awaitingRequiredChecks(verdict({ ci: GREEN_CI }))).toBe(false);
+  });
+  test("decideNextAction waits (does not act) on a missing required check", () => {
+    const d = decideNextAction(
+      verdict({ ci: MISSING_REQUIRED_CI }),
+      budget,
+      freshState,
+    );
+    expect(d.kind).toBe("wait");
   });
 });

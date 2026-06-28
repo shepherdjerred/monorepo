@@ -97,6 +97,13 @@ export const CiVerdictSchema = z.object({
    * not started", NOT "everything passed", so such a verdict is never `green`.
    */
   noChecksReported: z.boolean(),
+  /**
+   * Required status-check contexts (per the repo's branch ruleset) that are not
+   * yet present-and-passing. Guards "partial checks pass early": a fast check
+   * passing before the slow required build-completion check registers must NOT
+   * read as green. A non-empty list keeps `green` false.
+   */
+  missingRequired: z.array(z.string()),
 });
 export type CiVerdict = z.infer<typeof CiVerdictSchema>;
 

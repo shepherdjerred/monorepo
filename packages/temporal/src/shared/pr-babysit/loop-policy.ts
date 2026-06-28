@@ -72,6 +72,22 @@ export function awaitingCiRegistration(verdict: BabysitVerdict): boolean {
   );
 }
 
+/**
+ * True when CI is not green only because a REQUIRED check has not registered /
+ * passed yet (e.g. a fast check passed before the slow required build-completion
+ * check appeared) and nothing else is actionable. Wait for the required checks
+ * rather than declare green or burn an agent turn — there is nothing to fix, the
+ * build just is not complete.
+ */
+export function awaitingRequiredChecks(verdict: BabysitVerdict): boolean {
+  return (
+    verdict.ci.missingRequired.length > 0 &&
+    verdict.ci.failing.length === 0 &&
+    verdict.conflicts.clean &&
+    verdict.reviews.allResolved
+  );
+}
+
 export function decideNextAction(
   verdict: BabysitVerdict,
   budget: PrBabysitBudget,
@@ -109,6 +125,11 @@ export function decideNextAction(
   // rather than treat an empty check set as green.
   if (awaitingCiRegistration(verdict)) {
     return { kind: "wait", reason: "ci not reported yet" };
+  }
+  // Required checks not present-and-passing yet (slow jobs still registering):
+  // wait rather than burn an agent turn — there is nothing to fix.
+  if (awaitingRequiredChecks(verdict)) {
+    return { kind: "wait", reason: "required checks not green yet" };
   }
   // Stuck guard: same failure tried too many times.
   const signature = failureSignature(verdict);

@@ -45,14 +45,25 @@ export type NormalizedCheck = {
  * `noChecksReported` and is never green, so the DoD can't read "done" before CI
  * has started. A `cancel` bucket counts as failing (not green) — a cancelled
  * required check is not a pass.
+ *
+ * `requiredContexts` are the repo-ruleset required check contexts the babysitter
+ * gates on (typically just the build-completion aggregate — conflict and review
+ * required contexts are tracked separately). Any required context not present
+ * AND passing lands in `missingRequired` and keeps `green` false, so a fast
+ * check passing before the slow required jobs register does not read as green.
  */
-export function classifyChecks(checks: readonly NormalizedCheck[]): CiVerdict {
+export function classifyChecks(
+  checks: readonly NormalizedCheck[],
+  requiredContexts: readonly string[] = [],
+): CiVerdict {
   const failing: string[] = [];
   const pending: string[] = [];
   const ignoredSoft: string[] = [];
+  const passing = new Set<string>();
   for (const check of checks) {
     const bucket = check.bucket.toLowerCase();
     if (bucket === "pass" || bucket === "skipping") {
+      passing.add(check.name);
       continue;
     }
     if (bucket === "pending") {
@@ -66,13 +77,19 @@ export function classifyChecks(checks: readonly NormalizedCheck[]): CiVerdict {
       failing.push(check.name);
     }
   }
+  const missingRequired = requiredContexts.filter((ctx) => !passing.has(ctx));
   const noChecksReported = checks.length === 0;
   return {
-    green: !noChecksReported && failing.length === 0 && pending.length === 0,
+    green:
+      !noChecksReported &&
+      failing.length === 0 &&
+      pending.length === 0 &&
+      missingRequired.length === 0,
     failing: failing.toSorted(),
     pending: pending.toSorted(),
     ignoredSoft: ignoredSoft.toSorted(),
     noChecksReported,
+    missingRequired: [...missingRequired].toSorted(),
   };
 }
 

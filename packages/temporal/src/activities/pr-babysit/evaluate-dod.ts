@@ -19,7 +19,24 @@ import {
   type ReviewSeverity,
 } from "#shared/pr-babysit/types.ts";
 import { capture, run } from "./exec.ts";
-import { getChecks, getPrSnapshot, getReviewThreads } from "./github.ts";
+import {
+  getChecks,
+  getPrSnapshot,
+  getRequiredCheckContexts,
+  getReviewThreads,
+} from "./github.ts";
+
+/**
+ * Required contexts the babysitter does NOT fold into the CI gate because it
+ * tracks them through dedicated signals: merge-conflict via the local
+ * merge-tree, and the Greptile review gate via review-thread resolution. A
+ * required context matching any of these is excluded; the remainder (e.g. the
+ * build-completion aggregate) must be present-and-passing for `ci.green`.
+ */
+function isBabysitterTrackedContext(context: string): boolean {
+  const lower = context.toLowerCase();
+  return lower.includes("merge-conflict") || lower.includes("greptile");
+}
 
 export type EvaluateBabysitDoDInput = {
   owner: string;
@@ -102,6 +119,7 @@ export async function evaluateBabysitDoD(
       pending: [],
       ignoredSoft: [],
       noChecksReported: false,
+      missingRequired: [],
     };
     return {
       headSha: snapshot.headSha,
@@ -114,7 +132,7 @@ export async function evaluateBabysitDoD(
     };
   }
 
-  const [checks, threads, conflicts] = await Promise.all([
+  const [checks, threads, conflicts, requiredContexts] = await Promise.all([
     getChecks(ghCtx),
     getReviewThreads(ghCtx),
     checkConflictsInWorkdir({
@@ -122,9 +140,18 @@ export async function evaluateBabysitDoD(
       baseRef: input.baseRef,
       ...(input.env === undefined ? {} : { env: input.env }),
     }),
+    getRequiredCheckContexts({
+      owner: input.owner,
+      repo: input.repo,
+      baseRef: input.baseRef,
+      ...(input.env === undefined ? {} : { env: input.env }),
+    }),
   ]);
 
-  const ci = classifyChecks(checks);
+  const ci = classifyChecks(
+    checks,
+    requiredContexts.filter((c) => !isBabysitterTrackedContext(c)),
+  );
   const reviews = classifyReviewThreads(threads, input.blockingSeverity);
   const dodMet = computeDodMet(ci, conflicts, reviews, snapshot.prState);
 

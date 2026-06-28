@@ -215,3 +215,54 @@ export async function getReviewThreads(
     };
   });
 }
+
+const BranchRuleSchema = z.object({
+  type: z.string(),
+  parameters: z
+    .object({
+      required_status_checks: z
+        .array(z.object({ context: z.string() }))
+        .optional(),
+    })
+    .nullish(),
+});
+
+/**
+ * Required status-check contexts for the base branch, read from the repo's
+ * branch ruleset (`/rules/branches/<branch>`). The base branch is the merge
+ * target, so its required contexts define what "CI complete" means. Returns []
+ * when the repo has no ruleset / required checks (the babysitter then falls back
+ * to its other signals rather than failing).
+ */
+export async function getRequiredCheckContexts(ctx: {
+  owner: string;
+  repo: string;
+  baseRef: string;
+  env?: Record<string, string>;
+}): Promise<string[]> {
+  const result = await capture(
+    [
+      "gh",
+      "api",
+      `repos/${ctx.owner}/${ctx.repo}/rules/branches/${ctx.baseRef}`,
+    ],
+    ctx.env === undefined ? {} : { env: ctx.env },
+  );
+  if (result.exitCode !== 0) {
+    return [];
+  }
+  const rules = z.array(BranchRuleSchema).safeParse(JSON.parse(result.stdout));
+  if (!rules.success) {
+    return [];
+  }
+  const contexts = new Set<string>();
+  for (const rule of rules.data) {
+    if (rule.type !== "required_status_checks") {
+      continue;
+    }
+    for (const check of rule.parameters?.required_status_checks ?? []) {
+      contexts.add(check.context);
+    }
+  }
+  return [...contexts].toSorted();
+}

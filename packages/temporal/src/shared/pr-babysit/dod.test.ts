@@ -103,6 +103,30 @@ describe("classifyChecks", () => {
     expect(v.failing).toEqual([]);
     expect(v.pending).toEqual([]);
   });
+
+  test("required context present + passing → green", () => {
+    const v = classifyChecks(checks([["ci-complete", "pass"]]), [
+      "ci-complete",
+    ]);
+    expect(v.green).toBe(true);
+    expect(v.missingRequired).toEqual([]);
+  });
+
+  test("required context not yet registered → not green (partial checks)", () => {
+    // A fast check passed, but the required build-completion check has not
+    // registered yet — must NOT read green.
+    const v = classifyChecks(checks([["fast", "pass"]]), ["ci-complete"]);
+    expect(v.green).toBe(false);
+    expect(v.missingRequired).toEqual(["ci-complete"]);
+  });
+
+  test("required context pending → not green", () => {
+    const v = classifyChecks(checks([["ci-complete", "pending"]]), [
+      "ci-complete",
+    ]);
+    expect(v.green).toBe(false);
+    expect(v.missingRequired).toEqual(["ci-complete"]);
+  });
 });
 
 describe("parseReviewSeverity", () => {
@@ -193,6 +217,7 @@ describe("computeDodMet", () => {
           pending: [],
           ignoredSoft: [],
           noChecksReported: false,
+          missingRequired: [],
         },
         clean,
         { allResolved: true, blocking: [], advisory: [] },
@@ -209,6 +234,7 @@ describe("computeDodMet", () => {
           pending: [],
           ignoredSoft: [],
           noChecksReported: false,
+          missingRequired: [],
         },
         clean,
         { allResolved: true, blocking: [], advisory: [] },
@@ -225,6 +251,7 @@ describe("computeDodMet", () => {
           pending: [],
           ignoredSoft: [],
           noChecksReported: false,
+          missingRequired: [],
         },
         clean,
         { allResolved: true, blocking: [], advisory: [] },
