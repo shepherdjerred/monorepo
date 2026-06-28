@@ -29,13 +29,21 @@ Error uploading log file ... PutObject torvalds/backups/.../...-logs.gz:
 StatusCode: 501 ... NotImplemented: Header 'x-amz-tagging' with value '' not implemented
 ```
 
+## Upstream status
+
+- The targeted fix is **[velero-io/velero-plugin-for-aws#299](https://github.com/velero-io/velero-plugin-for-aws/pull/299)**
+  "Only set PutObject Tagging when tags are configured" — **merged to `main` 2026-06-15**.
+  Related: #303 (closed), #304 (open).
+- **It is NOT in the latest release `v1.14.2` (2026-06-26)** — that release is only
+  CVE dependency bumps + KMS support (backports #302/#305/#306), so v1.14.2 is **unproven on
+  R2** and may still 501. Do not assume v1.14.2 fixes this without testing.
+
 ## Definition of done (unpin criteria)
 
-1. A `velero-plugin-for-aws` release that **omits `x-amz-tagging` on PutObject when there
-   are no tags**, or otherwise restores S3-compat with Cloudflare R2. Track upstream:
-   <https://github.com/vmware-tanzu/velero-plugin-for-aws/issues> (and the issue we file).
-2. Validate the candidate (ideally against R2, e.g. a throwaway bucket / `dagger`-style
-   check) — confirm a `PutObject` succeeds without the 501.
+1. A `velero-plugin-for-aws` release that **contains #299** (or otherwise restores S3-compat
+   with Cloudflare R2). Watch for #299 being backported to a `1.14.x` release or a `1.15.x`.
+2. Validate the candidate **against R2** (throwaway bucket / `dagger`-style check) — confirm a
+   `PutObject` succeeds without the 501. (v1.14.2 may be worth testing directly.)
 3. Bump `versions.ts` to the fixed version, remove the `renovate.json` `allowedVersions`
    rule, redeploy, and confirm the next 6hourly backup reaches `Completed` with a tarball
    under `torvalds/backups/backups/<name>/`.
