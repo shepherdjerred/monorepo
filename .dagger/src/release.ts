@@ -768,11 +768,15 @@ export function deploySiteHelper(
     container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
   }
 
-  container = container.withExec(["bun", "install", "--frozen-lockfile"]);
-
-  // Build workspace deps that need compilation (e.g. astro-opengraph-images).
-  // Skip source-only library deps that consumers resolve via package exports
-  // directly — they don't ship a dist/.
+  // Build workspace deps that need compilation (e.g. astro-opengraph-images,
+  // llm-models) BEFORE installing the site itself. Nested-workspace sites
+  // (e.g. scout-for-lol) COPY their file: deps into node_modules at install
+  // time instead of symlinking, so a dep's dist/ must already exist on disk
+  // when the site is installed — otherwise the copied dep is dist-less and the
+  // site's bundler fails with "Failed to resolve entry for package ...".
+  // Symlinked sites see the dist/ regardless of order, so building first is
+  // safe for every site. Skip source-only library deps that consumers resolve
+  // via package exports directly — they don't ship a dist/.
   const SKIP_BUILD_DEPS: ReadonlySet<string> = new Set([
     "eslint-config",
     "llm-observability",
@@ -785,11 +789,13 @@ export function deploySiteHelper(
       .withExec(["bun", "run", "build"]);
   }
 
-  // Reset workdir to the package being deployed after the build-deps loop
-  // potentially left us inside the last built dep's directory. Without this,
-  // a consumer's `bun run --filter='./packages/foo' build` resolves the
-  // filter against the wrong cwd and fails with "No packages matched".
-  container = container.withWorkdir(`/workspace/packages/${pkg}`);
+  // Install the site last, with workdir reset to the deployed package (the
+  // build-deps loop left us in the last dep's directory). The install now
+  // copies/links the already-built deps, so their dist/ is present for the
+  // site's bundler.
+  container = container
+    .withWorkdir(`/workspace/packages/${pkg}`)
+    .withExec(["bun", "install", "--frozen-lockfile"]);
 
   // Install Playwright only when the site needs it (e.g. sjer.red for OG image generation)
   if (needsPlaywright) {
