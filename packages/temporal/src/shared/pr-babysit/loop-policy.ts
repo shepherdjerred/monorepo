@@ -57,6 +57,21 @@ export function onlyPendingCi(verdict: BabysitVerdict): boolean {
   );
 }
 
+/**
+ * True when GitHub has not reported any checks yet (e.g. immediately after a
+ * push, before Buildkite/status contexts register) and nothing else is
+ * actionable. Wait for CI to register rather than declaring victory on an empty
+ * check set or burning an agent turn on a phantom failure.
+ */
+export function awaitingCiRegistration(verdict: BabysitVerdict): boolean {
+  return (
+    verdict.ci.noChecksReported &&
+    verdict.ci.failing.length === 0 &&
+    verdict.conflicts.clean &&
+    verdict.reviews.allResolved
+  );
+}
+
 export function decideNextAction(
   verdict: BabysitVerdict,
   budget: PrBabysitBudget,
@@ -89,6 +104,11 @@ export function decideNextAction(
   // Only still-running CI: wait rather than spend an agent turn.
   if (onlyPendingCi(verdict)) {
     return { kind: "wait", reason: "ci pending" };
+  }
+  // CI has not reported any checks yet (fresh push): wait for it to register
+  // rather than treat an empty check set as green.
+  if (awaitingCiRegistration(verdict)) {
+    return { kind: "wait", reason: "ci not reported yet" };
   }
   // Stuck guard: same failure tried too many times.
   const signature = failureSignature(verdict);

@@ -29,6 +29,10 @@ const PrViewSchema = z.object({
   headRefOid: z.string().min(1),
   headRefName: z.string().min(1),
   baseRefName: z.string().min(1),
+  /** True when the head branch lives in a fork, not the base repo. */
+  isCrossRepository: z.boolean(),
+  /** Owner of the repo the head branch lives in (the fork owner for forks). */
+  headRepositoryOwner: z.object({ login: z.string() }).nullable(),
 });
 
 export type PrSnapshot = {
@@ -36,6 +40,14 @@ export type PrSnapshot = {
   headSha: string;
   headRef: string;
   baseRef: string;
+  /**
+   * True when the head branch lives in a fork. For such PRs `headRef` names a
+   * branch in the contributor's fork — it is NOT reachable on the base `origin`,
+   * so the babysitter cannot fetch/checkout or push it (see `ensureBabysitWorkdir`).
+   */
+  isCrossRepository: boolean;
+  /** Login of the head repo's owner (the fork owner for forks); null if unknown. */
+  headRepoOwner: string | null;
 };
 
 export async function getPrSnapshot(
@@ -50,7 +62,7 @@ export async function getPrSnapshot(
       "--repo",
       repoSlug(ctx),
       "--json",
-      "state,headRefOid,headRefName,baseRefName",
+      "state,headRefOid,headRefName,baseRefName,isCrossRepository,headRepositoryOwner",
     ],
     ctx.env === undefined ? {} : { env: ctx.env },
   );
@@ -71,6 +83,8 @@ export async function getPrSnapshot(
     headSha: parsed.headRefOid,
     headRef: parsed.headRefName,
     baseRef: parsed.baseRefName,
+    isCrossRepository: parsed.isCrossRepository,
+    headRepoOwner: parsed.headRepositoryOwner?.login ?? null,
   };
 }
 
@@ -82,9 +96,10 @@ const CheckSchema = z.object({
 /**
  * Read all check + status contexts for the PR. `gh pr checks` exits non-zero
  * when checks are pending/failing (a legitimate answer), so we ignore the exit
- * code and parse stdout. An empty result (no checks reported yet) returns `[]`,
- * which the classifier treats as green — see the fresh-push caveat in the plan
- * (the workflow waits for a CI signal before re-evaluating after a push).
+ * code and parse stdout. An empty result (no checks reported yet — e.g. right
+ * after a push, before Buildkite/status contexts register) returns `[]`, which
+ * `classifyChecks` flags as `noChecksReported` and never green, so the loop
+ * waits for CI to register instead of falsely reporting the DoD as met.
  */
 export async function getChecks(
   ctx: BabysitGhContext,

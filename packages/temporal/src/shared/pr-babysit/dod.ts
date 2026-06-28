@@ -39,9 +39,12 @@ export type NormalizedCheck = {
 
 /**
  * Classify checks into a CI verdict. Soft-failure contexts that fail are moved
- * to `ignoredSoft` and never block. `green` requires no non-soft failing or
- * pending checks. A `cancel` bucket counts as failing (not green) — a
- * cancelled required check is not a pass.
+ * to `ignoredSoft` and never block. `green` requires at least one reported check
+ * plus no non-soft failing or pending checks. An empty check set (none reported
+ * yet — e.g. right after a push, before contexts register) is flagged
+ * `noChecksReported` and is never green, so the DoD can't read "done" before CI
+ * has started. A `cancel` bucket counts as failing (not green) — a cancelled
+ * required check is not a pass.
  */
 export function classifyChecks(checks: readonly NormalizedCheck[]): CiVerdict {
   const failing: string[] = [];
@@ -63,11 +66,13 @@ export function classifyChecks(checks: readonly NormalizedCheck[]): CiVerdict {
       failing.push(check.name);
     }
   }
+  const noChecksReported = checks.length === 0;
   return {
-    green: failing.length === 0 && pending.length === 0,
+    green: !noChecksReported && failing.length === 0 && pending.length === 0,
     failing: failing.toSorted(),
     pending: pending.toSorted(),
     ignoredSoft: ignoredSoft.toSorted(),
+    noChecksReported,
   };
 }
 

@@ -50,6 +50,17 @@ export type EnsureBabysitWorkdirInput = {
   baseRef: string;
   /** Stable per-PR id; the workdir path is derived from it. */
   workflowId: string;
+  /**
+   * True when the PR head branch lives in a fork. For a forked PR `headRef`
+   * names a branch in the contributor's fork, which is NOT reachable on the base
+   * `origin` (and could silently collide with a same-named base-repo branch),
+   * and cannot be pushed back to with a base-repo installation token. The
+   * babysitter refuses such PRs up front rather than checking out / pushing the
+   * wrong ref.
+   */
+  isCrossRepository: boolean;
+  /** Login of the fork owner, used only for a clearer error message. */
+  headRepoOwner?: string;
   /** GitHub App installation token; omit to use ambient git credentials. */
   token?: string;
 };
@@ -91,6 +102,23 @@ async function runWithGitRetry(
 export async function ensureBabysitWorkdir(
   input: EnsureBabysitWorkdirInput,
 ): Promise<EnsureBabysitWorkdirResult> {
+  // Fork heads are unreachable on the base origin and can't be pushed back to
+  // with a base-repo installation token, so refuse cross-repo PRs before any
+  // clone/fetch (which would otherwise fail late, or worse, silently check out a
+  // same-named base-repo branch). Same-repo PR branches are the supported case.
+  if (input.isCrossRepository) {
+    const fork =
+      input.headRepoOwner === undefined
+        ? "a fork"
+        : `the fork ${input.headRepoOwner}/${input.repo}`;
+    throw new Error(
+      `PR head branch '${input.headRef}' lives in ${fork}, not in ` +
+        `${input.owner}/${input.repo}. The babysitter only supports same-repo ` +
+        `PR branches: a fork head is not reachable on origin and cannot be ` +
+        `pushed back to with a base-repo installation token.`,
+    );
+  }
+
   const workdir = babysitWorkdirPath(input.workflowId);
   const cloneUrl = `https://github.com/${input.owner}/${input.repo}.git`;
 

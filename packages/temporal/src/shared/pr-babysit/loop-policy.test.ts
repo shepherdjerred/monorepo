@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  awaitingCiRegistration,
   decideNextAction,
   onlyPendingCi,
   type BudgetState,
@@ -19,18 +20,28 @@ const GREEN_CI: CiVerdict = {
   failing: [],
   pending: [],
   ignoredSoft: [],
+  noChecksReported: false,
 };
 const FAILING_CI: CiVerdict = {
   green: false,
   failing: ["buildkite/pr"],
   pending: [],
   ignoredSoft: [],
+  noChecksReported: false,
 };
 const PENDING_CI: CiVerdict = {
   green: false,
   failing: [],
   pending: ["buildkite/pr"],
   ignoredSoft: [],
+  noChecksReported: false,
+};
+const NO_CHECKS_CI: CiVerdict = {
+  green: false,
+  failing: [],
+  pending: [],
+  ignoredSoft: [],
+  noChecksReported: true,
 };
 const CLEAN: ConflictVerdict = { clean: true, paths: [], baseRef: "main" };
 const RESOLVED: ReviewVerdict = {
@@ -97,6 +108,16 @@ describe("decideNextAction", () => {
     ).toBe("wait");
   });
 
+  test("wait when no checks reported yet (fresh push, not green)", () => {
+    const d = decideNextAction(
+      verdict({ ci: NO_CHECKS_CI, dodMet: false }),
+      budget,
+      freshState,
+    );
+    expect(d.kind).toBe("wait");
+    expect(d.reason).toContain("not reported");
+  });
+
   test("standdown when max iterations reached", () => {
     const d = decideNextAction(verdict({ ci: FAILING_CI }), budget, {
       ...freshState,
@@ -156,7 +177,38 @@ describe("onlyPendingCi", () => {
     expect(
       onlyPendingCi(
         verdict({
-          ci: { green: false, failing: ["x"], pending: ["y"], ignoredSoft: [] },
+          ci: {
+            green: false,
+            failing: ["x"],
+            pending: ["y"],
+            ignoredSoft: [],
+            noChecksReported: false,
+          },
+        }),
+      ),
+    ).toBe(false);
+  });
+});
+
+describe("awaitingCiRegistration", () => {
+  test("true when no checks reported and nothing else is actionable", () => {
+    expect(awaitingCiRegistration(verdict({ ci: NO_CHECKS_CI }))).toBe(true);
+  });
+  test("false once checks are reported", () => {
+    expect(awaitingCiRegistration(verdict({ ci: GREEN_CI }))).toBe(false);
+    expect(awaitingCiRegistration(verdict({ ci: PENDING_CI }))).toBe(false);
+  });
+  test("false when a real failure coexists with no-checks flag", () => {
+    expect(
+      awaitingCiRegistration(
+        verdict({
+          ci: {
+            green: false,
+            failing: ["x"],
+            pending: [],
+            ignoredSoft: [],
+            noChecksReported: true,
+          },
         }),
       ),
     ).toBe(false);

@@ -101,6 +101,7 @@ export async function evaluateBabysitDoD(
       failing: [],
       pending: [],
       ignoredSoft: [],
+      noChecksReported: false,
     };
     return {
       headSha: snapshot.headSha,

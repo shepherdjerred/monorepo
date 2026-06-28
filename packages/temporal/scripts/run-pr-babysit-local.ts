@@ -137,48 +137,17 @@ function logVerdict(verdict: BabysitVerdict): void {
   });
 }
 
-async function main(): Promise<void> {
-  const args = parseArgs(process.argv.slice(2));
-  const [owner, repoName] = args.repo.split("/");
-  if (owner === undefined || repoName === undefined) {
-    throw new Error(`--repo must be owner/name, got: ${args.repo}`);
-  }
+type LoopContext = {
+  owner: string;
+  repo: string;
+  input: PrBabysitInput;
+  workdir: string;
+  args: Args;
+};
 
-  const snapshot = await getPrSnapshot({
-    owner,
-    repo: repoName,
-    prNumber: args.prNumber,
-  });
-  log("resolved PR", { ...snapshot });
-  if (snapshot.prState !== "open") {
-    log("PR is not open; nothing to babysit", { prState: snapshot.prState });
-    return;
-  }
-
-  const input: PrBabysitInput = PrBabysitInputSchema.parse({
-    owner,
-    repo: repoName,
-    prNumber: args.prNumber,
-    headRef: snapshot.headRef,
-    baseRef: snapshot.baseRef,
-    ...(args.goal === undefined ? {} : { goal: args.goal }),
-    ...(args.model === undefined ? {} : { model: args.model }),
-    budget:
-      args.maxIterations === undefined
-        ? {}
-        : { maxIterations: args.maxIterations },
-  });
-
-  const workflowId = `pr-babysit-${owner}-${repoName}-${String(args.prNumber)}`;
-  const { workdir } = await ensureBabysitWorkdir({
-    owner,
-    repo: repoName,
-    headRef: input.headRef,
-    baseRef: input.baseRef,
-    workflowId,
-  });
-  log("workdir ready", { workdir });
-
+/** Drive the assess → act → push → wait loop until a terminal decision. */
+async function runBabysitLoop(ctx: LoopContext): Promise<void> {
+  const { owner, repo, input, workdir, args } = ctx;
   const start = Date.now();
   const state: {
     iterationsTotal: number;
@@ -193,7 +162,7 @@ async function main(): Promise<void> {
   for (;;) {
     const verdict = await evaluateBabysitDoD({
       owner,
-      repo: repoName,
+      repo,
       prNumber: args.prNumber,
       baseRef: input.baseRef,
       workdir,
@@ -266,24 +235,91 @@ async function main(): Promise<void> {
       return;
     }
 
-    if (result.committed && !args.dryRun) {
-      const push = await pushBabysitBranch({ workdir, headRef: input.headRef });
-      log("push result", { ...push });
-      if (push.pushed) {
-        log("waiting for CI to register after push", {
-          postPushSeconds: args.postPushSeconds,
-        });
-        await Bun.sleep(args.postPushSeconds * 1000);
-      }
-    } else if (result.committed && args.dryRun) {
-      log("dry-run: skipping push (agent committed locally)", {
-        changedPaths: result.changedPaths,
-      });
-    } else {
-      log("no commit this iteration; short wait before re-assess");
-      await Bun.sleep(args.pollSeconds * 1000);
-    }
+    await pushIfCommitted(result, ctx);
   }
+}
+
+/** Push the iteration's commit (if any) and wait for CI to register. */
+async function pushIfCommitted(
+  result: { committed: boolean; changedPaths: string[] },
+  ctx: LoopContext,
+): Promise<void> {
+  const { input, workdir, args } = ctx;
+  if (result.committed && args.dryRun) {
+    log("dry-run: skipping push (agent committed locally)", {
+      changedPaths: result.changedPaths,
+    });
+    return;
+  }
+  if (result.committed) {
+    const push = await pushBabysitBranch({ workdir, headRef: input.headRef });
+    log("push result", { ...push });
+    if (push.pushed) {
+      log("waiting for CI to register after push", {
+        postPushSeconds: args.postPushSeconds,
+      });
+      await Bun.sleep(args.postPushSeconds * 1000);
+    }
+    return;
+  }
+  log("no commit this iteration; short wait before re-assess");
+  await Bun.sleep(args.pollSeconds * 1000);
+}
+
+async function main(): Promise<void> {
+  const args = parseArgs(process.argv.slice(2));
+  const [owner, repoName] = args.repo.split("/");
+  if (owner === undefined || repoName === undefined) {
+    throw new Error(`--repo must be owner/name, got: ${args.repo}`);
+  }
+
+  const snapshot = await getPrSnapshot({
+    owner,
+    repo: repoName,
+    prNumber: args.prNumber,
+  });
+  log("resolved PR", { ...snapshot });
+  if (snapshot.prState !== "open") {
+    log("PR is not open; nothing to babysit", { prState: snapshot.prState });
+    return;
+  }
+  if (snapshot.isCrossRepository) {
+    log("PR head is in a fork; babysitter only supports same-repo branches", {
+      headRef: snapshot.headRef,
+      headRepoOwner: snapshot.headRepoOwner,
+    });
+    return;
+  }
+
+  const input: PrBabysitInput = PrBabysitInputSchema.parse({
+    owner,
+    repo: repoName,
+    prNumber: args.prNumber,
+    headRef: snapshot.headRef,
+    baseRef: snapshot.baseRef,
+    ...(args.goal === undefined ? {} : { goal: args.goal }),
+    ...(args.model === undefined ? {} : { model: args.model }),
+    budget:
+      args.maxIterations === undefined
+        ? {}
+        : { maxIterations: args.maxIterations },
+  });
+
+  const workflowId = `pr-babysit-${owner}-${repoName}-${String(args.prNumber)}`;
+  const { workdir } = await ensureBabysitWorkdir({
+    owner,
+    repo: repoName,
+    headRef: input.headRef,
+    baseRef: input.baseRef,
+    workflowId,
+    isCrossRepository: snapshot.isCrossRepository,
+    ...(snapshot.headRepoOwner === null
+      ? {}
+      : { headRepoOwner: snapshot.headRepoOwner }),
+  });
+  log("workdir ready", { workdir });
+
+  await runBabysitLoop({ owner, repo: repoName, input, workdir, args });
 }
 
 void (async (): Promise<void> => {

@@ -48,6 +48,7 @@ describe("classifyChecks", () => {
     expect(v.green).toBe(true);
     expect(v.failing).toEqual([]);
     expect(v.pending).toEqual([]);
+    expect(v.noChecksReported).toBe(false);
   });
 
   test("hard failure → not green, listed in failing", () => {
@@ -95,9 +96,12 @@ describe("classifyChecks", () => {
     expect(v.green).toBe(true);
   });
 
-  test("empty checks → green (no failing/pending)", () => {
+  test("empty checks → not green (none reported yet)", () => {
     const v = classifyChecks([]);
-    expect(v.green).toBe(true);
+    expect(v.green).toBe(false);
+    expect(v.noChecksReported).toBe(true);
+    expect(v.failing).toEqual([]);
+    expect(v.pending).toEqual([]);
   });
 });
 
@@ -183,7 +187,13 @@ describe("computeDodMet", () => {
   test("met when green, clean, resolved, open", () => {
     expect(
       computeDodMet(
-        { green: true, failing: [], pending: [], ignoredSoft: [] },
+        {
+          green: true,
+          failing: [],
+          pending: [],
+          ignoredSoft: [],
+          noChecksReported: false,
+        },
         clean,
         { allResolved: true, blocking: [], advisory: [] },
         "open",
@@ -193,7 +203,13 @@ describe("computeDodMet", () => {
   test("not met if CI not green", () => {
     expect(
       computeDodMet(
-        { green: false, failing: ["pr"], pending: [], ignoredSoft: [] },
+        {
+          green: false,
+          failing: ["pr"],
+          pending: [],
+          ignoredSoft: [],
+          noChecksReported: false,
+        },
         clean,
         { allResolved: true, blocking: [], advisory: [] },
         "open",
@@ -203,7 +219,13 @@ describe("computeDodMet", () => {
   test("not met if PR not open", () => {
     expect(
       computeDodMet(
-        { green: true, failing: [], pending: [], ignoredSoft: [] },
+        {
+          green: true,
+          failing: [],
+          pending: [],
+          ignoredSoft: [],
+          noChecksReported: false,
+        },
         clean,
         { allResolved: true, blocking: [], advisory: [] },
         "merged",

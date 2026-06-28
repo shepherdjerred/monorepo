@@ -41,8 +41,13 @@ export const PrBabysitBudgetSchema = z.object({
   maxWallClockMinutes: z.number().int().positive().default(360),
   /** Stop once cumulative agent cost crosses this (USD). */
   maxCostUsd: z.number().positive().default(20),
-  /** Per-iteration agent turn cap (claude `--max-turns`). */
-  perIterationMaxTurns: z.number().int().positive().default(40),
+  /**
+   * Per-iteration agent turn cap (claude `--max-turns`). A multi-fix iteration
+   * (edit several files + run validation + commit + resolve threads) needs well
+   * over the agent-task default; 40 was observed to exhaust mid-iteration and
+   * lose uncommitted work, so the agent is also told to commit incrementally.
+   */
+  perIterationMaxTurns: z.number().int().positive().default(100),
   /** Per-iteration agent wall-clock cap (minutes). Bounds a single claude run. */
   perIterationTimeoutMinutes: z.number().int().positive().max(90).default(30),
   /**
@@ -86,6 +91,12 @@ export const CiVerdictSchema = z.object({
   pending: z.array(z.string()),
   /** Soft contexts that failed but are ignored by policy. */
   ignoredSoft: z.array(z.string()),
+  /**
+   * True when GitHub reported NO check rows at all. Right after a push the
+   * status/check contexts have not registered yet — an empty set means "CI has
+   * not started", NOT "everything passed", so such a verdict is never `green`.
+   */
+  noChecksReported: z.boolean(),
 });
 export type CiVerdict = z.infer<typeof CiVerdictSchema>;
 
