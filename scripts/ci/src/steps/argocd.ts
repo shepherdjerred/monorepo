@@ -75,7 +75,7 @@ export function waitForTunnelBindingDeletionStep(
       ` --group networking.cfargotunnel.com` +
       ` --version v1` +
       ` --kind TunnelBinding` +
-      ` --namespace cloudflare-tunnel` +
+      ` --namespace seaweedfs` +
       ` --resource-name seaweedfs-s3-cf-tunnel` +
       ` --argo-cd-token env:ARGOCD_AUTH_TOKEN` +
       ` --timeout-seconds 120` +
