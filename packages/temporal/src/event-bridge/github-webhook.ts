@@ -28,6 +28,11 @@ import {
   startCheckPrMergeConflictsForMain,
   startCheckPrMergeConflictsForPr,
 } from "./conflict-check-starts.ts";
+import { createBabysitRoute, type BabysitRouteFn } from "./babysit-starts.ts";
+import {
+  handleIssueCommentEvent,
+  noopBabysitRoute,
+} from "./babysit-webhook.ts";
 
 const DEFAULT_PORT = 9466;
 
@@ -111,7 +116,7 @@ async function handleDraftSkip(
  * failure, or `null` when the signature is valid. Extracted from the handler
  * to keep its cyclomatic complexity within bounds.
  */
-async function verifyWebhookSignature(
+export async function verifyWebhookSignature(
   secret: string,
   payload: string,
   signature: string,
@@ -216,6 +221,47 @@ async function handlePushEvent(args: PushHandlerArgs): Promise<Response> {
 }
 
 /**
+ * Merge-conflict check — runs on opened/synchronize/reopened/edited regardless
+ * of draft state, author, or PR_BOT_ENABLED (the kill switch lives on the
+ * activity itself). Failure logs to Sentry but does NOT poison the
+ * review/summary pipeline.
+ */
+async function maybeStartConflictCheckPr(
+  startConflictCheckPr: ConflictCheckPrStartFn,
+  args: {
+    owner: string;
+    repo: string;
+    prNumber: number;
+    headSha: string;
+    baseRef: string;
+    action: string;
+    deliveryId: string;
+  },
+): Promise<void> {
+  if (!CONFLICT_CHECK_ACTIONS.has(args.action)) {
+    return;
+  }
+  try {
+    await startConflictCheckPr({
+      owner: args.owner,
+      repo: args.repo,
+      prNumber: args.prNumber,
+      headSha: args.headSha,
+      baseRef: args.baseRef,
+    });
+  } catch (error: unknown) {
+    captureConflictCheckStartError(error, {
+      deliveryId: args.deliveryId,
+      trigger: "pull_request",
+      action: args.action,
+      owner: args.owner,
+      repo: args.repo,
+      prNumber: args.prNumber,
+    });
+  }
+}
+
+/**
  * Optional hooks supplied to `buildWebhookApp` — bundled so the test-time
  * call sites stay legible and the function signature stays under the params
  * cap. Production wires every hook; tests opt in to the ones they need.
@@ -225,6 +271,7 @@ export type WebhookHooks = {
   startCancel?: CancelStartFn;
   startConflictCheckMain?: ConflictCheckMainStartFn;
   startConflictCheckPr?: ConflictCheckPrStartFn;
+  babysitRoute?: BabysitRouteFn;
 };
 
 /**
@@ -241,6 +288,7 @@ export function buildWebhookApp(
   const startConflictCheckMain =
     hooks.startConflictCheckMain ?? noopConflictMain;
   const startConflictCheckPr = hooks.startConflictCheckPr ?? noopConflictPr;
+  const babysitRoute = hooks.babysitRoute ?? noopBabysitRoute;
   const app = new Hono();
 
   app.get("/healthz", (c) => c.text("ok\n"));
@@ -264,6 +312,17 @@ export function buildWebhookApp(
         signature,
         deliveryId,
         startConflictCheckMain,
+      });
+    }
+
+    if (event === "issue_comment") {
+      return handleIssueCommentEvent({
+        c,
+        secret,
+        payload,
+        signature,
+        deliveryId,
+        babysitRoute,
       });
     }
 
@@ -306,31 +365,15 @@ export function buildWebhookApp(
       return handleClosedPr(parsed, deliveryId, startCancel);
     }
 
-    // Merge-conflict check — runs on opened/synchronize/reopened/edited
-    // regardless of draft state, author, or PR_BOT_ENABLED. The kill
-    // switch lives on the activity itself (MERGE_CONFLICT_CHECK_ENABLED).
-    // Failure here logs to Sentry but does NOT poison the review/summary
-    // pipeline below.
-    if (CONFLICT_CHECK_ACTIONS.has(action)) {
-      try {
-        await startConflictCheckPr({
-          owner: parsed.repository.owner.login,
-          repo: parsed.repository.name,
-          prNumber: parsed.pull_request.number,
-          headSha: parsed.pull_request.head.sha,
-          baseRef: parsed.pull_request.base.ref,
-        });
-      } catch (error: unknown) {
-        captureConflictCheckStartError(error, {
-          deliveryId,
-          trigger: "pull_request",
-          action,
-          owner: parsed.repository.owner.login,
-          repo: parsed.repository.name,
-          prNumber: parsed.pull_request.number,
-        });
-      }
-    }
+    await maybeStartConflictCheckPr(startConflictCheckPr, {
+      owner: parsed.repository.owner.login,
+      repo: parsed.repository.name,
+      prNumber: parsed.pull_request.number,
+      headSha: parsed.pull_request.head.sha,
+      baseRef: parsed.pull_request.base.ref,
+      action,
+      deliveryId,
+    });
 
     if (!RELEVANT_ACTIONS.has(action)) {
       prWebhookSkippedTotal.inc({ reason: `action:${action}` });
@@ -433,6 +476,7 @@ export function startGithubWebhook(client: Client): WebhookHandle {
         startCheckPrMergeConflictsForMain(client, args),
       startConflictCheckPr: (args) =>
         startCheckPrMergeConflictsForPr(client, args),
+      babysitRoute: createBabysitRoute(client),
     },
   );
 

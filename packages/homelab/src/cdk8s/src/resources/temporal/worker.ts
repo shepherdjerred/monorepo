@@ -456,6 +456,15 @@ export function createTemporalWorkerDeployment(
         // `isPostEnabled`.
         PR_REVIEW_POST_ENABLED: EnvValue.fromValue("true"),
         PR_REVIEW_WORKER_MAX_CONCURRENT_ACTIVITIES: EnvValue.fromValue("1"),
+        // PR babysitter — the mutating "get this PR green" bot. Independent
+        // kill switch, default OFF so the feature is dormant on deploy: the
+        // issue_comment webhook acks deliveries but starts no workflow. Flip to
+        // "true" to enable (owner-only commands gate it further). See
+        // packages/temporal/src/event-bridge/babysit-webhook.ts `isPrBabysitEnabled`.
+        PR_BABYSIT_ENABLED: EnvValue.fromValue("false"),
+        PR_BABYSIT_BOT_HANDLE: EnvValue.fromValue("@temporal-worker"),
+        PR_BABYSIT_BOT_LOGIN: EnvValue.fromValue("temporal-worker[bot]"),
+        PR_BABYSIT_WORKER_MAX_CONCURRENT_ACTIVITIES: EnvValue.fromValue("2"),
         GITHUB_WEBHOOK_PORT: EnvValue.fromValue("9466"),
         AGENT_TASK_API_PORT: EnvValue.fromValue("9467"),
         AGENT_TASK_API_TOKEN: EnvValue.fromSecretValue({

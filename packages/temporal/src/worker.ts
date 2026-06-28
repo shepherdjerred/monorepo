@@ -260,6 +260,29 @@ async function main(): Promise<void> {
 
   jsonLog("info", "Worker created", { taskQueue: TASK_QUEUES.AGENT_TASK });
 
+  // Dedicated queue for the per-PR babysitter loops. Long-lived workflows + long
+  // mutating `claude -p` subprocesses, isolated from every other queue. The
+  // small activity-concurrency cap bounds simultaneous agent subprocesses +
+  // workdir disk. The feature is dormant unless PR_BABYSIT_ENABLED=true gates
+  // the ingress (this worker just registers the workflow + activities).
+  const prBabysitMaxConcurrentActivities = readPositiveIntegerEnv({
+    name: "PR_BABYSIT_WORKER_MAX_CONCURRENT_ACTIVITIES",
+    defaultValue: 2,
+  });
+  const prBabysitWorker = await Worker.create({
+    connection,
+    namespace: "default",
+    taskQueue: TASK_QUEUES.PR_BABYSIT,
+    workflowsPath,
+    activities,
+    maxConcurrentActivityTaskExecutions: prBabysitMaxConcurrentActivities,
+  });
+
+  jsonLog("info", "Worker created", {
+    taskQueue: TASK_QUEUES.PR_BABYSIT,
+    maxConcurrentActivityTaskExecutions: prBabysitMaxConcurrentActivities,
+  });
+
   const clientConnection = await Connection.connect({ address });
   const client = new Client({ connection: clientConnection });
   await registerSchedules(client);
@@ -326,6 +349,14 @@ async function main(): Promise<void> {
         state: agentTaskState,
       });
     }
+    const prBabysitState = prBabysitWorker.getState();
+    if (prBabysitState === "RUNNING") {
+      prBabysitWorker.shutdown();
+    } else {
+      jsonLog("info", "pr-babysit worker not RUNNING, skipping shutdown()", {
+        state: prBabysitState,
+      });
+    }
     await stopMetricsServer();
     await shutdownTracing();
   };
@@ -342,6 +373,7 @@ async function main(): Promise<void> {
     prReviewWorker.run(),
     prSummaryWorker.run(),
     agentTaskWorker.run(),
+    prBabysitWorker.run(),
   ]);
 }
 
