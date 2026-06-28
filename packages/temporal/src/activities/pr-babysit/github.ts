@@ -228,18 +228,29 @@ const BranchRuleSchema = z.object({
 });
 
 /**
+ * Result of looking up the base branch's required checks. `known: false` means
+ * we could NOT determine them (gh error / unparseable response) — the caller
+ * must fail CLOSED (never report CI green on an unverified required-check set),
+ * not fall back to "no required checks". `known: true` with an empty `contexts`
+ * is the legitimate "this branch genuinely has no required checks" case.
+ */
+export type RequiredChecksResult =
+  | { known: true; contexts: string[] }
+  | { known: false; reason: string };
+
+/**
  * Required status-check contexts for the base branch, read from the repo's
  * branch ruleset (`/rules/branches/<branch>`). The base branch is the merge
- * target, so its required contexts define what "CI complete" means. Returns []
- * when the repo has no ruleset / required checks (the babysitter then falls back
- * to its other signals rather than failing).
+ * target, so its required contexts define what "CI complete" means. Returns
+ * `{ known: false }` on any failure to determine them so the caller fails closed
+ * rather than silently dropping the required-check gate.
  */
 export async function getRequiredCheckContexts(ctx: {
   owner: string;
   repo: string;
   baseRef: string;
   env?: Record<string, string>;
-}): Promise<string[]> {
+}): Promise<RequiredChecksResult> {
   const result = await capture(
     [
       "gh",
@@ -249,11 +260,26 @@ export async function getRequiredCheckContexts(ctx: {
     ctx.env === undefined ? {} : { env: ctx.env },
   );
   if (result.exitCode !== 0) {
-    return [];
+    return {
+      known: false,
+      reason: `gh api rules/branches/${ctx.baseRef} failed (exit ${String(result.exitCode)}): ${result.stderr.trim()}`,
+    };
   }
-  const rules = z.array(BranchRuleSchema).safeParse(JSON.parse(result.stdout));
+  let json: unknown;
+  try {
+    json = JSON.parse(result.stdout);
+  } catch (error: unknown) {
+    return {
+      known: false,
+      reason: `failed to parse branch rules JSON: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+  const rules = z.array(BranchRuleSchema).safeParse(json);
   if (!rules.success) {
-    return [];
+    return {
+      known: false,
+      reason: `unexpected branch rules shape: ${rules.error.message}`,
+    };
   }
   const contexts = new Set<string>();
   for (const rule of rules.data) {
@@ -264,5 +290,5 @@ export async function getRequiredCheckContexts(ctx: {
       contexts.add(check.context);
     }
   }
-  return [...contexts].toSorted();
+  return { known: true, contexts: [...contexts].toSorted() };
 }

@@ -12,9 +12,11 @@ import {
   classifyChecks,
   classifyReviewThreads,
   computeDodMet,
+  type NormalizedCheck,
 } from "#shared/pr-babysit/dod.ts";
 import {
   type BabysitVerdict,
+  type CiVerdict,
   type ConflictVerdict,
   type ReviewSeverity,
 } from "#shared/pr-babysit/types.ts";
@@ -24,7 +26,11 @@ import {
   getPrSnapshot,
   getRequiredCheckContexts,
   getReviewThreads,
+  type RequiredChecksResult,
 } from "./github.ts";
+
+/** Sentinel kept in `missingRequired` when required checks can't be determined. */
+const REQUIRED_CHECKS_UNKNOWN = "(required checks could not be determined)";
 
 /**
  * Required contexts the babysitter does NOT fold into the CI gate because it
@@ -36,6 +42,39 @@ import {
 function isBabysitterTrackedContext(context: string): boolean {
   const lower = context.toLowerCase();
   return lower.includes("merge-conflict") || lower.includes("greptile");
+}
+
+/**
+ * Build the CI verdict, failing CLOSED when the required-check set could not be
+ * determined. Reporting green on an unverified required set would reopen the
+ * partial-checks gap (a fast check passing while the slow required jobs have not
+ * registered), so instead force not-green and surface a sentinel in
+ * `missingRequired` — the loop then waits/retries rather than declaring done.
+ */
+export function classifyCiFailClosed(
+  checks: readonly NormalizedCheck[],
+  required: RequiredChecksResult,
+): CiVerdict {
+  if (required.known) {
+    return classifyChecks(
+      checks,
+      required.contexts.filter((c) => !isBabysitterTrackedContext(c)),
+    );
+  }
+  console.warn(
+    JSON.stringify({
+      level: "warning",
+      component: "pr-babysit",
+      msg: "required checks undetermined; failing closed (CI not green)",
+      reason: required.reason,
+    }),
+  );
+  const base = classifyChecks(checks, []);
+  return {
+    ...base,
+    green: false,
+    missingRequired: [...base.missingRequired, REQUIRED_CHECKS_UNKNOWN],
+  };
 }
 
 export type EvaluateBabysitDoDInput = {
@@ -148,10 +187,7 @@ export async function evaluateBabysitDoD(
     }),
   ]);
 
-  const ci = classifyChecks(
-    checks,
-    requiredContexts.filter((c) => !isBabysitterTrackedContext(c)),
-  );
+  const ci = classifyCiFailClosed(checks, requiredContexts);
   const reviews = classifyReviewThreads(threads, input.blockingSeverity);
   const dodMet = computeDodMet(ci, conflicts, reviews, snapshot.prState);
 
