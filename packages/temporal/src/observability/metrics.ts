@@ -36,6 +36,13 @@ export const prWebhookSkippedTotal = new Counter({
   registers: [register],
 });
 
+export const prBabysitCommandsTotal = new Counter({
+  name: "pr_babysit_commands_total",
+  help: "Babysitter comment commands by parsed command (start|stop|status|guidance|none) and outcome (accepted|unauthorized|disabled|no_workflow|ignored|error)",
+  labelNames: ["command", "outcome"] as const,
+  registers: [register],
+});
+
 export const prWebhookSignatureFailuresTotal = new Counter({
   name: "pr_webhook_signature_failures_total",
   help: "GitHub webhook deliveries rejected for missing or invalid X-Hub-Signature-256",
