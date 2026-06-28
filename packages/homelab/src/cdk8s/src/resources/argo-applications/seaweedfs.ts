@@ -40,6 +40,18 @@ export function createSeaweedfsApp(chart: Chart) {
   // out-of-cluster S3 client. In-cluster consumers (Caddy static sites, scout,
   // birmel, pokemon) use the in-cluster Service endpoint; public asset serving
   // (public.sjer.red) goes through the Caddy s3proxy, not this S3 API.
+  //
+  // All out-of-cluster S3 consumers have been migrated to the tailnet hostname:
+  //   - CI deploy containers (.dagger/src/release.ts) use seaweedfs-s3.tailnet-1a49.ts.net
+  //   - Operator dotfiles (~/.aws/config) use seaweedfs-s3.tailnet-1a49.ts.net
+  //   - Tofu backends (homelab/src/tofu/*/backend.tf) use seaweedfs-s3.tailnet-1a49.ts.net
+  //
+  // Deployment note: removing this TunnelBinding triggers the Cloudflare tunnel operator's
+  // finalizer to remove the ingress route from the shared tunnel. The Tofu cloudflare stack
+  // (which removes the seaweedfs.sjer.red DNS record) is applied in the same CI run as this
+  // ArgoCD sync. During the brief window between DNS removal and tunnel-route removal, the
+  // tunnel UUID is technically reachable directly — but the public DNS hostname is already
+  // gone, so this window is invisible to clients using standard name resolution.
   createIngress(chart, "seaweedfs-s3-ingress", {
     namespace: "seaweedfs",
     service: "seaweedfs-s3",

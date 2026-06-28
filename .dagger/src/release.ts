@@ -827,7 +827,7 @@ export function deploySiteHelper(
   const endpoint =
     target === "r2"
       ? `https://${cloudflareAccountId}.r2.cloudflarestorage.com`
-      : "https://seaweedfs.sjer.red";
+      : "https://seaweedfs-s3.tailnet-1a49.ts.net";
 
   return s3SyncStaticSite(
     container,
@@ -852,7 +852,7 @@ export function deployStaticSiteHelper(
   const endpoint =
     target === "r2"
       ? "https://r2.cloudflarestorage.com"
-      : "https://seaweedfs.sjer.red";
+      : "https://seaweedfs-s3.tailnet-1a49.ts.net";
 
   let container = dag
     .container()
