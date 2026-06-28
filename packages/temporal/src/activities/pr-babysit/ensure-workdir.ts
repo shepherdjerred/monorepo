@@ -43,6 +43,22 @@ async function writeGitAskpass(dir: string): Promise<string> {
   return path;
 }
 
+/** Stable path of the babysitter's GIT_ASKPASS helper (shared across activities). */
+export function babysitAskpassPath(): string {
+  return `${WORKDIR_ROOT}/git-askpass.sh`;
+}
+
+/**
+ * Idempotently (re)write the GIT_ASKPASS helper and return its path. The
+ * evaluate / push activities reuse this so their git operations authenticate
+ * with a freshly-minted token via `$GH_TOKEN`, without each re-declaring the
+ * askpass script (which holds the sanctioned `x-access-token` literal).
+ */
+export async function ensureBabysitAskpass(): Promise<string> {
+  await run(["mkdir", "-p", WORKDIR_ROOT]);
+  return writeGitAskpass(WORKDIR_ROOT);
+}
+
 export type EnsureBabysitWorkdirInput = {
   owner: string;
   repo: string;
