@@ -107,7 +107,7 @@ export function createQBitTorrentDeployment(
     command: [
       "/bin/sh",
       "-c",
-      "mkdir -p /config/qBittorrent && if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then cp /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf && chown 1000:1000 /config/qBittorrent/qBittorrent.conf && chmod 600 /config/qBittorrent/qBittorrent.conf; fi",
+      "mkdir -p /config/qBittorrent && if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then cp /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf && chown -R 1000:1000 /config/qBittorrent && chmod 600 /config/qBittorrent/qBittorrent.conf; fi",
     ],
     resources: {},
     securityContext: {
