@@ -238,19 +238,17 @@ export type RequiredChecksResult =
   | { known: true; contexts: string[] }
   | { known: false; reason: string };
 
-/**
- * Required status-check contexts for the base branch, read from the repo's
- * branch ruleset (`/rules/branches/<branch>`). The base branch is the merge
- * target, so its required contexts define what "CI complete" means. Returns
- * `{ known: false }` on any failure to determine them so the caller fails closed
- * rather than silently dropping the required-check gate.
- */
-export async function getRequiredCheckContexts(ctx: {
+export type RequiredCtx = {
   owner: string;
   repo: string;
   baseRef: string;
   env?: Record<string, string>;
-}): Promise<RequiredChecksResult> {
+};
+
+/** Required contexts from the modern rulesets endpoint (`/rules/branches/<branch>`). */
+async function rulesetRequiredContexts(
+  ctx: RequiredCtx,
+): Promise<RequiredChecksResult> {
   const result = await capture(
     [
       "gh",
@@ -290,5 +288,83 @@ export async function getRequiredCheckContexts(ctx: {
       contexts.add(check.context);
     }
   }
+  return { known: true, contexts: [...contexts] };
+}
+
+const ClassicProtectionSchema = z.object({
+  contexts: z.array(z.string()).optional(),
+  checks: z.array(z.object({ context: z.string() })).optional(),
+});
+
+/**
+ * Required contexts from CLASSIC branch protection
+ * (`/branches/<branch>/protection/required_status_checks`). A 404 means the
+ * branch has no classic protection (legitimately empty); any other failure is
+ * "unknown" so the caller fails closed.
+ */
+async function classicRequiredContexts(
+  ctx: RequiredCtx,
+): Promise<RequiredChecksResult> {
+  const result = await capture(
+    [
+      "gh",
+      "api",
+      `repos/${ctx.owner}/${ctx.repo}/branches/${ctx.baseRef}/protection/required_status_checks`,
+    ],
+    ctx.env === undefined ? {} : { env: ctx.env },
+  );
+  if (result.exitCode !== 0) {
+    if (/not protected|HTTP 404|\b404\b/i.test(result.stderr)) {
+      return { known: true, contexts: [] };
+    }
+    return {
+      known: false,
+      reason: `gh api classic protection failed (exit ${String(result.exitCode)}): ${result.stderr.trim()}`,
+    };
+  }
+  let json: unknown;
+  try {
+    json = JSON.parse(result.stdout);
+  } catch (error: unknown) {
+    return {
+      known: false,
+      reason: `failed to parse classic protection JSON: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+  const parsed = ClassicProtectionSchema.safeParse(json);
+  if (!parsed.success) {
+    return {
+      known: false,
+      reason: `unexpected classic protection shape: ${parsed.error.message}`,
+    };
+  }
+  const contexts = new Set<string>([
+    ...(parsed.data.contexts ?? []),
+    ...(parsed.data.checks ?? []).map((c) => c.context),
+  ]);
+  return { known: true, contexts: [...contexts] };
+}
+
+/**
+ * Required status-check contexts for the base branch — the union of BOTH the
+ * modern rulesets endpoint AND classic branch protection, since a repo may use
+ * either (or both). Returns `{ known: false }` if EITHER source can't be
+ * determined (real error, not a 404), so the caller fails closed rather than
+ * silently dropping the required-check gate.
+ */
+export async function getRequiredCheckContexts(
+  ctx: RequiredCtx,
+): Promise<RequiredChecksResult> {
+  const [ruleset, classic] = await Promise.all([
+    rulesetRequiredContexts(ctx),
+    classicRequiredContexts(ctx),
+  ]);
+  if (!ruleset.known) {
+    return ruleset;
+  }
+  if (!classic.known) {
+    return classic;
+  }
+  const contexts = new Set<string>([...ruleset.contexts, ...classic.contexts]);
   return { known: true, contexts: [...contexts].toSorted() };
 }
