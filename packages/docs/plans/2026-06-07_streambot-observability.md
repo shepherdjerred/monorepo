@@ -94,8 +94,9 @@ dashboard has real baselines.
 ### Remaining
 
 - Open the PR; after merge run the post-merge verification above.
-- Drop the now-empty `mk64-spike` namespace: `kubectl delete namespace mk64-spike` (namespace-delete
-  was permission-blocked during the session).
+- ~~Drop the now-empty `mk64-spike` namespace.~~ **Done 2026-06-27** (`kubectl delete namespace
+mk64-spike`) as part of the cdk8s-untracked-resource cleanup — see
+  `packages/docs/logs/2026-06-27_k8s-cdk8s-untracked-audit.md`.
 
 ### Caveats
 
