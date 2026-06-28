@@ -71,14 +71,16 @@ function secretTokens(): readonly (string | undefined)[] {
 export async function runBabysitIteration(
   args: RunBabysitIterationInput,
 ): Promise<RunBabysitIterationResult> {
-  // The `claude` CLI accepts either the subscription OAuth token or a direct
-  // API key; require at least one so the agent can authenticate.
-  const hasClaudeAuth =
-    (Bun.env["CLAUDE_CODE_OAUTH_TOKEN"] ?? "") !== "" ||
-    (Bun.env["ANTHROPIC_API_KEY"] ?? "") !== "";
-  if (!hasClaudeAuth) {
+  // Require the subscription OAuth token for the babysitter subprocess.
+  // ANTHROPIC_API_KEY is deliberately never forwarded: it is a long-lived
+  // deployment credential that injected PR or CI content could exfiltrate via
+  // the subprocess's Bash + WebFetch tools. Fail closed rather than falling
+  // back to the API key if the OAuth token is absent.
+  const oauthToken = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
+  if (typeof oauthToken !== "string" || oauthToken === "") {
     throw new Error(
-      "claude auth required: set CLAUDE_CODE_OAUTH_TOKEN (subscription) or ANTHROPIC_API_KEY",
+      "babysitter subprocess requires CLAUDE_CODE_OAUTH_TOKEN; ANTHROPIC_API_KEY is " +
+        "not forwarded to the agent subprocess to limit credential exposure via prompt injection",
     );
   }
 
@@ -113,10 +115,8 @@ export async function runBabysitIteration(
   // GITHUB_WEBHOOK_SECRET, POSTAL_API_KEY, etc.) to a prompt-injected process
   // that has Bash + WebFetch tools. Instead, forward only:
   //   1. Safe system vars (PATH, HOME, locale, tmp, terminal identity)
-  //   2. Exactly one Claude auth credential — prefer the subscription OAuth
-  //      token (shorter-lived, revocable) and only fall back to ANTHROPIC_API_KEY
-  //      when the OAuth token is absent, so the long-lived API key is never
-  //      forwarded when a subscription token is available.
+  //   2. CLAUDE_CODE_OAUTH_TOKEN only — already validated above. ANTHROPIC_API_KEY
+  //      is never forwarded (see the guard above).
   //   3. Caller-scoped overrides (GH_TOKEN, GIT_ASKPASS, GIT_TERMINAL_PROMPT)
   const SYSTEM_ENV_ALLOWLIST: ReadonlySet<string> = new Set([
     "PATH",
@@ -146,18 +146,8 @@ export async function runBabysitIteration(
       env[key] = value;
     }
   }
-  // Prefer the subscription OAuth token (shorter-lived) so ANTHROPIC_API_KEY
-  // is never forwarded when an OAuth token is already present. This limits
-  // the blast radius if a prompt-injected agent reads the subprocess env.
-  const oauthToken = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
-  if (typeof oauthToken === "string" && oauthToken !== "") {
-    env["CLAUDE_CODE_OAUTH_TOKEN"] = oauthToken;
-  } else {
-    const apiKey = Bun.env["ANTHROPIC_API_KEY"];
-    if (typeof apiKey === "string" && apiKey !== "") {
-      env["ANTHROPIC_API_KEY"] = apiKey;
-    }
-  }
+  // oauthToken was validated above (throws if absent/empty).
+  env["CLAUDE_CODE_OAUTH_TOKEN"] = oauthToken;
   // Caller provides GH_TOKEN, GIT_ASKPASS, GIT_TERMINAL_PROMPT.
   Object.assign(env, args.env ?? {});
   const result = await runTrackedAgentSubprocess(
