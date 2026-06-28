@@ -7,6 +7,17 @@ source_marker: false
 
 # Test and confirm the Scout for LoL report backends work end-to-end
 
+## Verification (2026-06-28) — dispatcher healthy, but 4 weekly reports have NEVER fired
+
+scout-prod logs show the `scheduled_reports` cron running every minute and completing
+(`✅ scheduled_reports completed in ~70ms`), so the dispatcher loop is healthy. **However**,
+PagerDuty incident **#5838** (triggered) reports that four `COMMON_DENOMINATOR` weekly reports
+(`id=46,47,48,49`: Ranked Surrender Leaders, Ranked Pairings, Ranked Bottom Pairings, Arena
+Pairings) "have not successfully run on schedule" — with a bogus `20631d` overdue duration, i.e.
+their last-successful-run timestamp is epoch-0 / **null → they have never fired in prod**. So the
+e2e path is _not_ confirmed green; there may be a real gap where these report types never dispatch.
+Stays open — and worth investigating as a possible bug, not just a verification.
+
 ## What
 
 Verify that report generation and delivery produce correct output across all
