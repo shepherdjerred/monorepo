@@ -1,4 +1,5 @@
 import {
+  ConfigMap,
   Cpu,
   Deployment,
   DeploymentStrategy,
@@ -10,6 +11,8 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { withCommonLinuxServerProps } from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
 import {
   withCommonProps,
@@ -20,6 +23,9 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+
+const CURRENT_FILENAME = fileURLToPath(import.meta.url);
+const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
 
 export function createQBitTorrentDeployment(
   chart: Chart,
@@ -60,6 +66,62 @@ export function createQBitTorrentDeployment(
 
   const localPathVolume = new ZfsNvmeVolume(chart, "qbittorrent-pvc", {
     storage: Size.gibibytes(32),
+  });
+
+  // The qBittorrent config PVC, shared between the seed init container and the
+  // main container so both mount the same `/config`.
+  const configVolume = Volume.fromPersistentVolumeClaim(
+    chart,
+    "qbittorrent-volume",
+    localPathVolume.claim,
+  );
+
+  // Config-as-code: a committed baseline qBittorrent.conf seeded into the PVC on
+  // first boot. qBittorrent rewrites its conf at runtime, so this is a
+  // seed-if-absent (not enforce): on an existing PVC the live conf is left
+  // untouched; on a fresh PVC (disaster recovery / new deploy) the committed
+  // settings are restored. The WebUI password hash is deliberately NOT in the
+  // committed file — qBittorrent generates a temporary password (logged) on a
+  // fresh start, which is then reset.
+  const qbittorrentConfig = new ConfigMap(chart, "qbittorrent-config", {
+    metadata: {
+      name: "qbittorrent-config",
+    },
+  });
+  // addDirectory reads the committed dir synchronously at synth time and adds
+  // each file as a ConfigMap key, so the key is exactly "qBittorrent.conf".
+  qbittorrentConfig.addDirectory(
+    path.join(CURRENT_DIRNAME, "..", "configs", "qbittorrent"),
+  );
+  const seedVolume = Volume.fromConfigMap(
+    chart,
+    "qbittorrent-config-volume",
+    qbittorrentConfig,
+  );
+
+  // Runs as root so it can write to a fresh, root-owned PVC during disaster
+  // recovery, then hands ownership to the LinuxServer PUID/PGID (1000:1000).
+  deployment.addInitContainer({
+    name: "qbittorrent-config-seed",
+    image: `ghcr.io/linuxserver/qbittorrent:${versions["linuxserver/qbittorrent"]}`,
+    command: [
+      "/bin/sh",
+      "-c",
+      "mkdir -p /config/qBittorrent && if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then cp /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf && chown 1000:1000 /config/qBittorrent/qBittorrent.conf && chmod 600 /config/qBittorrent/qBittorrent.conf; fi",
+    ],
+    resources: {},
+    securityContext: {
+      ensureNonRoot: false,
+      user: 0,
+      group: 0,
+      privileged: false,
+      allowPrivilegeEscalation: false,
+      readOnlyRootFilesystem: true,
+    },
+    volumeMounts: [
+      { path: "/config", volume: configVolume },
+      { path: "/seed", volume: seedVolume },
+    ],
   });
 
   deployment.addContainer(
@@ -120,11 +182,7 @@ export function createQBitTorrentDeployment(
       volumeMounts: [
         {
           path: "/config",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "qbittorrent-volume",
-            localPathVolume.claim,
-          ),
+          volume: configVolume,
         },
         {
           volume: Volume.fromPersistentVolumeClaim(
