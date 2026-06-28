@@ -185,6 +185,8 @@ Key settings:
 }
 ```
 
+**`server.port` must be a JSON string, not a number.** pinchtab's Go config parser (0.13.2) types `server.port` as `string`; a numeric value fails with `cannot unmarshal number into ServerConfig.server.port of type string`, the server never binds, and (in the homelab) the pod crashloops on its `/health` startup probe. In the cdk8s deploy (`packages/homelab/src/cdk8s/src/resources/pinchtab/index.ts`) emit it as `String(PINCHTAB_PORT)`. A Greptile P2 once "fixed" this to a number (commit `a831c840f`) and broke the deployment — do not re-apply.
+
 ## Stealth Levels
 
 - **light**: Minimal anti-detection

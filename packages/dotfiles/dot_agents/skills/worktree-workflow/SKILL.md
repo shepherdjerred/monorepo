@@ -593,6 +593,36 @@ fi
    git worktree list | grep "agent-"
    ```
 
+## Monorepo-Specific (shepherdjerred/monorepo)
+
+The generic workflow above applies, but this repo nests worktrees at `.claude/worktrees/<name>` and has fresh-worktree setup gotchas. Use the monorepo command from the root `CLAUDE.md` (`git worktree add .claude/worktrees/<slug> -b feature/<slug> origin/main`).
+
+### Team / multi-agent work stays out of main
+
+When spawning a team of agents to implement a plan, every teammate works in its own worktree (e.g. `.claude/worktrees/<feature>-<role>`), never the user's main checkout — bake the worktree-setup commands into each teammate's bootstrap prompt so they don't `cd` into main. The team lead coordinates from its own session and does not edit monorepo files in main either.
+
+### Commit + push after every phase
+
+Deleting a worktree discards uncommitted working-tree changes with no recovery path (never `git add`ed = no git objects in the shared `.git`). A large, fully-working feature was lost this way. For any multi-step / PR-bound work, commit after every phase and push the branch immediately (open a draft PR early) so the work is backed up off-machine — never hold a big change uncommitted.
+
+### Fresh worktree: `mise trust` before `setup.ts`
+
+A worktree from a plain `git worktree add` (not `claude -w` or the SessionStart hook) can't run `bun run scripts/setup.ts` out of the box: `bun` resolves to a mise shim that refuses to launch when the worktree's `.mise.toml` is untrusted, so bun never starts and setup's own Phase-1 `mise trust` never runs (chicken-and-egg). Fix: run `mise trust -y --all` first (~0.06s), then `bun run scripts/setup.ts`. `claude -w <slug>` and the SessionStart hook do this automatically.
+
+### Fresh worktree: pre-commit eslint needs deps + built eslint-config
+
+Committing a `packages/homelab` change in a fresh worktree fails the lefthook `staged-lint → eslint-homelab` hook before the commit lands, with two errors in order: (1) `The 'jiti' library is required...` — `bun run --filter @shepherdjerred/homelab typecheck` only populates `packages/homelab/src/cdk8s/node_modules`, so you must run a plain `cd packages/homelab && bun install` to get `packages/homelab/node_modules/.bin/eslint` + jiti at the root where the hook resolves them; (2) `Cannot find module '@eslint/js'` — fix with `cd packages/eslint-config && bun install && bun run build`. Running full `bun run scripts/setup.ts` (Shared Builds phase) also fixes both. Note: a failed pre-commit hook silently aborts the commit (HEAD unchanged, files stay staged) — don't pipe `git commit` to `tail` or you'll read tail's exit code instead of the failing job's.
+
+### knip is CI-only (since 2026-06-07)
+
+`knip` was removed from lefthook pre-commit and now runs only in CI (the `knip-check` Dagger step). It used to force a full `scripts/setup.ts` install in every fresh worktree because it loads every workspace in `knip.json`. Practical effect: a fresh worktree no longer needs the whole-repo install just to commit — the remaining pre-commit hooks are per-package and affected-scoped, so a change touching one package only needs that package's deps + a built `eslint-config`. knip coverage is not lost (CI runs it on every PR).
+
+### Recovering a wiped worktree
+
+A concurrent cleanup/prune over `.claude/worktrees/*` can delete your worktree's working tree AND its `.git` pointer mid-session. Symptoms: `git rev-parse --show-toplevel` suddenly returns the MAIN checkout and `--abbrev-ref HEAD` says `main`; files you read minutes ago are gone; Edit/Write fail with 'File does not exist'; `git worktree list` marks the worktree `prunable`. The branch ref + admin dir usually survive at `<main>/.git/worktrees/<name>/`, so committed work is safe.
+
+Recovery: (1) recreate the deleted pointer — `printf 'gitdir: <main>/.git/worktrees/<name>\n' > <worktree>/.git`; (2) VERIFY `git -C <worktree> rev-parse --show-toplevel` is the worktree (not main) before any restore, else a reset hits main; (3) `git reset --hard HEAD` to repopulate, then reinstall `node_modules` (untracked, also wiped). If the entire dir is gone, from main run `git worktree prune` then `git worktree add .claude/worktrees/<name> <branch>`. Commit + push ASAP afterward in case the cleanup re-fires.
+
 ## Integration with PR Workflow
 
 ### Combined Start-to-PR Script

@@ -52,8 +52,11 @@ bun scripts/check-suppressions.ts --ci         # lint suppressions valid
 bash scripts/check-env-var-names.sh            # env var naming conventions
 bash scripts/check-dagger-hygiene.sh           # no banned Dagger patterns
 bun scripts/guard-no-package-exclusions.ts     # migration guard
+bun scripts/check-react-version-sync.ts        # react/react-dom resolved versions match
 gitleaks detect --redact --no-banner           # no secrets in repo
 ```
+
+**`check-react-version-sync.ts`** parses every `bun.lock` and, for workspaces declaring both `react`+`react-dom` (or the `@types/react`+`@types/react-dom` pair) directly, asserts the resolved versions match. A skew throws `Incompatible React versions` at runtime (blank page) the instant `react-dom/client` imports — it passes tsc, vite build, eslint, and tests. Pin `react` and `react-dom` to the **same exact version**; Renovate's `React` group bumps them together. Blocking in lefthook (Tier-2), `.dagger/src/quality.ts` (`reactVersionSync`), and `scripts/ci`.
 
 ## Wave 4: Soft Checks
 
@@ -74,6 +77,10 @@ These require infrastructure only present in CI:
 - **Security scans** — Trivy, Semgrep (CI containers)
 - **Playwright tests** — needs browser install (`bunx playwright install`)
 - **Caddyfile validate** — needs Dagger
+
+## Gotcha — `check-suppressions` flags doc/skill markdown
+
+`scripts/check-suppressions.ts` greps the **staged diff** for suppression tokens (`eslint-disable`, `@ts-ignore`, `@ts-nocheck`, `@ts-expect-error`, `prettier-ignore`, `|| true`, `2>/dev/null`, `x-access-token`, `git add -A`, `--no-exit-code`, …) on added lines. Its `EXCLUDED_FILES` allowlist covers `packages/docs/`, `AGENTS.md`, `CLAUDE.md`, `.dagger/prompts/` — but **NOT** `packages/dotfiles/dot_agents/skills/`. So a skill that merely _names_ a banned pattern in prose trips the hook even though the token is inert. Fix by rewording the prose to avoid the literal token (preferred), or add the path to `EXCLUDED_FILES`. Note `packages/dotfiles/dot_agents/skills/**` is also excluded from markdownlint/prettier, but docs under `packages/docs/` are not.
 
 ## Success Criteria
 

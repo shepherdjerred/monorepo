@@ -175,8 +175,16 @@ git diff --word-diff                # Word-level diff
 
    Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`, `build`, `revert`
 
-3. **Stage intentionally**: Use `git add -p` to review each hunk
+3. **Stage intentionally**: Review staged changes with `git diff --cached` before committing
 4. **Verify before committing**: Run `git diff --cached` to review staged changes
+
+### Monorepo commit-msg validation (this repo)
+
+The `commit-msg` lefthook hook (`scripts/validate-commit-msg.ts`) requires `type(scope): description` with a **mandatory scope from a fixed allowlist** — `feat: …` with no scope is rejected with `Invalid commit message format`. Scope must be a `packages/` dir name or one of `root` / `dagger` / `practice` / `archive` (`monorepo`, `repo`, `ALL` are NOT valid). Use `root` for sweeping cross-package commits (e.g. `feat(root): …`). Valid types: `feat fix chore ci docs refactor test perf build style revert misc`. Auto-generated release/bot commits (e.g. `chore: bump image versions …`) bypass the hook because `release.ts` commits via git directly.
+
+### lefthook output gotcha — don't trust the summary glyphs
+
+In a lefthook (v2) pre-commit, a **failed** prettier/staged-lint step can render in the final summary tree with the same dim-green coloring as a pass, yet `git commit` exits 1 and creates no commit (it aborts before the commit-msg hook even runs). Trust the **exit code**, not the glyphs — read the step body higher in the output for `[warn] <file>` + `exit status 1`. Fix is usually `bunx prettier --write <file>` then re-stage. Also: piping the commit (`git commit … | tail`) makes `$?` report tail's exit (0) and masks the real failure — capture to a file and check the un-piped status.
 
 ### Syncing with Upstream
 
@@ -224,6 +232,15 @@ git reset --hard HEAD@{2}           # Reset to state 2 moves ago
 git reflog | grep "checkout.*branch-name"
 git branch <branch-name> <sha>      # Recreate from found SHA
 ```
+
+## Safety Rules (Agent)
+
+- **Never destroy uncommitted work to investigate.** Don't `git stash`, `git checkout -- <file>`, `git restore`, or switch branches just to test something (e.g. checking whether failures are pre-existing) — these discard the user's or a concurrent agent's in-progress changes. Note the observation and move on, or ask the user.
+- **Force-push only branches you own.** Never force-push `main`, release branches, or any branch others have pushed to or based work on without explicit confirmation at the moment of execution. Force-pushing a feature branch Claude created and owns this session is fine — use `--force-with-lease`, never `--force`. If unsure who else touched it, treat it as shared and ask first.
+- **Subagents must stay read-only on history.** When spawning Explore/Plan/general-purpose agents, explicitly forbid `git checkout <branch>`, `git switch`, `git stash`, `git reset`, or anything that moves HEAD or the working tree — they can silently leave the user on a stale commit. Tell them to use `git show <ref>:<path>`, `git log <ref>`, and `git diff <ref>..<ref>` for cross-branch inspection. Verify HEAD with `git reflog` before any push after a subagent ran.
+- **Never revert changes you didn't make.** Unexpected file modifications may be a concurrent human or agent, not a rogue linter — reverting them causes build failures and lost work. If a change looks intentional (new types, refactored functions, new files) rather than formatting-only, leave it; ask before reverting anything.
+- **Whole-file staging only.** Split work into multiple commits with plain `git add <path> ...` grouped by file or concern — never `git add -p` / `-i` / `--patch` or any interactive hunk staging (it is opaque and hard to review). This overrides the `git add -p` suggestions elsewhere in this skill; if one file truly mixes two unrelated concerns, ask rather than reaching for `-p`.
+- **`core.fsmonitor` can silently drop `git add`.** The user's git config enables `core.fsmonitor` + `core.untrackedCache`; a stale cache can make `git status` report a clean tree and `git add` no-op after tool-driven edits. Detect it when `git hash-object <file>` ≠ `git rev-parse :<file>`. Work around by prefixing commands with `-c core.fsmonitor=false` (e.g. `git -c core.fsmonitor=false add <files>`).
 
 ## When to Ask for Help
 
