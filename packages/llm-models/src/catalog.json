@@ -7,8 +7,8 @@
     "pricing": {
       "modality": "text",
       "input": 5,
-      "cachedInput": 0.5,
-      "output": 30
+      "output": 30,
+      "cachedInput": 0.5
     },
     "contextWindow": 400000,
     "capabilities": {
@@ -26,8 +26,8 @@
     "pricing": {
       "modality": "text",
       "input": 0.75,
-      "cachedInput": 0.075,
-      "output": 4.5
+      "output": 4.5,
+      "cachedInput": 0.075
     },
     "contextWindow": 400000,
     "capabilities": {
@@ -45,8 +45,8 @@
     "pricing": {
       "modality": "text",
       "input": 0.2,
-      "cachedInput": 0.02,
-      "output": 1.25
+      "output": 1.25,
+      "cachedInput": 0.02
     },
     "contextWindow": 400000,
     "capabilities": {
@@ -61,9 +61,16 @@
     "provider": "openai",
     "displayName": "Text Embedding 3 Small",
     "description": "Embedding model (input-only pricing).",
-    "pricing": { "modality": "text", "input": 0.02, "output": 0 },
+    "pricing": {
+      "modality": "text",
+      "input": 0.02,
+      "output": 0
+    },
     "contextWindow": 8191,
-    "capabilities": { "supportsTemperature": false, "supportsTopP": false },
+    "capabilities": {
+      "supportsTemperature": false,
+      "supportsTopP": false
+    },
     "status": "current",
     "category": "embedding"
   },
@@ -79,7 +86,7 @@
       "cacheRead": 0.5,
       "cacheWrite": 6.25
     },
-    "contextWindow": 1000000,
+    "contextWindow": 200000,
     "capabilities": {
       "supportsTemperature": false,
       "supportsTopP": false,
@@ -154,8 +161,14 @@
     "provider": "google",
     "displayName": "Gemini 3 Pro Image",
     "description": "State-of-the-art image generation (codename: Nano Banana Pro). Per-image rate is the Standard 1K-2K tier (4K is higher).",
-    "pricing": { "modality": "image", "perImage": 0.134 },
-    "capabilities": { "supportsTemperature": false, "supportsTopP": false },
+    "pricing": {
+      "modality": "image",
+      "perImage": 0.134
+    },
+    "capabilities": {
+      "supportsTemperature": false,
+      "supportsTopP": false
+    },
     "status": "preview"
   },
   "gemini-3.1-flash-image-preview": {
@@ -163,8 +176,14 @@
     "provider": "google",
     "displayName": "Gemini 3.1 Flash Image",
     "description": "High-efficiency image generation (codename: Nano Banana 2). Per-image rate is the Standard 1K tier.",
-    "pricing": { "modality": "image", "perImage": 0.067 },
-    "capabilities": { "supportsTemperature": false, "supportsTopP": false },
+    "pricing": {
+      "modality": "image",
+      "perImage": 0.067
+    },
+    "capabilities": {
+      "supportsTemperature": false,
+      "supportsTopP": false
+    },
     "status": "preview"
   },
   "gemini-2.5-flash-image": {
@@ -172,8 +191,14 @@
     "provider": "google",
     "displayName": "Gemini 2.5 Flash Image",
     "description": "Fast image generation (1024px, codename: Nano Banana).",
-    "pricing": { "modality": "image", "perImage": 0.039 },
-    "capabilities": { "supportsTemperature": false, "supportsTopP": false },
+    "pricing": {
+      "modality": "image",
+      "perImage": 0.039
+    },
+    "capabilities": {
+      "supportsTemperature": false,
+      "supportsTopP": false
+    },
     "status": "current"
   }
 }
