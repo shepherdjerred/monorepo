@@ -130,6 +130,7 @@ describe("insertChangelogEntry", () => {
   test("inserts the entry at the top of the array, before existing entries", () => {
     const literal = buildPatchChangelogEntryLiteral(
       SAMPLE_PATCH,
+      [],
       new Date(2026, 5, 28),
     );
     const updated = insertChangelogEntry(SAMPLE_SOURCE, literal);
@@ -155,6 +156,7 @@ describe("buildPatchChangelogEntryLiteral", () => {
   test("uses the REAL Riot patch number (26.x), not the Data Dragon version", () => {
     const literal = buildPatchChangelogEntryLiteral(
       SAMPLE_PATCH,
+      [],
       new Date(2026, 5, 28),
     );
     expect(literal).toContain("Updated for League patch 26.14");
@@ -168,11 +170,26 @@ describe("buildPatchChangelogEntryLiteral", () => {
   test("includes a direct link to the Riot patch notes", () => {
     const literal = buildPatchChangelogEntryLiteral(
       SAMPLE_PATCH,
+      [],
       new Date(2026, 5, 28),
     );
     expect(literal).toContain("link: {");
     expect(literal).toContain('label: "Read Riot\'s full Patch 26.14 notes"');
     expect(literal).toContain(`href: ${JSON.stringify(SAMPLE_PATCH.url)}`);
+  });
+
+  test("appends Claude-generated highlights after the data-refresh line", () => {
+    const literal = buildPatchChangelogEntryLiteral(
+      SAMPLE_PATCH,
+      ["New champion Locke joins the Rift", "Arena adds new prismatic items"],
+      new Date(2026, 5, 28),
+    );
+    const refreshIdx = literal.indexOf("refreshed for League patch 26.14");
+    const lockeIdx = literal.indexOf("New champion Locke joins the Rift");
+    const arenaIdx = literal.indexOf("Arena adds new prismatic items");
+    expect(refreshIdx).toBeGreaterThan(-1);
+    expect(lockeIdx).toBeGreaterThan(refreshIdx);
+    expect(arenaIdx).toBeGreaterThan(lockeIdx);
   });
 });
 
@@ -188,7 +205,7 @@ describe("patch gating end-to-end", () => {
     }
     return insertChangelogEntry(
       source,
-      buildPatchChangelogEntryLiteral(SAMPLE_PATCH, new Date(2026, 5, 28)),
+      buildPatchChangelogEntryLiteral(SAMPLE_PATCH, [], new Date(2026, 5, 28)),
     );
   }
 

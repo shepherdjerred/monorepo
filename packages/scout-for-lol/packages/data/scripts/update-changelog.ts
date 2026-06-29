@@ -135,13 +135,14 @@ export function insertChangelogEntry(
 }
 
 /**
- * Build the templated changelog entry literal for a Data Dragon patch bump,
- * using the REAL player-facing patch from Riot (e.g. "26.13") — not the Data
- * Dragon version ("16.13"). Copy is intentionally minimal and factual since
- * this rides the auto-merged PR.
+ * Build the changelog entry literal for a Data Dragon patch bump, using the REAL
+ * player-facing patch from Riot (e.g. "26.13") — not the Data Dragon version
+ * ("16.13"). The first item is always Scout's data-refresh line; `highlights`
+ * (Claude-summarized from the patch notes, may be empty on fallback) follow.
  */
 export function buildPatchChangelogEntryLiteral(
   patch: RiotPatch,
+  highlights: string[],
   date: Date,
 ): string {
   return buildChangelogEntryLiteral({
@@ -153,6 +154,7 @@ export function buildPatchChangelogEntryLiteral(
         color: "indigo",
         items: [
           `Champion, item, summoner spell, and rune data refreshed for League patch ${patch.patch}`,
+          ...highlights,
         ],
       },
     ],

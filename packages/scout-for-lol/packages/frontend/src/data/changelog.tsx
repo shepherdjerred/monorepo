@@ -20,8 +20,9 @@ export const changelog: ChangelogEntry[] = [
         color: "indigo",
         items: [
           "Champion, item, summoner spell, and rune data refreshed for League patch 26.13",
-          "New champion Locke is supported in match reports and pre-match loading screens",
-          "Reflects 26.13 champion balance changes, item updates, and Arena adjustments",
+          "New champion Locke, the Ashen Exorcist, arrives with demon-hunting abilities",
+          "Ranked 5v5 returns for a limited-time run with Tournament Draft",
+          "Champion balance shifts: buffs to Aphelios, Draven, and Kai'Sa; nerfs to Bard, Brand, and Cassiopeia",
         ],
       },
     ],

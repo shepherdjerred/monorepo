@@ -26,6 +26,7 @@ import {
   minorVersionKey,
 } from "./update-changelog.ts";
 import { fetchPatches, selectPatchByMinor } from "./riot-patch.ts";
+import { generatePatchHighlights } from "./patch-highlights.ts";
 
 const ASSETS_DIR = `${import.meta.dir}/../src/data-dragon/assets`;
 const IMG_DIR = `${ASSETS_DIR}/img`;
@@ -957,13 +958,27 @@ async function maybeAppendChangelogEntry(
     return;
   }
 
+  // Ask Claude to summarize the real patch notes into player-facing highlights.
+  // Best-effort: a failure (no claude, timeout, bad output) falls back to just
+  // the data-refresh line rather than blocking the asset PR.
+  let highlights: string[] = [];
+  try {
+    console.log(`🤖 Summarizing patch ${patch.patch} notes via Claude...`);
+    highlights = await generatePatchHighlights(patch);
+    console.log(`✓ ${String(highlights.length)} highlight(s) generated`);
+  } catch (error) {
+    console.warn(
+      `⚠ Claude highlight generation failed; using data-refresh line only: ${String(error)}`,
+    );
+  }
+
   console.log(
     `📝 Adding "What's New" entry for League patch ${patch.patch}...`,
   );
   const source = await Bun.file(CHANGELOG_FILE).text();
   const updated = insertChangelogEntry(
     source,
-    buildPatchChangelogEntryLiteral(patch, new Date()),
+    buildPatchChangelogEntryLiteral(patch, highlights, new Date()),
   );
   await Bun.write(CHANGELOG_FILE, updated);
 

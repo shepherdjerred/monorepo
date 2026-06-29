@@ -40,15 +40,21 @@ links straight to the official patch notes.
   JSON → `{ patch: "26.13", url, tagline, … }`. A plain `fetch()` works (no
   headless browser), so it runs from the Temporal worker. `selectPatchByMinor()`
   matches the Riot patch to the Data Dragon minor (the major differs: 16 ↔ 26).
+- `data/scripts/patch-highlights.ts` (new, + test): `generatePatchHighlights()`
+  spawns `claude -p` (Haiku, WebFetch-only, 2-min timeout) to read the real patch
+  notes and return 2-4 player-facing highlight bullets; the prompt + JSON parser
+  are pure/tested. Best-effort — a failure falls back to the data-refresh line only.
 - `data/scripts/update-changelog.ts` (new, pure + unit-tested): `minorVersionKey`,
-  `isMinorVersionBump`, `insertChangelogEntry`, and `buildPatchChangelogEntryLiteral`
-  — which now takes a `RiotPatch` and emits the real patch number + a
-  "Read Riot's full Patch X.Y notes →" link.
+  `isMinorVersionBump`, `insertChangelogEntry`, and
+  `buildPatchChangelogEntryLiteral(patch, highlights, date)` — emits the real patch
+  number, the data-refresh line + Claude highlights, and a
+  "Read Riot's full Patch X.Y notes →" link. The deterministic code owns the
+  number/link/gating, so the LLM can't get the load-bearing facts wrong.
 - `data/scripts/update-data-dragon.ts`: capture the on-disk version before
-  overwrite; on a minor bump, fetch the matching Riot patch, prepend the entry to
-  `changelog.tsx`, and `bunx prettier --write` it (the prettier gate covers it,
-  and this PR auto-merges). Network/parse failure throws; a not-yet-posted matching
-  patch is an expected timing case that skips the entry without blocking the asset PR.
+  overwrite; on a minor bump, fetch the matching Riot patch, ask Claude for
+  highlights, prepend the entry to `changelog.tsx`, and `bunx prettier --write` it
+  (the prettier gate covers it, and this PR auto-merges). Riot network/parse failure
+  throws; a not-yet-posted matching patch skips the entry without blocking the asset PR.
 - `packages/temporal/src/activities/data-dragon.ts`: added the changelog path to
   `GENERATED_PATHS` so it commits with the PR (a `git add` of an unchanged path
   is a no-op).
@@ -69,42 +75,44 @@ links straight to the official patch notes.
 | `…/frontend/src/data/changelog-builder.tsx`                                         | **new** types/component/`buildChangelogEntry` (+ link)       |
 | `…/frontend/src/data/changelog.tsx`                                                 | slimmed to data array; backfilled real **Patch 26.13** entry |
 | `…/data/scripts/riot-patch.ts` (+ test)                                             | **new** fetch + parse Riot patch notes; select by minor      |
-| `…/data/scripts/update-changelog.ts` (+ test)                                       | **new** pure helpers; entry uses real patch + link           |
-| `…/data/scripts/update-data-dragon.ts`                                              | minor-bump gate → resolve Riot patch → insert + prettier     |
+| `…/data/scripts/patch-highlights.ts` (+ test)                                       | **new** `claude -p` summarizes notes → highlight bullets     |
+| `…/data/scripts/update-changelog.ts` (+ test)                                       | **new** pure helpers; entry = real patch + highlights + link |
+| `…/data/scripts/update-data-dragon.ts`                                              | minor-bump gate → Riot patch → Claude highlights → insert    |
 | `…/temporal/src/activities/data-dragon.ts`                                          | changelog in `GENERATED_PATHS`                               |
 | `…/temporal/src/activities/scout-season-refresh.ts`                                 | changelog in `SEASON_PATHS` + prettier                       |
 | `…/temporal/src/activities/scout-season-refresh-prompt.ts` (+ test, + `-claude.ts`) | prompt + threading                                           |
 
 ## Verification (done locally)
 
-- `bun test` → 26 data tests (riot-patch + update-changelog) + 9 prompt tests pass.
+- `bun test scripts/` → 38 data tests (riot-patch + patch-highlights +
+  update-changelog) pass; season prompt test → 9 pass.
 - Typecheck clean: data, frontend (`astro check`, 0 errors), temporal. ESLint +
   prettier clean on all changed files; `changelog.tsx` back under the 500-line cap.
-- **Live**: `fetchPatches()` against Riot returns `26.13` and `selectPatchByMinor(…,13)`
-  → the real notes URL + tagline; the automation's generated literal carries
-  `26.13` + the patch-notes link.
+- **Live end-to-end**: `fetchPatches()` returns `26.13`; `generatePatchHighlights()`
+  (real `claude -p`) returned accurate bullets — "New champion Locke, the Ashen
+  Exorcist…", "Ranked 5v5 returns… with Tournament Draft", "buffs to Aphelios/
+  Draven/Kai'Sa; nerfs to Bard/Brand/Cassiopeia".
 - Built the site and screenshotted `/whatsnew` showing the real **Patch 26.13**
-  entry (Locke + balance/item/Arena) with a working "Read Riot's full Patch 26.13
-  notes →" link (`.claude/artifacts/whatsnew-patch-26-13.jpg`).
+  entry with the Claude highlights + a working "Read Riot's full Patch 26.13 notes →"
+  link (`.claude/artifacts/whatsnew-patch-26-13-llm.jpg`).
 
 ## Session Log — 2026-06-28
 
 ### Done
 
 - Both paths + shared `buildChangelogEntry` (with optional link); split builder
-  into `changelog-builder.tsx`. New `riot-patch.ts` pulls the real player-facing
-  patch number (26.x) from Riot; `update-data-dragon.ts` uses it. Backfilled the
-  current **Patch 26.13** entry. 35 tests; season prompt/threading + test updated.
-- Verified typecheck/lint/prettier/tests across all touched packages and screenshotted
-  the rendered 26.13 entry + link.
+  into `changelog-builder.tsx`. `riot-patch.ts` pulls the real player-facing patch
+  number (26.x) from Riot; `patch-highlights.ts` has `claude -p` summarize the notes
+  into highlight bullets; `update-data-dragon.ts` wires both. Backfilled the current
+  **Patch 26.13** entry with the real Claude highlights + link. 47 tests total.
+- Verified typecheck/lint/prettier/tests across all touched packages; live-ran the
+  LLM highlight generation; screenshotted the rendered 26.13 entry + link.
 
 ### Remaining
 
 - Commit + open PR; attach the `/whatsnew` screenshot.
-- Optional richer auto-copy: today's automation entry is one factual data-refresh
-  line + the patch link. Summarizing patch _highlights_ (new champion, modes, items)
-  accurately would need an LLM step (claude -p WebFetch) — deferred; hand-authored
-  entries can already be as rich as the 26.13 backfill.
+- Acceptance: watch the first real minor-bump Data Dragon PR to confirm the
+  Claude-highlight entry lands end-to-end (and the season PR for a new act).
 
 ### Caveats
 
@@ -116,5 +124,11 @@ links straight to the official patch notes.
   isn't in `setup.ts` shared builds, so its `dist` is missing from `file:` copies
   and dependents fail typecheck until built + copies refreshed. Worked around locally.
 - Patch entries ride the **auto-merged** PR, so the minor-only gate is load-bearing.
+- Patch highlights need the `claude` CLI + `CLAUDE_CODE_OAUTH_TOKEN` on `PATH` in
+  the worker (already present for season-refresh / pr-agent). It's **best-effort**:
+  if Claude is missing/fails, the entry still ships with the data-refresh line + link.
+  Highlights are LLM-generated and auto-merged, so they're unreviewed — kept short,
+  WebFetch-only, and strictly-factual by the prompt; the deterministic patch number
+  and link are never LLM-controlled.
 - Season prettier step assumes Claude ran `bun install`; the explicit
   `--frozen-lockfile` install before prettier covers the no-install case.
