@@ -2,7 +2,7 @@
 
 ## Status: Reference
 
-The `NPM_TOKEN` used by Buildkite CI for npm publishes lives in 1Password item `vaults/v64ocnykdqju4ui6j6pua56xw4/items/rzk3lawpk4yspyyu5rxlz44ssi`. Rotation is recurring (~every 90 days) and has several non-obvious traps.
+The `NPM_TOKEN` used by Buildkite CI for npm publishes lives in the homelab 1Password vault's Buildkite CI secrets item. Rotation is recurring (~every 90 days) and has several non-obvious traps.
 
 ## Gotchas
 
