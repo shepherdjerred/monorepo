@@ -106,14 +106,53 @@ describe("parsePatchesFromHtml", () => {
 });
 
 describe("selectPatchByMinor", () => {
+  const now2026 = new Date("2026-06-30T00:00:00Z");
+
   test("matches by minor (week), independent of the major", () => {
     const patches = parsePatchesFromHtml(fixtureHtml());
-    expect(selectPatchByMinor(patches, 13)?.patch).toBe("26.13");
-    expect(selectPatchByMinor(patches, 12)?.patch).toBe("26.12");
+    expect(selectPatchByMinor(patches, 13, now2026)?.patch).toBe("26.13");
+    expect(selectPatchByMinor(patches, 12, now2026)?.patch).toBe("26.12");
   });
 
   test("returns undefined when the matching minor is not posted yet", () => {
     const patches = parsePatchesFromHtml(fixtureHtml());
-    expect(selectPatchByMinor(patches, 14)).toBeUndefined();
+    expect(selectPatchByMinor(patches, 14, now2026)).toBeUndefined();
+  });
+
+  test("prefers the current calendar year when two years share a minor", () => {
+    // Simulate the future overlap the guard defends against: a newer 27.13
+    // sits ahead of 26.13 in the newest-first feed.
+    const patches = [
+      {
+        patch: "27.13",
+        major: 27,
+        minor: 13,
+        title: "League of Legends Patch 27.13 Notes",
+        tagline: "",
+        url: "https://example.com/27-13",
+      },
+      {
+        patch: "26.13",
+        major: 26,
+        minor: 13,
+        title: "League of Legends Patch 26.13 Notes",
+        tagline: "",
+        url: "https://example.com/26-13",
+      },
+    ];
+    // In 2026 (major 26), the older-but-current-year patch wins over the newer one.
+    expect(selectPatchByMinor(patches, 13, now2026)?.patch).toBe("26.13");
+    // In 2027 (major 27), the newer patch is the right one.
+    expect(
+      selectPatchByMinor(patches, 13, new Date("2027-06-30T00:00:00Z"))?.patch,
+    ).toBe("27.13");
+  });
+
+  test("falls back to the newest same-minor patch when no year matches", () => {
+    const patches = parsePatchesFromHtml(fixtureHtml());
+    // 2099 (major 99) matches nothing, so the newest 26.13 wins.
+    expect(
+      selectPatchByMinor(patches, 13, new Date("2099-06-30T00:00:00Z"))?.patch,
+    ).toBe("26.13");
   });
 });

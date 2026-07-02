@@ -16,7 +16,10 @@ const MODEL = "claude-haiku-4-5";
 const MAX_TURNS = "6";
 const TIMEOUT_MS = 120_000;
 
-const HighlightsSchema = z.array(z.string().min(1).max(200)).min(1).max(5);
+// Range mirrors the prompt's "2 to 4 highlights" instruction: a 1-item or
+// 5-item response fails validation so the caller falls back to the plain
+// data-refresh line rather than shipping an off-spec entry to an auto-merged PR.
+const HighlightsSchema = z.array(z.string().min(1).max(200)).min(2).max(4);
 
 // `claude -p --output-format json` wraps the final assistant text in `.result`.
 const ClaudeResultSchema = z.object({ result: z.string() });

@@ -116,12 +116,31 @@ export function parsePatchesFromHtml(html: string): RiotPatch[] {
   return patches;
 }
 
-/** Pick the patch whose minor (week) matches the Data Dragon minor, if posted. */
+/**
+ * Pick the patch whose minor (week) matches the Data Dragon minor, if posted.
+ *
+ * Riot's player-facing numbering is `YY.WW` (major = two-digit calendar year),
+ * so once two years' patches coexist on the feed (e.g. `27.13` alongside a still
+ * -listed `26.13`) matching on the minor alone would pick the wrong year's notes.
+ * We therefore prefer the candidate whose major equals the current two-digit year
+ * and only fall back to the newest same-minor patch when none matches — keeping
+ * today's single-year behavior while defending against the future overlap.
+ */
 export function selectPatchByMinor(
   patches: readonly RiotPatch[],
   minor: number,
+  now: Date = new Date(),
 ): RiotPatch | undefined {
-  return patches.find((patch) => patch.minor === minor);
+  const candidates = patches.filter((patch) => patch.minor === minor);
+  if (candidates.length === 0) {
+    return undefined;
+  }
+  const currentYearMajor = now.getUTCFullYear() % 100;
+  // `patches` is sorted newest-first, so candidates[0] is the newest fallback.
+  return (
+    candidates.find((patch) => patch.major === currentYearMajor) ??
+    candidates[0]
+  );
 }
 
 /**

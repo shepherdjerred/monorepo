@@ -60,13 +60,27 @@ describe("parseHighlights", () => {
     expect(() => parseHighlights(claudeJson("no array here"))).toThrow();
   });
 
-  test("throws when the array is empty (schema requires 1-5)", () => {
+  test("throws when the array is empty (schema requires 2-4)", () => {
     expect(() => parseHighlights(claudeJson("[]"))).toThrow();
   });
 
-  test("throws when there are more than 5 highlights", () => {
+  test("throws on a single highlight (below the 2-item minimum)", () => {
+    expect(() => parseHighlights(claudeJson('["only one"]'))).toThrow();
+  });
+
+  test("accepts the boundary counts (2 and 4 highlights)", () => {
+    expect(parseHighlights(claudeJson('["1","2"]'))).toEqual(["1", "2"]);
+    expect(parseHighlights(claudeJson('["1","2","3","4"]'))).toEqual([
+      "1",
+      "2",
+      "3",
+      "4",
+    ]);
+  });
+
+  test("throws when there are more than 4 highlights", () => {
     expect(() =>
-      parseHighlights(claudeJson('["1","2","3","4","5","6"]')),
+      parseHighlights(claudeJson('["1","2","3","4","5"]')),
     ).toThrow();
   });
 });

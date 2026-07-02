@@ -9,7 +9,7 @@ import type { RiotPatch } from "./riot-patch.ts";
 
 /**
  * Color palette for a changelog section. Mirrors `ChangelogColor` in
- * packages/frontend/src/data/changelog.tsx — keep in sync. The frontend
+ * packages/frontend/src/data/changelog-builder.tsx — keep in sync. The frontend
  * typecheck validates the generated source, so a drifted value fails loudly.
  */
 export type ChangelogColor =
