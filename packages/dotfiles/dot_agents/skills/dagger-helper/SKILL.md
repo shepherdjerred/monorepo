@@ -557,6 +557,8 @@ export DAGGER_NO_UPDATE_CHECK=1 # suppress update checks
 5. **Missing `.git` in excludes** — `.git` changes every commit, invalidates all downstream layers.
 6. **`curl | bash` without version pinning** — gets latest, breaks reproducibility. Always pin the version in the URL or use a versioned installer.
 7. **Side-effectful `WithExec` without forcing** — if no downstream consumer forces evaluation, the operation silently doesn't execute. Always call `.sync()` or `.stdout()` on containers with side effects.
+8. **Smoke tests that clear the real entrypoint** — every `smokeTest*Helper` in `.dagger/src/misc.ts` does `.withEntrypoint([])` and runs `bun .../index.ts` directly, so any **entrypoint boot prelude** (e.g. `bunx prisma db push`) is never exercised and can crashloop in prod while smoke stays green (bit discord-plays-mario-kart, PR #1171 — Prisma 7 removed `db push --skip-generate`). Harden by running the real entrypoint command, extracted to a shared const so image + smoke can't drift.
+9. **Proposing a `.daggerignore` file** — not a real Dagger feature; Dagger never reads it. Source exclusions live in the `exclude:` parameter on `withDirectory()` calls (e.g. the `SOURCE_EXCLUDES` constant) inside the module code. Fix filesync issues at the root (recursive symlinks, bad dependency refs), not with a nonexistent ignore file.
 
 ## Module Organization
 

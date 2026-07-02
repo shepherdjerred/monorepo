@@ -185,6 +185,7 @@ This repository demonstrates several chezmoi patterns:
 - **1Password integration:** `config.fish.tmpl` uses `{{ onepasswordRead "op://..." }}` with `{{ if lookPath "op" }}` guard
 - **Onchange scripts:** `run_onchange_after_launchagent.sh.tmpl` uses `{{ include ... | sha256sum }}` in a comment to trigger re-run when the included file changes
 - **After scripts:** `run_after_sync-theme.sh.tmpl` runs theme sync after every apply, guarded by OS check
+- **`run_after_` scripts always show as a pending "new file" in `chezmoi diff`.** A plain `run_after_` script (not `run_once_`/`run_onchange_`, e.g. `run_after_sync-theme.sh.tmpl`) runs on every apply and isn't state-tracked, so it renders as `new file mode 100755 ... sync-theme.sh` even right after a clean `chezmoi apply`. Treat a `chezmoi diff` whose only remaining hunk is that run script as fully reconciled. Also: `chezmoi apply` on `.claude/settings.json` needs `--force` in non-interactive shells because Claude Code rewrites that file out-of-band ("changed since chezmoi last wrote it").
 
 ## Special Files and Directories
 

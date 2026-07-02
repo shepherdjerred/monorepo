@@ -28,6 +28,7 @@ AI-maintained knowledge base for the monorepo.
 - [Velero Orphan-Snapshot Prevention](decisions/2026-05-05_velero-orphan-snapshot-prevention.md) - Why we chose detection + manual remediation over self-healing for Velero orphan ZFS snapshots and R2 objects
 - [ZFS Fragmentation Acceptance](decisions/2026-05-05_zfs-fragmentation-acceptance.md) - Why we raised the fragmentation alert thresholds on SSD pools instead of mitigating
 - [Scout Arena Pre-match Scrubbed Players](decisions/2026-06-07_scout-arena-prematch-scrubbed-players.md) - Privacy-scrubbed players have no usable identity in Spectator-V5, so they're dropped from the pre-match image; accepted data loss
+- [Homelab Security Hardening Decisions](decisions/2026-06-06_homelab-security-hardening-decisions.md) - Owner's 2026-06-06 pen-test security decisions and the PR-1 hardening that landed
 - [Dagger Engine GC Semantics & PVC-Drift Hardening](decisions/2026-06-07_dagger-gc-and-pvc-drift.md) - Why the engine GC thresholds and PVC sizing were chosen to prevent cache-disk drift
 
 ## Plans
@@ -65,6 +66,19 @@ General issue tracking — deferred work, acceptance-testing gaps, post-merge ve
 - [Discord Plays Pokémon Audio Research](guides/2026-06-13_dpp-audio-research.md) - Investigation notes on the DPP audio pipeline
 - [Streambot Autonomous Perf-Debug Runbook](guides/2026-06-14_streambot-autonomous-perf-debug-runbook.md) - End-to-end perf-debugging loop for streambot
 - [\*arr Stack Subtitle Strategy](guides/2026-06-27_arr-stack-subtitle-strategy.md) - Bazarr providers, forced/EN/zh targets, scoring, bilingual, Whisper & Lingarr — cited research
+- [npm Granular Token Rotation](guides/2026-05-20_npm-granular-token-rotation.md) - Rotating npm granular tokens: WebAuthn-gated bypass-2FA, classic tokens retired, 90-day cap
+- [Homelab SMART/NVMe Disk Metrics](guides/2026-06-28_homelab-smart-disk-metrics.md) - How disk health metrics are emitted/labeled and the serial-stability fix
+- [Homelab OpenTofu Stack Addition](guides/2026-06-28_homelab-tofu-stack-addition.md) - Adding a Tofu stack: import-before-merge, secret threading, `*arr` key locations
+- [LLM Models Catalog](guides/2026-06-28_llm-models-catalog.md) - Central `llm-models` catalog: JSON+Zod/Pydantic source, consumers, file: dep dist gotcha
+- [MCP Gateway Architecture](guides/2026-06-28_mcp-gateway-architecture.md) - tbxark/mcp-proxy aggregation, TCP-probe readiness caveat, token rendering
+- [Redlib glibc Self-Build](guides/2026-06-28_redlib-glibc-self-build.md) - Why homelab self-builds redlib's glibc image (musl OAuth block) and how it's pinned
+- [Scout App Monaco / CSP](guides/2026-06-28_scout-app-monaco-csp.md) - Embedding Monaco / worker libs in the scout web app under strict CSP
+- [Scout Pre-match Debugging](guides/2026-06-28_scout-prematch-debugging.md) - Spectator payload archival to S3 + pre-start lobby detection
+- [Scout Report Dispatcher](guides/2026-06-28_scout-report-dispatcher.md) - Sync vs scheduler separation and freshness-gauge gating
+- [SeaweedFS Static-Site Hosting](guides/2026-06-28_seaweedfs-static-site-hosting.md) - Static-site topology + the 403 / volume-count / HEAD gotchas and fixes
+- [Smoke Test Discord Flakiness](guides/2026-06-28_smoke-test-discord-flaky.md) - Why `smoke-scout-for-lol` flakes (live discord.com) and how to recover
+- [Talos Lockdown & eBPF](guides/2026-06-28_talos-lockdown-ebpf.md) - secure-boot `lockdown=confidentiality` kills eBPF profiling; diagnosis
+- [Vendoring Package Checklist](guides/2026-06-28_vendoring-package-checklist.md) - Every wiring/exclusion list to update when vendoring a third-party package
 
 ## Archive
 

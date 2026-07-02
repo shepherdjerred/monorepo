@@ -270,6 +270,10 @@ plugins:
 - Dagger engine: remote `tcp://dagger-engine.dagger.svc.cluster.local:8080`
 - Kueue: ClusterQueue with 16 CPU/64Gi quota, FIFO ordering, no preemption
 - Agent: agent-stack-k8s Helm, max-in-flight=20, git mirrors, batch-low priority
+- **Soft-fail gates** — `trivy-scan`, `knip-check`, and `semgrep-scan` are soft failures that do **not** block the quality gate. When the goal is "get CI green," focus on real build/test/lint/typecheck/deploy failures; don't burn time adding CVEs to `.trivyignore` or chasing knip findings.
+- **Pushes to `main` cancel the running build** — Buildkite supersedes/cancels the in-flight `main` build on every new push, so a fix being validated at step 92/175 never gets a result. Batch small fixes into one commit and wait for the current build to reach the relevant steps before pushing again; don't push for formatting/trivial churn.
+- **Don't eagerly merge `main` into open PRs** — only merge `origin/main` into a branch when GitHub reports it `CONFLICTING` (mergeStateStatus `DIRTY`). Proactive merges add PR noise and, because a merge touching `.dagger/` triggers a full "build everything" CI run, they're slow and expensive. For a branch missing one specific main fix, prefer a surgical `git cherry-pick <sha>` over a full merge.
+- **`release` step gates only release-consuming work** — the `release` step runs release-please and is long-lived. Only steps that actually consume release metadata (npm publish, helm push, cooklang push, clauderon upload, version commit-back) should `depends_on: release`. Everything else should depend on `quality-gate` so unrelated work isn't bottlenecked behind release-please.
 
 ## Reference Files
 

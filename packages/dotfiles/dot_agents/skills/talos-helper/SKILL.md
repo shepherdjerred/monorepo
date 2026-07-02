@@ -148,6 +148,13 @@ talosctl --nodes <node-ip> upgrade \
 talosctl --nodes <control-plane-ip> upgrade-k8s --to 1.28.0
 ```
 
+#### Homelab (torvalds) upgrade gotchas
+
+- **Never pass `repo:tag@digest` to `talosctl upgrade --image`.** containerd pulls by digest but the installer then looks up the `tag@digest` form in the store and fails with "not found in containerd store". Use the tag-only reference (e.g. `factory.talos.dev/metal-installer-secureboot/<schematic>:vX.Y.Z`).
+- **Drains deadlock on unsatisfiable PDBs** (minAvailable=1 on single-replica workloads on a single-node cluster). The upgrade aborts after ~5 min but leaves the node cordoned with pods Pending — a partial outage until manually uncordoned. Before any drain, check `kubectl get pdb -A` for `ALLOWED DISRUPTIONS 0`. (postgres-operator PDBs are disabled in code since PR #1126.)
+- **Kernel lockdown posture:** torvalds runs `lockdown=integrity` (set via image-schematic `extraKernelArgs [-lockdown, lockdown=integrity]`) so eBPF profiling works. Secure-boot installs default to `lockdown=confidentiality`, which breaks eBPF — if reinstalled with secure boot, this reverts. Also `kernel.kptr_restrict=1` via `packages/homelab/src/talos/patches/sysctls.yaml`.
+- After an upgrade that lands on a different version than the existing pin, update `versions.ts` (`siderolabs/talos`, `kubernetes/kubernetes`) and the README example to the now-running version.
+
 ### Node Maintenance
 
 ```bash
