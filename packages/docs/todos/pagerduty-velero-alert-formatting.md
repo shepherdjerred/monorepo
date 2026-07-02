@@ -7,6 +7,16 @@ source_marker: false
 
 # Verify PagerDuty alert description formatting after deploy
 
+## Verification (2026-06-28) — can't confirm yet; no post-fix velero alert has fired
+
+The fix (real-newline template + `.Annotations.message` fallback) is on `main` with a
+`helm-template.test.ts` assertion. But a live confirmation needs a velero alert to actually fire,
+and the **only** velero PagerDuty incidents are all from **2026-05-30** — i.e. pre-fix — and they
+_do_ show the bug (titles literally contain `\n\n`, e.g. `Large PVC may impact Velero backups\n\n`).
+No velero alert has fired since the fix, so there's nothing post-fix to inspect. Stays
+`waiting-on-verification` until the next real velero incident (or fold into `pagerduty-migration`
+if that lands first).
+
 The Alertmanager → PagerDuty `description` template was fixed
 ([prometheus.ts:192](../../homelab/src/cdk8s/src/resources/argo-applications/prometheus.ts#L192))
 to use a real newline and the correct `.Annotations.message` annotation (with
