@@ -50,6 +50,15 @@ These apply to all work — code, infrastructure, configuration, CI pipelines, s
 - **Quality is paramount** — Never take shortcuts. No TODO hacks, no "good enough for now" workarounds, no skipped edge cases. Write correct, complete solutions the first time — whether that's code, a Helm chart, a CI pipeline, or a database migration.
 - **Take the time you need** — Use as many tokens and tool calls as necessary to complete a task properly. Never rush or cut corners to save tokens. Investigate thoroughly, verify end-to-end, and get it right.
 
+## Waiting on CI / PRs / external state — never busy-poll
+
+- **Never poll with `sleep N && <cmd>`** (e.g. `sleep 90 && gh pr checks`). The harness blocks sleep-then-command, so these calls just fail and waste turns. Foreground `sleep` to "wait" is also blocked.
+- To wait on something that changes over time, use the right mechanism instead:
+  - **PRs / CI** → the `pr-monitor` skill (it drives a PR through CI, reviews, and conflicts), or `pr-health` for a one-shot status.
+  - **A condition you can re-check** → the `Monitor` tool (an until-loop), or a **background Bash task** (`run_in_background: true`) that re-invokes you when it exits.
+  - **A fixed future time / recurring check** → `ScheduleWakeup` (dynamic `/loop`) or a scheduled agent.
+- Harness-tracked background work (background Bash, spawned agents, workflows) re-invokes you on completion — do **not** add a short-interval poll to check on it.
+
 ## Research Preferences
 
 - When researching topics, emphasize **GitHub**, **Hacker News**, and **Wikipedia** as primary sources.
