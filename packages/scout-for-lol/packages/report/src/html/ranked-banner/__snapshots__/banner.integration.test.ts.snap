@@ -1,0 +1,9 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`banner — solo victory 1`] = `"cc7ae287a99a07da00cbcfdd81569a7323282340b5f549aa04045516b513ffb4"`;
+
+exports[`banner — solo defeat (ranked flex) 1`] = `"6cdb8bef2ebd7032aacd3edeb28ca6968e12a919fe0339b9daf7e6336086cbcc"`;
+
+exports[`banner — 3-player squad 1`] = `"28d3de48c27f8b52b711c739b0e5eeab1a69fbfffd4dd86ced243e8b82070ec8"`;
+
+exports[`banner — 5-player squad 1`] = `"1a5eac3bd8d877a6b43a534deb661f4af4d18143c56dae1cac9f4b6d0bedabac"`;
