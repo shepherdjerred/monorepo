@@ -208,14 +208,13 @@ resource "cloudflare_dns_record" "sjer_red_cname_resume" {
   proxied = true
 }
 
-resource "cloudflare_dns_record" "sjer_red_cname_seaweedfs" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "seaweedfs"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
-  proxied = true
-}
+# seaweedfs.sjer.red removed 2026-06-27: the SeaweedFS S3 API is now tailnet-only
+# (reachable via seaweedfs-s3.tailnet-1a49.ts.net). The state + llm-archive buckets
+# live on this gateway, so it is no longer exposed on the public Cloudflare tunnel.
+# All S3 consumers that previously used this public hostname have been migrated:
+#   - CI static-site deploy containers (.dagger/src/release.ts)
+#   - Operator ~/.aws/config default + seaweedfs profiles (packages/dotfiles/)
+#   - Tofu state backends (already used seaweedfs-s3.tailnet-1a49.ts.net)
 
 resource "cloudflare_dns_record" "sjer_red_cname_shuxin_bluemap" {
   zone_id = cloudflare_zone.sjer_red.id
