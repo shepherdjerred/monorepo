@@ -168,9 +168,19 @@ const versions = {
   velero: "12.0.1",
   // renovate: datasource=helm registryUrl=https://kyverno.github.io/kyverno versioning=semver
   kyverno: "3.8.1",
+  // PINNED to v1.14.0 (last release that works on Cloudflare R2). The plugin always sets an
+  // (often empty) `Tagging` field on PutObject; v1.14.1's dependency bump pulled a newer
+  // aws-sdk-go-v2 that started emitting an empty `x-amz-tagging` header on the wire, which R2
+  // rejects with `501 NotImplemented` ("Header 'x-amz-tagging' with value '' not implemented").
+  // That fails Velero's backup-metadata upload, so every backup since the v1.14.1 deploy
+  // (2026-06-21, PR #1307) is marked Failed and leaves orphaned ZFS snapshots + R2 data behind
+  // (PagerDuty #5860, #5849). v1.14.2 is NOT a fix — it still sets Tagging unconditionally; the
+  // upstream guard (velero-io/velero-plugin-for-aws#299) is on main, not in any release yet.
+  // Renovate is blocked to <1.14.1 in renovate.json until a release contains #299 and is
+  // verified on R2. See packages/docs/todos/velero-aws-plugin-r2-tagging.md.
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "velero/velero-plugin-for-aws":
-    "v1.14.1@sha256:1493a0039cd5cb31004cfbb52f8a1990bc0ed81497ce72516bc76fa9e21506c1",
+    "v1.14.0@sha256:7e82f717f44e89671212e0dfce7e061321c386ea84a33bca64a671670ca6c278",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "openebs/velero-plugin":
     "3.6.0@sha256:9ea3331d891e436a7239e37e68ca4c8888500cb122be7cdc9d8400f345555c76",
