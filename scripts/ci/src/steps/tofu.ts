@@ -32,6 +32,14 @@ function tofuSecretFlags(stacks: readonly string[]): string {
     `--cloudflare-api-token env:CLOUDFLARE_API_TOKEN`,
     `--tailscale-oauth-client-id env:TAILSCALE_OAUTH_CLIENT_ID`,
     `--tailscale-oauth-client-secret env:TAILSCALE_OAUTH_CLIENT_SECRET`,
+    `--buildkite-api-token env:BUILDKITE_API_TOKEN`,
+    `--radarr-api-key env:RADARR_API_KEY`,
+    `--sonarr-api-key env:SONARR_API_KEY`,
+    `--prowlarr-api-key env:PROWLARR_API_KEY`,
+    `--qbittorrent-password env:QBITTORRENT_PASSWORD`,
+    `--privatehd-password env:PRIVATEHD_PASSWORD`,
+    `--privatehd-pid env:PRIVATEHD_PID`,
+    `--pagerduty-token env:PAGERDUTY_TOKEN`,
   ]
     .filter(Boolean)
     .join(" ");

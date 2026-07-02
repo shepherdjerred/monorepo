@@ -1111,6 +1111,14 @@ export class Monorepo {
     cloudflareApiToken: Secret | null = null,
     tailscaleOauthClientId: Secret | null = null,
     tailscaleOauthClientSecret: Secret | null = null,
+    buildkiteApiToken: Secret | null = null,
+    radarrApiKey: Secret | null = null,
+    sonarrApiKey: Secret | null = null,
+    prowlarrApiKey: Secret | null = null,
+    qbittorrentPassword: Secret | null = null,
+    privatehdPassword: Secret | null = null,
+    privatehdPid: Secret | null = null,
+    pagerdutyToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuApplyHelper(
@@ -1123,6 +1131,14 @@ export class Monorepo {
       cloudflareApiToken,
       tailscaleOauthClientId,
       tailscaleOauthClientSecret,
+      buildkiteApiToken,
+      radarrApiKey,
+      sonarrApiKey,
+      prowlarrApiKey,
+      qbittorrentPassword,
+      privatehdPassword,
+      privatehdPid,
+      pagerdutyToken,
       dryrun,
     ).stdout();
   }
@@ -1139,6 +1155,14 @@ export class Monorepo {
     cloudflareApiToken: Secret | null = null,
     tailscaleOauthClientId: Secret | null = null,
     tailscaleOauthClientSecret: Secret | null = null,
+    buildkiteApiToken: Secret | null = null,
+    radarrApiKey: Secret | null = null,
+    sonarrApiKey: Secret | null = null,
+    prowlarrApiKey: Secret | null = null,
+    qbittorrentPassword: Secret | null = null,
+    privatehdPassword: Secret | null = null,
+    privatehdPid: Secret | null = null,
+    pagerdutyToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuPlanHelper(
@@ -1151,6 +1175,14 @@ export class Monorepo {
       cloudflareApiToken,
       tailscaleOauthClientId,
       tailscaleOauthClientSecret,
+      buildkiteApiToken,
+      radarrApiKey,
+      sonarrApiKey,
+      prowlarrApiKey,
+      qbittorrentPassword,
+      privatehdPassword,
+      privatehdPid,
+      pagerdutyToken,
       dryrun,
     ).stdout();
   }
@@ -1172,6 +1204,14 @@ export class Monorepo {
     cloudflareApiToken: Secret | null = null,
     tailscaleOauthClientId: Secret | null = null,
     tailscaleOauthClientSecret: Secret | null = null,
+    buildkiteApiToken: Secret | null = null,
+    radarrApiKey: Secret | null = null,
+    sonarrApiKey: Secret | null = null,
+    prowlarrApiKey: Secret | null = null,
+    qbittorrentPassword: Secret | null = null,
+    privatehdPassword: Secret | null = null,
+    privatehdPid: Secret | null = null,
+    pagerdutyToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuApplyAllHelper(
@@ -1184,6 +1224,14 @@ export class Monorepo {
       cloudflareApiToken,
       tailscaleOauthClientId,
       tailscaleOauthClientSecret,
+      buildkiteApiToken,
+      radarrApiKey,
+      sonarrApiKey,
+      prowlarrApiKey,
+      qbittorrentPassword,
+      privatehdPassword,
+      privatehdPid,
+      pagerdutyToken,
       dryrun,
     );
   }
@@ -1200,6 +1248,14 @@ export class Monorepo {
     cloudflareApiToken: Secret | null = null,
     tailscaleOauthClientId: Secret | null = null,
     tailscaleOauthClientSecret: Secret | null = null,
+    buildkiteApiToken: Secret | null = null,
+    radarrApiKey: Secret | null = null,
+    sonarrApiKey: Secret | null = null,
+    prowlarrApiKey: Secret | null = null,
+    qbittorrentPassword: Secret | null = null,
+    privatehdPassword: Secret | null = null,
+    privatehdPid: Secret | null = null,
+    pagerdutyToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuPlanAllHelper(
@@ -1212,6 +1268,14 @@ export class Monorepo {
       cloudflareApiToken,
       tailscaleOauthClientId,
       tailscaleOauthClientSecret,
+      buildkiteApiToken,
+      radarrApiKey,
+      sonarrApiKey,
+      prowlarrApiKey,
+      qbittorrentPassword,
+      privatehdPassword,
+      privatehdPid,
+      pagerdutyToken,
       dryrun,
     );
   }
