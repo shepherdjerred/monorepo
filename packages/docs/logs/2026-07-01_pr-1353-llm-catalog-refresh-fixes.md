@@ -98,6 +98,30 @@ PR, all four diff hunks were either pure key reordering or the bad Opus context 
 - The `greptileReviewStep()` has no `soft_fail` — it's a hard gate. CI will only go green
   once greptile's re-review is clean on the new commit.
 
+## Session Log — 2026-07-03 (pass 6)
+
+### Done
+
+- Verified that `:docker: Build temporal-worker` and `:package::heartbeat: Build + Smoke scout-for-lol`
+  both pass on main branch (builds #4883, #4890) — confirming build #4898 failures are infra-only.
+- Root cause: `docker-build-temporal-worker` ran first with all Dagger steps CACHED + exit 1 after
+  `.withEntrypoint()` (classic Dagger blip). Retries then failed at `load workspace: .` (runner
+  infra issue, not code). Two retries both failed — build #4898 blocked.
+- Pushed fresh pass-6 commit to trigger build on clean runners.
+
+### Remaining
+
+- Wait for new build to complete with all checks green.
+
+### Caveats
+
+- `docker-build-temporal-worker` is triggered by our `llm-models` dep (via `--dep-names llm-models`
+  in the Buildkite step). It's not a code failure — main branch passes these same jobs fine.
+- If fresh build also fails these two jobs, it's a persistent infra issue and the team lead should
+  be asked whether to keep retrying or gate-merge anyway.
+
+---
+
 ## Session Log — 2026-07-03 (pass 5)
 
 ### Done
