@@ -8,7 +8,7 @@ pr: "1368"
 
 ## Status
 
-In Progress (Build #4895 running)
+In Progress (Build #4942 running)
 
 ## Context
 
@@ -182,3 +182,40 @@ Commit `063980642`.
 - Build #4910 failure is infrastructure, NOT our code — local lint+typecheck both pass
 - The fix is mechanically correct: `sdk-trace` is now explicitly in `llm-observability/node_modules/` after any bun install, regardless of temporal's hoisting behavior
 - When infrastructure recovers, `dagger-knife-pkg-check` for temporal should pass
+
+### 8. Dagger engine recovery + build #4921 (snapshot race + `shield-quality-bundle-15-checks`)
+
+Dagger engine recovered. Build #4921 (triggered by empty commit `e75806f74`) confirmed `dagger-knife-pkg-check` PASSED (1m41s) — the sdk-trace fix is real, not infra noise.
+
+However 13 jobs failed with `rename /var/lib/dagger/worker/snapshots/new-XXXX .../YYYY: file exists` — a snapshot rename race on cold cache post-recovery. All 13 were retried; 3 of the retries hit a second engine-down window ("creating client ERROR") and were retried again.
+
+After all retries resolved, a NEW failure appeared in `shield-quality-bundle-15-checks`:
+
+**Failure:** `scout-test-template` sub-check exited 1 with `error: lockfile had changes, but lockfile is frozen`
+
+**Root cause:** `scoutTestTemplateCheckHelper` in `.dagger/src/quality.ts` runs `bun install --frozen-lockfile` in `packages/scout-for-lol`. scout-for-lol's backend depends on `@shepherdjerred/llm-observability` via `file:`. My `llm-observability/package.json` changes (adding `@opentelemetry/sdk-trace: ^2.9.0`) caused scout-for-lol's lockfile to drift — it now references updated llm-observability metadata. Same root mechanism as temporal: bun's `file:` dep closure cascades lockfile changes to all consuming packages.
+
+Also affected: `packages/discord-plays-pokemon/bun.lock` (discord-plays-pokemon/packages/backend also depends on llm-observability via `file:`). birmel's lockfile was already clean (no drift).
+
+**Fix:** Regenerated both lockfiles by running `bun install` (twice for stability) in each package. Committed `54d98f5dd`. Build #4942 now running.
+
+## Session Log — 2026-07-03 (round 4)
+
+### Done
+
+- Confirmed `dagger-knife-pkg-check` PASSED in build #4921 (sdk-trace fix is real, not infra)
+- Retried 13 snapshot-rename-race jobs in build #4921; then re-retried 3 that hit second engine-down window
+- Diagnosed `shield-quality-bundle-15-checks` / `scout-test-template` failure: lockfile drift in scout-for-lol and discord-plays-pokemon due to `file:` dep cascade from llm-observability change
+- Regenerated `packages/scout-for-lol/bun.lock` and `packages/discord-plays-pokemon/bun.lock`
+- Verified locally: both pass `bun install --frozen-lockfile`; birmel already clean
+- Commit `54d98f5dd` pushed. Build #4942 started.
+
+### Remaining
+
+- Monitor build #4942 until all checks green
+- Report final green status to team-lead
+
+### Caveats
+
+- The sdk-trace `file:` dep cascade affected 4 packages total: temporal (fixed in round 3), llm-observability (fixed in round 3), scout-for-lol and discord-plays-pokemon (fixed in round 4). birmel was already correct.
+- Dagger engine instability during build #4921 meant many jobs needed 2 retries; "retry once only" limit applies so any job that needs a 3rd retry would require a fresh build push.
