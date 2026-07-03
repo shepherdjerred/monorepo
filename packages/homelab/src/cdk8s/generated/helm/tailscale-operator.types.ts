@@ -75,6 +75,10 @@ export type TailscaleoperatorHelmValuesOperatorConfig = {
    */
   affinity?: Record<string, unknown>;
   /**
+   * @default ""
+   */
+  priorityClassName?: string;
+  /**
    * @default {}
    */
   podSecurityContext?: TailscaleoperatorHelmValuesOperatorConfigPodSecurityContext;
@@ -249,7 +253,7 @@ export type TailscaleoperatorHelmValues = {
   /**
    * In the case that you already have a tailscale ingressclass in your cluster (or vcluster), you can disable the creation here
    *
-   * @default {...} (14 keys)
+   * @default {...} (15 keys)
    */
   operatorConfig?: TailscaleoperatorHelmValuesOperatorConfig;
   /**
@@ -297,6 +301,7 @@ export type TailscaleoperatorHelmParameters = {
   "operatorConfig.resources"?: string;
   "operatorConfig.tolerations"?: string;
   "operatorConfig.affinity"?: string;
+  "operatorConfig.priorityClassName"?: string;
   "operatorConfig.extraEnv"?: string;
   "ingressClass.name"?: string;
   "ingressClass.enabled"?: string;

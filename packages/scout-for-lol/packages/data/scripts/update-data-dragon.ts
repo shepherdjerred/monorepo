@@ -25,13 +25,21 @@ import {
   isMinorVersionBump,
   minorVersionKey,
 } from "./update-changelog.ts";
-import { fetchPatches, selectPatchByMinor } from "./riot-patch.ts";
-import { generatePatchHighlights } from "./patch-highlights.ts";
+import {
+  fetchPatches,
+  selectPatchByMinor,
+  type RiotPatch,
+} from "./riot-patch.ts";
+import { analyzePatch } from "./patch-analysis.ts";
 
 const ASSETS_DIR = `${import.meta.dir}/../src/data-dragon/assets`;
 const IMG_DIR = `${ASSETS_DIR}/img`;
 // scout-for-lol/packages/data/scripts → scout-for-lol/packages/frontend/...
 const CHANGELOG_FILE = `${import.meta.dir}/../../frontend/src/data/changelog.tsx`;
+// Structured patch changeset consumed at review time (bundled asset).
+const PATCH_NOTES_ASSET = `${ASSETS_DIR}/patch-notes.json`;
+// Raw patch-notes provenance — committed but not imported at runtime.
+const PATCH_NOTES_ARCHIVE_DIR = `${import.meta.dir}/../patch-notes-archive`;
 // scout-for-lol/packages/data/scripts → monorepo root (for resolving prettier).
 const MONOREPO_ROOT = `${import.meta.dir}/../../../../..`;
 const BASE_URL = "https://ddragon.leagueoflegends.com";
@@ -927,6 +935,36 @@ async function readPreviousVersion(): Promise<string | undefined> {
  * network/parse failure throws (fail fast); a not-yet-posted matching patch is
  * an expected timing case that skips the entry without blocking the asset PR.
  */
+/**
+ * Archive the raw patch-notes page for provenance/re-analysis. Best-effort: a
+ * fetch failure is logged and skipped (the structured changeset is what reviews
+ * actually consume). Committed but excluded from formatting and never imported.
+ */
+async function saveRawPatchNotes(patch: RiotPatch): Promise<void> {
+  try {
+    const response = await fetch(patch.url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; ScoutForLoL/1.0; +https://scout-for-lol.com)",
+        Accept: "text/html",
+      },
+    });
+    if (!response.ok) {
+      console.warn(
+        `⚠ Could not archive raw patch notes: HTTP ${String(response.status)} ${response.statusText}`,
+      );
+      return;
+    }
+    await Bun.write(
+      `${PATCH_NOTES_ARCHIVE_DIR}/${patch.patch}.html`,
+      await response.text(),
+    );
+    console.log(`✓ Archived raw patch ${patch.patch} notes`);
+  } catch (error) {
+    console.warn(`⚠ Could not archive raw patch notes: ${String(error)}`);
+  }
+}
+
 async function maybeAppendChangelogEntry(
   previousVersion: string | undefined,
   version: string,
@@ -958,17 +996,34 @@ async function maybeAppendChangelogEntry(
     return;
   }
 
-  // Ask Claude to summarize the real patch notes into player-facing highlights.
+  // Ask Claude to read the real patch notes and produce a structured changeset
+  // (consumed by AI reviews) plus the short highlight bullets (consumed here).
   // Best-effort: a failure (no claude, timeout, bad output) falls back to just
-  // the data-refresh line rather than blocking the asset PR.
+  // the data-refresh line and leaves the committed changeset untouched, rather
+  // than blocking the asset PR or shipping a garbage changeset.
   let highlights: string[] = [];
   try {
-    console.log(`🤖 Summarizing patch ${patch.patch} notes via Claude...`);
-    highlights = await generatePatchHighlights(patch);
-    console.log(`✓ ${String(highlights.length)} highlight(s) generated`);
+    console.log(`🤖 Analyzing patch ${patch.patch} notes via Claude...`);
+    const changeset = await analyzePatch(patch);
+    await Bun.write(
+      PATCH_NOTES_ASSET,
+      `${JSON.stringify(changeset, null, 2)}\n`,
+    );
+    const prettierResult =
+      await $`cd ${MONOREPO_ROOT} && bunx prettier --write ${PATCH_NOTES_ASSET}`.quiet();
+    if (prettierResult.exitCode !== 0) {
+      throw new Error(
+        `prettier failed to format patch-notes.json (exit ${String(prettierResult.exitCode)}): ${prettierResult.stderr.toString()}`,
+      );
+    }
+    console.log(
+      `✓ Wrote patch changeset (${String(changeset.champions.length)} champion, ${String(changeset.items.length)} item, ${String(changeset.systems.length)} system changes)`,
+    );
+    highlights = changeset.summary;
+    await saveRawPatchNotes(patch);
   } catch (error) {
     console.warn(
-      `⚠ Claude highlight generation failed; using data-refresh line only: ${String(error)}`,
+      `⚠ Claude patch analysis failed; using data-refresh line only and leaving patch-notes.json unchanged: ${String(error)}`,
     );
   }
 

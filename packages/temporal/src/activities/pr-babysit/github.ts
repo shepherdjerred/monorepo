@@ -236,7 +236,7 @@ const BranchRuleSchema = z.object({
  */
 export type RequiredChecksResult =
   | { known: true; contexts: string[] }
-  | { known: false; reason: string };
+  | { known: false; reason: string; permissionDenied?: boolean };
 
 export type RequiredCtx = {
   owner: string;
@@ -317,9 +317,15 @@ async function classicRequiredContexts(
     if (/not protected|HTTP 404|\b404\b/i.test(result.stderr)) {
       return { known: true, contexts: [] };
     }
+    // A GitHub App installation without `Administration: read` gets a 403
+    // ("Resource not accessible by integration") reading classic protection.
+    // Tag it so the caller can defer to rulesets rather than fail closed.
+    const permissionDenied =
+      /HTTP 403|Resource not accessible by integration/i.test(result.stderr);
     return {
       known: false,
       reason: `gh api classic protection failed (exit ${String(result.exitCode)}): ${result.stderr.trim()}`,
+      permissionDenied,
     };
   }
   let json: unknown;
@@ -363,6 +369,25 @@ export async function getRequiredCheckContexts(
     return ruleset;
   }
   if (!classic.known) {
+    // The token can't READ classic protection (403), but rulesets IS
+    // authoritative for this branch (main is ruleset-protected). Defer to
+    // rulesets rather than fail closed — but ONLY when rulesets actually
+    // enumerates required checks. If rulesets is also empty we cannot tell
+    // "no required checks" from "classic held the only ones and we couldn't
+    // read them", so fail closed rather than let the DoD gate treat an
+    // unreadable branch as green. A real unknown (parse error, non-403
+    // failure) also falls through and fails closed below.
+    if (classic.permissionDenied === true && ruleset.contexts.length > 0) {
+      console.warn(
+        JSON.stringify({
+          level: "warning",
+          component: "pr-babysit",
+          msg: "classic protection unreadable (403); using rulesets-only required checks",
+          reason: classic.reason,
+        }),
+      );
+      return ruleset;
+    }
     return classic;
   }
   const contexts = new Set<string>([...ruleset.contexts, ...classic.contexts]);
