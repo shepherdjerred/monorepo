@@ -85,6 +85,11 @@ export function ogTemplate({
           style={{
             display: "flex",
             marginTop: "28px",
+            // Cap the block so long copy can't overflow the fixed 1200×630
+            // canvas: ~4 lines at 36px/1.35 line-height. Satori clips the
+            // overflow instead of bleeding past the image edge.
+            maxHeight: "160px",
+            overflow: "hidden",
             fontFamily: "Spiegel",
             fontWeight: 400,
             fontSize: "36px",

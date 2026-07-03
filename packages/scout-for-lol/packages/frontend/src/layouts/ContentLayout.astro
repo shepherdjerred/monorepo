@@ -6,9 +6,18 @@ import PageHeader from "../components/PageHeader.astro";
 
 const { frontmatter } = Astro.props;
 const { title, subtitle, description } = frontmatter;
+
+// `description` is the SEO/OG description for the page. Fail the build loudly
+// if a content page forgets it rather than silently shipping the `subtitle`
+// (e.g. "Last updated: …") as the meta description.
+if (typeof description !== "string" || description.length === 0) {
+  throw new Error(
+    `ContentLayout: content page "${String(title)}" is missing a "description" frontmatter field (required for SEO/OG metadata).`,
+  );
+}
 ---
 
-<Layout title={title} description={description ?? subtitle}>
+<Layout title={title} description={description}>
   <div class="bg-white dark:bg-gray-900">
     <Navbar />
 
