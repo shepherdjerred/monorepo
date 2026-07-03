@@ -77,6 +77,7 @@ func (r *wirelessNetworkResource) Schema(_ context.Context, _ resource.SchemaReq
 			"crypto": schema.StringAttribute{
 				Description: "Encryption type: aes, tkip+aes.",
 				Optional:    true,
+				Computed:    true,
 			},
 			"wpa_passphrase": schema.StringAttribute{
 				Description: "WPA pre-shared key. Write-only: never read back from the router, so it is not populated on import. Omit it from tracked config to keep plans clean.",
@@ -86,14 +87,17 @@ func (r *wirelessNetworkResource) Schema(_ context.Context, _ resource.SchemaReq
 			"channel": schema.Int64Attribute{
 				Description: "Channel number. 0 = auto.",
 				Optional:    true,
+				Computed:    true,
 			},
 			"bandwidth": schema.Int64Attribute{
 				Description: "Channel bandwidth: 0=auto, 1=20MHz, 2=40MHz, 4=80MHz, 5=160MHz.",
 				Optional:    true,
+				Computed:    true,
 			},
 			"hidden": schema.BoolAttribute{
 				Description: "Hide SSID from broadcast.",
 				Optional:    true,
+				Computed:    true,
 			},
 		},
 	}
