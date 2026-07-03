@@ -2,111 +2,130 @@
 
 ## Status
 
-**Blocked — do NOT merge.** Code change is complete and verified, but an
-in-cluster audit found Overseerr is still the live, actively-used system and
-users/requests have **not** been migrated to Seerr. Removing Overseerr now would
-cut off 5+ active users and discard 156 requests of history. See
-"Migration-readiness audit" below.
-
-## Migration-readiness audit (2026-07-03)
-
-Copied both SQLite DBs out of the running pods and compared:
-
-| | Seerr (new) | Overseerr (old) |
-|---|---|---|
-| Users | **1** (owner only) | **8** (owner + 7 friends/family) |
-| Media requests | **0** | **156** |
-| Requests last 30d | 0 | **15** |
-| Newest real request | — | 2026-06-29 (ariali459) |
-| Active requesters | just owner | ShepherdJerred 56, wnicol4 41, ariali459 25, Jones1000000 13, ognynnad 11, RcFlyer96 10 |
-
-**Seerr configuration is complete** (Plex libs Movies+TV synced, Radarr+Sonarr
-default servers with quality profiles + root folders, email+Discord
-notifications). But operationally it is an empty shell — only the owner has ever
-logged in. Overseerr (`overseerr.sjer.red`) is what everyone actually uses.
-
-There is **no** redirect or notice pointing users at `seerr.sjer.red`, and none
-of the 7 other Plex users have accounts on Seerr.
-
-### Before Overseerr can be removed
-
-1. **Migrate users** — In Seerr, Settings → Users → Import Plex Users (pulls the
-   shared Plex users), or migrate by copying Overseerr's DB (Seerr is an
-   Overseerr fork; schema is compatible).
-2. **Migrate request history** — No built-in Overseerr→Seerr importer. Cleanest
-   path: copy Overseerr's `/config/db/db.sqlite3` into Seerr's
-   `/app/config/db/db.sqlite3` (compatible schema) and keep Seerr's
-   `settings.json`. Then re-verify server connections.
-3. **Tell users to switch** — Update Plex/Discord messaging and/or point
-   `overseerr.sjer.red` at Seerr (or send a notification) so users land on Seerr.
-4. Only then remove Overseerr (this branch) and prune the DNS record.
+**Ready to merge.** The 8 users + 156 requests were migrated into Seerr and an
+edge redirect `overseerr.sjer.red → seerr.sjer.red` is live (both executed
+2026-07-03). This branch (`feature/finish-seerr-migration`) removes the Overseerr
+deployment and adds the redirect ruleset. After merge, manually prune the
+orphaned Overseerr resources (ArgoCD prune is off).
 
 ## Context
 
-Seerr (`ghcr.io/seerr-team/seerr`) was deployed alongside the legacy
+Seerr (`ghcr.io/seerr-team/seerr`) had been running alongside the legacy
 LinuxServer Overseerr (`ghcr.io/linuxserver/overseerr`) during the request-flow
-migration (see `2026-05-22_pr-751-keep-overseerr.md`). This session removes
-Overseerr now that Seerr fully owns the request flow.
+migration (see `2026-05-22_pr-751-keep-overseerr.md`). This session finishes the
+migration and removes Overseerr.
 
-### Verification that Seerr is the live source of truth
+## Pre-cutover audit — Overseerr was still the live system
 
-Before removing Overseerr, confirmed the in-cluster Seerr pod is fully
-configured (not a fresh/empty instance):
+An in-cluster DB comparison found Seerr was fully _configured_ but operationally
+an empty shell; Overseerr was what everyone actually used:
 
-- `media-seerr-*` pod up 16d; `settings.json` last modified the day of this
-  session (actively in use).
-- Plex connected (server `torvalds`), 1 Radarr + 1 Sonarr configured.
+|                     | Seerr (before)     | Overseerr                                                                               |
+| ------------------- | ------------------ | --------------------------------------------------------------------------------------- |
+| Users               | **1** (owner only) | **8** (owner + 7 friends/family)                                                        |
+| Media requests      | **0**              | **156**                                                                                 |
+| Requests last 30d   | 0                  | **15**                                                                                  |
+| Newest real request | —                  | 2026-06-29 (ariali459)                                                                  |
+| Active requesters   | just owner         | ShepherdJerred 56, wnicol4 41, ariali459 25, Jones1000000 13, ognynnad 11, RcFlyer96 10 |
 
-## Changes
+So removing Overseerr required migrating users + request history first, plus a
+redirect so people land on Seerr.
 
-- Deleted `packages/homelab/src/cdk8s/src/resources/torrents/overseerr.ts`
-  (deployment, PVC, service, Tailscale ingress, Cloudflare tunnel binding).
-- Removed the `createOverseerrDeployment` import + call from
-  `cdk8s-charts/media.ts`.
-- Removed the `linuxserver/overseerr` version pin (and its migration comment)
-  from `versions.ts`.
-- Removed the `sjer_red_cname_overseerr` Cloudflare DNS record from
-  `src/tofu/cloudflare/sjer-red.tf`.
+## Config comparison (verified)
 
-## Verification
+Field-by-field diff of both `settings.json`: **all meaningful config is
+identical** — Plex (`media-plex-service:32400`, both libraries synced), Radarr
+(`media-radarr-service:7878`, profile "Best Available", root `/movies`), Sonarr
+(`media-sonarr-service:8989`, profile "Best Available", root `/tv`), Tautulli,
+and all API keys match. Differences were only branding/expected: `applicationTitle`,
+`applicationUrl` (each → itself), `newPlexLogin` (Seerr false vs Overseerr true —
+flipped to true during cutover), `webpush.enabled` (Seerr false — moot).
 
-- `bun run typecheck` — pass.
-- `bun run build` — renders; `overseerr` absent from `dist/`, Seerr present in
-  `dist/media.k8s.yaml`, Plex Intel GPU resource unchanged.
-- `bun run test` — 251 pass / 5 skip / 0 fail (cdk8s) + 152 pass (helm-types).
-- `tofu -chdir=cloudflare validate` — success.
+## DB migration — validated then executed
 
-## Deploy-time effects (GitOps prune)
+Seerr is a Jellyseerr-lineage fork: schema-compatible with Overseerr but ahead
+(adds `blocklist`/`override_rule`/`watchlist` tables). Overseerr had one migration
+Seerr lacked (`UpdateWebPush1740717744278`) — the one possible conflict point.
 
-When this merges and ArgoCD syncs, the following Overseerr resources are pruned:
-Deployment, Service, Tailscale ingress, Cloudflare tunnel binding, and the
-`overseerr-pvc` PersistentVolumeClaim. Overseerr's config data on that PVC is
-discarded — intended, since Seerr is now the source of truth. `overseerr.sjer.red`
-stops resolving after the Cloudflare `tofu apply`.
+**Validated first** in an isolated Docker run (`ghcr.io/seerr-team/seerr`) against
+a consolidated copy of Overseerr's live DB: booted clean, **zero migration errors**
+(webpush divergence did not conflict), forward-migrated the schema, and preserved
+all 8 users / 156 requests / 236 media rows.
+
+**Executed cutover:**
+
+1. Consolidated Overseerr's live DB (`VACUUM INTO`); backed up Seerr's DB +
+   settings locally and in-PVC (`db.sqlite3.pre-migration`,
+   `settings.json.pre-migration`).
+2. Temporarily disabled ArgoCD auto-sync on the `media` app — a bare
+   `automated: {}` still reverted a manual scale-to-0 within ~3s, so auto-sync
+   had to be toggled off for the window.
+3. Scaled `media-seerr` to 0; swapped the consolidated DB into `seerr-pvc` via a
+   throwaway editor pod (ran as uid 1000 to match ownership + satisfy Kyverno);
+   removed stale `-wal`/`-shm`; also wrote patched `settings.json` with
+   `newPlexLogin: true` (parity with Overseerr, so Plex friends can self-sign-in).
+4. Scaled back to 1; re-enabled auto-sync.
+5. Seerr booted clean (v3.3.0), forward-migrated 33 → 53 migrations, **zero
+   errors**. Live verify: **8 users, 156 requests, 236 media rows**, new tables
+   present, API `initialized: true`.
+
+The imported DB and `newPlexLogin` live in the `seerr-pvc` (runtime state), not
+IaC.
+
+## Redirect — executed
+
+Added `cloudflare_ruleset.sjer_red_redirects` (dynamic-redirect phase) in
+`sjer-red.tf`: 301 `overseerr.sjer.red` → `seerr.sjer.red`, path + query
+preserved. Kept the Overseerr CNAME so the host still resolves; the edge redirect
+fires before the (now routeless) tunnel is contacted — same pattern as
+`discord-plays-pokemon-com.tf`.
+
+Applied via `tofu apply -target=cloudflare_ruleset.sjer_red_redirects` (1 added,
+0 changed). Verified live: `overseerr.sjer.red/requests?filter=all` → 301 →
+`seerr.sjer.red/requests?filter=all`.
+
+## Code changes (this branch)
+
+- Deleted `packages/homelab/src/cdk8s/src/resources/torrents/overseerr.ts`.
+- Removed the `createOverseerrDeployment` import + call from `cdk8s-charts/media.ts`.
+- Removed the `linuxserver/overseerr` version pin from `versions.ts`.
+- Kept the `sjer_red_cname_overseerr` record and added the redirect ruleset in
+  `sjer-red.tf`.
+
+Verification: `bun run typecheck`, `bun run build` (overseerr absent from `dist/`,
+Plex GPU unchanged), `bun run test` (251 pass / 5 skip / 0 fail cdk8s + 152 pass
+helm-types), `tofu validate` — all green.
 
 ## Session Log — 2026-07-03
 
 ### Done
 
-- Removed all Overseerr IaC: `overseerr.ts`, `media.ts` wiring, `versions.ts`
-  pin, and the Cloudflare DNS record.
-- Verified Seerr is fully configured live before removal.
-- Typecheck, build, tests, and tofu validate all green.
+- Migrated Overseerr → Seerr live: imported 8 users + 156 requests into
+  `seerr-pvc` (validated in Docker first; executed with backups + auto-sync off);
+  flipped `newPlexLogin` → true.
+- Redirect live: added + applied the `overseerr.sjer.red → seerr.sjer.red`
+  ruleset; verified 301 with path/query preserved.
+- Removed Overseerr IaC; all local checks green.
 - Marked `2026-05-22_pr-751-keep-overseerr.md` Complete.
 
 ### Remaining
 
-- Open PR, get Buildkite CI green, merge.
-- After merge, run `op run --env-file=.env -- tofu -chdir=cloudflare apply`
-  from `packages/homelab/src/tofu` to remove the `overseerr` DNS record (the
-  cdk8s changes deploy via ArgoCD automatically).
+- Open PR for `feature/finish-seerr-migration`, get Buildkite CI green, merge.
+- After merge, manually prune the orphaned Overseerr resources + `overseerr-pvc`
+  (ArgoCD prune is off): Deployment, Service, Tailscale ingress, CF tunnel binding.
+- Optional: message users that requests now live at `seerr.sjer.red` (the
+  redirect already covers old bookmarks).
 
 ### Caveats
 
-- **Maintainerr integration:** Maintainerr connects to Overseerr/Seerr via its
-  own runtime config (not IaC). If it still points at the Overseerr URL, update
-  it to Seerr in the Maintainerr UI or its config PVC before Overseerr is pruned.
-- **Overseerr PVC data is discarded** on ArgoCD prune. Seerr started fresh on
-  its own `seerr-pvc`; any request history in Overseerr is not carried over.
-- The `linuxserver-containers` skill cites Overseerr as an example deployment —
-  left as-is since it's an illustrative example, not a live-deployment claim.
+- Cloudflare prod state is **ahead of `main`** (ruleset already applied from this
+  branch). Don't `tofu apply` cloudflare from `main` before merge — it would
+  destroy the ruleset.
+- The imported DB + `newPlexLogin=true` live in `seerr-pvc`, not IaC — a PVC
+  restore/rebuild would revert them.
+- Overseerr pod keeps running until manually pruned; just unreachable via
+  `overseerr.sjer.red` (still reachable on its tailnet host until deleted).
+- **Maintainerr** connects to Overseerr/Seerr via its own runtime config. If it
+  still points at Overseerr, repoint it to Seerr before pruning Overseerr.
+- Local backups (Seerr's pre-migration DB + settings, which contain SMTP/webhook
+  secrets) are in the session scratchpad only — not committed.
