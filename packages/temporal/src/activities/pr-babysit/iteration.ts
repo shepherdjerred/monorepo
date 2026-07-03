@@ -5,10 +5,12 @@
  * edits + commits in the workdir but does NOT push; the orchestrator pushes
  * after this returns (so the push always uses a fresh token).
  *
- * The `Context.current()` calls in the shared helper are all guarded for
- * "outside Temporal", so this runs unchanged from the local PoC script and
- * (later) from a Temporal activity.
+ * The shared helper is a pure module (no Temporal imports); this caller threads
+ * the Temporal heartbeat/cancellation via `safeHeartbeat` + the activity Context,
+ * each guarded for "outside Temporal" so it runs unchanged from the local PoC
+ * script and (in the worker) from a Temporal activity.
  */
+import { Context } from "@temporalio/activity";
 import * as Sentry from "@sentry/bun";
 import { runTrackedAgentSubprocess } from "#shared/agent-subprocess.ts";
 import {
@@ -27,7 +29,34 @@ import {
 import { buildBabysitIterationCommand } from "./iteration-command.ts";
 
 const COMPONENT = "pr-babysit";
-const HEARTBEAT_INTERVAL_MS = 10_000;
+
+/**
+ * Subprocess heartbeat cadence. Overridable via env so tests can drive a fast
+ * heartbeat without a 10s wait; defaults to 10s in prod.
+ */
+function heartbeatIntervalMs(): number {
+  const raw = Bun.env["PR_BABYSIT_HEARTBEAT_INTERVAL_MS"];
+  if (raw !== undefined) {
+    const parsed = Number.parseInt(raw, 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed;
+    }
+  }
+  return 10_000;
+}
+
+/**
+ * Record a Temporal heartbeat, guarded for "outside Temporal" so the local PoC
+ * script (which calls this activity directly) is a no-op. Without this the
+ * activity's `heartbeatTimeout` fires and Temporal kills every iteration.
+ */
+function safeHeartbeat(payload: Record<string, unknown>): void {
+  try {
+    Context.current().heartbeat(payload);
+  } catch {
+    // Called outside a Temporal activity (local PoC / tests): no-op.
+  }
+}
 
 function jsonLog(
   level: "info" | "warning" | "error",
@@ -158,8 +187,9 @@ export async function runBabysitIteration(
       redactTokens: secretTokens(),
       startToCloseTimeoutMs: args.startToCloseTimeoutMs,
       cancellationSignal: args.cancellationSignal,
-      heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
+      heartbeatIntervalMs: heartbeatIntervalMs(),
       onHeartbeat: (beat) => {
+        safeHeartbeat({ phase: "agent", ...beat });
         jsonLog("info", "babysit heartbeat", { phase: "agent", ...beat });
       },
       onSoftKill: (event) => {

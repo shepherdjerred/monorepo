@@ -461,7 +461,7 @@ export function createTemporalWorkerDeployment(
         // packages/temporal/src/event-bridge/babysit-webhook.ts `isPrBabysitEnabled`.
         PR_BABYSIT_ENABLED: EnvValue.fromValue("true"),
         PR_BABYSIT_BOT_HANDLE: EnvValue.fromValue("@temporal-worker"),
-        PR_BABYSIT_BOT_LOGIN: EnvValue.fromValue("temporal-worker[bot]"),
+        PR_BABYSIT_BOT_LOGIN: EnvValue.fromValue("long-summer-intern[bot]"),
         PR_BABYSIT_WORKER_MAX_CONCURRENT_ACTIVITIES: EnvValue.fromValue("2"),
         GITHUB_WEBHOOK_PORT: EnvValue.fromValue("9466"),
         AGENT_TASK_API_PORT: EnvValue.fromValue("9467"),
