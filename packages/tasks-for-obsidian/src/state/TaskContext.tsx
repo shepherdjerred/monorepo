@@ -93,6 +93,9 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     };
     return () => {
       store.onDispatch = null;
+      // The successor engine owns the queue now; a stale retry timer must
+      // not drain it against the old client.
+      engine.dispose();
     };
   }, [engine, store]);
 

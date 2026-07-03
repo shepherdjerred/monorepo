@@ -378,6 +378,29 @@ describe("recurring completion captures the tapped day", () => {
   });
 });
 
+describe("engine disposal (API client swapped in Settings)", () => {
+  test("a disposed engine cancels its retry and ignores new triggers", async () => {
+    const harness = makeHarness();
+    await harness.store.restore();
+    harness.server.goOffline();
+    await harness.store.dispatch({
+      type: "delete",
+      taskId: taskId("TaskNotes/a.md"),
+    });
+    await harness.engine.syncNow();
+    expect(harness.scheduler.pending()).toHaveLength(1);
+
+    harness.engine.dispose();
+    expect(harness.scheduler.pending()).toHaveLength(0); // timer cancelled
+
+    harness.server.goOnline();
+    harness.engine.requestSync(); // no-op on a dead engine
+    await Promise.resolve();
+    expect(harness.server.callCount("deleteTask")).toBe(1); // only the offline attempt
+    expect(harness.queue.pending).toHaveLength(1); // command awaits the successor
+  });
+});
+
 describe("dead-letter review", () => {
   test("retry re-enqueues and syncs; discard drops it for good", async () => {
     const harness = makeHarness();

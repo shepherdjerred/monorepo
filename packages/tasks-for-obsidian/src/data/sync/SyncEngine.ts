@@ -113,6 +113,7 @@ export class SyncEngine {
   private passRequested = false;
   private failureStreak = 0;
   private cancelRetry: (() => void) | null = null;
+  private disposed = false;
 
   constructor(
     private readonly client: CommandClient | null,
@@ -132,7 +133,19 @@ export class SyncEngine {
 
   /** Fire-and-forget trigger; safe to call from anywhere, any number of times. */
   requestSync(): void {
+    if (this.disposed) return;
     void this.syncNow();
+  }
+
+  /**
+   * Stop this engine from initiating new work (a replacement engine owns the
+   * queue now — e.g. after the API client changed). The in-flight pass may
+   * finish; its commands remain idempotent, so overlap with the successor is
+   * harmless.
+   */
+  dispose(): void {
+    this.disposed = true;
+    this.clearRetryTimer();
   }
 
   /**
@@ -264,6 +277,7 @@ export class SyncEngine {
   }
 
   private scheduleRetry(error: AppError): void {
+    if (this.disposed) return; // an in-flight failure must not re-arm a dead engine
     this.failureStreak += 1;
     const exponent = Math.min(this.failureStreak - 1, 30);
     const raw = Math.min(BACKOFF_BASE_MS * 2 ** exponent, BACKOFF_MAX_MS);
