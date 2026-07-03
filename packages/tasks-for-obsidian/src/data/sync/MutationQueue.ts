@@ -121,22 +121,29 @@ const MutationSchema = z.discriminatedUnion("type", [
   }),
 ]);
 
-let counter = 0;
-function generateId(): string {
-  counter += 1;
-  return `${String(Date.now())}-${String(counter)}`;
-}
+export type Clock = () => number;
 
 export class MutationQueue {
   private queue: Mutation[] = [];
   private readonly storage: MutationStorage;
+  private readonly clock: Clock;
+  private counter = 0;
 
-  constructor(storage: MutationStorage = defaultStorage) {
+  constructor(
+    storage: MutationStorage = defaultStorage,
+    clock: Clock = Date.now,
+  ) {
     this.storage = storage;
+    this.clock = clock;
+  }
+
+  private generateId(): string {
+    this.counter += 1;
+    return `${String(this.clock())}-${String(this.counter)}`;
   }
 
   async enqueue(mutation: MutationInput): Promise<Mutation> {
-    const base = { id: generateId(), timestamp: Date.now() };
+    const base = { id: this.generateId(), timestamp: this.clock() };
     let entry: Mutation;
     switch (mutation.type) {
       case "create":
