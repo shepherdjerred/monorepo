@@ -2,7 +2,44 @@
 
 ## Status
 
-Complete
+**Blocked — do NOT merge.** Code change is complete and verified, but an
+in-cluster audit found Overseerr is still the live, actively-used system and
+users/requests have **not** been migrated to Seerr. Removing Overseerr now would
+cut off 5+ active users and discard 156 requests of history. See
+"Migration-readiness audit" below.
+
+## Migration-readiness audit (2026-07-03)
+
+Copied both SQLite DBs out of the running pods and compared:
+
+| | Seerr (new) | Overseerr (old) |
+|---|---|---|
+| Users | **1** (owner only) | **8** (owner + 7 friends/family) |
+| Media requests | **0** | **156** |
+| Requests last 30d | 0 | **15** |
+| Newest real request | — | 2026-06-29 (ariali459) |
+| Active requesters | just owner | ShepherdJerred 56, wnicol4 41, ariali459 25, Jones1000000 13, ognynnad 11, RcFlyer96 10 |
+
+**Seerr configuration is complete** (Plex libs Movies+TV synced, Radarr+Sonarr
+default servers with quality profiles + root folders, email+Discord
+notifications). But operationally it is an empty shell — only the owner has ever
+logged in. Overseerr (`overseerr.sjer.red`) is what everyone actually uses.
+
+There is **no** redirect or notice pointing users at `seerr.sjer.red`, and none
+of the 7 other Plex users have accounts on Seerr.
+
+### Before Overseerr can be removed
+
+1. **Migrate users** — In Seerr, Settings → Users → Import Plex Users (pulls the
+   shared Plex users), or migrate by copying Overseerr's DB (Seerr is an
+   Overseerr fork; schema is compatible).
+2. **Migrate request history** — No built-in Overseerr→Seerr importer. Cleanest
+   path: copy Overseerr's `/config/db/db.sqlite3` into Seerr's
+   `/app/config/db/db.sqlite3` (compatible schema) and keep Seerr's
+   `settings.json`. Then re-verify server connections.
+3. **Tell users to switch** — Update Plex/Discord messaging and/or point
+   `overseerr.sjer.red` at Seerr (or send a notification) so users land on Seerr.
+4. Only then remove Overseerr (this branch) and prune the DNS record.
 
 ## Context
 

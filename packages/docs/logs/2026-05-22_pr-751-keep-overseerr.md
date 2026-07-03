@@ -2,8 +2,10 @@
 
 ## Status
 
-Complete — Overseerr removed 2026-07-03 (see
-`packages/docs/logs/2026-07-03_finish-seerr-migration.md`).
+In Progress — removal is staged on branch `feature/finish-seerr-migration` but
+**held**: a 2026-07-03 audit found Overseerr is still the live system (8 users /
+156 requests vs Seerr's 1 user / 0 requests). Users + request history must be
+migrated first. See `packages/docs/logs/2026-07-03_finish-seerr-migration.md`.
 
 ## Context
 
