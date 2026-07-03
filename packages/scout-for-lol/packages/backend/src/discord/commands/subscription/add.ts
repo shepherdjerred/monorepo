@@ -21,6 +21,11 @@ import { sendWelcomeMatch } from "#src/discord/commands/subscription/welcome-mat
 import { DISCORD_SERVER_INVITE } from "#src/configuration/subscription-limits.ts";
 import { prisma } from "#src/database/index.ts";
 import { editReplyOnError } from "#src/discord/commands/subscription/reply-helpers.ts";
+import { parseQueuesArg } from "#src/discord/commands/subscription/queue-filter-arg.ts";
+import {
+  describeSubscriptionFilters,
+  type SubscriptionFilterSpec,
+} from "@scout-for-lol/data/index.ts";
 
 const logger = createLogger("subscription-add-command");
 
@@ -57,6 +62,16 @@ export async function executeSubscriptionAdd(
     return;
   }
 
+  const queuesResult = parseQueuesArg(interaction.options.getString("queues"));
+  if (!queuesResult.ok) {
+    await interaction.reply({
+      content: `Unknown queue type(s): ${queuesResult.invalid.join(", ")}. Pick from the autocomplete suggestions.`,
+      ephemeral: true,
+    });
+    return;
+  }
+  const filters: SubscriptionFilterSpec | null = queuesResult.spec;
+
   const args = parseResult.data;
   await interaction.deferReply({ ephemeral: true });
 
@@ -83,6 +98,7 @@ export async function executeSubscriptionAdd(
           alias: args.alias,
           discordUserId: args.user,
           creatorDiscordId,
+          filters,
         },
         puuid,
         tx,
@@ -94,7 +110,13 @@ export async function executeSubscriptionAdd(
   }
 
   await interaction.editReply({
-    content: formatAddResult(result, args.riotId, args.alias, args.channel),
+    content: formatAddResult({
+      result,
+      riotId: args.riotId,
+      alias: args.alias,
+      channelId: args.channel,
+      filters,
+    }),
   });
 
   for (const warning of result.kind === "created" ? result.warnings : []) {
@@ -143,12 +165,14 @@ export async function executeSubscriptionAdd(
   logger.info(`🎉 Subscription handler completed in ${totalTime.toString()}ms`);
 }
 
-function formatAddResult(
-  result: AddSubscriptionResult,
-  riotId: RiotId,
-  alias: string,
-  channelId: string,
-): string {
+function formatAddResult(params: {
+  result: AddSubscriptionResult;
+  riotId: RiotId;
+  alias: string;
+  channelId: string;
+  filters: SubscriptionFilterSpec | null;
+}): string {
+  const { result, riotId, alias, channelId, filters } = params;
   switch (result.kind) {
     case "created": {
       let message = `Successfully subscribed to updates for ${riotId.game_name}#${riotId.tag_line}`;
@@ -162,6 +186,7 @@ function formatAddResult(
       } else {
         message += `\n\n✅ Created new player profile for "${alias}"`;
       }
+      message += `\n\n🔔 Notifying for: ${describeSubscriptionFilters(filters)}`;
       return message;
     }
     case "account-already-subscribed": {

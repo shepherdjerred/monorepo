@@ -59,9 +59,9 @@ The current worker pod (`temporal-temporal-worker-77f44bf844-dx7vr`, started ~3 
 
 - The post-#1230 worker pod is the running revision (check image SHA on the pod).
 - The next `agentTaskWorkflow` execution (`homelab-audit-daily`) either Completes, OR fails with a now-explicit reason captured in heartbeat logs (`lastStderrLine`, `idleMs`, soft-kill record). Both outcomes count — the goal is to end silent failure.
-- The Grafana "Agent subprocesses" / "Alert remediation" rows populate with real data inside one sweep cycle.
+- The Grafana "Agent subprocesses" row populates with real homelab-audit subprocess data inside one run. (The former "Alert remediation" row was removed with that workflow — see logs/2026-07-02_gut-alert-remediation.md.)
 - `prReview` + `prSummary` either show non-zero recent counts on a real PR, or are explicitly confirmed disabled (separately tracked — PR #1230 doesn't address the webhook bridge).
-- 24-hour soak per PR #1230's test plan: zero `outcome: "failed"` in the latest 30 alert-remediation children.
+- The next several `homelab-audit-daily` runs either Complete or fail with an explicit, metrics-visible reason (no silent `agentTaskWorkflow` failures).
 
 ## Pointers
 

@@ -183,7 +183,7 @@ export type MariadbHelmValuesAuth = {
   /**
    * Example:
    * customPasswordFiles:
-   * replicator: /vault/secrets/mariadb-replicator
+   * metrics: /vault/secrets/mariadb-metrics
    *
    * @default {}
    */
@@ -2347,6 +2347,15 @@ export type MariadbHelmValuesMetrics = {
    */
   enabled?: boolean;
   /**
+   * Metrics exporter authentication. A dedicated MariaDB user is created with only the
+   * permissions required by mysqld_exporter (PROCESS, REPLICATION CLIENT, SELECT on
+   * performance_schema). This avoids passing the MariaDB root credential into the metrics sidecar.
+   * password in key 'mariadb-metrics-password'. When set, metrics.auth.password is ignored.
+   *
+   * @default {"username":"exporter","password":"","existingSecret":""}
+   */
+  auth?: MariadbHelmValuesMetricsAuth;
+  /**
    * @skip metrics.image.tag Exporter image tag (immutable tags are recommended)
    *
    * @default {...} (6 keys)
@@ -2476,6 +2485,27 @@ export type MariadbHelmValuesMetrics = {
   prometheusRule?: MariadbHelmValuesMetricsPrometheusRule;
 };
 
+export type MariadbHelmValuesMetricsAuth = {
+  /**
+   * MariaDB username for the metrics exporter
+   *
+   * @default "exporter"
+   */
+  username?: string;
+  /**
+   * MariaDB password for the metrics user. Auto-generated if empty.
+   *
+   * @default ""
+   */
+  password?: string;
+  /**
+   * Name of an existing secret containing the metrics user
+   *
+   * @default ""
+   */
+  existingSecret?: string;
+};
+
 export type MariadbHelmValuesMetricsImage = {
   /**
    * [default: REGISTRY_NAME] Exporter image registry
@@ -2547,7 +2577,7 @@ export type MariadbHelmValuesMetricsContainerSecurityContext = {
   /**
    * Enable security context for MariaDB metrics container
    *
-   * @default false
+   * @default true
    */
   enabled?: boolean;
   /**
@@ -3007,7 +3037,7 @@ export type MariadbHelmValues = {
    * Metrics parameters
    * Mysqld Prometheus exporter parameters
    *
-   * @default {...} (14 keys)
+   * @default {...} (15 keys)
    */
   metrics?: MariadbHelmValuesMetrics;
   /**
@@ -3315,6 +3345,9 @@ export type MariadbHelmParameters = {
   "volumePermissions.resources"?: string;
   "volumePermissions.fips.openssl"?: string;
   "metrics.enabled"?: string;
+  "metrics.auth.username"?: string;
+  "metrics.auth.password"?: string;
+  "metrics.auth.existingSecret"?: string;
   "metrics.image.registry"?: string;
   "metrics.image.repository"?: string;
   "metrics.image.tag"?: string;

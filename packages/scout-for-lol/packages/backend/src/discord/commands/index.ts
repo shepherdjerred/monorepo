@@ -61,6 +61,8 @@ import { executeSubscriptionDelete } from "#src/discord/commands/subscription/de
 import { executeSubscriptionList } from "#src/discord/commands/subscription/list.ts";
 import { executeSubscriptionAddChannel } from "#src/discord/commands/subscription/add-channel.ts";
 import { executeSubscriptionMove } from "#src/discord/commands/subscription/move.ts";
+import { executeSubscriptionEditFilters } from "#src/discord/commands/subscription/edit-filters.ts";
+import { suggestQueueCompletions } from "#src/discord/commands/subscription/queue-filter-arg.ts";
 import { executeMe } from "#src/discord/commands/me.ts";
 import { executePlayerList } from "#src/discord/commands/admin/player-list.ts";
 
@@ -114,6 +116,15 @@ export function handleCommands(client: Client) {
           return;
         }
 
+        // Queue-filter autocomplete for /subscription add + edit-filters.
+        // Suggests remaining queues appended to the comma-separated list.
+        if (commandName === "subscription" && focusedOption.name === "queues") {
+          await interaction.respond(
+            suggestQueueCompletions(focusedOption.value),
+          );
+          return;
+        }
+
         // No autocomplete for this option
         await interaction.respond([]);
         return;
@@ -163,6 +174,9 @@ export function handleCommands(client: Client) {
                 executeSubscriptionAddChannel(interaction),
               )
               .with("move", () => executeSubscriptionMove(interaction))
+              .with("edit-filters", () =>
+                executeSubscriptionEditFilters(interaction),
+              )
               .otherwise(() => {
                 logger.warn(
                   `⚠️  Unknown subscription subcommand: ${subcommandName}`,

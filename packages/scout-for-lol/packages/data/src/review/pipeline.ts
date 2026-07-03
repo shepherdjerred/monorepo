@@ -387,6 +387,12 @@ export async function generateFullMatchReview(
   if (stage1Result.timelineSummaryText !== undefined) {
     reviewTextParams.timelineSummary = stage1Result.timelineSummaryText;
   }
+  if (prompts.playerHistory !== undefined) {
+    reviewTextParams.playerHistory = prompts.playerHistory;
+  }
+  if (prompts.patchNotes !== undefined) {
+    reviewTextParams.patchNotes = prompts.patchNotes;
+  }
 
   const reviewResult = await generateReviewTextStage(reviewTextParams);
   traces.reviewText = reviewResult.trace;

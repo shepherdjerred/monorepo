@@ -142,6 +142,18 @@ export type PipelinePromptsInput = {
   personality: Personality;
   /** Lane-specific context text */
   laneContext: string;
+  /**
+   * Pre-built player-history context (recent form, champion pool, streaks,
+   * duo winrates). Built by the backend from the DB; omitted by callers that
+   * don't have history (e.g. the frontend review tool).
+   */
+  playerHistory?: string;
+  /**
+   * Pre-built current-patch context, ideally cross-referenced against the
+   * player's champions/role/items. Omitted callers fall back to the generic
+   * patch summary from the bundled changeset.
+   */
+  patchNotes?: string;
 };
 
 /**

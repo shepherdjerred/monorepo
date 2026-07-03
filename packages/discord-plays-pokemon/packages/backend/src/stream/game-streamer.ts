@@ -12,6 +12,7 @@ import type {
   EncoderHandles,
   RawGoLiveDeps,
 } from "@shepherdjerred/discord-stream-lifecycle/types.ts";
+import { createTransitionLogInspector } from "@shepherdjerred/discord-stream-lifecycle/debug/transition-logger.ts";
 import { type Actor, createActor } from "xstate";
 import {
   WIDTH,
@@ -85,6 +86,16 @@ export class GameStreamer {
           channelId: this.options.channelId,
         },
       },
+      // Logs each state transition of the desired-stream machine and its invoked rawGoLive
+      // child (join/prepare/stream/leave), including transient states, to aid debugging.
+      inspect: createTransitionLogInspector({
+        log: {
+          info: (message, meta) => {
+            logger.info(message, meta);
+          },
+        },
+        label: this.options.guildId,
+      }),
     });
     this.actor.subscribe((snapshot) => {
       const next = snapshot.context.frameSink;
