@@ -157,10 +157,31 @@ describe("computePlayerHistorySignals", () => {
     expect(signals.offRole).toBe(true);
   });
 
-  test("reports rank now, rank 10 games ago, and lp this week", () => {
+  test("reports rank now, rank at the start of the window, and lp this week", () => {
     expect(signals.rankNow).toEqual(rank("silver", 2, 25));
     expect(signals.rankAgo).toEqual(rank("silver", 2, 80));
+    // Only 3 snapshots exist, so the oldest is 2 games ago — not 10.
+    expect(signals.rankAgoGames).toBe(2);
     expect(typeof signals.lpThisWeek).toBe("number");
+  });
+
+  test("does not report rank history from a single snapshot", () => {
+    const single = computePlayerHistorySignals({
+      games: GAMES,
+      rankPoints: [
+        {
+          matchGameEndAt: new Date("2026-07-03T18:00:00Z"),
+          rankBefore: rank("silver", 2, 40),
+          rankAfter: rank("silver", 2, 25),
+        },
+      ],
+      teammates: TEAMMATES,
+      currentGame: CURRENT,
+      now: NOW,
+    });
+    expect(single.rankNow).toEqual(rank("silver", 2, 25));
+    expect(single.rankAgo).toBeUndefined();
+    expect(single.rankAgoGames).toBeUndefined();
   });
 
   test("computes performance vs baseline", () => {
@@ -191,6 +212,7 @@ describe("formatPlayerHistory", () => {
     expect(text).toContain("RECENT FORM — 3 losses in a row");
     expect(text).toContain("CHAMPS (last 6)");
     expect(text).toContain("This game: Teemo (first time on it");
+    expect(text).toContain("2 games ago:");
     expect(text).toContain("LANE — Main: Jungle");
     expect(text).toContain("off-role this game");
     expect(text).toContain("DUOS — with Colin 1-1");

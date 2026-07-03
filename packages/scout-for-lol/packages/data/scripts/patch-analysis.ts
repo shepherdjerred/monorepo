@@ -126,6 +126,12 @@ export async function analyzePatch(
   patch: RiotPatch,
   date: Date = new Date(),
 ): Promise<PatchChangeset> {
+  // `--allowed-tools WebFetch` is the actual tool-surface constraint: the model
+  // can only ever invoke WebFetch (a single HTTP read of the patch-notes URL),
+  // nothing else. `--dangerously-skip-permissions` only suppresses the
+  // *interactive* per-tool-call approval prompt, which is unavoidable for a
+  // headless `claude -p` run (there's no TTY to answer it); it does not widen
+  // the allow-list. Same combination the temporal `claude -p` activities use.
   const proc = Bun.spawn(
     [
       "claude",

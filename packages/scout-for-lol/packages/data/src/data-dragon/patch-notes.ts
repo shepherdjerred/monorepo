@@ -74,13 +74,19 @@ export type RelevantPatchChanges = {
 
 /**
  * Read + validate the bundled patch changeset. Returns `undefined` when the
- * asset is a placeholder/absent shape so callers fall back cleanly. A malformed
- * (present-but-wrong) asset throws — that's a build-time contract violation, not
- * a runtime fallback case.
+ * asset fails validation so callers degrade gracefully (patch context is a
+ * best-effort enrichment, and the `update-data-dragon` job ships the asset PR
+ * even when the changeset couldn't be refreshed). The failure is logged loudly
+ * rather than swallowed, so a corrupt committed asset is still visible.
  */
 export function getPatchChangeset(): PatchChangeset | undefined {
   const parsed = PatchChangesetSchema.safeParse(patchNotesData);
   if (!parsed.success) {
+    console.error(
+      "[patch-notes] bundled patch-notes.json failed validation; " +
+        "reviews will run without patch context:",
+      z.prettifyError(parsed.error),
+    );
     return undefined;
   }
   return parsed.data;

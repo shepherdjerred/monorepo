@@ -94,6 +94,7 @@ export const PlayerHistorySignalsSchema = z.object({
   gamesThisWeek: z.number().nonnegative(),
   rankNow: RankSchema.optional(),
   rankAgo: RankSchema.optional(),
+  rankAgoGames: z.number().int().positive().optional(),
   lpThisWeek: z.number().optional(),
   championPool: z.array(ChampionRecordSchema),
   thisGameChampion: ChampionRecordSchema.extend({
@@ -290,8 +291,13 @@ export function computePlayerHistorySignals(
     (a, b) => b.matchGameEndAt.getTime() - a.matchGameEndAt.getTime(),
   );
   const rankNow = sortedRank[0]?.rankAfter;
-  const rankAgoPoint =
-    sortedRank[Math.min(RANK_LOOKBACK_GAMES - 1, sortedRank.length - 1)];
+  // How many games back the oldest snapshot in our lookback window actually is.
+  // sortedRank[0] is "now", so index N is N games ago. When we have fewer than
+  // RANK_LOOKBACK_GAMES snapshots, the window is shorter — never claim 10.
+  const rankAgoGames = Math.min(RANK_LOOKBACK_GAMES - 1, sortedRank.length - 1);
+  // Only emit a comparison when there are at least two distinct snapshots;
+  // a single data point can't be "N games ago" against itself.
+  const rankAgoPoint = rankAgoGames >= 1 ? sortedRank[rankAgoGames] : undefined;
   const rankAgo = rankAgoPoint?.rankAfter;
 
   const signals: PlayerHistorySignals = {
@@ -320,6 +326,7 @@ export function computePlayerHistorySignals(
   }
   if (rankAgo !== undefined) {
     signals.rankAgo = rankAgo;
+    signals.rankAgoGames = rankAgoGames;
   }
   const lpThisWeek = lpThisWeekOf(rankPoints, now);
   if (lpThisWeek !== undefined) {
@@ -369,7 +376,7 @@ function formatRankLine(signals: PlayerHistorySignals): string | undefined {
   const parts = [
     `Now: ${rankToSimpleString(signals.rankNow)} (${tierToPercentileString(signals.rankNow.tier)} of players)`,
   ];
-  if (signals.rankAgo !== undefined) {
+  if (signals.rankAgo !== undefined && signals.rankAgoGames !== undefined) {
     const delta =
       rankToLeaguePoints(signals.rankNow) - rankToLeaguePoints(signals.rankAgo);
     const dir =
@@ -378,8 +385,11 @@ function formatRankLine(signals: PlayerHistorySignals): string | undefined {
         : delta > 0
           ? `+${delta.toString()} LP`
           : `${delta.toString()} LP`;
+    const gamesAgo = signals.rankAgoGames;
+    const gamesLabel =
+      gamesAgo === 1 ? "1 game ago" : `${gamesAgo.toString()} games ago`;
     parts.push(
-      `${RANK_LOOKBACK_GAMES.toString()} games ago: ${rankToSimpleString(signals.rankAgo)} (${dir})`,
+      `${gamesLabel}: ${rankToSimpleString(signals.rankAgo)} (${dir})`,
     );
   }
   if (signals.lpThisWeek !== undefined && signals.lpThisWeek !== 0) {
