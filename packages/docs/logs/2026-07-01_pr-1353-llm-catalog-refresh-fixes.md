@@ -98,6 +98,18 @@ PR, all four diff hunks were either pure key reordering or the bad Opus context 
 - The `greptileReviewStep()` has no `soft_fail` — it's a hard gate. CI will only go green
   once greptile's re-review is clean on the new commit.
 
+## Session Log — 2026-07-03 (pass 7)
+
+### Done
+
+- Canary build triggered after Dagger engine cache PVC was purged and pod restarted.
+
+### Remaining
+
+- Confirm `load workspace` passes and drive to green.
+
+---
+
 ## Session Log — 2026-07-03 (pass 6)
 
 ### Done
