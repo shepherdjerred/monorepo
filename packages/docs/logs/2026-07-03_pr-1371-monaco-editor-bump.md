@@ -83,7 +83,7 @@ to regenerate bun.lock.
   workspace resolution normalizes this back to `../llm-models` relative to the
   scout-for-lol workspace root.
 
-## Session Log — 2026-07-03 (second pass)
+## Session Log — 2026-07-03 (third pass — continued from context compaction)
 
 ### Done
 
@@ -113,3 +113,29 @@ to regenerate bun.lock.
   fix. If another Renovate PR lands before this merges, that PR will still time out.
 - Greptile never created a check-run for this PR (Renovate is in the excluded list), so
   the `excluded-author` skip comment will be detected on the next CI run.
+
+## Session Log — 2026-07-03 (fourth pass — post infra-reset rebuild)
+
+### Done
+
+- Resumed after context compaction; triggered fresh build #4931 on the post-infra-reset engine.
+- Diagnosed `scout-test-template` failure: `bun install --frozen-lockfile` was failing in CI's
+  quality-bundle check. Incremental `bun install` showed "Saved lockfile" with no git diff, masking
+  the drift. Reproduced locally: deleting `packages/scout-for-lol/bun.lock` and regenerating from
+  scratch produced 540 insertions / 725 deletions. Frozen install now passes.
+- Committed `5d42ea867` — regenerated bun.lock from scratch.
+- Triggered build #4936 on commit `5d42ea867` (canceled stale #4935 which was on old commit).
+
+### Remaining
+
+- Wait for build #4936 to complete and verify all-green.
+- If any real failures emerge in #4936, investigate and fix.
+
+### Caveats
+
+- The previous "incremental `bun install` shows no changes but --frozen fails" behavior is a Bun
+  quirk: incremental passes read from the existing lockfile and write minimal deltas, but the
+  resulting file may still diverge from what a clean resolve produces. Always delete the lockfile
+  and regenerate from scratch when CI reports frozen-lockfile drift that local incremental runs miss.
+- Build #4934 was "skipped" by Buildkite's intermediate-build cancellation when #4935 (old-commit
+  rebuild) queued first. Resolved by canceling #4935 and rebuilding #4934 → new build #4936.
