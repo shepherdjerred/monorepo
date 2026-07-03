@@ -46,7 +46,7 @@ function ThemedApp() {
     <>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
       <ConnectionBanner />
-      <E2EConfigHandler />
+      {__DEV__ && <E2EConfigHandler />}
       <AppNavigator />
       <ActiveTimeTrackingOverlay />
     </>
