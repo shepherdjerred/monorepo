@@ -79,6 +79,24 @@
   },
   "packageRules": [
     {
+      "description": "Group ALL non-code (infrastructure) updates into a single manual-merge PR: Docker images, Helm charts, Terraform providers, CI-tool releases (github-releases/github-tags), toolchain pins (node/go/java/rust-version), source-ref image pins (git-refs), and the PaperMC custom datasource. Everything here lands in one weekly branch (renovate/all-non-code-dependencies) that does NOT auto-merge, giving infra changes a single human review checkpoint instead of a flood of individual PRs. Code/library deps (npm, go modules, crates, nuget, pypi) are intentionally excluded and keep their own individual PRs / groups (React, Node.js majors, cdk8s). This also replaces the former standalone OpenTofu group: TOFU_IMAGE (docker) and TOFU_VERSION (github-releases) now co-locate here in the same PR, preserving the 'bump together' intent. Because this group is manual-merge, the critical-infra / prod-image / minecraft rules below keep minimumReleaseAge:0 (so cluster + prod + game-server updates are eligible for the next weekly PR without the 30-day global delay) but no longer carry their own 'at any time' schedule — they ride this weekly cadence. Trade-off: prod-image and cluster-version bumps are now batched weekly rather than surfacing immediately as individual PRs.",
+      "matchDatasources": [
+        "docker",
+        "helm",
+        "terraform-provider",
+        "github-releases",
+        "github-tags",
+        "git-refs",
+        "node-version",
+        "golang-version",
+        "java-version",
+        "rust-version",
+        "custom.papermc"
+      ],
+      "groupName": "all non-code dependencies",
+      "automerge": false
+    },
+    {
       "matchDatasources": ["docker"],
       "pinDigests": true
     },
@@ -99,8 +117,7 @@
         "kubernetes/kubernetes"
       ],
       "automerge": false,
-      "minimumReleaseAge": "0 days",
-      "schedule": ["at any time"]
+      "minimumReleaseAge": "0 days"
     },
     {
       "description": "Talos factory images are not digest-compatible with the base ghcr.io/siderolabs/installer image digest.",
@@ -114,15 +131,13 @@
         "shepherdjerred/starlight-karma-bot/prod"
       ],
       "automerge": false,
-      "minimumReleaseAge": "0 days",
-      "schedule": ["at any time"]
+      "minimumReleaseAge": "0 days"
     },
     {
       "description": "Minecraft - no delay, no automerge",
       "matchPackageNames": ["itzg/minecraft-server", "minecraft", "mc-router"],
       "automerge": false,
-      "minimumReleaseAge": "0 days",
-      "schedule": ["at any time"]
+      "minimumReleaseAge": "0 days"
     },
     {
       "matchPackageNames": ["ghcr.io/shepherdjerred/dotfiles"],
@@ -148,11 +163,6 @@
         "@types/react",
         "@types/react-dom"
       ]
-    },
-    {
-      "description": "Keep TOFU_IMAGE (docker datasource) and TOFU_VERSION (github-releases) in `.dagger/src/constants.ts` bumping together — they pin the same upstream and drift between them means the worker image and any container running TOFU_IMAGE are on different OpenTofu versions, which corrupts state files written by the other binary.",
-      "groupName": "OpenTofu",
-      "matchPackageNames": ["opentofu/opentofu"]
     },
     {
       "description": "Ignore architecture-specific Plex tags (armhf, arm64)",
