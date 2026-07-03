@@ -38,7 +38,11 @@ authoritative latest versions directly:
   prometheus-blackbox-exporter 11.15.1, tailscale-operator 1.98.4, pyroscope
   2.1.0, openebs 4.5.1, velero 12.0.2, redis **27.0.13** (major), seaweedfs
   4.31.0, mariadb **26.1.7** (major).
-- **1 github-release**: siderolabs/talos 1.13.5.
+**Excluded — talos & kubernetes are notify-only pins.** `siderolabs/talos` and
+`kubernetes/kubernetes` in versions.ts (and `TALOSCTL_VERSION` / `KUBECTL_VERSION`
+in `.dagger/src/constants.ts`) exist to *signal* the operator to run
+`talosctl upgrade` / the k8s upgrade by hand — they are NOT auto-bump targets and
+must be left at their current pins in dependency-bump PRs.
 
 `packages/homelab/src/cdk8s/generated/helm/*` — regenerated committed helm-types
 from the new chart versions (8 files changed; argo-cd +607 lines for the v10 schema).
