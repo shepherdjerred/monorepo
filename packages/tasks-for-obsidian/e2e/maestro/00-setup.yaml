@@ -1,0 +1,25 @@
+# Shared setup: clean app state, point the app at the local test stack via the
+# __DEV__-only e2e-config deep link, land on Today, and wait for the first sync.
+# Requires --env APP_URL and --env AUTH_TOKEN (provided by e2e/run.ts).
+appId: org.reactjs.native.example.TasksForObsidian
+---
+- launchApp:
+    clearState: true
+- openLink: "tasknotes://e2e-config?apiUrl=${APP_URL}&token=${AUTH_TOKEN}"
+# The config handler navigates to the Today tab once settings are applied.
+- extendedWaitUntil:
+    visible:
+      id: "tab-today"
+    timeout: 20000
+# "Water plants" (recurring, overdue, never renamed) is the stable sentinel that
+# proves the seeded vault synced. Pull to refresh between attempts — sync is async.
+- retry:
+    maxRetries: 3
+    commands:
+      - swipe:
+          start: "50%, 30%"
+          end: "50%, 70%"
+      - extendedWaitUntil:
+          visible:
+            text: ".*Water plants.*"
+          timeout: 10000

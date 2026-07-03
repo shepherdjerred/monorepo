@@ -1,0 +1,55 @@
+# Offline + relaunch replay: create a task while offline, kill the app,
+# relaunch WITHOUT clearing state, go back online, and verify the queued
+# mutation replays. Uses a distinct title so it can't be satisfied by the
+# task created in 05.
+appId: org.reactjs.native.example.TasksForObsidian
+---
+- runFlow: 00-setup.yaml
+- runScript:
+    file: scripts/chaos-offline.js
+    env:
+      CHAOS_BASE: ${APP_URL}
+- tapOn:
+    id: "fab-add-task"
+- extendedWaitUntil:
+    visible:
+      id: "quick-add-input"
+    timeout: 10000
+- tapOn:
+    id: "quick-add-input"
+- inputText: "Offline crash task"
+- tapOn:
+    id: "quick-add-submit"
+- tapOn:
+    id: "tab-inbox"
+- extendedWaitUntil:
+    visible:
+      text: ".*Offline crash task.*"
+    timeout: 15000
+# Simulate a crash: kill and relaunch preserving state (queued mutation
+# persists in AsyncStorage).
+- stopApp
+- launchApp
+- openLink: "tasknotes://e2e-config?apiUrl=${APP_URL}&token=${AUTH_TOKEN}"
+- extendedWaitUntil:
+    visible:
+      id: "tab-today"
+    timeout: 20000
+- runScript:
+    file: scripts/chaos-online.js
+    env:
+      CHAOS_BASE: ${APP_URL}
+- tapOn:
+    id: "tab-inbox"
+# Pull to refresh: fullSync replays the restored queue, then lists from the
+# server — the crashed-offline task must come back from the real vault.
+- retry:
+    maxRetries: 3
+    commands:
+      - swipe:
+          start: "50%, 30%"
+          end: "50%, 70%"
+      - extendedWaitUntil:
+          visible:
+            text: ".*Offline crash task.*"
+          timeout: 10000

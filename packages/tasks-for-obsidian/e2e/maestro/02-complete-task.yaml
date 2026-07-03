@@ -1,0 +1,27 @@
+# Complete the seeded open task and assert it reads as completed.
+# The task is due in the future, so it lives on the Inbox tab (no project).
+# Completion is toggled from the detail screen: the inline checkbox is nested
+# inside the row's accessible Pressable, which iOS collapses into a single
+# accessibility element, making the checkbox untappable for XCUITest/Maestro.
+appId: org.reactjs.native.example.TasksForObsidian
+---
+- runFlow: 00-setup.yaml
+- tapOn:
+    id: "tab-inbox"
+- extendedWaitUntil:
+    visible:
+      text: ".*Seeded open task.*"
+    timeout: 15000
+- tapOn:
+    text: ".*Seeded open task.*"
+- extendedWaitUntil:
+    visible:
+      id: "task-detail-toggle"
+    timeout: 10000
+- tapOn:
+    id: "task-detail-toggle"
+# The Status meta row flips to "Done" — the visual completion signal.
+- extendedWaitUntil:
+    visible:
+      text: "Done"
+    timeout: 15000

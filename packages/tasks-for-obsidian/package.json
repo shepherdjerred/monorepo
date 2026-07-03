@@ -9,6 +9,7 @@
     "build": "echo 'React Native builds via Xcode/Gradle, not bun'",
     "test": "bun test src scripts",
     "test:contract": "bun test contract-tests",
+    "e2e": "bun run e2e/run.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",

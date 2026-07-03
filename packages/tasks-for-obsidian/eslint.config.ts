@@ -11,6 +11,9 @@ const config = [
         "src/data/sync/__tests__/*.test.ts",
         "scripts/*.ts",
         "contract-tests/*.ts",
+        // tseslint disallows '**' here; all e2e TS files live at this depth
+        // (e2e/maestro/scripts/*.js are plain Maestro GraalJS, ignored).
+        "e2e/*.ts",
       ],
       maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 50,
     },

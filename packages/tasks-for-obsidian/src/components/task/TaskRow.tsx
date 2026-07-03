@@ -47,6 +47,7 @@ export const TaskRow = React.memo(function TaskRow({
         <Pressable
           style={[styles.row, { borderBottomColor: colors.borderLight }]}
           onPress={onPress}
+          testID="task-row"
           accessibilityRole="button"
           accessibilityLabel={`Task: ${task.title}${completed ? ", completed" : ""}${overdue ? ", overdue" : ""}${task.due ? `, due ${formatRelativeDate(task.due)}` : ""}${task.projects.length > 0 && task.projects[0] !== undefined ? `, project ${String(task.projects[0])}` : ""}`}
         >
