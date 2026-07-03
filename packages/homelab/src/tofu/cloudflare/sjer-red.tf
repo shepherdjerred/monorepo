@@ -115,15 +115,6 @@ resource "cloudflare_dns_record" "sjer_red_cname_jellyfin" {
   proxied = true
 }
 
-resource "cloudflare_dns_record" "sjer_red_cname_overseerr" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "overseerr"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
-  proxied = true
-}
-
 resource "cloudflare_dns_record" "sjer_red_cname_peertube" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1

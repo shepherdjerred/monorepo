@@ -2,7 +2,8 @@
 
 ## Status
 
-In Progress
+Complete — Overseerr removed 2026-07-03 (see
+`packages/docs/logs/2026-07-03_finish-seerr-migration.md`).
 
 ## Context
 
