@@ -185,11 +185,15 @@ All ten P2 build steps, on `feature/tasknotes-p2` (stacked on `feature/tasknotes
 
 ### Remaining
 
-- Maestro e2e (`bun run e2e`) as the local pre-merge gate — running at session end (first attempt failed only because the worktree lacked `pod install`; pods now installed).
-- Open the P2 PR once e2e is green; then TestFlight build (user-side).
+- P2 PR review/merge; then TestFlight build (user-side). P0 PR #1388 must merge first (P2 is stacked on it).
+
+### E2E gate — green (7/7 flows + vault-byte asserts), first full pass ever
+
+Getting it green surfaced two real app bugs (QuickAdd's Create button hid behind the keyboard whenever the offline banner shifted the layout — KAV stale padding; ConnectionBanner's reanimated collapse never applied, leaving a stuck "Syncing..." bar) and four harness holes (stale server on the fixed port from an interrupted run silently adopted by later runs — THE root cause of the historic red; random Maestro flow order over a shared stateful vault; chaos-proxy offline state leaking across flows; delayed tip popovers swallowing taps). Fixes in 333c8bc34.
 
 ### Caveats
 
 - `bun test` (bare) also picks up `contract-tests/` and fails without `../tasknotes-server` deps — use `bun run test` / `bun run test:contract`. In a fresh worktree the server needs its own `bun install` (not a workspace member) and the app needs `bun run pod-install` before e2e.
+- `ios/Podfile.lock` drifts by two prebuilt-pod checksums (hermes-engine, React-Core-prebuilt) after a fresh `pod install` in a new worktree — environment noise, left uncommitted.
 - v1→v2 queue migration maps `complete_instance` to `set_instance_complete{date: local day of enqueue timestamp, completed: true}` — best available record of the tapped day.
 - Aliases are pruned when the real id disappears from a server pull; UI surfaces holding a pruned temp id fall back to the id itself (task shows as gone — correct).
