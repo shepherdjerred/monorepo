@@ -183,7 +183,13 @@ export class TaskStore {
     return true;
   }
 
-  async completeRecurring(id: string): Promise<Task | undefined> {
+  async completeRecurring(
+    id: string,
+    options: {
+      date?: string | undefined;
+      completed?: boolean | undefined;
+    } = {},
+  ): Promise<Task | undefined> {
     const existing = this.tasks.get(id);
     if (existing === undefined) return undefined;
 
@@ -199,11 +205,21 @@ export class TaskStore {
       return completed;
     }
 
-    const today = toISODate(new Date());
-    const hasToday = existing.completeInstances.includes(today);
-    const completeInstances = hasToday
-      ? existing.completeInstances.filter((d) => d !== today)
-      : [...existing.completeInstances, today];
+    // Client-supplied date wins: it was captured at tap time on the device,
+    // which is authoritative over "server-local today" across timezones.
+    const target = options.date ?? toISODate(new Date());
+    const has = existing.completeInstances.includes(target);
+    // Explicit `completed` = SET semantics (idempotent, safe under offline
+    // queue replay); absent = legacy/upstream toggle.
+    const shouldComplete = options.completed ?? !has;
+
+    if (shouldComplete === has) {
+      return existing;
+    }
+
+    const completeInstances = shouldComplete
+      ? [...existing.completeInstances, target]
+      : existing.completeInstances.filter((d) => d !== target);
 
     const next: Task = {
       ...existing,
