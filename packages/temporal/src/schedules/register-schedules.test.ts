@@ -66,6 +66,9 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runScoutSeasonRefreshWorkflow",
   "runZfsMaintenanceWorkflow",
   "runBugsinkHousekeepingWorkflow",
+  // Awaits a single pruneScoutImages activity (list+delete). No workflow-level
+  // sleeps; the activity carries its own startToCloseTimeout + retry budget.
+  "runScoutImageGcWorkflow",
   "runVeleroOrphanAuditWorkflow",
   "syncGolinks",
 ]);

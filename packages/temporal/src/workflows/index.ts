@@ -16,6 +16,11 @@ import { reconcileLock as _reconcileLock } from "./ha/reconcile-lock.ts";
 import { runVacuumIfNotHome as _runVacuumIfNotHome } from "./ha/run-vacuum-if-not-home.ts";
 import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./zfs-maintenance.ts";
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
+import { runScoutImageGcWorkflow as _runScoutImageGcWorkflow } from "./scout-image-gc.ts";
+import type {
+  ScoutImageGcInput,
+  ScoutImageGcResult,
+} from "#activities/scout-image-gc.ts";
 import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./velero-orphan-audit.ts";
 import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./data-dragon.ts";
 import type {
@@ -114,6 +119,12 @@ export async function runZfsMaintenanceWorkflow(): Promise<void> {
 
 export async function runBugsinkHousekeepingWorkflow(): Promise<void> {
   return _runBugsinkHousekeepingWorkflow();
+}
+
+export async function runScoutImageGcWorkflow(
+  input: ScoutImageGcInput = {},
+): Promise<ScoutImageGcResult> {
+  return _runScoutImageGcWorkflow(input);
 }
 
 export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
