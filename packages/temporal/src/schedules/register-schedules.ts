@@ -5,7 +5,6 @@ import {
 } from "@temporalio/client";
 import type { Duration } from "@temporalio/common";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import { EVAL_FIXTURES_PIN } from "#shared/pr-review/eval-fixture.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
 import { detectOrphanSchedules } from "./orphan-detection.ts";
 
@@ -70,6 +69,15 @@ export const DELETED_SCHEDULE_IDS = [
   // keeps firing a workflow that no longer exists in the bundle.
   "pokeemerald-wasm-weekly",
   "pokeemerald-wasm-monthly",
+  // The pr-review eval bot (continuous-eval + weekly A/B significance) was
+  // removed entirely — its workflow types (`prReviewEvalWorkflow`,
+  // `prReviewWeeklySignificanceWorkflow`) are no longer in the bundle. Delete
+  // BOTH schedules on startup so the worker stops firing missing workflow
+  // types (which would also trip the `temporal_schedule_orphans` gauge). The
+  // dedicated `pr_review_eval` Postgres DB and PagerDuty alert group were torn
+  // down with them.
+  "pr-review-eval-nightly",
+  "pr-review-ab-weekly-report",
 ] as const;
 
 type ScheduleDefinition = {
@@ -88,15 +96,6 @@ type ScheduleDefinition = {
   // under CI's Node16 `ms` resolution — see the constants' comment.
   catchupWindow?: CatchupWindow;
 };
-
-const PR_REVIEW_EVAL_SCHEDULE_ID = "pr-review-eval-nightly";
-const PR_REVIEW_AB_WEEKLY_REPORT_SCHEDULE_ID = "pr-review-ab-weekly-report";
-const PR_REVIEW_FIXTURES_REPO_URL_ENV = "PR_REVIEW_FIXTURES_REPO_URL";
-const PR_REVIEW_EVAL_DATABASE_URL_ENV = "PR_REVIEW_EVAL_DATABASE_URL";
-const PR_REVIEW_EVAL_PAUSE_REASON =
-  "Paused because PR_REVIEW_FIXTURES_REPO_URL is not configured on the Temporal worker";
-const PR_REVIEW_EVAL_DATABASE_PAUSE_REASON =
-  "Paused because PR_REVIEW_EVAL_DATABASE_URL is not configured on the Temporal worker";
 
 const SCOUT_LANE_PRIOR_UPDATE_CONFIG = {
   lanePriors: {
@@ -280,34 +279,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Daily Velero orphan ZFS snapshot detection — emits Prometheus metrics for the orphan-snapshot pathology (see packages/docs/decisions/2026-05-05_velero-orphan-snapshot-prevention.md)",
   },
   {
-    id: "pr-review-ab-weekly-report",
-    workflowType: "prReviewWeeklySignificanceWorkflow",
-    args: [{}],
-    // Monday 09:00 PT — the team is back from the weekend and can act
-    // on a Discord report before standup. Workflow is cheap (single
-    // Postgres query per experiment + 100k MC samples per arm), so we
-    // don't bother staggering against the nightly cron.
-    cronExpression: "0 9 * * 1",
-    taskQueue: TASK_QUEUES.PR_REVIEW,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "10 minutes",
-    memo: "Weekly pr-review-bot A/B significance report — Bayesian posterior over real-PR acceptance, Discord post Mon 09:00 PT",
-  },
-  {
-    id: PR_REVIEW_EVAL_SCHEDULE_ID,
-    workflowType: "prReviewEvalWorkflow",
-    args: [{ pin: EVAL_FIXTURES_PIN }],
-    // 04:00 PT — staggered after velero-orphan-audit (03:30) so the
-    // worker pod isn't fighting two cron workflows for resources. The
-    // eval workflow takes ~10-20 min depending on corpus size + LLM
-    // latency; an hour of headroom before any 5am workflows is fine.
-    cronExpression: "0 4 * * *",
-    taskQueue: TASK_QUEUES.PR_REVIEW,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "2 hours",
-    memo: "Nightly pr-review-bot continuous-eval — replay against fixture corpus, persist precision/recall to pr_review_eval Postgres, fire PD alert on > 5pp drop vs trailing-7d mean",
-  },
-  {
     id: "golink-sync",
     workflowType: "syncGolinks",
     args: [],
@@ -401,61 +372,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
   },
 ];
 
-export function prReviewEvalFixturesConfigured(
-  env: Record<string, string | undefined> = Bun.env,
-): boolean {
-  return (env[PR_REVIEW_FIXTURES_REPO_URL_ENV]?.trim() ?? "").length > 0;
-}
-
-export function prReviewEvalDatabaseConfigured(
-  env: Record<string, string | undefined> = Bun.env,
-): boolean {
-  return (env[PR_REVIEW_EVAL_DATABASE_URL_ENV]?.trim() ?? "").length > 0;
-}
-
-export function scheduleRequiresConfigPause(
-  schedule: ScheduleDefinition,
-  env: Record<string, string | undefined> = Bun.env,
-): { paused: boolean; reason: string | undefined } {
-  if (schedule.id === PR_REVIEW_EVAL_SCHEDULE_ID) {
-    if (!prReviewEvalFixturesConfigured(env)) {
-      return { paused: true, reason: PR_REVIEW_EVAL_PAUSE_REASON };
-    }
-    if (!prReviewEvalDatabaseConfigured(env)) {
-      return { paused: true, reason: PR_REVIEW_EVAL_DATABASE_PAUSE_REASON };
-    }
-    return { paused: false, reason: undefined };
-  }
-  if (schedule.id === PR_REVIEW_AB_WEEKLY_REPORT_SCHEDULE_ID) {
-    if (!prReviewEvalDatabaseConfigured(env)) {
-      return { paused: true, reason: PR_REVIEW_EVAL_DATABASE_PAUSE_REASON };
-    }
-    return { paused: false, reason: undefined };
-  }
-  return { paused: false, reason: undefined };
-}
-
-async function reconcileSchedulePauseState(
-  handle: ReturnType<Client["schedule"]["getHandle"]>,
-  schedule: ScheduleDefinition,
-): Promise<void> {
-  const desired = scheduleRequiresConfigPause(schedule);
-  if (desired.paused) {
-    await handle.pause(desired.reason ?? "Paused by schedule configuration");
-    console.warn(`Paused schedule: ${schedule.id} (${desired.reason ?? ""})`);
-    return;
-  }
-  if (
-    schedule.id === PR_REVIEW_EVAL_SCHEDULE_ID ||
-    schedule.id === PR_REVIEW_AB_WEEKLY_REPORT_SCHEDULE_ID
-  ) {
-    await handle.unpause(
-      `Required PR review eval configuration is present; ${schedule.id} enabled`,
-    );
-    console.warn(`Unpaused schedule: ${schedule.id}`);
-  }
-}
-
 export function buildSchedulePolicies(schedule: ScheduleDefinition): {
   overlap: ScheduleOverlapPolicy;
   // CatchupWindow (not `Duration`): the resolved value is always one of the two
@@ -484,7 +400,7 @@ export async function registerSchedules(client: Client): Promise<void> {
   }
 
   for (const schedule of SCHEDULES) {
-    let handle = scheduleClient.getHandle(schedule.id);
+    const handle = scheduleClient.getHandle(schedule.id);
     try {
       // Update the existing schedule
       await handle.update((prev) => ({
@@ -531,9 +447,7 @@ export async function registerSchedules(client: Client): Promise<void> {
       });
 
       console.warn(`Created schedule: ${schedule.id}`);
-      handle = scheduleClient.getHandle(schedule.id);
     }
-    await reconcileSchedulePauseState(handle, schedule);
   }
 
   // After reconciling the declared set, surface any live schedule that is no

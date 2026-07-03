@@ -456,6 +456,20 @@ mock.module("./config", () => {
 });
 ```
 
+**Gotcha — `mock.module` leaks across test files.** `mock.module(specifier, factory)` registers the mock **process-wide** and is **not** auto-restored between files (`mock.restore()` does not undo it). A **partial** mock returning only the symbols it overrides effectively deletes the module's other exports for every test file that runs afterward, surfacing as a flaky, CI-only `SyntaxError: Export named 'X' not found in module '...'` that can't be reproduced in isolation. Spread the real module so only the intended symbol changes:
+
+```ts
+import * as realMod from "./agent-task-command.ts";
+void mock.module("#activities/agent-task-command.ts", () => ({
+  ...realMod,
+  buildAgentTaskCommand: async () => {
+    /* override */
+  },
+}));
+```
+
+Specifier aliases that resolve to the same file (`#activities/x.ts` and `./x.ts`) share one mock.
+
 ### Restoring Mocks
 
 ```typescript
