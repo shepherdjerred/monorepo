@@ -14,34 +14,34 @@ export const BUN_IMAGE =
   "oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4";
 // renovate: datasource=docker depName=rust
 export const RUST_IMAGE =
-  "rust:1.95.0-bookworm@sha256:6258907abe69656e41cd992e0b705cdcfabcbbe3db374f92ed2d47121282d4a1";
+  "rust:1.96.0-bookworm@sha256:5e2214abe154fe26e39f64488952e5c991eeed1d6d6da7cc8381ae83927f0cfc";
 // renovate: datasource=docker depName=golang
 export const GO_IMAGE =
-  "golang:1.26.3-bookworm@sha256:386d475a660466863d9f8c766fec64d7fdad3edac2c6a05020c09534d71edb4b";
+  "golang:1.26.4-bookworm@sha256:b305420a68d0f229d91eb3b3ed9e519fcf2cf5461da4bef997bf927e8c0bfd2b";
 // renovate: datasource=docker depName=mcr.microsoft.com/playwright
 export const PLAYWRIGHT_IMAGE =
-  "mcr.microsoft.com/playwright:v1.60.0-noble@sha256:9bd26ad900bb5e0f4dee75839e957a89ae89c2b7ab1e76050e559790e946b948";
+  "mcr.microsoft.com/playwright:v1.61.1-noble@sha256:5b8f294aff9041b7191c34a4bab3ac270157a28774d4b0660e9743297b697e48";
 // renovate: datasource=docker depName=ghcr.io/realm/swiftlint
 export const SWIFTLINT_IMAGE =
-  "ghcr.io/realm/swiftlint:0.63.2@sha256:8db376ff8a26e56fa506b56b8c70ea9c5583dc52d5746ce23b6c2c4d4ee00e31";
+  "ghcr.io/realm/swiftlint:0.65.0@sha256:a482729f4b58741875af1566f23397f3f6db300372756fc31606d0a4527fab9e";
 // renovate: datasource=docker depName=alpine
 export const ALPINE_IMAGE =
-  "alpine:3.23@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11";
+  "alpine:3.24@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b";
 // renovate: datasource=docker registryUrl=https://ghcr.io depName=opentofu/opentofu
 export const TOFU_IMAGE =
-  "ghcr.io/opentofu/opentofu:1.11.7@sha256:6166f12d09520dbbb431a13951973c5b1046c01f801fa8c7b73e89511a0fff34";
+  "ghcr.io/opentofu/opentofu:1.12.1@sha256:1cdf44e7a44a67c7838ada83c71ad28b4c4e1571b47ad1c5b592624c2c8f35b5";
 // renovate: datasource=docker depName=maven
 export const MAVEN_IMAGE =
-  "maven:3.9.15-eclipse-temurin-25@sha256:1c3a703ab39fee7ac0880f46e6ccd22c0d701f17f0616e6e66a258ddc1c637d2";
+  "maven:3.9.16-eclipse-temurin-25@sha256:7e461cec477077c1d9e50b13df8aef9018764410f4c4cd7c34803f10c4c99e4c";
 // renovate: datasource=docker depName=texlive/texlive
 export const TEXLIVE_IMAGE =
-  "texlive/texlive:TL2024-historic@sha256:7cf892aa62a923b3a2d9242a27e3f0d8b432385e8f76f34049ffad676aabcc1c";
+  "texlive/texlive:TL2024-historic@sha256:ee8ab695a9640d119482eff320c79b2292c70694d068aeb15ff4720761af8839";
 // renovate: datasource=docker depName=caddy
 export const CADDY_IMAGE =
-  "caddy:2.11.3-alpine@sha256:86deaf5e3d3408a6ccec08fbb79989783dd26e206ae10bcf78a801dc8c9ab794";
+  "caddy:2.11.4-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648";
 // renovate: datasource=docker depName=caddy
 export const CADDY_BUILDER_IMAGE =
-  "caddy:2.11.3-builder-alpine@sha256:3eae6b351ecdb05da6d16e341261a457692d344a435764c5ece7a60cf03a23f3";
+  "caddy:2.11.4-builder-alpine@sha256:b6a94e74b72261bd536b35acdd22f3577d4e466a9550f2c8d6c8ed6413085d72";
 // xcaddy --with module for the S3 proxy plugin. The fork keeps the upstream
 // import path (existing Caddyfiles keep working) and adds HEAD support, the
 // 304-on-index fix, and 206/Accept-Ranges on byte-range responses (Safari
@@ -63,7 +63,7 @@ export const REDLIB_SOURCE_REF = "a4d36e954cf1bd64f209cd8868c5a29edc81b374";
 // Also reused as the Node builder stage for the custom mcp-gateway image (edstem-mcp build).
 // renovate: datasource=docker depName=node
 export const OBSIDIAN_HEADLESS_BASE_IMAGE =
-  "node:24-slim@sha256:c2d5ade763cacfb03fe9cb8e8af5d1be5041ff331921fa26a9b231ca3a4f780a";
+  "node:24-slim@sha256:b31e7a42fdf8b8aa5f5ed477c72d694301273f1069c5a2f71d53c6482e99a2fc";
 
 // Base image for the custom mcp-gateway image. Layered with a prebuilt edstem-mcp
 // (rob-9/edstem-mcp is git-only, has no committed dist, and no build-on-install,
@@ -106,7 +106,7 @@ export const POKEEMERALD_SOURCE_REF =
   "ee8b9644375640fdb947b48a0d682adc35e0c297";
 // renovate: datasource=docker depName=alpine/helm
 export const HELM_IMAGE =
-  "alpine/helm:4.2.0@sha256:af08f75a3130d666a50b9fc150f40987ef20b885cf67659aabf4b83a5f2c5501";
+  "alpine/helm:4.2.2@sha256:ee6fe3e96d9f8ea8dd1af9ecd7bbb3e233616a25f145392376f020fd2a51eb33";
 
 // Quality-step scanner images (used by .dagger/src/quality.ts).
 // Pinned with `@sha256:` digests to match every other image constant in
@@ -114,10 +114,10 @@ export const HELM_IMAGE =
 // silently alter the security tooling without a Renovate signal.
 // renovate: datasource=docker depName=aquasec/trivy
 export const TRIVY_IMAGE =
-  "aquasec/trivy:0.70.0@sha256:be1190afcb28352bfddc4ddeb71470835d16462af68d310f9f4bca710961a41e";
+  "aquasec/trivy:0.71.0@sha256:016eae51fdcf989332a5404af7e8f625cd5d95d7c0907a221d080a996f556500";
 // renovate: datasource=docker depName=semgrep/semgrep
 export const SEMGREP_IMAGE =
-  "semgrep/semgrep:1.163.0@sha256:7cad2bc2d1e44f87f0bf4be6d1fa23aa90fb72015bebc89fb91385d813987a03";
+  "semgrep/semgrep:1.164.0@sha256:207983631beecdbe7fa29196c7f4a7a5f29033933cdb76c687ce4a672e07618d";
 // renovate: datasource=docker depName=zricethezav/gitleaks
 export const GITLEAKS_IMAGE =
   "zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f";
@@ -130,13 +130,13 @@ export const SHELLCHECK_IMAGE =
 export const BUN_VERSION = "1.3.14";
 
 // renovate: datasource=npm depName=release-please
-export const RELEASE_PLEASE_VERSION = "17.6.0";
+export const RELEASE_PLEASE_VERSION = "17.7.0";
 
 // renovate: datasource=npm depName=@anthropic-ai/claude-code
-export const CLAUDE_CODE_VERSION = "2.1.148";
+export const CLAUDE_CODE_VERSION = "2.1.161";
 
 // renovate: datasource=npm depName=@openai/codex
-export const CODEX_CLI_VERSION = "0.133.0";
+export const CODEX_CLI_VERSION = "0.136.0";
 
 // cogapp regenerates the README project-listing tables in the temporal-worker's
 // readme-refresh-weekly workflow (see withCogapp in image.ts).
@@ -147,31 +147,31 @@ export const COGAPP_VERSION = "3.6.0";
 export const GOLANGCI_LINT_VERSION = "v2.12.2";
 
 // renovate: datasource=github-releases depName=cli/cli
-export const GH_CLI_VERSION = "2.92.0";
+export const GH_CLI_VERSION = "2.93.0";
 
 // renovate: datasource=github-releases depName=kubernetes/kubectl
 export const KUBECTL_VERSION = "v1.36.2";
 
 // renovate: datasource=github-releases depName=github/github-mcp-server
-export const GITHUB_MCP_SERVER_VERSION = "1.0.5";
+export const GITHUB_MCP_SERVER_VERSION = "1.1.2";
 
 // renovate: datasource=github-releases depName=siderolabs/talos
 export const TALOSCTL_VERSION = "v1.13.5";
 
 // renovate: datasource=github-releases depName=opentofu/opentofu
-export const TOFU_VERSION = "1.11.7";
+export const TOFU_VERSION = "1.12.1";
 
 // renovate: datasource=github-releases depName=argoproj/argo-cd
-export const ARGOCD_CLI_VERSION = "v3.4.2";
+export const ARGOCD_CLI_VERSION = "v3.4.3";
 
 // renovate: datasource=github-releases depName=vmware-tanzu/velero
-export const VELERO_CLI_VERSION = "v1.18.1";
+export const VELERO_CLI_VERSION = "v1.18.2";
 
 // renovate: datasource=github-releases depName=buildkite/cli
-export const BUILDKITE_CLI_VERSION = "3.42.0";
+export const BUILDKITE_CLI_VERSION = "3.44.1";
 
 // renovate: datasource=github-releases depName=temporalio/cli
-export const TEMPORAL_CLI_VERSION = "1.7.0";
+export const TEMPORAL_CLI_VERSION = "1.7.1";
 
 // ---------------------------------------------------------------------------
 // Cache volume names (stable — never include version numbers)

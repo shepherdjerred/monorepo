@@ -38,6 +38,9 @@ const DATA_PACKAGE_ROOT = `${SCOUT_ROOT}/packages/data`;
 
 const GENERATED_PATHS = [
   `${DATA_PACKAGE_ROOT}/src/data-dragon`,
+  // Structured patch changeset (assets/patch-notes.json) is under src/data-dragon
+  // above; the raw-notes provenance lives outside src, so stage it explicitly.
+  `${DATA_PACKAGE_ROOT}/patch-notes-archive`,
   `${SCOUT_ROOT}/packages/backend/src/league/model/__tests__/__snapshots__`,
   `${SCOUT_ROOT}/packages/report/src/dataDragon/__snapshots__`,
   `${SCOUT_ROOT}/packages/report/src/html/arena/__snapshots__`,

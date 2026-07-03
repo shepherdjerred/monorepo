@@ -44,6 +44,12 @@ void mock.module("@sentry/bun", () => ({
   captureException,
 }));
 
+// Player history is DB-backed and fail-fast in production; this unit test isn't
+// about the DB, so stub it to an empty (no-history) result.
+void mock.module("../player-history.ts", () => ({
+  buildPlayerHistoryContext: async () => ({ text: "", poolChampions: [] }),
+}));
+
 // Test match ID for all tests
 const TEST_MATCH_ID = MatchIdSchema.parse("NA1_1234567890");
 
@@ -299,23 +305,23 @@ const { generateMatchReview } = await import("#src/league/review/generator.ts");
 describe("generateMatchReview", () => {
   describe("when API keys are not configured", () => {
     test("returns undefined for regular match", async () => {
-      const review = await generateMatchReview(
-        buildCompletedMatchFixture(),
-        TEST_MATCH_ID,
-        MINIMAL_RAW_MATCH,
-        MINIMAL_RAW_TIMELINE,
-      );
+      const review = await generateMatchReview({
+        match: buildCompletedMatchFixture(),
+        matchId: TEST_MATCH_ID,
+        rawMatchData: MINIMAL_RAW_MATCH,
+        timelineData: MINIMAL_RAW_TIMELINE,
+      });
 
       expect(review).toBeUndefined();
     });
 
     test("returns undefined for arena match", async () => {
-      const review = await generateMatchReview(
-        buildArenaMatchFixture(),
-        TEST_MATCH_ID,
-        MINIMAL_RAW_MATCH,
-        MINIMAL_RAW_TIMELINE,
-      );
+      const review = await generateMatchReview({
+        match: buildArenaMatchFixture(),
+        matchId: TEST_MATCH_ID,
+        rawMatchData: MINIMAL_RAW_MATCH,
+        timelineData: MINIMAL_RAW_TIMELINE,
+      });
 
       expect(review).toBeUndefined();
     });
@@ -329,12 +335,12 @@ describe("generateMatchReview", () => {
       error.name = "OpenAIBudgetExceeded";
       openaiClient = buildThrowingOpenAIClient(error);
 
-      const review = await generateMatchReview(
-        buildCompletedMatchFixture(),
-        TEST_MATCH_ID,
-        MINIMAL_RAW_MATCH,
-        MINIMAL_RAW_TIMELINE,
-      );
+      const review = await generateMatchReview({
+        match: buildCompletedMatchFixture(),
+        matchId: TEST_MATCH_ID,
+        rawMatchData: MINIMAL_RAW_MATCH,
+        timelineData: MINIMAL_RAW_TIMELINE,
+      });
 
       expect(review).toBeUndefined();
       expect(await getProviderIssueActiveValue("budget_exceeded")).toBe(1);
@@ -351,12 +357,12 @@ describe("generateMatchReview", () => {
         },
       });
 
-      const review = await generateMatchReview(
-        buildCompletedMatchFixture(),
-        TEST_MATCH_ID,
-        MINIMAL_RAW_MATCH,
-        MINIMAL_RAW_TIMELINE,
-      );
+      const review = await generateMatchReview({
+        match: buildCompletedMatchFixture(),
+        matchId: TEST_MATCH_ID,
+        rawMatchData: MINIMAL_RAW_MATCH,
+        timelineData: MINIMAL_RAW_TIMELINE,
+      });
 
       expect(review).toBeUndefined();
       expect(await getProviderIssueActiveValue("context_limit")).toBe(1);

@@ -235,16 +235,14 @@ export function createTemporalDashboard() {
       }),
       // -----------------------------------------------------------------
       // Agent subprocesses row (y >= 68) — covers the long-running
-      // claude -p subprocesses spawned by alert-remediation +
-      // agent-task (homelab-audit) so a hang or wall-hit pattern is
-      // visible at a glance. Added 2026-06-14 after a 14-day silent
-      // outage in alert-remediation.
+      // claude -p subprocesses spawned by agent-task (homelab-audit) so a
+      // hang or wall-hit pattern is visible at a glance.
       // -----------------------------------------------------------------
       timeseriesPanel({
         id: 300,
         title: "Agent Subprocess Wall-clock p50 / p95 / p99",
         description:
-          "Wall-clock duration distribution of long-running claude -p subprocesses (homelab-audit + alert-remediation), 7d window. A p99 that pegs at the activity startToCloseTimeout means the subprocess is wedged; instrumentation captures the soft-kill + last stderr line so the next line below in Loki has the hang signature.",
+          "Wall-clock duration distribution of long-running claude -p subprocesses (homelab-audit), 7d window. A p99 that pegs at the activity startToCloseTimeout means the subprocess is wedged; instrumentation captures the soft-kill + last stderr line so the next line below in Loki has the hang signature.",
         targets: [
           {
             expr: "histogram_quantile(0.5, sum by (le) (rate(homelab_audit_subprocess_duration_seconds_bucket[7d]))) or on() vector(0)",
@@ -257,18 +255,6 @@ export function createTemporalDashboard() {
           {
             expr: "histogram_quantile(0.99, sum by (le) (rate(homelab_audit_subprocess_duration_seconds_bucket[7d]))) or on() vector(0)",
             legend: "homelab-audit p99",
-          },
-          {
-            expr: "histogram_quantile(0.5, sum by (le) (rate(alert_remediation_subprocess_duration_seconds_bucket[7d]))) or on() vector(0)",
-            legend: "alert-remediation p50",
-          },
-          {
-            expr: "histogram_quantile(0.95, sum by (le) (rate(alert_remediation_subprocess_duration_seconds_bucket[7d]))) or on() vector(0)",
-            legend: "alert-remediation p95",
-          },
-          {
-            expr: "histogram_quantile(0.99, sum by (le) (rate(alert_remediation_subprocess_duration_seconds_bucket[7d]))) or on() vector(0)",
-            legend: "alert-remediation p99",
           },
         ],
         x: 0,
@@ -284,10 +270,6 @@ export function createTemporalDashboard() {
           "How agent subprocesses terminate: natural (exit code 0), SIGINT (our pre-emptive soft-kill at T-90s), SIGTERM (Temporal activity wall hit). A high SIGTERM rate means our soft-kill timing is wrong or the subprocess ignores SIGINT; a SIGINT spike correlates with the AgentSubprocessSoftKill alert.",
         targets: [
           {
-            expr: "sum by (signal) (increase(alert_remediation_subprocess_exit_total[1h])) or on() vector(0)",
-            legend: "alert-remediation {{signal}}",
-          },
-          {
             expr: 'sum by (provider, exit_code) (increase(agent_task_subprocess_exit_total{exit_code!="0"}[1h])) or on() vector(0)',
             legend: "agent-task {{provider}} exit_code={{exit_code}}",
           },
@@ -301,7 +283,7 @@ export function createTemporalDashboard() {
         id: 302,
         title: "Agent Subprocess Max Idle Seconds (p95, 1h)",
         description:
-          "p95 of the longest stderr-silent stretch per agent subprocess run over the last hour. A subprocess that's working emits stderr periodically; a wedged tool call (slow WebFetch / hung kubectl / API retry loop) is silent. Histogram-backed so concurrent runs (alert-remediation has `concurrency=3`) all contribute observations instead of overwriting one another. Drill down via Loki on the `lastStderrLine` field to see what was last running before the silence.",
+          "p95 of the longest stderr-silent stretch per agent subprocess run over the last hour. A subprocess that's working emits stderr periodically; a wedged tool call (slow WebFetch / hung kubectl / API retry loop) is silent. Histogram-backed so concurrent runs all contribute observations instead of overwriting one another. Drill down via Loki on the `lastStderrLine` field to see what was last running before the silence.",
         targets: [
           {
             expr: "histogram_quantile(0.95, sum by (workflow_type, le) (rate(agent_subprocess_idle_seconds_bucket[1h]))) or on() vector(0)",
@@ -325,81 +307,6 @@ export function createTemporalDashboard() {
         y: 76,
         w: 12,
         h: 8,
-      }),
-      // -----------------------------------------------------------------
-      // Alert remediation row (y >= 84) — driven by metrics emitted by
-      // packages/temporal/src/activities/alert-remediation.ts. Added
-      // 2026-06-14: the 14-day silent regression where every child
-      // workflow returned decision=failed went undetected until manual
-      // inspection.
-      // -----------------------------------------------------------------
-      timeseriesPanel({
-        id: 310,
-        title: "Alert Remediation Decisions",
-        description:
-          "Per-child workflow outcomes. A healthy mix is mostly `report-only` + occasional `pr-created`. `failed` means the agent never reached a verdict (usually the activity-wall hang); `verification-failed` means the agent ran but its proposed fix didn't pass tests.",
-        targets: [
-          {
-            expr: "sum by (outcome) (increase(alert_remediation_decisions_total[1h])) or on() vector(0)",
-            legend: "{{outcome}}",
-          },
-        ],
-        x: 0,
-        y: 84,
-        w: 12,
-        h: 8,
-      }),
-      timeseriesPanel({
-        id: 311,
-        title: "Alert Remediation Per-Source Volume",
-        description:
-          "Alert volume by source (PagerDuty vs Bugsink) and outcome. A spike in `bugsink/failed` typically means a high-volume Bugsink project is generating alerts faster than the agent can clear them.",
-        targets: [
-          {
-            expr: "sum by (source, outcome) (increase(alert_remediation_decisions_total[1h])) or on() vector(0)",
-            legend: "{{source}} {{outcome}}",
-          },
-        ],
-        x: 12,
-        y: 84,
-        w: 12,
-        h: 8,
-      }),
-      statPanel({
-        id: 312,
-        title: "Alert Remediation PRs Created (24h)",
-        description:
-          "Draft PRs opened by the alert-remediation agent in the last 24h. Should be a small positive number in steady state.",
-        expr: 'sum(increase(alert_remediation_decisions_total{outcome="pr-created"}[24h])) or on() vector(0)',
-        legend: "PRs",
-        x: 0,
-        y: 92,
-        w: 8,
-        h: 4,
-      }),
-      statPanel({
-        id: 313,
-        title: "Alert Remediation Failed Decisions (1h)",
-        description:
-          "Decisions returning `outcome=failed` in the last hour. Drives the AlertRemediationDecisionsAllFailing alert (which fires when these exceed half of all decisions).",
-        expr: 'sum(increase(alert_remediation_decisions_total{outcome="failed"}[1h])) or on() vector(0)',
-        legend: "failed",
-        x: 8,
-        y: 92,
-        w: 8,
-        h: 4,
-      }),
-      statPanel({
-        id: 314,
-        title: "Alert Remediation Subprocess SIGTERMs (1h)",
-        description:
-          "Number of alert-remediation subprocesses Temporal hard-killed at the 30-min activity wall in the last hour. Should be zero in steady state once the hang root cause is fixed; any positive number means an agent run was lost without producing a decision.",
-        expr: 'sum(increase(alert_remediation_subprocess_exit_total{signal="SIGTERM"}[1h])) or on() vector(0)',
-        legend: "SIGTERMs",
-        x: 16,
-        y: 92,
-        w: 8,
-        h: 4,
       }),
     ],
   };

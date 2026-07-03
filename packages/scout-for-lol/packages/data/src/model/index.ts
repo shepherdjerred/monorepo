@@ -22,6 +22,7 @@ export * from "./report-query-lint.ts";
 export * from "./report-query-complete.ts";
 export * from "./roster.ts";
 export * from "./state.ts";
+export * from "./subscription-filter.ts";
 export * from "./team.ts";
 export * from "./tier.ts";
 export * from "./voice-notification.ts";
