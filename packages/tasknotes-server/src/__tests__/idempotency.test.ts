@@ -140,6 +140,52 @@ describe("idempotency middleware", () => {
     expect(idempotencyStore.size).toBe(0);
   });
 
+  test("concurrent requests with the same mutation id execute exactly once", async () => {
+    const [first, second] = await Promise.all([
+      post("/api/tasks", { title: "Race" }, "mut-race"),
+      post("/api/tasks", { title: "Race" }, "mut-race"),
+    ]);
+
+    const replays = [first, second].filter(
+      (res) => res.headers.get(REPLAY_HEADER) === "true",
+    );
+    expect(replays).toHaveLength(1);
+
+    const list = await app.request("/api/tasks");
+    const listBody = await jsonBody(list);
+    expect(listBody.data.tasks).toHaveLength(1);
+  });
+
+  test("a failed record persist still returns the mutation's success", async () => {
+    // Parent "directory" is a file → the store's mkdir/write throws.
+    const blockerFile = path.join(tempDir, "not-a-dir");
+    await Bun.write(blockerFile, "");
+    const brokenStore = new IdempotencyStore(
+      path.join(blockerFile, "idempotency.json"),
+    );
+    const brokenApp = new Hono();
+    brokenApp.use("*", envelopeMiddleware);
+    brokenApp.use("*", idempotencyMiddleware(brokenStore));
+    const taskStore = new TaskStore(tempDir, "");
+    await taskStore.init();
+    brokenApp.route("/", taskRoutes(taskStore));
+
+    const res = await brokenApp.request("/api/tasks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        [MUTATION_ID_HEADER]: "mut-disk-fail",
+      },
+      body: JSON.stringify({ title: "Persist fails" }),
+    });
+
+    // The mutation executed; a 500 would push the client into a duplicate
+    // retry — the exact failure this middleware exists to prevent.
+    expect(res.status).toBe(201);
+    const body = await jsonBody(res);
+    expect(body.data.title).toBe("Persist fails");
+  });
+
   test("records persist across store restarts (crash safety)", async () => {
     await post("/api/tasks", { title: "Durable" }, "mut-durable");
 
