@@ -42,6 +42,24 @@ sandbox/                        # Personal scratch (not shipped, excluded from m
 └── practice/                   # Coding practice (Exercism, LeetCode, courses, books)
 ```
 
+## Engineering Principles
+
+- **No type assertions** — Never use `as` casts. The `custom-rules/no-type-assertions` ESLint rule bans all assertions except `as const` / `as unknown`. Narrow untyped data with Zod `.parse()`, `typeof`, or `Array.isArray()` instead of casting.
+- **Fail fast on missing tools** — Local/build scripts must call required tools directly. Never `which X && X || echo "skipping"`; a missing tool should error so the developer knows what to install.
+- **No defensive fallbacks for bad data** — Fix the root cause (refresh data, add the enum value, fix routing). Never replace a `throw` with a warning + default for unknown enums, missing assets, or unexpected shapes. Exception: user input at a system boundary (e.g. a Discord slash-command arg) should be caught and answered with a friendly message, not Sentry'd.
+- **Let contract violations fail loudly** — When `null` or an exception signals a broken caller contract, let it propagate (e.g. an NPE). Don't add null guards or defensive checks that silently hide the bug; reserve null-handling for real boundary inputs (user data, external API responses).
+- **Fix, don't ignore** — Never suppress build/CI/Renovate/lint errors with ignorePaths or exclusions. Investigate the root cause; only exclude when the thing genuinely shouldn't be processed.
+- **Fix forward on dependency upgrades** — When an upgrade breaks CI, migrate the code to the new version (read the migration guide, use `validate` tooling to catch every schema change) rather than reverting.
+- **"Pre-existing" is not an excuse** — When a task or audit targets 100% quality, fix issues regardless of who introduced them. Never leave something broken as "not caused by my changes."
+- **Never skip tests** — Don't use `test.skip` / `describe.skipIf` to work around missing build artifacts or generated types. Make the test script produce the prerequisite first (e.g. `"test": "bun run build && bun test"`).
+- **Don't blame the cache** — Docker/Dagger layer cache is deterministic; different results mean different inputs. Reproduce locally with `dagger call` and compare base images / dependency versions instead of citing "transient cache issues."
+- **Step back on complexity spirals** — After ~2 failed debugging iterations on the same problem, stop adding workarounds; re-evaluate the approach and present the constraint to the user rather than piling on layers.
+- **Verify before asserting** — Don't write a subagent's claim or your own inference into a plan/report as "confirmed." Grep the live tree (`scripts/ci/src/`, `.dagger/src/`, `lefthook.yml`) yourself before stating any CI/lint/gate wiring fact; audits often run against a stale base.
+- **Don't validate a replacement against the signal it replaces** — When building something to work around an unreliable upstream (e.g. GitHub's `mergeable` field, a flaky check), validate against an independent oracle (fixtures, golden files, the underlying tool, a semantic property like determinism), never the untrusted signal itself.
+- **Verify link liveness** — Every URL you write or rewrite (code, docs, READMEs, package metadata) must be liveness-checked (`curl -sI -o /dev/null -w '%{http_code}' <url>` → 200) before committing. Batch-verify mass rewrites; fall back to a known-good form or drop the link rather than ship a 404.
+- **Update docs with code** — When adding a CLI command or feature, update CLAUDE.md and the relevant skills in the same phase, not a later "polish" pass, so the integration points are usable as soon as the feature works.
+- **Shared data is language-neutral** — Cross-package shared data (catalogs, config) belongs in a language-neutral source of truth (JSON + JSON Schema), validated per-language (Zod in TS, Pydantic in Python). The repo has Bun and Python consumers; don't ship a TS-only module. If TS needs it browser- and node-safe, ship a built package with inlined JSON + `.d.ts`, not a `node:fs` read or a source-only JSON import.
+
 ## Documentation Discipline — Per Session
 
 **Every session must produce one of: a session log OR a plan**, and end with a written summary appended to it. Default to a log; reserve plans for substantive design work.

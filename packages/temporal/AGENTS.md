@@ -167,6 +167,8 @@ Do not expose direct Temporal scheduling as a public ingress path. Public creati
 
 Inputs use `runAt` for one-off tasks or `cron` + stable `scheduleId` for recurring tasks. Recurring schedules use `America/Los_Angeles`. Agents may return `followUp` to schedule one more report-only task. Agents may return `cancelCron: true` only when the original input has `allowSelfCancel: true`; cancellation pauses the Temporal Schedule rather than deleting it.
 
+**`claude -p --json-schema` gotcha (claude-code).** Pass the schema **inline** (`--json-schema "$(cat schema.json)"`), never a file path — a path wedges the CLI (zero bytes on stdout+stderr until killed) and was the 100% root cause of the agent-task / alert-remediation 30-min SIGTERM(143) hangs (PR #1264). The validated object is in the result message's **`structured_output`** field, NOT `result` (which is the model's prose) — read `parseClaudeResultMessage(stdout).structured_output` and Zod-validate it. Keep `--output-format stream-json --verbose` and pump **stdout** line-by-line for liveness: `claude -p` is silent on stderr, so a stderr-only idle detector is structurally blind.
+
 **Local dev loop (no Temporal, no cluster)** — see `scripts/run-homelab-audit-local.ts`:
 
 ```bash
@@ -188,6 +190,22 @@ op run --env-file=.env.audit -- bun run scripts/run-homelab-audit-local.ts
 Set `RUNBOOK_PATH=packages/docs/guides/2026-04-04_homelab-audit-runbook.md` in `.env.audit` to use the in-tree runbook (no GitHub round-trip).
 
 **Cluster RBAC** — the worker SA gets a cluster-wide read-only `temporal-worker-audit-reader` ClusterRole (see `packages/homelab/src/cdk8s/src/resources/temporal/audit-rbac.ts`). No `pods/exec`, no write verbs.
+
+## Scheduled PR-creating workflows
+
+There are **two** Temporal scheduling patterns — don't conflate them:
+
+- **Report-only agent-tasks** (`agentTaskWorkflow`, above) email reports and **cannot** open PRs/issues or edit files — `mode` is only `"report-only"` and the prompt forbids mutation.
+- **Deterministic PR-creating workflows** (e.g. `src/activities/data-dragon.ts`, `pokeemerald-wasm.ts`, `readme-refresh.ts`) regenerate artifacts then `git push --force-with-lease` + `gh pr create`, authed by a GitHub App installation token (`src/lib/github-app-token.ts` `createGitHubAppInstallationToken()`, env `GITHUB_APP_ID`/`GITHUB_APP_INSTALLATION_ID`/`GITHUB_APP_PRIVATE_KEY`). scout-for-lol's data-dragon refresh is the canonical example.
+
+To add a "weekly: regenerate X, open a PR if it changed" job, mirror `data-dragon.ts`: a deterministic activity (no Claude), GitHub App token, path-scoped `git add`, plus a thin workflow, an export in `src/workflows/index.ts`, and a `SCHEDULES` entry (cron, `America/Los_Angeles`, `TASK_QUEUES.DEFAULT`). The worker pod has bun/git/gh but **not** helm — add tools via `.dagger/src/image.ts` if the job needs them.
+
+## Greptile review gate (Buildkite)
+
+The `greptile-review` Buildkite step (`scripts/ci/src/wait-for-greptile.ts`) gates `ci-complete` for PRs — separate from the in-package PR review bot below.
+
+- **Greptile's own check-run goes green as soon as the review completes**, even with its posted comments still unresolved (verified on PR #1026), so it's useless as a "comments addressed" gate. Gate instead on **review threads** via GraphQL (`pullRequest.reviewThreads { nodes { isResolved isOutdated path comments(first:1){ nodes { author{login} } } } }`): a thread blocks iff authored by `greptile-apps` (GraphQL drops the `[bot]` suffix REST shows) AND `!isResolved` AND `!isOutdated`. Use the check-run only as the "Greptile finished reviewing this commit" marker (it's present even on a clean no-comment review). Greptile auto-resolves its own threads and marks them outdated when the referenced lines change.
+- An **empty-diff PR** (e.g. a superseded branch brought fully up to main, byte-identical tree) can **never** pass the gate: Greptile posts `No reviewable files after applying ignore patterns.` and never creates a review check-run, so `evaluateGate` stays `reviewing` and the step times out after 1200s. Such a PR needs a genuine reviewable diff, to be closed, or to be admin-merged once the conflict is cleared (what happened to PR #1076).
 
 ## Weekly README refresh
 

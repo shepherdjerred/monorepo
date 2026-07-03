@@ -201,6 +201,17 @@ curl -s -H "$AUTH" "$API/issues/$ISSUE_UUID/" | \
 
 ---
 
+## Resolving / Muting Issues (web UI only)
+
+The canonical REST API is **read-only** for issues — `PATCH`/`POST` on an issue returns `405` (Allow: GET, HEAD, OPTIONS). To resolve or mute, drive the Django + allauth web-UI bulk-action form:
+
+1. **Log in:** GET `/accounts/login/` for the `csrfmiddlewaretoken` + `csrftoken` cookie, then POST `username`/`password`/`csrfmiddlewaretoken`/`next` to `/accounts/login/` **with `Origin` and `Referer` headers** (Django HTTPS CSRF requires them, else `403 CSRF verification failed`). A `sessionid` cookie means success.
+2. **Bulk action:** the issue list is at `/issues/<project_id>/` (integer id); scrape its `issueForm` for a fresh `csrfmiddlewaretoken`, then POST to `/issues/<project_id>/` with `csrfmiddlewaretoken`, `action=resolved_next` (or `mute` / `mute_for:...` / `unmute`), and one `issue_ids[]=<uuid>` per issue (batch allowed). Verify via `GET /api/canonical/0/issues/<uuid>/` → `is_resolved: true`.
+
+Resolving does **not** prevent recurrence — the issue reopens as a regression on the next matching event, so resolve "fixed" issues only after the fix deploys.
+
+---
+
 ## Event Operations
 
 ### List Events (requires issue filter)
