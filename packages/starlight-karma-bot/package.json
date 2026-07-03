@@ -27,7 +27,7 @@
     "lodash": "4.18.1",
     "reflect-metadata": "^0.2.2",
     "sqlite3": "^6.0.1",
-    "typeorm": "^0.3.28"
+    "typeorm": "^1.0.0"
   },
   "repository": {
     "type": "git",
