@@ -87,7 +87,7 @@ const versions = {
     "2026.7.0@sha256:cb76c9922b530f6a5063a15463eb3ad6de287d297c826713abda16795bb98980",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "bropat/eufy-security-ws":
-    "2.1.0@sha256:886da4bc8ff070b63bb88cea3b535e512240e54f14313fa8c2890c843abd9605",
+    "3.1.0@sha256:d41169205f4e20e1e7e173283aaf8bb2d68e2abecb42bc1500a5fac5bb7a8750",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "zwavejs/zwave-js-ui":
     "11.19.1@sha256:944d39fe22d8985ddcbef0849cd22984b8340448f742195821cc34f7a9ca1bb4",
