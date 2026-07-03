@@ -52,10 +52,6 @@ function record(value: unknown): Record<string, unknown> {
   return parsed.success ? parsed.data : {};
 }
 
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return typeof v === "object" && v !== null && !Array.isArray(v);
-}
-
 function perMillion(value: unknown): number | undefined {
   const n = num(value);
   return n === undefined ? undefined : n * 1_000_000;
@@ -169,11 +165,7 @@ async function main(): Promise<void> {
   // Zod's parse creates a new object with keys in schema-definition order; writing
   // the Zod-parsed output causes spurious diff churn on every refresh run.
   const rawText = await Bun.file(CATALOG_PATH).text();
-  const rawParsed: unknown = JSON.parse(rawText);
-  if (!isRecord(rawParsed)) {
-    throw new Error("catalog.json: root is not an object");
-  }
-  const rawCatalog = rawParsed;
+  const rawCatalog = UnknownRecord.parse(JSON.parse(rawText));
   const catalog: Catalog = CatalogSchema.parse(JSON.parse(rawText));
   const [modelsDevRaw, liteLlmRaw] = await Promise.all([
     fetchJson(MODELS_DEV_URL),
@@ -225,21 +217,18 @@ async function main(): Promise<void> {
     // Patch only the drifted numeric fields into the raw JSON structure so that
     // key ordering and other non-numeric fields are preserved exactly as-is.
     for (const [id, entry] of Object.entries(catalog)) {
-      const rawValue = rawCatalog[id];
-      if (!isRecord(rawValue) || entry.pricing.modality !== "text") {
+      if (entry.pricing.modality !== "text" || rawCatalog[id] === undefined) {
         continue;
       }
-      const raw = rawValue;
-      const rawPricingValue = raw["pricing"];
-      if (!isRecord(rawPricingValue)) {
-        throw new Error(`catalog.json: pricing for ${id} is not an object`);
-      }
-      const rawPricing = rawPricingValue;
+      const rawEntry = record(rawCatalog[id]);
+      const rawPricing = record(rawEntry["pricing"]);
       rawPricing["input"] = entry.pricing.input;
       rawPricing["output"] = entry.pricing.output;
       if (entry.contextWindow !== undefined) {
-        raw["contextWindow"] = entry.contextWindow;
+        rawEntry["contextWindow"] = entry.contextWindow;
       }
+      rawEntry["pricing"] = rawPricing;
+      rawCatalog[id] = rawEntry;
     }
     await Bun.write(CATALOG_PATH, `${JSON.stringify(rawCatalog, null, 2)}\n`);
     emit("\nWrote updated src/catalog.json.");
