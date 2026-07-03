@@ -2,7 +2,24 @@
 
 ## Status
 
-In Progress — P0 underway (approved 2026-07-03)
+In Progress — P1 merged (#1379); P0 in review; P2 next.
+
+### Progress log
+
+- **P1 — MERGED** (#1379): `X-Mutation-Id` idempotency middleware + persisted
+  store; `complete-instance` accepts `{date, completed}` set-semantics.
+- **P0 — in PR** (branch `feature/tasknotes-p0`): app↔server contract suite
+  (18 tests, wired into Dagger/Buildkite); deterministic sync-sim harness
+  (FakeServer + injected clock + snapshot storage); Maestro e2e harness
+  (orchestrator, chaos proxy, seed vault, 7 flows, testIDs, dev config deep
+  link). The harness runs end-to-end; core flows (00–04) pass, offline flows
+  (05/06) are P2 acceptance criteria. **Also fixed a chain of fresh-checkout
+  iOS build breakages** (all would have hit Xcode Cloud/TestFlight too):
+  Sentry pod pin, sub-15 pod deployment targets, react-native-ios-utilities
+  RN-0.85 patch, RN-CLI Simulator.app path, Watchman worktree root, zod-v4
+  babel transform, react 19.2.6→19.2.3 peer mismatch, and the **iOS-27
+  UIScene lifecycle crash**. Filed todos: `mac-mini-buildkite-agent`,
+  `scout-data-missing-llm-models-dep`, `tasks-for-obsidian-context-menu-rn85`.
 
 ## Context
 
