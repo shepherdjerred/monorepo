@@ -33,16 +33,6 @@ import type {
 } from "#activities/scout-season-refresh.ts";
 import { prSummaryPipeline as _prSummaryPipeline } from "./pr-summary/index.ts";
 import { prReviewPipeline as _prReviewPipeline } from "./pr-review/index.ts";
-import { prReviewEvalWorkflow as _prReviewEvalWorkflow } from "./pr-review-eval/index.ts";
-import type {
-  PrReviewEvalWorkflowInput,
-  PrReviewEvalWorkflowResult,
-} from "./pr-review-eval/index.ts";
-import { prReviewWeeklySignificanceWorkflow as _prReviewWeeklySignificanceWorkflow } from "./pr-review-eval/weekly-significance.ts";
-import type {
-  WeeklySignificanceWorkflowInput,
-  WeeklySignificanceWorkflowResult,
-} from "./pr-review-eval/weekly-significance.ts";
 import {
   prReactionListener as _prReactionListener,
   type PrReactionListenerInput,
@@ -188,18 +178,6 @@ export async function alertRemediationChildWorkflow(
   input: AlertRemediationChildInput,
 ): Promise<AlertRemediationChildResult> {
   return _alertRemediationChildWorkflow(input);
-}
-
-export async function prReviewEvalWorkflow(
-  input: PrReviewEvalWorkflowInput,
-): Promise<PrReviewEvalWorkflowResult> {
-  return _prReviewEvalWorkflow(input);
-}
-
-export async function prReviewWeeklySignificanceWorkflow(
-  input: WeeklySignificanceWorkflowInput = {},
-): Promise<WeeklySignificanceWorkflowResult> {
-  return _prReviewWeeklySignificanceWorkflow(input);
 }
 
 export async function prReactionListener(

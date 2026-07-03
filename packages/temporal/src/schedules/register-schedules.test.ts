@@ -6,7 +6,6 @@ import {
   DELETED_SCHEDULE_IDS,
   SCHEDULES,
   buildSchedulePolicies,
-  scheduleRequiresConfigPause,
 } from "./register-schedules.ts";
 import { isOrphanSchedule } from "./orphan-detection.ts";
 
@@ -69,8 +68,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runBugsinkHousekeepingWorkflow",
   "runVeleroOrphanAuditWorkflow",
   "syncGolinks",
-  "prReviewEvalWorkflow",
-  "prReviewWeeklySignificanceWorkflow",
 ]);
 
 const SLACK_MS = 5 * ONE_MINUTE;
@@ -154,85 +151,6 @@ describe("Scout Data Dragon lane-prior schedule config", () => {
       holdoutSeed: "scout-lane-priors-patch-cadence-v1",
       threshold: 0.95,
     });
-  });
-});
-
-describe("PR review eval schedule config", () => {
-  test("pauses nightly eval when the private fixture repo URL is absent", () => {
-    const schedule = SCHEDULES.find(
-      (candidate) => candidate.id === "pr-review-eval-nightly",
-    );
-    if (schedule === undefined) {
-      throw new Error("Missing pr-review-eval-nightly schedule");
-    }
-    expect(scheduleRequiresConfigPause(schedule, {})).toEqual({
-      paused: true,
-      reason:
-        "Paused because PR_REVIEW_FIXTURES_REPO_URL is not configured on the Temporal worker",
-    });
-  });
-
-  test("does not pause nightly eval when the private fixture repo URL is present", () => {
-    const schedule = SCHEDULES.find(
-      (candidate) => candidate.id === "pr-review-eval-nightly",
-    );
-    if (schedule === undefined) {
-      throw new Error("Missing pr-review-eval-nightly schedule");
-    }
-    expect(
-      scheduleRequiresConfigPause(schedule, {
-        PR_REVIEW_FIXTURES_REPO_URL: "https://github.com/example/private.git",
-        PR_REVIEW_EVAL_DATABASE_URL: "postgres://example",
-      }),
-    ).toEqual({ paused: false, reason: undefined });
-  });
-
-  test("pauses nightly eval when the eval database URL is absent", () => {
-    const schedule = SCHEDULES.find(
-      (candidate) => candidate.id === "pr-review-eval-nightly",
-    );
-    if (schedule === undefined) {
-      throw new Error("Missing pr-review-eval-nightly schedule");
-    }
-    expect(
-      scheduleRequiresConfigPause(schedule, {
-        PR_REVIEW_FIXTURES_REPO_URL: "https://github.com/example/private.git",
-      }),
-    ).toEqual({
-      paused: true,
-      reason:
-        "Paused because PR_REVIEW_EVAL_DATABASE_URL is not configured on the Temporal worker",
-    });
-  });
-});
-
-describe("PR review A/B weekly report schedule config", () => {
-  test("pauses the weekly report when the eval database URL is absent", () => {
-    const schedule = SCHEDULES.find(
-      (candidate) => candidate.id === "pr-review-ab-weekly-report",
-    );
-    if (schedule === undefined) {
-      throw new Error("Missing pr-review-ab-weekly-report schedule");
-    }
-    expect(scheduleRequiresConfigPause(schedule, {})).toEqual({
-      paused: true,
-      reason:
-        "Paused because PR_REVIEW_EVAL_DATABASE_URL is not configured on the Temporal worker",
-    });
-  });
-
-  test("does not pause the weekly report when the eval database URL is present", () => {
-    const schedule = SCHEDULES.find(
-      (candidate) => candidate.id === "pr-review-ab-weekly-report",
-    );
-    if (schedule === undefined) {
-      throw new Error("Missing pr-review-ab-weekly-report schedule");
-    }
-    expect(
-      scheduleRequiresConfigPause(schedule, {
-        PR_REVIEW_EVAL_DATABASE_URL: "postgres://example",
-      }),
-    ).toEqual({ paused: false, reason: undefined });
   });
 });
 
