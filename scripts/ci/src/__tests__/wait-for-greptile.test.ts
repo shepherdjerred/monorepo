@@ -104,6 +104,28 @@ describe("evaluateGate — skipped-review shortcut", () => {
     expect(result.message).toContain("unresolved Greptile comment");
   });
 
+  it("passes when Greptile skipped review because PR author is in excluded list (Renovate PRs)", () => {
+    // Renovate PRs use claude@sjer.red which is in Greptile's excluded-authors
+    // list. Greptile posts a skip comment instead of creating a check-run.
+    const result = evaluate({
+      reviewCheck: { found: false, status: null, conclusion: null, url: null },
+      skippedReview: "excluded-author",
+    });
+    expect(result.state).toBe("passed");
+    expect(result.message).toContain("excluded authors list");
+    expect(result.message).toContain(HEAD);
+  });
+
+  it("still blocks on unresolved threads when skipped due to excluded author", () => {
+    const result = evaluate({
+      reviewCheck: { found: false, status: null, conclusion: null, url: null },
+      threads: [thread({ isResolved: false })],
+      skippedReview: "excluded-author",
+    });
+    expect(result.state).toBe("failed");
+    expect(result.message).toContain("unresolved Greptile comment");
+  });
+
   it("passes when skippedReview is set and the only threads are resolved", () => {
     const result = evaluate({
       reviewCheck: { found: false, status: null, conclusion: null, url: null },
@@ -193,6 +215,20 @@ describe("parseGreptileSkippedReview", () => {
     const body =
       "<!-- greptile-status --> Too many files changed for review. (`1000 files found`, `500 file limit`)";
     expect(parseGreptileSkippedReview(body)).toBe("too-many-files");
+  });
+
+  it('returns "excluded-author" for Greptile\'s observed excluded-author comment', () => {
+    // Exact body Greptile posts when the PR author is in the excluded-authors list
+    // (e.g. Renovate bot, claude@sjer.red). Observed on PR #1371.
+    const body =
+      "<!-- greptile-status -->\nPR author is in the excluded authors list.";
+    expect(parseGreptileSkippedReview(body)).toBe("excluded-author");
+  });
+
+  it('returns "excluded-author" when the marker and phrase share a line', () => {
+    const body =
+      "<!-- greptile-status --> PR author is in the excluded authors list.";
+    expect(parseGreptileSkippedReview(body)).toBe("excluded-author");
   });
 
   it("returns null for a normal Greptile review comment", () => {
