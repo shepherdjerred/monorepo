@@ -48,17 +48,10 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
       },
       users: {
         temporal: [PostgresqlSpecUsers.CREATEDB],
-        // Phase 10 eval store user — least-privilege, owns its own database.
-        // No CREATEDB / SUPERUSER / etc; only granted access to its own DB.
-        pr_review_eval: [],
       },
       databases: {
         temporal: "temporal",
         temporal_visibility: "temporal",
-        // Continuous-eval store for the pr-review bot. Owned by the
-        // pr_review_eval user. Separate database (not schema) so a runaway
-        // eval write loop can't fill up the temporal database's disk.
-        pr_review_eval: "pr_review_eval",
       },
       resources: {
         requests: {
@@ -81,7 +74,6 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
           "hostssl postgres temporal all scram-sha-256",
           "hostssl temporal temporal all scram-sha-256",
           "hostssl temporal_visibility temporal all scram-sha-256",
-          "hostssl pr_review_eval pr_review_eval all scram-sha-256",
           "hostssl replication standby all scram-sha-256",
           "local all all trust",
         ],

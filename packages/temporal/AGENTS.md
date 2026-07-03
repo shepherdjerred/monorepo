@@ -38,10 +38,11 @@ is source-controlled here; its **on/off pause state** is runtime/dynamic (see be
 
 Pause/unpause in the **Temporal Web UI** — `https://temporal-ui.tailnet-1a49.ts.net`
 (Tailscale-gated) → **Schedules** → pick the schedule → **Pause**. A pause **persists across
-worker restarts**: `registerSchedules` preserves live pause state on update and only ever
-auto-unpauses the two env-gated `pr-review-*` schedules. This is intentional — pause is the
-one dynamic knob; everything else about a schedule lives in source. Don't add a declarative
-`enabled` flag, it would fight the UI.
+worker restarts**: `registerSchedules` preserves live pause state on update (the `update`
+callback spreads the previous schedule, so a UI pause survives). `registerSchedules` never
+auto-pauses or auto-unpauses anything. This is intentional — pause is the one dynamic knob;
+everything else about a schedule lives in source. Don't add a declarative `enabled` flag, it
+would fight the UI.
 
 | To stop…             | Pause schedule id(s)                                                                                 |
 | -------------------- | ---------------------------------------------------------------------------------------------------- |
