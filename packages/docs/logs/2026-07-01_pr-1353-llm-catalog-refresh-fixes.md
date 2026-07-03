@@ -98,6 +98,38 @@ PR, all four diff hunks were either pure key reordering or the bad Opus context 
 - The `greptileReviewStep()` has no `soft_fail` — it's a hard gate. CI will only go green
   once greptile's re-review is clean on the new commit.
 
+## Session Log — 2026-07-03 (pass 5)
+
+### Done
+
+- Discovered second lint rule blocking `sync-from-upstreams.ts`: `custom-rules/no-type-guards`
+  bans type guard functions (`value is Type` predicates). Build #4871 failed with:
+  `55:1 error Type guard functions are not safe. Use Zod schema validation instead.`
+  — the `isRecord()` function added in commit `2baa9199e` triggered it.
+- Fixed in commit `8f27e64c7`:
+  - Removed `isRecord()` type guard entirely
+  - `rawCatalog` initialization: replaced `JSON.parse(rawText) as Record<...>` with
+    `UnknownRecord.parse(JSON.parse(rawText))` (existing Zod schema, no assertion)
+  - Mutation section: replaced `isRecord()` narrowing + shared-reference mutation with
+    `record()` (Zod-backed helper) + write-back pattern (`rawCatalog[id] = rawEntry`)
+    so mutations propagate correctly (Zod record parse creates copies, not references)
+- Pre-commit hooks passed. Build #4896 scheduled.
+
+### Remaining
+
+- Build #4896 must complete with `dagger-knife-pkg-check` lint clean.
+
+### Caveats
+
+- This repo bans BOTH type assertions (`as X` except `as const`/`as unknown`) AND type guards
+  (`function isX(v): v is Type`). Only Zod schema validation or explicit value comparisons are
+  permitted for narrowing unknown values. The `record()` helper in `sync-from-upstreams.ts`
+  wraps `z.record(z.string(), z.unknown()).safeParse()` — prefer it over new narrowing code.
+- When using `record()` for mutation: the Zod-parsed copy must be written back into the parent
+  object; mutating the copy in-place without write-back has no effect on the original.
+
+---
+
 ## Session Log — 2026-07-03 (pass 4)
 
 ### Done
