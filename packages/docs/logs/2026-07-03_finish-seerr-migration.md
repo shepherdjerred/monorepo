@@ -115,9 +115,11 @@ helm-types), `tofu validate` — all green.
 
 ### Remaining
 
-- Open PR for `feature/finish-seerr-migration`, get Buildkite CI green, merge.
-- After merge, manually prune the orphaned Overseerr resources + `overseerr-pvc`
-  (ArgoCD prune is off): Deployment, Service, Tailscale ingress, CF tunnel binding.
+- Get Buildkite CI green on PR #1385 and merge.
+- After merge, **prune the orphaned Overseerr resources** — tracked with exact
+  commands + acceptance checks in
+  `packages/docs/todos/overseerr-prune-after-migration.md` (ArgoCD prune is off,
+  so they won't auto-delete).
 - Optional: message users that requests now live at `seerr.sjer.red` (the
   redirect already covers old bookmarks).
 
