@@ -308,6 +308,100 @@ export type PrometheusblackboxexporterHelmValuesIngressHostsPathsElement = {
   pathType?: string;
 };
 
+export type PrometheusblackboxexporterHelmValuesRoute = {
+  /**
+   * @default {...} (12 keys)
+   */
+  main?: PrometheusblackboxexporterHelmValuesRouteMain;
+};
+
+export type PrometheusblackboxexporterHelmValuesRouteMain = {
+  /**
+   * Enable this route
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * ApiVersion set by default to "gateway.networking.k8s.io/v1"
+   *
+   * @default ""
+   */
+  apiVersion?: string;
+  /**
+   * kind set by default to HTTPRoute
+   *
+   * @default ""
+   */
+  kind?: string;
+  /**
+   * Optional name for the default rule in the rendered HTTPRoute.
+   *
+   * @default ""
+   */
+  name?: string;
+  /**
+   * Annotations to attach to the HTTPRoute resource
+   *
+   * @default {}
+   */
+  annotations?: PrometheusblackboxexporterHelmValuesRouteMainAnnotations;
+  /**
+   * Labels to attach to the HTTPRoute resource
+   *
+   * @default {}
+   */
+  labels?: PrometheusblackboxexporterHelmValuesRouteMainLabels;
+  parentRefs?: unknown[];
+  hostnames?: unknown[];
+  additionalRules?: unknown[];
+  filters?: unknown[];
+  matches?: PrometheusblackboxexporterHelmValuesRouteMainMatchesElement[];
+  /**
+   * httpsRedirect adds a filter for redirecting to https (HTTP 301 Moved Permanently).
+   * To redirect HTTP traffic to HTTPS, you need to have a Gateway with both HTTP and HTTPS listeners.
+   * Matches and filters do not take effect if enabled.
+   * Ref. https://gateway-api.sigs.k8s.io/guides/http-redirect-rewrite/
+   *
+   * @default false
+   */
+  httpsRedirect?: boolean;
+};
+
+export type PrometheusblackboxexporterHelmValuesRouteMainAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type PrometheusblackboxexporterHelmValuesRouteMainLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type PrometheusblackboxexporterHelmValuesRouteMainMatchesElement = {
+  /**
+   * @default {"type":"PathPrefix","value":"/"}
+   */
+  path?: PrometheusblackboxexporterHelmValuesRouteMainMatchesPath;
+};
+
+export type PrometheusblackboxexporterHelmValuesRouteMainMatchesPath = {
+  /**
+   * @default "PathPrefix"
+   */
+  type?: string;
+  /**
+   * @default "/"
+   */
+  value?: string;
+};
+
 export type PrometheusblackboxexporterHelmValuesPodAnnotations = object;
 
 export type PrometheusblackboxexporterHelmValuesDeploymentAnnotations = object;
@@ -601,7 +695,7 @@ export type PrometheusblackboxexporterHelmValuesNetworkPolicy = {
   enabled?: boolean;
   /**
    * Limit access only from monitoring namespace
-   * Before setting this value to true, you must add the name=monitoring label to the monitoring namespace.  Name can be rewritten by monitoringNamespaceName
+   * Before setting this value to true, the monitoring namespace must exist. Kubernetes automatically sets the kubernetes.io/metadata.name label on all namespaces. The namespace name can be configured via monitoringNamespaceName
    * Network Policy uses label filtering
    *
    * @default false
@@ -736,7 +830,7 @@ export type PrometheusblackboxexporterHelmValuesConfigReloaderImage = {
    */
   repository?: string;
   /**
-   * @default "v0.91.0"
+   * @default "v0.92.1"
    */
   tag?: string;
   /**
@@ -887,6 +981,8 @@ export type PrometheusblackboxexporterHelmValues = {
    */
   restartPolicy?: string;
   /**
+   * kind set by default to HTTPRoute
+   *
    * @default "Deployment"
    */
   kind?: string;
@@ -1040,13 +1136,18 @@ export type PrometheusblackboxexporterHelmValues = {
    * termination among other things for CouchDB deployments which are accessed
    * from outside the Kubernetes cluster.
    * ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
+   * A HTTPRoute (Gateway API) resource is an alternative to Ingress for routing
+   * external HTTP traffic to the blackbox exporter Service.
+   * ref: https://gateway-api.sigs.k8s.io/api-types/httproute/
    *
    * @default {...} (6 keys)
    */
   ingress?: PrometheusblackboxexporterHelmValuesIngress;
   /**
-   * - chart-example.local
-   *
+   * @default {"main":{"enabled":false,"apiVersion":"","kind":"","name":"","annotations":{},"labels":{},"parentRefs":[],"hostnames":[],"additionalRules":[],"filters":[],"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"httpsRedirect":false}}
+   */
+  route?: PrometheusblackboxexporterHelmValuesRoute;
+  /**
    * @default {}
    */
   podAnnotations?: PrometheusblackboxexporterHelmValuesPodAnnotations;
@@ -1176,6 +1277,17 @@ export type PrometheusblackboxexporterHelmParameters = {
   "ingress.hosts.paths.path"?: string;
   "ingress.hosts.paths.pathType"?: string;
   "ingress.tls"?: string;
+  "route.main.enabled"?: string;
+  "route.main.apiVersion"?: string;
+  "route.main.kind"?: string;
+  "route.main.name"?: string;
+  "route.main.parentRefs"?: string;
+  "route.main.hostnames"?: string;
+  "route.main.additionalRules"?: string;
+  "route.main.filters"?: string;
+  "route.main.matches.path.type"?: string;
+  "route.main.matches.path.value"?: string;
+  "route.main.httpsRedirect"?: string;
   hostAliases?: string;
   extraArgs?: string;
   replicas?: string;

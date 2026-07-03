@@ -8,7 +8,7 @@ import { Person } from "./person.ts";
 import configuration from "#src/configuration.ts";
 
 export const dataSource = new DataSource({
-  type: "sqlite",
+  type: "better-sqlite3",
   database: `${configuration.dataDir}/glitter.sqlite`,
   synchronize: false, // NEVER use true in production - it can wipe data!
   logging: true,

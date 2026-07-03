@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 
 import {
+  CompleteInstanceRequestSchema,
   CreateTaskRequestSchema,
   TaskQueryFilterSchema,
   UpdateTaskRequestSchema,
@@ -110,7 +111,21 @@ export function taskRoutes(store: TaskStore): Hono {
 
   app.post("/api/tasks/:id/complete-instance", async (c) => {
     const id = c.req.param("id");
-    const task = await store.completeRecurring(id);
+    // Body is optional (legacy clients and the upstream plugin send none).
+    const raw = await c.req.text();
+    let body: unknown = {};
+    if (raw.trim() !== "") {
+      try {
+        body = JSON.parse(raw);
+      } catch {
+        return c.json({ success: false, error: "Invalid JSON body" }, 400);
+      }
+    }
+    const parsed = CompleteInstanceRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      return c.json({ success: false, error: parsed.error.message }, 400);
+    }
+    const task = await store.completeRecurring(id, parsed.data);
     if (task === undefined) {
       return c.json({ success: false, error: "Task not found" }, 404);
     }

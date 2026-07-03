@@ -265,57 +265,6 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         {
-          // Catches the alert-remediation pattern from 2026-06-14: every
-          // child workflow exits cleanly but with `decision: "failed",
-          // reason: "Activity task timed out"`. Temporal status shows
-          // Completed (so activity_task_fail is silent), but every alert
-          // is functionally unaddressed. Page when a strong majority of
-          // recent decisions came back failed.
-          alert: "AlertRemediationDecisionsAllFailing",
-          annotations: {
-            summary: "alert-remediation agent is failing on every alert",
-            description: escapePrometheusTemplate(
-              "Over half of alert-remediation decisions in the last hour returned `outcome=failed`. The agent is not reaching real verdicts. Check Loki for `phase=agent-event` (live agent activity), `phase=exited` (with `firstOutputLatencyMs`/`maxIdleMs`/`lastLine`), and `phase=soft-kill`/`phase=sigkill` to see whether a run is wedged and on what.",
-            ),
-          },
-          // increase() (counts over the window), NOT rate() (per-second):
-          // with rate(), both numerator and denominator are tiny per-second
-          // values (~0.002), and clamp_min(denom, 1) floors the denominator
-          // at 1, collapsing the ratio to ~the numerator — so the rule could
-          // never exceed 0.5 and never fired even at 100% failure. increase()
-          // yields real counts (>1 over an hour) so the ratio is meaningful.
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            [
-              'sum(increase(alert_remediation_decisions_total{outcome="failed"}[1h]))',
-              " / clamp_min(sum(increase(alert_remediation_decisions_total[1h])), 1)",
-              " > 0.5",
-            ].join(""),
-          ),
-          for: "2h",
-          labels: {
-            severity: "warning",
-          },
-        },
-        {
-          // Sweep that hits its 2h workflowExecutionTimeout is a clear
-          // outage of the entire alert-remediation system — children get
-          // Terminated en masse. Page on any.
-          alert: "AlertRemediationSweepTimingOut",
-          annotations: {
-            summary: "alert-remediation hourly sweep is timing out",
-            description: escapePrometheusTemplate(
-              "The alertRemediationSweepWorkflow has hit its 2h workflowExecutionTimeout {{ $value }} time(s) in the last 2h. Children are getting Terminated en masse; no alert is being meaningfully processed. Check the Temporal UI and Loki for the agent subprocess hang signature.",
-            ),
-          },
-          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(workflow_completed_total{namespace="default",workflow_type="alertRemediationSweepWorkflow",status="TimedOut"}[2h]) > 0',
-          ),
-          for: "10m",
-          labels: {
-            severity: "warning",
-          },
-        },
-        {
           // Daily homelab-audit failing twice in a row — the agent is
           // hitting the 45-min activity wall. The existing
           // TemporalScheduledWorkflowFailingDaily covers activity_task_fail

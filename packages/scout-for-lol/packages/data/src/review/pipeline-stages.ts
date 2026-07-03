@@ -136,6 +136,8 @@ export async function generateReviewTextStage(params: {
   playerIndex: number;
   matchSummary: string;
   timelineSummary?: string;
+  playerHistory?: string;
+  patchNotes?: string;
   client: OpenAIClient;
   model: ModelConfig;
   systemPrompt: string;
@@ -153,6 +155,8 @@ export async function generateReviewTextStage(params: {
     playerIndex,
     matchSummary,
     timelineSummary,
+    playerHistory,
+    patchNotes,
     client,
     model,
     systemPrompt: systemPromptTemplate,
@@ -170,6 +174,8 @@ export async function generateReviewTextStage(params: {
     playerIndex,
     matchAnalysis: matchSummary, // Use match summary text
     ...(timelineSummary !== undefined && { timelineSummary }),
+    ...(playerHistory !== undefined && { playerHistory }),
+    ...(patchNotes !== undefined && { patchNotes }),
   });
 
   const userPrompt = replaceTemplateVariables(
