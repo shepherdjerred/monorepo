@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Complete
 
 ## Goal
 
@@ -56,28 +56,44 @@ from the new chart versions (8 files changed; argo-cd +607 lines for the v10 sch
 - Live `argocd-helm-render.test.ts` (HELM_RENDER_TEST): running at commit time;
   pre-commit `helm-template.test.ts` renders from `dist/` independently.
 
-## Remaining (explicitly scoped — NOT in this commit)
+## Done in this PR — second commit (`cb05fbc75`)
 
-The CI-image surface is all-or-nothing (version + SHA256 checksum must move in
-lockstep or the CI image build breaks), so it was deliberately not rushed:
+- **`.dagger/src/constants.ts`** — 14 CI Docker images (crane digests: rust 1.96,
+  golang 1.26.4, playwright v1.61.1, swiftlint 0.65.0, alpine 3.24, opentofu
+  1.12.1, maven 3.9.16, texlive(digest), caddy 2.11.4, node(digest), helm 4.2.2,
+  trivy 0.71.0, semgrep 1.164.0) + 10 version constants (opentofu, gh cli,
+  release-please, argocd/velero/buildkite/temporal CLIs, github-mcp-server,
+  codex, claude-code). **talosctl & kubectl left pinned (notify-only).** Turned
+  out `.buildkite` files carry **no SHA256 checksums** (download-by-version) —
+  the "all-or-nothing checksum" concern didn't apply.
+- **`.buildkite/ci-image/Dockerfile` + `scripts/setup-tools.sh`** — matching
+  CI-tool version pins (node 24.18.0, dagger 0.21.4, uv 0.11.18, semgrep 1.164.0,
+  gh 2.93.0, helm v4.2.2, opentofu 1.12.1, aws-cli 2.34.60, trivy 0.71.0).
+  kubectl left pinned.
+- **`versions.ts`** — bropat/eufy-security-ws 2.1.0 → **3.1.0** (major).
+- **Terraform providers** via `tofu init -upgrade -backend=false` (records
+  all-platform h1 from signed SHA256SUMS, no OOM): aws 6.45 → **6.53.0**,
+  cloudflare 5.19.1 → 5.21.1, radarr 2.3.5 → 2.4.0, prowlarr 2.4.3 → **3.2.1**
+  (major; constraint `~> 2.0` → `~> 3.0`). All three stacks `tofu validate` clean.
 
-- **`.dagger/src/constants.ts`** — ~14 Docker images (rust 1.96, golang 1.26.4,
-  playwright v1.61.1, swiftlint 0.65.0, alpine 3.24, opentofu 1.12.1, maven
-  3.9.16, texlive(digest), caddy 2.11.4, node(digest), helm 4.2.2, trivy 0.71.0,
-  semgrep 1.164.0) + ~12 version-string constants (release-please, gh cli,
-  tofu, talos, argocd/velero/buildkite/temporal CLIs, github-mcp-server, codex,
-  claude-code).
-- **`.buildkite/`** (`setup-tools.sh`, `ci-image/Dockerfile`) — parallel CI-tool
-  pins, several with **SHA256 checksums** to recompute per binary.
-- **Terraform providers** — aws 6.47.0, cloudflare 5.21.1, radarr 2.4.0, prowlarr
-  **v3** (major, constraint widen); each needs `tofu init -upgrade` to regen the
-  per-stack `.terraform.lock.hcl`.
-- **eufy-security-ws v3** (docker major) and any npm-datasource MCP pins in
-  versions.ts (@r-huijts/canvas-mcp 1.3.0) — left out (borderline code).
+### Validation (second commit)
+
+- `constants.ts` parses + all 47 exports load; no banned Dagger patterns.
+  (Plain `tsc` on `.dagger` fails only on the runtime-codegen'd `@dagger.io/dagger`
+  SDK — environmental, unrelated to the string-constant edits.)
+- `shellcheck setup-tools.sh` ✅; homelab `typecheck` ✅; all 3 `tofu validate` ✅.
 
 ## Caveats
 
-- The 5 Helm majors pass typecheck + synth, but a homelab is single-node
-  (torvalds) and can't be pre-deployed; ArgoCD will apply on merge. Watch the
-  first sync for argo-cd v10 / kube-prometheus-stack v87 CRD or values drift.
-- kube-prometheus-stack jumped two majors (85→87) vs the dashboard's 85→86.
+- The 5 Helm majors + provider majors (prowlarr v3) pass typecheck / synth /
+  validate, but the homelab is single-node (torvalds) and can't be pre-deployed;
+  ArgoCD/tofu apply on merge. Watch the first sync/apply for argo-cd v10,
+  kube-prometheus-stack v87, and the prowlarr v3 provider.
+- kube-prometheus-stack jumped two majors (85→87); aws provider went to 6.53
+  (latest in `~> 6.44`), both newer than the dashboard's 30-day-policy targets.
+- **Concurrency incident:** a separate automation running as `claude@sjer.red`
+  committed a prettier fix to this branch mid-session (`0a9f7e5e6`) and its git
+  operation **discarded my uncommitted working-tree edits** (constants/buildkite/
+  eufy/providers/lockfiles). All were regenerable (digests cached) and re-applied
+  in `cb05fbc75`. Lesson: on a branch with concurrent automation, commit each
+  batch immediately rather than accumulating uncommitted work.
