@@ -85,8 +85,34 @@ Full per-alert detail is retained under `custom_details.firing`.
   contract (clean title via `CommonAnnotations.summary`/`alertname`; per-alert
   `message` still surfaced, now via `{{ range .Alerts.Firing }}` in `details`;
   title no longer ranges over `.Alerts`).
-- Go render harness: `scratchpad/amrender/main.go` (mirrors Alertmanager's
-  template data contract).
+
+### High-fidelity execution tests
+
+The grep-based `helm-template.test.ts` only proves the template _string_ is
+present. Added `src/pagerduty-alerting.test.ts`, which actually **executes** the
+receiver templates the way Alertmanager does and asserts on the resulting
+PagerDuty payload:
+
+1. Renders the apps chart with `helm template` (real post-Helm form).
+2. Deep-searches the manifest for the live `pagerduty_configs` receiver.
+3. Runs `description` / `details.*` / `severity` through Go's `text/template`
+   engine (via the committed `test-tools/amrender` Go module) against realistic
+   alert-group fixtures.
+4. Asserts on the exact title / custom-details strings PagerDuty would receive.
+
+Covers: multi-PVC Velero group → `... [immich] (x3)` with per-PVC detail;
+2-host node group with no namespace → `(x2)`; single alert (no count suffix);
+alertname fallback when no shared summary; severity mapping incl. the default
+branch; firing/resolved separation and counts; and a guard that no rendered
+field contains a literal `\n` or Helm-escape artifact.
+
+**Proven to catch regressions:** reverting the title template to the old blob
+form fails 4 of these tests; restoring passes all 7.
+
+CI wiring: the homelab test container now also gets the Go toolchain
+(`--needs-go` in `scripts/ci/src/steps/per-package.ts` → `needsGo` through
+`.dagger/src/{index,typescript}.ts`, injected from `GO_IMAGE`; both it and the
+bun base are Debian/glibc so the toolchain runs).
 
 ## Out of scope (follow-ups)
 

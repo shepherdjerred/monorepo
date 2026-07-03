@@ -197,6 +197,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
     needsHelm = false,
+    needsGo = false,
   ): Promise<string> {
     return testHelper(
       pkgDir,
@@ -205,6 +206,7 @@ export class Monorepo {
       depDirs,
       tsconfig,
       needsHelm,
+      needsGo,
     ).stdout();
   }
 
@@ -329,6 +331,7 @@ export class Monorepo {
     includeAstroBuild = false,
     includeBuild = false,
     skipTest = false,
+    needsGo = false,
   ): Promise<string> {
     return lintTypecheckTestHelper(
       pkgDir,
@@ -343,6 +346,7 @@ export class Monorepo {
       includeAstroBuild,
       includeBuild,
       skipTest,
+      needsGo,
     );
   }
 

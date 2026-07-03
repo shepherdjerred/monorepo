@@ -115,6 +115,9 @@ export function perPackageSteps(
         ? ` --ha-url env:HASS_URL --ha-token env:HASS_TOKEN`
         : "";
     const helmFlag = pkg === "homelab" ? ` --needs-helm` : "";
+    // homelab's pagerduty-alerting.test.ts executes Alertmanager templates
+    // through the real Go text/template engine, so the test container needs Go.
+    const goFlag = pkg === "homelab" ? ` --needs-go` : "";
     const astroFlags = ASTRO_PACKAGES.has(pkg)
       ? ` --include-astro-check --include-astro-build`
       : "";
@@ -123,7 +126,7 @@ export function perPackageSteps(
       daggerCallStep(
         `:dagger_knife: pkg-check`,
         `pkg-check-${sk}`,
-        `${DAGGER_CALL} lint-typecheck-test ${pf}${helmFlag}${haFlags}${astroFlags}${buildFlag}`,
+        `${DAGGER_CALL} lint-typecheck-test ${pf}${helmFlag}${goFlag}${haFlags}${astroFlags}${buildFlag}`,
         resources,
       ),
     );
