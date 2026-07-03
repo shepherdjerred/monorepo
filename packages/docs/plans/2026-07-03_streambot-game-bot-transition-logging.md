@@ -2,7 +2,7 @@
 
 ## Status
 
-Complete (implemented on `feature/xstate-transition-logging`; pending PR/merge)
+In Progress (implemented on `feature/xstate-transition-logging`; pending PR/merge — will move to `Complete` and archive once merged to `main`)
 
 ## Context
 

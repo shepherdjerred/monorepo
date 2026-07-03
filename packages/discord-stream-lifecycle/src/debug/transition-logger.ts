@@ -95,13 +95,15 @@ export function createTransitionLogInspector(
         options.projectContext !== undefined && "context" in snapshot
           ? options.projectContext(snapshot.context)
           : {};
+      // Spread `context` first so the fixed diagnostic fields (`label`, `machine`, `from`, `to`,
+      // `event`) always win — a projectContext that returns a colliding key can't shadow them.
       options.log.info("state machine transition", {
+        ...context,
         ...(options.label === undefined ? {} : { label: options.label }),
         ...(machineId === undefined ? {} : { machine: machineId }),
         from,
         to,
         event: eventType,
-        ...context,
       });
     } catch (error) {
       // Observability must never break the state machine it observes.
