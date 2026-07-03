@@ -45,10 +45,6 @@ import {
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab-audit.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
 import { agentTaskWorkflow as _agentTaskWorkflow } from "./agent-task.ts";
-import {
-  alertRemediationChildWorkflow as _alertRemediationChildWorkflow,
-  alertRemediationSweepWorkflow as _alertRemediationSweepWorkflow,
-} from "./alert-remediation.ts";
 import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from "./cancel-buildkite-builds.ts";
 import { checkPrMergeConflictsWorkflow as _checkPrMergeConflictsWorkflow } from "./check-pr-merge-conflicts.ts";
 import { prBabysitWorkflow as _prBabysitWorkflow } from "./pr-babysit/index.ts";
@@ -62,12 +58,6 @@ import type {
 import type { PrReviewPipelineResult } from "./pr-review/index.ts";
 import type { RunSummaryResult } from "#activities/pr-review/summary.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
-import type {
-  AlertRemediationChildInput,
-  AlertRemediationChildResult,
-  AlertRemediationSweepRawInput,
-  AlertRemediationSweepResult,
-} from "#shared/alert-remediation.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
@@ -177,18 +167,6 @@ export async function runHomelabAuditWorkflow(
 
 export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   return _agentTaskWorkflow(input);
-}
-
-export async function alertRemediationSweepWorkflow(
-  input: AlertRemediationSweepRawInput = {},
-): Promise<AlertRemediationSweepResult> {
-  return _alertRemediationSweepWorkflow(input);
-}
-
-export async function alertRemediationChildWorkflow(
-  input: AlertRemediationChildInput,
-): Promise<AlertRemediationChildResult> {
-  return _alertRemediationChildWorkflow(input);
 }
 
 export async function prReactionListener(

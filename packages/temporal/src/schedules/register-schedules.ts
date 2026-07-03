@@ -54,13 +54,13 @@ export const DELETED_SCHEDULE_IDS = [
   // of reconciled weekly). The workflow type was removed from the bundle, so
   // this schedule must be deleted or it would keep firing a missing workflow.
   "helm-types-weekly-refresh",
-  // Renamed to `alert-remediation-daily` and throttled hourly → once a day
-  // while the `claude -p` startup hang is investigated (every hourly run was
-  // pegging the 30-min activity timeout; see
-  // packages/docs/logs/2026-06-19_bugsink-temporal-checkin-alert-remediation-hang.md).
-  // Schedules are keyed by id, so the renamed schedule is a NEW one — this
-  // entry deletes the old hourly schedule on startup so it stops firing.
+  // Alert-remediation workflow removed entirely: in ~1 month it opened 0 PRs
+  // (metrics: ~564 `failed`, ~2 `report-only`, 0 `pr-created`). Most PagerDuty/
+  // Bugsink alerts (absence signals, infra flaps, capacity) aren't fixable by a
+  // repo-only PR, so the premise didn't hold. Both ids stay here so the
+  // reconciler deletes the live schedules on startup rather than orphaning them.
   "alert-remediation-hourly",
+  "alert-remediation-daily",
   // The pokeemerald.wasm download workflow (`runPokeemeraldWasmUpdate`) is gone:
   // the wasm is now built from source in the Dagger image build with our
   // customizations (the download fetched an audio-stubbed upstream that lacked
@@ -191,30 +191,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "50 minutes",
     memo: "Bounded daily homelab health check email via generic report-only agent task (Claude -> Postal)",
-  },
-  {
-    id: "alert-remediation-daily",
-    workflowType: "alertRemediationSweepWorkflow",
-    args: [
-      {
-        repo: { fullName: "shepherdjerred/monorepo", ref: "main" },
-        provider: "claude",
-        concurrency: 3,
-        // Schema default also dropped from 80 → 15; pinning here so the
-        // intent (defense-in-depth against the 30-min activity wall) lives
-        // at the call site too.
-        maxTurns: 15,
-      },
-    ],
-    // 08:00 PT daily — throttled from hourly (the old `alert-remediation-hourly`
-    // schedule, now in DELETED_SCHEDULE_IDS) while the `claude -p` startup hang
-    // is investigated. Staggered clear of homelab-audit-daily (06:30), the only
-    // other AGENT_TASK-queue cron.
-    cronExpression: "0 8 * * *",
-    taskQueue: TASK_QUEUES.AGENT_TASK,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "2 hours",
-    memo: "Daily PagerDuty/Bugsink alert remediation fan-out (08:00 PT). Child workflows may create draft PRs for straightforward repo-only fixes.",
   },
   {
     id: "scout-data-dragon-version-check",

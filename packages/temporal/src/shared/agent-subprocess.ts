@@ -1,7 +1,7 @@
 /**
  * Shared subprocess-observability helpers used by every Temporal activity
  * that wraps a long-running `claude -p` / `codex exec` subprocess
- * (`runAlertRemediationAgent`, `runAgentTask`, ...).
+ * (`runAgentTask`, the pr-babysit iteration loop, ...).
  *
  * The pieces of state captured here are the difference between "we know
  * what was happening when the agent died" and "we don't":
