@@ -197,3 +197,22 @@ Getting it green surfaced two real app bugs (QuickAdd's Create button hid behind
 - `ios/Podfile.lock` drifts by two prebuilt-pod checksums (hermes-engine, React-Core-prebuilt) after a fresh `pod install` in a new worktree — environment noise, left uncommitted.
 - v1→v2 queue migration maps `complete_instance` to `set_instance_complete{date: local day of enqueue timestamp, completed: true}` — best available record of the tapped day.
 - Aliases are pruned when the real id disappears from a server pull; UI surfaces holding a pruned temp id fall back to the id itself (task shows as gone — correct).
+
+## Session Log — 2026-07-03 (P3 start: tasknotes-types v2)
+
+### Done
+
+- Worktree `.claude/worktrees/tasknotes-p3` (branch `feature/tasknotes-p3`, stacked on `feature/tasknotes-p2`).
+- `tasknotes-types`: pinned `@tasknotes/model@0.2.1` (exact); new `src/v2.ts` with the upstream plugin HTTP API contract — full route table + shapes transcribed from the upstream controllers (fetched sources live in the session scratchpad under `upstream/`); `MUTATION_ID_HEADER`; P1's `{date?, completed?}` complete-instance extension (e4fbb80df).
+- Key discovery: the model bundles zod v3; its schemas cannot type-compose with this package's zod v4. Resolution: v4 mirror schemas (`TaskInfoV2Schema`, `StatusConfigV2Schema`, `PriorityConfigV2Schema`) with `src/v2.test.ts` pinning them key-for-key + optionality against the model's runtime shapes, so a model bump fails loudly. Package now has a real `bun test` script.
+
+### Remaining (P3)
+
+- Hono `:id` param spike (URL-encoded path IDs) — do FIRST per plan.
+- Server engine rebuild: `model-config.ts`, `engine/task-repository.ts` (tolerant read, patch-based write), `vault-files.ts`, `watcher.ts`, `query.ts`, `stats.ts`, `time-reports.ts`, `filename.ts`; routes on the upstream table; legacy adapter; `migrate-vault.ts` + `vault-audit.ts`; golden corpus / round-trip / conformance / idempotency / concurrency tests; contract-test extension.
+- Ring 3 ob-sync transport test ideally before the concurrency design hardens (needs test-vault creds — user-gated).
+
+### Caveats
+
+- Upstream reference sources are in the scratchpad (`upstream/src_api_*.ts`, `docs_HTTP_API.md`) — refetch from `github.com/callumalpass/tasknotes` if lost.
+- `tasknotes-types` consumers: the app (P5) will need Metro to bundle rrule/yaml (model deps) — verify then.
