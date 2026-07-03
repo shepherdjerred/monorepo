@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /app/
+Disallow: /dev/
+
+Sitemap: https://scout-for-lol.com/sitemap-index.xml

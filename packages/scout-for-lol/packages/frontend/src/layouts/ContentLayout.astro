@@ -5,10 +5,10 @@ import Footer from "../components/Footer.astro";
 import PageHeader from "../components/PageHeader.astro";
 
 const { frontmatter } = Astro.props;
-const { title, subtitle } = frontmatter;
+const { title, subtitle, description } = frontmatter;
 ---
 
-<Layout>
+<Layout title={title} description={description ?? subtitle}>
   <div class="bg-white dark:bg-gray-900">
     <Navbar />
 
