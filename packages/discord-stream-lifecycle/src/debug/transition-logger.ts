@@ -1,4 +1,29 @@
-import type { InspectionEvent } from "xstate";
+/**
+ * The slice of XState's `InspectionEvent` this inspector actually reads. It is declared
+ * structurally on purpose instead of importing xstate's `InspectionEvent`: the observer returned
+ * by {@link createTransitionLogInspector} is handed to a **consumer's** `createActor({ inspect })`,
+ * and if that consumer resolves to a different physical `xstate` install than this package (routine
+ * in an isolated monorepo/CI dependency layout), typing the parameter as xstate's `InspectionEvent`
+ * forces TS to deep-compare two copies of `InspectionEvent → AnyActorRef → AnyActorLogic`, which
+ * overflows the type-instantiation-depth limit (TS2321). A shallow structural parameter keeps the
+ * consumer's real `InspectionEvent` assignable here without triggering that deep comparison, so the
+ * inspector plugs into any `xstate@5` actor regardless of which copy the consumer uses. XState
+ * always calls the observer with the full event; these are the only fields the logger touches.
+ */
+type TransitionInspectionEvent =
+  | {
+      readonly type: "@xstate.snapshot" | "@xstate.microstep";
+      readonly actorRef: { readonly sessionId: string };
+      readonly snapshot: object;
+      readonly event: { readonly type: string };
+    }
+  | {
+      readonly type:
+        | "@xstate.actor"
+        | "@xstate.event"
+        | "@xstate.action"
+        | "@xstate.transition";
+    };
 
 /**
  * Minimal structured-logger surface the transition inspector writes to. Matches the
@@ -56,7 +81,7 @@ function readMachineId(snapshot: object): string | undefined {
  */
 export function createTransitionLogInspector(
   options: CreateTransitionLogInspectorOptions,
-): (inspectionEvent: InspectionEvent) => void {
+): (inspectionEvent: TransitionInspectionEvent) => void {
   // Keyed by actor sessionId (unique per actor instance in the tree): last state value seen,
   // used to compute `from` and to suppress no-op self-transitions.
   const lastValue = new Map<string, string>();
