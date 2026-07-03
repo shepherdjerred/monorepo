@@ -115,14 +115,14 @@ function compareVersion(a: number[], b: number[]): number {
   return (a[1] ?? 0) - (b[1] ?? 0);
 }
 
-function ensureBootedSimulator(): string {
+function ensureBootedSimulator(): SimDevice {
   for (const devices of simctlList("booted").values()) {
     const booted = devices.find(
       (d) => d.state === "Booted" && d.name.includes("iPhone"),
     );
     if (booted !== undefined) {
       log(`using already-booted simulator: ${booted.name}`);
-      return booted.name;
+      return booted;
     }
   }
 
@@ -146,7 +146,7 @@ function ensureBootedSimulator(): string {
   runSimctl(["boot", best.device.udid]);
   // -b blocks until the device finishes booting.
   runSimctl(["bootstatus", best.device.udid, "-b"]);
-  return best.device.name;
+  return best.device;
 }
 
 // ---------------------------------------------------------------------------
@@ -240,10 +240,35 @@ async function isMetroRunning(): Promise<boolean> {
 }
 
 /** Debug builds load JS from Metro, so the packager must be up. */
+/**
+ * A Metro on :8081 started from a DIFFERENT checkout (e.g. the main repo
+ * while this runs in a worktree) would serve that tree's JS bundle and the
+ * suite would silently test the wrong code. Only reuse a Metro whose
+ * process cwd is this package.
+ */
+function metroCwd(): string | null {
+  const pidProc = spawnSync("lsof", ["-t", "-i", ":8081", "-sTCP:LISTEN"], {
+    encoding: "utf8",
+  });
+  const pid = pidProc.stdout.trim().split("\n")[0];
+  if (pid === undefined || pid === "") return null;
+  const cwdProc = spawnSync("lsof", ["-a", "-p", pid, "-d", "cwd", "-Fn"], {
+    encoding: "utf8",
+  });
+  const line = cwdProc.stdout.split("\n").find((l) => l.startsWith("n"));
+  return line === undefined ? null : line.slice(1);
+}
+
 async function ensureMetro(): Promise<ChildProcess | null> {
   if (await isMetroRunning()) {
-    log("Metro already running — reusing it");
-    return null;
+    const cwd = metroCwd();
+    if (cwd !== null && path.resolve(cwd) === path.resolve(packageDir)) {
+      log("Metro already running from this package — reusing it");
+      return null;
+    }
+    fail(
+      `a Metro/dev server is already on :8081 but serving a different project (${cwd ?? "unknown cwd"}) — stop it first, or it would serve the wrong tree's JS to the e2e app`,
+    );
   }
   log("starting Metro bundler");
   const proc = spawn("bun", ["run", "start"], {
@@ -254,22 +279,52 @@ async function ensureMetro(): Promise<ChildProcess | null> {
   return proc;
 }
 
-async function buildAndInstallApp(simulatorName: string): Promise<void> {
+/**
+ * Build with xcodebuild + install with simctl directly instead of
+ * `react-native run-ios`: the RN CLI hardcodes the pre-Xcode-27 path to
+ * Simulator.app (Contents/Developer/Applications) and dies on newer Xcode.
+ * Maestro only needs the simulator *booted*, not its GUI, so we never open
+ * a simulator app at all.
+ */
+async function buildAndInstallApp(simulator: SimDevice): Promise<void> {
+  const derivedDataPath = path.join(packageDir, "ios", "build", "e2e");
+  const appPath = path.join(
+    derivedDataPath,
+    "Build",
+    "Products",
+    "Debug-iphonesimulator",
+    "TasksForObsidian.app",
+  );
+
   if (process.env["E2E_SKIP_BUILD"] === "1") {
-    log(
-      "E2E_SKIP_BUILD=1 — skipping bun run ios (app must already be installed)",
+    log("E2E_SKIP_BUILD=1 — skipping xcodebuild (installing existing build)");
+  } else {
+    log(`building app for "${simulator.name}" (xcodebuild)`);
+    const proc = spawn(
+      "xcodebuild",
+      [
+        "-workspace",
+        "TasksForObsidian.xcworkspace",
+        "-scheme",
+        "TasksForObsidian",
+        "-configuration",
+        "Debug",
+        "-destination",
+        `platform=iOS Simulator,id=${simulator.udid}`,
+        "-derivedDataPath",
+        derivedDataPath,
+        "build",
+      ],
+      { cwd: path.join(packageDir, "ios"), stdio: "inherit" },
     );
-    return;
+    const exitCode = await waitForExit(proc);
+    if (exitCode !== 0) {
+      fail(`xcodebuild failed with exit code ${String(exitCode)}`);
+    }
   }
-  log(`building + installing app on "${simulatorName}" (bun run ios)`);
-  const proc = spawn("bun", ["run", "ios", "--simulator", simulatorName], {
-    cwd: packageDir,
-    stdio: "inherit",
-  });
-  const exitCode = await waitForExit(proc);
-  if (exitCode !== 0) {
-    fail(`bun run ios failed with exit code ${String(exitCode)}`);
-  }
+
+  log(`installing ${appPath}`);
+  runSimctl(["install", simulator.udid, appPath]);
 }
 
 // ---------------------------------------------------------------------------
@@ -382,12 +437,12 @@ async function main(): Promise<void> {
     children.push(await startChaosProxy());
 
     // (4) simulator
-    const simulatorName = ensureBootedSimulator();
+    const simulator = ensureBootedSimulator();
 
     // (5) Metro + app build
     const metro = await ensureMetro();
     if (metro !== null) children.push(metro);
-    await buildAndInstallApp(simulatorName);
+    await buildAndInstallApp(simulator);
 
     // (6) Maestro flows
     await runMaestro();
