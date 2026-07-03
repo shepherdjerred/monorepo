@@ -102,7 +102,7 @@ Renovate bot PRs). All 58 tests passed. Merge commit `c7eed1df2`. Build #4857 ru
 - The EEXIST bun-install race is a known pre-existing issue documented in `.dagger/src/base.ts`. It flakes when BUN_CACHE is cold and parallel containers race on the same symlink.
 - CI priority: build #4857 is the newest active build and thus has the lowest priority in the FIFO system. Expect some queue delay before K8s jobs start.
 
-### 6. Second merge conflict with origin/main (2026-07-03)
+### 6. Second merge conflict with origin/main (2026-07-03) — and sdk-trace-base resolution fix
 
 After build #4857 and the main branch advancing further, `ci/merge-conflict` failed again.
 The conflict was in `packages/temporal/package.json` and `packages/temporal/bun.lock`.
@@ -117,6 +117,24 @@ Fix:
 - Installed deps in `packages/llm-models`, `packages/scout-for-lol`, `packages/tasknotes-server` for typecheck/lint
 - All pre-commit hooks passed (tier-1 + tier-2 including `scout-for-lol-typecheck`, `tasknotes-server-test`)
 - Merge commit `107481f05` pushed. Build #4895 started.
+
+### 7. `dagger-knife-pkg-check` CI failure in build #4897 (temporal lint + typecheck)
+
+Build #4895 revealed a new real failure in `dagger-knife-pkg-check` for the temporal package:
+
+**Lint error:** `packages/temporal/src/observability/tracing.ts:153:9 — no-unsafe-assignment`
+**Typecheck error:** `Cannot find module '@opentelemetry/sdk-trace-base'` from `llm-observability/src/{archive-span-processor,index,init}.ts`
+
+**Root cause:** When temporal's `bun.lock` was regenerated (to incorporate `@aws-sdk/client-s3`), bun upgraded `@opentelemetry/sdk-trace-base` from `2.7.1` to `2.9.0` for the `@shepherdjerred/llm-observability` dep. Version `2.9.0` is a SHIM that re-exports types from a separate `@opentelemetry/sdk-trace` package. Bun's linker:
+
+1. Writes `sdk-trace-base@2.9.0` (the shim) into `llm-observability/node_modules/` when temporal's `bun install` processes the `file:../llm-observability` dep
+2. Hoists `sdk-trace@2.9.0` (the shim's dep) to `temporal/node_modules/` (top-level), NOT into `llm-observability/node_modules/`
+
+TypeScript dereferences the symlinked `llm-observability/src/` files to their real path. From that real path, it resolves `sdk-trace-base` from `llm-observability/node_modules/` (the shim, 2.9.0), then can't find its dep `sdk-trace` (only at temporal's top-level, unreachable from llm-observability's real path). Result: TS2307 in all three llm-observability source files, cascading to make `buildArchiveSpanProcessor`'s return type an "error type", triggering `no-unsafe-assignment` in `tracing.ts:153`.
+
+**Fix:** Added `@opentelemetry/sdk-trace: ^2.9.0` as an explicit dependency to `packages/llm-observability/package.json` and updated `sdk-trace-base: ^2.9.0`. Regenerated both `llm-observability/bun.lock` and `temporal/bun.lock`. With the explicit dep, `sdk-trace@2.9.0` gets installed into `llm-observability/node_modules/` in bun's step 5 (and temporal's step 6 picks it up correctly). Local `typecheck` and `lint` both pass with this fix.
+
+Commit `063980642`.
 
 ## Session Log — 2026-07-03 (round 2)
 
@@ -139,3 +157,28 @@ Fix:
 - Renovate auto-rebase is still disabled (non-Renovate author in history). Expected.
 - The `scout-for-lol` typecheck failures in the worktree were due to missing `bun install` in the worktree (not real code errors) — required installing `llm-models` and `scout-for-lol` deps locally.
 - If main advances again before #4895 finishes, another merge cycle may be needed.
+
+## Session Log — 2026-07-03 (round 3)
+
+### Done
+
+- Diagnosed `dagger-knife-pkg-check` failure in build #4897 as a REAL failure (not a flake)
+- Root cause: temporal's `bun install` upgrade of `sdk-trace-base` to `2.9.0` (shim) without installing its dep `sdk-trace` in `llm-observability/node_modules/`
+- Fixed `packages/llm-observability/package.json`: added `@opentelemetry/sdk-trace: ^2.9.0`, updated `sdk-trace-base` constraint to `^2.9.0`
+- Regenerated `packages/llm-observability/bun.lock` and `packages/temporal/bun.lock` (deleted and re-created temporal's lockfile from scratch to pick up updated llm-observability metadata)
+- Verified locally: `temporal` `bun run lint` and `bun run typecheck` both pass cleanly
+- Commit `063980642` pushed to `renovate/anthropic-ai-sdk-0.x`
+- Build #4910 triggered but all jobs failed with "load workspace: . ERROR" — confirmed Dagger infrastructure outage (ALL recent builds across all branches are failing, started ~20:27 UTC)
+
+### Remaining
+
+- Wait for Dagger infrastructure to recover
+- Re-trigger CI (push empty commit or wait for next build trigger)
+- Monitor until all checks green
+- Report final green status to team-lead
+
+### Caveats
+
+- Build #4910 failure is infrastructure, NOT our code — local lint+typecheck both pass
+- The fix is mechanically correct: `sdk-trace` is now explicitly in `llm-observability/node_modules/` after any bun install, regardless of temporal's hoisting behavior
+- When infrastructure recovers, `dagger-knife-pkg-check` for temporal should pass
