@@ -19,6 +19,7 @@ import { checkPrMergeConflictsActivities } from "./check-pr-merge-conflicts.ts";
 import { readmeRefreshActivities } from "./readme-refresh.ts";
 import { llmCatalogRefreshActivities } from "./llm-catalog-refresh.ts";
 import { prBabysitActivities } from "./pr-babysit/index.ts";
+import { scoutImageGcActivities } from "./scout-image-gc.ts";
 
 export const activities = {
   ...fetcherActivities,
@@ -42,4 +43,5 @@ export const activities = {
   ...readmeRefreshActivities,
   ...llmCatalogRefreshActivities,
   ...prBabysitActivities,
+  ...scoutImageGcActivities,
 };

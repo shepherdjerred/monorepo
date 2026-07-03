@@ -291,6 +291,20 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Daily Bugsink database housekeeping (delete old events, vacuum)",
   },
   {
+    id: "scout-image-gc-daily",
+    workflowType: "runScoutImageGcWorkflow",
+    args: [{ retentionDays: 30, dryRun: false }],
+    // 04:00 PT — after the 03:00 bugsink/zfs maintenance window so the nightly
+    // destructive jobs don't contend for the worker pod at once.
+    cronExpression: "0 4 * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    // First run sweeps ~110k objects and deletes ~38k; activity ceiling is 20m,
+    // this is the workflow-level cap above it. Steady-state runs finish in <1m.
+    workflowExecutionTimeout: "25 minutes",
+    memo: "Daily GC of Scout images: delete .png/.svg older than 30d under games/ & prematch/ in scout-prod + scout-beta (SeaweedFS), keeping JSON. See packages/docs/plans/2026-07-03_scout-s3-image-retention.md",
+  },
+  {
     id: "velero-orphan-audit",
     workflowType: "runVeleroOrphanAuditWorkflow",
     args: [],
