@@ -73,11 +73,13 @@ individual PRs.
 - Verified aws-lockfile OOM fix (#1363) works: clean forced run (17:43 log), #481 regenerated, no OOM.
 - Confirmed the "Repository Problems" `re-extract` banner is a cosmetic bun-manager false positive (PRs #1368/#1369 diffs correct); no change made.
 - `renovate.json`: added "all non-code dependencies" group (manual-merge), folded in critical-infra/prod/minecraft, removed standalone OpenTofu group. Validated. → PR #1375 (branch `feature/renovate-group-non-code`).
+- Addressed Greptile P2 comment: removed redundant `automerge: false` from three carve-out rules (critical-infra, prod images, Minecraft) — the first-position group rule already sets it. Updated descriptions to say "automerge inherited from group rule". Commit `b2f7bd7da`.
 
 ### Remaining
 
 - Merge #1375, then confirm on the next Mend run that a single `renovate/all-non-code-dependencies` PR forms and code deps still open individually.
 - Banner clears once #1368/#1369 merge.
+- CI (Buildkite #4834) + Greptile re-review in progress; wait for green before merging.
 
 ### Caveats
 
