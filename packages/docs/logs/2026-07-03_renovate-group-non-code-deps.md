@@ -65,3 +65,21 @@ individual PRs.
 - **Cluster-version cadence:** talos / kubernetes bumps likewise batch weekly now.
 - First grouped PR after merge will be large (backlog of eligible infra updates); expect
   to review a sizeable bundle once.
+
+## Session Log — 2026-07-03
+
+### Done
+
+- Verified aws-lockfile OOM fix (#1363) works: clean forced run (17:43 log), #481 regenerated, no OOM.
+- Confirmed the "Repository Problems" `re-extract` banner is a cosmetic bun-manager false positive (PRs #1368/#1369 diffs correct); no change made.
+- `renovate.json`: added "all non-code dependencies" group (manual-merge), folded in critical-infra/prod/minecraft, removed standalone OpenTofu group. Validated. → PR #1375 (branch `feature/renovate-group-non-code`).
+
+### Remaining
+
+- Merge #1375, then confirm on the next Mend run that a single `renovate/all-non-code-dependencies` PR forms and code deps still open individually.
+- Banner clears once #1368/#1369 merge.
+
+### Caveats
+
+- Prod-image + cluster-version bumps now batch **weekly** (were immediate). Carve prod back out if deploy cadence suffers.
+- First grouped PR post-merge will be large (backlog of eligible infra updates).
