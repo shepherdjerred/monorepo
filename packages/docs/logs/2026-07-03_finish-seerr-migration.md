@@ -106,6 +106,11 @@ helm-types), `tofu validate` — all green.
 - Redirect live: added + applied the `overseerr.sjer.red → seerr.sjer.red`
   ruleset; verified 301 with path/query preserved.
 - Removed Overseerr IaC; all local checks green.
+- Repointed **Maintainerr** to Seerr via its settings API (POST `/api/settings`):
+  `overseerr_url` → `http://media-seerr-service:5055`, `overseerr_api_key` →
+  Seerr's key. Verified from the Maintainerr pod that the authed Seerr API
+  responds and returns all 156 requests. Runtime PVC config, not IaC.
+- Opened PR #1385.
 - Marked `2026-05-22_pr-751-keep-overseerr.md` Complete.
 
 ### Remaining
@@ -125,7 +130,7 @@ helm-types), `tofu validate` — all green.
   restore/rebuild would revert them.
 - Overseerr pod keeps running until manually pruned; just unreachable via
   `overseerr.sjer.red` (still reachable on its tailnet host until deleted).
-- **Maintainerr** connects to Overseerr/Seerr via its own runtime config. If it
-  still points at Overseerr, repoint it to Seerr before pruning Overseerr.
+- **Maintainerr** was repointed to Seerr (done this session, see Done). Its
+  config is runtime PVC state, not IaC — a PVC restore would revert it.
 - Local backups (Seerr's pre-migration DB + settings, which contain SMTP/webhook
   secrets) are in the session scratchpad only — not committed.
