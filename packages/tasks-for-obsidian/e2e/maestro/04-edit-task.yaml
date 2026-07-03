@@ -24,6 +24,11 @@ appId: org.reactjs.native.example.TasksForObsidian
     id: "task-detail-title-input"
 - eraseText: 50
 - inputText: "Edited by e2e"
+# Dismiss the keyboard first: with it up, the Save button is half-covered and
+# the tap lands on the keyboard. Tapping the PRIORITY section label is a
+# side-effect-free way to blur the input (labels aren't tappable controls).
+- tapOn:
+    text: "Priority"
 - tapOn:
     id: "task-detail-save"
 - extendedWaitUntil:
