@@ -36,6 +36,13 @@ resource "asuswrt_nvram" "test" {
 }`,
 				Check: resource.TestCheckResourceAttr("asuswrt_nvram.test", "value", "updated_value"),
 			},
+			// Import by NVRAM key and verify state matches.
+			{
+				ResourceName:      "asuswrt_nvram.test",
+				ImportState:       true,
+				ImportStateId:     "test_key",
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
