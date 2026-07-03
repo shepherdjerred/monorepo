@@ -1,6 +1,6 @@
 # OpenTofu Infrastructure
 
-Manages external resources (Cloudflare DNS, GitHub repo settings, SeaweedFS S3 buckets, the Tailscale ACL policy, Buildkite, the \*arr apps, and an ArgoCD CI token) with [OpenTofu](https://opentofu.org/).
+Manages external resources (Cloudflare DNS, GitHub repo settings, SeaweedFS S3 buckets, the Tailscale ACL policy, Buildkite, the \*arr apps, an ArgoCD CI token, and the LAN Asus routers) with [OpenTofu](https://opentofu.org/).
 
 ## Structure
 
@@ -8,6 +8,7 @@ Manages external resources (Cloudflare DNS, GitHub repo settings, SeaweedFS S3 b
 tofu/
 ├── argocd/              # ArgoCD account token for Buildkite, stored in 1Password
 ├── arr/                 # Radarr/Sonarr/Prowlarr config, imported from the live instances
+├── asuswrt/             # Asus routers & APs (custom provider, local-run only)
 ├── buildkite/           # Buildkite cluster + monorepo pipeline settings
 ├── cloudflare/          # DNS zones, bot management, email security (one .tf per domain)
 ├── github/              # Repository settings and branch rulesets
@@ -28,6 +29,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
   - `buildkite` — `TF_VAR_buildkite_api_token`
   - `argocd` — ArgoCD admin credentials plus `OP_CONNECT_TOKEN` for the 1Password provider
   - `arr` — Radarr/Sonarr/Prowlarr API credentials (see `arr/providers.tf`)
+  - `asuswrt` — `TF_VAR_asuswrt_username` / `TF_VAR_asuswrt_password`, the shared router/AP admin login
 
 To validate `.tf` without state access: `tofu -chdir=<stack> init -backend=false && tofu -chdir=<stack> validate`.
 
@@ -48,6 +50,7 @@ The static Buildkite pipeline ([`.buildkite/pipeline.yml`](../../../../.buildkit
 - **Every PR** (when tofu inputs change): `tofu plan` for `seaweedfs`, `tailscale`, `buildkite`, `arr`, `github`, and `cloudflare`.
 - **On merge to main**: applies `seaweedfs`, `tailscale`, `buildkite`, and `arr` (`tofu-apply` step); `github` in its own no-retry step (GitHub API mutations are not idempotent on partial failure); and `cloudflare` after the ArgoCD sync step's TunnelBinding deletion gate.
 - The `argocd` stack is operator-run only — it is not in the CI plan/apply loops.
+- `asuswrt` is not in the CI loops either, and cannot be: the CI pod has tailnet-only egress and cannot reach the LAN routers. It is run by hand from a machine on both the LAN and the tailnet — see [`asuswrt/README.md`](asuswrt/README.md).
 
 ## What's Managed
 
@@ -99,6 +102,10 @@ Radarr/Sonarr/Prowlarr configuration imported from the live instances. Quality p
 ### ArgoCD
 
 Mints the `buildkite` ArgoCD account token and writes it to 1Password for the CI sync steps.
+
+### Asus routers
+
+The RT-AX88U Pro router and the RT-AX88U / RT-BE86U access points — system settings, DHCP static leases, port forwards, and wireless networks — through the in-repo [`terraform-provider-asuswrt`](../../../terraform-provider-asuswrt/), installed via a local filesystem mirror. Local-run only; see [`asuswrt/README.md`](asuswrt/README.md) for the device table, the import flow, and the wireless write-path caveats.
 
 ## Adding a New Domain
 

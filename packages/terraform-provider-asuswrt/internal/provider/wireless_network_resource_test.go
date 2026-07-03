@@ -44,6 +44,15 @@ resource "asuswrt_wireless_network" "wifi24" {
 }`,
 				Check: resource.TestCheckResourceAttr("asuswrt_wireless_network.wifi24", "ssid", "UpdatedWiFi"),
 			},
+			// Import by band index. wpa_passphrase is write-only (never read),
+			// so it is excluded from the state-equality check.
+			{
+				ResourceName:            "asuswrt_wireless_network.wifi24",
+				ImportState:             true,
+				ImportStateId:           "0",
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wpa_passphrase"},
+			},
 		},
 	})
 }

@@ -6,18 +6,21 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/shepherdjerred/monorepo/packages/terraform-provider-asuswrt/internal/client"
 )
 
 var (
-	_ resource.Resource              = &wirelessNetworkResource{}
-	_ resource.ResourceWithConfigure = &wirelessNetworkResource{}
+	_ resource.Resource                = &wirelessNetworkResource{}
+	_ resource.ResourceWithConfigure   = &wirelessNetworkResource{}
+	_ resource.ResourceWithImportState = &wirelessNetworkResource{}
 )
 
 type wirelessNetworkResource struct {
@@ -52,6 +55,9 @@ func (r *wirelessNetworkResource) Schema(_ context.Context, _ resource.SchemaReq
 			"id": schema.StringAttribute{
 				Description: "Resource identifier (wl{band}).",
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"band": schema.Int64Attribute{
 				Description: "Radio band index: 0 = 2.4GHz, 1 = 5GHz.",
@@ -73,7 +79,7 @@ func (r *wirelessNetworkResource) Schema(_ context.Context, _ resource.SchemaReq
 				Optional:    true,
 			},
 			"wpa_passphrase": schema.StringAttribute{
-				Description: "WPA pre-shared key.",
+				Description: "WPA pre-shared key. Write-only: never read back from the router, so it is not populated on import. Omit it from tracked config to keep plans clean.",
 				Optional:    true,
 				Sensitive:   true,
 			},
@@ -193,6 +199,29 @@ func (r *wirelessNetworkResource) Delete(_ context.Context, _ resource.DeleteReq
 	// Wireless radios cannot be deleted; this is a no-op.
 }
 
+// ImportState imports a wireless band by its index (e.g. "0", "1", "2").
+// Read then populates the remaining attributes from the router.
+func (r *wirelessNetworkResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	band, err := strconv.ParseInt(strings.TrimSpace(req.ID), 10, 64)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Invalid import ID",
+			fmt.Sprintf("Wireless import ID must be a band index (e.g. 0, 1, 2); got %q", req.ID),
+		)
+
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("band"), band)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), fmt.Sprintf("wl%d", band))...)
+}
+
+// applyWireless writes per-band wireless NVRAM. NOTE: the write path is
+// firmware-dependent and not verified against real hardware — reads/imports are
+// reliable, but applies are not. On 3006 the UI writes band-named keys
+// (2g1_*/5g1_*) rather than wl<band>_*, wl_bw codes differ across firmwares, and
+// SAE/WPA3 needs wl_mfp. See docs/todos/asuswrt-wireless-write-path.md before
+// relying on wireless apply.
 func (r *wirelessNetworkResource) applyWireless(ctx context.Context, band int, plan *wirelessNetworkResourceModel) error {
 	prefix := fmt.Sprintf("wl%d_", band)
 	values := map[string]string{
@@ -230,15 +259,17 @@ func setOptionalString(values map[string]string, key string, attr types.String) 
 }
 
 // readOptionalInt64 reads an NVRAM value and applies a transform to get an int64.
+// Populates from a non-empty value regardless of whether the target is null (so
+// imported state reflects the router); empty NVRAM values are left as null.
 func readOptionalInt64(target *types.Int64, result map[string]string, key string, transform func(string) int) {
-	if v, ok := result[key]; ok && v != "" && !target.IsNull() {
+	if v, ok := result[key]; ok && v != "" {
 		*target = types.Int64Value(int64(transform(v)))
 	}
 }
 
 // readOptionalInt64FromString reads a numeric string from NVRAM into an int64 attribute.
 func readOptionalInt64FromString(target *types.Int64, result map[string]string, key string) {
-	if v, ok := result[key]; ok && v != "" && !target.IsNull() {
+	if v, ok := result[key]; ok && v != "" {
 		if parsed, err := strconv.ParseInt(v, 10, 64); err == nil {
 			*target = types.Int64Value(parsed)
 		}
@@ -246,8 +277,9 @@ func readOptionalInt64FromString(target *types.Int64, result map[string]string, 
 }
 
 // readOptionalBoolFromFlag reads a "0"/"1" NVRAM flag into a bool attribute.
+// Skips empty values so an unset flag leaves the attribute null.
 func readOptionalBoolFromFlag(target *types.Bool, result map[string]string, key string) {
-	if v, ok := result[key]; ok && !target.IsNull() {
+	if v, ok := result[key]; ok && v != "" {
 		*target = types.BoolValue(v == "1")
 	}
 }

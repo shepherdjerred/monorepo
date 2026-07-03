@@ -45,6 +45,13 @@ resource "asuswrt_port_forward" "http" {
 }`,
 				Check: resource.TestCheckResourceAttr("asuswrt_port_forward.http", "external_port", "8080"),
 			},
+			// Import by rule name and verify state matches.
+			{
+				ResourceName:      "asuswrt_port_forward.http",
+				ImportState:       true,
+				ImportStateId:     "HTTP",
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

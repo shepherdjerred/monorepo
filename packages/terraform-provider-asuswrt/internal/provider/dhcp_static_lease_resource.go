@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -15,8 +16,9 @@ import (
 )
 
 var (
-	_ resource.Resource              = &dhcpStaticLeaseResource{}
-	_ resource.ResourceWithConfigure = &dhcpStaticLeaseResource{}
+	_ resource.Resource                = &dhcpStaticLeaseResource{}
+	_ resource.ResourceWithConfigure   = &dhcpStaticLeaseResource{}
+	_ resource.ResourceWithImportState = &dhcpStaticLeaseResource{}
 )
 
 type dhcpStaticLeaseResource struct {
@@ -86,23 +88,21 @@ func (r *dhcpStaticLeaseResource) Create(ctx context.Context, req resource.Creat
 
 	mac := strings.ToUpper(plan.MAC.ValueString())
 
-	entries, hostnames, err := r.readLeases(ctx)
+	entries, err := r.readLeases(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read DHCP leases", err.Error())
 
 		return
 	}
 
-	entries = append(entries, client.DHCPStaticEntry{
-		MAC: mac,
-		IP:  plan.IP.ValueString(),
-	})
-
-	if !plan.Hostname.IsNull() && plan.Hostname.ValueString() != "" {
-		hostnames[mac] = plan.Hostname.ValueString()
+	entry := client.DHCPStaticEntry{MAC: mac, IP: plan.IP.ValueString()}
+	if !plan.Hostname.IsNull() {
+		entry.Hostname = plan.Hostname.ValueString()
 	}
 
-	if err := r.writeLeases(ctx, entries, hostnames); err != nil {
+	entries = append(entries, entry)
+
+	if err := r.writeLeases(ctx, entries); err != nil {
 		resp.Diagnostics.AddError("Failed to write DHCP leases", err.Error())
 
 		return
@@ -123,32 +123,35 @@ func (r *dhcpStaticLeaseResource) Read(ctx context.Context, req resource.ReadReq
 
 	mac := strings.ToUpper(state.MAC.ValueString())
 
-	entries, hostnames, err := r.readLeases(ctx)
+	entries, err := r.readLeases(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read DHCP leases", err.Error())
 
 		return
 	}
 
-	found := false
+	var found *client.DHCPStaticEntry
 
-	for _, e := range entries {
-		if strings.EqualFold(e.MAC, mac) {
-			state.IP = types.StringValue(e.IP)
-			found = true
+	for i := range entries {
+		if strings.EqualFold(entries[i].MAC, mac) {
+			found = &entries[i]
 
 			break
 		}
 	}
 
-	if !found {
+	if found == nil {
 		resp.State.RemoveResource(ctx)
 
 		return
 	}
 
-	if hostname, ok := hostnames[mac]; ok && hostname != "" {
-		state.Hostname = types.StringValue(hostname)
+	state.IP = types.StringValue(found.IP)
+
+	// Hostname lives in dhcp_staticlist field 4 (there is no dhcp_hostnames key
+	// on this firmware). Empty hostname maps to null to keep plans clean.
+	if found.Hostname != "" {
+		state.Hostname = types.StringValue(found.Hostname)
 	} else if !state.Hostname.IsNull() {
 		state.Hostname = types.StringNull()
 	}
@@ -166,28 +169,29 @@ func (r *dhcpStaticLeaseResource) Update(ctx context.Context, req resource.Updat
 
 	mac := strings.ToUpper(plan.MAC.ValueString())
 
-	entries, hostnames, err := r.readLeases(ctx)
+	entries, err := r.readLeases(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read DHCP leases", err.Error())
 
 		return
 	}
 
-	for i, e := range entries {
-		if strings.EqualFold(e.MAC, mac) {
+	hostname := ""
+	if !plan.Hostname.IsNull() {
+		hostname = plan.Hostname.ValueString()
+	}
+
+	for i := range entries {
+		if strings.EqualFold(entries[i].MAC, mac) {
+			// Preserve field 3 (DNS); update IP and hostname.
 			entries[i].IP = plan.IP.ValueString()
+			entries[i].Hostname = hostname
 
 			break
 		}
 	}
 
-	if !plan.Hostname.IsNull() && plan.Hostname.ValueString() != "" {
-		hostnames[mac] = plan.Hostname.ValueString()
-	} else {
-		delete(hostnames, mac)
-	}
-
-	if err := r.writeLeases(ctx, entries, hostnames); err != nil {
+	if err := r.writeLeases(ctx, entries); err != nil {
 		resp.Diagnostics.AddError("Failed to write DHCP leases", err.Error())
 
 		return
@@ -208,7 +212,7 @@ func (r *dhcpStaticLeaseResource) Delete(ctx context.Context, req resource.Delet
 
 	mac := strings.ToUpper(state.MAC.ValueString())
 
-	entries, hostnames, err := r.readLeases(ctx)
+	entries, err := r.readLeases(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to read DHCP leases", err.Error())
 
@@ -223,33 +227,34 @@ func (r *dhcpStaticLeaseResource) Delete(ctx context.Context, req resource.Delet
 		}
 	}
 
-	delete(hostnames, mac)
-
-	if err := r.writeLeases(ctx, filtered, hostnames); err != nil {
+	if err := r.writeLeases(ctx, filtered); err != nil {
 		resp.Diagnostics.AddError("Failed to write DHCP leases", err.Error())
 	}
 }
 
-func (r *dhcpStaticLeaseResource) readLeases(ctx context.Context) ([]client.DHCPStaticEntry, map[string]string, error) {
-	result, err := r.client.NvramGet(ctx, []string{"dhcp_staticlist", "dhcp_hostnames"})
-	if err != nil {
-		return nil, nil, fmt.Errorf("reading DHCP NVRAM: %w", err)
-	}
-
-	entries := client.ParseDHCPStaticList(result["dhcp_staticlist"])
-	hostnames := client.ParseDHCPHostnames(result["dhcp_hostnames"])
-
-	return entries, hostnames, nil
+// ImportState imports a DHCP static lease by its MAC address. The MAC is
+// normalized to uppercase to match the resource's canonical form; Read then
+// populates the IP and hostname from the router.
+func (r *dhcpStaticLeaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("mac"), strings.ToUpper(strings.TrimSpace(req.ID)))...)
 }
 
-func (r *dhcpStaticLeaseResource) writeLeases(ctx context.Context, entries []client.DHCPStaticEntry, hostnames map[string]string) error {
+func (r *dhcpStaticLeaseResource) readLeases(ctx context.Context) ([]client.DHCPStaticEntry, error) {
+	val, err := r.client.NvramGetSingle(ctx, "dhcp_staticlist")
+	if err != nil {
+		return nil, fmt.Errorf("reading dhcp_staticlist: %w", err)
+	}
+
+	return client.ParseDHCPStaticList(val), nil
+}
+
+func (r *dhcpStaticLeaseResource) writeLeases(ctx context.Context, entries []client.DHCPStaticEntry) error {
 	values := map[string]string{
 		"dhcp_staticlist": client.SerializeDHCPStaticList(entries),
-		"dhcp_hostnames":  client.SerializeDHCPHostnames(hostnames),
 	}
 
 	if err := r.client.NvramSet(ctx, values, client.ServiceDNSMasq); err != nil {
-		return fmt.Errorf("writing DHCP NVRAM: %w", err)
+		return fmt.Errorf("writing dhcp_staticlist: %w", err)
 	}
 
 	return nil
