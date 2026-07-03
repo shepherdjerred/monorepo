@@ -8,7 +8,7 @@ pr: "1368"
 
 ## Status
 
-In Progress
+In Progress (Build #4895 running)
 
 ## Context
 
@@ -101,3 +101,41 @@ Renovate bot PRs). All 58 tests passed. Merge commit `c7eed1df2`. Build #4857 ru
 - `@anthropic-ai/sdk/resources/messages` is now a directory in v0.100.1 (previously a flat file). The existing import paths still work.
 - The EEXIST bun-install race is a known pre-existing issue documented in `.dagger/src/base.ts`. It flakes when BUN_CACHE is cold and parallel containers race on the same symlink.
 - CI priority: build #4857 is the newest active build and thus has the lowest priority in the FIFO system. Expect some queue delay before K8s jobs start.
+
+### 6. Second merge conflict with origin/main (2026-07-03)
+
+After build #4857 and the main branch advancing further, `ci/merge-conflict` failed again.
+The conflict was in `packages/temporal/package.json` and `packages/temporal/bun.lock`.
+main added `@aws-sdk/client-s3: ^3.1001.0` as a new dependency while our branch had bumped
+`@anthropic-ai/sdk` to `^0.100.0`. Also `scout-for-lol` and `tasknotes-server` needed
+their worktree dependencies installed for pre-commit hooks to pass.
+
+Fix:
+
+- Resolved `package.json` conflict: kept `@anthropic-ai/sdk: ^0.100.0` AND added `@aws-sdk/client-s3: ^3.1001.0`
+- Ran `bun install --no-frozen-lockfile` in `packages/temporal` to regenerate `bun.lock`
+- Installed deps in `packages/llm-models`, `packages/scout-for-lol`, `packages/tasknotes-server` for typecheck/lint
+- All pre-commit hooks passed (tier-1 + tier-2 including `scout-for-lol-typecheck`, `tasknotes-server-test`)
+- Merge commit `107481f05` pushed. Build #4895 started.
+
+## Session Log — 2026-07-03 (round 2)
+
+### Done
+
+- Detected second merge conflict in `packages/temporal/package.json` and `packages/temporal/bun.lock`
+- Resolved conflict preserving both SDK bump (`^0.100.0`) and new `@aws-sdk/client-s3` dependency
+- Regenerated `packages/temporal/bun.lock` via `bun install`
+- Fixed pre-commit failures by installing missing deps in `llm-models`, `scout-for-lol`, `tasknotes-server`
+- Merge commit `107481f05` pushed
+- `ci/merge-conflict` now passing; `buildkite/monorepo/pr` build #4895 running
+
+### Remaining
+
+- Monitor build #4895 for all checks to pass
+- If `discord-plays-pokemon` EEXIST flake recurs, retry via Buildkite API
+
+### Caveats
+
+- Renovate auto-rebase is still disabled (non-Renovate author in history). Expected.
+- The `scout-for-lol` typecheck failures in the worktree were due to missing `bun install` in the worktree (not real code errors) — required installing `llm-models` and `scout-for-lol` deps locally.
+- If main advances again before #4895 finishes, another merge cycle may be needed.
