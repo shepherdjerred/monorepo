@@ -13,6 +13,10 @@ model Subscription {
   channelId String
   player    Player @relation(fields: [playerId], references: [id])
 
+  // JSON-serialized SubscriptionFilterSpec (@scout-for-lol/data); null = notify
+  // all. Validated in the app via Zod; never queried in SQL.
+  filters String?
+
   // metadata
   serverId         String
   creatorDiscordId String

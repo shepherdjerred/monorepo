@@ -12,6 +12,11 @@ import {
   SubscriptionChannelDialog,
   type SubscriptionChannelAction,
 } from "#src/components/subscription-channel-dialog.tsx";
+import {
+  SubscriptionFilterDialog,
+  type SubscriptionFilterAction,
+} from "#src/components/subscription-filter-dialog.tsx";
+import { summarizeFilters } from "#src/components/subscription-filter-fields.tsx";
 import { Button } from "#src/components/ui/button.tsx";
 import { LoadMore } from "#src/components/load-more.tsx";
 import {
@@ -43,6 +48,8 @@ export function GuildSubscriptions() {
   const [isAddOpen, setAddOpen] = useState(false);
   const [channelAction, setChannelAction] =
     useState<SubscriptionChannelAction | null>(null);
+  const [filterAction, setFilterAction] =
+    useState<SubscriptionFilterAction | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -109,6 +116,16 @@ export function GuildSubscriptions() {
           <Button
             type="button"
             size="sm"
+            variant="outline"
+            onClick={() => {
+              setFilterAction({ kind: "bulk" });
+            }}
+          >
+            Set filters for a channel
+          </Button>
+          <Button
+            type="button"
+            size="sm"
             onClick={() => {
               setAddOpen(true);
             }}
@@ -155,6 +172,7 @@ export function GuildSubscriptions() {
                 <TableHead>Alias</TableHead>
                 <TableHead>Accounts</TableHead>
                 <TableHead>Channel</TableHead>
+                <TableHead>Filters</TableHead>
                 <TableHead className="w-1" />
               </TableRow>
             </TableHeader>
@@ -183,8 +201,26 @@ export function GuildSubscriptions() {
                         ? sub.channelId
                         : `#${channel.name}`}
                     </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {summarizeFilters(sub.filters)}
+                    </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setFilterAction({
+                              kind: "edit",
+                              alias: sub.player.alias,
+                              channelId: sub.channelId,
+                              initial: sub.filters,
+                            });
+                          }}
+                        >
+                          Edit filters
+                        </Button>
                         <Button
                           type="button"
                           variant="ghost"
@@ -273,6 +309,20 @@ export function GuildSubscriptions() {
           setMessage(nextMessage);
           setError(null);
           setChannelAction(null);
+          void queryClient.invalidateQueries({ queryKey: subsKey });
+        }}
+      />
+      <SubscriptionFilterDialog
+        guildId={guildId}
+        channels={channelsQuery.data ?? []}
+        action={filterAction}
+        onOpenChange={(open) => {
+          if (!open) setFilterAction(null);
+        }}
+        onDone={(nextMessage) => {
+          setMessage(nextMessage);
+          setError(null);
+          setFilterAction(null);
           void queryClient.invalidateQueries({ queryKey: subsKey });
         }}
       />

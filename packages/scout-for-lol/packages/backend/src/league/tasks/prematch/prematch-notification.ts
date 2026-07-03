@@ -11,6 +11,7 @@ import {
   queueTypeToDisplayString,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data/index.ts";
+import { channelsPassingQueueFilter } from "#src/league/tasks/notification-filters.ts";
 import { getChannelsSubscribedToPlayers } from "#src/database/index.ts";
 import { send, ChannelSendError } from "#src/league/discord/channel.ts";
 import { getChampionDisplayName } from "#src/utils/champion.ts";
@@ -164,20 +165,29 @@ export async function sendPrematchNotification(
     return;
   }
 
-  const targetGuildIds: DiscordGuildId[] = uniqueBy(
-    channels.map((c) => DiscordGuildIdSchema.parse(c.serverId)),
-    (id) => id,
-  );
-
-  logger.info(
-    `[sendPrematchNotification] 📺 Sending to ${channels.length.toString()} channel(s) across ${targetGuildIds.length.toString()} guild(s)`,
-  );
-
+  // Apply per-subscription notification filters (queue type, etc.).
   const queueType = resolveQueueTypeFromGame(
     gameInfo.gameQueueConfigId,
     gameInfo.gameMode,
     gameInfo.gameType,
   );
+  const deliverChannels = channelsPassingQueueFilter(channels, queueType);
+  if (deliverChannels.length === 0) {
+    logger.info(
+      `[sendPrematchNotification] 🔕 Game ${gameId} filtered out for all channels (queue ${queueType ?? "unknown"})`,
+    );
+    return;
+  }
+
+  const targetGuildIds: DiscordGuildId[] = uniqueBy(
+    deliverChannels.map((c) => DiscordGuildIdSchema.parse(c.serverId)),
+    (id) => id,
+  );
+
+  logger.info(
+    `[sendPrematchNotification] 📺 Sending to ${deliverChannels.length.toString()} channel(s) across ${targetGuildIds.length.toString()} guild(s)`,
+  );
+
   const prematchMessageContent = formatPrematchMessage(
     trackedPlayers,
     queueType,
@@ -292,7 +302,7 @@ export async function sendPrematchNotification(
     // Continue with text-only notification
   }
 
-  for (const { channel, serverId } of channels) {
+  for (const { channel, serverId } of deliverChannels) {
     try {
       const message =
         loadingScreenAttachment && loadingScreenEmbed
