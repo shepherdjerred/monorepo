@@ -334,6 +334,31 @@ describe("PagerDuty alert rendering (high-fidelity, real Go template engine)", (
     );
   });
 
+  it("counts only firing alerts in the title suffix, ignoring resolved ones", async () => {
+    // With send_resolved:true, a group can carry resolved alerts alongside firing
+    // ones. The title's "(xN)" is a *firing* count, so resolved entries must not
+    // inflate it (a fully-resolved group drops the suffix entirely).
+    const data = group({
+      alertname: "VeleroBackupPartialFailure",
+      namespace: "velero",
+      summary: "Velero backup experiencing partial failures",
+      firing: [
+        { message: "backup daily-immich partially failed" },
+        { message: "backup daily-plex partially failed" },
+      ],
+      resolved: [
+        { message: "backup daily-postgres recovered" },
+        { message: "backup daily-media recovered" },
+        { message: "backup daily-vault recovered" },
+      ],
+    });
+    const r = await amRender([{ id: "title", template: pd.description, data }]);
+    // 2 firing + 3 resolved -> "(x2)", not "(x5)".
+    expect(r.get("title")?.output).toBe(
+      "Velero backup experiencing partial failures [velero] (x2)",
+    );
+  });
+
   it("maps severity labels to PagerDuty event severities", async () => {
     const cases: { severity: string; expected: string }[] = [
       { severity: "critical", expected: "critical" },

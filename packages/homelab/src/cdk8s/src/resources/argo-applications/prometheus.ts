@@ -200,7 +200,7 @@ export async function createPrometheusApp(chart: Chart) {
                 // (the original reason the body was inlined here — see
                 // packages/docs/logs/2026-07-03_pagerduty-clean-titles.md).
                 description: escapeHelmGoTemplate(
-                  `{{ if .CommonAnnotations.summary }}{{ .CommonAnnotations.summary }}{{ else }}{{ .CommonLabels.alertname }}{{ end }}{{ if .CommonLabels.namespace }} [{{ .CommonLabels.namespace }}]{{ end }}{{ if gt (len .Alerts) 1 }} (x{{ len .Alerts }}){{ end }}`,
+                  `{{ if .CommonAnnotations.summary }}{{ .CommonAnnotations.summary }}{{ else }}{{ .CommonLabels.alertname }}{{ end }}{{ if .CommonLabels.namespace }} [{{ .CommonLabels.namespace }}]{{ end }}{{ if gt (len .Alerts.Firing) 1 }} (x{{ len .Alerts.Firing }}){{ end }}`,
                 ),
                 // Link the incident back to Alertmanager.
                 client: "Alertmanager",
