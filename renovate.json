@@ -173,6 +173,12 @@
       "description": "Pin velero-plugin-for-aws to v1.14.0. v1.14.1 sends an empty x-amz-tagging header on every PutObject, which Cloudflare R2 rejects with 501 NotImplemented, failing all Velero backup-metadata uploads (PR #1307 deployed it 2026-06-21 → every backup Failed since, plus orphaned ZFS/R2 data: PagerDuty #5860, #5849). See packages/docs/todos/velero-aws-plugin-r2-tagging.md. allowedVersions:<1.14.1 keeps v1.14.1+ off the auto-PR list (surfaces on the Dependency Dashboard as ignored) until upstream omits the header on R2; revisit and unpin once R2 compat is confirmed.",
       "matchPackageNames": ["velero/velero-plugin-for-aws"],
       "allowedVersions": "<1.14.1"
+    },
+    {
+      "description": "Skip .terraform.lock.hcl hash maintenance for hashicorp/aws only. To refresh a lock, Renovate recomputes the h1 hashes itself by downloading every published platform's provider zip (lockfile/index.ts createHashes -> terraform-provider getBuilds -> calculateHashScheme1Hashes), fetching them with concurrency=16. The aws provider ships ~15 platforms at ~150-200MB each, so the parallel downloads OOM-kill the Mend-hosted runner mid-run before it can regenerate Dependency Dashboard #481. Observed 2026-07-03: two runs in a row died at 'Calculating hashes for 15 builds' on branch renovate/aws-6.x-lockfile with no 'Repository finished', leaving #481 stale and the recreate/unlimit checkboxes stuck. Reducing platforms does NOT help: OpenTofu 1.12 records h1 for every platform from the signed SHA256SUMS regardless of `tofu providers lock -platform`, and Renovate hashes every build getBuilds returns, not the ones in the lock. skipArtifactsUpdate stops the in-range lock-only refresh branch from being created at all while still surfacing aws version/constraint-bump PRs. Trade-off: the aws lock is no longer auto-maintained -- when an aws constraint bump lands, regenerate packages/homelab/src/tofu/seaweedfs/.terraform.lock.hcl with `tofu init -upgrade` (CI runs plain `tofu init`, so a stale lock fails fast and visibly). Only aws is affected; every other provider's lock is small and stays Renovate-maintained.",
+      "matchDatasources": ["terraform-provider"],
+      "matchPackageNames": ["hashicorp/aws"],
+      "skipArtifactsUpdate": true
     }
   ],
   "minimumReleaseAge": "30 days",
