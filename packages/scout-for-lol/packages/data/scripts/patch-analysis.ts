@@ -18,8 +18,8 @@ import {
 import { formatDateForChangelog } from "./update-changelog.ts";
 
 // Structured extraction is a bigger reasoning task than the old one-line
-// highlights, so use a stronger model than haiku. This runs at most weekly.
-const MODEL = "claude-sonnet-4-6";
+// highlights, so use the strongest model. This runs at most weekly.
+const MODEL = "claude-opus-4-8";
 const MAX_TURNS = "8";
 const TIMEOUT_MS = 240_000;
 
