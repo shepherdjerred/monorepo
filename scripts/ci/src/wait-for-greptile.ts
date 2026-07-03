@@ -334,8 +334,9 @@ function describeThread(thread: GreptileThread): string {
  *   - `too-many-files`: the diff exceeded Greptile's file-count limit
  *     (currently 500 files; observed phrase: "Too many files changed for
  *     review. (`N files found`, `500 file limit`)").
- *   - `excluded-author`: the PR author is in Greptile's excluded authors list
- *     (phrase: "PR author is in the excluded authors list.").
+ *   - `excluded-author`: the PR author is in Greptile's excluded-authors
+ *     list (observed phrase: "PR author is in the excluded authors list.").
+ *     Renovate bot PRs trigger this when the Greptile config excludes bots.
  *
  * In each case there is no check-run to wait for, so the gate would
  * otherwise time out after 1200s. We must detect the skip marker on the
