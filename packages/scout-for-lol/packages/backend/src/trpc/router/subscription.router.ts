@@ -16,6 +16,7 @@ import {
   RegionSchema,
   RiotIdSchema,
   DiscordAccountIdSchema,
+  SubscriptionFilterSpecSchema,
 } from "@scout-for-lol/data";
 import { router, webProcedure, webMutationProcedure } from "#src/trpc/trpc.ts";
 import {
@@ -32,6 +33,10 @@ import type { AddSubscriptionResult } from "#src/lib/subscription/types.ts";
 import { removeSubscription } from "#src/lib/subscription/remove.ts";
 import { moveSubscription } from "#src/lib/subscription/move.ts";
 import { addSubscriptionChannel } from "#src/lib/subscription/add-channel.ts";
+import {
+  setSubscriptionFilters,
+  setChannelFilters,
+} from "#src/lib/subscription/filters.ts";
 import { listSubscriptions } from "#src/lib/subscription/list.ts";
 import { ListSubscriptionsInputSchema } from "#src/lib/subscription/types.ts";
 import { recordAudit, AuditActionSchema } from "#src/lib/audit/index.ts";
@@ -100,6 +105,7 @@ export const subscriptionRouter = router({
         riotId: RiotIdSchema,
         alias: z.string().min(1),
         discordUserId: DiscordAccountIdSchema.optional(),
+        filters: SubscriptionFilterSpecSchema.nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -142,6 +148,7 @@ export const subscriptionRouter = router({
             alias: input.alias,
             discordUserId: input.discordUserId,
             creatorDiscordId: actorDiscordId,
+            filters: input.filters ?? null,
           },
           puuid,
           tx,
@@ -330,6 +337,100 @@ export const subscriptionRouter = router({
                 fromChannelId: input.fromChannelId,
                 toChannelId: input.toChannelId,
               },
+              ipAddress: ctx.webSession.ipAddress,
+              userAgent: ctx.webSession.userAgent,
+            },
+            tx,
+          );
+        }
+
+        return result;
+      });
+    }),
+
+  setFilters: webMutationProcedure
+    .input(
+      z.object({
+        guildId: DiscordGuildIdSchema,
+        channelId: DiscordChannelIdSchema,
+        alias: z.string().min(1),
+        filters: SubscriptionFilterSpecSchema.nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+      assertChannelInGuild({
+        guildId: input.guildId,
+        channelId: input.channelId,
+      });
+      const actorDiscordId = ctx.user.discordId;
+
+      return prisma.$transaction(async (tx) => {
+        const result = await setSubscriptionFilters(
+          {
+            guildId: input.guildId,
+            channelId: input.channelId,
+            alias: input.alias,
+            filters: input.filters,
+            actorDiscordId,
+          },
+          tx,
+        );
+
+        if (result.kind === "updated") {
+          await recordAudit(
+            {
+              action: "SUBSCRIPTION_SET_FILTERS",
+              actorDiscordId,
+              serverId: input.guildId,
+              targetChannelId: input.channelId,
+              payload: { alias: input.alias, filters: input.filters },
+              ipAddress: ctx.webSession.ipAddress,
+              userAgent: ctx.webSession.userAgent,
+            },
+            tx,
+          );
+        }
+
+        return result;
+      });
+    }),
+
+  setChannelFilters: webMutationProcedure
+    .input(
+      z.object({
+        guildId: DiscordGuildIdSchema,
+        channelId: DiscordChannelIdSchema,
+        filters: SubscriptionFilterSpecSchema.nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+      assertChannelInGuild({
+        guildId: input.guildId,
+        channelId: input.channelId,
+      });
+      const actorDiscordId = ctx.user.discordId;
+
+      return prisma.$transaction(async (tx) => {
+        const result = await setChannelFilters(
+          {
+            guildId: input.guildId,
+            channelId: input.channelId,
+            filters: input.filters,
+            actorDiscordId,
+          },
+          tx,
+        );
+
+        if (result.kind === "updated") {
+          await recordAudit(
+            {
+              action: "SUBSCRIPTION_BULK_SET_FILTERS",
+              actorDiscordId,
+              serverId: input.guildId,
+              targetChannelId: input.channelId,
+              payload: { filters: input.filters, count: result.count },
               ipAddress: ctx.webSession.ipAddress,
               userAgent: ctx.webSession.userAgent,
             },

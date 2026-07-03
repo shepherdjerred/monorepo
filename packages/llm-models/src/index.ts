@@ -58,6 +58,8 @@ export const ModelEntrySchema = z.object({
   description: z.string().optional(),
   pricing: ModelPricingSchema,
   contextWindow: z.number().int().positive().optional(),
+  /** When true, the sync script will not overwrite contextWindow from upstream sources. */
+  pinnedContextWindow: z.boolean().optional(),
   capabilities: ModelCapabilitiesSchema,
   status: ModelStatusSchema,
   category: z.string().optional(),

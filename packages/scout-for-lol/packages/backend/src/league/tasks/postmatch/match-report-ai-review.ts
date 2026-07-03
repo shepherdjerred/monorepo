@@ -145,12 +145,13 @@ export async function generateAiReviewIfEnabled(
   await markAiAttempted(matchId);
 
   try {
-    const review = await generateMatchReview(
-      completedMatch,
+    const review = await generateMatchReview({
+      match: completedMatch,
       matchId,
-      matchData,
+      rawMatchData: matchData,
       timelineData,
-    );
+      targetServerIds: targetGuildIds,
+    });
     return { text: review?.text, image: review?.image };
   } catch (error) {
     if (error instanceof OpenAIBudgetExceeded) {

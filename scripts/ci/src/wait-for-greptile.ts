@@ -326,7 +326,7 @@ function describeThread(thread: GreptileThread): string {
 /**
  * A reason Greptile decided not to review the PR. Greptile posts an
  * issue-level comment marked with `<!-- greptile-status -->` instead of
- * creating its usual check-run in three known cases:
+ * creating its usual check-run in two known cases:
  *
  *   - `no-reviewable-files`: every file in the diff matched the ignore
  *     patterns defined in `.greptile/config.json`, so nothing was left to
@@ -334,9 +334,9 @@ function describeThread(thread: GreptileThread): string {
  *   - `too-many-files`: the diff exceeded Greptile's file-count limit
  *     (currently 500 files; observed phrase: "Too many files changed for
  *     review. (`N files found`, `500 file limit`)").
- *   - `author-excluded`: the PR author is in Greptile's excluded authors list
- *     (observed phrase: "PR author is in the excluded authors list.").
- *     Renovate and other bots are typically excluded.
+ *   - `excluded-author`: the PR author is in Greptile's excluded-authors
+ *     list (observed phrase: "PR author is in the excluded authors list.").
+ *     Renovate bot PRs trigger this when the Greptile config excludes bots.
  *
  * In each case there is no check-run to wait for, so the gate would
  * otherwise time out after 1200s. We must detect the skip marker on the
@@ -345,7 +345,7 @@ function describeThread(thread: GreptileThread): string {
 export type GreptileSkipReason =
   | "no-reviewable-files"
   | "too-many-files"
-  | "author-excluded";
+  | "excluded-author";
 
 /**
  * Detect a Greptile skip-review status comment and return the structured
@@ -364,7 +364,7 @@ export function parseGreptileSkippedReview(
     return "too-many-files";
   }
   if (body.includes("PR author is in the excluded authors list")) {
-    return "author-excluded";
+    return "excluded-author";
   }
   return null;
 }
@@ -434,7 +434,7 @@ export function evaluateGate(input: {
         ? `Greptile reported no reviewable files for ${input.head} after applying ignore patterns`
         : skippedReview === "too-many-files"
           ? `Greptile skipped review for ${input.head}: too many files changed (over the 500-file limit)`
-          : skippedReview === "author-excluded"
+          : skippedReview === "excluded-author"
             ? `Greptile skipped review for ${input.head}: PR author is in the excluded authors list`
             : `Greptile reviewed ${input.head}`;
     return {

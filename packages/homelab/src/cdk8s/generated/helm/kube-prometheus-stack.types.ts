@@ -338,7 +338,7 @@ export type KubeprometheusstackHelmValuesDefaultRules = {
    */
   additionalRuleLabels?: KubeprometheusstackHelmValuesDefaultRulesAdditionalRuleLabels;
   /**
-   * Additional annotations for PrometheusRule alerts
+   * Additional annotations for specific PrometheusRule alerts by alert name
    *
    * @default {}
    */
@@ -2384,7 +2384,7 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v0.32.1"
+   * @default "v0.33.0"
    */
   tag?: string;
   /**
@@ -2605,7 +2605,7 @@ export type KubeprometheusstackHelmValuesGrafana = {
    */
   service?: KubeprometheusstackHelmValuesGrafanaService;
   /**
-   * @default {...} (8 keys)
+   * @default {"enabled":true}
    */
   serviceMonitor?: KubeprometheusstackHelmValuesGrafanaServiceMonitor;
 };
@@ -3058,54 +3058,6 @@ export type KubeprometheusstackHelmValuesGrafanaServiceMonitor = {
    * @default true
    */
   enabled?: boolean;
-  /**
-   * Path to use for scraping metrics. Might be different if server.root_url is set
-   * in grafana.ini
-   *
-   * @default "/metrics"
-   */
-  path?: string;
-  /**
-   * labels for the ServiceMonitor
-   *
-   * @default {}
-   */
-  labels?: KubeprometheusstackHelmValuesGrafanaServiceMonitorLabels;
-  /**
-   * Scrape interval. If not set, the Prometheus default scrape interval is used.
-   *
-   * @default ""
-   */
-  interval?: string;
-  /**
-   * @default "http"
-   */
-  scheme?: string;
-  /**
-   * @default {}
-   */
-  tlsConfig?: KubeprometheusstackHelmValuesGrafanaServiceMonitorTlsConfig;
-  /**
-   * @default "30s"
-   */
-  scrapeTimeout?: string;
-  relabelings?: unknown[];
-};
-
-export type KubeprometheusstackHelmValuesGrafanaServiceMonitorLabels = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
-};
-
-export type KubeprometheusstackHelmValuesGrafanaServiceMonitorTlsConfig = {
-  /**
-   * This type allows arbitrary additional properties beyond those defined below.
-   * This is common for config maps, custom settings, and extensible configurations.
-   */
-  [key: string]: unknown;
 };
 
 export type KubeprometheusstackHelmValuesKubernetesServiceMonitors = {
@@ -5087,7 +5039,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooks = {
    */
   validatingWebhookConfiguration?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksValidatingWebhookConfiguration;
   /**
-   * @default {...} (24 keys)
+   * @default {...} (25 keys)
    */
   deployment?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeployment;
   /**
@@ -5249,10 +5201,8 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDepl
      * @default {...} (5 keys)
      */
     image?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentImage;
+    promqlOptions?: unknown[];
     /**
-     * Define Log Format
-     * Use logfmt (default) or json logging
-     * Decrease log verbosity to errors only
      * Liveness probe
      *
      * @default {...} (6 keys)
@@ -5708,7 +5658,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatc
      */
     repository?: string;
     /**
-     * @default "1.8.3"
+     * @default "1.8.4"
      */
     tag?: string;
     /**
@@ -8130,7 +8080,7 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v3.11.3-distroless"
+   * @default "v3.13.0-distroless"
    */
   tag?: string;
   /**
@@ -9612,11 +9562,6 @@ export type KubeprometheusstackHelmParameters = {
   "grafana.service.ipFamilies"?: string;
   "grafana.service.ipFamilyPolicy"?: string;
   "grafana.serviceMonitor.enabled"?: string;
-  "grafana.serviceMonitor.path"?: string;
-  "grafana.serviceMonitor.interval"?: string;
-  "grafana.serviceMonitor.scheme"?: string;
-  "grafana.serviceMonitor.scrapeTimeout"?: string;
-  "grafana.serviceMonitor.relabelings"?: string;
   "kubernetesServiceMonitors.enabled"?: string;
   "kubeApiServer.enabled"?: string;
   "kubeApiServer.tlsConfig.serverName"?: string;
@@ -9914,6 +9859,7 @@ export type KubeprometheusstackHelmParameters = {
   "prometheusOperator.admissionWebhooks.deployment.image.tag"?: string;
   "prometheusOperator.admissionWebhooks.deployment.image.sha"?: string;
   "prometheusOperator.admissionWebhooks.deployment.image.pullPolicy"?: string;
+  "prometheusOperator.admissionWebhooks.deployment.promqlOptions"?: string;
   "prometheusOperator.admissionWebhooks.deployment.livenessProbe.enabled"?: string;
   "prometheusOperator.admissionWebhooks.deployment.livenessProbe.failureThreshold"?: string;
   "prometheusOperator.admissionWebhooks.deployment.livenessProbe.initialDelaySeconds"?: string;

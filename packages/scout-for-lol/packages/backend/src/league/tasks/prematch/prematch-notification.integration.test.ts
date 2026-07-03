@@ -22,7 +22,15 @@ const captureExceptionMock = mock(() => "mock-event-id");
 const trackedPuuid =
   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
-let channelsResult: { serverId: string; channel: string }[] = [];
+let channelsResult: {
+  serverId: string;
+  channel: string;
+  subscriptions: {
+    subscriptionId: number;
+    playerId: number;
+    filters: null;
+  }[];
+}[] = [];
 let payloadSaveStatus: "saved" | "skipped_no_bucket" | "error" = "saved";
 let buildLoadingScreenImpl: () => Promise<unknown> = async () => ({
   fake: true,
@@ -188,7 +196,13 @@ beforeEach(() => {
   callOrder.length = 0;
   sendCalls.length = 0;
   captureExceptionMock.mockClear();
-  channelsResult = [{ serverId: "123456789012345678", channel: "channel-1" }];
+  channelsResult = [
+    {
+      serverId: "123456789012345678",
+      channel: "channel-1",
+      subscriptions: [{ subscriptionId: 1, playerId: 1, filters: null }],
+    },
+  ];
   payloadSaveStatus = "saved";
   buildLoadingScreenImpl = async () => ({ fake: true });
 });

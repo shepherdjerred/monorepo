@@ -8,15 +8,22 @@ import {
 } from "bun:test";
 import { getChannelsSubscribedToPlayers } from "#src/database/index.ts";
 import {
+  setSubscriptionFilters,
+  setChannelFilters,
+} from "#src/lib/subscription/filters.ts";
+import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
+  filtersPass,
+  serializeSubscriptionFilters,
   type DiscordAccountId,
   type DiscordChannelId,
   type DiscordGuildId,
   type LeaguePuuid,
   type PlayerId,
+  type SerializedSubscriptionFilters,
 } from "@scout-for-lol/data";
 
 import {
@@ -114,6 +121,7 @@ async function createTestSubscription(
   playerId: PlayerId,
   channelId: DiscordChannelId,
   serverId: DiscordGuildId,
+  filters?: SerializedSubscriptionFilters | null,
 ) {
   return await testPrisma.subscription.create({
     data: {
@@ -123,6 +131,7 @@ async function createTestSubscription(
       creatorDiscordId: testAccountId("testcreator"),
       createdTime: new Date(),
       updatedTime: new Date(),
+      filters: filters ?? null,
     },
   });
 }
@@ -385,5 +394,213 @@ describe("getChannelsSubscribedToPlayers - Edge Cases", () => {
       DiscordChannelIdSchema.parse(channelGeneral),
       DiscordChannelIdSchema.parse(channelLol),
     ]);
+  });
+});
+
+const soloOnly = serializeSubscriptionFilters({
+  version: 1,
+  filters: [{ type: "queue", queues: ["solo"] }],
+});
+
+describe("getChannelsSubscribedToPlayers - Filters", () => {
+  test("parses a stored filter spec onto the returned subscription", async () => {
+    const guildId = testGuildId("1000000001");
+    const player = await createTestPlayer("Filtered", guildId);
+    const account = await createTestAccount(
+      testPuuid("main"),
+      player.id,
+      guildId,
+      player.alias,
+    );
+    await createTestSubscription(
+      player.id,
+      testChannelId("123"),
+      guildId,
+      soloOnly,
+    );
+
+    const puuid = LeaguePuuidSchema.parse(account.puuid);
+    const channels = await getChannelsSubscribedToPlayers([puuid], testPrisma);
+
+    expect(channels).toHaveLength(1);
+    expect(channels[0]?.subscriptions).toHaveLength(1);
+    expect(channels[0]?.subscriptions[0]?.filters).toEqual({
+      version: 1,
+      filters: [{ type: "queue", queues: ["solo"] }],
+    });
+  });
+
+  test("a channel with a solo-only sub and a no-filter sub delivers via `some`", async () => {
+    const guildId = testGuildId("1000000001");
+    const channel = testChannelId("999");
+
+    // Player A: solo-only filter, routing to the shared channel.
+    const playerA = await createTestPlayer("PlayerA", guildId);
+    const accountA = await createTestAccount(
+      testPuuid("a"),
+      playerA.id,
+      guildId,
+      playerA.alias,
+    );
+    await createTestSubscription(playerA.id, channel, guildId, soloOnly);
+
+    // Player B: no filter (notify all), same channel.
+    const playerB = await createTestPlayer("PlayerB", guildId);
+    const accountB = await createTestAccount(
+      testPuuid("b"),
+      playerB.id,
+      guildId,
+      playerB.alias,
+    );
+    await createTestSubscription(playerB.id, channel, guildId, null);
+
+    const puuids = [accountA.puuid, accountB.puuid].map((p) =>
+      LeaguePuuidSchema.parse(p),
+    );
+    const channels = await getChannelsSubscribedToPlayers(puuids, testPrisma);
+
+    expect(channels).toHaveLength(1);
+    const subs = channels[0]?.subscriptions ?? [];
+    expect(subs).toHaveLength(2);
+
+    // A solo game passes for both subs; delivered.
+    expect(
+      subs.some((s) => filtersPass(s.filters, { queueType: "solo" })),
+    ).toBe(true);
+    // An ARAM game passes only via the no-filter sub; still delivered.
+    expect(
+      subs.some((s) => filtersPass(s.filters, { queueType: "aram" })),
+    ).toBe(true);
+  });
+
+  test("a channel with only a solo-only sub is filtered out for non-solo games", async () => {
+    const guildId = testGuildId("1000000001");
+    const player = await createTestPlayer("SoloOnly", guildId);
+    const account = await createTestAccount(
+      testPuuid("main"),
+      player.id,
+      guildId,
+      player.alias,
+    );
+    await createTestSubscription(
+      player.id,
+      testChannelId("321"),
+      guildId,
+      soloOnly,
+    );
+
+    const puuid = LeaguePuuidSchema.parse(account.puuid);
+    const channels = await getChannelsSubscribedToPlayers([puuid], testPrisma);
+    const subs = channels[0]?.subscriptions ?? [];
+
+    expect(
+      subs.some((s) => filtersPass(s.filters, { queueType: "solo" })),
+    ).toBe(true);
+    expect(
+      subs.some((s) => filtersPass(s.filters, { queueType: "aram" })),
+    ).toBe(false);
+  });
+});
+
+describe("setSubscriptionFilters / setChannelFilters", () => {
+  test("setSubscriptionFilters updates a single subscription's filters", async () => {
+    const guildId = testGuildId("1000000001");
+    const channel = testChannelId("123");
+    const player = await createTestPlayer("Solo", guildId);
+    await createTestAccount(
+      testPuuid("main"),
+      player.id,
+      guildId,
+      player.alias,
+    );
+    await createTestSubscription(player.id, channel, guildId, null);
+
+    const result = await setSubscriptionFilters(
+      {
+        guildId,
+        channelId: channel,
+        alias: player.alias,
+        filters: { version: 1, filters: [{ type: "queue", queues: ["solo"] }] },
+        actorDiscordId: testAccountId("actor"),
+      },
+      testPrisma,
+    );
+    expect(result.kind).toBe("updated");
+
+    const row = await testPrisma.subscription.findFirst({
+      where: { serverId: guildId, channelId: channel },
+    });
+    expect(row?.filters).toBe(soloOnly.toString());
+  });
+
+  test("setSubscriptionFilters(null) clears filters", async () => {
+    const guildId = testGuildId("1000000001");
+    const channel = testChannelId("123");
+    const player = await createTestPlayer("Solo", guildId);
+    await createTestAccount(
+      testPuuid("main"),
+      player.id,
+      guildId,
+      player.alias,
+    );
+    await createTestSubscription(player.id, channel, guildId, soloOnly);
+
+    const result = await setSubscriptionFilters(
+      {
+        guildId,
+        channelId: channel,
+        alias: player.alias,
+        filters: null,
+        actorDiscordId: testAccountId("actor"),
+      },
+      testPrisma,
+    );
+    expect(result.kind).toBe("updated");
+
+    const row = await testPrisma.subscription.findFirst({
+      where: { serverId: guildId, channelId: channel },
+    });
+    expect(row?.filters).toBeNull();
+  });
+
+  test("setChannelFilters updates every sub in the channel and leaves others untouched", async () => {
+    const guildId = testGuildId("1000000001");
+    const targetChannel = testChannelId("111");
+    const otherChannel = testChannelId("222");
+
+    const playerA = await createTestPlayer("A", guildId);
+    await createTestAccount(testPuuid("a"), playerA.id, guildId, playerA.alias);
+    await createTestSubscription(playerA.id, targetChannel, guildId, null);
+
+    const playerB = await createTestPlayer("B", guildId);
+    await createTestAccount(testPuuid("b"), playerB.id, guildId, playerB.alias);
+    await createTestSubscription(playerB.id, targetChannel, guildId, null);
+
+    const playerC = await createTestPlayer("C", guildId);
+    await createTestAccount(testPuuid("c"), playerC.id, guildId, playerC.alias);
+    await createTestSubscription(playerC.id, otherChannel, guildId, null);
+
+    const result = await setChannelFilters(
+      {
+        guildId,
+        channelId: targetChannel,
+        filters: { version: 1, filters: [{ type: "queue", queues: ["solo"] }] },
+        actorDiscordId: testAccountId("actor"),
+      },
+      testPrisma,
+    );
+    expect(result).toEqual({ kind: "updated", count: 2 });
+
+    const targetRows = await testPrisma.subscription.findMany({
+      where: { serverId: guildId, channelId: targetChannel },
+    });
+    expect(targetRows.every((r) => r.filters === soloOnly.toString())).toBe(
+      true,
+    );
+
+    const otherRow = await testPrisma.subscription.findFirst({
+      where: { serverId: guildId, channelId: otherChannel },
+    });
+    expect(otherRow?.filters).toBeNull();
   });
 });
