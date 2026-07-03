@@ -16,6 +16,7 @@
     "@scout-for-lol/data": "file:../data",
     "@scout-for-lol/report": "file:../report",
     "@tailwindcss/postcss": "^4.1.11",
+    "@tailwindcss/typography": "^0.5.16",
     "@trpc/client": "^11.8.0",
     "astro": "^6.1.9",
     "astro-icon": "^1.1.1",
