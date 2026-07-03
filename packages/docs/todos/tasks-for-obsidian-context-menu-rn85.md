@@ -10,11 +10,10 @@ source_marker: false
 ## What
 
 `zeego` → `react-native-ios-context-menu@3.2.1` → `react-native-ios-utilities@5.2.0`
-links against `RCTRootContentView`, which React Native 0.85's **prebuilt**
-React-Core no longer exports (the class still exists in source). The app only
-links when React-Core is built from source, so the Podfile now pins
-`ENV['RCT_USE_PREBUILT_RNCORE'] = '0'` — slower builds everywhere (local,
-e2e, Xcode Cloud).
+referenced `RCTRootContentView`, which React Native 0.85 no longer compiles
+into React-Core at all. The reference lived in a dead convenience property
+(`closestParentReactContentView`, zero callers), so the app carries a bun
+patch removing it: `patches/react-native-ios-utilities@5.2.0.patch`.
 
 `react-native-ios-utilities` 5.2.0 (2025-09-28) is the latest release; no
 RN 0.85-compatible version exists yet. Two of its pods also misdeclare
@@ -26,8 +25,8 @@ which uses iOS-16-only API unguarded).
 
 Either:
 
-- upstream ships RN 0.85-compatible releases → bump, drop the
-  `RCT_USE_PREBUILT_RNCORE` pin and the context-menu post_install pin, or
+- upstream ships RN 0.85-compatible releases → bump, drop the bun patch and
+  the context-menu post_install deployment-target pin, or
 - the app replaces zeego's iOS context menus (used in
   `src/components/task/TaskRow.tsx` and `src/components/common/KanbanCard.tsx`)
   with an alternative, and the deps are removed.
