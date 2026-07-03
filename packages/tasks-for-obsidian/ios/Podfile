@@ -6,14 +6,6 @@ require Pod::Executable.execute_command('node', ['-p',
   )', __dir__]).strip
 
 platform :ios, min_ios_version_supported
-
-# react-native-ios-utilities (via react-native-ios-context-menu/zeego) links
-# against RCTRootContentView, which RN 0.85's prebuilt React-Core no longer
-# exports. Building core from source keeps the legacy symbol available.
-# Revisit when those deps ship RN 0.85-compatible releases
-# (see packages/docs/todos/tasks-for-obsidian-context-menu-rn85.md).
-ENV['RCT_USE_PREBUILT_RNCORE'] = '0'
-
 prepare_react_native_project!
 
 linkage = ENV['USE_FRAMEWORKS']

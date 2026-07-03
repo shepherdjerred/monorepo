@@ -327,20 +327,49 @@ async function buildAndInstallApp(simulator: SimDevice): Promise<void> {
   runSimctl(["install", simulator.udid, appPath]);
 }
 
+/**
+ * Metro answers /status long before it can serve the app bundle — the first
+ * Watchman crawl + bundle build of this monorepo takes minutes. Running
+ * Maestro before the bundle is servable red-screens the Debug app ("could
+ * not connect to development server") and every flow fails at launch.
+ */
+async function waitForJsBundle(): Promise<void> {
+  log(
+    "waiting for Metro to serve the JS bundle (first build can take minutes)",
+  );
+  await pollUntil("Metro JS bundle", 300_000, async () => {
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${String(METRO_PORT)}/index.bundle?platform=ios&dev=true&lazy=true`,
+      );
+      if (!response.ok) return false;
+      await response.arrayBuffer();
+      return true;
+    } catch {
+      return false;
+    }
+  });
+  log("Metro bundle ready");
+}
+
 // ---------------------------------------------------------------------------
 // Maestro
 // ---------------------------------------------------------------------------
 
-async function runMaestro(): Promise<void> {
+async function runMaestro(simulator: SimDevice): Promise<void> {
   const which = spawnSync("which", ["maestro"], { encoding: "utf8" });
   if (which.status !== 0) {
     fail(
-      "maestro CLI not found — install it: curl -Ls https://get.maestro.mobile.dev | bash",
+      "maestro CLI not found — install it: brew install mobile-dev-inc/tap/maestro",
     );
   }
+  // Pin the device: maestro aborts with "Multiple devices connected" if any
+  // other simulator (or a paired watch/host) is also up.
   const proc = spawn(
     "maestro",
     [
+      "--device",
+      simulator.udid,
       "test",
       path.join("e2e", "maestro"),
       "--env",
@@ -443,9 +472,10 @@ async function main(): Promise<void> {
     const metro = await ensureMetro();
     if (metro !== null) children.push(metro);
     await buildAndInstallApp(simulator);
+    await waitForJsBundle();
 
     // (6) Maestro flows
-    await runMaestro();
+    await runMaestro(simulator);
 
     // (7) vault-state assertions
     await assertVaultState(vaultDir);

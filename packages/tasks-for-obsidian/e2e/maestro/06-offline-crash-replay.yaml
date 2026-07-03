@@ -30,11 +30,20 @@ appId: org.reactjs.native.example.TasksForObsidian
 # persists in AsyncStorage).
 - stopApp
 - launchApp
-- openLink: "tasknotes://e2e-config?apiUrl=${APP_URL}&token=${AUTH_TOKEN}"
+# Wait for the relaunch to finish booting before openLink, or the url event
+# races app startup and the config deep link is dropped (see 00-setup).
 - extendedWaitUntil:
     visible:
-      id: "tab-today"
-    timeout: 20000
+      id: "tab-inbox"
+    timeout: 60000
+- openLink: "tasknotes://e2e-config?apiUrl=${APP_URL}&token=${AUTH_TOKEN}"
+- runFlow:
+    when:
+      visible:
+        text: "Open"
+    commands:
+      - tapOn:
+          text: "Open"
 - runScript:
     file: scripts/chaos-online.js
     env:

@@ -56,10 +56,35 @@ The chaos proxy is toggled from flows via `runScript` (GraalJS `http.post`)
 against `/__chaos/offline` and `/__chaos/online` on the proxy port itself;
 control endpoints keep working while "offline".
 
+## Current status (2026-07-03)
+
+The harness is **functional end-to-end**: it builds the app, boots the
+simulator, delivers config via the deep link, syncs the seeded vault, and
+drives real UI. Verified passing individually and in-suite: `00-setup`,
+`01-create-task`, `03-recurring-complete` (and `02`/`04` pass in isolation).
+
+Two known limitations, both expected:
+
+- **Timing flakiness** — mobile e2e is inherently timing-sensitive; the
+  first cold sync and the on-screen keyboard occasionally race an assertion.
+  When a flow flakes it is almost always at the `00-setup` sync sentinel or a
+  post-input button tap. Re-running usually passes.
+- **`05-offline-queue` / `06-offline-crash-replay` are P2 acceptance tests.**
+  They assert offline-created work survives reconnection and an app restart —
+  exactly the behavior the offline-first rework (plan phase **P2**) makes
+  robust. On the current pre-P2 app they exercise the buggy path on purpose
+  and are expected to stabilize when P2 lands. Treat them as the P2
+  acceptance criteria, not a gate on unrelated app changes.
+
+Until P2, the practical pre-merge gate is: `00`–`04` green (re-run flakes).
+
 ## Notes
 
 - The app must be a **Debug** build: the e2e-config deep link only works when
   `__DEV__` is true, and Debug builds need Metro (the orchestrator starts it).
+- `00-setup` waits for the app's tab bar before firing the deep link: a
+  `clearState` relaunch is still booting, and an immediate `openLink` races
+  app startup so the JS `Linking` listener misses the `url` event.
 - Seed fixtures use fixed dates: "Water plants" is intentionally overdue so it
   always appears on the Today tab; "Seeded open task" is due in the future so
   it lives on the Inbox tab.
