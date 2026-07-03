@@ -19,13 +19,19 @@ type CaptureFn = (
   opts?: { env?: Record<string, string> },
 ) => Promise<CaptureResult>;
 
+// A rulesets payload with no required-status-checks rule (empty required set).
+const EMPTY_RULESET_STDOUT = JSON.stringify([]);
+
 // Route the two gh reads by URL: the rulesets endpoint vs classic protection.
-function stubCapture(classic: CaptureResult): CaptureFn {
+function stubCapture(
+  classic: CaptureResult,
+  rulesetStdout: string = RULESET_STDOUT,
+): CaptureFn {
   return (args) => {
     const url = args[2] ?? "";
     if (url.includes("rules/branches/")) {
       return Promise.resolve({
-        stdout: RULESET_STDOUT,
+        stdout: rulesetStdout,
         stderr: "",
         exitCode: 0,
       });
@@ -37,10 +43,13 @@ function stubCapture(classic: CaptureResult): CaptureFn {
   };
 }
 
-async function loadWithCapture(classic: CaptureResult) {
+async function loadWithCapture(
+  classic: CaptureResult,
+  rulesetStdout: string = RULESET_STDOUT,
+) {
   void mock.module("./exec.ts", () => ({
     ...actualExec,
-    capture: stubCapture(classic),
+    capture: stubCapture(classic, rulesetStdout),
   }));
   return import("./github.ts");
 }
@@ -70,6 +79,22 @@ describe("getRequiredCheckContexts — classic-protection 403", () => {
       exitCode: 1,
     });
     const result = await getRequiredCheckContexts(CTX);
+    expect(result.known).toBe(false);
+  });
+
+  it("fails closed on 403 when rulesets is ALSO empty (can't confirm zero required checks)", async () => {
+    const { getRequiredCheckContexts } = await loadWithCapture(
+      {
+        stdout: "",
+        stderr: "gh: Resource not accessible by integration (HTTP 403)",
+        exitCode: 1,
+      },
+      EMPTY_RULESET_STDOUT,
+    );
+    const result = await getRequiredCheckContexts(CTX);
+    // With classic unreadable (403) AND rulesets empty, we cannot distinguish
+    // "no required checks" from "classic held the only ones" — must fail closed
+    // rather than let the DoD gate treat the branch as green.
     expect(result.known).toBe(false);
   });
 });

@@ -371,9 +371,13 @@ export async function getRequiredCheckContexts(
   if (!classic.known) {
     // The token can't READ classic protection (403), but rulesets IS
     // authoritative for this branch (main is ruleset-protected). Defer to
-    // rulesets rather than fail closed — a real unknown (parse error, non-403
-    // failure) still falls through and fails closed below.
-    if (classic.permissionDenied === true) {
+    // rulesets rather than fail closed — but ONLY when rulesets actually
+    // enumerates required checks. If rulesets is also empty we cannot tell
+    // "no required checks" from "classic held the only ones and we couldn't
+    // read them", so fail closed rather than let the DoD gate treat an
+    // unreadable branch as green. A real unknown (parse error, non-403
+    // failure) also falls through and fails closed below.
+    if (classic.permissionDenied === true && ruleset.contexts.length > 0) {
       console.warn(
         JSON.stringify({
           level: "warning",

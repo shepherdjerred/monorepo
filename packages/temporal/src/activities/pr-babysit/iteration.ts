@@ -46,15 +46,24 @@ function heartbeatIntervalMs(): number {
 }
 
 /**
- * Record a Temporal heartbeat, guarded for "outside Temporal" so the local PoC
- * script (which calls this activity directly) is a no-op. Without this the
- * activity's `heartbeatTimeout` fires and Temporal kills every iteration.
+ * Record a Temporal heartbeat. `Context.current()` throws when the activity is
+ * invoked outside a Temporal worker (the local PoC script calls it as a plain
+ * function), so the call is guarded — otherwise the activity's `heartbeatTimeout`
+ * fires and Temporal kills every iteration.
+ *
+ * The guard suppresses ALL heartbeat failures, not only the outside-Temporal
+ * case, but it logs them: a genuine failure inside a live activity (serialization,
+ * payload-too-large) then leaves evidence instead of silently letting the
+ * heartbeat timeout kill the run. Outside a Temporal activity this is a benign,
+ * expected no-op (mirrors `alert-remediation.ts`).
  */
 function safeHeartbeat(payload: Record<string, unknown>): void {
   try {
     Context.current().heartbeat(payload);
-  } catch {
-    // Called outside a Temporal activity (local PoC / tests): no-op.
+  } catch (error: unknown) {
+    jsonLog("info", "heartbeat skipped", {
+      reason: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
