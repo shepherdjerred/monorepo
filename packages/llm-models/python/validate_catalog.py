@@ -60,6 +60,7 @@ class ModelEntry(BaseModel):
     description: Optional[str] = None
     pricing: Pricing
     contextWindow: Optional[int] = Field(default=None, gt=0)
+    pinnedContextWindow: Optional[bool] = None
     capabilities: Capabilities
     status: Literal["current", "preview", "deprecated"]
     category: Optional[str] = None
