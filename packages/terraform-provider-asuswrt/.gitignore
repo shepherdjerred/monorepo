@@ -1,0 +1,13 @@
+# Built provider binary (see GNUmakefile `build`/`install`)
+/terraform-provider-asuswrt
+/terraform-provider-asuswrt.exe
+
+# Go build/test artifacts
+*.test
+*.out
+
+# Local OpenTofu example/dev artifacts
+**/.terraform/
+**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*

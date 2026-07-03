@@ -22,11 +22,19 @@ tofu/
 │   ├── providers.tf     # AWS provider ~> 5.0 (custom S3 endpoint)
 │   ├── variables.tf     # Input variables
 │   └── buckets.tf       # S3 bucket definitions
-└── tailscale/           # Tailnet ACL policy (deny-by-default access control)
+├── tailscale/           # Tailnet ACL policy (deny-by-default access control)
+│   ├── backend.tf       # S3 state backend (SeaweedFS)
+│   ├── providers.tf     # Tailscale provider ~> 0.17 (OAuth via env)
+│   ├── variables.tf     # Input variables
+│   └── acl.tf           # tailscale_acl: tagOwners, ACLs, ssh, tests
+└── asuswrt/             # Asus routers & APs (custom provider, LOCAL-RUN ONLY)
     ├── backend.tf       # S3 state backend (SeaweedFS)
-    ├── providers.tf     # Tailscale provider ~> 0.17 (OAuth via env)
-    ├── variables.tf     # Input variables
-    └── acl.tf           # tailscale_acl: tagOwners, ACLs, ssh, tests
+    ├── providers.tf     # asuswrt provider 0.1.0 (filesystem mirror), 3 aliases
+    ├── variables.tf     # Router credentials
+    ├── router.tf        # RT-AX88U Pro @ .1 (system, DHCP, port-forward, wifi)
+    ├── ap-ax88u.tf      # RT-AX88U @ .213 (system, wifi)
+    ├── ap-be86u.tf      # RT-BE86U @ .2 (system)
+    └── import.sh        # Import existing device config into state
 ```
 
 Each subdirectory is an independent root module with its own state.
@@ -40,6 +48,7 @@ Each subdirectory is an independent root module with its own state.
   - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` - S3 credentials for SeaweedFS state backend
   - `TF_VAR_cloudflare_account_id` - Cloudflare account ID
   - `TAILSCALE_OAUTH_CLIENT_ID` / `TAILSCALE_OAUTH_CLIENT_SECRET` - Tailscale OAuth client (scope `acl`) for the `tailscale` module
+  - `TF_VAR_asuswrt_username` / `TF_VAR_asuswrt_password` - Asus router/AP admin login for the `asuswrt` module (local-run only)
 
 ## Usage
 
@@ -64,6 +73,10 @@ tofu -chdir=seaweedfs apply
 
 There is no CI for these stacks (the Dagger/Buildkite pipeline was removed
 2026-07). Run `tofu plan` / `tofu apply` manually per module.
+
+The `asuswrt` module is **excluded from CI** (not in `TOFU_STACKS` in
+`scripts/ci/src/catalog.ts`): the CI container has tailnet-only egress and cannot
+reach the LAN routers. It is local-run only — see `asuswrt/README.md`.
 
 ## What's Managed
 

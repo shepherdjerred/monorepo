@@ -133,15 +133,17 @@ func TestReadOptionalString(t *testing.T) {
 		}
 	})
 
-	t.Run("key-present-target-null-no-update", func(t *testing.T) {
+	t.Run("key-present-target-null-populates", func(t *testing.T) {
 		t.Parallel()
 
+		// Optional+Computed: a null target (e.g. fresh import) is populated so
+		// state reflects the router.
 		target := types.StringNull()
 		result := map[string]string{"hostname": "new"}
 		readOptionalString(&target, result, "hostname")
 
-		if !target.IsNull() {
-			t.Errorf("expected target to remain null")
+		if target.ValueString() != "new" {
+			t.Errorf("expected target to be populated with %q, got %q (null=%v)", "new", target.ValueString(), target.IsNull())
 		}
 	})
 
@@ -185,15 +187,16 @@ func TestReadOptionalBoolFromFlag(t *testing.T) {
 		}
 	})
 
-	t.Run("target-null-skipped", func(t *testing.T) {
+	t.Run("target-null-populates", func(t *testing.T) {
 		t.Parallel()
 
+		// Optional+Computed: a null target is populated from the flag on import.
 		target := types.BoolNull()
 		result := map[string]string{"enabled": "1"}
 		readOptionalBoolFromFlag(&target, result, "enabled")
 
-		if !target.IsNull() {
-			t.Errorf("expected target to remain null")
+		if target.IsNull() || !target.ValueBool() {
+			t.Errorf("expected target to be populated true, got null=%v value=%v", target.IsNull(), target.ValueBool())
 		}
 	})
 
@@ -249,15 +252,16 @@ func TestReadOptionalInt64FromString(t *testing.T) {
 		}
 	})
 
-	t.Run("target-null-skipped", func(t *testing.T) {
+	t.Run("target-null-populates", func(t *testing.T) {
 		t.Parallel()
 
+		// Optional+Computed: a null target is populated from the numeric value.
 		target := types.Int64Null()
 		result := map[string]string{"port": "42"}
 		readOptionalInt64FromString(&target, result, "port")
 
-		if !target.IsNull() {
-			t.Errorf("expected target to remain null")
+		if target.IsNull() || target.ValueInt64() != 42 {
+			t.Errorf("expected target to be populated 42, got null=%v value=%d", target.IsNull(), target.ValueInt64())
 		}
 	})
 }
