@@ -21,8 +21,12 @@ import {
 import {
   MatchIdSchema,
   DiscordGuildIdSchema,
+  resolveQueueTypeFromGame,
 } from "@scout-for-lol/data/index.ts";
-import { send, ChannelSendError } from "#src/league/discord/channel.ts";
+import {
+  channelsPassingQueueFilter,
+  deliverToChannels,
+} from "#src/league/tasks/notification-filters.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import {
   shouldCheckPlayer,
@@ -116,15 +120,24 @@ async function processMatch(
   );
   const channels = await getChannelsSubscribedToPlayers(puuids);
 
-  if (channels.length === 0) {
+  // Resolve queue + apply per-subscription filters; deliver only to channels
+  // with at least one passing in-match subscription (covers "no subscribers"
+  // too, since that yields no delivery channels).
+  const queueType = resolveQueueTypeFromGame(
+    matchData.info.queueId,
+    matchData.info.gameMode,
+    matchData.info.gameType,
+  );
+  const deliverChannels = channelsPassingQueueFilter(channels, queueType);
+  if (deliverChannels.length === 0) {
     logger.info(
-      `[processMatch] ⚠️  No channels subscribed for match ${matchId}`,
+      `[processMatch] 🔕 No delivery channels for match ${matchId} (queue ${queueType ?? "unknown"}, ${channels.length.toString()} subscribed)`,
     );
     return;
   }
 
   const targetGuildIds: DiscordGuildId[] = uniqueBy(
-    channels.map((c) => DiscordGuildIdSchema.parse(c.serverId)),
+    deliverChannels.map((c) => DiscordGuildIdSchema.parse(c.serverId)),
     (id) => id,
   );
 
@@ -146,25 +159,12 @@ async function processMatch(
     return;
   }
 
-  for (const { channel, serverId } of channels) {
-    try {
-      await send(message, channel, DiscordGuildIdSchema.parse(serverId));
-    } catch (error) {
-      if (error instanceof ChannelSendError && error.permissionError) {
-        logger.warn(
-          `[processMatch] ⚠️  Permission error for channel ${channel}: ${error.message}`,
-        );
-        continue;
-      }
-      logger.error(
-        `[processMatch] ❌ Failed to send to channel ${channel}:`,
-        error,
-      );
-      Sentry.captureException(error, {
-        tags: { source: "discord-notification", matchId, channel },
-      });
-    }
-  }
+  await deliverToChannels({
+    message,
+    channels: deliverChannels,
+    logPrefix: "[processMatch]",
+    sentryTags: { matchId },
+  });
 
   logger.info(`[processMatch] ✅ Processed match ${matchId}`);
 }
