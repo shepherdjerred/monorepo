@@ -119,10 +119,32 @@ export async function getChannelsSubscribedToPlayers(
           entry = { serverId: subscription.serverId, subscriptions: new Map() };
           byChannel.set(channel, entry);
         }
+        const filters = parseSubscriptionFilters(subscription.filters);
+        // `parseSubscriptionFilters` is fail-open: a corrupt/unknown blob
+        // yields null (= notify-all) rather than dropping notifications. That
+        // is the right runtime behavior, but a silent revert is invisible.
+        // Surface it: a non-empty raw value that parses to null is corruption
+        // (invalid JSON, wrong schema version, manual DB edit), not an
+        // intentionally-empty filter set.
+        const rawFilters = subscription.filters;
+        if (
+          filters === null &&
+          rawFilters !== null &&
+          rawFilters.trim() !== ""
+        ) {
+          logger.warn(
+            `⚠️  Subscription ${subscription.id.toString()} in ${channel} has unparseable filters; falling back to notify-all`,
+            {
+              subscriptionId: subscription.id,
+              channelId: channel,
+              serverId: subscription.serverId,
+            },
+          );
+        }
         entry.subscriptions.set(subscription.id, {
           subscriptionId: subscription.id,
           playerId: subscription.playerId,
-          filters: parseSubscriptionFilters(subscription.filters),
+          filters,
         });
       }
     }
