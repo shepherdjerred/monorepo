@@ -72,3 +72,28 @@ PR, all four diff hunks were either pure key reordering or the bad Opus context 
 - The write-back loop in `sync-from-upstreams.ts` patches `input` and `output` unconditionally
   for all text models. If upstream ever reports a value we don't want applied (like the context
   window issue), those fields would also need a pinning mechanism.
+
+## Session Log — 2026-07-03
+
+### Done
+
+- Identified root cause of `mag-greptile-review` CI failure: greptile flagged a P1 schema mismatch
+  — `pinnedContextWindow` was present in `catalog.json` and the Zod schema but NOT in
+  `catalog.schema.json` (which has `additionalProperties: false`) or the Python Pydantic model
+  (which has `extra: "forbid"`).
+- Fixed `packages/llm-models/catalog.schema.json`: added `"pinnedContextWindow": { "type": "boolean" }` to `modelEntry.properties`.
+- Fixed `packages/llm-models/python/validate_catalog.py`: added `pinnedContextWindow: Optional[bool] = None` to `ModelEntry`.
+- Verified Python validator passes (`OK: 11 models validated`), all 12 bun tests pass.
+- Committed as `fa5616ea3` and pushed to `chore/llm-catalog-refresh-33ca64b7`.
+
+### Remaining
+
+- CI (Buildkite) will re-trigger on the new commit. Greptile should re-review and the P1
+  schema mismatch should be resolved. Monitor the next CI run.
+- `mag-greptile-review` is a HARD check (not soft_fail) — it must pass for the parent build
+  to go green.
+
+### Caveats
+
+- The `greptileReviewStep()` has no `soft_fail` — it's a hard gate. CI will only go green
+  once greptile's re-review is clean on the new commit.
