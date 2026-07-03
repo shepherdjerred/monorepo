@@ -313,7 +313,6 @@ export const ReportAiStreamEventSchema = z.discriminatedUnion("type", [
     .object({
       type: z.literal("started"),
       runId: z.uuid(),
-      status: ReportAiEditStatusSchema,
     })
     .strict(),
   z

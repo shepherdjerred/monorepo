@@ -108,6 +108,16 @@ function processEventBlock(
     return;
   }
 
-  const raw: unknown = JSON.parse(dataLine.slice("data: ".length));
-  onEvent(ReportAiStreamEventSchema.parse(raw));
+  let event: ReportAiStreamEvent;
+  try {
+    const raw: unknown = JSON.parse(dataLine.slice("data: ".length));
+    event = ReportAiStreamEventSchema.parse(raw);
+  } catch {
+    // The backend validates every event before emitting, so a frame that
+    // fails to parse here means the stream was corrupted in transit (e.g. a
+    // proxy mangled a chunk). Surface a friendly message instead of leaking a
+    // raw "Unexpected token …" / Zod error to the user.
+    throw new Error("The AI report stream was corrupted. Please try again.");
+  }
+  onEvent(event);
 }

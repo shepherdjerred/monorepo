@@ -115,7 +115,6 @@ export async function handleReportAiRoute(
       emit({
         type: "started",
         runId: ticket.runId,
-        status,
       });
 
       void (async () => {
