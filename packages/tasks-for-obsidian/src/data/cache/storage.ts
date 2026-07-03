@@ -27,24 +27,30 @@ const SettingsSchema = z.object({
   offlineModeEnabled: z.boolean(),
 });
 
+/**
+ * Per-element salvage: one corrupt task must not discard the whole offline
+ * cache (the old whole-array parse dropped everything). Pure and exported
+ * for tests — AsyncStorage itself needs the native module.
+ */
+export function parseTaskCache(raw: string | null): Task[] {
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const tasks: Task[] = [];
+    for (const item of parsed) {
+      const result = TaskSchema.safeParse(item);
+      if (result.success) tasks.push(result.data);
+    }
+    return tasks;
+  } catch {
+    return [];
+  }
+}
+
 export const TypedStorage = {
   async getTasks(): Promise<Task[]> {
-    const raw = await AsyncStorage.getItem(KEYS.TASKS);
-    if (!raw) return [];
-    try {
-      const parsed: unknown = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return [];
-      // Per-element salvage: one corrupt task must not discard the whole
-      // offline cache (the old whole-array parse dropped everything).
-      const tasks: Task[] = [];
-      for (const item of parsed) {
-        const result = TaskSchema.safeParse(item);
-        if (result.success) tasks.push(result.data);
-      }
-      return tasks;
-    } catch {
-      return [];
-    }
+    return parseTaskCache(await AsyncStorage.getItem(KEYS.TASKS));
   },
 
   async setTasks(tasks: Task[]): Promise<void> {
