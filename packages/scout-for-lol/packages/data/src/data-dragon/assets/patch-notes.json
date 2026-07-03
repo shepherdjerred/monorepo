@@ -1,0 +1,23 @@
+{
+  "patch": "26.13",
+  "title": "Patch 26.13 Notes",
+  "url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-13-notes/",
+  "date": "2026 07 01",
+  "overview": "A balance-focused patch that reins in snowball-heavy marksmen and hands junglers a stronger early game, with a light touch on mid-lane mages.",
+  "themes": ["ADC item tuning", "jungle early game"],
+  "summary": [
+    "Marksman item spikes tuned down to slow bot-lane snowballing",
+    "Jungle early game buffed via better objective and camp rewards"
+  ],
+  "champions": [],
+  "items": [],
+  "systems": [
+    {
+      "area": "Jungle",
+      "direction": "buff",
+      "magnitude": "moderate",
+      "summary": "Epic monster and camp gold up early",
+      "details": "Jungle camps and early objectives grant more gold, so proactive junglers get rewarded harder for clearing and contesting."
+    }
+  ]
+}

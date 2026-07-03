@@ -307,12 +307,12 @@ async function main(): Promise<void> {
     }
 
     const startTime = Date.now();
-    const reviewResult = await generateMatchReview(
+    const reviewResult = await generateMatchReview({
       match,
       matchId,
-      rawMatch,
-      rawTimeline,
-    );
+      rawMatchData: rawMatch,
+      timelineData: rawTimeline,
+    });
     const duration = Date.now() - startTime;
 
     if (!reviewResult) {
