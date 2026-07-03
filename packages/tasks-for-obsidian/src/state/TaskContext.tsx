@@ -6,32 +6,45 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 
 import type { AppError } from "../domain/errors";
+import { NotFoundError } from "../domain/errors";
 import type { Result } from "../domain/result";
 import { OK_VOID, err, ok } from "../domain/result";
-import { ConnectionError } from "../domain/errors";
 import { getNextStatus } from "../domain/status";
-import { isRecurring, nextOptimistic } from "../domain/recurrence";
+import { isRecurring, localTodayYmd } from "../domain/recurrence";
 import type {
   CreateTaskRequest,
   Task,
   TaskId,
   UpdateTaskRequest,
 } from "../domain/types";
-import { contextName, projectName, tagName, taskId } from "../domain/types";
 import { syncWidgetData } from "../native/sync-widget";
-import { MutationQueue } from "../data/sync/MutationQueue";
-import { SyncEngine } from "../data/sync/SyncEngine";
-import { TypedStorage } from "../data/cache/storage";
+import { runMigrations } from "../data/cache/migrations";
+import { CommandQueue, type DeadLetterEntry } from "../data/sync/CommandQueue";
+import { SyncEngine, type SyncStatus } from "../data/sync/SyncEngine";
+import { TaskStore } from "../data/store/TaskStore";
 import { useApiClient } from "./ApiClientContext";
 
+/**
+ * React face of the offline-first store. Every mutation is a single
+ * `store.dispatch(...)` — the store persists the command, updates the view
+ * optimistically, and pokes the SyncEngine. No mutation here ever calls the
+ * network directly (the old enqueue + direct call + replay triple execution
+ * was the root data-loss bug).
+ */
+
 type TaskContextValue = {
-  tasks: Map<TaskId, Task>;
+  tasks: ReadonlyMap<TaskId, Task>;
   isLoading: boolean;
   error: AppError | null;
   pendingMutationCount: number;
+  deadLetters: readonly DeadLetterEntry[];
+  syncStatus: SyncStatus;
+  lastSyncTime: number | null;
+  resolveTaskId: (id: TaskId) => TaskId;
   createTask: (req: CreateTaskRequest) => Promise<Result<Task, AppError>>;
   updateTask: (
     id: TaskId,
@@ -40,158 +53,85 @@ type TaskContextValue = {
   deleteTask: (id: TaskId) => Promise<Result<void, AppError>>;
   toggleStatus: (id: TaskId) => Promise<Result<Task, AppError>>;
   refreshTasks: () => Promise<Result<void, AppError>>;
+  retryDeadLetter: (commandId: string) => Promise<void>;
+  discardDeadLetter: (commandId: string) => Promise<void>;
 };
 
 const TaskContext = createContext<TaskContextValue | null>(null);
 
-let tempCounter = 0;
-function generateTempId(): TaskId {
-  tempCounter += 1;
-  return taskId(`tmp-${String(Date.now())}-${String(tempCounter)}`);
-}
+const IDLE_STATUS: SyncStatus = {
+  state: "idle",
+  lastError: null,
+  nextRetryAt: null,
+};
 
 export function TaskProvider({ children }: { children: React.ReactNode }) {
   const client = useApiClient();
-  const [tasks, setTasks] = useState(new Map<TaskId, Task>());
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<AppError | null>(null);
-  const [pendingMutationCount, setPendingMutationCount] = useState(0);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(IDLE_STATUS);
+  const [restored, setRestored] = useState(false);
 
-  const mutationQueueRef = useRef<MutationQueue | null>(null);
-  mutationQueueRef.current ??= new MutationQueue();
-  const mutationQueue = mutationQueueRef.current;
+  // Queue and store live for the whole app session; only the engine is
+  // rebuilt when the API client changes (URL/token edited in Settings).
+  const stackRef = useRef<{ queue: CommandQueue; store: TaskStore } | null>(
+    null,
+  );
+  if (stackRef.current === null) {
+    const queue = new CommandQueue();
+    stackRef.current = { queue, store: new TaskStore(queue) };
+  }
+  const { queue, store } = stackRef.current;
 
-  const updatePendingCount = useCallback(() => {
-    setPendingMutationCount(mutationQueue.pending.length);
-  }, [mutationQueue]);
-
-  const setTasksFromArray = useCallback((list: Task[]) => {
-    const map = new Map<TaskId, Task>();
-    for (const t of list) {
-      map.set(t.id, t);
-    }
-    setTasks(map);
-  }, []);
-
-  const syncEngine = useMemo(
+  const engine = useMemo(
     () =>
-      client === null
-        ? null
-        : new SyncEngine(client, mutationQueue, setTasksFromArray),
-    [client, mutationQueue, setTasksFromArray],
+      new SyncEngine(client, queue, store, { onStatusChange: setSyncStatus }),
+    [client, queue, store],
   );
 
-  // Restore queue + cached tasks once on mount. React 18+ silently drops
-  // setState calls on unmounted components, so no cancellation flag needed.
+  useEffect(() => {
+    store.onDispatch = () => {
+      engine.requestSync();
+    };
+    return () => {
+      store.onDispatch = null;
+    };
+  }, [engine, store]);
+
+  // One-time startup: migrate old storage formats, then load durable state.
   useEffect(() => {
     void (async () => {
-      await mutationQueue.restore();
-      updatePendingCount();
-      const cached = await TypedStorage.getTasks();
-      if (cached.length > 0) {
-        setTasksFromArray(cached);
-      }
+      await runMigrations();
+      await store.restore();
+      setRestored(true);
     })();
-  }, [mutationQueue, setTasksFromArray, updatePendingCount]);
+  }, [store]);
 
-  const refreshTasks = useCallback(async (): Promise<
-    Result<void, AppError>
-  > => {
-    if (syncEngine === null) {
-      return err(new ConnectionError("API URL not configured"));
-    }
-    setIsLoading(true);
-    setError(null);
-    const result = await syncEngine.fullSync();
-    if (!result.ok) {
-      setError(result.error);
-    }
-    updatePendingCount();
-    setIsLoading(false);
-    return result;
-  }, [syncEngine, updatePendingCount]);
-
-  // Initial load when client becomes available.
+  // First sync once both the durable state and a client are available.
   useEffect(() => {
-    if (syncEngine === null) return;
-    void refreshTasks();
-  }, [syncEngine, refreshTasks]);
+    if (restored && client !== null) {
+      engine.requestSync();
+    }
+  }, [restored, client, engine]);
+
+  const subscribe = useCallback(
+    (onChange: () => void) => store.subscribe(onChange),
+    [store],
+  );
+  const getSnapshot = useCallback(() => store.getSnapshot(), [store]);
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot);
 
   useEffect(() => {
-    syncWidgetData(tasks);
-  }, [tasks]);
-
-  const replayInBackground = useCallback(() => {
-    if (client === null) return;
-    void (async () => {
-      await mutationQueue.replay(client);
-      updatePendingCount();
-    })();
-  }, [client, mutationQueue, updatePendingCount]);
+    syncWidgetData(snapshot.tasks);
+  }, [snapshot.tasks]);
 
   const createTask = useCallback(
     async (req: CreateTaskRequest): Promise<Result<Task, AppError>> => {
-      if (client === null) {
-        return err(new ConnectionError("API URL not configured"));
+      const created = await store.dispatch({ type: "create", payload: req });
+      if (created === undefined) {
+        return err(new NotFoundError("Task", "optimistic create"));
       }
-      const tempId = generateTempId();
-      const now = new Date().toISOString();
-      const optimistic: Task = {
-        id: tempId,
-        path: "",
-        title: req.title,
-        status: req.status ?? "open",
-        priority: req.priority ?? "normal",
-        due: req.due,
-        scheduled: req.scheduled,
-        contexts:
-          req.contexts === undefined
-            ? []
-            : req.contexts.map((c) => contextName(c)),
-        projects:
-          req.projects === undefined
-            ? []
-            : req.projects.map((p) => projectName(p)),
-        tags: req.tags === undefined ? [] : req.tags.map((t) => tagName(t)),
-        recurrence: req.recurrence,
-        recurrenceAnchor: req.recurrenceAnchor,
-        completeInstances: [],
-        skippedInstances: [],
-        timeEntries: [],
-        blockedBy: [],
-        reminders: [],
-        archived: false,
-        totalTrackedTime: 0,
-        isBlocked: false,
-        isBlocking: false,
-        extraFields: req.extraFields ?? {},
-        details: req.details,
-        dateCreated: now,
-        dateModified: now,
-      };
-      setTasks((prev) => {
-        const next = new Map(prev);
-        next.set(tempId, optimistic);
-        return next;
-      });
-      await mutationQueue.enqueue({ type: "create", payload: req });
-      updatePendingCount();
-      const result = await client.createTask(req);
-      if (result.ok) {
-        setTasks((prev) => {
-          const next = new Map(prev);
-          next.delete(tempId);
-          next.set(result.value.id, result.value);
-          return next;
-        });
-        await mutationQueue.replay(client);
-        updatePendingCount();
-        return result;
-      }
-      // Server unreachable: optimistic task with temp ID stays; mutation stays queued.
-      return ok(optimistic);
+      return ok(created);
     },
-    [client, mutationQueue, updatePendingCount],
+    [store],
   );
 
   const updateTask = useCallback(
@@ -199,137 +139,106 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       id: TaskId,
       req: UpdateTaskRequest,
     ): Promise<Result<Task, AppError>> => {
-      if (client === null) {
-        return err(new ConnectionError("API URL not configured"));
+      const target = store.resolveTaskId(id);
+      if (!store.getSnapshot().tasks.has(target)) {
+        return err(new NotFoundError("Task", String(id)));
       }
-      const existing = tasks.get(id);
-      if (existing === undefined) {
-        return err(new ConnectionError("Task not found"));
-      }
-      const updates: Partial<Task> = {};
-      for (const [key, value] of Object.entries(req)) {
-        if (value !== undefined) {
-          Object.assign(updates, { [key]: value });
-        }
-      }
-      const optimistic: Task = { ...existing, ...updates };
-      setTasks((prev) => {
-        const next = new Map(prev);
-        next.set(id, optimistic);
-        return next;
+      const updated = await store.dispatch({
+        type: "update",
+        taskId: target,
+        payload: req,
       });
-      await mutationQueue.enqueue({ type: "update", taskId: id, payload: req });
-      updatePendingCount();
-      const result = await client.updateTask(id, req);
-      if (result.ok) {
-        setTasks((prev) => {
-          const next = new Map(prev);
-          next.set(result.value.id, result.value);
-          return next;
-        });
-        await mutationQueue.replay(client);
-        updatePendingCount();
-        return result;
+      if (updated === undefined) {
+        return err(new NotFoundError("Task", String(id)));
       }
-      return ok(optimistic);
+      return ok(updated);
     },
-    [client, mutationQueue, tasks, updatePendingCount],
+    [store],
   );
 
   const deleteTask = useCallback(
     async (id: TaskId): Promise<Result<void, AppError>> => {
-      if (client === null) {
-        return err(new ConnectionError("API URL not configured"));
-      }
-      setTasks((prev) => {
-        const next = new Map(prev);
-        next.delete(id);
-        return next;
-      });
-      await mutationQueue.enqueue({ type: "delete", taskId: id });
-      updatePendingCount();
-      const result = await client.deleteTask(id);
-      if (result.ok) {
-        await mutationQueue.replay(client);
-        updatePendingCount();
-        return result;
-      }
+      await store.dispatch({ type: "delete", taskId: id });
       return OK_VOID;
     },
-    [client, mutationQueue, updatePendingCount],
+    [store],
   );
 
   const toggleStatus = useCallback(
     async (id: TaskId): Promise<Result<Task, AppError>> => {
-      if (client === null) {
-        return err(new ConnectionError("API URL not configured"));
-      }
-      const existing = tasks.get(id);
+      const target = store.resolveTaskId(id);
+      const existing = store.getSnapshot().tasks.get(target);
       if (existing === undefined) {
-        return err(new ConnectionError("Task not found"));
+        return err(new NotFoundError("Task", String(id)));
       }
-      const optimistic = nextOptimistic(existing);
-      setTasks((prev) => {
-        const next = new Map(prev);
-        next.set(id, optimistic);
-        return next;
-      });
-      if (isRecurring(existing)) {
-        await mutationQueue.enqueue({ type: "complete_instance", taskId: id });
-      } else {
-        const newStatus = getNextStatus(existing.status);
-        await mutationQueue.enqueue({
-          type: "toggle_status",
-          taskId: id,
-          payload: { status: newStatus },
-        });
+      // Absolute target state, computed once at tap time — replaying the
+      // command later (even after midnight) applies exactly this intent.
+      const updated = isRecurring(existing)
+        ? await store.dispatch({
+            type: "set_instance_complete",
+            taskId: target,
+            date: localTodayYmd(),
+            completed: !existing.completeInstances.includes(localTodayYmd()),
+          })
+        : await store.dispatch({
+            type: "set_status",
+            taskId: target,
+            status: getNextStatus(existing.status),
+          });
+      if (updated === undefined) {
+        return err(new NotFoundError("Task", String(id)));
       }
-      updatePendingCount();
-      const result = isRecurring(existing)
-        ? await client.completeRecurringInstance(id)
-        : await client.toggleTaskStatus(id, getNextStatus(existing.status));
-      if (result.ok) {
-        setTasks((prev) => {
-          const next = new Map(prev);
-          next.set(result.value.id, result.value);
-          return next;
-        });
-        await mutationQueue.replay(client);
-        updatePendingCount();
-        return result;
-      }
-      return ok(optimistic);
+      return ok(updated);
     },
-    [client, mutationQueue, tasks, updatePendingCount],
+    [store],
   );
 
-  // Replay queue on every client change (e.g., URL configured).
-  useEffect(() => {
-    replayInBackground();
-  }, [replayInBackground]);
+  const refreshTasks = useCallback(() => engine.syncNow(), [engine]);
+
+  const retryDeadLetter = useCallback(
+    (commandId: string) => store.retryDeadLetter(commandId),
+    [store],
+  );
+
+  const discardDeadLetter = useCallback(
+    (commandId: string) => store.discardDeadLetter(commandId),
+    [store],
+  );
+
+  const resolveTaskId = useCallback(
+    (id: TaskId) => store.resolveTaskId(id),
+    [store],
+  );
 
   const value = useMemo<TaskContextValue>(
     () => ({
-      tasks,
-      isLoading,
-      error,
-      pendingMutationCount,
+      tasks: snapshot.tasks,
+      isLoading: syncStatus.state === "syncing",
+      error: syncStatus.lastError,
+      pendingMutationCount: snapshot.pendingCount,
+      deadLetters: snapshot.deadLetters,
+      syncStatus,
+      lastSyncTime: snapshot.lastSyncTime,
+      resolveTaskId,
       createTask,
       updateTask,
       deleteTask,
       toggleStatus,
       refreshTasks,
+      retryDeadLetter,
+      discardDeadLetter,
     }),
     [
-      tasks,
-      isLoading,
-      error,
-      pendingMutationCount,
+      snapshot,
+      syncStatus,
+      resolveTaskId,
       createTask,
       updateTask,
       deleteTask,
       toggleStatus,
       refreshTasks,
+      retryDeadLetter,
+      discardDeadLetter,
     ],
   );
 

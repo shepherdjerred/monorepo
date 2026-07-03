@@ -8,13 +8,16 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSync } from "../../hooks/use-sync";
+import { useTaskContext } from "../../state/TaskContext";
 
 const BANNER_HEIGHT = 24;
 
 export function ConnectionBanner() {
   const { isConnected, isAuthenticated, isSyncing } = useSync();
+  const { pendingMutationCount, deadLetters } = useTaskContext();
   const insets = useSafeAreaInsets();
-  const visible = !isConnected || !isAuthenticated || isSyncing;
+  const visible =
+    !isConnected || !isAuthenticated || isSyncing || deadLetters.length > 0;
 
   const totalHeight = BANNER_HEIGHT + insets.top;
   const height = useSharedValue(visible ? totalHeight : 0);
@@ -34,14 +37,24 @@ export function ConnectionBanner() {
   let message: string;
   let backgroundColor: string;
   if (!isConnected) {
-    message = "No connection";
+    message =
+      pendingMutationCount > 0
+        ? `Offline — ${String(pendingMutationCount)} ${
+            pendingMutationCount === 1 ? "change" : "changes"
+          } queued`
+        : "No connection";
     backgroundColor = "#ef4444";
-  } else if (isAuthenticated) {
-    message = "Syncing...";
-    backgroundColor = "#f59e0b";
-  } else {
+  } else if (!isAuthenticated) {
     message = "Invalid auth token — check Settings";
     backgroundColor = "#ef4444";
+  } else if (deadLetters.length > 0) {
+    message = `${String(deadLetters.length)} ${
+      deadLetters.length === 1 ? "change" : "changes"
+    } failed to sync — review in Settings`;
+    backgroundColor = "#ef4444";
+  } else {
+    message = "Syncing...";
+    backgroundColor = "#f59e0b";
   }
 
   return (

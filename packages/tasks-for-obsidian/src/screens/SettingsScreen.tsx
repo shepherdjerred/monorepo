@@ -13,8 +13,27 @@ import {
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { z } from "zod";
 import type { RootStackParamList } from "../navigation/types";
+import type { Command } from "../data/sync/commands";
 import { useSettings } from "../hooks/use-settings";
+import { useTaskContext } from "../state/TaskContext";
 import { typography } from "../styles/typography";
+
+function describeCommand(command: Command): string {
+  switch (command.type) {
+    case "create":
+      return `Create "${command.payload.title}"`;
+    case "update":
+      return `Edit ${String(command.taskId)}`;
+    case "delete":
+      return `Delete ${String(command.taskId)}`;
+    case "set_status":
+      return `Mark ${String(command.taskId)} as ${command.status}`;
+    case "set_instance_complete":
+      return command.completed
+        ? `Complete ${String(command.taskId)} for ${command.date}`
+        : `Un-complete ${String(command.taskId)} for ${command.date}`;
+  }
+}
 
 const HealthCheckSchema = z.object({
   authenticated: z.boolean().optional(),
@@ -34,6 +53,12 @@ export function SettingsScreen(_props: Props) {
     setIsDarkMode,
     setFeedbackEnabled,
   } = useSettings();
+  const {
+    pendingMutationCount,
+    deadLetters,
+    retryDeadLetter,
+    discardDeadLetter,
+  } = useTaskContext();
   const [testStatus, setTestStatus] = useState<string | null>(null);
 
   const handleTestConnection = useCallback(() => {
@@ -170,6 +195,98 @@ export function SettingsScreen(_props: Props) {
             {testStatus}
           </Text>
         ) : null}
+
+        <Text
+          style={[
+            typography.label,
+            { color: colors.textSecondary },
+            styles.sectionLabel,
+          ]}
+        >
+          Sync
+        </Text>
+        <Text
+          style={[
+            typography.bodySmall,
+            styles.syncInfo,
+            { color: colors.text },
+          ]}
+          testID="settings-pending-count"
+        >
+          {pendingMutationCount === 0
+            ? "All changes synced"
+            : `${String(pendingMutationCount)} ${
+                pendingMutationCount === 1 ? "change" : "changes"
+              } waiting to sync`}
+        </Text>
+
+        {deadLetters.length > 0 ? (
+          <View testID="settings-dead-letters">
+            <Text
+              style={[
+                typography.label,
+                { color: colors.error },
+                styles.sectionLabel,
+              ]}
+            >
+              Failed Changes
+            </Text>
+            {deadLetters.map((entry) => (
+              <View
+                key={entry.command.id}
+                style={[
+                  styles.deadLetter,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.surface,
+                  },
+                ]}
+              >
+                <Text style={[typography.body, { color: colors.text }]}>
+                  {describeCommand(entry.command)}
+                </Text>
+                <Text
+                  style={[
+                    typography.bodySmall,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  {entry.error.message}
+                </Text>
+                <View style={styles.deadLetterActions}>
+                  <Pressable
+                    style={[
+                      styles.smallButton,
+                      { backgroundColor: colors.primary },
+                    ]}
+                    onPress={() => {
+                      void retryDeadLetter(entry.command.id);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Retry failed change"
+                    testID={`dead-letter-retry-${entry.command.id}`}
+                  >
+                    <Text style={styles.buttonText}>Retry</Text>
+                  </Pressable>
+                  <Pressable
+                    style={[
+                      styles.smallButton,
+                      { backgroundColor: colors.error },
+                    ]}
+                    onPress={() => {
+                      void discardDeadLetter(entry.command.id);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Discard failed change"
+                    testID={`dead-letter-discard-${entry.command.id}`}
+                  >
+                    <Text style={styles.buttonText}>Discard</Text>
+                  </Pressable>
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : null}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -211,5 +328,26 @@ const styles = StyleSheet.create({
   status: {
     textAlign: "center",
     marginTop: 12,
+  },
+  syncInfo: {
+    marginTop: 8,
+  },
+  deadLetter: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+    gap: 4,
+  },
+  deadLetterActions: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 8,
+  },
+  smallButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: "center",
   },
 });

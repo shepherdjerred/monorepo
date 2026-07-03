@@ -45,6 +45,18 @@ export type TaskNotesClientConfig = {
   fetch?: typeof fetch;
 };
 
+export const MUTATION_ID_HEADER = "X-Mutation-Id";
+
+/**
+ * Per-mutation options. `mutationId` is sent as `X-Mutation-Id`, the server's
+ * idempotency key: replaying the same mutation (e.g. after a crash between
+ * the server ack and the client dequeue) returns the stored response instead
+ * of double-applying.
+ */
+export type MutationOptions = {
+  mutationId?: string | undefined;
+};
+
 export class TaskNotesClient {
   private readonly baseUrl: string;
   private readonly authToken: string | undefined;
@@ -72,22 +84,34 @@ export class TaskNotesClient {
 
   async createTask(
     request: CreateTaskRequest,
+    options?: MutationOptions,
   ): Promise<Result<Task, AppError>> {
-    return this.request("POST", PATHS.TASKS, TaskSchema, request);
+    return this.request("POST", PATHS.TASKS, TaskSchema, {
+      body: request,
+      mutationId: options?.mutationId,
+    });
   }
 
   async updateTask(
     id: TaskId,
     request: UpdateTaskRequest,
+    options?: MutationOptions,
   ): Promise<Result<Task, AppError>> {
-    return this.request("PUT", PATHS.TASK(id), TaskSchema, request);
+    return this.request("PUT", PATHS.TASK(id), TaskSchema, {
+      body: request,
+      mutationId: options?.mutationId,
+    });
   }
 
-  async deleteTask(id: TaskId): Promise<Result<void, AppError>> {
+  async deleteTask(
+    id: TaskId,
+    options?: MutationOptions,
+  ): Promise<Result<void, AppError>> {
     const result = await this.request(
       "DELETE",
       PATHS.TASK(id),
       DeleteResponseSchema,
+      { mutationId: options?.mutationId },
     );
     if (!result.ok) return result;
     return OK_VOID;
@@ -96,9 +120,11 @@ export class TaskNotesClient {
   async toggleTaskStatus(
     id: TaskId,
     newStatus: TaskStatus,
+    options?: MutationOptions,
   ): Promise<Result<Task, AppError>> {
     return this.request("POST", PATHS.TASK_TOGGLE_STATUS(id), TaskSchema, {
-      status: newStatus,
+      body: { status: newStatus },
+      mutationId: options?.mutationId,
     });
   }
 
@@ -112,14 +138,28 @@ export class TaskNotesClient {
     return OK_VOID;
   }
 
-  async completeRecurringInstance(id: TaskId): Promise<Result<Task, AppError>> {
-    return this.request("POST", PATHS.TASK_COMPLETE_INSTANCE(id), TaskSchema);
+  /**
+   * With a body, sets the completion state of one instance absolutely
+   * (idempotent — safe to replay from the offline queue); without one, the
+   * server falls back to its legacy toggle-today behavior.
+   */
+  async completeRecurringInstance(
+    id: TaskId,
+    instance?: { date: string; completed: boolean },
+    options?: MutationOptions,
+  ): Promise<Result<Task, AppError>> {
+    return this.request("POST", PATHS.TASK_COMPLETE_INSTANCE(id), TaskSchema, {
+      body: instance,
+      mutationId: options?.mutationId,
+    });
   }
 
   async queryTasks(
     filter: TaskQueryFilter,
   ): Promise<Result<{ tasks: Task[]; total: number }, AppError>> {
-    return this.request("POST", PATHS.TASKS_QUERY, QueryResponseSchema, filter);
+    return this.request("POST", PATHS.TASKS_QUERY, QueryResponseSchema, {
+      body: filter,
+    });
   }
 
   async getFilterOptions(): Promise<Result<FilterOptions, AppError>> {
@@ -134,14 +174,16 @@ export class TaskNotesClient {
     text: string,
   ): Promise<Result<NlpParseResult, AppError>> {
     return this.request("POST", PATHS.NLP_PARSE, NlpParseResultSchema, {
-      text,
+      body: { text },
     });
   }
 
   async createFromNaturalLanguage(
     text: string,
   ): Promise<Result<Task, AppError>> {
-    return this.request("POST", PATHS.NLP_CREATE, TaskSchema, { text });
+    return this.request("POST", PATHS.NLP_CREATE, TaskSchema, {
+      body: { text },
+    });
   }
 
   async startTimeTracking(id: TaskId): Promise<Result<void, AppError>> {
@@ -179,7 +221,7 @@ export class TaskNotesClient {
       "POST",
       PATHS.POMODORO_START,
       PomodoroStatusSchema,
-      pomodoroTaskId ? { taskId: pomodoroTaskId } : undefined,
+      pomodoroTaskId ? { body: { taskId: pomodoroTaskId } } : undefined,
     );
   }
 
@@ -217,13 +259,17 @@ export class TaskNotesClient {
     method: string,
     path: string,
     schema: ZodType<T>,
-    body?: unknown,
+    init?: { body?: unknown; mutationId?: string | undefined },
   ): Promise<Result<T, AppError>> {
     const url = `${this.baseUrl}${path}`;
+    const body = init?.body;
 
     const headers: Record<string, string> = {};
     if (body) headers["Content-Type"] = "application/json";
     if (this.authToken) headers["Authorization"] = `Bearer ${this.authToken}`;
+    if (init?.mutationId !== undefined) {
+      headers[MUTATION_ID_HEADER] = init.mutationId;
+    }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
