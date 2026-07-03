@@ -40,6 +40,15 @@ export interface BuildkiteStep {
   label: string;
   key: string;
   command: string;
+  /**
+   * Per-step agent targeting. Overrides the pipeline-level `agents.queue`
+   * (which is `default` — the in-cluster agent-stack-k8s agents). Set this to
+   * route a single step to a non-default queue, e.g. the `macos` queue served
+   * by the Mac Mini for native Swift/Xcode builds. A step with its own
+   * `agents.queue` must NOT carry the `kubernetes` plugin — it runs natively on
+   * that agent (default git checkout), not through the in-cluster Dagger engine.
+   */
+  agents?: { queue: string };
   timeout_in_minutes?: number;
   retry?: Record<string, unknown>;
   plugins?: Record<string, unknown>[];

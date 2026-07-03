@@ -131,6 +131,8 @@ export function perPackageSteps(
 
   if (pkg === "tasks-for-obsidian") {
     steps.push(tasksForObsidianNativeDepsStep(resources));
+    const macosStep = macosSwiftLintStep();
+    if (macosStep) steps.push(macosStep);
   }
 
   // homelab: build helm-types (nested NPM package under homelab).
@@ -175,6 +177,39 @@ export function perPackageSteps(
     group: `:dagger_knife: ${pkg}`,
     key: `pkg-${sk}`,
     steps,
+  };
+}
+
+/**
+ * Native macOS SwiftLint over the `tasks-for-obsidian` iOS sources — the first
+ * real job for the Mac Mini agent (revives the previously-dead `swiftLint`
+ * Dagger helper, but run natively: macOS has no in-cluster Dagger engine).
+ *
+ * Deliberately a plain command step: NO `kubernetes` plugin, so the macOS
+ * agent performs its default git checkout and runs `swiftlint` on the working
+ * tree. `agents.queue = "macos"` routes it to the Mac Mini (registered with
+ * `--tags queue=macos`); every other step inherits the pipeline-level
+ * `queue: default`.
+ *
+ * Gated behind `MACOS_CI_ENABLED` (default off, read at pipeline-generation
+ * time like `DRYRUN_FLAG`). While off the step is never emitted, so a
+ * `tasks-for-obsidian` PR can't hang waiting for a macOS agent that isn't
+ * online yet. Flip `MACOS_CI_ENABLED=true` in the pipeline-upload env once the
+ * Mac Mini is provisioned (see `packages/homelab/mac-ci/README.md`).
+ */
+function macosSwiftLintStep(): BuildkiteStep | null {
+  if (process.env["MACOS_CI_ENABLED"] !== "true") return null;
+  return {
+    label: ":swift: SwiftLint (macOS)",
+    key: "swiftlint-tasks-for-obsidian",
+    // Prepend the Homebrew bin dir so `swiftlint` resolves under the
+    // brew-services agent env, then lint the iOS sources on the checked-out
+    // working tree.
+    command:
+      'export PATH="/opt/homebrew/bin:$PATH" && cd packages/tasks-for-obsidian/ios && swiftlint --strict',
+    agents: { queue: "macos" },
+    timeout_in_minutes: 10,
+    retry: RETRY,
   };
 }
 
