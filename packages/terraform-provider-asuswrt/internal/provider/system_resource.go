@@ -57,18 +57,22 @@ func (r *systemResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"hostname": schema.StringAttribute{
 				Description: "Router host name / Device Name (NVRAM: lan_hostname). Note: this is NOT computer_name, which is the Samba/NetBIOS name.",
 				Optional:    true,
+				Computed:    true,
 			},
 			"timezone": schema.StringAttribute{
 				Description: "Timezone string (NVRAM: time_zone), e.g. EST5EDT,M3.2.0,M11.1.0.",
 				Optional:    true,
+				Computed:    true,
 			},
 			"ntp_server_0": schema.StringAttribute{
 				Description: "Primary NTP server (NVRAM: ntp_server0).",
 				Optional:    true,
+				Computed:    true,
 			},
 			"ntp_server_1": schema.StringAttribute{
 				Description: "Secondary NTP server (NVRAM: ntp_server1).",
 				Optional:    true,
+				Computed:    true,
 			},
 		},
 	}
