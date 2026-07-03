@@ -97,3 +97,27 @@ PR, all four diff hunks were either pure key reordering or the bad Opus context 
 
 - The `greptileReviewStep()` has no `soft_fail` — it's a hard gate. CI will only go green
   once greptile's re-review is clean on the new commit.
+
+## Session Log — 2026-07-03 (pass 3)
+
+### Done
+
+- Diagnosed real root cause of continued `mag-greptile-review` failure: `wait-for-greptile.ts`
+  checks `isResolved` on each thread via GraphQL — NOT just greptile's summary comment.
+  Even though greptile's prose said "5/5 — safe to merge", the inline P1 thread
+  (`PRRT_kwDOHf4r4c6NxEAz`) had `isResolved=false`. The script fails fast on unresolved threads.
+- Resolved the thread via GraphQL `resolveReviewThread` mutation — confirmed `isResolved=true`.
+- Posted reply on thread explaining fix commit `fa5616ea3`.
+- Pushed empty commit `b23be71e31` to re-trigger CI — MISTAKE: Greptile's webhook does not
+  fire for empty commits (no file diff), so greptile step sat polling for 20 min then timed out.
+- Pushing this session log update (real file change) to trigger a new build where Greptile fires.
+
+### Remaining
+
+- Build triggered by this commit must complete with greptile step passing.
+- `wait-for-greptile.ts` will find: Greptile check-run present + zero unresolved threads = PASS.
+
+### Caveats
+
+- Avoid `git commit --allow-empty` to re-trigger CI: Greptile needs a real file change to
+  fire its webhook and create a check-run. Use any non-empty file change instead.
