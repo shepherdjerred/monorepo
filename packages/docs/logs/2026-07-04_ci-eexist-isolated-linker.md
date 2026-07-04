@@ -180,3 +180,19 @@ again, two causes:
    in parallel inside one CPU-limited container. Bumped to 180s (supersedes
    PR #1398's 60s — close #1398 when this merges). If it ever dies at
    180002ms, treat it as a real hang in `runReport` and dig there.
+
+## Round 6 — build 5029 fallout (dpmk image double-install)
+
+Build 5029 was the first to open the quality gate, exposing the image-build
+path. All pre-gate jobs green (scout lint + chart test included). One smoke
+failure: dpmk's runtime image couldn't resolve
+`@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot.ts`.
+
+Cause: `buildDiscordPlaysMarioKartImageHelper` ran a **root workspace install
+then a second install in `packages/backend`** — the exact pattern the dpp
+image build removed long ago (see comment at image.ts ~1300). Under hoisted,
+the second install EEXISTs on re-linking the root-installed `file:` deps; the
+new retry cleanup then removes `backend/node_modules` (including the dsl
+copy) and the retry exits 0 without restoring it → module missing at runtime.
+Fix: drop the second install (dpmk was the only remaining double-install
+site; verified by grepping every `BUN_INSTALL_WITH_RETRY` call's workdir).

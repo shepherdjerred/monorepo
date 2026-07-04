@@ -1514,10 +1514,16 @@ export function buildDiscordPlaysMarioKartImageHelper(
       // Workspace install (backend + frontend) — runs trustedDependencies
       // postinstalls. The discord-video-stream fork lazy-loads sharp in source
       // (no bun patch).
+      // No separate backend install: bun workspaces installs all member deps
+      // at the root level. A second `bun install` in packages/backend re-links
+      // file: deps already linked by the root install → EEXIST under the
+      // hoisted linker, and the retry's node_modules cleanup then leaves the
+      // backend member without its file: dep copies (build 5029 smoke caught
+      // `Cannot find module '@shepherdjerred/discord-stream-lifecycle/...'`).
+      // Mirrors the discord-plays-pokemon image build above.
       .withWorkdir(innerRoot)
       .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
       .withWorkdir(`${innerRoot}/packages/backend`)
-      .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
       // Generate the Prisma client for the leaderboard DB (output is gitignored,
       // so it must be produced in the image). Mirrors the birmel/scout flow.
       .withExec(["bunx", "--trust", "prisma", "generate"])
