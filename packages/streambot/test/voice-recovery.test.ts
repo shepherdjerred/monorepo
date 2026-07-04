@@ -71,10 +71,12 @@ describe("voiceLossStopReason", () => {
 });
 
 describe("buildReconnectExhaustedAnnouncement", () => {
-  test("pluralizes attempts and points at manual resume", () => {
+  test("pluralizes attempts and promises restart-time resume", () => {
     expect(buildReconnectExhaustedAnnouncement(1)).toContain("1 attempt.");
     const multi = buildReconnectExhaustedAnnouncement(3);
     expect(multi).toContain("3 attempts.");
-    expect(multi).toContain("/stream play");
+    expect(multi).toContain("resume automatically on the next restart");
+    // The state file only re-reads on restart; never promise a manual /stream play resume.
+    expect(multi).not.toContain("/stream play");
   });
 });

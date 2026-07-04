@@ -174,7 +174,7 @@ export const voiceDisconnectsTotal = new Counter({
 
 export const voiceReconnectsTotal = new Counter({
   name: "streambot_voice_reconnects_total",
-  help: "Automatic reconnect-with-resume attempts after a transient voice loss, by outcome (success | failed | exhausted | skipped)",
+  help: "Automatic reconnect-with-resume attempts after a transient voice loss, by outcome (success | failed | exhausted | skipped | unresumable | no-userbot)",
   labelNames: ["outcome"] as const,
   registers: [register],
 });

@@ -638,7 +638,7 @@ describe("SessionManager voice-loss recovery", () => {
     await manager.destroyAll();
   });
 
-  test("no free userbot: retries then announces exhaustion, preserving the state file", async () => {
+  test("saturated pool: waits (without burning the reconnect budget) then resumes when a userbot frees", async () => {
     const config = await makeReconnectConfig({ maxAttempts: 2 });
     const pool = fakePool(1);
     const { manager, announced } = makeManager(config, pool.provider);
@@ -650,20 +650,29 @@ describe("SessionManager voice-loss recovery", () => {
       atMs: Date.now(),
     });
     await waitUntil(() => manager.getExisting(GUILD, CHANNEL_A) === null);
-    // Steal the released userbot so every reconnect attempt finds the pool empty.
+    // Steal the released userbot so every reconnect attempt finds the pool saturated (a member
+    // userbot exists — canServe true — but it is busy serving another stream).
     const stolen = pool.provider.acquire(GUILD);
-    expect(stolen).not.toBeNull();
+    if (stolen === null) throw new Error("expected to steal the freed userbot");
 
-    await waitUntil(
-      () =>
-        announced.some((a) =>
-          announcementText(a.message).includes("Couldn't reconnect after 2"),
-        ),
-      8000,
-    );
+    // Several reconnect windows (delaySeconds: 1) elapse while the pool stays saturated. Because no
+    // rejoin is ever attempted, the budget must NOT be consumed: no "Couldn't reconnect" exhaustion
+    // announcement, and the state file is preserved so the movie isn't lost.
+    await sleep(3500);
+    expect(
+      announced.some((a) =>
+        announcementText(a.message).includes("Couldn't reconnect"),
+      ),
+    ).toBe(false);
     const file = stateFilePath(config.state.dir, GUILD, CHANNEL_A);
     expect(await Bun.file(file).exists()).toBe(true);
     expect(manager.getExisting(GUILD, CHANNEL_A)).toBeNull();
+
+    // Free the userbot back into the pool — the next reconnect window acquires it and resumes.
+    pool.provider.release(stolen);
+    await waitUntil(() => manager.getExisting(GUILD, CHANNEL_A) !== null, 5000);
+    // Original stream (#1), the steal (#2), and the successful resume (#3).
+    expect(pool.acquireCount()).toBe(3);
 
     await manager.destroyAll();
   });

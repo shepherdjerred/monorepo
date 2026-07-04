@@ -78,7 +78,7 @@ export function voiceLossStopReason(
 export function buildReconnectExhaustedAnnouncement(attempts: number): string {
   return (
     `❌ Couldn't reconnect after ${String(attempts)} attempt${attempts === 1 ? "" : "s"}. ` +
-    `Playback state is saved — it will resume on the next restart, or use /stream play to resume now.`
+    `Playback state is saved — it will resume automatically on the next restart.`
   );
 }
 
@@ -327,17 +327,26 @@ export class VoiceRecoveryCoordinator<TSession extends RecoverableSession> {
         });
         return;
       case "nothing":
-      case "unresumable":
+        // Queue was empty (nothing left to resume) — a harmless, terminal no-op.
         voiceReconnectsTotal.inc({ outcome: "skipped" });
         return;
+      case "unresumable":
+        // No member userbot is registered for this guild — a structural, permanent condition
+        // that the state file has already been dropped for. Distinct from the empty-queue case.
+        voiceReconnectsTotal.inc({ outcome: "unresumable" });
+        return;
       case "no-userbot":
-        voiceReconnectsTotal.inc({ outcome: "failed" });
+        // A member userbot exists but is busy serving another stream (pool saturation). No rejoin
+        // was attempted, so don't consume the reconnect budget — re-arm with the same attempt
+        // count and wait for a slot to free up. The state file is preserved and naturally expires
+        // via resumeMaxAgeSeconds, so this backs off on its own rather than looping forever.
+        voiceReconnectsTotal.inc({ outcome: "no-userbot" });
         this.scheduleReconnect({
           key,
           guildId: recovery.guildId,
           channelId: recovery.channelId,
           statusChannelId: recovery.statusChannelId,
-          attempts: attempt,
+          attempts: recovery.attempts,
           userbot: recovery.userbot,
         });
     }
