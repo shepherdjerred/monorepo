@@ -71,3 +71,31 @@ isolated linker: scout `generate` fails with
 `Cannot find module '@shepherdjerred/llm-models'` because `packages/data`
 imports it while only the scout root declares it (phantom dep; isolated mode
 correctly refuses to resolve it). The hoisted pin restores setup.
+
+## Round 2 — build 5025 fallout (hoisted-layout side effects)
+
+Build 5025 on PR #1400 confirmed the EEXIST class is gone (all installs
+succeeded) but surfaced two follow-on failures:
+
+1. **dpp typecheck/lint: duplicate xstate.** Under the hoisted linker, bun
+   copies a `file:` dep **wholesale, including the dep's `node_modules`** when
+   it exists at copy time — and in CI it always does (dep-install layers run
+   first in `bunBaseContainer`). discord-stream-lifecycle's lock resolved
+   xstate@5.32.1 while dpp's resolved 5.32.0, so backend saw two divergent
+   xstate copies → `TS2321 Excessive stack depth` in `game-streamer.ts`
+   (the lint no-unsafe-\* errors were downstream of the type errors). Under the
+   isolated linker the store materialized dsl against dpp's lock — single
+   xstate — which is why this never fired before. Fix: `bun update xstate`
+   across all four xstate lockfiles (dpp, dpmk, dsl, streambot — incl.
+   streambot's scoped `@shepherdjerred/discord-stream-lifecycle/xstate` entry)
+   → uniform 5.32.4. Identical-version duplicates typecheck fine (verified by
+   reproducing the CI layout locally: install dsl deps first, then fresh dpp
+   install, then typecheck).
+2. **streambot subtitle e2e timeout.** `subtitle-ytdlp-clean.test.ts` spawns a
+   real process; bun's 5s default timeout measured 5.4s under post-outage CI
+   load. Widened all four tests in the describe to `60_000` (same treatment as
+   PR #1398's chart-render fix).
+
+Local validation after round 2: dpp typecheck+lint (in the reproduced CI
+layout), dpmk typecheck, dsl typecheck+tests (56), streambot subtitle tests
+(4) + typecheck — all green.
