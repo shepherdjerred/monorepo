@@ -34,27 +34,24 @@ import { BUILD_TIME_DEPS } from "./deps";
  *   - Postinstall network flakes — e.g. `@lng2004/node-datachannel`'s
  *     `prebuild-install` timing out and falling back to a `npm`-driven source
  *     build that can't run (no npm in oven/bun image), exit 127 (#4359 main).
- * A failed attempt must clean up before retrying: an EEXIST loss leaves a
- * half-linked node_modules behind, and rerunning `bun install` on top of it
- * hits the same EEXIST instantly and deterministically — all three attempts
- * fail back-to-back (post-outage builds 4996–5024 on 2026-07-04 showed
- * attempts 2/3 failing in <1s with the identical error). Removing every
- * node_modules under the workdir between attempts makes the retries
- * independent trials of the underlying race instead of replays of the first
- * loss. Safe: `bun install --frozen-lockfile` is deterministic and rebuilds
- * node_modules in full from the shared install cache.
+ * Retry is safe under the hoisted linker: `bun install --frozen-lockfile`
+ * converges when re-run on a partial node_modules (it completes missing
+ * entries from the shared install cache). Do NOT add cleanup (rm -rf
+ * node_modules) between attempts: it was tried on 2026-07-04 and removed —
+ * when an install runs in a workspace *member* dir, the cleanup deletes
+ * state the retry does not rebuild (build 5029 produced a dpmk image missing
+ * its file: deps; only the smoke test caught it). The isolated-linker EEXIST
+ * that made retries replay a poisoned tree is instead fixed at the root by
+ * the `linker = "hoisted"` bunfig pins in the nested-workspace packages.
  * Join with newlines, not "; " — busybox sh rejects `do ;` / `then ;` / `done ;`.
  */
 export const BUN_INSTALL_WITH_RETRY = [
   "i=1",
   "while [ $i -le 3 ]; do",
   "  if bun install --frozen-lockfile; then exit 0; fi",
-  // Skip the cleanup + sleep + "retrying" log on the final attempt — no retry follows.
+  // Skip the sleep + "retrying" log on the final attempt — no retry follows.
   "  if [ $i -lt 3 ]; then",
-  '    echo "bun install failed (attempt $i/3), cleaning node_modules and retrying in $((i*5))s..." >&2',
-  // Covers the workdir's own node_modules and every nested workspace
-  // member's — the EEXIST-poisoned link can sit in either.
-  "    find . -name node_modules -type d -prune -exec rm -rf {} +",
+  '    echo "bun install failed (attempt $i/3), retrying in $((i*5))s..." >&2',
   "    sleep $((i*5))",
   "  fi",
   "  i=$((i+1))",

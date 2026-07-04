@@ -264,3 +264,14 @@ soft-fail as usual). Follow-up filed:
 - First cold dpp image build after any cache wipe stalls ~13 min silently at
   `extracted [184]` (node-datachannel source-build postinstall) — not a hang.
 - PR #1399 (dpp eslint-config dedupe) is now redundant — close or rebase.
+
+## Round 9 — retry cleanup removed (post-merge follow-up)
+
+On review (user challenge, valid): the `find … rm -rf node_modules` between
+retry attempts was a workaround stacked on a workaround. Its motivating case
+(isolated-linker EEXIST replaying a poisoned tree) is fixed at the root by
+the hoisted pins, plain re-runs converge under the hoisted linker, and the
+cleanup itself caused the build-5029 dpmk image corruption (deleted state in
+a member dir that the retry didn't rebuild). Reverted
+`BUN_INSTALL_WITH_RETRY` to the plain retry loop; the do-not-re-add rationale
+lives in the constant's docstring.
