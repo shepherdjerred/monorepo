@@ -285,3 +285,55 @@ Commit `7ffece9fc`. Build #4970 triggered.
 - The 15 s timeout on `runReport renders a chart report` may still be tight on slow CI runners;
   if build #4970 also times out on this test, the timeout should be raised further or the test
   should use a lighter rendering path.
+
+### 10. Build #4974: two failures — cold-cache timeout + dpp EEXIST race
+
+**Context:** A disk-full Dagger engine outage today (2026-07-03) evicted all Dagger build caches
+and BUN_CACHE volumes. Build #4974 (session-log-only commit `ed3c37557`) ran cold.
+
+**Failure 1 — scout-for-lol `Lint + Typecheck + Test` (6m47s):**
+
+The `runReport renders a chart report` test (timeout 15 s) timed out on the cold CI runner.
+Locally the full test suite completes in 2.93 s; on a 250 m CPU K8s pod with no warm JIT or
+BUN_CACHE, the ECharts/RESVG initialization can exceed 15 s.
+
+**Fix:** Extended the timeout from `15_000` → `60_000` ms in
+`packages/scout-for-lol/packages/backend/src/reports/report-render.integration.test.ts:194`.
+Comment updated to note cold-cache cold runs. All 10 chart tests still pass locally in 2.93 s.
+
+**Failure 2 — discord-plays-pokemon `pkg-check` (2m50s):**
+
+Cold BUN_CACHE → `bun install --frozen-lockfile` EEXIST race. Within one `bun install` call,
+bun processes workspace sub-packages in parallel and races on linking the same `file:` dep
+symlink. All three retry attempts (sleeps: 5 s, 10 s) fail because each attempt takes ~2 min
+(cold download) and the race re-occurs. The Buildkite `exit_status: 1` retry config has
+`limit: 0`, so no automatic Buildkite-level retry.
+
+This is a known pre-existing flake (documented in `.dagger/src/base.ts` comment). The next
+build should pass because the BUN_CACHE is now warm (downloaded by build #4974's 3 failed
+attempts, plus other PR CI runs since the eviction).
+
+## Session Log — 2026-07-03 (round 6)
+
+### Done
+
+- Diagnosed build #4974 two failures: scout-for-lol test timeout (cold cache) + dpp EEXIST race
+- Confirmed lint passes clean without ESLint cache: `bunx eslint packages/report/src --no-cache`
+- Confirmed typecheck passes: `bun run --filter='./packages/*' typecheck` → 0 errors
+- Confirmed dpp: lint/typecheck/test all pass locally (190 pass, 0 fail)
+- Extended chart render test timeout: `15_000` → `60_000` ms
+  (`packages/scout-for-lol/packages/backend/src/reports/report-render.integration.test.ts:194`)
+- Updated timeout comment to document cold-cache Dagger runs
+
+### Remaining
+
+- Push timeout fix commit → trigger new build
+- Monitor until `buildkite/monorepo/pr/white-check-mark-ci-complete` posts SUCCESS
+- Verify no merge conflicts
+- Report "PR #1368 GREEN" to team-lead
+
+### Caveats
+
+- dpp EEXIST is a known infra flake; next build should pass because BUN_CACHE is now warm
+- If dpp EEXIST recurs in next build: need Buildkite API token to manually retry, or investigate
+  serializing bun install in Dagger (would require `.dagger/src/base.ts` change)

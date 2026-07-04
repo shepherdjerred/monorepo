@@ -159,7 +159,8 @@ describe("RENDER clause — charts", () => {
 
 describe("RENDER clause — full runner pipeline", () => {
   // timeout: chart render includes image generation which can exceed 5 s on slower
-  // CI runners (observed 5015 ms in build #4958 after subscription-filters merge)
+  // CI runners (observed 5015 ms in build #4958 after subscription-filters merge);
+  // cold-cache Dagger runs (e.g. after disk-full eviction) can take up to ~30 s
   test("runReport renders a chart report and records a SUCCESS run", async () => {
     await seedFacts();
     const report = await prisma.report.create({
@@ -191,7 +192,7 @@ describe("RENDER clause — full runner pipeline", () => {
     });
     expect(run.status).toBe("SUCCESS");
     expect(run.rowsReturned).toBe(2);
-  }, 15_000);
+  }, 60_000);
 
   test("a malformed RENDER clause records a FAILED run (no silent bypass)", async () => {
     await seedFacts();
