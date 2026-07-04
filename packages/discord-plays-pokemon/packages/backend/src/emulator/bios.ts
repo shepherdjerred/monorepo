@@ -184,7 +184,27 @@ export function createBios(): Bios {
         return Math.trunc(Math.sqrt(args[0]));
       case "strcmp":
         return readCString(args[0]).localeCompare(readCString(args[1]));
+      // libc bulk-memory calls. Whether these appear as imports depends on the
+      // LLVM version that compiled the wasm: newer clangs lower them to inline
+      // bulk-memory ops, older ones (e.g. trixie's clang-19, used by the Dagger
+      // image build) emit calls to external libc symbols, which surface here.
+      // They return the destination/comparison result per the C signatures.
+      case "memcpy":
+      case "memmove":
+        u8.copyWithin(args[0], args[1], args[1] + args[2]);
+        return args[0];
+      case "memset":
+        u8.fill(args[1] & 0xff, args[0], args[0] + args[2]);
+        return args[0];
+      case "memcmp": {
+        for (let i = 0; i < args[2]; i++) {
+          const diff = u8[args[0] + i] - u8[args[1] + i];
+          if (diff !== 0) return diff;
+        }
+        return 0;
+      }
       default:
+        // NOOP_IMPORTS are validated in imports(); anything else is a bug.
         return 0;
     }
   }
@@ -199,9 +219,52 @@ export function createBios(): Bios {
       for (const item of WebAssembly.Module.imports(module)) {
         if (item.kind !== "function") continue;
         const name = item.name;
+        if (!IMPLEMENTED_IMPORTS.has(name) && !NOOP_IMPORTS.has(name)) {
+          throw new Error(
+            `wasm module imports unimplemented host function: ${name} — ` +
+              "implement it in bios.ts (a silent no-op corrupts emulation, " +
+              "e.g. missing memcpy blacks out all graphics)",
+          );
+        }
         env[name] = (...args: number[]): number => dispatch(name, args);
       }
       return { env };
     },
   };
 }
+
+// Every function import the wasm may declare must be listed here (implemented
+// in dispatch()) or in NOOP_IMPORTS (intentionally a no-op). Unknown imports
+// fail instantiation instead of silently returning 0 mid-game.
+const IMPLEMENTED_IMPORTS = new Set([
+  "CpuSet",
+  "CpuFastSet",
+  "LZ77UnCompWram",
+  "LZ77UnCompVram",
+  "RLUnCompWram",
+  "RLUnCompVram",
+  "BgAffineSet",
+  "ObjAffineSet",
+  "Div",
+  "Sqrt",
+  "strcmp",
+  "memcpy",
+  "memmove",
+  "memset",
+  "memcmp",
+]);
+
+// BIOS calls the game invokes but that are safe to ignore headlessly (link
+// cable / multiboot / reset paths); matches upstream web/app.js, which also
+// no-ops them. ArcTan2 returning 0 is upstream behavior too.
+const NOOP_IMPORTS = new Set([
+  "ArcTan2",
+  "SoftReset",
+  "RegisterRamReset",
+  "MultiBoot",
+  "GameCubeMultiBoot_Init",
+  "GameCubeMultiBoot_Main",
+  "GameCubeMultiBoot_ExecuteProgram",
+  "GameCubeMultiBoot_HandleSerialInterrupt",
+  "GameCubeMultiBoot_Quit",
+]);
