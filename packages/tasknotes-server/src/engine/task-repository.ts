@@ -234,7 +234,8 @@ export class TaskRepository {
     });
     return this.applyPlanPatch(id, fresh, plan.frontmatterPatch, {
       newPath: plan.updatedTask.path,
-      details: updates.details,
+      // null details = clear the body (upstream null-as-clear convention).
+      details: updates.details === null ? "" : updates.details,
     });
   }
 
@@ -383,7 +384,13 @@ export class TaskRepository {
     patch: Parameters<typeof applyFrontmatterPatch>[1],
     options: { newPath?: string | undefined; details?: string | undefined },
   ): Promise<TaskInfo> {
-    const patched = applyFrontmatterPatch(fresh.frontmatter, patch);
+    // A null value means CLEAR: drop the key entirely instead of writing a
+    // literal "key: null" line into frontmatter.
+    const patched = Object.fromEntries(
+      Object.entries(applyFrontmatterPatch(fresh.frontmatter, patch)).filter(
+        ([, value]) => value !== null,
+      ),
+    );
     const body = options.details ?? fresh.body;
     const markdown = serializeMarkdownDocument(patched, body);
 
