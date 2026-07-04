@@ -60,6 +60,32 @@ recording so future tuning doesn't repeat the same wrong assumptions.
 - Further GC tuning is now observable/safe via the alerts + `kubelet_volume_stats`.
 - GC config changes require an engine restart to take effect (read at startup only).
 
+## Addendum — 2026-07-03 recurrence
+
+The disk-full failure recurred on 2026-07-03 and validated this record's findings
+in production:
+
+- **Finding #2 confirmed at scale**: a Renovate rebase-wave build storm (89 builds
+  in 3h; 8 dep branches rebuilt simultaneously after a main merge) wrote ~670 GB
+  in 100 minutes (~110 MB/s net) straight through a healthy, live GC config to a
+  100%-full deadlock. GC tuning is not — and cannot be — the guard against bursts.
+- **Finding #4 was being violated by our own config**: `minFreeSpace` was set to
+  `"20%"` while this record says never use `%` on the quota'd dataset. Fixed to
+  `"400GB"` absolute in the 2026-07-03 fixes PR.
+- **Finding #5 bit again in reverse**: the recovery PV recreate provisioned from
+  the live STS template, which was still 1Ti (code said 2Ti) — VCT immutability
+  drift regressed the fresh volume. New op (STS `--cascade=orphan` recreate) added
+  to the runbook to bake template changes into the live STS.
+- **"Early warning, not automation" needed a burst-shaped alert**: the 85%/95%
+  threshold alerts fired and paged but gave ~7 minutes of lead time against a
+  100-minute burst, and drowned in an incident storm.
+  `DaggerEnginePVCFillPredicted` (predict_linear, 15m window, 2h horizon, >60%
+  usage guard) was added; it backtests to ~70 minutes of lead on this incident.
+- **New decision — smooth the input**: `prConcurrentLimit: 3` in `renovate.json`
+  caps how many dep branches can be open (and thus rebase/rebuild at once).
+
+Post-mortem: [2026-07-03_dagger-engine-disk-full-outage.md](../logs/2026-07-03_dagger-engine-disk-full-outage.md)
+
 ## References
 
 - Runbook: [2026-06-07_dagger-engine-pvc-resize.md](../guides/2026-06-07_dagger-engine-pvc-resize.md)
