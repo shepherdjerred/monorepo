@@ -2,6 +2,8 @@ import { useCallback, useMemo, useState } from "react";
 
 import type { TaskId } from "../domain/types";
 import { isActiveStatus } from "../domain/status";
+import { isRecurring, localTodayYmd, occursOn } from "../domain/recurrence";
+import { projectDisplayName, projectPath } from "tasknotes-types/v2";
 import { parseLocalDate } from "../lib/dates";
 import { useTaskContext } from "../state/TaskContext";
 
@@ -41,7 +43,11 @@ export function useTasks() {
   const ctx = useTaskContext();
   const [refreshing, setRefreshing] = useState(false);
 
-  const taskList = useMemo(() => [...ctx.tasks.values()], [ctx.tasks]);
+  // v2 lists include archived tasks (upstream parity) — filter client-side.
+  const taskList = useMemo(
+    () => [...ctx.tasks.values()].filter((t) => !t.archived),
+    [ctx.tasks],
+  );
 
   const inboxTasks = useMemo(
     () =>
@@ -51,33 +57,47 @@ export function useTasks() {
     [taskList],
   );
 
-  const todayTasks = useMemo(
-    () =>
-      taskList.filter(
-        (t) => isActiveStatus(t.status) && (isToday(t.due) || isOverdue(t.due)),
-      ),
-    [taskList],
-  );
+  const todayTasks = useMemo(() => {
+    const today = localTodayYmd();
+    return taskList.filter((t) => {
+      // Recurring: today's OCCURRENCE decides (model rrule expansion) —
+      // stays visible when checked so completion feedback is felt.
+      if (isRecurring(t)) return occursOn(t, today);
+      return isActiveStatus(t.status) && (isToday(t.due) || isOverdue(t.due));
+    });
+  }, [taskList]);
 
-  const upcomingTasks = useMemo(
-    () =>
-      taskList
-        .filter((t) => isActiveStatus(t.status) && isUpcoming(t.due))
-        .sort((a, b) => {
-          if (!a.due || !b.due) return 0;
-          return new Date(a.due).getTime() - new Date(b.due).getTime();
-        }),
-    [taskList],
-  );
+  const upcomingTasks = useMemo(() => {
+    const horizon: string[] = [];
+    const start = new Date();
+    for (let i = 1; i <= 7; i += 1) {
+      const d = new Date(start);
+      d.setDate(d.getDate() + i);
+      horizon.push(localTodayYmd(d));
+    }
+    return taskList
+      .filter((t) => {
+        if (isRecurring(t)) return horizon.some((day) => occursOn(t, day));
+        return isActiveStatus(t.status) && isUpcoming(t.due);
+      })
+      .sort((a, b) => {
+        if (!a.due || !b.due) return 0;
+        return new Date(a.due).getTime() - new Date(b.due).getTime();
+      });
+  }, [taskList]);
 
   const projectNames = useMemo(() => {
-    const names = new Set<string>();
+    // Dedupe the wikilink/bare-name duality by canonical path; show the
+    // human name. Navigation passes the display name; projectMatches
+    // bridges back to every spelling.
+    const byKey = new Map<string, string>();
     for (const t of taskList) {
       for (const p of t.projects) {
-        names.add(p);
+        const key = projectPath(String(p)).toLowerCase();
+        if (!byKey.has(key)) byKey.set(key, projectDisplayName(String(p)));
       }
     }
-    return [...names].sort();
+    return [...byKey.values()].sort();
   }, [taskList]);
 
   const tagNames = useMemo(() => {
