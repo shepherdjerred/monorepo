@@ -99,6 +99,16 @@ real `imports()` wiring, and asserts unknown imports throw. Registered in
   whole script (hit this; worked around rather than changed the script in this
   PR).
 
+## Follow-up — 2026-07-04 (PR review)
+
+Greptile flagged a P2 on the import validator: it checked `item.name` but not
+`item.module`, so a wasm importing a same-named function from another namespace
+(e.g. `wasi_snapshot_preview1.memcpy`) could pass validation yet still fail to
+instantiate. Added an `item.module !== "env"` guard before the name check that
+throws an actionable error naming the unexpected namespace, plus a test
+(`imports from a non-env namespace fail fast, even for known names`). Commit
+`136064da0`.
+
 ## Workflow Friction
 
 - Fresh-worktree `bun run scripts/setup.ts` leaves
