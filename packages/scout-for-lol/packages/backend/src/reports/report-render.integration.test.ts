@@ -189,7 +189,7 @@ describe("RENDER clause — full runner pipeline", () => {
     });
     expect(run.status).toBe("SUCCESS");
     expect(run.rowsReturned).toBe(2);
-  });
+  }, 60_000);
 
   test("a malformed RENDER clause records a FAILED run (no silent bypass)", async () => {
     await seedFacts();

@@ -137,3 +137,24 @@ config — its lint script has no `--max-warnings 0`, exit 0, not a blocker
 Local validation after round 3: eslint-config build + 234 tests; full scout
 lint (all 7 members incl. frontend .astro) + dpp lint + dpmk lint under
 clean hoisted layouts — all green.
+
+## Round 4 — build 5027 fallout (lock-regen blast radius; regen reverted)
+
+Build 5027: dpp/dpmk/streambot pkg-checks all passed, scout **lint** passed
+(astro fix confirmed). Two hard fails:
+
+1. **tasks-for-obsidian pkg-check**: `node:fs`/`node:path` became error-typed
+   in `scripts/check-ios-native-deps.ts`. Cause: the round-3 eslint-config
+   lock regen floated the nested `typescript` 5.9.3 → 6.0.3 and `@types/node`
+   25.6.0 → 25.9.4, changing typed-lint resolution for every consumer.
+   **Reverted the lock regen** — the astro crash fix (rule-off) is
+   version-independent, so the regen bought nothing and risked fallout in all
+   ~25 consumers. Verified: tasks-for-obsidian lint exit 0 with the reverted
+   lock; eslint-config build + 234 tests still green.
+2. **scout backend chart-render test at 5012ms vs 5s default timeout** — the
+   exact flake PR #1398 fixes. Applied the byte-identical `}, 60_000)` change
+   (same line/value → auto-merges with #1398).
+
+Lesson recorded: don't regenerate a shared `file:` dep's lockfile as a
+"nice-to-have" — its nested tree IS the lint/typecheck toolchain for every
+consumer under the hoisted linker.
