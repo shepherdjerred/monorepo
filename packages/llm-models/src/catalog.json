@@ -80,6 +80,7 @@
       "cacheWrite": 6.25
     },
     "contextWindow": 1000000,
+    "pinnedContextWindow": true,
     "capabilities": {
       "supportsTemperature": false,
       "supportsTopP": false,

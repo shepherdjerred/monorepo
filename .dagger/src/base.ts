@@ -34,8 +34,15 @@ import { BUILD_TIME_DEPS } from "./deps";
  *   - Postinstall network flakes — e.g. `@lng2004/node-datachannel`'s
  *     `prebuild-install` timing out and falling back to a `npm`-driven source
  *     build that can't run (no npm in oven/bun image), exit 127 (#4359 main).
- * Retry is safe: `bun install --frozen-lockfile` is deterministic and the
- * surviving partial node_modules is what bun would create on success anyway.
+ * Retry is safe under the hoisted linker: `bun install --frozen-lockfile`
+ * converges when re-run on a partial node_modules (it completes missing
+ * entries from the shared install cache). Do NOT add cleanup (rm -rf
+ * node_modules) between attempts: it was tried on 2026-07-04 and removed —
+ * when an install runs in a workspace *member* dir, the cleanup deletes
+ * state the retry does not rebuild (build 5029 produced a dpmk image missing
+ * its file: deps; only the smoke test caught it). The isolated-linker EEXIST
+ * that made retries replay a poisoned tree is instead fixed at the root by
+ * the `linker = "hoisted"` bunfig pins in the nested-workspace packages.
  * Join with newlines, not "; " — busybox sh rejects `do ;` / `then ;` / `done ;`.
  */
 export const BUN_INSTALL_WITH_RETRY = [

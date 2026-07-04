@@ -51,6 +51,21 @@ All responses use envelope: `{ success: boolean, data: T, error?: string }`
 - Calendar: `GET /api/calendar/events`
 - Health: `GET /api/health`
 
+### Complete-instance body (optional)
+
+`POST /api/tasks/:id/complete-instance` accepts `{date?: "YYYY-MM-DD", completed?: boolean}`:
+no body = legacy toggle of server-local today (upstream plugin parity); `date` targets the
+device-captured instance; `completed` gives idempotent SET semantics (required for safe
+offline-queue replay). Non-recurring tasks fall back to `status: done`.
+
+### Idempotent mutations
+
+Mutating `/api/` requests may carry an `X-Mutation-Id` header (the app's offline queue
+sends its command id). Replays of an already-executed mutation return the stored response
+with `X-Idempotent-Replay: true` instead of executing twice. Records persist at
+`<vault>/.tasknotes-server/idempotency.json` (7-day TTL, 500-record cap, atomic writes)
+so dedup survives restarts.
+
 ## Environment Variables
 
 | Variable     | Required | Default | Description                           |
