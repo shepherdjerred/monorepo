@@ -215,3 +215,65 @@ describe("v2 task routes", () => {
     expect(obj(summary["summary"])["tasksWithTime"]).toBe(0);
   });
 });
+
+describe("v2 NLP + calendars", () => {
+  test("nlp/parse returns {parsed, taskData}; nlp/create returns {task, parsed} at 201", async () => {
+    const parsedRes = await app.request("/api/nlp/parse", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: "Buy milk tomorrow !high" }),
+    });
+    expect(parsedRes.status).toBe(200);
+    const parseBody = await unwrap(parsedRes);
+    expect(obj(parseBody["parsed"])["title"]).toBe("Buy milk");
+    expect(obj(parseBody["taskData"])["title"]).toBe("Buy milk");
+
+    const createdRes = await app.request("/api/nlp/create", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: "Water garden today" }),
+    });
+    expect(createdRes.status).toBe(201);
+    const createBody = await unwrap(createdRes);
+    expect(obj(createBody["task"])["title"]).toBe("Water garden");
+    expect(obj(createBody["parsed"])["title"]).toBe("Water garden");
+  });
+
+  test("calendars/events expands recurring tasks and reports sources", async () => {
+    await writeFile(
+      path.join(vault, "TaskNotes/daily.md"),
+      "---\ntitle: Daily standup\nstatus: open\npriority: normal\nscheduled: 2026-07-01\nrecurrence: FREQ=DAILY\ntags: [task]\n---\n",
+    );
+    const config = resolveModelConfig();
+    const repo2 = new TaskRepository(vault, "TaskNotes", config, () => NOW);
+    await repo2.scan();
+    const app2 = new Hono();
+    app2.use("*", envelopeMiddleware);
+    app2.route(
+      "/",
+      v2Routes({ repo: repo2, config, vaultPath: vault, clock: () => NOW }),
+    );
+
+    const res = await app2.request(
+      "/api/calendars/events?start=2026-07-01&end=2026-07-03",
+    );
+    expect(res.status).toBe(200);
+    const body = await unwrap(res);
+    const events = z
+      .array(z.looseObject({ id: z.string(), start: z.string() }))
+      .parse(body["events"]);
+    const dailyEvents = events.filter((e) =>
+      e.id.startsWith("TaskNotes/daily"),
+    );
+    expect(dailyEvents.map((e) => e.start)).toEqual([
+      "2026-07-01",
+      "2026-07-02",
+      "2026-07-03",
+    ]);
+    // The seeded (non-recurring) task appears once on its due date.
+    expect(events.some((e) => e.id === "TaskNotes/seeded.md:2026-07-01")).toBe(
+      true,
+    );
+    expect(obj(body["sources"])["tasks"]).toBe(body["total"]);
+  });
+});

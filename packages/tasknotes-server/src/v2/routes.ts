@@ -4,8 +4,10 @@ import type { Context } from "hono";
 import { z } from "zod";
 import {
   CompleteInstanceRequestSchema,
+  NlpRequestSchema,
   TaskCreationRequestSchema,
   TaskUpdateRequestSchema,
+  generateRecurringInstances,
 } from "tasknotes-types/v2";
 import type { TaskNotesModelConfig } from "tasknotes-types/v2";
 
@@ -17,6 +19,7 @@ import {
   type TaskRepository,
 } from "../engine/task-repository.ts";
 import { FilterQuerySchema, evaluateQuery } from "../engine/query.ts";
+import { parseTaskInput } from "../nlp/parser.ts";
 import { computeFilterOptions, computeStats } from "../engine/stats.ts";
 import {
   computeActiveSessions,
@@ -52,6 +55,36 @@ function errorMessage(error: unknown): string {
       .join("; ");
   }
   return error instanceof Error ? error.message : String(error);
+}
+
+function startOfDay(date: Date): Date {
+  const out = new Date(date);
+  out.setHours(0, 0, 0, 0);
+  return out;
+}
+
+function addDays(date: Date, days: number): Date {
+  const out = new Date(date);
+  out.setDate(out.getDate() + days);
+  return out;
+}
+
+function nlpTaskData(parsed: ReturnType<typeof parseTaskInput>): {
+  title: string;
+  due?: string | undefined;
+  priority?: string | undefined;
+  projects: string[];
+  contexts: string[];
+  tags: string[];
+} {
+  return {
+    title: parsed.title,
+    due: parsed.due,
+    priority: parsed.priority,
+    projects: parsed.projects ?? [],
+    contexts: parsed.contexts ?? [],
+    tags: parsed.tags ?? [],
+  };
 }
 
 function ymd(date: Date): string {
@@ -190,6 +223,80 @@ export function v2Routes(deps: V2Dependencies): Hono {
   app.get("/api/time/active", (c) =>
     c.json(computeActiveSessions(repo.list(), clock())),
   );
+
+  // -- NLP -------------------------------------------------------------------
+
+  app.post("/api/nlp/parse", (c) =>
+    guard(c, async () => {
+      const { text } = NlpRequestSchema.parse(await c.req.json());
+      const parsed = parseTaskInput(text);
+      return c.json({ parsed, taskData: nlpTaskData(parsed) });
+    }),
+  );
+
+  app.post("/api/nlp/create", (c) =>
+    guard(c, async () => {
+      const { text } = NlpRequestSchema.parse(await c.req.json());
+      const parsed = parseTaskInput(text);
+      const task = await repo.create(nlpTaskData(parsed));
+      return c.json({ task, parsed }, 201);
+    }),
+  );
+
+  // -- calendars ---------------------------------------------------------------
+
+  // Task-derived events only: due/scheduled dates plus recurring expansion
+  // via the model's rrule engine. `sources` reports where events came from.
+  app.get("/api/calendars/events", (c) => {
+    const startParam = c.req.query("start");
+    const endParam = c.req.query("end");
+    const now = clock();
+    const start =
+      startParam === undefined ? startOfDay(now) : new Date(startParam);
+    const end =
+      endParam === undefined
+        ? addDays(startOfDay(now), 30)
+        : new Date(endParam);
+
+    const events: {
+      id: string;
+      title: string;
+      start: string;
+      allDay: boolean;
+      taskPath: string;
+    }[] = [];
+    for (const task of repo.list()) {
+      if (task.recurrence !== undefined && task.recurrence.length > 0) {
+        for (const date of generateRecurringInstances(task, start, end)) {
+          const day = ymd(date);
+          events.push({
+            id: `${task.path}:${day}`,
+            title: task.title,
+            start: day,
+            allDay: true,
+            taskPath: task.path,
+          });
+        }
+        continue;
+      }
+      const anchor = task.due ?? task.scheduled;
+      if (anchor === undefined) continue;
+      const day = anchor.slice(0, 10);
+      if (day < ymd(start) || day > ymd(end)) continue;
+      events.push({
+        id: `${task.path}:${day}`,
+        title: task.title,
+        start: day,
+        allDay: true,
+        taskPath: task.path,
+      });
+    }
+    return c.json({
+      events,
+      total: events.length,
+      sources: { tasks: events.length },
+    });
+  });
 
   app.get("/api/time/summary", (c) => {
     const from = c.req.query("from");
