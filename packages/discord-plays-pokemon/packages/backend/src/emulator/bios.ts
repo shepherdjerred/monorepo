@@ -218,6 +218,18 @@ export function createBios(): Bios {
       const env: Record<string, WebAssembly.ImportValue> = {};
       for (const item of WebAssembly.Module.imports(module)) {
         if (item.kind !== "function") continue;
+        // Every function import we satisfy lives on the `env` namespace. A wasm
+        // built to import from another module (e.g. `wasi_snapshot_preview1`)
+        // could name-collide with an entry below and pass validation, yet the
+        // engine would still fail to instantiate because it expects that other
+        // namespace. Fail fast with an actionable error instead.
+        if (item.module !== "env") {
+          throw new Error(
+            `wasm module imports function from unexpected namespace ` +
+              `"${item.module}" (${item.name}) — bios.ts only provides the ` +
+              `"env" namespace`,
+          );
+        }
         const name = item.name;
         if (!IMPLEMENTED_IMPORTS.has(name) && !NOOP_IMPORTS.has(name)) {
           throw new Error(

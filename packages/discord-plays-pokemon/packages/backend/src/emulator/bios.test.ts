@@ -26,19 +26,25 @@ const section = (id: number, body: number[]): number[] => [
   ...body,
 ];
 
-function moduleWithEnvImports(names: string[]): WebAssembly.Module {
+function moduleWithImports(
+  namespace: string,
+  names: string[],
+): WebAssembly.Module {
   const bytes: number[] = [];
   bytes.push(0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00);
   // type section: one functype () -> ()
   bytes.push(...section(1, [0x01, 0x60, 0x00, 0x00]));
-  // import section: env.<name> function imports, all typeidx 0
+  // import section: <namespace>.<name> function imports, all typeidx 0
   const importBody = [
     ...uleb(names.length),
-    ...names.flatMap((name) => [...str("env"), ...str(name), 0x00, 0x00]),
+    ...names.flatMap((name) => [...str(namespace), ...str(name), 0x00, 0x00]),
   ];
   bytes.push(...section(2, importBody));
   return new WebAssembly.Module(Uint8Array.from(bytes));
 }
+
+const moduleWithEnvImports = (names: string[]): WebAssembly.Module =>
+  moduleWithImports("env", names);
 
 // Extract the callable host closure for `name` without type assertions.
 function hostFunction(
@@ -127,6 +133,16 @@ describe("bios import validation", () => {
     const module = moduleWithEnvImports(["strlen"]);
     expect(() => bios.imports(module)).toThrow(
       /unimplemented host function: strlen/,
+    );
+  });
+
+  test("imports from a non-env namespace fail fast, even for known names", () => {
+    const bios = createBios();
+    // `memcpy` is implemented on env, but a wasi-namespaced import can't be
+    // satisfied by bios — the engine expects wasi_snapshot_preview1.memcpy.
+    const module = moduleWithImports("wasi_snapshot_preview1", ["memcpy"]);
+    expect(() => bios.imports(module)).toThrow(
+      /unexpected namespace "wasi_snapshot_preview1"/,
     );
   });
 });
