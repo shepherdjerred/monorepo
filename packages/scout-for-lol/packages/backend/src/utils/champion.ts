@@ -1,7 +1,5 @@
-import {
-  Champions,
-  getChampionName,
-} from "twisted/dist/constants/champions.js";
+import { Constants } from "twisted";
+const { Champions, getChampionName } = Constants;
 import { getChampionKeyById, normalizeChampionName } from "@scout-for-lol/data";
 import { z } from "zod";
 

@@ -50,6 +50,14 @@ export const subscriptionCommand = new SlashCommandBuilder()
       )
       .addUserOption((option) =>
         option.setName("user").setDescription("The Discord user of the player"),
+      )
+      .addStringOption((option) =>
+        option
+          .setName("queues")
+          .setDescription(
+            "Only notify for these queues (comma-separated). Leave empty for all.",
+          )
+          .setAutocomplete(true),
       ),
   )
   .addSubcommand((subcommand) =>
@@ -114,5 +122,30 @@ export const subscriptionCommand = new SlashCommandBuilder()
           .setName("to-channel")
           .setDescription("The channel to move the subscription to")
           .setRequired(true),
+      ),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("edit-filters")
+      .setDescription("Set which queues a subscription is notified about")
+      .addStringOption((option) =>
+        option
+          .setName("alias")
+          .setDescription("The alias of the player")
+          .setRequired(true),
+      )
+      .addChannelOption((option) =>
+        option
+          .setName("channel")
+          .setDescription("The channel whose subscription to edit")
+          .setRequired(true),
+      )
+      .addStringOption((option) =>
+        option
+          .setName("queues")
+          .setDescription(
+            "Only notify for these queues (comma-separated). Leave empty to clear (notify all).",
+          )
+          .setAutocomplete(true),
       ),
   );

@@ -2,7 +2,11 @@
 
 ## Status
 
-In Progress
+Complete — 2026-07-03 the 8 users + 156 requests were migrated into Seerr and an
+edge redirect `overseerr.sjer.red → seerr.sjer.red` went live. Overseerr removal
+is staged on branch `feature/finish-seerr-migration` (ready to merge; prune
+orphaned resources after). See
+`packages/docs/logs/2026-07-03_finish-seerr-migration.md`.
 
 ## Context
 

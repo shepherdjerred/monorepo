@@ -177,19 +177,19 @@ export const agentTaskEmailSentTotal = new Counter({
 });
 
 // ---------------------------------------------------------------------------
-// Agent subprocess wall-clock observability (shared between alert-remediation
-// and agent-task). The point of these two metrics is to make a hang
-// distinguishable from a long-but-progressing run on the dashboard:
+// Agent subprocess wall-clock observability (shared across every agent
+// subprocess activity, e.g. agent-task / homelab-audit / pr-babysit). The
+// point of these two metrics is to make a hang distinguishable from a
+// long-but-progressing run on the dashboard:
 //
 //   * `agent_subprocess_idle_seconds` is the longest stretch within a single
 //     subprocess run where no stderr was seen. A subprocess that's working
 //     emits stderr periodically; a wedged tool call (slow WebFetch / hung
 //     kubectl pipe / API retry loop) is silent. Modeled as a Histogram (not
-//     a Gauge) because alert-remediation runs up to `concurrency=3` children
-//     in parallel — a Gauge would last-writer-wins and silently drop the
-//     other two observations. The Histogram accumulates every run's max-idle
-//     so the dashboard p95 reflects the worst real hang across all
-//     concurrent runs.
+//     a Gauge) because multiple agent subprocesses can run in parallel — a
+//     Gauge would last-writer-wins and silently drop the other observations.
+//     The Histogram accumulates every run's max-idle so the dashboard p95
+//     reflects the worst real hang across all concurrent runs.
 //
 //   * `agent_subprocess_soft_kills_total` ticks when the activity itself
 //     sends SIGINT before Temporal's startToCloseTimeout SIGTERM lands. The
@@ -211,44 +211,6 @@ export const agentSubprocessSoftKillsTotal = new Counter({
   labelNames: ["workflow_type", "reason"] as const,
   registers: [register],
 });
-
-// ---------------------------------------------------------------------------
-// alert-remediation workflow metrics
-//
-// The sweep workflow fans out one child per normalized PagerDuty/Bugsink
-// alert; each child runs the `runAlertRemediationAgent` activity which
-// shells out to `claude -p`. Until 2026-06-14 this surface had zero
-// metrics — failures were only observable by inspecting individual
-// workflow histories, which is how a 14-day all-failed regression went
-// unnoticed.
-// ---------------------------------------------------------------------------
-
-export const alertRemediationDecisionsTotal = new Counter({
-  name: "alert_remediation_decisions_total",
-  help: "Decisions reached by the alert-remediation agent, by decision label, outcome (pr-created | report-only | not-straightforward | verification-failed | failed), and alert source (pagerduty | bugsink)",
-  labelNames: ["decision", "outcome", "source"] as const,
-  registers: [register],
-});
-
-export const alertRemediationSubprocessDurationSeconds = new Histogram({
-  name: "alert_remediation_subprocess_duration_seconds",
-  help: "Wall-clock duration of `claude -p` subprocess invocations for the alert-remediation agent",
-  labelNames: ["model", "exit_code"] as const,
-  buckets: [30, 60, 180, 300, 600, 900, 1500, 1800, 2700],
-  registers: [register],
-});
-
-export const alertRemediationSubprocessExitTotal = new Counter({
-  name: "alert_remediation_subprocess_exit_total",
-  help: "alert-remediation claude subprocess exits, by exit code and signal (natural | SIGINT | SIGTERM)",
-  labelNames: ["exit_code", "signal"] as const,
-  registers: [register],
-});
-
-// Sweep-level wall clock + per-disposition alert flow are covered by the
-// Temporal SDK's built-in `temporal_workflow_completed_total{workflow_type,
-// status}` and the child-level `alert_remediation_decisions_total` (which
-// carries the `source` label). Don't double-emit.
 
 // ---------------------------------------------------------------------------
 // scout-season-refresh workflow metrics

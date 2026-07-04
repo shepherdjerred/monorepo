@@ -1,3 +1,4 @@
+import { parseSubscriptionFilters } from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
 import type {
   ListSubscriptionsInput,
@@ -53,6 +54,7 @@ export async function listSubscriptions(
     creatorDiscordId: sub.creatorDiscordId,
     creatorDiscordUser: names[sub.creatorDiscordId] ?? null,
     createdTime: sub.createdTime,
+    filters: parseSubscriptionFilters(sub.filters),
   }));
 
   // Cursor is the last returned row's id (next page resumes after it).

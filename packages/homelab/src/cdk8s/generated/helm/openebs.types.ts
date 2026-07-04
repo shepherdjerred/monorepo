@@ -1,5 +1,21 @@
 // Generated TypeScript types for openebs Helm chart
 
+export type OpenebsHelmValuesGlobal = {
+  /**
+   * Global override for container image registry
+   *
+   * @default ""
+   */
+  imageRegistry?: string;
+  imagePullSecrets?: unknown[];
+  /**
+   * Global override for image pull policy
+   *
+   * @default ""
+   */
+  imagePullPolicy?: string;
+};
+
 export type OpenebsHelmValuesOpenebscrds = {
   /**
    * @default {"volumeSnapshots":{"enabled":true,"keep":true}}
@@ -16,6 +32,8 @@ export type OpenebsHelmValuesOpenebscrdsCsi = {
 
 export type OpenebsHelmValuesOpenebscrdsCsiVolumeSnapshots = {
   /**
+   * Enable/Disable installation of Volume Snapshot CRD's
+   *
    * @default true
    */
   enabled?: boolean;
@@ -30,6 +48,18 @@ export type OpenebsHelmValuesLocalpvprovisioner = {
    * @default {"create":true}
    */
   rbac?: OpenebsHelmValuesLocalpvprovisionerRbac;
+  /**
+   * @default true
+   */
+  globalImageRegistryOverride?: boolean;
+  /**
+   * @default {"image":{"registry":"docker.io"}}
+   */
+  helperPod?: OpenebsHelmValuesLocalpvprovisionerHelperPod;
+  /**
+   * @default {"image":{"registry":"docker.io"}}
+   */
+  localpv?: OpenebsHelmValuesLocalpvprovisionerLocalpv;
 };
 
 export type OpenebsHelmValuesLocalpvprovisionerRbac = {
@@ -37,6 +67,34 @@ export type OpenebsHelmValuesLocalpvprovisionerRbac = {
    * @default true
    */
   create?: boolean;
+};
+
+export type OpenebsHelmValuesLocalpvprovisionerHelperPod = {
+  /**
+   * @default {"registry":"docker.io"}
+   */
+  image?: OpenebsHelmValuesLocalpvprovisionerHelperPodImage;
+};
+
+export type OpenebsHelmValuesLocalpvprovisionerHelperPodImage = {
+  /**
+   * @default "docker.io"
+   */
+  registry?: string;
+};
+
+export type OpenebsHelmValuesLocalpvprovisionerLocalpv = {
+  /**
+   * @default {"registry":"docker.io"}
+   */
+  image?: OpenebsHelmValuesLocalpvprovisionerLocalpvImage;
+};
+
+export type OpenebsHelmValuesLocalpvprovisionerLocalpvImage = {
+  /**
+   * @default "docker.io"
+   */
+  registry?: string;
 };
 
 export type OpenebsHelmValuesZfslocalpv = {
@@ -334,7 +392,7 @@ export type OpenebsHelmValuesPreUpgradeHookImage = {
 
 export type OpenebsHelmValuesEngines = {
   /**
-   * @default {"lvm":{"enabled":true},"zfs":{"enabled":true},"rawfile":{"enabled":false}}
+   * @default {...} (4 keys)
    */
   local?: OpenebsHelmValuesEnginesLocal;
   /**
@@ -356,10 +414,16 @@ export type OpenebsHelmValuesEnginesLocal = {
    * @default {"enabled":false}
    */
   rawfile?: OpenebsHelmValuesEnginesLocalRawfile;
+  /**
+   * @default {"enabled":true}
+   */
+  hostpath?: OpenebsHelmValuesEnginesLocalHostpath;
 };
 
 export type OpenebsHelmValuesEnginesLocalLvm = {
   /**
+   * Enable/Disable LocalPV LVM Storage Engine
+   *
    * @default true
    */
   enabled?: boolean;
@@ -367,6 +431,8 @@ export type OpenebsHelmValuesEnginesLocalLvm = {
 
 export type OpenebsHelmValuesEnginesLocalZfs = {
   /**
+   * Enable/Disable LocalPV ZFS Storage Engine
+   *
    * @default true
    */
   enabled?: boolean;
@@ -375,8 +441,18 @@ export type OpenebsHelmValuesEnginesLocalZfs = {
 export type OpenebsHelmValuesEnginesLocalRawfile = {
   /**
    * Disabled by default since rawfile is not marked as stable yet.
+   * Enable/Disable LocalPV Rawfile Storage Engine
    *
    * @default false
+   */
+  enabled?: boolean;
+};
+
+export type OpenebsHelmValuesEnginesLocalHostpath = {
+  /**
+   * Enable/Disable Dynamic LocalPV Provisioner
+   *
+   * @default true
    */
   enabled?: boolean;
 };
@@ -390,6 +466,8 @@ export type OpenebsHelmValuesEnginesReplicated = {
 
 export type OpenebsHelmValuesEnginesReplicatedMayastor = {
   /**
+   * Enable/Disable Replicated PV Mayastor Storage Engine
+   *
    * @default true
    */
   enabled?: boolean;
@@ -397,6 +475,8 @@ export type OpenebsHelmValuesEnginesReplicatedMayastor = {
 
 export type OpenebsHelmValuesLoki = {
   /**
+   * Enable/Disable loki.
+   *
    * @default true
    */
   enabled?: boolean;
@@ -744,6 +824,8 @@ export type OpenebsHelmValuesLokiSingleBinaryPersistence = {
 
 export type OpenebsHelmValuesLokiMinio = {
   /**
+   * Specify the number of Minio Replicas.
+   *
    * @default 3
    */
   replicas?: number;
@@ -756,7 +838,7 @@ export type OpenebsHelmValuesLokiMinio = {
    */
   mode?: string;
   /**
-   * Disable this if you want to enabled external s3 bucket, and uncomment the storage section above.
+   * Disable this if you want to enable external s3 bucket, and uncomment the storage section above.
    *
    * @default true
    */
@@ -928,6 +1010,8 @@ export type OpenebsHelmValuesLokiSidecarImage = {
 
 export type OpenebsHelmValuesAlloy = {
   /**
+   * Enable/Disable Alloy.
+   *
    * @default true
    */
   enabled?: boolean;
@@ -1005,13 +1089,17 @@ export type OpenebsHelmValuesAlloyAlloyConfigMap = {
 
 export type OpenebsHelmValues = {
   /**
+   * @default {"imageRegistry":"","imagePullSecrets":[],"imagePullPolicy":""}
+   */
+  global?: OpenebsHelmValuesGlobal;
+  /**
    * @default {"csi":{"volumeSnapshots":{"enabled":true,"keep":true}}}
    */
   "openebs-crds"?: OpenebsHelmValuesOpenebscrds;
   /**
    * Refer to https://github.com/openebs/dynamic-localpv-provisioner/blob/v4.2.0/deploy/helm/charts/values.yaml for complete set of values.
    *
-   * @default {"rbac":{"create":true}}
+   * @default {...} (4 keys)
    */
   "localpv-provisioner"?: OpenebsHelmValuesLocalpvprovisioner;
   /**
@@ -1045,7 +1133,7 @@ export type OpenebsHelmValues = {
    */
   preUpgradeHook?: OpenebsHelmValuesPreUpgradeHook;
   /**
-   * @default {"local":{"lvm":{"enabled":true},"zfs":{"enabled":true},"rawfile":{"enabled":false}},"replicated":{"mayastor":{"enabled":true}}}
+   * @default {"local":{"lvm":{"enabled":true},"zfs":{"enabled":true},"rawfile":{"enabled":false},"hostpath":{"enabled":true}},"replicated":{"mayastor":{"enabled":true}}}
    */
   engines?: OpenebsHelmValuesEngines;
   /**
@@ -1059,9 +1147,15 @@ export type OpenebsHelmValues = {
 };
 
 export type OpenebsHelmParameters = {
+  "global.imageRegistry"?: string;
+  "global.imagePullSecrets"?: string;
+  "global.imagePullPolicy"?: string;
   "openebs-crds.csi.volumeSnapshots.enabled"?: string;
   "openebs-crds.csi.volumeSnapshots.keep"?: string;
   "localpv-provisioner.rbac.create"?: string;
+  "localpv-provisioner.globalImageRegistryOverride"?: string;
+  "localpv-provisioner.helperPod.image.registry"?: string;
+  "localpv-provisioner.localpv.image.registry"?: string;
   "zfs-localpv.crds.zfsLocalPv.enabled"?: string;
   "zfs-localpv.crds.csi.volumeSnapshots.enabled"?: string;
   "lvm-localpv.crds.lvmLocalPv.enabled"?: string;
@@ -1085,6 +1179,7 @@ export type OpenebsHelmParameters = {
   "engines.local.lvm.enabled"?: string;
   "engines.local.zfs.enabled"?: string;
   "engines.local.rawfile.enabled"?: string;
+  "engines.local.hostpath.enabled"?: string;
   "engines.replicated.mayastor.enabled"?: string;
   "loki.enabled"?: string;
   "loki.localpvScConfig.enabled"?: string;
