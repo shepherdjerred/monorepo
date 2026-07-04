@@ -264,3 +264,51 @@ soft-fail as usual). Follow-up filed:
 - First cold dpp image build after any cache wipe stalls ~13 min silently at
   `extracted [184]` (node-datachannel source-build postinstall) — not a hang.
 - PR #1399 (dpp eslint-config dedupe) is now redundant — close or rebase.
+
+## Round 9 — retry cleanup removed (post-merge follow-up)
+
+On review (user challenge, valid): the `find … rm -rf node_modules` between
+retry attempts was a workaround stacked on a workaround. Its motivating case
+(isolated-linker EEXIST replaying a poisoned tree) is fixed at the root by
+the hoisted pins, plain re-runs converge under the hoisted linker, and the
+cleanup itself caused the build-5029 dpmk image corruption (deleted state in
+a member dir that the retry didn't rebuild). Reverted
+`BUN_INSTALL_WITH_RETRY` to the plain retry loop; the do-not-re-add rationale
+lives in the constant's docstring.
+
+## Round 10 — main build 5035: the chart "timeout" was an AWS IMDS hang
+
+Post-merge main build 5035 failed on the scout chart-render runner test at the
+full 180s — per round 5's own criterion, a real hang. Root-caused and
+**deterministically reproduced locally**: `runReport` → `saveReportRunImage`
+→ bare `S3Client` → with no ambient AWS config (CI containers; locally
+reproducible with `HOME` pointed at an empty dir) the default credential
+chain falls through to the EC2 metadata probe at 169.254.169.254, which
+blackholes, and under bun the probe's 1s timeout is not enforced → the await
+hangs forever. With `~/.aws` present it fails fast and the best-effort catch
+absorbs it — which is why it always passed on dev machines. This, not slow
+rendering, is the true identity of the long-running chart-render flake
+(PRs #1368/#1398 were treating the symptom).
+
+Proof: `AWS_EC2_METADATA_DISABLED=true` → all 10 tests pass in ~0.7s in the
+same no-config environment.
+
+Fix (PR #1401): `AWS_EC2_METADATA_DISABLED=true` in scout backend
+test-setup.ts (there is no IMDS anywhere in this infra), plus
+connection/request timeouts on `createS3Client` so no S3 call can hang
+unboundedly in production either (a wedged SeaweedFS becomes a caught error,
+not a hung report run). Full backend suite: 1060 tests, 0 fail.
+
+## Round 11 — chown replaced with BUN_INSTALL_CACHE_DIR
+
+Build 5037's temporal-worker spent 30+ minutes in the `chown -R` again,
+racing its own 45-min timeout. Rather than keep paying an O(100k-files)
+overlayfs copy-up per cold build, shipped the fix from the
+`temporal-worker-chown-cache-copyup` todo (todo deleted in the same commit):
+drop `withWritableBunInstallCache` entirely and set
+`BUN_INSTALL_CACHE_DIR=/tmp/bun-install-cache` on the final image — bun
+verified (locally) to place its cache under the env-var prefix, so the
+runtime's cache writes land on a UID-1000-writable path and the original
+`AccessDenied` cannot recur by construction. Runtime verification before
+merge: export the built image via the warm CI engine and run it as UID 1000,
+exercising the bun startup path that originally EACCES'd.
