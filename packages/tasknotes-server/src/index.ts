@@ -59,6 +59,8 @@ app.route(
 app.route("/", pomodoroRoutes(pomodoroStore));
 app.route("/legacy", legacyRoutes({ repo, config: modelConfig }));
 app.route("/legacy", pomodoroRoutes(pomodoroStore));
+// The P2 app polls health at ITS base URL (which points at /legacy).
+app.route("/legacy", healthRoutes);
 
 // Engine visibility: parse skips and config provenance, next to /api/health.
 app.get("/api/engine-status", (c) =>

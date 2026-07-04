@@ -246,8 +246,15 @@ export function legacyRoutes(deps: LegacyDependencies): Hono {
     const collect = (pick: (t: TaskInfo) => readonly string[]): string[] =>
       [...new Set(tasks.flatMap((t) => [...pick(t)]))].sort();
     return c.json({
-      statuses: config.statuses.map((s) => s.value),
-      priorities: config.priorities.map((p) => p.value),
+      // Only legacy-enum values: the workflow's "none" status (and any
+      // custom values) predate the app's closed enums and would fail its
+      // response validation.
+      statuses: config.statuses
+        .map((s) => s.value)
+        .filter((v) => LEGACY_STATUSES.has(v)),
+      priorities: config.priorities
+        .map((p) => p.value)
+        .filter((v) => LEGACY_PRIORITIES.has(v)),
       contexts: collect((t) => t.contexts ?? []),
       projects: collect((t) => t.projects ?? []),
       tags: collect((t) => t.tags ?? []),
