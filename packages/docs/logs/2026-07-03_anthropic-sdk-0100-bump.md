@@ -219,3 +219,69 @@ Also affected: `packages/discord-plays-pokemon/bun.lock` (discord-plays-pokemon/
 
 - The sdk-trace `file:` dep cascade affected 4 packages total: temporal (fixed in round 3), llm-observability (fixed in round 3), scout-for-lol and discord-plays-pokemon (fixed in round 4). birmel was already correct.
 - Dagger engine instability during build #4921 meant many jobs needed 2 retries; "retry once only" limit applies so any job that needs a 3rd retry would require a fresh build push.
+
+### 9. scout-for-lol ESLint lint failure in build #4961
+
+Build #4942 ran but a new merge conflict with origin/main was needed (chore(deps): merge
+origin/main — resolve scout-for-lol bun.lock conflict, commit `16c5f0caa`). Then the
+render pipeline test was intermittently timing out (build #4958), so the timeout was
+extended to 15 s in commit `de27bfbbe`.
+
+Build #4961 was triggered by commit `de27bfbbe`. The Buildkite build page showed:
+
+- "Failed 1 step: scout-for-lol — Lint + Typecheck + Test"
+- `ci-complete` (required GitHub check) never ran because the scout-for-lol group failed
+
+The actual failure was **ESLint warnings treated as errors** (`--max-warnings 0`) in
+`packages/scout-for-lol/packages/report/src/html/competition-chart.ts`:
+
+```
+237:13  @typescript-eslint/strict-boolean-expressions — nullable string in boolean condition
+317:13  @typescript-eslint/strict-boolean-expressions — nullable string in boolean condition
+359:15  @typescript-eslint/strict-boolean-expressions — nullable string in boolean condition
+```
+
+`props.valueSuffix` is `string | undefined` (optional). All three uses were bare
+`(props.valueSuffix ? ... : {})` expressions. The fix is to use explicit `=== undefined`
+checks with the positive branch first (to satisfy `unicorn/no-negated-condition` too):
+
+```typescript
+// Before (triggers strict-boolean-expressions)
+...(props.valueSuffix ? { formatter: `{value}${props.valueSuffix}` } : {})
+
+// After (explicit, passes both rules)
+...(props.valueSuffix === undefined ? {} : { formatter: `{value}${props.valueSuffix}` })
+```
+
+Commit `7ffece9fc`. Build #4970 triggered.
+
+## Session Log — 2026-07-03 (round 5)
+
+### Done
+
+- Confirmed build #4961 root cause: ESLint `strict-boolean-expressions` violations in
+  `packages/scout-for-lol/packages/report/src/html/competition-chart.ts` (3 nullable string conditions)
+- Fixed all three with `=== undefined` positive-branch pattern to satisfy both
+  `strict-boolean-expressions` and `unicorn/no-negated-condition`
+- Verified: `bunx eslint packages/report/src/html/competition-chart.ts --max-warnings 0` → clean
+- Verified: full scout-for-lol `bunx eslint . --max-warnings 0` → clean
+- Verified: `bun run --filter='./packages/scout-for-lol' typecheck` → all pass (0 errors)
+- Commit `7ffece9fc` pushed to `renovate/anthropic-ai-sdk-0.x`
+- Build #4970 triggered and started
+
+### Remaining
+
+- Monitor build #4970 until `buildkite/monorepo/pr/white-check-mark-ci-complete` posts SUCCESS
+- Verify no merge conflicts with main
+- Verify no P3+ review comments
+- Report "PR #1368 GREEN" to team-lead
+
+### Caveats
+
+- The `competition-chart.ts` lint warnings were introduced by Scout's AI editor feature (PR #1387,
+  commit `821922700`) which added the `valueSuffix` optional prop — the new prop used bare truthiness
+  checks that violate the project's strict ESLint rules.
+- All tests pass locally (including the render pipeline chart tests that previously timed out).
+- The 15 s timeout on `runReport renders a chart report` may still be tight on slow CI runners;
+  if build #4970 also times out on this test, the timeout should be raised further or the test
+  should use a lighter rendering path.
