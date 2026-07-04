@@ -181,6 +181,16 @@ resource "prowlarr_indexer" "knaben" {
   priority       = 25
   protocol       = "torrent"
   tags           = []
+
+  lifecycle {
+    # Prowlarr owns and auto-updates its Cardigann indexer definitions, so
+    # `fields` drifts by design as definitions evolve. The devopsarr provider
+    # also fails any apply that touches fields ("Provider produced
+    # inconsistent result after apply: .fields: inconsistent values for
+    # sensitive attribute" — main build 5039, 2026-07-04). Manage the indexer's
+    # lifecycle here (enable, profile, name); leave field contents to the app.
+    ignore_changes = [fields]
+  }
 }
 
 # __generated__ by OpenTofu from "7"
@@ -227,6 +237,16 @@ resource "prowlarr_indexer" "magnetdownload" {
   priority       = 25
   protocol       = "torrent"
   tags           = []
+
+  lifecycle {
+    # Prowlarr owns and auto-updates its Cardigann indexer definitions, so
+    # `fields` drifts by design as definitions evolve. The devopsarr provider
+    # also fails any apply that touches fields ("Provider produced
+    # inconsistent result after apply: .fields: inconsistent values for
+    # sensitive attribute" — main build 5039, 2026-07-04). Manage the indexer's
+    # lifecycle here (enable, profile, name); leave field contents to the app.
+    ignore_changes = [fields]
+  }
 }
 
 # __generated__ by OpenTofu from "1"
@@ -337,6 +357,16 @@ resource "prowlarr_indexer" "the_pirate_bay" {
   priority       = 25
   protocol       = "torrent"
   tags           = []
+
+  lifecycle {
+    # Prowlarr owns and auto-updates its Cardigann indexer definitions, so
+    # `fields` drifts by design as definitions evolve. The devopsarr provider
+    # also fails any apply that touches fields ("Provider produced
+    # inconsistent result after apply: .fields: inconsistent values for
+    # sensitive attribute" — main build 5039, 2026-07-04). Manage the indexer's
+    # lifecycle here (enable, profile, name); leave field contents to the app.
+    ignore_changes = [fields]
+  }
 }
 
 # __generated__ by OpenTofu from "5"
@@ -418,4 +448,14 @@ resource "prowlarr_indexer" "privatehd" {
   priority       = 1
   protocol       = "torrent"
   tags           = []
+
+  lifecycle {
+    # Prowlarr owns and auto-updates its Cardigann indexer definitions, so
+    # `fields` drifts by design as definitions evolve. The devopsarr provider
+    # also fails any apply that touches fields ("Provider produced
+    # inconsistent result after apply: .fields: inconsistent values for
+    # sensitive attribute" — main build 5039, 2026-07-04). Manage the indexer's
+    # lifecycle here (enable, profile, name); leave field contents to the app.
+    ignore_changes = [fields]
+  }
 }
