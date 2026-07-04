@@ -158,3 +158,25 @@ Build 5027: dpp/dpmk/streambot pkg-checks all passed, scout **lint** passed
 Lesson recorded: don't regenerate a shared `file:` dep's lockfile as a
 "nice-to-have" — its nested tree IS the lint/typecheck toolchain for every
 consumer under the hoisted linker.
+
+## Round 5 — build 5028 fallout (typed astro linting disabled wholesale)
+
+Build 5028: tasks-for-obsidian passed (lock revert confirmed). Scout failed
+again, two causes:
+
+1. **The astro crash moved to another rule.** With the reverted (8.59) nested
+   plugin, `@typescript-eslint/no-misused-promises` crashed on
+   `index.astro` — same undefined-type dereference class as unbound-method
+   (which 8.62 had hardened, which is why the round-3 local sweep at 8.62
+   missed it). Whack-a-rule doesn't converge: replaced the single rule-off
+   with `tseslint.configs.disableTypeChecked` for `**/*.astro`, plus turning
+   off our two type-aware custom rules (`zod-schema-naming`,
+   `no-redundant-zod-parse`) which otherwise fail at load time without a
+   program. This makes explicit what the isolated linker was doing silently
+   (typed rules never ran on .astro). Validated: full scout lint sweep green
+   under hoisted with the 8.59 lock.
+2. **Chart-render test died at 60002ms** — at 60s this is starvation, not
+   marginal slowness: the Dagger lint bundle runs lint/typecheck/test phases
+   in parallel inside one CPU-limited container. Bumped to 180s (supersedes
+   PR #1398's 60s — close #1398 when this merges). If it ever dies at
+   180002ms, treat it as a real hang in `runReport` and dig there.

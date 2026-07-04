@@ -189,7 +189,11 @@ describe("RENDER clause — full runner pipeline", () => {
     });
     expect(run.status).toBe("SUCCESS");
     expect(run.rowsReturned).toBe(2);
-  }, 60_000);
+    // 180s: the CI lint+typecheck+test bundle runs phases in parallel in one
+    // CPU-limited container, so this satori/resvg render (2.7s on idle cores)
+    // can be timeshared into minutes (5.0s in build 5027, >60s in 5028).
+    // Supersedes PR #1398's 60s.
+  }, 180_000);
 
   test("a malformed RENDER clause records a FAILED run (no silent bypass)", async () => {
     await seedFacts();

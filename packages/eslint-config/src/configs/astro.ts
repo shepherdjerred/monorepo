@@ -2,6 +2,7 @@
  * Astro-specific linting configuration
  */
 import astroPlugin from "eslint-plugin-astro";
+import tseslint from "typescript-eslint";
 import type { TSESLint } from "@typescript-eslint/utils";
 
 /**
@@ -16,6 +17,26 @@ export function astroConfig(): TSESLint.FlatConfig.ConfigArray {
     // into a single object produces numeric keys ("0", "1", ...) and crashes
     // ESLint with `Unexpected key "0" found`.
     ...flatBase,
+    // Typed linting is not supported on .astro files: astro-eslint-parser has
+    // no projectService support (falls back to `project: true`) and its
+    // virtual TSX nodes are missing from the esTreeNodeToTSNodeMap, so any
+    // type-aware rule can dereference an undefined type and crash ESLint
+    // (observed with unbound-method and no-misused-promises). Under bun's
+    // isolated linker the program never attached and typed rules silently
+    // no-oped — this makes that long-standing effective behavior explicit.
+    {
+      files: ["**/*.astro"],
+      ...tseslint.configs.disableTypeChecked,
+    },
+    {
+      files: ["**/*.astro"],
+      rules: {
+        // Our own type-aware custom rules fail at load time once
+        // disableTypeChecked removes the program for .astro files.
+        "custom-rules/zod-schema-naming": "off",
+        "custom-rules/no-redundant-zod-parse": "off",
+      },
+    },
     {
       files: ["**/*.astro"],
       plugins: {
@@ -36,12 +57,6 @@ export function astroConfig(): TSESLint.FlatConfig.ConfigArray {
         "astro/no-deprecated-getentrybyslug": "error",
         "astro/no-unused-define-vars-in-style": "error",
         "astro/valid-compile": "error",
-        // astro-eslint-parser has no projectService support, and its virtual
-        // TSX nodes are absent from the esTreeNodeToTSNodeMap, so this typed
-        // rule crashes ESLint ("Cannot read properties of undefined") when a
-        // program is attached — and silently no-ops when one isn't. It has
-        // never produced a finding on .astro files; disable it there.
-        "@typescript-eslint/unbound-method": "off",
       },
     },
   ];
