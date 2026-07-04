@@ -31,27 +31,29 @@ function isSkippedSegment(name: string): boolean {
 /**
  * Does this vault-relative POSIX path denote a task-eligible markdown file?
  *
- * The rule, defined here once: a `.md` file none of whose ANCESTOR
- * directories are dot- or underscore-prefixed (`.obsidian`,
- * `.tasknotes-server`, `_templates`, ...). Only directories gate eligibility
- * — the filename itself is not prefix-filtered, matching how
- * `listMarkdownFiles` walks the tree. The watcher applies this same
- * predicate so live fs events and a full rescan agree on which files count
- * (review finding: the watcher's old first-character check let nested hidden
- * directories like `notes/.obsidian/x.md` slip through).
+ * The rule, defined here once: a `.md` file NONE of whose path components —
+ * ancestor directories OR the filename itself — are dot- or
+ * underscore-prefixed (`.obsidian`, `.tasknotes-server`, `_templates`,
+ * `.hidden.md`, ...). This mirrors Obsidian, which hides dot-prefixed files
+ * and folders, plus the `_`-prefix template convention. `listMarkdownFiles`
+ * and the watcher both apply this exact predicate, so a full rescan and live
+ * fs events agree on which files count — otherwise a file could enter the
+ * cache via one path and vanish via the other (review finding: the watcher's
+ * old first-character-only check let nested hidden dirs like
+ * `notes/.obsidian/x.md` slip through, while the full scan kept root dotfiles
+ * the watcher dropped).
  */
 export function isVaultMarkdownPath(relPath: string): boolean {
   if (!relPath.endsWith(".md")) return false;
-  const dirSegments = relPath.split("/").slice(0, -1);
-  return !dirSegments.some((seg) => isSkippedSegment(seg));
+  return !relPath.split("/").some((seg) => isSkippedSegment(seg));
 }
 
 /**
- * Recursively list all .md files under `root`, returning vault-relative
- * paths (POSIX separators — they double as task IDs). Dot- and
- * underscore-prefixed directories are skipped (`.obsidian`,
- * `.tasknotes-server`, `_templates`, ...) per `isVaultMarkdownPath`. Throws
- * if `root` is missing.
+ * Recursively list all task-eligible .md files under `root`, returning
+ * vault-relative paths (POSIX separators — they double as task IDs). Dot- and
+ * underscore-prefixed directories AND files are skipped per
+ * `isVaultMarkdownPath` (`.obsidian`, `_templates`, `.hidden.md`, ...).
+ * Throws if `root` is missing.
  */
 export async function listMarkdownFiles(root: string): Promise<string[]> {
   const results: string[] = [];
@@ -63,7 +65,7 @@ export async function listMarkdownFiles(root: string): Promise<string[]> {
       if (entry.isDirectory()) {
         if (isSkippedSegment(entry.name)) continue;
         await walk(fullPath);
-      } else if (entry.name.endsWith(".md")) {
+      } else if (entry.name.endsWith(".md") && !isSkippedSegment(entry.name)) {
         results.push(path.relative(root, fullPath).split(path.sep).join("/"));
       }
     }

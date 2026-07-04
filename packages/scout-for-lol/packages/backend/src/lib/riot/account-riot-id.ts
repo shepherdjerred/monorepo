@@ -15,7 +15,8 @@ import { type Region, RegionSchema } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { riotApi } from "#src/league/api/api.ts";
 import { mapRegionToEnum } from "#src/league/model/region.ts";
-import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
+import { Constants } from "twisted";
+const { regionToRegionGroupForAccountAPI } = Constants;
 import { withTimeout } from "#src/utils/timeout.ts";
 import { createLogger } from "#src/logger.ts";
 

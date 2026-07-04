@@ -13,7 +13,8 @@ import {
 import { Colors } from "discord.js";
 import { match } from "ts-pattern";
 import { z } from "zod";
-import { getChampionName } from "twisted/dist/constants/champions.js";
+import { Constants } from "twisted";
+const { getChampionName } = Constants;
 import { differenceInCalendarDays, format } from "date-fns";
 
 type CompetitionStatus = ReturnType<typeof getCompetitionStatus>;

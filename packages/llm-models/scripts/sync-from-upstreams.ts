@@ -149,7 +149,8 @@ function reconcile(
   if (
     upstream.contextWindow !== undefined &&
     entry.contextWindow !== undefined &&
-    entry.contextWindow !== upstream.contextWindow
+    entry.contextWindow !== upstream.contextWindow &&
+    entry.pinnedContextWindow !== true
   ) {
     note("contextWindow", entry.contextWindow, upstream.contextWindow);
     entry.contextWindow = upstream.contextWindow;
@@ -160,9 +161,12 @@ function reconcile(
 async function main(): Promise<void> {
   const check = process.argv.includes("--check");
 
-  const catalog: Catalog = CatalogSchema.parse(
-    await Bun.file(CATALOG_PATH).json(),
-  );
+  // Read the raw JSON text first so we can write it back without key reordering.
+  // Zod's parse creates a new object with keys in schema-definition order; writing
+  // the Zod-parsed output causes spurious diff churn on every refresh run.
+  const rawText = await Bun.file(CATALOG_PATH).text();
+  const rawCatalog = UnknownRecord.parse(JSON.parse(rawText));
+  const catalog: Catalog = CatalogSchema.parse(JSON.parse(rawText));
   const [modelsDevRaw, liteLlmRaw] = await Promise.all([
     fetchJson(MODELS_DEV_URL),
     fetchJson(LITELLM_URL),
@@ -210,10 +214,23 @@ async function main(): Promise<void> {
   }
 
   if (drifted.length > 0 && !check) {
-    await Bun.write(
-      CATALOG_PATH,
-      `${JSON.stringify(CatalogSchema.parse(catalog), null, 2)}\n`,
-    );
+    // Patch only the drifted numeric fields into the raw JSON structure so that
+    // key ordering and other non-numeric fields are preserved exactly as-is.
+    for (const [id, entry] of Object.entries(catalog)) {
+      if (entry.pricing.modality !== "text" || rawCatalog[id] === undefined) {
+        continue;
+      }
+      const rawEntry = record(rawCatalog[id]);
+      const rawPricing = record(rawEntry["pricing"]);
+      rawPricing["input"] = entry.pricing.input;
+      rawPricing["output"] = entry.pricing.output;
+      if (entry.contextWindow !== undefined) {
+        rawEntry["contextWindow"] = entry.contextWindow;
+      }
+      rawEntry["pricing"] = rawPricing;
+      rawCatalog[id] = rawEntry;
+    }
+    await Bun.write(CATALOG_PATH, `${JSON.stringify(rawCatalog, null, 2)}\n`);
     emit("\nWrote updated src/catalog.json.");
   }
   if (check && drifted.length > 0) {

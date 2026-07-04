@@ -31,6 +31,22 @@ const serverDir = fileURLToPath(
 
 let vaultDir: string;
 let serverProc: ReturnType<typeof Bun.spawn>;
+// Drained continuously from spawn time. Reading `serverProc.stderr` only
+// resolves once the process closes its stderr fd (i.e. after it exits), so a
+// server that starts listening but is slow to answer would deadlock the
+// timeout path below. Buffer chunks in the background instead and read the
+// accumulated text synchronously when we give up.
+let serverStderr = "";
+
+function drainStderr(stream: ReadableStream<Uint8Array>): void {
+  const decoder = new TextDecoder();
+  void (async () => {
+    for await (const chunk of stream) {
+      serverStderr += decoder.decode(chunk, { stream: true });
+    }
+    serverStderr += decoder.decode();
+  })();
+}
 
 const client = new TaskNotesClient({
   baseUrl: BASE_URL,
@@ -43,9 +59,8 @@ async function waitForHealthy(): Promise<void> {
     if (result.ok) return;
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  const stderr = await new Response(serverProc.stderr).text();
   throw new Error(
-    `tasknotes-server did not become healthy on ${BASE_URL}.\nstderr:\n${stderr}`,
+    `tasknotes-server did not become healthy on ${BASE_URL}.\nstderr:\n${serverStderr}`,
   );
 }
 
@@ -70,6 +85,9 @@ beforeAll(async () => {
     stdout: "pipe",
     stderr: "pipe",
   });
+  if (serverProc.stderr instanceof ReadableStream) {
+    drainStderr(serverProc.stderr);
+  }
   await waitForHealthy();
 });
 

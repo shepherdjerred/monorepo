@@ -69,11 +69,22 @@ describe("isVaultMarkdownPath (shared by the watcher and the full rescan)", () =
     expect(isVaultMarkdownPath("a/b/_archive/c.md")).toBe(false);
   });
 
+  test("rejects dot/underscore-prefixed files (Obsidian hides these)", () => {
+    // The FILENAME is filtered too, not just directories — a root `.hidden.md`
+    // is not a task. The full scan skips it identically (both use this rule).
+    expect(isVaultMarkdownPath(".hidden.md")).toBe(false);
+    expect(isVaultMarkdownPath("_draft.md")).toBe(false);
+    expect(isVaultMarkdownPath("notes/.secret.md")).toBe(false);
+    expect(isVaultMarkdownPath("notes/_scratch.md")).toBe(false);
+  });
+
   test("agrees with listMarkdownFiles over a mixed vault", async () => {
     const vault = await makeVault();
     await mkdir(path.join(vault, "notes/.obsidian"), { recursive: true });
     await mkdir(path.join(vault, "a/_archive"), { recursive: true });
     await writeFile(path.join(vault, "keep.md"), "k");
+    await writeFile(path.join(vault, ".hidden.md"), "hh");
+    await writeFile(path.join(vault, "notes/_scratch.md"), "s");
     await writeFile(path.join(vault, "notes/.obsidian/hidden.md"), "h");
     await writeFile(path.join(vault, "a/_archive/old.md"), "o");
 
@@ -81,6 +92,8 @@ describe("isVaultMarkdownPath (shared by the watcher and the full rescan)", () =
     expect(listed).toEqual(["keep.md"]);
     for (const rel of [
       "keep.md",
+      ".hidden.md",
+      "notes/_scratch.md",
       "notes/.obsidian/hidden.md",
       "a/_archive/old.md",
     ]) {

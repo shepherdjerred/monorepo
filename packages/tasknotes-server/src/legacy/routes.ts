@@ -117,6 +117,9 @@ function errorStatus(error: unknown): 400 | 404 | 500 {
   if (error instanceof NotRecurringError) return 400;
   if (error instanceof TimeTrackingError) return 400;
   if (error instanceof z.ZodError) return 400;
+  // A malformed JSON request body (JSON.parse / c.req.json() throws a
+  // SyntaxError) is a client error, not a server fault → 400, not 500.
+  if (error instanceof SyntaxError) return 400;
   return 500;
 }
 
