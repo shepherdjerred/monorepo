@@ -110,6 +110,8 @@ In Progress — implemented; PR [#1403](https://github.com/shepherdjerred/monore
 - **birmel**: `message-stream.ts` collector awaits VoltAgent's `usage`/`finishReason` → envelopes now carry tokens (were `usage: {}`).
 - **dpp**: `observability/tracing.ts` passes contextManager via `NodeSDK({contextManager})` (duplicate-registration error gone); `goal/codex-trace.ts` is now a thin shim over the package (pokemon span names preserved); `codex-jsonl.ts` + 2 test files deleted.
 - **Live e2e (pre-merge)**: real `claude -p` haiku run → `traceClaudeCli` → real `LlmArchiveSpanProcessor` → real `llm-archive` SeaweedFS bucket; envelope fetched back and validated (v1, bodies, usage, cost); test object deleted.
+- **Live e2e round 2** (commit `abbd3cf2b` context): claude `stream-json` format (the one agent-task/pr-babysit use) archived with cost; a LIVE `codex exec --json` run streamed through the promoted parser/adapter → turn span with usage (incl. reasoning + cached tokens) archived; a REAL VoltAgent agent + real OpenAI stream resolved `usage {input 25, output 5}` + `finishReason "stop"` into the span and envelope (proves birmel's runtime assumption). All test objects deleted from the bucket.
+- **Greptile review fixes** (`abbd3cf2b`): turn-index attr now prefix-derived (dpp keeps `pokemon.goal.turn_index`); birmel pre-attaches rejection observers to the SDK's deferred usage/finishReason promises (latent unhandled-rejection crash on stream abort). dpp thread replied+resolved; birmel thread auto-outdated.
 - PR [#1403](https://github.com/shepherdjerred/monorepo/pull/1403); todos filed: `scout-mastra-observability`, `dpp-goal-trace-post-deploy-verify`, `llm-cost-rollup`.
 
 ### Remaining
