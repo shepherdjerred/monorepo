@@ -99,7 +99,10 @@ function imageBuildStep(
     key: `build-${safeKey(img.name)}`,
     depends_on: dependsOn,
     command: cmd,
-    timeout_in_minutes: 15,
+    // 45 min: a cold image build (post cache-wipe) measured 32 min for the
+    // dpp smoke and >15 min for temporal-worker on 2026-07-04 — the old 15 min
+    // ceiling made a cold rebuild permanently unable to warm its own cache.
+    timeout_in_minutes: 45,
     priority: 1,
     retry: RETRY,
     env: DAGGER_ENV,
@@ -190,7 +193,10 @@ function smokeTestStep(
     key: `smoke-${safeKey(img.name)}`,
     depends_on: dependsOn,
     command: cmd,
-    timeout_in_minutes: 15,
+    // 45 min: a cold image build (post cache-wipe) measured 32 min for the
+    // dpp smoke and >15 min for temporal-worker on 2026-07-04 — the old 15 min
+    // ceiling made a cold rebuild permanently unable to warm its own cache.
+    timeout_in_minutes: 45,
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [
@@ -280,7 +286,10 @@ function imagePushStep(
     if: MAIN_ONLY,
     depends_on: dependsOn,
     command: cmd,
-    timeout_in_minutes: 15,
+    // 45 min: a cold image build (post cache-wipe) measured 32 min for the
+    // dpp smoke and >15 min for temporal-worker on 2026-07-04 — the old 15 min
+    // ceiling made a cold rebuild permanently unable to warm its own cache.
+    timeout_in_minutes: 45,
     priority: 1,
     retry: RETRY,
     env: DAGGER_ENV,

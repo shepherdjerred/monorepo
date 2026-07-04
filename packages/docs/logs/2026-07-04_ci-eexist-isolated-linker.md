@@ -196,3 +196,21 @@ new retry cleanup then removes `backend/node_modules` (including the dsl
 copy) and the retry exits 0 without restoring it → module missing at runtime.
 Fix: drop the second install (dpmk was the only remaining double-install
 site; verified by grepping every `BUN_INSTALL_WITH_RETRY` call's workdir).
+
+## Round 7 — builds 5030/5032 (cold image builds vs 15-min step timeout)
+
+Round 6's fix held: dpmk smoke passed in 5030. The remaining pain was
+operational:
+
+- dpp smoke + temporal-worker appeared "hung" (frozen logs, near-idle engine)
+  in 5030; canceled + rebuilt as 5032. In 5032 dpp smoke completed in ~32
+  minutes — the freeze was Buildkite's log API not showing bun's in-place
+  progress counter, and the builds were simply _slow_ (fully cold caches,
+  npm re-downloading everything post-outage).
+- temporal-worker `timed_out`: image build steps carry
+  `timeout_in_minutes: 15` (scripts/ci/src/steps/images.ts), which a cold
+  build cannot meet — so it could never complete once to warm its own cache.
+  Bumped image-build timeouts 15 → 45 min.
+- Note: the per-package Build + Smoke steps have NO timeout at all
+  (timeout null on the dpp job) — inconsistent with the 15-min docker steps;
+  left as-is tonight, worth unifying later.
