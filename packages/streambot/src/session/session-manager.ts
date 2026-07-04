@@ -45,6 +45,7 @@ import {
   resumeKeyFor,
 } from "@shepherdjerred/streambot/state/resume.ts";
 import { moveSessionRecord } from "@shepherdjerred/streambot/session/session-move.ts";
+import { createPlaybackInspector } from "@shepherdjerred/streambot/session/playback-log.ts";
 import type {
   ChannelId,
   GuildId,
@@ -345,6 +346,9 @@ export class SessionManager {
     };
     const actor = createActor(createPlaybackMachine(actors), {
       input: params.input,
+      inspect: createPlaybackInspector(
+        keyOf(params.guildId, params.voiceChannelId),
+      ),
     });
     const reporter = new StatusReporter(
       (message) => this.deps.announce(params.statusChannelId, message),

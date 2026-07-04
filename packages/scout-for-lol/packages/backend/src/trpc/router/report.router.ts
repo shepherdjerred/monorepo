@@ -20,6 +20,7 @@ import {
   ReportIdSchema,
   ReportLookbackDaysSchema,
   ReportMaxRowsSchema,
+  ReportAiEditStatusSchema,
   ReportQueryTextSchema,
   type DiscordGuildId,
   type ReportId,
@@ -38,6 +39,7 @@ import { executeReportQuery } from "#src/reports/query-engine.ts";
 import { renderReportOutput } from "#src/reports/output.ts";
 import { runReport } from "#src/reports/runner.ts";
 import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
+import { getReportAiEditStatus } from "#src/reports/ai/status.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const ReportIdInput = GuildInput.extend({ reportId: ReportIdSchema });
@@ -76,6 +78,16 @@ export const reportRouter = router({
       where: { serverId: input.guildId },
       orderBy: { createdTime: "desc" },
     });
+  }),
+
+  aiEditStatus: webProcedure.input(GuildInput).query(async ({ ctx, input }) => {
+    await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+    return ReportAiEditStatusSchema.parse(
+      getReportAiEditStatus({
+        guildId: input.guildId,
+        userId: DiscordAccountIdSchema.parse(ctx.user.discordId),
+      }),
+    );
   }),
 
   get: webProcedure

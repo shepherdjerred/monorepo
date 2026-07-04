@@ -29,9 +29,7 @@ export function OnboardingSubscribeStep(props: {
   const [value, setValue] = useState<SubscriptionFieldsValue>(() =>
     props.mode === "self"
       ? {
-          channelId: initialChannel,
-          region: "AMERICA_NORTH",
-          riotId: "",
+          ...emptySubscriptionValue(initialChannel),
           alias: props.username,
           discordUserId: props.discordId,
         }
