@@ -245,3 +245,33 @@ function ymdOf(date: Date): string {
   const day = String(date.getDate()).padStart(2, "0");
   return `${String(date.getFullYear())}-${month}-${day}`;
 }
+
+describe("time tracking mutations", () => {
+  test("start opens a session in frontmatter; double-start is a 400-class error", async () => {
+    await seed("TaskNotes/plugin-task.md", PLUGIN_AUTHORED);
+    await repo.scan();
+    const started = await repo.startTime("TaskNotes/plugin-task.md");
+    expect(started.timeEntries).toHaveLength(1);
+    expect(started.timeEntries?.[0]?.startTime).toBe(NOW.toISOString());
+    expect(started.timeEntries?.[0]?.endTime).toBeUndefined();
+    await expect(repo.startTime("TaskNotes/plugin-task.md")).rejects.toThrow(
+      "already active",
+    );
+    // The session is in the FILE (plugin-visible), not a side-store.
+    const raw = await Bun.file(
+      path.join(vault, "TaskNotes/plugin-task.md"),
+    ).text();
+    expect(raw).toContain("timeEntries");
+  });
+
+  test("stop closes the session; stop without one is a 400-class error", async () => {
+    await seed("TaskNotes/plugin-task.md", PLUGIN_AUTHORED);
+    await repo.scan();
+    await repo.startTime("TaskNotes/plugin-task.md");
+    const stopped = await repo.stopTime("TaskNotes/plugin-task.md");
+    expect(stopped.timeEntries?.[0]?.endTime).toBe(NOW.toISOString());
+    await expect(repo.stopTime("TaskNotes/plugin-task.md")).rejects.toThrow(
+      "No active",
+    );
+  });
+});

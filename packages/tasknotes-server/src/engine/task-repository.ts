@@ -2,8 +2,11 @@ import path from "node:path";
 import {
   applyFrontmatterPatch,
   buildRecurringTaskCompletePlan,
+  buildStartTimeTrackingPlan,
+  buildStopTimeTrackingPlan,
   buildTaskUpdatePlan,
   detectTaskFile,
+  getActiveTimeEntry,
   getDefaultCompletedStatus,
   isCompletedStatus,
   parseTaskDocument,
@@ -292,6 +295,37 @@ export class TaskRepository {
     return this.applyPlanPatch(id, fresh, patch, {});
   }
 
+  /**
+   * Start a tracking session (upstream: 400 if one is already active).
+   * The plan's timeEntries land in frontmatter via a normal update patch.
+   */
+  async startTime(id: string): Promise<TaskInfo> {
+    const fresh = await this.readFresh(id);
+    if (getActiveTimeEntry(fresh.task) !== undefined) {
+      throw new TimeTrackingError("Time tracking is already active");
+    }
+    const plan = buildStartTimeTrackingPlan(
+      fresh.task,
+      this.clock().toISOString(),
+    );
+    return this.update(id, { timeEntries: plan.updatedTask.timeEntries ?? [] });
+  }
+
+  /** Stop the active tracking session (upstream: 400 if none). */
+  async stopTime(id: string): Promise<TaskInfo> {
+    const fresh = await this.readFresh(id);
+    const active = getActiveTimeEntry(fresh.task);
+    if (active === undefined) {
+      throw new TimeTrackingError("No active time tracking session");
+    }
+    const plan = buildStopTimeTrackingPlan(
+      fresh.task,
+      active,
+      this.clock().toISOString(),
+    );
+    return this.update(id, { timeEntries: plan.updatedTask.timeEntries ?? [] });
+  }
+
   /** True when `status` is a completed status under the user's workflow. */
   isCompleted(status: string | undefined): boolean {
     return isCompletedStatus(status, this.config.statuses);
@@ -357,6 +391,13 @@ export class TaskNotFoundError extends Error {
   constructor(id: string) {
     super(`Task not found: ${id}`);
     this.name = "TaskNotFoundError";
+  }
+}
+
+export class TimeTrackingError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TimeTrackingError";
   }
 }
 
