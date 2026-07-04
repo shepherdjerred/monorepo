@@ -1,7 +1,6 @@
 import Parser from "rss-parser";
 import sanitizeHtml from "sanitize-html";
-import * as truncateHtml from "truncate-html";
-import { z } from "zod/v3";
+import { Parser as HtmlParser } from "htmlparser2";
 import {
   type Source,
   type ResultEntry,
@@ -11,24 +10,94 @@ import {
 import * as R from "remeda";
 import { asyncMapFilterUndefined } from "./util.ts";
 
-// Handle ESM/CommonJS interop - truncate-html exports differently in different environments
-const TruncateFnSchema = z
-  .function()
-  .args(z.string(), z.number().optional())
-  .returns(z.string());
-const TruncateModuleSchema = z.object({ default: TruncateFnSchema });
+const VOID_TAGS = new Set([
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "source",
+  "track",
+  "wbr",
+]);
 
-function truncate(html: string, length?: number): string {
-  const mod = truncateHtml as unknown;
-  const fnResult = TruncateFnSchema.safeParse(mod);
-  if (fnResult.success) {
-    return fnResult.data(html, length);
+function escapeText(text: string): string {
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function escapeAttributeValue(value: string): string {
+  return escapeText(value).replaceAll('"', "&quot;");
+}
+
+/**
+ * Truncate HTML to `length` text characters while keeping tags balanced.
+ * Whitespace runs collapse to a single space and `...` marks a cut, matching
+ * the behavior of the retired `truncate-html` package (which was pinned to a
+ * dead cheerio 1.0.0-rc.12/htmlparser2@6 chain).
+ */
+function truncate(html: string, length = 300): string {
+  let out = "";
+  let remaining = length;
+  let truncated = false;
+  const openTags: string[] = [];
+
+  const parser = new HtmlParser({
+    onopentag(name, attributes) {
+      if (truncated) {
+        return;
+      }
+      const attributeText = Object.entries(attributes)
+        .map(([key, value]) =>
+          value === "" ? ` ${key}` : ` ${key}="${escapeAttributeValue(value)}"`,
+        )
+        .join("");
+      out += `<${name}${attributeText}>`;
+      if (!VOID_TAGS.has(name)) {
+        openTags.push(name);
+      }
+    },
+    ontext(text) {
+      if (truncated) {
+        return;
+      }
+      const collapsed = text.replaceAll(/\s+/g, " ");
+      if (collapsed.length <= remaining) {
+        out += escapeText(collapsed);
+        remaining -= collapsed.length;
+        return;
+      }
+      out += `${escapeText(collapsed.slice(0, remaining))}...`;
+      truncated = true;
+    },
+    onclosetag(name) {
+      if (VOID_TAGS.has(name)) {
+        return;
+      }
+      // Only emit closes for tags we actually opened (tags opened after the
+      // cut never enter the stack, so their close events are dropped too).
+      const index = openTags.lastIndexOf(name);
+      if (index === -1) {
+        return;
+      }
+      openTags.splice(index, 1);
+      out += `</${name}>`;
+    },
+  });
+  parser.write(html);
+  parser.end();
+
+  for (const name of openTags.reverse()) {
+    out += `</${name}>`;
   }
-  const modResult = TruncateModuleSchema.safeParse(mod);
-  if (modResult.success) {
-    return modResult.data.default(html, length);
-  }
-  throw new Error("truncate-html module could not be resolved");
+  return out;
 }
 
 export async function fetchAll(config: Configuration) {
