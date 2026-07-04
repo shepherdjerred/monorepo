@@ -449,13 +449,4 @@ resource "prowlarr_indexer" "privatehd" {
   protocol       = "torrent"
   tags           = []
 
-  lifecycle {
-    # Prowlarr owns and auto-updates its Cardigann indexer definitions, so
-    # `fields` drifts by design as definitions evolve. The devopsarr provider
-    # also fails any apply that touches fields ("Provider produced
-    # inconsistent result after apply: .fields: inconsistent values for
-    # sensitive attribute" — main build 5039, 2026-07-04). Manage the indexer's
-    # lifecycle here (enable, profile, name); leave field contents to the app.
-    ignore_changes = [fields]
-  }
 }
