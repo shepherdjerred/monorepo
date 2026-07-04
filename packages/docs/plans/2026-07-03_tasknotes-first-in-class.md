@@ -216,3 +216,25 @@ Getting it green surfaced two real app bugs (QuickAdd's Create button hid behind
 
 - Upstream reference sources are in the scratchpad (`upstream/src_api_*.ts`, `docs_HTTP_API.md`) — refetch from `github.com/callumalpass/tasknotes` if lost.
 - `tasknotes-types` consumers: the app (P5) will need Metro to bundle rrule/yaml (model deps) — verify then.
+
+## Session Log — 2026-07-03 (P3 continued: full server rebuild)
+
+### Done
+
+On `feature/tasknotes-p3` (stacked on P2), all in `packages/tasknotes-server` unless noted:
+
+- **Engine** (all model-backed, all tested): `engine/model-config.ts` (plugin data.json → TaskNotesModelConfig; corrupt file throws), `engine/vault-files.ts` (honest-error byte IO), `engine/task-repository.ts` (tolerant reads + loud skips, plan-based surgical writes, workflow toggle-status, set-semantics complete-instance, title-rename identity, time start/stop into frontmatter), `engine/watcher.ts` (max-wait debounce, error re-arm, safety rescan), `engine/query.ts` (upstream FilterQuery tree), `engine/stats.ts`, `engine/time-reports.ts`, `engine/filename.ts`.
+- **Surfaces**: `v2/routes.ts` = upstream plugin API endpoint-for-endpoint incl. NLP `{parsed,taskData}`/`{task,parsed}` and `/api/calendars/events` with recurring expansion; `legacy/routes.ts` = old camelCase contract at `/legacy/api/*` for the P2 app (health mounted there too; filter-options clamped to legacy enums). `index.ts` cutover boots the engine with a hard startup gate + `/api/engine-status`.
+- **P4 tooling**: `scripts/migrate-vault.ts` (tag legacy files, fold `_tasknotes/time-tracking.json` into frontmatter, drop injected ids; dry-run default, idempotent) and `scripts/vault-audit.ts` (parse-skips + round-trip byte-diff gate) — verified end-to-end on a synthetic legacy vault.
+- **Verification**: golden corpus (8 review kill-cases + spec-version pin + fixture-byte meta-test; fixtures excluded from prettier/markdownlint); idempotency suite ported to v2 (12/12); old hand-rolled vault layer + routes deleted; server suite 135 tests; **the P2 app's contract suite passes 18/18 against the rebuilt server via `/legacy`**. tasknotes-types v2 wire schemas + drift-pin tests; Hono path-ID routing pinned. CLAUDE.md rewritten for the new architecture.
+
+### Remaining (P3)
+
+- Optional depth: conformance test via `executeConformanceOperation`; concurrency test at HTTP level (repository-level concurrent-edit survival is covered).
+- Dagger smoke test / CI verification for the rebuilt server; then the P3 PR review.
+- Ring-3 ob-sync transport test before P4 (user-gated: needs a spare Obsidian Sync vault slot).
+
+### Caveats
+
+- The e2e seed fixtures (`tags: [seeded]`) are invisible to the new engine until migrated — by design; the app e2e suite stays on the P2 branch's old server until P5 realigns it.
+- `/legacy` lives on the app's configurable base URL: at P4 rollout the app's API URL gains the `/legacy` suffix.
