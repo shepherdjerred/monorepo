@@ -88,3 +88,37 @@ Satori/jsdom integration — and a transitive `../data/patch.json` — into ever
 - Local builds need placeholder `PUBLIC_PINTEREST_TAG_ID` / `PUBLIC_REDDIT_PIXEL_ID` env vars.
 - Any future JS-interaction testing on this site must use a **low/no-stealth** browser
   (full-stealth injects a CSP that blocks island hydration — see the sweep log).
+
+## Session Log — 2026-07-03 (CI babysit)
+
+### Done
+
+- **Fixed a flaky CI hard-fail in the `scout-test-template` quality check** (`.dagger/src/quality.ts`,
+  commit `f082ec288`). Buildkite `shield-quality-bundle` intermittently died with
+  `EEXIST: File exists: failed to link package: @shepherdjerred/eslint-config` during
+  `bun install`. Root cause: adding the frontend's build-time `astro-opengraph-images`
+  file: dep (this PR) — aoi devDepends on `@shepherdjerred/eslint-config` via `../eslint-config`,
+  the same path scout's own eslint-config devDep resolves to. Bun materialized two store
+  entries for that one package and its parallel linker raced them. The check regenerates a
+  SQLite template and only needs the backend runtime (Prisma client + CLI, both
+  `dependencies`), so the scout install now runs `bun install --frozen-lockfile --production`,
+  dropping every devDependency (no duplicate eslint-config to race on). Verified end-to-end
+  in an isolated repo copy: frozen `--production` install + `prisma generate` +
+  `check:test-template` all pass; nested eslint-config store entries are gone.
+- Confirmed the flake was non-deterministic (scout-test-template passed in build #4928, failed
+  in #4957/#4960) and that a job-level retry was **not** an option — the pipeline generator
+  deliberately sets `exit_status: 1, limit: 0` (no retry on general failures).
+- Verified the three Greptile **P2** review comments (ContentLayout description fallback,
+  SeoHead JSON-LD app description, og-template overflow guard) were all already resolved in
+  later commits on the branch — the comments were left on stale revisions.
+
+### Remaining
+
+- Confirm build #4972 (commit `f082ec288`) goes fully green and is stable.
+
+### Caveats
+
+- The `scout-test-template` check now installs scout with `--production`; if a future change
+  makes the template generator depend on a devDependency, this check will fail to find it —
+  keep template-generation deps (`prisma`, `@prisma/client`, `@prisma/adapter-libsql`) as
+  runtime `dependencies`.
