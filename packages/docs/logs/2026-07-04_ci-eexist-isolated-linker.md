@@ -1,0 +1,73 @@
+# CI-wide EEXIST failures — bun isolated-linker race (post-outage remediation)
+
+## Status
+
+In Progress
+
+## Symptom
+
+After the 2026-07-03 Dagger engine disk-full outage recovery (~19:15 PDT), nearly
+every Buildkite build on every branch — including `main` (builds 5004, 5006, 5022) — failed in the discord-plays-pokemon `pkg-check` / `Lint + Typecheck +
+Test` jobs with:
+
+```
+EEXIST: File exists: failed to link package: @shepherdjerred/eslint-config@../eslint-config (link)
+```
+
+All three retry attempts in `BUN_INSTALL_WITH_RETRY` failed back-to-back.
+Knip and Trivy also showed red but are `soft_failed: true` (verified on passing
+build 5018) — not blockers.
+
+## Root cause
+
+1. **bun silently switched these workspaces to its isolated linker.** With the
+   default `linker = "auto"`, bun ≥1.3 selects the _isolated_ linker for any
+   workspace whose `bun.lock` has `configVersion: 1`
+   (`src/install/PackageManager/install_with_manager.rs`: `NodeLinker::Auto` →
+   `Isolated` when `workspace_paths.len() > 0`). dpp's lockfile has had
+   `configVersion: 1` since 2026-03-01 (`e782ec711`). The error string
+   `failed to link package` exists **only** in
+   `src/install/isolated_install/Installer.rs` — proof CI was on the isolated
+   path.
+2. **Bun's isolated installer has an unfixed EEXIST race** when several
+   workspace members reference the same `file:` dep (oven-sh/bun#12917,
+   oven-sh/bun#20142; both open). Only 3 packages have real nested workspaces
+   and are exposed: discord-plays-pokemon (3 members), discord-plays-mario-kart
+   (3), scout-for-lol (7) — exactly the packages with historical pkg-check
+   EEXIST flakes.
+3. **The outage recovery turned the flake into a wall.** The engine PVC purge/
+   recreate wiped the layer cache, so every branch re-ran every `bun install`
+   from scratch, concurrently (~20-branch backlog on one 32-core node) —
+   maximizing race pressure.
+4. **The retry loop was poisoned.** A failed attempt leaves a half-linked
+   `node_modules`; rerunning `bun install` on top of it hits the same EEXIST
+   instantly, so attempts 2/3 never had a chance.
+
+Ruled out: bun image bump (1.3.14 pinned since 05-13), engine GC thrash (one
+prune in 5h, disk 49%, config per 2026-06-07 decision record), PR #1399's
+dedupe (insufficient — the mounted dep dirs still carry `file:` refs to
+eslint-config in their devDependencies).
+
+## Fix (PR: fix/bun-install-retry-hygiene)
+
+- **Pin `linker = "hoisted"`** via `bunfig.toml` in the three nested-workspace
+  packages (dpp: new file; dpmk: new file; scout: added `[install]` section).
+  Verified locally: fresh dpp install flips from isolated (`node_modules/.bun`
+  store) to hoisted, `--frozen-lockfile` still passes, `bun.lock` unchanged,
+  and `file:` deps are still **copies** (real dirs), preserving scout's
+  intentional copy-on-install workflow.
+- **Retry hygiene** in `.dagger/src/base.ts` `BUN_INSTALL_WITH_RETRY`: remove
+  every `node_modules` under the workdir between attempts so retries are
+  independent trials, not replays of the first loss. Behaviorally tested
+  (3 attempts, cleanup of root + nested member node_modules, exit 1 preserved).
+- Follow-up tracked in `packages/docs/todos/bun-isolated-linker-eexist.md`
+  (remove pins when upstream fixes the race; move scout's phantom
+  `@shepherdjerred/llm-models` dep into `packages/data` first).
+
+## Bonus finding
+
+Fresh-checkout `bun run scripts/setup.ts` was already broken on main by the
+isolated linker: scout `generate` fails with
+`Cannot find module '@shepherdjerred/llm-models'` because `packages/data`
+imports it while only the scout root declares it (phantom dep; isolated mode
+correctly refuses to resolve it). The hoisted pin restores setup.
