@@ -47,8 +47,8 @@ function isOldServerTaskFile(frontmatter: Record<string, unknown>): boolean {
   // plugin-authored task or an arbitrary note that merely happens to carry
   // `title`/`status` frontmatter has no injected id, so it is left untouched
   // rather than false-tagged. Any id scalar counts — old 8-char ids that look
-  // numeric parse as numbers — so presence is the signal; the time-fold step
-  // re-validates the type.
+  // numeric parse as numbers, and the time-fold step coerces both string and
+  // numeric ids to the side-store's string key.
   return (
     "id" in frontmatter &&
     OldServerTaskCoreSchema.safeParse(frontmatter).success
@@ -81,8 +81,16 @@ export function migrateVaultFile(
     actions.push(`add tag "${tag}"`);
   }
 
-  // (2) fold side-store time entries in (dedup on startTime)
-  const legacyId = z.string().safeParse(next["id"]);
+  // (2) fold side-store time entries in (dedup on startTime).
+  // The old server wrote the same injected id to the frontmatter `id:` AND the
+  // side-store `taskId` (always a string). YAML re-parses an all-digit id like
+  // `12345678` as a NUMBER, so coerce to string before the lookup — otherwise
+  // a numeric-id task's entries are silently skipped and then lost forever when
+  // migrate-vault renames time-tracking.json to .migrated.
+  const legacyId = z
+    .union([z.string(), z.number()])
+    .transform(String)
+    .safeParse(next["id"]);
   if (legacyId.success) {
     const entries = timeEntriesForId(legacyId.data);
     if (entries.length > 0) {

@@ -49,6 +49,29 @@ describe("migrateVaultFile", () => {
     expect(result.content).not.toContain("taskId");
   });
 
+  test("folds time entries for an all-digit id that YAML parsed as a number", () => {
+    // `id: 12345678` re-parses as the NUMBER 12345678; the side-store keys are
+    // strings. Regression guard: without string coercion these entries would be
+    // silently dropped and lost when the side-store is renamed to .migrated.
+    const numericIdFile = `---
+id: 12345678
+title: Numeric id task
+status: open
+---
+
+Body.
+`;
+    const result = migrateVaultFile(numericIdFile, config, (id) =>
+      id === "12345678"
+        ? [{ taskId: "12345678", startTime: "2026-07-02T10:00:00Z" }]
+        : [],
+    );
+    expect(result.changed).toBe(true);
+    expect(result.actions).toContain("fold 1 time entrie(s) from side-store");
+    expect(result.content).toContain("startTime: 2026-07-02T10:00:00Z");
+    expect(result.content).not.toContain("id: 12345678");
+  });
+
   test("is idempotent: migrating the output changes nothing", () => {
     const first = migrateVaultFile(LEGACY_SERVER_FILE, config, () => []);
     const second = migrateVaultFile(first.content, config, () => []);
