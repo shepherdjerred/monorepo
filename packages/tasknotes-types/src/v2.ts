@@ -142,9 +142,24 @@ export const TaskCreationRequestSchema = TaskInfoV2Schema.partial()
 
 export type TaskCreationRequest = z.infer<typeof TaskCreationRequestSchema>;
 
-/** PUT /api/tasks/:id — Partial<TaskInfo> plus optional `details` body text. */
+/**
+ * PUT /api/tasks/:id — Partial<TaskInfo> plus optional `details` body text.
+ * `null` on a clearable field means REMOVE it (the model's plan builders
+ * treat null as a frontmatter-key removal; upstream sends null to clear).
+ */
 export const TaskUpdateRequestSchema = TaskInfoV2Schema.partial()
-  .extend({ details: z.string().optional() })
+  .extend({
+    due: z.string().nullable().optional(),
+    scheduled: z.string().nullable().optional(),
+    recurrence: z.string().nullable().optional(),
+    recurrence_anchor: z
+      .enum(["scheduled", "completion"])
+      .nullable()
+      .optional(),
+    completedDate: z.string().nullable().optional(),
+    timeEstimate: z.number().nullable().optional(),
+    details: z.string().nullable().optional(),
+  })
   .loose();
 
 export type TaskUpdateRequest = z.infer<typeof TaskUpdateRequestSchema>;

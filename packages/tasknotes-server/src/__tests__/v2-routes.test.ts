@@ -277,3 +277,19 @@ describe("v2 NLP + calendars", () => {
     expect(obj(body["sources"])["tasks"]).toBe(body["total"]);
   });
 });
+
+describe("null-as-clear (upstream update convention)", () => {
+  test("PUT with due:null removes the due date; file loses the key", async () => {
+    const withDue = await app.request(`/api/tasks/${SEEDED_ID}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ title: "Renamed", due: null }),
+    });
+    expect(withDue.status).toBe(200);
+    const task = await unwrap(withDue);
+    expect(task["title"]).toBe("Renamed");
+    expect(task["due"] ?? undefined).toBeUndefined();
+    const raw = await Bun.file(path.join(vault, "TaskNotes/seeded.md")).text();
+    expect(raw).not.toContain("due:");
+  });
+});
