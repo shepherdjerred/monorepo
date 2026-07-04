@@ -113,6 +113,14 @@ export function v2Routes(deps: V2Dependencies): Hono {
   const vault = { name: path.basename(vaultPath), path: vaultPath };
   const app = new Hono();
 
+  // Mutation responses carry `details` (the note body) like GET does — the
+  // app's offline store merges acked tasks into its base, and a detail-less
+  // ack would clobber the visible note text.
+  const withDetails = (task: { path: string }): Record<string, unknown> => {
+    const entry = repo.get(task.path);
+    return { ...task, details: entry === undefined ? "" : entry.body.trim() };
+  };
+
   // -- tasks ---------------------------------------------------------------
 
   app.get("/api/tasks", (c) => {
@@ -141,7 +149,7 @@ export function v2Routes(deps: V2Dependencies): Hono {
     guard(c, async () => {
       const data = TaskCreationRequestSchema.parse(await c.req.json());
       const task = await repo.create(data);
-      return c.json(task, 201);
+      return c.json(withDetails(task), 201);
     }),
   );
 
@@ -159,7 +167,7 @@ export function v2Routes(deps: V2Dependencies): Hono {
     guard(c, async () => {
       const updates = TaskUpdateRequestSchema.parse(await c.req.json());
       const task = await repo.update(c.req.param("id"), updates);
-      return c.json(task);
+      return c.json(withDetails(task));
     }),
   );
 
@@ -171,11 +179,15 @@ export function v2Routes(deps: V2Dependencies): Hono {
   );
 
   app.post("/api/tasks/:id/toggle-status", (c) =>
-    guard(c, async () => c.json(await repo.toggleStatus(c.req.param("id")))),
+    guard(c, async () =>
+      c.json(withDetails(await repo.toggleStatus(c.req.param("id")))),
+    ),
   );
 
   app.post("/api/tasks/:id/archive", (c) =>
-    guard(c, async () => c.json(await repo.toggleArchive(c.req.param("id")))),
+    guard(c, async () =>
+      c.json(withDetails(await repo.toggleArchive(c.req.param("id")))),
+    ),
   );
 
   app.post("/api/tasks/:id/complete-instance", (c) =>
@@ -185,7 +197,7 @@ export function v2Routes(deps: V2Dependencies): Hono {
         raw.length === 0 ? {} : JSON.parse(raw),
       );
       const task = await repo.completeInstance(c.req.param("id"), body);
-      return c.json(task);
+      return c.json(withDetails(task));
     }),
   );
 
@@ -213,11 +225,59 @@ export function v2Routes(deps: V2Dependencies): Hono {
   // -- time tracking -------------------------------------------------------
 
   app.post("/api/tasks/:id/time/start", (c) =>
-    guard(c, async () => c.json(await repo.startTime(c.req.param("id")))),
+    guard(c, async () =>
+      c.json(withDetails(await repo.startTime(c.req.param("id")))),
+    ),
   );
 
   app.post("/api/tasks/:id/time/stop", (c) =>
-    guard(c, async () => c.json(await repo.stopTime(c.req.param("id")))),
+    guard(c, async () =>
+      c.json(withDetails(await repo.stopTime(c.req.param("id")))),
+    ),
+  );
+
+  app.get("/api/tasks/:id/time", (c) =>
+    guard(c, () => {
+      const entry = repo.get(c.req.param("id"));
+      if (entry === undefined) {
+        return c.json({ success: false, error: "Task not found" }, 404);
+      }
+      const task = entry.task;
+      const entries = task.timeEntries ?? [];
+      const now = clock();
+      let totalMinutes = 0;
+      let completedSessions = 0;
+      let activeSessions = 0;
+      for (const e of entries) {
+        if (e.endTime === undefined) {
+          activeSessions += 1;
+          totalMinutes += Math.floor(
+            (now.getTime() - new Date(e.startTime).getTime()) / 60_000,
+          );
+        } else {
+          completedSessions += 1;
+          totalMinutes += Math.floor(
+            (new Date(e.endTime).getTime() - new Date(e.startTime).getTime()) /
+              60_000,
+          );
+        }
+      }
+      return c.json({
+        task: {
+          id: task.path,
+          title: task.title,
+          status: task.status,
+          priority: task.priority,
+        },
+        summary: {
+          totalMinutes,
+          totalHours: Math.round((totalMinutes / 60) * 100) / 100,
+          totalSessions: entries.length,
+          completedSessions,
+          activeSessions,
+        },
+      });
+    }),
   );
 
   app.get("/api/time/active", (c) =>
