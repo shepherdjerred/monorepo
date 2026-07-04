@@ -111,6 +111,29 @@ describe("v2 task routes", () => {
     expect(typeof body.error).toBe("string");
   });
 
+  test("malformed JSON body → 400, not 500", async () => {
+    // A SyntaxError from parsing a bad body is a client error. Covers both
+    // the manual JSON.parse path (complete-instance) and Hono's c.req.json().
+    const completeInstance = await app.request(
+      `/api/tasks/${SEEDED_ID}/complete-instance`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "{not valid json",
+      },
+    );
+    expect(completeInstance.status).toBe(400);
+    const ciBody = await envelope(completeInstance);
+    expect(ciBody.success).toBe(false);
+
+    const create = await app.request("/api/tasks", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{not valid json",
+    });
+    expect(create.status).toBe(400);
+  });
+
   test("PUT updates; DELETE returns {message}; 404 after", async () => {
     const updated = await app.request(`/api/tasks/${SEEDED_ID}`, {
       method: "PUT",
