@@ -13,5 +13,13 @@ import { S3Client } from "@aws-sdk/client-s3";
 export function createS3Client(): S3Client {
   return new S3Client({
     forcePathStyle: true,
+    // Bound every S3 call. Without these, a blackholed endpoint (or the
+    // SDK's IMDS credential probe under bun) hangs the await forever —
+    // observed hanging runReport for 180s+ in CI. With timeouts, a dead
+    // endpoint becomes a thrown error that best-effort call sites catch.
+    requestHandler: {
+      connectionTimeout: 3000,
+      requestTimeout: 15_000,
+    },
   });
 }

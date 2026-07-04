@@ -4,7 +4,7 @@ import type { AppRouter } from "@scout-for-lol/backend/trpc/router/index.ts";
 
 const CSRF_COOKIE = "scout_csrf";
 
-function readCsrfCookie(): string | null {
+export function readCsrfCookie(): string | null {
   const match = document.cookie
     .split(";")
     .map((c) => c.trim())

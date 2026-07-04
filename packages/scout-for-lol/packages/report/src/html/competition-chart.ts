@@ -234,7 +234,7 @@ function buildLineOption(
         color: palette.grey[1],
         fontSize: 22,
         fontFamily: BODY_FONT,
-        ...(props.valueSuffix
+        ...(props.valueSuffix !== undefined && props.valueSuffix !== ""
           ? { formatter: `{value}${props.valueSuffix}` }
           : {}),
       },
@@ -314,7 +314,7 @@ function buildBarOption(
         color: palette.grey[1],
         fontSize: 22,
         fontFamily: BODY_FONT,
-        ...(props.valueSuffix
+        ...(props.valueSuffix !== undefined && props.valueSuffix !== ""
           ? { formatter: `{value}${props.valueSuffix}` }
           : {}),
       },
@@ -356,7 +356,7 @@ function buildBarOption(
           fontFamily: BODY_FONT,
           fontWeight: 700,
           distance: 12,
-          ...(props.valueSuffix
+          ...(props.valueSuffix !== undefined && props.valueSuffix !== ""
             ? { formatter: `{c}${props.valueSuffix}` }
             : {}),
         },

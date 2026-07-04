@@ -109,6 +109,41 @@ describe("CommandQueue dead-letter", () => {
     expect(q2.deadLetters[0]?.command.id).toBe("cmd-tmp-1");
   });
 
+  test("remapTaskId rewrites dead-lettered commands targeting the temp id", async () => {
+    // A create and a downstream set_status both dead-letter, then the create is
+    // retried and acked with a real id. Without remapping the dead-letter list,
+    // the set_status stays pinned to the dead temp id and fails every retry.
+    await q.enqueue(create("tmp-1"));
+    await q.enqueue({
+      id: "s1",
+      createdAt: 1,
+      type: "set_status",
+      taskId: taskId("tmp-1"),
+      status: "done",
+    });
+    await q.deadLetter("cmd-tmp-1", new ApiError("bad", 422));
+    await q.deadLetter("s1", new ApiError("bad", 422));
+
+    await q.remapTaskId(taskId("tmp-1"), taskId("TaskNotes/real.md"));
+
+    const create1 = q.deadLetters.find((d) => d.command.id === "cmd-tmp-1");
+    const status1 = q.deadLetters.find((d) => d.command.id === "s1");
+    expect(create1?.command.type === "create" && create1.command.tempId).toBe(
+      taskId("TaskNotes/real.md"),
+    );
+    expect(
+      status1?.command.type === "set_status" && status1.command.taskId,
+    ).toBe(taskId("TaskNotes/real.md"));
+
+    // Remapped dead-letter list is persisted across a restore.
+    const q2 = new CommandQueue(storage, () => clock());
+    await q2.restore();
+    const status2 = q2.deadLetters.find((d) => d.command.id === "s1");
+    expect(
+      status2?.command.type === "set_status" && status2.command.taskId,
+    ).toBe(taskId("TaskNotes/real.md"));
+  });
+
   test("retryDeadLetter re-enqueues at the tail; discard drops it", async () => {
     await q.enqueue(create("tmp-1"));
     await q.deadLetter("cmd-tmp-1", new ApiError("bad", 500));

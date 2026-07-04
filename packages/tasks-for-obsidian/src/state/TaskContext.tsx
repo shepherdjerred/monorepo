@@ -176,12 +176,15 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       }
       // Absolute target state, computed once at tap time — replaying the
       // command later (even after midnight) applies exactly this intent.
+      // Capture today's date once so `date` and `completed` can't straddle a
+      // midnight boundary (object properties evaluate left-to-right).
+      const today = localTodayYmd();
       const updated = isRecurring(existing)
         ? await store.dispatch({
             type: "set_instance_complete",
             taskId: target,
-            date: localTodayYmd(),
-            completed: !existing.completeInstances.includes(localTodayYmd()),
+            date: today,
+            completed: !existing.completeInstances.includes(today),
           })
         : await store.dispatch({
             type: "set_status",

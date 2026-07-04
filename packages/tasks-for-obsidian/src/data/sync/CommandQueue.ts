@@ -141,6 +141,19 @@ export class CommandQueue {
   async remapTaskId(from: TaskId, to: TaskId): Promise<void> {
     this.queue = this.queue.map((c) => remapTaskId(c, from, to));
     await this.persistQueue();
+    // Dead-lettered downstream commands can still target the temp id: if a
+    // create and a following command (e.g. set_status) both dead-letter, then
+    // the create is retried and acked with a real id, the set_status entry
+    // stays pinned to the now-dead temp id and fails every subsequent retry.
+    // Remap the dead-letter list too so a later retry targets the real id.
+    const prevDead = this.dead;
+    this.dead = prevDead.map((entry) => {
+      const command = remapTaskId(entry.command, from, to);
+      return command === entry.command ? entry : { ...entry, command };
+    });
+    if (this.dead.some((entry, i) => entry !== prevDead[i])) {
+      await this.persistDeadLetter();
+    }
   }
 
   async deadLetter(id: string, error: AppError): Promise<void> {

@@ -1,7 +1,8 @@
 import { type Region, type RiotId } from "@scout-for-lol/data/index.ts";
 import { riotApi } from "#src/league/api/api.ts";
 import { mapRegionToEnum } from "#src/league/model/region.ts";
-import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
+import { Constants } from "twisted";
+const { regionToRegionGroupForAccountAPI } = Constants;
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { createLogger } from "#src/logger.ts";
 import { withTimeout } from "#src/utils/timeout.ts";
