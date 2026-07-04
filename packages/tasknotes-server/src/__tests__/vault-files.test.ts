@@ -5,6 +5,7 @@ import path from "node:path";
 
 import {
   deleteFile,
+  isVaultMarkdownPath,
   listMarkdownFiles,
   readFileSnapshot,
   writeFileAtomic,
@@ -45,6 +46,46 @@ describe("listMarkdownFiles", () => {
     await expect(
       listMarkdownFiles("/nonexistent/vault/root"),
     ).rejects.toThrow();
+  });
+});
+
+describe("isVaultMarkdownPath (shared by the watcher and the full rescan)", () => {
+  test("accepts .md files whose ancestor directories are all visible", () => {
+    expect(isVaultMarkdownPath("root.md")).toBe(true);
+    expect(isVaultMarkdownPath("TaskNotes/nested/c.md")).toBe(true);
+  });
+
+  test("rejects non-.md files", () => {
+    expect(isVaultMarkdownPath("TaskNotes/not-markdown.txt")).toBe(false);
+    expect(isVaultMarkdownPath("README")).toBe(false);
+  });
+
+  test("rejects files under a dot/underscore directory at ANY depth", () => {
+    // The watcher's old first-character check let these through even though
+    // the full rescan skips them — the mismatch this predicate closes.
+    expect(isVaultMarkdownPath(".obsidian/plugins/x.md")).toBe(false);
+    expect(isVaultMarkdownPath("_templates/t.md")).toBe(false);
+    expect(isVaultMarkdownPath("notes/.obsidian/x.md")).toBe(false);
+    expect(isVaultMarkdownPath("a/b/_archive/c.md")).toBe(false);
+  });
+
+  test("agrees with listMarkdownFiles over a mixed vault", async () => {
+    const vault = await makeVault();
+    await mkdir(path.join(vault, "notes/.obsidian"), { recursive: true });
+    await mkdir(path.join(vault, "a/_archive"), { recursive: true });
+    await writeFile(path.join(vault, "keep.md"), "k");
+    await writeFile(path.join(vault, "notes/.obsidian/hidden.md"), "h");
+    await writeFile(path.join(vault, "a/_archive/old.md"), "o");
+
+    const listed = await listMarkdownFiles(vault);
+    expect(listed).toEqual(["keep.md"]);
+    for (const rel of [
+      "keep.md",
+      "notes/.obsidian/hidden.md",
+      "a/_archive/old.md",
+    ]) {
+      expect(isVaultMarkdownPath(rel)).toBe(listed.includes(rel));
+    }
   });
 });
 

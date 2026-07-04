@@ -74,4 +74,20 @@ tags:
     const result = migrateVaultFile(pluginFile, config, () => []);
     expect(result.changed).toBe(false);
   });
+
+  test("a non-task note with title+status but no injected id is untouched", () => {
+    // A random note that merely happens to carry `title`/`status` frontmatter
+    // must not be false-tagged: only old-server files (which always stamped an
+    // injected `id`) get migrated.
+    const note = `---
+title: Meeting notes
+status: draft
+---
+
+Not a TaskNotes task.
+`;
+    const result = migrateVaultFile(note, config, () => []);
+    expect(result.changed).toBe(false);
+    expect(result.content).toBe(note);
+  });
 });

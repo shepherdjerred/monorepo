@@ -89,14 +89,22 @@ async function start(): Promise<void> {
   watchVault(config.vaultPath, {
     onChanges: (paths) => {
       void (async () => {
-        if (paths.length === 0) {
-          await repo.scan();
-        } else {
-          for (const relPath of paths) {
-            await repo.refreshFile(relPath);
+        try {
+          if (paths.length === 0) {
+            await repo.scan();
+          } else {
+            for (const relPath of paths) {
+              await repo.refreshFile(relPath);
+            }
           }
+          updateGauges();
+        } catch (error: unknown) {
+          // A rescan/refresh that fails (e.g. the vault root briefly vanished)
+          // must not become an unhandled rejection that tears the process
+          // down — the server keeps serving its last-known task map and the
+          // failure is surfaced in logs, mirroring the watcher's error policy.
+          console.error("[watcher] failed to apply vault changes:", error);
         }
-        updateGauges();
       })();
     },
     onError: (error) => {

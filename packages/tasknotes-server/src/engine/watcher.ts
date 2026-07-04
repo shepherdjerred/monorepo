@@ -1,4 +1,5 @@
 import { watch, type FSWatcher } from "node:fs";
+import { isVaultMarkdownPath } from "./vault-files.ts";
 
 /**
  * Vault file watcher feeding the TaskRepository (review finding #12: the
@@ -79,8 +80,10 @@ export function watchVault(
           return;
         }
         const relPath = filename.split("\\").join("/");
-        if (!relPath.endsWith(".md")) return;
-        if (relPath.startsWith(".") || relPath.startsWith("_")) return;
+        // Same eligibility rule as the full rescan: skip non-.md files and
+        // anything under a dot/underscore directory at ANY depth (the old
+        // first-character check missed nested hidden dirs).
+        if (!isVaultMarkdownPath(relPath)) return;
         pending.add(relPath);
         schedule();
       });

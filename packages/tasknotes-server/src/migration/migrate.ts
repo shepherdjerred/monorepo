@@ -35,11 +35,23 @@ export type MigrationResult = {
   actions: string[];
 };
 
-function isTaskLike(frontmatter: Record<string, unknown>): boolean {
-  // The old server always wrote `title` + `status` (+ injected `id`).
+const OldServerTaskCoreSchema = z.looseObject({
+  title: z.string(),
+  status: z.string(),
+});
+
+function isOldServerTaskFile(frontmatter: Record<string, unknown>): boolean {
+  // Only files the OLD server wrote need migrating, and it always stamped an
+  // injected `id` alongside string `title` + `status`. Gating on the `id` key
+  // (which this migration then drops in step 3) is the discriminator: a
+  // plugin-authored task or an arbitrary note that merely happens to carry
+  // `title`/`status` frontmatter has no injected id, so it is left untouched
+  // rather than false-tagged. Any id scalar counts — old 8-char ids that look
+  // numeric parse as numbers — so presence is the signal; the time-fold step
+  // re-validates the type.
   return (
-    typeof frontmatter["title"] === "string" &&
-    typeof frontmatter["status"] === "string"
+    "id" in frontmatter &&
+    OldServerTaskCoreSchema.safeParse(frontmatter).success
   );
 }
 
@@ -54,7 +66,7 @@ export function migrateVaultFile(
   timeEntriesForId: (id: string) => LegacyTimeEntry[],
 ): MigrationResult {
   const { frontmatter, body } = parseFrontmatter(markdown);
-  if (!isTaskLike(frontmatter)) {
+  if (!isOldServerTaskFile(frontmatter)) {
     return { changed: false, content: markdown, actions: [] };
   }
 
