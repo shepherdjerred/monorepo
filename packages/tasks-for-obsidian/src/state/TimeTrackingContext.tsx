@@ -10,14 +10,14 @@ import type { AppError } from "../domain/errors";
 import { ConnectionError } from "../domain/errors";
 import type { Result } from "../domain/result";
 import { err } from "../domain/result";
-import type { TaskId, TimeEntry, TimeSummary } from "../domain/types";
+import type { TaskId, TaskTime, TimeEntry } from "../domain/types";
 import { useApiClient } from "./ApiClientContext";
 
 type TimeTrackingContextValue = {
   activeEntry: TimeEntry | null;
   startTracking: (taskId: TaskId) => Promise<Result<void, AppError>>;
   stopTracking: (taskId: TaskId) => Promise<Result<void, AppError>>;
-  getTaskTime: (taskId: TaskId) => Promise<Result<TimeSummary, AppError>>;
+  getTaskTime: (taskId: TaskId) => Promise<Result<TaskTime, AppError>>;
 };
 
 const TimeTrackingContext = createContext<TimeTrackingContextValue | null>(
@@ -60,7 +60,7 @@ export function TimeTrackingProvider({
   );
 
   const getTaskTime = useCallback(
-    async (taskId: TaskId): Promise<Result<TimeSummary, AppError>> => {
+    async (taskId: TaskId): Promise<Result<TaskTime, AppError>> => {
       if (!client) return err(new ConnectionError("API URL not configured"));
       return client.getTaskTime(taskId);
     },
