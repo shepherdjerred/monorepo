@@ -18,6 +18,7 @@ import {
   type TaskRepository,
 } from "../engine/task-repository.ts";
 import { computeStats } from "../engine/stats.ts";
+import { ymd } from "../engine/date.ts";
 import { parseTaskInput } from "../nlp/parser.ts";
 
 /**
@@ -420,10 +421,4 @@ function entryMinutes(
       ? now.getTime()
       : new Date(entry.endTime).getTime();
   return Math.max(0, Math.floor((end - start) / 60_000));
-}
-
-function ymd(date: Date): string {
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${String(date.getFullYear())}-${month}-${day}`;
 }

@@ -23,11 +23,35 @@ function errorCode(error: unknown): string | null {
   return parsed.success ? parsed.data.code : null;
 }
 
+/** A vault path segment that hides its subtree from the task engine. */
+function isSkippedSegment(name: string): boolean {
+  return name.startsWith(".") || name.startsWith("_");
+}
+
+/**
+ * Does this vault-relative POSIX path denote a task-eligible markdown file?
+ *
+ * The rule, defined here once: a `.md` file none of whose ANCESTOR
+ * directories are dot- or underscore-prefixed (`.obsidian`,
+ * `.tasknotes-server`, `_templates`, ...). Only directories gate eligibility
+ * — the filename itself is not prefix-filtered, matching how
+ * `listMarkdownFiles` walks the tree. The watcher applies this same
+ * predicate so live fs events and a full rescan agree on which files count
+ * (review finding: the watcher's old first-character check let nested hidden
+ * directories like `notes/.obsidian/x.md` slip through).
+ */
+export function isVaultMarkdownPath(relPath: string): boolean {
+  if (!relPath.endsWith(".md")) return false;
+  const dirSegments = relPath.split("/").slice(0, -1);
+  return !dirSegments.some((seg) => isSkippedSegment(seg));
+}
+
 /**
  * Recursively list all .md files under `root`, returning vault-relative
  * paths (POSIX separators — they double as task IDs). Dot- and
  * underscore-prefixed directories are skipped (`.obsidian`,
- * `.tasknotes-server`, `_templates`, ...). Throws if `root` is missing.
+ * `.tasknotes-server`, `_templates`, ...) per `isVaultMarkdownPath`. Throws
+ * if `root` is missing.
  */
 export async function listMarkdownFiles(root: string): Promise<string[]> {
   const results: string[] = [];
@@ -37,7 +61,7 @@ export async function listMarkdownFiles(root: string): Promise<string[]> {
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
       if (entry.isDirectory()) {
-        if (entry.name.startsWith(".") || entry.name.startsWith("_")) continue;
+        if (isSkippedSegment(entry.name)) continue;
         await walk(fullPath);
       } else if (entry.name.endsWith(".md")) {
         results.push(path.relative(root, fullPath).split(path.sep).join("/"));

@@ -29,6 +29,7 @@ import {
   writeFileAtomic,
 } from "./vault-files.ts";
 import { newTaskPath } from "./filename.ts";
+import { ymd } from "./date.ts";
 
 /**
  * The vault-backed task store, built entirely on @tasknotes/model — the
@@ -434,10 +435,4 @@ export class NotRecurringError extends Error {
     super(`Task is not recurring: ${id}`);
     this.name = "NotRecurringError";
   }
-}
-
-function ymd(date: Date): string {
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${String(date.getFullYear())}-${month}-${day}`;
 }

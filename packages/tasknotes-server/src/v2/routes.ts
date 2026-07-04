@@ -19,6 +19,7 @@ import {
   type TaskRepository,
 } from "../engine/task-repository.ts";
 import { FilterQuerySchema, evaluateQuery } from "../engine/query.ts";
+import { ymd } from "../engine/date.ts";
 import { parseTaskInput } from "../nlp/parser.ts";
 import { computeFilterOptions, computeStats } from "../engine/stats.ts";
 import {
@@ -85,12 +86,6 @@ function nlpTaskData(parsed: ReturnType<typeof parseTaskInput>): {
     contexts: parsed.contexts ?? [],
     tags: parsed.tags ?? [],
   };
-}
-
-function ymd(date: Date): string {
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${String(date.getFullYear())}-${month}-${day}`;
 }
 
 async function guard(
@@ -204,10 +199,11 @@ export function v2Routes(deps: V2Dependencies): Hono {
   app.post("/api/tasks/query", (c) =>
     guard(c, async () => {
       const query = FilterQuerySchema.parse(await c.req.json());
-      const tasks = evaluateQuery(query, repo.list(), config);
+      const all = repo.list();
+      const tasks = evaluateQuery(query, all, config);
       return c.json({
         tasks,
-        total: repo.list().length,
+        total: all.length,
         filtered: tasks.length,
         vault,
       });
