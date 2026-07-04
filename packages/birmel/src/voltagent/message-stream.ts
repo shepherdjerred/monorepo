@@ -20,8 +20,17 @@ const MIN_CONTENT_LENGTH = 20;
 // cursor forever; aborting here surfaces the failure as a visible reply.
 const STREAM_TIMEOUT_MS = 60_000;
 
+// Structural slice of VoltAgent's StreamTextResultWithContext — textStream
+// for the progressive-edit loop, plus the AI SDK's deferred usage/finishReason
+// promises (they resolve once the stream completes) so the traceTextStream
+// span carries token counts for billing.
 type StreamTextResponse = {
   textStream: AsyncIterable<string>;
+  usage: PromiseLike<{
+    inputTokens: number | undefined;
+    outputTokens: number | undefined;
+  }>;
+  finishReason: PromiseLike<string>;
 };
 
 type StreamingAgent = {
@@ -102,7 +111,22 @@ export async function streamAgentResponse(params: {
         }
       }
 
-      return { text: accumulated };
+      // Resolved by the SDK once the stream finishes; carries token counts
+      // into the gen_ai span (and the S3 archive envelope) for billing.
+      const [usage, finishReason] = await Promise.all([
+        response.usage,
+        response.finishReason,
+      ]);
+      return {
+        text: accumulated,
+        ...(usage.inputTokens !== undefined && {
+          inputTokens: usage.inputTokens,
+        }),
+        ...(usage.outputTokens !== undefined && {
+          outputTokens: usage.outputTokens,
+        }),
+        finishReason,
+      };
     },
   );
 

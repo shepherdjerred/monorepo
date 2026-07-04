@@ -106,6 +106,7 @@ void mock.module("#activities/agent-task-command.ts", () => ({
       args: ["bun", "--eval", code],
       model: "test-model",
       outputPath,
+      prompt: "Return a short report.",
     };
   },
 }));
