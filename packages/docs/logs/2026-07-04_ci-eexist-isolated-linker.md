@@ -312,3 +312,55 @@ runtime's cache writes land on a UID-1000-writable path and the original
 `AccessDenied` cannot recur by construction. Runtime verification before
 merge: export the built image via the warm CI engine and run it as UID 1000,
 exercising the bun startup path that originally EACCES'd.
+
+## Rounds 12–14 — deploy-wave long tail, then green
+
+Main builds 5039/5042 got past every code fix but surfaced main-only issues
+none of the PR builds could exercise:
+
+- **Engine restart mid-build (5039)**: the first ArgoCD sync in two days
+  reconciled the outage's hand-recovered dagger chart and restarted the
+  engine under the running build — `error committing …: database not open`
+  killed temporal-worker/dpp-smoke/dpmk-push in flight. One-time collateral;
+  the chart is converged now.
+- **Prowlarr tofu apply (5039)**: devopsarr provider fails any apply touching
+  its all-sensitive indexer `fields`, which drift by design (Prowlarr
+  auto-updates Cardigann definitions). Fixed in PR #1402 with
+  `ignore_changes = [fields]` on the three Cardigann indexers — NOT on
+  privatehd, whose fields carry real 1Password credentials (Greptile P1,
+  valid catch).
+- **birmel backoff test (5042)**: wall-clock timing assertion flaked under
+  load; PR #1404 rewrites it with the injected-sleep pattern its neighbor
+  test already used.
+
+**Main build 5046 (`b2cbbd156`): 89/89 passed — first fully green main build
+and full deploy since before the 2026-07-03 outage** (the previously deployed
+temporal-worker image was 2.0.0-4875). temporal-worker pod rollout to
+2.0.0-5046 verified post-deploy (the chown-fix runtime check).
+
+## Session Log — 2026-07-04 (final)
+
+### Done
+
+- Main green end-to-end: PRs #1400 (linker pins, retry, xstate, astro lint,
+  timeouts), #1401 (retry-cleanup removal, AWS IMDS hang fix, chown →
+  BUN_INSTALL_CACHE_DIR), #1402 (prowlarr fields drift), #1404 (birmel
+  backoff test) — merged; build 5046 fully green + deployed.
+- Closed #1398/#1399 as superseded; todos filed/resolved as noted in rounds.
+
+### Remaining
+
+- Confirm temporal-worker pod runs 2.0.0-5046 without EACCES (rollout was in
+  progress at session end; crashloop would be loud).
+- `bun-isolated-linker-eexist` todo: un-pin hoisted linker when upstream
+  fixes the race; move scout's phantom llm-models dep first.
+- Optional: timeout for per-package Build + Smoke steps (currently none).
+
+### Caveats
+
+- Main-only steps (tofu apply, pushes, argo sync) are exercised only on main
+  — the first post-incident main build will always find what PR builds
+  cannot.
+- Fresh-worktree setup.ts still fails on scout ordering (llm-models dist not
+  yet built when the file: copy is made); re-running `bun install` at scout
+  root after shared builds fixes it — worth a setup.ts ordering fix someday.
