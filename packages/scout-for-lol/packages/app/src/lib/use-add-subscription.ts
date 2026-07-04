@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { RiotIdSchema } from "@scout-for-lol/data";
+import { RiotIdSchema, type SubscriptionFilterSpec } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import type { RegionValue } from "#src/lib/regions.ts";
 
@@ -15,6 +15,8 @@ export type SubscriptionFieldsValue = {
   riotId: string;
   alias: string;
   discordUserId: string;
+  // null = notify all queues (no filter).
+  filters: SubscriptionFilterSpec | null;
 };
 
 export function emptySubscriptionValue(
@@ -26,6 +28,7 @@ export function emptySubscriptionValue(
     riotId: "",
     alias: "",
     discordUserId: "",
+    filters: null,
   };
 }
 
@@ -94,6 +97,7 @@ export function useAddSubscription(opts: {
       region: value.region,
       riotId: value.riotId,
       alias: value.alias.trim(),
+      filters: value.filters,
       ...(value.discordUserId.length > 0 && {
         discordUserId: value.discordUserId,
       }),

@@ -361,30 +361,6 @@ function withDiscordPlaysRuntime(container: Container): Container {
 }
 
 /**
- * Hand ownership of Bun's install cache to UID 1000.
- *
- * The oven/bun base image sets `BUN_INSTALL=/usr/local`, which makes Bun
- * resolve its install cache to `/usr/local/install/cache`. The build runs
- * as root, so the cache is root-owned in the final image. Bun's runtime
- * needs write access to that cache during `bun run` startup once the
- * dependency graph crosses some threshold — the failure manifests as the
- * misleading error `bun is unable to write files to tempdir: AccessDenied`
- * (traced via /proc/<pid>/fd to a denied open of /usr/local/install/cache).
- *
- * Call this AFTER the last `bun install` step in the build so newly written
- * cache entries are also reassigned. Inert no-op for any image that doesn't
- * set or inherit BUN_INSTALL=/usr/local.
- */
-function withWritableBunInstallCache(container: Container): Container {
-  return container.withExec([
-    "chown",
-    "-R",
-    "1000:1000",
-    "/usr/local/install/cache",
-  ]);
-}
-
-/**
  * Install kubectl into a container that already has curl + ca-certificates
  * (e.g. one that has been through `withGitHubCli`).
  *
@@ -1055,23 +1031,32 @@ export function buildTemporalWorkerImageHelper(
     container = withToolkit(container);
   }
 
-  // Reassign ownership of the bun install cache AFTER every bun-install step
-  // (including toolkit's). New entries written by the toolkit install must
-  // also be readable by UID 1000 at runtime — see the docstring on
-  // `withWritableBunInstallCache`.
-  container = withWritableBunInstallCache(container);
-
-  return container
-    .withWorkdir("/workspace/packages/temporal")
-    .withLabel(
-      "org.opencontainers.image.source",
-      "https://github.com/shepherdjerred/monorepo",
-    )
-    .withLabel("org.opencontainers.image.version", version)
-    .withLabel("org.opencontainers.image.revision", gitSha)
-    .withEnvVariable("VERSION", version)
-    .withEnvVariable("GIT_SHA", gitSha)
-    .withEntrypoint(["bun", "run", "src/worker.ts"]);
+  return (
+    container
+      // Point Bun's runtime install cache at a UID-1000-writable path. The
+      // oven/bun base sets BUN_INSTALL=/usr/local, so the build-time cache at
+      // /usr/local/install/cache is root-owned; bun's runtime needs a writable
+      // cache during `bun run` startup once the dependency graph crosses some
+      // threshold — the failure manifests as the misleading
+      // `bun is unable to write files to tempdir: AccessDenied` (traced via
+      // /proc/<pid>/fd to a denied open of /usr/local/install/cache).
+      // The previous fix — `chown -R 1000:1000` over the in-layer cache — was
+      // O(every file): an overlayfs copy-up of ~100k files that ran ~30 min
+      // on cold builds (2026-07-04, builds 5033/5035/5037) and pushed the job
+      // past its step timeout. Redirecting the cache is O(1); bun creates the
+      // directory on demand under the writable prefix.
+      .withEnvVariable("BUN_INSTALL_CACHE_DIR", "/tmp/bun-install-cache")
+      .withWorkdir("/workspace/packages/temporal")
+      .withLabel(
+        "org.opencontainers.image.source",
+        "https://github.com/shepherdjerred/monorepo",
+      )
+      .withLabel("org.opencontainers.image.version", version)
+      .withLabel("org.opencontainers.image.revision", gitSha)
+      .withEnvVariable("VERSION", version)
+      .withEnvVariable("GIT_SHA", gitSha)
+      .withEntrypoint(["bun", "run", "src/worker.ts"])
+  );
 }
 
 /** Push a temporal-worker image to a registry. */
@@ -1514,10 +1499,16 @@ export function buildDiscordPlaysMarioKartImageHelper(
       // Workspace install (backend + frontend) — runs trustedDependencies
       // postinstalls. The discord-video-stream fork lazy-loads sharp in source
       // (no bun patch).
+      // No separate backend install: bun workspaces installs all member deps
+      // at the root level. A second `bun install` in packages/backend re-links
+      // file: deps already linked by the root install → EEXIST under the
+      // hoisted linker, and the retry's node_modules cleanup then leaves the
+      // backend member without its file: dep copies (build 5029 smoke caught
+      // `Cannot find module '@shepherdjerred/discord-stream-lifecycle/...'`).
+      // Mirrors the discord-plays-pokemon image build above.
       .withWorkdir(innerRoot)
       .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
       .withWorkdir(`${innerRoot}/packages/backend`)
-      .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
       // Generate the Prisma client for the leaderboard DB (output is gitignored,
       // so it must be produced in the image). Mirrors the birmel/scout flow.
       .withExec(["bunx", "--trust", "prisma", "generate"])
