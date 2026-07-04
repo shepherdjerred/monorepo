@@ -9,9 +9,15 @@ import type {
   UserbotEntry,
   UserbotProvider,
 } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
-import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer.ts";
+import type {
+  StreamerLike,
+  VoiceCloseInfo,
+} from "@shepherdjerred/streambot/streamer/streamer.ts";
 import type { Announcement } from "@shepherdjerred/streambot/discord/status-reporter.ts";
-import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
+import type {
+  ResolvedSource,
+  RunStreamInput,
+} from "@shepherdjerred/streambot/machine/types.ts";
 import {
   loadState,
   saveState,
@@ -37,15 +43,30 @@ const RESOLVED: ResolvedSource = {
   chapters: [],
 };
 
-/** Fake streamer: joins/leaves instantly; runStream parks until the machine aborts it (SKIP/STOP). */
-function fakeStreamer(): StreamerLike {
+/**
+ * Fake streamer: joins/leaves instantly; runStream parks until the machine aborts it (SKIP/STOP).
+ * `triggerVoiceClose` simulates Discord killing the voice session (fires the registered listener,
+ * like the real streamer does from the fork's `close` event).
+ */
+type FakeStreamer = StreamerLike & {
+  triggerVoiceClose: (info: VoiceCloseInfo) => void;
+  positionSeconds: { value: number | null };
+  lastRunStreamInput: { value: RunStreamInput | null };
+};
+
+function fakeStreamer(): FakeStreamer {
+  let lastClose: VoiceCloseInfo | null = null;
+  let listener: ((info: VoiceCloseInfo) => void) | null = null;
+  const positionSeconds = { value: 0 };
+  const lastRunStreamInput: { value: RunStreamInput | null } = { value: null };
   return {
     login: () => Promise.resolve(),
     guildIds: () => [GUILD],
     joinVoice: (input) =>
       Promise.resolve({ guildId: input.guildId, channelId: input.channelId }),
-    runStream: (_input, signal) =>
+    runStream: (input, signal) =>
       new Promise<void>((resolve) => {
+        lastRunStreamInput.value = input;
         if (signal.aborted) {
           resolve();
           return;
@@ -57,16 +78,29 @@ function fakeStreamer(): StreamerLike {
     leaveVoice: () => Promise.resolve(),
     setVolume: () => Promise.resolve(true),
     seek: () => Promise.resolve(true),
-    getPosition: () => 0,
+    getPosition: () => positionSeconds.value,
     userId: () => "200000000000000000",
     destroy: () => Promise.resolve(),
+    lastVoiceCloseInfo: () => lastClose,
+    setVoiceCloseListener: (next) => {
+      listener = next;
+    },
+    triggerVoiceClose: (info) => {
+      lastClose = info;
+      listener?.(info);
+    },
+    positionSeconds,
+    lastRunStreamInput,
   };
 }
 
 /** A fake pool with a fixed number of interchangeable userbots, tracking acquire/release. */
 function fakePool(size: number) {
-  const entries: UserbotEntry[] = Array.from({ length: size }, () => ({
-    userbot: fakeStreamer(),
+  const streamers: FakeStreamer[] = Array.from({ length: size }, () =>
+    fakeStreamer(),
+  );
+  const entries: UserbotEntry[] = streamers.map((userbot) => ({
+    userbot,
     guildIds: new Set([GUILD]),
     busy: false,
   }));
@@ -92,6 +126,8 @@ function fakePool(size: number) {
     provider,
     acquireCount: () => acquireCount,
     released,
+    streamers,
+    entries,
   };
 }
 
@@ -429,3 +465,206 @@ function persistedWithQueue(): PersistedState {
 function persistedAt(channelId: ChannelId): PersistedState {
   return { ...persistedWithQueue(), channelId };
 }
+
+/** Config with fast reconnect knobs for the voice-loss recovery tests. */
+async function makeReconnectConfig(
+  overrides: Partial<Config["reconnect"]> = {},
+): Promise<Config> {
+  const base = await makeConfig();
+  return {
+    ...base,
+    reconnect: {
+      enabled: true,
+      delaySeconds: 1,
+      maxAttempts: 2,
+      ...overrides,
+    },
+  };
+}
+
+/** Start a session in CHANNEL_A and wait until it is streaming (Now playing announced). */
+async function startStreaming(
+  manager: SessionManager,
+  announced: { channelId: string | null; message: Announcement }[],
+): Promise<void> {
+  const handle = manager.ensureForPlay({
+    guildId: GUILD,
+    voiceChannelId: CHANNEL_A,
+    statusChannelId: STATUS,
+  });
+  expect(handle).not.toBeNull();
+  handle?.dispatch({
+    type: "ADD",
+    source: { kind: "file", path: "/clip.mkv", title: "Clip" },
+    requesterId: USER,
+  });
+  await waitUntil(() =>
+    announced.some((a) => announcementText(a.message).includes("Now playing")),
+  );
+}
+
+describe("SessionManager voice-loss recovery", () => {
+  test("transient close: state survives teardown and the session auto-resumes at position", async () => {
+    const config = await makeReconnectConfig();
+    const pool = fakePool(1);
+    const { manager, announced } = makeManager(config, pool.provider);
+    await startStreaming(manager, announced);
+
+    const streamer = pool.streamers[0];
+    if (streamer === undefined) throw new Error("missing fake streamer");
+    streamer.positionSeconds.value = 123;
+    streamer.triggerVoiceClose({
+      code: 4006,
+      deliberate: false,
+      atMs: Date.now(),
+    });
+
+    // The session tears down with a visible reason, keeping the state file.
+    await waitUntil(() => manager.getExisting(GUILD, CHANNEL_A) === null);
+    const file = stateFilePath(config.state.dir, GUILD, CHANNEL_A);
+    expect(await Bun.file(file).exists()).toBe(true);
+    await waitUntil(() =>
+      announced.some((a) =>
+        announcementText(a.message).includes(
+          "voice connection dropped (close code 4006) — reconnecting shortly",
+        ),
+      ),
+    );
+
+    // After the delay, it re-acquires the userbot and resumes at the checkpointed position.
+    await waitUntil(() => manager.getExisting(GUILD, CHANNEL_A) !== null, 5000);
+    expect(pool.acquireCount()).toBe(2);
+    await waitUntil(
+      () => streamer.lastRunStreamInput.value?.seekSeconds === 123,
+    );
+
+    await manager.destroyAll();
+  });
+
+  test("deliberate close (fresh 4014): stays down, deletes state, announces the kick", async () => {
+    const config = await makeReconnectConfig();
+    const pool = fakePool(1);
+    const { manager, announced } = makeManager(config, pool.provider);
+    await startStreaming(manager, announced);
+
+    pool.streamers[0]?.triggerVoiceClose({
+      code: 4014,
+      deliberate: true,
+      atMs: Date.now(),
+    });
+
+    await waitUntil(() => manager.getExisting(GUILD, CHANNEL_A) === null);
+    await waitUntil(() =>
+      announced.some((a) =>
+        announcementText(a.message).includes(
+          "streamer was disconnected from voice (close code 4014)",
+        ),
+      ),
+    );
+    const file = stateFilePath(config.state.dir, GUILD, CHANNEL_A);
+    await waitForAsync(async () => !(await Bun.file(file).exists()));
+
+    // Long enough for the (not-scheduled) reconnect delay to have elapsed.
+    await sleep(1500);
+    expect(manager.getExisting(GUILD, CHANNEL_A)).toBeNull();
+    expect(pool.acquireCount()).toBe(1);
+
+    await manager.destroyAll();
+  });
+
+  test("reconnect disabled: transient close stays down like today, but announces the reason", async () => {
+    const config = await makeReconnectConfig({ enabled: false });
+    const pool = fakePool(1);
+    const { manager, announced } = makeManager(config, pool.provider);
+    await startStreaming(manager, announced);
+
+    pool.streamers[0]?.triggerVoiceClose({
+      code: 4006,
+      deliberate: false,
+      atMs: Date.now(),
+    });
+
+    await waitUntil(() => manager.getExisting(GUILD, CHANNEL_A) === null);
+    const stopped = announced.find((a) =>
+      announcementText(a.message).includes(
+        "voice connection dropped (close code 4006)",
+      ),
+    );
+    expect(stopped).toBeDefined();
+    expect(
+      announcementText(stopped?.message ?? "").includes("reconnecting"),
+    ).toBe(false);
+    const file = stateFilePath(config.state.dir, GUILD, CHANNEL_A);
+    await waitForAsync(async () => !(await Bun.file(file).exists()));
+
+    await sleep(1500);
+    expect(manager.getExisting(GUILD, CHANNEL_A)).toBeNull();
+    expect(pool.acquireCount()).toBe(1);
+
+    await manager.destroyAll();
+  });
+
+  test("manual re-play during the reconnect window wins; the timer no-ops", async () => {
+    const config = await makeReconnectConfig();
+    const pool = fakePool(1);
+    const { manager, announced } = makeManager(config, pool.provider);
+    await startStreaming(manager, announced);
+
+    pool.streamers[0]?.triggerVoiceClose({
+      code: 4006,
+      deliberate: false,
+      atMs: Date.now(),
+    });
+    await waitUntil(() => manager.getExisting(GUILD, CHANNEL_A) === null);
+
+    // User re-plays before the reconnect timer fires.
+    const handle = manager.ensureForPlay({
+      guildId: GUILD,
+      voiceChannelId: CHANNEL_A,
+      statusChannelId: STATUS,
+    });
+    expect(handle).not.toBeNull();
+    handle?.dispatch({
+      type: "ADD",
+      source: { kind: "file", path: "/other.mkv", title: "Other" },
+      requesterId: USER,
+    });
+
+    await sleep(1500);
+    // Manual session (acquire #2) is intact; the recovery did not spawn a third acquire.
+    expect(manager.getExisting(GUILD, CHANNEL_A)).not.toBeNull();
+    expect(pool.acquireCount()).toBe(2);
+
+    await manager.destroyAll();
+  });
+
+  test("no free userbot: retries then announces exhaustion, preserving the state file", async () => {
+    const config = await makeReconnectConfig({ maxAttempts: 2 });
+    const pool = fakePool(1);
+    const { manager, announced } = makeManager(config, pool.provider);
+    await startStreaming(manager, announced);
+
+    pool.streamers[0]?.triggerVoiceClose({
+      code: 4006,
+      deliberate: false,
+      atMs: Date.now(),
+    });
+    await waitUntil(() => manager.getExisting(GUILD, CHANNEL_A) === null);
+    // Steal the released userbot so every reconnect attempt finds the pool empty.
+    const stolen = pool.provider.acquire(GUILD);
+    expect(stolen).not.toBeNull();
+
+    await waitUntil(
+      () =>
+        announced.some((a) =>
+          announcementText(a.message).includes("Couldn't reconnect after 2"),
+        ),
+      8000,
+    );
+    const file = stateFilePath(config.state.dir, GUILD, CHANNEL_A);
+    expect(await Bun.file(file).exists()).toBe(true);
+    expect(manager.getExisting(GUILD, CHANNEL_A)).toBeNull();
+
+    await manager.destroyAll();
+  });
+});
