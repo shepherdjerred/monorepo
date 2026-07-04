@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Complete
 
 ## Context
 
@@ -139,3 +139,36 @@ to regenerate bun.lock.
   and regenerate from scratch when CI reports frozen-lockfile drift that local incremental runs miss.
 - Build #4934 was "skipped" by Buildkite's intermediate-build cancellation when #4935 (old-commit
   rebuild) queued first. Resolved by canceling #4935 and rebuilding #4934 → new build #4936.
+
+## Session Log — 2026-07-03 (continued after compaction)
+
+### Done
+
+- PR #1371 (`renovate/monaco-editor-0.x`) merged to main at `e574d5a2405f`
+  - ESLint fix: `report-query-editor.tsx` — dropped `OnMount` import, typed
+    `handleMount` params explicitly as `Monaco.editor.IStandaloneCodeEditor` /
+    `typeof Monaco` to avoid error-typed `monaco.d.ts` in 0.55
+  - `packages/scout-for-lol/bun.lock` regenerated from scratch (frozen-lockfile
+    drift from 0.55 dep graph changes)
+- Follow-up PR #1398 (`fix/scout-chart-render-timeout`) opened for the chart-render
+  test timeout bump:
+  - `packages/scout-for-lol/packages/backend/src/reports/report-render.integration.test.ts`
+    line 161: added `60_000` as third arg to `test()` + explanatory comment
+  - 60s matches PR #1368's value on the identical line → git auto-merges, no conflict
+  - Pre-commit hooks (ESLint, typecheck, Prisma generate) all green
+
+### Remaining
+
+- PR #1398 needs CI green and merge.
+
+### Caveats
+
+- Branch builds (`bk build create` or push to non-PR branch) hit the dpp EEXIST
+  race far more often than PR builds. Always use `bk build rebuild <PR-build-N>`
+  (preserves `pull_request` context) to get the less-racy PR Dagger concurrency.
+- `white-check-mark-ci-complete` only posts after pkg-checks DAG completes
+  successfully; retrying individual shards does NOT re-run ci-complete unless the
+  full DAG flows through. A full rebuild is the reliable recovery path.
+- New worktrees require `bun install` at root + each local `file:` dep package
+  (e.g. `packages/llm-models`) built + `bun install` in consuming packages before
+  pre-commit typecheck hooks pass.
