@@ -18,45 +18,69 @@ bun run dev                          # Dev mode (auto-reload)
 bun run start                        # Run directly
 ```
 
-## Architecture
+## Architecture (P3 — @tasknotes/model engine)
+
+The vault layer is `@tasknotes/model` (the upstream plugin's own engine
+library, pinned exact in `tasknotes-types`). Task IDs are vault-relative
+paths (URL-encoded in routes). Reads are tolerant; every task-like file
+that fails to parse is counted, logged, and surfaced at
+`GET /api/engine-status` — never silently dropped. Writes are
+read-modify-write from disk through the model's plan builders +
+`applyFrontmatterPatch`, so concurrent Obsidian edits and unknown
+frontmatter keys survive byte-for-byte.
 
 ```
 src/
-  domain/types.ts          # Re-exports from tasknotes-types
-  domain/schemas.ts        # Re-exports from tasknotes-types + server-only schemas
-  middleware/auth.ts        # Bearer token auth (skips /api/health)
-  middleware/envelope.ts    # Wraps responses in { success, data }
-  routes/                  # 23 Hono route handlers
-  store/task-store.ts      # In-memory Map<string, Task> from vault scan
-  store/time-store.ts      # Time entries in _tasknotes/time-tracking.json
-  store/pomodoro-store.ts  # Ephemeral pomodoro state
-  vault/reader.ts          # Walk vault dir, parse .md → Task
-  vault/writer.ts          # Atomic writes (temp → rename), slugified filenames
-  vault/frontmatter.ts     # gray-matter parse/serialize
-  vault/task-mapper.ts     # Frontmatter ↔ Task bidirectional mapping
-  vault/watcher.ts         # fs.watch with 200ms debounce
-  nlp/parser.ts            # NLP: @context, p:project, #tag, !priority, dates
+  engine/model-config.ts    # Load plugin data.json → TaskNotesModelConfig
+  engine/vault-files.ts     # Byte-level IO: walk, atomic write (root errors throw)
+  engine/task-repository.ts # THE store: parse/detect, plan-based mutations
+  engine/watcher.ts         # Debounce + max-wait, error re-arm, safety rescan
+  engine/query.ts           # Upstream FilterQuery tree evaluator
+  engine/stats.ts           # Config-driven stats + filter-options
+  engine/time-reports.ts    # /api/time summary + active (frontmatter entries)
+  engine/filename.ts        # Title-as-filename + " 1" dedup
+  v2/routes.ts              # Upstream plugin API surface (/api/*)
+  legacy/routes.ts          # Old camelCase contract for the P2 app (/legacy/api/*)
+  migration/migrate.ts      # Pure per-file legacy→plugin-format migration
+  middleware/               # auth, envelope, idempotency, logger, metrics
+  store/pomodoro-store.ts   # Ephemeral pomodoro state (both surfaces)
+  nlp/parser.ts             # NLP: @context, p:project, #tag, !priority, dates
+scripts/
+  migrate-vault.ts          # P4: tag legacy files, fold time side-store, drop ids
+  vault-audit.ts            # P4 gate: parse-skips + round-trip byte-diffs must be 0
 ```
 
-## API Endpoints
+## API Surfaces
 
 All responses use envelope: `{ success: boolean, data: T, error?: string }`
 
-- Task CRUD: `GET/POST/PUT/DELETE /api/tasks[/:id]`
-- Status/Archive: `POST /api/tasks/:id/toggle-status`, `/archive`, `/complete-instance`
-- Query/Stats: `POST /api/tasks/query`, `GET /api/stats`, `/filter-options`
-- NLP: `POST /api/nlp/parse`, `/create`
-- Time: `POST /api/time/:id/start`, `/stop`, `GET /api/time/:id`, `/summary`
-- Pomodoro: `POST /api/pomodoro/start`, `/stop`, `/pause`, `GET /api/pomodoro/status`
-- Calendar: `GET /api/calendar/events`
-- Health: `GET /api/health`
+**`/api/*` — the upstream TaskNotes plugin contract (v2, P5 app target):**
+
+- Task CRUD: `GET/POST/PUT/DELETE /api/tasks[/:id]` (TaskInfo, snake_case
+  recurrence fields, pagination default 50 / cap 200, `DELETE → {message}`)
+- Status/Archive: `POST /api/tasks/:id/toggle-status` (no body; cycles the
+  configured workflow), `/archive` (returns the task), `/complete-instance`
+  (`{date?, completed?}` — `completed` = idempotent set-semantics)
+- Query: `POST /api/tasks/query` (upstream FilterQuery TREE; unknown
+  property/operator → 400); `GET /api/stats`, `/filter-options` (config
+  OBJECTS for statuses/priorities)
+- NLP: `POST /api/nlp/parse → {parsed, taskData}`, `/create → {task, parsed}`
+- Time: `POST /api/tasks/:id/time/start|stop`, `GET /api/time/active`,
+  `/summary` (upstream TimeSummaryResult)
+- Calendars: `GET /api/calendars/events` (task events + recurring expansion)
+- `GET /api/engine-status` (parse skips, config provenance), `/api/health`
+
+**`/legacy/api/*` — the old camelCase contract (P2 app; deleted at P6):**
+same endpoints/shapes the old server exposed, translated onto the new
+engine. The app's configurable API URL points here from the P4 rollout
+until P5.
 
 ### Complete-instance body (optional)
 
 `POST /api/tasks/:id/complete-instance` accepts `{date?: "YYYY-MM-DD", completed?: boolean}`:
 no body = legacy toggle of server-local today (upstream plugin parity); `date` targets the
 device-captured instance; `completed` gives idempotent SET semantics (required for safe
-offline-queue replay). Non-recurring tasks fall back to `status: done`.
+offline-queue replay). Non-recurring tasks are a 400 (upstream parity).
 
 ### Idempotent mutations
 
