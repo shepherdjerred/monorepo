@@ -17,7 +17,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "xstate": "^5.32.0"
+    "xstate": "^5.32.4"
   },
   "peerDependencies": {
     "discord.js": "^14.26.4",
