@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import type * as Monaco from "monaco-editor";
-import Editor, { type OnChange, type OnMount } from "@monaco-editor/react";
+import Editor, { type OnChange } from "@monaco-editor/react";
 import "#src/lib/monaco-setup.ts";
 import {
   registerScoutQlLanguage,
@@ -31,7 +31,10 @@ export default function ReportQueryEditor(props: {
     }
   };
 
-  const handleMount: OnMount = (editor, monaco) => {
+  const handleMount = (
+    editor: Monaco.editor.IStandaloneCodeEditor,
+    monaco: typeof Monaco,
+  ) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
     registerScoutQlLanguage(monaco);
