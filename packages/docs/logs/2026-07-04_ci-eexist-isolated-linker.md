@@ -298,3 +298,17 @@ test-setup.ts (there is no IMDS anywhere in this infra), plus
 connection/request timeouts on `createS3Client` so no S3 call can hang
 unboundedly in production either (a wedged SeaweedFS becomes a caught error,
 not a hung report run). Full backend suite: 1060 tests, 0 fail.
+
+## Round 11 — chown replaced with BUN_INSTALL_CACHE_DIR
+
+Build 5037's temporal-worker spent 30+ minutes in the `chown -R` again,
+racing its own 45-min timeout. Rather than keep paying an O(100k-files)
+overlayfs copy-up per cold build, shipped the fix from the
+`temporal-worker-chown-cache-copyup` todo (todo deleted in the same commit):
+drop `withWritableBunInstallCache` entirely and set
+`BUN_INSTALL_CACHE_DIR=/tmp/bun-install-cache` on the final image — bun
+verified (locally) to place its cache under the env-var prefix, so the
+runtime's cache writes land on a UID-1000-writable path and the original
+`AccessDenied` cannot recur by construction. Runtime verification before
+merge: export the built image via the warm CI engine and run it as UID 1000,
+exercising the bun startup path that originally EACCES'd.
