@@ -127,7 +127,9 @@ export function attachCodexTrace(
           `${spanPrefix}.turn`,
           {
             attributes: {
-              "llm.codex.turn_index": turnCounter,
+              // Prefix-derived so dpp keeps its historical
+              // `pokemon.goal.turn_index` attribute name.
+              [`${spanPrefix}.turn_index`]: turnCounter,
               "gen_ai.system": SYSTEM,
               "gen_ai.request.model": options.model,
               "llm.service": options.service,

@@ -117,6 +117,10 @@ test("attachCodexTrace honors span prefix, root attrs, and tool events", () => {
   expect(tool.attributes["pokemon.tool.exit_code"]).toBe(0);
   expect(tool.attributes["pokemon.tool.stdout_snippet"]).toBe("files");
 
+  // Turn index keeps dpp's historical attribute name (prefix-derived).
+  const turn = spans.find((s) => s.name === "pokemon.goal.turn")!;
+  expect(turn.attributes["pokemon.goal.turn_index"]).toBe(1);
+
   const root = spans.find((s) => s.name === "pokemon.goal.run")!;
   expect(root.attributes["pokemon.goal.id"]).toBe("goal-42");
 });
