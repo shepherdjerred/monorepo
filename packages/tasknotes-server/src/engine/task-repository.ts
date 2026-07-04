@@ -15,9 +15,11 @@ import {
   serializeTaskDocument,
 } from "tasknotes-types/v2";
 import type {
+  TaskCreationRequest,
   TaskInfo,
   TaskNotesModelConfig,
   TaskUpdateInput,
+  TaskUpdateRequest,
 } from "tasknotes-types/v2";
 
 import {
@@ -54,6 +56,20 @@ type CacheEntry = {
 };
 
 export type Clock = () => Date;
+
+// Write inputs are the WIRE request types (zod v4 parse output). Their
+// optionals are `T | undefined`, which exactOptionalPropertyTypes will not
+// narrow to the model's `T?` — undefined-valued keys are scrubbed before
+// reaching the plan builders (the runtime values are schema-validated).
+function scrubUndefined(
+  input: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(input)) {
+    if (value !== undefined) out[key] = value;
+  }
+  return out;
+}
 
 export class TaskRepository {
   private cache = new Map<string, CacheEntry>();
@@ -175,14 +191,15 @@ export class TaskRepository {
 
   // -- write side -----------------------------------------------------------
 
-  async create(data: Partial<TaskInfo> & { title: string }): Promise<TaskInfo> {
+  async create(data: TaskCreationRequest): Promise<TaskInfo> {
     const relPath = newTaskPath(
       this.tasksDir,
       data.title,
       new Set(this.cache.keys()),
     );
     const now = this.clock();
-    const { details, ...fields } = data;
+    const { details, ...rest } = data;
+    const fields = scrubUndefined(rest);
     const task: Partial<TaskInfo> = {
       status: this.config.defaults.status,
       priority: this.config.defaults.priority,
@@ -201,11 +218,12 @@ export class TaskRepository {
     return this.mustGet(relPath).task;
   }
 
-  async update(id: string, updates: TaskUpdateInput): Promise<TaskInfo> {
+  async update(id: string, updates: TaskUpdateRequest): Promise<TaskInfo> {
     const fresh = await this.readFresh(id);
+    const scrubbed: TaskUpdateInput = scrubUndefined(updates);
     const plan = buildTaskUpdatePlan({
       originalTask: fresh.task,
-      updates,
+      updates: scrubbed,
       fieldMapping: this.config.fieldMapping,
       taskTag: this.config.taskIdentification.tag,
       storeTitleInFilename: this.config.storeTitleInFilename,
@@ -266,7 +284,10 @@ export class TaskRepository {
    */
   async completeInstance(
     id: string,
-    options: { date?: string; completed?: boolean } = {},
+    options: {
+      date?: string | undefined;
+      completed?: boolean | undefined;
+    } = {},
   ): Promise<TaskInfo> {
     const fresh = await this.readFresh(id);
     const recurrence = fresh.task.recurrence;
