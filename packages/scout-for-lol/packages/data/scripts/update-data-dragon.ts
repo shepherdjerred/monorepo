@@ -18,7 +18,8 @@ import {
   type ChampionListData,
   type CDragonChampion,
 } from "./update-data-dragon-schemas.ts";
-import { getChampionName } from "twisted/dist/constants/champions.js";
+import { Constants } from "twisted";
+const { getChampionName } = Constants;
 import {
   buildPatchChangelogEntryLiteral,
   insertChangelogEntry,
