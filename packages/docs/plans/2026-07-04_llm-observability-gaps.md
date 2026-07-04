@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned — all file/line claims re-verified against live main 2026-07-04
+In Progress — implemented; PR [#1403](https://github.com/shepherdjerred/monorepo/pull/1403) open; post-merge live verifications pending (see Session Log)
 
 ## Decisions
 
@@ -100,3 +100,30 @@ Planned — all file/line claims re-verified against live main 2026-07-04
 - **birmel — ~5-line fix.** `message-stream.ts:75-106` collector returns only `{text}`. VoltAgent's `StreamTextResultWithContext` (node_modules/@voltagent/core dist/index.d.ts:9278-9292) exposes `usage: Promise<LanguageModelUsage>` (`inputTokens`/`outputTokens`) + `finishReason`. Await both after the stream loop, return them; widen local `StreamTextResponse` type (`message-stream.ts:23-37`). Note: `totalUsage` is NOT exposed by VoltAgent's wrapper — use `.usage`.
 - **scout Mastra** — bare `new Agent(...)` + `agent.stream(...)` (`report-query-agent.ts:86-107`), no Mastra instance → zero spans by design. Usage already goes to Prometheus (`output.totalUsage`, :132-139). Least-invasive future fix: register agent on a `Mastra` with `Observability` + `OtelExporter` → scout's existing OTLP endpoint. **Caveat: Mastra's OtelExporter runs its own pipeline → spans reach Tempo but bypass scout's archive processor (no S3 bodies).** Low volume (one interactive HTTP route). (Prior POC/decision-doc citations removed — not present in live tree.)
 - **monarch** — local laptop CLI (`monarch-classify`, interactive, MailMate/Playwright), zero OTel deps, no deployment. Two non-streaming `messages.create` sites: `claude.ts:138`, tier3 tool loop `tier3.ts:184`. Would need full OTel bootstrap + forceFlush-on-exit + Tailscale-reachable S3/OTLP → archive-only at best.
+
+## Session Log — 2026-07-04
+
+### Done
+
+- **llm-observability**: `src/claude-cli-wrapper.ts` (`traceClaudeCli`, post-hoc `gen_ai.chat` span, `gen_ai.system="claude_code_cli"`, usage + cache split + `llm.cost_usd`, never-throws), `src/claude-message-schemas.ts` (shared with the Agent SDK wrapper), `src/codex-jsonl.ts` + `src/codex-trace.ts` (promoted from dpp, parameterized), barrel + `package.json` exports, 10 new unit tests driven by real captured fixtures (`test/fixtures/`, claude 2.1.187 / codex-cli 0.142.5). 27/27 pass.
+- **temporal**: `traceClaudeCli` in agent-task (via new `src/activities/agent-task-llm-trace.ts`, which also streams the codex branch through the shared adapter), pr-babysit `iteration.ts`, `homelab-audit.ts`, `scout-season-refresh-claude.ts`; `traceAnthropic` around `messages.parse` in `pr-review/specialists/runner.ts` + `correctness.ts`. Spans emit before failure checks. 604/604 tests (incl. integration against local `temporal server start-dev`). `AGENTS.md` updated with the LLM-observability contract.
+- **birmel**: `message-stream.ts` collector awaits VoltAgent's `usage`/`finishReason` → envelopes now carry tokens (were `usage: {}`).
+- **dpp**: `observability/tracing.ts` passes contextManager via `NodeSDK({contextManager})` (duplicate-registration error gone); `goal/codex-trace.ts` is now a thin shim over the package (pokemon span names preserved); `codex-jsonl.ts` + 2 test files deleted.
+- **Live e2e (pre-merge)**: real `claude -p` haiku run → `traceClaudeCli` → real `LlmArchiveSpanProcessor` → real `llm-archive` SeaweedFS bucket; envelope fetched back and validated (v1, bodies, usage, cost); test object deleted.
+- PR [#1403](https://github.com/shepherdjerred/monorepo/pull/1403); todos filed: `scout-mastra-observability`, `dpp-goal-trace-post-deploy-verify`, `llm-cost-rollup`.
+
+### Remaining
+
+- Merge PR #1403 (CI on Buildkite), then post-deploy live checks:
+  - Tempo `{ span.gen_ai.system = "claude_code_cli" }` + `aws s3 ls s3://llm-archive/llm/temporal-worker/claude_code_cli/ --profile seaweedfs` after the next scheduled agent task / daily audit (6:30am PT).
+  - Birmel envelope `usage` non-empty after the next Discord AI message.
+  - dpp goal run → `pokemon.goal.*` spans + fresh archives under `goals/discord-plays-pokemon/` (todo: `dpp-goal-trace-post-deploy-verify`).
+- Follow-up todos above (Mastra coverage, cost rollup).
+
+### Caveats
+
+- `claude_code_cli` spans are one flat span per run (no per-turn children); full-transcript capture is future work.
+- The codex adapter folds reasoning tokens into `gen_ai.usage.output_tokens` (OpenAI bills reasoning as output) and also records `gen_ai.usage.reasoning_tokens` separately.
+- dpp keeps its non-default archive prefix `goals/discord-plays-pokemon` — don't look for its envelopes under `llm/`.
+- Temporal integration tests need a local dev server (`temporal server start-dev`); without it exactly 3 tests fail with connection-refused — environmental, not code.
+- CLI fixtures are prettier-ignored (`.prettierignore`) to stay byte-faithful to real CLI output.
