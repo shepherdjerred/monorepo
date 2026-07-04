@@ -36,6 +36,12 @@ export function astroConfig(): TSESLint.FlatConfig.ConfigArray {
         "astro/no-deprecated-getentrybyslug": "error",
         "astro/no-unused-define-vars-in-style": "error",
         "astro/valid-compile": "error",
+        // astro-eslint-parser has no projectService support, and its virtual
+        // TSX nodes are absent from the esTreeNodeToTSNodeMap, so this typed
+        // rule crashes ESLint ("Cannot read properties of undefined") when a
+        // program is attached — and silently no-ops when one isn't. It has
+        // never produced a finding on .astro files; disable it there.
+        "@typescript-eslint/unbound-method": "off",
       },
     },
   ];

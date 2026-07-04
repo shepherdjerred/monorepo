@@ -99,3 +99,41 @@ succeeded) but surfaced two follow-on failures:
 Local validation after round 2: dpp typecheck+lint (in the reproduced CI
 layout), dpmk typecheck, dsl typecheck+tests (56), streambot subtitle tests
 (4) + typecheck — all green.
+
+## Round 3 — build 5026 fallout (scout lint)
+
+Build 5026: streambot + dpp pkg-checks passed (rounds 1-2 confirmed); one hard
+fail left — scout `Lint + Typecheck + Test`, two independent causes:
+
+1. **`@typescript-eslint/unbound-method` crashes ESLint on `.astro` files
+   under the hoisted layout** (`TypeError … getTypeAtLocation(node)…flatMap`,
+   Badge.astro). astro-eslint-parser doesn't support projectService (falls
+   back to `project: true`) and its virtual TSX nodes are missing from the
+   esTreeNodeToTSNodeMap. A/B-verified with `bun install --linker isolated`
+   vs hoisted on identical code+versions: isolated passes (the typed rule
+   silently no-ops — that's what main has been doing), hoisted attaches a
+   program and crashes. Version alignment (8.59.0 → 8.62.1) did NOT fix it.
+   Fix: disable `@typescript-eslint/unbound-method` for `**/*.astro` in
+   eslint-config's `astroConfig` — the rule has never produced a finding on
+   .astro files (it couldn't run), so nothing is lost.
+2. **3 `strict-boolean-expressions` warnings** in scout report
+   `competition-chart.ts` (`props.valueSuffix ? …`) — typed-lint findings
+   surfaced by the hoisted layout. Fixed with explicit
+   `!== undefined && !== ""` guards. (These warnings didn't fail the bundle —
+   report's lint has no `--max-warnings 0` — the crash did.)
+
+Also regenerated `packages/eslint-config/bun.lock` (manifest untouched — the
+existing ranges already covered the new resolutions) so its nested
+`@typescript-eslint` tree is 8.62.1, matching what consumers ran under the
+isolated linker on main. NOTE: `bun update <pkg>` rewrites package.json ranges
+(and even promotes transitive deps to direct ones); for a file: dep whose
+manifest is embedded in every consumer's lockfile, that causes repo-wide
+frozen-lockfile drift — regenerate the lock with ranges intact instead.
+
+dpmk frontend showed 4 `custom-rules/no-use-effect` warnings under the new
+config — its lint script has no `--max-warnings 0`, exit 0, not a blocker
+(pre-existing house-style findings, left alone).
+
+Local validation after round 3: eslint-config build + 234 tests; full scout
+lint (all 7 members incl. frontend .astro) + dpp lint + dpmk lint under
+clean hoisted layouts — all green.
