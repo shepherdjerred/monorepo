@@ -238,3 +238,24 @@ On `feature/tasknotes-p3` (stacked on P2), all in `packages/tasknotes-server` un
 
 - The e2e seed fixtures (`tags: [seeded]`) are invisible to the new engine until migrated — by design; the app e2e suite stays on the P2 branch's old server until P5 realigns it.
 - `/legacy` lives on the app's configurable base URL: at P4 rollout the app's API URL gains the `/legacy` suffix.
+
+## Session Log — 2026-07-03 (P5: app on the v2 contract + recurrence UX)
+
+### Done
+
+On `feature/tasknotes-p5` (stacked on P3), in `packages/tasks-for-obsidian` + `packages/tasknotes-types`:
+
+- **v2 wire boundary** (`src/domain/wire.ts`, 5a6de55cf): the upstream contract (snake_case, path-as-ID, config-object filter options, `{message}` deletes, plural calendars, NLP envelopes, TimeSummaryResult) parsed and transformed into the UNCHANGED camelCase domain `Task` — no storage migration needed; the P2 store/queue untouched. Client: paginated listTasks (cap 200), absolute status via PUT, flat-filter→FilterQuery-tree translation, per-task time endpoint, report screen onto pre-aggregated v2 topTasks. **Contract suite 18/18 against the real rebuilt server on `/api`.** Two server gaps it caught fixed on the P3 branch (mutation responses carry `details`; `GET /api/tasks/:id/time` routed).
+- **Recurrence UX** (c62316f53): `isCompletedOn`/`occursOn` via the model — per-day checkbox state (finding #4) and rrule expansion in Today/Upcoming.
+- **Wikilink projects** (finding #10): `projectPath`/`projectDisplayName`/`projectMatches` in tasknotes-types v2, applied at filters, project detail, and browse grouping (deduped by canonical path).
+- **Archived filtering** client-side; app CLAUDE.md updated; e2e seed fixtures tagged for the model engine's detection (af53f16a5).
+
+### Remaining (P5)
+
+- Maestro e2e green on the new stack (running at session end) — also proves Metro bundles @tasknotes/model (rrule/yaml); then the P5 PR.
+- TestFlight build (user-side) after merge.
+
+### Caveats
+
+- The app keeps CLOSED status/priority enums: a plugin-side custom workflow status fails response validation loudly rather than being remapped — acceptable for a single-user vault whose post-P4 statuses are the defaults; open-workflow support would be a future phase.
+- v2 `/legacy` surface is now unused by this branch's app but stays for the P4 rollout window (P2 app in production until this ships).
