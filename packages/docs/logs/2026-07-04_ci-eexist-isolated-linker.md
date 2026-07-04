@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Complete
 
 ## Symptom
 
@@ -214,3 +214,53 @@ operational:
 - Note: the per-package Build + Smoke steps have NO timeout at all
   (timeout null on the dpp job) — inconsistent with the 15-min docker steps;
   left as-is tonight, worth unifying later.
+
+## Round 8 — build 5033 green
+
+`withWritableBunInstallCache`'s `chown -R` of the in-layer bun cache
+(`BUN_INSTALL=/usr/local` → cache lives in the image layer, so chown forces an
+overlayfs copy-up of every file) accounted for the last ~30 silent minutes of
+the temporal-worker build; Tempo trace 2e9c0994cc51fe18fb127e0709af0978
+confirmed the build was progressing, not hung. It completed inside the new
+45-min budget. **Build 5033: 61 passed, 0 hard failures** (Knip + Trivy
+soft-fail as usual). Follow-up filed:
+`packages/docs/todos/temporal-worker-chown-cache-copyup.md`.
+
+## Session Log — 2026-07-04
+
+### Done
+
+- Root-caused the CI-wide EEXIST wall: bun ≥1.3 silently selects its isolated
+  linker (configVersion-1 lock + workspaces); the isolated installer has an
+  unfixed EEXIST race on shared `file:` deps (bun#12917/#20142); the
+  2026-07-03 outage cache-wipe made every install re-run at once; the old
+  retry replayed the poisoned node_modules.
+- PR #1400 (8 commits, builds 5025→5033, green at 5033):
+  hoisted-linker pins (dpp/dpmk/scout bunfig.toml), retry hygiene in
+  `BUN_INSTALL_WITH_RETRY`, xstate 5.32.4 alignment across 4 lockfiles,
+  streambot subtitle + scout chart-render test timeouts, typed linting
+  disabled for `.astro` (tseslint disableTypeChecked + 2 custom rules),
+  scout report strict-boolean fixes, dpmk image double-install removal,
+  image-build step timeout 15→45 min.
+- Corrected the stale `pkg-check-eexist-flake` memory; updated scout
+  AGENTS.md `file:`-copy path note.
+- Todos filed: `bun-isolated-linker-eexist` (un-pin when upstream fixes),
+  `temporal-worker-chown-cache-copyup` (replace chown -R with
+  BUN_INSTALL_CACHE_DIR).
+
+### Remaining
+
+- Merge PR #1400 and confirm the main build is green (in progress at session
+  end).
+- Close PR #1398 as superseded (chart-render timeout now 180s in #1400).
+- Consider a timeout for the per-package Build + Smoke steps (currently none).
+
+### Caveats
+
+- Reverting the eslint-config lock regen means its nested typescript-eslint
+  stays at 8.59.x while consumers drift ahead — typed-rule crashes on .astro
+  are now structurally prevented, but other version-skew surprises remain
+  possible; regenerate deliberately (ranges intact) if needed.
+- First cold dpp image build after any cache wipe stalls ~13 min silently at
+  `extracted [184]` (node-datachannel source-build postinstall) — not a hang.
+- PR #1399 (dpp eslint-config dedupe) is now redundant — close or rebase.
