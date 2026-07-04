@@ -185,6 +185,7 @@
   "internalChecksFilter": "strict",
   "schedule": ["after 3am on Sunday"],
   "prHourlyLimit": 5,
+  "prConcurrentLimit": 3,
   "reviewers": ["shepherdjerred"],
   "ignorePaths": ["sandbox/practice/**", "sandbox/archive/**"]
 }

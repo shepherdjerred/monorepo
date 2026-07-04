@@ -23,7 +23,7 @@ packages/
 Scout's sub-packages wire each other with `file:../X` deps (e.g. `@scout-for-lol/data`, `@scout-for-lol/backend`), **not** `workspace:*`.
 
 - **Never migrate `file:../X` deps to `workspace:*`** (or any symlinking scheme). The `file:` copy-on-install behavior is intentional and the preference is firm — do not list it as a follow-up, tech-debt, or improvement in PRs, plans, or chat.
-- Bun **copies** `file:` deps into `node_modules/.bun/<pkg>@file+.../` rather than symlinking. After editing source in a shared package (e.g. `packages/data`), the backend/app copies are **stale** — typecheck/tests fail with `Module '@scout-for-lol/data' has no exported member ...`. Fix: run `bun install` at `packages/scout-for-lol/` to re-copy, then typecheck dependents. (`bun install` reports `Saved lockfile` but usually leaves `bun.lock` unchanged — verify with `git diff`.)
+- Bun **copies** `file:` deps into `node_modules/<pkg>/` rather than symlinking (bunfig.toml pins `linker = "hoisted"`; under bun's isolated linker — bug-pinned away, see `packages/docs/todos/bun-isolated-linker-eexist.md` — the copies lived at `node_modules/.bun/<pkg>@file+.../`). After editing source in a shared package (e.g. `packages/data`), the backend/app copies are **stale** — typecheck/tests fail with `Module '@scout-for-lol/data' has no exported member ...`. Fix: run `bun install` at `packages/scout-for-lol/` to re-copy, then typecheck dependents. (`bun install` reports `Saved lockfile` but usually leaves `bun.lock` unchanged — verify with `git diff`.)
 - The app imports the backend `AppRouter` as `import type` only, so tRPC input/output changes also need this refresh before the app sees the new procedure shape.
 
 ---
