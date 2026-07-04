@@ -158,6 +158,9 @@ describe("RENDER clause — charts", () => {
 });
 
 describe("RENDER clause — full runner pipeline", () => {
+  // chart render via ECharts+RESVG takes ~5s; pod scheduling on the PR pipeline
+  // adds variance that occasionally crosses the 5s default — 60s matches the
+  // headroom set in PR #1368 to avoid a merge conflict on this line.
   test("runReport renders a chart report and records a SUCCESS run", async () => {
     await seedFacts();
     const report = await prisma.report.create({
@@ -189,7 +192,7 @@ describe("RENDER clause — full runner pipeline", () => {
     });
     expect(run.status).toBe("SUCCESS");
     expect(run.rowsReturned).toBe(2);
-  });
+  }, 60_000);
 
   test("a malformed RENDER clause records a FAILED run (no silent bypass)", async () => {
     await seedFacts();
