@@ -252,7 +252,7 @@ On `feature/tasknotes-p5` (stacked on P3), in `packages/tasks-for-obsidian` + `p
 
 ### Remaining (P5)
 
-- Maestro e2e green on the new stack (running at session end) — also proves Metro bundles @tasknotes/model (rrule/yaml); then the P5 PR.
+- ~~Maestro e2e~~ GREEN 7/7 on the full new stack (P5 app ↔ P3 server; Metro bundles the model). **PR #1394 open** (stack: #1388 → #1390 → #1391 → #1394). Null-as-clear + details-in-mutations + per-task-time server fixes landed on P3 en route; engine refinements (watcher rejection safety, unified path eligibility, migration id-gating, shared ymd) committed as 0ed84fdaf.
 - TestFlight build (user-side) after merge.
 
 ### Caveats
