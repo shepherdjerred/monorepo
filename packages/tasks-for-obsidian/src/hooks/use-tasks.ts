@@ -81,8 +81,12 @@ export function useTasks() {
         return isActiveStatus(t.status) && isUpcoming(t.due);
       })
       .sort((a, b) => {
-        if (!a.due || !b.due) return 0;
-        return new Date(a.due).getTime() - new Date(b.due).getTime();
+        // Recurring tasks surface via occursOn and are often scheduled-only
+        // (no due), so key on scheduled ?? due to keep calendar order.
+        const aKey = a.scheduled ?? a.due;
+        const bKey = b.scheduled ?? b.due;
+        if (!aKey || !bKey) return 0;
+        return new Date(aKey).getTime() - new Date(bKey).getTime();
       });
   }, [taskList]);
 

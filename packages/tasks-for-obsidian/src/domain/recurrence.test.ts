@@ -148,4 +148,13 @@ describe("model-driven per-day semantics (P5)", () => {
     expect(occursOn(weekly, "2026-07-13")).toBe(true); // next Monday
     expect(occursOn(base, "2026-07-06")).toBe(false); // not recurring
   });
+
+  test("a malformed day string fails fast instead of yielding an invalid Date", () => {
+    const weekly: Task = makeTask({
+      recurrence: "FREQ=WEEKLY;BYDAY=MO",
+      scheduled: "2026-07-06",
+    });
+    expect(() => occursOn(weekly, "2026-07-xx")).toThrow(TypeError);
+    expect(() => isCompletedOn(weekly, "not-a-date")).toThrow(TypeError);
+  });
 });

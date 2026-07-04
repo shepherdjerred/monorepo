@@ -95,6 +95,14 @@ export function occursOn(task: Task, day: string): boolean {
 
 /** Parse a YYYY-MM-DD string as a LOCAL date (never UTC midnight). */
 function localDate(day: string): Date {
-  const [y, m, d] = day.split("-").map(Number);
-  return new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1);
+  const parts = day.split("-");
+  const y = Number(parts[0]);
+  const m = Number(parts[1]);
+  const d = Number(parts[2]);
+  // `??` only guards null/undefined; a malformed segment yields NaN, which
+  // would silently flow into an invalid Date. Fail fast instead.
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) {
+    throw new TypeError(`localDate: invalid YYYY-MM-DD string "${day}"`);
+  }
+  return new Date(y, m - 1, d);
 }

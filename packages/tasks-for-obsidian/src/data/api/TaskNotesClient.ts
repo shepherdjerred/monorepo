@@ -140,7 +140,20 @@ export class TaskNotesClient {
       if (!page.ok) return page;
       tasks.push(...page.value.tasks);
       if (!page.value.pagination.hasMore) return ok(tasks);
-      offset += page.value.pagination.limit;
+      // Advance by what we actually received, not the declared limit, so a
+      // short page (items deleted mid-pagination, server edge case) can't
+      // skip the gap items on the next request.
+      if (page.value.tasks.length === 0) {
+        // hasMore with an empty page is a broken server contract; failing
+        // fast beats looping forever on a zero-length advance.
+        return err(
+          new ApiError(
+            "Task list pagination returned an empty page while hasMore=true",
+            0,
+          ),
+        );
+      }
+      offset += page.value.tasks.length;
     }
   }
 
