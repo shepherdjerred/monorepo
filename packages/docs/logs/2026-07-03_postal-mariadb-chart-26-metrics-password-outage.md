@@ -86,10 +86,7 @@ SLAVE MONITOR ON *.*; GRANT SELECT ON performance_schema.*`) inside `postal-mari
 
 ### Remaining
 
-- Refresh the 1Password vault snapshot (`bun run scripts/snapshot-1password-vault.ts` in
-  `packages/homelab/src/cdk8s`) and commit it — two attempts hit `op` biometric authorization
-  timeouts; needs the user present to approve.
-- Open the PR from `fix/postal-mariadb-metrics-password` once the snapshot lands.
+- None — vault snapshot refreshed and committed; PR #1396 open.
 
 ### Caveats
 
