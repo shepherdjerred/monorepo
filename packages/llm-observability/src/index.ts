@@ -43,6 +43,26 @@ import {
   type TraceTextStreamMetadata as InnerTraceTextStreamMetadata,
   type TraceTextStreamFinal as InnerTraceTextStreamFinal,
 } from "./text-stream-wrapper.ts";
+import {
+  traceClaudeCli as innerTraceClaudeCli,
+  type TraceClaudeCliMetadata as InnerTraceClaudeCliMetadata,
+  type TraceClaudeCliOutcome as InnerTraceClaudeCliOutcome,
+  type ClaudeCliLogger as InnerClaudeCliLogger,
+} from "./claude-cli-wrapper.ts";
+import {
+  createCodexJsonlParser as innerCreateCodexJsonlParser,
+  pumpCodexStdout as innerPumpCodexStdout,
+  addCodexUsage as innerAddCodexUsage,
+  type CodexEvent as InnerCodexEvent,
+  type CodexJsonlParser as InnerCodexJsonlParser,
+  type CodexTurnUsage as InnerCodexTurnUsage,
+  type CodexLogger as InnerCodexLogger,
+} from "./codex-jsonl.ts";
+import {
+  attachCodexTrace as innerAttachCodexTrace,
+  type CodexTrace as InnerCodexTrace,
+  type CodexTraceOptions as InnerCodexTraceOptions,
+} from "./codex-trace.ts";
 
 // The custom no-re-exports lint rule disallows both `export … from` and any
 // local re-binding whose RHS is an imported identifier. Public symbols are
@@ -124,3 +144,44 @@ export function traceTextStream(
 }
 export type TraceTextStreamMetadata = Identity<InnerTraceTextStreamMetadata>;
 export type TraceTextStreamFinal = Identity<InnerTraceTextStreamFinal>;
+
+export function traceClaudeCli(
+  ...args: Parameters<typeof innerTraceClaudeCli>
+): ReturnType<typeof innerTraceClaudeCli> {
+  innerTraceClaudeCli(...args);
+}
+export type TraceClaudeCliMetadata = Identity<InnerTraceClaudeCliMetadata>;
+export type TraceClaudeCliOutcome = Identity<InnerTraceClaudeCliOutcome>;
+export type ClaudeCliLogger = Identity<InnerClaudeCliLogger>;
+
+export function createCodexJsonlParser(
+  ...args: Parameters<typeof innerCreateCodexJsonlParser>
+): ReturnType<typeof innerCreateCodexJsonlParser> {
+  return innerCreateCodexJsonlParser(...args);
+}
+export function pumpCodexStdout(
+  ...args: Parameters<typeof innerPumpCodexStdout>
+): ReturnType<typeof innerPumpCodexStdout> {
+  return innerPumpCodexStdout(...args);
+}
+export function addCodexUsage(
+  ...args: Parameters<typeof innerAddCodexUsage>
+): ReturnType<typeof innerAddCodexUsage> {
+  return innerAddCodexUsage(...args);
+}
+// Union types are not amenable to the mapped-type Identity trick (it would
+// collapse the discriminated arms), so CodexEvent is re-derived as a function
+// parameter type instead.
+export type CodexEvent = Parameters<CodexEventListener>[0];
+export type CodexEventListener = (event: InnerCodexEvent) => void;
+export type CodexJsonlParser = Identity<InnerCodexJsonlParser>;
+export type CodexTurnUsage = Identity<InnerCodexTurnUsage>;
+export type CodexLogger = Identity<InnerCodexLogger>;
+
+export function attachCodexTrace(
+  ...args: Parameters<typeof innerAttachCodexTrace>
+): ReturnType<typeof innerAttachCodexTrace> {
+  return innerAttachCodexTrace(...args);
+}
+export type CodexTrace = Identity<InnerCodexTrace>;
+export type CodexTraceOptions = Identity<InnerCodexTraceOptions>;

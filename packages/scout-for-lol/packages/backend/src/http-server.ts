@@ -12,6 +12,7 @@ import {
   handleWebLogout,
 } from "#src/trpc/auth-web.ts";
 import { handleImageRoute } from "#src/trpc/image-routes.ts";
+import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
 
 const logger = createLogger("http-server");
 
@@ -263,6 +264,15 @@ const server = Bun.serve({
     // Web auth: logout
     if (url.pathname === "/api/auth/logout" && request.method === "POST") {
       return handleWebLogout(request);
+    }
+
+    const reportAiResponse = await handleReportAiRoute(
+      request,
+      url,
+      corsHeadersFor(request),
+    );
+    if (reportAiResponse !== null) {
+      return reportAiResponse;
     }
 
     // Generated chart PNGs for the web app (<img src>), cookie-authorized.

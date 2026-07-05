@@ -192,17 +192,27 @@ describe("Helm Escaping - E2E Content Verification (dist/)", () => {
 
   it("apps chart: PagerDuty config contains unescaped Alertmanager templates after Helm", async () => {
     const result = await helmTemplateChart("apps");
-    expect(result.stdout).toContain("{{ range .Alerts }}");
-    expect(result.stdout).toContain("{{ .Annotations.summary }}");
-    // Regression guard: the PagerDuty description must surface the per-alert
-    // `message` annotation (Velero/HA rules use `message`, not `description`)
-    // and the namespace, otherwise distinct incidents page identically and
-    // look like duplicates. See packages/docs/logs/2026-05-30_pagerduty-velero-duplicate-alerts.md
+    // Title (description) is a single clean line: shared summary (or alertname)
+    // + namespace + firing count. The full per-alert body must NOT be in the
+    // title — PagerDuty truncates it mid-word at ~1024 chars.
+    // See packages/docs/logs/2026-07-03_pagerduty-clean-titles.md
+    expect(result.stdout).toContain("{{ .CommonAnnotations.summary }}");
+    expect(result.stdout).toContain("{{ .CommonLabels.alertname }}");
+    // Regression guard: the per-alert `message` (falling back to `description`)
+    // must still reach PagerDuty — now in `details`, not the title — so distinct
+    // namespaces/objects grouped into one incident stay distinguishable.
+    // See packages/docs/logs/2026-05-30_pagerduty-velero-duplicate-alerts.md
+    expect(result.stdout).toContain("{{ range .Alerts.Firing }}");
     expect(result.stdout).toContain("{{ .Annotations.message }}");
-    expect(result.stdout).toContain("{{ .Labels.namespace }}");
-    // Regression guard: a literal backslash-n must never reach the description
-    // template. Go's text/template does not interpret `\n` in literal text, so
-    // it would clutter PagerDuty incident titles with literal "\n".
+    // Regression guard: the pre-2026-07 design inlined the whole body into the
+    // title via `{{ range .Alerts }}...summary...: ...message... }}`. Ensure the
+    // title no longer ranges over every alert (that caused the truncated blobs).
+    expect(result.stdout).not.toContain(
+      "{{ range .Alerts }}{{ .Annotations.summary }}",
+    );
+    // Regression guard: a literal backslash-n must never reach a template. Go's
+    // text/template does not interpret `\n` in literal text, so it would surface
+    // as the two characters "\n".
     expect(result.stdout).not.toContain(
       String.raw`{{ .Annotations.summary }}\n`,
     );

@@ -12,6 +12,8 @@ function makeAgent(chunks: readonly string[]) {
   return {
     streamText: async () => ({
       textStream: streamChunks(chunks),
+      usage: Promise.resolve({ inputTokens: 12, outputTokens: 34 }),
+      finishReason: Promise.resolve("stop"),
     }),
   };
 }

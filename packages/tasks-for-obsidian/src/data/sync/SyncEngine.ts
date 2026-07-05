@@ -1,5 +1,10 @@
 import { TypedStorage } from "../cache/storage";
-import type { MutationClient, MutationQueue, Mutation } from "./MutationQueue";
+import type {
+  Clock,
+  MutationClient,
+  MutationQueue,
+  Mutation,
+} from "./MutationQueue";
 import type { AppError } from "../../domain/errors";
 import { type Result, OK_VOID, err } from "../../domain/result";
 import { ConnectionError } from "../../domain/errors";
@@ -25,16 +30,23 @@ const defaultCacheStorage: TaskCacheStorage = {
   setLastSyncTime: (time) => TypedStorage.setLastSyncTime(time),
 };
 
+export type SyncEngineOptions = {
+  cache?: TaskCacheStorage;
+  clock?: Clock;
+};
+
 export class SyncEngine {
   private readonly cache: TaskCacheStorage;
+  private readonly clock: Clock;
 
   constructor(
     private readonly client: SyncClient | null,
     private readonly mutationQueue: MutationQueue,
     private readonly onTasksUpdated: (tasks: Task[]) => void,
-    cache: TaskCacheStorage = defaultCacheStorage,
+    options: SyncEngineOptions = {},
   ) {
-    this.cache = cache;
+    this.cache = options.cache ?? defaultCacheStorage;
+    this.clock = options.clock ?? Date.now;
   }
 
   async fullSync(): Promise<Result<void, AppError>> {
@@ -59,7 +71,7 @@ export class SyncEngine {
     const merged = [...tasks.values()];
 
     await this.cache.setTasks(merged);
-    await this.cache.setLastSyncTime(Date.now());
+    await this.cache.setLastSyncTime(this.clock());
 
     this.onTasksUpdated(merged);
 
