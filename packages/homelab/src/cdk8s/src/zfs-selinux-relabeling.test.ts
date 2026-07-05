@@ -3,6 +3,7 @@ import { App } from "cdk8s";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { setupCharts } from "./setup-charts.ts";
+import { zfsVolumeSelinuxLevels } from "./misc/selinux.ts";
 
 const SecurityContextSchema = z.looseObject({
   seLinuxOptions: z
@@ -29,9 +30,9 @@ const DeploymentSchema = z.looseObject({
 type Deployment = z.infer<typeof DeploymentSchema>;
 
 const expectedSelinuxLevels = new Map([
-  ["plausible-clickhouse", "s0:c101,c201"],
-  ["scout-beta-scout-backend", "s0:c220,c221"],
-  ["scout-prod-scout-backend", "s0:c222,c223"],
+  ["plausible-clickhouse", zfsVolumeSelinuxLevels.clickhouse],
+  ["scout-beta-scout-backend", zfsVolumeSelinuxLevels.scoutBeta],
+  ["scout-prod-scout-backend", zfsVolumeSelinuxLevels.scoutProd],
 ]);
 
 async function synthesizeDeployments() {
@@ -58,6 +59,12 @@ async function synthesizeDeployments() {
 }
 
 describe("ZFS SELinux relabeling", () => {
+  it("keeps MCS category pairs unique", () => {
+    const levels = Object.values(zfsVolumeSelinuxLevels);
+
+    expect(new Set(levels).size).toBe(levels.length);
+  });
+
   it("sets explicit SELinux labels on high-churn ZFS writers", async () => {
     const deployments = await synthesizeDeployments();
 

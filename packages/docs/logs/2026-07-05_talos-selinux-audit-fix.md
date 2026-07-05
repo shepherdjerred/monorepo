@@ -82,3 +82,22 @@ The generated manifests contain:
 
 - The PR is intentionally draft.
 - No live cluster state was changed during publication.
+
+## Session Log — 2026-07-05 PR Review Follow-up
+
+### Done
+
+- Addressed Greptile P2 feedback by centralizing ZFS SELinux MCS levels in `packages/homelab/src/cdk8s/src/misc/selinux.ts`.
+- Added fail-fast validation that a deployment has pod `securityContext` before applying the SELinux JSON patch.
+- Made Scout's pod-level `securityContext` explicit instead of relying on cdk8s-plus synthesis behavior.
+- Added regression coverage that the MCS category pairs stay unique.
+- Verified `bunx eslint src/misc/selinux.ts src/resources/analytics/clickhouse.ts src/resources/scout/index.ts src/zfs-selinux-relabeling.test.ts --fix`, `bun test src/zfs-selinux-relabeling.test.ts`, `bun run typecheck`, `bun run build`, and `bun run test`.
+
+### Remaining
+
+- Wait for a fresh Buildkite PR build to replace canceled build `5097`.
+- Recheck unresolved review threads after Greptile reviews the new head commit.
+
+### Caveats
+
+- Buildkite build `5097` was canceled before the pipeline upload job produced useful logs.

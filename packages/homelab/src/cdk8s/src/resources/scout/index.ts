@@ -22,12 +22,16 @@ import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout
 import { match } from "ts-pattern";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
-import { applyZfsVolumeSelinuxRelabeling } from "@shepherdjerred/homelab/cdk8s/src/misc/selinux.ts";
+import {
+  applyZfsVolumeSelinuxRelabeling,
+  zfsVolumeSelinuxLevels,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/selinux.ts";
 
 export function createScoutDeployment(chart: Chart, stage: Stage) {
   const deployment = new Deployment(chart, "scout-backend", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    securityContext: {},
     metadata: {
       annotations: {
         "ignore-check.kube-linter.io/run-as-non-root":
@@ -47,7 +51,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         path: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/rtu44pohnp5ixdp2njuv5f6t2e",
         applicationId: "1311755320745394317",
         s3BucketName: "scout-beta",
-        selinuxLevel: "s0:c220,c221",
+        selinuxLevel: zfsVolumeSelinuxLevels.scoutBeta,
       };
     })
     .with("prod", () => {
@@ -56,11 +60,10 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         path: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/pacrc4wfbtct4y3qazkvazop5a",
         applicationId: "1182800769188110366",
         s3BucketName: "scout-prod",
-        selinuxLevel: "s0:c222,c223",
+        selinuxLevel: zfsVolumeSelinuxLevels.scoutProd,
       };
     })
     .exhaustive();
-  applyZfsVolumeSelinuxRelabeling(deployment, selinuxLevel);
 
   const onePasswordItem = new OnePasswordItem(chart, "scout-for-lol-1p", {
     spec: {
@@ -238,6 +241,8 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       envVariables,
     }),
   );
+
+  applyZfsVolumeSelinuxRelabeling(deployment, selinuxLevel);
 
   setRevisionHistoryLimit(deployment);
 
