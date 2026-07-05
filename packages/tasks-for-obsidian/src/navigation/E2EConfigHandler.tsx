@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { Linking } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { TIPS_DISABLED_KEY } from "../hooks/use-tip";
 import { useSettingsContext } from "../state/SettingsContext";
 import { navigationRef } from "./navigation-ref";
 
@@ -19,6 +21,8 @@ import { navigationRef } from "./navigation-ref";
 type E2EConfig = {
   apiUrl: string;
   token: string;
+  /** `tips=off` — suppress first-run tip popovers (they make UI tests racy). */
+  tipsOff: boolean;
 };
 
 export function parseE2EConfigUrl(url: string): E2EConfig | null {
@@ -32,7 +36,7 @@ export function parseE2EConfigUrl(url: string): E2EConfig | null {
   const apiUrl = params.get("apiUrl");
   const token = params.get("token");
   if (apiUrl === null || apiUrl.length === 0 || token === null) return null;
-  return { apiUrl, token };
+  return { apiUrl, token, tipsOff: params.get("tips") === "off" };
 }
 
 export function E2EConfigHandler() {
@@ -44,6 +48,9 @@ export function E2EConfigHandler() {
     async function applyConfig(url: string): Promise<void> {
       const config = parseE2EConfigUrl(url);
       if (config === null) return;
+      if (config.tipsOff) {
+        await AsyncStorage.setItem(TIPS_DISABLED_KEY, "true");
+      }
       await setApiUrl(config.apiUrl);
       await setAuthToken(config.token);
       if (navigationRef.isReady()) {

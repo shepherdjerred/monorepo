@@ -9,8 +9,11 @@ const config = [
         "src/lib/*.test.ts",
         "src/data/sync/*.test.ts",
         "src/data/sync/__tests__/*.test.ts",
-        // scripts/*.ts now have their own tsconfig (scripts/tsconfig.json,
-        // bun types) discovered by the project service — not default-project.
+        "src/data/cache/*.test.ts",
+        "src/data/store/*.test.ts",
+        // scripts/*.ts, e2e/*.ts, and contract-tests/*.ts have their own
+        // tsconfigs (bun types) discovered by the project service — not
+        // default-project.
         // tseslint disallows '**' here; all e2e TS files live at this depth
         // (e2e/maestro/scripts/*.js are plain Maestro GraalJS, ignored).
       ],

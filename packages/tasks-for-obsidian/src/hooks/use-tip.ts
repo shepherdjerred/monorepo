@@ -5,6 +5,14 @@ function storageKey(tipId: string): string {
   return `@tasknotes/tip:${tipId}:dismissed`;
 }
 
+/**
+ * Global kill switch, set by the __DEV__-only e2e-config deep link
+ * (`tips=off`): first-run tip popovers appear on a delayed timer and can
+ * swallow taps aimed at the controls beneath them, which makes UI tests
+ * unbearably racy.
+ */
+export const TIPS_DISABLED_KEY = "@tasknotes/tips-disabled";
+
 export function useTip(tipId: string): {
   visible: boolean;
   dismiss: () => void;
@@ -16,9 +24,12 @@ export function useTip(tipId: string): {
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     async function check() {
-      const dismissed = await AsyncStorage.getItem(storageKey(tipId));
+      const [disabled, dismissed] = await Promise.all([
+        AsyncStorage.getItem(TIPS_DISABLED_KEY),
+        AsyncStorage.getItem(storageKey(tipId)),
+      ]);
       if (cancelled) return;
-      if (dismissed !== "true") {
+      if (disabled !== "true" && dismissed !== "true") {
         timer = setTimeout(() => {
           if (!cancelled) setVisible(true);
         }, 500);

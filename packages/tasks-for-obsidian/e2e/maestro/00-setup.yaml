@@ -3,6 +3,13 @@
 # Requires --env APP_URL and --env AUTH_TOKEN (provided by e2e/run.ts).
 appId: org.reactjs.native.example.TasksForObsidian
 ---
+# Self-healing: force the chaos proxy back online before every flow. If an
+# offline-simulation flow died between its offline and online toggles, every
+# later flow would otherwise inherit a dead network and fail right here.
+- runScript:
+    file: scripts/chaos-online.js
+    env:
+      CHAOS_BASE: ${APP_URL}
 - launchApp:
     clearState: true
 # Wait for the app to finish booting (tab bar present) BEFORE openLink. A
@@ -14,7 +21,7 @@ appId: org.reactjs.native.example.TasksForObsidian
     visible:
       id: "tab-inbox"
     timeout: 60000
-- openLink: "tasknotes://e2e-config?apiUrl=${APP_URL}&token=${AUTH_TOKEN}"
+- openLink: "tasknotes://e2e-config?apiUrl=${APP_URL}&token=${AUTH_TOKEN}&tips=off"
 # If SpringBoard shows an "Open in <app>?" confirmation for the custom scheme,
 # dismiss it. runFlow's `when` only taps if the button is actually present, so
 # the common direct-delivery path (app already frontmost) is unaffected.

@@ -1,12 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
-import {
-  View,
-  Pressable,
-  Text,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-} from "react-native";
+import { View, Pressable, Text, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
 import { useTasks } from "../hooks/use-tasks";
@@ -42,25 +35,19 @@ export function QuickAddScreen({ route, navigation }: Props) {
     navigation.goBack();
   }, [parsed, createTask, navigation]);
 
+  // The Create button sits directly under the input, NOT pinned to the
+  // bottom of a KeyboardAvoidingView: KAV's padding goes stale when the
+  // connection banner appears mid-session (its layout shift isn't
+  // re-measured), which left the bottom-pinned button hidden behind the
+  // keyboard — untappable exactly when the user is offline.
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <View style={styles.inputArea}>
-        <NaturalLanguageInput
-          value={text}
-          onChange={setText}
-          parsedResult={parsed}
-          testID="quick-add-input"
-        />
-        <TipPopover
-          visible={nlpTip.visible}
-          title="Try natural language"
-          message={'Type "Buy milk tomorrow !high p:Shopping"'}
-          onDismiss={nlpTip.dismiss}
-        />
-      </View>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <NaturalLanguageInput
+        value={text}
+        onChange={setText}
+        parsedResult={parsed}
+        testID="quick-add-input"
+      />
       <Pressable
         style={[
           styles.createButton,
@@ -79,7 +66,13 @@ export function QuickAddScreen({ route, navigation }: Props) {
       >
         <Text style={styles.createText}>Create Task</Text>
       </Pressable>
-    </KeyboardAvoidingView>
+      <TipPopover
+        visible={nlpTip.visible}
+        title="Try natural language"
+        message={'Type "Buy milk tomorrow !high p:Shopping"'}
+        onDismiss={nlpTip.dismiss}
+      />
+    </View>
   );
 }
 
@@ -88,14 +81,11 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  inputArea: {
-    flex: 1,
-  },
   createButton: {
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
-    marginBottom: 16,
+    marginTop: 16,
   },
   createText: {
     color: "#ffffff",
