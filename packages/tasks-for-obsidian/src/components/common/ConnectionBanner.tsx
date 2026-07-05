@@ -54,6 +54,7 @@ export function ConnectionBanner() {
       accessibilityRole="alert"
       accessibilityLabel={message}
       accessibilityLiveRegion="polite"
+      testID="connection-banner"
     >
       <Text style={styles.text}>{message}</Text>
     </Animated.View>

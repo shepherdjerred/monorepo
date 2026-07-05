@@ -153,7 +153,9 @@ describe("resolveSubtitleForYtdlp (fake yt-dlp, end-to-end)", () => {
     for (const phrase of ["hey", "hello", "hi"]) {
       expect(text.split(`\n${phrase}\n`).length - 1).toBe(1);
     }
-  });
+    // 60s: spawns a real process; bun's 5s default flakes under heavy CI load
+    // (build 5025 measured 5.4s post-outage). Matches PR #1398's precedent.
+  }, 60_000);
 
   test("leaves an already-clean subtitle track untouched", async () => {
     const config = await setup(CLEAN_SRT);
@@ -166,7 +168,7 @@ describe("resolveSubtitleForYtdlp (fake yt-dlp, end-to-end)", () => {
     if (resolved === undefined) throw new Error("expected a resolved subtitle");
     const text = await readFile(resolved.path, "utf8");
     expect(text).toBe(CLEAN_SRT);
-  });
+  }, 60_000);
 
   test("returns undefined when yt-dlp writes no subtitle", async () => {
     const config = await setup(null);
@@ -177,7 +179,7 @@ describe("resolveSubtitleForYtdlp (fake yt-dlp, end-to-end)", () => {
       NEVER_ABORT,
     );
     expect(resolved).toBeUndefined();
-  });
+  }, 60_000);
 
   test("does nothing when subtitles are disabled for the request", async () => {
     const config = await setup(ROLLING_SRT);
@@ -188,5 +190,5 @@ describe("resolveSubtitleForYtdlp (fake yt-dlp, end-to-end)", () => {
       NEVER_ABORT,
     );
     expect(resolved).toBeUndefined();
-  });
+  }, 60_000);
 });

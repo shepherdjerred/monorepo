@@ -379,9 +379,9 @@ export function parseGreptileSkippedReview(
  * threshold. Threads with no priority badge are never blocking.
  *
  * `skippedReview` is non-null when Greptile posted a skip-review status
- * comment on the issue (no reviewable files, or too many files for review).
- * In that case the check-run wait is skipped (Greptile never creates one when
- * it decides not to review), but thread resolution is still evaluated —
+ * comment on the issue (no reviewable files, too many files, or excluded
+ * author). In that case the check-run wait is skipped (Greptile never creates
+ * one when it decides not to review), but thread resolution is still evaluated —
  * earlier commits on the same PR may have produced unresolved Greptile
  * threads that GitHub does not automatically mark as outdated when only
  * ignored / overflow files change.

@@ -89,6 +89,8 @@ export function SettingsScreen(_props: Props) {
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="url"
+          testID="settings-api-url"
+          accessibilityLabel="API URL"
         />
 
         <Text
@@ -118,6 +120,8 @@ export function SettingsScreen(_props: Props) {
           autoCapitalize="none"
           autoCorrect={false}
           secureTextEntry
+          testID="settings-auth-token"
+          accessibilityLabel="Auth token"
         />
 
         <View style={[styles.row, styles.sectionLabel]}>
@@ -147,6 +151,7 @@ export function SettingsScreen(_props: Props) {
           onPress={handleTestConnection}
           accessibilityRole="button"
           accessibilityLabel="Test connection"
+          testID="settings-save"
         >
           <Text style={styles.buttonText}>Test Connection</Text>
         </Pressable>

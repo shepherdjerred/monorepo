@@ -18,6 +18,7 @@ export * from "./report-query-spec.ts";
 export * from "./report-query-registry.ts";
 export * from "./report-query-parser.ts";
 export * from "./report-query-compile.ts";
+export * from "./report-query-format.ts";
 export * from "./report-query-lint.ts";
 export * from "./report-query-complete.ts";
 export * from "./roster.ts";
