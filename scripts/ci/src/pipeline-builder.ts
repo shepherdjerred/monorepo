@@ -224,8 +224,8 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     releaseDeps.push(caddyStep.key);
   }
 
-  // --- Main-only steps ---
-  const hasMainSteps =
+  // --- Release and PR dryrun-capable steps ---
+  const hasReleaseOrPrDryrunSteps =
     affected.buildAll ||
     affected.hasImagePackages.size > 0 ||
     affected.hasSitePackages.size > 0 ||
@@ -234,12 +234,12 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     affected.cooklangChanged ||
     affected.ciImageChanged;
 
-  // Deploy-site step keys, populated inside the hasMainSteps block below and
-  // folded into `ci-complete`'s depends_on so a failed site build (including a
-  // PR dryrun) blocks the required GitHub check.
+  // Deploy-site step keys, populated inside the release/PR dryrun block below
+  // and folded into `ci-complete`'s depends_on so a failed site build
+  // (including a PR dryrun) blocks the required GitHub check.
   let siteDeployKeys: string[] = [];
 
-  if (hasMainSteps) {
+  if (hasReleaseOrPrDryrunSteps) {
     // Quality gate: lightweight step that passes once all blocking checks pass.
     // Downstream steps that don't need release metadata depend on this instead.
     steps.push({

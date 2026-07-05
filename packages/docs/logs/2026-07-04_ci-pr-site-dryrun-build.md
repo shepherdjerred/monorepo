@@ -91,3 +91,25 @@ now-accurate behavior.
   `--dryrun` skips the sync, so no publish occurs and missing AWS creds are
   tolerated (Dagger defers the secret until use). Confirmed by build 4990's dryrun,
   which ran the astro build without valid AWS creds.
+
+## Session Log — 2026-07-05
+
+### Done
+
+- `scripts/ci/src/pipeline-builder.ts`: renamed the stale "Main-only" block and
+  `hasMainSteps` helper to describe the shared release / PR dryrun path.
+- `scripts/ci/src/catalog.ts`: raised per-package Dagger wrapper resource tiers
+  so the Buildkite agent and Dagger client have more memory headroom after build
+  5090's `exit status -7` package-check failures.
+
+### Remaining
+
+- Wait for Buildkite on the pushed fix commit and address any new hard failures.
+
+### Caveats
+
+- Build 5090 was canceled after two package-check pods stopped without a normal
+  exit; the logs pointed at likely pod OOM rather than a TypeScript/lint/test
+  assertion.
+- `bunx eslint . --fix` is not currently runnable for `scripts/ci` from either
+  the package or repo root because no ESLint flat config is discoverable there.
