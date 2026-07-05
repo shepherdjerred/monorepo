@@ -73,6 +73,11 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       dir: env["STATE_DIR"],
       resumeMaxAgeSeconds: num(env["RESUME_MAX_AGE_SECONDS"]),
     },
+    reconnect: {
+      enabled: bool(env["STREAMER_RECONNECT_ENABLED"]),
+      delaySeconds: num(env["STREAMER_RECONNECT_DELAY_SECONDS"]),
+      maxAttempts: num(env["STREAMER_RECONNECT_MAX_ATTEMPTS"]),
+    },
     tmdb:
       env["TMDB_API_KEY"] === undefined
         ? undefined
