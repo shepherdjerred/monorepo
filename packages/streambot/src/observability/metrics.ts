@@ -163,6 +163,22 @@ export const playbackPositionSeconds = new Gauge({
   registers: [register],
 });
 
+// --- voice connection loss & recovery ---------------------------------------
+
+export const voiceDisconnectsTotal = new Counter({
+  name: "streambot_voice_disconnects_total",
+  help: "Discord-side voice session losses during an active session, by classification (deliberate = 4014 moderator disconnect)",
+  labelNames: ["deliberate"] as const,
+  registers: [register],
+});
+
+export const voiceReconnectsTotal = new Counter({
+  name: "streambot_voice_reconnects_total",
+  help: "Automatic reconnect-with-resume attempts after a transient voice loss, by outcome (success | failed | exhausted | skipped | unresumable | no-userbot)",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});
+
 // --- source media properties (set from ffprobe) -----------------------------
 
 const sourceInfo = new Gauge({

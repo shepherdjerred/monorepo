@@ -32,6 +32,14 @@ command bot plus a **pool of streamer userbots**:
 Resume: per-`(guild, channel)` state files `playback-state-<guildId>-<channelId>.json` (schema v2).
 On restart the session manager re-acquires a member-userbot per persisted session and resumes it.
 
+Voice-loss recovery: when Discord kills the userbot's voice session mid-stream (surfaced by the
+dvs fork's `close` event and/or the main gateway's voiceStateUpdate), `session/voice-recovery.ts`
+classifies the loss by ws close code — a fresh 4014 (moderator disconnect) is respected and stays
+down; anything else checkpoints position, preserves the state file through teardown, and retries
+`resumeSession` on a delay (bounded by `STREAMER_RECONNECT_MAX_ATTEMPTS`, kill switch
+`STREAMER_RECONNECT_ENABLED=false`). Stop reasons are announced to the status channel and counted
+in `streambot_voice_disconnects_total` / `streambot_voice_reconnects_total`.
+
 The bot/userbot split is necessary because Discord bots cannot stream video to voice — only user
 accounts can (via the unofficial selfbot lib). Modeled on `packages/discord-plays-pokemon`, but we
 stream files/URLs directly with ffmpeg instead of automating a browser.

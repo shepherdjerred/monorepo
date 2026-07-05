@@ -22,6 +22,14 @@ file). The ISC text and original copyright are retained in [`LICENSE`](./LICENSE
    appended (via the pure `buildVideoFilterChain`) to the transcoding `-vf` chain right after the
    built-in `scale`, so it composes with scale/encoder filters instead of clobbering them like a raw
    `-vf` in `customFfmpegFlags` would. streambot uses it to burn in subtitles (`subtitles='…'`).
+4. **Voice-gateway close surfacing** (`src/client/voice/BaseMediaConnection.ts`) — every voice ws
+   close is logged (`conn` namespace) with its close code, and a non-resumable close now emits a
+   typed `close` event (`MediaConnectionCloseInfo { code, canResume, deliberate }`, where
+   `deliberate` marks Discord's 4014 "disconnected") so consumers can distinguish a moderator
+   disconnect from transient session loss. Upstream discards the code and dies silently. The close
+   handler also bails when the close was locally initiated via `stop()` — upstream treated its own
+   code-1000 close as resumable and spawned a phantom resume socket after every normal stop — and
+   the websocket is created through a `protected createWebSocket()` seam so tests can inject a fake.
 
 `prepareStream` / `playStream` keep their upstream public behavior; the rawvideo bots
 (`discord-plays-*`) use them unchanged.
