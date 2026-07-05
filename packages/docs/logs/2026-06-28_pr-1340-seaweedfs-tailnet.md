@@ -105,3 +105,34 @@ thread has `priority <= 3`, `isResolved == false`, `isOutdated == false`.
 - Greptile caught two real bugs in my initial implementation (wrong namespace `cloudflare-tunnel`
   instead of `seaweedfs`, wrong CRD version `v1` instead of `v1alpha1`). Both were fixed before
   the final green build.
+
+## Session Log — 2026-07-04 (verification pass)
+
+### Done
+
+- Re-verified PR #1340 against all merge-readiness criteria in a fresh worktree:
+  - **CI:** Buildkite build #4752 — all 39 GitHub status contexts report SUCCESS.
+    The only "Soft failed" steps are `scissors-knip` and `shield-trivy-scan`
+    (soft-fail by design; they report SUCCESS to GitHub and do not gate).
+  - **Merge conflicts:** clean. `git fetch origin main` + dry-run `git merge --no-ff`
+    against `origin/main` merges cleanly (auto-merges only, no conflict markers).
+  - **Review comments:** 0 unresolved review threads. All 7 Greptile threads
+    (`isResolved=true`), and each verified addressed in the current tree:
+    deploy path + dotfiles/toolkit AWS profiles use `seaweedfs-s3.tailnet-1a49.ts.net`
+    (`release.ts:830,855`, `dotfiles/private_dot_aws/config`); argocd wait step uses
+    `--namespace seaweedfs` and `--version v1alpha1`; fail-closed TunnelBinding deletion
+    step sits between `deploy-argocd` and `tofu-apply-cloudflare`.
+
+### Remaining
+
+- Nothing for CI-green. Owner approval still required to merge (out of scope for this pass).
+
+### Caveats
+
+- The author's issue-level question "Is this safe to merge? There is a concerning comment above"
+  (2026-07-02) refers to the 2026-06-28 "Hold for sequencing" comment. That P1 sequencing concern
+  (network-isolated Dagger deploy container could not reach SeaweedFS after the public host is
+  removed) was resolved by commit 7262dfc2e, which repointed consumers to the tailnet endpoint
+  after confirming Dagger containers can reach `*.tailnet-1a49.ts.net` (the Tofu seaweedfs stack
+  already uses that endpoint for its state backend and bucket management). No new review threads
+  or CI failures resulted; the question predates the author's awareness the fix had landed.
