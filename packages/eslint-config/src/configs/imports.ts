@@ -1,8 +1,18 @@
 /**
  * Import/export linting configuration
  */
+import { createRequire } from "node:module";
 import importPlugin from "eslint-plugin-import";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+// Resolve resolver packages from THIS package's module context. Under bun's
+// isolated linker, eslint-plugin-import cannot load string-named resolvers:
+// they are eslint-config's deps, invisible from plugin-import's own store
+// subtree (a bare "typescript" key even resolves to the TypeScript compiler,
+// producing "invalid interface loaded as resolver"). plugin-import accepts
+// absolute paths as resolver keys, which sidesteps its lookup entirely.
+const localRequire = createRequire(import.meta.url);
+const resolverPath = (name: string): string => localRequire.resolve(name);
 
 export type ImportsConfigOptions = {
   tsconfigPaths?: string[];
@@ -20,7 +30,7 @@ export function importsConfig(
 
   const resolverConfig = useBunResolver
     ? {
-        "typescript-bun": {
+        [resolverPath("eslint-import-resolver-typescript-bun")]: {
           alwaysTryTypes: true,
           project: tsconfigPaths,
         },
@@ -29,7 +39,7 @@ export function importsConfig(
         },
       }
     : {
-        typescript: {
+        [resolverPath("eslint-import-resolver-typescript")]: {
           alwaysTryTypes: true,
           project: tsconfigPaths,
         },
