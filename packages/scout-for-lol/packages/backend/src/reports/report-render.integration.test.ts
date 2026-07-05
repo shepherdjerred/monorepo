@@ -1,4 +1,11 @@
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import {
+  afterAll,
+  beforeEach,
+  describe,
+  expect,
+  setDefaultTimeout,
+  test,
+} from "bun:test";
 import {
   AccountIdSchema,
   PlayerIdSchema,
@@ -24,6 +31,13 @@ import { runReport } from "#src/reports/runner.ts";
 // End-to-end coverage of the report DSL's declarative `RENDER` clause: real
 // SQLite facts → parse → aggregate → render. This is the only suite that
 // actually exercises chart rendering (echarts → SVG → PNG) in tests.
+//
+// Chart rendering (echarts → SVG → resvg PNG) is heavy and, on a cold Dagger
+// CI engine, a single render can exceed Bun's 5s default per-test timeout.
+// Give the whole suite generous headroom so a slow-but-successful render is
+// never flagged as a failure.
+setDefaultTimeout(30_000);
+
 const { prisma } = createTestDatabase("report-render-test");
 const serverId = testGuildId("717171");
 const now = new Date(Date.UTC(2026, 4, 17, 12, 0, 0));
@@ -189,7 +203,11 @@ describe("RENDER clause — full runner pipeline", () => {
     });
     expect(run.status).toBe("SUCCESS");
     expect(run.rowsReturned).toBe(2);
-  });
+    // 180s: the CI lint+typecheck+test bundle runs phases in parallel in one
+    // CPU-limited container, so this satori/resvg render (2.7s on idle cores)
+    // can be timeshared into minutes (5.0s in build 5027, >60s in 5028).
+    // Supersedes PR #1398's 60s.
+  }, 180_000);
 
   test("a malformed RENDER clause records a FAILED run (no silent bypass)", async () => {
     await seedFacts();

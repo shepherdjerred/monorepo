@@ -1,0 +1,13 @@
+{
+  "name": "Scout for League of Legends",
+  "short_name": "Scout",
+  "description": "Get notified when your friends start League of Legends matches and get beautiful post-match reports in Discord.",
+  "icons": [
+    { "src": "/favicon-48x48.png", "sizes": "48x48", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ],
+  "theme_color": "#4f46e5",
+  "background_color": "#0f172a",
+  "display": "standalone",
+  "start_url": "/"
+}

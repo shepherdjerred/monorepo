@@ -1,5 +1,6 @@
 ---
 import "../../styles/global.css";
+import SeoHead from "#src/components/SeoHead.astro";
 
 interface Props {
   title?: string;
@@ -11,11 +12,11 @@ const { title = "Dashboard" } = Astro.props;
 <!doctype html>
 <html lang="en" class="dark">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="generator" content={Astro.generator} />
-    <title>{title} | Scout for LoL</title>
+    <SeoHead
+      title={`${title} | Scout for LoL`}
+      description="Manage your Scout for League of Legends subscriptions, sound packs, and settings."
+      noindex
+    />
   </head>
   <body class="min-h-screen bg-slate-950 text-white">
     <div class="flex min-h-screen">

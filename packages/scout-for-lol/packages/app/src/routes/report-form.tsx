@@ -11,6 +11,8 @@ import {
   ReportFormFields,
   type ReportFormState,
 } from "#src/components/report-form-fields.tsx";
+import { ReportCommonPresets } from "#src/components/report-common-presets.tsx";
+import { ReportAiEditor } from "#src/components/report-ai-editor.tsx";
 
 function numberOr(value: string, fallback: number): number {
   return Number(value) || fallback;
@@ -128,6 +130,28 @@ export function ReportForm() {
 
       <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
+          {!isEdit && (
+            <>
+              <ReportCommonPresets
+                onUsePreset={(preset) => {
+                  setState((prev) => ({
+                    ...prev,
+                    title: preset.title,
+                    description: preset.description,
+                    queryText: preset.query,
+                    lookbackDays: preset.lookbackDays.toString(),
+                    maxRows: preset.maxRows.toString(),
+                  }));
+                }}
+              />
+              <ReportAiEditor
+                guildId={guildId}
+                state={state}
+                setState={setState}
+              />
+            </>
+          )}
+
           <ReportFormFields
             state={state}
             setState={setState}

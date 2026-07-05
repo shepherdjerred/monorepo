@@ -7,6 +7,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useSettings } from "../hooks/use-settings";
 import { AppIcon } from "../components/common/AppIcon";
 import { linking } from "./linking";
+import { navigationRef } from "./navigation-ref";
 import type { RootStackParamList, MainTabParamList } from "./types";
 
 import { InboxScreen } from "../screens/InboxScreen";
@@ -41,10 +42,26 @@ function MainTabs() {
         headerTintColor: colors.text,
       }}
     >
-      <Tab.Screen name="Inbox" component={InboxScreen} />
-      <Tab.Screen name="Today" component={TodayScreen} />
-      <Tab.Screen name="Upcoming" component={UpcomingScreen} />
-      <Tab.Screen name="Browse" component={BrowseScreen} />
+      <Tab.Screen
+        name="Inbox"
+        component={InboxScreen}
+        options={{ tabBarButtonTestID: "tab-inbox" }}
+      />
+      <Tab.Screen
+        name="Today"
+        component={TodayScreen}
+        options={{ tabBarButtonTestID: "tab-today" }}
+      />
+      <Tab.Screen
+        name="Upcoming"
+        component={UpcomingScreen}
+        options={{ tabBarButtonTestID: "tab-upcoming" }}
+      />
+      <Tab.Screen
+        name="Browse"
+        component={BrowseScreen}
+        options={{ tabBarButtonTestID: "tab-browse" }}
+      />
     </Tab.Navigator>
   );
 }
@@ -54,6 +71,7 @@ export function AppNavigator() {
 
   return (
     <NavigationContainer
+      ref={navigationRef}
       linking={linking}
       theme={{
         dark: isDarkMode,
@@ -93,6 +111,8 @@ export function AppNavigator() {
                     nav.navigate("Search");
                   }}
                   hitSlop={8}
+                  testID="header-search"
+                  accessibilityLabel="Search"
                 >
                   <AppIcon name="search" size={22} color={colors.text} />
                 </Pressable>
@@ -101,6 +121,8 @@ export function AppNavigator() {
                     nav.navigate("Settings");
                   }}
                   hitSlop={8}
+                  testID="tab-settings"
+                  accessibilityLabel="Settings"
                 >
                   <AppIcon name="settings" size={22} color={colors.text} />
                 </Pressable>
