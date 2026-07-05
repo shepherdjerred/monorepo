@@ -27,10 +27,10 @@ Patches are applied to the base Talos machine configuration to customize the clu
 
 **Current settings**:
 
-- `zfs_arc_max: 67108864000` (62.5 GB) - Maximum ARC size, set to 50% of total RAM
+- `zfs_arc_max: 51539607552` (48 GiB) - Maximum ARC size, kept below the kubelet `system-reserved memory=52Gi`
 - `zfs_arc_min: 8589934592` (8 GB) - Minimum ARC size
 
-**Background**: The ZFS ARC was originally limited to 48 GB despite the node having 125 GB total memory. This caused the cache to run at 98% capacity, triggering recurring PagerDuty alerts for hash collisions. Increasing to 62.5 GB (industry standard 50% of RAM) provides headroom for I/O spikes.
+**Background**: The cap has oscillated 48 → 62.5 → 48 GiB. It was raised to 62.5 GiB (≈50% of RAM) to quell recurring PagerDuty **hash-collision / ARC-eviction** alerts caused by the cache running at ~98%. However, 62.5 GiB exceeds the kubelet `system-reserved memory=52Gi` reservation (kubelet.yaml), so under CI build storms ARC + pod-allocatable + OS could oversubscribe the 128 GiB of physical RAM and hard-freeze the node (kube-apiserver, apid, and even `talosctl processes` timing out; recovered only by manual reboot). Investigation: `packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md`. Lowered back to 48 GiB (2026-07-05) so ARC can never exceed what kubelet accounts for as non-pod memory — trading a node freeze (severe) for the possibility of hash-collision alerts returning (recoverable). If those alerts recur, prefer raising `system-reserved` in lockstep over raising `zfs_arc_max` past it.
 
 ### sysctls.yaml
 
