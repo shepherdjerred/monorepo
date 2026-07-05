@@ -9,6 +9,11 @@ import type {
 import { LeaguePuuidSchema, parseQueueType } from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { resolveLakeDir } from "#src/report-lake/paths.ts";
+import {
+  writeMatchStagingFile,
+  writePrematchStagingFile,
+} from "#src/report-lake/staging.ts";
 
 export type StoredPayloadOptions = {
   s3Key?: string;
@@ -134,6 +139,12 @@ export async function upsertStoredMatchWithFacts(
         : {}),
     },
   });
+
+  // Stage flattened lake rows so the DuckDB report engine sees this match
+  // before the next compaction. Best-effort by design: failures are logged
+  // and metric'd inside, never thrown — the compactor re-derives the same
+  // rows from the StoredMatch upsert above.
+  await writeMatchStagingFile(resolveLakeDir(), match);
 
   const matchParticipantPuuids = match.metadata.participants.map((puuid) =>
     LeaguePuuidSchema.parse(puuid),
@@ -316,6 +327,9 @@ export async function upsertStoredPrematchWithFacts(
         : {}),
     },
   });
+
+  // Best-effort lake staging; see the match staging note above.
+  await writePrematchStagingFile(resolveLakeDir(), gameInfo, observedAt);
 
   const trackedAccounts = await findTrackedAccounts(prisma, puuids);
   const accountLookup = accountsByPuuid(trackedAccounts);
