@@ -244,6 +244,11 @@ export class StreambotStreamer implements StreamerLike {
   }
 
   readonly joinVoice = async (input: JoinVoiceInput): Promise<VoiceHandle> => {
+    // Clear any close info left over from a prior session on this (pooled, reusable) userbot.
+    // Otherwise a stale `deliberate` close from a different (guild, channel) could be re-read by a
+    // pending reconnect timer and misclassify a transient drop as deliberate — deleting saved state.
+    // A `null` baseline classifies as transient (the safe direction: reconnect and preserve state).
+    this.lastVoiceClose = null;
     await this.streamer.joinVoice(input.guildId, input.channelId);
     const connection = this.streamer.voiceConnection;
     if (connection === undefined) {
