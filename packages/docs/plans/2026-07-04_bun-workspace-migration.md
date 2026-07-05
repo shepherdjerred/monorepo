@@ -129,3 +129,24 @@ both correctness AND performance).
   guarded by existing smoke tests — if one fails, that's the designed signal.
 - Local tree has NOT run typecheck/tests for most packages (compute embargo);
   CI is the verifier by design.
+
+## CI round 1 results (build 5065) + round-2 fixes (pushed 51d9bd200)
+
+Pipeline itself worked (17+ steps green; filtered installs, meta firewall,
+--repo-root constructor all functioning in CI). Root-caused failures:
+
+| Failure | Cause | Fix |
+|---|---|---|
+| exit -7 (many jobs) | BK dagger-CLI pods OOM (256–384Mi) on workspace-scale traces | tiers → 512Mi/768Mi/1Gi |
+| temporal 16 test fails | phantom @opentelemetry/core + sdk-trace-base | declared |
+| birmel type/test fails | discord-player-youtubei missing peer (d.ts degrades); generated prisma client needs @prisma/client-runtime-utils at runtime | patch + declared (×3 prisma pkgs) |
+| sentry/gesture-handler type breaks | fresh re-resolution drift (10.53→10.63, 2.31→2.32) | pinned to main's versions |
+| ios-native-deps | legacy `--linker hoisted` vs isolated lockfile | standard workspace install |
+| prettier/markdownlint | --no-verify debt | formatted |
+
+OPEN (next session): eslint `import/no-relative-packages` — resolver
+"typescript-bun" fails to load under isolated (resolver referenced by shared
+eslint-config but resolved from consumer/plugin instance context). Affects
+per-package lint steps + local hooks. Also: knip failures (soft-fail,
+artifact /tmp/knip.txt on build 5065), remaining pkg-check exit-1s to triage
+after round 2, Kueue quota watch after memory bumps.
