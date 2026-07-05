@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Partially Complete
 
 ## Context
 
@@ -378,3 +378,60 @@ feature/scout-report-lake origin/main` + `bun run scripts/setup.ts`. Add `@duckd
 | Preview latency / event-loop pressure                 | threads=2, memory_limit, 15s timeout + interrupt(); per-server scans are ms-scale                 |
 | Engine/data schema drift                              | Single schema.ts owns column names + Zod; engine imports it; flatten golden tests pin derivations |
 | Fresh boot before first compaction                    | Empty-lake short-circuit; summoner backfill fail-soft; runOnInit compaction                       |
+
+## Session Log — 2026-07-04
+
+### Done
+
+- Phase 0: `@duckdb/node-api@1.5.4-r.1` added; spike gate green on macOS and
+  (via POC) in `oven/bun:1.3.14` (`backend/src/reports/duckdb/duckdb-spike.test.ts`).
+- Phase 1 (`a45fc3334`): report-lake foundation — `backend/src/report-lake/`
+  (schema/flatten/paths/staging/compactor), two-tier crons in
+  `src/league/cron.ts` (fold :05/15min, rebuild 2AM UTC), ingest staging hooks
+  in `report-store/store.ts`, `REPORT_LAKE_DIR` config, metrics,
+  `compact:report-lake` script, integration tests.
+- Phase 2+3 (`25c017aea`): `reports/duckdb/` engine (lake relations, ScoutQL→SQL
+  compiler, BigInt-safe row schemas, execute); `query-engine.ts` fact branches
+  swapped; `query-engine-legacy.ts` extracted; 14-test parity suite (toEqual
+  vs legacy across sources × groupings × filters × ordering × limits × empty);
+  compiler unit + injection-fuzz tests; engine/render integration tests
+  migrated to lake seeding; config reads hardened vs partial mock.module leaks.
+- Phase 4 (`c14556c62`): 8 new metrics end-to-end (gold_earned, vision_score,
+  damage_taken, total_damage_dealt, wards_placed, multikills,
+  avg_game_duration, cs_per_minute) — registry-only extension path proven.
+- Phase 5 (`151e36f16`): remaining fact readers migrated — player-history and
+  summoner-index via `reports/duckdb/lake-reads.ts`, report-store proof
+  queries ported to `report-lake/queries.ts` with a 3-test parity suite.
+- Phase 6: homelab `REPORT_LAKE_DIR`, scout AGENTS.md ScoutQL-lake section,
+  todos filed (`scout-report-lake-fact-table-drop`,
+  `scout-timeline-pvc-growth`), this log.
+- Full backend suite at Phase 5: 1073 pass / 0 fail.
+
+### Remaining
+
+- Push branch `feature/scout-report-lake`, open the main PR, drive through CI
+  (pr-monitor).
+- Beta/prod soak ~1 week: compaction metrics
+  (`report_lake_compaction_skipped_total` should stay 0), Discord run-now +
+  tRPC preview, AI-review player history freshness (two games <15 min apart),
+  summoner autocomplete after restart.
+- Follow-up PR per `todos/scout-report-lake-fact-table-drop.md`: stop fact
+  writes, drop both fact tables, delete the legacy engine + parity suites +
+  `report-store/queries.ts`.
+- Timeline PVC growth is a hard 10x prerequisite —
+  `todos/scout-timeline-pvc-growth.md`.
+
+### Caveats
+
+- Deviation from plan: `query-engine-legacy.ts` and the parity suites ship IN
+  the main PR (not deleted pre-merge) — they are the review artifact and they
+  depend on the dual-written fact tables anyway; both are removed together in
+  the follow-up PR.
+- Accepted behavior changes (documented in the parity suite header): lake
+  attribution reflects live aliases/accounts instead of ingest-time
+  snapshots; pair dedupe for a player with two tracked accounts in one match
+  is deterministic (lowest puuid) instead of last-write.
+- The lake prematch table stores ALL non-scrubbed participants (global);
+  tracked-only semantics are enforced at read time via the accounts join.
+- Bun `mock.module` leakage: any new config field read by long-lived modules
+  needs the unknown-widening guard pattern (see `report-lake/paths.ts`).
