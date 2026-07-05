@@ -410,9 +410,13 @@ type ResourceTier = { cpu: string; memory: string };
 
 // BK pods are thin dagger CLI wrappers — all compute happens in the remote
 // Dagger engine. Keep requests minimal so more jobs fit within Kueue quota.
-const HEAVY: ResourceTier = { cpu: "250m", memory: "512Mi" };
-const MEDIUM: ResourceTier = { cpu: "150m", memory: "384Mi" };
-const LIGHT: ResourceTier = { cpu: "100m", memory: "256Mi" };
+// Memory floors raised after the bun-workspace migration: workspace-scale
+// installs/builds stream much larger traces through the dagger CLI, and the
+// old 256–384Mi pods were OOM-killed (build 5065, exit -7 across pkg-check /
+// lint+typecheck jobs). CPU unchanged.
+const HEAVY: ResourceTier = { cpu: "250m", memory: "1Gi" };
+const MEDIUM: ResourceTier = { cpu: "150m", memory: "768Mi" };
+const LIGHT: ResourceTier = { cpu: "100m", memory: "512Mi" };
 
 export const PACKAGE_RESOURCES: Record<string, ResourceTier> = {
   homelab: HEAVY,

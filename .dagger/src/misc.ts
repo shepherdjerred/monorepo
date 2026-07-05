@@ -155,7 +155,14 @@ export async function smokeTestScoutForLolHelper(
   depDirs: Directory[] = [],
   repoRoot: Directory | null = null,
 ): Promise<string> {
-  const container = buildScoutImageHelper(pkgDir, depNames, depDirs, "dev", "unknown", repoRoot)
+  const container = buildScoutImageHelper(
+    pkgDir,
+    depNames,
+    depDirs,
+    "dev",
+    "unknown",
+    repoRoot,
+  )
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
     .withEnvVariable("APPLICATION_ID", "000000000000000000")
     .withEnvVariable("RIOT_API_KEY", "smoke-test-dummy")
@@ -185,7 +192,17 @@ export async function smokeTestStreambotHelper(
   depDirs: Directory[] = [],
   repoRoot: Directory | null = null,
 ): Promise<string> {
-  const container = buildImageHelper(pkgDir, "streambot", depNames, depDirs, "dev", "unknown", false, false, repoRoot)
+  const container = buildImageHelper(
+    pkgDir,
+    "streambot",
+    depNames,
+    depDirs,
+    "dev",
+    "unknown",
+    false,
+    false,
+    repoRoot,
+  )
     .withEnvVariable("BOT_TOKEN", "smoke-test-dummy")
     .withEnvVariable("USER_TOKENS", "smoke-test-dummy")
     .withEnvVariable("ADMIN_IDS", "000000000000000000")
@@ -232,7 +249,17 @@ export async function e2eStreambotHelper(
 ): Promise<string> {
   // USER_TOKENS is the real config (a single-token pool); E2E_* pin the voice channel the unattended
   // test joins (production joins the requester's current VC, which a headless test can't set).
-  const container = buildImageHelper(pkgDir, "streambot", depNames, depDirs, "dev", "unknown", false, false, repoRoot)
+  const container = buildImageHelper(
+    pkgDir,
+    "streambot",
+    depNames,
+    depDirs,
+    "dev",
+    "unknown",
+    false,
+    false,
+    repoRoot,
+  )
     .withSecretVariable("BOT_TOKEN", botToken)
     .withSecretVariable("USER_TOKENS", userToken)
     .withEnvVariable("E2E_GUILD_ID", guildId)
@@ -323,7 +350,17 @@ export async function smokeTestStarlightKarmaBotHelper(
   depDirs: Directory[] = [],
   repoRoot: Directory | null = null,
 ): Promise<string> {
-  const container = buildImageHelper(pkgDir, pkg, depNames, depDirs, "dev", "unknown", false, false, repoRoot)
+  const container = buildImageHelper(
+    pkgDir,
+    pkg,
+    depNames,
+    depDirs,
+    "dev",
+    "unknown",
+    false,
+    false,
+    repoRoot,
+  )
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
     .withEnvVariable("APPLICATION_ID", "000000000000000000")
     .withEnvVariable("DATA_DIR", "/tmp/smoke-data")
@@ -351,7 +388,17 @@ export async function smokeTestTasknotesServerHelper(
   depDirs: Directory[] = [],
   repoRoot: Directory | null = null,
 ): Promise<string> {
-  const container = buildImageHelper(pkgDir, pkg, depNames, depDirs, "dev", "unknown", false, false, repoRoot)
+  const container = buildImageHelper(
+    pkgDir,
+    pkg,
+    depNames,
+    depDirs,
+    "dev",
+    "unknown",
+    false,
+    false,
+    repoRoot,
+  )
     .withEnvVariable("VAULT_PATH", "/tmp/smoke-vault")
     .withEnvVariable("AUTH_TOKEN", "smoke-test-token")
     .withEnvVariable("PORT", "3000")
@@ -741,7 +788,14 @@ export async function smokeTestTrmnlDashboardHelper(
   depDirs: Directory[] = [],
   repoRoot: Directory | null = null,
 ): Promise<string> {
-  const container = buildTrmnlDashboardImageHelper(pkgDir, depNames, depDirs, "dev", "unknown", repoRoot)
+  const container = buildTrmnlDashboardImageHelper(
+    pkgDir,
+    depNames,
+    depDirs,
+    "dev",
+    "unknown",
+    repoRoot,
+  )
     .withEnvVariable("TRMNL_API_KEY", "smoke-test-dummy")
     .withEnvVariable("HA_TOKEN", "smoke-test-dummy")
     .withEnvVariable("HA_URL", "http://127.0.0.1:9999")

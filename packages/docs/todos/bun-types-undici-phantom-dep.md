@@ -27,4 +27,4 @@ global `Response`/`Request`/`Headers` degrade to near-empty interfaces
 
 Related watch: oven-sh/bun#12917 / #20142 (isolated-linker EEXIST races under
 parallel installs) — irrelevant to local dev (one install root) but the reason
-CI containers run isolated *without* the experimental globalStore.
+CI containers run isolated _without_ the experimental globalStore.

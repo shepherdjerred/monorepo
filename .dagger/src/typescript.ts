@@ -20,7 +20,15 @@ export function lintHelper(
   tsconfig: File | null = null,
   repoRoot: Directory | null = null,
 ): Container {
-  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig, [], repoRoot)
+  return bunBaseContainer(
+    pkgDir,
+    pkg,
+    depNames,
+    depDirs,
+    tsconfig,
+    [],
+    repoRoot,
+  )
     .withMountedCache(
       `/workspace/packages/${pkg}/.eslintcache`,
       dag.cacheVolume(ESLINT_CACHE),
@@ -37,11 +45,15 @@ export function typecheckHelper(
   tsconfig: File | null = null,
   repoRoot: Directory | null = null,
 ): Container {
-  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig, [], repoRoot).withExec([
-    "bun",
-    "run",
-    "typecheck",
-  ]);
+  return bunBaseContainer(
+    pkgDir,
+    pkg,
+    depNames,
+    depDirs,
+    tsconfig,
+    [],
+    repoRoot,
+  ).withExec(["bun", "run", "typecheck"]);
 }
 
 /** Run the build script on a bun container (validates compilation). */
@@ -53,11 +65,15 @@ export function buildHelper(
   tsconfig: File | null = null,
   repoRoot: Directory | null = null,
 ): Container {
-  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig, [], repoRoot).withExec([
-    "bun",
-    "run",
-    "build",
-  ]);
+  return bunBaseContainer(
+    pkgDir,
+    pkg,
+    depNames,
+    depDirs,
+    tsconfig,
+    [],
+    repoRoot,
+  ).withExec(["bun", "run", "build"]);
 }
 
 /** Run the test script on a bun container. */
@@ -95,7 +111,15 @@ export function generateContainer(
   tsconfig: File | null = null,
   repoRoot: Directory | null = null,
 ): Container {
-  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig, [], repoRoot)
+  return bunBaseContainer(
+    pkgDir,
+    pkg,
+    depNames,
+    depDirs,
+    tsconfig,
+    [],
+    repoRoot,
+  )
     .withWorkdir(`/workspace/packages/${pkg}`)
     .withExec(["bun", "run", "generate"]);
 }
@@ -184,11 +208,14 @@ export function generateAndTypecheckHelper(
   tsconfig: File | null = null,
   repoRoot: Directory | null = null,
 ): Container {
-  return generateContainer(pkgDir, pkg, depNames, depDirs, tsconfig, repoRoot).withExec([
-    "bun",
-    "run",
-    "typecheck",
-  ]);
+  return generateContainer(
+    pkgDir,
+    pkg,
+    depNames,
+    depDirs,
+    tsconfig,
+    repoRoot,
+  ).withExec(["bun", "run", "typecheck"]);
 }
 
 /** Generate then test — chains on the same container. */
@@ -200,11 +227,14 @@ export function generateAndTestHelper(
   tsconfig: File | null = null,
   repoRoot: Directory | null = null,
 ): Container {
-  return generateContainer(pkgDir, pkg, depNames, depDirs, tsconfig, repoRoot).withExec([
-    "bun",
-    "run",
-    "test",
-  ]);
+  return generateContainer(
+    pkgDir,
+    pkg,
+    depNames,
+    depDirs,
+    tsconfig,
+    repoRoot,
+  ).withExec(["bun", "run", "test"]);
 }
 
 /**
@@ -241,7 +271,8 @@ export async function lintTypecheckTestHelper(
   const children: { name: string; run: () => Promise<string> }[] = [
     {
       name: "lint",
-      run: () => lintHelper(pkgDir, pkg, depNames, depDirs, tsconfig, repoRoot).stdout(),
+      run: () =>
+        lintHelper(pkgDir, pkg, depNames, depDirs, tsconfig, repoRoot).stdout(),
     },
     {
       name: "typecheck",
@@ -257,7 +288,14 @@ export async function lintTypecheckTestHelper(
               haToken,
               repoRoot,
             ).stdout()
-          : typecheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig, repoRoot).stdout(),
+          : typecheckHelper(
+              pkgDir,
+              pkg,
+              depNames,
+              depDirs,
+              tsconfig,
+              repoRoot,
+            ).stdout(),
     },
   ];
   if (!skipTest) {
@@ -283,7 +321,14 @@ export async function lintTypecheckTestHelper(
     children.push({
       name: "astro-check",
       run: () =>
-        astroCheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig, repoRoot).stdout(),
+        astroCheckHelper(
+          pkgDir,
+          pkg,
+          depNames,
+          depDirs,
+          tsconfig,
+          repoRoot,
+        ).stdout(),
     });
   }
   if (includeAstroBuild) {
@@ -303,7 +348,15 @@ export async function lintTypecheckTestHelper(
   if (includeBuild) {
     children.push({
       name: "build",
-      run: () => buildHelper(pkgDir, pkg, depNames, depDirs, tsconfig, repoRoot).stdout(),
+      run: () =>
+        buildHelper(
+          pkgDir,
+          pkg,
+          depNames,
+          depDirs,
+          tsconfig,
+          repoRoot,
+        ).stdout(),
     });
   }
   return runBundle(children);

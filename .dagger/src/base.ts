@@ -54,9 +54,7 @@ export const BUN_INSTALL_WITH_RETRY = bunInstallWithRetry([]);
  * unambiguous.
  */
 export function bunInstallWithRetry(filterPkgs: string[]): string {
-  const filters = filterPkgs
-    .map((p) => `--filter ./packages/${p}`)
-    .join(" ");
+  const filters = filterPkgs.map((p) => `--filter ./packages/${p}`).join(" ");
   const install = `bun install --frozen-lockfile${filters ? ` ${filters}` : ""}`;
   return [
     "i=1",

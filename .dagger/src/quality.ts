@@ -13,6 +13,7 @@
  * Plain functions, not decorated. Keep `index.ts` thin (TypeScript SDK
  * constraint: the `@object()` class must live in one file).
  */
+import { bunInstallWithRetry } from "./base";
 import { dag, Container, Directory } from "@dagger.io/dagger";
 
 import { runBundle } from "./bundle";
@@ -308,7 +309,6 @@ export function lockfileCheckHelper(source: Directory): Container {
   ]);
 }
 
-
 /**
  * Validate env-var naming conventions across staged-style file types.
  * Inside Dagger we scan the whole repo (no staged-files concept).
@@ -474,16 +474,18 @@ export function largeFileCheckHelper(source: Directory): Container {
  * `.buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh` which the
  * BK pod previously ran against its working tree.
  *
- * `--linker hoisted` matches the legacy script — required because the
- * downstream `check:ios-native-deps` consumer expects a flat node_modules
- * layout, not isolated.
+ * Uses the standard workspace install (isolated linker): the member's
+ * node_modules/.bin and dep dirs exist per-member, which is what the
+ * checker and `react-native config` read. The legacy `--linker hoisted`
+ * override fights the isolated-flavored root lockfile.
  */
 export function tasksForObsidianIosNativeDepsHelper(
   source: Directory,
 ): Container {
   return bunQualityBase(source)
+    .withWorkdir("/repo")
+    .withExec(["sh", "-c", bunInstallWithRetry(["tasks-for-obsidian"])])
     .withWorkdir("/repo/packages/tasks-for-obsidian")
-    .withExec(["bun", "install", "--frozen-lockfile", "--linker", "hoisted"])
     .withExec(["bun", "run", "check:ios-native-deps"]);
 }
 

@@ -27,7 +27,7 @@ Evidence (all on the 14-member stress workspace: dpp+natives, libs, tasknotes, A
 
 - **EEXIST hammer: 8/8 clean fresh installs**, ~1.2s each, only 12 packages copied
   (postinstall natives), ~1,378 symlinked from the global store. The upstream race
-  (oven-sh/bun#12917) triggers on *parallel* installs — the target has ONE install root,
+  (oven-sh/bun#12917) triggers on _parallel_ installs — the target has ONE install root,
   so the concurrency that triggers it is eliminated architecturally.
 - **Split-brain: SOLVED under isolated** — per-instance peer resolution. sjer.red's
   build got past the vite/tailwind stage once it declared its actual peer host

@@ -76,7 +76,7 @@ Bazel→Dagger migration era.
 
 ## Follow-up: could the underlying issues be fixed to adopt Bun workspaces?
 
-Jerred explicitly reopened the previously-firm "never workspace:*" decision. Assessment:
+Jerred explicitly reopened the previously-firm "never workspace:\*" decision. Assessment:
 
 - **Parity/phantom-deps rationale** — solvable. Bun 1.3 isolated linker gives stricter
   resolution than `file:` copies; blocked short-term by the EEXIST race (oven-sh/bun#12917,
@@ -100,21 +100,21 @@ Jerred explicitly reopened the previously-firm "never workspace:*" decision. Ass
   tasknotes-server, and discord-plays-pokemon + a lockfile-subsetting spike against
   bunBaseContainer, before any full migration plan.
 - If adopted: update the decision record and the memory note recording the old
-  "never workspace:*" constraint.
+  "never workspace:\*" constraint.
 
 ## Phase-0 experiments (worktree `bun-workspace-poc`, branch `feature/bun-workspace-poc`)
 
 All run against origin/main (f36643fed) with bun 1.3.14, hoisted linker pinned at root.
 
-| # | Experiment | Result |
-|---|---|---|
-| A1 | Root workspace: eslint-config + tasknotes pair, `workspace:*` | ✅ install 1.6s, typecheck/test/lint green (178/178 tests) |
-| A2 | Flatten dpp nested workspace + 5 dep packages | ✅ install 8.4s cold; all 3 members typecheck after building llm-models + dvs |
-| A3 | Coexistence: non-member (`llm-models`) installs w/ own lockfile | ✅ unaffected by root workspaces; incremental migration viable |
-| B | `bun install --filter <pkg> --frozen-lockfile` from root lockfile | ✅ 407 vs 552 pkgs; skips other members' natives; typecheck green |
-| C | Isolated linker + `globalStore=true` | ⚠️ warm wipe 1.47s vs 3.5s hoisted; BUT tasknotes-server typecheck breaks (`c.res.status` — Response type resolves differently); hoisted green |
-| D | `turbo prune` (2.10.3) vs text bun.lock | ✅ with caveat: pruned lockfile byte-identical under unrelated dep bump (cache-key claim validated); handles nested members + hoists overrides/trustedDependencies; ❌ mixed `file:` edge → "Duplicate package path" corrupt lockfile; ✅ all-`workspace:*` shape installs frozen |
-| E | bun auto-resolves conflicted bun.lock | ✅ `bun install` on conflict-markered lockfile resolves both branches' bumps correctly |
+| #   | Experiment                                                        | Result                                                                                                                                                                                                                                                                            |
+| --- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A1  | Root workspace: eslint-config + tasknotes pair, `workspace:*`     | ✅ install 1.6s, typecheck/test/lint green (178/178 tests)                                                                                                                                                                                                                        |
+| A2  | Flatten dpp nested workspace + 5 dep packages                     | ✅ install 8.4s cold; all 3 members typecheck after building llm-models + dvs                                                                                                                                                                                                     |
+| A3  | Coexistence: non-member (`llm-models`) installs w/ own lockfile   | ✅ unaffected by root workspaces; incremental migration viable                                                                                                                                                                                                                    |
+| B   | `bun install --filter <pkg> --frozen-lockfile` from root lockfile | ✅ 407 vs 552 pkgs; skips other members' natives; typecheck green                                                                                                                                                                                                                 |
+| C   | Isolated linker + `globalStore=true`                              | ⚠️ warm wipe 1.47s vs 3.5s hoisted; BUT tasknotes-server typecheck breaks (`c.res.status` — Response type resolves differently); hoisted green                                                                                                                                    |
+| D   | `turbo prune` (2.10.3) vs text bun.lock                           | ✅ with caveat: pruned lockfile byte-identical under unrelated dep bump (cache-key claim validated); handles nested members + hoists overrides/trustedDependencies; ❌ mixed `file:` edge → "Duplicate package path" corrupt lockfile; ✅ all-`workspace:*` shape installs frozen |
+| E   | bun auto-resolves conflicted bun.lock                             | ✅ `bun install` on conflict-markered lockfile resolves both branches' bumps correctly                                                                                                                                                                                            |
 
 ### Migration findings (beyond the table)
 
@@ -241,7 +241,7 @@ alternative: don't subset the lockfile, subset the **install output**.
   (Env fix: installed Playwright chromium-headless-shell locally for sjer.red's MDX build.)
 - Found docs error: eslint-config labeled "(npm)" but 404s on the registry — never published.
 - Measured reorg cost for hypothetical family moves: ~115 explicit path refs (lefthook 48,
-  knip 32, ci catalog 10, setup.ts 10, .dagger ~12); nothing assumes flat packages/*.
+  knip 32, ci catalog 10, setup.ts 10, .dagger ~12); nothing assumes flat packages/\*.
 - Surveyed happy-path tooling (Turbo/Nx/Lerna/Rush/Lage/Changesets/syncpack) — every
   orchestrator assumes one coherent product; repo's three tool-slots already filled
   (bun workspaces / Dagger / release-please).
@@ -264,7 +264,7 @@ alternative: don't subset the lockfile, subset the **install output**.
 - PoC worktree `bun-workspace-poc` is now in web-cluster-simulation state (NOT Wave-1 state);
   the earlier Wave-1 diff is snapshotted at the session scratchpad (`wave1-shape.patch`),
   which is session-scoped — recycle or lose it.
-- The old "never workspace:*" stance is superseded in nuance: workspace:* is right WITHIN
+- The old "never workspace:_" stance is superseded in nuance: workspace:_ is right WITHIN
   a product cluster (scout/dpp/dpmk/tasknotes), wrong as repo-wide policy.
 
 ## Session Log addendum — round 5 (same day): the isolated-linker resolution

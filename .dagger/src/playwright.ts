@@ -120,7 +120,14 @@ export function playwrightUpdateHelper(
   tsconfig: File | null = null,
   repoRoot: Directory | null = null,
 ): Directory {
-  return playwrightBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig, repoRoot)
+  return playwrightBaseContainer(
+    pkgDir,
+    pkg,
+    depNames,
+    depDirs,
+    tsconfig,
+    repoRoot,
+  )
     .withExec(["bunx", "astro", "build"])
     .withExec(["bunx", "playwright", "test", "--update-snapshots"])
     .directory(`/workspace/packages/${pkg}/test`);
