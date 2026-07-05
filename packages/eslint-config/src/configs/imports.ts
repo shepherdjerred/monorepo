@@ -34,7 +34,7 @@ export function importsConfig(
           alwaysTryTypes: true,
           project: tsconfigPaths,
         },
-        node: {
+        [resolverPath("eslint-import-resolver-node")]: {
           extensions: [".js", ".jsx", ".ts", ".tsx"],
         },
       }
@@ -43,7 +43,7 @@ export function importsConfig(
           alwaysTryTypes: true,
           project: tsconfigPaths,
         },
-        node: {
+        [resolverPath("eslint-import-resolver-node")]: {
           extensions: [".js", ".jsx", ".ts", ".tsx"],
         },
       };
