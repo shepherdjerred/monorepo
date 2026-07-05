@@ -109,3 +109,22 @@ against `talosctl get machineconfig`, and/or a documented repeatable apply proce
 `2026-07-05_torvalds-ci-freeze-investigation.md` §4 lists "kubelet system-reserved memory=52Gi"
 as if applied — that value was read from the repo file, not the live node, and is **not in
 effect**. Live is the 512Mi default. (Doc is untracked in the main checkout.)
+
+## Session Log — 2026-07-05
+
+### Done
+
+- Checked PR #1414 health from `toolkit pr health`, GitHub status APIs, `gh pr checks`, and Buildkite build 5095.
+- Verified the PR head `bc64530b54d7c09d33c1b4754badb65268780995` merges cleanly into fetched `origin/main` with `git merge-tree --write-tree`.
+- Addressed Greptile's P2 stale reservation comment by changing `52Gi` ARC ceiling references to the actual `systemReserved.memory: 56Gi` in `packages/homelab/src/talos/README.md`, `packages/homelab/src/talos/patches/image.yaml`, and `packages/homelab/src/talos/patches/zfs.yaml`.
+- Added the kubelet reservation and eviction settings to the Talos README's `kubelet.yaml` current settings list.
+- Verified with `bun run --filter='./packages/homelab' typecheck`, `bunx markdownlint-cli2 packages/homelab/src/talos/README.md`, and `bunx prettier --check packages/homelab/src/talos/README.md packages/homelab/src/talos/patches/image.yaml packages/homelab/src/talos/patches/zfs.yaml`.
+
+### Remaining
+
+- Push the review-fix commit and wait for Buildkite to rerun on the new PR head.
+- Recheck unresolved review threads and required CI after the new head status lands.
+
+### Caveats
+
+- Buildkite build 5095 was canceled by Jerred Shepherd before any job-level failure; the branch still needs a fresh required Buildkite result.
