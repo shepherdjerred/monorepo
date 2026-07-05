@@ -173,6 +173,54 @@ export const REPORT_METRICS: ReportMetricInfo[] = [
     kind: "count",
   },
   {
+    id: "gold_earned",
+    label: "Gold earned",
+    description: "Total gold earned.",
+    kind: "count",
+  },
+  {
+    id: "vision_score",
+    label: "Vision score",
+    description: "Total vision score.",
+    kind: "count",
+  },
+  {
+    id: "damage_taken",
+    label: "Damage taken",
+    description: "Total damage taken.",
+    kind: "count",
+  },
+  {
+    id: "total_damage_dealt",
+    label: "Total damage",
+    description: "Total damage dealt to all targets (not just champions).",
+    kind: "count",
+  },
+  {
+    id: "wards_placed",
+    label: "Wards placed",
+    description: "Total wards placed.",
+    kind: "count",
+  },
+  {
+    id: "multikills",
+    label: "Multikills",
+    description: "Double + triple + quadra + penta kills combined.",
+    kind: "count",
+  },
+  {
+    id: "avg_game_duration",
+    label: "Avg game length",
+    description: "Average game duration in minutes.",
+    kind: "ratio",
+  },
+  {
+    id: "cs_per_minute",
+    label: "CS / min",
+    description: "Creep score per minute of time played.",
+    kind: "ratio",
+  },
+  {
     id: "prematches",
     label: "Prematches",
     description:

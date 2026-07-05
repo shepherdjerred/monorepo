@@ -44,6 +44,29 @@ export type AggregateRow = {
   assists: number;
   creepScore: number;
   damageToChampions: number;
+  // Lake-only counters: the legacy fact engine has no source columns for
+  // these and always reports 0 (it is deleted with the fact tables).
+  goldEarned: number;
+  visionScore: number;
+  damageTaken: number;
+  totalDamageDealt: number;
+  wardsPlaced: number;
+  multikills: number;
+  /** Sum of game durations (seconds), counted once per group row per game. */
+  durationSeconds: number;
+  /** Sum of time played (seconds) across group members. */
+  timePlayedSeconds: number;
+};
+
+const EMPTY_LAKE_COUNTERS = {
+  goldEarned: 0,
+  visionScore: 0,
+  damageTaken: 0,
+  totalDamageDealt: 0,
+  wardsPlaced: 0,
+  multikills: 0,
+  durationSeconds: 0,
+  timePlayedSeconds: 0,
 };
 
 export function aggregateMatchFacts(
@@ -216,6 +239,7 @@ function emptyPairAggregate(
     assists: 0,
     creepScore: 0,
     damageToChampions: 0,
+    ...EMPTY_LAKE_COUNTERS,
   };
 }
 
@@ -258,6 +282,7 @@ function emptyAggregate(
     assists: 0,
     creepScore: 0,
     damageToChampions: 0,
+    ...EMPTY_LAKE_COUNTERS,
   };
 }
 
@@ -314,43 +339,41 @@ function compareAggregateRows(
   return left.label.localeCompare(right.label);
 }
 
-function metricValue(row: AggregateRow, metric: ReportMetric): number {
-  if (metric === "games" || metric === "prematches") {
-    return row.games;
-  }
-  if (metric === "wins") {
-    return row.wins;
-  }
-  if (metric === "losses") {
-    return row.games - row.wins;
-  }
-  if (metric === "surrenders") {
-    return row.surrenders;
-  }
-  if (metric === "surrender_rate") {
-    return row.games === 0 ? 0 : row.surrenders / row.games;
-  }
-  if (metric === "win_rate") {
-    return row.games === 0 ? 0 : row.wins / row.games;
-  }
-  if (metric === "kills") {
-    return row.kills;
-  }
-  if (metric === "deaths") {
-    return row.deaths;
-  }
-  if (metric === "assists") {
-    return row.assists;
-  }
-  if (metric === "kda") {
+// Exhaustive per-metric derivations over the raw aggregate counters. Rates
+// and ratios guard division by zero (empty groups read 0, matching the
+// legacy engine).
+const METRIC_VALUES: Record<ReportMetric, (row: AggregateRow) => number> = {
+  games: (row) => row.games,
+  prematches: (row) => row.games,
+  wins: (row) => row.wins,
+  losses: (row) => row.games - row.wins,
+  surrenders: (row) => row.surrenders,
+  surrender_rate: (row) => (row.games === 0 ? 0 : row.surrenders / row.games),
+  win_rate: (row) => (row.games === 0 ? 0 : row.wins / row.games),
+  kills: (row) => row.kills,
+  deaths: (row) => row.deaths,
+  assists: (row) => row.assists,
+  kda: (row) => {
     const takedowns = row.kills + row.assists;
     return row.deaths === 0 ? takedowns : takedowns / row.deaths;
-  }
-  if (metric === "creep_score") {
-    return row.creepScore;
-  }
-  if (metric === "score") {
-    return row.games;
-  }
-  return row.damageToChampions;
+  },
+  creep_score: (row) => row.creepScore,
+  damage_to_champions: (row) => row.damageToChampions,
+  gold_earned: (row) => row.goldEarned,
+  vision_score: (row) => row.visionScore,
+  damage_taken: (row) => row.damageTaken,
+  total_damage_dealt: (row) => row.totalDamageDealt,
+  wards_placed: (row) => row.wardsPlaced,
+  multikills: (row) => row.multikills,
+  avg_game_duration: (row) =>
+    row.games === 0 ? 0 : row.durationSeconds / row.games / 60,
+  cs_per_minute: (row) =>
+    row.timePlayedSeconds === 0
+      ? 0
+      : row.creepScore / (row.timePlayedSeconds / 60),
+  score: (row) => row.games,
+};
+
+function metricValue(row: AggregateRow, metric: ReportMetric): number {
+  return METRIC_VALUES[metric](row);
 }

@@ -32,6 +32,14 @@ export const LakeAggregateRowSchema = z.object({
   assists: LakeCountSchema,
   creep_score: LakeCountSchema,
   damage_to_champions: LakeCountSchema,
+  gold_earned: LakeCountSchema,
+  vision_score: LakeCountSchema,
+  damage_taken: LakeCountSchema,
+  total_damage_dealt: LakeCountSchema,
+  wards_placed: LakeCountSchema,
+  multikills: LakeCountSchema,
+  duration_seconds: LakeCountSchema,
+  time_played_seconds: LakeCountSchema,
 });
 
 export type LakeAggregateRow = z.infer<typeof LakeAggregateRowSchema>;

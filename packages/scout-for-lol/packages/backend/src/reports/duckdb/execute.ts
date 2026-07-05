@@ -101,6 +101,14 @@ export async function runLakeAggregation(input: {
         assists: parsed.assists,
         creepScore: parsed.creep_score,
         damageToChampions: parsed.damage_to_champions,
+        goldEarned: parsed.gold_earned,
+        visionScore: parsed.vision_score,
+        damageTaken: parsed.damage_taken,
+        totalDamageDealt: parsed.total_damage_dealt,
+        wardsPlaced: parsed.wards_placed,
+        multikills: parsed.multikills,
+        durationSeconds: parsed.duration_seconds,
+        timePlayedSeconds: parsed.time_played_seconds,
       };
     });
     const rowsScanned = LakeScannedRowSchema.parse(scannedRows[0]).scanned;

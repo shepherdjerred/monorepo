@@ -26,6 +26,17 @@ export function matchAggregateSelect(): string {
     COUNT("assists", "assists"),
     COUNT("creep_score", "creep_score"),
     COUNT("total_damage_dealt_to_champions", "damage_to_champions"),
+    COUNT("gold_earned", "gold_earned"),
+    COUNT("vision_score", "vision_score"),
+    COUNT("total_damage_taken", "damage_taken"),
+    COUNT("total_damage_dealt", "total_damage_dealt"),
+    COUNT("wards_placed", "wards_placed"),
+    COUNT(
+      "double_kills + triple_kills + quadra_kills + penta_kills",
+      "multikills",
+    ),
+    COUNT("game_duration_seconds", "duration_seconds"),
+    COUNT("time_played", "time_played_seconds"),
   ].join(", ");
 }
 
@@ -46,6 +57,24 @@ export function pairAggregateSelect(): string {
       "p1.total_damage_dealt_to_champions + p2.total_damage_dealt_to_champions",
       "damage_to_champions",
     ),
+    COUNT("p1.gold_earned + p2.gold_earned", "gold_earned"),
+    COUNT("p1.vision_score + p2.vision_score", "vision_score"),
+    COUNT("p1.total_damage_taken + p2.total_damage_taken", "damage_taken"),
+    COUNT(
+      "p1.total_damage_dealt + p2.total_damage_dealt",
+      "total_damage_dealt",
+    ),
+    COUNT("p1.wards_placed + p2.wards_placed", "wards_placed"),
+    COUNT(
+      "p1.double_kills + p1.triple_kills + p1.quadra_kills + p1.penta_kills + " +
+        "p2.double_kills + p2.triple_kills + p2.quadra_kills + p2.penta_kills",
+      "multikills",
+    ),
+    // One duration per pair-game (p1 side only), so avg_game_duration is a
+    // true per-game average; time played is summed across both members to
+    // stay consistent with the pair's summed creep score.
+    COUNT("p1.game_duration_seconds", "duration_seconds"),
+    COUNT("p1.time_played + p2.time_played", "time_played_seconds"),
   ].join(", ");
 }
 
@@ -64,5 +93,13 @@ export function prematchAggregateSelect(): string {
     "0::BIGINT AS assists",
     "0::BIGINT AS creep_score",
     "0::BIGINT AS damage_to_champions",
+    "0::BIGINT AS gold_earned",
+    "0::BIGINT AS vision_score",
+    "0::BIGINT AS damage_taken",
+    "0::BIGINT AS total_damage_dealt",
+    "0::BIGINT AS wards_placed",
+    "0::BIGINT AS multikills",
+    "0::BIGINT AS duration_seconds",
+    "0::BIGINT AS time_played_seconds",
   ].join(", ");
 }

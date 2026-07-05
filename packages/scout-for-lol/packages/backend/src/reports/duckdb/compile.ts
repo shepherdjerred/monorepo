@@ -130,7 +130,10 @@ function championPredicate(championId: number | undefined): SqlFragment {
 const MATCH_FACT_COLUMNS =
   "a.player_id, a.player_alias, a.discord_id, m.match_id, m.team_id, m.puuid, " +
   "m.champion_id, m.champion_name, m.queue, m.win, m.surrendered, m.kills, " +
-  "m.deaths, m.assists, m.creep_score, m.total_damage_dealt_to_champions";
+  "m.deaths, m.assists, m.creep_score, m.total_damage_dealt_to_champions, " +
+  "m.gold_earned, m.vision_score, m.total_damage_taken, m.total_damage_dealt, " +
+  "m.wards_placed, m.double_kills, m.triple_kills, m.quadra_kills, " +
+  "m.penta_kills, m.game_duration_seconds, m.time_played";
 
 type FactsCte = SqlFragment;
 
