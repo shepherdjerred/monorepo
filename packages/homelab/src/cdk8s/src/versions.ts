@@ -249,7 +249,7 @@ const versions = {
   "bugsink/bugsink":
     "2.2.1@sha256:26da3e335f496b8270f4b59defeed414cc2a0b053f9e2ef3486d38bbad6058f9",
   // Relay Server - self-hosted Obsidian real-time collaboration backend (y-sweet fork)
-  // renovate: datasource=docker registryUrl=https://docker.system3.md versioning=docker
+  // not managed by renovate (docker.system3.md is a private relay.md registry; bump manually on upgrade)
   "relay-server":
     "v0.9.2@sha256:815222bd2dc167ee0a5b702d2dcd3d9eb681985b9eb5e6e761adf3933554a11f",
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
