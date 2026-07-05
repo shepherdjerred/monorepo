@@ -1,10 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import {
-  AccountIdSchema,
-  PlayerIdSchema,
-  type LeaguePuuid,
-} from "@scout-for-lol/data";
-import {
   createTestDatabase,
   deleteIfExists,
 } from "#src/testing/test-database.ts";
@@ -14,6 +9,12 @@ import {
   testGuildId,
   testPuuid,
 } from "#src/testing/test-ids.ts";
+import { resolveLakeDir } from "#src/report-lake/paths.ts";
+import {
+  resetTestLake,
+  writeTestLake,
+  type TestLakeMatchFact,
+} from "#src/testing/test-report-lake.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
 import {
   renderReportOutput,
@@ -22,27 +23,49 @@ import {
 import { runReport } from "#src/reports/runner.ts";
 
 // End-to-end coverage of the report DSL's declarative `RENDER` clause: real
-// SQLite facts → parse → aggregate → render. This is the only suite that
-// actually exercises chart rendering (echarts → SVG → PNG) in tests.
+// report-lake rows → parse → compiled SQL on DuckDB → render. This is the
+// only suite that actually exercises chart rendering (echarts → SVG → PNG).
 const { prisma } = createTestDatabase("report-render-test");
 const serverId = testGuildId("717171");
 const now = new Date(Date.UTC(2026, 4, 17, 12, 0, 0));
 const TITLE = "Test Report";
+const lakeDir = resolveLakeDir();
 
 // Alpha: 3 solo games, 2 wins (games=3, win_rate≈0.67).
 // Bravo: 1 solo game, 1 win  (games=1, win_rate=1.0).
 // games and win_rate rank players in opposite orders, so the chosen Y channel
 // (and ORDER BY) are observable.
+function fact(input: {
+  player: number;
+  alias: string;
+  matchId: string;
+  win: boolean;
+}): TestLakeMatchFact {
+  return {
+    playerId: input.player,
+    playerAlias: input.alias,
+    matchId: input.matchId,
+    puuid: testPuuid(`render-${input.alias}`),
+    queue: "solo",
+    win: input.win,
+    surrendered: false,
+    kills: 5,
+    deaths: 3,
+    assists: 7,
+    gameCreationAt: now,
+  };
+}
+
 async function seedFacts(): Promise<void> {
-  await createFact({ player: 1, alias: "Alpha", matchId: "NA1_a1", win: true });
-  await createFact({ player: 1, alias: "Alpha", matchId: "NA1_a2", win: true });
-  await createFact({
-    player: 1,
-    alias: "Alpha",
-    matchId: "NA1_a3",
-    win: false,
+  await writeTestLake(lakeDir, {
+    serverId,
+    matchFacts: [
+      fact({ player: 1, alias: "Alpha", matchId: "NA1_a1", win: true }),
+      fact({ player: 1, alias: "Alpha", matchId: "NA1_a2", win: true }),
+      fact({ player: 1, alias: "Alpha", matchId: "NA1_a3", win: false }),
+      fact({ player: 2, alias: "Bravo", matchId: "NA1_b1", win: true }),
+    ],
   });
-  await createFact({ player: 2, alias: "Bravo", matchId: "NA1_b1", win: true });
 }
 
 const BASE_QUERY =
@@ -234,52 +257,5 @@ describe("RENDER clause — full runner pipeline", () => {
 async function cleanup(): Promise<void> {
   await deleteIfExists(() => prisma.reportRun.deleteMany());
   await deleteIfExists(() => prisma.report.deleteMany());
-  await deleteIfExists(() => prisma.matchParticipantFact.deleteMany());
-}
-
-type FactInput = {
-  player: number;
-  alias: string;
-  matchId: string;
-  win: boolean;
-};
-
-async function createFact(input: FactInput): Promise<void> {
-  const puuid: LeaguePuuid = testPuuid(`render-${input.alias}`);
-  await prisma.matchParticipantFact.create({
-    data: {
-      serverId,
-      matchId: input.matchId,
-      gameId: input.matchId,
-      gameCreationAt: now,
-      gameEndAt: now,
-      queueId: 420,
-      queue: "solo",
-      durationSeconds: 1800,
-      playerId: PlayerIdSchema.parse(input.player),
-      accountId: AccountIdSchema.parse(input.player),
-      playerAlias: input.alias,
-      discordId: null,
-      puuid,
-      region: "AMERICA_NORTH",
-      participantId: input.player,
-      teamId: 100,
-      championId: 22,
-      championName: "Ashe",
-      win: input.win,
-      surrendered: false,
-      earlySurrendered: false,
-      kills: 5,
-      deaths: 3,
-      assists: 7,
-      kda: 4,
-      creepScore: 150,
-      goldEarned: 10_000,
-      totalDamageDealt: 50_000,
-      damageToChampions: 12_000,
-      damageTaken: 20_000,
-      visionScore: 20,
-      rawParticipantJson: "{}",
-    },
-  });
+  await resetTestLake(lakeDir);
 }

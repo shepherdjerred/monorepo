@@ -31,7 +31,15 @@ export const MATCHES_STAGING_DIR = "matches-recent";
 export const PREMATCH_STAGING_DIR = "prematch-recent";
 
 export function resolveLakeDir(): string {
-  return configuration.reportLakeDir;
+  // Widened to unknown because Bun's process-wide `mock.module` leakage can
+  // hand us a PARTIAL configuration mock missing this field (see the
+  // write-up in trpc/auth-web.test.ts); in real runs env-var's .default()
+  // guarantees a string.
+  const configured: unknown = configuration.reportLakeDir;
+  if (typeof configured === "string") {
+    return configured;
+  }
+  return Bun.env["REPORT_LAKE_DIR"] ?? "./report-lake";
 }
 
 let buildCounter = 0;

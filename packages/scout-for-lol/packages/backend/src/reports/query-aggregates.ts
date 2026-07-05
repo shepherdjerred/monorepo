@@ -33,7 +33,7 @@ export type PrematchParticipantFactRow = {
   queue: string | null;
 };
 
-type AggregateRow = {
+export type AggregateRow = {
   label: string;
   discordId: string | null;
   games: number;
@@ -59,7 +59,7 @@ export function aggregateMatchFacts(
     byGroup.set(key, current);
   }
 
-  return sortedAggregates(plan, byGroup);
+  return sortedAggregates(plan, byGroup.values());
 }
 
 export function aggregatePrematchFacts(
@@ -75,7 +75,7 @@ export function aggregatePrematchFacts(
     byGroup.set(key, current);
   }
 
-  return sortedAggregates(plan, byGroup);
+  return sortedAggregates(plan, byGroup.values());
 }
 
 export function aggregatePairFacts(
@@ -94,7 +94,7 @@ export function aggregatePairFacts(
     addPairRows(byPair, uniquePlayers);
   }
 
-  return sortedAggregates(plan, byPair);
+  return sortedAggregates(plan, byPair.values());
 }
 
 export function rowsFromAggregates(
@@ -234,11 +234,11 @@ function addMatchFact(row: AggregateRow, fact: MatchParticipantFactRow): void {
   row.damageToChampions += fact.damageToChampions;
 }
 
-function sortedAggregates(
+export function sortedAggregates(
   plan: ReportQueryPlan,
-  byGroup: Map<string, AggregateRow>,
+  rows: Iterable<AggregateRow>,
 ): AggregateRow[] {
-  return [...byGroup.values()]
+  return [...rows]
     .filter((row) => plan.minGames === undefined || row.games >= plan.minGames)
     .toSorted((left, right) => compareAggregateRows(left, right, plan));
 }

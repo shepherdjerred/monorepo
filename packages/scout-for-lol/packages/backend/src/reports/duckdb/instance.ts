@@ -48,12 +48,22 @@ let instancePromise: Promise<DuckDBInstance> | undefined;
 async function getInstance(): Promise<DuckDBInstance> {
   instancePromise ??= (async () => {
     const duckdb = await loadDuckDB();
+    // Widened to unknown to survive partial test mocks of the configuration
+    // module (process-wide mock.module leakage — see trpc/auth-web.test.ts);
+    // real runs always have the env-var defaults.
+    const configuredThreads: unknown = configuration.reportDuckDbThreads;
+    const configuredMemory: unknown = configuration.reportDuckDbMemoryLimit;
+    const threads = (
+      typeof configuredThreads === "number" ? configuredThreads : 2
+    ).toString();
+    const memoryLimit =
+      typeof configuredMemory === "string" ? configuredMemory : "512MB";
     logger.info(
-      `Creating DuckDB instance (threads=${configuration.reportDuckDbThreads.toString()}, memory_limit=${configuration.reportDuckDbMemoryLimit})`,
+      `Creating DuckDB instance (threads=${threads}, memory_limit=${memoryLimit})`,
     );
     return await duckdb.DuckDBInstance.create(":memory:", {
-      threads: configuration.reportDuckDbThreads.toString(),
-      memory_limit: configuration.reportDuckDbMemoryLimit,
+      threads,
+      memory_limit: memoryLimit,
     });
   })();
   return await instancePromise;
