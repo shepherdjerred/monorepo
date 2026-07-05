@@ -1,0 +1,3 @@
+{
+  "ignore_dirs": ["ios/build", "ios/Pods", "node_modules/.cache"]
+}

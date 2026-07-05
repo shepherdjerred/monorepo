@@ -116,7 +116,7 @@ describe("SyncEngine.fullSync", () => {
       (list) => {
         captured = list;
       },
-      makeCache(),
+      { cache: makeCache() },
     );
     const result = await engine.fullSync();
     expect(result.ok).toBe(false);
@@ -135,7 +135,7 @@ describe("SyncEngine.fullSync", () => {
       (list) => {
         captured = list;
       },
-      makeCache(),
+      { cache: makeCache() },
     );
     const result = await engine.fullSync();
     expect(result.ok).toBe(true);
@@ -155,7 +155,7 @@ describe("SyncEngine.fullSync", () => {
       (list) => {
         captured = list;
       },
-      makeCache(),
+      { cache: makeCache() },
     );
     await engine.fullSync();
     expect(queue.isEmpty).toBe(true);
@@ -179,7 +179,7 @@ describe("SyncEngine.fullSync", () => {
       (list) => {
         captured = list;
       },
-      makeCache(),
+      { cache: makeCache() },
     );
     await engine.fullSync();
     expect(queue.pending).toHaveLength(1);
@@ -198,7 +198,7 @@ describe("SyncEngine.applyOptimistic", () => {
       () => {
         // not used in these unit tests
       },
-      makeCache(),
+      { cache: makeCache() },
     );
   });
 

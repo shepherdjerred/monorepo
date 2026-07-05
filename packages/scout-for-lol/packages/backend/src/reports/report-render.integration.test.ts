@@ -1,4 +1,11 @@
-import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import {
+  afterAll,
+  beforeEach,
+  describe,
+  expect,
+  setDefaultTimeout,
+  test,
+} from "bun:test";
 import {
   createTestDatabase,
   deleteIfExists,
@@ -25,6 +32,12 @@ import { runReport } from "#src/reports/runner.ts";
 // End-to-end coverage of the report DSL's declarative `RENDER` clause: real
 // report-lake rows → parse → compiled SQL on DuckDB → render. This is the
 // only suite that actually exercises chart rendering (echarts → SVG → PNG).
+//
+// Chart rendering (echarts → SVG → resvg PNG) is heavy and, on a cold Dagger
+// CI engine, a single render can exceed Bun's 5s default per-test timeout.
+// Give the whole suite generous headroom so a slow-but-successful render is
+// never flagged as a failure.
+setDefaultTimeout(30_000);
 const { prisma } = createTestDatabase("report-render-test");
 const serverId = testGuildId("717171");
 const now = new Date(Date.UTC(2026, 4, 17, 12, 0, 0));

@@ -1,16 +1,27 @@
 ---
 import "../styles/global.css";
 import MarketingTracking from "#src/components/MarketingTracking.astro";
+import SeoHead from "#src/components/SeoHead.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  image?: string | undefined;
+  noindex?: boolean | undefined;
+}
+
+const { title, description, image, noindex } = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="generator" content={Astro.generator} />
-    <title>Scout for League of Legends</title>
+    <SeoHead
+      title={title}
+      description={description}
+      image={image}
+      noindex={noindex}
+    />
     <script is:inline>
       // Initialize dark mode before page renders to prevent flash
       if (

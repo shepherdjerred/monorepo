@@ -18,6 +18,7 @@ import {
   summarizeClaudeStreamLine,
 } from "#shared/claude-result.ts";
 import { redactSecrets } from "#shared/redact.ts";
+import { traceClaudeCli } from "@shepherdjerred/llm-observability/wrappers/claude-cli";
 import { babysitIterationPrompt } from "#shared/pr-babysit/prompt.ts";
 import {
   BabysitIterationResultSchema,
@@ -188,6 +189,7 @@ export async function runBabysitIteration(
   env["CLAUDE_CODE_OAUTH_TOKEN"] = oauthToken;
   // Caller provides GH_TOKEN, GIT_ASKPASS, GIT_TERMINAL_PROMPT.
   Object.assign(env, args.env ?? {});
+  const llmStartMs = Date.now();
   const result = await runTrackedAgentSubprocess(
     {
       command,
@@ -234,6 +236,34 @@ export async function runBabysitIteration(
       },
     },
     redactSecrets,
+  );
+
+  // Post-hoc gen_ai span for the whole run — before the failure checks so
+  // cancelled/failed iterations are traced too (they still spent tokens).
+  traceClaudeCli(
+    {
+      service: "temporal",
+      callSite: "pr-babysit-iteration",
+      request: {
+        model: args.input.model,
+        prompt,
+        options: {
+          prNumber: args.input.prNumber,
+          maxTurns: args.input.budget.perIterationMaxTurns,
+        },
+      },
+    },
+    {
+      stdout: result.stdout,
+      exitCode: result.exitCode,
+      startTimeMs: llmStartMs,
+      endTimeMs: llmStartMs + result.durationMs,
+    },
+    {
+      warn: (message) => {
+        jsonLog("warning", message, { phase: "claude-cli-trace" });
+      },
+    },
   );
 
   if (result.signal === "SIGTERM") {

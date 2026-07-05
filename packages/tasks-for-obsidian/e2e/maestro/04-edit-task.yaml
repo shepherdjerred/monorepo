@@ -1,0 +1,32 @@
+# Edit the seeded "Task with details": rename it via the detail edit form.
+appId: org.reactjs.native.example.TasksForObsidian
+---
+- runFlow: 00-setup.yaml
+- tapOn:
+    id: "tab-inbox"
+- extendedWaitUntil:
+    visible:
+      text: ".*Task with details.*"
+    timeout: 15000
+- tapOn:
+    text: ".*Task with details.*"
+- extendedWaitUntil:
+    visible:
+      id: "task-detail-edit"
+    timeout: 10000
+- tapOn:
+    id: "task-detail-edit"
+- extendedWaitUntil:
+    visible:
+      id: "task-detail-title-input"
+    timeout: 10000
+- tapOn:
+    id: "task-detail-title-input"
+- eraseText: 50
+- inputText: "Edited by e2e"
+- tapOn:
+    id: "task-detail-save"
+- extendedWaitUntil:
+    visible:
+      text: "Edited by e2e"
+    timeout: 15000
