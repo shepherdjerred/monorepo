@@ -2,15 +2,36 @@
 import { defineConfig, envField } from "astro/config";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
+import { readFileSync } from "node:fs";
 
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
 import icon from "astro-icon";
+import sitemap from "@astrojs/sitemap";
+import astroOpenGraphImages from "astro-opengraph-images";
+import { ogTemplate } from "./src/lib/og-template.tsx";
 
 const dirname = fileURLToPath(new URL(".", import.meta.url));
 
+const beaufortBold = readFileSync(
+  resolve(dirname, "public/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf"),
+);
+const spiegelRegular = readFileSync(
+  resolve(dirname, "public/fonts/Spiegel-TTF/Spiegel_TT_Regular.ttf"),
+);
+const spiegelSemiBold = readFileSync(
+  resolve(dirname, "public/fonts/Spiegel-TTF/Spiegel_TT_SemiBold.ttf"),
+);
+
+// Pages that are noindex (dashboard SPA + dev tooling) — excluded from the
+// sitemap. They still receive a generated OG image (harmless; they carry the
+// required og:* tags via SeoHead so the OG extractor doesn't error).
+const isNoindexPath = (/** @type {string} */ page) =>
+  /\/(app|dev)\//.test(page) || page.endsWith("/app") || page.endsWith("/dev");
+
 // https://astro.build/config
 export default defineConfig({
+  site: "https://scout-for-lol.com",
   env: {
     schema: {
       PUBLIC_PINTEREST_TAG_ID: envField.string({
@@ -30,7 +51,37 @@ export default defineConfig({
       }),
     },
   },
-  integrations: [mdx(), react(), icon()],
+  integrations: [
+    mdx(),
+    react(),
+    icon(),
+    sitemap({ filter: (page) => !isNoindexPath(page) }),
+    astroOpenGraphImages({
+      options: {
+        fonts: [
+          {
+            name: "Beaufort for LoL",
+            weight: 700,
+            style: "normal",
+            data: beaufortBold,
+          },
+          {
+            name: "Spiegel",
+            weight: 400,
+            style: "normal",
+            data: spiegelRegular,
+          },
+          {
+            name: "Spiegel",
+            weight: 600,
+            style: "normal",
+            data: spiegelSemiBold,
+          },
+        ],
+      },
+      render: ogTemplate,
+    }),
+  ],
   vite: {
     assetsInclude: ["**/*.txt"],
     optimizeDeps: {
