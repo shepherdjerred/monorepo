@@ -45,6 +45,7 @@ export function Fab({ onPress }: FabProps) {
       onPressOut={handlePressOut}
       accessibilityRole="button"
       accessibilityLabel="Quick add task"
+      testID="fab-add-task"
     >
       <Text style={styles.text}>+</Text>
     </AnimatedPressable>

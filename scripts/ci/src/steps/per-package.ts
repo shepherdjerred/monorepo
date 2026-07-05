@@ -136,6 +136,14 @@ export function perPackageSteps(
     steps.push(tasksForObsidianNativeDepsStep(resources));
   }
 
+  // Cross-package contract test: the app's real TaskNotesClient against a
+  // spawned real tasknotes-server. Emitted for whichever side changed (keys
+  // are per-package, so when both change in one build the two steps run the
+  // same suite — Dagger's cache makes the duplicate cheap).
+  if (pkg === "tasks-for-obsidian" || pkg === "tasknotes-server") {
+    steps.push(tasknotesContractTestStep(sk, resources));
+  }
+
   // homelab: build helm-types (nested NPM package under homelab).
   // No artifact upload — npm publish rebuilds via Dagger cache.
   if (pkg === "homelab") {
@@ -251,6 +259,38 @@ function tasksForObsidianNativeDepsStep(resources: {
     key: "ios-native-deps-tasks-for-obsidian",
     command: `${DAGGER_CALL} tasks-for-obsidian-ios-native-deps --source ${REPO_GIT_REF}`,
     timeout_in_minutes: 10,
+    retry: RETRY,
+    env: DAGGER_ENV,
+    plugins: [k8sPlugin({ cpu: resources.cpu, memory: resources.memory })],
+  };
+}
+
+/**
+ * App-client ↔ server contract test (`contract-tests/` in the app package).
+ * The app is the Dagger target package; tasknotes-server rides along as an
+ * extra dep dir so the suite can spawn it. Not derived from WORKSPACE_DEPS —
+ * the server is deliberately NOT a build dependency of the app.
+ */
+function tasknotesContractTestStep(
+  sk: string,
+  resources: { cpu: string; memory: string },
+): BuildkiteStep {
+  const flags = [
+    `--pkg-dir ${gitDir("packages/tasks-for-obsidian")}`,
+    `--pkg tasks-for-obsidian`,
+    ...["eslint-config", "tasknotes-types", "tasknotes-server"].flatMap(
+      (dep) => [
+        `--dep-names ${dep}`,
+        `--dep-dirs ${gitDir(`packages/${dep}`)}`,
+      ],
+    ),
+    `--tsconfig ${gitFile("tsconfig.base.json")}`,
+  ].join(" ");
+  return {
+    label: ":handshake: TaskNotes contract test",
+    key: `tasknotes-contract-test-${sk}`,
+    command: `${DAGGER_CALL} tasknotes-contract-test ${flags}`,
+    timeout_in_minutes: 15,
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [k8sPlugin({ cpu: resources.cpu, memory: resources.memory })],

@@ -109,6 +109,7 @@ import {
   smokeTestBirmelHelper,
   smokeTestStarlightKarmaBotHelper,
   smokeTestTasknotesServerHelper,
+  tasknotesContractTestHelper,
   smokeTestCaddyS3ProxyHelper,
   smokeTestObsidianHeadlessHelper,
   smokeTestMcpGatewayHelper,
@@ -1891,6 +1892,28 @@ export class Monorepo {
     depDirs: Directory[] = [],
   ): Promise<string> {
     return smokeTestTasknotesServerHelper(pkgDir, pkg, depNames, depDirs);
+  }
+
+  /**
+   * Contract test: tasks-for-obsidian's TaskNotesClient against a spawned
+   * real tasknotes-server. Pass tasks-for-obsidian as pkgDir/pkg and include
+   * tasknotes-server in depNames/depDirs.
+   */
+  @func()
+  async tasknotesContractTest(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return tasknotesContractTestHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+    ).stdout();
   }
 
   /** Smoke test caddy-s3proxy: verifies custom Caddy binary works */

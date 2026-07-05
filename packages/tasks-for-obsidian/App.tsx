@@ -17,6 +17,7 @@ import { ErrorBoundary } from "./src/components/common/ErrorBoundary";
 import { ConnectionBanner } from "./src/components/common/ConnectionBanner";
 import { ActiveTimeTrackingOverlay } from "./src/components/timer/ActiveTimeTrackingOverlay";
 import { AppNavigator } from "./src/navigation/AppNavigator";
+import { E2EConfigHandler } from "./src/navigation/E2EConfigHandler";
 import { initFeedback } from "./src/lib/feedback";
 import packageJson from "./package.json";
 
@@ -45,6 +46,7 @@ function ThemedApp() {
     <>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
       <ConnectionBanner />
+      {__DEV__ && <E2EConfigHandler />}
       <AppNavigator />
       <ActiveTimeTrackingOverlay />
     </>

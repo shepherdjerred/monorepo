@@ -112,6 +112,8 @@ export function TaskDetailScreen({ route, navigation }: Props) {
             ]}
             value={title}
             onChangeText={setTitle}
+            testID="task-detail-title-input"
+            accessibilityLabel="Task title"
           />
 
           <Text
@@ -169,6 +171,7 @@ export function TaskDetailScreen({ route, navigation }: Props) {
               onPress={handleSave}
               accessibilityRole="button"
               accessibilityLabel="Save changes"
+              testID="task-detail-save"
             >
               <Text style={styles.buttonText}>Save</Text>
             </Pressable>
@@ -269,6 +272,7 @@ export function TaskDetailScreen({ route, navigation }: Props) {
               ? "Mark as incomplete"
               : "Mark as complete"
           }
+          testID="task-detail-toggle"
         >
           <Text style={styles.buttonText}>Toggle Status</Text>
         </Pressable>
@@ -286,6 +290,7 @@ export function TaskDetailScreen({ route, navigation }: Props) {
           }}
           accessibilityRole="button"
           accessibilityLabel="Edit task"
+          testID="task-detail-edit"
         >
           <Text style={[styles.buttonText, { color: colors.text }]}>Edit</Text>
         </Pressable>
@@ -294,6 +299,7 @@ export function TaskDetailScreen({ route, navigation }: Props) {
           onPress={handleDelete}
           accessibilityRole="button"
           accessibilityLabel="Delete task"
+          testID="task-detail-delete"
         >
           <Text style={styles.buttonText}>Delete</Text>
         </Pressable>
