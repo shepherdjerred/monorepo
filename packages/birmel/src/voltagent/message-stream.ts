@@ -20,8 +20,17 @@ const MIN_CONTENT_LENGTH = 20;
 // cursor forever; aborting here surfaces the failure as a visible reply.
 const STREAM_TIMEOUT_MS = 60_000;
 
+// Structural slice of VoltAgent's StreamTextResultWithContext — textStream
+// for the progressive-edit loop, plus the AI SDK's deferred usage/finishReason
+// promises (they resolve once the stream completes) so the traceTextStream
+// span carries token counts for billing.
 type StreamTextResponse = {
   textStream: AsyncIterable<string>;
+  usage: PromiseLike<{
+    inputTokens: number | undefined;
+    outputTokens: number | undefined;
+  }>;
+  finishReason: PromiseLike<string>;
 };
 
 type StreamingAgent = {
@@ -81,6 +90,31 @@ export async function streamAgentResponse(params: {
         providerOptions: getOpenAIResponsesProviderOptions(),
         abortSignal: AbortSignal.timeout(STREAM_TIMEOUT_MS),
       });
+      // The SDK's deferred promises reject if the stream aborts mid-iteration
+      // (timeout, model stall). We only await them on the happy path below, so
+      // pre-attach rejection observers — otherwise an aborted stream leaves an
+      // unhandled rejection that crashes the process. The happy-path await
+      // still observes the original values.
+      const usagePromise = Promise.resolve(response.usage);
+      const finishReasonPromise = Promise.resolve(response.finishReason);
+      const observeRejection = async (
+        promise: Promise<unknown>,
+        label: string,
+      ): Promise<void> => {
+        try {
+          await promise;
+        } catch (deferredError) {
+          // The stream loop surfaces the real failure; this observer only
+          // prevents an unhandled-rejection crash.
+          logger.debug("Deferred stream promise rejected", {
+            label,
+            deferredError,
+            attempt: params.attemptName,
+          });
+        }
+      };
+      void observeRejection(usagePromise, "usage");
+      void observeRejection(finishReasonPromise, "finishReason");
 
       for await (const chunk of response.textStream) {
         accumulated += chunk;
@@ -102,7 +136,22 @@ export async function streamAgentResponse(params: {
         }
       }
 
-      return { text: accumulated };
+      // Resolved by the SDK once the stream finishes; carries token counts
+      // into the gen_ai span (and the S3 archive envelope) for billing.
+      const [usage, finishReason] = await Promise.all([
+        usagePromise,
+        finishReasonPromise,
+      ]);
+      return {
+        text: accumulated,
+        ...(usage.inputTokens !== undefined && {
+          inputTokens: usage.inputTokens,
+        }),
+        ...(usage.outputTokens !== undefined && {
+          outputTokens: usage.outputTokens,
+        }),
+        finishReason,
+      };
     },
   );
 
