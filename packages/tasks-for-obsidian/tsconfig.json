@@ -31,7 +31,8 @@
     "verbatimModuleSyntax": false,
     "declaration": false,
     "declarationMap": false,
-    "noUncheckedSideEffectImports": false
+    "noUncheckedSideEffectImports": false,
+    "types": ["react"]
   },
   "include": ["src/**/*", "App.tsx", "index.js", "react-native.d.ts"],
   "exclude": ["node_modules", "android", "ios", "**/*.test.ts", "**/*.test.tsx"]
