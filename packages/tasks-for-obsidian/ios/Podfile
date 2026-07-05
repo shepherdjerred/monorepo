@@ -36,6 +36,20 @@ target 'TasksForObsidian' do
         # Xcode 26 treats some pod header/module combinations as errors.
         build_configuration.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
 
+        # Xcode 27 refuses deployment targets below iOS 15; some pods
+        # (e.g. AsyncStorage's resource-bundle target) still pin 13.0.
+        deployment_target = build_configuration.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+        if deployment_target != nil && deployment_target.to_f < 15.0
+          build_configuration.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+        end
+
+        # react-native-ios-context-menu uses iOS-16-only API (UIAction
+        # `subtitle`) without availability guards but its podspec declares
+        # an older platform — it only compiles with a 16.0 target.
+        if target.name == 'react-native-ios-context-menu'
+          build_configuration.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
+        end
+
         # fmt 11.0.2 fails with consteval checks under Apple Clang in Xcode 26
         # when built as C++20. Keep fmt on C++17 only.
         if target.name == 'fmt'

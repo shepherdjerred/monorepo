@@ -93,6 +93,28 @@ bun run generate     # Regenerate src/generated/ha-schema.ts from live HA (needs
 
 The `bun test` run includes a workflow-bundle smoke test (`src/workflows/bundle.test.ts`) that runs the same webpack pass `Worker.create()` performs at startup. If you import an activity helper into a workflow file and this test starts failing, move the helper to `src/shared/` (a pure module with no Sentry/observability imports).
 
+## LLM observability
+
+Every LLM call in this package must emit a `gen_ai.*` span; the archive
+processor registered in `src/observability/tracing.ts` uploads prompt/response
+bodies to S3 (`llm-archive` bucket) and forwards a slim span to Tempo.
+
+- **SDK calls** — wrap with `traceAnthropic` / `traceOpenAi` from
+  `@shepherdjerred/llm-observability` (pr-summary, pr-review specialists +
+  correctness, deps-summary do this).
+- **`claude -p` subprocesses** — call `traceClaudeCli` with the captured
+  stdout after exit (agent-task, pr-babysit iteration, homelab-audit,
+  scout-season-refresh). Spans carry `gen_ai.system="claude_code_cli"`, which
+  distinguishes subscription-billed CLI runs from API-billed `anthropic`, plus
+  `llm.cost_usd` from the result message.
+- **`codex exec` subprocesses** — pump stdout NDJSON (`--json`) into the shared
+  codex adapter; agent-task does both providers via
+  `src/activities/agent-task-llm-trace.ts` (`startAgentTaskLlmTrace`). New CLI
+  activities should reuse that helper rather than hand-rolling.
+
+Emit the span **before** exit-code/cancellation failure checks — failed runs
+spent tokens and must be visible for billing.
+
 ## HA schema (type-safe workflows)
 
 Workflows that touch Home Assistant go through `src/workflows/ha/util.ts`, which wraps each activity in a schema-parameterized signature — entity IDs, domains, services, and service data are type-checked against `src/generated/ha-schema.ts`.

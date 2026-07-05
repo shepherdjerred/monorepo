@@ -13,6 +13,9 @@
     "./wrappers/openai": "./src/openai-wrapper.ts",
     "./wrappers/gemini": "./src/gemini-wrapper.ts",
     "./wrappers/claude-agent": "./src/claude-agent-wrapper.ts",
+    "./wrappers/claude-cli": "./src/claude-cli-wrapper.ts",
+    "./wrappers/codex": "./src/codex-trace.ts",
+    "./codex-jsonl": "./src/codex-jsonl.ts",
     "./wrappers/text-stream": "./src/text-stream-wrapper.ts"
   },
   "scripts": {

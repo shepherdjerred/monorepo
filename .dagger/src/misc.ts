@@ -30,6 +30,7 @@ import {
 } from "./image";
 
 import versions from "./versions";
+import { bunBaseContainer } from "./base";
 
 /** Build custom Caddy binary with s3-proxy plugin, using cached Go modules. */
 function caddyS3ProxyBinary(): File {
@@ -353,6 +354,29 @@ export async function smokeTestTasknotesServerHelper(
     .withExec(["sh", "-c", "timeout 10s bun run src/index.ts 2>&1"]);
 
   return runSmokeTest(container, []);
+}
+
+/**
+ * Contract test: tasks-for-obsidian's real TaskNotesClient against a real
+ * tasknotes-server spawned as a bun process over a temp vault.
+ *
+ * `pkgDir`/`pkg` is tasks-for-obsidian; tasknotes-server rides along in
+ * depNames/depDirs (bunBaseContainer installs every dep's own node_modules,
+ * which is exactly what the spawned server needs). The suite lives in
+ * `contract-tests/` behind its own `test:contract` script so the regular
+ * per-package `bun run test` container — which doesn't mount the server —
+ * never sees it.
+ */
+export function tasknotesContractTestHelper(
+  pkgDir: Directory,
+  pkg: string,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+  tsconfig: File | null = null,
+): Container {
+  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+    .withEnvVariable("CI", "true")
+    .withExec(["bun", "run", "test:contract"]);
 }
 
 // ---------------------------------------------------------------------------

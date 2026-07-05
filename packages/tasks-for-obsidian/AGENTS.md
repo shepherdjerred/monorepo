@@ -12,8 +12,26 @@ bun run ios --simulator="iPhone 16 Pro"  # Specific simulator
 bun run start                        # Start Metro bundler (separate terminal)
 bun run typecheck                    # Type check
 bunx eslint . --max-warnings=0       # Lint
-bun test                             # Tests
+bun run test                         # Unit tests (src + scripts only)
+bun run test:contract                # Wire-contract suite vs a real spawned tasknotes-server
+bun run e2e                          # Maestro e2e (simulator + real server + chaos proxy)
 ```
+
+## Testing Layers
+
+- **Unit** (`bun run test`): domain/lib/sync; the sync layer has a deterministic
+  simulation harness at `src/data/sync/__tests__/harness.ts` (FakeServer with
+  offline/failure injection, manual clock, snapshot-able storage for crash tests).
+- **Contract** (`bun run test:contract`): the real `TaskNotesClient` against a
+  spawned real `../tasknotes-server` over a temp vault. Runs in CI (Buildkite
+  `tasknotes-contract-test` step) when either package changes. Lives in
+  `contract-tests/` — deliberately outside the default test glob because the
+  regular CI test container doesn't mount the server package.
+- **E2E** (`bun run e2e`, see `e2e/README.md`): Maestro drives the app in a
+  simulator against a local server + chaos proxy (offline simulation), then
+  asserts on the vault's markdown bytes. **Local pre-merge gate for app PRs** —
+  no macOS CI agents (see `packages/docs/todos/mac-mini-buildkite-agent.md`).
+  Prereqs: Xcode + simulators, `brew install mobile-dev-inc/tap/maestro`.
 
 ## iOS First-Time Setup
 

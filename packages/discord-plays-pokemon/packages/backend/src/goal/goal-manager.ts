@@ -11,7 +11,7 @@ import {
   createCodexJsonlParser,
   pumpCodexStdout,
   type CodexJsonlParser,
-} from "./codex-jsonl.ts";
+} from "@shepherdjerred/llm-observability/codex-jsonl";
 import { attachCodexTrace, type CodexTrace } from "./codex-trace.ts";
 import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
 import { formatGameStateForPrompt } from "./game-state-summary.ts";
@@ -332,7 +332,14 @@ export class GoalManager {
         controlToken: this.controlToken,
       }),
     });
-    const jsonl = createCodexJsonlParser();
+    const jsonl = createCodexJsonlParser({
+      warn: (message) => {
+        logger.warn(message);
+      },
+      info: (message) => {
+        logger.info(message);
+      },
+    });
     // Span synthesis: subscribe before stdout pumping starts so no events are
     // missed. End the trace from every terminal path below.
     const trace = attachCodexTrace(jsonl, {

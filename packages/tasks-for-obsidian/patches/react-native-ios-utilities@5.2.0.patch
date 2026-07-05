@@ -1,0 +1,43 @@
+diff --git a/node_modules/react-native-ios-utilities/.bun-tag-84b3a6c7fad476d2 b/.bun-tag-84b3a6c7fad476d2
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/ios/Sources/Extensions+Helpers/RCTView+Helpers.swift b/ios/Sources/Extensions+Helpers/RCTView+Helpers.swift
+index 09be306d5aa39337c5114c2ad6ba7513218e0751..835809294d20143c665402c8add6cf2ae594a33e 100644
+--- a/ios/Sources/Extensions+Helpers/RCTView+Helpers.swift
++++ b/ios/Sources/Extensions+Helpers/RCTView+Helpers.swift
+@@ -25,17 +25,11 @@ public extension RCTView {
+     return rootView.recursivelyFindSubview(whereType: targetType);
+   };
+   
+-  var closestParentReactContentView: RCTRootContentView? {
+-    let targetType = RCTRootContentView.self;
+-  
+-    if let match = self.recursivelyFindParentView(whereType: targetType) {
+-      return match;
+-    };
+-    
+-    guard let rootView = self.rootViewForCurrentWindow else { return nil };
+-    return rootView.recursivelyFindSubview(whereType: targetType);
+-  };
+-  
++  // PATCHED (monorepo): `closestParentReactContentView` removed. It was the
++  // only reference to RCTRootContentView, which React Native 0.85 no longer
++  // compiles into React-Core, and nothing in ios-utilities or
++  // react-native-ios-context-menu calls it.
++
+   var reactTouchHandlers: [RCTTouchHandler]? {
+     self.gestureRecognizers?.compactMap {
+       $0 as? RCTTouchHandler
+@@ -57,7 +51,10 @@ public extension RCTView {
+       guard let superview = currentView.superview else { break };
+       currentView = superview;
+     };
+-    
+-    return closestParentReactContentView?.reactTouchHandlers?.first;
++
++    // PATCHED (monorepo): the RCTRootContentView fallback is gone — RN 0.85
++    // no longer compiles that class into React-Core. The superview walk
++    // above already covers the practical lookup path.
++    return nil;
+   };
+ };

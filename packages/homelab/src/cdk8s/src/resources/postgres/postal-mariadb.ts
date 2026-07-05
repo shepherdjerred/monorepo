@@ -32,7 +32,7 @@ export class PostalMariaDB extends Construct {
 
   /**
    * The 1Password item containing MariaDB credentials.
-   * Expected fields: mariadb-root-password, mariadb-password
+   * Expected fields: mariadb-root-password, mariadb-password, mariadb-metrics-password
    */
   public readonly secretItem: OnePasswordItem;
 
@@ -55,7 +55,8 @@ export class PostalMariaDB extends Construct {
     this.serviceName = releaseName;
 
     // 1Password item for MariaDB credentials
-    // Expected fields: mariadb-root-password, mariadb-password
+    // Expected fields: mariadb-root-password, mariadb-password, mariadb-metrics-password
+    // (chart v26+ requires mariadb-metrics-password in auth.existingSecret when metrics are enabled)
     this.secretItem = new OnePasswordItem(scope, `${id}-credentials`, {
       metadata: {
         name: `${id}-credentials`,
@@ -109,15 +110,11 @@ character-set-server = utf8mb4
 collation-server = utf8mb4_unicode_ci
 `,
       },
-      // Enable metrics for monitoring
+      // Enable metrics for monitoring. Chart v26+ runs the exporter as a dedicated
+      // low-privilege `exporter` user authenticated via the mariadb-metrics-password
+      // key of auth.existingSecret (no root-password env override needed).
       metrics: {
         enabled: true,
-        extraEnvVars: [
-          {
-            name: "MARIADB_ROOT_PASSWORD_FILE",
-            value: "/opt/bitnami/mysqld-exporter/secrets/mariadb-root-password",
-          },
-        ],
         resources: {
           requests: {
             cpu: "50m",
