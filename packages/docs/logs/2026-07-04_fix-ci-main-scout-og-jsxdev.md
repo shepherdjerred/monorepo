@@ -14,12 +14,12 @@ Task: "fix CI on main."
 Build 5069 had four failed jobs. Classifying by whether they actually block the
 build (`soft_failed` flag from the Buildkite API):
 
-| Job                                         | `soft_failed` | Blocks build? |
-| ------------------------------------------- | ------------- | ------------- |
-| `:scissors: Knip`                           | `true`        | No (advisory) |
-| `:shield: Trivy Scan`                       | `true`        | No (advisory) |
-| `:ship: Deploy scout-for-lol … (prod)`      | `false`       | **Yes**       |
-| `:ship: Deploy scout-for-lol … (beta)`      | `false`       | **Yes**       |
+| Job                                    | `soft_failed` | Blocks build? |
+| -------------------------------------- | ------------- | ------------- |
+| `:scissors: Knip`                      | `true`        | No (advisory) |
+| `:shield: Trivy Scan`                  | `true`        | No (advisory) |
+| `:ship: Deploy scout-for-lol … (prod)` | `false`       | **Yes**       |
+| `:ship: Deploy scout-for-lol … (beta)` | `false`       | **Yes**       |
 
 So the **only** thing turning main red was the scout-for-lol deploy. (Confirmed
 by comparing to build **5063**, which Buildkite marked `passed` overall even
@@ -112,3 +112,25 @@ Both are **non-blocking** (soft-fail) and were already red on the last
 - The failure does not reproduce on local mac builds; it is specific to the CI
   container's config transpile. Do not remove the pragma comments — they are the
   fix. The in-file comment says so.
+
+## Session Log — 2026-07-05
+
+### Done
+
+- Removed the build-time requirement for marketing tracking env vars in
+  `packages/scout-for-lol/packages/frontend/astro.config.mjs` and
+  `packages/scout-for-lol/packages/frontend/src/lib/marketing.ts`.
+- Gated `packages/scout-for-lol/packages/frontend/src/components/MarketingTracking.astro`
+  so the pixel loader is skipped cleanly when those optional IDs are absent.
+- Verified the frontend package with `bun run build`, `bun run lint`,
+  `bun run typecheck`, `bun run test`, and `bunx prettier --check` in the Scout
+  frontend workspace.
+
+### Remaining
+
+- Buildkite still needs a fresh run to reflect the pushed fixes.
+
+### Caveats
+
+- The only non-green items I saw locally were the existing Vite chunking
+  warnings during `astro build`; they did not fail the build.

@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 const MarketingTrackingEnvSchema = z.object({
-  PUBLIC_PINTEREST_TAG_ID: z.string().trim().min(1),
-  PUBLIC_REDDIT_PIXEL_ID: z.string().trim().min(1),
+  PUBLIC_PINTEREST_TAG_ID: z.string().trim().min(1).optional(),
+  PUBLIC_REDDIT_PIXEL_ID: z.string().trim().min(1).optional(),
 });
 
 export const CtaLocationSchema = z.enum([
