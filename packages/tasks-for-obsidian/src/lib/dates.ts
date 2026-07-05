@@ -2,8 +2,29 @@ function toStartOfDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-function parseDate(dateStr: string): Date {
+/**
+ * Parse a task date string into a local Date.
+ *
+ * Date-only strings ("YYYY-MM-DD") MUST be interpreted in local time: the
+ * platform `new Date("2026-07-10")` parses them as UTC midnight, and reading
+ * the local components then shifts the day backwards for any negative-UTC
+ * offset (a task due today classifies as overdue, tomorrow's shows as today).
+ * Full timestamps carry their own offset and are parsed as-is.
+ */
+export function parseLocalDate(dateStr: string): Date {
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+  if (dateOnly) {
+    return new Date(
+      Number(dateOnly[1]),
+      Number(dateOnly[2]) - 1,
+      Number(dateOnly[3]),
+    );
+  }
   return new Date(dateStr);
+}
+
+function parseDate(dateStr: string): Date {
+  return parseLocalDate(dateStr);
 }
 
 export function isToday(dateStr?: string): boolean {

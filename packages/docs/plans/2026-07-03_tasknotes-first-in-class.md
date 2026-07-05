@@ -165,3 +165,35 @@ Phase-specific: app phases — `bun run ios` builds + `bun run e2e` (Maestro, lo
 ## Docs discipline
 
 Mirror this plan to `packages/docs/plans/2026-07-03_tasknotes-first-in-class.md` before implementation; session summaries appended per phase; per-phase PRs reference the plan.
+
+## Session Log — 2026-07-03 (P2: offline-first sync rework)
+
+### Done
+
+All ten P2 build steps, on `feature/tasknotes-p2` (stacked on `feature/tasknotes-p0`), in `packages/tasks-for-obsidian`:
+
+- **Local-date fix (review #5)** — `lib/dates.ts` gains `parseLocalDate`; `use-tasks.ts` de-duplicated onto it; TZ tests (767cd6f31).
+- **Command model** — `src/data/sync/commands.ts`: absolute-state Command union, `applyCommand` pure rebase (create materializes), `remapTaskId`, `classify`, id/temp-id factories (b2e48c7c3).
+- **Persistence + migration** — `CommandQueue` (FIFO + dead-letter + create/delete squash), storage keys v2, `runMigrations` v0→v2 converting the legacy toggle queue (0786bea48).
+- **TaskStore** — `src/data/store/TaskStore.ts`: `view = rebase(base, pending)`, persisted temp→real aliases, `dispatch` never touches the network; `subscribe`/`getSnapshot` for `useSyncExternalStore` (41ecc6971).
+- **SyncEngine rework** — single-flight `requestSync()` with pass coalescing, FIFO drain with `X-Mutation-Id`, exponential backoff (1s→60s ±20% jitter, injectable scheduler/random), per-error classification: transient stops the drain, permanent dead-letters and continues, 404-on-delete = success, 401 → `auth_error` with no retry timer (41ecc6971).
+- **Client** — `TaskNotesClient` mutating methods take `{mutationId}` → `X-Mutation-Id`; `completeRecurringInstance(id, {date, completed})` set-semantics; `request()` params folded into an init object (41ecc6971).
+- **React cutover** — `TaskContext` rewritten onto the store (mutations are one-line dispatches; the enqueue + direct call + replay double-execution is deleted); `SyncContext` gains the foreground trigger via previously-unused `useAppState` (f58a2d6ae); `SyncEngine.dispose()` so a client swap can't leave a stale retry timer draining the queue (ea186254d).
+- **UI** — ConnectionBanner shows queued-change count offline and failed-change count; SettingsScreen gains a Sync section + Failed Changes review with Retry/Discard (41ecc6971).
+- **Tests** — harness reworked around the new stack (FakeServer dedups replayed mutation ids like the real P1 middleware; manual retry scheduler); `offline-scenarios.test.ts` covers subway crash/relaunch, exactly-once reconnect pile-up, crash-between-ack-and-dequeue replay, temp-ID chains, conflict rebase, retry classification, backoff schedule, 23:59 recurring tap, dead-letter review, engine disposal; `parseTaskCache` extracted + salvage tests (ba8ab8376). Old `MutationQueue`/`SyncEngine` and their tests deleted.
+- Verification: `tsc --noEmit` clean, 261 unit tests pass, `bun run test:contract` 18/18 vs the real spawned server, eslint + prettier clean.
+
+### Remaining
+
+- P2 PR review/merge; then TestFlight build (user-side). P0 PR #1388 must merge first (P2 is stacked on it).
+
+### E2E gate — green (7/7 flows + vault-byte asserts), first full pass ever
+
+Getting it green surfaced two real app bugs (QuickAdd's Create button hid behind the keyboard whenever the offline banner shifted the layout — KAV stale padding; ConnectionBanner's reanimated collapse never applied, leaving a stuck "Syncing..." bar) and four harness holes (stale server on the fixed port from an interrupted run silently adopted by later runs — THE root cause of the historic red; random Maestro flow order over a shared stateful vault; chaos-proxy offline state leaking across flows; delayed tip popovers swallowing taps). Fixes in 333c8bc34.
+
+### Caveats
+
+- `bun test` (bare) also picks up `contract-tests/` and fails without `../tasknotes-server` deps — use `bun run test` / `bun run test:contract`. In a fresh worktree the server needs its own `bun install` (not a workspace member) and the app needs `bun run pod-install` before e2e.
+- `ios/Podfile.lock` drifts by two prebuilt-pod checksums (hermes-engine, React-Core-prebuilt) after a fresh `pod install` in a new worktree — environment noise, left uncommitted.
+- v1→v2 queue migration maps `complete_instance` to `set_instance_complete{date: local day of enqueue timestamp, completed: true}` — best available record of the tapped day.
+- Aliases are pruned when the real id disappears from a server pull; UI surfaces holding a pruned temp id fall back to the id itself (task shows as gone — correct).
