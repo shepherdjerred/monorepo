@@ -36,7 +36,7 @@ appId: org.reactjs.native.example.TasksForObsidian
     visible:
       id: "tab-inbox"
     timeout: 60000
-- openLink: "tasknotes://e2e-config?apiUrl=${APP_URL}&token=${AUTH_TOKEN}"
+- openLink: "tasknotes://e2e-config?apiUrl=${APP_URL}&token=${AUTH_TOKEN}&tips=off"
 - runFlow:
     when:
       visible:

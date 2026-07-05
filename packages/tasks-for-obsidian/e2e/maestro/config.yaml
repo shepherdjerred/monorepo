@@ -1,0 +1,16 @@
+# Maestro workspace config.
+#
+# Flows MUST run in a fixed order: they share one server vault per suite run,
+# so later flows' expectations depend on earlier flows' mutations (e.g.
+# 02 completes the seeded open task). Without flowsOrder, Maestro picks its
+# own order and any state-sensitive assertion becomes a coin flip.
+executionOrder:
+  continueOnFailure: true
+  flowsOrder:
+    - 00-setup
+    - 01-create-task
+    - 02-complete-task
+    - 03-recurring-complete
+    - 04-edit-task
+    - 05-offline-queue
+    - 06-offline-crash-replay
