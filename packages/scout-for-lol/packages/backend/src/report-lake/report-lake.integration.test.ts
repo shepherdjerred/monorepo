@@ -32,6 +32,11 @@ const CountRowSchema = z.object({
   n: z.union([z.bigint(), z.number()]).transform(Number),
 });
 
+const ManifestSchema = z.object({
+  skippedMatches: z.number(),
+  skippedPrematches: z.number(),
+});
+
 async function loadMatchFixture(): Promise<RawMatch> {
   const fixtureUrl = new URL(
     "../league/model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json",
@@ -298,6 +303,45 @@ describe("compactor", () => {
       await runReportLakeFold({ prisma, lakeDir });
       const builds = await readdir(path.join(lakeDir, "builds"));
       expect(builds.length).toBeLessThanOrEqual(2);
+    } finally {
+      await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
+
+  test("fold skips malformed staging JSON and records skipped manifest counts", async () => {
+    const match = await loadMatchFixture();
+    const lakeDir = await makeLakeDir();
+    try {
+      const first = await runReportLakeRebuild({ prisma, lakeDir });
+      expect(first?.tier).toBe("rebuild");
+
+      const staged = await writeMatchStagingFile(lakeDir, match);
+      expect(staged).toBe(true);
+      const stagedFiles = await listStagingFiles(lakeDir, "matches");
+      expect(stagedFiles.length).toBe(1);
+      const stagedFile = stagedFiles[0];
+      if (stagedFile === undefined) {
+        throw new Error("staging file missing");
+      }
+      await Bun.write(stagedFile, '{"not-valid-json"\n');
+
+      const fold = await runReportLakeFold({ prisma, lakeDir });
+      expect(fold?.tier).toBe("fold");
+      expect(fold?.matchRows).toBe(0);
+      expect(fold?.skippedMatches).toBe(1);
+
+      const buildDir = await readCurrentBuildDir(lakeDir);
+      if (buildDir === undefined) {
+        throw new Error("no build dir");
+      }
+      const manifest = ManifestSchema.parse(
+        await Bun.file(path.join(buildDir, "manifest.json")).json(),
+      );
+      expect(manifest.skippedMatches).toBe(1);
+      expect(manifest.skippedPrematches).toBe(0);
+
+      const remainingFiles = await listStagingFiles(lakeDir, "matches");
+      expect(remainingFiles).toEqual(stagedFiles);
     } finally {
       await rm(lakeDir, { recursive: true, force: true });
     }

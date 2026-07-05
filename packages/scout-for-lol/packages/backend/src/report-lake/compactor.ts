@@ -155,18 +155,21 @@ async function writeAccountsParquet(
   } catch {
     // Fresh build dir: nothing to unlink.
   }
-  if (accounts.length > 0) {
-    await withDuckDBConnection(
-      async (session) => {
-        await session.run(
-          `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(ACCOUNT_LAKE_COLUMNS)})) TO '${parquetPath}' (FORMAT PARQUET)`,
-          [tmpPath],
-        );
-      },
-      { timeoutMs: COMPACTION_TIMEOUT_MS },
-    );
+  try {
+    if (accounts.length > 0) {
+      await withDuckDBConnection(
+        async (session) => {
+          await session.run(
+            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(ACCOUNT_LAKE_COLUMNS)})) TO '${parquetPath}' (FORMAT PARQUET)`,
+            [tmpPath],
+          );
+        },
+        { timeoutMs: COMPACTION_TIMEOUT_MS },
+      );
+    }
+  } finally {
+    await unlink(tmpPath);
   }
-  await unlink(tmpPath);
   return accounts.length;
 }
 
@@ -200,6 +203,7 @@ type StagingParseResult = {
   rowsByMonth: Map<string, object[]>;
   foldedIds: Set<string>;
   rows: number;
+  skipped: number;
 };
 
 async function readStagingRows(
@@ -211,6 +215,7 @@ async function readStagingRows(
   const rowsByMonth = new Map<string, object[]>();
   const foldedIds = new Set<string>();
   let rows = 0;
+  let skipped = 0;
 
   for (const file of await listStagingFiles(lakeDir, table)) {
     const stem = file
@@ -227,7 +232,13 @@ async function readStagingRows(
       if (line.trim().length === 0) {
         continue;
       }
-      const parsedLine: unknown = JSON.parse(line);
+      let parsedLine: unknown;
+      try {
+        parsedLine = JSON.parse(line);
+      } catch {
+        fileOk = false;
+        break;
+      }
       const parsed = schema.safeParse(parsedLine);
       if (!parsed.success) {
         fileOk = false;
@@ -239,6 +250,7 @@ async function readStagingRows(
       // Leave the file for the nightly rebuild path, which re-derives the
       // same data from the Stored* tables; count it so drift is visible.
       reportLakeCompactionSkippedTotal.inc({ table });
+      skipped += 1;
       logger.warn(`Staging file failed validation, leaving for rebuild`, {
         file,
       });
@@ -252,7 +264,7 @@ async function readStagingRows(
     }
     foldedIds.add(stem);
   }
-  return { rowsByMonth, foldedIds, rows };
+  return { rowsByMonth, foldedIds, rows, skipped };
 }
 
 async function writeFoldParquet(
@@ -273,16 +285,19 @@ async function writeFoldParquet(
     }
     await writer.close();
     const parquetPath = path.join(monthDir, `fold-${buildId}.parquet`);
-    await withDuckDBConnection(
-      async (session) => {
-        await session.run(
-          `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(columns)})) TO '${parquetPath}' (FORMAT PARQUET)`,
-          [tmpPath],
-        );
-      },
-      { timeoutMs: COMPACTION_TIMEOUT_MS },
-    );
-    await unlink(tmpPath);
+    try {
+      await withDuckDBConnection(
+        async (session) => {
+          await session.run(
+            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(columns)})) TO '${parquetPath}' (FORMAT PARQUET)`,
+            [tmpPath],
+          );
+        },
+        { timeoutMs: COMPACTION_TIMEOUT_MS },
+      );
+    } finally {
+      await unlink(tmpPath);
+    }
   }
 }
 
@@ -330,8 +345,8 @@ export async function runReportLakeFold(
       matchRows: stagedMatches.rows,
       prematchRows: stagedPrematches.rows,
       accountRows,
-      skippedMatches: 0,
-      skippedPrematches: 0,
+      skippedMatches: stagedMatches.skipped,
+      skippedPrematches: stagedPrematches.skipped,
     };
     await writeManifest(buildDir, summary);
     await publishBuild(lakeDir, buildId);
@@ -460,25 +475,28 @@ async function rebuildLocked(
   await prematchWriter.close();
 
   // --- NDJSON -> partitioned parquet ---
-  await withDuckDBConnection(
-    async (session) => {
-      if (matchWriter.rows > 0) {
-        await session.run(
-          `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_LAKE_COLUMNS)})) TO '${path.join(buildDir, "matches")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
-          [matchesTmp],
-        );
-      }
-      if (prematchWriter.rows > 0) {
-        await session.run(
-          `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(PREMATCH_LAKE_COLUMNS)})) TO '${path.join(buildDir, "prematch")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
-          [prematchTmp],
-        );
-      }
-    },
-    { timeoutMs: COMPACTION_TIMEOUT_MS },
-  );
-  await unlink(matchesTmp);
-  await unlink(prematchTmp);
+  try {
+    await withDuckDBConnection(
+      async (session) => {
+        if (matchWriter.rows > 0) {
+          await session.run(
+            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_LAKE_COLUMNS)})) TO '${path.join(buildDir, "matches")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
+            [matchesTmp],
+          );
+        }
+        if (prematchWriter.rows > 0) {
+          await session.run(
+            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(PREMATCH_LAKE_COLUMNS)})) TO '${path.join(buildDir, "prematch")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
+            [prematchTmp],
+          );
+        }
+      },
+      { timeoutMs: COMPACTION_TIMEOUT_MS },
+    );
+  } finally {
+    await unlink(matchesTmp);
+    await unlink(prematchTmp);
+  }
 
   const accountRows = await writeAccountsParquet(prisma, buildDir);
 
