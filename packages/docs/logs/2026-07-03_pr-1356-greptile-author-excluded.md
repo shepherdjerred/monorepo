@@ -6,7 +6,7 @@ summary: Fix wait-for-greptile to handle author-excluded skip reason (PR #1356)
 
 ## Status
 
-In Progress (CI running — waiting for build #4945)
+In Progress (CI running — waiting for build #5077)
 
 ## Context
 
@@ -93,6 +93,38 @@ in `scripts/ci/src/__tests__/wait-for-greptile.test.ts`.
 - The kubernetes v1.36.2 and the `"excluded-author"` fix are both already in main; this PR
   is effectively a no-op (no unique changes left) — the human may choose to close rather
   than merge it.
+
+## Session Log — 2026-07-05
+
+### Done
+
+- Identified 2 failing checks in build #4946:
+  1. `docker-build-temporal-worker` — timed out (exit -1 / signal: terminated) — caused by the
+     old 15-minute timeout ceiling; main already raised it to 45 min in `scripts/ci/src/steps/images.ts`
+  2. `packageheartbeat-build-plus-smoke-starlight-karma-bot` — `better-sqlite3` native bindings
+     missing for `node-v137-linux-x64`. Root cause: the previous merge (da382f27a, July 3 16:48 PDT)
+     happened BEFORE commit 9309d7b83 landed on main (July 3 23:05 PDT). That commit switches the
+     TypeORM DataSource from `type: "better-sqlite3"` to `type: "sqljs"` (pure-JS, Bun-compatible).
+- Merged main into the PR branch again (clean, no conflicts) to bring in:
+  - `fix(starlight-karma-bot)` (9309d7b83) — sql.js driver + removes better-sqlite3 dep
+  - `scripts/ci/src/steps/images.ts` 45-minute image-build timeout
+  - All other main changes (233 files, all unrelated to the k8s bump)
+- Pushed merge commit `67093ce75` to `origin/renovate/kubernetes-kubernetes-1.x`
+- Buildkite build #5077 scheduled
+
+### Remaining
+
+- Wait for build #5077 to complete and verify all checks green
+- Human decides merge (kubernetes version pins are notify-only per repo policy)
+
+### Caveats
+
+- The PR is effectively a no-op: the original kubectl version bump is already in main; the PR
+  now only brings that change's commit history. The human may choose to close rather than merge.
+- If the temporal-worker build still times out, the 45-min limit should be enough for a cached
+  rebuild; a fully cold build might need further investigation.
+- `bun run scripts/setup.ts` still fails in worktrees at `scout-for-lol generate` (bunx prisma
+  fetches broken latest Prisma). Workaround: `cd packages/scout-for-lol/packages/backend && bun install && bun run db:generate`
 
 ## Workflow Friction
 
