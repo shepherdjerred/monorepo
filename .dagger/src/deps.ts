@@ -56,7 +56,12 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   "sjer.red": ["eslint-config", "astro-opengraph-images", "webring"],
 
   // Homelab
-  homelab: ["eslint-config"],
+  homelab: [
+    // Own members first (workspace install filters [pkg, ...deps]).
+    "homelab/src/cdk8s",
+    "homelab/src/helm-types",
+    "eslint-config",
+  ],
   "homelab/src/cdk8s": ["eslint-config", "homelab/src/helm-types"],
   "homelab/src/helm-types": ["eslint-config"],
 
