@@ -2,14 +2,8 @@ import { describe, expect, test } from "bun:test";
 
 import { NetworkError } from "../../../domain/errors";
 import { taskId } from "../../../domain/types";
-import { MutationQueue } from "../MutationQueue";
-import {
-  FakeServer,
-  MemoryMutationStorage,
-  makeClock,
-  makeHarness,
-  makeTask,
-} from "./harness";
+import { CommandQueue } from "../CommandQueue";
+import { FakeServer, makeClock, makeHarness, makeTask } from "./harness";
 
 describe("FakeServer", () => {
   test("offline mode fails every call with ConnectionError", async () => {
@@ -66,7 +60,7 @@ describe("FakeServer", () => {
     if (list.ok) expect(list.value[0]?.title).toBe("Edited in Obsidian");
   });
 
-  test("completeRecurringInstance toggles clock-today (current server contract)", async () => {
+  test("completeRecurringInstance without a body toggles clock-today (legacy contract)", async () => {
     const clock = makeClock(new Date("2026-07-03T12:00:00").getTime());
     const server = new FakeServer(clock);
     const seeded = makeTask({ recurrence: "FREQ=DAILY" });
@@ -81,63 +75,115 @@ describe("FakeServer", () => {
     if (second.ok) expect(second.value.completeInstances).toEqual([]);
   });
 
+  test("completeRecurringInstance with a body sets absolute state (P1 contract)", async () => {
+    const server = new FakeServer(makeClock());
+    const seeded = makeTask({ recurrence: "FREQ=DAILY" });
+    server.seed(seeded);
+
+    const set = await server.completeRecurringInstance(seeded.id, {
+      date: "2026-07-01",
+      completed: true,
+    });
+    expect(set.ok).toBe(true);
+    if (set.ok) expect(set.value.completeInstances).toEqual(["2026-07-01"]);
+
+    // Setting the same state again is a no-op, not a toggle.
+    const again = await server.completeRecurringInstance(seeded.id, {
+      date: "2026-07-01",
+      completed: true,
+    });
+    expect(again.ok).toBe(true);
+    if (again.ok) expect(again.value.completeInstances).toEqual(["2026-07-01"]);
+
+    const unset = await server.completeRecurringInstance(seeded.id, {
+      date: "2026-07-01",
+      completed: false,
+    });
+    expect(unset.ok).toBe(true);
+    if (unset.ok) expect(unset.value.completeInstances).toEqual([]);
+  });
+
+  test("a replayed X-Mutation-Id returns the stored response without re-applying", async () => {
+    const server = new FakeServer(makeClock());
+    const first = await server.createTask(
+      { title: "Once" },
+      { mutationId: "mut-1" },
+    );
+    const replay = await server.createTask(
+      { title: "Once" },
+      { mutationId: "mut-1" },
+    );
+
+    expect(first.ok).toBe(true);
+    expect(replay.ok).toBe(true);
+    if (first.ok && replay.ok) {
+      expect(replay.value.id).toBe(first.value.id);
+    }
+    expect(server.tasks.size).toBe(1); // applied exactly once
+    expect(server.callCount("createTask")).toBe(2); // but called twice
+    expect(server.applyCount("createTask")).toBe(1);
+    expect(server.calls[1]?.replayed).toBe(true);
+  });
+
   test("call log records every call including failed and offline ones", async () => {
     const server = new FakeServer(makeClock());
     server.goOffline();
     await server.listTasks();
     server.goOnline();
-    await server.createTask({ title: "a" });
+    await server.createTask({ title: "a" }, { mutationId: "m1" });
     expect(server.callCount("listTasks")).toBe(1);
     expect(server.callCount("createTask")).toBe(1);
     expect(server.calls.map((c) => c.method)).toEqual([
       "listTasks",
       "createTask",
     ]);
+    expect(server.calls[1]?.mutationId).toBe("m1");
   });
 });
 
-async function deterministicScenario() {
+async function determinismScenario() {
   const harness = makeHarness();
-  harness.clock.advance(1000);
-  const first = await harness.queue.enqueue({
-    type: "delete",
-    taskId: taskId("TaskNotes/a.md"),
+  await harness.store.restore();
+  harness.server.seed(makeTask());
+  await harness.store.dispatch({ type: "create", payload: { title: "A" } });
+  await harness.store.dispatch({
+    type: "set_status",
+    taskId: taskId("TaskNotes/test.md"),
+    status: "done",
   });
-  harness.clock.advance(500);
-  const second = await harness.queue.enqueue({
-    type: "toggle_status",
-    taskId: taskId("TaskNotes/b.md"),
-    payload: { status: "done" },
-  });
-  return [first, second];
+  await harness.engine.syncNow();
+  return {
+    serverTasks: [...harness.server.tasks.entries()],
+    view: [...harness.store.getSnapshot().tasks.entries()],
+    pending: harness.store.getSnapshot().pendingCount,
+  };
 }
 
 describe("harness determinism", () => {
-  test("same scenario produces identical mutation ids and timestamps", async () => {
-    expect(await deterministicScenario()).toEqual(
-      await deterministicScenario(),
-    );
+  test("the same scenario converges to the identical end state", async () => {
+    expect(await determinismScenario()).toEqual(await determinismScenario());
   });
 });
 
 describe("crash simulation via storage snapshot", () => {
-  test("queue rebuilt from a snapshot restores pending mutations verbatim", async () => {
+  test("queue rebuilt from cloned storage restores pending commands verbatim", async () => {
     const harness = makeHarness();
+    await harness.store.restore();
     harness.server.goOffline();
-    await harness.queue.enqueue({
+    await harness.store.dispatch({
       type: "update",
       taskId: taskId("TaskNotes/a.md"),
       payload: { title: "Renamed offline" },
     });
-    await harness.queue.enqueue({
+    await harness.store.dispatch({
       type: "delete",
       taskId: taskId("TaskNotes/b.md"),
     });
     const before = [...harness.queue.pending];
 
     // Simulated crash: only durable state survives.
-    const relaunched = new MutationQueue(
-      MemoryMutationStorage.fromSnapshot(harness.storage.snapshot()),
+    const relaunched = new CommandQueue(
+      harness.queueStorage.clone(),
       harness.clock.now,
     );
     await relaunched.restore();
@@ -146,40 +192,45 @@ describe("crash simulation via storage snapshot", () => {
   });
 });
 
-describe("fullSync over the harness (current engine behavior)", () => {
+describe("sync over the harness", () => {
   test("drains the queue, pulls, caches, and stamps lastSyncTime from the clock", async () => {
     const harness = makeHarness();
+    await harness.store.restore();
     const seeded = makeTask();
     harness.server.seed(seeded);
-    await harness.queue.enqueue({
+    await harness.store.dispatch({
       type: "update",
       taskId: seeded.id,
       payload: { priority: "high" },
     });
 
     harness.clock.set(1_750_000_123_000);
-    const result = await harness.engine.fullSync();
+    const result = await harness.engine.syncNow();
 
     expect(result.ok).toBe(true);
     expect(harness.server.callCount("updateTask")).toBe(1);
     expect(harness.server.callCount("listTasks")).toBe(1);
     expect(harness.queue.isEmpty).toBe(true);
-    expect(harness.tasksSeen()[0]?.priority).toBe("high");
-    expect(harness.cache.snapshotTasks()[0]?.priority).toBe("high");
-    expect(await harness.cache.getLastSyncTime()).toBe(1_750_000_123_000);
+    const snap = harness.store.getSnapshot();
+    expect(snap.tasks.get(seeded.id)?.priority).toBe("high");
+    expect(snap.lastSyncTime).toBe(1_750_000_123_000);
+    expect(harness.engine.getStatus().state).toBe("idle");
   });
 
-  test("offline fullSync fails and leaves the queue intact", async () => {
+  test("offline sync fails, leaves the queue intact, and schedules a retry", async () => {
     const harness = makeHarness();
+    await harness.store.restore();
     harness.server.goOffline();
-    await harness.queue.enqueue({
+    await harness.store.dispatch({
       type: "delete",
       taskId: taskId("TaskNotes/a.md"),
     });
 
-    const result = await harness.engine.fullSync();
+    const result = await harness.engine.syncNow();
 
     expect(result.ok).toBe(false);
     expect(harness.queue.pending).toHaveLength(1);
+    expect(harness.engine.getStatus().state).toBe("backoff");
+    expect(harness.scheduler.pending()).toHaveLength(1);
   });
 });
