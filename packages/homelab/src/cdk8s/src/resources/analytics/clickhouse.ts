@@ -13,6 +13,7 @@ import {
   withCommonProps,
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { applyZfsVolumeSelinuxRelabeling } from "@shepherdjerred/homelab/cdk8s/src/misc/selinux.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
@@ -81,6 +82,7 @@ export function createClickHouseDeployment(chart: Chart) {
       },
     },
   });
+  applyZfsVolumeSelinuxRelabeling(deployment, "s0:c101,c201");
 
   deployment.addContainer(
     withCommonProps({
