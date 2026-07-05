@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress — changes made on branch `fix/torvalds-arc-ci-throttle`, not yet merged or applied to the node.
+Applied live to `torvalds` 2026-07-05 (PR #1414 open for the durable repo record; not yet merged).
 
 Follow-up to the facts-only investigation in
 [`2026-07-05_torvalds-ci-freeze-investigation.md`](./2026-07-05_torvalds-ci-freeze-investigation.md).
@@ -63,6 +63,27 @@ Buildkite `max-in-flight=24` allowed high peak concurrency.
    `kubectl get node torvalds -o jsonpath='{.status.allocatable.memory}'` should drop from
    ~130846352Ki to ~68–69 GiB, and
    `kubectl get --raw /api/v1/nodes/torvalds/proxy/configz` should show systemReserved 56Gi.
+
+## Applied live 2026-07-05 (no reboot)
+
+Both patches applied with `talosctl patch machineconfig` — talosctl reported "Applied
+configuration without a reboot" for each; node stayed up (age 411d, never rebooted), only
+kubelet restarted (~1s service restart).
+
+- **Kubelet** (`@src/talos/patches/kubelet.yaml`): `configz` now shows
+  `systemReserved={cpu:4, memory:56Gi}`, `kubeReserved={cpu:1, memory:2Gi}`,
+  `evictionHard={memory.available:2Gi, nodefs.available:10%}`. Node `allocatable` memory
+  dropped 130846352Ki → **68558480Ki (65.4 GiB)**, cpu 31950m → **27**. kubelet/apid/etcd
+  Running/OK. No pods evicted or OOM-killed (node was calm: MemFree 13 GB, 1 CI pod).
+- **ARC** (minimal `machine.sysfs` patch — runtime-writable, avoids applying image.yaml's
+  install block): live `/sys/module/zfs/parameters/zfs_arc_max` and arcstats `c_max` both
+  now **51539607552 (48 GiB)**. No reboot: ZFS accepted the tunable at runtime. Current ARC
+  size ~12.7 GiB (already below the cap, so nothing to evict — the cap just bounds future
+  growth). The kernel-module `parameters` form in zfs.yaml is boot-time only and was NOT
+  applied live by design; the sysfs path handles runtime.
+
+Both changes are persisted in the live machineconfig, so they survive a reboot. PR #1414
+remains the durable repo record; merge it so repo == node.
 
 ## Meta-problem: repo↔node config drift (recommend a follow-up)
 
