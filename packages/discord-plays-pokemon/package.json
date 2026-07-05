@@ -12,26 +12,10 @@
     "typecheck": "bun run --filter '*' typecheck",
     "e2e:goal": "bun test --filter '@discord-plays-pokemon/backend' packages/backend/src/goal/e2e-goal.integration.test.ts"
   },
-  "workspaces": [
-    "packages/common",
-    "packages/backend",
-    "packages/frontend"
-  ],
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@typescript-eslint/utils": "^8.59.3",
     "jiti": "^2.7.0"
   },
-  "dependencies": {},
-  "overrides": {
-    "js-cookie": "3.0.7",
-    "tmp": "0.2.6"
-  },
-  "trustedDependencies": [
-    "@lng2004/node-datachannel",
-    "node-av",
-    "@snazzah/davey",
-    "sharp",
-    "@sentry/profiling-node"
-  ]
+  "dependencies": {}
 }

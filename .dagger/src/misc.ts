@@ -153,8 +153,9 @@ export async function smokeTestScoutForLolHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  repoRoot: Directory | null = null,
 ): Promise<string> {
-  const container = buildScoutImageHelper(pkgDir, depNames, depDirs)
+  const container = buildScoutImageHelper(pkgDir, depNames, depDirs, "dev", "unknown", repoRoot)
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
     .withEnvVariable("APPLICATION_ID", "000000000000000000")
     .withEnvVariable("RIOT_API_KEY", "smoke-test-dummy")
@@ -182,8 +183,9 @@ export async function smokeTestStreambotHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  repoRoot: Directory | null = null,
 ): Promise<string> {
-  const container = buildImageHelper(pkgDir, "streambot", depNames, depDirs)
+  const container = buildImageHelper(pkgDir, "streambot", depNames, depDirs, "dev", "unknown", false, false, repoRoot)
     .withEnvVariable("BOT_TOKEN", "smoke-test-dummy")
     .withEnvVariable("USER_TOKENS", "smoke-test-dummy")
     .withEnvVariable("ADMIN_IDS", "000000000000000000")
@@ -226,10 +228,11 @@ export async function e2eStreambotHelper(
   videoChannelId: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   // USER_TOKENS is the real config (a single-token pool); E2E_* pin the voice channel the unattended
   // test joins (production joins the requester's current VC, which a headless test can't set).
-  const container = buildImageHelper(pkgDir, "streambot", depNames, depDirs)
+  const container = buildImageHelper(pkgDir, "streambot", depNames, depDirs, "dev", "unknown", false, false, repoRoot)
     .withSecretVariable("BOT_TOKEN", botToken)
     .withSecretVariable("USER_TOKENS", userToken)
     .withEnvVariable("E2E_GUILD_ID", guildId)
@@ -250,6 +253,7 @@ export async function smokeTestBirmelHelper(
   pkg: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   const container = buildImageHelper(
     pkgDir,
@@ -260,6 +264,7 @@ export async function smokeTestBirmelHelper(
     /* gitSha */ "unknown",
     /* usePrisma */ true,
     /* installEditorClis */ true,
+    repoRoot,
   )
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
     .withEnvVariable("DISCORD_CLIENT_ID", "smoke-test-dummy")
@@ -316,8 +321,9 @@ export async function smokeTestStarlightKarmaBotHelper(
   pkg: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  repoRoot: Directory | null = null,
 ): Promise<string> {
-  const container = buildImageHelper(pkgDir, pkg, depNames, depDirs)
+  const container = buildImageHelper(pkgDir, pkg, depNames, depDirs, "dev", "unknown", false, false, repoRoot)
     .withEnvVariable("DISCORD_TOKEN", "smoke-test-dummy")
     .withEnvVariable("APPLICATION_ID", "000000000000000000")
     .withEnvVariable("DATA_DIR", "/tmp/smoke-data")
@@ -343,8 +349,9 @@ export async function smokeTestTasknotesServerHelper(
   pkg: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  repoRoot: Directory | null = null,
 ): Promise<string> {
-  const container = buildImageHelper(pkgDir, pkg, depNames, depDirs)
+  const container = buildImageHelper(pkgDir, pkg, depNames, depDirs, "dev", "unknown", false, false, repoRoot)
     .withEnvVariable("VAULT_PATH", "/tmp/smoke-vault")
     .withEnvVariable("AUTH_TOKEN", "smoke-test-token")
     .withEnvVariable("PORT", "3000")
@@ -507,6 +514,7 @@ export async function smokeTestDiscordPlaysPokemonHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   // Minimal config.toml that passes Zod validation but uses dummy tokens
   const configToml = `
@@ -585,6 +593,9 @@ enabled = false
     pkgDir,
     depNames,
     depDirs,
+    "dev",
+    "unknown",
+    repoRoot,
   )
     .withEntrypoint([])
     // The app runs from the inner-monorepo root (see the image build), so
@@ -620,6 +631,7 @@ export async function smokeTestDiscordPlaysMarioKartHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   // Minimal config.toml that passes Zod validation but uses dummy tokens.
   // emulator disabled (no ROM available in CI); stream enabled so the selfbot
@@ -682,6 +694,9 @@ enabled = false
     pkgDir,
     depNames,
     depDirs,
+    "dev",
+    "unknown",
+    repoRoot,
   )
     .withEntrypoint([])
     // The app runs from the inner-monorepo root (see the image build), so
@@ -724,8 +739,9 @@ export async function smokeTestTrmnlDashboardHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  repoRoot: Directory | null = null,
 ): Promise<string> {
-  const container = buildTrmnlDashboardImageHelper(pkgDir, depNames, depDirs)
+  const container = buildTrmnlDashboardImageHelper(pkgDir, depNames, depDirs, "dev", "unknown", repoRoot)
     .withEnvVariable("TRMNL_API_KEY", "smoke-test-dummy")
     .withEnvVariable("HA_TOKEN", "smoke-test-dummy")
     .withEnvVariable("HA_URL", "http://127.0.0.1:9999")

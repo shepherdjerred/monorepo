@@ -39,7 +39,7 @@
     "@prisma/adapter-libsql": "7.8.0",
     "@prisma/client": "^7.8.0",
     "@sentry/bun": "^10.49.0",
-    "@shepherdjerred/llm-observability": "file:../llm-observability",
+    "@shepherdjerred/llm-observability": "workspace:*",
     "@snazzah/davey": "^0.1.11",
     "@voltagent/core": "^2.7.4",
     "@voltagent/libsql": "^2.1.2",
@@ -58,7 +58,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "^1.3.13",
     "@typescript-eslint/utils": "^8.59.3",
     "eslint": "^10.3.0",
@@ -66,12 +66,7 @@
     "prisma": "^7.8.0",
     "typescript": "^6.0.3"
   },
-  "overrides": {
-    "@opentelemetry/api": "1.9.1",
-    "axios": "1.16.1",
-    "fast-uri": "3.1.2",
-    "protobufjs": "8.3.0",
-    "esbuild": "0.28.1",
-    "@grpc/grpc-js": "1.14.4"
+  "imports": {
+    "#generated/*": "./generated/*"
   }
 }

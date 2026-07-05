@@ -61,7 +61,7 @@ export async function ciAllHelper(source: Directory): Promise<string> {
   // Run all TS packages in parallel
   for (const pkg of tsPackages) {
     const { pkgDir, depNames, depDirs } = dirsFor(pkg);
-    const base = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig);
+    const base = bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig, [], source);
     allChecks.push(
       check(
         `${pkg}: lint`,
@@ -108,6 +108,8 @@ export async function ciAllHelper(source: Directory): Promise<string> {
     scoutInfo.depNames,
     scoutInfo.depDirs,
     tsconfig,
+    [],
+    source,
   )
     .withExec(["bun", "run", "generate"])
     .directory("/workspace");

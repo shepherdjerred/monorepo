@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
-    "@scout-for-lol/data": "file:../data",
+    "@scout-for-lol/data": "workspace:*",
     "chroma-js": "^3.2.0",
     "echarts": "^6.0.0",
     "react": "19.2.6",
@@ -55,8 +55,5 @@
   },
   "imports": {
     "#src/*": "./src/*"
-  },
-  "patchedDependencies": {
-    "satori@0.18.3": "patches/satori@0.18.3.patch"
   }
 }

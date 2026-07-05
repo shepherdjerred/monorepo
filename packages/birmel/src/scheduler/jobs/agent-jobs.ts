@@ -1,4 +1,4 @@
-import type { AgentJob, ScheduledTask } from "@prisma/client";
+import type { AgentJob, ScheduledTask } from "#generated/prisma/client/index.js";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { handleSend } from "@shepherdjerred/birmel/agent-tools/tools/discord/message-actions.ts";

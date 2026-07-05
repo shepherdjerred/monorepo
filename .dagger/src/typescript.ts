@@ -18,8 +18,9 @@ export function lintHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
+  repoRoot: Directory | null = null,
 ): Container {
-  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig, [], repoRoot)
     .withMountedCache(
       `/workspace/packages/${pkg}/.eslintcache`,
       dag.cacheVolume(ESLINT_CACHE),
@@ -34,8 +35,9 @@ export function typecheckHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
+  repoRoot: Directory | null = null,
 ): Container {
-  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig).withExec([
+  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig, [], repoRoot).withExec([
     "bun",
     "run",
     "typecheck",
@@ -49,8 +51,9 @@ export function buildHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
+  repoRoot: Directory | null = null,
 ): Container {
-  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig).withExec([
+  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig, [], repoRoot).withExec([
     "bun",
     "run",
     "build",
@@ -65,6 +68,7 @@ export function testHelper(
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
   needsHelm = false,
+  repoRoot: Directory | null = null,
 ): Container {
   let container = bunBaseContainer(
     pkgDir,
@@ -72,6 +76,8 @@ export function testHelper(
     depNames,
     depDirs,
     tsconfig,
+    [],
+    repoRoot,
   ).withEnvVariable("CI", "true");
   if (needsHelm) {
     const helmBinary = dag.container().from(HELM_IMAGE).file("/usr/bin/helm");
@@ -87,8 +93,9 @@ export function generateContainer(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
+  repoRoot: Directory | null = null,
 ): Container {
-  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig, [], repoRoot)
     .withWorkdir(`/workspace/packages/${pkg}`)
     .withExec(["bun", "run", "generate"]);
 }
@@ -108,6 +115,7 @@ export function generateContainerWithSecrets(
   tsconfig: File | null = null,
   haUrl: Secret | null = null,
   haToken: Secret | null = null,
+  repoRoot: Directory | null = null,
 ): Container {
   let container = bunBaseContainer(
     pkgDir,
@@ -115,6 +123,8 @@ export function generateContainerWithSecrets(
     depNames,
     depDirs,
     tsconfig,
+    [],
+    repoRoot,
   ).withWorkdir(`/workspace/packages/${pkg}`);
   if (haUrl !== null) {
     container = container.withSecretVariable("HA_URL", haUrl);
@@ -134,6 +144,7 @@ export function generateAndTypecheckWithSecretsHelper(
   tsconfig: File | null = null,
   haUrl: Secret | null = null,
   haToken: Secret | null = null,
+  repoRoot: Directory | null = null,
 ): Container {
   return generateContainerWithSecrets(
     pkgDir,
@@ -143,6 +154,7 @@ export function generateAndTypecheckWithSecretsHelper(
     tsconfig,
     haUrl,
     haToken,
+    repoRoot,
   ).withExec(["bun", "run", "typecheck"]);
 }
 
@@ -153,8 +165,9 @@ export function generateAndLintHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
+  repoRoot: Directory | null = null,
 ): Container {
-  return generateContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+  return generateContainer(pkgDir, pkg, depNames, depDirs, tsconfig, repoRoot)
     .withMountedCache(
       `/workspace/packages/${pkg}/.eslintcache`,
       dag.cacheVolume(ESLINT_CACHE),
@@ -169,8 +182,9 @@ export function generateAndTypecheckHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
+  repoRoot: Directory | null = null,
 ): Container {
-  return generateContainer(pkgDir, pkg, depNames, depDirs, tsconfig).withExec([
+  return generateContainer(pkgDir, pkg, depNames, depDirs, tsconfig, repoRoot).withExec([
     "bun",
     "run",
     "typecheck",
@@ -184,8 +198,9 @@ export function generateAndTestHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
+  repoRoot: Directory | null = null,
 ): Container {
-  return generateContainer(pkgDir, pkg, depNames, depDirs, tsconfig).withExec([
+  return generateContainer(pkgDir, pkg, depNames, depDirs, tsconfig, repoRoot).withExec([
     "bun",
     "run",
     "test",
@@ -220,12 +235,13 @@ export async function lintTypecheckTestHelper(
   includeAstroBuild = false,
   includeBuild = false,
   skipTest = false,
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   const useTypecheckSecrets = haUrl !== null || haToken !== null;
   const children: { name: string; run: () => Promise<string> }[] = [
     {
       name: "lint",
-      run: () => lintHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
+      run: () => lintHelper(pkgDir, pkg, depNames, depDirs, tsconfig, repoRoot).stdout(),
     },
     {
       name: "typecheck",
@@ -239,8 +255,9 @@ export async function lintTypecheckTestHelper(
               tsconfig,
               haUrl,
               haToken,
+              repoRoot,
             ).stdout()
-          : typecheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
+          : typecheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig, repoRoot).stdout(),
     },
   ];
   if (!skipTest) {
@@ -258,6 +275,7 @@ export async function lintTypecheckTestHelper(
           depDirs,
           tsconfig,
           needsHelm,
+          repoRoot,
         ).stdout(),
     });
   }
@@ -265,7 +283,7 @@ export async function lintTypecheckTestHelper(
     children.push({
       name: "astro-check",
       run: () =>
-        astroCheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
+        astroCheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig, repoRoot).stdout(),
     });
   }
   if (includeAstroBuild) {
@@ -278,13 +296,14 @@ export async function lintTypecheckTestHelper(
           depNames,
           depDirs,
           tsconfig,
+          repoRoot,
         ).stdout(),
     });
   }
   if (includeBuild) {
     children.push({
       name: "build",
-      run: () => buildHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
+      run: () => buildHelper(pkgDir, pkg, depNames, depDirs, tsconfig, repoRoot).stdout(),
     });
   }
   return runBundle(children);
@@ -302,6 +321,7 @@ export async function generateAndLintTypecheckTestHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   return runBundle([
     {
@@ -313,6 +333,7 @@ export async function generateAndLintTypecheckTestHelper(
           depNames,
           depDirs,
           tsconfig,
+          repoRoot,
         ).stdout(),
     },
     {
@@ -324,6 +345,7 @@ export async function generateAndLintTypecheckTestHelper(
           depNames,
           depDirs,
           tsconfig,
+          repoRoot,
         ).stdout(),
     },
     {
@@ -335,6 +357,7 @@ export async function generateAndLintTypecheckTestHelper(
           depNames,
           depDirs,
           tsconfig,
+          repoRoot,
         ).stdout(),
     },
   ]);

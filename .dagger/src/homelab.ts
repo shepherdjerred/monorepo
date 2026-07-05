@@ -15,6 +15,7 @@ export function homelabSynthHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
+  repoRoot: Directory | null = null,
 ): Directory {
   return bunBaseContainer(
     pkgDir,
@@ -22,6 +23,8 @@ export function homelabSynthHelper(
     depNames,
     depDirs,
     tsconfig,
+    [],
+    repoRoot,
   )
     .withExec(["bun", "run", "build"])
     .directory("/workspace/packages/homelab/src/cdk8s/dist");
@@ -44,6 +47,7 @@ export function helmTypesDriftCheckHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
+  repoRoot: Directory | null = null,
 ): Container {
   const helmBinary = dag.container().from(HELM_IMAGE).file("/usr/bin/helm");
   return bunBaseContainer(
@@ -52,6 +56,8 @@ export function helmTypesDriftCheckHelper(
     depNames,
     depDirs,
     tsconfig,
+    [],
+    repoRoot,
   )
     .withFile("/usr/local/bin/helm", helmBinary)
     .withExec(["bun", "run", "generate-helm-types", "--check"]);
@@ -68,6 +74,7 @@ export function homelabOnePasswordLintHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
+  repoRoot: Directory | null = null,
 ): Container {
   return bunBaseContainer(
     pkgDir,
@@ -75,6 +82,8 @@ export function homelabOnePasswordLintHelper(
     depNames,
     depDirs,
     tsconfig,
+    [],
+    repoRoot,
   ).withExec(["bun", "run", "scripts/check-1password-items.ts"]);
 }
 
@@ -90,6 +99,7 @@ export async function homelabCdk8sBundleHelper(
   depNames: string[],
   depDirs: Directory[],
   tsconfig: File | null,
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   const synthContainer = bunBaseContainer(
     pkgDir,
@@ -97,12 +107,15 @@ export async function homelabCdk8sBundleHelper(
     depNames,
     depDirs,
     tsconfig,
+    [],
+    repoRoot,
   ).withExec(["bun", "run", "build"]);
   const opLint = homelabOnePasswordLintHelper(
     pkgDir,
     depNames,
     depDirs,
     tsconfig,
+    repoRoot,
   );
   return runBundle([
     { name: "cdk8s-synth", run: () => synthContainer.stdout() },

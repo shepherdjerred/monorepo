@@ -52,7 +52,7 @@ function annotatedDaggerScan(
  * `large-file-check`, `dagger-hygiene` (soft-fail, kept separate for
  * granular soft-fail tracking), `greptile-review` (PR-only),
  * `caddyfile-validate`, `tunnel-dns-coverage`, `talos-schematic-sync` (each
- * gated by file change-detection), `bun-lock-drift-check` (runtime `--seeds`
+ * gated by file change-detection) (runtime `--seeds`
  * arg derived from change-detection).
  */
 export function qualityBundleStep(): BuildkiteStep {
@@ -138,33 +138,6 @@ export function semgrepScanStep(): BuildkiteStep {
     timeoutMinutes: 15,
     softFail: true,
     artifactPaths: ["/tmp/semgrep.txt"],
-  });
-}
-
-/**
- * Per-package `bun.lock` drift gate — takes the directly-changed seed
- * packages, expands the `file:`-dep reverse closure inside the script (using
- * a **nested-workspace-aware** graph), then runs `bun install
- * --frozen-lockfile --dry-run` across the closure. Catches the class of
- * drift where a Renovate PR regenerates one workspace's `bun.lock` but
- * leaves a `file:`-dependent workspace's `bun.lock` stale (see PR #1213 →
- * discord-plays-pokemon post-mortem). Pairs with `lockfileCheckStep`, which
- * only validates the root `bun.lock`.
- *
- * Why seeds (not the pre-computed closure): the CI change detector's
- * `transitiveClosure` reads only top-level `packages/<X>/package.json`, so a
- * `file:` edge declared in a nested workspace (e.g. dpp's
- * `packages/backend/package.json` depending on `llm-observability`) is
- * invisible to it. Passing the raw seeds and re-expanding in-script with a
- * nested-aware graph fixes that miss.
- */
-export function bunLockDriftCheckStep(seeds: string[]): BuildkiteStep {
-  const list = seeds.slice().sort().join(",");
-  return daggerStep({
-    label: ":lock: Lockfile Drift Check",
-    key: "bun-lock-drift-check",
-    daggerCmd: `${DAGGER_CALL} bun-lock-drift-check --source ${REPO_GIT_REF} --seeds ${list}`,
-    timeoutMinutes: 5,
   });
 }
 

@@ -23,7 +23,7 @@
     "lint": "eslint ."
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "latest",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",

@@ -1,6 +1,14 @@
 # AGENTS.md
 
-Bun workspaces monorepo. Use `bun` commands exclusively (never npm/yarn/pnpm).
+Bun workspaces monorepo — a single root workspace (`workspaces` in the root
+package.json), ONE root `bun.lock`, and the **isolated linker** (root
+`bunfig.toml`): strict per-instance dependency/peer resolution, so phantom
+deps and hoisting split-brain cannot happen. Internal deps use `workspace:*`
+(live symlinks — no copy staleness, no per-package lockfile drift). `bun
+install` once at the root covers every package. Optional per-machine speedup:
+`globalStore = true` in `~/.bunfig.toml` (deliberately NOT committed — parallel
+CI installs against a shared store hit oven-sh/bun#12917).
+Use `bun` commands exclusively (never npm/yarn/pnpm).
 
 ## Structure
 
@@ -15,7 +23,7 @@ packages/
 ├── discord-plays-pokemon/      # Discord Plays Pokemon (headless emulator + Go-Live stream)
 ├── docs/                       # AI-maintained monorepo documentation
 ├── dotfiles/                   # Dotfiles & shell config (chezmoi source)
-├── eslint-config/              # Shared ESLint rules (npm)
+├── eslint-config/              # Shared ESLint flat config (workspace-internal)
 ├── fonts/                      # Custom fonts
 ├── home-assistant/             # Type-safe Home Assistant client + codegen
 ├── homelab/                    # Homelab infrastructure (K8s, cdk8s, Tofu)
@@ -231,7 +239,7 @@ Run `bun run scripts/setup.ts` after cloning or pulling changes that modify depe
 The setup script runs 5 phases:
 
 1. **Tools** — `mise trust` for repo configs, `mise install`, and optional tool warnings
-2. **Dependencies** — root + per-package `bun install --frozen-lockfile`
+2. **Dependencies** — one workspace-wide `bun install --frozen-lockfile`
 3. **Shared Builds** — eslint-config, webring, astro-opengraph-images, discord-video-stream, helm-types
 4. **Code Generation** — Prisma (birmel, scout-for-lol, discord-plays-mario-kart). Helm value types are **not** regenerated here: the committed types in `packages/homelab/src/cdk8s/generated/helm` are the source of truth, refreshed weekly by the `helm-types-weekly-refresh` Temporal schedule (which opens a PR if they drifted).
 5. **Verify** — checks critical build artifacts exist

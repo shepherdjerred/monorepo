@@ -55,7 +55,7 @@ export const DAGGER_MOD_REF = `github.com/shepherdjerred/monorepo/.dagger@$BUILD
 
 /** Canonical `dagger call` prefix for BK steps. Use everywhere instead of
  *  bare `dagger call`. */
-export const DAGGER_CALL = `dagger -m ${DAGGER_MOD_REF} call`;
+export const DAGGER_CALL = `dagger -m ${DAGGER_MOD_REF} call --repo-root "${REPO_GIT_REF}"`;
 
 /** Standard retry configuration for CI steps. */
 export const RETRY = {

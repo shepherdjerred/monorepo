@@ -1,6 +1,8 @@
 /**
- * Workspace dependency map: for each package, the list of other packages
- * that must be present in the container for file: deps to resolve.
+ * Workspace dependency map: for each package, the list of other members
+ * that must be mounted (full source) in the container so `workspace:*` deps
+ * resolve; everything else is present as manifest-only stubs (workspaceMeta).
+ * Also drives the `--filter` list for the root workspace install.
  *
  * Used by both the Dagger module (to mount deps) and the CI pipeline
  * generator (to produce --dep-names / --dep-dirs flags).
@@ -63,6 +65,11 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   // file:../../../discord-stream-lifecycle, which resolves to the dep mounted
   // at /workspace/packages/discord-stream-lifecycle.
   "discord-plays-pokemon": [
+    // Own members first: the workspace install filters [pkg, ...deps], so the
+    // parent target must list them for member deps to materialize.
+    "discord-plays-pokemon/packages/backend",
+    "discord-plays-pokemon/packages/common",
+    "discord-plays-pokemon/packages/frontend",
     "eslint-config",
     "discord-video-stream",
     "discord-stream-lifecycle",
@@ -70,11 +77,25 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
     "llm-observability",
   ],
   "discord-plays-mario-kart": [
+    "discord-plays-mario-kart/packages/backend",
+    "discord-plays-mario-kart/packages/common",
+    "discord-plays-mario-kart/packages/frontend",
     "eslint-config",
     "discord-video-stream",
     "discord-stream-lifecycle",
   ],
-  "scout-for-lol": ["eslint-config", "llm-models", "llm-observability"],
+  "scout-for-lol": [
+    "scout-for-lol/packages/app",
+    "scout-for-lol/packages/backend",
+    "scout-for-lol/packages/data",
+    "scout-for-lol/packages/desktop",
+    "scout-for-lol/packages/frontend",
+    "scout-for-lol/packages/report",
+    "scout-for-lol/packages/ui",
+    "eslint-config",
+    "llm-models",
+    "llm-observability",
+  ],
   "scout-for-lol/packages/data": ["llm-models"],
   "scout-for-lol/packages/frontend": [
     "eslint-config",

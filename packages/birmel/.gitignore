@@ -3,3 +3,6 @@ data/*
 !data/.gitkeep
 data/screenshots/*
 !data/screenshots/.gitkeep
+
+# Generated Prisma client — codegen output, never committed.
+generated/

@@ -40,12 +40,8 @@
   "devDependencies": {
     "@types/bun": "^1.3.13",
     "@types/fluent-ffmpeg": "^2.1.28",
+    "@types/node": "^25",
     "discord.js-selfbot-v13": "^3.7.1",
     "typescript": "^6.0.3"
-  },
-  "trustedDependencies": [
-    "@lng2004/node-datachannel",
-    "node-av",
-    "node-datachannel"
-  ]
+  }
 }

@@ -14,8 +14,9 @@ export function astroCheckHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
+  repoRoot: Directory | null = null,
 ): Container {
-  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig).withExec([
+  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig, [], repoRoot).withExec([
     "bunx",
     "astro",
     "check",
@@ -29,6 +30,7 @@ export function astroBuildHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
+  repoRoot: Directory | null = null,
 ): Directory {
   return astroBuildContainerHelper(
     pkgDir,
@@ -50,8 +52,9 @@ export function astroBuildContainerHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
+  repoRoot: Directory | null = null,
 ): Container {
-  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig, [], repoRoot)
     .withExec(["bunx", "playwright", "install", "--with-deps", "chromium"])
     .withExec(["bunx", "astro", "build"]);
 }
@@ -63,8 +66,9 @@ export function viteBuildHelper(
   depNames: string[] = [],
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
+  repoRoot: Directory | null = null,
 ): Directory {
-  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig)
+  return bunBaseContainer(pkgDir, pkg, depNames, depDirs, tsconfig, [], repoRoot)
     .withExec(["bunx", "vite", "build"])
     .directory(`/workspace/packages/${pkg}/dist`);
 }

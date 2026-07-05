@@ -37,9 +37,9 @@
     "@opentelemetry/sdk-node": "^0.218.0",
     "@opentelemetry/semantic-conventions": "^1.40.0",
     "@sentry/bun": "^10.49.0",
-    "@shepherdjerred/home-assistant": "file:../home-assistant",
-    "@shepherdjerred/llm-models": "file:../llm-models",
-    "@shepherdjerred/llm-observability": "file:../llm-observability",
+    "@shepherdjerred/home-assistant": "workspace:*",
+    "@shepherdjerred/llm-models": "workspace:*",
+    "@shepherdjerred/llm-observability": "workspace:*",
     "@temporalio/activity": "1.17.2",
     "@temporalio/client": "1.17.2",
     "@temporalio/common": "1.17.2",
@@ -59,7 +59,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@tsconfig/node-lts": "^24.0.0",
     "@tsconfig/recommended": "^1.0.13",
     "@temporalio/testing": "1.17.2",
@@ -68,10 +68,5 @@
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3"
-  },
-  "overrides": {
-    "@grpc/grpc-js": "1.14.4",
-    "sanitize-html": "^2.17.4",
-    "protobufjs": "^7.5.7"
   }
 }

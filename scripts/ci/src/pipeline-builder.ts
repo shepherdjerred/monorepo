@@ -23,7 +23,6 @@ import {
   tunnelDnsCoverageStep,
   talosSchematicSyncStep,
   caddyfileValidateStep,
-  bunLockDriftCheckStep,
   greptileReviewStep,
 } from "./steps/quality.ts";
 import { releasePleaseStep } from "./steps/release.ts";
@@ -167,38 +166,18 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   }
 
   // --- Quality gates (blocking — must pass before releases) ---
-  // The per-package `bun.lock` drift gate runs only when there's a scoped
-  // affected set with at least one directly-changed package: on `buildAll`,
-  // every per-package Dagger job already runs `bun install --frozen-lockfile`
-  // so the gate adds no signal; on the no-changes path we short-circuited
-  // above. For scoped Renovate-style PRs the gate is the fastest signal we
-  // get on transitive `file:`-dep drift.
-  //
-  // We pass `affected.directlyChanged` (the diff-seeds), NOT `packages` (the
-  // closure). `change-detection.transitiveClosure` only reads top-level
-  // `packages/<X>/package.json`, so a nested-workspace edge — like dpp's
-  // `file:../../../llm-observability` in
-  // `packages/discord-plays-pokemon/packages/backend/package.json` — is
-  // invisible to it. The drift script re-expands the closure using a
-  // nested-aware graph (`--seeds` mode), so dpp gets pulled in when
-  // `llm-observability` is bumped, which is exactly the PR #1213 scenario
-  // this gate was built to catch.
-  const driftSeeds = [...affected.directlyChanged].sort();
-  const driftGate: BuildkiteStep[] =
-    !affected.buildAll && driftSeeds.length > 0
-      ? [bunLockDriftCheckStep(driftSeeds)]
-      : [];
   // 15 source-only blocking checks (shellcheck, ratchet, todos, compliance,
   // gitleaks, suppression, env-var-names, line-endings, scout-test-template,
   // migration-guard, merge-conflict, react-version-sync, lockfile-check,
   // prettier, markdownlint) collapse into one bundled BK pod via
   // `qualityBundle`. The bundle's Dagger function fans them out in parallel
   // with Promise.all on sibling containers — the engine de-dups the shared
-  // source fetch by SHA. driftGate stays separate (runtime --seeds arg);
-  // greptile stays separate (PR-only authenticated review wait).
+  // source fetch by SHA. greptile stays separate (PR-only authenticated
+  // review wait). The per-package bun.lock drift gate is GONE: one root
+  // workspace lockfile makes the PR #1213 drift class structurally
+  // impossible (root lockfile-check covers it).
   const blockingGates = [
     qualityBundleStep(),
-    ...driftGate,
     ...(pullRequestBuild ? [greptileReviewStep()] : []),
   ];
   for (const gate of blockingGates) {

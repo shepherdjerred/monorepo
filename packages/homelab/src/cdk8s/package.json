@@ -28,11 +28,11 @@
     "remeda": "^2.33.7",
     "ts-pattern": "^5.9.0",
     "zod": "^4.4.3",
-    "@shepherdjerred/helm-types": "file:../helm-types",
+    "@shepherdjerred/helm-types": "workspace:*",
     "@grafana/grafana-foundation-sdk": "11.6.0-cogv0.0.x.1769699379"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "file:../../../eslint-config",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@temporalio/testing": "1.17.2",
     "@types/bun": "^1.3.13",
     "@types/lodash": "^4.17.24",

@@ -38,7 +38,20 @@ import {
   TOFU_VERSION,
   VELERO_CLI_VERSION,
 } from "./constants";
-import { BUN_INSTALL_WITH_RETRY } from "./base";
+import { bunInstallWithRetry, workspaceMeta } from "./base";
+
+/** Fail fast when a build helper is invoked without the workspace root. */
+function requireRepoRoot(
+  repoRoot: Directory | null,
+  context: string,
+): Directory {
+  if (repoRoot === null) {
+    throw new Error(
+      `${context}: repoRoot is required since the bun-workspace migration — pass --repo-root <git-ref>:. so the root bun.lock and member manifests are available`,
+    );
+  }
+  return repoRoot;
+}
 import versions from "./versions";
 
 export const PRISMA_BUN_SERVICE_START_COMMAND =
@@ -612,7 +625,6 @@ function withHomelabAuditClis(container: Container): Container {
 function withToolkit(container: Container): Container {
   return container
     .withWorkdir("/workspace/packages/toolkit")
-    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
     .withExec([
       "bun",
       "build",
@@ -637,16 +649,6 @@ function withToolkit(container: Container): Container {
  * Without this, the image builds fine but crashes at startup with `Cannot find module
  * '@lng2004/node-datachannel'`. Mirrors the per-dep install loop in `bunBaseContainer` (base.ts).
  */
-function withForkRuntimeDeps(
-  container: Container,
-  depNames: string[],
-): Container {
-  if (!depNames.includes("discord-video-stream")) return container;
-  return container
-    .withWorkdir("/workspace/packages/discord-video-stream")
-    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
-}
-
 /**
  * Build `@shepherdjerred/llm-models` when it's a mounted dep, so its `dist/`
  * exists before a consumer's frozen install copies it through the `file:` ref.
@@ -665,7 +667,6 @@ function withBuiltLlmModels(
   if (!depNames.includes("llm-models")) return container;
   return container
     .withWorkdir("/workspace/packages/llm-models")
-    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
     .withExec(["bun", "run", "build"]);
 }
 
@@ -685,7 +686,9 @@ export function buildImageHelper(
   gitSha: string = "unknown",
   usePrisma: boolean = false,
   installEditorClis: boolean = false,
+  repoRoot: Directory | null = null,
 ): Container {
+  const root = requireRepoRoot(repoRoot, `buildImageHelper(${pkg})`);
   const excludes = ["node_modules", "dist", ".eslintcache"];
 
   // Build a minimal workspace: target + needed packages
@@ -708,6 +711,7 @@ export function buildImageHelper(
 
   container = container
     .withWorkdir("/workspace")
+    .withDirectory("/workspace", workspaceMeta(root))
     .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
       exclude: excludes,
     });
@@ -720,12 +724,11 @@ export function buildImageHelper(
     );
   }
 
-  container = withForkRuntimeDeps(container, depNames);
-
-  // Install deps then set up the final image
+  // One filtered install at the workspace root covers the target and deps.
   let image = container
-    .withWorkdir(`/workspace/packages/${pkg}`)
-    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
+    .withWorkdir("/workspace")
+    .withExec(["sh", "-c", bunInstallWithRetry([pkg, ...depNames])])
+    .withWorkdir(`/workspace/packages/${pkg}`);
 
   if (pkg === "birmel") {
     // youtube-dl-exec resolves its binary at <pkg>/bin/yt-dlp (constants.YOUTUBE_DL_PATH),
@@ -825,6 +828,7 @@ export async function pushCaddyS3ProxyImageHelper(
   registryPassword: Secret,
   version: string = "dev",
   gitSha: string = "unknown",
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   const container = buildCaddyS3ProxyImageHelper(version, gitSha);
   return pushContainerHelper(
@@ -883,6 +887,7 @@ export async function pushObsidianHeadlessImageHelper(
   registryPassword: Secret,
   version: string = "dev",
   gitSha: string = "unknown",
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   const container = buildObsidianHeadlessImageHelper(version, gitSha);
   return pushContainerHelper(
@@ -952,6 +957,7 @@ export async function pushMcpGatewayImageHelper(
   registryPassword: Secret,
   version: string = "dev",
   gitSha: string = "unknown",
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   const container = buildMcpGatewayImageHelper(version, gitSha);
   return pushContainerHelper(
@@ -976,7 +982,9 @@ export function buildTemporalWorkerImageHelper(
   depDirs: Directory[] = [],
   version: string = "dev",
   gitSha: string = "unknown",
+  repoRoot: Directory | null = null,
 ): Container {
+  const root = requireRepoRoot(repoRoot, "buildTemporalWorkerImageHelper");
   const excludes = ["node_modules", "dist", ".eslintcache"];
 
   let container = dag
@@ -1005,6 +1013,7 @@ export function buildTemporalWorkerImageHelper(
 
   container = container
     .withWorkdir("/workspace")
+    .withDirectory("/workspace", workspaceMeta(root))
     .withDirectory("/workspace/packages/temporal", pkgDir, {
       exclude: excludes,
     });
@@ -1017,11 +1026,14 @@ export function buildTemporalWorkerImageHelper(
     );
   }
 
+  container = container
+    .withWorkdir("/workspace")
+    .withExec(["sh", "-c", bunInstallWithRetry(["temporal", ...depNames])]);
+
+  // llm-models ships built dist/; compile it after the root install.
   container = withBuiltLlmModels(container, depNames);
 
-  container = container
-    .withWorkdir("/workspace/packages/temporal")
-    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
+  container = container.withWorkdir("/workspace/packages/temporal");
 
   // Compile the in-tree toolkit CLI into a static binary if its source is
   // mounted. The temporal-worker WORKSPACE_DEPS list opts into this by
@@ -1069,6 +1081,7 @@ export async function pushTemporalWorkerImageHelper(
   depDirs: Directory[] = [],
   version: string = "dev",
   gitSha: string = "unknown",
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   const container = buildTemporalWorkerImageHelper(
     pkgDir,
@@ -1076,6 +1089,7 @@ export async function pushTemporalWorkerImageHelper(
     depDirs,
     version,
     gitSha,
+    repoRoot,
   );
   return pushContainerHelper(
     container,
@@ -1100,7 +1114,9 @@ export function buildScoutImageHelper(
   depDirs: Directory[] = [],
   version: string = "dev",
   gitSha: string = "unknown",
+  repoRoot: Directory | null = null,
 ): Container {
+  const root = requireRepoRoot(repoRoot, "buildScoutImageHelper");
   const excludes = ["node_modules", "dist", ".eslintcache"];
 
   let container = dag
@@ -1108,6 +1124,7 @@ export function buildScoutImageHelper(
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
     .withWorkdir("/workspace")
+    .withDirectory("/workspace", workspaceMeta(root))
     .withDirectory("/workspace/packages/scout-for-lol", pkgDir, {
       exclude: excludes,
     });
@@ -1120,11 +1137,28 @@ export function buildScoutImageHelper(
     );
   }
 
+  container = container
+    .withWorkdir("/workspace")
+    .withExec([
+      "sh",
+      "-c",
+      bunInstallWithRetry([
+        "scout-for-lol",
+        "scout-for-lol/packages/app",
+        "scout-for-lol/packages/backend",
+        "scout-for-lol/packages/data",
+        "scout-for-lol/packages/desktop",
+        "scout-for-lol/packages/frontend",
+        "scout-for-lol/packages/report",
+        "scout-for-lol/packages/ui",
+        ...depNames,
+      ]),
+    ]);
+
+  // llm-models ships built dist/; compile it after the root install.
   container = withBuiltLlmModels(container, depNames);
 
   return container
-    .withWorkdir("/workspace/packages/scout-for-lol")
-    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
     .withWorkdir("/workspace/packages/scout-for-lol/packages/backend")
     .withExec(["bunx", "--trust", "prisma", "generate"])
     .withLabel(
@@ -1239,7 +1273,9 @@ export function buildDiscordPlaysPokemonImageHelper(
   depDirs: Directory[] = [],
   version: string = "dev",
   gitSha: string = "unknown",
+  repoRoot: Directory | null = null,
 ): Container {
+  const root = requireRepoRoot(repoRoot, "buildDiscordPlaysPokemonImageHelper");
   const excludes = ["node_modules", "dist", ".eslintcache"];
   const innerRoot = "/workspace/packages/discord-plays-pokemon";
 
@@ -1253,6 +1289,7 @@ export function buildDiscordPlaysPokemonImageHelper(
   // browser/desktop — this is a headless Bun service.
   container = withCodexCli(withDiscordPlaysRuntime(container))
     .withWorkdir("/workspace")
+    .withDirectory("/workspace", workspaceMeta(root))
     // wasm-src is a build input for buildPokeemeraldWasm only (patches applied to
     // the cloned upstream); keep it out of the runtime image.
     .withDirectory(innerRoot, pkgDir, {
@@ -1267,9 +1304,6 @@ export function buildDiscordPlaysPokemonImageHelper(
     );
   }
 
-  container = withForkRuntimeDeps(container, depNames);
-  container = withBuiltLlmModels(container, depNames);
-
   return (
     container
       // Build pokeemerald.wasm from source (ottohg pin + our export patch) and
@@ -1280,17 +1314,24 @@ export function buildDiscordPlaysPokemonImageHelper(
         `${innerRoot}/packages/backend/assets/pokeemerald.wasm`,
         buildPokeemeraldWasm(pkgDir.directory("wasm-src/patches")),
       )
-      // Workspace install (covers backend + frontend + common) — runs the
-      // trustedDependencies postinstalls (node-datachannel, node-av). The
-      // discord-video-stream fork lazy-loads sharp in source (no bun patch).
-      // No separate backend install: bun workspaces installs all member deps at
-      // the root level. A second `bun install` in packages/backend causes bun to
-      // try to re-link file: deps already linked by the root install → EEXIST.
-      // Wrapped in retry because bun's worker pool also races on `file:` symlinks
-      // *within* a single install when the same dep (eslint-config) is referenced
-      // by 4+ nested package.jsons (#4336).
-      .withWorkdir(innerRoot)
-      .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
+      // Filtered root install (parent + members + deps) — runs the
+      // trustedDependencies postinstalls (node-datachannel, node-av).
+      .withWorkdir("/workspace")
+      .withExec([
+        "sh",
+        "-c",
+        bunInstallWithRetry([
+          "discord-plays-pokemon",
+          "discord-plays-pokemon/packages/backend",
+          "discord-plays-pokemon/packages/common",
+          "discord-plays-pokemon/packages/frontend",
+          ...depNames,
+        ]),
+      ])
+      // llm-models ships built dist/; compile it after the root install
+      // (always in dpp's depNames — the goal-mode pricing table imports it).
+      .withWorkdir("/workspace/packages/llm-models")
+      .withExec(["bun", "run", "build"])
       .withWorkdir(`${innerRoot}/packages/backend`)
       // Verify the from-source wasm is behaviorally equivalent to what shipped
       // before: the symbol reader resolves all game-state globals, and the audio
@@ -1349,6 +1390,7 @@ export async function pushScoutImageHelper(
   depDirs: Directory[] = [],
   version: string = "dev",
   gitSha: string = "unknown",
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   const container = buildScoutImageHelper(
     pkgDir,
@@ -1356,6 +1398,7 @@ export async function pushScoutImageHelper(
     depDirs,
     version,
     gitSha,
+    repoRoot,
   );
   return pushContainerHelper(
     container,
@@ -1375,6 +1418,7 @@ export async function pushDiscordPlaysPokemonImageHelper(
   depDirs: Directory[] = [],
   version: string = "dev",
   gitSha: string = "unknown",
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   const container = buildDiscordPlaysPokemonImageHelper(
     pkgDir,
@@ -1382,6 +1426,7 @@ export async function pushDiscordPlaysPokemonImageHelper(
     depDirs,
     version,
     gitSha,
+    repoRoot,
   );
   return pushContainerHelper(
     container,
@@ -1414,7 +1459,12 @@ export function buildDiscordPlaysMarioKartImageHelper(
   depDirs: Directory[] = [],
   version: string = "dev",
   gitSha: string = "unknown",
+  repoRoot: Directory | null = null,
 ): Container {
+  const root = requireRepoRoot(
+    repoRoot,
+    "buildDiscordPlaysMarioKartImageHelper",
+  );
   const excludes = ["node_modules", "dist", ".eslintcache"];
   const innerRoot = MARIO_KART_INNER_ROOT;
   const assetsDir = `${innerRoot}/packages/backend/assets/n64wasm`;
@@ -1452,6 +1502,7 @@ export function buildDiscordPlaysMarioKartImageHelper(
   // software-rendered N64 frames are read straight out of wasm memory.
   container = withDiscordPlaysRuntime(container)
     .withWorkdir("/workspace")
+    .withDirectory("/workspace", workspaceMeta(root))
     // wasm-src is the build input for stage 1 only — keep the large vendored
     // C/C++ tree out of the runtime image.
     .withDirectory(innerRoot, pkgDir, {
@@ -1465,8 +1516,6 @@ export function buildDiscordPlaysMarioKartImageHelper(
       { exclude: excludes },
     );
   }
-
-  container = withForkRuntimeDeps(container, depNames);
 
   return (
     container
@@ -1496,18 +1545,20 @@ export function buildDiscordPlaysMarioKartImageHelper(
         `${assetsDir}/res/arial.ttf`,
         wasmBuild.file("/src/code/res/arial.ttf"),
       )
-      // Workspace install (backend + frontend) — runs trustedDependencies
-      // postinstalls. The discord-video-stream fork lazy-loads sharp in source
-      // (no bun patch).
-      // No separate backend install: bun workspaces installs all member deps
-      // at the root level. A second `bun install` in packages/backend re-links
-      // file: deps already linked by the root install → EEXIST under the
-      // hoisted linker, and the retry's node_modules cleanup then leaves the
-      // backend member without its file: dep copies (build 5029 smoke caught
-      // `Cannot find module '@shepherdjerred/discord-stream-lifecycle/...'`).
-      // Mirrors the discord-plays-pokemon image build above.
-      .withWorkdir(innerRoot)
-      .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
+      // Filtered root install (parent + members + deps) — runs the
+      // trustedDependencies postinstalls. Mirrors the dpp image build above.
+      .withWorkdir("/workspace")
+      .withExec([
+        "sh",
+        "-c",
+        bunInstallWithRetry([
+          "discord-plays-mario-kart",
+          "discord-plays-mario-kart/packages/backend",
+          "discord-plays-mario-kart/packages/common",
+          "discord-plays-mario-kart/packages/frontend",
+          ...depNames,
+        ]),
+      ])
       .withWorkdir(`${innerRoot}/packages/backend`)
       // Generate the Prisma client for the leaderboard DB (output is gitignored,
       // so it must be produced in the image). Mirrors the birmel/scout flow.
@@ -1545,6 +1596,7 @@ export async function pushDiscordPlaysMarioKartImageHelper(
   depDirs: Directory[] = [],
   version: string = "dev",
   gitSha: string = "unknown",
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   const container = buildDiscordPlaysMarioKartImageHelper(
     pkgDir,
@@ -1552,6 +1604,7 @@ export async function pushDiscordPlaysMarioKartImageHelper(
     depDirs,
     version,
     gitSha,
+    repoRoot,
   );
   return pushContainerHelper(
     container,
@@ -1572,7 +1625,9 @@ export function buildTrmnlDashboardImageHelper(
   depDirs: Directory[] = [],
   version: string = "dev",
   gitSha: string = "unknown",
+  repoRoot: Directory | null = null,
 ): Container {
+  const root = requireRepoRoot(repoRoot, "buildTrmnlDashboardImageHelper");
   const excludes = ["node_modules", "dist", ".eslintcache"];
 
   let container = dag
@@ -1580,6 +1635,7 @@ export function buildTrmnlDashboardImageHelper(
     .from(BUN_IMAGE)
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
     .withWorkdir("/workspace")
+    .withDirectory("/workspace", workspaceMeta(root))
     .withDirectory("/workspace/packages/trmnl-dashboard", pkgDir, {
       exclude: excludes,
     });
@@ -1593,8 +1649,13 @@ export function buildTrmnlDashboardImageHelper(
   }
 
   return container
+    .withWorkdir("/workspace")
+    .withExec([
+      "sh",
+      "-c",
+      bunInstallWithRetry(["trmnl-dashboard", ...depNames]),
+    ])
     .withWorkdir("/workspace/packages/trmnl-dashboard")
-    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
     .withLabel(
       "org.opencontainers.image.source",
       "https://github.com/shepherdjerred/monorepo",
@@ -1617,6 +1678,7 @@ export async function pushTrmnlDashboardImageHelper(
   depDirs: Directory[] = [],
   version: string = "dev",
   gitSha: string = "unknown",
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   const container = buildTrmnlDashboardImageHelper(
     pkgDir,
@@ -1624,6 +1686,7 @@ export async function pushTrmnlDashboardImageHelper(
     depDirs,
     version,
     gitSha,
+    repoRoot,
   );
   return pushContainerHelper(
     container,
@@ -1674,6 +1737,7 @@ export async function pushRedlibImageHelper(
   registryPassword: Secret,
   version: string = "dev",
   gitSha: string = "unknown",
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   const container = buildRedlibImageHelper(version, gitSha);
   return pushContainerHelper(
@@ -1728,6 +1792,7 @@ export async function pushImageHelper(
   gitSha: string = "unknown",
   usePrisma: boolean = false,
   installEditorClis: boolean = false,
+  repoRoot: Directory | null = null,
 ): Promise<string> {
   if (tags.length === 0) {
     throw new Error("pushImageHelper requires at least one tag");
@@ -1741,6 +1806,7 @@ export async function pushImageHelper(
     gitSha,
     usePrisma,
     installEditorClis,
+    repoRoot,
   ).withRegistryAuth("ghcr.io", registryUsername, registryPassword);
 
   const digest = await image.publish(tags[0]);

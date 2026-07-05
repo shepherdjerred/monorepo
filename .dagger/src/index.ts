@@ -136,7 +136,6 @@ import {
   reactVersionSyncHelper,
   semgrepScanHelper,
   lockfileCheckHelper,
-  bunLockDriftCheckHelper,
   envVarNamesHelper,
   lineEndingsCheckHelper,
   migrationGuardHelper,
@@ -160,6 +159,17 @@ function requireRecord(
 
 @object()
 export class Monorepo {
+  /**
+   * Repo root (git ref) providing the workspace bun.lock + member manifests.
+   * Required by every bun-based function since the bun-workspace migration;
+   * pass once per invocation: `dagger call --repo-root <git-ref>:. <fn> ...`.
+   */
+  repoRoot: Directory | null;
+
+  constructor(repoRoot: Directory | null = null) {
+    this.repoRoot = repoRoot;
+  }
+
   // ---------------------------------------------------------------------------
   // Standard TS operations (lint, typecheck, test)
   // ---------------------------------------------------------------------------
@@ -173,7 +183,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Promise<string> {
-    return lintHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout();
+    return lintHelper(pkgDir, pkg, depNames, depDirs, tsconfig, this.repoRoot).stdout();
   }
 
   /** Run the typecheck script on a package */
@@ -185,7 +195,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Promise<string> {
-    return typecheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout();
+    return typecheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig, this.repoRoot).stdout();
   }
 
   /** Run the test script on a package */
@@ -205,6 +215,7 @@ export class Monorepo {
       depDirs,
       tsconfig,
       needsHelm,
+      this.repoRoot,
     ).stdout();
   }
 
@@ -217,7 +228,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Container {
-    return buildHelper(pkgDir, pkg, depNames, depDirs, tsconfig);
+    return buildHelper(pkgDir, pkg, depNames, depDirs, tsconfig, this.repoRoot);
   }
 
   // ---------------------------------------------------------------------------
@@ -239,6 +250,7 @@ export class Monorepo {
       depNames,
       depDirs,
       tsconfig,
+      this.repoRoot,
     ).stdout();
   }
 
@@ -257,6 +269,7 @@ export class Monorepo {
       depNames,
       depDirs,
       tsconfig,
+      this.repoRoot,
     ).stdout();
   }
 
@@ -285,6 +298,7 @@ export class Monorepo {
       tsconfig,
       haUrl,
       haToken,
+      this.repoRoot,
     ).stdout();
   }
 
@@ -303,6 +317,7 @@ export class Monorepo {
       depNames,
       depDirs,
       tsconfig,
+      this.repoRoot,
     ).stdout();
   }
 
@@ -343,6 +358,7 @@ export class Monorepo {
       includeAstroBuild,
       includeBuild,
       skipTest,
+      this.repoRoot,
     );
   }
 
@@ -361,6 +377,7 @@ export class Monorepo {
       depNames,
       depDirs,
       tsconfig,
+      this.repoRoot,
     );
   }
 
@@ -377,7 +394,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Promise<string> {
-    return astroCheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout();
+    return astroCheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig, this.repoRoot).stdout();
   }
 
   /** Run astro build and return the output directory */
@@ -389,7 +406,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Directory {
-    return astroBuildHelper(pkgDir, pkg, depNames, depDirs, tsconfig);
+    return astroBuildHelper(pkgDir, pkg, depNames, depDirs, tsconfig, this.repoRoot);
   }
 
   // ---------------------------------------------------------------------------
@@ -405,7 +422,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Directory {
-    return viteBuildHelper(pkgDir, pkg, depNames, depDirs, tsconfig);
+    return viteBuildHelper(pkgDir, pkg, depNames, depDirs, tsconfig, this.repoRoot);
   }
 
   // ---------------------------------------------------------------------------
@@ -436,6 +453,7 @@ export class Monorepo {
       gitSha,
       usePrisma,
       installEditorClis,
+      this.repoRoot,
     );
   }
 
@@ -466,6 +484,7 @@ export class Monorepo {
       gitSha,
       usePrisma,
       installEditorClis,
+      this.repoRoot,
     );
   }
 
@@ -506,6 +525,7 @@ export class Monorepo {
       registryPassword,
       version,
       gitSha,
+      this.repoRoot,
     );
   }
 
@@ -524,6 +544,7 @@ export class Monorepo {
       registryPassword,
       version,
       gitSha,
+      this.repoRoot,
     );
   }
 
@@ -551,6 +572,7 @@ export class Monorepo {
       registryPassword,
       version,
       gitSha,
+      this.repoRoot,
     );
   }
 
@@ -578,6 +600,7 @@ export class Monorepo {
       registryPassword,
       version,
       gitSha,
+      this.repoRoot,
     );
   }
 
@@ -594,7 +617,7 @@ export class Monorepo {
     version: string = "dev",
     gitSha: string = "unknown",
   ): Container {
-    return buildScoutImageHelper(pkgDir, depNames, depDirs, version, gitSha);
+    return buildScoutImageHelper(pkgDir, depNames, depDirs, version, gitSha, this.repoRoot);
   }
 
   /** Push a scout-for-lol image to a registry. Returns digest. */
@@ -618,6 +641,7 @@ export class Monorepo {
       depDirs,
       version,
       gitSha,
+      this.repoRoot,
     );
   }
 
@@ -636,6 +660,7 @@ export class Monorepo {
       depDirs,
       version,
       gitSha,
+      this.repoRoot,
     );
   }
 
@@ -660,6 +685,7 @@ export class Monorepo {
       depDirs,
       version,
       gitSha,
+      this.repoRoot,
     );
   }
 
@@ -678,6 +704,7 @@ export class Monorepo {
       depDirs,
       version,
       gitSha,
+      this.repoRoot,
     );
   }
 
@@ -702,6 +729,7 @@ export class Monorepo {
       depDirs,
       version,
       gitSha,
+      this.repoRoot,
     );
   }
 
@@ -724,6 +752,7 @@ export class Monorepo {
       depDirs,
       version,
       gitSha,
+      this.repoRoot,
     );
   }
 
@@ -748,6 +777,7 @@ export class Monorepo {
       depDirs,
       version,
       gitSha,
+      this.repoRoot,
     );
   }
 
@@ -770,6 +800,7 @@ export class Monorepo {
       depDirs,
       version,
       gitSha,
+      this.repoRoot,
     );
   }
 
@@ -794,6 +825,7 @@ export class Monorepo {
       depDirs,
       version,
       gitSha,
+      this.repoRoot,
     );
   }
 
@@ -866,7 +898,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Directory {
-    return homelabSynthHelper(pkgDir, depNames, depDirs, tsconfig);
+    return homelabSynthHelper(pkgDir, depNames, depDirs, tsconfig, this.repoRoot);
   }
 
   /**
@@ -886,6 +918,7 @@ export class Monorepo {
       depNames,
       depDirs,
       tsconfig,
+      this.repoRoot,
     ).stdout();
   }
 
@@ -902,6 +935,7 @@ export class Monorepo {
       depNames,
       depDirs,
       tsconfig,
+      this.repoRoot,
     ).stdout();
   }
 
@@ -917,7 +951,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Promise<string> {
-    return homelabCdk8sBundleHelper(pkgDir, depNames, depDirs, tsconfig);
+    return homelabCdk8sBundleHelper(pkgDir, depNames, depDirs, tsconfig, this.repoRoot);
   }
 
   // ---------------------------------------------------------------------------
@@ -949,6 +983,7 @@ export class Monorepo {
       depNames,
       depDirs,
       tsconfig,
+      this.repoRoot,
     ).stdout();
   }
 
@@ -961,7 +996,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
   ): Directory {
-    return playwrightUpdateHelper(pkgDir, pkg, depNames, depDirs, tsconfig);
+    return playwrightUpdateHelper(pkgDir, pkg, depNames, depDirs, tsconfig, this.repoRoot);
   }
 
   // ---------------------------------------------------------------------------
@@ -1054,6 +1089,7 @@ export class Monorepo {
       synthDepNames,
       synthDepDirs,
       tsconfig,
+      this.repoRoot,
     );
     return helmPackageHelper(
       source,
@@ -1744,20 +1780,6 @@ export class Monorepo {
     return lockfileCheckHelper(source).stdout();
   }
 
-  /**
-   * Per-package `bun.lock` drift check. `seeds` is a comma-separated list of
-   * directly-changed top-level workspace dirs (e.g.
-   * "birmel,llm-observability"). The script expands the reverse `file:`-dep
-   * closure across nested workspaces and runs `bun install --frozen-lockfile
-   * --dry-run` in each package in the closure. This catches the PR #1213
-   * scenario where a bump to `llm-observability` should also re-check dpp's
-   * lockfile via its nested `file:` edge.
-   */
-  @func()
-  async bunLockDriftCheck(source: Directory, seeds: string): Promise<string> {
-    return bunLockDriftCheckHelper(source, seeds).stdout();
-  }
-
   /** Env-var naming convention check across staged-style file types. */
   @func()
   async envVarNames(source: Directory): Promise<string> {
@@ -1853,7 +1875,7 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
   ): Promise<string> {
-    return smokeTestScoutForLolHelper(pkgDir, depNames, depDirs);
+    return smokeTestScoutForLolHelper(pkgDir, depNames, depDirs, this.repoRoot);
   }
 
   /** Smoke test birmel: build production image, verify config, Discord login attempt, expected auth failure */
@@ -1864,7 +1886,7 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
   ): Promise<string> {
-    return smokeTestBirmelHelper(pkgDir, pkg, depNames, depDirs);
+    return smokeTestBirmelHelper(pkgDir, pkg, depNames, depDirs, this.repoRoot);
   }
 
   /** Smoke test starlight-karma-bot: build production image, verify config, server start, expected auth failure */
@@ -1875,7 +1897,7 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
   ): Promise<string> {
-    return smokeTestStarlightKarmaBotHelper(pkgDir, pkg, depNames, depDirs);
+    return smokeTestStarlightKarmaBotHelper(pkgDir, pkg, depNames, depDirs, this.repoRoot);
   }
 
   /** Smoke test tasknotes-server: build production image, verify server starts and listens */
@@ -1886,7 +1908,7 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
   ): Promise<string> {
-    return smokeTestTasknotesServerHelper(pkgDir, pkg, depNames, depDirs);
+    return smokeTestTasknotesServerHelper(pkgDir, pkg, depNames, depDirs, this.repoRoot);
   }
 
   /** Smoke test caddy-s3proxy: verifies custom Caddy binary works */
@@ -1914,7 +1936,7 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
   ): Promise<string> {
-    return smokeTestDiscordPlaysPokemonHelper(pkgDir, depNames, depDirs);
+    return smokeTestDiscordPlaysPokemonHelper(pkgDir, depNames, depDirs, this.repoRoot);
   }
 
   /** Smoke test streambot: build image, verify ffmpeg + yt-dlp, boot machine, expect auth failure */
@@ -1924,7 +1946,7 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
   ): Promise<string> {
-    return smokeTestStreambotHelper(pkgDir, depNames, depDirs);
+    return smokeTestStreambotHelper(pkgDir, depNames, depDirs, this.repoRoot);
   }
 
   /** E2E streambot with real creds: streams a generated clip into the voice channel (manual run). */
@@ -1946,6 +1968,7 @@ export class Monorepo {
       videoChannelId,
       depNames,
       depDirs,
+      this.repoRoot,
     );
   }
 
@@ -1956,7 +1979,7 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
   ): Promise<string> {
-    return smokeTestDiscordPlaysMarioKartHelper(pkgDir, depNames, depDirs);
+    return smokeTestDiscordPlaysMarioKartHelper(pkgDir, depNames, depDirs, this.repoRoot);
   }
 
   /** Smoke test trmnl-dashboard: builds image, boots Bun.serve, killed at timeout. */
@@ -1966,6 +1989,6 @@ export class Monorepo {
     depNames: string[] = [],
     depDirs: Directory[] = [],
   ): Promise<string> {
-    return smokeTestTrmnlDashboardHelper(pkgDir, depNames, depDirs);
+    return smokeTestTrmnlDashboardHelper(pkgDir, depNames, depDirs, this.repoRoot);
   }
 }

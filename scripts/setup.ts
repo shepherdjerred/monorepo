@@ -92,38 +92,6 @@ function shellErrorDetail(error: unknown): string | undefined {
   return undefined;
 }
 
-async function findLockfileDirs(): Promise<string[]> {
-  const dirs: string[] = [];
-  const skip = new Set([
-    "node_modules",
-    "dist",
-    "build",
-    ".git",
-    "target",
-    "archive",
-    ".dagger",
-    "poc",
-    "practice",
-  ]);
-
-  async function walk(dir: string): Promise<void> {
-    const entries = await readdir(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (skip.has(entry.name)) continue;
-      const fullPath = join(dir, entry.name);
-      if (entry.isDirectory() && !entry.isSymbolicLink()) {
-        if (existsSync(join(fullPath, "bun.lock"))) {
-          dirs.push(fullPath);
-        }
-        await walk(fullPath);
-      }
-    }
-  }
-
-  await walk(ROOT);
-  return dirs.filter((d) => d !== ROOT).sort();
-}
-
 async function findMiseConfigs(): Promise<string[]> {
   const configs: string[] = [];
   const skip = new Set([
@@ -208,102 +176,10 @@ async function ensureTools(): Promise<void> {
 // ── Phase 2: Dependencies ──────────────────────────────────────────────
 
 async function installDependencies(): Promise<void> {
-  await exec("Deps", "root bun install", [
-    "bun",
-    "install",
-    "--frozen-lockfile",
-  ]);
-
-  const lockfileDirs = await findLockfileDirs();
-  log("Deps", `Found ${String(lockfileDirs.length)} packages with bun.lock`);
-
-  const concurrency = 6;
-  const maxAttempts = 3;
-  const failures: Array<{ dir: string; error: unknown }> = [];
-  let completed = 0;
-
-  async function installOne(dir: string): Promise<void> {
-    const label = relative(ROOT, dir);
-    let lastError: unknown;
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        await $`bun install --frozen-lockfile`.cwd(dir).quiet();
-        completed++;
-        return;
-      } catch (error) {
-        lastError = error;
-        // Concurrent installs occasionally contend on the shared bun cache;
-        // back off briefly and retry before giving up (individual installs
-        // succeed in seconds when not racing each other).
-        if (attempt < maxAttempts) await Bun.sleep(attempt * 250);
-      }
-    }
-    failures.push({ dir: label, error: lastError });
-  }
-
-  for (let i = 0; i < lockfileDirs.length; i += concurrency) {
-    const batch = lockfileDirs.slice(i, i + concurrency);
-    await Promise.allSettled(batch.map((dir) => installOne(dir)));
-  }
-
-  log(
-    "Deps",
-    `Installed ${String(completed)}/${String(lockfileDirs.length)} packages`,
-  );
-
-  if (failures.length > 0) {
-    console.error(`  [Deps] ${String(failures.length)} package(s) failed:`);
-    for (const f of failures) {
-      console.error(`           - ${f.dir}`);
-      const detail = shellErrorDetail(f.error);
-      if (detail) {
-        for (const line of detail.split("\n")) {
-          console.error(`             ${line}`);
-        }
-      }
-    }
-    throw new Error("Dependency installation failed");
-  }
-
-  const homelabDir = join(ROOT, "packages", "homelab");
-  if (existsSync(homelabDir)) {
-    await exec(
-      "Deps",
-      "homelab install-subpkgs",
-      ["bun", "run", "install-subpkgs"],
-      { cwd: homelabDir },
-    );
-  }
-}
-
-async function refreshBuiltFileDependencies(): Promise<void> {
-  const refreshDirs: Array<{ label: string; cwd: string }> = [
-    {
-      label: "sjer.red local package artifacts",
-      cwd: "packages/sjer.red",
-    },
-    // Consumers of the built @shepherdjerred/llm-models file: dep — re-copy its
-    // dist after the build above.
-    { label: "monarch llm-models", cwd: "packages/monarch" },
-    { label: "temporal llm-models", cwd: "packages/temporal" },
-    {
-      label: "discord-plays-pokemon backend llm-models",
-      cwd: "packages/discord-plays-pokemon/packages/backend",
-    },
-    { label: "scout-for-lol llm-models", cwd: "packages/scout-for-lol" },
-  ];
-
-  for (const dir of refreshDirs) {
-    const fullCwd = join(ROOT, dir.cwd);
-    if (!existsSync(fullCwd)) {
-      warn("Deps", `${dir.label} skipped (directory not found)`);
-      continue;
-    }
-
-    await exec("Deps", `${dir.label} refresh`, ["bun", "install", "--force"], {
-      cwd: fullCwd,
-    });
-  }
+  // One root workspace install covers every member (bun workspaces + isolated
+  // linker). The old per-package fan-out (28 installs, cache contention,
+  // retry/backoff) is gone with the per-package lockfiles.
+  await exec("Deps", "bun install", ["bun", "install", "--frozen-lockfile"]);
 }
 
 // ── Phase 3: Build & Generate (DAG) ────────────────────────────────────
@@ -525,7 +401,6 @@ try {
   await phase("Tools", ensureTools);
   await phase("Dependencies", installDependencies);
   await phase("Build & Generate", () => runDag(DAG_TASKS));
-  await phase("Refresh Built Dependencies", refreshBuiltFileDependencies);
   await phase("Verify", verifySetup);
 
   console.log(`\nSetup complete (${elapsed(totalStart)})`);

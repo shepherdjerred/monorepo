@@ -9,26 +9,10 @@
     "typecheck": "bun run --filter '*' typecheck",
     "generate": "bun run --cwd packages/backend generate"
   },
-  "workspaces": [
-    "packages/common",
-    "packages/backend",
-    "packages/frontend"
-  ],
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@typescript-eslint/utils": "^8.59.3",
     "jiti": "^2.7.0"
   },
-  "dependencies": {},
-  "overrides": {
-    "js-cookie": "3.0.7",
-    "tmp": "0.2.6"
-  },
-  "trustedDependencies": [
-    "@lng2004/node-datachannel",
-    "node-av",
-    "@snazzah/davey",
-    "sharp",
-    "@sentry/profiling-node"
-  ]
+  "dependencies": {}
 }

@@ -38,7 +38,7 @@
     "react-native-safe-area-context": "^5.7.0",
     "react-native-screens": "4.25.2",
     "react-native-sound": "^0.13.0",
-    "tasknotes-types": "file:../tasknotes-types",
+    "tasknotes-types": "workspace:*",
     "zeego": "^3.0.6",
     "zod": "^4.4.3"
   },
@@ -53,7 +53,7 @@
     "@react-native/metro-config": "0.85.3",
     "@react-native/typescript-config": "0.85.3",
     "@types/react": "~19.2.14",
-    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@typescript-eslint/utils": "^8.59.3",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
@@ -62,12 +62,5 @@
   },
   "engines": {
     "node": ">=20.19.4"
-  },
-  "patchedDependencies": {
-    "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch"
-  },
-  "overrides": {
-    "fast-xml-builder": "1.2.0",
-    "shell-quote": "1.8.4"
   }
 }

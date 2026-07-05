@@ -45,23 +45,66 @@ import { BUILD_TIME_DEPS } from "./deps";
  * the `linker = "hoisted"` bunfig pins in the nested-workspace packages.
  * Join with newlines, not "; " — busybox sh rejects `do ;` / `then ;` / `done ;`.
  */
-export const BUN_INSTALL_WITH_RETRY = [
-  "i=1",
-  "while [ $i -le 3 ]; do",
-  "  if bun install --frozen-lockfile; then exit 0; fi",
-  // Skip the sleep + "retrying" log on the final attempt — no retry follows.
-  "  if [ $i -lt 3 ]; then",
-  '    echo "bun install failed (attempt $i/3), retrying in $((i*5))s..." >&2',
-  "    sleep $((i*5))",
-  "  fi",
-  "  i=$((i+1))",
-  "done",
-  "exit 1",
-].join("\n");
+export const BUN_INSTALL_WITH_RETRY = bunInstallWithRetry([]);
 
 /**
- * Bun container with dependencies installed from individual directory params.
- * Each directory is passed separately for optimal Dagger caching.
+ * Workspace-aware variant: `bun install --frozen-lockfile [--filter ...]`
+ * wrapped in the same 3-attempt retry. Filters use `./packages/<dir>` path
+ * form so nested members (e.g. `scout-for-lol/packages/frontend`) are
+ * unambiguous.
+ */
+export function bunInstallWithRetry(filterPkgs: string[]): string {
+  const filters = filterPkgs
+    .map((p) => `--filter ./packages/${p}`)
+    .join(" ");
+  const install = `bun install --frozen-lockfile${filters ? ` ${filters}` : ""}`;
+  return [
+    "i=1",
+    "while [ $i -le 3 ]; do",
+    `  if ${install}; then exit 0; fi`,
+    // Skip the sleep + "retrying" log on the final attempt — no retry follows.
+    "  if [ $i -lt 3 ]; then",
+    '    echo "bun install failed (attempt $i/3), retrying in $((i*5))s..." >&2',
+    "    sleep $((i*5))",
+    "  fi",
+    "  i=$((i+1))",
+    "done",
+    "exit 1",
+  ].join("\n");
+}
+
+/**
+ * Reduce the repo root to the files a workspace install needs: root manifest,
+ * lockfile, bunfig, patches, shared tsconfig, and every member's package.json.
+ *
+ * This is the cache firewall: the input (`repoRoot`) is the whole tree and
+ * changes on every commit, but this filter is a pure directory op and its
+ * OUTPUT is content-addressed — downstream install/build/test layers key on
+ * the filtered content, so an unrelated source change never invalidates
+ * another package's layers. Only a real dependency-graph change (bun.lock,
+ * a manifest, a patch) re-runs installs.
+ */
+export function workspaceMeta(repoRoot: Directory): Directory {
+  return dag.directory().withDirectory("/", repoRoot, {
+    include: [
+      "package.json",
+      "bun.lock",
+      "bunfig.toml",
+      "tsconfig.base.json",
+      "patches/**",
+      "packages/*/package.json",
+      "packages/*/packages/*/package.json",
+      "packages/homelab/src/*/package.json",
+    ],
+  });
+}
+
+/**
+ * Bun container for one workspace member. The target package and its
+ * workspace deps are mounted as full directories (narrow, per-package cache
+ * keys); all other members exist as manifest-only stubs from workspaceMeta so
+ * the root lockfile resolves. One filtered install at the workspace root
+ * materializes the target + mounted deps.
  */
 export function bunBaseContainer(
   pkgDir: Directory,
@@ -70,7 +113,13 @@ export function bunBaseContainer(
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
   extraAptPackages: string[] = [],
+  repoRoot: Directory | null = null,
 ): Container {
+  if (repoRoot === null) {
+    throw new Error(
+      `bunBaseContainer(${pkg}): repoRoot is required since the bun-workspace migration — pass --repo-root <git-ref>:. so the root bun.lock and member manifests are available`,
+    );
+  }
   let container = dag
     .container()
     .from(BUN_IMAGE)
@@ -91,12 +140,13 @@ export function bunBaseContainer(
     ])
 
     .withMountedCache("/root/.bun/install/cache", dag.cacheVolume(BUN_CACHE))
-    .withWorkdir(`/workspace/packages/${pkg}`)
+    .withDirectory("/workspace", workspaceMeta(repoRoot))
     .withDirectory(`/workspace/packages/${pkg}`, pkgDir, {
       exclude: SOURCE_EXCLUDES,
     });
 
-  // Mount deps at correct relative paths for file: protocol resolution
+  // Mount workspace deps at their real paths so `workspace:*` symlinks
+  // resolve to full sources, not manifest stubs.
   for (let i = 0; i < depNames.length; i++) {
     container = container.withDirectory(
       `/workspace/packages/${depNames[i]}`,
@@ -109,32 +159,23 @@ export function bunBaseContainer(
     container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
   }
 
-  // Install and build deps first so dist/ exists before target's install resolves file: refs
+  // One filtered install from the workspace root covers the target and every
+  // mounted dep (isolated linker: strict per-instance resolution).
+  container = container
+    .withWorkdir("/workspace")
+    .withExec(["sh", "-c", bunInstallWithRetry([pkg, ...depNames])]);
+
+  // Build-time deps still need `bun run build` so dist/ exists before the
+  // target compiles against them (workspace symlinks expose dist/ live).
   for (const dep of BUILD_TIME_DEPS) {
     if (depNames.includes(dep)) {
       container = container
         .withWorkdir(`/workspace/packages/${dep}`)
-        .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
         .withExec(["bun", "run", "build"]);
     }
   }
-  // Non-build deps (e.g. @shepherdjerred/home-assistant) still need their own
-  // node_modules so imports inside the dep (like zod) resolve when the target
-  // compiles against it. Keep this loop separate from BUILD_TIME_DEPS so the
-  // layer hashes for BUILD_TIME_DEPS-only consumers are unchanged and their
-  // Dagger cache stays warm.
-  for (const dep of depNames) {
-    if (BUILD_TIME_DEPS.includes(dep)) {
-      continue;
-    }
-    container = container
-      .withWorkdir(`/workspace/packages/${dep}`)
-      .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
-  }
 
-  container = container
-    .withWorkdir(`/workspace/packages/${pkg}`)
-    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
+  container = container.withWorkdir(`/workspace/packages/${pkg}`);
 
   return container;
 }
