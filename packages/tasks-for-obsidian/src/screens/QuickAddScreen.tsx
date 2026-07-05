@@ -52,6 +52,7 @@ export function QuickAddScreen({ route, navigation }: Props) {
           value={text}
           onChange={setText}
           parsedResult={parsed}
+          testID="quick-add-input"
         />
         <TipPopover
           visible={nlpTip.visible}
@@ -74,6 +75,7 @@ export function QuickAddScreen({ route, navigation }: Props) {
         accessibilityRole="button"
         accessibilityLabel="Create task"
         accessibilityState={{ disabled: !parsed.title.trim() }}
+        testID="quick-add-submit"
       >
         <Text style={styles.createText}>Create Task</Text>
       </Pressable>

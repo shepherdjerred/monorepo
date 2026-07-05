@@ -13,7 +13,6 @@ import {
   diag,
   DiagLogLevel,
   trace,
-  context,
   SpanStatusCode,
   type DiagLogger,
   type Tracer,
@@ -73,10 +72,11 @@ export function initializeTracing(): void {
   const serviceName = Bun.env.TELEMETRY_SERVICE_NAME ?? DEFAULT_SERVICE_NAME;
   const serviceVersion = Bun.env.VERSION ?? "dev";
 
-  // AsyncLocalStorage-backed context so the active span propagates across awaits.
+  // AsyncLocalStorage-backed context so the active span propagates across
+  // awaits. Registered via NodeSDK below — registering it manually AND letting
+  // sdk.start() register its own produced a boot-time "duplicate registration
+  // of API: context" error on every start.
   const contextManager = new AsyncLocalStorageContextManager();
-  contextManager.enable();
-  context.setGlobalContextManager(contextManager);
 
   const exporter = new OTLPTraceExporter({
     url: `${otlpEndpoint}/v1/traces`,
@@ -102,6 +102,7 @@ export function initializeTracing(): void {
       [ATTR_SERVICE_VERSION]: serviceVersion,
     }),
     spanProcessors: [rootProcessor],
+    contextManager,
   });
 
   sdk.start();

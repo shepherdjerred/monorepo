@@ -373,6 +373,18 @@ export function migrationGuardHelper(source: Directory): Container {
  * base does not build BUILD_TIME_DEPS, so the catalog must be compiled here —
  * before scout's frozen install copies it into the `file:` store — otherwise
  * `check:test-template` dies with `Cannot find module '@shepherdjerred/llm-models'`.
+ *
+ * The scout install runs `--production`: this check only needs the backend's
+ * runtime (Prisma client + CLI, both `dependencies`) to regenerate the SQLite
+ * template. Installing devDependencies would pull the frontend's build-time
+ * `astro-opengraph-images` file: dep, which itself devDepends on
+ * `@shepherdjerred/eslint-config` via `../eslint-config` — the same path scout's
+ * own eslint-config devDep resolves to. Bun then materializes two store entries
+ * for that one package and its parallel linker intermittently races them,
+ * failing the install with `EEXIST: File exists: failed to link package:
+ * @shepherdjerred/eslint-config`. `--production` drops every devDependency (so
+ * no duplicate eslint-config exists to race on) and is the correct footprint
+ * for a runtime-only DB freshness check.
  */
 export function scoutTestTemplateCheckHelper(source: Directory): Container {
   return bunQualityBase(source)
@@ -380,7 +392,7 @@ export function scoutTestTemplateCheckHelper(source: Directory): Container {
     .withExec(["bun", "install", "--frozen-lockfile"])
     .withExec(["bun", "run", "build"])
     .withWorkdir("/repo/packages/scout-for-lol")
-    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withExec(["bun", "install", "--frozen-lockfile", "--production"])
     .withWorkdir("/repo/packages/scout-for-lol/packages/backend")
     .withExec(["bunx", "--trust", "prisma", "generate"])
     .withExec(["bun", "run", "check:test-template"]);

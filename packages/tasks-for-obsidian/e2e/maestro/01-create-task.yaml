@@ -1,0 +1,21 @@
+# Create a task through the FAB + Quick Add flow and see it in the Today list.
+appId: org.reactjs.native.example.TasksForObsidian
+---
+- runFlow: 00-setup.yaml
+- tapOn:
+    id: "fab-add-task"
+- extendedWaitUntil:
+    visible:
+      id: "quick-add-input"
+    timeout: 10000
+- tapOn:
+    id: "quick-add-input"
+- inputText: "Created by e2e today"
+- tapOn:
+    id: "quick-add-submit"
+# NLP strips the trailing "today" into a due date, so the created task is
+# titled "Created by e2e" and due today -> visible on the Today tab.
+- extendedWaitUntil:
+    visible:
+      text: ".*Created by e2e.*"
+    timeout: 20000

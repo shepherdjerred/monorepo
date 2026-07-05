@@ -5,7 +5,7 @@
  */
 import { dag, Container, Directory, File, Secret } from "@dagger.io/dagger";
 
-import { ESLINT_CACHE, HELM_IMAGE } from "./constants";
+import { ESLINT_CACHE, GO_IMAGE, HELM_IMAGE } from "./constants";
 
 import { bunBaseContainer } from "./base";
 import { runBundle } from "./bundle";
@@ -84,6 +84,7 @@ export function testHelper(
   depDirs: Directory[] = [],
   tsconfig: File | null = null,
   needsHelm = false,
+  needsGo = false,
   repoRoot: Directory | null = null,
 ): Container {
   let container = bunBaseContainer(
@@ -98,6 +99,18 @@ export function testHelper(
   if (needsHelm) {
     const helmBinary = dag.container().from(HELM_IMAGE).file("/usr/bin/helm");
     container = container.withFile("/usr/local/bin/helm", helmBinary);
+  }
+  if (needsGo) {
+    // homelab's pagerduty-alerting.test.ts renders the Alertmanager receiver
+    // templates through the real Go text/template engine. Inject the Go toolchain
+    // (GOROOT) from the golang image — both it and the bun base are Debian/glibc,
+    // so the toolchain runs. GOTOOLCHAIN=local avoids any toolchain download.
+    const goRoot = dag.container().from(GO_IMAGE).directory("/usr/local/go");
+    container = container
+      .withDirectory("/usr/local/go", goRoot)
+      .withEnvVariable("PATH", "/usr/local/go/bin:$PATH", { expand: true })
+      .withEnvVariable("GOTOOLCHAIN", "local")
+      .withEnvVariable("GOFLAGS", "-mod=mod");
   }
   return container.withExec(["bun", "run", "test"]);
 }
@@ -265,6 +278,7 @@ export async function lintTypecheckTestHelper(
   includeAstroBuild = false,
   includeBuild = false,
   skipTest = false,
+  needsGo = false,
   repoRoot: Directory | null = null,
 ): Promise<string> {
   const useTypecheckSecrets = haUrl !== null || haToken !== null;
@@ -313,6 +327,7 @@ export async function lintTypecheckTestHelper(
           depDirs,
           tsconfig,
           needsHelm,
+          needsGo,
           repoRoot,
         ).stdout(),
     });

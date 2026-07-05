@@ -17,7 +17,7 @@ type Props = {
 };
 
 const linkClassName =
-  "inline-flex h-10 items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500";
+  "inline-flex h-11 items-center justify-center rounded-md px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500";
 
 export function ClientNavigation({ items }: Props) {
   return (

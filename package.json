@@ -90,10 +90,11 @@
     "unrs-resolver"
   ],
   "patchedDependencies": {
+    "bun-types@1.3.14": "patches/bun-types@1.3.14.patch",
+    "discord-player-youtubei@2.0.0": "patches/discord-player-youtubei@2.0.0.patch",
+    "react-native-ios-utilities@5.2.0": "patches/react-native-ios-utilities@5.2.0.patch",
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
     "satori@0.18.3": "patches/satori@0.18.3.patch",
-    "twisted@1.73.0": "patches/twisted@1.73.0.patch",
-    "bun-types@1.3.14": "patches/bun-types@1.3.14.patch",
-    "discord-player-youtubei@2.0.0": "patches/discord-player-youtubei@2.0.0.patch"
+    "twisted@1.73.0": "patches/twisted@1.73.0.patch"
   }
 }

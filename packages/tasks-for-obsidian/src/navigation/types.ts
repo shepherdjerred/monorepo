@@ -1,3 +1,5 @@
+import type { NavigatorScreenParams } from "@react-navigation/native";
+
 import type {
   TaskId,
   ProjectName,
@@ -6,7 +8,7 @@ import type {
 } from "../domain/types";
 
 export type RootStackParamList = {
-  Main: undefined;
+  Main: NavigatorScreenParams<MainTabParamList> | undefined;
   TaskDetail: { taskId: TaskId };
   ProjectDetail: { projectName: ProjectName };
   ContextDetail: { contextName: ContextName };

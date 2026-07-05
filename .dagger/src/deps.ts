@@ -95,6 +95,8 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
     "eslint-config",
     "llm-models",
     "llm-observability",
+    // scout frontend consumes astro-opengraph-images (workspace:*)
+    "astro-opengraph-images",
   ],
   "scout-for-lol/packages/data": ["llm-models"],
   "scout-for-lol/packages/frontend": [

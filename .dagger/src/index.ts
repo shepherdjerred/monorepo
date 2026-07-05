@@ -109,6 +109,7 @@ import {
   smokeTestBirmelHelper,
   smokeTestStarlightKarmaBotHelper,
   smokeTestTasknotesServerHelper,
+  tasknotesContractTestHelper,
   smokeTestCaddyS3ProxyHelper,
   smokeTestObsidianHeadlessHelper,
   smokeTestMcpGatewayHelper,
@@ -221,6 +222,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
     needsHelm = false,
+    needsGo = false,
   ): Promise<string> {
     return testHelper(
       pkgDir,
@@ -229,6 +231,7 @@ export class Monorepo {
       depDirs,
       tsconfig,
       needsHelm,
+      needsGo,
       this.repoRoot,
     ).stdout();
   }
@@ -358,6 +361,7 @@ export class Monorepo {
     includeAstroBuild = false,
     includeBuild = false,
     skipTest = false,
+    needsGo = false,
   ): Promise<string> {
     return lintTypecheckTestHelper(
       pkgDir,
@@ -372,6 +376,7 @@ export class Monorepo {
       includeAstroBuild,
       includeBuild,
       skipTest,
+      needsGo,
       this.repoRoot,
     );
   }
@@ -1982,6 +1987,29 @@ export class Monorepo {
       depDirs,
       this.repoRoot,
     );
+  }
+
+  /**
+   * Contract test: tasks-for-obsidian's TaskNotesClient against a spawned
+   * real tasknotes-server. Pass tasks-for-obsidian as pkgDir/pkg and include
+   * tasknotes-server in depNames/depDirs.
+   */
+  @func()
+  async tasknotesContractTest(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return tasknotesContractTestHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+      this.repoRoot,
+    ).stdout();
   }
 
   /** Smoke test caddy-s3proxy: verifies custom Caddy binary works */
