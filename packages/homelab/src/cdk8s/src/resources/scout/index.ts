@@ -140,6 +140,10 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     }),
     ENVIRONMENT: EnvValue.fromValue(stage),
     DATABASE_URL: EnvValue.fromValue("file:/data/db.sqlite"),
+    // Parquet "report lake" queried by the DuckDB report engine. Disposable
+    // derived data on the same PVC as the SQLite DB; rebuilt from the
+    // Stored* tables by the report-lake compaction crons.
+    REPORT_LAKE_DIR: EnvValue.fromValue("/data/report-lake"),
     JWT_SIGNING_SECRET: EnvValue.fromSecretValue({
       secret: Secret.fromSecretName(
         chart,

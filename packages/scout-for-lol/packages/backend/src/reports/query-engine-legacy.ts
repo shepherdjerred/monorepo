@@ -1,3 +1,8 @@
+/**
+ * LEGACY fact-table report engine — kept ONLY for the parity test suite
+ * (query-engine-parity.integration.test.ts) during the lake migration.
+ * DELETE this file together with the fact tables in the follow-up PR.
+ */
 import type { DiscordGuildId, ReportQueryPlan } from "@scout-for-lol/data";
 import {
   CompetitionIdSchema,
@@ -9,13 +14,14 @@ import {
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { calculateLeaderboard } from "#src/league/competition/leaderboard.ts";
-import { runLakeAggregation } from "#src/reports/duckdb/execute.ts";
 import {
+  aggregateMatchFacts,
+  aggregatePairFacts,
+  aggregatePrematchFacts,
   cappedLimit,
   rowsFromAggregates,
-  sortedAggregates,
+  type MatchParticipantFactRow,
 } from "#src/reports/query-aggregates.ts";
-
 export type ReportResultValue = {
   column: string;
   value: number | string;
@@ -44,17 +50,7 @@ type ExecuteReportQueryParams = {
   now?: Date;
 };
 
-/**
- * Execute a ScoutQL report query.
- *
- * Fact-style sources (match_participants, player_pairs,
- * prematch_participants, competition_match_participants) run as compiled SQL
- * on embedded DuckDB over the report lake (see reports/duckdb/); rank
- * sources delegate to calculateLeaderboard as before. In all cases the
- * result shape and metric semantics are identical to the legacy fact-table
- * engine — pinned by the parity suite.
- */
-export async function executeReportQuery(
+export async function executeReportQueryLegacy(
   params: ExecuteReportQueryParams,
 ): Promise<ReportQueryResult> {
   const plan = parseAndCompile(params.queryText);
@@ -62,24 +58,33 @@ export async function executeReportQuery(
   if (plan.source === "competition_rank" || plan.source === "rank_current") {
     return await executeCompetitionRankReport(params, plan);
   }
+  if (plan.source === "prematch_participants") {
+    return await executePrematchParticipantReport(params, plan);
+  }
+  if (plan.source === "player_pairs") {
+    return await executePlayerPairsReport(params, plan);
+  }
   if (plan.source === "competition_match_participants") {
     return await executeCompetitionMatchParticipantReport(params, plan);
   }
-  if (plan.source === "player_pairs" && plan.groupBy !== "pair") {
-    throw new Error("player_pairs reports must GROUP BY pair.");
-  }
+  return await executeMatchParticipantReport(params, plan);
+}
 
+async function executeMatchParticipantReport(
+  params: ExecuteReportQueryParams,
+  plan: ReportQueryPlan,
+): Promise<ReportQueryResult> {
   const { startDate, endDate } = lookbackRange(params);
-  const result = await runLakeAggregation({
+  const facts = await fetchMatchParticipantFacts({
+    ...params,
     plan,
-    serverId: params.serverId,
     startDate,
     endDate,
   });
   return rowsFromAggregates(
     plan,
-    sortedAggregates(plan, result.aggregates),
-    result.rowsScanned,
+    aggregateMatchFacts(facts, plan),
+    facts.length,
     params.maxRows,
   );
 }
@@ -107,17 +112,66 @@ async function executeCompetitionMatchParticipantReport(
     select: { playerId: true },
   });
   const { startDate, endDate } = competitionRange(competition, params);
-  const result = await runLakeAggregation({
+  const facts = await fetchMatchParticipantFacts({
+    ...params,
     plan,
-    serverId: params.serverId,
     startDate,
     endDate,
     playerIds: participantRows.map((row) => row.playerId),
   });
   return rowsFromAggregates(
     plan,
-    sortedAggregates(plan, result.aggregates),
-    result.rowsScanned,
+    aggregateMatchFacts(facts, plan),
+    facts.length,
+    params.maxRows,
+  );
+}
+
+async function executePrematchParticipantReport(
+  params: ExecuteReportQueryParams,
+  plan: ReportQueryPlan,
+): Promise<ReportQueryResult> {
+  const { startDate, endDate } = lookbackRange(params);
+  const facts = await params.prisma.prematchParticipantFact.findMany({
+    where: {
+      serverId: params.serverId,
+      ...(plan.queueFilter === undefined
+        ? {}
+        : { queue: { in: plan.queueFilter } }),
+      observedAt: { gte: startDate, lte: endDate },
+    },
+  });
+  const filtered =
+    plan.championId === undefined
+      ? facts
+      : facts.filter((fact) => fact.championId === plan.championId);
+  return rowsFromAggregates(
+    plan,
+    aggregatePrematchFacts(filtered, plan),
+    facts.length,
+    params.maxRows,
+  );
+}
+
+async function executePlayerPairsReport(
+  params: ExecuteReportQueryParams,
+  plan: ReportQueryPlan,
+): Promise<ReportQueryResult> {
+  if (plan.groupBy !== "pair") {
+    throw new Error("player_pairs reports must GROUP BY pair.");
+  }
+
+  const { startDate, endDate } = lookbackRange(params);
+  const facts = await fetchMatchParticipantFacts({
+    ...params,
+    plan,
+    startDate,
+    endDate,
+  });
+  return rowsFromAggregates(
+    plan,
+    aggregatePairFacts(facts, plan),
+    facts.length,
     params.maxRows,
   );
 }
@@ -164,6 +218,33 @@ async function executeCompetitionRankReport(
     })),
     rowsScanned: leaderboard.length,
   };
+}
+
+async function fetchMatchParticipantFacts(params: {
+  prisma: ExtendedPrismaClient;
+  serverId: DiscordGuildId;
+  plan: ReportQueryPlan;
+  startDate: Date;
+  endDate: Date;
+  playerIds?: number[];
+}): Promise<MatchParticipantFactRow[]> {
+  const facts = await params.prisma.matchParticipantFact.findMany({
+    where: {
+      serverId: params.serverId,
+      ...(params.plan.queueFilter === undefined
+        ? {}
+        : { queue: { in: params.plan.queueFilter } }),
+      ...(params.playerIds === undefined
+        ? {}
+        : { playerId: { in: params.playerIds } }),
+      gameCreationAt: { gte: params.startDate, lte: params.endDate },
+    },
+  });
+
+  if (params.plan.championId === undefined) {
+    return facts;
+  }
+  return facts.filter((fact) => fact.championId === params.plan.championId);
 }
 
 function lookbackRange(params: ExecuteReportQueryParams): {

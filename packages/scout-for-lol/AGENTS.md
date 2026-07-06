@@ -344,6 +344,27 @@ type ParticipantDto = ...;  // Use RawParticipant instead
 - Lazy load heavy dependencies
 - Follow satori best practices (enforced by `custom-rules/satori-best-practices`)
 
+## ScoutQL Report Queries — DuckDB Report Lake
+
+Scheduled/user-authored ScoutQL reports execute as **compiled SQL on embedded
+DuckDB** (`@duckdb/node-api`, lazy-loaded) over a local Parquet "report lake"
+(`REPORT_LAKE_DIR`, prod `/data/report-lake`) — not over SQLite fact tables.
+
+- Lake layout & compaction: `backend/src/report-lake/` (two-tier: 15-min
+  staging fold + nightly full rebuild from `StoredMatch`/`StoredPrematch`
+  rawJson; atomic `CURRENT`-pointer publish; the lake is disposable derived
+  data). Manual run: `bun run compact:report-lake` (`--fold` for fold-only).
+- Engine: `backend/src/reports/duckdb/` — the ScoutQL `ReportQueryPlan`
+  compiles to parameterized SQL (never interpolate plan values); ordering,
+  minGames, limits, and metric derivation stay in JS (`query-aggregates.ts`).
+- **Adding a metric** = `ReportMetricSchema` enum + `REPORT_METRICS` registry
+  entry (packages/data) + `METRIC_DISPLAY` (backend output.ts) + an aggregate
+  column in `metrics-sql.ts`/`row-schema.ts`/`execute.ts` + `METRIC_VALUES`
+  derivation. No Prisma migration, no backfill — the nightly rebuild picks up
+  new lake columns from `report-lake/schema.ts`/`flatten.ts`.
+- Ingest staging: `store.ts` appends flattened rows to
+  `<lake>/matches-recent/` so games are queryable seconds after ingest.
+
 ---
 
 ## Database (Prisma)

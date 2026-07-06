@@ -22,6 +22,10 @@ node_modules/
 # Exception: test template database (pre-generated for fast test setup)
 !src/testing/template.db
 
+# Report lake (derived Parquet data, rebuilt by compaction crons).
+# Anchored to the package root — src/report-lake/ is source code!
+/report-lake/
+
 # Logs
 *.log
 npm-debug.log*
