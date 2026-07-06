@@ -193,6 +193,18 @@ resource "cloudflare_dns_record" "sjer_red_cname_temporal_agent_tasks" {
   proxied = true
 }
 
+# Self-hosted Relay Server (Obsidian real-time collaboration). TunnelBinding
+# lives in cdk8s (src/cdk8s/src/resources/relay); this record completes the
+# public path. Clients (Obsidian Relay plugin) connect over wss://relay.sjer.red.
+resource "cloudflare_dns_record" "sjer_red_cname_relay" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "relay"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
 resource "cloudflare_dns_record" "sjer_red_cname_seerr" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
