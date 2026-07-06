@@ -13,6 +13,10 @@ import {
   withCommonProps,
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import {
+  applyZfsVolumeSelinuxRelabeling,
+  zfsVolumeSelinuxLevels,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/selinux.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
@@ -81,7 +85,6 @@ export function createClickHouseDeployment(chart: Chart) {
       },
     },
   });
-
   deployment.addContainer(
     withCommonProps({
       name: "clickhouse",
@@ -134,6 +137,11 @@ export function createClickHouseDeployment(chart: Chart) {
         },
       },
     }),
+  );
+
+  applyZfsVolumeSelinuxRelabeling(
+    deployment,
+    zfsVolumeSelinuxLevels.clickhouse,
   );
 
   setRevisionHistoryLimit(deployment);

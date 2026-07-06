@@ -35,7 +35,7 @@ const CpuPowerCapOptionsSchema = z
 export type CpuPowerCapOptions = z.input<typeof CpuPowerCapOptionsSchema>;
 
 const NAMESPACE = "node-tuning";
-// The 95 W / 140 W limits are calibrated for the i9-13900K in this host. If
+// The 125 W / 253 W limits are Intel stock for the i9-14900K in this host. If
 // another node ever joins the cluster the limits would be wrong for it, and
 // the DaemonSet would CrashLoopBackOff there anyway because non-Intel hosts
 // lack /sys/class/powercap/intel-rapl:0. Pin to torvalds explicitly.
@@ -48,12 +48,15 @@ const TARGET_NODE_HOSTNAME = "torvalds";
  * and re-applies every 5 minutes as a safety net against firmware resets or
  * userspace clobbering.
  *
- * Why this exists: the i9-13900K in `torvalds` thermally throttles at TJMax
- * (100 °C) under bursty Buildkite CI load. The NVMe drives sit physically
- * adjacent to the CPU on the ASUS Pro Q670M-C and inherit the radiated heat —
- * nvme1 Composite has crossed its 81.85 °C warning threshold and its NAND
- * sensor has hit 103.85 °C. Capping CPU package power reduces radiated heat
- * into the SSD slot.
+ * Why this exists: torvalds runs an i9-14900K on an ASUS Pro Q670M-C whose
+ * firmware defaults PL1 to *unlimited*. Left unguarded that drove sustained
+ * 100 °C TJMax under bursty Buildkite CI load and overheated the physically
+ * adjacent M.2 slots (nvme1 NAND once hit ~104 °C). A large AIO cooler plus
+ * per-drive NVMe cooling (installed 2026-05-26) resolved the thermals — heavy
+ * CI days now peak ~82–84 °C — so on 2026-06-12 the emergency 95/140 W cap was
+ * raised to Intel stock 125/253 W. The DaemonSet is retained purely as a guard
+ * that re-pins the stock limits every 5 min so a firmware reset can't silently
+ * restore the unlimited-PL1 default.
  *
  * Note: this caps power, not voltage. Vcore undervolting on 10th-gen+ Intel
  * is blocked in microcode (Plundervolt mitigation, CVE-2019-11157) and must
