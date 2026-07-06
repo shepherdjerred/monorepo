@@ -382,11 +382,21 @@ const DAG_TASKS: DagTask[] = [
     warnOnly: false,
   },
   {
+    id: "scout-llm-models-refresh",
+    label: "scout-for-lol llm-models refresh",
+    // scout's generate imports @shepherdjerred/llm-models via a file: dep; the .bun copy made
+    // during Phase 2 install predates the llm-models build in this DAG, so re-copy it first.
+    cmd: ["bun", "install", "--force"],
+    cwd: "packages/scout-for-lol",
+    deps: ["llm-models"],
+    warnOnly: false,
+  },
+  {
     id: "scout-generate",
     label: "scout-for-lol generate",
     cmd: ["bun", "run", "generate"],
     cwd: "packages/scout-for-lol",
-    deps: ["birmel-prisma"],
+    deps: ["birmel-prisma", "scout-llm-models-refresh"],
     warnOnly: false,
   },
   {

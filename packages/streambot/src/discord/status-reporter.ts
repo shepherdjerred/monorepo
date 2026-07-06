@@ -29,6 +29,8 @@ export type StatusSnapshot = {
   readonly currentSourceLabel: string | null;
   readonly blockedNonce: number;
   readonly blockedRequester: UserId | null;
+  /** Machine `lastError` — the reason playback stopped (external stop, failure), or null. */
+  readonly lastError: string | null;
 };
 
 /** Cancels a pending scheduled notice. Returned by {@link NoticeScheduler}. */
@@ -76,6 +78,10 @@ export class StatusReporter {
   private readonly resolvingNoticeDelayMs: number;
   private lastNowKey: string | null = null;
   private lastNonce: number;
+  /** State seen on the previous snapshot — detects the active→idle edge for stop announcements. */
+  private lastState: string | null = null;
+  /** Dedup key for the last stop-reason announcement (state edges can re-render). */
+  private lastStopKey: string | null = null;
   /** Cancels the pending "preparing…" notice timer, or null when none is scheduled. */
   private cancelNotice: CancelNotice | null = null;
   /** Source label the current notice is scheduled/announced for — dedupes re-rendered snapshots. */
@@ -101,6 +107,7 @@ export class StatusReporter {
       }
     }
 
+    this.announceStopReason(snapshot);
     this.updateResolvingNotice(snapshot);
 
     const nowKey =
@@ -175,6 +182,35 @@ export class StatusReporter {
           `up to a minute. Playback will start automatically when it's ready.`,
       );
     }, this.resolvingNoticeDelayMs);
+  }
+
+  /**
+   * When playback stops with a recorded reason (external stop — voice loss, kick, guild removal),
+   * say so instead of going silent. Fires once per active→idle edge that carries a `lastError`;
+   * ordinary natural ends (lastError null) and user stops stay quiet as before.
+   */
+  private announceStopReason(snapshot: StatusSnapshot): void {
+    const previousState = this.lastState;
+    this.lastState = snapshot.state;
+    if (snapshot.state !== "idle" || snapshot.lastError === null) {
+      if (snapshot.state !== "idle") {
+        this.lastStopKey = null;
+      }
+      return;
+    }
+    const wasActive =
+      previousState !== null &&
+      previousState !== "idle" &&
+      previousState !== "waiting";
+    if (!wasActive) {
+      return;
+    }
+    const stopKey = `${previousState}:${snapshot.lastError}`;
+    if (stopKey === this.lastStopKey) {
+      return;
+    }
+    this.lastStopKey = stopKey;
+    void this.announce(`⏹️ Stream stopped: ${snapshot.lastError}`);
   }
 
   /** Cancel any pending "preparing…" notice and clear its dedup key. */
