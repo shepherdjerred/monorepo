@@ -44,12 +44,35 @@ export type VideoAttributes = {
   fps: number;
 };
 
-export abstract class BaseMediaConnection extends EventEmitter {
+/**
+ * Payload of the `close` event, emitted when the voice gateway websocket closes and the
+ * connection will NOT internally resume (i.e. the connection is dead). `deliberate` marks
+ * Discord's 4014 "disconnected" close — sent when the client is removed from the channel
+ * (e.g. a moderator disconnect) — as opposed to session loss (4006, network failures, ...).
+ */
+export type MediaConnectionCloseInfo = {
+  code: number;
+  canResume: boolean;
+  deliberate: boolean;
+};
+
+type MediaConnectionEvents = {
+  select_protocol_ack: [];
+  close: [MediaConnectionCloseInfo];
+};
+
+/** The subset of the WebSocket surface the voice gateway uses — narrow so tests can inject a fake. */
+export type VoiceGatewaySocket = Pick<
+  WebSocket,
+  "binaryType" | "readyState" | "send" | "close" | "addEventListener"
+>;
+
+export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEvents> {
   private interval: NodeJS.Timeout | null = null;
   public guildId: string | null = null;
   public channelId: string;
   public botId: string;
-  public ws: WebSocket | null = null;
+  public ws: VoiceGatewaySocket | null = null;
   public status: VoiceConnectionStatus;
   public server: string | null = null; //websocket url
   public token: string | null = null;
@@ -120,6 +143,11 @@ export abstract class BaseMediaConnection extends EventEmitter {
     this.ws?.close();
   }
 
+  /** Seam for tests to inject a fake websocket; production returns a real one. */
+  protected createWebSocket(url: string): VoiceGatewaySocket {
+    return new WebSocket(url);
+  }
+
   setSession(session_id: string): void {
     this.session_id = session_id;
 
@@ -144,7 +172,7 @@ export abstract class BaseMediaConnection extends EventEmitter {
       if (this.status.started) return;
       this.status.started = true;
 
-      this.ws = new WebSocket(`wss://${this.server}/?v=8`);
+      this.ws = this.createWebSocket(`wss://${this.server}/?v=8`);
       this.ws.binaryType = "arraybuffer";
       this.ws.addEventListener("open", () => {
         if (this.status.resuming) {
@@ -155,7 +183,7 @@ export abstract class BaseMediaConnection extends EventEmitter {
         }
       });
       this.ws.addEventListener("error", (err) => {
-        console.error(err);
+        this._logger.error({ err }, "voice gateway websocket error");
       });
       this.ws.addEventListener("close", (e) => {
         const wasStarted = this.status.started;
@@ -164,12 +192,32 @@ export abstract class BaseMediaConnection extends EventEmitter {
         this.status.started = false;
         const canResume = e.code === 4_015 || e.code < 4_000;
 
-        if (canResume && wasStarted) {
+        // A locally-initiated stop() closes the ws with a resumable-looking code (1000/1005);
+        // without this guard that close spawned a phantom resume socket after every normal stop.
+        if (this._closed) {
+          this._logger.info(
+            { code: e.code },
+            "voice gateway websocket closed after local stop",
+          );
+          return;
+        }
+
+        const resuming = canResume && wasStarted;
+        this._logger.info(
+          { code: e.code, canResume, wasStarted, resuming },
+          "voice gateway websocket closed",
+        );
+        if (resuming) {
           this.status.resuming = true;
           this.start();
         } else {
           this._closed = true;
           this._webRtcWrapper?.close();
+          this.emit("close", {
+            code: e.code,
+            canResume,
+            deliberate: e.code === 4_014,
+          });
         }
       });
       this.setupEvents();
