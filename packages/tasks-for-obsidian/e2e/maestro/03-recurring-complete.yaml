@@ -1,0 +1,23 @@
+# Complete today's instance of the recurring seeded task ("Water plants",
+# FREQ=DAILY, overdue -> visible on Today). Recurring completion records a
+# complete_instances entry but leaves status "Open"; run.ts asserts the vault
+# file gained the instance entry after the suite.
+appId: org.reactjs.native.example.TasksForObsidian
+---
+- runFlow: 00-setup.yaml
+- tapOn:
+    text: ".*Water plants.*"
+- extendedWaitUntil:
+    visible:
+      id: "task-detail-toggle"
+    timeout: 10000
+# Sanity: this really is the recurring task.
+- assertVisible: "FREQ=DAILY"
+- tapOn:
+    id: "task-detail-toggle"
+# Recurring semantics: the task itself must stay Open (not flip to Done).
+- extendedWaitUntil:
+    visible:
+      text: "Open"
+    timeout: 10000
+- assertVisible: ".*Water plants.*"

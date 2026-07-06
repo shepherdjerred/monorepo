@@ -1,0 +1,43 @@
+# Shared setup: clean app state, point the app at the local test stack via the
+# __DEV__-only e2e-config deep link, and wait for the seeded vault to sync in.
+# Requires --env APP_URL and --env AUTH_TOKEN (provided by e2e/run.ts).
+appId: org.reactjs.native.example.TasksForObsidian
+---
+# Self-healing: force the chaos proxy back online before every flow. If an
+# offline-simulation flow died between its offline and online toggles, every
+# later flow would otherwise inherit a dead network and fail right here.
+- runScript:
+    file: scripts/chaos-online.js
+    env:
+      CHAOS_BASE: ${APP_URL}
+- launchApp:
+    clearState: true
+# Wait for the app to finish booting (tab bar present) BEFORE openLink. A
+# clearState relaunch is still initializing when the flow continues; firing
+# openLink immediately races app startup and the JS Linking listener misses
+# the url event (and it is not a launch URL, so getInitialURL is empty too) —
+# the deep link is silently dropped and config never applies.
+- extendedWaitUntil:
+    visible:
+      id: "tab-inbox"
+    timeout: 60000
+- openLink: "tasknotes://e2e-config?apiUrl=${APP_URL}&token=${AUTH_TOKEN}&tips=off"
+# If SpringBoard shows an "Open in <app>?" confirmation for the custom scheme,
+# dismiss it. runFlow's `when` only taps if the button is actually present, so
+# the common direct-delivery path (app already frontmost) is unaffected.
+- runFlow:
+    when:
+      visible:
+        text: "Open"
+    commands:
+      - tapOn:
+          text: "Open"
+# The config handler applies apiUrl+token and navigates to Today. Applying the
+# apiUrl rebuilds the API client, which triggers an automatic refreshTasks — so
+# the seeded vault syncs in without any manual pull. "Water plants" (recurring,
+# overdue, never renamed by any flow) is the stable sentinel proving both config
+# and sync succeeded. Generous timeout because it's the first cold sync.
+- extendedWaitUntil:
+    visible:
+      text: ".*Water plants.*"
+    timeout: 45000

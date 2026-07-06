@@ -1,5 +1,6 @@
 ---
 import "../../styles/global.css";
+import SeoHead from "#src/components/SeoHead.astro";
 
 interface Props {
   title: string;
@@ -11,12 +12,11 @@ const { title } = Astro.props;
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="description" content="Review Generator Development Tool" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
+    <SeoHead
+      title={title}
+      description="Review Generator Development Tool"
+      noindex
+    />
   </head>
   <body class="bg-gray-50 dark:bg-gray-900 text-slate-950 dark:text-white">
     <slot />

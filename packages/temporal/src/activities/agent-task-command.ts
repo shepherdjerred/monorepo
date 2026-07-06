@@ -13,6 +13,8 @@ export type AgentTaskCommand = {
   args: string[];
   model: string;
   outputPath: string | undefined;
+  /** The rendered prompt, exposed for the LLM-observability span bodies. */
+  prompt: string;
 };
 
 async function writeOutputSchema(path: string): Promise<void> {
@@ -36,11 +38,12 @@ function claudeCommand(
   }
   const model = input.model ?? DEFAULT_CLAUDE_MODEL;
   const maxTurns = input.maxTurns ?? DEFAULT_MAX_TURNS;
+  const prompt = reportOnlyPrompt(input, workdir);
   return {
     args: [
       "claude",
       "-p",
-      reportOnlyPrompt(input, workdir),
+      prompt,
       "--output-format",
       "stream-json",
       "--verbose",
@@ -60,6 +63,7 @@ function claudeCommand(
     ],
     model,
     outputPath: undefined,
+    prompt,
   };
 }
 
@@ -75,6 +79,7 @@ async function codexCommand(
   const outputPath = `${workdir}/agent-task-output.json`;
   await writeOutputSchema(schemaPath);
   const model = input.model ?? DEFAULT_CODEX_MODEL;
+  const prompt = reportOnlyPrompt(input, workdir);
   return {
     args: [
       "codex",
@@ -92,10 +97,11 @@ async function codexCommand(
       workdir,
       "--model",
       model,
-      reportOnlyPrompt(input, workdir),
+      prompt,
     ],
     model,
     outputPath,
+    prompt,
   };
 }
 

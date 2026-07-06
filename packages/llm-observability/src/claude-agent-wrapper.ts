@@ -3,12 +3,17 @@ import {
   type AttributeValue,
   type Span,
 } from "@opentelemetry/api";
-import { z } from "zod";
 import {
   getLlmTracer,
   serializeBodyAttribute,
   type LlmCallMetadata,
 } from "./span-helpers.ts";
+import {
+  AssistantMessageSchema,
+  InitMessageSchema,
+  ResultMessageSchema,
+  type ClaudeResultMessage,
+} from "./claude-message-schemas.ts";
 
 export type TraceClaudeAgentMetadata = Omit<LlmCallMetadata, "system"> & {
   request: {
@@ -36,41 +41,6 @@ type Accumulator = {
   cacheCreationInputTokens: number | undefined;
   sawResult: boolean;
 };
-
-const InitMessageSchema = z.object({
-  type: z.literal("system"),
-  subtype: z.literal("init"),
-  model: z.string().optional(),
-  session_id: z.string().optional(),
-});
-
-const AssistantMessageSchema = z.object({
-  type: z.literal("assistant"),
-  message: z
-    .object({
-      content: z.unknown(),
-    })
-    .optional(),
-  session_id: z.string().optional(),
-});
-
-const ResultUsageSchema = z.object({
-  input_tokens: z.number().optional(),
-  output_tokens: z.number().optional(),
-  cache_read_input_tokens: z.number().optional(),
-  cache_creation_input_tokens: z.number().optional(),
-});
-
-const ResultMessageSchema = z.object({
-  type: z.literal("result"),
-  subtype: z.string().optional(),
-  stop_reason: z.string().optional(),
-  is_error: z.boolean().optional(),
-  total_cost_usd: z.number().optional(),
-  num_turns: z.number().optional(),
-  session_id: z.string().optional(),
-  usage: ResultUsageSchema.optional(),
-});
 
 /**
  * Wrap a Claude Agent SDK `query({...})` call. Returns an async generator that
@@ -274,7 +244,7 @@ function observe(message: unknown, acc: Accumulator): void {
 }
 
 function applyResultToAccumulator(
-  data: z.infer<typeof ResultMessageSchema>,
+  data: ClaudeResultMessage,
   acc: Accumulator,
 ): void {
   acc.sawResult = true;

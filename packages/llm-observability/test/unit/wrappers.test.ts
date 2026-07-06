@@ -1,29 +1,9 @@
-import { test, expect, beforeAll, afterAll } from "bun:test";
-import {
-  BasicTracerProvider,
-  InMemorySpanExporter,
-  SimpleSpanProcessor,
-} from "@opentelemetry/sdk-trace-base";
-import { resourceFromAttributes } from "@opentelemetry/resources";
-import { trace } from "@opentelemetry/api";
+import { test, expect } from "bun:test";
 import { traceAnthropic } from "#src/anthropic-wrapper.ts";
 import { traceOpenAi } from "#src/openai-wrapper.ts";
 import { traceGemini } from "#src/gemini-wrapper.ts";
 import { traceClaudeAgent } from "#src/claude-agent-wrapper.ts";
-
-const exporter = new InMemorySpanExporter();
-const provider = new BasicTracerProvider({
-  resource: resourceFromAttributes({ "service.name": "test-service" }),
-  spanProcessors: [new SimpleSpanProcessor(exporter)],
-});
-
-beforeAll(() => {
-  trace.setGlobalTracerProvider(provider);
-});
-
-afterAll(async () => {
-  await provider.shutdown();
-});
+import { exporter } from "./otel-test-provider.ts";
 
 test("traceAnthropic emits gen_ai.* attributes with usage", async () => {
   exporter.reset();

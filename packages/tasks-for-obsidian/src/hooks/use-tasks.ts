@@ -2,12 +2,16 @@ import { useCallback, useMemo, useState } from "react";
 
 import type { TaskId } from "../domain/types";
 import { isActiveStatus } from "../domain/status";
+import { parseLocalDate } from "../lib/dates";
 import { useTaskContext } from "../state/TaskContext";
 
+// Date-only strings ("YYYY-MM-DD") are parsed as LOCAL dates. new Date() would
+// treat them as UTC midnight, shifting Today/Overdue/Upcoming buckets by a day
+// for negative-UTC users (a task due today classifies as overdue).
 function isToday(dateStr?: string): boolean {
   if (!dateStr) return false;
   const today = new Date();
-  const date = new Date(dateStr);
+  const date = parseLocalDate(dateStr);
   return (
     date.getFullYear() === today.getFullYear() &&
     date.getMonth() === today.getMonth() &&
@@ -19,7 +23,7 @@ function isOverdue(dateStr?: string): boolean {
   if (!dateStr) return false;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const date = new Date(dateStr);
+  const date = parseLocalDate(dateStr);
   date.setHours(0, 0, 0, 0);
   return date < today;
 }
@@ -28,7 +32,7 @@ function isUpcoming(dateStr?: string): boolean {
   if (!dateStr) return false;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const date = new Date(dateStr);
+  const date = parseLocalDate(dateStr);
   date.setHours(0, 0, 0, 0);
   return date > today;
 }

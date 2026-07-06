@@ -56,6 +56,7 @@ function streaming(
     currentSourceLabel: title,
     blockedNonce: 0,
     blockedRequester: null,
+    lastError: null,
   };
 }
 
@@ -71,6 +72,7 @@ function resolving(
     currentSourceLabel: label,
     blockedNonce: 0,
     blockedRequester: null,
+    lastError: null,
   };
 }
 
@@ -103,6 +105,7 @@ describe("StatusReporter now-playing", () => {
       currentSourceLabel: null,
       blockedNonce: 0,
       blockedRequester: null,
+      lastError: null,
     });
     reporter.handle(streaming("Song A"));
     expect(messages).toHaveLength(2);
@@ -244,6 +247,7 @@ describe("StatusReporter blocked shaming", () => {
       currentSourceLabel: null,
       blockedNonce: 1,
       blockedRequester: REQUESTER,
+      lastError: null,
     });
     expect(messages).toHaveLength(1);
     expect(messages[0]).toContain(`<@${REQUESTER}>`);
@@ -259,6 +263,7 @@ describe("StatusReporter blocked shaming", () => {
       currentSourceLabel: null,
       blockedNonce: 1,
       blockedRequester: REQUESTER,
+      lastError: null,
     };
     reporter.handle(blocked);
     reporter.handle(blocked);
@@ -282,7 +287,68 @@ describe("StatusReporter blocked shaming", () => {
       currentSourceLabel: null,
       blockedNonce: 1,
       blockedRequester: REQUESTER,
+      lastError: null,
     });
     expect(messages).toHaveLength(0);
+  });
+});
+
+/** Flatten an Announcement to its text for assertions. */
+function text(message: Announcement): string {
+  return typeof message === "string" ? message : message.content;
+}
+
+function idleWith(lastError: string | null): StatusSnapshot {
+  return {
+    state: "idle",
+    currentTitle: null,
+    currentRequester: null,
+    currentKind: null,
+    currentSourceLabel: null,
+    blockedNonce: 0,
+    blockedRequester: null,
+    lastError,
+  };
+}
+
+describe("StatusReporter stop reasons", () => {
+  test("announces the reason once on the active→idle edge", () => {
+    const { reporter, messages } = collector();
+    reporter.handle(streaming("Song A"));
+    reporter.handle(idleWith("voice connection dropped (close code 4006)"));
+    reporter.handle(idleWith("voice connection dropped (close code 4006)"));
+    const stops = messages.filter((m) => text(m).includes("Stream stopped"));
+    expect(stops).toEqual([
+      "⏹️ Stream stopped: voice connection dropped (close code 4006)",
+    ]);
+  });
+
+  test("stays silent on a natural end (no lastError)", () => {
+    const { reporter, messages } = collector();
+    reporter.handle(streaming("Song A"));
+    reporter.handle(idleWith(null));
+    expect(messages.some((m) => text(m).includes("Stream stopped"))).toBe(
+      false,
+    );
+  });
+
+  test("does not announce for an idle-timeout leave (waiting→idle)", () => {
+    const { reporter, messages } = collector();
+    reporter.handle(streaming("Song A"));
+    reporter.handle({ ...idleWith("stale error"), state: "waiting" });
+    reporter.handle(idleWith("stale error"));
+    expect(messages.some((m) => text(m).includes("Stream stopped"))).toBe(
+      false,
+    );
+  });
+
+  test("a fresh session announcing a new stop reason is not deduped", () => {
+    const { reporter, messages } = collector();
+    reporter.handle(streaming("Song A"));
+    reporter.handle(idleWith("voice connection dropped (close code 4006)"));
+    reporter.handle(streaming("Song B"));
+    reporter.handle(idleWith("voice connection dropped (close code 4014)"));
+    const stops = messages.filter((m) => text(m).includes("Stream stopped"));
+    expect(stops).toHaveLength(2);
   });
 });

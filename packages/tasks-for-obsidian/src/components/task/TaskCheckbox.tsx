@@ -70,6 +70,7 @@ export const TaskCheckbox = React.memo(function TaskCheckbox({
     <Pressable
       onPress={handleToggle}
       hitSlop={11}
+      testID="task-checkbox"
       accessibilityRole="checkbox"
       accessibilityState={{ checked: completed }}
       accessibilityLabel={`${completed ? "Uncheck" : "Check"} task`}

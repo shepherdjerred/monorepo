@@ -1,13 +1,58 @@
 // Streaming parser for Codex CLI's `--json` stdout (one JSON event per line).
-// Two consumers subscribe via the event-bus: goal-manager (cost + final message)
-// and codex-trace (OTel span synthesis). The parser is intentionally schema-
-// permissive: Codex's event names change between CLI versions, so we extract
-// the few fields we care about with Zod and pass everything else through as
-// the raw record for downstream code that wants more.
+// Consumers subscribe via the event bus: cost accounting reads the running
+// usage total, codex-trace synthesizes OTel spans. The parser is intentionally
+// schema-permissive: Codex's event names change between CLI versions, so we
+// extract the few fields we care about with Zod and pass everything else
+// through as the raw record for downstream code that wants more.
+//
+// Promoted from discord-plays-pokemon's goal runner; the only changes are the
+// injected logger (instead of dpp's) and the usage type living here.
 
 import { z } from "zod";
-import { logger } from "#src/logger.ts";
-import { addUsage, EMPTY_USAGE, type TurnUsage } from "./pricing.ts";
+
+export type CodexTurnUsage = {
+  inputTokens: number;
+  cachedInputTokens: number;
+  outputTokens: number;
+  reasoningOutputTokens: number;
+};
+
+export const EMPTY_CODEX_USAGE: CodexTurnUsage = {
+  inputTokens: 0,
+  cachedInputTokens: 0,
+  outputTokens: 0,
+  reasoningOutputTokens: 0,
+};
+
+export function addCodexUsage(
+  left: CodexTurnUsage,
+  right: CodexTurnUsage,
+): CodexTurnUsage {
+  return {
+    inputTokens: left.inputTokens + right.inputTokens,
+    cachedInputTokens: left.cachedInputTokens + right.cachedInputTokens,
+    outputTokens: left.outputTokens + right.outputTokens,
+    reasoningOutputTokens:
+      left.reasoningOutputTokens + right.reasoningOutputTokens,
+  };
+}
+
+export type CodexLogger = {
+  warn: (message: string) => void;
+  info?: (message: string) => void;
+};
+
+const noopLogger: CodexLogger = {
+  warn(message) {
+    console.warn(
+      JSON.stringify({
+        level: "warn",
+        msg: message,
+        component: "llm-observability",
+      }),
+    );
+  },
+};
 
 // Discriminator + fields we depend on. Unknown events still land on the bus
 // as `raw` so codex-trace can fan them out into span events.
@@ -40,7 +85,7 @@ const TypedEventSchema = z.looseObject({
 
 export type CodexEvent =
   | { kind: "turn.started"; raw: unknown }
-  | { kind: "turn.completed"; usage: TurnUsage; raw: unknown }
+  | { kind: "turn.completed"; usage: CodexTurnUsage; raw: unknown }
   | { kind: "agent_message"; text: string; raw: unknown }
   | { kind: "other"; type: string; raw: unknown }
   | { kind: "parse_error"; line: string; error: unknown };
@@ -48,20 +93,22 @@ export type CodexEvent =
 export type CodexEventListener = (event: CodexEvent) => void;
 
 type ParserState = {
-  total: TurnUsage;
+  total: CodexTurnUsage;
   listeners: CodexEventListener[];
 };
 
 export type CodexJsonlParser = {
   push: (chunk: string) => void;
   finish: () => void;
-  total: () => TurnUsage;
+  total: () => CodexTurnUsage;
   subscribe: (listener: CodexEventListener) => () => void;
 };
 
-export function createCodexJsonlParser(): CodexJsonlParser {
+export function createCodexJsonlParser(
+  logger: CodexLogger = noopLogger,
+): CodexJsonlParser {
   const state: ParserState = {
-    total: { ...EMPTY_USAGE },
+    total: { ...EMPTY_CODEX_USAGE },
     listeners: [],
   };
   let buffer = "";
@@ -84,7 +131,7 @@ export function createCodexJsonlParser(): CodexJsonlParser {
       parsed = JSON.parse(trimmed);
     } catch (error) {
       emit({ kind: "parse_error", line: trimmed, error });
-      logger.info(`goal codex stdout (non-json): ${trimmed}`);
+      logger.info?.(`codex stdout (non-json): ${truncate(trimmed, 500)}`);
       return;
     }
 
@@ -103,7 +150,7 @@ export function createCodexJsonlParser(): CodexJsonlParser {
         const usage = normalizeUsage(
           completed.success ? completed.data.usage : undefined,
         );
-        state.total = addUsage(state.total, usage);
+        state.total = addCodexUsage(state.total, usage);
         emit({ kind: "turn.completed", usage, raw: parsed });
         return;
       }
@@ -115,7 +162,7 @@ export function createCodexJsonlParser(): CodexJsonlParser {
           typeof item.data.item.text === "string"
         ) {
           const text = item.data.item.text;
-          logger.info(`goal codex agent_message: ${truncate(text, 1000)}`);
+          logger.info?.(`codex agent_message: ${truncate(text, 1000)}`);
           emit({ kind: "agent_message", text, raw: parsed });
           return;
         }
@@ -144,7 +191,7 @@ export function createCodexJsonlParser(): CodexJsonlParser {
         buffer = "";
       }
     },
-    total(): TurnUsage {
+    total(): CodexTurnUsage {
       return { ...state.total };
     },
     subscribe(listener: CodexEventListener): () => void {
@@ -159,7 +206,7 @@ export function createCodexJsonlParser(): CodexJsonlParser {
 
 function normalizeUsage(
   raw: z.infer<typeof TurnUsageSchema> | undefined,
-): TurnUsage {
+): CodexTurnUsage {
   return {
     inputTokens: raw?.input_tokens ?? 0,
     cachedInputTokens: raw?.cached_input_tokens ?? 0,
