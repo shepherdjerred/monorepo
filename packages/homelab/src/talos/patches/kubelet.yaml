@@ -1,9 +1,40 @@
+# Kubelet node-resource reservations for the single-node torvalds cluster.
+#
+# IMPORTANT — mechanism: reservations live under `extraConfig` (a
+# KubeletConfiguration override that Talos deep-merges into the generated kubelet
+# config), NOT under `extraArgs`. From 2026-03-18 (commit c649ada3d) until
+# 2026-07-05 these were set as `--system-reserved` / `--eviction-hard` *flags* in
+# extraArgs and never took effect: a live `talosctl get machineconfig` showed only
+# `max-pods` present, with kubelet running on defaults (systemReserved=512Mi,
+# evictionHard.memory.available=100Mi). That left ~all 125 GiB of RAM pod-
+# allocatable, so CI pods + the ZFS ARC could oversubscribe RAM and hard-freeze the
+# node. KubeletConfiguration is the canonical, reliably-applied form.
+# See packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md.
 machine:
   kubelet:
     extraArgs:
       max-pods: "300"
-      system-reserved: "cpu=2,memory=52Gi"
-      kube-reserved: "cpu=1,memory=2Gi"
-      eviction-hard: "memory.available<2Gi,nodefs.available<10%"
-      eviction-soft: "memory.available<4Gi,nodefs.available<15%"
-      eviction-soft-grace-period: "memory.available=2m,nodefs.available=2m"
+    extraConfig:
+      # system-reserved must cover everything OUTSIDE the kubepods cgroup: the ZFS
+      # ARC (zfs_arc_max = 48 GiB, see talos/patches/zfs.yaml) plus host kernel / OS
+      # / kubelet / containerd / apid / etcd overhead (~8 GiB). With
+      # enforceNodeAllocatable=[pods] (the kubelet default, verified live), this
+      # shrinks the kubepods memory cgroup limit to (Capacity - reserved -
+      # evictionHard) ≈ 65 GiB, hard-capping total pod memory so ARC + OS always
+      # retain ~10 GiB of guaranteed headroom. A runaway build now OOM-kills one pod
+      # instead of wedging the whole node.
+      systemReserved:
+        cpu: "4"
+        memory: "56Gi"
+      kubeReserved:
+        cpu: "1"
+        memory: "2Gi"
+      evictionHard:
+        memory.available: "2Gi"
+        nodefs.available: "10%"
+      evictionSoft:
+        memory.available: "4Gi"
+        nodefs.available: "15%"
+      evictionSoftGracePeriod:
+        memory.available: "2m"
+        nodefs.available: "2m"

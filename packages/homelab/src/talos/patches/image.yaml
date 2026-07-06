@@ -19,10 +19,13 @@ machine:
     devices.virtual.powercap.intel-rapl.intel-rapl:0.constraint_0_power_limit_uw: "125000000"
     devices.virtual.powercap.intel-rapl.intel-rapl:0.constraint_1_power_limit_uw: "253000000"
     # ZFS ARC tuning for 128GB RAM system
-    # Use 50% of total RAM to leave headroom for k8s workloads while reducing
-    # hash-collision spikes under metadata-heavy ZFS load.
-    # Max ARC size: 62.5 GiB
-    module.zfs.parameters.zfs_arc_max: "67108864000"
+    # Capped at 48 GiB — below the kubelet `systemReserved.memory: 56Gi`
+    # (talos/patches/kubelet.yaml) so ARC can never grow past the memory kubelet
+    # accounts for as non-pod. A larger cap (was 62.5 GiB) let ARC + pod
+    # allocatable + OS oversubscribe RAM and freeze the node under CI build
+    # storms; see packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md.
+    # Max ARC size: 48 GiB
+    module.zfs.parameters.zfs_arc_max: "51539607552"
     # Min ARC size: 8GB (ensures cache isn't starved during memory pressure)
     module.zfs.parameters.zfs_arc_min: "8589934592"
     # Favor metadata in ARC (default 500, higher = more metadata)
