@@ -2,7 +2,9 @@
 
 ## Status
 
-In Progress — rewrite and lychee CI gate not yet implemented.
+Partially Complete — the polyrepo→monorepo link rewrites are effectively done (only out-of-scope
+gist/testdata/OCI-label refs remain); the lychee CI link-check gate (`lychee.toml` +
+`.buildkite/scripts/lychee.sh` + `lycheeStep`) is still not implemented.
 
 ## Context
 

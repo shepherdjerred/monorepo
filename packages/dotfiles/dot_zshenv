@@ -1,0 +1,7 @@
+# ~/.zshenv — sourced by every zsh invocation (incl. Claude Code's non-interactive Bash tool).
+#
+# Make an unmatched glob expand to the literal pattern instead of aborting the whole command.
+# zsh's default NOMATCH option errors out ("no matches found") on a glob with no matches, which
+# silently kills commands like `rm -f out/*.tmp` or `ls config*` when nothing matches — bash
+# passes the literal pattern through instead. This restores bash-like behavior for the Bash tool.
+setopt no_nomatch

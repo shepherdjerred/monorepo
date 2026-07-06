@@ -1,0 +1,40 @@
+# Offline queue: cut the chaos proxy, create a task, verify it shows
+# optimistically, restore the network, and verify it survives a real sync.
+appId: org.reactjs.native.example.TasksForObsidian
+---
+- runFlow: 00-setup.yaml
+- runScript:
+    file: scripts/chaos-offline.js
+    env:
+      CHAOS_BASE: ${APP_URL}
+- tapOn:
+    id: "fab-add-task"
+- extendedWaitUntil:
+    visible:
+      id: "quick-add-input"
+    timeout: 10000
+- tapOn:
+    id: "quick-add-input"
+- inputText: "Offline created task"
+- tapOn:
+    id: "quick-add-submit"
+# No due date -> the task lives on the Inbox tab. It must appear immediately
+# (optimistic) even though the server is unreachable.
+- tapOn:
+    id: "tab-inbox"
+- extendedWaitUntil:
+    visible:
+      text: ".*Offline created task.*"
+    timeout: 15000
+- runScript:
+    file: scripts/chaos-online.js
+    env:
+      CHAOS_BASE: ${APP_URL}
+# Pull to refresh replays the queued create against the real server.
+- swipe:
+    start: "50%, 30%"
+    end: "50%, 70%"
+- extendedWaitUntil:
+    visible:
+      text: ".*Offline created task.*"
+    timeout: 30000

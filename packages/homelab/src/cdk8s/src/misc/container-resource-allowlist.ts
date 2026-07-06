@@ -15,6 +15,7 @@ export const BEST_EFFORT_CONTAINER_ALLOWLIST: ReadonlySet<string> = new Set([
   "bugsink/migrate",
   "bugsink/migrate-snappea",
   "mcp-gateway/render-config",
+  "media-qbittorrent/qbittorrent-config-seed",
   "plausible/build-db-url",
   // Metrics/sidecar helpers — tiny, lose nothing on eviction.
   "media-plex/plex-exporter",

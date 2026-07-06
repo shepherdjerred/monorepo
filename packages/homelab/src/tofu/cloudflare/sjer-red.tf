@@ -115,6 +115,9 @@ resource "cloudflare_dns_record" "sjer_red_cname_jellyfin" {
   proxied = true
 }
 
+# Kept for the Overseerr→Seerr redirect (see cloudflare_ruleset
+# "sjer_red_redirects" in this file). The origin is gone; the edge redirect
+# ruleset intercepts every request before the tunnel is contacted.
 resource "cloudflare_dns_record" "sjer_red_cname_overseerr" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
@@ -197,6 +200,35 @@ resource "cloudflare_dns_record" "sjer_red_cname_seerr" {
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
+}
+
+# Overseerr was migrated to Seerr (users + request history imported into the
+# Seerr DB, 2026-07-03). The overseerr.sjer.red record is intentionally kept as
+# a proxied CNAME (above) so the hostname still resolves through Cloudflare; the
+# dynamic-redirect ruleset below runs at the edge *before* any origin fetch and
+# 301s every request to seerr.sjer.red (path + query preserved), so the
+# now-routeless tunnel target is never actually contacted.
+resource "cloudflare_ruleset" "sjer_red_redirects" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "sjer.red dynamic redirects"
+  kind    = "zone"
+  phase   = "http_request_dynamic_redirect"
+
+  rules = [{
+    ref         = "overseerr_to_seerr"
+    description = "Redirect overseerr.sjer.red to seerr.sjer.red (Overseerr retired)"
+    expression  = "(http.host eq \"overseerr.sjer.red\")"
+    action      = "redirect"
+    action_parameters = {
+      from_value = {
+        status_code           = 301
+        preserve_query_string = true
+        target_url = {
+          expression = "concat(\"https://seerr.sjer.red\", http.request.uri.path)"
+        }
+      }
+    }
+  }]
 }
 
 resource "cloudflare_dns_record" "sjer_red_cname_resume" {

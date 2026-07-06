@@ -7,6 +7,7 @@ import {
 import { getTraceContext } from "#observability/tracing.ts";
 import { emitOtel } from "#observability/log.ts";
 import { parseClaudeResultMessage } from "#shared/claude-result.ts";
+import { traceClaudeCli } from "@shepherdjerred/llm-observability/wrappers/claude-cli";
 import { redactSecrets } from "#shared/redact.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import { buildSeasonRefreshPrompt } from "./scout-season-refresh-prompt.ts";
@@ -22,6 +23,7 @@ export type ClaudeRunInput = {
   maxTurns: number;
   seasonsFile: string;
   seasonsTestFile: string;
+  changelogFile: string;
   noDriftSentinel: string;
   driftedSentinel: string;
 };
@@ -194,6 +196,7 @@ export async function runClaude(
     workdir: input.workdir,
     seasonsFile: input.seasonsFile,
     seasonsTestFile: input.seasonsTestFile,
+    changelogFile: input.changelogFile,
     noDriftSentinel: input.noDriftSentinel,
     driftedSentinel: input.driftedSentinel,
   });
@@ -250,6 +253,31 @@ export async function runClaude(
 
   const durationMs = Date.now() - startMs;
   scoutSeasonRefreshSubprocessExitTotal.inc({ exit_code: String(exitCode) });
+
+  // Post-hoc gen_ai span (archived to S3 by the span processor) — before the
+  // failure checks so failed runs are traced too.
+  traceClaudeCli(
+    {
+      service: "temporal",
+      callSite: "scout-season-refresh",
+      request: {
+        model: input.model,
+        prompt,
+        options: { maxTurns: input.maxTurns },
+      },
+    },
+    {
+      stdout,
+      exitCode,
+      startTimeMs: startMs,
+      endTimeMs: startMs + durationMs,
+    },
+    {
+      warn: (message) => {
+        jsonLog("warning", message, { phase: "claude-cli-trace" });
+      },
+    },
+  );
 
   if (exitCode !== 0) {
     const e = new Error(

@@ -18,10 +18,31 @@ import {
   type ChampionListData,
   type CDragonChampion,
 } from "./update-data-dragon-schemas.ts";
-import { getChampionName } from "twisted/dist/constants/champions.js";
+import { Constants } from "twisted";
+const { getChampionName } = Constants;
+import {
+  buildPatchChangelogEntryLiteral,
+  insertChangelogEntry,
+  isMinorVersionBump,
+  minorVersionKey,
+} from "./update-changelog.ts";
+import {
+  fetchPatches,
+  selectPatchByMinor,
+  type RiotPatch,
+} from "./riot-patch.ts";
+import { analyzePatch } from "./patch-analysis.ts";
 
 const ASSETS_DIR = `${import.meta.dir}/../src/data-dragon/assets`;
 const IMG_DIR = `${ASSETS_DIR}/img`;
+// scout-for-lol/packages/data/scripts → scout-for-lol/packages/frontend/...
+const CHANGELOG_FILE = `${import.meta.dir}/../../frontend/src/data/changelog.tsx`;
+// Structured patch changeset consumed at review time (bundled asset).
+const PATCH_NOTES_ASSET = `${ASSETS_DIR}/patch-notes.json`;
+// Raw patch-notes provenance — committed but not imported at runtime.
+const PATCH_NOTES_ARCHIVE_DIR = `${import.meta.dir}/../patch-notes-archive`;
+// scout-for-lol/packages/data/scripts → monorepo root (for resolving prettier).
+const MONOREPO_ROOT = `${import.meta.dir}/../../../../..`;
 const BASE_URL = "https://ddragon.leagueoflegends.com";
 const BYTES_PER_MIB = 1024 * 1024;
 const MAX_LOADING_SCREEN_IMAGE_BYTES = 1 * BYTES_PER_MIB;
@@ -887,10 +908,155 @@ async function downloadAugmentImages(
   }
 }
 
+const VersionFileSchema = z.object({ version: z.string().min(1) });
+
+/**
+ * Read the version currently committed on disk, before this run overwrites it.
+ * Returns undefined on a first-ever run or an unparseable file so the changelog
+ * step simply no-ops rather than guessing.
+ */
+async function readPreviousVersion(): Promise<string | undefined> {
+  const file = Bun.file(`${ASSETS_DIR}/version.json`);
+  if (!(await file.exists())) {
+    return undefined;
+  }
+  const data: unknown = await file.json();
+  const parsed = VersionFileSchema.safeParse(data);
+  return parsed.success ? parsed.data.version : undefined;
+}
+
+/**
+ * Append a "What's New" entry to the frontend changelog — but only on a
+ * minor-version bump (16.13.x → 16.14.x). Micro-bumps, unchanged weekly
+ * refreshes, and first-ever runs skip it, so the auto-merged Data Dragon PR
+ * never spams the changelog.
+ *
+ * The entry references the REAL player-facing patch number (e.g. "26.13") pulled
+ * from Riot's patch-notes feed, not the Data Dragon version ("16.13"). A
+ * network/parse failure throws (fail fast); a not-yet-posted matching patch is
+ * an expected timing case that skips the entry without blocking the asset PR.
+ */
+/**
+ * Archive the raw patch-notes page for provenance/re-analysis. Best-effort: a
+ * fetch failure is logged and skipped (the structured changeset is what reviews
+ * actually consume). Committed but excluded from formatting and never imported.
+ */
+async function saveRawPatchNotes(patch: RiotPatch): Promise<void> {
+  try {
+    const response = await fetch(patch.url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; ScoutForLoL/1.0; +https://scout-for-lol.com)",
+        Accept: "text/html",
+      },
+    });
+    if (!response.ok) {
+      console.warn(
+        `⚠ Could not archive raw patch notes: HTTP ${String(response.status)} ${response.statusText}`,
+      );
+      return;
+    }
+    await Bun.write(
+      `${PATCH_NOTES_ARCHIVE_DIR}/${patch.patch}.html`,
+      await response.text(),
+    );
+    console.log(`✓ Archived raw patch ${patch.patch} notes`);
+  } catch (error) {
+    console.warn(`⚠ Could not archive raw patch notes: ${String(error)}`);
+  }
+}
+
+async function maybeAppendChangelogEntry(
+  previousVersion: string | undefined,
+  version: string,
+): Promise<void> {
+  if (previousVersion === undefined) {
+    console.log("\nℹ No previous version.json — skipping changelog entry");
+    return;
+  }
+  if (!isMinorVersionBump(previousVersion, version)) {
+    console.log(
+      `\nℹ ${previousVersion} → ${version} is not a minor bump — skipping changelog entry`,
+    );
+    return;
+  }
+
+  const minor = Number(minorVersionKey(version).split(".")[1]);
+  console.log(
+    `\n📝 Resolving Riot patch notes for Data Dragon ${version} (minor .${String(minor)})...`,
+  );
+  const patches = await fetchPatches();
+  const patch = selectPatchByMinor(patches, minor);
+  if (patch === undefined) {
+    // Riot hasn't posted the matching patch yet (Data Dragon led the news).
+    // Expected timing, not a failure: skip the entry; the assets still update
+    // and a later run adds it once the notes are live.
+    console.warn(
+      `\n⚠ Riot has not posted patch notes for .${String(minor)} yet (latest: ${patches[0]?.patch ?? "unknown"}). Skipping changelog entry; assets still updated.`,
+    );
+    return;
+  }
+
+  // Ask Claude to read the real patch notes and produce a structured changeset
+  // (consumed by AI reviews) plus the short highlight bullets (consumed here).
+  // Best-effort: a failure (no claude, timeout, bad output) falls back to just
+  // the data-refresh line and leaves the committed changeset untouched, rather
+  // than blocking the asset PR or shipping a garbage changeset.
+  let highlights: string[] = [];
+  try {
+    console.log(`🤖 Analyzing patch ${patch.patch} notes via Claude...`);
+    const changeset = await analyzePatch(patch);
+    await Bun.write(
+      PATCH_NOTES_ASSET,
+      `${JSON.stringify(changeset, null, 2)}\n`,
+    );
+    const prettierResult =
+      await $`cd ${MONOREPO_ROOT} && bunx prettier --write ${PATCH_NOTES_ASSET}`.quiet();
+    if (prettierResult.exitCode !== 0) {
+      throw new Error(
+        `prettier failed to format patch-notes.json (exit ${String(prettierResult.exitCode)}): ${prettierResult.stderr.toString()}`,
+      );
+    }
+    console.log(
+      `✓ Wrote patch changeset (${String(changeset.champions.length)} champion, ${String(changeset.items.length)} item, ${String(changeset.systems.length)} system changes)`,
+    );
+    highlights = changeset.summary;
+    await saveRawPatchNotes(patch);
+  } catch (error) {
+    console.warn(
+      `⚠ Claude patch analysis failed; using data-refresh line only and leaving patch-notes.json unchanged: ${String(error)}`,
+    );
+  }
+
+  console.log(
+    `📝 Adding "What's New" entry for League patch ${patch.patch}...`,
+  );
+  const source = await Bun.file(CHANGELOG_FILE).text();
+  const updated = insertChangelogEntry(
+    source,
+    buildPatchChangelogEntryLiteral(patch, highlights, new Date()),
+  );
+  await Bun.write(CHANGELOG_FILE, updated);
+
+  // The prettier gate covers changelog.tsx, so format the edit before commit or
+  // the auto-merged PR fails CI. Resolve prettier from the monorepo root.
+  const result =
+    await $`cd ${MONOREPO_ROOT} && bunx prettier --write ${CHANGELOG_FILE}`.quiet();
+  if (result.exitCode !== 0) {
+    throw new Error(
+      `prettier failed to format changelog.tsx (exit ${String(result.exitCode)}): ${result.stderr.toString()}`,
+    );
+  }
+  console.log(`✓ Added changelog entry for League patch ${patch.patch}`);
+}
+
 async function main(): Promise<void> {
   try {
     // Get version from command line or fetch latest
     const version = process.argv[2] ?? (await getLatestVersion());
+    // Capture the on-disk version BEFORE writeJsonAssets overwrites it so the
+    // changelog step can detect a minor-version bump.
+    const previousVersion = await readPreviousVersion();
     const cdVersion = getCommunityDragonVersion(version);
     const communityDragonUrl = getCommunityDragonUrl(cdVersion);
     const communityDragonPositionsUrl =
@@ -984,6 +1150,9 @@ async function main(): Promise<void> {
     console.log("\n📸 Updating snapshots...");
     await updateSnapshots();
     console.log("✅ Snapshots updated");
+
+    // Add a "What's New" entry to the marketing site on minor-version bumps.
+    await maybeAppendChangelogEntry(previousVersion, version);
   } catch (error) {
     console.error("\n❌ Error updating Data Dragon assets:");
     console.error(error);

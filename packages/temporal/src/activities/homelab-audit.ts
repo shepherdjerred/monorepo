@@ -9,6 +9,7 @@ import {
 import { getTraceContext } from "#observability/tracing.ts";
 import { emitOtel } from "#observability/log.ts";
 import { parseClaudeResultMessage } from "#shared/claude-result.ts";
+import { traceClaudeCli } from "@shepherdjerred/llm-observability/wrappers/claude-cli";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import {
   buildAuditPrompt,
@@ -321,6 +322,31 @@ async function runAuditAgent(
     durationSeconds,
   );
   homelabAuditSubprocessExitTotal.inc({ exit_code: String(exitCode) });
+
+  // Post-hoc gen_ai span (archived to S3 by the span processor) — before the
+  // failure checks so failed runs are traced too.
+  traceClaudeCli(
+    {
+      service: "temporal",
+      callSite: "homelab-audit",
+      request: {
+        model,
+        prompt,
+        options: { date, sections, maxTurns },
+      },
+    },
+    {
+      stdout,
+      exitCode,
+      startTimeMs: startMs,
+      endTimeMs: startMs + durationMs,
+    },
+    {
+      warn: (message) => {
+        jsonLog("warning", message, { phase: "claude-cli-trace" });
+      },
+    },
+  );
 
   if (exitCode !== 0) {
     const e = new Error(

@@ -13,7 +13,7 @@ Verify that the deployed Temporal changes are doing what we intended after sever
 - Generic `agentTaskWorkflow` and authenticated `/agent-tasks` ingress.
 - `homelab-audit-daily` running through the `agent-task` queue.
 - Homelab audit worker tooling: `bk`, `temporal`, preflight checks, S3 archive, read-only RBAC.
-- PR review / summary bot workflows, inline findings, lifecycle comments, metrics, and nightly eval.
+- PR review / summary bot workflows, inline findings, lifecycle comments, and metrics.
 - Scout Data Dragon image-only suppression.
 - LLM observability archive/tracing for Temporal calls.
 - Residual Temporal workflow failures and Bugsink noise.
@@ -177,12 +177,11 @@ Overall result: **not green**. The platform is healthy and several intended depl
   - Pass: there is activity for recent PRs; p95 latency is below the 480 second SLO; failures/skips are explainable.
   - Evidence: `pr_review_count_total` showed approximately 24 posted and 2 failed over 72h; p95 latency was about 109s, below the 480s SLO; inline/status metrics were populated.
 
-- [ ] Nightly PR-review eval is running and not regressing.
-  - `temporal schedule describe --schedule-id pr-review-eval-nightly`
-  - `toolkit gf query 'pr_review_eval_regression_active'`
-  - `toolkit gf query 'sum(increase(pr_review_eval_runs_total[72h])) by (outcome)'`
-  - Pass: nightly runs complete, precision/recall metrics exist, and no unexplained regression alert is active.
-  - Evidence: failed. `pr-review-eval-nightly-workflow-2026-05-22T11:00:00Z` failed immediately because `PR_REVIEW_FIXTURES_REPO_URL` is missing. `pr_review_eval_regression_active` was 0, but the run itself failed.
+> **Removed 2026-07-03.** The nightly PR-review eval bot (`pr-review-eval-nightly`,
+> `pr-review-ab-weekly-report`) was deleted entirely — code, `pr_review_eval` Postgres DB,
+> and the `pr-review-bot-eval` PagerDuty alert group. There is no longer a nightly-eval
+> step to verify here. The historical 2026-05-22 evidence above (fixtures-repo-missing
+> failures) is kept as a point-in-time record only.
 
 ## Scout Data Dragon
 

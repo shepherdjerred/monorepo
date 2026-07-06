@@ -85,7 +85,11 @@ resource "github_repository_webhook" "pr_bot" {
   }
 
   active = true
-  events = ["pull_request", "push"]
+  # issue_comment drives the PR babysitter's comment trigger (e.g.
+  # "@temporal-worker help me get this green"). The worker ignores it unless
+  # PR_BABYSIT_ENABLED=true (default off), so subscribing is safe ahead of
+  # enabling — early deliveries 200-ack and no-op.
+  events = ["pull_request", "push", "issue_comment"]
 
   lifecycle {
     # GITHUB_WEBHOOK_SECRET lives in 1Password and is synced to the worker

@@ -1,11 +1,21 @@
 ---
 id: scout-orphan-guild-prod-cleanup
 status: waiting-on-verification
-origin: packages/docs/plans/2026-06-19_scout-guild-removal-lifecycle.md
+origin: packages/docs/archive/completed/2026-06-19_scout-guild-removal-lifecycle.md
 source_marker: false
 ---
 
 # Scout: clean up the orphaned `_hydr0o_` guild in prod + resolve Bugsink
+
+## Verification (2026-06-28) — error signal is quiet; DB cleanup is a mutation, left for owner
+
+The `TRPCError: You are not a member of that guild` Bugsink issue
+(`58109652-0f3a-4a4d-9ae7-7c77e28ba83b`) is **resolved**, last seen **2026-06-26** (quiet 2 days),
+and the reconcile-removed-guilds code from PR #1269 is deployed in scout-prod. So the user-facing
+symptom appears handled. The remaining item — the one-shot prod-DB row cleanup for guild
+`1345142904942760018` — is a **mutation against prod data**, so I did not run it unprompted (and
+scout-prod's `db.sqlite` is 10.5 GB with no in-pod `sqlite3`). Likely already moot; keep until the
+prod row is confirmed gone or the owner clears it.
 
 After the guild-removal-lifecycle PR deploys to `scout-prod`:
 

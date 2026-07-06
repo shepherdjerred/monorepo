@@ -279,6 +279,9 @@ export const TOFU_STACKS = [
   "github",
   "seaweedfs",
   "tailscale",
+  "buildkite",
+  "arr",
+  "pagerduty",
 ] as const;
 
 export const TOFU_STACK_LABELS: Record<string, string> = {
@@ -286,6 +289,9 @@ export const TOFU_STACK_LABELS: Record<string, string> = {
   github: "GitHub Config",
   seaweedfs: "SeaweedFS Config",
   tailscale: "Tailscale ACLs",
+  buildkite: "Buildkite Config",
+  arr: "*arr Config",
+  pagerduty: "PagerDuty Config",
 };
 
 // ---------------------------------------------------------------------------
@@ -402,11 +408,12 @@ export const ALL_PACKAGES: string[] = [
 
 type ResourceTier = { cpu: string; memory: string };
 
-// BK pods are thin dagger CLI wrappers — all compute happens in the remote
-// Dagger engine. Keep requests minimal so more jobs fit within Kueue quota.
-const HEAVY: ResourceTier = { cpu: "250m", memory: "512Mi" };
-const MEDIUM: ResourceTier = { cpu: "150m", memory: "384Mi" };
-const LIGHT: ResourceTier = { cpu: "100m", memory: "256Mi" };
+// BK pods are mostly thin dagger CLI wrappers — all compute happens in the
+// remote Dagger engine — but the wrapper still needs enough headroom to keep
+// the Dagger client and Buildkite agent alive while streaming progress.
+const HEAVY: ResourceTier = { cpu: "250m", memory: "768Mi" };
+const MEDIUM: ResourceTier = { cpu: "150m", memory: "512Mi" };
+const LIGHT: ResourceTier = { cpu: "100m", memory: "384Mi" };
 
 export const PACKAGE_RESOURCES: Record<string, ResourceTier> = {
   homelab: HEAVY,

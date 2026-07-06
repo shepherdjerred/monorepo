@@ -299,11 +299,22 @@ echo "Done."`,
               // mitigated). Conservative on purpose given the large over-cap footprint;
               // the DaggerEnginePVCStorage* alerts now provide steady-state visibility to
               // tune further. See packages/docs/guides/2026-06-07_dagger-engine-pvc-resize.md.
+              //
+              // 2026-07-03 outage postscript: this config was live and working (steady
+              // state sat flat at ~1.33 Ti / 60% for days), but a Renovate rebase-wave
+              // build storm wrote ~670 GB in 100 minutes and outran the reactive,
+              // rate-limited GC to a 100%-full deadlock. No GC setting prevents that —
+              // headroom, input smoothing (renovate.json prConcurrentLimit), and the
+              // DaggerEnginePVCFillPredicted alert do. minFreeSpace was also switched
+              // 20% -> 400GB absolute here: the `%` form contradicted the "keep absolute
+              // byte values" rule above. NOTE: the engine reads this file only at
+              // startup — a config change needs `kubectl rollout restart` (see runbook).
+              // Post-mortem: packages/docs/logs/2026-07-03_dagger-engine-disk-full-outage.md
               configJson: JSON.stringify({
                 gc: {
                   maxUsedSpace: "800GB",
                   reservedSpace: "200GB",
-                  minFreeSpace: "20%",
+                  minFreeSpace: "400GB",
                 },
               }),
               volumes: [

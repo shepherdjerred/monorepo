@@ -162,6 +162,17 @@ volumeSnapshotLocation: [
 ],
 ```
 
+## Verifying Backup Coverage (Operational)
+
+Volume data is backed up by the **openebs zfs-localpv Velero plugin** (per-PVC `zfs send` → Cloudflare R2), NOT by Velero kopia/restic FSB or CSI data-mover. So do **not** judge backup coverage by looking for a Velero `node-agent` daemonset, `BackupRepositories`, `DataUploads`, or `podvolumebackups` — those are absent **by design**.
+
+- Read the data streams with the **`r2` aws profile**: `aws s3 ls s3://homelab/zfspv-incr/backups/ --profile r2`
+- Layout: `zfspv-incr/backups/<velero-backup-name>/torvalds/zfs/-<backup>-pvc-<uuid>-<backup>` (data stream) plus a sibling `...zfsvol` (~1.4 KiB header) per volume. A **complete set ≈ 92 objects / ~1.4–5 GB**; a **metadata-only stub ≈ 46 objects / ~79 KB** means `zfs send` failed (e.g. dead/suspended pool).
+- K8s **manifests** are separate, under `torvalds/backups/` (standard Velero).
+- The backup counter is `status.volumeSnapshotsAttempted` (~46 PVCs), NOT `csiVolumeSnapshotsAttempted`.
+- ⚠️ Velero can mark a backup **`Failed` even when the full data uploaded** (one chronic single-volume error fails the whole backup's phase) — **verify by R2 object size, not by Velero phase.**
+- The single-disk `zfspv-pool-nvme` has no redundancy: if it suspends (e.g. an NVMe controller hang), `zfs send` stops and the newest R2 backup may be tens of minutes stale.
+
 ## Manual Backup Operations
 
 ### Create On-Demand Backup

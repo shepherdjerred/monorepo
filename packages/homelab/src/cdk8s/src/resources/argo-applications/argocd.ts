@@ -157,7 +157,11 @@ export function createArgoCdApp(chart: Chart) {
     },
     configs: {
       cm: {
-        "exec.enabled": true,
+        // exec.enabled toggles the ArgoCD UI pod-terminal (kubectl exec). Kept
+        // off: argocd-server is internet-reachable via the Cloudflare tunnel and
+        // an enabled terminal turns an admin-credential compromise into in-pod
+        // RCE. The buildkite account only has applications sync/get, not exec.
+        "exec.enabled": false,
         "timeout.reconciliation": "60s",
         "statusbadge.enabled": true,
         "accounts.buildkite": "apiKey",

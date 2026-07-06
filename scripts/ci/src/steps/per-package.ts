@@ -115,6 +115,9 @@ export function perPackageSteps(
         ? ` --ha-url env:HASS_URL --ha-token env:HASS_TOKEN`
         : "";
     const helmFlag = pkg === "homelab" ? ` --needs-helm` : "";
+    // homelab's pagerduty-alerting.test.ts executes Alertmanager templates
+    // through the real Go text/template engine, so the test container needs Go.
+    const goFlag = pkg === "homelab" ? ` --needs-go` : "";
     const astroFlags = ASTRO_PACKAGES.has(pkg)
       ? ` --include-astro-check --include-astro-build`
       : "";
@@ -123,7 +126,7 @@ export function perPackageSteps(
       daggerCallStep(
         `:dagger_knife: pkg-check`,
         `pkg-check-${sk}`,
-        `${DAGGER_CALL} lint-typecheck-test ${pf}${helmFlag}${haFlags}${astroFlags}${buildFlag}`,
+        `${DAGGER_CALL} lint-typecheck-test ${pf}${helmFlag}${goFlag}${haFlags}${astroFlags}${buildFlag}`,
         resources,
       ),
     );
@@ -131,6 +134,14 @@ export function perPackageSteps(
 
   if (pkg === "tasks-for-obsidian") {
     steps.push(tasksForObsidianNativeDepsStep(resources));
+  }
+
+  // Cross-package contract test: the app's real TaskNotesClient against a
+  // spawned real tasknotes-server. Emitted for whichever side changed (keys
+  // are per-package, so when both change in one build the two steps run the
+  // same suite — Dagger's cache makes the duplicate cheap).
+  if (pkg === "tasks-for-obsidian" || pkg === "tasknotes-server") {
+    steps.push(tasknotesContractTestStep(sk, resources));
   }
 
   // homelab: build helm-types (nested NPM package under homelab).
@@ -248,6 +259,38 @@ function tasksForObsidianNativeDepsStep(resources: {
     key: "ios-native-deps-tasks-for-obsidian",
     command: `${DAGGER_CALL} tasks-for-obsidian-ios-native-deps --source ${REPO_GIT_REF}`,
     timeout_in_minutes: 10,
+    retry: RETRY,
+    env: DAGGER_ENV,
+    plugins: [k8sPlugin({ cpu: resources.cpu, memory: resources.memory })],
+  };
+}
+
+/**
+ * App-client ↔ server contract test (`contract-tests/` in the app package).
+ * The app is the Dagger target package; tasknotes-server rides along as an
+ * extra dep dir so the suite can spawn it. Not derived from WORKSPACE_DEPS —
+ * the server is deliberately NOT a build dependency of the app.
+ */
+function tasknotesContractTestStep(
+  sk: string,
+  resources: { cpu: string; memory: string },
+): BuildkiteStep {
+  const flags = [
+    `--pkg-dir ${gitDir("packages/tasks-for-obsidian")}`,
+    `--pkg tasks-for-obsidian`,
+    ...["eslint-config", "tasknotes-types", "tasknotes-server"].flatMap(
+      (dep) => [
+        `--dep-names ${dep}`,
+        `--dep-dirs ${gitDir(`packages/${dep}`)}`,
+      ],
+    ),
+    `--tsconfig ${gitFile("tsconfig.base.json")}`,
+  ].join(" ");
+  return {
+    label: ":handshake: TaskNotes contract test",
+    key: `tasknotes-contract-test-${sk}`,
+    command: `${DAGGER_CALL} tasknotes-contract-test ${flags}`,
+    timeout_in_minutes: 15,
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [k8sPlugin({ cpu: resources.cpu, memory: resources.memory })],

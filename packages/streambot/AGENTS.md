@@ -32,6 +32,14 @@ command bot plus a **pool of streamer userbots**:
 Resume: per-`(guild, channel)` state files `playback-state-<guildId>-<channelId>.json` (schema v2).
 On restart the session manager re-acquires a member-userbot per persisted session and resumes it.
 
+Voice-loss recovery: when Discord kills the userbot's voice session mid-stream (surfaced by the
+dvs fork's `close` event and/or the main gateway's voiceStateUpdate), `session/voice-recovery.ts`
+classifies the loss by ws close code — a fresh 4014 (moderator disconnect) is respected and stays
+down; anything else checkpoints position, preserves the state file through teardown, and retries
+`resumeSession` on a delay (bounded by `STREAMER_RECONNECT_MAX_ATTEMPTS`, kill switch
+`STREAMER_RECONNECT_ENABLED=false`). Stop reasons are announced to the status channel and counted
+in `streambot_voice_disconnects_total` / `streambot_voice_reconnects_total`.
+
 The bot/userbot split is necessary because Discord bots cannot stream video to voice — only user
 accounts can (via the unofficial selfbot lib). Modeled on `packages/discord-plays-pokemon`, but we
 stream files/URLs directly with ffmpeg instead of automating a browser.
@@ -107,6 +115,30 @@ on the software path — so HDR remuxes no longer look washed out. If the iGPU l
 (`tonemap_vaapi`) or `overlay_vaapi`, ffmpeg fails at graph init and the existing HW→SW retry
 resumes playback on the software chain (watch `streambot_hw_fallback_total`).
 
+## discord-video-stream / VAAPI pipeline
+
+`@shepherdjerred/discord-video-stream` lives at `packages/discord-video-stream`, consumed via `file:` → TS source. VAAPI gotchas baked into its design:
+
+- **Software-scale trap:** `prepareStream` historically emitted `-hwaccel auto` (decode → system RAM) + software `scale=` (swscale) with only the encode on the GPU; on 4K HEVC that swscale runs ~0.77× realtime → CFS throttling on the 2-core limit → `Frame takes too long to send` stutter. `EncoderSettings.hwPipeline` keeps the whole graph on the GPU (`-hwaccel vaapi -hwaccel_output_format vaapi` + `scale_vaapi=…:format=nv12`) for ~22× less CPU.
+- `h264_vaapi` defaults to **AVBR** (ignores `-maxrate`/`-bufsize`, uncapped bitrate) — pin `-rc_mode VBR`. Drop `-pix_fmt yuv420p` + `hwupload` on the hw path.
+- Node `torvalds` advertises 10 `gpu.intel.com/i915` slots (iHD driver); spin a temp pod to benchmark ffmpeg against the real media (RWO PVCs mount on multiple same-node pods).
+
+## Live e2e (`e-2-e-streambot`)
+
+Runs against a dedicated **test** Discord server (never the production `streambot-config` guild). IDs are passed as args so prod config is untouched; tokens come from the `streambot-config` 1P item (Homelab vault). The selfbot logs in as `glidiot_`. The Dagger func is `e-2-e-streambot` (Dagger kebab-cases `e2eStreambot`, splitting the digits); internally it wires `--user-token` → secret `USER_TOKENS` and `--guild-id`/`--video-channel-id` → test-only `E2E_GUILD_ID`/`E2E_VIDEO_CHANNEL_ID` envs (production joins the issuer's current VC, which a headless test can't set).
+
+```bash
+J=$(op item get streambot-config --vault "Homelab (Kubernetes)" --format json --reveal)
+export BOT_TOKEN=$(echo "$J" | jq -r '.fields[]|select((.label//.id)=="BOT_TOKEN").value')
+export TOKEN=$(echo "$J" | jq -r '.fields[]|select((.label//.id)=="TOKEN").value')
+dagger call e-2-e-streambot --pkg-dir ./packages/streambot \
+  --bot-token=env:BOT_TOKEN --user-token=env:TOKEN \
+  --guild-id 1337623164146155593 --video-channel-id 1337623164955398253 \
+  --dep-names eslint-config --dep-dirs ./packages/eslint-config
+```
+
+The homelab deployment sources `USER_TOKENS` (comma-separated pool) from that 1P item.
+
 ## Observability
 
 Prometheus metrics are served at `/metrics` on `METRICS_PORT` (default `9466`, `0` disables),
@@ -123,7 +155,13 @@ The ffmpeg/send signals come from the vendored fork's optional `StreamObserver`
 Standard monorepo rules apply: strict TS, no `as` casts, kebab-case files, `.ts` import
 extensions, no parent imports (use `@shepherdjerred/streambot/...`), Zod at every boundary,
 Bun APIs, structured logging. `yt-dlp` and `ffmpeg` are system binaries baked into the image
-(no runtime download).
+(no runtime download). `yt-dlp` is installed by the shared `.dagger` `installYtDlp` helper, which
+downloads the per-arch standalone binary from the release **asset CDN**
+(`github.com/yt-dlp/yt-dlp/releases/latest/download/<asset>`) and verifies it against
+`SHA2-256SUMS`. Do **not** rely on `youtube-dl-exec`'s postinstall — it queries `api.github.com`
+unauthenticated (its token header is silently dropped by a `fetch(url, headers)` vs
+`fetch(url, { headers })` bug) and exhausts GitHub's 60 req/hr anonymous limit on shared CI egress
+IPs, intermittently failing image builds (e.g. `docker-build-birmel`).
 
 ## Commands
 
@@ -134,3 +172,18 @@ bun run test:integration # real-ffmpeg subtitle tests — integration/, needs ff
 bun run typecheck
 bun run lint
 ```
+
+**Fresh-worktree typecheck gotcha:** `bun run typecheck` can fail with ~40 errors from
+`../discord-video-stream/src/*`. Cause: `setup.ts` builds the package's d.ts into
+`packages/discord-video-stream/dist`, but the **copied** workspace entries under
+`node_modules/@shepherdjerred/discord-video-stream/` have no `dist/`, so tsc's `exports` `types`
+condition fails and it type-checks the loose package source instead. Fix (gitignored, local-only):
+
+```bash
+for d in node_modules packages/streambot/node_modules; do
+  mkdir -p "$d/@shepherdjerred/discord-video-stream/dist"
+  cp -R packages/discord-video-stream/dist/. "$d/@shepherdjerred/discord-video-stream/dist/"
+done
+```
+
+Real CI builds the dvs image so it never hits this.

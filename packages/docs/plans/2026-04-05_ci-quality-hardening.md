@@ -2,13 +2,10 @@
 
 ## Status
 
-Partially Complete. Knip and Trivy were hardened in
-`packages/docs/plans/2026-06-13_strict-quality-checks.md`; Semgrep remains
-soft-failing and should be handled separately.
-
-> **Stale-content note (2026-06-13):** Knip and Trivy are no longer
-> soft-failing after `2026-06-13_strict-quality-checks.md`. The remaining
-> actionable portion of this plan is Semgrep.
+Partially Complete. Findings have been triaged (`.trivyignore` is minimal), but on `main` all three —
+knip, Trivy, **and** Semgrep — are still `softFail: true` in `scripts/ci/src/steps/quality.ts` (lines
+73, 84, 139). None has been promoted to a hard failure; the earlier "Knip and Trivy hardened" note was
+inaccurate (verified 2026-06-28). Remaining work: decide which of the three should hard-fail and flip them.
 
 ## Context
 
@@ -35,13 +32,13 @@ All three quality tools are `softFail: true` in Buildkite CI. Goal: fix all find
 
 - **Action:** Add `--skip-dirs practice` to trivy command. Delete all 19 CVE lines. New practice CVEs won't need manual suppression.
 
-**Remove `softFail: true`** from `trivyScanStep()` at `quality.ts:134`.
+**Remove `softFail: true`** from `trivyScanStep()` at `quality.ts:84`.
 
 ### Files
 
 - `.buildkite/scripts/trivy-scan.sh` — add `--skip-dirs practice`
 - `.trivyignore` — remove all entries
-- `scripts/ci/src/steps/quality.ts:134` — remove softFail
+- `scripts/ci/src/steps/quality.ts:84` — remove softFail
 
 ## Phase 2: Semgrep
 
@@ -56,14 +53,14 @@ poc/
 node_modules/
 ```
 
-**Remove `softFail: true`** from `semgrepScanStep()` at `quality.ts:158`.
+**Remove `softFail: true`** from `semgrepScanStep()` at `quality.ts:139`.
 
 Push, see what semgrep finds, fix actual findings.
 
 ### Files
 
 - `.semgrepignore` — create
-- `scripts/ci/src/steps/quality.ts:158` — remove softFail
+- `scripts/ci/src/steps/quality.ts:139` — remove softFail
 
 ## Phase 3: Knip
 
@@ -154,9 +151,9 @@ All verified dead via grep — remove all 29 unused exports, 13 unused types, an
 
 Remove `softFail: true` from all three steps in `scripts/ci/src/steps/quality.ts`:
 
-- `knipCheckStep()` line 99
-- `trivyScanStep()` line 134
-- `semgrepScanStep()` line 158
+- `knipCheckStep()` line 73
+- `trivyScanStep()` line 84
+- `semgrepScanStep()` line 139
 
 ## Critical Files
 

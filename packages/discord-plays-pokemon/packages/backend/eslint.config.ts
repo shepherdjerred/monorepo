@@ -19,6 +19,7 @@ const config = [
         "src/emulator/audio/analysis.test.ts",
         "src/emulator/audio/audio-fingerprint.test.ts",
         "src/emulator/audio/m4a-handlers-basic.test.ts",
+        "src/emulator/bios.test.ts",
         "src/emulator/buttons.test.ts",
         "src/emulator/emulator-symbols.integration.test.ts",
         "src/goal/codex-command.test.ts",

@@ -1,4 +1,5 @@
 import {
+  ConfigMap,
   Cpu,
   Deployment,
   DeploymentStrategy,
@@ -10,6 +11,8 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { withCommonLinuxServerProps } from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
 import {
   withCommonProps,
@@ -20,6 +23,9 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+
+const CURRENT_FILENAME = fileURLToPath(import.meta.url);
+const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
 
 export function createQBitTorrentDeployment(
   chart: Chart,
@@ -60,6 +66,89 @@ export function createQBitTorrentDeployment(
 
   const localPathVolume = new ZfsNvmeVolume(chart, "qbittorrent-pvc", {
     storage: Size.gibibytes(32),
+  });
+
+  // The qBittorrent config PVC, shared between the seed init container and the
+  // main container so both mount the same `/config`.
+  const configVolume = Volume.fromPersistentVolumeClaim(
+    chart,
+    "qbittorrent-volume",
+    localPathVolume.claim,
+  );
+
+  // Config-as-code: the committed qBittorrent.conf is the source of truth.
+  // - Fresh PVC (no live conf): seed it from the committed file.
+  // - Existing PVC: assert the live conf still MATCHES the committed declaration
+  //   (see check-config-drift.sh). Any drift on a managed key fails the init
+  //   container so the operator must reconcile by committing the change — config
+  //   drift is never silently tolerated.
+  // Only keys we declare are enforced; keys qBittorrent writes on its own
+  // (WebUI\Password_PBKDF2, Network\Cookies, ...) are ignored, so the guard never
+  // false-positives on the app's runtime churn. A few engine-owned keys that DO
+  // appear in the committed seed (Meta\MigrationVersion, bumped by the image on a
+  // qBittorrent upgrade) are also excluded from enforcement so a version bump
+  // can't crash-loop the pod — see the exclusion list in check-config-drift.sh.
+  // The WebUI password hash is
+  // deliberately NOT in the committed file — qBittorrent generates a temporary
+  // password (logged) on a fresh start, which is then reset.
+  const qbittorrentConfig = new ConfigMap(chart, "qbittorrent-config", {
+    metadata: {
+      name: "qbittorrent-config",
+    },
+  });
+  // addDirectory reads the committed dir synchronously at synth time and adds
+  // each file as a ConfigMap key: "qBittorrent.conf" (the seed) and
+  // "check-config-drift.sh" (the fail-on-drift guard). Both are mounted at /seed.
+  qbittorrentConfig.addDirectory(
+    path.join(CURRENT_DIRNAME, "..", "configs", "qbittorrent"),
+  );
+  const seedVolume = Volume.fromConfigMap(
+    chart,
+    "qbittorrent-config-volume",
+    qbittorrentConfig,
+  );
+
+  // Runs as root so it can write to a fresh, root-owned PVC during disaster
+  // recovery. Seeding (the cp) is conditional — seed-if-absent so a live conf
+  // is never clobbered — but the ownership repair (chown -R) runs every
+  // reconcile, idempotently: an existing PVC whose /config/qBittorrent is still
+  // root:root (e.g. from a partial restore or an earlier seed attempt) gets
+  // handed to the LinuxServer PUID/PGID (1000:1000) so qBittorrent can create
+  // sibling log/lock/backup files there.
+  deployment.addInitContainer({
+    name: "qbittorrent-config-seed",
+    image: `ghcr.io/linuxserver/qbittorrent:${versions["linuxserver/qbittorrent"]}`,
+    command: [
+      "/bin/sh",
+      "-c",
+      // `set -e` propagates the drift guard's non-zero exit so the init
+      // container (and thus the pod) fails fast when the live conf has drifted
+      // from the committed declaration.
+      [
+        "set -e",
+        "mkdir -p /config/qBittorrent",
+        "if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then",
+        "  cp /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf",
+        "else",
+        "  sh /seed/check-config-drift.sh /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf",
+        "fi",
+        "chown -R 1000:1000 /config/qBittorrent",
+        "chmod 600 /config/qBittorrent/qBittorrent.conf",
+      ].join("\n"),
+    ],
+    resources: {},
+    securityContext: {
+      ensureNonRoot: false,
+      user: 0,
+      group: 0,
+      privileged: false,
+      allowPrivilegeEscalation: false,
+      readOnlyRootFilesystem: true,
+    },
+    volumeMounts: [
+      { path: "/config", volume: configVolume },
+      { path: "/seed", volume: seedVolume },
+    ],
   });
 
   deployment.addContainer(
@@ -120,11 +209,7 @@ export function createQBitTorrentDeployment(
       volumeMounts: [
         {
           path: "/config",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "qbittorrent-volume",
-            localPathVolume.claim,
-          ),
+          volume: configVolume,
         },
         {
           volume: Volume.fromPersistentVolumeClaim(

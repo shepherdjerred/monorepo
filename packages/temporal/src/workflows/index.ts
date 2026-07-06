@@ -16,6 +16,11 @@ import { reconcileLock as _reconcileLock } from "./ha/reconcile-lock.ts";
 import { runVacuumIfNotHome as _runVacuumIfNotHome } from "./ha/run-vacuum-if-not-home.ts";
 import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./zfs-maintenance.ts";
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
+import { runScoutImageGcWorkflow as _runScoutImageGcWorkflow } from "./scout-image-gc.ts";
+import type {
+  ScoutImageGcInput,
+  ScoutImageGcResult,
+} from "#activities/scout-image-gc.ts";
 import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./velero-orphan-audit.ts";
 import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./data-dragon.ts";
 import type {
@@ -33,16 +38,6 @@ import type {
 } from "#activities/scout-season-refresh.ts";
 import { prSummaryPipeline as _prSummaryPipeline } from "./pr-summary/index.ts";
 import { prReviewPipeline as _prReviewPipeline } from "./pr-review/index.ts";
-import { prReviewEvalWorkflow as _prReviewEvalWorkflow } from "./pr-review-eval/index.ts";
-import type {
-  PrReviewEvalWorkflowInput,
-  PrReviewEvalWorkflowResult,
-} from "./pr-review-eval/index.ts";
-import { prReviewWeeklySignificanceWorkflow as _prReviewWeeklySignificanceWorkflow } from "./pr-review-eval/weekly-significance.ts";
-import type {
-  WeeklySignificanceWorkflowInput,
-  WeeklySignificanceWorkflowResult,
-} from "./pr-review-eval/weekly-significance.ts";
 import {
   prReactionListener as _prReactionListener,
   type PrReactionListenerInput,
@@ -50,12 +45,10 @@ import {
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab-audit.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
 import { agentTaskWorkflow as _agentTaskWorkflow } from "./agent-task.ts";
-import {
-  alertRemediationChildWorkflow as _alertRemediationChildWorkflow,
-  alertRemediationSweepWorkflow as _alertRemediationSweepWorkflow,
-} from "./alert-remediation.ts";
 import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from "./cancel-buildkite-builds.ts";
 import { checkPrMergeConflictsWorkflow as _checkPrMergeConflictsWorkflow } from "./check-pr-merge-conflicts.ts";
+import { prBabysitWorkflow as _prBabysitWorkflow } from "./pr-babysit/index.ts";
+import type { PrBabysitWorkflowInput } from "#shared/pr-babysit/workflow-types.ts";
 import type {
   CancelBuildkiteBuildsInput,
   CheckPrMergeConflictsInput,
@@ -65,12 +58,6 @@ import type {
 import type { PrReviewPipelineResult } from "./pr-review/index.ts";
 import type { RunSummaryResult } from "#activities/pr-review/summary.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
-import type {
-  AlertRemediationChildInput,
-  AlertRemediationChildResult,
-  AlertRemediationSweepRawInput,
-  AlertRemediationSweepResult,
-} from "#shared/alert-remediation.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
@@ -122,6 +109,12 @@ export async function runZfsMaintenanceWorkflow(): Promise<void> {
 
 export async function runBugsinkHousekeepingWorkflow(): Promise<void> {
   return _runBugsinkHousekeepingWorkflow();
+}
+
+export async function runScoutImageGcWorkflow(
+  input: ScoutImageGcInput = {},
+): Promise<ScoutImageGcResult> {
+  return _runScoutImageGcWorkflow(input);
 }
 
 export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
@@ -176,30 +169,6 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   return _agentTaskWorkflow(input);
 }
 
-export async function alertRemediationSweepWorkflow(
-  input: AlertRemediationSweepRawInput = {},
-): Promise<AlertRemediationSweepResult> {
-  return _alertRemediationSweepWorkflow(input);
-}
-
-export async function alertRemediationChildWorkflow(
-  input: AlertRemediationChildInput,
-): Promise<AlertRemediationChildResult> {
-  return _alertRemediationChildWorkflow(input);
-}
-
-export async function prReviewEvalWorkflow(
-  input: PrReviewEvalWorkflowInput,
-): Promise<PrReviewEvalWorkflowResult> {
-  return _prReviewEvalWorkflow(input);
-}
-
-export async function prReviewWeeklySignificanceWorkflow(
-  input: WeeklySignificanceWorkflowInput = {},
-): Promise<WeeklySignificanceWorkflowResult> {
-  return _prReviewWeeklySignificanceWorkflow(input);
-}
-
 export async function prReactionListener(
   input: PrReactionListenerInput,
 ): Promise<void> {
@@ -216,4 +185,10 @@ export async function checkPrMergeConflictsWorkflow(
   input: CheckPrMergeConflictsInput,
 ): Promise<void> {
   return _checkPrMergeConflictsWorkflow(input);
+}
+
+export async function prBabysitWorkflow(
+  input: PrBabysitWorkflowInput,
+): Promise<void> {
+  return _prBabysitWorkflow(input);
 }

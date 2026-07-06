@@ -18,6 +18,16 @@ packages/
 └── ui/        # Shared UI components (React)
 ```
 
+## Workspace Dependencies (`file:` protocol)
+
+Scout's sub-packages wire each other with `file:../X` deps (e.g. `@scout-for-lol/data`, `@scout-for-lol/backend`), **not** `workspace:*`.
+
+- **Never migrate `file:../X` deps to `workspace:*`** (or any symlinking scheme). The `file:` copy-on-install behavior is intentional and the preference is firm — do not list it as a follow-up, tech-debt, or improvement in PRs, plans, or chat.
+- Bun **copies** `file:` deps into `node_modules/<pkg>/` rather than symlinking (bunfig.toml pins `linker = "hoisted"`; under bun's isolated linker — bug-pinned away, see `packages/docs/todos/bun-isolated-linker-eexist.md` — the copies lived at `node_modules/.bun/<pkg>@file+.../`). After editing source in a shared package (e.g. `packages/data`), the backend/app copies are **stale** — typecheck/tests fail with `Module '@scout-for-lol/data' has no exported member ...`. Fix: run `bun install` at `packages/scout-for-lol/` to re-copy, then typecheck dependents. (`bun install` reports `Saved lockfile` but usually leaves `bun.lock` unchanged — verify with `git diff`.)
+- The app imports the backend `AppRouter` as `import type` only, so tRPC input/output changes also need this refresh before the app sees the new procedure shape.
+
+---
+
 ## Core Technologies
 
 | Category      | Technology                       |
@@ -204,6 +214,21 @@ The project uses custom ESLint rules in `eslint-rules/`:
 
 ---
 
+## Web App vs Marketing Site — Distinct Design
+
+Two separate web surfaces with **intentionally distinct visual design**:
+
+- `packages/app/` — Vite + React SPA, served at `scout-for-lol.com/app/`. Authenticated subscription management (tables, forms, modals). Should look like a clean admin product.
+- `packages/frontend/` — Astro marketing site. Content-heavy, Riot/LoL-branded (Beaufort for LoL + Spiegel fonts, indigo palette), conversion-focused.
+
+Rules:
+
+- Never `@import` `frontend/src/styles/global.css` or its tokens into `app/`.
+- Never reuse the marketing site's fonts (Beaufort for LoL, Spiegel), color scale, radius, or shadow choices in `app/`. The app has its own `src/styles/tokens.css` and its own Tailwind v4 `@theme` block.
+- Shared **dependencies** are fine (Tailwind v4, Radix, lucide-react, clsx, tailwind-merge). Shared **visual tokens/components** are not — if both surfaces ever need a shadcn-style Button/Card/Dialog, each gets its own copy with its own tokens (do not put them in a shared package).
+
+---
+
 ## Code Quality Limits
 
 Enforced by ESLint:
@@ -362,6 +387,44 @@ type ParticipantDto = ...;  // Use RawParticipant instead
 - **Snapshot testing** - For report generation output
 - **Type testing** - Ensure type safety in complex scenarios
 - **Run tests**: `bun test` in any package or root
+
+### Local testing without Discord login or a real Discord backing
+
+There is **no runtime auth bypass** (no `SKIP_AUTH`/`DEV_AUTH` flag), and the web
+mutations are gated by a signed session cookie + CSRF + `assertGuildAdmin` (which
+calls Discord). To exercise the web/tRPC surface offline, use one of these — both
+run fully in-process against an isolated SQLite copy of `template.db`, no OAuth,
+no Discord API:
+
+- **Domain layer (simplest)** — call the exported functions directly (e.g.
+  `setSubscriptionFilters` / `setChannelFilters` from
+  `src/lib/subscription/filters.ts`) with a test client from
+  `createTestDatabase(...)`. No auth surface at all. See
+  `src/database/subscriptions.integration.test.ts`.
+
+- **Full tRPC router** — `createOfflineTrpcHarness(...)` from
+  `src/testing/test-trpc-caller.ts`. It stubs the Discord guild guard and points
+  the router's Prisma singleton at an isolated migrated DB, then hands you an
+  authenticated (and an anonymous) `appRouter.createCaller(...)`. This exercises
+  the real procedures — input validation, audit-row writes, domain wiring — the
+  exact surface OAuth gates. Example: `src/trpc/router/subscription-filters.router.test.ts`.
+
+  ```ts
+  const trpc = await createOfflineTrpcHarness("my-feature-test");
+  const res = await trpc
+    .authedCaller()
+    .subscription.setFilters({ guildId, channelId, alias, filters });
+  // assert against trpc.prisma …; trpc.anonCaller() for unauthenticated-rejection tests
+  // remember: await trpc.prisma.$disconnect() in afterAll
+  ```
+
+  Constraints (documented in the harness): call it at the TOP of the test file
+  before anything imports `appRouter`, and take `appRouter` from the returned
+  object. `assertGuildAdmin` / `assertChannelInGuild` are stubbed, so real Discord
+  admin/membership is out of scope for these tests.
+
+For the running app end-to-end, `bun run dev:web` still needs `op signin` and real
+Discord OAuth in the browser (see **Web UI (Local end-to-end)** above).
 
 ---
 

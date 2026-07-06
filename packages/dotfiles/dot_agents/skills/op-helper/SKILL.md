@@ -249,6 +249,15 @@ op whoami
 - Don't use `op item get --reveal` in scripts that might log output
 - Don't share service account tokens in plain text
 - Always verify you're in the correct vault before retrieving secrets
+- **A `.` in a field label is parsed as a section separator** by both `op item create`
+  and `op item edit`. `"config.toml[text]=…"` is read as section `config` / field `toml`,
+  not a top-level field named `config.toml`. Worse, `op item edit` against an item that
+  already has a top-level `config.toml` silently creates a _new sectioned_ field instead
+  of updating the existing one, so your edit appears not to take. Escape the dot:
+  `"config\.toml[text]=…"`. Verify with
+  `op item get <id> --format json | jq '.fields[] | {label, section: .section.label}'` —
+  `section: null` is the real top-level field. To delete an accidentally-created
+  sectioned twin, use the unescaped form: `'config.toml[delete]'`.
 
 ## Examples
 

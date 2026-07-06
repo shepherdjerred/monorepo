@@ -5,7 +5,6 @@ import {
 } from "@temporalio/client";
 import type { Duration } from "@temporalio/common";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import { EVAL_FIXTURES_PIN } from "#shared/pr-review/eval-fixture.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
 import { detectOrphanSchedules } from "./orphan-detection.ts";
 
@@ -55,13 +54,13 @@ export const DELETED_SCHEDULE_IDS = [
   // of reconciled weekly). The workflow type was removed from the bundle, so
   // this schedule must be deleted or it would keep firing a missing workflow.
   "helm-types-weekly-refresh",
-  // Renamed to `alert-remediation-daily` and throttled hourly → once a day
-  // while the `claude -p` startup hang is investigated (every hourly run was
-  // pegging the 30-min activity timeout; see
-  // packages/docs/logs/2026-06-19_bugsink-temporal-checkin-alert-remediation-hang.md).
-  // Schedules are keyed by id, so the renamed schedule is a NEW one — this
-  // entry deletes the old hourly schedule on startup so it stops firing.
+  // Alert-remediation workflow removed entirely: in ~1 month it opened 0 PRs
+  // (metrics: ~564 `failed`, ~2 `report-only`, 0 `pr-created`). Most PagerDuty/
+  // Bugsink alerts (absence signals, infra flaps, capacity) aren't fixable by a
+  // repo-only PR, so the premise didn't hold. Both ids stay here so the
+  // reconciler deletes the live schedules on startup rather than orphaning them.
   "alert-remediation-hourly",
+  "alert-remediation-daily",
   // The pokeemerald.wasm download workflow (`runPokeemeraldWasmUpdate`) is gone:
   // the wasm is now built from source in the Dagger image build with our
   // customizations (the download fetched an audio-stubbed upstream that lacked
@@ -70,6 +69,15 @@ export const DELETED_SCHEDULE_IDS = [
   // keeps firing a workflow that no longer exists in the bundle.
   "pokeemerald-wasm-weekly",
   "pokeemerald-wasm-monthly",
+  // The pr-review eval bot (continuous-eval + weekly A/B significance) was
+  // removed entirely — its workflow types (`prReviewEvalWorkflow`,
+  // `prReviewWeeklySignificanceWorkflow`) are no longer in the bundle. Delete
+  // BOTH schedules on startup so the worker stops firing missing workflow
+  // types (which would also trip the `temporal_schedule_orphans` gauge). The
+  // dedicated `pr_review_eval` Postgres DB and PagerDuty alert group were torn
+  // down with them.
+  "pr-review-eval-nightly",
+  "pr-review-ab-weekly-report",
 ] as const;
 
 type ScheduleDefinition = {
@@ -88,15 +96,6 @@ type ScheduleDefinition = {
   // under CI's Node16 `ms` resolution — see the constants' comment.
   catchupWindow?: CatchupWindow;
 };
-
-const PR_REVIEW_EVAL_SCHEDULE_ID = "pr-review-eval-nightly";
-const PR_REVIEW_AB_WEEKLY_REPORT_SCHEDULE_ID = "pr-review-ab-weekly-report";
-const PR_REVIEW_FIXTURES_REPO_URL_ENV = "PR_REVIEW_FIXTURES_REPO_URL";
-const PR_REVIEW_EVAL_DATABASE_URL_ENV = "PR_REVIEW_EVAL_DATABASE_URL";
-const PR_REVIEW_EVAL_PAUSE_REASON =
-  "Paused because PR_REVIEW_FIXTURES_REPO_URL is not configured on the Temporal worker";
-const PR_REVIEW_EVAL_DATABASE_PAUSE_REASON =
-  "Paused because PR_REVIEW_EVAL_DATABASE_URL is not configured on the Temporal worker";
 
 const SCOUT_LANE_PRIOR_UPDATE_CONFIG = {
   lanePriors: {
@@ -194,30 +193,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Bounded daily homelab health check email via generic report-only agent task (Claude -> Postal)",
   },
   {
-    id: "alert-remediation-daily",
-    workflowType: "alertRemediationSweepWorkflow",
-    args: [
-      {
-        repo: { fullName: "shepherdjerred/monorepo", ref: "main" },
-        provider: "claude",
-        concurrency: 3,
-        // Schema default also dropped from 80 → 15; pinning here so the
-        // intent (defense-in-depth against the 30-min activity wall) lives
-        // at the call site too.
-        maxTurns: 15,
-      },
-    ],
-    // 08:00 PT daily — throttled from hourly (the old `alert-remediation-hourly`
-    // schedule, now in DELETED_SCHEDULE_IDS) while the `claude -p` startup hang
-    // is investigated. Staggered clear of homelab-audit-daily (06:30), the only
-    // other AGENT_TASK-queue cron.
-    cronExpression: "0 8 * * *",
-    taskQueue: TASK_QUEUES.AGENT_TASK,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "2 hours",
-    memo: "Daily PagerDuty/Bugsink alert remediation fan-out (08:00 PT). Child workflows may create draft PRs for straightforward repo-only fixes.",
-  },
-  {
     id: "scout-data-dragon-version-check",
     workflowType: "runScoutDataDragonVersionCheck",
     args: [SCOUT_LANE_PRIOR_UPDATE_CONFIG],
@@ -292,6 +267,25 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Daily Bugsink database housekeeping (delete old events, vacuum)",
   },
   {
+    id: "scout-image-gc-daily",
+    workflowType: "runScoutImageGcWorkflow",
+    args: [{ retentionDays: 30, dryRun: false }],
+    // 04:00 PT — after the 03:00 bugsink/zfs maintenance window so the nightly
+    // destructive jobs don't contend for the worker pod at once.
+    cronExpression: "0 4 * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    // First run sweeps ~110k objects and deletes ~38k; steady-state runs finish
+    // in <1m. This workflow-level cap must fit the activity's full retry budget,
+    // not just one attempt: the retry policy allows 3 attempts at a 20m
+    // startToCloseTimeout each (plus ~90s of backoff), so a 25m cap would let a
+    // slow-but-failing first attempt consume the whole window and starve retries
+    // 2 and 3. 65m genuinely accommodates 3 × 20m + backoff; SKIP overlap + the
+    // daily cadence make the wider ceiling harmless (the next run is 24h out).
+    workflowExecutionTimeout: "65 minutes",
+    memo: "Daily GC of Scout images: delete .png/.svg older than 30d under games/ & prematch/ in scout-prod + scout-beta (SeaweedFS), keeping JSON. See packages/docs/plans/2026-07-03_scout-s3-image-retention.md",
+  },
+  {
     id: "velero-orphan-audit",
     workflowType: "runVeleroOrphanAuditWorkflow",
     args: [],
@@ -302,34 +296,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "15 minutes",
     memo: "Daily Velero orphan ZFS snapshot detection — emits Prometheus metrics for the orphan-snapshot pathology (see packages/docs/decisions/2026-05-05_velero-orphan-snapshot-prevention.md)",
-  },
-  {
-    id: "pr-review-ab-weekly-report",
-    workflowType: "prReviewWeeklySignificanceWorkflow",
-    args: [{}],
-    // Monday 09:00 PT — the team is back from the weekend and can act
-    // on a Discord report before standup. Workflow is cheap (single
-    // Postgres query per experiment + 100k MC samples per arm), so we
-    // don't bother staggering against the nightly cron.
-    cronExpression: "0 9 * * 1",
-    taskQueue: TASK_QUEUES.PR_REVIEW,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "10 minutes",
-    memo: "Weekly pr-review-bot A/B significance report — Bayesian posterior over real-PR acceptance, Discord post Mon 09:00 PT",
-  },
-  {
-    id: PR_REVIEW_EVAL_SCHEDULE_ID,
-    workflowType: "prReviewEvalWorkflow",
-    args: [{ pin: EVAL_FIXTURES_PIN }],
-    // 04:00 PT — staggered after velero-orphan-audit (03:30) so the
-    // worker pod isn't fighting two cron workflows for resources. The
-    // eval workflow takes ~10-20 min depending on corpus size + LLM
-    // latency; an hour of headroom before any 5am workflows is fine.
-    cronExpression: "0 4 * * *",
-    taskQueue: TASK_QUEUES.PR_REVIEW,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "2 hours",
-    memo: "Nightly pr-review-bot continuous-eval — replay against fixture corpus, persist precision/recall to pr_review_eval Postgres, fire PD alert on > 5pp drop vs trailing-7d mean",
   },
   {
     id: "golink-sync",
@@ -425,61 +391,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
   },
 ];
 
-export function prReviewEvalFixturesConfigured(
-  env: Record<string, string | undefined> = Bun.env,
-): boolean {
-  return (env[PR_REVIEW_FIXTURES_REPO_URL_ENV]?.trim() ?? "").length > 0;
-}
-
-export function prReviewEvalDatabaseConfigured(
-  env: Record<string, string | undefined> = Bun.env,
-): boolean {
-  return (env[PR_REVIEW_EVAL_DATABASE_URL_ENV]?.trim() ?? "").length > 0;
-}
-
-export function scheduleRequiresConfigPause(
-  schedule: ScheduleDefinition,
-  env: Record<string, string | undefined> = Bun.env,
-): { paused: boolean; reason: string | undefined } {
-  if (schedule.id === PR_REVIEW_EVAL_SCHEDULE_ID) {
-    if (!prReviewEvalFixturesConfigured(env)) {
-      return { paused: true, reason: PR_REVIEW_EVAL_PAUSE_REASON };
-    }
-    if (!prReviewEvalDatabaseConfigured(env)) {
-      return { paused: true, reason: PR_REVIEW_EVAL_DATABASE_PAUSE_REASON };
-    }
-    return { paused: false, reason: undefined };
-  }
-  if (schedule.id === PR_REVIEW_AB_WEEKLY_REPORT_SCHEDULE_ID) {
-    if (!prReviewEvalDatabaseConfigured(env)) {
-      return { paused: true, reason: PR_REVIEW_EVAL_DATABASE_PAUSE_REASON };
-    }
-    return { paused: false, reason: undefined };
-  }
-  return { paused: false, reason: undefined };
-}
-
-async function reconcileSchedulePauseState(
-  handle: ReturnType<Client["schedule"]["getHandle"]>,
-  schedule: ScheduleDefinition,
-): Promise<void> {
-  const desired = scheduleRequiresConfigPause(schedule);
-  if (desired.paused) {
-    await handle.pause(desired.reason ?? "Paused by schedule configuration");
-    console.warn(`Paused schedule: ${schedule.id} (${desired.reason ?? ""})`);
-    return;
-  }
-  if (
-    schedule.id === PR_REVIEW_EVAL_SCHEDULE_ID ||
-    schedule.id === PR_REVIEW_AB_WEEKLY_REPORT_SCHEDULE_ID
-  ) {
-    await handle.unpause(
-      `Required PR review eval configuration is present; ${schedule.id} enabled`,
-    );
-    console.warn(`Unpaused schedule: ${schedule.id}`);
-  }
-}
-
 export function buildSchedulePolicies(schedule: ScheduleDefinition): {
   overlap: ScheduleOverlapPolicy;
   // CatchupWindow (not `Duration`): the resolved value is always one of the two
@@ -508,7 +419,7 @@ export async function registerSchedules(client: Client): Promise<void> {
   }
 
   for (const schedule of SCHEDULES) {
-    let handle = scheduleClient.getHandle(schedule.id);
+    const handle = scheduleClient.getHandle(schedule.id);
     try {
       // Update the existing schedule
       await handle.update((prev) => ({
@@ -555,9 +466,7 @@ export async function registerSchedules(client: Client): Promise<void> {
       });
 
       console.warn(`Created schedule: ${schedule.id}`);
-      handle = scheduleClient.getHandle(schedule.id);
     }
-    await reconcileSchedulePauseState(handle, schedule);
   }
 
   // After reconciling the declared set, surface any live schedule that is no

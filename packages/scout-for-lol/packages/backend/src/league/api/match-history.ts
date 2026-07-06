@@ -1,5 +1,6 @@
 import { api } from "#src/league/api/api.ts";
-import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
+import { Constants } from "twisted";
+const { regionToRegionGroup } = Constants;
 import { mapRegionToEnum } from "#src/league/model/region.ts";
 import type { PlayerConfigEntry, MatchId } from "@scout-for-lol/data/index.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";

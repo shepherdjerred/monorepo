@@ -1,11 +1,20 @@
 ---
 id: mk64-emulator-worker-thread
 status: waiting-on-verification
-origin: packages/docs/plans/2026-06-19_mk64-stream-backpressure.md
+origin: packages/docs/archive/completed/2026-06-19_mk64-stream-backpressure.md
 source_marker: false
 ---
 
 # MK64: move the emulator to a Worker thread to restore 30fps
+
+## Verification (2026-06-28) — unmeasurable without a live `/play`
+
+The decision gate here is a live fps measurement during a real Mario Kart `/play` session
+(`stream_ffmpeg_fps`, `emulator_ticks_total`, drops, sink-buffer). Prometheus currently exposes
+**no** matching `emulator|mario|mk64|ffmpeg|sink_buffer` series — those metrics only emit while a
+game is actively streaming, and none is running now. So this can't be confirmed from infra; it
+needs an active `/play` to measure whether the PR #1274 drop-policy holds ~28–30fps (→ resolve,
+no worker thread needed) or still starves (→ build the worker thread).
 
 ## Why
 

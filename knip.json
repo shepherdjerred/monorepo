@@ -405,7 +405,6 @@
       "exports"
     ],
     "packages/tasknotes-server/src/sentry.ts": ["exports"],
-    "packages/temporal/src/activities/alert-remediation.ts": ["exports"],
     "packages/temporal/src/activities/pr-review/ingest-dismissals.ts": [
       "exports"
     ],

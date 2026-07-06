@@ -110,6 +110,7 @@ import {
   smokeTestBirmelHelper,
   smokeTestStarlightKarmaBotHelper,
   smokeTestTasknotesServerHelper,
+  tasknotesContractTestHelper,
   smokeTestCaddyS3ProxyHelper,
   smokeTestObsidianHeadlessHelper,
   smokeTestMcpGatewayHelper,
@@ -198,6 +199,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     tsconfig: File | null = null,
     needsHelm = false,
+    needsGo = false,
   ): Promise<string> {
     return testHelper(
       pkgDir,
@@ -206,6 +208,7 @@ export class Monorepo {
       depDirs,
       tsconfig,
       needsHelm,
+      needsGo,
     ).stdout();
   }
 
@@ -330,6 +333,7 @@ export class Monorepo {
     includeAstroBuild = false,
     includeBuild = false,
     skipTest = false,
+    needsGo = false,
   ): Promise<string> {
     return lintTypecheckTestHelper(
       pkgDir,
@@ -344,6 +348,7 @@ export class Monorepo {
       includeAstroBuild,
       includeBuild,
       skipTest,
+      needsGo,
     );
   }
 
@@ -1112,6 +1117,14 @@ export class Monorepo {
     cloudflareApiToken: Secret | null = null,
     tailscaleOauthClientId: Secret | null = null,
     tailscaleOauthClientSecret: Secret | null = null,
+    buildkiteApiToken: Secret | null = null,
+    radarrApiKey: Secret | null = null,
+    sonarrApiKey: Secret | null = null,
+    prowlarrApiKey: Secret | null = null,
+    qbittorrentPassword: Secret | null = null,
+    privatehdPassword: Secret | null = null,
+    privatehdPid: Secret | null = null,
+    pagerdutyToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuApplyHelper(
@@ -1124,6 +1137,14 @@ export class Monorepo {
       cloudflareApiToken,
       tailscaleOauthClientId,
       tailscaleOauthClientSecret,
+      buildkiteApiToken,
+      radarrApiKey,
+      sonarrApiKey,
+      prowlarrApiKey,
+      qbittorrentPassword,
+      privatehdPassword,
+      privatehdPid,
+      pagerdutyToken,
       dryrun,
     ).stdout();
   }
@@ -1140,6 +1161,14 @@ export class Monorepo {
     cloudflareApiToken: Secret | null = null,
     tailscaleOauthClientId: Secret | null = null,
     tailscaleOauthClientSecret: Secret | null = null,
+    buildkiteApiToken: Secret | null = null,
+    radarrApiKey: Secret | null = null,
+    sonarrApiKey: Secret | null = null,
+    prowlarrApiKey: Secret | null = null,
+    qbittorrentPassword: Secret | null = null,
+    privatehdPassword: Secret | null = null,
+    privatehdPid: Secret | null = null,
+    pagerdutyToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuPlanHelper(
@@ -1152,6 +1181,14 @@ export class Monorepo {
       cloudflareApiToken,
       tailscaleOauthClientId,
       tailscaleOauthClientSecret,
+      buildkiteApiToken,
+      radarrApiKey,
+      sonarrApiKey,
+      prowlarrApiKey,
+      qbittorrentPassword,
+      privatehdPassword,
+      privatehdPid,
+      pagerdutyToken,
       dryrun,
     ).stdout();
   }
@@ -1173,6 +1210,14 @@ export class Monorepo {
     cloudflareApiToken: Secret | null = null,
     tailscaleOauthClientId: Secret | null = null,
     tailscaleOauthClientSecret: Secret | null = null,
+    buildkiteApiToken: Secret | null = null,
+    radarrApiKey: Secret | null = null,
+    sonarrApiKey: Secret | null = null,
+    prowlarrApiKey: Secret | null = null,
+    qbittorrentPassword: Secret | null = null,
+    privatehdPassword: Secret | null = null,
+    privatehdPid: Secret | null = null,
+    pagerdutyToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuApplyAllHelper(
@@ -1185,6 +1230,14 @@ export class Monorepo {
       cloudflareApiToken,
       tailscaleOauthClientId,
       tailscaleOauthClientSecret,
+      buildkiteApiToken,
+      radarrApiKey,
+      sonarrApiKey,
+      prowlarrApiKey,
+      qbittorrentPassword,
+      privatehdPassword,
+      privatehdPid,
+      pagerdutyToken,
       dryrun,
     );
   }
@@ -1201,6 +1254,14 @@ export class Monorepo {
     cloudflareApiToken: Secret | null = null,
     tailscaleOauthClientId: Secret | null = null,
     tailscaleOauthClientSecret: Secret | null = null,
+    buildkiteApiToken: Secret | null = null,
+    radarrApiKey: Secret | null = null,
+    sonarrApiKey: Secret | null = null,
+    prowlarrApiKey: Secret | null = null,
+    qbittorrentPassword: Secret | null = null,
+    privatehdPassword: Secret | null = null,
+    privatehdPid: Secret | null = null,
+    pagerdutyToken: Secret | null = null,
     dryrun = false,
   ): Promise<string> {
     return tofuPlanAllHelper(
@@ -1213,6 +1274,14 @@ export class Monorepo {
       cloudflareApiToken,
       tailscaleOauthClientId,
       tailscaleOauthClientSecret,
+      buildkiteApiToken,
+      radarrApiKey,
+      sonarrApiKey,
+      prowlarrApiKey,
+      qbittorrentPassword,
+      privatehdPassword,
+      privatehdPid,
+      pagerdutyToken,
       dryrun,
     );
   }
@@ -1858,6 +1927,28 @@ export class Monorepo {
     depDirs: Directory[] = [],
   ): Promise<string> {
     return smokeTestTasknotesServerHelper(pkgDir, pkg, depNames, depDirs);
+  }
+
+  /**
+   * Contract test: tasks-for-obsidian's TaskNotesClient against a spawned
+   * real tasknotes-server. Pass tasks-for-obsidian as pkgDir/pkg and include
+   * tasknotes-server in depNames/depDirs.
+   */
+  @func()
+  async tasknotesContractTest(
+    pkgDir: Directory,
+    pkg: string,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+    tsconfig: File | null = null,
+  ): Promise<string> {
+    return tasknotesContractTestHelper(
+      pkgDir,
+      pkg,
+      depNames,
+      depDirs,
+      tsconfig,
+    ).stdout();
   }
 
   /** Smoke test caddy-s3proxy: verifies custom Caddy binary works */

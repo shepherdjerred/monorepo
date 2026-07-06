@@ -2,6 +2,7 @@ import type { SubscriptionFieldsValue } from "#src/lib/use-add-subscription.ts";
 import { RegionSelect } from "#src/components/region-select.tsx";
 import { RiotIdCombobox } from "#src/components/riot-id-combobox.tsx";
 import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.tsx";
+import { SubscriptionFilterFields } from "#src/components/subscription-filter-fields.tsx";
 import { Input } from "#src/components/ui/input.tsx";
 import { Label } from "#src/components/ui/label.tsx";
 import { findRegion } from "#src/lib/regions.ts";
@@ -115,6 +116,20 @@ export function SubscriptionFields(props: {
           value={value.discordUserId}
           onChange={(discordUserId) => {
             onChange({ ...value, discordUserId });
+          }}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={`${idPrefix}-queues`}>
+          Notify for{" "}
+          <span className="text-muted-foreground">(all queues if empty)</span>
+        </Label>
+        <SubscriptionFilterFields
+          id={`${idPrefix}-queues`}
+          value={value.filters}
+          onChange={(filters) => {
+            onChange({ ...value, filters });
           }}
         />
       </div>

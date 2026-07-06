@@ -38,9 +38,16 @@ const DATA_PACKAGE_ROOT = `${SCOUT_ROOT}/packages/data`;
 
 const GENERATED_PATHS = [
   `${DATA_PACKAGE_ROOT}/src/data-dragon`,
+  // Structured patch changeset (assets/patch-notes.json) is under src/data-dragon
+  // above; the raw-notes provenance lives outside src, so stage it explicitly.
+  `${DATA_PACKAGE_ROOT}/patch-notes-archive`,
   `${SCOUT_ROOT}/packages/backend/src/league/model/__tests__/__snapshots__`,
   `${SCOUT_ROOT}/packages/report/src/dataDragon/__snapshots__`,
   `${SCOUT_ROOT}/packages/report/src/html/arena/__snapshots__`,
+  // Auto-generated "What's New" entry on minor-version bumps (update-data-dragon.ts).
+  // A `git add` of an unchanged path is a no-op, so it only commits when the
+  // updater actually wrote an entry.
+  `${SCOUT_ROOT}/packages/frontend/src/data/changelog.tsx`,
   LANE_PRIOR_ARTIFACT_PATH,
   LANE_PRIOR_EVAL_REPORT_PATH,
 ];

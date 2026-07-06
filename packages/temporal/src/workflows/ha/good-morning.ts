@@ -13,9 +13,13 @@ const EXTRA_MEDIA_PLAYERS = [MAIN_BATHROOM_MEDIA] as const;
 const BEDROOM_DIMMED = "scene.bedroom_dimmed" as const;
 const BEDROOM_BRIGHT = "scene.bedroom_bright" as const;
 const MASTER_BATHROOM_HEAT = "climate.master_bathroom" as const;
-// Capped at 30°C by the Mysa HACS integration (kgelinas/Mysa_HA#16, fix in PR
-// kgelinas/Mysa_HA#18). Bump back to 35 once the upstream fix ships.
-const MORNING_HEAT_TEMP_C = 30;
+// The INF-V1 floor heater's true max is 40°C. Upstream kgelinas/Mysa_HA capped
+// it at 30°C (issue #16); the fix (PR #18) was closed unmerged and upstream is
+// stale, so HA runs our fork shepherdjerred/Mysa_HA@v0.9.3 (via HACS), which
+// exposes the real device limit. Verified live: climate.master_bathroom.max_temp
+// == 40 and a 35°C set applied without error. See
+// packages/docs/plans/2026-05-05_mysa-max-temp-cap.md.
+const MORNING_HEAT_TEMP_C = 40;
 const MORNING_HEAT_DURATION = "60 minutes" as const;
 
 const WAKE_MEDIA = {

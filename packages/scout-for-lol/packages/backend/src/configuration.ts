@@ -71,6 +71,7 @@ export default {
   port: env.get("PORT").default("3000").asPortNumber(),
   s3BucketName: getOptionalEnvVar("S3_BUCKET_NAME"),
   openaiApiKey: getOptionalEnvVar("OPENAI_API_KEY"),
+  reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "openai/gpt-5.5"),
   geminiApiKey: getOptionalEnvVar("GEMINI_API_KEY"),
   openaiHourlyTokenBudget: env
     .get("OPENAI_HOURLY_TOKEN_BUDGET")

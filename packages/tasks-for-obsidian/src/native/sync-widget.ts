@@ -3,7 +3,7 @@ import type { Task, TaskId } from "../domain/types";
 import { isOverdue, isToday } from "../lib/dates";
 import { updateWidgetData } from "./widget-bridge";
 
-export function syncWidgetData(tasks: Map<TaskId, Task>): void {
+export function syncWidgetData(tasks: ReadonlyMap<TaskId, Task>): void {
   const allTasks = [...tasks.values()];
   const todayTasks = allTasks
     .filter(

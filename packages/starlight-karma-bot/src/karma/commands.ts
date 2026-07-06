@@ -55,14 +55,10 @@ async function getOrCreate(id: string): Promise<Person> {
     where: {
       id,
     },
-    relations: [
-      "received",
-      "given",
-      "given.receiver",
-      "given.giver",
-      "received.receiver",
-      "received.giver",
-    ],
+    relations: {
+      received: { receiver: true, giver: true },
+      given: { receiver: true, giver: true },
+    },
   });
   if (person === null) {
     console.warn(`[Karma DB] Creating new person record for user ID: ${id}`);
@@ -274,7 +270,7 @@ async function handleKarmaHistory(interaction: ChatInputCommandInteraction) {
       { giver: { id: target.id }, guildId: interaction.guildId },
       { receiver: { id: target.id }, guildId: interaction.guildId },
     ],
-    relations: ["giver", "receiver"],
+    relations: { giver: true, receiver: true },
     order: { datetime: "DESC" },
     take: 10,
   });

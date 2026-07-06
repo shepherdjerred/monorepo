@@ -228,8 +228,8 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     releaseDeps.push(caddyStep.key);
   }
 
-  // --- Main-only steps ---
-  const hasMainSteps =
+  // --- Release and PR dryrun-capable steps ---
+  const hasReleaseOrPrDryrunSteps =
     affected.buildAll ||
     affected.hasImagePackages.size > 0 ||
     affected.hasSitePackages.size > 0 ||
@@ -238,7 +238,12 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     affected.cooklangChanged ||
     affected.ciImageChanged;
 
-  if (hasMainSteps) {
+  // Deploy-site step keys, populated inside the release/PR dryrun block below
+  // and folded into `ci-complete`'s depends_on so a failed site build
+  // (including a PR dryrun) blocks the required GitHub check.
+  let siteDeployKeys: string[] = [];
+
+  if (hasReleaseOrPrDryrunSteps) {
     // Quality gate: lightweight step that passes once all blocking checks pass.
     // Downstream steps that don't need release metadata depend on this instead.
     steps.push({
@@ -348,21 +353,38 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
       steps.push(cooklangReleaseGroup(pkgKeyMap.get("cooklang-for-obsidian")));
     }
 
-    // --- Deploy sites ---
-    if (
-      releaseBuild &&
-      (affected.buildAll || affected.hasSitePackages.size > 0)
-    ) {
+    // --- Deploy sites (release) / dryrun site builds (PR) ---
+    // Release builds sync to SeaweedFS. PR builds run the SAME site build as a
+    // dryrun (deploySiteStep appends `--dryrun` via DRYRUN_FLAG, skipping the
+    // sync) so frontend build regressions — e.g. Astro `astro:build:done`
+    // OG-image generation — are caught before merge. The real deploy is
+    // main-only, so without this a site build break first surfaces in the
+    // main deploy (see the scout OG `jsxDEV` incident, build 5069).
+    //
+    // On PRs we scope to sites whose SOURCE actually changed (hasSitePackages)
+    // and skip `buildAll` (infra/lockfile PRs), which would otherwise dryrun
+    // all ~9 sites; those still get real deploy validation on main.
+    const deploySites = releaseBuild
+      ? affected.buildAll || affected.hasSitePackages.size > 0
+      : !affected.buildAll && affected.hasSitePackages.size > 0;
+    if (deploySites) {
       const sitesToDeploy = filterSites(
         affected.hasSitePackages,
-        affected.buildAll,
+        releaseBuild && affected.buildAll,
       );
-      // Site deploys upload to SeaweedFS buckets that Tofu (seaweedfs stack)
-      // declares. Wait for the bundled tofu-apply-all step so the bucket
-      // exists before we sync into it.
+      // Only real (release) syncs need the SeaweedFS bucket to exist, so only
+      // they wait on the bundled tofu-apply-all step. PR dryruns never sync.
       const siteDeployDeps =
-        affected.buildAll || affected.homelabChanged ? ["tofu-apply-all"] : [];
-      steps.push(deploySitesGroup(sitesToDeploy, pkgKeyMap, siteDeployDeps));
+        releaseBuild && (affected.buildAll || affected.homelabChanged)
+          ? ["tofu-apply-all"]
+          : [];
+      const sitesGroup = deploySitesGroup(
+        sitesToDeploy,
+        pkgKeyMap,
+        siteDeployDeps,
+      );
+      steps.push(sitesGroup);
+      siteDeployKeys = sitesGroup.steps.map((s) => s.key);
     }
 
     // --- Homelab Tofu Plan (runs on PRs for early feedback) ---
@@ -460,7 +482,14 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
   }
 
   // --- CI Complete: single terminal step for GitHub required status check ---
-  const ciCompleteDeps = [...releaseDeps, ...pkgKeyMap.values()];
+  // Include site deploy keys so a failed site build — including a PR dryrun —
+  // fails the required check and blocks merge (deploy steps aren't in
+  // releaseDeps; they depend on quality-gate, so there is no dependency cycle).
+  const ciCompleteDeps = [
+    ...releaseDeps,
+    ...pkgKeyMap.values(),
+    ...siteDeployKeys,
+  ];
   steps.push({
     label: ":white_check_mark: CI Complete",
     key: "ci-complete",

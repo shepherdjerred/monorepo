@@ -1,7 +1,7 @@
 ---
 id: dagger-engine-tempo-otlp
 status: active
-origin: packages/docs/plans/2026-06-14_streambot-stutter-rate-mismatch.md
+origin: packages/docs/archive/completed/2026-06-14_streambot-stutter-rate-mismatch.md
 ---
 
 # Dagger engine should export OTLP traces to in-cluster Tempo

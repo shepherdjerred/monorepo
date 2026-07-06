@@ -406,10 +406,6 @@ export function createTemporalWorkerDeployment(
           key: "AWS_SECRET_ACCESS_KEY",
         }),
         // GitHub
-        // PR_REVIEW_FIXTURES_REPO_URL is not wired — it belongs to the disabled
-        // pr-review-eval feature (PR_BOT_ENABLED=false) and is not present in the
-        // 1P item, so requiring it would crash-loop the worker. The eval schedule
-        // self-pauses when it's absent (register-schedules.ts).
         GITHUB_APP_ID: EnvValue.fromSecretValue({
           secret,
           key: "GITHUB_APP_ID",
@@ -456,6 +452,17 @@ export function createTemporalWorkerDeployment(
         // `isPostEnabled`.
         PR_REVIEW_POST_ENABLED: EnvValue.fromValue("true"),
         PR_REVIEW_WORKER_MAX_CONCURRENT_ACTIVITIES: EnvValue.fromValue("1"),
+        // PR babysitter — the mutating "get this PR green" bot. Independent
+        // kill switch. ENABLED: an `@temporal-worker help me get this green`
+        // comment from the owner now starts a babysitter workflow (owner-only
+        // authz + per-PR concurrency + budget still gate it). Flip back to
+        // "false" to make the issue_comment webhook ack-and-ignore without
+        // starting any workflow. See
+        // packages/temporal/src/event-bridge/babysit-webhook.ts `isPrBabysitEnabled`.
+        PR_BABYSIT_ENABLED: EnvValue.fromValue("true"),
+        PR_BABYSIT_BOT_HANDLE: EnvValue.fromValue("@temporal-worker"),
+        PR_BABYSIT_BOT_LOGIN: EnvValue.fromValue("long-summer-intern[bot]"),
+        PR_BABYSIT_WORKER_MAX_CONCURRENT_ACTIVITIES: EnvValue.fromValue("2"),
         GITHUB_WEBHOOK_PORT: EnvValue.fromValue("9466"),
         AGENT_TASK_API_PORT: EnvValue.fromValue("9467"),
         AGENT_TASK_API_TOKEN: EnvValue.fromSecretValue({

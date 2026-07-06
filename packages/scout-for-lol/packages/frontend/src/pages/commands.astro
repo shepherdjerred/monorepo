@@ -8,12 +8,15 @@ import CommandBox from "../components/CommandBox.astro";
 import { APP_DASHBOARD_URL } from "#src/lib/marketing-constants.ts";
 ---
 
-<Layout>
+<Layout
+  title="Slash Commands · Scout for LoL"
+  description="Every Scout action is also a Discord slash command — subscribe to players, run competitions, check your rank, and more."
+>
   <div class="bg-white dark:bg-gray-900">
     <Navbar activePage="commands" />
 
     <!-- Main Content -->
-    <div class="relative px-6 pt-14 lg:px-8">
+    <div class="relative px-6 lg:px-8">
       <div class="mx-auto max-w-4xl py-32 sm:py-48 lg:py-56">
         <Header
           variant="page"
@@ -23,12 +26,12 @@ import { APP_DASHBOARD_URL } from "#src/lib/marketing-constants.ts";
           <div class="mt-6 flex flex-wrap gap-x-6 gap-y-2">
             <a
               href={APP_DASHBOARD_URL}
-              class="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+              class="inline-flex min-h-[44px] items-center font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
               >Open the dashboard →</a
             >
             <a
               href="/getting-started"
-              class="font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+              class="inline-flex min-h-[44px] items-center font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
               >New to Scout? Getting Started →</a
             >
           </div>

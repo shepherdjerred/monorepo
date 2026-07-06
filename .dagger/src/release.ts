@@ -237,6 +237,14 @@ export function tofuApplyHelper(
   cloudflareApiToken: Secret | null = null,
   tailscaleOauthClientId: Secret | null = null,
   tailscaleOauthClientSecret: Secret | null = null,
+  buildkiteApiToken: Secret | null = null,
+  radarrApiKey: Secret | null = null,
+  sonarrApiKey: Secret | null = null,
+  prowlarrApiKey: Secret | null = null,
+  qbittorrentPassword: Secret | null = null,
+  privatehdPassword: Secret | null = null,
+  privatehdPid: Secret | null = null,
+  pagerdutyToken: Secret | null = null,
   dryrun = false,
 ): Container {
   let container = dag.container().from(TOFU_IMAGE);
@@ -304,6 +312,57 @@ export function tofuApplyHelper(
     );
   }
 
+  if (buildkiteApiToken != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_buildkite_api_token",
+      buildkiteApiToken,
+    );
+  }
+
+  if (radarrApiKey != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_radarr_api_key",
+      radarrApiKey,
+    );
+  }
+  if (sonarrApiKey != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_sonarr_api_key",
+      sonarrApiKey,
+    );
+  }
+  if (prowlarrApiKey != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_prowlarr_api_key",
+      prowlarrApiKey,
+    );
+  }
+  if (qbittorrentPassword != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_qbittorrent_password",
+      qbittorrentPassword,
+    );
+  }
+  if (privatehdPassword != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_privatehd_password",
+      privatehdPassword,
+    );
+  }
+  if (privatehdPid != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_privatehd_pid",
+      privatehdPid,
+    );
+  }
+
+  if (pagerdutyToken != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_pagerduty_token",
+      pagerdutyToken,
+    );
+  }
+
   container = container.withExec(["sh", "-c", TOFU_INIT_WITH_RETRY]);
 
   if (dryrun) {
@@ -323,6 +382,14 @@ export function tofuPlanHelper(
   cloudflareApiToken: Secret | null = null,
   tailscaleOauthClientId: Secret | null = null,
   tailscaleOauthClientSecret: Secret | null = null,
+  buildkiteApiToken: Secret | null = null,
+  radarrApiKey: Secret | null = null,
+  sonarrApiKey: Secret | null = null,
+  prowlarrApiKey: Secret | null = null,
+  qbittorrentPassword: Secret | null = null,
+  privatehdPassword: Secret | null = null,
+  privatehdPid: Secret | null = null,
+  pagerdutyToken: Secret | null = null,
   dryrun = false,
 ): Container {
   let container = dag
@@ -371,6 +438,57 @@ export function tofuPlanHelper(
     );
   }
 
+  if (buildkiteApiToken != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_buildkite_api_token",
+      buildkiteApiToken,
+    );
+  }
+
+  if (radarrApiKey != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_radarr_api_key",
+      radarrApiKey,
+    );
+  }
+  if (sonarrApiKey != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_sonarr_api_key",
+      sonarrApiKey,
+    );
+  }
+  if (prowlarrApiKey != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_prowlarr_api_key",
+      prowlarrApiKey,
+    );
+  }
+  if (qbittorrentPassword != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_qbittorrent_password",
+      qbittorrentPassword,
+    );
+  }
+  if (privatehdPassword != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_privatehd_password",
+      privatehdPassword,
+    );
+  }
+  if (privatehdPid != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_privatehd_pid",
+      privatehdPid,
+    );
+  }
+
+  if (pagerdutyToken != null) {
+    container = container.withSecretVariable(
+      "TF_VAR_pagerduty_token",
+      pagerdutyToken,
+    );
+  }
+
   container = container.withExec(["sh", "-c", TOFU_INIT_WITH_RETRY]);
 
   if (dryrun) {
@@ -403,6 +521,14 @@ export async function tofuApplyAllHelper(
   cloudflareApiToken: Secret | null,
   tailscaleOauthClientId: Secret | null,
   tailscaleOauthClientSecret: Secret | null,
+  buildkiteApiToken: Secret | null,
+  radarrApiKey: Secret | null,
+  sonarrApiKey: Secret | null,
+  prowlarrApiKey: Secret | null,
+  qbittorrentPassword: Secret | null,
+  privatehdPassword: Secret | null,
+  privatehdPid: Secret | null,
+  pagerdutyToken: Secret | null,
   dryrun: boolean,
 ): Promise<string> {
   return runBundle(
@@ -419,6 +545,14 @@ export async function tofuApplyAllHelper(
           cloudflareApiToken,
           tailscaleOauthClientId,
           tailscaleOauthClientSecret,
+          buildkiteApiToken,
+          radarrApiKey,
+          sonarrApiKey,
+          prowlarrApiKey,
+          qbittorrentPassword,
+          privatehdPassword,
+          privatehdPid,
+          pagerdutyToken,
           dryrun,
         ).stdout(),
     })),
@@ -439,6 +573,14 @@ export async function tofuPlanAllHelper(
   cloudflareApiToken: Secret | null,
   tailscaleOauthClientId: Secret | null,
   tailscaleOauthClientSecret: Secret | null,
+  buildkiteApiToken: Secret | null,
+  radarrApiKey: Secret | null,
+  sonarrApiKey: Secret | null,
+  prowlarrApiKey: Secret | null,
+  qbittorrentPassword: Secret | null,
+  privatehdPassword: Secret | null,
+  privatehdPid: Secret | null,
+  pagerdutyToken: Secret | null,
   dryrun: boolean,
 ): Promise<string> {
   return runBundle(
@@ -455,6 +597,14 @@ export async function tofuPlanAllHelper(
           cloudflareApiToken,
           tailscaleOauthClientId,
           tailscaleOauthClientSecret,
+          buildkiteApiToken,
+          radarrApiKey,
+          sonarrApiKey,
+          prowlarrApiKey,
+          qbittorrentPassword,
+          privatehdPassword,
+          privatehdPid,
+          pagerdutyToken,
           dryrun,
         ).stdout(),
     })),
@@ -768,11 +918,15 @@ export function deploySiteHelper(
     container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
   }
 
-  container = container.withExec(["bun", "install", "--frozen-lockfile"]);
-
-  // Build workspace deps that need compilation (e.g. astro-opengraph-images).
-  // Skip source-only library deps that consumers resolve via package exports
-  // directly — they don't ship a dist/.
+  // Build workspace deps that need compilation (e.g. astro-opengraph-images,
+  // llm-models) BEFORE installing the site itself. Nested-workspace sites
+  // (e.g. scout-for-lol) COPY their file: deps into node_modules at install
+  // time instead of symlinking, so a dep's dist/ must already exist on disk
+  // when the site is installed — otherwise the copied dep is dist-less and the
+  // site's bundler fails with "Failed to resolve entry for package ...".
+  // Symlinked sites see the dist/ regardless of order, so building first is
+  // safe for every site. Skip source-only library deps that consumers resolve
+  // via package exports directly — they don't ship a dist/.
   const SKIP_BUILD_DEPS: ReadonlySet<string> = new Set([
     "eslint-config",
     "llm-observability",
@@ -785,11 +939,13 @@ export function deploySiteHelper(
       .withExec(["bun", "run", "build"]);
   }
 
-  // Reset workdir to the package being deployed after the build-deps loop
-  // potentially left us inside the last built dep's directory. Without this,
-  // a consumer's `bun run --filter='./packages/foo' build` resolves the
-  // filter against the wrong cwd and fails with "No packages matched".
-  container = container.withWorkdir(`/workspace/packages/${pkg}`);
+  // Install the site last, with workdir reset to the deployed package (the
+  // build-deps loop left us in the last dep's directory). The install now
+  // copies/links the already-built deps, so their dist/ is present for the
+  // site's bundler.
+  container = container
+    .withWorkdir(`/workspace/packages/${pkg}`)
+    .withExec(["bun", "install", "--frozen-lockfile"]);
 
   // Install Playwright only when the site needs it (e.g. sjer.red for OG image generation)
   if (needsPlaywright) {

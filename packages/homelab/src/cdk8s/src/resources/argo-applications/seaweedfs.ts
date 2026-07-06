@@ -140,9 +140,17 @@ export function createSeaweedfsApp(chart: Chart) {
         {
           name: "data",
           type: "persistentVolumeClaim",
-          size: Size.gibibytes(256).asString(),
+          size: Size.gibibytes(384).asString(),
           storageClass: NVME_STORAGE_CLASS,
-          maxVolumes: 0, // 0 means auto-detect
+          // Explicit volume-count cap. Auto-detect (0) landed on 297 for the
+          // 256Gi PVC and the store filled all 297 slots — even though ~91Gi of
+          // disk was still free — so the master could no longer grow a volume and
+          // every PutObject that needed a fresh volume returned HTTP 500
+          // ("No writable volumes"), which broke all static-site CI deploys.
+          // 360 slots are comfortably backed by the 384Gi PVC (volumes cap at
+          // 1Gi each, so 360Gi worst-case < 384Gi). scout-prod/beta hold ~167 of
+          // these slots; trimming that data is the durable follow-up.
+          maxVolumes: 360,
         },
       ],
       // Configure the PVC for volume data
