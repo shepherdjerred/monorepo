@@ -80,6 +80,35 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
         },
+        // --- voice connection loss & recovery ------------------------------------------
+        {
+          alert: "StreambotVoiceDisconnectsElevated",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "increase(streambot_voice_disconnects_total[1h]) > 3",
+          ),
+          labels: { severity: "warning", category: "streaming" },
+          annotations: {
+            summary:
+              "Discord dropped the streamer's voice session > 3 times in the last hour",
+            description: escapePrometheusTemplate(
+              'Repeated Discord-side voice session losses (see the 2026-07-03 mid-movie death investigation). Occasional drops are expected and auto-recovered; a burst points at network trouble on the node, Discord voice infra issues, or the account being flagged. Check `{app="media-streambot"} |= "voice gateway websocket closed"` in Loki for the close codes.',
+            ),
+          },
+        },
+        {
+          alert: "StreambotVoiceReconnectExhausted",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'increase(streambot_voice_reconnects_total{outcome="exhausted"}[15m]) > 0',
+          ),
+          labels: { severity: "critical", category: "streaming" },
+          annotations: {
+            summary:
+              "Streambot gave up auto-reconnecting after a voice drop — playback stayed down",
+            description: escapePrometheusTemplate(
+              "Every reconnect attempt after a transient voice loss failed (no free userbot, join errors, or repeated immediate drops). The resume state file is preserved, so a restart or a manual /stream play resumes the movie. Investigate why rejoin failed before viewers do.",
+            ),
+          },
+        },
         // --- viewer-side symptoms ----------------------------------------------------
         {
           alert: "StreambotLateFramesElevated",

@@ -9,6 +9,8 @@ const config = [
         "src/lib/*.test.ts",
         "src/data/sync/*.test.ts",
         "src/data/sync/__tests__/*.test.ts",
+        "src/data/cache/*.test.ts",
+        "src/data/store/*.test.ts",
         "scripts/*.ts",
         "contract-tests/*.ts",
         // tseslint disallows '**' here; all e2e TS files live at this depth

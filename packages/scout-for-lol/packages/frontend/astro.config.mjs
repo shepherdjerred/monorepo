@@ -37,10 +37,12 @@ export default defineConfig({
       PUBLIC_PINTEREST_TAG_ID: envField.string({
         context: "client",
         access: "public",
+        optional: true,
       }),
       PUBLIC_REDDIT_PIXEL_ID: envField.string({
         context: "client",
         access: "public",
+        optional: true,
       }),
       // Injected at build time by the CI site-deploy step (2.0.0-<build>).
       // Optional: unset in local/dev builds, where Sentry release stays undefined.
