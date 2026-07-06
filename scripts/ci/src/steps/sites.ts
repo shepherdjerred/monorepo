@@ -1,10 +1,15 @@
 /**
  * Site deploy step generators.
  *
- * Deploy steps run on every branch (PRs included). On non-main branches the
- * deploy command receives `--dryrun` via DRYRUN_FLAG, so the build runs but
- * the SeaweedFS sync is skipped — PRs catch SSR/build regressions without
- * publishing assets.
+ * On non-main branches the deploy command receives `--dryrun` via DRYRUN_FLAG,
+ * so the build runs but the SeaweedFS sync is skipped — PRs catch SSR/build
+ * regressions (e.g. Astro OG-image generation) without publishing assets.
+ *
+ * The pipeline builder decides WHICH branches emit these steps (see
+ * pipeline-builder.ts "Deploy sites (release) / dryrun site builds (PR)"):
+ * release builds deploy every affected site; PR builds dryrun-build only the
+ * sites whose source changed. Their step keys feed `ci-complete`'s depends_on,
+ * so a failed dryrun blocks the merge.
  */
 import type { DeploySite } from "../catalog.ts";
 import { DEPLOY_SITES, PACKAGE_TO_SITE } from "../catalog.ts";
