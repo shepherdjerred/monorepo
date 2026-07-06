@@ -408,11 +408,12 @@ export const ALL_PACKAGES: string[] = [
 
 type ResourceTier = { cpu: string; memory: string };
 
-// BK pods are thin dagger CLI wrappers — all compute happens in the remote
-// Dagger engine. Keep requests minimal so more jobs fit within Kueue quota.
-const HEAVY: ResourceTier = { cpu: "250m", memory: "512Mi" };
-const MEDIUM: ResourceTier = { cpu: "150m", memory: "384Mi" };
-const LIGHT: ResourceTier = { cpu: "100m", memory: "256Mi" };
+// BK pods are mostly thin dagger CLI wrappers — all compute happens in the
+// remote Dagger engine — but the wrapper still needs enough headroom to keep
+// the Dagger client and Buildkite agent alive while streaming progress.
+const HEAVY: ResourceTier = { cpu: "250m", memory: "768Mi" };
+const MEDIUM: ResourceTier = { cpu: "150m", memory: "512Mi" };
+const LIGHT: ResourceTier = { cpu: "100m", memory: "384Mi" };
 
 export const PACKAGE_RESOURCES: Record<string, ResourceTier> = {
   homelab: HEAVY,
