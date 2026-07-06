@@ -158,7 +158,33 @@ const HealthEnvelopeSchema = z.object({
   data: z.object({ status: z.string() }),
 });
 
+/**
+ * Fail fast if a fixed port is already taken. Without this, the health poll
+ * happily talks to a STALE server left over from an earlier run — the suite
+ * then runs against that server's old, already-mutated vault and fails with
+ * baffling "task not visible" assertions.
+ */
+async function assertPortFree(port: number, what: string): Promise<void> {
+  let responded = false;
+  try {
+    await fetch(`http://127.0.0.1:${String(port)}/`, {
+      signal: AbortSignal.timeout(1000),
+    });
+    responded = true;
+  } catch {
+    // connection refused / timeout — port is free enough
+  }
+  if (responded) {
+    fail(
+      `port ${String(port)} (${what}) is already serving HTTP — a stale ` +
+        `process from a previous run is still alive. Kill it first: ` +
+        `lsof -ti tcp:${String(port)} | xargs kill`,
+    );
+  }
+}
+
 async function startServer(vaultDir: string): Promise<ChildProcess> {
+  await assertPortFree(SERVER_PORT, "tasknotes-server");
   const proc = spawn("bun", ["run", "src/index.ts"], {
     cwd: serverDir,
     env: {
@@ -201,6 +227,7 @@ async function startServer(vaultDir: string): Promise<ChildProcess> {
 }
 
 async function startChaosProxy(): Promise<ChildProcess> {
+  await assertPortFree(CHAOS_PORT, "chaos proxy");
   const proc = spawn("bun", [path.join(packageDir, "e2e", "chaos-proxy.ts")], {
     env: {
       ...process.env,
@@ -452,9 +479,20 @@ async function assertVaultState(vaultDir: string): Promise<void> {
 // Main
 // ---------------------------------------------------------------------------
 
+// Module scope so signal handlers can reach them: `finally` does NOT run when
+// the process dies from Ctrl+C, and orphaned servers keep the fixed ports —
+// every later run then silently adopts the stale server and its stale vault.
+const children: ChildProcess[] = [];
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.on(signal, () => {
+    for (const child of children) child.kill();
+    process.exit(signal === "SIGINT" ? 130 : 143);
+  });
+}
+
 async function main(): Promise<void> {
   let vaultDir: string | null = null;
-  const children: ChildProcess[] = [];
+  let passed = false;
   try {
     // (1) temp vault seeded with fixtures
     vaultDir = await mkdtemp(path.join(tmpdir(), "tasknotes-e2e-"));
@@ -481,6 +519,7 @@ async function main(): Promise<void> {
     await assertVaultState(vaultDir);
 
     log("e2e suite passed");
+    passed = true;
   } finally {
     // (8) teardown — always
     await Promise.allSettled(
@@ -491,7 +530,13 @@ async function main(): Promise<void> {
       }),
     );
     if (vaultDir !== null) {
-      await rm(vaultDir, { recursive: true, force: true });
+      if (passed) {
+        await rm(vaultDir, { recursive: true, force: true });
+      } else {
+        // Keep the vault for post-mortem: the final markdown bytes are often
+        // the fastest way to tell which flow mutated what.
+        log(`suite failed — temp vault preserved at ${vaultDir}`);
+      }
     }
   }
 }
