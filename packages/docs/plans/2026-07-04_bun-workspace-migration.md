@@ -150,3 +150,34 @@ eslint-config but resolved from consumer/plugin instance context). Affects
 per-package lint steps + local hooks. Also: knip failures (soft-fail,
 artifact /tmp/knip.txt on build 5065), remaining pkg-check exit-1s to triage
 after round 2, Kueue quota watch after memory bumps.
+
+## Session Log — 2026-07-07
+
+### Done
+
+- Investigated PR #1408 Buildkite build 5100. The hard failure was
+  `shield-quality-bundle-15-checks` on this plan file's markdown table
+  formatting; the other red checks were canceled.
+- Finished the in-progress merge, merged current `origin/main`, and verified the
+  branch is conflict-free with `git merge-tree --write-tree --quiet origin/main HEAD`.
+- Fixed the remaining local `sjer.red` build failure by adding
+  `vite.resolve.noExternal` for `entities` and `rss-parser` in
+  `packages/sjer.red/astro.config.ts`, so Astro bundles the CommonJS
+  `rss-parser` -> `entities` path instead of generating an invalid default ESM
+  import.
+- Verified the targeted CI signals without running `bun run scripts/setup.ts`:
+  markdownlint/prettier on touched docs and CI files, `scripts/ci` tests,
+  pipeline generation, webring typecheck/test/build, sjer.red lint/typecheck via
+  build, and sjer.red build.
+
+### Remaining
+
+- Commit and push the final `sjer.red` bundling fix, then watch the new
+  Buildkite run for any remaining package-level failures.
+
+### Caveats
+
+- Root `bun run typecheck` was not re-run after the fix because the local run hit
+  process/resource exhaustion earlier; targeted package and CI generator checks
+  passed.
+- Setup was intentionally not run per operator instruction.
