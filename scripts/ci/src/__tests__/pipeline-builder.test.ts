@@ -372,6 +372,25 @@ describe("buildPipeline", () => {
       expect(nativeDepsStep?.soft_fail).toBeUndefined();
     });
 
+    it("emits one TaskNotes contract test step for each changed side", () => {
+      const affected = emptyAffected();
+      affected.packages.add("tasks-for-obsidian");
+      affected.packages.add("tasknotes-server");
+
+      const pipeline = buildPipeline(affected);
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      const contractKeys = allSteps
+        .filter((s) => s.key.startsWith("tasknotes-contract-test-"))
+        .map((s) => s.key)
+        .sort();
+
+      expect(contractKeys).toEqual([
+        "tasknotes-contract-test-tasknotes-server",
+        "tasknotes-contract-test-tasks-for-obsidian",
+      ]);
+    });
+
     it("only builds the image whose package actually changed", () => {
       const affected = emptyAffected();
       affected.packages.add("temporal");
@@ -779,6 +798,43 @@ describe("buildPipeline", () => {
       expect(stepKeys).not.toContain("argocd-health");
       expect(stepKeys).not.toContain("version-commit-back");
       expect(stepKeys).not.toContain("build-summary");
+    });
+
+    it("dryrun-builds a source-changed site on pull request builds and gates ci-complete on it", () => {
+      const affected = emptyAffected();
+      affected.packages = new Set(["scout-for-lol"]);
+      affected.directlyChanged = new Set(["scout-for-lol"]);
+      affected.hasSitePackages = new Set(["scout-for-lol"]);
+
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(affected),
+      );
+
+      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
+      expect(groupKeys).toContain("deploy-sites");
+
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+
+      const scoutDeploy = allSteps.find(
+        (s) => s.key === "deploy-scout-frontend",
+      );
+      expect(scoutDeploy).toBeDefined();
+      // PR dryruns never sync, so they must not wait on the main-only bucket apply.
+      expect(scoutDeploy?.depends_on).not.toContain("tofu-apply-all");
+
+      // A failed dryrun build must fail the required check and block merge.
+      const ciComplete = allSteps.find((s) => s.key === "ci-complete");
+      expect(ciComplete?.depends_on).toContain("deploy-scout-frontend");
+      expect(ciComplete?.depends_on).toContain("deploy-scout-frontend-beta");
+    });
+
+    it("does not dryrun-build sites for buildAll (infra) pull request builds", () => {
+      const pipeline = withBuildkitePullRequest("123", () =>
+        buildPipeline(fullBuild()),
+      );
+      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
+      expect(groupKeys).not.toContain("deploy-sites");
     });
 
     it("makes ci-complete depend on Greptile for pull request builds", () => {

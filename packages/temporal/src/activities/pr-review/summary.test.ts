@@ -46,6 +46,7 @@ function buildFakeAnthropic(input: FakeAnthropicInput): AnthropicForSummary {
     cache_creation_input_tokens: input.usage?.cacheCreationInputTokens ?? 0,
     cache_creation: null,
     inference_geo: null,
+    output_tokens_details: null,
     server_tool_use: null,
     service_tier: null,
   };

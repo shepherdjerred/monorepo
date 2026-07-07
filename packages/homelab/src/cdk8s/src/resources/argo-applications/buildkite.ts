@@ -105,15 +105,20 @@ export function createBuildkiteApp(chart: Chart) {
             agentStackSecret: "buildkite-agent-token",
             config: {
               queue: "default",
-              // Cluster-wide cap on concurrently-scheduled CI jobs. This is a
-              // secondary count gate; the resource-aware gate is the Kueue
-              // ClusterQueue (7.5 CPU / 16Gi, see kueue-config.ts). At the
-              // observed average step request (~234m), 24 jobs fit inside the
-              // Kueue CPU quota (~5.6 of 7.5 cores), so this bump is admitted
-              // without re-tuning Kueue. Raising past ~30 also needs a higher
-              // Kueue CPU nominalQuota. Bounded by node CPU (peaks ~93%) and
-              // CPU package temp (peaks ~90°C) under heavy multi-branch load.
-              "max-in-flight": 24,
+              // Cluster-wide cap on concurrently-scheduled CI jobs. This is the
+              // effective load lever: CI step containers set tiny requests and
+              // NO limits (scripts/ci/src/lib/k8s-plugin.ts), so the Kueue
+              // ClusterQueue (7.5 CPU / 16Gi, see kueue-config.ts) gate barely
+              // bites and this count governs real memory/CPU pressure. Lowered
+              // 24 -> 16 to cut peak concurrent build memory after CI build
+              // storms froze the node (ARC + pods + OS oversubscribed 128Gi RAM;
+              // see packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md).
+              // At the observed average step request (~234m), 16 jobs sit at
+              // ~3.75 of the 7.5-core Kueue quota — comfortably inside it, so no
+              // Kueue re-tune is needed. Bounded by node CPU (peaks ~93%); CPU
+              // package temp now peaks ~82-84°C under heavy multi-branch load
+              // (post-2026-05-26 AIO + NVMe cooling; was ~100°C pre-cooler).
+              "max-in-flight": 16,
               "empty-job-grace-period": "5m",
               // gitMirrors is intentionally retained for the bootstrap
               // pipeline-upload step. See the long comment on the PVC

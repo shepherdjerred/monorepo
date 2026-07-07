@@ -87,6 +87,21 @@ export const ConfigSchema = z.strictObject({
       resumeMaxAgeSeconds: z.number().int().positive().default(21_600),
     })
     .default({ dir: "/state", resumeMaxAgeSeconds: 21_600 }),
+  /**
+   * Auto-reconnect after Discord drops the voice session mid-stream (transient session loss —
+   * NOT a deliberate 4014 disconnect, which is always respected). Retries re-acquire a userbot
+   * and resume from the checkpointed position via the same machinery as boot resume.
+   */
+  reconnect: z
+    .strictObject({
+      /** Master switch: false restores stay-down behavior (logging/announcements remain). */
+      enabled: z.boolean().default(true),
+      /** Wait this long before each reconnect attempt (lets a late 4014 close code land). */
+      delaySeconds: z.number().int().positive().default(5),
+      /** Give up (preserving resume state for boot/manual resume) after this many attempts. */
+      maxAttempts: z.number().int().positive().default(3),
+    })
+    .default({ enabled: true, delaySeconds: 5, maxAttempts: 3 }),
   /** Optional TMDB integration for movie/TV poster art on the now-playing embed (local files). */
   tmdb: z.strictObject({ apiKey: z.string().min(1) }).optional(),
   /** Leave the voice channel after this many idle seconds. */

@@ -70,6 +70,18 @@ export default {
   databaseUrl: getRequiredEnvVar("DATABASE_URL"),
   port: env.get("PORT").default("3000").asPortNumber(),
   s3BucketName: getOptionalEnvVar("S3_BUCKET_NAME"),
+  // Local Parquet "report lake" queried by the DuckDB report engine.
+  // Disposable derived data: rebuilt from the Stored* tables by the
+  // report-lake compaction crons.
+  reportLakeDir: env.get("REPORT_LAKE_DIR").default("./report-lake").asString(),
+  reportDuckDbThreads: env
+    .get("REPORT_DUCKDB_THREADS")
+    .default("2")
+    .asIntPositive(),
+  reportDuckDbMemoryLimit: env
+    .get("REPORT_DUCKDB_MEMORY_LIMIT")
+    .default("512MB")
+    .asString(),
   openaiApiKey: getOptionalEnvVar("OPENAI_API_KEY"),
   reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "openai/gpt-5.5"),
   geminiApiKey: getOptionalEnvVar("GEMINI_API_KEY"),

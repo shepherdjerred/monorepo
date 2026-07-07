@@ -58,6 +58,25 @@ resource "aws_s3_bucket" "glitter_boys_ppl" {
   bucket = "glitter-boys-ppl"
 }
 
+# Document CRDT state + attachments for the self-hosted Relay Server (Obsidian
+# real-time collaboration). See packages/homelab/src/cdk8s/src/resources/relay.
+#
+# relay-docs was created before this resource reached main, then manually
+# recreated after a cross-checkout tofu apply deleted it. Adopt the existing
+# bucket into state instead of trying CreateBucket over it.
+import {
+  to = aws_s3_bucket.relay_docs
+  id = "relay-docs"
+}
+
+resource "aws_s3_bucket" "relay_docs" {
+  bucket = "relay-docs"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 # Expire old content-hashed assets 90 days after they were last written. The
 # deploy (`deploySiteHelper`, .dagger/src/release.ts) uploads these prefixes with
 # a 1-year `immutable` Cache-Control and WITHOUT `--delete`, so a deploy never

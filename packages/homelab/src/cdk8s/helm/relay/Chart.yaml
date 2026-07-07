@@ -1,0 +1,6 @@
+apiVersion: v2
+name: relay
+description: Self-hosted Relay Server for Obsidian real-time collaboration
+type: application
+version: "$version"
+appVersion: "$appVersion"
