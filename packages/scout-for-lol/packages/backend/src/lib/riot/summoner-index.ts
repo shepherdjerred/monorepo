@@ -11,6 +11,7 @@
 import { LeaguePuuidSchema, RegionSchema } from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { prisma } from "#src/database/index.ts";
+import { fetchDistinctPrematchIdentities } from "#src/reports/duckdb/lake-reads.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("summoner-index");
@@ -125,13 +126,11 @@ export async function recordRiotResolution(params: {
 
 /** Rows inserted into the index per `createMany`. */
 const BACKFILL_BATCH_SIZE = 500;
-/** Rows read per cursor page when streaming PrematchParticipantFact. */
-const BACKFILL_SCAN_BATCH_SIZE = 5000;
 
 /**
  * Seed the index from data we already have: every resolved `Account` plus
- * every distinct player observed in a tracked game (`PrematchParticipantFact
- * .riotId`, which is real Riot data from the spectator API).
+ * every distinct tracked player observed in a spectator game (report-lake
+ * prematch rows carry the real Riot ID from the spectator API).
  *
  * **Incremental + idempotent**: only PUUIDs not already indexed are inserted,
  * so it's cheap to re-run (it runs automatically on each backend startup).
@@ -187,32 +186,28 @@ export async function backfillFromExisting(): Promise<{
     );
   }
 
-  // Stream PrematchParticipantFact rows in id-ordered cursor batches rather
-  // than `findMany({ distinct: ["puuid"] })`, which would hash/sort the whole
-  // matching set and hold every distinct row in memory at once. `consider`
-  // already de-dups per PUUID, so plain pagination is sufficient; memory stays
-  // bounded by the page size plus the set of *new* PUUIDs.
+  // Distinct spectator identities come from the report lake (DuckDB does
+  // the DISTINCT — a few thousand rows). Lake prematch rows are global and
+  // carry no region, so join region through the tracked Account rows; this
+  // also preserves the old tracked-only semantics (untracked participants
+  // have no Account and are skipped). Fail-soft before the first compaction:
+  // an empty lake yields no identities and the idempotent backfill simply
+  // re-runs on the next startup.
+  const regionByPuuid = new Map<string, string>();
+  for (const account of await prisma.account.findMany({
+    select: { puuid: true, region: true },
+  })) {
+    regionByPuuid.set(account.puuid, account.region);
+  }
+  const identities = await fetchDistinctPrematchIdentities();
   let factsScanned = 0;
-  let cursorId: number | undefined;
-  for (;;) {
-    const page = await prisma.prematchParticipantFact.findMany({
-      where: { region: { not: null } },
-      select: { id: true, puuid: true, riotId: true, region: true },
-      orderBy: { id: "asc" },
-      take: BACKFILL_SCAN_BATCH_SIZE,
-      ...(cursorId !== undefined && { cursor: { id: cursorId }, skip: 1 }),
-    });
-    if (page.length === 0) break;
-    for (const fact of page) {
-      factsScanned++;
-      if (fact.region === null) continue;
-      const parsed = parseRiotId(fact.riotId);
-      if (parsed === null) continue;
-      consider(fact.puuid, parsed.gameName, parsed.tagLine, fact.region);
-    }
-    const last = page.at(-1);
-    if (last === undefined || page.length < BACKFILL_SCAN_BATCH_SIZE) break;
-    cursorId = last.id;
+  for (const identity of identities) {
+    factsScanned++;
+    const region = regionByPuuid.get(identity.puuid);
+    if (region === undefined) continue;
+    const parsed = parseRiotId(identity.riot_id);
+    if (parsed === null) continue;
+    consider(identity.puuid, parsed.gameName, parsed.tagLine, region);
   }
 
   const rows = [...toCreate.values()];

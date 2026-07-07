@@ -1,10 +1,11 @@
-// DB fetch for the "player history" review context. Pulls the reviewed player's
-// recent games, solo-queue rank trajectory, and co-tracked teammate results,
-// then delegates to the pure aggregator/formatter in player-history-signals.ts.
+// Fetch for the "player history" review context. Pulls the reviewed player's
+// recent games and co-tracked teammate results from the report lake (parquet
+// ∪ ingest staging, so a game finished minutes ago is already visible), the
+// solo-queue rank trajectory from Prisma, then delegates to the pure
+// aggregator/formatter in player-history-signals.ts.
 //
 // Best-effort: the caller wraps this so a history failure never blocks a review.
 
-import { z } from "zod";
 import {
   parseLane,
   RankSchema,
@@ -15,6 +16,10 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
+import {
+  fetchRecentGamesForPuuids,
+  fetchTeamRowsForMatches,
+} from "#src/reports/duckdb/lake-reads.ts";
 import {
   computePlayerHistorySignals,
   formatPlayerHistory,
@@ -27,22 +32,6 @@ import {
 const logger = createLogger("player-history");
 
 const WINDOW_SIZE = 30;
-
-const TeamPositionSchema = z.object({ teamPosition: z.string() }).loose();
-
-function laneFromRawParticipant(
-  rawParticipantJson: string,
-): HistoryGame["lane"] {
-  try {
-    const parsed = TeamPositionSchema.safeParse(JSON.parse(rawParticipantJson));
-    if (!parsed.success) {
-      return undefined;
-    }
-    return parseLane(parsed.data.teamPosition);
-  } catch {
-    return undefined;
-  }
-}
 
 function parseRankJson(value: string | null): Rank | undefined {
   if (value === null) {
@@ -81,21 +70,29 @@ async function fetchTeammateResults(
   if (games.length === 0) {
     return [];
   }
+  // Tracked identities come from Prisma live (no snapshot staleness); the
+  // lake rows are global, so the tracked-puuid list is what scopes results
+  // to this server's players.
+  const trackedAccounts = await client.account.findMany({
+    where: { serverId },
+    include: { player: true },
+  });
+  const aliasByPuuid = new Map<string, string>(
+    trackedAccounts.map((account) => [account.puuid, account.player.alias]),
+  );
   const teamByMatch = new Map<string, number>(
     games.map((g) => [g.matchId, g.teamId]),
   );
-  const rows = await client.matchParticipantFact.findMany({
-    where: {
-      serverId,
-      matchId: { in: games.map((g) => g.matchId) },
-      puuid: { not: puuid },
-    },
-    select: { matchId: true, teamId: true, win: true, playerAlias: true },
+  const rows = await fetchTeamRowsForMatches({
+    matchIds: games.map((g) => g.matchId),
+    puuids: [...aliasByPuuid.keys()],
+    excludePuuid: puuid,
   });
   const teammates: TeammateResult[] = [];
   for (const row of rows) {
-    if (teamByMatch.get(row.matchId) === row.teamId) {
-      teammates.push({ alias: row.playerAlias, win: row.win });
+    const alias = aliasByPuuid.get(row.puuid);
+    if (alias !== undefined && teamByMatch.get(row.match_id) === row.team_id) {
+      teammates.push({ alias, win: row.win });
     }
   }
   return teammates;
@@ -134,28 +131,30 @@ export async function buildPlayerHistoryContext(options: {
     return { text: "", poolChampions: [] };
   }
 
-  const factRows = await client.matchParticipantFact.findMany({
-    where: {
-      serverId: identity.serverId,
-      playerId: identity.playerId,
-      matchId: { not: options.currentMatchId },
-    },
-    orderBy: { gameCreationAt: "desc" },
-    take: WINDOW_SIZE,
+  // All of the player's tracked accounts on this server (multi-account
+  // players get their full history, matching the old playerId fact filter).
+  const identityAccounts = await client.account.findMany({
+    where: { serverId: identity.serverId, playerId: identity.playerId },
+    select: { puuid: true },
   });
-  const games: HistoryGame[] = factRows.map((row) => ({
-    matchId: row.matchId,
-    gameCreationAt: row.gameCreationAt,
-    championName: row.championName,
-    lane: laneFromRawParticipant(row.rawParticipantJson),
+  const lakeRows = await fetchRecentGamesForPuuids({
+    puuids: identityAccounts.map((account) => account.puuid),
+    excludeMatchId: options.currentMatchId,
+    limit: WINDOW_SIZE,
+  });
+  const games: HistoryGame[] = lakeRows.map((row) => ({
+    matchId: row.match_id,
+    gameCreationAt: new Date(row.game_creation_ms),
+    championName: row.champion_name,
+    lane: parseLane(row.team_position),
     queue: row.queue ?? undefined,
     win: row.win,
     kills: row.kills,
     deaths: row.deaths,
     assists: row.assists,
-    creepScore: row.creepScore,
-    durationSeconds: row.durationSeconds,
-    teamId: row.teamId,
+    creepScore: row.creep_score,
+    durationSeconds: row.game_duration_seconds,
+    teamId: row.team_id,
   }));
 
   const rankRows = await client.matchRankHistory.findMany({

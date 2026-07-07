@@ -377,7 +377,7 @@ async function verifySetup(): Promise<void> {
     },
     {
       label: "birmel prisma client",
-      path: "packages/birmel/node_modules/.prisma/client",
+      path: "packages/birmel/generated/prisma/client",
     },
     {
       label: "scout-for-lol prisma client",

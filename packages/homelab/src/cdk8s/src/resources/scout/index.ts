@@ -22,11 +22,16 @@ import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout
 import { match } from "ts-pattern";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
+import {
+  applyZfsVolumeSelinuxRelabeling,
+  zfsVolumeSelinuxLevels,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/selinux.ts";
 
 export function createScoutDeployment(chart: Chart, stage: Stage) {
   const deployment = new Deployment(chart, "scout-backend", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    securityContext: {},
     metadata: {
       annotations: {
         "ignore-check.kube-linter.io/run-as-non-root":
@@ -37,13 +42,16 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     },
   });
 
-  const { path, image, applicationId, s3BucketName } = match(stage)
+  const { path, image, applicationId, s3BucketName, selinuxLevel } = match(
+    stage,
+  )
     .with("beta", () => {
       return {
         image: `ghcr.io/shepherdjerred/scout-for-lol:${versions["shepherdjerred/scout-for-lol/beta"]}`,
         path: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/rtu44pohnp5ixdp2njuv5f6t2e",
         applicationId: "1311755320745394317",
         s3BucketName: "scout-beta",
+        selinuxLevel: zfsVolumeSelinuxLevels.scoutBeta,
       };
     })
     .with("prod", () => {
@@ -52,6 +60,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
         path: "vaults/v64ocnykdqju4ui6j6pua56xw4/items/pacrc4wfbtct4y3qazkvazop5a",
         applicationId: "1182800769188110366",
         s3BucketName: "scout-prod",
+        selinuxLevel: zfsVolumeSelinuxLevels.scoutProd,
       };
     })
     .exhaustive();
@@ -131,6 +140,10 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     }),
     ENVIRONMENT: EnvValue.fromValue(stage),
     DATABASE_URL: EnvValue.fromValue("file:/data/db.sqlite"),
+    // Parquet "report lake" queried by the DuckDB report engine. Disposable
+    // derived data on the same PVC as the SQLite DB; rebuilt from the
+    // Stored* tables by the report-lake compaction crons.
+    REPORT_LAKE_DIR: EnvValue.fromValue("/data/report-lake"),
     JWT_SIGNING_SECRET: EnvValue.fromSecretValue({
       secret: Secret.fromSecretName(
         chart,
@@ -232,6 +245,8 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
       envVariables,
     }),
   );
+
+  applyZfsVolumeSelinuxRelabeling(deployment, selinuxLevel);
 
   setRevisionHistoryLimit(deployment);
 

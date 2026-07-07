@@ -18,13 +18,20 @@ packages/
 └── ui/        # Shared UI components (React)
 ```
 
-## Workspace Dependencies (`file:` protocol)
+## Workspace Dependencies
 
-Scout's sub-packages wire each other with `file:../X` deps (e.g. `@scout-for-lol/data`, `@scout-for-lol/backend`), **not** `workspace:*`.
+Scout's sub-packages are part of the root Bun workspace and use `workspace:*`
+for internal dependencies (for example `@scout-for-lol/data` and
+`@scout-for-lol/backend`). Run `bun install` once at the repository root after
+dependency changes.
 
-- **Never migrate `file:../X` deps to `workspace:*`** (or any symlinking scheme). The `file:` copy-on-install behavior is intentional and the preference is firm — do not list it as a follow-up, tech-debt, or improvement in PRs, plans, or chat.
-- Bun **copies** `file:` deps into `node_modules/<pkg>/` rather than symlinking (bunfig.toml pins `linker = "hoisted"`; under bun's isolated linker — bug-pinned away, see `packages/docs/todos/bun-isolated-linker-eexist.md` — the copies lived at `node_modules/.bun/<pkg>@file+.../`). After editing source in a shared package (e.g. `packages/data`), the backend/app copies are **stale** — typecheck/tests fail with `Module '@scout-for-lol/data' has no exported member ...`. Fix: run `bun install` at `packages/scout-for-lol/` to re-copy, then typecheck dependents. (`bun install` reports `Saved lockfile` but usually leaves `bun.lock` unchanged — verify with `git diff`.)
-- The app imports the backend `AppRouter` as `import type` only, so tRPC input/output changes also need this refresh before the app sees the new procedure shape.
+- The isolated linker is configured at the repository root. Do not add package
+  local `bunfig.toml` linker overrides.
+- Internal Scout package edits are visible through workspace symlinks; no
+  package-local reinstall is needed to refresh copied `file:` dependencies.
+- The app imports the backend `AppRouter` as `import type` only, so tRPC
+  input/output changes still need dependent typechecks before the app sees the
+  new procedure shape.
 
 ---
 
@@ -343,6 +350,27 @@ type ParticipantDto = ...;  // Use RawParticipant instead
 - Handle report generation errors gracefully
 - Lazy load heavy dependencies
 - Follow satori best practices (enforced by `custom-rules/satori-best-practices`)
+
+## ScoutQL Report Queries — DuckDB Report Lake
+
+Scheduled/user-authored ScoutQL reports execute as **compiled SQL on embedded
+DuckDB** (`@duckdb/node-api`, lazy-loaded) over a local Parquet "report lake"
+(`REPORT_LAKE_DIR`, prod `/data/report-lake`) — not over SQLite fact tables.
+
+- Lake layout & compaction: `backend/src/report-lake/` (two-tier: 15-min
+  staging fold + nightly full rebuild from `StoredMatch`/`StoredPrematch`
+  rawJson; atomic `CURRENT`-pointer publish; the lake is disposable derived
+  data). Manual run: `bun run compact:report-lake` (`--fold` for fold-only).
+- Engine: `backend/src/reports/duckdb/` — the ScoutQL `ReportQueryPlan`
+  compiles to parameterized SQL (never interpolate plan values); ordering,
+  minGames, limits, and metric derivation stay in JS (`query-aggregates.ts`).
+- **Adding a metric** = `ReportMetricSchema` enum + `REPORT_METRICS` registry
+  entry (packages/data) + `METRIC_DISPLAY` (backend output.ts) + an aggregate
+  column in `metrics-sql.ts`/`row-schema.ts`/`execute.ts` + `METRIC_VALUES`
+  derivation. No Prisma migration, no backfill — the nightly rebuild picks up
+  new lake columns from `report-lake/schema.ts`/`flatten.ts`.
+- Ingest staging: `store.ts` appends flattened rows to
+  `<lake>/matches-recent/` so games are queryable seconds after ingest.
 
 ---
 

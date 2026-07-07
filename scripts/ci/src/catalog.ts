@@ -325,6 +325,7 @@ export const HELM_CHARTS: string[] = [
   "kyverno-policies",
   "bugsink",
   "tasknotes",
+  "relay",
   "temporal",
   "trmnl-dashboard",
 ];
@@ -408,11 +409,12 @@ export const ALL_PACKAGES: string[] = [
 
 type ResourceTier = { cpu: string; memory: string };
 
-// BK pods are thin dagger CLI wrappers — all compute happens in the remote
-// Dagger engine. Keep requests minimal so more jobs fit within Kueue quota.
+// BK pods are mostly thin dagger CLI wrappers — all compute happens in the
+// remote Dagger engine — but the wrapper still needs enough headroom to keep
+// the Dagger client and Buildkite agent alive while streaming progress.
 // Memory floors raised after the bun-workspace migration: workspace-scale
 // installs/builds stream much larger traces through the dagger CLI, and the
-// old 256–384Mi pods were OOM-killed (build 5065, exit -7 across pkg-check /
+// old 256-384Mi pods were OOM-killed (build 5065, exit -7 across pkg-check /
 // lint+typecheck jobs). CPU unchanged.
 const HEAVY: ResourceTier = { cpu: "250m", memory: "1Gi" };
 const MEDIUM: ResourceTier = { cpu: "150m", memory: "768Mi" };
