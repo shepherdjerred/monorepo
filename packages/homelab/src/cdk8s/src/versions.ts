@@ -30,7 +30,7 @@ const versions = {
   // CI's version commit-back fills the real tag@digest after the first image
   // push; the seed digest below is a placeholder until then.
   "shepherdjerred/redlib":
-    "2.0.0-5135@sha256:113fed2ba5b0ce6b755ccf75e0a8d89c6a053e078af2ee15a24495cdd73856cc",
+    "2.0.0-5142@sha256:338c50ddc36f32f039818c52866835f9c89e746325b976808c897c7efdfbfeb6",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "itzg/minecraft-server":
     "2026.7.0-java21@sha256:2619ad4eabfdd6da889c43cba203b87d63a8a9e8f51c8484be371c6f607c1426",
@@ -255,7 +255,7 @@ const versions = {
   // Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3
   // not managed by renovate
   "shepherdjerred/caddy-s3proxy":
-    "2.0.0-5135@sha256:58b2016e736e72b1718e02f409f387d43240b0aad90bc41f9efacb10872e42e0",
+    "2.0.0-5142@sha256:7035346b9cea27e9d684f06515845b97d406373fc9974b400a80ef4e8d7e6776",
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
@@ -263,11 +263,11 @@ const versions = {
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
-    "2.0.0-5135@sha256:05f514308fd3fdb077ac89c2f5da815e1d7aacf51f14b37fe48e68d5868bdf80",
+    "2.0.0-5142@sha256:d10c7d23ad2d59427d770a7e85ea7d4941c41e0b0a6c11b311b3e6a93df4b5e1",
   // Custom mcp-gateway image - tbxark/mcp-proxy + prebuilt edstem-mcp (rob-9/edstem-mcp)
   // not managed by renovate
   "shepherdjerred/mcp-gateway":
-    "2.0.0-5135@sha256:a74223c9cfa1dc0d23f14bfea12fc5ff4868a5d479f4e30822782f269f7079c4",
+    "2.0.0-5142@sha256:77ccdd3ab8346cf2e9619ce16d624b5d74bb7f939d7deabe8cf3828ffcd7254c",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "temporalio/auto-setup":
     "1.29.7@sha256:f14912b699cf73015ad5c4fc18d522d4b014db90e794039214dfb7c022c2644f",
