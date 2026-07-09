@@ -1,6 +1,7 @@
 import { describe, expect, test, afterAll, beforeEach } from "bun:test";
+import { DiscordAPIError } from "discord.js";
 import { reconcileRemovedGuilds } from "#src/league/tasks/cleanup/reconcile-removed-guilds.ts";
-import { mockClient } from "#src/testing/discord-mocks.ts";
+import { mockClient, mockGuild } from "#src/testing/discord-mocks.ts";
 import {
   testGuildId,
   testAccountId,
@@ -42,11 +43,35 @@ async function seedGuild(
   });
 }
 
-function clientWithMembers(memberIds: string[], ready = true) {
+function unknownGuildError(): DiscordAPIError {
+  return new DiscordAPIError(
+    { code: 10_004, message: "Unknown Guild" },
+    10_004,
+    404,
+    "GET",
+    "https://discord.com/api/v10/guilds/000",
+    { files: [], body: {} },
+  );
+}
+
+function clientWithMembers(
+  memberIds: string[],
+  options: {
+    ready?: boolean;
+    // Guilds the API confirms membership for even though they're missing
+    // from the cache (simulates a stale-cache false positive).
+    verifiableIds?: string[];
+  } = {},
+) {
+  const { ready = true, verifiableIds = [] } = options;
   return mockClient({
     isReady: () => ready,
     guilds: {
       cache: new Map(memberIds.map((id) => [id, { id }])),
+      fetch: (serverId: string) =>
+        verifiableIds.includes(serverId)
+          ? Promise.resolve(mockGuild({ id: serverId }))
+          : Promise.reject(unknownGuildError()),
     },
   });
 }
@@ -85,7 +110,10 @@ describe("reconcileRemovedGuilds", () => {
   test("is a no-op when the client is not ready (avoids wiping during startup)", async () => {
     await seedGuild(prisma, removedGuild);
 
-    await reconcileRemovedGuilds(clientWithMembers([], false), prisma);
+    await reconcileRemovedGuilds(
+      clientWithMembers([], { ready: false }),
+      prisma,
+    );
 
     // Nothing removed — we couldn't trust the (empty) membership snapshot.
     expect(
@@ -96,7 +124,50 @@ describe("reconcileRemovedGuilds", () => {
   test("is a no-op when the guild cache is empty", async () => {
     await seedGuild(prisma, removedGuild);
 
-    await reconcileRemovedGuilds(clientWithMembers([], true), prisma);
+    await reconcileRemovedGuilds(clientWithMembers([]), prisma);
+
+    expect(
+      await prisma.player.count({ where: { serverId: removedGuild } }),
+    ).toBe(1);
+  });
+
+  test("keeps data for a guild missing from cache but confirmed still a member via fetch (stale cache)", async () => {
+    await seedGuild(prisma, removedGuild);
+
+    // removedGuild isn't in the cache, but a live fetch confirms it's still
+    // a real member — this is the exact scenario that caused the 2026-07
+    // ScoutScheduledReportMissedWeekly incident.
+    const client = clientWithMembers([memberGuild], {
+      verifiableIds: [removedGuild],
+    });
+    await reconcileRemovedGuilds(client, prisma);
+
+    expect(
+      await prisma.player.count({ where: { serverId: removedGuild } }),
+    ).toBe(1);
+  });
+
+  test("keeps data when fetch fails for a reason other than Unknown Guild (fail safe)", async () => {
+    await seedGuild(prisma, removedGuild);
+
+    const client = mockClient({
+      isReady: () => true,
+      guilds: {
+        cache: new Map([[memberGuild, { id: memberGuild }]]),
+        fetch: () =>
+          Promise.reject(
+            new DiscordAPIError(
+              { code: 0, message: "Internal Server Error" },
+              0,
+              500,
+              "GET",
+              "https://discord.com/api/v10/guilds/000",
+              { files: [], body: {} },
+            ),
+          ),
+      },
+    });
+    await reconcileRemovedGuilds(client, prisma);
 
     expect(
       await prisma.player.count({ where: { serverId: removedGuild } }),
