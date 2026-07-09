@@ -501,15 +501,15 @@ async function verifySetup(): Promise<void> {
     },
     {
       label: "birmel prisma client",
-      path: "packages/birmel/generated/prisma/client",
+      path: "packages/birmel/generated/prisma/client/index.js",
     },
     {
       label: "scout-for-lol prisma client",
-      path: "packages/scout-for-lol/packages/backend/generated/prisma/client",
+      path: "packages/scout-for-lol/packages/backend/generated/prisma/client/index.js",
     },
     {
       label: "discord-plays-mario-kart prisma client",
-      path: "packages/discord-plays-mario-kart/packages/backend/generated/prisma/client",
+      path: "packages/discord-plays-mario-kart/packages/backend/generated/prisma/client/index.js",
     },
   ];
 
