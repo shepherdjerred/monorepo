@@ -26,6 +26,7 @@ homekit:
         - binary_sensor.*entertainment_configuration
         - binary_sensor.granary_smart_camera_feeder_*
         - binary_sensor.heat_pump_water_heater_*
+        - binary_sensor.front_door_*
         - switch.adaptive_lighting_*
         - sensor.the_victor_229_*
         - sensor.average_*
@@ -44,9 +45,11 @@ homekit:
         - light.living_room_main
         - light.office
   # Note: the Reolink front door doorbell is exposed to HomeKit by Scrypted
-  # (with HomeKit Secure Video), not by this HA HomeKit bridge. The Reolink
-  # integration and its motion/visitor sensors remain available in HA for
-  # dashboards and automations; only the duplicate HomeKit accessory was removed.
+  # (with HomeKit Secure Video), not by this HA HomeKit bridge. HA1's
+  # binary_sensor.front_door_* (motion/visitor) entities are excluded above so
+  # they don't also appear as duplicate standalone sensor tiles in Apple Home.
+  # The Reolink integration and its entities remain available in HA for
+  # dashboards and automations.
 
 http:
   use_x_forwarded_for: true
