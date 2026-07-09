@@ -31,6 +31,37 @@ describe("k8sPlugin", () => {
     expect(requests["memory"]).toBe("4Gi");
   });
 
+  it("sets default resource limits when no options given", () => {
+    const plugin = k8sPlugin() as Record<string, unknown>;
+    const k8s = plugin["kubernetes"] as Record<string, unknown>;
+    const pod = k8s["podSpecPatch"] as Record<string, unknown>;
+    const containers = pod["containers"] as Record<string, unknown>[];
+    const c0 = containers[0]!;
+    const resources = c0["resources"] as Record<string, unknown>;
+    const limits = resources["limits"] as Record<string, string>;
+
+    expect(limits["cpu"]).toBe("400m");
+    expect(limits["memory"]).toBe("768Mi");
+  });
+
+  it("uses custom resource limits when provided", () => {
+    const plugin = k8sPlugin({
+      cpu: "2",
+      memory: "4Gi",
+      cpuLimit: "4",
+      memoryLimit: "8Gi",
+    }) as Record<string, unknown>;
+    const k8s = plugin["kubernetes"] as Record<string, unknown>;
+    const pod = k8s["podSpecPatch"] as Record<string, unknown>;
+    const containers = pod["containers"] as Record<string, unknown>[];
+    const c0 = containers[0]!;
+    const resources = c0["resources"] as Record<string, unknown>;
+    const limits = resources["limits"] as Record<string, string>;
+
+    expect(limits["cpu"]).toBe("4");
+    expect(limits["memory"]).toBe("8Gi");
+  });
+
   it("includes _EXPERIMENTAL_DAGGER_RUNNER_HOST env var", () => {
     const plugin = k8sPlugin() as Record<string, unknown>;
     const json = JSON.stringify(plugin);

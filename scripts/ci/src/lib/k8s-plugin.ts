@@ -51,6 +51,8 @@ export function k8sPlugin(
   opts: {
     cpu?: string;
     memory?: string;
+    cpuLimit?: string;
+    memoryLimit?: string;
     secrets?: string[];
   } = {},
 ): Record<string, unknown> {
@@ -78,10 +80,19 @@ export function k8sPlugin(
           {
             name: "container-0",
             image: CI_BASE_IMAGE,
+            // 2026-07 CI-freeze hardening: limits added so no CI step container
+            // is ever unbounded by default, regardless of caller. Callers that
+            // pass an explicit tier (see catalog.ts ResourceTier) get
+            // tier-appropriate limits; everyone else gets the LIGHT-tier
+            // default. See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md.
             resources: {
               requests: {
                 cpu: opts.cpu ?? "100m",
                 memory: opts.memory ?? "256Mi",
+              },
+              limits: {
+                cpu: opts.cpuLimit ?? "400m",
+                memory: opts.memoryLimit ?? "768Mi",
               },
             },
             env: [
@@ -112,6 +123,8 @@ export function k8sPluginWithCheckout(
   opts: {
     cpu?: string;
     memory?: string;
+    cpuLimit?: string;
+    memoryLimit?: string;
     secrets?: string[];
   } = {},
 ): Record<string, unknown> {

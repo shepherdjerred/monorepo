@@ -25,6 +25,10 @@ Patches are applied to the base Talos machine configuration to customize the clu
 - `kubeReserved.memory: 2Gi` - Memory reserved for Kubernetes system daemons
 - `kubeReserved.cpu: 1` - CPU reserved for Kubernetes system daemons
 - Eviction thresholds - Hard floor at `memory.available: 2Gi`, soft floor at `memory.available: 4Gi` for 2 minutes
+- `podPidsLimit: 4096` - Cluster-wide (node-wide) cgroup pids.max cap per pod. Prevents an unbounded fork/thread explosion in any one pod from exhausting the node's process table. 2026-07 CI-freeze hardening — **needs live PID-headroom verification before/after applying** (see `packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md`); watch for `PIDPressure` node conditions post-rollout.
+- `enforceNodeAllocatable: [pods, system-reserved, kube-reserved]` - Previously only the kubelet default (`[pods]`) was enforced; `system-reserved`/`kube-reserved` now get real cgroup ceilings too, protecting kubelet/containerd/etcd/apid from pod-side starvation. 2026-07 CI-freeze hardening.
+
+**Applied**: _(fill in once rolled out — `talosctl patch machineconfig --patch @patches/kubelet.yaml`; confirm live effect with `talosctl -n torvalds get kubeletconfig` before trusting, reboot if the new fields didn't take)_.
 
 ### zfs.yaml
 
@@ -44,10 +48,24 @@ Patches are applied to the base Talos machine configuration to customize the clu
 **Current settings**:
 
 - `kernel.kptr_restrict: 1` - Talos defaults to 2 (KSPP), which hides /proc/kallsyms addresses from all readers, including privileged containers. Value 1 exposes them to CAP_SYSLOG holders only, which the alloy eBPF profiler needs for kernel stack symbolization.
+- `kernel.panic_on_rcu_stall: 1` - 2026-07 CI-freeze hardening bonus signal. **Not** the primary auto-recovery mechanism (see `watchdog.yaml` below) — live-verified that `kernel.hung_task_panic`/`kernel.hung_task_timeout_secs` do not exist on this kernel (`CONFIG_DETECT_HUNG_TASK` not compiled in), and even where present those only watch D-state (blocked) tasks, not the R-state runqueue-contention failure mode actually observed. RCU stalls are a closer, though not guaranteed, match. Costs nothing to enable.
 
-**Applied**: 2026-06-12 (`talosctl patch machineconfig --patch @patches/sysctls.yaml`, no reboot needed).
+**Applied**: 2026-06-12 (`kernel.kptr_restrict`, `talosctl patch machineconfig --patch @patches/sysctls.yaml`, no reboot needed). `kernel.panic_on_rcu_stall` — _(fill in once rolled out; confirm live effect with `talosctl -n torvalds read /proc/sys/kernel/panic_on_rcu_stall` before trusting)_.
 
 **Known limitation**: this alone does NOT make the alloy eBPF profiler work. The SecureBoot image boots with kernel lockdown in `confidentiality` mode, which disables the `bpf_probe_read*()` helpers entirely ("program of this type cannot use helper bpf_probe_read"). Fixing that requires regenerating the factory image schematic with `extraKernelArgs: [-lockdown, lockdown=integrity]` and a node upgrade. See <https://github.com/falcosecurity/libs/issues/2736> and <https://github.com/siderolabs/talos/pull/8535>.
+
+### watchdog.yaml
+
+**Purpose**: Hardware watchdog — the **primary** auto-recovery mechanism for the 2026-07 CI-freeze failure mode (a watchdog fires because its heartbeat is missed, not because the kernel self-diagnoses an error, which is why it fits a pure runqueue-contention freeze where the kernel never technically "hangs" or "panics").
+
+**Current settings**:
+
+- `machine.kernel.modules`: `iTCO_wdt` + `iTCO_vendor_support`, `heartbeat=60`/`nowayout=1`. Feasibility confirmed live 2026-07: the module is already auto-loaded by the kernel (Intel Z790-class chipset TCO controller) and `/sys/class/watchdog/watchdog0` already exists (`identity=iTCO_wdt`, `state=inactive`, default `timeout=30`). This pins the load explicitly for reproducibility.
+- `WatchdogTimerConfig`: `device: /dev/watchdog0`, `timeout: 3m0s`.
+
+**Applied**: _(fill in once rolled out)_. **Verify before trusting**: `talosctl -n torvalds get watchdogtimerstatus` must show the device active with a recent last-ping — confirm it's `machined` doing the petting (the desired behavior, since `machined` itself would starve under the same overload that killed everything else). An armed-but-unpetted watchdog reboots immediately; do not leave this half-configured.
+
+See `packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md` for the full investigation and why hung-task-panic sysctls were considered and rejected in favor of this.
 
 ### Other Patches
 
@@ -72,3 +90,5 @@ talosctl patch machineconfig \
 # Reboot to apply changes
 talosctl reboot
 ```
+
+`watchdog.yaml` contains a `WatchdogTimerConfig` document alongside the `machine.kernel.modules` patch (separated by `---`) — apply and verify it separately and carefully (see the watchdog.yaml section above) rather than folding it into a bulk `--patch` invocation, since an armed-but-unpetted watchdog reboots immediately.
