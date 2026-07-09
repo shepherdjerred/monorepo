@@ -9,7 +9,7 @@ import {
   type FileChange,
   type PendingChanges,
 } from "./types.ts";
-import type { EditorSession } from "@prisma/client";
+import type { EditorSession } from "#generated/prisma/client/index.js";
 
 const logger = loggers.editor.child("session-manager");
 

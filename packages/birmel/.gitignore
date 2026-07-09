@@ -3,3 +3,6 @@ data/*
 !data/.gitkeep
 data/screenshots/*
 !data/screenshots/.gitkeep
+
+# Generated Prisma client (see prisma/schema.prisma generator output path)
+generated/
