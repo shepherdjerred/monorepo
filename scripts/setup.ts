@@ -549,7 +549,11 @@ const DAG_TASKS: DagTask[] = [
     // Preserve --backend=symlink here for --group=scout --link — otherwise this
     // bare --force re-links the whole workspace with the default backend,
     // silently undoing Phase 2's symlink install (see refreshBuiltFileDependencies
-    // for the same issue on discord-plays-pokemon's backend).
+    // for the same issue on discord-plays-pokemon's backend). Currently inert:
+    // scout isn't in LINK_SAFE_GROUPS, so `--group=scout --link` is rejected in
+    // parseArgs before this ever runs, and the true branch here is unreachable.
+    // Written this way so it activates automatically if scout is ever added to
+    // LINK_SAFE_GROUPS, rather than needing this task revisited too.
     cmd:
       LINK && GROUP === "scout"
         ? ["bun", "install", "--force", "--backend=symlink"]

@@ -1,7 +1,0 @@
-[install]
-# Bun already defaults to clonefile on macOS/APFS (confirmed via
-# `bun install --help` on v1.3.14), so this is a defensive pin rather than a
-# functional change — it survives a future Bun default change. Repo-level
-# (not per-project) since a repo-wide bunfig.toml would also apply to
-# Buildkite CI on Linux, where "clonefile" isn't a valid backend.
-backend = "clonefile"
