@@ -132,7 +132,7 @@ const versions = {
     "2.0.0-4777@sha256:6a94f1d598bef983189c3f0b74d24f1c2c94ea4ba260dc2a5203d2d4bd735402",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-5135@sha256:144472669d68f82779c5fab02e5e8657c992cdc76992f9aa52a1db2c4135cea4",
+    "2.0.0-5157@sha256:3e5d2330b19aec31ad8798ac80b625950dcca6a7733f53aad2f56a3eeacf5f29",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
     "2.0.0-5135@sha256:ebeb48550d1cdc1d8f264ca82791b2fc81dbe6930b74e08bf2d2aaf65a40ba26",
