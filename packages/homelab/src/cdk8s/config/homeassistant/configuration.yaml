@@ -38,6 +38,14 @@ homekit:
         - sensor.petlibro_petlibro_sjer_red
         - sensor.unavailable_entities_count
         - switch.hacs_pre_release
+        # Sonos "buttons lock" config toggle, not a real door lock (same device
+        # cluster as the already-excluded auto_brightness/proximity_mode switches)
+        - switch.guest_bathroom_lock
+        - switch.guest_room_lock
+        - switch.master_bathroom_lock
+        - switch.office_lock
+        # Sonos playback codec metadata, not actionable state
+        - sensor.living_room_audio_input_format
         # Feeder device config/metadata, not live status
         - sensor.granary_smart_camera_feeder_mac_address
         - sensor.granary_smart_camera_feeder_device_sn
