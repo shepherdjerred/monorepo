@@ -9,6 +9,127 @@ const ROOT = import.meta.dirname
   ? join(import.meta.dirname, "..")
   : process.cwd();
 
+// ── Package groups (scoped worktree installs) ───────────────────────────
+//
+// A worktree that only touches one package pays for installing all ~35 —
+// ~13-15G of node_modules it never uses. --group=<name> scopes Phase 2/3/4/5
+// to one of these plus the shared `file:` producers every group needs
+// (always installed/built regardless of group; they're cheap — see
+// SHARED_PRODUCER_* below). --link additionally installs the group's own
+// dir(s) with Bun's --backend=symlink instead of the default clonefile,
+// linking from Bun's shared global store. Full runs (no --group) are
+// unchanged.
+
+const PACKAGE_GROUPS: Record<string, string[]> = {
+  scout: ["packages/scout-for-lol"],
+  pokemon: ["packages/discord-plays-pokemon"],
+  mk64: ["packages/discord-plays-mario-kart"],
+  birmel: ["packages/birmel"],
+};
+
+// Lockfile dirs for the shared `file:` producers (eslint-config, llm-models,
+// webring, astro-opengraph-images, discord-video-stream, helm-types). Always
+// installed regardless of --group — per the setup-cost profiling log these
+// total well under 4s combined, and always building them is what prevents a
+// scoped worktree from ending up with a stale/missing shared dep (the
+// recurring "Cannot find module @shepherdjerred/eslint-config" failure).
+const SHARED_PRODUCER_DIRS = [
+  "packages/eslint-config",
+  "packages/webring",
+  "packages/llm-models",
+  "packages/astro-opengraph-images",
+  "packages/discord-video-stream",
+  "packages/homelab/src/helm-types",
+];
+
+// Matching DAG_TASKS ids for the same shared producers (see Phase 3 below).
+const SHARED_PRODUCER_DAG_IDS = new Set([
+  "eslint-config",
+  "webring",
+  "llm-models",
+  "astro-og",
+  "discord-video-stream",
+  "helm-types-build",
+]);
+
+// Each group's own DAG tasks, beyond the always-on shared producers.
+// scout-generate's real DAG_TASKS entry also depends on "birmel-prisma" —
+// that edge exists only to keep two concurrent `prisma generate` runs (which
+// share Bun's engine-binary download/cache) from racing during a full run.
+// It's not a functional dependency of scout's own generate step, and birmel
+// isn't installed in a scout-scoped run anyway, so scopedDagTasks() below
+// strips any dep edge pointing outside the selected group's task set.
+const GROUP_DAG_ENTRYPOINTS: Record<string, string[]> = {
+  scout: ["scout-llm-models-refresh", "scout-generate"],
+  pokemon: [],
+  mk64: ["mario-kart-prisma"],
+  birmel: ["birmel-prisma"],
+};
+
+// Groups verified safe for --link (Bun's --backend=symlink). Tested live:
+// scout, mk64, and birmel all fail under --link — NOT because of the
+// node_modules-write risk this was originally designed around (that only
+// applies to birmel; scout/mk64 generate their Prisma client outside
+// node_modules), but because Prisma's own postinstall scripts
+// (@prisma/engines, prisma) `require()` their own sibling deps (e.g.
+// "@prisma/debug") assuming they're running from a real project
+// node_modules tree. Under symlink backend they execute directly from Bun's
+// shared global cache instead, where those siblings aren't resolvable, and
+// the postinstall crashes with MODULE_NOT_FOUND. Confirmed reproducible for
+// both scout (`@prisma/engines` postinstall) and mk64 (`prisma` postinstall);
+// birmel uses the same prisma toolchain so almost certainly hits the same
+// failure. pokemon has no Prisma dependency and its `--link` install
+// completes cleanly. Any group added to PACKAGE_GROUPS in the future needs
+// the same live test — don't assume safety from a static audit alone.
+const LINK_SAFE_GROUPS = new Set(["pokemon"]);
+
+function isRelevantForGroup(relDir: string, group: string): boolean {
+  if (SHARED_PRODUCER_DIRS.includes(relDir)) return true;
+  const groupDirs = PACKAGE_GROUPS[group];
+  return groupDirs.some((g) => relDir === g || relDir.startsWith(`${g}/`));
+}
+
+function isGroupOwnDir(relDir: string, group: string): boolean {
+  const groupDirs = PACKAGE_GROUPS[group];
+  return groupDirs.some((g) => relDir === g || relDir.startsWith(`${g}/`));
+}
+
+function parseArgs(): { group: string | undefined; link: boolean } {
+  let group: string | undefined;
+  let link = false;
+  for (const arg of process.argv.slice(2)) {
+    if (arg === "--link") {
+      link = true;
+    } else if (arg.startsWith("--group=")) {
+      group = arg.slice("--group=".length);
+    } else {
+      throw new Error(
+        `Unknown argument "${arg}". Valid flags: --group=<name>, --link`,
+      );
+    }
+  }
+  if (group !== undefined && !(group in PACKAGE_GROUPS)) {
+    const valid = Object.keys(PACKAGE_GROUPS).join(", ");
+    throw new Error(`Unknown --group "${group}". Valid groups: ${valid}`);
+  }
+  if (link && group === undefined) {
+    throw new Error("--link requires --group=<name>");
+  }
+  if (link && group !== undefined && !LINK_SAFE_GROUPS.has(group)) {
+    const valid = [...LINK_SAFE_GROUPS].join(", ");
+    throw new Error(
+      `--link is not safe for --group=${group}: its Prisma postinstall ` +
+        `scripts fail under Bun's symlink backend (tested — MODULE_NOT_FOUND ` +
+        `resolving their own sibling deps from Bun's global cache). ` +
+        `--link is currently only verified safe for: ${valid}. ` +
+        `Run --group=${group} without --link instead.`,
+    );
+  }
+  return { group, link };
+}
+
+const { group: GROUP, link: LINK } = parseArgs();
+
 // ── Utilities ──────────────────────────────────────────────────────────
 
 function elapsed(startMs: number): string {
@@ -214,8 +335,19 @@ async function installDependencies(): Promise<void> {
     "--frozen-lockfile",
   ]);
 
-  const lockfileDirs = await findLockfileDirs();
-  log("Deps", `Found ${String(lockfileDirs.length)} packages with bun.lock`);
+  const allLockfileDirs = await findLockfileDirs();
+  const lockfileDirs =
+    GROUP === undefined
+      ? allLockfileDirs
+      : allLockfileDirs.filter((dir) =>
+          isRelevantForGroup(relative(ROOT, dir), GROUP),
+        );
+  log(
+    "Deps",
+    GROUP === undefined
+      ? `Found ${String(lockfileDirs.length)} packages with bun.lock`
+      : `Found ${String(lockfileDirs.length)}/${String(allLockfileDirs.length)} packages with bun.lock in scope for --group=${GROUP}`,
+  );
 
   const concurrency = 6;
   const maxAttempts = 3;
@@ -224,10 +356,14 @@ async function installDependencies(): Promise<void> {
 
   async function installOne(dir: string): Promise<void> {
     const label = relative(ROOT, dir);
+    const useLink = LINK && GROUP !== undefined && isGroupOwnDir(label, GROUP);
+    const cmd = useLink
+      ? ["bun", "install", "--frozen-lockfile", "--backend=symlink"]
+      : ["bun", "install", "--frozen-lockfile"];
     let lastError: unknown;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        await $`bun install --frozen-lockfile`.cwd(dir).quiet();
+        await $`${cmd}`.cwd(dir).quiet();
         completed++;
         return;
       } catch (error) {
@@ -265,19 +401,23 @@ async function installDependencies(): Promise<void> {
     throw new Error("Dependency installation failed");
   }
 
-  const homelabDir = join(ROOT, "packages", "homelab");
-  if (existsSync(homelabDir)) {
-    await exec(
-      "Deps",
-      "homelab install-subpkgs",
-      ["bun", "run", "install-subpkgs"],
-      { cwd: homelabDir },
-    );
+  // homelab's nested pseudo-workspaces (src/helm-types, src/cdk8s) aren't
+  // shared producers other groups need, so skip this in scoped mode.
+  if (GROUP === undefined) {
+    const homelabDir = join(ROOT, "packages", "homelab");
+    if (existsSync(homelabDir)) {
+      await exec(
+        "Deps",
+        "homelab install-subpkgs",
+        ["bun", "run", "install-subpkgs"],
+        { cwd: homelabDir },
+      );
+    }
   }
 }
 
 async function refreshBuiltFileDependencies(): Promise<void> {
-  const refreshDirs: Array<{ label: string; cwd: string }> = [
+  const allRefreshDirs: Array<{ label: string; cwd: string }> = [
     {
       label: "sjer.red local package artifacts",
       cwd: "packages/sjer.red",
@@ -293,6 +433,16 @@ async function refreshBuiltFileDependencies(): Promise<void> {
     { label: "scout-for-lol llm-models", cwd: "packages/scout-for-lol" },
   ];
 
+  // sjer.red stays unconditional (deferred gating decision, see cost-profiling
+  // log); other consumers only refresh when their group is in scope.
+  const refreshDirs =
+    GROUP === undefined
+      ? allRefreshDirs
+      : allRefreshDirs.filter(
+          (d) =>
+            d.cwd === "packages/sjer.red" || isRelevantForGroup(d.cwd, GROUP),
+        );
+
   for (const dir of refreshDirs) {
     const fullCwd = join(ROOT, dir.cwd);
     if (!existsSync(fullCwd)) {
@@ -300,9 +450,19 @@ async function refreshBuiltFileDependencies(): Promise<void> {
       continue;
     }
 
-    await exec("Deps", `${dir.label} refresh`, ["bun", "install", "--force"], {
-      cwd: fullCwd,
-    });
+    // Without this, a `--link` group's symlinked node_modules gets silently
+    // materialized back to real files here: this refresh dir can be a
+    // workspace member with no bun.lock of its own (e.g. discord-plays-pokemon's
+    // backend), in which case `bun install` operates on the shared workspace
+    // root — so a bare `--force` (no --backend) re-links the whole workspace
+    // with the default backend, undoing Phase 2's symlink install.
+    const useLink =
+      LINK && GROUP !== undefined && isGroupOwnDir(dir.cwd, GROUP);
+    const cmd = useLink
+      ? ["bun", "install", "--force", "--backend=symlink"]
+      : ["bun", "install", "--force"];
+
+    await exec("Deps", `${dir.label} refresh`, cmd, { cwd: fullCwd });
   }
 }
 
@@ -386,7 +546,18 @@ const DAG_TASKS: DagTask[] = [
     label: "scout-for-lol llm-models refresh",
     // scout's generate imports @shepherdjerred/llm-models via a file: dep; the .bun copy made
     // during Phase 2 install predates the llm-models build in this DAG, so re-copy it first.
-    cmd: ["bun", "install", "--force"],
+    // Preserve --backend=symlink here for --group=scout --link — otherwise this
+    // bare --force re-links the whole workspace with the default backend,
+    // silently undoing Phase 2's symlink install (see refreshBuiltFileDependencies
+    // for the same issue on discord-plays-pokemon's backend). Currently inert:
+    // scout isn't in LINK_SAFE_GROUPS, so `--group=scout --link` is rejected in
+    // parseArgs before this ever runs, and the true branch here is unreachable.
+    // Written this way so it activates automatically if scout is ever added to
+    // LINK_SAFE_GROUPS, rather than needing this task revisited too.
+    cmd:
+      LINK && GROUP === "scout"
+        ? ["bun", "install", "--force", "--backend=symlink"]
+        : ["bun", "install", "--force"],
     cwd: "packages/scout-for-lol",
     deps: ["llm-models"],
     warnOnly: false,
@@ -408,6 +579,26 @@ const DAG_TASKS: DagTask[] = [
     warnOnly: false,
   },
 ];
+
+// Scopes DAG_TASKS to the shared producers plus one group's own entrypoints
+// (GROUP_DAG_ENTRYPOINTS lists each group's tasks flatly — deliberately not
+// resolved transitively via each task's `deps`, since a group's real
+// DAG_TASKS entry can carry a full-run-only ordering edge to another group's
+// task, e.g. scout-generate's "birmel-prisma" edge: see the
+// GROUP_DAG_ENTRYPOINTS comment above for why that's safe to drop). Any dep
+// edge pointing outside the wanted set is stripped — without that, a task
+// waiting on an unscheduled dep would sit unsatisfied in runDag's
+// `remaining` map forever and get silently dropped.
+function scopedDagTasks(tasks: DagTask[], group: string): DagTask[] {
+  const wanted = new Set([
+    ...SHARED_PRODUCER_DAG_IDS,
+    ...(GROUP_DAG_ENTRYPOINTS[group] ?? []),
+  ]);
+
+  return tasks
+    .filter((t) => wanted.has(t.id))
+    .map((t) => ({ ...t, deps: t.deps.filter((d) => wanted.has(d)) }));
+}
 
 async function runDag(
   tasks: DagTask[],
@@ -481,7 +672,7 @@ async function runDag(
 // ── Phase 4: Verify ────────────────────────────────────────────────────
 
 async function verifySetup(): Promise<void> {
-  const checks: Array<{ label: string; path: string }> = [
+  const checks: Array<{ label: string; path: string; group?: string }> = [
     {
       label: "eslint-config dist",
       path: "packages/eslint-config/dist/index.js",
@@ -502,19 +693,26 @@ async function verifySetup(): Promise<void> {
     {
       label: "birmel prisma client",
       path: "packages/birmel/generated/prisma/client/index.js",
+      group: "birmel",
     },
     {
       label: "scout-for-lol prisma client",
       path: "packages/scout-for-lol/packages/backend/generated/prisma/client/index.js",
+      group: "scout",
     },
     {
       label: "discord-plays-mario-kart prisma client",
       path: "packages/discord-plays-mario-kart/packages/backend/generated/prisma/client/index.js",
+      group: "mk64",
     },
   ];
 
+  const relevant = checks.filter(
+    (c) => c.group === undefined || GROUP === undefined || c.group === GROUP,
+  );
+
   let passed = 0;
-  for (const check of checks) {
+  for (const check of relevant) {
     const fullPath = join(ROOT, check.path);
     if (existsSync(fullPath)) {
       passed++;
@@ -523,7 +721,10 @@ async function verifySetup(): Promise<void> {
     }
   }
 
-  log("Verify", `${String(passed)}/${String(checks.length)} artifacts present`);
+  log(
+    "Verify",
+    `${String(passed)}/${String(relevant.length)} artifacts present`,
+  );
 }
 
 // ── Main ───────────────────────────────────────────────────────────────
@@ -534,7 +735,9 @@ console.log("Setting up monorepo development environment...");
 try {
   await phase("Tools", ensureTools);
   await phase("Dependencies", installDependencies);
-  await phase("Build & Generate", () => runDag(DAG_TASKS));
+  await phase("Build & Generate", () =>
+    runDag(GROUP === undefined ? DAG_TASKS : scopedDagTasks(DAG_TASKS, GROUP)),
+  );
   await phase("Refresh Built Dependencies", refreshBuiltFileDependencies);
   await phase("Verify", verifySetup);
 
