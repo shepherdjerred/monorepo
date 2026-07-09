@@ -7,6 +7,9 @@
     ".": "./src/index.ts",
     "./*": "./src/*"
   },
+  "imports": {
+    "#generated/*": "./generated/*"
+  },
   "files": [
     "src"
   ],

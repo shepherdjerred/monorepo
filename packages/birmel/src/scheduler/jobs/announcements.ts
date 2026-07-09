@@ -1,5 +1,5 @@
 import { toError } from "@shepherdjerred/birmel/utils/errors.ts";
-import type { ScheduledAnnouncement } from "@prisma/client";
+import type { ScheduledAnnouncement } from "#generated/prisma/client/index.js";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { logger } from "@shepherdjerred/birmel/utils/logger.ts";

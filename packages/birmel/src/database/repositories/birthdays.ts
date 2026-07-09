@@ -1,5 +1,5 @@
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
-import type { Birthday } from "@prisma/client";
+import type { Birthday } from "#generated/prisma/client/index.js";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 
 const logger = loggers.database.child("birthdays");
