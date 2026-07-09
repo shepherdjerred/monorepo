@@ -274,14 +274,22 @@ echo "Done."`,
             engine: {
               kind: "StatefulSet",
               port: 8080,
-              // No CPU limit on purpose — the engine bursts freely; the request is
-              // just the scheduling reservation. 30d peaks: 4.6 CPU / 14.4Gi.
+              // 2026-07 CI-freeze hardening: a CPU limit was added after concurrent CI
+              // session bursts on the previously-unbounded engine drove host load1 into
+              // the thousands-to-tens-of-thousands and hard-locked the node's kernel
+              // scheduler 7 times in 3 days (2026-07-05/07). 16 is ~3.5x the 30d observed
+              // peak of 4.6 CPU — enough headroom for legitimate heavy concurrent bursts,
+              // while bounding the worst-case runqueue pressure this one container can
+              // cause to a finite slice of the node's 32 threads instead of unbounded.
+              // See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md
+              // and packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md.
               resources: {
                 requests: {
                   cpu: "6",
                   memory: "16Gi",
                 },
                 limits: {
+                  cpu: "16",
                   memory: "50Gi",
                 },
               },

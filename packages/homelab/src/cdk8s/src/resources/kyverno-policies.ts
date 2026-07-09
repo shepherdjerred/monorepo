@@ -63,3 +63,67 @@ export function createVeleroBackupLabelPolicy(chart: Chart) {
     },
   });
 }
+
+/**
+ * 2026-07 CI-freeze hardening: reports (Audit mode — does not block) any
+ * container in the dagger/buildkite namespaces missing explicit cpu/memory
+ * resource limits. A cheap, independent backstop alongside the explicit
+ * limits set in dagger.ts and scripts/ci/src/lib/k8s-plugin.ts — this
+ * surfaces drift (a future container that forgets to set limits) via
+ * PolicyReport rather than silently allowing it.
+ *
+ * Deliberately Audit, not Enforce, and deliberately `validate` (report), not
+ * `mutate` (silently inject) — a mutating rule would hide gaps instead of
+ * surfacing them, and this is a 160+ pod cluster where a cluster-wide
+ * enforce/mutate rule risks breaking unrelated workloads. Scoped to
+ * dagger/buildkite only, the namespaces implicated in the incident. Flip to
+ * Enforce in a follow-up once PolicyReports show zero drift.
+ *
+ * See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md.
+ */
+export function createResourceLimitEnforcementPolicy(chart: Chart) {
+  return new ApiObject(chart, "resource-limit-enforcement-policy", {
+    apiVersion: "kyverno.io/v1",
+    kind: "ClusterPolicy",
+    metadata: {
+      name: "enforce-container-resource-limits",
+    },
+    spec: {
+      validationFailureAction: "Audit",
+      background: true,
+      rules: [
+        {
+          name: "require-cpu-memory-limits",
+          match: {
+            any: [
+              {
+                resources: {
+                  kinds: ["Pod"],
+                  namespaces: ["dagger", "buildkite"],
+                },
+              },
+            ],
+          },
+          validate: {
+            message:
+              "Containers in dagger/buildkite namespaces must set cpu and memory limits (2026-07 CI-freeze hardening).",
+            pattern: {
+              spec: {
+                containers: [
+                  {
+                    resources: {
+                      limits: {
+                        cpu: "?*",
+                        memory: "?*",
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      ],
+    },
+  });
+}

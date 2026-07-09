@@ -6,6 +6,26 @@
 # ("unable to read kallsyms addresses - check capabilities"). Value 1 exposes
 # addresses only to CAP_SYSLOG holders (the alloy DaemonSet runs privileged and
 # qualifies); unprivileged readers still see zeros.
+#
+# kernel.panic_on_rcu_stall: 2026-07 CI-freeze hardening bonus signal (cheap,
+# zero-risk). NOT the primary auto-recovery mechanism for the CI-freeze
+# failure mode — see the watchdog config (packages/homelab/src/talos/patches/
+# watchdog.yaml) for that. Live-verified on this kernel that the more obvious
+# hung-task-panic sysctls (kernel.hung_task_timeout_secs, kernel.hung_task_panic)
+# do NOT exist (CONFIG_DETECT_HUNG_TASK isn't compiled in), and even where they
+# do exist on other kernels they only watch D-state (blocked-on-I/O) tasks —
+# the freeze investigation showed node_procs_blocked stayed ~0 throughout
+# every incident while node_procs_running (R-state, runnable-but-starved)
+# spiked to 476, i.e. pure runqueue contention, not a kernel hang. RCU stalls
+# are a closer (though not guaranteed) match: RCU grace-period processing runs
+# in softirq context, which degrades less severely than plain userspace
+# process scheduling under the same contention, so it might catch an
+# escalating event before it reaches the extremes actually observed. Costs
+# nothing to enable. kernel.panic and kernel.panic_on_oops are already set by
+# Talos by default (verified live: panic=10, panic_on_oops=1) — no action
+# needed for either.
+# See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md.
 machine:
   sysctls:
     kernel.kptr_restrict: "1"
+    kernel.panic_on_rcu_stall: "1"
