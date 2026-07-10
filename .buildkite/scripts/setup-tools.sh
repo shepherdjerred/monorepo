@@ -13,7 +13,7 @@ KUBECTL_VERSION="v1.36.2"
 UV_VERSION="0.11.18"
 
 # renovate: datasource=github-releases depName=helm/helm
-HELM_VERSION="v4.2.3"
+HELM_VERSION="v4.2.2"
 
 # renovate: datasource=github-tags depName=aws/aws-cli versioning=semver
 AWSCLI_VERSION="2.35.1"

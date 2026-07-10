@@ -64,7 +64,7 @@ RUN curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_$
 
 # Helm (covers install_helm())
 # renovate: datasource=github-releases depName=helm/helm
-ARG HELM_VERSION=v4.2.3
+ARG HELM_VERSION=v4.2.2
 RUN curl -fsSL "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz" | tar xz -C /tmp && \
     mv /tmp/linux-amd64/helm /usr/local/bin/helm && \
     chmod +x /usr/local/bin/helm && \
