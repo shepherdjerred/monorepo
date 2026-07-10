@@ -158,7 +158,10 @@ homekit:
       include_domains:
         - light
       exclude_entities:
-        - light.living_room_main
+        # The old light.living_room_main was renamed; the entity is currently
+        # user-disabled, but keep the exclusion so re-enabling it doesn't
+        # silently add a duplicate Hue room-group tile to HomeKit.
+        - light.living_room
         - light.office
   # Note: the Reolink front door doorbell is exposed to HomeKit by Scrypted
   # (with HomeKit Secure Video), not by this HA HomeKit bridge. HA1's
