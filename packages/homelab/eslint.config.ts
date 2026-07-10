@@ -1,6 +1,10 @@
 import { recommended } from "@shepherdjerred/eslint-config";
 const config = [
-  ...recommended({ tsconfigRootDir: import.meta.dirname }),
+  ...recommended({
+    tsconfigRootDir: import.meta.dirname,
+    // knip (dead code/exports) + jscpd (duplication), both at warn.
+    customRules: { analysisRules: true },
+  }),
   { rules: { "no-console": "off" } },
   {
     ignores: [
