@@ -5,9 +5,14 @@
     "runtime": "node"
   },
   "dependencies": {
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "zod": "4.4.3"
   },
   "devDependencies": {
+    "@shepherdjerred/eslint-config": "file:../packages/eslint-config",
     "@types/node": "^25.8.0"
+  },
+  "scripts": {
+    "lint": "bunx eslint --cache ."
   }
 }

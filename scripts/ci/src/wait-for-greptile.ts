@@ -29,17 +29,21 @@
  * which is the one genuinely transient state.
  */
 
-type CheckConclusion =
-  | "success"
-  | "failure"
-  | "neutral"
-  | "cancelled"
-  | "skipped"
-  | "timed_out"
-  | "action_required"
-  | "startup_failure"
-  | "stale"
-  | null;
+import { z } from "zod";
+
+const CheckConclusionSchema = z.enum([
+  "success",
+  "failure",
+  "neutral",
+  "cancelled",
+  "skipped",
+  "timed_out",
+  "action_required",
+  "startup_failure",
+  "stale",
+]);
+
+type CheckConclusion = z.infer<typeof CheckConclusionSchema> | null;
 
 /** Greptile's own check-run on the head commit, normalised. */
 export type GreptileReviewCheck = {
@@ -98,16 +102,19 @@ query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
   }
 }`;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+const RecordSchema = z.record(z.string(), z.unknown());
+
+/** Narrow unknown JSON to a plain object, or null if it is not one. */
+function asRecord(value: unknown): Record<string, unknown> | null {
+  const result = RecordSchema.safeParse(value);
+  return result.success ? result.data : null;
 }
 
 function recordField(
   record: Record<string, unknown>,
   key: string,
 ): Record<string, unknown> | null {
-  const value = record[key];
-  return isRecord(value) ? value : null;
+  return asRecord(record[key]);
 }
 
 function arrayField(record: Record<string, unknown>, key: string): unknown[] {
@@ -136,24 +143,12 @@ function boolField(record: Record<string, unknown>, key: string): boolean {
 }
 
 function conclusionField(value: string | null): CheckConclusion {
-  switch (value) {
-    case "success":
-    case "failure":
-    case "neutral":
-    case "cancelled":
-    case "skipped":
-    case "timed_out":
-    case "action_required":
-    case "startup_failure":
-    case "stale":
-      return value;
-    default:
-      return null;
-  }
+  const result = CheckConclusionSchema.safeParse(value);
+  return result.success ? result.data : null;
 }
 
 function parsePositiveIntegerEnv(name: string, fallback: number): number {
-  const raw = process.env[name];
+  const raw = Bun.env[name];
   if (raw === undefined || raw.trim() === "") return fallback;
   const parsed = Number.parseInt(raw, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) {
@@ -167,7 +162,7 @@ function parsePositiveIntegerEnv(name: string, fallback: number): number {
  * invalid `GREPTILE_CHECK_PATTERN` fails with an actionable message instead of
  * a bare `SyntaxError`.
  */
-export function compileCheckPattern(raw: string | undefined): RegExp {
+export function compileCheckPattern(raw?: string): RegExp {
   const source =
     raw === undefined || raw.trim() === "" ? DEFAULT_CHECK_PATTERN : raw.trim();
   try {
@@ -176,6 +171,7 @@ export function compileCheckPattern(raw: string | undefined): RegExp {
     const detail = error instanceof Error ? error.message : String(error);
     throw new Error(
       `GREPTILE_CHECK_PATTERN is not a valid regular expression (${source}): ${detail}`,
+      { cause: error },
     );
   }
 }
@@ -184,8 +180,8 @@ export function compileCheckPattern(raw: string | undefined): RegExp {
 export function parseLinkNext(header: string | null): string | null {
   if (header === null) return null;
   for (const part of header.split(",")) {
-    const match = part.match(/<([^>]+)>\s*;\s*rel="next"/u);
-    if (match !== null && match[1] !== undefined) {
+    const match = /<([^>]+)>\s*;\s*rel="next"/u.exec(part);
+    if (match?.[1] !== undefined) {
       return match[1];
     }
   }
@@ -201,39 +197,39 @@ export function parseLinkNext(header: string | null): string | null {
  */
 export function parseGreptilePriority(body: string | null): number | null {
   if (body === null) return null;
-  const altMatch = body.match(/alt="P([0-3])"/iu);
-  if (altMatch !== null && altMatch[1] !== undefined) {
+  const altMatch = /alt="P([0-3])"/iu.exec(body);
+  if (altMatch?.[1] !== undefined) {
     return Number.parseInt(altMatch[1], 10);
   }
-  const badgeMatch = body.match(/badges\/p([0-3])\.svg/iu);
-  if (badgeMatch !== null && badgeMatch[1] !== undefined) {
+  const badgeMatch = /badges\/p([0-3])\.svg/iu.exec(body);
+  if (badgeMatch?.[1] !== undefined) {
     return Number.parseInt(badgeMatch[1], 10);
   }
   return null;
 }
 
 function repoFromEnvironment(): string {
-  const explicit = process.env["GITHUB_REPOSITORY"];
+  const explicit = Bun.env["GITHUB_REPOSITORY"];
   if (explicit !== undefined && explicit.trim() !== "") {
     return explicit.trim();
   }
 
-  const buildkiteRepo = process.env["BUILDKITE_REPO"];
+  const buildkiteRepo = Bun.env["BUILDKITE_REPO"];
   if (buildkiteRepo === undefined || buildkiteRepo.trim() === "") {
     return DEFAULT_REPO;
   }
 
-  const sshMatch = buildkiteRepo.match(
-    /github\.com[:/]([^/]+\/[^/.]+)(?:\.git)?$/u,
+  const sshMatch = /github\.com[:/]([^/]+\/[^/.]+)(?:\.git)?$/u.exec(
+    buildkiteRepo,
   );
-  if (sshMatch !== null && sshMatch[1] !== undefined) {
+  if (sshMatch?.[1] !== undefined) {
     return sshMatch[1];
   }
 
-  const httpsMatch = buildkiteRepo.match(
-    /github\.com\/([^/]+\/[^/.]+)(?:\.git)?$/u,
+  const httpsMatch = /github\.com\/([^/]+\/[^/.]+)(?:\.git)?$/u.exec(
+    buildkiteRepo,
   );
-  if (httpsMatch !== null && httpsMatch[1] !== undefined) {
+  if (httpsMatch?.[1] !== undefined) {
     return httpsMatch[1];
   }
 
@@ -266,15 +262,13 @@ function classifyReviewCheck(check: GreptileReviewCheck): ReviewState {
   if (!check.found || check.status !== "completed") {
     return "reviewing";
   }
-  switch (check.conclusion) {
-    case "failure":
-    case "cancelled":
-    case "timed_out":
-    case "startup_failure":
-      return "errored";
-    default:
-      return "reviewed";
-  }
+  const erroredConclusions = new Set<CheckConclusion>([
+    "failure",
+    "cancelled",
+    "timed_out",
+    "startup_failure",
+  ]);
+  return erroredConclusions.has(check.conclusion) ? "errored" : "reviewed";
 }
 
 /**
@@ -400,14 +394,14 @@ export function evaluateGate(input: {
   // the same PR.
   const skippedReview = input.skippedReview ?? null;
   const reviewState =
-    skippedReview !== null
-      ? "reviewed"
-      : classifyReviewCheck(input.reviewCheck);
+    skippedReview === null
+      ? classifyReviewCheck(input.reviewCheck)
+      : "reviewed";
 
   if (reviewState === "reviewing") {
-    const status = !input.reviewCheck.found
-      ? "not started"
-      : (input.reviewCheck.status ?? "pending");
+    const status = input.reviewCheck.found
+      ? (input.reviewCheck.status ?? "pending")
+      : "not started";
     return {
       state: "waiting",
       message: `Waiting for Greptile to finish reviewing ${input.head} (review check: ${status}).`,
@@ -502,9 +496,11 @@ async function graphqlRequest(
     );
   }
   const payload: unknown = await response.json();
-  if (isRecord(payload) && payload["errors"] !== undefined) {
+  const payloadRecord = asRecord(payload);
+  const errors = payloadRecord?.["errors"];
+  if (errors !== undefined) {
     throw new Error(
-      `GitHub GraphQL returned errors: ${JSON.stringify(payload["errors"])}`,
+      `GitHub GraphQL returned errors: ${JSON.stringify(errors)}`,
     );
   }
   return payload;
@@ -521,13 +517,15 @@ function parseMatchingCheckRuns(
   payload: unknown,
   pattern: RegExp,
 ): CheckRunRecord[] {
-  if (!isRecord(payload)) {
+  const payloadRecord = asRecord(payload);
+  if (payloadRecord === null) {
     throw new Error("GitHub check-runs response was not an object");
   }
-  const checkRuns = arrayField(payload, "check_runs");
+  const checkRuns = arrayField(payloadRecord, "check_runs");
   const matches: CheckRunRecord[] = [];
-  for (const item of checkRuns) {
-    if (!isRecord(item)) continue;
+  for (const rawItem of checkRuns) {
+    const item = asRecord(rawItem);
+    if (item === null) continue;
     const name = stringField(item, "name");
     const status = stringField(item, "status");
     if (name === null || status === null || !pattern.test(name)) continue;
@@ -595,10 +593,11 @@ type ThreadPage = {
 };
 
 function parseThreadPage(payload: unknown): ThreadPage {
-  if (!isRecord(payload)) {
+  const payloadRecord = asRecord(payload);
+  if (payloadRecord === null) {
     throw new Error("GitHub GraphQL response was not an object");
   }
-  const data = recordField(payload, "data");
+  const data = recordField(payloadRecord, "data");
   const repository = data === null ? null : recordField(data, "repository");
   const pullRequest =
     repository === null ? null : recordField(repository, "pullRequest");
@@ -613,15 +612,16 @@ function parseThreadPage(payload: unknown): ThreadPage {
   }
 
   const threads: GreptileThread[] = [];
-  for (const node of arrayField(reviewThreads, "nodes")) {
-    if (!isRecord(node)) continue;
+  for (const rawNode of arrayField(reviewThreads, "nodes")) {
+    const node = asRecord(rawNode);
+    if (node === null) continue;
     const comments = recordField(node, "comments");
     const commentNodes = comments === null ? [] : arrayField(comments, "nodes");
-    const firstComment: unknown = commentNodes[0];
+    const firstComment = asRecord(commentNodes[0]);
     let authorLogin: string | null = null;
     let url: string | null = null;
     let priority: number | null = null;
-    if (isRecord(firstComment)) {
+    if (firstComment !== null) {
       const author = recordField(firstComment, "author");
       authorLogin = author === null ? null : stringField(author, "login");
       url = stringField(firstComment, "url");
@@ -696,8 +696,9 @@ async function fetchGreptileSkippedReview(input: {
     const { payload, linkNext } = await getJsonWithLink(url, input.token);
     // The REST response for /issues/:number/comments is a top-level array.
     const commentArray = Array.isArray(payload) ? payload : [];
-    for (const item of commentArray) {
-      if (!isRecord(item)) continue;
+    for (const rawItem of commentArray) {
+      const item = asRecord(rawItem);
+      if (item === null) continue;
       const userRecord = recordField(item, "user");
       const login =
         userRecord === null ? null : stringField(userRecord, "login");
@@ -715,7 +716,7 @@ async function fetchGreptileSkippedReview(input: {
 }
 
 async function waitForGreptile(): Promise<void> {
-  const pullRequest = process.env["BUILDKITE_PULL_REQUEST"];
+  const pullRequest = Bun.env["BUILDKITE_PULL_REQUEST"];
   if (
     pullRequest === undefined ||
     pullRequest === "" ||
@@ -731,12 +732,12 @@ async function waitForGreptile(): Promise<void> {
     );
   }
 
-  const token = process.env["GH_TOKEN"];
+  const token = Bun.env["GH_TOKEN"];
   if (token === undefined || token.trim() === "") {
     throw new Error("GH_TOKEN is required to query GitHub review threads");
   }
 
-  const commit = process.env["BUILDKITE_COMMIT"];
+  const commit = Bun.env["BUILDKITE_COMMIT"];
   if (commit === undefined || commit.trim() === "") {
     throw new Error("BUILDKITE_COMMIT is required to identify the PR head");
   }
@@ -745,8 +746,8 @@ async function waitForGreptile(): Promise<void> {
   const repo = repoFromEnvironment();
   const { owner, name } = splitRepo(repo);
   const greptileLogin =
-    process.env["GREPTILE_AUTHOR_LOGIN"]?.trim() ?? DEFAULT_GREPTILE_LOGIN;
-  const pattern = compileCheckPattern(process.env["GREPTILE_CHECK_PATTERN"]);
+    Bun.env["GREPTILE_AUTHOR_LOGIN"]?.trim() ?? DEFAULT_GREPTILE_LOGIN;
+  const pattern = compileCheckPattern(Bun.env["GREPTILE_CHECK_PATTERN"]);
   const timeoutSeconds = parsePositiveIntegerEnv(
     "GREPTILE_WAIT_TIMEOUT_SECONDS",
     DEFAULT_TIMEOUT_SECONDS,
@@ -756,7 +757,7 @@ async function waitForGreptile(): Promise<void> {
     DEFAULT_INTERVAL_SECONDS,
   );
 
-  const maxBlockingPriorityRaw = process.env["GREPTILE_MAX_BLOCKING_PRIORITY"];
+  const maxBlockingPriorityRaw = Bun.env["GREPTILE_MAX_BLOCKING_PRIORITY"];
   const maxBlockingPriority = (() => {
     if (
       maxBlockingPriorityRaw === undefined ||

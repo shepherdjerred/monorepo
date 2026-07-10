@@ -13,7 +13,8 @@
  * Plain functions, not decorated. Keep `index.ts` thin (TypeScript SDK
  * constraint: the `@object()` class must live in one file).
  */
-import { dag, Container, Directory } from "@dagger.io/dagger";
+import type { Container, Directory } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
 
 import { runBundle } from "./bundle";
 
@@ -143,22 +144,30 @@ export function ruffCheckHelper(source: Directory): Container {
  * runtime download.
  */
 export function pyrightCheckHelper(source: Directory): Container {
-  return pythonQualityBase(source)
-    // pyright's bundled node (nodejs-wheel-binaries) links libatomic,
-    // which the trixie-slim base doesn't ship.
-    .withExec(["apt-get", "update"])
-    .withExec(["apt-get", "install", "-y", "--no-install-recommends", "libatomic1"])
-    .withExec(["uv", "venv", ".venv"])
-    .withExec([
-      "uv",
-      "pip",
-      "install",
-      "-r",
-      "scripts/python-dev-requirements.txt",
-      "--python",
-      ".venv/bin/python",
-    ])
-    .withExec(["uvx", `pyright@${PYRIGHT_VERSION}`]);
+  return (
+    pythonQualityBase(source)
+      // pyright's bundled node (nodejs-wheel-binaries) links libatomic,
+      // which the trixie-slim base doesn't ship.
+      .withExec(["apt-get", "update"])
+      .withExec([
+        "apt-get",
+        "install",
+        "-y",
+        "--no-install-recommends",
+        "libatomic1",
+      ])
+      .withExec(["uv", "venv", ".venv"])
+      .withExec([
+        "uv",
+        "pip",
+        "install",
+        "-r",
+        "scripts/python-dev-requirements.txt",
+        "--python",
+        ".venv/bin/python",
+      ])
+      .withExec(["uvx", `pyright@${PYRIGHT_VERSION}`])
+  );
 }
 
 /**
@@ -195,6 +204,25 @@ export function complianceCheckHelper(source: Directory): Container {
     "bash",
     "scripts/compliance-check.sh",
   ]);
+}
+
+/**
+ * ESLint over the automation code that isn't a workspace package: root
+ * scripts/, scripts/ci/, and .dagger/src. Each dir consumes the shared
+ * eslint-config via a file: devDep, so the producer is built first.
+ */
+export function eslintAutomationHelper(source: Directory): Container {
+  let container = bunQualityBase(source)
+    .withWorkdir("/repo/packages/eslint-config")
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withExec(["bun", "run", "build"]);
+  for (const dir of ["scripts", "scripts/ci", ".dagger"]) {
+    container = container
+      .withWorkdir(`/repo/${dir}`)
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withExec(["bunx", "eslint", "."]);
+  }
+  return container;
 }
 
 /**
@@ -504,7 +532,7 @@ export function mergeConflictCheckHelper(source: Directory): Container {
       "    ignore_args=\"$ignore_args | grep -v '$line'\";",
       "  done < .conflictignore;",
       "fi;",
-      "cmd=\"grep -rl '<<<<<<< \\|>>>>>>> '",
+      String.raw`cmd="grep -rl '<<<<<<< \|>>>>>>> '`,
       "--include='*.ts' --include='*.tsx' --include='*.rs'",
       "--include='*.json' --include='*.yaml' --include='*.yml'",
       "--include='*.md' --include='*.sh'",
@@ -660,5 +688,9 @@ export async function qualityBundleHelper(source: Directory): Promise<string> {
     { name: "markdownlint", run: () => markdownlintHelper(source).stdout() },
     { name: "ruff", run: () => ruffCheckHelper(source).stdout() },
     { name: "pyright", run: () => pyrightCheckHelper(source).stdout() },
+    {
+      name: "eslint-automation",
+      run: () => eslintAutomationHelper(source).stdout(),
+    },
   ]);
 }

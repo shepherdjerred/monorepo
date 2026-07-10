@@ -3,7 +3,8 @@
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
-import { dag, Container, Directory, File } from "@dagger.io/dagger";
+import type { Container, Directory, File } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
 
 import {
   PLAYWRIGHT_IMAGE,
@@ -54,9 +55,9 @@ function playwrightBaseContainer(
     });
 
   // Mount deps at correct relative paths
-  for (let i = 0; i < depNames.length; i++) {
+  for (const [i, depName] of depNames.entries()) {
     container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
+      `/workspace/packages/${depName}`,
       depDirs[i],
       { exclude: SOURCE_EXCLUDES },
     );

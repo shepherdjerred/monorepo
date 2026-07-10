@@ -1,15 +1,29 @@
 #!/usr/bin/env bun
 
 import { $ } from "bun";
-import { existsSync } from "node:fs";
-import { readdir, readFile } from "node:fs/promises";
-import { dirname, join, relative } from "node:path";
+import { access, readdir, readFile } from "node:fs/promises";
+import path from "node:path";
+import { z } from "zod";
+
+async function pathExists(target: string): Promise<boolean> {
+  try {
+    await access(target);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 type PackageMeta = {
   dir: string;
   name: string;
   scripts: Record<string, string>;
 };
+
+const PackageJsonSchema = z.object({
+  name: z.string().optional(),
+  scripts: z.record(z.string(), z.string()).optional(),
+});
 
 async function getPackageJsonPaths(): Promise<string[]> {
   const paths: string[] = [];
@@ -27,7 +41,7 @@ async function getPackageJsonPaths(): Promise<string[]> {
       ) {
         continue;
       }
-      const fullPath = join(dir, entry.name);
+      const fullPath = path.join(dir, entry.name);
       if (entry.isDirectory() && !entry.isSymbolicLink()) {
         await walk(fullPath);
       } else if (entry.name === "package.json") {
@@ -40,15 +54,12 @@ async function getPackageJsonPaths(): Promise<string[]> {
   return paths.sort();
 }
 
-async function loadPackageMeta(path: string): Promise<PackageMeta> {
-  const text = await readFile(path, "utf8");
-  const parsed = JSON.parse(text) as {
-    name?: string;
-    scripts?: Record<string, string>;
-  };
+async function loadPackageMeta(pkgJsonPath: string): Promise<PackageMeta> {
+  const text = await readFile(pkgJsonPath, "utf8");
+  const parsed = PackageJsonSchema.parse(JSON.parse(text));
   return {
-    dir: dirname(path),
-    name: parsed.name ?? relative("packages", dirname(path)),
+    dir: path.dirname(pkgJsonPath),
+    name: parsed.name ?? path.relative("packages", path.dirname(pkgJsonPath)),
     scripts: parsed.scripts ?? {},
   };
 }
@@ -60,24 +71,24 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  if (!existsSync("packages")) {
+  if (!(await pathExists("packages"))) {
     console.error("Expected to run from repository root.");
     process.exit(1);
   }
 
   const skipPackages = new Set(
-    (process.env["SKIP_PACKAGES"] ?? "").split(",").filter(Boolean),
+    (Bun.env["SKIP_PACKAGES"] ?? "").split(",").filter(Boolean),
   );
 
   const packageJsonPaths = await getPackageJsonPaths();
   const metas = await Promise.all(
-    packageJsonPaths.map((path) => loadPackageMeta(path)),
+    packageJsonPaths.map((pkgJsonPath) => loadPackageMeta(pkgJsonPath)),
   );
   const runnable = metas
     .filter((meta) => meta.scripts[scriptName])
     .filter((meta) => !skipPackages.has(meta.name));
   const skipped = metas.length - runnable.length;
-  const failures: Array<{ dir: string; error: unknown }> = [];
+  const failures: { dir: string; error: unknown }[] = [];
 
   console.log(
     `Running '${scriptName}' in ${String(runnable.length)} package(s) (${String(skipped)} skipped)...`,

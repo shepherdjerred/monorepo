@@ -9,7 +9,7 @@
 // Container image push targets
 // ---------------------------------------------------------------------------
 
-export interface ImageTarget {
+export type ImageTarget = {
   name: string;
   versionKey: string;
   /** Workspace package name, if different from name (for change detection). */
@@ -20,7 +20,7 @@ export interface ImageTarget {
   buildFn?: string;
   /** Custom Dagger push function name (kebab-case). Defaults to "push-image". */
   pushFn?: string;
-}
+};
 
 export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
   { name: "birmel", versionKey: "shepherdjerred/birmel" },
@@ -98,10 +98,10 @@ export const INFRA_PUSH_TARGETS: ImageTarget[] = [
 // npm packages
 // ---------------------------------------------------------------------------
 
-export interface NpmPackage {
+export type NpmPackage = {
   name: string;
   dir: string;
-}
+};
 
 export const NPM_PACKAGES: NpmPackage[] = [
   { name: "astro-opengraph-images", dir: "packages/astro-opengraph-images" },
@@ -116,7 +116,7 @@ export const NPM_PACKAGES: NpmPackage[] = [
 // Static site deploys
 // ---------------------------------------------------------------------------
 
-interface DeploySiteBase {
+type DeploySiteBase = {
   bucket: string;
   name: string;
   url: string;
@@ -135,7 +135,7 @@ interface DeploySiteBase {
    * `assets/`, the scout SPA's `app/assets/`).
    */
   immutablePrefixes?: string[];
-}
+};
 
 type DeploySiteBuildEnv =
   | {
@@ -246,7 +246,7 @@ export const DEPLOY_SITES: DeploySite[] = [
 ];
 
 /** Derived from NPM_PACKAGES — workspace packages whose changes should trigger npm publishes. */
-export const PACKAGES_WITH_NPM: Set<string> = new Set(
+export const PACKAGES_WITH_NPM = new Set<string>(
   NPM_PACKAGES.map(
     (pkg) => pkg.dir.replace("packages/", "").split("/")[0] ?? pkg.name,
   ),
@@ -257,7 +257,7 @@ export const PACKAGES_WITH_NPM: Set<string> = new Set(
  * Excludes nested packages (e.g. helm-types under homelab) where the
  * workspace root doesn't have its own build script.
  */
-export const NPM_BUILD_PACKAGES: Set<string> = new Set(
+export const NPM_BUILD_PACKAGES = new Set<string>(
   NPM_PACKAGES.filter((pkg) => !pkg.dir.includes("/src/")).map((pkg) =>
     pkg.dir.replace("packages/", ""),
   ),
@@ -357,7 +357,7 @@ export const PACKAGE_TO_SITE: Record<string, string[]> = {
 // ---------------------------------------------------------------------------
 
 /** Derived from IMAGE_PUSH_TARGETS — packages whose changes should trigger image builds. */
-export const PACKAGES_WITH_IMAGES: Set<string> = new Set(
+export const PACKAGES_WITH_IMAGES = new Set<string>(
   IMAGE_PUSH_TARGETS.map((img) => img.package ?? img.name),
 );
 
@@ -470,7 +470,7 @@ export { LIGHT as DEFAULT_RESOURCES };
  * They're still in ALL_PACKAGES for change detection (files trigger full-build awareness),
  * but perPackageSteps() skips them.
  */
-export const SKIP_PACKAGES: Set<string> = new Set([
+export const SKIP_PACKAGES = new Set<string>([
   "anki",
   "docs",
   "dotfiles",
@@ -485,7 +485,7 @@ export const SKIP_PACKAGES: Set<string> = new Set([
  * (`--skip-test`). Prefer adding tests over adding entries here.
  * Keep in sync with the test-script exemptions in scripts/compliance-check.sh.
  */
-export const NO_TEST_PACKAGES: Set<string> = new Set([
+export const NO_TEST_PACKAGES = new Set<string>([
   "leetcode",
   "cooklang-for-obsidian",
   "cooklang-rich-preview",
@@ -495,7 +495,7 @@ export const NO_TEST_PACKAGES: Set<string> = new Set([
 ]);
 
 /** Packages that need `bun run generate` before lint/typecheck/test (Prisma). */
-export const PRISMA_PACKAGES: Set<string> = new Set([
+export const PRISMA_PACKAGES = new Set<string>([
   "birmel",
   "scout-for-lol",
   "discord-plays-mario-kart",
@@ -507,16 +507,16 @@ export const PRISMA_PACKAGES: Set<string> = new Set([
  * Birmel's editor sub-agent shells out to both — without them the image
  * runs but the editor agent's tools no-op with a runtime warning.
  */
-export const EDITOR_CLI_PACKAGES: Set<string> = new Set(["birmel"]);
+export const EDITOR_CLI_PACKAGES = new Set<string>(["birmel"]);
 
 /** Packages that are Astro sites. */
-export const ASTRO_PACKAGES: Set<string> = new Set([
+export const ASTRO_PACKAGES = new Set<string>([
   "sjer.red",
   "cooklang-rich-preview",
 ]);
 
 /** Packages that need Playwright browser tests (run in Playwright container, not bunBase). */
-export const PLAYWRIGHT_PACKAGES: Set<string> = new Set(["sjer.red"]);
+export const PLAYWRIGHT_PACKAGES = new Set<string>(["sjer.red"]);
 
 // ---------------------------------------------------------------------------
 // Target aliases
@@ -532,12 +532,12 @@ export const ALIASES: Record<string, string[]> = {
 // Deploy targets (homelab-deploy orchestration)
 // ---------------------------------------------------------------------------
 
-export interface DeployTarget {
+export type DeployTarget = {
   name: string;
   images: ImageTarget[];
   charts: string[];
   argoApps: string[];
-}
+};
 
 function imageByName(name: string): ImageTarget {
   const img = [...IMAGE_PUSH_TARGETS, ...INFRA_PUSH_TARGETS].find(

@@ -3,7 +3,8 @@
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
-import { dag, Container, Directory } from "@dagger.io/dagger";
+import type { Container, Directory } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
 import { TEXLIVE_IMAGE } from "./constants";
 
 /** Build a LaTeX resume (packages/resume) with xelatex. */

@@ -6,10 +6,20 @@
     "experimentalDecorators": true,
     "strict": true,
     "skipLibCheck": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "paths": {
-      "@dagger.io/dagger": ["./sdk/index.ts"],
-      "@dagger.io/dagger/telemetry": ["./sdk/telemetry.ts"]
+      "@dagger.io/dagger": [
+        "./sdk/index.ts"
+      ],
+      "@dagger.io/dagger/telemetry": [
+        "./sdk/telemetry.ts"
+      ]
     }
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "eslint.config.ts"
+  ]
 }

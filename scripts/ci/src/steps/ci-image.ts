@@ -4,9 +4,6 @@
  * Builds the CI base image from .buildkite/ci-image/Dockerfile and pushes
  * to GHCR with both a versioned tag and :latest.
  */
-import { readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import {
   RETRY,
   DAGGER_ENV,
@@ -20,18 +17,17 @@ import type { BuildkiteStep } from "../lib/types.ts";
 
 const MAIN_ONLY = "build.branch == pipeline.default_branch";
 
-const CI_IMAGE_VERSION = readFileSync(
-  resolve(
-    dirname(fileURLToPath(import.meta.url)),
-    "../../../../.buildkite/ci-image/VERSION",
-  ),
-  "utf-8",
-).trim();
+const ciImageVersionRaw = await Bun.file(
+  `${import.meta.dir}/../../../../.buildkite/ci-image/VERSION`,
+).text();
+const CI_IMAGE_VERSION = ciImageVersionRaw.trim();
 
 function nextCiImageVersion(version: string): string {
   const parsed = Number(version);
   if (!Number.isInteger(parsed)) {
-    throw new Error(`CI image version must be an integer, got "${version}"`);
+    throw new TypeError(
+      `CI image version must be an integer, got "${version}"`,
+    );
   }
   return String(parsed + 1);
 }

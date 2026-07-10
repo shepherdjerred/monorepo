@@ -3,8 +3,12 @@ import {
   buildPipeline,
   buildReleasePleaseSkipPipeline,
 } from "../pipeline-builder.ts";
-import type { AffectedPackages } from "../lib/types.ts";
-import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
+import type {
+  AffectedPackages,
+  BuildkiteGroup,
+  BuildkiteStep,
+  PipelineStep,
+} from "../lib/types.ts";
 import {
   ALL_PACKAGES,
   PACKAGES_WITH_IMAGES,
@@ -55,93 +59,100 @@ function fullBuild(): AffectedPackages {
   };
 }
 
-function isGroup(step: unknown): step is BuildkiteGroup {
-  return typeof step === "object" && step !== null && "group" in step;
+/**
+ * Narrowing extractors for the `PipelineStep` discriminated union. Using
+ * `flatMap` with an `in`-narrowed ternary yields the concrete element type
+ * (BuildkiteStep / BuildkiteGroup / wait) without a `value is T` predicate or a
+ * type assertion.
+ */
+function commandSteps(steps: readonly PipelineStep[]): BuildkiteStep[] {
+  return steps.flatMap((s) => ("label" in s ? [s] : []));
 }
 
-function isStep(step: unknown): step is BuildkiteStep {
-  return (
-    typeof step === "object" &&
-    step !== null &&
-    "label" in step &&
-    !("group" in step) &&
-    !("wait" in step)
-  );
+function groupSteps(steps: readonly PipelineStep[]): BuildkiteGroup[] {
+  return steps.flatMap((s) => ("group" in s ? [s] : []));
 }
 
-function isWait(step: unknown): step is { wait: string } {
-  return typeof step === "object" && step !== null && "wait" in step;
+function waitSteps(steps: readonly PipelineStep[]): { wait: string }[] {
+  return steps.flatMap((s) => ("wait" in s ? [s] : []));
 }
 
-function collectSteps(steps: unknown[], allSteps: BuildkiteStep[]): void {
+function collectSteps(
+  steps: readonly PipelineStep[],
+  allSteps: BuildkiteStep[],
+): void {
   for (const s of steps) {
-    if (isStep(s)) allSteps.push(s);
-    if (
-      typeof s === "object" &&
-      s !== null &&
-      "steps" in s &&
-      Array.isArray((s as Record<string, unknown>)["steps"])
-    ) {
-      collectSteps(
-        (s as Record<string, unknown>)["steps"] as unknown[],
-        allSteps,
-      );
+    if ("group" in s) {
+      collectSteps(s.steps, allSteps);
+    } else if ("label" in s) {
+      allSteps.push(s);
+    }
+  }
+}
+
+function collectKeys(steps: readonly PipelineStep[], keys: string[]): void {
+  for (const step of steps) {
+    if ("group" in step) {
+      keys.push(step.key);
+      collectKeys(step.steps, keys);
+    } else if ("label" in step) {
+      keys.push(step.key);
     }
   }
 }
 
 function collectKeysAndDeps(
-  steps: unknown[],
+  steps: readonly PipelineStep[],
   allKeys: Set<string>,
   allDeps: string[],
 ): void {
   for (const step of steps) {
-    if (typeof step !== "object" || step === null) continue;
-    if ("key" in step && typeof step.key === "string") {
+    if ("group" in step) {
       allKeys.add(step.key);
+      collectKeysAndDeps(step.steps, allKeys, allDeps);
+      continue;
     }
-    if ("depends_on" in step && typeof step.depends_on === "string") {
-      allDeps.push(step.depends_on);
-    }
-    if ("depends_on" in step && Array.isArray(step.depends_on)) {
-      for (const dep of step.depends_on) {
+    if ("wait" in step) continue;
+    allKeys.add(step.key);
+    const dependsOn = step.depends_on;
+    if (typeof dependsOn === "string") {
+      allDeps.push(dependsOn);
+    } else if (Array.isArray(dependsOn)) {
+      for (const dep of dependsOn) {
         if (typeof dep === "string") {
           allDeps.push(dep);
         }
       }
     }
-    if ("steps" in step && Array.isArray(step.steps)) {
-      collectKeysAndDeps(step.steps, allKeys, allDeps);
-    }
   }
 }
 
 function withBuildkitePullRequest<T>(value: string, fn: () => T): T {
-  const original = process.env["BUILDKITE_PULL_REQUEST"];
-  process.env["BUILDKITE_PULL_REQUEST"] = value;
+  const original = Bun.env["BUILDKITE_PULL_REQUEST"];
+  Bun.env["BUILDKITE_PULL_REQUEST"] = value;
 
   try {
     return fn();
   } finally {
     if (original === undefined) {
-      delete process.env["BUILDKITE_PULL_REQUEST"];
+      delete Bun.env["BUILDKITE_PULL_REQUEST"];
     } else {
-      process.env["BUILDKITE_PULL_REQUEST"] = original;
+      Bun.env["BUILDKITE_PULL_REQUEST"] = original;
     }
   }
 }
 
 function withDryRun<T>(fn: () => T): T {
-  const original = process.env["DRYRUN"];
-  process.env["DRYRUN"] = "true";
+  const original = Bun.env["DRYRUN"];
+  Bun.env["DRYRUN"] = "true";
 
   try {
     return fn();
   } finally {
     if (original === undefined) {
-      delete process.env["DRYRUN"];
+      delete Bun.env["DRYRUN"];
     } else {
-      process.env["DRYRUN"] = original;
+      Bun.env["DRYRUN"] = original;
     }
   }
 }
@@ -151,28 +162,55 @@ function withBuildkiteBranchContext<T>(
   defaultBranch: string,
   fn: () => T,
 ): T {
-  const originalBranch = process.env["BUILDKITE_BRANCH"];
-  const originalDefaultBranch =
-    process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"];
+  const originalBranch = Bun.env["BUILDKITE_BRANCH"];
+  const originalDefaultBranch = Bun.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"];
 
-  process.env["BUILDKITE_BRANCH"] = branch;
-  process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"] = defaultBranch;
+  Bun.env["BUILDKITE_BRANCH"] = branch;
+  Bun.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"] = defaultBranch;
 
   try {
     return fn();
   } finally {
     if (originalBranch === undefined) {
-      delete process.env["BUILDKITE_BRANCH"];
+      delete Bun.env["BUILDKITE_BRANCH"];
     } else {
-      process.env["BUILDKITE_BRANCH"] = originalBranch;
+      Bun.env["BUILDKITE_BRANCH"] = originalBranch;
     }
 
     if (originalDefaultBranch === undefined) {
-      delete process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"];
+      delete Bun.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"];
     } else {
-      process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"] = originalDefaultBranch;
+      Bun.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"] = originalDefaultBranch;
     }
   }
+}
+
+function homelabStepKeys(affected: AffectedPackages): string[] {
+  const pipeline = buildPipeline(affected);
+  const homelab = groupSteps(pipeline.steps).find(
+    (g) => g.key === "pkg-homelab",
+  );
+  return commandSteps(homelab?.steps ?? []).map((s) => s.key);
+}
+
+function driftStep(affected: AffectedPackages): BuildkiteStep | undefined {
+  return commandSteps(buildPipeline(affected).steps).find(
+    (s) => s.key === "bun-lock-drift-check",
+  );
+}
+
+function versionBumpAffected(): AffectedPackages {
+  const affected = emptyAffected();
+  affected.packages.add("homelab");
+  affected.homelabChanged = true;
+  affected.versionBumpOnly = true;
+  return affected;
+}
+
+function releasePleaseAffected(): AffectedPackages {
+  const affected = fullBuild();
+  affected.releasePleaseMerge = true;
+  return affected;
 }
 
 describe("buildPipeline", () => {
@@ -181,13 +219,13 @@ describe("buildPipeline", () => {
       const pipeline = buildPipeline(emptyAffected());
       expect(pipeline.steps).toHaveLength(2);
       const noChanges = pipeline.steps[0]!;
-      expect(isStep(noChanges)).toBe(true);
-      if (isStep(noChanges)) {
+      expect("label" in noChanges).toBe(true);
+      if ("label" in noChanges) {
         expect(noChanges.key).toBe("no-changes");
       }
       const ciComplete = pipeline.steps[1]!;
-      expect(isStep(ciComplete)).toBe(true);
-      if (isStep(ciComplete)) {
+      expect("label" in ciComplete).toBe(true);
+      if ("label" in ciComplete) {
         expect(ciComplete.key).toBe("ci-complete");
         expect(ciComplete.depends_on).toEqual(["no-changes"]);
       }
@@ -198,7 +236,7 @@ describe("buildPipeline", () => {
         buildPipeline(emptyAffected()),
       );
       expect(pipeline.steps).toHaveLength(3);
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       const greptile = steps.find((s) => s.key === "greptile-review");
       const ciComplete = steps.find((s) => s.key === "ci-complete");
 
@@ -212,7 +250,7 @@ describe("buildPipeline", () => {
       const pipeline = withBuildkitePullRequest("false", () =>
         buildPipeline(emptyAffected()),
       );
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
 
       expect(steps.some((s) => s.key === "greptile-review")).toBe(false);
     });
@@ -224,7 +262,7 @@ describe("buildPipeline", () => {
       affected.ciImageChanged = true;
 
       const pipeline = buildPipeline(affected);
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
 
       const build = steps.find((s) => s.key === "build-ci-base");
       const push = steps.find((s) => s.key === "push-ci-base");
@@ -256,11 +294,11 @@ describe("buildPipeline", () => {
       affected.ciImageVersionChanged = true;
 
       const pipeline = buildPipeline(affected);
-      const steps = pipeline.steps.filter(isStep);
+      const step = commandSteps(pipeline.steps)[0];
 
-      expect(steps[0]?.key).toBe("ci-base-version-guard");
-      expect(steps[0]?.command).toContain(".buildkite/ci-image/VERSION");
-      expect(steps[0]?.command).toContain("exit 1");
+      expect(step?.key).toBe("ci-base-version-guard");
+      expect(step?.command).toContain(".buildkite/ci-image/VERSION");
+      expect(step?.command).toContain("exit 1");
     });
 
     it("does not loop on generated ci-base VERSION commits", () => {
@@ -269,7 +307,7 @@ describe("buildPipeline", () => {
       affected.isAutoGenerated = true;
 
       const pipeline = buildPipeline(affected);
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
 
       expect(steps.some((s) => s.key === "ci-base-version-guard")).toBe(false);
       expect(steps.some((s) => s.key === "build-ci-base")).toBe(false);
@@ -287,7 +325,7 @@ describe("buildPipeline", () => {
 
       const pipeline = buildPipeline(affected);
 
-      const groups = pipeline.steps.filter(isGroup);
+      const groups = groupSteps(pipeline.steps);
       const pkgGroups = groups.filter((g) => g.key.startsWith("pkg-"));
       expect(pkgGroups).toHaveLength(1);
       expect(pkgGroups[0]!.key).toBe("pkg-webring");
@@ -298,7 +336,7 @@ describe("buildPipeline", () => {
       affected.packages.add("webring");
 
       const pipeline = buildPipeline(affected);
-      const waits = pipeline.steps.filter(isWait);
+      const waits = waitSteps(pipeline.steps);
       expect(waits).toHaveLength(0);
     });
 
@@ -307,7 +345,7 @@ describe("buildPipeline", () => {
       affected.packages.add("webring");
 
       const pipeline = buildPipeline(affected);
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       const ciComplete = steps.find((s) => s.key === "ci-complete");
       expect(ciComplete).toBeDefined();
       const deps = Array.isArray(ciComplete?.depends_on)
@@ -324,7 +362,7 @@ describe("buildPipeline", () => {
       affected.packages.add("webring");
 
       const pipeline = buildPipeline(affected);
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       // All async checks should be present.
       // - prettier + markdownlint live inside `quality-bundle`
       // - dagger-hygiene + large-file-check live inside `soft-fail-bundle`
@@ -353,9 +391,9 @@ describe("buildPipeline", () => {
       affected.packages.add("tasks-for-obsidian");
 
       const pipeline = buildPipeline(affected);
-      const pkgGroup = pipeline.steps
-        .filter(isGroup)
-        .find((g) => g.key === "pkg-tasks-for-obsidian");
+      const pkgGroup = groupSteps(pipeline.steps).find(
+        (g) => g.key === "pkg-tasks-for-obsidian",
+      );
       const nativeDepsStep = pkgGroup?.steps.find(
         (s) => s.key === "ios-native-deps-tasks-for-obsidian",
       );
@@ -378,16 +416,13 @@ describe("buildPipeline", () => {
       affected.hasImagePackages.add("temporal");
 
       const pipeline = buildPipeline(affected);
-      const groups = pipeline.steps.filter(isGroup);
+      const groups = groupSteps(pipeline.steps);
 
       // Build/push groups should exist for temporal-worker only
       const buildGroup = groups.find((g) => g.key === "build-images");
       expect(buildGroup).toBeDefined();
       const buildSteps = buildGroup?.steps ?? [];
-      const buildKeys = buildSteps
-        .filter(isStep)
-        .map((s) => s.key)
-        .filter((k): k is string => typeof k === "string");
+      const buildKeys = commandSteps(buildSteps).map((s) => s.key);
       // Should include build for temporal-worker, NOT for birmel/scout/etc.
       expect(buildKeys.some((k) => k.includes("temporal-worker"))).toBe(true);
       expect(buildKeys.some((k) => k.includes("birmel"))).toBe(false);
@@ -403,24 +438,13 @@ describe("buildPipeline", () => {
       // Push steps live inside the push-images group, mirror should hold
       const pushGroup = groups.find((g) => g.key === "push-images");
       expect(pushGroup).toBeDefined();
-      const pushKeys = (pushGroup?.steps ?? [])
-        .filter(isStep)
-        .map((s) => s.key)
-        .filter((k): k is string => typeof k === "string");
+      const pushKeys = commandSteps(pushGroup?.steps ?? []).map((s) => s.key);
       expect(pushKeys.some((k) => k.includes("temporal-worker"))).toBe(true);
       expect(pushKeys.some((k) => k.includes("birmel"))).toBe(false);
     });
   });
 
   describe("helm-types drift check", () => {
-    function homelabStepKeys(affected: AffectedPackages): string[] {
-      const pipeline = buildPipeline(affected);
-      const homelab = pipeline.steps
-        .filter(isGroup)
-        .find((g) => g.key === "pkg-homelab");
-      return (homelab?.steps ?? []).filter(isStep).map((s) => s.key);
-    }
-
     it("emits the drift-check step when a generator input changed", () => {
       const affected = emptyAffected();
       affected.packages.add("homelab");
@@ -454,12 +478,12 @@ describe("buildPipeline", () => {
       // All other flags false — simulates a Renovate noop path
 
       const pipeline = buildPipeline(affected);
-      const homelabGroup = pipeline.steps
-        .filter(isGroup)
-        .find((g) => g.key === "pkg-homelab");
-      const stepKeys = (homelabGroup?.steps ?? [])
-        .filter(isStep)
-        .map((s) => s.key);
+      const homelabGroup = groupSteps(pipeline.steps).find(
+        (g) => g.key === "pkg-homelab",
+      );
+      const stepKeys = commandSteps(homelabGroup?.steps ?? []).map(
+        (s) => s.key,
+      );
 
       expect(stepKeys).toContain("helm-types-drift-check");
     });
@@ -475,20 +499,14 @@ describe("buildPipeline", () => {
 
       const pipeline = buildPipeline(affected);
       // The pipeline must NOT contain the "no-changes" key
-      const noChangesStep = pipeline.steps
-        .filter(isStep)
-        .find((s) => s.key === "no-changes");
+      const noChangesStep = commandSteps(pipeline.steps).find(
+        (s) => s.key === "no-changes",
+      );
       expect(noChangesStep).toBeUndefined();
     });
   });
 
   describe("bun.lock drift gate", () => {
-    function driftStep(affected: AffectedPackages) {
-      return buildPipeline(affected)
-        .steps.filter(isStep)
-        .find((s) => s.key === "bun-lock-drift-check");
-    }
-
     it("emits the gate with seeds from directlyChanged, not the closure", () => {
       // The gate must NOT be fed the post-`transitiveClosure` `packages` set,
       // since change-detection's closure only reads top-level manifests and
@@ -562,15 +580,15 @@ describe("buildPipeline", () => {
   describe("full build", () => {
     it("includes all packages", () => {
       const pipeline = buildPipeline(fullBuild());
-      const pkgGroups = pipeline.steps
-        .filter(isGroup)
-        .filter((g) => g.key.startsWith("pkg-"));
+      const pkgGroups = groupSteps(pipeline.steps).filter((g) =>
+        g.key.startsWith("pkg-"),
+      );
       expect(pkgGroups.length).toBe(ALL_PACKAGES.length - SKIP_PACKAGES.size);
     });
 
     it("includes quality gates", () => {
       const pipeline = buildPipeline(fullBuild());
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       // 15 source-only blocking checks are bundled into one `quality-bundle`
       // step now — see `.dagger/src/quality.ts:qualityBundleHelper`. The
       // soft-fail / annotated scans stay separate.
@@ -582,7 +600,7 @@ describe("buildPipeline", () => {
 
     it("includes security and quality scans with soft_fail", () => {
       const pipeline = buildPipeline(fullBuild());
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       // dagger-hygiene + large-file-check now run inside `soft-fail-bundle`.
       for (const key of [
         "semgrep-scan",
@@ -600,11 +618,11 @@ describe("buildPipeline", () => {
       const pipeline = buildPipeline(fullBuild());
 
       // No wait steps — quality-gate uses explicit depends_on
-      const waits = pipeline.steps.filter(isWait);
+      const waits = waitSteps(pipeline.steps);
       expect(waits).toHaveLength(0);
 
       // Quality gate step exists with depends_on
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       const gate = steps.find((s) => s.key === "quality-gate");
       expect(gate).toBeDefined();
       expect(Array.isArray(gate?.depends_on)).toBe(true);
@@ -614,9 +632,9 @@ describe("buildPipeline", () => {
 
       // Release-train rule: every per-package pkg-* group key gates release,
       // so a single failing pkg-check blocks every image/helm/site push.
-      const pkgGroups = pipeline.steps
-        .filter(isGroup)
-        .filter((g) => g.key.startsWith("pkg-"));
+      const pkgGroups = groupSteps(pipeline.steps).filter((g) =>
+        g.key.startsWith("pkg-"),
+      );
       expect(pkgGroups.length).toBeGreaterThan(0);
       for (const g of pkgGroups) {
         expect(depList).toContain(g.key);
@@ -644,9 +662,9 @@ describe("buildPipeline", () => {
 
     it("includes TasksForObsidian iOS native dependency check in full builds", () => {
       const pipeline = buildPipeline(fullBuild());
-      const pkgGroup = pipeline.steps
-        .filter(isGroup)
-        .find((g) => g.key === "pkg-tasks-for-obsidian");
+      const pkgGroup = groupSteps(pipeline.steps).find(
+        (g) => g.key === "pkg-tasks-for-obsidian",
+      );
 
       expect(
         pkgGroup?.steps.some(
@@ -658,21 +676,7 @@ describe("buildPipeline", () => {
     it("smoke tests gate image pushes (smoke before push)", () => {
       const pipeline = buildPipeline(fullBuild());
       const allSteps: BuildkiteStep[] = [];
-
-      function collect(steps: unknown[]) {
-        for (const s of steps) {
-          if (isStep(s)) allSteps.push(s);
-          if (
-            typeof s === "object" &&
-            s !== null &&
-            "steps" in s &&
-            Array.isArray((s as Record<string, unknown>)["steps"])
-          ) {
-            collect((s as Record<string, unknown>)["steps"] as unknown[]);
-          }
-        }
-      }
-      collect(pipeline.steps);
+      collectSteps(pipeline.steps, allSteps);
 
       // Build+smoke is now a single bundled step (no standalone build-<img>
       // for smokeable images). Each smoke step depends on quality-gate (and
@@ -756,7 +760,7 @@ describe("buildPipeline", () => {
       const pipeline = withBuildkitePullRequest("123", () =>
         buildPipeline(fullBuild()),
       );
-      const groups = pipeline.steps.filter(isGroup);
+      const groups = groupSteps(pipeline.steps);
       const groupKeys = groups.map((g) => g.key);
       const allSteps: BuildkiteStep[] = [];
       collectSteps(pipeline.steps, allSteps);
@@ -791,7 +795,7 @@ describe("buildPipeline", () => {
         buildPipeline(affected),
       );
 
-      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
+      const groupKeys = groupSteps(pipeline.steps).map((g) => g.key);
       expect(groupKeys).toContain("deploy-sites");
 
       const allSteps: BuildkiteStep[] = [];
@@ -814,7 +818,7 @@ describe("buildPipeline", () => {
       const pipeline = withBuildkitePullRequest("123", () =>
         buildPipeline(fullBuild()),
       );
-      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
+      const groupKeys = groupSteps(pipeline.steps).map((g) => g.key);
       expect(groupKeys).not.toContain("deploy-sites");
     });
 
@@ -842,7 +846,7 @@ describe("buildPipeline", () => {
 
     it("includes image build/push, npm, cooklang, and sites groups", () => {
       const pipeline = buildPipeline(fullBuild());
-      const groups = pipeline.steps.filter(isGroup);
+      const groups = groupSteps(pipeline.steps);
       const groupKeys = groups.map((g) => g.key);
 
       expect(groupKeys).toContain("build-images");
@@ -859,7 +863,7 @@ describe("buildPipeline", () => {
       affected.isAutoGenerated = true;
 
       const pipeline = buildPipeline(affected);
-      const groups = pipeline.steps.filter(isGroup);
+      const groups = groupSteps(pipeline.steps);
       const groupKeys = groups.map((g) => g.key);
 
       expect(groupKeys).not.toContain("cooklang-release");
@@ -873,7 +877,7 @@ describe("buildPipeline", () => {
       affected.cooklangChanged = false;
 
       const pipeline = buildPipeline(affected);
-      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
+      const groupKeys = groupSteps(pipeline.steps).map((g) => g.key);
 
       expect(groupKeys).not.toContain("cooklang-release");
       // ...but the rest of the full-build release track still runs.
@@ -889,7 +893,7 @@ describe("buildPipeline", () => {
       affected.cooklangChanged = true;
 
       const pipeline = buildPipeline(affected);
-      const groupKeys = pipeline.steps.filter(isGroup).map((g) => g.key);
+      const groupKeys = groupSteps(pipeline.steps).map((g) => g.key);
 
       expect(groupKeys).toContain("cooklang-release");
     });
@@ -1004,7 +1008,7 @@ describe("buildPipeline", () => {
       const pipeline = buildPipeline(fullBuild());
       const allSteps: BuildkiteStep[] = [];
       collectSteps(pipeline.steps, allSteps);
-      const groups = pipeline.steps.filter(isGroup);
+      const groups = groupSteps(pipeline.steps);
       const groupKeys = groups.map((g) => g.key);
       const stepKeys = allSteps.map((s) => s.key);
 
@@ -1051,13 +1055,13 @@ describe("buildPipeline", () => {
 
     it("includes version commit-back", () => {
       const pipeline = buildPipeline(fullBuild());
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       expect(steps.some((s) => s.key === "version-commit-back")).toBe(true);
     });
 
     it("serializes version commit-back", () => {
       const pipeline = buildPipeline(fullBuild());
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       const versionCommitBack = steps.find(
         (s) => s.key === "version-commit-back",
       );
@@ -1073,13 +1077,13 @@ describe("buildPipeline", () => {
       const affected = fullBuild();
       affected.isAutoGenerated = true;
       const pipeline = buildPipeline(affected);
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       expect(steps.some((s) => s.key === "version-commit-back")).toBe(false);
     });
 
     it("includes ci-complete step in full build", () => {
       const pipeline = buildPipeline(fullBuild());
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       const ciComplete = steps.find((s) => s.key === "ci-complete");
       expect(ciComplete).toBeDefined();
       const deps = Array.isArray(ciComplete?.depends_on)
@@ -1093,7 +1097,7 @@ describe("buildPipeline", () => {
 
     it("includes build summary step with allow_dependency_failure", () => {
       const pipeline = buildPipeline(fullBuild());
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       const summary = steps.find((s) => s.key === "build-summary");
       expect(summary).toBeDefined();
       expect(summary?.depends_on).toBeDefined();
@@ -1106,7 +1110,7 @@ describe("buildPipeline", () => {
       // Buildkite stripped `${BT}` as an unset env var. Ensure the new form survives
       // Buildkite's variable interpolation and produces literal backticks in bash.
       const pipeline = buildPipeline(fullBuild());
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       const summary = steps.find((s) => s.key === "build-summary");
       const command =
         typeof summary?.command === "string"
@@ -1117,7 +1121,7 @@ describe("buildPipeline", () => {
       expect(command).not.toContain("${BT}");
       expect(command).not.toContain("BT=");
       // After Buildkite $$ -> $ expansion the surviving markdown code span uses \`.
-      const postBuildkite = command.replace(/\$\$/g, "$");
+      const postBuildkite = command.replaceAll("$$", "$");
       expect(postBuildkite).toMatch(/\\`ghcr\.io\/[^`]+:\$VERSION\\`/);
       expect(postBuildkite).toMatch(/\\`\$DIGEST\\`/);
     });
@@ -1125,21 +1129,7 @@ describe("buildPipeline", () => {
     it("deploy steps have concurrency groups", () => {
       const pipeline = buildPipeline(fullBuild());
       const allSteps: BuildkiteStep[] = [];
-
-      function collect(steps: unknown[]) {
-        for (const s of steps) {
-          if (isStep(s)) allSteps.push(s);
-          if (
-            typeof s === "object" &&
-            s !== null &&
-            "steps" in s &&
-            Array.isArray((s as Record<string, unknown>)["steps"])
-          ) {
-            collect((s as Record<string, unknown>)["steps"] as unknown[]);
-          }
-        }
-      }
-      collect(pipeline.steps);
+      collectSteps(pipeline.steps, allSteps);
 
       // tofu-apply-all is the bundled step that applies every stack in
       // parallel inside one Dagger call. It carries no BK concurrency group
@@ -1169,23 +1159,15 @@ describe("buildPipeline", () => {
   });
 
   describe("version-bump-only (commit-back)", () => {
-    function versionBumpAffected(): AffectedPackages {
-      const affected = emptyAffected();
-      affected.packages.add("homelab");
-      affected.homelabChanged = true;
-      affected.versionBumpOnly = true;
-      return affected;
-    }
-
     it("includes cdk8s synth so new digests are rendered into manifests", () => {
       const pipeline = buildPipeline(versionBumpAffected());
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       expect(steps.some((s) => s.key === "homelab-cdk8s")).toBe(true);
     });
 
     it("includes the 1Password item/field lint gate (bundled with cdk8s synth)", () => {
       const pipeline = buildPipeline(versionBumpAffected());
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       // Both checks now run inside the `homelab-cdk8s` bundle Dagger func.
       const bundle = steps.find((s) => s.key === "homelab-cdk8s");
       expect(bundle).toBeDefined();
@@ -1210,7 +1192,7 @@ describe("buildPipeline", () => {
 
     it("includes one bundled ArgoCD sync + health step", () => {
       const pipeline = buildPipeline(versionBumpAffected());
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       // Sync + health-wait collapsed into one BK pod via
       // `argo-cd-sync-and-wait`; health-wait failure is caught Dagger-side.
       expect(steps.some((s) => s.key === "deploy-argocd")).toBe(true);
@@ -1219,25 +1201,25 @@ describe("buildPipeline", () => {
 
     it("does NOT build any images (they were already pushed)", () => {
       const pipeline = buildPipeline(versionBumpAffected());
-      const groups = pipeline.steps.filter(isGroup);
+      const groups = groupSteps(pipeline.steps);
       expect(groups.some((g) => g.key === "build-images")).toBe(false);
     });
 
     it("does NOT push any images", () => {
       const pipeline = buildPipeline(versionBumpAffected());
-      const groups = pipeline.steps.filter(isGroup);
+      const groups = groupSteps(pipeline.steps);
       expect(groups.some((g) => g.key === "push-images")).toBe(false);
     });
 
     it("does NOT run version-commit-back (breaks the loop)", () => {
       const pipeline = buildPipeline(versionBumpAffected());
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       expect(steps.some((s) => s.key === "version-commit-back")).toBe(false);
     });
 
     it("does NOT include unrelated packages (cooklang, npm, sites)", () => {
       const pipeline = buildPipeline(versionBumpAffected());
-      const groups = pipeline.steps.filter(isGroup);
+      const groups = groupSteps(pipeline.steps);
       const groupKeys = groups.map((g) => g.key);
       expect(groupKeys).not.toContain("cooklang-release");
       expect(groupKeys).not.toContain("publish-npm");
@@ -1246,7 +1228,7 @@ describe("buildPipeline", () => {
 
     it("ArgoCD sync depends on helm and tofu, not image pushes", () => {
       const pipeline = buildPipeline(versionBumpAffected());
-      const steps = pipeline.steps.filter(isStep);
+      const steps = commandSteps(pipeline.steps);
       const argoSync = steps.find((s) => s.key === "deploy-argocd");
       expect(argoSync).toBeDefined();
       const deps = Array.isArray(argoSync?.depends_on)
@@ -1263,23 +1245,7 @@ describe("buildPipeline", () => {
       const allKeys = new Set<string>();
       const allDeps: string[] = [];
 
-      function collect(steps: unknown[]) {
-        for (const s of steps) {
-          if (typeof s !== "object" || s === null) continue;
-          const obj = s as Record<string, unknown>;
-          if (typeof obj["key"] === "string") allKeys.add(obj["key"]);
-          if (typeof obj["depends_on"] === "string")
-            allDeps.push(obj["depends_on"]);
-          if (Array.isArray(obj["depends_on"])) {
-            for (const d of obj["depends_on"]) {
-              if (typeof d === "string") allDeps.push(d);
-            }
-          }
-          if (Array.isArray(obj["steps"])) collect(obj["steps"] as unknown[]);
-        }
-      }
-
-      collect(pipeline.steps);
+      collectKeysAndDeps(pipeline.steps, allKeys, allDeps);
 
       const missing = allDeps.filter((d) => !allKeys.has(d));
       expect(missing).toEqual([]);
@@ -1295,7 +1261,7 @@ describe("buildPipeline", () => {
       const pipeline = buildPipeline(affected);
       const allSteps: BuildkiteStep[] = [];
       collectSteps(pipeline.steps, allSteps);
-      const groups = pipeline.steps.filter(isGroup);
+      const groups = groupSteps(pipeline.steps);
       const groupKeys = groups.map((g) => g.key);
       const stepKeys = allSteps.map((s) => s.key);
 
@@ -1344,26 +1310,7 @@ describe("buildPipeline", () => {
       const pipeline = buildPipeline(fullBuild());
       const keys: string[] = [];
 
-      function collectKeys(steps: unknown[]) {
-        for (const s of steps) {
-          if (typeof s === "object" && s !== null) {
-            if (
-              "key" in s &&
-              typeof (s as Record<string, unknown>)["key"] === "string"
-            ) {
-              keys.push((s as Record<string, unknown>)["key"] as string);
-            }
-            if (
-              "steps" in s &&
-              Array.isArray((s as Record<string, unknown>)["steps"])
-            ) {
-              collectKeys((s as Record<string, unknown>)["steps"] as unknown[]);
-            }
-          }
-        }
-      }
-
-      collectKeys(pipeline.steps);
+      collectKeys(pipeline.steps, keys);
 
       const seen = new Set<string>();
       const dupes: string[] = [];
@@ -1380,23 +1327,7 @@ describe("buildPipeline", () => {
       const allKeys = new Set<string>();
       const allDeps: string[] = [];
 
-      function collect(steps: unknown[]) {
-        for (const s of steps) {
-          if (typeof s !== "object" || s === null) continue;
-          const obj = s as Record<string, unknown>;
-          if (typeof obj["key"] === "string") allKeys.add(obj["key"]);
-          if (typeof obj["depends_on"] === "string")
-            allDeps.push(obj["depends_on"]);
-          if (Array.isArray(obj["depends_on"])) {
-            for (const d of obj["depends_on"]) {
-              if (typeof d === "string") allDeps.push(d);
-            }
-          }
-          if (Array.isArray(obj["steps"])) collect(obj["steps"] as unknown[]);
-        }
-      }
-
-      collect(pipeline.steps);
+      collectKeysAndDeps(pipeline.steps, allKeys, allDeps);
 
       const missing = allDeps.filter((d) => !allKeys.has(d));
       expect(missing).toEqual([]);
@@ -1441,32 +1372,25 @@ describe("buildPipeline", () => {
       ]);
       const nonDagger: string[] = [];
 
-      function check(steps: unknown[]) {
-        for (const s of steps) {
-          if (typeof s !== "object" || s === null) continue;
-          const obj = s as Record<string, unknown>;
-          if (typeof obj["command"] === "string") {
-            const cmd = obj["command"] as string;
-            const key = obj["key"];
-            // Dagger CLI invocations may have flags between `dagger` and `call`
-            // (e.g. `dagger -m <module-ref> call`) so we look for both tokens
-            // rather than the literal substring.
-            const isDaggerCall =
-              /(^|\s)dagger(\s+-[\w-]+(\s+\S+)?)*\s+call(\s|$)/.test(cmd);
-            if (
-              !isDaggerCall &&
-              !cmd.includes("echo ") &&
-              !cmd.includes("buildkite-agent") &&
-              !(typeof key === "string" && PLAIN_STEP_KEYS.has(key))
-            ) {
-              nonDagger.push(`${key}: ${cmd}`);
-            }
-          }
-          if (Array.isArray(obj["steps"])) check(obj["steps"] as unknown[]);
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      for (const step of allSteps) {
+        const cmd = step.command;
+        const key = step.key;
+        // Dagger CLI invocations may have flags between `dagger` and `call`
+        // (e.g. `dagger -m <module-ref> call`) so we look for both tokens
+        // rather than the literal substring.
+        const isDaggerCall =
+          /(?:^|\s)dagger(?:\s+-[\w-]+(?:\s+\S+)?)*\s+call(?:\s|$)/.test(cmd);
+        if (
+          !isDaggerCall &&
+          !cmd.includes("echo ") &&
+          !cmd.includes("buildkite-agent") &&
+          !PLAIN_STEP_KEYS.has(key)
+        ) {
+          nonDagger.push(`${key}: ${cmd}`);
         }
       }
-
-      check(pipeline.steps);
       expect(nonDagger).toEqual([]);
     });
 
@@ -1475,26 +1399,19 @@ describe("buildPipeline", () => {
       let pluginCount = 0;
       let hasRunnerHost = 0;
 
-      function check(steps: unknown[]) {
-        for (const s of steps) {
-          if (typeof s !== "object" || s === null) continue;
-          const obj = s as Record<string, unknown>;
-          if (Array.isArray(obj["plugins"])) {
-            for (const p of obj["plugins"]) {
-              if (typeof p === "object" && p !== null && "kubernetes" in p) {
-                pluginCount++;
-                const json = JSON.stringify(p);
-                if (json.includes("_EXPERIMENTAL_DAGGER_RUNNER_HOST")) {
-                  hasRunnerHost++;
-                }
-              }
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      for (const step of allSteps) {
+        for (const p of step.plugins ?? []) {
+          if ("kubernetes" in p) {
+            pluginCount++;
+            const json = JSON.stringify(p);
+            if (json.includes("_EXPERIMENTAL_DAGGER_RUNNER_HOST")) {
+              hasRunnerHost++;
             }
           }
-          if (Array.isArray(obj["steps"])) check(obj["steps"] as unknown[]);
         }
       }
-
-      check(pipeline.steps);
       expect(pluginCount).toBeGreaterThan(0);
       expect(hasRunnerHost).toBe(pluginCount);
     });
@@ -1504,27 +1421,7 @@ describe("buildPipeline", () => {
       affected.releasePleaseMerge = true;
       const pipeline = buildPipeline(affected);
       const keys: string[] = [];
-
-      function collectKeys(steps: unknown[]) {
-        for (const s of steps) {
-          if (typeof s === "object" && s !== null) {
-            if (
-              "key" in s &&
-              typeof (s as Record<string, unknown>)["key"] === "string"
-            ) {
-              keys.push((s as Record<string, unknown>)["key"] as string);
-            }
-            if (
-              "steps" in s &&
-              Array.isArray((s as Record<string, unknown>)["steps"])
-            ) {
-              collectKeys((s as Record<string, unknown>)["steps"] as unknown[]);
-            }
-          }
-        }
-      }
-
-      collectKeys(pipeline.steps);
+      collectKeys(pipeline.steps, keys);
 
       const seen = new Set<string>();
       const dupes: string[] = [];
@@ -1538,15 +1435,9 @@ describe("buildPipeline", () => {
   });
 
   describe("release-please merge", () => {
-    function releasePleaseAffected(): AffectedPackages {
-      const affected = fullBuild();
-      affected.releasePleaseMerge = true;
-      return affected;
-    }
-
     it("generates both prod and dev npm publish bundle steps", () => {
       const pipeline = buildPipeline(releasePleaseAffected());
-      const groups = pipeline.steps.filter(isGroup);
+      const groups = groupSteps(pipeline.steps);
       const npmGroup = groups.find((g) => g.key === "publish-npm");
       expect(npmGroup).toBeDefined();
       const steps = npmGroup!.steps;
@@ -1559,7 +1450,7 @@ describe("buildPipeline", () => {
 
     it("prod bundle does not carry --dev-suffix flag", () => {
       const pipeline = buildPipeline(releasePleaseAffected());
-      const groups = pipeline.steps.filter(isGroup);
+      const groups = groupSteps(pipeline.steps);
       const npmGroup = groups.find((g) => g.key === "publish-npm");
       const prod = npmGroup!.steps.find(
         (s) => s.key === "npm-publish-all-prod",
@@ -1569,7 +1460,7 @@ describe("buildPipeline", () => {
 
     it("dev bundle carries --dev-suffix flag", () => {
       const pipeline = buildPipeline(releasePleaseAffected());
-      const groups = pipeline.steps.filter(isGroup);
+      const groups = groupSteps(pipeline.steps);
       const npmGroup = groups.find((g) => g.key === "publish-npm");
       const dev = npmGroup!.steps.find((s) => s.key === "npm-publish-all");
       expect(dev?.command).toContain("--dev-suffix");
@@ -1579,7 +1470,7 @@ describe("buildPipeline", () => {
   describe("publish step mount paths", () => {
     it("bundle carries one --pkg-paths flag per package on-disk dir", () => {
       const pipeline = buildPipeline(fullBuild());
-      const groups = pipeline.steps.filter(isGroup);
+      const groups = groupSteps(pipeline.steps);
       const npmGroup = groups.find((g) => g.key === "publish-npm");
       expect(npmGroup).toBeDefined();
       const dev = npmGroup!.steps.find((s) => s.key === "npm-publish-all");
@@ -1597,7 +1488,7 @@ describe("buildPipeline", () => {
 describe("buildReleasePleaseSkipPipeline", () => {
   it("emits a single annotation step and no required gates", () => {
     const pipeline = buildReleasePleaseSkipPipeline();
-    const steps = pipeline.steps.filter(isStep);
+    const steps = commandSteps(pipeline.steps);
     expect(steps).toHaveLength(1);
     expect(steps[0]!.key).toBe("release-please-skip");
     expect(steps[0]!.command).toContain("buildkite-agent annotate");

@@ -249,7 +249,6 @@ function imagePushStep(
       .join(" ");
   } else {
     // Default push-image takes --pkg-dir, --pkg, dep flags, tags, registry creds
-    const flags = depFlags(pkg);
     const prismaFlag = PRISMA_PACKAGES.has(img.name) ? "--use-prisma" : "";
     const editorClisFlag = EDITOR_CLI_PACKAGES.has(img.name)
       ? "--install-editor-clis"
@@ -274,7 +273,7 @@ function imagePushStep(
     // Dagger outputs ANSI escape codes even with DAGGER_PROGRESS=dots/plain,
     // so we strip them before grepping for the sha256 digest.
     `&& RAW=$$(${DAGGER_CALL} ${pushCall})`,
-    `&& CLEAN=$$(printf '%s' "$$RAW" | sed 's/\\x1b\\[[0-9;]*[a-zA-Z]//g' | tr -d '\\r')`,
+    String.raw`&& CLEAN=$$(printf '%s' "$$RAW" | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' | tr -d '\r')`,
     `&& DIGEST=$$(echo "$$CLEAN" | grep -oE 'sha256:[a-f0-9]+' | head -1)`,
     `&& if [ -z "$$DIGEST" ]; then echo "ERROR: empty digest for ${img.name} — raw output was: $$RAW" >&2; exit 1; fi`,
     `&& buildkite-agent meta-data set "digest:${img.versionKey}" "$$DIGEST"`,

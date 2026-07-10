@@ -37,7 +37,7 @@ import {
 
 const args = Bun.argv.slice(2);
 const countArg = args.indexOf("--count");
-const count = countArg >= 0 ? Number(args[countArg + 1] ?? "1") : 1;
+const count = countArg === -1 ? 1 : Number(args[countArg + 1] ?? "1");
 if (!Number.isFinite(count) || count < 1) {
   console.error("--count must be a positive integer");
   process.exit(1);
@@ -89,30 +89,28 @@ const tracer = trace.getTracer(SERVICE_NAME);
 const otelLogger = logsAPI.getLogger(SERVICE_NAME);
 
 for (let i = 0; i < count; i += 1) {
-  await tracer.startActiveSpan(
-    `local-stack.test-span-${i + 1}`,
-    async (span) => {
-      const traceId = span.spanContext().traceId;
-      const spanId = span.spanContext().spanId;
-      console.log(
-        `emitting span ${i + 1}/${count} traceId=${traceId} spanId=${spanId}`,
-      );
-      otelLogger.emit({
-        severityNumber: SeverityNumber.INFO,
-        severityText: "info",
-        body: `hello from span ${i + 1}`,
-        attributes: { iteration: i + 1, test: "local-stack" },
-      });
-      otelLogger.emit({
-        severityNumber: SeverityNumber.WARN,
-        severityText: "warn",
-        body: `mid-span checkpoint ${i + 1}`,
-        attributes: { iteration: i + 1, checkpoint: true },
-      });
-      span.setStatus({ code: SpanStatusCode.OK });
-      span.end();
-    },
-  );
+  const iteration = String(i + 1);
+  tracer.startActiveSpan(`local-stack.test-span-${iteration}`, (span) => {
+    const traceId = span.spanContext().traceId;
+    const spanId = span.spanContext().spanId;
+    console.log(
+      `emitting span ${iteration}/${String(count)} traceId=${traceId} spanId=${spanId}`,
+    );
+    otelLogger.emit({
+      severityNumber: SeverityNumber.INFO,
+      severityText: "info",
+      body: `hello from span ${iteration}`,
+      attributes: { iteration: i + 1, test: "local-stack" },
+    });
+    otelLogger.emit({
+      severityNumber: SeverityNumber.WARN,
+      severityText: "warn",
+      body: `mid-span checkpoint ${iteration}`,
+      attributes: { iteration: i + 1, checkpoint: true },
+    });
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
+  });
 }
 
 await spanProcessor.forceFlush();

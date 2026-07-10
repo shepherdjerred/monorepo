@@ -41,47 +41,74 @@
  *   --all              Sweep every `packages/<X>/bun.lock`. Debug / nightly.
  */
 
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { access } from "node:fs/promises";
+import path from "node:path";
 import { execSync } from "node:child_process";
 import { Glob } from "bun";
+import { z } from "zod";
 
 const PACKAGES_DIR = "packages";
 
-interface Args {
+async function pathExists(target: string): Promise<boolean> {
+  try {
+    await access(target);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+type Args = {
   mode: "seeds" | "packages" | "base" | "all";
   packages: string[];
   base: string;
-}
+};
 
 function parseArgs(argv: string[]): Args {
   const args: Args = { mode: "all", packages: [], base: "origin/main" };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === "--seeds") {
-      const list = argv[++i] ?? "";
-      args.packages = list
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
-      args.mode = "seeds";
-    } else if (a === "--packages") {
-      const list = argv[++i] ?? "";
-      args.packages = list
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
-      args.mode = "packages";
-    } else if (a === "--base") {
-      args.base = argv[++i] ?? "origin/main";
-      args.mode = "base";
-    } else if (a === "--all") {
-      args.mode = "all";
-    } else if (a === "--help" || a === "-h") {
-      console.log(
-        "Usage: bun scripts/check-bun-lock-drift.ts [--seeds a,b,c | --packages a,b,c | --base <ref> | --all]",
-      );
-      process.exit(0);
+    if (a === undefined) continue;
+    switch (a) {
+      case "--seeds": {
+        const list = argv[++i] ?? "";
+        args.packages = list
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0);
+        args.mode = "seeds";
+
+        break;
+      }
+      case "--packages": {
+        const list = argv[++i] ?? "";
+        args.packages = list
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0);
+        args.mode = "packages";
+
+        break;
+      }
+      case "--base": {
+        args.base = argv[++i] ?? "origin/main";
+        args.mode = "base";
+
+        break;
+      }
+      case "--all": {
+        args.mode = "all";
+
+        break;
+      }
+      case "--help":
+      case "-h": {
+        console.log(
+          "Usage: bun scripts/check-bun-lock-drift.ts [--seeds a,b,c | --packages a,b,c | --base <ref> | --all]",
+        );
+        process.exit(0);
+      }
+      // No default
     }
   }
   return args;
@@ -90,18 +117,24 @@ function parseArgs(argv: string[]): Args {
 async function listPackagesWithLock(): Promise<string[]> {
   const glob = new Glob(`${PACKAGES_DIR}/*/bun.lock`);
   const out: string[] = [];
-  for await (const path of glob.scan({ dot: false })) {
-    const pkg = path.split("/")[1];
+  for await (const lockPath of glob.scan({ dot: false })) {
+    const pkg = lockPath.split("/")[1];
     if (pkg !== undefined) out.push(pkg);
   }
   return out.sort();
 }
 
-interface PartialManifest {
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-  workspaces?: string[] | { packages?: string[] };
-}
+const PartialManifestSchema = z.object({
+  dependencies: z.record(z.string(), z.string()).optional(),
+  devDependencies: z.record(z.string(), z.string()).optional(),
+  workspaces: z
+    .union([
+      z.array(z.string()),
+      z.object({ packages: z.array(z.string()).optional() }),
+    ])
+    .optional(),
+});
+type PartialManifest = z.infer<typeof PartialManifestSchema>;
 
 function collectFileDeps(manifest: PartialManifest, into: Set<string>): void {
   const all: Record<string, string> = {
@@ -109,7 +142,6 @@ function collectFileDeps(manifest: PartialManifest, into: Set<string>): void {
     ...manifest.devDependencies,
   };
   for (const [name, spec] of Object.entries(all)) {
-    if (typeof spec !== "string") continue;
     if (!spec.startsWith("file:") && !spec.startsWith("workspace:")) continue;
     // `@scope/pkg` → `pkg` (the workspace-dir name); unscoped names pass through.
     const dir = name.startsWith("@") ? (name.split("/")[1] ?? name) : name;
@@ -141,11 +173,11 @@ async function readWorkspaceDeps(
   for (const pkg of packages) {
     const aggregated = new Set<string>();
     const topPath = `${PACKAGES_DIR}/${pkg}/package.json`;
-    if (!existsSync(topPath)) {
+    if (!(await pathExists(topPath))) {
       deps.set(pkg, aggregated);
       continue;
     }
-    const top = (await Bun.file(topPath).json()) as PartialManifest;
+    const top = PartialManifestSchema.parse(await Bun.file(topPath).json());
     collectFileDeps(top, aggregated);
     for (const wsPath of workspacePaths(top)) {
       // `workspaces` entries can be glob patterns (e.g. `packages/*`). Expand
@@ -153,7 +185,7 @@ async function readWorkspaceDeps(
       // `file:` deps are attributed to the top-level package.
       const glob = new Glob(`${PACKAGES_DIR}/${pkg}/${wsPath}/package.json`);
       for await (const subPath of glob.scan({ dot: false })) {
-        const sub = (await Bun.file(subPath).json()) as PartialManifest;
+        const sub = PartialManifestSchema.parse(await Bun.file(subPath).json());
         collectFileDeps(sub, aggregated);
       }
     }
@@ -201,25 +233,25 @@ function reverseClosure(
 
 function diffTouchedPackages(base: string): Set<string> {
   const out = execSync(`git diff --name-only ${base}...HEAD`, {
-    encoding: "utf-8",
+    encoding: "utf8",
   });
   const touched = new Set<string>();
   for (const raw of out.split("\n")) {
     const line = raw.trim();
-    const match = /^packages\/([^/]+)\/(package\.json|bun\.lock)$/.exec(line);
-    if (match && match[1] !== undefined) touched.add(match[1]);
+    const match = /^packages\/([^/]+)\/(?:package\.json|bun\.lock)$/.exec(line);
+    if (match?.[1] !== undefined) touched.add(match[1]);
   }
   return touched;
 }
 
-interface Violation {
+type Violation = {
   pkg: string;
   output: string;
-}
+};
 
 async function dryRunPackage(pkg: string): Promise<Violation | null> {
-  const cwd = resolve(`${PACKAGES_DIR}/${pkg}`);
-  if (!existsSync(`${cwd}/bun.lock`)) return null;
+  const cwd = path.resolve(`${PACKAGES_DIR}/${pkg}`);
+  if (!(await pathExists(`${cwd}/bun.lock`))) return null;
   const proc = Bun.spawn(["bun", "install", "--frozen-lockfile", "--dry-run"], {
     cwd,
     stdout: "pipe",
@@ -239,37 +271,48 @@ async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
 
   let toCheck: string[];
-  if (args.mode === "all") {
-    toCheck = await listPackagesWithLock();
-  } else if (args.mode === "packages") {
-    toCheck = args.packages;
-  } else if (args.mode === "seeds") {
-    if (args.packages.length === 0) {
-      console.log("No seed packages provided; nothing to check.");
-      return;
+  switch (args.mode) {
+    case "all": {
+      toCheck = await listPackagesWithLock();
+
+      break;
     }
-    const all = await listPackagesWithLock();
-    const deps = await readWorkspaceDeps(all);
-    const closure = reverseClosure(new Set(args.packages), deps);
-    toCheck = [...closure].sort();
-    console.error(
-      `Seeds: ${args.packages.slice().sort().join(", ")} → closure (${String(toCheck.length)}): ${toCheck.join(", ")}`,
-    );
-  } else {
-    const all = await listPackagesWithLock();
-    const seeds = diffTouchedPackages(args.base);
-    if (seeds.size === 0) {
-      console.log(
-        `No packages/*/{package.json,bun.lock} changes against ${args.base}.`,
+    case "packages": {
+      toCheck = args.packages;
+
+      break;
+    }
+    case "seeds": {
+      if (args.packages.length === 0) {
+        console.log("No seed packages provided; nothing to check.");
+        return;
+      }
+      const all = await listPackagesWithLock();
+      const deps = await readWorkspaceDeps(all);
+      const closure = reverseClosure(new Set(args.packages), deps);
+      toCheck = [...closure].sort();
+      console.error(
+        `Seeds: ${[...args.packages].sort().join(", ")} → closure (${String(toCheck.length)}): ${toCheck.join(", ")}`,
       );
-      return;
+
+      break;
     }
-    const deps = await readWorkspaceDeps(all);
-    const closure = reverseClosure(seeds, deps);
-    toCheck = [...closure].sort();
-    console.error(
-      `Touched: ${[...seeds].sort().join(", ")} → closure (${String(toCheck.length)}): ${toCheck.join(", ")}`,
-    );
+    case "base": {
+      const all = await listPackagesWithLock();
+      const seeds = diffTouchedPackages(args.base);
+      if (seeds.size === 0) {
+        console.log(
+          `No packages/*/{package.json,bun.lock} changes against ${args.base}.`,
+        );
+        return;
+      }
+      const deps = await readWorkspaceDeps(all);
+      const closure = reverseClosure(seeds, deps);
+      toCheck = [...closure].sort();
+      console.error(
+        `Touched: ${[...seeds].sort().join(", ")} → closure (${String(toCheck.length)}): ${toCheck.join(", ")}`,
+      );
+    }
   }
 
   if (toCheck.length === 0) {
@@ -277,8 +320,8 @@ async function main(): Promise<void> {
     return;
   }
 
-  const results = await Promise.all(toCheck.map(dryRunPackage));
-  const violations = results.filter((v): v is Violation => v !== null);
+  const results = await Promise.all(toCheck.map((pkg) => dryRunPackage(pkg)));
+  const violations = results.filter((v) => v !== null);
 
   if (violations.length > 0) {
     console.error(

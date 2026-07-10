@@ -4,7 +4,8 @@
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  * The ciAll wrapper in index.ts uses these to build the full CI pipeline.
  */
-import { dag, Container, Directory } from "@dagger.io/dagger";
+import type { Container, Directory } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
 
 import { BUN_IMAGE, ESLINT_CACHE, GOLANGCI_LINT_VERSION } from "./constants";
 
@@ -16,26 +17,21 @@ import { formatSummary, formatFailureDetails } from "./ci-format";
 
 import type { CheckResult } from "./ci-format";
 
-export type { CheckResult };
-
-// Re-export for external use
-export { formatSummary, formatFailureDetails };
-
 /** Run a check and capture the full error on failure. */
-export function check(
+export async function check(
   label: string,
   container: Container,
 ): Promise<CheckResult> {
-  return container
-    .stdout()
-    .then((): CheckResult => ({ label, status: "PASS" }))
-    .catch(
-      (e: Error): CheckResult => ({
-        label,
-        status: "FAIL",
-        error: e.message,
-      }),
-    );
+  try {
+    await container.stdout();
+    return { label, status: "PASS" };
+  } catch (error: unknown) {
+    return {
+      label,
+      status: "FAIL",
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -145,7 +141,7 @@ export async function ciAllHelper(source: Directory): Promise<string> {
   if (failures.length > 0) {
     const details = formatFailureDetails(failures);
     throw new Error(
-      `${failures.length} check(s) failed:\n\n${summary}\n\n${details}`,
+      `${String(failures.length)} check(s) failed:\n\n${summary}\n\n${details}`,
     );
   }
 

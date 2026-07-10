@@ -7,14 +7,8 @@
  * All implementation logic lives in helper files; this file contains only
  * the @object() class with thin @func() wrappers (Dagger TypeScript SDK constraint).
  */
-import {
-  Container,
-  Directory,
-  File,
-  Secret,
-  object,
-  func,
-} from "@dagger.io/dagger";
+import type { Container, Directory, File, Secret } from "@dagger.io/dagger";
+import { object, func } from "@dagger.io/dagger";
 
 import { mavenBuildHelper, mavenTestHelper, mavenCoverageHelper } from "./java";
 
@@ -147,6 +141,7 @@ import {
   tasksForObsidianIosNativeDepsHelper,
   ruffCheckHelper,
   pyrightCheckHelper,
+  eslintAutomationHelper,
   qualityBundleHelper,
   softFailBundleHelper,
 } from "./quality";
@@ -431,10 +426,10 @@ export class Monorepo {
     pkg: string,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
-    usePrisma: boolean = false,
-    installEditorClis: boolean = false,
+    version = "dev",
+    gitSha = "unknown",
+    usePrisma = false,
+    installEditorClis = false,
   ): Container {
     return buildImageHelper(
       pkgDir,
@@ -458,10 +453,10 @@ export class Monorepo {
     registryPassword: Secret,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
-    usePrisma: boolean = false,
-    installEditorClis: boolean = false,
+    version = "dev",
+    gitSha = "unknown",
+    usePrisma = false,
+    installEditorClis = false,
   ): Promise<string> {
     return pushImageHelper(
       pkgDir,
@@ -484,19 +479,13 @@ export class Monorepo {
 
   /** Build the caddy-s3proxy image (custom Caddy build with S3 proxy plugin) */
   @func()
-  buildCaddyS3ProxyImage(
-    version: string = "dev",
-    gitSha: string = "unknown",
-  ): Container {
+  buildCaddyS3ProxyImage(version = "dev", gitSha = "unknown"): Container {
     return buildCaddyS3ProxyImageHelper(version, gitSha);
   }
 
   /** Build the obsidian-headless image (Bun + obsidian CLI) */
   @func()
-  buildObsidianHeadlessImage(
-    version: string = "dev",
-    gitSha: string = "unknown",
-  ): Container {
+  buildObsidianHeadlessImage(version = "dev", gitSha = "unknown"): Container {
     return buildObsidianHeadlessImageHelper(version, gitSha);
   }
 
@@ -506,8 +495,8 @@ export class Monorepo {
     tags: string[],
     registryUsername: string,
     registryPassword: Secret,
-    version: string = "dev",
-    gitSha: string = "unknown",
+    version = "dev",
+    gitSha = "unknown",
   ): Promise<string> {
     return pushCaddyS3ProxyImageHelper(
       tags,
@@ -524,8 +513,8 @@ export class Monorepo {
     tags: string[],
     registryUsername: string,
     registryPassword: Secret,
-    version: string = "dev",
-    gitSha: string = "unknown",
+    version = "dev",
+    gitSha = "unknown",
   ): Promise<string> {
     return pushObsidianHeadlessImageHelper(
       tags,
@@ -538,10 +527,7 @@ export class Monorepo {
 
   /** Build the custom mcp-gateway image (tbxark/mcp-proxy + prebuilt edstem-mcp) */
   @func()
-  buildMcpGatewayImage(
-    version: string = "dev",
-    gitSha: string = "unknown",
-  ): Container {
+  buildMcpGatewayImage(version = "dev", gitSha = "unknown"): Container {
     return buildMcpGatewayImageHelper(version, gitSha);
   }
 
@@ -551,8 +537,8 @@ export class Monorepo {
     tags: string[],
     registryUsername: string,
     registryPassword: Secret,
-    version: string = "dev",
-    gitSha: string = "unknown",
+    version = "dev",
+    gitSha = "unknown",
   ): Promise<string> {
     return pushMcpGatewayImageHelper(
       tags,
@@ -565,10 +551,7 @@ export class Monorepo {
 
   /** Build the redlib image from upstream's glibc Dockerfile.ubuntu at a pinned commit. */
   @func()
-  buildRedlibImage(
-    version: string = "dev",
-    gitSha: string = "unknown",
-  ): Container {
+  buildRedlibImage(version = "dev", gitSha = "unknown"): Container {
     return buildRedlibImageHelper(version, gitSha);
   }
 
@@ -578,8 +561,8 @@ export class Monorepo {
     tags: string[],
     registryUsername: string,
     registryPassword: Secret,
-    version: string = "dev",
-    gitSha: string = "unknown",
+    version = "dev",
+    gitSha = "unknown",
   ): Promise<string> {
     return pushRedlibImageHelper(
       tags,
@@ -600,8 +583,8 @@ export class Monorepo {
     pkgDir: Directory,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
+    version = "dev",
+    gitSha = "unknown",
   ): Container {
     return buildScoutImageHelper(pkgDir, depNames, depDirs, version, gitSha);
   }
@@ -615,8 +598,8 @@ export class Monorepo {
     registryPassword: Secret,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
+    version = "dev",
+    gitSha = "unknown",
   ): Promise<string> {
     return pushScoutImageHelper(
       pkgDir,
@@ -636,8 +619,8 @@ export class Monorepo {
     pkgDir: Directory,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
+    version = "dev",
+    gitSha = "unknown",
   ): Container {
     return buildDiscordPlaysPokemonImageHelper(
       pkgDir,
@@ -657,8 +640,8 @@ export class Monorepo {
     registryPassword: Secret,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
+    version = "dev",
+    gitSha = "unknown",
   ): Promise<string> {
     return pushDiscordPlaysPokemonImageHelper(
       pkgDir,
@@ -678,8 +661,8 @@ export class Monorepo {
     pkgDir: Directory,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
+    version = "dev",
+    gitSha = "unknown",
   ): Container {
     return buildDiscordPlaysMarioKartImageHelper(
       pkgDir,
@@ -699,8 +682,8 @@ export class Monorepo {
     registryPassword: Secret,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
+    version = "dev",
+    gitSha = "unknown",
   ): Promise<string> {
     return pushDiscordPlaysMarioKartImageHelper(
       pkgDir,
@@ -724,8 +707,8 @@ export class Monorepo {
     pkgDir: Directory,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
+    version = "dev",
+    gitSha = "unknown",
   ): Container {
     return buildTemporalWorkerImageHelper(
       pkgDir,
@@ -745,8 +728,8 @@ export class Monorepo {
     registryPassword: Secret,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
+    version = "dev",
+    gitSha = "unknown",
   ): Promise<string> {
     return pushTemporalWorkerImageHelper(
       pkgDir,
@@ -770,8 +753,8 @@ export class Monorepo {
     pkgDir: Directory,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
+    version = "dev",
+    gitSha = "unknown",
   ): Container {
     return buildTrmnlDashboardImageHelper(
       pkgDir,
@@ -791,8 +774,8 @@ export class Monorepo {
     registryPassword: Secret,
     depNames: string[] = [],
     depDirs: Directory[] = [],
-    version: string = "dev",
-    gitSha: string = "unknown",
+    version = "dev",
+    gitSha = "unknown",
   ): Promise<string> {
     return pushTrmnlDashboardImageHelper(
       pkgDir,
@@ -1135,19 +1118,21 @@ export class Monorepo {
       stack,
       awsAccessKeyId,
       awsSecretAccessKey,
-      githubToken,
-      cloudflareAccountId,
-      cloudflareApiToken,
-      tailscaleOauthClientId,
-      tailscaleOauthClientSecret,
-      buildkiteApiToken,
-      radarrApiKey,
-      sonarrApiKey,
-      prowlarrApiKey,
-      qbittorrentPassword,
-      privatehdPassword,
-      privatehdPid,
-      pagerdutyToken,
+      {
+        githubToken,
+        cloudflareAccountId,
+        cloudflareApiToken,
+        tailscaleOauthClientId,
+        tailscaleOauthClientSecret,
+        buildkiteApiToken,
+        radarrApiKey,
+        sonarrApiKey,
+        prowlarrApiKey,
+        qbittorrentPassword,
+        privatehdPassword,
+        privatehdPid,
+        pagerdutyToken,
+      },
       dryrun,
     ).stdout();
   }
@@ -1179,19 +1164,21 @@ export class Monorepo {
       stack,
       awsAccessKeyId,
       awsSecretAccessKey,
-      githubToken,
-      cloudflareAccountId,
-      cloudflareApiToken,
-      tailscaleOauthClientId,
-      tailscaleOauthClientSecret,
-      buildkiteApiToken,
-      radarrApiKey,
-      sonarrApiKey,
-      prowlarrApiKey,
-      qbittorrentPassword,
-      privatehdPassword,
-      privatehdPid,
-      pagerdutyToken,
+      {
+        githubToken,
+        cloudflareAccountId,
+        cloudflareApiToken,
+        tailscaleOauthClientId,
+        tailscaleOauthClientSecret,
+        buildkiteApiToken,
+        radarrApiKey,
+        sonarrApiKey,
+        prowlarrApiKey,
+        qbittorrentPassword,
+        privatehdPassword,
+        privatehdPid,
+        pagerdutyToken,
+      },
       dryrun,
     ).stdout();
   }
@@ -1299,8 +1286,8 @@ export class Monorepo {
     depDirs: Directory[] = [],
     dryrun = false,
     tsconfig: File | null = null,
-    devSuffix: string = "",
-    pkgPath: string = "",
+    devSuffix = "",
+    pkgPath = "",
   ): Promise<string> {
     return publishNpmHelper(
       pkgDir,
@@ -1328,7 +1315,7 @@ export class Monorepo {
     pkgPaths: string[],
     npmToken: Secret,
     tsconfig: File | null = null,
-    devSuffix: string = "",
+    devSuffix = "",
     dryrun = false,
   ): Promise<string> {
     return npmPublishAllHelper(
@@ -1353,7 +1340,7 @@ export class Monorepo {
     target: string,
     awsAccessKeyId: Secret,
     awsSecretAccessKey: Secret,
-    cloudflareAccountId: string = "",
+    cloudflareAccountId = "",
     depNames: string[] = [],
     depDirs: Directory[] = [],
     buildEnvNames: string[] = [],
@@ -1411,7 +1398,7 @@ export class Monorepo {
   async argoCdSync(
     appName: string,
     argoCdToken: Secret,
-    serverUrl: string = "https://argocd.sjer.red",
+    serverUrl = "https://argocd.sjer.red",
     dryrun = false,
   ): Promise<string> {
     return argoCdSyncHelper(appName, argoCdToken, serverUrl, dryrun).stdout();
@@ -1422,8 +1409,8 @@ export class Monorepo {
   async argoCdHealthWait(
     appName: string,
     argoCdToken: Secret,
-    timeoutSeconds: number = 300,
-    serverUrl: string = "https://argocd.sjer.red",
+    timeoutSeconds = 300,
+    serverUrl = "https://argocd.sjer.red",
     dryrun = false,
   ): Promise<string> {
     return argoCdHealthWaitHelper(
@@ -1445,8 +1432,8 @@ export class Monorepo {
   async argoCdSyncAndWait(
     appName: string,
     argoCdToken: Secret,
-    timeoutSeconds: number = 300,
-    serverUrl: string = "https://argocd.sjer.red",
+    timeoutSeconds = 300,
+    serverUrl = "https://argocd.sjer.red",
     dryrun = false,
   ): Promise<string> {
     return argoCdSyncAndWaitHelper(
@@ -1526,7 +1513,7 @@ export class Monorepo {
       dryrun,
     ).stdout();
     const lines = publishOutput.trim().split("\n");
-    const newVersion = lines[lines.length - 1]?.trim() ?? "";
+    const newVersion = lines.at(-1)?.trim() ?? "";
     if (!/^\d+\.\d+\.\d+$/.test(newVersion)) {
       throw new Error(
         `cooklangPublish did not emit a semver version on its last line: got ${JSON.stringify(newVersion)}`,
@@ -1541,11 +1528,11 @@ export class Monorepo {
           manifest,
           "cooklang manifest.json missing minAppVersion",
         );
-        const minAppVersion = record["minAppVersion"];
-        if (typeof minAppVersion !== "string") {
-          throw new Error("cooklang manifest.json missing minAppVersion");
+        const parsedMinAppVersion = record.minAppVersion;
+        if (typeof parsedMinAppVersion !== "string") {
+          throw new TypeError("cooklang manifest.json missing minAppVersion");
         }
-        return minAppVersion;
+        return parsedMinAppVersion;
       });
     const commitBackOutput = await cooklangVersionCommitBackHelper(
       source,
@@ -1708,6 +1695,12 @@ export class Monorepo {
     return scoutDesktopRustHelper(desktopDir).stdout();
   }
 
+  /** ESLint over non-package automation code: scripts/, scripts/ci/, .dagger/. */
+  @func()
+  async eslintAutomation(source: Directory): Promise<string> {
+    return eslintAutomationHelper(source).stdout();
+  }
+
   /** Compliance check: every package has the required scripts in its package.json. */
   @func()
   async complianceCheck(source: Directory): Promise<string> {
@@ -1865,9 +1858,9 @@ export class Monorepo {
   @func()
   async smokeTest(
     image: Container,
-    port: number = 3000,
-    healthPath: string = "/",
-    timeoutSeconds: number = 30,
+    port = 3000,
+    healthPath = "/",
+    timeoutSeconds = 30,
   ): Promise<string> {
     return smokeTestHelper(image, port, healthPath, timeoutSeconds).stdout();
   }
