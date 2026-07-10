@@ -1058,7 +1058,7 @@ export type ArgocdHelmValuesController = {
   /**
    * Application controller metrics configuration
    *
-   * @default {...} (6 keys)
+   * @default {...} (5 keys)
    */
   metrics?: ArgocdHelmValuesControllerMetrics;
   /**
@@ -1402,12 +1402,6 @@ export type ArgocdHelmValuesControllerMetrics = {
    */
   enabled?: boolean;
   /**
-   * Prometheus ServiceMonitor scrapeTimeout. If empty, Prometheus uses the global scrape timeout unless it is less than the target's scrape interval value in which the latter is used.
-   *
-   * @default ""
-   */
-  scrapeTimeout?: string;
-  /**
    * @default {"enabled":false,"labels":[]}
    */
   applicationLabels?: ArgocdHelmValuesControllerMetricsApplicationLabels;
@@ -1416,7 +1410,7 @@ export type ArgocdHelmValuesControllerMetrics = {
    */
   service?: ArgocdHelmValuesControllerMetricsService;
   /**
-   * @default {...} (11 keys)
+   * @default {...} (12 keys)
    */
   serviceMonitor?: ArgocdHelmValuesControllerMetricsServiceMonitor;
   /**
@@ -1506,6 +1500,12 @@ export type ArgocdHelmValuesControllerMetricsServiceMonitor = {
    * @default "30s"
    */
   interval?: string;
+  /**
+   * Prometheus ServiceMonitor scrapeTimeout. If empty, Prometheus uses the global scrape timeout unless it is less than the target's scrape interval value in which the latter is used.
+   *
+   * @default ""
+   */
+  scrapeTimeout?: string;
   /**
    * When true, honorLabels preserves the metric’s labels when they collide with the target’s labels.
    *
@@ -9233,7 +9233,6 @@ export type ArgocdHelmParameters = {
   "controller.serviceAccount.name"?: string;
   "controller.serviceAccount.automountServiceAccountToken"?: string;
   "controller.metrics.enabled"?: string;
-  "controller.metrics.scrapeTimeout"?: string;
   "controller.metrics.applicationLabels.enabled"?: string;
   "controller.metrics.applicationLabels.labels"?: string;
   "controller.metrics.service.type"?: string;
@@ -9242,6 +9241,7 @@ export type ArgocdHelmParameters = {
   "controller.metrics.service.portName"?: string;
   "controller.metrics.serviceMonitor.enabled"?: string;
   "controller.metrics.serviceMonitor.interval"?: string;
+  "controller.metrics.serviceMonitor.scrapeTimeout"?: string;
   "controller.metrics.serviceMonitor.honorLabels"?: string;
   "controller.metrics.serviceMonitor.relabelings"?: string;
   "controller.metrics.serviceMonitor.metricRelabelings"?: string;
