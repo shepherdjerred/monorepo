@@ -23,6 +23,9 @@ import {
   TRIVY_IMAGE,
   SEMGREP_IMAGE,
   SHELLCHECK_IMAGE,
+  PYTHON_UV_IMAGE,
+  RUFF_VERSION,
+  PYRIGHT_VERSION,
   BUN_CACHE,
   SOURCE_EXCLUDES,
 } from "./constants";
@@ -104,6 +107,58 @@ export function shellcheckHelper(source: Directory): Container {
  */
 export function qualityRatchetHelper(source: Directory): Container {
   return bunQualityBase(source).withExec(["bun", "scripts/quality-ratchet.ts"]);
+}
+
+/**
+ * Shared uv-flavored base for Python checks. The astral-sh/uv image ships
+ * uv + python 3.12; the uv cache volume keeps tool/venv installs warm.
+ */
+function pythonQualityBase(source: Directory): Container {
+  return dag
+    .container()
+    .from(PYTHON_UV_IMAGE)
+    .withMountedCache("/root/.cache/uv", dag.cacheVolume("uv-cache"))
+    .withWorkdir("/repo")
+    .withDirectory("/repo", source, { exclude: SOURCE_EXCLUDES });
+}
+
+/**
+ * Ruff lint over every tracked .py file (config: root ruff.toml). Version
+ * pinned so local (`uvx ruff@…`) and CI agree.
+ */
+export function ruffCheckHelper(source: Directory): Container {
+  return pythonQualityBase(source).withExec([
+    "uvx",
+    `ruff@${RUFF_VERSION}`,
+    "check",
+    ".",
+  ]);
+}
+
+/**
+ * Pyright strict over every tracked .py file (config: root
+ * pyrightconfig.json). Builds the shared dev venv from
+ * scripts/python-dev-requirements.txt first so third-party imports resolve.
+ * The PyPI pyright package bundles node (nodejs-wheel-binaries) — no
+ * runtime download.
+ */
+export function pyrightCheckHelper(source: Directory): Container {
+  return pythonQualityBase(source)
+    // pyright's bundled node (nodejs-wheel-binaries) links libatomic,
+    // which the trixie-slim base doesn't ship.
+    .withExec(["apt-get", "update"])
+    .withExec(["apt-get", "install", "-y", "--no-install-recommends", "libatomic1"])
+    .withExec(["uv", "venv", ".venv"])
+    .withExec([
+      "uv",
+      "pip",
+      "install",
+      "-r",
+      "scripts/python-dev-requirements.txt",
+      "--python",
+      ".venv/bin/python",
+    ])
+    .withExec(["uvx", `pyright@${PYRIGHT_VERSION}`]);
 }
 
 /**
@@ -603,5 +658,7 @@ export async function qualityBundleHelper(source: Directory): Promise<string> {
     { name: "lockfile-check", run: () => lockfileCheckHelper(source).stdout() },
     { name: "prettier", run: () => prettierHelper(source).stdout() },
     { name: "markdownlint", run: () => markdownlintHelper(source).stdout() },
+    { name: "ruff", run: () => ruffCheckHelper(source).stdout() },
+    { name: "pyright", run: () => pyrightCheckHelper(source).stdout() },
   ]);
 }

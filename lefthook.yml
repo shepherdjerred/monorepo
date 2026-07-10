@@ -209,6 +209,24 @@ pre-commit:
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
+                # --- Python ---
+                - name: ruff
+                  glob: "**/*.py"
+                  exclude:
+                    - "sandbox/**"
+                    - "**/node_modules/**"
+                    - "**/wasm-src/**"
+                  run: uvx ruff@0.15.21 check --fix {staged_files}
+                  stage_fixed: true
+
+                - name: pyright
+                  glob: "**/*.py"
+                  exclude:
+                    - "sandbox/**"
+                    - "**/node_modules/**"
+                    - "**/wasm-src/**"
+                  run: bash scripts/pyright-check.sh
+
                 # --- shellcheck ---
                 - name: shellcheck
                   glob: "**/*.sh"

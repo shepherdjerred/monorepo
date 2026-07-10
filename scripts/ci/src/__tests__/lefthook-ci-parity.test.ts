@@ -47,6 +47,8 @@ const JOB_TO_CI_STEP: Record<string, string> = {
   "migration-guard": "quality-bundle",
   "lockfile-check": "quality-bundle",
   shellcheck: "quality-bundle",
+  ruff: "quality-bundle",
+  pyright: "quality-bundle",
   "compliance-check": "quality-bundle",
   "quality-ratchet": "quality-bundle",
   "scout-test-template-check": "quality-bundle",

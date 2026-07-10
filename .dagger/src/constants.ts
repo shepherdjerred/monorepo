@@ -18,6 +18,13 @@ export const RUST_IMAGE =
 // renovate: datasource=docker depName=golang
 export const GO_IMAGE =
   "golang:1.26.4-bookworm@sha256:b305420a68d0f229d91eb3b3ed9e519fcf2cf5461da4bef997bf927e8c0bfd2b";
+// renovate: datasource=docker registryUrl=https://ghcr.io depName=astral-sh/uv
+export const PYTHON_UV_IMAGE =
+  "ghcr.io/astral-sh/uv:0.11.28-python3.12-trixie-slim@sha256:3137a0b606f65a74ee0245f43dae219b09e8af98fc37fef20841cbceef35a646";
+// renovate: datasource=pypi depName=ruff
+export const RUFF_VERSION = "0.15.21";
+// renovate: datasource=pypi depName=pyright
+export const PYRIGHT_VERSION = "1.1.411";
 // renovate: datasource=docker depName=mcr.microsoft.com/playwright
 export const PLAYWRIGHT_IMAGE =
   "mcr.microsoft.com/playwright:v1.61.1-noble@sha256:5b8f294aff9041b7191c34a4bab3ac270157a28774d4b0660e9743297b697e48";
@@ -203,6 +210,7 @@ export const SOURCE_EXCLUDES = [
   "**/.next",
   "**/.tsbuildinfo",
   "**/__pycache__",
+  "**/.venv",
   "**/.DS_Store",
   "**/archive",
   "**/practice",

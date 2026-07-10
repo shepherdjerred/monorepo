@@ -145,6 +145,8 @@ import {
   mergeConflictCheckHelper,
   largeFileCheckHelper,
   tasksForObsidianIosNativeDepsHelper,
+  ruffCheckHelper,
+  pyrightCheckHelper,
   qualityBundleHelper,
   softFailBundleHelper,
 } from "./quality";
@@ -1681,6 +1683,18 @@ export class Monorepo {
   @func()
   async qualityRatchet(source: Directory): Promise<string> {
     return qualityRatchetHelper(source).stdout();
+  }
+
+  /** Ruff lint over every tracked .py file (root ruff.toml). */
+  @func()
+  async ruffCheck(source: Directory): Promise<string> {
+    return ruffCheckHelper(source).stdout();
+  }
+
+  /** Pyright strict over every tracked .py file (root pyrightconfig.json). */
+  @func()
+  async pyrightCheck(source: Directory): Promise<string> {
+    return pyrightCheckHelper(source).stdout();
   }
 
   /** Compliance check: every package has the required scripts in its package.json. */
