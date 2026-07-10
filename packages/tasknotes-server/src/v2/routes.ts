@@ -49,7 +49,28 @@ function errorStatus(error: unknown): 400 | 404 | 500 {
   // A malformed JSON request body (JSON.parse / c.req.json() throws a
   // SyntaxError) is a client error, not a server fault → 400, not 500.
   if (error instanceof SyntaxError) return 400;
+  // An Invalid Date reaching `.toISOString()` throws RangeError — a client
+  // input problem (a malformed date query param), not a server fault.
+  if (error instanceof RangeError) return 400;
   return 500;
+}
+
+const DateQueryParamSchema = z.iso.date();
+
+/** Validate a `YYYY-MM-DD` query param before it ever reaches `new Date(...)`. */
+function parseDateQueryParam(name: string, value: string): Date {
+  const result = DateQueryParamSchema.safeParse(value);
+  if (!result.success) {
+    throw new z.ZodError([
+      {
+        code: "custom",
+        path: [name],
+        message: `Invalid date "${value}" — expected YYYY-MM-DD`,
+        input: value,
+      },
+    ]);
+  }
+  return new Date(result.data);
 }
 
 function errorMessage(error: unknown): string {
@@ -306,73 +327,83 @@ export function v2Routes(deps: V2Dependencies): Hono {
 
   // Task-derived events only: due/scheduled dates plus recurring expansion
   // via the model's rrule engine. `sources` reports where events came from.
-  app.get("/api/calendars/events", (c) => {
-    const startParam = c.req.query("start");
-    const endParam = c.req.query("end");
-    const now = clock();
-    const start =
-      startParam === undefined ? startOfDay(now) : new Date(startParam);
-    const end =
-      endParam === undefined
-        ? addDays(startOfDay(now), 30)
-        : new Date(endParam);
+  app.get("/api/calendars/events", (c) =>
+    guard(c, () => {
+      const startParam = c.req.query("start");
+      const endParam = c.req.query("end");
+      const now = clock();
+      const start =
+        startParam === undefined
+          ? startOfDay(now)
+          : parseDateQueryParam("start", startParam);
+      const end =
+        endParam === undefined
+          ? addDays(startOfDay(now), 30)
+          : parseDateQueryParam("end", endParam);
 
-    const events: {
-      id: string;
-      title: string;
-      start: string;
-      allDay: boolean;
-      taskPath: string;
-    }[] = [];
-    for (const task of repo.list()) {
-      if (task.recurrence !== undefined && task.recurrence.length > 0) {
-        for (const date of generateRecurringInstances(task, start, end)) {
-          const day = ymd(date);
-          events.push({
-            id: `${task.path}:${day}`,
-            title: task.title,
-            start: day,
-            allDay: true,
-            taskPath: task.path,
-          });
+      const events: {
+        id: string;
+        title: string;
+        start: string;
+        allDay: boolean;
+        taskPath: string;
+      }[] = [];
+      for (const task of repo.list()) {
+        if (task.recurrence !== undefined && task.recurrence.length > 0) {
+          for (const date of generateRecurringInstances(task, start, end)) {
+            const day = ymd(date);
+            events.push({
+              id: `${task.path}:${day}`,
+              title: task.title,
+              start: day,
+              allDay: true,
+              taskPath: task.path,
+            });
+          }
+          continue;
         }
-        continue;
+        const anchor = task.due ?? task.scheduled;
+        if (anchor === undefined) continue;
+        const day = anchor.slice(0, 10);
+        if (day < ymd(start) || day > ymd(end)) continue;
+        events.push({
+          id: `${task.path}:${day}`,
+          title: task.title,
+          start: day,
+          allDay: true,
+          taskPath: task.path,
+        });
       }
-      const anchor = task.due ?? task.scheduled;
-      if (anchor === undefined) continue;
-      const day = anchor.slice(0, 10);
-      if (day < ymd(start) || day > ymd(end)) continue;
-      events.push({
-        id: `${task.path}:${day}`,
-        title: task.title,
-        start: day,
-        allDay: true,
-        taskPath: task.path,
+      return c.json({
+        events,
+        total: events.length,
+        sources: { tasks: events.length },
       });
-    }
-    return c.json({
-      events,
-      total: events.length,
-      sources: { tasks: events.length },
-    });
-  });
+    }),
+  );
 
-  app.get("/api/time/summary", (c) => {
-    const from = c.req.query("from");
-    const to = c.req.query("to");
-    return c.json(
-      computeTimeSummary(
-        repo.list(),
-        {
-          period: c.req.query("period") ?? "today",
-          fromDate: from === undefined ? undefined : new Date(from),
-          toDate: to === undefined ? undefined : new Date(to),
-        },
-        config,
-        clock(),
-      ),
-    );
-  });
+  app.get("/api/time/summary", (c) =>
+    guard(c, () => {
+      const from = c.req.query("from");
+      const to = c.req.query("to");
+      return c.json(
+        computeTimeSummary(
+          repo.list(),
+          {
+            period: c.req.query("period") ?? "today",
+            fromDate:
+              from === undefined
+                ? undefined
+                : parseDateQueryParam("from", from),
+            toDate:
+              to === undefined ? undefined : parseDateQueryParam("to", to),
+          },
+          config,
+          clock(),
+        ),
+      );
+    }),
+  );
 
   return app;
 }

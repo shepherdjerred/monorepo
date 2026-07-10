@@ -171,7 +171,10 @@ export type TaskUpdateRequest = z.infer<typeof TaskUpdateRequestSchema>;
  * what makes the app's offline replay idempotent.
  */
 export const CompleteInstanceRequestSchema = z.object({
-  date: z.string().optional(),
+  // z.iso.date() rejects malformed dates (e.g. "not-a-date") at the schema
+  // boundary with a 400, instead of letting `new Date(...)` produce an
+  // Invalid Date that later throws RangeError out of `ymd(...).toISOString()`.
+  date: z.iso.date().optional(),
   completed: z.boolean().optional(),
 });
 

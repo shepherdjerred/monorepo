@@ -13,6 +13,7 @@ import {
   recurringCompletePlanToFrontmatterPatch,
   serializeMarkdownDocument,
   serializeTaskDocument,
+  taskInfoUpdatesToFrontmatterPatch,
 } from "tasknotes-types/v2";
 import type {
   TaskCreationRequest,
@@ -320,7 +321,13 @@ export class TaskRepository {
 
   /**
    * Start a tracking session (upstream: 400 if one is already active).
-   * The plan's timeEntries land in frontmatter via a normal update patch.
+   *
+   * Builds the patch from the SAME `fresh` read used for the guard check and
+   * writes it directly via applyPlanPatch (like completeInstance) instead of
+   * delegating to update(), which would take its own independent readFresh.
+   * Two concurrent starts each doing guard-check + write against their own
+   * fresh read let a later write silently clobber an earlier session; a
+   * single snapshot per call closes that window.
    */
   async startTime(id: string): Promise<TaskInfo> {
     const fresh = await this.readFresh(id);
@@ -331,10 +338,14 @@ export class TaskRepository {
       fresh.task,
       this.clock().toISOString(),
     );
-    return this.update(id, { timeEntries: plan.updatedTask.timeEntries ?? [] });
+    const patch = taskInfoUpdatesToFrontmatterPatch(
+      { timeEntries: plan.updatedTask.timeEntries ?? [] },
+      this.config.fieldMapping,
+    );
+    return this.applyPlanPatch(id, fresh, patch, {});
   }
 
-  /** Stop the active tracking session (upstream: 400 if none). */
+  /** Stop the active tracking session (upstream: 400 if none). Single-read, see startTime. */
   async stopTime(id: string): Promise<TaskInfo> {
     const fresh = await this.readFresh(id);
     const active = getActiveTimeEntry(fresh.task);
@@ -346,7 +357,11 @@ export class TaskRepository {
       active,
       this.clock().toISOString(),
     );
-    return this.update(id, { timeEntries: plan.updatedTask.timeEntries ?? [] });
+    const patch = taskInfoUpdatesToFrontmatterPatch(
+      { timeEntries: plan.updatedTask.timeEntries ?? [] },
+      this.config.fieldMapping,
+    );
+    return this.applyPlanPatch(id, fresh, patch, {});
   }
 
   /** True when `status` is a completed status under the user's workflow. */
