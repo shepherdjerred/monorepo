@@ -157,7 +157,7 @@ export function helmPackageHelper(
     "-c",
     `tgz=$(ls *.tgz)
 for attempt in 1 2 3; do
-  code=$(curl -s -o /tmp/push-response -w '%{http_code}' --connect-timeout 15 --max-time 120 -u "${chartMuseumUsername}:$CHARTMUSEUM_PASSWORD" --data-binary @"$tgz" https://chartmuseum.sjer.red/api/charts) || code="curl-exit-$?"
+  code=$(curl -sS -o /tmp/push-response -w '%{http_code}' --connect-timeout 15 --max-time 120 -u "${chartMuseumUsername}:$CHARTMUSEUM_PASSWORD" --data-binary @"$tgz" https://chartmuseum.sjer.red/api/charts) || code="curl-exit-$?"
   case "$code" in
     2*) exit 0 ;;
     409) echo "chart already exists (earlier attempt landed); treating as success"; cat /tmp/push-response; exit 0 ;;
