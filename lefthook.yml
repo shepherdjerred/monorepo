@@ -209,6 +209,25 @@ pre-commit:
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
+                # --- Automation code (non-package dirs) ---
+                - name: eslint-root-scripts
+                  root: "scripts/"
+                  glob: "scripts/*.ts"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-ci-scripts
+                  root: "scripts/ci/"
+                  glob: "scripts/ci/**/*.ts"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-dagger
+                  root: ".dagger/"
+                  glob: ".dagger/src/**/*.ts"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
                 # --- Python ---
                 - name: ruff
                   glob: "**/*.py"

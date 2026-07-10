@@ -23,6 +23,7 @@
   "ignores": [
     "sandbox/archive/**",
     "**/node_modules/**",
+    "**/.venv/**",
     "**/generated/**",
     "**/dist/**",
     "**/build/**",
