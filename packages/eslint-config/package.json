@@ -27,7 +27,7 @@
   ],
   "scripts": {
     "build": "tsc --outDir ./dist",
-    "lint": "true",
+    "lint": "bunx eslint --cache .",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "bun run build"

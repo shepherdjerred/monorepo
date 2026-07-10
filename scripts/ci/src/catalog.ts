@@ -475,6 +475,23 @@ export const SKIP_PACKAGES: Set<string> = new Set([
   "docs",
   "dotfiles",
   "fonts",
+  // Static placeholder site with no source; deploy is driven by its
+  // DEPLOY_SITES entry (buildCmd "true", syncs public/ as-is).
+  "glitter",
+]);
+
+/**
+ * Packages with no test suite: pkg-check runs lint + typecheck only
+ * (`--skip-test`). Prefer adding tests over adding entries here.
+ * Keep in sync with the test-script exemptions in scripts/compliance-check.sh.
+ */
+export const NO_TEST_PACKAGES: Set<string> = new Set([
+  "leetcode",
+  "cooklang-for-obsidian",
+  "cooklang-rich-preview",
+  "stocks-sjer-red",
+  "starlight-karma-bot",
+  "tasknotes-types",
 ]);
 
 /** Packages that need `bun run generate` before lint/typecheck/test (Prisma). */

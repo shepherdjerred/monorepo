@@ -9,6 +9,7 @@ import {
   SKIP_PACKAGES,
   PLAYWRIGHT_PACKAGES,
   NPM_BUILD_PACKAGES,
+  NO_TEST_PACKAGES,
   type ResourceTier,
 } from "../catalog.ts";
 import {
@@ -123,11 +124,13 @@ export function perPackageSteps(
       ? ` --include-astro-check --include-astro-build`
       : "";
     const buildFlag = NPM_BUILD_PACKAGES.has(pkg) ? ` --include-build` : "";
+    // NO_TEST_PACKAGES have no test suite; run lint + typecheck only.
+    const skipTestFlag = NO_TEST_PACKAGES.has(pkg) ? ` --skip-test` : "";
     steps.push(
       daggerCallStep(
         `:dagger_knife: pkg-check`,
         `pkg-check-${sk}`,
-        `${DAGGER_CALL} lint-typecheck-test ${pf}${helmFlag}${goFlag}${haFlags}${astroFlags}${buildFlag}`,
+        `${DAGGER_CALL} lint-typecheck-test ${pf}${helmFlag}${goFlag}${haFlags}${astroFlags}${buildFlag}${skipTestFlag}`,
         resources,
       ),
     );
