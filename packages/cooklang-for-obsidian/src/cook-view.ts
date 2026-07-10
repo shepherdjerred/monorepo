@@ -33,19 +33,19 @@ export class CookView extends TextFileView {
     });
   }
 
-  getViewType(): string {
+  override getViewType(): string {
     return VIEW_TYPE_COOK;
   }
 
-  getDisplayText(): string {
+  override getDisplayText(): string {
     return this.file?.basename ?? "Recipe";
   }
 
-  getIcon(): string {
+  override getIcon(): string {
     return "chef-hat";
   }
 
-  async onOpen(): Promise<void> {
+  override async onOpen(): Promise<void> {
     await super.onOpen();
 
     // Add toggle button to view header using Obsidian's addAction API
@@ -58,7 +58,7 @@ export class CookView extends TextFileView {
     this.updateVisibility();
   }
 
-  async onClose(): Promise<void> {
+  override async onClose(): Promise<void> {
     this.editor?.destroy();
     this.editor = null;
     await super.onClose();
@@ -170,19 +170,19 @@ export class CookView extends TextFileView {
     );
   }
 
-  getState(): Record<string, unknown> {
+  override getState(): Record<string, unknown> {
     const state = super.getState();
-    state.mode = this.isPreview ? "preview" : "source";
+    state["mode"] = this.isPreview ? "preview" : "source";
     return state;
   }
 
-  setState(
+  override setState(
     state: Record<string, unknown>,
     result: ViewStateResult,
   ): Promise<void> {
-    if (state.mode === "source") {
+    if (state["mode"] === "source") {
       this.isPreview = false;
-    } else if (state.mode === "preview") {
+    } else if (state["mode"] === "preview") {
       this.isPreview = true;
     }
     this.updateVisibility();

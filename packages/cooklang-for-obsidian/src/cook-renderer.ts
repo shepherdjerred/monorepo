@@ -23,6 +23,15 @@ export function renderRecipe(
   }
 }
 
+/** Read a metadata field, returning undefined for absent or empty values. */
+function field(
+  metadata: ParsedRecipe["metadata"],
+  key: string,
+): string | undefined {
+  const value = metadata[key];
+  return value !== undefined && value !== "" ? value : undefined;
+}
+
 function renderMetadata(container: HTMLElement, recipe: ParsedRecipe): void {
   const { metadata } = recipe;
   if (Object.keys(metadata).length === 0) return;
@@ -30,85 +39,87 @@ function renderMetadata(container: HTMLElement, recipe: ParsedRecipe): void {
   const card = container.createDiv({ cls: "cook-metadata-card" });
 
   // Title
-  const title = metadata.title;
-  if (title) {
+  const title = field(metadata, "title");
+  if (title !== undefined) {
     card.createEl("h1", { text: title, cls: "cook-title" });
   }
 
   // Description
-  const description = metadata.description;
-  if (description) {
+  const description = field(metadata, "description");
+  if (description !== undefined) {
     card.createEl("p", { text: description, cls: "cook-description" });
   }
 
   // Info row
   const infoRow = card.createDiv({ cls: "cook-info-row" });
 
-  const servings = metadata.servings;
-  if (servings) {
+  const servings = field(metadata, "servings");
+  if (servings !== undefined) {
     const tag = infoRow.createDiv({ cls: "cook-info-tag" });
     tag.createSpan({ text: "🍽", cls: "cook-info-icon" });
     tag.createSpan({ text: servings });
   }
 
-  const prepTime = metadata["time.prep"];
-  if (prepTime) {
+  const prepTime = field(metadata, "time.prep");
+  if (prepTime !== undefined) {
     const tag = infoRow.createDiv({ cls: "cook-info-tag" });
     tag.createSpan({ text: "⏱", cls: "cook-info-icon" });
     tag.createSpan({ text: `Prep: ${prepTime}` });
   }
 
-  const cookTime = metadata["time.cook"];
-  if (cookTime) {
+  const cookTime = field(metadata, "time.cook");
+  if (cookTime !== undefined) {
     const tag = infoRow.createDiv({ cls: "cook-info-tag" });
     tag.createSpan({ text: "🔥", cls: "cook-info-icon" });
     tag.createSpan({ text: `Cook: ${cookTime}` });
   }
 
-  const totalTime = metadata["time.total"];
-  if (totalTime) {
+  const totalTime = field(metadata, "time.total");
+  if (totalTime !== undefined) {
     const tag = infoRow.createDiv({ cls: "cook-info-tag" });
     tag.createSpan({ text: "⏰", cls: "cook-info-icon" });
     tag.createSpan({ text: `Total: ${totalTime}` });
   }
 
   // Source link
-  const sourceUrl = metadata["source.url"];
-  const source = metadata.source;
-  if (sourceUrl) {
+  const sourceUrl = field(metadata, "source.url");
+  const source = field(metadata, "source");
+  if (sourceUrl !== undefined) {
     const link = card.createEl("a", {
-      text: source || sourceUrl,
+      text: source ?? sourceUrl,
       href: sourceUrl,
       cls: "cook-source-link external-link",
     });
     link.setAttr("target", "_blank");
     link.setAttr("rel", "noopener");
-  } else if (source) {
+  } else if (source !== undefined) {
     card.createEl("span", { text: `Source: ${source}`, cls: "cook-source" });
   }
 
   // Author
-  const author = metadata["source.author"];
-  if (author) {
+  const author = field(metadata, "source.author");
+  if (author !== undefined) {
     card.createEl("span", { text: `by ${author}`, cls: "cook-author" });
   }
 
   // Cuisine / Category
-  const cuisine = metadata.cuisine;
-  const category = metadata.category;
-  if (cuisine || category) {
+  const cuisine = field(metadata, "cuisine");
+  const category = field(metadata, "category");
+  if (cuisine !== undefined || category !== undefined) {
     const tags = card.createDiv({ cls: "cook-tags" });
-    if (cuisine) tags.createSpan({ text: cuisine, cls: "cook-tag" });
-    if (category) tags.createSpan({ text: category, cls: "cook-tag" });
+    if (cuisine !== undefined)
+      tags.createSpan({ text: cuisine, cls: "cook-tag" });
+    if (category !== undefined)
+      tags.createSpan({ text: category, cls: "cook-tag" });
   }
 }
 
 function renderImage(container: HTMLElement, recipe: ParsedRecipe): void {
-  const imageUrl = recipe.metadata["image.url"];
-  if (imageUrl) {
+  const imageUrl = field(recipe.metadata, "image.url");
+  if (imageUrl !== undefined) {
     const imgWrapper = container.createDiv({ cls: "cook-image-wrapper" });
     imgWrapper.createEl("img", {
-      attr: { src: imageUrl, alt: recipe.metadata.title || "Recipe" },
+      attr: { src: imageUrl, alt: field(recipe.metadata, "title") ?? "Recipe" },
       cls: "cook-image",
     });
   }
@@ -220,10 +231,11 @@ function renderDirections(
     const p = content.createEl("p");
     // Strip leading "N. " prefix from first text token since we add step numbers
     const tokens = [...step.tokens];
-    if (tokens.length > 0 && tokens[0].type === "text") {
-      const stripped = tokens[0].value.replace(/^\d+\.\s+/, "");
-      if (stripped !== tokens[0].value) {
-        tokens[0] = { ...tokens[0], value: stripped };
+    const first = tokens[0];
+    if (first?.type === "text") {
+      const stripped = first.value.replace(/^\d+\.\s+/, "");
+      if (stripped !== first.value) {
+        tokens[0] = { ...first, value: stripped };
       }
     }
     renderTokens(p, tokens, settings);
