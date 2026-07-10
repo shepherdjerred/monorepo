@@ -142,6 +142,20 @@ export function perPackageSteps(
     if (macosStep) steps.push(macosStep);
   }
 
+  // Scout desktop's Tauri crate: cargo fmt --check + clippy -D warnings +
+  // test. The compile runs in the Dagger engine (rust-toolchain.toml pins the
+  // toolchain), so the BK pod tier stays modest.
+  if (pkg === "scout-for-lol") {
+    steps.push(
+      daggerCallStep(
+        `:crab: Desktop Rust (fmt + clippy + test)`,
+        `scout-desktop-rust`,
+        `${DAGGER_CALL} scout-desktop-rust --desktop-dir ${gitDir("packages/scout-for-lol/packages/desktop")}`,
+        resources,
+      ),
+    );
+  }
+
   // Cross-package contract test: the app's real TaskNotesClient against a
   // spawned real tasknotes-server. Emitted for whichever side changed (keys
   // are per-package, so when both change in one build the two steps run the

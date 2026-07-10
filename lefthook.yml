@@ -415,6 +415,12 @@ pre-commit:
             glob: "packages/terraform-provider-asuswrt/**/*.go"
             run: golangci-lint run
 
+          # --- Rust (scout-for-lol desktop) ---
+          - name: scout-desktop-rust
+            root: "packages/scout-for-lol/packages/desktop/src-tauri/"
+            glob: "packages/scout-for-lol/packages/desktop/src-tauri/**/*.rs"
+            run: cargo fmt --check && cargo clippy --all-targets --all-features -- -D warnings
+
           # --- Astro check ---
           - name: sjer-red-astro-check
             root: "packages/sjer.red/"

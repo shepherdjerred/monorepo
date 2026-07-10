@@ -151,6 +151,8 @@ import {
   softFailBundleHelper,
 } from "./quality";
 
+import { scoutDesktopRustHelper } from "./rust";
+
 function requireRecord(
   value: unknown,
   message: string,
@@ -1695,6 +1697,15 @@ export class Monorepo {
   @func()
   async pyrightCheck(source: Directory): Promise<string> {
     return pyrightCheckHelper(source).stdout();
+  }
+
+  /**
+   * Scout desktop Rust crate: cargo fmt --check + clippy -D warnings + test.
+   * `desktopDir` is packages/scout-for-lol/packages/desktop.
+   */
+  @func()
+  async scoutDesktopRust(desktopDir: Directory): Promise<string> {
+    return scoutDesktopRustHelper(desktopDir).stdout();
   }
 
   /** Compliance check: every package has the required scripts in its package.json. */

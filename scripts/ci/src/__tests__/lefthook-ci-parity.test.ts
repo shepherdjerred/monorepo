@@ -55,6 +55,8 @@ const JOB_TO_CI_STEP: Record<string, string> = {
   "react-version-sync": "quality-bundle",
   // cdk8s synth + 1Password lint collapse into one bundled step `homelab-cdk8s`.
   "onepassword-items": "homelab-cdk8s",
+  // Desktop Tauri crate: fmt+clippy locally; CI step adds `cargo test`.
+  "scout-desktop-rust": "scout-desktop-rust",
 };
 
 /**
