@@ -372,6 +372,25 @@ describe("buildPipeline", () => {
       expect(nativeDepsStep?.soft_fail).toBeUndefined();
     });
 
+    it("emits one TaskNotes contract test step for each changed side", () => {
+      const affected = emptyAffected();
+      affected.packages.add("tasks-for-obsidian");
+      affected.packages.add("tasknotes-server");
+
+      const pipeline = buildPipeline(affected);
+      const allSteps: BuildkiteStep[] = [];
+      collectSteps(pipeline.steps, allSteps);
+      const contractKeys = allSteps
+        .filter((s) => s.key.startsWith("tasknotes-contract-test-"))
+        .map((s) => s.key)
+        .sort();
+
+      expect(contractKeys).toEqual([
+        "tasknotes-contract-test-tasknotes-server",
+        "tasknotes-contract-test-tasks-for-obsidian",
+      ]);
+    });
+
     it("only builds the image whose package actually changed", () => {
       const affected = emptyAffected();
       affected.packages.add("temporal");

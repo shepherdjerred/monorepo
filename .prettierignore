@@ -91,3 +91,7 @@ packages/sjer.red/src/content/blog/2024/job-hunt.mdx
 packages/sjer.red/src/content/blog/2025/writing-typescript-with-ai.mdx
 packages/sjer.red/src/content/blog/drafts/homelab-2.mdx
 packages/webring/README.md
+
+# Test fixtures are content under test, not code to format.
+**/__tests__/fixtures/**
+**/e2e/fixtures/**

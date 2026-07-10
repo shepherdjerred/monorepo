@@ -197,3 +197,44 @@ Getting it green surfaced two real app bugs (QuickAdd's Create button hid behind
 - `ios/Podfile.lock` drifts by two prebuilt-pod checksums (hermes-engine, React-Core-prebuilt) after a fresh `pod install` in a new worktree — environment noise, left uncommitted.
 - v1→v2 queue migration maps `complete_instance` to `set_instance_complete{date: local day of enqueue timestamp, completed: true}` — best available record of the tapped day.
 - Aliases are pruned when the real id disappears from a server pull; UI surfaces holding a pruned temp id fall back to the id itself (task shows as gone — correct).
+
+## Session Log — 2026-07-03 (P3 start: tasknotes-types v2)
+
+### Done
+
+- Worktree `.claude/worktrees/tasknotes-p3` (branch `feature/tasknotes-p3`, stacked on `feature/tasknotes-p2`).
+- `tasknotes-types`: pinned `@tasknotes/model@0.2.1` (exact); new `src/v2.ts` with the upstream plugin HTTP API contract — full route table + shapes transcribed from the upstream controllers (fetched sources live in the session scratchpad under `upstream/`); `MUTATION_ID_HEADER`; P1's `{date?, completed?}` complete-instance extension (e4fbb80df).
+- Key discovery: the model bundles zod v3; its schemas cannot type-compose with this package's zod v4. Resolution: v4 mirror schemas (`TaskInfoV2Schema`, `StatusConfigV2Schema`, `PriorityConfigV2Schema`) with `src/v2.test.ts` pinning them key-for-key + optionality against the model's runtime shapes, so a model bump fails loudly. Package now has a real `bun test` script.
+
+### Remaining (P3)
+
+- Hono `:id` param spike (URL-encoded path IDs) — do FIRST per plan.
+- Server engine rebuild: `model-config.ts`, `engine/task-repository.ts` (tolerant read, patch-based write), `vault-files.ts`, `watcher.ts`, `query.ts`, `stats.ts`, `time-reports.ts`, `filename.ts`; routes on the upstream table; legacy adapter; `migrate-vault.ts` + `vault-audit.ts`; golden corpus / round-trip / conformance / idempotency / concurrency tests; contract-test extension.
+- Ring 3 ob-sync transport test ideally before the concurrency design hardens (needs test-vault creds — user-gated).
+
+### Caveats
+
+- Upstream reference sources are in the scratchpad (`upstream/src_api_*.ts`, `docs_HTTP_API.md`) — refetch from `github.com/callumalpass/tasknotes` if lost.
+- `tasknotes-types` consumers: the app (P5) will need Metro to bundle rrule/yaml (model deps) — verify then.
+
+## Session Log — 2026-07-03 (P3 continued: full server rebuild)
+
+### Done
+
+On `feature/tasknotes-p3` (stacked on P2), all in `packages/tasknotes-server` unless noted:
+
+- **Engine** (all model-backed, all tested): `engine/model-config.ts` (plugin data.json → TaskNotesModelConfig; corrupt file throws), `engine/vault-files.ts` (honest-error byte IO), `engine/task-repository.ts` (tolerant reads + loud skips, plan-based surgical writes, workflow toggle-status, set-semantics complete-instance, title-rename identity, time start/stop into frontmatter), `engine/watcher.ts` (max-wait debounce, error re-arm, safety rescan), `engine/query.ts` (upstream FilterQuery tree), `engine/stats.ts`, `engine/time-reports.ts`, `engine/filename.ts`.
+- **Surfaces**: `v2/routes.ts` = upstream plugin API endpoint-for-endpoint incl. NLP `{parsed,taskData}`/`{task,parsed}` and `/api/calendars/events` with recurring expansion; `legacy/routes.ts` = old camelCase contract at `/legacy/api/*` for the P2 app (health mounted there too; filter-options clamped to legacy enums). `index.ts` cutover boots the engine with a hard startup gate + `/api/engine-status`.
+- **P4 tooling**: `scripts/migrate-vault.ts` (tag legacy files, fold `_tasknotes/time-tracking.json` into frontmatter, drop injected ids; dry-run default, idempotent) and `scripts/vault-audit.ts` (parse-skips + round-trip byte-diff gate) — verified end-to-end on a synthetic legacy vault.
+- **Verification**: golden corpus (8 review kill-cases + spec-version pin + fixture-byte meta-test; fixtures excluded from prettier/markdownlint); idempotency suite ported to v2 (12/12); old hand-rolled vault layer + routes deleted; server suite 135 tests; **the P2 app's contract suite passes 18/18 against the rebuilt server via `/legacy`**. tasknotes-types v2 wire schemas + drift-pin tests; Hono path-ID routing pinned. CLAUDE.md rewritten for the new architecture.
+
+### Remaining (P3)
+
+- Optional depth: conformance test via `executeConformanceOperation`; concurrency test at HTTP level (repository-level concurrent-edit survival is covered).
+- Dagger smoke test / CI verification for the rebuilt server; then the P3 PR review.
+- Ring-3 ob-sync transport test before P4 (user-gated: needs a spare Obsidian Sync vault slot).
+
+### Caveats
+
+- The e2e seed fixtures (`tags: [seeded]`) are invisible to the new engine until migrated — by design; the app e2e suite stays on the P2 branch's old server until P5 realigns it.
+- `/legacy` lives on the app's configurable base URL: at P4 rollout the app's API URL gains the `/legacy` suffix.

@@ -26,7 +26,7 @@ const config = [
     },
   },
   {
-    files: ["src/vault/watcher.ts"],
+    files: ["src/vault/watcher.ts", "src/engine/watcher.ts"],
     rules: {
       "no-restricted-imports": "off",
     },

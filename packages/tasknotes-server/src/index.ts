@@ -5,32 +5,37 @@ import { Hono } from "hono";
 import { config } from "./config.ts";
 import { IdempotencyStore } from "./idempotency/store.ts";
 import { idempotencyMiddleware } from "./middleware/idempotency.ts";
-import {
-  syncFilesTotal,
-  tasksCreatedTotal,
-  tasksDeletedTotal,
-  tasksTotal,
-  tasksUpdatedTotal,
-  uptimeSeconds,
-} from "./metrics.ts";
+import { syncFilesTotal, tasksTotal, uptimeSeconds } from "./metrics.ts";
 import { authMiddleware } from "./middleware/auth.ts";
 import { envelopeMiddleware } from "./middleware/envelope.ts";
 import { loggerMiddleware } from "./middleware/logger.ts";
 import { metricsMiddleware } from "./middleware/metrics.ts";
-import { calendarRoutes } from "./routes/calendar.ts";
 import { healthRoutes } from "./routes/health.ts";
-import { nlpRoutes } from "./routes/nlp.ts";
 import { pomodoroRoutes } from "./routes/pomodoro.ts";
-import { taskRoutes } from "./routes/tasks.ts";
-import { timeRoutes } from "./routes/time.ts";
 import { PomodoroStore } from "./store/pomodoro-store.ts";
-import { TaskStore } from "./store/task-store.ts";
-import { TimeStore } from "./store/time-store.ts";
+import { loadModelConfig } from "./engine/model-config.ts";
+import { TaskRepository } from "./engine/task-repository.ts";
+import { watchVault } from "./engine/watcher.ts";
+import { legacyRoutes } from "./legacy/routes.ts";
+import { v2Routes } from "./v2/routes.ts";
+
+/**
+ * P3 server: @tasknotes/model-backed engine serving TWO surfaces —
+ * - `/api/*`         the upstream plugin contract (v2; the P5 app target)
+ * - `/legacy/api/*`  the old camelCase contract for the P2 app (its
+ *                    configurable API URL gains a `/legacy` suffix at the
+ *                    P4 rollout; the adapter dies at P6).
+ * Pomodoro state is ephemeral and vault-independent; the old store serves
+ * both surfaces unchanged.
+ */
 
 const app = new Hono();
 
-const taskStore = new TaskStore(config.vaultPath, config.tasksDir);
-const timeStore = new TimeStore(config.vaultPath);
+// Loaded during start(); routes close over the boxes.
+const { config: modelConfig, source: configSource } = await loadModelConfig(
+  config.vaultPath,
+);
+const repo = new TaskRepository(config.vaultPath, config.tasksDir, modelConfig);
 const pomodoroStore = new PomodoroStore();
 // Dot-directory: excluded from vault scans, hidden from Obsidian, but on the
 // vault PVC so replay dedup survives pod restarts.
@@ -47,58 +52,77 @@ app.use("*", envelopeMiddleware);
 app.use("*", idempotencyMiddleware(idempotencyStore));
 
 app.route("/", healthRoutes);
-app.route("/", taskRoutes(taskStore));
-app.route("/", nlpRoutes(taskStore));
-app.route("/", timeRoutes(timeStore));
+app.route(
+  "/",
+  v2Routes({ repo, config: modelConfig, vaultPath: config.vaultPath }),
+);
 app.route("/", pomodoroRoutes(pomodoroStore));
-app.route("/", calendarRoutes(taskStore));
+app.route("/legacy", legacyRoutes({ repo, config: modelConfig }));
+app.route("/legacy", pomodoroRoutes(pomodoroStore));
+// The P2 app polls health at ITS base URL (which points at /legacy).
+app.route("/legacy", healthRoutes);
+
+// Engine visibility: parse skips and config provenance, next to /api/health.
+app.get("/api/engine-status", (c) =>
+  c.json({
+    configSource,
+    tasks: repo.list().length,
+    skippedFiles: repo.skippedFiles(),
+  }),
+);
 
 const startTime = Date.now();
 
 function updateGauges(): void {
-  const stats = taskStore.getStats();
-  tasksTotal.set(stats.total);
-  syncFilesTotal.set(stats.total);
+  const total = repo.list().length;
+  tasksTotal.set(total);
+  syncFilesTotal.set(total);
   uptimeSeconds.set(Math.round((Date.now() - startTime) / 1000));
 }
 
-// Instrument task store operations
-const originalCreate = taskStore.create.bind(taskStore);
-taskStore.create = async (...args) => {
-  const result = await originalCreate(...args);
-  tasksCreatedTotal.inc();
-  updateGauges();
-  return result;
-};
-
-const originalUpdate = taskStore.update.bind(taskStore);
-taskStore.update = async (...args) => {
-  const result = await originalUpdate(...args);
-  if (result !== undefined) {
-    tasksUpdatedTotal.inc();
-  }
-  return result;
-};
-
-const originalDelete = taskStore.delete.bind(taskStore);
-taskStore.delete = async (...args) => {
-  const result = await originalDelete(...args);
-  if (result) {
-    tasksDeletedTotal.inc();
-    updateGauges();
-  }
-  return result;
-};
-
 async function start(): Promise<void> {
-  await taskStore.init();
-  await timeStore.init();
+  // Startup gate: an unreadable vault throws here and kills the pod loudly
+  // instead of serving an empty task list.
+  await repo.scan();
   await idempotencyStore.init();
-  taskStore.startWatching();
+
+  watchVault(config.vaultPath, {
+    onChanges: (paths) => {
+      void (async () => {
+        try {
+          if (paths.length === 0) {
+            await repo.scan();
+          } else {
+            for (const relPath of paths) {
+              await repo.refreshFile(relPath);
+            }
+          }
+          updateGauges();
+        } catch (error: unknown) {
+          // A rescan/refresh that fails (e.g. the vault root briefly vanished)
+          // must not become an unhandled rejection that tears the process
+          // down — the server keeps serving its last-known task map and the
+          // failure is surfaced in logs, mirroring the watcher's error policy.
+          console.error("[watcher] failed to apply vault changes:", error);
+        }
+      })();
+    },
+    onError: (error) => {
+      console.error("[watcher] error:", error);
+    },
+  });
+
   updateGauges();
   setInterval(updateGauges, 15_000);
   console.log(`TaskNotes server listening on port ${String(config.port)}`);
   console.log(`Vault path: ${config.vaultPath}`);
+  console.log(`Model config source: ${configSource}`);
+  const skipped = repo.skippedFiles();
+  if (skipped.length > 0) {
+    console.error(
+      `[startup] ${String(skipped.length)} task-like file(s) failed to parse — see /api/engine-status`,
+    );
+  }
 }
 
 void start();
