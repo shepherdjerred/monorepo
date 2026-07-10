@@ -31,7 +31,6 @@ tasks-for-obsidian:build
 starlight-karma-bot:build
 starlight-karma-bot:test
 tasknotes-types:build
-tasknotes-types:test
 cooklang-for-obsidian:test
 cooklang-rich-preview:test
 stocks-sjer-red:test

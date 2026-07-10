@@ -491,7 +491,6 @@ export const NO_TEST_PACKAGES = new Set<string>([
   "cooklang-rich-preview",
   "stocks-sjer-red",
   "starlight-karma-bot",
-  "tasknotes-types",
 ]);
 
 /** Packages that need `bun run generate` before lint/typecheck/test (Prisma). */

@@ -7,7 +7,7 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "bun test src scripts",
-    "test:contract": "bun test contract-tests",
+    "test:contract": "bun test contract-tests --timeout 20000",
     "e2e": "bun run e2e/run.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

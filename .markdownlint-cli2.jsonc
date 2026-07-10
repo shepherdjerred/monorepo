@@ -22,6 +22,9 @@
   },
   "ignores": [
     "sandbox/archive/**",
+    // Test fixtures are content under test, not documentation.
+    "**/__tests__/fixtures/**",
+    "**/e2e/fixtures/**",
     "**/node_modules/**",
     "**/.venv/**",
     "**/generated/**",

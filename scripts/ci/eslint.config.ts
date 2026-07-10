@@ -76,17 +76,5 @@ const config: TSESLint.FlatConfig.ConfigArray = [
     files: ["src/__tests__/**/*"],
     rules: { "max-lines-per-function": ["error", { max: 1300 }] },
   },
-  // Sits exactly at the 1500 test cap after this wave's lint fixes (same
-  // precedent as scout's competition.test.ts override). Split it before it
-  // grows further; never raise this number.
-  {
-    files: ["src/__tests__/pipeline-builder.test.ts"],
-    rules: {
-      "max-lines": [
-        "error",
-        { max: 1520, skipBlankLines: false, skipComments: false },
-      ],
-    },
-  },
 ];
 export default config;

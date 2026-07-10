@@ -24,6 +24,9 @@ import { taskId, type Task } from "../src/domain/types";
 const AUTH_TOKEN = "contract-test-token";
 const PORT = 18_700 + (process.pid % 200);
 const BASE_URL = `http://127.0.0.1:${String(PORT)}`;
+// The P3 server serves the old camelCase contract (which this app speaks
+// until P5) under /legacy; /api/* is the upstream v2 surface.
+const LEGACY_BASE_URL = `${BASE_URL}/legacy`;
 
 const serverDir = fileURLToPath(
   new URL("../../tasknotes-server", import.meta.url),
@@ -49,7 +52,7 @@ function drainStderr(stream: ReadableStream<Uint8Array>): void {
 }
 
 const client = new TaskNotesClient({
-  baseUrl: BASE_URL,
+  baseUrl: LEGACY_BASE_URL,
   authToken: AUTH_TOKEN,
 });
 
@@ -116,7 +119,7 @@ describe("health & auth", () => {
 
   test("wrong bearer token is rejected with an ApiError", async () => {
     const badClient = new TaskNotesClient({
-      baseUrl: BASE_URL,
+      baseUrl: LEGACY_BASE_URL,
       authToken: "wrong-token",
     });
     const result = await badClient.listTasks();
