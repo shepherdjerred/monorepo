@@ -13,18 +13,27 @@ export type FtsResult = {
   snippet: string;
 };
 
+export type FtsDocument = {
+  slug: string;
+  title: string;
+  tags: string;
+  description: string;
+  constraints: string;
+  editorial: string;
+};
+
 export class SearchDb {
-  private db: Database;
+  private readonly db: Database;
   private vectorCache: { slugs: string[]; vectors: Float32Array[] } | null =
     null;
 
   constructor(sqlitePath: string = SQLITE_PATH) {
     this.db = new Database(sqlitePath);
-    this.db.exec("PRAGMA journal_mode = WAL");
+    this.db.run("PRAGMA journal_mode = WAL");
   }
 
   createSchema(): void {
-    this.db.exec(`
+    this.db.run(`
       CREATE VIRTUAL TABLE IF NOT EXISTS problems_fts USING fts5(
         slug UNINDEXED,
         title,
@@ -64,19 +73,20 @@ export class SearchDb {
     );
   }
 
-  addToFts(
-    slug: string,
-    title: string,
-    tags: string,
-    description: string,
-    constraints: string,
-    editorial: string,
-  ): void {
+  addToFts(doc: FtsDocument): void {
     this.db
       .query(
         "INSERT OR REPLACE INTO problems_fts (slug, title, tags, description, constraints, editorial) VALUES (?, ?, ?, ?, ?, ?)",
       )
-      .run(slug, title, tags, description, constraints, editorial);
+      .run(
+        doc.slug,
+        doc.title,
+        doc.tags,
+        doc.description,
+        doc.constraints,
+        doc.editorial,
+      );
+    const slug = doc.slug;
     this.db
       .query(
         "INSERT OR REPLACE INTO search_index_meta (problem_slug, indexed_at) VALUES (?, ?)",
@@ -96,11 +106,11 @@ export class SearchDb {
   private loadVectorCache(): { slugs: string[]; vectors: Float32Array[] } {
     if (this.vectorCache) return this.vectorCache;
     const rows = this.db
-      .query("SELECT problem_slug, vector FROM problem_vectors")
-      .all() as Array<{
-      problem_slug: string;
-      vector: Buffer;
-    }>;
+      .query<
+        { problem_slug: string; vector: Buffer },
+        []
+      >("SELECT problem_slug, vector FROM problem_vectors")
+      .all();
     const slugs: string[] = [];
     const vectors: Float32Array[] = [];
     for (const row of rows) {
@@ -117,13 +127,12 @@ export class SearchDb {
     return this.vectorCache;
   }
 
-  vectorSearch(queryVector: Float32Array, limit: number = 50): VectorResult[] {
+  vectorSearch(queryVector: Float32Array, limit = 50): VectorResult[] {
     const { slugs, vectors } = this.loadVectorCache();
     const results: VectorResult[] = [];
-    for (let i = 0; i < vectors.length; i++) {
+    for (const [i, vec] of vectors.entries()) {
       const slug = slugs[i];
-      const vec = vectors[i];
-      if (slug === undefined || vec === undefined) continue;
+      if (slug === undefined) continue;
       results.push({
         slug,
         score: dotProduct(queryVector, vec),
@@ -133,15 +142,15 @@ export class SearchDb {
     return results.slice(0, limit);
   }
 
-  searchFts(query: string, limit: number = 30): FtsResult[] {
+  searchFts(query: string, limit = 30): FtsResult[] {
     const matchExpr = buildFtsQuery(query);
     return this.db
-      .query(
+      .query<FtsResult, [string, number]>(
         `SELECT slug, title, bm25(problems_fts, 0, 50, 3, 1, 0, 0) as rank,
          snippet(problems_fts, 3, '', '', '...', 20) as snippet
          FROM problems_fts WHERE problems_fts MATCH ? ORDER BY rank LIMIT ?`,
       )
-      .all(matchExpr, limit) as FtsResult[];
+      .all(matchExpr, limit);
   }
 
   getDb(): Database {
@@ -155,15 +164,15 @@ export class SearchDb {
 
 function dotProduct(a: Float32Array, b: Float32Array): number {
   let sum = 0;
-  for (let i = 0; i < a.length; i++) {
-    sum += (a[i] ?? 0) * (b[i] ?? 0);
+  for (const [i, ai] of a.entries()) {
+    sum += ai * (b[i] ?? 0);
   }
   return sum;
 }
 
 function buildFtsQuery(query: string): string {
   // Sanitize: remove FTS5 special chars except quotes
-  const clean = query.replace(/[{}()[\]:^~*]/g, "").trim();
+  const clean = query.replaceAll(/[{}()[\]:^~*]/g, "").trim();
   if (!clean) return query;
 
   const words = clean.split(/\s+/).filter(Boolean);

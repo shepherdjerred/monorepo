@@ -3,21 +3,7 @@ import { SearchDb } from "./lib/search-db.ts";
 import { EmbeddingClient } from "./lib/embeddings.ts";
 import { htmlToText, extractConstraints } from "./lib/html-to-text.ts";
 import { SQLITE_PATH } from "./lib/config.ts";
-
-function timestamp(): string {
-  return new Date().toLocaleTimeString("en-US", { hour12: false });
-}
-
-function formatDuration(ms: number): string {
-  const s = Math.floor(ms / 1000);
-  if (s < 60) return `${s}s`;
-  const m = Math.floor(s / 60);
-  const rs = s % 60;
-  if (m < 60) return `${m}m${rs}s`;
-  const h = Math.floor(m / 60);
-  const rm = m % 60;
-  return `${h}h${rm}m`;
-}
+import { formatDuration, timestamp } from "./lib/format.ts";
 
 type ProblemRow = {
   slug: string;
@@ -36,11 +22,12 @@ async function main() {
 
   const sourceDb = new Database(SQLITE_PATH, { readonly: true });
   const problems = sourceDb
-    .query(
-      "SELECT slug, title, difficulty, content_html FROM problems ORDER BY id",
-    )
-    .all() as ProblemRow[];
-  console.log(`[${timestamp()}] Found ${problems.length} problems`);
+    .query<
+      ProblemRow,
+      []
+    >("SELECT slug, title, difficulty, content_html FROM problems ORDER BY id")
+    .all();
+  console.log(`[${timestamp()}] Found ${String(problems.length)} problems`);
 
   const embedder = new EmbeddingClient();
   const embeddingsAvailable = await embedder.isAvailable();
@@ -65,17 +52,15 @@ async function main() {
     }
     try {
       const vectors = await embedder.embed(textBatch);
-      for (let i = 0; i < vectors.length; i++) {
+      for (const [i, vec] of vectors.entries()) {
         const slug = slugBatch[i];
-        const vec = vectors[i];
         const text = textBatch[i];
-        if (slug === undefined || vec === undefined || text === undefined)
-          continue;
+        if (slug === undefined || text === undefined) continue;
         searchDb.addVector(slug, new Float32Array(vec), text);
         vectorsIndexed++;
       }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
       console.error(`  [embed error] ${msg}`);
       errors++;
     }
@@ -85,45 +70,46 @@ async function main() {
 
   for (const problem of problems) {
     // FTS: always rebuild (idempotent via INSERT OR REPLACE)
-    const tags = (
-      sourceDb
-        .query(
-          `
+    const tags = sourceDb
+      .query<TagRow, [string]>(
+        `
       SELECT t.name FROM topic_tags t
       JOIN problem_tags pt ON pt.tag_id = t.id
       JOIN problems p ON p.id = pt.problem_id
       WHERE p.slug = ?
     `,
-        )
-        .all(problem.slug) as TagRow[]
-    ).map((t) => t.name);
+      )
+      .all(problem.slug)
+      .map((t) => t.name);
 
     const editorial = sourceDb
-      .query(
+      .query<EditorialRow, [string]>(
         `
       SELECT e.content_html FROM editorials e
       JOIN problems p ON p.id = e.problem_id
       WHERE p.slug = ?
     `,
       )
-      .get(problem.slug) as EditorialRow | null;
+      .get(problem.slug);
 
     const contentHtml = problem.content_html ?? "";
     const description = htmlToText(contentHtml);
     const constraints = extractConstraints(contentHtml) ?? "";
-    const editorialText = editorial?.content_html
-      ? htmlToText(editorial.content_html)
-      : "";
+    const editorialHtml = editorial?.content_html;
+    const editorialText =
+      editorialHtml != null && editorialHtml !== ""
+        ? htmlToText(editorialHtml)
+        : "";
     const tagsStr = tags.join(", ");
 
-    searchDb.addToFts(
-      problem.slug,
-      problem.title,
-      tagsStr,
+    searchDb.addToFts({
+      slug: problem.slug,
+      title: problem.title,
+      tags: tagsStr,
       description,
       constraints,
-      editorialText,
-    );
+      editorial: editorialText,
+    });
     ftsIndexed++;
 
     // Vector: one embedding per problem (title + tags + description)
@@ -145,7 +131,7 @@ async function main() {
       const rate = total / (elapsed / 1000);
       const remaining = (problems.length - total) / rate;
       console.log(
-        `[${timestamp()}] [${total}/${problems.length}] ${vectorsIndexed} vectors, ${ftsIndexed} fts, ${skipped} skip | ${formatDuration(elapsed)} | eta ${formatDuration(remaining * 1000)}`,
+        `[${timestamp()}] [${String(total)}/${String(problems.length)}] ${String(vectorsIndexed)} vectors, ${String(ftsIndexed)} fts, ${String(skipped)} skip | ${formatDuration(elapsed)} | eta ${formatDuration(remaining * 1000)}`,
       );
     }
   }
@@ -159,15 +145,18 @@ async function main() {
   const elapsed = formatDuration(Date.now() - startTime);
   console.log(`\n${"=".repeat(60)}`);
   console.log(`[${timestamp()}] Search index build complete`);
-  console.log(`  FTS indexed: ${ftsIndexed}`);
-  console.log(`  Vectors:     ${vectorsIndexed}`);
-  console.log(`  Skipped:     ${skipped} (already had vector)`);
-  console.log(`  Errors:      ${errors}`);
+  console.log(`  FTS indexed: ${String(ftsIndexed)}`);
+  console.log(`  Vectors:     ${String(vectorsIndexed)}`);
+  console.log(`  Skipped:     ${String(skipped)} (already had vector)`);
+  console.log(`  Errors:      ${String(errors)}`);
   console.log(`  Elapsed:     ${elapsed}`);
   console.log("=".repeat(60));
 }
 
-main().catch((err) => {
-  console.error(`\n[FATAL] ${err.message}`);
+try {
+  await main();
+} catch (error: unknown) {
+  const msg = error instanceof Error ? error.message : String(error);
+  console.error(`\n[FATAL] ${msg}`);
   process.exit(1);
-});
+}

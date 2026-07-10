@@ -2,8 +2,19 @@
 // Self-contained — no cross-package dependency
 
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import path from "node:path";
+import { z } from "zod";
 import { EMBEDDING_DIM } from "./config.ts";
+
+const ReadyMessageSchema = z.object({
+  ready: z.boolean().optional(),
+  error: z.string().optional(),
+});
+
+const EmbedResponseSchema = z.object({
+  embeddings: z.array(z.array(z.number())).optional(),
+  error: z.string().optional(),
+});
 
 type StdinWriter = {
   write: (data: string) => void;
@@ -136,7 +147,7 @@ export class EmbeddingClient {
         "uv is required for embeddings. Install from https://docs.astral.sh/uv/",
       );
     }
-    const scriptPath = join(tmpdir(), "leetcode-embed-server.py");
+    const scriptPath = path.join(tmpdir(), "leetcode-embed-server.py");
     await Bun.write(scriptPath, EMBED_SERVER_SCRIPT);
     this.proc = Bun.spawn(["uv", "run", scriptPath], {
       stdin: "pipe",
@@ -151,8 +162,8 @@ export class EmbeddingClient {
     // Long timeout: first run may install deps via uv
     const firstLine = await this.readLine(300_000);
     if (firstLine == null) throw new Error("Embedding server did not start");
-    const msg = JSON.parse(firstLine) as { ready?: boolean; error?: string };
-    if (msg.error) throw new Error(msg.error);
+    const msg = ReadyMessageSchema.parse(JSON.parse(firstLine));
+    if (msg.error != null && msg.error !== "") throw new Error(msg.error);
     this.ready = true;
   }
 
@@ -166,11 +177,9 @@ export class EmbeddingClient {
     const responseLine = await this.readLine();
     if (responseLine == null)
       throw new Error("Embedding server returned no response");
-    const response = JSON.parse(responseLine) as {
-      embeddings?: number[][];
-      error?: string;
-    };
-    if (response.error) throw new Error(`Embedding error: ${response.error}`);
+    const response = EmbedResponseSchema.parse(JSON.parse(responseLine));
+    if (response.error != null && response.error !== "")
+      throw new Error(`Embedding error: ${response.error}`);
     if (!response.embeddings) throw new Error("No embeddings in response");
     return response.embeddings;
   }
@@ -191,7 +200,9 @@ export class EmbeddingClient {
         this.reader.read(),
         new Promise<never>((_, reject) =>
           setTimeout(
-            () => reject(new Error("Embedding server read timeout")),
+            () => {
+              reject(new Error("Embedding server read timeout"));
+            },
             Math.max(1000, deadline - Date.now()),
           ),
         ),
