@@ -1,3 +1,18 @@
+<!--
+  Cache-bust: 2026-07-10. The dagger-helm-engine's persistent dagql cache had a poisoned
+  entry for this package's `buildPackage` call — every CI attempt failed identically with
+  `Error: failed to decode ID: failed to decode receiver Call: call digest "Container" not
+  found`, served instantly (0.0s CACHED) even after restarting the engine pod, because the
+  corrupt entry lives on the engine's PVC (data-dagger-dagger-helm-engine-0), not pod memory.
+  Root cause: PR #1391's first CI build (Buildkite #5141) was canceled mid-flight by a
+  superseding push; Dagger's dagql persistent cache (new as of ~2026-04/05, replacing the
+  old BuildKit solver cache — see dagger/dagger#11856) appears to have written a torn/invalid
+  cache entry for this exact call during that cancellation. This comment exists solely to
+  change this file's content hash so the poisoned cache key is never looked up again.
+  Delete this comment once PR #1391's `Build helm-types` CI step has passed on a subsequent
+  commit — it has no purpose after that.
+-->
+
 # @shepherdjerred/helm-types
 
 Generate TypeScript types from Helm chart values.
