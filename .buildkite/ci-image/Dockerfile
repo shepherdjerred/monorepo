@@ -35,7 +35,7 @@ RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-l
     | tar xJ -C /usr/local --strip-components=1
 
 # renovate: datasource=github-releases depName=dagger/dagger
-ARG DAGGER_VERSION=0.21.4
+ARG DAGGER_VERSION=0.21.7
 RUN curl -fsSL "https://dl.dagger.io/dagger/releases/${DAGGER_VERSION}/dagger_v${DAGGER_VERSION}_linux_amd64.tar.gz" \
     | tar xz -C /usr/local/bin dagger && \
     chmod +x /usr/local/bin/dagger
@@ -50,13 +50,13 @@ ENV UV_LINK_MODE=copy
 # semgrep via uv (covers install_semgrep() — the largest single per-pod writer
 # at ~835 MB to /root/.local/share/uv + /root/.cache/uv)
 # renovate: datasource=pypi depName=semgrep
-ARG SEMGREP_VERSION=1.164.0
+ARG SEMGREP_VERSION=1.165.0
 RUN uv tool install --python 3.12 "semgrep==${SEMGREP_VERSION}" --with setuptools
 ENV PATH="/root/.local/bin:${PATH}"
 
 # GitHub CLI (covers install_gh())
 # renovate: datasource=github-releases depName=cli/cli
-ARG GH_VERSION=2.93.0
+ARG GH_VERSION=2.96.0
 RUN curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz" | tar xz -C /tmp && \
     cp "/tmp/gh_${GH_VERSION}_linux_amd64/bin/gh" /usr/local/bin/gh && \
     chmod +x /usr/local/bin/gh && \
@@ -64,7 +64,7 @@ RUN curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_$
 
 # Helm (covers install_helm())
 # renovate: datasource=github-releases depName=helm/helm
-ARG HELM_VERSION=v4.2.2
+ARG HELM_VERSION=v4.2.3
 RUN curl -fsSL "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz" | tar xz -C /tmp && \
     mv /tmp/linux-amd64/helm /usr/local/bin/helm && \
     chmod +x /usr/local/bin/helm && \
@@ -72,13 +72,13 @@ RUN curl -fsSL "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz" | t
 
 # OpenTofu (covers install_tofu())
 # renovate: datasource=github-releases depName=opentofu/opentofu
-ARG OPENTOFU_VERSION=1.12.1
+ARG OPENTOFU_VERSION=1.12.3
 RUN curl -fsSL https://get.opentofu.org/install-opentofu.sh | \
     bash -s -- --install-method standalone --opentofu-version "${OPENTOFU_VERSION}"
 
 # AWS CLI (covers install_awscli())
 # renovate: datasource=github-tags depName=aws/aws-cli versioning=semver
-ARG AWSCLI_VERSION=2.34.60
+ARG AWSCLI_VERSION=2.35.1
 RUN curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip" -o /tmp/awscliv2.zip && \
     unzip -q /tmp/awscliv2.zip -d /tmp/aws-install && \
     /tmp/aws-install/aws/install && \
@@ -110,7 +110,7 @@ RUN curl -fsSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEA
 
 # trivy (covers install_trivy())
 # renovate: datasource=github-releases depName=aquasecurity/trivy
-ARG TRIVY_VERSION=0.71.0
+ARG TRIVY_VERSION=0.72.0
 RUN curl -fsSL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" | tar xz -C /tmp && \
     cp /tmp/trivy /usr/local/bin/trivy && \
     chmod +x /usr/local/bin/trivy && \
