@@ -251,16 +251,37 @@ describe("buildPipeline", () => {
       );
     });
 
-    it("fails fast when a non-generated commit edits ci-base VERSION", () => {
-      const affected = emptyAffected();
-      affected.ciImageVersionChanged = true;
+    it("fails fast when a non-generated PR commit edits ci-base VERSION", () => {
+      withBuildkitePullRequest("123", () => {
+        const affected = emptyAffected();
+        affected.ciImageVersionChanged = true;
 
-      const pipeline = buildPipeline(affected);
-      const steps = pipeline.steps.filter(isStep);
+        const pipeline = buildPipeline(affected);
+        const steps = pipeline.steps.filter(isStep);
 
-      expect(steps[0]?.key).toBe("ci-base-version-guard");
-      expect(steps[0]?.command).toContain(".buildkite/ci-image/VERSION");
-      expect(steps[0]?.command).toContain("exit 1");
+        expect(steps[0]?.key).toBe("ci-base-version-guard");
+        expect(steps[0]?.command).toContain(".buildkite/ci-image/VERSION");
+        expect(steps[0]?.command).toContain("exit 1");
+      });
+    });
+
+    it("never emits the guard on main builds (post-merge it only blocks deploys)", () => {
+      // Main builds diff against the last SUCCESSFUL main commit, so when a
+      // bump's own build fails for unrelated reasons, later innocent commits
+      // inherit the VERSION diff with a non-generated HEAD. Firing the guard
+      // there took main down on 2026-07-09 (build 5190) without preventing
+      // anything -- the change had already merged.
+      withBuildkitePullRequest("false", () => {
+        const affected = emptyAffected();
+        affected.ciImageVersionChanged = true;
+
+        const pipeline = buildPipeline(affected);
+        const steps = pipeline.steps.filter(isStep);
+
+        expect(steps.some((s) => s.key === "ci-base-version-guard")).toBe(
+          false,
+        );
+      });
     });
 
     it("does not loop on generated ci-base VERSION commits", () => {

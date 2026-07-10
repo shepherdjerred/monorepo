@@ -148,10 +148,26 @@ export function helmPackageHelper(
       `DRYRUN: would push ${chartName}-${version}.tgz to ChartMuseum`,
     ]);
   }
+  // Bounded retry for transient ChartMuseum failures (connect stalls, 5xx,
+  // curl exit 28 timeouts — one such timeout on 1/29 charts failed main build
+  // 5187 on 2026-07-09). A 409 on a retry means an earlier attempt actually
+  // landed the chart (versions are unique per build), so it counts as success.
   return container.withExec([
     "sh",
     "-c",
-    `curl -sf -u "${chartMuseumUsername}:$CHARTMUSEUM_PASSWORD" --data-binary @$(ls *.tgz) https://chartmuseum.sjer.red/api/charts`,
+    `tgz=$(ls *.tgz)
+for attempt in 1 2 3; do
+  code=$(curl -s -o /tmp/push-response -w '%{http_code}' --connect-timeout 15 --max-time 120 -u "${chartMuseumUsername}:$CHARTMUSEUM_PASSWORD" --data-binary @"$tgz" https://chartmuseum.sjer.red/api/charts) || code="curl-exit-$?"
+  case "$code" in
+    2*) exit 0 ;;
+    409) echo "chart already exists (earlier attempt landed); treating as success"; cat /tmp/push-response; exit 0 ;;
+  esac
+  echo "push attempt $attempt failed: $code"
+  cat /tmp/push-response
+  sleep 5
+done
+echo "chart push failed after 3 attempts"
+exit 1`,
   ]);
 }
 
