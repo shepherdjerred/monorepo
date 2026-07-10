@@ -12,22 +12,21 @@ Usage:
 """
 
 import json
+import re
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any
-import re
+from typing import Any
 
 try:
     import pandas as pd
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
-    from rich.console import Console
-    from rich.table import Table
-    from rich.panel import Panel
-    from rich.markdown import Markdown
     from rich import box
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.table import Table
 except ImportError as e:
     print(f"Error: {e}")
     print("\nPlease run with: uvx --with=rich --with=plotly --with=pandas --with=kaleido velero-report.py")
@@ -36,7 +35,7 @@ except ImportError as e:
 console = Console()
 
 
-def run_command(cmd: List[str]) -> str:
+def run_command(cmd: list[str]) -> str:
     """Run a shell command and return output."""
     try:
         result = subprocess.run(
@@ -52,7 +51,7 @@ def run_command(cmd: List[str]) -> str:
         return ""
 
 
-def get_all_backups() -> List[Dict[str, Any]]:
+def get_all_backups() -> list[dict[str, Any]]:
     """Get all Velero backups."""
     console.print("[cyan]Fetching all Velero backups...[/cyan]")
 
@@ -72,11 +71,10 @@ def get_all_backups() -> List[Dict[str, Any]]:
         return []
 
 
-def parse_backup(backup: Dict[str, Any]) -> Dict[str, Any]:
+def parse_backup(backup: dict[str, Any]) -> dict[str, Any]:
     """Parse a single backup object."""
     metadata = backup.get("metadata", {})
     status = backup.get("status", {})
-    spec = backup.get("spec", {})
 
     name = metadata.get("name", "unknown")
     phase = status.get("phase", "Unknown")
@@ -85,7 +83,8 @@ def parse_backup(backup: Dict[str, Any]) -> Dict[str, Any]:
     # Parse timestamp
     try:
         timestamp = datetime.fromisoformat(creation_time.replace("Z", "+00:00"))
-    except:
+    except ValueError as e:
+        console.print(f"[yellow]Warning: invalid creationTimestamp {creation_time!r} on backup {name}: {e}[/yellow]")
         timestamp = None
 
     # Get labels
@@ -113,8 +112,8 @@ def parse_backup(backup: Dict[str, Any]) -> Dict[str, Any]:
             start = datetime.fromisoformat(start_time.replace("Z", "+00:00"))
             end = datetime.fromisoformat(completion_time.replace("Z", "+00:00"))
             duration = (end - start).total_seconds() / 60  # minutes
-        except:
-            pass
+        except ValueError as e:
+            console.print(f"[yellow]Warning: invalid start/completion timestamp on backup {name}: {e}[/yellow]")
 
     return {
         "name": name,
@@ -133,7 +132,7 @@ def parse_backup(backup: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def get_backup_details(backup_name: str) -> Dict[str, Any]:
+def get_backup_details(backup_name: str) -> dict[str, Any]:
     """Get detailed information about a backup including errors."""
     console.print(f"[dim]Fetching details for {backup_name}...[/dim]")
 
@@ -141,7 +140,7 @@ def get_backup_details(backup_name: str) -> Dict[str, Any]:
         "velero", "backup", "describe", backup_name, "--details"
     ])
 
-    details = {
+    details: dict[str, Any] = {
         "errors": [],
         "warnings": [],
         "failed_volumes": [],
@@ -165,13 +164,12 @@ def get_backup_details(backup_name: str) -> Dict[str, Any]:
             current_section = None
             continue
 
-        if current_section and line.strip():
+        if current_section and line.strip() and ("message:" in line or "name:" in line):
             # Parse error/warning lines
-            if "message:" in line or "name:" in line:
-                if current_section == "errors":
-                    details["errors"].append(line.strip())
-                elif current_section == "warnings":
-                    details["warnings"].append(line.strip())
+            if current_section == "errors":
+                details["errors"].append(line.strip())
+            elif current_section == "warnings":
+                details["warnings"].append(line.strip())
 
         # Extract failed volume information
         if "Result:             failed" in line:
@@ -205,9 +203,9 @@ def get_backup_details(backup_name: str) -> Dict[str, Any]:
     return details
 
 
-def get_volume_context(volume_id: str) -> Dict[str, Any]:
+def get_volume_context(volume_id: str) -> dict[str, Any]:
     """Get additional context about a failing volume."""
-    context = {
+    context: dict[str, Any] = {
         "pv_details": None,
         "pvc_info": None,
         "zfs_volume": None,
@@ -244,10 +242,12 @@ def get_volume_context(volume_id: str) -> Dict[str, Any]:
                                 "status": pvc_data.get("status", {}).get("phase"),
                                 "capacity": pvc_data.get("status", {}).get("capacity"),
                             }
-                        except:
-                            pass
-        except:
-            pass
+                        except json.JSONDecodeError as e:
+                            console.print(
+                                f"[yellow]Warning: unparseable PVC JSON for {pvc_namespace}/{pvc_name}: {e}[/yellow]"
+                            )
+        except json.JSONDecodeError as e:
+            console.print(f"[yellow]Warning: unparseable PV JSON for {volume_id}: {e}[/yellow]")
 
     # Get ZFS volume info if it's a ZFS volume
     zfs_output = run_command([
@@ -261,8 +261,8 @@ def get_volume_context(volume_id: str) -> Dict[str, Any]:
                 "capacity": zfs_data.get("spec", {}).get("capacity"),
                 "status": zfs_data.get("status", {}).get("state"),
             }
-        except:
-            pass
+        except json.JSONDecodeError as e:
+            console.print(f"[yellow]Warning: unparseable ZFSVolume JSON for {volume_id}: {e}[/yellow]")
 
     return context
 
@@ -287,7 +287,7 @@ def get_velero_logs() -> str:
     return output if output else "Could not retrieve Velero logs"
 
 
-def get_recent_events() -> List[str]:
+def get_recent_events() -> list[str]:
     """Get recent Kubernetes events related to backups and volumes."""
     output = run_command([
         "kubectl", "get", "events", "-A",
@@ -523,10 +523,7 @@ def display_summary_table(df: pd.DataFrame):
 
         # Volume info
         vol_info = f"{row['vol_snapshots_completed']}/{row['vol_snapshots_attempted']}"
-        if row["failed_volumes"] > 0:
-            vol_info = f"[red]{vol_info}[/red]"
-        else:
-            vol_info = f"[green]{vol_info}[/green]"
+        vol_info = f"[red]{vol_info}[/red]" if row["failed_volumes"] > 0 else f"[green]{vol_info}[/green]"
 
         # Items info
         items_info = f"{row['items_backed_up']}/{row['total_items']}"
@@ -549,7 +546,7 @@ def display_summary_table(df: pd.DataFrame):
     console.print(table)
 
 
-def display_failure_details(failed_backups: List[tuple]):
+def display_failure_details(failed_backups: list[tuple[Any, dict[str, Any]]]):
     """Display detailed failure information."""
     if not failed_backups:
         console.print(Panel("[green]No failures to report![/green]", title="Failure Details"))
@@ -598,8 +595,9 @@ def display_failure_details(failed_backups: List[tuple]):
         ))
 
 
-def generate_markdown_report(df: pd.DataFrame, failed_backups: List[tuple], output_dir: Path,
-                            volume_contexts: Dict[str, Dict], openebs_logs: str, velero_logs: str, events: List[str]):
+def generate_markdown_report(df: pd.DataFrame, failed_backups: list[tuple[Any, dict[str, Any]]], output_dir: Path,
+                            volume_contexts: dict[str, dict[str, Any]], openebs_logs: str, velero_logs: str,
+                            events: list[str]):
     """Generate a markdown report file."""
     report_path = output_dir / "velero-report.md"
 

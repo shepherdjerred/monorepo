@@ -219,9 +219,7 @@ def rulesets_match(existing: dict[str, Any], config: RulesetConfig) -> bool:
         return False
     if normalize_rules(existing.get("rules", [])) != normalize_rules(config.rules):
         return False
-    if normalize_bypass_actors(existing.get("bypass_actors")) != normalize_bypass_actors(config.bypass_actors):
-        return False
-    return True
+    return normalize_bypass_actors(existing.get("bypass_actors")) == normalize_bypass_actors(config.bypass_actors)
 
 
 def list_rulesets(client: GitHubClient) -> None:

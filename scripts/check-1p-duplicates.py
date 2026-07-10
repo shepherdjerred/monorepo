@@ -7,6 +7,7 @@ import subprocess
 import sys
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any
 
 
 def run_op(args: list[str]) -> str:
@@ -20,17 +21,17 @@ def run_op(args: list[str]) -> str:
     return result.stdout
 
 
-def get_vaults() -> list[dict]:
+def get_vaults() -> list[dict[str, Any]]:
     out = run_op(["vault", "list", "--format", "json"])
     return json.loads(out) if out else []
 
 
-def get_items(vault_id: str) -> list[dict]:
+def get_items(vault_id: str) -> list[dict[str, Any]]:
     out = run_op(["item", "list", "--vault", vault_id, "--format", "json"])
     return json.loads(out) if out else []
 
 
-def get_item_details(item_id: str, vault_id: str) -> dict | None:
+def get_item_details(item_id: str, vault_id: str) -> dict[str, Any] | None:
     out = run_op(["item", "get", item_id, "--vault", vault_id, "--format", "json", "--reveal"])
     return json.loads(out) if out else None
 
@@ -53,7 +54,7 @@ NOISE_VALUES = {
 }
 
 
-def extract_fields(item: dict) -> list[tuple[str, str, str]]:
+def extract_fields(item: dict[str, Any]) -> list[tuple[str, str, str]]:
     """Extract (section_label, field_label, value) tuples from an item.
 
     Only extracts secret-like fields (passwords, tokens, keys, credentials).
@@ -102,7 +103,9 @@ def extract_fields(item: dict) -> list[tuple[str, str, str]]:
     return results
 
 
-def fetch_one(item_summary: dict, vault_id: str, vault_name: str) -> tuple[str, str, str, list[tuple[str, str, str]]] | None:
+def fetch_one(
+    item_summary: dict[str, Any], vault_id: str, vault_name: str
+) -> tuple[str, str, str, list[tuple[str, str, str]]] | None:
     """Fetch a single item's details. Returns (vault_name, item_title, item_id, fields) or None."""
     item_id = item_summary["id"]
     item_title = item_summary.get("title", "(untitled)")
