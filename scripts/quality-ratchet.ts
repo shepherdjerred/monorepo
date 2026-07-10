@@ -15,6 +15,8 @@ interface Baseline {
   "ts-suppressions": Record<string, number>;
   "rust-allow": Record<string, number>;
   "prettier-ignore": Record<string, number>;
+  "test-skips": Record<string, number>;
+  "placeholder-assertions": Record<string, number>;
   updated: string;
 }
 
@@ -59,6 +61,26 @@ const RULES: GrepRule[] = [
     pattern: String.raw`^\s*(//|/\*)\s*prettier-ignore`,
     searchPaths: ["packages/", ".dagger/"],
     includes: ["*.ts", "*.tsx", "*.js", "*.jsx", "*.css", "*.json"],
+    excludeDirs: ["node_modules", "dist", "archive", "discord-video-stream"],
+    excludePathPatterns: [],
+  },
+  {
+    // Unconditional test skips. Conditional gating via `skipIf(expr)` is
+    // fine and deliberately NOT matched here (repo rule: never skip tests).
+    key: "test-skips",
+    pattern: String.raw`(test|describe|it)\.skip\(`,
+    searchPaths: ["packages/", "scripts/"],
+    includes: ["*.ts", "*.tsx"],
+    excludeDirs: ["node_modules", "dist", "archive", "discord-video-stream"],
+    excludePathPatterns: [],
+  },
+  {
+    // Assertions that assert nothing specific. Prefer toBe/toEqual/
+    // toBeDefined/toBeNull with a real expected value.
+    key: "placeholder-assertions",
+    pattern: String.raw`expect\(true\)\.toBe\(true\)|toBeTruthy\(\)|toBeFalsy\(\)`,
+    searchPaths: ["packages/", "scripts/"],
+    includes: ["*.ts", "*.tsx"],
     excludeDirs: ["node_modules", "dist", "archive", "discord-video-stream"],
     excludePathPatterns: [],
   },
