@@ -1291,6 +1291,13 @@ export type KubeprometheusstackHelmValuesAlertmanager = {
    */
   ingressPerReplica?: KubeprometheusstackHelmValuesAlertmanagerIngressPerReplica;
   /**
+   * Configuration for creating a Gateway API route that will map to each Alertmanager replica service
+   * alertmanager.servicePerReplica must be enabled
+   *
+   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostPrefix":"","hostDomain":"","parentRefs":[],"httpsRedirect":false,"filters":[],"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"sessionPersistence":{},"additionalRules":[]}}
+   */
+  routePerReplica?: KubeprometheusstackHelmValuesAlertmanagerRoutePerReplica;
+  /**
    * Configuration for Alertmanager service
    *
    * @default {...} (16 keys)
@@ -1310,7 +1317,7 @@ export type KubeprometheusstackHelmValuesAlertmanager = {
    */
   serviceMonitor?: KubeprometheusstackHelmValuesAlertmanagerServiceMonitor;
   /**
-   * @default {...} (56 keys)
+   * @default {...} (61 keys)
    */
   alertmanagerSpec?: KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec;
   /**
@@ -1806,6 +1813,122 @@ export type KubeprometheusstackHelmValuesAlertmanagerIngressPerReplicaTlsSecretP
      * @default "alertmanager"
      */
     prefix?: string;
+  };
+
+export type KubeprometheusstackHelmValuesAlertmanagerRoutePerReplica = {
+  /**
+   * @default {...} (13 keys)
+   */
+  main?: KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMain;
+};
+
+export type KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMain = {
+  /**
+   * Enables or disables the routePerReplica
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Set the route apiVersion, e.g. gateway.networking.k8s.io/v1 or gateway.networking.k8s.io/v1alpha2
+   *
+   * @default "gateway.networking.k8s.io/v1"
+   */
+  apiVersion?: string;
+  /**
+   * Set the route kind
+   * Valid options are GRPCRoute, HTTPRoute, TCPRoute, TLSRoute, UDPRoute
+   *
+   * @default "HTTPRoute"
+   */
+  kind?: string;
+  /**
+   * @default {}
+   */
+  annotations?: KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMainAnnotations;
+  /**
+   * @default {}
+   */
+  labels?: KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMainLabels;
+  /**
+   * Final form of the hostname for each per replica route is
+   * {{ routePerReplica.hostPrefix }}-{{ $replicaNumber }}.{{ routePerReplica.hostDomain }}
+   * Prefix for the per replica route that will have `-$replicaNumber` appended to the end
+   *
+   * @default ""
+   */
+  hostPrefix?: string;
+  /**
+   * Domain that will be used for the per replica route
+   *
+   * @default ""
+   */
+  hostDomain?: string;
+  parentRefs?: unknown[];
+  /**
+   * create http route for redirect (https://gateway-api.sigs.k8s.io/guides/http-redirect-rewrite/#http-to-https-redirects)
+   * Take care that you only enable this on the http listener of the gateway to avoid an infinite redirect.
+   * matches, filters and additionalRules will be ignored if this is set to true.
+   *
+   * @default false
+   */
+  httpsRedirect?: boolean;
+  filters?: unknown[];
+  matches?: KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMainMatchesElement[];
+  /**
+   * Session persistence configuration for the route rule.
+   *
+   * @default {}
+   */
+  sessionPersistence?: KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMainSessionPersistence;
+  additionalRules?: unknown[];
+};
+
+export type KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMainAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
+
+export type KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMainLabels =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
+
+export type KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMainMatchesElement =
+  {
+    /**
+     * @default {"type":"PathPrefix","value":"/"}
+     */
+    path?: KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMainMatchesPath;
+  };
+
+export type KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMainMatchesPath =
+  {
+    /**
+     * @default "PathPrefix"
+     */
+    type?: string;
+    /**
+     * @default "/"
+     */
+    value?: string;
+  };
+
+export type KubeprometheusstackHelmValuesAlertmanagerRoutePerReplicaMainSessionPersistence =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
   };
 
 export type KubeprometheusstackHelmValuesAlertmanagerService = {
@@ -2352,6 +2475,29 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec = {
    */
   updateStrategy?: KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecUpdateStrategy;
   terminationGracePeriodSeconds?: unknown;
+  enableServiceLinks?: unknown;
+  /**
+   * Set the scheduler name to use for the Alertmanager pods.
+   *
+   * @default ""
+   */
+  schedulerName?: string;
+  hostAliases?: unknown[];
+  /**
+   * Limits defines the Alertmanager limits command line flags. Requires Alertmanager >= v0.28.0.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.AlertmanagerLimitsSpec
+   *
+   * @default {}
+   */
+  limits?: KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecLimits;
+  /**
+   * ClusterTLS defines the mutual TLS configuration for the Alertmanager cluster's gossip protocol.
+   * Requires Alertmanager >= v0.24.0.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.ClusterTLSConfig
+   *
+   * @default {}
+   */
+  clusterTLS?: KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecClusterTLS;
   /**
    * Additional configuration which is not covered by the properties above. (passed through tpl)
    *
@@ -2384,7 +2530,7 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v0.33.0"
+   * @default "v0.33.1"
    */
   tag?: string;
   /**
@@ -2459,6 +2605,12 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecDnsConfig =
   object;
 
 export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecUpdateStrategy =
+  object;
+
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecLimits =
+  object;
+
+export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecClusterTLS =
   object;
 
 export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpecAdditionalConfig =
@@ -4894,6 +5046,16 @@ export type KubeprometheusstackHelmValuesPrometheusOperator = {
    */
   secretFieldSelector?: string;
   /**
+   * Feature gates to enable/disable operator features, rendered as --feature-gates=<key>=<value>.
+   * See https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/feature-gates.md
+   * Example:
+   * featureGates:
+   * StatusForConfigurationResources: true
+   *
+   * @default {}
+   */
+  featureGates?: KubeprometheusstackHelmValuesPrometheusOperatorFeatureGates;
+  /**
    * If false then the user will opt out of automounting API credentials.
    *
    * @default true
@@ -6273,7 +6435,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorThanosImage = {
    */
   repository?: string;
   /**
-   * @default "v0.41.0"
+   * @default "v0.42.0"
    */
   tag?: string;
   /**
@@ -6281,6 +6443,9 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorThanosImage = {
    */
   sha?: string;
 };
+
+export type KubeprometheusstackHelmValuesPrometheusOperatorFeatureGates =
+  object;
 
 export type KubeprometheusstackHelmValuesPrometheus = {
   /**
@@ -6405,13 +6570,20 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    */
   ingressPerReplica?: KubeprometheusstackHelmValuesPrometheusIngressPerReplica;
   /**
+   * Configuration for creating a Gateway API route that will map to each Prometheus replica service
+   * prometheus.servicePerReplica must be enabled
+   *
+   * @default {"main":{"enabled":false,"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","annotations":{},"labels":{},"hostPrefix":"","hostDomain":"","parentRefs":[],"httpsRedirect":false,"filters":[],"matches":[{"path":{"type":"PathPrefix","value":"/"}}],"sessionPersistence":{},"additionalRules":[]}}
+   */
+  routePerReplica?: KubeprometheusstackHelmValuesPrometheusRoutePerReplica;
+  /**
    * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#prometheusspec
    *
    * @default {...} (14 keys)
    */
   serviceMonitor?: KubeprometheusstackHelmValuesPrometheusServiceMonitor;
   /**
-   * @default {...} (122 keys)
+   * @default {...} (138 keys)
    */
   prometheusSpec?: KubeprometheusstackHelmValuesPrometheusPrometheusSpec;
   additionalRulesForClusterRole?: unknown[];
@@ -7265,6 +7437,121 @@ export type KubeprometheusstackHelmValuesPrometheusIngressPerReplicaTlsSecretPer
     prefix?: string;
   };
 
+export type KubeprometheusstackHelmValuesPrometheusRoutePerReplica = {
+  /**
+   * @default {...} (13 keys)
+   */
+  main?: KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMain;
+};
+
+export type KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMain = {
+  /**
+   * Enables or disables the routePerReplica
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Set the route apiVersion, e.g. gateway.networking.k8s.io/v1 or gateway.networking.k8s.io/v1alpha2
+   *
+   * @default "gateway.networking.k8s.io/v1"
+   */
+  apiVersion?: string;
+  /**
+   * Set the route kind
+   * Valid options are GRPCRoute, HTTPRoute, TCPRoute, TLSRoute, UDPRoute
+   *
+   * @default "HTTPRoute"
+   */
+  kind?: string;
+  /**
+   * @default {}
+   */
+  annotations?: KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMainAnnotations;
+  /**
+   * @default {}
+   */
+  labels?: KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMainLabels;
+  /**
+   * Final form of the hostname for each per replica route is
+   * {{ routePerReplica.hostPrefix }}-{{ $replicaNumber }}.{{ routePerReplica.hostDomain }}
+   * Prefix for the per replica route that will have `-$replicaNumber` appended to the end
+   *
+   * @default ""
+   */
+  hostPrefix?: string;
+  /**
+   * Domain that will be used for the per replica route
+   *
+   * @default ""
+   */
+  hostDomain?: string;
+  parentRefs?: unknown[];
+  /**
+   * create http route for redirect (https://gateway-api.sigs.k8s.io/guides/http-redirect-rewrite/#http-to-https-redirects)
+   * Take care that you only enable this on the http listener of the gateway to avoid an infinite redirect.
+   * matches, filters and additionalRules will be ignored if this is set to true.
+   *
+   * @default false
+   */
+  httpsRedirect?: boolean;
+  filters?: unknown[];
+  matches?: KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMainMatchesElement[];
+  /**
+   * Session persistence configuration for the route rule.
+   *
+   * @default {}
+   */
+  sessionPersistence?: KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMainSessionPersistence;
+  additionalRules?: unknown[];
+};
+
+export type KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMainAnnotations =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
+
+export type KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMainLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMainMatchesElement =
+  {
+    /**
+     * @default {"type":"PathPrefix","value":"/"}
+     */
+    path?: KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMainMatchesPath;
+  };
+
+export type KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMainMatchesPath =
+  {
+    /**
+     * @default "PathPrefix"
+     */
+    type?: string;
+    /**
+     * @default "/"
+     */
+    value?: string;
+  };
+
+export type KubeprometheusstackHelmValuesPrometheusRoutePerReplicaMainSessionPersistence =
+  {
+    /**
+     * This type allows arbitrary additional properties beyond those defined below.
+     * This is common for config maps, custom settings, and extensible configurations.
+     */
+    [key: string]: unknown;
+  };
+
 export type KubeprometheusstackHelmValuesPrometheusServiceMonitor = {
   /**
    * If true, create a serviceMonitor for prometheus
@@ -7706,6 +7993,9 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpec = {
    * Increasing shards will not reshard data either but it will continue to be available from the same instances.
    * To query globally use Thanos sidecar and Thanos querier or remote write data to a central location.
    * Sharding is done on the content of the `__address__` target meta-label.
+   * Set shards to null to omit spec.shards from the Prometheus custom resource (the operator then
+   * defaults to 1 shard). Omitting the field lets an external autoscaler such as an HPA or a KEDA
+   * ScaledObject own spec.shards through the /scale subresource without Helm reverting it.
    *
    * @default 1
    */
@@ -7921,6 +8211,49 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpec = {
    */
   sampleLimit?: boolean;
   /**
+   * TargetLimit defines a global limit on the number of scraped targets. 0 means no limit.
+   *
+   * @default 0
+   */
+  targetLimit?: number;
+  /**
+   * Per-scrape limit on number of labels that will be accepted for a sample. 0 means no limit.
+   *
+   * @default 0
+   */
+  labelLimit?: number;
+  /**
+   * Per-scrape limit on length of labels name that will be accepted for a sample. 0 means no limit.
+   *
+   * @default 0
+   */
+  labelNameLengthLimit?: number;
+  /**
+   * Per-scrape limit on length of labels value that will be accepted for a sample. 0 means no limit.
+   *
+   * @default 0
+   */
+  labelValueLengthLimit?: number;
+  /**
+   * Per-scrape limit on the number of targets dropped by relabeling that will be kept in memory. 0 means no limit.
+   *
+   * @default 0
+   */
+  keepDroppedTargets?: number;
+  /**
+   * BodySizeLimit defines a global limit on the size of uncompressed response body that will be accepted. Example: 100MB.
+   *
+   * @default ""
+   */
+  bodySizeLimit?: string;
+  /**
+   * EnforcedBodySizeLimit defines the maximum size of uncompressed response body that will be accepted, overriding any
+   * value set per ServiceMonitor/PodMonitor. Example: 100MB. Empty means no limit.
+   *
+   * @default ""
+   */
+  enforcedBodySizeLimit?: string;
+  /**
    * EnforcedKeepDroppedTargetsLimit defines on the number of targets dropped by relabeling that will be kept in memory.
    * The value overrides any spec.keepDroppedTargets set by ServiceMonitor, PodMonitor, Probe objects unless spec.keepDroppedTargets
    * is greater than zero and less than spec.enforcedKeepDroppedTargets. 0 means no limit.
@@ -8016,6 +8349,55 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpec = {
    * @default ""
    */
   serviceDiscoveryRole?: string;
+  enableServiceLinks?: unknown;
+  /**
+   * Set the scheduler name to use for the Prometheus pods.
+   *
+   * @default ""
+   */
+  schedulerName?: string;
+  /**
+   * Specifies the character escaping scheme applied to metric and label names.
+   * Supported values are: AllowUTF8, Underscores, Dots, Values
+   *
+   * @default ""
+   */
+  nameEscapingScheme?: string;
+  /**
+   * Defines the strategy used to reload the Prometheus configuration.
+   * Supported values are: HTTP, ProcessSignal
+   *
+   * @default ""
+   */
+  reloadStrategy?: string;
+  /**
+   * Defines the offset the rule evaluation timestamp of the rule evaluation queries is shifted backwards.
+   * ref: https://github.com/prometheus-community/helm-charts/issues/5843
+   *
+   * @default ""
+   */
+  ruleQueryOffset?: string;
+  /**
+   * RuntimeConfig configures the values for the Prometheus process behavior.
+   *
+   * @default {}
+   */
+  runtime?: KubeprometheusstackHelmValuesPrometheusPrometheusSpecRuntime;
+  /**
+   * Defines the sharding strategy applied by the operator.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.ShardingStrategy
+   *
+   * @default {}
+   */
+  shardingStrategy?: KubeprometheusstackHelmValuesPrometheusPrometheusSpecShardingStrategy;
+  /**
+   * Defines the retention policy for the resources of stale shards after a scale-down.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.ShardRetentionPolicy
+   *
+   * @default {}
+   */
+  shardRetentionPolicy?: KubeprometheusstackHelmValuesPrometheusPrometheusSpecShardRetentionPolicy;
+  remoteWriteReceiverMessageVersions?: unknown[];
   /**
    * Pod management policy. Kubernetes default is OrderedReady but prometheus-operator default is Parallel.
    * ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies
@@ -8199,6 +8581,15 @@ export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecThanos =
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecTracingConfig =
   object;
 
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecRuntime =
+  object;
+
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecShardingStrategy =
+  object;
+
+export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecShardRetentionPolicy =
+  object;
+
 export type KubeprometheusstackHelmValuesPrometheusPrometheusSpecUpdateStrategy =
   object;
 
@@ -8261,7 +8652,7 @@ export type KubeprometheusstackHelmValuesThanosRuler = {
    */
   serviceMonitor?: KubeprometheusstackHelmValuesThanosRulerServiceMonitor;
   /**
-   * @default {...} (46 keys)
+   * @default {...} (68 keys)
    */
   thanosRulerSpec?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpec;
   /**
@@ -8849,6 +9240,106 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpec = {
    */
   updateStrategy?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecUpdateStrategy;
   /**
+   * Version of Thanos Ruler to deploy. Overrides the version derived from the image tag when set.
+   *
+   * @default ""
+   */
+  version?: string;
+  /**
+   * Image pull policy for the Thanos Ruler container.
+   *
+   * @default ""
+   */
+  imagePullPolicy?: string;
+  enableFeatures?: unknown[];
+  enableServiceLinks?: unknown;
+  minReadySeconds?: unknown;
+  /**
+   * Defines the DNS configuration for the pods.
+   *
+   * @default {}
+   */
+  dnsConfig?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecDnsConfig;
+  /**
+   * Defines the DNS policy for the pods.
+   *
+   * @default ""
+   */
+  dnsPolicy?: string;
+  hostAliases?: unknown[];
+  remoteWrite?: unknown[];
+  /**
+   * Configures tracing for Thanos Ruler. Maps to the tracing.config CLI argument.
+   *
+   * @default {"existingSecret":{},"secret":{}}
+   */
+  tracingConfig?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecTracingConfig;
+  /**
+   * Path to a tracing configuration file on disk (e.g. mounted through a volume). Takes precedence over tracingConfig.
+   *
+   * @default ""
+   */
+  tracingConfigFile?: string;
+  /**
+   * Configures alert relabeling for Thanos Ruler. Maps to the alert.relabel-config CLI argument.
+   *
+   * @default {"existingSecret":{},"secret":{}}
+   */
+  alertRelabelConfigs?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAlertRelabelConfigs;
+  /**
+   * Path to an alert relabel configuration file on disk. Takes precedence over alertRelabelConfigs.
+   *
+   * @default ""
+   */
+  alertRelabelConfigFile?: string;
+  /**
+   * Configures the gRPC server TLS for Thanos Ruler.
+   * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.TLSConfig
+   *
+   * @default {}
+   */
+  grpcServerTlsConfig?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecGrpcServerTlsConfig;
+  /**
+   * Path to an object storage configuration file on disk. Takes precedence over objectStorageConfig.
+   *
+   * @default ""
+   */
+  objectStorageConfigFile?: string;
+  ruleConcurrentEval?: unknown;
+  /**
+   * Maximum time to tolerate outage for restoring "for" state of alert.
+   *
+   * @default ""
+   */
+  ruleOutageTolerance?: string;
+  /**
+   * Minimum duration between alert and restored "for" state. Maintained only for alerts with a configured "for"
+   * time greater than the grace period.
+   *
+   * @default ""
+   */
+  ruleGracePeriod?: string;
+  /**
+   * The default rule group's query offset duration to shift the evaluation time of rules backwards.
+   * ref: https://github.com/prometheus-community/helm-charts/issues/5843
+   *
+   * @default ""
+   */
+  ruleQueryOffset?: string;
+  /**
+   * Minimum amount of time to wait before resending an alert to Alertmanager.
+   *
+   * @default ""
+   */
+  resendDelay?: string;
+  /**
+   * EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert and metric.
+   *
+   * @default ""
+   */
+  enforcedNamespaceLabel?: string;
+  excludedFromEnforcement?: unknown[];
+  /**
    * Additional configuration which is not covered by the properties above. (passed through tpl)
    *
    * @default {}
@@ -8876,7 +9367,7 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecImage = {
    */
   repository?: string;
   /**
-   * @default "v0.41.0"
+   * @default "v0.42.0"
    */
   tag?: string;
   /**
@@ -9030,6 +9521,56 @@ export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecWeb = object;
 export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecUpdateStrategy =
   object;
 
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecDnsConfig =
+  object;
+
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecTracingConfig =
+  {
+    /**
+     * use existing secret, if configured, tracingConfig.secret will not be used
+     *
+     * @default {}
+     */
+    existingSecret?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecTracingConfigExistingSecret;
+    /**
+     * render tracingConfig secret data and configure it to be used by Thanos Ruler custom resource, ignored when tracingConfig.existingSecret is set
+     *
+     * @default {}
+     */
+    secret?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecTracingConfigSecret;
+  };
+
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecTracingConfigExistingSecret =
+  object;
+
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecTracingConfigSecret =
+  object;
+
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAlertRelabelConfigs =
+  {
+    /**
+     * use existing secret, if configured, alertRelabelConfigs.secret will not be used
+     *
+     * @default {}
+     */
+    existingSecret?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAlertRelabelConfigsExistingSecret;
+    /**
+     * render alertRelabelConfigs secret data and configure it to be used by Thanos Ruler custom resource, ignored when alertRelabelConfigs.existingSecret is set
+     *
+     * @default {}
+     */
+    secret?: KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAlertRelabelConfigsSecret;
+  };
+
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAlertRelabelConfigsExistingSecret =
+  object;
+
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAlertRelabelConfigsSecret =
+  object;
+
+export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecGrpcServerTlsConfig =
+  object;
+
 export type KubeprometheusstackHelmValuesThanosRulerThanosRulerSpecAdditionalConfig =
   object;
 
@@ -9147,7 +9688,7 @@ export type KubeprometheusstackHelmValues = {
    * someoneelse:$apr1$DMZX2Z4q$6SbQIfyuLQd.xmo/P0m2c.
    * Using default values from https://github.com/grafana-community/helm-charts/blob/main/charts/grafana/values.yaml
    *
-   * @default {...} (24 keys)
+   * @default {...} (25 keys)
    */
   alertmanager?: KubeprometheusstackHelmValuesAlertmanager;
   /**
@@ -9235,13 +9776,13 @@ export type KubeprometheusstackHelmValues = {
   /**
    * Manages Prometheus and Alertmanager components
    *
-   * @default {...} (50 keys)
+   * @default {...} (51 keys)
    */
   prometheusOperator?: KubeprometheusstackHelmValuesPrometheusOperator;
   /**
    * Deploy a Prometheus instance
    *
-   * @default {...} (23 keys)
+   * @default {...} (24 keys)
    */
   prometheus?: KubeprometheusstackHelmValuesPrometheus;
   /**
@@ -9417,6 +9958,17 @@ export type KubeprometheusstackHelmParameters = {
   "alertmanager.ingressPerReplica.tlsSecretName"?: string;
   "alertmanager.ingressPerReplica.tlsSecretPerReplica.enabled"?: string;
   "alertmanager.ingressPerReplica.tlsSecretPerReplica.prefix"?: string;
+  "alertmanager.routePerReplica.main.enabled"?: string;
+  "alertmanager.routePerReplica.main.apiVersion"?: string;
+  "alertmanager.routePerReplica.main.kind"?: string;
+  "alertmanager.routePerReplica.main.hostPrefix"?: string;
+  "alertmanager.routePerReplica.main.hostDomain"?: string;
+  "alertmanager.routePerReplica.main.parentRefs"?: string;
+  "alertmanager.routePerReplica.main.httpsRedirect"?: string;
+  "alertmanager.routePerReplica.main.filters"?: string;
+  "alertmanager.routePerReplica.main.matches.path.type"?: string;
+  "alertmanager.routePerReplica.main.matches.path.value"?: string;
+  "alertmanager.routePerReplica.main.additionalRules"?: string;
   "alertmanager.service.enabled"?: string;
   "alertmanager.service.clusterIP"?: string;
   "alertmanager.service.ipDualStack.enabled"?: string;
@@ -9505,6 +10057,9 @@ export type KubeprometheusstackHelmParameters = {
   "alertmanager.alertmanagerSpec.minReadySeconds"?: string;
   "alertmanager.alertmanagerSpec.podManagementPolicy"?: string;
   "alertmanager.alertmanagerSpec.terminationGracePeriodSeconds"?: string;
+  "alertmanager.alertmanagerSpec.enableServiceLinks"?: string;
+  "alertmanager.alertmanagerSpec.schedulerName"?: string;
+  "alertmanager.alertmanagerSpec.hostAliases"?: string;
   "alertmanager.alertmanagerSpec.additionalConfigString"?: string;
   "grafana.enabled"?: string;
   "grafana.namespaceOverride"?: string;
@@ -10105,6 +10660,17 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.ingressPerReplica.tlsSecretName"?: string;
   "prometheus.ingressPerReplica.tlsSecretPerReplica.enabled"?: string;
   "prometheus.ingressPerReplica.tlsSecretPerReplica.prefix"?: string;
+  "prometheus.routePerReplica.main.enabled"?: string;
+  "prometheus.routePerReplica.main.apiVersion"?: string;
+  "prometheus.routePerReplica.main.kind"?: string;
+  "prometheus.routePerReplica.main.hostPrefix"?: string;
+  "prometheus.routePerReplica.main.hostDomain"?: string;
+  "prometheus.routePerReplica.main.parentRefs"?: string;
+  "prometheus.routePerReplica.main.httpsRedirect"?: string;
+  "prometheus.routePerReplica.main.filters"?: string;
+  "prometheus.routePerReplica.main.matches.path.type"?: string;
+  "prometheus.routePerReplica.main.matches.path.value"?: string;
+  "prometheus.routePerReplica.main.additionalRules"?: string;
   "prometheus.serviceMonitor.selfMonitor"?: string;
   "prometheus.serviceMonitor.interval"?: string;
   "prometheus.serviceMonitor.sampleLimit"?: string;
@@ -10201,6 +10767,13 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.prometheusSpec.excludedFromEnforcement"?: string;
   "prometheus.prometheusSpec.queryLogFile"?: string;
   "prometheus.prometheusSpec.sampleLimit"?: string;
+  "prometheus.prometheusSpec.targetLimit"?: string;
+  "prometheus.prometheusSpec.labelLimit"?: string;
+  "prometheus.prometheusSpec.labelNameLengthLimit"?: string;
+  "prometheus.prometheusSpec.labelValueLengthLimit"?: string;
+  "prometheus.prometheusSpec.keepDroppedTargets"?: string;
+  "prometheus.prometheusSpec.bodySizeLimit"?: string;
+  "prometheus.prometheusSpec.enforcedBodySizeLimit"?: string;
   "prometheus.prometheusSpec.enforcedKeepDroppedTargets"?: string;
   "prometheus.prometheusSpec.enforcedSampleLimit"?: string;
   "prometheus.prometheusSpec.enforcedTargetLimit"?: string;
@@ -10215,6 +10788,12 @@ export type KubeprometheusstackHelmParameters = {
   "prometheus.prometheusSpec.hostUsers"?: string;
   "prometheus.prometheusSpec.hostAliases"?: string;
   "prometheus.prometheusSpec.serviceDiscoveryRole"?: string;
+  "prometheus.prometheusSpec.enableServiceLinks"?: string;
+  "prometheus.prometheusSpec.schedulerName"?: string;
+  "prometheus.prometheusSpec.nameEscapingScheme"?: string;
+  "prometheus.prometheusSpec.reloadStrategy"?: string;
+  "prometheus.prometheusSpec.ruleQueryOffset"?: string;
+  "prometheus.prometheusSpec.remoteWriteReceiverMessageVersions"?: string;
   "prometheus.prometheusSpec.podManagementPolicy"?: string;
   "prometheus.prometheusSpec.additionalConfigString"?: string;
   "prometheus.prometheusSpec.maximumStartupDurationSeconds"?: string;
@@ -10311,6 +10890,24 @@ export type KubeprometheusstackHelmParameters = {
   "thanosRuler.thanosRulerSpec.portName"?: string;
   "thanosRuler.thanosRulerSpec.terminationGracePeriodSeconds"?: string;
   "thanosRuler.thanosRulerSpec.podManagementPolicy"?: string;
+  "thanosRuler.thanosRulerSpec.version"?: string;
+  "thanosRuler.thanosRulerSpec.imagePullPolicy"?: string;
+  "thanosRuler.thanosRulerSpec.enableFeatures"?: string;
+  "thanosRuler.thanosRulerSpec.enableServiceLinks"?: string;
+  "thanosRuler.thanosRulerSpec.minReadySeconds"?: string;
+  "thanosRuler.thanosRulerSpec.dnsPolicy"?: string;
+  "thanosRuler.thanosRulerSpec.hostAliases"?: string;
+  "thanosRuler.thanosRulerSpec.remoteWrite"?: string;
+  "thanosRuler.thanosRulerSpec.tracingConfigFile"?: string;
+  "thanosRuler.thanosRulerSpec.alertRelabelConfigFile"?: string;
+  "thanosRuler.thanosRulerSpec.objectStorageConfigFile"?: string;
+  "thanosRuler.thanosRulerSpec.ruleConcurrentEval"?: string;
+  "thanosRuler.thanosRulerSpec.ruleOutageTolerance"?: string;
+  "thanosRuler.thanosRulerSpec.ruleGracePeriod"?: string;
+  "thanosRuler.thanosRulerSpec.ruleQueryOffset"?: string;
+  "thanosRuler.thanosRulerSpec.resendDelay"?: string;
+  "thanosRuler.thanosRulerSpec.enforcedNamespaceLabel"?: string;
+  "thanosRuler.thanosRulerSpec.excludedFromEnforcement"?: string;
   "thanosRuler.thanosRulerSpec.additionalConfigString"?: string;
   cleanPrometheusOperatorObjectNames?: string;
   extraManifests?: string;

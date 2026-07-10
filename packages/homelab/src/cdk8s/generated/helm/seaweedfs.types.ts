@@ -2129,7 +2129,7 @@ export type SeaweedfsHelmValuesSftp = {
    */
   hostKeysFolder?: string;
   /**
-   * Comma-separated list of allowed auth methods: password, publickey, keyboard-interactive
+   * Comma-separated list of allowed auth methods: password, publickey, certificate
    *
    * @default "password,publickey"
    */
@@ -2184,6 +2184,18 @@ export type SeaweedfsHelmValuesSftp = {
   enableAuth?: boolean;
   existingConfigSecret?: unknown;
   existingSshConfigSecret?: unknown;
+  /**
+   * SSH user-certificate authentication (CA-signed user certs). Mirrors
+   * OpenSSH `TrustedUserCAKeys` and MinIO `--sftp=trusted-user-ca-key`.
+   * Add "certificate" to `authMethods` to activate; when active, plain
+   * public keys are rejected on the public-key channel.
+   * Inline CA public keys in OpenSSH authorized_keys format (one per
+   * line). Ignored when `existingCAKeysSecret` is set.
+   *
+   * @default ""
+   */
+  trustedUserCAKeys?: string;
+  existingCAKeysSecret?: unknown;
   sidecars?: unknown[];
   /**
    * @default ""
@@ -3216,7 +3228,7 @@ export type SeaweedfsHelmValuesAllInOne = {
    * Note: Most parameters below default to null, which means they inherit from
    * the global sftp.* settings. Set explicit values here to override for allInOne only.
    *
-   * @default {...} (13 keys)
+   * @default {...} (15 keys)
    */
   sftp?: SeaweedfsHelmValuesAllInOneSftp;
   /**
@@ -3448,6 +3460,8 @@ export type SeaweedfsHelmValuesAllInOneSftp = {
   enableAuth?: boolean;
   existingConfigSecret?: unknown;
   existingSshConfigSecret?: unknown;
+  trustedUserCAKeys?: unknown;
+  existingCAKeysSecret?: unknown;
 };
 
 export type SeaweedfsHelmValuesAllInOneService = {
@@ -3825,7 +3839,7 @@ export type SeaweedfsHelmValues = {
    */
   s3?: SeaweedfsHelmValuesS3;
   /**
-   * @default {...} (41 keys)
+   * @default {...} (43 keys)
    */
   sftp?: SeaweedfsHelmValuesSftp;
   /**
@@ -4198,6 +4212,8 @@ export type SeaweedfsHelmParameters = {
   "sftp.enableAuth"?: string;
   "sftp.existingConfigSecret"?: string;
   "sftp.existingSshConfigSecret"?: string;
+  "sftp.trustedUserCAKeys"?: string;
+  "sftp.existingCAKeysSecret"?: string;
   "sftp.sidecars"?: string;
   "sftp.initContainers"?: string;
   "sftp.extraVolumes"?: string;
@@ -4365,6 +4381,8 @@ export type SeaweedfsHelmParameters = {
   "allInOne.sftp.enableAuth"?: string;
   "allInOne.sftp.existingConfigSecret"?: string;
   "allInOne.sftp.existingSshConfigSecret"?: string;
+  "allInOne.sftp.trustedUserCAKeys"?: string;
+  "allInOne.sftp.existingCAKeysSecret"?: string;
   "allInOne.service.type"?: string;
   "allInOne.service.internalTrafficPolicy"?: string;
   "allInOne.data.type"?: string;

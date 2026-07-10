@@ -1,5 +1,6 @@
 import type { Chart } from "cdk8s";
 import { ApiObject } from "cdk8s";
+import { BUILDKITE_MAX_IN_FLIGHT } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/buildkite.ts";
 
 /**
  * Creates Kueue resource management configuration for the Buildkite namespace.
@@ -8,6 +9,15 @@ import { ApiObject } from "cdk8s";
  * from other namespaces leave only ~2.5 cores of schedulable headroom — raising this further just
  * converts Kueue-suspended jobs into unschedulable Pending pods).
  * Jobs exceeding the quota are suspended (not rejected), eliminating FailedCreate event storms.
+ *
+ * 2026-07 CI-freeze hardening: `pods` added as a covered resource, capped at
+ * `BUILDKITE_MAX_IN_FLIGHT`. Buildkite's `max-in-flight` is the real, primary
+ * concurrency control (see the long comment on it in buildkite.ts); this is a
+ * cheap, independent second enforcement point at the K8s admission layer in
+ * case that setting ever regresses (e.g. a future Helm-values typo). No
+ * change to the CPU/memory nominal quota — Kueue admission accounting is
+ * always requests-based, and 7.5 CPU / 16Gi remains correctly scoped against
+ * the small per-step requests regardless of the pods cap.
  */
 export function createKueueConfig(chart: Chart) {
   new ApiObject(chart, "kueue-resource-flavor", {
@@ -36,7 +46,7 @@ export function createKueueConfig(chart: Chart) {
       },
       resourceGroups: [
         {
-          coveredResources: ["cpu", "memory"],
+          coveredResources: ["cpu", "memory", "pods"],
           flavors: [
             {
               name: "default",
@@ -48,6 +58,10 @@ export function createKueueConfig(chart: Chart) {
                 {
                   name: "memory",
                   nominalQuota: "16Gi",
+                },
+                {
+                  name: "pods",
+                  nominalQuota: String(BUILDKITE_MAX_IN_FLIGHT),
                 },
               ],
             },

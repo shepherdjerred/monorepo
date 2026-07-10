@@ -2,7 +2,7 @@ import {
   toError,
   parseJsonRecord,
 } from "@shepherdjerred/birmel/utils/errors.ts";
-import type { DailyPostConfig } from "@prisma/client";
+import type { DailyPostConfig } from "#generated/prisma/client/index.js";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";

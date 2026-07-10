@@ -2,7 +2,7 @@ import { z } from "zod";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getGitHubConfig, isGitHubConfigured } from "./config.ts";
-import type { GitHubAuth } from "@prisma/client";
+import type { GitHubAuth } from "#generated/prisma/client/index.js";
 
 const TokenResponseSchema = z
   .object({
