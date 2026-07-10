@@ -19,7 +19,10 @@ import {
 } from "./lib/classifier/claude.ts";
 import { classifyTier1 } from "./lib/classifier/tier1.ts";
 import { classifyTier2 } from "./lib/classifier/tier2.ts";
-import { classifyTier3 } from "./lib/classifier/tier3.ts";
+import {
+  classifyTier3,
+  getTier3FailureCounts,
+} from "./lib/classifier/tier3.ts";
 import type { ProposedChange } from "./lib/classifier/types.ts";
 import { verifyClassifications } from "./lib/verification/verify.ts";
 import {
@@ -243,6 +246,21 @@ async function main(): Promise<void> {
   });
 
   displayUsageSummary(getUsageSummary());
+
+  const tier3Failures = getTier3FailureCounts();
+  const tier3FailureTotal = Object.values(tier3Failures).reduce(
+    (a, b) => a + b,
+    0,
+  );
+  if (tier3FailureTotal > 0) {
+    log.warn(
+      `Tier 3 failures (transactions left uncategorized): ${Object.entries(
+        tier3Failures,
+      )
+        .map(([reason, count]) => `${reason}=${String(count)}`)
+        .join(", ")}`,
+    );
+  }
 
   if (config.suggest) {
     displaySuggestions(suggestions);

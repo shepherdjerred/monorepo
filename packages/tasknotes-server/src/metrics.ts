@@ -41,6 +41,13 @@ export const tasksDeletedTotal = new Counter({
   registers: [registry],
 });
 
+export const tasksParseFailuresTotal = new Counter({
+  name: "tasknotes_tasks_parse_failures_total",
+  help: "Task-like files dropped because parsing failed (by reason)",
+  labelNames: ["reason"] as const,
+  registers: [registry],
+});
+
 export const syncFilesTotal = new Gauge({
   name: "tasknotes_sync_files_total",
   help: "Number of files in the vault",

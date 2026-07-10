@@ -2,6 +2,7 @@ import { readdir } from "node:fs/promises";
 import path from "node:path";
 
 import type { Task } from "../domain/types.ts";
+import { tasksParseFailuresTotal } from "../metrics.ts";
 import { parseFrontmatter } from "./frontmatter.ts";
 import { frontmatterToTask } from "./task-mapper.ts";
 
@@ -33,7 +34,13 @@ export async function scanVault(
   let files: string[];
   try {
     files = await walkDir(scanDir);
-  } catch {
+  } catch (error) {
+    // A missing/unreadable vault dir means the server would silently report
+    // ZERO tasks — make the cause impossible to miss.
+    tasksParseFailuresTotal.inc({ reason: "scan_error" });
+    console.error(
+      `[vault] SCAN FAILED for ${scanDir} — reporting an empty vault: ${String(error)}`,
+    );
     return tasks;
   }
 
@@ -57,7 +64,11 @@ async function readTaskFile(
     const { data, content } = parseFrontmatter(raw);
     const relPath = path.relative(vaultPath, filePath);
     return frontmatterToTask(data, content, relPath);
-  } catch {
+  } catch (error) {
+    tasksParseFailuresTotal.inc({ reason: "read_error" });
+    console.error(
+      `[vault] DROPPED file ${filePath}: read/frontmatter error: ${String(error)}`,
+    );
     return undefined;
   }
 }

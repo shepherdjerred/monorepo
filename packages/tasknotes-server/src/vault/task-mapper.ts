@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { Task } from "../domain/types.ts";
+import { tasksParseFailuresTotal } from "../metrics.ts";
 
 const PrioritySchema = z.enum([
   "highest",
@@ -114,7 +115,21 @@ export function frontmatterToTask(
   filePath: string,
 ): Task | undefined {
   const parsed = TaskFrontmatterSchema.safeParse(data);
-  if (!parsed.success) return undefined;
+  if (!parsed.success) {
+    // A file without a string `title` is a regular note, not a task — skip
+    // silently. A file WITH a title that still fails the schema is a task
+    // being dropped: say so loudly instead of silently vanishing it.
+    if (typeof data["title"] === "string") {
+      tasksParseFailuresTotal.inc({ reason: "schema" });
+      const issues = parsed.error.issues
+        .map((i) => `${i.path.join(".")}: ${i.message}`)
+        .join("; ");
+      console.error(
+        `[vault] DROPPED task ${filePath}: frontmatter failed schema validation: ${issues}`,
+      );
+    }
+    return undefined;
+  }
 
   // Collect unknown keys into extraFields
   const extraFields: Record<string, unknown> = {};
