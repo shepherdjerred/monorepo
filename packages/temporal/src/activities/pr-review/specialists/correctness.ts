@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import type { JSONOutputFormat } from "@anthropic-ai/sdk/resources/messages";
 import * as Sentry from "@sentry/bun";
+import { traceAnthropic } from "@shepherdjerred/llm-observability/wrappers/anthropic";
 import { z } from "zod/v4";
 import { withSpan } from "#observability/tracing.ts";
 import { FindingSchema, type Finding } from "#shared/pr-review/finding.ts";
@@ -297,23 +298,31 @@ export async function runCorrectnessReviewer(
 
   const userText = buildCorrectnessUserText(input);
 
-  const response = await client.messages.parse({
+  const params = {
     model: CORRECTNESS_MODEL,
     max_tokens: CORRECTNESS_MAX_TOKENS,
-    thinking: { type: "adaptive" },
+    thinking: { type: "adaptive" as const },
     output_config: {
       effort: CORRECTNESS_EFFORT,
       format: zodOutputFormat(CorrectnessOutputSchema),
     },
     system: [
       {
-        type: "text",
+        type: "text" as const,
         text: CORRECTNESS_SYSTEM_PROMPT,
-        cache_control: { type: "ephemeral" },
+        cache_control: { type: "ephemeral" as const },
       },
     ],
-    messages: [{ role: "user", content: userText }],
-  });
+    messages: [{ role: "user" as const, content: userText }],
+  };
+  const response = await traceAnthropic(
+    {
+      service: "temporal",
+      callSite: "pr-review-correctness",
+      request: params,
+    },
+    () => client.messages.parse(params),
+  );
 
   resolveProviderIssue({
     app: "temporal",

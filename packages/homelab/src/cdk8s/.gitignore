@@ -2,5 +2,7 @@
 rendered/
 .helm-render-*
 .helm-test-*
+.pd-helm-*
+.amrender-bin-*
 .argocd-test-*
 .test-synth-container-resources/

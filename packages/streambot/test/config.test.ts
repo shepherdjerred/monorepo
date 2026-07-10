@@ -88,4 +88,27 @@ describe("loadConfig", () => {
     expect(config.state.dir).toBe("/data/state");
     expect(config.state.resumeMaxAgeSeconds).toBe(60);
   });
+
+  test("defaults the voice-reconnect config when unset", () => {
+    const config = loadConfig(VALID);
+    expect(config.reconnect).toEqual({
+      enabled: true,
+      delaySeconds: 5,
+      maxAttempts: 3,
+    });
+  });
+
+  test("reads STREAMER_RECONNECT_* from the environment", () => {
+    const config = loadConfig({
+      ...VALID,
+      STREAMER_RECONNECT_ENABLED: "false",
+      STREAMER_RECONNECT_DELAY_SECONDS: "2",
+      STREAMER_RECONNECT_MAX_ATTEMPTS: "5",
+    });
+    expect(config.reconnect).toEqual({
+      enabled: false,
+      delaySeconds: 2,
+      maxAttempts: 5,
+    });
+  });
 });

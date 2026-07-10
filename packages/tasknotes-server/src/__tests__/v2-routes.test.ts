@@ -214,6 +214,20 @@ describe("v2 task routes", () => {
     expect(notRecurring.status).toBe(400);
   });
 
+  test("complete-instance rejects a malformed `date` field with 400, not 500", async () => {
+    // Schema validation runs before the not-recurring check, so this 400s
+    // from CompleteInstanceRequestSchema regardless of the seeded task's
+    // recurrence — an invalid date string must never reach `new Date(...)`.
+    const res = await app.request(`/api/tasks/${SEEDED_ID}/complete-instance`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ date: "not-a-date" }),
+    });
+    expect(res.status).toBe(400);
+    const body = await envelope(res);
+    expect(body.success).toBe(false);
+  });
+
   test("stats + filter-options + time endpoints answer in upstream shapes", async () => {
     const stats = await unwrap(await app.request("/api/stats"));
     expect(stats["total"]).toBe(1);
@@ -298,6 +312,26 @@ describe("v2 NLP + calendars", () => {
       true,
     );
     expect(obj(body["sources"])["tasks"]).toBe(body["total"]);
+  });
+
+  test("calendars/events rejects a malformed `start`/`end` query param with 400, not 500", async () => {
+    const res = await app.request(
+      "/api/calendars/events?start=not-a-date&end=2026-07-03",
+    );
+    expect(res.status).toBe(400);
+    const body = await envelope(res);
+    expect(body.success).toBe(false);
+    expect(body.error).toContain("not-a-date");
+  });
+
+  test("time/summary rejects a malformed `from`/`to` query param with 400, not 500", async () => {
+    const res = await app.request(
+      "/api/time/summary?period=custom&from=also-not-a-date",
+    );
+    expect(res.status).toBe(400);
+    const body = await envelope(res);
+    expect(body.success).toBe(false);
+    expect(body.error).toContain("also-not-a-date");
   });
 });
 

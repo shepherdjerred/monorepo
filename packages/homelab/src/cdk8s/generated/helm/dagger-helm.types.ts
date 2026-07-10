@@ -384,6 +384,44 @@ export type DaggerhelmHelmValuesMagicache = {
   url?: string;
 };
 
+export type DaggerhelmHelmValuesService = {
+  /**
+   * Kubernetes Service is created automatically when engine.port is defined
+   * Service type (ClusterIP, NodePort, LoadBalancer)
+   *
+   * @default "ClusterIP"
+   */
+  type?: string;
+  /**
+   * Additional service annotations
+   *
+   * @default {}
+   */
+  annotations?: DaggerhelmHelmValuesServiceAnnotations;
+  /**
+   * Additional service labels
+   *
+   * @default {}
+   */
+  labels?: DaggerhelmHelmValuesServiceLabels;
+};
+
+export type DaggerhelmHelmValuesServiceAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type DaggerhelmHelmValuesServiceLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
 export type DaggerhelmHelmValues = {
   /**
    * @default ""
@@ -404,6 +442,10 @@ export type DaggerhelmHelmValues = {
    * @default {"enabled":false,"url":"https://api.dagger.cloud/magicache"}
    */
   magicache?: DaggerhelmHelmValuesMagicache;
+  /**
+   * @default {"type":"ClusterIP","annotations":{},"labels":{}}
+   */
+  service?: DaggerhelmHelmValuesService;
 };
 
 export type DaggerhelmHelmParameters = {
@@ -448,4 +490,5 @@ export type DaggerhelmHelmParameters = {
   "engine.volumes"?: string;
   "magicache.enabled"?: string;
   "magicache.url"?: string;
+  "service.type"?: string;
 };

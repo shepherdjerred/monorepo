@@ -325,6 +325,7 @@ export const HELM_CHARTS: string[] = [
   "kyverno-policies",
   "bugsink",
   "tasknotes",
+  "relay",
   "temporal",
   "trmnl-dashboard",
 ];
@@ -406,13 +407,42 @@ export const ALL_PACKAGES: string[] = [
 // Resource tiers for per-package build steps
 // ---------------------------------------------------------------------------
 
-type ResourceTier = { cpu: string; memory: string };
+export type ResourceTier = {
+  cpu: string;
+  memory: string;
+  cpuLimit: string;
+  memoryLimit: string;
+};
 
-// BK pods are thin dagger CLI wrappers — all compute happens in the remote
-// Dagger engine. Keep requests minimal so more jobs fit within Kueue quota.
-const HEAVY: ResourceTier = { cpu: "250m", memory: "512Mi" };
-const MEDIUM: ResourceTier = { cpu: "150m", memory: "384Mi" };
-const LIGHT: ResourceTier = { cpu: "100m", memory: "256Mi" };
+// BK pods are mostly thin dagger CLI wrappers — all compute happens in the
+// remote Dagger engine — but the wrapper still needs enough headroom to keep
+// the Dagger client and Buildkite agent alive while streaming progress.
+//
+// 2026-07 CI-freeze hardening: limits added alongside the existing requests.
+// These wrapper containers do thin Dagger-CLI-call work (the real compute
+// happens in the remote engine, capped separately in dagger.ts), so usage
+// should track the request closely — limits use a fixed multiplier rather
+// than a separately-tuned tier. CPU multiplier > memory multiplier:
+// log-streaming/wrapper processes burst CPU more than memory.
+// See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md.
+const HEAVY: ResourceTier = {
+  cpu: "250m",
+  memory: "768Mi",
+  cpuLimit: "1",
+  memoryLimit: "1536Mi",
+};
+const MEDIUM: ResourceTier = {
+  cpu: "150m",
+  memory: "512Mi",
+  cpuLimit: "600m",
+  memoryLimit: "1024Mi",
+};
+const LIGHT: ResourceTier = {
+  cpu: "100m",
+  memory: "384Mi",
+  cpuLimit: "400m",
+  memoryLimit: "768Mi",
+};
 
 export const PACKAGE_RESOURCES: Record<string, ResourceTier> = {
   homelab: HEAVY,

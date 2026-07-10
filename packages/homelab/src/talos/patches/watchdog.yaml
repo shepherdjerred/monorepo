@@ -1,0 +1,36 @@
+# Hardware watchdog — 2026-07 CI-freeze hardening, primary auto-recovery mechanism.
+#
+# A watchdog needs a periodic heartbeat, not the kernel self-diagnosing an error — it
+# fires precisely because the pinging process (Talos's own `machined`) starves under the
+# same runqueue exhaustion that froze everything else during the 2026-07-05/07 incidents.
+# This is why it's the primary mechanism here, not the `kernel.panic_on_rcu_stall`
+# sysctl (talos/patches/sysctls.yaml) — that only catches a formal kernel error
+# condition, and the freeze investigation showed this failure mode is pure R-state
+# runqueue contention (node_procs_blocked stayed ~0 throughout every incident), not one.
+#
+# Feasibility confirmed live on torvalds 2026-07: `iTCO_wdt` is already auto-loaded by
+# the kernel (Intel Z790-class chipset TCO controller) and `/sys/class/watchdog/watchdog0`
+# exists (identity=iTCO_wdt, state=inactive, default timeout=30s) — hardware support is
+# real, not hypothetical. `machine.kernel.modules` below pins the module load explicitly
+# (redundant today since it auto-loads, but makes it explicit/reproducible rather than
+# implicit driver-matching behavior).
+#
+# VERIFY AFTER APPLYING: `talosctl -n torvalds get watchdogtimerstatus` should show the
+# device active and a recent last-ping time from machined. Do not trust this config until
+# that's confirmed — an armed-but-unpetted watchdog reboots immediately; an
+# armed-and-petted-by-something-other-than-machined watchdog won't correctly fire when
+# machined itself starves.
+# See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md.
+machine:
+  kernel:
+    modules:
+      - name: iTCO_wdt
+        parameters:
+          - heartbeat=60
+          - nowayout=1
+      - name: iTCO_vendor_support
+---
+apiVersion: v1alpha1
+kind: WatchdogTimerConfig
+device: /dev/watchdog0
+timeout: 3m0s

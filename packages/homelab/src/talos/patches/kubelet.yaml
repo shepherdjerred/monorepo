@@ -1,9 +1,65 @@
+# Kubelet node-resource reservations for the single-node torvalds cluster.
+#
+# IMPORTANT — mechanism: reservations live under `extraConfig` (a
+# KubeletConfiguration override that Talos deep-merges into the generated kubelet
+# config), NOT under `extraArgs`. From 2026-03-18 (commit c649ada3d) until
+# 2026-07-05 these were set as `--system-reserved` / `--eviction-hard` *flags* in
+# extraArgs and never took effect: a live `talosctl get machineconfig` showed only
+# `max-pods` present, with kubelet running on defaults (systemReserved=512Mi,
+# evictionHard.memory.available=100Mi). That left ~all 125 GiB of RAM pod-
+# allocatable, so CI pods + the ZFS ARC could oversubscribe RAM and hard-freeze the
+# node. KubeletConfiguration is the canonical, reliably-applied form.
+# See packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md.
 machine:
   kubelet:
     extraArgs:
       max-pods: "300"
-      system-reserved: "cpu=2,memory=52Gi"
-      kube-reserved: "cpu=1,memory=2Gi"
-      eviction-hard: "memory.available<2Gi,nodefs.available<10%"
-      eviction-soft: "memory.available<4Gi,nodefs.available<15%"
-      eviction-soft-grace-period: "memory.available=2m,nodefs.available=2m"
+    extraConfig:
+      # system-reserved must cover everything OUTSIDE the kubepods cgroup: the ZFS
+      # ARC (zfs_arc_max = 48 GiB, see talos/patches/zfs.yaml) plus host kernel / OS
+      # / kubelet / containerd / apid / etcd overhead (~8 GiB). With
+      # enforceNodeAllocatable below now explicitly covering system-reserved and
+      # kube-reserved (previously only the kubelet default [pods], verified live),
+      # this shrinks the kubepods memory cgroup limit to (Capacity - reserved -
+      # evictionHard) ≈ 65 GiB, hard-capping total pod memory so ARC + OS always
+      # retain ~10 GiB of guaranteed headroom. A runaway build now OOM-kills one pod
+      # instead of wedging the whole node.
+      systemReserved:
+        cpu: "4"
+        memory: "56Gi"
+      kubeReserved:
+        cpu: "1"
+        memory: "2Gi"
+      evictionHard:
+        memory.available: "2Gi"
+        nodefs.available: "10%"
+      evictionSoft:
+        memory.available: "4Gi"
+        nodefs.available: "15%"
+      evictionSoftGracePeriod:
+        memory.available: "2m"
+        nodefs.available: "2m"
+      # 2026-07 CI-freeze hardening. podPidsLimit: cluster-wide (single node, so
+      # effectively node-wide — Kubernetes has no per-pod override) cgroup
+      # pids.max cap. 4096 is the standard Kubernetes-documented default for
+      # clusters that set this field (more restrictive CIS-hardening guidance of
+      # 1024 targets adversarial multi-tenant threat models, not this
+      # single-trusted-workload homelab). Must accommodate the Dagger engine's
+      # own legitimate multi-process needs, not just an average pod — the
+      # freeze investigation observed the engine's own goroutine count explode
+      # 24 -> 1164 in under 60s; 4096 sits well above any plausible legitimate
+      # footprint while still being a hard, finite ceiling instead of unbounded.
+      # Verify PID headroom under real heavy-concurrency load before trusting
+      # this value; watch for PIDPressure node conditions after rollout.
+      #
+      # enforceNodeAllocatable: adds real cgroup ceilings for system-reserved
+      # and kube-reserved (previously only the kubelet default [pods] was
+      # enforced) — protects kubelet/containerd/etcd/apid from being starved by
+      # pod-side pressure. The reservations above were already sized generously
+      # and assumed load-bearing; this makes that assumption actually enforced.
+      # See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md.
+      podPidsLimit: 4096
+      enforceNodeAllocatable:
+        - pods
+        - system-reserved
+        - kube-reserved

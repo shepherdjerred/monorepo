@@ -9,6 +9,7 @@ import {
   SKIP_PACKAGES,
   PLAYWRIGHT_PACKAGES,
   NPM_BUILD_PACKAGES,
+  type ResourceTier,
 } from "../catalog.ts";
 import {
   safeKey,
@@ -115,6 +116,9 @@ export function perPackageSteps(
         ? ` --ha-url env:HASS_URL --ha-token env:HASS_TOKEN`
         : "";
     const helmFlag = pkg === "homelab" ? ` --needs-helm` : "";
+    // homelab's pagerduty-alerting.test.ts executes Alertmanager templates
+    // through the real Go text/template engine, so the test container needs Go.
+    const goFlag = pkg === "homelab" ? ` --needs-go` : "";
     const astroFlags = ASTRO_PACKAGES.has(pkg)
       ? ` --include-astro-check --include-astro-build`
       : "";
@@ -123,7 +127,7 @@ export function perPackageSteps(
       daggerCallStep(
         `:dagger_knife: pkg-check`,
         `pkg-check-${sk}`,
-        `${DAGGER_CALL} lint-typecheck-test ${pf}${helmFlag}${haFlags}${astroFlags}${buildFlag}`,
+        `${DAGGER_CALL} lint-typecheck-test ${pf}${helmFlag}${goFlag}${haFlags}${astroFlags}${buildFlag}`,
         resources,
       ),
     );
@@ -131,6 +135,16 @@ export function perPackageSteps(
 
   if (pkg === "tasks-for-obsidian") {
     steps.push(tasksForObsidianNativeDepsStep(resources));
+    const macosStep = macosSwiftLintStep();
+    if (macosStep) steps.push(macosStep);
+  }
+
+  // Cross-package contract test: the app's real TaskNotesClient against a
+  // spawned real tasknotes-server. Emitted for whichever side changed (keys
+  // are per-package, so when both change in one build the two steps run the
+  // same suite — Dagger's cache makes the duplicate cheap).
+  if (pkg === "tasks-for-obsidian" || pkg === "tasknotes-server") {
+    steps.push(tasknotesContractTestStep(sk, resources));
   }
 
   // Cross-package contract test: the app's real TaskNotesClient against a
@@ -186,6 +200,46 @@ export function perPackageSteps(
   };
 }
 
+/**
+ * Native macOS SwiftLint over the `tasks-for-obsidian` iOS sources — the first
+ * real job for the Mac Mini agent (revives the previously-dead `swiftLint`
+ * Dagger helper, but run natively: macOS has no in-cluster Dagger engine).
+ *
+ * Deliberately a plain command step: NO `kubernetes` plugin, so the macOS
+ * agent performs its default git checkout and runs `swiftlint` on the working
+ * tree. `agents.queue = "macos"` routes it to the Mac Mini (registered with
+ * `--tags queue=macos`); every other step inherits the pipeline-level
+ * `queue: default`.
+ *
+ * Gated behind `MACOS_CI_ENABLED` (default off, read at pipeline-generation
+ * time like `DRYRUN_FLAG`). While off the step is never emitted, so a
+ * `tasks-for-obsidian` PR can't hang waiting for a macOS agent that isn't
+ * online yet. Flip `MACOS_CI_ENABLED=true` in the pipeline-upload env once the
+ * Mac Mini is provisioned (see `packages/homelab/mac-ci/README.md`).
+ */
+function macosSwiftLintStep(): BuildkiteStep | null {
+  if (process.env["MACOS_CI_ENABLED"] !== "true") return null;
+  return {
+    label: ":swift: SwiftLint (macOS)",
+    key: "swiftlint-tasks-for-obsidian",
+    // Prepend both Homebrew bin dirs so `swiftlint` resolves under the
+    // minimal `launchd` agent env, then lint the iOS sources on the
+    // checked-out working tree. Cover Apple Silicon (`/opt/homebrew`) and
+    // Intel (`/usr/local`) the same way `bootstrap.sh` does, so the step is
+    // robust regardless of which Mac hosts the agent.
+    command:
+      'export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH" && cd packages/tasks-for-obsidian/ios && swiftlint --strict',
+    agents: { queue: "macos" },
+    timeout_in_minutes: 10,
+    retry: RETRY,
+    // `packages/tasks-for-obsidian/ios` has no `.swiftlint.yml` yet, so
+    // `--strict` will flag the first batch of violations. Soft-fail keeps the
+    // overall build green while those get triaged; tighten to a hard failure
+    // once the iOS sources are clean.
+    soft_fail: true,
+  };
+}
+
 function goPackageGroup(sk: string): BuildkiteGroup {
   const goPkgDir = gitDir("packages/terraform-provider-asuswrt");
   return {
@@ -221,7 +275,7 @@ function daggerCallStep(
   label: string,
   key: string,
   command: string,
-  resources: { cpu: string; memory: string },
+  resources: ResourceTier,
   dependsOn?: string,
 ): BuildkiteStep {
   const step: BuildkiteStep = {
@@ -231,7 +285,14 @@ function daggerCallStep(
     timeout_in_minutes: 30,
     retry: RETRY,
     env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: resources.cpu, memory: resources.memory })],
+    plugins: [
+      k8sPlugin({
+        cpu: resources.cpu,
+        memory: resources.memory,
+        cpuLimit: resources.cpuLimit,
+        memoryLimit: resources.memoryLimit,
+      }),
+    ],
   };
   if (dependsOn) {
     step.depends_on = dependsOn;
@@ -247,10 +308,9 @@ function daggerCallStep(
  * `.buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh` against a
  * local working tree.
  */
-function tasksForObsidianNativeDepsStep(resources: {
-  cpu: string;
-  memory: string;
-}): BuildkiteStep {
+function tasksForObsidianNativeDepsStep(
+  resources: ResourceTier,
+): BuildkiteStep {
   return {
     label: ":iphone: iOS Native Deps",
     key: "ios-native-deps-tasks-for-obsidian",
@@ -258,7 +318,53 @@ function tasksForObsidianNativeDepsStep(resources: {
     timeout_in_minutes: 10,
     retry: RETRY,
     env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: resources.cpu, memory: resources.memory })],
+    plugins: [
+      k8sPlugin({
+        cpu: resources.cpu,
+        memory: resources.memory,
+        cpuLimit: resources.cpuLimit,
+        memoryLimit: resources.memoryLimit,
+      }),
+    ],
+  };
+}
+
+/**
+ * App-client ↔ server contract test (`contract-tests/` in the app package).
+ * The app is the Dagger target package; tasknotes-server rides along as an
+ * extra dep dir so the suite can spawn it. Not derived from WORKSPACE_DEPS —
+ * the server is deliberately NOT a build dependency of the app.
+ */
+function tasknotesContractTestStep(
+  sk: string,
+  resources: ResourceTier,
+): BuildkiteStep {
+  const flags = [
+    `--pkg-dir ${gitDir("packages/tasks-for-obsidian")}`,
+    `--pkg tasks-for-obsidian`,
+    ...["eslint-config", "tasknotes-types", "tasknotes-server"].flatMap(
+      (dep) => [
+        `--dep-names ${dep}`,
+        `--dep-dirs ${gitDir(`packages/${dep}`)}`,
+      ],
+    ),
+    `--tsconfig ${gitFile("tsconfig.base.json")}`,
+  ].join(" ");
+  return {
+    label: ":handshake: TaskNotes contract test",
+    key: `tasknotes-contract-test-${sk}`,
+    command: `${DAGGER_CALL} tasknotes-contract-test ${flags}`,
+    timeout_in_minutes: 15,
+    retry: RETRY,
+    env: DAGGER_ENV,
+    plugins: [
+      k8sPlugin({
+        cpu: resources.cpu,
+        memory: resources.memory,
+        cpuLimit: resources.cpuLimit,
+        memoryLimit: resources.memoryLimit,
+      }),
+    ],
   };
 }
 

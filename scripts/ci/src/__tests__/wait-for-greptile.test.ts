@@ -93,6 +93,16 @@ describe("evaluateGate — skipped-review shortcut", () => {
     expect(result.message).toContain(HEAD);
   });
 
+  it("still blocks on unresolved threads when skipped due to excluded author", () => {
+    const result = evaluate({
+      reviewCheck: { found: false, status: null, conclusion: null, url: null },
+      threads: [thread({ isResolved: false })],
+      skippedReview: "excluded-author",
+    });
+    expect(result.state).toBe("failed");
+    expect(result.message).toContain("unresolved Greptile comment");
+  });
+
   it("still blocks on unresolved threads from earlier commits even when skippedReview is set", () => {
     // An earlier commit may have produced unresolved Greptile threads; GitHub does
     // not automatically mark them outdated when only ignored / overflow files

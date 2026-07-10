@@ -11,6 +11,12 @@ import {
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
+// Exported so kueue-config.ts's `pods` nominalQuota can be asserted equal to
+// this in a test — the two are independent enforcement layers for the same
+// cap and must never drift apart. See the long comment on `max-in-flight`
+// below for why both exist.
+export const BUILDKITE_MAX_IN_FLIGHT = 24;
+
 export function createBuildkiteApp(chart: Chart) {
   new Namespace(chart, "buildkite-namespace", {
     metadata: {
@@ -46,10 +52,15 @@ export function createBuildkiteApp(chart: Chart) {
     },
   });
 
-  // Default resource requests for sidecar containers (e.g. Buildkite agent, checkout)
-  // that don't set their own resources. This ensures Kueue can account for sidecar
-  // CPU/memory when making admission decisions.
-  // Only defaultRequest is set — no default limits — so containers can burst freely.
+  // Default resource requests/limits for sidecar containers (e.g. Buildkite agent,
+  // checkout) that don't set their own resources. This ensures Kueue can account for
+  // sidecar CPU/memory when making admission decisions.
+  //
+  // 2026-07 CI-freeze hardening: `default` (limits) added alongside the existing
+  // `defaultRequest`. Explicit-tier step containers (scripts/ci/src/lib/k8s-plugin.ts)
+  // now set their own limits and aren't affected by this; this backstops anything
+  // that doesn't. Values match the LIGHT tier used elsewhere in CI (catalog.ts).
+  // See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md.
   new KubeLimitRange(chart, "buildkite-limit-range", {
     metadata: { name: "buildkite-default-resources", namespace: "buildkite" },
     spec: {
@@ -59,6 +70,10 @@ export function createBuildkiteApp(chart: Chart) {
           defaultRequest: {
             cpu: Quantity.fromString("50m"),
             memory: Quantity.fromString("64Mi"),
+          },
+          default: {
+            cpu: Quantity.fromString("400m"),
+            memory: Quantity.fromString("768Mi"),
           },
         },
       ],
@@ -105,15 +120,25 @@ export function createBuildkiteApp(chart: Chart) {
             agentStackSecret: "buildkite-agent-token",
             config: {
               queue: "default",
-              // Cluster-wide cap on concurrently-scheduled CI jobs. This is a
-              // secondary count gate; the resource-aware gate is the Kueue
-              // ClusterQueue (7.5 CPU / 16Gi, see kueue-config.ts). At the
-              // observed average step request (~234m), 24 jobs fit inside the
-              // Kueue CPU quota (~5.6 of 7.5 cores), so this bump is admitted
-              // without re-tuning Kueue. Raising past ~30 also needs a higher
-              // Kueue CPU nominalQuota. Bounded by node CPU (peaks ~93%) and
-              // CPU package temp (peaks ~90°C) under heavy multi-branch load.
-              "max-in-flight": 24,
+              // Cluster-wide cap on concurrently-scheduled CI jobs. Dagger has no
+              // native session/concurrency control of its own (confirmed against
+              // its engine config schema, Helm chart, and GitHub issues — see the
+              // 2026-07-08 investigation log below), so this is the only lever
+              // anywhere in the stack for bounding how many CI sessions can hit
+              // the single shared Dagger engine at once. It was temporarily
+              // lowered 24 -> 16 on 2026-07-05/06 during incident response, but
+              // that alone did not prevent a recurrence on 2026-07-07 (which
+              // happened at only 9 concurrent jobs, nowhere near even 16) —
+              // proving job-count alone was never the real constraint;
+              // per-session resource consumption was. Restored to 24 now that
+              // real consumption caps exist alongside this: the Dagger engine
+              // itself has a CPU limit (argo-applications/dagger.ts) and CI step
+              // containers have real resource limits, not just requests
+              // (scripts/ci/src/lib/k8s-plugin.ts). 24 ran without incident for a
+              // long time before this event. See
+              // packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md
+              // and packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md.
+              "max-in-flight": BUILDKITE_MAX_IN_FLIGHT,
               "empty-job-grace-period": "5m",
               // gitMirrors is intentionally retained for the bootstrap
               // pipeline-upload step. See the long comment on the PVC
