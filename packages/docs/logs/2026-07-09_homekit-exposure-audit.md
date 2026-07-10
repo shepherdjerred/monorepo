@@ -105,3 +105,55 @@ the user but left untouched pending a deliberate decision.
   advertising it, but any already-paired individual accessory in Apple Home
   may need manual removal if HomeKit cached it before the restart (same
   caveat as the original Front Door accessory going stale after #1321).
+
+## Session Log — 2026-07-09 (evening: great refresh execution)
+
+### Done
+
+- **HA registry refresh applied live** (all 17 verification checks pass): area surgery
+  (`guest_bedroom`→`office`, `bathroom`→`master_bathroom`, `bedroom`→`master_bedroom`,
+  "Guest room"→"Guest Bedroom"), 15 device renames/moves, 60 entity_id renames,
+  2 friendly-name fixes. Rollback snapshot saved in session scratchpad.
+- **PR #1432** (HomeKit filter audit + `lock.front_door` + floor preheat): pushed with
+  Greptile review fixes (presence-checked 15m preheat chunks, benign-skip alert rule,
+  240m timeout) and the stale `light.living_room_main`→`light.living_room` exclusion fix.
+  Blocked on a `helm-types` Dagger engine cache error (user declined engine prune).
+- **Built `hkctl`** — a minimal Mac Catalyst app (session scratchpad `hkctl/`) signed with
+  the user's dev team + HomeKit entitlement; reads and mutates Apple Home directly via
+  `HMHomeManager` (list / rename-room / rename-accessory / assign-room / remove-accessory /
+  remove-room, JSON command file, dry-run). Replaces the HomeClaw dependency. Gotchas
+  learned: TCC attributes raw-binary launches to the terminal (launch via `open`), and the
+  new SDK traps apps without scene-lifecycle adoption.
+- **Apple Home fixed to the extent possible pre-deploy**: room "Guest Room"→"Guest Bedroom";
+  19 tile renames (thermostats/ACs incl. the "Living Room"×2 Siri collision); R&B Lamp
+  group area corrected in HA; rogue UI-created "Front Door:21065" HomeKit bridge entry
+  deleted from HA; HA1/HA2 bridges reloaded, replacing the 10 dead "Sensor" tiles with
+  live "Laundry/Storage Multisensor" tiles, then assigned to their real rooms.
+  Final sweep: 12 canonical rooms, 69 accessories, zero name collisions, zero unreachable,
+  zero stale vocabulary.
+- **Remote fix**: revived the dead Rooftop Z-Wave switch (`switch.main_3`) via ping button.
+- An adversarial second audit (subagent) refuted the first audit's "all clean" verdict and
+  drove most of the above; its data is preserved in the session scratchpad `audit2/`.
+
+### Remaining
+
+- PR #1432 merge (blocked on `helm-types` — Dagger engine cache corruption; user has
+  declined the cache prune twice, so awaiting their direction).
+- After merge + ArgoCD sync + HA restart: wave-2 Apple cleanup via hkctl — remove the
+  8 stale front-door tiles, verify `lock.front_door` appears + assign to Front Door room.
+- User-only: EcoNet + SmartThings re-auth (todos filed), Q7 Max dock power-cycle,
+  Living Room Console plug check, Sonos/Hue app renames, Litter-Robot Sonoff install.
+- Pending identification: bedroom Sonos pair naming (user's recollection conflicts with
+  registry models); Kumo humidity sensors stuck `unknown` since the 5:38pm HA restart.
+- Decide where `hkctl` should live permanently (currently session scratchpad only).
+
+### Caveats
+
+- The HomeKit bridges silently skip `entity_category` diagnostic/config entities — the
+  845→231 exposure simulation overcounts vs the ~66 actually-bridged accessories, and the
+  deployed `device_tracker` domain include was always a no-op for this reason. The pending
+  PR's `include_entities` bypasses the skip.
+- `lock.front_door` carries `entity_category: diagnostic` from the eufy integration;
+  registry override was rejected — cosmetic, but worth an upstream look.
+- Something restarted HA at 5:38pm PT (before the registry surgery); econet/roborock/
+  Z-Wave-node breakage dates from that restart, not from the refresh.
