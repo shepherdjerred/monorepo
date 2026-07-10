@@ -32,6 +32,7 @@ const CHECK_AND_SKIP_WORKFLOWS: {
     ],
   },
   // goodMorning* skip when no one is home to wake — the expected gate.
+  { workflow: "goodMorningPreheat", benignSkipReasons: ["no-one-home"] },
   { workflow: "goodMorningWakeUp", benignSkipReasons: ["no-one-home"] },
   { workflow: "goodMorningGetUp", benignSkipReasons: ["no-one-home"] },
 ];

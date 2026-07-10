@@ -347,15 +347,16 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // Floor preheat 2h15m before wake: the bathroom floor ramps ~8.3°C/hour
     // (measured 2026-07-09), so reaching the 40°C setpoint from a ~22°C
     // overnight start needs ~2¼ hours. The workflow holds the setpoint for
-    // PREHEAT_TOTAL_DURATION (195m) then turns off as its own backstop, so the
-    // timeout must cover the full window + slack.
+    // 195m (13 × 15m presence-checked chunks) then turns off as its own
+    // backstop; the timeout carries generous slack so worker delay or activity
+    // retries can never time the run out before the turn-off executes.
     id: "good-morning-weekday-preheat",
     workflowType: "goodMorningPreheat",
     args: [],
     cronExpression: "45 5 * * 1-5",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "210 minutes",
+    workflowExecutionTimeout: "240 minutes",
     catchupWindow: CATCHUP_TIGHT,
     memo: "Bathroom floor preheat (weekdays 5:45 AM)",
   },
@@ -391,7 +392,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "45 6 * * 0,6",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "210 minutes",
+    workflowExecutionTimeout: "240 minutes",
     catchupWindow: CATCHUP_TIGHT,
     memo: "Bathroom floor preheat (weekends 6:45 AM)",
   },

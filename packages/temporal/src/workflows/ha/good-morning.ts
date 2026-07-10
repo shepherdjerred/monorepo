@@ -27,9 +27,12 @@ const MORNING_HEAT_DURATION = "60 minutes" as const;
 // The floor ramps ~8.3°C/hour (measured 2026-07-09: 22.3→30.6°C in the 60-min
 // wake window), so hitting 40°C from a ~22°C start needs ~2¼ hours of lead.
 // goodMorningPreheat fires 2h15m before wake and owns its own turn-off as a
-// backstop (wake time + 60m), so heat never stays on if the wake run skips
-// (e.g. everyone left after preheat started). Total window ≈ 3h15m.
-const PREHEAT_TOTAL_DURATION = "195 minutes" as const;
+// backstop (wake time + 60m), so heat never stays on if the wake run skips.
+// The 195-minute hold is chunked so a mid-hold departure (everyone leaves
+// after preheat started) turns the floor off within one chunk instead of
+// heating an empty house until the backstop.
+const PREHEAT_HOLD_CHUNK = "15 minutes" as const;
+const PREHEAT_HOLD_CHUNKS = 13; // 13 × 15m = 195m total window
 
 const WAKE_MEDIA = {
   media_content_id: "FV:2/5",
@@ -40,7 +43,8 @@ const WAKE_MEDIA = {
 // when goodMorningWakeUp runs (the floor's thermal mass needs ~2¼h to climb
 // 22→40°C). Owns its own turn-off so the heat can't stay on if the wake run
 // never fires; the wake run's turn-off at the same wall-clock time is an
-// idempotent no-op on an already-off thermostat.
+// idempotent no-op on an already-off thermostat. The hold re-checks presence
+// every chunk and aborts early if the house empties mid-preheat.
 export async function goodMorningPreheat(): Promise<void> {
   if (!(await anyoneHome())) {
     console.warn("good_morning_preheat: no one home, skipping");
@@ -54,7 +58,18 @@ export async function goodMorningPreheat(): Promise<void> {
     hvac_mode: "heat",
   });
 
-  await sleep(PREHEAT_TOTAL_DURATION);
+  for (let chunk = 0; chunk < PREHEAT_HOLD_CHUNKS; chunk += 1) {
+    await sleep(PREHEAT_HOLD_CHUNK);
+    if (!(await anyoneHome())) {
+      console.warn("good_morning_preheat: everyone left mid-hold, turning off");
+      await callServiceUnchecked("climate", "turn_off", {
+        entity_id: MASTER_BATHROOM_HEAT,
+      });
+      await setOutcome("executed", "preheat-aborted-everyone-left");
+      return;
+    }
+  }
+
   await callServiceUnchecked("climate", "turn_off", {
     entity_id: MASTER_BATHROOM_HEAT,
   });
