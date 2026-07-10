@@ -150,7 +150,7 @@ const versions = {
   "agent-stack-k8s":
     "0.44.0@sha256:e9b96d3c3bdd4928115fbd844774e81371c72b95f316da4252b716203c292044",
   // renovate: datasource=docker registryUrl=https://registry.dagger.io versioning=semver packageName=dagger-helm
-  "dagger-helm": "0.20.8",
+  "dagger-helm": "0.21.7",
   // renovate: datasource=docker registryUrl=https://registry.k8s.io versioning=semver packageName=kueue/charts/kueue
   kueue:
     "0.18.2@sha256:156fbc8c6752b08cf66a2324fed33e269e0a64e54dd8d70d51118065bca651af",
