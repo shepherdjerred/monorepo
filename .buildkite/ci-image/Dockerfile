@@ -35,7 +35,7 @@ RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-l
     | tar xJ -C /usr/local --strip-components=1
 
 # renovate: datasource=github-releases depName=dagger/dagger
-ARG DAGGER_VERSION=0.21.4
+ARG DAGGER_VERSION=0.21.7
 RUN curl -fsSL "https://dl.dagger.io/dagger/releases/${DAGGER_VERSION}/dagger_v${DAGGER_VERSION}_linux_amd64.tar.gz" \
     | tar xz -C /usr/local/bin dagger && \
     chmod +x /usr/local/bin/dagger
