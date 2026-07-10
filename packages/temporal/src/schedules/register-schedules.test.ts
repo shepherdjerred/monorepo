@@ -38,6 +38,8 @@ const ONE_MINUTE = 60 * 1000;
 const ONE_HOUR = 60 * ONE_MINUTE;
 
 const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
+  // preheat: PREHEAT_TOTAL_DURATION (195 minutes) heat hold + turn-off backstop
+  goodMorningPreheat: 195 * ONE_MINUTE,
   // wake-up: ~30 sec of media ramp + MORNING_HEAT_DURATION (60 minutes) heat hold
   goodMorningWakeUp: 60 * ONE_MINUTE,
   // get-up: ~5 sec sleep between volume ramps; <1m total

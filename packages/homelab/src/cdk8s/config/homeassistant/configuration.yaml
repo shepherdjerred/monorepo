@@ -31,6 +31,10 @@ homekit:
         - device_tracker.shuxin
         - device_tracker.shuxin_2
         - device_tracker.9a_18_f1_91_6a_33
+        # Front door lock: whitelisted rather than including the whole lock domain.
+        # Driven by the Temporal reconcile-lock workflow in HA; exposing it gives
+        # Apple Home / Siri / Watch lock control with HomeKit's secure-unlock UX.
+        - lock.front_door
       exclude_entities:
         - binary_sensor.roomba_bin_full
         - binary_sensor.remote_ui
