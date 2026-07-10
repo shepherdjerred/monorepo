@@ -28,7 +28,8 @@
     "declarationMap": false,
     "noUncheckedSideEffectImports": true,
     "strictBuiltinIteratorReturn": true,
-    "noErrorTruncation": true
+    "noErrorTruncation": true,
+    "types": ["bun"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]

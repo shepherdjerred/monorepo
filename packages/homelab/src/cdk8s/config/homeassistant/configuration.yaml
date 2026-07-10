@@ -15,17 +15,82 @@ homekit:
         - water_heater
         - sensor
         - switch
-        - device_tracker
         - binary_sensor
         - input_select
         - vacuum
+      # device_tracker is whitelisted per-entity instead of by domain: the domain also
+      # covers non-person network devices (NAS, printer, TVs, speakers, game consoles)
+      # picked up by router/nmap-style tracking, and HomeKit presence only makes sense
+      # for people. Add new phones/tablets here as they're set up.
+      include_entities:
+        - device_tracker.iphone
+        - device_tracker.iphone_2
+        - device_tracker.iphone_3
+        - device_tracker.jerred_iphone
+        - device_tracker.ipad
+        - device_tracker.shuxin
+        - device_tracker.shuxin_2
+        - device_tracker.9a_18_f1_91_6a_33
+        # Front door lock: whitelisted rather than including the whole lock domain.
+        # Driven by the Temporal reconcile-lock workflow in HA; exposing it gives
+        # Apple Home / Siri / Watch lock control with HomeKit's secure-unlock UX.
+        - lock.front_door
       exclude_entities:
         - binary_sensor.roomba_bin_full
+        - binary_sensor.remote_ui
+        - sensor.800_series_long_range_usb_controller_status
+        - sensor.petlibro_petlibro_sjer_red
+        - sensor.unavailable_entities_count
+        - switch.hacs_pre_release
+        # Sonos "buttons lock" config toggle, not a real door lock (same device
+        # cluster as the already-excluded auto_brightness/proximity_mode switches)
+        - switch.guest_bathroom_lock
+        - switch.guest_room_lock
+        - switch.master_bathroom_lock
+        - switch.office_lock
+        # Sonos playback codec metadata, not actionable state
+        - sensor.living_room_audio_input_format
+        # Feeder device config/metadata, not live status
+        - sensor.granary_smart_camera_feeder_mac_address
+        - sensor.granary_smart_camera_feeder_device_sn
+        - sensor.granary_smart_camera_feeder_camera_resolution
+        - sensor.granary_smart_camera_feeder_night_vision_mode
+        - sensor.granary_smart_camera_feeder_buttons_lock
+        - sensor.granary_smart_camera_feeder_wi_fi_ssid
+        - sensor.granary_smart_camera_feeder_video_recording_mode
+        - sensor.granary_smart_camera_feeder_video_recording_switch
+        - sensor.granary_smart_camera_feeder_desiccant_remaining_days
+        - sensor.granary_smart_camera_feeder_battery_ac
+        # Pet static profile fields, not live status
+        - sensor.kit
+        - sensor.kit_age
+        - sensor.kit_breed
+        - sensor.kit_linked_devices
+        - sensor.kit_pet_type
+        - sensor.kit_rfid_collar
+        - sensor.thor
+        - sensor.thor_age
+        - sensor.thor_breed
+        - sensor.thor_linked_devices
+        - sensor.thor_pet_type
+        - sensor.thor_rfid_collar
+        - switch.kit_neutered_spayed
+        - switch.thor_neutered_spayed
+        # Roomba historical stats, not live status (battery/tank-level sensors stay)
+        - sensor.roomba_average_mission_time
+        - sensor.roomba_battery_cycles
+        - sensor.roomba_canceled_missions
+        - sensor.roomba_failed_missions
+        - sensor.roomba_successful_missions
+        - sensor.roomba_total_missions
+        - sensor.roomba_total_cleaning_time
       exclude_entity_globs:
         - binary_sensor.*_focus
         - binary_sensor.*entertainment_configuration
         - binary_sensor.granary_smart_camera_feeder_*
         - binary_sensor.heat_pump_water_heater_*
+        - binary_sensor.front_door_*
+        - binary_sensor.*_connection
         - switch.adaptive_lighting_*
         - sensor.the_victor_229_*
         - sensor.average_*
@@ -34,6 +99,58 @@ homekit:
         - sensor.electricity_maps*
         - sensor.refrigerator*
         - binary_sensor.refrigerator*
+        # Retired front-door camera config — Scrypted (HKSV) owns this device now
+        - sensor.front_door_*
+        - switch.front_door_*
+        # Companion-app (phone/tablet) diagnostic sensors — not home state
+        - sensor.*_app_version
+        - sensor.*_audio_output
+        - sensor.*_bssid
+        - sensor.*_connection_type
+        - sensor.*_geocoded_location
+        - sensor.*_last_update_trigger
+        - sensor.*_location_permission
+        - sensor.*_sim_1
+        - sensor.*_sim_2
+        - sensor.*_ssid
+        - sensor.*_storage
+        - sensor.*_activity
+        - sensor.*_pressure
+        - sensor.*_floors_ascended
+        - sensor.*_floors_descended
+        - sensor.*_average_active_pace
+        - sensor.*_distance
+        - sensor.*_steps
+        # Network/mesh diagnostics — router, node health, connectivity, IPs
+        - sensor.192_168_1_1_*
+        - sensor.rt_ax88u_pro_74c0_*
+        - sensor.*_rssi
+        - sensor.*zigbee_connectivity*
+        - sensor.*node_status*
+        - sensor.*signal_strength
+        - sensor.*_ip_address
+        # Printer consumables/counters
+        - sensor.hl_l3280cdw_*
+        # Sonos/media-player configuration toggles, not smart-home switches
+        - switch.*crossfade*
+        - switch.*loudness*
+        - switch.*autoplay*
+        - switch.*touch_controls*
+        - switch.*status_light*
+        - switch.*subwoofer_enabled*
+        - switch.*surround*
+        - switch.*night_sound*
+        - switch.*speech_enhancement*
+        - switch.*auto_brightness*
+        - switch.*proximity_mode*
+        # Hue app's own automation toggles — redundant with HA automations
+        - switch.automation_*
+        - switch.hue_bridge_automation_*
+        # Per-circuit energy breakdown — better suited to Grafana than Home app tiles
+        - sensor.meta_house_energy_this_month*
+        - sensor.meta_house_energy_today*
+        - sensor.meta_house_power_minute_average*
+        - sensor.balance_*
   - name: HA2
     advertise_ip: 192.168.1.81
     port: 21064
@@ -41,12 +158,17 @@ homekit:
       include_domains:
         - light
       exclude_entities:
-        - light.living_room_main
+        # The old light.living_room_main was renamed; the entity is currently
+        # user-disabled, but keep the exclusion so re-enabling it doesn't
+        # silently add a duplicate Hue room-group tile to HomeKit.
+        - light.living_room
         - light.office
   # Note: the Reolink front door doorbell is exposed to HomeKit by Scrypted
-  # (with HomeKit Secure Video), not by this HA HomeKit bridge. The Reolink
-  # integration and its motion/visitor sensors remain available in HA for
-  # dashboards and automations; only the duplicate HomeKit accessory was removed.
+  # (with HomeKit Secure Video), not by this HA HomeKit bridge. HA1's
+  # binary_sensor.front_door_* (motion/visitor) entities are excluded above so
+  # they don't also appear as duplicate standalone sensor tiles in Apple Home.
+  # The Reolink integration and its entities remain available in HA for
+  # dashboards and automations.
 
 http:
   use_x_forwarded_for: true

@@ -9,6 +9,7 @@ import {
   SKIP_PACKAGES,
   PLAYWRIGHT_PACKAGES,
   NPM_BUILD_PACKAGES,
+  type ResourceTier,
 } from "../catalog.ts";
 import {
   safeKey,
@@ -266,7 +267,7 @@ function daggerCallStep(
   label: string,
   key: string,
   command: string,
-  resources: { cpu: string; memory: string },
+  resources: ResourceTier,
   dependsOn?: string,
 ): BuildkiteStep {
   const step: BuildkiteStep = {
@@ -276,7 +277,14 @@ function daggerCallStep(
     timeout_in_minutes: 30,
     retry: RETRY,
     env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: resources.cpu, memory: resources.memory })],
+    plugins: [
+      k8sPlugin({
+        cpu: resources.cpu,
+        memory: resources.memory,
+        cpuLimit: resources.cpuLimit,
+        memoryLimit: resources.memoryLimit,
+      }),
+    ],
   };
   if (dependsOn) {
     step.depends_on = dependsOn;
@@ -292,10 +300,9 @@ function daggerCallStep(
  * `.buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh` against a
  * local working tree.
  */
-function tasksForObsidianNativeDepsStep(resources: {
-  cpu: string;
-  memory: string;
-}): BuildkiteStep {
+function tasksForObsidianNativeDepsStep(
+  resources: ResourceTier,
+): BuildkiteStep {
   return {
     label: ":iphone: iOS Native Deps",
     key: "ios-native-deps-tasks-for-obsidian",
@@ -303,7 +310,14 @@ function tasksForObsidianNativeDepsStep(resources: {
     timeout_in_minutes: 10,
     retry: RETRY,
     env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: resources.cpu, memory: resources.memory })],
+    plugins: [
+      k8sPlugin({
+        cpu: resources.cpu,
+        memory: resources.memory,
+        cpuLimit: resources.cpuLimit,
+        memoryLimit: resources.memoryLimit,
+      }),
+    ],
   };
 }
 
@@ -315,7 +329,7 @@ function tasksForObsidianNativeDepsStep(resources: {
  */
 function tasknotesContractTestStep(
   sk: string,
-  resources: { cpu: string; memory: string },
+  resources: ResourceTier,
 ): BuildkiteStep {
   const flags = [
     `--pkg-dir ${gitDir("packages/tasks-for-obsidian")}`,
@@ -335,6 +349,13 @@ function tasknotesContractTestStep(
     timeout_in_minutes: 15,
     retry: RETRY,
     env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: resources.cpu, memory: resources.memory })],
+    plugins: [
+      k8sPlugin({
+        cpu: resources.cpu,
+        memory: resources.memory,
+        cpuLimit: resources.cpuLimit,
+        memoryLimit: resources.memoryLimit,
+      }),
+    ],
   };
 }

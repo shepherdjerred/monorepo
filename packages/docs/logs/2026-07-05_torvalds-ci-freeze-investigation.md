@@ -2,7 +2,8 @@
 
 ## Status
 
-In Progress — data-gathering only. No changes made. No root cause established.
+In Progress — data-gathering only. No runtime, cluster, or code changes made. No root cause
+established.
 
 This document records **only directly-observed facts** (tool output, file contents, git
 history, API results) with sources. It deliberately contains **no diagnosis, no root-cause
@@ -210,6 +211,65 @@ had no operator notes (auto-resolved).
 
 ---
 
+## 8. 19:30 UTC recurrence: full host hard lock
+
+User clarified after the recurrence that this was **not** just Kubernetes or Talos
+unreachability: the KVM showed frozen HDMI output and no input was accepted.
+
+Facts captured around the event:
+
+- At `2026-07-05T19:35:39Z`, `kubectl --request-timeout=5s get --raw=/readyz?verbose`
+  failed with a connection timeout to `torvalds:6443`.
+- `ping -c 3 torvalds` had 100% packet loss.
+- `tailscale status --json` showed peer `torvalds` as `online=false`,
+  `lastSeen=2026-07-05T19:30:00.1Z`.
+- User reported Talos commands were also not working during the freeze.
+- After user rebooted the node, Talos services came back first; kube API initially refused
+  `:6443`, then the node became `Ready`.
+- Kernel boot line after reboot was `2026-07-05T19:36:49Z`.
+- Kubernetes node events recorded a new `Rebooted` event with boot id
+  `4bdb26a6-c209-43fd-994b-462a6cc1af7c`.
+
+Prometheus samples from the lead-up (`19:20` -> `19:30` UTC):
+
+| Metric                          | 19:20  | 19:30  | Note                                  |
+| ------------------------------- | ------ | ------ | ------------------------------------- |
+| Buildkite pod count             | 14     | 85     | Large CI fan-out before disappearance |
+| Running Buildkite pods          | 2      | 18     | Burst of concurrent active jobs       |
+| CPU usage                       | 29%    | 59%    | Spikes up to 83% in the window        |
+| CPU pressure waiting            | 8.5%   | 9.4%   | Peaked at 27% at 19:23                |
+| MemFree                         | 15 GB  | 14 GB  | Not a 1 GB memory cliff this time     |
+| MemAvailable                    | 40 GB  | 42 GB  | Kubelet did not report pressure       |
+| Memory pressure waiting/stall   | ~0%    | 0%     | Unlike earlier 03:40 UTC pattern      |
+| IO pressure stalled             | 2.2%   | 0.9%   | Not high at last sample               |
+| ZFS ARC size                    | 32 GB  | 48 GB  | Near live `zfs_arc_max` after reboot  |
+| Dagger namespace working set    | 3.6 GB | 5.2 GB | Single shared engine still active     |
+| Buildkite namespace working set | 0.6 GB | 1.6 GB | Pod count, not pod memory, dominated  |
+
+Samples then disappear until `19:40` UTC while the node was rebooting/recovering.
+
+Additional Dagger facts:
+
+- Live Dagger engine pod after recovery: `registry.dagger.io/engine:v0.20.8`,
+  `restartCount=6`, previous termination `exitCode=255`, `reason=Unknown`.
+- CI base image source currently pins Dagger CLI `0.21.4` in
+  `.buildkite/ci-image/Dockerfile`, while the homelab Dagger Helm chart version in
+  `packages/homelab/src/cdk8s/src/versions.ts` is `0.20.8`.
+- Post-reboot Dagger logs showed many leftover CNI network namespaces from the previous
+  run, consistent with Dagger/BuildKit work being interrupted mid-flight.
+
+Interpretation bounded by the data:
+
+- This recurrence is a **bare-metal hard lock under CI burst load**, not a normal
+  Kubernetes/Talos outage.
+- It does **not** match the earlier low-memory cliff exactly: the last pre-freeze sample
+  still had substantial available memory and near-zero memory PSI.
+- The strongest current leads are CPU/concurrency-sensitive kernel or hardware instability
+  under Dagger/BuildKit load, and the Dagger CLI/engine version split (`0.21.4` CLI vs
+  `0.20.8` engine). Neither is proven causal yet.
+
+---
+
 ## Session Log — 2026-07-05
 
 ### Done
@@ -220,18 +280,25 @@ had no operator notes (auto-resolved).
 - Verified node/CI/ZFS configuration values first-hand from repo files (§4).
 - Collected recent relevant git changes with dates (§5).
 - Pulled PagerDuty infra/ZFS incident counts (§6).
+- Captured the later `19:30Z` recurrence as a full host hard lock with KVM, tailnet,
+  kube, reboot-event, CI fan-out, and Prometheus evidence (§8).
 
 ### Remaining
 
 - Establish causation (none proven). Capture a top-process/cgroup memory breakdown during a
   live freeze. Re-read current `DAGGER_VERSION`. Confirm whether reboots include any
   non-manual ones.
+- Test mitigations one at a time: cap Buildkite/Dagger concurrency, align Dagger CLI and
+  engine versions, and capture out-of-band hardware/firmware evidence during the next lock.
 
 ### Caveats
 
-- No changes were made to the repo or the cluster.
+- No runtime, cluster, or code changes were made; this doc was updated with the recurrence
+  evidence.
 - Prometheus/Grafana are co-located on `torvalds`; data for full-freeze intervals is absent
   (scrape gaps), so §3b relies on samples captured up to the moment scraping stopped.
 - Earlier in the session an incorrect power-cap value (95/140) was stated from a stale code
   comment; the applied value is 125/253 (`apps.ts:137`), used in this doc.
 - All UTC timestamps are as reported by Prometheus/node clock.
+- The `19:30Z` recurrence was observed after the first handoff section was written; its
+  evidence supersedes the weaker "kube API unavailable" framing for this event.

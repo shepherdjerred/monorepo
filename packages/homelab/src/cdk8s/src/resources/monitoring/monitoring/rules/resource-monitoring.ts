@@ -368,6 +368,34 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
           for: "15m",
           labels: { severity: "warning" },
         },
+        // 2026-07 CI-freeze hardening: UnusualSystemLoad above (node_load15,
+        // 15m `for:`) is too slow to catch this failure mode — the worst
+        // observed ramp went from load=5 to load=1300 in under 8 minutes.
+        // node_load1 reacts fast enough to give real lead time before the
+        // kernel scheduler locks up. Threshold (8x core count = load1 > 256
+        // on this 32-thread node) sits well above legitimate heavy-CI peaks
+        // (CPU% maxed ~93% during past healthy heavy bursts, not multiples of
+        // thread count) and well below the catastrophic range actually
+        // observed — a reasoned starting point, backtest before finalizing.
+        // See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md
+        // and packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md.
+        {
+          alert: "CriticalSystemLoad",
+          annotations: {
+            description: escapePrometheusTemplate(
+              "Node {{ $labels.instance }} node_load1 is {{ $value }}, far above CPU thread count. " +
+                "This pattern preceded every 2026-07 kernel hard-lockup freeze. Consider killing " +
+                "in-flight Buildkite builds now — kubectl/talosctl may stop responding within minutes.",
+            ),
+            summary:
+              "Node load1 critically high — imminent scheduler lockup risk",
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'node_load1 > 8 * count by (instance) (node_cpu_seconds_total{mode="idle"})',
+          ),
+          for: "2m",
+          labels: { severity: "critical" },
+        },
         {
           alert: "PotentialCryptoMining",
           annotations: {

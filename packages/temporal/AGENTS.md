@@ -46,6 +46,7 @@ would fight the UI.
 
 | To stop…             | Pause schedule id(s)                                                                                 |
 | -------------------- | ---------------------------------------------------------------------------------------------------- |
+| Floor preheat        | `good-morning-weekday-preheat`, `good-morning-weekend-preheat`                                       |
 | Wake-up (heat)       | `good-morning-weekday-wake`, `good-morning-weekend-wake`                                             |
 | Get-up (volume ramp) | `good-morning-weekday-up`, `good-morning-weekend-up`                                                 |
 | Vacuum               | `vacuum-9am`, `vacuum-12pm`, `vacuum-5pm`                                                            |

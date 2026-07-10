@@ -1,0 +1,10 @@
+{{- if eq .chezmoi.os "darwin" -}}
+[install]
+# Bun already defaults to clonefile on macOS/APFS (confirmed via
+# `bun install --help` on v1.3.14), so this is a defensive pin rather than a
+# functional change — it survives a future Bun default change. macOS-only:
+# "clonefile" isn't a valid backend on Linux (Buildkite CI, or any Linux
+# machine this dotfiles source is ever applied to), so this whole file is
+# templated out there rather than living in the repo's own bunfig.toml.
+backend = "clonefile"
+{{- end -}}

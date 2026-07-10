@@ -246,6 +246,8 @@ The setup script runs 5 phases:
 
 Optional tools (warned if missing): helm, swift, swiftlint, swiftformat, typeshare, go, golangci-lint, mvn, gitleaks, shellcheck.
 
+**Scoped installs for a single-package worktree:** `bun run scripts/setup.ts --group=<scout|pokemon|mk64|birmel>` scopes Phases 2-5 to that package plus the always-on shared `file:` producers (eslint-config, llm-models, webring, astro-opengraph-images, discord-video-stream, helm-types), instead of installing all ~35 packages (~13-15G). Add `--link` to additionally symlink that group's deps from Bun's global store instead of copying — verified safe for `pokemon` only; Prisma's postinstall scripts break under symlink backend, so `--link` is rejected for scout/mk64/birmel. No flags = unchanged full-install behavior.
+
 ## Verification
 
 Always verify changes:
@@ -266,8 +268,13 @@ cd .claude/worktrees/<feature-slug>
 
 # REQUIRED before any build/test in the new worktree — runs codegen, shared builds, deps.
 # Without this, builds fail with cryptic missing-module / missing-generated-file errors.
+# Touching only one package? Scope it: bun run scripts/setup.ts --group=scout --link
+# (--group=<scout|pokemon|mk64|birmel>; --link is verified safe for pokemon only — see
+# Development Setup above)
 bun run scripts/setup.ts
 ```
+
+**Never substitute a per-package `bun install` for `scripts/setup.ts`** — shared `file:` deps (eslint-config, llm-models, webring, astro-opengraph-images, discord-video-stream) need their producer rebuilt and force-copied in, which only `setup.ts` does (even in `--group` mode). Skipping it is the #1 cause of "Cannot find module `@shepherdjerred/eslint-config`" / stale `llm-models` errors.
 
 After PR merge: `git worktree remove .claude/worktrees/<feature-slug>` and `git branch -d feature/<slug>` from the main checkout. Run `git worktree prune` to clean up stale entries.
 

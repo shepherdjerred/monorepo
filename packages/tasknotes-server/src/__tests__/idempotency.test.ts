@@ -4,8 +4,10 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { Hono } from "hono";
 
-import { taskRoutes } from "../routes/tasks.ts";
-import { TaskStore } from "../store/task-store.ts";
+import { resolveModelConfig } from "tasknotes-types/v2";
+
+import { TaskRepository } from "../engine/task-repository.ts";
+import { v2Routes } from "../v2/routes.ts";
 import { IdempotencyStore } from "../idempotency/store.ts";
 import {
   MUTATION_ID_HEADER,
@@ -21,8 +23,9 @@ let storePath: string;
 
 beforeEach(async () => {
   tempDir = await mkdtemp(path.join(tmpdir(), "tasknotes-idem-"));
-  const taskStore = new TaskStore(tempDir, "");
-  await taskStore.init();
+  const config = resolveModelConfig();
+  const repo = new TaskRepository(tempDir, "", config);
+  await repo.scan();
   storePath = path.join(tempDir, ".tasknotes-server", "idempotency.json");
   idempotencyStore = new IdempotencyStore(storePath);
   await idempotencyStore.init();
@@ -31,7 +34,7 @@ beforeEach(async () => {
   app = new Hono();
   app.use("*", envelopeMiddleware);
   app.use("*", idempotencyMiddleware(idempotencyStore));
-  app.route("/", taskRoutes(taskStore));
+  app.route("/", v2Routes({ repo, config, vaultPath: tempDir }));
 });
 
 afterEach(async () => {
@@ -119,7 +122,7 @@ describe("idempotency middleware", () => {
       "mut-ci",
     );
     const firstBody = await jsonBody(first);
-    expect(firstBody.data.completeInstances).toEqual(["2026-07-03"]);
+    expect(firstBody.data.complete_instances).toEqual(["2026-07-03"]);
 
     // A replayed request must not toggle the instance back off.
     const replay = await post(
@@ -129,7 +132,7 @@ describe("idempotency middleware", () => {
     );
     expect(replay.headers.get(REPLAY_HEADER)).toBe("true");
     const replayBody = await jsonBody(replay);
-    expect(replayBody.data.completeInstances).toEqual(["2026-07-03"]);
+    expect(replayBody.data.complete_instances).toEqual(["2026-07-03"]);
   });
 
   test("GET requests bypass the middleware entirely", async () => {
@@ -166,9 +169,10 @@ describe("idempotency middleware", () => {
     const brokenApp = new Hono();
     brokenApp.use("*", envelopeMiddleware);
     brokenApp.use("*", idempotencyMiddleware(brokenStore));
-    const taskStore = new TaskStore(tempDir, "");
-    await taskStore.init();
-    brokenApp.route("/", taskRoutes(taskStore));
+    const config = resolveModelConfig();
+    const repo = new TaskRepository(tempDir, "", config);
+    await repo.scan();
+    brokenApp.route("/", v2Routes({ repo, config, vaultPath: tempDir }));
 
     const res = await brokenApp.request("/api/tasks", {
       method: "POST",
