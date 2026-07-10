@@ -61,17 +61,34 @@ function clientWithMembers(
     // Guilds the API confirms membership for even though they're missing
     // from the cache (simulates a stale-cache false positive).
     verifiableIds?: string[];
+    // Guilds that come back Unknown Guild on the first fetch but confirm
+    // membership on the recheck fetch (simulates a transient outage).
+    recoversOnRecheckIds?: string[];
   } = {},
 ) {
-  const { ready = true, verifiableIds = [] } = options;
+  const {
+    ready = true,
+    verifiableIds = [],
+    recoversOnRecheckIds = [],
+  } = options;
+  const fetchCounts = new Map<string, number>();
   return mockClient({
     isReady: () => ready,
     guilds: {
       cache: new Map(memberIds.map((id) => [id, { id }])),
-      fetch: (serverId: string) =>
-        verifiableIds.includes(serverId)
-          ? Promise.resolve(mockGuild({ id: serverId }))
-          : Promise.reject(unknownGuildError()),
+      fetch: (serverId: string) => {
+        if (verifiableIds.includes(serverId)) {
+          return Promise.resolve(mockGuild({ id: serverId }));
+        }
+        if (recoversOnRecheckIds.includes(serverId)) {
+          const count = (fetchCounts.get(serverId) ?? 0) + 1;
+          fetchCounts.set(serverId, count);
+          if (count >= 2) {
+            return Promise.resolve(mockGuild({ id: serverId }));
+          }
+        }
+        return Promise.reject(unknownGuildError());
+      },
     },
   });
 }
@@ -91,7 +108,9 @@ describe("reconcileRemovedGuilds", () => {
     await seedGuild(prisma, removedGuild);
 
     // Bot is only in memberGuild now.
-    await reconcileRemovedGuilds(clientWithMembers([memberGuild]), prisma);
+    await reconcileRemovedGuilds(clientWithMembers([memberGuild]), prisma, {
+      verifyRecheckDelayMs: 0,
+    });
 
     expect(
       await prisma.player.count({ where: { serverId: removedGuild } }),
@@ -141,6 +160,19 @@ describe("reconcileRemovedGuilds", () => {
       verifiableIds: [removedGuild],
     });
     await reconcileRemovedGuilds(client, prisma);
+
+    expect(
+      await prisma.player.count({ where: { serverId: removedGuild } }),
+    ).toBe(1);
+  });
+
+  test("keeps data for a guild that returns Unknown Guild once but recovers on the recheck fetch (transient outage)", async () => {
+    await seedGuild(prisma, removedGuild);
+
+    const client = clientWithMembers([memberGuild], {
+      recoversOnRecheckIds: [removedGuild],
+    });
+    await reconcileRemovedGuilds(client, prisma, { verifyRecheckDelayMs: 0 });
 
     expect(
       await prisma.player.count({ where: { serverId: removedGuild } }),

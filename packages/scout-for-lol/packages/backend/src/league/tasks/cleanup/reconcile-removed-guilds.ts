@@ -9,6 +9,10 @@ import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("cleanup-reconcile-removed-guilds");
 
+/** Delay between the two confirmation fetches, long enough to ride out a
+ * momentary per-guild blip without meaningfully delaying the daily sweep. */
+const DEFAULT_VERIFY_RECHECK_DELAY_MS = 30_000;
+
 /**
  * Reconcile the database against the bot's actual guild membership.
  *
@@ -29,11 +33,23 @@ const logger = createLogger("cleanup-reconcile-removed-guilds");
  * own home guild as removed on a cache miss and repeatedly deleted + re-seeded
  * the COMMON_DENOMINATOR system reports, so `ScoutScheduledReportMissedWeekly`
  * fired forever — see packages/docs/logs/2026-07-09_scout-pd-alert.md.)
+ *
+ * A single 10004 is still not fully trusted: a guild that is merely
+ * *temporarily unavailable* (Discord region/shard outage) can also 404 on a
+ * REST fetch, and the `guildDelete` event handler already treats that case as
+ * non-removal (skips cleanup when `guild.available` is false). To match that
+ * behavior here, a 10004 candidate is re-fetched once more after
+ * `verifyRecheckDelayMs` — only a *second* consecutive 10004 confirms the
+ * removal. A guild that comes back on the recheck was just riding out an
+ * outage and is left alone.
  */
 export async function reconcileRemovedGuilds(
   client: Client,
   db: ExtendedPrismaClient = prisma,
+  options: { verifyRecheckDelayMs?: number } = {},
 ): Promise<void> {
+  const verifyRecheckDelayMs =
+    options.verifyRecheckDelayMs ?? DEFAULT_VERIFY_RECHECK_DELAY_MS;
   logger.info("[ReconcileGuilds] Reconciling DB guilds against membership...");
 
   // Guard: without a ready client and a populated cache we cannot trust the
@@ -91,16 +107,43 @@ export async function reconcileRemovedGuilds(
         logger.warn(
           `[ReconcileGuilds] Guild ${serverId} missing from cache but confirmed still a member via API - skipping (stale cache)`,
         );
+        continue;
       } catch (error) {
-        if (isUnknownGuildError(error)) {
-          removedServerIds.push(serverId);
-        } else {
+        if (!isUnknownGuildError(error)) {
           logger.error(
             `[ReconcileGuilds] Could not confirm removal of guild ${serverId}, skipping cleanup:`,
             getErrorMessage(error),
           );
           Sentry.captureException(error, {
             tags: { source: "reconcile-removed-guilds-verify", serverId },
+          });
+          continue;
+        }
+      }
+
+      // First fetch came back Unknown Guild (10004). That alone can also mean
+      // the guild is only temporarily unavailable (Discord outage), so wait
+      // and re-fetch once more before trusting it as a real removal.
+      await Bun.sleep(verifyRecheckDelayMs);
+      try {
+        await client.guilds.fetch(serverId);
+        logger.warn(
+          `[ReconcileGuilds] Guild ${serverId} returned Unknown Guild once but recovered on recheck - skipping (transient outage)`,
+        );
+        continue;
+      } catch (error) {
+        if (isUnknownGuildError(error)) {
+          removedServerIds.push(serverId);
+        } else {
+          logger.error(
+            `[ReconcileGuilds] Could not confirm removal of guild ${serverId} on recheck, skipping cleanup:`,
+            getErrorMessage(error),
+          );
+          Sentry.captureException(error, {
+            tags: {
+              source: "reconcile-removed-guilds-verify-recheck",
+              serverId,
+            },
           });
         }
       }
