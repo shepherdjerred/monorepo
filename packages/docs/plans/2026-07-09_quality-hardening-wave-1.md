@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Complete
 
 ## Context
 
@@ -105,3 +105,31 @@ The 2026-07-09 quality + architecture study (`packages/docs/logs/2026-07-09_code
 - WS7 dpp backend strictness fixes could surface real index-access bugs; treat each as a real fix, not a `!` sprinkle (`no-type-assertions` still applies).
 - WS1 pyright strict on the 3 bare-python3 homelab exporters may need `# pyright: strict` relaxation per file if hopeless — prefer typing them properly; they're small.
 - Single PR will be large (~10 packages + CI). Commits are per-workstream for reviewability; revert unit = commit.
+
+## Session Log — 2026-07-09/10
+
+### Done
+
+All 8 workstreams implemented on `feature/quality-wave-1` (13 commits, one per workstream theme):
+
+- **WS4 (went deeper than planned)**: compliance-check.sh now BANS no-op stub scripts repo-wide with documented exemptions; found stubs in 17 packages (not 5) — **toolkit had 55 unit tests that never ran in CI** (`test: "true"`), now wired as `bun run test:unit`. glitter → SKIP_PACKAGES; NO_TEST_PACKAGES set drives `--skip-test` pkg-checks; sjer.red typecheck runs astro check.
+- **WS5**: ratchet extended with `test-skips` (23/9 files) + `placeholder-assertions` (32/12 files); canary-verified both directions.
+- **WS1**: root ruff.toml + pyrightconfig.json (strict, reportUnknown\* off); ~260 ruff + 203 pyright errors fixed to ZERO across 16 files, no noqa/type-ignore; velero bare excepts typed + loud; PYTHON_UV_IMAGE + ruff-check/pyright-check in the quality bundle (libatomic1 needed for pyright's bundled node); lefthook ruff (staged --fix) + pyright (self-bootstrapping venv script); both Dagger fns verified e2e.
+- **WS2**: .dagger/src/rust.ts — fmt --check + clippy -D warnings + cargo test for scout desktop in RUST_IMAGE with tauri apt deps, rustup-home cache volume (mounting only toolchains/ causes EXDEV), stub dist/ for tauri::generate_context!; scout-desktop-rust CI step + lefthook job; verified e2e (23 tests).
+- **WS3**: eslint.config.ts for scripts/, scripts/ci/, .dagger/ (file: devDeps); ~1,270 violations fixed (Bun.env/Bun.file, Zod for Buildkite/k8s/greptile parsing, structural extractions); documented grandfathering (max-lines giants, max-params off in .dagger, complexity caps on the 3 generator dispatchers, no-secrets allowlist); eslint-automation quality-bundle child + 3 lefthook jobs + parity mappings.
+- **WS6**: analysisRules on in scout/temporal/homelab (warn); jscpd pinned in root devDeps; temporal alone surfaces 254 findings.
+- **WS7**: dpp (242), dpmk (64), cooklang (45) strictness errors fixed onto tsconfig.base.json — fail-fast throws for invariants, conditional spreads, Bun.WebAssembly.\* types; all package tests green.
+- **WS8**: tasknotes-server logs dropped tasks w/ Zod field errors + parse-failure counter + watcher error handler (title-less notes stay silent — verified with live malformed-vault repro); temporal event-bridge escalates to Sentry after 10 consecutive failures (latched); monarch tier-3 failures loud w/ txn context + raw snippet + run-summary counts + 60-day KB eviction (tier-1 LRU-touch); toolkit MLX degradation always prints via shared printDegradationWarning.
+- Docs: AGENTS.md verification section updated; this plan mirrored.
+
+### Remaining
+
+- PR creation + Buildkite monitoring (in progress at log time).
+- Follow-ups deliberately deferred: triage knip/jscpd warnings (254 in temporal alone); split pipeline-builder.test.ts (sits at its 1520 cap); grandfathered max-lines/complexity overrides to shrink opportunistically; optional Grafana alert on `haEventBridgeConnected == 0`; test max-lines tightening dropped by user decision.
+
+### Caveats
+
+- eslint `--fix` with `custom-rules/no-parent-imports`/`require-ts-extensions` ON is destructive in non-package dirs (rewrote imports to a non-resolving self-alias; added .ts extensions a standalone tsconfig can't accept). Both were reverted + documented rule-offs; don't re-enable them there.
+- `dagger develop` bumps dagger.json engineVersion as a side effect — reverted; don't commit it incidentally.
+- pyright dev venv lives at repo-root `.venv` (now gitignored + SOURCE_EXCLUDES + ruff-excluded); scripts/python-dev-requirements.txt must stay in sync with inline uv-script headers.
+- The dagger-hygiene golden test asserts on release.ts SOURCE text — String.raw refactors change the source without changing runtime strings; assertion updated once.
