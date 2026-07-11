@@ -151,3 +151,24 @@ Note: steps 2–3 are one `apply-config` invocation since it's full-document. Se
 - **Load storms are not fixed** — memory-side is now bounded (no OOM in storms 2-3), but the D-state/runqueue explosion under concurrent CI + ZFS IO survives and causes 15-60min of degradation (apiserver timeouts). The remaining lever is CI concurrency (buildkite max-in-flight 16→8) — declined for now to preserve throughput.
 - All three of today's config pushes went **directly to main** (Buildkite was down/red; operator-directed). PR #1442 documents the first batch.
 - The archived-plan Status says Complete; this continuation shifted numbers (systemReserved 40Gi not 24Gi; allocatable 73.4Gi not 91.4Gi). The kubelet.yaml comments are the source of truth.
+
+## Session Log — 2026-07-11 (afternoon: tasks 1/2/4 + storm analysis)
+
+### Done
+
+- **qbittorrent root-caused for real** (`0dcbfaba0`): the "slow startup / resume-recheck" theory was WRONG. A dirty OOM kill left qBittorrent's single-instance lockfile (PID 153 + name + old pod hostname `media-qbittorrent-7fcf4d7b59-kffpp`) + ipc-socket on the config PVC; every nox start matched the stale PID against a live process in the small recycled container PID namespace, decided another instance existed, and exited 0 silently — s6 respawned it every few seconds, invisible to k8s. Verified: removing the lock brought the WebUI up in 44s; pod 3/3, 0 restarts. Fixes: config-seed init container now removes lockfile+ipc-socket on every start; startup probe kept at 15min (`dd17d36eb`, comment corrected) as storm insurance only.
+- **tempo-0 fixed**: force-deleted the stuck pod object (process was already gone; kubelet could not unmount the ZFS dataset), manually `umount`ed the two stale mount aliases via the openebs-zfs-plugin container, new pod mounted cleanly → 1/1 Running.
+- **Temporal follow-up scheduled** (`agent-task-torvalds-memory-rightsize-1wk-post-change-verifi…`, fires 2026-07-17 09:00 PT): ran `schedule-agent-task.ts --json` INSIDE the worker pod via kubectl exec. Port-forwarding can never work — the Temporal frontend binds the pod IP, not localhost, so the forward's in-netns dial to 127.0.0.1:7233 is refused. Remember this for future operator scheduling.
+- **CI-storm analysis (PSI vs devices)**: storms are queueing/reclaim pathology, NOT hardware limits. Peak memory-full PSI 58%, CPU-some 82%, IO-some 71% — while NVMe peaked at 67% util (~650MB/s, ~10% of capability), HDDs idle, CPU mostly 10-25%. Thousands of concurrent CI threads allocate + do small-file ZFS IO; when allocation outpaces slow ZFS slab reclaim, every thread piles into direct reclaim and load = queue length explodes (10k-33k). The 40Gi reservation + 4/8Gi eviction targets exactly this; decision: watch the next few CI builds' PSI before considering a concurrency cap (max-in-flight 16→8) — hardware upgrades would not help.
+
+### Remaining
+
+- Confirm a fully green main build post-storms (latest builds were pending at session end).
+- Watch memory-full PSI across the next few CI storms; if load storms recur with PSI-memory flat, apply the concurrency cap.
+- User handling separately: stale PD incident resolution, Scout retriggers, HA entities, SSD-wear/prometheus-leak alert tuning, optional PD auto_resolve_timeout + reconciliation task.
+- Worktree cleanup when done: `git worktree remove .claude/worktrees/torvalds-memory-rightsize && git branch -d feature/torvalds-memory-rightsize`.
+
+### Caveats
+
+- qbittorrent's live deployment was patched (probe 90) before the RS from `dd17d36eb` rolled; both now converge with git.
+- The stale-lock cleanup runs in the config-seed init container — if qbittorrent is ever moved off the linuxserver image or the init container is removed, the dirty-kill lock landmine returns.
