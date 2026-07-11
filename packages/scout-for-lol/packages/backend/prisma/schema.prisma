@@ -626,6 +626,20 @@ model MatchAiAttempt {
   attemptedAt DateTime @default(now())
 }
 
+// A guild the reconcile-removed-guilds sweep saw missing from the client
+// cache AND unconfirmed by a live `guilds.fetch` (Discord 10004) on some
+// previous day's run. Cleanup only proceeds once a candidate has been
+// re-observed as missing on a LATER calendar day than `firstDetectedAt` -
+// a single day's outage (Discord region/shard down, cache hydration gap)
+// resolves well within 24h, while a real removal stays missing across runs.
+// The row is deleted as soon as a run finds the guild reachable again
+// (recovered) or after cleanup runs (confirmed and handled).
+model GuildRemovalCandidate {
+  serverId        String   @id
+  firstDetectedAt DateTime
+  lastCheckedAt   DateTime
+}
+
 // Web-UI initiated subscription changes. Every mutation through the web UI
 // records a row so we can audit who added/removed what from outside Discord.
 model AuditLog {
