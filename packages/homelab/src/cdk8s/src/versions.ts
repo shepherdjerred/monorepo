@@ -80,7 +80,7 @@ const versions = {
     "main@sha256:3a204341938acc2cf78da4311487875e604643320a4143d6fd0dfd3eb6102822",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=docker
   "home-assistant/home-assistant":
-    "2026.7.1@sha256:f73512ba4fe06bb4d57636fe3578d0820cdec46f81e8f837ab59e451662ff3cb",
+    "2026.7.2@sha256:1476924357b46e80735c13e94232ba5c853cac052e9df4bb28d50fa56348097b",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
   "bropat/eufy-security-ws":
     "3.1.0@sha256:d41169205f4e20e1e7e173283aaf8bb2d68e2abecb42bc1500a5fac5bb7a8750",
