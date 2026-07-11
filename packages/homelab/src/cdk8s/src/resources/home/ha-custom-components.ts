@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { ContainerProps } from "cdk8s-plus-31";
 import { Cpu } from "cdk8s-plus-31";
 import { Size } from "cdk8s";
@@ -156,6 +157,27 @@ async function readPatches(
   );
 }
 
+/**
+ * Fingerprint of everything that changes the installed bytes: the upstream
+ * tag, the tarball hash, and any checked-in patch contents. Written to the
+ * PVC's `.installed_version` marker so a changed patch or hash (without a tag
+ * bump) still forces a reinstall instead of leaving stale bytes in place.
+ */
+function installMarker(
+  spec: HaCustomComponentSpec,
+  patchContents: string[],
+): string {
+  const hash = createHash("sha256");
+  hash.update(spec.version);
+  hash.update("\0");
+  hash.update(spec.sha256);
+  for (const content of patchContents) {
+    hash.update("\0");
+    hash.update(content);
+  }
+  return `${spec.version}-${hash.digest("hex").slice(0, 16)}`;
+}
+
 async function buildInstallScript(
   spec: HaCustomComponentSpec,
 ): Promise<string> {
@@ -164,6 +186,7 @@ async function buildInstallScript(
   if (spec.install.kind === "custom_components") {
     const { slug, patches } = spec.install;
     const patchContents = patches ? await readPatches(slug, patches) : [];
+    const marker = installMarker(spec, patchContents);
     const patchSteps = patchContents
       .map(
         (content, i) => `
@@ -177,11 +200,12 @@ HA_PATCH_EOF`,
     return String.raw`
 set -eu
 VERSION="${version}"
+INSTALL_MARKER="${marker}"
 EXPECTED_SHA256="${sha256}"
 TARGET_DIR="/config/custom_components/${slug}"
 MARKER="$TARGET_DIR/.installed_version"
 
-if [ -f "$MARKER" ] && [ "$(cat "$MARKER")" = "$VERSION" ]; then
+if [ -f "$MARKER" ] && [ "$(cat "$MARKER")" = "$INSTALL_MARKER" ]; then
   echo "${slug} $VERSION already installed"
   exit 0
 fi
@@ -199,7 +223,7 @@ ${patchSteps}
 mkdir -p /config/custom_components
 rm -rf "$TARGET_DIR"
 cp -r "$STAGE/custom_components/${slug}" "$TARGET_DIR"
-echo "$VERSION" > "$MARKER"
+echo "$INSTALL_MARKER" > "$MARKER"
 echo "installed ${slug} $VERSION"
 `;
   }
@@ -207,6 +231,7 @@ echo "installed ${slug} $VERSION"
   // www_community: copy specific pre-built files, not a whole subdir.
   const { slug, files } = spec.install;
   const targetDir = `/config/www/community/${slug}`;
+  const marker = installMarker(spec, []);
   const copyLines = files
     .map((f) => `cp "$STAGE/${f}" "${targetDir}/${f.split("/").pop() ?? f}"`)
     .join("\n");
@@ -214,11 +239,12 @@ echo "installed ${slug} $VERSION"
   return String.raw`
 set -eu
 VERSION="${version}"
+INSTALL_MARKER="${marker}"
 EXPECTED_SHA256="${sha256}"
 TARGET_DIR="${targetDir}"
 MARKER="$TARGET_DIR/.installed_version"
 
-if [ -f "$MARKER" ] && [ "$(cat "$MARKER")" = "$VERSION" ]; then
+if [ -f "$MARKER" ] && [ "$(cat "$MARKER")" = "$INSTALL_MARKER" ]; then
   echo "${slug} $VERSION already installed"
   exit 0
 fi
@@ -232,9 +258,10 @@ echo "$EXPECTED_SHA256  $ARCHIVE" | sha256sum -c -
 tar -xz -C "$STAGE" --strip-components=1 -f "$ARCHIVE"
 rm -f "$ARCHIVE"
 
+rm -rf "$TARGET_DIR"
 mkdir -p "$TARGET_DIR"
 ${copyLines}
-echo "$VERSION" > "$MARKER"
+echo "$INSTALL_MARKER" > "$MARKER"
 echo "installed ${slug} $VERSION"
 `;
 }

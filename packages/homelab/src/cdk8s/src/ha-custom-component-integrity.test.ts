@@ -79,7 +79,7 @@ describeFn("HA custom-component tarball integrity", () => {
       try {
         const tarProc = Bun.spawn(
           ["tar", "-xz", "-C", extractedDir, "--strip-components=1"],
-          { stdin: "pipe" },
+          { stdin: "pipe", stderr: "pipe" },
         );
         await tarProc.stdin.write(bytes);
         await tarProc.stdin.end();
