@@ -308,12 +308,33 @@ echo "Done."`,
               // especially with CI jobs hammering the engine. The liveness kill then
               // causes the NEXT unclean shutdown, looping forever — observed live
               // 2026-07-10 (22 restarts in 22h on the old pod, then a fresh pod
-              // killed at 11m mid-cold-start). 60 x 30s = 30 min of tolerated
-              // consecutive failures before a genuine deadlock gets the pod killed.
+              // killed at 11m mid-cold-start). 2026-07-11 storm: a 10-minute node
+              // load spike (load1 13,552) tripped this same loop 4 more times
+              // (restarts 30 min apart, 19:32/20:02/20:34/21:04Z) and wiped the
+              // buildcache PVC from 1.2Ti down to 16Gi before recovering — see
+              // packages/docs/logs/2026-07-11_afternoon-dagger-restart-loop.md.
+              //
+              // Root cause of *why* the wipe was unavoidable: `failureThreshold: 60`
+              // only widens how long the engine can fail probes before being killed —
+              // it does nothing about what happens at the moment of the kill. The
+              // chart defaults the liveness probe's own `terminationGracePeriodSeconds`
+              // (a distinct, probe-scoped override of the pod-level grace period,
+              // introduced in k8s 1.25 — see `terminationGracePeriodSeconds` below,
+              // which only governs pod deletion, NOT probe-triggered kills) to just
+              // 30s. That's nowhere near enough time to flush dagql/BuildKit state
+              // under load, so a liveness-triggered restart was *guaranteed* to be
+              // unclean and trigger the wipe, no matter how generous failureThreshold
+              // was. Raised to 280s (just under the pod-level 300s grace) so the
+              // engine gets a real chance at a clean shutdown when liveness fires,
+              // which should make the wipe-and-loop path the exception rather than
+              // the rule. failureThreshold also raised 60 -> 240 (2h) as defense in
+              // depth: the 2026-07-11 storm needed up to ~90 min of cold-start-after-
+              // wipe before probes passed again, which 30 min does not cover.
               // Readiness settings stay at chart defaults — failing readiness only
               // gates traffic, which is correct during cold start.
               livenessProbeSettings: {
-                failureThreshold: 60,
+                failureThreshold: 240,
+                terminationGracePeriodSeconds: 280,
               },
               // Garbage collection policy. IMPORTANT: maxUsedSpace bounds only the
               // *reclaimable* BuildKit cache, NOT total dataset usage — metadata DBs
