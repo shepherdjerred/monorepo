@@ -103,7 +103,10 @@ export type XcodeCloudBuildEvent = {
 /** Read a `name` that may live flat or under `attributes`, else a fallback. */
 function nameOf(
   section:
-    | { name?: string; attributes?: { name?: string } | undefined }
+    | {
+        name?: string | undefined;
+        attributes?: { name?: string | undefined } | undefined;
+      }
     | undefined,
   fallback: string,
 ): string {
