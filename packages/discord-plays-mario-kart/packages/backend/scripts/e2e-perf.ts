@@ -140,7 +140,7 @@ function readHistogramP95(metrics: JsonMetric[], name: string): number {
   const target = count * 0.95;
   const buckets = m.values
     .filter((v) => v.metricName === `${name}_bucket`)
-    .map((v) => ({ le: v.labels?.le ?? "+Inf", value: v.value }))
+    .map((v) => ({ le: v.labels?.["le"] ?? "+Inf", value: v.value }))
     .toSorted((a, b) => {
       const ai = a.le === "+Inf" ? Number.POSITIVE_INFINITY : Number(a.le);
       const bi = b.le === "+Inf" ? Number.POSITIVE_INFINITY : Number(b.le);
@@ -162,6 +162,9 @@ async function navigate(
   scenarioName: keyof typeof SCENARIOS,
 ): Promise<void> {
   const scenario = SCENARIOS[scenarioName];
+  if (scenario === undefined) {
+    throw new Error(`unknown scenario: ${scenarioName}`);
+  }
   await driveUntil(emu, {
     seats: scenario.seats,
     schedule: scenario.schedule,
@@ -275,11 +278,15 @@ function startSpam(clients: ClientSocket[]): () => void {
 async function runChild(key: ScenarioKey, romPath: string): Promise<void> {
   const spec = SPEC[key];
   const scenarioName = spec.scenario;
+  const scenario = SCENARIOS[scenarioName];
+  if (scenario === undefined) {
+    throw new Error(`unknown scenario: ${scenarioName}`);
+  }
 
   process.stderr.write(`[perf:${key}] booting (rom=${romPath})…\n`);
   const emu = await bootEmulator({
     rom: romPath,
-    seats: SCENARIOS[scenarioName].seats,
+    seats: scenario.seats,
     fps: NAV_FPS,
   });
 

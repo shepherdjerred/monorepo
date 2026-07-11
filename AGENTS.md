@@ -247,6 +247,10 @@ Always verify changes:
 1. `bun run typecheck` - Type errors
 2. `bun run test` - Test failures
 3. `bunx eslint . --fix` - Lint issues (in relevant package)
+4. Python (any `.py` change): `uvx ruff check .` and `bash scripts/pyright-check.sh` from the repo root (root `ruff.toml` + `pyrightconfig.json`; the pyright script bootstraps a `.venv` from `scripts/python-dev-requirements.txt`)
+5. Rust (scout desktop): `cd packages/scout-for-lol/packages/desktop/src-tauri && cargo fmt --check && cargo clippy --all-targets --all-features -- -D warnings` (CI runs these plus `cargo test` as the `scout-desktop-rust` step)
+
+Automation code is linted too: `scripts/`, `scripts/ci/`, and `.dagger/` each have an `eslint.config.ts` consuming the shared config (CI runs them as the `eslint-automation` quality-bundle child). No-op package scripts (`"lint": "true"`) are banned by `scripts/compliance-check.sh` — a package with nothing to lint/test gets a documented exemption there instead.
 
 ## Parallel Work — Use Worktrees
 

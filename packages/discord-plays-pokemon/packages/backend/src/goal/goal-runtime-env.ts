@@ -64,7 +64,7 @@ export function buildEnvironment(
     }
   }
 
-  const inheritedPath = Bun.env.PATH;
+  const inheritedPath = Bun.env["PATH"];
   const pathParts = [
     input.helperDirectory,
     path.join(input.runtimeDirectory, "node_modules", ".bin"),

@@ -8,7 +8,7 @@
 export const WORKSPACE_DEPS: Record<string, string[]> = {
   // Standalone (no workspace deps)
   "eslint-config": [],
-  leetcode: [],
+  leetcode: ["eslint-config"],
   resume: [],
   // Vendored fork of @dank074/discord-video-stream; standalone (no file: deps of its own).
   "discord-video-stream": [],
@@ -104,7 +104,10 @@ export const BUILD_TIME_DEPS: string[] = [
   "llm-models",
   "astro-opengraph-images",
   "webring",
-  "tasknotes-types",
+  // tasknotes-types is NOT here: after the P3 rebuild (#1391) it is source-only
+  // (package.json main/types/exports resolve to src/*.ts, no `build` script), so
+  // running `bun run build` on it fails ("Script not found"). Consumers
+  // (tasknotes-server, tasks-for-obsidian) read its src directly.
   // Emits dist/*.d.ts (declaration-only) so dependents' tsc resolves its types; bun runs its src.
   "discord-video-stream",
 ];

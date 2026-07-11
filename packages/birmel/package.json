@@ -16,7 +16,6 @@
   "scripts": {
     "start": "bun run generate && bunx prisma db push && bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
-    "build": "true",
     "generate": "bun run scripts/generate-prisma.ts",
     "test": "bun --env-file=.env.test run generate && bun --env-file=.env.test test",
     "test:e2e:music": "bun run e2e/music-playback.ts",

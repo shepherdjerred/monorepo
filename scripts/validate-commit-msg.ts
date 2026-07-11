@@ -5,8 +5,8 @@
  * Format: type(scope): description  OR  type(scope)!: description
  */
 
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { readdir, readFile } from "node:fs/promises";
+import path from "node:path";
 
 const VALID_TYPES: readonly string[] = [
   "feat",
@@ -51,9 +51,10 @@ const BYPASS_PATTERNS = [
 
 const COMMIT_PATTERN = /^(\w+)\(([^)]+)\)!?:\s+.+/;
 
-function getPackageScopes(): string[] {
-  const packagesDir = join(import.meta.dirname, "..", "packages");
-  return readdirSync(packagesDir, { withFileTypes: true })
+async function getPackageScopes(): Promise<string[]> {
+  const packagesDir = path.join(import.meta.dirname, "..", "packages");
+  const entries = await readdir(packagesDir, { withFileTypes: true });
+  return entries
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name);
 }
@@ -66,16 +67,16 @@ function stripComments(message: string): string {
     .trim();
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const commitMsgFile = process.argv[2];
   if (!commitMsgFile) {
     console.error("Usage: validate-commit-msg.ts <commit-msg-file>");
     process.exit(1);
   }
 
-  const rawMessage = readFileSync(commitMsgFile, "utf-8");
+  const rawMessage = await readFile(commitMsgFile, "utf8");
   const message = stripComments(rawMessage);
-  const firstLine = message.split("\n")[0].trim();
+  const firstLine = (message.split("\n")[0] ?? "").trim();
 
   if (!firstLine) {
     console.error("Error: empty commit message");
@@ -100,6 +101,10 @@ function main(): void {
 
   const type = match[1];
   const scope = match[2];
+  if (type === undefined || scope === undefined) {
+    console.error(`Invalid commit message format: "${firstLine}"`);
+    process.exit(1);
+  }
 
   if (!VALID_TYPES.includes(type)) {
     console.error(`Invalid commit type: "${type}"`);
@@ -108,7 +113,7 @@ function main(): void {
     process.exit(1);
   }
 
-  const validScopes = [...getPackageScopes(), ...EXTRA_SCOPES].sort();
+  const validScopes = [...(await getPackageScopes()), ...EXTRA_SCOPES].sort();
   if (!validScopes.includes(scope)) {
     console.error(`Invalid commit scope: "${scope}"`);
     console.error("");
@@ -117,4 +122,4 @@ function main(): void {
   }
 }
 
-main();
+await main();

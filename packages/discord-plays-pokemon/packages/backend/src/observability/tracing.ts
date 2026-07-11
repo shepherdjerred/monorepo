@@ -61,16 +61,16 @@ const diagLogger: DiagLogger = {
  * worker's tracing notes).
  */
 export function initializeTracing(): void {
-  if (Bun.env.TELEMETRY_ENABLED !== "true") {
+  if (Bun.env["TELEMETRY_ENABLED"] !== "true") {
     logger.info("OpenTelemetry tracing disabled");
     return;
   }
 
   diag.setLogger(diagLogger, DiagLogLevel.WARN);
 
-  const otlpEndpoint = Bun.env.OTLP_ENDPOINT ?? DEFAULT_OTLP_ENDPOINT;
-  const serviceName = Bun.env.TELEMETRY_SERVICE_NAME ?? DEFAULT_SERVICE_NAME;
-  const serviceVersion = Bun.env.VERSION ?? "dev";
+  const otlpEndpoint = Bun.env["OTLP_ENDPOINT"] ?? DEFAULT_OTLP_ENDPOINT;
+  const serviceName = Bun.env["TELEMETRY_SERVICE_NAME"] ?? DEFAULT_SERVICE_NAME;
+  const serviceVersion = Bun.env["VERSION"] ?? "dev";
 
   // AsyncLocalStorage-backed context so the active span propagates across
   // awaits. Registered via NodeSDK below — registering it manually AND letting

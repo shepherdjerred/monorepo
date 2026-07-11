@@ -12,7 +12,6 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun --watch run src/index.ts",
-    "build": "true",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "lint": "bunx eslint . --max-warnings=0"

@@ -31,8 +31,9 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import boto3
 from rich.console import Console
@@ -142,7 +143,7 @@ def wait_for_ssh(state: State, timeout: int = 300) -> None:
     sys.exit(1)
 
 
-def run(cmd: list[str], check: bool = True, **kwargs) -> subprocess.CompletedProcess:
+def run(cmd: list[str], check: bool = True, **kwargs: Any) -> subprocess.CompletedProcess[Any]:
     console.print(f"[dim]$ {' '.join(cmd)}[/dim]")
     return subprocess.run(cmd, check=check, **kwargs)
 
@@ -167,7 +168,10 @@ def cmd_launch(args: argparse.Namespace) -> None:
         console.print(f"Spot vCPU quota: {quota}")
         required_vcpus = 16  # i4i.4xlarge
         if quota < required_vcpus:
-            console.print(f"[yellow]Warning: Spot quota ({quota}) < {required_vcpus} vCPUs needed for {INSTANCE_TYPE}.[/yellow]")
+            console.print(
+                f"[yellow]Warning: Spot quota ({quota}) < {required_vcpus} vCPUs "
+                f"needed for {INSTANCE_TYPE}.[/yellow]"
+            )
             console.print("[yellow]Request an increase at: https://console.aws.amazon.com/servicequotas/[/yellow]")
             if not args.force:
                 console.print("Use --force to attempt launch anyway.")
@@ -380,7 +384,7 @@ def cmd_profile(args: argparse.Namespace) -> None:
 def cmd_collect(args: argparse.Namespace) -> None:
     state = State.load()
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
     local_dir = REPO_LOCAL / f"bench-results-{timestamp}"
 
     console.print(f"Collecting results to {local_dir}...")

@@ -14,22 +14,30 @@
  *   bun run scripts/generate-deps.ts --check  # exit 1 if missing deps found
  */
 import { readdir, readFile } from "node:fs/promises";
-import { join, relative } from "node:path";
+import path from "node:path";
+import { z } from "zod";
 
 const ROOT = import.meta.dir + "/..";
-const DEPS_FILE = join(ROOT, ".dagger/src/deps.ts");
-const PACKAGES_DIR = join(ROOT, "packages");
+const DEPS_FILE = path.join(ROOT, ".dagger/src/deps.ts");
+const PACKAGES_DIR = path.join(ROOT, "packages");
 
-interface PkgInfo {
+const PackageJsonSchema = z.object({
+  name: z.string().optional(),
+  dependencies: z.record(z.string(), z.string()).optional(),
+  devDependencies: z.record(z.string(), z.string()).optional(),
+});
+type PackageJson = z.infer<typeof PackageJsonSchema>;
+
+type PkgInfo = {
   name: string;
   path: string;
   workspaceDeps: string[];
-}
+};
 
 /** Recursively find package.json files under packages/ */
 async function findPackageJsons(dir: string, depth = 0): Promise<string[]> {
   const results: string[] = [];
-  const pkgJson = join(dir, "package.json");
+  const pkgJson = path.join(dir, "package.json");
   try {
     await readFile(pkgJson, "utf8");
     results.push(pkgJson);
@@ -52,7 +60,7 @@ async function findPackageJsons(dir: string, depth = 0): Promise<string[]> {
         ].includes(entry.name)
       ) {
         results.push(
-          ...(await findPackageJsons(join(dir, entry.name), depth + 1)),
+          ...(await findPackageJsons(path.join(dir, entry.name), depth + 1)),
         );
       }
     }
@@ -62,26 +70,23 @@ async function findPackageJsons(dir: string, depth = 0): Promise<string[]> {
 
 /** Extract workspace deps from a package.json */
 function extractWorkspaceDeps(
-  pkg: Record<string, unknown>,
+  pkg: PackageJson,
   allPackageNames: Map<string, string>,
 ): string[] {
   const deps: string[] = [];
-  for (const section of ["dependencies", "devDependencies"]) {
-    const depsObj = pkg[section];
-    if (typeof depsObj !== "object" || depsObj === null) continue;
-    for (const [name, version] of Object.entries(
-      depsObj as Record<string, string>,
-    )) {
-      if (
-        typeof version === "string" &&
-        (version.startsWith("workspace:") || version.startsWith("file:"))
-      ) {
+  for (const depsObj of [pkg.dependencies, pkg.devDependencies]) {
+    if (depsObj === undefined) continue;
+    for (const [name, version] of Object.entries(depsObj)) {
+      if (version.startsWith("workspace:") || version.startsWith("file:")) {
         // Map scoped package name to directory name
         const shortName = name.startsWith("@") ? name.split("/").pop() : name;
-        if (shortName && allPackageNames.has(shortName)) {
-          deps.push(allPackageNames.get(shortName)!);
-        } else if (shortName && allPackageNames.has(name)) {
-          deps.push(allPackageNames.get(name)!);
+        const shortDir =
+          shortName === undefined ? undefined : allPackageNames.get(shortName);
+        const fullDir = allPackageNames.get(name);
+        if (shortDir !== undefined) {
+          deps.push(shortDir);
+        } else if (fullDir !== undefined) {
+          deps.push(fullDir);
         }
       }
     }
@@ -100,12 +105,19 @@ async function main() {
   const packages: PkgInfo[] = [];
 
   for (const pkgJsonPath of pkgJsonPaths) {
-    const content = JSON.parse(await readFile(pkgJsonPath, "utf8"));
-    const relPath = relative(join(ROOT, "packages"), join(pkgJsonPath, ".."));
+    const content = PackageJsonSchema.parse(
+      JSON.parse(await readFile(pkgJsonPath, "utf8")),
+    );
+    const relPath = path.relative(
+      path.join(ROOT, "packages"),
+      path.join(pkgJsonPath, ".."),
+    );
 
     // Use the package name (without scope) as the key
     const name: string = content.name ?? relPath;
-    const shortName = name.startsWith("@") ? name.split("/").pop()! : name;
+    const shortName = name.startsWith("@")
+      ? (name.split("/").pop() ?? name)
+      : name;
 
     nameToPath.set(shortName, relPath);
     nameToPath.set(name, relPath);
@@ -114,8 +126,10 @@ async function main() {
 
   // Resolve workspace deps for each package
   for (const pkg of packages) {
-    const pkgJsonPath = join(PACKAGES_DIR, pkg.path, "package.json");
-    const content = JSON.parse(await readFile(pkgJsonPath, "utf8"));
+    const pkgJsonPath = path.join(PACKAGES_DIR, pkg.path, "package.json");
+    const content = PackageJsonSchema.parse(
+      JSON.parse(await readFile(pkgJsonPath, "utf8")),
+    );
     pkg.workspaceDeps = extractWorkspaceDeps(content, nameToPath);
   }
 
@@ -124,18 +138,25 @@ async function main() {
   // Match both quoted keys ("foo": [...) and unquoted keys (foo: [...)
   const currentKeys = [
     ...currentContent.matchAll(/^\s+(?:"([^"]+)"|(\w[\w/.-]*))\s*:\s*\[/gm),
-  ].map((m) => m[1] ?? m[2]);
+  ]
+    .map((m) => m[1] ?? m[2])
+    .filter((k) => k !== undefined);
 
   // For each key in deps.ts, parse its listed deps
   const currentDeps = new Map<string, string[]>();
   for (const key of currentKeys) {
+    const escaped = key.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
     const re = new RegExp(
-      `(?:"${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"|${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})\\s*:\\s*\\[([^\\]]*)\\]`,
+      String.raw`(?:"${escaped}"|${escaped})\s*:\s*\[([^\]]*)\]`,
     );
     const match = currentContent.match(re);
-    const deps = match
-      ? [...match[1].matchAll(/"([^"]+)"/g)].map((m) => m[1])
-      : [];
+    const matchBody = match?.[1];
+    const deps =
+      matchBody === undefined
+        ? []
+        : [...matchBody.matchAll(/"([^"]+)"/g)]
+            .map((m) => m[1])
+            .filter((d) => d !== undefined);
     currentDeps.set(key, deps);
   }
 
@@ -149,7 +170,7 @@ async function main() {
     // Skip sub-packages whose parent is already tracked (e.g. scout-for-lol/packages/backend
     // is managed by the scout-for-lol parent workspace entry)
     const isSubPackageOfTracked = currentKeys.some(
-      (k) => pkg.path.startsWith(k + "/") && k !== pkg.path,
+      (k) => pkg.path.startsWith(`${k}/`) && k !== pkg.path,
     );
     if (isSubPackageOfTracked) continue;
 
@@ -176,7 +197,7 @@ async function main() {
 
   if (issues > 0) {
     console.error(
-      `\n${issues} issue(s) found. Update .dagger/src/deps.ts manually.`,
+      `\n${String(issues)} issue(s) found. Update .dagger/src/deps.ts manually.`,
     );
     if (checkMode) process.exit(1);
   } else {

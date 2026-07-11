@@ -3,14 +3,15 @@
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
-import {
-  dag,
+import type {
   Container,
   Directory,
   File,
   Platform,
   Secret,
 } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
+import { z } from "zod";
 
 import {
   ARGOCD_CLI_VERSION,
@@ -40,6 +41,24 @@ import {
 } from "./constants";
 import { BUN_INSTALL_WITH_RETRY } from "./base";
 import versions from "./versions";
+
+/**
+ * `Platform` is a branded string (`string & {__Platform: never}`) with no
+ * public SDK constructor, and `dag.defaultPlatform()` only yields the host's
+ * platform. To pin an explicit target we validate a known-good literal through
+ * a Zod `custom` schema, which narrows to the branded type without a type
+ * assertion or type-guard predicate. The cluster node (torvalds) is amd64;
+ * without pinning, `dockerBuild()` can emit a wrong-arch image (observed:
+ * ci-base came out arm64, causing `exec format error` on /bin/sh in CI pods).
+ */
+const PlatformSchema = z.custom<Platform>(
+  (value) => typeof value === "string" && value.length > 0,
+  "Platform must be a non-empty string",
+);
+
+function amd64Platform(): Platform {
+  return PlatformSchema.parse("linux/amd64");
+}
 
 export const PRISMA_BUN_SERVICE_START_COMMAND =
   "bunx --trust prisma generate && bunx prisma db push && bun run src/index.ts";
@@ -630,21 +649,33 @@ function withToolkit(container: Container): Container {
 }
 
 /**
- * Give the vendored `discord-video-stream` fork its own `node_modules` at its mounted source
- * location. The fork is consumed as TypeScript source (bun runs `src/`), so when a consumer imports
- * it, the fork's files resolve their native runtime deps (`@lng2004/node-datachannel`, `node-av`, …)
- * from the fork's OWN directory — a sibling of the consumer, whose `node_modules` is unreachable.
- * Without this, the image builds fine but crashes at startup with `Cannot find module
- * '@lng2004/node-datachannel'`. Mirrors the per-dep install loop in `bunBaseContainer` (base.ts).
+ * Give source-consumed `file:` deps their own `node_modules` at their mounted source
+ * location. These packages are consumed as TypeScript source (bun runs `src/`), and bun's
+ * runtime resolves a `file:` dependency's imports from the dep's OWN directory — a sibling
+ * of the consumer, whose `node_modules` is unreachable from there. Without a per-dep
+ * install the image builds fine but crashes at startup:
+ *   - discord-video-stream: `Cannot find module '@lng2004/node-datachannel'` (native deps)
+ *   - discord-stream-lifecycle: `ENOENT while resolving package 'discord.js'` (its
+ *     peerDependencies — bun installs peers on a root install, so this provides them)
+ * Mirrors the per-dep install loop in `bunBaseContainer` (base.ts).
  */
+const SOURCE_RUNTIME_DEPS = [
+  "discord-video-stream",
+  "discord-stream-lifecycle",
+  "discord-plays-core",
+];
+
 function withForkRuntimeDeps(
   container: Container,
   depNames: string[],
 ): Container {
-  if (!depNames.includes("discord-video-stream")) return container;
-  return container
-    .withWorkdir("/workspace/packages/discord-video-stream")
-    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
+  for (const dep of SOURCE_RUNTIME_DEPS) {
+    if (!depNames.includes(dep)) continue;
+    container = container
+      .withWorkdir(`/workspace/packages/${dep}`)
+      .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
+  }
+  return container;
 }
 
 /**
@@ -681,10 +712,10 @@ export function buildImageHelper(
   pkg: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
-  usePrisma: boolean = false,
-  installEditorClis: boolean = false,
+  version = "dev",
+  gitSha = "unknown",
+  usePrisma = false,
+  installEditorClis = false,
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
 
@@ -712,9 +743,9 @@ export function buildImageHelper(
       exclude: excludes,
     });
 
-  for (let i = 0; i < depNames.length; i++) {
+  for (const [i, depName] of depNames.entries()) {
     container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
+      `/workspace/packages/${depName}`,
       depDirs[i],
       { exclude: excludes },
     );
@@ -766,8 +797,8 @@ export function buildImageHelper(
  * 206 + Accept-Ranges on byte-range requests. See CADDY_S3_PROXY_MODULE.
  */
 export function buildCaddyS3ProxyImageHelper(
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Container {
   // Stage 1: Build custom Caddy binary with S3 proxy plugin
   const caddyBinary = dag
@@ -823,8 +854,8 @@ export async function pushCaddyS3ProxyImageHelper(
   tags: string[],
   registryUsername: string,
   registryPassword: Secret,
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Promise<string> {
   const container = buildCaddyS3ProxyImageHelper(version, gitSha);
   return pushContainerHelper(
@@ -845,8 +876,8 @@ export async function pushCaddyS3ProxyImageHelper(
  * Bun-based image cached on CI for weeks.
  */
 export function buildObsidianHeadlessImageHelper(
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Container {
   return dag
     .container()
@@ -881,8 +912,8 @@ export async function pushObsidianHeadlessImageHelper(
   tags: string[],
   registryUsername: string,
   registryPassword: Secret,
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Promise<string> {
   const container = buildObsidianHeadlessImageHelper(version, gitSha);
   return pushContainerHelper(
@@ -903,8 +934,8 @@ export async function pushObsidianHeadlessImageHelper(
  * so the other servers keep running via npx/uvx at runtime.
  */
 export function buildMcpGatewayImageHelper(
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Container {
   // Stage 1 — clone + build edstem-mcp into /opt/edstem-mcp.
   const edstemDist = dag
@@ -950,8 +981,8 @@ export async function pushMcpGatewayImageHelper(
   tags: string[],
   registryUsername: string,
   registryPassword: Secret,
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Promise<string> {
   const container = buildMcpGatewayImageHelper(version, gitSha);
   return pushContainerHelper(
@@ -974,8 +1005,8 @@ export function buildTemporalWorkerImageHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
 
@@ -1009,9 +1040,9 @@ export function buildTemporalWorkerImageHelper(
       exclude: excludes,
     });
 
-  for (let i = 0; i < depNames.length; i++) {
+  for (const [i, depName] of depNames.entries()) {
     container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
+      `/workspace/packages/${depName}`,
       depDirs[i],
       { exclude: excludes },
     );
@@ -1067,8 +1098,8 @@ export async function pushTemporalWorkerImageHelper(
   registryPassword: Secret,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Promise<string> {
   const container = buildTemporalWorkerImageHelper(
     pkgDir,
@@ -1098,8 +1129,8 @@ export function buildScoutImageHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
 
@@ -1112,9 +1143,9 @@ export function buildScoutImageHelper(
       exclude: excludes,
     });
 
-  for (let i = 0; i < depNames.length; i++) {
+  for (const [i, depName] of depNames.entries()) {
     container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
+      `/workspace/packages/${depName}`,
       depDirs[i],
       { exclude: excludes },
     );
@@ -1237,8 +1268,9 @@ export function buildDiscordPlaysPokemonImageHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
+  tsconfig: File | null = null,
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
   const innerRoot = "/workspace/packages/discord-plays-pokemon";
@@ -1259,15 +1291,22 @@ export function buildDiscordPlaysPokemonImageHelper(
       exclude: [...excludes, "wasm-src"],
     });
 
-  for (let i = 0; i < depNames.length; i++) {
+  for (const [i, depName] of depNames.entries()) {
     container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
+      `/workspace/packages/${depName}`,
       depDirs[i],
       { exclude: excludes },
     );
   }
 
   container = withForkRuntimeDeps(container, depNames);
+  // Package tsconfigs extend the repo root tsconfig.base.json
+  // (extends "../../../../tsconfig.base.json" -> /workspace/tsconfig.base.json).
+  // vite 8 (rolldown) hard-fails the frontend build when the extends target is
+  // missing, so mount it like the pkg-check containers do (base.ts).
+  if (tsconfig != null) {
+    container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
+  }
   container = withBuiltLlmModels(container, depNames);
 
   return (
@@ -1347,8 +1386,8 @@ export async function pushScoutImageHelper(
   registryPassword: Secret,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Promise<string> {
   const container = buildScoutImageHelper(
     pkgDir,
@@ -1373,8 +1412,9 @@ export async function pushDiscordPlaysPokemonImageHelper(
   registryPassword: Secret,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
+  tsconfig: File | null = null,
 ): Promise<string> {
   const container = buildDiscordPlaysPokemonImageHelper(
     pkgDir,
@@ -1382,6 +1422,7 @@ export async function pushDiscordPlaysPokemonImageHelper(
     depDirs,
     version,
     gitSha,
+    tsconfig,
   );
   return pushContainerHelper(
     container,
@@ -1412,8 +1453,9 @@ export function buildDiscordPlaysMarioKartImageHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
+  tsconfig: File | null = null,
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
   const innerRoot = MARIO_KART_INNER_ROOT;
@@ -1458,15 +1500,22 @@ export function buildDiscordPlaysMarioKartImageHelper(
       exclude: [...excludes, "wasm-src"],
     });
 
-  for (let i = 0; i < depNames.length; i++) {
+  for (const [i, depName] of depNames.entries()) {
     container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
+      `/workspace/packages/${depName}`,
       depDirs[i],
       { exclude: excludes },
     );
   }
 
   container = withForkRuntimeDeps(container, depNames);
+  // Package tsconfigs extend the repo root tsconfig.base.json
+  // (extends "../../../../tsconfig.base.json" -> /workspace/tsconfig.base.json).
+  // vite 8 (rolldown) hard-fails the frontend build when the extends target is
+  // missing, so mount it like the pkg-check containers do (base.ts).
+  if (tsconfig != null) {
+    container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
+  }
 
   return (
     container
@@ -1543,8 +1592,9 @@ export async function pushDiscordPlaysMarioKartImageHelper(
   registryPassword: Secret,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
+  tsconfig: File | null = null,
 ): Promise<string> {
   const container = buildDiscordPlaysMarioKartImageHelper(
     pkgDir,
@@ -1552,6 +1602,7 @@ export async function pushDiscordPlaysMarioKartImageHelper(
     depDirs,
     version,
     gitSha,
+    tsconfig,
   );
   return pushContainerHelper(
     container,
@@ -1570,8 +1621,8 @@ export function buildTrmnlDashboardImageHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
 
@@ -1584,9 +1635,9 @@ export function buildTrmnlDashboardImageHelper(
       exclude: excludes,
     });
 
-  for (let i = 0; i < depNames.length; i++) {
+  for (const [i, depName] of depNames.entries()) {
     container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
+      `/workspace/packages/${depName}`,
       depDirs[i],
       { exclude: excludes },
     );
@@ -1615,8 +1666,8 @@ export async function pushTrmnlDashboardImageHelper(
   registryPassword: Secret,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Promise<string> {
   const container = buildTrmnlDashboardImageHelper(
     pkgDir,
@@ -1645,13 +1696,13 @@ export async function pushTrmnlDashboardImageHelper(
  * Unauthorized", redlib-org/redlib#551). The glibc build is unaffected.
  */
 export function buildRedlibImageHelper(
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Container {
-  // The cluster node (torvalds) is amd64. Platform is a branded string in the
-  // Dagger SDK with no public constructor, so cast it the same way the CI base
-  // image build does — otherwise dockerBuild can emit a wrong-arch image.
-  const platform: Platform = "linux/amd64" as unknown as Platform;
+  // The cluster node (torvalds) is amd64; without pinning, dockerBuild can emit
+  // a wrong-arch image. See amd64Platform() for why an assertion function is
+  // used instead of a cast.
+  const platform = amd64Platform();
   const redlibSource = dag
     .git("https://github.com/redlib-org/redlib.git")
     .commit(REDLIB_SOURCE_REF)
@@ -1672,8 +1723,8 @@ export async function pushRedlibImageHelper(
   tags: string[],
   registryUsername: string,
   registryPassword: Secret,
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Promise<string> {
   const container = buildRedlibImageHelper(version, gitSha);
   return pushContainerHelper(
@@ -1693,9 +1744,8 @@ export function buildCiBaseImageHelper(context: Directory): Container {
   // Explicitly target linux/amd64 — the cluster node (torvalds) is amd64.
   // Without this, dockerBuild() can produce a wrong-arch image (observed:
   // ci-base:405 came out arm64, causing `exec format error` on /bin/sh in
-  // every CI Job pod). Platform is a branded string in the Dagger SDK with
-  // no public constructor, so a typed cast is the pragmatic way to pin it.
-  const platform: Platform = "linux/amd64" as unknown as Platform;
+  // every CI Job pod). See amd64Platform() for the branded-type narrowing.
+  const platform = amd64Platform();
   return context.dockerBuild({ platform });
 }
 
@@ -1724,10 +1774,10 @@ export async function pushImageHelper(
   registryPassword: Secret,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
-  usePrisma: boolean = false,
-  installEditorClis: boolean = false,
+  version = "dev",
+  gitSha = "unknown",
+  usePrisma = false,
+  installEditorClis = false,
 ): Promise<string> {
   if (tags.length === 0) {
     throw new Error("pushImageHelper requires at least one tag");

@@ -111,8 +111,13 @@ export function s8StereoToMonoF64(pcm: Buffer | Uint8Array): Float64Array {
   const frames = stereo.length / 2;
   const out = new Float64Array(frames);
   for (let i = 0; i < frames; i++) {
-    const l = (stereo[i * 2] << 24) >> 24;
-    const r = (stereo[i * 2 + 1] << 24) >> 24;
+    const lByte = stereo[i * 2];
+    const rByte = stereo[i * 2 + 1];
+    if (lByte === undefined || rByte === undefined) {
+      throw new Error(`Stereo PCM index out of range at frame ${String(i)}`);
+    }
+    const l = (lByte << 24) >> 24;
+    const r = (rByte << 24) >> 24;
     out[i] = (l + r) / 2 / 128;
   }
   return out;

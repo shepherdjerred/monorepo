@@ -12,11 +12,11 @@ export async function withTiming<T>(
   try {
     const result = await fn();
     const duration = Date.now() - start;
-    console.error(`[TIMING] ${label}: ${duration}ms`);
+    console.error(`[TIMING] ${label}: ${String(duration)}ms`);
     return result;
-  } catch (e) {
+  } catch (error) {
     const duration = Date.now() - start;
-    console.error(`[TIMING] ${label}: FAILED after ${duration}ms`);
-    throw e;
+    console.error(`[TIMING] ${label}: FAILED after ${String(duration)}ms`);
+    throw error;
   }
 }

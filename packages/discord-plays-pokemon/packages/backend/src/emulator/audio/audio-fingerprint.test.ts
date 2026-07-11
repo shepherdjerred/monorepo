@@ -138,7 +138,7 @@ function chromaFingerprint(
   const acc = new Float64Array(12);
   for (const frame of frames) {
     const c = chromagram(frame, sampleRate);
-    for (let i = 0; i < 12; i++) acc[i] += c[i];
+    for (let i = 0; i < 12; i++) acc[i] = (acc[i] ?? 0) + (c[i] ?? 0);
   }
   for (let i = 0; i < 12; i++) acc[i] /= frames.length;
   return acc;

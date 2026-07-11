@@ -10,8 +10,22 @@
  * the parent package.
  */
 
-import { cpSync, existsSync, mkdirSync, rmSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { access, cp, mkdir, rm } from "node:fs/promises";
+import path from "node:path";
+import { z } from "zod";
+
+async function pathExists(target: string): Promise<boolean> {
+  try {
+    await access(target);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const ParentPkgSchema = z.object({
+  files: z.array(z.string()).optional(),
+});
 
 const [parentDirArg, depName, exampleDirArg] = process.argv.slice(2);
 
@@ -22,21 +36,20 @@ if (!parentDirArg || !depName || !exampleDirArg) {
   process.exit(1);
 }
 
-const parentDir = resolve(exampleDirArg, parentDirArg);
-const exampleDir = resolve(exampleDirArg);
-const targetDir = join(exampleDir, "node_modules", depName);
+const parentDir = path.resolve(exampleDirArg, parentDirArg);
+const exampleDir = path.resolve(exampleDirArg);
+const targetDir = path.join(exampleDir, "node_modules", depName);
 
-const parentPkgPath = join(parentDir, "package.json");
-if (!existsSync(parentPkgPath)) {
+const parentPkgPath = path.join(parentDir, "package.json");
+if (!(await pathExists(parentPkgPath))) {
   console.error(`Parent package.json not found: ${parentPkgPath}`);
   process.exit(1);
 }
 
-const parentPkg = JSON.parse(await Bun.file(parentPkgPath).text()) as Record<
-  string,
-  unknown
->;
-const files = parentPkg["files"];
+const parentPkg = ParentPkgSchema.parse(
+  JSON.parse(await Bun.file(parentPkgPath).text()),
+);
+const files = parentPkg.files;
 
 if (!Array.isArray(files)) {
   console.error(`No "files" field in ${parentPkgPath}`);
@@ -44,22 +57,24 @@ if (!Array.isArray(files)) {
 }
 
 // Always include package.json
-const toCopy: string[] = [...new Set(["package.json", ...(files as string[])])];
+const toCopy: string[] = [...new Set(["package.json", ...files])];
 
 // Clean and recreate target
-if (existsSync(targetDir)) {
-  rmSync(targetDir, { recursive: true });
+if (await pathExists(targetDir)) {
+  await rm(targetDir, { recursive: true });
 }
-mkdirSync(targetDir, { recursive: true });
+await mkdir(targetDir, { recursive: true });
 
 for (const entry of toCopy) {
-  const src = join(parentDir, entry);
-  if (!existsSync(src)) {
+  const src = path.join(parentDir, entry);
+  if (!(await pathExists(src))) {
     // Skip missing optional files (e.g. CHANGELOG.md before first release)
     continue;
   }
-  const dest = join(targetDir, entry);
-  cpSync(src, dest, { recursive: true });
+  const dest = path.join(targetDir, entry);
+  await cp(src, dest, { recursive: true });
 }
 
-console.log(`Copied ${depName} (${toCopy.length} entries) → ${targetDir}`);
+console.log(
+  `Copied ${depName} (${String(toCopy.length)} entries) → ${targetDir}`,
+);

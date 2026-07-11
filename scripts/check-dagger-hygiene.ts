@@ -10,19 +10,19 @@
 
 import { $ } from "bun";
 
-interface BannedPattern {
+type BannedPattern = {
   name: string;
   pattern: string;
-}
+};
 
-interface AllowlistEntry {
+type AllowlistEntry = {
   /** File path substring to match */
   file: string;
   /** Pattern name this allowlist entry applies to */
   patternName: string;
   /** Optional: specific line content substring that must also match */
   lineContains?: string;
-}
+};
 
 const BANNED_PATTERNS: BannedPattern[] = [
   { name: "silent-error-swallow", pattern: String.raw`\|\| true` },
@@ -54,12 +54,12 @@ const ALLOWLIST: AllowlistEntry[] = [
   },
 ];
 
-interface Violation {
+type Violation = {
   file: string;
   lineNumber: string;
   line: string;
   patternName: string;
-}
+};
 
 function isAllowlisted(
   file: string,

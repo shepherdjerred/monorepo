@@ -129,7 +129,7 @@ function fmt(v: number | null, digits = 2): string {
 }
 
 function joinRow(cells: string[], widths: number[]): string {
-  return cells.map((c, i) => c.padEnd(widths[i])).join("  ");
+  return cells.map((c, i) => c.padEnd(widths[i] ?? 0)).join("  ");
 }
 
 export function renderCompareTable(rows: CompareRow[]): string {
@@ -144,7 +144,7 @@ export function renderCompareTable(rows: CompareRow[]): string {
   ]);
   const cols = header.length;
   const widths = Array.from({ length: cols }, (_, i) =>
-    Math.max(header[i].length, ...data.map((row) => row[i].length)),
+    Math.max(header[i]?.length ?? 0, ...data.map((row) => row[i]?.length ?? 0)),
   );
   return [
     joinRow(header, widths),

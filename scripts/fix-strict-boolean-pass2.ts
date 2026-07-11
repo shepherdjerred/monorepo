@@ -11,22 +11,25 @@ import {
   type Type,
   type SourceFile,
 } from "ts-morph";
-import * as path from "node:path";
+import path from "node:path";
 import { $ } from "bun";
+import { z } from "zod";
 
 const ROOT = path.resolve(import.meta.dir, "..");
 
-type EslintMessage = {
-  ruleId: string;
-  line: number;
-  column: number;
-  message: string;
-};
+const EslintMessageSchema = z.object({
+  ruleId: z.string().nullable(),
+  line: z.number(),
+  column: z.number(),
+  message: z.string(),
+});
+type EslintMessage = z.infer<typeof EslintMessageSchema>;
 
-type EslintResult = {
-  filePath: string;
-  messages: EslintMessage[];
-};
+const EslintResultSchema = z.object({
+  filePath: z.string(),
+  messages: z.array(EslintMessageSchema),
+});
+const EslintOutputSchema = z.array(EslintResultSchema);
 
 function isNullableString(type: Type): boolean {
   if (type.isUnion()) {
@@ -139,13 +142,13 @@ function fixStrictBooleanAtLocation(
   sourceFile: SourceFile,
   line: number,
   col: number,
-  message: string,
+  _message: string,
 ): boolean {
   const node = findNodeAtPosition(sourceFile, line, col);
   if (!node) return false;
 
   // Walk up to find the expression being used as a condition
-  let expr = node;
+  const expr = node;
 
   // If we're in a PrefixUnaryExpression (! operator), handle negation
   const parent = expr.getParent();
@@ -201,7 +204,9 @@ async function processPackage(pkgPath: string): Promise<number> {
     await $`cd ${path.join(ROOT, pkgPath)} && bunx eslint . --format json`
       .quiet()
       .nothrow();
-  const eslintOutput = JSON.parse(result.stdout.toString()) as EslintResult[];
+  const eslintOutput = EslintOutputSchema.parse(
+    JSON.parse(result.stdout.toString()),
+  );
 
   // Collect issues by file
   const issuesByFile = new Map<string, EslintMessage[]>();
@@ -222,7 +227,7 @@ async function processPackage(pkgPath: string): Promise<number> {
   }
 
   console.log(
-    `  Found ${Array.from(issuesByFile.values()).reduce((sum, msgs) => sum + msgs.length, 0)} issues in ${issuesByFile.size} files`,
+    `  Found ${String([...issuesByFile.values()].reduce((sum, msgs) => sum + msgs.length, 0))} issues in ${String(issuesByFile.size)} files`,
   );
 
   const tsconfigPath = path.join(ROOT, pkgPath, "tsconfig.json");
@@ -263,7 +268,9 @@ async function processPackage(pkgPath: string): Promise<number> {
 
     if (fileFixes > 0) {
       const relative = path.relative(ROOT, filePath);
-      console.log(`  Fixed ${fileFixes}/${messages.length} in ${relative}`);
+      console.log(
+        `  Fixed ${String(fileFixes)}/${String(messages.length)} in ${relative}`,
+      );
       totalFixes += fileFixes;
     }
   }
@@ -280,7 +287,11 @@ async function main() {
     total += await processPackage(pkg);
   }
 
-  console.log(`\nTotal fixes: ${total}`);
+  console.log(`\nTotal fixes: ${String(total)}`);
 }
 
-main().catch(console.error);
+try {
+  await main();
+} catch (error) {
+  console.error(error);
+}

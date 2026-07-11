@@ -11,7 +11,7 @@ import {
 
 export type AudioEngine = {
   refresh: (memory: WebAssembly.Memory) => void;
-  bindExports: (exports: WebAssembly.Exports) => void;
+  bindExports: (exports: Bun.WebAssembly.Exports) => void;
   /** Drain one VBlank's worth of PCM. Returns null until the wasm has booted
    * audio. */
   drain: () => DrainResult | null;

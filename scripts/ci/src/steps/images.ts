@@ -20,6 +20,7 @@ import {
   RETRY,
   DAGGER_ENV,
   gitDir,
+  gitFile,
   DAGGER_CALL,
 } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
@@ -49,6 +50,21 @@ function depFlags(pkg: string): string {
 // Build steps (build phase — depends on quality-gate)
 // ---------------------------------------------------------------------------
 
+// Image builders whose in-image frontend build (vite 8 / rolldown) resolves a
+// package tsconfig that extends the repo root tsconfig.base.json. The dagger
+// functions take --tsconfig and mount it at /workspace/tsconfig.base.json,
+// mirroring the pkg-check containers.
+const TSCONFIG_IMAGES = new Set([
+  "discord-plays-pokemon",
+  "discord-plays-mario-kart",
+]);
+
+function tsconfigFlag(imgName: string): string {
+  return TSCONFIG_IMAGES.has(imgName)
+    ? `--tsconfig ${gitFile("tsconfig.base.json")}`
+    : "";
+}
+
 function imageBuildStep(
   img: ImageTarget,
   dependsOn: string | string[] = "quality-gate",
@@ -73,6 +89,7 @@ function imageBuildStep(
     cmd = [
       `${DAGGER_CALL} ${buildFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
       flags,
+      tsconfigFlag(img.name),
       VERSION_FLAGS,
     ]
       .filter(Boolean)
@@ -175,6 +192,7 @@ function smokeTestStep(
     cmd = [
       `${DAGGER_CALL} ${daggerFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
       flags,
+      tsconfigFlag(img.name),
     ]
       .filter(Boolean)
       .join(" ");
@@ -242,6 +260,7 @@ function imagePushStep(
     pushCall = [
       `${pushFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
       flags,
+      tsconfigFlag(img.name),
       tagFlags,
       VERSION_FLAGS,
     ]
@@ -249,7 +268,6 @@ function imagePushStep(
       .join(" ");
   } else {
     // Default push-image takes --pkg-dir, --pkg, dep flags, tags, registry creds
-    const flags = depFlags(pkg);
     const prismaFlag = PRISMA_PACKAGES.has(img.name) ? "--use-prisma" : "";
     const editorClisFlag = EDITOR_CLI_PACKAGES.has(img.name)
       ? "--install-editor-clis"
@@ -274,7 +292,7 @@ function imagePushStep(
     // Dagger outputs ANSI escape codes even with DAGGER_PROGRESS=dots/plain,
     // so we strip them before grepping for the sha256 digest.
     `&& RAW=$$(${DAGGER_CALL} ${pushCall})`,
-    `&& CLEAN=$$(printf '%s' "$$RAW" | sed 's/\\x1b\\[[0-9;]*[a-zA-Z]//g' | tr -d '\\r')`,
+    String.raw`&& CLEAN=$$(printf '%s' "$$RAW" | sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' | tr -d '\r')`,
     `&& DIGEST=$$(echo "$$CLEAN" | grep -oE 'sha256:[a-f0-9]+' | head -1)`,
     `&& if [ -z "$$DIGEST" ]; then echo "ERROR: empty digest for ${img.name} — raw output was: $$RAW" >&2; exit 1; fi`,
     `&& buildkite-agent meta-data set "digest:${img.versionKey}" "$$DIGEST"`,

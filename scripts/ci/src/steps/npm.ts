@@ -52,7 +52,7 @@ function npmPublishAllStep(
     .flatMap((p) => {
       const parentPkg = p.dir.replace("packages/", "").split("/")[0] ?? "";
       const k = pkgKeyMap?.get(p.name) ?? pkgKeyMap?.get(parentPkg);
-      return k !== undefined ? [k] : [];
+      return k === undefined ? [] : [k];
     })
     .filter((v, i, a) => a.indexOf(v) === i);
   const dependsOn = ["quality-gate", ...pkgDeps];

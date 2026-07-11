@@ -29,12 +29,53 @@ import { ALL_PACKAGES } from "../catalog.ts";
 type ExecResult = { stdout: string; exitCode: number };
 type ExecFn = (cmd: string[]) => Promise<ExecResult>;
 
-function buildkiteBootstrapJobs(): Array<{
+/** Matches the `fetch`-injection signature accepted by change-detection. */
+type FetchFn = (
+  input: Parameters<typeof fetch>[0],
+  init?: Parameters<typeof fetch>[1],
+) => ReturnType<typeof fetch>;
+
+/** Extract the URL string from a `fetch` first-argument (string | URL | Request). */
+function requestUrl(input: Parameters<typeof fetch>[0]): string {
+  if (typeof input === "string") return input;
+  if (input instanceof URL) return input.href;
+  return input.url;
+}
+
+/** A `fetch` mock that always rejects — asserts the code path never calls it. */
+function rejectingFetch(message: string): FetchFn {
+  return async () => {
+    throw new Error(message);
+  };
+}
+
+/** A `fetch` mock that always resolves with an empty body and the given status. */
+function statusFetch(status: number): FetchFn {
+  return async () => new Response("", { status });
+}
+
+/** A `fetch` mock that resolves with the given builds as a 200 JSON response. */
+function buildsFetch(builds: unknown[]): FetchFn {
+  return async () => Response.json(builds, { status: 200 });
+}
+
+/**
+ * A git-exec mock keyed on the git subcommand (`cmd[1]`, e.g. "rev-parse",
+ * "fetch", "merge-base"). Unmapped subcommands resolve to a generic failure.
+ */
+function gitExecMock(responses: Record<string, ExecResult>): ExecFn {
+  return async (cmd) => {
+    const subcommand = cmd[1] ?? "";
+    return responses[subcommand] ?? { stdout: "", exitCode: 1 };
+  };
+}
+
+function buildkiteBootstrapJobs(): {
   type: string;
   state: string;
   name: string;
   command: string;
-}> {
+}[] {
   return [
     {
       type: "script",
@@ -55,9 +96,9 @@ function restoreEnv(originalEnv: NodeJS.ProcessEnv, keys: string[]): void {
   for (const key of keys) {
     const value = originalEnv[key];
     if (value === undefined) {
-      delete process.env[key];
+      Reflect.deleteProperty(Bun.env, key);
     } else {
-      process.env[key] = value;
+      Bun.env[key] = value;
     }
   }
 }
@@ -158,37 +199,36 @@ describe("transitiveClosure", () => {
 // ---------------------------------------------------------------------------
 
 describe("isRenovatePr", () => {
-  const originalEnv = { ...process.env };
+  const originalEnv = { ...Bun.env };
 
   beforeEach(() => {
-    delete process.env["BUILDKITE_BUILD_AUTHOR_EMAIL"];
-    delete process.env["BUILDKITE_PULL_REQUEST"];
+    delete Bun.env["BUILDKITE_BUILD_AUTHOR_EMAIL"];
+    delete Bun.env["BUILDKITE_PULL_REQUEST"];
   });
 
   afterEach(() => {
-    process.env["BUILDKITE_BUILD_AUTHOR_EMAIL"] =
+    Bun.env["BUILDKITE_BUILD_AUTHOR_EMAIL"] =
       originalEnv["BUILDKITE_BUILD_AUTHOR_EMAIL"];
-    process.env["BUILDKITE_PULL_REQUEST"] =
-      originalEnv["BUILDKITE_PULL_REQUEST"];
+    Bun.env["BUILDKITE_PULL_REQUEST"] = originalEnv["BUILDKITE_PULL_REQUEST"];
   });
 
   it("returns true when email matches and PR is set", () => {
-    process.env["BUILDKITE_BUILD_AUTHOR_EMAIL"] =
+    Bun.env["BUILDKITE_BUILD_AUTHOR_EMAIL"] =
       "29139614+renovate[bot]@users.noreply.github.com";
-    process.env["BUILDKITE_PULL_REQUEST"] = "42";
+    Bun.env["BUILDKITE_PULL_REQUEST"] = "42";
     expect(_isRenovatePr()).toBe(true);
   });
 
   it("returns false when email matches but PR is false", () => {
-    process.env["BUILDKITE_BUILD_AUTHOR_EMAIL"] =
+    Bun.env["BUILDKITE_BUILD_AUTHOR_EMAIL"] =
       "29139614+renovate[bot]@users.noreply.github.com";
-    process.env["BUILDKITE_PULL_REQUEST"] = "false";
+    Bun.env["BUILDKITE_PULL_REQUEST"] = "false";
     expect(_isRenovatePr()).toBe(false);
   });
 
   it("returns false when PR is set but email is wrong", () => {
-    process.env["BUILDKITE_BUILD_AUTHOR_EMAIL"] = "dev@example.com";
-    process.env["BUILDKITE_PULL_REQUEST"] = "42";
+    Bun.env["BUILDKITE_BUILD_AUTHOR_EMAIL"] = "dev@example.com";
+    Bun.env["BUILDKITE_PULL_REQUEST"] = "42";
     expect(_isRenovatePr()).toBe(false);
   });
 
@@ -202,24 +242,23 @@ describe("isRenovatePr", () => {
 // ---------------------------------------------------------------------------
 
 describe("isVersionCommitBack", () => {
-  const originalEnv = { ...process.env };
+  const originalEnv = { ...Bun.env };
 
   beforeEach(() => {
-    delete process.env["BUILDKITE_MESSAGE"];
+    delete Bun.env["BUILDKITE_MESSAGE"];
   });
 
   afterEach(() => {
-    process.env["BUILDKITE_MESSAGE"] = originalEnv["BUILDKITE_MESSAGE"];
+    Bun.env["BUILDKITE_MESSAGE"] = originalEnv["BUILDKITE_MESSAGE"];
   });
 
   it("returns true for version bump commit message", () => {
-    process.env["BUILDKITE_MESSAGE"] =
-      "chore: bump image versions to 2.0.0-867";
+    Bun.env["BUILDKITE_MESSAGE"] = "chore: bump image versions to 2.0.0-867";
     expect(_isVersionCommitBack()).toBe(true);
   });
 
   it("returns false for unrelated commit message", () => {
-    process.env["BUILDKITE_MESSAGE"] = "feat: add new feature";
+    Bun.env["BUILDKITE_MESSAGE"] = "feat: add new feature";
     expect(_isVersionCommitBack()).toBe(false);
   });
 
@@ -228,50 +267,47 @@ describe("isVersionCommitBack", () => {
   });
 
   it("returns false for partial match", () => {
-    process.env["BUILDKITE_MESSAGE"] = "chore: bump image versions";
+    Bun.env["BUILDKITE_MESSAGE"] = "chore: bump image versions";
     expect(_isVersionCommitBack()).toBe(false);
   });
 
   it("returns false for similar but different message", () => {
-    process.env["BUILDKITE_MESSAGE"] =
-      "chore: bump chart versions to 2.0.0-867";
+    Bun.env["BUILDKITE_MESSAGE"] = "chore: bump chart versions to 2.0.0-867";
     expect(_isVersionCommitBack()).toBe(false);
   });
 
   it("matches real commit message format from versionCommitBackHelper", () => {
     // This is the exact format produced by .dagger/src/release.ts
-    process.env["BUILDKITE_MESSAGE"] =
-      "chore: bump image versions to 2.0.0-1234";
+    Bun.env["BUILDKITE_MESSAGE"] = "chore: bump image versions to 2.0.0-1234";
     expect(_isVersionCommitBack()).toBe(true);
   });
 });
 
 describe("isCooklangVersionCommitBack", () => {
-  const originalEnv = { ...process.env };
+  const originalEnv = { ...Bun.env };
 
   beforeEach(() => {
-    delete process.env["BUILDKITE_MESSAGE"];
+    delete Bun.env["BUILDKITE_MESSAGE"];
   });
 
   afterEach(() => {
-    process.env["BUILDKITE_MESSAGE"] = originalEnv["BUILDKITE_MESSAGE"];
+    Bun.env["BUILDKITE_MESSAGE"] = originalEnv["BUILDKITE_MESSAGE"];
   });
 
   it("returns true for cooklang version bump commit message", () => {
-    process.env["BUILDKITE_MESSAGE"] =
+    Bun.env["BUILDKITE_MESSAGE"] =
       "chore(cooklang): bump to v1.0.11\n\nAuto-Generated: ci-bot";
     expect(_isCooklangVersionCommitBack()).toBe(true);
   });
 
   it("returns true for cooklang version bump merge commit", () => {
-    process.env["BUILDKITE_MESSAGE"] =
+    Bun.env["BUILDKITE_MESSAGE"] =
       "Merge pull request #936 from shepherdjerred/chore/cooklang-version-bump-pending";
     expect(_isCooklangVersionCommitBack()).toBe(true);
   });
 
   it("returns false for image version bump commit message", () => {
-    process.env["BUILDKITE_MESSAGE"] =
-      "chore: bump image versions to 2.0.0-1234";
+    Bun.env["BUILDKITE_MESSAGE"] = "chore: bump image versions to 2.0.0-1234";
     expect(_isCooklangVersionCommitBack()).toBe(false);
   });
 
@@ -427,23 +463,23 @@ describe("isAutoGeneratedCommit", () => {
 });
 
 describe("isReleasePleaseMerge", () => {
-  const originalEnv = { ...process.env };
+  const originalEnv = { ...Bun.env };
 
   beforeEach(() => {
-    delete process.env["BUILDKITE_MESSAGE"];
+    delete Bun.env["BUILDKITE_MESSAGE"];
   });
 
   afterEach(() => {
-    process.env["BUILDKITE_MESSAGE"] = originalEnv["BUILDKITE_MESSAGE"];
+    Bun.env["BUILDKITE_MESSAGE"] = originalEnv["BUILDKITE_MESSAGE"];
   });
 
   it("returns true for release-please commit message", () => {
-    process.env["BUILDKITE_MESSAGE"] = "chore: release main";
+    Bun.env["BUILDKITE_MESSAGE"] = "chore: release main";
     expect(_isReleasePleaseMerge()).toBe(true);
   });
 
   it("returns false for unrelated commit message", () => {
-    process.env["BUILDKITE_MESSAGE"] = "feat: add new feature";
+    Bun.env["BUILDKITE_MESSAGE"] = "feat: add new feature";
     expect(_isReleasePleaseMerge()).toBe(false);
   });
 
@@ -452,18 +488,17 @@ describe("isReleasePleaseMerge", () => {
   });
 
   it("returns false for version bump commit message", () => {
-    process.env["BUILDKITE_MESSAGE"] =
-      "chore: bump image versions to 2.0.0-867";
+    Bun.env["BUILDKITE_MESSAGE"] = "chore: bump image versions to 2.0.0-867";
     expect(_isReleasePleaseMerge()).toBe(false);
   });
 });
 
 describe("shouldSkipReleasePleasePrBuild", () => {
   const KEYS = ["BUILDKITE_BRANCH", "BUILDKITE_SOURCE", "RUN_RELEASE_CI"];
-  const originalEnv = { ...process.env };
+  const originalEnv = { ...Bun.env };
 
   beforeEach(() => {
-    for (const key of KEYS) delete process.env[key];
+    for (const key of KEYS) Reflect.deleteProperty(Bun.env, key);
   });
 
   afterEach(() => {
@@ -471,69 +506,69 @@ describe("shouldSkipReleasePleasePrBuild", () => {
   });
 
   it("skips a webhook build of the release-please PR branch", () => {
-    process.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
-    process.env["BUILDKITE_SOURCE"] = "webhook";
+    Bun.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
+    Bun.env["BUILDKITE_SOURCE"] = "webhook";
     expect(_shouldSkipReleasePleasePrBuild()).toBe(true);
   });
 
   it("does not skip when source is unset (defaults to running CI)", () => {
-    process.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
+    Bun.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
     expect(_shouldSkipReleasePleasePrBuild()).toBe(false);
   });
 
   it("does not skip a manually-triggered (ui) build", () => {
-    process.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
-    process.env["BUILDKITE_SOURCE"] = "ui";
+    Bun.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
+    Bun.env["BUILDKITE_SOURCE"] = "ui";
     expect(_shouldSkipReleasePleasePrBuild()).toBe(false);
   });
 
   it("does not skip an api-triggered build", () => {
-    process.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
-    process.env["BUILDKITE_SOURCE"] = "api";
+    Bun.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
+    Bun.env["BUILDKITE_SOURCE"] = "api";
     expect(_shouldSkipReleasePleasePrBuild()).toBe(false);
   });
 
   it("does not skip a scheduled build", () => {
-    process.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
-    process.env["BUILDKITE_SOURCE"] = "schedule";
+    Bun.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
+    Bun.env["BUILDKITE_SOURCE"] = "schedule";
     expect(_shouldSkipReleasePleasePrBuild()).toBe(false);
   });
 
   it("does not skip a downstream trigger_job build", () => {
-    process.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
-    process.env["BUILDKITE_SOURCE"] = "trigger_job";
+    Bun.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
+    Bun.env["BUILDKITE_SOURCE"] = "trigger_job";
     expect(_shouldSkipReleasePleasePrBuild()).toBe(false);
   });
 
   it("does not skip an unknown future source", () => {
-    process.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
-    process.env["BUILDKITE_SOURCE"] = "some_new_source";
+    Bun.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
+    Bun.env["BUILDKITE_SOURCE"] = "some_new_source";
     expect(_shouldSkipReleasePleasePrBuild()).toBe(false);
   });
 
   it("does not skip when RUN_RELEASE_CI=true overrides a webhook build", () => {
-    process.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
-    process.env["BUILDKITE_SOURCE"] = "webhook";
-    process.env["RUN_RELEASE_CI"] = "true";
+    Bun.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
+    Bun.env["BUILDKITE_SOURCE"] = "webhook";
+    Bun.env["RUN_RELEASE_CI"] = "true";
     expect(_shouldSkipReleasePleasePrBuild()).toBe(false);
   });
 
   it("treats RUN_RELEASE_CI case-insensitively", () => {
-    process.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
-    process.env["BUILDKITE_SOURCE"] = "webhook";
-    process.env["RUN_RELEASE_CI"] = "TRUE";
+    Bun.env["BUILDKITE_BRANCH"] = "release-please--branches--main";
+    Bun.env["BUILDKITE_SOURCE"] = "webhook";
+    Bun.env["RUN_RELEASE_CI"] = "TRUE";
     expect(_shouldSkipReleasePleasePrBuild()).toBe(false);
   });
 
   it("does not skip a webhook build on another branch", () => {
-    process.env["BUILDKITE_BRANCH"] = "feature/whatever";
-    process.env["BUILDKITE_SOURCE"] = "webhook";
+    Bun.env["BUILDKITE_BRANCH"] = "feature/whatever";
+    Bun.env["BUILDKITE_SOURCE"] = "webhook";
     expect(_shouldSkipReleasePleasePrBuild()).toBe(false);
   });
 
   it("does not skip the main-branch release merge build", () => {
-    process.env["BUILDKITE_BRANCH"] = "main";
-    process.env["BUILDKITE_SOURCE"] = "webhook";
+    Bun.env["BUILDKITE_BRANCH"] = "main";
+    Bun.env["BUILDKITE_SOURCE"] = "webhook";
     expect(_shouldSkipReleasePleasePrBuild()).toBe(false);
   });
 });
@@ -803,7 +838,7 @@ describe("checkHelmTypesInputChanges", () => {
 });
 
 describe("fail-fast base detection", () => {
-  const originalEnv = { ...process.env };
+  const originalEnv = { ...Bun.env };
   const envKeys = [
     "BUILDKITE_API_TOKEN",
     "BUILDKITE_AGENT_ACCESS_TOKEN",
@@ -819,11 +854,11 @@ describe("fail-fast base detection", () => {
 
   beforeEach(() => {
     for (const key of envKeys) {
-      delete process.env[key];
+      Reflect.deleteProperty(Bun.env, key);
     }
-    process.env["BUILDKITE_ORGANIZATION_SLUG"] = "sjerred";
-    process.env["BUILDKITE_PIPELINE_SLUG"] = "monorepo";
-    process.env["BUILDKITE_BUILD_NUMBER"] = "100";
+    Bun.env["BUILDKITE_ORGANIZATION_SLUG"] = "sjerred";
+    Bun.env["BUILDKITE_PIPELINE_SLUG"] = "monorepo";
+    Bun.env["BUILDKITE_BUILD_NUMBER"] = "100";
   });
 
   afterEach(() => {
@@ -837,19 +872,15 @@ describe("fail-fast base detection", () => {
   });
 
   it("does not use BUILDKITE_AGENT_ACCESS_TOKEN as a REST API fallback", async () => {
-    process.env["BUILDKITE_AGENT_ACCESS_TOKEN"] = "agent-token";
-    const fetchFn = async () => {
-      throw new Error("fetch should not be called");
-    };
-
-    await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow(
-      "BUILDKITE_API_TOKEN is required",
-    );
+    Bun.env["BUILDKITE_AGENT_ACCESS_TOKEN"] = "agent-token";
+    await expect(
+      _getLastSuccessfulCommit(rejectingFetch("fetch should not be called")),
+    ).rejects.toThrow("BUILDKITE_API_TOKEN is required");
   });
 
   it("rejects unauthorized Buildkite API responses with scope guidance", async () => {
-    process.env["BUILDKITE_API_TOKEN"] = "api-token";
-    const fetchFn = async () => new Response("", { status: 401 });
+    Bun.env["BUILDKITE_API_TOKEN"] = "api-token";
+    const fetchFn = statusFetch(401);
 
     await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow(
       "read_builds scope",
@@ -857,17 +888,15 @@ describe("fail-fast base detection", () => {
   });
 
   it("rejects non-OK Buildkite API responses", async () => {
-    process.env["BUILDKITE_API_TOKEN"] = "api-token";
-    const fetchFn = async () => new Response("", { status: 500 });
+    Bun.env["BUILDKITE_API_TOKEN"] = "api-token";
+    const fetchFn = statusFetch(500);
 
     await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow("HTTP 500");
   });
 
   it("rejects Buildkite API request failures", async () => {
-    process.env["BUILDKITE_API_TOKEN"] = "api-token";
-    const fetchFn = async () => {
-      throw new Error("timeout");
-    };
+    Bun.env["BUILDKITE_API_TOKEN"] = "api-token";
+    const fetchFn = rejectingFetch("timeout");
 
     await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow(
       "Buildkite API request failed: timeout",
@@ -875,27 +904,23 @@ describe("fail-fast base detection", () => {
   });
 
   it("rejects when no qualifying successful main build exists", async () => {
-    process.env["BUILDKITE_API_TOKEN"] = "api-token";
-    const fetchFn = async () =>
-      new Response(
-        JSON.stringify([
+    Bun.env["BUILDKITE_API_TOKEN"] = "api-token";
+    const fetchFn = buildsFetch([
+      {
+        number: 99,
+        commit: "abc123",
+        state: "failed",
+        jobs: [
+          ...buildkiteBootstrapJobs(),
           {
-            number: 99,
-            commit: "abc123",
+            type: "script",
             state: "failed",
-            jobs: [
-              ...buildkiteBootstrapJobs(),
-              {
-                type: "script",
-                state: "failed",
-                step_key: "lint-birmel",
-                name: ":eslint: Lint",
-              },
-            ],
+            step_key: "lint-birmel",
+            name: ":eslint: Lint",
           },
-        ]),
-        { status: 200 },
-      );
+        ],
+      },
+    ]);
 
     await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow(
       "No qualifying successful main build found",
@@ -903,39 +928,35 @@ describe("fail-fast base detection", () => {
   });
 
   it("returns the first qualifying successful build even with zero test jobs", async () => {
-    process.env["BUILDKITE_API_TOKEN"] = "api-token";
-    const fetchFn = async () =>
-      new Response(
-        JSON.stringify([
+    Bun.env["BUILDKITE_API_TOKEN"] = "api-token";
+    const fetchFn = buildsFetch([
+      {
+        number: 100,
+        commit: "current",
+        state: "passed",
+        jobs: buildkiteBootstrapJobs(),
+      },
+      {
+        number: 99,
+        commit: "abc123def456",
+        state: "passed",
+        jobs: [
+          ...buildkiteBootstrapJobs(),
           {
-            number: 100,
-            commit: "current",
+            type: "script",
             state: "passed",
-            jobs: buildkiteBootstrapJobs(),
+            step_key: "lockfile-check",
+            name: ":lock: Lockfile Check",
           },
           {
-            number: 99,
-            commit: "abc123def456",
+            type: "script",
             state: "passed",
-            jobs: [
-              ...buildkiteBootstrapJobs(),
-              {
-                type: "script",
-                state: "passed",
-                step_key: "lockfile-check",
-                name: ":lock: Lockfile Check",
-              },
-              {
-                type: "script",
-                state: "passed",
-                step_key: "ci-complete",
-                name: ":white_check_mark: CI Complete",
-              },
-            ],
+            step_key: "ci-complete",
+            name: ":white_check_mark: CI Complete",
           },
-        ]),
-        { status: 200 },
-      );
+        ],
+      },
+    ]);
 
     await expect(_getLastSuccessfulCommit(fetchFn)).resolves.toBe(
       "abc123def456",
@@ -966,59 +987,55 @@ describe("fail-fast base detection", () => {
   });
 
   it("skips canceled, skipped, running, scheduled, and blocked builds", async () => {
-    process.env["BUILDKITE_API_TOKEN"] = "api-token";
-    const fetchFn = async () =>
-      new Response(
-        JSON.stringify([
-          {
-            number: 99,
-            commit: "canceled",
-            state: "canceled",
-            jobs: buildkiteBootstrapJobs(),
-          },
-          {
-            number: 98,
-            commit: "skipped",
-            state: "skipped",
-            jobs: buildkiteBootstrapJobs(),
-          },
-          {
-            number: 97,
-            commit: "running",
-            state: "running",
-            jobs: buildkiteBootstrapJobs(),
-          },
-          {
-            number: 96,
-            commit: "scheduled",
-            state: "scheduled",
-            jobs: buildkiteBootstrapJobs(),
-          },
-          {
-            number: 95,
-            commit: "blocked",
-            state: "blocked",
-            jobs: buildkiteBootstrapJobs(),
-          },
-          {
-            number: 94,
-            commit: "good-base",
-            state: "passed",
-            jobs: buildkiteBootstrapJobs(),
-          },
-        ]),
-        { status: 200 },
-      );
+    Bun.env["BUILDKITE_API_TOKEN"] = "api-token";
+    const fetchFn = buildsFetch([
+      {
+        number: 99,
+        commit: "canceled",
+        state: "canceled",
+        jobs: buildkiteBootstrapJobs(),
+      },
+      {
+        number: 98,
+        commit: "skipped",
+        state: "skipped",
+        jobs: buildkiteBootstrapJobs(),
+      },
+      {
+        number: 97,
+        commit: "running",
+        state: "running",
+        jobs: buildkiteBootstrapJobs(),
+      },
+      {
+        number: 96,
+        commit: "scheduled",
+        state: "scheduled",
+        jobs: buildkiteBootstrapJobs(),
+      },
+      {
+        number: 95,
+        commit: "blocked",
+        state: "blocked",
+        jobs: buildkiteBootstrapJobs(),
+      },
+      {
+        number: 94,
+        commit: "good-base",
+        state: "passed",
+        jobs: buildkiteBootstrapJobs(),
+      },
+    ]);
 
     await expect(_getLastSuccessfulCommit(fetchFn)).resolves.toBe("good-base");
   });
 
   it("honors LAST_SUCCESSFUL_COMMIT_OVERRIDE and skips the Buildkite API entirely", async () => {
-    process.env["LAST_SUCCESSFUL_COMMIT_OVERRIDE"] = "manual-override-sha";
+    Bun.env["LAST_SUCCESSFUL_COMMIT_OVERRIDE"] = "manual-override-sha";
     // No BUILDKITE_API_TOKEN, no org/pipeline — proves we never hit any of them.
-    const fetchFn = async () => {
-      throw new Error("fetch should not be called when override is set");
-    };
+    const fetchFn = rejectingFetch(
+      "fetch should not be called when override is set",
+    );
 
     await expect(_getLastSuccessfulCommit(fetchFn)).resolves.toBe(
       "manual-override-sha",
@@ -1026,26 +1043,22 @@ describe("fail-fast base detection", () => {
   });
 
   it("ignores an empty LAST_SUCCESSFUL_COMMIT_OVERRIDE and falls through to API", async () => {
-    process.env["LAST_SUCCESSFUL_COMMIT_OVERRIDE"] = "";
-    process.env["BUILDKITE_API_TOKEN"] = "api-token";
-    const fetchFn = async () =>
-      new Response(
-        JSON.stringify([
-          {
-            number: 99,
-            commit: "real-base",
-            state: "passed",
-            jobs: buildkiteBootstrapJobs(),
-          },
-        ]),
-        { status: 200 },
-      );
+    Bun.env["LAST_SUCCESSFUL_COMMIT_OVERRIDE"] = "";
+    Bun.env["BUILDKITE_API_TOKEN"] = "api-token";
+    const fetchFn = buildsFetch([
+      {
+        number: 99,
+        commit: "real-base",
+        state: "passed",
+        jobs: buildkiteBootstrapJobs(),
+      },
+    ]);
 
     await expect(_getLastSuccessfulCommit(fetchFn)).resolves.toBe("real-base");
   });
 
   it("paginates to subsequent pages when page 1 has only rejected builds", async () => {
-    process.env["BUILDKITE_API_TOKEN"] = "api-token";
+    Bun.env["BUILDKITE_API_TOKEN"] = "api-token";
 
     const PAGE_SIZE = 100;
     const page1: object[] = [];
@@ -1068,15 +1081,15 @@ describe("fail-fast base detection", () => {
 
     const calls: string[] = [];
     const fetchFn = async (input: Parameters<typeof fetch>[0]) => {
-      const url = typeof input === "string" ? input : String(input);
+      const url = requestUrl(input);
       calls.push(url);
       // Match the ?page= or &page= query param specifically, NOT the
       // per_page=100 substring (which contains "page=1").
       if (/[?&]page=1\b/.test(url)) {
-        return new Response(JSON.stringify(page1), { status: 200 });
+        return Response.json(page1, { status: 200 });
       }
       if (/[?&]page=2\b/.test(url)) {
-        return new Response(JSON.stringify(page2), { status: 200 });
+        return Response.json(page2, { status: 200 });
       }
       throw new Error(`unexpected page request: ${url}`);
     };
@@ -1090,7 +1103,7 @@ describe("fail-fast base detection", () => {
   });
 
   it("reports the exact builds scanned (not full-page * pages) when the last page is partial", async () => {
-    process.env["BUILDKITE_API_TOKEN"] = "api-token";
+    Bun.env["BUILDKITE_API_TOKEN"] = "api-token";
 
     // Page 1 is full (100 builds), page 2 has only 5 — all rejected.
     const PAGE_SIZE = 100;
@@ -1108,11 +1121,11 @@ describe("fail-fast base detection", () => {
     }));
 
     const fetchFn = async (input: Parameters<typeof fetch>[0]) => {
-      const url = typeof input === "string" ? input : String(input);
+      const url = requestUrl(input);
       if (/[?&]page=2\b/.test(url)) {
-        return new Response(JSON.stringify(partialPage), { status: 200 });
+        return Response.json(partialPage, { status: 200 });
       }
-      return new Response(JSON.stringify(fullPage), { status: 200 });
+      return Response.json(fullPage, { status: 200 });
     };
 
     await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow(
@@ -1121,7 +1134,7 @@ describe("fail-fast base detection", () => {
   });
 
   it("stops paginating once a page returns fewer than per_page builds (end of history)", async () => {
-    process.env["BUILDKITE_API_TOKEN"] = "api-token";
+    Bun.env["BUILDKITE_API_TOKEN"] = "api-token";
 
     // Only 5 main builds exist total — all rejected. We must NOT request page 2.
     const page1 = Array.from({ length: 5 }, (_unused, i) => ({
@@ -1133,9 +1146,9 @@ describe("fail-fast base detection", () => {
 
     const calls: string[] = [];
     const fetchFn = async (input: Parameters<typeof fetch>[0]) => {
-      const url = typeof input === "string" ? input : String(input);
+      const url = requestUrl(input);
       calls.push(url);
-      return new Response(JSON.stringify(page1), { status: 200 });
+      return Response.json(page1, { status: 200 });
     };
 
     await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow(
@@ -1145,7 +1158,7 @@ describe("fail-fast base detection", () => {
   });
 
   it("gives up after the page cap is exhausted with a descriptive error", async () => {
-    process.env["BUILDKITE_API_TOKEN"] = "api-token";
+    Bun.env["BUILDKITE_API_TOKEN"] = "api-token";
 
     const PAGE_SIZE = 100;
     const MAX_PAGES = 10;
@@ -1158,9 +1171,9 @@ describe("fail-fast base detection", () => {
 
     const calls: string[] = [];
     const fetchFn = async (input: Parameters<typeof fetch>[0]) => {
-      const url = typeof input === "string" ? input : String(input);
+      const url = requestUrl(input);
       calls.push(url);
-      return new Response(JSON.stringify(fullPage), { status: 200 });
+      return Response.json(fullPage, { status: 200 });
     };
 
     await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow(
@@ -1267,17 +1280,12 @@ describe("fail-fast base detection", () => {
   });
 
   it("rejects when merge-base cannot be computed", async () => {
-    process.env["BUILDKITE_BRANCH"] = "feature";
-    process.env["BUILDKITE_PULL_REQUEST"] = "42";
-    const execFn: ExecFn = async (cmd) => {
-      if (cmd[1] === "rev-parse") {
-        return { stdout: "deadbeef", exitCode: 0 };
-      }
-      if (cmd[1] === "fetch") {
-        return { stdout: "", exitCode: 0 };
-      }
-      return { stdout: "", exitCode: 1 };
-    };
+    Bun.env["BUILDKITE_BRANCH"] = "feature";
+    Bun.env["BUILDKITE_PULL_REQUEST"] = "42";
+    const execFn = gitExecMock({
+      "rev-parse": { stdout: "deadbeef", exitCode: 0 },
+      fetch: { stdout: "", exitCode: 0 },
+    });
 
     await expect(_getBaseRevision(execFn)).rejects.toThrow(
       "Unable to compute merge-base with origin/main after deepening shallow history",
@@ -1285,8 +1293,8 @@ describe("fail-fast base detection", () => {
   });
 
   it("deepens origin/main history when the shallow checkout lacks a merge-base", async () => {
-    process.env["BUILDKITE_BRANCH"] = "feature";
-    process.env["BUILDKITE_PULL_REQUEST"] = "42";
+    Bun.env["BUILDKITE_BRANCH"] = "feature";
+    Bun.env["BUILDKITE_PULL_REQUEST"] = "42";
     const calls: string[][] = [];
     let mergeBaseCalls = 0;
     const execFn: ExecFn = async (cmd) => {
@@ -1313,8 +1321,8 @@ describe("fail-fast base detection", () => {
   });
 
   it("fetches origin/main when missing before merge-base", async () => {
-    process.env["BUILDKITE_BRANCH"] = "feature";
-    process.env["BUILDKITE_PULL_REQUEST"] = "42";
+    Bun.env["BUILDKITE_BRANCH"] = "feature";
+    Bun.env["BUILDKITE_PULL_REQUEST"] = "42";
     const calls: string[][] = [];
     const execFn: ExecFn = async (cmd) => {
       calls.push(cmd);
@@ -1339,17 +1347,12 @@ describe("fail-fast base detection", () => {
   });
 
   it("rejects when origin/main fetch fails", async () => {
-    process.env["BUILDKITE_BRANCH"] = "feature";
-    process.env["BUILDKITE_PULL_REQUEST"] = "42";
-    const execFn: ExecFn = async (cmd) => {
-      if (cmd[1] === "rev-parse") {
-        return { stdout: "", exitCode: 1 };
-      }
-      if (cmd[1] === "fetch") {
-        return { stdout: "", exitCode: 128 };
-      }
-      return { stdout: "", exitCode: 1 };
-    };
+    Bun.env["BUILDKITE_BRANCH"] = "feature";
+    Bun.env["BUILDKITE_PULL_REQUEST"] = "42";
+    const execFn = gitExecMock({
+      "rev-parse": { stdout: "", exitCode: 1 },
+      fetch: { stdout: "", exitCode: 128 },
+    });
 
     await expect(_getBaseRevision(execFn)).rejects.toThrow(
       "Unable to fetch origin/main",
@@ -1357,17 +1360,12 @@ describe("fail-fast base detection", () => {
   });
 
   it("rejects when git diff fails after resolving a base", async () => {
-    process.env["BUILDKITE_BRANCH"] = "feature";
-    process.env["BUILDKITE_PULL_REQUEST"] = "false";
-    const execFn: ExecFn = async (cmd) => {
-      if (cmd[1] === "rev-parse") {
-        return { stdout: "deadbeef", exitCode: 0 };
-      }
-      if (cmd[1] === "merge-base") {
-        return { stdout: "abc123", exitCode: 0 };
-      }
-      return { stdout: "", exitCode: 1 };
-    };
+    Bun.env["BUILDKITE_BRANCH"] = "feature";
+    Bun.env["BUILDKITE_PULL_REQUEST"] = "false";
+    const execFn = gitExecMock({
+      "rev-parse": { stdout: "deadbeef", exitCode: 0 },
+      "merge-base": { stdout: "abc123", exitCode: 0 },
+    });
 
     await expect(_getChangedFiles(execFn)).rejects.toThrow(
       "Unable to diff base revision abc123 against HEAD",
@@ -1375,8 +1373,8 @@ describe("fail-fast base detection", () => {
   });
 
   it("returns a full build when explicitly requested without checking Buildkite API", async () => {
-    process.env["BUILDKITE_BRANCH"] = "main";
-    process.env["FULL_BUILD"] = "true";
+    Bun.env["BUILDKITE_BRANCH"] = "main";
+    Bun.env["FULL_BUILD"] = "true";
 
     const result = await detectChanges();
 
