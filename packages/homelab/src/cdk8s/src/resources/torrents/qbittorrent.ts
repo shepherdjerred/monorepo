@@ -202,11 +202,18 @@ export function createQBitTorrentDeployment(
       // which can take well over the cdk8s-plus default 30s startup window
       // (period=10s, failureThreshold=3). Kubelet was killing the container
       // (SIGKILL, exit 137) before it ever came up, crash-looping forever.
-      // Give it a 5-minute runway, matching jellyfin's/scrypted's pattern.
+      //
+      // 2026-07-11: even the original 5-minute runway proved too short while the
+      // node was recovering from the CI-storm freezes — the linuxserver s6 init
+      // alone took ~2min under degraded IO and the probe killed the container 4x
+      // in a row (each kill a dirty shutdown, making the next start slower — the
+      // same kill-during-recovery loop the dagger engine had). 15 minutes: on a
+      // healthy node startup finishes in ~3min so the extra window costs
+      // nothing, and under IO starvation the kill is the last thing that helps.
       startup: Probe.fromTcpSocket({
         port: 8080,
         periodSeconds: Duration.seconds(10),
-        failureThreshold: 30,
+        failureThreshold: 90,
       }),
       resources: {
         memory: {
