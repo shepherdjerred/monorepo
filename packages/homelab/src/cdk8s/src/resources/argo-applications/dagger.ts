@@ -301,6 +301,20 @@ echo "Done."`,
                   memory: "24Gi",
                 },
               },
+              // After an unclean shutdown the engine wipes and rebuilds its dagql/
+              // BuildKit cache state over the 2Ti build-cache PVC; during that cold
+              // start `dagger core version` (the probe command) times out for well
+              // over the chart-default 10 minutes (period 30s x failureThreshold 20),
+              // especially with CI jobs hammering the engine. The liveness kill then
+              // causes the NEXT unclean shutdown, looping forever — observed live
+              // 2026-07-10 (22 restarts in 22h on the old pod, then a fresh pod
+              // killed at 11m mid-cold-start). 60 x 30s = 30 min of tolerated
+              // consecutive failures before a genuine deadlock gets the pod killed.
+              // Readiness settings stay at chart defaults — failing readiness only
+              // gates traffic, which is correct during cold start.
+              livenessProbeSettings: {
+                failureThreshold: 60,
+              },
               // Garbage collection policy. IMPORTANT: maxUsedSpace bounds only the
               // *reclaimable* BuildKit cache, NOT total dataset usage — metadata DBs
               // (containerdmeta.db / metadata_v2.db), active leases, and in-flight exec
