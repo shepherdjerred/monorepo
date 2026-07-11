@@ -56,9 +56,9 @@ export function createWebServer<TSocket>({
 
   server.listen(port, () => {
     const address = server.address();
-    if (typeof address === "string") {
-      logger.info(`web server is listening on port ${address}`);
-    }
+    const boundTo =
+      typeof address === "string" ? address : (address?.port ?? port);
+    logger.info(`web server is listening on ${String(boundTo)}`);
   });
 
   return {
