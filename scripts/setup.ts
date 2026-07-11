@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { $, which } from "bun";
-import { access, readdir } from "node:fs/promises";
+import { access, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 
@@ -67,6 +67,44 @@ const SHARED_PRODUCER_DAG_IDS = new Set([
   "helm-types-build",
 ]);
 
+// ── Built file: producers (Phase 4 refresh derivation) ──────────────────
+//
+// Phase 4 (`refreshBuiltFileDependencies`) re-runs `bun install --force` in
+// each consumer of a BUILT `file:` producer so the consumer's copied-in
+// node_modules picks up the dist that the Phase 3 DAG produced *after* the
+// Phase 2 install already copied a stale/empty version.
+//
+// Only producers whose *runtime-resolved* entrypoint lands in their `dist/`
+// need this. The distinction (verified against each producer's package.json
+// `exports`):
+//
+//   BUILT (default/main export → dist, DAG builds it → consumers need refresh):
+//     - @shepherdjerred/llm-models   (exports "." default → ./dist/index.js)
+//     - webring                      (exports "." default → ./dist/index.js)
+//     - astro-opengraph-images       (exports "." default → ./dist/index.js)
+//
+//   SOURCE-ONLY (default export → src, so consumers import TS directly and a
+//   stale dist can't affect them — NO refresh needed even though some have a
+//   `tsc` build for typechecking):
+//     - @shepherdjerred/eslint-config       (Bun condition → ./src/index.ts; dist only for Node `import`)
+//     - @shepherdjerred/discord-video-stream (default → ./src/index.ts; only d.ts built)
+//     - @shepherdjerred/helm-types          (consumed only via its CLI by the non-setup generate-helm-types script)
+//     - @shepherdjerred/home-assistant      (exports "." → ./src/index.ts)
+//     - @shepherdjerred/llm-observability   (exports → ./src/*.ts, no build)
+//     - @shepherdjerred/discord-stream-lifecycle (exports → ./src/*.ts, no build)
+//     - tasknotes-types                     (exports "." → ./src/index.ts, no build)
+//
+// The consumer list is derived at runtime by scanning workspace package.json
+// files for `file:` deps on a BUILT_PRODUCERS member (see deriveRefreshPlan),
+// so adding/removing a consumer of one of these packages no longer requires
+// editing this file. If a NEW built producer with a dist-resolving default
+// export is added, add its package name here.
+const BUILT_PRODUCERS = new Set([
+  "@shepherdjerred/llm-models",
+  "webring",
+  "astro-opengraph-images",
+]);
+
 // Each group's own DAG tasks, beyond the always-on shared producers.
 // scout-generate's real DAG_TASKS entry also depends on "birmel-prisma" —
 // that edge exists only to keep two concurrent `prisma generate` runs (which
@@ -109,17 +147,25 @@ function isGroupOwnDir(relDir: string, group: string): boolean {
   return groupDirs.some((g) => relDir === g || relDir.startsWith(`${g}/`));
 }
 
-function parseArgs(): { group: string | undefined; link: boolean } {
+function parseArgs(): {
+  group: string | undefined;
+  link: boolean;
+  printRefreshPlan: boolean;
+} {
   let group: string | undefined;
   let link = false;
+  let printRefreshPlan = false;
   for (const arg of process.argv.slice(2)) {
     if (arg === "--link") {
       link = true;
+    } else if (arg === "--print-refresh-plan") {
+      printRefreshPlan = true;
     } else if (arg.startsWith("--group=")) {
       group = arg.slice("--group=".length);
     } else {
       throw new Error(
-        `Unknown argument "${arg}". Valid flags: --group=<name>, --link`,
+        `Unknown argument "${arg}". Valid flags: --group=<name>, --link, ` +
+          `--print-refresh-plan`,
       );
     }
   }
@@ -140,10 +186,14 @@ function parseArgs(): { group: string | undefined; link: boolean } {
         `Run --group=${group} without --link instead.`,
     );
   }
-  return { group, link };
+  return { group, link, printRefreshPlan };
 }
 
-const { group: GROUP, link: LINK } = parseArgs();
+const {
+  group: GROUP,
+  link: LINK,
+  printRefreshPlan: PRINT_REFRESH_PLAN,
+} = parseArgs();
 
 // ── Utilities ──────────────────────────────────────────────────────────
 
@@ -427,37 +477,115 @@ async function installDependencies(): Promise<void> {
   }
 }
 
-async function refreshBuiltFileDependencies(): Promise<void> {
-  const allRefreshDirs: { label: string; cwd: string }[] = [
-    {
-      label: "sjer.red local package artifacts",
-      cwd: "packages/sjer.red",
-    },
-    // Consumers of the built @shepherdjerred/llm-models file: dep — re-copy its
-    // dist after the build above.
-    { label: "monarch llm-models", cwd: "packages/monarch" },
-    { label: "temporal llm-models", cwd: "packages/temporal" },
-    {
-      label: "discord-plays-pokemon backend llm-models",
-      cwd: "packages/discord-plays-pokemon/packages/backend",
-    },
-    { label: "scout-for-lol llm-models", cwd: "packages/scout-for-lol" },
-  ];
+// A consumer directory that needs a Phase 4 `--force` refresh, plus which
+// BUILT_PRODUCERS members triggered it (for a legible drift-visible log).
+type RefreshEntry = { cwd: string; producers: string[] };
 
-  // sjer.red stays unconditional (deferred gating decision, see cost-profiling
-  // log); other consumers only refresh when their group is in scope.
-  const refreshDirs =
-    GROUP === undefined
-      ? allRefreshDirs
-      : allRefreshDirs.filter(
-          (d) =>
-            d.cwd === "packages/sjer.red" || isRelevantForGroup(d.cwd, GROUP),
-        );
+const RefreshPackageJsonSchema = z.object({
+  dependencies: z.record(z.string(), z.string()).optional(),
+  devDependencies: z.record(z.string(), z.string()).optional(),
+});
+
+// sjer.red is refreshed regardless of --group: it's the one consumer whose
+// `--force` install is deliberately unconditional (webring/astro-og dist
+// gating was left as a deferred decision — see the 2026-06-13 setup cost-
+// profiling log). Every other consumer is gated by group scope.
+const ALWAYS_REFRESH_DIRS = new Set(["packages/sjer.red"]);
+
+// Scan every workspace package.json for `file:` deps resolving to a
+// BUILT_PRODUCERS member; the consumers found are exactly the dirs whose
+// copied-in dist must be refreshed after the Phase 3 build. Fails fast on an
+// unreadable/invalid package.json rather than silently under-refreshing.
+async function deriveRefreshPlan(): Promise<RefreshEntry[]> {
+  const skip = new Set([
+    "node_modules",
+    "dist",
+    "build",
+    ".git",
+    "target",
+    "archive",
+    "poc",
+    "practice",
+  ]);
+  const packagesRoot = path.join(ROOT, "packages");
+  const found: RefreshEntry[] = [];
+
+  async function walk(dir: string): Promise<void> {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (skip.has(entry.name)) continue;
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory() && !entry.isSymbolicLink()) {
+        await walk(fullPath);
+      } else if (entry.name === "package.json") {
+        const relDir = path.relative(ROOT, dir);
+        let parsed: z.infer<typeof RefreshPackageJsonSchema>;
+        try {
+          parsed = RefreshPackageJsonSchema.parse(
+            JSON.parse(await readFile(fullPath, "utf8")),
+          );
+        } catch (error) {
+          const detail = shellErrorDetail(error) ?? "unknown error";
+          throw new Error(
+            `Failed to read/parse ${path.relative(ROOT, fullPath)}: ${detail}`,
+            { cause: error },
+          );
+        }
+        const allDeps = {
+          ...parsed.dependencies,
+          ...parsed.devDependencies,
+        };
+        const producers = Object.entries(allDeps)
+          .filter(
+            ([name, spec]) =>
+              BUILT_PRODUCERS.has(name) && spec.startsWith("file:"),
+          )
+          .map(([name]) => name)
+          .sort();
+        if (producers.length > 0) {
+          found.push({ cwd: relDir, producers });
+        }
+      }
+    }
+  }
+
+  await walk(packagesRoot);
+  return found.sort((a, b) => a.cwd.localeCompare(b.cwd));
+}
+
+// Apply --group scoping: sjer.red is always kept; everything else must be in
+// the group's scope (its own dirs or the shared producers). No group = keep
+// all. Mirrors the pre-derivation carve-out (sjer.red unconditional).
+function scopeRefreshPlan(plan: RefreshEntry[]): RefreshEntry[] {
+  if (GROUP === undefined) return plan;
+  return plan.filter(
+    (e) => ALWAYS_REFRESH_DIRS.has(e.cwd) || isRelevantForGroup(e.cwd, GROUP),
+  );
+}
+
+function logRefreshPlan(plan: RefreshEntry[]): void {
+  const scope = GROUP === undefined ? "full run" : `--group=${GROUP}`;
+  log(
+    "Deps",
+    `Derived Phase 4 refresh plan (${scope}): ${String(plan.length)} consumer(s) of built file: producers`,
+  );
+  for (const entry of plan) {
+    log("Deps", `  ${entry.cwd}  ← ${entry.producers.join(", ")}`);
+  }
+  if (plan.length === 0) {
+    log("Deps", "  (none in scope)");
+  }
+}
+
+async function refreshBuiltFileDependencies(): Promise<void> {
+  const refreshDirs = scopeRefreshPlan(await deriveRefreshPlan());
+  logRefreshPlan(refreshDirs);
 
   for (const dir of refreshDirs) {
+    const label = `${dir.cwd} refresh (${dir.producers.join(", ")})`;
     const fullCwd = path.join(ROOT, dir.cwd);
     if (!(await pathExists(fullCwd))) {
-      warn("Deps", `${dir.label} skipped (directory not found)`);
+      warn("Deps", `${label} skipped (directory not found)`);
       continue;
     }
 
@@ -473,7 +601,7 @@ async function refreshBuiltFileDependencies(): Promise<void> {
       ? ["bun", "install", "--force", "--backend=symlink"]
       : ["bun", "install", "--force"];
 
-    await exec("Deps", `${dir.label} refresh`, cmd, { cwd: fullCwd });
+    await exec("Deps", label, cmd, { cwd: fullCwd });
   }
 }
 
@@ -737,6 +865,15 @@ async function verifySetup(): Promise<void> {
 }
 
 // ── Main ───────────────────────────────────────────────────────────────
+
+// Dry-run: derive and print the Phase 4 refresh plan, then exit without
+// installing anything. Lets a reviewer see exactly which consumers the
+// derivation picks (and which built producer triggered each) at zero cost.
+if (PRINT_REFRESH_PLAN) {
+  const plan = scopeRefreshPlan(await deriveRefreshPlan());
+  logRefreshPlan(plan);
+  process.exit(0);
+}
 
 const totalStart = performance.now();
 console.log("Setting up monorepo development environment...");
