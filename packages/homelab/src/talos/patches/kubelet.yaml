@@ -17,19 +17,31 @@ machine:
     extraConfig:
       # system-reserved must cover everything OUTSIDE the kubepods cgroup: the ZFS
       # ARC (zfs_arc_max = 48 GiB, see talos/patches/zfs.yaml) plus host kernel / OS
-      # / kubelet / containerd / apid / etcd overhead (~8 GiB). With
-      # enforceNodeAllocatable below now explicitly covering system-reserved and
-      # kube-reserved (previously only the kubelet default [pods], verified live),
-      # this shrinks the kubepods memory cgroup limit to (Capacity - reserved -
-      # evictionHard) ≈ 65 GiB, hard-capping total pod memory so ARC + OS always
-      # retain ~10 GiB of guaranteed headroom. A runaway build now OOM-kills one pod
-      # instead of wedging the whole node.
+      # / kubelet / containerd / apid / etcd overhead (~8 GiB). These amounts are
+      # always subtracted from node allocatable (kubelet accounts for
+      # systemReserved/kubeReserved regardless of enforceNodeAllocatable), and as
+      # of 2026-07-10 are also *hard cgroup ceilings* via enforceNodeAllocatable +
+      # the *ReservedCgroup paths below — live-verified:
+      # `/sys/fs/cgroup/system/memory.max` = 56Gi, `/sys/fs/cgroup/podruntime/memory.max`
+      # = 2Gi, exactly matching these values.
       systemReserved:
         cpu: "4"
         memory: "56Gi"
+      # /system — Talos's CgroupSystem: every non-Kubernetes Talos daemon (udevd,
+      # apid, trustd, extensions, dashboard, the system-level containerd) runs
+      # here. Sourced from siderolabs/talos `pkg/machinery/constants/constants.go`
+      # and confirmed via a live default-kubelet startup log showing Talos already
+      # sets kubelet's own `SystemCgroupsName: "/system"` by default.
+      systemReservedCgroup: /system
       kubeReserved:
         cpu: "1"
         memory: "2Gi"
+      # /podruntime — Talos's CgroupPodRuntimeRoot: covers kubelet
+      # (/podruntime/kubelet), the Kubernetes-scoped containerd runtime
+      # (/podruntime/runtime), and etcd (/podruntime/etcd) — the parent cgroup
+      # covering both kubelet and the container runtime, per upstream Kubernetes'
+      # own guidance for what kube-reserved-cgroup should scope.
+      kubeReservedCgroup: /podruntime
       evictionHard:
         memory.available: "2Gi"
         nodefs.available: "10%"
@@ -52,12 +64,18 @@ machine:
       # Verify PID headroom under real heavy-concurrency load before trusting
       # this value; watch for PIDPressure node conditions after rollout.
       #
-      # enforceNodeAllocatable: adds real cgroup ceilings for system-reserved
-      # and kube-reserved (previously only the kubelet default [pods] was
-      # enforced) — protects kubelet/containerd/etcd/apid from being starved by
-      # pod-side pressure. The reservations above were already sized generously
-      # and assumed load-bearing; this makes that assumption actually enforced.
-      # See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md.
+      # enforceNodeAllocatable: real cgroup ceilings for system-reserved and
+      # kube-reserved, not just accounting. 2026-07-09 first attempted this
+      # without the *ReservedCgroup fields above — kubelet refuses to start in
+      # that case (exit code 1, "systemReservedCgroup ... must be specified when
+      # \"system-reserved\" ... included in enforceNodeAllocatable"), which
+      # crash-looped the node on every boot until reverted. Fixed 2026-07-10 by
+      # adding the cgroup paths above (sourced from Talos's own constants, not
+      # guessed) and live-verified working: kubelet came up Running/OK
+      # immediately, and the resulting cgroup limits matched exactly (see comment
+      # above). See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md,
+      # packages/docs/logs/2026-07-10_torvalds-kubelet-crashloop.md, and
+      # packages/docs/plans/2026-07-10_torvalds-kubelet-cgroup-enforcement.md.
       podPidsLimit: 4096
       enforceNodeAllocatable:
         - pods
