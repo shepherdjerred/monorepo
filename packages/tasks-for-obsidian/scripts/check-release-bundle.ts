@@ -37,6 +37,8 @@ function main(): void {
       [
         "node_modules/react-native/scripts/bundle.js",
         "bundle",
+        "--config-cmd",
+        "bun node_modules/.bin/react-native config",
         "--entry-file",
         "index.js",
         "--platform",
