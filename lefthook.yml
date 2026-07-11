@@ -462,6 +462,7 @@ pre-commit:
           - name: compliance-check
             glob:
               - "packages/*/package.json"
+              - "packages/*/packages/*/package.json"
               - "packages/*/eslint.config.*"
               - "packages/*/tsconfig.json"
             run: bash scripts/compliance-check.sh
