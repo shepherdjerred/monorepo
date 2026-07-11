@@ -60,18 +60,38 @@ print(hours)
 " "$1"
 }
 
+# How long OnTorrentAdded waits for a magnet's metadata (size) to arrive before
+# giving up. Magnet adds fire OnTorrentAdded immediately, reporting size=0 until
+# the DHT/peers deliver metadata; computing a limit at size=0 would persist the
+# <=1GB 72h floor onto what may become a 50GB+ torrent. Overridable for tests.
+METADATA_WAIT_SECONDS="${METADATA_WAIT_SECONDS:-300}"
+METADATA_POLL_INTERVAL_SECONDS="${METADATA_POLL_INTERVAL_SECONDS:-5}"
+
 apply_limit() {
   local hash="$1"
-  local info size_bytes size_gb name ratio_limit hours minutes status
+  local info size_bytes size_gb name ratio_limit hours minutes status waited=0
 
-  info=$(curl -s -b "$cookie_jar" "${QBT_URL}/api/v2/torrents/info?hashes=${hash}")
-  if [ "$(echo "$info" | jq 'length')" -eq 0 ]; then
-    err "torrent ${hash} not found via torrents/info; skipping"
-    return 1
-  fi
+  while :; do
+    info=$(curl -s -b "$cookie_jar" "${QBT_URL}/api/v2/torrents/info?hashes=${hash}")
+    if [ "$(echo "$info" | jq 'length')" -eq 0 ]; then
+      err "torrent ${hash} not found via torrents/info; skipping"
+      return 1
+    fi
 
-  size_bytes=$(echo "$info" | jq -r '.[0].size')
-  name=$(echo "$info" | jq -r '.[0].name')
+    size_bytes=$(echo "$info" | jq -r '.[0].size')
+    name=$(echo "$info" | jq -r '.[0].name')
+    if [ "$size_bytes" -gt 0 ]; then
+      break
+    fi
+    if [ "$waited" -ge "$METADATA_WAIT_SECONDS" ]; then
+      err "torrent ${hash} (${name}) still has no size metadata after ${waited}s (size=${size_bytes}); skipping — re-run with --all once metadata arrives"
+      return 1
+    fi
+    log "hash=${hash} name=\"${name}\" awaiting size metadata (size=${size_bytes}), waited=${waited}s"
+    sleep "$METADATA_POLL_INTERVAL_SECONDS"
+    waited=$((waited + METADATA_POLL_INTERVAL_SECONDS))
+  done
+
   # Pass the existing per-torrent ratio_limit straight through (Prowlarr/Sonarr/Radarr
   # already set this at grab time, e.g. 3.0) — we only add the seeding-time dimension.
   ratio_limit=$(echo "$info" | jq -r '.[0].ratio_limit')
