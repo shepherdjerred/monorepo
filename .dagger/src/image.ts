@@ -1090,6 +1090,41 @@ export function buildTemporalWorkerImageHelper(
   );
 }
 
+/**
+ * Rehearse the scheduled PR-creating workflows against a repo tree, inside
+ * the temporal-worker image — "will the weekly Temporal jobs still run after
+ * this change merges?". Builds the worker image (the engine de-dups this
+ * against the standalone build step, like the other smoke tests), copies the
+ * repo tree to a writable path, and runs
+ * `packages/temporal/scripts/rehearse-bot-clone.ts`, which drives the SAME
+ * `bot-clone.ts` helpers the activities execute in production. Catches the
+ * failure classes that broke data-dragon / season-refresh / readme-refresh
+ * weekly through June–July 2026: unbuilt `file:` producers, lefthook hooks
+ * armed in bot clones, moved cog target paths, and missing image binaries.
+ */
+export function temporalScheduleRehearsalHelper(
+  pkgDir: Directory,
+  repoDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+): Container {
+  return buildTemporalWorkerImageHelper(pkgDir, depNames, depDirs)
+    .withDirectory("/rehearsal/monorepo", repoDir, {
+      // `.git` excluded so the rehearsal always exercises the CI shape (the
+      // script git-inits a scratch repo). A host mount from a git worktree
+      // otherwise carries a `.git` FILE pointing at the main checkout, which
+      // breaks `git init` inside the container.
+      exclude: ["node_modules", "dist", ".eslintcache", ".git"],
+    })
+    .withWorkdir("/workspace/packages/temporal")
+    .withExec([
+      "bun",
+      "run",
+      "scripts/rehearse-bot-clone.ts",
+      "--repo=/rehearsal/monorepo",
+    ]);
+}
+
 /** Push a temporal-worker image to a registry. */
 export async function pushTemporalWorkerImageHelper(
   pkgDir: Directory,

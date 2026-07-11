@@ -228,6 +228,15 @@ There are **two** Temporal scheduling patterns — don't conflate them:
 
 To add a "weekly: regenerate X, open a PR if it changed" job, mirror `data-dragon.ts`: a deterministic activity (no Claude), GitHub App token, path-scoped `git add`, plus a thin workflow, an export in `src/workflows/index.ts`, and a `SCHEDULES` entry (cron, `America/Los_Angeles`, `TASK_QUEUES.DEFAULT`). The worker pod has bun/git/gh but **not** helm — add tools via `.dagger/src/image.ts` if the job needs them.
 
+### Bot-clone environment — use `bot-clone.ts`, never hand-rolled installs
+
+Every PR-creating activity clones the monorepo into `/tmp` and must prepare that clone through `src/activities/bot-clone.ts`:
+
+- **`rootInstallWithoutHooks(repoDir)`** — root `bun install --frozen-lockfile --ignore-scripts`. Bot clones are **not dev checkouts**: a plain root install runs the root `prepare` script (`lefthook install`), arming the full dev pre-commit suite for the bot's later `git commit` inside the worker pod, where it can't pass (no gitleaks binary, no per-package toolchains). Buildkite CI on the PR the bot opens is the real gate. This exact mistake broke `scout-season-refresh-weekly` and `readme-refresh-weekly` every week through June–July 2026.
+- **`buildLlmModels(repoDir)` / `installScoutWorkspace(repoDir)`** — `@shepherdjerred/llm-models` is a `file:` producer with a gitignored `dist/`; installing a consumer workspace without building it first copies a broken package (`Cannot find module '@shepherdjerred/llm-models'` — the `scout-data-dragon-weekly-refresh` failure). Build the producer, then install the consumer.
+
+The **`temporal-schedule-rehearsal`** CI step (the temporal-worker entry in `scripts/ci/src/steps/images.ts` `SMOKE_TEST_FUNCTIONS`, Dagger fn in `.dagger/src/image.ts`) runs `scripts/rehearse-bot-clone.ts` inside the PR's worker image against the PR's repo tree on every build that touches temporal. It drives these same helpers plus canaries for the cog targets and the hook-free commit path, so a PR that would break the weekly jobs fails CI instead of failing silently on the weekend. If you add a new repo-path or install-step dependency to a scheduled activity, extend the rehearsal script in the same PR.
+
 ## Greptile review gate (Buildkite)
 
 The `greptile-review` Buildkite step (`scripts/ci/src/wait-for-greptile.ts`) gates `ci-complete` for PRs — separate from the in-package PR review bot below.
@@ -237,7 +246,7 @@ The `greptile-review` Buildkite step (`scripts/ci/src/wait-for-greptile.ts`) gat
 
 ## Weekly README refresh
 
-`readme-refresh-weekly` (cron `0 8 * * 1` PT) runs `runReadmeRefresh` on the `default` queue. The activity (`src/activities/readme-refresh.ts`) mirrors `helm-types-refresh`: clone the monorepo (full blobless history — the cog blocks sort packages by first-commit date), run `cog -r README.md practice/README.md archive/README.md` to regenerate the embedded project-listing tables, format the output with the repo's pinned prettier (see below), stage only the three READMEs + any new per-package `_summary.md`, and open a PR via `openSeasonRefreshPr` if anything drifted (no diff → no PR). This replaced the old `.buildkite/scripts/update-readmes.sh` Buildkite scheduled build.
+`readme-refresh-weekly` (cron `0 8 * * 1` PT) runs `runReadmeRefresh` on the `default` queue. The activity (`src/activities/readme-refresh.ts`) mirrors `helm-types-refresh`: clone the monorepo (full blobless history — the cog blocks sort packages by first-commit date), run `cog -r README.md sandbox/practice/README.md sandbox/archive/README.md` to regenerate the embedded project-listing tables, format the output with the repo's pinned prettier (see below), stage only the three READMEs + any new per-package `_summary.md`, and open a PR via `openSeasonRefreshPr` if anything drifted (no diff → no PR). This replaced the old `.buildkite/scripts/update-readmes.sh` Buildkite scheduled build.
 
 `cog` is a Python tool, so the worker image installs cogapp via `withCogapp` in `.dagger/src/image.ts` (pinned by `COGAPP_VERSION` in `.dagger/src/constants.ts`). Per-package summaries are cached as committed `_summary.md` files, so a steady-state run makes no Codex calls; only a brand-new package without a committed summary triggers `bunx @openai/codex` (authed via the pod's `OPENAI_API_KEY`).
 
