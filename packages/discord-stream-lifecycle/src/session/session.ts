@@ -1,5 +1,5 @@
-import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot.ts";
-import type { UserbotEntry } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool.ts";
+import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
+import type { UserbotEntry } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool";
 
 /**
  * Immutable per-session record handed to the GameDriver on start and looked up by the

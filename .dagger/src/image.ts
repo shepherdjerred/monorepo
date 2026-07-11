@@ -39,7 +39,7 @@ import {
   TOFU_VERSION,
   VELERO_CLI_VERSION,
 } from "./constants";
-import { BUN_INSTALL_WITH_RETRY } from "./base";
+import { BUN_INSTALL_WITH_RETRY, withCleanReinstallIfNeeded } from "./base";
 import versions from "./versions";
 
 /**
@@ -679,6 +679,33 @@ function withForkRuntimeDeps(
 }
 
 /**
+ * Build `@shepherdjerred/discord-stream-lifecycle` when it's a mounted dep, so its `dist/`
+ * exists before a consumer's frozen install copies it through the `file:` ref (see
+ * `withBuiltLlmModels` below — same mechanism, same reason).
+ *
+ * This one is load-bearing, not just a `Cannot find module '@shepherdjerred/…'` nicety:
+ * discord-stream-lifecycle is consumed from deep inside a nested bun workspace
+ * (discord-plays-pokemon/mario-kart's `packages/backend`, itself two levels below the
+ * outer package). When consumed as raw TypeScript source, bun's on-the-fly transpile
+ * resolution for a wholesale-copied `file:` dep does NOT fall back to the consumer's
+ * ancestor `node_modules` — so `game-bot.ts`'s `discord.js` import fails at startup with
+ * `Cannot find module 'discord.js'` even though discord.js is correctly hoisted one level
+ * up. Compiling to `dist/*.js` and consuming it as compiled JS resolves the same way
+ * llm-models' `zod` dependency already does from the identical nesting depth (proven
+ * working) — plain Node-style ancestor `node_modules` resolution, no special-casing needed.
+ */
+function withBuiltDiscordStreamLifecycle(
+  container: Container,
+  depNames: string[],
+): Container {
+  if (!depNames.includes("discord-stream-lifecycle")) return container;
+  return container
+    .withWorkdir("/workspace/packages/discord-stream-lifecycle")
+    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
+    .withExec(["bun", "run", "build"]);
+}
+
+/**
  * Build `@shepherdjerred/llm-models` when it's a mounted dep, so its `dist/`
  * exists before a consumer's frozen install copies it through the `file:` ref.
  * The catalog's package.json `main`/`exports` resolve to gitignored `dist/`, so
@@ -752,11 +779,15 @@ export function buildImageHelper(
   }
 
   container = withForkRuntimeDeps(container, depNames);
+  container = withBuiltDiscordStreamLifecycle(container, depNames);
 
   // Install deps then set up the final image
-  let image = container
-    .withWorkdir(`/workspace/packages/${pkg}`)
-    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
+  // Clean-reinstall (not plain retry) when discord-stream-lifecycle is present:
+  // see `withCleanReinstallIfNeeded`'s doc comment in base.ts.
+  let image = withCleanReinstallIfNeeded(
+    container.withWorkdir(`/workspace/packages/${pkg}`),
+    depNames,
+  );
 
   if (pkg === "birmel") {
     // youtube-dl-exec resolves its binary at <pkg>/bin/yt-dlp (constants.YOUTUBE_DL_PATH),
@@ -1343,28 +1374,36 @@ export function buildDiscordPlaysPokemonImageHelper(
     container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
   }
   container = withBuiltLlmModels(container, depNames);
+  container = withBuiltDiscordStreamLifecycle(container, depNames);
+
+  container = container
+    // Build pokeemerald.wasm from source (ottohg pin + our export patch) and
+    // stage it where the emulator expects it. Staged AFTER the package mount so
+    // it wins over any locally-built copy a dev may have on disk; the committed
+    // blob and the Temporal download path are both gone.
+    .withFile(
+      `${innerRoot}/packages/backend/assets/pokeemerald.wasm`,
+      buildPokeemeraldWasm(pkgDir.directory("wasm-src/patches")),
+    )
+    .withWorkdir(innerRoot);
+  // Workspace install (covers backend + frontend + common) — runs the
+  // trustedDependencies postinstalls (node-datachannel, node-av). The
+  // discord-video-stream fork lazy-loads sharp in source (no bun patch).
+  // No separate backend install: bun workspaces installs all member deps at
+  // the root level. A second `bun install` in packages/backend causes bun to
+  // try to re-link file: deps already linked by the root install → EEXIST.
+  // Wrapped in retry because bun's worker pool also races on `file:` symlinks
+  // *within* a single install when the same dep (eslint-config) is referenced
+  // by 4+ nested package.jsons (#4336).
+  //
+  // Clean-reinstall (not plain retry) when discord-stream-lifecycle is present:
+  // see `withCleanReinstallIfNeeded`'s doc comment in base.ts — the FIRST install
+  // against that dep's own pre-built node_modules silently corrupts its copied
+  // package.json (exit 0, no retry triggered), a second clean install fixes it.
+  container = withCleanReinstallIfNeeded(container, depNames);
 
   return (
     container
-      // Build pokeemerald.wasm from source (ottohg pin + our export patch) and
-      // stage it where the emulator expects it. Staged AFTER the package mount so
-      // it wins over any locally-built copy a dev may have on disk; the committed
-      // blob and the Temporal download path are both gone.
-      .withFile(
-        `${innerRoot}/packages/backend/assets/pokeemerald.wasm`,
-        buildPokeemeraldWasm(pkgDir.directory("wasm-src/patches")),
-      )
-      // Workspace install (covers backend + frontend + common) — runs the
-      // trustedDependencies postinstalls (node-datachannel, node-av). The
-      // discord-video-stream fork lazy-loads sharp in source (no bun patch).
-      // No separate backend install: bun workspaces installs all member deps at
-      // the root level. A second `bun install` in packages/backend causes bun to
-      // try to re-link file: deps already linked by the root install → EEXIST.
-      // Wrapped in retry because bun's worker pool also races on `file:` symlinks
-      // *within* a single install when the same dep (eslint-config) is referenced
-      // by 4+ nested package.jsons (#4336).
-      .withWorkdir(innerRoot)
-      .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
       .withWorkdir(`${innerRoot}/packages/backend`)
       // Verify the from-source wasm is behaviorally equivalent to what shipped
       // before: the symbol reader resolves all game-state globals, and the audio
@@ -1544,6 +1583,49 @@ export function buildDiscordPlaysMarioKartImageHelper(
   }
 
   container = withForkRuntimeDeps(container, depNames);
+  container = withBuiltDiscordStreamLifecycle(container, depNames);
+
+  container = container
+    // Copy the compiled core + the files the host stages into MEMFS at
+    // runtime (loadFile reads these; see the emulator host).
+    .withFile(`${assetsDir}/n64wasm.js`, wasmBuild.file("/src/code/n64wasm.js"))
+    .withFile(
+      `${assetsDir}/n64wasm.wasm`,
+      wasmBuild.file("/src/code/n64wasm.wasm"),
+    )
+    .withFile(
+      `${assetsDir}/shader_vert.hlsl`,
+      wasmBuild.file("/src/code/shader_vert.hlsl"),
+    )
+    .withFile(
+      `${assetsDir}/shader_frag.hlsl`,
+      wasmBuild.file("/src/code/shader_frag.hlsl"),
+    )
+    .withFile(
+      `${assetsDir}/overlay.png`,
+      wasmBuild.file("/src/code/overlay.png"),
+    )
+    .withFile(
+      `${assetsDir}/res/arial.ttf`,
+      wasmBuild.file("/src/code/res/arial.ttf"),
+    )
+    .withWorkdir(innerRoot);
+  // Workspace install (backend + frontend) — runs trustedDependencies
+  // postinstalls. The discord-video-stream fork lazy-loads sharp in source
+  // (no bun patch).
+  // No separate backend install: bun workspaces installs all member deps
+  // at the root level. A second `bun install` in packages/backend re-links
+  // file: deps already linked by the root install → EEXIST under the
+  // hoisted linker, and the retry's node_modules cleanup then leaves the
+  // backend member without its file: dep copies (build 5029 smoke caught
+  // `Cannot find module '@shepherdjerred/discord-stream-lifecycle/...'`).
+  // Mirrors the discord-plays-pokemon image build above.
+  //
+  // Clean-reinstall (not plain retry) when discord-stream-lifecycle is present:
+  // see `withCleanReinstallIfNeeded`'s doc comment in base.ts — the FIRST install
+  // against that dep's own pre-built node_modules silently corrupts its copied
+  // package.json (exit 0, no retry triggered), a second clean install fixes it.
+  container = withCleanReinstallIfNeeded(container, depNames);
   // Package tsconfigs extend the repo root tsconfig.base.json
   // (extends "../../../../tsconfig.base.json" -> /workspace/tsconfig.base.json).
   // vite 8 (rolldown) hard-fails the frontend build when the extends target is
@@ -1554,44 +1636,6 @@ export function buildDiscordPlaysMarioKartImageHelper(
 
   return (
     container
-      // Copy the compiled core + the files the host stages into MEMFS at
-      // runtime (loadFile reads these; see the emulator host).
-      .withFile(
-        `${assetsDir}/n64wasm.js`,
-        wasmBuild.file("/src/code/n64wasm.js"),
-      )
-      .withFile(
-        `${assetsDir}/n64wasm.wasm`,
-        wasmBuild.file("/src/code/n64wasm.wasm"),
-      )
-      .withFile(
-        `${assetsDir}/shader_vert.hlsl`,
-        wasmBuild.file("/src/code/shader_vert.hlsl"),
-      )
-      .withFile(
-        `${assetsDir}/shader_frag.hlsl`,
-        wasmBuild.file("/src/code/shader_frag.hlsl"),
-      )
-      .withFile(
-        `${assetsDir}/overlay.png`,
-        wasmBuild.file("/src/code/overlay.png"),
-      )
-      .withFile(
-        `${assetsDir}/res/arial.ttf`,
-        wasmBuild.file("/src/code/res/arial.ttf"),
-      )
-      // Workspace install (backend + frontend) — runs trustedDependencies
-      // postinstalls. The discord-video-stream fork lazy-loads sharp in source
-      // (no bun patch).
-      // No separate backend install: bun workspaces installs all member deps
-      // at the root level. A second `bun install` in packages/backend re-links
-      // file: deps already linked by the root install → EEXIST under the
-      // hoisted linker, and the retry's node_modules cleanup then leaves the
-      // backend member without its file: dep copies (build 5029 smoke caught
-      // `Cannot find module '@shepherdjerred/discord-stream-lifecycle/...'`).
-      // Mirrors the discord-plays-pokemon image build above.
-      .withWorkdir(innerRoot)
-      .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
       .withWorkdir(`${innerRoot}/packages/backend`)
       // Generate the Prisma client for the leaderboard DB (output is gitignored,
       // so it must be produced in the image). Mirrors the birmel/scout flow.
