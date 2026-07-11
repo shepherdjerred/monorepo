@@ -8,15 +8,25 @@ were parallel-evolved identically live here so a fix lands once. Consumed via
 
 **Dependency gotcha:** this package declares `discord-stream-lifecycle` and
 `discord-video-stream` as its `file:` dependencies, and the game backends must
-**not** declare those two packages in their own manifests — they resolve via
-hoisting from this package's dependency tree (the repo pins bun's hoisted
-linker). Bun (≥1.3) deterministically fails `bun install --frozen-lockfile`
-("lockfile had changes", even when regeneration is byte-identical) whenever the
-same `file:` package is declared both by the install root and inside one of its
-`file:` dependencies — verified for every dep-type combination (deps, devDeps,
+**not** declare those two packages in their own manifests. Bun (≥1.3)
+deterministically fails `bun install --frozen-lockfile` ("lockfile had
+changes", even when regeneration is byte-identical) whenever the same `file:`
+package is declared both by the install root and inside one of its `file:`
+dependencies — verified for every dep-type combination (deps, devDeps,
 peerDeps). Exactly one layer may own each `file:` dep; this package owns the
-streaming stack. Backends still import those packages directly in driver code,
-which is expected layering.
+streaming stack.
+
+Backends still import dsl/dvs directly in driver code (expected layering —
+drivers implement dsl/dvs interfaces). Those imports do NOT resolve via
+node_modules (bun nests a `file:` dep's own `file:` deps under this package's
+copy instead of hoisting them); they resolve via `paths` in each backend's
+`tsconfig.json`, which map `@shepherdjerred/discord-stream-lifecycle{,/*}` and
+`@shepherdjerred/discord-video-stream{,/*}` to the sibling source dirs. Bun
+honors tsconfig `paths` at runtime, and tsc/eslint honor them at check time
+(verified in oven/bun:1.3.14). The mapped source dirs need their own
+`node_modules` for their runtime deps/peers — locally `scripts/setup.ts`
+installs them; in images `.dagger/src/image.ts`'s `withForkRuntimeDeps`
+(`SOURCE_RUNTIME_DEPS`) runs a per-dep install.
 
 Source-only (like `discord-stream-lifecycle`): `package.json#exports` maps `.`
 and `./*` straight at `src/`, so there is **no build step** — consumers import
