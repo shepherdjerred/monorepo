@@ -1,7 +1,7 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import type { z } from "zod";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { fromError } from "zod-validation-error";
+import { parseCommandArgs } from "#src/discord/commands/define-command.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("utils-validation");
@@ -34,20 +34,17 @@ export async function validateCommandArgs<T>(
 
   logger.info(`Starting ${commandName} for user ${username} (${userId})`);
 
-  try {
-    const rawArgs = argsBuilder(interaction);
-    const data = schema.parse(rawArgs);
-    logger.info(`✅ Command arguments validated successfully`);
-    return { success: true, data, userId, username };
-  } catch (error) {
-    logger.error(`❌ Invalid command arguments from ${username}:`, error);
-    const validationError = fromError(error);
-    await interaction.reply({
-      content: validationError.toString(),
-      ephemeral: true,
-    });
+  const parseResult = await parseCommandArgs(
+    interaction,
+    schema,
+    argsBuilder(interaction),
+  );
+  if (!parseResult.success) {
     return { success: false };
   }
+
+  logger.info(`✅ Command arguments validated successfully`);
+  return { success: true, data: parseResult.data, userId, username };
 }
 
 /**
