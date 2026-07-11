@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Complete
 
 ## Context
 
@@ -83,3 +83,42 @@ Note: steps 2–3 are one `apply-config` invocation since it's full-document. Se
 
 - Schedule a `temporal-agent-task` report-only check ~1 week out: ARC hit rate, ZfsArcHitRateLow firings, CI queue health, dagger engine OOM events — decide then whether 16Gi ARC needs nudging to 24Gi (raise `systemReserved` in lockstep if so).
 - Broader requests audit (loki-chunks-cache requests 4.9Gi vs ~250Mi used, etc.) — optional now that headroom is 30Gi+.
+
+## Session Log — 2026-07-10
+
+### Done
+
+- Root-caused Buildkite pods stuck `Pending`: node allocatable (59.4Gi post-hardening) was 99.99% booked by pod memory requests; scheduler reported `Insufficient memory`.
+- Gathered 30d Prometheus evidence (ARC hit rate p50 99.95%, ghost hits p95 ~580/s, pod WSS max 42.8Gi, dagger WSS max 15.6Gi) proving the 48Gi ARC oversized.
+- Shipped to `main` (Buildkite was down, merged directly per operator instruction): `96989f5a4` (ARC 48→16Gi, systemReserved 56→24Gi, dagger req/lim 16/50→8/24Gi, ZFS alert retuning, docs) and `c0b135f32` (dagger liveness failureThreshold 20→60). PR #1442 records the change.
+- Applied live via full-document `talosctl apply-config --mode=no-reboot` (three-line diff verified pre-apply). Verified: arc c_max=16Gi, configz systemReserved=24Gi, /system cgroup 24Gi, /podruntime 8Gi, allocatable 95821400Ki (~91.4Gi), `talosctl health` clean, kubelet/etcd OK.
+- Manually applied the dagger ArgoCD Application (server-side) and JSON-patched the live `prometheus-zfs-monitoring-rules` PrometheusRule (raw dist YAML has pre-Helm `{{ "{{" }}` escaping — do NOT `kubectl apply` it).
+- Result: Buildkite pods went Pending → 25+ Running within seconds; memory requests now 69% of allocatable (~28Gi headroom); 0 ZFS/memory alerts firing.
+- Diagnosed + fixed a pre-existing dagger engine crash loop: unclean shutdown → cache wipe → 10+ min cold start → liveness kill (30s×20) → next unclean shutdown. Old pod had 22 restarts/22h. failureThreshold 60 gives 30 min tolerance.
+
+### Remaining
+
+- Confirm the dagger engine pod is 1/1 Ready after its final (clean, graceful) rollout restart — was draining with 0 sessions at session end.
+- A handful of `main`-build Buildkite job pods errored while the engine bounced; retrigger/verify the main build goes green once the engine is stable.
+- Schedule the temporal-agent-task below (needs `TEMPORAL_ADDRESS` access; run `bun run scripts/schedule-agent-task.ts --from-doc` from `packages/temporal`).
+
+### Caveats
+
+- kubeReserved 2→8Gi (`4ff7e674f`) rode along in this push — it was applied live 2026-07-11 but never pushed.
+- The live machine config was edited by string replacement on the extracted document to keep everything else byte-identical; repo patch files and live config now match exactly.
+- If ZfsArcHitRateLow (<85%) fires sustained, raise `zfs_arc_max` AND `systemReserved.memory` in lockstep — never let ARC exceed the reservation.
+- Dagger engine limit is now 24Gi (30d max WSS 15.6Gi); if the engine OOMs under a future workload shape, raise the limit before suspecting the ARC change.
+
+<!-- temporal-agent-task
+{
+  "title": "Torvalds memory rightsize — 1wk post-change verification",
+  "provider": "claude",
+  "mode": "report-only",
+  "runAt": "2026-07-17T09:00:00-07:00",
+  "repo": { "fullName": "shepherdjerred/monorepo", "ref": "main" },
+  "source": {
+    "docPath": "packages/docs/archive/completed/2026-07-10_torvalds-memory-rightsize.md"
+  },
+  "prompt": "One week ago torvalds was rebalanced: ZFS ARC 48Gi->16Gi, systemReserved 56Gi->24Gi, allocatable ~91.4Gi, dagger engine req 8Gi/lim 24Gi, dagger liveness failureThreshold 60. Check via Grafana/Prometheus and kubectl: (1) ARC hit rate over the week — any sustained ZfsArcHitRateLow (<85%) firings? (2) any ZfsArcEvictionHigh/ZfsHashCollisionsHigh/ZfsMemoryReclaim firings? (3) dagger engine restarts and OOMKilled events since the change, (4) Buildkite/Kueue: any CI pods Pending on Insufficient memory, (5) node memory requests % of allocatable. Email a green/red verdict per check with evidence; recommend raising ARC to 24Gi (with systemReserved to 32Gi in lockstep) only if (1) is red."
+}
+-->
