@@ -61,8 +61,12 @@ export function useTasks() {
     const today = localTodayYmd();
     return taskList.filter((t) => {
       // Recurring: today's OCCURRENCE decides (model rrule expansion) —
-      // stays visible when checked so completion feedback is felt.
-      if (isRecurring(t)) return occursOn(t, today);
+      // stays visible when checked so completion feedback is felt. The
+      // active-status guard still applies: a globally done/cancelled
+      // recurring task must not reappear each time its rrule fires
+      // (checking off today's instance mutates completeInstances, not
+      // status, so a live recurring task stays visible).
+      if (isRecurring(t)) return isActiveStatus(t.status) && occursOn(t, today);
       return isActiveStatus(t.status) && (isToday(t.due) || isOverdue(t.due));
     });
   }, [taskList]);
@@ -77,7 +81,10 @@ export function useTasks() {
     }
     return taskList
       .filter((t) => {
-        if (isRecurring(t)) return horizon.some((day) => occursOn(t, day));
+        if (isRecurring(t))
+          return (
+            isActiveStatus(t.status) && horizon.some((day) => occursOn(t, day))
+          );
         return isActiveStatus(t.status) && isUpcoming(t.due);
       })
       .sort((a, b) => {
