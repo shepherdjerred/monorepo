@@ -34,11 +34,22 @@ export async function validateCommandArgs<T>(
 
   logger.info(`Starting ${commandName} for user ${username} (${userId})`);
 
-  const parseResult = await parseCommandArgs(
-    interaction,
-    schema,
-    argsBuilder(interaction),
-  );
+  // Reading/coercing Discord options is system-boundary user input: a builder
+  // throw gets the same friendly ephemeral reply as a schema failure instead
+  // of rejecting the command.
+  let rawArgs: unknown;
+  try {
+    rawArgs = argsBuilder(interaction);
+  } catch (error) {
+    logger.info(`❌ Failed to read command options for ${commandName}`, error);
+    await interaction.reply({
+      content: `❌ Invalid command options: ${error instanceof Error ? error.message : String(error)}`,
+      ephemeral: true,
+    });
+    return { success: false };
+  }
+
+  const parseResult = await parseCommandArgs(interaction, schema, rawArgs);
   if (!parseResult.success) {
     return { success: false };
   }
