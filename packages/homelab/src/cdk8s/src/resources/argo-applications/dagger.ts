@@ -283,14 +283,22 @@ echo "Done."`,
               // cause to a finite slice of the node's 32 threads instead of unbounded.
               // See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md
               // and packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md.
+              //
+              // Memory right-sized 2026-07-10 (req 16Gi -> 8Gi, lim 50Gi -> 24Gi) from
+              // 30d working-set data: p50 2.6Gi, p95 6.7Gi, max 15.6Gi. The request
+              // sits just above p95 (scheduling guarantee); the limit is ~1.5x the 30d
+              // max. On a single-node cluster an oversized request buys nothing except
+              // blocking other pods from scheduling — it was the largest single line
+              // item (26% of allocatable) when CI pods went unschedulable at 99.99%
+              // requested. See packages/docs/plans/2026-07-10_torvalds-memory-rightsize.md.
               resources: {
                 requests: {
                   cpu: "6",
-                  memory: "16Gi",
+                  memory: "8Gi",
                 },
                 limits: {
                   cpu: "16",
-                  memory: "50Gi",
+                  memory: "24Gi",
                 },
               },
               // Garbage collection policy. IMPORTANT: maxUsedSpace bounds only the

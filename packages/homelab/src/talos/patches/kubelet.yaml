@@ -16,17 +16,25 @@ machine:
       max-pods: "300"
     extraConfig:
       # system-reserved must cover everything OUTSIDE the kubepods cgroup: the ZFS
-      # ARC (zfs_arc_max = 48 GiB, see talos/patches/zfs.yaml) plus host kernel / OS
+      # ARC (zfs_arc_max = 16 GiB, see talos/patches/zfs.yaml) plus host kernel / OS
       # / kubelet / containerd / apid / etcd overhead (~8 GiB). These amounts are
       # always subtracted from node allocatable (kubelet accounts for
       # systemReserved/kubeReserved regardless of enforceNodeAllocatable), and as
       # of 2026-07-10 are also *hard cgroup ceilings* via enforceNodeAllocatable +
-      # the *ReservedCgroup paths below — live-verified:
-      # `/sys/fs/cgroup/system/memory.max` = 56Gi, `/sys/fs/cgroup/podruntime/memory.max`
-      # = 8Gi, exactly matching these values.
+      # the *ReservedCgroup paths below (the /system ceiling tracks this value;
+      # the ARC itself is kernel memory capped separately by zfs_arc_max, not by
+      # the cgroup).
+      #
+      # 24Gi = 16 ARC + 8 OS overhead. Right-sized from 56Gi (48 ARC + 8) on
+      # 2026-07-10: 30d evidence showed the 48Gi ARC massively oversized (hit rate
+      # p50 99.95%, ghost hits p95 ~580/s) while pod requests hit 99.99% of the
+      # 59.4Gi allocatable and CI pods went unschedulable. Allocatable is now
+      # ~91.4Gi. If ZfsArcHitRateLow fires sustained, raise zfs_arc_max and this
+      # value in lockstep. See
+      # packages/docs/plans/2026-07-10_torvalds-memory-rightsize.md.
       systemReserved:
         cpu: "4"
-        memory: "56Gi"
+        memory: "24Gi"
       # /system — Talos's CgroupSystem: every non-Kubernetes Talos daemon (udevd,
       # apid, trustd, extensions, dashboard, the system-level containerd) runs
       # here. Sourced from siderolabs/talos `pkg/machinery/constants/constants.go`
