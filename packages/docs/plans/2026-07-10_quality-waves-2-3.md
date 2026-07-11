@@ -132,3 +132,31 @@ New package `packages/discord-plays-core` (`@shepherdjerred/discord-plays-core`)
 - knip deletions: only high-confidence, individually verified; ambiguous → knip entry-point config, not deletion.
 - Scout command migration breadth (80 files): mechanical but wide; the offline test harness is the safety net, migrate in 4 batches (help/admin/subscription/competition+report).
 - Framework: behavior must be identical — the streamer base keeps mk64's frame-drop and observer hooks as opt-ins, not defaults.
+
+## Session Log — 2026-07-10/11 (execution)
+
+### Done
+
+All 6 PRs implemented and submitted as a git-spice stack on `feature/quality-wave-1` (#1438):
+
+- **#1444 quality-burndown**: 17 tests un-skipped (scout lazy config killed a process-wide mock.module landmine; S3 tests on aws-sdk-client-mock; helm-types chart fixture; dpp audio gate); ratchet baselines 23→5 skips / 32→22 placeholders; **knip-unused rule revived** (dead since knip 6.x — parser crash swallowed by its own catch; now parses issues[] shape, runs from root with --workspace, 7 regression tests + positive control); verified-dead code deleted (the exploration delete-list was mostly wrong — badge/card/init-theme live, kept); real duplication extracted in temporal (254→195) + scout (641→600) with deliberate pairs left; first suites for cooklang (20) + karma-bot (10); tasks-for-obsidian tests into typecheck; lefthook prettier-staged.sh (staged deletions crashed prettier, blocking file-deleting commits).
+- **#1445 toolkit**: lib/http + lib/config; Grafana/PagerDuty/Bugsink 330→134 LOC, behavior preserved, +19 tests.
+- **#1446 setup derive**: phase-4 refresh list derived from file: deps; found 2 real missing consumers (scout data, scout frontend — stale dist since forever); BUILT_PRODUCERS narrowed to the 3 dist-exporting producers; --print-refresh-plan.
+- **#1447 change-detection split**: 1105 lines → 7 modules + index, all under the 500 cap; grandfathered max-lines override DELETED; 313 tests unchanged.
+- **#1448 scout commands**: scoped-down honestly — registry premise was wrong (rest.ts/index.ts wired by name; rewiring = redesign) and competition/report reply helpers carry distinct user-facing semantics; shipped parseCommandArgs + replyError adopted everywhere behavior-preserving + defineCommand wrapper + AGENTS.md pattern.
+- **#1449 discord-plays-core**: the twins' shared middle layer (~870 LOC) extracted (tracing/metrics/entry/streamer-base/audio-transport/webserver) with hook-based parameterization; both games net −1169 lines; drivers/goal/seats stay per-game.
+- Wave-1 babysit: fixed the CI-only eslint-automation failure (undeclared @opentelemetry deps in scripts/), retried mass engine-restart job failures; #1438 + #1444 concluded fully green.
+
+### Remaining
+
+- CI + review babysitting for #1445–#1449; merge order: #1438 → #1444 → siblings (gs restack as bases move).
+- `packages/docs/todos/dpc-tracing-context-propagation-check.md` — post-deploy Tempo verification of mk64 span propagation (context-manager reconciliation in core tracing).
+- Deferred by scoped-down PR3: competition/report reply-helper unification (would change user-facing text; needs a product decision).
+- 6 documented knip dep survivors (scout llm-models root declaration, eslint devDeps in 5 subpkgs).
+
+### Caveats
+
+- **bun writes can be stat-invisible to git** (size+mtime-preserving writes): `git add` and `git status` both missed agent edits until a content re-hash + utime bump. If a commit looks mysteriously incomplete, hash-compare worktree vs index (see wave-2 session history). Wave-1 scanned clean.
+- git-spice: `gs branch create` needs `--no-commit` (its default empty commit violates commit-msg validation); GITHUB_TOKEN from `gh auth token`; sibling stacking chosen over the plan's linear chain (disjoint changes, independent merges).
+- Scoped `--group` setups don't install file:-consumed packages' own deps (llm-observability broke scout typecheck in a fresh worktree; .dagger needs its own `bun install` for the eslint hook) — candidates for setup.ts follow-ups.
+- The "flaky account-mutations" report was load contention from 5 concurrent agents; not reproducible on any branch.
