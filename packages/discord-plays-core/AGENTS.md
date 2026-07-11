@@ -6,6 +6,18 @@ same "headless emulator → ffmpeg → Discord Go-Live" architecture; the parts 
 were parallel-evolved identically live here so a fix lands once. Consumed via
 `file:` deps by both backends.
 
+**Dependency gotcha:** this package declares `discord-stream-lifecycle` and
+`discord-video-stream` as its `file:` dependencies, and the game backends must
+**not** declare those two packages in their own manifests — they resolve via
+hoisting from this package's dependency tree (the repo pins bun's hoisted
+linker). Bun (≥1.3) deterministically fails `bun install --frozen-lockfile`
+("lockfile had changes", even when regeneration is byte-identical) whenever the
+same `file:` package is declared both by the install root and inside one of its
+`file:` dependencies — verified for every dep-type combination (deps, devDeps,
+peerDeps). Exactly one layer may own each `file:` dep; this package owns the
+streaming stack. Backends still import those packages directly in driver code,
+which is expected layering.
+
 Source-only (like `discord-stream-lifecycle`): `package.json#exports` maps `.`
 and `./*` straight at `src/`, so there is **no build step** — consumers import
 subpaths directly, e.g.

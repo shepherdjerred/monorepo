@@ -46,8 +46,6 @@
     "@prisma/client-runtime-utils": "7.8.0",
     "@sentry/bun": "^10.0.0",
     "@shepherdjerred/discord-plays-core": "file:../../../discord-plays-core",
-    "@shepherdjerred/discord-stream-lifecycle": "file:../../../discord-stream-lifecycle",
-    "@shepherdjerred/discord-video-stream": "file:../../../discord-video-stream",
     "cors": "^2.8.5",
     "discord.js": "^14.26.4",
     "discord.js-selfbot-v13": "^3.6.1",

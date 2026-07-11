@@ -31,8 +31,6 @@
     "@opentelemetry/semantic-conventions": "^1.40.0",
     "@sentry/bun": "^10.0.0",
     "@shepherdjerred/discord-plays-core": "file:../../../discord-plays-core",
-    "@shepherdjerred/discord-stream-lifecycle": "file:../../../discord-stream-lifecycle",
-    "@shepherdjerred/discord-video-stream": "file:../../../discord-video-stream",
     "@shepherdjerred/llm-models": "file:../../../llm-models",
     "@shepherdjerred/llm-observability": "file:../../../llm-observability",
     "cors": "^2.8.5",
