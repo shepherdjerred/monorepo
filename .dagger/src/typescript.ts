@@ -247,23 +247,21 @@ export async function lintTypecheckTestHelper(
       run: () => lintHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
     });
   }
-  children.push(
-    {
-      name: "typecheck",
-      run: () =>
-        useTypecheckSecrets
-          ? generateAndTypecheckWithSecretsHelper(
-              pkgDir,
-              pkg,
-              depNames,
-              depDirs,
-              tsconfig,
-              haUrl,
-              haToken,
-            ).stdout()
-          : typecheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
-    },
-  );
+  children.push({
+    name: "typecheck",
+    run: () =>
+      useTypecheckSecrets
+        ? generateAndTypecheckWithSecretsHelper(
+            pkgDir,
+            pkg,
+            depNames,
+            depDirs,
+            tsconfig,
+            haUrl,
+            haToken,
+          ).stdout()
+        : typecheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
+  });
   if (!skipTest) {
     // PLAYWRIGHT_PACKAGES (sjer.red) override `bun run test` to
     // `bun run build && bunx playwright test`, which needs a Playwright
