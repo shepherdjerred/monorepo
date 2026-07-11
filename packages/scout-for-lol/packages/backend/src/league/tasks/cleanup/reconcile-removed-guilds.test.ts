@@ -79,6 +79,10 @@ function clientWithMembers(
 const day1 = new Date("2026-07-01T04:00:00.000Z");
 const day2 = new Date("2026-07-02T04:00:00.000Z");
 const sameDayLater = new Date("2026-07-01T20:00:00.000Z");
+// 23:55 UTC on day1 to 00:05 UTC on day2 - a different calendar date but
+// only 10 minutes apart, well within a normal transient outage.
+const justBeforeMidnight = new Date("2026-07-01T23:55:00.000Z");
+const justAfterMidnight = new Date("2026-07-02T00:05:00.000Z");
 
 beforeEach(async () => {
   await prisma.player.deleteMany();
@@ -191,6 +195,26 @@ describe("reconcileRemovedGuilds", () => {
 
     expect(
       await prisma.player.count({ where: { serverId: removedGuild } }),
+    ).toBe(1);
+  });
+
+  test("does not clean up when a repeat sighting crosses a UTC date boundary but less than a full day has elapsed", async () => {
+    await seedGuild(prisma, removedGuild);
+
+    await reconcileRemovedGuilds(clientWithMembers([memberGuild]), prisma, {
+      now: justBeforeMidnight,
+    });
+    await reconcileRemovedGuilds(clientWithMembers([memberGuild]), prisma, {
+      now: justAfterMidnight,
+    });
+
+    expect(
+      await prisma.player.count({ where: { serverId: removedGuild } }),
+    ).toBe(1);
+    expect(
+      await prisma.guildRemovalCandidate.count({
+        where: { serverId: removedGuild },
+      }),
     ).toBe(1);
   });
 

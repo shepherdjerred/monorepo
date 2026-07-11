@@ -12,10 +12,14 @@ import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("cleanup-reconcile-removed-guilds");
 
-/** UTC calendar date (Y-M-D, no time) as a sortable/comparable string. */
-function utcDateKey(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
+/**
+ * Minimum elapsed time since `firstDetectedAt` before a repeat 10004 counts
+ * as confirmed removal. A calendar-date comparison alone is not enough: an
+ * outage detected at 23:55 UTC and rechecked at 00:05 UTC the next day spans
+ * two calendar dates but is only 10 minutes long, well within normal outage
+ * duration. Requiring a full day of elapsed wall-clock time closes that gap.
+ */
+const CONFIRMATION_DELAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Reconcile the database against the bot's actual guild membership.
@@ -43,12 +47,14 @@ function utcDateKey(date: Date): string {
  * REST fetch, and the `guildDelete` event handler already treats that case as
  * non-removal (skips cleanup when `guild.available` is false) - and an outage
  * can easily outlast any in-process retry delay. Instead, confirmation is
- * tracked across *days* in `GuildRemovalCandidate`: the first run to see a
+ * tracked across *time* in `GuildRemovalCandidate`: the first run to see a
  * 10004 just records the sighting and skips cleanup; a guild is only cleaned
- * up once a run on a LATER UTC calendar day than `firstDetectedAt` also sees
- * 10004. A same-day outage resolves long before the next day's run, so this
- * can't mistake one for a removal. A guild that comes back reachable on any
- * run clears its candidate row and is left alone.
+ * up once a run at least `CONFIRMATION_DELAY_MS` after `firstDetectedAt` also
+ * sees 10004. A plain calendar-date comparison isn't enough here - an outage
+ * detected at 23:55 UTC and rechecked at 00:05 UTC the next day spans two
+ * dates but is only 10 minutes long, so this uses elapsed wall-clock time
+ * instead. A guild that comes back reachable on any run clears its candidate
+ * row and is left alone.
  */
 export async function reconcileRemovedGuilds(
   client: Client,
@@ -69,6 +75,7 @@ export async function reconcileRemovedGuilds(
   }
 
   const memberGuildIds = new Set(client.guilds.cache.keys());
+  const nowMs = now.getTime();
 
   try {
     // Distinct serverIds that still have data across the tables cleanup removes.
@@ -104,7 +111,6 @@ export async function reconcileRemovedGuilds(
       (serverId) => !memberGuildIds.has(serverId),
     );
 
-    const nowDateKey = utcDateKey(now);
     const removedGuildIds: DiscordGuildId[] = [];
     for (const serverId of candidateServerIds) {
       const guildId = DiscordGuildIdSchema.parse(serverId);
@@ -149,13 +155,14 @@ export async function reconcileRemovedGuilds(
         continue;
       }
 
-      if (utcDateKey(existing.firstDetectedAt) >= nowDateKey) {
+      const elapsedMs = nowMs - existing.firstDetectedAt.getTime();
+      if (elapsedMs < CONFIRMATION_DELAY_MS) {
         await db.guildRemovalCandidate.update({
           where: { serverId: guildId },
           data: { lastCheckedAt: now },
         });
         logger.warn(
-          `[ReconcileGuilds] Guild ${serverId} returned Unknown Guild again on the same day it was first seen - waiting for a later day's run to confirm before cleanup`,
+          `[ReconcileGuilds] Guild ${serverId} returned Unknown Guild again too soon after first sighting (${elapsedMs.toString()}ms) - waiting for ${CONFIRMATION_DELAY_MS.toString()}ms to elapse before confirming cleanup`,
         );
         continue;
       }
