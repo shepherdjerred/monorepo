@@ -1433,11 +1433,11 @@ export class Monorepo {
   }
 
   /**
-   * Poll the ArgoCD resource API until the specified resource returns 404
-   * (i.e., fully deleted including finalizer completion). Fail if it is still
-   * present after timeoutSeconds. Use between an ArgoCD sync step that prunes
-   * a resource with a finalizer and any downstream step that depends on the
-   * resource being gone.
+   * Poll ArgoCD's application resource tree until no resource matching
+   * group/version/kind/namespace remains (i.e., fully deleted including
+   * finalizer completion). Fail if any still match after timeoutSeconds. Use
+   * between an ArgoCD sync step that prunes a resource with a finalizer and
+   * any downstream step that depends on the resource being gone.
    */
   @func({ cache: "never" })
   async argoCdWaitForResourceDeletion(
@@ -1446,7 +1446,6 @@ export class Monorepo {
     version: string,
     kind: string,
     namespace: string,
-    resourceName: string,
     argoCdToken: Secret,
     timeoutSeconds: number = 120,
     serverUrl: string = "https://argocd.sjer.red",
@@ -1458,7 +1457,6 @@ export class Monorepo {
       version,
       kind,
       namespace,
-      resourceName,
       argoCdToken,
       timeoutSeconds,
       serverUrl,

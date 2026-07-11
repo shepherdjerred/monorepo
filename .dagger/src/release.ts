@@ -1037,11 +1037,18 @@ export function deployStaticSiteHelper(
 // ---------------------------------------------------------------------------
 
 /**
- * Poll the ArgoCD resource API until the specified resource is fully deleted
- * (i.e., the endpoint returns 404, meaning the finalizer has run and the K8s
- * object is gone). Use this after a sync that prunes a resource with a
- * finalizer to confirm the finalizer has completed before downstream steps
+ * Poll ArgoCD's application resource tree until no resource matching the
+ * given group/version/kind/namespace remains (i.e. the finalizer has run and
+ * the K8s object is gone). Use this after a sync that prunes a resource with
+ * a finalizer to confirm the finalizer has completed before downstream steps
  * that depend on the resource being gone.
+ *
+ * Filters by group/version/kind/namespace rather than an exact resource name:
+ * cdk8s ApiObjects without an explicit `metadata.name` get a hash-suffixed
+ * name from `Names.toDnsLabel` (id + `-<addr-hash>`) once nested under a
+ * Chart, so a name guessed from the construct id would not match the live
+ * object and this gate would 404 (treat it as already deleted) while the
+ * resource — and its finalizer — is still there.
  */
 export function waitForArgoCdResourceDeletionHelper(
   appName: string,
@@ -1049,30 +1056,28 @@ export function waitForArgoCdResourceDeletionHelper(
   version: string,
   kind: string,
   namespace: string,
-  resourceName: string,
   argoCdToken: Secret,
   timeoutSeconds: number = 120,
   serverUrl: string = "https://argocd.sjer.red",
   dryrun = false,
 ): Container {
+  const label = `${kind} (group=${group}, ns=${namespace})`;
   if (dryrun) {
     return dag
       .container()
       .from(ALPINE_IMAGE)
       .withExec([
         "echo",
-        `DRYRUN: would wait for ${kind}/${resourceName} in ${namespace} to be deleted from ArgoCD app ${appName}`,
+        `DRYRUN: would wait for all ${label} to be deleted from ArgoCD app ${appName}`,
       ]);
   }
   // NOTE: The URL is constructed in TypeScript and embedded as a literal in the
   // shell script to avoid shell quoting issues with query string parameters.
-  const resourceUrl =
-    `${serverUrl}/api/v1/applications/${appName}/resource` +
-    `?group=${encodeURIComponent(group)}&version=${encodeURIComponent(version)}&kind=${encodeURIComponent(kind)}&namespace=${encodeURIComponent(namespace)}&resourceName=${encodeURIComponent(resourceName)}`;
+  const appUrl = `${serverUrl}/api/v1/applications/${appName}`;
   return dag
     .container()
     .from(ALPINE_IMAGE)
-    .withExec(["apk", "add", "--no-cache", "curl"])
+    .withExec(["apk", "add", "--no-cache", "curl", "jq"])
     .withSecretVariable("ARGOCD_TOKEN", argoCdToken)
     .withExec([
       "sh",
@@ -1080,22 +1085,30 @@ export function waitForArgoCdResourceDeletionHelper(
       `set -eu
 elapsed=0
 while [ "$elapsed" -lt ${timeoutSeconds} ]; do
-  http=$(curl -sS --max-redirs 3 -o /dev/null -w '%{http_code}' \\
+  http=$(curl -sS -L --max-redirs 3 -o /tmp/argocd-resp -w '%{http_code}' \\
     -H "Authorization: Bearer $ARGOCD_TOKEN" \\
-    "${resourceUrl}") || { echo "curl error (elapsed=$elapsed)"; exit 1; }
-  echo "${kind}/${resourceName} in ${namespace}: HTTP $http ($elapsed/${timeoutSeconds}s)"
-  if [ "$http" = "404" ]; then
-    echo "${kind}/${resourceName} is fully deleted."
-    exit 0
-  fi
+    "${appUrl}")
   if [ "$http" != "200" ]; then
-    echo "ERROR: unexpected HTTP $http from ArgoCD — failing fast"
+    echo "ERROR: ${appUrl} returned HTTP $http"
+    if [ -s /tmp/argocd-resp ]; then
+      echo "Response body (first 1KB):"
+      head -c 1024 /tmp/argocd-resp
+      echo
+    fi
     exit 1
+  fi
+  remaining=$(jq -r \\
+    '[.status.resources[]? | select(.group == "${group}" and .version == "${version}" and .kind == "${kind}" and .namespace == "${namespace}")] | length' \\
+    /tmp/argocd-resp)
+  echo "${label}: $remaining remaining ($elapsed/${timeoutSeconds}s)"
+  if [ "$remaining" = "0" ]; then
+    echo "${label} is fully deleted."
+    exit 0
   fi
   sleep 10
   elapsed=$((elapsed + 10))
 done
-echo "Timeout: ${kind}/${resourceName} in ${namespace} was not deleted within ${timeoutSeconds}s"
+echo "Timeout: ${label} was not fully deleted within ${timeoutSeconds}s"
 exit 1`,
     ]);
 }

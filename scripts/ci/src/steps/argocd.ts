@@ -54,12 +54,16 @@ export function argoCdSyncAndWaitStep(
  *
  * ArgoCD's health-wait does not guarantee that finalizers on pruned resources
  * have completed — it only checks the health of remaining resources. This step
- * explicitly polls the ArgoCD resource API until the TunnelBinding returns 404,
- * confirming the Cloudflare tunnel operator's finalizer has removed the ingress
- * route.
+ * explicitly polls ArgoCD's resource tree until no TunnelBinding remains in the
+ * seaweedfs namespace, confirming the Cloudflare tunnel operator's finalizer has
+ * removed the ingress route. It filters by group/version/kind/namespace rather
+ * than an exact resource name, since the removed cdk8s construct never pinned
+ * `metadata.name` — the live object's name is a hash-suffixed value from
+ * `Names.toDnsLabel`, not the construct id.
  *
  * After this PR is fully deployed and the TunnelBinding no longer exists in the
- * codebase, this step completes immediately (ArgoCD returns 404 on the first poll).
+ * codebase, this step completes immediately (ArgoCD reports zero matches on the
+ * first poll).
  */
 export function waitForTunnelBindingDeletionStep(
   dependsOnKey: string,
@@ -76,7 +80,6 @@ export function waitForTunnelBindingDeletionStep(
       ` --version v1alpha1` +
       ` --kind TunnelBinding` +
       ` --namespace seaweedfs` +
-      ` --resource-name seaweedfs-s3-cf-tunnel` +
       ` --argo-cd-token env:ARGOCD_AUTH_TOKEN` +
       ` --timeout-seconds 120` +
       DRYRUN_FLAG,
