@@ -142,7 +142,21 @@ function orderAndLimitDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
   const out: ReportDiagnostic[] = [];
   if (ast.orderBy !== undefined) {
     const { metric, direction } = ast.orderBy;
-    if (!ReportOrderBySchema.safeParse(metric.value).success) {
+    const groupByClause =
+      ast.groupBy === undefined
+        ? undefined
+        : parseGroupByClause(ast.groupBy.value);
+    // The grouping column may be ordered by any of its names (`label`, `group`
+    // /`pair`, or the groupBy field) — the compiler canonicalizes them to
+    // `label`, so accept them here too instead of flagging a false error.
+    const labelNames =
+      groupByClause === undefined
+        ? new Set(["label"])
+        : groupingColumnNames(groupByClause.groupBy);
+    if (
+      !labelNames.has(metric.value) &&
+      !ReportOrderBySchema.safeParse(metric.value).success
+    ) {
       out.push(
         error(`Unknown ORDER BY target "${metric.value}".`, metric.span),
       );

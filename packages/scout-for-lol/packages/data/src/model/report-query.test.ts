@@ -63,6 +63,16 @@ describe("parseAndCompile", () => {
     expect(plan.render.kind).toBe("LEADERBOARD");
   });
 
+  test("canonicalizes ORDER BY on the group label column to label", () => {
+    for (const orderTarget of ["group", "pair", "label"]) {
+      const plan = parseAndCompile(
+        `SELECT group, games FROM player_groups GROUP BY group(2) ORDER BY ${orderTarget} ASC`,
+      );
+      expect(plan.orderBy).toBe("label");
+      expect(plan.orderDirection).toBe("asc");
+    }
+  });
+
   test("rejects out-of-range and malformed group sizes", () => {
     for (const bad of ["group(1)", "group(6)", "group()", "group(foo)"]) {
       expect(() =>
@@ -245,6 +255,15 @@ describe("lintReportQuery", () => {
       "select games, win_rate from match_participants where queue in (solo) group by player order by games desc limit 10",
     );
     expect(diagnostics).toHaveLength(0);
+  });
+
+  test("does not flag ORDER BY on the group label column", () => {
+    for (const orderTarget of ["group", "pair", "label"]) {
+      const diagnostics = lintReportQuery(
+        `select group, games from player_groups group by group(2) order by ${orderTarget} asc`,
+      );
+      expect(diagnostics).toHaveLength(0);
+    }
   });
 });
 

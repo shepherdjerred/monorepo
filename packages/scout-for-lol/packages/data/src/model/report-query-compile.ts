@@ -119,7 +119,14 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
   const orderBy =
     ast.orderBy === undefined
       ? "games"
-      : ReportOrderBySchema.parse(ast.orderBy.metric.value);
+      : // The grouping column can be referenced by any of its names (`group` /
+        // `pair` alias for group queries, or the groupBy field name) — all
+        // canonicalize to `label`, the same column those names select. This
+        // matches SELECT and RENDER x, which already accept these via
+        // `groupingColumnNames`.
+        labelNames.has(ast.orderBy.metric.value)
+        ? "label"
+        : ReportOrderBySchema.parse(ast.orderBy.metric.value);
   const orderDirection =
     ast.orderBy?.direction === undefined
       ? "desc"
