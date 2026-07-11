@@ -34,9 +34,7 @@ packages/discord-stream-lifecycle:build
 packages/trmnl-dashboard:build
 packages/tasks-for-obsidian:build
 packages/starlight-karma-bot:build
-packages/starlight-karma-bot:test
 packages/tasknotes-types:build
-packages/cooklang-for-obsidian:test
 packages/cooklang-rich-preview:test
 packages/stocks-sjer-red:test
 packages/discord-video-stream:lint

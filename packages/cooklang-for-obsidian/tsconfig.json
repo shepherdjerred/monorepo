@@ -9,7 +9,8 @@
     "allowJs": true,
     "importHelpers": true,
     "noEmit": true,
-    "lib": ["DOM", "ES2021"]
+    "lib": ["DOM", "ES2021"],
+    "types": ["node", "bun-types"]
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "test/**/*.ts"]
 }

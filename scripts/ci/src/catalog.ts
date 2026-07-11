@@ -494,10 +494,8 @@ export const NO_LINT_PACKAGES = new Set<string>(["discord-video-stream"]);
 
 export const NO_TEST_PACKAGES = new Set<string>([
   "leetcode",
-  "cooklang-for-obsidian",
   "cooklang-rich-preview",
   "stocks-sjer-red",
-  "starlight-karma-bot",
 ]);
 
 /** Packages that need `bun run generate` before lint/typecheck/test (Prisma). */
