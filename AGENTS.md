@@ -183,7 +183,8 @@ If a command legitimately needs error handling, handle the specific error explic
 
 ```bash
 # Package-specific (DEFAULT — scope verification to the packages you touched; see Verification)
-bun run --filter='./packages/<name>' <script>
+cd packages/<name> && bun run <script>
+# (or `bun run --filter='./packages/<name>' <script>` if the package is registered as a Bun workspace from the repo root)
 
 # Root commands (repo-wide fan-out over ~35 packages — only for genuinely repo-wide
 # changes, and never from multiple concurrent sessions; see Verification)
@@ -245,13 +246,13 @@ Optional tools (warned if missing): helm, swift, swiftlint, swiftformat, typesha
 
 Always verify changes, **scoped to the packages you touched**:
 
-1. `bun run --filter='./packages/<name>' typecheck` - Type errors (or `cd packages/<name> && bun run typecheck`)
-2. `bun run --filter='./packages/<name>' test` - Test failures
+1. `cd packages/<name> && bun run typecheck` - Type errors (or `bun run --filter='./packages/<name>' typecheck` if the package is registered as a Bun workspace from the repo root)
+2. `cd packages/<name> && bun run test` - Test failures
 3. `bunx eslint . --fix` - Lint issues (in relevant package)
 4. Python (any `.py` change): `uvx ruff check .` and `bash scripts/pyright-check.sh` from the repo root (root `ruff.toml` + `pyrightconfig.json`; the pyright script bootstraps a `.venv` from `scripts/python-dev-requirements.txt`)
 5. Rust (scout desktop): `cd packages/scout-for-lol/packages/desktop/src-tauri && cargo fmt --check && cargo clippy --all-targets --all-features -- -D warnings` (CI runs these plus `cargo test` as the `scout-desktop-rust` step)
 
-**Repo-wide runs (`bun run typecheck|test|build` at the root) are reserved for genuinely repo-wide changes** (shared config, eslint-config, root scripts, cross-package refactors) — and even then, run at most one at a time. A root run fans out over ~35 packages, each spawning its own node/bun toolchain; several sessions doing this concurrently has frozen the whole machine (6,000+ processes and 20-30 GB of anonymous memory materializing within seconds → macOS jetsam freeze; see `packages/docs/logs/2026-07-11_macbook-hang-jetsam-investigation.md`). If other heavy agent sessions are active, scope your verification with `--filter` instead. Rely on CI for the exhaustive cross-package pass.
+**Repo-wide runs (`bun run typecheck|test|build` at the root) are reserved for genuinely repo-wide changes** (shared config, eslint-config, root scripts, cross-package refactors) — and even then, run at most one at a time. A root run fans out over ~35 packages, each spawning its own node/bun toolchain; several sessions doing this concurrently has frozen the whole machine (6,000+ processes and 20-30 GB of anonymous memory materializing within seconds → macOS jetsam freeze; see `packages/docs/logs/2026-07-11_macbook-hang-jetsam-investigation.md`). If other heavy agent sessions are active, scope your verification to the touched package (`cd packages/<name> && bun run ...`) instead. Rely on CI for the exhaustive cross-package pass.
 
 Automation code is linted too: `scripts/`, `scripts/ci/`, and `.dagger/` each have an `eslint.config.ts` consuming the shared config (CI runs them as the `eslint-automation` quality-bundle child). No-op package scripts (`"lint": "true"`) are banned by `scripts/compliance-check.sh` — a package with nothing to lint/test gets a documented exemption there instead.
 

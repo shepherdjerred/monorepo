@@ -67,7 +67,7 @@ my-monorepo/
 
 ### Fan-out cost — scope scripts to the packages you touched
 
-Root scripts like the above fan out over every workspace package, each booting its own node/bun toolchain (tsc, eslint, test runners — ~100 MB+ each). In a large monorepo (~35 packages in shepherdjerred/monorepo), **multiple concurrent sessions each running a root-level `typecheck`/`build`/`test` has frozen the machine** (6,000+ processes, 20-30 GB of anonymous memory within seconds → macOS jetsam freeze; see `packages/docs/logs/2026-07-11_macbook-hang-jetsam-investigation.md`). Default to scoping: `bun run --filter='./packages/<name>' <script>`. Reserve repo-wide runs for genuinely repo-wide changes, one at a time machine-wide; CI does the exhaustive pass.
+Root scripts like the above fan out over every workspace package, each booting its own node/bun toolchain (tsc, eslint, test runners — ~100 MB+ each). In a large monorepo (~35 packages in shepherdjerred/monorepo), **multiple concurrent sessions each running a root-level `typecheck`/`build`/`test` has frozen the machine** (6,000+ processes, 20-30 GB of anonymous memory within seconds → macOS jetsam freeze; see `packages/docs/logs/2026-07-11_macbook-hang-jetsam-investigation.md`). Default to scoping: `cd packages/<name> && bun run <script>` (or `bun run --filter='./packages/<name>' <script>` if the package is registered as a Bun workspace from the repo root — the `cd` form is reliable regardless). Reserve repo-wide runs for genuinely repo-wide changes, one at a time machine-wide; CI does the exhaustive pass.
 
 ### Glob Patterns
 
