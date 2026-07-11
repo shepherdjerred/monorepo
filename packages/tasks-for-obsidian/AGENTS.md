@@ -78,6 +78,17 @@ usual culprit — it only runs in Release/Archive, so simulator debug builds pas
 while Archive fails. See the `xcode-cloud-debug` skill for the full workflow and
 the known `@tasknotes/model` resolution failure.
 
+### CI guard against Archive bundle failures
+
+`bun run check:release-bundle` (`scripts/check-release-bundle.ts`) runs the exact
+Release Metro bundle Xcode Cloud runs during Archive — pure JS, so it runs in the
+Linux Buildkite container. It's wired into the `:iphone: iOS Native Deps + Release
+Bundle` CI step (Dagger `tasks-for-obsidian-ios-native-deps`), which installs
+`tasknotes-types` + the app like `ci_post_clone.sh`, then bundles. An unresolvable
+import (from any package) fails CI **before** it reaches Xcode Cloud. If you add a
+new source-only `file:` dep, install it in both `ci_post_clone.sh` and the Dagger
+helper — the guard stays red until you do.
+
 ## iOS Build Troubleshooting
 
 Try these in order (least to most destructive):

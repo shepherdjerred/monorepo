@@ -56,6 +56,27 @@ bundle command locally — it now produces a 12 MB `main.jsbundle` (previously t
 - `packages/tasks-for-obsidian/AGENTS.md` — Xcode Cloud section documents the dual-install
   requirement and the log-pulling script.
 
+## Guard against recurrence (added after the fix)
+
+A CI guard that reproduces the exact failure pre-merge, so this class of bug can't
+reach Xcode Cloud again:
+
+- `packages/tasks-for-obsidian/scripts/check-release-bundle.ts` + `check:release-bundle`
+  script — runs the **Release Metro bundle** (`--dev false`, the Archive path) under
+  `bun` (pure JS, no macOS), asserts a full (>1 MB) bundle. Proven both ways: passes with
+  deps present (12 MB bundle), fails with `UnableToResolveError` + actionable message when
+  `tasknotes-types/node_modules` is missing the dep.
+- `.dagger/src/quality.ts` `tasksForObsidianIosNativeDepsHelper` — now installs
+  `tasknotes-types` + the app (mirrors `ci_post_clone.sh`) and runs both
+  `check:ios-native-deps` and `check:release-bundle`.
+- `scripts/ci/src/steps/per-package.ts` — step relabeled `:iphone: iOS Native Deps + Release
+Bundle`, timeout 10→15 min. Existing tests key off the step `key` (unchanged); all 313
+  CI-generator tests pass.
+
+Why a real bundle rather than a static check: the bundle is the independent oracle — it's
+exactly what fails on the worker, and it catches **any** future unresolvable source-only
+import, not just `@tasknotes/model`.
+
 ## 1Password
 
 Created item **"App Store Connect API — Xcode Cloud"** in the **Personal** vault
@@ -73,18 +94,21 @@ byte-identical to the downloaded `.p8`.
 - Verified the fix: exact Release Metro bundle command builds a 12 MB `main.jsbundle`.
 - Shipped `scripts/xcode-cloud-logs.ts` (typecheck + eslint clean; tested `runs` + `logs latest-failed`).
 - Added `xcode-cloud-debug` skill (+ live deploy) and updated `AGENTS.md`; `.gitignore` for log output.
-- Stored the App Store Connect API key in 1Password (Personal).
+- Stored the App Store Connect API key in 1Password (Personal); deleted the plaintext `.p8` from `~/Downloads`.
+- Built the recurrence guard: `check:release-bundle` (real Release Metro bundle) wired into the
+  `:iphone: iOS Native Deps + Release Bundle` Dagger/Buildkite step. Verified pass + fail; 313 CI-gen tests pass.
 
 ### Remaining
 
 - Merge the PR, then re-run the Xcode Cloud workflow (or push to trigger it) to confirm a green Archive + TestFlight upload.
-- Delete the plaintext `.p8` at `~/Downloads/AuthKey_254JA3KTG2.p8` (redundant now it's in 1Password) — awaiting user OK.
 
 ### Caveats
 
 - The lockfiles were **not** the fix — `bun install` in the app does not pull a `file:` dep's
   transitive deps; the tasknotes-types `node_modules` install is what matters. Don't "fix" this by
   regenerating the app lockfile.
-- Any future source-only `file:` dep the app's bundle imports will need the same treatment in
-  `ci_post_clone.sh`. A CI guard/test that asserts every consumed source-only dep's transitive
-  imports resolve would prevent recurrence (candidate: extend `scripts/check-ios-native-deps.ts`).
+- Any future source-only `file:` dep the app's bundle imports needs installing in **both**
+  `ci_post_clone.sh` and the Dagger helper. This is no longer silent: the `check:release-bundle`
+  guard turns CI red until both are wired. The bundle runs under `bun` in the Linux CI container
+  (verified locally); if a future RN/Metro version stops running under bun, the guard step would
+  need `node` added to the Dagger base.

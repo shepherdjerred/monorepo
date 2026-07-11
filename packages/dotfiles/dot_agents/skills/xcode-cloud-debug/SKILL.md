@@ -96,6 +96,16 @@ populated. This generalizes: **any source-only `file:` dep the bundle imports
 needs its own `bun install` on the worker.** Also keep the app's `bun.lock`
 regenerated whenever a consumed workspace package gains a new dependency.
 
+**Guard (catches this class pre-merge):** `bun run check:release-bundle`
+(`scripts/check-release-bundle.ts`) runs the exact Release Metro bundle — the
+same one Xcode Cloud runs during Archive, but pure JS so it works in the Linux
+Buildkite container. It's wired into the `:iphone: iOS Native Deps + Release
+Bundle` step (Dagger `tasks-for-obsidian-ios-native-deps`), which installs
+`tasknotes-types` + the app exactly like `ci_post_clone.sh` and then bundles. Any
+unresolvable import (from any package) fails CI before it reaches Xcode Cloud. Run
+it locally the same way. If you add a new source-only `file:` dep, install it in
+both `ci_post_clone.sh` and the Dagger helper — the guard will go red until you do.
+
 ## 4. Reproduce the Archive JS bundle locally
 
 You don't need Xcode Cloud to reproduce a bundle-phase failure — run the exact
