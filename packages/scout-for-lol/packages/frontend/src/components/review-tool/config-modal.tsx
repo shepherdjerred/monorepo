@@ -6,6 +6,7 @@ import { z } from "zod";
 import type { GlobalConfig } from "#src/lib/review-tool/config/schema.ts";
 import { ApiSettingsPanel } from "./api-settings-panel.tsx";
 import { resetToDefaults } from "#src/lib/review-tool/reset-defaults.ts";
+import { ReviewToolModal } from "./review-tool-modal.tsx";
 
 const ErrorSchema = z.object({ message: z.string() });
 
@@ -60,65 +61,13 @@ export function ConfigModal({
   const hasDataToReset = Object.values(preview).some((count) => count > 0);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      {/* Backdrop */}
-      <div
-        role="button"
-        tabIndex={0}
-        className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-all"
-        onClick={onClose}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            onClose();
-          }
-        }}
-      />
-
-      {/* Modal */}
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-        >
-          {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-surface-200 px-6 py-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-surface-900">
-                API Configuration
-              </h2>
-              <p className="text-sm text-surface-500 mt-1">
-                API keys and external service configuration
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-surface-400 hover:text-surface-600 transition-colors"
-              title="Close"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="p-6">
-            <ApiSettingsPanel config={globalConfig} onChange={onGlobalChange} />
-          </div>
-
-          {/* Footer */}
+    <>
+      <ReviewToolModal
+        title="API Configuration"
+        subtitle="API keys and external service configuration"
+        onClose={onClose}
+        maxWidthClassName="max-w-2xl"
+        footer={
           <div className="sticky bottom-0 bg-surface-50 border-t border-surface-200 px-6 py-4 flex justify-between items-center">
             <button
               onClick={handleResetClick}
@@ -147,8 +96,13 @@ export function ConfigModal({
               Done
             </button>
           </div>
+        }
+      >
+        {/* Content */}
+        <div className="p-6">
+          <ApiSettingsPanel config={globalConfig} onChange={onGlobalChange} />
         </div>
-      </div>
+      </ReviewToolModal>
 
       {/* Reset Confirmation Dialog */}
       {showResetConfirm && (
@@ -256,6 +210,6 @@ export function ConfigModal({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

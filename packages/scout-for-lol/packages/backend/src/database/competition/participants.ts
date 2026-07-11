@@ -11,6 +11,35 @@ import { isCompetitionActive } from "#src/database/competition/validation.ts";
 import { match } from "ts-pattern";
 
 // ============================================================================
+// Shared lookups
+// ============================================================================
+
+/**
+ * The composite unique key used to address a single participant row. Branded
+ * `CompetitionId`/`PlayerId` values widen to `number` on the way in.
+ */
+function participantKey(
+  competitionId: number,
+  playerId: number,
+): { competitionId_playerId: { competitionId: number; playerId: number } } {
+  return { competitionId_playerId: { competitionId, playerId } };
+}
+
+/**
+ * Look up a single participant row by (competitionId, playerId), or `null` if
+ * none exists. Callers apply their own not-found / status handling.
+ */
+function findParticipant(
+  prisma: ExtendedPrismaClient,
+  competitionId: number,
+  playerId: number,
+): Promise<CompetitionParticipant | null> {
+  return prisma.competitionParticipant.findUnique({
+    where: participantKey(competitionId, playerId),
+  });
+}
+
+// ============================================================================
 // Add Participant
 // ============================================================================
 
@@ -72,14 +101,7 @@ export async function addParticipant(options: {
   }
 
   // Check if participant already exists
-  const existing = await prisma.competitionParticipant.findUnique({
-    where: {
-      competitionId_playerId: {
-        competitionId,
-        playerId,
-      },
-    },
-  });
+  const existing = await findParticipant(prisma, competitionId, playerId);
 
   if (existing) {
     // If they previously left, they cannot rejoin
@@ -125,14 +147,7 @@ export async function acceptInvitation(
   competitionId: number,
   playerId: number,
 ): Promise<CompetitionParticipant> {
-  const participant = await prisma.competitionParticipant.findUnique({
-    where: {
-      competitionId_playerId: {
-        competitionId,
-        playerId,
-      },
-    },
-  });
+  const participant = await findParticipant(prisma, competitionId, playerId);
 
   if (!participant) {
     throw new Error("Participant not found");
@@ -145,12 +160,7 @@ export async function acceptInvitation(
   }
 
   return await prisma.competitionParticipant.update({
-    where: {
-      competitionId_playerId: {
-        competitionId,
-        playerId,
-      },
-    },
+    where: participantKey(competitionId, playerId),
     data: {
       status: "JOINED",
       joinedAt: new Date(),
@@ -176,14 +186,7 @@ export async function removeParticipant(
   competitionId: number,
   playerId: number,
 ): Promise<CompetitionParticipant> {
-  const participant = await prisma.competitionParticipant.findUnique({
-    where: {
-      competitionId_playerId: {
-        competitionId,
-        playerId,
-      },
-    },
-  });
+  const participant = await findParticipant(prisma, competitionId, playerId);
 
   if (!participant) {
     throw new Error(
@@ -196,12 +199,7 @@ export async function removeParticipant(
   }
 
   return await prisma.competitionParticipant.update({
-    where: {
-      competitionId_playerId: {
-        competitionId,
-        playerId,
-      },
-    },
+    where: participantKey(competitionId, playerId),
     data: {
       status: "LEFT",
       leftAt: new Date(),
@@ -254,12 +252,7 @@ export async function getParticipantStatus(
   playerId: number,
 ): Promise<ParticipantStatus | null> {
   const participant = await prisma.competitionParticipant.findUnique({
-    where: {
-      competitionId_playerId: {
-        competitionId,
-        playerId,
-      },
-    },
+    where: participantKey(competitionId, playerId),
     select: {
       status: true,
     },
@@ -328,14 +321,11 @@ export async function canJoinCompetition(
   }
 
   // Check if player is already a participant
-  const existingParticipant = await prisma.competitionParticipant.findUnique({
-    where: {
-      competitionId_playerId: {
-        competitionId,
-        playerId,
-      },
-    },
-  });
+  const existingParticipant = await findParticipant(
+    prisma,
+    competitionId,
+    playerId,
+  );
 
   if (existingParticipant) {
     return match(existingParticipant.status)

@@ -39,7 +39,8 @@ import {
 } from "#src/lib/subscription/filters.ts";
 import { listSubscriptions } from "#src/lib/subscription/list.ts";
 import { ListSubscriptionsInputSchema } from "#src/lib/subscription/types.ts";
-import { recordAudit, AuditActionSchema } from "#src/lib/audit/index.ts";
+import { AuditActionSchema } from "#src/lib/audit/index.ts";
+import { runAuditedMutation } from "#src/lib/audit/audited-mutation.ts";
 
 const GuildIdInput = z.object({ guildId: DiscordGuildIdSchema });
 
@@ -138,46 +139,40 @@ export const subscriptionRouter = router({
         tag_line: puuidResult.tagLine,
       };
 
-      const result = await prisma.$transaction(async (tx) => {
-        const r = await addSubscription(
-          {
-            guildId: input.guildId,
-            channelId: input.channelId,
-            region: input.region,
-            riotId: canonicalRiotId,
-            alias: input.alias,
-            discordUserId: input.discordUserId,
-            creatorDiscordId: actorDiscordId,
-            filters: input.filters ?? null,
-          },
-          puuid,
-          tx,
-        );
-
-        if (r.kind === "created") {
-          await recordAudit(
+      const result = await runAuditedMutation(
+        ctx,
+        input.guildId,
+        (tx) =>
+          addSubscription(
             {
-              action: "SUBSCRIPTION_ADD",
-              actorDiscordId,
-              serverId: input.guildId,
-              targetChannelId: input.channelId,
-              targetPlayerId: r.player.id,
-              targetAccountId: r.account.id,
-              payload: {
-                riotId: input.riotId,
-                region: input.region,
-                alias: input.alias,
-                isAddingToExistingPlayer: r.isAddingToExistingPlayer,
-              },
-              ipAddress: ctx.webSession.ipAddress,
-              userAgent: ctx.webSession.userAgent,
+              guildId: input.guildId,
+              channelId: input.channelId,
+              region: input.region,
+              riotId: canonicalRiotId,
+              alias: input.alias,
+              discordUserId: input.discordUserId,
+              creatorDiscordId: actorDiscordId,
+              filters: input.filters ?? null,
             },
+            puuid,
             tx,
-          );
-        }
-
-        return r;
-      });
+          ),
+        (r) =>
+          r.kind === "created"
+            ? {
+                action: "SUBSCRIPTION_ADD",
+                targetChannelId: input.channelId,
+                targetPlayerId: r.player.id,
+                targetAccountId: r.account.id,
+                payload: {
+                  riotId: input.riotId,
+                  region: input.region,
+                  alias: input.alias,
+                  isAddingToExistingPlayer: r.isAddingToExistingPlayer,
+                },
+              }
+            : null,
+      );
 
       if (result.kind === "created") {
         // Best-effort match-history backfill so the poll cycle doesn't
@@ -207,37 +202,31 @@ export const subscriptionRouter = router({
       await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
       const actorDiscordId = ctx.user.discordId;
 
-      return prisma.$transaction(async (tx) => {
-        const result = await removeSubscription(
-          {
-            guildId: input.guildId,
-            channelId: input.channelId,
-            alias: input.alias,
-            actorDiscordId,
-          },
-          tx,
-        );
-
-        if (result.kind === "removed") {
-          await recordAudit(
+      return runAuditedMutation(
+        ctx,
+        input.guildId,
+        (tx) =>
+          removeSubscription(
             {
-              action: "SUBSCRIPTION_REMOVE",
+              guildId: input.guildId,
+              channelId: input.channelId,
+              alias: input.alias,
               actorDiscordId,
-              serverId: input.guildId,
-              targetChannelId: input.channelId,
-              payload: {
-                alias: input.alias,
-                remainingChannelIds: result.remainingChannelIds,
-              },
-              ipAddress: ctx.webSession.ipAddress,
-              userAgent: ctx.webSession.userAgent,
             },
             tx,
-          );
-        }
-
-        return result;
-      });
+          ),
+        (result) =>
+          result.kind === "removed"
+            ? {
+                action: "SUBSCRIPTION_REMOVE",
+                targetChannelId: input.channelId,
+                payload: {
+                  alias: input.alias,
+                  remainingChannelIds: result.remainingChannelIds,
+                },
+              }
+            : null,
+      );
     }),
 
   addChannel: webMutationProcedure
@@ -256,34 +245,28 @@ export const subscriptionRouter = router({
       });
       const actorDiscordId = ctx.user.discordId;
 
-      return prisma.$transaction(async (tx) => {
-        const result = await addSubscriptionChannel(
-          {
-            guildId: input.guildId,
-            alias: input.alias,
-            channelId: input.channelId,
-            actorDiscordId,
-          },
-          tx,
-        );
-
-        if (result.kind === "added") {
-          await recordAudit(
+      return runAuditedMutation(
+        ctx,
+        input.guildId,
+        (tx) =>
+          addSubscriptionChannel(
             {
-              action: "SUBSCRIPTION_ADD_CHANNEL",
+              guildId: input.guildId,
+              alias: input.alias,
+              channelId: input.channelId,
               actorDiscordId,
-              serverId: input.guildId,
-              targetChannelId: input.channelId,
-              payload: { alias: input.alias },
-              ipAddress: ctx.webSession.ipAddress,
-              userAgent: ctx.webSession.userAgent,
             },
             tx,
-          );
-        }
-
-        return result;
-      });
+          ),
+        (result) =>
+          result.kind === "added"
+            ? {
+                action: "SUBSCRIPTION_ADD_CHANNEL",
+                targetChannelId: input.channelId,
+                payload: { alias: input.alias },
+              }
+            : null,
+      );
     }),
 
   move: webMutationProcedure
@@ -314,38 +297,32 @@ export const subscriptionRouter = router({
         });
       }
 
-      return prisma.$transaction(async (tx) => {
-        const result = await moveSubscription(
-          {
-            guildId: input.guildId,
-            alias: input.alias,
-            fromChannelId: input.fromChannelId,
-            toChannelId: input.toChannelId,
-            actorDiscordId,
-          },
-          tx,
-        );
-
-        if (result.kind === "moved") {
-          await recordAudit(
+      return runAuditedMutation(
+        ctx,
+        input.guildId,
+        (tx) =>
+          moveSubscription(
             {
-              action: "SUBSCRIPTION_MOVE",
+              guildId: input.guildId,
+              alias: input.alias,
+              fromChannelId: input.fromChannelId,
+              toChannelId: input.toChannelId,
               actorDiscordId,
-              serverId: input.guildId,
-              payload: {
-                alias: input.alias,
-                fromChannelId: input.fromChannelId,
-                toChannelId: input.toChannelId,
-              },
-              ipAddress: ctx.webSession.ipAddress,
-              userAgent: ctx.webSession.userAgent,
             },
             tx,
-          );
-        }
-
-        return result;
-      });
+          ),
+        (result) =>
+          result.kind === "moved"
+            ? {
+                action: "SUBSCRIPTION_MOVE",
+                payload: {
+                  alias: input.alias,
+                  fromChannelId: input.fromChannelId,
+                  toChannelId: input.toChannelId,
+                },
+              }
+            : null,
+      );
     }),
 
   setFilters: webMutationProcedure
@@ -365,35 +342,29 @@ export const subscriptionRouter = router({
       });
       const actorDiscordId = ctx.user.discordId;
 
-      return prisma.$transaction(async (tx) => {
-        const result = await setSubscriptionFilters(
-          {
-            guildId: input.guildId,
-            channelId: input.channelId,
-            alias: input.alias,
-            filters: input.filters,
-            actorDiscordId,
-          },
-          tx,
-        );
-
-        if (result.kind === "updated") {
-          await recordAudit(
+      return runAuditedMutation(
+        ctx,
+        input.guildId,
+        (tx) =>
+          setSubscriptionFilters(
             {
-              action: "SUBSCRIPTION_SET_FILTERS",
+              guildId: input.guildId,
+              channelId: input.channelId,
+              alias: input.alias,
+              filters: input.filters,
               actorDiscordId,
-              serverId: input.guildId,
-              targetChannelId: input.channelId,
-              payload: { alias: input.alias, filters: input.filters },
-              ipAddress: ctx.webSession.ipAddress,
-              userAgent: ctx.webSession.userAgent,
             },
             tx,
-          );
-        }
-
-        return result;
-      });
+          ),
+        (result) =>
+          result.kind === "updated"
+            ? {
+                action: "SUBSCRIPTION_SET_FILTERS",
+                targetChannelId: input.channelId,
+                payload: { alias: input.alias, filters: input.filters },
+              }
+            : null,
+      );
     }),
 
   setChannelFilters: webMutationProcedure
@@ -412,33 +383,27 @@ export const subscriptionRouter = router({
       });
       const actorDiscordId = ctx.user.discordId;
 
-      return prisma.$transaction(async (tx) => {
-        const result = await setChannelFilters(
-          {
-            guildId: input.guildId,
-            channelId: input.channelId,
-            filters: input.filters,
-            actorDiscordId,
-          },
-          tx,
-        );
-
-        if (result.kind === "updated") {
-          await recordAudit(
+      return runAuditedMutation(
+        ctx,
+        input.guildId,
+        (tx) =>
+          setChannelFilters(
             {
-              action: "SUBSCRIPTION_BULK_SET_FILTERS",
+              guildId: input.guildId,
+              channelId: input.channelId,
+              filters: input.filters,
               actorDiscordId,
-              serverId: input.guildId,
-              targetChannelId: input.channelId,
-              payload: { filters: input.filters, count: result.count },
-              ipAddress: ctx.webSession.ipAddress,
-              userAgent: ctx.webSession.userAgent,
             },
             tx,
-          );
-        }
-
-        return result;
-      });
+          ),
+        (result) =>
+          result.kind === "updated"
+            ? {
+                action: "SUBSCRIPTION_BULK_SET_FILTERS",
+                targetChannelId: input.channelId,
+                payload: { filters: input.filters, count: result.count },
+              }
+            : null,
+      );
     }),
 });
