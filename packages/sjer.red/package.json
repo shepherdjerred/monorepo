@@ -12,7 +12,7 @@
     "test:update": "bun run build && bunx playwright test --update-snapshots",
     "lint": "eslint --cache",
     "lint:fix": "eslint --cache --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "astro check && tsc --noEmit"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",

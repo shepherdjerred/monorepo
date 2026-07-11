@@ -22,11 +22,56 @@ import csv
 import json
 import math
 import re
-from datetime import datetime
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, Iterable, List, Set, Tuple
+from typing import TypedDict
+
+
+class AuthorPayload(TypedDict):
+    author: str
+    author_id: str
+    messages: int
+    avg_words: float
+    avg_chars: float
+    median_words: float
+    p90_words: float
+    p90_chars: float
+    lexical_diversity: float
+    word_variety: int
+    hapax_ratio: float
+    avg_word_length: float
+    avg_sentence_words: float
+    top_tokens: list[tuple[str, float]]
+    top_char_trigrams: list[tuple[str, float]]
+    laughter: list[tuple[str, float]]
+    emoji: list[tuple[str, float]]
+    openers1: list[tuple[str, float]]
+    openers2: list[tuple[str, float]]
+    closers1: list[tuple[str, float]]
+    closers2: list[tuple[str, float]]
+    punct: list[tuple[str, float]]
+    repeat_punct: list[tuple[str, float]]
+    question_rate: float
+    exclaim_rate: float
+    ellipsis_rate: float
+    caps_rate: float
+    link_rate: float
+    mention_rate: float
+    quote_rate: float
+    code_rate: float
+    multiline_rate: float
+    stretch_rate: float
+    shout_rate: float
+    typo_rate: float
+    mentions: list[tuple[str, float]]
+    style_markers: list[tuple[str, float]]
+    hour_peaks: list[int]
+    representative: str | None
+    interesting_messages: list[tuple[str, float]]
+    quotes: list[tuple[str, float]]
 
 STOPWORDS = {
     "a",
@@ -116,10 +161,10 @@ STOPWORDS = {
     "youre",
 }
 
-NOISE_TOKENS: Set[str] = {"missing"}
+NOISE_TOKENS: set[str] = {"missing"}
 
 # Rough list of frequent English words to help flag likely typos (very lightweight).
-COMMON_WORDS: Set[str] = {
+COMMON_WORDS: set[str] = {
     "about",
     "after",
     "again",
@@ -196,7 +241,7 @@ COMMON_WORDS: Set[str] = {
 
 # Optional manual overrides for how author IDs should be displayed in output.
 # Example: {"123456789012345678": "Alice"}
-USER_ID_ALIASES: Dict[str, str] = {
+USER_ID_ALIASES: dict[str, str] = {
     "186665676134547461": "Aaron",
     "208425244128444418": "Brian",
     "410595870380392458": "Irfan",
@@ -226,11 +271,11 @@ def resolve_author_name(author_id: str, name: str) -> str:
     return cleaned or "Unknown"
 
 
-def basic_words(text: str) -> List[str]:
+def basic_words(text: str) -> list[str]:
     return [w for w in re.findall(r"[A-Za-z0-9']+", text) if w.lower() not in NOISE_TOKENS]
 
 
-def tokenize(text: str) -> List[str]:
+def tokenize(text: str) -> list[str]:
     lowered = text.lower()
     tokens = re.findall(r"[a-z0-9']+", lowered)
     return [
@@ -242,17 +287,17 @@ def tokenize(text: str) -> List[str]:
     ]
 
 
-def ngrams(tokens: List[str], n: int) -> Iterable[str]:
+def ngrams(tokens: list[str], n: int) -> Iterable[str]:
     for i in range(len(tokens) - n + 1):
         yield " ".join(tokens[i : i + n])
 
 
-def valid_ngram_tokens(tokens: List[str]) -> bool:
+def valid_ngram_tokens(tokens: list[str]) -> bool:
     # Skip phrases that are just repeated noise (e.g., "missing missing").
     return not (tokens and len(set(tokens)) == 1 and tokens[0] in NOISE_TOKENS)
 
 
-def is_repetitive_phrase(tokens: List[str]) -> bool:
+def is_repetitive_phrase(tokens: list[str]) -> bool:
     if len(tokens) < 3:
         return False
     counts = Counter(tokens)
@@ -268,40 +313,29 @@ def read_csv_messages(path: Path, include_bots: bool) -> Iterable[Message]:
             return
         columns = {name: idx for idx, name in enumerate(header)}
 
-        def col(name: str) -> int | None:
-            return columns.get(name)
+        def cell(row: list[str], name: str, default: str) -> str:
+            idx = columns.get(name)
+            return row[idx] if idx is not None else default
 
         for row in reader:
-            content = row[col("content")] if col("content") is not None else ""
+            content = cell(row, "content", "")
             if not content:
                 continue
-            ts_raw = (
-                row[col("timestamp")]
-                if col("timestamp") is not None
-                else (row[col("date")] if col("date") is not None else "")
-            )
+            ts_raw = cell(row, "timestamp", "") or cell(row, "date", "")
             timestamp = None
             if ts_raw:
                 try:
                     timestamp = datetime.fromisoformat(ts_raw.replace("Z", "+00:00"))
                 except ValueError:
                     timestamp = None
-            author_id = (
-                row[col("author.id")] if col("author.id") is not None else "unknown"
-            )
+            author_id = cell(row, "author.id", "unknown")
             raw_author_name = (
-                row[col("author.global_name")]
-                if col("author.global_name") is not None
-                else None
-            ) or (
-                row[col("author.username")]
-                if col("author.username") is not None
-                else None
-            ) or "Unknown"
-            author_name = resolve_author_name(author_id, raw_author_name)
-            bot_flag = (
-                row[col("author.bot")] if col("author.bot") is not None else "false"
+                (cell(row, "author.global_name", "") or None)
+                or (cell(row, "author.username", "") or None)
+                or "Unknown"
             )
+            author_name = resolve_author_name(author_id, raw_author_name)
+            bot_flag = cell(row, "author.bot", "false")
             is_bot = bot_flag.strip().lower() == "true"
             if is_bot and not include_bots:
                 continue
@@ -314,20 +348,20 @@ def read_csv_messages(path: Path, include_bots: bool) -> Iterable[Message]:
             )
 
 
-def walk_csvs(base_dir: Path, guild: str | None) -> List[Path]:
+def walk_csvs(base_dir: Path, guild: str | None) -> list[Path]:
     root = base_dir if guild in (None, "all") else base_dir / guild
     return [p for p in root.rglob("*.csv") if p.is_file()]
 
 
-def compute_tfidf(doc_tokens: Dict[str, Counter]) -> Dict[str, Dict[str, float]]:
+def compute_tfidf(doc_tokens: dict[str, Counter[str]]) -> dict[str, dict[str, float]]:
     doc_count = len(doc_tokens)
     df = Counter()
     for counts in doc_tokens.values():
         df.update(counts.keys())
 
-    tfidf: Dict[str, Dict[str, float]] = {}
+    tfidf: dict[str, dict[str, float]] = {}
     for doc_id, counts in doc_tokens.items():
-        tfidf_doc: Dict[str, float] = {}
+        tfidf_doc: dict[str, float] = {}
         max_tf = max(counts.values()) if counts else 1
         for token, tf in counts.items():
             idf = math.log((1 + doc_count) / (1 + df[token])) + 1.0
@@ -336,7 +370,7 @@ def compute_tfidf(doc_tokens: Dict[str, Counter]) -> Dict[str, Dict[str, float]]
     return tfidf
 
 
-def cosine_similarity(vec_a: Dict[str, float], vec_b: Dict[str, float]) -> float:
+def cosine_similarity(vec_a: dict[str, float], vec_b: dict[str, float]) -> float:
     if not vec_a or not vec_b:
         return 0.0
     common = set(vec_a.keys()) & set(vec_b.keys())
@@ -348,12 +382,14 @@ def cosine_similarity(vec_a: Dict[str, float], vec_b: Dict[str, float]) -> float
     return dot / (norm_a * norm_b)
 
 
-def top_items(counter: Counter | Dict[str, float], limit: int) -> List[Tuple[str, float]]:
+def top_items[K](
+    counter: Counter[K] | dict[K, float], limit: int
+) -> list[tuple[K, float]]:
     return sorted(counter.items(), key=lambda kv: kv[1], reverse=True)[:limit]
 
 
 def pick_representative_message(
-    messages: List[str], weights: Dict[str, float]
+    messages: list[str], weights: dict[str, float]
 ) -> str | None:
     best = None
     best_score = 0.0
@@ -369,10 +405,10 @@ def pick_representative_message(
 
 
 def score_messages(
-    messages: List[str], weights: Dict[str, float], limit: int = 20
-) -> List[Tuple[str, float]]:
-    scored: List[Tuple[str, float]] = []
-    seen: Set[str] = set()
+    messages: list[str], weights: dict[str, float], limit: int = 20
+) -> list[tuple[str, float]]:
+    scored: list[tuple[str, float]] = []
+    seen: set[str] = set()
     for msg in messages:
         normalized = normalize_content(msg)
         if normalized in seen:
@@ -388,7 +424,7 @@ def score_messages(
     return scored[:limit]
 
 
-def extract_unicode_emoji(text: str) -> List[str]:
+def extract_unicode_emoji(text: str) -> list[str]:
     # Basic plane coverage; avoids needing the `regex` module.
     emoji_ranges = (
         "\U0001F300-\U0001F5FF"
@@ -405,7 +441,7 @@ def extract_unicode_emoji(text: str) -> List[str]:
 
 
 def pick_focus_author(
-    author_ids: List[str], authors: Dict[str, str], needle: str
+    author_ids: list[str], authors: dict[str, str], needle: str
 ) -> str | None:
     needle_lower = needle.lower()
     for aid in author_ids:
@@ -418,7 +454,7 @@ def is_numeric_id(token: str) -> bool:
     return token.isdigit() and len(token) >= 5
 
 
-def count_punct(text: str) -> Counter:
+def count_punct(text: str) -> Counter[str]:
     c = Counter()
     punctuations = ["!", "?", "...", ".", ",", ";", ":", '"', "'"]
     for mark in punctuations:
@@ -431,7 +467,7 @@ def count_punct(text: str) -> Counter:
     return c
 
 
-def char_trigrams(text: str) -> Counter:
+def char_trigrams(text: str) -> Counter[str]:
     cleaned = re.sub(r"\s+", " ", text.lower())
     c = Counter()
     for i in range(len(cleaned) - 2):
@@ -441,7 +477,7 @@ def char_trigrams(text: str) -> Counter:
     return c
 
 
-def find_laughter(text: str) -> Counter:
+def find_laughter(text: str) -> Counter[str]:
     c = Counter()
     patterns = [r"\bha+ha+\b", r"\bl+o+l+\b", r"\blmao\b", r"\b(rofl|lmfao)\b"]
     for pat in patterns:
@@ -450,9 +486,9 @@ def find_laughter(text: str) -> Counter:
     return c
 
 
-def sentence_word_counts(text: str) -> List[int]:
+def sentence_word_counts(text: str) -> list[int]:
     parts = re.split(r"[.!?]+", text)
-    counts: List[int] = []
+    counts: list[int] = []
     for part in parts:
         words = basic_words(part)
         if words:
@@ -460,7 +496,7 @@ def sentence_word_counts(text: str) -> List[int]:
     return counts
 
 
-def estimate_typos(words: List[str]) -> int:
+def estimate_typos(words: list[str]) -> int:
     typos = 0
     for w in words:
         if len(w) < 4:
@@ -511,7 +547,7 @@ STYLE_MARKERS = [
 ]
 
 
-def collect_style_markers(text: str) -> Counter:
+def collect_style_markers(text: str) -> Counter[str]:
     c = Counter()
     for name, pat in STYLE_MARKERS:
         hits = re.findall(pat, text, flags=re.IGNORECASE)
@@ -523,8 +559,8 @@ def collect_style_markers(text: str) -> Counter:
 MENTION_RE = re.compile(r"<@!?(?P<id>\d+)>|@(?P<name>[\w\.\-]+)")
 
 
-def extract_mentions(text: str) -> List[str]:
-    mentions: List[str] = []
+def extract_mentions(text: str) -> list[str]:
+    mentions: list[str] = []
     for match in MENTION_RE.finditer(text):
         mentions.append(match.group("id") or match.group("name"))
     return mentions
@@ -549,7 +585,7 @@ def uppercase_ratio(text: str) -> float:
     return sum(1 for c in letters if c.isupper()) / len(letters)
 
 
-def percentile(data: List[int], pct: float) -> float:
+def percentile(data: list[int], pct: float) -> float:
     if not data:
         return 0.0
     sorted_data = sorted(data)
@@ -568,14 +604,17 @@ def sanitize_filename(name: str) -> str:
     return cleaned.strip("_") or "user"
 
 
-def render_author_text(payload: Dict[str, object]) -> str:
+def render_author_text(payload: AuthorPayload) -> str:
     lines = [
         f"author: {payload['author']} ({payload.get('author_id', 'unknown')})",
         f"messages: {payload['messages']}",
-        f"volume: avg_words {payload['avg_words']}, median_words {payload['median_words']}, p90_words {payload['p90_words']}, avg_chars {payload['avg_chars']}, p90_chars {payload['p90_chars']}",
+        f"volume: avg_words {payload['avg_words']}, median_words {payload['median_words']}, "
+        f"p90_words {payload['p90_words']}, avg_chars {payload['avg_chars']}, "
+        f"p90_chars {payload['p90_chars']}",
         f"lexical: ttr {payload['lexical_diversity']}, hapax {payload['hapax_ratio']}, caps/msg {payload['caps_rate']}",
         f"sentences: avg_words {payload['avg_sentence_words']}",
-        f"words: avg_len {payload['avg_word_length']}, variety {payload['word_variety']}, typos/msg {payload['typo_rate']}",
+        f"words: avg_len {payload['avg_word_length']}, variety {payload['word_variety']}, "
+        f"typos/msg {payload['typo_rate']}",
         "tokens: " + ", ".join(f"{t} ({w})" for t, w in payload["top_tokens"]),
         "char_trigrams: " + (", ".join(f"{t} ({c})" for t, c in payload["top_char_trigrams"]) or "-"),
         "style_markers: " + (", ".join(f"{m} ({c})" for m, c in payload["style_markers"]) or "-"),
@@ -595,7 +634,10 @@ def render_author_text(payload: Dict[str, object]) -> str:
         + (", ".join(f"{p} ({c})" for p, c in payload["repeat_punct"]) or "-")
         + f" | ?/msg {payload['question_rate']} !/msg {payload['exclaim_rate']} .../msg {payload['ellipsis_rate']}",
         "formatting: "
-        + f"links/msg {payload['link_rate']} mentions/msg {payload['mention_rate']} quotes/msg {payload['quote_rate']} code/msg {payload['code_rate']} multiline/msg {payload['multiline_rate']} stretch/msg {payload['stretch_rate']} shout/msg {payload['shout_rate']}",
+        + f"links/msg {payload['link_rate']} mentions/msg {payload['mention_rate']} "
+        + f"quotes/msg {payload['quote_rate']} code/msg {payload['code_rate']} "
+        + f"multiline/msg {payload['multiline_rate']} stretch/msg {payload['stretch_rate']} "
+        + f"shout/msg {payload['shout_rate']}",
         "hours: " + (", ".join(str(h) for h in payload["hour_peaks"]) or "-"),
     ]
     if payload["mentions"]:
@@ -666,39 +708,36 @@ def main() -> None:
     if not csv_files:
         raise SystemExit(f"No CSVs found under {base_dir}")
 
-    authors: Dict[str, str] = {}
-    messages_by_author: Dict[str, List[str]] = defaultdict(list)
-    token_counts: Dict[str, Counter] = defaultdict(Counter)
-    # 3/4-gram phrase tracking removed (was noisy)
-    phrase_counts: Counter = Counter()
-    phrase_counts_by_author: Dict[str, Counter] = defaultdict(Counter)
-    quotes_by_author: Dict[str, Counter] = defaultdict(Counter)
-    emoji_by_author: Dict[str, Counter] = defaultdict(Counter)
-    raw_message_counts: Dict[str, int] = defaultdict(int)
-    word_lengths_by_author: Dict[str, List[int]] = defaultdict(list)
-    char_lengths_by_author: Dict[str, List[int]] = defaultdict(list)
-    mentions_by_author: Dict[str, Counter] = defaultdict(Counter)
-    link_counts_by_author: Dict[str, int] = defaultdict(int)
-    quote_block_by_author: Dict[str, int] = defaultdict(int)
-    code_blocks_by_author: Dict[str, int] = defaultdict(int)
-    multiline_by_author: Dict[str, int] = defaultdict(int)
-    stretchy_by_author: Dict[str, int] = defaultdict(int)
-    shouty_by_author: Dict[str, int] = defaultdict(int)
-    repeated_punct_by_author: Dict[str, Counter] = defaultdict(Counter)
-    hours_by_author: Dict[str, Counter] = defaultdict(Counter)
-    markers_by_author: Dict[str, Counter] = defaultdict(Counter)
-    opener1_by_author: Dict[str, Counter] = defaultdict(Counter)
-    opener2_by_author: Dict[str, Counter] = defaultdict(Counter)
-    closer1_by_author: Dict[str, Counter] = defaultdict(Counter)
-    closer2_by_author: Dict[str, Counter] = defaultdict(Counter)
-    punct_by_author: Dict[str, Counter] = defaultdict(Counter)
-    uppercase_words_by_author: Dict[str, Counter] = defaultdict(Counter)
-    char_count_by_author: Dict[str, int] = defaultdict(int)
-    char_trigrams_by_author: Dict[str, Counter] = defaultdict(Counter)
-    laughter_by_author: Dict[str, Counter] = defaultdict(Counter)
-    sentence_lengths_by_author: Dict[str, List[int]] = defaultdict(list)
-    word_char_lengths_by_author: Dict[str, List[int]] = defaultdict(list)
-    typo_counts_by_author: Dict[str, int] = defaultdict(int)
+    authors: dict[str, str] = {}
+    messages_by_author: dict[str, list[str]] = defaultdict(list)
+    token_counts: dict[str, Counter[str]] = defaultdict(Counter)
+    quotes_by_author: dict[str, Counter[str]] = defaultdict(Counter)
+    emoji_by_author: dict[str, Counter[str]] = defaultdict(Counter)
+    raw_message_counts: dict[str, int] = defaultdict(int)
+    word_lengths_by_author: dict[str, list[int]] = defaultdict(list)
+    char_lengths_by_author: dict[str, list[int]] = defaultdict(list)
+    mentions_by_author: dict[str, Counter[str]] = defaultdict(Counter)
+    link_counts_by_author: dict[str, int] = defaultdict(int)
+    quote_block_by_author: dict[str, int] = defaultdict(int)
+    code_blocks_by_author: dict[str, int] = defaultdict(int)
+    multiline_by_author: dict[str, int] = defaultdict(int)
+    stretchy_by_author: dict[str, int] = defaultdict(int)
+    shouty_by_author: dict[str, int] = defaultdict(int)
+    repeated_punct_by_author: dict[str, Counter[str]] = defaultdict(Counter)
+    hours_by_author: dict[str, Counter[int]] = defaultdict(Counter)
+    markers_by_author: dict[str, Counter[str]] = defaultdict(Counter)
+    opener1_by_author: dict[str, Counter[str]] = defaultdict(Counter)
+    opener2_by_author: dict[str, Counter[str]] = defaultdict(Counter)
+    closer1_by_author: dict[str, Counter[str]] = defaultdict(Counter)
+    closer2_by_author: dict[str, Counter[str]] = defaultdict(Counter)
+    punct_by_author: dict[str, Counter[str]] = defaultdict(Counter)
+    uppercase_words_by_author: dict[str, Counter[str]] = defaultdict(Counter)
+    char_count_by_author: dict[str, int] = defaultdict(int)
+    char_trigrams_by_author: dict[str, Counter[str]] = defaultdict(Counter)
+    laughter_by_author: dict[str, Counter[str]] = defaultdict(Counter)
+    sentence_lengths_by_author: dict[str, list[int]] = defaultdict(list)
+    word_char_lengths_by_author: dict[str, list[int]] = defaultdict(list)
+    typo_counts_by_author: dict[str, int] = defaultdict(int)
 
     for csv_path in csv_files:
         for msg in read_csv_messages(csv_path, include_bots=args.include_bots):
@@ -760,12 +799,12 @@ def main() -> None:
     tfidf = compute_tfidf(token_counts)
     total_messages = sum(len(v) for v in messages_by_author.values())
     author_order = sorted(
-        [aid for aid in tfidf.keys() if raw_message_counts.get(aid, 0) >= 100],
+        [aid for aid in tfidf if raw_message_counts.get(aid, 0) >= 100],
         key=lambda aid: len(messages_by_author.get(aid, [])),
         reverse=True,
     )
 
-    def author_payload(aid: str) -> Dict[str, object]:
+    def author_payload(aid: str) -> AuthorPayload:
         vec = tfidf[aid]
         msgs = messages_by_author.get(aid, [])
         msg_count = raw_message_counts[aid]
@@ -864,7 +903,7 @@ def main() -> None:
             "quotes": top_items(quotes_by_author[aid], args.quotes_per_user),
         }
 
-    payload_cache: Dict[str, Dict[str, object]] = {
+    payload_cache: dict[str, AuthorPayload] = {
         aid: author_payload(aid) for aid in author_order
     }
 
@@ -921,16 +960,20 @@ def main() -> None:
         payload = payload_cache[aid]
         print(f"{idx}. {payload['author']}")
         print(
-            f"   volume      : {payload['messages']} msgs | avg {payload['avg_words']:.1f}w | median {payload['median_words']:.1f}w | p90 {payload['p90_words']:.1f}w | p90 chars {payload['p90_chars']:.0f}"
+            f"   volume      : {payload['messages']} msgs | avg {payload['avg_words']:.1f}w | "
+            f"median {payload['median_words']:.1f}w | p90 {payload['p90_words']:.1f}w | "
+            f"p90 chars {payload['p90_chars']:.0f}"
         )
         print(
-            f"   lexical     : ttr {payload['lexical_diversity']:.2f} | hapax {payload['hapax_ratio']:.2f} | caps/msg {payload['caps_rate']:.2f}"
+            f"   lexical     : ttr {payload['lexical_diversity']:.2f} | "
+            f"hapax {payload['hapax_ratio']:.2f} | caps/msg {payload['caps_rate']:.2f}"
         )
         print(
             f"   sentences   : avg {payload['avg_sentence_words']:.2f} words"
         )
         print(
-            f"   words       : avg_len {payload['avg_word_length']:.2f} | variety {payload['word_variety']} | typos/msg {payload['typo_rate']:.2f}"
+            f"   words       : avg_len {payload['avg_word_length']:.2f} | "
+            f"variety {payload['word_variety']} | typos/msg {payload['typo_rate']:.2f}"
         )
         print(
             "   tokens      : "
@@ -966,11 +1009,16 @@ def main() -> None:
         )
         hours = ", ".join(str(h) for h in payload["hour_peaks"]) or "-"
         print(
-            f"   cadence     : {punct} | repeats {repeat_punct} | ?/msg {payload['question_rate']:.2f} !/msg {payload['exclaim_rate']:.2f} .../msg {payload['ellipsis_rate']:.2f}"
+            f"   cadence     : {punct} | repeats {repeat_punct} | "
+            f"?/msg {payload['question_rate']:.2f} !/msg {payload['exclaim_rate']:.2f} "
+            f".../msg {payload['ellipsis_rate']:.2f}"
         )
         print(
             "   formatting  : "
-            + f"links/msg {payload['link_rate']:.2f} | mentions/msg {payload['mention_rate']:.2f} | quotes/msg {payload['quote_rate']:.2f} | code/msg {payload['code_rate']:.2f} | multiline/msg {payload['multiline_rate']:.2f} | stretch/msg {payload['stretch_rate']:.2f} | shout/msg {payload['shout_rate']:.2f} | hours {hours}"
+            + f"links/msg {payload['link_rate']:.2f} | mentions/msg {payload['mention_rate']:.2f} | "
+            + f"quotes/msg {payload['quote_rate']:.2f} | code/msg {payload['code_rate']:.2f} | "
+            + f"multiline/msg {payload['multiline_rate']:.2f} | stretch/msg {payload['stretch_rate']:.2f} | "
+            + f"shout/msg {payload['shout_rate']:.2f} | hours {hours}"
         )
         if payload["mentions"]:
             print(

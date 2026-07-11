@@ -65,9 +65,11 @@ export function encodePngToSize(
     for (let x = 0; x < outW; x++) {
       const srcX = Math.min(width - 1, Math.trunc((x * width) / outW));
       const s = (srcY * width + srcX) * 4; // RGBA source: R,G,B,X
-      raw[pos++] = rgba[s]; // R
-      raw[pos++] = rgba[s + 1]; // G
-      raw[pos++] = rgba[s + 2]; // B
+      // s..s+2 are in-bounds by the requiredBytes check above (srcX/srcY are
+      // clamped to width-1/height-1); the ?? 0 only satisfies the compiler.
+      raw[pos++] = rgba[s] ?? 0; // R
+      raw[pos++] = rgba[s + 1] ?? 0; // G
+      raw[pos++] = rgba[s + 2] ?? 0; // B
     }
   }
 

@@ -7,10 +7,11 @@ Uses the Cloudflare REST API to fetch bucket usage statistics.
 import json
 import os
 import time
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
+from typing import Any
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
-from urllib.error import URLError, HTTPError
 
 # Configuration from environment variables
 API_TOKEN = os.environ.get("CLOUDFLARE_API_TOKEN", "")
@@ -20,7 +21,7 @@ SCRAPE_INTERVAL = int(os.environ.get("SCRAPE_INTERVAL_SECONDS", "300"))
 PORT = int(os.environ.get("EXPORTER_PORT", "9199"))
 
 # Cached metrics
-metrics_cache = {
+metrics_cache: dict[str, Any] = {
     "storage_bytes": 0,
     "object_count": 0,
     "last_scrape_time": 0,
@@ -49,7 +50,10 @@ def fetch_r2_usage():
                 metrics_cache["object_count"] = result.get("objectCount", 0)
                 metrics_cache["last_scrape_success"] = True
                 metrics_cache["last_error"] = ""
-                print(f"Successfully fetched R2 metrics: {metrics_cache['storage_bytes']} bytes, {metrics_cache['object_count']} objects")
+                print(
+                    f"Successfully fetched R2 metrics: {metrics_cache['storage_bytes']} bytes, "
+                    f"{metrics_cache['object_count']} objects"
+                )
             else:
                 errors = data.get("errors", [])
                 error_msg = "; ".join(e.get("message", "Unknown error") for e in errors)
@@ -99,7 +103,10 @@ def generate_metrics():
     lines.append("# TYPE cloudflare_r2_exporter_last_scrape_timestamp_seconds gauge")
     lines.append(f"cloudflare_r2_exporter_last_scrape_timestamp_seconds {metrics_cache['last_scrape_time']}")
 
-    lines.append("# HELP cloudflare_r2_exporter_scrape_success Whether the last scrape was successful (1=success, 0=failure)")
+    lines.append(
+        "# HELP cloudflare_r2_exporter_scrape_success "
+        "Whether the last scrape was successful (1=success, 0=failure)"
+    )
     lines.append("# TYPE cloudflare_r2_exporter_scrape_success gauge")
     lines.append(f"cloudflare_r2_exporter_scrape_success {1 if metrics_cache['last_scrape_success'] else 0}")
 
@@ -126,7 +133,7 @@ class MetricsHandler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
-    def log_message(self, format, *args):
+    def log_message(self, format: str, *args: Any) -> None:
         """Suppress default logging for cleaner output."""
         pass
 

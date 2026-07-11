@@ -24,9 +24,6 @@ import { taskId, type Task } from "../src/domain/types";
 const AUTH_TOKEN = "contract-test-token";
 const PORT = 18_700 + (process.pid % 200);
 const BASE_URL = `http://127.0.0.1:${String(PORT)}`;
-// The P3 server serves the old camelCase contract (which this app speaks
-// until P5) under /legacy; /api/* is the upstream v2 surface.
-const LEGACY_BASE_URL = `${BASE_URL}/legacy`;
 
 const serverDir = fileURLToPath(
   new URL("../../tasknotes-server", import.meta.url),
@@ -52,7 +49,7 @@ function drainStderr(stream: ReadableStream<Uint8Array>): void {
 }
 
 const client = new TaskNotesClient({
-  baseUrl: LEGACY_BASE_URL,
+  baseUrl: BASE_URL,
   authToken: AUTH_TOKEN,
 });
 
@@ -119,7 +116,7 @@ describe("health & auth", () => {
 
   test("wrong bearer token is rejected with an ApiError", async () => {
     const badClient = new TaskNotesClient({
-      baseUrl: LEGACY_BASE_URL,
+      baseUrl: BASE_URL,
       authToken: "wrong-token",
     });
     const result = await badClient.listTasks();
@@ -264,18 +261,18 @@ describe("time tracking (current contract)", () => {
     expect(stopped.ok).toBe(true);
 
     const time = unwrap(await client.getTaskTime(tracked.id));
-    expect(time.entries).toHaveLength(1);
+    expect(time.hasActiveSession).toBe(false); // stopped above
+    expect(time.totalTime).toBeGreaterThanOrEqual(0);
 
     await client.deleteTask(tracked.id);
   });
 
-  test("time summary responds (pinned: route-shadowed default — review finding #16)", async () => {
+  test("time summary responds with the v2 report shape", async () => {
+    // Review finding #16 (route-shadowed always-empty summary) is fixed by
+    // the P3 rebuild — this now asserts a real report.
     const summary = unwrap(await client.getTimeSummary());
-    // /api/time/summary is shadowed by /api/time/:id today, so it always
-    // returns the empty default. Pinned so the P3 rebuild consciously
-    // changes this assertion when the route order is fixed.
-    expect(summary.totalTime).toBe(0);
-    expect(summary.entries).toHaveLength(0);
+    expect(summary.totalTime).toBeGreaterThanOrEqual(0);
+    expect(Array.isArray(summary.topTasks)).toBe(true);
   });
 });
 

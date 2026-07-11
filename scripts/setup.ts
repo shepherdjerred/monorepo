@@ -1,12 +1,27 @@
 #!/usr/bin/env bun
 
 import { $, which } from "bun";
-import { existsSync } from "node:fs";
-import { readdir } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { access, readdir } from "node:fs/promises";
+import path from "node:path";
+import { z } from "zod";
+
+const ShellErrorSchema = z.object({
+  stderr: z.instanceof(Buffer).optional(),
+  stdout: z.instanceof(Buffer).optional(),
+  message: z.string().optional(),
+});
+
+async function pathExists(target: string): Promise<boolean> {
+  try {
+    await access(target);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 const ROOT = import.meta.dirname
-  ? join(import.meta.dirname, "..")
+  ? path.join(import.meta.dirname, "..")
   : process.cwd();
 
 // ── Package groups (scoped worktree installs) ───────────────────────────
@@ -33,14 +48,14 @@ const PACKAGE_GROUPS: Record<string, string[]> = {
 // total well under 4s combined, and always building them is what prevents a
 // scoped worktree from ending up with a stale/missing shared dep (the
 // recurring "Cannot find module @shepherdjerred/eslint-config" failure).
-const SHARED_PRODUCER_DIRS = [
+const SHARED_PRODUCER_DIRS = new Set([
   "packages/eslint-config",
   "packages/webring",
   "packages/llm-models",
   "packages/astro-opengraph-images",
   "packages/discord-video-stream",
   "packages/homelab/src/helm-types",
-];
+]);
 
 // Matching DAG_TASKS ids for the same shared producers (see Phase 3 below).
 const SHARED_PRODUCER_DAG_IDS = new Set([
@@ -84,13 +99,13 @@ const GROUP_DAG_ENTRYPOINTS: Record<string, string[]> = {
 const LINK_SAFE_GROUPS = new Set(["pokemon"]);
 
 function isRelevantForGroup(relDir: string, group: string): boolean {
-  if (SHARED_PRODUCER_DIRS.includes(relDir)) return true;
-  const groupDirs = PACKAGE_GROUPS[group];
+  if (SHARED_PRODUCER_DIRS.has(relDir)) return true;
+  const groupDirs = PACKAGE_GROUPS[group] ?? [];
   return groupDirs.some((g) => relDir === g || relDir.startsWith(`${g}/`));
 }
 
 function isGroupOwnDir(relDir: string, group: string): boolean {
-  const groupDirs = PACKAGE_GROUPS[group];
+  const groupDirs = PACKAGE_GROUPS[group] ?? [];
   return groupDirs.some((g) => relDir === g || relDir.startsWith(`${g}/`));
 }
 
@@ -136,12 +151,12 @@ function elapsed(startMs: number): string {
   return `${((performance.now() - startMs) / 1000).toFixed(1)}s`;
 }
 
-function log(phase: string, msg: string): void {
-  console.log(`  [${phase}] ${msg}`);
+function log(phaseName: string, msg: string): void {
+  console.log(`  [${phaseName}] ${msg}`);
 }
 
-function warn(phase: string, msg: string): void {
-  console.warn(`  [${phase}] ⚠ ${msg}`);
+function warn(phaseName: string, msg: string): void {
+  console.warn(`  [${phaseName}] ⚠ ${msg}`);
 }
 
 async function phase(name: string, fn: () => Promise<void>): Promise<void> {
@@ -170,11 +185,7 @@ async function exec(
       return false;
     }
     console.error(`  [${phaseName}] ${msg}`);
-    const shellErr = error as {
-      stderr?: Buffer;
-      stdout?: Buffer;
-      message?: string;
-    };
+    const shellErr = ShellErrorSchema.safeParse(error).data ?? {};
     if (shellErr.stderr?.length) {
       console.error(`  stderr:\n${shellErr.stderr.toString().trimEnd()}`);
     }
@@ -231,9 +242,9 @@ async function findLockfileDirs(): Promise<string[]> {
     const entries = await readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
       if (skip.has(entry.name)) continue;
-      const fullPath = join(dir, entry.name);
+      const fullPath = path.join(dir, entry.name);
       if (entry.isDirectory() && !entry.isSymbolicLink()) {
-        if (existsSync(join(fullPath, "bun.lock"))) {
+        if (await pathExists(path.join(fullPath, "bun.lock"))) {
           dirs.push(fullPath);
         }
         await walk(fullPath);
@@ -262,7 +273,7 @@ async function findMiseConfigs(): Promise<string[]> {
     const entries = await readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
       if (skip.has(entry.name)) continue;
-      const fullPath = join(dir, entry.name);
+      const fullPath = path.join(dir, entry.name);
       if (entry.isDirectory() && !entry.isSymbolicLink()) {
         await walk(fullPath);
       } else if (entry.name === "mise.toml" || entry.name === ".mise.toml") {
@@ -277,7 +288,7 @@ async function findMiseConfigs(): Promise<string[]> {
 
 async function trustMiseConfigs(configs: string[]): Promise<void> {
   for (const cfg of configs) {
-    await exec("Tools", `mise trust ${relative(ROOT, cfg)}`, [
+    await exec("Tools", `mise trust ${path.relative(ROOT, cfg)}`, [
       "mise",
       "trust",
       "-y",
@@ -298,11 +309,11 @@ async function ensureTools(): Promise<void> {
 
   const isMac = process.platform === "darwin";
 
-  const optionalTools: Array<{
+  const optionalTools: {
     name: string;
     reason: string;
     macOnly?: boolean;
-  }> = [
+  }[] = [
     { name: "helm", reason: "homelab helm-types generation" },
     { name: "go", reason: "terraform-provider-asuswrt" },
     { name: "golangci-lint", reason: "Go linting (pre-commit)" },
@@ -340,7 +351,7 @@ async function installDependencies(): Promise<void> {
     GROUP === undefined
       ? allLockfileDirs
       : allLockfileDirs.filter((dir) =>
-          isRelevantForGroup(relative(ROOT, dir), GROUP),
+          isRelevantForGroup(path.relative(ROOT, dir), GROUP),
         );
   log(
     "Deps",
@@ -351,11 +362,11 @@ async function installDependencies(): Promise<void> {
 
   const concurrency = 6;
   const maxAttempts = 3;
-  const failures: Array<{ dir: string; error: unknown }> = [];
+  const failures: { dir: string; error: unknown }[] = [];
   let completed = 0;
 
   async function installOne(dir: string): Promise<void> {
-    const label = relative(ROOT, dir);
+    const label = path.relative(ROOT, dir);
     const useLink = LINK && GROUP !== undefined && isGroupOwnDir(label, GROUP);
     const cmd = useLink
       ? ["bun", "install", "--frozen-lockfile", "--backend=symlink"]
@@ -404,8 +415,8 @@ async function installDependencies(): Promise<void> {
   // homelab's nested pseudo-workspaces (src/helm-types, src/cdk8s) aren't
   // shared producers other groups need, so skip this in scoped mode.
   if (GROUP === undefined) {
-    const homelabDir = join(ROOT, "packages", "homelab");
-    if (existsSync(homelabDir)) {
+    const homelabDir = path.join(ROOT, "packages", "homelab");
+    if (await pathExists(homelabDir)) {
       await exec(
         "Deps",
         "homelab install-subpkgs",
@@ -417,7 +428,7 @@ async function installDependencies(): Promise<void> {
 }
 
 async function refreshBuiltFileDependencies(): Promise<void> {
-  const allRefreshDirs: Array<{ label: string; cwd: string }> = [
+  const allRefreshDirs: { label: string; cwd: string }[] = [
     {
       label: "sjer.red local package artifacts",
       cwd: "packages/sjer.red",
@@ -444,8 +455,8 @@ async function refreshBuiltFileDependencies(): Promise<void> {
         );
 
   for (const dir of refreshDirs) {
-    const fullCwd = join(ROOT, dir.cwd);
-    if (!existsSync(fullCwd)) {
+    const fullCwd = path.join(ROOT, dir.cwd);
+    if (!(await pathExists(fullCwd))) {
       warn("Deps", `${dir.label} skipped (directory not found)`);
       continue;
     }
@@ -600,19 +611,17 @@ function scopedDagTasks(tasks: DagTask[], group: string): DagTask[] {
     .map((t) => ({ ...t, deps: t.deps.filter((d) => wanted.has(d)) }));
 }
 
-async function runDag(
-  tasks: DagTask[],
-  maxConcurrency: number = 4,
-): Promise<void> {
+async function runDag(tasks: DagTask[], maxConcurrency = 4): Promise<void> {
   // Filter to tasks whose directories exist
-  const valid = tasks.filter((t) => {
-    const fullCwd = join(ROOT, t.cwd);
-    if (!existsSync(fullCwd)) {
+  const valid: DagTask[] = [];
+  for (const t of tasks) {
+    const fullCwd = path.join(ROOT, t.cwd);
+    if (!(await pathExists(fullCwd))) {
       warn("DAG", `${t.label} skipped (directory not found)`);
-      return false;
+      continue;
     }
-    return true;
-  });
+    valid.push(t);
+  }
 
   const completed = new Set<string>();
   const failed = new Set<string>();
@@ -633,18 +642,18 @@ async function runDag(
 
       if (task.deps.every((d) => completed.has(d))) {
         remaining.delete(id);
-        const promise = exec("DAG", task.label, task.cmd, {
-          cwd: join(ROOT, task.cwd),
-          warnOnly: task.warnOnly,
-        })
-          .then((ok) => {
+        const promise = (async (): Promise<string> => {
+          try {
+            const ok = await exec("DAG", task.label, task.cmd, {
+              cwd: path.join(ROOT, task.cwd),
+              warnOnly: task.warnOnly,
+            });
             if (!ok) failed.add(id);
-            return id;
-          })
-          .catch(() => {
+          } catch {
             failed.add(id);
-            return id;
-          });
+          }
+          return id;
+        })();
         running.set(id, promise);
       }
     }
@@ -672,7 +681,7 @@ async function runDag(
 // ── Phase 4: Verify ────────────────────────────────────────────────────
 
 async function verifySetup(): Promise<void> {
-  const checks: Array<{ label: string; path: string; group?: string }> = [
+  const checks: { label: string; path: string; group?: string }[] = [
     {
       label: "eslint-config dist",
       path: "packages/eslint-config/dist/index.js",
@@ -713,8 +722,8 @@ async function verifySetup(): Promise<void> {
 
   let passed = 0;
   for (const check of relevant) {
-    const fullPath = join(ROOT, check.path);
-    if (existsSync(fullPath)) {
+    const fullPath = path.join(ROOT, check.path);
+    if (await pathExists(fullPath)) {
       passed++;
     } else {
       warn("Verify", `${check.label} not found at ${check.path}`);
@@ -742,7 +751,7 @@ try {
   await phase("Verify", verifySetup);
 
   console.log(`\nSetup complete (${elapsed(totalStart)})`);
-} catch (error) {
+} catch {
   console.error(`\nSetup failed (${elapsed(totalStart)})`);
   process.exit(1);
 }

@@ -42,7 +42,7 @@ function collectDigestsCmd(pushedVersionKeys: readonly string[]): string {
     `  d=$$(buildkite-agent meta-data get "digest:$$key" --default ""); `,
     `  if [ -z "$$d" ]; then echo "ERROR: missing digest for key $$key" >&2; exit 1; fi; `,
     `  if [ "$$first" = "1" ]; then first=0; else echo "," >> /tmp/digests.json; fi; `,
-    `  printf "  \\"%s\\": \\"%s\\"" "$$key" "$$d" >> /tmp/digests.json; `,
+    String.raw`  printf "  \"%s\": \"%s\"" "$$key" "$$d" >> /tmp/digests.json; `,
     `done; `,
     `echo "" >> /tmp/digests.json; `,
     `echo "}" >> /tmp/digests.json; `,

@@ -4,7 +4,8 @@
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  * All deploy/publish operations should use @func({ cache: "never" }) in the wrapper.
  */
-import { dag, Container, Directory, File, Secret } from "@dagger.io/dagger";
+import type { Container, Directory, File, Secret } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
 
 import {
   ALPINE_IMAGE,
@@ -93,14 +94,14 @@ function mintGithubAppTokenAndSetupGitAuth(
   ];
   if (withAskpass) {
     steps.push(
-      `printf '%s\\n' '#!/bin/sh' 'case "$1" in' '  *Username*) printf "%s%s%s\\\\n" "x-access" "-" "token" ;;' '  *) printf "%s\\\\n" "$GH_TOKEN" ;;' 'esac' > /usr/local/bin/git-askpass`,
+      String.raw`printf '%s\n' '#!/bin/sh' 'case "$1" in' '  *Username*) printf "%s%s%s\\n" "x-access" "-" "token" ;;' '  *) printf "%s\\n" "$GH_TOKEN" ;;' 'esac' > /usr/local/bin/git-askpass`,
       `chmod +x /usr/local/bin/git-askpass`,
       `export GIT_ASKPASS=/usr/local/bin/git-askpass`,
-      `echo "git-auth-setup: $(ls -l /usr/local/bin/git-askpass | awk '{print $1, $3, $5}'), GIT_ASKPASS=$GIT_ASKPASS, token-bytes=$(printf %s \"$GH_TOKEN\" | wc -c)"`,
+      `echo "git-auth-setup: $(ls -l /usr/local/bin/git-askpass | awk '{print $1, $3, $5}'), GIT_ASKPASS=$GIT_ASKPASS, token-bytes=$(printf %s "$GH_TOKEN" | wc -c)"`,
     );
   } else {
     steps.push(
-      `echo "git-auth-setup: token-bytes=$(printf %s \"$GH_TOKEN\" | wc -c) (no askpass)"`,
+      `echo "git-auth-setup: token-bytes=$(printf %s "$GH_TOKEN" | wc -c) (no askpass)"`,
     );
   }
   return steps.join(" && ");
@@ -120,7 +121,7 @@ export function helmPackageHelper(
   chartMuseumPassword: Secret,
   dryrun = false,
 ): Container {
-  let container = dag
+  const container = dag
     .container()
     .from(ALPINE_IMAGE)
     .withExec(["apk", "add", "--no-cache", "helm", "curl"])
@@ -138,7 +139,7 @@ export function helmPackageHelper(
     .withExec([
       "sh",
       "-c",
-      `sed -i 's/\\$version/${version}/g; s/\\$appVersion/${version}/g' Chart.yaml && helm package . --version ${version} --app-version ${version}`,
+      String.raw`sed -i 's/\$version/${version}/g; s/\$appVersion/${version}/g' Chart.yaml && helm package . --version ${version} --app-version ${version}`,
     ])
     .withSecretVariable("CHARTMUSEUM_PASSWORD", chartMuseumPassword);
 
@@ -242,25 +243,67 @@ const TOFU_INIT_WITH_RETRY = [
   // Join with newlines, not "; " — busybox sh rejects `do ;` / `then ;` / `done ;`.
 ].join("\n");
 
+/**
+ * The optional secrets both tofu helpers accept, in declaration order. Bundling
+ * them keeps the two helpers' signatures identical and lets the shared
+ * env-var wiring iterate instead of branching per secret.
+ */
+export type TofuOptionalSecrets = {
+  githubToken?: Secret | null;
+  cloudflareAccountId?: Secret | null;
+  cloudflareApiToken?: Secret | null;
+  tailscaleOauthClientId?: Secret | null;
+  tailscaleOauthClientSecret?: Secret | null;
+  buildkiteApiToken?: Secret | null;
+  radarrApiKey?: Secret | null;
+  sonarrApiKey?: Secret | null;
+  prowlarrApiKey?: Secret | null;
+  qbittorrentPassword?: Secret | null;
+  privatehdPassword?: Secret | null;
+  privatehdPid?: Secret | null;
+  pagerdutyToken?: Secret | null;
+};
+
+/**
+ * Wire each present optional secret to its OpenTofu env var. Null/absent
+ * secrets are skipped (stack-irrelevant secrets are passed but ignored). The
+ * env var name for each secret is fixed here so both helpers stay in sync.
+ */
+function withTofuOptionalSecrets(
+  container: Container,
+  secrets: TofuOptionalSecrets,
+): Container {
+  const mapping: [string, Secret | null | undefined][] = [
+    ["TF_VAR_github_token", secrets.githubToken],
+    ["TF_VAR_cloudflare_account_id", secrets.cloudflareAccountId],
+    ["CLOUDFLARE_API_TOKEN", secrets.cloudflareApiToken],
+    ["TAILSCALE_OAUTH_CLIENT_ID", secrets.tailscaleOauthClientId],
+    ["TAILSCALE_OAUTH_CLIENT_SECRET", secrets.tailscaleOauthClientSecret],
+    ["TF_VAR_buildkite_api_token", secrets.buildkiteApiToken],
+    ["TF_VAR_radarr_api_key", secrets.radarrApiKey],
+    ["TF_VAR_sonarr_api_key", secrets.sonarrApiKey],
+    ["TF_VAR_prowlarr_api_key", secrets.prowlarrApiKey],
+    ["TF_VAR_qbittorrent_password", secrets.qbittorrentPassword],
+    ["TF_VAR_privatehd_password", secrets.privatehdPassword],
+    ["TF_VAR_privatehd_pid", secrets.privatehdPid],
+    ["TF_VAR_pagerduty_token", secrets.pagerdutyToken],
+  ];
+  let result = container;
+  for (const [envName, secret] of mapping) {
+    if (secret != null) {
+      result = result.withSecretVariable(envName, secret);
+    }
+  }
+  return result;
+}
+
 /** Run tofu init + apply on a stack. */
 export function tofuApplyHelper(
   source: Directory,
   stack: string,
   awsAccessKeyId: Secret,
   awsSecretAccessKey: Secret,
-  githubToken: Secret | null = null,
-  cloudflareAccountId: Secret | null = null,
-  cloudflareApiToken: Secret | null = null,
-  tailscaleOauthClientId: Secret | null = null,
-  tailscaleOauthClientSecret: Secret | null = null,
-  buildkiteApiToken: Secret | null = null,
-  radarrApiKey: Secret | null = null,
-  sonarrApiKey: Secret | null = null,
-  prowlarrApiKey: Secret | null = null,
-  qbittorrentPassword: Secret | null = null,
-  privatehdPassword: Secret | null = null,
-  privatehdPid: Secret | null = null,
-  pagerdutyToken: Secret | null = null,
+  secrets: TofuOptionalSecrets = {},
   dryrun = false,
 ): Container {
   let container = dag.container().from(TOFU_IMAGE);
@@ -293,91 +336,7 @@ export function tofuApplyHelper(
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
     .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey);
 
-  if (githubToken != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_github_token",
-      githubToken,
-    );
-  }
-
-  if (cloudflareAccountId != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_cloudflare_account_id",
-      cloudflareAccountId,
-    );
-  }
-
-  if (cloudflareApiToken != null) {
-    container = container.withSecretVariable(
-      "CLOUDFLARE_API_TOKEN",
-      cloudflareApiToken,
-    );
-  }
-
-  if (tailscaleOauthClientId != null) {
-    container = container.withSecretVariable(
-      "TAILSCALE_OAUTH_CLIENT_ID",
-      tailscaleOauthClientId,
-    );
-  }
-
-  if (tailscaleOauthClientSecret != null) {
-    container = container.withSecretVariable(
-      "TAILSCALE_OAUTH_CLIENT_SECRET",
-      tailscaleOauthClientSecret,
-    );
-  }
-
-  if (buildkiteApiToken != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_buildkite_api_token",
-      buildkiteApiToken,
-    );
-  }
-
-  if (radarrApiKey != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_radarr_api_key",
-      radarrApiKey,
-    );
-  }
-  if (sonarrApiKey != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_sonarr_api_key",
-      sonarrApiKey,
-    );
-  }
-  if (prowlarrApiKey != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_prowlarr_api_key",
-      prowlarrApiKey,
-    );
-  }
-  if (qbittorrentPassword != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_qbittorrent_password",
-      qbittorrentPassword,
-    );
-  }
-  if (privatehdPassword != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_privatehd_password",
-      privatehdPassword,
-    );
-  }
-  if (privatehdPid != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_privatehd_pid",
-      privatehdPid,
-    );
-  }
-
-  if (pagerdutyToken != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_pagerduty_token",
-      pagerdutyToken,
-    );
-  }
+  container = withTofuOptionalSecrets(container, secrets);
 
   container = container.withExec(["sh", "-c", TOFU_INIT_WITH_RETRY]);
 
@@ -393,19 +352,7 @@ export function tofuPlanHelper(
   stack: string,
   awsAccessKeyId: Secret,
   awsSecretAccessKey: Secret,
-  githubToken: Secret | null = null,
-  cloudflareAccountId: Secret | null = null,
-  cloudflareApiToken: Secret | null = null,
-  tailscaleOauthClientId: Secret | null = null,
-  tailscaleOauthClientSecret: Secret | null = null,
-  buildkiteApiToken: Secret | null = null,
-  radarrApiKey: Secret | null = null,
-  sonarrApiKey: Secret | null = null,
-  prowlarrApiKey: Secret | null = null,
-  qbittorrentPassword: Secret | null = null,
-  privatehdPassword: Secret | null = null,
-  privatehdPid: Secret | null = null,
-  pagerdutyToken: Secret | null = null,
+  secrets: TofuOptionalSecrets = {},
   dryrun = false,
 ): Container {
   let container = dag
@@ -419,91 +366,7 @@ export function tofuPlanHelper(
     .withSecretVariable("AWS_ACCESS_KEY_ID", awsAccessKeyId)
     .withSecretVariable("AWS_SECRET_ACCESS_KEY", awsSecretAccessKey);
 
-  if (githubToken != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_github_token",
-      githubToken,
-    );
-  }
-
-  if (cloudflareAccountId != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_cloudflare_account_id",
-      cloudflareAccountId,
-    );
-  }
-
-  if (cloudflareApiToken != null) {
-    container = container.withSecretVariable(
-      "CLOUDFLARE_API_TOKEN",
-      cloudflareApiToken,
-    );
-  }
-
-  if (tailscaleOauthClientId != null) {
-    container = container.withSecretVariable(
-      "TAILSCALE_OAUTH_CLIENT_ID",
-      tailscaleOauthClientId,
-    );
-  }
-
-  if (tailscaleOauthClientSecret != null) {
-    container = container.withSecretVariable(
-      "TAILSCALE_OAUTH_CLIENT_SECRET",
-      tailscaleOauthClientSecret,
-    );
-  }
-
-  if (buildkiteApiToken != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_buildkite_api_token",
-      buildkiteApiToken,
-    );
-  }
-
-  if (radarrApiKey != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_radarr_api_key",
-      radarrApiKey,
-    );
-  }
-  if (sonarrApiKey != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_sonarr_api_key",
-      sonarrApiKey,
-    );
-  }
-  if (prowlarrApiKey != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_prowlarr_api_key",
-      prowlarrApiKey,
-    );
-  }
-  if (qbittorrentPassword != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_qbittorrent_password",
-      qbittorrentPassword,
-    );
-  }
-  if (privatehdPassword != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_privatehd_password",
-      privatehdPassword,
-    );
-  }
-  if (privatehdPid != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_privatehd_pid",
-      privatehdPid,
-    );
-  }
-
-  if (pagerdutyToken != null) {
-    container = container.withSecretVariable(
-      "TF_VAR_pagerduty_token",
-      pagerdutyToken,
-    );
-  }
+  container = withTofuOptionalSecrets(container, secrets);
 
   container = container.withExec(["sh", "-c", TOFU_INIT_WITH_RETRY]);
 
@@ -556,19 +419,21 @@ export async function tofuApplyAllHelper(
           stack,
           awsAccessKeyId,
           awsSecretAccessKey,
-          githubToken,
-          cloudflareAccountId,
-          cloudflareApiToken,
-          tailscaleOauthClientId,
-          tailscaleOauthClientSecret,
-          buildkiteApiToken,
-          radarrApiKey,
-          sonarrApiKey,
-          prowlarrApiKey,
-          qbittorrentPassword,
-          privatehdPassword,
-          privatehdPid,
-          pagerdutyToken,
+          {
+            githubToken,
+            cloudflareAccountId,
+            cloudflareApiToken,
+            tailscaleOauthClientId,
+            tailscaleOauthClientSecret,
+            buildkiteApiToken,
+            radarrApiKey,
+            sonarrApiKey,
+            prowlarrApiKey,
+            qbittorrentPassword,
+            privatehdPassword,
+            privatehdPid,
+            pagerdutyToken,
+          },
           dryrun,
         ).stdout(),
     })),
@@ -608,19 +473,21 @@ export async function tofuPlanAllHelper(
           stack,
           awsAccessKeyId,
           awsSecretAccessKey,
-          githubToken,
-          cloudflareAccountId,
-          cloudflareApiToken,
-          tailscaleOauthClientId,
-          tailscaleOauthClientSecret,
-          buildkiteApiToken,
-          radarrApiKey,
-          sonarrApiKey,
-          prowlarrApiKey,
-          qbittorrentPassword,
-          privatehdPassword,
-          privatehdPid,
-          pagerdutyToken,
+          {
+            githubToken,
+            cloudflareAccountId,
+            cloudflareApiToken,
+            tailscaleOauthClientId,
+            tailscaleOauthClientSecret,
+            buildkiteApiToken,
+            radarrApiKey,
+            sonarrApiKey,
+            prowlarrApiKey,
+            qbittorrentPassword,
+            privatehdPassword,
+            privatehdPid,
+            pagerdutyToken,
+          },
           dryrun,
         ).stdout(),
     })),
@@ -701,8 +568,8 @@ export function publishNpmHelper(
   depDirs: Directory[] = [],
   dryrun = false,
   tsconfig: File | null = null,
-  devSuffix: string = "",
-  pkgPath: string = "",
+  devSuffix = "",
+  pkgPath = "",
 ): Container {
   // pkgPath is the on-disk path under packages/ (e.g. "homelab/src/helm-types"
   // for @shepherdjerred/helm-types). Mounting at the real on-disk path is
@@ -710,7 +577,7 @@ export function publishNpmHelper(
   // — file: refs are written relative to the source-tree layout, not the npm
   // package name. Default to `pkg` for top-level unscoped packages where the
   // name and directory coincide (e.g. webring, astro-opengraph-images).
-  const mountPath = pkgPath !== "" ? pkgPath : pkg;
+  const mountPath = pkgPath === "" ? pkg : pkgPath;
 
   let container = dag
     .container()
@@ -721,9 +588,9 @@ export function publishNpmHelper(
       exclude: SOURCE_EXCLUDES,
     });
 
-  for (let i = 0; i < depNames.length; i++) {
+  for (const [i, depName] of depNames.entries()) {
     container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
+      `/workspace/packages/${depName}`,
       depDirs[i],
       { exclude: SOURCE_EXCLUDES },
     );
@@ -752,7 +619,7 @@ export function publishNpmHelper(
     "-c",
     [
       `cd /workspace/packages/${mountPath}`,
-      `bun -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync("package.json","utf8")); for(const [,deps] of [["dependencies",p.dependencies||{}],["devDependencies",p.devDependencies||{}]]) { for(const [name,ver] of Object.entries(deps)) { if(typeof ver==="string"&&ver.startsWith("file:")) { try { const d=JSON.parse(fs.readFileSync(ver.replace("file:","")+"/package.json","utf8")); deps[name]="^"+d.version } catch {} } } } fs.writeFileSync("package.json",JSON.stringify(p,null,2)+"\\n")'`,
+      String.raw`bun -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync("package.json","utf8")); for(const [,deps] of [["dependencies",p.dependencies||{}],["devDependencies",p.devDependencies||{}]]) { for(const [name,ver] of Object.entries(deps)) { if(typeof ver==="string"&&ver.startsWith("file:")) { try { const d=JSON.parse(fs.readFileSync(ver.replace("file:","")+"/package.json","utf8")); deps[name]="^"+d.version } catch {} } } } fs.writeFileSync("package.json",JSON.stringify(p,null,2)+"\n")'`,
     ].join(" && "),
   ]);
 
@@ -761,14 +628,14 @@ export function publishNpmHelper(
     container = container.withExec([
       "sh",
       "-c",
-      `bun -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync("package.json","utf8")); p.version=p.version+"-dev.${devSuffix}"; fs.writeFileSync("package.json",JSON.stringify(p,null,2)+"\\n")'`,
+      String.raw`bun -e 'const fs=require("fs"); const p=JSON.parse(fs.readFileSync("package.json","utf8")); p.version=p.version+"-dev.${devSuffix}"; fs.writeFileSync("package.json",JSON.stringify(p,null,2)+"\n")'`,
     ]);
   }
 
   // Build from source (Dagger caches this across runs)
   container = container.withExec(["bun", "run", "build"]);
 
-  const tag = devSuffix !== "" ? "dev" : "latest";
+  const tag = devSuffix === "" ? "latest" : "dev";
 
   if (dryrun) {
     return container.withExec([
@@ -898,7 +765,7 @@ export function deploySiteHelper(
   target: string,
   awsAccessKeyId: Secret,
   awsSecretAccessKey: Secret,
-  cloudflareAccountId: string = "",
+  cloudflareAccountId = "",
   depNames: string[] = [],
   depDirs: Directory[] = [],
   buildEnvNames: string[] = [],
@@ -910,7 +777,7 @@ export function deploySiteHelper(
 ): Container {
   if (buildEnvNames.length !== buildEnvValues.length) {
     throw new Error(
-      `Expected ${buildEnvNames.length} build env secret values, received ${buildEnvValues.length}`,
+      `Expected ${String(buildEnvNames.length)} build env secret values, received ${String(buildEnvValues.length)}`,
     );
   }
 
@@ -922,9 +789,9 @@ export function deploySiteHelper(
     });
 
   // Mount deps at correct relative paths for file: protocol resolution
-  for (let i = 0; i < depNames.length; i++) {
+  for (const [i, depName] of depNames.entries()) {
     container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
+      `/workspace/packages/${depName}`,
       depDirs[i],
       { exclude: SOURCE_EXCLUDES },
     );
@@ -983,11 +850,10 @@ export function deploySiteHelper(
     .withEnvVariable("AWS_REQUEST_CHECKSUM_CALCULATION", "WHEN_REQUIRED")
     .withEnvVariable("AWS_RESPONSE_CHECKSUM_VALIDATION", "WHEN_REQUIRED");
 
-  for (let i = 0; i < buildEnvNames.length; i++) {
-    const name = buildEnvNames[i];
+  for (const [i, name] of buildEnvNames.entries()) {
     const value = buildEnvValues[i];
-    if (name === "" || value == null) {
-      throw new Error(`Invalid build env secret at index ${i}`);
+    if (name === "") {
+      throw new Error(`Invalid build env secret at index ${String(i)}`);
     }
     container = container.withSecretVariable(name, value);
   }
@@ -1026,7 +892,7 @@ export function deployStaticSiteHelper(
       ? "https://r2.cloudflarestorage.com"
       : "https://seaweedfs.sjer.red";
 
-  let container = dag
+  const container = dag
     .container()
     .from(ALPINE_IMAGE)
     .withExec(["apk", "add", "--no-cache", "aws-cli"])
@@ -1056,7 +922,7 @@ export function deployStaticSiteHelper(
 export function argoCdSyncHelper(
   appName: string,
   argoCdToken: Secret,
-  serverUrl: string = "https://argocd.sjer.red",
+  serverUrl = "https://argocd.sjer.red",
   dryrun = false,
 ): Container {
   const container = dag
@@ -1082,8 +948,8 @@ export function argoCdSyncHelper(
 export function argoCdHealthWaitHelper(
   appName: string,
   argoCdToken: Secret,
-  timeoutSeconds: number = 300,
-  serverUrl: string = "https://argocd.sjer.red",
+  timeoutSeconds = 300,
+  serverUrl = "https://argocd.sjer.red",
   dryrun = false,
 ): Container {
   if (dryrun) {
@@ -1111,7 +977,7 @@ export function argoCdHealthWaitHelper(
       "-c",
       `set -eu
 elapsed=0
-while [ "$elapsed" -lt ${timeoutSeconds} ]; do
+while [ "$elapsed" -lt ${String(timeoutSeconds)} ]; do
   http=$(curl -sS -L --max-redirs 3 -o /tmp/argocd-resp -w '%{http_code}' \
     -H "Authorization: Bearer $ARGOCD_TOKEN" \
     "${serverUrl}/api/v1/applications/${appName}")
@@ -1125,12 +991,12 @@ while [ "$elapsed" -lt ${timeoutSeconds} ]; do
     exit 1
   fi
   status=$(jq -r '.status.health.status' /tmp/argocd-resp)
-  echo "Health: $status ($elapsed/${timeoutSeconds}s)"
+  echo "Health: $status ($elapsed/${String(timeoutSeconds)}s)"
   [ "$status" = "Healthy" ] && exit 0
   sleep 10
   elapsed=$((elapsed + 10))
 done
-echo "Timeout: ${appName} did not become Healthy within ${timeoutSeconds}s"
+echo "Timeout: ${appName} did not become Healthy within ${String(timeoutSeconds)}s"
 exit 1`,
     ]);
 }
@@ -1164,8 +1030,8 @@ export async function argoCdSyncAndWaitHelper(
       serverUrl,
       dryrun,
     ).stdout();
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
     healthOut = `+++ :warning: health-wait failed (soft-fail): ${msg}`;
   }
   return [
@@ -1201,9 +1067,9 @@ export function cooklangBuildHelper(
   }
 
   // Mount deps at correct relative paths for file: protocol resolution
-  for (let i = 0; i < depNames.length; i++) {
+  for (const [i, depName] of depNames.entries()) {
     container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
+      `/workspace/packages/${depName}`,
       depDirs[i],
       { exclude: SOURCE_EXCLUDES },
     );
@@ -1214,7 +1080,7 @@ export function cooklangBuildHelper(
     .withExec(["bun", "run", "build"]);
 }
 
-const GITHUB_REPO_SLUG_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+const GITHUB_REPO_SLUG_PATTERN = /^[\w.-]+\/[\w.-]+$/;
 
 function validateGitHubRepoSlug(repo: string, label: string): string {
   if (!GITHUB_REPO_SLUG_PATTERN.test(repo)) {
@@ -1273,7 +1139,7 @@ export function cooklangPublishHelper(
       [
         `set -eu`,
         mintGithubAppTokenAndSetupGitAuth({ withAskpass: false }),
-        `latest=$(gh release list --repo ${cooklangPluginRepo} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)`,
+        String.raw`latest=$(gh release list --repo ${cooklangPluginRepo} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -1)`,
         `base="\${latest:-$(jq -r .version /artifacts/manifest.json)}"`,
         `major=$(echo "$base" | cut -d. -f1)`,
         `minor=$(echo "$base" | cut -d. -f2)`,
@@ -1306,7 +1172,7 @@ export function cooklangPublishHelper(
       `git config user.email "ci@sjer.red"`,
       `git config user.name "CI Bot"`,
       // Compute next version: latest semver release tag + 1 patch, fallback to artifacts manifest
-      `latest=$(gh release list --repo ${cooklangPluginRepo} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)`,
+      String.raw`latest=$(gh release list --repo ${cooklangPluginRepo} --limit 50 --json tagName --jq '.[].tagName' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -1)`,
       `base="\${latest:-$(jq -r .version /artifacts/manifest.json)}"`,
       `major=$(echo "$base" | cut -d. -f1)`,
       `minor=$(echo "$base" | cut -d. -f2)`,
@@ -1320,7 +1186,7 @@ export function cooklangPublishHelper(
       // Copy artifacts to repo + update versions.json only for compatibility boundary changes
       `cp /artifacts/main.js /artifacts/manifest.json /artifacts/styles.css /repo/`,
       `if [ ! -s /repo/versions.json ]; then echo '{}' > /repo/versions.json; fi`,
-      `latest_min=$(jq -r 'to_entries | map(select(.key | test("^[0-9]+\\\\.[0-9]+\\\\.[0-9]+$"))) | sort_by(.key | split(".") | map(tonumber)) | (last // {"value": ""}) | .value' /repo/versions.json)`,
+      String.raw`latest_min=$(jq -r 'to_entries | map(select(.key | test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))) | sort_by(.key | split(".") | map(tonumber)) | (last // {"value": ""}) | .value' /repo/versions.json)`,
       `if [ -z "$latest_min" ] || [ "$latest_min" != "$min" ]; then jq --arg v "$new" --arg m "$min" '.[$v] = $m' /repo/versions.json > /repo/versions.json.tmp && mv /repo/versions.json.tmp /repo/versions.json && git -C /repo add versions.json; else echo "versions.json compatibility boundary unchanged ($min)"; fi`,
       // Commit + push to plugin repo main
       `git -C /repo add main.js manifest.json styles.css`,
@@ -1328,7 +1194,7 @@ export function cooklangPublishHelper(
       // Create the GitHub release on the plugin repo (idempotent: skip if tag already exists)
       `if gh release view "$new" --repo ${cooklangPluginRepo} >/dev/null; then echo "Release $new already exists on ${cooklangPluginRepo}, skipping"; else gh release create "$new" /artifacts/main.js /artifacts/manifest.json /artifacts/styles.css --repo ${cooklangPluginRepo} --title "v$new" --generate-notes; fi`,
       // Last line of stdout = new version, for callers
-      `printf '%s\\n' "$new"`,
+      String.raw`printf '%s\n' "$new"`,
     ].join(" && "),
   ]);
 }
@@ -1371,10 +1237,15 @@ export function versionCommitBackHelper(
   const digestArgs = digests.trim()
     ? (() => {
         try {
-          const parsed = JSON.parse(digests);
-          return Object.entries(parsed)
-            .filter(([, v]) => typeof v === "string" && v !== "")
-            .map(([k, v]) => `"${k}=${v}"`)
+          const parsed: unknown = JSON.parse(digests);
+          if (parsed === null || typeof parsed !== "object") {
+            return "";
+          }
+          const entries: [string, unknown][] = Object.entries(parsed);
+          return entries
+            .flatMap(([k, v]) =>
+              typeof v === "string" && v !== "" ? [`"${k}=${v}"`] : [],
+            )
             .join(" ");
         } catch {
           return "";
@@ -1461,7 +1332,7 @@ export function ciBaseVersionCommitBackHelper(
       `git config user.email "ci@sjer.red"`,
       `git config user.name "CI Bot"`,
       `if git ls-remote --exit-code --heads origin "${CI_BASE_VERSION_BUMP_BRANCH}" >/dev/null; then git fetch origin main:refs/remotes/origin/main "${CI_BASE_VERSION_BUMP_BRANCH}:${CI_BASE_VERSION_BUMP_BRANCH}" && git checkout "${CI_BASE_VERSION_BUMP_BRANCH}" && git rebase origin/main; else git fetch origin main:refs/remotes/origin/main && git checkout -b "${CI_BASE_VERSION_BUMP_BRANCH}" origin/main; fi`,
-      `printf '%s\\n' "${version}" > .buildkite/ci-image/VERSION`,
+      String.raw`printf '%s\n' "${version}" > .buildkite/ci-image/VERSION`,
       `git add -- .buildkite/ci-image/VERSION`,
       `if git diff --cached --quiet; then HAS_VERSION_CHANGES=0; echo "No ci-base version changes to commit"; else HAS_VERSION_CHANGES=1; git commit -m "chore: bump ci-base image to ${version}" -m "Auto-Generated: ci-bot"; fi`,
       `if [ "$HAS_VERSION_CHANGES" = "0" ] && git diff --quiet origin/main...HEAD; then echo "No ci-base version changes and pending branch has no diff"; exit 0; fi`,
@@ -1530,7 +1401,7 @@ export function cooklangVersionCommitBackHelper(
       `jq --arg v "${version}" '.version = $v' packages/cooklang-for-obsidian/manifest.json > packages/cooklang-for-obsidian/manifest.json.tmp`,
       `mv packages/cooklang-for-obsidian/manifest.json.tmp packages/cooklang-for-obsidian/manifest.json`,
       `if [ ! -s packages/cooklang-for-obsidian/versions.json ]; then echo '{}' > packages/cooklang-for-obsidian/versions.json; fi`,
-      `latest_min=$(jq -r 'to_entries | map(select(.key | test("^[0-9]+\\\\.[0-9]+\\\\.[0-9]+$"))) | sort_by(.key | split(".") | map(tonumber)) | (last // {"value": ""}) | .value' packages/cooklang-for-obsidian/versions.json)`,
+      String.raw`latest_min=$(jq -r 'to_entries | map(select(.key | test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))) | sort_by(.key | split(".") | map(tonumber)) | (last // {"value": ""}) | .value' packages/cooklang-for-obsidian/versions.json)`,
       `if [ -z "$latest_min" ] || [ "$latest_min" != "${minAppVersion}" ]; then jq --arg v "${version}" --arg m "${minAppVersion}" '.[$v] = $m' packages/cooklang-for-obsidian/versions.json > packages/cooklang-for-obsidian/versions.json.tmp && mv packages/cooklang-for-obsidian/versions.json.tmp packages/cooklang-for-obsidian/versions.json && git add packages/cooklang-for-obsidian/versions.json; else echo "versions.json compatibility boundary unchanged (${minAppVersion})"; fi`,
       `git add packages/cooklang-for-obsidian/manifest.json`,
       `if git diff --cached --quiet; then HAS_CHANGES=0; echo "No cooklang version changes to commit"; else HAS_CHANGES=1; git commit -m "chore(cooklang): bump to v${version}" -m "Auto-Generated: ci-bot"; fi`,

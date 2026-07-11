@@ -59,8 +59,12 @@ function formatBadgesLine(snapshot: GameSnapshot): string {
   const earned: string[] = [];
   const cap = Math.min(snapshot.badges.length, BADGES.length);
   for (let i = 0; i < cap; i += 1) {
-    if (!snapshot.badges[i]) continue;
-    earned.push(BADGES[i].name.replace(/ Badge$/, ""));
+    if (snapshot.badges[i] !== true) continue;
+    const badge = BADGES[i];
+    if (badge === undefined) {
+      throw new Error(`Badge index out of range: ${String(i)}`);
+    }
+    earned.push(badge.name.replace(/ Badge$/, ""));
   }
   const count = earned.length;
   const total = BADGES.length;
@@ -152,8 +156,9 @@ function titleCase(value: string): string {
     .toLowerCase()
     .split(/\s+/)
     .map((word) => {
-      if (word.length === 0) return word;
-      return `${word[0].toUpperCase()}${word.slice(1)}`;
+      const first = word[0];
+      if (first === undefined) return word;
+      return `${first.toUpperCase()}${word.slice(1)}`;
     })
     .join(" ");
 }

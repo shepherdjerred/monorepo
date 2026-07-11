@@ -40,7 +40,7 @@ export type DrainResult = {
 
 export type M4aDriver = {
   /** Bind the wasm exports we read. Call once after `WebAssembly.instantiate`. */
-  bindExports: (exports: WebAssembly.Exports) => void;
+  bindExports: (exports: Bun.WebAssembly.Exports) => void;
   /** Refresh the cached linear-memory view. Call after instantiation; the
    * wasm linear memory in this build is fixed-size so once is enough. */
   refresh: (memory: WebAssembly.Memory) => void;
@@ -49,7 +49,10 @@ export type M4aDriver = {
   drain: () => DrainResult | null;
 };
 
-function readGlobalNumber(exports: WebAssembly.Exports, name: string): number {
+function readGlobalNumber(
+  exports: Bun.WebAssembly.Exports,
+  name: string,
+): number {
   const value = exports[name];
   if (!(value instanceof WebAssembly.Global)) {
     throw new TypeError(
@@ -72,7 +75,7 @@ export function createM4aDriver(): M4aDriver {
   let dv = new DataView(new ArrayBuffer(0));
   let f32 = new Float32Array(0);
 
-  function bindExports(exports: WebAssembly.Exports): void {
+  function bindExports(exports: Bun.WebAssembly.Exports): void {
     gSoundInfoAddr = readGlobalNumber(exports, "gSoundInfo");
     gWasmPcmLAddr = readGlobalNumber(exports, "gWasmPcmL");
     gWasmPcmRAddr = readGlobalNumber(exports, "gWasmPcmR");
@@ -97,8 +100,13 @@ export function createM4aDriver(): M4aDriver {
     // an ffmpeg `-f f32le -ac 2` stdin.
     const out = Buffer.alloc(samples * 8);
     for (let i = 0; i < samples; i++) {
-      out.writeFloatLE(f32[lStart + i], i * 8);
-      out.writeFloatLE(f32[rStart + i], i * 8 + 4);
+      const lSample = f32[lStart + i];
+      const rSample = f32[rStart + i];
+      if (lSample === undefined || rSample === undefined) {
+        throw new Error(`PCM sample index out of range at ${String(i)}`);
+      }
+      out.writeFloatLE(lSample, i * 8);
+      out.writeFloatLE(rSample, i * 8 + 4);
     }
 
     return { pcm: out, freqHz, frames: samples };

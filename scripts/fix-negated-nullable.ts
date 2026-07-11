@@ -5,25 +5,27 @@
  * Also fixes simple a && b where both are nullable strings.
  * Uses ESLint JSON output to find exact locations and applies text-based fixes.
  */
-import * as path from "node:path";
-import * as fs from "node:fs";
+import path from "node:path";
 import { $ } from "bun";
+import { z } from "zod";
 
 const ROOT = path.resolve(import.meta.dir, "..");
 
-type EslintMessage = {
-  ruleId: string;
-  line: number;
-  column: number;
-  endLine: number;
-  endColumn: number;
-  message: string;
-};
+const EslintMessageSchema = z.object({
+  ruleId: z.string().nullable(),
+  line: z.number(),
+  column: z.number(),
+  endLine: z.number().optional(),
+  endColumn: z.number().optional(),
+  message: z.string(),
+});
+type EslintMessage = z.infer<typeof EslintMessageSchema>;
 
-type EslintResult = {
-  filePath: string;
-  messages: EslintMessage[];
-};
+const EslintResultSchema = z.object({
+  filePath: z.string(),
+  messages: z.array(EslintMessageSchema),
+});
+const EslintOutputSchema = z.array(EslintResultSchema);
 
 async function getEslintIssues(
   pkgPath: string,
@@ -32,7 +34,7 @@ async function getEslintIssues(
     await $`cd ${path.join(ROOT, pkgPath)} && bunx eslint . --format json`
       .quiet()
       .nothrow();
-  const data = JSON.parse(result.stdout.toString()) as EslintResult[];
+  const data = EslintOutputSchema.parse(JSON.parse(result.stdout.toString()));
 
   const issuesByFile = new Map<string, EslintMessage[]>();
   for (const file of data) {
@@ -65,14 +67,10 @@ function fixLine(line: string, col: number, message: string): string {
       if (depth === 0) break;
       depth--;
     } else if (
-      ch === " " ||
-      ch === "|" ||
-      ch === "&" ||
-      ch === ")" ||
-      ch === ","
-    ) {
-      if (depth === 0) break;
-    }
+      (ch === " " || ch === "|" || ch === "&" || ch === ")" || ch === ",") &&
+      depth === 0
+    )
+      break;
     exprEnd++;
   }
 
@@ -140,15 +138,19 @@ async function processPackage(pkgPath: string): Promise<number> {
     );
     if (sbeMessages.length === 0) continue;
 
-    const content = fs.readFileSync(filePath, "utf-8");
+    const content = await Bun.file(filePath).text();
     const lines = content.split("\n");
     let modified = false;
 
     // Group by line - process from right to left (high col first) to preserve column positions
     const byLine = new Map<number, EslintMessage[]>();
     for (const msg of sbeMessages) {
-      if (!byLine.has(msg.line)) byLine.set(msg.line, []);
-      byLine.get(msg.line)!.push(msg);
+      const existing = byLine.get(msg.line);
+      if (existing) {
+        existing.push(msg);
+      } else {
+        byLine.set(msg.line, [msg]);
+      }
     }
 
     for (const [lineNum, lineMessages] of byLine) {
@@ -156,6 +158,7 @@ async function processPackage(pkgPath: string): Promise<number> {
       lineMessages.sort((a, b) => b.column - a.column);
 
       let currentLine = lines[lineNum - 1]; // 0-indexed
+      if (currentLine === undefined) continue;
       for (const msg of lineMessages) {
         const newLine = fixLine(currentLine, msg.column, msg.message);
         if (newLine !== currentLine) {
@@ -168,9 +171,9 @@ async function processPackage(pkgPath: string): Promise<number> {
     }
 
     if (modified) {
-      fs.writeFileSync(filePath, lines.join("\n"));
+      await Bun.write(filePath, lines.join("\n"));
       const rel = path.relative(ROOT, filePath);
-      console.log(`  Fixed ${sbeMessages.length} in ${rel}`);
+      console.log(`  Fixed ${String(sbeMessages.length)} in ${rel}`);
     }
   }
 
@@ -182,7 +185,7 @@ async function processPackage(pkgPath: string): Promise<number> {
     );
     if (nucMessages.length === 0) continue;
 
-    const content = fs.readFileSync(filePath, "utf-8");
+    const content = await Bun.file(filePath).text();
     const lines = content.split("\n");
     let modified = false;
 
@@ -192,13 +195,14 @@ async function processPackage(pkgPath: string): Promise<number> {
     for (const msg of nucMessages) {
       const lineIdx = msg.line - 1;
       const line = lines[lineIdx];
+      if (line === undefined) continue;
 
       // Find the ?. at or near the column position
       const searchStart = Math.max(0, msg.column - 5);
       const searchEnd = Math.min(line.length, msg.column + 20);
       const segment = line.slice(searchStart, searchEnd);
       const qIdx = segment.indexOf("?.");
-      if (qIdx >= 0) {
+      if (qIdx !== -1) {
         const absIdx = searchStart + qIdx;
         lines[lineIdx] = line.slice(0, absIdx) + line.slice(absIdx + 1); // Remove '?'
         modified = true;
@@ -207,7 +211,7 @@ async function processPackage(pkgPath: string): Promise<number> {
     }
 
     if (modified) {
-      fs.writeFileSync(filePath, lines.join("\n"));
+      await Bun.write(filePath, lines.join("\n"));
       const rel = path.relative(ROOT, filePath);
       console.log(`  Fixed optional chains in ${rel}`);
     }
@@ -233,7 +237,11 @@ async function main() {
     total += await processPackage(pkg);
   }
 
-  console.log(`\nTotal fixes: ${total}`);
+  console.log(`\nTotal fixes: ${String(total)}`);
 }
 
-main().catch(console.error);
+try {
+  await main();
+} catch (error) {
+  console.error(error);
+}

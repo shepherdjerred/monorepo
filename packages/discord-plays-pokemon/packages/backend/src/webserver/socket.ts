@@ -16,20 +16,21 @@ export function createSocket({
 }): Observable<{ request: Request; socket: Socket }> {
   logger.info("starting web socket listener");
 
-  let cors;
+  const cors = isCorsEnabled
+    ? {
+        origin: "*",
+        methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+        preflightContinue: false,
+        optionsSuccessStatus: 204,
+      }
+    : undefined;
 
   if (isCorsEnabled) {
     logger.info("enabling cors for the web socket");
-    cors = {
-      origin: "*",
-      methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-      preflightContinue: false,
-      optionsSuccessStatus: 204,
-    };
   }
 
   const io = new Server(server, {
-    cors,
+    ...(cors === undefined ? {} : { cors }),
   });
 
   return new Observable((subscriber) => {

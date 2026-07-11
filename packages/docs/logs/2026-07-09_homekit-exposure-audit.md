@@ -157,3 +157,46 @@ the user but left untouched pending a deliberate decision.
   registry override was rejected — cosmetic, but worth an upstream look.
 - Something restarted HA at 5:38pm PT (before the registry surgery); econet/roborock/
   Z-Wave-node breakage dates from that restart, not from the refresh.
+
+## Session Log — 2026-07-09 (final: deploy, CI incident, wave 2, camera incident)
+
+### Done
+
+- PR #1432 merged and deployed (chart 2.0.0-5192, HA upgraded to 2026.7.1 in the
+  same sync); HA restarted; new HomeKit filter live.
+- Wave-2 Apple cleanup via hkctl: 8 stale front-door sensor tiles dropped by the
+  bridge; `lock.front_door` exposed and assigned to the Front Door room; the 8
+  device-tracker presence tiles arrived with proper names.
+- Main-branch CI outage root-caused and fixed: transient ChartMuseum push
+  timeout failed the ci-base bump build, parking the last-successful pointer so
+  every later main build inherited the VERSION diff and an always-fail guard.
+  Unblocked by retrying the push + rebuilding; prevention shipped in PR #1435
+  (guard scoped to PR builds, chart pushes retried) — merged.
+- Post-restart integration recovery verified: roborock loads (Q7 Max `docked`
+  — the "offline vacuum" was a cffi import race the whole time), SmartThings
+  re-auth confirmed; econet remains blocked upstream (Rheem cert chain,
+  home-assistant/core#172228). Bath Emporia circuit confirmed Guest Bathroom by
+  correlating today's 8–9 AM floor-heat window (Floor Heat circuit drew ~590 W;
+  Bath drew 0 W).
+- **Incident:** removed Apple accessory "Reolink Camera 5BD4" believing it was
+  an orphan of the deleted 21065 bridge — it was the live Scrypted HKSV
+  pairing (`reachable=true` should have been a hard stop). User re-paired
+  on-LAN the same evening; camera verified back in Front Door. Pre-re-pair
+  HKSV history likely lost. Lesson recorded in agent memory
+  (destructive-ops-verify-provenance).
+- hkctl source committed to `sandbox/poc/hkctl` (session scratchpad was wiped
+  by a restart; reconstructed from history) with README covering the
+  entitlement/TCC/scene-lifecycle gotchas.
+- Plan archived to `packages/docs/archive/completed/`; deliberate leftovers in
+  `packages/docs/todos/homekit-refresh-followups.md`.
+
+### Remaining
+
+- Everything open is tracked in `todos/homekit-refresh-followups.md`,
+  `todos/litter-robot-sonoff.md`, and `todos/ha-integration-reauth.md`.
+
+### Caveats
+
+- The hkctl app itself must be rebuilt from source before next use (build
+  artifacts were session-local).
+- Kumo humidity sensors still `unknown` across two restarts — watch item.

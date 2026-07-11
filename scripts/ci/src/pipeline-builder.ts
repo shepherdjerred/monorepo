@@ -55,7 +55,7 @@ import { buildSummaryStep } from "./steps/build-summary.ts";
 import { k8sPlugin } from "./lib/k8s-plugin.ts";
 
 function isPullRequestBuild(): boolean {
-  const pullRequest = process.env["BUILDKITE_PULL_REQUEST"] ?? "false";
+  const pullRequest = Bun.env["BUILDKITE_PULL_REQUEST"] ?? "false";
   return pullRequest !== "" && pullRequest !== "false";
 }
 
@@ -83,6 +83,31 @@ export function buildReleasePleaseSkipPipeline(): BuildkitePipeline {
       },
     ],
   };
+}
+
+/**
+ * Pick the image targets to (re)build for this change set. A version-bump-only
+ * commit builds nothing; a full build takes every target; otherwise we take
+ * only the app images whose package actually changed (so a temporal-only PR
+ * doesn't rebuild birmel/scout/etc), plus the infra images when homelab moved.
+ * `img.package ?? img.name` matches the `--pkg-dir ./packages/<pkg>`
+ * disambiguation used in steps/images.ts.
+ */
+function selectImagesToBuild(affected: AffectedPackages): ImageTarget[] {
+  if (affected.versionBumpOnly) return [];
+  if (affected.buildAll) return [...IMAGE_PUSH_TARGETS, ...INFRA_PUSH_TARGETS];
+
+  const imagesToBuild: ImageTarget[] = [];
+  for (const img of IMAGE_PUSH_TARGETS) {
+    const pkg = img.package ?? img.name;
+    if (affected.hasImagePackages.has(pkg)) {
+      imagesToBuild.push(img);
+    }
+  }
+  if (affected.homelabChanged) {
+    imagesToBuild.push(...INFRA_PUSH_TARGETS);
+  }
+  return imagesToBuild;
 }
 
 export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
@@ -153,7 +178,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
 
   // --- Per-package build & test steps ---
   const packages = affected.buildAll
-    ? ALL_PACKAGES.slice().sort()
+    ? [...ALL_PACKAGES].sort()
     : [...affected.packages].sort();
 
   // Map package name → build group key (e.g. "birmel" → "pkg-birmel")
@@ -273,28 +298,7 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
 
     // Determine which images need building based on what changed.
     // versionBumpOnly: digests already pushed — skip image rebuilds to prevent loop.
-    const imagesToBuild: ImageTarget[] = [];
-    if (!affected.versionBumpOnly) {
-      if (affected.buildAll) {
-        imagesToBuild.push(...IMAGE_PUSH_TARGETS, ...INFRA_PUSH_TARGETS);
-      } else {
-        if (affected.hasImagePackages.size > 0) {
-          // Filter to only the images whose package actually changed —
-          // a temporal-only PR shouldn't trigger birmel/scout/etc rebuilds.
-          // `img.package ?? img.name` matches the disambiguation used in
-          // steps/images.ts for `--pkg-dir ./packages/<pkg>`.
-          for (const img of IMAGE_PUSH_TARGETS) {
-            const pkg = img.package ?? img.name;
-            if (affected.hasImagePackages.has(pkg)) {
-              imagesToBuild.push(img);
-            }
-          }
-        }
-        if (affected.homelabChanged) {
-          imagesToBuild.push(...INFRA_PUSH_TARGETS);
-        }
-      }
-    }
+    const imagesToBuild = selectImagesToBuild(affected);
     const hasImages = imagesToBuild.length > 0;
 
     // --- Build all images + smoke tests ---

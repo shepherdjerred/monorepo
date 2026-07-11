@@ -16,37 +16,62 @@ machine:
       max-pods: "300"
     extraConfig:
       # system-reserved must cover everything OUTSIDE the kubepods cgroup: the ZFS
-      # ARC (zfs_arc_max = 48 GiB, see talos/patches/zfs.yaml) plus host kernel / OS
-      # / kubelet / containerd / apid / etcd overhead (~8 GiB). These amounts are
+      # ARC (zfs_arc_max = 16 GiB, see talos/patches/zfs.yaml) plus host kernel / OS
+      # / kubelet / containerd / apid / etcd overhead. These amounts are
       # always subtracted from node allocatable (kubelet accounts for
       # systemReserved/kubeReserved regardless of enforceNodeAllocatable), and as
       # of 2026-07-10 are also *hard cgroup ceilings* via enforceNodeAllocatable +
-      # the *ReservedCgroup paths below — live-verified:
-      # `/sys/fs/cgroup/system/memory.max` = 56Gi, `/sys/fs/cgroup/podruntime/memory.max`
-      # = 2Gi, exactly matching these values.
+      # the *ReservedCgroup paths below (the /system ceiling tracks this value;
+      # the ARC and kernel slab are kernel memory capped/bounded outside the
+      # cgroup — the reservation still budgets for them in allocatable math).
+      #
+      # 40Gi = 16 ARC + ~24 kernel/OS burst. History: right-sized 56Gi -> 24Gi on
+      # 2026-07-10 (30d evidence: 48Gi ARC massively oversized, CI unschedulable
+      # at 99.99% requested), then corrected 24Gi -> 40Gi on 2026-07-11 after a
+      # global-OOM freeze: under a full CI storm + dagger cache rebuild, kernel
+      # slab (ZFS dnode/dbuf metadata from buildkit small-file IO) alone peaked
+      # at 30.3Gi — the original "8Gi OS overhead" estimate only holds when idle.
+      # Sum of ceilings must leave real physical slack: kubepods (capacity-48Gi
+      # = 77.4Gi) + ARC 16 + slab burst fits in 125.4Gi physical with this value.
+      # If ZfsArcHitRateLow fires sustained, raise zfs_arc_max and this value in
+      # lockstep. See
+      # packages/docs/archive/completed/2026-07-10_torvalds-memory-rightsize.md.
       systemReserved:
         cpu: "4"
-        memory: "56Gi"
+        memory: "40Gi"
       # /system — Talos's CgroupSystem: every non-Kubernetes Talos daemon (udevd,
       # apid, trustd, extensions, dashboard, the system-level containerd) runs
       # here. Sourced from siderolabs/talos `pkg/machinery/constants/constants.go`
       # and confirmed via a live default-kubelet startup log showing Talos already
       # sets kubelet's own `SystemCgroupsName: "/system"` by default.
       systemReservedCgroup: /system
+      # 8Gi, NOT 2Gi: the 2026-07-10 rollout enforced this as a hard ceiling at
+      # 2Gi, but /podruntime's real usage is >2Gi (the Kubernetes containerd at
+      # /podruntime/runtime alone was measured at ~1.65Gi, plus kubelet + etcd).
+      # The kernel memcg-OOM-killed containerd/etcd/kubelet in a loop, the
+      # (also newly enabled) hardware watchdog rebooted the node, and the
+      # kube-apiserver stayed down until the ceiling was raised to 8Gi live on
+      # 2026-07-11 (usage immediately settled at ~2.2Gi). If this ever needs
+      # resizing again, measure /sys/fs/cgroup/podruntime/memory.peak first.
+      # See packages/docs/logs/2026-07-10_torvalds-podruntime-oom-outage.md.
       kubeReserved:
         cpu: "1"
-        memory: "2Gi"
+        memory: "8Gi"
       # /podruntime — Talos's CgroupPodRuntimeRoot: covers kubelet
       # (/podruntime/kubelet), the Kubernetes-scoped containerd runtime
       # (/podruntime/runtime), and etcd (/podruntime/etcd) — the parent cgroup
       # covering both kubelet and the container runtime, per upstream Kubernetes'
       # own guidance for what kube-reserved-cgroup should scope.
       kubeReservedCgroup: /podruntime
+      # Raised 2/4Gi -> 4/8Gi on 2026-07-11: during the global-OOM freeze the
+      # kernel entered direct-reclaim thrash (ZFS slab reclaim is slow; load15
+      # peaked >13k) before kubelet eviction at 2Gi ever fired. Earlier eviction
+      # gives kubelet a chance to shed pods while the node is still responsive.
       evictionHard:
-        memory.available: "2Gi"
+        memory.available: "4Gi"
         nodefs.available: "10%"
       evictionSoft:
-        memory.available: "4Gi"
+        memory.available: "8Gi"
         nodefs.available: "15%"
       evictionSoftGracePeriod:
         memory.available: "2m"

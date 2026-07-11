@@ -8,7 +8,7 @@ import { execSync } from "node:child_process";
 
 function getRepoRoot(): string {
   return execSync("git rev-parse --show-toplevel", {
-    encoding: "utf-8",
+    encoding: "utf8",
   }).trim();
 }
 import { readFile } from "node:fs/promises";
@@ -27,7 +27,7 @@ import {
 export function getTrackedPackageNames(repoRoot: string): string[] {
   const output = execSync("git ls-files -- packages", {
     cwd: repoRoot,
-    encoding: "utf-8",
+    encoding: "utf8",
   });
   const packages = new Set<string>();
 
@@ -41,6 +41,36 @@ export function getTrackedPackageNames(repoRoot: string): string[] {
   return [...packages].sort();
 }
 
+/** Every PACKAGE_TO_SITE bucket must be backed by a DEPLOY_SITES entry. */
+function checkSiteBuckets(errors: string[]): void {
+  const siteBuckets = new Set(DEPLOY_SITES.map((s) => s.bucket));
+  for (const [pkg, buckets] of Object.entries(PACKAGE_TO_SITE)) {
+    for (const bucket of buckets) {
+      if (!siteBuckets.has(bucket)) {
+        errors.push(
+          `PACKAGE_TO_SITE maps "${pkg}" to bucket "${bucket}" but no DEPLOY_SITES entry has that bucket.`,
+        );
+      }
+    }
+  }
+}
+
+/** The Playwright Docker image must match each package's @playwright/test version. */
+async function checkPlaywrightVersions(
+  repoRoot: string,
+  errors: string[],
+): Promise<void> {
+  const playwrightImageVersion = await getPlaywrightImageVersion(repoRoot);
+  for (const pkg of PLAYWRIGHT_PACKAGES) {
+    const npmVersion = await getPlaywrightNpmVersion(repoRoot, pkg);
+    if (npmVersion && playwrightImageVersion !== npmVersion) {
+      errors.push(
+        `Playwright version mismatch: Docker image is v${playwrightImageVersion} but packages/${pkg} has @playwright/test@${npmVersion}. Update PLAYWRIGHT_IMAGE in .dagger/src/constants.ts.`,
+      );
+    }
+  }
+}
+
 export async function validateCatalog(): Promise<void> {
   const errors: string[] = [];
 
@@ -48,7 +78,7 @@ export async function validateCatalog(): Promise<void> {
   // Pipeline generator may run from scripts/ci/ or repo root — use git to find root.
   // Use tracked files rather than raw directories so ignored local build artifacts
   // or dependency folders do not make the validator disagree with CI checkouts.
-  const repoRoot = await getRepoRoot();
+  const repoRoot = getRepoRoot();
   const actualPackages = getTrackedPackageNames(repoRoot);
 
   const catalogSet = new Set(ALL_PACKAGES);
@@ -103,16 +133,7 @@ export async function validateCatalog(): Promise<void> {
   }
 
   // 6. PACKAGE_TO_SITE values must match a DEPLOY_SITES bucket
-  const siteBuckets = new Set(DEPLOY_SITES.map((s) => s.bucket));
-  for (const [pkg, buckets] of Object.entries(PACKAGE_TO_SITE)) {
-    for (const bucket of buckets) {
-      if (!siteBuckets.has(bucket)) {
-        errors.push(
-          `PACKAGE_TO_SITE maps "${pkg}" to bucket "${bucket}" but no DEPLOY_SITES entry has that bucket.`,
-        );
-      }
-    }
-  }
+  checkSiteBuckets(errors);
 
   // 7. SKIP_PACKAGES entries must exist in ALL_PACKAGES
   for (const pkg of SKIP_PACKAGES) {
@@ -124,15 +145,7 @@ export async function validateCatalog(): Promise<void> {
   }
 
   // 8. Playwright Docker image version must match installed @playwright/test version
-  const playwrightImageVersion = await getPlaywrightImageVersion(repoRoot);
-  for (const pkg of PLAYWRIGHT_PACKAGES) {
-    const npmVersion = await getPlaywrightNpmVersion(repoRoot, pkg);
-    if (npmVersion && playwrightImageVersion !== npmVersion) {
-      errors.push(
-        `Playwright version mismatch: Docker image is v${playwrightImageVersion} but packages/${pkg} has @playwright/test@${npmVersion}. Update PLAYWRIGHT_IMAGE in .dagger/src/constants.ts.`,
-      );
-    }
-  }
+  await checkPlaywrightVersions(repoRoot, errors);
 
   if (errors.length > 0) {
     throw new Error(
@@ -141,7 +154,7 @@ export async function validateCatalog(): Promise<void> {
   }
 
   console.error(
-    `Catalog validated: ${ALL_PACKAGES.length} packages, ${PACKAGES_WITH_IMAGES.size} with images, ${Object.keys(PACKAGE_TO_SITE).length} with sites`,
+    `Catalog validated: ${String(ALL_PACKAGES.length)} packages, ${String(PACKAGES_WITH_IMAGES.size)} with images, ${String(Object.keys(PACKAGE_TO_SITE).length)} with sites`,
   );
 }
 
@@ -149,7 +162,7 @@ export async function validateCatalog(): Promise<void> {
 async function getPlaywrightImageVersion(repoRoot: string): Promise<string> {
   const content = await readFile(
     `${repoRoot}/.dagger/src/constants.ts`,
-    "utf-8",
+    "utf8",
   );
   const match = /PLAYWRIGHT_IMAGE\s*=\s*"[^"]*:v([\d.]+)-/.exec(content);
   return match?.[1] ?? "unknown";
@@ -163,7 +176,7 @@ async function getPlaywrightNpmVersion(
   try {
     const lockContent = await readFile(
       `${repoRoot}/packages/${pkg}/bun.lock`,
-      "utf-8",
+      "utf8",
     );
     const match = /"@playwright\/test@([\d.]+)"/.exec(lockContent);
     return match?.[1] ?? null;

@@ -48,7 +48,7 @@ export class SeatManager {
     const seat = this.seatOf(socketId);
     if (seat === null) return null;
     const current = this.seats[seat];
-    if (current !== null) current.name = name;
+    if (current != null) current.name = name;
     return seat;
   }
 

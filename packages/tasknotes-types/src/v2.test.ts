@@ -10,6 +10,9 @@ import {
   PriorityConfigV2Schema,
   StatusConfigV2Schema,
   TaskInfoV2Schema,
+  projectDisplayName,
+  projectMatches,
+  projectPath,
 } from "./v2.ts";
 
 /**
@@ -105,5 +108,29 @@ describe("v2 wire schemas mirror @tasknotes/model", () => {
       .parse(taskInfoSchema);
     expect(v3.safeParse(task).success).toBe(true);
     expect(TaskInfoV2Schema.safeParse(task).success).toBe(true);
+  });
+});
+
+describe("wikilink project helpers", () => {
+  test("projectPath and projectDisplayName cover all spellings", () => {
+    expect(projectPath("[[Projects/Big Launch|Launch]]")).toBe(
+      "Projects/Big Launch",
+    );
+    expect(projectPath("[[Foo]]")).toBe("Foo");
+    expect(projectPath("Plain")).toBe("Plain");
+    expect(projectDisplayName("[[Projects/Big Launch|Launch]]")).toBe("Launch");
+    expect(projectDisplayName("[[Projects/Big Launch]]")).toBe("Big Launch");
+    expect(projectDisplayName("Plain")).toBe("Plain");
+  });
+
+  test("projectMatches bridges the wikilink/bare-name duality", () => {
+    const link = "[[Projects/Big Launch|Launch]]";
+    expect(projectMatches(link, "Launch")).toBe(true);
+    expect(projectMatches(link, "big launch")).toBe(true);
+    expect(projectMatches(link, "Projects/Big Launch")).toBe(true);
+    expect(projectMatches(link, link)).toBe(true);
+    expect(projectMatches(link, "Other")).toBe(false);
+    expect(projectMatches("Foo", "Foo")).toBe(true);
+    expect(projectMatches("Foo", "Bar")).toBe(false);
   });
 });

@@ -3,7 +3,6 @@ import { View, Text, FlatList, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../navigation/types";
 import type { TimeSummary } from "../domain/types";
-import { useTasks } from "../hooks/use-tasks";
 import { useTaskNotesClient } from "../hooks/use-task-notes-client";
 import { useSettings } from "../hooks/use-settings";
 import { typography } from "../styles/typography";
@@ -20,7 +19,6 @@ type TimeReportItem = {
 
 export function TimeReportScreen(_props: Props) {
   const { colors } = useSettings();
-  const { taskList } = useTasks();
   const client = useTaskNotesClient();
   const [summary, setSummary] = useState<TimeSummary | null>(null);
 
@@ -34,23 +32,14 @@ export function TimeReportScreen(_props: Props) {
   }, [client]);
 
   const items: TimeReportItem[] = React.useMemo(() => {
-    if (!summary?.entries) return [];
-    const byTask = new Map<string, number>();
-    for (const entry of summary.entries) {
-      const current = byTask.get(entry.taskId) ?? 0;
-      byTask.set(entry.taskId, current + (entry.duration ?? 0));
-    }
-    const result: TimeReportItem[] = [];
-    for (const [id, totalMinutes] of byTask) {
-      const task = taskList.find((t) => t.id === id);
-      result.push({
-        taskId: id,
-        taskTitle: task?.title ?? id,
-        totalMinutes,
-      });
-    }
-    return result.sort((a, b) => b.totalMinutes - a.totalMinutes);
-  }, [summary, taskList]);
+    if (summary === null) return [];
+    // v2 pre-aggregates per-task totals (topTasks), titles included.
+    return summary.topTasks.map((t) => ({
+      taskId: String(t.taskId),
+      taskTitle: t.title,
+      totalMinutes: t.minutes,
+    }));
+  }, [summary]);
 
   if (items.length === 0) {
     return (

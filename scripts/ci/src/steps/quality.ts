@@ -159,7 +159,7 @@ export function semgrepScanStep(): BuildkiteStep {
  * nested-aware graph fixes that miss.
  */
 export function bunLockDriftCheckStep(seeds: string[]): BuildkiteStep {
-  const list = seeds.slice().sort().join(",");
+  const list = [...seeds].sort().join(",");
   return daggerStep({
     label: ":lock: Lockfile Drift Check",
     key: "bun-lock-drift-check",

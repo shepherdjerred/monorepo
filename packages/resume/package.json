@@ -4,9 +4,6 @@
   "private": true,
   "description": "LaTeX resume - built and deployed via Dagger + Buildkite",
   "scripts": {
-    "build": "xelatex resume.tex",
-    "lint": "true",
-    "test": "true",
-    "typecheck": "true"
+    "build": "xelatex resume.tex"
   }
 }

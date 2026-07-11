@@ -3,7 +3,7 @@ import { k8sPlugin, k8sPluginWithCheckout } from "./k8s-plugin.ts";
 
 /** Convert a name to a Buildkite-safe step key. */
 export function safeKey(name: string): string {
-  return name.replace(/[^a-zA-Z0-9_:-]/g, "-");
+  return name.replaceAll(/[^\w:-]/g, "-");
 }
 
 // ---------------------------------------------------------------------------
@@ -79,14 +79,14 @@ export const RETRY = {
  * how renovate-481 broke main while showing green PR CI.
  */
 function isPullRequestBranch(): boolean {
-  const branch = process.env["BUILDKITE_BRANCH"];
-  const defaultBranch = process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"];
+  const branch = Bun.env["BUILDKITE_BRANCH"];
+  const defaultBranch = Bun.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"];
   if (branch === undefined || branch === "") return false;
   if (defaultBranch === undefined || defaultBranch === "") return false;
   return branch !== defaultBranch;
 }
 export const DRYRUN_FLAG =
-  process.env["DRYRUN"] === "true" || isPullRequestBranch() ? " --dryrun" : "";
+  Bun.env["DRYRUN"] === "true" || isPullRequestBranch() ? " --dryrun" : "";
 
 export const GITHUB_APP_SECRET_ARGS = [
   "--github-app-id env:GITHUB_APP_ID",
@@ -181,9 +181,9 @@ export function daggerStep(opts: {
     env: stepEnv,
     plugins: [
       k8sPlugin({
-        ...(opts.cpu !== undefined ? { cpu: opts.cpu } : {}),
-        ...(opts.memory !== undefined ? { memory: opts.memory } : {}),
-        ...(opts.secrets !== undefined ? { secrets: opts.secrets } : {}),
+        ...(opts.cpu === undefined ? {} : { cpu: opts.cpu }),
+        ...(opts.memory === undefined ? {} : { memory: opts.memory }),
+        ...(opts.secrets === undefined ? {} : { secrets: opts.secrets }),
       }),
     ],
   };

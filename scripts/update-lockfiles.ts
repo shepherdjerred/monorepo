@@ -1,16 +1,30 @@
 #!/usr/bin/env bun
 
 import { $ } from "bun";
-import { existsSync } from "node:fs";
-import { readdir, readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { access, readdir, readFile } from "node:fs/promises";
+import path from "node:path";
+import { z } from "zod";
+
+async function pathExists(target: string): Promise<boolean> {
+  try {
+    await access(target);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const PackageJsonSchema = z.object({
+  dependencies: z.record(z.string(), z.string()).optional(),
+  devDependencies: z.record(z.string(), z.string()).optional(),
+});
 
 /**
  * Walk the packages/ directory and run `bun install` in each package
  * that has a package.json with dependencies, generating per-package lockfiles.
  */
 async function main(): Promise<void> {
-  if (!existsSync("packages")) {
+  if (!(await pathExists("packages"))) {
     console.error("Expected to run from repository root.");
     process.exit(1);
   }
@@ -30,9 +44,9 @@ async function main(): Promise<void> {
       ) {
         continue;
       }
-      const fullPath = join(dir, entry.name);
+      const fullPath = path.join(dir, entry.name);
       if (entry.isDirectory() && !entry.isSymbolicLink()) {
-        if (existsSync(join(fullPath, "package.json"))) {
+        if (await pathExists(path.join(fullPath, "package.json"))) {
           packageDirs.push(fullPath);
         }
         await walk(fullPath);
@@ -42,15 +56,12 @@ async function main(): Promise<void> {
 
   await walk("packages");
 
-  const failures: Array<{ dir: string; error: string }> = [];
+  const failures: { dir: string; error: string }[] = [];
   let installed = 0;
 
   for (const dir of packageDirs.sort()) {
-    const text = await readFile(join(dir, "package.json"), "utf8");
-    const json = JSON.parse(text) as {
-      dependencies?: Record<string, string>;
-      devDependencies?: Record<string, string>;
-    };
+    const text = await readFile(path.join(dir, "package.json"), "utf8");
+    const json = PackageJsonSchema.parse(JSON.parse(text));
 
     // Skip packages with no deps
     if (!json.dependencies && !json.devDependencies) {

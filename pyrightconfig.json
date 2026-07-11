@@ -1,0 +1,24 @@
+{
+  // Strict for OUR code. The reportUnknown* family is disabled because it
+  // punishes consumers of untyped third-party libs (pandas, plotly, bs4,
+  // fontTools) rather than our own annotations — everything else in strict
+  // mode (missing param/return types, implicit Any in our defs, unused
+  // symbols, etc.) still fails. Env comes from scripts/python-dev-requirements.txt.
+  "typeCheckingMode": "strict",
+  "pythonVersion": "3.12",
+  "venvPath": ".",
+  "venv": ".venv",
+  "exclude": [
+    "sandbox",
+    "**/node_modules",
+    ".claude",
+    "packages/discord-plays-mario-kart/wasm-src",
+    ".venv"
+  ],
+  "reportUnknownMemberType": false,
+  "reportUnknownArgumentType": false,
+  "reportUnknownVariableType": false,
+  "reportUnknownParameterType": false,
+  "reportUnknownLambdaType": false,
+  "reportMissingTypeStubs": false
+}

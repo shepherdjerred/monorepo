@@ -81,15 +81,17 @@ const { snapshot, frame } = await driveUntil(emu, {
   schedule: scenario.schedule,
   until: scenario.until,
   timeoutFrames: scenario.timeoutFrames,
-  onTick: watch
-    ? (snap, f) => {
-        const line = describe(snap);
-        if (line !== lastLine) {
-          out(`f=${String(f).padStart(5, "0")} ${line}`);
-          lastLine = line;
-        }
+  ...(watch
+    ? {
+        onTick: (snap: Mk64Snapshot, f: number) => {
+          const line = describe(snap);
+          if (line !== lastLine) {
+            out(`f=${String(f).padStart(5, "0")} ${line}`);
+            lastLine = line;
+          }
+        },
       }
-    : undefined,
+    : {}),
 });
 
 out(`[scenario] reached at frame ${String(frame)}: ${describe(snapshot)}`);

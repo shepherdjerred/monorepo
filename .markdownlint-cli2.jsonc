@@ -26,6 +26,7 @@
     "**/__tests__/fixtures/**",
     "**/e2e/fixtures/**",
     "**/node_modules/**",
+    "**/.venv/**",
     "**/generated/**",
     "**/dist/**",
     "**/build/**",

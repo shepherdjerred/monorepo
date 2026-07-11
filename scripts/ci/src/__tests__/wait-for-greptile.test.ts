@@ -51,9 +51,9 @@ function evaluate(input: {
     threads: input.threads ?? [],
     greptileLogin: GREPTILE,
     maxBlockingPriority: input.maxBlockingPriority ?? 3,
-    ...(input.skippedReview !== undefined
-      ? { skippedReview: input.skippedReview }
-      : {}),
+    ...(input.skippedReview === undefined
+      ? {}
+      : { skippedReview: input.skippedReview }),
   });
 }
 
@@ -468,7 +468,7 @@ describe("parseGreptilePriority", () => {
 
 describe("compileCheckPattern", () => {
   it("defaults to a case-insensitive /greptile/ matcher", () => {
-    const pattern = compileCheckPattern(undefined);
+    const pattern = compileCheckPattern();
     expect(pattern.test("Greptile Review")).toBe(true);
     expect(pattern.test("buildkite/lint")).toBe(false);
   });

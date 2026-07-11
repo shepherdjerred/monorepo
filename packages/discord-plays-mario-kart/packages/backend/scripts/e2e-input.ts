@@ -62,11 +62,11 @@ const held = inputFor(press);
 out(`[e2e] booting (rom=${rom})…`);
 const emu = await bootEmulator({ rom, seats: 4 });
 
-const dumpEvery = Number(Bun.env.DUMP_EVERY ?? 0);
+const dumpEvery = Number(Bun.env["DUMP_EVERY"] ?? 0);
 function meanLuma(rgba: Buffer, w: number, h: number): number {
   let sum = 0;
   for (let i = 0; i < w * h; i++)
-    sum += rgba[i * 4] + rgba[i * 4 + 1] + rgba[i * 4 + 2];
+    sum += (rgba[i * 4] ?? 0) + (rgba[i * 4 + 1] ?? 0) + (rgba[i * 4 + 2] ?? 0);
   return sum / (w * h * 3);
 }
 
@@ -103,9 +103,9 @@ await Bun.write(outPng, png);
 // Hash only the RGB (drop the dead alpha byte) of the final frame.
 const rgb = Buffer.alloc(width * height * 3);
 for (let i = 0, j = 0; i < width * height; i++) {
-  rgb[j++] = rgba[i * 4];
-  rgb[j++] = rgba[i * 4 + 1];
-  rgb[j++] = rgba[i * 4 + 2];
+  rgb[j++] = rgba[i * 4] ?? 0;
+  rgb[j++] = rgba[i * 4 + 1] ?? 0;
+  rgb[j++] = rgba[i * 4 + 2] ?? 0;
 }
 const hash = createHash("sha256").update(rgb).digest("hex").slice(0, 16);
 

@@ -20,13 +20,13 @@ Requirements:
 """
 
 import argparse
-import os
 import shutil
 import subprocess
 import sys
-import tempfile
 import zipfile
 from pathlib import Path
+from typing import Any
+
 from fontTools.ttLib import TTFont
 
 
@@ -67,6 +67,7 @@ def fix_font_names(font_path: Path, style: str):
     """Fix internal font names to 'Berkeley Mono'."""
     font = TTFont(font_path)
 
+    record: Any
     for record in font['name'].names:
         if record.nameID == 1:  # Family
             record.string = 'Berkeley Mono'
@@ -84,7 +85,7 @@ def fix_font_names(font_path: Path, style: str):
     font.save(font_path)
 
 
-def patch_font(font_path: Path, patcher_dir: Path, output_dir: Path) -> Path:
+def patch_font(font_path: Path, patcher_dir: Path, output_dir: Path) -> Path | None:
     """Patch a single font with Nerd Fonts glyphs."""
     print(f"Patching: {font_path.name}")
 
