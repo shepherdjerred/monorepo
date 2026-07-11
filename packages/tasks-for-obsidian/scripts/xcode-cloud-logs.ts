@@ -223,7 +223,11 @@ async function downloadLogs(creds: Creds, buildRunId: string, outDir: string) {
         "_",
       );
       const safeFileName = (fileName ?? art.id).replaceAll(/[^\w.-]+/g, "_");
-      const safeName = `${actionName}__${fileType ?? "artifact"}__${safeFileName}`;
+      const safeFileType = (fileType ?? "artifact").replaceAll(
+        /[^\w.-]+/g,
+        "_",
+      );
+      const safeName = `${actionName}__${safeFileType}__${safeFileName}`;
       console.log(`Downloading ${safeName} (${fileSize ?? "?"} bytes)...`);
       const bin = await fetch(downloadUrl);
       if (!bin.ok) {
