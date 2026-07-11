@@ -160,3 +160,53 @@ All 6 PRs implemented and submitted as a git-spice stack on `feature/quality-wav
 - git-spice: `gs branch create` needs `--no-commit` (its default empty commit violates commit-msg validation); GITHUB_TOKEN from `gh auth token`; sibling stacking chosen over the plan's linear chain (disjoint changes, independent merges).
 - Scoped `--group` setups don't install file:-consumed packages' own deps (llm-observability broke scout typecheck in a fresh worktree; .dagger needs its own `bun install` for the eslint hook) — candidates for setup.ts follow-ups.
 - The "flaky account-mutations" report was load contention from 5 concurrent agents; not reproducible on any branch.
+
+## Session Log — 2026-07-11 (CI babysit to green)
+
+### Done
+
+- All 7 stack PRs (#1438, #1444–#1449) reached **zero failing checks** after three fix rounds:
+  - `fix(toolkit)` `f645065bc` (wave-1): `bun test` silently ignores `--exclude`, so the
+    catalog drift test still ran in unit runs and failed in dagger containers (no git).
+    Moved to `packages/toolkit/test-integration/`; `test:integration` points there.
+  - `fix(dagger)` `e8806b92a` (wave-1): two latent image bugs, **also broken on main** —
+    (1) dsl's peer `discord.js` unreachable at image runtime (bun resolves a `file:` dep's
+    imports from its own source dir) → per-dep installs via `SOURCE_RUNTIME_DEPS` in
+    `withForkRuntimeDeps`; (2) mk64's vite 8/rolldown hard-fails on missing
+    `/workspace/tsconfig.base.json` → `--tsconfig` plumbed through the two game
+    build/push/smoke dagger functions + CI generator (`TSCONFIG_IMAGES`).
+  - `fix(discord-plays-core)` `e1f5eb0d8` + `9c939349d` (#1449): bun ≥1.3 deterministically
+    fails `--frozen-lockfile` when the same `file:` package is declared by the install root
+    AND inside one of its `file:` deps (verified all dep-type combos, byte-identical regen).
+    Single-owner shape: dpc owns dsl/dvs; backends dropped their manifest entries and their
+    direct driver imports resolve via tsconfig `paths` to the sibling sources (bun honors
+    paths at runtime — verified in oven/bun:1.3.14 on clean layouts).
+  - Greptile P1s fixed (dpc webserver TCP startup log; scout `validateCommandArgs` builder
+    throw handling) and all 8 threads across #1445/#1448/#1449 resolved with fix replies.
+- Infra flakes (temporal-worker dagger session shutdown; engine stampedes) retried via
+  Buildkite API — all passed on retry.
+
+### Remaining
+
+- Merge the stack in order #1438 → #1444 → siblings (#1445–#1449), restacking between
+  merges (`git-spice branch restack` + `branch submit` per worktree). Not merged yet —
+  awaiting go-ahead.
+- After merges: remove worktrees, delete branches, `git worktree prune`; move both plan
+  docs to `packages/docs/archive/completed/`; the dpc tracing post-deploy todo
+  (`dpc-tracing-context-propagation-check`) stays `waiting-on-verification`.
+- Consider reporting the bun frozen-lockfile nested-`file:`-dep bug upstream (oven-sh/bun)
+  with the minimal repro from this session.
+
+### Caveats
+
+- **dpp/mk64 smoke failures pre-date this stack and fail on main** (builds 5211/5243) —
+  they only _look_ new because the stack's dagger edits forced fresh, uncached image
+  builds. Wave-1 carries the fix; main heals when it merges.
+- The smoke "passes" on main before 5211 were dagger cache hits, not real runs — treat
+  green smoke steps as stale-cache-suspect after long periods without dpp/mk64 changes.
+- bun's `file:` layout differs by install root: a dep's own `file:` deps are **nested**,
+  not hoisted. Any future package that both consumes dpc AND imports dsl/dvs directly
+  needs the same tsconfig `paths` treatment (documented in dpc's AGENTS.md).
+- macOS vs Linux bun behave differently here (macOS resolved the node_modules copy; Linux
+  resolved the source dir) — always verify this class of failure in `oven/bun:<pin>` via
+  Docker, not just locally.
