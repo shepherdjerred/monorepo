@@ -123,6 +123,7 @@
     "packages/scout-for-lol/packages/app": {
       "entry": [
         "src/main.tsx",
+        "src/**/*.test.ts",
         "vite.config.ts",
         "index.html",
         "public/**/*.js"
@@ -393,6 +394,9 @@
     "packages/monarch/src/lib/enrichment.ts": ["exports"],
     "packages/monarch/src/lib/monarch/api.ts": ["exports"],
     "packages/scout-for-lol/packages/app/src/components/ui/dialog.tsx": [
+      "exports"
+    ],
+    "packages/scout-for-lol/packages/app/src/components/ui/dropdown-menu.tsx": [
       "exports"
     ],
     "packages/scout-for-lol/packages/app/src/components/ui/select.tsx": [

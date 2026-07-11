@@ -10,32 +10,10 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { resolve } from "node:path";
+import { dirname, relative, resolve, sep } from "node:path";
 
 const KNIP_CACHE_FILE = ".knip-cache.json";
 const JSCPD_CACHE_FILE = ".jscpd-cache.json";
-
-type KnipExportEntry = {
-  name: string;
-  line: number;
-  col: number;
-  pos: number;
-};
-
-type KnipIssue = {
-  file: string;
-  dependencies: unknown[];
-  devDependencies: unknown[];
-  optionalPeerDependencies: unknown[];
-  unresolved: unknown[];
-  exports: KnipExportEntry[];
-  catalog: unknown[];
-};
-
-type KnipOutput = {
-  files: string[];
-  issues: KnipIssue[];
-};
 
 export type KnipFileResult = {
   isUnusedFile: boolean;
@@ -47,6 +25,115 @@ export type KnipFileResult = {
 };
 
 export type KnipResults = Map<string, KnipFileResult>;
+
+/**
+ * Walk up from `startDir` to find the monorepo root that owns the knip
+ * config — the nearest ancestor directory containing a `knip.json`. Knip 6
+ * only reads config from its cwd (it does not search upward), so the rule
+ * must run knip from this root and target the linted package via
+ * `--workspace`; otherwise knip falls back to its default config and floods
+ * every package with false positives.
+ */
+function findKnipRoot(startDir: string): string | null {
+  let dir = startDir;
+  for (;;) {
+    if (existsSync(resolve(dir, "knip.json"))) {
+      return dir;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) {
+      return null;
+    }
+    dir = parent;
+  }
+}
+
+/**
+ * Shape of a single knip 6 issue row. Knip 6 dropped the top-level `files`
+ * array from `--reporter json`; an unused file is now a row whose per-issue
+ * `files` array is non-empty. Parsed defensively (all fields optional) so a
+ * future schema tweak degrades to "no findings" rather than throwing and
+ * silently disabling the rule — the exact failure this parser replaces.
+ */
+type KnipIssueRow = {
+  file?: unknown;
+  files?: unknown;
+  exports?: unknown;
+};
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    return { ...value };
+  }
+  return null;
+}
+
+function parseExportEntry(
+  value: unknown,
+): { symbol: string; line?: number; col?: number } | null {
+  const record = asRecord(value);
+  if (record === null || typeof record["name"] !== "string") {
+    return null;
+  }
+  const entry: { symbol: string; line?: number; col?: number } = {
+    symbol: record["name"],
+  };
+  if (typeof record["line"] === "number") {
+    entry.line = record["line"];
+  }
+  if (typeof record["col"] === "number") {
+    entry.col = record["col"];
+  }
+  return entry;
+}
+
+/**
+ * Parse knip's `--reporter json` output (knip 6 shape) into per-file results
+ * keyed by absolute path. `basePath` is the directory knip ran in, used to
+ * resolve knip's relative `file` paths to absolute — with `--workspace` from
+ * the monorepo root, those paths are root-relative.
+ *
+ * Exported for unit testing so the knip-6 JSON shape is pinned by a fixture.
+ */
+export function parseKnipOutput(output: string, basePath: string): KnipResults {
+  const results: KnipResults = new Map();
+
+  const root = asRecord(JSON.parse(output));
+  const issues = root === null ? null : root["issues"];
+  if (!Array.isArray(issues)) {
+    return results;
+  }
+
+  for (const rawIssue of issues) {
+    const issue: KnipIssueRow | null = asRecord(rawIssue);
+    if (issue === null || typeof issue.file !== "string") {
+      continue;
+    }
+    const absPath = resolve(basePath, issue.file);
+
+    const filesArr = Array.isArray(issue.files) ? issue.files : [];
+    const isUnusedFile = filesArr.length > 0;
+
+    const exportsArr = Array.isArray(issue.exports) ? issue.exports : [];
+    const unusedExports: KnipFileResult["unusedExports"] = [];
+    for (const raw of exportsArr) {
+      const entry = parseExportEntry(raw);
+      if (entry !== null) {
+        unusedExports.push(entry);
+      }
+    }
+
+    const existing = results.get(absPath);
+    if (existing) {
+      existing.isUnusedFile ||= isUnusedFile;
+      existing.unusedExports.push(...unusedExports);
+    } else {
+      results.set(absPath, { isUnusedFile, unusedExports });
+    }
+  }
+
+  return results;
+}
 
 function readKnipCache(projectRoot: string): string | null {
   const cachePath = resolve(projectRoot, KNIP_CACHE_FILE);
@@ -61,71 +148,57 @@ function readKnipCache(projectRoot: string): string | null {
 }
 
 export function runKnip(projectRoot: string): KnipResults {
-  const results: KnipResults = new Map();
-
   try {
-    let output = readKnipCache(projectRoot);
-
-    if (output === null) {
-      const result = spawnSync("bunx", ["knip", "--reporter", "json"], {
-        cwd: projectRoot,
-        encoding: "utf-8",
-        timeout: 120_000,
-        shell: false,
-      });
-
-      if (result.error) {
-        console.error(
-          "[knip-unused] Failed to run knip:",
-          result.error.message,
-        );
-        return results;
-      }
-
-      output = result.stdout.trim();
+    const cached = readKnipCache(projectRoot);
+    if (cached !== null) {
+      // Cache files are written by the linted package itself, so their paths
+      // are resolved relative to that package dir.
+      return parseKnipOutput(cached, projectRoot);
     }
 
+    const knipRoot = findKnipRoot(projectRoot);
+    if (knipRoot === null) {
+      console.error(
+        "[knip-unused] Could not locate a knip.json above:",
+        projectRoot,
+      );
+      return new Map();
+    }
+
+    // Knip 6 resolves config only from its cwd, so run from the config root
+    // and scope to the linted package. `--workspace` names are the config's
+    // workspace keys, which are POSIX-relative paths from the root.
+    const workspace = relative(knipRoot, projectRoot).split(sep).join("/");
+    const args =
+      workspace === ""
+        ? ["knip", "--reporter", "json"]
+        : ["knip", "--workspace", workspace, "--reporter", "json"];
+
+    const result = spawnSync("bunx", args, {
+      cwd: knipRoot,
+      encoding: "utf-8",
+      timeout: 120_000,
+      shell: false,
+    });
+
+    if (result.error) {
+      console.error("[knip-unused] Failed to run knip:", result.error.message);
+      return new Map();
+    }
+
+    const output = result.stdout.trim();
     if (!output) {
-      return results;
+      return new Map();
     }
 
-    const parsed = JSON.parse(output) as KnipOutput;
-
-    for (const file of parsed.files) {
-      const absPath = resolve(projectRoot, file);
-      results.set(absPath, {
-        isUnusedFile: true,
-        unusedExports: [],
-      });
-    }
-
-    for (const issue of parsed.issues) {
-      const absPath = resolve(projectRoot, issue.file);
-      const existing = results.get(absPath);
-
-      const unusedExports = issue.exports.map((exp) => ({
-        symbol: exp.name,
-        line: exp.line,
-        col: exp.col,
-      }));
-
-      if (existing) {
-        existing.unusedExports.push(...unusedExports);
-      } else {
-        results.set(absPath, {
-          isUnusedFile: false,
-          unusedExports,
-        });
-      }
-    }
+    return parseKnipOutput(output, knipRoot);
   } catch (error) {
     console.error(
       "[knip-unused] Error parsing knip output:",
       error instanceof Error ? error.message : String(error),
     );
+    return new Map();
   }
-
-  return results;
 }
 
 type JscpdLocation = {

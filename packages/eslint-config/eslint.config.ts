@@ -8,6 +8,7 @@ const config = [
         "local.ts",
         "local-rules.ts",
         "src/rules/*.test.ts",
+        "src/rules/shared/*.test.ts",
       ],
       maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 25,
     },
