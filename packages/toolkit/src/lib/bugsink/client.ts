@@ -14,23 +14,21 @@ export type BugsinkClientResult<T> = {
   error?: string | undefined;
 };
 
-function getBaseUrl(): string {
-  return requireEnv(
-    "BUGSINK_URL",
-    "Bugsink instance URL, e.g. https://bugsink.example.com",
-  )
-    .replace(/\/$/, "")
-    .replace(/\/api\/canonical\/0$/, "");
-}
-
 function client(): HttpClient {
-  const baseUrl = getBaseUrl();
-  const authToken = requireEnv("BUGSINK_TOKEN", "Bugsink API token");
-  return createHttpClient({
-    baseUrl,
-    auth: { scheme: "Bearer", token: authToken },
-    errorLabel: "Bugsink API",
-    normalizeUrl: buildBugsinkApiUrl,
+  return createHttpClient(() => {
+    const baseUrl = requireEnv(
+      "BUGSINK_URL",
+      "Bugsink instance URL, e.g. https://bugsink.example.com",
+    )
+      .replace(/\/$/, "")
+      .replace(/\/api\/canonical\/0$/, "");
+    const authToken = requireEnv("BUGSINK_TOKEN", "Bugsink API token");
+    return {
+      baseUrl,
+      auth: { scheme: "Bearer", token: authToken },
+      errorLabel: "Bugsink API",
+      normalizeUrl: buildBugsinkApiUrl,
+    };
   });
 }
 

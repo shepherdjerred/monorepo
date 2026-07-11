@@ -9,18 +9,20 @@ export type GrafanaClientResult<T> = {
 };
 
 function client(): HttpClient {
-  const baseUrl = requireEnv("GRAFANA_URL", "Grafana instance URL").replace(
-    /\/$/,
-    "",
-  );
-  const apiKey = requireEnv(
-    "GRAFANA_API_KEY",
-    "Grafana API key or service account token",
-  );
-  return createHttpClient({
-    baseUrl,
-    auth: { scheme: "Bearer", token: apiKey },
-    errorLabel: "Grafana API",
+  return createHttpClient(() => {
+    const baseUrl = requireEnv("GRAFANA_URL", "Grafana instance URL").replace(
+      /\/$/,
+      "",
+    );
+    const apiKey = requireEnv(
+      "GRAFANA_API_KEY",
+      "Grafana API key or service account token",
+    );
+    return {
+      baseUrl,
+      auth: { scheme: "Bearer", token: apiKey },
+      errorLabel: "Grafana API",
+    };
   });
 }
 

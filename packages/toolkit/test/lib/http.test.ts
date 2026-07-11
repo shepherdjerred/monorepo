@@ -208,6 +208,19 @@ describe("createHttpClient parsing and errors", () => {
     expect(typeof result.error).toBe("string");
   });
 
+  it("wraps a thrown options-factory error into the failure envelope instead of rejecting", async () => {
+    const client = createHttpClient(() => {
+      throw new Error("MISSING_TOKEN environment variable is not set");
+    });
+
+    const result = await client.get("/items", { schema: BodySchema });
+
+    expect(result).toEqual({
+      success: false,
+      error: "MISSING_TOKEN environment variable is not set",
+    });
+  });
+
   it("wraps a thrown network error into the failure envelope", async () => {
     const fetchMock: typeof fetch = Object.assign(
       async () => {

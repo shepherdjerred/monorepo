@@ -11,12 +11,14 @@ export type PagerDutyClientResult<T> = {
 const PAGERDUTY_BASE_URL = "https://api.pagerduty.com";
 
 function client(): HttpClient {
-  const apiKey = requireEnv("PAGERDUTY_TOKEN", "PagerDuty API token");
-  return createHttpClient({
-    baseUrl: PAGERDUTY_BASE_URL,
-    auth: { scheme: "Token token=", token: apiKey },
-    errorLabel: "PagerDuty API",
-    headers: { Accept: "application/vnd.pagerduty+json;version=2" },
+  return createHttpClient(() => {
+    const apiKey = requireEnv("PAGERDUTY_TOKEN", "PagerDuty API token");
+    return {
+      baseUrl: PAGERDUTY_BASE_URL,
+      auth: { scheme: "Token token=", token: apiKey },
+      errorLabel: "PagerDuty API",
+      headers: { Accept: "application/vnd.pagerduty+json;version=2" },
+    };
   });
 }
 

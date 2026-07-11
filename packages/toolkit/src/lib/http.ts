@@ -7,10 +7,16 @@ import type { z } from "zod";
  * build a URL from a base + endpoint, attach an auth header, fetch, and on a
  * non-2xx response return a `{ success: false, error }` envelope carrying the
  * response body. On success the body is parsed with a Zod schema. Any thrown
- * error (network failure, non-JSON body, or a Zod parse failure) is caught once
- * and flattened to `{ success: false, error }`. This module centralizes that
- * behavior so each client only declares its base URL, auth, and error-message
- * prefix.
+ * error (network failure, non-JSON body, config lookup, or a Zod parse
+ * failure) is caught once and flattened to `{ success: false, error }`. This
+ * module centralizes that behavior so each client only declares its base URL,
+ * auth, and error-message prefix.
+ *
+ * `createHttpClient` accepts either `HttpClientOptions` or a
+ * `() => HttpClientOptions` factory. Service clients that read env vars (via
+ * `requireEnv`) pass a factory so the lookup runs inside `get`/`post`/`raw`'s
+ * own `try`, keeping a missing env var inside the standard envelope instead of
+ * rejecting the returned promise.
  */
 
 /** Standard response envelope shared by every service client. */
@@ -108,10 +114,30 @@ export type HttpClient = {
   ) => Promise<HttpResult<string>>;
 };
 
-export function createHttpClient(options: HttpClientOptions): HttpClient {
-  const { baseUrl, auth, errorLabel, headers, normalizeUrl } = options;
+/**
+ * Build an `HttpClient` from options that may themselves throw (e.g. a
+ * `requireEnv` lookup baked into `optionsOrFactory`). Every entry point below
+ * calls this inside its own `try` so a thrown config error is caught and
+ * flattened to the same `{ success: false, error }` envelope as a request
+ * failure, matching the pre-refactor per-client `try/catch` behavior.
+ */
+function resolveOptions(
+  optionsOrFactory: HttpClientOptions | (() => HttpClientOptions),
+): HttpClientOptions {
+  return typeof optionsOrFactory === "function"
+    ? optionsOrFactory()
+    : optionsOrFactory;
+}
 
-  function buildUrl(endpoint: string, query?: QueryParams): URL {
+export function createHttpClient(
+  optionsOrFactory: HttpClientOptions | (() => HttpClientOptions),
+): HttpClient {
+  function buildUrl(
+    options: HttpClientOptions,
+    endpoint: string,
+    query?: QueryParams,
+  ): URL {
+    const { baseUrl, normalizeUrl } = options;
     const url =
       normalizeUrl == null
         ? new URL(`${baseUrl}${endpoint}`)
@@ -122,26 +148,29 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
     return url;
   }
 
-  function jsonHeaders(): Record<string, string> {
+  function jsonHeaders(options: HttpClientOptions): Record<string, string> {
     return {
-      Authorization: authorizationHeader(auth),
+      Authorization: authorizationHeader(options.auth),
       "Content-Type": "application/json",
-      ...headers,
+      ...options.headers,
     };
   }
 
-  function rawHeaders(): Record<string, string> {
+  function rawHeaders(options: HttpClientOptions): Record<string, string> {
     return {
-      Authorization: authorizationHeader(auth),
-      ...headers,
+      Authorization: authorizationHeader(options.auth),
+      ...options.headers,
     };
   }
 
-  async function errorEnvelope(response: Response): Promise<HttpResult<never>> {
+  async function errorEnvelope(
+    options: HttpClientOptions,
+    response: Response,
+  ): Promise<HttpResult<never>> {
     const errorText = await response.text();
     return {
       success: false,
-      error: `${errorLabel} error (${String(response.status)}): ${errorText}`,
+      error: `${options.errorLabel} error (${String(response.status)}): ${errorText}`,
     };
   }
 
@@ -150,13 +179,14 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
     getOptions: HttpGetOptions<T> & { schema: z.ZodType<T> },
   ): Promise<HttpResult<T>> {
     try {
-      const url = buildUrl(endpoint, getOptions.query);
+      const options = resolveOptions(optionsOrFactory);
+      const url = buildUrl(options, endpoint, getOptions.query);
       const response = await fetch(url.toString(), {
         method: "GET",
-        headers: jsonHeaders(),
+        headers: jsonHeaders(options),
       });
       if (!response.ok) {
-        return await errorEnvelope(response);
+        return await errorEnvelope(options, response);
       }
       const json: unknown = await response.json();
       const data = getOptions.schema.parse(json);
@@ -171,14 +201,15 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
     postOptions: HttpPostOptions<T> & { schema: z.ZodType<T> },
   ): Promise<HttpResult<T>> {
     try {
-      const url = buildUrl(endpoint, postOptions.query);
+      const options = resolveOptions(optionsOrFactory);
+      const url = buildUrl(options, endpoint, postOptions.query);
       const response = await fetch(url.toString(), {
         method: "POST",
-        headers: jsonHeaders(),
+        headers: jsonHeaders(options),
         body: JSON.stringify(postOptions.body),
       });
       if (!response.ok) {
-        return await errorEnvelope(response);
+        return await errorEnvelope(options, response);
       }
       const json: unknown = await response.json();
       const data = postOptions.schema.parse(json);
@@ -193,13 +224,14 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
     rawOptions?: { query?: QueryParams | undefined },
   ): Promise<HttpResult<string>> {
     try {
-      const url = buildUrl(endpoint, rawOptions?.query);
+      const options = resolveOptions(optionsOrFactory);
+      const url = buildUrl(options, endpoint, rawOptions?.query);
       const response = await fetch(url.toString(), {
         method: "GET",
-        headers: rawHeaders(),
+        headers: rawHeaders(options),
       });
       if (!response.ok) {
-        return await errorEnvelope(response);
+        return await errorEnvelope(options, response);
       }
       const text = await response.text();
       return { success: true, data: text };
