@@ -23,6 +23,7 @@ import {
 } from "@scout-for-lol/data/model/competition-cron.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { getFlag, MY_SERVER } from "#src/configuration/flags.ts";
+import { resolveEnvironment } from "#src/configuration.ts";
 import { competitionQueueToStoredQueues } from "#src/report-store/queue.ts";
 
 const SYSTEM_OWNER_ID = DiscordAccountIdSchema.parse("00000000000000000");
@@ -45,6 +46,11 @@ type SystemReportDefinition = {
   ownerId: DiscordAccountId;
   channelId: DiscordChannelId;
   title: string;
+  // Former titles of this definition. findSystemReport matches rows by title,
+  // so a rename lists its old titles here to update the existing row in place
+  // (keeping its id + run history) instead of forking a new row and stranding
+  // the old one disabled. Not a DB column — stripped before create/update.
+  previousTitles?: string[];
   description: string | null;
   queryText: string;
   lookbackDays: number;
@@ -134,6 +140,12 @@ async function competitionReportDefinitions(
 }
 
 function commonDenominatorDefinitions(now: Date): SystemReportDefinition[] {
+  // These reports belong to MY_SERVER, which only the beta bot serves with
+  // real data — seeding them from prod created orphan rows (see the
+  // 2026-07-11 scout-mute-groups plan). Beta-only, on top of the flag.
+  if (resolveEnvironment() !== "beta") {
+    return [];
+  }
   if (!getFlag("common_denominator_enabled", { server: MY_SERVER })) {
     return [];
   }
@@ -150,51 +162,72 @@ function commonDenominatorDefinitions(now: Date): SystemReportDefinition[] {
         "LIMIT 10",
       ].join(" "),
       maxRows: 10,
+      description:
+        "Players with the highest ranked surrender rate over the last 30 days (min 10 games).",
       now,
     }),
     commonDenominatorReport({
-      title: "Common Denominator - Ranked Pairings",
-      queryText: commonPairingQuery(["solo", "flex"], 25, "DESC"),
+      title: "Common Denominator - Ranked Groups",
+      previousTitles: ["Common Denominator - Ranked Pairings"],
+      queryText: commonGroupQuery(["solo", "flex"], 25, "DESC"),
       maxRows: 25,
+      description: GROUP_WINRATE_DESCRIPTION,
       now,
     }),
     commonDenominatorReport({
-      title: "Common Denominator - Ranked Bottom Pairings",
-      queryText: commonPairingQuery(["solo", "flex"], 25, "ASC"),
+      title: "Common Denominator - Ranked Bottom Groups",
+      previousTitles: ["Common Denominator - Ranked Bottom Pairings"],
+      queryText: commonGroupQuery(["solo", "flex"], 25, "ASC"),
       maxRows: 25,
+      description: GROUP_LOSSRATE_DESCRIPTION,
       now,
     }),
     commonDenominatorReport({
-      title: "Common Denominator - Arena Pairings",
-      queryText: commonPairingQuery(["arena"], 10, "DESC"),
+      title: "Common Denominator - Arena Groups",
+      previousTitles: ["Common Denominator - Arena Pairings"],
+      queryText: commonGroupQuery(["arena"], 10, "DESC"),
       maxRows: 10,
+      description: GROUP_WINRATE_DESCRIPTION,
       now,
     }),
     commonDenominatorReport({
-      title: "Common Denominator - Arena Bottom Pairings",
-      queryText: commonPairingQuery(["arena"], 10, "ASC"),
+      title: "Common Denominator - Arena Bottom Groups",
+      previousTitles: ["Common Denominator - Arena Bottom Pairings"],
+      queryText: commonGroupQuery(["arena"], 10, "ASC"),
       maxRows: 10,
+      description: GROUP_LOSSRATE_DESCRIPTION,
       now,
     }),
     commonDenominatorReport({
-      title: "Common Denominator - ARAM Pairings",
-      queryText: commonPairingQuery(["aram"], 10, "DESC"),
+      title: "Common Denominator - ARAM Groups",
+      previousTitles: ["Common Denominator - ARAM Pairings"],
+      queryText: commonGroupQuery(["aram"], 10, "DESC"),
       maxRows: 10,
+      description: GROUP_WINRATE_DESCRIPTION,
       now,
     }),
     commonDenominatorReport({
-      title: "Common Denominator - ARAM Bottom Pairings",
-      queryText: commonPairingQuery(["aram"], 10, "ASC"),
+      title: "Common Denominator - ARAM Bottom Groups",
+      previousTitles: ["Common Denominator - ARAM Bottom Pairings"],
+      queryText: commonGroupQuery(["aram"], 10, "ASC"),
       maxRows: 10,
+      description: GROUP_LOSSRATE_DESCRIPTION,
       now,
     }),
   ];
 }
 
+const GROUP_WINRATE_DESCRIPTION =
+  "Teammate groups of every size (duos through full stacks; Arena groups by subteam) ranked by win rate over the last 30 days (min 10 shared games).";
+const GROUP_LOSSRATE_DESCRIPTION =
+  "Teammate groups of every size (duos through full stacks; Arena groups by subteam) ranked by LOWEST win rate over the last 30 days (min 10 shared games).";
+
 function commonDenominatorReport(params: {
   title: string;
+  previousTitles?: string[];
   queryText: string;
   maxRows: number;
+  description?: string;
   now: Date;
 }): SystemReportDefinition {
   return {
@@ -202,7 +235,12 @@ function commonDenominatorReport(params: {
     ownerId: SYSTEM_OWNER_ID,
     channelId: COMMON_DENOMINATOR_CHANNEL_ID,
     title: params.title,
-    description: "Seeded replacement for the legacy Common Denominator cron.",
+    ...(params.previousTitles === undefined
+      ? {}
+      : { previousTitles: params.previousTitles }),
+    description:
+      params.description ??
+      "Seeded replacement for the legacy Common Denominator cron.",
     queryText: `${params.queryText} RENDER leaderboard`,
     lookbackDays: COMMON_DENOMINATOR_LOOKBACK_DAYS,
     maxRows: params.maxRows,
@@ -216,17 +254,17 @@ function commonDenominatorReport(params: {
   };
 }
 
-function commonPairingQuery(
+function commonGroupQuery(
   queues: string[],
   limit: number,
   direction: "ASC" | "DESC",
 ): string {
   const queueList = queues.map((queue) => `'${queue}'`).join(", ");
   return [
-    "SELECT pair, games, wins, losses, win_rate",
-    "FROM player_pairs",
+    "SELECT group, games, wins, losses, win_rate",
+    "FROM player_groups",
     `WHERE queue IN (${queueList}) AND games >= ${COMMON_DENOMINATOR_MIN_GAMES.toString()}`,
-    "GROUP BY pair",
+    "GROUP BY group(all)",
     `ORDER BY win_rate ${direction}`,
     `LIMIT ${limit.toString()}`,
   ].join(" ");
@@ -347,7 +385,9 @@ async function findSystemReport(
       systemSource: definition.systemSource,
       serverId: definition.serverId,
       sourceCompetitionId: definition.sourceCompetitionId,
-      title: definition.title,
+      // Match former titles too, so a renamed definition updates its
+      // existing row in place instead of forking a new one.
+      title: { in: [definition.title, ...(definition.previousTitles ?? [])] },
     },
   });
 }
@@ -357,9 +397,10 @@ async function createSystemReport(
   definition: SystemReportDefinition,
   now: Date,
 ): Promise<void> {
+  const { previousTitles: _previousTitles, ...columns } = definition;
   await prisma.report.create({
     data: {
-      ...definition,
+      ...columns,
       isEnabled: true,
       isSystemManaged: true,
       createdTime: now,
@@ -387,6 +428,7 @@ async function updateSystemReport(params: {
     params.existingCronExpression !== params.definition.cronExpression;
   const {
     nextScheduledRunAt: definitionNextScheduledRunAt,
+    previousTitles: _previousTitles,
     ...definitionWithoutSchedule
   } = params.definition;
   await params.prisma.report.update({
@@ -417,7 +459,12 @@ async function disableStaleSystemReports(
     }, []);
   const activeCommonTitles = definitions
     .filter((definition) => definition.systemSource === "COMMON_DENOMINATOR")
-    .map((definition) => definition.title);
+    .flatMap((definition) => [
+      definition.title,
+      // A just-renamed row still carries its old title until the update
+      // sync lands; don't disable it in the same tick.
+      ...(definition.previousTitles ?? []),
+    ]);
 
   const result = await prisma.report.updateMany({
     where: {

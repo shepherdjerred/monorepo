@@ -40,41 +40,36 @@ export function matchAggregateSelect(): string {
   ].join(", ");
 }
 
-/** Pair aggregates: stats summed across both members (p1/p2 aliases). */
-export function pairAggregateSelect(): string {
+/**
+ * Raw per-player fact columns for teammate-group queries. Unlike the other
+ * selects this is NOT aggregated: group combination generation and stat
+ * summation run in JS (reports/group-combinations.ts), because the group
+ * size is plan-driven and this file's static-SQL rule forbids emitting
+ * per-size column text. Counter columns are cast to BIGINT so the row
+ * schema's bigint handling applies uniformly.
+ */
+export function groupFactSelect(): string {
   return [
-    "COUNT(*)::BIGINT AS games",
-    COUNT("CASE WHEN p1.win AND p2.win THEN 1 ELSE 0 END", "wins"),
-    COUNT(
-      "CASE WHEN p1.surrendered OR p2.surrendered THEN 1 ELSE 0 END",
-      "surrenders",
-    ),
-    COUNT("p1.kills + p2.kills", "kills"),
-    COUNT("p1.deaths + p2.deaths", "deaths"),
-    COUNT("p1.assists + p2.assists", "assists"),
-    COUNT("p1.creep_score + p2.creep_score", "creep_score"),
-    COUNT(
-      "p1.total_damage_dealt_to_champions + p2.total_damage_dealt_to_champions",
-      "damage_to_champions",
-    ),
-    COUNT("p1.gold_earned + p2.gold_earned", "gold_earned"),
-    COUNT("p1.vision_score + p2.vision_score", "vision_score"),
-    COUNT("p1.total_damage_taken + p2.total_damage_taken", "damage_taken"),
-    COUNT(
-      "p1.total_damage_dealt + p2.total_damage_dealt",
-      "total_damage_dealt",
-    ),
-    COUNT("p1.wards_placed + p2.wards_placed", "wards_placed"),
-    COUNT(
-      "p1.double_kills + p1.triple_kills + p1.quadra_kills + p1.penta_kills + " +
-        "p2.double_kills + p2.triple_kills + p2.quadra_kills + p2.penta_kills",
-      "multikills",
-    ),
-    // One duration per pair-game (p1 side only), so avg_game_duration is a
-    // true per-game average; time played is summed across both members to
-    // stay consistent with the pair's summed creep score.
-    COUNT("p1.game_duration_seconds", "duration_seconds"),
-    COUNT("p1.time_played + p2.time_played", "time_played_seconds"),
+    "player_id",
+    "player_alias",
+    "match_id",
+    "team_id",
+    "player_subteam_id",
+    "win",
+    "surrendered",
+    "kills::BIGINT AS kills",
+    "deaths::BIGINT AS deaths",
+    "assists::BIGINT AS assists",
+    "creep_score::BIGINT AS creep_score",
+    "total_damage_dealt_to_champions::BIGINT AS damage_to_champions",
+    "gold_earned::BIGINT AS gold_earned",
+    "vision_score::BIGINT AS vision_score",
+    "total_damage_taken::BIGINT AS damage_taken",
+    "total_damage_dealt::BIGINT AS total_damage_dealt",
+    "wards_placed::BIGINT AS wards_placed",
+    "(double_kills + triple_kills + quadra_kills + penta_kills)::BIGINT AS multikills",
+    "game_duration_seconds::BIGINT AS game_duration_seconds",
+    "time_played::BIGINT AS time_played_seconds",
   ].join(", ");
 }
 

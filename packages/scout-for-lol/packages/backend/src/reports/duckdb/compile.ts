@@ -11,8 +11,8 @@ import {
   type SqlFragment,
 } from "#src/reports/duckdb/lake.ts";
 import {
+  groupFactSelect,
   matchAggregateSelect,
-  pairAggregateSelect,
   prematchAggregateSelect,
 } from "#src/reports/duckdb/metrics-sql.ts";
 
@@ -76,8 +76,8 @@ function matchGrouping(groupBy: ReportGroupBy): Grouping {
       discordExpr: "NULL::VARCHAR",
       groupExpr: "COALESCE(queue, 'unknown')",
     }))
-    .with("pair", () => {
-      throw new Error("pair grouping uses compilePairQuery");
+    .with("group", () => {
+      throw new Error("group grouping uses compileGroupFactsQuery");
     })
     .exhaustive();
 }
@@ -128,7 +128,8 @@ function championPredicate(championId: number | undefined): SqlFragment {
 }
 
 const MATCH_FACT_COLUMNS =
-  "a.player_id, a.player_alias, a.discord_id, m.match_id, m.team_id, m.puuid, " +
+  "a.player_id, a.player_alias, a.discord_id, m.match_id, m.team_id, " +
+  "m.player_subteam_id, m.puuid, " +
   "m.champion_id, m.champion_name, m.queue, m.win, m.surrendered, m.kills, " +
   "m.deaths, m.assists, m.creep_score, m.total_damage_dealt_to_champions, " +
   "m.gold_earned, m.vision_score, m.total_damage_taken, m.total_damage_dealt, " +
@@ -213,8 +214,16 @@ export function compileMatchQuery(
   };
 }
 
-/** player_pairs: same-team co-occurrence, playerId-ordered pairs. */
-export function compilePairQuery(
+/**
+ * player_groups: raw per-player fact rows for teammate-group units holding
+ * ≥2 tracked players. The group unit is (match, team, subteam) — Arena's
+ * team_id is a whole 100/200 side spanning several unrelated 2-3 player
+ * subteams, so player_subteam_id (NULL outside Arena) scopes the unit.
+ * Combination generation + stat summation happen in JS
+ * (reports/group-combinations.ts): the group size is plan-driven, which the
+ * static-SQL SELECT rule cannot express.
+ */
+export function compileGroupFactsQuery(
   input: LakeQueryInput,
 ): CompiledLakeQuery | undefined {
   const predicate = combinePredicates([
@@ -230,21 +239,19 @@ export function compilePairQuery(
     return undefined;
   }
   const facts = buildMatchFactsCte(input, matchesSource);
-  // One row per (match, team, player): when a player has two tracked
-  // accounts in one match, keep a deterministic one (lowest puuid). The
-  // fact engine kept the last-processed fact; pinned as an accepted
+  // One row per (match, team, subteam, player): when a player has two
+  // tracked accounts in one match, keep a deterministic one (lowest puuid).
+  // The fact engine kept the last-processed fact; pinned as an accepted
   // difference in the parity suite.
   const dedupe =
     "deduped AS (SELECT * FROM facts QUALIFY row_number() OVER " +
-    "(PARTITION BY match_id, team_id, player_id ORDER BY puuid) = 1)";
+    "(PARTITION BY match_id, team_id, player_subteam_id, player_id ORDER BY puuid) = 1)";
   return {
     aggregateSql:
       `${facts.sql}, ${dedupe} ` +
-      `SELECT any_value(p1.player_alias || ' + ' || p2.player_alias) AS label, ` +
-      `NULL::VARCHAR AS discord_id, ${pairAggregateSelect()} ` +
-      `FROM deduped p1 JOIN deduped p2 ON p1.match_id = p2.match_id ` +
-      `AND p1.team_id = p2.team_id AND p1.player_id < p2.player_id ` +
-      `GROUP BY p1.player_id, p2.player_id`,
+      `SELECT ${groupFactSelect()} FROM deduped ` +
+      `QUALIFY count(*) OVER ` +
+      `(PARTITION BY match_id, team_id, player_subteam_id) >= 2`,
     aggregateParams: facts.params,
     ...scannedStatement(facts),
   };

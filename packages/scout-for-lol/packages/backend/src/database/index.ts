@@ -61,6 +61,7 @@ export type SubscribedChannelSubscription = {
   subscriptionId: number;
   playerId: number;
   filters: SubscriptionFilterSpec | null;
+  isMuted: boolean;
 };
 export type SubscribedChannel = {
   channel: DiscordChannelId;
@@ -145,6 +146,7 @@ export async function getChannelsSubscribedToPlayers(
           subscriptionId: subscription.id,
           playerId: subscription.playerId,
           filters,
+          isMuted: subscription.isMuted,
         });
       }
     }
