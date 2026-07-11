@@ -49,10 +49,34 @@ If `pod install` fails, check prerequisites:
 
 ## Xcode Cloud
 
+iOS release builds run on **Xcode Cloud** — there are no macOS CI agents (see
+`packages/docs/todos/mac-mini-buildkite-agent.md`).
+
 - Custom dependency bootstrap script: `ios/ci_scripts/ci_post_clone.sh` (installs Node/Bun deps + pods)
+- The bootstrap installs deps in **both** `packages/tasknotes-types` and this app.
+  `tasknotes-types` is a `file:` dep consumed from source, and its own transitive
+  deps (e.g. `@tasknotes/model`) must exist in `packages/tasknotes-types/node_modules`
+  for Metro to resolve them during the Release/Archive bundle — Bun does not install
+  a `file:` dir dep's transitive deps into the consumer.
 - For monorepo efficiency, set workflow file filters to at least `packages/tasks-for-obsidian/**` and `packages/tasknotes-types/**`
 - Archive action must use a distributable setting (not `None`) to support TestFlight
 - Add a TestFlight post-action with your internal tester group
+
+### Pulling Xcode Cloud logs (when a cloud build fails)
+
+Fetch the real xcodebuild/Metro logs from a failed cloud build via the App Store
+Connect API (credentials in 1Password — see the `xcode-cloud-debug` skill):
+
+```bash
+bun scripts/xcode-cloud-logs.ts runs              # list recent build runs
+bun scripts/xcode-cloud-logs.ts logs latest-failed # download the newest FAILED run's logs
+```
+
+Unzip the `LOG_BUNDLE` and grep `xcodebuild-archive.log` for `Command PhaseScriptExecution failed`
+or `error:`. The **"Bundle React Native code and images"** phase (Metro) is the
+usual culprit — it only runs in Release/Archive, so simulator debug builds pass
+while Archive fails. See the `xcode-cloud-debug` skill for the full workflow and
+the known `@tasknotes/model` resolution failure.
 
 ## iOS Build Troubleshooting
 
