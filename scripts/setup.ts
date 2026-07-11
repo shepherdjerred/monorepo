@@ -55,6 +55,10 @@ const SHARED_PRODUCER_DIRS = new Set([
   "packages/astro-opengraph-images",
   "packages/discord-video-stream",
   "packages/homelab/src/helm-types",
+  // Source-only shared middle layer consumed by both discord-plays-* backends
+  // via file: deps. No build step (like discord-stream-lifecycle), so it only
+  // needs installing in scope for --group=pokemon / --group=mk64 runs.
+  "packages/discord-plays-core",
 ]);
 
 // Matching DAG_TASKS ids for the same shared producers (see Phase 3 below).

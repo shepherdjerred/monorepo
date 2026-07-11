@@ -28,6 +28,14 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
   // Shared XState stream lifecycle machine; consumed via file: deps by
   // streambot and the discord-plays-* backends below.
   "discord-stream-lifecycle": ["eslint-config"],
+  // Shared middle layer (tracing/metrics/audio-transport/streamer-base/webserver/
+  // entrypoint) for the discord-plays-* game backends; consumed via file: deps by
+  // both games below.
+  "discord-plays-core": [
+    "eslint-config",
+    "discord-video-stream",
+    "discord-stream-lifecycle",
+  ],
   streambot: [
     "eslint-config",
     "discord-video-stream",
@@ -66,6 +74,7 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
     "eslint-config",
     "discord-video-stream",
     "discord-stream-lifecycle",
+    "discord-plays-core",
     "llm-models",
     "llm-observability",
   ],
@@ -73,6 +82,7 @@ export const WORKSPACE_DEPS: Record<string, string[]> = {
     "eslint-config",
     "discord-video-stream",
     "discord-stream-lifecycle",
+    "discord-plays-core",
   ],
   "scout-for-lol": [
     "eslint-config",

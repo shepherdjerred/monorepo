@@ -1,16 +1,25 @@
-import express from "express";
+import express, { type Express } from "express";
 import cors from "cors";
-import { assertPathExists } from "#src/util.ts";
-import { logger } from "#src/logger.ts";
-import { registry } from "#src/observability/metrics.ts";
+import type { Registry } from "prom-client";
+import type { Logger } from "#src/logger.ts";
+
+export type CreateExpressAppOptions = {
+  isCorsEnabled: boolean;
+  webAssetsPath: string;
+  /** Prometheus registry scraped at GET /metrics (each game passes its own registry). */
+  registry: Registry;
+  logger: Logger;
+  /** Throw if the web assets directory is missing (each game injects its own game-branded assertion). */
+  assertPathExists: (path: string, pathName: string) => void;
+};
 
 export function createExpressApp({
   isCorsEnabled,
   webAssetsPath,
-}: {
-  isCorsEnabled: boolean;
-  webAssetsPath: string;
-}) {
+  registry,
+  logger,
+  assertPathExists,
+}: CreateExpressAppOptions): Express {
   logger.info("creating express app");
 
   const app = express();

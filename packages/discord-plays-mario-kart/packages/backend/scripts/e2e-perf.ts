@@ -30,7 +30,7 @@ import type { N64Emulator } from "#src/emulator/n64-emulator.ts";
 import { createSocket } from "#src/webserver/socket.ts";
 import { handleRequest } from "#src/webserver/dispatch.ts";
 import { SeatManager } from "#src/input/seat-manager.ts";
-import { registry } from "#src/observability/metrics.ts";
+import { registry } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import { MAX_SEATS } from "#src/emulator/constants.ts";
 import {
   EMPTY_BUTTONS,

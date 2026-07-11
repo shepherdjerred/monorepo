@@ -31,6 +31,7 @@ packages/streambot:build
 packages/monarch:build
 packages/llm-observability:build
 packages/discord-stream-lifecycle:build
+packages/discord-plays-core:build
 packages/trmnl-dashboard:build
 packages/tasks-for-obsidian:build
 packages/starlight-karma-bot:build

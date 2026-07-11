@@ -23,6 +23,7 @@
         "@opentelemetry/sdk-trace-base": "^2.7.1",
         "@opentelemetry/semantic-conventions": "^1.40.0",
         "@sentry/bun": "^10.0.0",
+        "@shepherdjerred/discord-plays-core": "file:../../../discord-plays-core",
         "@shepherdjerred/discord-stream-lifecycle": "file:../../../discord-stream-lifecycle",
         "@shepherdjerred/discord-video-stream": "file:../../../discord-video-stream",
         "@shepherdjerred/llm-models": "file:../../../llm-models",
@@ -2140,6 +2141,8 @@
 
     "@babel/helper-compilation-targets/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 
+    "@discord-plays-pokemon/backend/@shepherdjerred/discord-plays-core": ["@shepherdjerred/discord-plays-core@file:../discord-plays-core", { "dependencies": { "@opentelemetry/api": "^1.9.1", "@opentelemetry/context-async-hooks": "^2.7.1", "@opentelemetry/exporter-trace-otlp-http": "^0.218.0", "@opentelemetry/resources": "^2.7.1", "@opentelemetry/sdk-node": "^0.218.0", "@opentelemetry/sdk-trace-base": "^2.7.1", "@opentelemetry/semantic-conventions": "^1.40.0", "@sentry/bun": "^10.0.0", "@shepherdjerred/discord-stream-lifecycle": "file:../discord-stream-lifecycle", "@shepherdjerred/discord-video-stream": "file:../discord-video-stream", "cors": "^2.8.5", "discord.js": "^14.26.4", "discord.js-selfbot-v13": "^3.6.1", "express": "^5.0.0", "prom-client": "^15.1.3", "xstate": "^5.32.4" }, "devDependencies": { "@shepherdjerred/eslint-config": "file:../eslint-config", "@types/bun": "^1.3.13", "@types/cors": "^2.8.17", "@types/express": "^5.0.1", "@types/node": "^25.0.0", "@typescript-eslint/utils": "^8.59.3", "eslint": "^10.3.0", "jiti": "^2.7.0", "typescript": "^6.0.3" } }],
+
     "@discord-plays-pokemon/backend/@shepherdjerred/discord-stream-lifecycle": ["@shepherdjerred/discord-stream-lifecycle@file:../discord-stream-lifecycle", { "dependencies": { "xstate": "^5.32.4" }, "devDependencies": { "@shepherdjerred/eslint-config": "file:../eslint-config", "@types/bun": "^1.3.13", "@types/node": "^25.0.0", "@typescript-eslint/utils": "^8.59.3", "discord.js": "^14.26.4", "discord.js-selfbot-v13": "^3.7.1", "eslint": "^10.3.0", "jiti": "^2.7.0", "typescript": "^6.0.3" }, "peerDependencies": { "discord.js": "^14.26.4", "discord.js-selfbot-v13": "^3.6.1" } }],
 
     "@discord-plays-pokemon/backend/@shepherdjerred/discord-video-stream": ["@shepherdjerred/discord-video-stream@file:../discord-video-stream", { "dependencies": { "@lng2004/node-datachannel": "0.32.0-20260202", "@snazzah/davey": "^0.1.8", "debug-level": "^4.1.1", "fluent-ffmpeg": "^2.1.3", "node-av": "^5.2.2", "p-debounce": "^5.1.0", "sharp": "^0.34.5", "zeromq": "^6.5.0" }, "devDependencies": { "@types/bun": "^1.3.13", "@types/fluent-ffmpeg": "^2.1.28", "discord.js-selfbot-v13": "^3.7.1", "typescript": "^6.0.3" }, "peerDependencies": { "discord.js-selfbot-v13": "^3.6.0" } }],
@@ -2467,6 +2470,12 @@
     "unplugin-icons/unplugin": ["unplugin@2.3.11", "", { "dependencies": { "@jridgewell/remapping": "^2.3.5", "acorn": "^8.15.0", "picomatch": "^4.0.3", "webpack-virtual-modules": "^0.6.2" } }, "sha512-5uKD0nqiYVzlmCRs01Fhs2BdkEgBS3SAVP6ndrBsuK42iC2+JHyxM05Rm9G8+5mkmRtzMZGY8Ct5+mliZxU/Ww=="],
 
     "werift/debug": ["debug@4.4.0", "", { "dependencies": { "ms": "^2.1.3" } }, "sha512-6WTZ/IxCY/T6BALoZHaE4ctp9xm+Z5kY/pzYaCHRFeyVhojxlrm+46y68HA6hr0TcwEssoxNiDEUJQjfPZ/RYA=="],
+
+    "@discord-plays-pokemon/backend/@shepherdjerred/discord-plays-core/@shepherdjerred/discord-stream-lifecycle": ["@shepherdjerred/discord-stream-lifecycle@file:../discord-stream-lifecycle", {}],
+
+    "@discord-plays-pokemon/backend/@shepherdjerred/discord-plays-core/@shepherdjerred/discord-video-stream": ["@shepherdjerred/discord-video-stream@file:../discord-video-stream", {}],
+
+    "@discord-plays-pokemon/backend/@shepherdjerred/discord-plays-core/@shepherdjerred/eslint-config": ["@shepherdjerred/eslint-config@file:../eslint-config", {}],
 
     "@discord-plays-pokemon/backend/@shepherdjerred/discord-stream-lifecycle/@shepherdjerred/eslint-config": ["@shepherdjerred/eslint-config@file:../eslint-config", {}],
 
