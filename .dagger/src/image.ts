@@ -1110,7 +1110,11 @@ export function temporalScheduleRehearsalHelper(
 ): Container {
   return buildTemporalWorkerImageHelper(pkgDir, depNames, depDirs)
     .withDirectory("/rehearsal/monorepo", repoDir, {
-      exclude: ["node_modules", "dist", ".eslintcache"],
+      // `.git` excluded so the rehearsal always exercises the CI shape (the
+      // script git-inits a scratch repo). A host mount from a git worktree
+      // otherwise carries a `.git` FILE pointing at the main checkout, which
+      // breaks `git init` inside the container.
+      exclude: ["node_modules", "dist", ".eslintcache", ".git"],
     })
     .withWorkdir("/workspace/packages/temporal")
     .withExec([
