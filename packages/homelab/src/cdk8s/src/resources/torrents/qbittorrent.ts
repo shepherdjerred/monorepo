@@ -5,12 +5,13 @@ import {
   DeploymentStrategy,
   EnvValue,
   type PersistentVolumeClaim,
+  Probe,
   Secret,
   Service,
   Volume,
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
+import { Duration, Size } from "cdk8s";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { withCommonLinuxServerProps } from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
@@ -196,6 +197,17 @@ export function createQBitTorrentDeployment(
       name: "qbittorrent",
       image: `ghcr.io/linuxserver/qbittorrent:${versions["linuxserver/qbittorrent"]}`,
       portNumber: 8080,
+      // On a cold start (pod/node reboot), qbittorrent-nox loads and rechecks
+      // resume data for every tracked torrent before it binds the WebUI port,
+      // which can take well over the cdk8s-plus default 30s startup window
+      // (period=10s, failureThreshold=3). Kubelet was killing the container
+      // (SIGKILL, exit 137) before it ever came up, crash-looping forever.
+      // Give it a 5-minute runway, matching jellyfin's/scrypted's pattern.
+      startup: Probe.fromTcpSocket({
+        port: 8080,
+        periodSeconds: Duration.seconds(10),
+        failureThreshold: 30,
+      }),
       resources: {
         memory: {
           request: Size.gibibytes(1),
