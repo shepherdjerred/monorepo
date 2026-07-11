@@ -104,7 +104,10 @@ export const BUILD_TIME_DEPS: string[] = [
   "llm-models",
   "astro-opengraph-images",
   "webring",
-  "tasknotes-types",
+  // tasknotes-types is NOT here: after the P3 rebuild (#1391) it is source-only
+  // (package.json main/types/exports resolve to src/*.ts, no `build` script), so
+  // running `bun run build` on it fails ("Script not found"). Consumers
+  // (tasknotes-server, tasks-for-obsidian) read its src directly.
   // Emits dist/*.d.ts (declaration-only) so dependents' tsc resolves its types; bun runs its src.
   "discord-video-stream",
 ];
