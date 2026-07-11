@@ -122,3 +122,32 @@ Note: steps 2–3 are one `apply-config` invocation since it's full-document. Se
   "prompt": "One week ago torvalds was rebalanced: ZFS ARC 48Gi->16Gi, systemReserved 56Gi->24Gi, allocatable ~91.4Gi, dagger engine req 8Gi/lim 24Gi, dagger liveness failureThreshold 60. Check via Grafana/Prometheus and kubectl: (1) ARC hit rate over the week — any sustained ZfsArcHitRateLow (<85%) firings? (2) any ZfsArcEvictionHigh/ZfsHashCollisionsHigh/ZfsMemoryReclaim firings? (3) dagger engine restarts and OOMKilled events since the change, (4) Buildkite/Kueue: any CI pods Pending on Insufficient memory, (5) node memory requests % of allocatable. Email a green/red verdict per check with evidence; recommend raising ARC to 24Gi (with systemReserved to 32Gi in lockstep) only if (1) is red."
 }
 -->
+
+## Session Log — 2026-07-11 (continuation)
+
+### Done
+
+- **Global-OOM freeze root-caused** (03:38Z): under full CI storm + dagger cache rebuild, kernel slab (ZFS dnode/dbuf metadata) peaked at 30.3Gi — unbudgeted by the 24Gi systemReserved ("8Gi OS overhead" only holds when idle). Aggregate demand > 125.4Gi physical → ~15min direct-reclaim thrash (load15 >13k) → global OOM kill. Second storm 06:08Z (load15 ~33k) recovered without OOM; third ~19:00Z (load1 ~10.8k) tracked the retune CI build and also self-recovered.
+- **Retune applied** (`30bfab693`): systemReserved 24→40Gi (16 ARC + ~24 kernel/OS burst, measured), evictionHard/Soft 2/4→4/8Gi. Live-verified: configz, /system cgroup = 40Gi, allocatable 73.4Gi (requests ~61Gi → ~12Gi CI headroom).
+- **ARC 16Gi vindicated overnight**: hit rate never below 97.7% across all storms; no ZFS alerts fired; ARC pinned at cap and innocent in the OOM.
+- **PD auto-resolve investigated**: send_resolved works when the stack survives; orphaning happens because Alertmanager active-alert state is memory-only (PVC holds only nflog/silences) and AM was OOMKilled 5x during storms (chart-default 200Mi request, no limit → worst OOM score). PD service has auto_resolve_timeout: None (no backstop).
+- **Alertmanager resources shipped** (`9b4472070`): 512Mi request / 1Gi limit; live-verified on the pod.
+- **qbittorrent crash loop root-caused**: gluetun OOM kill left stale `ip rule` (table 51820) in pod netns → VPN never reconnected (backoff 8.5h) → qbittorrent (binds wg0) killed by startup probe x138. Pod recreated → VPN healthy; qbittorrent startup raced storms.
+- **tempo-0**: process silently wedged since 03:09Z (readiness failed 4.9k times while liveness passed); pod deleted.
+- PD triage of all 17 open incidents delivered (8 stale-orphaned, 3 fixed in-flight, 4 real follow-ups, 2 noise). User handling incidents separately.
+
+### Remaining
+
+- **tempo-0 stuck Terminating** (D-state on ZFS IO) — should clear as IO drains; if still Terminating hours later, investigate kernel-level.
+- **qbittorrent** — VPN healthy but container was still cycling startup probe during the load storm; verify 3/3 after storm settles. If it still can't start in 5min when idle, raise its startupProbe failureThreshold.
+- **Temporal follow-up task not scheduled** — gRPC through port-forward kept failing while the apiserver was recovering. Re-run: `kubectl port-forward -n temporal svc/temporal-temporal-server-service 7233:7233 &` then `cd packages/temporal && TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-doc ../docs/archive/completed/2026-07-10_torvalds-memory-rightsize.md` (runAt 2026-07-17 — no urgency).
+- **main CI red→pending**: builds during the storms failed; latest build (9b4472070) in flight — confirm green.
+- Scout weekly reports x7 + Data Dragon refresh retriggers; HA 234 unavailable entities; SSD-wear + prometheus-"leak" alert tuning — user handling separately.
+- Optional PD hardening not done by choice: auto_resolve_timeout backstop; Temporal reconciliation task diffing open PD incidents vs firing alerts.
+- Worktree cleanup after everything settles: `git worktree remove .claude/worktrees/torvalds-memory-rightsize && git branch -d feature/torvalds-memory-rightsize`.
+
+### Caveats
+
+- **Load storms are not fixed** — memory-side is now bounded (no OOM in storms 2-3), but the D-state/runqueue explosion under concurrent CI + ZFS IO survives and causes 15-60min of degradation (apiserver timeouts). The remaining lever is CI concurrency (buildkite max-in-flight 16→8) — declined for now to preserve throughput.
+- All three of today's config pushes went **directly to main** (Buildkite was down/red; operator-directed). PR #1442 documents the first batch.
+- The archived-plan Status says Complete; this continuation shifted numbers (systemReserved 40Gi not 24Gi; allocatable 73.4Gi not 91.4Gi). The kubelet.yaml comments are the source of truth.
