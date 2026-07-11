@@ -51,9 +51,9 @@ function evaluate(input: {
     threads: input.threads ?? [],
     greptileLogin: GREPTILE,
     maxBlockingPriority: input.maxBlockingPriority ?? 3,
-    ...(input.skippedReview !== undefined
-      ? { skippedReview: input.skippedReview }
-      : {}),
+    ...(input.skippedReview === undefined
+      ? {}
+      : { skippedReview: input.skippedReview }),
   });
 }
 
@@ -91,6 +91,16 @@ describe("evaluateGate — skipped-review shortcut", () => {
     expect(result.state).toBe("passed");
     expect(result.message).toContain("excluded authors list");
     expect(result.message).toContain(HEAD);
+  });
+
+  it("still blocks on unresolved threads when skipped due to excluded author", () => {
+    const result = evaluate({
+      reviewCheck: { found: false, status: null, conclusion: null, url: null },
+      threads: [thread({ isResolved: false })],
+      skippedReview: "excluded-author",
+    });
+    expect(result.state).toBe("failed");
+    expect(result.message).toContain("unresolved Greptile comment");
   });
 
   it("still blocks on unresolved threads from earlier commits even when skippedReview is set", () => {
@@ -458,7 +468,7 @@ describe("parseGreptilePriority", () => {
 
 describe("compileCheckPattern", () => {
   it("defaults to a case-insensitive /greptile/ matcher", () => {
-    const pattern = compileCheckPattern(undefined);
+    const pattern = compileCheckPattern();
     expect(pattern.test("Greptile Review")).toBe(true);
     expect(pattern.test("buildkite/lint")).toBe(false);
   });

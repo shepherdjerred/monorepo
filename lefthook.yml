@@ -209,6 +209,43 @@ pre-commit:
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
+                # --- Automation code (non-package dirs) ---
+                - name: eslint-root-scripts
+                  root: "scripts/"
+                  glob: "scripts/*.ts"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-ci-scripts
+                  root: "scripts/ci/"
+                  glob: "scripts/ci/**/*.ts"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                - name: eslint-dagger
+                  root: ".dagger/"
+                  glob: ".dagger/src/**/*.ts"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
+                # --- Python ---
+                - name: ruff
+                  glob: "**/*.py"
+                  exclude:
+                    - "sandbox/**"
+                    - "**/node_modules/**"
+                    - "**/wasm-src/**"
+                  run: uvx ruff@0.15.21 check --fix {staged_files}
+                  stage_fixed: true
+
+                - name: pyright
+                  glob: "**/*.py"
+                  exclude:
+                    - "sandbox/**"
+                    - "**/node_modules/**"
+                    - "**/wasm-src/**"
+                  run: bash scripts/pyright-check.sh
+
                 # --- shellcheck ---
                 - name: shellcheck
                   glob: "**/*.sh"
@@ -397,6 +434,12 @@ pre-commit:
             glob: "packages/terraform-provider-asuswrt/**/*.go"
             run: golangci-lint run
 
+          # --- Rust (scout-for-lol desktop) ---
+          - name: scout-desktop-rust
+            root: "packages/scout-for-lol/packages/desktop/src-tauri/"
+            glob: "packages/scout-for-lol/packages/desktop/src-tauri/**/*.rs"
+            run: cargo fmt --check && cargo clippy --all-targets --all-features -- -D warnings
+
           # --- Astro check ---
           - name: sjer-red-astro-check
             root: "packages/sjer.red/"
@@ -419,6 +462,7 @@ pre-commit:
           - name: compliance-check
             glob:
               - "packages/*/package.json"
+              - "packages/*/packages/*/package.json"
               - "packages/*/eslint.config.*"
               - "packages/*/tsconfig.json"
             run: bash scripts/compliance-check.sh

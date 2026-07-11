@@ -1,20 +1,14 @@
-import { readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 
 /** CI base image — version read from .buildkite/ci-image/VERSION at pipeline generation time. */
-const CHECKED_OUT_CI_BASE_VERSION = readFileSync(
-  resolve(
-    dirname(fileURLToPath(import.meta.url)),
-    "../../../../.buildkite/ci-image/VERSION",
-  ),
-  "utf-8",
-).trim();
+const checkedOutCiBaseVersionRaw = await Bun.file(
+  `${import.meta.dir}/../../../../.buildkite/ci-image/VERSION`,
+).text();
+const CHECKED_OUT_CI_BASE_VERSION = checkedOutCiBaseVersionRaw.trim();
 
 function ciBaseVersion(): string {
-  const pullRequest = process.env["BUILDKITE_PULL_REQUEST"];
-  const baseBranch = process.env["BUILDKITE_PULL_REQUEST_BASE_BRANCH"];
+  const pullRequest = Bun.env["BUILDKITE_PULL_REQUEST"];
+  const baseBranch = Bun.env["BUILDKITE_PULL_REQUEST_BASE_BRANCH"];
   if (pullRequest !== undefined && pullRequest !== "false" && baseBranch) {
     try {
       execFileSync("git", ["fetch", "--depth=1", "origin", baseBranch], {
@@ -24,7 +18,7 @@ function ciBaseVersion(): string {
         "git",
         ["show", "FETCH_HEAD:.buildkite/ci-image/VERSION"],
         {
-          encoding: "utf-8",
+          encoding: "utf8",
         },
       ).trim();
     } catch {
@@ -36,6 +30,40 @@ function ciBaseVersion(): string {
 
 const CI_BASE_VERSION = ciBaseVersion();
 const CI_BASE_IMAGE = `ghcr.io/shepherdjerred/ci-base:${CI_BASE_VERSION}`;
+
+type ResourceQuantities = {
+  cpu: string;
+  memory: string;
+};
+
+type SecretRef = {
+  secretRef: { name: string; optional?: boolean };
+};
+
+type PluginContainer = {
+  name: string;
+  image: string;
+  resources: { requests: ResourceQuantities; limits: ResourceQuantities };
+  env: { name: string; value: string }[];
+  envFrom: SecretRef[];
+  volumeMounts?: unknown[];
+};
+
+type CheckoutConfig = {
+  skip?: boolean;
+  cloneFlags?: string;
+  fetchFlags?: string;
+};
+
+export type K8sPlugin = {
+  kubernetes: {
+    checkout: CheckoutConfig;
+    podSpecPatch: {
+      serviceAccountName: string;
+      containers: PluginContainer[];
+    };
+  };
+};
 
 /**
  * Build the Kubernetes plugin config for a Buildkite step.
@@ -51,10 +79,12 @@ export function k8sPlugin(
   opts: {
     cpu?: string;
     memory?: string;
+    cpuLimit?: string;
+    memoryLimit?: string;
     secrets?: string[];
   } = {},
-): Record<string, unknown> {
-  const secretRefs: Record<string, unknown>[] = [
+): K8sPlugin {
+  const secretRefs: SecretRef[] = [
     { secretRef: { name: "buildkite-ci-secrets" } },
   ];
 
@@ -78,10 +108,25 @@ export function k8sPlugin(
           {
             name: "container-0",
             image: CI_BASE_IMAGE,
+            // 2026-07 CI-freeze hardening: limits added so no CI step container
+            // is ever unbounded by default, regardless of caller. Callers that
+            // pass an explicit tier (see catalog.ts ResourceTier) get
+            // tier-appropriate limits; everyone else gets the LIGHT-tier
+            // default limit UNLESS their own request would exceed it — the
+            // fallback chain falls back to the caller's request before the
+            // fixed default, since Kubernetes rejects a pod whose request
+            // exceeds its limit (several existing callers pass a custom `cpu`/
+            // `memory` request, e.g. "500m", without a matching limit option;
+            // defaulting the limit straight to "400m" would reject those).
+            // See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md.
             resources: {
               requests: {
                 cpu: opts.cpu ?? "100m",
                 memory: opts.memory ?? "256Mi",
+              },
+              limits: {
+                cpu: opts.cpuLimit ?? opts.cpu ?? "400m",
+                memory: opts.memoryLimit ?? opts.memory ?? "768Mi",
               },
             },
             env: [
@@ -112,15 +157,13 @@ export function k8sPluginWithCheckout(
   opts: {
     cpu?: string;
     memory?: string;
+    cpuLimit?: string;
+    memoryLimit?: string;
     secrets?: string[];
   } = {},
-): Record<string, unknown> {
-  const plugin = k8sPlugin(opts) as {
-    kubernetes: Record<string, unknown> & {
-      podSpecPatch: { containers: { volumeMounts?: unknown[] }[] };
-    };
-  };
-  plugin.kubernetes["checkout"] = {
+): K8sPlugin {
+  const plugin = k8sPlugin(opts);
+  plugin.kubernetes.checkout = {
     cloneFlags: "--depth=100",
     fetchFlags: "--depth=100",
   };

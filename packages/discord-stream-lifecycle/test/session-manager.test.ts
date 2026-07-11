@@ -2,11 +2,11 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver.ts";
-import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot.ts";
-import { UserbotPool } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool.ts";
-import { SingleSlotSessionManager } from "@shepherdjerred/discord-stream-lifecycle/session/session-manager.ts";
-import type { SessionStopReason } from "@shepherdjerred/discord-stream-lifecycle/session/session.ts";
+import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver";
+import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
+import { UserbotPool } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool";
+import { SingleSlotSessionManager } from "@shepherdjerred/discord-stream-lifecycle/session/session-manager";
+import type { SessionStopReason } from "@shepherdjerred/discord-stream-lifecycle/session/session";
 
 async function isDirectory(p: string): Promise<boolean> {
   try {

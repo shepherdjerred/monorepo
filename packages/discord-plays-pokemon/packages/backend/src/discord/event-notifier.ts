@@ -37,10 +37,11 @@ const COLORS: Record<GameEventKind, number> = {
 
 // Display names are stored uppercase (BULBASAUR); title-case for prose.
 function titleCase(name: string): string {
-  return name.replaceAll(
-    /[A-Z]+/gi,
-    (word) => word[0] + word.slice(1).toLowerCase(),
-  );
+  return name.replaceAll(/[A-Z]+/gi, (word) => {
+    const first = word[0];
+    if (first === undefined) return word;
+    return first + word.slice(1).toLowerCase();
+  });
 }
 
 export function eventToEmbed(event: GameEvent): EmbedBuilder {
@@ -59,6 +60,11 @@ export function eventToEmbed(event: GameEvent): EmbedBuilder {
     case "badge": {
       // badgeIndex is always 0-7 (the diff iterates the 8 badge flags).
       const badge = BADGES[event.badgeIndex];
+      if (badge === undefined) {
+        throw new Error(
+          `Badge index out of range: ${String(event.badgeIndex)}`,
+        );
+      }
       return embed
         .setTitle("🏅 Badge earned")
         .setDescription(

@@ -17,6 +17,7 @@ This script must be run as root (or with sudo).
 
 from __future__ import annotations
 
+import contextlib
 import os
 import subprocess
 import sys
@@ -27,7 +28,7 @@ REPO_URL = "https://github.com/shepherdjerred/monorepo.git"
 REPO_DIR = f"{NVME_MOUNT}/repo/monorepo"
 
 
-def run(cmd: str, check: bool = True) -> subprocess.CompletedProcess:
+def run(cmd: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
     print(f"  $ {cmd}", flush=True)
     return subprocess.run(cmd, shell=True, check=check)
 
@@ -103,10 +104,8 @@ def tune_kernel() -> None:
     governors = list(Path("/sys/devices/system/cpu").glob("cpu*/cpufreq/scaling_governor"))
     if governors:
         for gov in governors:
-            try:
+            with contextlib.suppress(OSError):
                 gov.write_text("performance")
-            except OSError:
-                pass
         print(f"  Set {len(governors)} CPUs to performance governor")
     else:
         print("  No CPU frequency scaling available (EC2 handles this)")
@@ -142,7 +141,7 @@ def clone_repo() -> None:
 def main() -> None:
     if os.geteuid() != 0:
         print("This script must be run as root. Re-running with sudo...")
-        os.execvp("sudo", ["sudo", sys.executable] + sys.argv)
+        os.execvp("sudo", ["sudo", sys.executable, *sys.argv])
 
     print("=" * 60)
     print("Bazel Bench - Remote Setup")

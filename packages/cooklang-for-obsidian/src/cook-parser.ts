@@ -98,14 +98,15 @@ const stepLexer = new Lexer(allTokens, {
  *  not when it immediately follows a sigil like `@~454g` ("approximately 454g"). */
 function findBraceBeforeSigil(tokens: IToken[], from: number): number {
   for (let i = from; i < tokens.length; i++) {
-    if (tokens[i].tokenType === LBrace) return i;
-    if (tokens[i].tokenType === AtSign || tokens[i].tokenType === HashSign)
-      return -1;
+    const tok = tokens[i];
+    if (tok === undefined) break;
+    if (tok.tokenType === LBrace) return i;
+    if (tok.tokenType === AtSign || tok.tokenType === HashSign) return -1;
     // ~ after a space is a timer boundary; ~ without preceding space is part of name
     if (
-      tokens[i].tokenType === TildeSign &&
+      tok.tokenType === TildeSign &&
       i > from &&
-      tokens[i - 1].tokenType === Space
+      tokens[i - 1]?.tokenType === Space
     )
       return -1;
   }
@@ -115,7 +116,7 @@ function findBraceBeforeSigil(tokens: IToken[], from: number): number {
 /** Find matching RBrace starting after LBrace at `from`. Returns -1 if none. */
 function findMatchingRBrace(tokens: IToken[], from: number): number {
   for (let i = from; i < tokens.length; i++) {
-    if (tokens[i].tokenType === RBrace) return i;
+    if (tokens[i]?.tokenType === RBrace) return i;
   }
   return -1;
 }
@@ -124,7 +125,7 @@ function findMatchingRBrace(tokens: IToken[], from: number): number {
 function collectImages(tokens: IToken[], start: number, end: number): string {
   let s = "";
   for (let i = start; i < end; i++) {
-    s += tokens[i].image;
+    s += tokens[i]?.image ?? "";
   }
   return s;
 }
@@ -138,7 +139,7 @@ function parseQuantityBody(
   // Find % separator
   let percentIdx = -1;
   for (let i = start; i < end; i++) {
-    if (tokens[i].tokenType === Percent) {
+    if (tokens[i]?.tokenType === Percent) {
       percentIdx = i;
       break;
     }
@@ -175,6 +176,7 @@ function parseTokenStream(
 
   while (pos < tokens.length) {
     const tok = tokens[pos];
+    if (tok === undefined) break;
 
     // ── @ingredient ─────────────────────────────────────────────────
     if (tok.tokenType === AtSign) {
@@ -200,9 +202,10 @@ function parseTokenStream(
       }
 
       // Bare form: @word (single word after @)
-      if (pos + 1 < tokens.length && tokens[pos + 1].tokenType === Word) {
+      const nextTok = tokens[pos + 1];
+      if (nextTok?.tokenType === Word) {
         flush();
-        const name = tokens[pos + 1].image;
+        const name = nextTok.image;
         const ingredient: Ingredient = { name, quantity: "", units: "" };
         ingredients.push(ingredient);
         result.push({ type: "ingredient", value: name, ref: ingredient });
@@ -233,9 +236,10 @@ function parseTokenStream(
       }
 
       // Bare form: #word
-      if (pos + 1 < tokens.length && tokens[pos + 1].tokenType === Word) {
+      const nextTok = tokens[pos + 1];
+      if (nextTok?.tokenType === Word) {
         flush();
-        const name = tokens[pos + 1].image;
+        const name = nextTok.image;
         const cw: Cookware = { name };
         cookware.push(cw);
         result.push({ type: "cookware", value: name, ref: cw });
@@ -341,9 +345,9 @@ function parseFrontmatter(text: string): {
     }
 
     const match = /^([\w.-]+):\s*(.*)/.exec(line);
-    if (match) {
+    if (match?.[1] !== undefined) {
       currentKey = match[1];
-      const val = match[2];
+      const val = match[2] ?? "";
       if (val === "|" || val === ">") {
         inMultiline = true;
         currentValue = "";
@@ -461,9 +465,9 @@ function parsePlainTextBody(
           trimmed,
         );
       if (ingMatch) {
-        const qty = (ingMatch[1] || "").trim();
-        const unit = (ingMatch[2] || "").trim();
-        const name = (ingMatch[3] || trimmed).trim();
+        const qty = (ingMatch[1] ?? "").trim();
+        const unit = (ingMatch[2] ?? "").trim();
+        const name = (ingMatch[3] ?? trimmed).trim();
         const ingredient: Ingredient = { name, quantity: qty, units: unit };
         ingredients.push(ingredient);
         currentSection.steps.push({

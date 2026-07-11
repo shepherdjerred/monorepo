@@ -18,7 +18,15 @@
  * fields directly rather than `instanceof ExecError`. The fields we care
  * about (`exitCode`, `stdout`, `stderr`, `cmd`) have been stable since the
  * SDK started exposing exec failures.
+ *
+ * Each raw field is read once into a local and coerced: unexpected types
+ * become `undefined` (lenient — a boolean `exitCode` is dropped, not fatal),
+ * matching the original duck-typing behavior without a runtime dependency.
  */
+function readString(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
 function execErrorFields(reason: unknown): {
   exitCode?: number | string;
   cmd?: string;
@@ -26,23 +34,19 @@ function execErrorFields(reason: unknown): {
   stderr?: string;
 } | null {
   if (reason === null || typeof reason !== "object") return null;
-  const r = reason as Record<string, unknown>;
-  if (
-    typeof r["exitCode"] === "undefined" &&
-    typeof r["stdout"] === "undefined" &&
-    typeof r["stderr"] === "undefined"
-  ) {
+  const record: Record<string, unknown> = { ...reason };
+  const rawExitCode = record.exitCode;
+  const exitCode =
+    typeof rawExitCode === "number" || typeof rawExitCode === "string"
+      ? rawExitCode
+      : undefined;
+  const cmd = readString(record.cmd);
+  const stdout = readString(record.stdout);
+  const stderr = readString(record.stderr);
+  if (exitCode === undefined && stdout === undefined && stderr === undefined) {
     return null;
   }
-  return {
-    exitCode:
-      typeof r["exitCode"] === "number" || typeof r["exitCode"] === "string"
-        ? r["exitCode"]
-        : undefined,
-    cmd: typeof r["cmd"] === "string" ? r["cmd"] : undefined,
-    stdout: typeof r["stdout"] === "string" ? r["stdout"] : undefined,
-    stderr: typeof r["stderr"] === "string" ? r["stderr"] : undefined,
-  };
+  return { exitCode, cmd, stdout, stderr };
 }
 
 function formatSection(
@@ -52,14 +56,14 @@ function formatSection(
   if (result.status === "fulfilled") {
     return `--- :white_check_mark: ${name}\n${result.value}`;
   }
-  const reason = result.reason;
+  const reason: unknown = result.reason;
   const fields = execErrorFields(reason);
   if (fields !== null) {
     const exitStr =
-      fields.exitCode !== undefined ? ` (exit ${String(fields.exitCode)})` : "";
+      fields.exitCode === undefined ? "" : ` (exit ${String(fields.exitCode)})`;
     return [
       `+++ :x: ${name}${exitStr}`,
-      fields.cmd !== undefined ? `command: ${fields.cmd}` : "",
+      fields.cmd === undefined ? "" : `command: ${fields.cmd}`,
       fields.stdout ?? "",
       fields.stderr ?? "",
     ]
@@ -104,8 +108,8 @@ export function aggregateBundle(
  * The thunks are evaluated immediately to start the work; only the results
  * pass through `Promise.allSettled`.
  */
-export async function runBundle<T extends string>(
-  children: { name: T; run: () => Promise<string> }[],
+export async function runBundle(
+  children: { name: string; run: () => Promise<string> }[],
 ): Promise<string> {
   const names = children.map((c) => c.name);
   const results = await Promise.allSettled(children.map((c) => c.run()));

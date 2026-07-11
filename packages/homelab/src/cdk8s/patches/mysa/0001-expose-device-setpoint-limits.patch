@@ -1,0 +1,68 @@
+--- a/custom_components/mysa/climate.py
++++ b/custom_components/mysa/climate.py
+@@ -286,8 +286,40 @@
+         )
+         val = self._get_sticky_value("target_temperature_high", val)
+         return self._convert_to_display(float(val)) if val is not None else None
++
++    def _setpoint_limit(self, keys: list[str], fallback_c: float) -> float:
++        """Resolve a min/max setpoint limit reported by the device.
++
++        Mirrors the logic in MysaMin/MaxSetpointNumber.native_value: legacy
++        devices often report mns/mxs/MinSetpoint/MaxSetpoint in centidegrees,
++        ST-V1-0 reports min_setpoint/max_setpoint in degrees. Falls back to
++        the class-level Celsius default if the device exposes no value.
++        """
++        state = self._get_state_data()
++        if isinstance(state, dict):
++            val = self._extract_value(state, keys)
++            if val is not None:
++                val_f = float(val)
++                if val_f > 100:
++                    val_f /= 100.0
++                return cast(float, self._convert_to_display(val_f))
++        return cast(float, self._convert_to_display(fallback_c))
+ 
+     @property
++    def min_temp(self) -> float:
++        """Return the minimum settable temperature reported by the device."""
++        return self._setpoint_limit(
++            ["min_setpoint", "mns", "MinSetpoint"], self._attr_min_temp
++        )
++
++    @property
++    def max_temp(self) -> float:
++        """Return the maximum settable temperature reported by the device."""
++        return self._setpoint_limit(
++            ["max_setpoint", "mxs", "MaxSetpoint"], self._attr_max_temp
++        )
++
++    @property
+     def current_humidity(self) -> float | None:
+         """Return humidity."""
+         state = self._get_state_data()
+--- a/custom_components/mysa/number.py
++++ b/custom_components/mysa/number.py
+@@ -357,7 +357,11 @@
+     """Number entity for minimum setpoint limit."""
+ 
+     _attr_native_min_value = 5.0
+-    _attr_native_max_value = 30.0
++    # Mysa devices (e.g. INF-V1 in-floor) accept setpoints up to 40 °C even
++    # though the Mysa app's default range is 5–30. Keeping the slider at 30
++    # was rejecting valid values; the cloud API enforces the device's true
++    # range server-side, so a generous slider cap is safe.
++    _attr_native_max_value = 40.0
+     _attr_native_step = 0.5
+     _attr_native_unit_of_measurement = "°C"
+ 
+@@ -419,7 +423,8 @@
+     """Number entity for maximum setpoint limit."""
+ 
+     _attr_native_min_value = 5.0
+-    _attr_native_max_value = 30.0
++    # See MysaMinSetpointNumber for the rationale on bumping from 30 → 40.
++    _attr_native_max_value = 40.0
+     _attr_native_step = 0.5
+     _attr_native_unit_of_measurement = "°C"
+ 

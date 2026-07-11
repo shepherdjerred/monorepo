@@ -9,40 +9,156 @@ if grep -q '"!packages/' package.json; then
   ERRORS=$((ERRORS+1))
 fi
 
-for dir in packages/*/; do
-  PKG=$(basename "$dir")
+# Documented exemptions ("<packages-relative-dir>:script"). A script may be
+# ABSENT — or present as a deliberate no-op stub — ONLY when the package
+# genuinely has nothing for it to do and that fact is documented here.
+# Keys are the package's path under the repo root so nested workspace packages
+# (e.g. scout-for-lol/packages/frontend) never collide with a same-named
+# sibling (e.g. discord-plays-pokemon/packages/common vs
+# discord-plays-mario-kart/packages/common).
+# Keep in sync with SKIP_PACKAGES / NO_TEST_PACKAGES in scripts/ci/src/catalog.ts.
+EXEMPT="
+packages/glitter:build
+packages/glitter:test
+packages/glitter:lint
+packages/glitter:typecheck
+packages/resume:test
+packages/resume:lint
+packages/resume:typecheck
+packages/leetcode:test
+packages/birmel:build
+packages/streambot:build
+packages/monarch:build
+packages/llm-observability:build
+packages/discord-stream-lifecycle:build
+packages/trmnl-dashboard:build
+packages/tasks-for-obsidian:build
+packages/starlight-karma-bot:build
+packages/starlight-karma-bot:test
+packages/tasknotes-types:build
+packages/cooklang-for-obsidian:test
+packages/cooklang-rich-preview:test
+packages/stocks-sjer-red:test
+packages/discord-video-stream:lint
+packages/discord-plays-mario-kart/packages/common:test
+packages/discord-plays-pokemon/packages/common:test
+packages/discord-plays-pokemon/packages/frontend:test
+packages/scout-for-lol/packages/app:test
+packages/scout-for-lol/packages/data:build
+packages/scout-for-lol/packages/desktop:test
+packages/scout-for-lol/packages/frontend:test
+packages/scout-for-lol/packages/ui:build
+packages/scout-for-lol/packages/ui:test
+"
+# glitter — static placeholder, no source; deployed via DEPLOY_SITES (buildCmd true).
+# resume — LaTeX only; build (xelatex) is its sole script, CI uses latexPackageGroup.
+# *:build — Bun-runtime / source-only / library packages with no build step
+#   (run from source); images are built by dedicated Dagger helpers, not
+#   `bun run build`. tasks-for-obsidian builds via Xcode/Gradle; tasknotes-types,
+#   scout `data`, and scout `ui` are source-only.
+# *:test — no test suite yet; pkg-check runs --skip-test (NO_TEST_PACKAGES
+#   in scripts/ci/src/catalog.ts). Add tests, then remove the exemption.
+#   Nested sub-packages' real test runs are orchestrated by their parent
+#   package's CI (dpp/mk64 common + dpp frontend + scout app/desktop/frontend/ui).
+#   dpp/mk64 common + dpp/scout desktop/frontend keep a placeholder `test` stub
+#   ("true" / "echo ...", tests not wired yet) — exempted here rather than deleted.
+# discord-video-stream:lint — vendored upstream fork, deliberately unlinted.
 
-  # Skip directories that are gitignored (local-only, not part of the repo)
-  if git check-ignore -q "$dir" 2>/dev/null; then
-    continue
-  fi
+is_exempt() {
+  case "$EXEMPT" in
+    *"
+$1:$2
+"*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 
-  if [ ! -f "$dir/package.json" ]; then
-    echo "  INFO: $PKG has no package.json (non-Bun package)"
-    continue
-  fi
+# Enumerate the true workspace package set: every top-level packages/* plus the
+# nested workspace members each one declares via its `workspaces` field. This is
+# the set root automation + CI actually run scripts for, so a nested package
+# can't hide a no-op stub outside a top-level-only scan. Standalone example/demo
+# dirs (e.g. astro-opengraph-images/examples/*) are NOT workspace members and are
+# excluded. Enumeration runs via `bun` (always present in the CI base image) so
+# the check has no git/python dependency.
+PKG_DIRS=$(bun run - <<'BUN_EOF'
+import { readdirSync, existsSync, readFileSync } from "node:fs";
+import { Glob } from "bun";
+
+function readPkg(dir) {
+  try {
+    return JSON.parse(readFileSync(`${dir}/package.json`, "utf8"));
+  } catch {
+    return null;
+  }
+}
+function workspaces(pkg) {
+  const ws = pkg?.workspaces;
+  if (Array.isArray(ws)) return ws;
+  if (ws && Array.isArray(ws.packages)) return ws.packages;
+  return [];
+}
+
+const selected = new Set();
+function visit(dir) {
+  if (selected.has(dir)) return;
+  const pkg = readPkg(dir);
+  if (!pkg) return;
+  selected.add(dir);
+  for (const pattern of workspaces(pkg)) {
+    for (const match of new Glob(`${dir}/${pattern}/package.json`).scanSync(".")) {
+      visit(match.slice(0, -"/package.json".length));
+    }
+  }
+}
+
+for (const name of readdirSync("packages")) {
+  const dir = `packages/${name}`;
+  if (existsSync(`${dir}/package.json`)) visit(dir);
+}
+
+for (const dir of [...selected].sort()) console.log(dir);
+BUN_EOF
+)
+
+while IFS= read -r dir; do
+  [ -z "$dir" ] && continue
+  pj="$dir/package.json"
 
   # Check for script contract expected by root automation.
-  if ! grep -q "\"build\"" "$dir/package.json" 2>/dev/null; then
-    echo "  FAIL: $PKG missing build script"
-    ERRORS=$((ERRORS+1))
-  fi
+  for SCRIPT in build test lint typecheck; do
+    if ! grep -q "\"$SCRIPT\"" "$pj"; then
+      if is_exempt "$dir" "$SCRIPT"; then
+        continue
+      fi
+      echo "  FAIL: $dir missing $SCRIPT script"
+      ERRORS=$((ERRORS+1))
+    fi
+  done
 
-  if ! grep -q "\"test\"" "$dir/package.json" 2>/dev/null; then
-    echo "  FAIL: $PKG missing test script"
-    ERRORS=$((ERRORS+1))
+  # Ban no-op stub scripts: a script that exists must do real work.
+  # "true" / ":" / bare "echo ..." stubs read as passing checks that never ran.
+  # Match the stub value tolerant of surrounding whitespace and of no-op
+  # variants (bare "echo", "echo ...", ":", "true") so e.g. "test": "true "
+  # or "lint": "echo" cannot slip a false-green check past this gate. A stub is
+  # allowed only when the "<dir>:<script>" pair is a documented exemption above.
+  NOOP_LINES=$(grep -E "\"(build|test|lint|typecheck)\": *\"[[:space:]]*(true|:|echo([[:space:]][^\"]*)?)[[:space:]]*\"" "$pj" || printf '')
+  if [ -n "$NOOP_LINES" ]; then
+    while IFS= read -r line; do
+      [ -z "$line" ] && continue
+      SCRIPT=$(printf '%s' "$line" | sed -E 's/.*"(build|test|lint|typecheck)".*/\1/')
+      if is_exempt "$dir" "$SCRIPT"; then
+        continue
+      fi
+      echo "  FAIL: $dir has no-op stub script: $(printf '%s' "$line" | tr -d ' ')"
+      echo "        Delete the script and add a documented exemption instead."
+      ERRORS=$((ERRORS+1))
+    done <<INNER
+$NOOP_LINES
+INNER
   fi
-
-  if ! grep -q "\"lint\"" "$dir/package.json" 2>/dev/null; then
-    echo "  FAIL: $PKG missing lint script"
-    ERRORS=$((ERRORS+1))
-  fi
-
-  if ! grep -q "\"typecheck\"" "$dir/package.json" 2>/dev/null; then
-    echo "  FAIL: $PKG missing typecheck script"
-    ERRORS=$((ERRORS+1))
-  fi
-done
+done <<EOF
+$PKG_DIRS
+EOF
 
 if [ "$ERRORS" -gt 0 ]; then
   echo "Compliance check failed with $ERRORS error(s)"

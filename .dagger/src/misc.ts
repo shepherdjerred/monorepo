@@ -3,7 +3,8 @@
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
-import { dag, Container, Directory, File, Secret } from "@dagger.io/dagger";
+import type { Container, Directory, File, Secret } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
 
 import {
   BUN_IMAGE,
@@ -67,9 +68,9 @@ export function caddyfileValidateHelper(source: Directory): Container {
 /** Start a container and verify its health endpoint responds. */
 export function smokeTestHelper(
   image: Container,
-  port: number = 3000,
-  healthPath: string = "/",
-  timeoutSeconds: number = 30,
+  port = 3000,
+  healthPath = "/",
+  timeoutSeconds = 30,
 ): Container {
   const svc = image.withExposedPort(port).asService();
 
@@ -82,15 +83,15 @@ export function smokeTestHelper(
       "-c",
       [
         `elapsed=0`,
-        `while [ $elapsed -lt ${timeoutSeconds} ]; do`,
-        `  if wget -q -O /dev/null "http://target:${port}${healthPath}"; then`,
-        `    echo "Health check passed at ${healthPath} after ${"\u0024"}{elapsed}s"`,
+        `while [ $elapsed -lt ${String(timeoutSeconds)} ]; do`,
+        `  if wget -q -O /dev/null "http://target:${String(port)}${healthPath}"; then`,
+        `    echo "Health check passed at ${healthPath} after \u0024{elapsed}s"`,
         `    exit 0`,
         `  fi`,
         `  sleep 2`,
         `  elapsed=$((elapsed + 2))`,
         `done`,
-        `echo "Health check timed out after ${timeoutSeconds}s"`,
+        `echo "Health check timed out after ${String(timeoutSeconds)}s"`,
         `exit 1`,
       ].join("\n"),
     ]);
@@ -141,7 +142,8 @@ async function runSmokeTest(
     }
 
     throw new Error(
-      `Smoke test failed (exit code ${exitCode}).\n\nstdout:\n${stdout}\n\nstderr:\n${stderr}`,
+      `Smoke test failed (exit code ${String(exitCode)}).\n\nstdout:\n${stdout}\n\nstderr:\n${stderr}`,
+      { cause: error },
     );
   }
 }
@@ -284,18 +286,18 @@ export async function smokeTestBirmelHelper(
         "command -v claude",
         "node --version",
         "python3 --version",
-        'bun -e "const ffmpegPath = require(\\"ffmpeg-static\\"); if (typeof ffmpegPath !== \\"string\\" || ffmpegPath.length === 0) throw new Error(\\"ffmpeg-static did not resolve\\");"',
-        'bun -e "await import(\\"@snazzah/davey\\");"',
+        String.raw`bun -e "const ffmpegPath = require(\"ffmpeg-static\"); if (typeof ffmpegPath !== \"string\" || ffmpegPath.length === 0) throw new Error(\"ffmpeg-static did not resolve\");"`,
+        String.raw`bun -e "await import(\"@snazzah/davey\");"`,
         "test -x node_modules/youtube-dl-exec/bin/yt-dlp",
         "timeout 10s node_modules/youtube-dl-exec/bin/yt-dlp --version",
         [
           "set +e",
           `output="$(timeout 30s ${PRISMA_BUN_SERVICE_START_COMMAND} 2>&1)"`,
           'status="$?"',
-          "printf '%s\\n' \"$output\"",
+          String.raw`printf '%s\n' "$output"`,
           '[ "$status" -eq 0 ] && exit 0',
           '[ "$status" -eq 124 ] && exit 124',
-          "printf '%s\\n' \"$output\" | grep -E 'TokenInvalid|401|Unauthorized|Invalid token'",
+          String.raw`printf '%s\n' "$output" | grep -E 'TokenInvalid|401|Unauthorized|Invalid token'`,
         ].join(" ; "),
       ].join(" && "),
     ]);
@@ -531,6 +533,7 @@ export async function smokeTestDiscordPlaysPokemonHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  tsconfig: File | null = null,
 ): Promise<string> {
   // Minimal config.toml that passes Zod validation but uses dummy tokens
   const configToml = `
@@ -609,6 +612,9 @@ enabled = false
     pkgDir,
     depNames,
     depDirs,
+    "dev",
+    "unknown",
+    tsconfig,
   )
     .withEntrypoint([])
     // The app runs from the inner-monorepo root (see the image build), so
@@ -644,6 +650,7 @@ export async function smokeTestDiscordPlaysMarioKartHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  tsconfig: File | null = null,
 ): Promise<string> {
   // Minimal config.toml that passes Zod validation but uses dummy tokens.
   // emulator disabled (no ROM available in CI); stream enabled so the selfbot
@@ -706,6 +713,9 @@ enabled = false
     pkgDir,
     depNames,
     depDirs,
+    "dev",
+    "unknown",
+    tsconfig,
   )
     .withEntrypoint([])
     // The app runs from the inner-monorepo root (see the image build), so

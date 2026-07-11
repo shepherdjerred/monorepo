@@ -261,18 +261,18 @@ describe("time tracking (current contract)", () => {
     expect(stopped.ok).toBe(true);
 
     const time = unwrap(await client.getTaskTime(tracked.id));
-    expect(time.entries).toHaveLength(1);
+    expect(time.hasActiveSession).toBe(false); // stopped above
+    expect(time.totalTime).toBeGreaterThanOrEqual(0);
 
     await client.deleteTask(tracked.id);
   });
 
-  test("time summary responds (pinned: route-shadowed default — review finding #16)", async () => {
+  test("time summary responds with the v2 report shape", async () => {
+    // Review finding #16 (route-shadowed always-empty summary) is fixed by
+    // the P3 rebuild — this now asserts a real report.
     const summary = unwrap(await client.getTimeSummary());
-    // /api/time/summary is shadowed by /api/time/:id today, so it always
-    // returns the empty default. Pinned so the P3 rebuild consciously
-    // changes this assertion when the route order is fixed.
-    expect(summary.totalTime).toBe(0);
-    expect(summary.entries).toHaveLength(0);
+    expect(summary.totalTime).toBeGreaterThanOrEqual(0);
+    expect(Array.isArray(summary.topTasks)).toBe(true);
   });
 });
 

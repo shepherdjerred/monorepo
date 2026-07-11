@@ -3,14 +3,15 @@
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
-import {
-  dag,
+import type {
   Container,
   Directory,
   File,
   Platform,
   Secret,
 } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
+import { z } from "zod";
 
 import {
   ARGOCD_CLI_VERSION,
@@ -38,8 +39,26 @@ import {
   TOFU_VERSION,
   VELERO_CLI_VERSION,
 } from "./constants";
-import { BUN_INSTALL_WITH_RETRY } from "./base";
+import { BUN_INSTALL_WITH_RETRY, withCleanReinstallIfNeeded } from "./base";
 import versions from "./versions";
+
+/**
+ * `Platform` is a branded string (`string & {__Platform: never}`) with no
+ * public SDK constructor, and `dag.defaultPlatform()` only yields the host's
+ * platform. To pin an explicit target we validate a known-good literal through
+ * a Zod `custom` schema, which narrows to the branded type without a type
+ * assertion or type-guard predicate. The cluster node (torvalds) is amd64;
+ * without pinning, `dockerBuild()` can emit a wrong-arch image (observed:
+ * ci-base came out arm64, causing `exec format error` on /bin/sh in CI pods).
+ */
+const PlatformSchema = z.custom<Platform>(
+  (value) => typeof value === "string" && value.length > 0,
+  "Platform must be a non-empty string",
+);
+
+function amd64Platform(): Platform {
+  return PlatformSchema.parse("linux/amd64");
+}
 
 export const PRISMA_BUN_SERVICE_START_COMMAND =
   "bunx --trust prisma generate && bunx prisma db push && bun run src/index.ts";
@@ -630,21 +649,60 @@ function withToolkit(container: Container): Container {
 }
 
 /**
- * Give the vendored `discord-video-stream` fork its own `node_modules` at its mounted source
- * location. The fork is consumed as TypeScript source (bun runs `src/`), so when a consumer imports
- * it, the fork's files resolve their native runtime deps (`@lng2004/node-datachannel`, `node-av`, …)
- * from the fork's OWN directory — a sibling of the consumer, whose `node_modules` is unreachable.
- * Without this, the image builds fine but crashes at startup with `Cannot find module
- * '@lng2004/node-datachannel'`. Mirrors the per-dep install loop in `bunBaseContainer` (base.ts).
+ * Give source-consumed `file:` deps their own `node_modules` at their mounted source
+ * location. These packages are consumed as TypeScript source (bun runs `src/`), and bun's
+ * runtime resolves a `file:` dependency's imports from the dep's OWN directory — a sibling
+ * of the consumer, whose `node_modules` is unreachable from there. Without a per-dep
+ * install the image builds fine but crashes at startup:
+ *   - discord-video-stream: `Cannot find module '@lng2004/node-datachannel'` (native deps)
+ *   - discord-stream-lifecycle: `ENOENT while resolving package 'discord.js'` (its
+ *     peerDependencies — bun installs peers on a root install, so this provides them)
+ * Mirrors the per-dep install loop in `bunBaseContainer` (base.ts).
  */
+const SOURCE_RUNTIME_DEPS = [
+  "discord-video-stream",
+  "discord-stream-lifecycle",
+  "discord-plays-core",
+];
+
 function withForkRuntimeDeps(
   container: Container,
   depNames: string[],
 ): Container {
-  if (!depNames.includes("discord-video-stream")) return container;
+  for (const dep of SOURCE_RUNTIME_DEPS) {
+    if (!depNames.includes(dep)) continue;
+    container = container
+      .withWorkdir(`/workspace/packages/${dep}`)
+      .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
+  }
+  return container;
+}
+
+/**
+ * Build `@shepherdjerred/discord-stream-lifecycle` when it's a mounted dep, so its `dist/`
+ * exists before a consumer's frozen install copies it through the `file:` ref (see
+ * `withBuiltLlmModels` below — same mechanism, same reason).
+ *
+ * This one is load-bearing, not just a `Cannot find module '@shepherdjerred/…'` nicety:
+ * discord-stream-lifecycle is consumed from deep inside a nested bun workspace
+ * (discord-plays-pokemon/mario-kart's `packages/backend`, itself two levels below the
+ * outer package). When consumed as raw TypeScript source, bun's on-the-fly transpile
+ * resolution for a wholesale-copied `file:` dep does NOT fall back to the consumer's
+ * ancestor `node_modules` — so `game-bot.ts`'s `discord.js` import fails at startup with
+ * `Cannot find module 'discord.js'` even though discord.js is correctly hoisted one level
+ * up. Compiling to `dist/*.js` and consuming it as compiled JS resolves the same way
+ * llm-models' `zod` dependency already does from the identical nesting depth (proven
+ * working) — plain Node-style ancestor `node_modules` resolution, no special-casing needed.
+ */
+function withBuiltDiscordStreamLifecycle(
+  container: Container,
+  depNames: string[],
+): Container {
+  if (!depNames.includes("discord-stream-lifecycle")) return container;
   return container
-    .withWorkdir("/workspace/packages/discord-video-stream")
-    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
+    .withWorkdir("/workspace/packages/discord-stream-lifecycle")
+    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
+    .withExec(["bun", "run", "build"]);
 }
 
 /**
@@ -681,10 +739,10 @@ export function buildImageHelper(
   pkg: string,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
-  usePrisma: boolean = false,
-  installEditorClis: boolean = false,
+  version = "dev",
+  gitSha = "unknown",
+  usePrisma = false,
+  installEditorClis = false,
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
 
@@ -712,20 +770,24 @@ export function buildImageHelper(
       exclude: excludes,
     });
 
-  for (let i = 0; i < depNames.length; i++) {
+  for (const [i, depName] of depNames.entries()) {
     container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
+      `/workspace/packages/${depName}`,
       depDirs[i],
       { exclude: excludes },
     );
   }
 
   container = withForkRuntimeDeps(container, depNames);
+  container = withBuiltDiscordStreamLifecycle(container, depNames);
 
   // Install deps then set up the final image
-  let image = container
-    .withWorkdir(`/workspace/packages/${pkg}`)
-    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
+  // Clean-reinstall (not plain retry) when discord-stream-lifecycle is present:
+  // see `withCleanReinstallIfNeeded`'s doc comment in base.ts.
+  let image = withCleanReinstallIfNeeded(
+    container.withWorkdir(`/workspace/packages/${pkg}`),
+    depNames,
+  );
 
   if (pkg === "birmel") {
     // youtube-dl-exec resolves its binary at <pkg>/bin/yt-dlp (constants.YOUTUBE_DL_PATH),
@@ -766,8 +828,8 @@ export function buildImageHelper(
  * 206 + Accept-Ranges on byte-range requests. See CADDY_S3_PROXY_MODULE.
  */
 export function buildCaddyS3ProxyImageHelper(
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Container {
   // Stage 1: Build custom Caddy binary with S3 proxy plugin
   const caddyBinary = dag
@@ -823,8 +885,8 @@ export async function pushCaddyS3ProxyImageHelper(
   tags: string[],
   registryUsername: string,
   registryPassword: Secret,
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Promise<string> {
   const container = buildCaddyS3ProxyImageHelper(version, gitSha);
   return pushContainerHelper(
@@ -845,8 +907,8 @@ export async function pushCaddyS3ProxyImageHelper(
  * Bun-based image cached on CI for weeks.
  */
 export function buildObsidianHeadlessImageHelper(
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Container {
   return dag
     .container()
@@ -881,8 +943,8 @@ export async function pushObsidianHeadlessImageHelper(
   tags: string[],
   registryUsername: string,
   registryPassword: Secret,
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Promise<string> {
   const container = buildObsidianHeadlessImageHelper(version, gitSha);
   return pushContainerHelper(
@@ -903,8 +965,8 @@ export async function pushObsidianHeadlessImageHelper(
  * so the other servers keep running via npx/uvx at runtime.
  */
 export function buildMcpGatewayImageHelper(
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Container {
   // Stage 1 — clone + build edstem-mcp into /opt/edstem-mcp.
   const edstemDist = dag
@@ -950,8 +1012,8 @@ export async function pushMcpGatewayImageHelper(
   tags: string[],
   registryUsername: string,
   registryPassword: Secret,
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Promise<string> {
   const container = buildMcpGatewayImageHelper(version, gitSha);
   return pushContainerHelper(
@@ -974,8 +1036,8 @@ export function buildTemporalWorkerImageHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
 
@@ -1009,9 +1071,9 @@ export function buildTemporalWorkerImageHelper(
       exclude: excludes,
     });
 
-  for (let i = 0; i < depNames.length; i++) {
+  for (const [i, depName] of depNames.entries()) {
     container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
+      `/workspace/packages/${depName}`,
       depDirs[i],
       { exclude: excludes },
     );
@@ -1059,6 +1121,41 @@ export function buildTemporalWorkerImageHelper(
   );
 }
 
+/**
+ * Rehearse the scheduled PR-creating workflows against a repo tree, inside
+ * the temporal-worker image — "will the weekly Temporal jobs still run after
+ * this change merges?". Builds the worker image (the engine de-dups this
+ * against the standalone build step, like the other smoke tests), copies the
+ * repo tree to a writable path, and runs
+ * `packages/temporal/scripts/rehearse-bot-clone.ts`, which drives the SAME
+ * `bot-clone.ts` helpers the activities execute in production. Catches the
+ * failure classes that broke data-dragon / season-refresh / readme-refresh
+ * weekly through June–July 2026: unbuilt `file:` producers, lefthook hooks
+ * armed in bot clones, moved cog target paths, and missing image binaries.
+ */
+export function temporalScheduleRehearsalHelper(
+  pkgDir: Directory,
+  repoDir: Directory,
+  depNames: string[] = [],
+  depDirs: Directory[] = [],
+): Container {
+  return buildTemporalWorkerImageHelper(pkgDir, depNames, depDirs)
+    .withDirectory("/rehearsal/monorepo", repoDir, {
+      // `.git` excluded so the rehearsal always exercises the CI shape (the
+      // script git-inits a scratch repo). A host mount from a git worktree
+      // otherwise carries a `.git` FILE pointing at the main checkout, which
+      // breaks `git init` inside the container.
+      exclude: ["node_modules", "dist", ".eslintcache", ".git"],
+    })
+    .withWorkdir("/workspace/packages/temporal")
+    .withExec([
+      "bun",
+      "run",
+      "scripts/rehearse-bot-clone.ts",
+      "--repo=/rehearsal/monorepo",
+    ]);
+}
+
 /** Push a temporal-worker image to a registry. */
 export async function pushTemporalWorkerImageHelper(
   pkgDir: Directory,
@@ -1067,8 +1164,8 @@ export async function pushTemporalWorkerImageHelper(
   registryPassword: Secret,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Promise<string> {
   const container = buildTemporalWorkerImageHelper(
     pkgDir,
@@ -1098,8 +1195,8 @@ export function buildScoutImageHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
 
@@ -1112,9 +1209,9 @@ export function buildScoutImageHelper(
       exclude: excludes,
     });
 
-  for (let i = 0; i < depNames.length; i++) {
+  for (const [i, depName] of depNames.entries()) {
     container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
+      `/workspace/packages/${depName}`,
       depDirs[i],
       { exclude: excludes },
     );
@@ -1237,8 +1334,9 @@ export function buildDiscordPlaysPokemonImageHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
+  tsconfig: File | null = null,
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
   const innerRoot = "/workspace/packages/discord-plays-pokemon";
@@ -1259,38 +1357,53 @@ export function buildDiscordPlaysPokemonImageHelper(
       exclude: [...excludes, "wasm-src"],
     });
 
-  for (let i = 0; i < depNames.length; i++) {
+  for (const [i, depName] of depNames.entries()) {
     container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
+      `/workspace/packages/${depName}`,
       depDirs[i],
       { exclude: excludes },
     );
   }
 
   container = withForkRuntimeDeps(container, depNames);
+  // Package tsconfigs extend the repo root tsconfig.base.json
+  // (extends "../../../../tsconfig.base.json" -> /workspace/tsconfig.base.json).
+  // vite 8 (rolldown) hard-fails the frontend build when the extends target is
+  // missing, so mount it like the pkg-check containers do (base.ts).
+  if (tsconfig != null) {
+    container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
+  }
   container = withBuiltLlmModels(container, depNames);
+  container = withBuiltDiscordStreamLifecycle(container, depNames);
+
+  container = container
+    // Build pokeemerald.wasm from source (ottohg pin + our export patch) and
+    // stage it where the emulator expects it. Staged AFTER the package mount so
+    // it wins over any locally-built copy a dev may have on disk; the committed
+    // blob and the Temporal download path are both gone.
+    .withFile(
+      `${innerRoot}/packages/backend/assets/pokeemerald.wasm`,
+      buildPokeemeraldWasm(pkgDir.directory("wasm-src/patches")),
+    )
+    .withWorkdir(innerRoot);
+  // Workspace install (covers backend + frontend + common) — runs the
+  // trustedDependencies postinstalls (node-datachannel, node-av). The
+  // discord-video-stream fork lazy-loads sharp in source (no bun patch).
+  // No separate backend install: bun workspaces installs all member deps at
+  // the root level. A second `bun install` in packages/backend causes bun to
+  // try to re-link file: deps already linked by the root install → EEXIST.
+  // Wrapped in retry because bun's worker pool also races on `file:` symlinks
+  // *within* a single install when the same dep (eslint-config) is referenced
+  // by 4+ nested package.jsons (#4336).
+  //
+  // Clean-reinstall (not plain retry) when discord-stream-lifecycle is present:
+  // see `withCleanReinstallIfNeeded`'s doc comment in base.ts — the FIRST install
+  // against that dep's own pre-built node_modules silently corrupts its copied
+  // package.json (exit 0, no retry triggered), a second clean install fixes it.
+  container = withCleanReinstallIfNeeded(container, depNames);
 
   return (
     container
-      // Build pokeemerald.wasm from source (ottohg pin + our export patch) and
-      // stage it where the emulator expects it. Staged AFTER the package mount so
-      // it wins over any locally-built copy a dev may have on disk; the committed
-      // blob and the Temporal download path are both gone.
-      .withFile(
-        `${innerRoot}/packages/backend/assets/pokeemerald.wasm`,
-        buildPokeemeraldWasm(pkgDir.directory("wasm-src/patches")),
-      )
-      // Workspace install (covers backend + frontend + common) — runs the
-      // trustedDependencies postinstalls (node-datachannel, node-av). The
-      // discord-video-stream fork lazy-loads sharp in source (no bun patch).
-      // No separate backend install: bun workspaces installs all member deps at
-      // the root level. A second `bun install` in packages/backend causes bun to
-      // try to re-link file: deps already linked by the root install → EEXIST.
-      // Wrapped in retry because bun's worker pool also races on `file:` symlinks
-      // *within* a single install when the same dep (eslint-config) is referenced
-      // by 4+ nested package.jsons (#4336).
-      .withWorkdir(innerRoot)
-      .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
       .withWorkdir(`${innerRoot}/packages/backend`)
       // Verify the from-source wasm is behaviorally equivalent to what shipped
       // before: the symbol reader resolves all game-state globals, and the audio
@@ -1347,8 +1460,8 @@ export async function pushScoutImageHelper(
   registryPassword: Secret,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Promise<string> {
   const container = buildScoutImageHelper(
     pkgDir,
@@ -1373,8 +1486,9 @@ export async function pushDiscordPlaysPokemonImageHelper(
   registryPassword: Secret,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
+  tsconfig: File | null = null,
 ): Promise<string> {
   const container = buildDiscordPlaysPokemonImageHelper(
     pkgDir,
@@ -1382,6 +1496,7 @@ export async function pushDiscordPlaysPokemonImageHelper(
     depDirs,
     version,
     gitSha,
+    tsconfig,
   );
   return pushContainerHelper(
     container,
@@ -1412,8 +1527,9 @@ export function buildDiscordPlaysMarioKartImageHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
+  tsconfig: File | null = null,
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
   const innerRoot = MARIO_KART_INNER_ROOT;
@@ -1458,56 +1574,68 @@ export function buildDiscordPlaysMarioKartImageHelper(
       exclude: [...excludes, "wasm-src"],
     });
 
-  for (let i = 0; i < depNames.length; i++) {
+  for (const [i, depName] of depNames.entries()) {
     container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
+      `/workspace/packages/${depName}`,
       depDirs[i],
       { exclude: excludes },
     );
   }
 
   container = withForkRuntimeDeps(container, depNames);
+  container = withBuiltDiscordStreamLifecycle(container, depNames);
+
+  container = container
+    // Copy the compiled core + the files the host stages into MEMFS at
+    // runtime (loadFile reads these; see the emulator host).
+    .withFile(`${assetsDir}/n64wasm.js`, wasmBuild.file("/src/code/n64wasm.js"))
+    .withFile(
+      `${assetsDir}/n64wasm.wasm`,
+      wasmBuild.file("/src/code/n64wasm.wasm"),
+    )
+    .withFile(
+      `${assetsDir}/shader_vert.hlsl`,
+      wasmBuild.file("/src/code/shader_vert.hlsl"),
+    )
+    .withFile(
+      `${assetsDir}/shader_frag.hlsl`,
+      wasmBuild.file("/src/code/shader_frag.hlsl"),
+    )
+    .withFile(
+      `${assetsDir}/overlay.png`,
+      wasmBuild.file("/src/code/overlay.png"),
+    )
+    .withFile(
+      `${assetsDir}/res/arial.ttf`,
+      wasmBuild.file("/src/code/res/arial.ttf"),
+    )
+    .withWorkdir(innerRoot);
+  // Workspace install (backend + frontend) — runs trustedDependencies
+  // postinstalls. The discord-video-stream fork lazy-loads sharp in source
+  // (no bun patch).
+  // No separate backend install: bun workspaces installs all member deps
+  // at the root level. A second `bun install` in packages/backend re-links
+  // file: deps already linked by the root install → EEXIST under the
+  // hoisted linker, and the retry's node_modules cleanup then leaves the
+  // backend member without its file: dep copies (build 5029 smoke caught
+  // `Cannot find module '@shepherdjerred/discord-stream-lifecycle/...'`).
+  // Mirrors the discord-plays-pokemon image build above.
+  //
+  // Clean-reinstall (not plain retry) when discord-stream-lifecycle is present:
+  // see `withCleanReinstallIfNeeded`'s doc comment in base.ts — the FIRST install
+  // against that dep's own pre-built node_modules silently corrupts its copied
+  // package.json (exit 0, no retry triggered), a second clean install fixes it.
+  container = withCleanReinstallIfNeeded(container, depNames);
+  // Package tsconfigs extend the repo root tsconfig.base.json
+  // (extends "../../../../tsconfig.base.json" -> /workspace/tsconfig.base.json).
+  // vite 8 (rolldown) hard-fails the frontend build when the extends target is
+  // missing, so mount it like the pkg-check containers do (base.ts).
+  if (tsconfig != null) {
+    container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
+  }
 
   return (
     container
-      // Copy the compiled core + the files the host stages into MEMFS at
-      // runtime (loadFile reads these; see the emulator host).
-      .withFile(
-        `${assetsDir}/n64wasm.js`,
-        wasmBuild.file("/src/code/n64wasm.js"),
-      )
-      .withFile(
-        `${assetsDir}/n64wasm.wasm`,
-        wasmBuild.file("/src/code/n64wasm.wasm"),
-      )
-      .withFile(
-        `${assetsDir}/shader_vert.hlsl`,
-        wasmBuild.file("/src/code/shader_vert.hlsl"),
-      )
-      .withFile(
-        `${assetsDir}/shader_frag.hlsl`,
-        wasmBuild.file("/src/code/shader_frag.hlsl"),
-      )
-      .withFile(
-        `${assetsDir}/overlay.png`,
-        wasmBuild.file("/src/code/overlay.png"),
-      )
-      .withFile(
-        `${assetsDir}/res/arial.ttf`,
-        wasmBuild.file("/src/code/res/arial.ttf"),
-      )
-      // Workspace install (backend + frontend) — runs trustedDependencies
-      // postinstalls. The discord-video-stream fork lazy-loads sharp in source
-      // (no bun patch).
-      // No separate backend install: bun workspaces installs all member deps
-      // at the root level. A second `bun install` in packages/backend re-links
-      // file: deps already linked by the root install → EEXIST under the
-      // hoisted linker, and the retry's node_modules cleanup then leaves the
-      // backend member without its file: dep copies (build 5029 smoke caught
-      // `Cannot find module '@shepherdjerred/discord-stream-lifecycle/...'`).
-      // Mirrors the discord-plays-pokemon image build above.
-      .withWorkdir(innerRoot)
-      .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY])
       .withWorkdir(`${innerRoot}/packages/backend`)
       // Generate the Prisma client for the leaderboard DB (output is gitignored,
       // so it must be produced in the image). Mirrors the birmel/scout flow.
@@ -1543,8 +1671,9 @@ export async function pushDiscordPlaysMarioKartImageHelper(
   registryPassword: Secret,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
+  tsconfig: File | null = null,
 ): Promise<string> {
   const container = buildDiscordPlaysMarioKartImageHelper(
     pkgDir,
@@ -1552,6 +1681,7 @@ export async function pushDiscordPlaysMarioKartImageHelper(
     depDirs,
     version,
     gitSha,
+    tsconfig,
   );
   return pushContainerHelper(
     container,
@@ -1570,8 +1700,8 @@ export function buildTrmnlDashboardImageHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
 
@@ -1584,9 +1714,9 @@ export function buildTrmnlDashboardImageHelper(
       exclude: excludes,
     });
 
-  for (let i = 0; i < depNames.length; i++) {
+  for (const [i, depName] of depNames.entries()) {
     container = container.withDirectory(
-      `/workspace/packages/${depNames[i]}`,
+      `/workspace/packages/${depName}`,
       depDirs[i],
       { exclude: excludes },
     );
@@ -1615,8 +1745,8 @@ export async function pushTrmnlDashboardImageHelper(
   registryPassword: Secret,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Promise<string> {
   const container = buildTrmnlDashboardImageHelper(
     pkgDir,
@@ -1645,13 +1775,13 @@ export async function pushTrmnlDashboardImageHelper(
  * Unauthorized", redlib-org/redlib#551). The glibc build is unaffected.
  */
 export function buildRedlibImageHelper(
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Container {
-  // The cluster node (torvalds) is amd64. Platform is a branded string in the
-  // Dagger SDK with no public constructor, so cast it the same way the CI base
-  // image build does — otherwise dockerBuild can emit a wrong-arch image.
-  const platform: Platform = "linux/amd64" as unknown as Platform;
+  // The cluster node (torvalds) is amd64; without pinning, dockerBuild can emit
+  // a wrong-arch image. See amd64Platform() for why an assertion function is
+  // used instead of a cast.
+  const platform = amd64Platform();
   const redlibSource = dag
     .git("https://github.com/redlib-org/redlib.git")
     .commit(REDLIB_SOURCE_REF)
@@ -1672,8 +1802,8 @@ export async function pushRedlibImageHelper(
   tags: string[],
   registryUsername: string,
   registryPassword: Secret,
-  version: string = "dev",
-  gitSha: string = "unknown",
+  version = "dev",
+  gitSha = "unknown",
 ): Promise<string> {
   const container = buildRedlibImageHelper(version, gitSha);
   return pushContainerHelper(
@@ -1693,9 +1823,8 @@ export function buildCiBaseImageHelper(context: Directory): Container {
   // Explicitly target linux/amd64 — the cluster node (torvalds) is amd64.
   // Without this, dockerBuild() can produce a wrong-arch image (observed:
   // ci-base:405 came out arm64, causing `exec format error` on /bin/sh in
-  // every CI Job pod). Platform is a branded string in the Dagger SDK with
-  // no public constructor, so a typed cast is the pragmatic way to pin it.
-  const platform: Platform = "linux/amd64" as unknown as Platform;
+  // every CI Job pod). See amd64Platform() for the branded-type narrowing.
+  const platform = amd64Platform();
   return context.dockerBuild({ platform });
 }
 
@@ -1724,10 +1853,10 @@ export async function pushImageHelper(
   registryPassword: Secret,
   depNames: string[] = [],
   depDirs: Directory[] = [],
-  version: string = "dev",
-  gitSha: string = "unknown",
-  usePrisma: boolean = false,
-  installEditorClis: boolean = false,
+  version = "dev",
+  gitSha = "unknown",
+  usePrisma = false,
+  installEditorClis = false,
 ): Promise<string> {
   if (tags.length === 0) {
     throw new Error("pushImageHelper requires at least one tag");

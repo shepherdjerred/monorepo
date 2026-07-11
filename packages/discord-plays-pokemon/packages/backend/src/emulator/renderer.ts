@@ -91,29 +91,65 @@ export function createRenderer(): Renderer {
   let u8 = new Uint8Array(0);
   let u16 = new Uint16Array(0);
 
+  // Live wasm-memory reads are always in-bounds for a well-formed frame; an
+  // out-of-range index means memory wasn't refreshed or a register decoded
+  // wrong, so fail fast rather than rasterizing from an undefined.
+  function rd8(index: number): number {
+    const value = u8[index];
+    if (value === undefined) {
+      throw new Error(`renderer u8 read out of range: ${String(index)}`);
+    }
+    return value;
+  }
+  function rd16(index: number): number {
+    const value = u16[index];
+    if (value === undefined) {
+      throw new Error(`renderer u16 read out of range: ${String(index)}`);
+    }
+    return value;
+  }
+
+  // The output framebuffer and per-pixel layer map are indexed by a pixel that
+  // is already range-checked (0 <= x < WIDTH, 0 <= y < HEIGHT) before we get
+  // here, so an undefined read would be an internal bug — surface it.
+  function rdImage(index: number): number {
+    const value = image[index];
+    if (value === undefined) {
+      throw new Error(`renderer image read out of range: ${String(index)}`);
+    }
+    return value;
+  }
+  function rd8Layer(pixel: number): number {
+    const value = layerData[pixel];
+    if (value === undefined) {
+      throw new Error(`renderer layer read out of range: ${String(pixel)}`);
+    }
+    return value;
+  }
+
   function word(offset: number): number {
-    return u16[(REG + offset) >> 1] | (u16[(REG + offset + 2) >> 1] << 16);
+    return rd16((REG + offset) >> 1) | (rd16((REG + offset + 2) >> 1) << 16);
   }
 
   function windowMask(x: number, y: number): number {
-    const dispcnt = u16[REG >> 1];
+    const dispcnt = rd16(REG >> 1);
     const windowsEnabled = dispcnt & 0xe0_00;
     if (!windowsEnabled) return 0x3f;
     if (
       dispcnt & 0x20_00 &&
-      inWindowRange(x, u16[(REG + 0x40) >> 1]) &&
-      inWindowRange(y, u16[(REG + 0x44) >> 1])
+      inWindowRange(x, rd16((REG + 0x40) >> 1)) &&
+      inWindowRange(y, rd16((REG + 0x44) >> 1))
     ) {
-      return u16[(REG + 0x48) >> 1] & 0x3f;
+      return rd16((REG + 0x48) >> 1) & 0x3f;
     }
     if (
       dispcnt & 0x40_00 &&
-      inWindowRange(x, u16[(REG + 0x42) >> 1]) &&
-      inWindowRange(y, u16[(REG + 0x46) >> 1])
+      inWindowRange(x, rd16((REG + 0x42) >> 1)) &&
+      inWindowRange(y, rd16((REG + 0x46) >> 1))
     ) {
-      return (u16[(REG + 0x48) >> 1] >> 8) & 0x3f;
+      return (rd16((REG + 0x48) >> 1) >> 8) & 0x3f;
     }
-    return u16[(REG + 0x4a) >> 1] & 0x3f;
+    return rd16((REG + 0x4a) >> 1) & 0x3f;
   }
 
   function activeBlendColor(
@@ -122,22 +158,22 @@ export function createRenderer(): Renderer {
     pixel: number,
     effectsEnabled: number,
   ): number[] {
-    const bldcnt = u16[(REG + 0x50) >> 1];
+    const bldcnt = rd16((REG + 0x50) >> 1);
     const effect = (bldcnt >> 6) & 3;
     const sourceTargets = bldcnt & 0x3f;
     if (!effectsEnabled || !(sourceTargets & layer) || effect === 0)
       return color;
-    if (effect === 1 && (bldcnt >> 8) & layerData[pixel]) {
-      const alpha = u16[(REG + 0x52) >> 1];
+    if (effect === 1 && (bldcnt >> 8) & rd8Layer(pixel)) {
+      const alpha = rd16((REG + 0x52) >> 1);
       const eva = Math.min(alpha & 0x1f, 16);
       const evb = Math.min((alpha >> 8) & 0x1f, 16);
       return [
-        Math.min(255, (color[0] * eva + image[pixel * 4] * evb) >> 4),
-        Math.min(255, (color[1] * eva + image[pixel * 4 + 1] * evb) >> 4),
-        Math.min(255, (color[2] * eva + image[pixel * 4 + 2] * evb) >> 4),
+        Math.min(255, (color[0] * eva + rdImage(pixel * 4) * evb) >> 4),
+        Math.min(255, (color[1] * eva + rdImage(pixel * 4 + 1) * evb) >> 4),
+        Math.min(255, (color[2] * eva + rdImage(pixel * 4 + 2) * evb) >> 4),
       ];
     }
-    const evy = Math.min(u16[(REG + 0x54) >> 1] & 0x1f, 16);
+    const evy = Math.min(rd16((REG + 0x54) >> 1) & 0x1f, 16);
     if (effect === 2) return color.map((c) => c + (((255 - c) * evy) >> 4));
     if (effect === 3) return color.map((c) => c - ((c * evy) >> 4));
     return color;
@@ -149,23 +185,27 @@ export function createRenderer(): Renderer {
     if (!(mask & layer)) return;
     const pixel = y * WIDTH + x;
     const output = activeBlendColor(color, layer, pixel, mask & 0x20);
+    const [r, g, b] = output;
+    if (r === undefined || g === undefined || b === undefined) {
+      throw new Error("blend produced fewer than 3 channels");
+    }
     const p = pixel * 4;
-    image[p] = output[0];
-    image[p + 1] = output[1];
-    image[p + 2] = output[2];
+    image[p] = r;
+    image[p + 1] = g;
+    image[p + 2] = b;
     image[p + 3] = 255;
     layerData[pixel] = layer;
   }
 
   function clearScreen(): void {
-    const color = gbaColor(u16[PAL >> 1]);
+    const color = gbaColor(rd16(PAL >> 1));
     for (let y = 0; y < HEIGHT; y++)
       for (let x = 0; x < WIDTH; x++) putPixel(x, y, color, 0x20);
   }
 
   function renderBitmapMode3(): void {
     for (let i = 0; i < WIDTH * HEIGHT; i++) {
-      const [r, g, b] = gbaColor(u16[(VRAM >> 1) + i]);
+      const [r, g, b] = gbaColor(rd16((VRAM >> 1) + i));
       const p = i * 4;
       image[p] = r;
       image[p + 1] = g;
@@ -178,8 +218,8 @@ export function createRenderer(): Renderer {
   function renderBitmapMode4(dispcnt: number): void {
     const page = dispcnt & 0x10 ? 0xa0_00 : 0;
     for (let i = 0; i < WIDTH * HEIGHT; i++) {
-      const colorIndex = u8[VRAM + page + i];
-      const [r, g, b] = gbaColor(u16[(PAL >> 1) + colorIndex]);
+      const colorIndex = rd8(VRAM + page + i);
+      const [r, g, b] = gbaColor(rd16((PAL >> 1) + colorIndex));
       const p = i * 4;
       image[p] = r;
       image[p + 1] = g;
@@ -190,49 +230,55 @@ export function createRenderer(): Renderer {
   }
 
   function textBgPixel(bg: number, x: number, y: number): Color | null {
-    const cnt = u16[(REG + 8 + bg * 2) >> 1];
+    const cnt = rd16((REG + 8 + bg * 2) >> 1);
     const charBase = VRAM + ((cnt >> 2) & 3) * 0x40_00;
     const screenBase = VRAM + ((cnt >> 8) & 31) * 0x8_00;
     const color256 = cnt & 0x80;
     const size = (cnt >> 14) & 3;
     const width = size & 1 ? 512 : 256;
     const height = size & 2 ? 512 : 256;
-    const hofs = u16[(REG + 0x10 + bg * 4) >> 1] & 511;
-    const vofs = u16[(REG + 0x12 + bg * 4) >> 1] & 511;
+    const hofs = rd16((REG + 0x10 + bg * 4) >> 1) & 511;
+    const vofs = rd16((REG + 0x12 + bg * 4) >> 1) & 511;
     const sx = (x + hofs) & (width - 1);
     const sy = (y + vofs) & (height - 1);
     const block = (sx >= 256 ? 1 : 0) + (sy >= 256 ? (size === 3 ? 2 : 1) : 0);
     const mapX = (sx & 255) >> 3;
     const mapY = (sy & 255) >> 3;
-    const entry =
-      u16[(screenBase + block * 0x8_00 + (mapY * 32 + mapX) * 2) >> 1];
+    const entry = rd16(
+      (screenBase + block * 0x8_00 + (mapY * 32 + mapX) * 2) >> 1,
+    );
     const tile = entry & 0x3_ff;
     const palette = (entry >> 12) & 15;
     const px = entry & 0x4_00 ? 7 - (sx & 7) : sx & 7;
     const py = entry & 0x8_00 ? 7 - (sy & 7) : sy & 7;
     if (color256) {
-      const colorIndex = u8[charBase + tile * 64 + py * 8 + px];
+      const colorIndex = rd8(charBase + tile * 64 + py * 8 + px);
       if (!colorIndex) return null;
-      return gbaColor(u16[(PAL >> 1) + colorIndex]);
+      return gbaColor(rd16((PAL >> 1) + colorIndex));
     }
-    const packed = u8[charBase + tile * 32 + py * 4 + (px >> 1)];
+    const packed = rd8(charBase + tile * 32 + py * 4 + (px >> 1));
     const colorIndex = px & 1 ? packed >> 4 : packed & 15;
     if (!colorIndex) return null;
-    return gbaColor(u16[(PAL >> 1) + palette * 16 + colorIndex]);
+    return gbaColor(rd16((PAL >> 1) + palette * 16 + colorIndex));
   }
 
   function affineBgPixel(bg: number, x: number, y: number): Color | null {
-    const cnt = u16[(REG + 8 + bg * 2) >> 1];
+    const cnt = rd16((REG + 8 + bg * 2) >> 1);
     const charBase = VRAM + ((cnt >> 2) & 3) * 0x40_00;
     const screenBase = VRAM + ((cnt >> 8) & 31) * 0x8_00;
     const sizes = [128, 256, 512, 1024];
     const size = sizes[(cnt >> 14) & 3];
+    if (size === undefined) {
+      throw new Error(
+        `affine bg size out of range: ${String((cnt >> 14) & 3)}`,
+      );
+    }
     const wrap = cnt & 0x20_00;
     const reg = bg === 2 ? 0x20 : 0x30;
-    const pa = signed16(u16[(REG + reg) >> 1]);
-    const pb = signed16(u16[(REG + reg + 2) >> 1]);
-    const pc = signed16(u16[(REG + reg + 4) >> 1]);
-    const pd = signed16(u16[(REG + reg + 6) >> 1]);
+    const pa = signed16(rd16((REG + reg) >> 1));
+    const pb = signed16(rd16((REG + reg + 2) >> 1));
+    const pc = signed16(rd16((REG + reg + 4) >> 1));
+    const pd = signed16(rd16((REG + reg + 6) >> 1));
     const refX = signed28(word(reg + 8));
     const refY = signed28(word(reg + 12));
     let sx = (refX + pa * x + pb * y) >> 8;
@@ -244,10 +290,10 @@ export function createRenderer(): Renderer {
       return null;
     }
     const tilesPerRow = size >> 3;
-    const tile = u8[screenBase + (sy >> 3) * tilesPerRow + (sx >> 3)];
-    const colorIndex = u8[charBase + tile * 64 + (sy & 7) * 8 + (sx & 7)];
+    const tile = rd8(screenBase + (sy >> 3) * tilesPerRow + (sx >> 3));
+    const colorIndex = rd8(charBase + tile * 64 + (sy & 7) * 8 + (sx & 7));
     if (!colorIndex) return null;
-    return gbaColor(u16[(PAL >> 1) + colorIndex]);
+    return gbaColor(rd16((PAL >> 1) + colorIndex));
   }
 
   type Layer = { bg: number; type: "text" | "affine"; priority: number };
@@ -263,7 +309,7 @@ export function createRenderer(): Renderer {
     }
     return layers.map((layer) => ({
       ...layer,
-      priority: u16[(REG + 8 + layer.bg * 2) >> 1] & 3,
+      priority: rd16((REG + 8 + layer.bg * 2) >> 1) & 3,
     }));
   }
 
@@ -271,18 +317,20 @@ export function createRenderer(): Renderer {
     const tileOffset = objTileOffset(sprite, x >> 3, y >> 3);
     let colorIndex: number;
     if (sprite.color256)
-      colorIndex =
-        u8[VRAM + 0x1_00_00 + tileOffset * 32 + (y & 7) * 8 + (x & 7)];
+      colorIndex = rd8(
+        VRAM + 0x1_00_00 + tileOffset * 32 + (y & 7) * 8 + (x & 7),
+      );
     else {
-      const packed =
-        u8[VRAM + 0x1_00_00 + tileOffset * 32 + (y & 7) * 4 + ((x & 7) >> 1)];
+      const packed = rd8(
+        VRAM + 0x1_00_00 + tileOffset * 32 + (y & 7) * 4 + ((x & 7) >> 1),
+      );
       colorIndex = x & 1 ? packed >> 4 : packed & 15;
     }
     if (!colorIndex) return null;
     const palOffset = sprite.color256
       ? colorIndex
       : sprite.palette * 16 + colorIndex;
-    return gbaColor(u16[(PAL >> 1) + 0x1_00 + palOffset]);
+    return gbaColor(rd16((PAL >> 1) + 0x1_00 + palOffset));
   }
 
   function renderBgLayer(bg: number, type: "text" | "affine"): void {
@@ -332,15 +380,23 @@ export function createRenderer(): Renderer {
     priority: number | null,
   ): Sprite | null {
     const base = (OAM >> 1) + i * 4;
-    const a0 = u16[base];
-    const a1 = u16[base + 1];
-    const a2 = u16[base + 2];
+    const a0 = rd16(base);
+    const a1 = rd16(base + 1);
+    const a2 = rd16(base + 2);
     const affineMode = (a0 >> 8) & 3;
     const affine = affineMode & 1;
     if (!affine && a0 & 0x02_00) return null;
     const shape = (a0 >> 14) & 3;
     if (shape === 3) return null;
-    const [width, height] = SPRITE_SIZES[shape][(a1 >> 14) & 3];
+    const shapeSizes = SPRITE_SIZES[shape];
+    const dims = shapeSizes?.[(a1 >> 14) & 3];
+    if (dims === undefined) {
+      throw new Error(`sprite size out of range: shape ${String(shape)}`);
+    }
+    const [width, height] = dims;
+    if (width === undefined || height === undefined) {
+      throw new Error(`sprite dimensions missing for shape ${String(shape)}`);
+    }
     const spritePriority = (a2 >> 10) & 3;
     if (priority !== null && spritePriority !== priority) return null;
     let ox = a1 & 511;
@@ -355,10 +411,10 @@ export function createRenderer(): Renderer {
     if (affine) {
       const matrix = (a1 >> 9) & 31;
       const matrixBase = (OAM >> 1) + matrix * 16;
-      pa = signed16(u16[matrixBase + 3]);
-      pb = signed16(u16[matrixBase + 7]);
-      pc = signed16(u16[matrixBase + 11]);
-      pd = signed16(u16[matrixBase + 15]);
+      pa = signed16(rd16(matrixBase + 3));
+      pb = signed16(rd16(matrixBase + 7));
+      pc = signed16(rd16(matrixBase + 11));
+      pd = signed16(rd16(matrixBase + 15));
     }
 
     return {
@@ -398,7 +454,7 @@ export function createRenderer(): Renderer {
     const layers = bgLayersForMode(dispcnt);
     for (let priority = 3; priority >= 0; priority--) {
       for (const { bg, type } of layers) {
-        if ((u16[(REG + 8 + bg * 2) >> 1] & 3) === priority)
+        if ((rd16((REG + 8 + bg * 2) >> 1) & 3) === priority)
           renderBgLayer(bg, type);
       }
       renderSprites(dispcnt, priority);
@@ -411,7 +467,7 @@ export function createRenderer(): Renderer {
       u16 = new Uint16Array(memory.buffer);
     },
     render(): Uint8ClampedArray {
-      const dispcnt = u16[REG >> 1];
+      const dispcnt = rd16(REG >> 1);
       const mode = dispcnt & 7;
       if (mode === 3) renderBitmapMode3();
       else if (mode === 4) renderBitmapMode4(dispcnt);

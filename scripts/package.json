@@ -1,0 +1,25 @@
+{
+  "name": "@shepherdjerred/root-scripts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "bunx eslint --cache .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/api-logs": "^0.218.0",
+    "@opentelemetry/context-async-hooks": "^2.7.1",
+    "@opentelemetry/exporter-logs-otlp-http": "^0.218.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.218.0",
+    "@opentelemetry/resources": "^2.7.1",
+    "@opentelemetry/sdk-logs": "^0.218.0",
+    "@opentelemetry/sdk-trace-base": "^2.7.1",
+    "@opentelemetry/semantic-conventions": "^1.40.0",
+    "@shepherdjerred/eslint-config": "file:../packages/eslint-config",
+    "@types/bun": "^1.3.12",
+    "ts-morph": "^28.0.0",
+    "typescript": "^6.0.3",
+    "zod": "^4.4.3"
+  }
+}

@@ -274,16 +274,67 @@ echo "Done."`,
             engine: {
               kind: "StatefulSet",
               port: 8080,
-              // No CPU limit on purpose — the engine bursts freely; the request is
-              // just the scheduling reservation. 30d peaks: 4.6 CPU / 14.4Gi.
+              // 2026-07 CI-freeze hardening: a CPU limit was added after concurrent CI
+              // session bursts on the previously-unbounded engine drove host load1 into
+              // the thousands-to-tens-of-thousands and hard-locked the node's kernel
+              // scheduler 7 times in 3 days (2026-07-05/07). 16 is ~3.5x the 30d observed
+              // peak of 4.6 CPU — enough headroom for legitimate heavy concurrent bursts,
+              // while bounding the worst-case runqueue pressure this one container can
+              // cause to a finite slice of the node's 32 threads instead of unbounded.
+              // See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md
+              // and packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md.
+              //
+              // Memory right-sized 2026-07-10 (req 16Gi -> 8Gi, lim 50Gi -> 24Gi) from
+              // 30d working-set data: p50 2.6Gi, p95 6.7Gi, max 15.6Gi. The request
+              // sits just above p95 (scheduling guarantee); the limit is ~1.5x the 30d
+              // max. On a single-node cluster an oversized request buys nothing except
+              // blocking other pods from scheduling — it was the largest single line
+              // item (26% of allocatable) when CI pods went unschedulable at 99.99%
+              // requested. See packages/docs/plans/2026-07-10_torvalds-memory-rightsize.md.
               resources: {
                 requests: {
                   cpu: "6",
-                  memory: "16Gi",
+                  memory: "8Gi",
                 },
                 limits: {
-                  memory: "50Gi",
+                  cpu: "16",
+                  memory: "24Gi",
                 },
+              },
+              // After an unclean shutdown the engine wipes and rebuilds its dagql/
+              // BuildKit cache state over the 2Ti build-cache PVC; during that cold
+              // start `dagger core version` (the probe command) times out for well
+              // over the chart-default 10 minutes (period 30s x failureThreshold 20),
+              // especially with CI jobs hammering the engine. The liveness kill then
+              // causes the NEXT unclean shutdown, looping forever — observed live
+              // 2026-07-10 (22 restarts in 22h on the old pod, then a fresh pod
+              // killed at 11m mid-cold-start). 2026-07-11 storm: a 10-minute node
+              // load spike (load1 13,552) tripped this same loop 4 more times
+              // (restarts 30 min apart, 19:32/20:02/20:34/21:04Z) and wiped the
+              // buildcache PVC from 1.2Ti down to 16Gi before recovering — see
+              // packages/docs/logs/2026-07-11_afternoon-dagger-restart-loop.md.
+              //
+              // Root cause of *why* the wipe was unavoidable: `failureThreshold: 60`
+              // only widens how long the engine can fail probes before being killed —
+              // it does nothing about what happens at the moment of the kill. The
+              // chart defaults the liveness probe's own `terminationGracePeriodSeconds`
+              // (a distinct, probe-scoped override of the pod-level grace period,
+              // introduced in k8s 1.25 — see `terminationGracePeriodSeconds` below,
+              // which only governs pod deletion, NOT probe-triggered kills) to just
+              // 30s. That's nowhere near enough time to flush dagql/BuildKit state
+              // under load, so a liveness-triggered restart was *guaranteed* to be
+              // unclean and trigger the wipe, no matter how generous failureThreshold
+              // was. Raised to 280s (just under the pod-level 300s grace) so the
+              // engine gets a real chance at a clean shutdown when liveness fires,
+              // which should make the wipe-and-loop path the exception rather than
+              // the rule. failureThreshold also raised 60 -> 240 (2h) as defense in
+              // depth: the 2026-07-11 storm needed up to ~90 min of cold-start-after-
+              // wipe before probes passed again, which 30 min does not cover.
+              // Readiness settings stay at chart defaults — failing readiness only
+              // gates traffic, which is correct during cold start.
+              livenessProbeSettings: {
+                failureThreshold: 240,
+                terminationGracePeriodSeconds: 280,
               },
               // Garbage collection policy. IMPORTANT: maxUsedSpace bounds only the
               // *reclaimable* BuildKit cache, NOT total dataset usage — metadata DBs

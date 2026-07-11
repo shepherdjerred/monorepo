@@ -17,7 +17,7 @@ const config = [
     },
   },
   {
-    files: ["src/index.ts"],
+    files: ["src/index.ts", "src/v2.ts"],
     rules: {
       "custom-rules/no-re-exports": "off",
     },

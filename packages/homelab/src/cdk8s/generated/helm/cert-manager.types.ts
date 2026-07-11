@@ -13,12 +13,14 @@ export type CertmanagerHelmValuesGlobal = {
   nodeSelector?: Record<string, string>;
   /**
    * Labels to apply to all resources.
-   * Please note that this does not add labels to the resources created dynamically by the controllers.
-   * For these resources, you have to add the labels in the template in the cert-manager custom resource:
-   * For example, podTemplate/ ingressTemplate in ACMEChallengeSolverHTTP01Ingress
-   * For more information, see the [cert-manager documentation](https://cert-manager.io/docs/reference/api-docs/#acme.cert-manager.io/v1.ACMEChallengeSolverHTTP01Ingress).
-   * For example, secretTemplate in CertificateSpec
-   * For more information, see the [cert-manager documentation](https://cert-manager.io/docs/reference/api-docs/#cert-manager.io/v1.CertificateSpec).
+   * These labels are also applied to dynamically-created ACME HTTP01 solver resources
+   * (pods, services, ingresses, or Gateway API HTTPRoutes).
+   * The following ACME identity label keys are reserved and will be
+   * silently ignored on dynamically-created resources: acme.cert-manager.io/http-domain,
+   * acme.cert-manager.io/http-token, acme.cert-manager.io/http01-solver.
+   * For per-Issuer-specific labels, use the HTTP01 ingress solver podTemplate and
+   * ingressTemplate fields for pod/ingress resources, or the gatewayHTTPRoute
+   * solver labels field for Gateway API HTTPRoute resources.
    *
    * @default {}
    */
@@ -64,12 +66,16 @@ export type CertmanagerHelmValuesGlobal = {
    * The duration the clients should wait between attempting acquisition and
    * renewal of a leadership.
    * +docs:property
-   * This option is equivalent to setting crds.enabled=true and crds.keep=true.
-   * Deprecated: use crds.enabled and crds.keep instead.
+   * A Kubernetes Runtime Class to apply to ACME HTTP01 solver pods, if required. For more information, see [Runtime Class](https://kubernetes.io/docs/concepts/containers/).
+   * For example:
    *
    * @default {"namespace":"kube-system"}
    */
   leaderElection?: CertmanagerHelmValuesGlobalLeaderElection;
+  /**
+   * @default ""
+   */
+  runtimeClassName?: string;
 };
 
 export type CertmanagerHelmValuesGlobalCommonLabels = object;
@@ -338,13 +344,13 @@ export type CertmanagerHelmValuesPrometheus = {
    */
   enabled?: boolean;
   /**
-   * @default {...} (10 keys)
+   * @default {...} (8 keys)
    */
   servicemonitor?: CertmanagerHelmValuesPrometheusServicemonitor;
   /**
    * Note that you cannot enable both PodMonitor and ServiceMonitor as they are mutually exclusive. Enabling both will result in an error.
    *
-   * @default {...} (9 keys)
+   * @default {...} (8 keys)
    */
   podmonitor?: CertmanagerHelmValuesPrometheusPodmonitor;
 };
@@ -367,20 +373,6 @@ export type CertmanagerHelmValuesPrometheusServicemonitor = {
    * @default "default"
    */
   prometheusInstance?: string | number | boolean;
-  /**
-   * The target port to set on the ServiceMonitor. This must match the port that the
-   * cert-manager controller is listening on for metrics.
-   * +docs:type=string,integer
-   *
-   * @default "http-metrics"
-   */
-  targetPort?: string;
-  /**
-   * The path to scrape for metrics.
-   *
-   * @default "/metrics"
-   */
-  path?: string;
   /**
    * The interval to scrape metrics.
    *
@@ -465,12 +457,6 @@ export type CertmanagerHelmValuesPrometheusPodmonitor = {
    * @default "default"
    */
   prometheusInstance?: string | number | boolean;
-  /**
-   * The path to scrape for metrics.
-   *
-   * @default "/metrics"
-   */
-  path?: string;
   /**
    * The interval to scrape metrics.
    *
@@ -663,6 +649,13 @@ export type CertmanagerHelmValuesWebhook = {
    * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
+  /**
+   * A Kubernetes Runtime Class to apply to ACME HTTP01 solver pods, if required. For more information, see [Runtime Class](https://kubernetes.io/docs/concepts/containers/).
+   * For example:
+   *
+   * @default ""
+   */
+  runtimeClassName?: string;
   /**
    * Kubernetes tolerations (standard Toleration objects)
    */
@@ -1140,6 +1133,13 @@ export type CertmanagerHelmValuesCainjector = {
    */
   affinity?: Record<string, unknown>;
   /**
+   * A Kubernetes Runtime Class to apply to ACME HTTP01 solver pods, if required. For more information, see [Runtime Class](https://kubernetes.io/docs/concepts/containers/).
+   * For example:
+   *
+   * @default ""
+   */
+  runtimeClassName?: string;
+  /**
    * Kubernetes tolerations (standard Toleration objects)
    */
   tolerations?: unknown[];
@@ -1345,6 +1345,13 @@ export type CertmanagerHelmValuesAcmesolver = {
    * @default {"name":"cert-manager-acmesolver","repository":"","pullPolicy":"IfNotPresent"}
    */
   image?: CertmanagerHelmValuesAcmesolverImage;
+  /**
+   * A Kubernetes Runtime Class to apply to ACME HTTP01 solver pods, if required. For more information, see [Runtime Class](https://kubernetes.io/docs/concepts/containers/).
+   * For example:
+   *
+   * @default ""
+   */
+  runtimeClassName?: string;
 };
 
 export type CertmanagerHelmValuesAcmesolverImage = {
@@ -1419,6 +1426,15 @@ export type CertmanagerHelmValuesStartupapicheck = {
    */
   backoffLimit?: number;
   /**
+   * Limits the lifetime of a Job that has finished execution (either Complete
+   * or Failed). If this field is set, once the Job finishes, it will be
+   * automatically cleaned up after ttlSecondsAfterFinished seconds. This is
+   * disabled by default (field is not set) to preserve backward compatibility
+   * and avoid issues with GitOps tools (e.g. Argo CD) that may attempt to
+   * reconcile or recreate Jobs after they are automatically deleted.
+   * For more information, see [Automatic Cleanup for Finished Jobs](https://kubernetes.io/docs/concepts/workloads/controllers/ttlafterfinished/).
+   * +docs:property
+   * +docs:type=integer
    * Optional additional annotations to add to the startupapicheck Job.
    * +docs:property
    *
@@ -1447,6 +1463,13 @@ export type CertmanagerHelmValuesStartupapicheck = {
    * Kubernetes affinity (standard Affinity object)
    */
   affinity?: Record<string, unknown>;
+  /**
+   * A Kubernetes Runtime Class to apply to ACME HTTP01 solver pods, if required. For more information, see [Runtime Class](https://kubernetes.io/docs/concepts/containers/).
+   * For example:
+   *
+   * @default ""
+   */
+  runtimeClassName?: string;
   /**
    * Kubernetes tolerations (standard Toleration objects)
    */
@@ -1662,7 +1685,7 @@ export type CertmanagerHelmValues = {
    * This is a YAML-formatted file.
    * Declare variables to be passed into your templates.
    *
-   * @default {...} (8 keys)
+   * @default {...} (9 keys)
    */
   global?: CertmanagerHelmValuesGlobal;
   /**
@@ -1812,6 +1835,7 @@ export type CertmanagerHelmValues = {
    * See https://cert-manager.io/docs/devops-tips/prometheus-metrics/#tls
    * Configure PEM size limits for certificate validation
    * Useful for certificates with many DNS names (e.g., Istio gateways with 100+ DNS names)
+   * Configure certificate request backoff durations
    *
    * @default {}
    */
@@ -1929,6 +1953,13 @@ export type CertmanagerHelmValues = {
    */
   affinity?: Record<string, unknown>;
   /**
+   * A Kubernetes Runtime Class to apply to ACME HTTP01 solver pods, if required. For more information, see [Runtime Class](https://kubernetes.io/docs/concepts/containers/).
+   * For example:
+   *
+   * @default ""
+   */
+  runtimeClassName?: string;
+  /**
    * A list of Kubernetes Tolerations, if required. For more information, see [Toleration v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#toleration-v1-core).
    * For example:
    */
@@ -1957,25 +1988,25 @@ export type CertmanagerHelmValues = {
   /**
    * +docs:section=Prometheus
    *
-   * @default {"enabled":true,"servicemonitor":{"enabled":false,"prometheusInstance":"default","targetPort":"http-metrics","path":"/metrics","interval":"60s","scrapeTimeout":"30s","labels":{},"annotations":{},"honorLabels":false,"endpointAdditionalProperties":{}},"podmonitor":{"enabled":false,"prometheusInstance":"default","path":"/metrics","interval":"60s","scrapeTimeout":"30s","labels":{},"annotations":{},"honorLabels":false,"endpointAdditionalProperties":{}}}
+   * @default {"enabled":true,"servicemonitor":{"enabled":false,"prometheusInstance":"default","interval":"60s","scrapeTimeout":"30s","labels":{},"annotations":{},"honorLabels":false,"endpointAdditionalProperties":{}},"podmonitor":{"enabled":false,"prometheusInstance":"default","interval":"60s","scrapeTimeout":"30s","labels":{},"annotations":{},"honorLabels":false,"endpointAdditionalProperties":{}}}
    */
   prometheus?: CertmanagerHelmValuesPrometheus;
   /**
    * +docs:section=Webhook
    *
-   * @default {...} (36 keys)
+   * @default {...} (37 keys)
    */
   webhook?: CertmanagerHelmValuesWebhook;
   /**
    * +docs:section=CA Injector
    *
-   * @default {...} (23 keys)
+   * @default {...} (24 keys)
    */
   cainjector?: CertmanagerHelmValuesCainjector;
   /**
    * +docs:section=ACME Solver
    *
-   * @default {"image":{"name":"cert-manager-acmesolver","repository":"","pullPolicy":"IfNotPresent"}}
+   * @default {"image":{"name":"cert-manager-acmesolver","repository":"","pullPolicy":"IfNotPresent"},"runtimeClassName":""}
    */
   acmesolver?: CertmanagerHelmValuesAcmesolver;
   /**
@@ -1988,7 +2019,7 @@ export type CertmanagerHelmValues = {
    * owing to the Job never being completed because the sidecar proxy does not exit.
    * For more information, see [this note](https://github.com/cert-manager/cert-manager/pull/4414).
    *
-   * @default {...} (19 keys)
+   * @default {...} (20 keys)
    */
   startupapicheck?: CertmanagerHelmValuesStartupapicheck;
   extraObjects?: unknown[];
@@ -2024,6 +2055,7 @@ export type CertmanagerHelmParameters = {
   "global.podSecurityPolicy.useAppArmor"?: string;
   "global.logLevel"?: string;
   "global.leaderElection.namespace"?: string;
+  "global.runtimeClassName"?: string;
   installCRDs?: string;
   "crds.enabled"?: string;
   "crds.keep"?: string;
@@ -2064,6 +2096,7 @@ export type CertmanagerHelmParameters = {
   "networkPolicy.egress.ports.port"?: string;
   "networkPolicy.egress.ports.protocol"?: string;
   affinity?: string;
+  runtimeClassName?: string;
   tolerations?: string;
   topologySpreadConstraints?: string;
   "livenessProbe.enabled"?: string;
@@ -2076,14 +2109,11 @@ export type CertmanagerHelmParameters = {
   "prometheus.enabled"?: string;
   "prometheus.servicemonitor.enabled"?: string;
   "prometheus.servicemonitor.prometheusInstance"?: string;
-  "prometheus.servicemonitor.targetPort"?: string;
-  "prometheus.servicemonitor.path"?: string;
   "prometheus.servicemonitor.interval"?: string;
   "prometheus.servicemonitor.scrapeTimeout"?: string;
   "prometheus.servicemonitor.honorLabels"?: string;
   "prometheus.podmonitor.enabled"?: string;
   "prometheus.podmonitor.prometheusInstance"?: string;
-  "prometheus.podmonitor.path"?: string;
   "prometheus.podmonitor.interval"?: string;
   "prometheus.podmonitor.scrapeTimeout"?: string;
   "prometheus.podmonitor.honorLabels"?: string;
@@ -2114,6 +2144,7 @@ export type CertmanagerHelmParameters = {
   "webhook.readinessProbe.timeoutSeconds"?: string;
   "webhook.nodeSelector"?: string;
   "webhook.affinity"?: string;
+  "webhook.runtimeClassName"?: string;
   "webhook.tolerations"?: string;
   "webhook.topologySpreadConstraints"?: string;
   "webhook.serviceIPFamilyPolicy"?: string;
@@ -2156,6 +2187,7 @@ export type CertmanagerHelmParameters = {
   "cainjector.resources"?: string;
   "cainjector.nodeSelector"?: string;
   "cainjector.affinity"?: string;
+  "cainjector.runtimeClassName"?: string;
   "cainjector.tolerations"?: string;
   "cainjector.topologySpreadConstraints"?: string;
   "cainjector.image.name"?: string;
@@ -2169,6 +2201,7 @@ export type CertmanagerHelmParameters = {
   "acmesolver.image.name"?: string;
   "acmesolver.image.repository"?: string;
   "acmesolver.image.pullPolicy"?: string;
+  "acmesolver.runtimeClassName"?: string;
   "startupapicheck.enabled"?: string;
   "startupapicheck.securityContext.runAsNonRoot"?: string;
   "startupapicheck.securityContext.seccompProfile.type"?: string;
@@ -2185,6 +2218,7 @@ export type CertmanagerHelmParameters = {
   "startupapicheck.resources"?: string;
   "startupapicheck.nodeSelector"?: string;
   "startupapicheck.affinity"?: string;
+  "startupapicheck.runtimeClassName"?: string;
   "startupapicheck.tolerations"?: string;
   "startupapicheck.image.name"?: string;
   "startupapicheck.image.repository"?: string;

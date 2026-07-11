@@ -7,7 +7,6 @@
     "monarch-classify": "./src/index.ts"
   },
   "scripts": {
-    "build": "true",
     "login": "bun run scripts/monarch-browser-login.ts",
     "login:password": "bun run scripts/monarch-login.ts",
     "login:browser": "bun run scripts/monarch-browser-login.ts",
@@ -16,7 +15,7 @@
     "lint": "bunx eslint ."
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.96.0",
+    "@anthropic-ai/sdk": "^0.100.0",
     "@shepherdjerred/llm-models": "file:../llm-models",
     "pdfjs-dist": "^5.6.205",
     "playwright": "^1.60.0",

@@ -12,6 +12,10 @@ import { createCronJob } from "#src/league/cron/helpers.ts";
 import { createLogger } from "#src/logger.ts";
 import { runStartupRecovery } from "#src/league/tasks/recovery/startup-recovery.ts";
 import { runReportStoreS3CatchUp } from "#src/report-store/catch-up.ts";
+import {
+  runReportLakeFold,
+  runReportLakeRebuild,
+} from "#src/report-lake/compactor.ts";
 
 const logger = createLogger("league-cron");
 
@@ -88,6 +92,36 @@ export async function startCronJobs() {
     logTrigger: "Catching up SQLite report-store facts from S3 archive",
   });
 
+  // fold freshly-ingested staging rows into the report lake every 15 minutes
+  // (offset from the S3 catch-up so they don't contend for the DB), and run
+  // on init so a fresh deploy gets a lake before the first report fires.
+  logger.info("📅 Setting up report-lake fold (every 15 minutes at :05)");
+  createCronJob({
+    schedule: "0 5-59/15 * * * *",
+    jobName: "report_lake_fold",
+    task: async () => {
+      await runReportLakeFold();
+    },
+    logMessage: "🗜️ Folding staged rows into the report lake",
+    timezone: "UTC",
+    runOnInit: true,
+  });
+
+  // full lake rebuild nightly at 2 AM UTC: consolidates fold fragments,
+  // picks up lake schema changes, and re-derives everything from the
+  // canonical Stored* raw JSON.
+  logger.info("📅 Setting up report-lake rebuild (daily 2 AM UTC)");
+  createCronJob({
+    schedule: "0 0 2 * * *",
+    jobName: "report_lake_rebuild",
+    task: async () => {
+      await runReportLakeRebuild();
+    },
+    logMessage: "🏗️ Rebuilding the report lake from stored raw JSON",
+    timezone: "UTC",
+    runOnInit: false,
+  });
+
   // prune orphaned players daily at 3 AM UTC
   logger.info("📅 Setting up daily player pruning job (3 AM UTC)");
   createCronJob({
@@ -138,6 +172,7 @@ export async function startCronJobs() {
   logger.info(
     "📊 Pre-match check (30s), match history polling (1min), competition lifecycle (15min), data validation (hourly), " +
       "match time refresh (6hr), scheduled reports (every minute), report-store S3 catch-up (15min), " +
+      "report-lake fold (15min) and rebuild (2AM UTC), " +
       "player pruning (3AM UTC), removed-guild reconciliation (4AM UTC) cron jobs are now active",
   );
 }

@@ -9,7 +9,7 @@
 // Container image push targets
 // ---------------------------------------------------------------------------
 
-export interface ImageTarget {
+export type ImageTarget = {
   name: string;
   versionKey: string;
   /** Workspace package name, if different from name (for change detection). */
@@ -20,7 +20,7 @@ export interface ImageTarget {
   buildFn?: string;
   /** Custom Dagger push function name (kebab-case). Defaults to "push-image". */
   pushFn?: string;
-}
+};
 
 export const IMAGE_PUSH_TARGETS: ImageTarget[] = [
   { name: "birmel", versionKey: "shepherdjerred/birmel" },
@@ -98,10 +98,10 @@ export const INFRA_PUSH_TARGETS: ImageTarget[] = [
 // npm packages
 // ---------------------------------------------------------------------------
 
-export interface NpmPackage {
+export type NpmPackage = {
   name: string;
   dir: string;
-}
+};
 
 export const NPM_PACKAGES: NpmPackage[] = [
   { name: "astro-opengraph-images", dir: "packages/astro-opengraph-images" },
@@ -116,7 +116,7 @@ export const NPM_PACKAGES: NpmPackage[] = [
 // Static site deploys
 // ---------------------------------------------------------------------------
 
-interface DeploySiteBase {
+type DeploySiteBase = {
   bucket: string;
   name: string;
   url: string;
@@ -135,7 +135,7 @@ interface DeploySiteBase {
    * `assets/`, the scout SPA's `app/assets/`).
    */
   immutablePrefixes?: string[];
-}
+};
 
 type DeploySiteBuildEnv =
   | {
@@ -246,7 +246,7 @@ export const DEPLOY_SITES: DeploySite[] = [
 ];
 
 /** Derived from NPM_PACKAGES — workspace packages whose changes should trigger npm publishes. */
-export const PACKAGES_WITH_NPM: Set<string> = new Set(
+export const PACKAGES_WITH_NPM = new Set<string>(
   NPM_PACKAGES.map(
     (pkg) => pkg.dir.replace("packages/", "").split("/")[0] ?? pkg.name,
   ),
@@ -257,7 +257,7 @@ export const PACKAGES_WITH_NPM: Set<string> = new Set(
  * Excludes nested packages (e.g. helm-types under homelab) where the
  * workspace root doesn't have its own build script.
  */
-export const NPM_BUILD_PACKAGES: Set<string> = new Set(
+export const NPM_BUILD_PACKAGES = new Set<string>(
   NPM_PACKAGES.filter((pkg) => !pkg.dir.includes("/src/")).map((pkg) =>
     pkg.dir.replace("packages/", ""),
   ),
@@ -325,6 +325,7 @@ export const HELM_CHARTS: string[] = [
   "kyverno-policies",
   "bugsink",
   "tasknotes",
+  "relay",
   "temporal",
   "trmnl-dashboard",
 ];
@@ -356,7 +357,7 @@ export const PACKAGE_TO_SITE: Record<string, string[]> = {
 // ---------------------------------------------------------------------------
 
 /** Derived from IMAGE_PUSH_TARGETS — packages whose changes should trigger image builds. */
-export const PACKAGES_WITH_IMAGES: Set<string> = new Set(
+export const PACKAGES_WITH_IMAGES = new Set<string>(
   IMAGE_PUSH_TARGETS.map((img) => img.package ?? img.name),
 );
 
@@ -406,14 +407,42 @@ export const ALL_PACKAGES: string[] = [
 // Resource tiers for per-package build steps
 // ---------------------------------------------------------------------------
 
-type ResourceTier = { cpu: string; memory: string };
+export type ResourceTier = {
+  cpu: string;
+  memory: string;
+  cpuLimit: string;
+  memoryLimit: string;
+};
 
 // BK pods are mostly thin dagger CLI wrappers — all compute happens in the
 // remote Dagger engine — but the wrapper still needs enough headroom to keep
 // the Dagger client and Buildkite agent alive while streaming progress.
-const HEAVY: ResourceTier = { cpu: "250m", memory: "768Mi" };
-const MEDIUM: ResourceTier = { cpu: "150m", memory: "512Mi" };
-const LIGHT: ResourceTier = { cpu: "100m", memory: "384Mi" };
+//
+// 2026-07 CI-freeze hardening: limits added alongside the existing requests.
+// These wrapper containers do thin Dagger-CLI-call work (the real compute
+// happens in the remote engine, capped separately in dagger.ts), so usage
+// should track the request closely — limits use a fixed multiplier rather
+// than a separately-tuned tier. CPU multiplier > memory multiplier:
+// log-streaming/wrapper processes burst CPU more than memory.
+// See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md.
+const HEAVY: ResourceTier = {
+  cpu: "250m",
+  memory: "768Mi",
+  cpuLimit: "1",
+  memoryLimit: "1536Mi",
+};
+const MEDIUM: ResourceTier = {
+  cpu: "150m",
+  memory: "512Mi",
+  cpuLimit: "600m",
+  memoryLimit: "1024Mi",
+};
+const LIGHT: ResourceTier = {
+  cpu: "100m",
+  memory: "384Mi",
+  cpuLimit: "400m",
+  memoryLimit: "768Mi",
+};
 
 export const PACKAGE_RESOURCES: Record<string, ResourceTier> = {
   homelab: HEAVY,
@@ -441,15 +470,38 @@ export { LIGHT as DEFAULT_RESOURCES };
  * They're still in ALL_PACKAGES for change detection (files trigger full-build awareness),
  * but perPackageSteps() skips them.
  */
-export const SKIP_PACKAGES: Set<string> = new Set([
+export const SKIP_PACKAGES = new Set<string>([
   "anki",
   "docs",
   "dotfiles",
   "fonts",
+  // Static placeholder site with no source; deploy is driven by its
+  // DEPLOY_SITES entry (buildCmd "true", syncs public/ as-is).
+  "glitter",
+]);
+
+/**
+ * Packages with no test suite: pkg-check runs lint + typecheck only
+ * (`--skip-test`). Prefer adding tests over adding entries here.
+ * Keep in sync with the test-script exemptions in scripts/compliance-check.sh.
+ */
+/**
+ * Packages with no lint script BY DESIGN (vendored code kept as upstream
+ * ships it): pkg-check passes --skip-lint. Keep in sync with the lint-script
+ * exemptions in scripts/compliance-check.sh.
+ */
+export const NO_LINT_PACKAGES = new Set<string>(["discord-video-stream"]);
+
+export const NO_TEST_PACKAGES = new Set<string>([
+  "leetcode",
+  "cooklang-for-obsidian",
+  "cooklang-rich-preview",
+  "stocks-sjer-red",
+  "starlight-karma-bot",
 ]);
 
 /** Packages that need `bun run generate` before lint/typecheck/test (Prisma). */
-export const PRISMA_PACKAGES: Set<string> = new Set([
+export const PRISMA_PACKAGES = new Set<string>([
   "birmel",
   "scout-for-lol",
   "discord-plays-mario-kart",
@@ -461,16 +513,16 @@ export const PRISMA_PACKAGES: Set<string> = new Set([
  * Birmel's editor sub-agent shells out to both — without them the image
  * runs but the editor agent's tools no-op with a runtime warning.
  */
-export const EDITOR_CLI_PACKAGES: Set<string> = new Set(["birmel"]);
+export const EDITOR_CLI_PACKAGES = new Set<string>(["birmel"]);
 
 /** Packages that are Astro sites. */
-export const ASTRO_PACKAGES: Set<string> = new Set([
+export const ASTRO_PACKAGES = new Set<string>([
   "sjer.red",
   "cooklang-rich-preview",
 ]);
 
 /** Packages that need Playwright browser tests (run in Playwright container, not bunBase). */
-export const PLAYWRIGHT_PACKAGES: Set<string> = new Set(["sjer.red"]);
+export const PLAYWRIGHT_PACKAGES = new Set<string>(["sjer.red"]);
 
 // ---------------------------------------------------------------------------
 // Target aliases
@@ -486,12 +538,12 @@ export const ALIASES: Record<string, string[]> = {
 // Deploy targets (homelab-deploy orchestration)
 // ---------------------------------------------------------------------------
 
-export interface DeployTarget {
+export type DeployTarget = {
   name: string;
   images: ImageTarget[];
   charts: string[];
   argoApps: string[];
-}
+};
 
 function imageByName(name: string): ImageTarget {
   const img = [...IMAGE_PUSH_TARGETS, ...INFRA_PUSH_TARGETS].find(

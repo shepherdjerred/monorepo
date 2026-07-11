@@ -16,9 +16,9 @@
   },
   "scripts": {
     "build": "bun build ./src/index.ts --compile --external ffmpeg-static --outfile=dist/toolkit",
-    "test": "true",
-    "test:unit": "bun test test/recall test/fetch test/daemon test/bugsink test/s3 test/deployed --exclude '*integration*'",
-    "test:integration": "bun test test/**/*integration*",
+    "test": "bun run test:unit",
+    "test:unit": "bun test test/recall test/fetch test/daemon test/bugsink test/s3 test/deployed",
+    "test:integration": "bun test test-integration",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },

@@ -2,11 +2,11 @@ import * as Sentry from "@sentry/bun";
 
 Sentry.init({
   dsn:
-    Bun.env.SENTRY_DSN ??
+    Bun.env["SENTRY_DSN"] ??
     "https://9c905c2bb5924e55b4dea32e2a95f0d1@bugsink.sjer.red/8",
   environment: Bun.env.NODE_ENV ?? "development",
   // VERSION is baked into the image at build time (buildDiscordPlaysPokemonImageHelper).
-  release: Bun.env.VERSION,
+  release: Bun.env["VERSION"],
   // Don't let Sentry register the global OTel TracerProvider/Propagator/
   // ContextManager. It runs before initializeTracing(), so it lands first and
   // the NodeSDK below fails registration ("duplicate registration of API:
@@ -21,8 +21,8 @@ import { initializeTracing } from "./observability/tracing.ts";
 initializeTracing();
 
 import { match } from "ts-pattern";
-import { createGameBot } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot.ts";
-import { createSelfbotPooledUserbotFactory } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client.ts";
+import { createGameBot } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot";
+import { createSelfbotPooledUserbotFactory } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
 import { handleMessages } from "./discord/message-handler.ts";
 import { buildPokemonExtraCommands } from "./discord/slashCommands/index.ts";
 import { PokemonGameDriver } from "./lifecycle/pokemon-driver.ts";
@@ -53,7 +53,7 @@ const driver = new PokemonGameDriver({ config });
 // canonical list and passes each bot its peers as "all - self" via PEER_USERBOT_IDS).
 // Empty when running locally; the Go-Live heuristic then catches peer userbots instead.
 function readPeerUserbotIds(): readonly string[] {
-  const raw = Bun.env.PEER_USERBOT_IDS;
+  const raw = Bun.env["PEER_USERBOT_IDS"];
   if (raw === undefined) {
     return [];
   }

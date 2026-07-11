@@ -1,8 +1,6 @@
-import {
-  LeetCodeClient,
-  formatDuration,
-  timestamp,
-} from "./lib/leetcode-graphql";
+import { z } from "zod";
+import { LeetCodeClient } from "./lib/leetcode-graphql.ts";
+import { formatDuration, timestamp } from "./lib/format.ts";
 
 const BATCH_SIZE = 100;
 const OUTPUT_PATH = new URL("../data/problems-list.json", import.meta.url)
@@ -26,37 +24,40 @@ query problemsetQuestionListV2($categorySlug: String!, $limit: Int, $skip: Int, 
   }
 }`;
 
-interface ProblemListResponse {
-  problemsetQuestionListV2: {
-    totalLength: number;
-    hasMore: boolean;
-    questions: Array<{
-      titleSlug: string;
-      title: string;
-      questionFrontendId: string;
-      difficulty: string;
-      paidOnly: boolean;
-      topicTags: Array<{ name: string; slug: string }>;
-      acRate: number;
-      frequency: number | null;
-    }>;
-  };
-}
+const QuestionSchema = z.object({
+  titleSlug: z.string(),
+  title: z.string(),
+  questionFrontendId: z.string(),
+  difficulty: z.string(),
+  paidOnly: z.boolean(),
+  topicTags: z.array(z.object({ name: z.string(), slug: z.string() })),
+  acRate: z.number(),
+  frequency: z.number().nullable(),
+});
+
+const ProblemListResponseSchema = z.object({
+  problemsetQuestionListV2: z.object({
+    totalLength: z.number(),
+    hasMore: z.boolean(),
+    questions: z.array(QuestionSchema),
+  }),
+});
+
+type Question = z.infer<typeof QuestionSchema>;
 
 async function main() {
   const client = new LeetCodeClient(2000, 4000);
-  const allQuestions: ProblemListResponse["problemsetQuestionListV2"]["questions"] =
-    [];
+  const allQuestions: Question[] = [];
   const startTime = Date.now();
 
   console.log(`[${timestamp()}] Starting problem list scrape...`);
 
   let skip = 0;
-  let totalLength = 0;
   let batch = 1;
+  let hasMore = true;
 
-  while (true) {
-    const result = await client.query<ProblemListResponse>(LIST_QUERY, {
+  while (hasMore) {
+    const result = await client.query(LIST_QUERY, {
       categorySlug: "",
       limit: BATCH_SIZE,
       skip,
@@ -68,26 +69,33 @@ async function main() {
       process.exit(1);
     }
 
-    const list = result.data!.problemsetQuestionListV2;
-    totalLength = list.totalLength;
+    const parsed = ProblemListResponseSchema.safeParse(result.data);
+    if (!parsed.success) {
+      console.error(`[${timestamp()}] GraphQL returned no data`);
+      process.exit(1);
+    }
+    const list = parsed.data.problemsetQuestionListV2;
     allQuestions.push(...list.questions);
 
     console.log(
-      `[${timestamp()}] Batch ${batch} — got ${list.questions.length} problems (${allQuestions.length}/${totalLength}) — ${formatDuration(Date.now() - startTime)} elapsed`,
+      `[${timestamp()}] Batch ${String(batch)} — got ${String(list.questions.length)} problems (${String(allQuestions.length)}/${String(list.totalLength)}) — ${formatDuration(Date.now() - startTime)} elapsed`,
     );
 
-    if (!list.hasMore) break;
+    hasMore = list.hasMore;
     skip += BATCH_SIZE;
     batch++;
   }
 
   await Bun.write(OUTPUT_PATH, JSON.stringify(allQuestions, null, 2));
   console.log(
-    `\n[${timestamp()}] Done! Wrote ${allQuestions.length} problems to ${OUTPUT_PATH} in ${formatDuration(Date.now() - startTime)}`,
+    `\n[${timestamp()}] Done! Wrote ${String(allQuestions.length)} problems to ${OUTPUT_PATH} in ${formatDuration(Date.now() - startTime)}`,
   );
 }
 
-main().catch((err) => {
-  console.error(`\n[FATAL] ${err.message}`);
+try {
+  await main();
+} catch (error: unknown) {
+  const msg = error instanceof Error ? error.message : String(error);
+  console.error(`\n[FATAL] ${msg}`);
   process.exit(1);
-});
+}

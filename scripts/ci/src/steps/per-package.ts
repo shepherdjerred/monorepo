@@ -9,6 +9,9 @@ import {
   SKIP_PACKAGES,
   PLAYWRIGHT_PACKAGES,
   NPM_BUILD_PACKAGES,
+  NO_TEST_PACKAGES,
+  NO_LINT_PACKAGES,
+  type ResourceTier,
 } from "../catalog.ts";
 import {
   safeKey,
@@ -48,6 +51,31 @@ function daggerPkgFlags(pkg: string): string {
  * skipped. `helmTypesInputsChanged` gates the homelab helm-types drift-check
  * step (only emitted when a generator input changed — see change-detection).
  */
+/**
+ * Extra `lint-typecheck-test` flags for the standard bundled-check step,
+ * derived from the package. temporal needs live HA secrets for ha-codegen
+ * before tsc; homelab needs helm + Go (its pagerduty-alerting.test.ts runs
+ * Alertmanager templates through the real Go text/template engine); ASTRO and
+ * NPM_BUILD packages add parallel astro/build siblings; NO_TEST packages skip
+ * the (absent) test suite.
+ */
+function bundledCheckFlags(pkg: string): string {
+  const haFlags =
+    pkg === "temporal"
+      ? ` --ha-url env:HASS_URL --ha-token env:HASS_TOKEN`
+      : "";
+  const helmFlag = pkg === "homelab" ? ` --needs-helm` : "";
+  const goFlag = pkg === "homelab" ? ` --needs-go` : "";
+  const astroFlags = ASTRO_PACKAGES.has(pkg)
+    ? ` --include-astro-check --include-astro-build`
+    : "";
+  const buildFlag = NPM_BUILD_PACKAGES.has(pkg) ? ` --include-build` : "";
+  const skipTestFlag = NO_TEST_PACKAGES.has(pkg) ? ` --skip-test` : "";
+  // NO_LINT_PACKAGES (vendored code) have no lint script by design.
+  const skipLintFlag = NO_LINT_PACKAGES.has(pkg) ? ` --skip-lint` : "";
+  return `${helmFlag}${goFlag}${haFlags}${astroFlags}${buildFlag}${skipTestFlag}${skipLintFlag}`;
+}
+
 export function perPackageSteps(
   pkg: string,
   helmTypesInputsChanged = false,
@@ -110,23 +138,11 @@ export function perPackageSteps(
     // astro-build run as additional parallel siblings inside the bundle.
     // NPM_BUILD_PACKAGES (astro-opengraph-images, webring): `bun run build`
     // runs as a parallel sibling to warm the Dagger cache for npm publish.
-    const haFlags =
-      pkg === "temporal"
-        ? ` --ha-url env:HASS_URL --ha-token env:HASS_TOKEN`
-        : "";
-    const helmFlag = pkg === "homelab" ? ` --needs-helm` : "";
-    // homelab's pagerduty-alerting.test.ts executes Alertmanager templates
-    // through the real Go text/template engine, so the test container needs Go.
-    const goFlag = pkg === "homelab" ? ` --needs-go` : "";
-    const astroFlags = ASTRO_PACKAGES.has(pkg)
-      ? ` --include-astro-check --include-astro-build`
-      : "";
-    const buildFlag = NPM_BUILD_PACKAGES.has(pkg) ? ` --include-build` : "";
     steps.push(
       daggerCallStep(
         `:dagger_knife: pkg-check`,
         `pkg-check-${sk}`,
-        `${DAGGER_CALL} lint-typecheck-test ${pf}${helmFlag}${goFlag}${haFlags}${astroFlags}${buildFlag}`,
+        `${DAGGER_CALL} lint-typecheck-test ${pf}${bundledCheckFlags(pkg)}`,
         resources,
       ),
     );
@@ -134,6 +150,22 @@ export function perPackageSteps(
 
   if (pkg === "tasks-for-obsidian") {
     steps.push(tasksForObsidianNativeDepsStep(resources));
+    const macosStep = macosSwiftLintStep();
+    if (macosStep) steps.push(macosStep);
+  }
+
+  // Scout desktop's Tauri crate: cargo fmt --check + clippy -D warnings +
+  // test. The compile runs in the Dagger engine (rust-toolchain.toml pins the
+  // toolchain), so the BK pod tier stays modest.
+  if (pkg === "scout-for-lol") {
+    steps.push(
+      daggerCallStep(
+        `:crab: Desktop Rust (fmt + clippy + test)`,
+        `scout-desktop-rust`,
+        `${DAGGER_CALL} scout-desktop-rust --desktop-dir ${gitDir("packages/scout-for-lol/packages/desktop")}`,
+        resources,
+      ),
+    );
   }
 
   // Cross-package contract test: the app's real TaskNotesClient against a
@@ -189,6 +221,46 @@ export function perPackageSteps(
   };
 }
 
+/**
+ * Native macOS SwiftLint over the `tasks-for-obsidian` iOS sources — the first
+ * real job for the Mac Mini agent (revives the previously-dead `swiftLint`
+ * Dagger helper, but run natively: macOS has no in-cluster Dagger engine).
+ *
+ * Deliberately a plain command step: NO `kubernetes` plugin, so the macOS
+ * agent performs its default git checkout and runs `swiftlint` on the working
+ * tree. `agents.queue = "macos"` routes it to the Mac Mini (registered with
+ * `--tags queue=macos`); every other step inherits the pipeline-level
+ * `queue: default`.
+ *
+ * Gated behind `MACOS_CI_ENABLED` (default off, read at pipeline-generation
+ * time like `DRYRUN_FLAG`). While off the step is never emitted, so a
+ * `tasks-for-obsidian` PR can't hang waiting for a macOS agent that isn't
+ * online yet. Flip `MACOS_CI_ENABLED=true` in the pipeline-upload env once the
+ * Mac Mini is provisioned (see `packages/homelab/mac-ci/README.md`).
+ */
+function macosSwiftLintStep(): BuildkiteStep | null {
+  if (Bun.env["MACOS_CI_ENABLED"] !== "true") return null;
+  return {
+    label: ":swift: SwiftLint (macOS)",
+    key: "swiftlint-tasks-for-obsidian",
+    // Prepend both Homebrew bin dirs so `swiftlint` resolves under the
+    // minimal `launchd` agent env, then lint the iOS sources on the
+    // checked-out working tree. Cover Apple Silicon (`/opt/homebrew`) and
+    // Intel (`/usr/local`) the same way `bootstrap.sh` does, so the step is
+    // robust regardless of which Mac hosts the agent.
+    command:
+      'export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH" && cd packages/tasks-for-obsidian/ios && swiftlint --strict',
+    agents: { queue: "macos" },
+    timeout_in_minutes: 10,
+    retry: RETRY,
+    // `packages/tasks-for-obsidian/ios` has no `.swiftlint.yml` yet, so
+    // `--strict` will flag the first batch of violations. Soft-fail keeps the
+    // overall build green while those get triaged; tighten to a hard failure
+    // once the iOS sources are clean.
+    soft_fail: true,
+  };
+}
+
 function goPackageGroup(sk: string): BuildkiteGroup {
   const goPkgDir = gitDir("packages/terraform-provider-asuswrt");
   return {
@@ -224,44 +296,55 @@ function daggerCallStep(
   label: string,
   key: string,
   command: string,
-  resources: { cpu: string; memory: string },
-  dependsOn?: string,
+  resources: ResourceTier,
 ): BuildkiteStep {
-  const step: BuildkiteStep = {
+  return {
     label,
     key,
     command,
     timeout_in_minutes: 30,
     retry: RETRY,
     env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: resources.cpu, memory: resources.memory })],
+    plugins: [
+      k8sPlugin({
+        cpu: resources.cpu,
+        memory: resources.memory,
+        cpuLimit: resources.cpuLimit,
+        memoryLimit: resources.memoryLimit,
+      }),
+    ],
   };
-  if (dependsOn) {
-    step.depends_on = dependsOn;
-  }
-  return step;
 }
 
 /**
- * iOS native deps check — runs `bun install --linker hoisted` and
- * `bun run check:ios-native-deps` for `packages/tasks-for-obsidian` inside
- * the Dagger engine. Source comes from the git URL ref (no BK checkout).
- * Replaces the previous plainStep that ran
+ * iOS native deps check + Release Metro bundle smoke — runs `bun install
+ * --linker hoisted` (for tasknotes-types and the app), `bun run
+ * check:ios-native-deps`, and `bun run check:release-bundle` for
+ * `packages/tasks-for-obsidian` inside the Dagger engine. The bundle smoke
+ * reproduces the Xcode Cloud Archive JS bundle so unresolvable imports fail
+ * pre-merge. Source comes from the git URL ref (no BK checkout). Replaces the
+ * previous plainStep that ran
  * `.buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh` against a
  * local working tree.
  */
-function tasksForObsidianNativeDepsStep(resources: {
-  cpu: string;
-  memory: string;
-}): BuildkiteStep {
+function tasksForObsidianNativeDepsStep(
+  resources: ResourceTier,
+): BuildkiteStep {
   return {
-    label: ":iphone: iOS Native Deps",
+    label: ":iphone: iOS Native Deps + Release Bundle",
     key: "ios-native-deps-tasks-for-obsidian",
     command: `${DAGGER_CALL} tasks-for-obsidian-ios-native-deps --source ${REPO_GIT_REF}`,
-    timeout_in_minutes: 10,
+    timeout_in_minutes: 15,
     retry: RETRY,
     env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: resources.cpu, memory: resources.memory })],
+    plugins: [
+      k8sPlugin({
+        cpu: resources.cpu,
+        memory: resources.memory,
+        cpuLimit: resources.cpuLimit,
+        memoryLimit: resources.memoryLimit,
+      }),
+    ],
   };
 }
 
@@ -273,7 +356,7 @@ function tasksForObsidianNativeDepsStep(resources: {
  */
 function tasknotesContractTestStep(
   sk: string,
-  resources: { cpu: string; memory: string },
+  resources: ResourceTier,
 ): BuildkiteStep {
   const flags = [
     `--pkg-dir ${gitDir("packages/tasks-for-obsidian")}`,
@@ -293,6 +376,13 @@ function tasknotesContractTestStep(
     timeout_in_minutes: 15,
     retry: RETRY,
     env: DAGGER_ENV,
-    plugins: [k8sPlugin({ cpu: resources.cpu, memory: resources.memory })],
+    plugins: [
+      k8sPlugin({
+        cpu: resources.cpu,
+        memory: resources.memory,
+        cpuLimit: resources.cpuLimit,
+        memoryLimit: resources.memoryLimit,
+      }),
+    ],
   };
 }

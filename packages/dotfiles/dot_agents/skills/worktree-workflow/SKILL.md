@@ -601,6 +601,10 @@ The generic workflow above applies, but this repo nests worktrees at `.claude/wo
 
 When spawning a team of agents to implement a plan, every teammate works in its own worktree (e.g. `.claude/worktrees/<feature>-<role>`), never the user's main checkout — bake the worktree-setup commands into each teammate's bootstrap prompt so they don't `cd` into main. The team lead coordinates from its own session and does not edit monorepo files in main either.
 
+### Scoped verification — one repo-wide fan-out at a time
+
+Verify with package-scoped commands (`cd packages/<name> && bun run typecheck|test`, or `bun run --filter='./packages/<name>' typecheck|test` if the package is registered as a Bun workspace from the repo root), not root-level `bun run typecheck|test|build`. A root run fans out over ~35 packages, each booting its own node/bun toolchain; when several worktree sessions or teammates do this concurrently, the spawn storm has frozen the whole machine (6,000+ processes, 20-30 GB of anonymous memory within seconds → macOS jetsam freeze; see `packages/docs/logs/2026-07-11_macbook-hang-jetsam-investigation.md`). Reserve root-level runs for genuinely repo-wide changes, run at most one at a time machine-wide, and bake the scoped commands into teammate bootstrap prompts so parallel agents never all fan out at once. CI provides the exhaustive cross-package pass.
+
 ### Commit + push after every phase
 
 Deleting a worktree discards uncommitted working-tree changes with no recovery path (never `git add`ed = no git objects in the shared `.git`). A large, fully-working feature was lost this way. For any multi-step / PR-bound work, commit after every phase and push the branch immediately (open a draft PR early) so the work is backed up off-machine — never hold a big change uncommitted.
@@ -612,6 +616,14 @@ A worktree from a plain `git worktree add` (not `claude -w` or the SessionStart 
 ### Fresh worktree: pre-commit eslint needs deps + built eslint-config
 
 Committing a `packages/homelab` change in a fresh worktree fails the lefthook `staged-lint → eslint-homelab` hook before the commit lands, with two errors in order: (1) `The 'jiti' library is required...` — `bun run --filter @shepherdjerred/homelab typecheck` only populates `packages/homelab/src/cdk8s/node_modules`, so you must run a plain `cd packages/homelab && bun install` to get `packages/homelab/node_modules/.bin/eslint` + jiti at the root where the hook resolves them; (2) `Cannot find module '@eslint/js'` — fix with `cd packages/eslint-config && bun install && bun run build`. Running full `bun run scripts/setup.ts` (Shared Builds phase) also fixes both. Note: a failed pre-commit hook silently aborts the commit (HEAD unchanged, files stay staged) — don't pipe `git commit` to `tail` or you'll read tail's exit code instead of the failing job's.
+
+### Scoped installs: `--group=<name>` and `--link`
+
+If a worktree only touches one package, don't run the full `bun run scripts/setup.ts` (~13-15G of `node_modules`, most of it unused). Use `bun run scripts/setup.ts --group=<scout|pokemon|mk64|birmel>` instead — it scopes deps/build/codegen/verify to that package plus the shared `file:` producers every group needs (eslint-config, llm-models, webring, astro-opengraph-images, discord-video-stream, helm-types), which always build regardless of group (cheap, seconds not minutes). No flag = current full-install behavior, unchanged.
+
+Add `--link` for an even cheaper install that symlinks the group's own deps from Bun's shared global store instead of copying them — but only `pokemon` is currently verified safe (`--group=<other> --link` is rejected with the reason at the CLI level). Prisma's own installer packages (`@prisma/engines`, `prisma` — used by scout, mk64, birmel) have postinstall scripts that break under Bun's symlink backend, so don't try to work around the rejection by hand-running `bun install --backend=symlink` in those packages either. If you change your mind about `--link`, just re-run `bun run scripts/setup.ts --group=<name>` without it — no separate "materialize" step needed.
+
+**Never substitute a per-package `bun install` for `scripts/setup.ts`, scoped or not.** This is the #1 cause of "Cannot find module `@shepherdjerred/eslint-config`" / stale `llm-models` errors: those are `file:` deps, and Bun's hoisted linker copies a `file:` dep's contents into the consumer's `node_modules` **at install time only** — it doesn't track the producer's `dist/` changing afterward. `scripts/setup.ts` handles the build-then-force-copy ordering for you (and even a scoped `--group` run does, since the shared producers always build first); a bare `bun install` in one package skips all of that.
 
 ### knip is CI-only (since 2026-06-07)
 

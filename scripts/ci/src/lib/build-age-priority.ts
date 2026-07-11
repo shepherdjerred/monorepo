@@ -13,11 +13,7 @@
  * than `max-in-flight` runnable jobs, then spills into the next (no idle slots wasted).
  * Net effect: builds finish in FIFO order instead of all progressing a little.
  */
-import type {
-  BuildkitePipeline,
-  BuildkiteStep,
-  PipelineStep,
-} from "./types.ts";
+import type { BuildkitePipeline } from "./types.ts";
 
 /**
  * Separates cross-build ordering from intra-build ordering. Each step's priority
@@ -30,20 +26,10 @@ export const BUILD_AGE_SCALE = 100;
 
 /** Current Buildkite build number, or null when generating outside Buildkite (local runs). */
 function currentBuildNumber(): number | null {
-  const raw = process.env["BUILDKITE_BUILD_NUMBER"] ?? "";
+  const raw = Bun.env["BUILDKITE_BUILD_NUMBER"] ?? "";
   if (raw === "") return null;
   const parsed = Number.parseInt(raw, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-}
-
-function isCommandStep(step: PipelineStep): step is BuildkiteStep {
-  return "command" in step;
-}
-
-function isGroupStep(
-  step: PipelineStep,
-): step is Extract<PipelineStep, { group: string }> {
-  return "group" in step;
 }
 
 /**
@@ -60,9 +46,9 @@ export function applyBuildAgePriority(
   }
   const offset = buildNumber * BUILD_AGE_SCALE;
   for (const step of pipeline.steps) {
-    if (isCommandStep(step)) {
+    if ("command" in step) {
       step.priority = (step.priority ?? 0) - offset;
-    } else if (isGroupStep(step)) {
+    } else if ("group" in step) {
       for (const child of step.steps) {
         child.priority = (child.priority ?? 0) - offset;
       }

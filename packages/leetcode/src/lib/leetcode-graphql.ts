@@ -1,7 +1,12 @@
-const CSRF_TOKEN = process.env["CSRF_TOKEN"]!;
-const LEETCODE_SESSION = process.env["LEETCODE_SESSION"]!;
+const CSRF_TOKEN = Bun.env["CSRF_TOKEN"];
+const LEETCODE_SESSION = Bun.env["LEETCODE_SESSION"];
 
-if (!CSRF_TOKEN || !LEETCODE_SESSION) {
+if (
+  CSRF_TOKEN == null ||
+  CSRF_TOKEN === "" ||
+  LEETCODE_SESSION == null ||
+  LEETCODE_SESSION === ""
+) {
   console.error("Missing CSRF_TOKEN or LEETCODE_SESSION in .env");
   process.exit(1);
 }
@@ -27,17 +32,21 @@ const HEADERS: Record<string, string> = {
   "Accept-Language": "en-US,en;q=0.9",
 };
 
-export interface QueryResult<T = unknown> {
-  data?: T;
-  errors?: Array<{ message: string }>;
-}
+import { z } from "zod";
+
+const QueryResultSchema = z.object({
+  data: z.unknown().optional(),
+  errors: z.array(z.object({ message: z.string() })).optional(),
+});
+
+export type QueryResult = z.infer<typeof QueryResultSchema>;
 
 export class LeetCodeClient {
   private lastRequestTime = 0;
 
   constructor(
-    private minDelay: number = 2000,
-    private maxDelay: number = 5000,
+    private readonly minDelay = 2000,
+    private readonly maxDelay = 5000,
   ) {}
 
   private async rateLimit(): Promise<void> {
@@ -52,11 +61,11 @@ export class LeetCodeClient {
     this.lastRequestTime = Date.now();
   }
 
-  async query<T = unknown>(
+  async query(
     query: string,
     variables?: Record<string, unknown>,
-    maxRetries: number = 3,
-  ): Promise<QueryResult<T>> {
+    maxRetries = 3,
+  ): Promise<QueryResult> {
     await this.rateLimit();
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -67,30 +76,30 @@ export class LeetCodeClient {
           headers: HEADERS,
           body: JSON.stringify({ query, variables }),
         });
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
         if (attempt < maxRetries) {
           const backoff = 10_000 * (attempt + 1);
           console.error(
-            `  [network error] ${msg} — retrying in ${backoff / 1000}s`,
+            `  [network error] ${msg} — retrying in ${String(backoff / 1000)}s`,
           );
           await Bun.sleep(backoff);
           continue;
         }
         throw new Error(
-          `Network error after ${maxRetries + 1} attempts: ${msg}`,
+          `Network error after ${String(maxRetries + 1)} attempts: ${msg}`,
+          { cause: error },
         );
       }
 
       if (resp.status === 200) {
-        const json = (await resp.json()) as QueryResult<T>;
-        return json;
+        return QueryResultSchema.parse(await resp.json());
       }
 
       if (resp.status === 429) {
         const backoff = Math.min(30_000 * 2 ** attempt, 300_000);
         console.error(
-          `  [429] Rate limited — backing off ${backoff / 1000}s (attempt ${attempt + 1})`,
+          `  [429] Rate limited — backing off ${String(backoff / 1000)}s (attempt ${String(attempt + 1)})`,
         );
         await Bun.sleep(backoff);
         continue;
@@ -99,7 +108,7 @@ export class LeetCodeClient {
       if (resp.status === 403) {
         const body = await resp.text().catch(() => "");
         throw new CloudflareBlockError(
-          `403 Forbidden — likely Cloudflare block. Response: ${body.substring(0, 200)}`,
+          `403 Forbidden — likely Cloudflare block. Response: ${body.slice(0, 200)}`,
         );
       }
 
@@ -107,20 +116,20 @@ export class LeetCodeClient {
         if (attempt < maxRetries) {
           const backoff = 10_000 * (attempt + 1);
           console.error(
-            `  [${resp.status}] Server error — retrying in ${backoff / 1000}s`,
+            `  [${String(resp.status)}] Server error — retrying in ${String(backoff / 1000)}s`,
           );
           await Bun.sleep(backoff);
           continue;
         }
         const body = await resp.text().catch(() => "");
         throw new Error(
-          `Server error ${resp.status} after ${maxRetries + 1} attempts: ${body.substring(0, 200)}`,
+          `Server error ${String(resp.status)} after ${String(maxRetries + 1)} attempts: ${body.slice(0, 200)}`,
         );
       }
 
       const body = await resp.text().catch(() => "");
       throw new Error(
-        `Unexpected status ${resp.status}: ${body.substring(0, 200)}`,
+        `Unexpected status ${String(resp.status)}: ${body.slice(0, 200)}`,
       );
     }
 
@@ -133,19 +142,4 @@ export class CloudflareBlockError extends Error {
     super(message);
     this.name = "CloudflareBlockError";
   }
-}
-
-export function formatDuration(ms: number): string {
-  const s = Math.floor(ms / 1000);
-  if (s < 60) return `${s}s`;
-  const m = Math.floor(s / 60);
-  const rs = s % 60;
-  if (m < 60) return `${m}m${rs}s`;
-  const h = Math.floor(m / 60);
-  const rm = m % 60;
-  return `${h}h${rm}m`;
-}
-
-export function timestamp(): string {
-  return new Date().toLocaleTimeString("en-US", { hour12: false });
 }

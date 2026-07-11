@@ -8,11 +8,11 @@
 // Types
 // ---------------------------------------------------------------------------
 
-export interface CheckResult {
+export type CheckResult = {
   label: string;
   status: "PASS" | "FAIL";
   error?: string;
-}
+};
 
 // ---------------------------------------------------------------------------
 // Pure helpers (testable without Dagger)
@@ -34,5 +34,7 @@ export function formatSummary(results: CheckResult[]): string {
 
 /** Extract failures from results and build the error details string. */
 export function formatFailureDetails(failures: CheckResult[]): string {
-  return failures.map((f) => `--- ${f.label} ---\n${f.error}`).join("\n\n");
+  return failures
+    .map((f) => `--- ${f.label} ---\n${String(f.error)}`)
+    .join("\n\n");
 }
