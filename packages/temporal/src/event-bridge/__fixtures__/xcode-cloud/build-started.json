@@ -1,0 +1,31 @@
+{
+  "_comment": "Non-terminal event (BUILD_STARTED, executionProgress RUNNING, no completionStatus) — must be ignored, no alert.",
+  "metadata": {
+    "type": "metadata",
+    "createdDate": "2026-07-11T18:07:37.233Z",
+    "eventType": "BUILD_STARTED"
+  },
+  "ciWorkflow": {
+    "type": "ciWorkflows",
+    "attributes": { "name": "Archive - iOS" }
+  },
+  "ciProduct": {
+    "type": "ciProducts",
+    "attributes": { "name": "Tasks for Obsidian", "productType": "APP" }
+  },
+  "ciBuildRun": {
+    "type": "ciBuildRuns",
+    "attributes": {
+      "number": 91,
+      "executionProgress": "RUNNING"
+    }
+  },
+  "scmGitReference": {
+    "type": "scmGitReferences",
+    "attributes": {
+      "name": "main",
+      "canonicalName": "refs/heads/main",
+      "kind": "BRANCH"
+    }
+  }
+}

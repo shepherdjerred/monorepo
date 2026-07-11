@@ -9,6 +9,10 @@ import {
   startAgentTaskApi,
   type AgentTaskApiHandle,
 } from "./agent-task-api.ts";
+import {
+  startXcodeCloudWebhook,
+  type XcodeCloudWebhookHandle,
+} from "./xcode-cloud-webhook.ts";
 
 export type EventBridgeHandle = {
   close: () => Promise<void>;
@@ -26,12 +30,26 @@ export function startHttpServers(client: Client): EventBridgeHandle {
 
   const agentTaskApi: AgentTaskApiHandle = startAgentTaskApi(client);
 
+  // Xcode Cloud webhook receiver is optional — only start when its token is
+  // set. Translates iOS build-failure webhooks into Alertmanager alerts.
+  let xcodeCloud: XcodeCloudWebhookHandle | undefined;
+  if ((Bun.env["XCODE_CLOUD_WEBHOOK_TOKEN"] ?? "") === "") {
+    console.warn(
+      "XCODE_CLOUD_WEBHOOK_TOKEN not set; skipping Xcode Cloud webhook server",
+    );
+  } else {
+    xcodeCloud = startXcodeCloudWebhook();
+  }
+
   return {
     async close() {
       if (webhook !== undefined) {
         await webhook.close();
       }
       await agentTaskApi.close();
+      if (xcodeCloud !== undefined) {
+        await xcodeCloud.close();
+      }
     },
   };
 }
