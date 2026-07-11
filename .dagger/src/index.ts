@@ -623,6 +623,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     version = "dev",
     gitSha = "unknown",
+    tsconfig: File | null = null,
   ): Container {
     return buildDiscordPlaysPokemonImageHelper(
       pkgDir,
@@ -630,6 +631,7 @@ export class Monorepo {
       depDirs,
       version,
       gitSha,
+      tsconfig,
     );
   }
 
@@ -644,6 +646,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     version = "dev",
     gitSha = "unknown",
+    tsconfig: File | null = null,
   ): Promise<string> {
     return pushDiscordPlaysPokemonImageHelper(
       pkgDir,
@@ -654,6 +657,7 @@ export class Monorepo {
       depDirs,
       version,
       gitSha,
+      tsconfig,
     );
   }
 
@@ -665,6 +669,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     version = "dev",
     gitSha = "unknown",
+    tsconfig: File | null = null,
   ): Container {
     return buildDiscordPlaysMarioKartImageHelper(
       pkgDir,
@@ -672,6 +677,7 @@ export class Monorepo {
       depDirs,
       version,
       gitSha,
+      tsconfig,
     );
   }
 
@@ -686,6 +692,7 @@ export class Monorepo {
     depDirs: Directory[] = [],
     version = "dev",
     gitSha = "unknown",
+    tsconfig: File | null = null,
   ): Promise<string> {
     return pushDiscordPlaysMarioKartImageHelper(
       pkgDir,
@@ -696,6 +703,7 @@ export class Monorepo {
       depDirs,
       version,
       gitSha,
+      tsconfig,
     );
   }
 
@@ -1960,8 +1968,14 @@ export class Monorepo {
     pkgDir: Directory,
     depNames: string[] = [],
     depDirs: Directory[] = [],
+    tsconfig: File | null = null,
   ): Promise<string> {
-    return smokeTestDiscordPlaysPokemonHelper(pkgDir, depNames, depDirs);
+    return smokeTestDiscordPlaysPokemonHelper(
+      pkgDir,
+      depNames,
+      depDirs,
+      tsconfig,
+    );
   }
 
   /** Smoke test streambot: build image, verify ffmpeg + yt-dlp, boot machine, expect auth failure */
@@ -2002,8 +2016,14 @@ export class Monorepo {
     pkgDir: Directory,
     depNames: string[] = [],
     depDirs: Directory[] = [],
+    tsconfig: File | null = null,
   ): Promise<string> {
-    return smokeTestDiscordPlaysMarioKartHelper(pkgDir, depNames, depDirs);
+    return smokeTestDiscordPlaysMarioKartHelper(
+      pkgDir,
+      depNames,
+      depDirs,
+      tsconfig,
+    );
   }
 
   /** Smoke test trmnl-dashboard: builds image, boots Bun.serve, killed at timeout. */

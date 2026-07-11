@@ -649,21 +649,33 @@ function withToolkit(container: Container): Container {
 }
 
 /**
- * Give the vendored `discord-video-stream` fork its own `node_modules` at its mounted source
- * location. The fork is consumed as TypeScript source (bun runs `src/`), so when a consumer imports
- * it, the fork's files resolve their native runtime deps (`@lng2004/node-datachannel`, `node-av`, …)
- * from the fork's OWN directory — a sibling of the consumer, whose `node_modules` is unreachable.
- * Without this, the image builds fine but crashes at startup with `Cannot find module
- * '@lng2004/node-datachannel'`. Mirrors the per-dep install loop in `bunBaseContainer` (base.ts).
+ * Give source-consumed `file:` deps their own `node_modules` at their mounted source
+ * location. These packages are consumed as TypeScript source (bun runs `src/`), and bun's
+ * runtime resolves a `file:` dependency's imports from the dep's OWN directory — a sibling
+ * of the consumer, whose `node_modules` is unreachable from there. Without a per-dep
+ * install the image builds fine but crashes at startup:
+ *   - discord-video-stream: `Cannot find module '@lng2004/node-datachannel'` (native deps)
+ *   - discord-stream-lifecycle: `ENOENT while resolving package 'discord.js'` (its
+ *     peerDependencies — bun installs peers on a root install, so this provides them)
+ * Mirrors the per-dep install loop in `bunBaseContainer` (base.ts).
  */
+const SOURCE_RUNTIME_DEPS = [
+  "discord-video-stream",
+  "discord-stream-lifecycle",
+  "discord-plays-core",
+];
+
 function withForkRuntimeDeps(
   container: Container,
   depNames: string[],
 ): Container {
-  if (!depNames.includes("discord-video-stream")) return container;
-  return container
-    .withWorkdir("/workspace/packages/discord-video-stream")
-    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
+  for (const dep of SOURCE_RUNTIME_DEPS) {
+    if (!depNames.includes(dep)) continue;
+    container = container
+      .withWorkdir(`/workspace/packages/${dep}`)
+      .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
+  }
+  return container;
 }
 
 /**
@@ -1258,6 +1270,7 @@ export function buildDiscordPlaysPokemonImageHelper(
   depDirs: Directory[] = [],
   version = "dev",
   gitSha = "unknown",
+  tsconfig: File | null = null,
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
   const innerRoot = "/workspace/packages/discord-plays-pokemon";
@@ -1287,6 +1300,13 @@ export function buildDiscordPlaysPokemonImageHelper(
   }
 
   container = withForkRuntimeDeps(container, depNames);
+  // Package tsconfigs extend the repo root tsconfig.base.json
+  // (extends "../../../../tsconfig.base.json" -> /workspace/tsconfig.base.json).
+  // vite 8 (rolldown) hard-fails the frontend build when the extends target is
+  // missing, so mount it like the pkg-check containers do (base.ts).
+  if (tsconfig != null) {
+    container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
+  }
   container = withBuiltLlmModels(container, depNames);
 
   return (
@@ -1394,6 +1414,7 @@ export async function pushDiscordPlaysPokemonImageHelper(
   depDirs: Directory[] = [],
   version = "dev",
   gitSha = "unknown",
+  tsconfig: File | null = null,
 ): Promise<string> {
   const container = buildDiscordPlaysPokemonImageHelper(
     pkgDir,
@@ -1401,6 +1422,7 @@ export async function pushDiscordPlaysPokemonImageHelper(
     depDirs,
     version,
     gitSha,
+    tsconfig,
   );
   return pushContainerHelper(
     container,
@@ -1433,6 +1455,7 @@ export function buildDiscordPlaysMarioKartImageHelper(
   depDirs: Directory[] = [],
   version = "dev",
   gitSha = "unknown",
+  tsconfig: File | null = null,
 ): Container {
   const excludes = ["node_modules", "dist", ".eslintcache"];
   const innerRoot = MARIO_KART_INNER_ROOT;
@@ -1486,6 +1509,13 @@ export function buildDiscordPlaysMarioKartImageHelper(
   }
 
   container = withForkRuntimeDeps(container, depNames);
+  // Package tsconfigs extend the repo root tsconfig.base.json
+  // (extends "../../../../tsconfig.base.json" -> /workspace/tsconfig.base.json).
+  // vite 8 (rolldown) hard-fails the frontend build when the extends target is
+  // missing, so mount it like the pkg-check containers do (base.ts).
+  if (tsconfig != null) {
+    container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
+  }
 
   return (
     container
@@ -1564,6 +1594,7 @@ export async function pushDiscordPlaysMarioKartImageHelper(
   depDirs: Directory[] = [],
   version = "dev",
   gitSha = "unknown",
+  tsconfig: File | null = null,
 ): Promise<string> {
   const container = buildDiscordPlaysMarioKartImageHelper(
     pkgDir,
@@ -1571,6 +1602,7 @@ export async function pushDiscordPlaysMarioKartImageHelper(
     depDirs,
     version,
     gitSha,
+    tsconfig,
   );
   return pushContainerHelper(
     container,

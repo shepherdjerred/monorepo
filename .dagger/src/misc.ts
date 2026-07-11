@@ -533,6 +533,7 @@ export async function smokeTestDiscordPlaysPokemonHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  tsconfig: File | null = null,
 ): Promise<string> {
   // Minimal config.toml that passes Zod validation but uses dummy tokens
   const configToml = `
@@ -611,6 +612,9 @@ enabled = false
     pkgDir,
     depNames,
     depDirs,
+    "dev",
+    "unknown",
+    tsconfig,
   )
     .withEntrypoint([])
     // The app runs from the inner-monorepo root (see the image build), so
@@ -646,6 +650,7 @@ export async function smokeTestDiscordPlaysMarioKartHelper(
   pkgDir: Directory,
   depNames: string[] = [],
   depDirs: Directory[] = [],
+  tsconfig: File | null = null,
 ): Promise<string> {
   // Minimal config.toml that passes Zod validation but uses dummy tokens.
   // emulator disabled (no ROM available in CI); stream enabled so the selfbot
@@ -708,6 +713,9 @@ enabled = false
     pkgDir,
     depNames,
     depDirs,
+    "dev",
+    "unknown",
+    tsconfig,
   )
     .withEntrypoint([])
     // The app runs from the inner-monorepo root (see the image build), so

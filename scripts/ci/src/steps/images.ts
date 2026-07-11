@@ -20,6 +20,7 @@ import {
   RETRY,
   DAGGER_ENV,
   gitDir,
+  gitFile,
   DAGGER_CALL,
 } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
@@ -49,6 +50,21 @@ function depFlags(pkg: string): string {
 // Build steps (build phase — depends on quality-gate)
 // ---------------------------------------------------------------------------
 
+// Image builders whose in-image frontend build (vite 8 / rolldown) resolves a
+// package tsconfig that extends the repo root tsconfig.base.json. The dagger
+// functions take --tsconfig and mount it at /workspace/tsconfig.base.json,
+// mirroring the pkg-check containers.
+const TSCONFIG_IMAGES = new Set([
+  "discord-plays-pokemon",
+  "discord-plays-mario-kart",
+]);
+
+function tsconfigFlag(imgName: string): string {
+  return TSCONFIG_IMAGES.has(imgName)
+    ? `--tsconfig ${gitFile("tsconfig.base.json")}`
+    : "";
+}
+
 function imageBuildStep(
   img: ImageTarget,
   dependsOn: string | string[] = "quality-gate",
@@ -73,6 +89,7 @@ function imageBuildStep(
     cmd = [
       `${DAGGER_CALL} ${buildFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
       flags,
+      tsconfigFlag(img.name),
       VERSION_FLAGS,
     ]
       .filter(Boolean)
@@ -175,6 +192,7 @@ function smokeTestStep(
     cmd = [
       `${DAGGER_CALL} ${daggerFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
       flags,
+      tsconfigFlag(img.name),
     ]
       .filter(Boolean)
       .join(" ");
@@ -242,6 +260,7 @@ function imagePushStep(
     pushCall = [
       `${pushFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
       flags,
+      tsconfigFlag(img.name),
       tagFlags,
       VERSION_FLAGS,
     ]
