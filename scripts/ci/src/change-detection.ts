@@ -299,25 +299,34 @@ function errorMessage(e: unknown): string {
 }
 
 /**
- * Buildkite API shapes. Unknown fields are ignored; a field present with an
- * unexpected type makes the enclosing object fail to parse (the build/job is
- * then skipped by the caller), which is safe for our read-only classification.
+ * Buildkite API shapes. Unknown fields are ignored. The API returns explicit
+ * `null` for absent values (every keyless job has `step_key: null`; waiter and
+ * trigger jobs null out `name`/`command`), so every field must be
+ * null-tolerant — a null-rejecting schema here once dropped 100% of builds and
+ * broke main CI's change detection.
  */
+function nullToUndefined(value: unknown): unknown {
+  return value ?? undefined;
+}
+
+const nullishString = z.preprocess(nullToUndefined, z.string().optional());
+const nullishBoolean = z.preprocess(nullToUndefined, z.boolean().optional());
+
 const BuildkiteJobSchema = z.object({
-  type: z.string().optional(),
-  name: z.string().optional(),
-  command: z.string().optional(),
-  state: z.string().optional(),
-  step_key: z.string().optional(),
-  soft_failed: z.boolean().optional(),
+  type: nullishString,
+  name: nullishString,
+  command: nullishString,
+  state: nullishString,
+  step_key: nullishString,
+  soft_failed: nullishBoolean,
 });
 
 const BuildkiteBuildSchema = z.object({
-  number: z.number().optional(),
-  state: z.string().optional(),
-  blocked: z.boolean().optional(),
-  commit: z.string().optional(),
-  jobs: z.array(BuildkiteJobSchema).optional(),
+  number: z.preprocess(nullToUndefined, z.number().optional()),
+  state: nullishString,
+  blocked: nullishBoolean,
+  commit: nullishString,
+  jobs: z.preprocess(nullToUndefined, z.array(BuildkiteJobSchema).optional()),
 });
 
 type BuildkiteJob = z.infer<typeof BuildkiteJobSchema>;
@@ -380,21 +389,41 @@ function getBuildRejectionReason(
     : "hard-failed-jobs";
 }
 
-function parseBuildkiteBuild(value: unknown): BuildkiteBuild | null {
-  const result = BuildkiteBuildSchema.safeParse(value);
-  return result.success ? result.data : null;
-}
-
 function parseBuildkiteBuilds(value: unknown): BuildkiteBuild[] {
-  if (!Array.isArray(value)) return [];
+  if (!Array.isArray(value)) {
+    throw new TypeError(
+      `Buildkite builds API returned non-array response: ${typeof value}`,
+    );
+  }
 
   const builds: BuildkiteBuild[] = [];
+  let firstError: string | null = null;
+  let failedCount = 0;
   for (const build of value) {
-    const parsedBuild = parseBuildkiteBuild(build);
-    if (parsedBuild !== null) {
-      builds.push(parsedBuild);
+    const result = BuildkiteBuildSchema.safeParse(build);
+    if (result.success) {
+      builds.push(result.data);
+    } else {
+      failedCount++;
+      firstError ??= result.error.issues
+        .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+        .join("; ");
     }
   }
+
+  // A build that fails to parse means the schema has drifted from the API, not
+  // that the build is unusable — dropping it silently once made a 100%-parse
+  // failure look like "no builds found". Surface drift loudly instead.
+  if (failedCount > 0) {
+    const summary = `${String(failedCount)}/${String(value.length)} Buildkite builds failed schema parsing (first error: ${firstError ?? "unknown"})`;
+    if (builds.length === 0) {
+      throw new Error(
+        `${summary}; refusing to treat schema drift as empty history`,
+      );
+    }
+    console.error(`WARNING: ${summary}`);
+  }
+
   return builds;
 }
 
