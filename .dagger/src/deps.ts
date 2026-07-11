@@ -8,7 +8,7 @@
 export const WORKSPACE_DEPS: Record<string, string[]> = {
   // Standalone (no workspace deps)
   "eslint-config": [],
-  leetcode: [],
+  leetcode: ["eslint-config"],
   resume: [],
   // Vendored fork of @dank074/discord-video-stream; standalone (no file: deps of its own).
   "discord-video-stream": [],

@@ -485,6 +485,13 @@ export const SKIP_PACKAGES = new Set<string>([
  * (`--skip-test`). Prefer adding tests over adding entries here.
  * Keep in sync with the test-script exemptions in scripts/compliance-check.sh.
  */
+/**
+ * Packages with no lint script BY DESIGN (vendored code kept as upstream
+ * ships it): pkg-check passes --skip-lint. Keep in sync with the lint-script
+ * exemptions in scripts/compliance-check.sh.
+ */
+export const NO_LINT_PACKAGES = new Set<string>(["discord-video-stream"]);
+
 export const NO_TEST_PACKAGES = new Set<string>([
   "leetcode",
   "cooklang-for-obsidian",

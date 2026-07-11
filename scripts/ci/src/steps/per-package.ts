@@ -10,6 +10,7 @@ import {
   PLAYWRIGHT_PACKAGES,
   NPM_BUILD_PACKAGES,
   NO_TEST_PACKAGES,
+  NO_LINT_PACKAGES,
   type ResourceTier,
 } from "../catalog.ts";
 import {
@@ -70,7 +71,9 @@ function bundledCheckFlags(pkg: string): string {
     : "";
   const buildFlag = NPM_BUILD_PACKAGES.has(pkg) ? ` --include-build` : "";
   const skipTestFlag = NO_TEST_PACKAGES.has(pkg) ? ` --skip-test` : "";
-  return `${helmFlag}${goFlag}${haFlags}${astroFlags}${buildFlag}${skipTestFlag}`;
+  // NO_LINT_PACKAGES (vendored code) have no lint script by design.
+  const skipLintFlag = NO_LINT_PACKAGES.has(pkg) ? ` --skip-lint` : "";
+  return `${helmFlag}${goFlag}${haFlags}${astroFlags}${buildFlag}${skipTestFlag}${skipLintFlag}`;
 }
 
 export function perPackageSteps(

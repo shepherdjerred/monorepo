@@ -92,8 +92,11 @@ describe("Mel + chroma fingerprints", () => {
     let total = 0;
     let peak = 0;
     for (let i = 0; i < 12; i++) {
-      total += chroma[i];
-      if (chroma[i] > peak) peak = chroma[i];
+      // loop is bounded by the fixed 12-bin chroma length; ?? 0 satisfies
+      // noUncheckedIndexedAccess without changing the sum
+      const bin = chroma[i] ?? 0;
+      total += bin;
+      if (bin > peak) peak = bin;
     }
     expect(peak / total).toBeGreaterThan(0.4);
   });
