@@ -24,6 +24,13 @@ sandbox/archive/clauderon/mobile/NuGet.config   text eol=crlf
 # --- Test fixtures: preserve byte-for-byte (real-world capture) ---
 packages/webring/src/testdata/rss-*.xml -text
 
+# --- Third-party source patches: preserve byte-for-byte ---
+# These diffs are applied verbatim with `patch -p1` against pinned upstream
+# tarballs; some upstream sources use CRLF line endings, which the patch
+# content must reproduce exactly or `patch` fails to match context lines.
+# Line-ending normalization would silently corrupt them.
+packages/homelab/src/cdk8s/patches/** -text
+
 # --- Generated test snapshots: keep out of GitHub language stats / diff noise ---
 **/__snapshots__/** linguist-generated=true
 *.snap              linguist-generated=true

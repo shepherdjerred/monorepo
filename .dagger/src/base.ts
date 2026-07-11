@@ -88,6 +88,7 @@ export function bunBaseContainer(
       "python3-setuptools",
       "make",
       "g++",
+      "patch",
       ...extraAptPackages,
     ])
 

@@ -1,0 +1,18 @@
+--- a/custom_components/eufy_security/eufy_security_api/web_socket_client.py
++++ b/custom_components/eufy_security/eufy_security_api/web_socket_client.py
+@@ -64,6 +64,15 @@
+             await self._on_message(msg)
+ 
+     async def _on_message(self, message):
++        if message.type != aiohttp.WSMsgType.TEXT:
++            # ERROR/CLOSE/CLOSING frames carry the underlying exception (e.g.
++            # ServerTimeoutError on a keepalive timeout) in `.data`, not JSON text.
++            # Calling .json() on those crashes with a TypeError and ends this
++            # message loop, which is what actually triggers the coordinator's
++            # "add-on is broken" notification -- let _process_messages end
++            # cleanly here instead of raising out of a broken .json() call.
++            _LOGGER.debug(f"websocket client _on_message - non-text frame received: {message.type}")
++            return
+         try:
+             if self.message_callback is not None:
+                 await self.message_callback(message.json())
