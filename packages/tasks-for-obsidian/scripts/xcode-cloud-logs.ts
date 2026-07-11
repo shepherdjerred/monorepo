@@ -222,10 +222,16 @@ async function downloadLogs(creds: Creds, buildRunId: string, outDir: string) {
         /[^\w.-]+/g,
         "_",
       );
-      const safeName = `${actionName}__${fileType ?? "artifact"}__${fileName ?? art.id}`;
+      const safeFileName = (fileName ?? art.id).replaceAll(/[^\w.-]+/g, "_");
+      const safeName = `${actionName}__${fileType ?? "artifact"}__${safeFileName}`;
       console.log(`Downloading ${safeName} (${fileSize ?? "?"} bytes)...`);
       const bin = await fetch(downloadUrl);
       if (!bin.ok) {
+        if (fileType === "LOG_BUNDLE") {
+          throw new Error(
+            `Failed to download LOG_BUNDLE artifact ${safeName}: ${String(bin.status)} ${bin.statusText}`,
+          );
+        }
         console.log(`  !! ${bin.status} ${bin.statusText}`);
         continue;
       }
