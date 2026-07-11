@@ -9,6 +9,7 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 import { z } from "zod";
 import { saveSvgToS3 } from "#src/storage/s3.ts";
+import { resetConfigurationForTests } from "#src/configuration.ts";
 import { MatchIdSchema } from "@scout-for-lol/data";
 
 // Create S3 mock
@@ -39,13 +40,17 @@ function getValidatedCommand(callIndex: number) {
 }
 
 beforeEach(() => {
-  // Ensure S3_BUCKET_NAME is set for tests
+  // Ensure S3_BUCKET_NAME is set for tests, then re-read the memoized config.
   Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+  resetConfigurationForTests();
   // Reset mock before each test
   s3Mock.reset();
 });
 
 afterEach(() => {
+  // Restore the default bucket and drop any per-test configuration override.
+  Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+  resetConfigurationForTests();
   // Reset mock after each test
   s3Mock.reset();
 });
@@ -148,14 +153,21 @@ describe("saveSvgToS3 - Success Cases", () => {
 // ============================================================================
 
 describe("saveSvgToS3 - Configuration", () => {
-  test.skip("returns undefined when S3_BUCKET_NAME is not configured", async () => {
-    // Note: This test is skipped because the configuration module caches
-    // environment variables on first load.
-    //
-    // Expected behavior:
-    // - When S3_BUCKET_NAME is not set, saveSvgToS3 returns undefined
-    // - No S3 calls are made
-    // - A warning is logged
+  test("returns undefined when S3_BUCKET_NAME is not configured", async () => {
+    delete Bun.env["S3_BUCKET_NAME"];
+    resetConfigurationForTests();
+
+    const matchId = MatchIdSchema.parse("NA1_SVG_NO_BUCKET");
+    const svgContent = "<svg></svg>";
+
+    s3Mock.on(PutObjectCommand).resolves({
+      $metadata: { httpStatusCode: 200 },
+    });
+
+    const result = await saveSvgToS3(matchId, svgContent, "solo", []);
+
+    expect(result).toBeUndefined();
+    expect(s3Mock.calls().length).toBe(0);
   });
 });
 

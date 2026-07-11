@@ -1,35 +1,25 @@
-import { describe, expect, test, mock } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { CompetitionIdSchema } from "@scout-for-lol/data";
+import { loadHistoricalLeaderboardSnapshots } from "#src/storage/s3-leaderboard.ts";
+import { resetConfigurationForTests } from "#src/configuration.ts";
 
-// TODO(scout-for-lol): bun's `mock.module()` is process-wide and retroactive,
-// so mocking `#src/configuration.ts` here leaks `s3BucketName: undefined` into
-// the rest of the backend suite. Gated off until production code accepts the
-// bucket via parameter/factory and we can cover the no-bucket path without
-// mocking the configuration singleton.
-const RUN_NO_BUCKET_TEST = false;
+describe("loadHistoricalLeaderboardSnapshots — no bucket configured", () => {
+  beforeEach(() => {
+    // Drive the no-bucket branch by clearing the env var the lazy
+    // configuration getter reads, then forcing a re-read.
+    delete Bun.env["S3_BUCKET_NAME"];
+    resetConfigurationForTests();
+  });
 
-if (RUN_NO_BUCKET_TEST) {
-  void mock.module("#src/configuration.ts", () => ({
-    default: {
-      version: "test",
-      gitSha: "test",
-      environment: "dev",
-      sentryDsn: undefined,
-      s3BucketName: undefined,
-    },
-  }));
-}
+  afterEach(() => {
+    // Restore the default bucket for every other file in the shared process.
+    Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+    resetConfigurationForTests();
+  });
 
-const { CompetitionIdSchema } = await import("@scout-for-lol/data");
-const { loadHistoricalLeaderboardSnapshots } =
-  await import("#src/storage/s3-leaderboard.ts");
-
-describe.skipIf(!RUN_NO_BUCKET_TEST)(
-  "loadHistoricalLeaderboardSnapshots — no bucket configured",
-  () => {
-    test("returns an empty array without throwing when S3_BUCKET_NAME is undefined", async () => {
-      const id = CompetitionIdSchema.parse(42);
-      const result = await loadHistoricalLeaderboardSnapshots(id);
-      expect(result).toEqual([]);
-    });
-  },
-);
+  test("returns an empty array without throwing when S3_BUCKET_NAME is undefined", async () => {
+    const id = CompetitionIdSchema.parse(42);
+    const result = await loadHistoricalLeaderboardSnapshots(id);
+    expect(result).toEqual([]);
+  });
+});

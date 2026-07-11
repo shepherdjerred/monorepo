@@ -8,6 +8,7 @@
 import { describe, expect, test, beforeEach, afterEach } from "bun:test";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
+import { resetConfigurationForTests } from "#src/configuration.ts";
 import { MatchIdSchema } from "@scout-for-lol/data";
 
 // Create S3 mock
@@ -18,10 +19,15 @@ const s3Mock = mockClient(S3Client);
 
 beforeEach(() => {
   Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+  resetConfigurationForTests();
   s3Mock.reset();
 });
 
 afterEach(() => {
+  // Restore the default bucket and drop any per-test configuration override so
+  // the configuration singleton re-reads on next access.
+  Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+  resetConfigurationForTests();
   s3Mock.reset();
 });
 
@@ -94,13 +100,23 @@ describe("getImage S3 Integration", () => {
     ).rejects.toThrow("Failed to save PNG NA1_FAILED_UPLOAD to S3");
   });
 
-  test.skip("handles missing S3 configuration gracefully", async () => {
-    // Note: This test is skipped because the configuration module caches
-    // environment variables on first load. See s3-image.test.ts for details.
-    //
-    // Expected behavior:
-    // - When S3_BUCKET_NAME is not set, saveImageToS3 returns undefined
-    // - No S3 calls are made
+  test("handles missing S3 configuration gracefully", async () => {
+    const { saveImageToS3 } = await import("../../../storage/s3.js");
+
+    delete Bun.env["S3_BUCKET_NAME"];
+    resetConfigurationForTests();
+
+    const matchId = MatchIdSchema.parse("NA1_NO_BUCKET_MATCH");
+    const imageBuffer = new TextEncoder().encode("match-image");
+
+    s3Mock.on(PutObjectCommand).resolves({
+      $metadata: { httpStatusCode: 200 },
+    });
+
+    const result = await saveImageToS3(matchId, imageBuffer, "solo", []);
+
+    expect(result).toBeUndefined();
+    expect(s3Mock.calls().length).toBe(0);
   });
 });
 
@@ -361,12 +377,29 @@ describe("ContentType and S3 Configuration", () => {
     }
   });
 
-  test.skip("uses correct S3 bucket from environment", async () => {
-    // Note: This test is skipped because the configuration module caches
-    // environment variables on first load. See s3-image.test.ts for details.
-    //
-    // Expected behavior:
-    // - Uses the bucket name from S3_BUCKET_NAME environment variable
-    // - Returns s3:// URL with the correct bucket name
+  test("uses correct S3 bucket from environment", async () => {
+    const { saveImageToS3 } = await import("../../../storage/s3.js");
+
+    Bun.env["S3_BUCKET_NAME"] = "custom-scout-bucket";
+    resetConfigurationForTests();
+
+    const matchId = MatchIdSchema.parse("NA1_CUSTOM_BUCKET");
+    const imageBuffer = new TextEncoder().encode("png-image-data");
+
+    s3Mock.on(PutObjectCommand).resolves({
+      $metadata: { httpStatusCode: 200 },
+    });
+
+    const result = await saveImageToS3(matchId, imageBuffer, "solo", []);
+
+    expect(s3Mock.calls().length).toBe(1);
+    const call = s3Mock.call(0);
+    const command = call.args[0];
+    expect(command).toBeInstanceOf(PutObjectCommand);
+    if (command instanceof PutObjectCommand) {
+      expect(command.input.Bucket).toBe("custom-scout-bucket");
+    }
+    expect(result).toStartWith("s3://custom-scout-bucket/");
+    expect(result).toContain(matchId);
   });
 });

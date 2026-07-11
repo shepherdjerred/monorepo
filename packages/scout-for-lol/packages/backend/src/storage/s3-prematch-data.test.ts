@@ -1,24 +1,14 @@
-import { afterEach, beforeEach, describe, expect, test, mock } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
-
-void mock.module("#src/configuration.ts", () => ({
-  default: {
-    version: "test",
-    gitSha: "test",
-    environment: "dev",
-    sentryDsn: undefined,
-    s3BucketName: "test-bucket",
-  },
-}));
-
-const { RawCurrentGameInfoSchema } = await import("@scout-for-lol/data");
-const {
+import { RawCurrentGameInfoSchema } from "@scout-for-lol/data";
+import {
   getMetrics,
   prematchSpectatorPayloadSaveDurationSeconds,
   prematchSpectatorPayloadSavesTotal,
-} = await import("#src/metrics/index.ts");
-const { savePrematchDataToS3 } = await import("#src/storage/s3.ts");
+} from "#src/metrics/index.ts";
+import { savePrematchDataToS3 } from "#src/storage/s3.ts";
+import { resetConfigurationForTests } from "#src/configuration.ts";
 
 const s3Mock = mockClient(S3Client);
 
@@ -82,10 +72,14 @@ function getHistogramCount(metrics: string, metricName: string): number {
 }
 
 beforeEach(() => {
+  Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+  resetConfigurationForTests();
   s3Mock.reset();
 });
 
 afterEach(() => {
+  Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+  resetConfigurationForTests();
   s3Mock.reset();
 });
 
