@@ -20,8 +20,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "test": "bun test test/",
-    "typecheck": "tsc --noEmit",
+    "test": "bun run build && bun test test/",
+    "typecheck": "bun run build && tsc --noEmit",
     "lint": "eslint ."
   },
   "dependencies": {
