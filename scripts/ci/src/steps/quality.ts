@@ -52,8 +52,7 @@ function annotatedDaggerScan(
  * `large-file-check`, `dagger-hygiene` (soft-fail, kept separate for
  * granular soft-fail tracking), `greptile-review` (PR-only),
  * `caddyfile-validate`, `tunnel-dns-coverage`, `talos-schematic-sync` (each
- * gated by file change-detection) (runtime `--seeds`
- * arg derived from change-detection).
+ * gated by file change-detection).
  */
 export function qualityBundleStep(): BuildkiteStep {
   return daggerStep({
