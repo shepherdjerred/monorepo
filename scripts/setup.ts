@@ -484,6 +484,7 @@ type RefreshEntry = { cwd: string; producers: string[] };
 const RefreshPackageJsonSchema = z.object({
   dependencies: z.record(z.string(), z.string()).optional(),
   devDependencies: z.record(z.string(), z.string()).optional(),
+  optionalDependencies: z.record(z.string(), z.string()).optional(),
 });
 
 // sjer.red is refreshed regardless of --group: it's the one consumer whose
@@ -534,6 +535,7 @@ async function deriveRefreshPlan(): Promise<RefreshEntry[]> {
         const allDeps = {
           ...parsed.dependencies,
           ...parsed.devDependencies,
+          ...parsed.optionalDependencies,
         };
         const producers = Object.entries(allDeps)
           .filter(
