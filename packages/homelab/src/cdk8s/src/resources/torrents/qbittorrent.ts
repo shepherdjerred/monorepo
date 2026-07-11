@@ -234,6 +234,21 @@ export function createQBitTorrentDeployment(
           limit: Cpu.millis(2000),
         },
       },
+      // QBT_USERNAME/QBT_PASSWORD let hitandrun-share-limit.sh (mounted at
+      // /scripts below, run via AutoRun\OnTorrentAdded — see qBittorrent.conf)
+      // authenticate to the local WebUI API to set a per-torrent, size-computed
+      // seeding-time limit that matches the tracker's Hit & Run requirement.
+      envVariables: {
+        QBT_USERNAME: EnvValue.fromValue("jerred"),
+        QBT_PASSWORD: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "qbittorrent-hitandrun-password",
+            qBitTorrentItem.name,
+          ),
+          key: "password",
+        }),
+      },
       volumeMounts: [
         {
           path: "/config",
@@ -246,6 +261,13 @@ export function createQBitTorrentDeployment(
             claims.downloads,
           ),
           path: "/downloads",
+        },
+        // Same ConfigMap the init container seeds /config from (see
+        // qbittorrentConfig.addDirectory above) — mounted again here so the
+        // qbittorrent process itself can exec hitandrun-share-limit.sh.
+        {
+          path: "/scripts",
+          volume: seedVolume,
         },
       ],
     }),
