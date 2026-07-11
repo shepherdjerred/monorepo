@@ -1,9 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  isCompletedOn,
   isRecurring,
   localTodayYmd,
   nextOptimistic,
+  occursOn,
   toggleCompleteInstance,
 } from "./recurrence";
 import type { Task } from "./types";
@@ -115,5 +117,44 @@ describe("nextOptimistic", () => {
     });
     const result = nextOptimistic(task, "2026-05-10");
     expect(result.completeInstances).toEqual([]);
+  });
+});
+
+describe("model-driven per-day semantics (P5)", () => {
+  const base = makeTask();
+  const recurring: Task = makeTask({
+    recurrence: "FREQ=DAILY",
+    scheduled: "2026-07-01",
+    completeInstances: ["2026-07-02"],
+  });
+
+  test("isCompletedOn reflects the instance state per day", () => {
+    expect(isCompletedOn(recurring, "2026-07-02")).toBe(true);
+    expect(isCompletedOn(recurring, "2026-07-03")).toBe(false);
+  });
+
+  test("isCompletedOn for plain tasks is just the status", () => {
+    expect(isCompletedOn({ ...base, status: "done" }, "2026-07-03")).toBe(true);
+    expect(isCompletedOn(base, "2026-07-03")).toBe(false);
+  });
+
+  test("occursOn expands scheduled-anchored rules via the model", () => {
+    const weekly: Task = makeTask({
+      recurrence: "FREQ=WEEKLY;BYDAY=MO",
+      scheduled: "2026-07-06", // a Monday
+    });
+    expect(occursOn(weekly, "2026-07-06")).toBe(true); // Monday
+    expect(occursOn(weekly, "2026-07-07")).toBe(false); // Tuesday
+    expect(occursOn(weekly, "2026-07-13")).toBe(true); // next Monday
+    expect(occursOn(base, "2026-07-06")).toBe(false); // not recurring
+  });
+
+  test("a malformed day string fails fast instead of yielding an invalid Date", () => {
+    const weekly: Task = makeTask({
+      recurrence: "FREQ=WEEKLY;BYDAY=MO",
+      scheduled: "2026-07-06",
+    });
+    expect(() => occursOn(weekly, "2026-07-xx")).toThrow(TypeError);
+    expect(() => isCompletedOn(weekly, "not-a-date")).toThrow(TypeError);
   });
 });
