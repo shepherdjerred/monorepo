@@ -166,7 +166,13 @@ function insertTags(stmts: Statements, q: Question): void {
 
 function insertCompanyTags(stmts: Statements, q: Question): void {
   if (q.companyTagStatsV2 == null || q.companyTagStatsV2 === "") return;
-  const parsed = CompanyStatsSchema.safeParse(JSON.parse(q.companyTagStatsV2));
+  let rawCompanyStats: unknown;
+  try {
+    rawCompanyStats = JSON.parse(q.companyTagStatsV2);
+  } catch {
+    return; // Malformed company JSON: drop company data, keep the problem.
+  }
+  const parsed = CompanyStatsSchema.safeParse(rawCompanyStats);
   if (!parsed.success) return; // Some company data might be malformed.
   for (const [timePeriod, companies] of Object.entries(parsed.data)) {
     for (const company of companies) {

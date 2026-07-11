@@ -80,8 +80,11 @@ for dir in packages/*/; do
   done
 
   # Ban no-op stub scripts: a script that exists must do real work.
-  # "true" / bare "echo ..." stubs read as passing checks that never ran.
-  NOOPS=$(grep -E "\"(build|test|lint|typecheck)\": *\"(true|echo [^\"]*)\"" "$dir/package.json" || printf '')
+  # "true" / ":" / bare "echo ..." stubs read as passing checks that never ran.
+  # Match the stub value tolerant of surrounding whitespace and of no-op
+  # variants (bare "echo", "echo ...", ":", "true") so e.g. "test": "true "
+  # or "lint": "echo" cannot slip a false-green check past this gate.
+  NOOPS=$(grep -E "\"(build|test|lint|typecheck)\": *\"[[:space:]]*(true|:|echo([[:space:]][^\"]*)?)[[:space:]]*\"" "$dir/package.json" || printf '')
   if [ -n "$NOOPS" ]; then
     echo "  FAIL: $PKG has no-op stub script(s): $(echo "$NOOPS" | tr -d ' ' | tr '\n' ' ')"
     echo "        Delete the script and add a documented exemption instead."
