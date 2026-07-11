@@ -80,11 +80,11 @@ export const REPORT_SOURCES: ReportSourceInfo[] = [
     validGroupBys: ["player", "champion", "queue"],
   },
   {
-    id: "player_pairs",
-    label: "Player pairs",
+    id: "player_groups",
+    label: "Player groups",
     description:
-      "Co-player statistics for teammates who played together. Requires GROUP BY pair.",
-    validGroupBys: ["pair"],
+      "Teammate-group statistics (sizes 2-5; Arena groups by subteam). Requires GROUP BY group(N) or group(all); player_pairs + GROUP BY pair are legacy aliases for group(2).",
+    validGroupBys: ["group"],
   },
   {
     id: "rank_current",
@@ -256,10 +256,11 @@ export const REPORT_GROUP_BYS: ReportGroupByInfo[] = [
     description: "Group rows by queue type.",
   },
   {
-    id: "pair",
-    label: "Pair",
-    columnLabel: "Pair",
-    description: "Group rows by teammate pair (player_pairs only).",
+    id: "group",
+    label: "Group",
+    columnLabel: "Group",
+    description:
+      "Group rows by teammate group (player_groups only): GROUP BY group(N) for one size (N = 2-5) or group(all) for every size the roster supports. Stats sum members; a win requires every member to win. GROUP BY pair is the legacy alias for group(2).",
   },
 ];
 
@@ -267,7 +268,11 @@ export const REPORT_KEYWORDS: ReportKeywordInfo[] = [
   { keyword: "SELECT", description: "Choose the metrics (columns) to report." },
   { keyword: "FROM", description: "Choose the data source (table)." },
   { keyword: "WHERE", description: "Filter rows (AND-joined clauses)." },
-  { keyword: "GROUP BY", description: "Aggregate rows by a grouping field." },
+  {
+    keyword: "GROUP BY",
+    description:
+      "Aggregate rows by a field: player, or group(2..5)/group(all).",
+  },
   { keyword: "ORDER BY", description: "Sort by a metric or label." },
   { keyword: "LIMIT", description: "Cap the number of rows returned." },
   { keyword: "AND", description: "Combine multiple WHERE clauses." },
@@ -391,13 +396,14 @@ export const REPORT_COMMON_PRESETS: ReportCommonPresetInfo[] = [
       "select games, win_rate from match_participants group by champion order by games desc limit 10 render bar_chart with (y = games)",
   },
   {
-    id: "best-duos",
-    title: "Most active duos",
-    description: "List teammate pairs with the most games together.",
+    id: "best-groups",
+    title: "Most active teammate groups",
+    description:
+      "List teammate groups of every size (group(2) picks duos only) by games together.",
     lookbackDays: 30,
     maxRows: 10,
     query:
-      "select games, win_rate from player_pairs group by pair order by games desc limit 10 render leaderboard",
+      "select games, win_rate from player_groups group by group(all) order by games desc limit 10 render leaderboard",
   },
   {
     id: "kda-leaders",
@@ -460,7 +466,7 @@ export function reportGroupByColumnLabel(groupBy: ReportGroupBy): string {
     .with("player", () => "Player")
     .with("champion", () => "Champion")
     .with("queue", () => "Queue")
-    .with("pair", () => "Pair")
+    .with("group", () => "Group")
     .exhaustive();
 }
 

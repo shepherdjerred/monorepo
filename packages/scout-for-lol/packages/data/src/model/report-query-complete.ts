@@ -152,12 +152,33 @@ function sourceItems(): ReportCompletionItem[] {
 }
 
 function fieldItems(): ReportCompletionItem[] {
-  return REPORT_GROUP_BYS.map((groupBy) => ({
-    label: groupBy.id,
-    insertText: groupBy.id,
-    detail: groupBy.label,
-    kind: "field",
-  }));
+  return REPORT_GROUP_BYS.flatMap((groupBy): ReportCompletionItem[] => {
+    // `group` is a call form — complete concrete invocations, not the bare id.
+    if (groupBy.id === "group") {
+      return [
+        {
+          label: "group(2)",
+          insertText: "group(2)",
+          detail: "Teammate pairs",
+          kind: "field",
+        },
+        {
+          label: "group(all)",
+          insertText: "group(all)",
+          detail: "Teammate groups of every size",
+          kind: "field",
+        },
+      ];
+    }
+    return [
+      {
+        label: groupBy.id,
+        insertText: groupBy.id,
+        detail: groupBy.label,
+        kind: "field",
+      },
+    ];
+  });
 }
 
 function whereStarterItems(): ReportCompletionItem[] {

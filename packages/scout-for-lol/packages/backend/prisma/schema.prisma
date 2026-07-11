@@ -17,6 +17,10 @@ model Subscription {
   // all. Validated in the app via Zod; never queried in SQL.
   filters String?
 
+  // Muted subscriptions stay intact (history, filters, channel wiring) but are
+  // skipped when dispatching pre/post-match notifications.
+  isMuted Boolean @default(false)
+
   // metadata
   serverId         String
   creatorDiscordId String

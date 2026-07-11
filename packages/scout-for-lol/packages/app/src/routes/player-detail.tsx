@@ -50,6 +50,8 @@ export function PlayerDetail() {
   const safeGuildId = guildId ?? "";
   const safeAlias = alias ?? "";
   const [renameOpen, setRenameOpen] = useState(false);
+  // Ended/cancelled competitions are hidden by default behind the toggle.
+  const [showAllCompetitions, setShowAllCompetitions] = useState(false);
   const [mergeOpen, setMergeOpen] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
   const [addAccountOpen, setAddAccountOpen] = useState(false);
@@ -122,9 +124,6 @@ export function PlayerDetail() {
   const competitions = player?.competitions ?? [];
   const activeCompetitions = competitions.filter((participant) =>
     isActiveCompetition(participant.competition),
-  );
-  const pastCompetitions = competitions.filter(
-    (participant) => !isActiveCompetition(participant.competition),
   );
 
   return (
@@ -233,7 +232,7 @@ export function PlayerDetail() {
                     ) : (
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
                         disabled={unlinkMutation.isPending}
                         onClick={() => {
@@ -360,12 +359,21 @@ export function PlayerDetail() {
           </Section>
 
           <CompetitionSection
-            title="Active competitions"
-            rows={activeCompetitions}
-          />
-          <CompetitionSection
-            title="Past competitions"
-            rows={pastCompetitions}
+            title="Competitions"
+            guildId={guildId}
+            rows={showAllCompetitions ? competitions : activeCompetitions}
+            action={
+              <Button
+                type="button"
+                size="sm"
+                variant={showAllCompetitions ? "outline" : "default"}
+                onClick={() => {
+                  setShowAllCompetitions((prev) => !prev);
+                }}
+              >
+                {showAllCompetitions ? "All" : "Active only"}
+              </Button>
+            }
           />
 
           <RenamePlayerDialog

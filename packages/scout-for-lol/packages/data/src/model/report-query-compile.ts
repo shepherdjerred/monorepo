@@ -1,13 +1,13 @@
 import { match } from "ts-pattern";
 import { z } from "zod";
 import {
-  ReportGroupBySchema,
   ReportMetricSchema,
   ReportOrderBySchema,
   ReportOrderDirectionSchema,
   ReportQueryPlanSchema,
   ReportSourceSchema,
   type ReportGroupBy,
+  type ReportGroupSize,
   type ReportMetric,
   type ReportQueryAst,
   type ReportQueryPlan,
@@ -36,6 +36,57 @@ type WhereFilters = {
   competitionId?: number;
 };
 
+// The parsed `GROUP BY` clause value: the grouping field plus, for teammate
+// groups, the requested size. `pair` is the legacy alias for `group(2)`.
+export type ReportGroupByClause = {
+  groupBy: ReportGroupBy;
+  groupSize?: ReportGroupSize;
+};
+
+const INVALID_GROUP_BY_MESSAGE =
+  "Unknown GROUP BY field. Valid fields: player, champion, queue, group(2..5), group(all), pair.";
+
+// The parser joins the GROUP BY tokens with single spaces (e.g. `group(3)`
+// lexes to `group ( 3 )`), so the call form is matched on that shape.
+const GROUP_CALL_PATTERN = /^group\s*\(\s*(?<size>\d+|all)\s*\)$/u;
+
+/**
+ * Parse raw `GROUP BY` clause text (lowercased, whitespace-collapsed) into the
+ * structured grouping. Returns undefined for unknown fields — shared by the
+ * compiler (which throws) and the linter (which emits a diagnostic).
+ */
+export function parseGroupByClause(
+  value: string,
+): ReportGroupByClause | undefined {
+  if (value === "player" || value === "champion" || value === "queue") {
+    return { groupBy: value };
+  }
+  if (value === "pair") {
+    return { groupBy: "group", groupSize: 2 };
+  }
+  const call = GROUP_CALL_PATTERN.exec(value);
+  const size = call?.groups?.["size"];
+  if (size === undefined) {
+    return undefined;
+  }
+  if (size === "all") {
+    return { groupBy: "group", groupSize: "all" };
+  }
+  const numeric = Number(size);
+  if (numeric < 2 || numeric > 5) {
+    return undefined;
+  }
+  return { groupBy: "group", groupSize: numeric };
+}
+
+// SELECT-list names that refer to the grouping ("label") column rather than a
+// metric. Group queries accept `group` plus the legacy `pair` alias.
+export function groupingColumnNames(groupBy: ReportGroupBy): Set<string> {
+  return groupBy === "group"
+    ? new Set(["label", "group", "pair"])
+    : new Set(["label", groupBy]);
+}
+
 // Compiles a parsed AST into the strict ReportQueryPlan the executor runs.
 // Throws (zod or Error) on any invalid value — same contract as the original
 // parseReportQuery.
@@ -44,15 +95,23 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
     throw new Error(INVALID_QUERY_MESSAGE);
   }
 
-  const source = ReportSourceSchema.parse(ast.source.value);
-  const groupBy = ReportGroupBySchema.parse(ast.groupBy.value);
+  // `player_pairs` is the legacy alias for `player_groups`; plans always
+  // carry the canonical id so the engine matches one source.
+  const rawSource = ReportSourceSchema.parse(ast.source.value);
+  const source = rawSource === "player_pairs" ? "player_groups" : rawSource;
+  const groupByClause = parseGroupByClause(ast.groupBy.value);
+  if (groupByClause === undefined) {
+    throw new Error(INVALID_GROUP_BY_MESSAGE);
+  }
+  const { groupBy, groupSize } = groupByClause;
+  const labelNames = groupingColumnNames(groupBy);
   const metrics = z
     .array(ReportMetricSchema)
     .min(1)
     .parse(
       ast.select
         .map((item) => item.value)
-        .filter((value) => value !== groupBy && value !== "label"),
+        .filter((value) => !labelNames.has(value)),
     );
 
   const filters = compileWhere(ast.where);
@@ -60,7 +119,14 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
   const orderBy =
     ast.orderBy === undefined
       ? "games"
-      : ReportOrderBySchema.parse(ast.orderBy.metric.value);
+      : // The grouping column can be referenced by any of its names (`group` /
+        // `pair` alias for group queries, or the groupBy field name) — all
+        // canonicalize to `label`, the same column those names select. This
+        // matches SELECT and RENDER x, which already accept these via
+        // `groupingColumnNames`.
+        labelNames.has(ast.orderBy.metric.value)
+        ? "label"
+        : ReportOrderBySchema.parse(ast.orderBy.metric.value);
   const orderDirection =
     ast.orderBy?.direction === undefined
       ? "desc"
@@ -75,6 +141,7 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
   return ReportQueryPlanSchema.parse({
     source,
     groupBy,
+    groupSize,
     metrics,
     queueFilter: filters.queueFilter,
     championId: filters.championId,
@@ -253,7 +320,7 @@ function assertRenderColumn(
   channel: "x" | "y",
 ): string {
   if (channel === "x") {
-    if (column === "label" || column === groupBy) {
+    if (groupingColumnNames(groupBy).has(column)) {
       return column;
     }
     throw new Error(
