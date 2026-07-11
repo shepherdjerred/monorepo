@@ -51,3 +51,35 @@ export function createAgentTaskApiService(
     subdomain: "temporal-agent-tasks",
   });
 }
+
+export function createXcodeCloudWebhookService(
+  chart: Chart,
+  deployment: Deployment,
+) {
+  // Service + Cloudflare Tunnel binding for the Xcode Cloud webhook receiver
+  // (Hono server on :9468). Public URL: https://xcode-cloud-webhook.sjer.red —
+  // register this URL (with the secret token path) in App Store Connect →
+  // Xcode Cloud → Settings → Webhooks. The receiver translates iOS
+  // build-failure webhooks into Alertmanager alerts.
+  const webhookService = new Service(
+    chart,
+    "temporal-worker-xcode-cloud-webhook-service",
+    {
+      metadata: {
+        name: "temporal-worker-xcode-cloud-webhook",
+        labels: { app: "temporal-worker-xcode-cloud-webhook" },
+      },
+      selector: deployment,
+      ports: [{ name: "xc-webhook", port: 9468, targetPort: 9468 }],
+    },
+  );
+
+  createCloudflareTunnelBinding(
+    chart,
+    "temporal-worker-xcode-cloud-webhook-cf-tunnel",
+    {
+      serviceName: webhookService.name,
+      subdomain: "xcode-cloud-webhook",
+    },
+  );
+}

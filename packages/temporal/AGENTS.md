@@ -160,6 +160,10 @@ Workflow:
 - `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL` — bot identity for any activity that runs `git commit`
 - `GITHUB_WEBHOOK_SECRET` — HMAC secret used to verify `X-Hub-Signature-256` on incoming PR webhooks. **Required** when the webhook server is enabled; the server only starts when this is set.
 - `GITHUB_WEBHOOK_PORT` — port for the GitHub webhook receiver (default `9466`).
+- `XCODE_CLOUD_WEBHOOK_TOKEN` — unguessable token embedded in the Xcode Cloud webhook URL path (`/hook/<token>`). Xcode Cloud webhooks carry no signature/auth header, so the URL path IS the credential. **Required** to start the receiver; when unset the server is skipped.
+- `XCODE_CLOUD_WEBHOOK_PORT` — port for the Xcode Cloud webhook receiver (default `9468`).
+- `XCODE_CLOUD_ALERT_TTL_SECONDS` — safety auto-resolve window for a fired build-failure alert if no later `SUCCEEDED` clears it (default `21600` = 6h).
+- `ALERTMANAGER_URL` — in-cluster Alertmanager base URL the Xcode Cloud receiver POSTs alerts to (`http://prometheus-kube-prometheus-alertmanager.prometheus:9093`). **Required** when the receiver is enabled.
 
 ## Homelab audit (daily)
 

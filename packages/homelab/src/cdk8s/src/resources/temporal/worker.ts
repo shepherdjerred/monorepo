@@ -30,6 +30,7 @@ import { createTemporalWorkerAuditRbac } from "./audit-rbac.ts";
 import {
   createAgentTaskApiService,
   createTemporalWorkerGithubWebhookService,
+  createXcodeCloudWebhookService,
 } from "./http-services.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
@@ -317,11 +318,15 @@ export function createTemporalWorkerDeployment(
       //        github-webhook.ts) — exposed via Cloudflare Tunnel for PR
       //        review/summary events.
       // :9467 = authenticated agent-task scheduling API.
+      // :9468 = Xcode Cloud webhook receiver (Hono server in event-bridge/
+      //        xcode-cloud-webhook.ts) — exposed via Cloudflare Tunnel; POSTs
+      //        iOS build failures into Alertmanager.
       ports: [
         { number: 9464, name: "metrics" },
         { number: 9465, name: "app-metrics" },
         { number: 9466, name: "gh-webhook" },
         { number: 9467, name: "agent-tasks" },
+        { number: 9468, name: "xc-webhook" },
       ],
       securityContext: {
         user: UID,
@@ -469,6 +474,22 @@ export function createTemporalWorkerDeployment(
           secret,
           key: "AGENT_TASK_API_TOKEN",
         }),
+        // Xcode Cloud webhook receiver (event-bridge/xcode-cloud-webhook.ts).
+        // The receiver only starts when XCODE_CLOUD_WEBHOOK_TOKEN is set; the
+        // token authenticates the unguessable URL path (Xcode Cloud webhooks
+        // carry no signature). On a FAILED/ERRORED iOS build it POSTs a
+        // `severity=warning` alert to Alertmanager, which the existing route
+        // forwards to the PagerDuty dashboard. Required — the 1P item carries
+        // XCODE_CLOUD_WEBHOOK_TOKEN.
+        XCODE_CLOUD_WEBHOOK_PORT: EnvValue.fromValue("9468"),
+        XCODE_CLOUD_WEBHOOK_TOKEN: EnvValue.fromSecretValue({
+          secret,
+          key: "XCODE_CLOUD_WEBHOOK_TOKEN",
+        }),
+        // In-cluster Alertmanager write API. Non-sensitive; a plain literal.
+        ALERTMANAGER_URL: EnvValue.fromValue(
+          "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
+        ),
         // pr-review-bot dismissed-comments KV (Phase 9). Single Redis
         // instance is deployed inside the temporal chart via the shared
         // Redis cdk8s construct; service name is `temporal-redis-master`
@@ -591,6 +612,7 @@ export function createTemporalWorkerDeployment(
 
   createTemporalWorkerGithubWebhookService(chart, deployment);
   createAgentTaskApiService(chart, deployment);
+  createXcodeCloudWebhookService(chart, deployment);
 
   return { deployment };
 }
