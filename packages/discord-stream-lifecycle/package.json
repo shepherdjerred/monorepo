@@ -22,7 +22,7 @@
     "build": "tsc -p tsconfig.build.json",
     "test": "bun run build && bun test test/",
     "typecheck": "bun run build && tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "bun run build && eslint ."
   },
   "dependencies": {
     "xstate": "^5.32.4"
