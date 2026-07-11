@@ -97,7 +97,8 @@ us and are encoded in the code:
   version `2.0.0-<build>`, not a git SHA.
 - The pod digest lives in `imageID` (often `<repo>@sha256:…`), not `image`.
 - The service registry lives in `src/lib/deployed/catalog.ts`; a drift test
-  (`test/deployed/catalog.test.ts`) asserts every versionKey exists in the live
+  (`test-integration/catalog.integration.test.ts`, run via `bun run test:integration`
+  in a git checkout) asserts every versionKey exists in the live
   `versions.ts`.
 
 ## `discord` — act on Discord through a session daemon
