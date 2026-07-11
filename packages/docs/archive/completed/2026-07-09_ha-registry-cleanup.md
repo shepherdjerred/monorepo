@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress — Phase 0 (naming spec) approved; Phase 1 (repo PR) in flight; Phases 2–3 (registry mutation + Apple-side cleanup) pending.
+Complete — shipped 2026-07-09. All phases executed and verified (final sweep: 71 accessories / 12 canonical rooms / zero unreachable / zero collisions). Deliberate leftovers (vendor-app renames, HKSV re-verify after the camera re-pair incident, floor-preheat first-run check) tracked in `packages/docs/todos/homekit-refresh-followups.md`.
 
 ## Goal / bar
 
