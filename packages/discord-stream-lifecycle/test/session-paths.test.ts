@@ -5,7 +5,7 @@ import path from "node:path";
 import {
   ensureSessionDir,
   sessionDir,
-} from "@shepherdjerred/discord-stream-lifecycle/persistence/session-paths.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/persistence/session-paths";
 
 async function isDirectory(p: string): Promise<boolean> {
   try {

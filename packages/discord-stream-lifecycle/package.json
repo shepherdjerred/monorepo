@@ -1,17 +1,25 @@
 {
   "name": "@shepherdjerred/discord-stream-lifecycle",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./*": "./src/*"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
   },
   "files": [
-    "src"
+    "dist"
   ],
   "scripts": {
-    "build": "true",
+    "build": "tsc -p tsconfig.build.json",
     "test": "bun test test/",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."

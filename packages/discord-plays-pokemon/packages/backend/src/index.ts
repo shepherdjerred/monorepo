@@ -21,8 +21,8 @@ import { initializeTracing } from "./observability/tracing.ts";
 initializeTracing();
 
 import { match } from "ts-pattern";
-import { createGameBot } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot.ts";
-import { createSelfbotPooledUserbotFactory } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client.ts";
+import { createGameBot } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot";
+import { createSelfbotPooledUserbotFactory } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
 import { handleMessages } from "./discord/message-handler.ts";
 import { buildPokemonExtraCommands } from "./discord/slashCommands/index.ts";
 import { PokemonGameDriver } from "./lifecycle/pokemon-driver.ts";

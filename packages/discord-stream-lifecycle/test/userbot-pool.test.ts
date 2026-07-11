@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { UserbotPool } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool.ts";
-import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot.ts";
+import { UserbotPool } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool";
+import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
 
 function makeFakeUserbot(params: {
   userId: string;

@@ -1,12 +1,12 @@
 import path from "node:path";
 import * as Sentry from "@sentry/bun";
 import type { Client as BotClient } from "discord.js";
-import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver.ts";
+import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver";
 import type {
   Session,
   SessionStopReason,
-} from "@shepherdjerred/discord-stream-lifecycle/session/session.ts";
-import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/session/session";
+import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
 import { N64Emulator } from "#src/emulator/n64-emulator.ts";
 import type { ScreenMode } from "#src/emulator/mk64-memory.ts";
 import { GameStreamer } from "#src/stream/game-streamer.ts";
