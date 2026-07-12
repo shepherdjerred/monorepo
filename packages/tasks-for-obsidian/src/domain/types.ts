@@ -5,9 +5,7 @@ import type {
   CreateTaskRequest as BaseCreateTaskRequest,
   UpdateTaskRequest as BaseUpdateTaskRequest,
   TaskQueryFilter as _TaskQueryFilter,
-  FilterOptions as _FilterOptions,
   NlpParseResult as _NlpParseResult,
-  TimeSummary as _TimeSummary,
   PomodoroStatus as _PomodoroStatus,
   CalendarEvent as _CalendarEvent,
   HealthStatus as _HealthStatus,
@@ -15,9 +13,14 @@ import type {
 } from "tasknotes-types";
 
 export type TaskQueryFilter = _TaskQueryFilter;
-export type FilterOptions = _FilterOptions;
+export type FilterOptions = {
+  readonly statuses: readonly string[];
+  readonly priorities: readonly string[];
+  readonly contexts: readonly string[];
+  readonly projects: readonly string[];
+  readonly tags: readonly string[];
+};
 export type NlpParseResult = _NlpParseResult;
-export type TimeSummary = _TimeSummary;
 export type PomodoroStatus = _PomodoroStatus;
 export type CalendarEvent = _CalendarEvent;
 export type HealthStatus = _HealthStatus;
@@ -65,6 +68,22 @@ export type TimeEntry = {
   readonly startTime: string;
   readonly endTime?: string | undefined;
   readonly duration?: number | undefined;
+};
+
+/** Report shape from GET /api/time/summary (v2 topTasks pre-aggregation). */
+export type TimeSummary = {
+  readonly totalTime: number;
+  readonly topTasks: readonly {
+    readonly taskId: TaskId;
+    readonly title: string;
+    readonly minutes: number;
+  }[];
+};
+
+/** Per-task tracked time from GET /api/tasks/:id/time. */
+export type TaskTime = {
+  readonly totalTime: number;
+  readonly hasActiveSession: boolean;
 };
 
 export type ApiResponse<T> = {

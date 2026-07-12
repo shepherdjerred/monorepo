@@ -15,7 +15,7 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 // this in a test — the two are independent enforcement layers for the same
 // cap and must never drift apart. See the long comment on `max-in-flight`
 // below for why both exist.
-export const BUILDKITE_MAX_IN_FLIGHT = 24;
+export const BUILDKITE_MAX_IN_FLIGHT = 10;
 
 export function createBuildkiteApp(chart: Chart) {
   new Namespace(chart, "buildkite-namespace", {

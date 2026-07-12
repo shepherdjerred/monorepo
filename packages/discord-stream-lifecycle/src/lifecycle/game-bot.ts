@@ -8,29 +8,29 @@ import {
 import {
   buildPlayCommand,
   handlePlayCommand,
-} from "@shepherdjerred/discord-stream-lifecycle/discord/play-command.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/discord/play-command";
 import {
   buildStopCommand,
   handleStopCommand,
   type StopPermissionMode,
-} from "@shepherdjerred/discord-stream-lifecycle/discord/stop-command.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/discord/stop-command";
 import {
   registerGameBotCommands,
   type RegisterableCommand,
-} from "@shepherdjerred/discord-stream-lifecycle/discord/command-registration.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/discord/command-registration";
 import type { GameDriver } from "./game-driver.ts";
-import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot.ts";
-import { UserbotPool } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool.ts";
-import type { PooledUserbotFactory } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot.ts";
+import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
+import { UserbotPool } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool";
+import type { PooledUserbotFactory } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
 import {
   AloneInVoiceWatcher,
   type VoiceOccupancySnapshot,
-} from "@shepherdjerred/discord-stream-lifecycle/session/auto-leave.ts";
-import { countRealViewers } from "@shepherdjerred/discord-stream-lifecycle/viewer-presence.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/session/auto-leave";
+import { countRealViewers } from "@shepherdjerred/discord-stream-lifecycle/viewer-presence";
 import {
   SingleSlotSessionManager,
   type SessionManagerLogger,
-} from "@shepherdjerred/discord-stream-lifecycle/session/session-manager.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/session/session-manager";
 
 export type ExtraSlashCommand = {
   readonly builder: RegisterableCommand;

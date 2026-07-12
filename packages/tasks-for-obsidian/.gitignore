@@ -2,3 +2,6 @@
 # Shared schemes live in xcshareddata/xcschemes/ and remain tracked.
 xcuserdata/
 *.xcuserstate
+
+# Xcode Cloud logs pulled by scripts/xcode-cloud-logs.ts
+xcode-cloud-logs/

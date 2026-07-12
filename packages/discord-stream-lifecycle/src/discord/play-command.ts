@@ -5,8 +5,8 @@ import {
   MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
-import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot.ts";
-import type { SingleSlotSessionManager } from "@shepherdjerred/discord-stream-lifecycle/session/session-manager.ts";
+import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
+import type { SingleSlotSessionManager } from "@shepherdjerred/discord-stream-lifecycle/session/session-manager";
 
 /** Builds the `/play` slash command JSON for `REST.put(Routes.applicationCommands(...))`. */
 export function buildPlayCommand(params: {

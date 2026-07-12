@@ -18,6 +18,7 @@ import {
   updateLanePriors,
   type LanePriorUpdateConfig,
 } from "./data-dragon-lane-priors.ts";
+import { installScoutWorkspace } from "./bot-clone.ts";
 import { recordRun } from "./data-dragon-metrics.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import {
@@ -225,9 +226,10 @@ export const dataDragonActivities = {
         "1",
       ]);
 
-      await runCommand(["bun", "install", "--frozen-lockfile"], {
-        cwd: `${repoDir}/${SCOUT_ROOT}`,
-      });
+      // Builds the llm-models `file:` producer before the workspace install —
+      // without it the updater's snapshot-refresh `bun test` dies with
+      // `Cannot find module '@shepherdjerred/llm-models'`.
+      await installScoutWorkspace(repoDir);
       await runCommand(
         ["bun", "run", "update-data-dragon", input.latestVersion],
         {
