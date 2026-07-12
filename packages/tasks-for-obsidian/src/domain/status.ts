@@ -1,4 +1,4 @@
-import type { TaskStatus as _TaskStatus } from "tasknotes-types";
+import type { TaskStatus as _TaskStatus } from "./base-schemas";
 
 export type TaskStatus = _TaskStatus;
 
