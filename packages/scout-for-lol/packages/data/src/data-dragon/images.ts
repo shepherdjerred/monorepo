@@ -73,13 +73,13 @@ export function championNameToDisplayName(championName: string): string {
 
 /**
  * Resolve a numeric champion id directly to Riot's human display name using
- * the bundled `champion.json`. Falls back to a `Champion<id>` placeholder
- * only if the id is entirely absent from the bundled assets (stale assets —
- * run `update-data-dragon`).
+ * the bundled `champion.json`. Falls back to a `Champion <id>` placeholder
+ * (matching the pre-unification fallback format) only if the id is entirely
+ * absent from the bundled assets (stale assets — run `update-data-dragon`).
  */
 export function getChampionDisplayNameById(championId: number): string {
   return (
-    championDisplayNamesById[championId] ?? `Champion${championId.toString()}`
+    championDisplayNamesById[championId] ?? `Champion ${championId.toString()}`
   );
 }
 

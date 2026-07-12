@@ -89,7 +89,7 @@ describe("champion display names", () => {
   });
 
   test("getChampionDisplayNameById falls back to a placeholder for an unknown id", () => {
-    expect(getChampionDisplayNameById(999_999)).toBe("Champion999999");
+    expect(getChampionDisplayNameById(999_999)).toBe("Champion 999999");
   });
 
   test("championNameToDisplayName resolves raw Riot match-data casing to the correct display name", () => {
