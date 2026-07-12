@@ -5,6 +5,7 @@ export async function runCommand(
     env?: Record<string, string | undefined>;
     redactOutput?: boolean;
     trimStdout?: boolean;
+    allowNonZeroExit?: boolean;
   },
 ): Promise<string> {
   const clearedEnvKeys = new Set(
@@ -37,7 +38,7 @@ export async function runCommand(
     proc.exited,
   ]);
 
-  if (exitCode !== 0) {
+  if (exitCode !== 0 && options.allowNonZeroExit !== true) {
     const output =
       options.redactOutput === true
         ? "<redacted>"

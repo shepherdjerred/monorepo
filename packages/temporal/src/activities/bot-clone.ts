@@ -95,10 +95,30 @@ export async function installScoutWorkspace(repoDir: string): Promise<void> {
  * bot-style `git commit` in a bot clone, as a mechanism-agnostic safety net —
  * it doesn't matter what armed the hooks, only that they're gone before the
  * commit that must not trigger them.
+ *
+ * Deleting files under `.git/hooks` only helps if hooks actually live there.
+ * `lefthook install` points `core.hooksPath` at `.git/hooks` in this repo
+ * today, but that's a lefthook default, not a guarantee — a global
+ * `~/.gitconfig` or a differently configured lefthook could point
+ * `core.hooksPath` at an arbitrary directory outside `.git/hooks`, in which
+ * case the delete above silently misses every hook file and this "disarm"
+ * would do nothing. Unset `core.hooksPath` in the clone's local config too
+ * (checking first, since `git config --unset-all` on an unset key exits
+ * non-zero and would trip `runCommand`'s fail-fast check), so no hook runs
+ * regardless of where it was configured to live.
  */
 export async function disarmGitHooks(repoDir: string): Promise<void> {
   await runCommand(
     ["find", ".git/hooks", "-type", "f", "!", "-name", "*.sample", "-delete"],
     { cwd: repoDir },
   );
+  const hooksPath = await runCommand(
+    ["git", "config", "--get", "core.hooksPath"],
+    { cwd: repoDir, allowNonZeroExit: true },
+  );
+  if (hooksPath !== "") {
+    await runCommand(["git", "config", "--unset-all", "core.hooksPath"], {
+      cwd: repoDir,
+    });
+  }
 }
