@@ -187,13 +187,22 @@ async function buildInstallScript(
     const { slug, patches } = spec.install;
     const patchContents = patches ? await readPatches(slug, patches) : [];
     const marker = installMarker(spec, patchContents);
+    // Patch content is base64-encoded rather than inlined as a raw heredoc: a
+    // patch's diff hunks routinely contain lines that are pure whitespace
+    // (context lines for blank source lines). The `yaml` package cdk8s uses to
+    // serialize manifests represents an embedded newline inside a long
+    // double-quoted scalar via YAML's line-folding escape syntax, and mis-
+    // round-trips a whitespace-only line back into a literal `\` -- reproducible
+    // even parsing the library's own output back with itself, not just a
+    // cross-implementation quirk. That corrupts the patch and fails it with
+    // "malformed patch" at runtime. Base64 has no embedded newlines or special
+    // YAML characters, so it can't trip this escaping bug regardless of which
+    // YAML parser touches the manifest downstream (cdk8s, Helm, ArgoCD, kubectl).
     const patchSteps = patchContents
       .map(
         (content, i) => `
 echo "applying patch ${String(i + 1)}/${String(patchContents.length)} to ${slug}"
-patch -p1 -d "$STAGE" <<'HA_PATCH_EOF'
-${content}
-HA_PATCH_EOF`,
+echo '${Buffer.from(content).toString("base64")}' | base64 -d | patch -p1 -d "$STAGE"`,
       )
       .join("\n");
 
