@@ -98,12 +98,14 @@ Unify and improve Scout's reporting workflow: correct preview tables, add readab
 - Started the local Vite app at `http://127.0.0.1:5180/app/` without connecting the beta Discord bot.
 - Rebased onto current `origin/main`, resolved the system-report conflicts against the retired Common Denominator bootstrap, and reverified the full Scout workspace.
 - Published implementation commit `9d250f7c9` and opened draft PR [#1513](https://github.com/shepherdjerred/monorepo/pull/1513).
+- Verified the report editor in PinchTab against a deterministic local backend, including the corrected preset preview, all quota windows, operator exemption, AI draft preview, data explorer, and schedule controls.
+- Uploaded five after screenshots to `public.sjer.red`, verified each asset returned HTTP 200, and attached them to PR #1513 alongside the supplied before screenshot.
 
 ### Remaining
 
-- Capture the visible report-editor states before publishing a PR.
+- None.
 
 ### Caveats
 
-- The in-app browser reported no available browser instances, so desktop/mobile screenshots could not be captured in this session. The local app server remains available for direct inspection.
+- Screenshots use a deterministic local mock backend so no live Discord bot or OpenAI request was needed.
 - The app workspace has no `test` package script; its discovered test was run directly with `bun test`.
