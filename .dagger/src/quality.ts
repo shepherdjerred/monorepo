@@ -595,9 +595,16 @@ export function largeFileCheckHelper(source: Directory): Container {
 }
 
 /**
- * iOS native-deps check for tasks-for-obsidian. Replaces the script
- * `.buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh` which the
- * BK pod previously ran against its working tree.
+ * iOS native-deps check + Release Metro bundle smoke for tasks-for-obsidian.
+ * Replaces the script `.buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh`
+ * which the BK pod previously ran against its working tree.
+ *
+ * The install sequence mirrors `ios/ci_scripts/ci_post_clone.sh` (what Xcode
+ * Cloud runs): `tasknotes-types` is a source-only `file:` dep, so its own
+ * transitive deps (e.g. `@tasknotes/model`) must live in its node_modules for
+ * the Release Metro bundle to resolve them. `check:release-bundle` then runs
+ * that exact bundle (pure JS, no macOS) so an unresolvable import fails here
+ * pre-merge instead of in the Xcode Cloud Archive.
  *
  * `--linker hoisted` matches the legacy script — required because the
  * downstream `check:ios-native-deps` consumer expects a flat node_modules
@@ -607,9 +614,12 @@ export function tasksForObsidianIosNativeDepsHelper(
   source: Directory,
 ): Container {
   return bunQualityBase(source)
+    .withWorkdir("/repo/packages/tasknotes-types")
+    .withExec(["bun", "install", "--frozen-lockfile", "--linker", "hoisted"])
     .withWorkdir("/repo/packages/tasks-for-obsidian")
     .withExec(["bun", "install", "--frozen-lockfile", "--linker", "hoisted"])
-    .withExec(["bun", "run", "check:ios-native-deps"]);
+    .withExec(["bun", "run", "check:ios-native-deps"])
+    .withExec(["bun", "run", "check:release-bundle"]);
 }
 
 /**

@@ -4,7 +4,7 @@ import * as ContextMenu from "zeego/context-menu";
 import type { Task } from "../../domain/types";
 import type { Priority } from "../../domain/priority";
 import { ALL_PRIORITIES, PRIORITY_LABELS } from "../../domain/priority";
-import { isCompletedStatus } from "../../domain/status";
+import { isCompletedOn, localTodayYmd } from "../../domain/recurrence";
 import { isOverdue } from "../../lib/dates";
 import { formatRelativeDate } from "../../lib/dates";
 import { useSettings } from "../../hooks/use-settings";
@@ -38,7 +38,9 @@ export const TaskRow = React.memo(function TaskRow({
   onSetPriority,
 }: TaskRowProps) {
   const { colors } = useSettings();
-  const completed = isCompletedStatus(task.status);
+  // Recurring tasks check per-TODAY's-instance (completion feedback —
+  // review finding #4); plain tasks by status.
+  const completed = isCompletedOn(task, localTodayYmd());
   const overdue = isOverdue(task.due);
 
   return (

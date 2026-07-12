@@ -13,6 +13,7 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "check:ios-native-deps": "bun scripts/check-ios-native-deps.ts",
+    "check:release-bundle": "bun scripts/check-release-bundle.ts",
     "pod-install": "cd ios && pod install",
     "clean:ios": "bash scripts/clean-ios.sh",
     "ios:logs": "bash scripts/ios-logs.sh"

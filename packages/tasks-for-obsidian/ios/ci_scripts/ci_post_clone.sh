@@ -35,6 +35,18 @@ if ! command -v bun >/dev/null 2>&1; then
   export PATH="$BUN_INSTALL/bin:$PATH"
 fi
 
+# tasknotes-types is a `file:` dependency consumed from source (its package.json
+# main/exports point at src/*.ts). The Release/Archive Metro bundle follows
+# tasknotes-types/src/v2.ts, which re-exports "@tasknotes/model" — a dependency
+# declared by tasknotes-types, NOT by this app. Bun does not install a `file:`
+# dir dependency's own transitive deps into the consumer, so Metro resolves
+# "@tasknotes/model" from packages/tasknotes-types/node_modules. That directory
+# must be populated on the worker, or the bundle fails with UnableToResolveError.
+TYPES_DIR="$REPO_ROOT/packages/tasknotes-types"
+echo "[ci_post_clone] Installing tasknotes-types dependencies in $TYPES_DIR (needed for Metro to resolve @tasknotes/model)"
+cd "$TYPES_DIR"
+bun install --frozen-lockfile --linker hoisted
+
 echo "[ci_post_clone] Installing JS dependencies in $PKG_DIR"
 cd "$PKG_DIR"
 # React Native + CocoaPods expect a physical node_modules tree.

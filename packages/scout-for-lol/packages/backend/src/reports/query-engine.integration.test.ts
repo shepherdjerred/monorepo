@@ -241,6 +241,150 @@ describe("executeReportQuery", () => {
   });
 });
 
+describe("executeReportQuery player groups", () => {
+  test("group(2) matches the legacy pair query on the same lake", async () => {
+    const matchFacts = [
+      {
+        playerId: 1,
+        playerAlias: "First Player",
+        matchId: "NA1_group_eq",
+        puuid: testPuuid("report-group-1"),
+        queue: "solo",
+        win: true,
+        surrendered: false,
+        kills: 2,
+        deaths: 1,
+        assists: 10,
+        teamId: 100,
+        gameCreationAt: now,
+      },
+      {
+        playerId: 2,
+        playerAlias: "Second Player",
+        matchId: "NA1_group_eq",
+        puuid: testPuuid("report-group-2"),
+        queue: "solo",
+        win: true,
+        surrendered: false,
+        kills: 4,
+        deaths: 2,
+        assists: 6,
+        teamId: 100,
+        gameCreationAt: now,
+      },
+    ];
+    await writeTestLake(lakeDir, { serverId, matchFacts });
+
+    const base = {
+      prisma,
+      serverId,
+      lookbackDays: 30,
+      maxRows: 10,
+      now,
+    };
+    const legacy = await executeReportQuery({
+      ...base,
+      queryText:
+        "SELECT pair, games, wins, kills, win_rate FROM player_pairs GROUP BY pair",
+    });
+    const modern = await executeReportQuery({
+      ...base,
+      queryText:
+        "SELECT group, games, wins, kills, win_rate FROM player_groups GROUP BY group(2)",
+    });
+    expect(modern.rows).toEqual(legacy.rows);
+    expect(modern.rows[0]?.label).toBe("First Player + Second Player");
+    expect(
+      modern.rows[0]?.values.find((value) => value.column === "kills")?.value,
+    ).toBe(6);
+  });
+
+  test("group(all) on a trio yields pairs and the trio, all-win semantics", async () => {
+    const trio = [1, 2, 3].map((playerId) => ({
+      playerId,
+      playerAlias: `Player ${playerId.toString()}`,
+      matchId: "NA1_group_trio",
+      puuid: testPuuid(`report-trio-${playerId.toString()}`),
+      queue: "solo",
+      win: playerId !== 3, // one loser breaks every group containing them
+      surrendered: false,
+      kills: playerId,
+      deaths: 1,
+      assists: 1,
+      teamId: 100,
+      gameCreationAt: now,
+    }));
+    await writeTestLake(lakeDir, { serverId, matchFacts: trio });
+
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText:
+        "SELECT group, games, wins FROM player_groups GROUP BY group(all) ORDER BY label ASC",
+      lookbackDays: 30,
+      maxRows: 10,
+      now,
+    });
+
+    expect(result.rows.map((row) => row.label)).toEqual([
+      "Player 1 + Player 2",
+      "Player 1 + Player 2 + Player 3",
+      "Player 1 + Player 3",
+      "Player 2 + Player 3",
+    ]);
+    const winsByLabel = new Map(
+      result.rows.map((row) => [
+        row.label,
+        row.values.find((value) => value.column === "wins")?.value,
+      ]),
+    );
+    expect(winsByLabel.get("Player 1 + Player 2")).toBe(1);
+    expect(winsByLabel.get("Player 1 + Player 3")).toBe(0);
+    expect(winsByLabel.get("Player 1 + Player 2 + Player 3")).toBe(0);
+  });
+
+  test("Arena groups scope to the subteam, never the whole team side", async () => {
+    // Two duos share team side 100 in one Arena match — the old pair engine
+    // wrongly joined all four; subteam scoping must keep the duos apart.
+    const arenaFacts = [
+      { playerId: 1, subteam: 1 },
+      { playerId: 2, subteam: 1 },
+      { playerId: 3, subteam: 2 },
+      { playerId: 4, subteam: 2 },
+    ].map(({ playerId, subteam }) => ({
+      playerId,
+      playerAlias: `Arena ${playerId.toString()}`,
+      matchId: "NA1_group_arena",
+      puuid: testPuuid(`report-arena-${playerId.toString()}`),
+      queue: "arena",
+      win: subteam === 1,
+      surrendered: false,
+      kills: 3,
+      deaths: 2,
+      assists: 4,
+      teamId: 100,
+      playerSubteamId: subteam,
+      gameCreationAt: now,
+    }));
+    await writeTestLake(lakeDir, { serverId, matchFacts: arenaFacts });
+
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText:
+        "SELECT group, games, wins FROM player_groups WHERE queue IN ('arena') GROUP BY group(all) ORDER BY label ASC",
+      lookbackDays: 30,
+      maxRows: 10,
+      now,
+    });
+
+    expect(result.rows.map((row) => row.label)).toEqual([
+      "Arena 1 + Arena 2",
+      "Arena 3 + Arena 4",
+    ]);
+  });
+});
+
 describe("executeReportQuery competition rank reports", () => {
   test("formats highest-rank competition report scores as ranks", async () => {
     const player = await prisma.player.create({

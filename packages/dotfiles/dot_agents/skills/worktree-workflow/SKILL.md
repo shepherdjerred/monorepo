@@ -601,6 +601,10 @@ The generic workflow above applies, but this repo nests worktrees at `.claude/wo
 
 When spawning a team of agents to implement a plan, every teammate works in its own worktree (e.g. `.claude/worktrees/<feature>-<role>`), never the user's main checkout — bake the worktree-setup commands into each teammate's bootstrap prompt so they don't `cd` into main. The team lead coordinates from its own session and does not edit monorepo files in main either.
 
+### Scoped verification — one repo-wide fan-out at a time
+
+Verify with package-scoped commands (`cd packages/<name> && bun run typecheck|test`, or `bun run --filter='./packages/<name>' typecheck|test` if the package is registered as a Bun workspace from the repo root), not root-level `bun run typecheck|test|build`. A root run fans out over ~35 packages, each booting its own node/bun toolchain; when several worktree sessions or teammates do this concurrently, the spawn storm has frozen the whole machine (6,000+ processes, 20-30 GB of anonymous memory within seconds → macOS jetsam freeze; see `packages/docs/logs/2026-07-11_macbook-hang-jetsam-investigation.md`). Reserve root-level runs for genuinely repo-wide changes, run at most one at a time machine-wide, and bake the scoped commands into teammate bootstrap prompts so parallel agents never all fan out at once. CI provides the exhaustive cross-package pass.
+
 ### Commit + push after every phase
 
 Deleting a worktree discards uncommitted working-tree changes with no recovery path (never `git add`ed = no git objects in the shared `.git`). A large, fully-working feature was lost this way. For any multi-step / PR-bound work, commit after every phase and push the branch immediately (open a draft PR early) so the work is backed up off-machine — never hold a big change uncommitted.
