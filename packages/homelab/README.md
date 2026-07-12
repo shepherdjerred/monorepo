@@ -204,7 +204,7 @@ kubectl exec pod/shell -n maintenance -- \
 ### Upgrade Talos
 
 ```bash {"interpreter":"/opt/homebrew/bin/bash"}
-VERSION=v1.13.4
+VERSION=v1.13.6
 IMAGE=factory.talos.dev/metal-installer-secureboot/4560d31e3c529f9808e0898c2804d25be14201992fe2792abd4a09618e0d39a9:$VERSION
 talosctl upgrade --nodes 192.168.1.81 \
   --image $IMAGE \

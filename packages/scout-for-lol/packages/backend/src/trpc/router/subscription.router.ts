@@ -37,9 +37,10 @@ import {
   setSubscriptionFilters,
   setChannelFilters,
 } from "#src/lib/subscription/filters.ts";
+import { setSubscriptionMuted } from "#src/lib/subscription/mute.ts";
 import { listSubscriptions } from "#src/lib/subscription/list.ts";
 import { ListSubscriptionsInputSchema } from "#src/lib/subscription/types.ts";
-import { AuditActionSchema } from "#src/lib/audit/index.ts";
+import { recordAudit, AuditActionSchema } from "#src/lib/audit/index.ts";
 import { runAuditedMutation } from "#src/lib/audit/audited-mutation.ts";
 
 const GuildIdInput = z.object({ guildId: DiscordGuildIdSchema });
@@ -365,6 +366,54 @@ export const subscriptionRouter = router({
               }
             : null,
       );
+    }),
+
+  setMuted: webMutationProcedure
+    .input(
+      z.object({
+        guildId: DiscordGuildIdSchema,
+        channelId: DiscordChannelIdSchema,
+        alias: z.string().min(1),
+        isMuted: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+      assertChannelInGuild({
+        guildId: input.guildId,
+        channelId: input.channelId,
+      });
+      const actorDiscordId = ctx.user.discordId;
+
+      return prisma.$transaction(async (tx) => {
+        const result = await setSubscriptionMuted(
+          {
+            guildId: input.guildId,
+            channelId: input.channelId,
+            alias: input.alias,
+            isMuted: input.isMuted,
+            actorDiscordId,
+          },
+          tx,
+        );
+
+        if (result.kind === "updated") {
+          await recordAudit(
+            {
+              action: "SUBSCRIPTION_SET_MUTED",
+              actorDiscordId,
+              serverId: input.guildId,
+              targetChannelId: input.channelId,
+              payload: { alias: input.alias, isMuted: input.isMuted },
+              ipAddress: ctx.webSession.ipAddress,
+              userAgent: ctx.webSession.userAgent,
+            },
+            tx,
+          );
+        }
+
+        return result;
+      });
     }),
 
   setChannelFilters: webMutationProcedure

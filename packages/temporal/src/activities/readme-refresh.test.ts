@@ -6,15 +6,15 @@ describe("parsePorcelainPaths", () => {
     // ` M` = index status ' ' (unmodified), work-tree status 'M' (modified).
     // The leading space is part of the 2-char status code and must NOT be stripped
     // before splitting — a whole-string .trim() on the runCommand output eats it.
-    const porcelain = " M README.md\n M archive/README.md\n";
+    const porcelain = " M README.md\n M sandbox/archive/README.md\n";
     const paths = parsePorcelainPaths(porcelain);
-    expect(paths).toEqual(["README.md", "archive/README.md"]);
+    expect(paths).toEqual(["README.md", "sandbox/archive/README.md"]);
   });
 
   test("parses staged modifications (M_ XY code)", () => {
-    const porcelain = "M  README.md\nM  practice/README.md\n";
+    const porcelain = "M  README.md\nM  sandbox/practice/README.md\n";
     const paths = parsePorcelainPaths(porcelain);
-    expect(paths).toEqual(["README.md", "practice/README.md"]);
+    expect(paths).toEqual(["README.md", "sandbox/practice/README.md"]);
   });
 
   test("parses untracked files (?? XY code)", () => {
@@ -26,11 +26,11 @@ describe("parsePorcelainPaths", () => {
   test("handles mixed status codes including leading-space first line", () => {
     // Realistic output: first file is unstaged-modified, second is staged-added
     const porcelain =
-      " M README.md\nA  archive/README.md\n?? packages/foo/_summary.md\n";
+      " M README.md\nA  sandbox/archive/README.md\n?? packages/foo/_summary.md\n";
     const paths = parsePorcelainPaths(porcelain);
     expect(paths).toEqual([
       "README.md",
-      "archive/README.md",
+      "sandbox/archive/README.md",
       "packages/foo/_summary.md",
     ]);
   });

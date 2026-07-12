@@ -47,7 +47,7 @@ type ExecuteReportQueryParams = {
 /**
  * Execute a ScoutQL report query.
  *
- * Fact-style sources (match_participants, player_pairs,
+ * Fact-style sources (match_participants, player_groups,
  * prematch_participants, competition_match_participants) run as compiled SQL
  * on embedded DuckDB over the report lake (see reports/duckdb/); rank
  * sources delegate to calculateLeaderboard as before. In all cases the
@@ -65,8 +65,11 @@ export async function executeReportQuery(
   if (plan.source === "competition_match_participants") {
     return await executeCompetitionMatchParticipantReport(params, plan);
   }
-  if (plan.source === "player_pairs" && plan.groupBy !== "pair") {
-    throw new Error("player_pairs reports must GROUP BY pair.");
+  if (
+    (plan.source === "player_groups" || plan.source === "player_pairs") &&
+    plan.groupBy !== "group"
+  ) {
+    throw new Error("player_groups reports must GROUP BY group(...).");
   }
 
   const { startDate, endDate } = lookbackRange(params);

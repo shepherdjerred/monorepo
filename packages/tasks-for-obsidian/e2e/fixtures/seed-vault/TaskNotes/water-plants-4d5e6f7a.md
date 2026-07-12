@@ -6,6 +6,7 @@ priority: normal
 due: "2026-07-01"
 tags:
   - seeded
+  - task
 recurrence: FREQ=DAILY
 complete_instances: []
 dateCreated: "2026-07-01T09:00:00.000Z"

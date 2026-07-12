@@ -63,17 +63,24 @@ async function probeAndRecordSourceMetadata(
  * through, URL/search sources go through the system yt-dlp. Adult sources are rejected here — once
  * up front on the obvious request, and again on the yt-dlp-resolved domain (inside
  * {@link resolveWithYtdlp}) for searches/redirects. This is the machine's `resolveSource` actor.
+ *
+ * When `preResolved` is given (from `/stream play`'s synchronous pre-validation), the expensive
+ * yt-dlp/subtitle work is skipped and that result is used directly — only the cheap local probe
+ * still runs, so observability (source-info metric/log) stays consistent either way.
  */
 export async function resolveSource(
   config: Config,
   source: Source,
   signal: AbortSignal,
+  preResolved?: ResolvedSource,
 ): Promise<ResolvedSource> {
   if (isBlockedSource(source)) {
     throw new BlockedSourceError(sourceLabel(source));
   }
   let resolved: ResolvedSource;
-  if (source.kind === "file") {
+  if (preResolved !== undefined) {
+    resolved = preResolved;
+  } else if (source.kind === "file") {
     const subtitle = await resolveSubtitleForFile(
       config,
       source.path,

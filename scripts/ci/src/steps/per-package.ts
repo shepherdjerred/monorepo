@@ -317,10 +317,13 @@ function daggerCallStep(
 }
 
 /**
- * iOS native deps check — runs `bun install --linker hoisted` and
- * `bun run check:ios-native-deps` for `packages/tasks-for-obsidian` inside
- * the Dagger engine. Source comes from the git URL ref (no BK checkout).
- * Replaces the previous plainStep that ran
+ * iOS native deps check + Release Metro bundle smoke — runs `bun install
+ * --linker hoisted` (for tasknotes-types and the app), `bun run
+ * check:ios-native-deps`, and `bun run check:release-bundle` for
+ * `packages/tasks-for-obsidian` inside the Dagger engine. The bundle smoke
+ * reproduces the Xcode Cloud Archive JS bundle so unresolvable imports fail
+ * pre-merge. Source comes from the git URL ref (no BK checkout). Replaces the
+ * previous plainStep that ran
  * `.buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh` against a
  * local working tree.
  */
@@ -328,10 +331,10 @@ function tasksForObsidianNativeDepsStep(
   resources: ResourceTier,
 ): BuildkiteStep {
   return {
-    label: ":iphone: iOS Native Deps",
+    label: ":iphone: iOS Native Deps + Release Bundle",
     key: "ios-native-deps-tasks-for-obsidian",
     command: `${DAGGER_CALL} tasks-for-obsidian-ios-native-deps --source ${REPO_GIT_REF}`,
-    timeout_in_minutes: 10,
+    timeout_in_minutes: 15,
     retry: RETRY,
     env: DAGGER_ENV,
     plugins: [

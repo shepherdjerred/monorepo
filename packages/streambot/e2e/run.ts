@@ -129,6 +129,8 @@ function buildSession(config: Config, input: PlaybackInput): Session {
     library: () => [],
     expandPlaylist: (url, signal) => expandPlaylist(config, url, signal),
     listSources: (signal) => listExtractors(config, signal),
+    resolvePlaySource: (source, signal) =>
+      resolveSource(config, source, signal),
   });
   refs.sessions = new SessionManager({
     config,

@@ -13,16 +13,18 @@ const logger = createLogger("notification-dispatch");
 /**
  * Filter resolved channels down to those that should be notified for a match,
  * applying each subscription's notification filters. A channel is kept iff at
- * least one of its in-match subscriptions passes (the rendered message is
- * match-level, covering every tracked player in the game).
+ * least one of its in-match subscriptions is unmuted and passes (the rendered
+ * message is match-level, covering every tracked player in the game).
  */
 export function channelsPassingQueueFilter(
   channels: SubscribedChannel[],
   queueType: QueueType | undefined,
 ): SubscribedChannel[] {
   return channels.filter((channel) =>
-    channel.subscriptions.some((subscription) =>
-      filtersPass(subscription.filters, { queueType }),
+    channel.subscriptions.some(
+      (subscription) =>
+        !subscription.isMuted &&
+        filtersPass(subscription.filters, { queueType }),
     ),
   );
 }

@@ -1,18 +1,24 @@
 /**
- * Pure text builders for the discovery commands (`/stream help`, `/stream sources`). Kept out of
- * `command-handler.ts` so they carry no playback state and can be unit-tested directly (a
- * command-handler test asserts every registered subcommand appears in {@link helpText}).
+ * Pure text builders for the discovery commands (`/stream help`, `/stream sources`, `/stream
+ * list`/`search`). Kept out of `command-handler.ts` so they carry no playback state and can be
+ * unit-tested directly (a command-handler test asserts every registered subcommand appears in
+ * {@link helpText}).
  */
+import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
+import { searchLibrary } from "@shepherdjerred/streambot/sources/library.ts";
 
 /** Source names per page of `/stream sources` output (browse + filtered). */
 const SOURCES_PER_PAGE = 30;
 
+/** Library entries per page of `/stream list`/`search` output. */
+const LIST_PER_PAGE = 20;
+
 /**
- * The result of {@link sourcesPages}: a header line describing the full result set, and one
- * Discord-message-sized body chunk per page. The adapter renders Prev/Next/First/Last buttons
- * when `pages.length > 1`; when it's 1 it just sends the single message.
+ * The result of {@link sourcesPages}/{@link listPages}: a header line describing the full result
+ * set, and one Discord-message-sized body chunk per page. The adapter renders Prev/Next/First/Last
+ * buttons when `pages.length > 1`; when it's 1 it just sends the single message.
  */
-export type SourcesPages = {
+export type PaginatedPages = {
   readonly header: string;
   readonly pages: readonly string[];
 };
@@ -39,7 +45,8 @@ export function helpText(): string {
     "**Library & chapters**",
     "• `/stream list [filter]` · `search <query>` · `chapters` · `chapter <n>`",
     "",
-    "**Subtitles** — add `subtitles:on|off` and `sublang:<lang>` (e.g. `en`, `en.forced`) to `play`/`playnext`.",
+    "**Subtitles** — add `subtitles:on|off` and `sublang:<lang>` (e.g. `en`, `en.forced`) to `play`/`playnext`, " +
+      "or run `/stream subtitles` mid-playback to pick from the actual available tracks (brief restart).",
     "",
     "📡 **Supported sources**",
     "`/stream play` accepts a library title, search terms, or any public link yt-dlp can fetch " +
@@ -61,7 +68,7 @@ export function helpText(): string {
 export function sourcesPages(
   sources: readonly string[],
   query: string | null,
-): SourcesPages {
+): PaginatedPages {
   const trimmed = query?.trim() ?? "";
   const isFiltered = trimmed.length > 0;
   const matched = isFiltered
@@ -98,6 +105,53 @@ function paginate(
   for (let i = 0; i < names.length; i += perPage) {
     const slice = names.slice(i, i + perPage).map((name) => `\`${name}\``);
     pages.push(slice.join(" · "));
+  }
+  return pages;
+}
+
+/**
+ * Render `/stream list`/`search` as a paginated, browseable list of library entries. Bare call
+ * (`query === null`) paginates the whole library; a query paginates only the fuzzy matches
+ * ({@link searchLibrary}: exact > prefix > substring), unranked-limited (the caller wants every
+ * match spread across pages, not just the top N). The adapter wires Prev/Next buttons on top when
+ * `pages.length > 1`.
+ */
+export function listPages(
+  entries: readonly LibraryEntry[],
+  query: string | null,
+): PaginatedPages {
+  const trimmed = query?.trim() ?? "";
+  const isFiltered = trimmed.length > 0;
+  const matched = isFiltered
+    ? searchLibrary(entries, trimmed, entries.length)
+    : entries;
+
+  if (matched.length === 0) {
+    return {
+      header: isFiltered
+        ? `No matches for \`${trimmed}\`.`
+        : "The library is empty.",
+      pages: [""],
+    };
+  }
+
+  const lines = matched.map(
+    (entry, index) =>
+      `${String(index + 1)}. \`${entry.title}\` _(${entry.library})_`,
+  );
+  const header = isFiltered
+    ? `**${String(matched.length)} result(s) matching \`${trimmed}\`:**`
+    : `**${String(matched.length)} result(s):**`;
+  return { header, pages: paginateLines(lines, LIST_PER_PAGE) };
+}
+
+function paginateLines(
+  lines: readonly string[],
+  perPage: number,
+): readonly string[] {
+  const pages: string[] = [];
+  for (let i = 0; i < lines.length; i += perPage) {
+    pages.push(lines.slice(i, i + perPage).join("\n"));
   }
   return pages;
 }

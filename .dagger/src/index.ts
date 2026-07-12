@@ -25,6 +25,7 @@ import {
   npmPublishAllHelper,
   deploySiteHelper,
   deployStaticSiteHelper,
+  waitForArgoCdResourceDeletionHelper,
   argoCdSyncHelper,
   argoCdHealthWaitHelper,
   argoCdSyncAndWaitHelper,
@@ -61,6 +62,7 @@ import {
   buildDiscordPlaysPokemonImageHelper,
   buildDiscordPlaysMarioKartImageHelper,
   buildTemporalWorkerImageHelper,
+  temporalScheduleRehearsalHelper,
   buildTrmnlDashboardImageHelper,
   pushCaddyS3ProxyImageHelper,
   pushObsidianHeadlessImageHelper,
@@ -727,6 +729,27 @@ export class Monorepo {
       version,
       gitSha,
     );
+  }
+
+  /**
+   * Build the temporal-worker image and rehearse the scheduled PR-creating
+   * workflows' environment against the given repo tree (see
+   * packages/temporal/scripts/rehearse-bot-clone.ts). Fails when a change
+   * would break the weekly data-dragon / season-refresh / readme-refresh jobs.
+   */
+  @func()
+  async temporalScheduleRehearsal(
+    pkgDir: Directory,
+    repoDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return temporalScheduleRehearsalHelper(
+      pkgDir,
+      repoDir,
+      depNames,
+      depDirs,
+    ).stdout();
   }
 
   /** Push a temporal-worker image to a registry. Returns digest. */
@@ -1425,6 +1448,38 @@ export class Monorepo {
   ): Promise<string> {
     return argoCdHealthWaitHelper(
       appName,
+      argoCdToken,
+      timeoutSeconds,
+      serverUrl,
+      dryrun,
+    ).stdout();
+  }
+
+  /**
+   * Poll ArgoCD's application resource tree until no resource matching
+   * group/version/kind/namespace remains (i.e., fully deleted including
+   * finalizer completion). Fail if any still match after timeoutSeconds. Use
+   * between an ArgoCD sync step that prunes a resource with a finalizer and
+   * any downstream step that depends on the resource being gone.
+   */
+  @func({ cache: "never" })
+  async argoCdWaitForResourceDeletion(
+    appName: string,
+    group: string,
+    version: string,
+    kind: string,
+    namespace: string,
+    argoCdToken: Secret,
+    timeoutSeconds = 120,
+    serverUrl = "https://argocd.sjer.red",
+    dryrun = false,
+  ): Promise<string> {
+    return waitForArgoCdResourceDeletionHelper(
+      appName,
+      group,
+      version,
+      kind,
+      namespace,
       argoCdToken,
       timeoutSeconds,
       serverUrl,

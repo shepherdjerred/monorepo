@@ -8,7 +8,7 @@ import {
   type MediaConnectionCloseInfo,
   type Player,
 } from "@shepherdjerred/discord-video-stream";
-import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot.ts";
+import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type {
   JoinVoiceInput,

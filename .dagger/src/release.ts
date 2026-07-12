@@ -865,7 +865,7 @@ export function deploySiteHelper(
   const endpoint =
     target === "r2"
       ? `https://${cloudflareAccountId}.r2.cloudflarestorage.com`
-      : "https://seaweedfs.sjer.red";
+      : "https://seaweedfs-s3.tailnet-1a49.ts.net";
 
   return s3SyncStaticSite(
     container,
@@ -890,7 +890,7 @@ export function deployStaticSiteHelper(
   const endpoint =
     target === "r2"
       ? "https://r2.cloudflarestorage.com"
-      : "https://seaweedfs.sjer.red";
+      : "https://seaweedfs-s3.tailnet-1a49.ts.net";
 
   const container = dag
     .container()
@@ -917,6 +917,83 @@ export function deployStaticSiteHelper(
 // ---------------------------------------------------------------------------
 // ArgoCD
 // ---------------------------------------------------------------------------
+
+/**
+ * Poll ArgoCD's application resource tree until no resource matching the
+ * given group/version/kind/namespace remains (i.e. the finalizer has run and
+ * the K8s object is gone). Use this after a sync that prunes a resource with
+ * a finalizer to confirm the finalizer has completed before downstream steps
+ * that depend on the resource being gone.
+ *
+ * Filters by group/version/kind/namespace rather than an exact resource name:
+ * cdk8s ApiObjects without an explicit `metadata.name` get a hash-suffixed
+ * name from `Names.toDnsLabel` (id + `-<addr-hash>`) once nested under a
+ * Chart, so a name guessed from the construct id would not match the live
+ * object and this gate would 404 (treat it as already deleted) while the
+ * resource — and its finalizer — is still there.
+ */
+export function waitForArgoCdResourceDeletionHelper(
+  appName: string,
+  group: string,
+  version: string,
+  kind: string,
+  namespace: string,
+  argoCdToken: Secret,
+  timeoutSeconds = 120,
+  serverUrl = "https://argocd.sjer.red",
+  dryrun = false,
+): Container {
+  const label = `${kind} (group=${group}, ns=${namespace})`;
+  if (dryrun) {
+    return dag
+      .container()
+      .from(ALPINE_IMAGE)
+      .withExec([
+        "echo",
+        `DRYRUN: would wait for all ${label} to be deleted from ArgoCD app ${appName}`,
+      ]);
+  }
+  // NOTE: The URL is constructed in TypeScript and embedded as a literal in the
+  // shell script to avoid shell quoting issues with query string parameters.
+  const appUrl = `${serverUrl}/api/v1/applications/${appName}`;
+  return dag
+    .container()
+    .from(ALPINE_IMAGE)
+    .withExec(["apk", "add", "--no-cache", "curl", "jq"])
+    .withSecretVariable("ARGOCD_TOKEN", argoCdToken)
+    .withExec([
+      "sh",
+      "-c",
+      `set -eu
+elapsed=0
+while [ "$elapsed" -lt ${String(timeoutSeconds)} ]; do
+  http=$(curl -sS -L --max-redirs 3 -o /tmp/argocd-resp -w '%{http_code}' \
+    -H "Authorization: Bearer $ARGOCD_TOKEN" \
+    "${appUrl}")
+  if [ "$http" != "200" ]; then
+    echo "ERROR: ${appUrl} returned HTTP $http"
+    if [ -s /tmp/argocd-resp ]; then
+      echo "Response body (first 1KB):"
+      head -c 1024 /tmp/argocd-resp
+      echo
+    fi
+    exit 1
+  fi
+  remaining=$(jq -r \
+    '[.status.resources[]? | select(.group == "${group}" and .version == "${version}" and .kind == "${kind}" and .namespace == "${namespace}")] | length' \
+    /tmp/argocd-resp)
+  echo "${label}: $remaining remaining ($elapsed/${String(timeoutSeconds)}s)"
+  if [ "$remaining" = "0" ]; then
+    echo "${label} is fully deleted."
+    exit 0
+  fi
+  sleep 10
+  elapsed=$((elapsed + 10))
+done
+echo "Timeout: ${label} was not fully deleted within ${String(timeoutSeconds)}s"
+exit 1`,
+    ]);
+}
 
 /** Trigger an ArgoCD sync for an application. */
 export function argoCdSyncHelper(

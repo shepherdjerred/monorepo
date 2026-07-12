@@ -182,11 +182,13 @@ If a command legitimately needs error handling, handle the specific error explic
 ## Commands
 
 ```bash
-# Root commands
-bun run build|test|typecheck
+# Package-specific (DEFAULT — scope verification to the packages you touched; see Verification)
+cd packages/<name> && bun run <script>
+# (or `bun run --filter='./packages/<name>' <script>` if the package is registered as a Bun workspace from the repo root)
 
-# Package-specific
-bun run --filter='./packages/<name>' <script>
+# Root commands (repo-wide fan-out over ~35 packages — only for genuinely repo-wide
+# changes, and never from multiple concurrent sessions; see Verification)
+bun run build|test|typecheck
 
 # Linting (per-package)
 cd packages/<name> && bunx eslint . --fix
@@ -242,13 +244,15 @@ Optional tools (warned if missing): helm, swift, swiftlint, swiftformat, typesha
 
 ## Verification
 
-Always verify changes:
+Always verify changes, **scoped to the packages you touched**:
 
-1. `bun run typecheck` - Type errors
-2. `bun run test` - Test failures
+1. `cd packages/<name> && bun run typecheck` - Type errors (or `bun run --filter='./packages/<name>' typecheck` if the package is registered as a Bun workspace from the repo root)
+2. `cd packages/<name> && bun run test` - Test failures
 3. `bunx eslint . --fix` - Lint issues (in relevant package)
 4. Python (any `.py` change): `uvx ruff check .` and `bash scripts/pyright-check.sh` from the repo root (root `ruff.toml` + `pyrightconfig.json`; the pyright script bootstraps a `.venv` from `scripts/python-dev-requirements.txt`)
 5. Rust (scout desktop): `cd packages/scout-for-lol/packages/desktop/src-tauri && cargo fmt --check && cargo clippy --all-targets --all-features -- -D warnings` (CI runs these plus `cargo test` as the `scout-desktop-rust` step)
+
+**Repo-wide runs (`bun run typecheck|test|build` at the root) are reserved for genuinely repo-wide changes** (shared config, eslint-config, root scripts, cross-package refactors) — and even then, run at most one at a time. A root run fans out over ~35 packages, each spawning its own node/bun toolchain; several sessions doing this concurrently has frozen the whole machine (6,000+ processes and 20-30 GB of anonymous memory materializing within seconds → macOS jetsam freeze; see `packages/docs/logs/2026-07-11_macbook-hang-jetsam-investigation.md`). If other heavy agent sessions are active, scope your verification to the touched package (`cd packages/<name> && bun run ...`) instead. Rely on CI for the exhaustive cross-package pass.
 
 Automation code is linted too: `scripts/`, `scripts/ci/`, and `.dagger/` each have an `eslint.config.ts` consuming the shared config (CI runs them as the `eslint-automation` quality-bundle child). No-op package scripts (`"lint": "true"`) are banned by `scripts/compliance-check.sh` — a package with nothing to lint/test gets a documented exemption there instead.
 
@@ -379,6 +383,6 @@ toolkit pr asset <PR_NUMBER> ./before.png ./flow.mp4 ./demo.cast ./demo-site --p
 - Uses the standard AWS toolchain (`@aws-sdk/client-s3`, path-style): credentials,
   `endpoint_url`, and region come from `~/.aws/credentials` / `~/.aws/config`.
   Select the profile with `--profile <name>` or `AWS_PROFILE` (the `seaweedfs`
-  profile points at `https://seaweedfs.sjer.red`).
+  profile points at `https://seaweedfs-s3.tailnet-1a49.ts.net`, tailnet-only).
 - Objects under `pr/assets/` expire after 365 days; the homelab must be up for
   the artifacts to load.

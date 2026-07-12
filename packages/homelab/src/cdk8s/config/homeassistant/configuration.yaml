@@ -1,5 +1,17 @@
 default_config:
 
+# custom-brand-icons (HACS "plugin" category) is now pinned via
+# ha-custom-components.ts instead of installed through HACS, which used to
+# register this as a Lovelace resource at /hacsfiles/custom-brand-icons/...
+# -- a URL alias only HACS's own integration serves. Since nothing installs
+# through HACS anymore, that alias goes away; this declares the resource at
+# HA's native /local/ alias (served from /config/www/) instead, so it keeps
+# loading regardless of what HACS's old .storage/lovelace_resources entry
+# still points at.
+frontend:
+  extra_module_url:
+    - /local/community/custom-brand-icons/custom-brand-icons.js
+
 homekit:
   - name: HA1
     advertise_ip: 192.168.1.81
