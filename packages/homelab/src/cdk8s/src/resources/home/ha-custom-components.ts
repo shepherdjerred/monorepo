@@ -37,7 +37,13 @@ export type HaComponentInstallSpec =
       /** Specific pre-built files copied into `www/community/<slug>/` (HACS "plugin" shape). */
       kind: "www_community";
       slug: string;
-      /** Paths relative to the extracted tarball root, copied verbatim into the target dir. */
+      /**
+       * Paths relative to the extracted tarball root, copied verbatim into the target dir.
+       * Any `.js` file also gets a `.gz` sibling generated locally (not sourced from the
+       * tarball) so serving pre-compressed JS doesn't depend on upstream shipping one —
+       * a `elax46/custom-brand-icons` release dropped its `dist/*.js.gz` asset and broke
+       * installs that required it verbatim from the archive.
+       */
       files: string[];
     };
 
@@ -135,7 +141,7 @@ export const HA_CUSTOM_COMPONENTS: HaCustomComponentSpec[] = [
     install: {
       kind: "www_community",
       slug: "custom-brand-icons",
-      files: ["dist/custom-brand-icons.js", "dist/custom-brand-icons.js.gz"],
+      files: ["dist/custom-brand-icons.js"],
     },
   },
 ];
@@ -242,7 +248,13 @@ echo "installed ${slug} $VERSION"
   const targetDir = `/config/www/community/${slug}`;
   const marker = installMarker(spec, []);
   const copyLines = files
-    .map((f) => `cp "$STAGE/${f}" "${targetDir}/${f.split("/").pop() ?? f}"`)
+    .map((f) => {
+      const name = f.split("/").pop() ?? f;
+      const cp = `cp "$STAGE/${f}" "${targetDir}/${name}"`;
+      return name.endsWith(".js")
+        ? `${cp}\ngzip -9 -c "${targetDir}/${name}" > "${targetDir}/${name}.gz"`
+        : cp;
+    })
     .join("\n");
 
   return String.raw`
