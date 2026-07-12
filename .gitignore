@@ -62,12 +62,6 @@ packages/dpp/
 /.rustup/
 .config/
 
-# Legacy Bazel marker/lock files
-.bun-install.lock
-.bun-install-done
-.build-*.lock
-.generate-done
-
 # Lefthook local overrides
 lefthook-local.yml
 
@@ -106,7 +100,6 @@ packages/tasks-for-obsidian/ios/build/
 *.db
 *.sqlite
 *.sqlite3
-MODULE.bazel.lock
 
 # Generated TypeDoc docs (webring)
 packages/webring/docs/

@@ -95,12 +95,9 @@ non-fast-forward pushes, and requires the BuildKite CI-complete and Greptile rev
 ### SeaweedFS
 
 All S3 buckets on the self-hosted SeaweedFS instance, managed via the AWS provider with a custom S3 endpoint.
-Includes static site buckets, application storage (scout), build cache (sccache), and the tofu state backend
-bucket itself.
+Includes static site buckets, application storage (scout), and the tofu state backend bucket itself.
 
 The `homelab-tofu-state` bucket has `prevent_destroy = true` since it stores state for all tofu modules.
-The sccache bucket's 30-day expiration lifecycle is managed separately by
-`scripts/seaweedfs/setup-sccache-bucket.sh`.
 
 ### Tailscale
 
