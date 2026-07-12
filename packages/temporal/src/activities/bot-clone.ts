@@ -54,3 +54,25 @@ export async function installScoutWorkspace(repoDir: string): Promise<void> {
     cwd: `${repoDir}/packages/scout-for-lol`,
   });
 }
+
+/**
+ * Forcibly disarm any git hooks armed in this ephemeral clone, regardless of
+ * how they got armed. `rootInstallWithoutHooks`'s `--ignore-scripts` only
+ * prevents ITS OWN call from arming hooks — it can't un-arm hooks a prior,
+ * uncontrolled subprocess already installed (e.g. an agentic `claude -p` /
+ * `codex exec` session with Bash access running a plain `bun install` on its
+ * own initiative before this point, which is what broke
+ * `scout-season-refresh-weekly` on 2026-07-12: Claude has Bash access and
+ * `packages/scout-for-lol/CLAUDE.md` documents "run `bun install` to re-copy
+ * stale deps" — correct advice for a human dev checkout, but it arms lefthook
+ * when followed inside a bot clone). Call this immediately before any
+ * bot-style `git commit` in a bot clone, as a mechanism-agnostic safety net —
+ * it doesn't matter what armed the hooks, only that they're gone before the
+ * commit that must not trigger them.
+ */
+export async function disarmGitHooks(repoDir: string): Promise<void> {
+  await runCommand(
+    ["find", ".git/hooks", "-type", "f", "!", "-name", "*.sample", "-delete"],
+    { cwd: repoDir },
+  );
+}

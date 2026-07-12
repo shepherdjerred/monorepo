@@ -12,10 +12,16 @@
  *  1. scout  — llm-models `file:` producer builds and resolves from
  *              scout's data package, and the snapshot test that died in the
  *              scout-data-dragon-weekly-refresh runs passes.
- *  2. hooks  — the hook-free root install leaves no lefthook hooks, prettier
- *              (with plugins) formats the season changelog byte-stably, and a
- *              bot-style `git commit` of a scout file succeeds without any
- *              pre-commit hook running (scout-season-refresh-weekly).
+ *  2. hooks  — the hook-free root install leaves no lefthook hooks, a
+ *              simulated agentic step (a plain `bun install`, standing in for
+ *              a `claude -p`/`codex exec` session that might run one on its
+ *              own) re-arms them, `disarmGitHooks` removes them again,
+ *              prettier (with plugins) formats the season changelog
+ *              byte-stably, and a bot-style `git commit` of a scout file
+ *              succeeds without any pre-commit hook running
+ *              (scout-season-refresh-weekly, and the 2026-07-12 recurrence
+ *              where Claude's own `bun install` armed hooks that
+ *              `rootInstallWithoutHooks` alone couldn't undo).
  *  3. cog    — the readme-refresh COG_TARGETS exist, still contain `[[[cog`
  *              blocks, and the `cog` binary is present (readme-refresh-weekly).
  *
@@ -28,6 +34,7 @@
  * initialized so the commit canary can run.
  */
 import {
+  disarmGitHooks,
   installScoutWorkspace,
   rootInstallWithoutHooks,
 } from "#activities/bot-clone.ts";
@@ -92,22 +99,55 @@ async function rehearseScoutWorkspace(repoDir: string): Promise<void> {
   });
 }
 
+async function armedHookNames(repoDir: string): Promise<string[]> {
+  const hooksDir = `${repoDir}/.git/hooks`;
+  const hookList = await runCommand(["ls", hooksDir], { cwd: repoDir });
+  return hookList
+    .split("\n")
+    .filter((name) => name !== "" && !name.endsWith(".sample"));
+}
+
 async function rehearseHookFreeCommit(repoDir: string): Promise<void> {
   console.error("[rehearsal] hooks: rootInstallWithoutHooks");
   await rootInstallWithoutHooks(repoDir);
 
-  const hooksDir = `${repoDir}/.git/hooks`;
-  const hookList = await runCommand(["ls", hooksDir], { cwd: repoDir });
-  const armed = hookList
-    .split("\n")
-    .filter((name) => name !== "" && !name.endsWith(".sample"));
-  if (armed.length > 0) {
+  const armedAfterInstall = await armedHookNames(repoDir);
+  if (armedAfterInstall.length > 0) {
     throw new Error(
-      `hook-free install still armed git hooks: ${armed.join(", ")} — ` +
+      `hook-free install still armed git hooks: ${armedAfterInstall.join(", ")} — ` +
         "did the root `prepare` script run? Bot commits would hit lefthook.",
     );
   }
   console.error("[rehearsal] hooks: no git hooks armed");
+
+  // Simulate an agentic Claude/Codex step (which runs between the pre-install
+  // and the final commit in scout-season-refresh.ts / readme-refresh.ts)
+  // deciding on its own to run a plain `bun install` — exactly what armed
+  // lefthook in the 2026-07-12 scout-season-refresh-weekly failure.
+  console.error(
+    "[rehearsal] hooks: simulating an agentic step's plain `bun install`",
+  );
+  await runCommand(["bun", "install", "--frozen-lockfile"], { cwd: repoDir });
+  const armedAfterPlainInstall = await armedHookNames(repoDir);
+  if (armedAfterPlainInstall.length === 0) {
+    throw new Error(
+      "expected the simulated plain `bun install` to arm git hooks (it should " +
+        "run the root `prepare` script) — if this no longer arms hooks, the " +
+        "canary's premise is stale and needs re-deriving from the real bug.",
+    );
+  }
+  console.error(
+    `[rehearsal] hooks: confirmed armed (${armedAfterPlainInstall.join(", ")}) — now disarming`,
+  );
+
+  await disarmGitHooks(repoDir);
+  const armedAfterDisarm = await armedHookNames(repoDir);
+  if (armedAfterDisarm.length > 0) {
+    throw new Error(
+      `disarmGitHooks left hooks armed: ${armedAfterDisarm.join(", ")}`,
+    );
+  }
+  console.error("[rehearsal] hooks: disarmGitHooks removed the armed hooks");
 
   console.error("[rehearsal] hooks: prettier --write on the season changelog");
   await runCommand(["bunx", "prettier", "--write", CHANGELOG_FILE], {
