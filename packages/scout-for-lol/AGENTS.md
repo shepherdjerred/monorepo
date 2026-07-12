@@ -413,9 +413,10 @@ DuckDB** (`@duckdb/node-api`, lazy-loaded) over a local Parquet "report lake"
 (`REPORT_LAKE_DIR`, prod `/data/report-lake`) — not over SQLite fact tables.
 
 - Lake layout & compaction: `backend/src/report-lake/` (two-tier: 15-min
-  staging fold + nightly full rebuild from `StoredMatch`/`StoredPrematch`
-  rawJson; atomic `CURRENT`-pointer publish; the lake is disposable derived
-  data). Manual run: `bun run compact:report-lake` (`--fold` for fold-only).
+  staging fold + nightly full rebuild enumerating the canonical raw match /
+  prematch JSON from **S3** (SeaweedFS); atomic `CURRENT`-pointer publish; the
+  lake is disposable derived data). Manual run: `bun run compact:report-lake`
+  (`--fold` for fold-only).
 - Engine: `backend/src/reports/duckdb/` — the ScoutQL `ReportQueryPlan`
   compiles to parameterized SQL (never interpolate plan values); ordering,
   minGames, limits, and metric derivation stay in JS (`query-aggregates.ts`).
