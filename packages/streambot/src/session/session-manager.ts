@@ -18,7 +18,10 @@ import type {
   ResolveSourceInput,
 } from "@shepherdjerred/streambot/machine/types.ts";
 import { buildPlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
-import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
+import {
+  sourceIdentity,
+  sourceLabel,
+} from "@shepherdjerred/streambot/sources/source.ts";
 import { listSubtitleCandidatesForSource } from "@shepherdjerred/streambot/sources/subtitle-candidates.ts";
 import {
   playbackPositionSeconds,
@@ -375,8 +378,10 @@ export class SessionManager {
           signal,
         );
       },
-      currentSourceKind: () =>
-        session.actor.getSnapshot().context.current?.source.kind ?? null,
+      currentSourceId: () => {
+        const current = session.actor.getSnapshot().context.current;
+        return current === null ? null : sourceIdentity(current.source);
+      },
       hasPendingSubtitleMenu: () => session.pendingSubtitleMenu,
       claimSubtitleMenu: () => {
         if (session.pendingSubtitleMenu) return false;

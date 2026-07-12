@@ -21,7 +21,6 @@ import {
 import type {
   Source,
   SubtitlePref,
-  SubtitleTrackRef,
 } from "@shepherdjerred/streambot/sources/source.ts";
 import {
   chaptersText,
@@ -38,21 +37,6 @@ import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 
 const SOURCES_TIMEOUT_MS = 15_000;
 const SUBTITLE_ENUMERATION_TIMEOUT_MS = 15_000;
-
-/**
- * Whether a decoded trackRef could apply to a source of `kind` — used to detect playback having
- * moved on to a different-kind source during the picker's (up to 2-minute) wait. `off` always
- * applies; `sidecar`/`embedded` only to a `file` source; `ytdlp` only to a `url`/`search` source.
- * Applying a mismatched trackRef would throw the invariant guard in the subtitle resolver.
- */
-function trackRefMatchesKind(
-  trackRef: SubtitleTrackRef,
-  kind: Source["kind"],
-): boolean {
-  if (trackRef.kind === "off") return true;
-  if (trackRef.kind === "ytdlp") return kind === "url" || kind === "search";
-  return kind === "file";
-}
 
 /**
  * The minimal slash-interaction surface the handler needs — decoupled from discord.js so the
@@ -118,10 +102,14 @@ export type CommandHandlerDeps = {
     signal: AbortSignal,
   ) => Promise<SubtitleCandidate[]>;
   /**
-   * The `kind` of the currently-playing source, or `null` if nothing is playing — re-checked right
-   * before dispatching `CHANGE_SUBTITLES` in case playback moved on during the picker's wait.
+   * A stable identity (`file:<path>` / `url:<url>` / `search:<query>`) of the currently-playing
+   * source, or `null` if nothing is playing. Captured when the picker opens and re-checked right
+   * before dispatching `CHANGE_SUBTITLES`, so a pick built for one item is never applied to a
+   * *different* item that playback advanced to during the picker's wait — even one sharing the same
+   * display title. The `kind:` prefix also detects a source-kind change (which would throw in the
+   * exact subtitle resolver).
    */
-  readonly currentSourceKind: () => Source["kind"] | null;
+  readonly currentSourceId: () => string | null;
   /** True while a subtitle picker is already open for this session (single-flight guard). */
   readonly hasPendingSubtitleMenu: () => boolean;
   /** Claim the single-flight slot; returns false if one was already claimed. */
@@ -447,6 +435,9 @@ export class CommandHandler {
 
     await interaction.defer();
     try {
+      // Identity of the item whose candidates the picker will show. The candidates are enumerated
+      // from THIS source; a pick is only valid if this exact item is still current at dispatch time.
+      const pickedFromSourceId = this.deps.currentSourceId();
       const candidates = await this.deps.listSubtitleCandidates(
         AbortSignal.timeout(SUBTITLE_ENUMERATION_TIMEOUT_MS),
       );
@@ -463,20 +454,18 @@ export class CommandHandler {
       }
       const trackRef = decodeTrackRef(picked);
 
-      // Playback can move on (natural end, skip, another change) during the picker's wait —
-      // re-check right before dispatching so a stale pick never gets applied to a different item.
-      const nowView = this.deps.view();
-      const nowKind = this.deps.currentSourceKind();
-      if (
-        nowView.current?.title !== current.title ||
-        nowKind === null ||
-        !trackRefMatchesKind(trackRef, nowKind)
-      ) {
+      // Playback can move on (natural end, skip, another change) during the picker's wait — re-check
+      // the current item's stable identity right before dispatching. Comparing the source identity
+      // (not the display title) catches a same-title-but-different-item swap that would otherwise
+      // burn the old item's subtitle track onto the new one or throw in the exact subtitle resolver.
+      // The `kind:` prefix on the identity also covers a source-kind change.
+      if (this.deps.currentSourceId() !== pickedFromSourceId) {
         await interaction.editReply(
           "Playback changed while you were choosing — nothing was applied. Try again.",
         );
         return;
       }
+      const nowView = this.deps.view();
 
       const subtitles: SubtitlePref = { trackRef };
       this.deps.dispatch({

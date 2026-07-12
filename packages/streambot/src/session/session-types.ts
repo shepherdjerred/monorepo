@@ -8,7 +8,6 @@ import type { PlaybackView } from "@shepherdjerred/streambot/discord/queue-text.
 import type { StatusReporter } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type { UserbotEntry } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import type { SubtitleCandidate } from "@shepherdjerred/streambot/sources/subtitles.ts";
-import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type {
   ChannelId,
   GuildId,
@@ -32,12 +31,15 @@ export type SessionHandle = {
   /** Enumerate burnable subtitle candidates for the currently-playing item (`/stream subtitles`'s picker). Empty when nothing is playing. */
   listSubtitleCandidates: (signal: AbortSignal) => Promise<SubtitleCandidate[]>;
   /**
-   * The `kind` of the currently-playing source (`file`/`url`/`search`), or `null` if nothing is
-   * playing. Read again right before dispatching `CHANGE_SUBTITLES` to detect playback having
-   * moved on during the picker's (up to 2-minute) wait — a trackRef built for one source kind
-   * applied to a different kind would throw in the subtitle resolver.
+   * A stable identity of the currently-playing source (`file:<path>` / `url:<url>` /
+   * `search:<query>`), or `null` if nothing is playing. Captured when the subtitle picker opens and
+   * read again right before dispatching `CHANGE_SUBTITLES`, to detect playback having advanced to a
+   * *different* item during the picker's (up to 2-minute) wait — including a same-title swap that a
+   * title comparison would miss. A trackRef built for the old item applied to a different item would
+   * either burn the wrong track or throw in the exact subtitle resolver. The `kind:` prefix also
+   * subsumes the source-kind check (a `file:` id can never equal a `url:`/`search:` id).
    */
-  currentSourceKind: () => Source["kind"] | null;
+  currentSourceId: () => string | null;
   /** True while a subtitle picker is already open for this session (single-flight guard). */
   hasPendingSubtitleMenu: () => boolean;
   /** Claim the single-flight slot; returns false if one was already claimed. */
@@ -113,7 +115,7 @@ export const EMPTY_HANDLE: SessionHandle = {
   setVolume: () => Promise.resolve(false),
   seek: () => Promise.resolve(false),
   listSubtitleCandidates: () => Promise.resolve([]),
-  currentSourceKind: () => null,
+  currentSourceId: () => null,
   hasPendingSubtitleMenu: () => false,
   claimSubtitleMenu: () => true,
   releaseSubtitleMenu: () => {

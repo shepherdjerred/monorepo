@@ -22,7 +22,6 @@ import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts"
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import { BlockedSourceError } from "@shepherdjerred/streambot/moderation/adult-block.ts";
 import type { SubtitleCandidate } from "@shepherdjerred/streambot/sources/subtitles.ts";
-import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 
 const ADMIN = "160509172704739328";
 const REQUESTER = "100000000000000001";
@@ -79,13 +78,27 @@ function makeHandler(over: {
   resolvePlayError?: Error;
   subtitleCandidates?: SubtitleCandidate[];
   subtitleMenuAlreadyPending?: boolean;
-  /** Defaults to `"file"` when `view.current` is set, else `null` — override to test the stale-picker guard. */
-  currentSourceKind?: Source["kind"] | null;
+  /**
+   * Stable identity of the currently-playing source, as `currentSourceId()` reports it. Defaults to
+   * `"file:/current"` when `view.current` is set, else `null`. Pass an array to make consecutive
+   * reads differ (the handler reads once when the picker opens and again before dispatch) — the
+   * second value simulates playback advancing to a different item during the picker's wait.
+   */
+  currentSourceId?: string | null | (string | null)[];
 }): Harness & { seeks: number[]; subtitleMenuPending: () => boolean } {
   const events: PlaybackEvent[] = [];
   const announces: string[] = [];
   const seeks: number[] = [];
   let subtitleMenuPending = over.subtitleMenuAlreadyPending ?? false;
+  const defaultSourceId =
+    (over.view?.current ?? null) === null ? null : "file:/current";
+  const sourceIdReads =
+    over.currentSourceId === undefined
+      ? [defaultSourceId]
+      : Array.isArray(over.currentSourceId)
+        ? over.currentSourceId
+        : [over.currentSourceId];
+  let sourceIdReadIndex = 0;
   const deps: CommandHandlerDeps = {
     config: makeConfig(over.adminIds ?? []),
     dispatch: (event) => events.push(event),
@@ -108,12 +121,13 @@ function makeHandler(over: {
     },
     listSubtitleCandidates: () =>
       Promise.resolve(over.subtitleCandidates ?? []),
-    currentSourceKind: () =>
-      over.currentSourceKind === undefined
-        ? (over.view?.current ?? null) === null
-          ? null
-          : "file"
-        : over.currentSourceKind,
+    currentSourceId: () => {
+      const read =
+        sourceIdReads[Math.min(sourceIdReadIndex, sourceIdReads.length - 1)] ??
+        null;
+      sourceIdReadIndex += 1;
+      return read;
+    },
     hasPendingSubtitleMenu: () => subtitleMenuPending,
     claimSubtitleMenu: () => {
       if (subtitleMenuPending) return false;
@@ -873,12 +887,53 @@ describe("CommandHandler subtitles command (track picker)", () => {
 
   test("aborts (no dispatch) if the current source's kind changed while the picker was open", async () => {
     // The picker was built from a file source's sidecar candidate, but by the time the user
-    // picks, playback has moved on to a url/search source — applying the sidecar trackRef there
-    // would throw the invariant guard in the subtitle resolver, so this must be caught first.
+    // picks, playback has moved on to a url source — applying the sidecar trackRef there would
+    // throw the invariant guard in the subtitle resolver, so this must be caught first. The
+    // source-id read flips from a `file:` id to a `url:` id between picker-open and dispatch.
     const h = makeHandler({
       view: { ...viewWithCurrent(REQUESTER), positionSeconds: 5 },
       subtitleCandidates: [SIDECAR_CANDIDATE],
-      currentSourceKind: "url",
+      currentSourceId: ["file:/movie.mkv", "url:https://youtu.be/abc"],
+    });
+    const { interaction, edits } = fakeInteraction({
+      sub: "subtitles",
+      userId: REQUESTER,
+      subtitleMenuPick: "sidecar:Movie.en.srt",
+    });
+    await h.handler.run(interaction);
+    expect(h.events).toHaveLength(0);
+    expect(edits.at(-1)).toContain("Playback changed while you were choosing");
+    expect(h.subtitleMenuPending()).toBe(false);
+  });
+
+  test("aborts (no dispatch) when playback advanced to a different item with the SAME title", async () => {
+    // Two distinct files can share a display title. If playback advances from one to the other
+    // during the picker window, a title-only guard would let the old file's sidecar trackRef be
+    // applied to the new file. The source-id read changes (different path) even though the view's
+    // title is unchanged, so the stale pick must be rejected.
+    const h = makeHandler({
+      view: { ...viewWithCurrent(REQUESTER), positionSeconds: 5 },
+      subtitleCandidates: [SIDECAR_CANDIDATE],
+      currentSourceId: ["file:/movies/dupe-a.mkv", "file:/movies/dupe-b.mkv"],
+    });
+    const { interaction, edits } = fakeInteraction({
+      sub: "subtitles",
+      userId: REQUESTER,
+      subtitleMenuPick: "sidecar:Movie.en.srt",
+    });
+    await h.handler.run(interaction);
+    expect(h.events).toHaveLength(0);
+    expect(edits.at(-1)).toContain("Playback changed while you were choosing");
+    expect(h.subtitleMenuPending()).toBe(false);
+  });
+
+  test("aborts (no dispatch) when playback stopped entirely while the picker was open", async () => {
+    // The item ended and nothing replaced it: the second source-id read is null, which never
+    // equals the captured id, so the pick is rejected instead of dispatched into the void.
+    const h = makeHandler({
+      view: { ...viewWithCurrent(REQUESTER), positionSeconds: 5 },
+      subtitleCandidates: [SIDECAR_CANDIDATE],
+      currentSourceId: ["file:/movie.mkv", null],
     });
     const { interaction, edits } = fakeInteraction({
       sub: "subtitles",

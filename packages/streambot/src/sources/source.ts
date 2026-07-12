@@ -78,6 +78,26 @@ export function sourceLabel(source: Source): string {
   }
 }
 
+/**
+ * A stable identity string for a source, distinguishing WHICH item is playing regardless of its
+ * display title. Used by `/stream subtitles` to detect that playback advanced to a *different* item
+ * during the picker's (up to 2-minute) wait — a same-title-but-different-source swap that a title
+ * comparison alone would miss. The `kind:` prefix keeps two variants from ever colliding (so it also
+ * subsumes the source-kind check), and the concrete locator (path/url/query) distinguishes two files
+ * or URLs that happen to share a title. Ignores the per-request subtitle preference on purpose: the
+ * point is to identify the underlying item, not its current subtitle setting.
+ */
+export function sourceIdentity(source: Source): string {
+  switch (source.kind) {
+    case "file":
+      return `file:${source.path}`;
+    case "url":
+      return `url:${source.url}`;
+    case "search":
+      return `search:${source.query}`;
+  }
+}
+
 /** Attach a subtitle preference to a resolved source, preserving its discriminant. */
 export function withSubtitles(
   source: Source,

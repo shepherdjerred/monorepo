@@ -278,7 +278,7 @@ export class CommandBot {
       resolvePlaySource: this.deps.resolvePlaySource,
       announce: (message) => this.announce(announceChannel, message),
       listSubtitleCandidates: handle.listSubtitleCandidates,
-      currentSourceKind: handle.currentSourceKind,
+      currentSourceId: handle.currentSourceId,
       hasPendingSubtitleMenu: handle.hasPendingSubtitleMenu,
       claimSubtitleMenu: handle.claimSubtitleMenu,
       releaseSubtitleMenu: handle.releaseSubtitleMenu,

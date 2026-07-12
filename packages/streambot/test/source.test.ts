@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   SourceSchema,
+  sourceIdentity,
   sourceLabel,
 } from "@shepherdjerred/streambot/sources/source.ts";
 
@@ -49,5 +50,51 @@ describe("sourceLabel", () => {
       "https://youtu.be/abc",
     );
     expect(sourceLabel({ kind: "search", query: "lofi" })).toBe("lofi");
+  });
+});
+
+describe("sourceIdentity", () => {
+  test("prefixes the kind and the concrete locator per source kind", () => {
+    expect(
+      sourceIdentity({ kind: "file", path: "/v/a.mkv", title: "Movie" }),
+    ).toBe("file:/v/a.mkv");
+    expect(sourceIdentity({ kind: "url", url: "https://youtu.be/abc" })).toBe(
+      "url:https://youtu.be/abc",
+    );
+    expect(sourceIdentity({ kind: "search", query: "lofi" })).toBe(
+      "search:lofi",
+    );
+  });
+
+  test("distinguishes two files that share a display title", () => {
+    const a = sourceIdentity({ kind: "file", path: "/a/dupe.mkv", title: "T" });
+    const b = sourceIdentity({ kind: "file", path: "/b/dupe.mkv", title: "T" });
+    expect(a).not.toBe(b);
+  });
+
+  test("ignores the per-request subtitle preference", () => {
+    const withoutPref = sourceIdentity({
+      kind: "file",
+      path: "/v/a.mkv",
+      title: "Movie",
+    });
+    const withPref = sourceIdentity({
+      kind: "file",
+      path: "/v/a.mkv",
+      title: "Movie",
+      subtitles: { trackRef: { kind: "sidecar", file: "a.en.srt" } },
+    });
+    expect(withPref).toBe(withoutPref);
+  });
+
+  test("cannot collide across source kinds", () => {
+    const fileId = sourceIdentity({
+      kind: "file",
+      path: "x",
+      title: "x",
+    });
+    const urlId = sourceIdentity({ kind: "url", url: "https://x.test/x" });
+    const searchId = sourceIdentity({ kind: "search", query: "x" });
+    expect(new Set([fileId, urlId, searchId]).size).toBe(3);
   });
 });
