@@ -96,6 +96,8 @@ Unify and improve Scout's reporting workflow: correct preview tables, add readab
 - Pinned all ten AI quota windows and reset intervals in a backend contract test.
 - Fixed scheduler idempotency to use the scheduled occurrence date, preventing a delayed run across local midnight from consuming the following day's slot.
 - Started the local Vite app at `http://127.0.0.1:5180/app/` without connecting the beta Discord bot.
+- Rebased onto current `origin/main`, resolved the system-report conflicts against the retired Common Denominator bootstrap, and reverified the full Scout workspace.
+- Published implementation commit `9d250f7c9` and opened draft PR [#1513](https://github.com/shepherdjerred/monorepo/pull/1513).
 
 ### Remaining
 
