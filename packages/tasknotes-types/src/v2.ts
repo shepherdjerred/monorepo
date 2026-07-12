@@ -372,3 +372,48 @@ export const CalendarEventsResponseSchema = z.object({
   total: z.number(),
   sources: z.record(z.string(), z.number()),
 });
+
+// ---------------------------------------------------------------------------
+// Wikilink projects (review finding #10: "[[Projects/Foo|alias]]" written by
+// Obsidian and "Foo" written by the app never matched)
+// ---------------------------------------------------------------------------
+
+const WIKILINK = /^\[\[([^\]|]+)(?:\|([^\]]+))?\]\]$/;
+
+/** The canonical vault path inside a project value ("[[A/B|C]]" → "A/B"). */
+export function projectPath(value: string): string {
+  const match = WIKILINK.exec(value.trim());
+  return match?.[1] === undefined ? value.trim() : match[1].trim();
+}
+
+/** What a human should see ("[[A/B|C]]" → "C"; "[[A/B]]" → "B"; "X" → "X"). */
+export function projectDisplayName(value: string): string {
+  const match = WIKILINK.exec(value.trim());
+  if (match === null) return value.trim();
+  const alias = match[2]?.trim();
+  if (alias !== undefined && alias.length > 0) return alias;
+  const path = match[1]?.trim() ?? "";
+  const lastSlash = path.lastIndexOf("/");
+  return lastSlash === -1 ? path : path.slice(lastSlash + 1);
+}
+
+/**
+ * Whether two project values refer to the same project, tolerant of the
+ * wikilink/bare-name duality: full paths, basenames, and aliases all count
+ * (case-insensitive).
+ */
+function projectKeys(value: string): Set<string> {
+  const path = projectPath(value).toLowerCase();
+  const lastSlash = path.lastIndexOf("/");
+  return new Set([
+    value.trim().toLowerCase(),
+    path,
+    lastSlash === -1 ? path : path.slice(lastSlash + 1),
+    projectDisplayName(value).toLowerCase(),
+  ]);
+}
+
+export function projectMatches(a: string, b: string): boolean {
+  const ka = projectKeys(a);
+  return [...projectKeys(b)].some((k) => ka.has(k));
+}

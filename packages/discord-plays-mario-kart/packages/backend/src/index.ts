@@ -2,11 +2,11 @@ import * as Sentry from "@sentry/bun";
 
 Sentry.init({
   dsn:
-    Bun.env.SENTRY_DSN ??
+    Bun.env["SENTRY_DSN"] ??
     "https://c2f90a5857e940e1997b49791d9fc684@bugsink.sjer.red/13",
   environment: Bun.env.NODE_ENV ?? "development",
   // VERSION is baked into the image at build time (buildDiscordPlaysMarioKartImageHelper).
-  release: Bun.env.VERSION,
+  release: Bun.env["VERSION"],
   // Don't let Sentry register the global OTel TracerProvider/Propagator/
   // ContextManager. See the matching comment in discord-plays-pokemon's index.ts.
   skipOpenTelemetrySetup: true,
@@ -16,8 +16,8 @@ import { initializeTracing } from "./observability/tracing.ts";
 
 initializeTracing();
 
-import { createGameBot } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot.ts";
-import { createSelfbotPooledUserbotFactory } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client.ts";
+import { createGameBot } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot";
+import { createSelfbotPooledUserbotFactory } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
 import { buildMarioKartExtraCommands } from "./discord/slashCommands/index.ts";
 import { MarioKartGameDriver } from "./lifecycle/mario-kart-driver.ts";
 import { SeatManager } from "./input/seat-manager.ts";
@@ -44,7 +44,7 @@ const driver = new MarioKartGameDriver({ config });
 // canonical list and passes each bot its peers as "all - self" via PEER_USERBOT_IDS).
 // Empty when running locally; the Go-Live heuristic then catches peer userbots instead.
 function readPeerUserbotIds(): readonly string[] {
-  const raw = Bun.env.PEER_USERBOT_IDS;
+  const raw = Bun.env["PEER_USERBOT_IDS"];
   if (raw === undefined) {
     return [];
   }
@@ -103,11 +103,13 @@ if (config.web.enabled) {
         const overlay = active.nameOverlay;
         leaderboardDeps = {
           store,
-          setOverlayName: overlay
-            ? (seat, name) => {
-                overlay.setName(seat, name);
+          ...(overlay
+            ? {
+                setOverlayName: (seat, name) => {
+                  overlay.setName(seat, name);
+                },
               }
-            : undefined,
+            : {}),
         };
         // Wire the broadcast hook into the active runtime so RaceTracker can
         // push fresh leaderboards through the socket.
@@ -125,11 +127,14 @@ if (config.web.enabled) {
           }
         });
       }
+      const overlayContext = active?.overlayContext;
       handleRequest(event, {
         seatManager: active?.seatManager ?? NULL_SEAT_MANAGER,
         emulator: active?.emulator,
-        leaderboard: leaderboardDeps,
-        overlayContext: active?.overlayContext,
+        ...(leaderboardDeps === undefined
+          ? {}
+          : { leaderboard: leaderboardDeps }),
+        ...(overlayContext === undefined ? {} : { overlayContext }),
       });
     });
   }

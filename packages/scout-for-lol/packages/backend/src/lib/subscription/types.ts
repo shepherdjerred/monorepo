@@ -46,6 +46,17 @@ export type SetChannelFiltersInput = z.infer<
   typeof SetChannelFiltersInputSchema
 >;
 
+export const SetSubscriptionMutedInputSchema = z.object({
+  guildId: DiscordGuildIdSchema,
+  channelId: DiscordChannelIdSchema,
+  alias: z.string().min(1),
+  isMuted: z.boolean(),
+  actorDiscordId: DiscordAccountIdSchema,
+});
+export type SetSubscriptionMutedInput = z.infer<
+  typeof SetSubscriptionMutedInputSchema
+>;
+
 export const RemoveSubscriptionInputSchema = z.object({
   guildId: DiscordGuildIdSchema,
   channelId: DiscordChannelIdSchema,
@@ -155,6 +166,12 @@ export type SetChannelFiltersResult =
   | { kind: "updated"; count: number }
   | { kind: "internal-error"; message: string };
 
+export type SetSubscriptionMutedResult =
+  | { kind: "updated" }
+  | { kind: "player-not-found" }
+  | { kind: "not-subscribed-in-channel" }
+  | { kind: "internal-error"; message: string };
+
 export type SubscriptionListItem = {
   subscriptionId: number;
   channelId: string;
@@ -176,4 +193,5 @@ export type SubscriptionListItem = {
   creatorDiscordUser: ResolvedDiscordUser | null;
   createdTime: Date;
   filters: SubscriptionFilterSpec | null;
+  isMuted: boolean;
 };

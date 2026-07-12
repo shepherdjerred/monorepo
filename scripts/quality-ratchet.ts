@@ -9,16 +9,21 @@
  */
 
 import { $ } from "bun";
+import { z } from "zod";
 
-interface Baseline {
-  "eslint-disable": Record<string, number>;
-  "ts-suppressions": Record<string, number>;
-  "rust-allow": Record<string, number>;
-  "prettier-ignore": Record<string, number>;
-  updated: string;
-}
+const countMap = z.record(z.string(), z.number());
+const BaselineSchema = z.object({
+  "eslint-disable": countMap,
+  "ts-suppressions": countMap,
+  "rust-allow": countMap,
+  "prettier-ignore": countMap,
+  "test-skips": countMap,
+  "placeholder-assertions": countMap,
+  updated: z.string(),
+});
+type Baseline = z.infer<typeof BaselineSchema>;
 
-interface GrepRule {
+type GrepRule = {
   key: keyof Omit<Baseline, "updated">;
   pattern: string;
   searchPaths: string[];
@@ -27,7 +32,7 @@ interface GrepRule {
   excludeDirs: string[];
   /** Path substrings to filter from output (for paths like /generated/ that --exclude-dir can't handle) */
   excludePathPatterns: string[];
-}
+};
 
 const RULES: GrepRule[] = [
   {
@@ -62,6 +67,26 @@ const RULES: GrepRule[] = [
     excludeDirs: ["node_modules", "dist", "archive", "discord-video-stream"],
     excludePathPatterns: [],
   },
+  {
+    // Unconditional test skips. Conditional gating via `skipIf(expr)` is
+    // fine and deliberately NOT matched here (repo rule: never skip tests).
+    key: "test-skips",
+    pattern: String.raw`(test|describe|it)\.skip\(`,
+    searchPaths: ["packages/", "scripts/"],
+    includes: ["*.ts", "*.tsx"],
+    excludeDirs: ["node_modules", "dist", "archive", "discord-video-stream"],
+    excludePathPatterns: [],
+  },
+  {
+    // Assertions that assert nothing specific. Prefer toBe/toEqual/
+    // toBeDefined/toBeNull with a real expected value.
+    key: "placeholder-assertions",
+    pattern: String.raw`expect\(true\)\.toBe\(true\)|toBeTruthy\(\)|toBeFalsy\(\)`,
+    searchPaths: ["packages/", "scripts/"],
+    includes: ["*.ts", "*.tsx"],
+    excludeDirs: ["node_modules", "dist", "archive", "discord-video-stream"],
+    excludePathPatterns: [],
+  },
 ];
 
 async function grepSuppressions(rule: GrepRule): Promise<Map<string, number>> {
@@ -91,7 +116,7 @@ async function grepSuppressions(rule: GrepRule): Promise<Map<string, number>> {
 
 async function main() {
   const baselineText = await Bun.file(".quality-baseline.json").text();
-  const baseline: Baseline = JSON.parse(baselineText);
+  const baseline: Baseline = BaselineSchema.parse(JSON.parse(baselineText));
 
   let failed = false;
   const summaryLines: string[] = [];
@@ -108,14 +133,15 @@ async function main() {
 
     // Check for suppressions in files not in the allowlist
     for (const [file, count] of current) {
-      if (!(file in allowed)) {
+      const allowedForFile = allowed[file];
+      if (allowedForFile === undefined) {
         console.error(
           `FAIL: ${rule.key} found in unallowed file: ${file} (${String(count)} occurrences)`,
         );
         failed = true;
-      } else if (count > allowed[file]) {
+      } else if (count > allowedForFile) {
         console.error(
-          `FAIL: ${rule.key} count increased in ${file} (${String(count)} > ${String(allowed[file])} allowed)`,
+          `FAIL: ${rule.key} count increased in ${file} (${String(count)} > ${String(allowedForFile)} allowed)`,
         );
         failed = true;
       }

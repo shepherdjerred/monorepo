@@ -21,24 +21,24 @@
  */
 import { spawnSync } from "node:child_process";
 
-interface EolEntry {
+type EolEntry = {
   index: string;
   workTree: string;
   attr: string;
   path: string;
-}
+};
 
 function parseEolLine(line: string): EolEntry | null {
   // Format: "i/<eol>  w/<eol>  attr/<attr>  \t<path>"
   // The work-tree column is empty when the file is not checked out, e.g.
   // "i/crlf  w/      attr/text=auto eol=lf 	path". So `w/` may be followed
   // by zero or more non-whitespace characters.
-  const match = line.match(/^i\/(\S*)\s+w\/(\S*)\s+attr\/(.*?)\s*\t(.+)$/u);
+  const match = /^i\/(\S*)\s+w\/(\S*)\s+attr\/([^\t]*)\t(.+)$/u.exec(line);
   if (!match) return null;
   return {
     index: match[1] ?? "",
     workTree: match[2] ?? "",
-    attr: match[3] ?? "",
+    attr: (match[3] ?? "").trimEnd(),
     path: match[4] ?? "",
   };
 }
@@ -74,7 +74,7 @@ function main(): void {
 
   // maxBuffer: full repo --eol output exceeds the default 1 MiB cap.
   const result = spawnSync("git", cmd, {
-    encoding: "utf-8",
+    encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,
   });
   if (result.status !== 0) {
@@ -98,12 +98,13 @@ function main(): void {
   }
 
   if (violations.length === 0) {
-    if (args.length === 0) console.log(`✓ ${records.length} files clean`);
+    if (args.length === 0)
+      console.log(`✓ ${String(records.length)} files clean`);
     process.exit(0);
   }
 
   console.error(
-    `✗ ${violations.length} file(s) with line-ending violations:\n`,
+    `✗ ${String(violations.length)} file(s) with line-ending violations:\n`,
   );
   for (const v of violations) {
     console.error(`  ${v.path}`);

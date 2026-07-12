@@ -30,8 +30,8 @@ function setGlobalPrisma(client: PrismaClient): void {
 }
 
 export function databaseUrl(configDbPath: string): string {
-  const fromPath = Bun.env.DATABASE_PATH;
-  const fromUrl = Bun.env.DATABASE_URL;
+  const fromPath = Bun.env["DATABASE_PATH"];
+  const fromUrl = Bun.env["DATABASE_URL"];
   if (fromUrl != null && fromUrl.length > 0) return fromUrl;
   const path =
     fromPath != null && fromPath.length > 0 ? fromPath : configDbPath;
@@ -45,7 +45,7 @@ export function createPrisma(url: string): PrismaClient {
   const client = new PrismaClient({
     adapter,
     log:
-      Bun.env.LOG_LEVEL === "debug"
+      Bun.env["LOG_LEVEL"] === "debug"
         ? ["query", "info", "warn", "error"]
         : ["error"],
   });

@@ -13,7 +13,8 @@
  * Plain functions, not decorated. Keep `index.ts` thin (TypeScript SDK
  * constraint: the `@object()` class must live in one file).
  */
-import { dag, Container, Directory } from "@dagger.io/dagger";
+import type { Container, Directory } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
 
 import { runBundle } from "./bundle";
 
@@ -23,6 +24,9 @@ import {
   TRIVY_IMAGE,
   SEMGREP_IMAGE,
   SHELLCHECK_IMAGE,
+  PYTHON_UV_IMAGE,
+  RUFF_VERSION,
+  PYRIGHT_VERSION,
   BUN_CACHE,
   SOURCE_EXCLUDES,
 } from "./constants";
@@ -107,6 +111,66 @@ export function qualityRatchetHelper(source: Directory): Container {
 }
 
 /**
+ * Shared uv-flavored base for Python checks. The astral-sh/uv image ships
+ * uv + python 3.12; the uv cache volume keeps tool/venv installs warm.
+ */
+function pythonQualityBase(source: Directory): Container {
+  return dag
+    .container()
+    .from(PYTHON_UV_IMAGE)
+    .withMountedCache("/root/.cache/uv", dag.cacheVolume("uv-cache"))
+    .withWorkdir("/repo")
+    .withDirectory("/repo", source, { exclude: SOURCE_EXCLUDES });
+}
+
+/**
+ * Ruff lint over every tracked .py file (config: root ruff.toml). Version
+ * pinned so local (`uvx ruff@…`) and CI agree.
+ */
+export function ruffCheckHelper(source: Directory): Container {
+  return pythonQualityBase(source).withExec([
+    "uvx",
+    `ruff@${RUFF_VERSION}`,
+    "check",
+    ".",
+  ]);
+}
+
+/**
+ * Pyright strict over every tracked .py file (config: root
+ * pyrightconfig.json). Builds the shared dev venv from
+ * scripts/python-dev-requirements.txt first so third-party imports resolve.
+ * The PyPI pyright package bundles node (nodejs-wheel-binaries) — no
+ * runtime download.
+ */
+export function pyrightCheckHelper(source: Directory): Container {
+  return (
+    pythonQualityBase(source)
+      // pyright's bundled node (nodejs-wheel-binaries) links libatomic,
+      // which the trixie-slim base doesn't ship.
+      .withExec(["apt-get", "update"])
+      .withExec([
+        "apt-get",
+        "install",
+        "-y",
+        "--no-install-recommends",
+        "libatomic1",
+      ])
+      .withExec(["uv", "venv", ".venv"])
+      .withExec([
+        "uv",
+        "pip",
+        "install",
+        "-r",
+        "scripts/python-dev-requirements.txt",
+        "--python",
+        ".venv/bin/python",
+      ])
+      .withExec(["uvx", `pyright@${PYRIGHT_VERSION}`])
+  );
+}
+
+/**
  * Enforce the source-marker → docs invariant for TODO/FIXME/XXX markers
  * (`scripts/check-todos.ts`). This runs in the lefthook pre-commit hook; the
  * Dagger wrapper adds the matching CI gate so a `--no-verify` commit can't
@@ -140,6 +204,25 @@ export function complianceCheckHelper(source: Directory): Container {
     "bash",
     "scripts/compliance-check.sh",
   ]);
+}
+
+/**
+ * ESLint over the automation code that isn't a workspace package: root
+ * scripts/, scripts/ci/, and .dagger/src. Each dir consumes the shared
+ * eslint-config via a file: devDep, so the producer is built first.
+ */
+export function eslintAutomationHelper(source: Directory): Container {
+  let container = bunQualityBase(source)
+    .withWorkdir("/repo/packages/eslint-config")
+    .withExec(["bun", "install", "--frozen-lockfile"])
+    .withExec(["bun", "run", "build"]);
+  for (const dir of ["scripts", "scripts/ci", ".dagger"]) {
+    container = container
+      .withWorkdir(`/repo/${dir}`)
+      .withExec(["bun", "install", "--frozen-lockfile"])
+      .withExec(["bunx", "eslint", "."]);
+  }
+  return container;
 }
 
 /**
@@ -449,7 +532,7 @@ export function mergeConflictCheckHelper(source: Directory): Container {
       "    ignore_args=\"$ignore_args | grep -v '$line'\";",
       "  done < .conflictignore;",
       "fi;",
-      "cmd=\"grep -rl '<<<<<<< \\|>>>>>>> '",
+      String.raw`cmd="grep -rl '<<<<<<< \|>>>>>>> '`,
       "--include='*.ts' --include='*.tsx' --include='*.rs'",
       "--include='*.json' --include='*.yaml' --include='*.yml'",
       "--include='*.md' --include='*.sh'",
@@ -512,9 +595,16 @@ export function largeFileCheckHelper(source: Directory): Container {
 }
 
 /**
- * iOS native-deps check for tasks-for-obsidian. Replaces the script
- * `.buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh` which the
- * BK pod previously ran against its working tree.
+ * iOS native-deps check + Release Metro bundle smoke for tasks-for-obsidian.
+ * Replaces the script `.buildkite/scripts/tasks-for-obsidian-ios-native-deps.sh`
+ * which the BK pod previously ran against its working tree.
+ *
+ * The install sequence mirrors `ios/ci_scripts/ci_post_clone.sh` (what Xcode
+ * Cloud runs): `tasknotes-types` is a source-only `file:` dep, so its own
+ * transitive deps (e.g. `@tasknotes/model`) must live in its node_modules for
+ * the Release Metro bundle to resolve them. `check:release-bundle` then runs
+ * that exact bundle (pure JS, no macOS) so an unresolvable import fails here
+ * pre-merge instead of in the Xcode Cloud Archive.
  *
  * `--linker hoisted` matches the legacy script — required because the
  * downstream `check:ios-native-deps` consumer expects a flat node_modules
@@ -524,9 +614,12 @@ export function tasksForObsidianIosNativeDepsHelper(
   source: Directory,
 ): Container {
   return bunQualityBase(source)
+    .withWorkdir("/repo/packages/tasknotes-types")
+    .withExec(["bun", "install", "--frozen-lockfile", "--linker", "hoisted"])
     .withWorkdir("/repo/packages/tasks-for-obsidian")
     .withExec(["bun", "install", "--frozen-lockfile", "--linker", "hoisted"])
-    .withExec(["bun", "run", "check:ios-native-deps"]);
+    .withExec(["bun", "run", "check:ios-native-deps"])
+    .withExec(["bun", "run", "check:release-bundle"]);
 }
 
 /**
@@ -603,5 +696,11 @@ export async function qualityBundleHelper(source: Directory): Promise<string> {
     { name: "lockfile-check", run: () => lockfileCheckHelper(source).stdout() },
     { name: "prettier", run: () => prettierHelper(source).stdout() },
     { name: "markdownlint", run: () => markdownlintHelper(source).stdout() },
+    { name: "ruff", run: () => ruffCheckHelper(source).stdout() },
+    { name: "pyright", run: () => pyrightCheckHelper(source).stdout() },
+    {
+      name: "eslint-automation",
+      run: () => eslintAutomationHelper(source).stdout(),
+    },
   ]);
 }

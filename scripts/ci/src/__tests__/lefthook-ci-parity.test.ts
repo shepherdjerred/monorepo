@@ -1,6 +1,4 @@
 import { describe, expect, it } from "bun:test";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { buildPipeline } from "../pipeline-builder.ts";
 import type { AffectedPackages } from "../lib/types.ts";
 import {
@@ -22,7 +20,8 @@ import {
  * in pre-commit until this parity gate was added).
  */
 
-const LEFTHOOK_PATH = resolve(import.meta.dir, "../../../../lefthook.yml");
+const LEFTHOOK_PATH = `${import.meta.dir}/../../../../lefthook.yml`;
+const LEFTHOOK_YAML = await Bun.file(LEFTHOOK_PATH).text();
 
 /**
  * Repo-wide checks → the `key` of their generated CI step. Each value is
@@ -47,12 +46,20 @@ const JOB_TO_CI_STEP: Record<string, string> = {
   "migration-guard": "quality-bundle",
   "lockfile-check": "quality-bundle",
   shellcheck: "quality-bundle",
+  ruff: "quality-bundle",
+  pyright: "quality-bundle",
+  // Non-package automation dirs, bundled as the `eslint-automation` child.
+  "eslint-root-scripts": "quality-bundle",
+  "eslint-ci-scripts": "quality-bundle",
+  "eslint-dagger": "quality-bundle",
   "compliance-check": "quality-bundle",
   "quality-ratchet": "quality-bundle",
   "scout-test-template-check": "quality-bundle",
   "react-version-sync": "quality-bundle",
   // cdk8s synth + 1Password lint collapse into one bundled step `homelab-cdk8s`.
   "onepassword-items": "homelab-cdk8s",
+  // Desktop Tauri crate: fmt+clippy locally; CI step adds `cargo test`.
+  "scout-desktop-rust": "scout-desktop-rust",
 };
 
 /**
@@ -100,17 +107,16 @@ const PRECOMMIT_ONLY: Record<string, string> = {
 function leafJobNames(yaml: string): string[] {
   const lines = yaml.split("\n");
   const nameRe = /^\s*-\s*name:\s*(\S+)/;
-  const runRe = /^\s*run:(\s|$)/;
+  const runRe = /^\s*run:(?:\s|$)/;
   const jobStarts: { name: string; line: number }[] = [];
   lines.forEach((line, i) => {
     const m = nameRe.exec(line);
-    if (m !== null && m[1] !== undefined)
-      jobStarts.push({ name: m[1], line: i });
+    if (m?.[1] !== undefined) jobStarts.push({ name: m[1], line: i });
   });
   const leaves: string[] = [];
   jobStarts.forEach((job, idx) => {
     const next = jobStarts[idx + 1];
-    const end = next !== undefined ? next.line : lines.length;
+    const end = next === undefined ? lines.length : next.line;
     const block = lines.slice(job.line, end);
     if (block.some((l) => runRe.test(l))) leaves.push(job.name);
   });
@@ -151,7 +157,7 @@ function collectStepKeys(steps: unknown[], out: Set<string>): void {
 }
 
 describe("lefthook ↔ CI parity", () => {
-  const yaml = readFileSync(LEFTHOOK_PATH, "utf8");
+  const yaml = LEFTHOOK_YAML;
   const leaves = leafJobNames(yaml);
 
   it("finds the lefthook leaf jobs (sanity)", () => {

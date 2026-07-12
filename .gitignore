@@ -5,6 +5,7 @@
 .swiftpm
 **/__pycache__
 node_modules/
+.venv/
 dist/
 .env
 .env.*

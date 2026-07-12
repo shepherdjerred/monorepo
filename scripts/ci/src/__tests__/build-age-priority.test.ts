@@ -36,12 +36,12 @@ function priorityOf(p: BuildkitePipeline, key: string): number | undefined {
   throw new Error(`step ${key} not found`);
 }
 
-const ORIGINAL_BUILD_NUMBER = process.env["BUILDKITE_BUILD_NUMBER"];
+const ORIGINAL_BUILD_NUMBER = Bun.env["BUILDKITE_BUILD_NUMBER"];
 afterEach(() => {
   if (ORIGINAL_BUILD_NUMBER === undefined) {
-    delete process.env["BUILDKITE_BUILD_NUMBER"];
+    delete Bun.env["BUILDKITE_BUILD_NUMBER"];
   } else {
-    process.env["BUILDKITE_BUILD_NUMBER"] = ORIGINAL_BUILD_NUMBER;
+    Bun.env["BUILDKITE_BUILD_NUMBER"] = ORIGINAL_BUILD_NUMBER;
   }
 });
 
@@ -91,15 +91,15 @@ describe("applyBuildAgePriority", () => {
   });
 
   it("reads BUILDKITE_BUILD_NUMBER from the environment by default", () => {
-    process.env["BUILDKITE_BUILD_NUMBER"] = "7";
+    Bun.env["BUILDKITE_BUILD_NUMBER"] = "7";
     const p = applyBuildAgePriority(pipeline());
     expect(priorityOf(p, "lint")).toBe(-7 * BUILD_AGE_SCALE);
   });
 
   it("treats a missing/invalid build number as no-op", () => {
-    delete process.env["BUILDKITE_BUILD_NUMBER"];
+    delete Bun.env["BUILDKITE_BUILD_NUMBER"];
     expect(priorityOf(applyBuildAgePriority(pipeline()), "deploy")).toBe(1);
-    process.env["BUILDKITE_BUILD_NUMBER"] = "not-a-number";
+    Bun.env["BUILDKITE_BUILD_NUMBER"] = "not-a-number";
     expect(priorityOf(applyBuildAgePriority(pipeline()), "deploy")).toBe(1);
   });
 });

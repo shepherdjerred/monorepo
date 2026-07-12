@@ -37,9 +37,13 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 from urllib.parse import urljoin, urlparse
 
 from bs4 import BeautifulSoup
+
+if TYPE_CHECKING:
+    from playwright.async_api import Page
 
 
 @dataclass
@@ -116,12 +120,8 @@ def is_hig_url(url: str, base_url: str, hig_prefix: str) -> bool:
     if parsed.netloc != "developer.apple.com":
         return False
 
-    # Must be under HIG path
-    if not parsed.path.startswith(hig_prefix):
-        return False
-
-    # Exclude anchors and query params (already normalized by normalize_url)
-    return True
+    # Must be under HIG path (anchors and query params already normalized by normalize_url)
+    return parsed.path.startswith(hig_prefix)
 
 
 def url_to_filepath(url: str, base_dir: Path) -> Path:
@@ -189,7 +189,7 @@ def save_visited_urls(output_dir: Path, visited: set[str]) -> None:
 
 
 async def fetch_with_retry(
-    page,
+    page: "Page",
     url: str,
     max_retries: int = 3,
     timeout: int = 30000,
@@ -340,7 +340,7 @@ async def crawl_hig(
                 # Parse links
                 soup = BeautifulSoup(html, 'lxml')
                 for link in soup.find_all('a', href=True):
-                    href = link['href']
+                    href = str(link['href'])
                     absolute_url = urljoin(url, href)
 
                     if is_hig_url(absolute_url, tracker.base_url, tracker.hig_path_prefix):
@@ -431,8 +431,8 @@ Examples:
         "https://developer.apple.com",
         "/design/human-interface-guidelines"
     ):
-        print(f"Error: Start URL must be an Apple HIG URL", file=sys.stderr)
-        print(f"Expected: https://developer.apple.com/design/human-interface-guidelines...", file=sys.stderr)
+        print("Error: Start URL must be an Apple HIG URL", file=sys.stderr)
+        print("Expected: https://developer.apple.com/design/human-interface-guidelines...", file=sys.stderr)
         print(f"Got: {args.start_url}", file=sys.stderr)
         sys.exit(1)
 

@@ -6,5 +6,11 @@ import { recommended } from "@shepherdjerred/eslint-config";
 // `bun install --frozen-lockfile`, and the resulting `ConfigArray` types
 // are nominally incompatible. Letting TS infer the return shape keeps the
 // file portable across both layouts.
-const config = [...recommended({ tsconfigRootDir: import.meta.dirname })];
+const config = [
+  ...recommended({
+    tsconfigRootDir: import.meta.dirname,
+    // knip (dead code/exports) + jscpd (duplication), both at warn.
+    customRules: { analysisRules: true },
+  }),
+];
 export default config;

@@ -3,7 +3,7 @@
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
-import { Container, Directory } from "@dagger.io/dagger";
+import type { Container, Directory } from "@dagger.io/dagger";
 
 import { GOLANGCI_LINT_VERSION } from "./constants";
 

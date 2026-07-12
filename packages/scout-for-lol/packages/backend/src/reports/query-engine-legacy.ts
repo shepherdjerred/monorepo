@@ -12,16 +12,21 @@ import {
   rankToString,
   rankToLeaguePoints,
 } from "@scout-for-lol/data";
+import { z } from "zod";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { calculateLeaderboard } from "#src/league/competition/leaderboard.ts";
 import {
   aggregateMatchFacts,
-  aggregatePairFacts,
   aggregatePrematchFacts,
   cappedLimit,
   rowsFromAggregates,
+  sortedAggregates,
   type MatchParticipantFactRow,
 } from "#src/reports/query-aggregates.ts";
+import {
+  aggregateGroupFacts,
+  type GroupFactRow,
+} from "#src/reports/group-combinations.ts";
 export type ReportResultValue = {
   column: string;
   value: number | string;
@@ -61,8 +66,8 @@ export async function executeReportQueryLegacy(
   if (plan.source === "prematch_participants") {
     return await executePrematchParticipantReport(params, plan);
   }
-  if (plan.source === "player_pairs") {
-    return await executePlayerPairsReport(params, plan);
+  if (plan.source === "player_groups" || plan.source === "player_pairs") {
+    return await executePlayerGroupsReport(params, plan);
   }
   if (plan.source === "competition_match_participants") {
     return await executeCompetitionMatchParticipantReport(params, plan);
@@ -153,12 +158,19 @@ async function executePrematchParticipantReport(
   );
 }
 
-async function executePlayerPairsReport(
+// The SQLite fact table has no playerSubteamId column, but it archives the
+// raw participant JSON — pick just the subteam id out of it for Arena group
+// scoping (null / absent for every non-Arena queue).
+const RawSubteamSchema = z.object({
+  playerSubteamId: z.number().int().nullish(),
+});
+
+async function executePlayerGroupsReport(
   params: ExecuteReportQueryParams,
   plan: ReportQueryPlan,
 ): Promise<ReportQueryResult> {
-  if (plan.groupBy !== "pair") {
-    throw new Error("player_pairs reports must GROUP BY pair.");
+  if (plan.groupBy !== "group" || plan.groupSize === undefined) {
+    throw new Error("player_groups reports must GROUP BY group(...).");
   }
 
   const { startDate, endDate } = lookbackRange(params);
@@ -168,12 +180,44 @@ async function executePlayerPairsReport(
     startDate,
     endDate,
   });
+  const groupFacts = facts.map((fact) => toGroupFactRow(fact));
   return rowsFromAggregates(
     plan,
-    aggregatePairFacts(facts, plan),
+    sortedAggregates(plan, aggregateGroupFacts(groupFacts, plan.groupSize)),
     facts.length,
     params.maxRows,
   );
+}
+
+function toGroupFactRow(fact: MatchParticipantFactRow): GroupFactRow {
+  const raw =
+    fact.rawParticipantJson === undefined
+      ? {}
+      : RawSubteamSchema.parse(JSON.parse(fact.rawParticipantJson));
+  return {
+    playerId: fact.playerId,
+    playerAlias: fact.playerAlias,
+    matchId: fact.matchId,
+    teamId: fact.teamId,
+    playerSubteamId: raw.playerSubteamId ?? null,
+    win: fact.win,
+    surrendered: fact.surrendered,
+    kills: fact.kills,
+    deaths: fact.deaths,
+    assists: fact.assists,
+    creepScore: fact.creepScore,
+    damageToChampions: fact.damageToChampions,
+    // The legacy fact table has no source columns for the lake-only
+    // counters; they read 0, matching the pre-lake pair engine.
+    goldEarned: 0,
+    visionScore: 0,
+    damageTaken: 0,
+    totalDamageDealt: 0,
+    wardsPlaced: 0,
+    multikills: 0,
+    gameDurationSeconds: 0,
+    timePlayedSeconds: 0,
+  };
 }
 
 async function executeCompetitionRankReport(

@@ -42,9 +42,9 @@ const SENTRY_RELEASE_ENV_PREFIX =
   "PUBLIC_SENTRY_RELEASE=2.0.0-$BUILDKITE_BUILD_NUMBER";
 
 function isDryrunBuild(): boolean {
-  const branch = process.env["BUILDKITE_BRANCH"];
-  const defaultBranch = process.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"];
-  if (process.env["DRYRUN"] === "true") return true;
+  const branch = Bun.env["BUILDKITE_BRANCH"];
+  const defaultBranch = Bun.env["BUILDKITE_PIPELINE_DEFAULT_BRANCH"];
+  if (Bun.env["DRYRUN"] === "true") return true;
   if (branch === undefined || branch === "") return false;
   if (defaultBranch === undefined || defaultBranch === "") return false;
   return branch !== defaultBranch;
@@ -99,9 +99,9 @@ function deploySiteStep(site: DeploySite, dependsOn: string[]): BuildkiteStep {
         ])
         .join(" ");
   const placeholderBuildEnvPrefix = usePlaceholderBuildEnv
-    ? site.buildEnvPlaceholders !== undefined
-      ? buildEnvPrefix(buildEnvVars, site.buildEnvPlaceholders)
-      : dryrunBuildEnvPrefix(buildEnvVars)
+    ? site.buildEnvPlaceholders === undefined
+      ? dryrunBuildEnvPrefix(buildEnvVars)
+      : buildEnvPrefix(buildEnvVars, site.buildEnvPlaceholders)
     : "";
   const buildCmd = usePlaceholderBuildEnv
     ? `${SENTRY_RELEASE_ENV_PREFIX} ${placeholderBuildEnvPrefix} ${site.buildCmd}`

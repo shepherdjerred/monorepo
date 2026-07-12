@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["bun"],
+    "noEmit": true
+  },
+  "include": ["*.ts", "observability/**/*.ts"],
+  "exclude": ["ci", "node_modules"]
+}

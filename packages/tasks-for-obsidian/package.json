@@ -6,7 +6,6 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "build": "echo 'React Native builds via Xcode/Gradle, not bun'",
     "test": "bun test src scripts",
     "test:contract": "bun test contract-tests --timeout 20000",
     "e2e": "bun run e2e/run.ts",
@@ -14,6 +13,7 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "check:ios-native-deps": "bun scripts/check-ios-native-deps.ts",
+    "check:release-bundle": "bun scripts/check-release-bundle.ts",
     "pod-install": "cd ios && pod install",
     "clean:ios": "bash scripts/clean-ios.sh",
     "ios:logs": "bash scripts/ios-logs.sh"

@@ -1,0 +1,33 @@
+{
+  "_comment": "Flat-shaped variant (fields directly on each object, per Apple's payload reference) to prove the normalizer handles both nestings. SUCCEEDED → resolves a prior failure for the same workflow+branch.",
+  "metadata": {
+    "type": "metadata",
+    "createdDate": "2026-07-11T20:20:00.000Z",
+    "eventType": "BUILD_COMPLETED"
+  },
+  "ciWorkflow": {
+    "type": "ciWorkflows",
+    "name": "Archive - iOS"
+  },
+  "ciProduct": {
+    "type": "ciProducts",
+    "name": "Tasks for Obsidian",
+    "productType": "APP"
+  },
+  "ciBuildRun": {
+    "type": "ciBuildRuns",
+    "number": 89,
+    "executionProgress": "COMPLETE",
+    "completionStatus": "SUCCEEDED",
+    "sourceCommit": {
+      "commitSha": "c3d4e5f60718293a4b5c6d7e8f90123456789abc",
+      "htmlUrl": "https://github.com/shepherdjerred/monorepo/commit/c3d4e5f60718293a4b5c6d7e8f90123456789abc"
+    }
+  },
+  "scmGitReference": {
+    "type": "scmGitReferences",
+    "name": "main",
+    "canonicalName": "refs/heads/main",
+    "kind": "BRANCH"
+  }
+}

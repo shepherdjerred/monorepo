@@ -19,6 +19,33 @@ export type CompletedGoal = {
 export const HISTORY_LIMIT = 10;
 
 /**
+ * Normalize a loosely-typed persisted history entry (optional fields inferred
+ * as `T | undefined` by Zod) into a `CompletedGoal`, omitting absent optional
+ * fields entirely so the result satisfies `exactOptionalPropertyTypes`.
+ */
+export function normalizeCompletedGoal(entry: {
+  id: string;
+  goal: string;
+  requestedBy: string;
+  startedAt: string;
+  finishedAt: string;
+  status: GoalStatus;
+  finalReport?: string | undefined;
+  exitCode?: number | undefined;
+}): CompletedGoal {
+  return {
+    id: entry.id,
+    goal: entry.goal,
+    requestedBy: entry.requestedBy,
+    startedAt: entry.startedAt,
+    finishedAt: entry.finishedAt,
+    status: entry.status,
+    ...(entry.finalReport !== undefined && { finalReport: entry.finalReport }),
+    ...(entry.exitCode !== undefined && { exitCode: entry.exitCode }),
+  };
+}
+
+/**
  * Appends a finished goal to a newest-first history list, trimming to
  * `HISTORY_LIMIT`. Idempotent on the goal id — if `recordedIds` already has
  * the id, the existing history is returned unchanged. Returns the new

@@ -20,7 +20,7 @@ const CHEF_HAT_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 
 export default class CooklangPlugin extends Plugin {
   settings: CooklangSettings = DEFAULT_SETTINGS;
 
-  async onload(): Promise<void> {
+  override async onload(): Promise<void> {
     await this.loadSettings();
 
     addIcon("chef-hat", CHEF_HAT_ICON);
@@ -46,7 +46,7 @@ export default class CooklangPlugin extends Plugin {
     });
   }
 
-  onunload(): void {
+  override onunload(): void {
     // Views are automatically cleaned up by Obsidian
   }
 

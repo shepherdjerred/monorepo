@@ -1,11 +1,11 @@
 import path from "node:path";
 import type { Client as BotClient } from "discord.js";
-import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver.ts";
+import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver";
 import type {
   Session,
   SessionStopReason,
-} from "@shepherdjerred/discord-stream-lifecycle/session/session.ts";
-import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/session/session";
+import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
 import { Emulator } from "#src/emulator/emulator.ts";
 import {
   framesFromMs,
@@ -94,9 +94,9 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
       bitrateKbps: config.stream.video.bitrate_kbps,
       bitrateMaxKbps: config.stream.video.bitrate_max_kbps,
       hardwareAcceleration:
-        Bun.env.STREAM_HARDWARE_ACCELERATION === "true" ||
+        Bun.env["STREAM_HARDWARE_ACCELERATION"] === "true" ||
         config.stream.video.hardware_acceleration,
-      vaapiDevice: Bun.env.VAAPI_DEVICE ?? config.stream.video.vaapi_device,
+      vaapiDevice: Bun.env["VAAPI_DEVICE"] ?? config.stream.video.vaapi_device,
     });
     await streamer.login();
     emulator.onFrame((frame) => {
@@ -211,8 +211,8 @@ export class PokemonGameDriver implements GameDriver<SelfbotPooledUserbot> {
       session,
       emulator,
       streamer,
-      goalManager,
-      goalControlServer,
+      ...(goalManager === undefined ? {} : { goalManager }),
+      ...(goalControlServer === undefined ? {} : { goalControlServer }),
       timing,
     };
   }

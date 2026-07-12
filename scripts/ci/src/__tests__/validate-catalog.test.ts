@@ -15,7 +15,7 @@ import {
 import { execSync } from "node:child_process";
 
 const repoRoot = execSync("git rev-parse --show-toplevel", {
-  encoding: "utf-8",
+  encoding: "utf8",
 }).trim();
 
 describe("validateCatalog", () => {

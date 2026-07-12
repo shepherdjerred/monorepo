@@ -1,21 +1,29 @@
 #!/usr/bin/env python3
 import os
 import subprocess
-from functools import reduce, partial
+from collections.abc import Callable, Iterable, Iterator
+from functools import partial, reduce
 from itertools import groupby
-from operator import itemgetter, add
+from operator import add, itemgetter
+from typing import Any
+
 from prometheus_client import CollectorRegistry, Gauge, generate_latest
 
+# A parsed snapshot row: (pool, volume, snapshot, *numeric columns).
+ParsedRow = tuple[Any, ...]
+# An aggregated per-filesystem row: ((pool, volume), value).
+AggregatedRow = tuple[tuple[Any, ...], float]
 
-def row_to_metric(metric: Gauge, row):
+
+def row_to_metric(metric: Gauge, row: AggregatedRow) -> Any:
     return metric.labels(pool=row[0][0], volume=row[0][1]).set(row[1])
 
 
-def collect_metrics(metric: Gauge, it) -> None:
+def collect_metrics(metric: Gauge, it: Iterable[AggregatedRow]) -> None:
     list(map(partial(row_to_metric, metric), it))
 
 
-def zfs_parse_line(line):
+def zfs_parse_line(line: str) -> ParsedRow:
     cols = line.split("\t")
     rest, snapshot = cols[0].rsplit("@", 1)
     pool = rest
@@ -26,7 +34,7 @@ def zfs_parse_line(line):
     return pool, volume, snapshot, *map(int, cols[1:])
 
 
-def zfs_list_snapshots():
+def zfs_list_snapshots() -> Iterator[str]:
     cmd = [
         "zfs",
         "list",
@@ -42,6 +50,7 @@ def zfs_list_snapshots():
     popen = subprocess.Popen(
         cmd, stdout=subprocess.PIPE, env=dict(os.environ, LC_ALL="C")
     )
+    assert popen.stdout is not None
     for stdout_line in iter(popen.stdout.readline, ""):
         stdout_line = stdout_line.strip()
         if stdout_line == b"":
@@ -52,7 +61,11 @@ def zfs_list_snapshots():
         raise subprocess.CalledProcessError(return_code, cmd)
 
 
-def aggregate_rows(rows, index, operator):
+def aggregate_rows(
+    rows: Iterable[tuple[tuple[Any, ...], list[ParsedRow]]],
+    index: int,
+    operator: Callable[[Any, Any], Any],
+) -> Iterator[AggregatedRow]:
     return map(
         lambda row: (row[0], reduce(operator, map(itemgetter(index), row[1]), 0)), rows
     )

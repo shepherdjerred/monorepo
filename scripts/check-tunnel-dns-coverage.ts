@@ -39,7 +39,7 @@ type Zone = {
 // trailing comma after the object argument (`}, )`, as Prettier emits when the
 // arg list wraps) is tolerated so such call sites aren't silently skipped.
 const TUNNEL_BINDING_REGEX =
-  /createCloudflareTunnelBinding\s*\(\s*[A-Za-z_$][\w$.]*\s*,\s*["'`][^"'`]+["'`]\s*,\s*\{([\s\S]*?)\}\s*,?\s*\)/g;
+  /createCloudflareTunnelBinding\s*\(\s*[A-Za-z_$][\w$.]*\s*,\s*["'`][^"'`]+["'`]\s*,\s*\{([\s\S]*?)\}\s*(?:,\s*)?\)/g;
 const SUBDOMAIN_REGEX = /\bsubdomain\s*:\s*["'`]([^"'`]+)["'`]/;
 const FQDN_REGEX = /\bfqdn\s*:\s*["'`]([^"'`]+)["'`]/;
 // Directive used by call sites whose fqdn comes from a loop variable. Points
@@ -54,7 +54,7 @@ const ZONE_REGEX =
 const DNS_RECORD_START_REGEX =
   /resource\s+"cloudflare_dns_record"\s+"([^"]+)"\s*\{/g;
 const DNS_NAME_FIELD = /^\s*name\s*=\s*"([^"]+)"/m;
-const DNS_ZONE_ID_FIELD = /zone_id\s*=\s*cloudflare_zone\.([A-Za-z0-9_]+)\.id/;
+const DNS_ZONE_ID_FIELD = /zone_id\s*=\s*cloudflare_zone\.(\w+)\.id/;
 
 function lineOf(text: string, offset: number): number {
   return text.slice(0, offset).split("\n").length;
@@ -67,7 +67,7 @@ function extractDnsRecordBlocks(
 
   for (const match of text.matchAll(DNS_RECORD_START_REGEX)) {
     const resourceName = match[1];
-    if (resourceName === undefined || match.index === undefined) continue;
+    if (resourceName === undefined) continue;
 
     let depth = 1;
     let quote: '"' | "'" | undefined;
@@ -76,6 +76,7 @@ function extractDnsRecordBlocks(
 
     for (let index = bodyStart; index < text.length; index += 1) {
       const char = text[index];
+      if (char === undefined) continue;
 
       if (quote !== undefined) {
         if (escaped) {
@@ -88,21 +89,30 @@ function extractDnsRecordBlocks(
         continue;
       }
 
-      if (char === '"' || char === "'") {
-        quote = char;
-      } else if (char === "{") {
-        depth += 1;
-      } else if (char === "}") {
-        depth -= 1;
-        if (depth === 0) {
-          blocks.push({
-            resourceName,
-            body: text.slice(bodyStart, index),
-            offset: match.index,
-          });
+      switch (char) {
+        case '"':
+        case "'": {
+          quote = char;
           break;
         }
+        case "{": {
+          depth += 1;
+          break;
+        }
+        case "}": {
+          depth -= 1;
+          if (depth === 0) {
+            blocks.push({
+              resourceName,
+              body: text.slice(bodyStart, index),
+              offset: match.index,
+            });
+          }
+          break;
+        }
+        // No default
       }
+      if (depth === 0) break;
     }
 
     if (depth !== 0) {
@@ -113,6 +123,47 @@ function extractDnsRecordBlocks(
   }
 
   return blocks;
+}
+
+function computeLineStarts(text: string): number[] {
+  const lineStarts: number[] = [0];
+  let idx = text.indexOf("\n");
+  while (idx !== -1) {
+    lineStarts.push(idx + 1);
+    idx = text.indexOf("\n", idx + 1);
+  }
+  return lineStarts;
+}
+
+/**
+ * Resolve the literal hostnames for a call site whose fqdn comes from a loop
+ * variable. Requires a `// @tunnel-dns-coverage:hostnames-from <path>`
+ * directive within the {@link PRECEDING_LINES} lines above the call.
+ */
+async function resolveDynamicHostnames(
+  abs: string,
+  text: string,
+  offset: number,
+  line: number,
+): Promise<string[]> {
+  const PRECEDING_LINES = 5;
+  const lineStarts = computeLineStarts(text);
+  const callLine = line - 1;
+  const windowStart = lineStarts[Math.max(0, callLine - PRECEDING_LINES)] ?? 0;
+  const searchWindow = text.slice(windowStart, offset);
+  const directive = HOSTNAMES_FROM_DIRECTIVE.exec(searchWindow);
+  if (directive?.[1] === undefined) {
+    throw new Error(
+      `${abs}:${String(line)}: createCloudflareTunnelBinding without subdomain or fqdn — cannot extract hostname (add a "// @tunnel-dns-coverage:hostnames-from <path>" directive in the ${String(PRECEDING_LINES)} lines immediately above this call if the fqdn is dynamic)`,
+    );
+  }
+  const sourcePath = path.resolve(path.dirname(abs), directive[1]);
+  const sourceText = await Bun.file(sourcePath).text();
+  const hostnames: string[] = [];
+  for (const hostnameMatch of sourceText.matchAll(HOSTNAME_LITERAL_REGEX)) {
+    if (hostnameMatch[1] !== undefined) hostnames.push(hostnameMatch[1]);
+  }
+  return hostnames;
 }
 
 async function collectTunnelBindings(): Promise<TunnelBinding[]> {
@@ -129,7 +180,7 @@ async function collectTunnelBindings(): Promise<TunnelBinding[]> {
     for (const match of text.matchAll(TUNNEL_BINDING_REGEX)) {
       const block = match[1];
       if (block === undefined) continue;
-      const offset = match.index ?? 0;
+      const offset = match.index;
       const line = lineOf(text, offset);
       const sub = SUBDOMAIN_REGEX.exec(block);
       const fqdn = FQDN_REGEX.exec(block);
@@ -137,51 +188,30 @@ async function collectTunnelBindings(): Promise<TunnelBinding[]> {
         bindings.push({
           file: abs,
           line,
-          fqdn: `${sub[1]}.sjer.red`,
+          fqdn: `${sub[1] ?? ""}.sjer.red`,
           source: "subdomain",
         });
-      } else if (fqdn !== null) {
+      } else if (fqdn === null) {
+        // Non-literal fqdn (e.g. `fqdn: site.hostname` inside a loop). The
+        // call site MUST be preceded by a `hostnames-from` directive pointing
+        // at a file containing `hostname: "..."` literals. See
+        // resolveDynamicHostnames for the directive contract.
+        const hostnames = await resolveDynamicHostnames(
+          abs,
+          text,
+          offset,
+          line,
+        );
+        for (const hostname of hostnames) {
+          bindings.push({ file: abs, line, fqdn: hostname, source: "fqdn" });
+        }
+      } else {
         bindings.push({
           file: abs,
           line,
           fqdn: fqdn[1] ?? "",
           source: "fqdn",
         });
-      } else {
-        // Non-literal fqdn (e.g. `fqdn: site.hostname` inside a loop). The
-        // call site MUST be preceded (within the prior ~5 lines) by a
-        // `// @tunnel-dns-coverage:hostnames-from <path>` directive that
-        // points at a file containing `hostname: "..."` literals. Scoping the
-        // search to the lines just above the call avoids cross-contamination
-        // if a future file ever has two such loops with different sources.
-        const PRECEDING_LINES = 5;
-        const lineStarts: number[] = [0];
-        for (let i = 0; i < text.length; i += 1) {
-          if (text[i] === "\n") lineStarts.push(i + 1);
-        }
-        const callLine = line - 1;
-        const windowStart =
-          lineStarts[Math.max(0, callLine - PRECEDING_LINES)] ?? 0;
-        const window = text.slice(windowStart, offset);
-        const directive = HOSTNAMES_FROM_DIRECTIVE.exec(window);
-        if (directive === null || directive[1] === undefined) {
-          throw new Error(
-            `${abs}:${String(line)}: createCloudflareTunnelBinding without subdomain or fqdn — cannot extract hostname (add a "// @tunnel-dns-coverage:hostnames-from <path>" directive in the ${String(PRECEDING_LINES)} lines immediately above this call if the fqdn is dynamic)`,
-          );
-        }
-        const sourcePath = path.resolve(path.dirname(abs), directive[1]);
-        const sourceText = await Bun.file(sourcePath).text();
-        for (const hostnameMatch of sourceText.matchAll(
-          HOSTNAME_LITERAL_REGEX,
-        )) {
-          if (hostnameMatch[1] === undefined) continue;
-          bindings.push({
-            file: abs,
-            line,
-            fqdn: hostnameMatch[1],
-            source: "fqdn",
-          });
-        }
       }
     }
   }
@@ -289,7 +319,7 @@ async function main(): Promise<void> {
     const labels = example.fqdn.split(".");
     const subdomain = labels[0] ?? example.fqdn;
     console.error(
-      `  resource "cloudflare_dns_record" "sjer_red_cname_${subdomain.replace(/-/g, "_")}" {\n    zone_id = cloudflare_zone.sjer_red.id\n    ttl     = 1\n    name    = "${subdomain}"\n    type    = "CNAME"\n    content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"\n    proxied = true\n  }`,
+      `  resource "cloudflare_dns_record" "sjer_red_cname_${subdomain.replaceAll("-", "_")}" {\n    zone_id = cloudflare_zone.sjer_red.id\n    ttl     = 1\n    name    = "${subdomain}"\n    type    = "CNAME"\n    content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"\n    proxied = true\n  }`,
     );
   }
   process.exit(1);

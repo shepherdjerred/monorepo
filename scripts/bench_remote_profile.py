@@ -23,7 +23,7 @@ import platform
 import subprocess
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 REPO_DIR = Path("/mnt/nvme/repo/monorepo")
@@ -44,12 +44,12 @@ class RunResult:
     exit_code: int
 
 
-def run_cmd(cmd: str, check: bool = True) -> subprocess.CompletedProcess:
+def run_cmd(cmd: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
     print(f"\n  $ {cmd}", flush=True)
     return subprocess.run(cmd, shell=True, check=check, cwd=REPO_DIR)
 
 
-def bazel(*args: str, check: bool = True) -> subprocess.CompletedProcess:
+def bazel(*args: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
     cmd = f"bazel {' '.join(BAZELRC_ARGS)} {' '.join(args)}"
     return run_cmd(cmd, check=check)
 
@@ -58,7 +58,7 @@ def timed_bazel(category: str, run_number: int, *args: str) -> RunResult:
     """Run a bazel command and measure wall time."""
     print(f"\n{'='*60}")
     print(f"  {category} (run {run_number})")
-    print(f"  {datetime.now(timezone.utc).isoformat()}")
+    print(f"  {datetime.now(UTC).isoformat()}")
     print(f"{'='*60}", flush=True)
 
     start = time.monotonic()
@@ -92,14 +92,14 @@ def append_timing(result: RunResult) -> None:
             "run": result.run_number,
             "wall_seconds": f"{result.wall_seconds:.1f}",
             "exit_code": result.exit_code,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         })
 
 
 def write_build_info() -> None:
     """Capture system and build environment info."""
     info_lines = [
-        f"timestamp: {datetime.now(timezone.utc).isoformat()}",
+        f"timestamp: {datetime.now(UTC).isoformat()}",
         f"hostname: {platform.node()}",
         f"platform: {platform.platform()}",
     ]
@@ -210,7 +210,7 @@ def run_uncached(num_runs: int = 3) -> None:
         else:
             bazel("clean")
 
-        timed_bazel(f"uncached", i,
+        timed_bazel("uncached", i,
             "build", "//...",
             f"--disk_cache={cache_dir}",
             *common_build_flags(f"uncached-{i}.profile.gz"),
@@ -234,7 +234,7 @@ def run_cached(num_runs: int = 3) -> None:
         # bazel clean clears analysis cache but NOT disk cache
         bazel("clean")
 
-        timed_bazel(f"cached", i,
+        timed_bazel("cached", i,
             "build", "//...",
             f"--disk_cache={cache_dir}",
             *common_build_flags(f"cached-{i}.profile.gz"),
@@ -268,7 +268,7 @@ def print_summary() -> None:
     with TIMINGS_CSV.open() as f:
         reader = csv.DictReader(f)
         for row in reader:
-            status = "OK" if row["exit_code"] == "0" else f"FAILED"
+            status = "OK" if row["exit_code"] == "0" else "FAILED"
             print(f"  {row['category']:20s}  run {row['run']}  {float(row['wall_seconds']):8.1f}s  {status}")
 
     print("=" * 60)
@@ -277,7 +277,7 @@ def print_summary() -> None:
 def main() -> None:
     print("=" * 60)
     print("Bazel Bench - Remote Profiling")
-    print(f"Started: {datetime.now(timezone.utc).isoformat()}")
+    print(f"Started: {datetime.now(UTC).isoformat()}")
     print("=" * 60)
 
     # Ensure directories exist

@@ -41,6 +41,8 @@ export type TestLakeMatchFact = {
   deaths: number;
   assists: number;
   teamId?: number;
+  /** Arena subteam (1-8); leave unset for non-Arena queues. */
+  playerSubteamId?: number;
   championId?: number;
   championName?: string;
   gameCreationAt: Date;
@@ -139,7 +141,7 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     dragon_kills: 0,
     placement: null,
     subteam_placement: null,
-    player_subteam_id: null,
+    player_subteam_id: fact.playerSubteamId ?? null,
   };
 }
 

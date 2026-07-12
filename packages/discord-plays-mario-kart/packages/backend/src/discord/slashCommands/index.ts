@@ -1,5 +1,5 @@
 import type { Client, Interaction } from "discord.js";
-import type { ExtraSlashCommand } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot.ts";
+import type { ExtraSlashCommand } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot";
 import { makeScreenshot, screenshotCommand } from "./commands/screenshot.ts";
 import { help, helpCommand } from "./commands/help.ts";
 import type { MarioKartGameDriver } from "#src/lifecycle/mario-kart-driver.ts";

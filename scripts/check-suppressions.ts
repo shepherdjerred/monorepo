@@ -139,7 +139,7 @@ async function main(): Promise<void> {
     // Track which file we're in
     if (line.startsWith("+++ ")) {
       const match = /^\+\+\+ [a-z]\/(.*)/.exec(line);
-      if (match) {
+      if (match?.[1] !== undefined) {
         currentFile = match[1];
         // Skip checking excluded files
         if (
@@ -161,8 +161,8 @@ async function main(): Promise<void> {
     // Track line numbers from diff hunks
     if (line.startsWith("@@")) {
       const match = /\+(\d+)/.exec(line);
-      if (match) {
-        currentLineNumber = parseInt(match[1]);
+      if (match?.[1] !== undefined) {
+        currentLineNumber = Number.parseInt(match[1]);
       }
       continue;
     }
@@ -172,7 +172,7 @@ async function main(): Promise<void> {
       continue;
     }
 
-    const cleanedLine = line.substring(1); // Remove the + prefix
+    const cleanedLine = line.slice(1); // Remove the + prefix
 
     // Check if line matches any suppression pattern
     for (const pattern of SUPPRESSION_PATTERNS) {
@@ -200,8 +200,8 @@ async function main(): Promise<void> {
 
   // Group by file
   const byFile = findings.reduce<Record<string, Finding[]>>((acc, finding) => {
-    acc[finding.file] ??= [];
-    acc[finding.file].push(finding);
+    const bucket = (acc[finding.file] ??= []);
+    bucket.push(finding);
     return acc;
   }, {});
 

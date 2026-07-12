@@ -3,7 +3,8 @@
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
-import { dag, Container, Directory, File } from "@dagger.io/dagger";
+import type { Container, Directory, File } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
 
 import { HELM_IMAGE } from "./constants";
 import { bunBaseContainer } from "./base";

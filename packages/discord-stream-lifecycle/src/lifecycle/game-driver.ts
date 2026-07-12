@@ -1,8 +1,8 @@
-import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot.ts";
+import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
 import type {
   Session,
   SessionStopReason,
-} from "@shepherdjerred/discord-stream-lifecycle/session/session.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/session/session";
 
 /**
  * The plug-in interface every game-bot implements. The SessionManager wires `/play` and

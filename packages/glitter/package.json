@@ -2,11 +2,5 @@
   "name": "glitter",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
-  "scripts": {
-    "build": "true",
-    "test": "true",
-    "typecheck": "true",
-    "lint": "true"
-  }
+  "type": "module"
 }

@@ -3,7 +3,8 @@
  *
  * These are plain functions (not decorated) — the @func() wrappers live in index.ts.
  */
-import { dag, Container, Directory, File, Secret } from "@dagger.io/dagger";
+import type { Container, Directory, File, Secret } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
 
 import { ESLINT_CACHE, GO_IMAGE, HELM_IMAGE } from "./constants";
 
@@ -234,29 +235,33 @@ export async function lintTypecheckTestHelper(
   includeBuild = false,
   skipTest = false,
   needsGo = false,
+  skipLint = false,
 ): Promise<string> {
   const useTypecheckSecrets = haUrl !== null || haToken !== null;
-  const children: { name: string; run: () => Promise<string> }[] = [
-    {
+  const children: { name: string; run: () => Promise<string> }[] = [];
+  // NO_LINT_PACKAGES (e.g. the vendored discord-video-stream fork) have no
+  // lint script by design — see the exemptions in scripts/compliance-check.sh.
+  if (!skipLint) {
+    children.push({
       name: "lint",
       run: () => lintHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
-    },
-    {
-      name: "typecheck",
-      run: () =>
-        useTypecheckSecrets
-          ? generateAndTypecheckWithSecretsHelper(
-              pkgDir,
-              pkg,
-              depNames,
-              depDirs,
-              tsconfig,
-              haUrl,
-              haToken,
-            ).stdout()
-          : typecheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
-    },
-  ];
+    });
+  }
+  children.push({
+    name: "typecheck",
+    run: () =>
+      useTypecheckSecrets
+        ? generateAndTypecheckWithSecretsHelper(
+            pkgDir,
+            pkg,
+            depNames,
+            depDirs,
+            tsconfig,
+            haUrl,
+            haToken,
+          ).stdout()
+        : typecheckHelper(pkgDir, pkg, depNames, depDirs, tsconfig).stdout(),
+  });
   if (!skipTest) {
     // PLAYWRIGHT_PACKAGES (sjer.red) override `bun run test` to
     // `bun run build && bunx playwright test`, which needs a Playwright
