@@ -1,28 +1,8 @@
-import { describe, expect, test, mock } from "bun:test";
-
-// TODO(scout-for-lol): bun's `mock.module()` is process-wide and retroactive,
-// so mocking `#src/configuration.ts` here leaks `s3BucketName: undefined` into
-// the rest of the backend suite (breaks ~17 unrelated S3 tests). The test is
-// gated off until production code is refactored to take the bucket via a
-// parameter or factory, which would let us cover the no-bucket path without
-// mocking the configuration singleton.
-const RUN_NO_BUCKET_TEST = false;
-
-if (RUN_NO_BUCKET_TEST) {
-  void mock.module("#src/configuration.ts", () => ({
-    default: {
-      version: "test",
-      gitSha: "test",
-      environment: "dev",
-      sentryDsn: undefined,
-      s3BucketName: undefined,
-    },
-  }));
-}
-
-const { getMetrics } = await import("#src/metrics/index.ts");
-const { savePrematchDataToS3 } = await import("#src/storage/s3.ts");
-const { RawCurrentGameInfoSchema } = await import("@scout-for-lol/data");
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { getMetrics } from "#src/metrics/index.ts";
+import { savePrematchDataToS3 } from "#src/storage/s3.ts";
+import { RawCurrentGameInfoSchema } from "@scout-for-lol/data";
+import { resetConfigurationForTests } from "#src/configuration.ts";
 
 function makeGameInfo() {
   return RawCurrentGameInfoSchema.parse({
@@ -71,32 +51,42 @@ function getCounterValue(
   return Number(line.slice(line.lastIndexOf(" ") + 1));
 }
 
-describe.skipIf(!RUN_NO_BUCKET_TEST)(
-  "savePrematchDataToS3 without S3 bucket",
-  () => {
-    test("returns skipped_no_bucket and records skip metric", async () => {
-      const gameInfo = makeGameInfo();
-      const metricsBefore = await getMetrics();
-      const skippedBefore = getCounterValue(
-        metricsBefore,
+describe("savePrematchDataToS3 without S3 bucket", () => {
+  beforeEach(() => {
+    // Exercise the no-bucket branch by clearing the env var the lazy
+    // configuration getter reads, then forcing a re-read.
+    delete Bun.env["S3_BUCKET_NAME"];
+    resetConfigurationForTests();
+  });
+
+  afterEach(() => {
+    // Restore the default bucket for every other file in the shared process.
+    Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+    resetConfigurationForTests();
+  });
+
+  test("returns skipped_no_bucket and records skip metric", async () => {
+    const gameInfo = makeGameInfo();
+    const metricsBefore = await getMetrics();
+    const skippedBefore = getCounterValue(
+      metricsBefore,
+      "prematch_spectator_payload_saves_total",
+      "skipped_no_bucket",
+    );
+
+    const result = await savePrematchDataToS3(gameInfo.gameId, gameInfo, [
+      "Player",
+    ]);
+
+    expect(result).toEqual({ status: "skipped_no_bucket" });
+
+    const metricsAfter = await getMetrics();
+    expect(
+      getCounterValue(
+        metricsAfter,
         "prematch_spectator_payload_saves_total",
         "skipped_no_bucket",
-      );
-
-      const result = await savePrematchDataToS3(gameInfo.gameId, gameInfo, [
-        "Player",
-      ]);
-
-      expect(result).toEqual({ status: "skipped_no_bucket" });
-
-      const metricsAfter = await getMetrics();
-      expect(
-        getCounterValue(
-          metricsAfter,
-          "prematch_spectator_payload_saves_total",
-          "skipped_no_bucket",
-        ) - skippedBefore,
-      ).toBe(1);
-    });
-  },
-);
+      ) - skippedBefore,
+    ).toBe(1);
+  });
+});

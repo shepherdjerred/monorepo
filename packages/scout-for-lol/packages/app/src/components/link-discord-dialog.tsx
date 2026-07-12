@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
-import { Button } from "#src/components/ui/button.tsx";
 import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.tsx";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "#src/components/ui/dialog.tsx";
 import { Label } from "#src/components/ui/label.tsx";
+import {
+  DialogFormError,
+  DialogFormFooter,
+} from "#src/components/dialog-form.tsx";
 
 /** Link a Discord user to a player (via `player.linkDiscord`). */
 export function LinkDiscordDialog(props: {
@@ -71,27 +73,17 @@ export function LinkDiscordDialog(props: {
             />
           </div>
 
-          {error !== null && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          <DialogFormError error={error} />
 
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                props.onOpenChange(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={mutation.isPending || discordUserId.length === 0}
-            >
-              {mutation.isPending ? "Linking…" : "Link"}
-            </Button>
-          </DialogFooter>
+          <DialogFormFooter
+            pending={mutation.isPending}
+            submitLabel="Link"
+            pendingLabel="Linking…"
+            submitDisabled={discordUserId.length === 0}
+            onCancel={() => {
+              props.onOpenChange(false);
+            }}
+          />
         </form>
       </DialogContent>
     </Dialog>

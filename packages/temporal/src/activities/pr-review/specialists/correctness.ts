@@ -1,19 +1,12 @@
-import { Context } from "@temporalio/activity";
-import Anthropic from "@anthropic-ai/sdk";
+import type Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import type { JSONOutputFormat } from "@anthropic-ai/sdk/resources/messages";
-import * as Sentry from "@sentry/bun";
 import { traceAnthropic } from "@shepherdjerred/llm-observability/wrappers/anthropic";
 import { z } from "zod/v4";
-import { withSpan } from "#observability/tracing.ts";
 import { FindingSchema, type Finding } from "#shared/pr-review/finding.ts";
 import type { PrReviewContext } from "#shared/pr-review/context.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
-import { workflowExecutionContext } from "#activities/temporal-context.ts";
-import {
-  recordProviderIssue,
-  resolveProviderIssue,
-} from "#activities/pr-review/provider-metrics.ts";
+import { resolveProviderIssue } from "#activities/pr-review/provider-metrics.ts";
 
 const COMPONENT = "pr-review-pipeline";
 
@@ -121,63 +114,6 @@ function jsonLog(
       ...fields,
     }),
   );
-}
-
-function classifyAnthropicProviderIssue(
-  error: unknown,
-): "credit_balance_low" | "rate_limit" | null {
-  const message = error instanceof Error ? error.message : String(error);
-  const lowerMessage = message.toLowerCase();
-  if (lowerMessage.includes("credit balance is too low")) {
-    return "credit_balance_low";
-  }
-  if (
-    lowerMessage.includes("rate_limit_error") ||
-    lowerMessage.includes("rate limit") ||
-    lowerMessage.includes("429")
-  ) {
-    return "rate_limit";
-  }
-  return null;
-}
-
-function captureWithContext(
-  error: unknown,
-  input: CorrectnessReviewInput,
-  extra: Record<string, unknown> = {},
-): void {
-  const providerIssueKind = classifyAnthropicProviderIssue(error);
-  if (providerIssueKind !== null) {
-    recordProviderIssue({
-      app: "temporal",
-      provider: "anthropic",
-      kind: providerIssueKind,
-      source: "pr_review_correctness",
-    });
-    jsonLog("warning", "Anthropic provider issue recorded", {
-      providerIssueKind,
-      owner: input.pipeline.owner,
-      repo: input.pipeline.repo,
-      prNumber: input.pipeline.prNumber,
-    });
-    return;
-  }
-
-  Sentry.withScope((scope) => {
-    const info = Context.current().info;
-    scope.setTag("workflow", info.workflowType);
-    scope.setTag("activity", info.activityType);
-    scope.setTag("component", COMPONENT);
-    scope.setContext("correctnessReviewer", {
-      ...workflowExecutionContext(info),
-      attempt: info.attempt,
-      owner: input.pipeline.owner,
-      repo: input.pipeline.repo,
-      prNumber: input.pipeline.prNumber,
-      ...extra,
-    });
-    Sentry.captureException(error);
-  });
 }
 
 /**
@@ -395,48 +331,4 @@ export function makeCorrectnessClient(
       },
     },
   };
-}
-
-/**
- * In-process entry point for the correctness reviewer. Reads
- * `CLAUDE_CODE_OAUTH_TOKEN` from the environment so the SDK bills against
- * the user's Claude Code subscription (same auth path as the legacy
- * `claude -p` workflow). Used by `runSpecialists` (single-call Phase 2
- * baseline) and by the `replay-pr-review.ts` CLI.
- *
- * Wrapped in `withSpan` so OTel sees one `prReview.correctnessReviewer` span
- * per call, with span attributes for PR coordinates and context size.
- */
-export async function correctnessReviewer(
-  input: CorrectnessReviewInput,
-): Promise<CorrectnessReviewResult> {
-  return await withSpan(
-    "prReview.correctnessReviewer",
-    {
-      "pr.owner": input.pipeline.owner,
-      "pr.repo": input.pipeline.repo,
-      "pr.number": input.pipeline.prNumber,
-      "changedFiles.count": input.context.changedFiles.length,
-      "claudeMd.count": input.context.claudeMdHierarchy.length,
-    },
-    async () => {
-      const authToken = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
-      if (authToken === undefined || authToken === "") {
-        throw new Error(
-          "CLAUDE_CODE_OAUTH_TOKEN is required for the correctness reviewer",
-        );
-      }
-      const client = makeCorrectnessClient(new Anthropic({ authToken }));
-      try {
-        return await runCorrectnessReviewer(client, input);
-      } catch (error: unknown) {
-        captureWithContext(error, input);
-        jsonLog("error", "correctnessReviewer failed", {
-          prNumber: input.pipeline.prNumber,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        throw error;
-      }
-    },
-  );
 }

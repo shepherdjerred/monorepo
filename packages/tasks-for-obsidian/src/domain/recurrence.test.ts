@@ -154,7 +154,11 @@ describe("model-driven per-day semantics (P5)", () => {
       recurrence: "FREQ=WEEKLY;BYDAY=MO",
       scheduled: "2026-07-06",
     });
-    expect(() => occursOn(weekly, "2026-07-xx")).toThrow(TypeError);
-    expect(() => isCompletedOn(weekly, "not-a-date")).toThrow(TypeError);
+    expect(() => occursOn(weekly, "2026-07-xx")).toThrow(
+      /invalid YYYY-MM-DD string/,
+    );
+    expect(() => isCompletedOn(weekly, "not-a-date")).toThrow(
+      /invalid YYYY-MM-DD string/,
+    );
   });
 });

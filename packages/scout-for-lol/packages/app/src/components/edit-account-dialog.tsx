@@ -2,18 +2,20 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { findRegion, type RegionValue } from "#src/lib/regions.ts";
-import { Button } from "#src/components/ui/button.tsx";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "#src/components/ui/dialog.tsx";
 import { Input } from "#src/components/ui/input.tsx";
 import { Label } from "#src/components/ui/label.tsx";
 import { RegionSelect } from "#src/components/region-select.tsx";
+import {
+  DialogFormError,
+  DialogFormFooter,
+} from "#src/components/dialog-form.tsx";
 
 /**
  * Edit an existing account's alias and region in place (via
@@ -92,24 +94,16 @@ export function EditAccountDialog(props: {
             />
           </div>
 
-          {error !== null && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          <DialogFormError error={error} />
 
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                props.onOpenChange(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Saving…" : "Save"}
-            </Button>
-          </DialogFooter>
+          <DialogFormFooter
+            pending={mutation.isPending}
+            submitLabel="Save"
+            pendingLabel="Saving…"
+            onCancel={() => {
+              props.onOpenChange(false);
+            }}
+          />
         </form>
       </DialogContent>
     </Dialog>

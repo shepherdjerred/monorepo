@@ -16,9 +16,14 @@ describe("seasons", () => {
       expect(SEASONS).toBeDefined();
       expect(Object.keys(SEASONS).length).toBeGreaterThan(0);
 
-      for (const season of Object.values(SEASONS)) {
-        expect(season.id).toBeTruthy();
-        expect(season.displayName).toBeTruthy();
+      for (const [key, season] of Object.entries(SEASONS)) {
+        // The record key must equal the season's own id, and both must be a
+        // valid `YYYY_SEASON_N_ACT_M` id accepted by the schema. Parsing the
+        // key also gives it the SeasonId literal type for the `toBe` compare.
+        expect(season.id).toBe(SeasonIdSchema.parse(key));
+        expect(season.id).toMatch(/^\d{4}_SEASON_\d+_ACT_\d+$/);
+        expect(typeof season.displayName).toBe("string");
+        expect(season.displayName.length).toBeGreaterThan(0);
         expect(season.startDate).toBeInstanceOf(Date);
         expect(season.endDate).toBeInstanceOf(Date);
         expect(season.startDate.getTime()).toBeLessThan(
@@ -72,7 +77,7 @@ describe("seasons", () => {
       const season = getSeasonById("2025_SEASON_3_ACT_1");
       expect(season).toBeDefined();
       expect(season?.id).toBe("2025_SEASON_3_ACT_1");
-      expect(season?.displayName).toBeTruthy();
+      expect(season?.displayName).toBe("Trials of Twilight");
     });
 
     test("should return undefined for invalid ID", () => {
@@ -126,10 +131,15 @@ describe("seasons", () => {
       expect(choices).toBeArray();
 
       for (const choice of choices) {
-        expect(choice.name).toBeTruthy();
-        expect(choice.value).toBeTruthy();
+        // Discord requires a non-empty label, and the value must be a real
+        // season id (parsing succeeds and its display name is the label).
+        expect(typeof choice.name).toBe("string");
+        expect(choice.name.length).toBeGreaterThan(0);
         const result = SeasonIdSchema.safeParse(choice.value);
         expect(result.success).toBe(true);
+        if (result.success) {
+          expect(getSeasonById(result.data)?.displayName).toBe(choice.name);
+        }
       }
     });
 

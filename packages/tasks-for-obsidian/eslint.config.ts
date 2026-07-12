@@ -5,12 +5,8 @@ const config = [
     reactNative: true,
     projectService: {
       allowDefaultProject: [
-        "src/domain/*.test.ts",
-        "src/lib/*.test.ts",
-        "src/data/sync/*.test.ts",
-        "src/data/sync/__tests__/*.test.ts",
-        "src/data/cache/*.test.ts",
-        "src/data/store/*.test.ts",
+        // src/**/*.test.ts files are now part of the main tsconfig project
+        // (they were previously excluded, so they lived here instead).
         "scripts/*.ts",
         "contract-tests/*.ts",
         // tseslint disallows '**' here; all e2e TS files live at this depth

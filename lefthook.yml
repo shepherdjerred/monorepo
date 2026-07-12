@@ -83,7 +83,8 @@ pre-commit:
                     # CLAUDE.md is a symlink to AGENTS.md everywhere; prettier
                     # errors on explicitly-passed symlinks. AGENTS.md is linted.
                     - "**/CLAUDE.md"
-                  run: bunx prettier --check {staged_files}
+                  # Wrapper filters out staged DELETIONS (prettier hard-errors on missing files)
+                  run: bash scripts/prettier-staged.sh {staged_files}
 
                 # --- markdownlint (repo-wide, staged files) ---
                 - name: markdownlint
