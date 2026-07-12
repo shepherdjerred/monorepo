@@ -25,7 +25,7 @@
   "dependencies": {},
   "overrides": {
     "js-cookie": "3.0.8",
-    "tmp": "0.2.6"
+    "tmp": "0.2.7"
   },
   "trustedDependencies": [
     "@lng2004/node-datachannel",
