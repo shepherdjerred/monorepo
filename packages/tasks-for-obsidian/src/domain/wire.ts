@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import type { Task, TimeSummary, TaskTime } from "./types";
 import { contextName, projectName, tagName, taskId } from "./types";
-import { PrioritySchema, TaskStatusSchema } from "tasknotes-types";
+import { PrioritySchema, TaskStatusSchema } from "./base-schemas";
 
 /**
  * The v2 WIRE boundary — the upstream TaskNotes plugin HTTP contract

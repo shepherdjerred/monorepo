@@ -2,6 +2,8 @@
 
 Headless Pokémon Emerald (pokeemerald-wasm, ottohg fork with the C m4a audio engine) running in Bun, streamed to a Discord voice channel via `@shepherdjerred/discord-video-stream`. See `README.md` for the architecture; this file is the agent quick-reference. The WASM is built from source in the Dagger image (and locally by `scripts/build-wasm.sh`) — never committed; Renovate advances the `POKEEMERALD_SOURCE_REF` pin. See `wasm-src/PATCHES.md`.
 
+The tracing/metrics wiring, loopback audio transport, Go-Live streamer base class, web server, and bot entrypoint are shared with discord-plays-mario-kart in **`@shepherdjerred/discord-plays-core`** (`packages/discord-plays-core`, source-only, subpath imports) — see its `AGENTS.md`. This backend supplies the Pokémon-specific pieces: the emulator, `PokemonGameDriver`, the goal system, `copyMs` + game-event/notification metrics, the socket dispatch, and the llm-observability span-processor wrap passed to `bootGameBot`.
+
 ## Reading live game state from the wasm
 
 The notifier polls emulator memory (~2×/s) for faints/badges/evolutions/catches. Read-side modules: `packages/backend/src/emulator/{memory,symbols}.ts`, `src/game/events/`; debug with `packages/backend/scripts/probe-memory.ts`.

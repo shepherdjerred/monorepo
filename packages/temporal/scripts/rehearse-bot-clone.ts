@@ -9,21 +9,27 @@
  * of them), so the rehearsal cannot drift from what production executes.
  *
  * Canaries (each maps to a real weekly failure from June/July 2026):
- *  1. scout  — llm-models `file:` producer builds and resolves from
- *              scout's data package, and the snapshot test that died in the
- *              scout-data-dragon-weekly-refresh runs passes.
- *  2. hooks  — the hook-free root install leaves no lefthook hooks, a
- *              simulated agentic step (a plain `bun install`, standing in for
- *              a `claude -p`/`codex exec` session that might run one on its
- *              own) re-arms them, `disarmGitHooks` removes them again,
- *              prettier (with plugins) formats the season changelog
- *              byte-stably, and a bot-style `git commit` of a scout file
- *              succeeds without any pre-commit hook running
- *              (scout-season-refresh-weekly, and the 2026-07-12 recurrence
- *              where Claude's own `bun install` armed hooks that
- *              `rootInstallWithoutHooks` alone couldn't undo).
- *  3. cog    — the readme-refresh COG_TARGETS exist, still contain `[[[cog`
- *              blocks, and the `cog` binary is present (readme-refresh-weekly).
+ *  1. scout    — llm-models `file:` producer builds and resolves from
+ *                scout's data package, and a plain `bun test` on the report
+ *                package passes.
+ *  2. snapshot — `update-data-dragon.ts --snapshots-only`, the exact
+ *                install-refresh (second `bun install --force`) + snapshot-
+ *                test step that failed in scout-data-dragon-weekly-refresh
+ *                even after the (1) fix, because that second install wasn't
+ *                isolated from the pod's shared, persistent Bun cache. See
+ *                packages/docs/plans/2026-07-12_fix-data-dragon-shared-cache.md.
+ *  3. hooks    — the hook-free root install leaves no lefthook hooks, a
+ *                simulated agentic step (a plain `bun install`, standing in
+ *                for a `claude -p`/`codex exec` session that might run one on
+ *                its own) re-arms them, `disarmGitHooks` removes them again,
+ *                prettier (with plugins) formats the season changelog
+ *                byte-stably, and a bot-style `git commit` of a scout file
+ *                succeeds without any pre-commit hook running
+ *                (scout-season-refresh-weekly, and the 2026-07-12 recurrence
+ *                where Claude's own `bun install` armed hooks that
+ *                `rootInstallWithoutHooks` alone couldn't undo).
+ *  4. cog      — the readme-refresh COG_TARGETS exist, still contain `[[[cog`
+ *                blocks, and the `cog` binary is present (readme-refresh-weekly).
  *
  * Deliberately NOT rehearsed: asset downloads, Claude/Codex calls, and the
  * full `cog -r` regeneration (needs blobless git history + Codex for new
@@ -34,6 +40,7 @@
  * initialized so the commit canary can run.
  */
 import {
+  botCloneCacheDir,
   disarmGitHooks,
   installScoutWorkspace,
   rootInstallWithoutHooks,
@@ -97,6 +104,20 @@ async function rehearseScoutWorkspace(repoDir: string): Promise<void> {
     cwd: `${repoDir}/${REPORT_PACKAGE}`,
     env: { ENVIRONMENT: undefined },
   });
+}
+
+async function rehearseSnapshotRefresh(repoDir: string): Promise<void> {
+  console.error(
+    "[rehearsal] snapshot: update-data-dragon --snapshots-only (second install + snapshot test)",
+  );
+  await runCommand(["bun", "run", "update-data-dragon", "--snapshots-only"], {
+    cwd: `${repoDir}/${DATA_PACKAGE}`,
+    env: {
+      ENVIRONMENT: undefined,
+      BUN_INSTALL_CACHE_DIR: botCloneCacheDir(repoDir),
+    },
+  });
+  console.error("[rehearsal] snapshot: install-refresh + snapshot test OK");
 }
 
 async function armedHookNames(repoDir: string): Promise<string[]> {
@@ -203,6 +224,7 @@ async function main(): Promise<void> {
   const repoDir = parseRepoArg(process.argv.slice(2));
   await ensureScratchGitRepo(repoDir);
   await rehearseScoutWorkspace(repoDir);
+  await rehearseSnapshotRefresh(repoDir);
   await rehearseHookFreeCommit(repoDir);
   await rehearseCogTargets(repoDir);
   console.error("[rehearsal] all canaries passed");

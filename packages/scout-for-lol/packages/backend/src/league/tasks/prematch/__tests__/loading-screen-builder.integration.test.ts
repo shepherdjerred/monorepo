@@ -158,7 +158,7 @@ describe("buildLoadingScreenData layout variants", () => {
 
     const reksai = parsed.participants.find((p) => p.championName === "RekSai");
     expect(reksai).toBeDefined();
-    expect(reksai?.championDisplayName).toBe("Reksai");
+    expect(reksai?.championDisplayName).toBe("Rek'Sai");
   });
 
   test.each([3200, 3270])(

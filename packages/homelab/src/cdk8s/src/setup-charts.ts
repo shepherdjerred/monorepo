@@ -26,11 +26,18 @@ import { createTasknotesChart } from "./cdk8s-charts/tasknotes.ts";
 import { createRelayChart } from "./cdk8s-charts/relay.ts";
 import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
 import { createTrmnlDashboardChart } from "./cdk8s-charts/trmnl-dashboard.ts";
+import { createServiceProbesChart } from "./resources/monitoring/service-probes-chart.ts";
+import { resetProbeRegistry } from "./misc/probe-registry.ts";
 
 /**
  * Sets up all charts for the application
  */
 export async function setupCharts(app: App): Promise<void> {
+  // The probe registry is process-global module state (see probe-registry.ts)
+  // — reset it so each independent setupCharts() run (the test suite calls
+  // this many times per process, once per App instance) starts clean.
+  resetProbeRegistry();
+
   await createAppsChart(app);
   createScoutChart(app, "beta");
   createScoutChart(app, "prod");
@@ -70,4 +77,8 @@ export async function setupCharts(app: App): Promise<void> {
   createRelayChart(app);
   createTemporalChart(app);
   createTrmnlDashboardChart(app);
+
+  // Must run last: reads the probe registry populated by every
+  // TailscaleIngress/createIngress/createCloudflareTunnelBinding call above.
+  createServiceProbesChart(app);
 }

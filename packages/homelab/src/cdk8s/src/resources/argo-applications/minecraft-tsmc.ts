@@ -56,6 +56,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
     fqdn: "bluemap.ts-mc.net",
     namespace: "minecraft-tsmc",
     disableDnsUpdates: true,
+    port: 8100,
   });
 
   const minecraftValues: HelmValuesForChart<"minecraft"> = {

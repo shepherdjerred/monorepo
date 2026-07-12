@@ -6,7 +6,10 @@ import type {
   RawParticipant,
   RawTimeline,
 } from "@scout-for-lol/data";
-import { LeaguePuuidSchema, parseQueueType } from "@scout-for-lol/data";
+import {
+  LeaguePuuidSchema,
+  resolveQueueTypeFromGame,
+} from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
@@ -93,7 +96,11 @@ export async function upsertStoredMatchWithFacts(
   match: RawMatch,
   options: StoredPayloadOptions = {},
 ): Promise<{ stored: boolean; factCount: number }> {
-  const queue = parseQueueType(match.info.queueId);
+  const queue = resolveQueueTypeFromGame(
+    match.info.queueId,
+    match.info.gameMode,
+    match.info.gameType,
+  );
   const matchId = match.metadata.matchId;
   const importedFromS3 = options.importedFromS3 ?? false;
 
@@ -249,7 +256,11 @@ export async function upsertStoredPrematchWithFacts(
   observedAt: Date,
   options: StoredPayloadOptions = {},
 ): Promise<{ storedPrematchId: number; factCount: number }> {
-  const queue = parseQueueType(gameInfo.gameQueueConfigId);
+  const queue = resolveQueueTypeFromGame(
+    gameInfo.gameQueueConfigId,
+    gameInfo.gameMode,
+    gameInfo.gameType,
+  );
   const importedFromS3 = options.importedFromS3 ?? false;
   const gameStartAt =
     gameInfo.gameStartTime > 0 ? toDate(gameInfo.gameStartTime) : undefined;

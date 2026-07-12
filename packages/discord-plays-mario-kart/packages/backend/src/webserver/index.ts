@@ -1,6 +1,7 @@
-import { createServer } from "node:http";
+import { createWebServer as coreCreateWebServer } from "@shepherdjerred/discord-plays-core/webserver/server.ts";
+import { registry } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
+import { assertPathExists } from "#src/util.ts";
 import { logger } from "#src/logger.ts";
-import { createExpressApp } from "./express.ts";
 import { createSocket } from "./socket.ts";
 
 export function createWebServer({
@@ -14,27 +15,14 @@ export function createWebServer({
   isApiEnabled: boolean;
   webAssetsPath: string;
 }) {
-  logger.info("creating web server");
-
-  const app = createExpressApp({ isCorsEnabled, webAssetsPath });
-
-  const server = createServer(app);
-
-  let socket;
-  if (isApiEnabled) {
-    socket = createSocket({ isCorsEnabled, server });
-  }
-
-  server.listen(port, () => {
-    const address = server.address();
-    if (typeof address === "string") {
-      logger.info(`web server is listening on port ${address}`);
-    }
+  return coreCreateWebServer({
+    port,
+    isCorsEnabled,
+    isApiEnabled,
+    webAssetsPath,
+    registry,
+    logger,
+    assertPathExists,
+    createSocket,
   });
-
-  return {
-    server,
-    socket,
-    app,
-  };
 }

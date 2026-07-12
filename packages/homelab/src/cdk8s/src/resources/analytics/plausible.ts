@@ -204,6 +204,7 @@ export function createPlausibleDeployment(
   createCloudflareTunnelBinding(chart, "plausible-cf-tunnel", {
     serviceName: service.name,
     subdomain: "plausible",
+    port: 8000,
   });
 
   return { deployment, service };

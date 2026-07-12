@@ -1,6 +1,5 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { fromError } from "zod-validation-error";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -9,6 +8,7 @@ import {
 import { createLogger } from "#src/logger.ts";
 import { addSubscriptionChannel } from "#src/lib/subscription/add-channel.ts";
 import { prisma } from "#src/database/index.ts";
+import { parseCommandArgs } from "#src/discord/commands/define-command.ts";
 import { editReplyOnError } from "#src/discord/commands/subscription/reply-helpers.ts";
 
 const logger = createLogger("subscription-add-channel-command");
@@ -25,18 +25,13 @@ export async function executeSubscriptionAddChannel(
 ) {
   logger.info("🔔 Starting add-channel");
 
-  const parseResult = ArgsSchema.safeParse({
+  const parseResult = await parseCommandArgs(interaction, ArgsSchema, {
     alias: interaction.options.getString("alias"),
     channel: interaction.options.getChannel("channel")?.id,
     guildId: interaction.guildId,
     userId: interaction.user.id,
   });
-
   if (!parseResult.success) {
-    await interaction.reply({
-      content: fromError(parseResult.error).toString(),
-      ephemeral: true,
-    });
     return;
   }
 

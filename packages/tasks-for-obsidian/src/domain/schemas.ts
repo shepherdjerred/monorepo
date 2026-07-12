@@ -21,7 +21,7 @@ import {
   TaskStatsSchema as BaseTaskStatsSchema,
   FilterOptionsSchema as BaseFilterOptionsSchema,
   NlpParseResultSchema as BaseNlpParseResultSchema,
-} from "tasknotes-types";
+} from "./base-schemas";
 
 export const TaskStatusSchema = _TaskStatusSchema;
 

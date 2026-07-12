@@ -1,5 +1,6 @@
 import {
   getEffectiveTaskStatus,
+  resolveOperationTargetDate,
   shouldShowRecurringTaskOnDate,
 } from "tasknotes-types/v2";
 
@@ -44,6 +45,29 @@ export function localTodayYmd(now: Date = new Date()): string {
 
 export function isRecurring(task: Task): boolean {
   return task.recurrence !== undefined && task.recurrence !== "";
+}
+
+/**
+ * The occurrence date a completion toggle should target for a RECURRING task.
+ *
+ * Mirrors the TaskNotes plugin's own `getRecurringTaskActionDate`: a checkbox
+ * tap completes the task's currently-SCHEDULED instance (falling back to
+ * `due`, then today), NOT the literal calendar day of the tap. Completion-
+ * anchored rules ("N days after each completion") DO target today, since the
+ * next occurrence is computed from when you complete.
+ *
+ * The old code hardcoded `localTodayYmd()` here. That silently orphaned every
+ * completion made on a non-occurrence day (e.g. paying a rent task that recurs
+ * on the 1st while it's the 12th): `getEffectiveTaskStatus` only reads an
+ * occurrence as done when that occurrence's OWN date is in `complete_instances`,
+ * so a `2026-07-12` entry never checked off the `2026-07-01`/`08-01` instance
+ * and the task reappeared as if untouched.
+ *
+ * Only meaningful for recurring tasks; callers gate on `isRecurring`.
+ */
+export function completionTargetDate(task: Task): string {
+  if (task.recurrenceAnchor === "completion") return localTodayYmd();
+  return resolveOperationTargetDate(undefined, task.scheduled, task.due);
 }
 
 export function toggleCompleteInstance(

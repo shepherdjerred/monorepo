@@ -162,6 +162,12 @@ pre-commit:
                   run: bunx eslint --fix {staged_files}
                   stage_fixed: true
 
+                - name: eslint-discord-plays-core
+                  root: "packages/discord-plays-core/"
+                  glob: "packages/discord-plays-core/**/*.{ts,tsx,js,jsx}"
+                  run: bunx eslint --fix {staged_files}
+                  stage_fixed: true
+
                 - name: eslint-homelab
                   root: "packages/homelab/"
                   glob: "packages/homelab/**/*.{ts,tsx,js,jsx}"

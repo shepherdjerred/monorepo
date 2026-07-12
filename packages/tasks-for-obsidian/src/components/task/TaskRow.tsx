@@ -4,7 +4,12 @@ import * as ContextMenu from "zeego/context-menu";
 import type { Task } from "../../domain/types";
 import type { Priority } from "../../domain/priority";
 import { ALL_PRIORITIES, PRIORITY_LABELS } from "../../domain/priority";
-import { isCompletedOn, localTodayYmd } from "../../domain/recurrence";
+import {
+  completionTargetDate,
+  isCompletedOn,
+  isRecurring,
+  localTodayYmd,
+} from "../../domain/recurrence";
 import { isOverdue } from "../../lib/dates";
 import { formatRelativeDate } from "../../lib/dates";
 import { useSettings } from "../../hooks/use-settings";
@@ -38,9 +43,13 @@ export const TaskRow = React.memo(function TaskRow({
   onSetPriority,
 }: TaskRowProps) {
   const { colors } = useSettings();
-  // Recurring tasks check per-TODAY's-instance (completion feedback —
-  // review finding #4); plain tasks by status.
-  const completed = isCompletedOn(task, localTodayYmd());
+  // Recurring tasks read the state of the occurrence a tap would target
+  // (the scheduled instance — same date `toggleStatus` completes, so the
+  // checkbox and the toggle always agree); plain tasks read by status.
+  const completed = isCompletedOn(
+    task,
+    isRecurring(task) ? completionTargetDate(task) : localTodayYmd(),
+  );
   const overdue = isOverdue(task.due);
 
   return (

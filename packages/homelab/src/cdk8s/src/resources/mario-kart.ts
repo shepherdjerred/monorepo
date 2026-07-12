@@ -247,5 +247,6 @@ export function createMarioKartDeployment(chart: Chart) {
   createCloudflareTunnelBinding(chart, "mariokart-cf-tunnel", {
     serviceName: uiService.name,
     subdomain: "mariokart",
+    port: WEB_PORT,
   });
 }
