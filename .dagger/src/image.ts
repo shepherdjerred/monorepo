@@ -657,6 +657,9 @@ function withToolkit(container: Container): Container {
  *   - discord-video-stream: `Cannot find module '@lng2004/node-datachannel'` (native deps)
  *   - discord-stream-lifecycle: `ENOENT while resolving package 'discord.js'` (its
  *     peerDependencies — bun installs peers on a root install, so this provides them)
+ *   - discord-plays-core: `Cannot find module '@shepherdjerred/discord-stream-lifecycle/…'`
+ *     unless dsl's `dist/` already exists when THIS install runs (see the ordering note on
+ *     `withBuiltDiscordStreamLifecycle` below — it must run before this function).
  * Mirrors the per-dep install loop in `bunBaseContainer` (base.ts).
  */
 const SOURCE_RUNTIME_DEPS = [
@@ -693,6 +696,18 @@ function withForkRuntimeDeps(
  * up. Compiling to `dist/*.js` and consuming it as compiled JS resolves the same way
  * llm-models' `zod` dependency already does from the identical nesting depth (proven
  * working) — plain Node-style ancestor `node_modules` resolution, no special-casing needed.
+ *
+ * MUST run before `withForkRuntimeDeps`: bun's hoisted-linker install snapshots a `file:`
+ * dep's top-level entries as individual symlinks at install time. `discord-plays-core` (a
+ * `SOURCE_RUNTIME_DEPS` member) has its own `file:` dep on discord-stream-lifecycle — if
+ * `withForkRuntimeDeps` installs discord-plays-core's node_modules BEFORE this function
+ * builds dsl's `dist/`, the symlink snapshot is taken pre-build and has no `dist` entry.
+ * Building dsl afterward populates the real directory but never refreshes that already-taken
+ * snapshot, so discord-plays-core's copy is permanently missing `dist/` even though dsl's own
+ * directory has it — `Cannot find module '@shepherdjerred/discord-stream-lifecycle/…'` at
+ * runtime despite tsc resolving cleanly (tsc reads the real directory, bun's runtime reads
+ * the stale symlink snapshot). Reproduced locally: installing discord-plays-core's deps
+ * before vs. after building dsl's dist is the only difference between working and broken.
  */
 function withBuiltDiscordStreamLifecycle(
   container: Container,
@@ -778,8 +793,10 @@ export function buildImageHelper(
     );
   }
 
-  container = withForkRuntimeDeps(container, depNames);
+  // Order matters: build dsl's dist BEFORE installing discord-plays-core's own
+  // node_modules (see withBuiltDiscordStreamLifecycle's doc comment).
   container = withBuiltDiscordStreamLifecycle(container, depNames);
+  container = withForkRuntimeDeps(container, depNames);
 
   // Install deps then set up the final image
   // Clean-reinstall (not plain retry) when discord-stream-lifecycle is present:
@@ -1365,7 +1382,6 @@ export function buildDiscordPlaysPokemonImageHelper(
     );
   }
 
-  container = withForkRuntimeDeps(container, depNames);
   // Package tsconfigs extend the repo root tsconfig.base.json
   // (extends "../../../../tsconfig.base.json" -> /workspace/tsconfig.base.json).
   // vite 8 (rolldown) hard-fails the frontend build when the extends target is
@@ -1374,7 +1390,10 @@ export function buildDiscordPlaysPokemonImageHelper(
     container = container.withFile("/workspace/tsconfig.base.json", tsconfig);
   }
   container = withBuiltLlmModels(container, depNames);
+  // Order matters: build dsl's dist BEFORE installing discord-plays-core's own
+  // node_modules (see withBuiltDiscordStreamLifecycle's doc comment).
   container = withBuiltDiscordStreamLifecycle(container, depNames);
+  container = withForkRuntimeDeps(container, depNames);
 
   container = container
     // Build pokeemerald.wasm from source (ottohg pin + our export patch) and
@@ -1582,8 +1601,10 @@ export function buildDiscordPlaysMarioKartImageHelper(
     );
   }
 
-  container = withForkRuntimeDeps(container, depNames);
+  // Order matters: build dsl's dist BEFORE installing discord-plays-core's own
+  // node_modules (see withBuiltDiscordStreamLifecycle's doc comment).
   container = withBuiltDiscordStreamLifecycle(container, depNames);
+  container = withForkRuntimeDeps(container, depNames);
 
   container = container
     // Copy the compiled core + the files the host stages into MEMFS at

@@ -12,10 +12,12 @@ import {
 } from "./constants.ts";
 import {
   emulateMs,
-  copyMs,
   lateMs,
   ticksTotal,
   loopResyncTotal,
+} from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
+import {
+  copyMs,
   frameHookErrorsTotal,
   flashSaveLoadInvalidTotal,
 } from "#src/observability/metrics.ts";

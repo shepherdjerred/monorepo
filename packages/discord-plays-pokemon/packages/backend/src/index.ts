@@ -1,28 +1,6 @@
-import * as Sentry from "@sentry/bun";
-
-Sentry.init({
-  dsn:
-    Bun.env["SENTRY_DSN"] ??
-    "https://9c905c2bb5924e55b4dea32e2a95f0d1@bugsink.sjer.red/8",
-  environment: Bun.env.NODE_ENV ?? "development",
-  // VERSION is baked into the image at build time (buildDiscordPlaysPokemonImageHelper).
-  release: Bun.env["VERSION"],
-  // Don't let Sentry register the global OTel TracerProvider/Propagator/
-  // ContextManager. It runs before initializeTracing(), so it lands first and
-  // the NodeSDK below fails registration ("duplicate registration of API:
-  // trace") — spans then route through Sentry's sampler (tracesSampleRate
-  // unset) and never reach Tempo. Sentry stays for errors via captureException.
-  skipOpenTelemetrySetup: true,
-});
-
-import { initializeTracing } from "./observability/tracing.ts";
-
-// Start OTLP tracing before any traced network work (Discord login, voice).
-initializeTracing();
-
 import { match } from "ts-pattern";
-import { createGameBot } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot";
-import { createSelfbotPooledUserbotFactory } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
+import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
+import { bootGameBot } from "@shepherdjerred/discord-plays-core/entry.ts";
 import { handleMessages } from "./discord/message-handler.ts";
 import { buildPokemonExtraCommands } from "./discord/slashCommands/index.ts";
 import { PokemonGameDriver } from "./lifecycle/pokemon-driver.ts";
@@ -45,50 +23,30 @@ const config = getConfig();
 // One userbot, one emulator, one game at a time. The "pool" in the shared lib is
 // general-purpose (Streambot uses it for many concurrent streams); for this single-slot
 // game-bot we just feed it the single configured userbot token.
-const userbotTokens = [config.stream.userbot.token];
-
 const driver = new PokemonGameDriver({ config });
 
-// Peer userbot Discord user IDs supplied by the deployment (homelab cdk8s defines the
-// canonical list and passes each bot its peers as "all - self" via PEER_USERBOT_IDS).
-// Empty when running locally; the Go-Live heuristic then catches peer userbots instead.
-function readPeerUserbotIds(): readonly string[] {
-  const raw = Bun.env["PEER_USERBOT_IDS"];
-  if (raw === undefined) {
-    return [];
-  }
-  return raw
-    .split(",")
-    .map((id) => id.trim())
-    .filter((id) => id.length > 0);
-}
-
-const runtime = createGameBot({
-  botToken: config.bot.discord_token,
-  applicationId: config.bot.application_id,
-  userbotTokens,
-  userbotFactory: createSelfbotPooledUserbotFactory(),
-  driver,
-  stateRootDir: config.state_root_dir,
-  extraCommands: (botClient) =>
-    buildPokemonExtraCommands({
-      driver,
-      botClient,
-      screenshotEnabled: config.bot.commands.screenshot.enabled,
-      goalEnabled: config.game.goal.enabled,
-    }),
-  aloneGraceMs: 30_000,
-  peerUserbotIds: readPeerUserbotIds(),
-  logger: {
-    info: (message, metadata) => {
-      logger.info(message, metadata);
-    },
-    warn: (message, metadata) => {
-      logger.warn(message, metadata);
-    },
-    error: (message, metadata) => {
-      logger.error(message, metadata);
-    },
+const runtime = bootGameBot({
+  serviceName: "discord-plays-pokemon",
+  sentryDsn: "https://9c905c2bb5924e55b4dea32e2a95f0d1@bugsink.sjer.red/8",
+  logger,
+  // Wrap the batch span processor with the LLM archive layer: spans carrying
+  // gen_ai.* body attributes get their bodies gzipped to SeaweedFS and replaced
+  // with a ref before the slim span reaches Tempo. No-op when
+  // LLM_OBSERVABILITY_ENABLED=false. Same shape as birmel / scout / temporal.
+  wrapSpanProcessor: (inner) => buildArchiveSpanProcessor({ inner }),
+  wiring: {
+    botToken: config.bot.discord_token,
+    applicationId: config.bot.application_id,
+    userbotTokens: [config.stream.userbot.token],
+    driver,
+    stateRootDir: config.state_root_dir,
+    extraCommands: (botClient) =>
+      buildPokemonExtraCommands({
+        driver,
+        botClient,
+        screenshotEnabled: config.bot.commands.screenshot.enabled,
+        goalEnabled: config.game.goal.enabled,
+      }),
   },
 });
 
@@ -170,20 +128,3 @@ if (config.web.enabled) {
     });
   }
 }
-
-async function shutdown(): Promise<void> {
-  await runtime.shutdown();
-}
-
-async function shutdownAndExit(): Promise<void> {
-  await shutdown();
-  process.exit(0);
-}
-
-process.once("SIGTERM", () => {
-  void shutdownAndExit();
-});
-
-process.once("SIGINT", () => {
-  void shutdownAndExit();
-});
