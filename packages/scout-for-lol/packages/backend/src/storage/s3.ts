@@ -14,7 +14,7 @@ import {
 } from "#src/metrics/index.ts";
 
 export type PrematchPayloadSaveResult = {
-  status: "saved" | "skipped_no_bucket" | "error";
+  status: "saved" | "skipped_no_bucket";
   durationSeconds?: number;
 };
 
@@ -138,7 +138,11 @@ export async function saveSvgToS3(
 }
 
 /**
- * Save raw spectator API payload to S3 for debugging/replay.
+ * Persist the raw spectator API payload to S3. S3 is the canonical prematch
+ * store, so a failed upload is a hard error: record the failure metric and
+ * re-throw so the ingest path fails loud (the caller retries next poll). The
+ * missing-bucket path stays a graceful no-op for dev/test — a boot-time guard
+ * (src/index.ts) prevents that from ever happening in beta/prod.
  */
 export async function savePrematchDataToS3(
   gameId: number,
@@ -176,11 +180,11 @@ export async function savePrematchDataToS3(
     prematchSpectatorPayloadSaveDurationSeconds.observe(durationSeconds);
     prematchSpectatorPayloadSavesTotal.inc({ status: "saved" });
     return { status: "saved", durationSeconds };
-  } catch {
+  } catch (error) {
     const durationSeconds = (Date.now() - startTime) / 1000;
     prematchSpectatorPayloadSaveDurationSeconds.observe(durationSeconds);
     prematchSpectatorPayloadSavesTotal.inc({ status: "error" });
-    return { status: "error", durationSeconds };
+    throw error;
   }
 }
 

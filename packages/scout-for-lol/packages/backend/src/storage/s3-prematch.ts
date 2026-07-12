@@ -5,6 +5,7 @@ import configuration from "#src/configuration.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { format } from "date-fns";
 import { createLogger } from "#src/logger.ts";
+import { sendPutWithRetry } from "#src/storage/s3-put-retry.ts";
 
 const logger = createLogger("storage-s3-prematch");
 
@@ -96,7 +97,11 @@ export async function savePrematchToS3(
       },
     });
 
-    await client.send(command);
+    await sendPutWithRetry(
+      client,
+      command,
+      `${errorContext} game ${gameIdStr}`,
+    );
 
     const uploadTime = Date.now() - startTime;
     const s3Url = `s3://${bucket}/${key}`;

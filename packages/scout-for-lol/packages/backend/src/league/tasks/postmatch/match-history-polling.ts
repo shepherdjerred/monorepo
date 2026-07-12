@@ -48,7 +48,6 @@ import {
   getLastSuccessfulPollAt,
 } from "#src/league/tasks/recovery/app-state.ts";
 import { fetchMatchIdsForTimeRange } from "#src/league/tasks/recovery/backfill-to-s3.ts";
-import { saveMatchToS3 } from "#src/storage/s3.ts";
 import { recordMatchForReportStore } from "#src/report-store/live-ingest.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
@@ -192,30 +191,40 @@ async function processMatchAndUpdatePlayers(
     `[processMatch] 🔍 ${allTrackedPlayers.length.toString()} tracked player(s) in match: ${allTrackedPlayers.map((p) => p.alias).join(", ")}`,
   );
 
-  await recordMatchForReportStore({
-    prisma,
-    match: matchData,
-    source: silent ? "postmatch_silent_backfill" : "postmatch_live",
-  });
+  // Authoritative S3 ingest GATES the cursor. S3 is the canonical raw store, so
+  // a failed write here is NOT deterministic (transient SeaweedFS/network
+  // outage) — advancing the cursor past it would lose the match forever. On
+  // failure we RETURN before marking processed / advancing the cursor, so the
+  // next poll retries. `backfill-to-s3.ts` (Riot re-fetch) is the recovery net.
+  const aliases = allTrackedPlayers.map((p) => p.alias);
+  try {
+    await recordMatchForReportStore({
+      match: matchData,
+      source: silent ? "postmatch_silent_backfill" : "postmatch_live",
+      trackedPlayerAliases: aliases,
+    });
+  } catch (error) {
+    logger.error(
+      `[processMatch] ❌ Authoritative S3 ingest failed for ${matchId} — NOT advancing cursor; will retry next poll`,
+      error,
+    );
+    Sentry.captureException(error, {
+      tags: { source: "report-store-ingest-gate", matchId },
+    });
+    return;
+  }
 
-  if (silent) {
-    try {
-      const aliases = allTrackedPlayers.map((p) => p.alias);
-      await saveMatchToS3(matchData, aliases);
-      logger.info(`[backfill] 📦 Saved match ${matchId} to S3`);
-    } catch (error) {
-      logger.error(`[backfill] Error saving match ${matchId} to S3:`, error);
-    }
-  } else {
-    // Wrap so a downstream failure (e.g. satori render crash, OpenAI error,
-    // Discord send failure) doesn't prevent the cursor advancing below.
-    // Without this, the same match retries every poll forever, re-running
-    // the whole AI pipeline and burning tokens.
+  if (!silent) {
+    // Report generation runs only AFTER the durable copy succeeded. A
+    // downstream failure (satori render crash, OpenAI error, Discord send
+    // failure) still swallows + advances: the authoritative S3 write already
+    // succeeded, and these failures are deterministic — retrying every poll
+    // would re-run the whole AI pipeline and burn tokens for nothing.
     try {
       await processMatch(matchData, allTrackedPlayers);
     } catch (error) {
       logger.error(
-        `[processMatch] ❌ processMatch threw for ${matchId} — cursor will still advance`,
+        `[processMatch] ❌ processMatch threw for ${matchId} — cursor will still advance (durable S3 copy already saved)`,
         error,
       );
       Sentry.captureException(error, {
@@ -228,9 +237,7 @@ async function processMatchAndUpdatePlayers(
   processedMatchIds.add(matchId);
 
   // Update lastProcessedMatchId and lastMatchTime for all players in this match.
-  // Always run, even if processMatch threw — the cursor encodes "we tried,"
-  // not "we succeeded." Both Riot validation failures and report-render
-  // crashes are deterministic; retrying is bound to fail.
+  // Reached only after the authoritative S3 ingest succeeded above.
   const matchCreationTime = new Date(matchData.info.gameCreation);
   for (const trackedPlayer of allTrackedPlayers) {
     const playerPuuid = trackedPlayer.league.leagueAccount.puuid;

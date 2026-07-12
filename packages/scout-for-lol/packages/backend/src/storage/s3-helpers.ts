@@ -6,6 +6,7 @@ import { getErrorMessage } from "#src/utils/errors.ts";
 import type { MatchId } from "@scout-for-lol/data/index.ts";
 import { format } from "date-fns";
 import { createLogger } from "#src/logger.ts";
+import { sendPutWithRetry } from "#src/storage/s3-put-retry.ts";
 
 const logger = createLogger("storage-s3-helpers");
 
@@ -109,7 +110,7 @@ export async function saveToS3(
       },
     });
 
-    await client.send(command);
+    await sendPutWithRetry(client, command, `${errorContext} ${matchId}`);
 
     const uploadTime = Date.now() - startTime;
     const s3Url = `s3://${bucket}/${key}`;

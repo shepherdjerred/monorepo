@@ -14,7 +14,6 @@ import { createSnapshot } from "#src/league/competition/snapshots.ts";
 import { calculateLeaderboard } from "#src/league/competition/leaderboard.ts";
 import { fetchMatchIdsForTimeRange } from "#src/league/tasks/recovery/backfill-to-s3.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
-import { saveMatchToS3 } from "#src/storage/s3.ts";
 import { saveCachedLeaderboard } from "#src/storage/s3-leaderboard.ts";
 import { recordMatchForReportStore } from "#src/report-store/live-ingest.ts";
 
@@ -217,14 +216,10 @@ async function repairCompetition(
         continue;
       }
       await recordMatchForReportStore({
-        prisma,
         match: matchData,
         source: "repair_active_competitions",
+        trackedPlayerAliases: matches.aliasesByMatchId.get(matchId) ?? [],
       });
-      await saveMatchToS3(
-        matchData,
-        matches.aliasesByMatchId.get(matchId) ?? [],
-      );
       matchesSaved += 1;
     }
 

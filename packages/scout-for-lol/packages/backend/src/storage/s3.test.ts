@@ -252,7 +252,8 @@ describe("S3 Match Storage", () => {
     await expect(saveMatchToS3(match, [])).rejects.toThrow(
       `Failed to save match ${match.metadata.matchId} to S3`,
     );
-    expect(s3Mock.calls().length).toBe(1);
+    // A network-shaped error is retried MAX_PUT_ATTEMPTS (3) times before throwing.
+    expect(s3Mock.calls().length).toBe(3);
   });
 });
 
@@ -315,7 +316,9 @@ describe("S3 Image Storage", () => {
     await expect(
       saveImageToS3(matchId, imageBuffer, "solo", []),
     ).rejects.toThrow(`Failed to save PNG ${matchId} to S3`);
-    expect(s3Mock.calls().length).toBe(1);
+    // "Access Denied" here is a raw Error (no 4xx metadata) → treated as
+    // transient and retried MAX_PUT_ATTEMPTS (3) times before throwing.
+    expect(s3Mock.calls().length).toBe(3);
   });
 
   test("saveImageToS3 handles different queue types in metadata", async () => {
