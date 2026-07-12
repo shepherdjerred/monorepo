@@ -62,7 +62,7 @@ export function createServiceProbesChart(app: App) {
       url:
         probe.module === "tcp_connect"
           ? `${probe.fqdn}:443`
-          : `https://${probe.fqdn}/`,
+          : `https://${probe.fqdn}${probe.path}`,
       module: probe.module,
       labels: {
         service: probe.serviceName,

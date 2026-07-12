@@ -41,7 +41,8 @@ export function createFreshRssChart(app: App) {
             },
           ],
         },
-        // Allow blackbox-exporter's in-cluster health probe
+        // Allow blackbox-exporter's in-cluster health probe (service port
+        // only — not every port on the pod)
         {
           from: [
             {
@@ -50,6 +51,7 @@ export function createFreshRssChart(app: App) {
               },
             },
           ],
+          ports: [{ port: IntOrString.fromNumber(80), protocol: "TCP" }],
         },
       ],
     },

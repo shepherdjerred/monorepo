@@ -27,10 +27,15 @@ export function createTemporalWorkerGithubWebhookService(
     serviceName: webhookService.name,
     subdomain: "pr-bot",
     port: 9466,
-    // POST-only webhook receiver — an HTTP probe hitting GET / would 404/405
-    // even when healthy, so just check the port accepts a connection.
+    // POST-only webhook receiver: GET / would 404/405 even when healthy, so
+    // the in-cluster probe just checks the port accepts a connection. The
+    // public probe, however, must verify the origin end-to-end — a bare
+    // tcp_connect to fqdn:443 only proves Cloudflare's edge is up, staying
+    // green even if the tunnel or origin is down. The Hono server exposes
+    // GET /healthz -> 200, so probe that through Cloudflare instead.
     probeModule: "tcp_connect",
-    publicProbeModule: "tcp_connect",
+    publicProbeModule: "http_2xx",
+    publicProbePath: "/healthz",
   });
 }
 
@@ -55,9 +60,12 @@ export function createAgentTaskApiService(
     serviceName: agentTaskService.name,
     subdomain: "temporal-agent-tasks",
     port: 9467,
-    // POST-only receiver — see the gh-webhook probe comment above.
+    // POST-only receiver — see the gh-webhook probe comment above. The Hono
+    // server exposes GET /healthz -> 200, so the public probe checks the
+    // origin end-to-end through Cloudflare rather than stopping at the edge.
     probeModule: "tcp_connect",
-    publicProbeModule: "tcp_connect",
+    publicProbeModule: "http_2xx",
+    publicProbePath: "/healthz",
   });
 }
 
@@ -90,9 +98,12 @@ export function createXcodeCloudWebhookService(
       serviceName: webhookService.name,
       subdomain: "xcode-cloud-webhook",
       port: 9468,
-      // POST-only receiver — see the gh-webhook probe comment above.
+      // POST-only receiver — see the gh-webhook probe comment above. The Hono
+      // server exposes GET /healthz -> 200, so the public probe checks the
+      // origin end-to-end through Cloudflare rather than stopping at the edge.
       probeModule: "tcp_connect",
-      publicProbeModule: "tcp_connect",
+      publicProbeModule: "http_2xx",
+      publicProbePath: "/healthz",
     },
   );
 }

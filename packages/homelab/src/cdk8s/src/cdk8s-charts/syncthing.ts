@@ -30,7 +30,8 @@ export function createSyncthingChart(app: App) {
             },
           ],
         },
-        // Allow blackbox-exporter's in-cluster health probe
+        // Allow blackbox-exporter's in-cluster health probe (GUI service port
+        // only — not every port on the pod)
         {
           from: [
             {
@@ -39,6 +40,7 @@ export function createSyncthingChart(app: App) {
               },
             },
           ],
+          ports: [{ port: IntOrString.fromNumber(8384), protocol: "TCP" }],
         },
       ],
     },

@@ -99,7 +99,8 @@ export function createPostalChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }],
         },
-        // Allow blackbox-exporter's in-cluster health probe
+        // Allow blackbox-exporter's in-cluster health probe (web service port
+        // only — not every port on the pod)
         {
           from: [
             {
@@ -108,6 +109,7 @@ export function createPostalChart(app: App) {
               },
             },
           ],
+          ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }],
         },
       ],
       egress: [

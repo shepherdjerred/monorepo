@@ -54,7 +54,8 @@ export function createPlausibleChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(8000), protocol: "TCP" }],
         },
-        // Allow blackbox-exporter's in-cluster health probe
+        // Allow blackbox-exporter's in-cluster health probe (http service port
+        // only — not every port on the pod)
         {
           from: [
             {
@@ -63,6 +64,7 @@ export function createPlausibleChart(app: App) {
               },
             },
           ],
+          ports: [{ port: IntOrString.fromNumber(8000), protocol: "TCP" }],
         },
       ],
       egress: [

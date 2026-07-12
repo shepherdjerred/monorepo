@@ -48,7 +48,8 @@ export function createPinchtabChart(app: App) {
             { port: IntOrString.fromNumber(PINCHTAB_PORT), protocol: "TCP" },
           ],
         },
-        // Allow blackbox-exporter's in-cluster health probe
+        // Allow blackbox-exporter's in-cluster health probe (pinchtab port
+        // only — not every port on the pod)
         {
           from: [
             {
@@ -56,6 +57,9 @@ export function createPinchtabChart(app: App) {
                 matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
               },
             },
+          ],
+          ports: [
+            { port: IntOrString.fromNumber(PINCHTAB_PORT), protocol: "TCP" },
           ],
         },
       ],

@@ -112,4 +112,28 @@ describe("registerPublicProbe", () => {
     expect(getRegisteredBackendProbes()).toHaveLength(1);
     expect(getRegisteredPublicProbes()).toHaveLength(1);
   });
+
+  test("defaults path to / when omitted", () => {
+    registerPublicProbe({
+      namespace: "bugsink",
+      serviceName: "bugsink-service",
+      fqdn: "bugsink.sjer.red",
+    });
+
+    expect(getRegisteredPublicProbes()[0]?.path).toBe("/");
+  });
+
+  test("honors an explicit path override (e.g. an origin health endpoint)", () => {
+    registerPublicProbe({
+      namespace: "temporal",
+      serviceName: "temporal-worker-gh-webhook",
+      fqdn: "pr-bot.sjer.red",
+      module: "http_2xx",
+      path: "/healthz",
+    });
+
+    const probe = getRegisteredPublicProbes()[0];
+    expect(probe?.module).toBe("http_2xx");
+    expect(probe?.path).toBe("/healthz");
+  });
 });

@@ -37,7 +37,8 @@ export function createRedlibChart(app: App) {
             },
           ],
         },
-        // Allow blackbox-exporter's in-cluster health probe
+        // Allow blackbox-exporter's in-cluster health probe (service port
+        // only — not every port on the pod)
         {
           from: [
             {
@@ -46,6 +47,7 @@ export function createRedlibChart(app: App) {
               },
             },
           ],
+          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
         },
       ],
     },

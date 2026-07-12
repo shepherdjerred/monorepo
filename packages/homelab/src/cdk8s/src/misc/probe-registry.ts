@@ -12,6 +12,11 @@ export type PublicProbeDescriptor = {
   serviceName: string;
   fqdn: string;
   module: ProbeModule;
+  /**
+   * URL path the public HTTP probe requests (e.g. "/healthz"). Only meaningful
+   * for HTTP modules — a `tcp_connect` probe ignores it. Defaults to "/".
+   */
+  path: string;
 };
 
 // Module-level singletons: the whole cdk8s synth (`app.ts`) runs in one
@@ -72,12 +77,14 @@ export function registerPublicProbe(descriptor: {
   serviceName: string;
   fqdn: string;
   module?: ProbeModule;
+  path?: string;
 }): void {
   publicProbes.push({
     namespace: descriptor.namespace,
     serviceName: descriptor.serviceName,
     fqdn: descriptor.fqdn,
     module: descriptor.module ?? "http_2xx",
+    path: descriptor.path ?? "/",
   });
 }
 

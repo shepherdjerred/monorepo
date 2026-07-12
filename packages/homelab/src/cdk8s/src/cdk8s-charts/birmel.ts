@@ -44,7 +44,8 @@ export function createBirmelChart(app: App) {
             },
           ],
         },
-        // Allow blackbox-exporter's in-cluster health probe
+        // Allow blackbox-exporter's in-cluster health probe (oauth service
+        // port only — not every port on the pod)
         {
           from: [
             {
@@ -53,6 +54,7 @@ export function createBirmelChart(app: App) {
               },
             },
           ],
+          ports: [{ port: IntOrString.fromNumber(4112), protocol: "TCP" }],
         },
       ],
     },

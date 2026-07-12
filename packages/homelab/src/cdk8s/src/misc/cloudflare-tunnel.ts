@@ -37,6 +37,14 @@ export function createCloudflareTunnelBinding(
     /** Blackbox module override for the public (Cloudflare-hostname) probe. Defaults to "http_2xx". */
     publicProbeModule?: ProbeModule;
     /**
+     * URL path the public HTTP probe requests through Cloudflare, e.g.
+     * "/healthz". Use this to point an HTTP probe at a real origin health
+     * endpoint so the probe verifies the origin end-to-end rather than only
+     * Cloudflare's edge. Ignored by a `tcp_connect` publicProbeModule.
+     * Defaults to "/".
+     */
+    publicProbePath?: string;
+    /**
      * Skip auto-registering blackbox probes for this binding. Rare — must
      * carry a comment at the call site explaining why.
      */
@@ -95,6 +103,7 @@ export function createCloudflareTunnelBinding(
       serviceName: props.serviceName,
       fqdn,
       module: props.publicProbeModule,
+      path: props.publicProbePath,
     });
   }
 
