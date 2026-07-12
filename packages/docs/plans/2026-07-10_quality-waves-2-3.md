@@ -210,3 +210,40 @@ All 6 PRs implemented and submitted as a git-spice stack on `feature/quality-wav
 - macOS vs Linux bun behave differently here (macOS resolved the node_modules copy; Linux
   resolved the source dir) — always verify this class of failure in `oven/bun:<pin>` via
   Docker, not just locally.
+
+## Session Log — 2026-07-12 (PR #1448 merge origin/main)
+
+### Done
+
+- Merged `origin/main` into `scout-command-helper` (rebased base after quality-burndown
+  landed). `git rerere` auto-replayed all 10 shared conflicts; `scripts/ci/src/change-detection.ts`
+  removed via `git rm` (main split it into `change-detection/`; branch's edits — `PackageJsonDepsSchema`,
+  `Bun.env["BUILDKITE_MESSAGE"]` — verified already present in `git-diff.ts`/`version-commit.ts`/`index.ts`).
+- Take-main files verified byte-identical to origin/main (`.dagger/src/image.ts`, `.quality-baseline.json`,
+  `AGENTS.md`, `package.json`, `discord-stream-lifecycle/package.json`, `scripts/ci/eslint.config.ts`,
+  helm-types `sample-chart/values.yaml`, `pipeline-builder.ts`, `subscription.router.ts` with `setMuted` restored).
+- **Net delta vs origin/main = scout refactor ONLY** (10 files: `define-command.ts`, 6 command files,
+  `validation.ts`, `reply-helpers.ts`, scout `AGENTS.md`). Zero base-overlap noise, nothing reverted.
+- Merge commit `4531c1bf1` (2 parents) committed through **full unbypassed lefthook** — all tier-1/tier-2
+  green, scout backend 1123 pass / 0 fail. Pushed non-force (clean ff `2abbe05b8..4531c1bf1`).
+- Fresh CI: Buildkite build #5513 PENDING; `ci/merge-conflict` SUCCESS. Unresolved P0–P3 greptile: **0**
+  (4 threads, all resolved+outdated P1s from prior branch work).
+
+### Remaining
+
+- Monitor Buildkite #5513 to green (cold Dagger cache → slow). Watch for a hidden pkg-check/smoke
+  break like sibling #1449 (scout refactor unlikely to trip dsl-resolution, but verify).
+
+### Caveats
+
+- **Scoped-worktree install gaps hit lefthook, NOT bypassed — resolved by installing deps**, all
+  landing in gitignored dirs (zero tracked drift). The pokemon-scoped `setup.ts` left several packages'
+  `node_modules` absent, so their staged-file lefthook steps failed on missing modules. Fixes applied:
+  - `discord-stream-lifecycle`: built dist + `bun install --force` in dpp backend (the known dsl gotcha).
+  - `tasks-for-obsidian` + `tasknotes-types`: `bun install` in both; `@tasknotes/model@0.2.1` (registry
+    dep of tasknotes-types) only landed nested in the tfo `file:` copy after `bun install --force` in tfo.
+  - `.dagger`, `scripts/ci`, `packages/homelab`: had **no node_modules at all** → their `eslint.config.ts`
+    load failed with "The 'jiti' library is required". `bun install` in each pulled jiti + eslint-config.
+  - Root cause is the same for all: scoped setup doesn't install every package a full-repo merge stages.
+    On CI (full install) none of these are issues. Next merge of a broad main into a scoped worktree will
+    likely need the same per-producer installs before lefthook passes.
