@@ -6,6 +6,7 @@ priority: low
 due: "2026-06-30"
 tags:
   - seeded
+  - task
 completedDate: "2026-07-01"
 dateCreated: "2026-06-28T09:00:00.000Z"
 dateModified: "2026-07-01T09:00:00.000Z"

@@ -193,6 +193,19 @@ resource "cloudflare_dns_record" "sjer_red_cname_temporal_agent_tasks" {
   proxied = true
 }
 
+# Receives Xcode Cloud build webhooks (tasks-for-obsidian iOS app). The temporal
+# worker's receiver (event-bridge/xcode-cloud-webhook.ts) translates FAILED/
+# ERRORED builds into Alertmanager alerts. TunnelBinding lives in cdk8s; this
+# DNS record completes the public path. See packages/temporal/AGENTS.md.
+resource "cloudflare_dns_record" "sjer_red_cname_xcode_cloud_webhook" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "xcode-cloud-webhook"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
 # Self-hosted Relay Server (Obsidian real-time collaboration). TunnelBinding
 # lives in cdk8s (src/cdk8s/src/resources/relay); this record completes the
 # public path. Clients (Obsidian Relay plugin) connect over wss://relay.sjer.red.
@@ -252,14 +265,13 @@ resource "cloudflare_dns_record" "sjer_red_cname_resume" {
   proxied = true
 }
 
-resource "cloudflare_dns_record" "sjer_red_cname_seaweedfs" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "seaweedfs"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
-  proxied = true
-}
+# seaweedfs.sjer.red removed 2026-06-27: the SeaweedFS S3 API is now tailnet-only
+# (reachable via seaweedfs-s3.tailnet-1a49.ts.net). The state + llm-archive buckets
+# live on this gateway, so it is no longer exposed on the public Cloudflare tunnel.
+# All S3 consumers that previously used this public hostname have been migrated:
+#   - CI static-site deploy containers (.dagger/src/release.ts)
+#   - Operator ~/.aws/config default + seaweedfs profiles (packages/dotfiles/)
+#   - Tofu state backends (already used seaweedfs-s3.tailnet-1a49.ts.net)
 
 resource "cloudflare_dns_record" "sjer_red_cname_shuxin_bluemap" {
   zone_id = cloudflare_zone.sjer_red.id

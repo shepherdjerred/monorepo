@@ -3,7 +3,10 @@ import { copyFile, mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
-import type { SubtitlePref } from "@shepherdjerred/streambot/sources/source.ts";
+import type {
+  SubtitlePref,
+  SubtitleTrackRef,
+} from "@shepherdjerred/streambot/sources/source.ts";
 import type { ResolvedSubtitle } from "@shepherdjerred/streambot/machine/types.ts";
 import { cleanRollingSrt } from "@shepherdjerred/streambot/sources/subtitle-clean.ts";
 import {
@@ -16,6 +19,7 @@ import {
   ytdlpSubtitleArgs,
   type FfprobeSubtitleStream,
   type SubtitleCandidate,
+  type YtdlpSubtitleKinds,
 } from "@shepherdjerred/streambot/sources/subtitles.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
@@ -170,6 +174,26 @@ async function probeEmbeddedCandidates(
 }
 
 /**
+ * Enumerate every burnable subtitle candidate (sidecar + embedded) for a local file, ranked
+ * best-first by the server's configured language preference — for `/stream subtitles`'s track
+ * picker. Unlike {@link resolveSubtitleForFile}, this never stages/extracts anything; it's a pure
+ * listing so the user can pick before any I/O happens.
+ */
+export async function listSubtitleCandidatesForFile(
+  config: Config,
+  filePath: string,
+  signal: AbortSignal,
+): Promise<SubtitleCandidate[]> {
+  const sidecars = await gatherSidecarCandidates(filePath);
+  const embedded = await probeEmbeddedCandidates(config, filePath, signal);
+  return rankSubtitleCandidates(
+    [...sidecars, ...embedded],
+    config.subtitles.languages,
+    null,
+  );
+}
+
+/**
  * Cheap, content-free cache key for an extracted embedded track: SHA-256 over the file's identity
  * (absolute path + byte size + mtime) and the subtitle-relative stream index. Deliberately does NOT
  * hash the file's bytes — a remux is tens of GB, so hashing it would cost more than the extraction
@@ -310,6 +334,32 @@ async function extractEmbeddedTrack(
   return { path: cachePath };
 }
 
+/** Apply an exact track pick for a local file — no gathering/ranking, just stage/extract that one track. */
+async function resolveExactTrackForFile(
+  config: Config,
+  filePath: string,
+  trackRef: SubtitleTrackRef,
+  signal: AbortSignal,
+): Promise<ResolvedSubtitle | undefined> {
+  switch (trackRef.kind) {
+    case "off":
+      return undefined;
+    case "sidecar":
+      return stageSidecar(path.join(path.dirname(filePath), trackRef.file));
+    case "embedded":
+      return extractEmbeddedTrack(
+        config,
+        filePath,
+        { subtitleIndex: trackRef.subtitleIndex, codec: trackRef.codec },
+        signal,
+      );
+    case "ytdlp":
+      throw new Error(
+        "invariant: a ytdlp trackRef was passed to the file subtitle resolver",
+      );
+  }
+}
+
 /**
  * Resolve a burnable subtitle for a local file. Sidecars and embedded text tracks compete in ONE
  * cross-source ranking (language → full/SDH/forced quality → sidecar-first tie-break), so a
@@ -324,6 +374,12 @@ export async function resolveSubtitleForFile(
   pref: SubtitlePref | undefined,
   signal: AbortSignal,
 ): Promise<ResolvedSubtitle | undefined> {
+  // A trackRef (from `/stream subtitles`'s picker) names an EXACT track — bypass ranking/config
+  // defaults entirely (an explicit pick applies even if subtitles are config-disabled by default).
+  if (pref?.trackRef !== undefined) {
+    return resolveExactTrackForFile(config, filePath, pref.trackRef, signal);
+  }
+
   const eff = effectiveSubtitleConfig(pref, config);
   if (!eff.enabled) return undefined;
 
@@ -338,6 +394,11 @@ export async function resolveSubtitleForFile(
       eff.pinnedModifier,
     );
     for (const candidate of ranked) {
+      if (candidate.kind === "ytdlp") {
+        throw new Error(
+          "invariant: file subtitle ranking produced a yt-dlp candidate",
+        );
+      }
       const staged =
         candidate.kind === "sidecar"
           ? await stageSidecar(
@@ -365,19 +426,20 @@ export async function resolveSubtitleForFile(
 }
 
 /**
- * Resolve a burnable subtitle for a yt-dlp target (URL or `ytsearch1:` query) by downloading the
- * preferred subtitle/caption track and converting it to SRT. Best-effort: returns undefined (no
- * subtitles) on any failure or when none are available.
+ * Download + convert-to-SRT the best-matching subtitle/caption track yt-dlp reports for `target`,
+ * pinned to exactly `langPrefs`/`kinds`. Shared by the ranking path (`langPrefs` = the server's
+ * configured languages, `kinds` = manual-always/auto-if-configured) and the exact-pick path
+ * (`langPrefs` = a single trackRef language, `kinds` = exactly the one kind the user picked) — a
+ * single language list degenerates `pickWrittenSubtitleFile`'s ranking to "pick that one," so this
+ * one download routine serves both callers unchanged.
  */
-export async function resolveSubtitleForYtdlp(
+async function downloadYtdlpSubtitle(
   config: Config,
   target: string,
-  pref: SubtitlePref | undefined,
+  pick: { langPrefs: readonly string[]; kinds: YtdlpSubtitleKinds },
   signal: AbortSignal,
 ): Promise<ResolvedSubtitle | undefined> {
-  const eff = effectiveSubtitleConfig(pref, config);
-  if (!eff.enabled) return undefined;
-
+  const { langPrefs, kinds } = pick;
   let dir: string;
   try {
     dir = await ensureTempDir();
@@ -389,12 +451,7 @@ export async function resolveSubtitleForYtdlp(
   }
   const stem = randomUUID();
   const outputTemplate = path.join(dir, `${stem}.%(ext)s`);
-  const args = ytdlpSubtitleArgs(
-    target,
-    eff.languages,
-    config.subtitles.includeAutoGenerated,
-    outputTemplate,
-  );
+  const args = ytdlpSubtitleArgs(target, langPrefs, kinds, outputTemplate);
   // yt-dlp can exit non-zero when a source simply has no subtitles; we don't treat that as fatal —
   // we just inspect what (if anything) it wrote.
   await run([config.ytDlpPath, ...args], signal);
@@ -409,7 +466,7 @@ export async function resolveSubtitleForYtdlp(
     });
     return undefined;
   }
-  const picked = pickWrittenSubtitleFile(written, eff.languages);
+  const picked = pickWrittenSubtitleFile(written, langPrefs);
   if (picked === null) {
     log.info("no subtitles available for source", { target });
     return undefined;
@@ -418,6 +475,67 @@ export async function resolveSubtitleForYtdlp(
   await cleanRollingSubtitleFile(full);
   log.info("downloaded subtitle for source", { target, file: picked });
   return { path: full, cleanupPath: full };
+}
+
+/** Apply an exact track pick for a yt-dlp target — no ranking, pinned to one language + auto-flag. */
+async function resolveExactTrackForYtdlp(
+  config: Config,
+  target: string,
+  trackRef: SubtitleTrackRef,
+  signal: AbortSignal,
+): Promise<ResolvedSubtitle | undefined> {
+  if (trackRef.kind === "off") {
+    return undefined;
+  }
+  if (trackRef.kind !== "ytdlp") {
+    throw new Error(
+      "invariant: a non-ytdlp trackRef was passed to the yt-dlp subtitle resolver",
+    );
+  }
+  return downloadYtdlpSubtitle(
+    config,
+    target,
+    {
+      langPrefs: [trackRef.lang],
+      // Mutually exclusive: an exact pick must fetch ONLY the kind the user chose — requesting
+      // both would let a same-language manual track win over the auto-generated pick (or vice
+      // versa), since pickWrittenSubtitleFile ranks by language/format only, not manual-vs-auto.
+      kinds: {
+        manual: !trackRef.autoGenerated,
+        auto: trackRef.autoGenerated,
+      },
+    },
+    signal,
+  );
+}
+
+/**
+ * Resolve a burnable subtitle for a yt-dlp target (URL or `ytsearch1:` query) by downloading the
+ * preferred subtitle/caption track and converting it to SRT. Best-effort: returns undefined (no
+ * subtitles) on any failure or when none are available.
+ */
+export async function resolveSubtitleForYtdlp(
+  config: Config,
+  target: string,
+  pref: SubtitlePref | undefined,
+  signal: AbortSignal,
+): Promise<ResolvedSubtitle | undefined> {
+  if (pref?.trackRef !== undefined) {
+    return resolveExactTrackForYtdlp(config, target, pref.trackRef, signal);
+  }
+
+  const eff = effectiveSubtitleConfig(pref, config);
+  if (!eff.enabled) return undefined;
+
+  return downloadYtdlpSubtitle(
+    config,
+    target,
+    {
+      langPrefs: eff.languages,
+      kinds: { manual: true, auto: config.subtitles.includeAutoGenerated },
+    },
+    signal,
+  );
 }
 
 /**

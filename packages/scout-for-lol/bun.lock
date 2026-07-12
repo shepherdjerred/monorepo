@@ -11,7 +11,7 @@
         "@tauri-apps/plugin-dialog": "^2.7.0",
         "autoprefixer": "^10.5.0",
         "openai": "^6.34.0",
-        "react": "19.2.6",
+        "react": "19.2.7",
         "twisted": "^1.73.0",
         "zod": "^4.4.3",
       },
@@ -63,8 +63,8 @@
         "clsx": "^2.1.1",
         "lucide-react": "^1.14.0",
         "monaco-editor": "^0.55.0",
-        "react": "19.2.6",
-        "react-dom": "19.2.6",
+        "react": "19.2.7",
+        "react-dom": "19.2.7",
         "react-router-dom": "^7.7.1",
         "tailwind-merge": "^3.4.0",
         "ts-pattern": "^5.7.0",
@@ -117,7 +117,7 @@
         "prism-media": "^1.3.5",
         "prisma": "^7.8.0",
         "prom-client": "^15.1.3",
-        "react": "19.2.6",
+        "react": "19.2.7",
         "remeda": "^2.21.2",
         "sodium-native": "^5.0.10",
         "ts-pattern": "^5.7.0",
@@ -171,8 +171,8 @@
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "lucide-react": "^1.14.0",
-        "react": "19.2.6",
-        "react-dom": "19.2.6",
+        "react": "19.2.7",
+        "react-dom": "19.2.7",
         "tailwind-merge": "^3.4.0",
         "zod": "^4.4.3",
       },
@@ -224,8 +224,8 @@
         "fuse.js": "^7.1.0",
         "lucide-react": "^1.14.0",
         "openai": "^6.9.1",
-        "react": "19.2.6",
-        "react-dom": "19.2.6",
+        "react": "19.2.7",
+        "react-dom": "19.2.7",
         "tailwind-merge": "^3.4.0",
         "tailwindcss": "^4.0.0",
         "tailwindcss-animate": "^1.0.7",
@@ -248,7 +248,7 @@
         "@scout-for-lol/data": "file:../data",
         "chroma-js": "^3.2.0",
         "echarts": "^6.0.0",
-        "react": "19.2.6",
+        "react": "19.2.7",
         "remeda": "^2.21.2",
         "satori": "^0.26.0",
         "ts-pattern": "^5.7.0",
@@ -268,7 +268,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@scout-for-lol/data": "file:../data",
-        "react": "19.2.6",
+        "react": "19.2.7",
       },
       "devDependencies": {
         "@types/react": "^19.2.14",
@@ -277,7 +277,7 @@
         "typescript": "^6.0.3",
       },
       "peerDependencies": {
-        "react": "19.2.6",
+        "react": "19.2.7",
       },
     },
   },
@@ -2930,9 +2930,9 @@
 
     "rc9": ["rc9@3.0.1", "", { "dependencies": { "defu": "^6.1.6", "destr": "^2.0.5" } }, "sha512-gMDyleLWVE+i6Sgtc0QbbY6pEKqYs97NGi6isHQPqYlLemPoO8dxQ3uGi0f4NiP98c+jMW6cG1Kx9dDwfvqARQ=="],
 
-    "react": ["react@19.2.6", "", {}, "sha512-sfWGGfavi0xr8Pg0sVsyHMAOziVYKgPLNrS7ig+ivMNb3wbCBw3KxtflsGBAwD3gYQlE/AEZsTLgToRrSCjb0Q=="],
+    "react": ["react@19.2.7", "", {}, "sha512-HNe9WslTbXmFK8o8cmwgAeJFSBvt1bPdHCVKtaaV+WlAN36mpT4hcRpwbf3fY56ar2oIXzsBpOAiIRHAdY0OlQ=="],
 
-    "react-dom": ["react-dom@19.2.6", "", { "dependencies": { "scheduler": "^0.27.0" }, "peerDependencies": { "react": "^19.2.6" } }, "sha512-0prMI+hvBbPjsWnxDLxlCGyM8PN6UuWjEUCYmZhO67xIV9Xasa/r/vDnq+Xyq4Lo27g8QSbO5YzARu0D1Sps3g=="],
+    "react-dom": ["react-dom@19.2.7", "", { "dependencies": { "scheduler": "^0.27.0" }, "peerDependencies": { "react": "^19.2.7" } }, "sha512-t0BRVXvbiE/o20Hfw669rLbMCDWtYZLvmJigy2f0MxsXF+71pxhR3xOkspmsO8h3ZlNzyibAmtCa3l4lYKk6gQ=="],
 
     "react-is": ["react-is@16.13.1", "", {}, "sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ=="],
 
@@ -3702,7 +3702,7 @@
 
     "@scout-for-lol/data/@shepherdjerred/llm-models": ["@shepherdjerred/llm-models@file:../llm-models", { "dependencies": { "zod": "^4.4.3" }, "devDependencies": { "@shepherdjerred/eslint-config": "file:../eslint-config", "@tsconfig/node-lts": "^24.0.0", "@tsconfig/recommended": "^1.0.13", "@tsconfig/strictest": "^2.0.8", "@types/bun": "^1.2.0", "typescript": "^6.0.0" } }],
 
-    "@scout-for-lol/frontend/astro-opengraph-images": ["astro-opengraph-images@file:../astro-opengraph-images", { "dependencies": { "@resvg/resvg-js": "^2.6.2", "jsdom": "^29.0.2", "react": "19.2.6", "satori": "^0.26.0" }, "devDependencies": { "@fontsource/roboto": "^5.2.10", "@shepherdjerred/eslint-config": "file:../eslint-config", "@tsconfig/node24": "^24.0.4", "@tsconfig/strictest": "^2.0.8", "@types/bun": "^1.3.13", "@types/jsdom": "^28.0.1", "@types/node": "^25.6.0", "@types/react": "^19.2.14", "astro": "^6.1.9", "eslint": "^10.3.0", "jiti": "^2.7.0", "typescript": "^6.0.3", "vitest": "^4.1.5" }, "peerDependencies": { "tw-to-css": "^0.0.12" } }],
+    "@scout-for-lol/frontend/astro-opengraph-images": ["astro-opengraph-images@file:../astro-opengraph-images", { "dependencies": { "@resvg/resvg-js": "^2.6.2", "jsdom": "^29.0.2", "react": "19.2.7", "satori": "^0.26.0" }, "devDependencies": { "@fontsource/roboto": "^5.2.10", "@shepherdjerred/eslint-config": "file:../eslint-config", "@tsconfig/node24": "^24.0.4", "@tsconfig/strictest": "^2.0.8", "@types/bun": "^1.3.13", "@types/jsdom": "^28.0.1", "@types/node": "^25.6.0", "@types/react": "^19.2.14", "astro": "^6.1.9", "eslint": "^10.3.0", "jiti": "^2.7.0", "typescript": "^6.0.3", "vitest": "^4.1.5" }, "peerDependencies": { "tw-to-css": "^0.0.12" } }],
 
     "@sentry/node/@opentelemetry/instrumentation": ["@opentelemetry/instrumentation@0.214.0", "", { "dependencies": { "@opentelemetry/api-logs": "0.214.0", "import-in-the-middle": "^3.0.0", "require-in-the-middle": "^8.0.0" }, "peerDependencies": { "@opentelemetry/api": "^1.3.0" } }, "sha512-MHqEX5Dk59cqVah5LiARMACku7jXSVk9iVDWOea4x3cr7VfdByeDCURK6o1lntT1JS/Tsovw01UJrBhN3/uC5w=="],
 

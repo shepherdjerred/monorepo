@@ -110,4 +110,11 @@ export const BUILD_TIME_DEPS: string[] = [
   // (tasknotes-server, tasks-for-obsidian) read its src directly.
   // Emits dist/*.d.ts (declaration-only) so dependents' tsc resolves its types; bun runs its src.
   "discord-video-stream",
+  // Built package (package.json `main`/`types`/`exports` resolve to dist/), consumed from
+  // deep inside nested bun workspaces (discord-plays-pokemon/mario-kart's packages/backend,
+  // streambot). Raw-TS-source consumption from that depth doesn't fall back to the consumer's
+  // ancestor node_modules for runtime deps like discord.js under the hoisted linker — compiling
+  // to dist/*.js resolves the same way llm-models' zod dependency already does. Must come after
+  // eslint-config (its only build-time dep).
+  "discord-stream-lifecycle",
 ];

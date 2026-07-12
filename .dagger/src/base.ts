@@ -61,6 +61,48 @@ export const BUN_INSTALL_WITH_RETRY = [
 ].join("\n");
 
 /**
+ * Runs `BUN_INSTALL_WITH_RETRY`, then unconditionally removes `node_modules` at the
+ * workspace root AND every workspace member directory, then installs again cleanly.
+ * For a bun WORKSPACE ROOT install (not a member subdirectory — see
+ * `BUN_INSTALL_WITH_RETRY`'s doc comment on why cleanup between *member* retries was
+ * reverted) that links a `file:` dep which itself has its own populated `node_modules`
+ * (i.e. was built via a `withBuilt*`-style pre-install step before this install runs —
+ * e.g. discord-stream-lifecycle's compiled dist/).
+ *
+ * Empirically reproduced on discord-plays-pokemon/mario-kart's workspace-root install:
+ * the FIRST `bun install --frozen-lockfile` against a freshly-mounted `file:` dep with
+ * its own `node_modules` exits 0 but silently produces a corrupt copy — the dep's own
+ * `package.json` lands as a broken self-referential symlink (`package.json ->
+ * package.json`), so any import from that dep fails at runtime with `Cannot find
+ * module`, even though `dist/*.js` genuinely exists at the correct path. This is NOT a
+ * caching artifact (reproduced with a freshly-named `BUN_CACHE` volume and a bumped
+ * dependency version) and NOT the documented isolated-linker EEXIST race (`linker =
+ * "hoisted"` is already pinned in this workspace's `bunfig.toml`). Since exit code 0
+ * masks the corruption, `BUN_INSTALL_WITH_RETRY`'s failure-triggered retry never fires.
+ *
+ * Critical detail: the corrupted copy lands in the WORKSPACE MEMBER's `node_modules`
+ * (e.g. `packages/backend/node_modules/@shepherdjerred/discord-stream-lifecycle/`, since
+ * that's the member whose `package.json` declares the `file:` reference) — removing only
+ * the workspace ROOT's `node_modules` before reinstalling leaves that corrupted member
+ * copy untouched and does NOT fix the failure. `find -name node_modules` at depth 3
+ * catches root plus every member's node_modules under packages/.
+ */
+export function withCleanReinstallIfNeeded(
+  container: Container,
+  depNames: string[],
+): Container {
+  container = container.withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
+  if (!depNames.includes("discord-stream-lifecycle")) return container;
+  return container
+    .withExec([
+      "sh",
+      "-c",
+      "find . -maxdepth 3 -name node_modules -type d -exec rm -rf {} +",
+    ])
+    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
+}
+
+/**
  * Bun container with dependencies installed from individual directory params.
  * Each directory is passed separately for optimal Dagger caching.
  */
@@ -88,6 +130,7 @@ export function bunBaseContainer(
       "python3-setuptools",
       "make",
       "g++",
+      "patch",
       ...extraAptPackages,
     ])
 
@@ -133,9 +176,12 @@ export function bunBaseContainer(
       .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
   }
 
-  container = container
-    .withWorkdir(`/workspace/packages/${pkg}`)
-    .withExec(["sh", "-c", BUN_INSTALL_WITH_RETRY]);
+  // Clean-reinstall (not plain retry) when discord-stream-lifecycle is present:
+  // see `withCleanReinstallIfNeeded`'s doc comment above.
+  container = withCleanReinstallIfNeeded(
+    container.withWorkdir(`/workspace/packages/${pkg}`),
+    depNames,
+  );
 
   return container;
 }

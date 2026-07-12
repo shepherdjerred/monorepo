@@ -23,6 +23,9 @@ export type MatchParticipantFactRow = {
   assists: number;
   creepScore: number;
   damageToChampions: number;
+  // Archived raw participant blob — the legacy group path picks the Arena
+  // playerSubteamId out of it (the fact table has no dedicated column).
+  rawParticipantJson?: string;
 };
 
 export type PrematchParticipantFactRow = {
@@ -101,25 +104,6 @@ export function aggregatePrematchFacts(
   return sortedAggregates(plan, byGroup.values());
 }
 
-export function aggregatePairFacts(
-  facts: MatchParticipantFactRow[],
-  plan: ReportQueryPlan,
-): AggregateRow[] {
-  const byTeam = new Map<string, MatchParticipantFactRow[]>();
-  for (const fact of facts) {
-    const key = `${fact.matchId}:${fact.teamId.toString()}`;
-    byTeam.set(key, [...(byTeam.get(key) ?? []), fact]);
-  }
-
-  const byPair = new Map<string, AggregateRow>();
-  for (const teammates of byTeam.values()) {
-    const uniquePlayers = uniquePlayerFacts(teammates);
-    addPairRows(byPair, uniquePlayers);
-  }
-
-  return sortedAggregates(plan, byPair.values());
-}
-
 export function rowsFromAggregates(
   plan: ReportQueryPlan,
   rows: AggregateRow[],
@@ -145,102 +129,6 @@ export function rowsFromAggregates(
 export function cappedLimit(plan: ReportQueryPlan, maxRows: number): number {
   const limit = Math.min(plan.limit ?? maxRows, maxRows);
   return Math.min(limit, REPORT_MAX_ROWS_LIMIT);
-}
-
-function addPairRows(
-  byPair: Map<string, AggregateRow>,
-  uniquePlayers: MatchParticipantFactRow[],
-): void {
-  for (let leftIndex = 0; leftIndex < uniquePlayers.length; leftIndex++) {
-    for (
-      let rightIndex = leftIndex + 1;
-      rightIndex < uniquePlayers.length;
-      rightIndex++
-    ) {
-      const left = uniquePlayers[leftIndex];
-      const right = uniquePlayers[rightIndex];
-      if (left === undefined || right === undefined) {
-        continue;
-      }
-      addPairRow(byPair, left, right);
-    }
-  }
-}
-
-function addPairRow(
-  byPair: Map<string, AggregateRow>,
-  left: MatchParticipantFactRow,
-  right: MatchParticipantFactRow,
-): void {
-  const pair = orderedPair(left, right);
-  const current =
-    byPair.get(pair.key) ?? emptyPairAggregate(pair.left, pair.right);
-  current.games++;
-  if (left.win && right.win) {
-    current.wins++;
-  }
-  if (left.surrendered || right.surrendered) {
-    current.surrenders++;
-  }
-  current.kills += left.kills + right.kills;
-  current.deaths += left.deaths + right.deaths;
-  current.assists += left.assists + right.assists;
-  current.creepScore += left.creepScore + right.creepScore;
-  current.damageToChampions += left.damageToChampions + right.damageToChampions;
-  byPair.set(pair.key, current);
-}
-
-function uniquePlayerFacts(
-  facts: MatchParticipantFactRow[],
-): MatchParticipantFactRow[] {
-  const byPlayer = new Map<number, MatchParticipantFactRow>();
-  for (const fact of facts) {
-    byPlayer.set(fact.playerId, fact);
-  }
-  return [...byPlayer.values()].toSorted(
-    (left, right) => left.playerId - right.playerId,
-  );
-}
-
-function orderedPair(
-  left: MatchParticipantFactRow,
-  right: MatchParticipantFactRow,
-): {
-  key: string;
-  left: MatchParticipantFactRow;
-  right: MatchParticipantFactRow;
-} {
-  if (left.playerId <= right.playerId) {
-    return {
-      key: `${left.playerId.toString()}:${right.playerId.toString()}`,
-      left,
-      right,
-    };
-  }
-  return {
-    key: `${right.playerId.toString()}:${left.playerId.toString()}`,
-    left: right,
-    right: left,
-  };
-}
-
-function emptyPairAggregate(
-  left: MatchParticipantFactRow,
-  right: MatchParticipantFactRow,
-): AggregateRow {
-  return {
-    label: `${left.playerAlias} + ${right.playerAlias}`,
-    discordId: null,
-    games: 0,
-    wins: 0,
-    surrenders: 0,
-    kills: 0,
-    deaths: 0,
-    assists: 0,
-    creepScore: 0,
-    damageToChampions: 0,
-    ...EMPTY_LAKE_COUNTERS,
-  };
 }
 
 function addMatchFact(row: AggregateRow, fact: MatchParticipantFactRow): void {
@@ -296,8 +184,8 @@ function groupKey(
   if (groupBy === "champion") {
     return `champion:${fact.championId.toString()}`;
   }
-  if (groupBy === "pair") {
-    throw new Error("pair grouping requires the player_pairs source.");
+  if (groupBy === "group") {
+    throw new Error("group grouping requires the player_groups source.");
   }
   return `queue:${fact.queue ?? "unknown"}`;
 }
@@ -314,8 +202,8 @@ function groupLabel(
       ? fact.championName
       : fact.championId.toString();
   }
-  if (groupBy === "pair") {
-    throw new Error("pair grouping requires the player_pairs source.");
+  if (groupBy === "group") {
+    throw new Error("group grouping requires the player_groups source.");
   }
   return fact.queue ?? "unknown";
 }

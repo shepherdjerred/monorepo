@@ -3,8 +3,11 @@ import type {
   DiscordTopologyEvent,
   GatewayHealthEvent,
   ProducerHealthEvent,
-} from "@shepherdjerred/discord-stream-lifecycle/types.ts";
-import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/types";
+import type {
+  Source,
+  SubtitlePref,
+} from "@shepherdjerred/streambot/sources/source.ts";
 import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
 import type {
   ChannelId,
@@ -59,6 +62,13 @@ export type ResolvedSource = {
 export type QueuedSource = {
   readonly source: Source;
   readonly requesterId: UserId;
+  /**
+   * Already-resolved result from synchronous pre-validation at queue time (`/stream play`'s
+   * yt-dlp call before acking). When present, the `resolving` state's actor returns it directly
+   * instead of re-fetching — cleared after its first use so a later loop/requeue of the same item
+   * re-resolves (a signed yt-dlp URL can expire by then).
+   */
+  readonly preResolved?: ResolvedSource;
 };
 
 export type PlaybackContext = {
@@ -87,8 +97,18 @@ export type PlaybackContext = {
 };
 
 export type PlaybackEvent =
-  | { type: "ADD"; source: Source; requesterId: UserId }
-  | { type: "ADD_NEXT"; source: Source; requesterId: UserId }
+  | {
+      type: "ADD";
+      source: Source;
+      requesterId: UserId;
+      preResolved?: ResolvedSource;
+    }
+  | {
+      type: "ADD_NEXT";
+      source: Source;
+      requesterId: UserId;
+      preResolved?: ResolvedSource;
+    }
   | { type: "SKIP" }
   | { type: "STOP" }
   | { type: "REMOVE"; index: number }
@@ -97,6 +117,11 @@ export type PlaybackEvent =
   | { type: "SHUFFLE" }
   | { type: "SET_LOOP"; mode: LoopMode }
   | { type: "SET_VOLUME"; volume: number }
+  | {
+      type: "CHANGE_SUBTITLES";
+      subtitles: SubtitlePref | undefined;
+      positionSeconds: number;
+    }
   | DiscordTopologyEvent
   | GatewayHealthEvent
   | ProducerHealthEvent
@@ -120,7 +145,10 @@ export type JoinVoiceInput = {
   readonly guildId: GuildId;
   readonly channelId: ChannelId;
 };
-export type ResolveSourceInput = { readonly source: Source };
+export type ResolveSourceInput = {
+  readonly source: Source;
+  readonly preResolved?: ResolvedSource;
+};
 export type RunStreamInput = {
   readonly voice: VoiceHandle;
   readonly resolved: ResolvedSource;

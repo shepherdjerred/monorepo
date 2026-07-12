@@ -4,12 +4,13 @@ import { match } from "ts-pattern";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import type { AggregateRow } from "#src/reports/query-aggregates.ts";
 import {
+  compileGroupFactsQuery,
   compileMatchQuery,
-  compilePairQuery,
   compilePrematchQuery,
   type CompiledLakeQuery,
   type LakeQueryInput,
 } from "#src/reports/duckdb/compile.ts";
+import { aggregateGroupFacts } from "#src/reports/group-combinations.ts";
 import {
   withDuckDBConnection,
   type DuckDBSession,
@@ -17,6 +18,7 @@ import {
 import { resolveLakeFiles, type BoundParam } from "#src/reports/duckdb/lake.ts";
 import {
   LakeAggregateRowSchema,
+  LakeGroupFactRowSchema,
   LakeScannedRowSchema,
 } from "#src/reports/duckdb/row-schema.ts";
 
@@ -66,7 +68,9 @@ export async function runLakeAggregation(input: {
     .with("match_participants", "competition_match_participants", () =>
       compileMatchQuery(queryInput),
     )
-    .with("player_pairs", () => compilePairQuery(queryInput))
+    .with("player_groups", "player_pairs", () =>
+      compileGroupFactsQuery(queryInput),
+    )
     .with("prematch_participants", () => compilePrematchQuery(queryInput))
     .with("rank_current", "competition_rank", () => {
       throw new Error(`rank sources are not lake-backed: ${input.plan.source}`);
@@ -78,6 +82,10 @@ export async function runLakeAggregation(input: {
     return EMPTY_RESULT;
   }
 
+  const isGroupSource =
+    input.plan.source === "player_groups" ||
+    input.plan.source === "player_pairs";
+
   return await withDuckDBConnection(async (session) => {
     const aggregateRows = await session.run(
       compiled.aggregateSql,
@@ -87,6 +95,42 @@ export async function runLakeAggregation(input: {
       compiled.scannedSql,
       bindParams(session, compiled.scannedParams),
     );
+    const rowsScanned = LakeScannedRowSchema.parse(scannedRows[0]).scanned;
+
+    if (isGroupSource) {
+      const groupSize = input.plan.groupSize;
+      if (groupSize === undefined) {
+        throw new Error(
+          "player_groups reports require a group size (GROUP BY group(...)).",
+        );
+      }
+      const facts = aggregateRows.map((row) => {
+        const parsed = LakeGroupFactRowSchema.parse(row);
+        return {
+          playerId: parsed.player_id,
+          playerAlias: parsed.player_alias,
+          matchId: parsed.match_id,
+          teamId: parsed.team_id,
+          playerSubteamId: parsed.player_subteam_id,
+          win: parsed.win,
+          surrendered: parsed.surrendered,
+          kills: parsed.kills,
+          deaths: parsed.deaths,
+          assists: parsed.assists,
+          creepScore: parsed.creep_score,
+          damageToChampions: parsed.damage_to_champions,
+          goldEarned: parsed.gold_earned,
+          visionScore: parsed.vision_score,
+          damageTaken: parsed.damage_taken,
+          totalDamageDealt: parsed.total_damage_dealt,
+          wardsPlaced: parsed.wards_placed,
+          multikills: parsed.multikills,
+          gameDurationSeconds: parsed.game_duration_seconds,
+          timePlayedSeconds: parsed.time_played_seconds,
+        };
+      });
+      return { aggregates: aggregateGroupFacts(facts, groupSize), rowsScanned };
+    }
 
     const aggregates = aggregateRows.map((row) => {
       const parsed = LakeAggregateRowSchema.parse(row);
@@ -111,7 +155,6 @@ export async function runLakeAggregation(input: {
         timePlayedSeconds: parsed.time_played_seconds,
       };
     });
-    const rowsScanned = LakeScannedRowSchema.parse(scannedRows[0]).scanned;
     return { aggregates, rowsScanned };
   });
 }

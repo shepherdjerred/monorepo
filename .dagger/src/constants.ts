@@ -137,13 +137,13 @@ export const SHELLCHECK_IMAGE =
 export const BUN_VERSION = "1.3.14";
 
 // renovate: datasource=npm depName=release-please
-export const RELEASE_PLEASE_VERSION = "17.7.0";
+export const RELEASE_PLEASE_VERSION = "17.9.0";
 
 // renovate: datasource=npm depName=@anthropic-ai/claude-code
-export const CLAUDE_CODE_VERSION = "2.1.161";
+export const CLAUDE_CODE_VERSION = "2.1.175";
 
 // renovate: datasource=npm depName=@openai/codex
-export const CODEX_CLI_VERSION = "0.136.0";
+export const CODEX_CLI_VERSION = "0.139.0";
 
 // cogapp regenerates the README project-listing tables in the temporal-worker's
 // readme-refresh-weekly workflow (see withCogapp in image.ts).
@@ -160,10 +160,10 @@ export const GH_CLI_VERSION = "2.96.0";
 export const KUBECTL_VERSION = "v1.36.2";
 
 // renovate: datasource=github-releases depName=github/github-mcp-server
-export const GITHUB_MCP_SERVER_VERSION = "1.2.0";
+export const GITHUB_MCP_SERVER_VERSION = "1.3.0";
 
 // renovate: datasource=github-releases depName=siderolabs/talos
-export const TALOSCTL_VERSION = "v1.13.5";
+export const TALOSCTL_VERSION = "v1.13.6";
 
 // renovate: datasource=github-releases depName=opentofu/opentofu
 export const TOFU_VERSION = "1.12.3";
@@ -175,7 +175,7 @@ export const ARGOCD_CLI_VERSION = "v3.4.5";
 export const VELERO_CLI_VERSION = "v1.18.2";
 
 // renovate: datasource=github-releases depName=buildkite/cli
-export const BUILDKITE_CLI_VERSION = "3.47.0";
+export const BUILDKITE_CLI_VERSION = "3.48.0";
 
 // renovate: datasource=github-releases depName=temporalio/cli
 export const TEMPORAL_CLI_VERSION = "1.7.3";

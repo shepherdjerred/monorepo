@@ -3,7 +3,7 @@ import {
   countRealViewers,
   isRealViewer,
   type ViewerCandidate,
-} from "@shepherdjerred/discord-stream-lifecycle/viewer-presence.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/viewer-presence";
 
 const SELF = "self-userbot-id";
 const PEER_A = "peer-a-id";

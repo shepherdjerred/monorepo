@@ -393,3 +393,144 @@ describe("playback machine — resume", () => {
     );
   });
 });
+
+describe("CHANGE_SUBTITLES", () => {
+  test("restarts the current source with a new subtitle pref at the saved position", async () => {
+    const rec = makeSeekRecorder();
+    const actor = startActor(makeActors({ runStream: rec.runStream }));
+    actor.send({ type: "ADD", source: fileSource("movie"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    expect(rec.seeks[0]).toBe(0);
+
+    actor.send({
+      type: "CHANGE_SUBTITLES",
+      subtitles: { enabled: true, language: "en" },
+      positionSeconds: 42,
+    });
+    await waitFor(actor, () => rec.seeks.length === 2, WAIT);
+    expect(rec.seeks[1]).toBe(42);
+    expect(actor.getSnapshot().context.current?.source).toEqual({
+      ...fileSource("movie"),
+      subtitles: { enabled: true, language: "en" },
+    });
+  });
+
+  test("a subsequent natural loop after a subtitle restart starts at 0", async () => {
+    // The original (pre-restart) `runStream` invoke is abandoned, not resolved, when
+    // CHANGE_SUBTITLES tears it down — so unlike `makeSeekRecorder`'s FIFO `endCurrent`, this
+    // recorder must resolve the most recently started invoke, not the oldest pending one.
+    const seeks: number[] = [];
+    const resolvers: (() => void)[] = [];
+    const runStream: PlaybackActors["runStream"] = (input) => {
+      seeks.push(input.seekSeconds);
+      return new Promise<void>((resolve) => resolvers.push(resolve));
+    };
+    const actor = createActor(
+      createPlaybackMachine(makeActors({ runStream })),
+      {
+        input: { ...INPUT, initialLoop: "track" },
+      },
+    );
+    actor.start();
+    actor.send({ type: "ADD", source: fileSource("movie"), requesterId: U1 });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+
+    actor.send({
+      type: "CHANGE_SUBTITLES",
+      subtitles: { enabled: false },
+      positionSeconds: 10,
+    });
+    await waitFor(actor, () => seeks.length === 2, WAIT);
+    expect(seeks[1]).toBe(10);
+
+    resolvers.at(-1)?.(); // natural end of the restarted stream → track loop replays the item
+    await waitFor(actor, () => seeks.length === 3, WAIT);
+    expect(seeks[2]).toBe(0);
+    expect(actor.getSnapshot().context.resumeSeekSeconds).toBe(0);
+  });
+
+  test("is ignored while nothing is streaming (no active session)", () => {
+    const actor = startActor(makeActors());
+    expect(() =>
+      actor.send({
+        type: "CHANGE_SUBTITLES",
+        subtitles: { enabled: true },
+        positionSeconds: 0,
+      }),
+    ).not.toThrow();
+    expect(actor.getSnapshot().value).toBe("idle");
+  });
+});
+
+function urlSource(query: string): Source {
+  return { kind: "url", url: `https://example.com/${query}` };
+}
+
+describe("preResolved (synchronous pre-validation short-circuit)", () => {
+  test("resolveSource actor receives preResolved and its output is used as-is", async () => {
+    const seenPreResolved: unknown[] = [];
+    const resolveSource: PlaybackActors["resolveSource"] = (input) => {
+      seenPreResolved.push(input.preResolved);
+      return Promise.resolve(
+        input.preResolved ?? {
+          title: "fallback",
+          ffmpegInput: "should-not-be-used",
+          chapters: [],
+        },
+      );
+    };
+    const actor = startActor(makeActors({ resolveSource }));
+    const stub = { title: "pre", ffmpegInput: "pre://input", chapters: [] };
+    actor.send({
+      type: "ADD",
+      source: urlSource("video"),
+      requesterId: U1,
+      preResolved: stub,
+    });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    expect(seenPreResolved[0]).toEqual(stub);
+    expect(actor.getSnapshot().context.resolved).toEqual(stub);
+  });
+
+  test("preResolved is consumed once — a track-loop replay re-resolves for real", async () => {
+    const seenPreResolved: unknown[] = [];
+    const resolveSource: PlaybackActors["resolveSource"] = (input) => {
+      seenPreResolved.push(input.preResolved);
+      return Promise.resolve(
+        input.preResolved ?? {
+          title: "re-resolved",
+          ffmpegInput: "re-resolved://input",
+          chapters: [],
+        },
+      );
+    };
+    const stream = makeStreamController();
+    const actor = createActor(
+      createPlaybackMachine(
+        makeActors({ resolveSource, runStream: stream.runStream }),
+      ),
+      { input: { ...INPUT, initialLoop: "track" } },
+    );
+    actor.start();
+    const stub = { title: "pre", ffmpegInput: "pre://input", chapters: [] };
+    actor.send({
+      type: "ADD",
+      source: urlSource("video"),
+      requesterId: U1,
+      preResolved: stub,
+    });
+    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    expect(seenPreResolved[0]).toEqual(stub);
+    expect(actor.getSnapshot().context.resolved).toEqual(stub);
+
+    stream.endCurrent(); // natural end → track loop replays the same queued item
+    await waitFor(actor, () => seenPreResolved.length === 2, WAIT);
+    // The second resolve is a real one (preResolved was cleared after its first use).
+    expect(seenPreResolved[1]).toBeUndefined();
+    await waitFor(
+      actor,
+      (s) => s.context.resolved?.title === "re-resolved",
+      WAIT,
+    );
+  });
+});

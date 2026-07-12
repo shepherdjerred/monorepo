@@ -22,6 +22,7 @@ import {
   gitDir,
   gitFile,
   DAGGER_CALL,
+  REPO_GIT_REF,
 } from "../lib/buildkite.ts";
 import { k8sPlugin } from "../lib/k8s-plugin.ts";
 import type { BuildkiteGroup, BuildkiteStep } from "../lib/types.ts";
@@ -149,6 +150,11 @@ const SMOKE_TEST_FUNCTIONS: Record<string, string> = {
   streambot: "smoke-test-streambot",
   "discord-plays-mario-kart": "smoke-test-discord-plays-mario-kart",
   "trmnl-dashboard": "smoke-test-trmnl-dashboard",
+  // Not a startup smoke: rehearses the scheduled PR-creating workflows'
+  // environment (bot-clone install/build/commit paths) inside the built
+  // worker image, against the full repo tree at $BUILDKITE_COMMIT. See
+  // packages/temporal/scripts/rehearse-bot-clone.ts.
+  "temporal-worker": "temporal-schedule-rehearsal",
 };
 
 // Smoke test functions that take no arguments (standalone images)
@@ -166,6 +172,11 @@ const SMOKE_CUSTOM_INFRA = new Set([
   "smoke-test-streambot",
   "smoke-test-trmnl-dashboard",
 ]);
+
+// Smoke test functions that additionally take the whole repo tree as
+// --repo-dir (the temporal schedule rehearsal validates repo-wide paths the
+// weekly jobs depend on: cog targets, scout workspace, root install).
+const SMOKE_REPO_TREE = new Set(["temporal-schedule-rehearsal"]);
 
 /**
  * Combined "build + smoke" step. Each smoke `@func()` in `.dagger/src/`
@@ -188,6 +199,14 @@ function smokeTestStep(
   let cmd: string;
   if (SMOKE_NO_ARGS.has(daggerFn)) {
     cmd = `${DAGGER_CALL} ${daggerFn}`;
+  } else if (SMOKE_REPO_TREE.has(daggerFn)) {
+    cmd = [
+      `${DAGGER_CALL} ${daggerFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
+      `--repo-dir ${REPO_GIT_REF}`,
+      flags,
+    ]
+      .filter(Boolean)
+      .join(" ");
   } else if (SMOKE_CUSTOM_INFRA.has(daggerFn)) {
     cmd = [
       `${DAGGER_CALL} ${daggerFn} --pkg-dir ${gitDir(`packages/${pkg}`)}`,
