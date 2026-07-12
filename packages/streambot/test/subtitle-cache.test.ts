@@ -175,3 +175,56 @@ describe("embedded subtitle cache", () => {
     expect(await Bun.file(resolved.path).exists()).toBe(true);
   });
 });
+
+describe("resolveSubtitleForFile trackRef bypass (exact pick from the picker)", () => {
+  test("an off trackRef returns undefined without probing ffprobe/ffmpeg", async () => {
+    const { config, moviePath, ffmpegLog } = await setup(true);
+    const signal = new AbortController().signal;
+    const resolved = await resolveSubtitleForFile(
+      config,
+      moviePath,
+      { trackRef: { kind: "off" } },
+      signal,
+    );
+    expect(resolved).toBeUndefined();
+    // Neither binary ran, so the call-log files were never created.
+    expect(await Bun.file(ffmpegLog).exists()).toBe(false);
+  });
+
+  test("an embedded trackRef extracts that exact stream, skipping ranking", async () => {
+    const { config, moviePath, cacheDir } = await setup(true);
+    const signal = new AbortController().signal;
+    const resolved = await resolveSubtitleForFile(
+      config,
+      moviePath,
+      { trackRef: { kind: "embedded", subtitleIndex: 0, codec: "subrip" } },
+      signal,
+    );
+    if (resolved === undefined) {
+      throw new Error("expected a resolved subtitle");
+    }
+    expect(resolved.path.startsWith(cacheDir)).toBe(true);
+    expect(await Bun.file(resolved.path).exists()).toBe(true);
+  });
+
+  test("a sidecar trackRef stages that exact file, skipping ranking", async () => {
+    const { config, moviePath } = await setup(true);
+    const signal = new AbortController().signal;
+    const sidecarPath = path.join(path.dirname(moviePath), "Movie.es.srt");
+    await writeFile(sidecarPath, "1\n00:00:00,000 --> 00:00:01,000\nhola\n");
+
+    const resolved = await resolveSubtitleForFile(
+      config,
+      moviePath,
+      { trackRef: { kind: "sidecar", file: "Movie.es.srt" } },
+      signal,
+    );
+    if (resolved === undefined) {
+      throw new Error("expected a resolved subtitle");
+    }
+    // Staged sidecars are always a one-shot temp copy (never the shared cache).
+    expect(resolved.cleanupPath).toBe(resolved.path);
+    const text = await readFile(resolved.path, "utf8");
+    expect(text).toContain("hola");
+  });
+});

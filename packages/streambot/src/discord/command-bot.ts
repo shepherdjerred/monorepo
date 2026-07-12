@@ -18,11 +18,14 @@ import {
   type CommandInteraction,
 } from "@shepherdjerred/streambot/discord/command-handler.ts";
 import { sendPaginatedReply } from "@shepherdjerred/streambot/discord/pagination.ts";
+import { sendSubtitleMenu } from "@shepherdjerred/streambot/discord/subtitle-menu.ts";
 import { commandJson } from "@shepherdjerred/streambot/discord/commands.ts";
 import type { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
 import { EMPTY_HANDLE } from "@shepherdjerred/streambot/session/session-types.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
+import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { PlaylistItem } from "@shepherdjerred/streambot/sources/ytdlp.ts";
+import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import {
   ChannelIdSchema,
   GuildIdSchema,
@@ -53,6 +56,11 @@ export type CommandBotDeps = {
     signal: AbortSignal,
   ) => Promise<PlaylistItem[]>;
   readonly listSources: (signal: AbortSignal) => Promise<readonly string[]>;
+  /** Synchronously pre-resolve a `/stream play` url/search source before acking (feature: fast error surfacing). */
+  readonly resolvePlaySource: (
+    source: Source,
+    signal: AbortSignal,
+  ) => Promise<ResolvedSource>;
 };
 
 /** Render a neutral {@link Announcement} into discord.js message options (text, optional poster embed). */
@@ -267,7 +275,13 @@ export class CommandBot {
       seek: handle.seek,
       expandPlaylist: this.deps.expandPlaylist,
       listSources: this.deps.listSources,
+      resolvePlaySource: this.deps.resolvePlaySource,
       announce: (message) => this.announce(announceChannel, message),
+      listSubtitleCandidates: handle.listSubtitleCandidates,
+      currentSourceId: handle.currentSourceId,
+      hasPendingSubtitleMenu: handle.hasPendingSubtitleMenu,
+      claimSubtitleMenu: handle.claimSubtitleMenu,
+      releaseSubtitleMenu: handle.releaseSubtitleMenu,
     });
     await handler.run(this.adapt(interaction));
   }
@@ -450,6 +464,8 @@ export class CommandBot {
       replyPaginated: async (payload) => {
         await sendPaginatedReply(interaction, payload);
       },
+      replySelectMenu: (candidates) =>
+        sendSubtitleMenu(interaction, candidates),
     };
   }
 
