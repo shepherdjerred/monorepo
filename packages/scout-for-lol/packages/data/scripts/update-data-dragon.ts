@@ -1052,6 +1052,20 @@ async function maybeAppendChangelogEntry(
 
 async function main(): Promise<void> {
   try {
+    // --snapshots-only skips version resolution + asset download and jumps
+    // straight to the install-refresh + snapshot-test step, against
+    // whatever Data Dragon assets are already committed in the tree. Used by
+    // the temporal-schedule-rehearsal CI canary to exercise the exact step
+    // that broke scout-data-dragon-weekly-refresh without a network fetch or
+    // a real version bump — see
+    // packages/docs/plans/2026-07-12_fix-data-dragon-shared-cache.md.
+    if (process.argv.includes("--snapshots-only")) {
+      console.log("\n📸 Updating snapshots (--snapshots-only)...");
+      await updateSnapshots();
+      console.log("✅ Snapshots updated");
+      return;
+    }
+
     // Get version from command line or fetch latest
     const version = process.argv[2] ?? (await getLatestVersion());
     // Capture the on-disk version BEFORE writeJsonAssets overwrites it so the
