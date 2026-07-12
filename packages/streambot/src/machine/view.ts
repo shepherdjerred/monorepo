@@ -1,5 +1,5 @@
 import type { SnapshotFrom } from "xstate";
-import type { PlaybackView } from "@shepherdjerred/streambot/discord/command-handler.ts";
+import type { PlaybackView } from "@shepherdjerred/streambot/discord/queue-text.ts";
 import type { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
 import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
 
