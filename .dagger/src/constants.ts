@@ -137,7 +137,7 @@ export const SHELLCHECK_IMAGE =
 export const BUN_VERSION = "1.3.14";
 
 // renovate: datasource=npm depName=release-please
-export const RELEASE_PLEASE_VERSION = "17.7.0";
+export const RELEASE_PLEASE_VERSION = "17.9.0";
 
 // renovate: datasource=npm depName=@anthropic-ai/claude-code
 export const CLAUDE_CODE_VERSION = "2.1.175";
