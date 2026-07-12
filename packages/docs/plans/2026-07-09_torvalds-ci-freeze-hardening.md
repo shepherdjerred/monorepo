@@ -2,9 +2,13 @@
 
 ## Status
 
-Partially Complete — all code/config changes implemented and merged to this PR. Talos
-node-level rollout (watchdog, sysctls, kubelet podPidsLimit/enforceNodeAllocatable) is a
-**manual operator step not yet performed** — see "Rollout for 1a–1d" below.
+Complete — all four layers implemented, merged, and the Talos node-level manual rollout
+(watchdog, sysctls, kubelet podPidsLimit/enforceNodeAllocatable) is now live and verified
+on `torvalds` as of 2026-07-10. That rollout caused a real outage along the way — see the
+2026-07-10 Session Log below and `packages/docs/logs/2026-07-10_torvalds-kubelet-crashloop.md`
+for the full incident, and `packages/docs/plans/2026-07-10_torvalds-kubelet-cgroup-enforcement.md`
+(now archived to `packages/docs/archive/completed/`) for how it was ultimately completed
+correctly.
 
 ## Context
 
@@ -606,3 +610,48 @@ false-positive.
   (a bad watchdog config reboots the box), so per this repo's risk posture that's an
   explicit follow-up for the user/operator, not something to do unprompted from a coding
   session.
+
+## Session Log — 2026-07-10 (manual rollout, incident, and completion)
+
+### Done
+
+- The deferred manual rollout was performed 2026-07-09 and immediately caused an outage:
+  `enforceNodeAllocatable: [pods, system-reserved, kube-reserved]` was applied without the
+  kubelet-required `systemReservedCgroup`/`kubeReservedCgroup` fields, crash-looping
+  kubelet (and the node itself, repeatedly) until diagnosed and reverted. Full incident:
+  `packages/docs/logs/2026-07-10_torvalds-kubelet-crashloop.md`. `kernel.panic_on_rcu_stall`
+  and `podPidsLimit: 4096` were applied successfully in the same rollout and were
+  unaffected by the crash-loop.
+- A second gotcha surfaced during recovery: `talosctl patch machineconfig` appends list
+  fields instead of replacing them on this node — the actual fix required a full-document
+  `talosctl apply-config` instead. This is now the standard mechanism for all Talos changes
+  on this cluster going forward.
+- Follow-up plan `packages/docs/plans/2026-07-10_torvalds-kubelet-cgroup-enforcement.md`
+  (now archived to `archive/completed/`) re-did the enforcement correctly — found the real
+  Talos cgroup paths (`/system`, `/podruntime`) from `siderolabs/talos` source rather than
+  guessing, applied live, and verified the cgroup limits are real (`memory.max` matches
+  `systemReserved`/`kubeReserved` exactly). Also completed the still-pending watchdog
+  rollout from this PR (1a), verified `machined` is actively petting it.
+- Found and fixed two pieces of unrelated live-vs-repo drift surfaced by the incident:
+  a duplicated `kernel.modules` list (`i915`/`zfs`), and a stale `zfs_arc_max` module
+  parameter (62.5 GiB from an orphaned, never-merged branch) that was silently masked by
+  `image.yaml`'s sysfs override actually being correct at runtime.
+- Investigated (not fixed) a third drift: duplicate `TS_AUTHKEY` values in the Tailscale
+  `ExtensionServiceConfig` — see `packages/docs/todos/torvalds-tailscale-authkey-duplication.md`.
+
+### Remaining
+
+- Same post-rollout 1-2 week observation window called out in the original 2026-07-09 log
+  (false-positive check on `CriticalSystemLoad`, PID-pressure check, Kyverno PolicyReport
+  review, `max-in-flight: 24` reproduction check) — nothing new added by this rollout.
+- `packages/docs/todos/torvalds-tailscale-authkey-duplication.md` — low-priority, no
+  current impact, deferred fix (regenerate a single fresh authkey).
+- No full audit was done of whether other Talos patch files beyond the ones this PR
+  touched have similar live-vs-repo drift from historical manual rollouts.
+
+### Caveats
+
+- The `talosctl patch machineconfig` append-vs-replace behavior is now confirmed but its
+  root cause (Talos version behavior vs. how `extraConfig`'s opaque map is merged) was not
+  investigated further — worth checking Talos's own docs/issues if it needs to be relied
+  on or reported upstream.

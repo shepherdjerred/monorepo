@@ -61,6 +61,7 @@ import {
   buildDiscordPlaysPokemonImageHelper,
   buildDiscordPlaysMarioKartImageHelper,
   buildTemporalWorkerImageHelper,
+  temporalScheduleRehearsalHelper,
   buildTrmnlDashboardImageHelper,
   pushCaddyS3ProxyImageHelper,
   pushObsidianHeadlessImageHelper,
@@ -727,6 +728,27 @@ export class Monorepo {
       version,
       gitSha,
     );
+  }
+
+  /**
+   * Build the temporal-worker image and rehearse the scheduled PR-creating
+   * workflows' environment against the given repo tree (see
+   * packages/temporal/scripts/rehearse-bot-clone.ts). Fails when a change
+   * would break the weekly data-dragon / season-refresh / readme-refresh jobs.
+   */
+  @func()
+  async temporalScheduleRehearsal(
+    pkgDir: Directory,
+    repoDir: Directory,
+    depNames: string[] = [],
+    depDirs: Directory[] = [],
+  ): Promise<string> {
+    return temporalScheduleRehearsalHelper(
+      pkgDir,
+      repoDir,
+      depNames,
+      depDirs,
+    ).stdout();
   }
 
   /** Push a temporal-worker image to a registry. Returns digest. */

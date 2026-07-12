@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { parseAndCompile } from "@scout-for-lol/data";
 import {
+  compileGroupFactsQuery,
   compileMatchQuery,
-  compilePairQuery,
   compilePrematchQuery,
   type LakeQueryInput,
 } from "#src/reports/duckdb/compile.ts";
@@ -96,17 +96,33 @@ describe("compile", () => {
     );
   });
 
-  test("pair query self-join is playerId-ordered", () => {
-    const compiled = compilePairQuery(
-      input("SELECT pair, games FROM player_pairs GROUP BY pair"),
+  test("group query dedupes per subteam unit and keeps only multi-player units", () => {
+    const compiled = compileGroupFactsQuery(
+      input("SELECT group, games FROM player_groups GROUP BY group(all)"),
     );
     if (compiled === undefined) {
       throw new Error("expected compiled query");
     }
-    expect(compiled.aggregateSql).toContain("p1.player_id < p2.player_id");
+    // Dedupe and unit scoping both key on the Arena-aware unit: (match,
+    // team, subteam). Singleton units never leave DuckDB.
     expect(compiled.aggregateSql).toContain(
-      "PARTITION BY match_id, team_id, player_id ORDER BY puuid",
+      "PARTITION BY match_id, team_id, player_subteam_id, player_id ORDER BY puuid",
     );
+    expect(compiled.aggregateSql).toContain(
+      "PARTITION BY match_id, team_id, player_subteam_id) >= 2",
+    );
+    // Raw fact rows, not SQL aggregation — combinations happen in JS.
+    expect(compiled.aggregateSql).not.toContain("GROUP BY");
+  });
+
+  test("legacy pair query text compiles to the same group facts query", () => {
+    const legacy = compileGroupFactsQuery(
+      input("SELECT pair, games FROM player_pairs GROUP BY pair"),
+    );
+    const modern = compileGroupFactsQuery(
+      input("SELECT group, games FROM player_groups GROUP BY group(2)"),
+    );
+    expect(legacy?.aggregateSql).toBe(modern?.aggregateSql);
   });
 
   test("prematch rowsScanned asymmetry: champion filter only in the aggregate statement", () => {

@@ -16,8 +16,8 @@ import { initializeTracing } from "./observability/tracing.ts";
 
 initializeTracing();
 
-import { createGameBot } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot.ts";
-import { createSelfbotPooledUserbotFactory } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client.ts";
+import { createGameBot } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot";
+import { createSelfbotPooledUserbotFactory } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
 import { buildMarioKartExtraCommands } from "./discord/slashCommands/index.ts";
 import { MarioKartGameDriver } from "./lifecycle/mario-kart-driver.ts";
 import { SeatManager } from "./input/seat-manager.ts";

@@ -9,6 +9,8 @@ import {
   applyFilter,
   applySort,
 } from "../domain/filters";
+import { projectDisplayName, projectMatches } from "tasknotes-types/v2";
+
 import { useTasks } from "../hooks/use-tasks";
 import { feedbackTaskDelete } from "../lib/feedback";
 import { TaskList } from "../components/task/TaskList";
@@ -30,7 +32,10 @@ export function ProjectDetailScreen({ route, navigation }: Props) {
   const [sort, setSort] = useState(DEFAULT_SORT);
 
   const projectTasks = useMemo(
-    () => taskList.filter((t) => t.projects.includes(projectName)),
+    () =>
+      taskList.filter((t) =>
+        t.projects.some((p) => projectMatches(String(p), String(projectName))),
+      ),
     [taskList, projectName],
   );
 
@@ -71,7 +76,7 @@ export function ProjectDetailScreen({ route, navigation }: Props) {
   );
 
   React.useEffect(() => {
-    navigation.setOptions({ title: String(projectName) });
+    navigation.setOptions({ title: projectDisplayName(String(projectName)) });
   }, [navigation, projectName]);
 
   return (

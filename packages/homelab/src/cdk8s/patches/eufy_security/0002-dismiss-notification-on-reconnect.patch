@@ -1,0 +1,55 @@
+--- a/custom_components/eufy_security/eufy_security_api/api_client.py
++++ b/custom_components/eufy_security/eufy_security_api/api_client.py
+@@ -41,10 +41,11 @@
+ class ApiClient:
+     """Client to communicate with eufy-security-ws over websocket connection"""
+ 
+-    def __init__(self, config, session: aiohttp.ClientSession, on_error_callback) -> None:
++    def __init__(self, config, session: aiohttp.ClientSession, on_error_callback, on_open_callback=None) -> None:
+         self._config = config
+         self._client: WebSocketClient = WebSocketClient(self._config.host, self._config.port, session, self._on_open, self._on_message, self._on_close, self._on_error)
+         self._on_error_callback = on_error_callback
++        self._on_open_callback = on_open_callback
+         self._result_futures: dict[str, asyncio.Future] = {}
+         self._devices: dict = None
+         self._stations: dict = None
+@@ -324,6 +325,8 @@
+ 
+     async def _on_open(self) -> None:
+         _LOGGER.debug("on_open - executed")
++        if self._on_open_callback is not None:
++            self._on_open_callback()
+ 
+     def _on_close(self, future="") -> None:
+         _LOGGER.debug(f"on_close - executed - {future} = {future.exception()}")
+--- a/custom_components/eufy_security/coordinator.py
++++ b/custom_components/eufy_security/coordinator.py
+@@ -6,7 +6,7 @@
+ import asyncio
+ from homeassistant.config_entries import ConfigEntry
+ from homeassistant.core import HomeAssistant
+-from homeassistant.components.persistent_notification import create
++from homeassistant.components.persistent_notification import create, dismiss
+ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+ from homeassistant.helpers import aiohttp_client
+ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+@@ -32,7 +32,7 @@
+         super().__init__(hass, _LOGGER, name=DOMAIN, update_method=self._update_local, update_interval=timedelta(seconds=self.config.sync_interval))
+         self._platforms = []
+         self.data = {}
+-        self._api = ApiClient(self.config, aiohttp_client.async_get_clientsession(self.hass), self._on_error)
++        self._api = ApiClient(self.config, aiohttp_client.async_get_clientsession(self.hass), self._on_error, self._on_reconnect)
+ 
+     async def initialize(self):
+         """Initialize the integration"""
+@@ -107,6 +107,10 @@
+         self.hass.bus.async_listen_once(DISCONNECTED, self._async_reload)
+         self.hass.bus.async_fire(DISCONNECTED, None)
+ 
++    def _on_reconnect(self):
++        """clear the broken-connection notification once the websocket reconnects"""
++        dismiss(self.hass, "eufy_security_addon_connection_error")
++
+     @property
+     def available(self) -> bool:
+         return self._api.available
