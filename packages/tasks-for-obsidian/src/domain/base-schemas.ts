@@ -1,5 +1,19 @@
 import { z } from "zod";
 
+/**
+ * The app's INTERNAL camelCase domain vocabulary.
+ *
+ * These closed camelCase enums and base schemas are the app's own model —
+ * NOT the `/v2` wire contract (snake_case, config-driven statuses). The wire
+ * boundary (`./wire.ts`) parses the upstream `/v2` shapes and transforms them
+ * into these domain shapes; everything inland speaks this vocabulary.
+ *
+ * Re-homed from `tasknotes-types` when P6 deleted that package's legacy
+ * camelCase surface. Kept dependency-free except `zod`. `./types.ts` brands
+ * ids/names on top of these bases, and `./schemas.ts` wraps them with
+ * `.transform(...)` to produce the branded runtime schemas.
+ */
+
 // ── Enums ──────────────────────────────────────────────────────
 
 export const PrioritySchema = z.enum([
@@ -22,12 +36,10 @@ export const TaskStatusSchema = z.enum([
   "delegated",
 ]);
 export type TaskStatus = z.infer<typeof TaskStatusSchema>;
-export const ALL_STATUSES = TaskStatusSchema.options;
 
 // ── Task ───────────────────────────────────────────────────────
 
 export const RecurrenceAnchorSchema = z.enum(["scheduled", "completion"]);
-export type RecurrenceAnchor = z.infer<typeof RecurrenceAnchorSchema>;
 
 export const BlockedByEntrySchema = z.object({
   uid: z.string(),
@@ -117,11 +129,6 @@ export const UpdateTaskRequestSchema = z.object({
 });
 export type UpdateTaskRequest = z.infer<typeof UpdateTaskRequestSchema>;
 
-export const NlpRequestSchema = z.object({
-  text: z.string().min(1),
-});
-export type NlpRequest = z.infer<typeof NlpRequestSchema>;
-
 export const TaskQueryFilterSchema = z.object({
   status: z.array(TaskStatusSchema).optional(),
   priority: z.array(PrioritySchema).optional(),
@@ -136,80 +143,7 @@ export const TaskQueryFilterSchema = z.object({
 });
 export type TaskQueryFilter = z.infer<typeof TaskQueryFilterSchema>;
 
-// ── FilterQuery (upstream tree format) ─────────────────────────
-
-const FilterConditionSchema = z.object({
-  type: z.literal("condition"),
-  id: z.string(),
-  property: z.string(),
-  operator: z.string(),
-  value: z.unknown(),
-});
-
-type FilterGroup = {
-  type: "group";
-  id: string;
-  conjunction: "and" | "or";
-  children: FilterNode[];
-};
-
-type FilterNode = z.infer<typeof FilterConditionSchema> | FilterGroup;
-
-const FilterNodeSchema: z.ZodType<FilterNode> = z.lazy(() =>
-  z.union([FilterConditionSchema, FilterGroupSchema]),
-);
-
-const FilterGroupSchema: z.ZodType<FilterGroup> = z.object({
-  type: z.literal("group"),
-  id: z.string(),
-  conjunction: z.enum(["and", "or"]),
-  children: z.array(FilterNodeSchema),
-});
-
-export const FilterQuerySchema = z.object({
-  type: z.literal("group"),
-  id: z.string(),
-  conjunction: z.enum(["and", "or"]),
-  children: z.array(FilterNodeSchema),
-  sortKey: z.string().optional(),
-  sortDirection: z.enum(["asc", "desc"]).optional(),
-  groupKey: z.string().optional(),
-  subgroupKey: z.string().optional(),
-});
-export type FilterQuery = z.infer<typeof FilterQuerySchema>;
-
 // ── Responses ──────────────────────────────────────────────────
-
-export const ApiResponseSchema = <T extends z.ZodType>(dataSchema: T) =>
-  z.object({
-    success: z.boolean(),
-    data: dataSchema,
-    error: z.string().optional(),
-  });
-
-export const TaskListResponseSchema = z.object({
-  tasks: z.array(TaskSchema),
-  pagination: z.object({
-    total: z.number(),
-    offset: z.number(),
-    limit: z.number(),
-    hasMore: z.boolean(),
-  }),
-  vault: z
-    .object({
-      name: z.string(),
-      path: z.string(),
-    })
-    .optional(),
-  note: z.string().optional(),
-});
-export type TaskListResponse = z.infer<typeof TaskListResponseSchema>;
-
-export const QueryResponseSchema = z.object({
-  tasks: z.array(TaskSchema),
-  total: z.number(),
-});
-export type QueryResponse = z.infer<typeof QueryResponseSchema>;
 
 export const TaskStatsSchema = z.object({
   total: z.number(),
@@ -228,7 +162,6 @@ export const FilterOptionsSchema = z.object({
   statuses: z.array(TaskStatusSchema),
   priorities: z.array(PrioritySchema),
 });
-export type FilterOptions = z.infer<typeof FilterOptionsSchema>;
 
 export const NlpParseResultSchema = z.object({
   title: z.string(),
@@ -240,27 +173,6 @@ export const NlpParseResultSchema = z.object({
   recurrence: z.string().optional(),
 });
 export type NlpParseResult = z.infer<typeof NlpParseResultSchema>;
-
-export const DeleteResponseSchema = z.object({
-  success: z.boolean(),
-});
-export type DeleteResponse = z.infer<typeof DeleteResponseSchema>;
-
-// ── Time Tracking ──────────────────────────────────────────────
-
-export const TimeEntrySchema = z.object({
-  taskId: z.string(),
-  startTime: z.string(),
-  endTime: z.string().optional(),
-  duration: z.number().optional(),
-});
-export type TimeEntry = z.infer<typeof TimeEntrySchema>;
-
-export const TimeSummarySchema = z.object({
-  totalTime: z.number(),
-  entries: z.array(TimeEntrySchema),
-});
-export type TimeSummary = z.infer<typeof TimeSummarySchema>;
 
 // ── Pomodoro ───────────────────────────────────────────────────
 
@@ -281,11 +193,6 @@ export const CalendarEventSchema = z.object({
   taskId: z.string().optional(),
 });
 export type CalendarEvent = z.infer<typeof CalendarEventSchema>;
-
-export const CalendarEventsSchema = z.object({
-  events: z.array(CalendarEventSchema),
-});
-export type CalendarEvents = z.infer<typeof CalendarEventsSchema>;
 
 // ── Health ─────────────────────────────────────────────────────
 

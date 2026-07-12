@@ -10,7 +10,7 @@ import type {
   CalendarEvent as _CalendarEvent,
   HealthStatus as _HealthStatus,
   TaskStats as _TaskStats,
-} from "tasknotes-types";
+} from "./base-schemas";
 
 export type TaskQueryFilter = _TaskQueryFilter;
 export type FilterOptions = {
