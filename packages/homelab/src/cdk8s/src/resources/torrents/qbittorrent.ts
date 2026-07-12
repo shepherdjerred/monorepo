@@ -128,6 +128,17 @@ export function createQBitTorrentDeployment(
       [
         "set -e",
         "mkdir -p /config/qBittorrent",
+        // Stale single-instance lock cleanup. qBittorrent writes a lockfile
+        // (PID + process name) and ipc-socket; a dirty kill (OOM, SIGKILL)
+        // leaves them behind, and on the next start qbittorrent-nox reads the
+        // stale PID, finds *some* live process matching it (container PID
+        // namespaces are small and recycle constantly — including its own
+        // s6-respawned siblings), concludes another instance is running, and
+        // exits 0 silently. s6 respawns it every few seconds, the WebUI never
+        // binds, and the k8s startup probe kills the container forever (138
+        // restarts on 2026-07-11 before this was root-caused). Removing the
+        // lock here is always safe: in a fresh pod no instance can pre-exist.
+        "rm -f /config/qBittorrent/lockfile /config/qBittorrent/ipc-socket",
         "if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then",
         "  cp /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf",
         "else",
@@ -197,16 +208,21 @@ export function createQBitTorrentDeployment(
       name: "qbittorrent",
       image: `ghcr.io/linuxserver/qbittorrent:${versions["linuxserver/qbittorrent"]}`,
       portNumber: 8080,
-      // On a cold start (pod/node reboot), qbittorrent-nox loads and rechecks
-      // resume data for every tracked torrent before it binds the WebUI port,
-      // which can take well over the cdk8s-plus default 30s startup window
-      // (period=10s, failureThreshold=3). Kubelet was killing the container
-      // (SIGKILL, exit 137) before it ever came up, crash-looping forever.
-      // Give it a 5-minute runway, matching jellyfin's/scrypted's pattern.
+      // Generous startup window. NOTE (2026-07-11): the original rationale here
+      // ("nox rechecks resume data before binding the WebUI") was WRONG —
+      // qBittorrent 5.x loads resume data asynchronously and binds the WebUI in
+      // seconds on a clean start. The 2026-07-11 crash loop that looked like
+      // slow startup was actually the stale single-instance lockfile (see the
+      // config-seed init container above): nox exited 0 immediately on every
+      // spawn, so no probe window could ever have been long enough. The 15min
+      // runway is kept purely as storm insurance: under CI-storm IO starvation
+      // every start is slow, and a startup-probe SIGKILL mid-recovery is a
+      // dirty shutdown that makes the next attempt slower (the same
+      // kill-during-recovery loop the dagger engine liveness probe had).
       startup: Probe.fromTcpSocket({
         port: 8080,
         periodSeconds: Duration.seconds(10),
-        failureThreshold: 30,
+        failureThreshold: 90,
       }),
       resources: {
         memory: {
@@ -217,6 +233,21 @@ export function createQBitTorrentDeployment(
           request: Cpu.millis(100),
           limit: Cpu.millis(2000),
         },
+      },
+      // QBT_USERNAME/QBT_PASSWORD let hitandrun-share-limit.sh (mounted at
+      // /scripts below, run via AutoRun\OnTorrentAdded — see qBittorrent.conf)
+      // authenticate to the local WebUI API to set a per-torrent, size-computed
+      // seeding-time limit that matches the tracker's Hit & Run requirement.
+      envVariables: {
+        QBT_USERNAME: EnvValue.fromValue("jerred"),
+        QBT_PASSWORD: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "qbittorrent-hitandrun-password",
+            qBitTorrentItem.name,
+          ),
+          key: "password",
+        }),
       },
       volumeMounts: [
         {
@@ -230,6 +261,13 @@ export function createQBitTorrentDeployment(
             claims.downloads,
           ),
           path: "/downloads",
+        },
+        // Same ConfigMap the init container seeds /config from (see
+        // qbittorrentConfig.addDirectory above) — mounted again here so the
+        // qbittorrent process itself can exec hitandrun-share-limit.sh.
+        {
+          path: "/scripts",
+          volume: seedVolume,
         },
       ],
     }),

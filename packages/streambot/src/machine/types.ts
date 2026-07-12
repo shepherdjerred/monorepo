@@ -3,7 +3,7 @@ import type {
   DiscordTopologyEvent,
   GatewayHealthEvent,
   ProducerHealthEvent,
-} from "@shepherdjerred/discord-stream-lifecycle/types.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/types";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
 import type {

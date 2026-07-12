@@ -137,7 +137,7 @@ export function PlayerList() {
                 <TableRow key={player.id}>
                   <TableCell className="font-medium">
                     <Link
-                      className="hover:underline"
+                      className="underline"
                       to={`/g/${guildId}/players/${encodeURIComponent(player.alias)}`}
                     >
                       {player.alias}

@@ -1,4 +1,4 @@
-import { createTransitionLogInspector } from "@shepherdjerred/discord-stream-lifecycle/debug/transition-logger.ts";
+import { createTransitionLogInspector } from "@shepherdjerred/discord-stream-lifecycle/debug/transition-logger";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 /**

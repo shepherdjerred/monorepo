@@ -129,6 +129,25 @@ export async function createPrometheusApp(chart: Chart) {
     alertmanager: {
       alertmanagerSpec: {
         externalUrl: "https://alertmanager.tailnet-1a49.ts.net",
+        // Alertmanager's active-alert state is in-memory only (the PVC persists
+        // just nflog/silences), so when it dies mid-outage, resolve events for
+        // alerts that clear during the gap are never sent and PagerDuty
+        // incidents orphan as forever-"triggered". With only the chart-default
+        // 200Mi request and NO limit, it had one of the worst OOM scores on the
+        // node and was the kernel's preferred victim in the 2026-07-11 global-OOM
+        // storms (OOMKilled x5, e.g. 06:07:15Z) — exactly when its resolves
+        // matter most. A real request keeps its score low so it survives storms;
+        // the limit keeps it from becoming a problem itself (normal usage
+        // ~50-100Mi). See packages/docs/archive/completed/2026-07-10_torvalds-memory-rightsize.md.
+        resources: {
+          requests: {
+            cpu: "50m",
+            memory: "512Mi",
+          },
+          limits: {
+            memory: "1Gi",
+          },
+        },
         storage: {
           volumeClaimTemplate: {
             spec: {

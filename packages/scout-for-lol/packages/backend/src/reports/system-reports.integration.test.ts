@@ -14,6 +14,11 @@ import {
 
 const { prisma } = createTestDatabase("system-reports-test");
 
+// COMMON_DENOMINATOR definitions are beta-gated (they belong to MY_SERVER,
+// which only the beta bot serves) — run this suite as beta.
+const previousEnvironment = Bun.env["ENVIRONMENT"];
+Bun.env["ENVIRONMENT"] = "beta";
+
 beforeEach(async () => {
   await cleanup();
 });
@@ -21,10 +26,15 @@ beforeEach(async () => {
 afterAll(async () => {
   await cleanup();
   await prisma.$disconnect();
+  if (previousEnvironment === undefined) {
+    delete Bun.env["ENVIRONMENT"];
+  } else {
+    Bun.env["ENVIRONMENT"] = previousEnvironment;
+  }
 });
 
 describe("syncSystemReports", () => {
-  test("seeds Common Denominator top and bottom pairing reports", async () => {
+  test("seeds Common Denominator top and bottom group reports", async () => {
     await syncSystemReports({
       prisma,
       now: new Date(Date.UTC(2026, 4, 17, 12, 0, 0)),
@@ -40,20 +50,83 @@ describe("syncSystemReports", () => {
     });
 
     expect(reports.map((report) => report.title)).toEqual([
-      "Common Denominator - ARAM Bottom Pairings",
-      "Common Denominator - ARAM Pairings",
-      "Common Denominator - Arena Bottom Pairings",
-      "Common Denominator - Arena Pairings",
-      "Common Denominator - Ranked Bottom Pairings",
-      "Common Denominator - Ranked Pairings",
+      "Common Denominator - ARAM Bottom Groups",
+      "Common Denominator - ARAM Groups",
+      "Common Denominator - Arena Bottom Groups",
+      "Common Denominator - Arena Groups",
+      "Common Denominator - Ranked Bottom Groups",
+      "Common Denominator - Ranked Groups",
       "Common Denominator - Ranked Surrender Leaders",
     ]);
     const bottomReports = reports.filter((report) =>
-      report.title.includes("Bottom Pairings"),
+      report.title.includes("Bottom Groups"),
     );
     expect(bottomReports).toHaveLength(3);
     for (const report of bottomReports) {
       expect(report.queryText).toContain("ORDER BY win_rate ASC");
+      expect(report.queryText).toContain("FROM player_groups");
+      expect(report.queryText).toContain("GROUP BY group(all)");
+    }
+  });
+
+  test("renamed definitions update the old-titled row in place", async () => {
+    const t1 = new Date(Date.UTC(2026, 4, 17, 12, 0, 0));
+    // Seed a row under the pre-rename title, as a live deployment would have.
+    const legacy = await prisma.report.create({
+      data: {
+        serverId: MY_SERVER,
+        ownerId: testAccountId("0"),
+        channelId: testChannelId("771"),
+        title: "Common Denominator - Arena Pairings",
+        description:
+          "Seeded replacement for the legacy Common Denominator cron.",
+        queryText:
+          "SELECT pair, games, wins, losses, win_rate FROM player_pairs WHERE queue IN ('arena') AND games >= 10 GROUP BY pair ORDER BY win_rate DESC LIMIT 10 RENDER leaderboard",
+        lookbackDays: 30,
+        maxRows: 10,
+        isEnabled: true,
+        isSystemManaged: true,
+        systemSource: "COMMON_DENOMINATOR",
+        cronExpression: "0 18 * * 0",
+        createdTime: t1,
+        updatedTime: t1,
+      },
+    });
+
+    await syncSystemReports({ prisma, now: t1 });
+
+    const updated = await prisma.report.findUniqueOrThrow({
+      where: { id: legacy.id },
+    });
+    // Same row (id + run history preserved), new definition text.
+    expect(updated.title).toBe("Common Denominator - Arena Groups");
+    expect(updated.queryText).toContain("FROM player_groups");
+    expect(updated.queryText).toContain("GROUP BY group(all)");
+    expect(updated.isEnabled).toBe(true);
+    // No duplicate row was created under the new title.
+    const arenaRows = await prisma.report.findMany({
+      where: {
+        serverId: MY_SERVER,
+        systemSource: "COMMON_DENOMINATOR",
+        title: "Common Denominator - Arena Groups",
+      },
+    });
+    expect(arenaRows).toHaveLength(1);
+  });
+
+  test("seeds nothing outside the beta environment", async () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    try {
+      await syncSystemReports({
+        prisma,
+        now: new Date(Date.UTC(2026, 4, 17, 12, 0, 0)),
+      });
+      const reports = await prisma.report.findMany({
+        where: { serverId: MY_SERVER, systemSource: "COMMON_DENOMINATOR" },
+      });
+      expect(reports).toHaveLength(0);
+    } finally {
+      Bun.env["ENVIRONMENT"] = "beta";
     }
   });
 

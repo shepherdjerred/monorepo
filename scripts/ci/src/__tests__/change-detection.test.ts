@@ -963,6 +963,55 @@ describe("fail-fast base detection", () => {
     );
   });
 
+  it("tolerates explicit nulls in Buildkite API job fields (real API shape)", async () => {
+    Bun.env["BUILDKITE_API_TOKEN"] = "api-token";
+    // The Buildkite REST API returns `step_key: null` for every keyless job
+    // (e.g. the bootstrap upload step) and nulls out name/command on
+    // waiter/trigger jobs. A null-rejecting schema once dropped 100% of
+    // builds here and broke main CI.
+    const fetchFn = buildsFetch([
+      {
+        number: 99,
+        commit: "null-tolerant-base",
+        state: "passed",
+        blocked: false,
+        jobs: [
+          {
+            type: "script",
+            state: "passed",
+            name: ":pipeline: Upload pipeline",
+            command: "buildkite-agent pipeline upload",
+            step_key: null,
+            soft_failed: false,
+          },
+          {
+            type: "script",
+            state: "passed",
+            name: ":pipeline: Generate Pipeline",
+            command: ".buildkite/scripts/generate-pipeline.sh",
+            step_key: null,
+          },
+          { type: "waiter", name: null, command: null, step_key: null },
+        ],
+      },
+    ]);
+
+    await expect(_getLastSuccessfulCommit(fetchFn)).resolves.toBe(
+      "null-tolerant-base",
+    );
+  });
+
+  it("fails loudly when every build fails schema parsing (schema drift)", async () => {
+    Bun.env["BUILDKITE_API_TOKEN"] = "api-token";
+    const fetchFn = buildsFetch([
+      { number: "not-a-number", commit: "abc", state: "passed" },
+    ]);
+
+    await expect(_getLastSuccessfulCommit(fetchFn)).rejects.toThrow(
+      "refusing to treat schema drift as empty history",
+    );
+  });
+
   it("recognizes pipeline bootstrap jobs by stable command when labels change", () => {
     expect(
       _getBuildRejectionReason({

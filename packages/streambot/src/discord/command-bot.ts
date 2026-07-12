@@ -10,7 +10,7 @@ import {
   Routes,
   type VoiceState,
 } from "discord.js";
-import { countRealViewers } from "@shepherdjerred/discord-stream-lifecycle/viewer-presence.ts";
+import { countRealViewers } from "@shepherdjerred/discord-stream-lifecycle/viewer-presence";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { Announcement } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import {

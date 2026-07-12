@@ -28,13 +28,13 @@ export type CompetitionExample = {
 export const REPORT_EXAMPLES: ReportExample[] = [
   {
     id: "pairings",
-    label: "Best duo pairings",
+    label: "Best teammate groups",
     build: (channelId) => ({
       ...EMPTY_REPORT_STATE,
-      title: "Best duo pairings",
+      title: "Best teammate groups",
       channelId,
       queryText:
-        "select pair, games, win_rate from player_pairs where games >= 5 group by pair order by win_rate desc render leaderboard",
+        "select group, games, win_rate from player_groups where games >= 5 group by group(all) order by win_rate desc render leaderboard",
     }),
   },
   {

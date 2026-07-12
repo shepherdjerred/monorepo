@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { assign, createActor, fromPromise, setup, waitFor } from "xstate";
-import { createTransitionLogInspector } from "@shepherdjerred/discord-stream-lifecycle/debug/transition-logger.ts";
-import type { TransitionLogSink } from "@shepherdjerred/discord-stream-lifecycle/debug/transition-logger.ts";
+import { createTransitionLogInspector } from "@shepherdjerred/discord-stream-lifecycle/debug/transition-logger";
+import type { TransitionLogSink } from "@shepherdjerred/discord-stream-lifecycle/debug/transition-logger";
 
 type LoggedLine = { message: string; meta: Record<string, unknown> };
 

@@ -55,6 +55,7 @@ export async function listSubscriptions(
     creatorDiscordUser: names[sub.creatorDiscordId] ?? null,
     createdTime: sub.createdTime,
     filters: parseSubscriptionFilters(sub.filters),
+    isMuted: sub.isMuted,
   }));
 
   // Cursor is the last returned row's id (next page resumes after it).

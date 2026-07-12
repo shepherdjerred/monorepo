@@ -14,7 +14,7 @@ export function createDesiredStreamMachine(deps: RawGoLiveDeps) {
 // their own subpaths via the `./*` pattern in `package.json#exports`. Consumers should
 // import directly from those paths, e.g.:
 //
-//   import { UserbotPool } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool.ts";
-//   import { SingleSlotSessionManager } from "@shepherdjerred/discord-stream-lifecycle/session/session-manager.ts";
+//   import { UserbotPool } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool";
+//   import { SingleSlotSessionManager } from "@shepherdjerred/discord-stream-lifecycle/session/session-manager";
 //
 // This keeps the root entry point lean and avoids the no-re-exports lint rule.

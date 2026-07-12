@@ -11,8 +11,8 @@ import { createDesiredStreamMachine } from "@shepherdjerred/discord-stream-lifec
 import type {
   EncoderHandles,
   RawGoLiveDeps,
-} from "@shepherdjerred/discord-stream-lifecycle/types.ts";
-import { createTransitionLogInspector } from "@shepherdjerred/discord-stream-lifecycle/debug/transition-logger.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/types";
+import { createTransitionLogInspector } from "@shepherdjerred/discord-stream-lifecycle/debug/transition-logger";
 import { type Actor, createActor } from "xstate";
 import {
   WIDTH,

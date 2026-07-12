@@ -1,6 +1,5 @@
 import { z } from "zod";
 import {
-  ReportGroupBySchema,
   ReportMetricSchema,
   ReportOrderBySchema,
   ReportOrderDirectionSchema,
@@ -12,7 +11,11 @@ import {
   type ReportWhereClause,
 } from "#src/model/report-query-spec.ts";
 import { parseReportQuery } from "#src/model/report-query-parser.ts";
-import { parseRenderClause } from "#src/model/report-query-compile.ts";
+import {
+  groupingColumnNames,
+  parseGroupByClause,
+  parseRenderClause,
+} from "#src/model/report-query-compile.ts";
 import { tokenizeReportQuery } from "#src/model/report-query-lexer.ts";
 import { QueueTypeSchema } from "#src/model/state.ts";
 
@@ -56,8 +59,11 @@ function renderDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
   if (ast.render === undefined) {
     return [];
   }
-  const groupByResult = ReportGroupBySchema.safeParse(ast.groupBy?.value);
-  if (!groupByResult.success) {
+  const groupByClause =
+    ast.groupBy === undefined
+      ? undefined
+      : parseGroupByClause(ast.groupBy.value);
+  if (groupByClause === undefined) {
     return [];
   }
   const metrics: ReportMetric[] = [];
@@ -68,7 +74,7 @@ function renderDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
     }
   }
   try {
-    parseRenderClause(ast.render.value, metrics, groupByResult.data);
+    parseRenderClause(ast.render.value, metrics, groupByClause.groupBy);
     return [];
   } catch (renderError) {
     const message =
@@ -92,11 +98,11 @@ function sourceAndGroupDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
   }
   if (
     ast.groupBy !== undefined &&
-    !ReportGroupBySchema.safeParse(ast.groupBy.value).success
+    parseGroupByClause(ast.groupBy.value) === undefined
   ) {
     out.push(
       error(
-        `Unknown GROUP BY field "${ast.groupBy.value}". Valid fields: ${ReportGroupBySchema.options.join(", ")}.`,
+        `Unknown GROUP BY field "${ast.groupBy.value}". Valid fields: player, champion, queue, group(2..5), group(all), pair.`,
         ast.groupBy.span,
       ),
     );
@@ -107,9 +113,15 @@ function sourceAndGroupDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
 function metricDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
   const out: ReportDiagnostic[] = [];
   const groupByValue = ast.groupBy?.value;
+  const groupByClause =
+    groupByValue === undefined ? undefined : parseGroupByClause(groupByValue);
+  const labelNames =
+    groupByClause === undefined
+      ? new Set(["label"])
+      : groupingColumnNames(groupByClause.groupBy);
   let validMetrics = 0;
   for (const item of ast.select) {
-    if (item.value === "label" || item.value === groupByValue) {
+    if (labelNames.has(item.value) || item.value === groupByValue) {
       continue;
     }
     if (ReportMetricSchema.safeParse(item.value).success) {
@@ -130,7 +142,21 @@ function orderAndLimitDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
   const out: ReportDiagnostic[] = [];
   if (ast.orderBy !== undefined) {
     const { metric, direction } = ast.orderBy;
-    if (!ReportOrderBySchema.safeParse(metric.value).success) {
+    const groupByClause =
+      ast.groupBy === undefined
+        ? undefined
+        : parseGroupByClause(ast.groupBy.value);
+    // The grouping column may be ordered by any of its names (`label`, `group`
+    // /`pair`, or the groupBy field) — the compiler canonicalizes them to
+    // `label`, so accept them here too instead of flagging a false error.
+    const labelNames =
+      groupByClause === undefined
+        ? new Set(["label"])
+        : groupingColumnNames(groupByClause.groupBy);
+    if (
+      !labelNames.has(metric.value) &&
+      !ReportOrderBySchema.safeParse(metric.value).success
+    ) {
       out.push(
         error(`Unknown ORDER BY target "${metric.value}".`, metric.span),
       );
