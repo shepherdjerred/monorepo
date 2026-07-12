@@ -140,7 +140,7 @@ export const BUN_VERSION = "1.3.14";
 export const RELEASE_PLEASE_VERSION = "17.7.0";
 
 // renovate: datasource=npm depName=@anthropic-ai/claude-code
-export const CLAUDE_CODE_VERSION = "2.1.161";
+export const CLAUDE_CODE_VERSION = "2.1.175";
 
 // renovate: datasource=npm depName=@openai/codex
 export const CODEX_CLI_VERSION = "0.136.0";
