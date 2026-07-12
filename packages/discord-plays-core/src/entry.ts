@@ -1,12 +1,12 @@
 import * as Sentry from "@sentry/bun";
 import type { SpanProcessor } from "@opentelemetry/sdk-trace-base";
-import { createGameBot } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot.ts";
+import { createGameBot } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot";
 import type {
   CreateGameBotOptions,
   GameBotRuntime,
-} from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot.ts";
-import { createSelfbotPooledUserbotFactory } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client.ts";
-import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot";
+import { createSelfbotPooledUserbotFactory } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
+import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
 import { initializeTracing } from "#src/observability/tracing.ts";
 import type { Logger } from "#src/logger.ts";
 

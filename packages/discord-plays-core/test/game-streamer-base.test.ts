@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { PassThrough } from "node:stream";
 import { Client } from "discord.js-selfbot-v13";
-import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types.ts";
+import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types";
 import { GameStreamerBase } from "#src/stream/game-streamer-base.ts";
 import { streamActive } from "#src/observability/metrics.ts";
 import type { AudioTransport } from "#src/stream/audio-transport.ts";
