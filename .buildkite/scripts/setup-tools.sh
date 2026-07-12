@@ -10,7 +10,7 @@ RIPGREP_VERSION="15.1.0"
 KUBECTL_VERSION="v1.36.2"
 
 # renovate: datasource=github-releases depName=astral-sh/uv
-UV_VERSION="0.11.18"
+UV_VERSION="0.11.21"
 
 # renovate: datasource=github-releases depName=helm/helm
 HELM_VERSION="v4.2.2"
