@@ -1,6 +1,7 @@
 import { REPORT_MAX_ROWS_LIMIT } from "@scout-for-lol/data";
 import type {
   ReportGroupBy,
+  ReportExpression,
   ReportMetric,
   ReportQueryPlan,
 } from "@scout-for-lol/data";
@@ -59,6 +60,39 @@ export type AggregateRow = {
   durationSeconds: number;
   /** Sum of time played (seconds) across group members. */
   timePlayedSeconds: number;
+  participantRows: number;
+  earlySurrenders: number;
+  laneMinions: number;
+  neutralMinions: number;
+  goldSpent: number;
+  damageMitigated: number;
+  damageToObjectives: number;
+  damageToTurrets: number;
+  healing: number;
+  teammateHealing: number;
+  wardsKilled: number;
+  controlWardsBought: number;
+  detectorWardsPlaced: number;
+  doubleKills: number;
+  tripleKills: number;
+  quadraKills: number;
+  pentaKills: number;
+  largestMultikill: number;
+  killingSprees: number;
+  firstBloods: number;
+  championLevelTotal: number;
+  championExperienceTotal: number;
+  timeDeadSeconds: number;
+  longestLifeSeconds: number;
+  ccTimeSeconds: number;
+  turretKills: number;
+  inhibitorKills: number;
+  dragonKills: number;
+  baronKills: number;
+  arenaRows: number;
+  placementSum: number;
+  topTwoPlacements: number;
+  firstPlaceFinishes: number;
 };
 
 const EMPTY_LAKE_COUNTERS = {
@@ -70,6 +104,39 @@ const EMPTY_LAKE_COUNTERS = {
   multikills: 0,
   durationSeconds: 0,
   timePlayedSeconds: 0,
+  participantRows: 0,
+  earlySurrenders: 0,
+  laneMinions: 0,
+  neutralMinions: 0,
+  goldSpent: 0,
+  damageMitigated: 0,
+  damageToObjectives: 0,
+  damageToTurrets: 0,
+  healing: 0,
+  teammateHealing: 0,
+  wardsKilled: 0,
+  controlWardsBought: 0,
+  detectorWardsPlaced: 0,
+  doubleKills: 0,
+  tripleKills: 0,
+  quadraKills: 0,
+  pentaKills: 0,
+  largestMultikill: 0,
+  killingSprees: 0,
+  firstBloods: 0,
+  championLevelTotal: 0,
+  championExperienceTotal: 0,
+  timeDeadSeconds: 0,
+  longestLifeSeconds: 0,
+  ccTimeSeconds: 0,
+  turretKills: 0,
+  inhibitorKills: 0,
+  dragonKills: 0,
+  baronKills: 0,
+  arenaRows: 0,
+  placementSum: 0,
+  topTwoPlacements: 0,
+  firstPlaceFinishes: 0,
 };
 
 export function aggregateMatchFacts(
@@ -113,13 +180,14 @@ export function rowsFromAggregates(
   const limit = cappedLimit(plan, maxRows);
   return {
     plan,
-    columns: ["label", ...plan.metrics],
+    columns: ["label", ...plan.selectItems.map((item) => item.key)],
     rows: rows.slice(0, limit).map((row) => ({
       label: row.label,
+      dimensions: row.label.split(" • "),
       discordId: row.discordId,
-      values: plan.metrics.map((metric) => ({
-        column: metric,
-        value: metricValue(row, metric),
+      values: plan.selectItems.map((item) => ({
+        column: item.key,
+        value: evaluateExpression(row, item.expression),
       })),
     })),
     rowsScanned,
@@ -152,6 +220,7 @@ export function sortedAggregates(
 ): AggregateRow[] {
   return [...rows]
     .filter((row) => plan.minGames === undefined || row.games >= plan.minGames)
+    .filter((row) => matchesHaving(row, plan))
     .toSorted((left, right) => compareAggregateRows(left, right, plan));
 }
 
@@ -218,8 +287,22 @@ function compareAggregateRows(
     return direction * left.label.localeCompare(right.label);
   }
 
-  const valueDiff =
-    metricValue(left, plan.orderBy) - metricValue(right, plan.orderBy);
+  const selectItem = plan.selectItems.find((item) => item.key === plan.orderBy);
+  const leftValue =
+    selectItem === undefined
+      ? plan.orderBy === "games"
+        ? left.games
+        : null
+      : evaluateExpression(left, selectItem.expression);
+  const rightValue =
+    selectItem === undefined
+      ? plan.orderBy === "games"
+        ? right.games
+        : null
+      : evaluateExpression(right, selectItem.expression);
+  if (leftValue === null && rightValue !== null) return 1;
+  if (leftValue !== null && rightValue === null) return -1;
+  const valueDiff = (leftValue ?? 0) - (rightValue ?? 0);
   if (valueDiff !== 0) {
     return direction * valueDiff;
   }
@@ -260,8 +343,135 @@ const METRIC_VALUES: Record<ReportMetric, (row: AggregateRow) => number> = {
       ? 0
       : row.creepScore / (row.timePlayedSeconds / 60),
   score: (row) => row.games,
+  early_surrenders: (row) => row.earlySurrenders,
+  early_surrender_rate: (row) =>
+    row.games === 0 ? 0 : row.earlySurrenders / row.games,
+  lane_minions: (row) => row.laneMinions,
+  neutral_minions: (row) => row.neutralMinions,
+  gold_spent: (row) => row.goldSpent,
+  damage_mitigated: (row) => row.damageMitigated,
+  damage_to_objectives: (row) => row.damageToObjectives,
+  damage_to_turrets: (row) => row.damageToTurrets,
+  healing: (row) => row.healing,
+  teammate_healing: (row) => row.teammateHealing,
+  wards_killed: (row) => row.wardsKilled,
+  control_wards_bought: (row) => row.controlWardsBought,
+  detector_wards_placed: (row) => row.detectorWardsPlaced,
+  double_kills: (row) => row.doubleKills,
+  triple_kills: (row) => row.tripleKills,
+  quadra_kills: (row) => row.quadraKills,
+  penta_kills: (row) => row.pentaKills,
+  largest_multikill: (row) => row.largestMultikill,
+  killing_sprees: (row) => row.killingSprees,
+  first_bloods: (row) => row.firstBloods,
+  first_blood_rate: (row) =>
+    row.games === 0 ? 0 : row.firstBloods / row.games,
+  avg_champion_level: (row) =>
+    row.participantRows === 0
+      ? 0
+      : row.championLevelTotal / row.participantRows,
+  avg_champion_experience: (row) =>
+    row.participantRows === 0
+      ? 0
+      : row.championExperienceTotal / row.participantRows,
+  time_dead_seconds: (row) => row.timeDeadSeconds,
+  longest_life_seconds: (row) => row.longestLifeSeconds,
+  cc_time_seconds: (row) => row.ccTimeSeconds,
+  turret_kills: (row) => row.turretKills,
+  inhibitor_kills: (row) => row.inhibitorKills,
+  dragon_kills: (row) => row.dragonKills,
+  baron_kills: (row) => row.baronKills,
+  arena_games: (row) => row.arenaRows,
+  average_placement: (row) =>
+    row.arenaRows === 0 ? 0 : row.placementSum / row.arenaRows,
+  top_two_rate: (row) =>
+    row.arenaRows === 0 ? 0 : row.topTwoPlacements / row.arenaRows,
+  first_place_rate: (row) =>
+    row.arenaRows === 0 ? 0 : row.firstPlaceFinishes / row.arenaRows,
 };
 
-function metricValue(row: AggregateRow, metric: ReportMetric): number {
+export function metricValue(row: AggregateRow, metric: ReportMetric): number {
   return METRIC_VALUES[metric](row);
+}
+
+export function evaluateExpression(
+  row: AggregateRow,
+  expression: ReportExpression,
+): number | null {
+  if (expression.kind === "metric") {
+    return metricValue(row, expression.metric);
+  }
+  if (expression.kind === "number") {
+    return expression.value;
+  }
+  if (expression.kind === "binary") {
+    return evaluateBinaryExpression(row, expression);
+  }
+  return evaluateFunctionExpression(row, expression);
+}
+
+function evaluateBinaryExpression(
+  row: AggregateRow,
+  expression: Extract<ReportExpression, { kind: "binary" }>,
+): number | null {
+  const left = evaluateExpression(row, expression.left);
+  const right = evaluateExpression(row, expression.right);
+  if (left === null || right === null) return null;
+  switch (expression.operator) {
+    case "+":
+      return left + right;
+    case "-":
+      return left - right;
+    case "*":
+      return left * right;
+    case "/":
+      return right === 0 ? null : left / right;
+  }
+}
+
+function evaluateFunctionExpression(
+  row: AggregateRow,
+  expression: Extract<ReportExpression, { kind: "function" }>,
+): number | null {
+  const values = expression.arguments.map((argument) =>
+    evaluateExpression(row, argument),
+  );
+  if (expression.name === "coalesce") {
+    return values[0] ?? values[1] ?? null;
+  }
+  const first = values[0];
+  if (first === null || first === undefined) return null;
+  if (expression.name === "per_game") {
+    return row.games === 0 ? null : first / row.games;
+  }
+  if (expression.name === "per_minute") {
+    return row.timePlayedSeconds === 0
+      ? null
+      : first / (row.timePlayedSeconds / 60);
+  }
+  const precision = values[1] ?? 0;
+  if (!Number.isInteger(precision) || precision < 0 || precision > 10) {
+    throw new Error("round precision must be an integer from 0 to 10.");
+  }
+  const scale = 10 ** precision;
+  return Math.round(first * scale) / scale;
+}
+
+function matchesHaving(row: AggregateRow, plan: ReportQueryPlan): boolean {
+  return plan.having.every((clause) => {
+    const item = plan.selectItems.find(
+      (candidate) => candidate.key === clause.key,
+    );
+    if (item === undefined) {
+      throw new Error(`HAVING target "${clause.key}" is not a SELECT output.`);
+    }
+    const value = evaluateExpression(row, item.expression);
+    if (value === null) return false;
+    if (clause.operator === "=") return value === clause.value;
+    if (clause.operator === "!=") return value !== clause.value;
+    if (clause.operator === "<") return value < clause.value;
+    if (clause.operator === "<=") return value <= clause.value;
+    if (clause.operator === ">") return value > clause.value;
+    return value >= clause.value;
+  });
 }

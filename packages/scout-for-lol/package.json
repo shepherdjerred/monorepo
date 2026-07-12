@@ -42,6 +42,7 @@
     "jiti": "^2.7.0",
     "jscpd": "^4.0.9",
     "knip": "^6.6.0",
+    "prettier": "3.8.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.0"
   },

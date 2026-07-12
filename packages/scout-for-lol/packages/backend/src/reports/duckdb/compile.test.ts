@@ -27,7 +27,7 @@ function input(queryText: string, playerIds?: number[]): LakeQueryInput {
   };
 }
 
-function paramValues(params: BoundParam[]): (string | number)[] {
+function paramValues(params: BoundParam[]): (string | number | boolean)[] {
   return params.flatMap((param) =>
     param.kind === "scalar" ? [param.value] : [...param.values],
   );
@@ -152,6 +152,37 @@ describe("compile", () => {
     }
     expect(compiled.aggregateSql).toContain("champion_id = ?");
     expect(compiled.scannedSql).toContain("champion_id = ?");
+  });
+
+  test("compiles two-dimensional temporal grouping as closed SQL", () => {
+    const compiled = compileMatchQuery(
+      input(
+        "SELECT games, win_rate FROM match_participants GROUP BY week, team_position ORDER BY label ASC",
+      ),
+    );
+    if (compiled === undefined) throw new Error("expected compiled query");
+    expect(compiled.aggregateSql).toContain(
+      "date_trunc('week', game_creation_at)",
+    );
+    expect(compiled.aggregateSql).toContain("team_position");
+    expect(compiled.aggregateSql).toContain("concat_ws(' • '");
+  });
+
+  test("binds string, numeric, and boolean participant filters", () => {
+    const compiled = compileMatchQuery(
+      input(
+        "SELECT games FROM match_participants WHERE role = 'support' AND damage_to_champions >= 10000 AND win IN (true, false) GROUP BY player",
+      ),
+    );
+    if (compiled === undefined) throw new Error("expected compiled query");
+    expect(compiled.aggregateSql).toContain("lower(role) = ?");
+    expect(compiled.aggregateSql).toContain(
+      "total_damage_dealt_to_champions >= ?",
+    );
+    expect(compiled.aggregateSql).toContain("(win = ? OR win = ?)");
+    expect(paramValues(compiled.aggregateParams)).toEqual(
+      expect.arrayContaining(["support", 10_000, true, false]),
+    );
   });
 
   test("empty lake (no files) compiles to undefined for short-circuit", () => {

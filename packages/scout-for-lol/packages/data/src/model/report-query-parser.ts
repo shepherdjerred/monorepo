@@ -6,6 +6,7 @@ import type {
   ReportQueryItem,
   ReportQuerySpan,
   ReportWhereClause,
+  ReportFilterValue,
 } from "#src/model/report-query-spec.ts";
 import {
   And,
@@ -14,11 +15,16 @@ import {
   Equals,
   From,
   GreaterEqual,
+  Greater,
   Group,
+  Having,
   In,
   Limit,
   LParen,
   NumberLiteral,
+  Less,
+  LessEqual,
+  NotEqual,
   Order,
   Render,
   RParen,
@@ -47,6 +53,7 @@ function locateClauses(tokens: IToken[]): {
   groupIdx: number;
   whereIdx: number;
   orderIdx: number;
+  havingIdx: number;
   limitIdx: number;
   renderIdx: number;
 } {
@@ -61,6 +68,7 @@ function locateClauses(tokens: IToken[]): {
     whereIdx: fromIdx === -1 ? -1 : indexOfType(tokens, Where, fromIdx),
     orderIdx:
       groupIdx === -1 ? -1 : indexOfGroupBy(tokens, groupIdx + 1, Order),
+    havingIdx: afterGroup(Having),
     limitIdx: afterGroup(Limit),
     renderIdx: afterGroup(Render),
   };
@@ -77,6 +85,7 @@ export function parseReportQuery(text: string): ReportParseResult {
     groupIdx,
     whereIdx,
     orderIdx,
+    havingIdx,
     limitIdx,
     renderIdx,
   } = locateClauses(tokens);
@@ -118,11 +127,18 @@ export function parseReportQuery(text: string): ReportParseResult {
     : [];
 
   const groupByEnd = firstPositive(
-    [orderIdx, limitIdx, renderIdx],
+    [havingIdx, orderIdx, limitIdx, renderIdx],
     tokens.length,
   );
   const groupBy =
     groupIdx === -1 ? undefined : joinItem(tokens, groupIdx + 2, groupByEnd);
+
+  const havingEnd = firstPositive(
+    [orderIdx, limitIdx, renderIdx],
+    tokens.length,
+  );
+  const having =
+    havingIdx === -1 ? undefined : joinItem(tokens, havingIdx + 1, havingEnd);
 
   const orderByEnd = firstPositive([limitIdx, renderIdx], tokens.length);
   const orderBy = parseOrderBy(tokens, orderIdx, orderByEnd);
@@ -134,6 +150,7 @@ export function parseReportQuery(text: string): ReportParseResult {
     source,
     where,
     groupBy,
+    having,
     orderBy,
     limit,
     render,
@@ -220,6 +237,8 @@ function parseWhereClause(
   if (queue !== undefined) {
     return queue;
   }
+  const inClause = matchInClause(slice, span);
+  if (inClause !== undefined) return inClause;
   const comparison = matchComparisonClause(slice, span);
   if (comparison !== undefined) {
     return comparison;
@@ -230,6 +249,33 @@ function parseWhereClause(
     span,
   });
   return { kind: "unsupported", text: sliceText(slice), span };
+}
+
+function matchInClause(
+  slice: IToken[],
+  span: ReportQuerySpan,
+): ReportWhereClause | undefined {
+  const field = slice[0];
+  if (
+    field === undefined ||
+    slice[1]?.tokenType !== In ||
+    slice[2]?.tokenType !== LParen ||
+    slice.at(-1)?.tokenType !== RParen
+  ) {
+    return undefined;
+  }
+  const values = slice
+    .slice(3, -1)
+    .filter((token) => token.tokenType !== Comma)
+    .map((token) => parseFilterValue(token));
+  if (values.length === 0) return undefined;
+  return {
+    kind: "field",
+    field: normalize(field.image),
+    operator: "in",
+    values,
+    span,
+  };
 }
 
 function matchQueueClause(
@@ -271,25 +317,60 @@ function matchComparisonClause(
     return undefined;
   }
   const [field, operator, value] = slice;
-  if (
-    field === undefined ||
-    operator === undefined ||
-    value?.tokenType !== NumberLiteral
-  ) {
+  if (field === undefined || operator === undefined || value === undefined) {
     return undefined;
   }
   const fieldName = normalize(field.image);
-  const numeric = Number(value.image);
-  if (fieldName === "champion_id" && operator.tokenType === Equals) {
+  const numeric =
+    value.tokenType === NumberLiteral ? Number(value.image) : undefined;
+  if (
+    fieldName === "champion_id" &&
+    operator.tokenType === Equals &&
+    numeric !== undefined
+  ) {
     return { kind: "champion_id", value: numeric, span };
   }
-  if (fieldName === "games" && operator.tokenType === GreaterEqual) {
+  if (
+    fieldName === "games" &&
+    operator.tokenType === GreaterEqual &&
+    numeric !== undefined
+  ) {
     return { kind: "min_games", value: numeric, span };
   }
-  if (fieldName === "competition_id" && operator.tokenType === Equals) {
+  if (
+    fieldName === "competition_id" &&
+    operator.tokenType === Equals &&
+    numeric !== undefined
+  ) {
     return { kind: "competition_id", value: numeric, span };
   }
+  const operatorValue = comparisonOperator(operator);
+  if (operatorValue === undefined) return undefined;
+  return {
+    kind: "field",
+    field: fieldName,
+    operator: operatorValue,
+    values: [parseFilterValue(value)],
+    span,
+  };
+}
+
+function comparisonOperator(token: IToken): string | undefined {
+  if (token.tokenType === Equals) return "=";
+  if (token.tokenType === NotEqual) return "!=";
+  if (token.tokenType === Less) return "<";
+  if (token.tokenType === LessEqual) return "<=";
+  if (token.tokenType === Greater) return ">";
+  if (token.tokenType === GreaterEqual) return ">=";
   return undefined;
+}
+
+function parseFilterValue(token: IToken): ReportFilterValue {
+  if (token.tokenType === NumberLiteral) return Number(token.image);
+  const value = normalizeQueueValue(token.image);
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return value;
 }
 
 // ── token helpers ────────────────────────────────────────────────────────────
@@ -333,8 +414,13 @@ function parseItems(
 ): ReportQueryItem[] {
   const items: ReportQueryItem[] = [];
   let itemStart = start;
+  let depth = 0;
   for (let index = start; index <= end; index++) {
-    const atBoundary = index === end || tokens[index]?.tokenType === Comma;
+    const token = tokens[index];
+    if (token?.tokenType === LParen) depth++;
+    if (token?.tokenType === RParen) depth--;
+    const atBoundary =
+      index === end || (token?.tokenType === Comma && depth === 0);
     if (!atBoundary) {
       continue;
     }
