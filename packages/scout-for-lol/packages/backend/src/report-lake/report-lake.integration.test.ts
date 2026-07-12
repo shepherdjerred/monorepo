@@ -3,6 +3,12 @@ import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
+  GetObjectCommand,
+  ListObjectsV2Command,
+  S3Client,
+} from "@aws-sdk/client-s3";
+import { mockClient } from "aws-sdk-client-mock";
+import {
   LeaguePuuidSchema,
   RawMatchSchema,
   type DiscordAccountId,
@@ -14,19 +20,57 @@ import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testAccountId, testGuildId } from "#src/testing/test-ids.ts";
 import {
   runReportLakeFold,
-  runReportLakeRebuildFromSqlite,
+  runReportLakeRebuild,
 } from "#src/report-lake/compactor.ts";
 import { flattenMatch, flattenPrematch } from "#src/report-lake/flatten.ts";
 import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
+import { matchObjectKey } from "#src/report-store/s3-raw-source.ts";
 import {
   listStagingFiles,
   writeMatchStagingFile,
 } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { resetConfigurationForTests } from "#src/configuration.ts";
 
 const { prisma } = createTestDatabase("report-lake-test");
 const serverId = testGuildId("888");
 const creatorDiscordId = testAccountId("888");
+
+// The full rebuild reads canonical raw JSON from S3 (SeaweedFS). Mock it
+// in-memory: ListObjectsV2 enumerates the seeded objects for the requested
+// prefix, GetObject returns each object's JSON body. A GetObject Body carries an
+// SdkStream that can't be constructed in test code, so we return a partial mock
+// (Body.transformToString) via callsFake(), which accepts any return type.
+const s3Mock = mockClient(S3Client);
+
+function mockGetObjectResponse(content: string) {
+  return {
+    Body: { transformToString: () => Promise.resolve(content) },
+    $metadata: {},
+  };
+}
+
+/**
+ * Seed the S3 mock with raw match objects keyed exactly as the live write path
+ * would (games/{yyyy}/{MM}/{dd}/{matchId}/match.json). The rebuild lists the
+ * "games/" prefix, then the "prematch/" prefix (unmocked → empty).
+ */
+function seedS3Matches(objects: { key: string; body: string }[]): void {
+  s3Mock.reset();
+  // The rebuild lists the "games/" prefix (match objects) then "prematch/".
+  // Mock both prefixes explicitly so every call has an exact matcher.
+  s3Mock
+    .on(ListObjectsV2Command, { Prefix: "games/" })
+    .resolves({ Contents: objects.map((o) => ({ Key: o.key })) });
+  s3Mock.on(ListObjectsV2Command, { Prefix: "prematch/" }).resolves({
+    Contents: [],
+  });
+  for (const object of objects) {
+    s3Mock
+      .on(GetObjectCommand, { Key: object.key })
+      .callsFake(() => mockGetObjectResponse(object.body));
+  }
+}
 
 const CountRowSchema = z.object({
   n: z.union([z.bigint(), z.number()]).transform(Number),
@@ -91,13 +135,23 @@ async function countParquetRows(glob: string): Promise<number> {
 }
 
 beforeEach(async () => {
-  await prisma.matchParticipantFact.deleteMany();
-  await prisma.storedMatch.deleteMany();
+  Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+  resetConfigurationForTests();
+  s3Mock.reset();
+  // Default: an empty lake (both prefixes). Tests that need seeded objects call
+  // seedS3Matches, which resets and re-declares these matchers.
+  s3Mock.on(ListObjectsV2Command, { Prefix: "games/" }).resolves({
+    Contents: [],
+  });
+  s3Mock.on(ListObjectsV2Command, { Prefix: "prematch/" }).resolves({
+    Contents: [],
+  });
   await prisma.account.deleteMany();
   await prisma.player.deleteMany();
 });
 
 afterAll(async () => {
+  s3Mock.reset();
   await prisma.$disconnect();
 });
 
@@ -191,27 +245,19 @@ describe("compactor", () => {
       puuid: LeaguePuuidSchema.parse(firstPuuid),
       discordId: testAccountId("999"),
     });
-    await prisma.storedMatch.create({
-      data: {
-        matchId: match.metadata.matchId,
-        gameId: match.info.gameId.toString(),
-        platformId: match.info.platformId,
-        queueId: match.info.queueId,
-        gameMode: match.info.gameMode,
-        gameType: match.info.gameType,
-        gameVersion: match.info.gameVersion,
-        gameCreationAt: new Date(match.info.gameCreation),
-        gameStartAt: new Date(match.info.gameStartTimestamp),
-        gameEndAt: new Date(match.info.gameEndTimestamp),
-        durationSeconds: match.info.gameDuration,
-        participantPuuidsJson: JSON.stringify(match.metadata.participants),
-        rawJson: JSON.stringify(match),
+    seedS3Matches([
+      {
+        key: matchObjectKey(
+          match.metadata.matchId,
+          new Date(match.info.gameCreation),
+        ),
+        body: JSON.stringify(match),
       },
-    });
+    ]);
 
     const lakeDir = await makeLakeDir();
     try {
-      const summary = await runReportLakeRebuildFromSqlite({ prisma, lakeDir });
+      const summary = await runReportLakeRebuild({ prisma, lakeDir });
       expect(summary).not.toBeNull();
       expect(summary?.tier).toBe("rebuild");
       expect(summary?.matchRows).toBe(match.info.participants.length);
@@ -240,27 +286,16 @@ describe("compactor", () => {
   });
 
   test("rebuild skips malformed rawJson but still publishes", async () => {
-    await prisma.storedMatch.create({
-      data: {
-        matchId: "NA1_BROKEN",
-        gameId: "0",
-        platformId: "NA1",
-        queueId: 420,
-        gameMode: "CLASSIC",
-        gameType: "MATCHED_GAME",
-        gameVersion: "0.0.0",
-        gameCreationAt: new Date(),
-        gameStartAt: new Date(),
-        gameEndAt: new Date(),
-        durationSeconds: 1,
-        participantPuuidsJson: "[]",
-        rawJson: JSON.stringify({ not: "a match" }),
+    seedS3Matches([
+      {
+        key: matchObjectKey("NA1_BROKEN", new Date("2026-07-01T00:00:00Z")),
+        body: JSON.stringify({ not: "a match" }),
       },
-    });
+    ]);
 
     const lakeDir = await makeLakeDir();
     try {
-      const summary = await runReportLakeRebuildFromSqlite({ prisma, lakeDir });
+      const summary = await runReportLakeRebuild({ prisma, lakeDir });
       expect(summary?.skippedMatches).toBe(1);
       expect(summary?.matchRows).toBe(0);
       expect(await readCurrentBuildDir(lakeDir)).toBeDefined();
@@ -273,8 +308,8 @@ describe("compactor", () => {
     const match = await loadMatchFixture();
     const lakeDir = await makeLakeDir();
     try {
-      // Build 1: empty rebuild (no stored matches).
-      const first = await runReportLakeRebuildFromSqlite({ prisma, lakeDir });
+      // Build 1: empty rebuild (S3 has no objects — unmocked list → empty).
+      const first = await runReportLakeRebuild({ prisma, lakeDir });
       expect(first?.tier).toBe("rebuild");
 
       // Stage one match, then fold it in.
@@ -312,7 +347,7 @@ describe("compactor", () => {
     const match = await loadMatchFixture();
     const lakeDir = await makeLakeDir();
     try {
-      const first = await runReportLakeRebuildFromSqlite({ prisma, lakeDir });
+      const first = await runReportLakeRebuild({ prisma, lakeDir });
       expect(first?.tier).toBe("rebuild");
 
       const staged = await writeMatchStagingFile(lakeDir, match);

@@ -14,10 +14,7 @@ import configuration from "#src/configuration.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
 import {
   populateMatchesFromS3,
-  populateMatchesFromSqlite,
   populatePrematchFromS3,
-  populatePrematchFromSqlite,
-  type RebuildSource,
 } from "#src/report-lake/rebuild-sources.ts";
 import {
   buildDirPath,
@@ -292,7 +289,7 @@ export async function runReportLakeFold(
     const currentDir = await readCurrentBuildDir(lakeDir);
     if (currentDir === undefined) {
       logger.info("No published build yet; folding via full rebuild");
-      return await rebuildLocked(prisma, lakeDir, startedAt, "s3");
+      return await rebuildLocked(prisma, lakeDir, startedAt);
     }
 
     const buildId = newBuildId();
@@ -351,25 +348,7 @@ export async function runReportLakeRebuild(
     const prisma = options.prisma ?? defaultPrisma;
     const lakeDir = options.lakeDir ?? resolveLakeDir();
     await ensureLakeScaffold(lakeDir);
-    return await rebuildLocked(prisma, lakeDir, Date.now(), "s3");
-  });
-}
-
-/**
- * Rebuild the lake from the legacy SQLite Stored* tables instead of S3. Kept
- * ONLY for the rebuild-parity script (`scripts/report-lake-rebuild-parity.ts`),
- * which diffs a SQLite-sourced rebuild against an S3-sourced one before the
- * destructive table drop (PR-B). Not wired into any cron; removed with the
- * tables in PR-B.
- */
-export async function runReportLakeRebuildFromSqlite(
-  options: CompactionOptions = {},
-): Promise<CompactionSummary | null> {
-  return await withCompactionLock(async () => {
-    const prisma = options.prisma ?? defaultPrisma;
-    const lakeDir = options.lakeDir ?? resolveLakeDir();
-    await ensureLakeScaffold(lakeDir);
-    return await rebuildLocked(prisma, lakeDir, Date.now(), "sqlite");
+    return await rebuildLocked(prisma, lakeDir, Date.now());
   });
 }
 
@@ -377,7 +356,6 @@ async function rebuildLocked(
   prisma: ExtendedPrismaClient,
   lakeDir: string,
   startedAt: number,
-  source: RebuildSource,
 ): Promise<CompactionSummary> {
   const buildId = newBuildId();
   const buildDir = buildDirPath(lakeDir, buildId);
@@ -390,40 +368,25 @@ async function rebuildLocked(
   const prematchWriter = new NdjsonFileWriter(prematchTmp);
   const foldedPrematchIds = new Set<string>();
 
-  let skippedMatches: number;
-  let skippedPrematches: number;
-  if (source === "sqlite") {
-    skippedMatches = await populateMatchesFromSqlite(
-      prisma,
-      matchWriter,
-      foldedMatchIds,
-    );
-    skippedPrematches = await populatePrematchFromSqlite(
-      prisma,
-      prematchWriter,
-      foldedPrematchIds,
-    );
-  } else {
-    const bucket = configuration.s3BucketName;
-    if (bucket === undefined) {
-      throw new Error(
-        "S3_BUCKET_NAME not configured — cannot rebuild the report lake from S3.",
-      );
-    }
-    const client = createS3Client();
-    skippedMatches = await populateMatchesFromS3(
-      client,
-      bucket,
-      matchWriter,
-      foldedMatchIds,
-    );
-    skippedPrematches = await populatePrematchFromS3(
-      client,
-      bucket,
-      prematchWriter,
-      foldedPrematchIds,
+  const bucket = configuration.s3BucketName;
+  if (bucket === undefined) {
+    throw new Error(
+      "S3_BUCKET_NAME not configured — cannot rebuild the report lake from S3.",
     );
   }
+  const client = createS3Client();
+  const skippedMatches = await populateMatchesFromS3(
+    client,
+    bucket,
+    matchWriter,
+    foldedMatchIds,
+  );
+  const skippedPrematches = await populatePrematchFromS3(
+    client,
+    bucket,
+    prematchWriter,
+    foldedPrematchIds,
+  );
   await matchWriter.close();
   await prematchWriter.close();
 
@@ -471,7 +434,7 @@ async function rebuildLocked(
 
   const durationMs = Date.now() - startedAt;
   logger.info(
-    `Rebuild (${source}) published build ${buildId} (${matchWriter.rows.toString()} match rows, ${prematchWriter.rows.toString()} prematch rows, ${skippedMatches.toString()} skipped) in ${durationMs.toString()}ms`,
+    `Rebuild (s3) published build ${buildId} (${matchWriter.rows.toString()} match rows, ${prematchWriter.rows.toString()} prematch rows, ${skippedMatches.toString()} skipped) in ${durationMs.toString()}ms`,
   );
   return { ...summary, durationMs };
 }

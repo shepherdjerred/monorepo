@@ -1,6 +1,5 @@
 import type { S3Client } from "@aws-sdk/client-s3";
 import { RawCurrentGameInfoSchema, RawMatchSchema } from "@scout-for-lol/data";
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { reportLakeCompactionSkippedTotal } from "#src/metrics/report-lake.ts";
 import { flattenMatch, flattenPrematch } from "#src/report-lake/flatten.ts";
@@ -19,10 +18,6 @@ import {
 
 const logger = createLogger("report-lake-rebuild-sources");
 
-/** Where a full lake rebuild reads its raw JSON from. */
-export type RebuildSource = "s3" | "sqlite";
-
-const REBUILD_PAGE_SIZE = 500;
 // Bounded in-flight S3 GETs during a rebuild. Fetch+parse+flatten runs
 // concurrently; writes are funnelled serially into the single NDJSON writer.
 const REBUILD_S3_CONCURRENCY = 16;
@@ -142,86 +137,6 @@ export async function populatePrematchFromS3(
   }
   if (batch.length > 0) {
     await flush();
-  }
-  return skipped;
-}
-
-// --- Rebuild source: SQLite Stored* tables (parity-only; removed in PR-B) ---
-
-export async function populateMatchesFromSqlite(
-  prisma: ExtendedPrismaClient,
-  writer: NdjsonFileWriter,
-  foldedIds: Set<string>,
-): Promise<number> {
-  let skipped = 0;
-  let cursor: string | undefined;
-  for (;;) {
-    const page = await prisma.storedMatch.findMany({
-      take: REBUILD_PAGE_SIZE,
-      ...(cursor === undefined ? {} : { cursor: { matchId: cursor }, skip: 1 }),
-      orderBy: { matchId: "asc" },
-      select: { matchId: true, rawJson: true },
-    });
-    if (page.length === 0) {
-      break;
-    }
-    cursor = page.at(-1)?.matchId;
-    for (const stored of page) {
-      const rawParsed: unknown = JSON.parse(stored.rawJson);
-      const parsed = RawMatchSchema.safeParse(rawParsed);
-      if (!parsed.success) {
-        skipped += 1;
-        reportLakeCompactionSkippedTotal.inc({ table: "matches" });
-        logger.warn(
-          `Skipping stored match ${stored.matchId}: rawJson failed validation`,
-          { issue: parsed.error.issues[0] },
-        );
-        continue;
-      }
-      for (const row of flattenMatch(parsed.data)) {
-        writer.write(row);
-      }
-      foldedIds.add(stagingIdForMatch(stored.matchId));
-    }
-  }
-  return skipped;
-}
-
-export async function populatePrematchFromSqlite(
-  prisma: ExtendedPrismaClient,
-  writer: NdjsonFileWriter,
-  foldedIds: Set<string>,
-): Promise<number> {
-  let skipped = 0;
-  let cursor: number | undefined;
-  for (;;) {
-    const page = await prisma.storedPrematch.findMany({
-      take: REBUILD_PAGE_SIZE,
-      ...(cursor === undefined ? {} : { cursor: { id: cursor }, skip: 1 }),
-      orderBy: { id: "asc" },
-      select: { id: true, dedupeKey: true, observedAt: true, rawJson: true },
-    });
-    if (page.length === 0) {
-      break;
-    }
-    cursor = page.at(-1)?.id;
-    for (const stored of page) {
-      const rawParsed: unknown = JSON.parse(stored.rawJson);
-      const parsed = RawCurrentGameInfoSchema.safeParse(rawParsed);
-      if (!parsed.success) {
-        skipped += 1;
-        reportLakeCompactionSkippedTotal.inc({ table: "prematch" });
-        logger.warn(
-          `Skipping stored prematch ${stored.dedupeKey}: rawJson failed validation`,
-          { issue: parsed.error.issues[0] },
-        );
-        continue;
-      }
-      for (const row of flattenPrematch(parsed.data, stored.observedAt)) {
-        writer.write(row);
-      }
-      foldedIds.add(stagingIdForPrematch(stored.dedupeKey));
-    }
   }
   return skipped;
 }
