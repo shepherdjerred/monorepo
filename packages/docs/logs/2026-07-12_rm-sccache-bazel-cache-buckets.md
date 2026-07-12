@@ -89,16 +89,19 @@ were orphans.
 - Content/fixtures/false-positives: `sjer.red` blog post, `webring` RSS testdata,
   scout arena SVG snapshots (a summoner name), `sandbox/archive/**` (do-not-modify).
 
-**Left as a follow-up (comment-only, deliberately deferred):** four `.ts` files
-still _mention_ Bazel in comments explaining still-valid logic —
-`scout-for-lol/.../competition.ts` (why `data` doesn't import Prisma — circular
-dep), both `discord-plays-*/.../vite-env.d.ts` (fallback type decls), and
-`eslint-config/.../no-parent-imports.ts` (the "match LAST /packages/" comment is
-actually now better justified by scout's nested `packages/`, not Bazel). These
-aren't functional Bazel code, and staging any of them fires heavy per-package
-pre-commit hooks (scout runs `db:generate && typecheck && test`; dpp/mk64
-typecheck) that would need full `setup.ts --group=scout|pokemon|mk64` — not worth
-it for comment text. See PR follow-up.
+Four `.ts` files also _mentioned_ Bazel in comments (not functional Bazel code).
+Two were reworded here after a full `setup.ts` and clean typechecks:
+
+- `eslint-config/.../no-parent-imports.ts` — the "match LAST /packages/" fixer is
+  justified by scout's nested `packages/`, not Bazel sandboxes.
+- `scout-for-lol/.../competition.ts` — `data` hand-mirrors the Prisma row to avoid
+  a circular dependency with `backend`; the Bazel/BUILD clause was historical.
+
+Two are **deferred** (see Remaining): both `discord-plays-*/.../vite-env.d.ts`.
+Their fallback block is dead code, but the package typecheck pre-commit hook
+can't go green in a worktree due to an unrelated `discord-stream-lifecycle`
+subpath-resolution gap. Tracked in
+`packages/docs/todos/vite-env-bazel-comment-cleanup.md`.
 
 ## Session Log — 2026-07-12
 
@@ -112,13 +115,23 @@ it for comment text. See PR follow-up.
   EC2 profiling harness (4 files), the `.gitignore` Bazel markers, and Bazel
   entries in three dotfiles (+ live `ripgreprc`). Verified no `tools/rules_bun`
   / `.bzl` remained.
+- Scrubbed 2 of the 4 stale Bazel code-comments (`eslint-config/no-parent-imports.ts`,
+  `scout .../competition.ts`) — reworded to drop Bazel while keeping the real
+  rationale (nested workspaces; circular dep). Both packages typecheck clean
+  (scout also passed its full test-suite pre-commit hook).
 
 ### Remaining
 
 - Merge → CI `seaweedfs` apply destroys the buckets. Confirm they're gone
   afterward (`aws s3 ls --profile seaweedfs --endpoint-url https://seaweedfs-s3.tailnet-1a49.ts.net`).
-- Optional follow-up: scrub the 4 comment-only Bazel mentions listed above (needs
-  scout/pokemon/mk64 setup for their pre-commit hooks).
+- **Deferred: `discord-plays-{pokemon,mario-kart}/.../vite-env.d.ts`** still
+  reference Bazel. The `ImportMetaEnv`/`ImportMeta` fallback block is dead code
+  (both frontends have `vite` as a direct dep, so `vite/client` supplies those
+  types), but I could not land the edit: the `discord-plays-*-typecheck`
+  pre-commit hook typechecks the whole package incl. backend, and the **backend
+  fails on `main` in a fresh worktree** — `@shepherdjerred/discord-stream-lifecycle/debug/transition-logger`
+  (a nested `./*` subpath export) does not resolve. Pre-existing, unrelated to
+  Bazel. Tracked in `packages/docs/todos/vite-env-bazel-comment-cleanup.md`.
 - `chezmoi apply` to sync the dotfiles changes to live (only `ripgreprc` had a
   live divergence; already synced by hand).
 
@@ -126,3 +139,19 @@ it for comment text. See PR follow-up.
 
 - The bucket destroy is intentional and irreversible for the cached data.
 - Bazel-era docs remain under `packages/docs/archive/bazel/` by design.
+- Content/fixtures with incidental "bazel" (sjer.red blog, webring RSS testdata,
+  scout arena SVG summoner-name snapshots, `sandbox/archive/**`) left as-is.
+
+## Workflow Friction
+
+- `scripts/setup.ts` does not build `packages/discord-stream-lifecycle`, a shared
+  package imported by the `discord-plays-pokemon`, `discord-plays-mario-kart`, and
+  `streambot` backends. In a fresh worktree those packages' `typecheck` (and the
+  matching pre-commit hooks) fail with `Cannot find module
+'@shepherdjerred/discord-stream-lifecycle/...'` until you manually
+  `cd packages/discord-stream-lifecycle && bun run build`. Even after building,
+  the nested `./*` subpath `.../debug/transition-logger` still fails to resolve
+  locally (single-segment subpaths like `/types` resolve). Add discord-stream-lifecycle
+  to the shared-producer build list in `setup.ts` (and confirm its export map /
+  `moduleResolution` resolves nested subpaths) so dpp/mk64/streambot are
+  typecheckable in a worktree.
