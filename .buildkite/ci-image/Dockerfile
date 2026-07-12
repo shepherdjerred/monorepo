@@ -50,7 +50,7 @@ ENV UV_LINK_MODE=copy
 # semgrep via uv (covers install_semgrep() — the largest single per-pod writer
 # at ~835 MB to /root/.local/share/uv + /root/.cache/uv)
 # renovate: datasource=pypi depName=semgrep
-ARG SEMGREP_VERSION=1.165.0
+ARG SEMGREP_VERSION=1.166.0
 RUN uv tool install --python 3.12 "semgrep==${SEMGREP_VERSION}" --with setuptools
 ENV PATH="/root/.local/bin:${PATH}"
 
