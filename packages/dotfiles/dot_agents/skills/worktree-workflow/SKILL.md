@@ -603,7 +603,7 @@ When spawning a team of agents to implement a plan, every teammate works in its 
 
 ### Scoped verification — one repo-wide fan-out at a time
 
-Verify with package-scoped commands (`cd packages/<name> && bun run typecheck|test`, or `bun run --filter='./packages/<name>' typecheck|test` if the package is registered as a Bun workspace from the repo root), not root-level `bun run typecheck|test|build`. A root run fans out over ~35 packages, each booting its own node/bun toolchain; when several worktree sessions or teammates do this concurrently, the spawn storm has frozen the whole machine (6,000+ processes, 20-30 GB of anonymous memory within seconds → macOS jetsam freeze; see `packages/docs/logs/2026-07-11_macbook-hang-jetsam-investigation.md`). Reserve root-level runs for genuinely repo-wide changes, run at most one at a time machine-wide, and bake the scoped commands into teammate bootstrap prompts so parallel agents never all fan out at once. CI provides the exhaustive cross-package pass.
+Verify with package-scoped commands (`cd packages/<name> && bun run typecheck|test`, or `bun run --filter='./packages/<name>' typecheck|test` if the package is registered as a Bun workspace from the repo root), not root-level `bun run typecheck|test|build`. A root run fans out over ~35 packages, each booting its own node/bun toolchain; when several worktree sessions or teammates do this concurrently, the spawn storm has frozen the whole machine (6,000+ processes, 20-30 GB of anonymous memory within seconds → macOS jetsam freeze; see `packages/docs/logs/2026-07-11_macbook-hang-jetsam-investigation.md`). Reserve root-level runs for genuinely repo-wide changes, run at most one at a time machine-wide, and bake the scoped commands into teammate bootstrap prompts so parallel agents never all fan out at once. There is no CI (pipeline removed 2026-07), so anything you don't verify locally ships unverified.
 
 ### Commit + push after every phase
 
@@ -613,9 +613,9 @@ Deleting a worktree discards uncommitted working-tree changes with no recovery p
 
 A worktree from a plain `git worktree add` (not `claude -w` or the SessionStart hook) can't run `bun run scripts/setup.ts` out of the box: `bun` resolves to a mise shim that refuses to launch when the worktree's `.mise.toml` is untrusted, so bun never starts and setup's own Phase-1 `mise trust` never runs (chicken-and-egg). Fix: run `mise trust -y --all` first (~0.06s), then `bun run scripts/setup.ts`. `claude -w <slug>` and the SessionStart hook do this automatically.
 
-### Fresh worktree: pre-commit eslint needs deps + built eslint-config
+### Fresh worktree: eslint needs deps + built eslint-config
 
-Committing a `packages/homelab` change in a fresh worktree fails the lefthook `staged-lint → eslint-homelab` hook before the commit lands, with two errors in order: (1) `The 'jiti' library is required...` — `bun run --filter @shepherdjerred/homelab typecheck` only populates `packages/homelab/src/cdk8s/node_modules`, so you must run a plain `cd packages/homelab && bun install` to get `packages/homelab/node_modules/.bin/eslint` + jiti at the root where the hook resolves them; (2) `Cannot find module '@eslint/js'` — fix with `cd packages/eslint-config && bun install && bun run build`. Running full `bun run scripts/setup.ts` (Shared Builds phase) also fixes both. Note: a failed pre-commit hook silently aborts the commit (HEAD unchanged, files stay staged) — don't pipe `git commit` to `tail` or you'll read tail's exit code instead of the failing job's.
+(Git hooks were removed 2026-07 — nothing lints on commit anymore, so run eslint yourself.) Linting `packages/homelab` in a fresh worktree fails with two errors in order: (1) `The 'jiti' library is required...` — `bun run --filter @shepherdjerred/homelab typecheck` only populates `packages/homelab/src/cdk8s/node_modules`, so you must run a plain `cd packages/homelab && bun install` to get `packages/homelab/node_modules/.bin/eslint` + jiti at the package root; (2) `Cannot find module '@eslint/js'` — fix with `cd packages/eslint-config && bun install && bun run build`. Running full `bun run scripts/setup.ts` (Shared Builds phase) also fixes both.
 
 ### Scoped installs: `--group=<name>` and `--link`
 
@@ -625,9 +625,9 @@ Add `--link` for an even cheaper install that symlinks the group's own deps from
 
 **Never substitute a per-package `bun install` for `scripts/setup.ts`, scoped or not.** This is the #1 cause of "Cannot find module `@shepherdjerred/eslint-config`" / stale `llm-models` errors: those are `file:` deps, and Bun's hoisted linker copies a `file:` dep's contents into the consumer's `node_modules` **at install time only** — it doesn't track the producer's `dist/` changing afterward. `scripts/setup.ts` handles the build-then-force-copy ordering for you (and even a scoped `--group` run does, since the shared producers always build first); a bare `bun install` in one package skips all of that.
 
-### knip is CI-only (since 2026-06-07)
+### knip is manual-only
 
-`knip` was removed from lefthook pre-commit and now runs only in CI (the `knip-check` Dagger step). It used to force a full `scripts/setup.ts` install in every fresh worktree because it loads every workspace in `knip.json`. Practical effect: a fresh worktree no longer needs the whole-repo install just to commit — the remaining pre-commit hooks are per-package and affected-scoped, so a change touching one package only needs that package's deps + a built `eslint-config`. knip coverage is not lost (CI runs it on every PR).
+`knip` was removed from pre-commit in 2026-06, and the CI step that still ran it was removed with the pipeline 2026-07 — nothing runs knip automatically anymore. It loads every workspace in `knip.json`, so a knip run needs a full `scripts/setup.ts` install; run it manually from the repo root (with `--workspace` to scope) when you want dead-code coverage. A fresh worktree needs no whole-repo install just to commit — a change touching one package only needs that package's deps + a built `eslint-config`.
 
 ### Recovering a wiped worktree
 

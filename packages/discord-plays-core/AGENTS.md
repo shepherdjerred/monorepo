@@ -25,8 +25,8 @@ copy instead of hoisting them); they resolve via `paths` in each backend's
 honors tsconfig `paths` at runtime, and tsc/eslint honor them at check time
 (verified in oven/bun:1.3.14). The mapped source dirs need their own
 `node_modules` for their runtime deps/peers — locally `scripts/setup.ts`
-installs them; in images `.dagger/src/image.ts`'s `withForkRuntimeDeps`
-(`SOURCE_RUNTIME_DEPS`) runs a per-dep install.
+installs them; image builds must run the same per-dep install (formerly the
+`withForkRuntimeDeps` Dagger helper, removed 2026-07 with the CI pipeline).
 
 Source-only (like `discord-stream-lifecycle`): `package.json#exports` maps `.`
 and `./*` straight at `src/`, so there is **no build step** — consumers import

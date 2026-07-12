@@ -4,9 +4,9 @@
 # voice UDP path. No X server, no browser, no GPU.
 FROM oven/bun:1.3.14-debian@sha256:9dba1a1b43ce28c9d7931bfc4eb00feb63b0114720a0277a8f939ae4dfc9db6f
 
-# NOTE: The canonical build is the Dagger pipeline (`build-discord-plays-pokemon-image`), which
-# mounts the in-repo fork `@shepherdjerred/discord-video-stream` (a `file:` dep outside this
-# directory) into the workspace. A raw `docker build` from this directory cannot resolve that
+# NOTE: The canonical build was the (since-removed 2026-07) CI pipeline, which mounted the
+# in-repo fork `@shepherdjerred/discord-video-stream` (a `file:` dep outside this directory)
+# into the workspace. A raw `docker build` from this directory cannot resolve that
 # out-of-context dependency; this Dockerfile is kept for reference/local iteration only.
 #
 # System deps:
@@ -36,7 +36,7 @@ COPY packages/frontend/package.json packages/frontend/
 # bun-safe lazy `sharp` import is baked into the fork source (no patch needed).
 RUN bun install --frozen-lockfile
 
-# Goal mode shells out to Codex. Keep this pinned to .dagger/src/constants.ts.
+# Goal mode shells out to Codex.
 RUN bun install -g @openai/codex@0.130.0 && codex --version
 
 # App source (includes the vendored packages/backend/assets/pokeemerald.wasm).

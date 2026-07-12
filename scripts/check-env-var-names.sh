@@ -10,7 +10,7 @@ set -eu
 FILES_CMD=(git ls-files -z --
   '*.ts' '*.rs' '*.py' '*.fish' '*.tmpl' '*.yaml' '*.yml'
   '*.env' '*.md' '*.sh' '*.swift'
-  ':!:sandbox/archive/' ':!:sandbox/practice/' ':!:.dagger/' ':!:.build/' ':!:**/generated/*'
+  ':!:sandbox/archive/' ':!:sandbox/practice/' ':!:.build/' ':!:**/generated/*'
 )
 
 # Files to exclude from all pattern matches
@@ -43,7 +43,7 @@ if [ -n "$MATCHES" ]; then
 fi
 
 # --- Special case: GITHUB_TOKEN (exact env var name, not substrings like TOFU_GITHUB_TOKEN) ---
-GITHUB_EXCLUDE='TOFU_GITHUB_TOKEN|GLANCE_TEST_|@modelcontextprotocol|server-github expects|mcp-gateway|YOUR_GITHUB_TOKEN|env:GITHUB_TOKEN|CHANGELOG\.md|plans/|dot_agents/skills/|GITHUB_TOKEN_URL|\.dagger/src/release\.ts'
+GITHUB_EXCLUDE='TOFU_GITHUB_TOKEN|GLANCE_TEST_|@modelcontextprotocol|server-github expects|mcp-gateway|YOUR_GITHUB_TOKEN|env:GITHUB_TOKEN|CHANGELOG\.md|plans/|dot_agents/skills/|GITHUB_TOKEN_URL'
 
 GITHUB_MATCHES=$("${FILES_CMD[@]}" | xargs -0 grep -n 'GITHUB_TOKEN' | grep -vE "${EXCLUDE_PATTERN}" | grep -vE "${GITHUB_EXCLUDE}" || true)
 

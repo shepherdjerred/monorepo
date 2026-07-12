@@ -4,10 +4,6 @@ import { escapePrometheusTemplate } from "./shared.ts";
 import { VELERO_SCHEDULES } from "@shepherdjerred/homelab/cdk8s/src/resources/velero-schedules.ts";
 
 export const REVIEWED_LARGE_PVC_BACKUP_POLICY_MATCHERS = [
-  {
-    namespace: "dagger",
-    persistentvolumeclaim: "data-dagger-dagger-helm-engine-0",
-  },
   { namespace: "gickup", persistentvolumeclaim: "gickup-backup-pvc" },
   { namespace: "media", persistentvolumeclaim: "plex-movies-hdd-pvc" },
   { namespace: "media", persistentvolumeclaim: "plex-tv-hdd-pvc" },

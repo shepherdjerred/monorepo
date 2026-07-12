@@ -23,14 +23,14 @@ bun run e2e                          # Maestro e2e (simulator + real server + ch
   simulation harness at `src/data/sync/__tests__/harness.ts` (FakeServer with
   offline/failure injection, manual clock, snapshot-able storage for crash tests).
 - **Contract** (`bun run test:contract`): the real `TaskNotesClient` against a
-  spawned real `../tasknotes-server` over a temp vault. Runs in CI (Buildkite
-  `tasknotes-contract-test` step) when either package changes. Lives in
-  `contract-tests/` — deliberately outside the default test glob because the
-  regular CI test container doesn't mount the server package.
+  spawned real `../tasknotes-server` over a temp vault. Run it manually whenever
+  either package changes (the Buildkite `tasknotes-contract-test` CI step was
+  removed 2026-07). Lives in `contract-tests/` — deliberately outside the
+  default test glob because it needs the sibling server package present.
 - **E2E** (`bun run e2e`, see `e2e/README.md`): Maestro drives the app in a
   simulator against a local server + chaos proxy (offline simulation), then
-  asserts on the vault's markdown bytes. **Local pre-merge gate for app PRs** —
-  no macOS CI agents (see `packages/docs/todos/mac-mini-buildkite-agent.md`).
+  asserts on the vault's markdown bytes. **Local pre-merge gate for app PRs**
+  (there is no CI — verify locally).
   Prereqs: Xcode + simulators, `brew install mobile-dev-inc/tap/maestro`.
 
 ## iOS First-Time Setup
@@ -49,8 +49,8 @@ If `pod install` fails, check prerequisites:
 
 ## Xcode Cloud
 
-iOS release builds run on **Xcode Cloud** — there are no macOS CI agents (see
-`packages/docs/todos/mac-mini-buildkite-agent.md`).
+iOS release builds run on **Xcode Cloud** — the monorepo has no CI of its own
+(the Dagger/Buildkite pipeline was removed 2026-07).
 
 - Custom dependency bootstrap script: `ios/ci_scripts/ci_post_clone.sh` (installs Node/Bun deps + pods)
 - The bootstrap installs deps in **both** `packages/tasknotes-types` and this app.
@@ -78,16 +78,15 @@ usual culprit — it only runs in Release/Archive, so simulator debug builds pas
 while Archive fails. See the `xcode-cloud-debug` skill for the full workflow and
 the known `@tasknotes/model` resolution failure.
 
-### CI guard against Archive bundle failures
+### Guard against Archive bundle failures (run locally)
 
 `bun run check:release-bundle` (`scripts/check-release-bundle.ts`) runs the exact
-Release Metro bundle Xcode Cloud runs during Archive — pure JS, so it runs in the
-Linux Buildkite container. It's wired into the `:iphone: iOS Native Deps + Release
-Bundle` CI step (Dagger `tasks-for-obsidian-ios-native-deps`), which installs
-`tasknotes-types` + the app like `ci_post_clone.sh`, then bundles. An unresolvable
-import (from any package) fails CI **before** it reaches Xcode Cloud. If you add a
-new source-only `file:` dep, install it in both `ci_post_clone.sh` and the Dagger
-helper — the guard stays red until you do.
+Release Metro bundle Xcode Cloud runs during Archive — pure JS, so it runs anywhere.
+It used to be a CI step, but the pipeline was removed 2026-07 — **run it locally
+before merging** anything that touches the app's deps or imports. An unresolvable
+import (from any package) fails the guard **before** it reaches Xcode Cloud. If you
+add a new source-only `file:` dep, install it in `ci_post_clone.sh` — the guard
+stays red until you do.
 
 ## iOS Build Troubleshooting
 

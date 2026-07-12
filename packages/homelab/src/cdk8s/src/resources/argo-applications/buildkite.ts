@@ -82,17 +82,12 @@ export function createBuildkiteApp(chart: Chart) {
 
   // The `buildkite-git-mirrors` PVC + `default-checkout-params.gitMirrors`
   // Helm value are intentionally retained even after PR2: the bootstrap
-  // pipeline-upload step in `.buildkite/pipeline.yml` is the only BK pod
-  // that still checks out the repo (it runs `bun src/main.ts` against the
-  // local tree). The BK k8s agent stack auto-configures the bootstrap
-  // pod's checkout to use these mirrors via the alternates path
-  // `/buildkite/git-mirrors/<encoded-url>/objects` — without the mount,
-  // git fetch fails with "unable to normalize alternate object path".
-  // PR3 of the BK-pressure plan will move pipeline generation itself into
-  // Dagger, at which point these can be deleted; until then they cost
-  // ~1.3 GiB once per build, which is negligible compared to the per-step
-  // savings PR1 + PR2 already deliver. See
-  // packages/docs/plans/2026-05-31_bk-dagger-git-url-refactor.md.
+  // NOTE: the monorepo's CI pipeline was removed 2026-07, so nothing feeds
+  // this agent stack anymore — it (and this mirror PVC) stay only until the
+  // Buildkite service itself is torn down (manual follow-up; see
+  // packages/docs/plans/2026-07-12_strip-ci-remove-dagger.md). The BK k8s
+  // agent stack auto-configures bootstrap-pod checkouts to use these mirrors
+  // via the alternates path `/buildkite/git-mirrors/<encoded-url>/objects`.
   new KubePersistentVolumeClaim(chart, "buildkite-git-mirrors-pvc", {
     metadata: { name: "buildkite-git-mirrors", namespace: "buildkite" },
     spec: {
@@ -120,24 +115,12 @@ export function createBuildkiteApp(chart: Chart) {
             agentStackSecret: "buildkite-agent-token",
             config: {
               queue: "default",
-              // Cluster-wide cap on concurrently-scheduled CI jobs. Dagger has no
-              // native session/concurrency control of its own (confirmed against
-              // its engine config schema, Helm chart, and GitHub issues — see the
-              // 2026-07-08 investigation log below), so this is the only lever
-              // anywhere in the stack for bounding how many CI sessions can hit
-              // the single shared Dagger engine at once. It was temporarily
-              // lowered 24 -> 16 on 2026-07-05/06 during incident response, but
-              // that alone did not prevent a recurrence on 2026-07-07 (which
-              // happened at only 9 concurrent jobs, nowhere near even 16) —
-              // proving job-count alone was never the real constraint;
-              // per-session resource consumption was. Restored to 24 now that
-              // real consumption caps exist alongside this: the Dagger engine
-              // itself has a CPU limit (argo-applications/dagger.ts) and CI step
-              // containers have real resource limits, not just requests
-              // (scripts/ci/src/lib/k8s-plugin.ts). 24 ran without incident for a
-              // long time before this event. See
+              // Cluster-wide cap on concurrently-scheduled CI jobs. Sized
+              // during the 2026-07 incident response (see
               // packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md
-              // and packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md.
+              // and 2026-07-05_torvalds-ci-freeze-investigation.md); moot since
+              // the CI pipeline was removed 2026-07 — nothing schedules jobs
+              // here until the Buildkite service teardown (manual follow-up).
               "max-in-flight": BUILDKITE_MAX_IN_FLIGHT,
               "empty-job-grace-period": "5m",
               // gitMirrors is intentionally retained for the bootstrap

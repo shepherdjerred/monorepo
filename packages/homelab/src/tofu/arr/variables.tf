@@ -64,7 +64,7 @@ variable "privatehd_pid" {
 }
 
 variable "cloudflare_account_id" {
-  description = "Cloudflare account ID (passed by the Dagger container to every stack, unused by *arr resources)"
+  description = "Cloudflare account ID (passed to every stack, unused by *arr resources)"
   type        = string
   sensitive   = true
   default     = ""

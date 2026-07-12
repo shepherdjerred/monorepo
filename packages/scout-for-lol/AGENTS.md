@@ -37,7 +37,6 @@ Scout's sub-packages wire each other with `file:../X` deps (e.g. `@scout-for-lol
 | Linting       | ESLint + Prettier                |
 | Database      | Prisma ORM                       |
 | Validation    | Zod                              |
-| CI/CD         | Dagger + Buildkite               |
 | Task Runner   | mise                             |
 | Bot Framework | Discord.js                       |
 | Frontend      | Astro                            |
@@ -66,7 +65,6 @@ bun run duplication-check # Check for code duplication
 mise run dev             # Setup development environment
 mise run check           # Run all checks (typecheck, lint, format, test, knip, duplication-check)
 mise run generate        # Generate Prisma client
-mise run ci              # Run full CI pipeline
 ```
 
 ### Backend Package
@@ -118,9 +116,9 @@ bun run build:windows    # Build for Windows
 
 Each package supports: `dev`, `build`, `test`, `lint`, `format`, `typecheck`
 
-## CI/CD Pipeline (Dagger + Buildkite)
+## CI/CD
 
-CI builds, tests, and creates container images via Dagger pipelines on Buildkite.
+There is no CI — the Dagger + Buildkite pipeline was removed 2026-07. Run checks locally (`mise run check`) and build/push container images manually.
 
 ---
 
@@ -432,7 +430,7 @@ DuckDB** (`@duckdb/node-api`, lazy-loaded) over a local Parquet "report lake"
 
 - Use `env-var` for type-safe environment variables
 - Validate all configuration with Zod schemas
-- Use CI secrets for sensitive data in CI/CD
+- Keep sensitive data in secret stores (1Password / k8s secrets), never in the repo
 - Separate development and production configurations
 
 ---
@@ -507,12 +505,11 @@ Discord OAuth in the browser (see **Web UI (Local end-to-end)** above).
 
 ---
 
-## Git Hooks (Husky + lint-staged)
+## Pre-commit Checklist (manual — git hooks were removed 2026-07)
 
-Pre-commit hooks run automatically:
+Nothing runs automatically on commit. Before committing, run yourself:
 
-- Prettier formatting on all files
+- Prettier formatting on touched files
 - Markdownlint on `.md` files
-- Actionlint on GitHub workflow files
 - Per-package: typecheck, ESLint, and relevant tests
 - Rust formatting and Clippy for desktop/src-tauri

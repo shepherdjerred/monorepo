@@ -6,10 +6,6 @@ import { recommended } from "@shepherdjerred/eslint-config";
 // `typeof recommended` binds to the exact copy the config package ships, so the
 // nested-vs-root type identities don't diverge.
 const config: ReturnType<typeof recommended> = [
-  // scripts/ci is its own lint root with its own eslint.config.ts; flat
-  // config doesn't cascade, so globally ignore it here to avoid
-  // double-linting it under this config's (wrong) project settings.
-  { ignores: ["ci/**"] },
   ...recommended({ tsconfigRootDir: import.meta.dirname }),
   {
     rules: {

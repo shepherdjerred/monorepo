@@ -81,11 +81,11 @@ machine:
       # pids.max cap. 4096 is the standard Kubernetes-documented default for
       # clusters that set this field (more restrictive CIS-hardening guidance of
       # 1024 targets adversarial multi-tenant threat models, not this
-      # single-trusted-workload homelab). Must accommodate the Dagger engine's
-      # own legitimate multi-process needs, not just an average pod — the
-      # freeze investigation observed the engine's own goroutine count explode
-      # 24 -> 1164 in under 60s; 4096 sits well above any plausible legitimate
-      # footprint while still being a hard, finite ceiling instead of unbounded.
+      # single-trusted-workload homelab). Sized during the freeze
+      # investigation, which observed the (since-removed) Dagger engine's
+      # goroutine count explode 24 -> 1164 in under 60s; 4096 sits well above
+      # any plausible legitimate footprint while still being a hard, finite
+      # ceiling instead of unbounded.
       # Verify PID headroom under real heavy-concurrency load before trusting
       # this value; watch for PIDPressure node conditions after rollout.
       #

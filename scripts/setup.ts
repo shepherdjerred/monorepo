@@ -290,7 +290,6 @@ async function findLockfileDirs(): Promise<string[]> {
     ".git",
     "target",
     "archive",
-    ".dagger",
     "poc",
     "practice",
   ]);

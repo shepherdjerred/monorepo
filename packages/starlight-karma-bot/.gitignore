@@ -10,5 +10,3 @@ data/
 *.iml
 dist/
 
-# Dagger
-.dagger/sdk/
