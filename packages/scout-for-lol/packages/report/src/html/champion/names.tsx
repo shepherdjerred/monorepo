@@ -1,5 +1,6 @@
 import { palette } from "#src/assets/colors.ts";
 import { getChampionImage } from "#src/dataDragon/image-cache.ts";
+import { championNameToDisplayName } from "@scout-for-lol/data";
 
 export function Names({
   summonerName,
@@ -65,7 +66,7 @@ export function Names({
             maxWidth: "40rem",
           }}
         >
-          {championName}
+          {championNameToDisplayName(championName)}
         </span>
       </div>
     </div>

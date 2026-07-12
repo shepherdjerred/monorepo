@@ -1,4 +1,7 @@
-import { type ArenaChampion } from "@scout-for-lol/data";
+import {
+  championNameToDisplayName,
+  type ArenaChampion,
+} from "@scout-for-lol/data";
 import { palette } from "#src/assets/colors.ts";
 import { font } from "#src/assets/index.ts";
 import { getChampionLoadingImage } from "#src/dataDragon/image-cache.ts";
@@ -144,7 +147,7 @@ export function PlayerColumn({
               textTransform: "uppercase",
             }}
           >
-            {player.championName}
+            {championNameToDisplayName(player.championName)}
           </div>
         </div>
       </div>
