@@ -160,7 +160,7 @@ export const GH_CLI_VERSION = "2.96.0";
 export const KUBECTL_VERSION = "v1.36.2";
 
 // renovate: datasource=github-releases depName=github/github-mcp-server
-export const GITHUB_MCP_SERVER_VERSION = "1.2.0";
+export const GITHUB_MCP_SERVER_VERSION = "1.3.0";
 
 // renovate: datasource=github-releases depName=siderolabs/talos
 export const TALOSCTL_VERSION = "v1.13.6";
