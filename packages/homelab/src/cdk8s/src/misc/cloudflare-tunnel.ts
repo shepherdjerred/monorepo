@@ -1,8 +1,11 @@
 import type { Construct } from "constructs";
+import { Chart } from "cdk8s";
 import {
   TunnelBinding,
   TunnelBindingTunnelRefKind,
 } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-types/cfargotunnel.ts";
+import type { ProbeModule } from "./blackbox-modules.ts";
+import { registerBackendProbe, registerPublicProbe } from "./probe-registry.ts";
 
 // Secret name that the cloudflare-operator expects
 // Note: For ClusterTunnel, the secret must be in cloudflare-operator-system namespace
@@ -27,11 +30,22 @@ export function createCloudflareTunnelBinding(
     protocol?: "http" | "https" | "tcp" | "udp" | "ssh" | "rdp";
     /** Skip TLS verification when `protocol: "https"`. */
     noTlsVerify?: boolean;
+    /** Port the in-cluster Service listens on — used to auto-register a backend health probe. */
+    port: number;
+    /** Blackbox module override for the backend (in-cluster) probe. Defaults to "http_2xx". */
+    probeModule?: ProbeModule;
+    /** Blackbox module override for the public (Cloudflare-hostname) probe. Defaults to "http_2xx". */
+    publicProbeModule?: ProbeModule;
+    /**
+     * Skip auto-registering blackbox probes for this binding. Rare — must
+     * carry a comment at the call site explaining why.
+     */
+    disableProbe?: boolean;
   } & ({ subdomain: string } | { fqdn: string }),
 ) {
   const fqdn = "fqdn" in props ? props.fqdn : `${props.subdomain}.sjer.red`;
 
-  return new TunnelBinding(scope, id, {
+  const binding = new TunnelBinding(scope, id, {
     metadata: {
       ...(props.namespace === undefined ? {} : { namespace: props.namespace }),
       ...(props.annotations === undefined
@@ -62,4 +76,27 @@ export function createCloudflareTunnelBinding(
       disableDNSUpdates: props.disableDnsUpdates ?? true,
     },
   });
+
+  if (props.disableProbe !== true) {
+    const namespace = props.namespace ?? Chart.of(scope).namespace;
+    if (namespace == null) {
+      throw new Error(
+        `createCloudflareTunnelBinding(${id}): cannot auto-register a blackbox probe without a namespace — pass props.namespace, set one on the chart, or pass disableProbe: true with a comment explaining why.`,
+      );
+    }
+    registerBackendProbe({
+      namespace,
+      serviceName: props.serviceName,
+      port: props.port,
+      module: props.probeModule,
+    });
+    registerPublicProbe({
+      namespace,
+      serviceName: props.serviceName,
+      fqdn,
+      module: props.publicProbeModule,
+    });
+  }
+
+  return binding;
 }

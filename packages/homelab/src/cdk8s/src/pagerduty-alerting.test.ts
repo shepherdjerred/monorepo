@@ -592,3 +592,21 @@ describe("Xcode Cloud alert routing guard", () => {
     expect(pdRoute?.matchers).toContain('severity =~ "critical|warning"');
   });
 });
+
+describe("Service probe alert routing guard", () => {
+  let route: RouteNode;
+
+  beforeAll(async () => {
+    route = findAlertmanagerRoute(await renderApps());
+  }, 120_000);
+
+  it("routes a ServiceProbeDown (severity=warning) alert to pagerduty", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "ServiceProbeDown",
+        severity: "warning",
+        service: "scrypted",
+      }),
+    ).toBe("pagerduty");
+  });
+});

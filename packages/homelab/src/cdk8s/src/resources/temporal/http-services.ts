@@ -26,6 +26,11 @@ export function createTemporalWorkerGithubWebhookService(
   createCloudflareTunnelBinding(chart, "temporal-worker-gh-webhook-cf-tunnel", {
     serviceName: webhookService.name,
     subdomain: "pr-bot",
+    port: 9466,
+    // POST-only webhook receiver — an HTTP probe hitting GET / would 404/405
+    // even when healthy, so just check the port accepts a connection.
+    probeModule: "tcp_connect",
+    publicProbeModule: "tcp_connect",
   });
 }
 
@@ -49,6 +54,10 @@ export function createAgentTaskApiService(
   createCloudflareTunnelBinding(chart, "temporal-worker-agent-task-cf-tunnel", {
     serviceName: agentTaskService.name,
     subdomain: "temporal-agent-tasks",
+    port: 9467,
+    // POST-only receiver — see the gh-webhook probe comment above.
+    probeModule: "tcp_connect",
+    publicProbeModule: "tcp_connect",
   });
 }
 
@@ -80,6 +89,10 @@ export function createXcodeCloudWebhookService(
     {
       serviceName: webhookService.name,
       subdomain: "xcode-cloud-webhook",
+      port: 9468,
+      // POST-only receiver — see the gh-webhook probe comment above.
+      probeModule: "tcp_connect",
+      publicProbeModule: "tcp_connect",
     },
   );
 }

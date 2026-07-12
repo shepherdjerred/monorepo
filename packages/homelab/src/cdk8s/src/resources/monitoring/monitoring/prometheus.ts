@@ -11,6 +11,7 @@ import { getHaWorkflowRuleGroups } from "./rules/ha-workflows.ts";
 import { getGitckupRuleGroups } from "./rules/gitckup.ts";
 import { getQBitTorrentRuleGroups } from "./rules/qbittorrent.ts";
 import { getStaticSitesRuleGroups } from "./rules/static-sites.ts";
+import { getServiceProbeRuleGroups } from "./rules/service-probes.ts";
 import { getR2StorageRuleGroups } from "./rules/r2-storage.ts";
 import { getBugsinkRuleGroups } from "./rules/bugsink.ts";
 import { getPostalRuleGroups } from "./rules/postal.ts";
@@ -156,6 +157,18 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getStaticSitesRuleGroups(),
+    },
+  });
+
+  // Create service-probe rules (blackbox Probe fleet across all namespaces)
+  new PrometheusRule(chart, "prometheus-service-probes-rules", {
+    metadata: {
+      name: "prometheus-service-probes-rules",
+      namespace: "prometheus",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getServiceProbeRuleGroups(),
     },
   });
 

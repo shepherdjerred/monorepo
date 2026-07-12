@@ -99,6 +99,16 @@ export function createPostalChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(5000), protocol: "TCP" }],
         },
+        // Allow blackbox-exporter's in-cluster health probe
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
+        },
       ],
       egress: [
         // Allow DNS

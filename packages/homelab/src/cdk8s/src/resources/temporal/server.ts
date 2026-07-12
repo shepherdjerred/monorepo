@@ -197,6 +197,9 @@ export function createTemporalServerDeployment(
   new TailscaleIngress(chart, "temporal-tailscale-ingress", {
     service,
     host: "temporal",
+    // Temporal's frontend speaks gRPC, not HTTP — an HTTP probe would
+    // misreport it as down even when healthy.
+    probeModule: "tcp_connect",
   });
 
   return { deployment, service };

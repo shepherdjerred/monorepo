@@ -37,6 +37,16 @@ export function createRedlibChart(app: App) {
             },
           ],
         },
+        // Allow blackbox-exporter's in-cluster health probe
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
+        },
       ],
     },
   });
