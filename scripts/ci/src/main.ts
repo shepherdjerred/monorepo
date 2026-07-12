@@ -4,10 +4,8 @@
  * Detects changed packages, builds a Buildkite pipeline, and outputs JSON to stdout.
  * All diagnostic output goes to stderr so only the pipeline JSON goes to stdout.
  */
-import {
-  detectChanges,
-  shouldSkipReleasePleasePrBuild,
-} from "./change-detection.ts";
+import { detectChanges } from "./change-detection/index.ts";
+import { shouldSkipReleasePleasePrBuild } from "./change-detection/version-commit.ts";
 import {
   buildPipeline,
   buildReleasePleaseSkipPipeline,
