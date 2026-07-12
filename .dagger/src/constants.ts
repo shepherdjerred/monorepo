@@ -143,7 +143,7 @@ export const RELEASE_PLEASE_VERSION = "17.7.0";
 export const CLAUDE_CODE_VERSION = "2.1.175";
 
 // renovate: datasource=npm depName=@openai/codex
-export const CODEX_CLI_VERSION = "0.136.0";
+export const CODEX_CLI_VERSION = "0.139.0";
 
 // cogapp regenerates the README project-listing tables in the temporal-worker's
 // readme-refresh-weekly workflow (see withCogapp in image.ts).
