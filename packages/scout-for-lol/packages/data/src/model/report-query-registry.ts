@@ -60,8 +60,6 @@ export type ReportExampleInfo = {
 export type ReportCommonPresetInfo = ReportExampleInfo & {
   id: string;
   description: string;
-  lookbackDays: number;
-  maxRows: number;
 };
 
 export const REPORT_SOURCES: ReportSourceInfo[] = [
@@ -342,9 +340,14 @@ export const REPORT_FILTERS: ReportFilterInfo[] = [
     description: "Restrict to specific queue types.",
   },
   {
-    id: "champion_id",
-    syntax: "champion_id = <number>",
-    description: "Restrict to a single champion by numeric id.",
+    id: "champion",
+    syntax: "champion_id = champion('Lux')",
+    description: "Restrict to a validated champion by display name.",
+  },
+  {
+    id: "lookback",
+    syntax: "game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'",
+    description: "Restrict match facts to a recent time window.",
   },
   {
     id: "games",
@@ -363,83 +366,65 @@ export const REPORT_COMMON_PRESETS: ReportCommonPresetInfo[] = [
     id: "activity-leaders",
     title: "Most games played",
     description: "Find the most active players over the lookback window.",
-    lookbackDays: 30,
-    maxRows: 10,
     query:
-      "select games, win_rate from match_participants group by player order by games desc limit 10 render leaderboard",
+      "select games, win_rate from match_participants where game_creation_at >= current_timestamp - interval '30 days' group by player order by games desc limit 10 render leaderboard",
   },
   {
     id: "ranked-win-rate",
     title: "Best win rate (ranked solo, min 10 games)",
     description: "Rank players by solo queue win rate with a games floor.",
-    lookbackDays: 30,
-    maxRows: 10,
     query:
-      "select games, win_rate from match_participants where queue in (solo) and games >= 10 group by player order by win_rate desc render bar_chart with (y = win_rate)",
+      "select games, win_rate from match_participants where game_creation_at >= current_timestamp - interval '30 days' and queue in (solo) and games >= 10 group by player order by win_rate desc limit 10 render bar_chart with (y = win_rate)",
   },
   {
     id: "surrender-watch",
     title: "Surrender-happy champions",
     description: "Spot champions most associated with surrender losses.",
-    lookbackDays: 30,
-    maxRows: 10,
     query:
-      "select games, surrender_rate from match_participants group by champion order by surrender_rate desc limit 10 render leaderboard",
+      "select games, surrender_rate from match_participants where game_creation_at >= current_timestamp - interval '30 days' group by champion order by surrender_rate desc limit 10 render leaderboard",
   },
   {
     id: "champion-pool",
     title: "Most-played champions",
     description: "Show which champions the server has been playing most.",
-    lookbackDays: 30,
-    maxRows: 10,
     query:
-      "select games, win_rate from match_participants group by champion order by games desc limit 10 render bar_chart with (y = games)",
+      "select games, win_rate from match_participants where game_creation_at >= current_timestamp - interval '30 days' group by champion order by games desc limit 10 render bar_chart with (y = games)",
   },
   {
     id: "best-groups",
     title: "Most active teammate groups",
     description:
       "List teammate groups of every size (group(2) picks duos only) by games together.",
-    lookbackDays: 30,
-    maxRows: 10,
     query:
-      "select games, win_rate from player_groups group by group(all) order by games desc limit 10 render leaderboard",
+      "select games, win_rate from player_groups where game_creation_at >= current_timestamp - interval '30 days' group by group(all) order by games desc limit 10 render leaderboard",
   },
   {
     id: "kda-leaders",
     title: "KDA leaders",
     description: "Rank players by KDA with a minimum games filter.",
-    lookbackDays: 30,
-    maxRows: 10,
     query:
-      "select games, kda from match_participants where games >= 5 group by player order by kda desc limit 10 render leaderboard",
+      "select games, kda from match_participants where game_creation_at >= current_timestamp - interval '30 days' and games >= 5 group by player order by kda desc limit 10 render leaderboard",
   },
   {
     id: "damage-leaders",
     title: "Damage leaders",
     description: "Find who dealt the most champion damage.",
-    lookbackDays: 14,
-    maxRows: 10,
     query:
-      "select games, damage_to_champions from match_participants group by player order by damage_to_champions desc limit 10 render bar_chart with (y = damage_to_champions)",
+      "select games, damage_to_champions from match_participants where game_creation_at >= current_timestamp - interval '14 days' group by player order by damage_to_champions desc limit 10 render bar_chart with (y = damage_to_champions)",
   },
   {
     id: "champion-select-picks",
     title: "Champion-select picks",
     description: "Use lobby observations to see planned champion picks.",
-    lookbackDays: 14,
-    maxRows: 10,
     query:
-      "select prematches from prematch_participants group by champion order by prematches desc limit 10 render bar_chart with (y = prematches)",
+      "select prematches from prematch_participants where observed_at >= current_timestamp - interval '14 days' group by champion order by prematches desc limit 10 render bar_chart with (y = prematches)",
   },
   {
     id: "queue-mix",
     title: "Queue mix",
     description: "Break recent server activity down by queue.",
-    lookbackDays: 30,
-    maxRows: 10,
     query:
-      "select games, win_rate from match_participants group by queue order by games desc render table",
+      "select games, win_rate from match_participants where game_creation_at >= current_timestamp - interval '30 days' group by queue order by games desc limit 10 render table",
   },
 ];
 

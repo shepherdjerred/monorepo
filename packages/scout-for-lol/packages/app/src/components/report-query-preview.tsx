@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "#src/components/ui/table.tsx";
+import { ReportResultTable } from "#src/components/report-result-table.tsx";
 
 const DEBOUNCE_MS = 500;
 
@@ -16,10 +9,8 @@ export function ReportQueryPreview(props: {
   guildId: string;
   queryText: string;
   title: string;
-  lookbackDays: number;
-  maxRows: number;
 }) {
-  const { guildId, queryText, title, lookbackDays, maxRows } = props;
+  const { guildId, queryText, title } = props;
   const trpc = useTRPC();
   const previewMutation = useMutation(
     trpc.report.previewQuery.mutationOptions(),
@@ -44,10 +35,8 @@ export function ReportQueryPreview(props: {
       guildId,
       queryText: debounced.queryText,
       title: debounced.title,
-      lookbackDays,
-      maxRows,
     });
-  }, [mutate, guildId, debounced, lookbackDays, maxRows]);
+  }, [mutate, guildId, debounced]);
 
   const result = previewMutation.data;
 
@@ -76,34 +65,7 @@ export function ReportQueryPreview(props: {
               alt={`${result.renderKind} preview`}
             />
           )}
-          <div className="rounded-md border border-border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Label</TableHead>
-                  {result.columns.map((column) => (
-                    <TableHead key={column}>{column}</TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {result.rows.map((row, rowIndex) => (
-                  <TableRow key={`${row.label}-${rowIndex.toString()}`}>
-                    <TableCell className="font-medium">{row.label}</TableCell>
-                    {row.values.map((value, valueIndex) => (
-                      <TableCell
-                        key={`${value.column}-${valueIndex.toString()}`}
-                      >
-                        {typeof value.value === "number"
-                          ? value.value.toString()
-                          : value.value}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <ReportResultTable columns={result.columns} rows={result.rows} />
           <p className="text-xs text-muted-foreground">
             {result.rows.length} row(s) · {result.rowsScanned} fact row(s)
             scanned

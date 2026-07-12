@@ -8,7 +8,6 @@ import {
   type ReportMetric,
   type ReportQueryAst,
   type ReportQuerySpan,
-  type ReportWhereClause,
 } from "#src/model/report-query-spec.ts";
 import { parseReportQuery } from "#src/model/report-query-parser.ts";
 import {
@@ -18,6 +17,10 @@ import {
 } from "#src/model/report-query-compile.ts";
 import { tokenizeReportQuery } from "#src/model/report-query-lexer.ts";
 import { QueueTypeSchema } from "#src/model/state.ts";
+import {
+  closestChampionName,
+  resolveReportChampion,
+} from "#src/model/report-query-champions.ts";
 
 const PositiveIntSchema = z.coerce.number().int().positive();
 
@@ -47,7 +50,7 @@ export function lintReportQuery(text: string): ReportDiagnostic[] {
   diagnostics.push(...sourceAndGroupDiagnostics(ast));
   diagnostics.push(...metricDiagnostics(ast));
   diagnostics.push(...orderAndLimitDiagnostics(ast));
-  diagnostics.push(...whereDiagnostics(ast.where));
+  diagnostics.push(...whereDiagnostics(ast));
   diagnostics.push(...renderDiagnostics(ast));
   return diagnostics;
 }
@@ -179,27 +182,65 @@ function orderAndLimitDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
   return out;
 }
 
-function whereDiagnostics(clauses: ReportWhereClause[]): ReportDiagnostic[] {
+function whereDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
   const out: ReportDiagnostic[] = [];
-  for (const clause of clauses) {
-    if (clause.kind === "queue") {
-      for (const value of clause.values) {
-        if (!QueueTypeSchema.safeParse(value).success) {
+  for (const clause of ast.where) {
+    switch (clause.kind) {
+      case "queue": {
+        for (const value of clause.values) {
+          if (!QueueTypeSchema.safeParse(value).success) {
+            out.push(
+              warning(
+                `Unknown queue "${value}" — it will match no games.`,
+                clause.span,
+              ),
+            );
+          }
+        }
+        break;
+      }
+      case "champion": {
+        if (resolveReportChampion(clause.name) === undefined) {
+          const suggestion = closestChampionName(clause.name);
           out.push(
-            warning(
-              `Unknown queue "${value}" — it will match no games.`,
+            error(
+              suggestion === undefined
+                ? `Unknown champion "${clause.name}".`
+                : `Unknown champion "${clause.name}". Did you mean "${suggestion}"?`,
               clause.span,
             ),
           );
         }
+        break;
       }
-    } else if (
-      clause.kind !== "unsupported" &&
-      !PositiveIntSchema.safeParse(clause.value).success
-    ) {
-      out.push(
-        error(`${clause.kind} must be a positive integer.`, clause.span),
-      );
+      case "lookback": {
+        const expected =
+          ast.source?.value === "prematch_participants"
+            ? "observed_at"
+            : "game_creation_at";
+        if (clause.field !== expected) {
+          out.push(
+            error(
+              `Source "${ast.source?.value ?? "unknown"}" uses ${expected} for lookback filters.`,
+              clause.span,
+            ),
+          );
+        }
+        break;
+      }
+      case "champion_id":
+      case "min_games":
+      case "competition_id": {
+        if (!PositiveIntSchema.safeParse(clause.value).success) {
+          out.push(
+            error(`${clause.kind} must be a positive integer.`, clause.span),
+          );
+        }
+        break;
+      }
+      case "unsupported": {
+        break;
+      }
     }
   }
   return out;

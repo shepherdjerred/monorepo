@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import type { CompetitionId } from "@scout-for-lol/data";
+import { parseAndCompile, type CompetitionId } from "@scout-for-lol/data";
 import { DEFAULT_COMPETITION_CRON } from "@scout-for-lol/data/model/competition-cron.ts";
 import { createCompetition } from "#src/database/competition/queries.ts";
 import { syncSystemReports } from "#src/reports/system-reports.ts";
@@ -84,7 +84,7 @@ describe("syncSystemReports", () => {
 
     const report = await competitionReport(competitionId);
     expect(report.queryText).toContain("RENDER bar_chart");
-    expect(report.maxRows).toBe(10);
+    expect(parseAndCompile(report.queryText).limit).toBe(10);
   });
 
   test("disables a competition report once the competition ends", async () => {

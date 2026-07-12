@@ -2,6 +2,8 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import {
   LeaguePuuidSchema,
   RawMatchSchema,
+  REPORT_MAX_ROWS_LIMIT,
+  parseAndCompile,
   type LeaguePuuid,
   type RawCurrentGameInfo,
   type RawMatch,
@@ -197,13 +199,14 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-async function expectParity(queryText: string, maxRows = 25): Promise<void> {
+async function expectParity(queryText: string): Promise<void> {
+  const plan = parseAndCompile(queryText);
   const params = {
     prisma,
     serverId,
     queryText,
-    lookbackDays: 30,
-    maxRows,
+    lookbackDays: plan.lookbackDays,
+    maxRows: REPORT_MAX_ROWS_LIMIT,
     now,
   };
   const [lake, legacy] = [
@@ -244,10 +247,9 @@ describe("lake engine parity with legacy fact engine", () => {
     );
   });
 
-  test("players: limit cap interplay", async () => {
+  test("players: ScoutQL limit is shared by both engines", async () => {
     await expectParity(
-      "SELECT player, games FROM match_participants GROUP BY player ORDER BY games DESC LIMIT 50",
-      2,
+      "SELECT player, games FROM match_participants GROUP BY player ORDER BY games DESC LIMIT 2",
     );
   });
 

@@ -275,26 +275,26 @@ model ReportStoreImportFailure {
 }
 
 model Report {
-  id                  Int       @id @default(autoincrement())
-  serverId            String
-  ownerId             String
-  channelId           String
-  title               String
-  description         String?
-  queryText           String
-  lookbackDays        Int       @default(30)
-  maxRows             Int       @default(10)
-  isEnabled           Boolean   @default(true)
-  isSystemManaged     Boolean   @default(false)
-  systemSource        String?
-  sourceCompetitionId Int?
-  cronExpression      String
-  nextScheduledRunAt  DateTime?
-  lastScheduledRunAt  DateTime?
-  lastRunStatus       String?
-  lastRunError        String?
-  createdTime         DateTime
-  updatedTime         DateTime
+  id                     Int       @id @default(autoincrement())
+  serverId               String
+  ownerId                String
+  channelId              String
+  title                  String
+  description            String?
+  queryText              String
+  isEnabled              Boolean   @default(true)
+  isSystemManaged        Boolean   @default(false)
+  systemSource           String?
+  sourceCompetitionId    Int?
+  cronExpression         String
+  scheduleTimezone       String    @default("UTC")
+  nextScheduledRunAt     DateTime?
+  lastScheduledRunAt     DateTime?
+  lastScheduledLocalDate String?
+  lastRunStatus          String?
+  lastRunError           String?
+  createdTime            DateTime
+  updatedTime            DateTime
 
   runs ReportRun[]
 
@@ -305,23 +305,23 @@ model Report {
 }
 
 model ReportRun {
-  id           Int       @id @default(autoincrement())
-  reportId     Int
-  serverId     String
-  trigger      String
-  status       String
-  startedAt    DateTime
-  completedAt  DateTime?
-  durationMs   Int?
-  rowsReturned Int       @default(0)
-  rowsScanned  Int       @default(0)
-  errorMessage String?
+  id              Int       @id @default(autoincrement())
+  reportId        Int
+  serverId        String
+  trigger         String
+  status          String
+  startedAt       DateTime
+  completedAt     DateTime?
+  durationMs      Int?
+  rowsReturned    Int       @default(0)
+  rowsScanned     Int       @default(0)
+  errorMessage    String?
   // Faithful per-run archive of what was posted: the rendered text body and an
   // S3 key for the chart PNG (null for text-only formats or when S3 is off).
   renderedContent String?
   imageS3Key      String?
   imageByteSize   Int?
-  createdAt    DateTime  @default(now())
+  createdAt       DateTime  @default(now())
 
   report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
@@ -469,15 +469,15 @@ model GuildPermissionError {
 // All DMs MUST flow through `sendDM` (discord/utils/dm.ts), which writes one
 // row here per attempt so DMs are fully traceable. Append-only.
 model DmAuditLog {
-  id           Int      @id @default(autoincrement())
-  recipientId  String // Discord user (snowflake) the DM was addressed to
-  recipientTag String? // Discord tag at send time, when resolvable
-  guildId      String? // Guild this DM relates to, when applicable
+  id             Int      @id @default(autoincrement())
+  recipientId    String // Discord user (snowflake) the DM was addressed to
+  recipientTag   String? // Discord tag at send time, when resolvable
+  guildId        String? // Guild this DM relates to, when applicable
   kind           String // Category, e.g. "permission_error" | "abandonment" | "feedback_request" | "competition_invite" | "prune_notice"
   content        String // The message body that was (attempted to be) sent
   deliveryStatus String // "sent" | "dm_disabled" | "failed"
   errorMessage   String? // Failure detail when delivery != "sent"
-  createdAt    DateTime @default(now())
+  createdAt      DateTime @default(now())
 
   @@index([recipientId, createdAt])
   @@index([kind, createdAt])
@@ -651,11 +651,11 @@ model AuditLog {
   createdAt       DateTime @default(now())
   actorDiscordId  String
   serverId        String
-  action          String   // AuditAction enum value
+  action          String // AuditAction enum value
   targetChannelId String?
   targetPlayerId  Int?
   targetAccountId Int?
-  payload         String   // JSON-encoded before/after snapshot
+  payload         String // JSON-encoded before/after snapshot
   ipAddress       String?
   userAgent       String?
 

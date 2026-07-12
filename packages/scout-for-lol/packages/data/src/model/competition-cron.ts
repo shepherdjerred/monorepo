@@ -2,6 +2,7 @@ import { CronExpressionParser } from "cron-parser";
 import { z } from "zod";
 
 export const DEFAULT_COMPETITION_CRON = "0 0 * * *";
+export const DEFAULT_SCHEDULE_TIMEZONE = "UTC";
 
 const MIN_FIRE_GAP_MS = 23 * 60 * 60 * 1000;
 const FIRE_SAMPLE_COUNT = 10;
@@ -31,6 +32,18 @@ export const CompetitionCronSchema = z
       return;
     }
 
+    if (
+      iterator.fields.minute.values.length !== 1 ||
+      iterator.fields.hour.values.length !== 1
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Schedule must fire at most once per day by selecting exactly one minute and one hour.",
+      });
+      return;
+    }
+
     let previous = iterator.next().toDate();
     for (let i = 1; i < FIRE_SAMPLE_COUNT; i++) {
       const current = iterator.next().toDate();
@@ -48,14 +61,42 @@ export const CompetitionCronSchema = z
 
 export type CompetitionCron = z.infer<typeof CompetitionCronSchema>;
 
+export const ReportScheduleTimezoneSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .superRefine((value, ctx) => {
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: value }).format();
+    } catch {
+      ctx.addIssue({ code: "custom", message: "Unknown schedule timezone." });
+    }
+  });
+
 export function computeNextScheduledUpdateAt(
   cronExpression: string,
   from: Date,
+  timezone = DEFAULT_SCHEDULE_TIMEZONE,
 ): Date {
   return CronExpressionParser.parse(cronExpression, {
     currentDate: from,
-    tz: "UTC",
+    tz: ReportScheduleTimezoneSchema.parse(timezone),
   })
     .next()
     .toDate();
+}
+
+export function computeUpcomingSchedule(
+  cronExpression: string,
+  from: Date,
+  timezone: string,
+  count = 3,
+): Date[] {
+  const expression = CompetitionCronSchema.parse(cronExpression);
+  const parsedTimezone = ReportScheduleTimezoneSchema.parse(timezone);
+  const iterator = CronExpressionParser.parse(expression, {
+    currentDate: from,
+    tz: parsedTimezone,
+  });
+  return Array.from({ length: count }, () => iterator.next().toDate());
 }

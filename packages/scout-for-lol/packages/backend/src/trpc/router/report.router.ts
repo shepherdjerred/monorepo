@@ -16,17 +16,19 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   parseAndCompile,
+  reportResultColumns,
   ReportCreateInputSchema,
   ReportIdSchema,
-  ReportLookbackDaysSchema,
-  ReportMaxRowsSchema,
   ReportAiEditStatusSchema,
   ReportQueryTextSchema,
   type DiscordGuildId,
   type ReportId,
 } from "@scout-for-lol/data";
 import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competition-cron.ts";
-import { CompetitionCronSchema } from "@scout-for-lol/data/model/competition-cron.ts";
+import {
+  CompetitionCronSchema,
+  ReportScheduleTimezoneSchema,
+} from "@scout-for-lol/data/model/competition-cron.ts";
 import type { Report } from "#generated/prisma/client/index.js";
 import { router, webProcedure, webMutationProcedure } from "#src/trpc/trpc.ts";
 import {
@@ -40,6 +42,11 @@ import { renderReportOutput } from "#src/reports/output.ts";
 import { runReport } from "#src/reports/runner.ts";
 import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
 import { getReportAiEditStatus } from "#src/reports/ai/status.ts";
+import {
+  browseReportData,
+  reportDataExplorerSchema,
+  ReportDataBrowseInputSchema,
+} from "#src/reports/data-explorer.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const ReportIdInput = GuildInput.extend({ reportId: ReportIdSchema });
@@ -89,6 +96,34 @@ export const reportRouter = router({
       }),
     );
   }),
+
+  dataExplorerSchema: webProcedure
+    .input(GuildInput)
+    .query(async ({ ctx, input }) => {
+      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+      return reportDataExplorerSchema();
+    }),
+
+  browseData: webProcedure
+    .input(GuildInput.extend(ReportDataBrowseInputSchema.shape))
+    .query(async ({ ctx, input }) => {
+      await assertGuildAdmin({ user: ctx.user, guildId: input.guildId });
+      try {
+        return await browseReportData({
+          serverId: input.guildId,
+          input: ReportDataBrowseInputSchema.parse({
+            table: input.table,
+            columns: input.columns,
+            filters: input.filters,
+            sort: input.sort,
+            cursor: input.cursor,
+            pageSize: input.pageSize,
+          }),
+        });
+      } catch (error) {
+        asBadRequest(error);
+      }
+    }),
 
   get: webProcedure
     .input(
@@ -157,14 +192,14 @@ export const reportRouter = router({
           title: input.title,
           description: input.description,
           queryText: input.queryText,
-          lookbackDays: input.lookbackDays,
-          maxRows: input.maxRows,
           isEnabled: input.isEnabled,
           isSystemManaged: false,
           cronExpression: input.cronExpression,
+          scheduleTimezone: input.scheduleTimezone,
           nextScheduledRunAt: computeNextScheduledUpdateAt(
             input.cronExpression,
             now,
+            input.scheduleTimezone,
           ),
           createdTime: now,
           updatedTime: now,
@@ -179,9 +214,8 @@ export const reportRouter = router({
         description: z.string().trim().max(500).nullable().optional(),
         channelId: DiscordChannelIdSchema.optional(),
         queryText: ReportQueryTextSchema.optional(),
-        lookbackDays: ReportLookbackDaysSchema.optional(),
-        maxRows: ReportMaxRowsSchema.optional(),
         cronExpression: CompetitionCronSchema.optional(),
+        scheduleTimezone: ReportScheduleTimezoneSchema.optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -217,17 +251,17 @@ export const reportRouter = router({
           ...(input.queryText === undefined
             ? {}
             : { queryText: input.queryText }),
-          ...(input.lookbackDays === undefined
-            ? {}
-            : { lookbackDays: input.lookbackDays }),
-          ...(input.maxRows === undefined ? {} : { maxRows: input.maxRows }),
-          ...(input.cronExpression === undefined
+          ...(input.cronExpression === undefined &&
+          input.scheduleTimezone === undefined
             ? {}
             : {
-                cronExpression: input.cronExpression,
+                cronExpression: input.cronExpression ?? report.cronExpression,
+                scheduleTimezone:
+                  input.scheduleTimezone ?? report.scheduleTimezone,
                 nextScheduledRunAt: computeNextScheduledUpdateAt(
-                  input.cronExpression,
+                  input.cronExpression ?? report.cronExpression,
                   now,
+                  input.scheduleTimezone ?? report.scheduleTimezone,
                 ),
               }),
           updatedTime: now,
@@ -250,6 +284,7 @@ export const reportRouter = router({
               nextScheduledRunAt: computeNextScheduledUpdateAt(
                 report.cronExpression,
                 now,
+                report.scheduleTimezone,
               ),
               updatedTime: now,
             }
@@ -305,8 +340,6 @@ export const reportRouter = router({
     .input(
       GuildInput.extend({
         queryText: ReportQueryTextSchema,
-        lookbackDays: ReportLookbackDaysSchema,
-        maxRows: ReportMaxRowsSchema,
         title: z.string().trim().min(1).max(100).default("Preview"),
         sourceCompetitionId: z
           .number()
@@ -323,8 +356,6 @@ export const reportRouter = router({
           prisma,
           serverId: input.guildId,
           queryText: input.queryText,
-          lookbackDays: input.lookbackDays,
-          maxRows: input.maxRows,
           sourceCompetitionId: input.sourceCompetitionId,
         });
         // Render the actual chart PNG so the form preview is true WYSIWYG; text
@@ -340,7 +371,7 @@ export const reportRouter = router({
             : null;
         const image = output === null ? null : output.image;
         return {
-          columns: result.columns,
+          columns: reportResultColumns(result.plan, result.columns),
           rows: result.rows,
           rowsScanned: result.rowsScanned,
           renderKind: render.kind,

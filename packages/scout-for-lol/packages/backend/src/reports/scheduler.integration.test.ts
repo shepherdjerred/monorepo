@@ -28,14 +28,13 @@ const REPORT_DEFAULTS = {
   channelId: testChannelId("999003"),
   description: null,
   queryText:
-    "SELECT player, score FROM competition_rank WHERE competition_id = 0 GROUP BY player ORDER BY score DESC",
-  lookbackDays: 30,
-  maxRows: 10,
+    "SELECT player, score FROM competition_rank WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days' AND competition_id = 0 GROUP BY player ORDER BY score DESC LIMIT 10",
   isEnabled: true,
   isSystemManaged: false,
   systemSource: null,
   sourceCompetitionId: null,
   cronExpression: "0 0 * * *",
+  scheduleTimezone: "America/Los_Angeles",
 } as const;
 
 describe("runDueReports", () => {
@@ -129,6 +128,68 @@ describe("runDueReports", () => {
       snapshot.values.find((v) => v.labels.report_id === report.id.toString())
         ?.value ?? null;
     expect(value).toBe(42);
+  });
+
+  test("suppresses a second claimed run on the same local date", async () => {
+    const now = new Date("2026-07-12T18:00:00.000Z");
+    const report = await prisma.report.create({
+      data: {
+        ...REPORT_DEFAULTS,
+        title: "Local date idempotency",
+        nextScheduledRunAt: new Date(now.getTime() - 60_000),
+        createdTime: now,
+        updatedTime: now,
+      },
+    });
+
+    await runDueReports({ prisma, now });
+    await prisma.report.update({
+      where: { id: report.id },
+      data: { nextScheduledRunAt: new Date(now.getTime() - 30_000) },
+    });
+    await runDueReports({ prisma, now: new Date(now.getTime() + 60_000) });
+
+    expect(
+      await prisma.reportRun.count({ where: { reportId: report.id } }),
+    ).toBe(1);
+  });
+
+  test("keys delayed runs to the scheduled local date across midnight", async () => {
+    const firstScheduledAt = new Date("2026-07-13T06:59:00.000Z");
+    const firstWorkerRunAt = new Date("2026-07-13T07:01:00.000Z");
+    const report = await prisma.report.create({
+      data: {
+        ...REPORT_DEFAULTS,
+        title: "Delayed across midnight",
+        nextScheduledRunAt: firstScheduledAt,
+        createdTime: firstScheduledAt,
+        updatedTime: firstScheduledAt,
+      },
+    });
+
+    await runDueReports({ prisma, now: firstWorkerRunAt });
+    const afterFirst = await prisma.report.findUniqueOrThrow({
+      where: { id: report.id },
+    });
+    expect(afterFirst.lastScheduledLocalDate).toBe("2026-07-12");
+
+    const secondScheduledAt = new Date("2026-07-13T07:02:00.000Z");
+    await prisma.report.update({
+      where: { id: report.id },
+      data: { nextScheduledRunAt: secondScheduledAt },
+    });
+    await runDueReports({
+      prisma,
+      now: new Date("2026-07-13T07:03:00.000Z"),
+    });
+
+    const afterSecond = await prisma.report.findUniqueOrThrow({
+      where: { id: report.id },
+    });
+    expect(afterSecond.lastScheduledLocalDate).toBe("2026-07-13");
+    expect(
+      await prisma.reportRun.count({ where: { reportId: report.id } }),
+    ).toBe(2);
   });
 });
 

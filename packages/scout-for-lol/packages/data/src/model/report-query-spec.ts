@@ -1,6 +1,10 @@
 import { z } from "zod";
 import {
   DEFAULT_RENDER_SPEC,
+  REPORT_DEFAULT_LOOKBACK_DAYS,
+  REPORT_DEFAULT_MAX_ROWS,
+  ReportLookbackDaysSchema,
+  ReportMaxRowsSchema,
   ReportRenderSpecSchema,
 } from "#src/model/report.ts";
 
@@ -81,9 +85,12 @@ export const ReportQueryPlanSchema = z
     championId: z.number().int().positive().optional(),
     minGames: z.number().int().positive().optional(),
     competitionId: z.number().int().positive().optional(),
+    lookbackDays: ReportLookbackDaysSchema.default(
+      REPORT_DEFAULT_LOOKBACK_DAYS,
+    ),
     orderBy: z.union([ReportMetricSchema, z.literal("label")]).default("games"),
     orderDirection: ReportOrderDirectionSchema.default("desc"),
-    limit: z.number().int().positive().optional(),
+    limit: ReportMaxRowsSchema.default(REPORT_DEFAULT_MAX_ROWS),
     // The trailing `RENDER <kind> [WITH (...)]` clause; absent clauses default to
     // a TABLE render so a plain query reproduces the pre-DSL behavior.
     render: ReportRenderSpecSchema.default(DEFAULT_RENDER_SPEC),
@@ -140,6 +147,13 @@ export type ReportQueryItem = { value: string; span: ReportQuerySpan };
 export type ReportWhereClause =
   | { kind: "queue"; values: string[]; span: ReportQuerySpan }
   | { kind: "champion_id"; value: number; span: ReportQuerySpan }
+  | { kind: "champion"; name: string; span: ReportQuerySpan }
+  | {
+      kind: "lookback";
+      field: "game_creation_at" | "observed_at";
+      days: number;
+      span: ReportQuerySpan;
+    }
   | { kind: "min_games"; value: number; span: ReportQuerySpan }
   | { kind: "competition_id"; value: number; span: ReportQuerySpan }
   | { kind: "unsupported"; text: string; span: ReportQuerySpan };

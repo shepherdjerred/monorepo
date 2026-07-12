@@ -23,6 +23,7 @@ describe("parseAndCompile", () => {
       championId: undefined,
       minGames: undefined,
       competitionId: undefined,
+      lookbackDays: 30,
       orderBy: "surrender_rate",
       orderDirection: "desc",
       limit: 10,
@@ -90,7 +91,7 @@ describe("parseAndCompile", () => {
 
     expect(plan.orderBy).toBe("games");
     expect(plan.orderDirection).toBe("desc");
-    expect(plan.limit).toBeUndefined();
+    expect(plan.limit).toBe(10);
   });
 
   test("rejects unsupported where clauses", () => {
@@ -114,6 +115,47 @@ describe("parseAndCompile", () => {
     expect(plan.queueFilter).toEqual(["arena"]);
     expect(plan.championId).toBe(22);
     expect(plan.minGames).toBe(5);
+  });
+
+  test("resolves a validated champion name to its numeric id", () => {
+    const plan = parseAndCompile(
+      "SELECT games FROM match_participants WHERE champion_id = champion('Lux') GROUP BY player",
+    );
+
+    expect(plan.championId).toBe(99);
+  });
+
+  test("supports champion display names containing apostrophes", () => {
+    const plan = parseAndCompile(
+      `SELECT games FROM match_participants WHERE champion_id = champion("Kai'Sa") GROUP BY player`,
+    );
+
+    expect(plan.championId).toBe(145);
+  });
+
+  test("rejects unknown champion names with a suggestion", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT games FROM match_participants WHERE champion_id = champion('Luxx') GROUP BY player",
+      ),
+    ).toThrow('Did you mean "Lux"?');
+  });
+
+  test("compiles SQL-style lookback predicates", () => {
+    const plan = parseAndCompile(
+      "SELECT games FROM match_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '14 days' GROUP BY player LIMIT 5",
+    );
+
+    expect(plan.lookbackDays).toBe(14);
+    expect(plan.limit).toBe(5);
+  });
+
+  test("requires the source-specific timestamp field", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT prematches FROM prematch_participants WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '14 days' GROUP BY player",
+      ),
+    ).toThrow("uses observed_at");
   });
 
   test("rejects unknown source", () => {

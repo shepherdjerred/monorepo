@@ -8,8 +8,6 @@ import {
   type DiscordGuildId,
   DiscordGuildIdSchema,
   ReportIdSchema,
-  ReportLookbackDaysSchema,
-  ReportMaxRowsSchema,
   ReportQueryTextSchema,
   parseAndCompile,
 } from "@scout-for-lol/data";
@@ -29,8 +27,6 @@ type ReportUpdateOptions = {
   description?: string;
   queryText?: string;
   cronExpression?: string;
-  lookbackDays?: number;
-  maxRows?: number;
   channelId?: DiscordChannelId;
   enabled?: boolean;
 };
@@ -106,7 +102,7 @@ export async function executeReportUpdate(
 
   const updated = await prisma.report.update({
     where: { id: report.id },
-    data: buildReportUpdateData(options, now),
+    data: buildReportUpdateData(options, now, report.scheduleTimezone),
   });
 
   await interaction.reply({
@@ -126,8 +122,6 @@ function readReportUpdateOptions(
     readDescriptionOption(interaction),
     readQueryOption(interaction),
     readCronOption(interaction),
-    readLookbackDaysOption(interaction),
-    readMaxRowsOption(interaction),
   );
   if (channel !== null) {
     options.channelId = DiscordChannelIdSchema.parse(channel.id);
@@ -167,26 +161,6 @@ function readCronOption(
     return undefined;
   }
   return { cronExpression: CompetitionCronSchema.parse(value) };
-}
-
-function readLookbackDaysOption(
-  interaction: ChatInputCommandInteraction,
-): Pick<ReportUpdateOptions, "lookbackDays"> | undefined {
-  const value = interaction.options.getInteger("lookback-days");
-  if (value === null) {
-    return undefined;
-  }
-  return { lookbackDays: ReportLookbackDaysSchema.parse(value) };
-}
-
-function readMaxRowsOption(
-  interaction: ChatInputCommandInteraction,
-): Pick<ReportUpdateOptions, "maxRows"> | undefined {
-  const value = interaction.options.getInteger("max-rows");
-  if (value === null) {
-    return undefined;
-  }
-  return { maxRows: ReportMaxRowsSchema.parse(value) };
 }
 
 function readQueryOption(
@@ -235,6 +209,7 @@ async function validateReportReenable(params: {
 function buildReportUpdateData(
   options: ReportUpdateOptions,
   now: Date,
+  scheduleTimezone: string,
 ): Prisma.ReportUpdateInput {
   return {
     ...(options.title === undefined ? {} : { title: options.title }),
@@ -247,10 +222,6 @@ function buildReportUpdateData(
     ...(options.queryText === undefined
       ? {}
       : { queryText: options.queryText }),
-    ...(options.lookbackDays === undefined
-      ? {}
-      : { lookbackDays: options.lookbackDays }),
-    ...(options.maxRows === undefined ? {} : { maxRows: options.maxRows }),
     ...(options.enabled === undefined ? {} : { isEnabled: options.enabled }),
     ...(options.cronExpression === undefined
       ? {}
@@ -259,6 +230,7 @@ function buildReportUpdateData(
           nextScheduledRunAt: computeNextScheduledUpdateAt(
             options.cronExpression,
             now,
+            scheduleTimezone,
           ),
         }),
     updatedTime: now,

@@ -3,8 +3,6 @@ import { AlertCircle, Check, Square, WandSparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import {
   DiscordGuildIdSchema,
-  REPORT_DEFAULT_LOOKBACK_DAYS,
-  REPORT_DEFAULT_MAX_ROWS,
   type ReportAiEditStatus,
   type ReportAiFinalDraft,
   type ReportAiPreviewSummary,
@@ -23,6 +21,7 @@ import { useTRPC } from "#src/lib/trpc.ts";
 import { streamReportAiEdit } from "#src/lib/report-ai-stream.ts";
 import { type ReportFormState } from "#src/components/report-form-fields.tsx";
 import { ReportQueryViewer } from "#src/components/report-query-viewer.tsx";
+import { ReportResultTable } from "#src/components/report-result-table.tsx";
 
 type ProgressItem = {
   id: string;
@@ -49,8 +48,6 @@ export function ReportAiEditor(props: {
     trpc.report.aiEditStatus.queryOptions({ guildId: props.guildId }),
   );
   const status = statusQuery.data;
-  const quota = weeklyQuota(status);
-  const exhausted = status?.quota.find((snapshot) => snapshot.remaining === 0);
   const disabledReason = statusDisabledReason(status);
   const canRun =
     status?.enabled === true &&
@@ -90,11 +87,6 @@ export function ReportAiEditor(props: {
             props.state.description.trim().length === 0
               ? null
               : props.state.description,
-          lookbackDays: numberOr(
-            props.state.lookbackDays,
-            REPORT_DEFAULT_LOOKBACK_DAYS,
-          ),
-          maxRows: numberOr(props.state.maxRows, REPORT_DEFAULT_MAX_ROWS),
           sourceCompetitionId: null,
         },
         signal: controller.signal,
@@ -184,13 +176,11 @@ export function ReportAiEditor(props: {
       <CardHeader className="space-y-3 pb-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-sm">AI editor</CardTitle>
-          <QuotaBadge quota={quota} />
+          {status?.exempt === true && (
+            <Badge variant="outline">Unlimited (admin)</Badge>
+          )}
         </div>
-        {exhausted !== undefined && (
-          <p className="text-xs text-muted-foreground">
-            {exhausted.window} quota resets {formatReset(exhausted.resetsAt)}.
-          </p>
-        )}
+        <QuotaSummary status={status} />
       </CardHeader>
       <CardContent className="space-y-3">
         <Textarea
@@ -237,7 +227,7 @@ export function ReportAiEditor(props: {
             type="button"
             size="sm"
             variant="outline"
-            disabled={finalDraft === null}
+            disabled={finalDraft === null || preview === null}
             onClick={applyDraft}
           >
             <Check />
@@ -256,13 +246,12 @@ export function ReportAiEditor(props: {
         )}
 
         {preview !== null && (
-          <div className="rounded-md border border-border p-3 text-xs">
-            <p className="font-medium">
-              Preview: {preview.rows.length.toString()} rows,{" "}
-              {preview.rowsScanned.toString()} scanned
-            </p>
-            <p className="mt-1 text-muted-foreground">
-              {preview.columns.join(", ")}
+          <div className="space-y-2">
+            <p className="text-xs font-medium">Draft preview</p>
+            <ReportResultTable columns={preview.columns} rows={preview.rows} />
+            <p className="text-xs text-muted-foreground">
+              {preview.rows.length.toString()} row(s) ·{" "}
+              {preview.rowsScanned.toLocaleString()} fact row(s) scanned
             </p>
           </div>
         )}
@@ -303,26 +292,38 @@ export function ReportAiEditor(props: {
   );
 }
 
-function QuotaBadge(props: {
-  quota: ReportAiEditStatus["quota"][number] | undefined;
-}) {
-  if (props.quota === undefined) {
-    return <Badge variant="outline">Quota loading</Badge>;
+function QuotaSummary(props: { status: ReportAiEditStatus | undefined }) {
+  if (props.status === undefined) {
+    return <p className="text-xs text-muted-foreground">Loading credits…</p>;
+  }
+  if (props.status.exempt) {
+    return null;
   }
   return (
-    <Badge variant="outline">
-      Weekly quota: {props.quota.remaining.toString()} /{" "}
-      {props.quota.limit.toString()}
-    </Badge>
+    <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2">
+      {props.status.quota.map((snapshot) => (
+        <p
+          key={`${snapshot.scope}-${snapshot.window}`}
+          className="text-xs text-muted-foreground"
+        >
+          <span className="font-medium text-foreground">
+            {quotaScopeLabel(snapshot.scope)} {snapshot.window}:
+          </span>{" "}
+          {snapshot.remaining.toString()} of {snapshot.limit.toString()}{" "}
+          remaining · resets {formatReset(snapshot.resetsAt)}
+        </p>
+      ))}
+    </div>
   );
 }
 
-function weeklyQuota(
-  status: ReportAiEditStatus | undefined,
-): ReportAiEditStatus["quota"][number] | undefined {
-  return status?.quota.find(
-    (snapshot) => snapshot.scope === "user_guild" && snapshot.window === "week",
-  );
+function quotaScopeLabel(
+  scope: ReportAiEditStatus["quota"][number]["scope"],
+): string {
+  if (scope === "user_guild") {
+    return "Your";
+  }
+  return scope === "guild" ? "Server" : "Service";
 }
 
 function statusDisabledReason(
@@ -348,11 +349,6 @@ function progressClassName(tone: ProgressItem["tone"]): string {
     return "text-xs text-destructive";
   }
   return "text-xs text-muted-foreground";
-}
-
-function numberOr(value: string, fallback: number): number {
-  const parsed = Number(value);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 function formatReset(resetsAt: string): string {

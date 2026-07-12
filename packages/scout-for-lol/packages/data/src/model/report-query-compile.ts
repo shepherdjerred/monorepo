@@ -26,6 +26,7 @@ import {
   parseReportQuery,
   UNSUPPORTED_WHERE_MESSAGE,
 } from "#src/model/report-query-parser.ts";
+import { requireReportChampion } from "#src/model/report-query-champions.ts";
 
 const PositiveIntSchema = z.coerce.number().int().positive();
 
@@ -34,6 +35,7 @@ type WhereFilters = {
   championId?: number;
   minGames?: number;
   competitionId?: number;
+  lookbackDays?: number;
 };
 
 // The parsed `GROUP BY` clause value: the grouping field plus, for teammate
@@ -114,7 +116,7 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
         .filter((value) => !labelNames.has(value)),
     );
 
-  const filters = compileWhere(ast.where);
+  const filters = compileWhere(ast.where, source);
 
   const orderBy =
     ast.orderBy === undefined
@@ -147,6 +149,7 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
     championId: filters.championId,
     minGames: filters.minGames,
     competitionId: filters.competitionId,
+    lookbackDays: filters.lookbackDays,
     orderBy,
     orderDirection,
     limit,
@@ -154,7 +157,10 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
   });
 }
 
-function compileWhere(clauses: ReportWhereClause[]): WhereFilters {
+function compileWhere(
+  clauses: ReportWhereClause[],
+  source: ReportQueryPlan["source"],
+): WhereFilters {
   const filters: WhereFilters = {};
   for (const clause of clauses) {
     match(clause)
@@ -166,6 +172,21 @@ function compileWhere(clauses: ReportWhereClause[]): WhereFilters {
       })
       .with({ kind: "champion_id" }, (c) => {
         filters.championId = PositiveIntSchema.parse(c.value);
+      })
+      .with({ kind: "champion" }, (c) => {
+        filters.championId = requireReportChampion(c.name).id;
+      })
+      .with({ kind: "lookback" }, (c) => {
+        const expectedField =
+          source === "prematch_participants"
+            ? "observed_at"
+            : "game_creation_at";
+        if (c.field !== expectedField) {
+          throw new Error(
+            `Source "${source}" uses ${expectedField} for lookback filters, not ${c.field}.`,
+          );
+        }
+        filters.lookbackDays = c.days;
       })
       .with({ kind: "min_games" }, (c) => {
         filters.minGames = PositiveIntSchema.parse(c.value);

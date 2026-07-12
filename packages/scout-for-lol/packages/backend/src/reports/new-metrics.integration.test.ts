@@ -54,8 +54,6 @@ describe("new lake metrics", () => {
       serverId,
       queryText:
         "SELECT player, games, gold_earned, vision_score, damage_taken, total_damage_dealt, wards_placed, multikills, avg_game_duration, cs_per_minute FROM match_participants GROUP BY player ORDER BY games DESC",
-      lookbackDays: 30,
-      maxRows: 10,
       now,
     });
 
@@ -115,8 +113,6 @@ describe("new lake metrics", () => {
       serverId,
       queryText:
         "SELECT pair, games, gold_earned, avg_game_duration, cs_per_minute FROM player_pairs GROUP BY pair",
-      lookbackDays: 30,
-      maxRows: 10,
       now,
     });
 
@@ -151,8 +147,6 @@ describe("new lake metrics", () => {
       serverId,
       queryText:
         "SELECT player, prematches, gold_earned, cs_per_minute FROM prematch_participants GROUP BY player",
-      lookbackDays: 30,
-      maxRows: 10,
       now,
     });
 

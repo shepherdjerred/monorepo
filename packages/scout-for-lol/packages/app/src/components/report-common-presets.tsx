@@ -17,7 +17,7 @@ export function ReportCommonPresets(props: {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm">Common reports</CardTitle>
+        <CardTitle className="text-sm">Presets</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid gap-2 sm:grid-cols-2">

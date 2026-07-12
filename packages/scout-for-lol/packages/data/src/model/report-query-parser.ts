@@ -11,18 +11,22 @@ import {
   And,
   By,
   Comma,
+  CurrentTimestamp,
   Equals,
   From,
   GreaterEqual,
   Group,
   In,
+  Interval,
   Limit,
   LParen,
+  Minus,
   NumberLiteral,
   Order,
   Render,
   RParen,
   Select,
+  StringLiteral,
   tokenizeReportQuery,
   tokenSpan,
   Where,
@@ -267,6 +271,14 @@ function matchComparisonClause(
   slice: IToken[],
   span: ReportQuerySpan,
 ): ReportWhereClause | undefined {
+  const champion = matchChampionClause(slice, span);
+  if (champion !== undefined) {
+    return champion;
+  }
+  const lookback = matchLookbackClause(slice, span);
+  if (lookback !== undefined) {
+    return lookback;
+  }
   if (slice.length !== 3) {
     return undefined;
   }
@@ -290,6 +302,53 @@ function matchComparisonClause(
     return { kind: "competition_id", value: numeric, span };
   }
   return undefined;
+}
+
+function matchChampionClause(
+  slice: IToken[],
+  span: ReportQuerySpan,
+): ReportWhereClause | undefined {
+  if (
+    normalize(slice[0]?.image ?? "") !== "champion_id" ||
+    slice[1]?.tokenType !== Equals ||
+    normalize(slice[2]?.image ?? "") !== "champion" ||
+    slice[3]?.tokenType !== LParen ||
+    slice[4]?.tokenType !== StringLiteral ||
+    slice[5]?.tokenType !== RParen ||
+    slice.length !== 6
+  ) {
+    return undefined;
+  }
+  return { kind: "champion", name: unquote(slice[4].image), span };
+}
+
+function matchLookbackClause(
+  slice: IToken[],
+  span: ReportQuerySpan,
+): ReportWhereClause | undefined {
+  const field = normalize(slice[0]?.image ?? "");
+  if (
+    (field !== "game_creation_at" && field !== "observed_at") ||
+    slice[1]?.tokenType !== GreaterEqual ||
+    slice[2]?.tokenType !== CurrentTimestamp ||
+    slice[3]?.tokenType !== Minus ||
+    slice[4]?.tokenType !== Interval ||
+    slice[5]?.tokenType !== StringLiteral ||
+    slice.length !== 6
+  ) {
+    return undefined;
+  }
+  const interval = unquote(slice[5].image).trim().toLowerCase();
+  const intervalMatch = /^(?<days>\d+)\s+days?$/u.exec(interval);
+  const days = Number(intervalMatch?.groups?.["days"] ?? Number.NaN);
+  if (!Number.isInteger(days)) {
+    return undefined;
+  }
+  return { kind: "lookback", field, days, span };
+}
+
+function unquote(value: string): string {
+  return value.slice(1, -1);
 }
 
 // ── token helpers ────────────────────────────────────────────────────────────
