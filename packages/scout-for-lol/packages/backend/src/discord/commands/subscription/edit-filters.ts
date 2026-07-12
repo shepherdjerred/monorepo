@@ -1,6 +1,5 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { fromError } from "zod-validation-error";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -9,6 +8,7 @@ import {
 import { createLogger } from "#src/logger.ts";
 import { setSubscriptionFilters } from "#src/lib/subscription/filters.ts";
 import { prisma } from "#src/database/index.ts";
+import { parseCommandArgs } from "#src/discord/commands/define-command.ts";
 import { editReplyOnError } from "#src/discord/commands/subscription/reply-helpers.ts";
 import { parseQueuesArg } from "#src/discord/commands/subscription/queue-filter-arg.ts";
 import { describeSubscriptionFilters } from "@scout-for-lol/data/index.ts";
@@ -26,17 +26,12 @@ export async function executeSubscriptionEditFilters(
 ) {
   logger.info("🔔 Starting subscription edit-filters");
 
-  const parseResult = ArgsSchema.safeParse({
+  const parseResult = await parseCommandArgs(interaction, ArgsSchema, {
     alias: interaction.options.getString("alias"),
     channel: interaction.options.getChannel("channel")?.id,
     guildId: interaction.guildId,
   });
-
   if (!parseResult.success) {
-    await interaction.reply({
-      content: fromError(parseResult.error).toString(),
-      ephemeral: true,
-    });
     return;
   }
 
