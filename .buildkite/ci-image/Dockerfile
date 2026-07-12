@@ -78,7 +78,7 @@ RUN curl -fsSL https://get.opentofu.org/install-opentofu.sh | \
 
 # AWS CLI (covers install_awscli())
 # renovate: datasource=github-tags depName=aws/aws-cli versioning=semver
-ARG AWSCLI_VERSION=2.35.1
+ARG AWSCLI_VERSION=2.35.3
 RUN curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip" -o /tmp/awscliv2.zip && \
     unzip -q /tmp/awscliv2.zip -d /tmp/aws-install && \
     /tmp/aws-install/aws/install && \
