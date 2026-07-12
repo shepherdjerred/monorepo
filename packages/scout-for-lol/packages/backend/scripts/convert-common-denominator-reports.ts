@@ -74,25 +74,34 @@ async function main(): Promise<void> {
 
   const now = new Date();
 
-  // 1. Delete the ARAM reports (cascades ReportRun).
-  const deleted = await prisma.report.deleteMany({
-    where: {
-      systemSource: "COMMON_DENOMINATOR",
-      title: { contains: "ARAM" },
-    },
-  });
+  // Delete + convert run in one transaction: if the connection drops or the
+  // process is killed mid-migration, either both steps commit or neither
+  // does. Without this, a kill right after deleteMany would permanently lose
+  // the ARAM reports (and their cascaded ReportRun history) while leaving the
+  // remaining rows still tagged COMMON_DENOMINATOR.
+  const { deleted, converted } = await prisma.$transaction(async (tx) => {
+    // 1. Delete the ARAM reports (cascades ReportRun).
+    const deletedResult = await tx.report.deleteMany({
+      where: {
+        systemSource: "COMMON_DENOMINATOR",
+        title: { contains: "ARAM" },
+      },
+    });
 
-  // 2. Convert the remaining rows to normal, editable reports. Re-enable them
-  //    too, in case an interim sync tick had already disabled them.
-  const converted = await prisma.report.updateMany({
-    where: { systemSource: "COMMON_DENOMINATOR" },
-    data: {
-      isSystemManaged: false,
-      systemSource: null,
-      isEnabled: true,
-      updatedTime: now,
-      ...(ownerId === undefined ? {} : { ownerId }),
-    },
+    // 2. Convert the remaining rows to normal, editable reports. Re-enable
+    //    them too, in case an interim sync tick had already disabled them.
+    const convertedResult = await tx.report.updateMany({
+      where: { systemSource: "COMMON_DENOMINATOR" },
+      data: {
+        isSystemManaged: false,
+        systemSource: null,
+        isEnabled: true,
+        updatedTime: now,
+        ...(ownerId === undefined ? {} : { ownerId }),
+      },
+    });
+
+    return { deleted: deletedResult, converted: convertedResult };
   });
 
   logger.info("Done.", { deleted: deleted.count, converted: converted.count });
