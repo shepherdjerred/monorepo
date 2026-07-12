@@ -54,6 +54,7 @@ const SHARED_PRODUCER_DIRS = new Set([
   "packages/llm-models",
   "packages/astro-opengraph-images",
   "packages/discord-video-stream",
+  "packages/discord-stream-lifecycle",
   "packages/homelab/src/helm-types",
   // Source-only shared middle layer consumed by both discord-plays-* backends
   // via file: deps. No build step (like discord-stream-lifecycle), so it only
@@ -68,6 +69,7 @@ const SHARED_PRODUCER_DAG_IDS = new Set([
   "llm-models",
   "astro-og",
   "discord-video-stream",
+  "discord-stream-lifecycle",
   "helm-types-build",
 ]);
 
@@ -86,6 +88,7 @@ const SHARED_PRODUCER_DAG_IDS = new Set([
 //     - @shepherdjerred/llm-models   (exports "." default → ./dist/index.js)
 //     - webring                      (exports "." default → ./dist/index.js)
 //     - astro-opengraph-images       (exports "." default → ./dist/index.js)
+//     - @shepherdjerred/discord-stream-lifecycle (exports "./*" types+default → ./dist/*; tsc build)
 //
 //   SOURCE-ONLY (default export → src, so consumers import TS directly and a
 //   stale dist can't affect them — NO refresh needed even though some have a
@@ -95,7 +98,6 @@ const SHARED_PRODUCER_DAG_IDS = new Set([
 //     - @shepherdjerred/helm-types          (consumed only via its CLI by the non-setup generate-helm-types script)
 //     - @shepherdjerred/home-assistant      (exports "." → ./src/index.ts)
 //     - @shepherdjerred/llm-observability   (exports → ./src/*.ts, no build)
-//     - @shepherdjerred/discord-stream-lifecycle (exports → ./src/*.ts, no build)
 //     - tasknotes-types                     (exports "." → ./src/index.ts, no build)
 //
 // The consumer list is derived at runtime by scanning workspace package.json
@@ -107,6 +109,7 @@ const BUILT_PRODUCERS = new Set([
   "@shepherdjerred/llm-models",
   "webring",
   "astro-opengraph-images",
+  "@shepherdjerred/discord-stream-lifecycle",
 ]);
 
 // Each group's own DAG tasks, beyond the always-on shared producers.
@@ -660,6 +663,14 @@ const DAG_TASKS: DagTask[] = [
     label: "discord-video-stream build (d.ts)",
     cmd: ["bun", "run", "build"],
     cwd: "packages/discord-video-stream",
+    deps: [],
+    warnOnly: false,
+  },
+  {
+    id: "discord-stream-lifecycle",
+    label: "discord-stream-lifecycle build",
+    cmd: ["bun", "run", "build"],
+    cwd: "packages/discord-stream-lifecycle",
     deps: [],
     warnOnly: false,
   },
