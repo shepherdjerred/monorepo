@@ -118,6 +118,30 @@ def summary_has_quality(summary):
         return False
     return True
 
+# Codex's Responses API wraps inline citations in private-use delimiters
+# (U+E200 open, U+E202 segment separator, U+E201 close) around
+# `cite<path>:<line>` segments; when the raw text is dumped instead of
+# rendered, these degrade into unreadable glyphs. Built from chr() rather
+# than literal escapes so the codepoints survive plain-text editing untouched.
+_CITE_OPEN = chr(0xE200)
+_CITE_SEP = chr(0xE202)
+_CITE_CLOSE = chr(0xE201)
+CITATION_RE = re.compile(
+    _CITE_OPEN + "cite(?:" + _CITE_SEP + "[^" + _CITE_OPEN + _CITE_SEP + _CITE_CLOSE + "]*)*" + _CITE_CLOSE
+)
+
+def clean_summary(text):
+    """Strip citation-marker artifacts and any session-log footer a summary
+    picked up (e.g. from a project's own AGENTS.md/CLAUDE.md instructions)."""
+    text = CITATION_RE.sub("", text)
+    # Drop a trailing session-footer block (Session Summary/Log + Done/
+    # Remaining/Caveats bullets) so it never gets published under a project
+    # listing — only the intended description should remain.
+    text = re.split(r"\n\s*\*\*Session (?:Summary|Log)\*\*", text)[0]
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r" +([.,])", r"\1", text)
+    return text.strip()
+
 def generate_summary(content, prompt, summary_path):
     """Generate summary using Codex CLI and cache it."""
     schema = {
@@ -146,6 +170,10 @@ def generate_summary(content, prompt, summary_path):
                 "bunx",
                 "@openai/codex",
                 "exec",
+                # Ignore AGENTS.md/CLAUDE.md project docs so codex returns just a
+                # project summary, not agent session-log meta (Done/Remaining/Caveats).
+                "-c",
+                "project_doc_max_bytes=0",
                 "--model",
                 MODEL,
                 "--sandbox",
@@ -171,7 +199,7 @@ def generate_summary(content, prompt, summary_path):
 
         try:
             payload = json.loads(out_path.read_text())
-            description = str(payload.get("summary", "")).strip()
+            description = clean_summary(str(payload.get("summary", "")))
         except Exception:
             return None
 
@@ -212,7 +240,7 @@ for dirname, commit_date in subdirs_with_dates:
     cog.outl(f"### [{dirname}]({github_url}) ({date_formatted})\n")
 
     if summary_path.exists():
-        cog.outl(summary_path.read_text().strip())
+        cog.outl(clean_summary(summary_path.read_text()))
     else:
         # Always scan source files for summary
         context = gather_source_context(folder_path)
