@@ -21,6 +21,7 @@ import {
 import type {
   Source,
   SubtitlePref,
+  SubtitleTrackRef,
 } from "@shepherdjerred/streambot/sources/source.ts";
 import {
   chaptersText,
@@ -37,6 +38,21 @@ import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 
 const SOURCES_TIMEOUT_MS = 15_000;
 const SUBTITLE_ENUMERATION_TIMEOUT_MS = 15_000;
+
+/**
+ * Whether a decoded trackRef could apply to a source of `kind` — used to detect playback having
+ * moved on to a different-kind source during the picker's (up to 2-minute) wait. `off` always
+ * applies; `sidecar`/`embedded` only to a `file` source; `ytdlp` only to a `url`/`search` source.
+ * Applying a mismatched trackRef would throw the invariant guard in the subtitle resolver.
+ */
+function trackRefMatchesKind(
+  trackRef: SubtitleTrackRef,
+  kind: Source["kind"],
+): boolean {
+  if (trackRef.kind === "off") return true;
+  if (trackRef.kind === "ytdlp") return kind === "url" || kind === "search";
+  return kind === "file";
+}
 
 /**
  * The minimal slash-interaction surface the handler needs — decoupled from discord.js so the
@@ -101,6 +117,11 @@ export type CommandHandlerDeps = {
   readonly listSubtitleCandidates: (
     signal: AbortSignal,
   ) => Promise<SubtitleCandidate[]>;
+  /**
+   * The `kind` of the currently-playing source, or `null` if nothing is playing — re-checked right
+   * before dispatching `CHANGE_SUBTITLES` in case playback moved on during the picker's wait.
+   */
+  readonly currentSourceKind: () => Source["kind"] | null;
   /** True while a subtitle picker is already open for this session (single-flight guard). */
   readonly hasPendingSubtitleMenu: () => boolean;
   /** Claim the single-flight slot; returns false if one was already claimed. */
@@ -440,11 +461,28 @@ export class CommandHandler {
         await interaction.editReply("Selection timed out.");
         return;
       }
-      const subtitles: SubtitlePref = { trackRef: decodeTrackRef(picked) };
+      const trackRef = decodeTrackRef(picked);
+
+      // Playback can move on (natural end, skip, another change) during the picker's wait —
+      // re-check right before dispatching so a stale pick never gets applied to a different item.
+      const nowView = this.deps.view();
+      const nowKind = this.deps.currentSourceKind();
+      if (
+        nowView.current?.title !== current.title ||
+        nowKind === null ||
+        !trackRefMatchesKind(trackRef, nowKind)
+      ) {
+        await interaction.editReply(
+          "Playback changed while you were choosing — nothing was applied. Try again.",
+        );
+        return;
+      }
+
+      const subtitles: SubtitlePref = { trackRef };
       this.deps.dispatch({
         type: "CHANGE_SUBTITLES",
         subtitles,
-        positionSeconds: view.positionSeconds ?? 0,
+        positionSeconds: nowView.positionSeconds ?? 0,
       });
       await interaction.editReply(
         "🔄 Restarting with the selected subtitle track…",

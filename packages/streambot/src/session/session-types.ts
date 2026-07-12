@@ -8,6 +8,7 @@ import type { PlaybackView } from "@shepherdjerred/streambot/discord/queue-text.
 import type { StatusReporter } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type { UserbotEntry } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import type { SubtitleCandidate } from "@shepherdjerred/streambot/sources/subtitles.ts";
+import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type {
   ChannelId,
   GuildId,
@@ -30,6 +31,13 @@ export type SessionHandle = {
   seek: (seconds: number) => Promise<boolean>;
   /** Enumerate burnable subtitle candidates for the currently-playing item (`/stream subtitles`'s picker). Empty when nothing is playing. */
   listSubtitleCandidates: (signal: AbortSignal) => Promise<SubtitleCandidate[]>;
+  /**
+   * The `kind` of the currently-playing source (`file`/`url`/`search`), or `null` if nothing is
+   * playing. Read again right before dispatching `CHANGE_SUBTITLES` to detect playback having
+   * moved on during the picker's (up to 2-minute) wait — a trackRef built for one source kind
+   * applied to a different kind would throw in the subtitle resolver.
+   */
+  currentSourceKind: () => Source["kind"] | null;
   /** True while a subtitle picker is already open for this session (single-flight guard). */
   hasPendingSubtitleMenu: () => boolean;
   /** Claim the single-flight slot; returns false if one was already claimed. */
@@ -105,6 +113,7 @@ export const EMPTY_HANDLE: SessionHandle = {
   setVolume: () => Promise.resolve(false),
   seek: () => Promise.resolve(false),
   listSubtitleCandidates: () => Promise.resolve([]),
+  currentSourceKind: () => null,
   hasPendingSubtitleMenu: () => false,
   claimSubtitleMenu: () => true,
   releaseSubtitleMenu: () => {

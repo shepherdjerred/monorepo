@@ -375,6 +375,8 @@ export class SessionManager {
           signal,
         );
       },
+      currentSourceKind: () =>
+        session.actor.getSnapshot().context.current?.source.kind ?? null,
       hasPendingSubtitleMenu: () => session.pendingSubtitleMenu,
       claimSubtitleMenu: () => {
         if (session.pendingSubtitleMenu) return false;

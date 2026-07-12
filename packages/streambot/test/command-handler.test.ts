@@ -22,6 +22,7 @@ import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts"
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import { BlockedSourceError } from "@shepherdjerred/streambot/moderation/adult-block.ts";
 import type { SubtitleCandidate } from "@shepherdjerred/streambot/sources/subtitles.ts";
+import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 
 const ADMIN = "160509172704739328";
 const REQUESTER = "100000000000000001";
@@ -78,6 +79,8 @@ function makeHandler(over: {
   resolvePlayError?: Error;
   subtitleCandidates?: SubtitleCandidate[];
   subtitleMenuAlreadyPending?: boolean;
+  /** Defaults to `"file"` when `view.current` is set, else `null` — override to test the stale-picker guard. */
+  currentSourceKind?: Source["kind"] | null;
 }): Harness & { seeks: number[]; subtitleMenuPending: () => boolean } {
   const events: PlaybackEvent[] = [];
   const announces: string[] = [];
@@ -105,6 +108,12 @@ function makeHandler(over: {
     },
     listSubtitleCandidates: () =>
       Promise.resolve(over.subtitleCandidates ?? []),
+    currentSourceKind: () =>
+      over.currentSourceKind === undefined
+        ? (over.view?.current ?? null) === null
+          ? null
+          : "file"
+        : over.currentSourceKind,
     hasPendingSubtitleMenu: () => subtitleMenuPending,
     claimSubtitleMenu: () => {
       if (subtitleMenuPending) return false;
@@ -860,6 +869,26 @@ describe("CommandHandler subtitles command (track picker)", () => {
         positionSeconds: 5,
       },
     ]);
+  });
+
+  test("aborts (no dispatch) if the current source's kind changed while the picker was open", async () => {
+    // The picker was built from a file source's sidecar candidate, but by the time the user
+    // picks, playback has moved on to a url/search source — applying the sidecar trackRef there
+    // would throw the invariant guard in the subtitle resolver, so this must be caught first.
+    const h = makeHandler({
+      view: { ...viewWithCurrent(REQUESTER), positionSeconds: 5 },
+      subtitleCandidates: [SIDECAR_CANDIDATE],
+      currentSourceKind: "url",
+    });
+    const { interaction, edits } = fakeInteraction({
+      sub: "subtitles",
+      userId: REQUESTER,
+      subtitleMenuPick: "sidecar:Movie.en.srt",
+    });
+    await h.handler.run(interaction);
+    expect(h.events).toHaveLength(0);
+    expect(edits.at(-1)).toContain("Playback changed while you were choosing");
+    expect(h.subtitleMenuPending()).toBe(false);
   });
 });
 

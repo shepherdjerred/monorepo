@@ -388,7 +388,7 @@ describe("ytdlpSubtitleArgs", () => {
     const withAuto = ytdlpSubtitleArgs(
       "URL",
       ["en", "eng"],
-      true,
+      { manual: true, auto: true },
       "/tmp/o.%(ext)s",
     );
     expect(withAuto).toContain("--write-subs");
@@ -397,8 +397,35 @@ describe("ytdlpSubtitleArgs", () => {
     expect(withAuto[withAuto.indexOf("--sub-langs") + 1]).toBe("en,eng");
     expect(withAuto.at(-1)).toBe("URL");
 
-    const noAuto = ytdlpSubtitleArgs("URL", ["en"], false, "/tmp/o.%(ext)s");
+    const noAuto = ytdlpSubtitleArgs(
+      "URL",
+      ["en"],
+      { manual: true, auto: false },
+      "/tmp/o.%(ext)s",
+    );
     expect(noAuto).not.toContain("--write-auto-subs");
+  });
+
+  test("an exact auto-only pick requests ONLY auto-captions, never manual (regression: mixing both let a same-language manual track silently win)", () => {
+    const autoOnly = ytdlpSubtitleArgs(
+      "URL",
+      ["en"],
+      { manual: false, auto: true },
+      "/tmp/o.%(ext)s",
+    );
+    expect(autoOnly).not.toContain("--write-subs");
+    expect(autoOnly).toContain("--write-auto-subs");
+  });
+
+  test("an exact manual-only pick requests ONLY manual subs, never auto", () => {
+    const manualOnly = ytdlpSubtitleArgs(
+      "URL",
+      ["en"],
+      { manual: true, auto: false },
+      "/tmp/o.%(ext)s",
+    );
+    expect(manualOnly).toContain("--write-subs");
+    expect(manualOnly).not.toContain("--write-auto-subs");
   });
 });
 

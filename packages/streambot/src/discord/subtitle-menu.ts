@@ -32,7 +32,11 @@ const MAX_CANDIDATE_OPTIONS = MAX_MENU_OPTIONS - 1;
 const OFF_VALUE = "off";
 const CUSTOM_ID = "subtitle_track_pick";
 
-/** Encode a track ref as an opaque Discord select-option value (`<=100` chars, well within it). */
+/**
+ * Encode a track ref as an opaque string, returned by {@link sendSubtitleMenu} to the caller.
+ * Unbounded length — this is never sent to Discord directly as a component value (see
+ * {@link sendSubtitleMenu}'s synthetic-index indirection for why).
+ */
 export function encodeTrackRef(ref: SubtitleTrackRef): string {
   switch (ref.kind) {
     case "off":
@@ -113,30 +117,64 @@ function labelForCandidate(candidate: SubtitleCandidate): string {
   return `${lang}${modifier} — ${source}`;
 }
 
+type MenuOption = { readonly label: string; readonly value: string };
+type MenuOptions = {
+  readonly options: readonly MenuOption[];
+  /** `encodedRefs[Number(option.value)]` — the real (possibly >100-char) encoded trackRef. */
+  readonly encodedRefs: readonly string[];
+  readonly hiddenCount: number;
+};
+
+/**
+ * Pure: build the picker's options and the index → encoded-trackRef lookup table. Exported so the
+ * 100-char-safety property (see {@link sendSubtitleMenu}'s doc) is directly testable without
+ * touching discord.js.
+ */
+export function buildMenuOptions(
+  candidates: readonly SubtitleCandidate[],
+): MenuOptions {
+  const shown = candidates.slice(0, MAX_CANDIDATE_OPTIONS);
+  const encodedRefs = [
+    OFF_VALUE,
+    ...shown.map((candidate) => encodeTrackRef(candidateToTrackRef(candidate))),
+  ];
+  const options: MenuOption[] = [
+    { label: "Off (no subtitles)", value: "0" },
+    ...shown.map((candidate, index) => ({
+      label: labelForCandidate(candidate).slice(0, 100),
+      value: String(index + 1),
+    })),
+  ];
+  return {
+    options,
+    encodedRefs,
+    hiddenCount: candidates.length - shown.length,
+  };
+}
+
 /**
  * Present a subtitle-track picker built from `candidates` (already ranked best-first by the
  * caller) and resolve with the user's pick as an opaque encoded trackRef string, or `null` on
  * timeout/cancel/any error. Truncates to the best {@link MAX_CANDIDATE_OPTIONS} candidates when
  * there are more, surfacing a "(+N more not shown)" note rather than silently dropping tracks.
  * Assumes the interaction has already been deferred (a menu pick can take up to the timeout).
+ *
+ * Discord caps a select option's `value` at 100 chars — a sidecar filename or a long codec/lang
+ * string can exceed that, which would make `addOptions` throw and the picker never render. Options
+ * sent to Discord use short synthetic indices (see {@link buildMenuOptions}); the real encoded
+ * trackRef is looked up by index after the pick, so the 100-char cap never applies to our actual
+ * (potentially long) values.
  */
 export async function sendSubtitleMenu(
   interaction: ChatInputCommandInteraction,
   candidates: readonly SubtitleCandidate[],
 ): Promise<string | null> {
-  const shown = candidates.slice(0, MAX_CANDIDATE_OPTIONS);
-  const hiddenCount = candidates.length - shown.length;
+  const { options, encodedRefs, hiddenCount } = buildMenuOptions(candidates);
 
   const menu = new StringSelectMenuBuilder()
     .setCustomId(CUSTOM_ID)
     .setPlaceholder("Choose a subtitle track")
-    .addOptions(
-      { label: "Off (no subtitles)", value: OFF_VALUE },
-      ...shown.map((candidate) => ({
-        label: labelForCandidate(candidate).slice(0, 100),
-        value: encodeTrackRef(candidateToTrackRef(candidate)),
-      })),
-    );
+    .addOptions(...options);
   const row =
     new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
       menu,
@@ -155,7 +193,8 @@ export async function sendSubtitleMenu(
       filter: (i) => i.user.id === interaction.user.id,
       time: MENU_TIMEOUT_MS,
     });
-    const value = picked.values[0] ?? null;
+    const index = Number(picked.values[0]);
+    const value = encodedRefs[index] ?? null;
     await picked.update({ components: [] });
     return value;
   } catch (error) {
