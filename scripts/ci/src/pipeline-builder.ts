@@ -90,6 +90,56 @@ export function buildReleasePleaseSkipPipeline(): BuildkitePipeline {
 }
 
 /**
+ * Unified ArgoCD sync (depends on whatever upstream steps ran), plus the
+ * SeaweedFS TunnelBinding deletion gate and Cloudflare DNS apply that must
+ * follow it on homelab changes. Pushes its steps directly onto `steps` and
+ * returns whether the sync ran, so the caller can wire `deploy-argocd` into
+ * `summaryDeps`.
+ *
+ * See argocd.ts waitForTunnelBindingDeletionStep for the tunnel-gate rationale.
+ */
+function pushArgoCdSyncSteps(
+  steps: PipelineStep[],
+  affected: AffectedPackages,
+  opts: { releaseBuild: boolean; hasImages: boolean; imagePushKeys: string[] },
+): boolean {
+  const { releaseBuild, hasImages, imagePushKeys } = opts;
+  const needsArgoSync =
+    releaseBuild && (hasImages || affected.buildAll || affected.homelabChanged);
+  if (!needsArgoSync) return false;
+
+  const argocdDeps: string[] = [];
+  if (hasImages) {
+    argocdDeps.push(...imagePushKeys);
+  }
+  if (affected.buildAll || affected.homelabChanged) {
+    argocdDeps.push("helm-push-all", "tofu-apply-all", "tofu-apply-github");
+  }
+  // Sync + health-wait now run in one bundled BK pod (the Dagger
+  // function catches health-wait failures internally — same soft-fail
+  // semantics as the wave-1 standalone argocd-health step).
+  steps.push(
+    argoCdSyncAndWaitStep(argocdDeps, {
+      key: "deploy-argocd",
+      app: "apps",
+    }),
+  );
+
+  // Explicit fail-closed check that the SeaweedFS S3 TunnelBinding finalizer
+  // has completed before Cloudflare DNS is modified. ArgoCD's health-wait
+  // does not guarantee finalizers on pruned resources have run; this step
+  // explicitly polls the ArgoCD resource API until TunnelBinding returns 404.
+  if (affected.buildAll || affected.homelabChanged) {
+    steps.push(waitForTunnelBindingDeletionStep("deploy-argocd"));
+    // Cloudflare DNS apply depends on the tunnel deletion check, not directly
+    // on deploy-argocd, ensuring the tunnel route is gone before DNS is modified.
+    steps.push(homelabTofuApplyCloudflareStep("wait-tunnel-binding-deletion"));
+  }
+
+  return true;
+}
+
+/**
  * Pick the image targets to (re)build for this change set. A version-bump-only
  * commit builds nothing; a full build takes every target; otherwise we take
  * only the app images whose package actually changed (so a temporal-only PR
@@ -423,41 +473,11 @@ export function buildPipeline(affected: AffectedPackages): BuildkitePipeline {
     }
 
     // --- Unified ArgoCD sync (depends on whatever upstream steps ran) ---
-    const needsArgoSync =
-      releaseBuild &&
-      (hasImages || affected.buildAll || affected.homelabChanged);
-    if (needsArgoSync) {
-      const argocdDeps: string[] = [];
-      if (hasImages) {
-        argocdDeps.push(...imagePushKeys);
-      }
-      if (affected.buildAll || affected.homelabChanged) {
-        argocdDeps.push("helm-push-all", "tofu-apply-all", "tofu-apply-github");
-      }
-      // Sync + health-wait now run in one bundled BK pod (the Dagger
-      // function catches health-wait failures internally — same soft-fail
-      // semantics as the wave-1 standalone argocd-health step).
-      steps.push(
-        argoCdSyncAndWaitStep(argocdDeps, {
-          key: "deploy-argocd",
-          app: "apps",
-        }),
-      );
-
-      // Explicit fail-closed check that the SeaweedFS S3 TunnelBinding finalizer
-      // has completed before Cloudflare DNS is modified. ArgoCD's health-wait
-      // does not guarantee finalizers on pruned resources have run; this step
-      // explicitly polls the ArgoCD resource API until TunnelBinding returns 404.
-      // See argocd.ts waitForTunnelBindingDeletionStep for full rationale.
-      if (affected.buildAll || affected.homelabChanged) {
-        steps.push(waitForTunnelBindingDeletionStep("deploy-argocd"));
-        // Cloudflare DNS apply depends on the tunnel deletion check, not directly
-        // on deploy-argocd, ensuring the tunnel route is gone before DNS is modified.
-        steps.push(
-          homelabTofuApplyCloudflareStep("wait-tunnel-binding-deletion"),
-        );
-      }
-    }
+    const needsArgoSync = pushArgoCdSyncSteps(steps, affected, {
+      releaseBuild,
+      hasImages,
+      imagePushKeys,
+    });
 
     // --- Version Commit-Back ---
     // Skipped on bot-authored commits (Auto-Generated: trailer) so the bump
