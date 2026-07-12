@@ -3,7 +3,7 @@ import type {
   RawMatch,
   RawParticipant,
 } from "@scout-for-lol/data";
-import { parseQueueType } from "@scout-for-lol/data";
+import { resolveQueueTypeFromGame } from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
 import type {
   AccountLakeRow,
@@ -47,7 +47,12 @@ function participantEarlySurrendered(participant: RawParticipant): boolean {
 }
 
 export function flattenMatch(match: RawMatch): MatchLakeRow[] {
-  const queue = parseQueueType(match.info.queueId) ?? null;
+  const queue =
+    resolveQueueTypeFromGame(
+      match.info.queueId,
+      match.info.gameMode,
+      match.info.gameType,
+    ) ?? null;
   const matchId = match.metadata.matchId;
 
   return match.info.participants.map((participant) => ({
@@ -137,7 +142,12 @@ export function flattenPrematch(
   gameInfo: RawCurrentGameInfo,
   observedAt: Date,
 ): PrematchLakeRow[] {
-  const queue = parseQueueType(gameInfo.gameQueueConfigId) ?? null;
+  const queue =
+    resolveQueueTypeFromGame(
+      gameInfo.gameQueueConfigId,
+      gameInfo.gameMode,
+      gameInfo.gameType,
+    ) ?? null;
   const dedupeKey = `${gameInfo.platformId}:${gameInfo.gameId.toString()}`;
   const observedMs = observedAt.getTime();
   const gameStartAt =
