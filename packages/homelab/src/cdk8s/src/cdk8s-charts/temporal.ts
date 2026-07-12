@@ -114,6 +114,20 @@ export function createTemporalChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(9090), protocol: "TCP" }],
         },
+        {
+          // Allow blackbox-exporter's in-cluster health probe (gRPC port,
+          // separate from the metrics-scraping rule above)
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "prometheus",
+                },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+        },
       ],
       egress: [
         // DNS
@@ -168,6 +182,17 @@ export function createTemporalChart(app: App) {
                 matchLabels: {
                   "kubernetes.io/metadata.name": "cloudflare-tunnel",
                 },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
+        },
+        {
+          // Allow blackbox-exporter's in-cluster health probe
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
               },
             },
           ],

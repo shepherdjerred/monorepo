@@ -169,6 +169,7 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
   createCloudflareTunnelBinding(chart, "trmnl-dashboard-cf-tunnel", {
     serviceName: service.name,
     fqdn: "trmnl.sjer.red",
+    port: 3000,
   });
 
   return { deployment, service };

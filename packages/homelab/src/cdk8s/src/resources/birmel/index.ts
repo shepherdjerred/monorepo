@@ -271,5 +271,6 @@ export function createBirmelDeployment(chart: Chart) {
   createCloudflareTunnelBinding(chart, "birmel-oauth-cf-tunnel", {
     serviceName: oauthService.name,
     subdomain: "birmel-oauth",
+    port: 4112,
   });
 }
