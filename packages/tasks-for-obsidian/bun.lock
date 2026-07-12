@@ -39,7 +39,7 @@
         "@react-native-community/cli-platform-ios": "^20.1.3",
         "@react-native/babel-preset": "0.86.0",
         "@react-native/metro-config": "0.86.0",
-        "@react-native/typescript-config": "0.85.3",
+        "@react-native/typescript-config": "0.86.0",
         "@shepherdjerred/eslint-config": "file:../eslint-config",
         "@types/react": "~19.2.14",
         "@typescript-eslint/utils": "^8.59.3",
@@ -471,7 +471,7 @@
 
     "@react-native/normalize-colors": ["@react-native/normalize-colors@0.85.3", "", {}, "sha512-hj0PScZEhIbcOvQV5yMKX3ha4XEIOy/SVE1Rrpp0beW0dpNLOgSC7KDxGewmDnIHK9YdQUXGY9eMEfShUMIaZw=="],
 
-    "@react-native/typescript-config": ["@react-native/typescript-config@0.85.3", "", {}, "sha512-F2Ign3lv/99R5HMDiaQE6NpRdopn87VuXgfHABSk0iwzouLFk1fcwaMkJUmjhnxrQagsUwxOWp4WTPwEvRRazQ=="],
+    "@react-native/typescript-config": ["@react-native/typescript-config@0.86.0", "", {}, "sha512-oSuFIEMVAVEXdIvDnrdXsWmIF4fYdgtvAEr2ofn8OY534m7XWm9QAqHHpGUzoK0iwDPlPZ5n2Rb25gqF1SZ0rg=="],
 
     "@react-native/virtualized-lists": ["@react-native/virtualized-lists@0.85.3", "", { "dependencies": { "invariant": "^2.2.4", "nullthrows": "^1.1.1" }, "peerDependencies": { "@types/react": "^19.2.0", "react": "*", "react-native": "0.85.3" }, "optionalPeers": ["@types/react"] }, "sha512-dsCjI//OIPEUJMyNHp4l7zNLVjCx7bcaRUceOCkU+IB17hkbtbGWvi7HjGFSzy7FJGmS/MOlcfpb72xXiy1Oig=="],
 
