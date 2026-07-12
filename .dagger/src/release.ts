@@ -939,8 +939,8 @@ export function waitForArgoCdResourceDeletionHelper(
   kind: string,
   namespace: string,
   argoCdToken: Secret,
-  timeoutSeconds: number = 120,
-  serverUrl: string = "https://argocd.sjer.red",
+  timeoutSeconds = 120,
+  serverUrl = "https://argocd.sjer.red",
   dryrun = false,
 ): Container {
   const label = `${kind} (group=${group}, ns=${namespace})`;
@@ -966,9 +966,9 @@ export function waitForArgoCdResourceDeletionHelper(
       "-c",
       `set -eu
 elapsed=0
-while [ "$elapsed" -lt ${timeoutSeconds} ]; do
-  http=$(curl -sS -L --max-redirs 3 -o /tmp/argocd-resp -w '%{http_code}' \\
-    -H "Authorization: Bearer $ARGOCD_TOKEN" \\
+while [ "$elapsed" -lt ${String(timeoutSeconds)} ]; do
+  http=$(curl -sS -L --max-redirs 3 -o /tmp/argocd-resp -w '%{http_code}' \
+    -H "Authorization: Bearer $ARGOCD_TOKEN" \
     "${appUrl}")
   if [ "$http" != "200" ]; then
     echo "ERROR: ${appUrl} returned HTTP $http"
@@ -979,10 +979,10 @@ while [ "$elapsed" -lt ${timeoutSeconds} ]; do
     fi
     exit 1
   fi
-  remaining=$(jq -r \\
-    '[.status.resources[]? | select(.group == "${group}" and .version == "${version}" and .kind == "${kind}" and .namespace == "${namespace}")] | length' \\
+  remaining=$(jq -r \
+    '[.status.resources[]? | select(.group == "${group}" and .version == "${version}" and .kind == "${kind}" and .namespace == "${namespace}")] | length' \
     /tmp/argocd-resp)
-  echo "${label}: $remaining remaining ($elapsed/${timeoutSeconds}s)"
+  echo "${label}: $remaining remaining ($elapsed/${String(timeoutSeconds)}s)"
   if [ "$remaining" = "0" ]; then
     echo "${label} is fully deleted."
     exit 0
@@ -990,7 +990,7 @@ while [ "$elapsed" -lt ${timeoutSeconds} ]; do
   sleep 10
   elapsed=$((elapsed + 10))
 done
-echo "Timeout: ${label} was not fully deleted within ${timeoutSeconds}s"
+echo "Timeout: ${label} was not fully deleted within ${String(timeoutSeconds)}s"
 exit 1`,
     ]);
 }

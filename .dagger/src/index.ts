@@ -1470,8 +1470,8 @@ export class Monorepo {
     kind: string,
     namespace: string,
     argoCdToken: Secret,
-    timeoutSeconds: number = 120,
-    serverUrl: string = "https://argocd.sjer.red",
+    timeoutSeconds = 120,
+    serverUrl = "https://argocd.sjer.red",
     dryrun = false,
   ): Promise<string> {
     return waitForArgoCdResourceDeletionHelper(
