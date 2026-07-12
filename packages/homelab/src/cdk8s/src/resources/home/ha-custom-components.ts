@@ -37,7 +37,13 @@ export type HaComponentInstallSpec =
       /** Specific pre-built files copied into `www/community/<slug>/` (HACS "plugin" shape). */
       kind: "www_community";
       slug: string;
-      /** Paths relative to the extracted tarball root, copied verbatim into the target dir. */
+      /**
+       * Paths relative to the extracted tarball root, copied verbatim into the target dir.
+       * Any `.js` file also gets a `.gz` sibling generated locally (not sourced from the
+       * tarball) so serving pre-compressed JS doesn't depend on upstream shipping one —
+       * a `elax46/custom-brand-icons` release dropped its `dist/*.js.gz` asset and broke
+       * installs that required it verbatim from the archive.
+       */
       files: string[];
     };
 
@@ -135,7 +141,7 @@ export const HA_CUSTOM_COMPONENTS: HaCustomComponentSpec[] = [
     install: {
       kind: "www_community",
       slug: "custom-brand-icons",
-      files: ["dist/custom-brand-icons.js", "dist/custom-brand-icons.js.gz"],
+      files: ["dist/custom-brand-icons.js"],
     },
   },
 ];
@@ -187,13 +193,22 @@ async function buildInstallScript(
     const { slug, patches } = spec.install;
     const patchContents = patches ? await readPatches(slug, patches) : [];
     const marker = installMarker(spec, patchContents);
+    // Patch content is base64-encoded rather than inlined as a raw heredoc: a
+    // patch's diff hunks routinely contain lines that are pure whitespace
+    // (context lines for blank source lines). The `yaml` package cdk8s uses to
+    // serialize manifests represents an embedded newline inside a long
+    // double-quoted scalar via YAML's line-folding escape syntax, and mis-
+    // round-trips a whitespace-only line back into a literal `\` -- reproducible
+    // even parsing the library's own output back with itself, not just a
+    // cross-implementation quirk. That corrupts the patch and fails it with
+    // "malformed patch" at runtime. Base64 has no embedded newlines or special
+    // YAML characters, so it can't trip this escaping bug regardless of which
+    // YAML parser touches the manifest downstream (cdk8s, Helm, ArgoCD, kubectl).
     const patchSteps = patchContents
       .map(
         (content, i) => `
 echo "applying patch ${String(i + 1)}/${String(patchContents.length)} to ${slug}"
-patch -p1 -d "$STAGE" <<'HA_PATCH_EOF'
-${content}
-HA_PATCH_EOF`,
+echo '${Buffer.from(content).toString("base64")}' | base64 -d | patch -p1 -d "$STAGE"`,
       )
       .join("\n");
 
@@ -233,7 +248,13 @@ echo "installed ${slug} $VERSION"
   const targetDir = `/config/www/community/${slug}`;
   const marker = installMarker(spec, []);
   const copyLines = files
-    .map((f) => `cp "$STAGE/${f}" "${targetDir}/${f.split("/").pop() ?? f}"`)
+    .map((f) => {
+      const name = f.split("/").pop() ?? f;
+      const cp = `cp "$STAGE/${f}" "${targetDir}/${name}"`;
+      return name.endsWith(".js")
+        ? `${cp}\ngzip -9 -c "${targetDir}/${name}" > "${targetDir}/${name}.gz"`
+        : cp;
+    })
     .join("\n");
 
   return String.raw`

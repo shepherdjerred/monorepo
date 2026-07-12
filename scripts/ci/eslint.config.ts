@@ -42,10 +42,6 @@ const config: TSESLint.FlatConfig.ConfigArray = [
   // Grandfathered pre-existing giants — new modules are held to the normal
   // 500-line cap. Shrink these opportunistically, never grow them.
   {
-    files: ["src/change-detection.ts"],
-    rules: { "max-lines": ["error", { max: 1200, skipComments: true }] },
-  },
-  {
     files: ["src/wait-for-greptile.ts", "src/catalog.ts"],
     rules: { "max-lines": ["error", { max: 900, skipComments: true }] },
   },
@@ -57,15 +53,24 @@ const config: TSESLint.FlatConfig.ConfigArray = [
   // `getLastSuccessfulCommit` (~24) is a single Buildkite-pagination state
   // machine. Reduce these opportunistically alongside real feature work, never
   // grow them; new functions in these files are held to the normal caps.
+  // `detectChanges` lives in change-detection/index.ts and
+  // `getLastSuccessfulCommit` in change-detection/buildkite-queries.ts after the
+  // module split.
   {
     files: ["src/pipeline-builder.ts"],
     rules: { complexity: ["error", { max: 75 }] },
   },
   {
-    files: ["src/change-detection.ts"],
+    files: ["src/change-detection/index.ts"],
     rules: {
       complexity: ["error", { max: 27 }],
       "max-depth": ["error", { max: 5 }],
+    },
+  },
+  {
+    files: ["src/change-detection/buildkite-queries.ts"],
+    rules: {
+      complexity: ["error", { max: 27 }],
     },
   },
   // Test suites are organised as one top-level `describe` arrow per module;

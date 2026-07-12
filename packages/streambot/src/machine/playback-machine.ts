@@ -10,6 +10,7 @@ import {
   removeAt,
   shuffleQueue,
 } from "@shepherdjerred/streambot/machine/queue-ops.ts";
+import { withSubtitles } from "@shepherdjerred/streambot/sources/source.ts";
 import type {
   JoinVoiceInput,
   LeaveVoiceInput,
@@ -236,14 +237,26 @@ export function createPlaybackMachine(actors: PlaybackActors) {
         actions: assign({
           queue: ({ context, event }) => [
             ...context.queue,
-            { source: event.source, requesterId: event.requesterId },
+            {
+              source: event.source,
+              requesterId: event.requesterId,
+              ...(event.preResolved === undefined
+                ? {}
+                : { preResolved: event.preResolved }),
+            },
           ],
         }),
       },
       ADD_NEXT: {
         actions: assign({
           queue: ({ context, event }) => [
-            { source: event.source, requesterId: event.requesterId },
+            {
+              source: event.source,
+              requesterId: event.requesterId,
+              ...(event.preResolved === undefined
+                ? {}
+                : { preResolved: event.preResolved }),
+            },
             ...context.queue,
           ],
         }),
@@ -382,14 +395,29 @@ export function createPlaybackMachine(actors: PlaybackActors) {
       resolving: {
         invoke: {
           src: "resolveSource",
-          input: ({ context }) => ({ source: mustCurrent(context).source }),
+          input: ({ context }) => {
+            const current = mustCurrent(context);
+            return {
+              source: current.source,
+              ...(current.preResolved === undefined
+                ? {}
+                : { preResolved: current.preResolved }),
+            };
+          },
           onDone: {
             target: "streaming",
-            actions: assign({
-              resolved: ({ event }) => event.output,
+            actions: assign(({ context, event }) => ({
+              resolved: event.output,
               lastError: null,
               lastErrorKind: null,
-            }),
+              // Drop the one-shot pre-resolved payload now that it's been consumed, so any later
+              // replay of this same queued item (track loop, requeue) re-resolves for real instead
+              // of reusing a possibly-expired URL.
+              current: {
+                source: mustCurrent(context).source,
+                requesterId: mustCurrent(context).requesterId,
+              },
+            })),
           },
           onError: {
             target: "failed",
@@ -437,6 +465,25 @@ export function createPlaybackMachine(actors: PlaybackActors) {
         on: {
           SKIP: { target: "skipped" },
           STOP: { target: "leaving", actions: "clearQueue" },
+          // Restart the current source with a new subtitle preference at the same position —
+          // reuses the resume-seek plumbing (`resumeSeekSeconds`) that voice-reconnect resume
+          // already relies on, so no new state is needed beyond the existing `skipped` transient.
+          CHANGE_SUBTITLES: {
+            target: "skipped",
+            actions: assign(({ context, event }) => {
+              const current = mustCurrent(context);
+              return {
+                queue: [
+                  {
+                    source: withSubtitles(current.source, event.subtitles),
+                    requesterId: current.requesterId,
+                  },
+                  ...context.queue,
+                ],
+                resumeSeekSeconds: event.positionSeconds,
+              };
+            }),
+          },
         },
       },
       // In voice, nothing playing: hold for a grace period, then disconnect. New items resume play.

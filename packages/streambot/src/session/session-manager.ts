@@ -18,7 +18,11 @@ import type {
   ResolveSourceInput,
 } from "@shepherdjerred/streambot/machine/types.ts";
 import { buildPlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
-import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
+import {
+  sourceIdentity,
+  sourceLabel,
+} from "@shepherdjerred/streambot/sources/source.ts";
+import { listSubtitleCandidatesForSource } from "@shepherdjerred/streambot/sources/subtitle-candidates.ts";
 import {
   playbackPositionSeconds,
   queueLength,
@@ -302,6 +306,7 @@ export class SessionManager {
       reconnectAttempts: params.reconnectAttempts ?? 0,
       recoveredFromVoiceLoss: params.recoveredFromVoiceLoss ?? false,
       voiceRecoveryStarted: false,
+      pendingSubtitleMenu: false,
     };
     // Trigger 1: the fork's voice ws `close` event (fires even when the main gateway never
     // reports the streamer leaving — the silent-to-EOF case).
@@ -364,6 +369,28 @@ export class SessionManager {
         ),
       setVolume: (percent) => session.entry.userbot.setVolume(percent),
       seek: (seconds) => session.entry.userbot.seek(seconds),
+      listSubtitleCandidates: (signal) => {
+        const current = session.actor.getSnapshot().context.current;
+        if (current === null) return Promise.resolve([]);
+        return listSubtitleCandidatesForSource(
+          this.deps.config,
+          current.source,
+          signal,
+        );
+      },
+      currentSourceId: () => {
+        const current = session.actor.getSnapshot().context.current;
+        return current === null ? null : sourceIdentity(current.source);
+      },
+      hasPendingSubtitleMenu: () => session.pendingSubtitleMenu,
+      claimSubtitleMenu: () => {
+        if (session.pendingSubtitleMenu) return false;
+        session.pendingSubtitleMenu = true;
+        return true;
+      },
+      releaseSubtitleMenu: () => {
+        session.pendingSubtitleMenu = false;
+      },
     };
   }
 

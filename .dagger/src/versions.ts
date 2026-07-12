@@ -7,7 +7,7 @@
  */
 const versions = {
   // renovate: datasource=npm
-  "obsidian-headless": "0.0.8",
+  "obsidian-headless": "0.0.10",
 };
 
 export default versions;

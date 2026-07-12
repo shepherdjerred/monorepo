@@ -1,7 +1,9 @@
 /**
- * Discord button pagination for `/stream sources`. Lives outside the command handler so the
- * handler stays discord.js-free and unit-testable, and outside `command-bot.ts` so that file
- * stays under the max-lines cap.
+ * Discord button pagination shared by every paginated `/stream` subcommand (`sources`, `list`,
+ * `search`). Lives outside the command handler so the handler stays discord.js-free and
+ * unit-testable, and outside `command-bot.ts` so that file stays under the max-lines cap. Button
+ * ids aren't per-command since only one paginated message's component tree is ever active per
+ * interaction.
  */
 import {
   ActionRowBuilder,
@@ -13,7 +15,7 @@ import {
   type MessageActionRowComponentBuilder,
   MessageFlags,
 } from "discord.js";
-import type { SourcesPages } from "@shepherdjerred/streambot/discord/help-text.ts";
+import type { PaginatedPages } from "@shepherdjerred/streambot/discord/help-text.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
@@ -24,10 +26,10 @@ const log = logger.child("pagination");
 const PAGINATION_TIMEOUT_MS = 5 * 60 * 1000;
 
 const ButtonId = {
-  First: "sources_first",
-  Prev: "sources_prev",
-  Next: "sources_next",
-  Last: "sources_last",
+  First: "page_first",
+  Prev: "page_prev",
+  Next: "page_next",
+  Last: "page_last",
 } as const;
 
 /**
@@ -38,7 +40,7 @@ const ButtonId = {
  */
 export async function sendPaginatedReply(
   interaction: ChatInputCommandInteraction,
-  payload: SourcesPages,
+  payload: PaginatedPages,
 ): Promise<void> {
   const { header, pages } = payload;
   const totalPages = pages.length;
@@ -110,7 +112,7 @@ async function handlePaginationClick(
 ): Promise<void> {
   if (button.user.id !== invokerId) {
     await button.reply({
-      content: "These buttons aren't for you — run `/stream sources` yourself.",
+      content: "These buttons aren't for you — run the command yourself.",
       flags: MessageFlags.Ephemeral,
     });
     return;
