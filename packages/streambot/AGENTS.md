@@ -172,8 +172,8 @@ bun run lint
 ```
 
 **Fresh-worktree typecheck gotcha:** `bun run typecheck` can fail with ~40 errors from
-`../discord-video-stream/src/*`. Cause: `setup.ts` builds the package's d.ts into
-`packages/discord-video-stream/dist`, but the **copied** workspace entries under
+`../discord-video-stream/src/*`. Cause: `bun run build` in `packages/discord-video-stream`
+produces the package's d.ts into its `dist/`, but the **copied** workspace entries under
 `node_modules/@shepherdjerred/discord-video-stream/` have no `dist/`, so tsc's `exports` `types`
 condition fails and it type-checks the loose package source instead. Fix (gitignored, local-only):
 
@@ -184,4 +184,4 @@ for d in node_modules packages/streambot/node_modules; do
 done
 ```
 
-Real CI builds the dvs image so it never hits this.
+(The old CI's dvs image build did the same copy, so it never hit this; with CI removed 2026-07, apply the fix manually in fresh checkouts.)

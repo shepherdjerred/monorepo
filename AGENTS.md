@@ -217,24 +217,35 @@ cd packages/<name> && bunx eslint . --fix
 
 ## Development Setup
 
+**There is no setup orchestrator** (`scripts/setup.ts` was removed 2026-07, along with CI; a workspace-based replacement is planned — see `packages/docs/plans/`). Setup is manual and scoped to the package(s) you're working on:
+
 ```bash
-bun run scripts/setup.ts     # Trust mise configs, install tools/deps, build shared artifacts, run codegen
-# Once the repo is trusted, `mise run dev` is equivalent.
+# 1. Toolchains (bun, rust, java) + trust the repo's mise configs
+mise trust -y --all && mise install
+
+# 2. Build the shared `file:` producers BEFORE installing any consumer
+#    (each takes seconds; skipping this is the #1 cause of
+#    "Cannot find module '@shepherdjerred/eslint-config'" / stale llm-models errors)
+for p in eslint-config llm-models webring astro-opengraph-images \
+         discord-video-stream discord-stream-lifecycle; do
+  (cd "packages/$p" && bun install --frozen-lockfile && bun run build)
+done
+(cd packages/homelab/src/helm-types && bun install --frozen-lockfile && bun run build)
+
+# 3. Install + codegen for the package(s) you're touching
+cd packages/<name> && bun install --frozen-lockfile
+bun run generate   # only where it exists (Prisma: birmel, scout-for-lol, discord-plays-mario-kart)
 ```
 
-Run `bun run scripts/setup.ts` after cloning or pulling changes that modify dependencies or schemas.
+Gotchas the old orchestrator used to hide:
 
-The setup script runs 5 phases:
+- Bun's hoisted linker copies a `file:` dep into the consumer's `node_modules` **at install time only**. If you rebuild a producer after installing a consumer, re-run `bun install --force` in the consumer to pick up the new `dist/`.
+- `discord-plays-core` is a source-only `file:` producer (no build step), but the discord-plays-* backends need it installed: `cd packages/discord-plays-core && bun install --frozen-lockfile`.
+- Do **not** use `bun install --backend=symlink` in Prisma-consuming packages (birmel, scout-for-lol, discord-plays-mario-kart) — Prisma's postinstall scripts break under the symlink backend.
 
-1. **Tools** — `mise trust` for repo configs, `mise install`, and optional tool warnings
-2. **Dependencies** — root + per-package `bun install --frozen-lockfile`
-3. **Shared Builds** — eslint-config, webring, astro-opengraph-images, discord-video-stream, helm-types
-4. **Code Generation** — Prisma (birmel, scout-for-lol, discord-plays-mario-kart). Helm value types are **not** regenerated here: the committed types in `packages/homelab/src/cdk8s/generated/helm` are the source of truth, refreshed weekly by the `helm-types-weekly-refresh` Temporal schedule (which opens a PR if they drifted).
-5. **Verify** — checks critical build artifacts exist
+Helm value types are **not** regenerated during setup: the committed types in `packages/homelab/src/cdk8s/generated/helm` are the source of truth, refreshed weekly by the `helm-types-weekly-refresh` Temporal schedule (which opens a PR if they drifted).
 
-Optional tools (warned if missing): helm, swift, swiftlint, swiftformat, typeshare, go, golangci-lint, mvn, gitleaks, shellcheck.
-
-**Scoped installs for a single-package worktree:** `bun run scripts/setup.ts --group=<scout|pokemon|mk64|birmel>` scopes Phases 2-5 to that package plus the always-on shared `file:` producers (eslint-config, llm-models, webring, astro-opengraph-images, discord-video-stream, helm-types), instead of installing all ~35 packages (~13-15G). Add `--link` to additionally symlink that group's deps from Bun's global store instead of copying — verified safe for `pokemon` only; Prisma's postinstall scripts break under symlink backend, so `--link` is rejected for scout/mk64/birmel. No flags = unchanged full-install behavior.
+Optional tools some packages need (install on demand): helm, swift, swiftlint, swiftformat, typeshare, go, golangci-lint, mvn, gitleaks, shellcheck.
 
 ## Verification
 
@@ -260,15 +271,14 @@ git worktree add .claude/worktrees/<feature-slug> -b feature/<slug> origin/main
 
 cd .claude/worktrees/<feature-slug>
 
-# REQUIRED before any build/test in the new worktree — runs codegen, shared builds, deps.
-# Without this, builds fail with cryptic missing-module / missing-generated-file errors.
-# Touching only one package? Scope it: bun run scripts/setup.ts --group=scout --link
-# (--group=<scout|pokemon|mk64|birmel>; --link is verified safe for pokemon only — see
-# Development Setup above)
-bun run scripts/setup.ts
+# Fresh worktree configs are untrusted (mise keys trust by absolute path)
+mise trust -y --all
+
+# Then follow "Development Setup" above, scoped to the package(s) you'll touch:
+# build the shared file: producers first, then bun install + codegen in your package.
 ```
 
-**Never substitute a per-package `bun install` for `scripts/setup.ts`** — shared `file:` deps (eslint-config, llm-models, webring, astro-opengraph-images, discord-video-stream) need their producer rebuilt and force-copied in, which only `setup.ts` does (even in `--group` mode). Skipping it is the #1 cause of "Cannot find module `@shepherdjerred/eslint-config`" / stale `llm-models` errors.
+**Build shared `file:` producers before installing their consumers.** Bun copies a `file:` dep's contents into the consumer's `node_modules` at install time only — installing a consumer while a producer's `dist/` is missing or stale copies a broken package, and rebuilding the producer afterward doesn't propagate until you re-run `bun install --force` in the consumer. This ordering mistake is the #1 cause of "Cannot find module `@shepherdjerred/eslint-config`" / stale `llm-models` errors.
 
 After PR merge: `git worktree remove .claude/worktrees/<feature-slug>` and `git branch -d feature/<slug>` from the main checkout. Run `git worktree prune` to clean up stale entries.
 

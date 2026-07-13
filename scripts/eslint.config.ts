@@ -16,11 +16,5 @@ const config: ReturnType<typeof recommended> = [
       "custom-rules/no-parent-imports": "off",
     },
   },
-  // Grandfathered pre-existing giants — new scripts are held to the normal
-  // 500-line cap. Shrink these opportunistically, never grow them.
-  {
-    files: ["setup.ts"],
-    rules: { "max-lines": ["error", { max: 800, skipComments: true }] },
-  },
 ];
 export default config;
