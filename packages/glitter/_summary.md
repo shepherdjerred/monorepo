@@ -1,0 +1,1 @@
+This project packages the `glitter` application and stores its distributable assets in the `public/` directory for static serving. It relies on the Node.js/npm toolchain, as shown by the root `package.json` manifest with no runtime dependencies, highlighting an architecture that ships entirely static resources without external npm modules.

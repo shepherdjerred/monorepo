@@ -237,7 +237,27 @@ for dirname, commit_date in subdirs_with_dates:
     cog.outl()
 ]]]-->
 
-**33 active packages**
+**36 active packages**
+
+### [scout-for-lol](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol) (2026-07-13)
+
+Scout for League of Legends is a Discord bot that tracks your friends’ matches and delivers post-game notifications with rich stat reports directly into your server. The codebase uses React, the Tauri app framework, Zod validation, ffmpeg-static, and both OpenAI and Google Generative AI SDKs (`package.json`). It runs configurable competitions, supports multi-region player tracking, and generates full arena-mode reports for all teams with augment and placement data.
+
+### [docs](https://github.com/shepherdjerred/monorepo/tree/main/packages/docs) (2026-07-13)
+
+Monorepo Documentation is an AI-maintained knowledge base that captures architecture, decisions, guides, plans, and logs for the wider monorepo. The collection is organized as Markdown directories like `architecture/`, `patterns/`, and `guides/`, with automation hooks that rely on Bun scripts and Temporal scheduling workflows. A notable capability is the `temporal-agent-task` annotation system that lets operators trigger follow-up runs through the Temporal agent-task scheduler via `bun run scripts/schedule-agent-task.ts`.
+
+### [discord-plays-core](https://github.com/shepherdjerred/monorepo/tree/main/packages/discord-plays-core) (2026-07-12)
+
+Discord Plays Core orchestrates streaming and observability for interactive Discord game bots such as Pokémon and Mario Kart, handling tracing, metrics, audio transport, and bot bootstrapping. Built with Bun, TypeScript, and frameworks including Discord.js, Express, OpenTelemetry, Sentry, and prom-client, it provides structured logging and telemetry plumbing. Its package-level architecture exposes each module through dedicated subpath exports so games can import shared observability and streaming primitives while reusing pooled selfbot factories and Go-Live heuristics.
+
+### [llm-models](https://github.com/shepherdjerred/monorepo/tree/main/packages/llm-models) (2026-06-27)
+
+@shepherdjerred/llm-models provides a language-neutral catalog of active LLM models with pricing metadata for downstream services. The project is built with TypeScript validated by Zod, packaged via Bun, and mirrored to Python consumers that enforce the same schema with Pydantic. A single catalog.json file serves as the source of truth, loaded and typechecked across languages to guarantee consistent model capabilities and pricing data.
+
+### [glitter](https://github.com/shepherdjerred/monorepo/tree/main/packages/glitter) (2026-06-15)
+
+This project packages the `glitter` application and stores its distributable assets in the `public/` directory for static serving. It relies on the Node.js/npm toolchain, as shown by the root `package.json` manifest with no runtime dependencies, highlighting an architecture that ships entirely static resources without external npm modules.
 
 ### [discord-stream-lifecycle](https://github.com/shepherdjerred/monorepo/tree/main/packages/discord-stream-lifecycle) (2026-06-13)
 
@@ -307,10 +327,6 @@ Tasknotes Server is a Bun-powered backend that turns Markdown frontmatter into t
 
 Tasks-for-obsidian delivers a React Native mobile client for managing synchronized tasks tied to an Obsidian-centered workflow, complete with in-app sync status and offline cues. It relies on a TypeScript-based stack with React Native, React Navigation, react-native-reanimated, Safe Area Context, and Sentry instrumentation plus vector icon and gesture libraries. A notable capability is the animated connection banner and Kanban board architecture that leverages shared Reanimated state, safe-area awareness, and typed domain models to orchestrate task columns while signaling authentication and sync conditions.
 
-### [docs](https://github.com/shepherdjerred/monorepo/tree/main/packages/docs) (2026-02-22)
-
-Monorepo Documentation is an AI-maintained knowledge base that captures architecture, decisions, guides, plans, and logs for the wider monorepo. The collection is organized as Markdown directories like `architecture/`, `patterns/`, and `guides/`, with automation hooks that rely on Bun scripts and Temporal scheduling workflows. A notable capability is the `temporal-agent-task` annotation system that lets operators trigger follow-up runs through the Temporal agent-task scheduler via `bun run scripts/schedule-agent-task.ts`.
-
 ### [monarch](https://github.com/shepherdjerred/monorepo/tree/main/packages/monarch) (2026-02-21)
 
 Monarch is an AI-driven transaction categorizer for Monarch Money that processes bank data, enriches it with Amazon, Venmo, and Bilt sources, and applies Claude-based merchant classifications. It runs on Bun with a TypeScript codebase that pulls in the Anthropic SDK, Playwright scrapers, pdfjs-dist parsing, and Zod validation across scripts like `src/index.ts` and its supporting libraries. The architecture uses a multi-tier Claude classifier pipeline with a persistent knowledge base that reconciles Amazon orders to transactions and tracks enrichment statistics.
@@ -319,33 +335,25 @@ Monarch is an AI-driven transaction categorizer for Monarch Money that processes
 
 Homelab provisions and manages a Kubernetes-driven personal infrastructure cluster named `torvalds`, delivering fully automated deployments and backups through ArgoCD orchestration. The repo uses TypeScript with cdk8s built and bundled by Bun, paired with Talos control-plane scripts and generated Helm chart typings under `src/cdk8s/generated/helm`. It enforces an ArgoCD app-of-apps architecture with dependency pinning and automated updates that keep Docker images, Helm charts, and Bun packages current.
 
-### [webring](https://github.com/shepherdjerred/monorepo/tree/main/packages/webring) (2026-02-15)
-
-Webring aggregates the latest items from user-defined RSS feeds, implemented in TypeScript with dependencies like rss-parser, remeda, sanitize-html, and truncate-html to fetch, transform, and sanitize entries. It supports an optional cached execution path that stores results on disk via zod-validated configuration, enabling per-source preview filters and shuffle controls before returning the final list.
-
-### [dotfiles](https://github.com/shepherdjerred/monorepo/tree/main/packages/dotfiles) (2026-02-15)
-
-This repository is a personal monorepo aggregating active projects, learning experiments, and archived work under a shared workspace `README.md:3`. It uses a Bun-powered TypeScript setup with declared workspaces, Lefthook git hooks, Dagger tooling, and Tauri API dependencies managed through `package.json:1`. A notable capability is the Bun automation script `scripts/run-package-script.ts:1`, which discovers every package under `packages/*` and executes a requested script across them while honoring skip lists for selective runs.
-
 ### [anki](https://github.com/shepherdjerred/monorepo/tree/main/packages/anki) (2026-02-15)
 
 This package automates turning Markdown study notes (`book_high_performance_web_applications.md`, `book_ostep.md`, `bytes.md`, `interview.md`) into Anki decks by invoking the mdanki CLI to emit `.apkg` files. The `generate.sh` workflow relies on Node.js tooling (`npx`, `mdanki`, `sql.js`) plus a shared `settings.json` template that defines the card HTML and CSS, and it swaps in the `sql-memory-growth.js` build of sql.js before running the conversions so every deck is generated with the memory-growth WebAssembly runtime.
+
+### [astro-opengraph-images](https://github.com/shepherdjerred/monorepo/tree/main/packages/astro-opengraph-images) (2026-02-15)
+
+This project ships an Astro integration that generates Open Graph images for every page in a static Astro build. It is written in TypeScript and relies on React-based presets powered by Satori and the @resvg/resvg-js renderer. During the astro:build:done hook it sanitizes HTML with jsdom, extracts Open Graph metadata, and renders customizable presets that cover Astro content collections.
 
 ### [better-skill-capped](https://github.com/shepherdjerred/monorepo/tree/main/packages/better-skill-capped) (2026-02-15)
 
 Better Skill Capped is a React web app that rebuilds Skill Capped’s catalog into a richer interface driven by the service’s embedded video manifest. It is built with TypeScript, Vite, Bulma styling, Font Awesome icons, Fuse.js search utilities, and Sentry monitoring. The UI persists bookmarks and viewing status through localStorage-backed datastores, giving users personalized tracking alongside the enhanced catalog view.
 
-### [scout-for-lol](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol) (2026-02-15)
-
-Scout for League of Legends is a Discord bot that tracks your friends’ matches and delivers post-game notifications with rich stat reports directly into your server. The codebase uses React, the Tauri app framework, Zod validation, ffmpeg-static, and both OpenAI and Google Generative AI SDKs (`package.json`). It runs configurable competitions, supports multi-region player tracking, and generates full arena-mode reports for all teams with augment and placement data.
-
 ### [discord-plays-pokemon](https://github.com/shepherdjerred/monorepo/tree/main/packages/discord-plays-pokemon) (2026-02-15)
 
-Discord Plays Pokémon lets a Discord server collectively play Pokémon Emerald by routing chat button commands into a fully headless emulator stream. The repo centers on a Bun runtime driving the vendored `pokeemerald-wasm`, encodes frames with `ffmpeg`, and delivers them over the forked `@shepherdjerred/discord-video-stream` stack into a Discord voice channel. A Temporal-managed workflow periodically refreshes the `packages/backend/assets/pokeemerald.wasm` blob so deployments through ArgoCD stay current without manual intervention.
+Discord Plays Pokémon lets a Discord server collectively play Pokémon Emerald by routing chat button commands into a fully headless emulator stream. The repo centers on a Bun runtime driving the vendored `pokeemerald-wasm`, encodes frames with `ffmpeg`, and delivers them over the forked `@shepherdjerred/discord-video-stream` stack into a Discord voice channel. The `packages/backend/assets/pokeemerald.wasm` binary is built from source (ottohg's fork plus a small export patch) during the Dagger image build rather than committed, and Renovate advances the pinned upstream commit so deployments through ArgoCD stay current without manual intervention.
 
-### [astro-opengraph-images](https://github.com/shepherdjerred/monorepo/tree/main/packages/astro-opengraph-images) (2026-02-15)
+### [dotfiles](https://github.com/shepherdjerred/monorepo/tree/main/packages/dotfiles) (2026-02-15)
 
-This project ships an Astro integration that generates Open Graph images for every page in a static Astro build. It is written in TypeScript and relies on React-based presets powered by Satori and the @resvg/resvg-js renderer. During the astro:build:done hook it sanitizes HTML with jsdom, extracts Open Graph metadata, and renders customizable presets that cover Astro content collections.
+This repository is a personal monorepo aggregating active projects, learning experiments, and archived work under a shared workspace `README.md:3`. It uses a Bun-powered TypeScript setup with declared workspaces, Lefthook git hooks, Dagger tooling, and Tauri API dependencies managed through `package.json:1`. A notable capability is the Bun automation script `scripts/run-package-script.ts:1`, which discovers every package under `packages/*` and executes a requested script across them while honoring skip lists for selective runs.
 
 ### [sjer.red](https://github.com/shepherdjerred/monorepo/tree/main/packages/sjer.red) (2026-02-15)
 
@@ -354,6 +362,10 @@ This repo powers the sjer.red personal site, delivering blog posts, curated book
 ### [starlight-karma-bot](https://github.com/shepherdjerred/monorepo/tree/main/packages/starlight-karma-bot) (2026-02-15)
 
 Starlight Karma Bot is a Discord bot that manages karma points, leaderboards, and history commands for servers. It runs on Bun with discord.js v14, TypeORM backed by SQLite, dotenv/env-var configuration helpers, and Sentry instrumentation declared in `package.json:1`. The data layer uses TypeORM view entities and an auto-migration routine to keep per-guild stats consistent, combining definitions like `src/db/karma-counts.ts:1` and the legacy migration in `src/db/auto-migrate.ts:1`.
+
+### [webring](https://github.com/shepherdjerred/monorepo/tree/main/packages/webring) (2026-02-15)
+
+Webring aggregates the latest items from user-defined RSS feeds, implemented in TypeScript with dependencies like rss-parser, remeda, sanitize-html, and truncate-html to fetch, transform, and sanitize entries. It supports an optional cached execution path that stores results on disk via zod-validated configuration, enabling per-source preview filters and shuffle controls before returning the final list.
 
 ### [fonts](https://github.com/shepherdjerred/monorepo/tree/main/packages/fonts) (2026-01-31)
 
