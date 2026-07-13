@@ -11,7 +11,7 @@ Origin: 2026-07-12 session. Prereqs in flight: PR #1516 (remove all CI), PR #151
 **One task graph, executed everywhere.** Local dev, agents, and (future) CI run the same commands against the same cache. CI later becomes a thin runner of this graph — no second build system to drift (the Bazel and Dagger failure mode, twice).
 
 - **Layer 1** — make the repo a real Bun workspace: one install, one lockfile, `workspace:*` symlinks instead of `file:` copy-glue.
-- **Layer 2** — Turborepo on top: cached, dependency-ordered, affected-aware task running.
+- **Layer 2** — Turborepo on top: cached, dependency-ordered, affected-aware task running. (Runner contest resolved 2026-07-12: turbo chosen after both were PoC-built; see decisions 3/13/14.)
 
 ## Key discovery: PR #1408 already is Layer 1
 
@@ -147,7 +147,7 @@ Turbo brought to the same fidelity as moon for a fair final comparison:
 | --- | --- | --- |
 | 1 | Layer 1 = refresh and land **PR #1408** (rebased onto post-#1516/#1517 main; its Dagger/CI-generator changes dissolve in the rebase) | Complete, spike-verified; greenfield would re-derive the same tree |
 | 2 | Keep **isolated linker** + `patchedDependencies` from #1408, with `linker = "hoisted"` documented as the one-line rollback | Research (hoisted) and spike (isolated) disagree; the spike wins on recency and directness: the cited isolated bugs are 1.2.22–1.3.0 era and fixed or catalog-dependent (we skip catalogs), while 1.3.14 isolated passed install, Prisma generate, typecheck, and runtime client resolution here. Isolated also kills the phantom-dep class #1408 fixed real bugs for. Gate: Phase 1's full test sweep must pass before merge; any isolated-linker weirdness → flip to hoisted, not debug-forever (complexity-spiral rule) |
-| 3 | Layer 2 = **moon 2.4.3, pinned exactly** (`@moonrepo/cli` devDep), per user preference for the polyglot graph. Config model: `.moon/tasks/all.yml` (build/typecheck/test/lint with `^:build` + optional `~:generate` deps) + ~17 small per-project files (opt-outs + generate declarations) + `javascript.installDependencies: false` (**mandatory** — auto-install runs concurrent per-project `bun install`s that resurrect the EEXIST race; one root install is the contract). turbo (spike-verified, config preserved in the spike branch) is the documented fallback | De-risk pass passed: inheritance solves config sprawl, REAPI remote cache round-trips against bazel-remote, outputs hydrate, Rust joins the graph shim-free |
+| 3 | Layer 2 = **turbo, pinned exactly** (spike used 2.10.4; pick the current stable line at Phase-2 time). One `turbo.json`; native/WASM projects join via shim package.json (their artifacts cache fully via declared `outputs`, incl. remotely). **User decision 2026-07-12** after the popularity/bus-factor data (moon: solo maintainer, 2,086-vs-5 commit concentration, ~50K dl/wk) and the build-out comparison (turbo: `--continue`, no walk-up hazard, zero per-project exception files). moon (fully PoC-verified, config preserved on the spike branch) is the documented fallback — trigger: native shim packages multiply past ~6 and chafe | Both runners passed their de-risk passes; turbo wins on operational simplicity + ecosystem durability; mise remains the single toolchain authority (no proto overlap) |
 | 4 | Root scripts become `moon run :<task>` (capped `-c`); **delete `scripts/run-package-script.ts` AND the umbrella packages' `--filter` fan-out scripts** (see incident) | Replaces unbounded fan-out (jetsam/fork-bomb class) with cached, bounded, dependency-ordered runs |
 | 5 | **Separate `generate` from `typecheck`/`test` in package scripts** (e.g. birmel `typecheck` is currently `bun run generate && tsc --noEmit`) | Task purity → correct caching; turbo handles ordering via `dependsOn` |
 | 6 | `.turbo` added to root `.gitignore` in the same PR that adds turbo | Unignored turbo logs self-invalidate every task hash (spike-proven) |
@@ -157,7 +157,8 @@ Turbo brought to the same fidelity as moon for a fair final comparison:
 | 10 | **Skip bun catalogs** for now; shared versions stay per-package (Renovate keeps them aligned) | Renovate cannot update `catalog:` entries (2026); catalogs also trigger the worst isolated-linker bug (#23615) |
 | 11 | Root fan-out happens **only through turbo** (`--concurrency` capped); `bun run --filter '*'` is banned in scripts/docs | bun `--filter` has no concurrency cap (open request #27858) — the jetsam-freeze class |
 | 12 | Add `trustedDependencies` for `prisma`/`@prisma/client`/`@prisma/engines` at root if missing; keep explicit `generate` tasks | Postinstall gating under workspaces; explicit generate sidesteps install-order coupling |
-| 13 | Runner choice stays reversible: all tasks remain plain package.json scripts; runner-specific files are `.moon/**` + ~17 small `moon.yml`s | turbo config is preserved on the spike branch; switching back is an afternoon, not a migration |
+| 13 | Runner choice stays reversible: all tasks remain plain package.json scripts; `turbo.json` is the only runner-specific file | moon config is preserved on the spike branch; switching is an afternoon, not a migration |
+| 14 | **mise stays** as the toolchain layer (turbo has none): mise = tool versions, bun workspace = deps, turbo = task graph. Phase 2 cleanup: drop stale per-package `[tasks.dev]` entries; keep `[tools]` sections | Zero overlap; `mise install` is the future-CI toolchain story |
 
 ## Phases
 
