@@ -87,7 +87,7 @@ Prove turbo's shim story on real native code:
 
 | Item | Result |
 | --- | --- |
-| Production turbo.json | Landed: `.mise.toml`/`bunfig.toml`/`patches/**` globalDependencies, exact 2.10.4 pin, 6 package-level `turbo.json` overrides (report/home-assistant `outputs: []`, resume pdf, birmel test `cache:false` — gitignored `.env.test` is unhashable, scout-backend test `env: DATABASE_URL`). `daemon` key dropped (2.10 no longer uses a daemon for `run`) |
+| Production turbo.json | Landed: `.mise.toml`/`bunfig.toml`/`patches/**` globalDependencies, exact 2.10.4 pin, 6 package-level `turbo.json` overrides (report/home-assistant `outputs: []`, resume pdf, birmel test cached with `.env.test` as explicit input (gitignored files ARE hashable via `inputs` — verified: 3 distinct hashes for two contents + absence; earlier "unhashable" claim was wrong), scout-backend test `env: DATABASE_URL`). `daemon` key dropped (2.10 no longer uses a daemon for `run`) |
 | Env-hash correctness | PROVEN: declared `DATABASE_URL` flip → MISS; undeclared var → HIT. Full scout-backend suite replays in 81 ms |
 | generate split | `generate:live` (temporal, helm-types; `cache:false`, no default chain) vs cached `generate` (birmel, scout-backend, dpmk-backend). Verified temporal typecheck self-manages via stub |
 | Native shim (rust) | `cargo fmt` + `clippy` in the graph via shim package.json. **Clippy: ~1m40s cold → 164 ms cached (FULL TURBO)** — the expensive-check case proven. Two prerequisites found: tauri's `generate_context!` needs `../dist` to exist (placeholder `index.html` suffices; Phase 2 wires a dependsOn or keeps the convention) |
@@ -135,3 +135,7 @@ Prove turbo's shim story on real native code:
 ### Caveats
 - The spike branch now intentionally diverges from #1408 (generate renames, root script deletions, shim) — Phase 1 should treat the spike as the reference implementation for these changes, not merge it blindly.
 - check-todos left failing on the branch (real violation, honest signal).
+
+## Correction (2026-07-12, user challenge)
+
+The "birmel test must be `cache: false`" hack was based on a false claim: turbo's explicit `inputs` DO hash gitignored files. Verified empirically (distinct task hashes for two `.env.test` contents and for absence). birmel's test is now cache-enabled with `"inputs": ["$TURBO_DEFAULT$", ".env.test"]`. Note: cache artifacts store the hash (never file contents), but task LOG output is cached and replayed — tests must not print secrets (true of any cached test task).
