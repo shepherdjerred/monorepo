@@ -139,3 +139,12 @@ Prove turbo's shim story on real native code:
 ## Correction (2026-07-12, user challenge)
 
 The "birmel test must be `cache: false`" hack was based on a false claim: turbo's explicit `inputs` DO hash gitignored files. Verified empirically (distinct task hashes for two `.env.test` contents and for absence). birmel's test is now cache-enabled with `"inputs": ["$TURBO_DEFAULT$", ".env.test"]`. Note: cache artifacts store the hash (never file contents), but task LOG output is cached and replayed — tests must not print secrets (true of any cached test task).
+
+## Build-out round 3 (2026-07-12, "fix what's worthwhile now")
+
+| Item | Result |
+| --- | --- |
+| **dpp/dpmk umbrella packages DISSOLVED** | package.json + family eslint.config.ts deleted; Dockerfiles unaffected (they `cd` into children); `e2e:goal` relocated into dpp backend; children own their eslint configs (verified they import `@shepherdjerred/eslint-config` directly). Workspace: 46 packages, graph 56/56 green |
+| **mise pins consolidated** | 10 redundant `[tools]` pins removed (bun ×9, rust ×1 — all exactly duplicating root). Root `.mise.toml` is now the single toolchain truth AND single Renovate touchpoint; homelab keeps its python pin. Verified: bun resolves 1.3.14 from package dirs via root. All per-package mise `tasks` kept (Phase-2 migrates them to `turbo run`) |
+| Deferred to Phase 1 (properly scoped, not skipped) | **scout umbrella**: carries real workflows (`dev:web` op-run orchestration, knip, duplication-check, asset checks) + ~30 deps needing homes. **homelab root**: anchors family-wide eslint + delegating scripts. Both need dep-relocation + doc updates — same dissolution recipe, more moving parts |
+| birmel test caching | (round-2 correction) `.env.test` hashed as explicit input — gitignored files ARE hashable; `cache:false` hack removed |
