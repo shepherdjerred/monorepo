@@ -1,0 +1,6 @@
+language: typescript
+
+tasks:
+  generate:
+    command: bun run generate
+    outputs: ["generated/**"]

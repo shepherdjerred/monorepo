@@ -1,5 +1,9 @@
 language: rust
 
+workspace:
+  inheritedTasks:
+    exclude: ["build", "generate", "typecheck", "test", "lint"]
+
 tasks:
   fmt-check:
     command: cargo fmt --check

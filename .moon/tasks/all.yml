@@ -1,0 +1,19 @@
+tasks:
+  build:
+    command: bun run build
+    deps: ["^:build"]
+  typecheck:
+    command: bun run typecheck
+    deps:
+      - "^:build"
+      - target: "~:generate"
+        optional: true
+  test:
+    command: bun run test
+    deps:
+      - "^:build"
+      - target: "~:generate"
+        optional: true
+  lint:
+    command: bun run lint
+    deps: ["^:build"]

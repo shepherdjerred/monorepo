@@ -23,3 +23,6 @@ projects:
 vcs:
   defaultBranch: "spike/workspace-taskgraph"
   provider: "github"
+
+remote:
+  host: "grpc://localhost:9092"
