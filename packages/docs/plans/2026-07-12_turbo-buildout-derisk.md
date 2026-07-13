@@ -8,7 +8,7 @@ Partially Complete — all local de-risk items done; R2 round-trip blocked on us
 
 Turbo was chosen as the Layer-2 runner (see `packages/docs/plans/2026-07-12_workspace-taskgraph-replatform.md`), but its PoC is shallower than moon's de-risk pass. Verified so far: caching/`--affected`/ordering, one full typecheck sweep (`--continue`, 57 tasks/33 s), remote-cache round-trip **on local disk only**, script-less no-op semantics. This plan closes the remaining gaps so Phase 2 (landing turbo) starts from a production-shaped, de-risked config instead of a demo `turbo.json`. Output = commits on the `spike/workspace-taskgraph` worktree + updates to the replatform plan doc + a go/no-go checklist for Phase 2.
 
-All work happens in `.claude/worktrees/spike-ws` (existing spike). **Compute protocol** (standing, after the fork-bomb incident): foreground only, `--concurrency=2..4`, umbrella packages excluded, one heavy command at a time, `ps -A | wc -l` between batches; anything repo-wide beyond the listed sweeps needs fresh user go-ahead.
+All work happens in `.claude/worktrees/spike-ws` (existing spike). **Compute protocol** (standing, after the fork-bomb incident): the machine is powerful — the hazard is UNBOUNDED fan-out (nested `bun --filter` umbrella scripts, orphaned process accumulation), which hangs any machine. Every fan-out must carry a concurrency bound (turbo `--concurrency`, cargo `-j`); umbrella packages stay excluded until their scripts are deleted. With bounds in place, generous parallelism is fine.
 
 ## De-risk gaps → work items
 

@@ -124,7 +124,7 @@ The per-project inventory loop crashed the MacBook (fork exhaustion → reboot).
 
 1. **Umbrella fan-out scripts are a fork bomb under any task runner.** The migration must DELETE the umbrella packages' `--filter`-fan-out scripts (moon/turbo runs leaf projects natively; the umbrellas keep only their genuinely-own tasks).
 2. Until then, umbrella projects are excluded from inherited runner tasks.
-3. Repo-wide sweeps: one at a time, foreground, `-c 2`, with process-count monitoring — and never while other agent sessions are active. (Reaffirms the 2026-07-11 jetsam log.)
+3. The machine itself is not the constraint (it is beefy) — **unbounded spawn patterns are**: any machine hangs at ~10k processes. Rule: every fan-out goes through a concurrency-bounded runner; with that in place, wide parallelism is fine. Avoid concurrent unbounded fan-outs from multiple sessions (the 2026-07-11 jetsam log).
 
 ## turbo build-out (2026-07-12, same spike branch — parity pass after the moon build-out)
 
