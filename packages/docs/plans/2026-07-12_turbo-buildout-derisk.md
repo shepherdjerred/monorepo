@@ -2,7 +2,7 @@
 
 ## Status
 
-Partially Complete — all local de-risk items done; R2 round-trip blocked on user (tofu apply + S3 token).
+Partially Complete — graph fully green (57/57), all local items done; only the R2 round-trip remains (user: tofu apply + S3 token).
 
 ## Context
 
@@ -100,6 +100,19 @@ Prove turbo's shim story on real native code:
 | R2 | `cloudflare_r2_bucket.turbo_cache` + 30-day lifecycle written and `tofu validate`-clean (`packages/homelab/src/tofu/cloudflare/turbo-cache.tf`). **BLOCKED on user**: `tofu apply` + mint bucket-scoped S3 token; then rerun the proven ducktors round-trip against R2 |
 | Machine safety | Entire execution foreground/bounded; process count flat; zero incidents |
 
+## Build-out round 2 (2026-07-12, "keep building")
+
+| Item | Result |
+| --- | --- |
+| **Full graph GREEN: 57/57 tasks**, force-executed in 24 s at `-c 4`; **warm sweep 0.26 s** (57/57 cached) | First fully-green repo-wide verification since CI removal |
+| Strict `envMode` | **Confirmed empirically**: undeclared env vars are filtered from task environments (`PROBE: filtered`) — env caching is fail-closed, not fail-silent. Caveat resolved |
+| All 6 sweep failures fixed | dpp/dpmk-common: explicit `rootDir` (TS6). cooklang: real `bun-types`/happy-dom deps + `override` modifiers. scout-backend: `--external '@duckdb/*'`. All were phantom-dep/latent bugs the isolated linker + graph surfaced |
+| **discord-plays-core converted** to workspace member | Root cause of dpp/dpmk backend failures: dpc was umbrella-hoisted (a phantom by design); backends now declare `workspace:*`. Also purged stale real-dir node_modules left by moon's rogue auto-install |
+| Umbrella fan-out scripts DELETED (+ dsl hoisted-linker pin, + vestigial builds) | The `--filter` exclusion hack is gone; sweeps run unfiltered. `check-todos` green |
+| **New finding: concurrent Prisma generates race** the shared engine cache (flaky `scout-backend#generate` at `-c 4`) | Same race the old setup.ts DAG guarded; fixed with the same synthetic `dependsOn` edge (scout generate → birmel generate), documented as deliberate non-dependency |
+| scout-backend `template.db` was an undeclared output | Added to `outputs` (cache restore now covers it) |
+| Lint smoke | Green after adding llm-models' own eslint+jiti (phantom); webring/tasknotes-types already correct. Full lint sweep will surface this per-package — mechanical |
+
 ## Phase-2 go/no-go checklist
 
 - [x] Production config exists and is exercised (this branch)
@@ -108,7 +121,7 @@ Prove turbo's shim story on real native code:
 - [x] Live-codegen isolated from default chains
 - [x] Root checks in the graph; root fan-out scripts deletable
 - [ ] R2 storage round-trip (user steps above, then ~10 min of verification)
-- [ ] Phase-1 fixups: dpp/dpmk-common rootDir, scout-backend duckdb build, cooklang bun-types, anki scripts, check-todos doc reconcile, home-assistant build outDir
+- [x] Phase-1 fixups: ALL DONE on the spike branch (rootDir, duckdb, bun-types, check-todos/dsl pin, home-assistant/report vestigial builds, dpc conversion, umbrella deletion). anki has no scripts — nothing to fix under turbo
 
 ## Session Log — 2026-07-12 (execution)
 
