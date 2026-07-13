@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "scripts": {
     "start": "bun packages/backend/src/index.ts",
-    "build": "bun run --filter '*' build",
-    "test": "bun run --filter '*' test",
-    "lint": "bun run --filter '*' lint",
-    "typecheck": "bun run --filter '*' typecheck",
     "generate": "bun run --cwd packages/backend generate"
   },
   "devDependencies": {

@@ -60,7 +60,8 @@
     "ts-pattern": "^5.7.0",
     "winston": "^3.17.0",
     "xstate": "^5.32.4",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@shepherdjerred/discord-plays-core": "workspace:*"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

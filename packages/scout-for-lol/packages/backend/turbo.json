@@ -6,6 +6,15 @@
     // changes results. Everything else is pinned by the test-setup preload.
     "test": {
       "env": ["DATABASE_URL"]
+    },
+    // generate also produces the test template DB (undeclared outputs don't
+    // restore from cache). The dependsOn edge is NOT a real dependency: it
+    // serializes this prisma generate against birmel's so two concurrent runs
+    // don't race Prisma's shared engine/download cache (same synthetic edge
+    // the old setup.ts DAG carried; observed flaky at -c 4 without it).
+    "generate": {
+      "dependsOn": ["@shepherdjerred/birmel#generate"],
+      "outputs": ["generated/**", "src/testing/template.db"]
     }
   }
 }

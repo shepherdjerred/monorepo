@@ -6,10 +6,6 @@
   },
   "scripts": {
     "start": "bun packages/backend/src/index.ts",
-    "build": "bun run --filter '*' build",
-    "test": "bun run --filter '*' test",
-    "lint": "bun run --filter '*' lint",
-    "typecheck": "bun run --filter '*' typecheck",
     "e2e:goal": "bun test --filter '@discord-plays-pokemon/backend' packages/backend/src/goal/e2e-goal.integration.test.ts"
   },
   "devDependencies": {

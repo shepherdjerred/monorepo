@@ -29,6 +29,7 @@
     "packages/discord-plays-mario-kart/packages/backend",
     "packages/discord-plays-mario-kart/packages/common",
     "packages/discord-plays-mario-kart/packages/frontend",
+    "packages/discord-plays-core",
     "packages/discord-plays-pokemon",
     "packages/discord-plays-pokemon/packages/backend",
     "packages/discord-plays-pokemon/packages/common",
