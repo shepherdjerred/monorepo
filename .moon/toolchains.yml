@@ -1,6 +1,0 @@
-javascript:
-  packageManager: bun
-  installDependencies: false
-
-bun:
-  version: "1.3.14"

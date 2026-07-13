@@ -1,5 +1,0 @@
-language: typescript
-
-workspace:
-  inheritedTasks:
-    exclude: ["build"]
