@@ -1,0 +1,9 @@
+{
+  "name": "@scout-for-lol/desktop-rust",
+  "private": true,
+  "description": "Turbo shim for the Tauri Rust crate — scripts wrap cargo so the crate participates in the task graph (caching + affected).",
+  "scripts": {
+    "lint": "cargo fmt --check",
+    "clippy": "cargo clippy --all-targets --all-features -- -D warnings"
+  }
+}

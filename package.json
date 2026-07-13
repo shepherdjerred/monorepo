@@ -53,6 +53,7 @@
     "packages/scout-for-lol/packages/backend",
     "packages/scout-for-lol/packages/data",
     "packages/scout-for-lol/packages/desktop",
+    "packages/scout-for-lol/packages/desktop/src-tauri",
     "packages/scout-for-lol/packages/frontend",
     "packages/scout-for-lol/packages/report",
     "packages/scout-for-lol/packages/ui",

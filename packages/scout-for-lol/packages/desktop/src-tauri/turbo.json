@@ -1,0 +1,11 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // Check-only cargo tasks: no artifacts to cache, exit+logs replay on hit.
+    // cargo's own incremental target/ dir is gitignored → excluded from inputs.
+    "clippy": {
+      "outputs": []
+    }
+  }
+}

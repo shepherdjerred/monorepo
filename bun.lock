@@ -864,6 +864,9 @@
         "vite-tsconfig-paths": "^6.0.0",
       },
     },
+    "packages/scout-for-lol/packages/desktop/src-tauri": {
+      "name": "@scout-for-lol/desktop-rust",
+    },
     "packages/scout-for-lol/packages/frontend": {
       "name": "@scout-for-lol/frontend",
       "version": "0.0.1",
@@ -2988,6 +2991,8 @@
     "@scout-for-lol/data": ["@scout-for-lol/data@workspace:packages/scout-for-lol/packages/data"],
 
     "@scout-for-lol/desktop": ["@scout-for-lol/desktop@workspace:packages/scout-for-lol/packages/desktop"],
+
+    "@scout-for-lol/desktop-rust": ["@scout-for-lol/desktop-rust@workspace:packages/scout-for-lol/packages/desktop/src-tauri"],
 
     "@scout-for-lol/frontend": ["@scout-for-lol/frontend@workspace:packages/scout-for-lol/packages/frontend"],
 
