@@ -174,7 +174,8 @@ The per-project inventory loop crashed the MacBook (fork exhaustion → reboot).
 
 ### Caveats
 
-- Moon PoC (2026-07-12, later in session): both runners verified head-to-head on the spike branch — see "Head-to-head PoC" section; runner decision now explicitly with the user.
+- **Machine crash during moon de-risk (4th that day):** the per-project typecheck inventory fork-bombed the MacBook (see the incident section). The standing rule — explicit user go-ahead before ANY multi-minute local compute — was violated by this session and is now re-recorded in agent memory. The typecheck inventory is INCOMPLETE (8 of 49 projects): PASS astro-opengraph-images, better-skill-capped, birmel, cooklang-rich-preview; FAIL anki, cooklang-for-obsidian, discord-plays-core, discord-plays-mario-kart (umbrella). Completing it must NOT run umbrella-package scripts and needs user approval or offload to a non-primary machine.
+- Moon PoC (2026-07-12, later in session): both runners verified head-to-head on the spike branch — see "Head-to-head PoC" section; user chose moon; de-risk pass done except the full sweep above.
 - Spike branch `spike/workspace-taskgraph` exists as a local worktree (`.claude/worktrees/spike-ws`), not pushed; it contains mechanical ours-side conflict resolutions (slightly stale main-side dep bumps) — fine for evidence, not for landing as-is.
 - Turbo cache instability will recur for any task whose script mutates tracked files non-deterministically; `.turbo` gitignore fixed the observed case but Phase 2 should audit `generate`-style scripts.
 - **Hold bun at 1.3.x** until turbo supports lockfileVersion 2 (turbo discussion #13126) — a Renovate bun bump to 1.4 would silently break turbo's workspace graph.
