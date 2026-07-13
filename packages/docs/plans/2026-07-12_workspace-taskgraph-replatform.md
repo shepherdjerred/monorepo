@@ -181,6 +181,12 @@ Principle: **stateless compute + remote cache** (the inverse of the Dagger desig
 - **Agents stay ephemeral (pod-per-job) — as they already were.** The old architecture's flaw was NOT persistent agents (BK pods were ephemeral then too): it was funneling every ephemeral worker into a **singleton active stateful service** — the Dagger engine StatefulSet, which fused cache + executor + scheduler in one process over one 2 TiB block device (single writer, single failure domain: disk-full = all of CI down, 2026-07-03). The new design keeps execution IN the pod (turbo is a process, not a daemon you RPC into) and makes all persistent state **passive**: turbo remote cache = dumb content-addressed blobs in S3/R2 (the ducktors server is stateless/restartable; eviction is a bucket lifecycle rule, not engine GC), node-local hostPath `BUN_INSTALL_CACHE_DIR` for downloads (content-addressed only — `globalStore` stays off per oven-sh/bun#12917), registry-backed BuildKit layers. Optional later: node-local git-mirror volume if clone latency annoys. Rule of thumb: persistent state may be a blob store, never a daemon with a disk.
 - **Scope-creep tripwire**: if a CI step runs anything besides `mise install`, `bun install`, `turbo run …`, or `docker buildx`, it's the old failure mode (CI growing its own build system) — stop and fix the task graph instead.
 
+## Repo-structure verdict (2026-07-12, after both PoCs)
+
+No large restructure needed. The single pattern that fights every tool (bun nesting, moon IDs, turbo `--affected`, phantom hoisting, fan-out scripts) is **package-inside-package**. Phase-1 fix: **dissolve the parent package.jsons** — delete the umbrella package.json files (scout-for-lol, discord-plays-pokemon, discord-plays-mario-kart) and de-package the homelab root, keeping the directories as pure grouping. Directory flattening after that is cosmetic; skip it. `src-tauri` stays nested (standard Tauri layout; unconditional-run workaround covers the turbo bug — move to a sibling only if upstream doesn't fix).
+
+Small alignments: consolidate ~70 per-package `mise.toml`s down to root + genuinely-different ones (kills trust-walk friction + drift); add `build` scripts to deploy-time-built sites when CI lands (Phase 3); replace per-package aggregate/mise check tasks with `turbo run` in Phase 2. Everything else that looks unusual (sandbox/, script-less packages, LaTeX/Xcode builds, scoped/unscoped naming) is tool-compatible as-is.
+
 ## Risks
 
 | Risk | Mitigation |
