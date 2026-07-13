@@ -158,7 +158,7 @@ Turbo brought to the same fidelity as moon for a fair final comparison:
 | 11 | Root fan-out happens **only through turbo** (`--concurrency` capped); `bun run --filter '*'` is banned in scripts/docs | bun `--filter` has no concurrency cap (open request #27858) — the jetsam-freeze class |
 | 12 | Add `trustedDependencies` for `prisma`/`@prisma/client`/`@prisma/engines` at root if missing; keep explicit `generate` tasks | Postinstall gating under workspaces; explicit generate sidesteps install-order coupling |
 | 13 | Runner choice stays reversible: all tasks remain plain package.json scripts; `turbo.json` is the only runner-specific file | moon config is preserved on the spike branch; switching is an afternoon, not a migration |
-| 14 | **mise stays** as the toolchain layer (turbo has none): mise = tool versions, bun workspace = deps, turbo = task graph. Phase 2 cleanup: drop stale per-package `[tasks.dev]` entries; keep `[tools]` sections | Zero overlap; `mise install` is the future-CI toolchain story |
+| 14 | **mise stays** as the toolchain layer (user-confirmed 2026-07-12 after challenge): mise = tool versions, bun workspace = deps, turbo = task graph. Pins consolidated to root + homelab python (round 3). Load-bearing because bun has NO native version manager and the 1.4 lockfile wall makes an unpinned `bun upgrade` a silent turbo-breaker. Revisit only if: bun ships native version management AND the 1.4 wall clears AND the CI image stops being baked from mise.toml | Zero overlap with turbo; `mise install` is the future-CI toolchain parity story |
 
 ## Phases
 
