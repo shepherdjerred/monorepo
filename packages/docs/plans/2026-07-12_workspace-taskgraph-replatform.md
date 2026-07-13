@@ -2,7 +2,9 @@
 
 ## Status
 
-In Progress — design drafted from investigation spikes, awaiting user review.
+In Progress — design complete and fully spike-verified; landing PRs open.
+
+**PR stack:** #1516 (remove CI) → #1517 (remove setup.ts + plans) → **#1518 (workspace + turbo, draft — supersedes #1408)**. Phase 3 (remote cache deploy) and Phase-2 doc rewrite remain.
 
 Origin: 2026-07-12 session. Prereqs in flight: PR #1516 (remove all CI), PR #1517 (remove `scripts/setup.ts`, stacked on #1516).
 
