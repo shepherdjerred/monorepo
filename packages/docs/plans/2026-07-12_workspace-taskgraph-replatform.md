@@ -101,6 +101,23 @@ Both installed repo-locally on `spike/workspace-taskgraph` and driven against th
 | Local cache across worktrees | Per-workspace (`.moon/cache` at each worktree root) — no local sharing (turbo 2.10 shares). The remote cache covers this |
 | Full-workspace sweep | `moon run :typecheck -c 4` works but **`moon run` bails on first failure** (no `--no-bail`; `moon ci` is the continue-through mode). Partial per-project inventory before the incident below: PASS astro-opengraph-images, better-skill-capped, birmel, cooklang-rich-preview; FAIL anki (its `typecheck` delegates to root `run-package-script.ts`, which needs a root `zod` that no longer exists), cooklang-for-obsidian, discord-plays-core, discord-plays-mario-kart. Completing the inventory is Phase-1 work |
 
+### Typecheck inventory — COMPLETE (post-crash, chunked protocol)
+
+Resumed with user go-ahead under a strict protocol (foreground chunks of ≤7, `-c 2`, umbrellas + script-less projects excluded, process-count check between chunks — stayed flat at ~709). **31 of 38 script-bearing projects PASS.** The 7 failures collapse to 4 root causes, all pre-existing #1408 fallout the old CI would have caught:
+
+| Root cause | Projects affected |
+| --- | --- |
+| `bun-types` TS2688 under the workspace | cooklang-for-obsidian |
+| `dpp-common`/`dpmk-common` **build**: TS5011 `rootDir` must be explicit | dpp-backend, dpp-frontend, dpmk-backend, dpmk-frontend (via `^:build`) |
+| `scout-backend` **build** bundles linux-only duckdb native bindings on mac | scout-app, scout-frontend (via `^:build`; note scout-app needs backend *types* only — consider relaxing that edge) |
+| anki has no `typecheck` script → bun walk-up runs the ROOT fan-out script | anki (excluded; hazard below) |
+
+Additional hazards found (now design constraints):
+
+- **bun script walk-up**: `bun run <missing-script>` silently falls back to the ROOT package.json script. Combined with inherited tasks, every script-less project detonates the root fan-out — and post-migration it would recurse (moon → bun → root script → moon). **Constraint: the root package.json must carry NO scripts named like moon tasks**; walk-up then fails cleanly.
+- **moon task-merge**: defining the same task in `.moon/tasks/all.yml` AND a project `moon.yml` merges by *appending args* (`bun run typecheck typecheck` → tsc TS5112). Per-project files must only opt out or add project-unique tasks, never redefine inherited ones.
+- **`discord-plays-core` is NOT a workspace member in #1408** — it (and its `file:` streaming-stack ownership) was left on the old copy model. Phase-1 item: convert it or document why not.
+
 ### ⚠ Incident: fork-exhaustion crash during the sweep (machine reboot)
 
 The per-project inventory loop crashed the MacBook (fork exhaustion → reboot). Chain: **umbrella projects** (`discord-plays-mario-kart`, `discord-plays-pokemon`, `scout-for-lol`) have `typecheck` scripts that fan out over their sub-packages with **unbounded `bun --filter`**; moon ran those *as tasks* under `-c 4` (the cap bounds moon's tasks, **not what each task spawns**), while orphaned tsc/bun children from earlier aborted sweeps accumulated. Guardrails now binding:
@@ -174,7 +191,7 @@ The per-project inventory loop crashed the MacBook (fork exhaustion → reboot).
 
 ### Caveats
 
-- **Machine crash during moon de-risk (4th that day):** the per-project typecheck inventory fork-bombed the MacBook (see the incident section). The standing rule — explicit user go-ahead before ANY multi-minute local compute — was violated by this session and is now re-recorded in agent memory. The typecheck inventory is INCOMPLETE (8 of 49 projects): PASS astro-opengraph-images, better-skill-capped, birmel, cooklang-rich-preview; FAIL anki, cooklang-for-obsidian, discord-plays-core, discord-plays-mario-kart (umbrella). Completing it must NOT run umbrella-package scripts and needs user approval or offload to a non-primary machine.
+- **Machine crash during moon de-risk (4th that day):** the per-project typecheck inventory fork-bombed the MacBook (see the incident section). The standing rule — explicit user go-ahead before ANY multi-minute local compute — was violated by this session and is now re-recorded in agent memory. The inventory was later COMPLETED with user go-ahead under the chunked protocol (31/38 pass, 4 root causes — see inventory section).
 - Moon PoC (2026-07-12, later in session): both runners verified head-to-head on the spike branch — see "Head-to-head PoC" section; user chose moon; de-risk pass done except the full sweep above.
 - Spike branch `spike/workspace-taskgraph` exists as a local worktree (`.claude/worktrees/spike-ws`), not pushed; it contains mechanical ours-side conflict resolutions (slightly stale main-side dep bumps) — fine for evidence, not for landing as-is.
 - Turbo cache instability will recur for any task whose script mutates tracked files non-deterministically; `.turbo` gitignore fixed the observed case but Phase 2 should audit `generate`-style scripts.
