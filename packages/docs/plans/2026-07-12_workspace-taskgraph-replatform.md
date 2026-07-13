@@ -67,6 +67,26 @@ Spike = #1408 merged with the CI+setup removal (`feature/rip-setup`), then exerc
 - **Publish gotcha** (oven-sh/bun#20477): `bun pm pack` takes versions from `bun.lock`, not the dep's package.json — run a fresh `bun install` before publishing interdependent packages.
 - **Lockfiles don't merge**: delete the 45 per-package locks, one fresh install regenerates a single lock, and version drift must be audited (36 independent resolutions collapse to one per name). #1408 already ate this (e.g. its protobufjs union call).
 
+## Head-to-head PoC: turbo vs moon (2026-07-12, same spike branch)
+
+Both installed repo-locally on `spike/workspace-taskgraph` and driven against the same tasks.
+
+| Axis | turbo 2.10.4 | moon 2.4.3 |
+| --- | --- | --- |
+| Setup to first cached run | One `turbo.json` (+ `packageManager` field) covered all 45 packages | `.moon/workspace.yml` + `.moon/toolchains.yml` + `inferTasksFromScripts` |
+| Cache hit (birmel typecheck chain) | 73 ms (FULL TURbo) | 191 ms ("to the moon") — same class |
+| Cache footguns | `.turbo` logs must be gitignored or every hash self-invalidates (hit it) | None hit — cache state lives outside project dirs |
+| Cross-project ordering (`^build`) | 4 lines, applies everywhere | **Script-inferred tasks cannot take deps** (verified: inherited `.moon/tasks.yml` deps are ignored by inferred tasks) → production moon means real task configs across ~45 projects (per-project `moon.yml` or inherited task files + de-scripted packages) |
+| Project identity | package.json names (already unique) | **Folder names → collisions** (dpp/dpmk/scout `backend`/`frontend`/`common`); needed 14 hand-mapped `sources` entries |
+| Native (Rust) project | Needs a package.json shim (not exercised) | **7-line `moon.yml`, no shim** — `cargo fmt --check` ran + cached (117 ms hit) in the same graph |
+| Polyglot affected | n/a (JS graph only) | Touch one `.rs` file → `scout-desktop-rust` + downstream selected; clean tree → 0. Works |
+| Docs/version drift | — | v1 `.moon/toolchain.yml` (singular) is **silently ignored** by v2 (`toolchains.yml`); config keys moved (`javascript.packageManager`) |
+| Toolchain | Uses ambient bun (mise) | Downloads/pins its own bun via proto — redundant with mise |
+
+**Read:** both pass the fundamentals on this repo. turbo's total config cost for full coverage was ~20 lines; moon's full-production cost is real per-project config (inference is explicitly a prototyping bridge — it can't express the producer-build ordering this repo depends on). moon's polyglot graph is genuinely better and its per-native-project cost is tiny (7 lines); its per-TS-project cost is the sticking point at 45 projects.
+
+**Environmental finding (affects both):** the main clone had a **shallow graft** (`.git/shallow`, created 2026-07-12 14:37 by some `--depth` fetch) which silently disables all history-based affected detection — moon warned loudly; turbo's `--affected` only worked in earlier tests because they used `TURBO_SCM_BASE=HEAD`. Fixed with `git fetch --unshallow`; worth finding what re-shallows the clone.
+
 ## Design decisions
 
 | # | Decision | Rationale |
@@ -132,6 +152,7 @@ Spike = #1408 merged with the CI+setup removal (`feature/rip-setup`), then exerc
 
 ### Caveats
 
+- Moon PoC (2026-07-12, later in session): both runners verified head-to-head on the spike branch — see "Head-to-head PoC" section; runner decision now explicitly with the user.
 - Spike branch `spike/workspace-taskgraph` exists as a local worktree (`.claude/worktrees/spike-ws`), not pushed; it contains mechanical ours-side conflict resolutions (slightly stale main-side dep bumps) — fine for evidence, not for landing as-is.
 - Turbo cache instability will recur for any task whose script mutates tracked files non-deterministically; `.turbo` gitignore fixed the observed case but Phase 2 should audit `generate`-style scripts.
 - **Hold bun at 1.3.x** until turbo supports lockfileVersion 2 (turbo discussion #13126) — a Renovate bun bump to 1.4 would silently break turbo's workspace graph.
