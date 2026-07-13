@@ -1,0 +1,12 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // Legacy in-place tsc emit (no outDir → JS lands beside src TS). Consumers
+    // import the TS source (exports "." → ./src/index.ts), so the emit is
+    // vestigial. TODO Phase 1: give it an outDir or make it noEmit.
+    "build": {
+      "outputs": []
+    }
+  }
+}

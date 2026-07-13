@@ -1,0 +1,10 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // "build" here is `tsc --noEmit` — a check, not an emit. No output files.
+    "build": {
+      "outputs": []
+    }
+  }
+}

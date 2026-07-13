@@ -1,18 +1,28 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
+  // Root-level files whose change must invalidate every task hash.
+  // (Root package.json, turbo.json, and bun.lock are always hashed by turbo.)
+  "globalDependencies": [".mise.toml", "bunfig.toml", "patches/**"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
+    // Local codegen only (Prisma: birmel, scout backend, dpmk backend).
+    // Live-credential codegen lives in generate:live and is NEVER in a
+    // default chain (temporal → live Home Assistant, helm-types → chart repos).
     "generate": {
       "outputs": ["generated/**"]
+    },
+    "generate:live": {
+      "cache": false
     },
     "typecheck": {
       "dependsOn": ["^build", "generate"]
     },
     "test": {
-      "dependsOn": ["^build", "generate"]
+      "dependsOn": ["^build", "generate"],
+      "env": ["NODE_ENV"]
     },
     "lint": {
       "dependsOn": ["^build"]

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // test script interpolates ${DATABASE_URL:-file:./test.db} — ambient value
+    // changes results. Everything else is pinned by the test-setup preload.
+    "test": {
+      "env": ["DATABASE_URL"]
+    }
+  }
+}

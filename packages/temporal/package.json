@@ -20,7 +20,7 @@
     "lint": "bunx eslint --cache .",
     "test": "bun run scripts/ensure-ha-schema.ts && bun test src/activities src/event-bridge src/observability src/schedules src/shared src/workflows src/lib",
     "test:integration": "bun run scripts/ensure-ha-schema.ts && bun test src/integration.test.ts",
-    "generate": "bun ../home-assistant/src/codegen/cli.ts --out src/generated/ha-schema.ts --name HaSchema"
+    "generate:live": "bun ../home-assistant/src/codegen/cli.ts --out src/generated/ha-schema.ts --name HaSchema"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.0",

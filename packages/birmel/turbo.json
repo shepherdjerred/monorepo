@@ -1,0 +1,15 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // Tests read a gitignored .env.test (Discord/Anthropic creds) that turbo
+    // cannot hash — caching would be incorrect. Env-dependent by design.
+    "test": {
+      "cache": false
+    },
+    // generate-prisma.ts evaluates the database config module.
+    "generate": {
+      "env": ["DATABASE_URL", "DATABASE_PATH", "LOG_LEVEL"]
+    }
+  }
+}
