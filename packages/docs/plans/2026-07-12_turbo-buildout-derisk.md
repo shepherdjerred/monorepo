@@ -2,7 +2,7 @@
 
 ## Status
 
-Partially Complete — graph fully green (57/57), all local items done; only the R2 round-trip remains (user: tofu apply + S3 token).
+Complete — graph fully green, all de-risk items verified (S3 cache round-trip proven via local MinIO; R2 deferred by user choice, tofu config staged).
 
 ## Context
 
@@ -120,7 +120,7 @@ Prove turbo's shim story on real native code:
 - [x] Native/polyglot story workable (shim + unconditional runs + cache)
 - [x] Live-codegen isolated from default chains
 - [x] Root checks in the graph; root fan-out scripts deletable
-- [ ] R2 storage round-trip (user steps above, then ~10 min of verification)
+- [x] S3-provider round-trip — verified against local MinIO (ducktors `STORAGE_PROVIDER=s3`: upload → objects in bucket → cold-client FULL TURBO 203 ms). R2 specifically deferred by user (tofu config ready when wanted); remaining R2 risk is endpoint quirks only, the provider code path is proven
 - [x] Phase-1 fixups: ALL DONE on the spike branch (rootDir, duckdb, bun-types, check-todos/dsl pin, home-assistant/report vestigial builds, dpc conversion, umbrella deletion). anki has no scripts — nothing to fix under turbo
 
 ## Session Log — 2026-07-12 (execution)
@@ -148,3 +148,7 @@ The "birmel test must be `cache: false`" hack was based on a false claim: turbo'
 | **mise pins consolidated** | 10 redundant `[tools]` pins removed (bun ×9, rust ×1 — all exactly duplicating root). Root `.mise.toml` is now the single toolchain truth AND single Renovate touchpoint; homelab keeps its python pin. Verified: bun resolves 1.3.14 from package dirs via root. All per-package mise `tasks` kept (Phase-2 migrates them to `turbo run`) |
 | Deferred to Phase 1 (properly scoped, not skipped) | **scout umbrella**: carries real workflows (`dev:web` op-run orchestration, knip, duplication-check, asset checks) + ~30 deps needing homes. **homelab root**: anchors family-wide eslint + delegating scripts. Both need dep-relocation + doc updates — same dissolution recipe, more moving parts |
 | birmel test caching | (round-2 correction) `.env.test` hashed as explicit input — gitignored files ARE hashable; `cache:false` hack removed |
+
+## S3 round-trip (2026-07-12, local MinIO per user decision)
+
+ducktors `STORAGE_PROVIDER=s3` against dockerized MinIO: upload leg landed both artifacts as bucket objects (verified via `s3 ls`), cold-client leg replayed them ("cache hit" on the same hashes, FULL TURBO 203 ms). The S3 provider path is fully proven; pointing it at R2/SeaweedFS later is an endpoint/credentials change (tofu for the R2 bucket is staged in `packages/homelab/src/tofu/cloudflare/turbo-cache.tf`).
