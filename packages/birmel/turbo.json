@@ -2,10 +2,12 @@
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
-    // Tests read a gitignored .env.test (Discord/Anthropic creds) that turbo
-    // cannot hash — caching would be incorrect. Env-dependent by design.
+    // Tests read a gitignored .env.test — declared as an explicit input so its
+    // CONTENTS participate in the task hash (turbo stores the hash, not the
+    // file). If turbo can't hash ignored files, this must revert to cache:false.
     "test": {
-      "cache": false
+      "env": ["NODE_ENV"],
+      "inputs": ["$TURBO_DEFAULT$", ".env.test"]
     },
     // generate-prisma.ts evaluates the database config module.
     "generate": {
