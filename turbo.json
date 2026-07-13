@@ -26,6 +26,17 @@
     },
     "lint": {
       "dependsOn": ["^build"]
+    },
+    // Root-level repo checks (run as `turbo run //#<name>`). Inputs scoped so
+    // they only re-run when relevant files change.
+    "//#check-todos": {
+      "inputs": ["packages/docs/todos/**", "packages/**/*.ts", "scripts/check-todos.ts"]
+    },
+    "//#check-suppressions": {
+      "inputs": ["scripts/**"]
+    },
+    "//#markdownlint": {
+      "inputs": ["**/*.md", ".markdownlint*"]
     }
   }
 }
