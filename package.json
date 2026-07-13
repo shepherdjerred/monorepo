@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@eslint/compat": "^2.1.0",
+    "@moonrepo/cli": "^2.4.3",
     "jscpd": "5.0.12",
     "knip": "6.16.1",
     "markdownlint-cli2": "^0.22.0",

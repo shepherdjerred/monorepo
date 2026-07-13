@@ -6,6 +6,7 @@
       "name": "@shepherdjerred/monorepo",
       "devDependencies": {
         "@eslint/compat": "^2.1.0",
+        "@moonrepo/cli": "^2.4.3",
         "jscpd": "5.0.12",
         "knip": "6.16.1",
         "markdownlint-cli2": "^0.22.0",
@@ -2269,6 +2270,22 @@
     "@monaco-editor/loader": ["@monaco-editor/loader@1.7.0", "", { "dependencies": { "state-local": "^1.0.6" } }, "sha512-gIwR1HrJrrx+vfyOhYmCZ0/JcWqG5kbfG7+d3f/C1LXk2EvzAbHSg3MQ5lO2sMlo9izoAZ04shohfKLVT6crVA=="],
 
     "@monaco-editor/react": ["@monaco-editor/react@4.7.0", "", { "dependencies": { "@monaco-editor/loader": "^1.5.0" }, "peerDependencies": { "monaco-editor": ">= 0.25.0 < 1", "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-cyzXQCtO47ydzxpQtCGSQGOC8Gk3ZUeBXFAxD+CWXYFo5OqZyZUonFl0DwUlTyAfRHntBfw2p3w4s9R6oe1eCA=="],
+
+    "@moonrepo/cli": ["@moonrepo/cli@2.4.3", "", { "dependencies": { "detect-libc": "^2.1.2" }, "optionalDependencies": { "@moonrepo/core-linux-arm64-gnu": "2.4.3", "@moonrepo/core-linux-arm64-musl": "2.4.3", "@moonrepo/core-linux-x64-gnu": "2.4.3", "@moonrepo/core-linux-x64-musl": "2.4.3", "@moonrepo/core-macos-arm64": "2.4.3", "@moonrepo/core-macos-x64": "2.4.3", "@moonrepo/core-windows-x64-msvc": "2.4.3" }, "bin": { "moon": "moon.js", "moonx": "moonx.js" } }, "sha512-Gd5jmgbwFUOwILWbr7fjSZliErazGnlJOa4RU6scicWVsGfnW6H4p9KEkMw/ELBhlX+CAOIDjRetzJWg2wtQYQ=="],
+
+    "@moonrepo/core-linux-arm64-gnu": ["@moonrepo/core-linux-arm64-gnu@2.4.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-KvtWkuAubdAxKih1qLYwvY2u5JvYZ4WEuvGuioeytF4OtOJ4IfIIxjyxWMoAZJVq2wfjdtyQ1Cx5At7syLZLoQ=="],
+
+    "@moonrepo/core-linux-arm64-musl": ["@moonrepo/core-linux-arm64-musl@2.4.3", "", { "os": "linux", "cpu": "arm64" }, "sha512-hZy99YQnPdfwbuRxpX8fpb4n2ztG1nvvLrgdRnovw+iqo8+9tKsor/pkWyxZULSkgMQ+3cF7Pix+SftPE3qbhQ=="],
+
+    "@moonrepo/core-linux-x64-gnu": ["@moonrepo/core-linux-x64-gnu@2.4.3", "", { "os": "linux", "cpu": "x64" }, "sha512-nzI4CThREW1ltPJh900jiHSjvmGPo/PsQ2gvTi2aVKAZQnBWCxx8EYOdo6mN+qpWwHFh9KUH5b55OMokMGlSuA=="],
+
+    "@moonrepo/core-linux-x64-musl": ["@moonrepo/core-linux-x64-musl@2.4.3", "", { "os": "linux", "cpu": "x64" }, "sha512-F+n0jVRAF51jwkiUnpWM1STf6xWXqSOzpWPjM5nzhWRjbNQuQe5pczceFNZ3CocuWqcC5+ZXfnjGnF3mc/jKsw=="],
+
+    "@moonrepo/core-macos-arm64": ["@moonrepo/core-macos-arm64@2.4.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-N0c2G8tmLFMC1sF+Gltsf+dKZr9XrY8LGqa8gaZTqxdDYM+JDIFuWhD9Kz6KuKj443VtvaCTQQyMLL9T64uJhA=="],
+
+    "@moonrepo/core-macos-x64": ["@moonrepo/core-macos-x64@2.4.3", "", { "os": "darwin", "cpu": "x64" }, "sha512-yR1YSL5bavFJkEJA78Kg9rONzhMJDggKtYC05kNE2IrhBCe9biZ2rTL1AUsXSjjpjLLduIlZX/yo7RDU05/nYw=="],
+
+    "@moonrepo/core-windows-x64-msvc": ["@moonrepo/core-windows-x64-msvc@2.4.3", "", { "os": "win32", "cpu": "x64" }, "sha512-XbUkPbLcHOp8DXaV/pA5W94kaP94Sk8X8FtPnrNK4CJfkT8Kifp4f0+ATB5ZskfkQiXbVbXqFIHUgDL81oKGFA=="],
 
     "@mswjs/interceptors": ["@mswjs/interceptors@0.41.9", "", { "dependencies": { "@open-draft/deferred-promise": "^2.2.0", "@open-draft/logger": "^0.3.0", "@open-draft/until": "^2.0.0", "is-node-process": "^1.2.0", "outvariant": "^1.4.3", "strict-event-emitter": "^0.5.1" } }, "sha512-VVPPgHyQ6ShqnrmDWuxjmUIsO9gWyOZFmuOfLd9LfBGQJwZfy0gvv9pbHSJuoFNIYC7ZDX9aoFwowjcdSC4E8w=="],
 

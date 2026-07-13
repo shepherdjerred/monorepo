@@ -1,0 +1,25 @@
+# moon PoC — projects mirror the bun workspace members plus one native (Rust) project.
+# NOTE: moon project ids default to the FOLDER name (not package.json name), so the
+# nested backend/frontend/common families collide and need explicit ids here.
+projects:
+  globs:
+    - "packages/*"
+  sources:
+    scout-backend: "packages/scout-for-lol/packages/backend"
+    scout-frontend: "packages/scout-for-lol/packages/frontend"
+    scout-app: "packages/scout-for-lol/packages/app"
+    scout-data: "packages/scout-for-lol/packages/data"
+    scout-report: "packages/scout-for-lol/packages/report"
+    scout-ui: "packages/scout-for-lol/packages/ui"
+    scout-desktop: "packages/scout-for-lol/packages/desktop"
+    dpp-backend: "packages/discord-plays-pokemon/packages/backend"
+    dpp-frontend: "packages/discord-plays-pokemon/packages/frontend"
+    dpp-common: "packages/discord-plays-pokemon/packages/common"
+    dpmk-backend: "packages/discord-plays-mario-kart/packages/backend"
+    dpmk-frontend: "packages/discord-plays-mario-kart/packages/frontend"
+    dpmk-common: "packages/discord-plays-mario-kart/packages/common"
+    scout-desktop-rust: "packages/scout-for-lol/packages/desktop/src-tauri"
+
+vcs:
+  defaultBranch: "spike/workspace-taskgraph"
+  provider: "github"

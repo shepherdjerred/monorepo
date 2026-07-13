@@ -1,0 +1,9 @@
+language: rust
+
+tasks:
+  fmt-check:
+    command: cargo fmt --check
+    toolchains: [system]
+    inputs:
+      - "src/**/*.rs"
+      - "Cargo.toml"

@@ -1,0 +1,7 @@
+language: typescript
+
+tasks:
+  typecheck:
+    command: bun run typecheck
+    deps:
+      - "^:build"
