@@ -87,23 +87,45 @@ Both installed repo-locally on `spike/workspace-taskgraph` and driven against th
 
 **Environmental finding (affects both):** the main clone had a **shallow graft** (`.git/shallow`, created 2026-07-12 14:37 by some `--depth` fetch) which silently disables all history-based affected detection — moon warned loudly; turbo's `--affected` only worked in earlier tests because they used `TURBO_SCM_BASE=HEAD`. Fixed with `git fetch --unshallow`; worth finding what re-shallows the clone.
 
+## moon de-risk pass (2026-07-12, user prefers moon for the polyglot graph)
+
+| Risk | Result |
+| --- | --- |
+| Config cost at 45 TS projects | **Solved with inheritance + opt-outs.** `.moon/tasks/all.yml` (one file, turbo.json-equivalent) defines build/typecheck/test/lint with `^:build` deps; `generate` is per-project. Script coverage across 45 members: typecheck missing in 2, lint 3, test 7, build 9, generate present in only 7 → total ≈ **1 workspace file + ~17 small per-project files** (opt-outs via `workspace.inheritedTasks.exclude`, generate declarations). Verified: `^:build` correctly skips opted-out projects; `optional: true` deps skip absent `generate` |
+| Inherited task on script-less project | Hard failure (`Script not found`) — hence the opt-out model above; turbo doesn't have this class (tasks exist only where scripts do) |
+| Codegen output hydration | `generated/**` restored after `rm -rf`; follow-up runs cached (113 ms) |
+| **Remote cache (REAPI)** | **Full round-trip verified** against dockerized `bazel-remote`: execute → upload → wipe local `.moon/cache` → **"cached from remote, 1ms"**. This was moon's biggest unverified claim post-moonbase |
+| CI heuristic foot-gun | moon treats **no-TTY as CI** and refuses *localhost* remote endpoints in CI mode (agent shells / scripts always hit this). Also: any `BUILDKITE*` env var (the fish profile exports `BUILDKITE_API_TOKEN`) puts moon in Buildkite-CI mode machine-wide, changing affected-detection defaults. Mitigations: production remote host is non-localhost (guard doesn't apply); consider un-exporting the BK token from the interactive profile |
+| Toolchain duplication | moon/proto downloaded its own bun 1.3.14 (~126 MB in `~/.proto`) next to mise's. Acceptable; alternatively omit `bun.version` to use PATH bun |
+| Config schema drift (v1→v2) | Three silent-ignore incidents in one session: `.moon/toolchain.yml` (now `toolchains.yml`), `inferTasksFromScripts` moved under `javascript`, `.moon/tasks.yml` (now `.moon/tasks/**`). Pin moon exactly; validate configs against the v2 schemas when upgrading |
+| Local cache across worktrees | Per-workspace (`.moon/cache` at each worktree root) — no local sharing (turbo 2.10 shares). The remote cache covers this |
+| Full-workspace sweep | `moon run :typecheck -c 4` works but **`moon run` bails on first failure** (no `--no-bail`; `moon ci` is the continue-through mode). Partial per-project inventory before the incident below: PASS astro-opengraph-images, better-skill-capped, birmel, cooklang-rich-preview; FAIL anki (its `typecheck` delegates to root `run-package-script.ts`, which needs a root `zod` that no longer exists), cooklang-for-obsidian, discord-plays-core, discord-plays-mario-kart. Completing the inventory is Phase-1 work |
+
+### ⚠ Incident: fork-exhaustion crash during the sweep (machine reboot)
+
+The per-project inventory loop crashed the MacBook (fork exhaustion → reboot). Chain: **umbrella projects** (`discord-plays-mario-kart`, `discord-plays-pokemon`, `scout-for-lol`) have `typecheck` scripts that fan out over their sub-packages with **unbounded `bun --filter`**; moon ran those *as tasks* under `-c 4` (the cap bounds moon's tasks, **not what each task spawns**), while orphaned tsc/bun children from earlier aborted sweeps accumulated. Guardrails now binding:
+
+1. **Umbrella fan-out scripts are a fork bomb under any task runner.** The migration must DELETE the umbrella packages' `--filter`-fan-out scripts (moon/turbo runs leaf projects natively; the umbrellas keep only their genuinely-own tasks).
+2. Until then, umbrella projects are excluded from inherited runner tasks.
+3. Repo-wide sweeps: one at a time, foreground, `-c 2`, with process-count monitoring — and never while other agent sessions are active. (Reaffirms the 2026-07-11 jetsam log.)
+
 ## Design decisions
 
 | # | Decision | Rationale |
 | --- | --- | --- |
 | 1 | Layer 1 = refresh and land **PR #1408** (rebased onto post-#1516/#1517 main; its Dagger/CI-generator changes dissolve in the rebase) | Complete, spike-verified; greenfield would re-derive the same tree |
 | 2 | Keep **isolated linker** + `patchedDependencies` from #1408, with `linker = "hoisted"` documented as the one-line rollback | Research (hoisted) and spike (isolated) disagree; the spike wins on recency and directness: the cited isolated bugs are 1.2.22–1.3.0 era and fixed or catalog-dependent (we skip catalogs), while 1.3.14 isolated passed install, Prisma generate, typecheck, and runtime client resolution here. Isolated also kills the phantom-dep class #1408 fixed real bugs for. Gate: Phase 1's full test sweep must pass before merge; any isolated-linker weirdness → flip to hoisted, not debug-forever (complexity-spiral rule) |
-| 3 | Layer 2 = **turbo 2.10.x pinned** at root, `turbo.json` with `build` / `generate` / `typecheck` / `test` / `lint` tasks | Spike-verified vs bun.lock; caching + affected work |
-| 4 | Root scripts become `turbo run <task>`; **delete `scripts/run-package-script.ts`**; default concurrency capped (e.g. `--concurrency=4`-ish default via root script) | Replaces unbounded fan-out (jetsam-freeze class) with cached, bounded, dependency-ordered runs |
+| 3 | Layer 2 = **moon 2.4.3, pinned exactly** (`@moonrepo/cli` devDep), per user preference for the polyglot graph. Config model: `.moon/tasks/all.yml` (build/typecheck/test/lint with `^:build` + optional `~:generate` deps) + ~17 small per-project files (opt-outs + generate declarations) + `javascript.installDependencies: false` (**mandatory** — auto-install runs concurrent per-project `bun install`s that resurrect the EEXIST race; one root install is the contract). turbo (spike-verified, config preserved in the spike branch) is the documented fallback | De-risk pass passed: inheritance solves config sprawl, REAPI remote cache round-trips against bazel-remote, outputs hydrate, Rust joins the graph shim-free |
+| 4 | Root scripts become `moon run :<task>` (capped `-c`); **delete `scripts/run-package-script.ts` AND the umbrella packages' `--filter` fan-out scripts** (see incident) | Replaces unbounded fan-out (jetsam/fork-bomb class) with cached, bounded, dependency-ordered runs |
 | 5 | **Separate `generate` from `typecheck`/`test` in package scripts** (e.g. birmel `typecheck` is currently `bun run generate && tsc --noEmit`) | Task purity → correct caching; turbo handles ordering via `dependsOn` |
 | 6 | `.turbo` added to root `.gitignore` in the same PR that adds turbo | Unignored turbo logs self-invalidate every task hash (spike-proven) |
 | 7 | **Never `turbo prune`**; Docker builds use plain `bun install` | Recurring bun.lock corruption upstream |
 | 8 | Bun stays **1.3.x** until turbo supports lockfileVersion 2 | Turbo cannot parse bun 1.4 lockfiles at all |
-| 9 | Remote cache = ducktors self-host on the homelab k8s cluster, **R2 bucket** primary (SeaweedFS only after a verified round-trip) — separate follow-up phase | Availability: cache survives homelab outages; laptop + future CI share it |
+| 9 | Remote cache = **bazel-remote (REAPI)** self-hosted on the homelab k8s cluster, S3 backend (R2 primary vs SeaweedFS — open question; bazel-remote's S3 backend is MinIO-tested, needs a round-trip against the chosen store) — separate follow-up phase | Round-trip verified locally this session ("cached from remote, 1ms"); also covers moon's lack of local cross-worktree cache sharing |
 | 10 | **Skip bun catalogs** for now; shared versions stay per-package (Renovate keeps them aligned) | Renovate cannot update `catalog:` entries (2026); catalogs also trigger the worst isolated-linker bug (#23615) |
 | 11 | Root fan-out happens **only through turbo** (`--concurrency` capped); `bun run --filter '*'` is banned in scripts/docs | bun `--filter` has no concurrency cap (open request #27858) — the jetsam-freeze class |
 | 12 | Add `trustedDependencies` for `prisma`/`@prisma/client`/`@prisma/engines` at root if missing; keep explicit `generate` tasks | Postinstall gating under workspaces; explicit generate sidesteps install-order coupling |
-| 13 | Turbo choice is deliberately reversible: all tasks remain plain package.json scripts; turbo.json is the only runner-specific file | moon + bazel-remote (REAPI) is the documented fallback; switching costs an afternoon, not a migration |
+| 13 | Runner choice stays reversible: all tasks remain plain package.json scripts; runner-specific files are `.moon/**` + ~17 small `moon.yml`s | turbo config is preserved on the spike branch; switching back is an afternoon, not a migration |
 
 ## Phases
 
