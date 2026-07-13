@@ -170,6 +170,16 @@ Turbo brought to the same fidelity as moon for a fair final comparison:
 
 **Phase 3 — remote cache (follow-up session).** Deploy ducktors/turborepo-remote-cache to the cluster (cdk8s app), R2 bucket via tofu, `TURBO_API`/`TURBO_TOKEN`/`TURBO_TEAM` wiring (1Password), verify push/pull round-trip. Unblocks future CI (Layer 3) reusing the same cache.
 
+## Layer 3 sketch — CI (future phase, direction agreed 2026-07-12)
+
+Principle: **stateless compute + remote cache** (the inverse of the Dagger design, whose stateful 2 TiB local cache was its recurring outage source). Not "Docker vs bare" — disposable vs snowflake.
+
+- **Verification** = ephemeral pods on the existing Buildkite agent-stack-k8s. Steps are exactly the local commands: `bun install --frozen-lockfile` → `turbo run build typecheck test lint --affected --continue`, `TURBO_API` → self-hosted cache. Agent toolchain image is **baked from `mise.toml`** — one pin file for laptop, agents, CI.
+- **The `scripts/ci` pipeline generator does not come back.** turbo `--affected` replaces dynamic per-package pipeline generation; `.buildkite/pipeline.yml` is static and tiny.
+- **Image builds** (main only): BuildKit in-pod (namespace already privileged), plain Dockerfiles with plain `bun install` (prune is banned), layer cache via `--cache-to/from type=registry`, push `ghcr.io/...:sha` + semver; Renovate keeps closing the loop into homelab `versions.ts`.
+- **Bare nodes**: none initially. iOS stays on Xcode Cloud; the Mac-mini agent idea stays parked until a real macOS-native build need (e.g. Tauri desktop releases).
+- **Scope-creep tripwire**: if a CI step runs anything besides `mise install`, `bun install`, `turbo run …`, or `docker buildx`, it's the old failure mode (CI growing its own build system) — stop and fix the task graph instead.
+
 ## Risks
 
 | Risk | Mitigation |
