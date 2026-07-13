@@ -11,7 +11,6 @@ import { Namespace } from "cdk8s-plus-31";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 
 export function createSeaweedfsApp(chart: Chart) {
   new Namespace(chart, "seaweedfs-namespace", {
@@ -35,17 +34,29 @@ export function createSeaweedfsApp(chart: Chart) {
     },
   });
 
+  // S3 API is tailnet-only (seaweedfs-s3.tailnet-1a49.ts.net). It is NOT exposed
+  // on the public Cloudflare tunnel: the state bucket (homelab-tofu-state) and
+  // llm-archive live on this gateway, and the only public consumer was an
+  // out-of-cluster S3 client. In-cluster consumers (Caddy static sites, scout,
+  // birmel, pokemon) use the in-cluster Service endpoint; public asset serving
+  // (public.sjer.red) goes through the Caddy s3proxy, not this S3 API.
+  //
+  // All out-of-cluster S3 consumers have been migrated to the tailnet hostname:
+  //   - CI deploy containers (pipeline since removed) used seaweedfs-s3.tailnet-1a49.ts.net
+  //   - Operator dotfiles (~/.aws/config) use seaweedfs-s3.tailnet-1a49.ts.net
+  //   - Tofu backends (homelab/src/tofu/*/backend.tf) use seaweedfs-s3.tailnet-1a49.ts.net
+  //
+  // Deployment note: removing this TunnelBinding triggers the Cloudflare tunnel operator's
+  // finalizer to remove the ingress route from the shared tunnel. The CI pipeline provides a
+  // fail-closed ordering guarantee via an explicit ArgoCD resource-deletion check
+  // (wait-tunnel-binding-deletion step) that polls until this TunnelBinding returns 404 from
+  // ArgoCD before the Cloudflare DNS Tofu apply runs. See scripts/ci/src/steps/argocd.ts
+  // (waitForTunnelBindingDeletionStep) for the full implementation.
   createIngress(chart, "seaweedfs-s3-ingress", {
     namespace: "seaweedfs",
     service: "seaweedfs-s3",
     port: 8333,
     hosts: ["seaweedfs-s3"],
-  });
-
-  createCloudflareTunnelBinding(chart, "seaweedfs-s3-cf-tunnel", {
-    serviceName: "seaweedfs-s3",
-    subdomain: "seaweedfs",
-    namespace: "seaweedfs",
   });
 
   // ClusterIP service for Filer UI (the helm chart creates a headless service which doesn't work with Tailscale ingress)

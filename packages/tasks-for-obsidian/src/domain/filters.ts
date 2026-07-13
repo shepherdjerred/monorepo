@@ -1,3 +1,5 @@
+import { projectMatches } from "tasknotes-types/v2";
+
 import type { Task } from "./types";
 import type { TaskStatus } from "./status";
 import type { Priority } from "./priority";
@@ -51,7 +53,9 @@ export function applyFilter(
     if (
       projects &&
       projects.length > 0 &&
-      !task.projects.some((p) => projects.includes(String(p)))
+      !task.projects.some((p) =>
+        projects.some((wanted) => projectMatches(String(p), wanted)),
+      )
     )
       return false;
     if (

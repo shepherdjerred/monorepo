@@ -9,8 +9,6 @@ import type {
 } from "@scout-for-lol/data";
 import {
   CompetitionIdSchema,
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   REPORT_DEFAULT_MAX_ROWS,
   REPORT_MAX_ROWS_LIMIT,
@@ -22,16 +20,8 @@ import {
   computeNextScheduledUpdateAt,
 } from "@scout-for-lol/data/model/competition-cron.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import { getFlag, MY_SERVER } from "#src/configuration/flags.ts";
 import { competitionQueueToStoredQueues } from "#src/report-store/queue.ts";
 
-const SYSTEM_OWNER_ID = DiscordAccountIdSchema.parse("00000000000000000");
-const COMMON_DENOMINATOR_CHANNEL_ID = DiscordChannelIdSchema.parse(
-  "1337631455085334650",
-);
-const COMMON_DENOMINATOR_CRON = "0 18 * * 0";
-const COMMON_DENOMINATOR_LOOKBACK_DAYS = 30;
-const COMMON_DENOMINATOR_MIN_GAMES = 10;
 const COMPETITION_REPORT_TOP_ROWS = REPORT_DEFAULT_MAX_ROWS;
 
 export type SystemReportSyncResult = {
@@ -49,7 +39,7 @@ type SystemReportDefinition = {
   queryText: string;
   lookbackDays: number;
   maxRows: number;
-  systemSource: "COMMON_DENOMINATOR" | "COMPETITION";
+  systemSource: "COMPETITION";
   sourceCompetitionId: CompetitionId | null;
   cronExpression: string;
   nextScheduledRunAt: Date;
@@ -60,10 +50,11 @@ export async function syncSystemReports(params: {
   now?: Date;
 }): Promise<SystemReportSyncResult> {
   const now = params.now ?? new Date();
-  const definitions = [
-    ...(await competitionReportDefinitions(params.prisma, now)),
-    ...commonDenominatorDefinitions(now),
-  ];
+  // Only competition-linked reports are seeded from code now. The former
+  // COMMON_DENOMINATOR bootstrap has been retired — those rows live in the DB
+  // as ordinary user-editable reports (converted by
+  // scripts/convert-common-denominator-reports.ts).
+  const definitions = await competitionReportDefinitions(params.prisma, now);
 
   let created = 0;
   let updated = 0;
@@ -131,105 +122,6 @@ async function competitionReportDefinitions(
           computeNextScheduledUpdateAt(cronExpression, now),
       };
     });
-}
-
-function commonDenominatorDefinitions(now: Date): SystemReportDefinition[] {
-  if (!getFlag("common_denominator_enabled", { server: MY_SERVER })) {
-    return [];
-  }
-
-  return [
-    commonDenominatorReport({
-      title: "Common Denominator - Ranked Surrender Leaders",
-      queryText: [
-        "SELECT player, games, surrenders, surrender_rate",
-        "FROM match_participants",
-        "WHERE queue IN ('solo', 'flex') AND games >= 10",
-        "GROUP BY player",
-        "ORDER BY surrender_rate DESC",
-        "LIMIT 10",
-      ].join(" "),
-      maxRows: 10,
-      now,
-    }),
-    commonDenominatorReport({
-      title: "Common Denominator - Ranked Pairings",
-      queryText: commonPairingQuery(["solo", "flex"], 25, "DESC"),
-      maxRows: 25,
-      now,
-    }),
-    commonDenominatorReport({
-      title: "Common Denominator - Ranked Bottom Pairings",
-      queryText: commonPairingQuery(["solo", "flex"], 25, "ASC"),
-      maxRows: 25,
-      now,
-    }),
-    commonDenominatorReport({
-      title: "Common Denominator - Arena Pairings",
-      queryText: commonPairingQuery(["arena"], 10, "DESC"),
-      maxRows: 10,
-      now,
-    }),
-    commonDenominatorReport({
-      title: "Common Denominator - Arena Bottom Pairings",
-      queryText: commonPairingQuery(["arena"], 10, "ASC"),
-      maxRows: 10,
-      now,
-    }),
-    commonDenominatorReport({
-      title: "Common Denominator - ARAM Pairings",
-      queryText: commonPairingQuery(["aram"], 10, "DESC"),
-      maxRows: 10,
-      now,
-    }),
-    commonDenominatorReport({
-      title: "Common Denominator - ARAM Bottom Pairings",
-      queryText: commonPairingQuery(["aram"], 10, "ASC"),
-      maxRows: 10,
-      now,
-    }),
-  ];
-}
-
-function commonDenominatorReport(params: {
-  title: string;
-  queryText: string;
-  maxRows: number;
-  now: Date;
-}): SystemReportDefinition {
-  return {
-    serverId: MY_SERVER,
-    ownerId: SYSTEM_OWNER_ID,
-    channelId: COMMON_DENOMINATOR_CHANNEL_ID,
-    title: params.title,
-    description: "Seeded replacement for the legacy Common Denominator cron.",
-    queryText: `${params.queryText} RENDER leaderboard`,
-    lookbackDays: COMMON_DENOMINATOR_LOOKBACK_DAYS,
-    maxRows: params.maxRows,
-    systemSource: "COMMON_DENOMINATOR",
-    sourceCompetitionId: null,
-    cronExpression: COMMON_DENOMINATOR_CRON,
-    nextScheduledRunAt: computeNextScheduledUpdateAt(
-      COMMON_DENOMINATOR_CRON,
-      params.now,
-    ),
-  };
-}
-
-function commonPairingQuery(
-  queues: string[],
-  limit: number,
-  direction: "ASC" | "DESC",
-): string {
-  const queueList = queues.map((queue) => `'${queue}'`).join(", ");
-  return [
-    "SELECT pair, games, wins, losses, win_rate",
-    "FROM player_pairs",
-    `WHERE queue IN (${queueList}) AND games >= ${COMMON_DENOMINATOR_MIN_GAMES.toString()}`,
-    "GROUP BY pair",
-    `ORDER BY win_rate ${direction}`,
-    `LIMIT ${limit.toString()}`,
-  ].join(" ");
 }
 
 function competitionReportQuery(
@@ -377,9 +269,9 @@ async function updateSystemReport(params: {
 }): Promise<void> {
   // `nextScheduledRunAt` is scheduler state, not definition state — the
   // dispatcher's `runDueReports` advances it after each fire. If sync
-  // overwrites it every minute, COMMON_DENOMINATOR fires get silently
-  // skipped (the next-fire is recomputed past the current minute before
-  // the dispatcher reads it). Only recompute when the cron itself changed.
+  // overwrites it every minute, scheduled fires get silently skipped (the
+  // next-fire is recomputed past the current minute before the dispatcher
+  // reads it). Only recompute when the cron itself changed.
   // `existingCronExpression` is threaded through from the caller's
   // `findSystemReport` row to avoid an extra round-trip per report per
   // sync tick.
@@ -407,31 +299,25 @@ async function disableStaleSystemReports(
   prisma: ExtendedPrismaClient,
   definitions: SystemReportDefinition[],
 ): Promise<number> {
-  const activeCompetitionIds = definitions
-    .filter((definition) => definition.systemSource === "COMPETITION")
-    .reduce<CompetitionId[]>((ids, definition) => {
+  const activeCompetitionIds = definitions.reduce<CompetitionId[]>(
+    (ids, definition) => {
       if (definition.sourceCompetitionId === null) {
         return ids;
       }
       return [...ids, definition.sourceCompetitionId];
-    }, []);
-  const activeCommonTitles = definitions
-    .filter((definition) => definition.systemSource === "COMMON_DENOMINATOR")
-    .map((definition) => definition.title);
+    },
+    [],
+  );
 
+  // Only COMPETITION-sourced reports are still code-managed. The retired
+  // COMMON_DENOMINATOR rows (systemSource NULL after the one-time conversion,
+  // or still 'COMMON_DENOMINATOR' before it runs) are intentionally left
+  // untouched so they keep firing as ordinary DB reports.
   const result = await prisma.report.updateMany({
     where: {
       isSystemManaged: true,
-      OR: [
-        {
-          systemSource: "COMPETITION",
-          sourceCompetitionId: { notIn: activeCompetitionIds },
-        },
-        {
-          systemSource: "COMMON_DENOMINATOR",
-          title: { notIn: activeCommonTitles },
-        },
-      ],
+      systemSource: "COMPETITION",
+      sourceCompetitionId: { notIn: activeCompetitionIds },
       isEnabled: true,
     },
     data: { isEnabled: false, updatedTime: new Date() },

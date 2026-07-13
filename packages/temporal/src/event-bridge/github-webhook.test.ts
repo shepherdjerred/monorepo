@@ -31,6 +31,26 @@ type CancelCall = [CancelBuildkiteBuildsInput];
 type ConflictMainCall = [ConflictMainArgs];
 type ConflictPrCall = [ConflictPrArgs];
 
+/** A `start` mock that records each PR input it is called with. */
+function capturingStart() {
+  const calls: StartCall[] = [];
+  const start = mock(async (input: PrAgentInput) => {
+    calls.push([input]);
+  });
+  return { start, calls };
+}
+
+/** A `postStatus` mock that records each (input, state) pair. */
+function capturingPostStatus() {
+  const statusCalls: StatusCall[] = [];
+  const postStatus = mock(
+    async (input: PrAgentInput, state: "draft_skipped") => {
+      statusCalls.push([input, state]);
+    },
+  );
+  return { postStatus, statusCalls };
+}
+
 function makePrInput(): PrAgentInput {
   return {
     kind: "review",
@@ -191,10 +211,7 @@ describe("buildWebhookApp", () => {
   });
 
   it("starts both workflows when an opened PR is delivered", async () => {
-    const calls: StartCall[] = [];
-    const start = mock(async (input: PrAgentInput) => {
-      calls.push([input]);
-    });
+    const { start, calls } = capturingStart();
     const app = buildWebhookApp(SECRET, start);
     const res = await postWebhook(app, makeBaseEvent());
     expect(res.status).toBe(200);
@@ -218,10 +235,7 @@ describe("buildWebhookApp", () => {
   });
 
   it("foundation: passes through fields the pr-review pipeline derives its id from", async () => {
-    const calls: StartCall[] = [];
-    const start = mock(async (input: PrAgentInput) => {
-      calls.push([input]);
-    });
+    const { start, calls } = capturingStart();
     const app = buildWebhookApp(SECRET, start);
     const res = await postWebhook(
       app,
@@ -257,12 +271,7 @@ describe("buildWebhookApp", () => {
 
   it("posts a visible draft-skipped status for draft PRs", async () => {
     const start = mock(noopStart);
-    const statusCalls: StatusCall[] = [];
-    const postStatus = mock(
-      async (input: PrAgentInput, state: "draft_skipped") => {
-        statusCalls.push([input, state]);
-      },
-    );
+    const { postStatus, statusCalls } = capturingPostStatus();
     const app = buildWebhookApp(SECRET, start, { postStatus });
     const res = await postWebhook(
       app,
@@ -339,12 +348,7 @@ describe("buildWebhookApp", () => {
     Bun.env["PR_BOT_ENABLED"] = "false";
     try {
       const start = mock(noopStart);
-      const statusCalls: StatusCall[] = [];
-      const postStatus = mock(
-        async (input: PrAgentInput, state: "draft_skipped") => {
-          statusCalls.push([input, state]);
-        },
-      );
+      const { postStatus } = capturingPostStatus();
       const app = buildWebhookApp(SECRET, start, { postStatus });
       const res = await postWebhook(app, makeBaseEvent());
       expect(res.status).toBe(200);

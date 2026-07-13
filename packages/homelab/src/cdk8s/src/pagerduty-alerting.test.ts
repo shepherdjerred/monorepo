@@ -75,6 +75,13 @@ type AmResult = { id: string; output: string; error: string };
 /** Path to the compiled amrender helper binary (set in beforeAll). */
 let amrenderBin = "";
 
+/** Memoize the (slow) `helm template apps` render so both describe blocks share one pass. */
+let cachedAppsRender: Promise<string> | undefined;
+function renderApps(): Promise<string> {
+  cachedAppsRender ??= helmTemplate("apps");
+  return cachedAppsRender;
+}
+
 /** Render one Helm chart from `dist/<chart>.k8s.yaml`, mirroring the ArgoCD flow. */
 async function helmTemplate(chartName: string): Promise<string> {
   const manifestPath = path.join(DIST_DIR, `${chartName}.k8s.yaml`);
@@ -228,10 +235,7 @@ describe("PagerDuty alert rendering (high-fidelity, real Go template engine)", (
 
   beforeAll(async () => {
     // Render Helm + compile the Go renderer once (both are slow cold operations).
-    const [rendered, bin] = await Promise.all([
-      helmTemplate("apps"),
-      buildAmRender(),
-    ]);
+    const [rendered, bin] = await Promise.all([renderApps(), buildAmRender()]);
     pd = findPagerDutyConfig(rendered);
     amrenderBin = bin;
   }, 120_000);
@@ -440,5 +444,169 @@ describe("PagerDuty alert rendering (high-fidelity, real Go template engine)", (
     expect(r.get("client_url")?.output).toBe(
       "https://alertmanager.tailnet-1a49.ts.net",
     );
+  });
+});
+
+/**
+ * Route guard for the Xcode Cloud → Alertmanager → PagerDuty integration.
+ *
+ * The Xcode Cloud webhook receiver (packages/temporal .../xcode-cloud-webhook.ts)
+ * emits alerts with `severity=warning` on the assumption that Alertmanager's
+ * route forwards them to the PagerDuty receiver. If someone ever narrows or
+ * renames that route, the integration would silently stop paging. This test is
+ * the independent oracle: it evaluates the *rendered* route tree the way
+ * Alertmanager does (first matching sibling wins, matchers ANDed, `=~` fully
+ * anchored) and asserts a synthetic XcodeCloudBuildFailed alert resolves to
+ * `pagerduty`. It also checks two known routes (Watchdog → null, info → null)
+ * so a trivially-passing evaluator can't hide a real regression.
+ */
+type RouteNode = {
+  receiver?: string;
+  matchers?: string[];
+  continue?: boolean;
+  routes?: RouteNode[];
+};
+const RouteNodeSchema: z.ZodType<RouteNode> = z.lazy(() =>
+  z.object({
+    receiver: z.string().optional(),
+    matchers: z.array(z.string()).optional(),
+    continue: z.boolean().optional(),
+    routes: z.array(RouteNodeSchema).optional(),
+  }),
+);
+
+/** Deep-search the rendered manifest for the single top-level Alertmanager route. */
+function findAlertmanagerRoute(rendered: string): RouteNode {
+  const found: RouteNode[] = [];
+  const visit = (node: unknown) => {
+    if (Array.isArray(node)) {
+      for (const child of node) visit(child);
+      return;
+    }
+    const rec = RecordSchema.safeParse(node);
+    if (!rec.success) return;
+    const routeVal = rec.data["route"];
+    if (routeVal !== undefined) {
+      const parsed = RouteNodeSchema.safeParse(routeVal);
+      if (parsed.success && parsed.data.routes !== undefined) {
+        found.push(parsed.data);
+      }
+    }
+    for (const value of Object.values(rec.data)) visit(value);
+  };
+  for (const doc of parseAllDocuments(rendered)) {
+    visit(doc.toJS());
+  }
+  if (found.length !== 1) {
+    throw new Error(
+      `expected exactly 1 alertmanager route, found ${String(found.length)}`,
+    );
+  }
+  const [route] = found;
+  if (route === undefined) {
+    throw new Error("alertmanager route missing after length check");
+  }
+  return route;
+}
+
+// Backtracking-safe: greedy `\w+` label (disjoint from `\s`), operator, then
+// the rest is captured greedily and trimmed/unquoted in code.
+const MATCHER_RE = /^(\w+)\s*(=~|!~|!=|=)(.*)$/;
+
+/** Evaluate one Alertmanager matcher (`label <op> value`) against labels. */
+function matcherMatches(
+  matcher: string,
+  labels: Record<string, string>,
+): boolean {
+  const m = MATCHER_RE.exec(matcher.trim());
+  if (m === null) {
+    throw new Error(`unparseable matcher: ${matcher}`);
+  }
+  const name = m[1] ?? "";
+  const op = m[2] ?? "";
+  const value = (m[3] ?? "").trim().replace(/^"(.*)"$/, "$1");
+  const actual = labels[name] ?? "";
+  switch (op) {
+    case "=":
+      return actual === value;
+    case "!=":
+      return actual !== value;
+    // Alertmanager fully anchors regex matchers.
+    case "=~":
+      return new RegExp(`^(?:${value})$`).test(actual);
+    case "!~":
+      return !new RegExp(`^(?:${value})$`).test(actual);
+    default:
+      throw new Error(`unknown matcher operator: ${op}`);
+  }
+}
+
+/** Resolve the receiver an alert lands on: first matching child wins (continue=false). */
+function resolveReceiver(
+  route: RouteNode,
+  labels: Record<string, string>,
+): string | undefined {
+  for (const child of route.routes ?? []) {
+    const matchers = child.matchers ?? [];
+    if (matchers.every((mm) => matcherMatches(mm, labels))) {
+      if (child.routes !== undefined && child.routes.length > 0) {
+        const nested = resolveReceiver(child, labels);
+        if (nested !== undefined) {
+          return nested;
+        }
+      }
+      return child.receiver ?? route.receiver;
+    }
+  }
+  return route.receiver;
+}
+
+describe("Xcode Cloud alert routing guard", () => {
+  let route: RouteNode;
+
+  beforeAll(async () => {
+    route = findAlertmanagerRoute(await renderApps());
+  }, 120_000);
+
+  it("routes a XcodeCloudBuildFailed (severity=warning) alert to pagerduty", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "XcodeCloudBuildFailed",
+        severity: "warning",
+        service: "xcode-cloud",
+      }),
+    ).toBe("pagerduty");
+  });
+
+  it("still routes Watchdog and info-level alerts to null (evaluator sanity)", () => {
+    expect(resolveReceiver(route, { alertname: "Watchdog" })).toBe("null");
+    expect(
+      resolveReceiver(route, { alertname: "SomethingInfo", severity: "info" }),
+    ).toBe("null");
+  });
+
+  it("has an explicit critical|warning → pagerduty route (structural guard)", () => {
+    const pdRoute = (route.routes ?? []).find(
+      (r) => r.receiver === "pagerduty",
+    );
+    expect(pdRoute?.matchers).toContain('severity =~ "critical|warning"');
+  });
+});
+
+describe("Service probe alert routing guard", () => {
+  let route: RouteNode;
+
+  beforeAll(async () => {
+    route = findAlertmanagerRoute(await renderApps());
+  }, 120_000);
+
+  it("routes a ServiceProbeDown (severity=warning) alert to pagerduty", () => {
+    expect(
+      resolveReceiver(route, {
+        alertname: "ServiceProbeDown",
+        severity: "warning",
+        service: "scrypted",
+      }),
+    ).toBe("pagerduty");
   });
 });

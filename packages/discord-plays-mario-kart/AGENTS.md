@@ -4,6 +4,15 @@ Headless MK64 (N64Wasm: parallel-n64 + angrylion) streamed to Discord; up to 4
 people drive seats P1–P4 from a React web UI over Socket.IO. See `README.md` for
 the architecture; this file is the quick orientation for agents.
 
+The tracing/metrics wiring, loopback audio transport, Go-Live streamer base class,
+web server, and bot entrypoint are shared with discord-plays-pokemon in
+**`@shepherdjerred/discord-plays-core`** (`packages/discord-plays-core`,
+source-only, subpath imports) — see its `AGENTS.md`. This backend supplies the
+MK64-specific pieces: the N64 emulator, `MarioKartGameDriver`, seats /
+leaderboard / name overlay, the richer ffmpeg/send-path metrics + `copyMs`, the
+socket dispatch, and the `GameStreamerBase` hook overrides (frame-drop policy,
+StreamObserver, session summary, guarded client destroy).
+
 ## The ROM (not in the repo)
 
 The MK64 ROM is **copyrighted** and the repo is **public** with a 5 MB
@@ -52,7 +61,8 @@ re-applies them every frame via `applyHostControls()` (in
 `wasm-src/patches/0001-*.patch`). This works around `mainLoopInner()` calling
 `resetNeilButtons()` every frame — the original code wrote `neilbuttons[*]` once
 before `_runMainLoop()`, so all input was silently dropped (frames still
-rendered). Because the WASM is built in the Dagger image (gitignored assets), a
+rendered). Because the WASM is built at image-build time (gitignored assets;
+image builds are manual since the CI pipeline was removed 2026-07), a
 fix here needs an image rebuild + GitOps redeploy to reach prod. Manual
 game-effect verification (needs ROM + built core): from `packages/backend`,
 `bun run build:wasm` then `bun run e2e:input:check "<rom>"` — holding START on

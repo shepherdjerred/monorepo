@@ -18,6 +18,7 @@ import {
   updateLanePriors,
   type LanePriorUpdateConfig,
 } from "./data-dragon-lane-priors.ts";
+import { botCloneCacheDir, installScoutWorkspace } from "./bot-clone.ts";
 import { recordRun } from "./data-dragon-metrics.ts";
 import { runCommand } from "./data-dragon-shell.ts";
 import {
@@ -225,9 +226,10 @@ export const dataDragonActivities = {
         "1",
       ]);
 
-      await runCommand(["bun", "install", "--frozen-lockfile"], {
-        cwd: `${repoDir}/${SCOUT_ROOT}`,
-      });
+      // Builds the llm-models `file:` producer before the workspace install —
+      // without it the updater's snapshot-refresh `bun test` dies with
+      // `Cannot find module '@shepherdjerred/llm-models'`.
+      await installScoutWorkspace(repoDir);
       await runCommand(
         ["bun", "run", "update-data-dragon", input.latestVersion],
         {
@@ -238,7 +240,17 @@ export const dataDragonActivities = {
           // runs with ENVIRONMENT=production and the subprocess inherits it,
           // failing validation. Clear it at the subprocess boundary so Scout
           // falls back to its own default instead of inheriting pod config.
-          env: { ENVIRONMENT: undefined },
+          //
+          // BUN_INSTALL_CACHE_DIR is set here (not just by
+          // installScoutWorkspace above) because update-data-dragon.ts's own
+          // snapshot-refresh step shells out to a SECOND `bun install
+          // --force` internally via Bun's `$` — which inherits this
+          // process's env — so this one override reaches that nested call
+          // too, keeping it isolated from the pod-wide shared cache.
+          env: {
+            ENVIRONMENT: undefined,
+            BUN_INSTALL_CACHE_DIR: botCloneCacheDir(repoDir),
+          },
         },
       );
       await updateLanePriors({

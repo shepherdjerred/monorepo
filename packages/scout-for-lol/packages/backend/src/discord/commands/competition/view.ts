@@ -9,6 +9,7 @@ import { formatScore } from "#src/discord/embeds/competition-format-helpers.ts";
 import { loadCachedLeaderboard } from "#src/storage/s3-leaderboard.ts";
 import { replyWithErrorFromException } from "#src/discord/commands/competition/utils/replies.ts";
 import { createLogger } from "#src/logger.ts";
+import { getChampionDisplayName } from "#src/utils/champion.ts";
 
 const logger = createLogger("competition-view");
 import {
@@ -433,7 +434,7 @@ function getCriteriaDescription(
     })
     .with({ type: "MOST_WINS_CHAMPION" }, (c) => {
       const queue = c.queue ? ` in ${formatQueueType(c.queue)}` : "";
-      return `Most wins with Champion ${c.championId.toString()}${queue}`;
+      return `Most wins with ${getChampionDisplayName(c.championId)}${queue}`;
     })
     .with({ type: "HIGHEST_WIN_RATE" }, (c) => {
       const queue = formatQueueType(c.queue);

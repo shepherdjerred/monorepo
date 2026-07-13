@@ -4,6 +4,11 @@
     "types": ["@types/bun"],
     "noEmit": true
   },
-  "include": ["src/**/*", "test/**/*", "eslint.config.ts"],
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "test-integration/**/*",
+    "eslint.config.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

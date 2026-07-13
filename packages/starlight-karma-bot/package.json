@@ -9,8 +9,7 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "health": "bun run src/health.ts",
-    "build": "true",
-    "test": "true",
+    "test": "bun test",
     "typecheck": "bunx tsc --noEmit",
     "lint": "bunx eslint --cache .",
     "format": "bunx prettier --check .",

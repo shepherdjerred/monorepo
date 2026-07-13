@@ -9,7 +9,6 @@ import type {
   Task,
   TaskStats,
   TimeEntry,
-  TimeSummary,
 } from "./types";
 import { contextName, projectName, tagName, taskId } from "./types";
 import {
@@ -22,7 +21,7 @@ import {
   TaskStatsSchema as BaseTaskStatsSchema,
   FilterOptionsSchema as BaseFilterOptionsSchema,
   NlpParseResultSchema as BaseNlpParseResultSchema,
-} from "tasknotes-types";
+} from "./base-schemas";
 
 export const TaskStatusSchema = _TaskStatusSchema;
 
@@ -110,13 +109,6 @@ export const TimeEntrySchema = z
       taskId: taskId(raw.taskId),
     }),
   );
-
-export const TimeSummarySchema = z
-  .object({
-    totalTime: z.number(),
-    entries: z.array(TimeEntrySchema),
-  })
-  .transform((raw): TimeSummary => raw);
 
 export const PomodoroStatusSchema = z
   .object({

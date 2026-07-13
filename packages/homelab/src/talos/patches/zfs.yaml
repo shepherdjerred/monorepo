@@ -1,14 +1,23 @@
 # ZFS kernel module parameters
-# ARC maximum set to 48 GiB (aligned with sysfs override in image.yaml).
-# Kept BELOW the kubelet `systemReserved.memory: 56Gi` (kubelet.yaml) so ARC can
-# never grow past the memory kubelet has accounted for as non-pod. At 62.5 GiB the
-# ARC could exceed that reservation, so ARC + pod allocatable + OS could demand more
-# than physical RAM and wedge the node under CI build storms (see
+# ARC maximum set to 16 GiB (aligned with sysfs override in image.yaml).
+# Kept BELOW the kubelet `systemReserved.memory: 24Gi` (kubelet.yaml) so ARC can
+# never grow past the memory kubelet has accounted for as non-pod; otherwise
+# ARC + pod allocatable + OS could demand more than physical RAM and wedge the
+# node under CI build storms (see
 # packages/docs/logs/2026-07-05_torvalds-ci-freeze-investigation.md).
+#
+# Right-sized 48 -> 16 GiB on 2026-07-10 from 30d Prometheus evidence: hit rate
+# p50 99.95% (worst hour 89.6%), miss rate p50 3 reads/s, ghost hits (misses a
+# bigger ARC would have caught) p50 ~0.1/s / p95 ~580/s — trivial for NVMe. The
+# freed 32 GiB went to pod allocatable (59 -> ~91 GiB) after CI pods became
+# unschedulable at 99.99% requested. The `ZfsArcHitRateLow` alert (<85%) is the
+# canary that 16 GiB is too small; if it fires sustained, raise this AND
+# `systemReserved.memory` in lockstep (never let ARC exceed the reservation).
+# See packages/docs/plans/2026-07-10_torvalds-memory-rightsize.md.
 machine:
   kernel:
     modules:
       - name: zfs
         parameters:
-          - zfs_arc_max=51539607552 # 48 GiB (matches sysfs override in image.yaml)
+          - zfs_arc_max=17179869184 # 16 GiB (matches sysfs override in image.yaml)
           - zfs_arc_min=8589934592 # 8 GB minimum

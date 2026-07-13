@@ -30,6 +30,18 @@ export function createSyncthingChart(app: App) {
             },
           ],
         },
+        // Allow blackbox-exporter's in-cluster health probe (GUI service port
+        // only — not every port on the pod)
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(8384), protocol: "TCP" }],
+        },
       ],
     },
   });

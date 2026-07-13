@@ -11,6 +11,8 @@ allowed-tools:
 
 Check the health of a pull request including merge conflicts, CI status, and approval status.
 
+> **Note:** this monorepo has no CI (the Dagger/Buildkite pipeline was removed 2026-07), so for monorepo PRs the CI section reports no checks — health is effectively conflicts + approval. The CI/logs commands still apply to other repos.
+
 ## Commands
 
 ### Check PR Health

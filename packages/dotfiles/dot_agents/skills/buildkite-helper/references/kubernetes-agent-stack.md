@@ -84,7 +84,7 @@ secrets:
     secret: buildkite-secret-name
 ```
 
-Never write tokens to files or embed in URLs. Use `--token` flags or Dagger `Secret` type.
+Never write tokens to files or embed in URLs. Use `--token` flags or your CI system's secret type.
 
 ## Resource Management
 

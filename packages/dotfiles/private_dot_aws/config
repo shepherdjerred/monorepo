@@ -1,6 +1,6 @@
 
 [default]
-endpoint_url = https://seaweedfs.sjer.red
+endpoint_url = https://seaweedfs-s3.tailnet-1a49.ts.net
 region = us-east-1
 
 [profile r2]
@@ -8,7 +8,7 @@ endpoint_url = https://48948ed6cd40d73e34d27f0cc10e595f.r2.cloudflarestorage.com
 region = auto
 
 [profile seaweedfs]
-endpoint_url = https://seaweedfs.sjer.red
+endpoint_url = https://seaweedfs-s3.tailnet-1a49.ts.net
 region = us-east-1
 
 [profile aws]

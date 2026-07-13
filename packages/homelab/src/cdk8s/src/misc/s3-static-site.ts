@@ -410,6 +410,11 @@ export class S3StaticSites extends Construct {
           namespace,
           fqdn: site.hostname,
           disableDnsUpdates: true,
+          port: 80,
+          // Static sites already get bespoke Probe coverage below (per-site,
+          // per-endpoint, with SSL-expiry and slow-response checks) — the
+          // generic auto-registered probe would just be a redundant duplicate.
+          disableProbe: true,
         },
       );
 

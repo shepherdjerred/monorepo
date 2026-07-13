@@ -1,7 +1,11 @@
 # mac-ci — Mac Mini Buildkite agent
 
 Provisions a Mac Mini as a Buildkite CI agent on the **`macos`** queue, for
-native Swift/Xcode builds that can't run in the Linux/Dagger in-cluster path.
+native Swift/Xcode builds that couldn't run in the Linux in-cluster path.
+
+> **2026-07:** the monorepo's CI pipeline (Dagger + Buildkite) was removed, so
+> nothing dispatches jobs to this agent; this setup is dormant pending the
+> Buildkite service teardown.
 
 This is a **thin, headless-appliance** setup — deliberately separate from the
 personal chezmoi dotfiles layer (`packages/dotfiles/`, which is for
@@ -10,10 +14,9 @@ documented manual steps; there's no Ansible/Nix/chezmoi involved.
 
 ## Why this exists
 
-All existing CI runs in-cluster via `agent-stack-k8s` on the Talos node
-(`torvalds`), through `dagger call` against the in-cluster Dagger engine — all
-Linux. There is no macOS execution surface. Swift builds (and the currently
-dead `swiftLint` Dagger helper) need real macOS. The Mac Mini is that surface.
+CI ran in-cluster via `agent-stack-k8s` on the Talos node (`torvalds`) — all
+Linux. There was no macOS execution surface. Swift builds need real macOS.
+The Mac Mini was that surface.
 
 ## What runs where
 

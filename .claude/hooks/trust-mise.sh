@@ -3,7 +3,7 @@
 # directory so `mise` can parse them without a manual `mise trust`. This matters
 # most for freshly created git worktrees, where none of the repo's mise configs
 # are trusted yet (mise keys trust by absolute path, so each new worktree path
-# is untrusted even though the main checkout is trusted by scripts/setup.ts).
+# is untrusted even when the main checkout's configs are already trusted).
 #
 # SessionStart runs on every session, so this hook stays cheap in the common
 # case (main checkout) and only does the full nested-config walk inside a linked
@@ -37,8 +37,9 @@ set +e
 mise trust --yes --quiet --all >/dev/null
 
 # Only walk nested per-package configs inside a linked worktree. In the main
-# checkout scripts/setup.ts already trusts everything, so re-walking 70+ configs
-# on every session start would be wasted work. A linked worktree has an absolute
+# checkout the nested configs are almost always already trusted from earlier
+# sessions (trust persists per absolute path), so re-walking 70+ configs on
+# every session start would be wasted work. A linked worktree has an absolute
 # git-dir distinct from the common git-dir.
 git_dir=""
 common_dir=""

@@ -117,9 +117,6 @@ export const EXTENSIBLE_TYPE_PATTERNS: Record<string, string[]> = {
   ],
   // OCI charts that document config keys only as commented-out examples in
   // values.yaml, so inference from active defaults misses valid keys.
-  "dagger-helm": [
-    "engine", // engine.port / engine.configJson / engine.config are commented-out chart examples
-  ],
   "agent-stack-k8s": [
     "config", // config.queue / max-in-flight / empty-job-grace-period / default-checkout-params are valid but not defaulted
   ],

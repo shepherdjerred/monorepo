@@ -40,10 +40,9 @@ src/
   engine/time-reports.ts    # /api/time summary + active (frontmatter entries)
   engine/filename.ts        # Title-as-filename + " 1" dedup
   v2/routes.ts              # Upstream plugin API surface (/api/*)
-  legacy/routes.ts          # Old camelCase contract for the P2 app (/legacy/api/*)
   migration/migrate.ts      # Pure per-file legacy→plugin-format migration
   middleware/               # auth, envelope, idempotency, logger, metrics
-  store/pomodoro-store.ts   # Ephemeral pomodoro state (both surfaces)
+  store/pomodoro-store.ts   # Ephemeral pomodoro state (/api/pomodoro/*)
   nlp/parser.ts             # NLP: @context, p:project, #tag, !priority, dates
 scripts/
   migrate-vault.ts          # P4: tag legacy files, fold time side-store, drop ids
@@ -54,7 +53,10 @@ scripts/
 
 All responses use envelope: `{ success: boolean, data: T, error?: string }`
 
-**`/api/*` — the upstream TaskNotes plugin contract (v2, P5 app target):**
+The server exposes a SINGLE surface: `/api/*`, the upstream TaskNotes plugin
+contract. The interim `/legacy/api/*` camelCase adapter was removed in P6.
+
+**`/api/*` — the upstream TaskNotes plugin contract (v2, the app target):**
 
 - Task CRUD: `GET/POST/PUT/DELETE /api/tasks[/:id]` (TaskInfo, snake_case
   recurrence fields, pagination default 50 / cap 200, `DELETE → {message}`)
@@ -69,11 +71,8 @@ All responses use envelope: `{ success: boolean, data: T, error?: string }`
   `/summary` (upstream TimeSummaryResult)
 - Calendars: `GET /api/calendars/events` (task events + recurring expansion)
 - `GET /api/engine-status` (parse skips, config provenance), `/api/health`
-
-**`/legacy/api/*` — the old camelCase contract (P2 app; deleted at P6):**
-same endpoints/shapes the old server exposed, translated onto the new
-engine. The app's configurable API URL points here from the P4 rollout
-until P5.
+- Pomodoro: `POST /api/pomodoro/start|stop|pause`, `GET /api/pomodoro/status`
+  (ephemeral, vault-independent)
 
 ### Complete-instance body (optional)
 
@@ -101,4 +100,9 @@ so dedup survives restarts.
 
 ## Shared Types
 
-Types and schemas come from `packages/tasknotes-types/` (shared with mobile app). The `details` field (not `description`) holds the task body content. `TaskStats` uses upstream shape: `{ total, completed, active, overdue, archived, withTimeTracking }`.
+The `/api/*` contract types come from `tasknotes-types/v2` (the upstream
+plugin shapes, shared with the mobile app). Small server-internal shapes that
+are NOT part of the wire contract live in `src/domain/` — `types.ts` (the NLP
+parser output and ephemeral pomodoro status) and `schemas.ts`
+(`PomodoroStartSchema`). The `details` field (not `description`) holds the task
+body content. `TaskStats` uses upstream shape: `{ total, completed, active, overdue, archived, withTimeTracking }`.

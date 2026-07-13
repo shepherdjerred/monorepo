@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Button } from "#src/components/ui/button.tsx";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import {
@@ -96,7 +97,6 @@ export function PlayerAccountsTable(props: {
           <TableHead>Alias</TableHead>
           <TableHead>Riot ID</TableHead>
           <TableHead>Region</TableHead>
-          <TableHead>PUUID</TableHead>
           <TableHead>Last match</TableHead>
           <TableHead>Last checked</TableHead>
           <TableHead className="w-1" />
@@ -119,9 +119,6 @@ export function PlayerAccountsTable(props: {
               )}
             </TableCell>
             <TableCell>{account.region}</TableCell>
-            <TableCell className="max-w-72 truncate font-mono text-xs text-muted-foreground">
-              {account.puuid}
-            </TableCell>
             <TableCell>{formatDate(account.lastMatchTime)}</TableCell>
             <TableCell>{formatDate(account.lastCheckedAt)}</TableCell>
             <TableCell>
@@ -197,6 +194,8 @@ export function Section(props: {
 
 export function CompetitionSection(props: {
   title: string;
+  guildId: string;
+  action?: React.ReactNode;
   rows: {
     id: number;
     status: string;
@@ -216,7 +215,7 @@ export function CompetitionSection(props: {
   }[];
 }) {
   return (
-    <Section title={props.title}>
+    <Section title={props.title} action={props.action}>
       {props.rows.length === 0 ? (
         <p className="p-3 text-sm text-muted-foreground">None.</p>
       ) : (
@@ -234,7 +233,12 @@ export function CompetitionSection(props: {
             {props.rows.map((participant) => (
               <TableRow key={participant.id}>
                 <TableCell className="font-medium">
-                  {participant.competition.title}
+                  <Link
+                    className="underline"
+                    to={`/g/${props.guildId}/competitions/${participant.competition.id.toString()}`}
+                  >
+                    {participant.competition.title}
+                  </Link>
                   {participant.competition.isCancelled ? " (cancelled)" : ""}
                 </TableCell>
                 <TableCell>{participant.status}</TableCell>

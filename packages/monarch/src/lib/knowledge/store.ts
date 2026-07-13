@@ -23,6 +23,14 @@ const MerchantKnowledgeSchema = z.object({
 
 const KBFileSchema = z.record(z.string(), MerchantKnowledgeSchema);
 
+/**
+ * Entries not refreshed within this window are evicted on load. Every
+ * classification run that reuses an entry rewrites `lastUpdated`, so only
+ * merchants unseen for the full window age out — keeps the KB from growing
+ * unboundedly and drops stale categorizations the user may have changed.
+ */
+const KB_EVICTION_DAYS = 60;
+
 export async function loadKnowledgeBase(): Promise<
   Map<string, MerchantKnowledge>
 > {
@@ -32,8 +40,20 @@ export async function loadKnowledgeBase(): Promise<
   if (await file.exists()) {
     const raw: unknown = JSON.parse(await file.text());
     const parsed = KBFileSchema.parse(raw);
+    const cutoff = Date.now() - KB_EVICTION_DAYS * 24 * 60 * 60 * 1000;
+    let evicted = 0;
     for (const [key, value] of Object.entries(parsed)) {
+      const updatedAt = Date.parse(value.lastUpdated);
+      if (!Number.isNaN(updatedAt) && updatedAt < cutoff) {
+        evicted += 1;
+        continue;
+      }
       kb.set(key, value);
+    }
+    if (evicted > 0) {
+      log.info(
+        `Evicted ${String(evicted)} merchant KB entries older than ${String(KB_EVICTION_DAYS)} days`,
+      );
     }
     log.info(`Loaded ${String(kb.size)} merchant KB entries`);
   }

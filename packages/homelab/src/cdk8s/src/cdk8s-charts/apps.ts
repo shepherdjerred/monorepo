@@ -67,7 +67,6 @@ import { createMcpGatewayApp } from "@shepherdjerred/homelab/cdk8s/src/resources
 import { createBugsinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/bugsink.ts";
 import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/tasknotes.ts";
 import { createRelayApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/relay.ts";
-import { createDaggerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/dagger.ts";
 import { createTemporalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/temporal.ts";
 import { createTrmnlDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/trmnl-dashboard.ts";
 
@@ -178,7 +177,6 @@ export async function createAppsChart(app: App) {
   createBugsinkApp(chart);
   createTasknotesApp(chart);
   createRelayApp(chart);
-  createDaggerApp(chart);
   createTemporalApp(chart);
   createTrmnlDashboardApp(chart);
 

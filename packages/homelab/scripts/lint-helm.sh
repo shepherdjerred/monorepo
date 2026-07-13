@@ -46,7 +46,7 @@ for chart_dir in "$HELM_DIR"/*/; do
     # Copy chart files
     cp -r "$chart_dir"/* "$TEMP_DIR/"
 
-    # Set version using the same script that Dagger uses
+    # Set version using the shared helper
     "$REPO_ROOT/scripts/helm-set-version.sh" "$TEMP_DIR/Chart.yaml" "0.0.0-lint"
 
     # Copy this chart's CDK8s manifest into templates.

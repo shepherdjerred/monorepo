@@ -47,3 +47,30 @@ export type LakeAggregateRow = z.infer<typeof LakeAggregateRowSchema>;
 export const LakeScannedRowSchema = z.object({
   scanned: LakeCountSchema,
 });
+
+// Raw per-player fact row returned by compileGroupFactsQuery — one row per
+// (match, team, subteam, player). Combination generation happens in JS.
+export const LakeGroupFactRowSchema = z.object({
+  player_id: LakeCountSchema,
+  player_alias: z.string(),
+  match_id: z.string(),
+  team_id: LakeCountSchema,
+  player_subteam_id: LakeCountSchema.nullable(),
+  win: z.boolean(),
+  surrendered: z.boolean(),
+  kills: LakeCountSchema,
+  deaths: LakeCountSchema,
+  assists: LakeCountSchema,
+  creep_score: LakeCountSchema,
+  damage_to_champions: LakeCountSchema,
+  gold_earned: LakeCountSchema,
+  vision_score: LakeCountSchema,
+  damage_taken: LakeCountSchema,
+  total_damage_dealt: LakeCountSchema,
+  wards_placed: LakeCountSchema,
+  multikills: LakeCountSchema,
+  game_duration_seconds: LakeCountSchema,
+  time_played_seconds: LakeCountSchema,
+});
+
+export type LakeGroupFactRow = z.infer<typeof LakeGroupFactRowSchema>;

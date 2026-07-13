@@ -37,6 +37,18 @@ export async function createMcpGatewayChart(app: App) {
             },
           ],
         },
+        // Allow blackbox-exporter's in-cluster health probe (http service port
+        // only — not every port on the pod)
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(9090), protocol: "TCP" }],
+        },
       ],
     },
   });

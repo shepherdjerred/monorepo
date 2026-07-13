@@ -12,6 +12,22 @@ function fakeClient(): Client {
   return Object.create(null);
 }
 
+const START_RESULT: AgentTaskStartResult = {
+  kind: "workflow",
+  workflowId: "agent-task-test",
+  runId: "run-id",
+};
+
+/** A `start` mock that resolves to the canonical workflow start result. */
+function makeStartMock() {
+  return mock(
+    async (
+      _client: Client,
+      _input: AgentTaskInput,
+    ): Promise<AgentTaskStartResult> => START_RESULT,
+  );
+}
+
 function validInput(): AgentTaskInput {
   return {
     title: "Check follow-up",
@@ -46,16 +62,7 @@ async function postAgentTask(
 
 describe("buildAgentTaskApiApp", () => {
   it("keeps health checks unauthenticated", async () => {
-    const start = mock(
-      async (
-        _client: Client,
-        _input: AgentTaskInput,
-      ): Promise<AgentTaskStartResult> => ({
-        kind: "workflow",
-        workflowId: "agent-task-test",
-        runId: "run-id",
-      }),
-    );
+    const start = makeStartMock();
     const app = buildAgentTaskApiApp(TOKEN, fakeClient(), start);
 
     const res = await app.fetch(new Request("http://test/healthz"));
@@ -66,16 +73,7 @@ describe("buildAgentTaskApiApp", () => {
   });
 
   it("rejects unauthenticated agent task creation", async () => {
-    const start = mock(
-      async (
-        _client: Client,
-        _input: AgentTaskInput,
-      ): Promise<AgentTaskStartResult> => ({
-        kind: "workflow",
-        workflowId: "agent-task-test",
-        runId: "run-id",
-      }),
-    );
+    const start = makeStartMock();
     const app = buildAgentTaskApiApp(TOKEN, fakeClient(), start);
 
     const res = await postAgentTask(app, validInput());
@@ -86,16 +84,7 @@ describe("buildAgentTaskApiApp", () => {
   });
 
   it("rejects a wrong-but-same-length bearer token", async () => {
-    const start = mock(
-      async (
-        _client: Client,
-        _input: AgentTaskInput,
-      ): Promise<AgentTaskStartResult> => ({
-        kind: "workflow",
-        workflowId: "agent-task-test",
-        runId: "run-id",
-      }),
-    );
+    const start = makeStartMock();
     const app = buildAgentTaskApiApp(TOKEN, fakeClient(), start);
 
     const wrongSameLength = "x".repeat(TOKEN.length);
@@ -108,26 +97,13 @@ describe("buildAgentTaskApiApp", () => {
   });
 
   it("schedules authenticated agent task creation", async () => {
-    const start = mock(
-      async (
-        _client: Client,
-        _input: AgentTaskInput,
-      ): Promise<AgentTaskStartResult> => ({
-        kind: "workflow",
-        workflowId: "agent-task-test",
-        runId: "run-id",
-      }),
-    );
+    const start = makeStartMock();
     const app = buildAgentTaskApiApp(TOKEN, fakeClient(), start);
 
     const res = await postAgentTask(app, validInput(), TOKEN);
 
     expect(res.status).toBe(202);
-    expect(await res.json()).toEqual({
-      kind: "workflow",
-      workflowId: "agent-task-test",
-      runId: "run-id",
-    });
+    expect(await res.json()).toEqual(START_RESULT);
     expect(start).toHaveBeenCalledTimes(1);
   });
 });

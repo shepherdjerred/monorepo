@@ -9,7 +9,6 @@
     "build": "astro build",
     "preview": "astro preview",
     "lint": "astro check",
-    "test": "echo 'No tests yet'",
     "typecheck": "astro check && bunx tsc --noEmit"
   },
   "dependencies": {

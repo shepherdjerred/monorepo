@@ -13,7 +13,6 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
-    "build": "true",
     "test": "bun test test/",
     "test:integration": "bun test integration/",
     "e2e": "bun run e2e/run.ts",

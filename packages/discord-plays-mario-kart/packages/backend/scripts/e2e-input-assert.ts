@@ -44,8 +44,10 @@ async function run(press: string, outPng: string): Promise<string> {
   }
   process.stdout.write(text);
   const m = /hash=([0-9a-f]+)/.exec(text);
-  if (m === null) throw new Error(`no frame hash in output for press=${press}`);
-  return m[1];
+  const hash = m?.[1];
+  if (hash === undefined)
+    throw new Error(`no frame hash in output for press=${press}`);
+  return hash;
 }
 
 const baseline = await run("none", "/tmp/mk_assert_none.png");

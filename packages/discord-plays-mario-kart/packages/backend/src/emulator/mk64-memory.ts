@@ -109,9 +109,10 @@ export function physical(vaddr: number): number {
   return vaddr & RDRAM_MASK;
 }
 
-// Bounds are checked numerically (not via `=== undefined` on the indexed value)
-// because the tsconfig has no noUncheckedIndexedAccess: TS types a Uint8Array
-// index as always-`number`, so a result-undefined guard reads as dead code.
+// Bounds are checked numerically up front via requireInBounds. The reads below
+// then use `?? 0` only to satisfy noUncheckedIndexedAccess: once requireInBounds
+// has passed, every indexed access is provably in range, so the fallback is
+// never taken.
 function requireInBounds(mem: RdramView, offset: number, span: number): void {
   if (offset < 0 || offset + span > mem.heap.length) {
     throw new RangeError(
@@ -123,7 +124,7 @@ function requireInBounds(mem: RdramView, offset: number, span: number): void {
 export function readU8(mem: RdramView, vaddr: number): number {
   const off = mem.base + (physical(vaddr) ^ 3);
   requireInBounds(mem, off, 1);
-  return mem.heap[off];
+  return mem.heap[off] ?? 0;
 }
 
 export function readS8(mem: RdramView, vaddr: number): number {
@@ -134,7 +135,7 @@ export function readS8(mem: RdramView, vaddr: number): number {
 export function readU16(mem: RdramView, vaddr: number): number {
   const off = mem.base + (physical(vaddr) ^ 2);
   requireInBounds(mem, off, 2);
-  return mem.heap[off] | (mem.heap[off + 1] << 8);
+  return (mem.heap[off] ?? 0) | ((mem.heap[off + 1] ?? 0) << 8);
 }
 
 export function readS16(mem: RdramView, vaddr: number): number {
@@ -146,10 +147,10 @@ export function readU32(mem: RdramView, vaddr: number): number {
   const off = mem.base + (physical(vaddr) & ~3);
   requireInBounds(mem, off, 4);
   return (
-    (mem.heap[off] |
-      (mem.heap[off + 1] << 8) |
-      (mem.heap[off + 2] << 16) |
-      (mem.heap[off + 3] << 24)) >>>
+    ((mem.heap[off] ?? 0) |
+      ((mem.heap[off + 1] ?? 0) << 8) |
+      ((mem.heap[off + 2] ?? 0) << 16) |
+      ((mem.heap[off + 3] ?? 0) << 24)) >>>
     0
   );
 }
@@ -255,13 +256,14 @@ export function readSnapshot(mem: RdramView): Mk64Snapshot {
   const modeRaw = readS32(mem, MK64_ADDR.gModeSelection);
   const courseId = readS16(mem, MK64_ADDR.gCurrentCourseId);
 
-  // Range-check the raw enum indices numerically (no noUncheckedIndexedAccess,
-  // so indexing the lookup tables can't be guarded on undefined).
+  // Range-check the raw enum indices numerically, then look them up. Both
+  // lookups are provably defined once the range check passes (screenModeRaw and
+  // modeRaw are within the table lengths), so the undefined branch is dead.
+  const screenMode: ScreenMode | undefined = SCREEN_MODES[screenModeRaw];
+  const gameMode: GameMode | undefined = GAME_MODES[modeRaw];
   const valid =
-    screenModeRaw >= 0 &&
-    screenModeRaw < SCREEN_MODES.length &&
-    modeRaw >= 0 &&
-    modeRaw < GAME_MODES.length &&
+    screenMode !== undefined &&
+    gameMode !== undefined &&
     humanCountRaw >= 1 &&
     humanCountRaw <= 4 &&
     courseId >= 0 &&
@@ -277,9 +279,6 @@ export function readSnapshot(mem: RdramView): Mk64Snapshot {
       players: [],
     };
   }
-
-  const screenMode = SCREEN_MODES[screenModeRaw];
-  const gameMode = GAME_MODES[modeRaw];
 
   const players: Mk64PlayerSnapshot[] = [];
   for (let slot = 0; slot < 4; slot++) {

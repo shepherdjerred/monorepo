@@ -14,7 +14,7 @@ import { NotFoundError } from "../domain/errors";
 import type { Result } from "../domain/result";
 import { OK_VOID, err, ok } from "../domain/result";
 import { getNextStatus } from "../domain/status";
-import { isRecurring, localTodayYmd } from "../domain/recurrence";
+import { completionTargetDate, isRecurring } from "../domain/recurrence";
 import type {
   CreateTaskRequest,
   Task,
@@ -176,15 +176,18 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       }
       // Absolute target state, computed once at tap time — replaying the
       // command later (even after midnight) applies exactly this intent.
-      // Capture today's date once so `date` and `completed` can't straddle a
+      // Recurring completion targets the SCHEDULED occurrence (plugin parity via
+      // completionTargetDate), not the literal tap day — otherwise a tap on a
+      // non-occurrence day records an orphaned date the model never reads as
+      // done. Capture the date once so `date` and `completed` can't straddle a
       // midnight boundary (object properties evaluate left-to-right).
-      const today = localTodayYmd();
+      const instanceDate = completionTargetDate(existing);
       const updated = isRecurring(existing)
         ? await store.dispatch({
             type: "set_instance_complete",
             taskId: target,
-            date: today,
-            completed: !existing.completeInstances.includes(today),
+            date: instanceDate,
+            completed: !existing.completeInstances.includes(instanceDate),
           })
         : await store.dispatch({
             type: "set_status",

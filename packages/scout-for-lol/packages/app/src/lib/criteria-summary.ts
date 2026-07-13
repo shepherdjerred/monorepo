@@ -1,6 +1,7 @@
 import { match } from "ts-pattern";
 import {
   competitionQueueTypeToString,
+  getChampionDisplayNameById,
   type CompetitionCriteria,
 } from "@scout-for-lol/data";
 
@@ -31,7 +32,7 @@ export function summarizeCriteria(criteria: CompetitionCriteria): string {
         c.queue === undefined
           ? "any queue"
           : competitionQueueTypeToString(c.queue);
-      return `Most wins on champion ${c.championId.toString()} · ${queue}`;
+      return `Most wins on ${getChampionDisplayNameById(c.championId)} · ${queue}`;
     })
     .with(
       { type: "HIGHEST_WIN_RATE" },

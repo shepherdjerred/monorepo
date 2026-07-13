@@ -52,20 +52,26 @@ export function parseCommandInput(input: string): CommandInput | undefined {
     .filter((group) => group !== "");
 
   let quantity: Quantity = 1;
-  if (split.length > 0 && !Number.isNaN(Number.parseInt(split[0]))) {
-    quantity = Number.parseInt(split[0]);
+  const quantityHead = split[0];
+  if (
+    quantityHead !== undefined &&
+    !Number.isNaN(Number.parseInt(quantityHead))
+  ) {
+    quantity = Number.parseInt(quantityHead);
     [, ...split] = split;
   }
 
   let parsedModifier: Modifier | undefined;
-  if (split.length > 0 && isModifier(split[0])) {
-    parsedModifier = findModifier(split[0]);
+  const modifierHead = split[0];
+  if (modifierHead !== undefined && isModifier(modifierHead)) {
+    parsedModifier = findModifier(modifierHead);
     [, ...split] = split;
   }
 
   let parsedCommand: Command | undefined;
-  if (split.length > 0) {
-    parsedCommand = findCommand(split[0]);
+  const commandHead = split[0];
+  if (commandHead !== undefined) {
+    parsedCommand = findCommand(commandHead);
     if (parsedCommand !== undefined) {
       [, ...split] = split;
     }
@@ -75,7 +81,7 @@ export function parseCommandInput(input: string): CommandInput | undefined {
     return {
       command: parsedCommand,
       quantity,
-      modifier: parsedModifier,
+      ...(parsedModifier === undefined ? {} : { modifier: parsedModifier }),
     };
   }
 

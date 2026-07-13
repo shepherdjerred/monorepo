@@ -54,6 +54,18 @@ export function createPlausibleChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(8000), protocol: "TCP" }],
         },
+        // Allow blackbox-exporter's in-cluster health probe (http service port
+        // only — not every port on the pod)
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(8000), protocol: "TCP" }],
+        },
       ],
       egress: [
         // Allow DNS

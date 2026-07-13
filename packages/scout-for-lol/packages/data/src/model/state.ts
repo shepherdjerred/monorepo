@@ -30,6 +30,11 @@ const ARENA_GAME_MODE = "CHERRY";
 // but show up in live Spectator payloads: 3200/3220 for ARAM: Mayhem on Howling
 // Abyss, and 710 — the revived premade "Ranked 5s" queue on Summoner's Rift,
 // which Riot's published queues.json still labels as the long-defunct original.
+//
+// Arena churns its queue ID between reworks (1700 was the original Soul Fighter
+// launch; Riot moved live Arena to 1750 around mid-2026). Both map to "arena"
+// here, but the durable classifier is `resolveQueueTypeFromGame` below, which
+// keys off `gameMode === "CHERRY"` and is immune to the next ID change.
 export function parseQueueType(input: number): QueueType | undefined {
   return match(input)
     .returnType<QueueType | undefined>()
@@ -45,6 +50,7 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(490, () => "quickplay")
     .with(900, () => "arurf")
     .with(ARENA_QUEUE_ID, () => "arena")
+    .with(1750, () => "arena")
     .with(2300, () => "brawl")
     .with(2400, () => "aram mayhem")
     .with(3200, () => "aram mayhem")

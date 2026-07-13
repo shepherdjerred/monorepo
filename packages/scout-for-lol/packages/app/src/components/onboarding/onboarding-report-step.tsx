@@ -9,8 +9,7 @@ import {
   type ReportFormState,
 } from "#src/components/report-form-fields.tsx";
 import { REPORT_EXAMPLES } from "#src/lib/onboarding-examples.ts";
-import { OnboardingShell } from "#src/components/onboarding/onboarding-shell.tsx";
-import { OnboardingNoChannels } from "#src/components/onboarding/onboarding-no-channels.tsx";
+import { OnboardingStepFrame } from "#src/components/onboarding/onboarding-step-frame.tsx";
 
 const TITLE = "Set up a report";
 const DESCRIPTION =
@@ -48,19 +47,6 @@ export function OnboardingReportStep(props: {
     }),
   );
 
-  if (props.channels.length === 0) {
-    return (
-      <OnboardingShell
-        step="build-report"
-        title={TITLE}
-        description={DESCRIPTION}
-        onSkip={props.onSkip}
-      >
-        <OnboardingNoChannels onBack={props.onBack} />
-      </OnboardingShell>
-    );
-  }
-
   function handleSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setError(null);
@@ -77,10 +63,12 @@ export function OnboardingReportStep(props: {
   }
 
   return (
-    <OnboardingShell
+    <OnboardingStepFrame
       step="build-report"
       title={TITLE}
       description={DESCRIPTION}
+      hasChannels={props.channels.length > 0}
+      onBack={props.onBack}
       onSkip={props.onSkip}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -99,6 +87,6 @@ export function OnboardingReportStep(props: {
           </Button>
         </div>
       </form>
-    </OnboardingShell>
+    </OnboardingStepFrame>
   );
 }

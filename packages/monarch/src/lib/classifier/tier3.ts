@@ -157,6 +157,20 @@ function processToolUseBlocks(
   return results;
 }
 
+/**
+ * Per-run tier-3 failure counts by reason, surfaced in the end-of-run
+ * summary so silent classification losses are visible.
+ */
+const tier3Failures: Record<string, number> = {};
+
+function recordTier3Failure(reason: string): void {
+  tier3Failures[reason] = (tier3Failures[reason] ?? 0) + 1;
+}
+
+export function getTier3FailureCounts(): Record<string, number> {
+  return { ...tier3Failures };
+}
+
 function extractJsonFromText(text: string): string {
   let cleaned = text.trim();
   const fenceMatch = /```(?:json)?[ \t]*\n([\s\S]*?)\n[ \t]*```/.exec(cleaned);
@@ -207,13 +221,32 @@ async function runToolLoop(
       .map((b) => ("text" in b ? b.text : ""))
       .join("");
 
-    if (text === "") return undefined;
+    if (text === "") {
+      recordTier3Failure("empty_response");
+      log.warn("Tier 3: model returned no text content; leaving uncategorized");
+      return undefined;
+    }
 
     const cleaned = extractJsonFromText(text);
-    const parsed: unknown = JSON.parse(cleaned);
-    return Tier3ResultSchema.parse(parsed);
+    try {
+      const parsed: unknown = JSON.parse(cleaned);
+      return Tier3ResultSchema.parse(parsed);
+    } catch (error: unknown) {
+      // Re-throw with the raw response attached — the caller logs merchant
+      // context, but without the snippet a parse failure is undebuggable.
+      const message = error instanceof Error ? error.message : String(error);
+      const snippet = text.length > 300 ? `${text.slice(0, 300)}…` : text;
+      throw new Error(
+        `response parse failed (${message}); raw response: ${snippet}`,
+        { cause: error },
+      );
+    }
   }
 
+  recordTier3Failure("tool_rounds_exhausted");
+  log.warn(
+    `Tier 3: no final answer after ${String(maxToolRounds)} tool rounds; leaving uncategorized`,
+  );
   return undefined;
 }
 
@@ -244,8 +277,11 @@ async function classifySingleTier3(
           continue;
         }
       }
+      recordTier3Failure(
+        error instanceof Anthropic.APIError ? "api_error" : "parse_error",
+      );
       log.error(
-        `Tier 3 classification failed for ${enriched.transaction.merchant.name}: ${error instanceof Error ? error.message : String(error)}`,
+        `Tier 3 classification failed for ${enriched.transaction.merchant.name} (txn ${enriched.transaction.id}, attempt ${String(attempt + 1)}): ${error instanceof Error ? error.message : String(error)}`,
       );
       return undefined;
     }

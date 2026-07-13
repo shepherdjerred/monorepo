@@ -10,7 +10,6 @@
     "preview": "astro preview",
     "astro": "astro",
     "typecheck": "tsc --noEmit",
-    "test": "echo 'No tests yet'",
     "lint": "astro check"
   },
   "dependencies": {

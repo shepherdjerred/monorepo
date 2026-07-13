@@ -3,7 +3,6 @@ import { useMutation } from "@tanstack/react-query";
 import { RiotIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { findRegion, type RegionValue } from "#src/lib/regions.ts";
-import { Button } from "#src/components/ui/button.tsx";
 import { Label } from "#src/components/ui/label.tsx";
 import { RegionSelect } from "#src/components/region-select.tsx";
 import { RiotIdCombobox } from "#src/components/riot-id-combobox.tsx";
@@ -11,10 +10,13 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "#src/components/ui/dialog.tsx";
+import {
+  DialogFormError,
+  DialogFormFooter,
+} from "#src/components/dialog-form.tsx";
 
 /** Add a Riot account to an existing player (via `player.addAccount`). */
 export function AddAccountDialog(props: {
@@ -90,24 +92,16 @@ export function AddAccountDialog(props: {
             />
           </div>
 
-          {error !== null && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          <DialogFormError error={error} />
 
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                props.onOpenChange(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Adding…" : "Add"}
-            </Button>
-          </DialogFooter>
+          <DialogFormFooter
+            pending={mutation.isPending}
+            submitLabel="Add"
+            pendingLabel="Adding…"
+            onCancel={() => {
+              props.onOpenChange(false);
+            }}
+          />
         </form>
       </DialogContent>
     </Dialog>

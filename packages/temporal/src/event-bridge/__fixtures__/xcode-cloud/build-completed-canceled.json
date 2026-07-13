@@ -1,0 +1,31 @@
+{
+  "metadata": {
+    "type": "metadata",
+    "createdDate": "2026-07-11T21:00:00.000Z",
+    "eventType": "BUILD_COMPLETED"
+  },
+  "ciWorkflow": {
+    "type": "ciWorkflows",
+    "attributes": { "name": "Archive - iOS" }
+  },
+  "ciProduct": {
+    "type": "ciProducts",
+    "attributes": { "name": "Tasks for Obsidian", "productType": "APP" }
+  },
+  "ciBuildRun": {
+    "type": "ciBuildRuns",
+    "attributes": {
+      "number": 90,
+      "executionProgress": "COMPLETE",
+      "completionStatus": "CANCELED"
+    }
+  },
+  "scmGitReference": {
+    "type": "scmGitReferences",
+    "attributes": {
+      "name": "main",
+      "canonicalName": "refs/heads/main",
+      "kind": "BRANCH"
+    }
+  }
+}

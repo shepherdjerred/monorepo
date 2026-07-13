@@ -27,6 +27,15 @@
 
 import { Glob } from "bun";
 import { readFile } from "node:fs/promises";
+import { z } from "zod";
+
+const RecordSchema = z.record(z.string(), z.unknown());
+
+/** Narrow an unknown value to a plain object map, or `undefined` if it isn't one. */
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  const parsed = RecordSchema.safeParse(value);
+  return parsed.success ? parsed.data : undefined;
+}
 
 /**
  * Pairs of packages that must resolve to compatible versions in a lockfile.
@@ -40,16 +49,24 @@ const LOCKSTEP_PAIRS: { a: string; b: string; match: "exact" | "major" }[] = [
 
 const EXCLUDE_GLOBS = ["**/node_modules/**", "sandbox/archive/**"];
 
-interface Violation {
+type Violation = {
   file: string;
   message: string;
-}
+};
 
 /**
  * `bun.lock` is JSONC (trailing commas, optionally comments), not strict JSON.
  * Strip line/block comments and trailing commas — tracking string state so we
  * never touch characters inside string literals — then `JSON.parse`.
  */
+/** True when the comma at `commaIndex` is followed only by whitespace then `}`/`]`. */
+function isTrailingComma(text: string, commaIndex: number): boolean {
+  let j = commaIndex + 1;
+  while (j < text.length && /\s/.test(text[j] ?? "")) j++;
+  const after = text[j];
+  return after === "}" || after === "]";
+}
+
 function parseJsonc(text: string): unknown {
   let out = "";
   let inString = false;
@@ -57,6 +74,7 @@ function parseJsonc(text: string): unknown {
   let inBlock = false;
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
+    if (ch === undefined) continue;
     const next = text[i + 1];
     if (inLine) {
       if (ch === "\n") {
@@ -97,20 +115,12 @@ function parseJsonc(text: string): unknown {
       i++;
       continue;
     }
-    if (ch === ",") {
-      // Look ahead past whitespace for a closing bracket → trailing comma.
-      let j = i + 1;
-      while (j < text.length && /\s/.test(text[j] ?? "")) j++;
-      const after = text[j];
-      if (after === "}" || after === "]") continue; // drop trailing comma
+    if (ch === "," && isTrailingComma(text, i)) {
+      continue; // drop trailing comma
     }
     out += ch;
   }
   return JSON.parse(out);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 /** Parse `name@version` (handles scoped names like `@types/react@19.2.14`). */
@@ -139,7 +149,7 @@ function resolvedVersions(
   for (const entry of Object.values(packages)) {
     if (!Array.isArray(entry) || typeof entry[0] !== "string") continue;
     const parsed = parseNameVersion(entry[0]);
-    if (parsed === null || parsed.name !== name) continue;
+    if (parsed?.name !== name) continue;
     // Skip workspace self-links (`name@workspace:...`) and other non-semver tags.
     if (!/^\d/.test(parsed.version)) continue;
     versions.add(parsed.version);
@@ -149,16 +159,15 @@ function resolvedVersions(
 
 function isRange(spec: string): boolean {
   // Anything that is not a bare exact semver (e.g. starts with ^ ~ >= < * x).
-  return !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(spec);
+  return !/^\d+\.\d+\.\d+(?:-[0-9A-Z.-]+)?$/i.test(spec);
 }
 
 /** Merge a workspace's direct `dependencies` + `devDependencies` into one map. */
 function workspaceDeps(workspace: unknown): Record<string, string> {
-  if (!isRecord(workspace)) return {};
-  const depsRaw = workspace["dependencies"];
-  const devRaw = workspace["devDependencies"];
-  const deps: Record<string, unknown> = isRecord(depsRaw) ? depsRaw : {};
-  const dev: Record<string, unknown> = isRecord(devRaw) ? devRaw : {};
+  const ws = asRecord(workspace);
+  if (ws === undefined) return {};
+  const deps: Record<string, unknown> = asRecord(ws["dependencies"]) ?? {};
+  const dev: Record<string, unknown> = asRecord(ws["devDependencies"]) ?? {};
   const merged: Record<string, string> = {};
   for (const [name, spec] of [
     ...Object.entries(deps),
@@ -177,15 +186,10 @@ async function checkLockfile(file: string): Promise<Violation[]> {
   } catch (error) {
     return [{ file, message: `failed to parse lockfile: ${String(error)}` }];
   }
-  const root: Record<string, unknown> = isRecord(parsed) ? parsed : {};
-  const packagesRaw = root["packages"];
-  const packages: Record<string, unknown> = isRecord(packagesRaw)
-    ? packagesRaw
-    : {};
-  const workspacesRaw = root["workspaces"];
-  const workspaces: Record<string, unknown> = isRecord(workspacesRaw)
-    ? workspacesRaw
-    : {};
+  const root: Record<string, unknown> = asRecord(parsed) ?? {};
+  const packages: Record<string, unknown> = asRecord(root["packages"]) ?? {};
+  const workspaces: Record<string, unknown> =
+    asRecord(root["workspaces"]) ?? {};
 
   // Per-workspace direct declarations — the lockstep rule only applies when a
   // workspace declares BOTH halves of a pair directly. A transitive `react-dom`
@@ -232,8 +236,8 @@ async function checkLockfile(file: string): Promise<Violation[]> {
         });
       }
     } else {
-      const aMajors = new Set([...aVersions].map(major));
-      const bMajors = new Set([...bVersions].map(major));
+      const aMajors = new Set([...aVersions].map((v) => major(v)));
+      const bMajors = new Set([...bVersions].map((v) => major(v)));
       // Subset semantics: every pair.b major must have a matching pair.a major.
       const missingMajors = [...bMajors].filter((m) => !aMajors.has(m));
       if (missingMajors.length > 0) {
@@ -260,7 +264,7 @@ async function collect(pattern: string): Promise<string[]> {
 async function main(): Promise<void> {
   const lockfiles = await collect("**/bun.lock");
 
-  const results = await Promise.all(lockfiles.map(checkLockfile));
+  const results = await Promise.all(lockfiles.map((f) => checkLockfile(f)));
   const violations = results.flat();
 
   if (violations.length > 0) {

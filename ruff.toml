@@ -1,0 +1,29 @@
+# Root ruff config — lints every tracked .py file in the repo.
+# Run manually: uvx ruff check . (no automated trigger since CI/hooks were removed).
+
+target-version = "py312"
+line-length = 120
+
+exclude = [
+  "sandbox",
+  "node_modules",
+  ".venv",
+  ".claude",
+  # Vendored mupen64plus / libretro sources (python2-era upstream tooling).
+  "packages/discord-plays-mario-kart/wasm-src",
+]
+
+[lint]
+select = [
+  "E",   # pycodestyle errors (incl. E722 bare except)
+  "F",   # pyflakes
+  "W",   # pycodestyle warnings
+  "I",   # isort
+  "UP",  # pyupgrade
+  "B",   # flake8-bugbear
+  "SIM", # flake8-simplify
+  "RUF", # ruff-specific
+]
+
+[lint.per-file-ignores]
+# E501 long lines in inline uv-script dependency headers are fine.

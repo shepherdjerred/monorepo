@@ -112,6 +112,11 @@ export function parsePartyMon(bytes: Uint8Array): ParsedPartyMon | null {
 
   // personality % 24 is always in [0, 23] and the table has 24 rows.
   const positions = SUBSTRUCT_POSITIONS[personality % 24];
+  if (positions === undefined) {
+    throw new Error(
+      `Substruct positions out of range: ${String(personality % 24)}`,
+    );
+  }
   const growthOffset = positions[0] * SUBSTRUCT_SIZE;
   const species = decrypted.getUint16(growthOffset, true);
   if (species === 0 || species >= NUM_SPECIES) return null;

@@ -21,7 +21,12 @@ function newlyOwnedDex(prev: Uint8Array, next: Uint8Array): number[] {
   const numbers: number[] = [];
   const length = Math.min(prev.length, next.length);
   for (let byteIndex = 0; byteIndex < length; byteIndex++) {
-    const added = next[byteIndex] & ~prev[byteIndex] & 0xff;
+    const nextByte = next[byteIndex];
+    const prevByte = prev[byteIndex];
+    if (nextByte === undefined || prevByte === undefined) {
+      throw new Error(`Dex byte index out of range: ${String(byteIndex)}`);
+    }
+    const added = nextByte & ~prevByte & 0xff;
     if (added === 0) continue;
     for (let bit = 0; bit < 8; bit++) {
       if ((added >> bit) & 1) {
@@ -92,7 +97,7 @@ export function diffSnapshots(
 
   // Badges: each flag flipping 0→1.
   for (let i = 0; i < next.badges.length; i++) {
-    if (!prev.badges[i] && next.badges[i]) {
+    if (prev.badges[i] !== true && next.badges[i] === true) {
       events.push({ kind: "badge", badgeIndex: i });
     }
   }

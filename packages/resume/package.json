@@ -2,11 +2,8 @@
   "name": "@shepherdjerred/resume",
   "version": "1.0.0",
   "private": true,
-  "description": "LaTeX resume - built and deployed via Dagger + Buildkite",
+  "description": "LaTeX resume - built with xelatex, deployed manually",
   "scripts": {
-    "build": "xelatex resume.tex",
-    "lint": "true",
-    "test": "true",
-    "typecheck": "true"
+    "build": "xelatex resume.tex"
   }
 }

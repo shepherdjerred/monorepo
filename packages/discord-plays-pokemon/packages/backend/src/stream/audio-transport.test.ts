@@ -177,16 +177,14 @@ function haveTools(): boolean {
   return true;
 }
 
+// Gate only on tool availability (ffmpeg/ffprobe) or an explicit env opt-out.
+// When the tools are present the test runs for real; `skipIf` keeps CI green on
+// hosts without ffmpeg without ever unconditionally skipping.
 const SKIP = Bun.env.SKIP_AUDIO_STREAM_INTEGRATION === "1" || !haveTools();
 
-if (SKIP) {
-  describe.skip("audio stream integration (skipped: ffmpeg/ffprobe missing or env-skipped)", () => {
-    test("noop", () => {
-      expect(true).toBe(true);
-    });
-  });
-} else {
-  describe("audio stream integration vs synthetic Float32 input", () => {
+describe.skipIf(SKIP)(
+  "audio stream integration vs synthetic Float32 input",
+  () => {
     test("440 Hz sine survives transport + prepareStream + libopus encode", async () => {
       const inputPcm = syntheticSine(1.5);
       const nut = await renderBroadcast(inputPcm);
@@ -200,5 +198,5 @@ if (SKIP) {
       // would still fail loud on silence.
       expect(outRms).toBeGreaterThan(500);
     }, 60_000);
-  });
-}
+  },
+);

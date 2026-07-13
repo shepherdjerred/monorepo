@@ -232,6 +232,17 @@ export function createRelayDeployment(chart: Chart) {
           ],
           ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
         },
+        {
+          // Allow blackbox-exporter's in-cluster health probe
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
+        },
       ],
       egress: [
         {
@@ -273,6 +284,7 @@ export function createRelayDeployment(chart: Chart) {
   createCloudflareTunnelBinding(chart, "relay-cf-tunnel", {
     serviceName: service.name,
     fqdn: "relay.sjer.red",
+    port: 8080,
   });
 
   return { deployment, service, seaweedfsCreds, config };

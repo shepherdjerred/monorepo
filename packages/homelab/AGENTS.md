@@ -7,13 +7,12 @@ This is a Kubernetes homelab infrastructure monorepo using CDK8s for infrastruct
 - **Runtime**: Bun (not Node.js)
 - **Language**: TypeScript (strict mode)
 - **Infrastructure**: CDK8s for Kubernetes manifests
-- **CI/CD**: Dagger + Buildkite + Python CI scripts
+- **CI/CD**: none — the Dagger/Buildkite pipeline was removed 2026-07; run checks and deploys manually
 
 ## Workspaces
 
 - `src/cdk8s` - Kubernetes infrastructure as code
 - `src/helm-types` - Type-safe Helm chart parameter generator
-- `../../scripts/ci/src/` - TypeScript CI pipeline generator
 
 Home Assistant automations and the other migrated schedules (dependency summary,
 DNS audit, Better Skill Capped fetcher, golink sync) live in `packages/temporal`,
@@ -53,7 +52,7 @@ bun run prettier
 ### Formatting (Prettier)
 
 - Print width: 120 characters
-- Runs on all files via lint-staged
+- Run `bun run prettier` manually — there are no git hooks (removed 2026-07)
 
 ### TypeScript
 
@@ -127,10 +126,7 @@ When adding a new Kubernetes service/chart, you MUST complete ALL of these steps
    appVersion: "$appVersion"
    ```
 
-3. **Helm Charts List** - `../../scripts/ci/src/catalog.ts`
-   - Add `"{name}"` to the `HELM_CHARTS` array
-
-4. **ArgoCD Application** - `src/cdk8s/src/resources/argo-applications/{name}.ts`
+3. **ArgoCD Application** - `src/cdk8s/src/resources/argo-applications/{name}.ts`
    - Export a `create{Name}App(chart: Chart)` function
    - Wire up in `src/cdk8s/src/cdk8s-charts/apps.ts` (import + call)
 
@@ -152,8 +148,9 @@ synced secret's data keys are consumed via `secretKeyRef`/`envFrom`/volume mount
 
 A linter guarantees that **every referenced item and field actually exists in 1Password**,
 so a typo'd field name or a missing/renamed item is caught before deploy instead of failing
-the operator sync (or crashing the pod) at runtime. It runs offline (pre-commit + a blocking
-CI gate) by checking the synthesized references against a committed snapshot of vault
+the operator sync (or crashing the pod) at runtime. It runs offline — run it manually before
+committing (the pre-commit hook and CI gate that enforced it were removed 2026-07) — by
+checking the synthesized references against a committed snapshot of vault
 structure — `src/cdk8s/onepassword-vault-snapshot.json`, which holds **only sha256 hashes**
 of item ids/titles/field keys (no values, no plaintext names).
 
@@ -206,7 +203,9 @@ more and recreate the secret. (`stringData` auto-encodes once; the old chart dec
 twice, the new chart mounts the file so K8s only decodes once.) Upstream:
 github.com/1Password/connect-helm-charts#272.
 
-## Testing & Pre-commit Notes
+## Testing Notes
+
+(There are no pre-commit hooks or CI since 2026-07 — run these checks manually before committing.)
 
 ### Run tests with `bun run test`, not bare `bun test`
 
@@ -216,19 +215,16 @@ The `cd src/cdk8s` matters: many cdk8s tests read `config/homeassistant` via a
 CWD-relative path. Bare `bun test` from `packages/homelab` uses the wrong CWD and
 produces ~15 spurious failures, all reporting
 `ENOENT: no such file or directory, open 'config/homeassistant '` (note the trailing
-null byte) across unrelated test files — these are NOT real failures. The
-`homelab-typecheck` pre-commit hook already uses the script, so only ad-hoc local runs
-hit this.
+null byte) across unrelated test files — these are NOT real failures.
 
 ### `helm-template.test.ts` flakes under concurrent load
 
-Any commit touching `packages/homelab/` runs the `homelab-typecheck` pre-commit hook,
-which runs the full `bun test` suite. `src/cdk8s/src/helm-template.test.ts` ("should
+`src/cdk8s/src/helm-template.test.ts` ("should
 render all charts with helm template without errors") has a **5000ms per-test timeout**
-and renders ~29 charts via `helm template`; on `torvalds` it times out under heavy
-concurrent CI load (passes in ~7s when idle). It is not network-related (renders from
+and renders ~29 charts via `helm template`; it can time out under heavy
+concurrent load (passes in ~7s when idle). It is not network-related (renders from
 `dist/`, no fetch — distinct from the live-fetch `argocd-helm-render.test.ts`). Fix: just
-retry the commit — a trivial edit cannot change other charts' rendering.
+retry the run — a trivial edit cannot change other charts' rendering.
 
 ### `argocd-helm-render.test.ts` — transient upstream skips
 
@@ -244,8 +240,7 @@ expected. Run locally with `HELM_RENDER_TEST=1 bun test src/argocd-helm-render.t
 
 ## Git Workflow
 
-- Conventional commits and pre-commit checks are managed at monorepo root
-- Pre-commit checks run via root `lefthook.yml`
+- Use conventional commit messages (`type(scope): description`); nothing enforces them anymore (lefthook was removed 2026-07), so run lint/typecheck/tests yourself before committing
 
 ## Version Management
 
@@ -282,4 +277,4 @@ OpenTofu/Terraform state for the `src/tofu/*` stacks is stored in **SeaweedFS** 
 
 The `shepherdjerred/monorepo` branch rulesets and repo settings are OpenTofu-managed in `src/tofu/github/` (`rulesets.tf`, `repos.tf`). **Manual edits via `gh api`/the GitHub UI do not stick** — a `tofu apply` reconciles them away. To change required status checks, enforcement, or bypass actors, edit `rulesets.tf`.
 
-Required status checks are `required_check { context = "..." }` blocks under `rules { required_status_checks { ... } }`. Buildkite reports each pipeline step as a status context `buildkite/monorepo/pr/<safe-key>`; a context only exists on PR builds whose pipeline includes that step, so requiring a brand-new step's context would block all other PRs until that step reaches `main`. Routing the requirement through Tofu (applied on merge) makes enforcement land exactly when the step lands. Validate locally: `tofu -chdir=github init -backend=false && tofu -chdir=github validate`.
+Required status checks are `required_check { context = "..." }` blocks under `rules { required_status_checks { ... } }`. The `buildkite/monorepo/pr/*` required checks were removed 2026-07 along with the CI pipeline (see the comment in `rulesets.tf` for what remains). If a required check is ever reintroduced, route it through Tofu — requiring a context that doesn't yet exist on PR builds blocks every PR until the producer lands on `main`. Validate locally: `tofu -chdir=github init -backend=false && tofu -chdir=github validate`.

@@ -279,5 +279,6 @@ export function createPokemonDeployment(chart: Chart) {
   createCloudflareTunnelBinding(chart, "pokebot-cf-tunnel", {
     serviceName: uiService.name,
     subdomain: "pokebot",
+    port: WEB_PORT,
   });
 }

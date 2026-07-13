@@ -29,7 +29,7 @@ import {
 bunx ha-codegen --url $HA_URL --token $HA_TOKEN --out <path>.ts --name MySchema
 ```
 
-Generated output contains private entity IDs and service definitions and **must never be committed** — consumer packages gitignore the output path and regenerate in Dagger CI (same pattern as Prisma packages).
+Generated output contains private entity IDs and service definitions and **must never be committed** — consumer packages gitignore the output path and regenerate it at build time (same pattern as Prisma packages; there is no CI to do this since 2026-07, so regenerate manually where needed).
 
 ## Commands
 

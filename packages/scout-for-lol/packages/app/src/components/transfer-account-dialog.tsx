@@ -2,17 +2,19 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import type { RegionValue } from "#src/lib/regions.ts";
-import { Button } from "#src/components/ui/button.tsx";
 import { PlayerAliasCombobox } from "#src/components/player-alias-combobox.tsx";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "#src/components/ui/dialog.tsx";
 import { Label } from "#src/components/ui/label.tsx";
+import {
+  DialogFormError,
+  DialogFormFooter,
+} from "#src/components/dialog-form.tsx";
 
 /**
  * Transfer an account to another player (via `player.transferAccount`). The
@@ -78,24 +80,16 @@ export function TransferAccountDialog(props: {
             />
           </div>
 
-          {error !== null && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          <DialogFormError error={error} />
 
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                props.onOpenChange(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? "Transferring…" : "Transfer"}
-            </Button>
-          </DialogFooter>
+          <DialogFormFooter
+            pending={mutation.isPending}
+            submitLabel="Transfer"
+            pendingLabel="Transferring…"
+            onCancel={() => {
+              props.onOpenChange(false);
+            }}
+          />
         </form>
       </DialogContent>
     </Dialog>

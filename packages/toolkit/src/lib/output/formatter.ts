@@ -88,3 +88,15 @@ export function formatHealthReport(report: HealthReport): string {
 export function formatJson(data: unknown): string {
   return JSON.stringify(data, null, 2);
 }
+
+/**
+ * Loudly announce degraded behavior on stderr. Degradation must never be
+ * silent (or gated behind --verbose): the user should always know when a
+ * command ran with reduced capability and how to restore it.
+ */
+export function printDegradationWarning(
+  context: string,
+  message: string,
+): void {
+  console.error(`[${context}] DEGRADED: ${message}`);
+}
