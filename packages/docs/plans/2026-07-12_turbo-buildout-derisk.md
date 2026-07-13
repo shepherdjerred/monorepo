@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Partially Complete — all local de-risk items done; R2 round-trip blocked on user (tofu apply + S3 token).
 
 ## Context
 
@@ -82,3 +82,43 @@ Prove turbo's shim story on real native code:
 2. Tofu commit (homelab): R2 bucket + token resources (user-applied).
 3. Replatform plan doc updated: audit tables, R2 round-trip results, go/no-go checklist for Phase 2.
 4. Chat summary of any NEW risks found (or confirmation none).
+
+## Results (2026-07-12 execution)
+
+| Item | Result |
+| --- | --- |
+| Production turbo.json | Landed: `.mise.toml`/`bunfig.toml`/`patches/**` globalDependencies, exact 2.10.4 pin, 6 package-level `turbo.json` overrides (report/home-assistant `outputs: []`, resume pdf, birmel test `cache:false` — gitignored `.env.test` is unhashable, scout-backend test `env: DATABASE_URL`). `daemon` key dropped (2.10 no longer uses a daemon for `run`) |
+| Env-hash correctness | PROVEN: declared `DATABASE_URL` flip → MISS; undeclared var → HIT. Full scout-backend suite replays in 81 ms |
+| generate split | `generate:live` (temporal, helm-types; `cache:false`, no default chain) vs cached `generate` (birmel, scout-backend, dpmk-backend). Verified temporal typecheck self-manages via stub |
+| Native shim (rust) | `cargo fmt` + `clippy` in the graph via shim package.json. **Clippy: ~1m40s cold → 164 ms cached (FULL TURBO)** — the expensive-check case proven. Two prerequisites found: tauri's `generate_context!` needs `../dist` to exist (placeholder `index.html` suffices; Phase 2 wires a dependsOn or keeps the convention) |
+| **Finding: nested-package `--affected` is broken in turbo 2.10.4** | Three code paths, three answers for a file in a package-inside-package: `turbo ls --affected` → correct (deepest); `run --affected` tasks → parent package; dry-run `.packages` → umbrella. **Under-selects the nested package's own tasks (unsafe direction).** Cache keys ARE correct (`.rs` edit busts the shim's hash) → workaround: native shim tasks run unconditionally, cache absorbs (76-164 ms replays). Phase-1 options: de-nest the crate, or live with unconditional runs. Worth an upstream issue |
+| WASM (pokeemerald) | Deferred by design: the wasm was built from source in the removed CI image (custom audio patches); no local build path exists today. Phase-2 design: shim package + dockerized emscripten build + `outputs: ["*.wasm"]`, remote-cached — identical pattern to the rust shim |
+| Test sample | 6 hermetic packages (webring, llm-models, eslint-config, tasknotes-types, home-assistant, trmnl-dashboard): 8/8 tasks pass, rerun FULL TURBO 82 ms |
+| Root tasks | `//#check-todos`, `//#check-suppressions`, `//#markdownlint` wired with scoped inputs; `scripts/` added as a workspace member (its deps were never installed under the workspace — zod failure found). check-todos correctly caught a real violation: `discord-stream-lifecycle/bunfig.toml:8` marker `todo:bun-isolated-linker-eexist` has no doc on this branch (Phase-1 reconcile) |
+| Root fan-out scripts | DELETED from root package.json (build/test/typecheck/lint) — closes the bun walk-up hazard on the spike branch |
+| Final sweep | `typecheck --continue -c 2` (umbrellas excluded): **50/56 pass, 24 s wall** — failures reduced 8 → 6 vs baseline (both live-generate failures eliminated); remaining 6 = the 3 known Phase-1 root causes. No regressions |
+| R2 | `cloudflare_r2_bucket.turbo_cache` + 30-day lifecycle written and `tofu validate`-clean (`packages/homelab/src/tofu/cloudflare/turbo-cache.tf`). **BLOCKED on user**: `tofu apply` + mint bucket-scoped S3 token; then rerun the proven ducktors round-trip against R2 |
+| Machine safety | Entire execution foreground/bounded; process count flat; zero incidents |
+
+## Phase-2 go/no-go checklist
+
+- [x] Production config exists and is exercised (this branch)
+- [x] Caching correctness: inputs, outputs, env all verified
+- [x] Native/polyglot story workable (shim + unconditional runs + cache)
+- [x] Live-codegen isolated from default chains
+- [x] Root checks in the graph; root fan-out scripts deletable
+- [ ] R2 storage round-trip (user steps above, then ~10 min of verification)
+- [ ] Phase-1 fixups: dpp/dpmk-common rootDir, scout-backend duckdb build, cooklang bun-types, anki scripts, check-todos doc reconcile, home-assistant build outDir
+
+## Session Log — 2026-07-12 (execution)
+
+### Done
+- All plan items executed except the R2 half of item 4 (user-blocked). Commits on `spike/workspace-taskgraph`: c13080063 (config), 2753f05a8 (rust shim), a53a1ccf8 (tofu), 9071cb5b6 (root tasks). Docs mirrored + updated on `feature/rip-setup` (PR #1517).
+
+### Remaining
+- User: `tofu apply` in `packages/homelab/src/tofu/cloudflare` (spike worktree) + mint R2 S3 token → then I rerun the ducktors round-trip against R2 and check the box.
+- Consider filing the nested-package `--affected` bug upstream (vercel/turborepo) with the three-code-paths repro.
+
+### Caveats
+- The spike branch now intentionally diverges from #1408 (generate renames, root script deletions, shim) — Phase 1 should treat the spike as the reference implementation for these changes, not merge it blindly.
+- check-todos left failing on the branch (real violation, honest signal).
