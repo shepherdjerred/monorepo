@@ -1,6 +1,4 @@
 [tools]
-# renovate: datasource=github-releases depName=oven-sh/bun
-bun = "1.3.14"
 python = "3.14.6"
 
 [tasks.dev]
