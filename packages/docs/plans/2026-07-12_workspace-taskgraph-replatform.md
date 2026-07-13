@@ -126,6 +126,21 @@ The per-project inventory loop crashed the MacBook (fork exhaustion → reboot).
 2. Until then, umbrella projects are excluded from inherited runner tasks.
 3. Repo-wide sweeps: one at a time, foreground, `-c 2`, with process-count monitoring — and never while other agent sessions are active. (Reaffirms the 2026-07-11 jetsam log.)
 
+## turbo build-out (2026-07-12, same spike branch — parity pass after the moon build-out)
+
+Turbo brought to the same fidelity as moon for a fair final comparison:
+
+| Check | Result |
+| --- | --- |
+| Script-less projects | **No config needed** — dry-run marks them `<NONEXISTENT>`, execution runs 0 tasks. No walk-up hazard (turbo never invokes missing scripts), no opt-out files |
+| Umbrella packages | Still hazardous under turbo too (they have real fan-out scripts) — excluded via `--filter='!…'`; migration deletes those scripts regardless of runner |
+| Full sweep | **One invocation**: `turbo run typecheck --continue --concurrency=2` + umbrella filters → 57 tasks in 33 s, machine flat. (`--continue` exists; moon's `run` bails and needed a chunked external loop) |
+| Inventory parity | Same 4 root causes as moon, **plus 2 turbo-only finds**: `temporal#generate` and `helm-types#generate` fail because they need **live credentials** (HA, chart repos). Lesson for either runner: split local codegen (Prisma) from live codegen — only the former belongs in the default `typecheck`/`test` dependency chain (temporal's own typecheck already self-manages via its stub) |
+| Remote cache | **Round-trip verified** against dockerized ducktors server (request log: PUT 200 on miss → GET 200 from a cold client). Caveat: turbo ≥2.10's shared worktree cache physically lives in the **main checkout's** `.turbo/cache`, which worktree runs write into — harmless but surprising, and it complicates cold-cache testing |
+| Config polish needed | `outputs` warnings for `report`/`home-assistant` builds (declared outputs don't match what the scripts emit) |
+
+**Final config bill:** turbo = 1 file + filter hygiene, zero per-project exceptions. moon = 1 workspace tasks file + ~8–17 per-project files + merge-semantics discipline (+ `installDependencies: false` mandatory). Both have verified self-hosted remote caches. moon's polyglot graph and REAPI cache remain its unique wins; turbo's operational simplicity and `--continue`/no-walk-up semantics are its. Both PoCs are committed on `spike/workspace-taskgraph`, so Phase 2 can land either runner from a working reference.
+
 ## Design decisions
 
 | # | Decision | Rationale |
