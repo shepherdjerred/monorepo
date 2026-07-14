@@ -28,7 +28,6 @@
   "dependencies": {
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/core": "^2.7.1",
-    "@opentelemetry/sdk-trace": "^2.9.0",
     "@opentelemetry/sdk-trace-base": "^2.9.0",
     "@opentelemetry/semantic-conventions": "^1.40.0",
     "zod": "^4.4.3"
@@ -69,6 +68,8 @@
     "@tsconfig/recommended": "^1.0.13",
     "@tsconfig/strictest": "^2.0.8",
     "@types/bun": "^1.2.0",
+    "eslint": "^10.7.0",
+    "jiti": "^2.7.0",
     "msw": "^2.6.0",
     "openai": "^6.34.0",
     "typescript": "^6.0.0"

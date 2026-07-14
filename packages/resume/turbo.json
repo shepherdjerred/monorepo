@@ -3,6 +3,10 @@
   "extends": ["//"],
   "tasks": {
     "build": {
+      // The tracked resume.pdf is this task's OUTPUT — xelatex output is
+      // nondeterministic (embeds CreationDate), so hashing it as an input
+      // self-invalidates the task on every run.
+      "inputs": ["$TURBO_DEFAULT$", "!resume.pdf"],
       "outputs": ["*.pdf"]
     }
   }

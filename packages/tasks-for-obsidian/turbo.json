@@ -1,0 +1,18 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // Every RN native module must be linked in the iOS project (old CI:
+    // tasks-for-obsidian-ios-native-deps). Runs against the workspace install —
+    // the legacy per-package hoisted-install dance is no longer needed.
+    "check:ios-native-deps": {
+      "inputs": [
+        "package.json",
+        "ios/**",
+        "!ios/Pods/**",
+        "!ios/build/**",
+        "scripts/check-ios-native-deps.ts"
+      ]
+    }
+  }
+}

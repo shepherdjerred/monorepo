@@ -24,21 +24,21 @@ Inventory status (verified this session against spike-ws + git history):
 
 Every check becomes a root turbo task with scoped `inputs` so it caches; root `package.json` gets the script, `turbo.json` gets the `//#` entry.
 
-| Task | Command | Inputs scope |
-| --- | --- | --- |
-| `//#prettier` | `prettier --check .` | `**/*` minus ignores (respects .prettierignore) |
-| `//#shellcheck` | shellcheck over `**/*.sh` (rewrite trivial wrapper, exclude archive) | `**/*.sh` |
-| `//#knip` | `knip --no-config-hints` | ts/js sources + knip.json |
-| `//#gitleaks` | `gitleaks detect --no-git` (working-tree scan as before) | `**/*` |
-| `//#jscpd` 🆕 | `jscpd` with new root config (thresholds tuned on first run; exclude sandbox/archive/generated) | source globs |
-| `//#quality-ratchet` | `bun scripts/quality-ratchet.ts` — restore a **committed** baseline (old one was runtime-generated; commit it so the check is deterministic) | sources + baseline |
-| `//#compliance-check` | `bash scripts/compliance-check.sh` | `packages/*/package.json` |
-| `//#lockfile-check` | `bun install --frozen-lockfile --dry-run` (recreate; verify dry-run catches drift, else tmp-dir install) | `bun.lock`, all package.json |
-| `//#merge-conflicts` | recover script from `4f11973dc^` | `**/*` |
-| `//#env-var-names`, `//#line-endings`, `//#react-version-sync`, `//#large-files`, `//#migration-guard` | existing scripts | scoped per check |
-| `//#ruff` | `uvx ruff check .` | `**/*.py`, ruff.toml |
-| `//#pyright` | `bash scripts/pyright-check.sh` | `**/*.py`, pyrightconfig.json |
-| `//#talos-schematic-sync` | recover logic from old tree | homelab talos files |
+| Task                                                                                                   | Command                                                                                                                                      | Inputs scope                                    |
+| ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `//#prettier`                                                                                          | `prettier --check .`                                                                                                                         | `**/*` minus ignores (respects .prettierignore) |
+| `//#shellcheck`                                                                                        | shellcheck over `**/*.sh` (rewrite trivial wrapper, exclude archive)                                                                         | `**/*.sh`                                       |
+| `//#knip`                                                                                              | `knip --no-config-hints`                                                                                                                     | ts/js sources + knip.json                       |
+| `//#gitleaks`                                                                                          | `gitleaks detect --no-git` (working-tree scan as before)                                                                                     | `**/*`                                          |
+| `//#jscpd` 🆕                                                                                          | `jscpd` with new root config (thresholds tuned on first run; exclude sandbox/archive/generated)                                              | source globs                                    |
+| `//#quality-ratchet`                                                                                   | `bun scripts/quality-ratchet.ts` — restore a **committed** baseline (old one was runtime-generated; commit it so the check is deterministic) | sources + baseline                              |
+| `//#compliance-check`                                                                                  | `bash scripts/compliance-check.sh`                                                                                                           | `packages/*/package.json`                       |
+| `//#lockfile-check`                                                                                    | `bun install --frozen-lockfile --dry-run` (recreate; verify dry-run catches drift, else tmp-dir install)                                     | `bun.lock`, all package.json                    |
+| `//#merge-conflicts`                                                                                   | recover script from `4f11973dc^`                                                                                                             | `**/*`                                          |
+| `//#env-var-names`, `//#line-endings`, `//#react-version-sync`, `//#large-files`, `//#migration-guard` | existing scripts                                                                                                                             | scoped per check                                |
+| `//#ruff`                                                                                              | `uvx ruff check .`                                                                                                                           | `**/*.py`, ruff.toml                            |
+| `//#pyright`                                                                                           | `bash scripts/pyright-check.sh`                                                                                                              | `**/*.py`, pyrightconfig.json                   |
+| `//#talos-schematic-sync`                                                                              | recover logic from old tree                                                                                                                  | homelab talos files                             |
 
 Package-scoped check tasks (not root): scout-backend `check:template` (recover scout-test-template logic), homelab `check:1password` + `check:tunnel-dns` (scripts exist; add `env` for creds or mark `generate:live`-style if they need live access — verify each; anything needing live creds goes in a `check:live` task outside default chains).
 
@@ -105,14 +105,14 @@ All recovered from `.dagger/src/release.ts` logic, reimplemented as plain bun sc
 
 **Performance benchmarks (recorded in the plan doc as tables):**
 
-| Metric | Old baseline | How measured new |
-| --- | --- | --- |
+| Metric                                                       | Old baseline                                                                    | How measured new                                                               |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | PR verify wall time (docs-only / single-pkg / cross-cutting) | pull old build durations from Buildkite API (historical builds still queryable) | BK build time once live; locally `time bun run verify --affected` per scenario |
-| Repo-wide check sweep | old quality bundle step time | `time turbo run <//# tasks>` cold vs warm |
-| Pods per build | ~1,100 pods/hr fleet-wide | count steps in new pipeline (target: ≤5 per PR) |
-| Pre-commit hook latency | old lefthook (re-ran everything) | `time` warm/cold; gate < 5 s warm |
-| Image build | old Dagger build times (BK API) | buildx cold vs registry-cache warm, per image |
-| Fresh worktree → green verify | old: setup.ts (~minutes) + full run | `time (bun install && bun run verify)` with remote cache |
+| Repo-wide check sweep                                        | old quality bundle step time                                                    | `time turbo run <//# tasks>` cold vs warm                                      |
+| Pods per build                                               | ~1,100 pods/hr fleet-wide                                                       | count steps in new pipeline (target: ≤5 per PR)                                |
+| Pre-commit hook latency                                      | old lefthook (re-ran everything)                                                | `time` warm/cold; gate < 5 s warm                                              |
+| Image build                                                  | old Dagger build times (BK API)                                                 | buildx cold vs registry-cache warm, per image                                  |
+| Fresh worktree → green verify                                | old: setup.ts (~minutes) + full run                                             | `time (bun install && bun run verify)` with remote cache                       |
 
 **Success criteria**: all parity rows green; single-package PR verify < 5 min; docs-only PR < 2 min; warm hooks < 5 s; no wrong-cache-hit found in spot checks.
 

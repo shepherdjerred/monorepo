@@ -1,0 +1,25 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // Every cdk8s OnePasswordItem reference + consumed field must exist in the
+    // committed vault snapshot. Offline — no live 1Password access.
+    "check:1password": {
+      "inputs": [
+        "src/**/*.ts",
+        "scripts/check-1password-items.ts",
+        "onepassword-vault-snapshot.json"
+      ]
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    // Tests read the synth output; the inline `bun run build &&` was dropped
+    // from the script so turbo orders (and caches) the synth instead.
+    "test": {
+      "dependsOn": ["build", "^build", "generate"],
+      "env": ["NODE_ENV"]
+    }
+  }
+}
