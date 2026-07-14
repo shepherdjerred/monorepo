@@ -1,0 +1,6 @@
+apiVersion: v2
+name: turbo-cache
+description: Self-hosted Turborepo remote cache (ducktors/turborepo-remote-cache) backed by Cloudflare R2
+type: application
+version: "$version"
+appVersion: "$appVersion"

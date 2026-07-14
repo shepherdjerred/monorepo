@@ -33,6 +33,18 @@
       "dependsOn": ["^build"],
       "cache": false
     },
+    // Container image build (docker buildx --load, tag <name>:dev). BuildKit's
+    // layer cache is the cache layer here, not turbo — a turbo "hit" that skips
+    // the docker invocation could mask a broken Dockerfile.
+    "docker:build": {
+      "cache": false
+    },
+    // Boots the freshly-built :dev image and asserts on startup behavior
+    // (health endpoint or expected clean auth-failure) — old CI's smoke tests.
+    "smoke": {
+      "dependsOn": ["docker:build"],
+      "cache": false
+    },
     // ─── Root repo-wide checks (run via `bun run verify` or `turbo run <name>`).
     // Inputs are scoped so each check only re-runs when files it actually
     // reads change. Explicit input globs hash gitignored files too, so the

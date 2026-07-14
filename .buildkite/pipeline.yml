@@ -1,0 +1,244 @@
+# Static Buildkite pipeline — no generator. `turbo --affected` + the remote
+# cache replace the old dynamic pipeline's change detection: every build runs
+# the same steps, and unchanged work replays from cache in milliseconds.
+#
+# Invariant (scope-creep guard): CI runs nothing besides `mise install`,
+# `bun install`, `turbo run …` (via `bun run verify`), `docker buildx`, and
+# the thin deploy scripts. If a step needs more, fix the task graph instead.
+
+agents:
+  queue: default
+
+# Every step runs in the toolchain image baked from .mise.toml
+# (.buildkite/ci-image) — same tool versions as every laptop.
+common:
+  - pod: &pod
+      kubernetes:
+        checkout:
+          # Full clone: turbo --affected needs the merge-base with main.
+          cloneFlags: "--no-tags"
+        podSpecPatch:
+          serviceAccountName: buildkite-agent-stack-k8s-controller
+          containers:
+            - name: container-0
+              image: "ghcr.io/shepherdjerred/ci-base:latest"
+              resources:
+                requests: { cpu: "2", memory: "4Gi" }
+                limits: { cpu: "7", memory: "12Gi" }
+              envFrom:
+                - secretRef: { name: buildkite-ci-secrets }
+  - pod_privileged: &pod_privileged
+      kubernetes:
+        checkout:
+          cloneFlags: "--no-tags"
+        podSpecPatch:
+          serviceAccountName: buildkite-agent-stack-k8s-controller
+          containers:
+            - name: container-0
+              image: "ghcr.io/shepherdjerred/ci-base:latest"
+              securityContext: { privileged: true }
+              resources:
+                requests: { cpu: "2", memory: "6Gi" }
+                limits: { cpu: "7", memory: "14Gi" }
+              envFrom:
+                - secretRef: { name: buildkite-ci-secrets }
+  - retry: &retry
+      automatic:
+        # Transient infra failures only; logical failures (1, 3) never retry.
+        - exit_status: 255
+          limit: 2
+        - exit_status: 34
+          limit: 2
+        - exit_status: -1
+          limit: 2
+
+env:
+  TURBO_SCM_BASE: "origin/main"
+  TURBO_TELEMETRY_DISABLED: "1"
+
+steps:
+  # ── Verify: the whole task graph + every repo check, affected-scoped ──────
+  - label: ":turborepo: verify"
+    key: verify
+    command: |
+      bun install --frozen-lockfile
+      bun run verify -- --affected --concurrency=6 --output-logs=errors-only
+    retry: *retry
+    plugins:
+      - *pod
+
+  # ── Soft-fail lane (parallel with everything) ─────────────────────────────
+  - label: ":shield: trivy"
+    soft_fail: true
+    command: trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 .
+    plugins:
+      - kubernetes:
+          checkout:
+            cloneFlags: "--depth=1"
+          podSpecPatch:
+            containers:
+              - name: container-0
+                image: "aquasec/trivy:latest"
+                resources:
+                  requests: { cpu: "500m", memory: "1Gi" }
+
+  - label: ":mag: semgrep"
+    soft_fail: true
+    command: semgrep scan --config auto --error .
+    plugins:
+      - kubernetes:
+          checkout:
+            cloneFlags: "--depth=1"
+          podSpecPatch:
+            containers:
+              - name: container-0
+                image: "semgrep/semgrep:latest"
+                resources:
+                  requests: { cpu: "500m", memory: "1Gi" }
+
+  - label: ":robot_face: greptile review gate"
+    if: build.branch != pipeline.default_branch
+    soft_fail: true
+    command: bun scripts/wait-for-greptile.ts
+    plugins:
+      - *pod
+
+  # ── PR-only: read-only infra plan ─────────────────────────────────────────
+  - label: ":terraform: tofu plan"
+    if: build.branch != pipeline.default_branch
+    depends_on: verify
+    command: |
+      bun install --frozen-lockfile
+      for stack in seaweedfs tailscale buildkite arr pagerduty github cloudflare; do
+        bun packages/homelab/scripts/tofu-stack.ts "$stack" plan
+      done
+    retry: *retry
+    plugins:
+      - *pod
+
+  # ── Main-only: images (build + smoke + push, serial per image) ───────────
+  - label: ":docker: images — build, smoke, push"
+    key: images
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    concurrency: 1
+    concurrency_group: monorepo/image-push
+    command: |
+      bun install --frozen-lockfile
+      bash .buildkite/scripts/build-smoke-push-all.sh
+    retry: *retry
+    plugins:
+      - *pod_privileged
+
+  # ── Main-only: static sites ───────────────────────────────────────────────
+  - label: ":rocket: deploy sites"
+    key: sites
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    concurrency: 1
+    concurrency_group: monorepo/site-deploys
+    command: |
+      bun install --frozen-lockfile
+      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red scout-frontend scout-frontend-beta better-skill-capped glitter; do
+        bun scripts/deploy-site.ts "$site"
+      done
+    retry: *retry
+    plugins:
+      - *pod
+
+  # ── Main-only: npm publishes ──────────────────────────────────────────────
+  - label: ":npm: publish packages"
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    command: |
+      bun install --frozen-lockfile
+      bun run --cwd packages/astro-opengraph-images publish:npm
+      bun run --cwd packages/webring publish:npm
+      bun run --cwd packages/homelab/src/helm-types publish:npm
+    retry: *retry
+    plugins:
+      - *pod
+
+  # ── Main-only: homelab release track ─────────────────────────────────────
+  - label: ":helm: helm push"
+    key: helm-push
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    command: |
+      bun install --frozen-lockfile
+      bun packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER"
+    retry: *retry
+    plugins:
+      - *pod
+
+  - label: ":terraform: tofu apply (infra stacks)"
+    key: tofu-apply
+    if: build.branch == pipeline.default_branch
+    depends_on: [verify, helm-push]
+    command: |
+      bun install --frozen-lockfile
+      for stack in seaweedfs tailscale buildkite arr pagerduty; do
+        bun packages/homelab/scripts/tofu-stack.ts "$stack" apply
+      done
+    retry: *retry
+    plugins:
+      - *pod
+
+  - label: ":terraform: tofu apply (github)"
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    concurrency: 1
+    concurrency_group: monorepo/tofu-github
+    # No automatic retry: GitHub API mutations are not idempotent on partial
+    # failure (same policy as the old pipeline).
+    command: |
+      bun install --frozen-lockfile
+      bun packages/homelab/scripts/tofu-stack.ts github apply
+    plugins:
+      - *pod
+
+  - label: ":argo: sync + wait"
+    key: argocd-sync
+    if: build.branch == pipeline.default_branch
+    depends_on: [images, helm-push, tofu-apply]
+    command: |
+      bun install --frozen-lockfile
+      bun packages/homelab/scripts/argocd.ts sync apps
+      bun packages/homelab/scripts/argocd.ts health-wait apps --timeout 300
+    retry: *retry
+    plugins:
+      - *pod
+
+  - label: ":terraform: tofu apply (cloudflare, after tunnel gate)"
+    if: build.branch == pipeline.default_branch
+    depends_on: argocd-sync
+    concurrency: 1
+    concurrency_group: monorepo/tofu-cloudflare
+    # Fail-closed: the SeaweedFS TunnelBinding finalizer must complete before
+    # the Cloudflare DNS tunnel route is removed (same gate as the old CI).
+    command: |
+      bun install --frozen-lockfile
+      bun packages/homelab/scripts/argocd.ts wait-deletion apps --group networking.cfargotunnel.com --version v1alpha1 --kind TunnelBinding --namespace seaweedfs --timeout 120
+      bun packages/homelab/scripts/tofu-stack.ts cloudflare apply
+    plugins:
+      - *pod
+
+  # ── Main-only: release automation ─────────────────────────────────────────
+  - label: ":package: release-please + version commit-back"
+    if: build.branch == pipeline.default_branch
+    depends_on: [images, sites]
+    command: |
+      bun install --frozen-lockfile
+      bun scripts/release.ts
+      bun scripts/update-versions.ts
+    plugins:
+      - *pod
+
+  # ── Toolchain image refresh (only when .mise.toml or the Dockerfile moved) ─
+  - label: ":docker: ci-image refresh"
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    command: bash .buildkite/scripts/build-ci-image.sh
+    retry: *retry
+    plugins:
+      - *pod_privileged

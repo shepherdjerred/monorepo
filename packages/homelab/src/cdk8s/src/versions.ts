@@ -165,6 +165,11 @@ const versions = {
   // renovate: datasource=docker registryUrl=https://ghcr.io/buildkite/helm versioning=semver packageName=agent-stack-k8s
   "agent-stack-k8s":
     "0.45.0@sha256:82920b774ff106d40ab961c23ed623fd253780c68f6311d0152b73d1033708f3",
+  // Self-hosted Turborepo remote cache (backs the workspace task-graph
+  // replatform — packages/docs/plans/2026-07-12_workspace-taskgraph-replatform.md).
+  // renovate: datasource=docker registryUrl=https://docker.io versioning=semver
+  "ducktors/turborepo-remote-cache":
+    "2.11.2@sha256:99634a04eba43c839fb96f3e60bf0012b59abe1e6889153580493a840aad7ad0",
   // renovate: datasource=docker registryUrl=https://registry.k8s.io versioning=semver packageName=kueue/charts/kueue
   kueue:
     "0.18.2@sha256:156fbc8c6752b08cf66a2324fed33e269e0a64e54dd8d70d51118065bca651af",

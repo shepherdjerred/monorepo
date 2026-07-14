@@ -46,6 +46,18 @@
       "datasourceTemplate": "git-refs",
       "depNameTemplate": "pokeemerald",
       "packageNameTemplate": "https://github.com/ottohg/pokeemerald-wasm"
+    },
+    {
+      "customType": "regex",
+      "description": "redlib source pin \u2014 track upstream main HEAD for the image build (ARG REDLIB_SOURCE_REF)",
+      "managerFilePatterns": ["packages/homelab/images/redlib/Dockerfile"],
+      "matchStrings": [
+        "# renovate: datasource=git-refs depName=redlib-source branch=main\\nARG REDLIB_SOURCE_REF=(?<currentDigest>[a-f0-9]{40})"
+      ],
+      "datasourceTemplate": "git-refs",
+      "depNameTemplate": "redlib-source",
+      "packageNameTemplate": "https://github.com/redlib-org/redlib",
+      "currentValueTemplate": "main"
     }
   ],
   "customDatasources": {

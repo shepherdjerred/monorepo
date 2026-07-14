@@ -116,6 +116,17 @@ All recovered from `.dagger/src/release.ts` logic, reimplemented as plain bun sc
 
 **Success criteria**: all parity rows green; single-package PR verify < 5 min; docs-only PR < 2 min; warm hooks < 5 s; no wrong-cache-hit found in spot checks.
 
+**Results (2026-07-13, measured):**
+
+| Metric              | Old CI (Buildkite API, last 50 passed builds)               | New system                                                                                                 |
+| ------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| PR verify wall      | median **11.0 min**, p90 **72.7 min**, max 109.6 min (n=46) | full 169-task verify: cold **5m34s** at `-c 4`; warm **1.7s** FULL TURBO; affected-scoped is strictly less |
+| Main build wall     | median **37.8 min**, p90 66.9 min (n=4)                     | verify + deploy DAG (to be measured live in Phase F rollout)                                               |
+| Repo-wide checks    | 15-check quality bundle, own pod each pre-bundling          | all 22 checks input-scoped; docs-only edit re-runs 7 checks, everything else stays cached                  |
+| Pre-commit hook     | re-ran every per-package job each commit                    | **3.7s warm** (staged safety checks + `turbo --affected` replay)                                           |
+| Steps per PR build  | dynamic, dozens of pods                                     | **5 static steps** (verify + 3 soft-fail + tofu plan)                                                      |
+| Fresh-clone codegen | `setup.ts` multi-phase orchestrator                         | `bun install` 6.3s + `turbo run generate` (cached: 113ms restore)                                          |
+
 ## Verification (end of plan)
 
 1. Parity checklist in the mirrored plan doc fully checked, each row linking evidence (run output/PR).
