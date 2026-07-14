@@ -1215,6 +1215,9 @@
         "typescript": "^6.0.3",
       },
     },
+    "packages/terraform-provider-asuswrt": {
+      "name": "@shepherdjerred/terraform-provider-asuswrt",
+    },
     "packages/toolkit": {
       "name": "@shepherdjerred/toolkit",
       "version": "0.1.0",
@@ -3095,6 +3098,8 @@
     "@shepherdjerred/streambot": ["@shepherdjerred/streambot@workspace:packages/streambot"],
 
     "@shepherdjerred/temporal": ["@shepherdjerred/temporal@workspace:packages/temporal"],
+
+    "@shepherdjerred/terraform-provider-asuswrt": ["@shepherdjerred/terraform-provider-asuswrt@workspace:packages/terraform-provider-asuswrt"],
 
     "@shepherdjerred/toolkit": ["@shepherdjerred/toolkit@workspace:packages/toolkit"],
 

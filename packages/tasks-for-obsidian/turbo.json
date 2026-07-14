@@ -13,6 +13,11 @@
         "!ios/build/**",
         "scripts/check-ios-native-deps.ts"
       ]
+    },
+    // swiftlint --strict, same as the old CI swift-lint step. Needs the
+    // swiftlint binary (mise optional tool set / CI toolchain image).
+    "lint:swift": {
+      "inputs": ["ios/**/*.swift", ".swiftlint.yml"]
     }
   }
 }

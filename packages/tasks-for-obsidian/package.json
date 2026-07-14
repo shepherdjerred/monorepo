@@ -15,7 +15,8 @@
     "check:ios-native-deps": "bun scripts/check-ios-native-deps.ts",
     "pod-install": "cd ios && pod install",
     "clean:ios": "bash scripts/clean-ios.sh",
-    "ios:logs": "bash scripts/ios-logs.sh"
+    "ios:logs": "bash scripts/ios-logs.sh",
+    "lint:swift": "swiftlint lint --strict --quiet ios/TasksForObsidian ios/TasksWidget"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^3.0.2",
