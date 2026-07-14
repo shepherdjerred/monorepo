@@ -47,7 +47,9 @@
     "test:headed": "echo 'Playwright tests disabled'",
     "test:report": "echo 'Playwright tests disabled'",
     "test:install": "echo 'Playwright tests disabled'",
-    "typecheck": "astro check && bunx tsc --noEmit"
+    "typecheck": "astro check && bunx tsc --noEmit",
+    "deploy": "bun ../../../../scripts/deploy-site.ts scout-frontend",
+    "deploy:beta": "bun ../../../../scripts/deploy-site.ts scout-frontend-beta"
   },
   "type": "module",
   "version": "0.0.1",

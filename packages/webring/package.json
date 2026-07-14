@@ -25,7 +25,9 @@
     "test": "bun test src/",
     "test:update": "bun test src/ --update-snapshots",
     "typedoc": "typedoc src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deploy": "bun ../../scripts/deploy-site.ts webring",
+    "publish:npm": "bun ../../scripts/publish-npm.ts ."
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

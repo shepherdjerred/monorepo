@@ -10,7 +10,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "typecheck": "tsc --noEmit",
-    "lint": "astro check"
+    "lint": "astro check",
+    "deploy": "bun ../../scripts/deploy-site.ts stocks-sjer-red"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",

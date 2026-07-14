@@ -29,7 +29,8 @@
     "lint:fix": "bunx eslint . --fix",
     "typecheck": "bunx tsc --noEmit",
     "prepublishOnly": "bun run build",
-    "generate:live": "bun run src/cli.ts"
+    "generate:live": "bun run src/cli.ts",
+    "publish:npm": "bun ../../../../scripts/publish-npm.ts ."
   },
   "keywords": [
     "helm",

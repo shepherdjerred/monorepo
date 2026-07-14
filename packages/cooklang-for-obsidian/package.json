@@ -8,7 +8,8 @@
     "build": "bun esbuild.config.mjs production",
     "lint": "eslint src --cache",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "publish:plugin": "bun scripts/publish.ts"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.10.6",
