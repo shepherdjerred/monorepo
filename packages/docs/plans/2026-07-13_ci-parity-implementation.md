@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress — branch `feature/ci-parity` (stacked on `spike/workspace-taskgraph`, PR #1518). Single-PR delivery per user direction.
+Complete (pending review) — branch `feature/ci-parity` (stacked on `spike/workspace-taskgraph`, PR #1518). Single-PR delivery per user direction. Final verify: **174/174 tasks green**.
 
 ## Context
 
@@ -138,3 +138,30 @@ All recovered from `.dagger/src/release.ts` logic, reimplemented as plain bun sc
 - Migrating sandbox/practice (Java) into CI — matches old behavior.
 - Multi-arch images, image signing — old CI didn't do them either.
 - Replacing Temporal helm-types weekly refresh with a per-PR check.
+
+## Session Log — 2026-07-14
+
+### Done
+
+- Phase A: 22 repo-wide checks as input-scoped turbo tasks + `bun run verify` (169→174 tasks, FULL TURBO warm replay 1.7s; docs-only edit re-runs 7 checks). knip-driven real cleanup (dead OTel/tracing vestiges, cors/xstate/@sentry deps, tasknotes counters wired at repo layer, finished codemods + run-package-script.ts deleted). jscpd added (3% ratchet).
+- Phase B: Go shim (terraform-provider-asuswrt, workspace #47), swiftlint --strict (6 violations fixed), Playwright test:e2e proven (110 pass), resume PDF cache round-trip (75ms restore).
+- Phase C: lefthook reinstated, turbo-powered (warm pre-commit ~3.7s; pre-push = verify --affected). Hooks caught real violations during this session (lint errors, invalid commit scope, banned-pattern comments) — working as intended. large-files check rewritten bash→Bun (39s→0.1s).
+- Phase D: all 14 images Dockerized + smoke-passed locally (6 Bun apps, scout/dpp/dpmk with in-image wasm toolchains, 4 homelab infra). `${DOCKER_BUILD_EXTRA_ARGS:-}` hook for CI registry cache. Todos: image-size-workspace-install, temporal-worker-agent-clis.
+- Phase E: deploy-site (9-site catalog, two-pass cache-control sync), publish-npm (2FA preflight), helm-push, tofu-stack, argocd (sync/health-wait/wait-deletion), cooklang publish, release-please config+manifest restored + runner (changelog refinement stubbed → todo), update-versions commit-back, wait-for-greptile gate recovered.
+- Phase F: static 15-step .buildkite/pipeline.yml; toolchain image baked from .mise.toml (now carries gitleaks/shellcheck/go/golangci-lint/helm/opentofu/argocd/awscli); cdk8s buildkite app de-Daggered; turbo-cache server app STAGED (registration commented until vault item + R2 apply — todo turbo-cache-rollout); rulesets.tf required check staged commented-out; renovate git-refs manager for redlib pin.
+- Benchmarks: old CI via Buildkite API (PR median 11.0m, p90 72.7m; main median 37.8m) vs new (verify cold 5m34s, warm 1.7s; hooks 3.7s). Tables in this doc.
+
+### Remaining
+
+- Operator: turbo-cache rollout (todo turbo-cache-rollout: R2 apply → R2 token → 1P item → snapshot → uncomment registration → wire TURBO_API/TOKEN/TEAM into buildkite-ci-secrets + dev shells).
+- Operator: create the Buildkite pipeline pointing at .buildkite/pipeline.yml, build + push the ci-base image once (bash .buildkite/scripts/build-ci-image.sh needs registry auth), then uncomment the rulesets.tf required check after the first green PR build.
+- Live-path testing of deploy/release scripts (no creds locally): first main build exercises them; watch it.
+- Todos filed: image-size-workspace-install, temporal-worker-agent-clis, release-changelog-refinement, turbo-cache-rollout.
+
+### Caveats
+
+- Images are 5.4–6.4 GB (whole-workspace install; layers dedupe across images/nodes — see todo).
+- dpmk emscripten stage is amd64-only (QEMU on arm64 laptops; native on the cluster).
+- Images boot with VERSION=dev/GIT_SHA=unknown defaults; release path should override.
+- helm-types drift stays on the Temporal weekly schedule; Java/sandbox stays out of CI (both match old behavior).
+- turbo nested --affected caveat, bun 1.3.x pin, and turbo-prune ban all still stand (documented in the replatform plan).
