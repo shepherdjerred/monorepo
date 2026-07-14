@@ -13,7 +13,9 @@
     "typecheck": "bunx tsc --noEmit",
     "lint": "bunx eslint --cache .",
     "format": "bunx prettier --check .",
-    "prettier": "bunx prettier --write ."
+    "prettier": "bunx prettier --write .",
+    "docker:build": "docker buildx build ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t starlight-karma-bot:dev -f Dockerfile ../..",
+    "smoke": "bun scripts/smoke.ts"
   },
   "dependencies": {
     "@sentry/bun": "^10.49.0",

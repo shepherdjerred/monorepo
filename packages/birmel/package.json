@@ -22,7 +22,9 @@
     "test:e2e:youtube-stream": "bun run e2e/youtube-stream-resource.ts",
     "test:e2e:openclaw-docker": "bun run e2e/openclaw-capabilities-docker.ts",
     "typecheck": "bun run generate && tsc --noEmit",
-    "lint": "bun run generate && eslint ."
+    "lint": "bun run generate && eslint .",
+    "docker:build": "docker buildx build ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t birmel:dev -f Dockerfile ../..",
+    "smoke": "bun scripts/smoke.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.63",

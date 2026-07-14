@@ -439,10 +439,13 @@
   "ignoreBinaries": [
     "HEAD",
     "argocd",
+    "docker",
     "ffmpeg",
     "ffprobe",
     "gh",
     "gitleaks",
+    "go",
+    "golangci-lint",
     "helm",
     "kubectl",
     "mktemp",

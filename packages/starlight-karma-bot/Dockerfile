@@ -1,51 +1,36 @@
-# Use Bun official image as base
-# renovate: datasource=docker registryUrl=https://docker.io versioning=docker
-FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS base
+# starlight-karma-bot image. Build context is the REPO ROOT (single Bun
+# workspace, one root bun.lock, isolated linker). Built via `bun run docker:build`
+# in this package (which passes `-f Dockerfile ../..`).
+#
+# Replaces the old per-package `COPY package.json bun.lock` + `bun install` stage:
+# that world (per-package lockfiles / file: deps) is gone. We now COPY the whole
+# workspace and run one root `bun install --frozen-lockfile`.
+FROM oven/bun:1.3.14 AS base
 WORKDIR /app
 
-# Install dependencies into temp directory
-# This will cache dependencies unless they change
-FROM base AS install
+COPY . .
+RUN bun install --frozen-lockfile
 
-RUN mkdir -p /temp/prod
-COPY package.json bun.lock /temp/prod/
-RUN cd /temp/prod && bun install --frozen-lockfile
-
-# Copy production dependencies and source code
-FROM base AS release
-
-# Build arguments for version information
+# Version/revision metadata — the old buildImageHelper injected these as ENV +
+# OCI labels. starlight's config requires VERSION and GIT_SHA at boot.
 ARG VERSION=dev
 ARG GIT_SHA=unknown
-
-COPY --from=install /temp/prod/node_modules node_modules
-COPY . .
-
-# Set build-time environment variables
 ENV VERSION=${VERSION}
 ENV GIT_SHA=${GIT_SHA}
-
-# Runtime required environment variables (must be provided when running container):
-# - DISCORD_TOKEN: Discord bot token
-# - APPLICATION_ID: Discord application ID
-# - DATA_DIR: Data directory path
-# - ENVIRONMENT: Environment (dev/beta/prod)
-# Optional environment variables:
-# - SENTRY_DSN: Sentry DSN for error tracking
-# - PORT: Server port (default: 8000)
-
+ENV NODE_ENV=production
 LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
 
-# Create data directory
-RUN mkdir -p /app/data
-
-# Expose the port
+# The bot exposes a health server (default 8000; see src/health.ts).
 EXPOSE 8000
 
-# Health check
+# Health check reuses the in-repo health probe (unchanged from the old image).
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD bun run src/health.ts || exit 1
+  CMD bun run packages/starlight-karma-bot/src/health.ts || exit 1
 
-# Run the application
+# Run as the non-root `bun` user shipped in the base image.
 USER bun
-CMD ["bun", "run", "src/index.ts"]
+
+# Run from the package dir so Bun picks up this package's tsconfig
+# (experimentalDecorators + emitDecoratorMetadata, required by TypeORM entities).
+WORKDIR /app/packages/starlight-karma-bot
+CMD ["bun", "src/index.ts"]

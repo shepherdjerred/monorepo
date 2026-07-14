@@ -8,7 +8,9 @@
     "build": "bun build src/index.ts --compile --outfile=dist/tasknotes-server",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
-    "lint": "bunx eslint . --max-warnings=0"
+    "lint": "bunx eslint . --max-warnings=0",
+    "docker:build": "docker buildx build ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t tasknotes-server:dev -f Dockerfile ../..",
+    "smoke": "bun scripts/smoke.ts"
   },
   "dependencies": {
     "@sentry/bun": "^10.49.0",
