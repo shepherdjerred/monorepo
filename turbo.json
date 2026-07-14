@@ -170,7 +170,7 @@
     "//#large-files": {
       "inputs": [
         ".largeignore",
-        "scripts/check-large-files.sh",
+        "scripts/check-large-files.ts",
         "packages/scout-for-lol/scripts/check-asset-sizes.ts",
         "**/*",
         "!**/node_modules/**",
