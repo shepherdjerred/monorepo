@@ -411,9 +411,12 @@ steps:
     plugins:
       - *pod
 
-  # ── Toolchain image refresh (only when .mise.toml or the Dockerfile moved) ─
+  # ── Toolchain image refresh ───────────────────────────────────────────────
+  # TEMPORARY branch clause: the registry's ci-base:latest predates this
+  # pipeline (Dagger-era), so this branch bakes the first real image itself.
+  # Drop the feature/ci-parity clause after merge.
   - label: ":docker: ci-image refresh"
-    if: build.branch == pipeline.default_branch
+    if: build.branch == pipeline.default_branch || build.branch == "feature/ci-parity"
     depends_on: verify
     command: |
       . .buildkite/scripts/toolchain.sh

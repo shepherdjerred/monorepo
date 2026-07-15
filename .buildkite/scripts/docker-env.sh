@@ -22,6 +22,11 @@ fi
 
 export DOCKER_HOST="${DOCKER_HOST:-tcp://127.0.0.1:2375}"
 
+# Registry auth for buildcache pulls + image pushes (ghcr).
+if [ -n "${GH_TOKEN:-}" ]; then
+  ghcr_login_deferred=1
+fi
+
 # Bounded wait for the dind sidecar to come up.
 for _ in $(seq 1 60); do
   if docker info >/dev/null 2>&1; then
@@ -34,4 +39,8 @@ if [ "${exit_ready:-0}" != "1" ]; then
   echo "docker daemon did not become ready within 60s" >&2
   docker info
   exit 1
+fi
+
+if [ "${ghcr_login_deferred:-0}" = "1" ]; then
+  printf '%s' "$GH_TOKEN" | docker login ghcr.io -u shepherdjerred --password-stdin
 fi
