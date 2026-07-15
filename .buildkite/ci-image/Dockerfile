@@ -17,7 +17,7 @@ RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
 
 # Docker CLI + buildx for image-build steps (BuildKit runs in-pod)
 COPY --from=docker:28-cli /usr/local/bin/docker /usr/local/bin/docker
-COPY --from=docker/buildx-bin:0.30 /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
+COPY --from=docker/buildx-bin:0.30.1 /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
 
 # swiftlint + its bundled Swift runtime
 COPY --from=swiftlint /usr/bin/swiftlint /usr/bin/swiftlint

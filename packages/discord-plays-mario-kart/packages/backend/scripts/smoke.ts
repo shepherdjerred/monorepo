@@ -83,11 +83,16 @@ assets = "/tmp"
 enabled = false
 `;
 
-async function sh(cmd: string[]): Promise<{ code: number; stdout: string }> {
+async function sh(
+  cmd: string[],
+): Promise<{ code: number; stdout: string; stderr: string }> {
   const proc = Bun.spawn(cmd, { stdout: "pipe", stderr: "pipe" });
-  const stdout = await new Response(proc.stdout).text();
+  const [stdout, stderr] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+  ]);
   const code = await proc.exited;
-  return { code, stdout };
+  return { code, stdout, stderr };
 }
 
 async function removeContainer(): Promise<void> {
@@ -97,23 +102,39 @@ async function removeContainer(): Promise<void> {
 async function main(configPath: string): Promise<void> {
   await removeContainer();
 
-  const proc = Bun.spawn(
-    [
-      "docker",
-      "run",
-      "--name",
-      CONTAINER,
-      // Writable SQLite target for the `prisma db push` prelude (prod uses a PVC;
-      // here any writable path works).
-      "-e",
-      "DATABASE_PATH=/tmp/smoke-leaderboard.db",
-      // Bind the config into the inner-monorepo root, where getConfig() reads it.
-      "-v",
-      `${configPath}:/app/packages/discord-plays-mario-kart/config.toml:ro`,
-      IMAGE,
-    ],
-    { stdout: "pipe", stderr: "pipe" },
-  );
+  // docker cp streams the config through the daemon API instead of a host
+  // bind mount — in CI the daemon is a dind sidecar that cannot see this
+  // container's filesystem, so a -v mount silently materializes as an empty
+  // directory and getConfig() fails.
+  const create = await sh([
+    "docker",
+    "create",
+    "--name",
+    CONTAINER,
+    // Writable SQLite target for the `prisma db push` prelude (prod uses a PVC;
+    // here any writable path works).
+    "-e",
+    "DATABASE_PATH=/tmp/smoke-leaderboard.db",
+    IMAGE,
+  ]);
+  if (create.code !== 0) {
+    throw new Error(`docker create failed:\n${create.stderr}`);
+  }
+  const cp = await sh([
+    "docker",
+    "cp",
+    configPath,
+    // Lands in the inner-monorepo root, where getConfig() reads it.
+    `${CONTAINER}:/app/packages/discord-plays-mario-kart/config.toml`,
+  ]);
+  if (cp.code !== 0) {
+    throw new Error(`docker cp failed:\n${cp.stderr}`);
+  }
+
+  const proc = Bun.spawn(["docker", "start", "--attach", CONTAINER], {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
 
   const timer = setTimeout(() => {
     void sh(["docker", "stop", "-t", "2", CONTAINER]);
