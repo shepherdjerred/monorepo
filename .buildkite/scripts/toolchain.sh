@@ -8,6 +8,13 @@ set -euo pipefail
 
 command -v mise >/dev/null || curl -fsSL https://mise.run | sh
 export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/mise/shims:$PATH"
+# mise resolves tool versions via api.github.com; unauthenticated calls share
+# the cluster egress IP's 60/hr limit, which CI exhausts immediately. mise
+# reads the token from GITHUB_TOKEN (its contract — exempted in
+# check-env-var-names.sh); the pod secret provides GH_TOKEN.
+if [ -n "${GH_TOKEN:-}" ]; then
+  export GITHUB_TOKEN="$GH_TOKEN"
+fi
 mise trust .mise.toml
 mise install --yes
 
