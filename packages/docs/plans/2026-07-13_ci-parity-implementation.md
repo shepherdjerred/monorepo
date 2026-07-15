@@ -149,21 +149,22 @@ all `//#` checks, check:talos, lint:helm, check:1password, check:test-template,
 check:ios-native-deps, lint:swift, check:caddyfile, test:contract,
 check:rehearsal).
 
-| Task surface                         | Local                                                                     | CI step                                              | When                                     |
-| ------------------------------------ | ------------------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------- |
-| `verify` (everything above)          | `bun run verify` (pre-push hook: `--affected`)                            | verify                                               | PR `--affected`; main FULL               |
-| `test:e2e` (Playwright)              | `turbo run test:e2e`                                                      | playwright e2e                                       | PR + main                                |
-| `docker:build` + `smoke` (14 images) | `turbo run smoke --filter=<pkg>`                                          | images dry-run (PR) / images build+smoke+push (main) | PR (affected + nested trio) + main (all) |
-| `deploy` (9 sites)                   | `bun scripts/deploy-site.ts <site> [--dry-run]`                           | sites dry-run (PR) / deploy sites (main)             | PR dry-run + main                        |
-| `publish:npm` (3 pkgs)               | `bun run publish:npm` per package                                         | publish packages                                     | main                                     |
-| `helm:push`                          | `bun packages/homelab/scripts/helm-push.ts <n> [--dry-run]`               | helm dry-run (PR) / helm push (main)                 | PR dry-run + main                        |
-| tofu stacks                          | `bun packages/homelab/scripts/tofu-stack.ts <stack> plan\|apply`          | tofu plan (PR) / applies (main)                      | PR plan + main apply                     |
-| ArgoCD sync/gates                    | `bun packages/homelab/scripts/argocd.ts …`                                | argocd sync + cloudflare gate                        | main                                     |
-| release-please + refine              | `bun scripts/release.ts [--dry-run]`                                      | release dry-run (PR) / release (main)                | PR dry-run + main                        |
-| version commit-back                  | `bun scripts/update-versions.ts`                                          | release step                                         | main                                     |
-| cooklang plugin publish              | `bun run --cwd packages/cooklang-for-obsidian publish:plugin [--dry-run]` | cooklang plugin publish                              | main (tag-idempotent)                    |
-| trivy / semgrep / greptile gate      | (CI-only scanners; greptile: `bun scripts/wait-for-greptile.ts`)          | soft-fail lane                                       | PR + main (greptile PR-only)             |
-| toolchain image                      | `docker buildx` on .buildkite/ci-image                                    | ci-image refresh                                     | main                                     |
+| Task surface                                   | Local                                                                     | CI step                                              | When                                     |
+| ---------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------- |
+| `verify` (everything above)                    | `bun run verify` (pre-push hook: `--affected`)                            | verify                                               | PR `--affected`; main FULL               |
+| `test:e2e` (browser: sjer.red)                 | `turbo run test:e2e --filter=sjer.red`                                    | playwright e2e                                       | PR + main                                |
+| `test:e2e` (docker-compose: llm-observability) | `turbo run test:e2e --filter='@shepherdjerred/llm-observability'`         | docker e2e                                           | PR + main                                |
+| `docker:build` + `smoke` (14 images)           | `turbo run smoke --filter=<pkg>`                                          | images dry-run (PR) / images build+smoke+push (main) | PR (affected + nested trio) + main (all) |
+| `deploy` (9 sites)                             | `bun scripts/deploy-site.ts <site> [--dry-run]`                           | sites dry-run (PR) / deploy sites (main)             | PR dry-run + main                        |
+| `publish:npm` (3 pkgs)                         | `bun run publish:npm` per package                                         | publish packages                                     | main                                     |
+| `helm:push`                                    | `bun packages/homelab/scripts/helm-push.ts <n> [--dry-run]`               | helm dry-run (PR) / helm push (main)                 | PR dry-run + main                        |
+| tofu stacks                                    | `bun packages/homelab/scripts/tofu-stack.ts <stack> plan\|apply`          | tofu plan (PR) / applies (main)                      | PR plan + main apply                     |
+| ArgoCD sync/gates                              | `bun packages/homelab/scripts/argocd.ts …`                                | argocd sync + cloudflare gate                        | main                                     |
+| release-please + refine                        | `bun scripts/release.ts [--dry-run]`                                      | release dry-run (PR) / release (main)                | PR dry-run + main                        |
+| version commit-back                            | `bun scripts/update-versions.ts`                                          | release step                                         | main                                     |
+| cooklang plugin publish                        | `bun run --cwd packages/cooklang-for-obsidian publish:plugin [--dry-run]` | cooklang plugin publish                              | main (tag-idempotent)                    |
+| trivy / semgrep / greptile gate                | (CI-only scanners; greptile: `bun scripts/wait-for-greptile.ts`)          | soft-fail lane                                       | PR + main (greptile PR-only)             |
+| toolchain image                                | `docker buildx` on .buildkite/ci-image                                    | ci-image refresh                                     | main                                     |
 
 Operator-only (justified exclusions): `generate:live` (live Home Assistant /
 chart-repo credentials; typecheck/test self-manage stubs), `dev`/`start`/watch

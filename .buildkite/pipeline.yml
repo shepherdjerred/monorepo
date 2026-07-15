@@ -11,7 +11,7 @@ agents:
 
 # Every step runs in the toolchain image baked from .mise.toml
 # (.buildkite/ci-image) — same tool versions as every laptop.
-# Steps that run repo tasks start with `source .buildkite/scripts/toolchain.sh`
+# Steps that run repo tasks start with `. .buildkite/scripts/toolchain.sh`
 # — a fast no-op on a current image, a runtime mise bootstrap on a stale one.
 common:
   - pod: &pod
@@ -29,6 +29,13 @@ common:
                 limits: { cpu: "7", memory: "12Gi" }
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
+              # The live agent-stack checkout clones with git-mirror alternates;
+              # task containers need the mirror mounted to read objects. Becomes
+              # a no-op mount once the de-mirrored agent config deploys.
+              volumeMounts:
+                - name: buildkite-git-mirrors
+                  mountPath: /buildkite/git-mirrors
+                  readOnly: true
   - pod_privileged: &pod_privileged
       kubernetes:
         checkout:
@@ -44,6 +51,13 @@ common:
                 limits: { cpu: "7", memory: "14Gi" }
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
+              # The live agent-stack checkout clones with git-mirror alternates;
+              # task containers need the mirror mounted to read objects. Becomes
+              # a no-op mount once the de-mirrored agent config deploys.
+              volumeMounts:
+                - name: buildkite-git-mirrors
+                  mountPath: /buildkite/git-mirrors
+                  readOnly: true
   - retry: &retry
       automatic:
         # Transient infra failures only; logical failures (1, 3) never retry.
@@ -57,11 +71,6 @@ common:
 env:
   TURBO_SCM_BASE: "origin/main"
   TURBO_TELEMETRY_DISABLED: "1"
-  # The de-mirrored agent config (cdk8s buildkite.ts on this branch) only
-  # deploys after merge; until then the live agent-stack injects git-mirror
-  # alternates whose volume these pods don't mount, breaking any git command
-  # that reads objects. An empty mirrors path disables the mirror entirely.
-  BUILDKITE_GIT_MIRRORS_PATH: ""
 
 steps:
   # ── Verify: the whole task graph + every repo check ──────────────────────
@@ -71,21 +80,22 @@ steps:
   - label: ":turborepo: verify"
     key: verify
     command: |
-      source .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       if [ "$BUILDKITE_BRANCH" = "main" ]; then SCOPE=""; else SCOPE="--affected"; fi
       set +e
-      bun run verify -- $SCOPE --concurrency=6 --output-logs=errors-only --summarize
+      bun run verify -- $$SCOPE --concurrency=6 --output-logs=errors-only --summarize
       verify_status=$?
       set -e
       bun scripts/annotate-turbo-summary.ts
-      exit "$verify_status"
+      exit "$$verify_status"
     retry: *retry
     plugins:
       - *pod
 
   # ── Playwright e2e (PR + main) — browser-equipped container, bun installed
-  # the same way the old CI's playwright step did.
+  # the same way the old CI's playwright step did. Browser-based test:e2e
+  # members only; docker-compose e2e runs in the docker e2e step below.
   - label: ":performing_arts: playwright e2e"
     key: e2e
     command: |
@@ -93,7 +103,7 @@ steps:
       curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.14
       export PATH="/root/.bun/bin:$PATH"
       bun install --frozen-lockfile
-      bunx turbo run test:e2e --concurrency=2
+      bunx turbo run test:e2e --filter=sjer.red --concurrency=2
     retry: *retry
     plugins:
       - kubernetes:
@@ -110,6 +120,18 @@ steps:
                   limits: { cpu: "4", memory: "8Gi" }
                 envFrom:
                   - secretRef: { name: buildkite-ci-secrets }
+
+  # ── Docker-compose e2e (PR + main) — llm-observability spins up a compose
+  # stack; needs the privileged pod's docker, not a browser container.
+  - label: ":docker: docker e2e"
+    key: docker-e2e
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      bun install --frozen-lockfile
+      bunx turbo run test:e2e --filter='@shepherdjerred/llm-observability'
+    retry: *retry
+    plugins:
+      - *pod_privileged
 
   # ── Soft-fail lane (parallel with everything) ─────────────────────────────
   - label: ":shield: trivy"
@@ -144,7 +166,7 @@ steps:
     if: build.branch != pipeline.default_branch
     soft_fail: true
     command: |
-      source .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun scripts/wait-for-greptile.ts
     plugins:
@@ -156,10 +178,10 @@ steps:
     if: build.branch != pipeline.default_branch
     depends_on: verify
     command: |
-      source .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       for stack in seaweedfs tailscale buildkite arr pagerduty github cloudflare; do
-        bun packages/homelab/scripts/tofu-stack.ts "$stack" plan
+        bun packages/homelab/scripts/tofu-stack.ts "$$stack" plan
       done
     retry: *retry
     plugins:
@@ -169,7 +191,7 @@ steps:
     if: build.branch != pipeline.default_branch
     depends_on: verify
     command: |
-      source .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       # Affected images build + smoke with registry layer cache; the three
       # nested-package families run unconditionally (turbo's nested --affected
@@ -184,10 +206,10 @@ steps:
     if: build.branch != pipeline.default_branch
     depends_on: verify
     command: |
-      source .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red scout-frontend scout-frontend-beta better-skill-capped glitter; do
-        bun scripts/deploy-site.ts "$site" --dry-run
+        bun scripts/deploy-site.ts "$$site" --dry-run
       done
       bun packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER" --dry-run
       bun scripts/release.ts --dry-run
@@ -203,7 +225,7 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/image-push
     command: |
-      source .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bash .buildkite/scripts/build-smoke-push-all.sh
     retry: *retry
@@ -218,10 +240,10 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
-      source .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red scout-frontend scout-frontend-beta better-skill-capped glitter; do
-        bun scripts/deploy-site.ts "$site"
+        bun scripts/deploy-site.ts "$$site"
       done
     retry: *retry
     plugins:
@@ -232,7 +254,7 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on: verify
     command: |
-      source .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun run --cwd packages/astro-opengraph-images publish:npm
       bun run --cwd packages/webring publish:npm
@@ -247,7 +269,7 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on: verify
     command: |
-      source .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER"
     retry: *retry
@@ -259,10 +281,10 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on: [verify, helm-push]
     command: |
-      source .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       for stack in seaweedfs tailscale buildkite arr pagerduty; do
-        bun packages/homelab/scripts/tofu-stack.ts "$stack" apply
+        bun packages/homelab/scripts/tofu-stack.ts "$$stack" apply
       done
     retry: *retry
     plugins:
@@ -276,7 +298,7 @@ steps:
     # No automatic retry: GitHub API mutations are not idempotent on partial
     # failure (same policy as the old pipeline).
     command: |
-      source .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun packages/homelab/scripts/tofu-stack.ts github apply
     plugins:
@@ -287,7 +309,7 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on: [images, helm-push, tofu-apply]
     command: |
-      source .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun packages/homelab/scripts/argocd.ts sync apps
       bun packages/homelab/scripts/argocd.ts health-wait apps --timeout 300
@@ -303,7 +325,7 @@ steps:
     # Fail-closed: the SeaweedFS TunnelBinding finalizer must complete before
     # the Cloudflare DNS tunnel route is removed (same gate as the old CI).
     command: |
-      source .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun packages/homelab/scripts/argocd.ts wait-deletion apps --group networking.cfargotunnel.com --version v1alpha1 --kind TunnelBinding --namespace seaweedfs --timeout 120
       bun packages/homelab/scripts/tofu-stack.ts cloudflare apply
@@ -315,7 +337,7 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on: [images, sites]
     command: |
-      source .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun scripts/release.ts
       bun scripts/update-versions.ts
@@ -329,7 +351,7 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on: verify
     command: |
-      source .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun run --cwd packages/cooklang-for-obsidian publish:plugin
     plugins:
@@ -340,7 +362,7 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on: verify
     command: |
-      source .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/toolchain.sh
       bash .buildkite/scripts/build-ci-image.sh
     retry: *retry
     plugins:
@@ -352,6 +374,7 @@ steps:
     depends_on:
       - verify
       - e2e
+      - docker-e2e
       - images
       - sites
       - helm-push
