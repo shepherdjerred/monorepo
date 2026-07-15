@@ -14,7 +14,7 @@ fi
 
 if ! docker compose version >/dev/null 2>&1; then
   # renovate: datasource=github-releases depName=docker/compose
-  COMPOSE_VERSION="5.3.1"
+  COMPOSE_VERSION="5.1.2"  # match local Docker Desktop; 5.3.x fails `up --wait` on exited one-shot containers
   mkdir -p /usr/local/lib/docker/cli-plugins
   curl -fsSL "https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-linux-x86_64" \
     -o /usr/local/lib/docker/cli-plugins/docker-compose
