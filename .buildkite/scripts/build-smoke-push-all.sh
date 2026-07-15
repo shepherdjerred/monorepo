@@ -28,11 +28,19 @@ IMAGES=(
   "discord-plays-mario-kart=@discord-plays-mario-kart/backend"
 )
 
+# Registry cache export needs a docker-container builder — dind's default
+# docker driver can't export cache. The package docker:build scripts already
+# pass --load, which lands each image back in the daemon for the tag/push
+# below. image-manifest=true keeps the cache manifest OCI-conformant for ghcr.
+if ! docker buildx inspect ci; then
+  docker buildx create --name ci --driver docker-container
+fi
+
 for entry in "${IMAGES[@]}"; do
   name="${entry%%=*}"
   filter="${entry#*=}"
   echo "--- :docker: ${name}"
-  DOCKER_BUILD_EXTRA_ARGS="${VERSION_ARGS} --cache-from type=registry,ref=${REGISTRY}/${name}:buildcache --cache-to type=registry,ref=${REGISTRY}/${name}:buildcache,mode=max" \
+  DOCKER_BUILD_EXTRA_ARGS="${VERSION_ARGS} --builder ci --cache-from type=registry,ref=${REGISTRY}/${name}:buildcache --cache-to type=registry,ref=${REGISTRY}/${name}:buildcache,mode=max,image-manifest=true" \
     bunx turbo run smoke --filter="${filter}"
   docker tag "${name}:dev" "${REGISTRY}/${name}:${SHA}"
   docker tag "${name}:dev" "${REGISTRY}/${name}:latest"
