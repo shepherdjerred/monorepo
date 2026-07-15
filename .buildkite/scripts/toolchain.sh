@@ -16,3 +16,13 @@ mise install --yes
 if ! command -v rsync >/dev/null; then
   apt-get update -qq && apt-get install -y -qq --no-install-recommends rsync
 fi
+if ! command -v swiftlint >/dev/null; then
+  # Official linux artifact (bundles the Swift runtime libs; the fresh
+  # ci-base copies it from ghcr.io/realm/swiftlint instead).
+  # renovate: datasource=github-releases depName=realm/SwiftLint
+  SWIFTLINT_VERSION="0.61.0"
+  curl -fsSL "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT_VERSION}/swiftlint_linux.zip" -o /tmp/swiftlint.zip
+  unzip -q -o /tmp/swiftlint.zip -d /usr/local/swiftlint
+  ln -sf /usr/local/swiftlint/swiftlint /usr/local/bin/swiftlint
+  rm /tmp/swiftlint.zip
+fi
