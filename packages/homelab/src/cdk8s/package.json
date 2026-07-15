@@ -18,7 +18,8 @@
     "render": "bun run build && bun run scripts/helm-render.ts --render",
     "diff": "bun run build && bun run scripts/helm-render.ts --diff",
     "audit:grafana": "bun run scripts/grafana-dashboard-audit.ts",
-    "check:1password": "bun run scripts/check-1password-items.ts"
+    "check:1password": "bun run scripts/check-1password-items.ts",
+    "check:caddyfile": "bun run scripts/check-caddyfile.ts"
   },
   "dependencies": {
     "cdk8s": "^2.70.58",

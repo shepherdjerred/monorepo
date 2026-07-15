@@ -18,6 +18,16 @@
     // swiftlint binary (mise optional tool set / CI toolchain image).
     "lint:swift": {
       "inputs": ["ios/**/*.swift", ".swiftlint.yml"]
+    },
+    // Wire-contract suite: the app's real TaskNotesClient against a spawned
+    // real tasknotes-server over a temp vault (old CI: tasknotes-contract-test).
+    // Hermetic — no creds, no build artifact (the server runs from source).
+    // turbo `inputs` cannot reach outside the package (`../` is invalid), so the
+    // tasknotes-server coupling is expressed as a task dependency instead: a
+    // server change invalidates this task via that task's hash.
+    "test:contract": {
+      "dependsOn": ["tasknotes-server#typecheck"],
+      "inputs": ["contract-tests/**", "src/data/**", "src/domain/**"]
     }
   }
 }
