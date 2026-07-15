@@ -6,7 +6,13 @@ import { recommended } from "@shepherdjerred/eslint-config";
 // `typeof recommended` binds to the exact copy the config package ships, so the
 // nested-vs-root type identities don't diverge.
 const config: ReturnType<typeof recommended> = [
-  ...recommended({ tsconfigRootDir: import.meta.dirname }),
+  ...recommended({
+    tsconfigRootDir: import.meta.dirname,
+    // Standalone mini-package (own package.json + bun.lock, outside the
+    // workspace); its deps only exist after its own install, so neither the
+    // scripts tsconfig nor the project service can type it.
+    ignores: ["observability/local-stack/**"],
+  }),
   {
     rules: {
       // These are operator CLIs: stdout is the interface.

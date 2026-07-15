@@ -12,6 +12,15 @@ if ! command -v docker >/dev/null; then
     tar xz --strip-components=1 -C /usr/local/bin docker/docker
 fi
 
+if ! docker compose version >/dev/null 2>&1; then
+  # renovate: datasource=github-releases depName=docker/compose
+  COMPOSE_VERSION="5.3.1"
+  mkdir -p /usr/local/lib/docker/cli-plugins
+  curl -fsSL "https://github.com/docker/compose/releases/download/v${COMPOSE_VERSION}/docker-compose-linux-x86_64" \
+    -o /usr/local/lib/docker/cli-plugins/docker-compose
+  chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+fi
+
 if ! docker buildx version >/dev/null 2>&1; then
   # renovate: datasource=github-releases depName=docker/buildx
   BUILDX_VERSION="0.30.1"

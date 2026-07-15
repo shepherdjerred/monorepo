@@ -71,23 +71,29 @@ async function main(): Promise<void> {
   console.error(
     `[check:caddyfile] validating with ${IMAGE} (custom s3proxy module)`,
   );
-  await run(
+  // Stream the Caddyfile via stdin rather than a -v bind mount: in CI the
+  // docker daemon is a dind sidecar that cannot see this container's /tmp,
+  // so host-path mounts silently mount nothing.
+  const validate = Bun.spawn(
     [
       "docker",
       "run",
       "--rm",
-      "-v",
-      `${caddyfilePath}:/etc/caddy-check/Caddyfile`,
+      "-i",
+      "--entrypoint",
+      "sh",
       IMAGE,
-      "caddy",
-      "validate",
-      "--config",
-      "/etc/caddy-check/Caddyfile",
-      "--adapter",
-      "caddyfile",
+      "-c",
+      "cat > /tmp/Caddyfile && caddy validate --config /tmp/Caddyfile --adapter caddyfile",
     ],
-    "caddy validate",
+    { stdin: Bun.file(caddyfilePath), stdout: "inherit", stderr: "inherit" },
   );
+  const validateExit = await validate.exited;
+  if (validateExit !== 0) {
+    throw new Error(
+      `caddy validate failed with exit code ${String(validateExit)}`,
+    );
+  }
 
   console.error("[check:caddyfile] Caddyfile is valid");
 }
