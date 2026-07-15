@@ -22,7 +22,7 @@
     "typecheck": "bunx tsc --noEmit",
     "lint": "bunx eslint --cache .",
     "test": "bun test test/unit",
-    "test:e2e": "docker compose -f test/e2e/compose.yaml up -d --wait && bun test test/e2e ; ec=$? ; docker compose -f test/e2e/compose.yaml down -v ; exit $ec",
+    "test:e2e": "bash test/e2e/run.sh",
     "test:e2e:debug": "docker compose -f test/e2e/compose.yaml up -d --wait && bun test test/e2e --watch"
   },
   "dependencies": {

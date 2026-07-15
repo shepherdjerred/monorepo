@@ -231,6 +231,7 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
+      export AWS_ACCESS_KEY_ID="$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$SEAWEEDFS_SECRET_ACCESS_KEY"
       for stack in seaweedfs tailscale buildkite arr pagerduty github cloudflare; do
         bun packages/homelab/scripts/tofu-stack.ts "$$stack" plan
       done
@@ -338,6 +339,7 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
+      export AWS_ACCESS_KEY_ID="$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$SEAWEEDFS_SECRET_ACCESS_KEY"
       for stack in seaweedfs tailscale buildkite arr pagerduty; do
         bun packages/homelab/scripts/tofu-stack.ts "$$stack" apply
       done
@@ -355,6 +357,7 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
+      export AWS_ACCESS_KEY_ID="$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$SEAWEEDFS_SECRET_ACCESS_KEY"
       bun packages/homelab/scripts/tofu-stack.ts github apply
     plugins:
       - *pod
@@ -383,6 +386,7 @@ steps:
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun packages/homelab/scripts/argocd.ts wait-deletion apps --group networking.cfargotunnel.com --version v1alpha1 --kind TunnelBinding --namespace seaweedfs --timeout 120
+      export AWS_ACCESS_KEY_ID="$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$SEAWEEDFS_SECRET_ACCESS_KEY"
       bun packages/homelab/scripts/tofu-stack.ts cloudflare apply
     plugins:
       - *pod
