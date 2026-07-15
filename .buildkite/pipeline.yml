@@ -195,6 +195,7 @@ steps:
                 image: "aquasec/trivy:latest"
                 resources:
                   requests: { cpu: "500m", memory: "1Gi" }
+                  limits: { cpu: "2", memory: "4Gi" }
 
   - label: ":mag: semgrep"
     soft_fail: true
@@ -209,6 +210,7 @@ steps:
                 image: "semgrep/semgrep:latest"
                 resources:
                   requests: { cpu: "500m", memory: "1Gi" }
+                  limits: { cpu: "2", memory: "4Gi" }
 
   - label: ":robot_face: greptile review gate"
     if: build.branch != pipeline.default_branch
