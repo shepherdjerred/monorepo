@@ -10,3 +10,9 @@ command -v mise >/dev/null || curl -fsSL https://mise.run | sh
 export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/mise/shims:$PATH"
 mise trust .mise.toml
 mise install --yes
+
+# System tools the tasks shell out to that mise doesn't manage. Baked into
+# the fresh ci-base; bootstrapped here on a stale image.
+if ! command -v rsync >/dev/null; then
+  apt-get update -qq && apt-get install -y -qq --no-install-recommends rsync
+fi

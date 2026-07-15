@@ -11,7 +11,7 @@ FROM ghcr.io/realm/swiftlint:0.61.0 AS swiftlint
 FROM debian:bookworm-slim
 
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
-    ca-certificates curl git unzip xz-utils zstd python3 ripgrep \
+    ca-certificates curl git unzip xz-utils zstd python3 ripgrep rsync \
     build-essential pkg-config libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 

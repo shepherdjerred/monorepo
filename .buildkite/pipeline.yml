@@ -95,17 +95,18 @@ steps:
     key: verify
     command: |
       . .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/docker-env.sh
       bun install --frozen-lockfile
       if [ "$BUILDKITE_BRANCH" = "main" ]; then SCOPE=""; else SCOPE="--affected"; fi
       set +e
-      bun run verify -- $$SCOPE --concurrency=6 --output-logs=errors-only --summarize
+      bun run verify -- $$SCOPE --filter='!sjer.red' --filter='!@shepherdjerred/resume' --concurrency=6 --output-logs=errors-only --summarize
       verify_status=$?
       set -e
       bun scripts/annotate-turbo-summary.ts
       exit "$$verify_status"
     retry: *retry
     plugins:
-      - *pod
+      - *pod_privileged
 
   # ── Playwright e2e (PR + main) — browser-equipped container, bun installed
   # the same way the old CI's playwright step did. Browser-based test:e2e
@@ -121,7 +122,7 @@ steps:
       # the package so bunx uses its dependency, not a downloaded latest):
       # chromium + headless-shell + webkit (the suite runs Mobile Safari).
       cd packages/sjer.red && bunx playwright install && cd ../..
-      bunx turbo run test:e2e --filter=sjer.red --concurrency=2
+      bunx turbo run build typecheck lint test test:e2e --filter=sjer.red --concurrency=2
     retry: *retry
     plugins:
       - kubernetes:
@@ -136,6 +137,34 @@ steps:
                 resources:
                   requests: { cpu: "2", memory: "4Gi" }
                   limits: { cpu: "4", memory: "8Gi" }
+                envFrom:
+                  - secretRef: { name: buildkite-ci-secrets }
+
+  # ── Resume build (PR + main) — xelatex needs a full TeX distribution; the
+  # old CI used the texlive/texlive container for exactly this. Excluded from
+  # the verify pod (--filter='!@shepherdjerred/resume').
+  - label: ":scroll: resume build"
+    key: resume-build
+    command: |
+      apt-get update -qq && apt-get install -y -qq --no-install-recommends unzip curl
+      curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.14
+      export PATH="/root/.bun/bin:$PATH"
+      bun install --frozen-lockfile
+      bunx turbo run build --filter='@shepherdjerred/resume'
+    retry: *retry
+    plugins:
+      - kubernetes:
+          checkout:
+            cloneFlags: "--no-tags"
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s-controller
+            containers:
+              - name: container-0
+                # renovate: datasource=docker depName=texlive/texlive
+                image: "texlive/texlive:TL2024-historic"
+                resources:
+                  requests: { cpu: "1", memory: "2Gi" }
+                  limits: { cpu: "2", memory: "4Gi" }
                 envFrom:
                   - secretRef: { name: buildkite-ci-secrets }
 
