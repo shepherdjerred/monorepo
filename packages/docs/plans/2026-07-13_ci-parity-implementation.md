@@ -231,3 +231,27 @@ scripts (interactive), tasks-for-obsidian Maestro e2e + `check:release-bundle`
 
 - check:caddyfile + check:rehearsal are cache:false (docker image / whole-tree correctness outside turbo's hash); rehearsal adds ~1m40s to a cold verify.
 - Maestro e2e + check:release-bundle + Xcode Cloud remain outside Buildkite by physics (no macOS agents) — documented as operator-only in the matrix.
+
+## Session Log — 2026-07-15 (drive Buildkite to green)
+
+### Done
+
+- **Build 5605 PASSED** — the full pipeline is green end-to-end on `feature/ci-parity` (PR #1521); the only red steps are the by-design soft-fail lane (trivy/semgrep findings, greptile review gate). Verified steps: verify 9.7m (177 tasks), playwright e2e, resume build, docker e2e, tofu plan, images build+smoke dry-run 8.3m, sites+helm+release dry-run, ci-image refresh 3.5m.
+- Fix ledger driving builds 5580→5605 to green (each committed through live hooks):
+  - `packages/homelab/scripts/tofu-stack.ts` — OPTIONAL*SECRET_ENV source names now match the real `buildkite-ci-secrets` keys (plain `CLOUDFLARE_ACCOUNT_ID` etc., not `TF_VAR*`-prefixed) (`bb549f0e3`).
+  - `.buildkite/scripts/build-ci-image.sh` + `build-smoke-push-all.sh` — registry cache export requires a docker-container buildx builder (dind's default driver can't `--cache-to`); `image-manifest=true` for ghcr-compatible cache manifests (`d756eeb37`).
+  - dpp/dpmk smoke scripts — replaced host bind-mount config injection (invisible to the dind sidecar daemon; dpmk only passed by accidentally pattern-matching "401") with `docker create` + `docker cp` + `docker start --attach` (`fcad6f9fe`).
+  - `.buildkite/ci-image/Dockerfile` — `docker/buildx-bin:0.30` doesn't exist → pin `0.30.1`; realm's swiftlint image has no `/usr/lib/swift/linux` → bake `swiftlint-static` from the official release zip (same recipe as toolchain.sh) (`fcad6f9fe`, `149095aa2`).
+  - Earlier in-session: verify green in CI, docker e2e compose runner (inline tempo config, bash runner), playwright env plumbing, Kueue limits, git-mirror mounts — see the 2026-07-14 session logs above.
+- Fresh `ghcr.io/shepherdjerred/ci-base:latest` is now baked and pushed by build 5605 — subsequent builds pull the real toolchain image and the runtime mise/docker bootstraps in `toolchain.sh`/`docker-env.sh` become no-ops.
+
+### Remaining
+
+- Operator-only: turbo remote-cache rollout (R2 apply → token → 1P item → registration), enable the GitHub ruleset required check now that the pipeline is green, restart the wedged local Docker Desktop, and after merge drop the temporary `|| build.branch == "feature/ci-parity"` clause from the ci-image step in `.buildkite/pipeline.yml`.
+- Merge order unchanged: #1516 → #1517 → #1518 → #1521.
+
+### Caveats
+
+- `bun install` hit two transient npm-registry download failures in build 5604 (firestore tarball, node-datachannel prebuilt binary → broken source-build fallback). Both passed on API job retry. If this recurs often, add BK automatic retry or an install retry wrapper to the affected steps.
+- The dpmk playerKeyOf hook-timeout flake appeared once (build 5600) under load; if it recurs, fix the test's hook timeout at the source rather than retrying.
+- dind bind-mount blindness is now a confirmed repo-wide hazard pattern (Caddyfile, tempo.yaml, smoke configs): any `docker run -v <host-path>` in CI silently mounts an empty dir. Use stdin streaming, compose `content:`, or `docker cp`.
