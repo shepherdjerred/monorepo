@@ -15,7 +15,7 @@
     // (not env) because the path is machine-specific and must not shift the
     // task hash.
     "test:e2e": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["build", "^build"],
       "cache": false,
       "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH"]
     }

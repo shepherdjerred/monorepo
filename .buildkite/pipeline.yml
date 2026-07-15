@@ -148,7 +148,8 @@ steps:
     command: |
       apt-get update -qq && apt-get install -y -qq --no-install-recommends unzip curl
       curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.14
-      export PATH="/root/.bun/bin:$PATH"
+      # The agent constructs its own PATH; re-add the texlive bin dir.
+      export PATH="/root/.bun/bin:$(dirname "$(find /usr/local/texlive -name xelatex -type f | head -1)"):$PATH"
       bun install --frozen-lockfile
       bunx turbo run build --filter='@shepherdjerred/resume'
     retry: *retry
