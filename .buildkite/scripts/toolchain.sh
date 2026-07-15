@@ -30,6 +30,8 @@ if ! command -v swiftlint >/dev/null; then
   SWIFTLINT_VERSION="0.61.0"
   curl -fsSL "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT_VERSION}/swiftlint_linux_amd64.zip" -o /tmp/swiftlint.zip
   unzip -q -o /tmp/swiftlint.zip -d /usr/local/swiftlint
-  ln -sf /usr/local/swiftlint/swiftlint /usr/local/bin/swiftlint
+  # The dynamic binary needs Swift runtime libs the zip doesn't carry
+  # (exec fails as 127); the -static build is self-contained.
+  ln -sf /usr/local/swiftlint/swiftlint-static /usr/local/bin/swiftlint
   rm /tmp/swiftlint.zip
 fi
