@@ -49,7 +49,40 @@ services:
 
 configs:
   tempo_config:
-    file: ./tempo.yaml
+    # Inline content (not `file:`): compose implements `file:` configs as
+    # bind mounts, which CI's dind daemon cannot resolve. Keep in sync with
+    # ./tempo.yaml (kept for local tooling/reference).
+    content: |
+      stream_over_http_enabled: true
+      server:
+        http_listen_port: 3200
+        log_level: info
+      distributor:
+        receivers:
+          otlp:
+            protocols:
+              http:
+                endpoint: "0.0.0.0:4318"
+              grpc:
+                endpoint: "0.0.0.0:4317"
+      ingester:
+        max_block_duration: 5m
+        complete_block_timeout: 10s
+        trace_idle_period: 1s
+      compactor:
+        compaction:
+          block_retention: 1h
+      storage:
+        trace:
+          backend: local
+          wal:
+            path: /var/tempo/wal
+          local:
+            path: /var/tempo/blocks
+      overrides:
+        defaults:
+          metrics_generator:
+            processors: []
 
 volumes:
   tempo-data: {}
