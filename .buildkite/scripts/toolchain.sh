@@ -24,8 +24,8 @@ if ! command -v rsync >/dev/null; then
   apt-get update -qq && apt-get install -y -qq --no-install-recommends rsync
 fi
 if ! command -v swiftlint >/dev/null; then
-  # Official linux artifact (bundles the Swift runtime libs; the fresh
-  # ci-base copies it from ghcr.io/realm/swiftlint instead).
+  # Official linux artifact; same recipe as .buildkite/ci-image/Dockerfile
+  # (which bakes it in) — keep the two in sync.
   # renovate: datasource=github-releases depName=realm/SwiftLint
   SWIFTLINT_VERSION="0.61.0"
   curl -fsSL "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT_VERSION}/swiftlint_linux_amd64.zip" -o /tmp/swiftlint.zip
