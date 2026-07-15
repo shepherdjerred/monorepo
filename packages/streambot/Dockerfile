@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7-labs
 # streambot image. Build context is the REPO ROOT (single Bun workspace, one
 # root bun.lock, isolated linker). Built via `bun run docker:build` in this
 # package (which passes `-f Dockerfile ../..`).
@@ -47,8 +48,23 @@ RUN set -e; \
     rm -f "/tmp/$asset" /tmp/SHA2-256SUMS "/tmp/$asset.sha256"
 
 # --- Workspace install + build the two dist-resolving fork deps. ---
-COPY . .
+# Manifests-only install layer: this ~6 GB `bun install` layer only invalidates
+# when a manifest/lockfile/patch changes, not on every source edit.
+# `--frozen-lockfile` requires every workspace member's package.json present, so
+# the globs enumerate all 47 members (top-level, nested packages/*/packages/*,
+# homelab/src/*, the desktop src-tauri crate, and the `scripts` dir).
+COPY --parents \
+  package.json bun.lock bunfig.toml patches/ scripts/package.json \
+  packages/*/package.json packages/*/packages/*/package.json \
+  packages/homelab/src/cdk8s/package.json \
+  packages/homelab/src/helm-types/package.json \
+  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
+  ./
 RUN bun install --frozen-lockfile
+
+# Now the sources. node_modules is excluded from context by .dockerignore, so
+# this does not clobber the installed tree.
+COPY . .
 
 # discord-video-stream and discord-stream-lifecycle both resolve their package
 # entry to a gitignored `dist/`; streambot imports them, so compile both before

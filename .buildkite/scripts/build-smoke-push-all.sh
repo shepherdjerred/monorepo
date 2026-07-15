@@ -7,6 +7,11 @@ set -euo pipefail
 
 REGISTRY="ghcr.io/shepherdjerred"
 SHA="${BUILDKITE_COMMIT:?BUILDKITE_COMMIT is required}"
+BUILD_NUMBER="${BUILDKITE_BUILD_NUMBER:?BUILDKITE_BUILD_NUMBER is required}"
+
+# Bake the real version + sha into images (the Dockerfiles declare ARG
+# VERSION/GIT_SHA with `dev`/`unknown` defaults for local builds).
+VERSION_ARGS="--build-arg VERSION=${BUILD_NUMBER} --build-arg GIT_SHA=${SHA}"
 
 # image name → turbo package filter that owns docker:build + smoke
 IMAGES=(
@@ -25,7 +30,7 @@ for entry in "${IMAGES[@]}"; do
   name="${entry%%=*}"
   filter="${entry#*=}"
   echo "--- :docker: ${name}"
-  DOCKER_BUILD_EXTRA_ARGS="--cache-from type=registry,ref=${REGISTRY}/${name}:buildcache --cache-to type=registry,ref=${REGISTRY}/${name}:buildcache,mode=max" \
+  DOCKER_BUILD_EXTRA_ARGS="${VERSION_ARGS} --cache-from type=registry,ref=${REGISTRY}/${name}:buildcache --cache-to type=registry,ref=${REGISTRY}/${name}:buildcache,mode=max" \
     bunx turbo run smoke --filter="${filter}"
   docker tag "${name}:dev" "${REGISTRY}/${name}:${SHA}"
   docker tag "${name}:dev" "${REGISTRY}/${name}:latest"
@@ -34,6 +39,7 @@ for entry in "${IMAGES[@]}"; do
 done
 
 # Homelab infra images build via the homelab package's umbrella scripts.
+# (Self-contained contexts; they don't consume VERSION/GIT_SHA.)
 echo "--- :docker: homelab infra images"
 DOCKER_BUILD_EXTRA_ARGS="" bunx turbo run smoke --filter=homelab
 for name in caddy-s3proxy obsidian-headless mcp-gateway redlib; do

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7-labs
 # Headless Discord Plays Pokémon. Build context is the REPO ROOT (single Bun
 # workspace, one root bun.lock, isolated linker, workspace:* deps). Built via
 # `bun run docker:build` in packages/discord-plays-pokemon/packages/backend
@@ -82,12 +83,25 @@ RUN set -e; \
 
 WORKDIR /app
 
-# Copy the whole workspace and install once at the root against the single
-# lockfile. trustedDependencies (node-datachannel, node-av, sharp) run their
-# native postinstalls during the frozen install. The root .dockerignore keeps
-# node_modules/dist/.git out of context.
-COPY . .
+# Manifests-only install layer: this ~6 GB `bun install` layer only invalidates
+# when a manifest/lockfile/patch changes, not on every source edit.
+# trustedDependencies (node-datachannel, node-av, sharp) run their native
+# postinstalls during the frozen install. `--frozen-lockfile` requires every
+# workspace member's package.json present, so the globs enumerate all 47 members
+# (top-level, nested packages/*/packages/*, homelab/src/*, the desktop src-tauri
+# crate, and the `scripts` dir).
+COPY --parents \
+  package.json bun.lock bunfig.toml patches/ scripts/package.json \
+  packages/*/package.json packages/*/packages/*/package.json \
+  packages/homelab/src/cdk8s/package.json \
+  packages/homelab/src/helm-types/package.json \
+  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
+  ./
 RUN bun install --frozen-lockfile
+
+# Now the sources. node_modules is excluded from context by .dockerignore, so
+# this does not clobber the installed tree.
+COPY . .
 
 # Build the workspace deps whose package `main`/exports resolve to a gitignored
 # `dist/` — consumers crash at startup with `Cannot find module` otherwise.
@@ -117,9 +131,15 @@ COPY --from=wasm-builder /src/build/wasm/pokeemerald.wasm \
 ENV VITE_SENTRY_RELEASE=dev
 RUN cd packages/discord-plays-pokemon/packages/frontend && bun run build
 
+# Version/revision metadata as build args so CI can bake the real build number +
+# commit SHA (`--build-arg VERSION=… --build-arg GIT_SHA=…`); the `dev`/`unknown`
+# defaults keep a plain `docker run` bootable. Kept AFTER the frontend build so a
+# per-build VERSION doesn't invalidate the (expensive) frontend build layer.
 ENV NODE_ENV=production
-ENV VERSION=dev
-ENV GIT_SHA=unknown
+ARG VERSION=dev
+ARG GIT_SHA=unknown
+ENV VERSION=${VERSION}
+ENV GIT_SHA=${GIT_SHA}
 
 # Run from the inner-monorepo root so getConfig()/emulator resolve config.toml,
 # packages/backend/assets/pokeemerald.wasm, and saves/ relative to CWD.

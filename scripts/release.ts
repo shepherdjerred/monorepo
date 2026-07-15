@@ -6,16 +6,18 @@
  * Runs the release-please CLI via `bunx`, authed by the GitHub App token minted
  * from env creds.
  *
- * Pipeline order (matches the old helper): release-pr → [refine] → github-release.
- * The refine step (a Claude agent that rewrote the just-generated CHANGELOGs)
- * is currently STUBBED OUT — its prompt file `.dagger/prompts/refine-release-please.md`
- * was removed with the `.dagger` dir when CI was stripped. See the TODO marker
- * below and packages/docs/todos/release-changelog-refinement.md.
+ * Pipeline order (matches the old helper): release-pr → refine → github-release.
+ * The refine step runs a Claude agent (prompt: scripts/prompts/refine-release-please.md,
+ * recovered verbatim from the old .dagger/prompts/) that rewrites the
+ * just-generated CHANGELOG entries into a consumer-focused view and pushes a
+ * cleanup commit to the release PR. It exits 0 with a status envelope when
+ * there is no open release PR or nothing to refine.
  *
  * Usage:
  *   bun scripts/release.ts [--dry-run]
  *
- * Env: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, GITHUB_APP_PRIVATE_KEY
+ * Env: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, GITHUB_APP_PRIVATE_KEY,
+ *      CLAUDE_CODE_OAUTH_TOKEN (refine step)
  */
 
 import { run } from "./lib/run.ts";
@@ -45,10 +47,10 @@ async function main(): Promise<void> {
   console.log(`--- release-please${dryRun ? " (dry run)" : ""}`);
   if (dryRun) {
     console.log(
-      "DRYRUN: would run `release-please release-pr` then " +
+      "DRYRUN: would run `release-please release-pr`, the Claude CHANGELOG " +
+        "refinement (scripts/prompts/refine-release-please.md), then " +
         "`release-please github-release` against " +
-        `${MONOREPO_REPO} (target-branch=main). The CHANGELOG-refinement step ` +
-        "is stubbed out — see packages/docs/todos/release-changelog-refinement.md.",
+        `${MONOREPO_REPO} (target-branch=main).`,
     );
     return;
   }
@@ -74,14 +76,46 @@ async function main(): Promise<void> {
 
     await releasePlease("release-pr");
 
-    // TODO(todo:release-changelog-refinement): the Claude CHANGELOG-refinement
-    // step between release-pr and github-release is intentionally omitted. Its
-    // prompt (.dagger/prompts/refine-release-please.md) was deleted when CI was
-    // stripped, so there is nothing self-contained to run here yet. Re-add it
-    // per the todo doc once the prompt is re-homed.
-    console.log(
-      "(skipping CHANGELOG refinement — stubbed; see " +
-        "packages/docs/todos/release-changelog-refinement.md)",
+    // Refine the just-generated CHANGELOGs. The prompt is the source of truth
+    // for the agent's behavior; it exits 0 with a status envelope when there
+    // is no open release PR, no bumped packages, or nothing to refine.
+    // The agent runs arbitrary git/gh Bash commands non-interactively, so it
+    // needs --dangerously-skip-permissions; its write access is bounded by
+    // the fixed, code-reviewed prompt and the GitHub App token's repo scope —
+    // re-evaluate if the prompt ever becomes dynamic. IS_SANDBOX=1 is Claude
+    // Code's documented escape hatch for trusted ephemeral automation
+    // containers (the flag refuses to run as root without it).
+    console.log("--- refine CHANGELOGs");
+    const claudeToken = Bun.env["CLAUDE_CODE_OAUTH_TOKEN"];
+    if (claudeToken === undefined || claudeToken === "") {
+      throw new Error(
+        "CLAUDE_CODE_OAUTH_TOKEN is required for the CHANGELOG refinement step",
+      );
+    }
+    const prompt = await Bun.file(
+      new URL("prompts/refine-release-please.md", import.meta.url).pathname,
+    ).text();
+    await run(
+      [
+        "claude",
+        "-p",
+        prompt,
+        "--output-format",
+        "json",
+        "--allowed-tools",
+        "Bash,Read,Edit,Write,Grep,Glob",
+        "--dangerously-skip-permissions",
+        "--max-turns",
+        "80",
+        "--model",
+        "claude-opus-4-8",
+      ],
+      {
+        cwd: root,
+        // auth.env carries GH_TOKEN + the GIT_ASKPASS helper the agent's
+        // git clone/push needs (the old helper's withAskpass: true).
+        env: { ...env, IS_SANDBOX: "1" },
+      },
     );
 
     await releasePlease("github-release");

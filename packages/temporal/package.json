@@ -21,7 +21,8 @@
     "test:integration": "bun run scripts/ensure-ha-schema.ts && bun test src/integration.test.ts",
     "generate:live": "bun ../home-assistant/src/codegen/cli.ts --out src/generated/ha-schema.ts --name HaSchema",
     "docker:build": "docker buildx build ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t temporal-worker:dev -f Dockerfile ../..",
-    "smoke": "bun scripts/smoke.ts"
+    "smoke": "bun scripts/smoke.ts",
+    "check:rehearsal": "bun run scripts/check-schedule-rehearsal.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.0",

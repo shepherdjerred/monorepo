@@ -37,4 +37,10 @@ RUN mise trust .mise.toml && mise install && mise reshim
 # uv/uvx for the python checks (ruff via uvx, pyright bootstraps a venv)
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
+# claude CLI for the release CHANGELOG-refinement step (scripts/release.ts);
+# same pinned recipe as packages/birmel/Dockerfile.
+ARG CLAUDE_CODE_VERSION=2.1.175
+ENV BUN_INSTALL=/usr/local
+RUN bun add -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && claude --version
+
 CMD ["bash"]
