@@ -11,6 +11,8 @@ agents:
 
 # Every step runs in the toolchain image baked from .mise.toml
 # (.buildkite/ci-image) — same tool versions as every laptop.
+# Steps that run repo tasks start with `source .buildkite/scripts/toolchain.sh`
+# — a fast no-op on a current image, a runtime mise bootstrap on a stale one.
 common:
   - pod: &pod
       kubernetes:
@@ -55,6 +57,11 @@ common:
 env:
   TURBO_SCM_BASE: "origin/main"
   TURBO_TELEMETRY_DISABLED: "1"
+  # The de-mirrored agent config (cdk8s buildkite.ts on this branch) only
+  # deploys after merge; until then the live agent-stack injects git-mirror
+  # alternates whose volume these pods don't mount, breaking any git command
+  # that reads objects. An empty mirrors path disables the mirror entirely.
+  BUILDKITE_GIT_MIRRORS_PATH: ""
 
 steps:
   # ── Verify: the whole task graph + every repo check ──────────────────────
@@ -64,6 +71,7 @@ steps:
   - label: ":turborepo: verify"
     key: verify
     command: |
+      source .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       if [ "$BUILDKITE_BRANCH" = "main" ]; then SCOPE=""; else SCOPE="--affected"; fi
       set +e
@@ -81,6 +89,7 @@ steps:
   - label: ":performing_arts: playwright e2e"
     key: e2e
     command: |
+      apt-get update -qq && apt-get install -y -qq --no-install-recommends unzip
       curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.14
       export PATH="/root/.bun/bin:$PATH"
       bun install --frozen-lockfile
@@ -134,7 +143,10 @@ steps:
   - label: ":robot_face: greptile review gate"
     if: build.branch != pipeline.default_branch
     soft_fail: true
-    command: bun scripts/wait-for-greptile.ts
+    command: |
+      source .buildkite/scripts/toolchain.sh
+      bun install --frozen-lockfile
+      bun scripts/wait-for-greptile.ts
     plugins:
       - *pod
 
@@ -144,6 +156,7 @@ steps:
     if: build.branch != pipeline.default_branch
     depends_on: verify
     command: |
+      source .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       for stack in seaweedfs tailscale buildkite arr pagerduty github cloudflare; do
         bun packages/homelab/scripts/tofu-stack.ts "$stack" plan
@@ -156,6 +169,7 @@ steps:
     if: build.branch != pipeline.default_branch
     depends_on: verify
     command: |
+      source .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       # Affected images build + smoke with registry layer cache; the three
       # nested-package families run unconditionally (turbo's nested --affected
@@ -170,6 +184,7 @@ steps:
     if: build.branch != pipeline.default_branch
     depends_on: verify
     command: |
+      source .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red scout-frontend scout-frontend-beta better-skill-capped glitter; do
         bun scripts/deploy-site.ts "$site" --dry-run
@@ -188,6 +203,7 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/image-push
     command: |
+      source .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bash .buildkite/scripts/build-smoke-push-all.sh
     retry: *retry
@@ -202,6 +218,7 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
+      source .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red scout-frontend scout-frontend-beta better-skill-capped glitter; do
         bun scripts/deploy-site.ts "$site"
@@ -215,6 +232,7 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on: verify
     command: |
+      source .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun run --cwd packages/astro-opengraph-images publish:npm
       bun run --cwd packages/webring publish:npm
@@ -229,6 +247,7 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on: verify
     command: |
+      source .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER"
     retry: *retry
@@ -240,6 +259,7 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on: [verify, helm-push]
     command: |
+      source .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       for stack in seaweedfs tailscale buildkite arr pagerduty; do
         bun packages/homelab/scripts/tofu-stack.ts "$stack" apply
@@ -256,6 +276,7 @@ steps:
     # No automatic retry: GitHub API mutations are not idempotent on partial
     # failure (same policy as the old pipeline).
     command: |
+      source .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun packages/homelab/scripts/tofu-stack.ts github apply
     plugins:
@@ -266,6 +287,7 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on: [images, helm-push, tofu-apply]
     command: |
+      source .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun packages/homelab/scripts/argocd.ts sync apps
       bun packages/homelab/scripts/argocd.ts health-wait apps --timeout 300
@@ -281,6 +303,7 @@ steps:
     # Fail-closed: the SeaweedFS TunnelBinding finalizer must complete before
     # the Cloudflare DNS tunnel route is removed (same gate as the old CI).
     command: |
+      source .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun packages/homelab/scripts/argocd.ts wait-deletion apps --group networking.cfargotunnel.com --version v1alpha1 --kind TunnelBinding --namespace seaweedfs --timeout 120
       bun packages/homelab/scripts/tofu-stack.ts cloudflare apply
@@ -292,6 +315,7 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on: [images, sites]
     command: |
+      source .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun scripts/release.ts
       bun scripts/update-versions.ts
@@ -305,6 +329,7 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on: verify
     command: |
+      source .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun run --cwd packages/cooklang-for-obsidian publish:plugin
     plugins:
@@ -314,7 +339,9 @@ steps:
   - label: ":docker: ci-image refresh"
     if: build.branch == pipeline.default_branch
     depends_on: verify
-    command: bash .buildkite/scripts/build-ci-image.sh
+    command: |
+      source .buildkite/scripts/toolchain.sh
+      bash .buildkite/scripts/build-ci-image.sh
     retry: *retry
     plugins:
       - *pod_privileged
