@@ -9,8 +9,10 @@ REGISTRY="ghcr.io/shepherdjerred"
 SHA="${BUILDKITE_COMMIT:?BUILDKITE_COMMIT is required}"
 BUILD_NUMBER="${BUILDKITE_BUILD_NUMBER:?BUILDKITE_BUILD_NUMBER is required}"
 
-# Bake the real version + sha into images (the Dockerfiles declare ARG
-# VERSION/GIT_SHA with `dev`/`unknown` defaults for local builds).
+# Bake the real version + sha into images. The Dockerfiles declare ARG
+# VERSION/GIT_SHA with `dev`/`unknown` defaults for local builds — except
+# tasknotes-server, which reads no VERSION at runtime and deliberately
+# declares neither (buildx ignores unused --build-arg without warning).
 VERSION_ARGS="--build-arg VERSION=${BUILD_NUMBER} --build-arg GIT_SHA=${SHA}"
 
 # image name → turbo package filter that owns docker:build + smoke
