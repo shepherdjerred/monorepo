@@ -2,7 +2,7 @@
 
 ## Status
 
-Complete (pending review) — branch `feature/ci-parity` (stacked on `spike/workspace-taskgraph`, PR #1518). Single-PR delivery per user direction. Final verify: **174/174 tasks green**.
+Complete (pending review) — branch `feature/ci-parity` (stacked on `spike/workspace-taskgraph`, PR #1518). Single-PR delivery per user direction. Final verify: **177/177 tasks green** (gap closure added check:caddyfile, test:contract, check:rehearsal).
 
 ## Context
 
@@ -211,3 +211,22 @@ scripts (interactive), tasks-for-obsidian Maestro e2e + `check:release-bundle`
 - Images boot with VERSION=dev/GIT_SHA=unknown defaults; release path should override.
 - helm-types drift stays on the Temporal weekly schedule; Java/sandbox stays out of CI (both match old behavior).
 - turbo nested --affected caveat, bun 1.3.x pin, and turbo-prune ban all still stand (documented in the replatform plan).
+
+## Session Log — 2026-07-14 (gap closure)
+
+### Done
+
+- Review pushback closed EVERY deferred item (todos temporal-worker-agent-clis, release-changelog-refinement, image-size-workspace-install all completed + deleted; only turbo-cache-rollout remains, operator-only) plus three capabilities the parity audit had missed entirely: check:caddyfile, test:contract, check:rehearsal — all wired into verify + CI with seeded-failure proofs.
+- temporal-worker ships all 13 operator CLIs (smoke-asserted); all 9 workspace images relayered manifests-first (source edits keep the 5-6 GB install layer CACHED; warm rebuilds 35-50s → 1-14s); VERSION/GIT_SHA baked on main.
+- 1:1 local↔CI matrix established (table in this doc): Playwright e2e step, main runs FULL verify, PR dry-run lane restored (images/sites/helm/release), cooklang plugin publish step added, turbo-summary + build-summary annotations.
+- Docs truth pass across root + 11 package AGENTS.md files; benchmark framing corrected (old CI was cached AND pruned — the comparison is architectural).
+- Final: bun run verify = 177/177 green.
+
+### Remaining
+
+- Operator-only: turbo-cache rollout (todo), point Buildkite at the pipeline + push ci-base once, enable the rulesets.tf check after the first green build.
+
+### Caveats
+
+- check:caddyfile + check:rehearsal are cache:false (docker image / whole-tree correctness outside turbo's hash); rehearsal adds ~1m40s to a cold verify.
+- Maestro e2e + check:release-bundle + Xcode Cloud remain outside Buildkite by physics (no macOS agents) — documented as operator-only in the matrix.
