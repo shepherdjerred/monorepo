@@ -7,7 +7,7 @@ This is a Kubernetes homelab infrastructure monorepo using CDK8s for infrastruct
 - **Runtime**: Bun (not Node.js)
 - **Language**: TypeScript (strict mode)
 - **Infrastructure**: CDK8s for Kubernetes manifests
-- **CI/CD**: none — the Dagger/Buildkite pipeline was removed 2026-07; run checks and deploys manually
+- **CI/CD**: the static Buildkite pipeline (`.buildkite/pipeline.yml`) runs `bun run verify` on every PR (which includes homelab's `check:talos`, `lint:helm`, `check:1password` turbo tasks) and, on merge to main, tofu-plans/applies the infra stacks, helm-pushes, and ArgoCD-syncs
 
 ## Workspaces
 
@@ -52,7 +52,7 @@ bun run prettier
 ### Formatting (Prettier)
 
 - Print width: 120 characters
-- Run `bun run prettier` manually — there are no git hooks (removed 2026-07)
+- The `pre-commit` hook formats staged files automatically; run `bun run prettier` to check the whole tree
 
 ### TypeScript
 
@@ -148,8 +148,8 @@ synced secret's data keys are consumed via `secretKeyRef`/`envFrom`/volume mount
 
 A linter guarantees that **every referenced item and field actually exists in 1Password**,
 so a typo'd field name or a missing/renamed item is caught before deploy instead of failing
-the operator sync (or crashing the pod) at runtime. It runs offline — run it manually before
-committing (the pre-commit hook and CI gate that enforced it were removed 2026-07) — by
+the operator sync (or crashing the pod) at runtime. It runs offline as the `check:1password`
+turbo task (wired into `bun run verify`, so the `pre-push` hook and CI both enforce it) — by
 checking the synthesized references against a committed snapshot of vault
 structure — `src/cdk8s/onepassword-vault-snapshot.json`, which holds **only sha256 hashes**
 of item ids/titles/field keys (no values, no plaintext names).
@@ -205,7 +205,7 @@ github.com/1Password/connect-helm-charts#272.
 
 ## Testing Notes
 
-(There are no pre-commit hooks or CI since 2026-07 — run these checks manually before committing.)
+(The `pre-push` hook and CI run `bun run verify`, which includes these tests; run them locally too so you catch failures before pushing.)
 
 ### Run tests with `bun run test`, not bare `bun test`
 
@@ -240,7 +240,7 @@ expected. Run locally with `HELM_RENDER_TEST=1 bun test src/argocd-helm-render.t
 
 ## Git Workflow
 
-- Use conventional commit messages (`type(scope): description`); nothing enforces them anymore (lefthook was removed 2026-07), so run lint/typecheck/tests yourself before committing
+- Use conventional commit messages (`type(scope): description`); the `commit-msg` lefthook validates them (`scripts/validate-commit-msg.ts`, scope must be a package name or `root`/`deps`/`ci`/etc.), and the `pre-commit`/`pre-push` hooks run lint/typecheck/verify
 
 ## Version Management
 
@@ -277,4 +277,4 @@ OpenTofu/Terraform state for the `src/tofu/*` stacks is stored in **SeaweedFS** 
 
 The `shepherdjerred/monorepo` branch rulesets and repo settings are OpenTofu-managed in `src/tofu/github/` (`rulesets.tf`, `repos.tf`). **Manual edits via `gh api`/the GitHub UI do not stick** — a `tofu apply` reconciles them away. To change required status checks, enforcement, or bypass actors, edit `rulesets.tf`.
 
-Required status checks are `required_check { context = "..." }` blocks under `rules { required_status_checks { ... } }`. The `buildkite/monorepo/pr/*` required checks were removed 2026-07 along with the CI pipeline (see the comment in `rulesets.tf` for what remains). If a required check is ever reintroduced, route it through Tofu — requiring a context that doesn't yet exist on PR builds blocks every PR until the producer lands on `main`. Validate locally: `tofu -chdir=github init -backend=false && tofu -chdir=github validate`.
+Required status checks are `required_check { context = "..." }` blocks under `rules { required_status_checks { ... } }`. The replatformed Buildkite pipeline posts a single aggregate `buildkite/monorepo` commit status (not the old per-step `buildkite/monorepo/pr/*` contexts); the `required_check` for it is **commented out in `rulesets.tf`** and only becomes required once the operator points Buildkite at `.buildkite/pipeline.yml` and it has posted that status on at least one PR build — the currently-active required check is `ci/merge-conflict` (posted by a Temporal worker). Uncomment/reintroduce a required check only through Tofu — requiring a context that doesn't yet exist on PR builds blocks every PR until the producer lands on `main`. Validate locally: `tofu -chdir=github init -backend=false && tofu -chdir=github validate`.

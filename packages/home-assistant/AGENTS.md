@@ -29,7 +29,7 @@ import {
 bunx ha-codegen --url $HA_URL --token $HA_TOKEN --out <path>.ts --name MySchema
 ```
 
-Generated output contains private entity IDs and service definitions and **must never be committed** — consumer packages gitignore the output path and regenerate it at build time (same pattern as Prisma packages; there is no CI to do this since 2026-07, so regenerate manually where needed).
+Generated output contains private entity IDs and service definitions and **must never be committed** — consumer packages gitignore the output path and regenerate it at build time (same pattern as Prisma packages). CI has no HA credentials, so this codegen is never run in the pipeline; regenerate it locally against a live instance where needed.
 
 ## Commands
 

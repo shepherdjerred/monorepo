@@ -118,14 +118,60 @@ All recovered from `.dagger/src/release.ts` logic, reimplemented as plain bun sc
 
 **Results (2026-07-13, measured):**
 
-| Metric              | Old CI (Buildkite API, last 50 passed builds)               | New system                                                                                                 |
-| ------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| PR verify wall      | median **11.0 min**, p90 **72.7 min**, max 109.6 min (n=46) | full 169-task verify: cold **5m34s** at `-c 4`; warm **1.7s** FULL TURBO; affected-scoped is strictly less |
-| Main build wall     | median **37.8 min**, p90 66.9 min (n=4)                     | verify + deploy DAG (to be measured live in Phase F rollout)                                               |
-| Repo-wide checks    | 15-check quality bundle, own pod each pre-bundling          | all 22 checks input-scoped; docs-only edit re-runs 7 checks, everything else stays cached                  |
-| Pre-commit hook     | re-ran every per-package job each commit                    | **3.7s warm** (staged safety checks + `turbo --affected` replay)                                           |
-| Steps per PR build  | dynamic, dozens of pods                                     | **5 static steps** (verify + 3 soft-fail + tofu plan)                                                      |
-| Fresh-clone codegen | `setup.ts` multi-phase orchestrator                         | `bun install` 6.3s + `turbo run generate` (cached: 113ms restore)                                          |
+> Framing note (honesty pass, 2026-07-14): the old CI was NOT uncached — it had
+> BuildKit layer caching (the 2 TiB engine), per-function cache mounts, and
+> change-detection that pruned unaffected steps from the pipeline entirely. The
+> 11-min median below is a cached, pruned system's number. The real difference
+> is architectural: old caching was infrastructure-scoped (one stateful
+> singleton engine, cache keyed per Dagger op — the failure domain behind the
+> 2026-06/07 outages), new caching is task-content-scoped (hermetic hashes,
+> shareable via dumb blob storage, no daemon). Sub-second warm replays and the
+> removal of the singleton are the wins; "old had no caching" is not the claim.
+> Two old capabilities were consciously dropped and one restored: build-age
+> step prioritization is moot with a single verify step (nothing to reorder);
+> the PR --dryrun deploy validation was initially dropped and is now RESTORED
+> as the PR dry-run lane (images build+smoke, site/helm/release --dry-run).
+
+| Metric              | Old CI (Buildkite API, last 50 passed builds)               | New system                                                                                                      |
+| ------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| PR verify wall      | median **11.0 min**, p90 **72.7 min**, max 109.6 min (n=46) | full 169-task verify: cold **5m34s** at `-c 4`; warm **1.7s** FULL TURBO; affected-scoped is strictly less      |
+| Main build wall     | median **37.8 min**, p90 66.9 min (n=4)                     | verify + deploy DAG (to be measured live in Phase F rollout)                                                    |
+| Repo-wide checks    | 15-check quality bundle, own pod each pre-bundling          | all 22 checks input-scoped; docs-only edit re-runs 7 checks, everything else stays cached                       |
+| Pre-commit hook     | re-ran every per-package job each commit                    | **3.7s warm** (staged safety checks + `turbo --affected` replay)                                                |
+| Steps per PR build  | dynamic, dozens of pods                                     | **8 static steps** (verify, playwright e2e, 3 soft-fail, tofu plan, images dry-run, sites/helm/release dry-run) |
+| Fresh-clone codegen | `setup.ts` multi-phase orchestrator                         | `bun install` 6.3s + `turbo run generate` (cached: 113ms restore)                                               |
+
+## Local ↔ CI matrix (the standing 1:1 contract)
+
+CI is authoritative: every task runnable locally runs in CI, or is explicitly
+operator-only below. `verify` = `bun run verify` (build, typecheck, test, lint,
+all `//#` checks, check:talos, lint:helm, check:1password, check:test-template,
+check:ios-native-deps, lint:swift, check:caddyfile, test:contract,
+check:rehearsal).
+
+| Task surface                         | Local                                                                     | CI step                                              | When                                     |
+| ------------------------------------ | ------------------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------- |
+| `verify` (everything above)          | `bun run verify` (pre-push hook: `--affected`)                            | verify                                               | PR `--affected`; main FULL               |
+| `test:e2e` (Playwright)              | `turbo run test:e2e`                                                      | playwright e2e                                       | PR + main                                |
+| `docker:build` + `smoke` (14 images) | `turbo run smoke --filter=<pkg>`                                          | images dry-run (PR) / images build+smoke+push (main) | PR (affected + nested trio) + main (all) |
+| `deploy` (9 sites)                   | `bun scripts/deploy-site.ts <site> [--dry-run]`                           | sites dry-run (PR) / deploy sites (main)             | PR dry-run + main                        |
+| `publish:npm` (3 pkgs)               | `bun run publish:npm` per package                                         | publish packages                                     | main                                     |
+| `helm:push`                          | `bun packages/homelab/scripts/helm-push.ts <n> [--dry-run]`               | helm dry-run (PR) / helm push (main)                 | PR dry-run + main                        |
+| tofu stacks                          | `bun packages/homelab/scripts/tofu-stack.ts <stack> plan\|apply`          | tofu plan (PR) / applies (main)                      | PR plan + main apply                     |
+| ArgoCD sync/gates                    | `bun packages/homelab/scripts/argocd.ts …`                                | argocd sync + cloudflare gate                        | main                                     |
+| release-please + refine              | `bun scripts/release.ts [--dry-run]`                                      | release dry-run (PR) / release (main)                | PR dry-run + main                        |
+| version commit-back                  | `bun scripts/update-versions.ts`                                          | release step                                         | main                                     |
+| cooklang plugin publish              | `bun run --cwd packages/cooklang-for-obsidian publish:plugin [--dry-run]` | cooklang plugin publish                              | main (tag-idempotent)                    |
+| trivy / semgrep / greptile gate      | (CI-only scanners; greptile: `bun scripts/wait-for-greptile.ts`)          | soft-fail lane                                       | PR + main (greptile PR-only)             |
+| toolchain image                      | `docker buildx` on .buildkite/ci-image                                    | ci-image refresh                                     | main                                     |
+
+Operator-only (justified exclusions): `generate:live` (live Home Assistant /
+chart-repo credentials; typecheck/test self-manage stubs), `dev`/`start`/watch
+scripts (interactive), tasks-for-obsidian Maestro e2e + `check:release-bundle`
+
+- Xcode Cloud (needs macOS simulators — Buildkite has no macOS agents; Xcode
+  Cloud owns the iOS release path), `snapshot-1password-vault.ts` (biometric op
+  access).
 
 ## Verification (end of plan)
 

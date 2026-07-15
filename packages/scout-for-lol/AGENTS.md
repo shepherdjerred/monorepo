@@ -125,7 +125,7 @@ Each package supports: `dev`, `build`, `test`, `lint`, `format`, `typecheck`
 
 ## CI/CD
 
-There is no CI — the Dagger + Buildkite pipeline was removed 2026-07. Run checks locally (`mise run check`) and build/push container images manually.
+CI runs on the static Buildkite pipeline (`.buildkite/pipeline.yml`): every PR runs `bun run verify` (affected-scoped, includes scout's checks), Playwright e2e, and a dry-run image build + smoke; on merge to main the backend image is built, smoked, and pushed and the frontends deploy. Locally, `bun run verify` (or `mise run check`) mirrors CI; build the backend image with `bun run --filter=@scout-for-lol/backend docker:build` (`bunx turbo run smoke --filter=@scout-for-lol/backend` builds + smoke-tests it).
 
 ---
 
@@ -512,11 +512,14 @@ Discord OAuth in the browser (see **Web UI (Local end-to-end)** above).
 
 ---
 
-## Pre-commit Checklist (manual — git hooks were removed 2026-07)
+## Pre-commit / pre-push gates
 
-Nothing runs automatically on commit. Before committing, run yourself:
+Git hooks (lefthook) run automatically: `pre-commit` formats staged files and runs
+`turbo run lint typecheck --affected`; `pre-push` runs `bun run verify -- --affected`
+(the full build/typecheck/test/lint + repo checks). Nothing extra is required, but
+running these yourself before pushing catches failures earlier:
 
-- Prettier formatting on touched files
+- Prettier formatting on touched files (also auto-fixed by the pre-commit hook)
 - Markdownlint on `.md` files
 - Per-package: typecheck, ESLint, and relevant tests
 - Rust formatting and Clippy for desktop/src-tauri
