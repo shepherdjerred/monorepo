@@ -57,15 +57,50 @@ env:
   TURBO_TELEMETRY_DISABLED: "1"
 
 steps:
-  # ── Verify: the whole task graph + every repo check, affected-scoped ──────
+  # ── Verify: the whole task graph + every repo check ──────────────────────
+  # PRs run affected-scoped; main re-verifies EVERYTHING (cheap via cache).
+  # The turbo run summary is annotated onto the build either way, without
+  # masking verify's exit code.
   - label: ":turborepo: verify"
     key: verify
     command: |
       bun install --frozen-lockfile
-      bun run verify -- --affected --concurrency=6 --output-logs=errors-only
+      if [ "$BUILDKITE_BRANCH" = "main" ]; then SCOPE=""; else SCOPE="--affected"; fi
+      set +e
+      bun run verify -- $SCOPE --concurrency=6 --output-logs=errors-only --summarize
+      verify_status=$?
+      set -e
+      bun scripts/annotate-turbo-summary.ts
+      exit "$verify_status"
     retry: *retry
     plugins:
       - *pod
+
+  # ── Playwright e2e (PR + main) — browser-equipped container, bun installed
+  # the same way the old CI's playwright step did.
+  - label: ":performing_arts: playwright e2e"
+    key: e2e
+    command: |
+      curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.14
+      export PATH="/root/.bun/bin:$PATH"
+      bun install --frozen-lockfile
+      bunx turbo run test:e2e --concurrency=2
+    retry: *retry
+    plugins:
+      - kubernetes:
+          checkout:
+            cloneFlags: "--no-tags"
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s-controller
+            containers:
+              - name: container-0
+                # renovate: datasource=docker depName=mcr.microsoft.com/playwright
+                image: "mcr.microsoft.com/playwright:v1.61.1-noble"
+                resources:
+                  requests: { cpu: "2", memory: "4Gi" }
+                  limits: { cpu: "4", memory: "8Gi" }
+                envFrom:
+                  - secretRef: { name: buildkite-ci-secrets }
 
   # ── Soft-fail lane (parallel with everything) ─────────────────────────────
   - label: ":shield: trivy"
@@ -103,7 +138,8 @@ steps:
     plugins:
       - *pod
 
-  # ── PR-only: read-only infra plan ─────────────────────────────────────────
+  # ── PR-only dry-run lane: validate every deploy path, no side effects ─────
+  # (the old pipeline's --dryrun plumbing, restored)
   - label: ":terraform: tofu plan"
     if: build.branch != pipeline.default_branch
     depends_on: verify
@@ -112,6 +148,34 @@ steps:
       for stack in seaweedfs tailscale buildkite arr pagerduty github cloudflare; do
         bun packages/homelab/scripts/tofu-stack.ts "$stack" plan
       done
+    retry: *retry
+    plugins:
+      - *pod
+
+  - label: ":docker: images — build + smoke (PR dry-run)"
+    if: build.branch != pipeline.default_branch
+    depends_on: verify
+    command: |
+      bun install --frozen-lockfile
+      # Affected images build + smoke with registry layer cache; the three
+      # nested-package families run unconditionally (turbo's nested --affected
+      # under-selection bug — same workaround as the native shims). No push.
+      bunx turbo run smoke --affected
+      bunx turbo run smoke --filter='@discord-plays-pokemon/backend' --filter='@discord-plays-mario-kart/backend' --filter='@scout-for-lol/backend'
+    retry: *retry
+    plugins:
+      - *pod_privileged
+
+  - label: ":rocket: sites + helm + release (PR dry-run)"
+    if: build.branch != pipeline.default_branch
+    depends_on: verify
+    command: |
+      bun install --frozen-lockfile
+      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red scout-frontend scout-frontend-beta better-skill-capped glitter; do
+        bun scripts/deploy-site.ts "$site" --dry-run
+      done
+      bun packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER" --dry-run
+      bun scripts/release.ts --dry-run
     retry: *retry
     plugins:
       - *pod
@@ -234,6 +298,18 @@ steps:
     plugins:
       - *pod
 
+  # ── Main-only: cooklang Obsidian plugin release ───────────────────────────
+  # Publishes to the plugin repo + commits the version back (idempotent: the
+  # script skips the release cut when the version tag already exists).
+  - label: ":knife_fork_plate: cooklang plugin publish"
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    command: |
+      bun install --frozen-lockfile
+      bun run --cwd packages/cooklang-for-obsidian publish:plugin
+    plugins:
+      - *pod
+
   # ── Toolchain image refresh (only when .mise.toml or the Dockerfile moved) ─
   - label: ":docker: ci-image refresh"
     if: build.branch == pipeline.default_branch
@@ -242,3 +318,19 @@ steps:
     retry: *retry
     plugins:
       - *pod_privileged
+
+  # ── Main-only: build summary annotation (runs even when deploys fail) ─────
+  - label: ":memo: build summary"
+    if: build.branch == pipeline.default_branch
+    depends_on:
+      - verify
+      - e2e
+      - images
+      - sites
+      - helm-push
+      - tofu-apply
+      - argocd-sync
+    allow_dependency_failure: true
+    command: bash .buildkite/scripts/annotate-build-summary.sh
+    plugins:
+      - *pod
