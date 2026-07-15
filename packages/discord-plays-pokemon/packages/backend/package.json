@@ -19,7 +19,7 @@
     "test": "bun test",
     "test:watch": "bun test --watch",
     "e2e:goal": "bun test src/goal/e2e-goal.integration.test.ts",
-    "docker:build": "docker buildx build ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t discord-plays-pokemon:dev -f ../../Dockerfile ../../../..",
+    "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/discord-plays-pokemon:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t discord-plays-pokemon:dev -f ../../Dockerfile ../../../..",
     "smoke": "bun scripts/smoke.ts"
   },
   "dependencies": {

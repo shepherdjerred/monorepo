@@ -19,7 +19,7 @@
     "e2e:local": "bun run e2e/local.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "docker:build": "docker buildx build ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t streambot:dev -f Dockerfile ../..",
+    "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/streambot:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t streambot:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts"
   },
   "dependencies": {

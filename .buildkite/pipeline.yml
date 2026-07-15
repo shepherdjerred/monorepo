@@ -213,8 +213,10 @@ steps:
       . .buildkite/scripts/toolchain.sh
       . .buildkite/scripts/docker-env.sh
       bun install --frozen-lockfile
-      # Affected images build + smoke with registry layer cache; the three
-      # nested-package families run unconditionally (turbo's nested --affected
+      # Images build + smoke. Registry layer cache is read via the per-image
+      # --cache-from baked into each docker:build script (read-only on PRs —
+      # only main's push script adds --cache-to). The three nested-package
+      # families run unconditionally (turbo's nested --affected
       # under-selection bug — same workaround as the native shims). No push.
       bunx turbo run smoke --affected
       bunx turbo run smoke --filter='@discord-plays-pokemon/backend' --filter='@discord-plays-mario-kart/backend' --filter='@scout-for-lol/backend'

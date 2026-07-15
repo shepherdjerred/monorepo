@@ -23,7 +23,7 @@
     "test:e2e:openclaw-docker": "bun run e2e/openclaw-capabilities-docker.ts",
     "typecheck": "bun run generate && tsc --noEmit",
     "lint": "bun run generate && eslint .",
-    "docker:build": "docker buildx build ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t birmel:dev -f Dockerfile ../..",
+    "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/birmel:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t birmel:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts"
   },
   "dependencies": {

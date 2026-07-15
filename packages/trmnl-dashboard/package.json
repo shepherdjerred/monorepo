@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "lint": "bunx eslint . --max-warnings=0",
-    "docker:build": "docker buildx build ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t trmnl-dashboard:dev -f Dockerfile ../..",
+    "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/trmnl-dashboard:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t trmnl-dashboard:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts"
   },
   "dependencies": {

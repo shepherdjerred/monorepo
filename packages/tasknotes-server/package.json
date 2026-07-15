@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "lint": "bunx eslint . --max-warnings=0",
-    "docker:build": "docker buildx build ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t tasknotes-server:dev -f Dockerfile ../..",
+    "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/tasknotes-server:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t tasknotes-server:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts"
   },
   "dependencies": {
