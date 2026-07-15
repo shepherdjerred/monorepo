@@ -117,9 +117,10 @@ steps:
       curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.14
       export PATH="/root/.bun/bin:$PATH"
       bun install --frozen-lockfile
-      # The image ships browsers for its own playwright build; install the
-      # repo-resolved build too (fast no-op when they match).
-      bunx playwright install chromium
+      # Install the browser builds for the REPO-resolved playwright (run from
+      # the package so bunx uses its dependency, not a downloaded latest):
+      # chromium + headless-shell + webkit (the suite runs Mobile Safari).
+      cd packages/sjer.red && bunx playwright install && cd ../..
       bunx turbo run test:e2e --filter=sjer.red --concurrency=2
     retry: *retry
     plugins:
