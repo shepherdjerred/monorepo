@@ -45,20 +45,23 @@ const STACKS_REL = "src/tofu";
  * matches the target for TF_VAR_* / CLOUDFLARE_API_TOKEN / TAILSCALE_* since
  * those were already conventional env vars in the old operator flow.
  */
+// Source names match the buildkite-ci-secrets keys (and the repo's env-var
+// naming convention) exactly; targets are what each stack's variables.tf
+// declares.
 const OPTIONAL_SECRET_ENV: readonly [source: string, target: string][] = [
   ["GH_TOKEN", "TF_VAR_github_token"],
-  ["TF_VAR_CLOUDFLARE_ACCOUNT_ID", "TF_VAR_cloudflare_account_id"],
+  ["CLOUDFLARE_ACCOUNT_ID", "TF_VAR_cloudflare_account_id"],
   ["CLOUDFLARE_API_TOKEN", "CLOUDFLARE_API_TOKEN"],
   ["TAILSCALE_OAUTH_CLIENT_ID", "TAILSCALE_OAUTH_CLIENT_ID"],
   ["TAILSCALE_OAUTH_CLIENT_SECRET", "TAILSCALE_OAUTH_CLIENT_SECRET"],
-  ["TF_VAR_BUILDKITE_API_TOKEN", "TF_VAR_buildkite_api_token"],
-  ["TF_VAR_RADARR_API_KEY", "TF_VAR_radarr_api_key"],
-  ["TF_VAR_SONARR_API_KEY", "TF_VAR_sonarr_api_key"],
-  ["TF_VAR_PROWLARR_API_KEY", "TF_VAR_prowlarr_api_key"],
-  ["TF_VAR_QBITTORRENT_PASSWORD", "TF_VAR_qbittorrent_password"],
-  ["TF_VAR_PRIVATEHD_PASSWORD", "TF_VAR_privatehd_password"],
-  ["TF_VAR_PRIVATEHD_PID", "TF_VAR_privatehd_pid"],
-  ["TF_VAR_PAGERDUTY_TOKEN", "TF_VAR_pagerduty_token"],
+  ["BUILDKITE_API_TOKEN", "TF_VAR_buildkite_api_token"],
+  ["RADARR_API_KEY", "TF_VAR_radarr_api_key"],
+  ["SONARR_API_KEY", "TF_VAR_sonarr_api_key"],
+  ["PROWLARR_API_KEY", "TF_VAR_prowlarr_api_key"],
+  ["QBITTORRENT_PASSWORD", "TF_VAR_qbittorrent_password"],
+  ["PRIVATEHD_PASSWORD", "TF_VAR_privatehd_password"],
+  ["PRIVATEHD_PID", "TF_VAR_privatehd_pid"],
+  ["PAGERDUTY_TOKEN", "TF_VAR_pagerduty_token"],
 ];
 
 /** Build the env the tofu subprocess runs with. */
