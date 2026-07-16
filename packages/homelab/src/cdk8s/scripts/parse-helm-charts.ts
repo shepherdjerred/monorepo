@@ -17,7 +17,7 @@ export type ChartInfo = {
  * docker datasource, so this allowlist is the only reliable way to tell the two
  * apart. Keep in sync with the OCI ArgoCD applications.
  */
-const OCI_CHART_KEYS = new Set(["kueue", "dagger-helm", "agent-stack-k8s"]);
+const OCI_CHART_KEYS = new Set(["kueue", "agent-stack-k8s"]);
 
 /**
  * The version value is usually on the key line (`key: "x"`), but long pins

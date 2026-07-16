@@ -101,7 +101,8 @@ Requires `.env` with Discord and AI API keys. Key variables:
 
 ## Image build
 
-The production image is built by `buildImageHelper` in `.dagger/src/image.ts`
-with `installEditorClis: true`. That installs `gh` and the Anthropic Claude
-Code CLI into the image so the `editor-agent` sub-agent's tools work at
-runtime. The smoke test asserts both binaries are on `$PATH`.
+The image builds from `Dockerfile` via `bun run docker:build` (`bunx turbo run
+smoke --filter=birmel` builds + smoke-tests it; CI builds, smokes, and pushes it
+on merge to main). The image must include `gh` and the Anthropic Claude Code CLI
+so the `editor-agent` sub-agent's tools work at runtime — verify both binaries
+are on `$PATH` before deploying.

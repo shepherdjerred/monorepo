@@ -1,6 +1,5 @@
 import {
   createAudioTransport as coreCreateAudioTransport,
-  buildAudioInputOptions,
   type AudioTransport,
 } from "@shepherdjerred/discord-plays-core/stream/audio-transport.ts";
 import { AUDIO_SAMPLE_RATE, AUDIO_CHANNELS } from "#src/emulator/constants.ts";
@@ -14,8 +13,6 @@ const AUDIO_OPTIONS = {
   sampleRate: AUDIO_SAMPLE_RATE,
   channels: AUDIO_CHANNELS,
 } as const;
-
-export const AUDIO_INPUT_OPTIONS = buildAudioInputOptions(AUDIO_OPTIONS);
 
 /** Write resampled PCM (s16le/44.1 kHz/stereo) to the returned transport's `sink`. */
 export function createAudioTransport(): Promise<AudioTransport> {

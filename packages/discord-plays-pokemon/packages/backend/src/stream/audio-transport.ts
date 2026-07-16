@@ -1,6 +1,5 @@
 import {
   createAudioTransport as coreCreateAudioTransport,
-  buildAudioInputOptions,
   type AudioTransport,
 } from "@shepherdjerred/discord-plays-core/stream/audio-transport.ts";
 import { AUDIO_CHANNELS, AUDIO_SAMPLE_RATE } from "#src/emulator/constants.ts";
@@ -16,8 +15,6 @@ const AUDIO_OPTIONS = {
   sampleRate: AUDIO_SAMPLE_RATE,
   channels: AUDIO_CHANNELS,
 } as const;
-
-export const AUDIO_INPUT_OPTIONS = buildAudioInputOptions(AUDIO_OPTIONS);
 
 /** Write Float32 LRLR PCM to the returned transport's `sink`; ffmpeg muxes it into the broadcast. */
 export function createAudioTransport(): Promise<AudioTransport> {

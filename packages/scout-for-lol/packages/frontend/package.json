@@ -12,9 +12,9 @@
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-navigation-menu": "^1.2.14",
     "@radix-ui/react-slot": "^1.2.4",
-    "@scout-for-lol/backend": "file:../backend",
-    "@scout-for-lol/data": "file:../data",
-    "@scout-for-lol/report": "file:../report",
+    "@scout-for-lol/backend": "workspace:*",
+    "@scout-for-lol/data": "workspace:*",
+    "@scout-for-lol/report": "workspace:*",
     "@tailwindcss/postcss": "^4.1.11",
     "@tailwindcss/typography": "^0.5.16",
     "@trpc/client": "^11.8.0",
@@ -47,7 +47,9 @@
     "test:headed": "echo 'Playwright tests disabled'",
     "test:report": "echo 'Playwright tests disabled'",
     "test:install": "echo 'Playwright tests disabled'",
-    "typecheck": "astro check && bunx tsc --noEmit"
+    "typecheck": "astro check && bunx tsc --noEmit",
+    "deploy": "bun ../../../../scripts/deploy-site.ts scout-frontend",
+    "deploy:beta": "bun ../../../../scripts/deploy-site.ts scout-frontend-beta"
   },
   "type": "module",
   "version": "0.0.1",

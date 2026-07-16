@@ -61,8 +61,10 @@ re-applies them every frame via `applyHostControls()` (in
 `wasm-src/patches/0001-*.patch`). This works around `mainLoopInner()` calling
 `resetNeilButtons()` every frame — the original code wrote `neilbuttons[*]` once
 before `_runMainLoop()`, so all input was silently dropped (frames still
-rendered). Because the WASM is built in the Dagger image (gitignored assets), a
-fix here needs an image rebuild + GitOps redeploy to reach prod. Manual
+rendered). Because the WASM is built at image-build time (gitignored assets;
+CI builds, smokes, and pushes the image on merge to main via the `smoke`/image
+lanes in `.buildkite/pipeline.yml`), a fix here needs an image rebuild + GitOps
+redeploy to reach prod. Manual
 game-effect verification (needs ROM + built core): from `packages/backend`,
 `bun run build:wasm` then `bun run e2e:input:check "<rom>"` — holding START on
 the title screen must advance to GAME SELECT while the baseline stays put.

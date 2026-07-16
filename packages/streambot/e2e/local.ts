@@ -17,7 +17,7 @@ import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 /**
  * Credential-free local end-to-end test of the observability stack. Unlike `e2e/run.ts` (which needs
- * real Discord tokens and runs in Dagger), this exercises everything that does NOT require a Discord
+ * real Discord tokens), this exercises everything that does NOT require a Discord
  * voice connection, against a REAL ffmpeg/ffprobe:
  *
  *   1. ffprobe — generate an HEVC 10-bit HDR clip with a 6-channel audio track and confirm
