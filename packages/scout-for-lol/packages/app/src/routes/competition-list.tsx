@@ -20,7 +20,8 @@ import {
 export function CompetitionList() {
   const { guildId } = useParams();
   const trpc = useTRPC();
-  const [activeOnly, setActiveOnly] = useState(false);
+  // Default to hiding cancelled/ended competitions; the toggle shows all.
+  const [activeOnly, setActiveOnly] = useState(true);
   const safeGuildId = guildId ?? "";
 
   const competitionsQuery = useInfiniteQuery(
@@ -95,7 +96,7 @@ export function CompetitionList() {
                 <TableRow key={competition.id}>
                   <TableCell className="font-medium">
                     <Link
-                      className="hover:underline"
+                      className="underline"
                       to={`/g/${guildId}/competitions/${competition.id.toString()}`}
                     >
                       {competition.title}

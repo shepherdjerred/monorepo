@@ -20,10 +20,10 @@ export function buildCodexCredentialEnvironment(
   const codexAccessToken = envValue(inherited, "CODEX_ACCESS_TOKEN");
   const codexCredentialEnvironment: Record<string, string> = {};
   if (codexApiKey !== undefined) {
-    codexCredentialEnvironment.CODEX_API_KEY = codexApiKey;
+    codexCredentialEnvironment["CODEX_API_KEY"] = codexApiKey;
   }
   if (codexAccessToken !== undefined) {
-    codexCredentialEnvironment.CODEX_ACCESS_TOKEN = codexAccessToken;
+    codexCredentialEnvironment["CODEX_ACCESS_TOKEN"] = codexAccessToken;
   }
   return codexCredentialEnvironment;
 }

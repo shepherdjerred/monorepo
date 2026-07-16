@@ -1,31 +1,21 @@
-import { PassThrough, type Readable } from "node:stream";
+import { PassThrough } from "node:stream";
 import type { Client } from "discord.js-selfbot-v13";
 import {
-  Streamer,
   prepareStream,
-  playStream,
   Encoders,
   computeLetterbox,
 } from "@shepherdjerred/discord-video-stream";
-import { createDesiredStreamMachine } from "@shepherdjerred/discord-stream-lifecycle";
-import type {
-  EncoderHandles,
-  RawGoLiveDeps,
-} from "@shepherdjerred/discord-stream-lifecycle/types.ts";
-import { type Actor, createActor } from "xstate";
+import type { EncoderHandles } from "@shepherdjerred/discord-stream-lifecycle/types.ts";
+import { GameStreamerBase } from "@shepherdjerred/discord-plays-core/stream/game-streamer-base.ts";
 import {
   WIDTH,
   HEIGHT,
   GBA_FPS,
   DISPLAY_ASPECT,
 } from "#src/emulator/constants.ts";
-import { sinkBufferBytes, streamActive } from "#src/observability/metrics.ts";
-import { withSpan } from "#src/observability/tracing.ts";
+import { sinkBufferBytes } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import { logger } from "#src/logger.ts";
-import {
-  createAudioTransport,
-  type AudioTransport,
-} from "#src/stream/audio-transport.ts";
+import { createAudioTransport } from "#src/stream/audio-transport.ts";
 
 export type GameStreamerOptions = {
   /**
@@ -52,66 +42,20 @@ export type GameStreamerOptions = {
 const SRC_FPS = GBA_FPS;
 
 // Streams the emulator's RGBA frames into a Discord voice channel as a Go-Live
-// broadcast, over the voice UDP path.
-//
-// The lifecycle (join voice → encode → broadcast → leave) is owned by an XState
-// machine; this class is a thin facade that supplies the side effects and
-// exposes the same start()/stop()/pushFrame() surface the rest of the app uses.
-// start()/stop() set the *desired* state and return immediately — the
-// orchestrator reconciles it against the in-flight machine, so they are safe to
-// call fire-and-forget (and rapidly) from VoiceStateUpdate callbacks without the
-// races the old hand-rolled mutex guarded against.
-export class GameStreamer {
+// broadcast. The lifecycle (join voice → encode → broadcast → leave) is owned by
+// the shared GameStreamerBase; this subclass supplies the Pokémon-specific ffmpeg
+// wiring (RGBA input, f32le audio) and the simple frame push.
+export class GameStreamer extends GameStreamerBase {
   private readonly options: GameStreamerOptions;
-  private readonly streamer: Streamer;
-  private readonly actor: Actor<ReturnType<typeof createDesiredStreamMachine>>;
-  // Mirror of the machine's live frame sink, kept in sync via subscription so
-  // the per-frame hot path is a single null check + write.
-  private frameSink: PassThrough | null = null;
-  // Loopback PCM transport — sink fed by `pushAudio`, piped to ffmpeg. Created
-  // alongside the encoder and torn down when the broadcast stops; mirrors how
-  // discord-plays-mario-kart's GameStreamer handles its audio path.
-  private audioTransport: AudioTransport | null = null;
 
   constructor(options: GameStreamerOptions) {
+    super({
+      selfbotClient: options.selfbotClient,
+      guildId: options.guildId,
+      channelId: options.channelId,
+      logger,
+    });
     this.options = options;
-    this.streamer = new Streamer(options.selfbotClient);
-
-    const machine = createDesiredStreamMachine(this.deps());
-    this.actor = createActor(machine, {
-      input: {
-        voiceTarget: {
-          guildId: this.options.guildId,
-          channelId: this.options.channelId,
-        },
-      },
-    });
-    this.actor.subscribe((snapshot) => {
-      const next = snapshot.context.frameSink;
-      // The machine ends the video sink when a broadcast stops; tear the audio
-      // transport down in lockstep so its socket/server don't leak.
-      if (next === null) this.teardownAudio();
-      this.frameSink = next;
-      streamActive.set(this.frameSink === null ? 0 : 1);
-    });
-    this.actor.start();
-  }
-
-  /**
-   * Selfbot login is owned by the userbot pool now — this no-op shim remains so
-   * existing callers don't change shape during the migration.
-   */
-  async login(): Promise<void> {
-    const user = this.streamer.client.user;
-    logger.info(
-      `stream account already logged in as ${user?.tag ?? "unknown"}`,
-    );
-    await Promise.resolve();
-  }
-
-  /** True while a Go-Live broadcast is live and accepting frames. */
-  get isStreaming(): boolean {
-    return this.frameSink !== null;
   }
 
   /** Feed one RGBA frame (no-op unless a broadcast is live). */
@@ -123,79 +67,7 @@ export class GameStreamer {
     }
   }
 
-  /** Feed Float32 LRLR PCM (interleaved, native ~13379 Hz) to the broadcast.
-   * No-op when idle. Buffer format matches what `Emulator#onAudio` provides
-   * (`DrainResult.pcm`). */
-  pushAudio(pcm: Buffer): void {
-    if (this.audioTransport !== null) this.audioTransport.sink.write(pcm);
-  }
-
-  /** Request that the broadcast be running. Resolves immediately. */
-  start(): Promise<void> {
-    this.actor.send({ type: "SET_DESIRED", desired: true });
-    return Promise.resolve();
-  }
-
-  /** Request that the broadcast be stopped. Resolves immediately. */
-  stop(): Promise<void> {
-    this.actor.send({ type: "SET_DESIRED", desired: false });
-    return Promise.resolve();
-  }
-
-  destroy(): void {
-    this.actor.stop();
-    this.teardownAudio();
-    this.streamer.client.destroy();
-  }
-
-  /** Tear down the loopback audio transport (sink + socket + server). Idempotent. */
-  private teardownAudio(): void {
-    if (this.audioTransport !== null) {
-      this.audioTransport.close();
-      this.audioTransport = null;
-    }
-  }
-
-  // ---- side effects injected into the machine ----
-
-  private deps(): RawGoLiveDeps {
-    return {
-      joinVoice: ({ target }, signal) =>
-        withSpan("stream.joinVoice", async () => {
-          await this.streamer.joinVoice(target.guildId, target.channelId);
-          // The library's joinVoice cannot be cancelled mid-flight. If STOP arrived
-          // while we were connecting, the actor was aborted and leaveVoice already ran;
-          // tear down the connection we just established so it isn't orphaned.
-          if (signal.aborted) {
-            this.streamer.leaveVoice();
-          }
-        }),
-      prepareEncoder: () =>
-        withSpan("stream.prepareEncoder", () => this.buildEncoder()),
-      runStream: ({ output, playing }) => this.runStream(output, playing),
-      leaveVoice: (playing) =>
-        withSpan("stream.leaveVoice", async () => {
-          if (playing) {
-            try {
-              await playing;
-            } catch {
-              // ffmpeg is SIGKILLed when the frame stream ends on stop; the encode
-              // promise rejecting here is expected and not an error.
-            }
-          }
-          this.streamer.leaveVoice();
-        }),
-      onFailure: ({ attempt, maxRetries, error }) => {
-        logger.error(
-          `stream failed (attempt ${String(attempt)} of ${String(
-            maxRetries,
-          )}): ${error ?? "unknown"}`,
-        );
-      },
-    };
-  }
-
-  private async buildEncoder(): Promise<EncoderHandles> {
+  protected async buildEncoder(): Promise<EncoderHandles> {
     const rgba = new PassThrough();
     // Scale the 3:2 game into an aspect-correct content box, then pillarbox it onto
     // a black 16:9 canvas for Discord (see prepareStream `pad`).
@@ -247,25 +119,5 @@ export class GameStreamer {
           }),
     });
     return { sink: rgba, output, playing: promise };
-  }
-
-  // Drives the Go-Live broadcast and watches the ffmpeg encode for errors.
-  // ffmpeg is killed when the frame stream ends on stop(), which is expected and
-  // not surfaced as an error. Resolves when the stream ends for any reason.
-  private async runStream(
-    output: Readable,
-    encode: Promise<void>,
-  ): Promise<void> {
-    try {
-      await Promise.all([
-        playStream(output, this.streamer, { type: "go-live" }),
-        encode,
-      ]);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      if (!/SIGKILL|signal 9|Exiting normally/i.test(message)) {
-        logger.error(`stream error: ${message}`);
-      }
-    }
   }
 }

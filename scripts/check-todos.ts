@@ -15,10 +15,13 @@
 
 import { $ } from "bun";
 import { readdir, readFile } from "node:fs/promises";
-import { join } from "node:path";
+import path from "node:path";
+import { z } from "zod";
+
+const ErrnoSchema = z.object({ code: z.string() });
 
 const REPO_ROOT = new URL("..", import.meta.url).pathname.replace(/\/$/, "");
-const TODOS_DIR = join(REPO_ROOT, "packages/docs/todos");
+const TODOS_DIR = path.join(REPO_ROOT, "packages/docs/todos");
 
 const VALID_STATUSES = new Set([
   "active",
@@ -30,23 +33,23 @@ const VALID_STATUSES = new Set([
 
 const MARKER_REGEX = /(?:TODO|FIXME|XXX)\(todo:([a-z0-9][a-z0-9-]*)\)/g;
 
-interface SourceMarker {
+type SourceMarker = {
   id: string;
   file: string;
   lineNumber: number;
   line: string;
-}
+};
 
-interface TodoDoc {
+type TodoDoc = {
   id: string;
   file: string;
   frontmatter: Record<string, string | boolean>;
-}
+};
 
-interface Error_ {
+type TodoError = {
   kind: string;
   message: string;
-}
+};
 
 async function scanSourceMarkers(): Promise<SourceMarker[]> {
   // Use ripgrep for speed; restrict to tracked files. Exclude:
@@ -97,8 +100,10 @@ async function scanSourceMarkers(): Promise<SourceMarker[]> {
     MARKER_REGEX.lastIndex = 0;
     let match: RegExpExecArray | null;
     while ((match = MARKER_REGEX.exec(content)) !== null) {
+      const id = match[1];
+      if (id === undefined) continue;
       markers.push({
-        id: match[1],
+        id,
         file,
         lineNumber,
         line: content.trim(),
@@ -144,18 +149,19 @@ async function scanTodoDocs(): Promise<TodoDoc[]> {
   let entries: string[];
   try {
     entries = await readdir(TODOS_DIR);
-  } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+  } catch (error) {
+    const parsed = ErrnoSchema.safeParse(error);
+    if (parsed.success && parsed.data.code === "ENOENT") {
       return [];
     }
-    throw err;
+    throw error;
   }
 
   const docs: TodoDoc[] = [];
   for (const entry of entries) {
     if (!entry.endsWith(".md")) continue;
     if (entry === "README.md") continue;
-    const file = join(TODOS_DIR, entry);
+    const file = path.join(TODOS_DIR, entry);
     const raw = await readFile(file, "utf8");
     if (!raw.startsWith("---")) {
       docs.push({
@@ -205,7 +211,7 @@ async function main(): Promise<void> {
     markersById.set(m.id, list);
   }
 
-  const errors: Error_[] = [];
+  const errors: TodoError[] = [];
 
   // 1. Every source marker must have a matching doc.
   for (const m of markers) {
@@ -219,7 +225,7 @@ async function main(): Promise<void> {
 
   // 2. Docs that claim source_marker:true must have at least one matching marker.
   for (const doc of docs) {
-    if (doc.frontmatter.source_marker === true && !markersById.has(doc.id)) {
+    if (doc.frontmatter["source_marker"] === true && !markersById.has(doc.id)) {
       errors.push({
         kind: "stale-source-marker-claim",
         message: `${relativize(doc.file)}: declares 'source_marker: true' but no matching TODO(todo:${doc.id}) found in source`,
@@ -229,7 +235,7 @@ async function main(): Promise<void> {
 
   // 3. Filename id must equal frontmatter id (when frontmatter id is set).
   for (const doc of docs) {
-    const fmId = doc.frontmatter.id;
+    const fmId = doc.frontmatter["id"];
     if (fmId !== undefined && fmId !== doc.id) {
       errors.push({
         kind: "id-mismatch",
@@ -240,7 +246,7 @@ async function main(): Promise<void> {
 
   // 4. Frontmatter status must be a documented value.
   for (const doc of docs) {
-    const status = doc.frontmatter.status;
+    const status = doc.frontmatter["status"];
     if (status === undefined) {
       errors.push({
         kind: "missing-status",

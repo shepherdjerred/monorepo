@@ -1,0 +1,15 @@
+{
+  "path": ["packages", "scripts"],
+  "pattern": "**/*.{ts,tsx}",
+  "ignore": [
+    "**/node_modules/**",
+    "**/generated/**",
+    "**/dist/**",
+    "**/*.d.ts",
+    "**/archive/**"
+  ],
+  "minTokens": 70,
+  "threshold": 3,
+  "gitignore": true,
+  "silent": true
+}

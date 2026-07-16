@@ -18,7 +18,7 @@ const SUPPRESSION_PATTERNS = [
   // Rust suppressions
   /#\[allow\(/,
   /#!\[allow\(/,
-  // Dagger/CI hygiene patterns (banned in .dagger/src/ and scripts/ci/src/)
+  // Shell hygiene patterns (error swallowing, token-in-URL)
   /\|\| true/,
   /2>\/dev\/null/,
   /\|\| bun install/,
@@ -35,7 +35,6 @@ const EXCLUDED_FILES = [
   "scripts/check-suppressions.ts",
   "scripts/quality-ratchet.sh",
   "CHANGELOG.md",
-  "scripts/ci/src/ci/lib/quality.py",
   "Cargo.toml",
   "clippy.toml",
   ".quality-baseline.json",
@@ -63,19 +62,16 @@ const EXCLUDED_FILES = [
   "AGENTS.md",
   "CLAUDE.md",
   "packages/docs/",
+  // Agent prompts are prose that PROHIBITS the banned patterns by name
+  // (e.g. refine-release-please.md tells the agent never to `git add -A`).
+  "scripts/prompts/",
   "packages/dotfiles/AGENTS.md",
   "packages/dotfiles/CLAUDE.md",
-  // Agent prompts (e.g. .dagger/prompts/refine-release-please.md) describe banned
-  // patterns by name so the agent knows what NOT to do; same exception as AGENTS.md.
-  ".dagger/prompts/",
-  // Contains patterns as search strings
-  "scripts/check-dagger-hygiene.ts",
   // Uses || true for grep exit code
   "scripts/quality-ratchet.ts",
   // Prometheus exporter shell script: `2>/dev/null` falls back to a 0 metric
   // when zpool/date are unavailable, which is the right behavior for scrape
-  // resilience. The 2>/dev/null ban is scoped to .dagger/src/ and
-  // scripts/ci/src/ per AGENTS.md, not arbitrary shell scripts.
+  // resilience; the ban targets automation scripts, not arbitrary shell.
   "packages/homelab/src/cdk8s/src/resources/monitoring/scripts/zfs_zpool.sh",
   // Intentional: writes a GIT_ASKPASS script that returns the literal string
   // "x-access-token" as the git username (with $GH_TOKEN as the password).
@@ -97,8 +93,7 @@ const EXCLUDED_FILES = [
   // (same pattern as discord-plays-pokemon/packages/frontend/src/main.tsx)
   "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx",
   // Upstream vendored mupen64plus build script — `2>/dev/null` is part of the
-  // original build system's install detection logic; not subject to the Dagger/CI
-  // hygiene ban which is scoped to .dagger/src/ and scripts/ci/src/.
+  // original build system's install detection logic; not ours to lint.
   "packages/discord-plays-mario-kart/wasm-src/code/src/mupen64plus-core/tools/install_binary_bundle.sh",
 ];
 
@@ -139,7 +134,7 @@ async function main(): Promise<void> {
     // Track which file we're in
     if (line.startsWith("+++ ")) {
       const match = /^\+\+\+ [a-z]\/(.*)/.exec(line);
-      if (match) {
+      if (match?.[1] !== undefined) {
         currentFile = match[1];
         // Skip checking excluded files
         if (
@@ -161,8 +156,8 @@ async function main(): Promise<void> {
     // Track line numbers from diff hunks
     if (line.startsWith("@@")) {
       const match = /\+(\d+)/.exec(line);
-      if (match) {
-        currentLineNumber = parseInt(match[1]);
+      if (match?.[1] !== undefined) {
+        currentLineNumber = Number.parseInt(match[1]);
       }
       continue;
     }
@@ -172,7 +167,7 @@ async function main(): Promise<void> {
       continue;
     }
 
-    const cleanedLine = line.substring(1); // Remove the + prefix
+    const cleanedLine = line.slice(1); // Remove the + prefix
 
     // Check if line matches any suppression pattern
     for (const pattern of SUPPRESSION_PATTERNS) {
@@ -200,8 +195,8 @@ async function main(): Promise<void> {
 
   // Group by file
   const byFile = findings.reduce<Record<string, Finding[]>>((acc, finding) => {
-    acc[finding.file] ??= [];
-    acc[finding.file].push(finding);
+    const bucket = (acc[finding.file] ??= []);
+    bucket.push(finding);
     return acc;
   }, {});
 

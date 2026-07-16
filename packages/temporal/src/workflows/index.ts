@@ -7,6 +7,7 @@ import { runDnsAudit as _runDnsAudit } from "./dns-audit.ts";
 import { syncGolinks as _syncGolinks } from "./golink-sync.ts";
 import {
   goodMorningGetUp as _goodMorningGetUp,
+  goodMorningPreheat as _goodMorningPreheat,
   goodMorningWakeUp as _goodMorningWakeUp,
 } from "./ha/good-morning.ts";
 import { goodNight as _goodNight } from "./ha/good-night.ts";
@@ -73,6 +74,10 @@ export async function runDnsAudit(): Promise<void> {
 
 export async function syncGolinks(): Promise<void> {
   return _syncGolinks();
+}
+
+export async function goodMorningPreheat(): Promise<void> {
+  return _goodMorningPreheat();
 }
 
 export async function goodMorningWakeUp(): Promise<void> {

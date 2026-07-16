@@ -8,8 +8,9 @@ import { Person } from "./person.ts";
 import configuration from "#src/configuration.ts";
 
 export const dataSource = new DataSource({
-  type: "sqlite",
-  database: `${configuration.dataDir}/glitter.sqlite`,
+  type: "sqljs",
+  location: `${configuration.dataDir}/glitter.sqlite`,
+  autoSave: true,
   synchronize: false, // NEVER use true in production - it can wipe data!
   logging: true,
   entities: [Karma, Person, KarmaGiven, KarmaReceived],

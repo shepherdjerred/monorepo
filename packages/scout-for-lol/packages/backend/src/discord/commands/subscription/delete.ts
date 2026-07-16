@@ -1,6 +1,5 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { fromError } from "zod-validation-error";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -9,6 +8,7 @@ import {
 import { createLogger } from "#src/logger.ts";
 import { removeSubscription } from "#src/lib/subscription/remove.ts";
 import { prisma } from "#src/database/index.ts";
+import { parseCommandArgs } from "#src/discord/commands/define-command.ts";
 import { editReplyOnError } from "#src/discord/commands/subscription/reply-helpers.ts";
 
 const logger = createLogger("subscription-delete-command");
@@ -24,18 +24,12 @@ export async function executeSubscriptionDelete(
 ) {
   logger.info("🔕 Starting subscription deletion");
 
-  const parseResult = ArgsSchema.safeParse({
+  const parseResult = await parseCommandArgs(interaction, ArgsSchema, {
     alias: interaction.options.getString("alias"),
     channel: interaction.options.getChannel("channel")?.id,
     guildId: interaction.guildId,
   });
-
   if (!parseResult.success) {
-    logger.error("❌ Invalid command arguments", parseResult.error);
-    await interaction.reply({
-      content: fromError(parseResult.error).toString(),
-      ephemeral: true,
-    });
     return;
   }
 

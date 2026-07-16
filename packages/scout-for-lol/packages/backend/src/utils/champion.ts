@@ -1,8 +1,10 @@
+import { Constants } from "twisted";
+const { Champions, getChampionName } = Constants;
 import {
-  Champions,
-  getChampionName,
-} from "twisted/dist/constants/champions.js";
-import { getChampionKeyById, normalizeChampionName } from "@scout-for-lol/data";
+  getChampionDisplayNameById,
+  getChampionKeyById,
+  normalizeChampionName,
+} from "@scout-for-lol/data";
 import { z } from "zod";
 
 /**
@@ -46,31 +48,20 @@ export function getChampionId(name: string): number | undefined {
 }
 
 /**
- * Get display name for a champion (with proper formatting)
- * Converts TWISTED_FATE to "Twisted Fate"
+ * Get the human display name for a champion by id, e.g. "Twisted Fate",
+ * "Vel'Koz", "Wukong". Delegates to the `champion.json`-backed lookup table
+ * in `@scout-for-lol/data`, which (unlike twisted's hardcoded champion enum)
+ * is always current and returns Riot's actual punctuated name rather than a
+ * string transform of it.
  *
  * @param championId Champion ID
- * @returns Formatted champion name or "Unknown Champion" if not found
  *
  * @example
  * getChampionDisplayName(4) // "Twisted Fate"
- * getChampionDisplayName(157) // "Yasuo"
+ * getChampionDisplayName(805) // "Locke"
  */
 export function getChampionDisplayName(championId: number): string {
-  try {
-    const name = getChampionName(championId);
-    if (!name || name === "") {
-      return `Champion ${championId.toString()}`;
-    }
-
-    // Convert TWISTED_FATE to "Twisted Fate"
-    return name
-      .split("_")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(" ");
-  } catch {
-    return `Champion ${championId.toString()}`;
-  }
+  return getChampionDisplayNameById(championId);
 }
 
 /**

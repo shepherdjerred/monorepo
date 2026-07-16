@@ -97,7 +97,8 @@ us and are encoded in the code:
   version `2.0.0-<build>`, not a git SHA.
 - The pod digest lives in `imageID` (often `<repo>@sha256:…`), not `image`.
 - The service registry lives in `src/lib/deployed/catalog.ts`; a drift test
-  (`test/deployed/catalog.test.ts`) asserts every versionKey exists in the live
+  (`test-integration/catalog.integration.test.ts`, run via `bun run test:integration`
+  in a git checkout) asserts every versionKey exists in the live
   `versions.ts`.
 
 ## `discord` — act on Discord through a session daemon
@@ -178,6 +179,33 @@ exactly like the AWS CLI. Select a profile with `--profile <name>` or
 ```bash
 toolkit pr asset 1234 ./after.png ./flow.mp4 ./demo.cast ./demo-site --profile seaweedfs --markdown
 ```
+
+## Shared `lib/http` + `lib/config`
+
+The Grafana, PagerDuty, and Bugsink service clients share one HTTP layer instead
+of each re-implementing fetch + auth + error handling.
+
+- **`src/lib/http.ts`** — `createHttpClient({ baseUrl, auth, errorLabel, headers?, normalizeUrl? })`
+  returns a client with `get(endpoint, { schema, query? })`, `post(endpoint, { schema, body?, query? })`,
+  and `raw(endpoint, { query? })` (text, no JSON parse). All three return the
+  standard `{ success, data?, error? }` envelope. `auth` is a discriminated shape —
+  `{ scheme: "Bearer", token }` or `{ scheme: "Token token=", token }` — written
+  verbatim into the `Authorization` header. Query params are `set` for scalars and
+  `append`-ed for arrays. Any thrown error (network failure, non-JSON body, or a
+  Zod parse failure) is caught once and flattened to `{ success: false, error }`.
+  `normalizeUrl(baseUrl, endpoint)` lets a client own URL construction — Bugsink
+  uses it to insert its `/api/canonical/0` prefix via `buildBugsinkApiUrl`.
+- **`src/lib/config.ts`** — `requireEnv(name, description)` throws an actionable
+  error naming the variable and its purpose when unset/empty; `optionalEnv(name)`
+  returns `undefined` when unset/empty. Both read `Bun.env` and treat `""` as
+  absent.
+
+Each client (`src/lib/{grafana,pagerduty,bugsink}/client.ts`) keeps its original
+exported function signatures — callers and command handlers are unchanged — and
+delegates to a `createHttpClient` instance. Do not touch the github/s3/discord
+clients; they have different auth/transport shapes and are intentionally not on
+this layer. Unit tests live in `test/lib/` (`http.test.ts`, `config.test.ts`),
+wired into the `test:unit` glob.
 
 ## Adding New Commands
 

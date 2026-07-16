@@ -14,7 +14,6 @@
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",
     "test:ci": "bun test --bail --coverage --reporter=junit --reporter-outfile=./junit.xml",
-    "build": "bunx tsc --noEmit",
     "lint": "bunx eslint src",
     "format": "bunx prettier --check src",
     "format:write": "bunx prettier --write src",
@@ -22,10 +21,10 @@
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
-    "@scout-for-lol/data": "file:../data",
+    "@scout-for-lol/data": "workspace:*",
     "chroma-js": "^3.2.0",
     "echarts": "^6.0.0",
-    "react": "19.2.6",
+    "react": "19.2.7",
     "remeda": "^2.21.2",
     "satori": "^0.26.0",
     "ts-pattern": "^5.7.0",
@@ -55,8 +54,5 @@
   },
   "imports": {
     "#src/*": "./src/*"
-  },
-  "patchedDependencies": {
-    "satori@0.18.3": "patches/satori@0.18.3.patch"
   }
 }

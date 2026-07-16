@@ -4,6 +4,7 @@ import {
   LeaguePuuidSchema,
   type LeaguePuuid,
   type Region,
+  serializeSubscriptionFilters,
 } from "@scout-for-lol/data/index.ts";
 import { backfillLastMatchTime } from "#src/league/api/backfill-match-history.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
@@ -43,6 +44,7 @@ async function commitSubscription(params: {
     alias,
     discordUserId,
     creatorDiscordId,
+    filters,
   } = input;
   const now = new Date();
 
@@ -153,6 +155,7 @@ async function commitSubscription(params: {
       updatedTime: now,
       creatorDiscordId: DiscordAccountIdSchema.parse(creatorDiscordId),
       serverId: guildId,
+      filters: filters ? serializeSubscriptionFilters(filters) : null,
     },
   });
 

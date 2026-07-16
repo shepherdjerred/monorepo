@@ -8,8 +8,8 @@ config*.toml
 error.png
 .tmp-earthly-out
 *.gba
-# The emulator wasm is built from source (scripts/build-wasm.sh locally, the
-# Dagger image build in CI) and never committed.
+# The emulator wasm is built from source (scripts/build-wasm.sh) and never
+# committed.
 *.wasm
 logs
 saves

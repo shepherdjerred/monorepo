@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Button } from "#src/components/ui/button.tsx";
 import { SubscriptionFields } from "#src/components/subscription-fields.tsx";
 import {
   emptySubscriptionValue,
@@ -10,10 +9,13 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "#src/components/ui/dialog.tsx";
+import {
+  DialogFormError,
+  DialogFormFooter,
+} from "#src/components/dialog-form.tsx";
 
 type Channel = { id: string; name: string };
 
@@ -58,24 +60,16 @@ export function AddSubscriptionDialog(props: Props) {
             onChange={setValue}
           />
 
-          {error !== null && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          <DialogFormError error={error} />
 
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                props.onOpenChange(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Adding…" : "Add"}
-            </Button>
-          </DialogFooter>
+          <DialogFormFooter
+            pending={isPending}
+            submitLabel="Add"
+            pendingLabel="Adding…"
+            onCancel={() => {
+              props.onOpenChange(false);
+            }}
+          />
         </form>
       </DialogContent>
     </Dialog>

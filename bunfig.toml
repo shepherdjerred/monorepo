@@ -1,0 +1,7 @@
+[install]
+# Isolated linker: strict per-instance peer/dep resolution (no phantom deps,
+# no hoisting split-brain). The experimental globalStore is deliberately NOT
+# set here: parallel CI installs against a shared store hit oven-sh/bun#12917;
+# enable it per-machine in ~/.bunfig.toml for ~1s warm installs locally.
+# See packages/docs/plans/2026-07-04_bun-workspace-migration.md
+linker = "isolated"

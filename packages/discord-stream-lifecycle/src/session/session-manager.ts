@@ -1,7 +1,7 @@
-import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver.ts";
-import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot.ts";
-import type { UserbotProvider } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool.ts";
-import { ensureSessionDir } from "@shepherdjerred/discord-stream-lifecycle/persistence/session-paths.ts";
+import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver";
+import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
+import type { UserbotProvider } from "@shepherdjerred/discord-stream-lifecycle/pool/userbot-pool";
+import { ensureSessionDir } from "@shepherdjerred/discord-stream-lifecycle/persistence/session-paths";
 import type { Session, SessionStopReason } from "./session.ts";
 
 export type SessionManagerLogger = {

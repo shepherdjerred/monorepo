@@ -2,24 +2,25 @@
   "$schema": "https://unpkg.com/knip@latest/schema.json",
   "workspaces": {
     ".": {
-      "entry": ["scripts/**/*.ts", ".buildkite/scripts/**/*.ts"],
-      "project": ["scripts/**/*.ts", ".buildkite/scripts/**/*.ts"]
+      "entry": ["scripts/**/*.ts"],
+      "project": ["scripts/**/*.ts"]
+    },
+    "scripts": {
+      "entry": ["*.ts", "observability/**/*.ts"],
+      "project": ["**/*.ts"]
     },
     "packages/birmel": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
-    ".dagger": {
-      "entry": ["src/index.ts", "src/__tests__/**/*.ts"],
-      "project": ["src/**/*.ts"]
-    },
-    "scripts/ci": {
-      "entry": ["src/main.ts", "src/__tests__/**/*.ts"],
+    "packages/discord-plays-core": {
+      "entry": ["src/index.ts", "src/entry.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/eslint-config": {
       "entry": ["src/index.ts"],
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["eslint-import-resolver-node"]
     },
     "packages/astro-opengraph-images": {
       "entry": ["src/index.ts", "src/presets/render-examples.ts"],
@@ -63,7 +64,12 @@
       "project": ["src/**/*.ts"]
     },
     "packages/discord-plays-pokemon/packages/backend": {
-      "entry": ["src/index.ts", "src/**/*.test.ts", "scripts/**/*.ts"],
+      "entry": [
+        "src/index.ts",
+        "src/**/*.test.ts",
+        "scripts/**/*.ts",
+        "src/goal/pokemonctl.ts"
+      ],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/discord-plays-pokemon/packages/common": {
@@ -123,6 +129,7 @@
     "packages/scout-for-lol/packages/app": {
       "entry": [
         "src/main.tsx",
+        "src/**/*.test.ts",
         "vite.config.ts",
         "index.html",
         "public/**/*.js"
@@ -206,6 +213,10 @@
     "packages/homelab": {
       "entry": ["scripts/**/*.ts", "eslint.config.ts"],
       "project": ["scripts/**/*.ts", "eslint.config.ts"]
+    },
+    "packages/discord-stream-lifecycle": {
+      "entry": ["src/**/*.ts"],
+      "project": ["src/**/*.ts"]
     }
   },
   "ignoreExportsUsedInFile": true,
@@ -256,7 +267,6 @@
     "@anthropic-ai/sdk",
     "@astrojs/tailwind",
     "@commitlint/types",
-    "@dagger.io/dagger",
     "@eslint-community/eslint-plugin-eslint-comments",
     "@eslint/compat",
     "@eslint/eslintrc",
@@ -346,7 +356,6 @@
     "zod"
   ],
   "ignoreFiles": [
-    ".dagger/src/timing.ts",
     "packages/better-skill-capped/src/datastore/content-datastore.ts",
     "packages/discord-plays-mario-kart/packages/frontend/src/model/connection.ts",
     "packages/discord-plays-mario-kart/packages/frontend/src/util.ts",
@@ -356,7 +365,6 @@
     "packages/scout-for-lol/packages/frontend/src/components/StatCard.astro"
   ],
   "ignoreIssues": {
-    ".dagger/src/base.ts": ["exports"],
     "packages/better-skill-capped/src/utils/url-utilities.ts": ["exports"],
     "packages/discord-plays-mario-kart/packages/backend/src/observability/tracing.ts": [
       "exports"
@@ -395,6 +403,9 @@
     "packages/scout-for-lol/packages/app/src/components/ui/dialog.tsx": [
       "exports"
     ],
+    "packages/scout-for-lol/packages/app/src/components/ui/dropdown-menu.tsx": [
+      "exports"
+    ],
     "packages/scout-for-lol/packages/app/src/components/ui/select.tsx": [
       "exports"
     ],
@@ -423,20 +434,25 @@
     ],
     "packages/temporal/src/observability/pr-review-metrics.ts": ["exports"],
     "packages/temporal/src/observability/tracing.ts": ["exports"],
-    "packages/temporal/src/workflows/ha/util.ts": ["exports"],
-    "scripts/ci/src/catalog.ts": ["exports"],
-    "scripts/ci/src/steps/images.ts": ["exports"]
+    "packages/temporal/src/workflows/ha/util.ts": ["exports"]
   },
   "ignoreBinaries": [
     "HEAD",
     "argocd",
+    "docker",
+    "ffmpeg",
+    "ffprobe",
     "gh",
+    "gitleaks",
+    "go",
+    "golangci-lint",
+    "helm",
     "kubectl",
-    "lefthook",
     "mktemp",
     "op",
     "rg",
     "tsc",
+    "uvx",
     "velero"
   ]
 }

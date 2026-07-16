@@ -32,6 +32,7 @@ export function createMinecraftShuxinApp(chart: Chart) {
     serviceName: "minecraft-shuxin-bluemap",
     subdomain: "shuxin.bluemap",
     namespace: "minecraft-shuxin",
+    port: 8100,
   });
 
   const minecraftValues: HelmValuesForChart<"minecraft"> = {

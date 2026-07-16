@@ -8,14 +8,14 @@ Post-deploy checklist for wiring the Zooz ZST39 800-series Z-Wave stick into the
 
 ## Final shape
 
-| Item | Where |
-| --- | --- |
-| cdk8s Deployment + Service + TailscaleIngress (UI only) | `packages/homelab/src/cdk8s/src/resources/home/zwave-js-ui.ts` |
-| Wired into `home` chart (sibling to HA + eufy-security-ws) | `packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts` |
-| Image pinned with sha256 | `packages/homelab/src/cdk8s/src/versions.ts` (`zwavejs/zwave-js-ui`) |
-| Node hostname (USB-stick host) | `torvalds` (only Talos node) |
-| Host device path | `/dev/serial/by-id/usb-Zooz_800_Z-Wave_Stick_533D004242-if00` |
-| 1Password item (`zwave-js-ui` in `Homelab (Kubernetes)`) | `ertelv7tiogcwecrt3dxmjd2wi` |
+| Item                                                       | Where                                                                |
+| ---------------------------------------------------------- | -------------------------------------------------------------------- |
+| cdk8s Deployment + Service + TailscaleIngress (UI only)    | `packages/homelab/src/cdk8s/src/resources/home/zwave-js-ui.ts`       |
+| Wired into `home` chart (sibling to HA + eufy-security-ws) | `packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts`                |
+| Image pinned with sha256                                   | `packages/homelab/src/cdk8s/src/versions.ts` (`zwavejs/zwave-js-ui`) |
+| Node hostname (USB-stick host)                             | `torvalds` (only Talos node)                                         |
+| Host device path                                           | `/dev/serial/by-id/usb-Zooz_800_Z-Wave_Stick_533D004242-if00`        |
+| 1Password item (`zwave-js-ui` in `Homelab (Kubernetes)`)   | `ertelv7tiogcwecrt3dxmjd2wi`                                         |
 
 1P fields (all CONCEALED, populated):
 

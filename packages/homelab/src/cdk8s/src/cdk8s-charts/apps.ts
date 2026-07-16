@@ -66,9 +66,10 @@ import { createKyvernoPoliciesApp } from "@shepherdjerred/homelab/cdk8s/src/reso
 import { createMcpGatewayApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/mcp-gateway.ts";
 import { createBugsinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/bugsink.ts";
 import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/tasknotes.ts";
-import { createDaggerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/dagger.ts";
+import { createRelayApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/relay.ts";
 import { createTemporalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/temporal.ts";
 import { createTrmnlDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/trmnl-dashboard.ts";
+// import { createTurboCacheApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/turbo-cache.ts"; // staged: todo turbo-cache-rollout
 
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
@@ -176,9 +177,13 @@ export async function createAppsChart(app: App) {
   createMcpGatewayApp(chart);
   createBugsinkApp(chart);
   createTasknotesApp(chart);
-  createDaggerApp(chart);
+  createRelayApp(chart);
   createTemporalApp(chart);
   createTrmnlDashboardApp(chart);
+  // Staged, not yet deployed: needs the turbo-cache-r2 1Password item +
+  // R2 apply first (todo: turbo-cache-rollout). Uncomment together with
+  // createTurboCacheChart in setup-charts.ts.
+  // createTurboCacheApp(chart);
 
   // ArgoCD AppProject
   createProject(chart);

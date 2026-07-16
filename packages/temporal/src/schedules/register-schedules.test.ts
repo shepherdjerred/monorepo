@@ -38,6 +38,8 @@ const ONE_MINUTE = 60 * 1000;
 const ONE_HOUR = 60 * ONE_MINUTE;
 
 const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
+  // preheat: 13 × 15m presence-checked hold chunks (195 minutes) + turn-off backstop
+  goodMorningPreheat: 195 * ONE_MINUTE,
   // wake-up: ~30 sec of media ramp + MORNING_HEAT_DURATION (60 minutes) heat hold
   goodMorningWakeUp: 60 * ONE_MINUTE,
   // get-up: ~5 sec sleep between volume ramps; <1m total
@@ -231,8 +233,8 @@ describe("orphan schedule detection", () => {
   const deletedIds = new Set<string>(DELETED_SCHEDULE_IDS);
 
   test("both pokeemerald wasm schedules are queued for deletion", () => {
-    // The pokeemerald.wasm download workflow is gone — the wasm is built from
-    // source in the Dagger image build. Both the weekly and the older monthly
+    // The pokeemerald.wasm download workflow is gone — the wasm was built
+    // from source in the old CI image build. Both the weekly and the older monthly
     // schedule must be deleted (and absent from SCHEDULES) so neither keeps
     // firing a workflow that's no longer in the bundle.
     for (const id of [

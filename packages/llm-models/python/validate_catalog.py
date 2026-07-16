@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, TypeAdapter
 
@@ -29,9 +29,9 @@ class TextPricing(BaseModel):
     modality: Literal["text"]
     input: float = Field(ge=0)
     output: float = Field(ge=0)
-    cachedInput: Optional[float] = Field(default=None, ge=0)
-    cacheRead: Optional[float] = Field(default=None, ge=0)
-    cacheWrite: Optional[float] = Field(default=None, ge=0)
+    cachedInput: float | None = Field(default=None, ge=0)
+    cacheRead: float | None = Field(default=None, ge=0)
+    cacheWrite: float | None = Field(default=None, ge=0)
 
 
 class ImagePricing(BaseModel):
@@ -47,9 +47,9 @@ class Capabilities(BaseModel):
     model_config = {"extra": "forbid"}
     supportsTemperature: bool
     supportsTopP: bool
-    maxTokens: Optional[int] = Field(default=None, gt=0)
-    adaptiveThinking: Optional[bool] = None
-    effortTiers: Optional[list[str]] = None
+    maxTokens: int | None = Field(default=None, gt=0)
+    adaptiveThinking: bool | None = None
+    effortTiers: list[str] | None = None
 
 
 class ModelEntry(BaseModel):
@@ -57,12 +57,13 @@ class ModelEntry(BaseModel):
     id: str = Field(min_length=1)
     provider: Literal["openai", "anthropic", "google"]
     displayName: str = Field(min_length=1)
-    description: Optional[str] = None
+    description: str | None = None
     pricing: Pricing
-    contextWindow: Optional[int] = Field(default=None, gt=0)
+    contextWindow: int | None = Field(default=None, gt=0)
+    pinnedContextWindow: bool | None = None
     capabilities: Capabilities
     status: Literal["current", "preview", "deprecated"]
-    category: Optional[str] = None
+    category: str | None = None
 
 
 CatalogAdapter = TypeAdapter(dict[str, ModelEntry])

@@ -57,6 +57,13 @@ export type ReportExampleInfo = {
   query: string;
 };
 
+export type ReportCommonPresetInfo = ReportExampleInfo & {
+  id: string;
+  description: string;
+  lookbackDays: number;
+  maxRows: number;
+};
+
 export const REPORT_SOURCES: ReportSourceInfo[] = [
   {
     id: "match_participants",
@@ -73,11 +80,11 @@ export const REPORT_SOURCES: ReportSourceInfo[] = [
     validGroupBys: ["player", "champion", "queue"],
   },
   {
-    id: "player_pairs",
-    label: "Player pairs",
+    id: "player_groups",
+    label: "Player groups",
     description:
-      "Co-player statistics for teammates who played together. Requires GROUP BY pair.",
-    validGroupBys: ["pair"],
+      "Teammate-group statistics (sizes 2-5; Arena groups by subteam). Requires GROUP BY group(N) or group(all); player_pairs + GROUP BY pair are legacy aliases for group(2).",
+    validGroupBys: ["group"],
   },
   {
     id: "rank_current",
@@ -166,6 +173,54 @@ export const REPORT_METRICS: ReportMetricInfo[] = [
     kind: "count",
   },
   {
+    id: "gold_earned",
+    label: "Gold earned",
+    description: "Total gold earned.",
+    kind: "count",
+  },
+  {
+    id: "vision_score",
+    label: "Vision score",
+    description: "Total vision score.",
+    kind: "count",
+  },
+  {
+    id: "damage_taken",
+    label: "Damage taken",
+    description: "Total damage taken.",
+    kind: "count",
+  },
+  {
+    id: "total_damage_dealt",
+    label: "Total damage",
+    description: "Total damage dealt to all targets (not just champions).",
+    kind: "count",
+  },
+  {
+    id: "wards_placed",
+    label: "Wards placed",
+    description: "Total wards placed.",
+    kind: "count",
+  },
+  {
+    id: "multikills",
+    label: "Multikills",
+    description: "Double + triple + quadra + penta kills combined.",
+    kind: "count",
+  },
+  {
+    id: "avg_game_duration",
+    label: "Avg game length",
+    description: "Average game duration in minutes.",
+    kind: "ratio",
+  },
+  {
+    id: "cs_per_minute",
+    label: "CS / min",
+    description: "Creep score per minute of time played.",
+    kind: "ratio",
+  },
+  {
     id: "prematches",
     label: "Prematches",
     description:
@@ -201,10 +256,11 @@ export const REPORT_GROUP_BYS: ReportGroupByInfo[] = [
     description: "Group rows by queue type.",
   },
   {
-    id: "pair",
-    label: "Pair",
-    columnLabel: "Pair",
-    description: "Group rows by teammate pair (player_pairs only).",
+    id: "group",
+    label: "Group",
+    columnLabel: "Group",
+    description:
+      "Group rows by teammate group (player_groups only): GROUP BY group(N) for one size (N = 2-5) or group(all) for every size the roster supports. Stats sum members; a win requires every member to win. GROUP BY pair is the legacy alias for group(2).",
   },
 ];
 
@@ -212,7 +268,11 @@ export const REPORT_KEYWORDS: ReportKeywordInfo[] = [
   { keyword: "SELECT", description: "Choose the metrics (columns) to report." },
   { keyword: "FROM", description: "Choose the data source (table)." },
   { keyword: "WHERE", description: "Filter rows (AND-joined clauses)." },
-  { keyword: "GROUP BY", description: "Aggregate rows by a grouping field." },
+  {
+    keyword: "GROUP BY",
+    description:
+      "Aggregate rows by a field: player, or group(2..5)/group(all).",
+  },
   { keyword: "ORDER BY", description: "Sort by a metric or label." },
   { keyword: "LIMIT", description: "Cap the number of rows returned." },
   { keyword: "AND", description: "Combine multiple WHERE clauses." },
@@ -298,23 +358,94 @@ export const REPORT_FILTERS: ReportFilterInfo[] = [
   },
 ];
 
-export const REPORT_EXAMPLES: ReportExampleInfo[] = [
+export const REPORT_COMMON_PRESETS: ReportCommonPresetInfo[] = [
   {
+    id: "activity-leaders",
     title: "Most games played",
+    description: "Find the most active players over the lookback window.",
+    lookbackDays: 30,
+    maxRows: 10,
     query:
       "select games, win_rate from match_participants group by player order by games desc limit 10 render leaderboard",
   },
   {
+    id: "ranked-win-rate",
     title: "Best win rate (ranked solo, min 10 games)",
+    description: "Rank players by solo queue win rate with a games floor.",
+    lookbackDays: 30,
+    maxRows: 10,
     query:
       "select games, win_rate from match_participants where queue in (solo) and games >= 10 group by player order by win_rate desc render bar_chart with (y = win_rate)",
   },
   {
+    id: "surrender-watch",
     title: "Surrender-happy champions",
+    description: "Spot champions most associated with surrender losses.",
+    lookbackDays: 30,
+    maxRows: 10,
     query:
       "select games, surrender_rate from match_participants group by champion order by surrender_rate desc limit 10 render leaderboard",
   },
+  {
+    id: "champion-pool",
+    title: "Most-played champions",
+    description: "Show which champions the server has been playing most.",
+    lookbackDays: 30,
+    maxRows: 10,
+    query:
+      "select games, win_rate from match_participants group by champion order by games desc limit 10 render bar_chart with (y = games)",
+  },
+  {
+    id: "best-groups",
+    title: "Most active teammate groups",
+    description:
+      "List teammate groups of every size (group(2) picks duos only) by games together.",
+    lookbackDays: 30,
+    maxRows: 10,
+    query:
+      "select games, win_rate from player_groups group by group(all) order by games desc limit 10 render leaderboard",
+  },
+  {
+    id: "kda-leaders",
+    title: "KDA leaders",
+    description: "Rank players by KDA with a minimum games filter.",
+    lookbackDays: 30,
+    maxRows: 10,
+    query:
+      "select games, kda from match_participants where games >= 5 group by player order by kda desc limit 10 render leaderboard",
+  },
+  {
+    id: "damage-leaders",
+    title: "Damage leaders",
+    description: "Find who dealt the most champion damage.",
+    lookbackDays: 14,
+    maxRows: 10,
+    query:
+      "select games, damage_to_champions from match_participants group by player order by damage_to_champions desc limit 10 render bar_chart with (y = damage_to_champions)",
+  },
+  {
+    id: "champion-select-picks",
+    title: "Champion-select picks",
+    description: "Use lobby observations to see planned champion picks.",
+    lookbackDays: 14,
+    maxRows: 10,
+    query:
+      "select prematches from prematch_participants group by champion order by prematches desc limit 10 render bar_chart with (y = prematches)",
+  },
+  {
+    id: "queue-mix",
+    title: "Queue mix",
+    description: "Break recent server activity down by queue.",
+    lookbackDays: 30,
+    maxRows: 10,
+    query:
+      "select games, win_rate from match_participants group by queue order by games desc render table",
+  },
 ];
+
+export const REPORT_EXAMPLES: ReportExampleInfo[] = REPORT_COMMON_PRESETS.map(
+  (preset) => ({ title: preset.title, query: preset.query }),
+);
 
 export type ReportQueueValueInfo = {
   id: QueueType;
@@ -335,7 +466,7 @@ export function reportGroupByColumnLabel(groupBy: ReportGroupBy): string {
     .with("player", () => "Player")
     .with("champion", () => "Champion")
     .with("queue", () => "Queue")
-    .with("pair", () => "Pair")
+    .with("group", () => "Group")
     .exhaustive();
 }
 

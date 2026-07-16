@@ -1,5 +1,5 @@
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
-import type { GuildOwner } from "@prisma/client";
+import type { GuildOwner } from "#generated/prisma/client/index.js";
 
 export async function getGuildOwner(
   guildId: string,

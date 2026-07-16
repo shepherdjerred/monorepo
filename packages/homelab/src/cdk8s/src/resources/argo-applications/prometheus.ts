@@ -129,6 +129,25 @@ export async function createPrometheusApp(chart: Chart) {
     alertmanager: {
       alertmanagerSpec: {
         externalUrl: "https://alertmanager.tailnet-1a49.ts.net",
+        // Alertmanager's active-alert state is in-memory only (the PVC persists
+        // just nflog/silences), so when it dies mid-outage, resolve events for
+        // alerts that clear during the gap are never sent and PagerDuty
+        // incidents orphan as forever-"triggered". With only the chart-default
+        // 200Mi request and NO limit, it had one of the worst OOM scores on the
+        // node and was the kernel's preferred victim in the 2026-07-11 global-OOM
+        // storms (OOMKilled x5, e.g. 06:07:15Z) — exactly when its resolves
+        // matter most. A real request keeps its score low so it survives storms;
+        // the limit keeps it from becoming a problem itself (normal usage
+        // ~50-100Mi). See packages/docs/archive/completed/2026-07-10_torvalds-memory-rightsize.md.
+        resources: {
+          requests: {
+            cpu: "50m",
+            memory: "512Mi",
+          },
+          limits: {
+            memory: "1Gi",
+          },
+        },
         storage: {
           volumeClaimTemplate: {
             spec: {
@@ -187,47 +206,57 @@ export async function createPrometheusApp(chart: Chart) {
               {
                 send_resolved: true,
                 routing_key_file: `/etc/alertmanager/secrets/${alertmanagerSecrets.name}/PAGERDUTY_TOKEN`,
-                // Alertmanager will evaluate this Go template when sending to PagerDuty
-                // kube-prometheus-stack chart passes config values through without template processing
+                // Alertmanager evaluates these Go templates when sending to PagerDuty.
+                // The kube-prometheus-stack chart passes config values through without
+                // template processing, so they must be Helm-escaped (escapeHelmGoTemplate).
                 //
-                // NOTE: use a real newline between alerts, not a literal `\n`. Go's
-                // text/template does not interpret backslash escapes in literal template
-                // text (only inside quoted action strings), so `\n` would reach PagerDuty
-                // as the two characters "\n" and clutter the incident title.
-                //
-                // NOTE: include the namespace and fall back from `.message` to
-                // `.description`. Different rule families use different detail
-                // annotations (Velero/HA rules use `message`; createSensorAlert uses
-                // `description`). Without the fallback, message-based alerts page with
-                // only the static summary, making distinct incidents look like duplicates.
+                // TITLE (`description`): keep it a single clean line. PagerDuty uses this
+                // as the incident title and truncates it mid-word at ~1024 chars, so the
+                // full per-alert body must NOT go here — it belongs in `details` below.
+                // We use the shared static summary (CommonAnnotations.summary, falling back
+                // to the alertname), then append the namespace and a firing count so that
+                // distinct namespaces/objects grouped into one incident stay distinguishable
+                // (the original reason the body was inlined here — see
+                // packages/docs/logs/2026-07-03_pagerduty-clean-titles.md).
                 description: escapeHelmGoTemplate(
-                  `{{ range .Alerts }}{{ .Annotations.summary }}{{ if .Labels.namespace }} ({{ .Labels.namespace }}){{ end }}: {{ if .Annotations.message }}{{ .Annotations.message }}{{ else }}{{ .Annotations.description }}{{ end }}\n{{ end }}`,
+                  `{{ if .CommonAnnotations.summary }}{{ .CommonAnnotations.summary }}{{ else }}{{ .CommonLabels.alertname }}{{ end }}{{ if .CommonLabels.namespace }} [{{ .CommonLabels.namespace }}]{{ end }}{{ if gt (len .Alerts.Firing) 1 }} (x{{ len .Alerts.Firing }}){{ end }}`,
                 ),
-                // Map alert severity label to PagerDuty severity (critical/warning/error/info)
-                // Check if GroupLabels exists first (nil during helm lint)
+                // Link the incident back to Alertmanager.
+                client: "Alertmanager",
+                client_url: escapeHelmGoTemplate(`{{ .ExternalURL }}`),
+                // Map the alert severity label to PagerDuty event severity. Use
+                // CommonLabels (shared across the group) — `severity` is not in group_by,
+                // so GroupLabels.severity would be empty and always fall through to "error".
                 severity: escapeHelmGoTemplate(
-                  '{{ if .GroupLabels }}{{ if eq .GroupLabels.severity "critical" }}critical{{ else if eq .GroupLabels.severity "warning" }}warning{{ else if eq .GroupLabels.severity "error" }}error{{ else if eq .GroupLabels.severity "info" }}info{{ else }}error{{ end }}{{ else }}error{{ end }}',
+                  '{{ if eq .CommonLabels.severity "critical" }}critical{{ else if eq .CommonLabels.severity "warning" }}warning{{ else if eq .CommonLabels.severity "info" }}info{{ else }}error{{ end }}',
                 ),
-                // details: escapeHelmGoTemplate(
-                //   JSON.stringify(
-                //     {
-                //       firing: "{{ range .Alerts.Firing }}{{ . }}\n{{ end }}",
-                //       resolved:
-                //         "{{ range .Alerts.Resolved }}{{ . }}\n{{ end }}",
-                //       num_firing: "{{ .Alerts.Firing | len }}",
-                //       num_resolved: "{{ .Alerts.Resolved | len }}",
-                //     },
-                //     null,
-                //     2,
-                //   ),
-                // ),
-                // // Grafana has an image rendering feature
-                // // let's see if we can use it here
-                // images: [],
-                // links: [],
-                // component: "",
-                // group: "",
-                // class: "",
+                // Structured detail — PagerDuty renders `details` as a Custom Details
+                // section. Each firing/resolved alert contributes one line, falling back
+                // from `.message` (Velero/HA rules) to `.description` (createSensorAlert),
+                // so the per-alert specifics that used to clutter the title live here.
+                details: {
+                  alertname: escapeHelmGoTemplate(
+                    `{{ .CommonLabels.alertname }}`,
+                  ),
+                  namespace: escapeHelmGoTemplate(
+                    `{{ .CommonLabels.namespace }}`,
+                  ),
+                  severity: escapeHelmGoTemplate(
+                    `{{ .CommonLabels.severity }}`,
+                  ),
+                  num_firing: escapeHelmGoTemplate(
+                    `{{ .Alerts.Firing | len }}`,
+                  ),
+                  num_resolved: escapeHelmGoTemplate(
+                    `{{ .Alerts.Resolved | len }}`,
+                  ),
+                  firing: escapeHelmGoTemplate(
+                    `{{ range .Alerts.Firing }}- {{ if .Annotations.message }}{{ .Annotations.message }}{{ else }}{{ .Annotations.description }}{{ end }}\n{{ end }}`,
+                  ),
+                  resolved: escapeHelmGoTemplate(
+                    `{{ range .Alerts.Resolved }}- {{ if .Annotations.message }}{{ .Annotations.message }}{{ else }}{{ .Annotations.description }}{{ end }}\n{{ end }}`,
+                  ),
+                },
               },
             ],
           },

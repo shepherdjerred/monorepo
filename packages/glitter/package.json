@@ -4,9 +4,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "true",
-    "test": "true",
-    "typecheck": "true",
-    "lint": "true"
+    "deploy": "bun ../../scripts/deploy-site.ts glitter"
   }
 }

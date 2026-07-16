@@ -114,6 +114,25 @@ export * from "./data-dragon/item.ts";
 export * from "./data-dragon/runes.ts";
 export { getChampionInfo, getChampionList } from "./data-dragon/champion.ts";
 export {
+  getPatchChangeset,
+  selectRelevantPatchChanges,
+  formatPatchNotes,
+  formatGenericPatchNotes,
+  PatchChangesetSchema,
+  PatchDirectionSchema,
+  PatchMagnitudeSchema,
+  PatchChampionChangeSchema,
+  PatchItemChangeSchema,
+  PatchSystemChangeSchema,
+  type PatchChangeset,
+  type PatchChampionChange,
+  type PatchItemChange,
+  type PatchSystemChange,
+  type PatchDirection,
+  type PatchMagnitude,
+  type RelevantPatchChanges,
+} from "./data-dragon/patch-notes.ts";
+export {
   arenaAugmentCache,
   getCachedArenaAugmentById,
 } from "./data-dragon/arena-augments.ts";
@@ -146,6 +165,8 @@ export {
   validateChampionLoadingImage,
   normalizeChampionName,
   getChampionKeyById,
+  championNameToDisplayName,
+  getChampionDisplayNameById,
 } from "./data-dragon/images.ts";
 export type { SkinFallbackEvent } from "./data-dragon/images.ts";
 

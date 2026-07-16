@@ -155,6 +155,8 @@ export function replaceTemplateVariables(
     matchAnalysis: string;
     queueContext: string;
     rankContext: string;
+    playerHistory: string;
+    patchNotes: string;
   },
 ): string {
   return template
@@ -167,5 +169,7 @@ export function replaceTemplateVariables(
     .replaceAll("<RANDOM BEHAVIOR>", variables.randomBehavior)
     .replaceAll("<MATCH ANALYSIS>", variables.matchAnalysis)
     .replaceAll("<QUEUE CONTEXT>", variables.queueContext)
-    .replaceAll("<RANK CONTEXT>", variables.rankContext);
+    .replaceAll("<RANK CONTEXT>", variables.rankContext)
+    .replaceAll("<PLAYER HISTORY>", variables.playerHistory)
+    .replaceAll("<PATCH NOTES>", variables.patchNotes);
 }

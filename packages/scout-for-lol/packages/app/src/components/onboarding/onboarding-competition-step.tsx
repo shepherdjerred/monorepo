@@ -9,8 +9,7 @@ import {
 } from "#src/components/competition-form-fields.tsx";
 import { validateForm } from "#src/lib/competition-form-state.ts";
 import { COMPETITION_EXAMPLES } from "#src/lib/onboarding-examples.ts";
-import { OnboardingShell } from "#src/components/onboarding/onboarding-shell.tsx";
-import { OnboardingNoChannels } from "#src/components/onboarding/onboarding-no-channels.tsx";
+import { OnboardingStepFrame } from "#src/components/onboarding/onboarding-step-frame.tsx";
 
 const TITLE = "Start a competition";
 const DESCRIPTION =
@@ -49,19 +48,6 @@ export function OnboardingCompetitionStep(props: {
     }),
   );
 
-  if (props.channels.length === 0) {
-    return (
-      <OnboardingShell
-        step="build-competition"
-        title={TITLE}
-        description={DESCRIPTION}
-        onSkip={props.onSkip}
-      >
-        <OnboardingNoChannels onBack={props.onBack} />
-      </OnboardingShell>
-    );
-  }
-
   function handleSubmit(event: React.SyntheticEvent) {
     event.preventDefault();
     setError(null);
@@ -83,10 +69,12 @@ export function OnboardingCompetitionStep(props: {
   }
 
   return (
-    <OnboardingShell
+    <OnboardingStepFrame
       step="build-competition"
       title={TITLE}
       description={DESCRIPTION}
+      hasChannels={props.channels.length > 0}
+      onBack={props.onBack}
       onSkip={props.onSkip}
     >
       <div className="space-y-3">
@@ -105,6 +93,6 @@ export function OnboardingCompetitionStep(props: {
           ← Back
         </Button>
       </div>
-    </OnboardingShell>
+    </OnboardingStepFrame>
   );
 }

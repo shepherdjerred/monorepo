@@ -7,6 +7,7 @@ import {
   isOverdue,
   isToday,
   isUpcoming,
+  parseLocalDate,
 } from "./dates";
 
 // Helper: format a Date as YYYY-MM-DD
@@ -160,5 +161,28 @@ describe("getDateGroup", () => {
     const farFuture = daysFromNow(60);
     const result = getDateGroup(farFuture);
     expect(result).toMatch(/^\w{3} \d{1,2}$/);
+  });
+});
+
+describe("parseLocalDate — timezone correctness", () => {
+  test("parses a date-only string in local time, not UTC", () => {
+    // new Date("2026-07-10") is UTC midnight; in a negative-UTC zone reading
+    // local components would yield the 9th. parseLocalDate must give the 10th.
+    const d = parseLocalDate("2026-07-10");
+    expect(d.getFullYear()).toBe(2026);
+    expect(d.getMonth()).toBe(6); // July (0-indexed)
+    expect(d.getDate()).toBe(10);
+  });
+
+  test("today's date-only string classifies as Today, not Overdue", () => {
+    const d = new Date();
+    const todayYmd = `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    expect(isToday(todayYmd)).toBe(true);
+    expect(isOverdue(todayYmd)).toBe(false);
+  });
+
+  test("full timestamps are parsed as-is", () => {
+    const d = parseLocalDate("2026-07-10T15:30:00Z");
+    expect(d.getTime()).toBe(new Date("2026-07-10T15:30:00Z").getTime());
   });
 });

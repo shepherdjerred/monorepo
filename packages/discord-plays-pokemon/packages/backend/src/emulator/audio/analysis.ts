@@ -5,6 +5,17 @@
 // critical — but the math is correct enough that "right song" comes out
 // distinguishable from "noise" or "silence" with comfortable margin.
 
+// Every index below is loop-bounded by the array's own length, so an
+// out-of-range read signals a logic bug rather than expected data — fail fast
+// instead of letting an undefined silently poison the DSP arithmetic.
+function at(arr: Float64Array, index: number): number {
+  const value = arr[index];
+  if (value === undefined) {
+    throw new Error(`audio analysis index out of range: ${String(index)}`);
+  }
+  return value;
+}
+
 /** In-place radix-2 Cooley-Tukey FFT. Window length must be a power of 2. */
 export function fft(re: Float64Array, im: Float64Array): void {
   const n = re.length;
@@ -17,8 +28,8 @@ export function fft(re: Float64Array, im: Float64Array): void {
     for (; j & bit; bit >>= 1) j ^= bit;
     j ^= bit;
     if (i < j) {
-      [re[i], re[j]] = [re[j], re[i]];
-      [im[i], im[j]] = [im[j], im[i]];
+      [re[i], re[j]] = [at(re, j), at(re, i)];
+      [im[i], im[j]] = [at(im, j), at(im, i)];
     }
   }
   // Cooley-Tukey butterflies.
@@ -31,12 +42,16 @@ export function fft(re: Float64Array, im: Float64Array): void {
       let zRe = 1;
       let zIm = 0;
       for (let k = 0; k < halfSize; k++) {
-        const tRe = zRe * re[i + k + halfSize] - zIm * im[i + k + halfSize];
-        const tIm = zRe * im[i + k + halfSize] + zIm * re[i + k + halfSize];
-        re[i + k + halfSize] = re[i + k] - tRe;
-        im[i + k + halfSize] = im[i + k] - tIm;
-        re[i + k] += tRe;
-        im[i + k] += tIm;
+        const tRe =
+          zRe * at(re, i + k + halfSize) - zIm * at(im, i + k + halfSize);
+        const tIm =
+          zRe * at(im, i + k + halfSize) + zIm * at(re, i + k + halfSize);
+        const baseRe = at(re, i + k);
+        const baseIm = at(im, i + k);
+        re[i + k + halfSize] = baseRe - tRe;
+        im[i + k + halfSize] = baseIm - tIm;
+        re[i + k] = baseRe + tRe;
+        im[i + k] = baseIm + tIm;
         const nzRe = zRe * wRe - zIm * wIm;
         const nzIm = zRe * wIm + zIm * wRe;
         zRe = nzRe;
@@ -67,12 +82,13 @@ export function stft(
   const re = new Float64Array(windowSize);
   const im = new Float64Array(windowSize);
   for (let start = 0; start + windowSize <= samples.length; start += hopSize) {
-    for (let i = 0; i < windowSize; i++) re[i] = samples[start + i] * w[i];
+    for (let i = 0; i < windowSize; i++)
+      re[i] = at(samples, start + i) * at(w, i);
     im.fill(0);
     fft(re, im);
     const mag = new Float64Array(windowSize / 2);
     for (let i = 0; i < mag.length; i++) {
-      mag[i] = Math.hypot(re[i], im[i]);
+      mag[i] = Math.hypot(at(re, i), at(im, i));
     }
     frames.push(mag);
   }
@@ -116,6 +132,9 @@ export function melFilterbank(
     const left = binFreqs[m - 1];
     const center = binFreqs[m];
     const right = binFreqs[m + 1];
+    if (left === undefined || center === undefined || right === undefined) {
+      throw new Error(`mel bin frequency out of range at filter ${String(m)}`);
+    }
     for (let k = left; k < center; k++) {
       if (center === left) continue;
       filt[k] = (k - left) / (center - left);
@@ -137,7 +156,7 @@ export function applyFilterbank(
   const out = new Float64Array(filters.length);
   for (const [m, f] of filters.entries()) {
     let s = 0;
-    for (let k = 0; k < f.length; k++) s += spectrum[k] * f[k];
+    for (let k = 0; k < f.length; k++) s += at(spectrum, k) * at(f, k);
     out[m] = s;
   }
   return out;
@@ -158,7 +177,7 @@ export function chromagram(
     if (hz < 80 || hz > 5000) continue;
     const midi = 69 + 12 * Math.log2(hz / 440);
     const pc = ((Math.round(midi) % 12) + 12) % 12;
-    chroma[pc] += spectrum[k];
+    chroma[pc] = at(chroma, pc) + at(spectrum, k);
   }
   return chroma;
 }
@@ -174,8 +193,11 @@ export function onsetCount(spectra: StftFrame[], sigma = 1.5): number {
     let s = 0;
     const prev = spectra[i - 1];
     const cur = spectra[i];
+    if (prev === undefined || cur === undefined) {
+      throw new Error(`spectra frame out of range at ${String(i)}`);
+    }
     for (const [k, element] of cur.entries()) {
-      const d = element - prev[k];
+      const d = element - at(prev, k);
       if (d > 0) s += d;
     }
     flux[i - 1] = s;
@@ -200,9 +222,11 @@ export function cosineSimilarity(a: Float64Array, b: Float64Array): number {
   let na = 0;
   let nb = 0;
   for (let i = 0; i < n; i++) {
-    dot += a[i] * b[i];
-    na += a[i] * a[i];
-    nb += b[i] * b[i];
+    const av = at(a, i);
+    const bv = at(b, i);
+    dot += av * bv;
+    na += av * av;
+    nb += bv * bv;
   }
   if (na === 0 || nb === 0) return 0;
   return dot / (Math.sqrt(na) * Math.sqrt(nb));
@@ -215,7 +239,14 @@ export function meanFrameCosine(a: Float64Array[], b: Float64Array[]): number {
   const n = Math.min(a.length, b.length);
   if (n === 0) return 0;
   let acc = 0;
-  for (let i = 0; i < n; i++) acc += cosineSimilarity(a[i], b[i]);
+  for (let i = 0; i < n; i++) {
+    const av = a[i];
+    const bv = b[i];
+    if (av === undefined || bv === undefined) {
+      throw new Error(`frame index out of range at ${String(i)}`);
+    }
+    acc += cosineSimilarity(av, bv);
+  }
   return acc / n;
 }
 
@@ -251,7 +282,7 @@ export function bandEnergyRatio(
   let inBand = 0;
   for (let k = 1; k < spectrum.length; k++) {
     const hz = (k * sampleRate) / fftSize;
-    const e = spectrum[k] * spectrum[k];
+    const e = at(spectrum, k) * at(spectrum, k);
     total += e;
     if (hz >= lowHz && hz <= highHz) inBand += e;
   }

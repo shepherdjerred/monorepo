@@ -87,12 +87,14 @@ async function main(): Promise<void> {
     library: () => library,
     expandPlaylist: (url, signal) => expandPlaylist(config, url, signal),
     listSources: (signal) => listExtractors(config, signal),
+    resolvePlaySource: (source, signal) =>
+      resolveSource(config, source, signal),
   });
   const sessions = new SessionManager({
     config,
     pool,
     resolveSource: (input, signal) =>
-      resolveSource(config, input.source, signal),
+      resolveSource(config, input.source, signal, input.preResolved),
     announce: (channelId, message) => commandBot.announce(channelId, message),
   });
   refs.sessions = sessions;

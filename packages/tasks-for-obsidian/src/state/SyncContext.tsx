@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import NetInfo from "@react-native-community/netinfo";
 
+import { useAppState } from "../hooks/use-app-state";
 import { useApiClient } from "./ApiClientContext";
 import { useTaskContext } from "./TaskContext";
 
@@ -68,6 +69,13 @@ export function SyncProvider({ children }: { children: React.ReactNode }) {
       setIsSyncing(false);
     }
   }, [client, refreshTasks]);
+
+  // Returning to the foreground is a sync trigger: drain anything queued
+  // while backgrounded and pick up desktop-side edits.
+  useAppState(() => {
+    void checkHealth();
+    void syncNow();
+  });
 
   // Monitor network state
   useEffect(() => {

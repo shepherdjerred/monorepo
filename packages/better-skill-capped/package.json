@@ -11,7 +11,8 @@
     "build": "vite build",
     "test": "bun test",
     "lint": "eslint src --cache",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deploy": "bun ../../scripts/deploy-site.ts better-skill-capped"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",
@@ -32,7 +33,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

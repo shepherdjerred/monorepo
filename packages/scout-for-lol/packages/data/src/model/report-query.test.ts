@@ -30,6 +30,59 @@ describe("parseAndCompile", () => {
     });
   });
 
+  test("compiles group(N) queries to a structured group plan", () => {
+    const plan = parseAndCompile(
+      "SELECT group, games, win_rate FROM player_groups WHERE games >= 10 GROUP BY group(3) ORDER BY win_rate DESC",
+    );
+
+    expect(plan.source).toBe("player_groups");
+    expect(plan.groupBy).toBe("group");
+    expect(plan.groupSize).toBe(3);
+    expect(plan.metrics).toEqual(["games", "win_rate"]);
+    expect(plan.minGames).toBe(10);
+  });
+
+  test("compiles group(all) queries", () => {
+    const plan = parseAndCompile(
+      "SELECT group, games FROM player_groups GROUP BY group(all)",
+    );
+
+    expect(plan.groupBy).toBe("group");
+    expect(plan.groupSize).toBe("all");
+  });
+
+  test("normalizes the legacy pair aliases to group(2)", () => {
+    const plan = parseAndCompile(
+      "SELECT pair, games, wins, losses, win_rate FROM player_pairs WHERE queue IN ('arena') AND games >= 10 GROUP BY pair ORDER BY win_rate DESC LIMIT 10 RENDER leaderboard",
+    );
+
+    expect(plan.source).toBe("player_groups");
+    expect(plan.groupBy).toBe("group");
+    expect(plan.groupSize).toBe(2);
+    expect(plan.metrics).toEqual(["games", "wins", "losses", "win_rate"]);
+    expect(plan.render.kind).toBe("LEADERBOARD");
+  });
+
+  test("canonicalizes ORDER BY on the group label column to label", () => {
+    for (const orderTarget of ["group", "pair", "label"]) {
+      const plan = parseAndCompile(
+        `SELECT group, games FROM player_groups GROUP BY group(2) ORDER BY ${orderTarget} ASC`,
+      );
+      expect(plan.orderBy).toBe("label");
+      expect(plan.orderDirection).toBe("asc");
+    }
+  });
+
+  test("rejects out-of-range and malformed group sizes", () => {
+    for (const bad of ["group(1)", "group(6)", "group()", "group(foo)"]) {
+      expect(() =>
+        parseAndCompile(
+          `SELECT group, games FROM player_groups GROUP BY ${bad}`,
+        ),
+      ).toThrow("Unknown GROUP BY field");
+    }
+  });
+
   test("defaults order and limit when omitted", () => {
     const plan = parseAndCompile(
       "SELECT champion, games FROM match_participants GROUP BY champion",
@@ -202,6 +255,15 @@ describe("lintReportQuery", () => {
       "select games, win_rate from match_participants where queue in (solo) group by player order by games desc limit 10",
     );
     expect(diagnostics).toHaveLength(0);
+  });
+
+  test("does not flag ORDER BY on the group label column", () => {
+    for (const orderTarget of ["group", "pair", "label"]) {
+      const diagnostics = lintReportQuery(
+        `select group, games from player_groups group by group(2) order by ${orderTarget} asc`,
+      );
+      expect(diagnostics).toHaveLength(0);
+    }
   });
 });
 

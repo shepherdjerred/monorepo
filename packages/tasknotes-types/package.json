@@ -5,19 +5,30 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
-    "build": "echo 'source-only package, no build step'",
-    "test": "echo 'no tests'",
+    "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "bunx eslint . --max-warnings=0"
   },
   "dependencies": {
+    "@tasknotes/model": "0.2.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/bun": "^1.3.14",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./v2": {
+      "types": "./src/v2.ts",
+      "default": "./src/v2.ts"
+    }
   }
 }

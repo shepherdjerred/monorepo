@@ -2,9 +2,6 @@
 sandbox/archive/castle-casters/assets/videos/game-intro.mp4
 
 # Pokemon blog post demo videos — embedded MP4 demos in blog content.
-# Originally undetected because the old plain step's `[ -n "" ]` check
-# was a silent no-op (PR2 of the BK-pressure plan moved the check to a
-# Dagger function which surfaces real findings).
 packages/sjer.red/src/content/blog/2024/pokemon/demo.mp4
 packages/sjer.red/src/content/blog/2024/pokemon/demo2.mp4
 

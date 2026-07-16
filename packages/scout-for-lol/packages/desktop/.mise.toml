@@ -1,8 +1,5 @@
 # mise configuration for desktop package
 
-[tools]
-rust = "1.95.0"
-
 [tasks.fmt]
 description = "Format Rust code"
 run = "cd src-tauri && cargo fmt"

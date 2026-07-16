@@ -51,4 +51,4 @@ export const SessionState = {
 
 export type SessionStateType = (typeof SessionState)[keyof typeof SessionState];
 
-// Prisma types should be imported directly from "@prisma/client"
+// Prisma types should be imported directly from "#generated/prisma/client/index.js"

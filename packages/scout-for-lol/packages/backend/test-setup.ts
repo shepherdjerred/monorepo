@@ -2,6 +2,7 @@
  * Test setup file - preloaded before all tests run
  * Configure test environment and global setup here
  */
+import { tmpdir } from "node:os";
 
 // Set test environment variables
 Bun.env.NODE_ENV = "test";
@@ -9,6 +10,23 @@ Bun.env.NODE_ENV = "test";
 // Set S3_BUCKET_NAME for tests that require it
 // This must be set before the configuration module is imported
 Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+
+// Isolate the report lake per test run: ingest paths (store.ts) write
+// staging files via configuration.reportLakeDir, which must never land in
+// the checkout during tests. Tests that need a lake of their own pass an
+// explicit lakeDir instead of relying on this.
+Bun.env["REPORT_LAKE_DIR"] =
+  Bun.env["REPORT_LAKE_DIR"] ??
+  `${tmpdir()}/scout-test-report-lake-${process.pid.toString()}`;
+
+// Kill the AWS SDK's EC2 metadata (IMDS) credential probe. With no ambient
+// AWS config (CI containers, fresh machines), the default credential chain
+// falls through to IMDS at 169.254.169.254 — blackholed here, and under bun
+// the probe's 1s timeout is not enforced, so any real S3 call hangs
+// indefinitely. This was the root cause of the report-render "chart timeout"
+// flake (main build 5035 hung the full 180s; deterministic repro with
+// HOME pointed at an empty dir). There is no IMDS anywhere in this infra.
+Bun.env["AWS_EC2_METADATA_DISABLED"] = "true";
 
 // SQLite stub URL — tests that need real Prisma should mock the client.
 // Without this, modules that eagerly import `#src/database/index.ts` fail

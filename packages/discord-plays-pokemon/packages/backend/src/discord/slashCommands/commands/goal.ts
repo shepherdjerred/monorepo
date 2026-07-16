@@ -71,9 +71,9 @@ export function makeGoal(driver: PokemonGameDriver) {
 
       await interaction.editReply({
         content: result.content,
-        allowedMentions: result.ephemeral
-          ? undefined
-          : { users: [interaction.user.id] },
+        ...(result.ephemeral
+          ? {}
+          : { allowedMentions: { users: [interaction.user.id] } }),
       });
     } catch (error) {
       // Best-effort: inform the user something went wrong. If editReply itself

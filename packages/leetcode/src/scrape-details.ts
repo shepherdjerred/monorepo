@@ -1,16 +1,34 @@
-import { existsSync, readdirSync } from "fs";
-import { join } from "path";
+import { appendFile, readdir, unlink } from "node:fs/promises";
+import path from "node:path";
+import { z } from "zod";
 import {
   CloudflareBlockError,
   LeetCodeClient,
-  formatDuration,
-  timestamp,
-} from "./lib/leetcode-graphql";
+} from "./lib/leetcode-graphql.ts";
+import { formatDuration, timestamp } from "./lib/format.ts";
+
+const ProblemListSchema = z.array(z.object({ titleSlug: z.string() }));
+const QuestionResponseSchema = z.object({
+  question: z.unknown().nullable(),
+});
 
 const DATA_DIR = new URL("../data", import.meta.url).pathname;
-const PROBLEMS_DIR = join(DATA_DIR, "problems");
-const LIST_PATH = join(DATA_DIR, "problems-list.json");
-const ERROR_LOG_PATH = join(DATA_DIR, "errors.log");
+const PROBLEMS_DIR = path.join(DATA_DIR, "problems");
+const LIST_PATH = path.join(DATA_DIR, "problems-list.json");
+const ERROR_LOG_PATH = path.join(DATA_DIR, "errors.log");
+
+async function readJsonFilenames(dir: string): Promise<string[]> {
+  try {
+    const entries = await readdir(dir);
+    return entries.filter((file) => file.endsWith(".json"));
+  } catch (error: unknown) {
+    // Directory does not exist yet on the first run — nothing fetched.
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      return [];
+    }
+    throw error;
+  }
+}
 
 const DETAIL_QUERY = `
 query getQuestionDetail($titleSlug: String!) {
@@ -37,11 +55,11 @@ query getQuestionDetail($titleSlug: String!) {
 }`;
 
 let shuttingDown = false;
-let stats = { ok: 0, skipped: 0, errors: 0 };
+const stats = { ok: 0, skipped: 0, errors: 0 };
 
 async function appendErrorLog(slug: string, message: string) {
   const line = `[${timestamp()}] ${slug}: ${message}\n`;
-  await Bun.write(ERROR_LOG_PATH, line, { append: true } as never);
+  await appendFile(ERROR_LOG_PATH, line);
 }
 
 function printProgress(current: number, total: number, startTime: number) {
@@ -51,35 +69,30 @@ function printProgress(current: number, total: number, startTime: number) {
   const remaining = (total - current) / rate;
   const eta = formatDuration(remaining * 1000);
   console.log(
-    `\n[Progress] ${current}/${total} (${pct}%) | ${stats.ok} ok, ${stats.skipped} skip, ${stats.errors} err | ${formatDuration(elapsed)} elapsed | eta ${eta}\n`,
+    `\n[Progress] ${String(current)}/${String(total)} (${pct}%) | ${String(stats.ok)} ok, ${String(stats.skipped)} skip, ${String(stats.errors)} err | ${formatDuration(elapsed)} elapsed | eta ${eta}\n`,
   );
 }
 
 async function main() {
-  if (!existsSync(LIST_PATH)) {
+  if (!(await Bun.file(LIST_PATH).exists())) {
     console.error(
       `Problem list not found at ${LIST_PATH}. Run scrape:list first.`,
     );
     process.exit(1);
   }
 
-  const problemList: Array<{ titleSlug: string }> =
-    await Bun.file(LIST_PATH).json();
+  const problemList = ProblemListSchema.parse(await Bun.file(LIST_PATH).json());
   console.log(
-    `[${timestamp()}] Loaded ${problemList.length} problems from list`,
+    `[${timestamp()}] Loaded ${String(problemList.length)} problems from list`,
   );
 
   // Scan existing files for resume
   const existing = new Set<string>();
-  if (existsSync(PROBLEMS_DIR)) {
-    for (const file of readdirSync(PROBLEMS_DIR)) {
-      if (file.endsWith(".json")) {
-        existing.add(file.replace(".json", ""));
-      }
-    }
+  for (const file of await readJsonFilenames(PROBLEMS_DIR)) {
+    existing.add(file.replace(".json", ""));
   }
   console.log(
-    `[${timestamp()}] Found ${existing.size} already fetched — will skip those`,
+    `[${timestamp()}] Found ${String(existing.size)} already fetched — will skip those`,
   );
 
   const toFetch = problemList.filter((p) => !existing.has(p.titleSlug));
@@ -88,7 +101,7 @@ async function main() {
   stats.skipped = existing.size;
 
   console.log(
-    `[${timestamp()}] Fetching ${toFetch.length} remaining problems...\n`,
+    `[${timestamp()}] Fetching ${String(toFetch.length)} remaining problems...\n`,
   );
 
   const client = new LeetCodeClient(2000, 5000);
@@ -119,17 +132,18 @@ async function main() {
       if (result.errors) {
         const msg = result.errors.map((e) => e.message).join("; ");
         console.log(
-          `[${timestamp()}] [${current}/${total}] ${slug} — GraphQL error: ${msg}`,
+          `[${timestamp()}] [${String(current)}/${String(total)}] ${slug} — GraphQL error: ${msg}`,
         );
         await appendErrorLog(slug, `GraphQL error: ${msg}`);
         stats.errors++;
         continue;
       }
 
-      const question = (result.data as Record<string, unknown>)?.["question"];
-      if (!question) {
+      const parsed = QuestionResponseSchema.safeParse(result.data);
+      const question = parsed.success ? parsed.data.question : null;
+      if (question == null) {
         console.log(
-          `[${timestamp()}] [${current}/${total}] ${slug} — null response (premium?)`,
+          `[${timestamp()}] [${String(current)}/${String(total)}] ${slug} — null response (premium?)`,
         );
         await appendErrorLog(slug, "null question response");
         stats.errors++;
@@ -137,31 +151,30 @@ async function main() {
       }
 
       // Atomic write: .tmp then rename
-      const tmpPath = join(PROBLEMS_DIR, `${slug}.json.tmp`);
-      const finalPath = join(PROBLEMS_DIR, `${slug}.json`);
+      const tmpPath = path.join(PROBLEMS_DIR, `${slug}.json.tmp`);
+      const finalPath = path.join(PROBLEMS_DIR, `${slug}.json`);
       await Bun.write(tmpPath, JSON.stringify(question, null, 2));
       const file = Bun.file(tmpPath);
       await Bun.write(finalPath, file);
-      const { unlink } = await import("fs/promises");
       await unlink(tmpPath);
 
       stats.ok++;
       console.log(
-        `[${timestamp()}] [${current}/${total}] ${slug} — 200 OK (${elapsed}ms)`,
+        `[${timestamp()}] [${String(current)}/${String(total)}] ${slug} — 200 OK (${String(elapsed)}ms)`,
       );
-    } catch (err) {
-      if (err instanceof CloudflareBlockError) {
-        console.error(`\n[${timestamp()}] [BLOCKED] ${err.message}`);
+    } catch (error) {
+      if (error instanceof CloudflareBlockError) {
+        console.error(`\n[${timestamp()}] [BLOCKED] ${error.message}`);
         console.error(
           "Cloudflare blocked us. Progress is saved — re-run to continue.",
         );
-        await appendErrorLog(slug, err.message);
+        await appendErrorLog(slug, error.message);
         break;
       }
 
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = error instanceof Error ? error.message : String(error);
       console.error(
-        `[${timestamp()}] [${current}/${total}] ${slug} — ERROR: ${msg}`,
+        `[${timestamp()}] [${String(current)}/${String(total)}] ${slug} — ERROR: ${msg}`,
       );
       await appendErrorLog(slug, msg);
       stats.errors++;
@@ -179,10 +192,10 @@ async function main() {
   console.log(
     `[${timestamp()}] Scrape ${shuttingDown ? "interrupted" : "complete"}`,
   );
-  console.log(`  Total:   ${total}`);
-  console.log(`  OK:      ${stats.ok}`);
-  console.log(`  Skipped: ${stats.skipped} (already existed)`);
-  console.log(`  Errors:  ${stats.errors}`);
+  console.log(`  Total:   ${String(total)}`);
+  console.log(`  OK:      ${String(stats.ok)}`);
+  console.log(`  Skipped: ${String(stats.skipped)} (already existed)`);
+  console.log(`  Errors:  ${String(stats.errors)}`);
   console.log(`  Elapsed: ${elapsed}`);
   if (stats.errors > 0) {
     console.log(`  See ${ERROR_LOG_PATH} for error details`);
@@ -190,7 +203,10 @@ async function main() {
   console.log("=".repeat(60));
 }
 
-main().catch((err) => {
-  console.error(`\n[FATAL] ${err.message}`);
+try {
+  await main();
+} catch (error: unknown) {
+  const msg = error instanceof Error ? error.message : String(error);
+  console.error(`\n[FATAL] ${msg}`);
   process.exit(1);
-});
+}

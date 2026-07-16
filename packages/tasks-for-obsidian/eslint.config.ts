@@ -3,15 +3,10 @@ const config = [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
     reactNative: true,
-    projectService: {
-      allowDefaultProject: [
-        "src/domain/*.test.ts",
-        "src/lib/*.test.ts",
-        "src/data/sync/*.test.ts",
-        "scripts/*.ts",
-      ],
-      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 50,
-    },
+    // The package tsconfigs (app + scripts/e2e/contract-tests) cover every
+    // linted file via the project service; allowDefaultProject entries became
+    // hard "also found in the project service" errors and were removed.
+    projectService: true,
     ignores: [
       "**/generated/**/*",
       "**/dist/**/*",

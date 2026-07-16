@@ -46,6 +46,7 @@ would fight the UI.
 
 | To stop…             | Pause schedule id(s)                                                                                 |
 | -------------------- | ---------------------------------------------------------------------------------------------------- |
+| Floor preheat        | `good-morning-weekday-preheat`, `good-morning-weekend-preheat`                                       |
 | Wake-up (heat)       | `good-morning-weekday-wake`, `good-morning-weekend-wake`                                             |
 | Get-up (volume ramp) | `good-morning-weekday-up`, `good-morning-weekend-up`                                                 |
 | Vacuum               | `vacuum-9am`, `vacuum-12pm`, `vacuum-5pm`                                                            |
@@ -93,6 +94,28 @@ bun run generate     # Regenerate src/generated/ha-schema.ts from live HA (needs
 
 The `bun test` run includes a workflow-bundle smoke test (`src/workflows/bundle.test.ts`) that runs the same webpack pass `Worker.create()` performs at startup. If you import an activity helper into a workflow file and this test starts failing, move the helper to `src/shared/` (a pure module with no Sentry/observability imports).
 
+## LLM observability
+
+Every LLM call in this package must emit a `gen_ai.*` span; the archive
+processor registered in `src/observability/tracing.ts` uploads prompt/response
+bodies to S3 (`llm-archive` bucket) and forwards a slim span to Tempo.
+
+- **SDK calls** — wrap with `traceAnthropic` / `traceOpenAi` from
+  `@shepherdjerred/llm-observability` (pr-summary, pr-review specialists +
+  correctness, deps-summary do this).
+- **`claude -p` subprocesses** — call `traceClaudeCli` with the captured
+  stdout after exit (agent-task, pr-babysit iteration, homelab-audit,
+  scout-season-refresh). Spans carry `gen_ai.system="claude_code_cli"`, which
+  distinguishes subscription-billed CLI runs from API-billed `anthropic`, plus
+  `llm.cost_usd` from the result message.
+- **`codex exec` subprocesses** — pump stdout NDJSON (`--json`) into the shared
+  codex adapter; agent-task does both providers via
+  `src/activities/agent-task-llm-trace.ts` (`startAgentTaskLlmTrace`). New CLI
+  activities should reuse that helper rather than hand-rolling.
+
+Emit the span **before** exit-code/cancellation failure checks — failed runs
+spent tokens and must be visible for billing.
+
 ## HA schema (type-safe workflows)
 
 Workflows that touch Home Assistant go through `src/workflows/ha/util.ts`, which wraps each activity in a schema-parameterized signature — entity IDs, domains, services, and service data are type-checked against `src/generated/ha-schema.ts`.
@@ -108,7 +131,7 @@ Workflow:
 
 - **Local dev with HA access**: `bun run generate` populates `ha-schema.ts` with real data. Workflows get strict type safety. Don't commit the result.
 - **Local dev without HA access**: stub flows in automatically via `ensure-ha-schema.ts`. Workflows typecheck against `DefaultHaSchema` (loose strings). Same compile behavior as before this feature landed.
-- **CI (Dagger)**: today runs against the stub. To get strict typing in CI, add a `generateAndTypecheck` variant in `.dagger/src/typescript.ts` that injects `HA_URL` + `HA_TOKEN` via `withSecretVariable`, and register temporal in the codegen-required packages set (`scripts/ci/src/catalog.ts`'s `PRISMA_PACKAGES` is the analogous place). Not wired yet — the stub keeps CI green.
+- **CI has no HA credentials**: the stub keeps `bun run typecheck` green in the Buildkite pipeline (and anywhere else) without HA access; strict typing requires a local `bun run generate` against live HA.
 
 ## Environment Variables
 
@@ -137,6 +160,10 @@ Workflow:
 - `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL` — bot identity for any activity that runs `git commit`
 - `GITHUB_WEBHOOK_SECRET` — HMAC secret used to verify `X-Hub-Signature-256` on incoming PR webhooks. **Required** when the webhook server is enabled; the server only starts when this is set.
 - `GITHUB_WEBHOOK_PORT` — port for the GitHub webhook receiver (default `9466`).
+- `XCODE_CLOUD_WEBHOOK_TOKEN` — unguessable token embedded in the Xcode Cloud webhook URL path (`/hook/<token>`). Xcode Cloud webhooks carry no signature/auth header, so the URL path IS the credential. **Required** to start the receiver; when unset the server is skipped.
+- `XCODE_CLOUD_WEBHOOK_PORT` — port for the Xcode Cloud webhook receiver (default `9468`).
+- `XCODE_CLOUD_ALERT_TTL_SECONDS` — safety auto-resolve window for a fired build-failure alert if no later `SUCCEEDED` clears it (default `21600` = 6h).
+- `ALERTMANAGER_URL` — in-cluster Alertmanager base URL the Xcode Cloud receiver POSTs alerts to (`http://prometheus-kube-prometheus-alertmanager.prometheus:9093`). **Required** when the receiver is enabled.
 
 ## Homelab audit (daily)
 
@@ -199,25 +226,34 @@ There are **two** Temporal scheduling patterns — don't conflate them:
 - **Report-only agent-tasks** (`agentTaskWorkflow`, above) email reports and **cannot** open PRs/issues or edit files — `mode` is only `"report-only"` and the prompt forbids mutation.
 - **Deterministic PR-creating workflows** (e.g. `src/activities/data-dragon.ts`, `pokeemerald-wasm.ts`, `readme-refresh.ts`) regenerate artifacts then `git push --force-with-lease` + `gh pr create`, authed by a GitHub App installation token (`src/lib/github-app-token.ts` `createGitHubAppInstallationToken()`, env `GITHUB_APP_ID`/`GITHUB_APP_INSTALLATION_ID`/`GITHUB_APP_PRIVATE_KEY`). scout-for-lol's data-dragon refresh is the canonical example.
 
-To add a "weekly: regenerate X, open a PR if it changed" job, mirror `data-dragon.ts`: a deterministic activity (no Claude), GitHub App token, path-scoped `git add`, plus a thin workflow, an export in `src/workflows/index.ts`, and a `SCHEDULES` entry (cron, `America/Los_Angeles`, `TASK_QUEUES.DEFAULT`). The worker pod has bun/git/gh but **not** helm — add tools via `.dagger/src/image.ts` if the job needs them.
+To add a "weekly: regenerate X, open a PR if it changed" job, mirror `data-dragon.ts`: a deterministic activity (no Claude), GitHub App token, path-scoped `git add`, plus a thin workflow, an export in `src/workflows/index.ts`, and a `SCHEDULES` entry (cron, `America/Los_Angeles`, `TASK_QUEUES.DEFAULT`). The worker pod has bun/git/gh but **not** helm — add tools to the worker image build (`Dockerfile`) if the job needs them (`bunx turbo run smoke --filter=temporal` builds + smoke-tests the image; CI builds/smokes/pushes it on merge to main).
 
-## Greptile review gate (Buildkite)
+### Bot-clone environment — use `bot-clone.ts`, never hand-rolled installs
 
-The `greptile-review` Buildkite step (`scripts/ci/src/wait-for-greptile.ts`) gates `ci-complete` for PRs — separate from the in-package PR review bot below.
+Every PR-creating activity clones the monorepo into `/tmp` and must prepare that clone through `src/activities/bot-clone.ts`:
+
+- **`rootInstallWithoutHooks(repoDir)`** — root `bun install --frozen-lockfile --ignore-scripts`. Bot clones are **not dev checkouts**: historically a plain root install ran a root `prepare` script that armed the full dev pre-commit suite for the bot's later `git commit` inside the worker pod, where it couldn't pass (no gitleaks binary, no per-package toolchains) — this exact mistake broke `scout-season-refresh-weekly` and `readme-refresh-weekly` every week through June–July 2026. In dev, lefthook is armed manually (`bunx lefthook install`, not by an install script), and the bot must keep the hook-free `--ignore-scripts` install regardless: it's faster and skips any postinstall side-effects, while the Buildkite pipeline running on the bot's opened PR (plus a human reviewer) is the real gate.
+- **`buildLlmModels(repoDir)` / `installScoutWorkspace(repoDir)`** — `@shepherdjerred/llm-models` is a `file:` producer with a gitignored `dist/`; installing a consumer workspace without building it first copies a broken package (`Cannot find module '@shepherdjerred/llm-models'` — the `scout-data-dragon-weekly-refresh` failure). Build the producer, then install the consumer.
+
+The **`scripts/rehearse-bot-clone.ts`** rehearsal script drives these same helpers plus canaries for the cog targets and the hook-free commit path. It is exposed as the `check:rehearsal` turbo task (`bunx turbo run check:rehearsal --filter=@shepherdjerred/temporal`, driven by `scripts/check-schedule-rehearsal.ts`; `cache:false` because it copies the whole repo tree and shells out to real tools turbo can't hash). It runs in `bun run verify` (and therefore the `pre-push` hook and the Buildkite pipeline), so a break in a scheduled activity's install/repo-path assumptions is caught pre-merge instead of surfacing silently on the weekend. If you add a new repo-path or install-step dependency to a scheduled activity, extend the rehearsal script in the same PR.
+
+## Greptile review threads (CI gate)
+
+The Buildkite pipeline has a **soft-fail** greptile review gate on PR builds (`scripts/wait-for-greptile.ts`, `.buildkite/pipeline.yml`). The thread-evaluation knowledge below applies both to that gate and to any bot (e.g. pr-babysit) that reasons about Greptile reviews — separate from the in-package PR review bot below.
 
 - **Greptile's own check-run goes green as soon as the review completes**, even with its posted comments still unresolved (verified on PR #1026), so it's useless as a "comments addressed" gate. Gate instead on **review threads** via GraphQL (`pullRequest.reviewThreads { nodes { isResolved isOutdated path comments(first:1){ nodes { author{login} } } } }`): a thread blocks iff authored by `greptile-apps` (GraphQL drops the `[bot]` suffix REST shows) AND `!isResolved` AND `!isOutdated`. Use the check-run only as the "Greptile finished reviewing this commit" marker (it's present even on a clean no-comment review). Greptile auto-resolves its own threads and marks them outdated when the referenced lines change.
 - An **empty-diff PR** (e.g. a superseded branch brought fully up to main, byte-identical tree) can **never** pass the gate: Greptile posts `No reviewable files after applying ignore patterns.` and never creates a review check-run, so `evaluateGate` stays `reviewing` and the step times out after 1200s. Such a PR needs a genuine reviewable diff, to be closed, or to be admin-merged once the conflict is cleared (what happened to PR #1076).
 
 ## Weekly README refresh
 
-`readme-refresh-weekly` (cron `0 8 * * 1` PT) runs `runReadmeRefresh` on the `default` queue. The activity (`src/activities/readme-refresh.ts`) mirrors `helm-types-refresh`: clone the monorepo (full blobless history — the cog blocks sort packages by first-commit date), run `cog -r README.md practice/README.md archive/README.md` to regenerate the embedded project-listing tables, format the output with the repo's pinned prettier (see below), stage only the three READMEs + any new per-package `_summary.md`, and open a PR via `openSeasonRefreshPr` if anything drifted (no diff → no PR). This replaced the old `.buildkite/scripts/update-readmes.sh` Buildkite scheduled build.
+`readme-refresh-weekly` (cron `0 8 * * 1` PT) runs `runReadmeRefresh` on the `default` queue. The activity (`src/activities/readme-refresh.ts`) mirrors `helm-types-refresh`: clone the monorepo (full blobless history — the cog blocks sort packages by first-commit date), run `cog -r README.md sandbox/practice/README.md sandbox/archive/README.md` to regenerate the embedded project-listing tables, format the output with the repo's pinned prettier (see below), stage only the three READMEs + any new per-package `_summary.md`, and open a PR via `openSeasonRefreshPr` if anything drifted (no diff → no PR). This replaced the old `.buildkite/scripts/update-readmes.sh` Buildkite scheduled build (since removed).
 
-`cog` is a Python tool, so the worker image installs cogapp via `withCogapp` in `.dagger/src/image.ts` (pinned by `COGAPP_VERSION` in `.dagger/src/constants.ts`). Per-package summaries are cached as committed `_summary.md` files, so a steady-state run makes no Codex calls; only a brand-new package without a committed summary triggers `bunx @openai/codex` (authed via the pod's `OPENAI_API_KEY`).
+`cog` is a Python tool, so the worker image's `Dockerfile` must install cogapp (baked into the image build). Per-package summaries are cached as committed `_summary.md` files, so a steady-state run makes no Codex calls; only a brand-new package without a committed summary triggers `bunx @openai/codex` (authed via the pod's `OPENAI_API_KEY`).
 
 Two non-obvious bits the cog blocks + activity handle, learned the hard way (PR #1164):
 
 - **codex must ignore `AGENTS.md`.** `codex exec` runs in the repo root and, left alone, obeys the repo agent docs ("every session must produce a session log") and dumps `**Done**/**Remaining**/**Caveats**` meta into the summary. The cog blocks pass `-c project_doc_max_bytes=0` so codex returns a plain project summary. Without it, ~8/21 generated summaries came out contaminated.
-- **cog output isn't prettier-clean.** Its raw markdown (e.g. a missing blank line after `]]]-->`) fails the repo's prettier gate, so an unformatted auto-PR would never pass CI. The activity runs `bun install --frozen-lockfile` + `bunx prettier --write` on the regenerated files before opening the PR. In steady state cog un-formats and prettier re-formats back to the committed bytes, netting no diff. (markdownlint only checks the root `README.md`; `archive/**`, `practice/**`, and `**/_summary.md` are ignored — and clean single-paragraph summaries don't trip MD032.)
+- **cog output isn't prettier-clean.** Its raw markdown (e.g. a missing blank line after `]]]-->`) doesn't match the repo's prettier formatting, so an unformatted auto-PR would churn the committed bytes. The activity runs `bun install --frozen-lockfile` + `bunx prettier --write` on the regenerated files before opening the PR. In steady state cog un-formats and prettier re-formats back to the committed bytes, netting no diff. (markdownlint only checks the root `README.md`; `archive/**`, `practice/**`, and `**/_summary.md` are ignored — and clean single-paragraph summaries don't trip MD032.)
 
 ## PR review / summary bot
 
@@ -232,7 +268,7 @@ Per webhook delivery, the Hono server in `src/event-bridge/github-webhook.ts` st
 
 The two summary paths use **distinct** markers so both comments live on every non-draft PR during shadow mode — reviewers and the eval grader compare quality side-by-side. Phase 13 retires the legacy `claude -p` workflows; at that point the SDK summary takes over the canonical `<!-- pr-summary -->` marker if useful.
 
-The `runPrAgent` activity (`src/activities/pr-agent.ts`) launches `claude -p --mcp-config <tempfile> --allowed-tools mcp__github__* --model <m> --max-turns <n>`. The MCP config points at `/usr/local/bin/github-mcp-server` (installed in the worker image via `withGithubMcpServer` in `.dagger/src/image.ts`). Tokens are passed via env, never written into the MCP config file. stderr is streamed line-by-line through `jsonLog` with token redaction. Heartbeats fire every 10s during the subprocess lifetime.
+The `runPrAgent` activity (`src/activities/pr-agent.ts`) launches `claude -p --mcp-config <tempfile> --allowed-tools mcp__github__* --model <m> --max-turns <n>`. The MCP config points at `/usr/local/bin/github-mcp-server` (baked into the worker image's `Dockerfile`). Tokens are passed via env, never written into the MCP config file. stderr is streamed line-by-line through `jsonLog` with token redaction. Heartbeats fire every 10s during the subprocess lifetime.
 
 The `runPrSummaryPipeline` activity (`src/activities/pr-review/summary.ts`) talks to the Anthropic SDK directly. Streams Haiku 4.5 via `messages.stream(...).finalMessage()`. Prompt caching pinned to the last system block (agent instructions hierarchy). Cost target ≤$0.10/summary. See `scripts/replay-pr-summary.ts --pr <#>` for the verification harness.
 

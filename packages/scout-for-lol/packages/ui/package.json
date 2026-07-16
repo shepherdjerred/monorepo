@@ -14,7 +14,7 @@
     "format:write": "bunx prettier --write src"
   },
   "dependencies": {
-    "@scout-for-lol/data": "file:../data",
+    "@scout-for-lol/data": "workspace:*",
     "react": "19.2.6"
   },
   "devDependencies": {

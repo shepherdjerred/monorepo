@@ -25,7 +25,7 @@ const SCHEDULE_TIMEZONE = "America/Los_Angeles";
 //     is "ran this cycle," so running late after a server outage is acceptable.
 //
 // Inferred string-literal types, NOT `: Duration`. `Duration` is
-// `StringValue | number`, and under Dagger's per-package Node16 install the canary
+// `StringValue | number`, and under the old CI's per-package Node16 install the canary
 // `ms` resolves with no usable `StringValue` (its `exports` map has no `types`
 // condition, so TS falls through to `@types/ms`, which never exported StringValue),
 // leaving `Duration` partly error-typed. Any value whose static type is `Duration`
@@ -62,7 +62,7 @@ export const DELETED_SCHEDULE_IDS = [
   "alert-remediation-hourly",
   "alert-remediation-daily",
   // The pokeemerald.wasm download workflow (`runPokeemeraldWasmUpdate`) is gone:
-  // the wasm is now built from source in the Dagger image build with our
+  // the wasm was instead built from source in the (since-removed) CI image build with our
   // customizations (the download fetched an audio-stubbed upstream that lacked
   // them). Delete BOTH the live weekly schedule and the never-removed monthly
   // one (a monthly→weekly rename relic the 2026-06-26 audit caught) so neither
@@ -344,13 +344,31 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Run vacuum if no one is home (5 PM)",
   },
   {
+    // Floor preheat 2h15m before wake: the bathroom floor ramps ~8.3°C/hour
+    // (measured 2026-07-09), so reaching the 40°C setpoint from a ~22°C
+    // overnight start needs ~2¼ hours. The workflow holds the setpoint for
+    // 195m (13 × 15m presence-checked chunks) then turns off as its own
+    // backstop; the timeout carries generous slack so worker delay or activity
+    // retries can never time the run out before the turn-off executes.
+    id: "good-morning-weekday-preheat",
+    workflowType: "goodMorningPreheat",
+    args: [],
+    cronExpression: "45 5 * * 1-5",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "240 minutes",
+    catchupWindow: CATCHUP_TIGHT,
+    memo: "Bathroom floor preheat (weekdays 5:45 AM)",
+  },
+  {
     id: "good-morning-weekday-wake",
     workflowType: "goodMorningWakeUp",
     args: [],
     cronExpression: "0 8 * * 1-5",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    // goodMorningWakeUp now runs the 60-minute heat cycle (MORNING_HEAT_DURATION); needs > 60m + slack
+    // goodMorningWakeUp still runs its 60-minute heat window (MORNING_HEAT_DURATION)
+    // as the fallback when the preheat run was skipped; needs > 60m + slack
     workflowExecutionTimeout: "75 minutes",
     catchupWindow: CATCHUP_TIGHT,
     memo: "Good morning wake-up + bathroom heat (weekdays 8 AM)",
@@ -367,13 +385,26 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Good morning get-up (weekdays 8:15 AM)",
   },
   {
+    // Weekend preheat: 2h15m before the 9 AM weekend wake.
+    id: "good-morning-weekend-preheat",
+    workflowType: "goodMorningPreheat",
+    args: [],
+    cronExpression: "45 6 * * 0,6",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "240 minutes",
+    catchupWindow: CATCHUP_TIGHT,
+    memo: "Bathroom floor preheat (weekends 6:45 AM)",
+  },
+  {
     id: "good-morning-weekend-wake",
     workflowType: "goodMorningWakeUp",
     args: [],
     cronExpression: "0 9 * * 0,6",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    // goodMorningWakeUp now runs the 60-minute heat cycle (MORNING_HEAT_DURATION); needs > 60m + slack
+    // goodMorningWakeUp still runs its 60-minute heat window (MORNING_HEAT_DURATION)
+    // as the fallback when the preheat run was skipped; needs > 60m + slack
     workflowExecutionTimeout: "75 minutes",
     catchupWindow: CATCHUP_TIGHT,
     memo: "Good morning wake-up + bathroom heat (weekends 9 AM)",

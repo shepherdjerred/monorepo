@@ -12,6 +12,11 @@ import {
 import { dataSource } from "#src/db/index.ts";
 import _ from "lodash";
 import client from "#src/discord/client.ts";
+import {
+  formatLeaderboardLine,
+  karmaAmountFor,
+  rankLeaderboard,
+} from "#src/karma/scoring.ts";
 
 const karmaCommand = new SlashCommandBuilder()
   .setName("karma")
@@ -55,14 +60,10 @@ async function getOrCreate(id: string): Promise<Person> {
     where: {
       id,
     },
-    relations: [
-      "received",
-      "given",
-      "given.receiver",
-      "given.giver",
-      "received.receiver",
-      "received.giver",
-    ],
+    relations: {
+      received: { receiver: true, giver: true },
+      given: { receiver: true, giver: true },
+    },
   });
   if (person === null) {
     console.warn(`[Karma DB] Creating new person record for user ID: ${id}`);
@@ -137,10 +138,11 @@ async function handleKarmaGive(interaction: ChatInputCommandInteraction) {
     console.warn(
       `[Karma Give] ${giverUser.tag} (${giverUser.id}) attempted self-karma - applying penalty (-1)`,
     );
+    const penalty = karmaAmountFor(giverUser.id, receiverUser.id);
     await modifyKarma({
       giverId: giverUser.id,
       receiverId: receiverUser.id,
-      amount: -1,
+      amount: penalty,
       guildId: interaction.guildId,
       reason: "tried altering their own karma",
     });
@@ -150,7 +152,7 @@ async function handleKarmaGive(interaction: ChatInputCommandInteraction) {
     );
     await interaction.reply({
       content: `${userMention(giverUser.id)} tried altering their karma. SMH my head. ${bold(
-        "-1",
+        penalty.toString(),
       )} karma. They now have ${bold(newKarma.toString())} karma.`,
     });
     return;
@@ -164,7 +166,7 @@ async function handleKarmaGive(interaction: ChatInputCommandInteraction) {
   await modifyKarma({
     giverId: giverUser.id,
     receiverId: receiverUser.id,
-    amount: 1,
+    amount: karmaAmountFor(giverUser.id, receiverUser.id),
     guildId: interaction.guildId,
     reason,
   });
@@ -213,32 +215,17 @@ async function handleKarmaLeaderboard(
     `[Karma Leaderboard] Retrieved ${karmaCounts.length.toString()} entries for guild ${interaction.guildId}`,
   );
 
-  let rank = 0;
-  let prev: number;
+  const ranked = rankLeaderboard(karmaCounts);
   const leaderboardEntries = await Promise.all(
-    _.map(karmaCounts, async (value) => {
-      // show ties
-      if (value.karmaReceived !== prev) {
-        rank++;
-      }
-      // make a copy of rank. I think this is required because the function is async?
-      const myRank = rank;
-      prev = value.karmaReceived;
-
+    _.map(ranked, async (entry) => {
       // mention the user who called the leaderboard command
-      const fetchedUser = await client.users.fetch(value.id, { cache: true });
-      let user = fetchedUser.username;
-      if (interaction.user.id === value.id) {
-        user = userMention(interaction.user.id);
-      }
+      const fetchedUser = await client.users.fetch(entry.id, { cache: true });
+      const displayName =
+        interaction.user.id === entry.id
+          ? userMention(interaction.user.id)
+          : fetchedUser.username;
 
-      let rankString = `#${myRank.toString()}`;
-      // top 3 are better than everyone else
-      if (myRank <= 3) {
-        rankString = bold(rankString);
-      }
-
-      return `${rankString}: ${user} (${String(value.karmaReceived)} karma)`;
+      return formatLeaderboardLine(entry, displayName);
     }),
   );
   const leaderboard = leaderboardEntries.join("\n");
@@ -274,7 +261,7 @@ async function handleKarmaHistory(interaction: ChatInputCommandInteraction) {
       { giver: { id: target.id }, guildId: interaction.guildId },
       { receiver: { id: target.id }, guildId: interaction.guildId },
     ],
-    relations: ["giver", "receiver"],
+    relations: { giver: true, receiver: true },
     order: { datetime: "DESC" },
     take: 10,
   });

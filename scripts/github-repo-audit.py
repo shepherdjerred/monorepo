@@ -24,7 +24,7 @@ from typing import Any
 
 def run_gh(args: list[str], max_retries: int = 20, retry_delay: float = 3.0) -> str:
     """Run gh command with generous retries."""
-    cmd = ["gh"] + args
+    cmd = ["gh", *args]
     last_error: str = ""
 
     for attempt in range(1, max_retries + 1):

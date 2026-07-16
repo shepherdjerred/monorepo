@@ -58,12 +58,16 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "ZfsArcEvictionHigh",
           annotations: {
             description: escapePrometheusTemplate(
-              "ZFS ARC on {{ $labels.instance }} has high eviction rate: {{ $value }}/s - may indicate memory pressure",
+              "ZFS ARC on {{ $labels.instance }} has sustained extreme eviction churn: {{ $value }}/s",
             ),
-            summary: "High ZFS ARC eviction rate detected",
+            summary: "Sustained extreme ZFS ARC eviction churn",
           },
+          // The ARC is deliberately right-sized (16Gi, 2026-07-10) and runs pinned at
+          // cap, so steady eviction is normal operation — not memory pressure. Only
+          // sustained extreme churn is signal; ZfsArcHitRateLow is the "cache too
+          // small" canary. See packages/docs/plans/2026-07-10_torvalds-memory-rightsize.md.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "rate(node_zfs_arc_deleted[5m]) > 1000",
+            "rate(node_zfs_arc_deleted[5m]) > 10000",
           ),
           for: "30m",
           labels: { severity: "warning" },
@@ -178,12 +182,18 @@ export function getZfsMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "ZfsHashCollisionsHigh",
           annotations: {
             description: escapePrometheusTemplate(
-              "ZFS hash collisions on {{ $labels.instance }} are high: {{ $value }}/s - may impact performance",
+              "ZFS hash collisions on {{ $labels.instance }} are far above the 30d norm: {{ $value }}/s - may impact performance",
             ),
             summary: "High ZFS hash collisions detected",
           },
+          // Threshold history: the old 1000/s threshold was routinely exceeded even
+          // under the oversized 48Gi ARC (30d: p50 36/s, p95 5.1k/s, max 13.5k/s) —
+          // raising the ARC to quell this alert demonstrably did not work, so the
+          // threshold now sits above the observed 30d max instead (~1.5x). Collisions
+          // are a perf-noise signal, not data risk. See
+          // packages/docs/plans/2026-07-10_torvalds-memory-rightsize.md.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "rate(node_zfs_arc_hash_collisions[5m]) > 1000",
+            "rate(node_zfs_arc_hash_collisions[5m]) > 20000",
           ),
           for: "15m",
           labels: { severity: "warning" },

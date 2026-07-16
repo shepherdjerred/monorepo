@@ -5,7 +5,7 @@ import { createRawGoLiveMachine } from "@shepherdjerred/discord-stream-lifecycle
 import type {
   EncoderHandles,
   RawGoLiveDeps,
-} from "@shepherdjerred/discord-stream-lifecycle/types.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/types";
 
 type Deferred<T> = {
   promise: Promise<T>;

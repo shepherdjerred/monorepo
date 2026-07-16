@@ -29,8 +29,10 @@ import asyncio
 import sys
 from argparse import ArgumentParser
 from pathlib import Path
+
 from bs4 import BeautifulSoup
 from markdownify import markdownify as md
+
 
 def extract_content_from_html(html_content: str, url: str) -> tuple[str, str, str]:
     """
@@ -46,7 +48,7 @@ def extract_content_from_html(html_content: str, url: str) -> tuple[str, str, st
     title = title_tag.get_text() if title_tag else "Untitled"
 
     desc_tag = soup.find('meta', attrs={'name': 'description'})
-    description = desc_tag.get('content', '') if desc_tag else ""
+    description = str(desc_tag.get('content', '')) if desc_tag else ""
 
     # The HIG pages are Vue.js SPAs, so we need to render them with a headless browser
     # or extract from the initial state. For now, we'll include metadata and note
@@ -89,7 +91,7 @@ async def process_html_with_browser(html_path: Path, url: str) -> tuple[str, str
 
         # Extract meta description
         desc_element = await page.query_selector('meta[name="description"]')
-        description = await desc_element.get_attribute('content') if desc_element else ""
+        description = (await desc_element.get_attribute('content') or "") if desc_element else ""
 
         # Extract main content
         # HIG pages typically have main content in specific containers
@@ -120,7 +122,7 @@ def process_file_simple(html_path: Path, url: str, output_path: Path):
     """Simple processing without browser rendering."""
     try:
         html_content = html_path.read_text(encoding='utf-8')
-        title, description, markdown = extract_content_from_html(html_content, url)
+        _title, _description, markdown = extract_content_from_html(html_content, url)
 
         # Write markdown file
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -136,7 +138,7 @@ def process_file_simple(html_path: Path, url: str, output_path: Path):
 async def process_file_with_browser(html_path: Path, url: str, output_path: Path):
     """Full processing with browser rendering."""
     try:
-        title, description, markdown = await process_html_with_browser(html_path, url)
+        _title, _description, markdown = await process_html_with_browser(html_path, url)
 
         # Write markdown file
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -193,7 +195,7 @@ async def process_all_files(input_dir: Path, output_dir: Path, use_browser: bool
         if (i + 1) % 10 == 0:
             gc.collect()
 
-    print(f"\n=== Summary ===")
+    print("\n=== Summary ===")
     print(f"Total: {len(html_files)}")
     print(f"Success: {success_count}")
     print(f"Failed: {fail_count}")

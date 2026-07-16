@@ -17,6 +17,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import type { JSONOutputFormat } from "@anthropic-ai/sdk/resources/messages";
 import * as Sentry from "@sentry/bun";
+import { traceAnthropic } from "@shepherdjerred/llm-observability/wrappers/anthropic";
 import { z } from "zod/v4";
 import {
   FindingSchema,
@@ -431,23 +432,31 @@ export async function runSpecialistPass(
   const userText = buildSpecialistUserText(request);
   const schema = specialistOutputSchema(request.config.kind);
 
-  const response = await client.messages.parse({
+  const params = {
     model: request.config.model,
     max_tokens: request.config.maxTokens,
-    thinking: { type: "adaptive" },
+    thinking: { type: "adaptive" as const },
     output_config: {
       effort: request.config.effort,
       format: zodOutputFormat(schema),
     },
     system: [
       {
-        type: "text",
+        type: "text" as const,
         text: request.config.systemPrompt,
-        cache_control: { type: "ephemeral" },
+        cache_control: { type: "ephemeral" as const },
       },
     ],
-    messages: [{ role: "user", content: userText }],
-  });
+    messages: [{ role: "user" as const, content: userText }],
+  };
+  const response = await traceAnthropic(
+    {
+      service: "temporal",
+      callSite: `pr-review-specialist:${request.config.id}`,
+      request: params,
+    },
+    () => client.messages.parse(params),
+  );
 
   resolveProviderIssue({
     app: "temporal",

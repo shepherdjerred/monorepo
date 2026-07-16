@@ -152,7 +152,11 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
     });
 
     expect(result.success).toBe(true);
-    expect(result.data?.["jobId"]).toBeTruthy();
+    expect(result.message).toBe("Agent job created");
+    expect(getStringField(result.data, "jobId").length).toBeGreaterThan(0);
+    // A one-time ISO date is not recurring and carries no cron pattern.
+    expect(result.data?.["isRecurring"]).toBe(false);
+    expect(result.data?.["cronPattern"]).toBeUndefined();
     expect(result.data?.["scheduledAt"]).toBeTruthy();
   });
 
@@ -169,6 +173,7 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
     });
 
     expect(result.success).toBe(true);
+    expect(result.message).toBe("Agent job created");
     expect(result.data?.["cronPattern"]).toBe("0 9 * * *");
     expect(result.data?.["isRecurring"]).toBe(true);
   });
@@ -185,6 +190,8 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
     });
 
     expect(result.success).toBe(true);
+    // Remind rewrites the message to a human-readable confirmation.
+    expect(result.message).toContain("Reminder set for");
     expect(result.data?.["scheduledAt"]).toBeTruthy();
   });
 
@@ -211,11 +218,20 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
     });
 
     expect(result.success).toBe(true);
-    expect(result.data?.["tasks"]).toBeTruthy();
+    // The prior tests scheduled at least three jobs in this guild.
+    expect(result.message).toMatch(/^Found \d+ jobs?$/);
     const tasks = result.data?.["tasks"];
     expect(Array.isArray(tasks)).toBe(true);
     if (Array.isArray(tasks)) {
       expect(tasks.length).toBeGreaterThan(0);
+      expect(result.data?.["count"]).toBe(tasks.length);
+      // Every listed task exposes an id and enabled flag.
+      for (const task of tasks) {
+        expect(task).toMatchObject({
+          jobId: expect.any(String),
+          enabled: expect.any(Boolean),
+        });
+      }
     }
   });
 
@@ -231,6 +247,7 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
       ...testContext,
     });
 
+    expect(createResult.message).toBe("Agent job created");
     const jobId = createResult.data?.["jobId"];
     expect(jobId).toBeTruthy();
 
@@ -243,6 +260,7 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
     });
 
     expect(cancelResult.success).toBe(true);
+    expect(cancelResult.message).toBe("Agent job cancelled");
 
     const job = await prisma.agentJob.findUnique({
       where: { id: String(jobId) },
@@ -261,6 +279,8 @@ describe("Phase 2: Timer/Scheduler Tools", () => {
       name: "Owned task",
       ...testContext,
     });
+    expect(createResult.success).toBe(true);
+    expect(createResult.message).toBe("Agent job created");
     const jobId = createResult.data?.["jobId"];
     expect(jobId).toBeTruthy();
 

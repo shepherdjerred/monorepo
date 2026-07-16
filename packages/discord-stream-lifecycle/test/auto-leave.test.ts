@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { AloneInVoiceWatcher } from "@shepherdjerred/discord-stream-lifecycle/session/auto-leave.ts";
+import { AloneInVoiceWatcher } from "@shepherdjerred/discord-stream-lifecycle/session/auto-leave";
 
 function makeSession(guildId: string, voiceChannelId: string) {
   return { guildId, voiceChannelId, startedAt: new Date() };

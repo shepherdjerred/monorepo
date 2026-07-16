@@ -5,9 +5,10 @@ import {
   Streamer,
   Utils,
   createSeekablePlayer,
+  type MediaConnectionCloseInfo,
   type Player,
 } from "@shepherdjerred/discord-video-stream";
-import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot.ts";
+import type { PooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/pooled-userbot";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type {
   JoinVoiceInput,
@@ -63,6 +64,23 @@ export type StreamerLike = PooledUserbot & {
   setVolume: (percent: number) => Promise<boolean>;
   seek: (seconds: number) => Promise<boolean>;
   getPosition: () => number | null;
+  /** Most recent Discord-side voice ws close observed on this userbot, or null if none yet. */
+  lastVoiceCloseInfo: () => VoiceCloseInfo | null;
+  /**
+   * Register the (single) callback fired when Discord closes the voice connection out from under
+   * us. Locally-initiated stops never fire it. Pass null to clear.
+   */
+  setVoiceCloseListener: (
+    listener: ((info: VoiceCloseInfo) => void) | null,
+  ) => void;
+};
+
+/** A Discord-side voice connection death, timestamped for freshness-based classification. */
+export type VoiceCloseInfo = {
+  code: number;
+  /** True for Discord's 4014 "disconnected" — a deliberate removal (e.g. moderator disconnect). */
+  deliberate: boolean;
+  atMs: number;
 };
 
 export class StreambotStreamer implements StreamerLike {
@@ -83,6 +101,12 @@ export class StreambotStreamer implements StreamerLike {
   private segmentStartOffsetSeconds = 0;
   /** Wall-clock (ms) when the current segment began playing; null when nothing is playing. */
   private segmentStartedAtMs: number | null = null;
+  /** Most recent Discord-side voice ws close (never set by local stops). */
+  private lastVoiceClose: VoiceCloseInfo | null = null;
+  /** Session-layer callback for Discord-side voice closes; cleared between sessions. */
+  private voiceCloseListener: ((info: VoiceCloseInfo) => void) | null = null;
+  /** Unsubscribes the current voice connection's close handler; null when not joined. */
+  private detachVoiceCloseHandler: (() => void) | null = null;
 
   constructor(
     userToken: UserToken,
@@ -186,7 +210,20 @@ export class StreambotStreamer implements StreamerLike {
     );
   }
 
+  lastVoiceCloseInfo(): VoiceCloseInfo | null {
+    return this.lastVoiceClose;
+  }
+
+  setVoiceCloseListener(
+    listener: ((info: VoiceCloseInfo) => void) | null,
+  ): void {
+    this.voiceCloseListener = listener;
+  }
+
   private safeStop(): void {
+    // Detach first so the ws close triggered by our own teardown can never fire the listener.
+    this.detachVoiceCloseHandler?.();
+    this.detachVoiceCloseHandler = null;
     try {
       this.player?.stop();
     } catch (error) {
@@ -207,7 +244,38 @@ export class StreambotStreamer implements StreamerLike {
   }
 
   readonly joinVoice = async (input: JoinVoiceInput): Promise<VoiceHandle> => {
+    // Clear any close info left over from a prior session on this (pooled, reusable) userbot.
+    // Otherwise a stale `deliberate` close from a different (guild, channel) could be re-read by a
+    // pending reconnect timer and misclassify a transient drop as deliberate — deleting saved state.
+    // A `null` baseline classifies as transient (the safe direction: reconnect and preserve state).
+    this.lastVoiceClose = null;
     await this.streamer.joinVoice(input.guildId, input.channelId);
+    const connection = this.streamer.voiceConnection;
+    if (connection === undefined) {
+      throw new Error("voice connection missing after joinVoice resolved");
+    }
+    // Surface Discord-side connection deaths (the fork only emits `close` for non-resumable,
+    // remotely-initiated closes). A Discord session end closes the voice connection, which
+    // cascades to the stream connection, so subscribing here covers both.
+    const onClose = (info: MediaConnectionCloseInfo) => {
+      const close: VoiceCloseInfo = {
+        code: info.code,
+        deliberate: info.deliberate,
+        atMs: this.now(),
+      };
+      this.lastVoiceClose = close;
+      log.warn("voice connection closed by Discord", {
+        guildId: input.guildId,
+        channelId: input.channelId,
+        code: close.code,
+        deliberate: close.deliberate,
+      });
+      this.voiceCloseListener?.(close);
+    };
+    connection.on("close", onClose);
+    this.detachVoiceCloseHandler = () => {
+      connection.off("close", onClose);
+    };
     log.info("joined voice", {
       guildId: input.guildId,
       channelId: input.channelId,

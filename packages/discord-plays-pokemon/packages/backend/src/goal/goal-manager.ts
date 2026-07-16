@@ -11,7 +11,7 @@ import {
   createCodexJsonlParser,
   pumpCodexStdout,
   type CodexJsonlParser,
-} from "./codex-jsonl.ts";
+} from "@shepherdjerred/llm-observability/codex-jsonl";
 import { attachCodexTrace, type CodexTrace } from "./codex-trace.ts";
 import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
 import { formatGameStateForPrompt } from "./game-state-summary.ts";
@@ -21,6 +21,7 @@ import { computeCost, formatCostLine } from "./pricing.ts";
 import {
   appendToHistory,
   HISTORY_LIMIT,
+  normalizeCompletedGoal,
   type CompletedGoal,
 } from "./goal-history.ts";
 import type { GoalState } from "./goal-types.ts";
@@ -191,11 +192,11 @@ export class GoalManager {
       );
       return;
     }
-    const loaded = (result.data.history ?? []).slice(0, HISTORY_LIMIT);
+    const loaded: CompletedGoal[] = (result.data.history ?? [])
+      .slice(0, HISTORY_LIMIT)
+      .map((entry) => normalizeCompletedGoal(entry));
     this.history = loaded;
-    for (const entry of loaded) {
-      this.recordedIds.add(entry.id);
-    }
+    for (const entry of loaded) this.recordedIds.add(entry.id);
     logger.info(
       `goal-manager: loaded ${String(loaded.length)} history entries from disk`,
     );
@@ -332,7 +333,14 @@ export class GoalManager {
         controlToken: this.controlToken,
       }),
     });
-    const jsonl = createCodexJsonlParser();
+    const jsonl = createCodexJsonlParser({
+      warn: (message) => {
+        logger.warn(message);
+      },
+      info: (message) => {
+        logger.info(message);
+      },
+    });
     // Span synthesis: subscribe before stdout pumping starts so no events are
     // missed. End the trace from every terminal path below.
     const trace = attachCodexTrace(jsonl, {
