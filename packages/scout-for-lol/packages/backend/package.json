@@ -23,6 +23,8 @@
     "format": "bunx prettier --check src",
     "format:write": "bunx prettier --write src",
     "typecheck": "bunx tsc --noEmit",
+    "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/scout-for-lol:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t scout-for-lol:dev -f Dockerfile ../../../..",
+    "smoke": "bun scripts/smoke.ts",
     "generate": "bun run db:generate",
     "compact:report-lake": "bun run scripts/compact-report-lake.ts",
     "generate-lane-priors": "bun run scripts/generate-lane-priors.ts",

@@ -8,11 +8,12 @@
     "build": "astro check && tsc --noEmit && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "bun run build && bunx playwright test",
     "test:update": "bun run build && bunx playwright test --update-snapshots",
     "lint": "eslint --cache",
     "lint:fix": "eslint --cache --fix",
-    "typecheck": "astro check && tsc --noEmit"
+    "typecheck": "astro check && tsc --noEmit",
+    "test:e2e": "bunx playwright test",
+    "deploy": "bun ../../scripts/deploy-site.ts sjer-red"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",

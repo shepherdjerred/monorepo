@@ -2,5 +2,8 @@
   "name": "glitter",
   "version": "0.1.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "deploy": "bun ../../scripts/deploy-site.ts glitter"
+  }
 }

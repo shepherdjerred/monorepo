@@ -11,7 +11,8 @@
     "build": "vite build",
     "test": "bun test",
     "lint": "eslint src --cache",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deploy": "bun ../../scripts/deploy-site.ts better-skill-capped"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",

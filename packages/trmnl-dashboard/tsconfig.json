@@ -6,6 +6,6 @@
     "declaration": false,
     "declarationMap": false
   },
-  "include": ["src/**/*", "eslint.config.ts"],
+  "include": ["src/**/*", "eslint.config.ts", "scripts/**/*"],
   "exclude": ["node_modules", "dist"]
 }

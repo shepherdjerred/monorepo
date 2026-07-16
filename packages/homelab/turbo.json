@@ -1,0 +1,22 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // The pinned Talos installer in patches/image.yaml must match what the
+    // image.yaml schematic produces (old CI: talos-schematic-sync).
+    "check:talos": {
+      "inputs": ["src/talos/**"]
+    },
+    // Helm chart lint over the cdk8s synth output (old CI: homelab-helm-lint).
+    // Ordered after the synth so it never reads a half-written dist/.
+    "lint:helm": {
+      "dependsOn": ["@homelab/cdk8s#build"],
+      "inputs": [
+        "scripts/lint-helm.sh",
+        "src/cdk8s/**",
+        "!src/cdk8s/node_modules/**",
+        "!src/cdk8s/dist/**"
+      ]
+    }
+  }
+}

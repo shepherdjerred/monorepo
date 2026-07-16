@@ -1,0 +1,11 @@
+{
+  "name": "@shepherdjerred/terraform-provider-asuswrt",
+  "private": true,
+  "description": "Turbo shim over the Go toolchain (same pattern as the scout desktop Rust crate)",
+  "scripts": {
+    "build": "go build ./...",
+    "test": "go test ./...",
+    "lint": "golangci-lint run",
+    "typecheck": "go vet ./..."
+  }
+}

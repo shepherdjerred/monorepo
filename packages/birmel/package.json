@@ -16,14 +16,15 @@
   "scripts": {
     "start": "bun run generate && bunx prisma db push && bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
-    "build": "true",
     "generate": "bun run scripts/generate-prisma.ts",
     "test": "bun --env-file=.env.test run generate && bun --env-file=.env.test test",
     "test:e2e:music": "bun run e2e/music-playback.ts",
     "test:e2e:youtube-stream": "bun run e2e/youtube-stream-resource.ts",
     "test:e2e:openclaw-docker": "bun run e2e/openclaw-capabilities-docker.ts",
     "typecheck": "bun run generate && tsc --noEmit",
-    "lint": "bun run generate && eslint ."
+    "lint": "bun run generate && eslint .",
+    "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/birmel:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t birmel:dev -f Dockerfile ../..",
+    "smoke": "bun scripts/smoke.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.63",

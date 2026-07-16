@@ -31,6 +31,11 @@ import {
 } from "./vault-files.ts";
 import { newTaskPath } from "./filename.ts";
 import { ymd } from "./date.ts";
+import {
+  tasksCreatedTotal,
+  tasksDeletedTotal,
+  tasksUpdatedTotal,
+} from "../metrics.ts";
 
 /**
  * The vault-backed task store, built entirely on @tasknotes/model — the
@@ -217,6 +222,7 @@ export class TaskRepository {
     });
     await writeFileAtomic(this.absPath(relPath), markdown);
     await this.refreshFile(relPath);
+    tasksCreatedTotal.inc();
     return this.mustGet(relPath).task;
   }
 
@@ -234,11 +240,18 @@ export class TaskRepository {
       now: this.clock().toISOString(),
       currentDateString: ymd(this.clock()),
     });
-    return this.applyPlanPatch(id, fresh, plan.frontmatterPatch, {
-      newPath: plan.updatedTask.path,
-      // null details = clear the body (upstream null-as-clear convention).
-      details: updates.details === null ? "" : updates.details,
-    });
+    const updated = await this.applyPlanPatch(
+      id,
+      fresh,
+      plan.frontmatterPatch,
+      {
+        newPath: plan.updatedTask.path,
+        // null details = clear the body (upstream null-as-clear convention).
+        details: updates.details === null ? "" : updates.details,
+      },
+    );
+    tasksUpdatedTotal.inc();
+    return updated;
   }
 
   async delete(id: string): Promise<void> {
@@ -247,6 +260,7 @@ export class TaskRepository {
     }
     await deleteFile(this.absPath(id));
     this.cache.delete(id);
+    tasksDeletedTotal.inc();
   }
 
   /** Upstream semantics: no body; cycle the configured status workflow. */

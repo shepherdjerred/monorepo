@@ -9,7 +9,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "lint": "astro check",
-    "typecheck": "astro check && bunx tsc --noEmit"
+    "typecheck": "astro check && bunx tsc --noEmit",
+    "deploy": "bun ../../scripts/deploy-site.ts cook"
   },
   "dependencies": {
     "@iconify-json/heroicons": "^1.2.3",
