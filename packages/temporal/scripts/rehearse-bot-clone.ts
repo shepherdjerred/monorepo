@@ -18,16 +18,17 @@
  *                even after the (1) fix, because that second install wasn't
  *                isolated from the pod's shared, persistent Bun cache. See
  *                packages/docs/plans/2026-07-12_fix-data-dragon-shared-cache.md.
- *  3. hooks    — the hook-free root install leaves no lefthook hooks, a
- *                simulated agentic step (a plain `bun install`, standing in
- *                for a `claude -p`/`codex exec` session that might run one on
- *                its own) re-arms them, `disarmGitHooks` removes them again,
- *                prettier (with plugins) formats the season changelog
+ *  3. hooks    — the hook-free root install leaves no git hooks, a simulated
+ *                agentic plain `bun install` arms none either (the root
+ *                `prepare` script that armed lefthook in the 2026-07-12
+ *                scout-season-refresh-weekly recurrence is gone; this leg
+ *                catches it sneaking back in), a simulated agentic
+ *                `bunx lefthook install` (what AGENTS.md tells every dev
+ *                session to run) arms them, `disarmGitHooks` removes them
+ *                again, prettier (with plugins) formats the season changelog
  *                byte-stably, and a bot-style `git commit` of a scout file
  *                succeeds without any pre-commit hook running
- *                (scout-season-refresh-weekly, and the 2026-07-12 recurrence
- *                where Claude's own `bun install` armed hooks that
- *                `rootInstallWithoutHooks` alone couldn't undo).
+ *                (scout-season-refresh-weekly).
  *  4. cog      — the readme-refresh COG_TARGETS exist, still contain `[[[cog`
  *                blocks, and the `cog` binary is present (readme-refresh-weekly).
  *
@@ -143,22 +144,39 @@ async function rehearseHookFreeCommit(repoDir: string): Promise<void> {
 
   // Simulate an agentic Claude/Codex step (which runs between the pre-install
   // and the final commit in scout-season-refresh.ts / readme-refresh.ts)
-  // deciding on its own to run a plain `bun install` — exactly what armed
-  // lefthook in the 2026-07-12 scout-season-refresh-weekly failure.
+  // deciding on its own to run a plain `bun install`. In the 2026-07-12
+  // scout-season-refresh-weekly failure this armed lefthook via the root
+  // `prepare` script; that script is gone, so today the install must arm
+  // NOTHING — this leg catches any prepare/postinstall hook sneaking back in.
   console.error(
     "[rehearsal] hooks: simulating an agentic step's plain `bun install`",
   );
   await runCommand(["bun", "install", "--frozen-lockfile"], { cwd: repoDir });
   const armedAfterPlainInstall = await armedHookNames(repoDir);
-  if (armedAfterPlainInstall.length === 0) {
+  if (armedAfterPlainInstall.length > 0) {
     throw new Error(
-      "expected the simulated plain `bun install` to arm git hooks (it should " +
-        "run the root `prepare` script) — if this no longer arms hooks, the " +
-        "canary's premise is stale and needs re-deriving from the real bug.",
+      `plain \`bun install\` armed git hooks: ${armedAfterPlainInstall.join(", ")} — ` +
+        "did a root `prepare`/`postinstall` script sneak back in? Bot commits must stay hook-free.",
+    );
+  }
+
+  // An agentic step can still arm hooks explicitly — AGENTS.md tells every dev
+  // session to run `bunx lefthook install` — so arm them the way an agent
+  // would and prove disarmGitHooks undoes it before the bot-style commit.
+  console.error(
+    "[rehearsal] hooks: simulating an agentic step's `bunx lefthook install`",
+  );
+  await runCommand(["bunx", "lefthook", "install"], { cwd: repoDir });
+  const armedAfterLefthookInstall = await armedHookNames(repoDir);
+  if (armedAfterLefthookInstall.length === 0) {
+    throw new Error(
+      "expected `bunx lefthook install` to arm git hooks — if lefthook no " +
+        "longer arms hooks, the canary's premise is stale and needs " +
+        "re-deriving from the real bug.",
     );
   }
   console.error(
-    `[rehearsal] hooks: confirmed armed (${armedAfterPlainInstall.join(", ")}) — now disarming`,
+    `[rehearsal] hooks: confirmed armed (${armedAfterLefthookInstall.join(", ")}) — now disarming`,
   );
 
   await disarmGitHooks(repoDir);
