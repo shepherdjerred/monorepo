@@ -289,8 +289,17 @@ describe("pomodoro & calendar", () => {
   });
 
   test("calendar events parse", async () => {
+    // Due today, computed at runtime: the default calendar window is
+    // [startOfDay(now), now+30d), so a hardcoded date ages out of the window
+    // and the test starts failing on a calendar date, not a code change.
+    const now = new Date();
+    const today = [
+      String(now.getFullYear()),
+      String(now.getMonth() + 1).padStart(2, "0"),
+      String(now.getDate()).padStart(2, "0"),
+    ].join("-");
     const withDue = unwrap(
-      await client.createTask({ title: "Due event", due: "2026-07-15" }),
+      await client.createTask({ title: "Due event", due: today }),
     );
     const events = unwrap(await client.getCalendarEvents());
     expect(events.some((e) => e.title.includes("Due event"))).toBe(true);

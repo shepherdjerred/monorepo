@@ -22,12 +22,12 @@ main's CI-removal wording ("removed 2026-07 with the CI pipeline", "Git hooks
 were removed 2026-07") plus the setup.ts-removal wording. All conflicts were
 resolved by taking the branch side:
 
-| File | Resolution |
-| --- | --- |
-| `packages/temporal/src/activities/bot-clone.ts` | branch side — doc comment now points at root AGENTS.md "Development Setup" instead of `scripts/setup.ts` |
-| `packages/discord-plays-core/AGENTS.md` | branch side — per-dep `bun install` instructions replace the setup.ts reference; keeps main's Dagger-helper-removed note |
-| `packages/dotfiles/dot_agents/skills/worktree-workflow/SKILL.md` | branch side (both hunks) — drops setup.ts as a fix path; keeps main's "no hooks / no CI" wording |
-| `scripts/setup.ts` (modify/delete) | deleted — main's only change since the base was a one-line deletion from the CI-removal commit; nothing to preserve |
+| File                                                             | Resolution                                                                                                               |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `packages/temporal/src/activities/bot-clone.ts`                  | branch side — doc comment now points at root AGENTS.md "Development Setup" instead of `scripts/setup.ts`                 |
+| `packages/discord-plays-core/AGENTS.md`                          | branch side — per-dep `bun install` instructions replace the setup.ts reference; keeps main's Dagger-helper-removed note |
+| `packages/dotfiles/dot_agents/skills/worktree-workflow/SKILL.md` | branch side (both hunks) — drops setup.ts as a fix path; keeps main's "no hooks / no CI" wording                         |
+| `scripts/setup.ts` (modify/delete)                               | deleted — main's only change since the base was a one-line deletion from the CI-removal commit; nothing to preserve      |
 
 ## Verification
 

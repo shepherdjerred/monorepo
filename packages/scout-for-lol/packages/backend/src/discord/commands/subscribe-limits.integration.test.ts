@@ -429,6 +429,8 @@ describe("Subscribe Command - Account Limits", () => {
     expect(subscribedPlayerCount).toBe(5);
   });
 
+  // Seeds 2×DEFAULT_ACCOUNT_LIMIT accounts sequentially — under a loaded CI
+  // node that alone can exceed bun's 5s default test timeout.
   test("account limit is enforced per-server independently", async () => {
     const now = new Date();
     const server1Id = testGuildId("009");
@@ -471,7 +473,7 @@ describe("Subscribe Command - Account Limits", () => {
 
     expect(server1Count).toBe(DEFAULT_ACCOUNT_LIMIT);
     expect(server2Count).toBe(DEFAULT_ACCOUNT_LIMIT);
-  });
+  }, 20_000);
 
   test("unlimited servers bypass account limit", async () => {
     const now = new Date();
