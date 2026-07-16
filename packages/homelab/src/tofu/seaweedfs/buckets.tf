@@ -78,14 +78,13 @@ resource "aws_s3_bucket" "relay_docs" {
 }
 
 # Expire old content-hashed assets 90 days after they were last written. The
-# deploy (`deploySiteHelper`, .dagger/src/release.ts) uploads these prefixes with
-# a 1-year `immutable` Cache-Control and WITHOUT `--delete`, so a deploy never
-# 404s a hashed chunk that a still-open browser tab references. Every deploy
-# re-uploads the current build's hashed files (fresh mtime resets their age), so
-# only *prior* builds' hashes — no longer referenced by any live shell — age out.
-# Prefixes mirror `immutablePrefixes` in scripts/ci/src/catalog.ts. Only buckets
-# actively deployed by CI are listed; non-hashed sites (resume, webring, glitter)
-# and buckets we don't deploy to are intentionally omitted.
+# (now-removed) CI site deploy uploaded these prefixes with a 1-year `immutable`
+# Cache-Control and WITHOUT `--delete`, so a deploy never 404s a hashed chunk
+# that a still-open browser tab references. Any future manual deploy should
+# follow the same convention: re-upload the current build's hashed files (fresh
+# mtime resets their age) so only prior builds' hashes age out. Only buckets
+# the retired pipeline deployed to are listed; non-hashed sites (resume,
+# webring, glitter) and buckets never deployed to are intentionally omitted.
 locals {
   static_site_immutable_prefixes = {
     "scout-frontend"      = ["app/assets/", "_astro/"]

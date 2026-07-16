@@ -11,7 +11,8 @@
     "test/**/*",
     "integration/**/*",
     "e2e/**/*",
-    "eslint.config.ts"
+    "eslint.config.ts",
+    "scripts/**/*"
   ],
   "exclude": ["node_modules", "dist"]
 }

@@ -4,7 +4,7 @@
 
 Before doing ANY work, scan the available skills list for relevant skills and LOAD THEM. This is not optional.
 
-- **ALWAYS load matching skills first** - If the task involves a technology that has a skill (Dagger, Docker, Terraform, Kubernetes, Git, TypeScript, etc.), load that skill BEFORE taking any action. Do not attempt to solve the problem without the skill.
+- **ALWAYS load matching skills first** - If the task involves a technology that has a skill (Docker, Terraform, Kubernetes, Git, TypeScript, etc.), load that skill BEFORE taking any action. Do not attempt to solve the problem without the skill.
 - **Use MCP tools first** - When MCP servers provide relevant functionality, prefer them over manual approaches
 - **Leverage plugins** - Check available plugins before implementing something from scratch
 - **Use `toolkit recall search` for knowledge lookups** - Before answering questions about past work, plans, research, or how things were done before, search the local RAG index: `toolkit recall search "<query>"`. This searches all past Claude conversations, plans, research docs, monorepo docs, and fetched web pages.
@@ -13,7 +13,6 @@ Before doing ANY work, scan the available skills list for relevant skills and LO
 
 Examples of what NOT to do:
 
-- Seeing Dagger CI failures and NOT loading the dagger-helper skill
 - Seeing Kubernetes errors and NOT loading kubectl-helper
 - Seeing TypeScript errors and NOT loading typescript-helper
 - Reporting "your API key is expired" without investigating how to fix it
@@ -54,7 +53,7 @@ These apply to all work — code, infrastructure, configuration, CI pipelines, s
 
 - **Never poll with `sleep N && <cmd>`** (e.g. `sleep 90 && gh pr checks`). The harness blocks sleep-then-command, so these calls just fail and waste turns. Foreground `sleep` to "wait" is also blocked.
 - To wait on something that changes over time, use the right mechanism instead:
-  - **PRs / CI** → the `pr-monitor` skill (it drives a PR through CI, reviews, and conflicts), or `pr-health` for a one-shot status.
+  - **PRs / CI** → the `pr-monitor` skill (it drives a PR through reviews and conflicts, plus CI in repos that have it), or `pr-health` for a one-shot status.
   - **A condition you can re-check** → the `Monitor` tool (an until-loop), or a **background Bash task** (`run_in_background: true`) that re-invokes you when it exits.
   - **A fixed future time / recurring check** → `ScheduleWakeup` (dynamic `/loop`) or a scheduled agent.
 - Harness-tracked background work (background Bash, spawned agents, workflows) re-invokes you on completion — do **not** add a short-interval poll to check on it.

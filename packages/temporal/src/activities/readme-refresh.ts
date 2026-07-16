@@ -119,14 +119,15 @@ export const readmeRefreshActivities = {
       }
 
       // cog's raw output isn't prettier-clean (e.g. a missing blank line after
-      // the `]]]-->` marker), and the PR this opens runs through the normal
-      // prettier + markdownlint CI gates. Format the regenerated files with the
-      // repo's pinned prettier (installed via the frozen lockfile) so the PR is
-      // mergeable — the same approach helm-types-refresh takes for its generated
-      // output. In steady state cog un-formats and prettier re-formats back to
-      // the committed bytes, so this nets to no diff (and opens no PR).
-      // Hook-free: a plain root install would run `lefthook install` and arm
-      // the dev pre-commit suite for the bot commit below.
+      // the `]]]-->` marker). Format the regenerated files with the repo's
+      // pinned prettier (installed via the frozen lockfile) so the PR doesn't
+      // churn formatting — the same approach helm-types-refresh takes for its
+      // generated output. In steady state cog un-formats and prettier
+      // re-formats back to the committed bytes, so this nets to no diff (and
+      // opens no PR).
+      // Hook-free install: skips install scripts entirely (historically the
+      // root `prepare` script armed lefthook hooks; lefthook was removed from
+      // the repo 2026-07, but --ignore-scripts stays as belt-and-suspenders).
       await rootInstallWithoutHooks(repoDir);
       await runCommand(["bunx", "prettier", "--write", ...regenerated], {
         cwd: repoDir,

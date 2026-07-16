@@ -41,7 +41,6 @@ export function baseConfig(
       "**/.cache/**/*",
       "**/node_modules/**/*",
       "**/.astro/**/*",
-      ".dagger/sdk/**/*",
       "**/*.md",
       "**/*.mdx",
       "**/*.mjs",

@@ -115,7 +115,6 @@ Scout automatically checks for matches every minute and posts:
 - Prisma for database ORM
 - React + Satori for report generation
 - Zod for runtime validation
-- Dagger for CI/CD
 
 **Architecture:**
 
@@ -133,16 +132,14 @@ packages/
   data/         - Shared types and utilities
   report/       - Report generation components
   frontend/     - Web frontend (Astro)
-.dagger/        - CI/CD pipeline definitions
 ```
 
 **Development:**
 
 - Fast local checks with `mise check`
-- Full CI validation with `dagger call check`
 - Type-safe with strict TypeScript
 - Comprehensive test coverage
-- Automated linting and formatting
+- Linting and formatting via ESLint + Prettier (run manually — there is no CI)
 
 **Environment:**
 The bot requires API tokens for Discord and Riot Games. In test mode (`NODE_ENV=test`), placeholder values are used automatically—no real tokens needed for development!

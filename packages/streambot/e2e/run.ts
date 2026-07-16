@@ -36,7 +36,8 @@ import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import { register } from "@shepherdjerred/streambot/observability/metrics.ts";
 
 /**
- * End-to-end test, run inside Dagger with real credentials (see `e2eStreambot`). Exercises BOTH
+ * End-to-end test, run manually with real credentials (`bun run e2e`; formerly the `e2eStreambot`
+ * Dagger function, removed 2026-07 with the CI pipeline). Exercises BOTH
  * Discord identities — the command bot (logs in, registers slash commands on the guild) and the
  * userbot streamer (joins the voice channel and streams).
  *

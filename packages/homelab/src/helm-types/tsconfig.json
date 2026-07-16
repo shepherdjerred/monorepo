@@ -3,7 +3,7 @@
   "compilerOptions": {
     "composite": true,
     "allowSyntheticDefaultImports": true,
-    "types": ["bun-types"]
+    "types": ["bun"]
   },
   "exclude": ["node_modules", "dist", "eslint.config.ts"]
 }

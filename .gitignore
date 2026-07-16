@@ -62,8 +62,6 @@ packages/dpp/
 /.rustup/
 .config/
 
-# Lefthook local overrides
-lefthook-local.yml
 
 **/.eslintcache
 
@@ -115,3 +113,8 @@ packages/eslint-config/local.d.ts.map
 
 # Agent scratch scripts for live Discord interaction (see discord skill)
 packages/streambot/scratch/
+.turbo
+
+# moon
+.moon/cache
+.moon/docker

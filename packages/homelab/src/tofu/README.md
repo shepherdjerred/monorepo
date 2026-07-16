@@ -62,9 +62,8 @@ tofu -chdir=seaweedfs apply
 
 ## CI/CD
 
-The Dagger pipeline (`../../.dagger/src/homelab/tofu.ts`) runs
-`tofu plan -detailed-exitcode` on all modules in parallel and reports drift.
-It does **not** auto-apply -- apply is a manual step.
+There is no CI for these stacks (the Dagger/Buildkite pipeline was removed
+2026-07). Run `tofu plan` / `tofu apply` manually per module.
 
 ## What's Managed
 

@@ -2,7 +2,7 @@ import { recommended } from "@shepherdjerred/eslint-config";
 
 // No explicit `TSESLint.FlatConfig.ConfigArray` annotation: trmnl-dashboard
 // and eslint-config can resolve different patch versions of
-// `@typescript-eslint/utils` under Dagger's per-package
+// `@typescript-eslint/utils` under per-package
 // `bun install --frozen-lockfile`, and the resulting `Config` types are
 // nominally incompatible under `exactOptionalPropertyTypes: true`.
 // Letting TS infer the array shape keeps this file portable.

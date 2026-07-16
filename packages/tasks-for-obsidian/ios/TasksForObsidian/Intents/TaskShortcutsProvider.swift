@@ -8,7 +8,7 @@ struct TaskShortcutsProvider: AppShortcutsProvider {
       phrases: [
         "Add a task in \(.applicationName)",
         "Create a task in \(.applicationName)",
-        "New task in \(.applicationName)",
+        "New task in \(.applicationName)"
       ],
       shortTitle: "Add Task",
       systemImageName: "plus.circle.fill"
@@ -18,7 +18,7 @@ struct TaskShortcutsProvider: AppShortcutsProvider {
       phrases: [
         "What's due today in \(.applicationName)",
         "Show today's tasks in \(.applicationName)",
-        "Today in \(.applicationName)",
+        "Today in \(.applicationName)"
       ],
       shortTitle: "Today's Tasks",
       systemImageName: "calendar"

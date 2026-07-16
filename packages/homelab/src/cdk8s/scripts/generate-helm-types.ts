@@ -9,9 +9,9 @@
  *              `src/versions.ts`.
  *   --check    Regenerate into a throwaway dir and FAIL (exit 1) if the result
  *              differs from the committed `generated/helm/` tree — without
- *              mutating it. This is the CI freshness gate that replaced the
- *              weekly helm-types-refresh Temporal workflow (the Dagger wrapper
- *              is `helmTypesDriftCheckHelper` in `.dagger/src/homelab.ts`).
+ *              mutating it. Formerly the CI freshness gate that replaced the
+ *              weekly helm-types-refresh Temporal workflow; run it manually
+ *              now that CI is removed.
  */
 
 // Using string concatenation instead of node:path

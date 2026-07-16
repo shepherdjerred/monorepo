@@ -9,9 +9,11 @@ description: |
 
 # BuildKite Helper
 
+> **⚠️ This monorepo's Buildkite pipeline was removed 2026-07.** The `.buildkite/` directory, the `scripts/ci/` pipeline generator, and the Dagger module are gone — nothing runs on commit/push/PR anymore; verification is manual. The Buildkite org and the homelab agent-stack (`buildkite` namespace, kueue) still exist pending a separate manual teardown. Monorepo-specific notes below are **historical**; the general Buildkite reference material remains valid for other uses.
+
 ## Overview
 
-BuildKite is a CI/CD platform where builds run on your own infrastructure via agents. Pipelines are defined in YAML (static or dynamically generated). This monorepo uses BuildKite as its sole CI platform with dynamic TypeScript pipeline generation and Dagger for all build steps.
+BuildKite is a CI/CD platform where builds run on your own infrastructure via agents. Pipelines are defined in YAML (static or dynamically generated). This monorepo formerly used BuildKite as its sole CI platform with dynamic TypeScript pipeline generation and Dagger for all build steps (removed 2026-07).
 
 ## Pipeline YAML Quick Reference
 
@@ -106,7 +108,7 @@ buildkite-agent pipeline upload .buildkite/deploy.yml
 echo '{"steps": [{"command": "test.sh"}]}' | buildkite-agent pipeline upload
 ```
 
-**This monorepo**: TypeScript generator at `scripts/ci/src/main.ts` → change detection → JSON → `buildkite-agent pipeline upload`.
+**This monorepo (historical)**: TypeScript generator at `scripts/ci/src/main.ts` (since removed) → change detection → JSON → `buildkite-agent pipeline upload`.
 
 ## Step Configuration
 
@@ -252,9 +254,11 @@ plugins:
                 readOnly: true
 ```
 
-## This Monorepo's CI Patterns
+## This Monorepo's CI Patterns (historical — pipeline removed 2026-07)
 
-**Key files:**
+Everything in this section describes the pipeline as it existed before removal. The files below no longer exist in the repo; kept as history for anyone reading old builds/PRs.
+
+**Key files (since removed):**
 
 - `.buildkite/pipeline.yml` — Bootstrap: single step runs TypeScript generator
 - `scripts/ci/src/main.ts` — Pipeline generator entry (change detection → build → JSON)

@@ -88,6 +88,9 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    resolve: {
+      noExternal: ["entities", "rss-parser"],
+    },
     ssr: {
       external: ["@resvg/resvg-js"],
     },
