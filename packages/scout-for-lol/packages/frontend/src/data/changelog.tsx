@@ -12,6 +12,27 @@ export function renderChangelogToHtml(content: ReactNode): string {
 
 export const changelog: ChangelogEntry[] = [
   buildChangelogEntry({
+    date: "2026 07 16",
+    banner: "Updated for League patch 26.14",
+    sections: [
+      {
+        title: "Game Data",
+        color: "indigo",
+        items: [
+          "Champion, item, summoner spell, and rune data refreshed for League patch 26.14",
+          "Senna and Seraphine get their AP scaling clipped — support carries eat a nerf.",
+          "Garen and Jayce lose lane pressure; Azir, Corki, Mordekaiser, and Nami get help.",
+          "Hextech Rocketbelt is rebuilt with a new path, weaker burst, and a longer active cooldown.",
+          "Blue Buff now scales its ability haste with game time, rewarding junglers who take it late.",
+        ],
+      },
+    ],
+    link: {
+      label: "Read Riot's full Patch 26.14 notes",
+      href: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-14-notes",
+    },
+  }),
+  buildChangelogEntry({
     date: "2026 06 28",
     banner: "Updated for League patch 26.13",
     sections: [

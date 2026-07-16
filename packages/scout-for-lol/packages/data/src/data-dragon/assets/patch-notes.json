@@ -1,23 +1,144 @@
 {
-  "patch": "26.13",
-  "title": "Patch 26.13 Notes",
-  "url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-13-notes/",
-  "date": "2026 07 01",
-  "overview": "A balance-focused patch that reins in snowball-heavy marksmen and hands junglers a stronger early game, with a light touch on mid-lane mages.",
-  "themes": ["ADC item tuning", "jungle early game"],
-  "summary": [
-    "Marksman item spikes tuned down to slow bot-lane snowballing",
-    "Jungle early game buffed via better objective and camp rewards"
+  "patch": "26.14",
+  "title": "League of Legends Patch 26.14 Notes",
+  "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-14-notes",
+  "date": "2026 07 16",
+  "overview": "Patch 26.14 celebrates T1's Worlds three-peat with mostly small-scale balance tuning: mage and marksman touch-ups, a handful of nerfs to overperformers like Senna, Seraphine, and Garen, item retuning around Hextech Rocketbelt, and a jungle-priority Blue Buff change.",
+  "themes": [
+    "Mage tuning",
+    "Item retuning",
+    "Jungle changes",
+    "ARAM & Arena adjustments"
   ],
-  "champions": [],
-  "items": [],
-  "systems": [
+  "summary": [
+    "Senna and Seraphine get their AP scaling clipped — support carries eat a nerf.",
+    "Garen and Jayce lose lane pressure; Azir, Corki, Mordekaiser, and Nami get help.",
+    "Hextech Rocketbelt is rebuilt with a new path, weaker burst, and a longer active cooldown.",
+    "Blue Buff now scales its ability haste with game time, rewarding junglers who take it late."
+  ],
+  "champions": [
     {
-      "area": "Jungle",
       "direction": "buff",
       "magnitude": "moderate",
-      "summary": "Epic monster and camp gold up early",
-      "details": "Jungle camps and early objectives grant more gold, so proactive junglers get rewarded harder for clearing and contesting."
+      "summary": "Soldier on-hit rune interactions fixed and buffed",
+      "details": "Arise! soldiers now deal 100% of Scorch, Liandry's, Blackfire Torch, and Hextech Alternator damage on-hit (was 50%), apply 2 Conqueror stacks, and Emperor's Divide knocks back jungle monsters, so your DPS and rune value finally count for full.",
+      "name": "Azir"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "minor",
+      "summary": "AD growth and rocket recharge improved",
+      "details": "Attack Damage growth rises from 2 to 2.5 and Missile Barrage now recharges 2-6 seconds faster with crit chance (was 2-4), so a crit-built Corki keeps his package stocked more often.",
+      "name": "Corki"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "moderate",
+      "summary": "E damage and ult stat steal increased",
+      "details": "Death's Grasp now deals up to 140 (+45% AP) and Realm of Death steals 13% of your victim's stats (was 10%), making his 1v1 duels in the death realm noticeably scarier.",
+      "name": "Mordekaiser"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "minor",
+      "summary": "Tidecaller's Blessing damage buffed",
+      "details": "Tidecaller's Blessing empowered-attack damage scales up to 80 at max rank (was 60), giving Nami's poke and her ADC's trades a bit more sting.",
+      "name": "Nami"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "minor",
+      "summary": "Attack Damage growth increased",
+      "details": "Attack Damage growth goes from 2.5 to 3, so Yunara scales a touch harder into the mid and late game.",
+      "name": "Yunara"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "moderate",
+      "summary": "Demacian Justice true damage reduced",
+      "details": "Demacian Justice's flat true damage drops from 150/250/350 to 125/200/275, so Garen's signature execute needs a bit more setup to close out a kill.",
+      "name": "Garen"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "moderate",
+      "summary": "Passive move speed and ult resistances cut",
+      "details": "Hextech Capacitor bonus move speed falls from 40 to 30 and Mercury Hammer's armor/MR shrinks to 5/12/19/26, making Jayce squishier and less slippery when he swaps stances.",
+      "name": "Jayce"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "moderate",
+      "summary": "Q and W damage and uptime reduced",
+      "details": "Ritual Nails' recast window drops to 4 seconds with lower nail and mark damage, and Soul Ignition's grey-health cap falls to 40/70/100/130/160, trimming Locke's sustained trading power.",
+      "name": "Locke"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "moderate",
+      "summary": "Crit modifier and Q AP scaling cut",
+      "details": "Absolution's crit damage modifier drops to 80% and Piercing Darkness' AP slow and heal ratios are reduced, reining in AP-Senna's runaway healing and utility.",
+      "name": "Senna"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "minor",
+      "summary": "High Note AP ratio reduced",
+      "details": "High Note's AP ratio drops from 50% to 40%, so Seraphine's main poke does less as she stacks AP.",
+      "name": "Seraphine"
+    }
+  ],
+  "items": [
+    {
+      "direction": "adjustment",
+      "magnitude": "moderate",
+      "summary": "Rebuilt with new path and weaker active",
+      "details": "Rocketbelt now builds from Hextech Alternator + Kindlegem + Ruby Crystal with 60 AP, 350 health, and a 50-second dash cooldown, trading raw AP for more durability and a slower gap-closer.",
+      "name": "Hextech Rocketbelt"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "minor",
+      "summary": "Damage and healing bonuses reduced",
+      "details": "The above-50%-health damage bonus drops to 4% and the below-50% healing/shielding bonus to 12%, softening the item's swingy execute-and-survive profile.",
+      "name": "Immortal Path"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "minor",
+      "summary": "More expensive with weaker low-end stats",
+      "details": "Cost rises to 2600 with lower minimum health (100-300) and healing (100-400), so early Protoplasm buyers get less value for the extra gold.",
+      "name": "Protoplasm Harness"
+    }
+  ],
+  "systems": [
+    {
+      "direction": "buff",
+      "magnitude": "moderate",
+      "summary": "Blue Buff ability haste now scales with level",
+      "details": "Blue Buff grants 10/15/20 ability haste at levels 1/6/11 instead of a flat 10, giving junglers and mid laners a stronger reason to prioritize it as the game goes on.",
+      "area": "Jungle"
+    },
+    {
+      "direction": "adjustment",
+      "magnitude": "moderate",
+      "summary": "Mayhem augments rebalanced",
+      "details": "Dropkick, Tooth Fairy, and Infernal Conduit are nerfed while Dimension Shift, Poro Stampede, and Squishy Slappy Grab get buffed and a new Overkill execute augment is added, reshuffling which ARAM augments are worth taking.",
+      "area": "ARAM"
+    },
+    {
+      "direction": "adjustment",
+      "magnitude": "moderate",
+      "summary": "Wide champion and item retuning",
+      "details": "Gragas, Illaoi, Samira, Zoe and others get buffs while Ambessa's Q ratios are cut, and duelist items like Phantom Dancer and Kraken Slayer gain attack speed, shifting the Arena power picks.",
+      "area": "Arena"
+    },
+    {
+      "direction": "adjustment",
+      "magnitude": "minor",
+      "summary": "Buff bar decluttered",
+      "details": "Low-signal buffs are trimmed, item durations moved to your inventory, and very short debuffs hidden, so the buff bar shows the information that actually matters mid-fight.",
+      "area": "UI"
     }
   ]
 }
