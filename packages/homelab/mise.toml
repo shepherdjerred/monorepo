@@ -1,17 +1,8 @@
 [tools]
-# renovate: datasource=github-releases depName=oven-sh/bun
-bun = "1.3.14"
 python = "3.14.6"
 
-[tasks.check]
-description = "Check"
-run = "dagger call homelab-check-all --source=."
-
-[tasks.ci]
-run = 'dagger call ci --argocd-token=env:DUMMY_ARGOCD_TOKEN --chart-museum-password=env:DUMMY_CHART_MUSEUM_PASSWORD --chart-museum-username=dummy-user --chart-version=0.1.0-dev --ghcr-password=env:DUMMY_GHCR_PASSWORD --ghcr-username=dummy-user --env=dev'
-
 [tasks.dev]
-run = 'bun install && (cd ../../ && dagger develop) && (cd ../../.dagger/ && bun install && bun run scripts/fix-sdk.ts)'
+run = 'bun install'
 
 [tasks.build-cdk8s]
 dir = 'src/cdk8s/'
@@ -21,9 +12,5 @@ run = ['bun run typecheck', 'bun run lint', 'bun run build']
 dir = 'src/helm-types/'
 run = ['bun run typecheck', 'bun run lint']
 
-[tasks.build-dagger]
-dir = '../../.dagger/'
-run = ['bun run typecheck', 'bun run lint']
-
 [tasks.build]
-depends = ['build-cdk8s', 'build-helm-types', 'build-dagger']
+depends = ['build-cdk8s', 'build-helm-types']

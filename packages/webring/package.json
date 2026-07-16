@@ -25,7 +25,9 @@
     "test": "bun test src/",
     "test:update": "bun test src/ --update-snapshots",
     "typedoc": "typedoc src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deploy": "bun ../../scripts/deploy-site.ts webring",
+    "publish:npm": "bun ../../scripts/publish-npm.ts ."
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -36,14 +38,14 @@
     }
   },
   "dependencies": {
+    "htmlparser2": "^10.0.0",
     "remeda": "^2.33.7",
     "rss-parser": "^3.13.0",
     "sanitize-html": "^2.17.4",
-    "truncate-html": "^1.2.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@tsconfig/node24": "^24.0.4",
     "@tsconfig/strictest": "^2.0.8",
     "@types/bun": "^1.3.13",
@@ -68,8 +70,5 @@
     "LICENSE",
     "bun.lock",
     "CHANGELOG.md"
-  ],
-  "overrides": {
-    "sanitize-html": "^2.17.4"
-  }
+  ]
 }

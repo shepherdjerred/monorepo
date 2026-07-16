@@ -21,7 +21,7 @@ resource "buildkite_cluster_default_queue" "homelab" {
 
 # macOS queue — served by the Mac Mini agent (registered with
 # `--tags queue=macos`, see packages/homelab/mac-ci/). Native Swift/Xcode
-# builds that can't run in the Linux/Dagger in-cluster path land here. The
+# builds that can't run in the Linux in-cluster path land here. The
 # same per-cluster agent token registers macOS agents against this queue; only
 # the queue tag differs from the default in-cluster agents.
 resource "buildkite_cluster_queue" "macos" {

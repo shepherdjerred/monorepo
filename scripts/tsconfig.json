@@ -5,5 +5,8 @@
     "noEmit": true
   },
   "include": ["*.ts", "observability/**/*.ts"],
-  "exclude": ["ci", "node_modules"]
+  // local-stack is a standalone mini-package (own package.json + bun.lock,
+  // deliberately outside the workspace); its deps only exist after its own
+  // install, so the scripts typecheck must not include it.
+  "exclude": ["ci", "node_modules", "observability/local-stack"]
 }

@@ -17,7 +17,7 @@ If a service's `start` runs under Bun (`bun run src/index.ts`), use **`@sentry/b
 
 ## Setting `release` + `environment` (this monorepo)
 
-Always pass `release` and `environment` to `Sentry.init`. Conventions across this monorepo: static sites read `VITE_SENTRY_RELEASE` / `PUBLIC_SENTRY_RELEASE` (= `2.0.0-$BUILDKITE_BUILD_NUMBER`, stamped by `scripts/ci/src/steps/sites.ts`); Bun services read `Bun.env.VERSION`; Vite frontends get `VITE_SENTRY_RELEASE` set before the Dagger build; desktop/RN use the package version. The post-deploy check is: confirm new events carry a non-null `release`.
+Always pass `release` and `environment` to `Sentry.init`. Conventions across this monorepo: static sites read `VITE_SENTRY_RELEASE` / `PUBLIC_SENTRY_RELEASE`; Bun services read `Bun.env.VERSION`; desktop/RN use the package version. These used to be stamped by the CI pipeline (`2.0.0-$BUILDKITE_BUILD_NUMBER`), which was removed 2026-07 — builds/deploys are manual now, so set the release env var yourself when building. The post-deploy check is: confirm new events carry a non-null `release`.
 
 ## MCP Tool Equivalents Reference
 

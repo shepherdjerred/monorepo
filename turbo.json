@@ -1,0 +1,224 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  // Root-level files whose change must invalidate every task hash.
+  // (Root package.json, turbo.json, and bun.lock are always hashed by turbo.)
+  "globalDependencies": [".mise.toml", "bunfig.toml", "patches/**"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    // Local codegen only (Prisma: birmel, scout backend, dpmk backend).
+    // Live-credential codegen lives in generate:live and is NEVER in a
+    // default chain (temporal → live Home Assistant, helm-types → chart repos).
+    "generate": {
+      "outputs": ["generated/**"]
+    },
+    "generate:live": {
+      "cache": false
+    },
+    "typecheck": {
+      "dependsOn": ["^build", "generate"]
+    },
+    "test": {
+      "dependsOn": ["^build", "generate"],
+      "env": ["NODE_ENV"]
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    // Browser-driven e2e (Playwright). Not in the default `test` chain and
+    // never cached: needs installed browsers and exercises a live dev server.
+    "test:e2e": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    // Container image build (docker buildx --load, tag <name>:dev). BuildKit's
+    // layer cache is the cache layer here, not turbo — a turbo "hit" that skips
+    // the docker invocation could mask a broken Dockerfile.
+    "docker:build": {
+      "cache": false
+    },
+    // Boots the freshly-built :dev image and asserts on startup behavior
+    // (health endpoint or expected clean auth-failure) — old CI's smoke tests.
+    "smoke": {
+      "dependsOn": ["docker:build"],
+      "cache": false
+    },
+    // ─── Root repo-wide checks (run via `bun run verify` or `turbo run <name>`).
+    // Inputs are scoped so each check only re-runs when files it actually
+    // reads change. Explicit input globs hash gitignored files too, so the
+    // big generated dirs are negated wherever a broad glob is needed.
+    "//#check-todos": {
+      "inputs": [
+        "packages/docs/todos/**",
+        "packages/**/*.ts",
+        "!packages/**/node_modules/**",
+        "scripts/check-todos.ts"
+      ]
+    },
+    "//#check-suppressions": {
+      "inputs": ["scripts/**", "!scripts/node_modules/**"]
+    },
+    "//#markdownlint": {
+      "inputs": ["**/*.md", ".markdownlint*", "!**/node_modules/**"]
+    },
+    "//#prettier": {
+      "inputs": [
+        "**/*",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/target/**",
+        "!**/generated/**",
+        "!**/.venv/**"
+      ]
+    },
+    "//#shellcheck": {
+      "inputs": ["**/*.sh", "!**/node_modules/**", "scripts/shellcheck.sh"]
+    },
+    "//#knip": {
+      "inputs": [
+        "knip.json",
+        "**/*.{ts,tsx,js,jsx,astro}",
+        "**/package.json",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/generated/**"
+      ]
+    },
+    "//#gitleaks": {
+      "inputs": [
+        "**/*",
+        ".gitleaks.toml",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/target/**",
+        "!**/.venv/**"
+      ]
+    },
+    "//#jscpd": {
+      "inputs": [
+        ".jscpd.json",
+        "packages/**/*.{ts,tsx}",
+        "scripts/**/*.ts",
+        "!**/node_modules/**",
+        "!**/generated/**",
+        "!**/dist/**"
+      ]
+    },
+    "//#quality-ratchet": {
+      "inputs": [
+        ".quality-baseline.json",
+        "scripts/quality-ratchet.ts",
+        "**/*.{ts,tsx,rs}",
+        "!**/node_modules/**",
+        "!**/generated/**",
+        "!**/dist/**",
+        "!**/target/**"
+      ]
+    },
+    "//#compliance-check": {
+      "inputs": [
+        "scripts/compliance-check.sh",
+        "packages/*/package.json",
+        "packages/*/packages/*/package.json",
+        "packages/*/eslint.config.*",
+        "packages/*/tsconfig.json"
+      ]
+    },
+    "//#lockfile-check": {
+      "inputs": [
+        "bun.lock",
+        "package.json",
+        "packages/**/package.json",
+        "scripts/package.json",
+        "!**/node_modules/**"
+      ]
+    },
+    "//#merge-conflicts": {
+      "inputs": [
+        ".conflictignore",
+        "scripts/check-merge-conflicts.sh",
+        "**/*.{ts,tsx,rs,json,yaml,yml,md,sh,astro,toml}",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/generated/**",
+        "!**/target/**"
+      ]
+    },
+    "//#env-var-names": {
+      "inputs": [
+        "scripts/check-env-var-names.sh",
+        "**/*.{ts,rs,py,fish,tmpl,yaml,yml,env,md,sh,swift}",
+        "!**/node_modules/**",
+        "!**/generated/**"
+      ]
+    },
+    "//#line-endings": {
+      "inputs": [
+        ".gitattributes",
+        "scripts/check-line-endings.ts",
+        "**/*",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/target/**",
+        "!**/.venv/**"
+      ]
+    },
+    "//#react-version-sync": {
+      "inputs": [
+        "scripts/check-react-version-sync.ts",
+        "**/package.json",
+        "bun.lock",
+        "!**/node_modules/**"
+      ]
+    },
+    "//#large-files": {
+      "inputs": [
+        ".largeignore",
+        "scripts/check-large-files.ts",
+        "packages/scout-for-lol/scripts/check-asset-sizes.ts",
+        "**/*",
+        "!**/node_modules/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/target/**",
+        "!**/.venv/**"
+      ]
+    },
+    "//#guard:migration": {
+      "inputs": [
+        "scripts/guard-no-package-exclusions.ts",
+        "package.json",
+        "turbo.json"
+      ]
+    },
+    "//#ruff": {
+      "inputs": ["ruff.toml", "**/*.py", "!**/node_modules/**", "!**/.venv/**"]
+    },
+    "//#pyright": {
+      "inputs": [
+        "pyrightconfig.json",
+        "scripts/pyright-check.sh",
+        "scripts/python-dev-requirements.txt",
+        "**/*.py",
+        "!**/node_modules/**",
+        "!**/.venv/**"
+      ]
+    },
+    "//#tunnel-dns-coverage": {
+      "inputs": [
+        "scripts/check-tunnel-dns-coverage.ts",
+        "packages/homelab/src/cdk8s/src/**/*.ts",
+        "packages/homelab/src/tofu/cloudflare/*.tf"
+      ]
+    }
+  }
+}

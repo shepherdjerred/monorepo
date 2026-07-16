@@ -1,5 +1,5 @@
 # Root ruff config — lints every tracked .py file in the repo.
-# Wired into lefthook (pre-commit) and the Dagger quality bundle (CI).
+# Run manually: uvx ruff check . (no automated trigger since CI/hooks were removed).
 
 target-version = "py312"
 line-length = 120

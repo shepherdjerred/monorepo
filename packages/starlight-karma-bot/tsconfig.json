@@ -38,5 +38,5 @@
     "emitDecoratorMetadata": true,
     "types": ["bun-types"]
   },
-  "exclude": ["node_modules", "dist", "data", ".dagger"]
+  "exclude": ["node_modules", "dist", "data"]
 }

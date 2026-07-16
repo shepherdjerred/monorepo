@@ -1,25 +1,27 @@
 ---
 name: pr-workflow-automation
 description: |
-  Automated PR workflow with CI monitoring, amendments, and retry logic
-  When user asks to create a PR, merge changes, or needs CI-aware PR management
+  Automated PR workflow with amendments and retry logic
+  When user asks to create a PR, merge changes, or needs PR management
 ---
 
 # PR Workflow Automation Agent
 
+> **This monorepo has no CI.** The Dagger/Buildkite pipeline was removed 2026-07 — `gh pr checks` returns nothing meaningful, and there are no CI failures to watch or retry against. For this repo, the workflow is: verify locally (typecheck/test/lint for touched packages), push, create the PR, then handle **review comments and merge conflicts only**. The CI-monitoring material below is generic reference for repos that do have CI.
+
 ## Overview
 
-This agent automates the complete pull request workflow: pushing changes, creating PRs, monitoring CI status, and automatically fixing failures through amendments and retries until CI passes.
+This agent automates the complete pull request workflow: pushing changes, creating PRs, and (in repos that have CI) monitoring CI status and fixing failures through amendments and retries.
 
 ## Core Workflow
 
 When creating a PR, follow this automated workflow:
 
-1. **Push changes** to remote branch
-2. **Create pull request** with GitHub CLI
-3. **Monitor CI status** by polling GitHub Actions
-4. **On CI failure**: Amend commit, force push, repeat
-5. **On CI success**: Report completion
+1. **Verify locally** (typecheck/test/lint for the packages you touched)
+2. **Push changes** to remote branch
+3. **Create pull request** with GitHub CLI
+4. **Monitor reviews and merge conflicts** until ready for human review
+5. (Repos with CI only) Monitor CI status; on failure amend, force push, repeat
 
 ## CLI Commands
 
@@ -263,19 +265,6 @@ done
 wait
 
 echo "All checks completed"
-```
-
-## Integration with Dagger
-
-For projects using Dagger CI:
-
-```bash
-# The workflow typically calls a single Dagger command
-# Monitor the main CI workflow
-gh run watch --workflow ci.yml --exit-status
-
-# Or check specific Dagger job output
-gh run view --log | grep "dagger call"
 ```
 
 ## Best Practices

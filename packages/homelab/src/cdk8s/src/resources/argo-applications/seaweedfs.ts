@@ -42,7 +42,7 @@ export function createSeaweedfsApp(chart: Chart) {
   // (public.sjer.red) goes through the Caddy s3proxy, not this S3 API.
   //
   // All out-of-cluster S3 consumers have been migrated to the tailnet hostname:
-  //   - CI deploy containers (.dagger/src/release.ts) use seaweedfs-s3.tailnet-1a49.ts.net
+  //   - CI deploy containers (pipeline since removed) used seaweedfs-s3.tailnet-1a49.ts.net
   //   - Operator dotfiles (~/.aws/config) use seaweedfs-s3.tailnet-1a49.ts.net
   //   - Tofu backends (homelab/src/tofu/*/backend.tf) use seaweedfs-s3.tailnet-1a49.ts.net
   //

@@ -1,13 +1,15 @@
 #!/usr/bin/env bun
 /**
- * Release Metro bundle smoke — the CI guard against Xcode Cloud Archive failures.
+ * Release Metro bundle smoke — the pre-merge guard against Xcode Cloud Archive
+ * failures. Run it locally (`bun run check:release-bundle`) before merging; the
+ * CI step that used to run it was removed 2026-07 with the pipeline.
  *
  * The Xcode Cloud "Bundle React Native code and images" phase runs Metro in
  * Release mode (`--dev false`), which is the ONLY place source-only `file:`
  * workspace deps (and their transitive deps) get resolved for real. A simulator
  * debug build skips this, so a missing dependency passes locally but fails the
- * cloud Archive. This script reproduces that exact bundle in the Buildkite iOS
- * step (pure JS — no macOS needed), so the failure is caught pre-merge.
+ * cloud Archive. This script reproduces that exact bundle (pure JS — no macOS
+ * needed), so the failure is caught pre-merge.
  *
  * It caught, and guards against recurrence of, the `@tasknotes/model` resolution
  * failure: `tasknotes-types/src/v2.ts` re-exports a dep that must be installed in
