@@ -51,8 +51,8 @@ export async function rootInstallWithoutHooks(repoDir: string): Promise<void> {
  * Its `dist/` entrypoint is gitignored, so a fresh clone ships it unbuilt and
  * any later `bun install` in a consumer workspace copies a broken package
  * (`Cannot find module '@shepherdjerred/llm-models'`). Must run BEFORE the
- * consumer's install so the copy picks up `dist/`. Mirrors the Phase 3
- * build in `scripts/setup.ts`.
+ * consumer's install so the copy picks up `dist/`. Mirrors the shared-producer
+ * build step in the root AGENTS.md "Development Setup".
  */
 export async function buildLlmModels(repoDir: string): Promise<void> {
   const pkgDir = `${repoDir}/packages/llm-models`;

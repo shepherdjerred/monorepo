@@ -24,9 +24,10 @@ copy instead of hoisting them); they resolve via `paths` in each backend's
 `@shepherdjerred/discord-video-stream{,/*}` to the sibling source dirs. Bun
 honors tsconfig `paths` at runtime, and tsc/eslint honor them at check time
 (verified in oven/bun:1.3.14). The mapped source dirs need their own
-`node_modules` for their runtime deps/peers — locally `scripts/setup.ts`
-installs them; image builds must run the same per-dep install (formerly the
-`withForkRuntimeDeps` Dagger helper, removed 2026-07 with the CI pipeline).
+`node_modules` for their runtime deps/peers — locally, `bun install` in each
+mapped source dir (they're `file:` producers; see the root AGENTS.md
+"Development Setup"); image builds run the same per-dep install as a step in each
+backend's `Dockerfile` (built + smoke-tested by `bunx turbo run smoke`, and by CI).
 
 Source-only (like `discord-stream-lifecycle`): `package.json#exports` maps `.`
 and `./*` straight at `src/`, so there is **no build step** — consumers import

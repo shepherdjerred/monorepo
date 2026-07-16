@@ -1,0 +1,76 @@
+glob_matcher: doublestar
+
+# Turbo-powered hooks. The old lefthook re-ran per-package eslint/typecheck/
+# test jobs on every commit; turbo replays unchanged work from cache in
+# milliseconds, so the tiers collapse into two turbo invocations plus a
+# handful of staged-file safety checks.
+
+commit-msg:
+  jobs:
+    - name: validate-commit-msg
+      run: bun scripts/validate-commit-msg.ts {1}
+
+pre-commit:
+  jobs:
+    - name: safety
+      group:
+        parallel: true
+        jobs:
+          - name: gitleaks
+            run: gitleaks protect --staged --redact --no-banner
+
+          - name: merge-conflicts
+            run: bash scripts/check-merge-conflicts.sh
+
+          - name: large-files
+            run: bun scripts/check-large-files.ts
+
+          - name: line-endings
+            run: bun scripts/check-line-endings.ts {staged_files}
+
+          - name: env-var-names
+            glob: "**/*.{ts,rs,py,fish,tmpl,yaml,yml,env,md,sh,swift}"
+            exclude:
+              - "sandbox/archive/**"
+              - "**/generated/**"
+              - "**/node_modules/**"
+            run: bash scripts/check-env-var-names.sh {staged_files}
+
+          - name: check-suppressions
+            run: bun scripts/check-suppressions.ts
+
+          - name: check-todos
+            run: bun scripts/check-todos.ts
+
+          - name: migration-guard
+            run: bun scripts/guard-no-package-exclusions.ts
+
+          - name: lockfile-check
+            glob: "**/package.json"
+            run: bun install --frozen-lockfile --dry-run
+
+          # Formatters fix + restage; everything else formatting-related is
+          # caught by `//#prettier` in pre-push/verify.
+          - name: prettier
+            glob: "**/*.{ts,tsx,js,jsx,json,jsonc,yaml,yml,md,css,astro,html,graphql}"
+            exclude:
+              - "sandbox/archive/**"
+              - "**/node_modules/**"
+              - "**/generated/**"
+              # CLAUDE.md is a symlink to AGENTS.md everywhere; prettier
+              # errors on explicitly-passed symlinks. AGENTS.md is linted.
+              - "**/CLAUDE.md"
+            run: bash scripts/prettier-staged.sh {staged_files}
+            stage_fixed: true
+
+    # Affected-only lint + typecheck through turbo — warm-cache replay is
+    # near-instant; only packages whose inputs changed actually run.
+    - name: turbo-affected
+      run: bunx turbo run lint typecheck --affected --concurrency=4 --output-logs=errors-only
+
+pre-push:
+  jobs:
+    # The full verification surface (build/typecheck/test/lint + every repo
+    # check), affected-scoped. Identical command surface to CI.
+    - name: verify-affected
+      run: bun run verify -- --affected --concurrency=4 --output-logs=errors-only

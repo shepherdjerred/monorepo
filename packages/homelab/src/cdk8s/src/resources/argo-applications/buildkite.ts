@@ -5,10 +5,8 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   KubeLimitRange,
-  KubePersistentVolumeClaim,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
 // Exported so kueue-config.ts's `pods` nominalQuota can be asserted equal to
@@ -57,9 +55,9 @@ export function createBuildkiteApp(chart: Chart) {
   // sidecar CPU/memory when making admission decisions.
   //
   // 2026-07 CI-freeze hardening: `default` (limits) added alongside the existing
-  // `defaultRequest`. Explicit-tier step containers (scripts/ci/src/lib/k8s-plugin.ts)
-  // now set their own limits and aren't affected by this; this backstops anything
-  // that doesn't. Values match the LIGHT tier used elsewhere in CI (catalog.ts).
+  // `defaultRequest`. Explicit-tier step containers now set their own limits and
+  // aren't affected by this; this backstops anything that doesn't. Values match the
+  // LIGHT tier used elsewhere in CI.
   // See packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md.
   new KubeLimitRange(chart, "buildkite-limit-range", {
     metadata: { name: "buildkite-default-resources", namespace: "buildkite" },
@@ -77,23 +75,6 @@ export function createBuildkiteApp(chart: Chart) {
           },
         },
       ],
-    },
-  });
-
-  // The `buildkite-git-mirrors` PVC + `default-checkout-params.gitMirrors`
-  // Helm value are intentionally retained even after PR2: the bootstrap
-  // NOTE: the monorepo's CI pipeline was removed 2026-07, so nothing feeds
-  // this agent stack anymore — it (and this mirror PVC) stay only until the
-  // Buildkite service itself is torn down (manual follow-up; see
-  // packages/docs/plans/2026-07-12_strip-ci-remove-dagger.md). The BK k8s
-  // agent stack auto-configures bootstrap-pod checkouts to use these mirrors
-  // via the alternates path `/buildkite/git-mirrors/<encoded-url>/objects`.
-  new KubePersistentVolumeClaim(chart, "buildkite-git-mirrors-pvc", {
-    metadata: { name: "buildkite-git-mirrors", namespace: "buildkite" },
-    spec: {
-      accessModes: ["ReadWriteMany"],
-      storageClassName: NVME_STORAGE_CLASS,
-      resources: { requests: { storage: Quantity.fromString("20Gi") } },
     },
   });
 
@@ -118,26 +99,16 @@ export function createBuildkiteApp(chart: Chart) {
               // Cluster-wide cap on concurrently-scheduled CI jobs. Sized
               // during the 2026-07 incident response (see
               // packages/docs/logs/2026-07-08_torvalds-cluster-health-deep-check.md
-              // and 2026-07-05_torvalds-ci-freeze-investigation.md); moot since
-              // the CI pipeline was removed 2026-07 — nothing schedules jobs
-              // here until the Buildkite service teardown (manual follow-up).
+              // and 2026-07-05_torvalds-ci-freeze-investigation.md). Kept as the
+              // admission bound for the replatformed CI, which schedules jobs on
+              // this "default" queue. Mirrored by kueue-config.ts's `pods`
+              // nominalQuota — the two must stay in lockstep (asserted in a test).
               "max-in-flight": BUILDKITE_MAX_IN_FLIGHT,
               "empty-job-grace-period": "5m",
-              // gitMirrors is intentionally retained for the bootstrap
-              // pipeline-upload step. See the long comment on the PVC
-              // declaration above for why removing this and the PVC was
-              // deferred to a follow-up PR.
-              "default-checkout-params": {
-                gitMirrors: {
-                  volume: {
-                    name: "buildkite-git-mirrors",
-                    persistentVolumeClaim: {
-                      claimName: "buildkite-git-mirrors",
-                    },
-                  },
-                  lockTimeout: 300,
-                },
-              },
+              // No git-mirror checkout config: the replatformed CI does a plain
+              // shallow checkout (no Dagger, no bootstrap pipeline-upload step),
+              // so the buildkite-git-mirrors PVC + default-checkout-params.gitMirrors
+              // that the Dagger-era stack needed were dropped in the CI replatform.
               "pod-spec-patch": {
                 priorityClassName: "batch-low",
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",

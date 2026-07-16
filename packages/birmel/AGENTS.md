@@ -101,7 +101,8 @@ Requires `.env` with Discord and AI API keys. Key variables:
 
 ## Image build
 
-Production image builds are manual (the Dagger `buildImageHelper` build was removed 2026-07
-with the CI pipeline). The image must include `gh` and the
-Anthropic Claude Code CLI so the `editor-agent` sub-agent's tools work at
-runtime — verify both binaries are on `$PATH` before deploying.
+The image builds from `Dockerfile` via `bun run docker:build` (`bunx turbo run
+smoke --filter=birmel` builds + smoke-tests it; CI builds, smokes, and pushes it
+on merge to main). The image must include `gh` and the Anthropic Claude Code CLI
+so the `editor-agent` sub-agent's tools work at runtime — verify both binaries
+are on `$PATH` before deploying.

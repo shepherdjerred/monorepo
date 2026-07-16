@@ -1,18 +1,49 @@
-# Headless Discord Plays Pokémon.
-# Replaces the old GPU + desktop + Firefox image: this runs pokeemerald-wasm
-# entirely in Bun, renders frames in software, and streams to Discord over the
-# voice UDP path. No X server, no browser, no GPU.
-FROM oven/bun:1.3.14-debian@sha256:9dba1a1b43ce28c9d7931bfc4eb00feb63b0114720a0277a8f939ae4dfc9db6f
-
-# NOTE: The canonical build was the (since-removed 2026-07) CI pipeline, which mounted the
-# in-repo fork `@shepherdjerred/discord-video-stream` (a `file:` dep outside this directory)
-# into the workspace. A raw `docker build` from this directory cannot resolve that
-# out-of-context dependency; this Dockerfile is kept for reference/local iteration only.
+# syntax=docker/dockerfile:1.7-labs
+# Headless Discord Plays Mario Kart. Build context is the REPO ROOT (single Bun
+# workspace, one root bun.lock, isolated linker, workspace:* deps). Built via
+# `bun run docker:build` in packages/discord-plays-mario-kart/packages/backend
+# (which passes `-f ../../Dockerfile ../../../..`).
 #
+# Runs the N64Wasm core (parallel-n64 + angrylion software RDP) entirely in Bun,
+# renders frames in software, and streams to Discord over the voice UDP path.
+# No X server, no browser, no GPU.
+
+# ---------------------------------------------------------------------------
+# Stage 1 — compile the N64Wasm core from the vendored source.
+# The committed `wasm-src/code` tree is BYTE-PRISTINE upstream; our changes
+# (neilSetRom, neilGetVideoBuffer/Height, the per-player input export, the
+# Makefile exports) live in `wasm-src/patches/` and are applied here at build
+# time. No binaries are committed — the build is reproducible from source.
+# Pinned emscripten 2.0.7: the exact toolchain the legacy SDL2/GLES2 core
+# compiles with (a newer emsdk silently breaks it). Mirrors the removed Dagger
+# `buildDiscordPlaysMarioKartImageHelper` stage 1.
+# ---------------------------------------------------------------------------
+FROM emscripten/emsdk:2.0.7 AS wasm-builder
+
+WORKDIR /src
+# Copy only the vendored wasm source tree (patches + the pristine `code/` tree).
+COPY packages/discord-plays-mario-kart/wasm-src /src
+
+# Apply our patch series (patch(1) ships in the emscripten image; /src is not a
+# git work tree, so use patch, not git apply).
+RUN set -e; for p in patches/*.patch; do \
+    echo "applying $p"; patch -p1 --no-backup-if-mismatch < "$p"; \
+  done
+
+# `make clean` drops any object files so the patched sources are rebuilt from
+# scratch; `make` emits n64wasm.js + n64wasm.wasm in this dir.
+WORKDIR /src/code
+RUN make clean && make
+
+# ---------------------------------------------------------------------------
+# Stage 2 — the headless Bun runtime.
+# ---------------------------------------------------------------------------
+FROM oven/bun:1.3.14 AS runtime
+
 # System deps:
-# - ffmpeg: used by discord-video-stream (fluent-ffmpeg) to encode the
-#   rawvideo frame feed to H.264.
-# - libvips: native lib for sharp (a transitive dep of discord-video-stream).
+# - ffmpeg: discord-video-stream (fluent-ffmpeg) encodes the rawvideo frame feed.
+# - libvips: native lib for sharp.
+# - fontconfig: sharp/libvips text rendering (the leaderboard name overlay).
 # - Intel VAAPI stack (libva + iHD driver): h264_vaapi hardware encoding on an
 #   Intel iGPU. iHD lives in Debian non-free (enabled below) and is amd64-only;
 #   software libx264 is the fallback when the device/driver is absent.
@@ -25,28 +56,63 @@ RUN set -e; \
 
 WORKDIR /app
 
-# Install dependencies first for layer caching. The inner monorepo manifests:
-COPY package.json bun.lock ./
-COPY packages/common/package.json packages/common/
-COPY packages/backend/package.json packages/backend/
-COPY packages/frontend/package.json packages/frontend/
-
-# trustedDependencies in the root package.json lets the native postinstalls
-# (node-datachannel, node-av) run during a frozen install. discord-video-stream's
-# bun-safe lazy `sharp` import is baked into the fork source (no patch needed).
+# Manifests-only install layer: this ~6 GB `bun install` layer only invalidates
+# when a manifest/lockfile/patch changes, not on every source edit.
+# trustedDependencies (node-datachannel, node-av, sharp) run their native
+# postinstalls during the frozen install. `--frozen-lockfile` requires every
+# workspace member's package.json present, so the globs enumerate all 47 members
+# (top-level, nested packages/*/packages/*, homelab/src/*, the desktop src-tauri
+# crate, and the `scripts` dir).
+COPY --parents \
+  package.json bun.lock bunfig.toml patches/ scripts/package.json \
+  packages/*/package.json packages/*/packages/*/package.json \
+  packages/homelab/src/cdk8s/package.json \
+  packages/homelab/src/helm-types/package.json \
+  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
+  ./
 RUN bun install --frozen-lockfile
 
-# App source (includes the vendored packages/backend/assets/pokeemerald.wasm).
+# Now the sources. node_modules is excluded from context by .dockerignore, so
+# this does not clobber the installed tree.
 COPY . .
 
+# discord-stream-lifecycle's package resolves to a gitignored `dist/`; consumed
+# as compiled JS from the nested backend, it must be built or the app crashes at
+# startup with `Cannot find module '@shepherdjerred/discord-stream-lifecycle'`.
+RUN cd packages/discord-stream-lifecycle && bun run build
+
+# Copy the compiled core + the files the emulator host stages into MEMFS at
+# runtime (loadFile reads these), relative to the inner-monorepo root.
+ARG ASSETS=/app/packages/discord-plays-mario-kart/packages/backend/assets/n64wasm
+COPY --from=wasm-builder /src/code/n64wasm.js        ${ASSETS}/n64wasm.js
+COPY --from=wasm-builder /src/code/n64wasm.wasm      ${ASSETS}/n64wasm.wasm
+COPY --from=wasm-builder /src/code/shader_vert.hlsl  ${ASSETS}/shader_vert.hlsl
+COPY --from=wasm-builder /src/code/shader_frag.hlsl  ${ASSETS}/shader_frag.hlsl
+COPY --from=wasm-builder /src/code/overlay.png       ${ASSETS}/overlay.png
+COPY --from=wasm-builder /src/code/res/arial.ttf     ${ASSETS}/res/arial.ttf
+
 # Generate the Prisma client for the leaderboard DB (output is gitignored).
-RUN cd packages/backend && bunx --trust prisma generate
+RUN cd packages/discord-plays-mario-kart/packages/backend && bunx --trust prisma generate
 
-# Build the web UI served by the backend (web.assets).
-RUN cd packages/frontend && bun run build
+# Build the web UI served by the backend (web.assets). Expose the release to
+# Vite BEFORE the build so the SPA's Sentry.init tags events with `release`.
+ENV VITE_SENTRY_RELEASE=dev
+RUN cd packages/discord-plays-mario-kart/packages/frontend && bun run build
 
-# config.toml is provided at runtime (mount or bake a non-secret config).
-# The save + data directories are created on demand (data holds the leaderboard
-# SQLite DB; `prisma db push` applies the schema before start, idempotently).
+# Version/revision metadata as build args so CI can bake the real build number +
+# commit SHA (`--build-arg VERSION=… --build-arg GIT_SHA=…`); the `dev`/`unknown`
+# defaults keep a plain `docker run` bootable. Kept AFTER the frontend build so a
+# per-build VERSION doesn't invalidate the (expensive) frontend build layer.
 ENV NODE_ENV=production
-CMD ["sh", "-c", "cd packages/backend && bunx prisma db push && cd /app && exec bun packages/backend/src/index.ts"]
+ARG VERSION=dev
+ARG GIT_SHA=unknown
+ENV VERSION=${VERSION}
+ENV GIT_SHA=${GIT_SHA}
+
+# Run from the inner-monorepo root so getConfig()/emulator resolve config.toml,
+# the n64wasm assets, and saves/ relative to CWD. Apply the leaderboard schema
+# to the (persistent-volume) SQLite DB before start — idempotent, birmel-style;
+# harmless when leaderboards are disabled. Prisma 7's `db push` no longer accepts
+# `--skip-generate`, so it is omitted (generate ran at build time above).
+WORKDIR /app/packages/discord-plays-mario-kart
+CMD ["sh", "-c", "cd packages/backend && bunx prisma db push && cd /app/packages/discord-plays-mario-kart && exec bun packages/backend/src/index.ts"]

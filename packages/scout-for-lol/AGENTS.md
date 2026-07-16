@@ -18,13 +18,20 @@ packages/
 └── ui/        # Shared UI components (React)
 ```
 
-## Workspace Dependencies (`file:` protocol)
+## Workspace Dependencies
 
-Scout's sub-packages wire each other with `file:../X` deps (e.g. `@scout-for-lol/data`, `@scout-for-lol/backend`), **not** `workspace:*`.
+Scout's sub-packages are part of the root Bun workspace and use `workspace:*`
+for internal dependencies (for example `@scout-for-lol/data` and
+`@scout-for-lol/backend`). Run `bun install` once at the repository root after
+dependency changes.
 
-- **Never migrate `file:../X` deps to `workspace:*`** (or any symlinking scheme). The `file:` copy-on-install behavior is intentional and the preference is firm — do not list it as a follow-up, tech-debt, or improvement in PRs, plans, or chat.
-- Bun **copies** `file:` deps into `node_modules/<pkg>/` rather than symlinking (bunfig.toml pins `linker = "hoisted"`; under bun's isolated linker — bug-pinned away, see `packages/docs/todos/bun-isolated-linker-eexist.md` — the copies lived at `node_modules/.bun/<pkg>@file+.../`). After editing source in a shared package (e.g. `packages/data`), the backend/app copies are **stale** — typecheck/tests fail with `Module '@scout-for-lol/data' has no exported member ...`. Fix: run `bun install` at `packages/scout-for-lol/` to re-copy, then typecheck dependents. (`bun install` reports `Saved lockfile` but usually leaves `bun.lock` unchanged — verify with `git diff`.)
-- The app imports the backend `AppRouter` as `import type` only, so tRPC input/output changes also need this refresh before the app sees the new procedure shape.
+- The isolated linker is configured at the repository root. Do not add package
+  local `bunfig.toml` linker overrides.
+- Internal Scout package edits are visible through workspace symlinks; no
+  package-local reinstall is needed to refresh copied `file:` dependencies.
+- The app imports the backend `AppRouter` as `import type` only, so tRPC
+  input/output changes still need dependent typechecks before the app sees the
+  new procedure shape.
 
 ---
 
@@ -118,7 +125,7 @@ Each package supports: `dev`, `build`, `test`, `lint`, `format`, `typecheck`
 
 ## CI/CD
 
-There is no CI — the Dagger + Buildkite pipeline was removed 2026-07. Run checks locally (`mise run check`) and build/push container images manually.
+CI runs on the static Buildkite pipeline (`.buildkite/pipeline.yml`): every PR runs `bun run verify` (affected-scoped, includes scout's checks), Playwright e2e, and a dry-run image build + smoke; on merge to main the backend image is built, smoked, and pushed and the frontends deploy. Locally, `bun run verify` (or `mise run check`) mirrors CI; build the backend image with `bun run --filter=@scout-for-lol/backend docker:build` (`bunx turbo run smoke --filter=@scout-for-lol/backend` builds + smoke-tests it).
 
 ---
 
@@ -505,11 +512,14 @@ Discord OAuth in the browser (see **Web UI (Local end-to-end)** above).
 
 ---
 
-## Pre-commit Checklist (manual — git hooks were removed 2026-07)
+## Pre-commit / pre-push gates
 
-Nothing runs automatically on commit. Before committing, run yourself:
+Git hooks (lefthook) run automatically: `pre-commit` formats staged files and runs
+`turbo run lint typecheck --affected`; `pre-push` runs `bun run verify -- --affected`
+(the full build/typecheck/test/lint + repo checks). Nothing extra is required, but
+running these yourself before pushing catches failures earlier:
 
-- Prettier formatting on touched files
+- Prettier formatting on touched files (also auto-fixed by the pre-commit hook)
 - Markdownlint on `.md` files
 - Per-package: typecheck, ESLint, and relevant tests
 - Rust formatting and Clippy for desktop/src-tauri

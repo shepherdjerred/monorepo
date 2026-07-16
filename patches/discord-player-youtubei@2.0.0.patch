@@ -1,0 +1,14 @@
+diff --git a/package.json b/package.json
+index e6e79304aaad05dcfda72a879e8307656b918026..45fad7ec310e6f2ae42b55c64f3a5f1d8b584ce1 100644
+--- a/package.json
++++ b/package.json
+@@ -41,5 +41,8 @@
+       "import": "./dist/index.mjs",
+       "require": "./dist/index.js"
+     }
++  },
++  "peerDependencies": {
++    "discord-player": "^7.0.0"
+   }
+ }
+\ No newline at end of file

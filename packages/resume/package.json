@@ -4,6 +4,7 @@
   "private": true,
   "description": "LaTeX resume - built with xelatex, deployed manually",
   "scripts": {
-    "build": "xelatex resume.tex"
+    "build": "xelatex resume.tex",
+    "deploy": "bun ../../scripts/deploy-site.ts resume"
   }
 }

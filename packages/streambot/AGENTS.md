@@ -72,8 +72,9 @@ stream files/URLs directly with ffmpeg instead of automating a browser.
 - `src/util/` — structured logger, errors.
 - `test/` — `bun:test`; the machine is the most heavily tested surface.
 - `integration/` — real-ffmpeg integration tests (`bun run test:integration`); need real
-  ffmpeg/ffprobe (e.g. inside the streambot image), never part of the plain `bun test`. Run them
-  manually — the Dagger CI step that used to run them was removed 2026-07.
+  ffmpeg/ffprobe (e.g. inside the streambot image), never part of the plain `bun test`. They
+  are not wired into a turbo task, so `bun run verify` and CI don't run them — run them
+  manually against real ffmpeg when touching the ffmpeg pipeline.
 
 ## Subtitles
 
@@ -126,7 +127,7 @@ resumes playback on the software chain (watch `streambot_hw_fallback_total`).
 
 ## Live e2e (`bun run e2e`)
 
-Runs against a dedicated **test** Discord server (never the production `streambot-config` guild). IDs are passed as env vars so prod config is untouched; tokens come from the `streambot-config` 1P item (Homelab vault). The selfbot logs in as `glidiot_`. (This used to run via a `e-2-e-streambot` Dagger function, removed 2026-07 with the CI pipeline — run `e2e/run.ts` directly now.) It needs `USER_TOKENS` plus the test-only `E2E_GUILD_ID`/`E2E_VIDEO_CHANNEL_ID` envs (production joins the issuer's current VC, which a headless test can't set), and real ffmpeg/ffprobe on PATH.
+Runs against a dedicated **test** Discord server (never the production `streambot-config` guild). IDs are passed as env vars so prod config is untouched; tokens come from the `streambot-config` 1P item (Homelab vault). The selfbot logs in as `glidiot_`. (This live Discord e2e is not part of the Buildkite pipeline — it needs a real test guild and user tokens — so run `e2e/run.ts` directly.) It needs `USER_TOKENS` plus the test-only `E2E_GUILD_ID`/`E2E_VIDEO_CHANNEL_ID` envs (production joins the issuer's current VC, which a headless test can't set), and real ffmpeg/ffprobe on PATH.
 
 ```bash
 J=$(op item get streambot-config --vault "Homelab (Kubernetes)" --format json --reveal)
@@ -156,7 +157,7 @@ Bun APIs, structured logging. `yt-dlp` and `ffmpeg` are system binaries baked in
 (no runtime download). When building the image, install `yt-dlp` by downloading the per-arch
 standalone binary from the release **asset CDN**
 (`github.com/yt-dlp/yt-dlp/releases/latest/download/<asset>`) and verifying it against
-`SHA2-256SUMS` (this was the shared `.dagger` `installYtDlp` helper; the pipeline was removed 2026-07). Do **not** rely on `youtube-dl-exec`'s postinstall — it queries `api.github.com`
+`SHA2-256SUMS` (this install runs as a step in the `Dockerfile`). Do **not** rely on `youtube-dl-exec`'s postinstall — it queries `api.github.com`
 unauthenticated (its token header is silently dropped by a `fetch(url, headers)` vs
 `fetch(url, { headers })` bug) and exhausts GitHub's 60 req/hr anonymous limit on shared egress
 IPs, intermittently failing image builds.
@@ -172,8 +173,8 @@ bun run lint
 ```
 
 **Fresh-worktree typecheck gotcha:** `bun run typecheck` can fail with ~40 errors from
-`../discord-video-stream/src/*`. Cause: `setup.ts` builds the package's d.ts into
-`packages/discord-video-stream/dist`, but the **copied** workspace entries under
+`../discord-video-stream/src/*`. Cause: `bun run build` in `packages/discord-video-stream`
+produces the package's d.ts into its `dist/`, but the **copied** workspace entries under
 `node_modules/@shepherdjerred/discord-video-stream/` have no `dist/`, so tsc's `exports` `types`
 condition fails and it type-checks the loose package source instead. Fix (gitignored, local-only):
 
@@ -184,4 +185,4 @@ for d in node_modules packages/streambot/node_modules; do
 done
 ```
 
-Real CI builds the dvs image so it never hits this.
+(The image build does the same copy, so CI never hits this; apply the fix manually in fresh local checkouts.)
