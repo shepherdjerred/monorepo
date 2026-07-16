@@ -18,7 +18,7 @@ const CHEF_HAT_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 
 </svg>`;
 
 export default class CooklangPlugin extends Plugin {
-  settings: CooklangSettings = DEFAULT_SETTINGS;
+  override settings: CooklangSettings = DEFAULT_SETTINGS;
 
   override async onload(): Promise<void> {
     await this.loadSettings();

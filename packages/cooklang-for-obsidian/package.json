@@ -8,12 +8,12 @@
     "build": "bun esbuild.config.mjs production",
     "lint": "eslint src --cache",
     "test": "bun test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "publish:plugin": "bun scripts/publish.ts"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.10.6",
-    "@shepherdjerred/eslint-config": "file:../eslint-config",
-    "@types/bun": "^1.3.14",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@types/node": "^25.6.0",
     "builtin-modules": "^5.1.0",
     "bun-types": "^1.3.14",

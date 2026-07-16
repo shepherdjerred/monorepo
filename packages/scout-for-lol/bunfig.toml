@@ -1,15 +1,3 @@
-[install]
-# Pin the hoisted linker. With the default `linker = "auto"`, bun ≥1.3 silently
-# selects the *isolated* linker for any workspace whose bun.lock has
-# configVersion 1 — and bun's isolated installer has an unfixed EEXIST race
-# when several members reference the same `file:` dep
-# (oven-sh/bun#12917, oven-sh/bun#20142). This took down CI for every branch
-# after the 2026-07-03 Dagger cache wipe forced all installs to re-run.
-# Hoisted mode still *copies* `file:` deps (verified — real dirs, not
-# symlinks), so the intentional copy-on-install workflow is unchanged.
-# TODO(todo:bun-isolated-linker-eexist): remove once upstream fixes the race.
-linker = "hoisted"
-
 [loader]
 ".txt" = "text"
 

@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/bun": "^1.3.13",
     "@typescript-eslint/utils": "^8.59.3",
@@ -18,12 +18,17 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.0"
   },
-  "trustedDependencies": [],
   "scripts": {
-    "install-subpkgs": "cd src/helm-types && bun install --frozen-lockfile && cd ../cdk8s && bun install --frozen-lockfile",
-    "build": "bun run install-subpkgs && cd src/cdk8s && bun run build",
-    "test": "bun run install-subpkgs && cd src/cdk8s && bun run test && cd ../helm-types && bun run test",
-    "lint": "bun run install-subpkgs && cd src/cdk8s && bun run lint && cd ../helm-types && bun run lint",
-    "typecheck": "bun run install-subpkgs && cd src/cdk8s && bun run typecheck && cd ../helm-types && bun run typecheck"
+    "check:talos": "bun src/talos/update-image-id.ts --check",
+    "lint:helm": "bash scripts/lint-helm.sh",
+    "docker:build:caddy-s3proxy": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/caddy-s3proxy:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t caddy-s3proxy:dev images/caddy-s3proxy",
+    "docker:build:obsidian-headless": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/obsidian-headless:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t obsidian-headless:dev images/obsidian-headless",
+    "docker:build:mcp-gateway": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/mcp-gateway:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t mcp-gateway:dev images/mcp-gateway",
+    "docker:build:redlib": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/redlib:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t redlib:dev images/redlib",
+    "docker:build": "bun run docker:build:caddy-s3proxy && bun run docker:build:obsidian-headless && bun run docker:build:mcp-gateway && bun run docker:build:redlib",
+    "smoke": "bun scripts/smoke-images.ts",
+    "helm:push": "bun scripts/helm-push.ts",
+    "tofu:stack": "bun scripts/tofu-stack.ts",
+    "argocd": "bun scripts/argocd.ts"
   }
 }

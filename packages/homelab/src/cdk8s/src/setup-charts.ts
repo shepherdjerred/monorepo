@@ -26,6 +26,7 @@ import { createTasknotesChart } from "./cdk8s-charts/tasknotes.ts";
 import { createRelayChart } from "./cdk8s-charts/relay.ts";
 import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
 import { createTrmnlDashboardChart } from "./cdk8s-charts/trmnl-dashboard.ts";
+// import { createTurboCacheChart } from "./cdk8s-charts/turbo-cache.ts"; // staged: todo turbo-cache-rollout
 import { createServiceProbesChart } from "./resources/monitoring/service-probes-chart.ts";
 import { resetProbeRegistry } from "./misc/probe-registry.ts";
 
@@ -77,6 +78,10 @@ export async function setupCharts(app: App): Promise<void> {
   createRelayChart(app);
   createTemporalChart(app);
   createTrmnlDashboardChart(app);
+  // Staged, not yet deployed: needs the turbo-cache-r2 1Password item +
+  // R2 apply first (todo: turbo-cache-rollout). Uncomment together with
+  // createTurboCacheApp in cdk8s-charts/apps.ts.
+  // createTurboCacheChart(app);
 
   // Must run last: reads the probe registry populated by every
   // TailscaleIngress/createIngress/createCloudflareTunnelBinding call above.
