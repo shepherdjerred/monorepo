@@ -1,5 +1,10 @@
 glob_matcher: doublestar
 
+# Turbo-powered hooks. The old lefthook re-ran per-package eslint/typecheck/
+# test jobs on every commit; turbo replays unchanged work from cache in
+# milliseconds, so the tiers collapse into two turbo invocations plus a
+# handful of staged-file safety checks.
+
 commit-msg:
   jobs:
     - name: validate-commit-msg
@@ -7,52 +12,29 @@ commit-msg:
 
 pre-commit:
   jobs:
-    # TIER 1: Fast checks (sequential, fail-fast)
-    - name: tier-1
+    - name: safety
       group:
-        piped: true
+        parallel: true
         jobs:
-          - name: safety-checks
-            group:
-              parallel: true
-              jobs:
-                - name: gitleaks
-                  run: gitleaks protect --staged --redact --no-banner
+          - name: gitleaks
+            run: gitleaks protect --staged --redact --no-banner
 
-                - name: env-var-names
-                  glob: "**/*.{ts,rs,py,fish,tmpl,yaml,yml,env,md,sh,swift}"
-                  exclude:
-                    - "sandbox/archive/**"
-                    - "**/generated/**"
-                    - "**/node_modules/**"
-                  run: bash scripts/check-env-var-names.sh {staged_files}
+          - name: merge-conflicts
+            run: bash scripts/check-merge-conflicts.sh
 
-                - name: merge-conflicts
-                  glob: "*.{ts,tsx,js,jsx,json,yml,yaml,md,rs,sh,toml,astro}"
-                  exclude:
-                    - "lefthook.yml"
-                  run: "! grep -n '<<<<<<< \\|>>>>>>> ' {staged_files}"
+          - name: large-files
+            run: bun scripts/check-large-files.ts
 
-                - name: large-files
-                  run: |
-                    max=5242880
-                    large=$(git diff --staged --name-only --diff-filter=d | while read -r f; do
-                      if [ "${f#sandbox/archive/}" != "$f" ]; then
-                        continue
-                      fi
-                      size=$(wc -c < "$f" 2>/dev/null || echo 0)
-                      if [ "$size" -gt "$max" ]; then
-                        echo "  $f ($(( size / 1048576 ))MB)"
-                      fi
-                    done)
-                    if [ -n "$large" ]; then
-                      echo "Files exceed 5MB limit:"
-                      echo "$large"
-                      exit 1
-                    fi
+          - name: line-endings
+            run: bun scripts/check-line-endings.ts {staged_files}
 
-                - name: line-endings
-                  run: bun scripts/check-line-endings.ts {staged_files}
+          - name: env-var-names
+            glob: "**/*.{ts,rs,py,fish,tmpl,yaml,yml,env,md,sh,swift}"
+            exclude:
+              - "sandbox/archive/**"
+              - "**/generated/**"
+              - "**/node_modules/**"
+            run: bash scripts/check-env-var-names.sh {staged_files}
 
           - name: check-suppressions
             run: bun scripts/check-suppressions.ts
@@ -63,469 +45,32 @@ pre-commit:
           - name: migration-guard
             run: bun scripts/guard-no-package-exclusions.ts
 
-          - name: staged-lint
-            group:
-              parallel: true
-              jobs:
-                # --- lockfile ---
-                - name: lockfile-check
-                  glob: "**/package.json"
-                  run: bun install --frozen-lockfile
-
-                # --- prettier (repo-wide, staged files) ---
-                - name: prettier
-                  glob: "**/*.{ts,tsx,js,jsx,json,jsonc,yaml,yml,md,css,astro,html,graphql}"
-                  exclude:
-                    - "sandbox/archive/**"
-                    - "**/node_modules/**"
-                    - "**/generated/**"
-                    - "**/.dagger/**"
-                    # CLAUDE.md is a symlink to AGENTS.md everywhere; prettier
-                    # errors on explicitly-passed symlinks. AGENTS.md is linted.
-                    - "**/CLAUDE.md"
-                  # Wrapper filters out staged DELETIONS (prettier hard-errors on missing files)
-                  run: bash scripts/prettier-staged.sh {staged_files}
-
-                # --- markdownlint (repo-wide, staged files) ---
-                - name: markdownlint
-                  glob: "**/*.md"
-                  exclude:
-                    - "sandbox/archive/**"
-                    - "**/node_modules/**"
-                    - "**/generated/**"
-                  run: bunx markdownlint-cli2 {staged_files}
-
-                # --- eslint per package (staged files only) ---
-                - name: eslint-birmel
-                  root: "packages/birmel/"
-                  glob: "packages/birmel/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-eslint-config
-                  root: "packages/eslint-config/"
-                  glob: "packages/eslint-config/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-astro-opengraph-images
-                  root: "packages/astro-opengraph-images/"
-                  glob: "packages/astro-opengraph-images/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-better-skill-capped
-                  root: "packages/better-skill-capped/"
-                  glob: "packages/better-skill-capped/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-sjer-red
-                  root: "packages/sjer.red/"
-                  glob: "packages/sjer.red/**/*.{ts,tsx,js,jsx,astro}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-webring
-                  root: "packages/webring/"
-                  glob: "packages/webring/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-starlight-karma-bot
-                  root: "packages/starlight-karma-bot/"
-                  glob: "packages/starlight-karma-bot/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-scout-for-lol
-                  root: "packages/scout-for-lol/"
-                  glob: "packages/scout-for-lol/**/*.{ts,tsx,js,jsx,astro}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-discord-plays-pokemon-common
-                  root: "packages/discord-plays-pokemon/packages/common/"
-                  glob: "packages/discord-plays-pokemon/packages/common/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-discord-plays-pokemon-backend
-                  root: "packages/discord-plays-pokemon/packages/backend/"
-                  glob: "packages/discord-plays-pokemon/packages/backend/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-discord-plays-pokemon-frontend
-                  root: "packages/discord-plays-pokemon/packages/frontend/"
-                  glob: "packages/discord-plays-pokemon/packages/frontend/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-discord-plays-core
-                  root: "packages/discord-plays-core/"
-                  glob: "packages/discord-plays-core/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-homelab
-                  root: "packages/homelab/"
-                  glob: "packages/homelab/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-cooklang-rich-preview
-                  root: "packages/cooklang-rich-preview/"
-                  glob: "packages/cooklang-rich-preview/**/*.{ts,tsx,js,jsx,astro}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-monarch
-                  root: "packages/monarch/"
-                  glob: "packages/monarch/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-tasknotes-server
-                  root: "packages/tasknotes-server/"
-                  glob: "packages/tasknotes-server/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-tasknotes-types
-                  root: "packages/tasknotes-types/"
-                  glob: "packages/tasknotes-types/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-tasks-for-obsidian
-                  root: "packages/tasks-for-obsidian/"
-                  glob: "packages/tasks-for-obsidian/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-toolkit
-                  root: "packages/toolkit/"
-                  glob: "packages/toolkit/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-leetcode
-                  root: "packages/leetcode/"
-                  glob: "packages/leetcode/**/*.{ts,tsx,js,jsx}"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                # --- Automation code (non-package dirs) ---
-                - name: eslint-root-scripts
-                  root: "scripts/"
-                  glob: "scripts/*.ts"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-ci-scripts
-                  root: "scripts/ci/"
-                  glob: "scripts/ci/**/*.ts"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                - name: eslint-dagger
-                  root: ".dagger/"
-                  glob: ".dagger/src/**/*.ts"
-                  run: bunx eslint --fix {staged_files}
-                  stage_fixed: true
-
-                # --- Python ---
-                - name: ruff
-                  glob: "**/*.py"
-                  exclude:
-                    - "sandbox/**"
-                    - "**/node_modules/**"
-                    - "**/wasm-src/**"
-                  run: uvx ruff@0.15.21 check --fix {staged_files}
-                  stage_fixed: true
-
-                - name: pyright
-                  glob: "**/*.py"
-                  exclude:
-                    - "sandbox/**"
-                    - "**/node_modules/**"
-                    - "**/wasm-src/**"
-                  run: bash scripts/pyright-check.sh
-
-                # --- shellcheck ---
-                - name: shellcheck
-                  glob: "**/*.sh"
-                  exclude:
-                    - "node_modules/**"
-                    - "**/node_modules/**"
-                    - "**/Pods/**"
-                    # Frozen legacy scripts (intentional CRLF, -text in
-                    # .gitattributes); CI shellcheck also skips */archive/*.
-                    - "sandbox/archive/**"
-                    # Vendored emscripten/C build tooling for discord-plays-mario-kart —
-                    # includes upstream mupen64plus-core scripts that pre-date shebang conventions
-                    - "**/wasm-src/**"
-                  run: shellcheck --severity=warning {staged_files}
-
-    # TIER 2: Conditional checks (parallel)
-    - name: tier-2
-      group:
-        parallel: true
-        jobs:
-          # --- TypeScript typecheck per package ---
-          - name: birmel-check
-            root: "packages/birmel/"
-            glob: "packages/birmel/**/*.{ts,tsx}"
-            run: bun run typecheck && bun run test
-
-          - name: eslint-config-typecheck
-            root: "packages/eslint-config/"
-            glob: "packages/eslint-config/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: astro-opengraph-images-test
-            root: "packages/astro-opengraph-images/"
-            glob: "packages/astro-opengraph-images/**/*.{ts,tsx}"
-            run: bun run test
-
-          - name: better-skill-capped-test
-            root: "packages/better-skill-capped/"
-            glob: "packages/better-skill-capped/**/*.{ts,tsx}"
-            run: bun run test
-
-          - name: eslint-config-test
-            root: "packages/eslint-config/"
-            glob: "packages/eslint-config/**/*.{ts,tsx}"
-            run: bun run test
-
-          - name: monarch-test
-            root: "packages/monarch/"
-            glob: "packages/monarch/**/*.{ts,tsx}"
-            run: bun run test
-
-          - name: tasknotes-server-test
-            root: "packages/tasknotes-server/"
-            glob: "packages/tasknotes-server/**/*.{ts,tsx}"
-            run: bun run test
-
-          - name: tasks-for-obsidian-test
-            root: "packages/tasks-for-obsidian/"
-            glob: "packages/tasks-for-obsidian/**/*.{ts,tsx}"
-            run: bun run test
-
-          - name: webring-test
-            root: "packages/webring/"
-            glob: "packages/webring/**/*.{ts,tsx}"
-            run: bun run test
-
-          # homelab-test combined into homelab-typecheck to avoid parallel bun install races
-
-          - name: homelab-versions-validate
-            root: "packages/homelab/src/cdk8s/"
-            glob:
-              - "packages/homelab/src/cdk8s/src/versions.ts"
-            run: bun test src/versions.test.ts
-
-          - name: homelab-helm-lint
-            root: "packages/homelab/"
-            glob:
-              - "packages/homelab/src/cdk8s/**/*.{ts,py}"
-              - "packages/homelab/src/cdk8s/helm/**"
-              - "packages/homelab/src/cdk8s/config/**"
-            run: bash scripts/lint-helm.sh
-
-          - name: discord-plays-pokemon-test
-            root: "packages/discord-plays-pokemon/"
-            glob: "packages/discord-plays-pokemon/**/*.{ts,tsx}"
-            run: bun run test
-
-          - name: astro-opengraph-images-typecheck
-            root: "packages/astro-opengraph-images/"
-            glob: "packages/astro-opengraph-images/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: better-skill-capped-typecheck
-            root: "packages/better-skill-capped/"
-            glob: "packages/better-skill-capped/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: sjer-red-typecheck
-            root: "packages/sjer.red/"
-            glob: "packages/sjer.red/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: webring-typecheck
-            root: "packages/webring/"
-            glob: "packages/webring/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: starlight-karma-bot-typecheck
-            root: "packages/starlight-karma-bot/"
-            glob: "packages/starlight-karma-bot/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: scout-for-lol-typecheck
-            root: "packages/scout-for-lol/"
-            glob: "packages/scout-for-lol/**/*.{ts,tsx}"
-            run: bun run --cwd packages/backend db:generate && bun run typecheck && bun run test
-
-          - name: scout-test-template-check
-            root: "packages/scout-for-lol/packages/backend/"
-            glob:
-              - "packages/scout-for-lol/packages/backend/prisma/migrations/**"
-              - "packages/scout-for-lol/packages/backend/scripts/generate-test-template-db.ts"
-              - "packages/scout-for-lol/packages/backend/scripts/check-test-template-db.ts"
-              - "packages/scout-for-lol/packages/backend/src/testing/template.db"
-              - "packages/scout-for-lol/packages/data/src/seasons.ts"
-            run: bunx --trust prisma generate && bun run check:test-template
-
-          - name: discord-plays-pokemon-typecheck
-            root: "packages/discord-plays-pokemon/"
-            glob: "packages/discord-plays-pokemon/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: homelab-typecheck
-            root: "packages/homelab/"
-            glob: "packages/homelab/**/*.{ts,tsx}"
-            run: bun run typecheck && bun run test
-
-          - name: cooklang-rich-preview-typecheck
-            root: "packages/cooklang-rich-preview/"
-            glob: "packages/cooklang-rich-preview/**/*.{ts,tsx,astro}"
-            run: bun run typecheck
-
-          - name: monarch-typecheck
-            root: "packages/monarch/"
-            glob: "packages/monarch/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: tasknotes-server-typecheck
-            root: "packages/tasknotes-server/"
-            glob: "packages/tasknotes-server/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: tasknotes-types-typecheck
-            root: "packages/tasknotes-types/"
-            glob: "packages/tasknotes-types/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: tasks-for-obsidian-typecheck
-            root: "packages/tasks-for-obsidian/"
-            glob: "packages/tasks-for-obsidian/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: toolkit-typecheck
-            root: "packages/toolkit/"
-            glob: "packages/toolkit/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          - name: leetcode-typecheck
-            root: "packages/leetcode/"
-            glob: "packages/leetcode/**/*.{ts,tsx}"
-            run: bun run typecheck
-
-          # --- Go (terraform-provider-asuswrt) ---
-          - name: go-build
-            root: "packages/terraform-provider-asuswrt/"
-            glob: "packages/terraform-provider-asuswrt/**/*.go"
-            run: go build ./...
-
-          - name: go-test
-            root: "packages/terraform-provider-asuswrt/"
-            glob: "packages/terraform-provider-asuswrt/**/*.go"
-            run: go test ./...
-
-          - name: go-lint
-            root: "packages/terraform-provider-asuswrt/"
-            glob: "packages/terraform-provider-asuswrt/**/*.go"
-            run: golangci-lint run
-
-          # --- Rust (scout-for-lol desktop) ---
-          - name: scout-desktop-rust
-            root: "packages/scout-for-lol/packages/desktop/src-tauri/"
-            glob: "packages/scout-for-lol/packages/desktop/src-tauri/**/*.rs"
-            run: cargo fmt --check && cargo clippy --all-targets --all-features -- -D warnings
-
-          # --- Astro check ---
-          - name: sjer-red-astro-check
-            root: "packages/sjer.red/"
-            glob: "packages/sjer.red/**/*.{ts,tsx,astro}"
-            run: bunx astro check
-
-          - name: full-typecheck
-            glob: "tsconfig.base.json"
-            run: bun run typecheck
-
-          # --- Knip: CI-only ---
-          # Knip is a whole-graph dead-code analysis: it loads every workspace
-          # declared in knip.json and needs all ~30 packages' deps installed to
-          # run. On the per-commit path that forced a full `scripts/setup.ts`
-          # install before any commit, which is expensive per-worktree. It runs
-          # in CI instead (the `knip-check` Dagger step in scripts/ci), so it
-          # stays off the commit hot path with no loss of coverage.
-
-          # --- Compliance ---
-          - name: compliance-check
-            glob:
-              - "packages/*/package.json"
-              - "packages/*/packages/*/package.json"
-              - "packages/*/eslint.config.*"
-              - "packages/*/tsconfig.json"
-            run: bash scripts/compliance-check.sh
-
-          # --- Dagger hygiene ---
-          - name: dagger-hygiene
-            glob:
-              - ".dagger/src/**/*.ts"
-              - "scripts/ci/src/**/*.ts"
-            run: bash scripts/check-dagger-hygiene.sh
-
-          # --- Tunnel ↔ DNS coverage ---
-          # Every cdk8s TunnelBinding must have a matching cloudflare_dns_record
-          # in tofu. Without this, the public hostname silently fails to resolve.
-          - name: tunnel-dns-coverage
-            glob:
-              - "packages/homelab/src/cdk8s/src/**/*.ts"
-              - "packages/homelab/src/tofu/cloudflare/*.tf"
-            run: bun scripts/check-tunnel-dns-coverage.ts
-
-          # --- Talos schematic sync ---
-          # The pinned installer in patches/image.yaml must match what the
-          # image.yaml schematic produces. Editing image.yaml (extraKernelArgs,
-          # systemExtensions) without regenerating the pin silently boots the old
-          # schematic — e.g. dropping lockdown=integrity and breaking eBPF.
-          - name: talos-schematic-sync
-            glob:
-              - "packages/homelab/src/talos/image.yaml"
-              - "packages/homelab/src/talos/patches/image.yaml"
-            run: bun packages/homelab/src/talos/update-image-id.ts --check
-
-          # --- 1Password items & fields ---
-          # Every cdk8s OnePasswordItem reference + consumed secret field must exist
-          # in the committed vault snapshot. Offline, no 1Password access.
-          - name: onepassword-items
-            root: "packages/homelab/src/cdk8s/"
-            glob:
-              - "packages/homelab/src/cdk8s/src/**/*.ts"
-              - "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json"
-            run: bun run scripts/check-1password-items.ts
-
-          # --- React version sync ---
-          # react/react-dom (and their @types) must resolve to matching versions
-          # in every bun.lock — a skew throws "Incompatible React versions" at
-          # runtime (invisible to typecheck/build/test). See mariokart.sjer.red
-          # post-mortem in packages/docs/plans.
-          - name: react-version-sync
-            glob:
-              - "**/package.json"
-              - "**/bun.lock"
+          - name: lockfile-check
+            glob: "**/package.json"
+            run: bun install --frozen-lockfile --dry-run
+
+          # Formatters fix + restage; everything else formatting-related is
+          # caught by `//#prettier` in pre-push/verify.
+          - name: prettier
+            glob: "**/*.{ts,tsx,js,jsx,json,jsonc,yaml,yml,md,css,astro,html,graphql}"
             exclude:
               - "sandbox/archive/**"
               - "**/node_modules/**"
-            run: bun scripts/check-react-version-sync.ts
+              - "**/generated/**"
+              # CLAUDE.md is a symlink to AGENTS.md everywhere; prettier
+              # errors on explicitly-passed symlinks. AGENTS.md is linted.
+              - "**/CLAUDE.md"
+            run: bash scripts/prettier-staged.sh {staged_files}
+            stage_fixed: true
 
-          # --- Quality ratchet ---
-          - name: quality-ratchet
-            glob: "**/*.{ts,tsx,rs}"
-            run: bash scripts/quality-ratchet.sh
+    # Affected-only lint + typecheck through turbo — warm-cache replay is
+    # near-instant; only packages whose inputs changed actually run.
+    - name: turbo-affected
+      run: bunx turbo run lint typecheck --affected --concurrency=4 --output-logs=errors-only
+
+pre-push:
+  jobs:
+    # The full verification surface (build/typecheck/test/lint + every repo
+    # check), affected-scoped. Identical command surface to CI.
+    - name: verify-affected
+      run: bun run verify -- --affected --concurrency=4 --output-logs=errors-only

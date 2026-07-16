@@ -4,7 +4,7 @@
 # third-party imports resolve. Requires uv (installed by mise).
 set -euo pipefail
 
-PYRIGHT_VERSION="1.1.411" # keep in sync with .dagger/src/constants.ts
+PYRIGHT_VERSION="1.1.411"
 
 if [ ! -x .venv/bin/python ]; then
   echo "Creating Python dev venv (.venv) for pyright..."

@@ -6,7 +6,7 @@
     "build": "rm -rf dist/ && bun run src/app.ts && bun run scripts/patch.ts",
     "lint": "bunx eslint .",
     "typecheck": "bunx tsc --noEmit",
-    "test": "bun run build && bun test && bun run test:gpu-resources",
+    "test": "bun test && bun run test:gpu-resources",
     "test:gpu-resources": "bun run scripts/test-gpu-resources.ts",
     "clear": "rm -rf dist/",
     "build-app": "bun run src/app.ts",
@@ -14,10 +14,12 @@
     "r2:inventory": "bun run scripts/r2-prefix-inventory.ts",
     "update-imports": "bun run scripts/update-imports.ts",
     "generate-helm-types": "bun run scripts/generate-helm-types.ts",
-    "up": "bun run build && kubectl delete job dagger-zfs-tuning docker-config-builder -n dagger --ignore-not-found; bun run scripts/helm-render.ts --apply",
+    "up": "bun run build && bun run scripts/helm-render.ts --apply",
     "render": "bun run build && bun run scripts/helm-render.ts --render",
     "diff": "bun run build && bun run scripts/helm-render.ts --diff",
-    "audit:grafana": "bun run scripts/grafana-dashboard-audit.ts"
+    "audit:grafana": "bun run scripts/grafana-dashboard-audit.ts",
+    "check:1password": "bun run scripts/check-1password-items.ts",
+    "check:caddyfile": "bun run scripts/check-caddyfile.ts"
   },
   "dependencies": {
     "cdk8s": "^2.70.58",
@@ -28,11 +30,11 @@
     "remeda": "^2.33.7",
     "ts-pattern": "^5.9.0",
     "zod": "^4.4.3",
-    "@shepherdjerred/helm-types": "file:../helm-types",
+    "@shepherdjerred/helm-types": "workspace:*",
     "@grafana/grafana-foundation-sdk": "11.6.0-cogv0.0.x.1769699379"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "file:../../../eslint-config",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@temporalio/testing": "1.17.2",
     "@types/bun": "^1.3.13",
     "@types/lodash": "^4.17.24",

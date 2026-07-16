@@ -1,117 +1,47 @@
-# CI base image: minimal host with Dagger CLI + Bun for pipeline generation.
-# All heavy lifting (builds, tests, lints) runs inside Dagger containers.
-# Version is tracked in .buildkite/ci-image/VERSION and is bumped AUTOMATICALLY by CI
-# (the ci-base-version-commit-back step) after this image is rebuilt and published on
-# main. Do NOT edit VERSION in a PR — the ci-base-version-guard step fails any PR that
-# changes it. Just change this Dockerfile; CI handles the version bump on merge.
-# Build: docker build -t ghcr.io/shepherdjerred/ci-base:$(cat .buildkite/ci-image/VERSION) .buildkite/ci-image/
-# Push:  docker push ghcr.io/shepherdjerred/ci-base:$(cat .buildkite/ci-image/VERSION)
-#
-# Tool versions intentionally mirror those in .buildkite/scripts/setup-tools.sh —
-# install_*() functions there short-circuit via `command -v X && return` once a
-# tool is in $PATH, so adding tools here makes the runtime install a no-op and
-# eliminates per-pod overlay-layer writes (~2 GB/pod) that were thermally
-# throttling nvme0n1.
+# CI toolchain image — baked from the repo's .mise.toml so agents run the
+# EXACT tool versions developers run. Rebuild when .mise.toml changes (the
+# pipeline's build-ci-image step keys its registry cache on it); no VERSION
+# file, no commit-back dance — the image tag is the .mise.toml content hash.
 
-# renovate: datasource=docker depName=oven/bun versioning=docker
-FROM oven/bun:debian@sha256:9dba1a1b43ce28c9d7931bfc4eb00feb63b0114720a0277a8f939ae4dfc9db6f
+FROM debian:bookworm-slim
 
-LABEL org.opencontainers.image.title="ci-base"
-LABEL org.opencontainers.image.description="CI base image: Dagger CLI, Bun, Node.js, uv, semgrep, gh, helm, opentofu, awscli, ripgrep, shellcheck, gitleaks, trivy, plus build-essentials"
-LABEL org.opencontainers.image.source="https://github.com/shepherdjerred/monorepo"
+RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
+    ca-certificates curl git unzip xz-utils zstd python3 ripgrep rsync \
+    build-essential pkg-config libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# System essentials + build dependencies (covers install_base() in setup-tools.sh).
-# gnupg is required by the opentofu installer below for signature verification.
-RUN apt-get update -qq && \
-    apt-get install -y -qq \
-    bash curl jq git ca-certificates unzip xz-utils gnupg \
-    gcc g++ python3 libssl-dev pkg-config && \
-    rm -rf /var/lib/apt/lists/*
+# Docker CLI + buildx for image-build steps (BuildKit runs in-pod)
+COPY --from=docker:28-cli /usr/local/bin/docker /usr/local/bin/docker
+COPY --from=docker/buildx-bin:0.30.1 /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
 
-# Node.js (required by Dagger TypeScript SDK runtime)
-# renovate: datasource=node-version depName=node
-ARG NODE_VERSION=24.18.0
-RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
-    | tar xJ -C /usr/local --strip-components=1
+# swiftlint from the official release zip: the -static build is
+# self-contained (the dynamic binary needs Swift runtime libs neither the
+# zip nor realm's image lays out where we can copy them). Same recipe as
+# .buildkite/scripts/toolchain.sh — keep the two in sync.
+# renovate: datasource=github-releases depName=realm/SwiftLint
+ARG SWIFTLINT_VERSION=0.61.0
+RUN curl -fsSL "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT_VERSION}/swiftlint_linux_amd64.zip" -o /tmp/swiftlint.zip \
+    && unzip -q -o /tmp/swiftlint.zip -d /usr/local/swiftlint \
+    && ln -sf /usr/local/swiftlint/swiftlint-static /usr/local/bin/swiftlint \
+    && rm /tmp/swiftlint.zip
 
-# renovate: datasource=github-releases depName=dagger/dagger
-ARG DAGGER_VERSION=0.21.7
-RUN curl -fsSL "https://dl.dagger.io/dagger/releases/${DAGGER_VERSION}/dagger_v${DAGGER_VERSION}_linux_amd64.tar.gz" \
-    | tar xz -C /usr/local/bin dagger && \
-    chmod +x /usr/local/bin/dagger
+# mise, pinned; tools come from the repo's .mise.toml
+ENV MISE_VERSION="v2026.7.1" \
+    MISE_DATA_DIR=/opt/mise \
+    PATH="/opt/mise/shims:/root/.local/bin:${PATH}"
+RUN curl -fsSL https://mise.run | sh
 
-# renovate: datasource=github-releases depName=astral-sh/uv
-ARG UV_VERSION=0.11.21
-RUN curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | sh && \
-    mv /root/.local/bin/uv /usr/local/bin/uv && \
-    mv /root/.local/bin/uvx /usr/local/bin/uvx || true
-ENV UV_LINK_MODE=copy
+COPY .mise.toml /workspace/.mise.toml
+WORKDIR /workspace
+RUN mise trust .mise.toml && mise install && mise reshim
 
-# semgrep via uv (covers install_semgrep() — the largest single per-pod writer
-# at ~835 MB to /root/.local/share/uv + /root/.cache/uv)
-# renovate: datasource=pypi depName=semgrep
-ARG SEMGREP_VERSION=1.166.0
-RUN uv tool install --python 3.12 "semgrep==${SEMGREP_VERSION}" --with setuptools
-ENV PATH="/root/.local/bin:${PATH}"
+# uv/uvx for the python checks (ruff via uvx, pyright bootstraps a venv)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# GitHub CLI (covers install_gh())
-# renovate: datasource=github-releases depName=cli/cli
-ARG GH_VERSION=2.96.0
-RUN curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz" | tar xz -C /tmp && \
-    cp "/tmp/gh_${GH_VERSION}_linux_amd64/bin/gh" /usr/local/bin/gh && \
-    chmod +x /usr/local/bin/gh && \
-    rm -rf /tmp/gh_*
+# claude CLI for the release CHANGELOG-refinement step (scripts/release.ts);
+# same pinned recipe as packages/birmel/Dockerfile.
+ARG CLAUDE_CODE_VERSION=2.1.175
+ENV BUN_INSTALL=/usr/local
+RUN bun add -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && claude --version
 
-# Helm (covers install_helm())
-# renovate: datasource=github-releases depName=helm/helm
-ARG HELM_VERSION=v4.2.2
-RUN curl -fsSL "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz" | tar xz -C /tmp && \
-    mv /tmp/linux-amd64/helm /usr/local/bin/helm && \
-    chmod +x /usr/local/bin/helm && \
-    rm -rf /tmp/linux-amd64
-
-# OpenTofu (covers install_tofu())
-# renovate: datasource=github-releases depName=opentofu/opentofu
-ARG OPENTOFU_VERSION=1.12.3
-RUN curl -fsSL https://get.opentofu.org/install-opentofu.sh | \
-    bash -s -- --install-method standalone --opentofu-version "${OPENTOFU_VERSION}"
-
-# AWS CLI (covers install_awscli())
-# renovate: datasource=github-tags depName=aws/aws-cli versioning=semver
-ARG AWSCLI_VERSION=2.35.3
-RUN curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip" -o /tmp/awscliv2.zip && \
-    unzip -q /tmp/awscliv2.zip -d /tmp/aws-install && \
-    /tmp/aws-install/aws/install && \
-    rm -rf /tmp/awscliv2.zip /tmp/aws-install
-
-# ripgrep (covers install_ripgrep())
-# renovate: datasource=github-releases depName=BurntSushi/ripgrep
-ARG RIPGREP_VERSION=15.1.0
-RUN curl -fsSL "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz" | tar xz -C /tmp && \
-    cp "/tmp/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/rg" /usr/local/bin/rg && \
-    chmod +x /usr/local/bin/rg && \
-    rm -rf /tmp/ripgrep-*
-
-# shellcheck (covers install_shellcheck())
-# renovate: datasource=github-releases depName=koalaman/shellcheck
-ARG SHELLCHECK_VERSION=0.11.0
-RUN curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.linux.x86_64.tar.xz" | tar xJ -C /tmp && \
-    cp "/tmp/shellcheck-v${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/shellcheck && \
-    chmod +x /usr/local/bin/shellcheck && \
-    rm -rf /tmp/shellcheck-*
-
-# gitleaks (covers install_gitleaks())
-# renovate: datasource=github-releases depName=gitleaks/gitleaks
-ARG GITLEAKS_VERSION=8.30.1
-RUN curl -fsSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar xz -C /tmp && \
-    cp /tmp/gitleaks /usr/local/bin/gitleaks && \
-    chmod +x /usr/local/bin/gitleaks && \
-    rm -f /tmp/LICENSE /tmp/README.md /tmp/gitleaks
-
-# trivy (covers install_trivy())
-# renovate: datasource=github-releases depName=aquasecurity/trivy
-ARG TRIVY_VERSION=0.72.0
-RUN curl -fsSL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" | tar xz -C /tmp && \
-    cp /tmp/trivy /usr/local/bin/trivy && \
-    chmod +x /usr/local/bin/trivy && \
-    rm -f /tmp/LICENSE /tmp/README.md /tmp/trivy
+CMD ["bash"]

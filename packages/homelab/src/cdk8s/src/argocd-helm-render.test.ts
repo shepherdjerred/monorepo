@@ -45,7 +45,7 @@ const INTERNAL_REPOS = [
 const GIT_REPOS = ["github.com/dotdc/", "github.com/adyanth/"];
 
 // OCI registries that need oci:// prefix for helm commands
-const OCI_REGISTRIES = ["registry.dagger.io", "registry.k8s.io", "ghcr.io"];
+const OCI_REGISTRIES = ["registry.k8s.io", "ghcr.io"];
 
 const HelmSourceSchema = z.object({
   chart: z.string(),

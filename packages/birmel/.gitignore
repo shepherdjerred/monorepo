@@ -4,5 +4,5 @@ data/*
 data/screenshots/*
 !data/screenshots/.gitkeep
 
-# Generated Prisma client (see prisma/schema.prisma generator output path)
+# Generated Prisma client — codegen output, never committed.
 generated/

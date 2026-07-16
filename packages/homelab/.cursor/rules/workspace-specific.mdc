@@ -53,9 +53,7 @@ Home Assistant automations are no longer hosted here — they live in
 5. Run quality checks (lint, typecheck, test)
 
 ### Building and Deployment
-- Use Dagger targets for building
-- CDK8s: `dagger call build-k-8-s-manifests`
-- Combined: `dagger call check-all`
+- Build locally with `bun run build` (the Dagger build targets were removed 2026-07)
 
 ## Shared Dependencies
 - Both workspaces use Bun as runtime and package manager

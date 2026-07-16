@@ -21,8 +21,8 @@ package; a private package makes kubelet pull anonymously, ghcr returns `401 Una
 `ImagePullBackOff`.
 
 Newly-created ghcr packages default to **private**, so a brand-new service breaks on first deploy
-until its package is flipped to public — even when `versions.ts` has the correct digest (digests fill
-in via CI version commit-back; visibility is separate).
+until its package is flipped to public — even when `versions.ts` has the correct digest (digests are
+updated manually in `versions.ts` since the CI commit-back was removed 2026-07; visibility is separate).
 
 Check visibility without cluster access:
 
@@ -210,7 +210,7 @@ export function createYourNamespaceApplication(chart: Chart) {
 }
 ```
 
-Then register in `src/cdk8s/src/cdk8s-charts/apps.ts` and add to `HELM_CHARTS` in `.dagger/src/helm.ts`.
+Then register in `src/cdk8s/src/cdk8s-charts/apps.ts`. (Charts were also listed in `HELM_CHARTS` in `.dagger/src/helm.ts` for the automated helm package/push, but that pipeline was removed 2026-07 — chart packaging/publishing to ChartMuseum is manual now.)
 
 ## Advanced Patterns
 
@@ -315,4 +315,3 @@ src/cdk8s/src/
 - `src/cdk8s/src/cdk8s-charts/home.ts` - Home namespace chart
 - `src/cdk8s/src/resources/torrents/sonarr.ts` - Reference example
 - `src/cdk8s/src/resources/media/plex.ts` - Complex example with sidecars
-- `.dagger/src/helm.ts` - HELM_CHARTS list of all charts

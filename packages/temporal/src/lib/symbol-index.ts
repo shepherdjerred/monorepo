@@ -150,7 +150,6 @@ const DEFAULT_EXCLUDE_DIRS = new Set([
   "node_modules",
   "dist",
   "build",
-  ".dagger",
   "generated",
   "__snapshots__",
   ".bun",

@@ -12,12 +12,11 @@
  * Files marked `-text` or `binary` are skipped (intentionally preserved).
  *
  * Used by:
- * - `lefthook.yml` pre-commit (staged files only, see check-line-endings hook)
- * - `scripts/ci/` Buildkite step (full repo)
+ * - manual invocation (no automated trigger since CI/hooks were removed)
  *
  * Usage:
  *   bun scripts/check-line-endings.ts          # full repo
- *   bun scripts/check-line-endings.ts <files>  # specific files (lefthook)
+ *   bun scripts/check-line-endings.ts <files>  # specific files
  */
 import { spawnSync } from "node:child_process";
 

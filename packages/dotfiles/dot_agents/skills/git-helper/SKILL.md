@@ -178,13 +178,9 @@ git diff --word-diff                # Word-level diff
 3. **Stage intentionally**: Review staged changes with `git diff --cached` before committing
 4. **Verify before committing**: Run `git diff --cached` to review staged changes
 
-### Monorepo commit-msg validation (this repo)
+### Monorepo commit-msg convention (this repo)
 
-The `commit-msg` lefthook hook (`scripts/validate-commit-msg.ts`) requires `type(scope): description` with a **mandatory scope from a fixed allowlist** — `feat: …` with no scope is rejected with `Invalid commit message format`. Scope must be a `packages/` dir name or one of `root` / `dagger` / `practice` / `archive` (`monorepo`, `repo`, `ALL` are NOT valid). Use `root` for sweeping cross-package commits (e.g. `feat(root): …`). Valid types: `feat fix chore ci docs refactor test perf build style revert misc`. Auto-generated release/bot commits (e.g. `chore: bump image versions …`) bypass the hook because `release.ts` commits via git directly.
-
-### lefthook output gotcha — don't trust the summary glyphs
-
-In a lefthook (v2) pre-commit, a **failed** prettier/staged-lint step can render in the final summary tree with the same dim-green coloring as a pass, yet `git commit` exits 1 and creates no commit (it aborts before the commit-msg hook even runs). Trust the **exit code**, not the glyphs — read the step body higher in the output for `[warn] <file>` + `exit status 1`. Fix is usually `bunx prettier --write <file>` then re-stage. Also: piping the commit (`git commit … | tail`) makes `$?` report tail's exit (0) and masks the real failure — capture to a file and check the un-piped status.
+Git hooks were removed 2026-07 (lefthook and its `commit-msg` validator are gone), so nothing enforces this anymore — but keep following the convention: `type(scope): description` with a scope that is a `packages/` dir name or one of `root` / `practice` / `archive` (`monorepo`, `repo`, `ALL` were never valid). Use `root` for sweeping cross-package commits (e.g. `feat(root): …`). Types: `feat fix chore ci docs refactor test perf build style revert misc`. There is also no pre-commit formatting hook — run `bunx prettier --write <file>` yourself before committing.
 
 ### Syncing with Upstream
 

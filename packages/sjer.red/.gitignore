@@ -29,6 +29,3 @@ dist-ssr
 .cache
 .astro
 
-# Dagger generated files
-.dagger/sdk/
-.dagger/runtime/
