@@ -28,7 +28,7 @@ description: Infrastructure as code guidelines using CDK8s, Kubernetes resource 
 
 ## Helm Charts
 - Store Helm configurations in [src/cdk8s/helm/](mdc:src/cdk8s/helm)
-- Use the Dagger helm-build and helm-publish targets for chart management
+- Package and publish charts manually (the Dagger helm-build/helm-publish targets were removed 2026-07)
 - Pin chart versions and application versions
 
 ## Configuration Management

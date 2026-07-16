@@ -13,7 +13,6 @@ Library/
 {{- end }}
 
 _summary.md
-BUILD.bazel
 scripts
 CLAUDE.md
 .claude.json

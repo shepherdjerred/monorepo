@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Shared script to set Helm chart version
-# Used by both Dagger CI pipeline and pre-commit hooks
+# Used by lint-helm.sh (and formerly the CI pipeline)
 #
 # Usage: helm-set-version.sh <chart-yaml-path> <version>
 
@@ -20,7 +20,6 @@ if [ ! -f "$CHART_YAML" ]; then
 fi
 
 # Update Chart.yaml version and appVersion
-# This matches the logic used in ../../.dagger/src/homelab/helm.ts
 sed -i.bak "s/^version:.*$/version: ${VERSION}/" "$CHART_YAML"
 sed -i.bak "s/^appVersion:.*$/appVersion: ${VERSION}/" "$CHART_YAML"
 rm -f "${CHART_YAML}.bak"

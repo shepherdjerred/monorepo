@@ -25,7 +25,7 @@ const SCHEDULE_TIMEZONE = "America/Los_Angeles";
 //     is "ran this cycle," so running late after a server outage is acceptable.
 //
 // Inferred string-literal types, NOT `: Duration`. `Duration` is
-// `StringValue | number`, and under Dagger's per-package Node16 install the canary
+// `StringValue | number`, and under the old CI's per-package Node16 install the canary
 // `ms` resolves with no usable `StringValue` (its `exports` map has no `types`
 // condition, so TS falls through to `@types/ms`, which never exported StringValue),
 // leaving `Duration` partly error-typed. Any value whose static type is `Duration`
@@ -62,7 +62,7 @@ export const DELETED_SCHEDULE_IDS = [
   "alert-remediation-hourly",
   "alert-remediation-daily",
   // The pokeemerald.wasm download workflow (`runPokeemeraldWasmUpdate`) is gone:
-  // the wasm is now built from source in the Dagger image build with our
+  // the wasm was instead built from source in the (since-removed) CI image build with our
   // customizations (the download fetched an audio-stubbed upstream that lacked
   // them). Delete BOTH the live weekly schedule and the never-removed monthly
   // one (a monthly→weekly rename relic the 2026-06-26 audit caught) so neither

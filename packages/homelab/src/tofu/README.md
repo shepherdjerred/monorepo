@@ -62,9 +62,8 @@ tofu -chdir=seaweedfs apply
 
 ## CI/CD
 
-The Dagger pipeline (`../../.dagger/src/homelab/tofu.ts`) runs
-`tofu plan -detailed-exitcode` on all modules in parallel and reports drift.
-It does **not** auto-apply -- apply is a manual step.
+There is no CI for these stacks (the Dagger/Buildkite pipeline was removed
+2026-07). Run `tofu plan` / `tofu apply` manually per module.
 
 ## What's Managed
 
@@ -95,12 +94,9 @@ non-fast-forward pushes, and requires the BuildKite CI-complete and Greptile rev
 ### SeaweedFS
 
 All S3 buckets on the self-hosted SeaweedFS instance, managed via the AWS provider with a custom S3 endpoint.
-Includes static site buckets, application storage (scout), build cache (sccache), and the tofu state backend
-bucket itself.
+Includes static site buckets, application storage (scout), and the tofu state backend bucket itself.
 
 The `homelab-tofu-state` bucket has `prevent_destroy = true` since it stores state for all tofu modules.
-The sccache bucket's 30-day expiration lifecycle is managed separately by
-`scripts/seaweedfs/setup-sccache-bucket.sh`.
 
 ### Tailscale
 

@@ -36,9 +36,12 @@ packages/discord-plays-mario-kart/wasm-src/
 packages/clauderon/mobile/src/types/generated/
 packages/clauderon/web/shared/src/generated/
 packages/scout-for-lol/packages/backend/generated/
-.dagger/sdk/
 
-# Release-please managed changelogs
+# Codegen output (Prisma etc.) — `generate` turbo-task outputs, never hand-formatted
+**/generated/**
+**/src-tauri/gen/**
+
+# Changelogs (mostly machine-generated)
 **/CHANGELOG.md
 
 # Coverage

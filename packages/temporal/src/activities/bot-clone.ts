@@ -14,7 +14,7 @@ import { runCommand } from "./data-dragon-shell.ts";
  * Per-run Bun install cache directory for a bot clone, sibling to the git
  * checkout inside the same unique `/tmp/<activity>-<uuid>` tempDir. The
  * worker image bakes a single `BUN_INSTALL_CACHE_DIR=/tmp/bun-install-cache`
- * into the container env (`.dagger/src/image.ts`), which sits on an
+ * into the container env (by the since-removed CI image build), which sits on an
  * `emptyDir` scoped to the pod's lifetime — every activity invocation on
  * the single long-lived worker pod shares that one cache directory for as
  * long as the pod stays up between deploys. Overriding it per-call to a
@@ -51,9 +51,8 @@ export async function rootInstallWithoutHooks(repoDir: string): Promise<void> {
  * Its `dist/` entrypoint is gitignored, so a fresh clone ships it unbuilt and
  * any later `bun install` in a consumer workspace copies a broken package
  * (`Cannot find module '@shepherdjerred/llm-models'`). Must run BEFORE the
- * consumer's install so the copy picks up `dist/`. Mirrors
- * `withBuiltLlmModels` in `.dagger/src/image.ts` and the Phase 3 build in
- * `scripts/setup.ts`.
+ * consumer's install so the copy picks up `dist/`. Mirrors the shared-producer
+ * build step in the root AGENTS.md "Development Setup".
  */
 export async function buildLlmModels(repoDir: string): Promise<void> {
   const pkgDir = `${repoDir}/packages/llm-models`;

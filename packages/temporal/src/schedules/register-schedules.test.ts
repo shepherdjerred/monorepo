@@ -233,8 +233,8 @@ describe("orphan schedule detection", () => {
   const deletedIds = new Set<string>(DELETED_SCHEDULE_IDS);
 
   test("both pokeemerald wasm schedules are queued for deletion", () => {
-    // The pokeemerald.wasm download workflow is gone — the wasm is built from
-    // source in the Dagger image build. Both the weekly and the older monthly
+    // The pokeemerald.wasm download workflow is gone — the wasm was built
+    // from source in the old CI image build. Both the weekly and the older monthly
     // schedule must be deleted (and absent from SCHEDULES) so neither keeps
     // firing a workflow that's no longer in the bundle.
     for (const id of [

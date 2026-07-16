@@ -136,7 +136,7 @@ async function rehearseHookFreeCommit(repoDir: string): Promise<void> {
   if (armedAfterInstall.length > 0) {
     throw new Error(
       `hook-free install still armed git hooks: ${armedAfterInstall.join(", ")} — ` +
-        "did the root `prepare` script run? Bot commits would hit lefthook.",
+        "did a root `prepare` script run? Bot commits must stay hook-free.",
     );
   }
   console.error("[rehearsal] hooks: no git hooks armed");

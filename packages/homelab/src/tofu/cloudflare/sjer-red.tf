@@ -269,7 +269,7 @@ resource "cloudflare_dns_record" "sjer_red_cname_resume" {
 # (reachable via seaweedfs-s3.tailnet-1a49.ts.net). The state + llm-archive buckets
 # live on this gateway, so it is no longer exposed on the public Cloudflare tunnel.
 # All S3 consumers that previously used this public hostname have been migrated:
-#   - CI static-site deploy containers (.dagger/src/release.ts)
+#   - CI static-site deploy containers (pipeline since removed)
 #   - Operator ~/.aws/config default + seaweedfs profiles (packages/dotfiles/)
 #   - Tofu state backends (already used seaweedfs-s3.tailnet-1a49.ts.net)
 

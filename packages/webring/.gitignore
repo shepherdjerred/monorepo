@@ -3,10 +3,4 @@ node_modules
 .eslintcache
 *.afphoto~lock~
 
-# Dagger
-.dagger/sdk/
-.dagger/node_modules/
-.dagger/dist/
-.dagger/*.log
-.dagger/.cache/
 .claude/settings.local.json

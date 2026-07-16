@@ -4,8 +4,8 @@
 # The committed wasm-src/code tree is BYTE-PRISTINE upstream (see wasm-src/PATCHES.md).
 # Our changes live in wasm-src/patches/ and are applied HERE, at build time, into a
 # throwaway copy — the committed tree is never mutated. A bare `make` in wasm-src/code
-# would compile WITHOUT our neil exports, so always build via this script (or Dagger,
-# which applies the same patches in its emscripten stage).
+# would compile WITHOUT our neil exports, so always build via this script, which
+# applies the patch series into a throwaway copy.
 #
 # Reproducible: runs `make` inside the pinned emscripten image. No binaries are committed.
 set -euo pipefail

@@ -1,14 +1,6 @@
-[tools]
-# renovate: datasource=github-releases depName=oven-sh/bun
-bun = "1.3.14"
-
 [tasks.dev]
 description = "Set up development environment"
-run = "bun install && (cd .dagger && bun install) && dagger develop"
-
-[tasks.ci]
-description = "Run CI pipeline"
-run = "dagger call ci-with-release --env=dev"
+run = "bun install"
 
 [tasks.check]
 description = "Run all checks"
