@@ -37,4 +37,12 @@ paths = [
   '''packages/homelab/src/cdk8s/src/resources/argo-applications/cloudflare-operator\.ts''',
   # Spectator API test data — encryptionKey is a Riot game session key, not a secret
   '''packages/scout-for-lol/.*/testdata/spectator-.*\.json''',
+  # Local build/cache output (gitignored; never committed). The old CI scanned a
+  # source mount that excluded these; the local working-tree scan sees them.
+  '''node_modules/''',
+  '''/dist/''',
+  '''/target/''',
+  '''\.turbo/''',
+  '''\.venv/''',
+  '''\.moon/''',
 ]

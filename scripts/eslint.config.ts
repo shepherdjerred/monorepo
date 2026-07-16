@@ -6,7 +6,13 @@ import { recommended } from "@shepherdjerred/eslint-config";
 // `typeof recommended` binds to the exact copy the config package ships, so the
 // nested-vs-root type identities don't diverge.
 const config: ReturnType<typeof recommended> = [
-  ...recommended({ tsconfigRootDir: import.meta.dirname }),
+  ...recommended({
+    tsconfigRootDir: import.meta.dirname,
+    // Standalone mini-package (own package.json + bun.lock, outside the
+    // workspace); its deps only exist after its own install, so neither the
+    // scripts tsconfig nor the project service can type it.
+    ignores: ["observability/local-stack/**"],
+  }),
   {
     rules: {
       // These are operator CLIs: stdout is the interface.
@@ -14,6 +20,15 @@ const config: ReturnType<typeof recommended> = [
       // Standalone script dir with no package import-alias infrastructure;
       // relative parent imports are the only way to reach shared modules.
       "custom-rules/no-parent-imports": "off",
+    },
+  },
+  {
+    // Recovered whole from the deleted scripts/ci pipeline generator (which
+    // carried a higher limit); a battle-tested single-file merge gate — not
+    // worth splitting to satisfy a line count.
+    files: ["wait-for-greptile.ts"],
+    rules: {
+      "max-lines": "off",
     },
   },
 ];

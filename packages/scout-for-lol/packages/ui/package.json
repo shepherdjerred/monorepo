@@ -14,8 +14,8 @@
     "format:write": "bunx prettier --write src"
   },
   "dependencies": {
-    "@scout-for-lol/data": "file:../data",
-    "react": "19.2.7"
+    "@scout-for-lol/data": "workspace:*",
+    "react": "19.2.6"
   },
   "devDependencies": {
     "@types/react": "^19.2.14",
@@ -24,7 +24,7 @@
     "typescript": "^6.0.3"
   },
   "peerDependencies": {
-    "react": "19.2.7"
+    "react": "19.2.6"
   },
   "imports": {
     "#src/*": "./src/*"

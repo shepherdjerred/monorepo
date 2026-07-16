@@ -1,0 +1,16 @@
+# Shared by all image builds: Dockerfiles COPY the workspace and run one
+# root `bun install --frozen-lockfile` (turbo prune is banned — it corrupts
+# bun.lock). Keep the build context to tracked-ish sources.
+.git
+.turbo
+node_modules
+**/node_modules
+**/dist
+**/build
+**/.cache
+**/.venv
+**/target
+**/*.log
+.claude
+sandbox
+packages/docs

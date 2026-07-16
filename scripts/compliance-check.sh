@@ -47,6 +47,19 @@ packages/scout-for-lol/packages/desktop:test
 packages/scout-for-lol/packages/frontend:test
 packages/scout-for-lol/packages/ui:build
 packages/scout-for-lol/packages/ui:test
+packages/scout-for-lol:build
+packages/scout-for-lol:test
+packages/scout-for-lol:lint
+packages/scout-for-lol:typecheck
+packages/home-assistant:build
+packages/sjer.red:test
+packages/temporal:build
+packages/homelab:build
+packages/homelab:test
+packages/homelab:lint
+packages/homelab:typecheck
+packages/discord-plays-pokemon/packages/backend:build
+packages/discord-plays-mario-kart/packages/backend:build
 "
 # glitter — static placeholder, no source.
 # resume — LaTeX only; build (xelatex) is its sole script.
@@ -57,6 +70,18 @@ packages/scout-for-lol/packages/ui:test
 #   dpp/mk64 common + dpp/scout desktop/frontend keep a placeholder `test` stub
 #   ("true" / "echo ...", tests not wired yet) — exempted here rather than deleted.
 # discord-video-stream:lint — vendored upstream fork, deliberately unlinted.
+# scout-for-lol (parent) — anchor package only: hosts the family eslint.config.ts,
+#   dev:web tooling, and shared scripts/. All build/test/lint/typecheck live in its
+#   child packages. Dissolving the anchor is tracked on PR #1518's checklist.
+# home-assistant:build — source-only (vestigial in-place tsc build removed with
+#   the workspace migration; consumers import TS sources via workspace symlink).
+# sjer.red:test — Playwright only; lives in test:e2e outside the default chain
+#   (needs installed browsers; the old CI ran it in a Playwright container).
+# temporal / dpp-backend / dpmk-backend :build — tsconfig is noEmit, so build
+#   was a typecheck duplicate; Bun-runtime services run from source.
+# homelab (parent) — anchor package: children (@homelab/cdk8s,
+#   @shepherdjerred/helm-types) are workspace members with their own tasks;
+#   the parent keeps check:talos + lint:helm and the family eslint config.
 
 is_exempt() {
   case "$EXEMPT" in

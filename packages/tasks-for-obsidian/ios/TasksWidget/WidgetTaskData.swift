@@ -30,9 +30,10 @@ struct WidgetData: Codable {
   static var placeholder: WidgetData {
     WidgetData(
       todayTasks: [
-        WidgetTask(id: "1", title: "Review pull request", priority: "medium", completed: false, due: nil, project: "Work"),
+        WidgetTask(id: "1", title: "Review pull request", priority: "medium", completed: false, due: nil,
+                   project: "Work"),
         WidgetTask(id: "2", title: "Buy groceries", priority: "low", completed: false, due: nil, project: "Personal"),
-        WidgetTask(id: "3", title: "Call dentist", priority: "high", completed: true, due: nil, project: nil),
+        WidgetTask(id: "3", title: "Call dentist", priority: "high", completed: true, due: nil, project: nil)
       ],
       stats: WidgetStats(total: 12, overdue: 2, today: 5)
     )

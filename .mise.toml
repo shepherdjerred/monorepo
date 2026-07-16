@@ -1,11 +1,21 @@
-# Mise configuration for monorepo development
-# `mise install` provides the toolchains. Dependency install/build steps are
-# manual and scoped to the packages you touch — see AGENTS.md "Development
-# Setup" (the setup.ts orchestrator was removed 2026-07; a workspace-based
-# replacement is planned).
+# Mise configuration for monorepo development AND CI.
+# `mise install` provides every toolchain: dev machines, git hooks, and the
+# CI toolchain image (.buildkite/ci-image) are all baked from this one file,
+# so laptop and CI can never disagree about tool versions.
 
 [tools]
 # renovate: datasource=github-releases depName=oven-sh/bun
 bun = "1.3.14"
 rust = "1.95.0"
 java = "corretto-25.0.3.9.1"
+# Repo-wide checks + git hooks (verify/pre-commit call these directly)
+gitleaks = "8"
+shellcheck = "0.11"
+# Native-family shims
+go = "1.25"
+golangci-lint = "2"
+# Homelab automation (helm push, tofu wrappers, ArgoCD sync, site deploys)
+helm = "3"
+opentofu = "1.10"
+argocd = "3"
+awscli = "2"

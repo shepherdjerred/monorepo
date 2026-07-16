@@ -1,0 +1,28 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // Rehearse the scheduled PR-creating workflows' environment prep against a
+    // copy of the repo tree (old CI: temporal-schedule-rehearsal). Drives the
+    // SAME bot-clone.ts helpers the weekly activities run, so a break surfaces
+    // at PR time instead of silently on the weekend.
+    //
+    // cache:false: the rehearsal copies the entire live repo tree and runs real
+    // installs + git + prettier + the cog binary — its correctness depends on
+    // the whole tree and on external tools (uvx/cogapp, rsync), none of which
+    // turbo can hash. `inputs` is scoped to the temporal-package sources it
+    // loads directly; the cross-repo coupling is deliberately not modelled as a
+    // turbo hash because it can't be (inputs cannot reach outside the package).
+    "check:rehearsal": {
+      "inputs": [
+        "scripts/check-schedule-rehearsal.ts",
+        "scripts/rehearse-bot-clone.ts",
+        "src/activities/bot-clone.ts",
+        "src/activities/data-dragon-shell.ts",
+        "src/activities/readme-refresh.ts",
+        "src/activities/scout-season-refresh.ts"
+      ],
+      "cache": false
+    }
+  }
+}

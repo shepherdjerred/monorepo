@@ -62,6 +62,9 @@ const EXCLUDED_FILES = [
   "AGENTS.md",
   "CLAUDE.md",
   "packages/docs/",
+  // Agent prompts are prose that PROHIBITS the banned patterns by name
+  // (e.g. refine-release-please.md tells the agent never to `git add -A`).
+  "scripts/prompts/",
   "packages/dotfiles/AGENTS.md",
   "packages/dotfiles/CLAUDE.md",
   // Uses || true for grep exit code
