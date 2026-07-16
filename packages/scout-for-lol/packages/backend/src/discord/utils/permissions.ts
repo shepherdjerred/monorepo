@@ -55,6 +55,21 @@ export function isMissingChannelError(error: unknown): boolean {
 }
 
 /**
+ * Check if an error confirms the bot is definitively not a member of a guild
+ * (as opposed to a transient fetch failure). Used to gate destructive
+ * guild-data cleanup on a positive signal from Discord, not just a local
+ * cache miss.
+ */
+export function isUnknownGuildError(error: unknown): boolean {
+  const result = DiscordAPIErrorSchema.safeParse(error);
+  if (!result.success) {
+    return false;
+  }
+  // 10004 = Unknown Guild
+  return result.data.code === 10_004;
+}
+
+/**
  * How a delivery failed, for tailoring the owner notification copy.
  */
 export type DeliveryFailureKind = "permission" | "channel_missing";

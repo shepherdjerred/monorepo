@@ -69,7 +69,8 @@ const PinchtabConfigSchema = z.object({
 
 async function pinchtabToken(): Promise<string> {
   const cfgPath =
-    Bun.env.PINCHTAB_CONFIG ?? `${Bun.env.HOME ?? "~"}/.pinchtab/config.json`;
+    Bun.env["PINCHTAB_CONFIG"] ??
+    `${Bun.env["HOME"] ?? "~"}/.pinchtab/config.json`;
   const raw: unknown = JSON.parse(await Bun.file(cfgPath).text());
   return PinchtabConfigSchema.parse(raw).server.token;
 }

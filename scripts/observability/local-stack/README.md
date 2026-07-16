@@ -39,6 +39,5 @@ docker compose down -v   # -v also removes anonymous volumes
   init order breaks (e.g. someone moves the LoggerProvider construction
   after the global TracerProvider registration), the script's emit() would
   ECONNREFUSE here too.
-- **Phase 3** (Dagger logs endpoint): not exercised by this script — see
-  the Layer C "Dagger CLI validation" option in the plan for a one-shot
-  test against either this stack's Loki or a Bun OTLP stub.
+- **Phase 3** (the old CI's Dagger logs endpoint): no longer applicable —
+  the Dagger/Buildkite pipeline was removed 2026-07.

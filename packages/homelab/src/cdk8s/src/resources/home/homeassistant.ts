@@ -18,9 +18,12 @@ import {
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
-import versions, {
-  EUFY_TARBALL_SHA256,
-} from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import {
+  createHaCustomComponentInitContainer,
+  createPruneStaleComponentsInitContainer,
+  HA_CUSTOM_COMPONENTS,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/home/ha-custom-components.ts";
 import { Glob } from "bun";
 
 export async function createHomeAssistantDeployment(chart: Chart) {
@@ -62,69 +65,19 @@ export async function createHomeAssistantDeployment(chart: Chart) {
   config.addDirectory(`${import.meta.dir}/../../../config/homeassistant`);
   const configVolume = Volume.fromConfigMap(chart, "ha-cm-volume", config);
 
-  const eufyVersion = versions["fuatakgun/eufy_security"];
-
+  // Every HA custom_components/www-community entry on this PVC is pinned in
+  // git (see ha-custom-components.ts) — nothing installs or updates through
+  // HACS anymore. The prune container removes HACS itself and anything not
+  // in HA_CUSTOM_COMPONENTS, so undeclared state can't silently persist.
+  for (const spec of HA_CUSTOM_COMPONENTS) {
+    deployment.addInitContainer({
+      ...(await createHaCustomComponentInitContainer(spec)),
+      volumeMounts: [{ path: "/config", volume }],
+    });
+  }
   deployment.addInitContainer({
-    name: "install-eufy-security",
-    image: `docker.io/alpine:${versions["library/alpine"]}`,
-    command: ["/bin/sh"],
-    args: [
-      "-c",
-      `
-set -eu
-VERSION="${eufyVersion}"
-EXPECTED_SHA256="${EUFY_TARBALL_SHA256}"
-TARGET_DIR="/config/custom_components/eufy_security"
-MARKER="$TARGET_DIR/.installed_version"
-
-if [ -f "$MARKER" ] && [ "$(cat "$MARKER")" = "$VERSION" ]; then
-  echo "eufy_security $VERSION already installed"
-  exit 0
-fi
-
-apk add --no-cache curl tar
-STAGE=$(mktemp -d)
-ARCHIVE="$(mktemp)"
-curl -fSL "https://github.com/fuatakgun/eufy_security/archive/refs/tags/$VERSION.tar.gz" \
-  -o "$ARCHIVE"
-echo "$EXPECTED_SHA256  $ARCHIVE" | sha256sum -c -
-tar -xz -C "$STAGE" --strip-components=1 -f "$ARCHIVE"
-rm -f "$ARCHIVE"
-
-mkdir -p /config/custom_components
-rm -rf "$TARGET_DIR"
-cp -r "$STAGE/custom_components/eufy_security" "$TARGET_DIR"
-echo "$VERSION" > "$MARKER"
-echo "installed eufy_security $VERSION"
-`,
-    ],
-    securityContext: {
-      ensureNonRoot: false,
-      user: ROOT_UID,
-      group: ROOT_GID,
-      readOnlyRootFilesystem: false,
-      privileged: false,
-      allowPrivilegeEscalation: false,
-    },
-    // Without this, cdk8s-plus defaults to a 1 CPU / 512Mi request, and the pod's
-    // effective request is max(init, main) — so the init container was silently
-    // reserving a full core for a one-shot tarball download.
-    resources: {
-      cpu: {
-        request: Cpu.millis(100),
-        limit: Cpu.millis(500),
-      },
-      memory: {
-        request: Size.mebibytes(128),
-        limit: Size.mebibytes(512),
-      },
-    },
-    volumeMounts: [
-      {
-        path: "/config",
-        volume,
-      },
-    ],
+    ...createPruneStaleComponentsInitContainer(HA_CUSTOM_COMPONENTS),
+    volumeMounts: [{ path: "/config", volume }],
   });
 
   deployment.addContainer(
@@ -197,5 +150,6 @@ echo "installed eufy_security $VERSION"
   createCloudflareTunnelBinding(chart, "homeassistant-cf-tunnel", {
     serviceName: service.name,
     subdomain: "homeassistant",
+    port: 8123,
   });
 }

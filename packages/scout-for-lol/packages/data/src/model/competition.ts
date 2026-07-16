@@ -15,8 +15,7 @@ import type { SeasonId } from "#src/seasons.ts";
  *   `data` is the base package in the dependency graph. `backend` depends on
  *   `data`, not the other way around. The old import
  *   `from "@scout-for-lol/backend/generated/prisma/client"` created a circular
- *   dependency that broke Bazel sandboxing (and was already tagged `manual` in
- *   the v1 BUILD targets).
+ *   dependency between `data` and `backend`.
  *
  *   Extracting Prisma into its own package was considered, but the
  *   `brand-prisma-types` post-generation script imports branded IDs FROM this

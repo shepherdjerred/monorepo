@@ -8,11 +8,12 @@
     "build": "astro check && tsc --noEmit && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "bun run build && bunx playwright test",
     "test:update": "bun run build && bunx playwright test --update-snapshots",
     "lint": "eslint --cache",
     "lint:fix": "eslint --cache --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "astro check && tsc --noEmit",
+    "test:e2e": "bunx playwright test",
+    "deploy": "bun ../../scripts/deploy-site.ts sjer-red"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",
@@ -36,7 +37,7 @@
     "astro-seo": "^1.1.0",
     "jsdom": "^29.0.2",
     "markdown-it": "^14.1.1",
-    "react": "19.2.6",
+    "react": "19.2.7",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-mermaid": "^3.0.0",
     "remark-toc": "^9.0.0",

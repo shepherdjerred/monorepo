@@ -62,7 +62,7 @@ description: Security best practices covering secret management, container secur
 
 ## Development Security
 - Use security-focused linting rules
-- Implement security testing in CI/CD pipelines
+- Run security scans manually before merging (there is no CI)
 - Follow secure coding practices in TypeScript
 - Review security implications of infrastructure changes
 - Document security decisions and trade-offs

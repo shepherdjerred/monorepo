@@ -18,7 +18,6 @@
     "#lib": "./src/index.ts"
   },
   "scripts": {
-    "build": "tsc",
     "typecheck": "bunx tsc --noEmit",
     "lint": "bunx eslint --cache .",
     "test": "bun test"

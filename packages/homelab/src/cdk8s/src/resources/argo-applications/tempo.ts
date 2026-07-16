@@ -7,12 +7,11 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 
 /**
  * Creates Grafana Tempo for distributed tracing.
- * Receives traces from Dagger via OTLP protocol.
+ * Receives traces over the OTLP protocol.
  * Deployed in SingleBinary mode suitable for homelab scale.
  */
 export function createTempoApp(chart: Chart) {
   // Tempo values - SingleBinary mode with OTLP receiver enabled
-  // Dagger will send traces directly to Tempo's OTLP endpoint
   const tempoValues: HelmValuesForChart<"tempo"> = {
     tempo: {
       // Enable OTLP receivers for trace ingestion
@@ -30,9 +29,9 @@ export function createTempoApp(chart: Chart) {
       },
       // Retention configuration
       retention: "720h", // 30 days of traces
-      // Dagger traces can get very large; Tempo defaults to 5MB and will refuse
-      // traces that exceed it with TRACE_TOO_LARGE. Increase the limit so we
-      // ingest complete Dagger pipelines.
+      // Some traces (the old CI's Dagger pipelines especially) get very large;
+      // Tempo defaults to 5MB and refuses traces that exceed it with
+      // TRACE_TOO_LARGE, so the limit is raised.
       overrides: {
         defaults: {
           global: {

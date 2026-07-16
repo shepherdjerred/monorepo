@@ -6,9 +6,9 @@
  * the compiled binary must NOT freeze a snapshot of versions.ts (which is read
  * live via git), but the package↔versionKey↔argoApp wiring changes rarely.
  *
- * A drift test (test/deployed/catalog.test.ts) cross-checks the package →
- * versionKey base pairs against IMAGE_PUSH_TARGETS / INFRA_PUSH_TARGETS in
- * scripts/ci/src/catalog.ts so this table can't silently fall out of sync.
+ * A drift test (test-integration/catalog.integration.test.ts) checks every
+ * versionKey against the live versions.ts on HEAD so this table can't
+ * silently fall out of sync.
  */
 import type { Service, Variant } from "./types.ts";
 

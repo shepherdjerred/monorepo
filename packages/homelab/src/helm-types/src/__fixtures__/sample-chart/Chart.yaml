@@ -1,0 +1,6 @@
+apiVersion: v2
+name: sample-chart
+description: A minimal local chart fixture for helm-types CLI tests (no network)
+type: application
+version: "1.2.3"
+appVersion: "4.5.6"

@@ -127,6 +127,9 @@ function isEventBridgeSupervisorClosed(
   return state.closed;
 }
 
+/** Consecutive start failures before escalating the outage to Sentry. */
+const EVENT_BRIDGE_ESCALATION_ATTEMPTS = 10;
+
 async function runEventBridgeSupervisor(
   client: Client,
   state: EventBridgeSupervisorState,
@@ -150,6 +153,18 @@ async function runEventBridgeSupervisor(
         const reason = classifyEventBridgeStartFailure(error);
         haEventBridgeConnected.set(0);
         haEventBridgeStartFailuresTotal.inc({ reason });
+        // Escalate once per outage: the retry loop is intentionally eternal,
+        // which previously meant a permanently-down bridge (no HA presence
+        // signals, no webhooks) only ever showed up as stderr lines and a
+        // gauge nobody was alerting on. Ten consecutive failures ≈ 9 minutes
+        // of outage — loud enough for Sentry, once (attempt only grows
+        // within a single outage; success exits the loop).
+        if (attempt === EVENT_BRIDGE_ESCALATION_ATTEMPTS) {
+          Sentry.captureMessage(
+            `Event bridge has failed to start ${String(attempt)} consecutive times (latest reason: ${reason}); still retrying`,
+            "warning",
+          );
+        }
         jsonLog("error", "Event bridge failed to start; retrying", {
           attempt,
           reason,

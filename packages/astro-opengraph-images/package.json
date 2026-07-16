@@ -26,7 +26,8 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "publish:npm": "bun ../../scripts/publish-npm.ts ."
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -58,7 +59,7 @@
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "jsdom": "^29.0.2",
-    "react": "19.2.6",
+    "react": "19.2.7",
     "satori": "^0.26.0"
   },
   "peerDependencies": {

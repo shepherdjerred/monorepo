@@ -61,8 +61,9 @@ anything touching more than one file, or any multi-step task — create a worktr
 
   git worktree add .claude/worktrees/<slug> -b feature/<slug> origin/main
   cd .claude/worktrees/<slug>
-  bun run scripts/setup.ts   # REQUIRED before build/test in a fresh worktree
-  # Touching one package? Scope it: --group=<scout|pokemon|mk64|birmel> [--link]
+  mise trust -y --all   # fresh worktree configs are untrusted
+  # Then set up deps scoped to the package(s) you'll touch — see AGENTS.md
+  # "Development Setup" (build shared file: producers, then bun install + codegen).
 
 Only stay in the main checkout for a single-file, single-commit fix you won't PR.
 When unsure, make the worktree. (Tip: `claude -w <slug>` does this at launch.)

@@ -17,10 +17,12 @@ import {
 } from "./constants.ts";
 import {
   emulateMs,
-  copyMs,
   lateMs,
   ticksTotal,
   loopResyncTotal,
+} from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
+import {
+  copyMs,
   inputApplyDelayMs,
   emulatorRestartsTotal,
 } from "#src/observability/metrics.ts";
@@ -275,10 +277,11 @@ export class N64Emulator {
     } catch {
       /* already exists */
     }
-    for (const [src, dst] of [
+    const optionalAssets: readonly (readonly [string, string])[] = [
       ["overlay.png", "overlay.png"],
       ["res/arial.ttf", "res/arial.ttf"],
-    ]) {
+    ];
+    for (const [src, dst] of optionalAssets) {
       try {
         fsWrite(
           dst,
@@ -425,6 +428,9 @@ export class N64Emulator {
     const active: boolean[] = [];
     for (let i = 0; i < this.opts.seats; i++) {
       const s = this.inputs[i];
+      if (s === undefined) {
+        throw new Error(`missing input state for seat ${String(i)}`);
+      }
       let held = Math.abs(s.analogX) > 0.25 || Math.abs(s.analogY) > 0.25;
       if (!held) {
         for (const name of BUTTON_ORDER) {
@@ -515,6 +521,9 @@ export class N64Emulator {
     // retro_run() polls it. See applyHostControls() in PATCHES.md.
     for (let p = 0; p < this.opts.seats; p++) {
       const s = this.inputs[p];
+      if (s === undefined) {
+        throw new Error(`missing input state for seat ${String(p)}`);
+      }
       rt.send(
         p,
         encodeButtons(s.buttons),

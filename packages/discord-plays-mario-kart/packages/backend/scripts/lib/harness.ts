@@ -17,7 +17,7 @@ import { EMPTY_INPUT } from "@discord-plays-mario-kart/common";
 import type { PlayerInputState } from "@discord-plays-mario-kart/common";
 
 /** The canonical ROM home: the user's Syncthing folder (replicated per-machine). */
-export const DEFAULT_ROM_PATH = `${Bun.env.HOME ?? "~"}/syncthing/Sync/roms/mariokart64.z64`;
+export const DEFAULT_ROM_PATH = `${Bun.env["HOME"] ?? "~"}/syncthing/Sync/roms/mariokart64.z64`;
 
 /**
  * Resolve the MK64 ROM path: explicit arg → `MK64_ROM` env → the Syncthing
@@ -25,7 +25,7 @@ export const DEFAULT_ROM_PATH = `${Bun.env.HOME ?? "~"}/syncthing/Sync/roms/mari
  */
 export async function resolveRom(arg?: string): Promise<string> {
   const candidates: string[] = [];
-  for (const c of [arg, Bun.env.MK64_ROM, DEFAULT_ROM_PATH]) {
+  for (const c of [arg, Bun.env["MK64_ROM"], DEFAULT_ROM_PATH]) {
     if (c != null && c.length > 0) candidates.push(c);
   }
   for (const candidate of candidates) {
@@ -46,7 +46,7 @@ export async function bootEmulator(opts: {
   fps?: number;
 }): Promise<N64Emulator> {
   const emu = new N64Emulator({
-    wasmDir: Bun.env.WASM_DIR ?? "assets/n64wasm",
+    wasmDir: Bun.env["WASM_DIR"] ?? "assets/n64wasm",
     romPath: opts.rom,
     fps: opts.fps ?? 1000,
     software: true,
@@ -134,7 +134,9 @@ export async function captureScreenshot(
     throw new Error("captureScreenshot: no frame rendered yet");
 
   if (opts.names !== undefined && opts.screenMode !== undefined) {
-    const renderer = createLabelRenderer(Bun.env.WASM_DIR ?? "assets/n64wasm");
+    const renderer = createLabelRenderer(
+      Bun.env["WASM_DIR"] ?? "assets/n64wasm",
+    );
     const rects = viewportRects(
       opts.screenMode,
       opts.seats ?? MAX_SEATS,

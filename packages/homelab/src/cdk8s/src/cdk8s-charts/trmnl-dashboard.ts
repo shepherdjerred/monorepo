@@ -42,6 +42,17 @@ export function createTrmnlDashboardChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
         },
+        {
+          // Allow blackbox-exporter's in-cluster health probe
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
+        },
       ],
     },
   });

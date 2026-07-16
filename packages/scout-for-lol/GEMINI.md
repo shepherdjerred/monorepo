@@ -2,7 +2,7 @@
 
 ## Environment Notes
 
-**Dagger/Docker Availability**: Dagger and Docker commands are NOT available when `CLAUDE_CODE_REMOTE=true`. Use `bun run` commands for local development tasks instead.
+**Docker Availability**: Docker commands are NOT available when `CLAUDE_CODE_REMOTE=true`. Use `bun run` commands for local development tasks instead.
 
 ## Project Structure
 
@@ -25,7 +25,6 @@ packages/
 | Linting       | ESLint + Prettier                |
 | Database      | Prisma ORM                       |
 | Validation    | Zod                              |
-| CI/CD         | Dagger (requires Docker)         |
 | Bot Framework | Discord.js                       |
 | Frontend      | Astro                            |
 | Reports       | React + satori + @resvg/resvg-js |
@@ -59,52 +58,9 @@ bun run db:studio        # Open Prisma Studio
 
 Each package supports: `dev`, `build`, `test`, `lint`, `format`, `typecheck`
 
-## Dagger CI/CD Pipeline
+## CI/CD
 
-> Only available when Docker is running (not available when `CLAUDE_CODE_REMOTE=true`)
-
-### Discovery
-
-```bash
-dagger functions              # List all available Dagger functions
-dagger functions --help       # View specific function details
-```
-
-### Main Targets
-
-```bash
-dagger call check                                       # Run lint, typecheck, test
-dagger call build --version="1.0.0" --git-sha="abc123" # Build all packages
-dagger call ci --version="1.0.0" --git-sha="abc123"    # Full CI pipeline
-dagger call deploy --version="1.0.0" --stage="beta"    # Deploy to stage
-```
-
-### Package-Specific
-
-```bash
-dagger call check-backend
-dagger call check-report
-dagger call check-data
-dagger call generate-prisma
-dagger call build-backend-image --version="1.0.0" --git-sha="abc123"
-dagger call build-report-for-npm --version="1.0.0"
-```
-
-### Docker Export & Run
-
-```bash
-# Build and export backend image
-dagger call build-backend-image --version="test" --git-sha="test123" export --path="./backend-image.tar.gz"
-
-# Load and run
-docker load < ./backend-image.tar.gz
-docker run --rm <image_sha>
-```
-
-### Common Dagger Issues
-
-- **Module not found "src/database/migrate.ts"**: Fix entrypoint in `dagger/src/backend.ts` to use correct working directory
-- **failed to find arg "DataSource"**: Remove unused parameters from `dagger/src/index.ts` function signatures
+There is no CI — the Dagger pipeline was removed 2026-07. Run checks locally with `bun run` commands and build/push container images manually (plain `docker build`/`docker push`).
 
 ---
 
@@ -265,7 +221,7 @@ type ParticipantDto = ...;  // ❌ Use RawParticipant instead
 
 - Use `env-var` for type-safe environment variables
 - Validate all configuration with Zod schemas
-- Use Dagger secrets for sensitive data in CI/CD
+- Keep sensitive data in secret stores (1Password / k8s secrets), never in the repo
 - Separate development and production configurations
 
 ---

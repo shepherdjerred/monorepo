@@ -48,7 +48,7 @@ const moduleWithEnvImports = (names: string[]): WebAssembly.Module =>
 
 // Extract the callable host closure for `name` without type assertions.
 function hostFunction(
-  imports: WebAssembly.Imports,
+  imports: Bun.WebAssembly.Imports,
   name: string,
 ): (...args: number[]) => number {
   const env = imports.env;
@@ -67,7 +67,7 @@ function hostFunction(
 }
 
 function biosWithMemory(names: string[]): {
-  env: WebAssembly.Imports;
+  env: Bun.WebAssembly.Imports;
   view: Uint8Array;
 } {
   const bios = createBios();

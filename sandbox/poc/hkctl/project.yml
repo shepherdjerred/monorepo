@@ -1,0 +1,29 @@
+name: hkctl
+options:
+  bundleIdPrefix: red.sjer
+targets:
+  hkctl:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    supportedDestinations: [iOS, macCatalyst]
+    sources: [Sources]
+    entitlements:
+      path: hkctl.entitlements
+      properties:
+        com.apple.developer.homekit: true
+    info:
+      path: Info.plist
+      properties:
+        NSHomeKitUsageDescription: "hkctl reads and organizes your HomeKit accessories and rooms."
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+    settings:
+      base:
+        DEVELOPMENT_TEAM: 63ZAG7X889
+        CODE_SIGN_STYLE: Automatic
+        PRODUCT_BUNDLE_IDENTIFIER: red.sjer.hkctl
+        SUPPORTS_MACCATALYST: true
+        DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: false
+        TARGETED_DEVICE_FAMILY: "1,2,6"

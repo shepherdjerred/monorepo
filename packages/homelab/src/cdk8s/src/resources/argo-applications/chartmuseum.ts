@@ -19,6 +19,7 @@ export function createChartMuseumApp(chart: Chart) {
     serviceName: "chartmuseum",
     subdomain: "chartmuseum",
     namespace: "chartmuseum",
+    port: 8080,
   });
 
   const basicAuth = new OnePasswordItem(chart, "chartmuseum-admin-password", {

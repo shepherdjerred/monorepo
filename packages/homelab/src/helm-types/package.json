@@ -22,14 +22,15 @@
   ],
   "scripts": {
     "build": "bun build src/index.ts src/cli.ts --outdir dist --target node",
-    "generate": "bun run src/cli.ts",
     "test": "bun test",
     "test:helm-types": "bun test src/helm-types.test.ts",
     "test:cli": "bun test src/cli.test.ts",
     "lint": "bunx eslint .",
     "lint:fix": "bunx eslint . --fix",
     "typecheck": "bunx tsc --noEmit",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "bun run build",
+    "generate:live": "bun run src/cli.ts",
+    "publish:npm": "bun ../../../../scripts/publish-npm.ts ."
   },
   "keywords": [
     "helm",

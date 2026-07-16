@@ -1,0 +1,24 @@
+# Union of every inline uv-script dependency header across the repo's .py
+# files, plus the bare-python3 monitoring exporters' imports. Used ONLY to
+# give pyright a resolvable environment (locally: `uv venv && uv pip install
+# -r scripts/python-dev-requirements.txt`; CI: baked into the pyright check
+# container). Scripts themselves still declare their own deps inline for
+# `uv run` — keep both in sync when adding a dependency.
+beautifulsoup4
+boto3>=1.35
+fonttools>=4.50.0
+html2text
+httpx
+kaleido
+lxml
+markdownify
+openai>=1.30.0
+pandas
+pandas-stubs
+playwright
+plotly
+prometheus_client
+pydantic>=2.0
+rich>=13
+tiktoken>=0.7.0
+types-boto3

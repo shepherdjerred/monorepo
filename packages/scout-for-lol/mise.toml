@@ -1,13 +1,6 @@
-[tools]
-# renovate: datasource=github-releases depName=oven-sh/bun
-bun = "1.3.14"
-
 [tasks.dev]
 description = "Create all files needed for development"
-run = "bun install && (cd packages/backend/ && bun db:generate) && dagger develop"
-
-[tasks.ci]
-run = "dagger call ci --git-sha='HEAD' --version='dev'"
+run = "bun install && (cd packages/backend/ && bun db:generate)"
 
 [tasks.generate]
 description = "Generate Prisma client and other generated code"

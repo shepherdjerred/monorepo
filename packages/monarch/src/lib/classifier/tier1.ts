@@ -16,6 +16,10 @@ export function classifyTier1(
 
     if (!kb?.defaultCategory) continue;
 
+    // LRU touch: a KB hit counts as "recently used" so the 60-day eviction
+    // in loadKnowledgeBase only ages out merchants that stop appearing.
+    kb.lastUpdated = new Date().toISOString();
+
     // Only propose a change if the current category differs
     if (txn.category.id === kb.defaultCategory.id) continue;
 

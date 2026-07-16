@@ -17,6 +17,7 @@ import {
   type SubscriptionFilterAction,
 } from "#src/components/subscription-filter-dialog.tsx";
 import { summarizeFilters } from "#src/components/subscription-filter-fields.tsx";
+import { Badge } from "#src/components/ui/badge.tsx";
 import { Button } from "#src/components/ui/button.tsx";
 import { LoadMore } from "#src/components/load-more.tsx";
 import {
@@ -80,6 +81,35 @@ export function GuildSubscriptions() {
         switch (result.kind) {
           case "removed":
             setMessage("Subscription removed.");
+            setError(null);
+            void queryClient.invalidateQueries({ queryKey: subsKey });
+            return;
+          case "player-not-found":
+            setError("Player not found.");
+            return;
+          case "not-subscribed-in-channel":
+            setError("Player is not subscribed in that channel.");
+            return;
+          case "internal-error":
+            setError(result.message);
+            return;
+        }
+      },
+      onError: (err) => {
+        setError(err.message);
+      },
+    }),
+  );
+  const muteMutation = useMutation(
+    trpc.subscription.setMuted.mutationOptions({
+      onSuccess: (result, variables) => {
+        switch (result.kind) {
+          case "updated":
+            setMessage(
+              variables.isMuted
+                ? "Subscription muted — no more match notifications."
+                : "Subscription unmuted.",
+            );
             setError(null);
             void queryClient.invalidateQueries({ queryKey: subsKey });
             return;
@@ -185,7 +215,7 @@ export function GuildSubscriptions() {
                   <TableRow key={sub.subscriptionId}>
                     <TableCell className="font-medium">
                       <Link
-                        className="hover:underline"
+                        className="underline"
                         to={`/g/${guildId}/players/${encodeURIComponent(sub.player.alias)}`}
                       >
                         {sub.player.alias}
@@ -202,7 +232,10 @@ export function GuildSubscriptions() {
                         : `#${channel.name}`}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {summarizeFilters(sub.filters)}
+                      <span className="inline-flex items-center gap-2">
+                        {summarizeFilters(sub.filters)}
+                        {sub.isMuted && <Badge variant="outline">Muted</Badge>}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-1">
@@ -247,6 +280,22 @@ export function GuildSubscriptions() {
                           }}
                         >
                           Move
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={muteMutation.isPending}
+                          onClick={() => {
+                            muteMutation.mutate({
+                              guildId,
+                              channelId: sub.channelId,
+                              alias: sub.player.alias,
+                              isMuted: !sub.isMuted,
+                            });
+                          }}
+                        >
+                          {sub.isMuted ? "Unmute" : "Mute"}
                         </Button>
                         <Button
                           type="button"

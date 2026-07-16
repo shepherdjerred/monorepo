@@ -16,17 +16,12 @@ import { PomodoroStore } from "./store/pomodoro-store.ts";
 import { loadModelConfig } from "./engine/model-config.ts";
 import { TaskRepository } from "./engine/task-repository.ts";
 import { watchVault } from "./engine/watcher.ts";
-import { legacyRoutes } from "./legacy/routes.ts";
 import { v2Routes } from "./v2/routes.ts";
 
 /**
- * P3 server: @tasknotes/model-backed engine serving TWO surfaces —
- * - `/api/*`         the upstream plugin contract (v2; the P5 app target)
- * - `/legacy/api/*`  the old camelCase contract for the P2 app (its
- *                    configurable API URL gains a `/legacy` suffix at the
- *                    P4 rollout; the adapter dies at P6).
- * Pomodoro state is ephemeral and vault-independent; the old store serves
- * both surfaces unchanged.
+ * Server: @tasknotes/model-backed engine serving the upstream plugin
+ * contract on `/api/*` (the app target). Pomodoro state is ephemeral and
+ * vault-independent; its store mounts on the same surface.
  */
 
 const app = new Hono();
@@ -57,10 +52,6 @@ app.route(
   v2Routes({ repo, config: modelConfig, vaultPath: config.vaultPath }),
 );
 app.route("/", pomodoroRoutes(pomodoroStore));
-app.route("/legacy", legacyRoutes({ repo, config: modelConfig }));
-app.route("/legacy", pomodoroRoutes(pomodoroStore));
-// The P2 app polls health at ITS base URL (which points at /legacy).
-app.route("/legacy", healthRoutes);
 
 // Engine visibility: parse skips and config provenance, next to /api/health.
 app.get("/api/engine-status", (c) =>

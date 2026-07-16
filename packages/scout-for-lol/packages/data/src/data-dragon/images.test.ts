@@ -1,6 +1,8 @@
 import { describe, test, expect } from "bun:test";
 import { championNameOverrides } from "./champion-name-overrides.generated.ts";
 import {
+  championNameToDisplayName,
+  getChampionDisplayNameById,
   getChampionImageUrl,
   getChampionLoadingImageBase64,
   getChampionLoadingImageUrl,
@@ -72,6 +74,30 @@ test("returns CDN URL for item image", () => {
   const url = getItemImageUrl(1001);
   expect(url).toStartWith("https://ddragon.leagueoflegends.com/cdn/");
   expect(url).toContain("/img/item/1001.png");
+});
+
+describe("champion display names", () => {
+  test("getChampionDisplayNameById resolves 805 (Locke) — newer than twisted's enum", () => {
+    expect(getChampionDisplayNameById(805)).toBe("Locke");
+  });
+
+  test("getChampionDisplayNameById returns punctuated display names, not a string transform", () => {
+    expect(getChampionDisplayNameById(161)).toBe("Vel'Koz");
+    expect(getChampionDisplayNameById(121)).toBe("Kha'Zix");
+    expect(getChampionDisplayNameById(62)).toBe("Wukong");
+    expect(getChampionDisplayNameById(20)).toBe("Nunu & Willump");
+  });
+
+  test("getChampionDisplayNameById falls back to a placeholder for an unknown id", () => {
+    expect(getChampionDisplayNameById(999_999)).toBe("Champion 999999");
+  });
+
+  test("championNameToDisplayName resolves raw Riot match-data casing to the correct display name", () => {
+    expect(championNameToDisplayName("XinZhao")).toBe("Xin Zhao");
+    expect(championNameToDisplayName("Velkoz")).toBe("Vel'Koz");
+    expect(championNameToDisplayName("FiddleSticks")).toBe("Fiddlesticks");
+    expect(championNameToDisplayName("MonkeyKing")).toBe("Wukong");
+  });
 });
 
 describe("championNameOverrides", () => {

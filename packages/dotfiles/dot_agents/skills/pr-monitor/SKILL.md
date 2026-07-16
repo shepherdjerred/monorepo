@@ -1,9 +1,10 @@
 ---
 name: pr-monitor
 description: |
-  Monitor a PR through CI, reviews, and merge conflicts until ready for human review.
-  Use when user says "monitor PR", "watch PR", "wait for CI", or wants automated PR workflow.
-  Creates PR if needed, then monitors Dagger CI, automated review comments, and merge conflicts.
+  Monitor a PR through reviews and merge conflicts until ready for human review.
+  Use when user says "monitor PR", "watch PR", or wants automated PR workflow.
+  Creates PR if needed, then monitors review comments and merge conflicts.
+  Note: this monorepo has no CI (pipeline removed 2026-07), so there is no CI to watch.
 user-invocable: true
 allowed-tools:
   - Bash
@@ -17,7 +18,9 @@ allowed-tools:
 
 # PR Monitor Skill
 
-Automates the complete PR workflow: create PR, monitor CI/reviews/conflicts, fix issues, and notify when ready.
+Automates the complete PR workflow: create PR, monitor reviews/conflicts, fix issues, and notify when ready.
+
+> **No CI in this monorepo.** The Dagger/Buildkite pipeline was removed 2026-07 — nothing runs on push or PR, and `gh pr checks` will show no meaningful checks. Verification is manual: run the touched packages' typecheck/test/lint locally before and during monitoring. This skill now covers **review comments and merge conflicts only**.
 
 ## Workflow
 
@@ -28,28 +31,21 @@ When invoked:
    - Create PR with `gh pr create`
 
 2. **Monitor Loop** (every 60 seconds)
-   Check three things and resolve issues found:
+   Check two things and resolve issues found:
 
-   ### A. Dagger CI Status
-   - Run `gh pr checks` to see CI status
-   - If CI is running, wait for completion
-   - If CI fails, investigate logs with `gh run view <run-id> --log`
-   - **IMPORTANT**: Errors about "url params" or "GraphQL" are misleading - look for the actual error higher in the logs
-   - Fix any issues found and push amendments
-
-   ### B. Review Comments & Approval
+   ### A. Review Comments & Approval
    - Check for automated Claude Code review comments with `gh pr view --json reviews,reviewDecision`
    - Address ALL issues found by automated reviews
    - PR is NOT approved until it has a GitHub approval status
    - Note: PR may be approved then have changes requested after revisions
 
-   ### C. Merge Conflicts
+   ### B. Merge Conflicts
    - Check if behind main with `git fetch origin main && git merge-base --is-ancestor origin/main HEAD`
    - If behind, merge from main and resolve any conflicts that arise
    - YOU are responsible for merge conflicts, not the user
 
 3. **Completion Check**
-   - Verify ALL THREE checks pass simultaneously
+   - Verify BOTH checks pass simultaneously
    - No new automated issues/concerns
    - Only then notify user
 
@@ -70,20 +66,6 @@ gh pr create --fill
 
 # Check if PR exists
 gh pr view --json number,url
-```
-
-### Monitor CI
-
-```bash
-# Check all PR checks
-gh pr checks
-
-# Get detailed status
-gh pr checks --json name,status,conclusion
-
-# View failed run logs
-gh run list --limit 1 --json databaseId,conclusion
-gh run view <run-id> --log
 ```
 
 ### Check Reviews
@@ -132,7 +114,7 @@ git push --force-with-lease
 
 ## Important Notes
 
-1. **Misleading CI Errors**: "url params" or "GraphQL" errors from Dagger are usually not the root cause. Scroll up in logs to find the actual failure.
+1. **No CI**: There is no CI on this repo (pipeline removed 2026-07). Run the touched packages' `bun run typecheck` / `test` / `bunx eslint .` locally — anything you don't verify locally ships unverified.
 
 2. **Automated Reviews**: Claude Code automated reviews must ALL be addressed. The PR isn't approved until GitHub shows an approval.
 
@@ -143,7 +125,7 @@ git push --force-with-lease
 5. **Polling Interval**: Check every 60 seconds to avoid rate limiting while still being responsive.
 
 6. **Final Verification**: Before notifying the user, double-check that:
-   - CI is green
+   - Local verification (typecheck/test/lint for touched packages) passes
    - PR has GitHub approval
    - No merge conflicts with main
    - No outstanding review comments

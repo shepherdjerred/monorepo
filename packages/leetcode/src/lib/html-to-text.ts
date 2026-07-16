@@ -18,29 +18,32 @@ const ENTITIES: Record<string, string> = {
 export function htmlToText(html: string): string {
   let text = html;
   // Replace <br> and block-level tags with newlines
-  text = text.replace(/<br\s*\/?>/gi, "\n");
-  text = text.replace(/<\/(p|div|li|tr|h[1-6])>/gi, "\n");
-  text = text.replace(/<(p|div|h[1-6])[^>]*>/gi, "\n");
+  text = text.replaceAll(/<br\s*\/?>/gi, "\n");
+  text = text.replaceAll(/<\/(?:p|div|li|tr|h[1-6])>/gi, "\n");
+  text = text.replaceAll(/<(?:p|div|h[1-6])[^>]*>/gi, "\n");
   // Replace list items with bullet
-  text = text.replace(/<li[^>]*>/gi, "\n- ");
+  text = text.replaceAll(/<li[^>]*>/gi, "\n- ");
   // Superscript/subscript
-  text = text.replace(/<sup>(.*?)<\/sup>/gi, "^$1");
-  text = text.replace(/<sub>(.*?)<\/sub>/gi, "_$1");
+  text = text.replaceAll(/<sup>(.*?)<\/sup>/gi, "^$1");
+  text = text.replaceAll(/<sub>(.*?)<\/sub>/gi, "_$1");
   // Preserve code blocks — handles both <pre><code>...</code></pre> and <pre>...</pre>
-  text = text.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, (_, code) => {
-    // Strip inner <code> tags if present
-    const clean = code.replace(/<\/?code[^>]*>/gi, "");
-    return "\n```\n" + decodeEntities(clean) + "\n```\n";
-  });
+  text = text.replaceAll(
+    /<pre[^>]*>([\s\S]*?)<\/pre>/gi,
+    (_: string, code: string) => {
+      // Strip inner <code> tags if present
+      const clean = code.replaceAll(/<\/?code[^>]*>/gi, "");
+      return "\n```\n" + decodeEntities(clean) + "\n```\n";
+    },
+  );
   // Inline code
-  text = text.replace(/<code[^>]*>(.*?)<\/code>/gi, "`$1`");
+  text = text.replaceAll(/<code[^>]*>(.*?)<\/code>/gi, "`$1`");
   // Strip remaining tags
-  text = text.replace(/<[^>]+>/g, "");
+  text = text.replaceAll(/<[^>]+>/g, "");
   // Decode HTML entities
   text = decodeEntities(text);
   // Normalize whitespace
-  text = text.replace(/[ \t]+/g, " ");
-  text = text.replace(/\n{3,}/g, "\n\n");
+  text = text.replaceAll(/[ \t]+/g, " ");
+  text = text.replaceAll(/\n{3,}/g, "\n\n");
   return text.trim();
 }
 
@@ -50,20 +53,19 @@ function decodeEntities(text: string): string {
     result = result.replaceAll(entity, char);
   }
   // Numeric entities
-  result = result.replace(/&#(\d+);/g, (_, num) =>
-    String.fromCharCode(Number(num)),
+  result = result.replaceAll(/&#(\d+);/g, (_: string, num: string) =>
+    String.fromCodePoint(Number(num)),
   );
-  result = result.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) =>
-    String.fromCharCode(parseInt(hex, 16)),
+  result = result.replaceAll(/&#x([0-9a-fA-F]+);/g, (_: string, hex: string) =>
+    String.fromCodePoint(Number.parseInt(hex, 16)),
   );
   return result;
 }
 
 export function extractConstraints(html: string): string | null {
-  const match = html.match(
-    /<strong>Constraints:<\/strong>\s*<\/p>\s*<ul>([\s\S]*?)<\/ul>/i,
-  );
+  const match =
+    /<strong>Constraints:<\/strong>\s*<\/p>\s*<ul>([\s\S]*?)<\/ul>/i.exec(html);
   const captured = match?.[1];
-  if (!captured) return null;
+  if (captured == null || captured === "") return null;
   return htmlToText(captured);
 }

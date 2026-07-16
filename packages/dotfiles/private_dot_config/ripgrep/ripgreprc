@@ -10,5 +10,3 @@
 # Exclude common build/dependency directories
 --glob=!node_modules
 --glob=!target
---glob=!.bazel-*
---glob=!bazel-*

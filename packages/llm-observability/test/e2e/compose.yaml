@@ -3,18 +3,20 @@ services:
   tempo:
     image: grafana/tempo:2.10.6@sha256:6ea351a2186822a044d5e326ed4c7a43d019378e4c033c271b89584216db03e7
     command: ["-config.file=/etc/tempo.yaml"]
+    # `configs` ships the file CONTENT through the compose API instead of a
+    # host bind mount — required in CI, where the docker daemon is a dind
+    # sidecar that cannot see this container's checkout.
+    configs:
+      - source: tempo_config
+        target: /etc/tempo.yaml
     volumes:
-      - ./tempo.yaml:/etc/tempo.yaml:ro
       - tempo-data:/var/tempo
     ports:
       - "3200:3200"
       - "4317:4317"
       - "4318:4318"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3200/ready"]
-      interval: 2s
-      retries: 30
-      start_period: 5s
+    # No healthcheck: the tempo image is distroless (no shell, no wget — an
+    # exec-form check can never pass). run.sh polls /ready from the host.
 
   minio:
     image: minio/minio:RELEASE.2025-04-08T15-41-24Z@sha256:8834ae47a2de3509b83e0e70da9369c24bbbc22de42f2a2eddc530eee88acd1b
@@ -44,6 +46,43 @@ services:
       mc mb --ignore-existing local/llm-archive
       "
     restart: "no"
+
+configs:
+  tempo_config:
+    # Inline content (not `file:`): compose implements `file:` configs as
+    # bind mounts, which CI's dind daemon cannot resolve. Keep in sync with
+    # ./tempo.yaml (kept for local tooling/reference).
+    content: |
+      stream_over_http_enabled: true
+      server:
+        http_listen_port: 3200
+        log_level: info
+      distributor:
+        receivers:
+          otlp:
+            protocols:
+              http:
+                endpoint: "0.0.0.0:4318"
+              grpc:
+                endpoint: "0.0.0.0:4317"
+      ingester:
+        max_block_duration: 5m
+        complete_block_timeout: 10s
+        trace_idle_period: 1s
+      compactor:
+        compaction:
+          block_retention: 1h
+      storage:
+        trace:
+          backend: local
+          wal:
+            path: /var/tempo/wal
+          local:
+            path: /var/tempo/blocks
+      overrides:
+        defaults:
+          metrics_generator:
+            processors: []
 
 volumes:
   tempo-data: {}

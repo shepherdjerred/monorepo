@@ -6,7 +6,7 @@ import {
   parseTimemarkSeconds,
 } from "./stream-observer.ts";
 import { notifyStreamSessionEnded } from "./game-streamer.ts";
-import { registry } from "#src/observability/metrics.ts";
+import { registry } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import { logger } from "#src/logger.ts";
 
 // The registry is shared across this process's tests — always assert deltas.

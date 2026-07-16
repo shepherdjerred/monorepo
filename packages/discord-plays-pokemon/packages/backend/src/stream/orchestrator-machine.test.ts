@@ -5,7 +5,7 @@ import { createDesiredStreamMachine } from "@shepherdjerred/discord-stream-lifec
 import type {
   EncoderHandles,
   RawGoLiveDeps,
-} from "@shepherdjerred/discord-stream-lifecycle/types.ts";
+} from "@shepherdjerred/discord-stream-lifecycle/types";
 
 // Resolves with a sentinel `true` rather than `void` — the repo's
 // no-invalid-void-type rule rejects `void` as a generic type argument.

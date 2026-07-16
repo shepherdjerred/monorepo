@@ -12,10 +12,12 @@ import {
 } from "./constants.ts";
 import {
   emulateMs,
-  copyMs,
   lateMs,
   ticksTotal,
   loopResyncTotal,
+} from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
+import {
+  copyMs,
   frameHookErrorsTotal,
   flashSaveLoadInvalidTotal,
 } from "#src/observability/metrics.ts";
@@ -32,7 +34,7 @@ type WasmExports = {
 };
 
 function requireFunction(
-  exports: WebAssembly.Exports,
+  exports: Bun.WebAssembly.Exports,
   name: string,
 ): () => void {
   const value = exports[name];
@@ -47,8 +49,8 @@ function requireFunction(
   };
 }
 
-function requireMemory(exports: WebAssembly.Exports): WebAssembly.Memory {
-  const value = exports.memory;
+function requireMemory(exports: Bun.WebAssembly.Exports): WebAssembly.Memory {
+  const value = exports["memory"];
   if (!(value instanceof WebAssembly.Memory)) {
     throw new TypeError("wasm module is missing required memory export");
   }
@@ -71,7 +73,7 @@ export class Emulator {
   private readonly options: EmulatorOptions;
 
   private exports: WasmExports | undefined;
-  private rawExports: WebAssembly.Exports | undefined;
+  private rawExports: Bun.WebAssembly.Exports | undefined;
   private cachedMemoryReader: MemoryReader | undefined;
   private cachedGameSymbols: GameSymbols | undefined;
   private u16 = new Uint16Array(0);

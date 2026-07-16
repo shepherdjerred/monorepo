@@ -55,6 +55,7 @@ export function createMinecraftSjerredApp(chart: Chart) {
     serviceName: "minecraft-sjerred-bluemap",
     subdomain: "sjerred.bluemap",
     namespace: "minecraft-sjerred",
+    port: 8100,
   });
 
   const minecraftValues: HelmValuesForChart<"minecraft"> = {

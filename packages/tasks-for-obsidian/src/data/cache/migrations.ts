@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   CreateTaskRequestSchema,
   UpdateTaskRequestSchema,
-} from "tasknotes-types";
+} from "../../domain/base-schemas";
 
 import { TaskIdSchema } from "../../domain/types";
 import { TaskStatusSchema } from "../../domain/schemas";

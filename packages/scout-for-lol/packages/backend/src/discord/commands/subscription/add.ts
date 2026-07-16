@@ -1,6 +1,5 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { fromError } from "zod-validation-error";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -20,6 +19,7 @@ import type { AddSubscriptionResult } from "#src/lib/subscription/types.ts";
 import { sendWelcomeMatch } from "#src/discord/commands/subscription/welcome-match.ts";
 import { DISCORD_SERVER_INVITE } from "#src/configuration/subscription-limits.ts";
 import { prisma } from "#src/database/index.ts";
+import { parseCommandArgs } from "#src/discord/commands/define-command.ts";
 import { editReplyOnError } from "#src/discord/commands/subscription/reply-helpers.ts";
 import { parseQueuesArg } from "#src/discord/commands/subscription/queue-filter-arg.ts";
 import {
@@ -44,7 +44,7 @@ export async function executeSubscriptionAdd(
   const startTime = Date.now();
   const creatorDiscordId = DiscordAccountIdSchema.parse(interaction.user.id);
 
-  const parseResult = ArgsSchema.safeParse({
+  const parseResult = await parseCommandArgs(interaction, ArgsSchema, {
     channel: interaction.options.getChannel("channel")?.id,
     region: interaction.options.getString("region"),
     riotId: interaction.options.getString("riot-id"),
@@ -52,13 +52,7 @@ export async function executeSubscriptionAdd(
     alias: interaction.options.getString("alias"),
     guildId: interaction.guildId,
   });
-
   if (!parseResult.success) {
-    logger.info("❌ Invalid command arguments", parseResult.error);
-    await interaction.reply({
-      content: fromError(parseResult.error).toString(),
-      ephemeral: true,
-    });
     return;
   }
 

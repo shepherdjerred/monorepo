@@ -46,10 +46,11 @@ logger.info(
 );
 const re = new Float64Array(win);
 const im = new Float64Array(win);
-for (let i = 0; i < win; i++) re[i] = mono[bestStart + i];
+for (let i = 0; i < win; i++) re[i] = mono[bestStart + i] ?? 0;
 fft(re, im);
 const mag = new Float64Array(win / 2);
-for (let i = 0; i < mag.length; i++) mag[i] = Math.hypot(re[i], im[i]);
+for (let i = 0; i < mag.length; i++)
+  mag[i] = Math.hypot(re[i] ?? 0, im[i] ?? 0);
 logger.info(
   `  band 200 Hz-8 kHz: ${(bandEnergyRatio(mag, sr, 200, 8000) * 100).toFixed(1)}%`,
 );
@@ -59,8 +60,14 @@ logger.info(
 
 const peaks: { hz: number; mag: number }[] = [];
 for (let k = 1; k < mag.length - 1; k++) {
-  if (mag[k] > mag[k - 1] && mag[k] > mag[k + 1] && mag[k] > 0.1) {
-    peaks.push({ hz: (k * sr) / win, mag: mag[k] });
+  const cur = mag[k];
+  const prev = mag[k - 1];
+  const next = mag[k + 1];
+  if (cur === undefined || prev === undefined || next === undefined) {
+    throw new Error(`Magnitude index out of range at bin ${String(k)}`);
+  }
+  if (cur > prev && cur > next && cur > 0.1) {
+    peaks.push({ hz: (k * sr) / win, mag: cur });
   }
 }
 peaks.sort((a, b) => b.mag - a.mag);

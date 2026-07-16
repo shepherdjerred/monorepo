@@ -176,6 +176,13 @@ export const commandDefinitions = [
     )
     .addSubcommand((sub) =>
       sub
+        .setName("subtitles")
+        .setDescription(
+          "Pick a subtitle track for the currently playing video (brief restart)",
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
         .setName("list")
         .setDescription("Browse the video library")
         .addStringOption((o) =>

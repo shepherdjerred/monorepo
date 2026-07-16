@@ -23,12 +23,40 @@ function affineTerms(
 
 export type Bios = {
   refresh: (memory: WebAssembly.Memory) => void;
-  imports: (module: WebAssembly.Module) => WebAssembly.Imports;
+  imports: (module: WebAssembly.Module) => Bun.WebAssembly.Imports;
 };
+
+// BIOS call arguments are positional per the ABI; a missing slot means the
+// wasm caller violated the signature, so fail fast rather than defaulting.
+function arg(args: number[], index: number): number {
+  const value = args[index];
+  if (value === undefined) {
+    throw new Error(`BIOS arg missing at index ${String(index)}`);
+  }
+  return value;
+}
 
 export function createBios(): Bios {
   let u8 = new Uint8Array(0);
   let u16 = new Uint16Array(0);
+
+  // Live wasm-memory reads are always in-bounds by the BIOS ABI; an
+  // out-of-range index signals a corrupt call, so fail fast rather than
+  // silently propagating an undefined into the arithmetic below.
+  function rd8(index: number): number {
+    const value = u8[index];
+    if (value === undefined) {
+      throw new Error(`BIOS u8 read out of range: ${String(index)}`);
+    }
+    return value;
+  }
+  function rd16(index: number): number {
+    const value = u16[index];
+    if (value === undefined) {
+      throw new Error(`BIOS u16 read out of range: ${String(index)}`);
+    }
+    return value;
+  }
 
   function copy(
     src: number,
@@ -44,56 +72,56 @@ export function createBios(): Bios {
   }
 
   function lz77(src: number, dst: number): void {
-    const size = u8[src + 1] | (u8[src + 2] << 8) | (u8[src + 3] << 16);
+    const size = rd8(src + 1) | (rd8(src + 2) << 8) | (rd8(src + 3) << 16);
     let s = src + 4;
     let d = dst;
     const end = dst + size;
     while (d < end) {
-      const flags = u8[s++];
+      const flags = rd8(s++);
       for (let bit = 7; bit >= 0 && d < end; bit--) {
         if (flags & (1 << bit)) {
-          const pair = (u8[s] << 8) | u8[s + 1];
+          const pair = (rd8(s) << 8) | rd8(s + 1);
           s += 2;
           let length = (pair >> 12) + 3;
           const disp = (pair & 0xf_ff) + 1;
           while (length-- && d < end) {
-            u8[d] = u8[d - disp];
+            u8[d] = rd8(d - disp);
             d++;
           }
-        } else u8[d++] = u8[s++];
+        } else u8[d++] = rd8(s++);
       }
     }
   }
 
   function rl(src: number, dst: number): void {
-    const size = u8[src + 1] | (u8[src + 2] << 8) | (u8[src + 3] << 16);
+    const size = rd8(src + 1) | (rd8(src + 2) << 8) | (rd8(src + 3) << 16);
     let s = src + 4;
     let d = dst;
     const end = dst + size;
     while (d < end) {
-      const flag = u8[s++];
+      const flag = rd8(s++);
       if (flag & 0x80) {
         let count = (flag & 0x7f) + 3;
-        const value = u8[s++];
+        const value = rd8(s++);
         while (count-- && d < end) u8[d++] = value;
       } else {
         let count = (flag & 0x7f) + 1;
-        while (count-- && d < end) u8[d++] = u8[s++];
+        while (count-- && d < end) u8[d++] = rd8(s++);
       }
     }
   }
 
   function readCString(ptr: number): string {
     let out = "";
-    while (u8[ptr]) out += String.fromCodePoint(u8[ptr++]);
+    while (rd8(ptr)) out += String.fromCodePoint(rd8(ptr++));
     return out;
   }
   function readS16(ptr: number): number {
-    return (u16[ptr >> 1] << 16) >> 16;
+    return (rd16(ptr >> 1) << 16) >> 16;
   }
   function readS32(ptr: number): number {
     // The shift+or already yields a signed int32.
-    return u16[ptr >> 1] | (u16[(ptr + 2) >> 1] << 16);
+    return rd16(ptr >> 1) | (rd16((ptr + 2) >> 1) << 16);
   }
   function writeS16(ptr: number, value: number): void {
     u16[ptr >> 1] = value & 0xff_ff;
@@ -114,7 +142,7 @@ export function createBios(): Bios {
       const { pa, pb, pc, pd } = affineTerms(
         readS16(s + 12),
         readS16(s + 14),
-        u16[(s + 16) >> 1],
+        rd16((s + 16) >> 1),
       );
       const a = Math.trunc(pa);
       const b = Math.trunc(pb);
@@ -141,7 +169,7 @@ export function createBios(): Bios {
       const { pa, pb, pc, pd } = affineTerms(
         readS16(s),
         readS16(s + 2),
-        u16[(s + 4) >> 1],
+        rd16((s + 4) >> 1),
       );
       writeS16(d, Math.trunc(pa));
       writeS16(d + offset, Math.trunc(pb));
@@ -153,52 +181,54 @@ export function createBios(): Bios {
   function dispatch(name: string, args: number[]): number {
     switch (name) {
       case "CpuSet":
-        copy(args[0], args[1], args[2] & 0x1f_ff_ff, {
-          size: (args[2] >>> 26) & 1 ? 4 : 2,
-          fill: (args[2] >>> 24) & 1,
+        copy(arg(args, 0), arg(args, 1), arg(args, 2) & 0x1f_ff_ff, {
+          size: (arg(args, 2) >>> 26) & 1 ? 4 : 2,
+          fill: (arg(args, 2) >>> 24) & 1,
         });
         return 0;
       case "CpuFastSet":
-        copy(args[0], args[1], args[2] & 0x1f_ff_ff, {
+        copy(arg(args, 0), arg(args, 1), arg(args, 2) & 0x1f_ff_ff, {
           size: 4,
-          fill: (args[2] >>> 24) & 1,
+          fill: (arg(args, 2) >>> 24) & 1,
         });
         return 0;
       case "LZ77UnCompWram":
       case "LZ77UnCompVram":
-        lz77(args[0], args[1]);
+        lz77(arg(args, 0), arg(args, 1));
         return 0;
       case "RLUnCompWram":
       case "RLUnCompVram":
-        rl(args[0], args[1]);
+        rl(arg(args, 0), arg(args, 1));
         return 0;
       case "BgAffineSet":
-        bgAffineSet(args[0], args[1], args[2]);
+        bgAffineSet(arg(args, 0), arg(args, 1), arg(args, 2));
         return 0;
       case "ObjAffineSet":
-        objAffineSet(args[0], args[1], args[2], args[3]);
+        objAffineSet(arg(args, 0), arg(args, 1), arg(args, 2), arg(args, 3));
         return 0;
       case "Div":
-        return args[1] ? Math.trunc(args[0] / args[1]) : 0;
+        return arg(args, 1) ? Math.trunc(arg(args, 0) / arg(args, 1)) : 0;
       case "Sqrt":
-        return Math.trunc(Math.sqrt(args[0]));
+        return Math.trunc(Math.sqrt(arg(args, 0)));
       case "strcmp":
-        return readCString(args[0]).localeCompare(readCString(args[1]));
+        return readCString(arg(args, 0)).localeCompare(
+          readCString(arg(args, 1)),
+        );
       // libc bulk-memory calls. Whether these appear as imports depends on the
       // LLVM version that compiled the wasm: newer clangs lower them to inline
-      // bulk-memory ops, older ones (e.g. trixie's clang-19, used by the Dagger
+      // bulk-memory ops, older ones (e.g. trixie's clang-19, used by the old CI
       // image build) emit calls to external libc symbols, which surface here.
       // They return the destination/comparison result per the C signatures.
       case "memcpy":
       case "memmove":
-        u8.copyWithin(args[0], args[1], args[1] + args[2]);
-        return args[0];
+        u8.copyWithin(arg(args, 0), arg(args, 1), arg(args, 1) + arg(args, 2));
+        return arg(args, 0);
       case "memset":
-        u8.fill(args[1] & 0xff, args[0], args[0] + args[2]);
-        return args[0];
+        u8.fill(arg(args, 1) & 0xff, arg(args, 0), arg(args, 0) + arg(args, 2));
+        return arg(args, 0);
       case "memcmp": {
-        for (let i = 0; i < args[2]; i++) {
-          const diff = u8[args[0] + i] - u8[args[1] + i];
+        for (let i = 0; i < arg(args, 2); i++) {
+          const diff = rd8(arg(args, 0) + i) - rd8(arg(args, 1) + i);
           if (diff !== 0) return diff;
         }
         return 0;
@@ -214,8 +244,8 @@ export function createBios(): Bios {
       u8 = new Uint8Array(memory.buffer);
       u16 = new Uint16Array(memory.buffer);
     },
-    imports(module: WebAssembly.Module): WebAssembly.Imports {
-      const env: Record<string, WebAssembly.ImportValue> = {};
+    imports(module: WebAssembly.Module): Bun.WebAssembly.Imports {
+      const env: Record<string, Bun.WebAssembly.ImportValue> = {};
       for (const item of WebAssembly.Module.imports(module)) {
         if (item.kind !== "function") continue;
         // Every function import we satisfy lives on the `env` namespace. A wasm

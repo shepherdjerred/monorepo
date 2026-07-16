@@ -1,4 +1,41 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { mockClient } from "aws-sdk-client-mock";
+import { z } from "zod";
+import {
+  MatchIdSchema,
+  RawMatchSchema,
+  type RawMatch,
+} from "@scout-for-lol/data";
+import { saveImageToS3, saveMatchToS3 } from "#src/storage/s3.ts";
+import { resetConfigurationForTests } from "#src/configuration.ts";
+
+const s3Mock = mockClient(S3Client);
+
+// Zod schema for validating PutObjectCommand structure captured by the mock.
+const PutCommandSchema = z.object({
+  input: z.object({
+    Bucket: z.string(),
+    Key: z.string(),
+    Body: z.union([z.instanceof(Uint8Array), z.string()]),
+    ContentType: z.string(),
+    Metadata: z.record(z.string(), z.string()).optional(),
+  }),
+});
+
+function getValidatedPutCommand(callIndex: number) {
+  const call = s3Mock.call(callIndex);
+  return PutCommandSchema.parse(call?.args?.[0]);
+}
+
+async function loadMatchFixture(): Promise<RawMatch> {
+  const fixtureUrl = new URL(
+    "../league/model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json",
+    import.meta.url,
+  );
+  const json: unknown = await Bun.file(fixtureUrl).json();
+  return RawMatchSchema.parse(json);
+}
 
 // ============================================================================
 // S3 Key Generation Tests (unit tests for the logic)
@@ -146,65 +183,160 @@ describe("S3 Key Generation Logic for SVG Images", () => {
 });
 
 // ============================================================================
-// Integration Tests (requires S3 configuration)
+// S3 Storage Tests (aws-sdk-client-mock — in-memory, no real S3)
 // ============================================================================
 
-describe("S3 Match Storage Integration", () => {
-  test.skip("saveMatchToS3 uploads JSON with correct content type", async () => {
-    // This would be an integration test that requires actual S3
-    // Expected behavior:
-    // 1. Generate S3 key based on current date
-    // 2. Serialize match data to JSON
-    // 3. Upload with ContentType: application/json
-    // 4. Include metadata (matchId, gameMode, queueId, etc.)
-    // 5. Log success with timing
+describe("S3 Match Storage", () => {
+  beforeEach(() => {
+    Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+    resetConfigurationForTests();
+    s3Mock.reset();
   });
 
-  test.skip("saveMatchToS3 handles missing S3_BUCKET_NAME gracefully", async () => {
-    // Expected behavior:
-    // 1. Check if S3_BUCKET_NAME is configured
-    // 2. If not, log warning and return early
-    // 3. Do not throw error
+  afterEach(() => {
+    Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+    resetConfigurationForTests();
+    s3Mock.reset();
   });
 
-  test.skip("saveMatchToS3 throws error on S3 failure", async () => {
-    // Expected behavior:
-    // 1. Attempt S3 upload
-    // 2. If S3 fails, log error
-    // 3. Throw descriptive error with match ID
+  test("saveMatchToS3 uploads JSON with correct content type", async () => {
+    const match = await loadMatchFixture();
+    s3Mock
+      .on(PutObjectCommand)
+      .resolves({ $metadata: { httpStatusCode: 200 } });
+
+    await saveMatchToS3(match, ["TrackedPlayer"]);
+
+    expect(s3Mock.calls().length).toBe(1);
+    const command = getValidatedPutCommand(0);
+    expect(command.input.Bucket).toBe("test-bucket");
+    expect(command.input.ContentType).toBe("application/json");
+    // Key is dated off gameCreation and ends in match.json.
+    const matchId = match.metadata.matchId;
+    expect(command.input.Key).toMatch(
+      new RegExp(String.raw`^games/\d{4}/\d{2}/\d{2}/${matchId}/match\.json$`),
+    );
+    expect(command.input.Metadata?.["matchId"]).toBe(matchId);
+    expect(command.input.Metadata?.["gameMode"]).toBe(match.info.gameMode);
+    expect(command.input.Metadata?.["trackedPlayers"]).toBe("TrackedPlayer");
+
+    // saveToS3 encodes string bodies to a Uint8Array before upload; decode it
+    // back and confirm it round-trips to the original match JSON.
+    const body = command.input.Body;
+    expect(body).toBeInstanceOf(Uint8Array);
+    if (body instanceof Uint8Array) {
+      const parsed: unknown = JSON.parse(new TextDecoder().decode(body));
+      expect(RawMatchSchema.parse(parsed).metadata.matchId).toBe(matchId);
+    }
+  });
+
+  test("saveMatchToS3 handles missing S3_BUCKET_NAME gracefully", async () => {
+    // Load the fixture before clearing the bucket so there is no await between
+    // the env mutation and the call under test.
+    const match = await loadMatchFixture();
+    delete Bun.env["S3_BUCKET_NAME"];
+    resetConfigurationForTests();
+    s3Mock
+      .on(PutObjectCommand)
+      .resolves({ $metadata: { httpStatusCode: 200 } });
+
+    // Returns void without throwing and makes no S3 calls.
+    await expect(saveMatchToS3(match, [])).resolves.toBeUndefined();
+    expect(s3Mock.calls().length).toBe(0);
+  });
+
+  test("saveMatchToS3 throws error on S3 failure", async () => {
+    const match = await loadMatchFixture();
+    s3Mock.on(PutObjectCommand).rejects(new Error("S3 upload failed"));
+
+    await expect(saveMatchToS3(match, [])).rejects.toThrow(
+      `Failed to save match ${match.metadata.matchId} to S3`,
+    );
+    expect(s3Mock.calls().length).toBe(1);
   });
 });
 
-describe("S3 Image Storage Integration", () => {
-  test.skip("saveImageToS3 uploads PNG with correct content type", async () => {
-    // This would be an integration test that requires actual S3
-    // Expected behavior:
-    // 1. Generate S3 key based on current date
-    // 2. Upload image buffer directly
-    // 3. Upload with ContentType: image/png
-    // 4. Include metadata (matchId, queueType, uploadedAt)
-    // 5. Return S3 URL on success
+describe("S3 Image Storage", () => {
+  beforeEach(() => {
+    Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+    resetConfigurationForTests();
+    s3Mock.reset();
   });
 
-  test.skip("saveImageToS3 returns undefined when S3_BUCKET_NAME not configured", async () => {
-    // Expected behavior:
-    // 1. Check if S3_BUCKET_NAME is configured
-    // 2. If not, log warning and return undefined
-    // 3. Do not throw error
+  afterEach(() => {
+    Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+    resetConfigurationForTests();
+    s3Mock.reset();
   });
 
-  test.skip("saveImageToS3 throws error on S3 failure", async () => {
-    // Expected behavior:
-    // 1. Attempt S3 upload
-    // 2. If S3 fails, log error
-    // 3. Throw descriptive error with match ID
+  test("saveImageToS3 uploads PNG with correct content type", async () => {
+    const matchId = MatchIdSchema.parse("NA1_1234567890");
+    const imageBuffer = new TextEncoder().encode("fake-png-data");
+    s3Mock
+      .on(PutObjectCommand)
+      .resolves({ $metadata: { httpStatusCode: 200 } });
+
+    const result = await saveImageToS3(matchId, imageBuffer, "solo", []);
+
+    expect(s3Mock.calls().length).toBe(1);
+    const command = getValidatedPutCommand(0);
+    expect(command.input.Bucket).toBe("test-bucket");
+    expect(command.input.ContentType).toBe("image/png");
+    expect(command.input.Key).toMatch(
+      /^games\/\d{4}\/\d{2}\/\d{2}\/NA1_1234567890\/report\.png$/,
+    );
+    expect(command.input.Metadata?.["matchId"]).toBe(matchId);
+    expect(command.input.Metadata?.["queueType"]).toBe("solo");
+    expect(result).toStartWith("s3://test-bucket/");
+    expect(result).toEndWith(".png");
   });
 
-  test.skip("saveImageToS3 handles different queue types in metadata", async () => {
-    // Expected behavior:
-    // 1. Accept queueType as parameter (arena, solo, flex, unknown, etc.)
-    // 2. Include queueType in S3 object metadata
-    // 3. Verify metadata is set correctly
+  test("saveImageToS3 returns undefined when S3_BUCKET_NAME not configured", async () => {
+    delete Bun.env["S3_BUCKET_NAME"];
+    resetConfigurationForTests();
+
+    const matchId = MatchIdSchema.parse("NA1_NO_BUCKET");
+    const imageBuffer = new TextEncoder().encode("image-data");
+    s3Mock
+      .on(PutObjectCommand)
+      .resolves({ $metadata: { httpStatusCode: 200 } });
+
+    const result = await saveImageToS3(matchId, imageBuffer, "solo", []);
+
+    expect(result).toBeUndefined();
+    expect(s3Mock.calls().length).toBe(0);
+  });
+
+  test("saveImageToS3 throws error on S3 failure", async () => {
+    const matchId = MatchIdSchema.parse("NA1_ERROR_CASE");
+    const imageBuffer = new TextEncoder().encode("image-data");
+    s3Mock.on(PutObjectCommand).rejects(new Error("Access Denied"));
+
+    await expect(
+      saveImageToS3(matchId, imageBuffer, "solo", []),
+    ).rejects.toThrow(`Failed to save PNG ${matchId} to S3`);
+    expect(s3Mock.calls().length).toBe(1);
+  });
+
+  test("saveImageToS3 handles different queue types in metadata", async () => {
+    s3Mock
+      .on(PutObjectCommand)
+      .resolves({ $metadata: { httpStatusCode: 200 } });
+
+    for (const queueType of ["solo", "flex", "arena", "unknown"]) {
+      s3Mock.reset();
+      s3Mock
+        .on(PutObjectCommand)
+        .resolves({ $metadata: { httpStatusCode: 200 } });
+
+      const matchId = MatchIdSchema.parse(`NA1_${queueType.toUpperCase()}`);
+      const imageBuffer = new TextEncoder().encode(`${queueType}-image`);
+
+      await saveImageToS3(matchId, imageBuffer, queueType, []);
+
+      const command = getValidatedPutCommand(0);
+      expect(command.input.Metadata?.["queueType"]).toBe(queueType);
+    }
   });
 });
 

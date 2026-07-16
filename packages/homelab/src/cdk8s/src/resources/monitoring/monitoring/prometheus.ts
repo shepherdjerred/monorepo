@@ -11,6 +11,7 @@ import { getHaWorkflowRuleGroups } from "./rules/ha-workflows.ts";
 import { getGitckupRuleGroups } from "./rules/gitckup.ts";
 import { getQBitTorrentRuleGroups } from "./rules/qbittorrent.ts";
 import { getStaticSitesRuleGroups } from "./rules/static-sites.ts";
+import { getServiceProbeRuleGroups } from "./rules/service-probes.ts";
 import { getR2StorageRuleGroups } from "./rules/r2-storage.ts";
 import { getBugsinkRuleGroups } from "./rules/bugsink.ts";
 import { getPostalRuleGroups } from "./rules/postal.ts";
@@ -21,7 +22,6 @@ import { getEtcdCustomRuleGroups } from "./rules/etcd-custom.ts";
 import { getZfsMaintenanceRuleGroups } from "./rules/zfs-maintenance.ts";
 import { getTemporalRuleGroups } from "./rules/temporal.ts";
 import { getPrReviewBotRuleGroups } from "./rules/pr-review-bot.ts";
-import { getDaggerEngineRuleGroups } from "./rules/dagger.ts";
 import { getStreambotRuleGroups } from "./rules/streambot.ts";
 
 export function createPrometheusMonitoring(chart: Chart) {
@@ -159,6 +159,18 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
   });
 
+  // Create service-probe rules (blackbox Probe fleet across all namespaces)
+  new PrometheusRule(chart, "prometheus-service-probes-rules", {
+    metadata: {
+      name: "prometheus-service-probes-rules",
+      namespace: "prometheus",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getServiceProbeRuleGroups(),
+    },
+  });
+
   // Create R2 storage rules
   new PrometheusRule(chart, "prometheus-r2-storage-rules", {
     metadata: {
@@ -276,18 +288,6 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getPrReviewBotRuleGroups(),
-    },
-  });
-
-  // Create Dagger engine rules (CI build-cache PVC quota early-warning)
-  new PrometheusRule(chart, "prometheus-dagger-engine-rules", {
-    metadata: {
-      name: "prometheus-dagger-engine-rules",
-      namespace: "dagger",
-      labels: { release: "prometheus" },
-    },
-    spec: {
-      groups: getDaggerEngineRuleGroups(),
     },
   });
 

@@ -27,6 +27,17 @@ function memoryStorage(): CommandQueueStorage & {
 
 const clock = () => 1000;
 
+/** Narrow a queue head to a CreateCommand so its `tempId` is accessible.
+ *  Fails loudly if the head is missing or a different command kind. */
+function expectCreateHead(command: Command | undefined): CreateCommand {
+  if (command?.type !== "create") {
+    throw new Error(
+      `expected a create command at queue head, got ${command?.type ?? "undefined"}`,
+    );
+  }
+  return command;
+}
+
 function create(tempId: string, id = `cmd-${tempId}`): CreateCommand {
   return {
     id,
@@ -54,9 +65,9 @@ describe("CommandQueue FIFO + persistence", () => {
   test("enqueue/head/ack are FIFO and persisted", async () => {
     await q.enqueue(create("tmp-1"));
     await q.enqueue(create("tmp-2"));
-    expect(q.head()?.tempId).toBe(taskId("tmp-1"));
+    expect(expectCreateHead(q.head()).tempId).toBe(taskId("tmp-1"));
     await q.ack("cmd-tmp-1");
-    expect(q.head()?.tempId).toBe(taskId("tmp-2"));
+    expect(expectCreateHead(q.head()).tempId).toBe(taskId("tmp-2"));
     expect(q.pending).toHaveLength(1);
 
     // rebuilt queue over the same storage restores pending state

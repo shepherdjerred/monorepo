@@ -2,7 +2,10 @@
  * Display details about the currently selected match
  */
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
-import { formatArenaPlacement } from "@scout-for-lol/data";
+import {
+  championNameToDisplayName,
+  formatArenaPlacement,
+} from "@scout-for-lol/data";
 
 type MatchDetailsPanelProps = {
   match: CompletedMatch | ArenaMatch;
@@ -108,7 +111,8 @@ export function MatchDetailsPanel({
                 </div>
                 <div className="flex items-center gap-3 text-xs text-surface-600">
                   <span>
-                    <strong>Champion:</strong> {player.champion.championName}
+                    <strong>Champion:</strong>{" "}
+                    {championNameToDisplayName(player.champion.championName)}
                   </span>
                   {!isArena &&
                     "lane" in player.champion &&
@@ -153,7 +157,7 @@ export function MatchDetailsPanel({
                         {champion.riotIdGameName}
                       </div>
                       <div className="text-blue-700">
-                        {champion.championName}
+                        {championNameToDisplayName(champion.championName)}
                       </div>
                     </div>
                   ))}
@@ -172,7 +176,7 @@ export function MatchDetailsPanel({
                         {champion.riotIdGameName}
                       </div>
                       <div className="text-red-700">
-                        {champion.championName}
+                        {championNameToDisplayName(champion.championName)}
                       </div>
                     </div>
                   ))}
@@ -200,7 +204,9 @@ export function MatchDetailsPanel({
                       {formatArenaPlacement(team.placement)}
                     </span>
                     <span className="text-surface-600">
-                      {team.players.map((p) => p.championName).join(" & ")}
+                      {team.players
+                        .map((p) => championNameToDisplayName(p.championName))
+                        .join(" & ")}
                     </span>
                   </div>
                 ))}
