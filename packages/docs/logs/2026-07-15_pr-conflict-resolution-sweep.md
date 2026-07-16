@@ -51,30 +51,60 @@ merge commit that staged them.
    the session's working directory silently reset to the primary checkout;
    recovered with `git reset --hard origin/main` before anything was pushed.
 
+## #1408 resolution (added later in the same session)
+
+The user asked to fix all conflicts including #1408. Merging `origin/main` into
+`fix/webring-truncate-html` revealed the branch is almost entirely superseded:
+main landed the single-workspace migration through the CI-replatform commits
+(#1516/#1517), including the webring `truncate-html` fix, the birmel SDK
+override, and the migration itself. Every content conflict resolved to main's
+side; files main deleted (`.dagger/`, `scripts/ci/`, `scripts/setup.ts`) stayed
+deleted. The only remaining diff is deleting two vestigial nested lockfiles
+(`scripts/bun.lock`, `packages/discord-plays-core/bun.lock`) — both dirs are
+root-workspace members. The PR was retitled/re-bodied to match.
+
+## #1511 rehearsal canary re-derivation (added later in the same session)
+
+PR #1511's first push failed pre-push verify: its rehearsal canary asserted a plain
+`bun install` arms git hooks via the root `prepare` script, which main removed.
+Re-derived per the canary's own error message: a plain install must now arm
+NOTHING (catches a prepare/postinstall hook sneaking back in), an explicit
+`bunx lefthook install` arms hooks, and `disarmGitHooks` must remove them
+(`e4ab7cc66`).
+
 ## Session Log — 2026-07-15
 
 ### Done
 
-- Resolved conflicts + pushed: #1515 (`f33b4095e`), #1513 (`0e6d3da99`), #1511
-  (`9d2175a9e`), #1506 (`e59e5aedf`) — each a merge of `origin/main` with the
-  resolutions in the table above; every push passed the full pre-push
-  `verify -- --affected` gate.
+- Resolved conflicts + pushed all five conflicting PRs: #1515 (`f33b4095e`),
+  #1513 (`0e6d3da99`), #1511 (`9d2175a9e` + canary fix `e4ab7cc66`), #1506
+  (`e59e5aedf`), #1408 (`c3e765973`) — each a merge of `origin/main` with the
+  resolutions above; every push passed the full pre-push `verify -- --affected`
+  gate. All 13 open PRs now report `MERGEABLE`.
 - Fixed on the way: stale prettier pin (#1515), dead `??` lint error (#1513),
-  stale `_summary.md` wording (#1506), three unformatted docs files from main
-  (all four merge commits).
+  stale `_summary.md` wording (#1506), stale hooks-canary premise (#1511),
+  three unformatted docs files from main (every merge commit + this branch).
+- Retitled #1408 to its true remaining scope (vestigial nested-lockfile
+  removal).
 
 ### Remaining
 
-- #1408: decide rebase vs re-cut, then resolve in a dedicated session.
 - #1514: investigate its failing check (UNSTABLE, no conflicts).
 - Consider adding a `^build` (or explicit llm-models) dependency to the
   `generate` task in root `turbo.json` so fresh-worktree setup works as
   documented (gotcha 1).
+- `packages/docs/plans/2026-07-04_bun-workspace-migration.md` still says
+  "In Progress (single-PR execution on PR #1408)" — stale now that the
+  migration landed via #1516/#1517; groom when convenient.
 
 ### Caveats
 
-- The four PR branches now contain merge commits from `origin/main`; their CI
+- The five PR branches now contain merge commits from `origin/main`; their CI
   needs to re-run before merging.
 - `packages/dotfiles/_summary.md` wording change rides in bot PR #1506 — if
   that PR is closed instead of merged, main's README hand-edit will churn back
   on the next weekly readme refresh.
+- Merge-conflict resolution worktrees are left in `.claude/worktrees/`
+  (`pr-1515-scoutql`, `pr-1513-reporting-editor`, `pr-1511-lefthook`,
+  `pr-1506-readme`, `pr-1408-workspace`, `pr-conflict-log`) — remove after the
+  PRs merge.
