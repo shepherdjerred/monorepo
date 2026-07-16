@@ -593,6 +593,48 @@ fi
    git worktree list | grep "agent-"
    ```
 
+## Monorepo-Specific (shepherdjerred/monorepo)
+
+The generic workflow above applies, but this repo nests worktrees at `.claude/worktrees/<name>` and has fresh-worktree setup gotchas. Use the monorepo command from the root `CLAUDE.md` (`git worktree add .claude/worktrees/<slug> -b feature/<slug> origin/main`).
+
+### Team / multi-agent work stays out of main
+
+When spawning a team of agents to implement a plan, every teammate works in its own worktree (e.g. `.claude/worktrees/<feature>-<role>`), never the user's main checkout — bake the worktree-setup commands into each teammate's bootstrap prompt so they don't `cd` into main. The team lead coordinates from its own session and does not edit monorepo files in main either.
+
+### Scoped verification — one repo-wide fan-out at a time
+
+Verify with package-scoped commands (`cd packages/<name> && bun run typecheck|test`, or `bun run --filter='./packages/<name>' typecheck|test` if the package is registered as a Bun workspace from the repo root), not root-level `bun run typecheck|test|build`. A root run fans out over ~35 packages, each booting its own node/bun toolchain; when several worktree sessions or teammates do this concurrently, the spawn storm has frozen the whole machine (6,000+ processes, 20-30 GB of anonymous memory within seconds → macOS jetsam freeze; see `packages/docs/logs/2026-07-11_macbook-hang-jetsam-investigation.md`). Reserve root-level runs for genuinely repo-wide changes, run at most one at a time machine-wide, and bake the scoped commands into teammate bootstrap prompts so parallel agents never all fan out at once. There is no CI (pipeline removed 2026-07), so anything you don't verify locally ships unverified.
+
+### Commit + push after every phase
+
+Deleting a worktree discards uncommitted working-tree changes with no recovery path (never `git add`ed = no git objects in the shared `.git`). A large, fully-working feature was lost this way. For any multi-step / PR-bound work, commit after every phase and push the branch immediately (open a draft PR early) so the work is backed up off-machine — never hold a big change uncommitted.
+
+### Fresh worktree: `mise trust` first
+
+In a worktree from a plain `git worktree add` (not `claude -w` or the SessionStart hook), `bun` won't launch: it resolves to a mise shim that refuses to run while the worktree's `.mise.toml` is untrusted (mise keys trust by absolute path, so every new worktree starts untrusted). Run `mise trust -y --all` (~0.06s) before any bun command. `claude -w <slug>` and the SessionStart hook do this automatically.
+
+### Fresh worktree: eslint needs deps + built eslint-config
+
+(Git hooks were removed 2026-07 — nothing lints on commit anymore, so run eslint yourself.) Linting `packages/homelab` in a fresh worktree fails with two errors in order: (1) `The 'jiti' library is required...` — `bun run --filter @shepherdjerred/homelab typecheck` only populates `packages/homelab/src/cdk8s/node_modules`, so you must run a plain `cd packages/homelab && bun install` to get `packages/homelab/node_modules/.bin/eslint` + jiti at the package root; (2) `Cannot find module '@eslint/js'` — fix with `cd packages/eslint-config && bun install && bun run build`.
+
+### Install only what you touch (setup.ts was removed 2026-07)
+
+There is no setup orchestrator anymore — setup is manual and scoped (see the root AGENTS.md "Development Setup"). In a fresh worktree: build the shared `file:` producers first (eslint-config, llm-models, webring, astro-opengraph-images, discord-video-stream, discord-stream-lifecycle, helm-types — each `bun install --frozen-lockfile && bun run build`, seconds apiece), then `bun install --frozen-lockfile` + codegen (`bun run generate` where it exists) in the package(s) you're touching. Never install all ~35 packages for a single-package change (~13-15G of `node_modules` you won't use).
+
+**Producers before consumers, always.** This ordering is the #1 cause of "Cannot find module `@shepherdjerred/eslint-config`" / stale `llm-models` errors: those are `file:` deps, and Bun's hoisted linker copies a `file:` dep's contents into the consumer's `node_modules` **at install time only** — it doesn't track the producer's `dist/` changing afterward. If you rebuild a producer after the consumer was installed, re-run `bun install --force` in the consumer.
+
+Don't use `bun install --backend=symlink` in Prisma-consuming packages (scout, mk64, birmel): Prisma's installer packages (`@prisma/engines`, `prisma`) have postinstall scripts that break under Bun's symlink backend.
+
+### knip is manual-only
+
+`knip` was removed from pre-commit in 2026-06, and the CI step that still ran it was removed with the pipeline 2026-07 — nothing runs knip automatically anymore. It loads every workspace in `knip.json`, so a knip run needs every workspace's deps installed (a full-repo install); run it manually from the repo root (with `--workspace` to scope) when you want dead-code coverage. A fresh worktree needs no whole-repo install just to commit — a change touching one package only needs that package's deps + a built `eslint-config`.
+
+### Recovering a wiped worktree
+
+A concurrent cleanup/prune over `.claude/worktrees/*` can delete your worktree's working tree AND its `.git` pointer mid-session. Symptoms: `git rev-parse --show-toplevel` suddenly returns the MAIN checkout and `--abbrev-ref HEAD` says `main`; files you read minutes ago are gone; Edit/Write fail with 'File does not exist'; `git worktree list` marks the worktree `prunable`. The branch ref + admin dir usually survive at `<main>/.git/worktrees/<name>/`, so committed work is safe.
+
+Recovery: (1) recreate the deleted pointer — `printf 'gitdir: <main>/.git/worktrees/<name>\n' > <worktree>/.git`; (2) VERIFY `git -C <worktree> rev-parse --show-toplevel` is the worktree (not main) before any restore, else a reset hits main; (3) `git reset --hard HEAD` to repopulate, then reinstall `node_modules` (untracked, also wiped). If the entire dir is gone, from main run `git worktree prune` then `git worktree add .claude/worktrees/<name> <branch>`. Commit + push ASAP afterward in case the cleanup re-fires.
+
 ## Integration with PR Workflow
 
 ### Combined Start-to-PR Script

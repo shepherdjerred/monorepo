@@ -46,17 +46,24 @@ describe("Champion utilities", () => {
       expect(getChampionDisplayName(1)).toBe("Annie");
     });
 
-    // Spot-check the champions whose twisted output is inconsistent
-    // (no underscore). The display name is still produced from the raw
-    // string, so these render as a single word — covered explicitly
-    // to pin current behavior.
-    test("formats camelCase-filename champions", () => {
-      expect(getChampionDisplayName(421)).toBe("Reksai"); // REKSAI
-      expect(getChampionDisplayName(897)).toBe("Ksante"); // KSANTE
-      expect(getChampionDisplayName(9)).toBe("Fiddlesticks"); // FIDDLESTICKS
-      expect(getChampionDisplayName(59)).toBe("Jarvan Iv"); // JARVAN_IV
-      expect(getChampionDisplayName(62)).toBe("Monkey King"); // MONKEY_KING (Wukong)
-      expect(getChampionDisplayName(96)).toBe("Kog Maw"); // KOG_MAW
+    // Champions whose twisted-derived name would be wrong (Reksai, Ksante,
+    // Monkey King) or unpunctuated (Rek'Sai, K'Sante, Wukong) if produced by
+    // any string transform of the enum/asset key. These come straight from
+    // `champion.json`'s `name` field, so they're correct.
+    test("returns Riot's actual punctuated display name, not a derived string", () => {
+      expect(getChampionDisplayName(421)).toBe("Rek'Sai");
+      expect(getChampionDisplayName(897)).toBe("K'Sante");
+      expect(getChampionDisplayName(9)).toBe("Fiddlesticks");
+      expect(getChampionDisplayName(59)).toBe("Jarvan IV");
+      expect(getChampionDisplayName(62)).toBe("Wukong");
+      expect(getChampionDisplayName(96)).toBe("Kog'Maw");
+    });
+
+    // 805 (Locke) is newer than twisted's champion enum (caps at 804) — the
+    // old twisted-based implementation returned "Champion 805" here. This is
+    // twisted-free (backed by champion.json), so it resolves correctly.
+    test("resolves champions newer than twisted's hardcoded enum", () => {
+      expect(getChampionDisplayName(805)).toBe("Locke");
     });
 
     test("handles invalid champion ID", () => {
@@ -88,6 +95,10 @@ describe("Champion utilities", () => {
       [421, "RekSai"],
       [897, "KSante"],
       [888, "Renata"],
+      // 805 (Locke) is newer than twisted's champion enum (caps at 804). The
+      // champion.json id→key fallback must still resolve it so the prematch
+      // loading screen finds Locke.png instead of a Champion805.png 404.
+      [805, "Locke"],
     ];
 
     test.each(cases)("resolveChampionKey(%i) === %s", (id, expected) => {
@@ -138,11 +149,8 @@ describe("Champion utilities", () => {
       expect(lowerResults).toEqual(upperResults);
     });
 
-    // Twisted stores Rek'Sai as "REKSAI" (no underscore), so the
-    // reverse-lookup key is "reksai". Queries that normalize to the same
-    // string find her; queries containing apostrophes or spaces normalize
-    // to "rek_sai" and do NOT (known gap — see follow-up normalization
-    // layer plan). Pin current behavior so the gap is visible if fixed.
+    // Twisted's reverse-lookup key for Rek'Sai is "reksai" (no punctuation).
+    // Queries that normalize to the same string find her via `searchName`.
     test("finds Rek'Sai via plain forms", () => {
       for (const query of ["reksai", "REKSAI", "RekSai"]) {
         const results = searchChampions(query);
@@ -151,12 +159,22 @@ describe("Champion utilities", () => {
       }
     });
 
-    test("current gap: Rek'Sai apostrophe/space queries miss", () => {
-      for (const query of ["rek'sai", "rek sai"]) {
-        const results = searchChampions(query);
-        const match = results.find((c) => c.id === 421);
-        expect(match).toBeUndefined();
-      }
+    // The displayed `.name` is now Riot's actual "Rek'Sai" (via
+    // getChampionDisplayName), so an apostrophed query matches directly
+    // against the display name even though `searchName` has no punctuation.
+    // A space-separated query ("rek sai") still misses — that's a distinct,
+    // out-of-scope normalization gap in the query-side matching logic, not
+    // the display-name lookup this change fixes.
+    test("finds Rek'Sai via its punctuated display name", () => {
+      const results = searchChampions("rek'sai");
+      const match = results.find((c) => c.id === 421);
+      expect(match).toBeDefined();
+    });
+
+    test("known gap: space-separated query does not match Rek'Sai", () => {
+      const results = searchChampions("rek sai");
+      const match = results.find((c) => c.id === 421);
+      expect(match).toBeUndefined();
     });
 
     test("default limit is 25", () => {

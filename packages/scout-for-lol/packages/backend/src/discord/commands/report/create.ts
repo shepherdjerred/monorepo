@@ -7,12 +7,12 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   ReportCreateInputSchema,
+  parseAndCompile,
 } from "@scout-for-lol/data";
 import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competition-cron.ts";
 import { prisma } from "#src/database/index.ts";
 import { canCreateReport } from "#src/database/competition/permissions.ts";
 import { canCreateAnotherUserReport } from "#src/discord/commands/report/authorization.ts";
-import { parseReportQuery } from "#src/reports/query-language.ts";
 
 export async function executeReportCreate(
   interaction: ChatInputCommandInteraction,
@@ -74,10 +74,9 @@ export async function executeReportCreate(
     queryText: interaction.options.getString("query", true),
     lookbackDays: interaction.options.getInteger("lookback-days") ?? undefined,
     maxRows: interaction.options.getInteger("max-rows") ?? undefined,
-    outputFormat: interaction.options.getString("output-format") ?? undefined,
     cronExpression: interaction.options.getString("schedule-cron", true),
   });
-  parseReportQuery(input.queryText);
+  parseAndCompile(input.queryText);
 
   const now = new Date();
   const report = await prisma.report.create({
@@ -90,7 +89,6 @@ export async function executeReportCreate(
       queryText: input.queryText,
       lookbackDays: input.lookbackDays,
       maxRows: input.maxRows,
-      outputFormat: input.outputFormat,
       isEnabled: input.isEnabled,
       isSystemManaged: false,
       cronExpression: input.cronExpression,

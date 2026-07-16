@@ -1,3 +1,4 @@
+import { rename } from "node:fs/promises";
 import { createAudioEngine } from "./audio/index.ts";
 import type { DrainResult } from "./audio/m4a-driver.ts";
 import { createBios } from "./bios.ts";
@@ -11,11 +12,14 @@ import {
 } from "./constants.ts";
 import {
   emulateMs,
-  copyMs,
   lateMs,
   ticksTotal,
   loopResyncTotal,
+} from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
+import {
+  copyMs,
   frameHookErrorsTotal,
+  flashSaveLoadInvalidTotal,
 } from "#src/observability/metrics.ts";
 import { logger } from "#src/logger.ts";
 import { createMemoryReader, type MemoryReader } from "./memory.ts";
@@ -30,7 +34,7 @@ type WasmExports = {
 };
 
 function requireFunction(
-  exports: WebAssembly.Exports,
+  exports: Bun.WebAssembly.Exports,
   name: string,
 ): () => void {
   const value = exports[name];
@@ -45,8 +49,8 @@ function requireFunction(
   };
 }
 
-function requireMemory(exports: WebAssembly.Exports): WebAssembly.Memory {
-  const value = exports.memory;
+function requireMemory(exports: Bun.WebAssembly.Exports): WebAssembly.Memory {
+  const value = exports["memory"];
   if (!(value instanceof WebAssembly.Memory)) {
     throw new TypeError("wasm module is missing required memory export");
   }
@@ -69,7 +73,7 @@ export class Emulator {
   private readonly options: EmulatorOptions;
 
   private exports: WasmExports | undefined;
-  private rawExports: WebAssembly.Exports | undefined;
+  private rawExports: Bun.WebAssembly.Exports | undefined;
   private cachedMemoryReader: MemoryReader | undefined;
   private cachedGameSymbols: GameSymbols | undefined;
   private u16 = new Uint16Array(0);
@@ -311,6 +315,7 @@ export class Emulator {
           flash.set(saved);
           logger.info(`loaded flash save from ${path}`);
         } else {
+          flashSaveLoadInvalidTotal.inc();
           logger.warn(
             `ignoring flash save at ${path}: wrong size ${String(saved.length)}`,
           );
@@ -333,8 +338,13 @@ export class Emulator {
   }
 
   private async persist(path: string, data: Uint8Array): Promise<void> {
+    // Atomic write: stage to a sibling tmp file in the same directory, then
+    // rename(2) — POSIX guarantees atomicity. A kill -9 mid-write at worst
+    // leaves the tmp around; the real save is never torn.
+    const tmp = `${path}.tmp`;
     try {
-      await Bun.write(path, data);
+      await Bun.write(tmp, data);
+      await rename(tmp, path);
     } catch (error) {
       logger.error("failed to persist flash save", error);
     }

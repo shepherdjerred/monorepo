@@ -17,11 +17,17 @@ import { ErrorBoundary } from "./src/components/common/ErrorBoundary";
 import { ConnectionBanner } from "./src/components/common/ConnectionBanner";
 import { ActiveTimeTrackingOverlay } from "./src/components/timer/ActiveTimeTrackingOverlay";
 import { AppNavigator } from "./src/navigation/AppNavigator";
+import { E2EConfigHandler } from "./src/navigation/E2EConfigHandler";
 import { initFeedback } from "./src/lib/feedback";
+import packageJson from "./package.json";
 
 Sentry.init({
   dsn: "https://af299d1967744476b01584b14d811556@bugsink.sjer.red/10",
   enabled: !__DEV__,
+  environment: __DEV__ ? "development" : "production",
+  // No CI-injected version for the native build; the app's package version is
+  // the meaningful release identifier (bumped alongside the native versions).
+  release: packageJson.version,
   // Disable tracing - Bugsink does not support performance monitoring
   tracesSampleRate: 0,
 });
@@ -40,6 +46,7 @@ function ThemedApp() {
     <>
       <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} />
       <ConnectionBanner />
+      {__DEV__ && <E2EConfigHandler />}
       <AppNavigator />
       <ActiveTimeTrackingOverlay />
     </>

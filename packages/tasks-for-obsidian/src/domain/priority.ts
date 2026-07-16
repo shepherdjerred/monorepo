@@ -1,5 +1,5 @@
-import { ALL_PRIORITIES as _ALL_PRIORITIES } from "tasknotes-types";
-import type { Priority as _Priority } from "tasknotes-types";
+import { ALL_PRIORITIES as _ALL_PRIORITIES } from "./base-schemas";
+import type { Priority as _Priority } from "./base-schemas";
 
 export type Priority = _Priority;
 export const ALL_PRIORITIES: readonly Priority[] = [..._ALL_PRIORITIES];

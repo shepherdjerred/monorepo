@@ -1,7 +1,7 @@
 ---
 id: sjer-red-mta-sts
 status: deferred
-origin: packages/docs/plans/2026-05-25_sjer-red-hardening.md
+origin: packages/docs/archive/completed/2026-05-25_sjer-red-hardening.md
 ---
 
 # Publish MTA-STS policies for mail-receiving zones

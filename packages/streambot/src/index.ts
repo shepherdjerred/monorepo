@@ -21,10 +21,13 @@ import {
   stopMetricsServer,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
 import { startGpuCollector } from "@shepherdjerred/streambot/observability/gpu-collector.ts";
+import { initializeSentry } from "@shepherdjerred/streambot/observability/sentry.ts";
 
 const LIBRARY_REFRESH_MS = 5 * 60 * 1000;
 
 async function main(): Promise<void> {
+  // Initialize before anything else so early failures are captured.
+  initializeSentry();
   const config = loadConfig();
   logger.info("starting streambot", {
     userTokenCount: config.discord.userTokens.length,
@@ -84,12 +87,14 @@ async function main(): Promise<void> {
     library: () => library,
     expandPlaylist: (url, signal) => expandPlaylist(config, url, signal),
     listSources: (signal) => listExtractors(config, signal),
+    resolvePlaySource: (source, signal) =>
+      resolveSource(config, source, signal),
   });
   const sessions = new SessionManager({
     config,
     pool,
     resolveSource: (input, signal) =>
-      resolveSource(config, input.source, signal),
+      resolveSource(config, input.source, signal, input.preResolved),
     announce: (channelId, message) => commandBot.announce(channelId, message),
   });
   refs.sessions = sessions;

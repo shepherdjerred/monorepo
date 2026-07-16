@@ -13,6 +13,9 @@ export const AuditActionSchema = z.enum([
   "SUBSCRIPTION_REMOVE",
   "SUBSCRIPTION_ADD_CHANNEL",
   "SUBSCRIPTION_MOVE",
+  "SUBSCRIPTION_SET_FILTERS",
+  "SUBSCRIPTION_BULK_SET_FILTERS",
+  "SUBSCRIPTION_SET_MUTED",
   "PLAYER_CREATE",
   "PLAYER_RENAME",
   "PLAYER_DELETE",
@@ -22,6 +25,7 @@ export const AuditActionSchema = z.enum([
   "ACCOUNT_ADD",
   "ACCOUNT_DELETE",
   "ACCOUNT_TRANSFER",
+  "ACCOUNT_UPDATE",
 ]);
 export type AuditAction = z.infer<typeof AuditActionSchema>;
 

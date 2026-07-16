@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Rammus": {
       "id": "Rammus",
@@ -12,7 +12,7 @@
         "full": "Rammus.png",
         "sprite": "champion3.png",
         "group": "champion",
-        "x": 240,
+        "x": 288,
         "y": 48,
         "w": 48,
         "h": 48
@@ -430,10 +430,10 @@
           "rangeBurn": "300",
           "image": {
             "full": "PowerBall.png",
-            "sprite": "spell10.png",
+            "sprite": "spell11.png",
             "group": "spell",
-            "x": 384,
-            "y": 144,
+            "x": 96,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -575,10 +575,10 @@
           "rangeBurn": "300",
           "image": {
             "full": "DefensiveBallCurl.png",
-            "sprite": "spell10.png",
+            "sprite": "spell11.png",
             "group": "spell",
-            "x": 432,
-            "y": 144,
+            "x": 144,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -718,7 +718,7 @@
             "full": "PuncturingTaunt.png",
             "sprite": "spell11.png",
             "group": "spell",
-            "x": 0,
+            "x": 192,
             "y": 0,
             "w": 48,
             "h": 48
@@ -835,7 +835,7 @@
             "full": "Tremors2.png",
             "sprite": "spell11.png",
             "group": "spell",
-            "x": 48,
+            "x": 240,
             "y": 0,
             "w": 48,
             "h": 48
@@ -850,7 +850,7 @@
           "full": "Armordillo_ScavengeArmor.png",
           "sprite": "passive3.png",
           "group": "passive",
-          "x": 240,
+          "x": 288,
           "y": 48,
           "w": 48,
           "h": 48

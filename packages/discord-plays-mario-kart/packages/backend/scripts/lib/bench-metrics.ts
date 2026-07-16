@@ -118,12 +118,15 @@ export function histogramQuantile(
   const rows: { le: number; cum: number }[] = [];
   let mm: RegExpExecArray | null = re.exec(m.text);
   while (mm !== null) {
-    const rawLabels = mm[1];
+    const rawLabels = mm[1] ?? "";
     const leMatch = /(?:^|,)le="([^"]+)"(?:,|$)/.exec(rawLabels);
-    if (leMatch && (!labels || matchesLabels(rawLabels, labels))) {
-      const le =
-        leMatch[1] === "+Inf" ? Number.POSITIVE_INFINITY : Number(leMatch[1]);
-      rows.push({ le, cum: Number(mm[2]) });
+    const leRaw = leMatch?.[1];
+    if (
+      leRaw !== undefined &&
+      (labels === undefined || matchesLabels(rawLabels, labels))
+    ) {
+      const le = leRaw === "+Inf" ? Number.POSITIVE_INFINITY : Number(leRaw);
+      rows.push({ le, cum: Number(mm[2] ?? "0") });
     }
     mm = re.exec(m.text);
   }

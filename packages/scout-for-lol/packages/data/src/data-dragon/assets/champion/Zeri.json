@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Zeri": {
       "id": "Zeri",
@@ -12,7 +12,7 @@
         "full": "Zeri.png",
         "sprite": "champion5.png",
         "group": "champion",
-        "x": 336,
+        "x": 384,
         "y": 48,
         "w": 48,
         "h": 48
@@ -512,8 +512,8 @@
             "full": "ZeriQ.png",
             "sprite": "spell17.png",
             "group": "spell",
-            "x": 288,
-            "y": 0,
+            "x": 0,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -657,8 +657,8 @@
             "full": "ZeriW.png",
             "sprite": "spell17.png",
             "group": "spell",
-            "x": 336,
-            "y": 0,
+            "x": 48,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -802,8 +802,8 @@
             "full": "ZeriE.png",
             "sprite": "spell17.png",
             "group": "spell",
-            "x": 384,
-            "y": 0,
+            "x": 96,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -919,8 +919,8 @@
             "full": "ZeriR.png",
             "sprite": "spell17.png",
             "group": "spell",
-            "x": 432,
-            "y": 0,
+            "x": 144,
+            "y": 48,
             "w": 48,
             "h": 48
           },
@@ -934,7 +934,7 @@
           "full": "ZeriP.png",
           "sprite": "passive5.png",
           "group": "passive",
-          "x": 336,
+          "x": 384,
           "y": 48,
           "w": 48,
           "h": 48

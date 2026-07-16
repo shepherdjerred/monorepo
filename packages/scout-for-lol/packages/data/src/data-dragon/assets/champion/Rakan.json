@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Rakan": {
       "id": "Rakan",
@@ -12,7 +12,7 @@
         "full": "Rakan.png",
         "sprite": "champion3.png",
         "group": "champion",
-        "x": 192,
+        "x": 240,
         "y": 48,
         "w": 48,
         "h": 48
@@ -591,7 +591,7 @@
             "full": "RakanQ.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 192,
+            "x": 384,
             "y": 144,
             "w": 48,
             "h": 48
@@ -734,7 +734,7 @@
             "full": "RakanW.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 240,
+            "x": 432,
             "y": 144,
             "w": 48,
             "h": 48
@@ -875,10 +875,10 @@
           "rangeBurn": "650",
           "image": {
             "full": "RakanE.png",
-            "sprite": "spell10.png",
+            "sprite": "spell11.png",
             "group": "spell",
-            "x": 288,
-            "y": 144,
+            "x": 0,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -992,10 +992,10 @@
           "rangeBurn": "150",
           "image": {
             "full": "RakanR.png",
-            "sprite": "spell10.png",
+            "sprite": "spell11.png",
             "group": "spell",
-            "x": 336,
-            "y": 144,
+            "x": 48,
+            "y": 0,
             "w": 48,
             "h": 48
           },
@@ -1009,7 +1009,7 @@
           "full": "Rakan_P.png",
           "sprite": "passive3.png",
           "group": "passive",
-          "x": 192,
+          "x": 240,
           "y": 48,
           "w": 48,
           "h": 48

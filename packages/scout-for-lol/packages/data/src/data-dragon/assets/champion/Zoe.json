@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Zoe": {
       "id": "Zoe",
@@ -12,7 +12,7 @@
         "full": "Zoe.png",
         "sprite": "champion5.png",
         "group": "champion",
-        "x": 0,
+        "x": 48,
         "y": 96,
         "w": 48,
         "h": 48
@@ -505,8 +505,8 @@
             "full": "ZoeQ.png",
             "sprite": "spell17.png",
             "group": "spell",
-            "x": 384,
-            "y": 48,
+            "x": 96,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -648,8 +648,8 @@
             "full": "ZoeW.png",
             "sprite": "spell17.png",
             "group": "spell",
-            "x": 432,
-            "y": 48,
+            "x": 144,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -793,7 +793,7 @@
             "full": "ZoeE.png",
             "sprite": "spell17.png",
             "group": "spell",
-            "x": 0,
+            "x": 192,
             "y": 96,
             "w": 48,
             "h": 48
@@ -906,7 +906,7 @@
             "full": "ZoeR.png",
             "sprite": "spell17.png",
             "group": "spell",
-            "x": 48,
+            "x": 240,
             "y": 96,
             "w": 48,
             "h": 48
@@ -921,7 +921,7 @@
           "full": "Zoe_P.png",
           "sprite": "passive5.png",
           "group": "passive",
-          "x": 0,
+          "x": 48,
           "y": 96,
           "w": 48,
           "h": 48

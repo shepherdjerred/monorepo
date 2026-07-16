@@ -11,6 +11,7 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
   ChannelType,
   PermissionFlagsBits,
@@ -56,7 +57,7 @@ export const guildRouter = router({
    * Admin-gated: the signed-in user must be an Administrator of the guild.
    */
   listChannels: webProcedure
-    .input(z.object({ guildId: z.string() }))
+    .input(z.object({ guildId: DiscordGuildIdSchema }))
     .query(async ({ ctx, input }) => {
       const userGuilds = await fetchUserGuilds(ctx.user);
       const target = userGuilds.find((g) => g.id === input.guildId);

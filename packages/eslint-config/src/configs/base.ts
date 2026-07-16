@@ -41,7 +41,6 @@ export function baseConfig(
       "**/.cache/**/*",
       "**/node_modules/**/*",
       "**/.astro/**/*",
-      ".dagger/sdk/**/*",
       "**/*.md",
       "**/*.mdx",
       "**/*.mjs",
@@ -69,6 +68,14 @@ export function baseConfig(
         "unicorn/no-array-reduce": "off",
         "unicorn/no-array-for-each": "off",
         "unicorn/no-array-reverse": "off",
+        // Do NOT push `.toSorted()` over `.sort()`. `Array.prototype.toSorted`
+        // is ES2023 and ships unpolyfilled by esbuild/Vite, so it throws on
+        // older browser engines (Chrome <110 / Safari <16) and Hermes (RN).
+        // Enforcing it caused a recurring prod crash in better-skill-capped
+        // (a March `.sort()` fix was reverted to satisfy this rule, then
+        // regressed in June). `require-array-sort-compare` still guarantees a
+        // comparator, so `.sort()` stays deterministic.
+        "unicorn/no-array-sort": "off",
         "unicorn/prefer-top-level-await": "off",
       },
     },

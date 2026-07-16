@@ -35,7 +35,7 @@ export async function executeReportList(
     content: reports
       .map(
         (report) =>
-          `#${report.id.toString()} **${report.title}** — ${report.outputFormat}, ${report.isEnabled ? "enabled" : "disabled"}, next: ${report.nextScheduledRunAt?.toISOString() ?? "not scheduled"}, last: ${report.lastRunStatus ?? "never run"}`,
+          `#${report.id.toString()} **${report.title}** — ${report.isEnabled ? "enabled" : "disabled"}, next: ${report.nextScheduledRunAt?.toISOString() ?? "not scheduled"}, last: ${report.lastRunStatus ?? "never run"}`,
       )
       .join("\n"),
     ephemeral: true,

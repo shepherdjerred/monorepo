@@ -12,6 +12,7 @@ import {
   type SpecialistConfig,
   type SpecialistOutput,
 } from "./runner.ts";
+import { rawSpecialistFinding } from "#activities/pr-review/testing/fixtures.ts";
 
 class AnthropicRateLimitFixture extends Error {
   readonly status = 429;
@@ -95,20 +96,7 @@ describe("specialistOutputSchema", () => {
     const schema = specialistOutputSchema("security");
     expect(() =>
       schema.parse({
-        findings: [
-          {
-            id: "f1",
-            file: "a.ts",
-            lineStart: 1,
-            lineEnd: 1,
-            kind: "correctness", // wrong specialist
-            severity: "warning",
-            verifier: "none",
-            claim: "x",
-            evidence: "y",
-            confidence: 0.7,
-          },
-        ],
+        findings: [rawSpecialistFinding({ kind: "correctness" })], // wrong specialist
       }),
     ).toThrow();
   });
@@ -117,21 +105,8 @@ describe("specialistOutputSchema", () => {
     const schema = specialistOutputSchema("security");
     expect(() =>
       schema.parse({
-        findings: [
-          {
-            id: "f1",
-            file: "a.ts",
-            lineStart: 1,
-            lineEnd: 1,
-            kind: "security",
-            severity: "warning",
-            verifier: "grep",
-            // verifierTarget intentionally missing
-            claim: "x",
-            evidence: "y",
-            confidence: 0.7,
-          },
-        ],
+        // verifier set without the required verifierTarget
+        findings: [rawSpecialistFinding({ verifier: "grep" })],
       }),
     ).toThrow();
   });
@@ -141,13 +116,7 @@ describe("specialistOutputSchema", () => {
     expect(() =>
       schema.parse({
         findings: [
-          {
-            id: "f1",
-            file: "a.ts",
-            lineStart: 1,
-            lineEnd: 1,
-            kind: "security",
-            severity: "warning",
+          rawSpecialistFinding({
             verifier: "grep",
             verifierTarget: {
               kind: "test",
@@ -155,10 +124,7 @@ describe("specialistOutputSchema", () => {
               testNamePattern: "foo",
               expectPass: true,
             },
-            claim: "x",
-            evidence: "y",
-            confidence: 0.7,
-          },
+          }),
         ],
       }),
     ).toThrow();
@@ -169,13 +135,7 @@ describe("specialistOutputSchema", () => {
     expect(() =>
       schema.parse({
         findings: [
-          {
-            id: "f1",
-            file: "a.ts",
-            lineStart: 1,
-            lineEnd: 1,
-            kind: "security",
-            severity: "warning",
+          rawSpecialistFinding({
             verifier: "grep",
             verifierTarget: {
               kind: "grep",
@@ -184,10 +144,7 @@ describe("specialistOutputSchema", () => {
               pathGlob: "src/**",
               mustMatch: true,
             },
-            claim: "x",
-            evidence: "y",
-            confidence: 0.7,
-          },
+          }),
         ],
       }),
     ).not.toThrow();

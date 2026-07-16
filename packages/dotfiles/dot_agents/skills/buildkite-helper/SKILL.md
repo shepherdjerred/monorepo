@@ -9,9 +9,11 @@ description: |
 
 # BuildKite Helper
 
+> **⚠️ This monorepo's Buildkite pipeline was removed 2026-07.** The `.buildkite/` directory, the `scripts/ci/` pipeline generator, and the Dagger module are gone — nothing runs on commit/push/PR anymore; verification is manual. The Buildkite org and the homelab agent-stack (`buildkite` namespace, kueue) still exist pending a separate manual teardown. Monorepo-specific notes below are **historical**; the general Buildkite reference material remains valid for other uses.
+
 ## Overview
 
-BuildKite is a CI/CD platform where builds run on your own infrastructure via agents. Pipelines are defined in YAML (static or dynamically generated). This monorepo uses BuildKite as its sole CI platform with dynamic TypeScript pipeline generation and Dagger for all build steps.
+BuildKite is a CI/CD platform where builds run on your own infrastructure via agents. Pipelines are defined in YAML (static or dynamically generated). This monorepo formerly used BuildKite as its sole CI platform with dynamic TypeScript pipeline generation and Dagger for all build steps (removed 2026-07).
 
 ## Pipeline YAML Quick Reference
 
@@ -106,7 +108,7 @@ buildkite-agent pipeline upload .buildkite/deploy.yml
 echo '{"steps": [{"command": "test.sh"}]}' | buildkite-agent pipeline upload
 ```
 
-**This monorepo**: TypeScript generator at `scripts/ci/src/main.ts` → change detection → JSON → `buildkite-agent pipeline upload`.
+**This monorepo (historical)**: TypeScript generator at `scripts/ci/src/main.ts` (since removed) → change detection → JSON → `buildkite-agent pipeline upload`.
 
 ## Step Configuration
 
@@ -252,9 +254,11 @@ plugins:
                 readOnly: true
 ```
 
-## This Monorepo's CI Patterns
+## This Monorepo's CI Patterns (historical — pipeline removed 2026-07)
 
-**Key files:**
+Everything in this section describes the pipeline as it existed before removal. The files below no longer exist in the repo; kept as history for anyone reading old builds/PRs.
+
+**Key files (since removed):**
 
 - `.buildkite/pipeline.yml` — Bootstrap: single step runs TypeScript generator
 - `scripts/ci/src/main.ts` — Pipeline generator entry (change detection → build → JSON)
@@ -270,6 +274,11 @@ plugins:
 - Dagger engine: remote `tcp://dagger-engine.dagger.svc.cluster.local:8080`
 - Kueue: ClusterQueue with 16 CPU/64Gi quota, FIFO ordering, no preemption
 - Agent: agent-stack-k8s Helm, max-in-flight=20, git mirrors, batch-low priority
+- **Soft-fail gates** — `trivy-scan`, `knip-check`, and `semgrep-scan` are soft failures that do **not** block the quality gate. When the goal is "get CI green," focus on real build/test/lint/typecheck/deploy failures; don't burn time adding CVEs to `.trivyignore` or chasing knip findings.
+- **Pushes to `main` cancel the running build** — Buildkite supersedes/cancels the in-flight `main` build on every new push, so a fix being validated at step 92/175 never gets a result. Batch small fixes into one commit and wait for the current build to reach the relevant steps before pushing again; don't push for formatting/trivial churn.
+- **Don't eagerly merge `main` into open PRs** — only merge `origin/main` into a branch when GitHub reports it `CONFLICTING` (mergeStateStatus `DIRTY`). Proactive merges add PR noise and, because a merge touching `.dagger/` triggers a full "build everything" CI run, they're slow and expensive. For a branch missing one specific main fix, prefer a surgical `git cherry-pick <sha>` over a full merge.
+- **`release` step gates only release-consuming work** — the `release` step runs release-please and is long-lived. Only steps that actually consume release metadata (npm publish, helm push, cooklang push, clauderon upload, version commit-back) should `depends_on: release`. Everything else should depend on `quality-gate` so unrelated work isn't bottlenecked behind release-please.
+- **Cold Dagger cache → slow `bun install` that looks hung but isn't** — After a Dagger engine restart or unclean shutdown, the engine logs `dagql persistence store marked unclean; wiping and cold-starting` and deletes its **entire** build cache (100 GB+) before it will serve — that wipe alone is ~15-20 min of recursive delete I/O on the ZFS nvme build-cache pool (`zfspv-pool-nvme` on `torvalds`). On the resulting cold cache, every `bun install --frozen-lockfile` step (a small-file write storm) runs **3-8+ min instead of seconds**: ZFS serializes writes through txg syncs and small-file bursts hit txg backpressure, so the install parks in uninterruptible `D` state (`cv_wait_common`), the Buildkite log goes static, and the build looks wedged. **It is slow, not stuck.** Distinguish with `kubectl exec -n dagger dagger-dagger-helm-engine-0 -- sh -c "ps -eo pid,stat,etime,args | awk '\$2 ~ /^D/'"`: if the D-state PID **rotates** (a fresh `bun install` each check) or the pool's free space keeps moving, it's progressing. Only suspect a real wedge if ONE PID sits in `D` >10 min with zero log output **and** `df /var/lib/dagger` is flat. The pool is healthy and ~19% full — this is write-throughput contention, **not** corruption or capacity. **Do NOT force-restart the engine to "fix" a merely-slow build**: it triggers another full cold-cache wipe (unclean shutdown → cold start), which is strictly worse and kills all in-flight sessions. Concurrent install-heavy steps amplify it; the agent `max-in-flight` cap (reduced to 10) targets exactly this.
 
 ## Reference Files
 

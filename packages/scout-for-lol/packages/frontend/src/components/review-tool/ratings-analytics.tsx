@@ -97,7 +97,7 @@ export function RatingsAnalytics() {
         average: data.sum / data.total,
         count: data.total,
       }))
-      .toSorted((a, b) => b.average - a.average);
+      .sort((a, b) => b.average - a.average);
 
     return {
       totalRated,

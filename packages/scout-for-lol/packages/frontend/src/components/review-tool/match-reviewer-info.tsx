@@ -2,6 +2,7 @@
  * Display selected match and reviewer info
  */
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
+import { championNameToDisplayName } from "@scout-for-lol/data";
 import type { ReviewConfig } from "#src/lib/review-tool/config/schema.ts";
 
 /**
@@ -19,7 +20,7 @@ function getMatchDisplayInfo(match: CompletedMatch | ArenaMatch) {
   }
 
   const alias = player.playerConfig.alias;
-  const champion = player.champion.championName;
+  const champion = championNameToDisplayName(player.champion.championName);
 
   if (match.queueType === "arena") {
     const arenaPlayer = player;

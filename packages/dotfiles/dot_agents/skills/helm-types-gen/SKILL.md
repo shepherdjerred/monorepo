@@ -87,6 +87,29 @@ The tool performs these steps:
 4. **Infer Types**: Falls back to runtime type inference when schema is incomplete
 5. **Generate Code**: Outputs TypeScript interfaces with JSDoc comments
 
+## Regenerating Committed Types — Gotchas
+
+The committed `src/cdk8s/generated/helm/*.types.ts` are the **source of truth** (git-committed,
+refreshed weekly by the `helm-types-weekly-refresh` Temporal schedule, which opens a PR on
+drift). `bun run generate-helm-types` (`src/cdk8s/scripts/generate-helm-types.ts`) `helm pull`s
+every chart in `versions.ts`. Behavior (post-PR #1150):
+
+- **Writes in place, no destructive wipe.** It used to `rm -rf generated/helm` then regenerate,
+  so a single flaky fetch could silently delete a committed type file. Now it writes in place,
+  retries fetches 3×, prunes only charts removed from `versions.ts`, and throws if any chart
+  can't be generated (two runs ⇒ 0 diff).
+- **Uses the repo's pinned prettier** (workspace 3.8.3 + `.prettierrc`), with a scoped
+  `helm repo update <repoName>` and fail-fast prettier — a full generate leaves the tree
+  byte-clean, no manual `prettier --write` needed afterward.
+- **Recovery:** if generated types go missing/wrong, `git restore packages/homelab/src/cdk8s/generated/helm/`
+  (the whole dir) — never re-run the generator to "fix" them.
+- **OCI charts** (kueue, agent-stack-k8s) use `datasource=docker` in `versions.ts`
+  (renovate models OCI as docker); they're pulled via `helm pull oci://…` and tracked by the
+  `OCI_CHART_KEYS` allowlist in `parse-helm-charts.ts`.
+- **Commented-out config keys** (e.g. buildkite `config.{queue,…}`)
+  need `EXTENSIBLE_TYPE_PATTERNS` entries in `helm-types/src/config.ts`, since the generator only
+  infers from active `values.yaml` defaults; those blocks become `[key: string]: unknown`.
+
 ## Generated Type Features
 
 - **Nested Interfaces**: Each object becomes its own TypeScript type

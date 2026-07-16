@@ -13,6 +13,14 @@ model Subscription {
   channelId String
   player    Player @relation(fields: [playerId], references: [id])
 
+  // JSON-serialized SubscriptionFilterSpec (@scout-for-lol/data); null = notify
+  // all. Validated in the app via Zod; never queried in SQL.
+  filters String?
+
+  // Muted subscriptions stay intact (history, filters, channel wiring) but are
+  // skipped when dispatching pre/post-match notifications.
+  isMuted Boolean @default(false)
+
   // metadata
   serverId         String
   creatorDiscordId String
@@ -43,11 +51,17 @@ model Player {
 model Account {
   id       Int    @id @default(autoincrement())
   alias    String
-  // TODO(https://github.com/shepherdjerred/monorepo/issues/186): store riot ID for the sake of easier understanding
   puuid    String
   region   String
   playerId Int
   player   Player @relation(fields: [playerId], references: [id])
+
+  // Cached Riot ID (gameName#tagLine) resolved from the PUUID. Nullable
+  // until first resolved; refreshed on read when older than 24h. Lets the
+  // web UI show the real Riot ID instead of the user-chosen alias.
+  riotGameName    String?
+  riotTagLine     String?
+  riotIdUpdatedAt DateTime?
 
   // Match processing tracking
   lastProcessedMatchId String? // Track last match we've processed to avoid duplicates
@@ -61,6 +75,24 @@ model Account {
   updatedTime      DateTime
 
   @@unique([serverId, puuid])
+}
+
+// Global, self-maintaining cache of known summoners (Riot IDs are public).
+// Powers fast prefix autocomplete in the web "add player" flow. Populated on
+// confirmed Riot resolutions + backfill from Account/PrematchParticipantFact;
+// an entry is evicted when Riot can no longer resolve it (rename/deletion).
+model SummonerIndex {
+  id             Int      @id @default(autoincrement())
+  puuid          String   @unique
+  gameName       String
+  tagLine        String
+  region         String
+  lastVerifiedAt DateTime
+  createdTime    DateTime
+  updatedTime    DateTime
+
+  // Prefix-autocomplete on gameName (SQLite LIKE 'q%', ASCII case-insensitive).
+  @@index([gameName])
 }
 
 model MatchRankHistory {
@@ -252,7 +284,6 @@ model Report {
   queryText           String
   lookbackDays        Int       @default(30)
   maxRows             Int       @default(10)
-  outputFormat        String    @default("LEADERBOARD")
   isEnabled           Boolean   @default(true)
   isSystemManaged     Boolean   @default(false)
   systemSource        String?
@@ -279,7 +310,6 @@ model ReportRun {
   serverId     String
   trigger      String
   status       String
-  outputFormat String
   startedAt    DateTime
   completedAt  DateTime?
   durationMs   Int?
@@ -420,13 +450,38 @@ model GuildPermissionError {
   lastOccurrence        DateTime // Most recent occurrence
   consecutiveErrorCount Int       @default(1) // Number of consecutive errors
   lastSuccessfulSend    DateTime? // Last time a message was successfully sent to this server
-  ownerNotified         Boolean   @default(false) // Whether owner was notified about abandonment
+  ownerNotified         Boolean   @default(false) // DEPRECATED (was the abandoned-guild latch); unused since notificationStage replaced it
+  // Backed-off owner notification escalation for the current failure streak.
+  // notificationStage: 0 = none sent, 1 = immediate sent, 2 = +1w sent, 3 = +1mo sent (terminal).
+  // lastNotifiedAt anchors the next stage's delay (NOT firstOccurrence) so existing
+  // mid-streak rows restart cleanly at "immediate" instead of jumping to "month".
+  notificationStage     Int       @default(0)
+  lastNotifiedAt        DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
   @@unique([serverId, channelId])
   @@index([serverId, consecutiveErrorCount])
   @@index([lastOccurrence])
+}
+
+// Central audit log of every direct message (DM) the bot sends to a user.
+// All DMs MUST flow through `sendDM` (discord/utils/dm.ts), which writes one
+// row here per attempt so DMs are fully traceable. Append-only.
+model DmAuditLog {
+  id           Int      @id @default(autoincrement())
+  recipientId  String // Discord user (snowflake) the DM was addressed to
+  recipientTag String? // Discord tag at send time, when resolvable
+  guildId      String? // Guild this DM relates to, when applicable
+  kind           String // Category, e.g. "permission_error" | "abandonment" | "feedback_request" | "competition_invite" | "prune_notice"
+  content        String // The message body that was (attempted to be) sent
+  deliveryStatus String // "sent" | "dm_disabled" | "failed"
+  errorMessage   String? // Failure detail when delivery != "sent"
+  createdAt    DateTime @default(now())
+
+  @@index([recipientId, createdAt])
+  @@index([kind, createdAt])
+  @@index([guildId, createdAt])
 }
 
 // =============================================================================
@@ -531,6 +586,7 @@ model GuildInstall {
   installedAt       DateTime
   outreach3dSentAt  DateTime? // null = not yet sent
   outreach14dSentAt DateTime? // null = not yet sent
+  outreach30dSentAt DateTime? // 30-day "still not configured" nudge; null = not yet sent
 
   @@index([installedAt])
 }
@@ -572,6 +628,20 @@ model GameEventLog {
 model MatchAiAttempt {
   matchId     String   @id // Riot match ID, e.g. EUW1_7843083474
   attemptedAt DateTime @default(now())
+}
+
+// A guild the reconcile-removed-guilds sweep saw missing from the client
+// cache AND unconfirmed by a live `guilds.fetch` (Discord 10004) on some
+// previous day's run. Cleanup only proceeds once a candidate has been
+// re-observed as missing on a LATER calendar day than `firstDetectedAt` -
+// a single day's outage (Discord region/shard down, cache hydration gap)
+// resolves well within 24h, while a real removal stays missing across runs.
+// The row is deleted as soon as a run finds the guild reachable again
+// (recovered) or after cleanup runs (confirmed and handled).
+model GuildRemovalCandidate {
+  serverId        String   @id
+  firstDetectedAt DateTime
+  lastCheckedAt   DateTime
 }
 
 // Web-UI initiated subscription changes. Every mutation through the web UI

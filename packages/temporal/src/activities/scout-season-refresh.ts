@@ -9,6 +9,7 @@ import { getTraceContext } from "#observability/tracing.ts";
 import { emitOtel } from "#observability/log.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
+import { installScoutWorkspace, rootInstallWithoutHooks } from "./bot-clone.ts";
 import {
   runClaude,
   type ClaudeRunResult,
@@ -25,10 +26,16 @@ const COMPONENT = "scout-season-refresh";
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const REPO_SLUG = "shepherdjerred/monorepo";
 const MAIN_BRANCH = "main";
-const SEASONS_FILE = "packages/scout-for-lol/packages/data/src/seasons.ts";
+export const SEASONS_FILE =
+  "packages/scout-for-lol/packages/data/src/seasons.ts";
 const SEASONS_TEST_FILE =
   "packages/scout-for-lol/packages/data/src/seasons.test.ts";
-const SEASON_PATHS = [SEASONS_FILE, SEASONS_TEST_FILE] as const;
+// Marketing "What's New" changelog — Claude prepends an entry here when it adds
+// a brand-new season/act. Listing it in SEASON_PATHS wires it into staging,
+// change-detection, and the diff (all keyed off SEASON_PATHS).
+export const CHANGELOG_FILE =
+  "packages/scout-for-lol/packages/frontend/src/data/changelog.tsx";
+const SEASON_PATHS = [SEASONS_FILE, SEASONS_TEST_FILE, CHANGELOG_FILE] as const;
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
 const DEFAULT_MODEL = "claude-opus-4-8";
@@ -284,6 +291,11 @@ async function prepareWorkdir(input: ScoutSeasonRefreshInput): Promise<{
     "--depth",
     "1",
   ]);
+  // Pre-install the scout workspace (with the llm-models producer built) so
+  // Claude's verification step (`bun test src/seasons.test.ts`) works on the
+  // first try — otherwise Claude improvises its own installs, and a root
+  // install would arm lefthook hooks in the clone.
+  await installScoutWorkspace(repoDir);
   return { tempDir, repoDir, ownedByUs: true };
 }
 
@@ -344,12 +356,26 @@ async function run(
       maxTurns: input.maxTurns ?? DEFAULT_MAX_TURNS,
       seasonsFile: SEASONS_FILE,
       seasonsTestFile: SEASONS_TEST_FILE,
+      changelogFile: CHANGELOG_FILE,
       noDriftSentinel: NO_DRIFT_SENTINEL,
       driftedSentinel: DRIFTED_SENTINEL,
     });
 
     const sentinelText = claude.resultText.trim();
-    const files = await changedFilesInPaths(workdir.repoDir, SEASON_PATHS);
+    let files = await changedFilesInPaths(workdir.repoDir, SEASON_PATHS);
+    if (files.includes(CHANGELOG_FILE)) {
+      // The prettier gate covers changelog.tsx, so normalize Claude's edit or
+      // the PR fails CI. Mirrors the prettier step in readme-refresh.ts. Only
+      // runs on the rare new-season drift, so the frozen install is negligible.
+      // Hook-free: a plain root install would run `lefthook install` and arm
+      // the dev pre-commit suite for the later bot commit (the June/July 2026
+      // weekly failures).
+      await rootInstallWithoutHooks(workdir.repoDir);
+      await runCommand(["bunx", "prettier", "--write", CHANGELOG_FILE], {
+        cwd: workdir.repoDir,
+      });
+      files = await changedFilesInPaths(workdir.repoDir, SEASON_PATHS);
+    }
     const diff =
       files.length > 0
         ? await getUnifiedDiff(workdir.repoDir, SEASON_PATHS)

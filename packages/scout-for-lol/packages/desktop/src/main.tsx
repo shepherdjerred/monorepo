@@ -6,6 +6,10 @@ import "./styles.css";
 
 Sentry.init({
   dsn: "https://337945d2208840dca4a573be311a1bbb@bugsink.sjer.red/1",
+  release: BUILD_SENTRY_RELEASE,
+  environment: import.meta.env.MODE,
+  // Bugsink is Sentry-compatible but does not support performance tracing.
+  tracesSampleRate: 0,
 });
 
 const root = document.querySelector("#root");

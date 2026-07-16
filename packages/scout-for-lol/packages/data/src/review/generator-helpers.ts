@@ -14,6 +14,7 @@ import {
   lpDiffToString,
   rankToLeaguePoints,
 } from "#src/model/league-points.ts";
+import { formatGenericPatchNotes } from "#src/data-dragon/patch-notes.ts";
 
 /**
  * Extract match data from a match object
@@ -262,6 +263,8 @@ function buildQueueContext(queueType: string | undefined): string {
       return "This is a Solo/Duo Ranked game - the most competitive standard queue where players climb the ranked ladder. Games are taken seriously and LP is on the line.";
     case "flex":
       return "This is a Flex Ranked game - a ranked queue that allows groups of any size. Generally more relaxed than Solo/Duo but still competitive since LP is on the line.";
+    case "ranked 5s":
+      return "This is a Ranked 5s game - the revived premade 5v5 ranked team queue on Summoner's Rift. Pre-made teams climb a dedicated ranked ladder, so games are highly coordinated and competitive with team compositions and communication planned in advance.";
     case "clash":
       return "This is a CLASH game - a competitive tournament mode where teams sign up in advance and play bracket-style matches. Clash games are typically more serious and strategic than regular games, with coordinated team compositions and communication. The stakes feel higher and players often try harder.";
     case "aram clash":
@@ -344,6 +347,8 @@ export function buildPromptVariables(params: {
   playerIndex?: number;
   matchAnalysis?: string;
   timelineSummary?: string;
+  playerHistory?: string;
+  patchNotes?: string;
 }): {
   reviewerName: string;
   playerName: string;
@@ -358,6 +363,8 @@ export function buildPromptVariables(params: {
   timelineSummary: string;
   queueContext: string;
   rankContext: string;
+  playerHistory: string;
+  patchNotes: string;
 } {
   const {
     matchData,
@@ -367,6 +374,8 @@ export function buildPromptVariables(params: {
     playerIndex = 0,
     matchAnalysis,
     timelineSummary,
+    playerHistory,
+    patchNotes,
   } = params;
   const playerName = matchData["playerName"];
   if (playerName === undefined) {
@@ -405,6 +414,22 @@ export function buildPromptVariables(params: {
   const queueContext = buildQueueContext(match.queueType);
   const rankContext = buildRankContext(match);
 
+  const playerHistoryText =
+    playerHistory !== undefined && playerHistory.trim().length > 0
+      ? playerHistory.trim()
+      : "No recent match history available.";
+  // When the caller doesn't cross-reference patch notes to the player, fall back
+  // to the generic overview + highlights from the bundled changeset; if there's
+  // no changeset at all, formatGenericPatchNotes returns "".
+  const suppliedPatchNotes =
+    patchNotes !== undefined && patchNotes.trim().length > 0
+      ? patchNotes.trim()
+      : formatGenericPatchNotes();
+  const patchNotesText =
+    suppliedPatchNotes.length > 0
+      ? suppliedPatchNotes
+      : "No patch notes available.";
+
   return {
     reviewerName,
     playerName,
@@ -419,5 +444,7 @@ export function buildPromptVariables(params: {
     timelineSummary: timelineSummaryText,
     queueContext,
     rankContext,
+    playerHistory: playerHistoryText,
+    patchNotes: patchNotesText,
   };
 }

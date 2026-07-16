@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Swain": {
       "id": "Swain",
@@ -12,8 +12,8 @@
         "full": "Swain.png",
         "sprite": "champion4.png",
         "group": "champion",
-        "x": 432,
-        "y": 0,
+        "x": 0,
+        "y": 48,
         "w": 48,
         "h": 48
       },
@@ -548,7 +548,7 @@
             "full": "SwainQ.png",
             "sprite": "spell13.png",
             "group": "spell",
-            "x": 192,
+            "x": 384,
             "y": 48,
             "w": 48,
             "h": 48
@@ -693,7 +693,7 @@
             "full": "SwainW.png",
             "sprite": "spell13.png",
             "group": "spell",
-            "x": 240,
+            "x": 432,
             "y": 48,
             "w": 48,
             "h": 48
@@ -836,8 +836,8 @@
             "full": "SwainE.png",
             "sprite": "spell13.png",
             "group": "spell",
-            "x": 288,
-            "y": 48,
+            "x": 0,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -953,8 +953,8 @@
             "full": "SwainR.png",
             "sprite": "spell13.png",
             "group": "spell",
-            "x": 336,
-            "y": 48,
+            "x": 48,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -968,8 +968,8 @@
           "full": "Swain_P.png",
           "sprite": "passive4.png",
           "group": "passive",
-          "x": 432,
-          "y": 0,
+          "x": 0,
+          "y": 48,
           "w": 48,
           "h": 48
         }

@@ -35,6 +35,106 @@ resource "aws_s3_bucket" "cook" {
   bucket = "cook"
 }
 
+# stocks.sjer.red. This bucket predates its IaC declaration: when stocks was
+# wired into the deploy (commit 6d0aa524b) it was added to CI + Caddy + the Astro
+# app but never to this file, and SeaweedFS's S3 gateway auto-created it on the
+# first deploy sync (it auto-creates a bucket on first PutObject, unlike AWS S3).
+# The bucket already exists, so the `import` block adopts it into state on the
+# next apply rather than letting Tofu try to CreateBucket over it. This is
+# declarative (no manual `tofu import`) and safe because the resource + import
+# land on main together — a manual pre-merge import would leave state ahead of
+# config and the next apply would destroy the bucket. The block is a no-op once
+# the bucket is in state and may be removed after the first successful apply.
+import {
+  to = aws_s3_bucket.stocks_sjer_red
+  id = "stocks-sjer-red"
+}
+
+resource "aws_s3_bucket" "stocks_sjer_red" {
+  bucket = "stocks-sjer-red"
+}
+
+resource "aws_s3_bucket" "glitter_boys_ppl" {
+  bucket = "glitter-boys-ppl"
+}
+
+# Document CRDT state + attachments for the self-hosted Relay Server (Obsidian
+# real-time collaboration). See packages/homelab/src/cdk8s/src/resources/relay.
+#
+# relay-docs was created before this resource reached main, then manually
+# recreated after a cross-checkout tofu apply deleted it. Adopt the existing
+# bucket into state instead of trying CreateBucket over it.
+import {
+  to = aws_s3_bucket.relay_docs
+  id = "relay-docs"
+}
+
+resource "aws_s3_bucket" "relay_docs" {
+  bucket = "relay-docs"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+# Expire old content-hashed assets 90 days after they were last written. The
+# (now-removed) CI site deploy uploaded these prefixes with a 1-year `immutable`
+# Cache-Control and WITHOUT `--delete`, so a deploy never 404s a hashed chunk
+# that a still-open browser tab references. Any future manual deploy should
+# follow the same convention: re-upload the current build's hashed files (fresh
+# mtime resets their age) so only prior builds' hashes age out. Only buckets
+# the retired pipeline deployed to are listed; non-hashed sites (resume,
+# webring, glitter) and buckets never deployed to are intentionally omitted.
+locals {
+  static_site_immutable_prefixes = {
+    "scout-frontend"      = ["app/assets/", "_astro/"]
+    "scout-frontend-beta" = ["app/assets/", "_astro/"]
+    "sjer-red"            = ["_astro/"]
+    "cook"                = ["_astro/"]
+    "stocks-sjer-red"     = ["_astro/"]
+    "better-skill-capped" = ["assets/"]
+  }
+}
+
+resource "terraform_data" "static_site_asset_lifecycle" {
+  for_each = local.static_site_immutable_prefixes
+
+  # Ensure the bucket exists before configuring its lifecycle.
+  depends_on = [
+    aws_s3_bucket.scout_frontend,
+    aws_s3_bucket.scout_frontend_beta,
+    aws_s3_bucket.sjer_red,
+    aws_s3_bucket.cook,
+    aws_s3_bucket.stocks_sjer_red,
+    aws_s3_bucket.better_skill_capped,
+  ]
+
+  input = {
+    bucket       = each.key
+    endpoint_url = "https://seaweedfs-s3.tailnet-1a49.ts.net"
+    # Re-runs the provisioner whenever the prefix set or TTL changes.
+    rules = jsonencode({
+      Rules = [
+        for idx, prefix in each.value : {
+          ID         = "expire-old-hashed-${idx}"
+          Status     = "Enabled"
+          Filter     = { Prefix = prefix }
+          Expiration = { Days = 90 }
+        }
+      ]
+    })
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      aws s3api put-bucket-lifecycle-configuration \
+        --bucket "${self.input.bucket}" \
+        --endpoint-url "${self.input.endpoint_url}" \
+        --lifecycle-configuration '${self.input.rules}'
+    EOT
+  }
+}
+
 # Public artifact bucket — served at https://public.sjer.red via Caddy s3proxy.
 # PR screenshots live under the `pr/assets/<number>/` prefix (365-day TTL, below);
 # the bucket root is seeded with a landing + 404 page so the static-site root
@@ -99,64 +199,6 @@ resource "aws_s3_bucket" "scout_beta" {
 
 resource "aws_s3_bucket" "scout_prod" {
   bucket = "scout-prod"
-}
-
-# Build cache with 30-day expiration
-resource "aws_s3_bucket" "sccache" {
-  bucket = "sccache"
-}
-
-resource "terraform_data" "sccache_lifecycle" {
-  input = {
-    bucket       = aws_s3_bucket.sccache.id
-    expire_days  = 30
-    endpoint_url = "https://seaweedfs-s3.tailnet-1a49.ts.net"
-  }
-
-  provisioner "local-exec" {
-    command = <<-EOT
-      aws s3api put-bucket-lifecycle-configuration \
-        --bucket "${self.input.bucket}" \
-        --endpoint-url "${self.input.endpoint_url}" \
-        --lifecycle-configuration '{
-          "Rules": [{
-            "ID": "expire-cache-objects",
-            "Status": "Enabled",
-            "Filter": {"Prefix": ""},
-            "Expiration": {"Days": ${self.input.expire_days}}
-          }]
-        }'
-    EOT
-  }
-}
-
-# Bazel remote cache with 30-day expiration
-resource "aws_s3_bucket" "bazel_cache" {
-  bucket = "bazel-cache"
-}
-
-resource "terraform_data" "bazel_cache_lifecycle" {
-  input = {
-    bucket       = aws_s3_bucket.bazel_cache.id
-    expire_days  = 30
-    endpoint_url = "https://seaweedfs-s3.tailnet-1a49.ts.net"
-  }
-
-  provisioner "local-exec" {
-    command = <<-EOT
-      aws s3api put-bucket-lifecycle-configuration \
-        --bucket "${self.input.bucket}" \
-        --endpoint-url "${self.input.endpoint_url}" \
-        --lifecycle-configuration '{
-          "Rules": [{
-            "ID": "expire-cache-objects",
-            "Status": "Enabled",
-            "Filter": {"Prefix": ""},
-            "Expiration": {"Days": ${self.input.expire_days}}
-          }]
-        }'
-    EOT
-  }
 }
 
 # LLM request/response archive — gzipped JSON envelopes per LLM call.

@@ -1,15 +1,19 @@
 import {
+  ConfigMap,
   Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
   type PersistentVolumeClaim,
+  Probe,
   Secret,
   Service,
   Volume,
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
+import { Duration, Size } from "cdk8s";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { withCommonLinuxServerProps } from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
 import {
   withCommonProps,
@@ -20,6 +24,9 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+
+const CURRENT_FILENAME = fileURLToPath(import.meta.url);
+const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
 
 export function createQBitTorrentDeployment(
   chart: Chart,
@@ -60,6 +67,100 @@ export function createQBitTorrentDeployment(
 
   const localPathVolume = new ZfsNvmeVolume(chart, "qbittorrent-pvc", {
     storage: Size.gibibytes(32),
+  });
+
+  // The qBittorrent config PVC, shared between the seed init container and the
+  // main container so both mount the same `/config`.
+  const configVolume = Volume.fromPersistentVolumeClaim(
+    chart,
+    "qbittorrent-volume",
+    localPathVolume.claim,
+  );
+
+  // Config-as-code: the committed qBittorrent.conf is the source of truth.
+  // - Fresh PVC (no live conf): seed it from the committed file.
+  // - Existing PVC: assert the live conf still MATCHES the committed declaration
+  //   (see check-config-drift.sh). Any drift on a managed key fails the init
+  //   container so the operator must reconcile by committing the change — config
+  //   drift is never silently tolerated.
+  // Only keys we declare are enforced; keys qBittorrent writes on its own
+  // (WebUI\Password_PBKDF2, Network\Cookies, ...) are ignored, so the guard never
+  // false-positives on the app's runtime churn. A few engine-owned keys that DO
+  // appear in the committed seed (Meta\MigrationVersion, bumped by the image on a
+  // qBittorrent upgrade) are also excluded from enforcement so a version bump
+  // can't crash-loop the pod — see the exclusion list in check-config-drift.sh.
+  // The WebUI password hash is
+  // deliberately NOT in the committed file — qBittorrent generates a temporary
+  // password (logged) on a fresh start, which is then reset.
+  const qbittorrentConfig = new ConfigMap(chart, "qbittorrent-config", {
+    metadata: {
+      name: "qbittorrent-config",
+    },
+  });
+  // addDirectory reads the committed dir synchronously at synth time and adds
+  // each file as a ConfigMap key: "qBittorrent.conf" (the seed) and
+  // "check-config-drift.sh" (the fail-on-drift guard). Both are mounted at /seed.
+  qbittorrentConfig.addDirectory(
+    path.join(CURRENT_DIRNAME, "..", "configs", "qbittorrent"),
+  );
+  const seedVolume = Volume.fromConfigMap(
+    chart,
+    "qbittorrent-config-volume",
+    qbittorrentConfig,
+  );
+
+  // Runs as root so it can write to a fresh, root-owned PVC during disaster
+  // recovery. Seeding (the cp) is conditional — seed-if-absent so a live conf
+  // is never clobbered — but the ownership repair (chown -R) runs every
+  // reconcile, idempotently: an existing PVC whose /config/qBittorrent is still
+  // root:root (e.g. from a partial restore or an earlier seed attempt) gets
+  // handed to the LinuxServer PUID/PGID (1000:1000) so qBittorrent can create
+  // sibling log/lock/backup files there.
+  deployment.addInitContainer({
+    name: "qbittorrent-config-seed",
+    image: `ghcr.io/linuxserver/qbittorrent:${versions["linuxserver/qbittorrent"]}`,
+    command: [
+      "/bin/sh",
+      "-c",
+      // `set -e` propagates the drift guard's non-zero exit so the init
+      // container (and thus the pod) fails fast when the live conf has drifted
+      // from the committed declaration.
+      [
+        "set -e",
+        "mkdir -p /config/qBittorrent",
+        // Stale single-instance lock cleanup. qBittorrent writes a lockfile
+        // (PID + process name) and ipc-socket; a dirty kill (OOM, SIGKILL)
+        // leaves them behind, and on the next start qbittorrent-nox reads the
+        // stale PID, finds *some* live process matching it (container PID
+        // namespaces are small and recycle constantly — including its own
+        // s6-respawned siblings), concludes another instance is running, and
+        // exits 0 silently. s6 respawns it every few seconds, the WebUI never
+        // binds, and the k8s startup probe kills the container forever (138
+        // restarts on 2026-07-11 before this was root-caused). Removing the
+        // lock here is always safe: in a fresh pod no instance can pre-exist.
+        "rm -f /config/qBittorrent/lockfile /config/qBittorrent/ipc-socket",
+        "if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then",
+        "  cp /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf",
+        "else",
+        "  sh /seed/check-config-drift.sh /seed/qBittorrent.conf /config/qBittorrent/qBittorrent.conf",
+        "fi",
+        "chown -R 1000:1000 /config/qBittorrent",
+        "chmod 600 /config/qBittorrent/qBittorrent.conf",
+      ].join("\n"),
+    ],
+    resources: {},
+    securityContext: {
+      ensureNonRoot: false,
+      user: 0,
+      group: 0,
+      privileged: false,
+      allowPrivilegeEscalation: false,
+      readOnlyRootFilesystem: true,
+    },
+    volumeMounts: [
+      { path: "/config", volume: configVolume },
+      { path: "/seed", volume: seedVolume },
+    ],
   });
 
   deployment.addContainer(
@@ -107,6 +208,22 @@ export function createQBitTorrentDeployment(
       name: "qbittorrent",
       image: `ghcr.io/linuxserver/qbittorrent:${versions["linuxserver/qbittorrent"]}`,
       portNumber: 8080,
+      // Generous startup window. NOTE (2026-07-11): the original rationale here
+      // ("nox rechecks resume data before binding the WebUI") was WRONG —
+      // qBittorrent 5.x loads resume data asynchronously and binds the WebUI in
+      // seconds on a clean start. The 2026-07-11 crash loop that looked like
+      // slow startup was actually the stale single-instance lockfile (see the
+      // config-seed init container above): nox exited 0 immediately on every
+      // spawn, so no probe window could ever have been long enough. The 15min
+      // runway is kept purely as storm insurance: under CI-storm IO starvation
+      // every start is slow, and a startup-probe SIGKILL mid-recovery is a
+      // dirty shutdown that makes the next attempt slower (the same
+      // kill-during-recovery loop the dagger engine liveness probe had).
+      startup: Probe.fromTcpSocket({
+        port: 8080,
+        periodSeconds: Duration.seconds(10),
+        failureThreshold: 90,
+      }),
       resources: {
         memory: {
           request: Size.gibibytes(1),
@@ -117,14 +234,25 @@ export function createQBitTorrentDeployment(
           limit: Cpu.millis(2000),
         },
       },
+      // QBT_USERNAME/QBT_PASSWORD let hitandrun-share-limit.sh (mounted at
+      // /scripts below, run via AutoRun\OnTorrentAdded — see qBittorrent.conf)
+      // authenticate to the local WebUI API to set a per-torrent, size-computed
+      // seeding-time limit that matches the tracker's Hit & Run requirement.
+      envVariables: {
+        QBT_USERNAME: EnvValue.fromValue("jerred"),
+        QBT_PASSWORD: EnvValue.fromSecretValue({
+          secret: Secret.fromSecretName(
+            chart,
+            "qbittorrent-hitandrun-password",
+            qBitTorrentItem.name,
+          ),
+          key: "password",
+        }),
+      },
       volumeMounts: [
         {
           path: "/config",
-          volume: Volume.fromPersistentVolumeClaim(
-            chart,
-            "qbittorrent-volume",
-            localPathVolume.claim,
-          ),
+          volume: configVolume,
         },
         {
           volume: Volume.fromPersistentVolumeClaim(
@@ -133,6 +261,13 @@ export function createQBitTorrentDeployment(
             claims.downloads,
           ),
           path: "/downloads",
+        },
+        // Same ConfigMap the init container seeds /config from (see
+        // qbittorrentConfig.addDirectory above) — mounted again here so the
+        // qbittorrent process itself can exec hitandrun-share-limit.sh.
+        {
+          path: "/scripts",
+          volume: seedVolume,
         },
       ],
     }),
@@ -156,7 +291,10 @@ export function createQBitTorrentDeployment(
       envVariables: {
         QBITTORRENT_HOST: EnvValue.fromValue("localhost"),
         QBITTORRENT_PORT: EnvValue.fromValue("8080"),
-        QBITTORRENT_USER: EnvValue.fromValue("admin"),
+        // Must match the qBittorrent WebUI username (WebUI\Username in the
+        // /config PVC), otherwise every scrape fails auth, reports
+        // qbittorrent_up=0, and bans the pod's localhost IP for repeated bad logins.
+        QBITTORRENT_USER: EnvValue.fromValue("jerred"),
         QBITTORRENT_PASS: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(
             chart,

@@ -5,8 +5,13 @@ import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3
  *
  * - `script-src 'self'` is satisfied because the first-paint dark-mode setup
  *   was extracted into `/app/init-theme.js` (see scout `app/index.html`).
- * - `img-src` allows `https://cdn.discordapp.com` for guild icons and `data:`
- *   for inlined icons.
+ * - `img-src` allows `https://cdn.discordapp.com` for guild icons, `data:` for
+ *   inlined icons + SVG report-query previews, and `blob:` for chart PNGs fetched
+ *   with credentials and rendered via `URL.createObjectURL`
+ *   (see `app/src/components/chart-image.tsx`).
+ * - `worker-src 'self' blob:` lets the Monaco editor (report query studio) spawn
+ *   its bundled, same-origin web worker (`/app/assets/editor.worker-*.js`); the
+ *   `blob:` fallback covers Monaco's blob-wrapped worker path.
  * - `form-action 'self' https://discord.com` covers the
  *   `/api/auth/discord/start` → `discord.com/oauth2/authorize` redirect chain.
  * - `frame-ancestors 'none'` blocks clickjacking; this matches the
@@ -15,8 +20,9 @@ import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3
 const scoutCsp = [
   "default-src 'self'",
   "script-src 'self'",
+  "worker-src 'self' blob:",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' https://cdn.discordapp.com data:",
+  "img-src 'self' https://cdn.discordapp.com data: blob:",
   "connect-src 'self'",
   "frame-ancestors 'none'",
   "base-uri 'self'",
@@ -91,6 +97,7 @@ export const staticSites: StaticSiteConfig[] = [
   { hostname: "better-skill-capped.com", bucket: "better-skill-capped" },
   { hostname: "clauderon.com", bucket: "clauderon" },
   { hostname: "ts-mc.net", bucket: "ts-mc" },
+  { hostname: "ppl.glitter-boys.com", bucket: "glitter-boys-ppl" },
   { hostname: "cook.sjer.red", bucket: "cook" },
   { hostname: "stocks.sjer.red", bucket: "stocks-sjer-red" },
   // Public artifact host. PR screenshots are served from the `pr/assets/<n>/`
@@ -98,5 +105,13 @@ export const staticSites: StaticSiteConfig[] = [
   { hostname: "public.sjer.red", bucket: "public-sjer-red" },
 ];
 
-export const S3_ENDPOINT = "https://seaweedfs.sjer.red";
+// In-cluster SeaweedFS S3 gateway. Caddy/s3proxy runs in this cluster, so it must
+// reach SeaweedFS directly via the Kubernetes service — NOT via the public
+// `https://seaweedfs.sjer.red` Cloudflare ingress, which hairpins every asset fetch
+// out to Cloudflare and back. That hairpin doubled latency, made internal serving
+// depend on Cloudflare being up, and is a SigV4-behind-a-reverse-proxy hazard
+// (intermittent `SignatureDoesNotMatch` 403s → broken assets that need a refresh).
+// This matches the canonical internal endpoint used by scout/birmel/pokemon.
+export const S3_ENDPOINT =
+  "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333";
 export const S3_CREDENTIALS_SECRET_NAME = "seaweedfs-s3-credentials";

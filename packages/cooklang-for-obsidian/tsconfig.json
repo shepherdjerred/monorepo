@@ -1,19 +1,16 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "inlineSourceMap": true,
     "inlineSources": true,
-    "module": "ESNext",
-    "target": "ES2018",
+    "sourceMap": false,
+    "declaration": false,
+    "declarationMap": false,
     "allowJs": true,
-    "noImplicitAny": true,
-    "moduleResolution": "bundler",
     "importHelpers": true,
-    "isolatedModules": true,
-    "strictNullChecks": true,
-    "allowImportingTsExtensions": true,
     "noEmit": true,
-    "skipLibCheck": true,
-    "lib": ["DOM", "ES2019", "ES2021.String"]
+    "lib": ["DOM", "ES2021"],
+    "types": ["node", "bun-types"]
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "test/**/*.ts"]
 }

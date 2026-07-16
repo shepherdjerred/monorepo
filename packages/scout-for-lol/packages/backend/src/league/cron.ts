@@ -2,7 +2,7 @@ import { checkPostMatch } from "#src/league/tasks/postmatch/index.ts";
 import { checkPreMatch } from "#src/league/tasks/prematch/index.ts";
 import { runLifecycleCheck } from "#src/league/tasks/competition/lifecycle.ts";
 import { runPlayerPruning } from "#src/league/tasks/cleanup/prune-players.ts";
-import { checkAbandonedGuilds } from "#src/league/tasks/cleanup/abandoned-guilds.ts";
+import { reconcileRemovedGuilds } from "#src/league/tasks/cleanup/reconcile-removed-guilds.ts";
 import { runDataValidation } from "#src/league/tasks/cleanup/validate-data.ts";
 import { refreshMatchTimes } from "#src/league/tasks/maintenance/refresh-match-times.ts";
 import { runOutreach } from "#src/league/tasks/outreach/index.ts";
@@ -12,6 +12,10 @@ import { createCronJob } from "#src/league/cron/helpers.ts";
 import { createLogger } from "#src/logger.ts";
 import { runStartupRecovery } from "#src/league/tasks/recovery/startup-recovery.ts";
 import { runReportStoreS3CatchUp } from "#src/report-store/catch-up.ts";
+import {
+  runReportLakeFold,
+  runReportLakeRebuild,
+} from "#src/report-lake/compactor.ts";
 
 const logger = createLogger("league-cron");
 
@@ -88,6 +92,36 @@ export async function startCronJobs() {
     logTrigger: "Catching up SQLite report-store facts from S3 archive",
   });
 
+  // fold freshly-ingested staging rows into the report lake every 15 minutes
+  // (offset from the S3 catch-up so they don't contend for the DB), and run
+  // on init so a fresh deploy gets a lake before the first report fires.
+  logger.info("📅 Setting up report-lake fold (every 15 minutes at :05)");
+  createCronJob({
+    schedule: "0 5-59/15 * * * *",
+    jobName: "report_lake_fold",
+    task: async () => {
+      await runReportLakeFold();
+    },
+    logMessage: "🗜️ Folding staged rows into the report lake",
+    timezone: "UTC",
+    runOnInit: true,
+  });
+
+  // full lake rebuild nightly at 2 AM UTC: consolidates fold fragments,
+  // picks up lake schema changes, and re-derives everything from the
+  // canonical Stored* raw JSON.
+  logger.info("📅 Setting up report-lake rebuild (daily 2 AM UTC)");
+  createCronJob({
+    schedule: "0 0 2 * * *",
+    jobName: "report_lake_rebuild",
+    task: async () => {
+      await runReportLakeRebuild();
+    },
+    logMessage: "🏗️ Rebuilding the report lake from stored raw JSON",
+    timezone: "UTC",
+    runOnInit: false,
+  });
+
   // prune orphaned players daily at 3 AM UTC
   logger.info("📅 Setting up daily player pruning job (3 AM UTC)");
   createCronJob({
@@ -99,13 +133,14 @@ export async function startCronJobs() {
     runOnInit: true,
   });
 
-  // check for abandoned guilds daily at 4 AM UTC (after player pruning)
-  logger.info("📅 Setting up abandoned guild cleanup job (4 AM UTC)");
+  // reconcile guilds the bot was removed from (e.g. while offline) daily at 4 AM
+  // UTC (after player pruning). The bot never leaves on its own.
+  logger.info("📅 Setting up removed-guild reconciliation job (4 AM UTC)");
   createCronJob({
     schedule: "0 0 4 * * *",
-    jobName: "abandoned_guild_cleanup",
-    task: () => checkAbandonedGuilds(client),
-    logMessage: "🧹 Running abandoned guild cleanup",
+    jobName: "removed_guild_reconciliation",
+    task: () => reconcileRemovedGuilds(client),
+    logMessage: "🧹 Reconciling removed guilds",
     timezone: "UTC",
     runOnInit: true,
   });
@@ -137,6 +172,7 @@ export async function startCronJobs() {
   logger.info(
     "📊 Pre-match check (30s), match history polling (1min), competition lifecycle (15min), data validation (hourly), " +
       "match time refresh (6hr), scheduled reports (every minute), report-store S3 catch-up (15min), " +
-      "player pruning (3AM UTC), abandoned guild cleanup (4AM UTC) cron jobs are now active",
+      "report-lake fold (15min) and rebuild (2AM UTC), " +
+      "player pruning (3AM UTC), removed-guild reconciliation (4AM UTC) cron jobs are now active",
   );
 }

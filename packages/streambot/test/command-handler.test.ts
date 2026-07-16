@@ -3,11 +3,13 @@ import {
   CommandHandler,
   type CommandHandlerDeps,
   type CommandInteraction,
-  type PlaybackView,
 } from "@shepherdjerred/streambot/discord/command-handler.ts";
+import type { PlaybackView } from "@shepherdjerred/streambot/discord/queue-text.ts";
 import {
   helpText,
-  sourcesText,
+  listPages,
+  sourcesPages,
+  type PaginatedPages,
 } from "@shepherdjerred/streambot/discord/help-text.ts";
 import { commandJson } from "@shepherdjerred/streambot/discord/commands.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
@@ -17,6 +19,9 @@ import {
   type UserId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
+import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
+import { BlockedSourceError } from "@shepherdjerred/streambot/moderation/adult-block.ts";
+import type { SubtitleCandidate } from "@shepherdjerred/streambot/sources/subtitles.ts";
 
 const ADMIN = "160509172704739328";
 const REQUESTER = "100000000000000001";
@@ -40,12 +45,19 @@ function makeConfig(adminIds: string[]) {
   });
 }
 
+const RESOLVED_STUB: ResolvedSource = {
+  title: "resolved",
+  ffmpegInput: "resolved://input",
+  chapters: [],
+};
+
 const EMPTY_VIEW: PlaybackView = {
   state: "idle",
   current: null,
   queue: [],
   loop: "off",
   volume: 100,
+  positionSeconds: null,
 };
 
 type Harness = {
@@ -62,10 +74,31 @@ function makeHandler(over: {
   seekApplied?: boolean;
   playlistItems?: { url: string; title: string }[];
   sources?: string[];
-}): Harness & { seeks: number[] } {
+  resolvedSource?: ResolvedSource;
+  resolvePlayError?: Error;
+  subtitleCandidates?: SubtitleCandidate[];
+  subtitleMenuAlreadyPending?: boolean;
+  /**
+   * Stable identity of the currently-playing source, as `currentSourceId()` reports it. Defaults to
+   * `"file:/current"` when `view.current` is set, else `null`. Pass an array to make consecutive
+   * reads differ (the handler reads once when the picker opens and again before dispatch) — the
+   * second value simulates playback advancing to a different item during the picker's wait.
+   */
+  currentSourceId?: string | null | (string | null)[];
+}): Harness & { seeks: number[]; subtitleMenuPending: () => boolean } {
   const events: PlaybackEvent[] = [];
   const announces: string[] = [];
   const seeks: number[] = [];
+  let subtitleMenuPending = over.subtitleMenuAlreadyPending ?? false;
+  const defaultSourceId =
+    (over.view?.current ?? null) === null ? null : "file:/current";
+  const sourceIdReads =
+    over.currentSourceId === undefined
+      ? [defaultSourceId]
+      : Array.isArray(over.currentSourceId)
+        ? over.currentSourceId
+        : [over.currentSourceId];
+  let sourceIdReadIndex = 0;
   const deps: CommandHandlerDeps = {
     config: makeConfig(over.adminIds ?? []),
     dispatch: (event) => events.push(event),
@@ -78,12 +111,40 @@ function makeHandler(over: {
     },
     expandPlaylist: () => Promise.resolve(over.playlistItems ?? []),
     listSources: () => Promise.resolve(over.sources ?? []),
+    resolvePlaySource: () =>
+      over.resolvePlayError === undefined
+        ? Promise.resolve(over.resolvedSource ?? RESOLVED_STUB)
+        : Promise.reject(over.resolvePlayError),
     announce: (message) => {
       announces.push(message);
       return Promise.resolve();
     },
+    listSubtitleCandidates: () =>
+      Promise.resolve(over.subtitleCandidates ?? []),
+    currentSourceId: () => {
+      const read =
+        sourceIdReads[Math.min(sourceIdReadIndex, sourceIdReads.length - 1)] ??
+        null;
+      sourceIdReadIndex += 1;
+      return read;
+    },
+    hasPendingSubtitleMenu: () => subtitleMenuPending,
+    claimSubtitleMenu: () => {
+      if (subtitleMenuPending) return false;
+      subtitleMenuPending = true;
+      return true;
+    },
+    releaseSubtitleMenu: () => {
+      subtitleMenuPending = false;
+    },
   };
-  return { handler: new CommandHandler(deps), events, announces, seeks };
+  return {
+    handler: new CommandHandler(deps),
+    events,
+    announces,
+    seeks,
+    subtitleMenuPending: () => subtitleMenuPending,
+  };
 }
 
 type FakeOpts = {
@@ -91,16 +152,22 @@ type FakeOpts = {
   sub: string;
   strings?: Record<string, string>;
   integers?: Record<string, number>;
+  /** What `replySelectMenu` resolves with — the user's (fake) pick, or null to simulate a timeout. */
+  subtitleMenuPick?: string | null;
 };
 
 function fakeInteraction(opts: FakeOpts): {
   interaction: CommandInteraction;
   replies: string[];
   edits: string[];
+  paginated: PaginatedPages[];
+  selectMenuCandidates: (readonly SubtitleCandidate[])[];
   state: { deferred: boolean };
 } {
   const replies: string[] = [];
   const edits: string[] = [];
+  const paginated: PaginatedPages[] = [];
+  const selectMenuCandidates: (readonly SubtitleCandidate[])[] = [];
   const state = { deferred: false };
   const interaction: CommandInteraction = {
     userId: uid(opts.userId ?? REQUESTER),
@@ -132,8 +199,23 @@ function fakeInteraction(opts: FakeOpts): {
       edits.push(content);
       return Promise.resolve();
     },
+    replyPaginated: (payload) => {
+      paginated.push(payload);
+      return Promise.resolve();
+    },
+    replySelectMenu: (candidates) => {
+      selectMenuCandidates.push(candidates);
+      return Promise.resolve(opts.subtitleMenuPick ?? null);
+    },
   };
-  return { interaction, replies, edits, state };
+  return {
+    interaction,
+    replies,
+    edits,
+    paginated,
+    selectMenuCandidates,
+    state,
+  };
 }
 
 function viewWithCurrent(requesterId: string): PlaybackView {
@@ -149,32 +231,138 @@ function viewWithCurrent(requesterId: string): PlaybackView {
 }
 
 describe("CommandHandler routing + acks", () => {
-  test("play queues a search source and acks", async () => {
+  test("play pre-resolves a search source (defer+edit) and acks", async () => {
     const h = makeHandler({});
-    const { interaction, replies } = fakeInteraction({
+    const { interaction, edits, state } = fakeInteraction({
       sub: "play",
       strings: { query: "never gonna give you up" },
     });
     await h.handler.run(interaction);
+    expect(state.deferred).toBe(true);
     expect(h.events).toEqual([
       {
         type: "ADD",
         source: { kind: "search", query: "never gonna give you up" },
         requesterId: uid(REQUESTER),
+        preResolved: RESOLVED_STUB,
       },
     ]);
-    expect(replies[0]).toBe("Queued: **never gonna give you up**");
+    expect(edits[0]).toStartWith("Queued: **never gonna give you up**");
+    expect(edits[0]).toContain("Tip: ");
   });
 
   test("playnext unshifts (ADD_NEXT) and acks", async () => {
     const h = makeHandler({});
-    const { interaction, replies } = fakeInteraction({
+    const { interaction, edits } = fakeInteraction({
       sub: "playnext",
       strings: { query: "song" },
     });
     await h.handler.run(interaction);
     expect(h.events[0]?.type).toBe("ADD_NEXT");
-    expect(replies[0]).toBe("Up next: **song**");
+    expect(edits[0]).toStartWith("Up next: **song**");
+    expect(edits[0]).toContain("Tip: ");
+  });
+
+  test("play resolves a library file source without deferring (fast path)", async () => {
+    const h = makeHandler({
+      library: [
+        {
+          title: "Movie",
+          path: "/videos/Movie.mkv",
+          relativePath: "Movie.mkv",
+          library: "movies",
+        },
+      ],
+    });
+    const { interaction, replies, state } = fakeInteraction({
+      sub: "play",
+      strings: { query: "Movie" },
+    });
+    await h.handler.run(interaction);
+    expect(state.deferred).toBe(false);
+    expect(h.events).toEqual([
+      {
+        type: "ADD",
+        source: { kind: "file", path: "/videos/Movie.mkv", title: "Movie" },
+        requesterId: uid(REQUESTER),
+      },
+    ]);
+    expect(replies[0]).toStartWith("Queued: **Movie**");
+  });
+
+  test("play surfaces a specific error for an unsupported site and queues nothing", async () => {
+    const h = makeHandler({
+      resolvePlayError: new Error(
+        "yt-dlp exited with code 1: Unsupported URL: https://nope.example/x",
+      ),
+    });
+    const { interaction, edits, state } = fakeInteraction({
+      sub: "play",
+      strings: { query: "https://nope.example/x" },
+    });
+    await h.handler.run(interaction);
+    expect(state.deferred).toBe(true);
+    expect(h.events).toHaveLength(0);
+    expect(edits[0]).toContain("That site isn't supported");
+  });
+
+  test("play surfaces a specific error for an unavailable video and queues nothing", async () => {
+    const h = makeHandler({
+      resolvePlayError: new Error(
+        "yt-dlp exited with code 1: ERROR: [youtube] abc123: Video unavailable",
+      ),
+    });
+    const { interaction, edits } = fakeInteraction({
+      sub: "play",
+      strings: { query: "https://www.youtube.com/watch?v=abc123" },
+    });
+    await h.handler.run(interaction);
+    expect(h.events).toHaveLength(0);
+    expect(edits[0]).toContain("unavailable, private, or has been removed");
+  });
+
+  test("play surfaces a no-results error for a garbage search and queues nothing", async () => {
+    const h = makeHandler({
+      resolvePlayError: new Error(
+        "yt-dlp exited with code 1: ERROR: [youtube:search] query: No videos found",
+      ),
+    });
+    const { interaction, edits } = fakeInteraction({
+      sub: "play",
+      strings: { query: "asdkjfhaslkdjfhalskdjfh" },
+    });
+    await h.handler.run(interaction);
+    expect(h.events).toHaveLength(0);
+    expect(edits[0]).toBe("No results found for that search.");
+  });
+
+  test("play falls back to a generic (trimmed) error for unrecognized yt-dlp failures", async () => {
+    const h = makeHandler({
+      resolvePlayError: new Error(
+        "could not parse yt-dlp output: unexpected token",
+      ),
+    });
+    const { interaction, edits } = fakeInteraction({
+      sub: "play",
+      strings: { query: "https://example.com/video" },
+    });
+    await h.handler.run(interaction);
+    expect(h.events).toHaveLength(0);
+    expect(edits[0]).toStartWith("Couldn't queue that:");
+  });
+
+  test("play still shames+blocks when yt-dlp resolves to a blocked domain", async () => {
+    const h = makeHandler({
+      resolvePlayError: new BlockedSourceError("blocked.example"),
+    });
+    const { interaction, edits } = fakeInteraction({
+      sub: "play",
+      strings: { query: "https://bit.ly/redirect" },
+    });
+    await h.handler.run(interaction);
+    expect(h.events).toHaveLength(0);
+    expect(edits[0]).toBe("🚫 Nope.");
+    expect(h.announces).toHaveLength(1);
   });
 
   test("unknown subcommand replies politely, dispatches nothing", async () => {
@@ -194,6 +382,62 @@ describe("CommandHandler routing + acks", () => {
     const np = fakeInteraction({ sub: "nowplaying" });
     await h.handler.run(np.interaction);
     expect(np.replies[0]).toContain("**Now playing:** Current Song");
+  });
+
+  test("nowplaying reports nothing playing when idle", async () => {
+    const h = makeHandler({ view: EMPTY_VIEW });
+    const { interaction, replies } = fakeInteraction({ sub: "nowplaying" });
+    await h.handler.run(interaction);
+    expect(replies[0]).toBe("Nothing is playing.");
+  });
+
+  test("nowplaying omits the position line when position is null", async () => {
+    const h = makeHandler({ view: viewWithCurrent(REQUESTER) });
+    const { interaction, replies } = fakeInteraction({ sub: "nowplaying" });
+    await h.handler.run(interaction);
+    expect(replies[0]).not.toContain("Position:");
+  });
+
+  test("nowplaying renders position alone when there are no chapters", async () => {
+    const view: PlaybackView = {
+      ...viewWithCurrent(REQUESTER),
+      positionSeconds: 95,
+    };
+    const h = makeHandler({ view });
+    const { interaction, replies } = fakeInteraction({ sub: "nowplaying" });
+    await h.handler.run(interaction);
+    expect(replies[0]).toContain("**Position:** 1:35");
+    expect(replies[0]).not.toContain("Chapter");
+  });
+
+  test("nowplaying renders position + current chapter when both are known", async () => {
+    const view: PlaybackView = {
+      ...viewWithChapters(REQUESTER),
+      positionSeconds: 200,
+    };
+    const h = makeHandler({ view });
+    const { interaction, replies } = fakeInteraction({ sub: "nowplaying" });
+    await h.handler.run(interaction);
+    expect(replies[0]).toContain("**Position:** 3:20 — Chapter 2: The Heist");
+  });
+
+  test("nowplaying skips the chapter clause when position is before the first chapter", async () => {
+    const view: PlaybackView = {
+      ...viewWithChapters(REQUESTER),
+      current: {
+        title: "Current Movie",
+        requesterId: uid(REQUESTER),
+        chapters: [
+          { index: 1, title: "Intro", startSeconds: 30, endSeconds: 90 },
+        ],
+      },
+      positionSeconds: 10,
+    };
+    const h = makeHandler({ view });
+    const { interaction, replies } = fakeInteraction({ sub: "nowplaying" });
+    await h.handler.run(interaction);
+    expect(replies[0]).toContain("**Position:** 0:10");
+    expect(replies[0]).not.toContain("Chapter");
   });
 });
 
@@ -228,7 +472,8 @@ describe("CommandHandler playlist expansion", () => {
     expect(state.deferred).toBe(true);
     expect(h.events).toHaveLength(2);
     expect(h.events.every((event) => event.type === "ADD")).toBe(true);
-    expect(edits[0]).toBe("Queued 2 item(s) from the playlist.");
+    expect(edits[0]).toStartWith("Queued 2 item(s) from the playlist.");
+    expect(edits[0]).toContain("Tip: ");
   });
 });
 
@@ -510,6 +755,198 @@ describe("CommandHandler chapters", () => {
   });
 });
 
+const SIDECAR_CANDIDATE: SubtitleCandidate = {
+  kind: "sidecar",
+  file: "Movie.en.srt",
+  lang: "en",
+  modifier: null,
+};
+
+describe("CommandHandler subtitles command (track picker)", () => {
+  test("defers, lists candidates, presents the menu, and dispatches the pick", async () => {
+    const h = makeHandler({
+      view: { ...viewWithCurrent(REQUESTER), positionSeconds: 123 },
+      subtitleCandidates: [SIDECAR_CANDIDATE],
+    });
+    const { interaction, edits, state, selectMenuCandidates } = fakeInteraction(
+      {
+        sub: "subtitles",
+        userId: REQUESTER,
+        subtitleMenuPick: "sidecar:Movie.en.srt",
+      },
+    );
+    await h.handler.run(interaction);
+    expect(state.deferred).toBe(true);
+    expect(selectMenuCandidates).toEqual([[SIDECAR_CANDIDATE]]);
+    expect(h.events).toEqual([
+      {
+        type: "CHANGE_SUBTITLES",
+        subtitles: { trackRef: { kind: "sidecar", file: "Movie.en.srt" } },
+        positionSeconds: 123,
+      },
+    ]);
+    expect(edits.at(-1)).toContain(
+      "Restarting with the selected subtitle track",
+    );
+    // Single-flight slot is released after a successful pick.
+    expect(h.subtitleMenuPending()).toBe(false);
+  });
+
+  test("reports nothing playing when idle (no defer, no candidate lookup)", async () => {
+    const h = makeHandler({ view: EMPTY_VIEW });
+    const { interaction, replies, state } = fakeInteraction({
+      sub: "subtitles",
+    });
+    await h.handler.run(interaction);
+    expect(state.deferred).toBe(false);
+    expect(h.events).toHaveLength(0);
+    expect(replies[0]).toBe("Nothing is playing.");
+  });
+
+  test("denies a non-requester non-admin", async () => {
+    const h = makeHandler({ view: viewWithCurrent(OTHER) });
+    const { interaction, replies, state } = fakeInteraction({
+      sub: "subtitles",
+      userId: REQUESTER,
+    });
+    await h.handler.run(interaction);
+    expect(state.deferred).toBe(false);
+    expect(h.events).toHaveLength(0);
+    expect(replies[0]).toContain("Only the requester or an admin");
+  });
+
+  test("replies immediately with no candidates found and skips the menu", async () => {
+    const h = makeHandler({
+      view: viewWithCurrent(REQUESTER),
+      subtitleCandidates: [],
+    });
+    const { interaction, edits, selectMenuCandidates } = fakeInteraction({
+      sub: "subtitles",
+      userId: REQUESTER,
+    });
+    await h.handler.run(interaction);
+    expect(selectMenuCandidates).toHaveLength(0);
+    expect(edits).toEqual([
+      "No subtitle tracks were found for the current video.",
+    ]);
+    expect(h.events).toHaveLength(0);
+    expect(h.subtitleMenuPending()).toBe(false);
+  });
+
+  test("a timed-out pick (null) reports timeout and dispatches nothing", async () => {
+    const h = makeHandler({
+      view: viewWithCurrent(REQUESTER),
+      subtitleCandidates: [SIDECAR_CANDIDATE],
+    });
+    const { interaction, edits } = fakeInteraction({
+      sub: "subtitles",
+      userId: REQUESTER,
+      subtitleMenuPick: null,
+    });
+    await h.handler.run(interaction);
+    expect(edits.at(-1)).toBe("Selection timed out.");
+    expect(h.events).toHaveLength(0);
+    expect(h.subtitleMenuPending()).toBe(false);
+  });
+
+  test("rejects a second concurrent picker for the same session", async () => {
+    const h = makeHandler({
+      view: viewWithCurrent(REQUESTER),
+      subtitleCandidates: [SIDECAR_CANDIDATE],
+      subtitleMenuAlreadyPending: true,
+    });
+    const { interaction, replies, state } = fakeInteraction({
+      sub: "subtitles",
+      userId: REQUESTER,
+    });
+    await h.handler.run(interaction);
+    expect(state.deferred).toBe(false);
+    expect(h.events).toHaveLength(0);
+    expect(replies[0]).toContain("A subtitle picker is already open");
+  });
+
+  test("picking Off dispatches an off trackRef", async () => {
+    const h = makeHandler({
+      view: { ...viewWithCurrent(REQUESTER), positionSeconds: 5 },
+      subtitleCandidates: [SIDECAR_CANDIDATE],
+    });
+    const { interaction } = fakeInteraction({
+      sub: "subtitles",
+      userId: REQUESTER,
+      subtitleMenuPick: "off",
+    });
+    await h.handler.run(interaction);
+    expect(h.events).toEqual([
+      {
+        type: "CHANGE_SUBTITLES",
+        subtitles: { trackRef: { kind: "off" } },
+        positionSeconds: 5,
+      },
+    ]);
+  });
+
+  test("aborts (no dispatch) if the current source's kind changed while the picker was open", async () => {
+    // The picker was built from a file source's sidecar candidate, but by the time the user
+    // picks, playback has moved on to a url source — applying the sidecar trackRef there would
+    // throw the invariant guard in the subtitle resolver, so this must be caught first. The
+    // source-id read flips from a `file:` id to a `url:` id between picker-open and dispatch.
+    const h = makeHandler({
+      view: { ...viewWithCurrent(REQUESTER), positionSeconds: 5 },
+      subtitleCandidates: [SIDECAR_CANDIDATE],
+      currentSourceId: ["file:/movie.mkv", "url:https://youtu.be/abc"],
+    });
+    const { interaction, edits } = fakeInteraction({
+      sub: "subtitles",
+      userId: REQUESTER,
+      subtitleMenuPick: "sidecar:Movie.en.srt",
+    });
+    await h.handler.run(interaction);
+    expect(h.events).toHaveLength(0);
+    expect(edits.at(-1)).toContain("Playback changed while you were choosing");
+    expect(h.subtitleMenuPending()).toBe(false);
+  });
+
+  test("aborts (no dispatch) when playback advanced to a different item with the SAME title", async () => {
+    // Two distinct files can share a display title. If playback advances from one to the other
+    // during the picker window, a title-only guard would let the old file's sidecar trackRef be
+    // applied to the new file. The source-id read changes (different path) even though the view's
+    // title is unchanged, so the stale pick must be rejected.
+    const h = makeHandler({
+      view: { ...viewWithCurrent(REQUESTER), positionSeconds: 5 },
+      subtitleCandidates: [SIDECAR_CANDIDATE],
+      currentSourceId: ["file:/movies/dupe-a.mkv", "file:/movies/dupe-b.mkv"],
+    });
+    const { interaction, edits } = fakeInteraction({
+      sub: "subtitles",
+      userId: REQUESTER,
+      subtitleMenuPick: "sidecar:Movie.en.srt",
+    });
+    await h.handler.run(interaction);
+    expect(h.events).toHaveLength(0);
+    expect(edits.at(-1)).toContain("Playback changed while you were choosing");
+    expect(h.subtitleMenuPending()).toBe(false);
+  });
+
+  test("aborts (no dispatch) when playback stopped entirely while the picker was open", async () => {
+    // The item ended and nothing replaced it: the second source-id read is null, which never
+    // equals the captured id, so the pick is rejected instead of dispatched into the void.
+    const h = makeHandler({
+      view: { ...viewWithCurrent(REQUESTER), positionSeconds: 5 },
+      subtitleCandidates: [SIDECAR_CANDIDATE],
+      currentSourceId: ["file:/movie.mkv", null],
+    });
+    const { interaction, edits } = fakeInteraction({
+      sub: "subtitles",
+      userId: REQUESTER,
+      subtitleMenuPick: "sidecar:Movie.en.srt",
+    });
+    await h.handler.run(interaction);
+    expect(h.events).toHaveLength(0);
+    expect(edits.at(-1)).toContain("Playback changed while you were choosing");
+    expect(h.subtitleMenuPending()).toBe(false);
+  });
+});
+
 function playedSource(strings: Record<string, string>) {
   const h = makeHandler({});
   return { h, fake: fakeInteraction({ sub: "play", strings }) };
@@ -535,7 +972,7 @@ describe("CommandHandler subtitles options", () => {
     const event = h.events[0];
     if (event?.type !== "ADD") throw new Error("expected ADD");
     expect(event.source.subtitles).toEqual({ enabled: true, language: "es" });
-    expect(fake.replies[0]).toBe("Queued: **a song** _(subtitles: es)_");
+    expect(fake.edits[0]).toStartWith("Queued: **a song** _(subtitles: es)_");
   });
 
   test("subtitles:off disables and is reflected in the ack", async () => {
@@ -544,7 +981,7 @@ describe("CommandHandler subtitles options", () => {
     const event = h.events[0];
     if (event?.type !== "ADD") throw new Error("expected ADD");
     expect(event.source.subtitles).toEqual({ enabled: false });
-    expect(fake.replies[0]).toBe("Queued: **a song** _(subtitles: off)_");
+    expect(fake.edits[0]).toStartWith("Queued: **a song** _(subtitles: off)_");
   });
 
   test("playlist items inherit the subtitle preference", async () => {
@@ -598,18 +1035,22 @@ describe("help", () => {
 });
 
 describe("sources", () => {
-  test("bare sources defers and summarizes the count", async () => {
+  test("bare sources defers and paginates the full list", async () => {
     const h = makeHandler({ sources: ["youtube", "twitch:vod", "vimeo"] });
     const fake = fakeInteraction({ sub: "sources" });
     await h.handler.run(fake.interaction);
     expect(fake.state.deferred).toBe(true);
-    const edit = fake.edits[0];
-    if (edit === undefined) throw new Error("expected an edited reply");
-    expect(edit).toContain("3 sources");
-    expect(edit).toContain("/stream sources");
+    const payload = fake.paginated[0];
+    if (payload === undefined)
+      throw new Error("expected a paginated reply payload");
+    expect(payload.header).toContain("3 sources");
+    expect(payload.pages).toHaveLength(1);
+    expect(payload.pages[0]).toContain("`youtube`");
+    expect(payload.pages[0]).toContain("`twitch:vod`");
+    expect(payload.pages[0]).toContain("`vimeo`");
   });
 
-  test("filtered sources lists case-insensitive matches only", async () => {
+  test("filtered sources paginate over matches only", async () => {
     const h = makeHandler({
       sources: ["youtube", "twitch:vod", "twitch:clips", "vimeo"],
     });
@@ -618,27 +1059,138 @@ describe("sources", () => {
       strings: { query: "TWITCH" },
     });
     await h.handler.run(fake.interaction);
-    const edit = fake.edits[0];
-    if (edit === undefined) throw new Error("expected an edited reply");
-    expect(edit).toContain("twitch:vod");
-    expect(edit).toContain("twitch:clips");
-    expect(edit).not.toContain("vimeo");
-    expect(edit).toContain("2 source(s)");
+    const payload = fake.paginated[0];
+    if (payload === undefined)
+      throw new Error("expected a paginated reply payload");
+    expect(payload.header).toContain("2 source(s) matching `TWITCH`");
+    expect(payload.pages).toHaveLength(1);
+    const body = payload.pages[0] ?? "";
+    expect(body).toContain("`twitch:vod`");
+    expect(body).toContain("`twitch:clips`");
+    expect(body).not.toContain("`vimeo`");
   });
 
-  test("filtered sources reports when nothing matches", async () => {
+  test("filtered sources with no matches return a single explanatory page", async () => {
     const h = makeHandler({ sources: ["youtube", "vimeo"] });
     const fake = fakeInteraction({
       sub: "sources",
       strings: { query: "nope" },
     });
     await h.handler.run(fake.interaction);
-    expect(fake.edits[0]).toContain("No sources matching");
+    const payload = fake.paginated[0];
+    if (payload === undefined)
+      throw new Error("expected a paginated reply payload");
+    expect(payload.header).toContain("No sources matching `nope`");
+    expect(payload.pages).toHaveLength(1);
   });
 
-  test("sourcesText truncates beyond the display cap", () => {
-    const many = Array.from({ length: 25 }, (_, i) => `site${String(i)}`);
-    const text = sourcesText(many, "site");
-    expect(text).toContain("…and 5 more");
+  test("large source sets split into multiple pages", () => {
+    const many = Array.from({ length: 73 }, (_, i) => `site${String(i)}`);
+    const { header, pages } = sourcesPages(many, null);
+    expect(header).toContain("yt-dlp supports 73 sources");
+    // 73 entries at SOURCES_PER_PAGE = 30 → 3 pages (30 + 30 + 13).
+    expect(pages).toHaveLength(3);
+    expect(pages[0]).toContain("`site0`");
+    expect(pages[0]).toContain("`site29`");
+    expect(pages[1]).toContain("`site30`");
+    expect(pages[2]).toContain("`site72`");
+    // Each page stays well under Discord's 2000-char limit.
+    for (const page of pages) {
+      expect(page.length).toBeLessThanOrEqual(2000);
+    }
+  });
+
+  test("filter paginates across many matches", () => {
+    const sources = [
+      ...Array.from({ length: 50 }, (_, i) => `twitch_${String(i)}`),
+      "vimeo",
+    ];
+    const { header, pages } = sourcesPages(sources, "twitch");
+    expect(header).toContain("50 source(s) matching `twitch`");
+    expect(pages).toHaveLength(2);
+    for (const page of pages) {
+      expect(page).not.toContain("vimeo");
+    }
+  });
+});
+
+function entry(title: string): LibraryEntry {
+  return {
+    title,
+    path: `/videos/${title}.mkv`,
+    relativePath: `${title}.mkv`,
+    library: "movies",
+  };
+}
+
+describe("list", () => {
+  test("bare list defers and paginates the full library", async () => {
+    const h = makeHandler({
+      library: [entry("Alpha"), entry("Bravo"), entry("Charlie")],
+    });
+    const fake = fakeInteraction({ sub: "list" });
+    await h.handler.run(fake.interaction);
+    expect(fake.state.deferred).toBe(true);
+    const payload = fake.paginated[0];
+    if (payload === undefined)
+      throw new Error("expected a paginated reply payload");
+    expect(payload.header).toContain("3 result(s)");
+    expect(payload.pages).toHaveLength(1);
+    expect(payload.pages[0]).toContain("`Alpha`");
+    expect(payload.pages[0]).toContain("`Charlie`");
+  });
+
+  test("filtered list paginates over fuzzy matches only", async () => {
+    const h = makeHandler({
+      library: [entry("Alpha One"), entry("Alpha Two"), entry("Bravo")],
+    });
+    const fake = fakeInteraction({ sub: "list", strings: { filter: "alpha" } });
+    await h.handler.run(fake.interaction);
+    const payload = fake.paginated[0];
+    if (payload === undefined)
+      throw new Error("expected a paginated reply payload");
+    expect(payload.header).toContain("2 result(s) matching `alpha`");
+    const body = payload.pages[0] ?? "";
+    expect(body).toContain("`Alpha One`");
+    expect(body).toContain("`Alpha Two`");
+    expect(body).not.toContain("`Bravo`");
+  });
+
+  test("filtered list with no matches returns a single explanatory page", async () => {
+    const h = makeHandler({ library: [entry("Alpha")] });
+    const fake = fakeInteraction({ sub: "list", strings: { filter: "nope" } });
+    await h.handler.run(fake.interaction);
+    const payload = fake.paginated[0];
+    if (payload === undefined)
+      throw new Error("expected a paginated reply payload");
+    expect(payload.header).toContain("No matches for `nope`");
+  });
+
+  test("/stream search reuses the same paginated helper", async () => {
+    const h = makeHandler({ library: [entry("Alpha"), entry("Bravo")] });
+    const fake = fakeInteraction({
+      sub: "search",
+      strings: { query: "Bravo" },
+    });
+    await h.handler.run(fake.interaction);
+    const payload = fake.paginated[0];
+    if (payload === undefined)
+      throw new Error("expected a paginated reply payload");
+    expect(payload.header).toContain("1 result(s) matching `Bravo`");
+  });
+
+  test("large libraries split into multiple pages", () => {
+    const many = Array.from({ length: 45 }, (_, i) =>
+      entry(`Title${String(i)}`),
+    );
+    const { header, pages } = listPages(many, null);
+    expect(header).toContain("45 result(s)");
+    // 45 entries at LIST_PER_PAGE = 20 → 3 pages (20 + 20 + 5).
+    expect(pages).toHaveLength(3);
+    expect(pages[0]).toContain("`Title0`");
+    expect(pages[2]).toContain("`Title44`");
+    for (const page of pages) {
+      expect(page.length).toBeLessThanOrEqual(2000);
+    }
   });
 });

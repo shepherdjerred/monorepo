@@ -408,7 +408,6 @@ const FIELD_TYPE_MAP: Record<string, string> = {
 
 const MODEL_FIELD_TYPE_MAP: Record<string, Record<string, string>> = {
   Report: {
-    outputFormat: "ReportOutputFormat",
     lastRunStatus: "ReportRunStatus",
     sourceCompetitionId: "CompetitionId",
     systemSource: "ReportSystemSource",
@@ -417,7 +416,6 @@ const MODEL_FIELD_TYPE_MAP: Record<string, Record<string, string>> = {
     reportId: "ReportId",
     trigger: "ReportRunTrigger",
     status: "ReportRunStatus",
-    outputFormat: "ReportOutputFormat",
   },
 };
 

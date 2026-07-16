@@ -1,5 +1,6 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import {
+  parseAndCompile,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   ReportIdSchema,
@@ -51,6 +52,7 @@ export async function executeReportView(
     report.lastRunError === null
       ? "none"
       : truncateDiscordMessage(report.lastRunError, 400);
+  const renderKind = safeRenderKind(report.queryText);
   await interaction.reply({
     content: [
       `#${report.id.toString()} **${report.title}**`,
@@ -60,10 +62,21 @@ export async function executeReportView(
       `Next run: ${report.nextScheduledRunAt?.toISOString() ?? "not scheduled"}`,
       `Last status: ${status}`,
       `Last error: ${lastError}`,
-      `Output: ${report.outputFormat}, lookback: ${report.lookbackDays.toString()} day(s), max rows: ${report.maxRows.toString()}`,
+      `Display: ${renderKind}, lookback: ${report.lookbackDays.toString()} day(s), max rows: ${report.maxRows.toString()}`,
       "Query:",
       `\`\`\`sql\n${truncateDiscordMessage(report.queryText, 1200)}\n\`\`\``,
     ].join("\n"),
     ephemeral: true,
   });
+}
+
+// The render kind lives in the query's RENDER clause. A stored query is always
+// validated on save, but guard the view command so one malformed row can't
+// block inspecting it (the raw query is shown below for diagnosis).
+function safeRenderKind(queryText: string): string {
+  try {
+    return parseAndCompile(queryText).render.kind;
+  } catch {
+    return "unparseable";
+  }
 }

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Aurora": {
       "id": "Aurora",
@@ -154,6 +154,68 @@
           "name": "Arcana Aurora (Obsidian)",
           "chromas": false,
           "parentSkin": 11
+        },
+        {
+          "id": "893020",
+          "num": 20,
+          "name": "Broken Covenant Aurora",
+          "chromas": true
+        },
+        {
+          "id": "893021",
+          "num": 21,
+          "name": "Broken Covenant Aurora (Ruby)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "893022",
+          "num": 22,
+          "name": "Broken Covenant Aurora (Catseye)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "893023",
+          "num": 23,
+          "name": "Broken Covenant Aurora (Emerald)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "893024",
+          "num": 24,
+          "name": "Broken Covenant Aurora (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "893025",
+          "num": 25,
+          "name": "Broken Covenant Aurora (Sapphire)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "893026",
+          "num": 26,
+          "name": "Broken Covenant Aurora (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "893027",
+          "num": 27,
+          "name": "Broken Covenant Aurora (Pearl)",
+          "chromas": false,
+          "parentSkin": 20
+        },
+        {
+          "id": "893028",
+          "num": 28,
+          "name": "Broken Covenant Aurora (Obsidian)",
+          "chromas": false,
+          "parentSkin": 20
         }
       ],
       "lore": "From the moment she was born, Aurora navigated life with a unique ability to move between the spirit and material realms. Determined to learn more about the spirit realm's inhabitants, she left her home to further her research and happened upon a wayward demigod who'd become twisted and lost to time. Witnessing his desperation, Aurora resolved to find a way to help her feral friend regain his forgotten identity—a journey that would take her to the farthest reaches of the Freljord.",

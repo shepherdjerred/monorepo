@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Vex": {
       "id": "Vex",
@@ -10,10 +10,10 @@
       "title": "the Gloomist",
       "image": {
         "full": "Vex.png",
-        "sprite": "champion4.png",
+        "sprite": "champion5.png",
         "group": "champion",
-        "x": 432,
-        "y": 96,
+        "x": 0,
+        "y": 0,
         "w": 48,
         "h": 48
       },
@@ -453,7 +453,7 @@
             "full": "VexQ.png",
             "sprite": "spell15.png",
             "group": "spell",
-            "x": 192,
+            "x": 384,
             "y": 48,
             "w": 48,
             "h": 48
@@ -596,7 +596,7 @@
             "full": "VexW.png",
             "sprite": "spell15.png",
             "group": "spell",
-            "x": 240,
+            "x": 432,
             "y": 48,
             "w": 48,
             "h": 48
@@ -622,13 +622,13 @@
           },
           "maxrank": 5,
           "cooldown": [
-            13,
-            13,
-            13,
-            13,
-            13
+            12,
+            12,
+            12,
+            12,
+            12
           ],
-          "cooldownBurn": "13",
+          "cooldownBurn": "12",
           "cost": [
             70,
             80,
@@ -739,8 +739,8 @@
             "full": "VexE.png",
             "sprite": "spell15.png",
             "group": "spell",
-            "x": 288,
-            "y": 48,
+            "x": 0,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -858,8 +858,8 @@
             "full": "VexR.png",
             "sprite": "spell15.png",
             "group": "spell",
-            "x": 336,
-            "y": 48,
+            "x": 48,
+            "y": 96,
             "w": 48,
             "h": 48
           },
@@ -871,10 +871,10 @@
         "description": "Vex periodically becomes empowered, causing her next basic Ability to fear enemies and interrupt dashes. Whenever a nearby enemy dashes, Vex applies a mark that can be consumed for bonus damage that also reduces the cooldown of her empowered state.",
         "image": {
           "full": "Icons_Vex_Passive.png",
-          "sprite": "passive4.png",
+          "sprite": "passive5.png",
           "group": "passive",
-          "x": 432,
-          "y": 96,
+          "x": 0,
+          "y": 0,
           "w": 48,
           "h": 48
         }

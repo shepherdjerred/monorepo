@@ -1,142 +1,151 @@
 ---
 import { marketingTrackingConfig } from "#src/lib/marketing.ts";
-import { DISCORD_INSTALL_CLICK_EVENT } from "#src/lib/marketing-constants.ts";
+import { GET_STARTED_CLICK_EVENT } from "#src/lib/marketing-constants.ts";
 
 const { pinterestTagId, redditPixelId } = marketingTrackingConfig;
-const discordInstallClickEvent = DISCORD_INSTALL_CLICK_EVENT;
+const getStartedClickEvent = GET_STARTED_CLICK_EVENT;
 ---
 
 <script
   is:inline
-  define:vars={{ pinterestTagId, redditPixelId, discordInstallClickEvent }}
+  define:vars={{ pinterestTagId, redditPixelId, getStartedClickEvent }}
 >
-  function insertBeforeFirstScript(script) {
-    var firstScript = document.getElementsByTagName("script")[0];
-    if (firstScript.parentNode) {
-      firstScript.parentNode.insertBefore(script, firstScript);
-    }
-  }
-
-  function loadPinterestPixel() {
-    if (window.pintrk) {
+  (() => {
+    if (!pinterestTagId || !redditPixelId) {
       return;
     }
 
-    window.pintrk = function () {
-      window.pintrk.queue.push(Array.prototype.slice.call(arguments));
-    };
-    window.pintrk.queue = [];
-    window.pintrk.version = "3.0";
-
-    var script = document.createElement("script");
-    script.async = true;
-    script.src = "https://s.pinimg.com/ct/core.js";
-    insertBeforeFirstScript(script);
-
-    window.pintrk("load", pinterestTagId);
-    window.pintrk("page");
-  }
-
-  function loadRedditPixel() {
-    if (window.rdt) {
-      return;
+    function insertBeforeFirstScript(script) {
+      var firstScript = document.getElementsByTagName("script")[0];
+      if (firstScript.parentNode) {
+        firstScript.parentNode.insertBefore(script, firstScript);
+      }
     }
 
-    var redditTracker = (window.rdt = function () {
-      if (redditTracker.sendEvent) {
-        redditTracker.sendEvent.apply(redditTracker, arguments);
+    function loadPinterestPixel() {
+      if (window.pintrk) {
         return;
       }
 
-      redditTracker.callQueue.push(arguments);
-    });
-    redditTracker.callQueue = [];
-
-    var script = document.createElement("script");
-    script.async = true;
-    script.src = "https://www.redditstatic.com/ads/pixel.js";
-    insertBeforeFirstScript(script);
-
-    window.rdt("init", redditPixelId);
-    window.rdt("track", "PageVisit");
-  }
-
-  function loadMarketingPixels() {
-    loadPinterestPixel();
-    loadRedditPixel();
-  }
-
-  function initializeMarketingTracking() {
-    loadMarketingPixels();
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initializeMarketingTracking);
-  } else {
-    initializeMarketingTracking();
-  }
-
-  document.addEventListener(
-    "click",
-    function (event) {
-      if (!(event.target instanceof Element)) {
-        return;
-      }
-
-      var ctaElement = event.target.closest(
-        "[data-scout-conversion='" + discordInstallClickEvent + "']",
-      );
-      if (!(ctaElement instanceof HTMLElement)) {
-        return;
-      }
-
-      var ctaLocation = ctaElement.dataset.scoutCtaLocation;
-      if (!ctaLocation) {
-        console.error("Tracked Scout Discord CTA is missing a location");
-        return;
-      }
-
-      var eventId =
-        window.crypto && window.crypto.randomUUID
-          ? window.crypto.randomUUID()
-          : String(Date.now()) + "-" + Math.random().toString(36).slice(2);
-
-      var eventProperties = {
-        cta_location: ctaLocation,
-        event_id: eventId,
+      window.pintrk = function () {
+        window.pintrk.queue.push(Array.prototype.slice.call(arguments));
       };
+      window.pintrk.queue = [];
+      window.pintrk.version = "3.0";
 
-      window.dispatchEvent(
-        new CustomEvent("scout:conversion", {
-          detail: {
-            event: discordInstallClickEvent,
-            properties: eventProperties,
-          },
-        }),
-      );
+      var script = document.createElement("script");
+      script.async = true;
+      script.src = "https://s.pinimg.com/ct/core.js";
+      insertBeforeFirstScript(script);
 
-      if (typeof window.plausible === "function") {
-        window.plausible(discordInstallClickEvent, {
-          props: eventProperties,
-        });
+      window.pintrk("load", pinterestTagId);
+      window.pintrk("page");
+    }
+
+    function loadRedditPixel() {
+      if (window.rdt) {
+        return;
       }
 
-      if (typeof window.pintrk === "function") {
-        window.pintrk("track", "Lead", {
+      var redditTracker = (window.rdt = function () {
+        if (redditTracker.sendEvent) {
+          redditTracker.sendEvent.apply(redditTracker, arguments);
+          return;
+        }
+
+        redditTracker.callQueue.push(arguments);
+      });
+      redditTracker.callQueue = [];
+
+      var script = document.createElement("script");
+      script.async = true;
+      script.src = "https://www.redditstatic.com/ads/pixel.js";
+      insertBeforeFirstScript(script);
+
+      window.rdt("init", redditPixelId);
+      window.rdt("track", "PageVisit");
+    }
+
+    function loadMarketingPixels() {
+      loadPinterestPixel();
+      loadRedditPixel();
+    }
+
+    function initializeMarketingTracking() {
+      loadMarketingPixels();
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener(
+        "DOMContentLoaded",
+        initializeMarketingTracking,
+      );
+    } else {
+      initializeMarketingTracking();
+    }
+
+    document.addEventListener(
+      "click",
+      function (event) {
+        if (!(event.target instanceof Element)) {
+          return;
+        }
+
+        var ctaElement = event.target.closest(
+          "[data-scout-conversion='" + getStartedClickEvent + "']",
+        );
+        if (!(ctaElement instanceof HTMLElement)) {
+          return;
+        }
+
+        var ctaLocation = ctaElement.dataset.scoutCtaLocation;
+        if (!ctaLocation) {
+          console.error("Tracked Scout CTA is missing a location");
+          return;
+        }
+
+        var eventId =
+          window.crypto && window.crypto.randomUUID
+            ? window.crypto.randomUUID()
+            : String(Date.now()) + "-" + Math.random().toString(36).slice(2);
+
+        var eventProperties = {
           cta_location: ctaLocation,
           event_id: eventId,
-          lead_type: discordInstallClickEvent,
-        });
-      }
+        };
 
-      if (typeof window.rdt === "function") {
-        window.rdt("track", "Lead", {
-          conversionId: eventId,
-          cta_location: ctaLocation,
-          customEventName: discordInstallClickEvent,
-        });
-      }
-    },
-    { capture: true },
-  );
+        window.dispatchEvent(
+          new CustomEvent("scout:conversion", {
+            detail: {
+              event: getStartedClickEvent,
+              properties: eventProperties,
+            },
+          }),
+        );
+
+        if (typeof window.plausible === "function") {
+          window.plausible(getStartedClickEvent, {
+            props: eventProperties,
+          });
+        }
+
+        if (typeof window.pintrk === "function") {
+          window.pintrk("track", "Lead", {
+            cta_location: ctaLocation,
+            event_id: eventId,
+            lead_type: getStartedClickEvent,
+          });
+        }
+
+        if (typeof window.rdt === "function") {
+          window.rdt("track", "Lead", {
+            conversionId: eventId,
+            cta_location: ctaLocation,
+            customEventName: getStartedClickEvent,
+          });
+        }
+      },
+      { capture: true },
+    );
+  })();
 </script>

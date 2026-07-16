@@ -7564,47 +7564,6 @@
     "calculations": {},
     "type": "full"
   },
-  "166": {
-    "id": 166,
-    "apiName": "ChainLightning",
-    "name": "Chain Lightning",
-    "desc": "Dealing damage to target will also damage the nearest enemy for <trueDamage>@DamageMod*100@% damage dealt true damage</trueDamage>.",
-    "tooltip": "{{Cherry_ChainLightning_Summary}}",
-    "iconLarge": "assets/ux/cherry/augments/icons/chainlightning_large.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/chainlightning_small.png",
-    "rarity": "gold",
-    "dataValues": {
-      "DamageMod": [
-        0.25,
-        0.25,
-        0.4000000059604645,
-        0.4000000059604645,
-        0.4000000059604645,
-        0.4000000059604645,
-        0.4000000059604645
-      ],
-      "MaxLevel": [
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2
-      ],
-      "Range": [
-        800,
-        800,
-        800,
-        800,
-        800,
-        800,
-        800
-      ]
-    },
-    "calculations": {},
-    "type": "full"
-  },
   "171": {
     "id": 171,
     "apiName": "Dematerialize",
@@ -7929,7 +7888,7 @@
     "tooltip": "You automatically begin <attention>Reviving</attention> yourself after @ReviveArmTime@ seconds and you can be <attention>Revived</attention> @BonusLives@ additional times. Each time you <attention>Revive</attention>, come back smaller and with <scaleHealth>@ReviveMod*100@% max Health</scaleHealth>.<br><br>When you <attention>revive</attention>, <status>knockback</status> enemies around you.",
     "iconLarge": "assets/ux/cherry/augments/icons/nesting_doll.png",
     "iconSmall": "assets/ux/cherry/augments/icons/nesting_doll_small.png",
-    "rarity": "prismatic",
+    "rarity": "gold",
     "dataValues": {
       "BonusLives": [
         1,
@@ -10196,8 +10155,8 @@
     "id": 234,
     "apiName": "GambaAnvil",
     "name": "Gamba Anvil",
-    "desc": "Gain <gold>+%i:goldCoins%@GoldBonus@ gold</gold> and reduce the price of all anvils.<br><br><attention>Prismatic Anvils</attention>: <gold>-%i:goldCoins%@PrismaticCostReduction@gold</gold><br><attention>Legendary Anvils</attention>: <gold>-%i:goldCoins%@LegendaryCostReduction@gold</gold><br><attention>Stat Anvils</attention>: <gold>-%i:goldCoins%@StatCostReduction@gold</gold><br><br><rules>Items acquired from anvils resell for <gold>-%i:goldCoins%500 gold</gold> less.</rules>",
-    "tooltip": "Gain <gold>+%i:goldCoins%@GoldBonus@ gold</gold> and reduce the price of all anvils.<br><br><attention>Prismatic Anvils</attention>: <gold>-%i:goldCoins%@PrismaticCostReduction@gold</gold><br><attention>Legendary Anvils</attention>: <gold>-%i:goldCoins%@LegendaryCostReduction@gold</gold><br><attention>Stat Anvils</attention>: <gold>-%i:goldCoins%@StatCostReduction@gold</gold><br><br><rules>Items acquired from anvils resell for <gold>-%i:goldCoins%500 gold</gold> less.</rules>",
+    "desc": "Gain <gold>+%i:goldCoins%@GoldBonus@ gold</gold> and reduce the price of all anvils.<br><br><attention>Prismatic Anvils</attention>: <gold>-%i:goldCoins%@PrismaticCostReduction@ gold</gold><br><attention>Legendary Anvils</attention>: <gold>-%i:goldCoins%@LegendaryCostReduction@ gold</gold><br><attention>Stat Anvils</attention>: <gold>-%i:goldCoins%@StatCostReduction@ gold</gold><br><br><rules>Items acquired from anvils resell for <gold>-%i:goldCoins%500 gold</gold> less.</rules>",
+    "tooltip": "Gain <gold>+%i:goldCoins%@GoldBonus@ gold</gold> and reduce the price of all anvils.<br><br><attention>Prismatic Anvils</attention>: <gold>-%i:goldCoins%@PrismaticCostReduction@ gold</gold><br><attention>Legendary Anvils</attention>: <gold>-%i:goldCoins%@LegendaryCostReduction@ gold</gold><br><attention>Stat Anvils</attention>: <gold>-%i:goldCoins%@StatCostReduction@ gold</gold><br><br><rules>Items acquired from anvils resell for <gold>-%i:goldCoins%500 gold</gold> less.</rules>",
     "iconLarge": "assets/ux/cherry/augments/icons/thiefsgloves_large.png",
     "iconSmall": "assets/ux/cherry/augments/icons/thiefsgloves_small.png",
     "rarity": "gold",
@@ -11445,13 +11404,13 @@
         2
       ],
       "MaxLevelManaSpendThreshold": [
-        400,
-        400,
-        400,
-        400,
-        400,
-        400,
-        400
+        300,
+        300,
+        300,
+        300,
+        300,
+        300,
+        300
       ],
       "RefundAmount": [
         5,
@@ -11903,38 +11862,6 @@
         ]
       }
     },
-    "type": "full"
-  },
-  "320": {
-    "id": 320,
-    "apiName": "CalculatedRisk",
-    "name": "Calculated Risk",
-    "desc": "You can no longer %i:Reroll% Reroll.<br><br>Begin a <keywordMajor>%i:Augment% Gold Augment</keywordMajor> selection, if you have @AugmentThreshold@ or fewer augments gain a <keywordMajor>%i:Augment% Prismatic Augment</keywordMajor> instead.",
-    "tooltip": "{{ Cherry_CalculatedRisk_Summary }}",
-    "iconLarge": "assets/ux/cherry/augments/icons/calculated_risk_large.png",
-    "iconSmall": "assets/ux/cherry/augments/icons/calculated_risk_small.png",
-    "rarity": "silver",
-    "dataValues": {
-      "AugmentThreshold": [
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2
-      ],
-      "MaxLevel": [
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1
-      ]
-    },
-    "calculations": {},
     "type": "full"
   },
   "321": {
@@ -12471,13 +12398,13 @@
         800
       ],
       "MSRatio": [
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612,
-        0.10000000149011612
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224,
+        0.20000000298023224
       ],
       "MaxLevel": [
         1,
@@ -12512,13 +12439,13 @@
         2
       ],
       "ItemPercentAmp": [
-        0.3499999940395355,
-        0.3499999940395355,
-        0.3499999940395355,
-        0.3499999940395355,
-        0.3499999940395355,
-        0.3499999940395355,
-        0.3499999940395355
+        0.4000000059604645,
+        0.4000000059604645,
+        0.4000000059604645,
+        0.4000000059604645,
+        0.4000000059604645,
+        0.4000000059604645,
+        0.4000000059604645
       ],
       "MaxLevel": [
         1,
@@ -12716,22 +12643,22 @@
         0.30000001192092896
       ],
       "BaseDamageMax": [
-        100,
-        100,
-        100,
-        100,
-        100,
-        100,
-        100
+        120,
+        120,
+        120,
+        120,
+        120,
+        120,
+        120
       ],
       "BaseDamageMin": [
-        40,
-        40,
-        40,
-        40,
-        40,
-        40,
-        40
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60
       ],
       "BeeRange": [
         25000,
@@ -12907,7 +12834,7 @@
       ]
     },
     "calculations": {
-      "{903f4f4f}": {
+      "LevelableAugmentCount": {
         "__type": "GameCalculation",
         "mFormulaParts": [
           {
@@ -13658,8 +13585,8 @@
     "id": 359,
     "apiName": "GoHLamb",
     "name": "Lamb's Respite",
-    "desc": "Gain @RevivesToGain@ additional revives, and cuts the time needed to revive in half.",
-    "tooltip": "Gain @RevivesToGain@ additional revives, and cuts the time needed to revive in half.",
+    "desc": "Gain @RevivesToGain@ additional revive, and cuts the time needed to revive in half.",
+    "tooltip": "Gain @RevivesToGain@ additional revive, and cuts the time needed to revive in half.",
     "iconLarge": "assets/ux/cherry/augments/icons/lamb_large.arena_2026_s2.png",
     "iconSmall": "assets/ux/cherry/augments/icons/lamb_small.arena_2026_s2.png",
     "rarity": "silver",
@@ -13692,13 +13619,13 @@
         1
       ],
       "RevivesToGain": [
-        2,
-        2,
-        2,
-        2,
-        2,
-        2,
-        2
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
       ],
       "SizeAdjustment": [
         0.20000000298023224,

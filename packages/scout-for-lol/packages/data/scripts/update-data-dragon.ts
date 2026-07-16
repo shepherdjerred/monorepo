@@ -18,10 +18,31 @@ import {
   type ChampionListData,
   type CDragonChampion,
 } from "./update-data-dragon-schemas.ts";
-import { getChampionName } from "twisted/dist/constants/champions.js";
+import { Constants } from "twisted";
+const { getChampionName } = Constants;
+import {
+  buildPatchChangelogEntryLiteral,
+  insertChangelogEntry,
+  isMinorVersionBump,
+  minorVersionKey,
+} from "./update-changelog.ts";
+import {
+  fetchPatches,
+  selectPatchByMinor,
+  type RiotPatch,
+} from "./riot-patch.ts";
+import { analyzePatch } from "./patch-analysis.ts";
 
 const ASSETS_DIR = `${import.meta.dir}/../src/data-dragon/assets`;
 const IMG_DIR = `${ASSETS_DIR}/img`;
+// scout-for-lol/packages/data/scripts → scout-for-lol/packages/frontend/...
+const CHANGELOG_FILE = `${import.meta.dir}/../../frontend/src/data/changelog.tsx`;
+// Structured patch changeset consumed at review time (bundled asset).
+const PATCH_NOTES_ASSET = `${ASSETS_DIR}/patch-notes.json`;
+// Raw patch-notes provenance — committed but not imported at runtime.
+const PATCH_NOTES_ARCHIVE_DIR = `${import.meta.dir}/../patch-notes-archive`;
+// scout-for-lol/packages/data/scripts → monorepo root (for resolving prettier).
+const MONOREPO_ROOT = `${import.meta.dir}/../../../../..`;
 const BASE_URL = "https://ddragon.leagueoflegends.com";
 const BYTES_PER_MIB = 1024 * 1024;
 const MAX_LOADING_SCREEN_IMAGE_BYTES = 1 * BYTES_PER_MIB;
@@ -67,6 +88,45 @@ export function resolveCDragonAssetUrl(loadScreenPath: string): string {
   return `${CDRAGON_LOL_GAME_DATA_BASE}${stripped}`;
 }
 
+/**
+ * `fetch` with bounded retries for transient failures (network errors and 5xx).
+ * Data Dragon / CommunityDragon occasionally blip during a fresh patch release;
+ * a single attempt turns that into a hard failure. 4xx responses are returned
+ * as-is (not retried) — callers decide what a 404 means (e.g. the two-tier
+ * loading-screen fallback, or the propagation-lag retry pass below), and fast
+ * retries don't help a "not yet published" asset anyway.
+ */
+async function fetchWithRetry(
+  url: string,
+  init?: RequestInit,
+  options: { attempts?: number; baseDelayMs?: number } = {},
+): Promise<Response> {
+  const attempts = options.attempts ?? 3;
+  const baseDelayMs = options.baseDelayMs ?? 1000;
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      const response = await fetch(url, init);
+      if (response.status < 500) {
+        return response;
+      }
+      lastError = new Error(`HTTP ${String(response.status)} from ${url}`);
+      // Discard the 5xx body so the TCP connection returns to the pool
+      // immediately instead of waiting on GC — matters across the many
+      // requests this script makes when several 5xx land in a retry window.
+      void response.body?.cancel();
+    } catch (error) {
+      lastError = error;
+    }
+    if (attempt < attempts) {
+      await Bun.sleep(baseDelayMs * 2 ** (attempt - 1));
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error(`fetch failed for ${url}: ${String(lastError)}`);
+}
+
 const cdragonChampionCache = new Map<number, CDragonChampion | undefined>();
 
 /**
@@ -80,8 +140,11 @@ async function fetchCDragonChampion(
     return cdragonChampionCache.get(championId);
   }
   try {
-    const response = await fetch(getCDragonChampionJsonUrl(championId));
+    const response = await fetchWithRetry(
+      getCDragonChampionJsonUrl(championId),
+    );
     if (!response.ok) {
+      // Definitive miss (e.g. 404) — safe to cache so we don't re-request it.
       cdragonChampionCache.set(championId, undefined);
       return undefined;
     }
@@ -90,7 +153,10 @@ async function fetchCDragonChampion(
     cdragonChampionCache.set(championId, parsed);
     return parsed;
   } catch {
-    cdragonChampionCache.set(championId, undefined);
+    // Transient (network error after retries, or a parse blip during fresh-patch
+    // propagation). Do NOT cache `undefined` — caching it here would blank the
+    // CommunityDragon fallback for EVERY skin of this champion for the whole run.
+    // Leaving it uncached lets the loading-screen propagation-lag retry re-fetch.
     return undefined;
   }
 }
@@ -101,7 +167,7 @@ async function ensureDir(path: string): Promise<void> {
 
 async function getLatestVersion(): Promise<string> {
   console.log("Fetching latest version...");
-  const response = await fetch(`${BASE_URL}/api/versions.json`);
+  const response = await fetchWithRetry(`${BASE_URL}/api/versions.json`);
   const data: unknown = await response.json();
   const versions = z.array(z.string()).parse(data);
   const latestVersion = first(versions);
@@ -119,7 +185,7 @@ async function downloadAsset<T>(
   const url = `${BASE_URL}/cdn/${version}/data/en_US/${filename}`;
   console.log(`Downloading ${filename} from ${url}...`);
 
-  const response = await fetch(url);
+  const response = await fetchWithRetry(url);
   if (!response.ok) {
     throw new Error(
       `Failed to fetch ${filename}: ${String(response.status)} ${response.statusText}`,
@@ -136,7 +202,7 @@ async function downloadAsset<T>(
 }
 
 async function downloadImage(url: string, outputPath: string): Promise<void> {
-  const response = await fetch(url);
+  const response = await fetchWithRetry(url);
   if (!response.ok) {
     throw new Error(`Failed to fetch image ${url}: ${String(response.status)}`);
   }
@@ -233,7 +299,7 @@ async function writeJsonAssets(
 async function fetchChampionList(version: string): Promise<ChampionListData> {
   console.log("\nFetching champion list...");
   const championListUrl = `${BASE_URL}/cdn/${version}/data/en_US/champion.json`;
-  const championListResponse = await fetch(championListUrl);
+  const championListResponse = await fetchWithRetry(championListUrl);
   const data: unknown = await championListResponse.json();
   const championListData = ChampionListSchema.parse(data);
   const championNames = Object.keys(championListData.data);
@@ -382,7 +448,7 @@ async function downloadChampionData(
   for (const championName of championNames) {
     try {
       const url = `${BASE_URL}/cdn/${version}/data/en_US/champion/${championName}.json`;
-      const response = await fetch(url);
+      const response = await fetchWithRetry(url);
       if (response.ok) {
         const data: unknown = await response.json();
         await Bun.write(
@@ -435,7 +501,7 @@ async function downloadLoadingScreenSkin(
   // Tier 1: Data Dragon
   const ddragonUrl = `${BASE_URL}/cdn/img/champion/loading/${championName}_${String(skinNum)}.jpg`;
   try {
-    const response = await fetch(ddragonUrl);
+    const response = await fetchWithRetry(ddragonUrl);
     if (response.ok) {
       const buffer = await response.arrayBuffer();
       await Bun.write(outputPath, buffer);
@@ -465,7 +531,7 @@ async function downloadLoadingScreenSkin(
   }
   const cdragonUrl = resolveCDragonAssetUrl(skinEntry.loadScreenPath);
   try {
-    const response = await fetch(cdragonUrl);
+    const response = await fetchWithRetry(cdragonUrl);
     if (!response.ok) {
       return { status: "failed" };
     }
@@ -480,6 +546,61 @@ async function downloadLoadingScreenSkin(
   } catch {
     return { status: "failed" };
   }
+}
+
+type LoadingScreenFailure = {
+  championName: string;
+  championId: number;
+  skinNum: number;
+};
+
+/**
+ * Re-attempt loading screens that failed BOTH sources on the first pass.
+ *
+ * A freshly-released patch frequently has a handful of new skins missing from
+ * the Data Dragon CDN *and* CommunityDragon for a few minutes after release;
+ * the first pass loses that race and would otherwise hard-fail the entire
+ * refresh (exactly what failed the 2026-06-20 weekly run on patch 16.12.1 —
+ * Renata 31 / Zed 69 were on both CDNs hours later). Each round drops the
+ * cached CDragon champion JSON so Tier 2 re-resolves, waits out propagation,
+ * then retries only the still-missing skins. Genuinely-missing assets still
+ * fail after every round, preserving the loud hard-fail downstream.
+ */
+async function retryFailedLoadingScreens(
+  failures: LoadingScreenFailure[],
+  onSuccess: (
+    failure: LoadingScreenFailure,
+    source: "ddragon" | "cdragon",
+  ) => void,
+): Promise<LoadingScreenFailure[]> {
+  const ROUNDS = 3;
+  const DELAY_MS = 30_000;
+  let pending = failures;
+  for (let round = 1; round <= ROUNDS && pending.length > 0; round++) {
+    console.warn(
+      `\n⏳ ${String(pending.length)} loading screen(s) missing from both sources — retry ${String(round)}/${String(ROUNDS)} after ${String(DELAY_MS / 1000)}s (likely fresh-patch CDN propagation lag)...`,
+    );
+    await Bun.sleep(DELAY_MS);
+    // Force Tier 2 to re-resolve: the champion JSON itself may have been absent.
+    for (const failure of pending) {
+      cdragonChampionCache.delete(failure.championId);
+    }
+    const stillFailing: LoadingScreenFailure[] = [];
+    for (const failure of pending) {
+      const result = await downloadLoadingScreenSkin(
+        failure.championName,
+        failure.championId,
+        failure.skinNum,
+      );
+      if (result.status === "success") {
+        onSuccess(failure, result.source);
+      } else {
+        stillFailing.push(failure);
+      }
+    }
+    pending = stillFailing;
+  }
+  return pending;
 }
 
 /**
@@ -509,11 +630,11 @@ async function downloadChampionLoadingImages(
   // Per-source counters for the summary
   let ddragonCount = 0;
   let cdragonCount = 0;
-  let failedCount = 0;
   // championName → list of skinNums sourced from CDragon (for the summary)
   const cdragonByChampion: Record<string, number[]> = {};
-  // championName → list of skinNums where both sources failed (loud warn)
-  const failedByChampion: Record<string, number[]> = {};
+  // Skins that failed BOTH sources on the first pass — retried below (fresh
+  // patches lag both CDNs) before any of them count as a hard failure.
+  const failedSkins: LoadingScreenFailure[] = [];
 
   for (const [championName, listEntry] of championEntries) {
     let intendedSkins: number[] = [];
@@ -568,8 +689,7 @@ async function downloadChampionLoadingImages(
           (cdragonByChampion[championName] ??= []).push(skinNum);
         }
       } else {
-        failedCount++;
-        (failedByChampion[championName] ??= []).push(skinNum);
+        failedSkins.push({ championName, championId, skinNum });
       }
     }
 
@@ -577,6 +697,36 @@ async function downloadChampionLoadingImages(
     if (Object.keys(chromaMap).length > 0) {
       chromaToParent[championName] = chromaMap;
     }
+  }
+
+  // Propagation-lag retry: give freshly-released skins a few more chances on
+  // both CDNs before declaring them permanently missing. Successes are folded
+  // back into baseSkins + the per-source counters; whatever is still missing
+  // afterward is a real failure that hard-throws below.
+  const retriedChampions = new Set<string>();
+  const stillMissing = await retryFailedLoadingScreens(
+    failedSkins,
+    (failure, source) => {
+      (baseSkins[failure.championName] ??= []).push(failure.skinNum);
+      retriedChampions.add(failure.championName);
+      if (source === "ddragon") {
+        ddragonCount++;
+      } else {
+        cdragonCount++;
+        (cdragonByChampion[failure.championName] ??= []).push(failure.skinNum);
+      }
+    },
+  );
+  // Restore ascending skin order for champions that gained late retries.
+  for (const championName of retriedChampions) {
+    baseSkins[championName] = (baseSkins[championName] ?? []).toSorted(
+      (a, b) => a - b,
+    );
+  }
+  const failedCount = stillMissing.length;
+  const failedByChampion: Record<string, number[]> = {};
+  for (const failure of stillMissing) {
+    (failedByChampion[failure.championName] ??= []).push(failure.skinNum);
   }
 
   // Write champion-skins.json — contents reflect what's actually on disk
@@ -686,7 +836,7 @@ async function fetchAndSaveArenaAugments(arenaAugmentsUrl: string): Promise<{
 }> {
   console.log("\nFetching Arena augments from CommunityDragon...");
 
-  const response = await fetch(arenaAugmentsUrl);
+  const response = await fetchWithRetry(arenaAugmentsUrl);
   if (!response.ok) {
     throw new Error(
       `Failed to fetch Arena augments: ${String(response.status)} ${response.statusText}`,
@@ -758,10 +908,169 @@ async function downloadAugmentImages(
   }
 }
 
+const VersionFileSchema = z.object({ version: z.string().min(1) });
+
+/**
+ * Read the version currently committed on disk, before this run overwrites it.
+ * Returns undefined on a first-ever run or an unparseable file so the changelog
+ * step simply no-ops rather than guessing.
+ */
+async function readPreviousVersion(): Promise<string | undefined> {
+  const file = Bun.file(`${ASSETS_DIR}/version.json`);
+  if (!(await file.exists())) {
+    return undefined;
+  }
+  const data: unknown = await file.json();
+  const parsed = VersionFileSchema.safeParse(data);
+  return parsed.success ? parsed.data.version : undefined;
+}
+
+/**
+ * Append a "What's New" entry to the frontend changelog — but only on a
+ * minor-version bump (16.13.x → 16.14.x). Micro-bumps, unchanged weekly
+ * refreshes, and first-ever runs skip it, so the auto-merged Data Dragon PR
+ * never spams the changelog.
+ *
+ * The entry references the REAL player-facing patch number (e.g. "26.13") pulled
+ * from Riot's patch-notes feed, not the Data Dragon version ("16.13"). A
+ * network/parse failure throws (fail fast); a not-yet-posted matching patch is
+ * an expected timing case that skips the entry without blocking the asset PR.
+ */
+/**
+ * Archive the raw patch-notes page for provenance/re-analysis. Best-effort: a
+ * fetch failure is logged and skipped (the structured changeset is what reviews
+ * actually consume). Committed but excluded from formatting and never imported.
+ */
+async function saveRawPatchNotes(patch: RiotPatch): Promise<void> {
+  try {
+    const response = await fetch(patch.url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; ScoutForLoL/1.0; +https://scout-for-lol.com)",
+        Accept: "text/html",
+      },
+    });
+    if (!response.ok) {
+      console.warn(
+        `⚠ Could not archive raw patch notes: HTTP ${String(response.status)} ${response.statusText}`,
+      );
+      return;
+    }
+    await Bun.write(
+      `${PATCH_NOTES_ARCHIVE_DIR}/${patch.patch}.html`,
+      await response.text(),
+    );
+    console.log(`✓ Archived raw patch ${patch.patch} notes`);
+  } catch (error) {
+    console.warn(`⚠ Could not archive raw patch notes: ${String(error)}`);
+  }
+}
+
+async function maybeAppendChangelogEntry(
+  previousVersion: string | undefined,
+  version: string,
+): Promise<void> {
+  if (previousVersion === undefined) {
+    console.log("\nℹ No previous version.json — skipping changelog entry");
+    return;
+  }
+  if (!isMinorVersionBump(previousVersion, version)) {
+    console.log(
+      `\nℹ ${previousVersion} → ${version} is not a minor bump — skipping changelog entry`,
+    );
+    return;
+  }
+
+  const minor = Number(minorVersionKey(version).split(".")[1]);
+  console.log(
+    `\n📝 Resolving Riot patch notes for Data Dragon ${version} (minor .${String(minor)})...`,
+  );
+  const patches = await fetchPatches();
+  const patch = selectPatchByMinor(patches, minor);
+  if (patch === undefined) {
+    // Riot hasn't posted the matching patch yet (Data Dragon led the news).
+    // Expected timing, not a failure: skip the entry; the assets still update
+    // and a later run adds it once the notes are live.
+    console.warn(
+      `\n⚠ Riot has not posted patch notes for .${String(minor)} yet (latest: ${patches[0]?.patch ?? "unknown"}). Skipping changelog entry; assets still updated.`,
+    );
+    return;
+  }
+
+  // Ask Claude to read the real patch notes and produce a structured changeset
+  // (consumed by AI reviews) plus the short highlight bullets (consumed here).
+  // Best-effort: a failure (no claude, timeout, bad output) falls back to just
+  // the data-refresh line and leaves the committed changeset untouched, rather
+  // than blocking the asset PR or shipping a garbage changeset.
+  let highlights: string[] = [];
+  try {
+    console.log(`🤖 Analyzing patch ${patch.patch} notes via Claude...`);
+    const changeset = await analyzePatch(patch);
+    await Bun.write(
+      PATCH_NOTES_ASSET,
+      `${JSON.stringify(changeset, null, 2)}\n`,
+    );
+    const prettierResult =
+      await $`cd ${MONOREPO_ROOT} && bunx prettier --write ${PATCH_NOTES_ASSET}`.quiet();
+    if (prettierResult.exitCode !== 0) {
+      throw new Error(
+        `prettier failed to format patch-notes.json (exit ${String(prettierResult.exitCode)}): ${prettierResult.stderr.toString()}`,
+      );
+    }
+    console.log(
+      `✓ Wrote patch changeset (${String(changeset.champions.length)} champion, ${String(changeset.items.length)} item, ${String(changeset.systems.length)} system changes)`,
+    );
+    highlights = changeset.summary;
+    await saveRawPatchNotes(patch);
+  } catch (error) {
+    console.warn(
+      `⚠ Claude patch analysis failed; using data-refresh line only and leaving patch-notes.json unchanged: ${String(error)}`,
+    );
+  }
+
+  console.log(
+    `📝 Adding "What's New" entry for League patch ${patch.patch}...`,
+  );
+  const source = await Bun.file(CHANGELOG_FILE).text();
+  const updated = insertChangelogEntry(
+    source,
+    buildPatchChangelogEntryLiteral(patch, highlights, new Date()),
+  );
+  await Bun.write(CHANGELOG_FILE, updated);
+
+  // The prettier gate covers changelog.tsx, so format the edit before commit or
+  // the auto-merged PR fails CI. Resolve prettier from the monorepo root.
+  const result =
+    await $`cd ${MONOREPO_ROOT} && bunx prettier --write ${CHANGELOG_FILE}`.quiet();
+  if (result.exitCode !== 0) {
+    throw new Error(
+      `prettier failed to format changelog.tsx (exit ${String(result.exitCode)}): ${result.stderr.toString()}`,
+    );
+  }
+  console.log(`✓ Added changelog entry for League patch ${patch.patch}`);
+}
+
 async function main(): Promise<void> {
   try {
+    // --snapshots-only skips version resolution + asset download and jumps
+    // straight to the install-refresh + snapshot-test step, against
+    // whatever Data Dragon assets are already committed in the tree. Used by
+    // the temporal-schedule-rehearsal CI canary to exercise the exact step
+    // that broke scout-data-dragon-weekly-refresh without a network fetch or
+    // a real version bump — see
+    // packages/docs/plans/2026-07-12_fix-data-dragon-shared-cache.md.
+    if (process.argv.includes("--snapshots-only")) {
+      console.log("\n📸 Updating snapshots (--snapshots-only)...");
+      await updateSnapshots();
+      console.log("✅ Snapshots updated");
+      return;
+    }
+
     // Get version from command line or fetch latest
     const version = process.argv[2] ?? (await getLatestVersion());
+    // Capture the on-disk version BEFORE writeJsonAssets overwrites it so the
+    // changelog step can detect a minor-version bump.
+    const previousVersion = await readPreviousVersion();
     const cdVersion = getCommunityDragonVersion(version);
     const communityDragonUrl = getCommunityDragonUrl(cdVersion);
     const communityDragonPositionsUrl =
@@ -855,6 +1164,9 @@ async function main(): Promise<void> {
     console.log("\n📸 Updating snapshots...");
     await updateSnapshots();
     console.log("✅ Snapshots updated");
+
+    // Add a "What's New" entry to the marketing site on minor-version bumps.
+    await maybeAppendChangelogEntry(previousVersion, version);
   } catch (error) {
     console.error("\n❌ Error updating Data Dragon assets:");
     console.error(error);

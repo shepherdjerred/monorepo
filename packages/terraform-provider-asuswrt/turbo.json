@@ -1,0 +1,21 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // `go build ./...` compiles into Go's own build cache — no repo artifacts.
+    // Turbo's win here is the cached log replay keyed on source hash.
+    "build": {
+      "inputs": ["**/*.go", "go.mod", "go.sum"],
+      "outputs": []
+    },
+    "test": {
+      "inputs": ["**/*.go", "go.mod", "go.sum"]
+    },
+    "lint": {
+      "inputs": ["**/*.go", "go.mod", "go.sum", ".golangci.yml"]
+    },
+    "typecheck": {
+      "inputs": ["**/*.go", "go.mod", "go.sum"]
+    }
+  }
+}

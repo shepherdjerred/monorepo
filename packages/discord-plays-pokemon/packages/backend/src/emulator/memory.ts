@@ -5,6 +5,7 @@
 export type MemoryReader = {
   u8: (addr: number) => number;
   u16: (addr: number) => number;
+  s16: (addr: number) => number;
   u32: (addr: number) => number;
   /** Copy `len` bytes starting at `addr`. Never returns a live view. */
   bytes: (addr: number, len: number) => Uint8Array;
@@ -32,6 +33,10 @@ export function createMemoryReader(memory: WebAssembly.Memory): MemoryReader {
     u16(addr: number): number {
       check(addr, 2);
       return view.getUint16(addr, true);
+    },
+    s16(addr: number): number {
+      check(addr, 2);
+      return view.getInt16(addr, true);
     },
     u32(addr: number): number {
       check(addr, 4);

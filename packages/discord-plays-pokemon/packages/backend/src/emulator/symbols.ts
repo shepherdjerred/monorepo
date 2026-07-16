@@ -9,6 +9,8 @@ const GAME_SYMBOL_NAMES = [
   "gPlayerParty",
   "gPlayerPartyCount",
   "gBattleResults",
+  "gPlayerAvatar",
+  "gObjectEvents",
 ] as const;
 
 type GameSymbolName = (typeof GAME_SYMBOL_NAMES)[number];
@@ -16,7 +18,7 @@ type GameSymbolName = (typeof GAME_SYMBOL_NAMES)[number];
 export type GameSymbols = Readonly<Record<GameSymbolName, number>>;
 
 function resolveAddress(
-  exports: WebAssembly.Exports,
+  exports: Bun.WebAssembly.Exports,
   name: string,
 ): number | undefined {
   const value = exports[name];
@@ -30,7 +32,9 @@ function resolveAddress(
   return address;
 }
 
-export function createGameSymbols(exports: WebAssembly.Exports): GameSymbols {
+export function createGameSymbols(
+  exports: Bun.WebAssembly.Exports,
+): GameSymbols {
   const resolved = new Map<GameSymbolName, number>();
   const missing: string[] = [];
   for (const name of GAME_SYMBOL_NAMES) {
@@ -59,5 +63,7 @@ export function createGameSymbols(exports: WebAssembly.Exports): GameSymbols {
     gPlayerParty: addressOf("gPlayerParty"),
     gPlayerPartyCount: addressOf("gPlayerPartyCount"),
     gBattleResults: addressOf("gBattleResults"),
+    gPlayerAvatar: addressOf("gPlayerAvatar"),
+    gObjectEvents: addressOf("gObjectEvents"),
   };
 }

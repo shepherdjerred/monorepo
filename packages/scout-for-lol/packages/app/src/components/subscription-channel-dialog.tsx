@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
-import { Button } from "#src/components/ui/button.tsx";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "#src/components/ui/dialog.tsx";
 import { Label } from "#src/components/ui/label.tsx";
+import {
+  DialogFormError,
+  DialogFormFooter,
+} from "#src/components/dialog-form.tsx";
 import {
   Select,
   SelectContent,
@@ -181,24 +183,16 @@ export function SubscriptionChannelDialog(props: Props) {
             </Select>
           </div>
 
-          {error !== null && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          <DialogFormError error={error} />
 
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                props.onOpenChange(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Saving..." : "Save"}
-            </Button>
-          </DialogFooter>
+          <DialogFormFooter
+            pending={pending}
+            submitLabel="Save"
+            pendingLabel="Saving..."
+            onCancel={() => {
+              props.onOpenChange(false);
+            }}
+          />
         </form>
       </DialogContent>
     </Dialog>

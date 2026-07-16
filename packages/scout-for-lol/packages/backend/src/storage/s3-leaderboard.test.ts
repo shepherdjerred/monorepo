@@ -1,4 +1,11 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
+import { mockClient } from "aws-sdk-client-mock";
+import { z } from "zod";
 
 import {
   CachedLeaderboardSchema,
@@ -6,6 +13,49 @@ import {
   PlayerIdSchema,
   type CachedLeaderboard,
 } from "@scout-for-lol/data";
+import {
+  loadCachedLeaderboard,
+  saveCachedLeaderboard,
+} from "#src/storage/s3-leaderboard.ts";
+import { resetConfigurationForTests } from "#src/configuration.ts";
+
+const s3Mock = mockClient(S3Client);
+
+// Zod schema for validating PutObjectCommand structure captured by the mock.
+const PutLeaderboardCommandSchema = z.object({
+  input: z.object({
+    Bucket: z.string(),
+    Key: z.string(),
+    Body: z.string(),
+    ContentType: z.string(),
+    Metadata: z
+      .object({
+        competitionId: z.string(),
+        version: z.string(),
+        calculatedAt: z.string(),
+        entryCount: z.string(),
+        uploadedAt: z.string(),
+      })
+      .optional(),
+  }),
+});
+
+function getValidatedPutCommand(callIndex: number) {
+  const call = s3Mock.call(callIndex);
+  return PutLeaderboardCommandSchema.parse(call?.args?.[0]);
+}
+
+// SdkStream can't be constructed in test code, so return a partial mock and
+// feed it through `.callsFake()` (which accepts any return type) rather than
+// `.resolves()` (which requires a full GetObjectCommandOutput).
+function mockGetObjectBody(content: string) {
+  return {
+    Body: {
+      transformToString: () => Promise.resolve(content),
+    },
+    $metadata: {},
+  };
+}
 
 // ============================================================================
 // Zod Schema Validation Tests
@@ -268,42 +318,125 @@ describe("S3 Key Generation Logic", () => {
 });
 
 // ============================================================================
-// Integration Tests (requires S3 configuration)
+// S3 Storage Tests (aws-sdk-client-mock — in-memory, no real S3)
 // ============================================================================
 
-describe("S3 Leaderboard Storage Integration", () => {
-  // These tests require S3_BUCKET_NAME to be configured
-  // They will be skipped if S3 is not available
-
-  test.skip("saveCachedLeaderboard saves to both current and snapshot locations", async () => {
-    // This would be an integration test that requires actual S3
-    // For now we skip it, but it documents the expected behavior:
-    // 1. Save to current.json (overwrites)
-    // 2. Save to snapshots/YYYY-MM-DD.json (preserves history)
+describe("S3 Leaderboard Storage", () => {
+  beforeEach(() => {
+    Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+    resetConfigurationForTests();
+    s3Mock.reset();
   });
 
-  test.skip("loadCachedLeaderboard retrieves and validates from S3", async () => {
-    // This would be an integration test that requires actual S3
-    // Expected behavior:
-    // 1. Fetch from S3
-    // 2. Parse JSON
-    // 3. Validate against schema
-    // 4. Return typed result or null
+  afterEach(() => {
+    Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+    resetConfigurationForTests();
+    s3Mock.reset();
   });
 
-  test.skip("loadCachedLeaderboard returns null for non-existent cache", async () => {
-    // Expected behavior:
-    // 1. Attempt to fetch from S3
-    // 2. Handle NoSuchKey error
-    // 3. Return null (not throw error)
+  test("saveCachedLeaderboard saves to both current and snapshot locations", async () => {
+    const leaderboard: CachedLeaderboard = {
+      version: "v1",
+      competitionId: CompetitionIdSchema.parse(123),
+      calculatedAt: "2025-10-15T12:00:00.000Z",
+      entries: [
+        {
+          playerId: PlayerIdSchema.parse(1),
+          playerName: "Player1",
+          score: 100,
+          rank: 1,
+        },
+      ],
+    };
+
+    s3Mock
+      .on(PutObjectCommand)
+      .resolves({ $metadata: { httpStatusCode: 200 } });
+
+    await saveCachedLeaderboard(leaderboard);
+
+    // Two PutObject calls: current.json and the dated snapshot.
+    expect(s3Mock.calls().length).toBe(2);
+
+    const currentCommand = getValidatedPutCommand(0);
+    expect(currentCommand.input.Bucket).toBe("test-bucket");
+    expect(currentCommand.input.Key).toBe(
+      "leaderboards/competition-123/current.json",
+    );
+    expect(currentCommand.input.ContentType).toBe("application/json");
+    expect(currentCommand.input.Metadata?.competitionId).toBe("123");
+    expect(currentCommand.input.Metadata?.version).toBe("v1");
+    expect(currentCommand.input.Metadata?.entryCount).toBe("1");
+
+    const snapshotCommand = getValidatedPutCommand(1);
+    expect(snapshotCommand.input.Key).toBe(
+      "leaderboards/competition-123/snapshots/2025-10-15.json",
+    );
+
+    // Both bodies round-trip back to the original leaderboard.
+    const parsedBody: unknown = JSON.parse(currentCommand.input.Body);
+    expect(CachedLeaderboardSchema.parse(parsedBody)).toEqual(leaderboard);
   });
 
-  test.skip("loadCachedLeaderboard returns null for invalid schema", async () => {
-    // Expected behavior:
-    // 1. Fetch from S3
-    // 2. Parse JSON
-    // 3. Validate against schema (fails)
-    // 4. Log error and return null
+  test("loadCachedLeaderboard retrieves and validates from S3", async () => {
+    const stored: CachedLeaderboard = {
+      version: "v1",
+      competitionId: CompetitionIdSchema.parse(456),
+      calculatedAt: "2025-10-15T12:00:00.000Z",
+      entries: [
+        {
+          playerId: PlayerIdSchema.parse(1),
+          playerName: "Player1",
+          score: 100,
+          rank: 1,
+        },
+        {
+          playerId: PlayerIdSchema.parse(2),
+          playerName: "Player2",
+          score: 80,
+          rank: 2,
+        },
+      ],
+    };
+
+    s3Mock
+      .on(GetObjectCommand, {
+        Bucket: "test-bucket",
+        Key: "leaderboards/competition-456/current.json",
+      })
+      .callsFake(() => mockGetObjectBody(JSON.stringify(stored)));
+
+    const result = await loadCachedLeaderboard(456);
+
+    expect(result).toEqual(stored);
+    expect(s3Mock.commandCalls(GetObjectCommand).length).toBe(1);
+  });
+
+  test("loadCachedLeaderboard returns null for non-existent cache", async () => {
+    // AWS SDK surfaces a missing object as a NoSuchKey error.
+    const noSuchKey = Object.assign(new Error("The key does not exist"), {
+      name: "NoSuchKey",
+    });
+    s3Mock.on(GetObjectCommand).rejects(noSuchKey);
+
+    const result = await loadCachedLeaderboard(789);
+
+    expect(result).toBeNull();
+    expect(s3Mock.commandCalls(GetObjectCommand).length).toBe(1);
+  });
+
+  test("loadCachedLeaderboard returns null for invalid schema", async () => {
+    // Valid JSON, but not a CachedLeaderboard shape → validation fails.
+    s3Mock
+      .on(GetObjectCommand)
+      .callsFake(() =>
+        mockGetObjectBody(JSON.stringify({ not: "a-leaderboard" })),
+      );
+
+    const result = await loadCachedLeaderboard(321);
+
+    expect(result).toBeNull();
+    expect(s3Mock.commandCalls(GetObjectCommand).length).toBe(1);
   });
 });
 

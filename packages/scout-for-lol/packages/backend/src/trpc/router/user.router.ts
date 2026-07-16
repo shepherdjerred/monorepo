@@ -6,6 +6,7 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { router, protectedProcedure } from "#src/trpc/trpc.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -147,7 +148,7 @@ export const userRouter = router({
    * This requires the bot to be in the guild
    */
   getVoiceChannels: protectedProcedure
-    .input(z.object({ guildId: z.string() }))
+    .input(z.object({ guildId: DiscordGuildIdSchema }))
     .query(({ input }) => {
       // This would query Discord API for voice channels
       // For now, return empty - will be implemented with Discord client

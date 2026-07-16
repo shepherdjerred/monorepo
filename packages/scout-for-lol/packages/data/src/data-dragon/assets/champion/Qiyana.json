@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Qiyana": {
       "id": "Qiyana",
@@ -12,7 +12,7 @@
         "full": "Qiyana.png",
         "sprite": "champion3.png",
         "group": "champion",
-        "x": 96,
+        "x": 144,
         "y": 48,
         "w": 48,
         "h": 48
@@ -535,8 +535,8 @@
             "full": "QiyanaQ.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 288,
-            "y": 96,
+            "x": 0,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -680,8 +680,8 @@
             "full": "QiyanaW.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 336,
-            "y": 96,
+            "x": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -823,8 +823,8 @@
             "full": "QiyanaE.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 384,
-            "y": 96,
+            "x": 96,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -938,8 +938,8 @@
             "full": "QiyanaR.png",
             "sprite": "spell10.png",
             "group": "spell",
-            "x": 432,
-            "y": 96,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -953,7 +953,7 @@
           "full": "Qiyana_Passive.png",
           "sprite": "passive3.png",
           "group": "passive",
-          "x": 96,
+          "x": 144,
           "y": 48,
           "w": 48,
           "h": 48

@@ -12,8 +12,11 @@ const SENTRY_REPORT_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 
 /**
  * Number of consecutive failures before the circuit opens.
+ *
+ * Exported so tests assert against the same source of truth rather than
+ * mirroring a hardcoded copy that could silently drift.
  */
-const OPEN_THRESHOLD = 5;
+export const OPEN_THRESHOLD = 5;
 
 /**
  * How long (ms) the circuit stays open before allowing a single probe request.
@@ -75,7 +78,14 @@ export class CircuitBreaker {
   }
 
   /**
-   * Record a failure and optionally report it to Sentry (rate-limited).
+   * Record a failure and optionally report it to Sentry.
+   *
+   * Reporting is gated twice so transient blips stay out of error tracking:
+   * a failure is only reported once it is sustained enough to trip the breaker
+   * (`>= OPEN_THRESHOLD` consecutive), and then at most once per
+   * `SENTRY_REPORT_INTERVAL_MS`. Isolated failures that recover on the next
+   * call (e.g. a single Riot 5xx for one player) are expected upstream noise —
+   * still counted in metrics and the circuit-state gauge, just not Sentry.
    *
    * @param error - The error to report
    * @param tags  - Extra Sentry tags
@@ -89,6 +99,12 @@ export class CircuitBreaker {
       logger.warn(
         `[${this.name}] Circuit opened after ${this.consecutiveFailures.toString()} consecutive failures`,
       );
+    }
+
+    // Don't report isolated transient failures — only a sustained run that
+    // trips the breaker is a real signal worth an error-tracking event.
+    if (this.consecutiveFailures < OPEN_THRESHOLD) {
+      return;
     }
 
     // Rate-limit Sentry reporting: at most one event per window

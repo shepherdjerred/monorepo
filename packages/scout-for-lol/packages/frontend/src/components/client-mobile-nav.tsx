@@ -4,7 +4,7 @@ import {
   SheetTrigger,
 } from "#src/components/ui/sheet.tsx";
 import { Button } from "#src/components/ui/button.tsx";
-import { DISCORD_INSTALL_CLICK_EVENT } from "#src/lib/marketing-constants.ts";
+import { GET_STARTED_CLICK_EVENT } from "#src/lib/marketing-constants.ts";
 
 type MobileNavItem = {
   href: string;
@@ -18,10 +18,10 @@ type MobileNavItem = {
 type Props = {
   items: MobileNavItem[];
   activePage?: string | undefined;
-  discordLink: string;
+  ctaHref: string;
 };
 
-export function ClientMobileNav({ items, activePage, discordLink }: Props) {
+export function ClientMobileNav({ items, activePage, ctaHref }: Props) {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -55,8 +55,8 @@ export function ClientMobileNav({ items, activePage, discordLink }: Props) {
               rel={item.external === true ? "noopener noreferrer" : undefined}
               className={
                 activePage === item.currentPage
-                  ? "block rounded-md px-3 py-2 text-base font-medium bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-                  : "block rounded-md px-3 py-2 text-base font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  ? "flex min-h-[44px] w-full items-center rounded-md px-3 py-2 text-base font-medium bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+                  : "flex min-h-[44px] w-full items-center rounded-md px-3 py-2 text-base font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
               }
             >
               {item.label}
@@ -64,12 +64,12 @@ export function ClientMobileNav({ items, activePage, discordLink }: Props) {
           ))}
           <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
             <a
-              href={discordLink}
-              data-scout-conversion={DISCORD_INSTALL_CLICK_EVENT}
+              href={ctaHref}
+              data-scout-conversion={GET_STARTED_CLICK_EVENT}
               data-scout-cta-location="navbar"
-              className="block rounded-md bg-indigo-600 px-3 py-2 text-base font-semibold text-white text-center shadow-sm hover:bg-indigo-500"
+              className="flex min-h-[44px] w-full items-center justify-center rounded-md bg-indigo-600 px-3 py-2 text-base font-semibold text-white shadow-sm hover:bg-indigo-500"
             >
-              Add to Discord
+              Get Started
             </a>
           </div>
         </div>

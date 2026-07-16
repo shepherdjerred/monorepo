@@ -34,7 +34,33 @@ function mkAccount(puuid: LeaguePuuid): PlayerAccountWithState {
   return { config, lastMatchTime: new Date(), lastCheckedAt: undefined };
 }
 
+function mkParticipant(puuid: string, teamId: number, championId: number) {
+  return {
+    puuid,
+    teamId,
+    spell1Id: 4,
+    spell2Id: 7,
+    championId,
+    lastSelectedSkinIndex: 0,
+    profileIconId: 0,
+    riotId: `test-${puuid.slice(0, 6)}#NA1`,
+    bot: false,
+    gameCustomizationObjects: [],
+    perks: { perkIds: [], perkStyle: 0, perkSubStyle: 0 },
+  };
+}
+
 function mkGameInfo(gameId: number, puuid: LeaguePuuid): RawCurrentGameInfo {
+  // A started game reports a full 10-player roster. Build the tracked player
+  // plus 9 fillers so the pre-start/partial-roster defer guard
+  // (participants < 10) does NOT fire for these "already in progress" fixtures.
+  const fillers = Array.from({ length: 9 }, (_, i) =>
+    mkParticipant(
+      `filler-${i.toString()}`.padEnd(78, "z"),
+      i < 4 ? 100 : 200,
+      10 + i,
+    ),
+  );
   return RawCurrentGameInfoSchema.parse({
     gameId,
     gameType: "MATCHED",
@@ -46,21 +72,7 @@ function mkGameInfo(gameId: number, puuid: LeaguePuuid): RawCurrentGameInfo {
     bannedChampions: [],
     gameQueueConfigId: 420,
     observers: { encryptionKey: "" },
-    participants: [
-      {
-        puuid,
-        teamId: 100,
-        spell1Id: 4,
-        spell2Id: 7,
-        championId: 9,
-        lastSelectedSkinIndex: 0,
-        profileIconId: 0,
-        riotId: "test#NA1",
-        bot: false,
-        gameCustomizationObjects: [],
-        perks: { perkIds: [], perkStyle: 0, perkSubStyle: 0 },
-      },
-    ],
+    participants: [mkParticipant(puuid, 100, 9), ...fillers],
   });
 }
 
@@ -125,6 +137,14 @@ await mock.module(
     },
   }),
 );
+
+// `active-game-detection.ts` imports getActiveServerIds, which pulls in the
+// Discord client singleton (and its whole command tree). Mock it so the client
+// module is never loaded under the partial database mock above. The return value
+// is irrelevant here since getAccountsWithState is mocked to ignore its filter.
+await mock.module("#src/discord/utils/guild-membership.ts", () => ({
+  getActiveServerIds: () => new Set<string>(),
+}));
 
 await mock.module("#src/report-store/live-ingest.ts", () => ({
   recordPrematchForReportStore: ({
@@ -222,6 +242,55 @@ describe("checkActiveGames — subsequent-match polling", () => {
 
     // Pre-start custom lobby must NOT be committed: the next 30s cron
     // tick gets a clean shot once the other players load in.
+    expect(upsertCalls).toHaveLength(0);
+    expect(notificationCalls).toHaveLength(0);
+    expect(reportStoreCalls).toHaveLength(0);
+  });
+
+  test("defers a matched pre-start ARAM event lobby (gameType=MATCHED, queue 3220, <10 participants) — no upsert, no notification", async () => {
+    mockAccounts = [mkAccount(P1)];
+    // Synthesised from the archived spectator-data.json for Bugsink ZodError
+    // event (game 7896774982): an ARAM: Mayhem (queue 3220) Howling Abyss
+    // lobby still in its pre-game countdown (gameLength -58) with only 2 of 10
+    // participants loaded. gameType is MATCHED, not CUSTOM — the old
+    // custom-only guard let this through and the builder threw on .length(10).
+    const incomplete = RawCurrentGameInfoSchema.parse({
+      gameId: 7_896_774_982,
+      gameType: "MATCHED",
+      gameStartTime: Date.now(),
+      mapId: 12,
+      gameLength: -58,
+      platformId: "NA1",
+      gameMode: "ARAM",
+      bannedChampions: [],
+      gameQueueConfigId: 3220,
+      observers: { encryptionKey: "" },
+      participants: [P1, "puuid-player-two".padEnd(78, "y")].map(
+        (puuid, idx) => ({
+          puuid,
+          teamId: idx === 0 ? 100 : 200,
+          spell1Id: 4,
+          spell2Id: 12,
+          championId: 63 + idx,
+          lastSelectedSkinIndex: 0,
+          profileIconId: 505,
+          riotId: `Player${idx.toString()}#NA1`,
+          bot: false,
+          gameCustomizationObjects: [],
+          perks: { perkIds: [], perkStyle: 0, perkSubStyle: 0 },
+        }),
+      ),
+    });
+    mockSpectatorResponses.set(P1, {
+      game: incomplete,
+      upstreamError: false,
+    });
+
+    // retryDelayMs=0 to skip the real 2×2s sleep in the retry loop.
+    await checkActiveGames(0);
+
+    // Matched event lobby caught mid-countdown must NOT be committed; the next
+    // 30s cron tick re-evaluates once the full roster has loaded in.
     expect(upsertCalls).toHaveLength(0);
     expect(notificationCalls).toHaveLength(0);
     expect(reportStoreCalls).toHaveLength(0);

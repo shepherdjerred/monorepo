@@ -7,6 +7,7 @@ import { runDnsAudit as _runDnsAudit } from "./dns-audit.ts";
 import { syncGolinks as _syncGolinks } from "./golink-sync.ts";
 import {
   goodMorningGetUp as _goodMorningGetUp,
+  goodMorningPreheat as _goodMorningPreheat,
   goodMorningWakeUp as _goodMorningWakeUp,
 } from "./ha/good-morning.ts";
 import { goodNight as _goodNight } from "./ha/good-night.ts";
@@ -16,16 +17,21 @@ import { reconcileLock as _reconcileLock } from "./ha/reconcile-lock.ts";
 import { runVacuumIfNotHome as _runVacuumIfNotHome } from "./ha/run-vacuum-if-not-home.ts";
 import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./zfs-maintenance.ts";
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
+import { runScoutImageGcWorkflow as _runScoutImageGcWorkflow } from "./scout-image-gc.ts";
+import type {
+  ScoutImageGcInput,
+  ScoutImageGcResult,
+} from "#activities/scout-image-gc.ts";
 import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./velero-orphan-audit.ts";
 import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./data-dragon.ts";
 import type {
   DataDragonUpdateResult,
   DataDragonWorkflowInput,
 } from "#activities/data-dragon.ts";
-import { runPokeemeraldWasmUpdate as _runPokeemeraldWasmUpdate } from "./pokeemerald-wasm.ts";
-import type { PokeemeraldWasmUpdateResult } from "#activities/pokeemerald-wasm.ts";
 import { runReadmeRefresh as _runReadmeRefresh } from "./readme-refresh.ts";
 import type { ReadmeRefreshResult } from "#activities/readme-refresh.ts";
+import { runLlmCatalogRefresh as _runLlmCatalogRefresh } from "./llm-catalog-refresh.ts";
+import type { LlmCatalogRefreshResult } from "#activities/llm-catalog-refresh.ts";
 import { runScoutSeasonRefreshWorkflow as _runScoutSeasonRefreshWorkflow } from "./scout-season-refresh.ts";
 import type {
   ScoutSeasonRefreshInput,
@@ -33,16 +39,6 @@ import type {
 } from "#activities/scout-season-refresh.ts";
 import { prSummaryPipeline as _prSummaryPipeline } from "./pr-summary/index.ts";
 import { prReviewPipeline as _prReviewPipeline } from "./pr-review/index.ts";
-import { prReviewEvalWorkflow as _prReviewEvalWorkflow } from "./pr-review-eval/index.ts";
-import type {
-  PrReviewEvalWorkflowInput,
-  PrReviewEvalWorkflowResult,
-} from "./pr-review-eval/index.ts";
-import { prReviewWeeklySignificanceWorkflow as _prReviewWeeklySignificanceWorkflow } from "./pr-review-eval/weekly-significance.ts";
-import type {
-  WeeklySignificanceWorkflowInput,
-  WeeklySignificanceWorkflowResult,
-} from "./pr-review-eval/weekly-significance.ts";
 import {
   prReactionListener as _prReactionListener,
   type PrReactionListenerInput,
@@ -50,25 +46,19 @@ import {
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab-audit.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
 import { agentTaskWorkflow as _agentTaskWorkflow } from "./agent-task.ts";
-import {
-  alertRemediationChildWorkflow as _alertRemediationChildWorkflow,
-  alertRemediationSweepWorkflow as _alertRemediationSweepWorkflow,
-} from "./alert-remediation.ts";
 import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from "./cancel-buildkite-builds.ts";
+import { checkPrMergeConflictsWorkflow as _checkPrMergeConflictsWorkflow } from "./check-pr-merge-conflicts.ts";
+import { prBabysitWorkflow as _prBabysitWorkflow } from "./pr-babysit/index.ts";
+import type { PrBabysitWorkflowInput } from "#shared/pr-babysit/workflow-types.ts";
 import type {
   CancelBuildkiteBuildsInput,
+  CheckPrMergeConflictsInput,
   PrReviewPipelineInput,
   PrSummaryInput,
 } from "#shared/schemas.ts";
 import type { PrReviewPipelineResult } from "./pr-review/index.ts";
 import type { RunSummaryResult } from "#activities/pr-review/summary.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
-import type {
-  AlertRemediationChildInput,
-  AlertRemediationChildResult,
-  AlertRemediationSweepRawInput,
-  AlertRemediationSweepResult,
-} from "#shared/alert-remediation.ts";
 
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
@@ -84,6 +74,10 @@ export async function runDnsAudit(): Promise<void> {
 
 export async function syncGolinks(): Promise<void> {
   return _syncGolinks();
+}
+
+export async function goodMorningPreheat(): Promise<void> {
+  return _goodMorningPreheat();
 }
 
 export async function goodMorningWakeUp(): Promise<void> {
@@ -122,6 +116,12 @@ export async function runBugsinkHousekeepingWorkflow(): Promise<void> {
   return _runBugsinkHousekeepingWorkflow();
 }
 
+export async function runScoutImageGcWorkflow(
+  input: ScoutImageGcInput = {},
+): Promise<ScoutImageGcResult> {
+  return _runScoutImageGcWorkflow(input);
+}
+
 export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
   return _runVeleroOrphanAuditWorkflow();
 }
@@ -142,8 +142,8 @@ export async function runReadmeRefresh(): Promise<ReadmeRefreshResult> {
   return _runReadmeRefresh();
 }
 
-export async function runPokeemeraldWasmUpdate(): Promise<PokeemeraldWasmUpdateResult> {
-  return _runPokeemeraldWasmUpdate();
+export async function runLlmCatalogRefresh(): Promise<LlmCatalogRefreshResult> {
+  return _runLlmCatalogRefresh();
 }
 
 export async function runScoutSeasonRefreshWorkflow(
@@ -174,30 +174,6 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   return _agentTaskWorkflow(input);
 }
 
-export async function alertRemediationSweepWorkflow(
-  input: AlertRemediationSweepRawInput = {},
-): Promise<AlertRemediationSweepResult> {
-  return _alertRemediationSweepWorkflow(input);
-}
-
-export async function alertRemediationChildWorkflow(
-  input: AlertRemediationChildInput,
-): Promise<AlertRemediationChildResult> {
-  return _alertRemediationChildWorkflow(input);
-}
-
-export async function prReviewEvalWorkflow(
-  input: PrReviewEvalWorkflowInput,
-): Promise<PrReviewEvalWorkflowResult> {
-  return _prReviewEvalWorkflow(input);
-}
-
-export async function prReviewWeeklySignificanceWorkflow(
-  input: WeeklySignificanceWorkflowInput = {},
-): Promise<WeeklySignificanceWorkflowResult> {
-  return _prReviewWeeklySignificanceWorkflow(input);
-}
-
 export async function prReactionListener(
   input: PrReactionListenerInput,
 ): Promise<void> {
@@ -208,4 +184,16 @@ export async function cancelBuildkiteBuildsWorkflow(
   input: CancelBuildkiteBuildsInput,
 ): Promise<void> {
   return _cancelBuildkiteBuildsWorkflow(input);
+}
+
+export async function checkPrMergeConflictsWorkflow(
+  input: CheckPrMergeConflictsInput,
+): Promise<void> {
+  return _checkPrMergeConflictsWorkflow(input);
+}
+
+export async function prBabysitWorkflow(
+  input: PrBabysitWorkflowInput,
+): Promise<void> {
+  return _prBabysitWorkflow(input);
 }

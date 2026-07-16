@@ -69,12 +69,15 @@ async function setup(withCache: boolean): Promise<Fakes> {
     ffprobeLog,
     `printf '{"streams":[{"codec_name":"subrip","tags":{"language":"eng"}}]}'`,
   );
-  // Write a minimal SRT to the dest (the last positional arg), mimicking `-c:s srt <dest>`.
+  // Write a minimal SRT to the dest (the last positional arg), mimicking `-c:s srt <dest>`. The
+  // dest-must-end-in-`.srt` guard mirrors real ffmpeg's muxer auto-detect: it picks the output format
+  // from the trailing extension and errors on anything unknown (PR #1172 shipped `.srt.tmp` and broke
+  // every cached extraction in prod). Keep this guard — it's the regression test for that class of bug.
   const ffmpeg = await fakeBin(
     bin,
     "ffmpeg",
     ffmpegLog,
-    `for dest in "$@"; do :; done\nprintf '1\\n00:00:01,000 --> 00:00:02,000\\nhi\\n' > "$dest"`,
+    `for dest in "$@"; do :; done\ncase "$dest" in *.srt) ;; *) echo "fake-ffmpeg: dest must end in .srt, got: $dest" >&2; exit 1 ;; esac\nprintf '1\\n00:00:01,000 --> 00:00:02,000\\nhi\\n' > "$dest"`,
   );
 
   const moviePath = path.join(media, "Movie.mkv");
@@ -170,5 +173,58 @@ describe("embedded subtitle cache", () => {
     expect(resolved.cleanupPath).toBe(resolved.path);
     expect(resolved.path.startsWith(cacheDir)).toBe(false);
     expect(await Bun.file(resolved.path).exists()).toBe(true);
+  });
+});
+
+describe("resolveSubtitleForFile trackRef bypass (exact pick from the picker)", () => {
+  test("an off trackRef returns undefined without probing ffprobe/ffmpeg", async () => {
+    const { config, moviePath, ffmpegLog } = await setup(true);
+    const signal = new AbortController().signal;
+    const resolved = await resolveSubtitleForFile(
+      config,
+      moviePath,
+      { trackRef: { kind: "off" } },
+      signal,
+    );
+    expect(resolved).toBeUndefined();
+    // Neither binary ran, so the call-log files were never created.
+    expect(await Bun.file(ffmpegLog).exists()).toBe(false);
+  });
+
+  test("an embedded trackRef extracts that exact stream, skipping ranking", async () => {
+    const { config, moviePath, cacheDir } = await setup(true);
+    const signal = new AbortController().signal;
+    const resolved = await resolveSubtitleForFile(
+      config,
+      moviePath,
+      { trackRef: { kind: "embedded", subtitleIndex: 0, codec: "subrip" } },
+      signal,
+    );
+    if (resolved === undefined) {
+      throw new Error("expected a resolved subtitle");
+    }
+    expect(resolved.path.startsWith(cacheDir)).toBe(true);
+    expect(await Bun.file(resolved.path).exists()).toBe(true);
+  });
+
+  test("a sidecar trackRef stages that exact file, skipping ranking", async () => {
+    const { config, moviePath } = await setup(true);
+    const signal = new AbortController().signal;
+    const sidecarPath = path.join(path.dirname(moviePath), "Movie.es.srt");
+    await writeFile(sidecarPath, "1\n00:00:00,000 --> 00:00:01,000\nhola\n");
+
+    const resolved = await resolveSubtitleForFile(
+      config,
+      moviePath,
+      { trackRef: { kind: "sidecar", file: "Movie.es.srt" } },
+      signal,
+    );
+    if (resolved === undefined) {
+      throw new Error("expected a resolved subtitle");
+    }
+    // Staged sidecars are always a one-shot temp copy (never the shared cache).
+    expect(resolved.cleanupPath).toBe(resolved.path);
+    const text = await readFile(resolved.path, "utf8");
+    expect(text).toContain("hola");
   });
 });

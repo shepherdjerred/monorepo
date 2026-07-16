@@ -133,16 +133,33 @@ export function createTasknotesDeployment(chart: Chart) {
       image: `ghcr.io/shepherdjerred/obsidian-headless:${versions["shepherdjerred/obsidian-headless"]}`,
       command: ["/bin/sh", "-c"],
       args: [
-        'ob sync-setup --vault "$OBSIDIAN_VAULT_NAME" --password "$OBSIDIAN_VAULT_PASSWORD" --path /vault && while true; do rm -rf /vault/.obsidian/.sync.lock; ob sync --continuous --path /vault; echo "Sync exited, retrying in 10s..."; sleep 10; done',
+        // Run ob sync --continuous in the background; a companion loop touches
+        // /tmp/ob-sync-alive every 30 s while the process is alive.  When sync
+        // exits (cleanly or via crash), the companion exits, we wait, then retry.
+        // test -d /proc/$P checks process liveness without producing stderr output.
+        'ob sync-setup --vault "$OBSIDIAN_VAULT_NAME" --password "$OBSIDIAN_VAULT_PASSWORD" --path /vault && while true; do rm -rf /vault/.obsidian/.sync.lock; ob sync --continuous --path /vault & P=$!; while test -d /proc/$P; do touch /tmp/ob-sync-alive; sleep 30; done; wait $P; echo "Sync exited, retrying in 10s..."; sleep 10; done',
       ],
       securityContext: {
         readOnlyRootFilesystem: false,
         ensureNonRoot: false,
       },
-      liveness: Probe.fromCommand(["test", "-f", "/proc/1/status"], {
+      // Wait for ob sync-setup to create /vault/.obsidian before allowing liveness checks.
+      // /vault is a PVC, so this directory persists across restarts — correct for a startup gate.
+      startup: Probe.fromCommand(["test", "-d", "/vault/.obsidian"], {
         periodSeconds: Duration.seconds(30),
-        failureThreshold: 6,
+        failureThreshold: 12, // up to 6 minutes for initial setup
       }),
+      // /tmp/ob-sync-alive is written every 30 s while ob sync --continuous is running.
+      // Using /tmp (not the PVC) avoids checking stale state across pod restarts.
+      // Fails if the sync loop has not touched the file in the last 5 minutes.
+      // Search /tmp by name so find does not error if the file is absent.
+      liveness: Probe.fromCommand(
+        ["sh", "-c", "find /tmp -name ob-sync-alive -mmin -5 | grep -q ."],
+        {
+          periodSeconds: Duration.seconds(30),
+          failureThreshold: 6,
+        },
+      ),
       resources: {
         cpu: {
           request: Cpu.millis(100),

@@ -175,8 +175,12 @@ git diff --word-diff                # Word-level diff
 
    Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`, `build`, `revert`
 
-3. **Stage intentionally**: Use `git add -p` to review each hunk
+3. **Stage intentionally**: Review staged changes with `git diff --cached` before committing
 4. **Verify before committing**: Run `git diff --cached` to review staged changes
+
+### Monorepo commit-msg convention (this repo)
+
+Git hooks were removed 2026-07 (lefthook and its `commit-msg` validator are gone), so nothing enforces this anymore — but keep following the convention: `type(scope): description` with a scope that is a `packages/` dir name or one of `root` / `practice` / `archive` (`monorepo`, `repo`, `ALL` were never valid). Use `root` for sweeping cross-package commits (e.g. `feat(root): …`). Types: `feat fix chore ci docs refactor test perf build style revert misc`. There is also no pre-commit formatting hook — run `bunx prettier --write <file>` yourself before committing.
 
 ### Syncing with Upstream
 
@@ -224,6 +228,15 @@ git reset --hard HEAD@{2}           # Reset to state 2 moves ago
 git reflog | grep "checkout.*branch-name"
 git branch <branch-name> <sha>      # Recreate from found SHA
 ```
+
+## Safety Rules (Agent)
+
+- **Never destroy uncommitted work to investigate.** Don't `git stash`, `git checkout -- <file>`, `git restore`, or switch branches just to test something (e.g. checking whether failures are pre-existing) — these discard the user's or a concurrent agent's in-progress changes. Note the observation and move on, or ask the user.
+- **Force-push only branches you own.** Never force-push `main`, release branches, or any branch others have pushed to or based work on without explicit confirmation at the moment of execution. Force-pushing a feature branch Claude created and owns this session is fine — use `--force-with-lease`, never `--force`. If unsure who else touched it, treat it as shared and ask first.
+- **Subagents must stay read-only on history.** When spawning Explore/Plan/general-purpose agents, explicitly forbid `git checkout <branch>`, `git switch`, `git stash`, `git reset`, or anything that moves HEAD or the working tree — they can silently leave the user on a stale commit. Tell them to use `git show <ref>:<path>`, `git log <ref>`, and `git diff <ref>..<ref>` for cross-branch inspection. Verify HEAD with `git reflog` before any push after a subagent ran.
+- **Never revert changes you didn't make.** Unexpected file modifications may be a concurrent human or agent, not a rogue linter — reverting them causes build failures and lost work. If a change looks intentional (new types, refactored functions, new files) rather than formatting-only, leave it; ask before reverting anything.
+- **Whole-file staging only.** Split work into multiple commits with plain `git add <path> ...` grouped by file or concern — never `git add -p` / `-i` / `--patch` or any interactive hunk staging (it is opaque and hard to review). This overrides the `git add -p` suggestions elsewhere in this skill; if one file truly mixes two unrelated concerns, ask rather than reaching for `-p`.
+- **`core.fsmonitor` can silently drop `git add`.** The user's git config enables `core.fsmonitor` + `core.untrackedCache`; a stale cache can make `git status` report a clean tree and `git add` no-op after tool-driven edits. Detect it when `git hash-object <file>` ≠ `git rev-parse :<file>`. Work around by prefixing commands with `-c core.fsmonitor=false` (e.g. `git -c core.fsmonitor=false add <files>`).
 
 ## When to Ask for Help
 

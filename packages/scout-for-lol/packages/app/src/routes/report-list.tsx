@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ReportIdSchema } from "@scout-for-lol/data";
@@ -24,6 +25,8 @@ export function ReportList() {
   const { guildId } = useParams();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  // Default to hiding disabled reports; the toggle shows all.
+  const [enabledOnly, setEnabledOnly] = useState(true);
   const safeGuildId = guildId ?? "";
 
   const listKey = trpc.report.list.queryKey({ guildId: safeGuildId });
@@ -46,14 +49,29 @@ export function ReportList() {
   }
 
   const reports = reportsQuery.data ?? [];
+  const visibleReports = enabledOnly
+    ? reports.filter((report) => report.isEnabled)
+    : reports;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold tracking-tight">Reports</h2>
-        <Button asChild size="sm">
-          <Link to={`/g/${guildId}/reports/new`}>+ New report</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant={enabledOnly ? "default" : "outline"}
+            onClick={() => {
+              setEnabledOnly((prev) => !prev);
+            }}
+          >
+            {enabledOnly ? "Enabled only" : "All"}
+          </Button>
+          <Button asChild size="sm">
+            <Link to={`/g/${guildId}/reports/new`}>+ New report</Link>
+          </Button>
+        </div>
       </div>
 
       {reportsQuery.isLoading && (
@@ -75,14 +93,19 @@ export function ReportList() {
           No reports yet — click &quot;New report&quot; to get started.
         </p>
       )}
+      {reports.length > 0 && visibleReports.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          All reports are disabled — switch the toggle to &quot;All&quot; to see
+          them.
+        </p>
+      )}
 
-      {reports.length > 0 && (
+      {visibleReports.length > 0 && (
         <div className="rounded-md border border-border">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Report</TableHead>
-                <TableHead>Format</TableHead>
                 <TableHead>Schedule</TableHead>
                 <TableHead>Enabled</TableHead>
                 <TableHead>Last run</TableHead>
@@ -90,18 +113,15 @@ export function ReportList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {reports.map((report) => (
+              {visibleReports.map((report) => (
                 <TableRow key={report.id}>
                   <TableCell className="font-medium">
                     <Link
-                      className="hover:underline"
+                      className="underline"
                       to={`/g/${guildId}/reports/${report.id.toString()}`}
                     >
                       {report.title}
                     </Link>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {report.outputFormat}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {cronLabel(report.cronExpression)}

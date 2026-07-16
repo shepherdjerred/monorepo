@@ -4,6 +4,15 @@ Headless MK64 (N64Wasm: parallel-n64 + angrylion) streamed to Discord; up to 4
 people drive seats P1–P4 from a React web UI over Socket.IO. See `README.md` for
 the architecture; this file is the quick orientation for agents.
 
+The tracing/metrics wiring, loopback audio transport, Go-Live streamer base class,
+web server, and bot entrypoint are shared with discord-plays-pokemon in
+**`@shepherdjerred/discord-plays-core`** (`packages/discord-plays-core`,
+source-only, subpath imports) — see its `AGENTS.md`. This backend supplies the
+MK64-specific pieces: the N64 emulator, `MarioKartGameDriver`, seats /
+leaderboard / name overlay, the richer ffmpeg/send-path metrics + `copyMs`, the
+socket dispatch, and the `GameStreamerBase` hook overrides (frame-drop policy,
+StreamObserver, session summary, guarded client destroy).
+
 ## The ROM (not in the repo)
 
 The MK64 ROM is **copyrighted** and the repo is **public** with a 5 MB
@@ -44,6 +53,44 @@ timeoutFrames, onTick})`, `captureScreenshot({path, names, screenMode})`.
 presses A — the schedules mirror A onto all N controllers. Drive into a race by:
 tap START to the GAME SELECT menu → press RIGHT (seats−1) times to pick the
 N-player column → mirror A on all seats through char/course select into racing.
+
+## Controller input
+
+The headless N64Wasm host latches web inputs into `g_neilHostPads[4]` and
+re-applies them every frame via `applyHostControls()` (in
+`wasm-src/patches/0001-*.patch`). This works around `mainLoopInner()` calling
+`resetNeilButtons()` every frame — the original code wrote `neilbuttons[*]` once
+before `_runMainLoop()`, so all input was silently dropped (frames still
+rendered). Because the WASM is built at image-build time (gitignored assets;
+CI builds, smokes, and pushes the image on merge to main via the `smoke`/image
+lanes in `.buildkite/pipeline.yml`), a fix here needs an image rebuild + GitOps
+redeploy to reach prod. Manual
+game-effect verification (needs ROM + built core): from `packages/backend`,
+`bun run build:wasm` then `bun run e2e:input:check "<rom>"` — holding START on
+the title screen must advance to GAME SELECT while the baseline stays put.
+
+## Stream performance & profiling
+
+Input lag is **not** the encoder. The VAAPI `h264_vaapi` path benchmarks at
+~16.7× realtime — keep hardware encode. The real bottleneck: the emulator
+`runMainLoop` (p95 `emulate_ms` ≈ 30ms of the 33ms budget) and Discord stream
+I/O share one Node event loop, starving ffmpeg below realtime in prod →
+`pushFrame` piled frames into an unbounded `PassThrough` (`stream_sink_buffer_bytes`
+hit 3.47 GB ≈ 188s of lag, OOM risk vs the 4 GB limit). Fix (PR #1274):
+`shouldDropFrame` drops the newest frame once the queue exceeds
+`MAX_SINK_BUFFER_BYTES` (~3 frames) — bounds latency, degrades fps. Restoring
+full 30fps under load needs the emulator on a Worker thread
+(`packages/docs/todos/mk64-emulator-worker-thread.md`).
+
+Diagnosis: `stream_sink_buffer_bytes` growing unbounded is the smoking gun;
+`stream_ffmpeg_speed_ratio` < 1 sustained; the `e2e:perf` harness drives only
+the emulator path (empty `onFrame`) so it can't exercise the sink.
+
+Profiling: node-wide `pyroscope.ebpf` → Pyroscope has `mario-kart/main`, but
+~64% of Bun samples are `[unknown]` (eBPF can't symbolize Bun's JIT'd JS/wasm).
+For symbolized JS, PR #1274 added on-demand capture:
+`kubectl exec -n mario-kart deploy/mario-kart -- sh -c 'kill -USR2 1'` runs the
+JSC sampling profiler for ~30s and writes folded stacks (speedscope) to the logs.
 
 ## Conventions
 

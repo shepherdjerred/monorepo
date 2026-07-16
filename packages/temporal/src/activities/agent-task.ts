@@ -13,7 +13,10 @@ import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { buildAgentTaskCommand } from "#activities/agent-task-command.ts";
 import { workflowExecutionContext } from "#activities/temporal-context.ts";
 import { runTrackedAgentSubprocess } from "#shared/agent-subprocess.ts";
-import { parseClaudeResultMessage } from "#shared/claude-result.ts";
+import {
+  parseClaudeResultMessage,
+  summarizeClaudeStreamLine,
+} from "#shared/claude-result.ts";
 import {
   AgentTaskInputSchema,
   AgentTaskResultPayloadSchema,
@@ -22,6 +25,8 @@ import {
   type AgentTaskResultPayload,
 } from "#shared/agent-task.ts";
 import { redactSecrets } from "#shared/redact.ts";
+import { startAgentTaskLlmTrace } from "#activities/agent-task-llm-trace.ts";
+import type { TrackedAgentResult } from "#shared/agent-subprocess.ts";
 import {
   cleanup,
   pauseSchedule,
@@ -196,9 +201,17 @@ function splitRepo(fullName: string): { owner: string; repo: string } {
   return { owner, repo };
 }
 
-function parseAgentPayload(raw: string): AgentTaskResultPayload {
+// `raw` is claude's `structured_output` object (from `--json-schema`) or
+// codex's `--output-last-message` file text (a JSON string).
+function parseAgentPayload(raw: unknown): AgentTaskResultPayload {
+  if (raw === undefined || raw === "") {
+    throw new Error(
+      "agent produced no structured output (expected --json-schema structured_output / --output-schema file)",
+    );
+  }
   try {
-    return AgentTaskResultPayloadSchema.parse(JSON.parse(raw));
+    const obj: unknown = typeof raw === "string" ? JSON.parse(raw) : raw;
+    return AgentTaskResultPayloadSchema.parse(obj);
   } catch (error: unknown) {
     throw new Error(
       `Failed to parse agent task JSON payload: ${error instanceof Error ? error.message : String(error)}`,
@@ -235,61 +248,117 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
       });
 
       const githubTokenResult = await createGitHubAppInstallationToken();
-      const result = await runTrackedAgentSubprocess(
-        {
-          command: command.args,
-          cwd: input.workdir,
-          env: envForProvider(provider, githubTokenResult.token),
-          redactTokens: secretTokens(githubTokenResult.token),
-          startToCloseTimeoutMs: startToCloseTimeoutMsOrUndefined(),
-          cancellationSignal: activityCancellationSignalOrUndefined(),
-          heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
-          onHeartbeat: (beat) => {
-            safeHeartbeat({ phase: "agent", provider, ...beat });
-            jsonLog("info", "agent heartbeat", {
-              phase: "agent",
-              provider,
-              ...beat,
-            });
-            span.addEvent("agent.heartbeat", {
-              elapsedMs: beat.elapsedMs,
-              idleMs: beat.idleMs,
-            });
-          },
-          onSoftKill: (event) => {
-            jsonLog("warning", "agent soft-kill", {
-              phase: "soft-kill",
-              provider,
-              ...event,
-            });
-            span.addEvent("agent.soft-kill", {
-              elapsedMs: event.elapsedMs,
-              idleMs: event.idleMs,
-              maxIdleMs: event.maxIdleMs,
-            });
-            agentSubprocessSoftKillsTotal.inc({
-              workflow_type: workflowType,
-              reason: "pre_temporal_timeout",
-            });
-          },
-          onStderrLine: (line) => {
-            jsonLog("info", "agent stderr", { provider, line });
-          },
-          onCancellation: (state) => {
-            jsonLog(
-              "warning",
-              "Agent task cancellation requested; killing subprocess",
-              {
-                provider,
-                title: parsed.title,
-                model: command.model,
-                ...state,
-              },
-            );
-          },
+
+      const llmStartMs = Date.now();
+      const llmTrace = startAgentTaskLlmTrace({
+        provider,
+        callSite: "agent-task",
+        model: command.model,
+        prompt: command.prompt,
+        options: {
+          maxTurns: parsed.maxTurns,
+          title: parsed.title,
+          mode: parsed.mode,
         },
-        redactSecrets,
-      );
+        warn: (message) => {
+          jsonLog("warning", message, { phase: "llm-trace" });
+        },
+      });
+
+      let result: TrackedAgentResult;
+      try {
+        result = await runTrackedAgentSubprocess(
+          {
+            command: command.args,
+            cwd: input.workdir,
+            env: envForProvider(provider, githubTokenResult.token),
+            redactTokens: secretTokens(githubTokenResult.token),
+            startToCloseTimeoutMs: startToCloseTimeoutMsOrUndefined(),
+            cancellationSignal: activityCancellationSignalOrUndefined(),
+            heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
+            onHeartbeat: (beat) => {
+              safeHeartbeat({ phase: "agent", provider, ...beat });
+              jsonLog("info", "agent heartbeat", {
+                phase: "agent",
+                provider,
+                ...beat,
+              });
+              span.addEvent("agent.heartbeat", {
+                elapsedMs: beat.elapsedMs,
+                idleMs: beat.idleMs,
+              });
+            },
+            onSoftKill: (event) => {
+              jsonLog("warning", "agent soft-kill", {
+                phase: "soft-kill",
+                provider,
+                ...event,
+              });
+              span.addEvent("agent.soft-kill", {
+                elapsedMs: event.elapsedMs,
+                idleMs: event.idleMs,
+                maxIdleMs: event.maxIdleMs,
+              });
+              agentSubprocessSoftKillsTotal.inc({
+                workflow_type: workflowType,
+                reason: "pre_temporal_timeout",
+              });
+            },
+            onSigkillEscalation: (event) => {
+              jsonLog("warning", "agent sigkill escalation", {
+                phase: "sigkill",
+                provider,
+                ...event,
+              });
+              agentSubprocessSoftKillsTotal.inc({
+                workflow_type: workflowType,
+                reason: "escalated_sigkill",
+              });
+            },
+            onStdoutLine: (line) => {
+              llmTrace.pushStdoutLine(line);
+              const event = summarizeClaudeStreamLine(line);
+              if (event !== undefined) {
+                jsonLog("info", "agent event", {
+                  phase: "agent-event",
+                  provider,
+                  ...event,
+                });
+                span.addEvent("agent.event", { type: event.type });
+              }
+            },
+            onStderrLine: (line) => {
+              jsonLog("info", "agent stderr", { provider, line });
+            },
+            onCancellation: (state) => {
+              jsonLog(
+                "warning",
+                "Agent task cancellation requested; killing subprocess",
+                {
+                  provider,
+                  title: parsed.title,
+                  model: command.model,
+                  ...state,
+                },
+              );
+            },
+          },
+          redactSecrets,
+        );
+      } finally {
+        // Close codex spans on every exit path (incl. spawn failure) so a
+        // crashed run still shows up in Tempo with whatever turns completed.
+        llmTrace.close();
+      }
+
+      // Post-hoc claude span — before the cancelled/exit-code checks so
+      // failed runs are traced too (they still spent tokens).
+      llmTrace.record({
+        stdout: result.stdout,
+        exitCode: result.exitCode,
+        startTimeMs: llmStartMs,
+        durationMs: result.durationMs,
+      });
 
       const cancelled = result.signal === "SIGTERM";
       agentSubprocessIdleSeconds.observe(
@@ -320,6 +389,9 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
         exitCode: result.exitCode,
         signal: result.signal,
         maxIdleMs: result.maxIdleMs,
+        firstOutputLatencyMs: result.firstOutputLatencyMs,
+        sigkillEscalated: result.sigkillEscalated,
+        lastLine: result.lastLine,
       });
 
       if (cancelled) {
@@ -329,8 +401,9 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
           provider,
           durationMs: result.durationMs,
           maxIdleMs: result.maxIdleMs,
+          firstOutputLatencyMs: result.firstOutputLatencyMs,
           signal: result.signal,
-          lastStderrLine: result.lastStderrLine,
+          lastLine: result.lastLine,
         });
         throw error;
       }
@@ -344,8 +417,9 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
           provider,
           durationMs: result.durationMs,
           maxIdleMs: result.maxIdleMs,
+          firstOutputLatencyMs: result.firstOutputLatencyMs,
           signal: result.signal,
-          lastStderrLine: result.lastStderrLine,
+          lastLine: result.lastLine,
         });
         throw error;
       }
@@ -354,7 +428,7 @@ async function runAgent(input: RunAgentTaskInput): Promise<RunAgentTaskResult> {
       try {
         if (provider === "claude") {
           payload = parseAgentPayload(
-            parseClaudeResultMessage(result.stdout).result ?? "",
+            parseClaudeResultMessage(result.stdout).structured_output,
           );
         } else {
           if (command.outputPath === undefined) {

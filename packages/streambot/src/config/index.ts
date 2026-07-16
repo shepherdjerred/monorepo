@@ -46,6 +46,7 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       // backward compatibility with the pre-pool deployment.
       userTokens: list(env["USER_TOKENS"]) ?? list(env["TOKEN"]),
       adminIds: list(env["ADMIN_IDS"]),
+      peerUserbotIds: list(env["PEER_USERBOT_IDS"]),
     },
     library: {
       videosDir: env["VIDEOS_DIR"],
@@ -71,6 +72,11 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
     state: {
       dir: env["STATE_DIR"],
       resumeMaxAgeSeconds: num(env["RESUME_MAX_AGE_SECONDS"]),
+    },
+    reconnect: {
+      enabled: bool(env["STREAMER_RECONNECT_ENABLED"]),
+      delaySeconds: num(env["STREAMER_RECONNECT_DELAY_SECONDS"]),
+      maxAttempts: num(env["STREAMER_RECONNECT_MAX_ATTEMPTS"]),
     },
     tmdb:
       env["TMDB_API_KEY"] === undefined

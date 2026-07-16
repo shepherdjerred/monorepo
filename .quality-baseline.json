@@ -2,6 +2,7 @@
   "eslint-disable": {
     "packages/better-skill-capped/src/components/app.tsx": 1,
     "packages/better-skill-capped/src/components/router.tsx": 1,
+    "packages/better-skill-capped/src/vite-env.d.ts": 1,
     "packages/discord-plays-pokemon/packages/frontend/src/main.tsx": 1,
     "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx": 1,
     "packages/scout-for-lol/packages/backend/src/testing/discord-mocks.ts": 2,
@@ -20,5 +21,20 @@
   },
   "prettier-ignore": {},
   "hermeticity-exempt": {},
-  "updated": "2026-05-22"
+  "updated": "2026-07-11",
+  "test-skips": {
+    "packages/discord-plays-pokemon/packages/backend/src/emulator/audio/audio-fingerprint.test.ts": 1,
+    "packages/homelab/src/helm-types/src/real-world-charts.test.ts": 4
+  },
+  "placeholder-assertions": {
+    "packages/birmel/src/agent-tools/tools/automation/automation.test.ts": 7,
+    "packages/discord-plays-pokemon/packages/backend/src/emulator/audio/audio-fingerprint.test.ts": 1,
+    "packages/homelab/src/helm-types/src/type-converter.test.ts": 1,
+    "packages/homelab/src/helm-types/src/yaml-preprocessing.test.ts": 1,
+    "packages/scout-for-lol/packages/backend/src/database/competition.integration.test.ts": 5,
+    "packages/scout-for-lol/packages/backend/src/database/competition/queries.integration.test.ts": 2,
+    "packages/scout-for-lol/packages/backend/src/discord/commands/competition/create.integration.test.ts": 2,
+    "packages/scout-for-lol/packages/backend/src/discord/commands/competition/edit.integration.test.ts": 2,
+    "packages/scout-for-lol/packages/backend/src/discord/commands/competition/view-leaderboard-cache.test.ts": 1
+  }
 }

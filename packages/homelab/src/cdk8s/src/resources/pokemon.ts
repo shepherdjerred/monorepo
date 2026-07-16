@@ -22,6 +22,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
 
 // Headless Discord Plays Pokemon: pokeemerald-wasm runs in Bun, renders frames
 // in software, and streams to a Discord voice channel via the voice UDP path.
@@ -55,6 +56,22 @@ export function createPokemonDeployment(chart: Chart) {
     storage: Size.gibibytes(8),
   });
 
+  // The synced secret is mounted at APP_ROOT/config.toml below. The backend now uses
+  // an on-demand /play model (PR shipping the pokebot-mk64-pool refactor): the
+  // emulator boots only when a user runs /play in their voice channel, and saves
+  // are keyed per-guild under saves/<guildId>/. Config.toml shape:
+  //
+  //   [stream.userbot]
+  //   id    = "<selfbot user id>"
+  //   token = "<selfbot token>"
+  //   # The single userbot account that joins voice channels and streams. One
+  //   # userbot, one emulator, one game at a time — there's no pool of accounts
+  //   # because there's no concurrency to exploit.
+  //
+  //   state_root_dir = "saves"   # root of per-guild dirs (default "saves")
+  //
+  // Multi-guild service: same userbot account, just invited into every Discord
+  // server you want this deployment to serve.
   const item = new OnePasswordItem(chart, "pokemon-config", {
     spec: {
       itemPath:
@@ -87,6 +104,10 @@ export function createPokemonDeployment(chart: Chart) {
       image: `ghcr.io/shepherdjerred/discord-plays-pokemon:${versions["shepherdjerred/discord-plays-pokemon"]}`,
       envVariables: {
         NODE_ENV: EnvValue.fromValue("production"),
+        // Peer userbot Discord user IDs (Glitter Kart + Streambot) so the channel-handler
+        // excludes them from the "real viewers" count and leaves an otherwise-empty VC.
+        // Sourced from the canonical map in resources/userbot-ids.ts.
+        PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("pokemon")),
         // VAAPI hardware H.264 encoding on the Intel iGPU (requested below). The
         // app reads STREAM_HARDWARE_ACCELERATION/VAAPI_DEVICE; ffmpeg reads
         // LIBVA_DRIVER_NAME. Falls back to software libx264 if the device is absent.
@@ -258,5 +279,6 @@ export function createPokemonDeployment(chart: Chart) {
   createCloudflareTunnelBinding(chart, "pokebot-cf-tunnel", {
     serviceName: uiService.name,
     subdomain: "pokebot",
+    port: WEB_PORT,
   });
 }

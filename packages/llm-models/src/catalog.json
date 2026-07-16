@@ -1,0 +1,180 @@
+{
+  "gpt-5.5": {
+    "id": "gpt-5.5",
+    "provider": "openai",
+    "displayName": "GPT-5.5",
+    "description": "OpenAI flagship (current).",
+    "pricing": {
+      "modality": "text",
+      "input": 5,
+      "cachedInput": 0.5,
+      "output": 30
+    },
+    "contextWindow": 400000,
+    "capabilities": {
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 400000
+    },
+    "status": "current"
+  },
+  "gpt-5.4-mini": {
+    "id": "gpt-5.4-mini",
+    "provider": "openai",
+    "displayName": "GPT-5.4 Mini",
+    "description": "Balanced GPT-5.4 variant.",
+    "pricing": {
+      "modality": "text",
+      "input": 0.75,
+      "cachedInput": 0.075,
+      "output": 4.5
+    },
+    "contextWindow": 400000,
+    "capabilities": {
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 200000
+    },
+    "status": "current"
+  },
+  "gpt-5.4-nano": {
+    "id": "gpt-5.4-nano",
+    "provider": "openai",
+    "displayName": "GPT-5.4 Nano",
+    "description": "Fastest, most cost-effective GPT-5.4 variant.",
+    "pricing": {
+      "modality": "text",
+      "input": 0.2,
+      "cachedInput": 0.02,
+      "output": 1.25
+    },
+    "contextWindow": 400000,
+    "capabilities": {
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 100000
+    },
+    "status": "current"
+  },
+  "text-embedding-3-small": {
+    "id": "text-embedding-3-small",
+    "provider": "openai",
+    "displayName": "Text Embedding 3 Small",
+    "description": "Embedding model (input-only pricing).",
+    "pricing": { "modality": "text", "input": 0.02, "output": 0 },
+    "contextWindow": 8191,
+    "capabilities": { "supportsTemperature": false, "supportsTopP": false },
+    "status": "current",
+    "category": "embedding"
+  },
+  "claude-opus-4-8": {
+    "id": "claude-opus-4-8",
+    "provider": "anthropic",
+    "displayName": "Claude Opus 4.8",
+    "description": "Most capable Opus-tier model; adaptive thinking only.",
+    "pricing": {
+      "modality": "text",
+      "input": 5,
+      "output": 25,
+      "cacheRead": 0.5,
+      "cacheWrite": 6.25
+    },
+    "contextWindow": 1000000,
+    "pinnedContextWindow": true,
+    "capabilities": {
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "adaptiveThinking": true,
+      "effortTiers": ["low", "medium", "high", "xhigh", "max"]
+    },
+    "status": "current"
+  },
+  "claude-sonnet-4-6": {
+    "id": "claude-sonnet-4-6",
+    "provider": "anthropic",
+    "displayName": "Claude Sonnet 4.6",
+    "description": "Best speed/intelligence balance; adaptive thinking.",
+    "pricing": {
+      "modality": "text",
+      "input": 3,
+      "output": 15,
+      "cacheRead": 0.3,
+      "cacheWrite": 3.75
+    },
+    "contextWindow": 1000000,
+    "capabilities": {
+      "supportsTemperature": true,
+      "supportsTopP": true,
+      "adaptiveThinking": true,
+      "effortTiers": ["low", "medium", "high", "max"]
+    },
+    "status": "current"
+  },
+  "claude-haiku-4-5": {
+    "id": "claude-haiku-4-5",
+    "provider": "anthropic",
+    "displayName": "Claude Haiku 4.5",
+    "description": "Fastest, most cost-effective Claude model.",
+    "pricing": {
+      "modality": "text",
+      "input": 1,
+      "output": 5,
+      "cacheRead": 0.1,
+      "cacheWrite": 1.25
+    },
+    "contextWindow": 200000,
+    "capabilities": {
+      "supportsTemperature": true,
+      "supportsTopP": true,
+      "adaptiveThinking": false
+    },
+    "status": "current"
+  },
+  "claude-haiku-4-5-20251001": {
+    "id": "claude-haiku-4-5-20251001",
+    "provider": "anthropic",
+    "displayName": "Claude Haiku 4.5 (2025-10-01)",
+    "description": "Dated snapshot of claude-haiku-4-5.",
+    "pricing": {
+      "modality": "text",
+      "input": 1,
+      "output": 5,
+      "cacheRead": 0.1,
+      "cacheWrite": 1.25
+    },
+    "contextWindow": 200000,
+    "capabilities": {
+      "supportsTemperature": true,
+      "supportsTopP": true,
+      "adaptiveThinking": false
+    },
+    "status": "current"
+  },
+  "gemini-3-pro-image-preview": {
+    "id": "gemini-3-pro-image-preview",
+    "provider": "google",
+    "displayName": "Gemini 3 Pro Image",
+    "description": "State-of-the-art image generation (codename: Nano Banana Pro). Per-image rate is the Standard 1K-2K tier (4K is higher).",
+    "pricing": { "modality": "image", "perImage": 0.134 },
+    "capabilities": { "supportsTemperature": false, "supportsTopP": false },
+    "status": "preview"
+  },
+  "gemini-3.1-flash-image-preview": {
+    "id": "gemini-3.1-flash-image-preview",
+    "provider": "google",
+    "displayName": "Gemini 3.1 Flash Image",
+    "description": "High-efficiency image generation (codename: Nano Banana 2). Per-image rate is the Standard 1K tier.",
+    "pricing": { "modality": "image", "perImage": 0.067 },
+    "capabilities": { "supportsTemperature": false, "supportsTopP": false },
+    "status": "preview"
+  },
+  "gemini-2.5-flash-image": {
+    "id": "gemini-2.5-flash-image",
+    "provider": "google",
+    "displayName": "Gemini 2.5 Flash Image",
+    "description": "Fast image generation (1024px, codename: Nano Banana).",
+    "pricing": { "modality": "image", "perImage": 0.039 },
+    "capabilities": { "supportsTemperature": false, "supportsTopP": false },
+    "status": "current"
+  }
+}

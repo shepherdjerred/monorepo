@@ -26,6 +26,10 @@ describe("startMetricsServer", () => {
     expect(startMetricsServer(0)).toBeUndefined();
   });
 
+  // 30s timeout: the test does a real Bun.serve bind + three localhost
+  // fetches, each of which runs `register.metrics()` → `collectDefaultMetrics`.
+  // Bun's default 5s timeout flakes on shared CI agents under buildAll
+  // concurrency (see main build #4369).
   test("serves /metrics and /healthz, then stops", async () => {
     expect(startMetricsServer(TEST_PORT)).toBe(TEST_PORT);
     const base = `http://localhost:${String(TEST_PORT)}`;
@@ -41,5 +45,5 @@ describe("startMetricsServer", () => {
     expect(missingRes.status).toBe(404);
 
     await stopMetricsServer();
-  });
+  }, 30_000);
 });

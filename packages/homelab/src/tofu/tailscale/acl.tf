@@ -78,6 +78,16 @@ resource "tailscale_acl" "homelab" {
       # tag:k8s node above) would also need the tofu-state backend on 443.
       { action = "accept", src = ["tag:ci"], dst = ["tag:k8s:443"] },
 
+      # golink (go.tailnet-1a49.ts.net) runs its OWN embedded tsnet node tagged
+      # tag:k8s-operator — it is NOT an operator-created ingress proxy (those are
+      # tag:k8s), so the tag:k8s -> tag:k8s:443 rule above does not cover it. The
+      # cluster node (tag:k8s) is where the temporal-worker pod egresses to the
+      # tailnet, and its `golink-sync` schedule reads/writes golink over 443.
+      # Without this grant, deny-by-default drops tag:k8s -> tag:k8s-operator:443
+      # (verified: worker reaches tag:k8s ingresses but times out on golink), which
+      # silently broke golink-sync the day this policy first applied (2026-06-14).
+      { action = "accept", src = ["tag:k8s"], dst = ["tag:k8s-operator:443"] },
+
       # tag:iot intentionally gets NO inbound or outbound access, and tag:ci gets
       # no *inbound* access (deny-by-default): appliances are sources only,
       # nothing reaches into them, and they cannot reach the infrastructure.
@@ -151,6 +161,14 @@ resource "tailscale_acl" "homelab" {
         src    = "tag:ci"
         accept = ["tag:k8s:443"]
         deny   = ["tag:server:22", "tag:k8s:22"]
+      },
+      # The cluster node (tag:k8s, where the temporal-worker egresses) MUST reach
+      # golink's embedded tsnet node (tag:k8s-operator) on 443 for golink-sync.
+      # Guards against dropping the grant above. Still no raw node SSH.
+      {
+        src    = "tag:k8s"
+        accept = ["tag:k8s-operator:443"]
+        deny   = ["tag:k8s-operator:22"]
       },
     ]
   })

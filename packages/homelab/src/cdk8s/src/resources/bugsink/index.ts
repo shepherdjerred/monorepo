@@ -366,6 +366,17 @@ export function createBugsinkDeployment(chart: Chart) {
           ],
           ports: [{ port: IntOrString.fromNumber(8000), protocol: "TCP" }],
         },
+        {
+          // Allow blackbox-exporter's in-cluster health probe
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(8000), protocol: "TCP" }],
+        },
       ],
       egress: [
         {
@@ -429,6 +440,7 @@ export function createBugsinkDeployment(chart: Chart) {
   createCloudflareTunnelBinding(chart, "bugsink-cf-tunnel", {
     serviceName: service.name,
     fqdn: "bugsink.sjer.red",
+    port: 8000,
   });
 
   return { deployment, service, bugsinkSecrets };

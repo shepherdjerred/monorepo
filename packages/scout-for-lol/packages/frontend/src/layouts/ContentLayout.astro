@@ -5,21 +5,30 @@ import Footer from "../components/Footer.astro";
 import PageHeader from "../components/PageHeader.astro";
 
 const { frontmatter } = Astro.props;
-const { title, subtitle } = frontmatter;
+const { title, subtitle, description } = frontmatter;
+
+// `description` is the SEO/OG description for the page. Fail the build loudly
+// if a content page forgets it rather than silently shipping the `subtitle`
+// (e.g. "Last updated: …") as the meta description.
+if (typeof description !== "string" || description.length === 0) {
+  throw new Error(
+    `ContentLayout: content page "${String(title)}" is missing a "description" frontmatter field (required for SEO/OG metadata).`,
+  );
+}
 ---
 
-<Layout>
+<Layout title={title} description={description}>
   <div class="bg-white dark:bg-gray-900">
     <Navbar />
 
-    <div class="relative px-6 pt-14 lg:px-8">
-      <div class="mx-auto max-w-4xl py-32 sm:py-48 lg:py-56">
-        <PageHeader title={title} subtitle={subtitle} />
+    <div class="mx-auto max-w-3xl px-6 py-16 sm:py-20 lg:px-8">
+      <PageHeader title={title} subtitle={subtitle} />
 
-        <article class="prose dark:prose-invert max-w-none mt-12">
-          <slot />
-        </article>
-      </div>
+      <article
+        class="prose prose-lg prose-gray dark:prose-invert mt-10 max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-gray-900 dark:prose-headings:text-white prose-a:font-medium prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline dark:prose-a:text-indigo-400"
+      >
+        <slot />
+      </article>
     </div>
 
     <Footer />

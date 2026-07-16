@@ -16,19 +16,14 @@ import {
   getGeneratedScoutShowcaseAssetSrc,
 } from "../data/scout-showcase";
 import {
-  DISCORD_INSTALL_CLICK_EVENT,
-  DISCORD_INVITE_URL,
+  APP_DASHBOARD_URL,
+  GET_STARTED_CLICK_EVENT,
 } from "#src/lib/marketing-constants.ts";
 
-const matchImg = "/match.png";
+const matchImg = getGeneratedScoutShowcaseAssetSrc("ranked-solo-1-postmatch");
 
 type GeneratedScoutShowcaseAsset =
   (typeof generatedScoutShowcaseAssets)[number];
-
-const findShowcaseAsset = (
-  id: string,
-): GeneratedScoutShowcaseAsset | undefined =>
-  generatedScoutShowcaseAssets.find((asset) => asset.id === id);
 
 const requireShowcaseAsset = (id: string): GeneratedScoutShowcaseAsset => {
   const src = getGeneratedScoutShowcaseAssetSrc(id);
@@ -43,35 +38,37 @@ const requireShowcaseAsset = (id: string): GeneratedScoutShowcaseAsset => {
   return asset;
 };
 
+// Cover the main queues — Arena (×2), Ranked Flex, Ranked Solo/Duo, ARAM —
+// leading with the "report inside Discord" composites.
 const showcasePreviews = [
   requireShowcaseAsset("arena-discord"),
-  ..."arena-3-postmatch aram-postmatch ranked-solo-1-postmatch"
-    .split(" ")
-    .flatMap((assetId) => {
-      const asset = findShowcaseAsset(assetId);
-
-      return asset ? [asset] : [];
-    }),
+  requireShowcaseAsset("ranked-solo-discord"),
+  requireShowcaseAsset("aram-discord"),
+  requireShowcaseAsset("ranked-flex-1-postmatch"),
+  requireShowcaseAsset("arena-3-postmatch"),
 ];
 
 const initialShowcasePreview = showcasePreviews.at(0);
 ---
 
-<Layout>
+<Layout
+  title="Scout for League of Legends"
+  description="Get notified when your friends start League of Legends matches and get beautiful post-match reports delivered right to your Discord server."
+>
   <div class="bg-white dark:bg-gray-900">
     <WhatsNewBanner />
     <Navbar activePage="home" />
 
     <Hero
       title="Scout for League of Legends"
-      subtitle="Get notified when your friends start League matches and receive beautiful post-match reports with detailed stats, all delivered directly to your Discord server."
+      subtitle="Get notified when your friends start League matches and receive beautiful post-match reports with detailed stats, all delivered right to your Discord server."
       showGradient={true}
       ctaButtons={[
         {
-          text: "Add to Discord",
-          href: DISCORD_INVITE_URL,
+          text: "Get Started",
+          href: APP_DASHBOARD_URL,
           variant: "primary",
-          trackingEvent: DISCORD_INSTALL_CLICK_EVENT,
+          trackingEvent: GET_STARTED_CLICK_EVENT,
           trackingLocation: "home_hero",
         },
         { text: "View Documentation", href: "/docs", variant: "secondary" },
@@ -348,25 +345,53 @@ const initialShowcasePreview = showcasePreviews.at(0);
           <dl
             class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3"
           >
-            <ProcessStep number={1} title="Add Scout to your server">
+            <ProcessStep number={1} title="Sign in with Discord">
               <p class="text-gray-600 dark:text-gray-300">
-                Click 'Add to Discord' and authorize Scout with the necessary
-                permissions to send messages to your channels.
+                Open the dashboard and sign in with your Discord account.
               </p>
             </ProcessStep>
-            <ProcessStep number={2} title="Subscribe to players">
+            <ProcessStep number={2} title="Add Scout to your server">
               <p class="text-gray-600 dark:text-gray-300">
-                Use /subscription add to add League players you want to track.
-                Specify their Riot ID, region, and a friendly alias.
+                One click adds the bot to your server and sends you right back
+                to the dashboard.
               </p>
             </ProcessStep>
-            <ProcessStep number={3} title="Enjoy automatic updates">
+            <ProcessStep number={3} title="Pick who to track">
               <p class="text-gray-600 dark:text-gray-300">
-                Scout will automatically notify your channel when tracked
-                players start matches and post detailed reports when games end.
+                Add the friends you want to follow, choose where Scout posts,
+                and start getting alerts, reports, and leaderboards.
               </p>
             </ProcessStep>
           </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard showcase -->
+    <div class="py-24 sm:py-32">
+      <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <SectionHeader
+          badge="Subscriptions · Competitions · Reports"
+          title="Manage it all from one dashboard"
+          subtitle="Track the players you care about, choose where Scout posts, and run competitions and scheduled reports — all from a fast web UI."
+          centered={true}
+        />
+        <div class="mx-auto mt-16 max-w-4xl space-y-12">
+          <GalleryItem
+            imageSrc="/dashboard-add-subscription.png"
+            imageAlt="Scout dashboard 'Add subscription' dialog with channel, region, Riot ID, and alias fields"
+            caption="Add a player to track in seconds — pick a channel, paste a Riot ID, set an alias."
+          />
+          <GalleryItem
+            imageSrc="/dashboard-subscriptions.png"
+            imageAlt="Scout dashboard subscriptions table listing tracked players and their channels"
+            caption="Manage every tracked player and channel from one table."
+          />
+          <GalleryItem
+            imageSrc="/dashboard-competition.png"
+            imageAlt="Scout dashboard competition setup form with criteria, queue, and schedule"
+            caption="Spin up competitions and leaderboards with a guided form."
+          />
         </div>
       </div>
     </div>
@@ -378,10 +403,10 @@ const initialShowcasePreview = showcasePreviews.at(0);
       description="Add Scout to your Discord server and never miss another epic play or hilarious fail from your League friends."
       buttons={[
         {
-          text: "Add to Discord",
-          href: DISCORD_INVITE_URL,
+          text: "Get Started",
+          href: APP_DASHBOARD_URL,
           variant: "primary",
-          trackingEvent: DISCORD_INSTALL_CLICK_EVENT,
+          trackingEvent: GET_STARTED_CLICK_EVENT,
           trackingLocation: "home_final_cta",
         },
         { text: "Read the docs", href: "/docs", variant: "secondary" },

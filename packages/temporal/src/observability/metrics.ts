@@ -36,6 +36,13 @@ export const prWebhookSkippedTotal = new Counter({
   registers: [register],
 });
 
+export const prBabysitCommandsTotal = new Counter({
+  name: "pr_babysit_commands_total",
+  help: "Babysitter comment commands by parsed command (start|stop|status|guidance|none) and outcome (accepted|unauthorized|disabled|no_workflow|ignored|error)",
+  labelNames: ["command", "outcome"] as const,
+  registers: [register],
+});
+
 export const prWebhookSignatureFailuresTotal = new Counter({
   name: "pr_webhook_signature_failures_total",
   help: "GitHub webhook deliveries rejected for missing or invalid X-Hub-Signature-256",
@@ -170,19 +177,19 @@ export const agentTaskEmailSentTotal = new Counter({
 });
 
 // ---------------------------------------------------------------------------
-// Agent subprocess wall-clock observability (shared between alert-remediation
-// and agent-task). The point of these two metrics is to make a hang
-// distinguishable from a long-but-progressing run on the dashboard:
+// Agent subprocess wall-clock observability (shared across every agent
+// subprocess activity, e.g. agent-task / homelab-audit / pr-babysit). The
+// point of these two metrics is to make a hang distinguishable from a
+// long-but-progressing run on the dashboard:
 //
 //   * `agent_subprocess_idle_seconds` is the longest stretch within a single
 //     subprocess run where no stderr was seen. A subprocess that's working
 //     emits stderr periodically; a wedged tool call (slow WebFetch / hung
 //     kubectl pipe / API retry loop) is silent. Modeled as a Histogram (not
-//     a Gauge) because alert-remediation runs up to `concurrency=3` children
-//     in parallel — a Gauge would last-writer-wins and silently drop the
-//     other two observations. The Histogram accumulates every run's max-idle
-//     so the dashboard p95 reflects the worst real hang across all
-//     concurrent runs.
+//     a Gauge) because multiple agent subprocesses can run in parallel — a
+//     Gauge would last-writer-wins and silently drop the other observations.
+//     The Histogram accumulates every run's max-idle so the dashboard p95
+//     reflects the worst real hang across all concurrent runs.
 //
 //   * `agent_subprocess_soft_kills_total` ticks when the activity itself
 //     sends SIGINT before Temporal's startToCloseTimeout SIGTERM lands. The
@@ -204,44 +211,6 @@ export const agentSubprocessSoftKillsTotal = new Counter({
   labelNames: ["workflow_type", "reason"] as const,
   registers: [register],
 });
-
-// ---------------------------------------------------------------------------
-// alert-remediation workflow metrics
-//
-// The sweep workflow fans out one child per normalized PagerDuty/Bugsink
-// alert; each child runs the `runAlertRemediationAgent` activity which
-// shells out to `claude -p`. Until 2026-06-14 this surface had zero
-// metrics — failures were only observable by inspecting individual
-// workflow histories, which is how a 14-day all-failed regression went
-// unnoticed.
-// ---------------------------------------------------------------------------
-
-export const alertRemediationDecisionsTotal = new Counter({
-  name: "alert_remediation_decisions_total",
-  help: "Decisions reached by the alert-remediation agent, by decision label, outcome (pr-created | report-only | not-straightforward | verification-failed | failed), and alert source (pagerduty | bugsink)",
-  labelNames: ["decision", "outcome", "source"] as const,
-  registers: [register],
-});
-
-export const alertRemediationSubprocessDurationSeconds = new Histogram({
-  name: "alert_remediation_subprocess_duration_seconds",
-  help: "Wall-clock duration of `claude -p` subprocess invocations for the alert-remediation agent",
-  labelNames: ["model", "exit_code"] as const,
-  buckets: [30, 60, 180, 300, 600, 900, 1500, 1800, 2700],
-  registers: [register],
-});
-
-export const alertRemediationSubprocessExitTotal = new Counter({
-  name: "alert_remediation_subprocess_exit_total",
-  help: "alert-remediation claude subprocess exits, by exit code and signal (natural | SIGINT | SIGTERM)",
-  labelNames: ["exit_code", "signal"] as const,
-  registers: [register],
-});
-
-// Sweep-level wall clock + per-disposition alert flow are covered by the
-// Temporal SDK's built-in `temporal_workflow_completed_total{workflow_type,
-// status}` and the child-level `alert_remediation_decisions_total` (which
-// carries the `source` label). Don't double-emit.
 
 // ---------------------------------------------------------------------------
 // scout-season-refresh workflow metrics
@@ -419,6 +388,49 @@ export const prReviewVerifyFindingsTotal = new Counter({
   name: "pr_review_verify_findings_total",
   help: "Findings entering the verify stage, by verifier kind and post-verification outcome (verified | unverified | contradicted)",
   labelNames: ["verifier", "outcome"] as const,
+  registers: [register],
+});
+
+// ---------------------------------------------------------------------------
+// PR merge-conflict check (`ci/merge-conflict` status on every open PR).
+// Triggered by push-to-main (kind=all-prs) and PR events (kind=single-pr).
+// One observation per posted commit-status (the unit the PR UI shows). See
+// packages/docs/plans/2026-06-14_pr-merge-conflict-check.md.
+// ---------------------------------------------------------------------------
+
+export const prMergeConflictCheckTotal = new Counter({
+  name: "pr_merge_conflict_check_total",
+  help: "Commit statuses posted by the merge-conflict checker, by trigger (main push / per-PR event) and result (success=clean | failure=conflict | errored=per-PR exception)",
+  labelNames: ["trigger", "result"] as const,
+  registers: [register],
+});
+
+export const prMergeConflictCheckDurationSeconds = new Histogram({
+  name: "pr_merge_conflict_check_duration_seconds",
+  help: "Wall-clock duration of a single runCheckPrMergeConflicts activity invocation, by trigger",
+  labelNames: ["trigger"] as const,
+  buckets: [1, 5, 10, 20, 30, 60, 120, 300],
+  registers: [register],
+});
+
+// ---------------------------------------------------------------------------
+// Schedule-registry drift
+//
+// registerSchedules() upserts the declared SCHEDULES and deletes the explicit
+// DELETED_SCHEDULE_IDS allow-list — it never blind-prunes (that would nuke the
+// dynamic /agent-tasks schedules). So a schedule that is renamed/removed from
+// source but not added to DELETED_SCHEDULE_IDS keeps firing forever, unnoticed
+// (this has happened 4×, most recently `pokeemerald-wasm-monthly`). This gauge
+// is set once per worker startup to the count of live schedules that are
+// neither declared nor a known dynamic agent-task schedule. Alert on `> 0`.
+// A value of -1 (ORPHAN_DETECTION_FAILED) means the live-schedule listing
+// itself failed, so the count is unknown — alert on `< 0` separately, since a
+// failed scan otherwise leaves the gauge at 0 and looks identical to "clean".
+// ---------------------------------------------------------------------------
+
+export const scheduleOrphans = new Gauge({
+  name: "temporal_schedule_orphans",
+  help: "Live Temporal schedules not declared in register-schedules.ts (excluding dynamic agent-task schedules). >0 means a removed/renamed schedule was never added to DELETED_SCHEDULE_IDS and is still firing. -1 means orphan detection failed to list schedules (count unknown).",
   registers: [register],
 });
 

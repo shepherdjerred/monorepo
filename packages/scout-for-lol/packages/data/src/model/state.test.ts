@@ -20,13 +20,16 @@ describe("parseQueueType", () => {
     [480, "swiftplay"],
     [490, "quickplay"],
     [700, "clash"],
+    [710, "ranked 5s"],
     [720, "aram clash"],
     [900, "arurf"],
     [1700, "arena"],
+    [1750, "arena"],
     [1900, "urf"],
     [2300, "brawl"],
     [2400, "aram mayhem"],
     [3200, "aram mayhem"],
+    [3220, "aram mayhem"],
     [3270, "aram mayhem"],
     [3100, "custom"],
     [3130, "easy doom bots"],
@@ -57,6 +60,19 @@ describe("Arena queue resolution", () => {
   test("treats queue 1700 as arena even with a different mode string", () => {
     expect(isArenaQueueOrMode(1700, "UNKNOWN")).toBe(true);
     expect(resolveQueueTypeFromGame(1700, "UNKNOWN")).toBe("arena");
+  });
+
+  // Regression: Riot moved live Arena from queue 1700 -> 1750 around mid-2026.
+  // The report lake flattened `queue` via bare parseQueueType, which only knew
+  // 1700, so every 1750 game landed with queue=null and vanished from the
+  // `queue IN ('arena')` reports. Both the direct id map and the CHERRY-mode
+  // classifier must now recognise 1750.
+  test("treats the reworked queue 1750 (CHERRY) as arena", () => {
+    expect(parseQueueType(1750)).toBe("arena");
+    expect(isArenaQueueOrMode(1750, "CHERRY")).toBe(true);
+    expect(resolveQueueTypeFromGame(1750, "CHERRY")).toBe("arena");
+    // Even if Riot churns the id again, CHERRY mode still resolves to arena.
+    expect(resolveQueueTypeFromGame(1760, "CHERRY")).toBe("arena");
   });
 });
 
@@ -94,6 +110,7 @@ describe("queueTypeToDisplayString", () => {
   const cases: readonly (readonly [QueueType, string])[] = [
     ["solo", "ranked solo"],
     ["flex", "ranked flex"],
+    ["ranked 5s", "ranked 5s"],
     ["clash", "clash"],
     ["aram clash", "ARAM clash"],
     ["aram", "ARAM"],

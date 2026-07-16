@@ -1,18 +1,8 @@
 import { describe, expect, test, mock } from "bun:test";
 
-// Read env vars at runtime so this mock doesn't override the test-bucket
-// configured by test-setup.ts. Bun's mock.module is process-wide and
-// retroactive — hard-coding `s3BucketName: undefined` here would leak into
-// every other test file's view of configuration and break unrelated S3 tests.
-void mock.module("#src/configuration.ts", () => ({
-  default: {
-    version: "test",
-    gitSha: "test",
-    environment: "dev",
-    sentryDsn: undefined,
-    s3BucketName: Bun.env["S3_BUCKET_NAME"],
-  },
-}));
+// The real configuration module reads `S3_BUCKET_NAME` (set by test-setup.ts)
+// lazily from the environment, so there is no need to stub it here — doing so
+// via a process-wide `mock.module` used to leak into unrelated S3 test files.
 
 const {
   CachedLeaderboardSchema,

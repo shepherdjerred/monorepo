@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Twitch": {
       "id": "Twitch",
@@ -12,7 +12,7 @@
         "full": "Twitch.png",
         "sprite": "champion4.png",
         "group": "champion",
-        "x": 96,
+        "x": 144,
         "y": 96,
         "w": 48,
         "h": 48
@@ -597,8 +597,8 @@
             "full": "TwitchHideInShadows.png",
             "sprite": "spell14.png",
             "group": "spell",
-            "x": 288,
-            "y": 96,
+            "x": 0,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -738,8 +738,8 @@
             "full": "TwitchVenomCask.png",
             "sprite": "spell14.png",
             "group": "spell",
-            "x": 336,
-            "y": 96,
+            "x": 48,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -881,8 +881,8 @@
             "full": "TwitchExpunge.png",
             "sprite": "spell14.png",
             "group": "spell",
-            "x": 384,
-            "y": 96,
+            "x": 96,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -994,8 +994,8 @@
             "full": "TwitchFullAutomatic.png",
             "sprite": "spell14.png",
             "group": "spell",
-            "x": 432,
-            "y": 96,
+            "x": 144,
+            "y": 144,
             "w": 48,
             "h": 48
           },
@@ -1009,7 +1009,7 @@
           "full": "Twitch_Passive.png",
           "sprite": "passive4.png",
           "group": "passive",
-          "x": 96,
+          "x": 144,
           "y": 96,
           "w": 48,
           "h": 48

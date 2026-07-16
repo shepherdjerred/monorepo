@@ -7,13 +7,12 @@ This is a Kubernetes homelab infrastructure monorepo using CDK8s for infrastruct
 - **Runtime**: Bun (not Node.js)
 - **Language**: TypeScript (strict mode)
 - **Infrastructure**: CDK8s for Kubernetes manifests
-- **CI/CD**: Dagger + Buildkite + Python CI scripts
+- **CI/CD**: the static Buildkite pipeline (`.buildkite/pipeline.yml`) runs `bun run verify` on every PR (which includes homelab's `check:talos`, `lint:helm`, `check:1password` turbo tasks) and, on merge to main, tofu-plans/applies the infra stacks, helm-pushes, and ArgoCD-syncs
 
 ## Workspaces
 
 - `src/cdk8s` - Kubernetes infrastructure as code
 - `src/helm-types` - Type-safe Helm chart parameter generator
-- `../../scripts/ci/src/` - TypeScript CI pipeline generator
 
 Home Assistant automations and the other migrated schedules (dependency summary,
 DNS audit, Better Skill Capped fetcher, golink sync) live in `packages/temporal`,
@@ -53,7 +52,7 @@ bun run prettier
 ### Formatting (Prettier)
 
 - Print width: 120 characters
-- Runs on all files via lint-staged
+- The `pre-commit` hook formats staged files automatically; run `bun run prettier` to check the whole tree
 
 ### TypeScript
 
@@ -127,14 +126,19 @@ When adding a new Kubernetes service/chart, you MUST complete ALL of these steps
    appVersion: "$appVersion"
    ```
 
-3. **Helm Charts List** - `../../scripts/ci/src/catalog.ts`
-   - Add `"{name}"` to the `HELM_CHARTS` array
-
-4. **ArgoCD Application** - `src/cdk8s/src/resources/argo-applications/{name}.ts`
+3. **ArgoCD Application** - `src/cdk8s/src/resources/argo-applications/{name}.ts`
    - Export a `create{Name}App(chart: Chart)` function
    - Wire up in `src/cdk8s/src/cdk8s-charts/apps.ts` (import + call)
 
 **NEVER apply manifests directly with `kubectl apply`. All deployments go through ArgoCD.**
+
+### Single-Node Cluster (torvalds)
+
+The cluster is a **single-node Talos cluster** (`torvalds`). When debugging or testing in-cluster:
+
+- No node-placement variance — GPU/hwaccel, NUMA, and disk locality are constant.
+- There is no way to spin up an isolated test pod on a separate node; a replacement pod IS prod.
+- `kubectl set image` or any direct deployment mutation hits prod immediately, and ArgoCD reverts it unless that Application is paused. All changes should go through GitOps.
 
 ## 1Password Secrets
 
@@ -144,8 +148,9 @@ synced secret's data keys are consumed via `secretKeyRef`/`envFrom`/volume mount
 
 A linter guarantees that **every referenced item and field actually exists in 1Password**,
 so a typo'd field name or a missing/renamed item is caught before deploy instead of failing
-the operator sync (or crashing the pod) at runtime. It runs offline (pre-commit + a blocking
-CI gate) by checking the synthesized references against a committed snapshot of vault
+the operator sync (or crashing the pod) at runtime. It runs offline as the `check:1password`
+turbo task (wired into `bun run verify`, so the `pre-push` hook and CI both enforce it) — by
+checking the synthesized references against a committed snapshot of vault
 structure — `src/cdk8s/onepassword-vault-snapshot.json`, which holds **only sha256 hashes**
 of item ids/titles/field keys (no values, no plaintext names).
 
@@ -171,10 +176,71 @@ Notes:
 - If the lint fails right after a legitimate vault change (item/field added, renamed, or
   populated), refresh the snapshot and commit it.
 
+### No optional secrets — fail fast
+
+Do **not** wire any secret env var or secret volume in `src/cdk8s` with `optional: true`. The repo's standard is **zero optional secrets**: if a referenced 1Password field/secret key is missing, the pod SHOULD crash-loop (`CreateContainerConfigError`) so the gap is loud at deploy time, not silently absent at runtime. For a previously-optional secret, pick ONE:
+
+- **Make it required** (drop `optional: true`) and populate the field in 1Password.
+- **Remove the ref entirely** if the feature is disabled/optional.
+
+Non-sensitive config (bucket names, etc.) should be plain `EnvValue.fromValue(...)` literals, not secret refs. (A missing `optional: true` masked a never-added `BUILDKITE_API_TOKEN`, silently breaking the cancel-builds-on-PR-close feature.) Note the linter still _exempts_ `optional: true` refs from existence/population checks — this is a policy on top of the linter, not enforced by it.
+
+### 1Password Connect — double-encoded credentials
+
+The 1Password Connect Helm chart v2.3.0 changed `OP_SESSION` from an env var to a file
+mount, which silently breaks credentials stored with the old double-base64 convention.
+Symptom: Connect returns 500s and logs
+`failed to Unmarshal credentials file data into map, invalid character 'e' looking for beginning of value`
+(the `e` is the start of `eyJ…`, i.e. base64 of `{"`). Diagnose:
+
+```bash
+kubectl get secret op-credentials -n 1password \
+  -o jsonpath='{.data.1password-credentials\.json}' | base64 -d | head -c 5
+```
+
+If it starts with `eyJ` instead of `{`, the credentials are double-encoded — decode once
+more and recreate the secret. (`stringData` auto-encodes once; the old chart decoded
+twice, the new chart mounts the file so K8s only decodes once.) Upstream:
+github.com/1Password/connect-helm-charts#272.
+
+## Testing Notes
+
+(The `pre-push` hook and CI run `bun run verify`, which includes these tests; run them locally too so you catch failures before pushing.)
+
+### Run tests with `bun run test`, not bare `bun test`
+
+Run homelab tests via the **script** `bun run test` (which does
+`install-subpkgs && cd src/cdk8s && bun run test && cd ../helm-types && bun run test`).
+The `cd src/cdk8s` matters: many cdk8s tests read `config/homeassistant` via a
+CWD-relative path. Bare `bun test` from `packages/homelab` uses the wrong CWD and
+produces ~15 spurious failures, all reporting
+`ENOENT: no such file or directory, open 'config/homeassistant '` (note the trailing
+null byte) across unrelated test files — these are NOT real failures.
+
+### `helm-template.test.ts` flakes under concurrent load
+
+`src/cdk8s/src/helm-template.test.ts` ("should
+render all charts with helm template without errors") has a **5000ms per-test timeout**
+and renders ~29 charts via `helm template`; it can time out under heavy
+concurrent load (passes in ~7s when idle). It is not network-related (renders from
+`dist/`, no fetch — distinct from the live-fetch `argocd-helm-render.test.ts`). Fix: just
+retry the run — a trivial edit cannot change other charts' rendering.
+
+### `argocd-helm-render.test.ts` — transient upstream skips
+
+`src/cdk8s/src/argocd-helm-render.test.ts` renders every external chart by fetching the
+pinned tarball **live** from upstream, which intermittently serves `504`. As of PR #1081
+it retries with jittered backoff (7 attempts) and treats a failure that still matches the
+transient pattern (502/503/504, `ECONN*`, DNS, TLS handshake) as a loudly-logged
+**non-fatal skip**, not a build failure. Real errors (404/missing version, template or
+schema-validation errors) stay hard failures. So a red helm-render build means a genuine
+chart/values bug, not a flake; `Skipped N/M chart(s) due to transient upstream errors` is
+expected. Run locally with `HELM_RENDER_TEST=1 bun test src/argocd-helm-render.test.ts`
+(needs `bun run build` first for `dist/apps.k8s.yaml`).
+
 ## Git Workflow
 
-- Conventional commits and pre-commit checks are managed at monorepo root
-- Pre-commit checks run via root `lefthook.yml`
+- Use conventional commit messages (`type(scope): description`); the `commit-msg` lefthook validates them (`scripts/validate-commit-msg.ts`, scope must be a package name or `root`/`deps`/`ci`/etc.), and the `pre-commit`/`pre-push` hooks run lint/typecheck/verify
 
 ## Version Management
 
@@ -202,3 +268,13 @@ To add/modify DNS records, edit the appropriate `.tf` file and run:
 op run --env-file=.env -- tofu -chdir=cloudflare plan
 op run --env-file=.env -- tofu -chdir=cloudflare apply
 ```
+
+## OpenTofu State
+
+OpenTofu/Terraform state for the `src/tofu/*` stacks is stored in **SeaweedFS** (S3-compatible), not locally. `tofu init` therefore needs AWS credentials for the backend. To validate `.tf` without state access, use `tofu init -backend=false` (syntax) and `tofu validate` (resource schemas).
+
+## GitHub Repo Settings & Rulesets
+
+The `shepherdjerred/monorepo` branch rulesets and repo settings are OpenTofu-managed in `src/tofu/github/` (`rulesets.tf`, `repos.tf`). **Manual edits via `gh api`/the GitHub UI do not stick** — a `tofu apply` reconciles them away. To change required status checks, enforcement, or bypass actors, edit `rulesets.tf`.
+
+Required status checks are `required_check { context = "..." }` blocks under `rules { required_status_checks { ... } }`. The replatformed Buildkite pipeline posts a single aggregate `buildkite/monorepo` commit status (not the old per-step `buildkite/monorepo/pr/*` contexts); the `required_check` for it is **commented out in `rulesets.tf`** and only becomes required once the operator points Buildkite at `.buildkite/pipeline.yml` and it has posted that status on at least one PR build — the currently-active required check is `ci/merge-conflict` (posted by a Temporal worker). Uncomment/reintroduce a required check only through Tofu — requiring a context that doesn't yet exist on PR builds blocks every PR until the producer lands on `main`. Validate locally: `tofu -chdir=github init -backend=false && tofu -chdir=github validate`.

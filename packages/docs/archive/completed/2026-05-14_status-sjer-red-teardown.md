@@ -47,6 +47,7 @@ Single Prometheus replica, TSDB on a 256Gi `zfs-ssd` PVC (`prometheus-db-...`), 
    ```
 
    Wait 90s.
+
 2. **Verify** the mount picked up the change:
 
    ```
@@ -55,6 +56,7 @@ Single Prometheus replica, TSDB on a 256Gi `zfs-ssd` PVC (`prometheus-db-...`), 
    ```
 
    Expected: `0`. If still `1` after 90s, proceed to step 3; otherwise skip to step 4.
+
 3. **Fallback** — force a fresh mount by deleting the pod (StatefulSet recreates it; ~20–30s scrape gap, WAL recovery a few seconds since shutdown is clean):
 
    ```
@@ -62,6 +64,7 @@ Single Prometheus replica, TSDB on a 256Gi `zfs-ssd` PVC (`prometheus-db-...`), 
    ```
 
    Wait until `kubectl get pod -n prometheus prometheus-prometheus-kube-prometheus-prometheus-0` reports `2/2 Running`, then re-run the verification grep.
+
 4. **Trigger reload** so Prometheus drops the old scrape pool from memory (the operator's config-reloader does this automatically after a config change, but doing it explicitly is harmless):
 
    ```

@@ -6,7 +6,15 @@ export type RetryOptions = {
   maxDelayMs?: number;
   backoffMultiplier?: number;
   shouldRetry?: (error: unknown) => boolean;
+  // Injectable wait used between attempts. Defaults to a real timer; tests
+  // override it to observe the requested backoff schedule deterministically
+  // instead of measuring (flaky) wall-clock time under CI load.
+  sleep?: (ms: number) => Promise<void>;
 };
+
+function defaultSleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 const DEFAULT_OPTIONS: Required<RetryOptions> = {
   maxAttempts: 3,
@@ -14,11 +22,8 @@ const DEFAULT_OPTIONS: Required<RetryOptions> = {
   maxDelayMs: 30_000,
   backoffMultiplier: 2,
   shouldRetry: () => true,
+  sleep: defaultSleep,
 };
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 export async function retry<T>(
   fn: () => Promise<T>,
@@ -49,7 +54,7 @@ export async function retry<T>(
         error: error instanceof Error ? error.message : String(error),
       });
 
-      await sleep(delay);
+      await opts.sleep(delay);
       delay = Math.min(delay * opts.backoffMultiplier, opts.maxDelayMs);
     }
   }

@@ -1,9 +1,12 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  completionTargetDate,
+  isCompletedOn,
   isRecurring,
   localTodayYmd,
   nextOptimistic,
+  occursOn,
   toggleCompleteInstance,
 } from "./recurrence";
 import type { Task } from "./types";
@@ -115,5 +118,96 @@ describe("nextOptimistic", () => {
     });
     const result = nextOptimistic(task, "2026-05-10");
     expect(result.completeInstances).toEqual([]);
+  });
+});
+
+describe("completionTargetDate", () => {
+  test("targets the scheduled instance (plugin parity), not the tap day", () => {
+    const task = makeTask({
+      recurrence: "FREQ=MONTHLY",
+      scheduled: "2026-07-20",
+      due: "2026-01-01",
+    });
+    expect(completionTargetDate(task)).toBe("2026-07-20");
+  });
+
+  test("falls back to due when there is no scheduled date", () => {
+    const task = makeTask({ recurrence: "FREQ=MONTHLY", due: "2026-08-01" });
+    expect(completionTargetDate(task)).toBe("2026-08-01");
+  });
+
+  test("completion-anchored rules target today", () => {
+    const task = makeTask({
+      recurrence: "FREQ=DAILY",
+      recurrenceAnchor: "completion",
+      scheduled: "2026-07-20",
+    });
+    expect(completionTargetDate(task)).toBe(localTodayYmd());
+  });
+
+  test("regression: completing a recurring task registers on its scheduled occurrence, not the tap day", () => {
+    // Recurs on the 20th; `scheduled` points at the current instance. Tapping
+    // "complete" on the 12th used to record `2026-07-12` — a non-occurrence
+    // date the model never reads as done, so the task reappeared untouched.
+    const task = makeTask({
+      recurrence: "DTSTART:20260220;FREQ=MONTHLY;BYMONTHDAY=20",
+      scheduled: "2026-07-20",
+    });
+    const tapDay = "2026-07-12";
+
+    const target = completionTargetDate(task);
+    expect(target).toBe("2026-07-20");
+    expect(target).not.toBe(tapDay);
+
+    // Recording the resolved target marks the occurrence complete...
+    const fixed = toggleCompleteInstance(task, target);
+    expect(isCompletedOn(fixed, "2026-07-20")).toBe(true);
+
+    // ...while recording the raw tap day (the old behavior) does NOT.
+    const orphaned = toggleCompleteInstance(task, tapDay);
+    expect(isCompletedOn(orphaned, "2026-07-20")).toBe(false);
+  });
+});
+
+describe("model-driven per-day semantics (P5)", () => {
+  const base = makeTask();
+  const recurring: Task = makeTask({
+    recurrence: "FREQ=DAILY",
+    scheduled: "2026-07-01",
+    completeInstances: ["2026-07-02"],
+  });
+
+  test("isCompletedOn reflects the instance state per day", () => {
+    expect(isCompletedOn(recurring, "2026-07-02")).toBe(true);
+    expect(isCompletedOn(recurring, "2026-07-03")).toBe(false);
+  });
+
+  test("isCompletedOn for plain tasks is just the status", () => {
+    expect(isCompletedOn({ ...base, status: "done" }, "2026-07-03")).toBe(true);
+    expect(isCompletedOn(base, "2026-07-03")).toBe(false);
+  });
+
+  test("occursOn expands scheduled-anchored rules via the model", () => {
+    const weekly: Task = makeTask({
+      recurrence: "FREQ=WEEKLY;BYDAY=MO",
+      scheduled: "2026-07-06", // a Monday
+    });
+    expect(occursOn(weekly, "2026-07-06")).toBe(true); // Monday
+    expect(occursOn(weekly, "2026-07-07")).toBe(false); // Tuesday
+    expect(occursOn(weekly, "2026-07-13")).toBe(true); // next Monday
+    expect(occursOn(base, "2026-07-06")).toBe(false); // not recurring
+  });
+
+  test("a malformed day string fails fast instead of yielding an invalid Date", () => {
+    const weekly: Task = makeTask({
+      recurrence: "FREQ=WEEKLY;BYDAY=MO",
+      scheduled: "2026-07-06",
+    });
+    expect(() => occursOn(weekly, "2026-07-xx")).toThrow(
+      /invalid YYYY-MM-DD string/,
+    );
+    expect(() => isCompletedOn(weekly, "not-a-date")).toThrow(
+      /invalid YYYY-MM-DD string/,
+    );
   });
 });

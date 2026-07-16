@@ -10,8 +10,10 @@ import {
 } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { formatDate } from "#src/lib/format.ts";
+import { useDiscordNames } from "#src/hooks/use-discord-names.ts";
 import { Button } from "#src/components/ui/button.tsx";
-import { Input } from "#src/components/ui/input.tsx";
+import { DiscordUser } from "#src/components/discord-user.tsx";
+import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.tsx";
 import { Section } from "#src/components/section.tsx";
 import {
   Table,
@@ -51,6 +53,7 @@ export function CompetitionParticipantsPanel(props: {
   const trpc = useTRPC();
   const [inviteId, setInviteId] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const names = useDiscordNames(participants.map((p) => p.discordId));
 
   const locked = status === "ENDED" || status === "CANCELLED";
 
@@ -94,15 +97,15 @@ export function CompetitionParticipantsPanel(props: {
       <div className="space-y-3 p-3">
         {!locked && (
           <div className="flex flex-wrap items-center gap-2">
-            <Input
-              value={inviteId}
-              onChange={(event) => {
-                setInviteId(event.target.value);
-              }}
-              placeholder="Discord user ID to invite"
-              className="max-w-xs"
-              disabled={visibility === "SERVER_WIDE"}
-            />
+            <div className="w-full max-w-xs">
+              <DiscordMemberCombobox
+                guildId={guildId}
+                value={inviteId}
+                onChange={setInviteId}
+                disabled={visibility === "SERVER_WIDE"}
+                placeholder="Search members to invite"
+              />
+            </div>
             <Button
               type="button"
               size="sm"
@@ -166,6 +169,15 @@ export function CompetitionParticipantsPanel(props: {
                 <TableRow key={participant.id}>
                   <TableCell className="font-medium">
                     {participant.alias}
+                    {participant.discordId !== null && (
+                      <span className="ml-2 font-normal">
+                        <DiscordUser
+                          id={participant.discordId}
+                          name={names.resolve(participant.discordId)}
+                          className="text-xs text-muted-foreground"
+                        />
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell>{statusLabel(participant.status)}</TableCell>
                   <TableCell className="text-muted-foreground">

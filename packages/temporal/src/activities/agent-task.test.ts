@@ -89,9 +89,9 @@ const fetchStub = Object.assign(
 // Bun's `mock.module` registers the mock process-wide and is NOT auto-restored
 // between test files, and `#activities/agent-task-command.ts` resolves to the
 // same file as the relative `./agent-task-command.ts`. Without the spread, a
-// sibling file importing another export (e.g. `reportOnlyPrompt` in
-// alert-remediation-command.test.ts) would intermittently fail to link with
-// "Export named 'reportOnlyPrompt' not found", depending on test-file order.
+// sibling test file importing another export from this module would
+// intermittently fail to link with "Export named '…' not found", depending on
+// test-file order.
 void mock.module("#activities/agent-task-command.ts", () => ({
   ...actualAgentTaskCommand,
   buildAgentTaskCommand: async (
@@ -106,6 +106,7 @@ void mock.module("#activities/agent-task-command.ts", () => ({
       args: ["bun", "--eval", code],
       model: "test-model",
       outputPath,
+      prompt: "Return a short report.",
     };
   },
 }));

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Soraka": {
       "id": "Soraka",
@@ -12,7 +12,7 @@
         "full": "Soraka.png",
         "sprite": "champion4.png",
         "group": "champion",
-        "x": 384,
+        "x": 432,
         "y": 0,
         "w": 48,
         "h": 48
@@ -628,7 +628,7 @@
             "full": "SorakaQ.png",
             "sprite": "spell13.png",
             "group": "spell",
-            "x": 0,
+            "x": 192,
             "y": 48,
             "w": 48,
             "h": 48
@@ -773,7 +773,7 @@
             "full": "SorakaW.png",
             "sprite": "spell13.png",
             "group": "spell",
-            "x": 48,
+            "x": 240,
             "y": 48,
             "w": 48,
             "h": 48
@@ -918,7 +918,7 @@
             "full": "SorakaE.png",
             "sprite": "spell13.png",
             "group": "spell",
-            "x": 96,
+            "x": 288,
             "y": 48,
             "w": 48,
             "h": 48
@@ -1033,7 +1033,7 @@
             "full": "SorakaR.png",
             "sprite": "spell13.png",
             "group": "spell",
-            "x": 144,
+            "x": 336,
             "y": 48,
             "w": 48,
             "h": 48
@@ -1048,7 +1048,7 @@
           "full": "Soraka_Passive.png",
           "sprite": "passive4.png",
           "group": "passive",
-          "x": 384,
+          "x": 432,
           "y": 0,
           "w": 48,
           "h": 48

@@ -671,6 +671,15 @@ export type SeaweedfsHelmValuesVolume = {
   imageOverride?: unknown;
   restartPolicy?: unknown;
   /**
+   * Run the Rust volume server (/usr/bin/weed-volume) instead of the Go one.
+   * Requires an image that ships the Rust binary (amd64/arm64). The Go-only
+   * log flags (-logtostderr/-logdir/-v) and -pulseSeconds are dropped; set log
+   * level via the RUST_LOG env var in extraEnvironmentVars if needed.
+   *
+   * @default false
+   */
+  rust?: boolean;
+  /**
    * @default 8080
    */
   port?: number;
@@ -2120,7 +2129,7 @@ export type SeaweedfsHelmValuesSftp = {
    */
   hostKeysFolder?: string;
   /**
-   * Comma-separated list of allowed auth methods: password, publickey, keyboard-interactive
+   * Comma-separated list of allowed auth methods: password, publickey, certificate
    *
    * @default "password,publickey"
    */
@@ -2175,6 +2184,18 @@ export type SeaweedfsHelmValuesSftp = {
   enableAuth?: boolean;
   existingConfigSecret?: unknown;
   existingSshConfigSecret?: unknown;
+  /**
+   * SSH user-certificate authentication (CA-signed user certs). Mirrors
+   * OpenSSH `TrustedUserCAKeys` and MinIO `--sftp=trusted-user-ca-key`.
+   * Add "certificate" to `authMethods` to activate; when active, plain
+   * public keys are rejected on the public-key channel.
+   * Inline CA public keys in OpenSSH authorized_keys format (one per
+   * line). Ignored when `existingCAKeysSecret` is set.
+   *
+   * @default ""
+   */
+  trustedUserCAKeys?: string;
+  existingCAKeysSecret?: unknown;
   sidecars?: unknown[];
   /**
    * @default ""
@@ -2497,6 +2518,12 @@ export type SeaweedfsHelmValuesAdmin = {
    */
   extraEnvironmentVars?: SeaweedfsHelmValuesAdminExtraEnvironmentVars;
   /**
+   * secret env variables (e.g. for injecting OIDC client secret from a Kubernetes Secret)
+   *
+   * @default {}
+   */
+  secretExtraEnvironmentVars?: SeaweedfsHelmValuesAdminSecretExtraEnvironmentVars;
+  /**
    * Health checks
    *
    * @default {...} (7 keys)
@@ -2649,6 +2676,8 @@ export type SeaweedfsHelmValuesAdminPodSecurityContext = object;
 export type SeaweedfsHelmValuesAdminContainerSecurityContext = object;
 
 export type SeaweedfsHelmValuesAdminExtraEnvironmentVars = object;
+
+export type SeaweedfsHelmValuesAdminSecretExtraEnvironmentVars = object;
 
 export type SeaweedfsHelmValuesAdminLivenessProbe = {
   /**
@@ -3199,7 +3228,7 @@ export type SeaweedfsHelmValuesAllInOne = {
    * Note: Most parameters below default to null, which means they inherit from
    * the global sftp.* settings. Set explicit values here to override for allInOne only.
    *
-   * @default {...} (13 keys)
+   * @default {...} (15 keys)
    */
   sftp?: SeaweedfsHelmValuesAllInOneSftp;
   /**
@@ -3431,6 +3460,8 @@ export type SeaweedfsHelmValuesAllInOneSftp = {
   enableAuth?: boolean;
   existingConfigSecret?: unknown;
   existingSshConfigSecret?: unknown;
+  trustedUserCAKeys?: unknown;
+  existingCAKeysSecret?: unknown;
 };
 
 export type SeaweedfsHelmValuesAllInOneService = {
@@ -3790,7 +3821,7 @@ export type SeaweedfsHelmValues = {
    */
   master?: SeaweedfsHelmValuesMaster;
   /**
-   * @default {...} (48 keys)
+   * @default {...} (49 keys)
    */
   volume?: SeaweedfsHelmValuesVolume;
   /**
@@ -3808,11 +3839,11 @@ export type SeaweedfsHelmValues = {
    */
   s3?: SeaweedfsHelmValuesS3;
   /**
-   * @default {...} (41 keys)
+   * @default {...} (43 keys)
    */
   sftp?: SeaweedfsHelmValuesSftp;
   /**
-   * @default {...} (37 keys)
+   * @default {...} (38 keys)
    */
   admin?: SeaweedfsHelmValuesAdmin;
   /**
@@ -3954,6 +3985,7 @@ export type SeaweedfsHelmParameters = {
   "volume.enabled"?: string;
   "volume.imageOverride"?: string;
   "volume.restartPolicy"?: string;
+  "volume.rust"?: string;
   "volume.port"?: string;
   "volume.grpcPort"?: string;
   "volume.metricsPort"?: string;
@@ -4180,6 +4212,8 @@ export type SeaweedfsHelmParameters = {
   "sftp.enableAuth"?: string;
   "sftp.existingConfigSecret"?: string;
   "sftp.existingSshConfigSecret"?: string;
+  "sftp.trustedUserCAKeys"?: string;
+  "sftp.existingCAKeysSecret"?: string;
   "sftp.sidecars"?: string;
   "sftp.initContainers"?: string;
   "sftp.extraVolumes"?: string;
@@ -4347,6 +4381,8 @@ export type SeaweedfsHelmParameters = {
   "allInOne.sftp.enableAuth"?: string;
   "allInOne.sftp.existingConfigSecret"?: string;
   "allInOne.sftp.existingSshConfigSecret"?: string;
+  "allInOne.sftp.trustedUserCAKeys"?: string;
+  "allInOne.sftp.existingCAKeysSecret"?: string;
   "allInOne.service.type"?: string;
   "allInOne.service.internalTrafficPolicy"?: string;
   "allInOne.data.type"?: string;

@@ -16,18 +16,16 @@ AI-maintained knowledge base for the monorepo.
 
 ## Decisions
 
-- [Dagger --source . vs Plain Steps](decisions/2026-04-03_dagger-source-vs-plain-steps.md) - Tradeoff: full-repo copy cost in Dagger vs isolation loss in plain Buildkite steps
-- [CI Security Audit](decisions/2026-04-04_ci-security-audit.md) - Buildkite + Dagger security audit for external contributor safety
 - [Unified Versioning Strategy](decisions/2026-04-04_unified-versioning-strategy.md) - Restored Era 1 versioning with `2.0.0-BUILD` format
 - [Env Var Naming Convention](decisions/2026-03-27_env-var-naming-convention.md) - Canonical env var names across 1Password, K8s, CI, and shells
 - [Kueue for Buildkite Resource Management](decisions/2026-03-18_kueue-buildkite-resource-management.md) - Why Kueue replaced ResourceQuota for CI job admission
-- [Dagger Disk Write Amplification](decisions/2026-02-23_dagger-disk-write-amplification.md) - Disk-write amplification analysis and mitigation; supplemented by the 2026-05-10 disk-write-reduction work in `archive/completed/`
 - [1Password Deduplication](decisions/2026-03-08_1password-deduplication.md) - Deduplicating 1Password secret references
 - [Renovate HA Manager Disabled](decisions/2026-04-05_renovate-homeassistant-manager-disabled.md) - Disabled homeassistant-manifest manager for non-HA manifests
 - [CI Build Scoping Fixes](decisions/2026-04-26_ci-build-scoping-fixes.md) - Three bugs causing every main build to rebuild all 25 packages; fixed baseline lookup and Renovate fast-track
 - [Velero Orphan-Snapshot Prevention](decisions/2026-05-05_velero-orphan-snapshot-prevention.md) - Why we chose detection + manual remediation over self-healing for Velero orphan ZFS snapshots and R2 objects
 - [ZFS Fragmentation Acceptance](decisions/2026-05-05_zfs-fragmentation-acceptance.md) - Why we raised the fragmentation alert thresholds on SSD pools instead of mitigating
 - [Scout Arena Pre-match Scrubbed Players](decisions/2026-06-07_scout-arena-prematch-scrubbed-players.md) - Privacy-scrubbed players have no usable identity in Spectator-V5, so they're dropped from the pre-match image; accepted data loss
+- [Homelab Security Hardening Decisions](decisions/2026-06-06_homelab-security-hardening-decisions.md) - Owner's 2026-06-06 pen-test security decisions and the PR-1 hardening that landed
 
 ## Plans
 
@@ -59,6 +57,23 @@ General issue tracking — deferred work, acceptance-testing gaps, post-merge ve
 - [Homelab Health Audit (2026-05-08)](guides/2026-05-08_homelab-health-audit.md) - Current cluster health audit snapshot
 - [Homelab Issue Investigation (2026-05-08)](guides/2026-05-08_homelab-issue-investigation.md) - Root-cause deep dive on every Yellow row, PD incident, and Bugsink issue from the audit
 - [Temporal Post-Deploy Quality Checklist](guides/2026-05-22_temporal-post-deploy-quality-checklist.md) - Standard verification steps to run after a Temporal deploy
+- [Tailscale ACLs Runbook](guides/2026-06-06_tailscale-acls-runbook.md) - Enablement runbook for Tailscale ACLs (tofu-managed policy)
+- [Discord Plays Pokémon Audio Research](guides/2026-06-13_dpp-audio-research.md) - Investigation notes on the DPP audio pipeline
+- [Streambot Autonomous Perf-Debug Runbook](guides/2026-06-14_streambot-autonomous-perf-debug-runbook.md) - End-to-end perf-debugging loop for streambot
+- [\*arr Stack Subtitle Strategy](guides/2026-06-27_arr-stack-subtitle-strategy.md) - Bazarr providers, forced/EN/zh targets, scoring, bilingual, Whisper & Lingarr — cited research
+- [npm Granular Token Rotation](guides/2026-05-20_npm-granular-token-rotation.md) - Rotating npm granular tokens: WebAuthn-gated bypass-2FA, classic tokens retired, 90-day cap
+- [Homelab SMART/NVMe Disk Metrics](guides/2026-06-28_homelab-smart-disk-metrics.md) - How disk health metrics are emitted/labeled and the serial-stability fix
+- [Homelab OpenTofu Stack Addition](guides/2026-06-28_homelab-tofu-stack-addition.md) - Adding a Tofu stack: import-before-merge, secret threading, `*arr` key locations
+- [LLM Models Catalog](guides/2026-06-28_llm-models-catalog.md) - Central `llm-models` catalog: JSON+Zod/Pydantic source, consumers, file: dep dist gotcha
+- [MCP Gateway Architecture](guides/2026-06-28_mcp-gateway-architecture.md) - tbxark/mcp-proxy aggregation, TCP-probe readiness caveat, token rendering
+- [Redlib glibc Self-Build](guides/2026-06-28_redlib-glibc-self-build.md) - Why homelab self-builds redlib's glibc image (musl OAuth block) and how it's pinned
+- [Scout App Monaco / CSP](guides/2026-06-28_scout-app-monaco-csp.md) - Embedding Monaco / worker libs in the scout web app under strict CSP
+- [Scout Pre-match Debugging](guides/2026-06-28_scout-prematch-debugging.md) - Spectator payload archival to S3 + pre-start lobby detection
+- [Scout Report Dispatcher](guides/2026-06-28_scout-report-dispatcher.md) - Sync vs scheduler separation and freshness-gauge gating
+- [SeaweedFS Static-Site Hosting](guides/2026-06-28_seaweedfs-static-site-hosting.md) - Static-site topology + the 403 / volume-count / HEAD gotchas and fixes
+- [Smoke Test Discord Flakiness](guides/2026-06-28_smoke-test-discord-flaky.md) - Why `smoke-scout-for-lol` flakes (live discord.com) and how to recover
+- [Talos Lockdown & eBPF](guides/2026-06-28_talos-lockdown-ebpf.md) - secure-boot `lockdown=confidentiality` kills eBPF profiling; diagnosis
+- [Vendoring Package Checklist](guides/2026-06-28_vendoring-package-checklist.md) - Every wiring/exclusion list to update when vendoring a third-party package
 
 ## Archive
 
@@ -66,10 +81,10 @@ Historical docs preserved for reference. These are no longer actively maintained
 
 - [`archive/bazel/`](archive/bazel/) - 12 docs from the Bazel era
 - [`archive/changelogs/`](archive/changelogs/) - 1 historical changelog
-- [`archive/completed/`](archive/completed/) - 87 plans whose work has shipped (preserves design context)
-- [`archive/dagger-migration/`](archive/dagger-migration/) - 18 Dagger migration plans and audits
+- [`archive/completed/`](archive/completed/) - 177 plans whose work has shipped (preserves design context)
+- [`archive/dagger-migration/`](archive/dagger-migration/) - Dagger-era plans, audits, decisions, and runbooks (Dagger removed from the monorepo 2026-07)
 - [`archive/homelab-audits/`](archive/homelab-audits/) - 9 superseded homelab health audit snapshots
 - [`archive/on-hold/`](archive/on-hold/) - 4 on-hold Sentinel architecture and implementation docs
 - [`archive/scout-followups/`](archive/scout-followups/) - 1 time-boxed Scout follow-up checklist
 - [`archive/stale/`](archive/stale/) - 8 stale operational snapshots and superseded plans
-- [`archive/superseded/`](archive/superseded/) - 9 plans/guides replaced by newer versions
+- [`archive/superseded/`](archive/superseded/) - 10 plans/guides replaced by newer versions

@@ -25,9 +25,7 @@ some things I'm proud of:
 - Automated backups
 - HTTPS ingress with [Tailscale](https://tailscale.com/)
 - All secrets managed with [1Password](https://1password.com/)
-- GHA Runners w/ Dagger used by my open-source projects
-- Entirely automated deployment for updates, upgrades, etc.
-  - Commit-to-deployment takes ~1min
+- Declarative deployment via ArgoCD (manifests applied manually since the CI pipeline was removed)
 
 - Automated dependency updates
   - For Docker images (w/ pinned SHAs)
@@ -204,7 +202,7 @@ kubectl exec pod/shell -n maintenance -- \
 ### Upgrade Talos
 
 ```bash {"interpreter":"/opt/homebrew/bin/bash"}
-VERSION=v1.13.4
+VERSION=v1.13.6
 IMAGE=factory.talos.dev/metal-installer-secureboot/4560d31e3c529f9808e0898c2804d25be14201992fe2792abd4a09618e0d39a9:$VERSION
 talosctl upgrade --nodes 192.168.1.81 \
   --image $IMAGE \

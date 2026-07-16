@@ -11,7 +11,7 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
-import { getErrorMessage } from "#src/utils/errors.ts";
+import { replyError } from "#src/discord/commands/define-command.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("commands-me");
@@ -81,10 +81,7 @@ export async function executeMe(
       ? lookupByDiscordId(interaction, guildId, userId)
       : lookupByAlias(interaction, guildId, alias));
   } catch (error) {
-    logger.error(`❌ Error in /me command:`, error);
-    await interaction.editReply({
-      content: `❌ **Error looking up player**\n\n${getErrorMessage(error)}`,
-    });
+    await replyError(interaction, "looking up player", error);
   }
 }
 

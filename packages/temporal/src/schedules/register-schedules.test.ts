@@ -1,11 +1,25 @@
 import { describe, test, expect } from "bun:test";
 import type { Duration } from "@temporalio/common";
 import { DataDragonWorkflowInputSchema } from "#activities/data-dragon.ts";
+import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task.ts";
 import {
   DELETED_SCHEDULE_IDS,
   SCHEDULES,
-  scheduleRequiresConfigPause,
+  buildSchedulePolicies,
 } from "./register-schedules.ts";
+import { isOrphanSchedule } from "./orphan-detection.ts";
+
+const DYNAMIC_AGENT_TASK_MEMO = {
+  [DYNAMIC_AGENT_TASK_MEMO_KEY]: true,
+} as const;
+
+function findScheduleById(id: string) {
+  const schedule = SCHEDULES.find((candidate) => candidate.id === id);
+  if (schedule === undefined) {
+    throw new Error(`Missing schedule ${id}`);
+  }
+  return schedule;
+}
 
 // ---------------------------------------------------------------------------
 // Maximum total sleep time per workflow type, in milliseconds.
@@ -24,6 +38,8 @@ const ONE_MINUTE = 60 * 1000;
 const ONE_HOUR = 60 * ONE_MINUTE;
 
 const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
+  // preheat: 13 × 15m presence-checked hold chunks (195 minutes) + turn-off backstop
+  goodMorningPreheat: 195 * ONE_MINUTE,
   // wake-up: ~30 sec of media ramp + MORNING_HEAT_DURATION (60 minutes) heat hold
   goodMorningWakeUp: 60 * ONE_MINUTE,
   // get-up: ~5 sec sleep between volume ramps; <1m total
@@ -39,20 +55,21 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runDnsAudit",
   "runHomelabAuditWorkflow",
   "agentTaskWorkflow",
-  // Fan-out sweep: child workflows run in parallel; the sweep workflow itself
-  // only awaits their futures, no long sleeps of its own.
-  "alertRemediationSweepWorkflow",
   "runScoutDataDragonVersionCheck",
   "runScoutDataDragonWeeklyRefresh",
-  "runPokeemeraldWasmUpdate",
   "runReadmeRefresh",
+  // Clones the monorepo, runs the deterministic catalog cross-check, opens a
+  // PR on drift. No long sleeps of its own — the single refreshLlmCatalog
+  // activity carries its own startToCloseTimeout + retry budget.
+  "runLlmCatalogRefresh",
   "runScoutSeasonRefreshWorkflow",
   "runZfsMaintenanceWorkflow",
   "runBugsinkHousekeepingWorkflow",
+  // Awaits a single pruneScoutImages activity (list+delete). No workflow-level
+  // sleeps; the activity carries its own startToCloseTimeout + retry budget.
+  "runScoutImageGcWorkflow",
   "runVeleroOrphanAuditWorkflow",
   "syncGolinks",
-  "prReviewEvalWorkflow",
-  "prReviewWeeklySignificanceWorkflow",
 ]);
 
 const SLACK_MS = 5 * ONE_MINUTE;
@@ -139,85 +156,6 @@ describe("Scout Data Dragon lane-prior schedule config", () => {
   });
 });
 
-describe("PR review eval schedule config", () => {
-  test("pauses nightly eval when the private fixture repo URL is absent", () => {
-    const schedule = SCHEDULES.find(
-      (candidate) => candidate.id === "pr-review-eval-nightly",
-    );
-    if (schedule === undefined) {
-      throw new Error("Missing pr-review-eval-nightly schedule");
-    }
-    expect(scheduleRequiresConfigPause(schedule, {})).toEqual({
-      paused: true,
-      reason:
-        "Paused because PR_REVIEW_FIXTURES_REPO_URL is not configured on the Temporal worker",
-    });
-  });
-
-  test("does not pause nightly eval when the private fixture repo URL is present", () => {
-    const schedule = SCHEDULES.find(
-      (candidate) => candidate.id === "pr-review-eval-nightly",
-    );
-    if (schedule === undefined) {
-      throw new Error("Missing pr-review-eval-nightly schedule");
-    }
-    expect(
-      scheduleRequiresConfigPause(schedule, {
-        PR_REVIEW_FIXTURES_REPO_URL: "https://github.com/example/private.git",
-        PR_REVIEW_EVAL_DATABASE_URL: "postgres://example",
-      }),
-    ).toEqual({ paused: false, reason: undefined });
-  });
-
-  test("pauses nightly eval when the eval database URL is absent", () => {
-    const schedule = SCHEDULES.find(
-      (candidate) => candidate.id === "pr-review-eval-nightly",
-    );
-    if (schedule === undefined) {
-      throw new Error("Missing pr-review-eval-nightly schedule");
-    }
-    expect(
-      scheduleRequiresConfigPause(schedule, {
-        PR_REVIEW_FIXTURES_REPO_URL: "https://github.com/example/private.git",
-      }),
-    ).toEqual({
-      paused: true,
-      reason:
-        "Paused because PR_REVIEW_EVAL_DATABASE_URL is not configured on the Temporal worker",
-    });
-  });
-});
-
-describe("PR review A/B weekly report schedule config", () => {
-  test("pauses the weekly report when the eval database URL is absent", () => {
-    const schedule = SCHEDULES.find(
-      (candidate) => candidate.id === "pr-review-ab-weekly-report",
-    );
-    if (schedule === undefined) {
-      throw new Error("Missing pr-review-ab-weekly-report schedule");
-    }
-    expect(scheduleRequiresConfigPause(schedule, {})).toEqual({
-      paused: true,
-      reason:
-        "Paused because PR_REVIEW_EVAL_DATABASE_URL is not configured on the Temporal worker",
-    });
-  });
-
-  test("does not pause the weekly report when the eval database URL is present", () => {
-    const schedule = SCHEDULES.find(
-      (candidate) => candidate.id === "pr-review-ab-weekly-report",
-    );
-    if (schedule === undefined) {
-      throw new Error("Missing pr-review-ab-weekly-report schedule");
-    }
-    expect(
-      scheduleRequiresConfigPause(schedule, {
-        PR_REVIEW_EVAL_DATABASE_URL: "postgres://example",
-      }),
-    ).toEqual({ paused: false, reason: undefined });
-  });
-});
-
 describe("DELETED_SCHEDULE_IDS", () => {
   test("none of the deleted ids appear in active SCHEDULES", () => {
     const activeIds = SCHEDULES.map((s) => s.id);
@@ -241,5 +179,150 @@ describe("homelab daily audit schedule config", () => {
       agentTimeoutMinutes: 45,
     });
     expect(JSON.stringify(schedule.args[0])).toContain("Ignore Bugsink");
+  });
+});
+
+describe("catchup window policy", () => {
+  test.each([
+    "vacuum-9am",
+    "vacuum-12pm",
+    "vacuum-5pm",
+    "good-morning-weekday-wake",
+    "good-morning-weekday-up",
+    "good-morning-weekend-wake",
+    "good-morning-weekend-up",
+  ])("time-of-day home schedule %s gets the tight 5-minute window", (id) => {
+    expect(buildSchedulePolicies(findScheduleById(id)).catchupWindow).toBe(
+      "5 minutes",
+    );
+  });
+
+  test.each([
+    "dns-audit-daily",
+    "homelab-audit-daily",
+    "zfs-maintenance-weekly",
+    "deps-summary-weekly",
+    "scout-data-dragon-version-check",
+  ])("report/maintenance schedule %s inherits the relaxed window", (id) => {
+    expect(buildSchedulePolicies(findScheduleById(id)).catchupWindow).toBe(
+      "1 hour",
+    );
+  });
+
+  test("tight window is strictly shorter than the relaxed default", () => {
+    const tight = buildSchedulePolicies(
+      findScheduleById("vacuum-9am"),
+    ).catchupWindow;
+    const relaxed = buildSchedulePolicies(
+      findScheduleById("dns-audit-daily"),
+    ).catchupWindow;
+    expect(durationToMs(tight)).toBeLessThan(durationToMs(relaxed));
+  });
+
+  test("every schedule resolves to a positive catchup window", () => {
+    for (const schedule of SCHEDULES) {
+      expect(
+        durationToMs(buildSchedulePolicies(schedule).catchupWindow),
+      ).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe("orphan schedule detection", () => {
+  const declaredIds = new Set(SCHEDULES.map((schedule) => schedule.id));
+  const deletedIds = new Set<string>(DELETED_SCHEDULE_IDS);
+
+  test("both pokeemerald wasm schedules are queued for deletion", () => {
+    // The pokeemerald.wasm download workflow is gone — the wasm was built
+    // from source in the old CI image build. Both the weekly and the older monthly
+    // schedule must be deleted (and absent from SCHEDULES) so neither keeps
+    // firing a workflow that's no longer in the bundle.
+    for (const id of [
+      "pokeemerald-wasm-weekly",
+      "pokeemerald-wasm-monthly",
+    ] as const) {
+      expect(DELETED_SCHEDULE_IDS).toContain(id);
+      expect(SCHEDULES.map((s) => s.id)).not.toContain(id);
+    }
+  });
+
+  test("declared schedules are never flagged as orphans", () => {
+    for (const schedule of SCHEDULES) {
+      expect(
+        isOrphanSchedule(schedule.id, undefined, declaredIds, deletedIds),
+      ).toBe(false);
+    }
+  });
+
+  test("ids on the delete allow-list are never flagged as orphans", () => {
+    for (const id of DELETED_SCHEDULE_IDS) {
+      expect(isOrphanSchedule(id, undefined, declaredIds, deletedIds)).toBe(
+        false,
+      );
+    }
+  });
+
+  test("dynamic agent-task schedules are never flagged as orphans", () => {
+    // Auto-generated id prefix (agentTaskScheduleId) — exempt even without memo,
+    // covering schedules created before the dynamic memo marker existed.
+    expect(
+      isOrphanSchedule(
+        "agent-task-foo-abc123",
+        undefined,
+        declaredIds,
+        deletedIds,
+      ),
+    ).toBe(false);
+    // A custom scheduleId passed via the /agent-tasks API has no `agent-task-`
+    // prefix, so it relies on the dynamic memo marker stamped at creation.
+    expect(
+      isOrphanSchedule(
+        "recheck-birmel-metrics",
+        DYNAMIC_AGENT_TASK_MEMO,
+        declaredIds,
+        deletedIds,
+      ),
+    ).toBe(false);
+  });
+
+  test("a declared agent-task schedule removed from SCHEDULES is still flagged", () => {
+    // Regression guard: a *declared*, source-controlled schedule that runs
+    // agentTaskWorkflow (homelab-audit-daily) must NOT be silently exempted just
+    // because of its workflow type. If it were removed from SCHEDULES without
+    // being added to DELETED_SCHEDULE_IDS — and it carries no `agent-task-`
+    // prefix and no dynamic memo marker — the orphan gauge must catch it.
+    expect(
+      isOrphanSchedule(
+        "homelab-audit-daily",
+        undefined,
+        new Set<string>(),
+        new Set<string>(),
+      ),
+    ).toBe(true);
+  });
+
+  test("a custom-id agent-task schedule without the memo marker is flagged", () => {
+    // The workflow type alone no longer exempts a schedule; a custom-id dynamic
+    // schedule that predates (or is missing) the marker surfaces as an orphan so
+    // the gap that hid declared agent-task schedules can't reopen.
+    expect(
+      isOrphanSchedule(
+        "recheck-birmel-metrics",
+        undefined,
+        declaredIds,
+        deletedIds,
+      ),
+    ).toBe(true);
+  });
+
+  test("a live schedule absent from source and the delete list is an orphan", () => {
+    expect(
+      isOrphanSchedule(
+        "some-removed-schedule",
+        undefined,
+        declaredIds,
+        deletedIds,
+      ),
+    ).toBe(true);
   });
 });

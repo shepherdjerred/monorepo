@@ -11,6 +11,9 @@ export function createArgoCdApp(chart: Chart) {
     service: "argocd-server",
     port: 443,
     hosts: ["argocd"],
+    // argocd-server's in-cluster cert is self-signed (see the noTlsVerify
+    // comment below) — the blackbox probe needs the same TLS-skip treatment.
+    probeModule: "https_2xx_insecure",
   });
 
   // argocd-server defaults to HTTPS-only on its single pod port (8080 with TLS
@@ -36,6 +39,7 @@ export function createArgoCdApp(chart: Chart) {
     namespace: "argocd",
     protocol: "https",
     noTlsVerify: true,
+    port: 443,
   });
 
   const argoCdValues: HelmValuesForChart<"argo-cd"> = {
@@ -157,7 +161,11 @@ export function createArgoCdApp(chart: Chart) {
     },
     configs: {
       cm: {
-        "exec.enabled": true,
+        // exec.enabled toggles the ArgoCD UI pod-terminal (kubectl exec). Kept
+        // off: argocd-server is internet-reachable via the Cloudflare tunnel and
+        // an enabled terminal turns an admin-credential compromise into in-pod
+        // RCE. The buildkite account only has applications sync/get, not exec.
+        "exec.enabled": false,
         "timeout.reconciliation": "60s",
         "statusbadge.enabled": true,
         "accounts.buildkite": "apiKey",

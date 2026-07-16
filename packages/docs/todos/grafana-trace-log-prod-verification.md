@@ -7,6 +7,15 @@ source_marker: false
 
 # Phase 5: production click-path verification for "Logs for this span"
 
+## Verification (2026-06-28) — wiring confirmed, live click still pending
+
+The Tempo datasource on the live Grafana (`grafana.tailnet-1a49.ts.net`) carries the correct
+`tracesToLogsV2` config: `datasourceUid: loki`, `filterByTraceID: true`, span time shifts ±5m,
+and a `service.name → service_name` tag map. So the config that powers the "Logs for this span"
+button is present and correct. What I could **not** confirm from the API: live data flow — a
+quick Tempo search and Loki label query returned 0 in my window, so I couldn't eyeball an actual
+trace→log jump. Keep open for the one manual click on a real span; the wiring itself is done.
+
 ## What
 
 The full trace↔log correlation pipeline shipped on 2026-05-19 (commit `59823f7c1`) — Tempo `tracesToLogsV2` mapping codified in cdk8s, OTLP-native logs from birmel + temporal-worker, Dagger CI `OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` wired. Local docker-compose validation passed (Grafana datasource proxy returned the two correlated log lines for a synthetic span). Production click-path is unverified: the **Logs for this span** button on a real birmel / temporal-worker / dagger-ci-\* span in torvalds Grafana must return the matching log lines. Gated on ArgoCD sync of the `prometheus` Application.

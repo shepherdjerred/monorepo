@@ -12,6 +12,7 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 import { z } from "zod";
 import { saveImageToS3 } from "#src/storage/s3.ts";
+import { resetConfigurationForTests } from "#src/configuration.ts";
 import { MatchIdSchema } from "@scout-for-lol/data";
 
 // Create S3 mock
@@ -42,13 +43,19 @@ function getValidatedCommand(callIndex: number) {
 }
 
 beforeEach(() => {
-  // Ensure S3_BUCKET_NAME is set for tests
+  // Ensure S3_BUCKET_NAME is set for tests, then force the configuration
+  // singleton to re-read it (values are memoized behind lazy getters).
   Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+  resetConfigurationForTests();
   // Reset mock before each test
   s3Mock.reset();
 });
 
 afterEach(() => {
+  // Restore the default bucket for subsequent files and drop any per-test
+  // configuration override.
+  Bun.env["S3_BUCKET_NAME"] = "test-bucket";
+  resetConfigurationForTests();
   // Reset mock after each test
   s3Mock.reset();
 });
@@ -186,24 +193,40 @@ describe("saveImageToS3 - Success Cases", () => {
 // ============================================================================
 
 describe("saveImageToS3 - Configuration", () => {
-  test.skip("returns undefined when S3_BUCKET_NAME is not configured", async () => {
-    // Note: This test is skipped because the configuration module caches
-    // environment variables on first load, so we can't test the "not configured"
-    // scenario after the module has been imported.
-    //
-    // Expected behavior (verified in integration tests):
-    // - When S3_BUCKET_NAME is not set, saveImageToS3 returns undefined
-    // - No S3 calls are made
-    // - A warning is logged
+  test("returns undefined when S3_BUCKET_NAME is not configured", async () => {
+    delete Bun.env["S3_BUCKET_NAME"];
+    resetConfigurationForTests();
+
+    const matchId = MatchIdSchema.parse("NA1_NO_BUCKET");
+    const imageBuffer = new TextEncoder().encode("image-data");
+
+    s3Mock.on(PutObjectCommand).resolves({
+      $metadata: { httpStatusCode: 200 },
+    });
+
+    const result = await saveImageToS3(matchId, imageBuffer, "solo", []);
+
+    // No bucket → no upload attempted, undefined returned.
+    expect(result).toBeUndefined();
+    expect(s3Mock.calls().length).toBe(0);
   });
 
-  test.skip("returns undefined when S3_BUCKET_NAME is empty string", async () => {
-    // Note: This test is skipped for the same reason as above.
-    //
-    // Expected behavior (verified in integration tests):
-    // - When S3_BUCKET_NAME is empty, saveImageToS3 returns undefined
-    // - No S3 calls are made
-    // - A warning is logged
+  test("returns undefined when S3_BUCKET_NAME is empty string", async () => {
+    Bun.env["S3_BUCKET_NAME"] = "";
+    resetConfigurationForTests();
+
+    const matchId = MatchIdSchema.parse("NA1_EMPTY_BUCKET");
+    const imageBuffer = new TextEncoder().encode("image-data");
+
+    s3Mock.on(PutObjectCommand).resolves({
+      $metadata: { httpStatusCode: 200 },
+    });
+
+    const result = await saveImageToS3(matchId, imageBuffer, "solo", []);
+
+    // getOptionalEnvVar treats an empty string as "not configured".
+    expect(result).toBeUndefined();
+    expect(s3Mock.calls().length).toBe(0);
   });
 });
 

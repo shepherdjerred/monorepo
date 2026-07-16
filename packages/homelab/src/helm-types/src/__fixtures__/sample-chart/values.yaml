@@ -1,0 +1,22 @@
+# -- Number of pod replicas to run.
+replicaCount: 2
+
+image:
+  # -- Container image repository.
+  repository: nginx
+  # -- Image pull policy.
+  pullPolicy: IfNotPresent
+  # -- Image tag; defaults to the chart appVersion when empty.
+  tag: "@sha256:ec4ed8b5299e5e90694af7750eb6dffd2627317d30544d056b0371f8082f7bce"
+
+# -- Whether the service is enabled.
+serviceEnabled: true
+
+service:
+  # -- Kubernetes service type.
+  type: ClusterIP
+  # -- Service port.
+  port: 80
+
+# -- Extra environment variables passed to the container.
+extraEnv: []

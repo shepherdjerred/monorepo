@@ -7,11 +7,13 @@ import {
   REPORT_MAX_LOOKBACK_DAYS,
   REPORT_MAX_ROWS_LIMIT,
   REPORT_QUERY_MAX_LENGTH,
+  DEFAULT_RENDER_SPEC,
   ReportCreateInputSchema,
   ReportIdSchema,
   ReportLookbackDaysSchema,
   ReportMaxRowsSchema,
   ReportOutputFormatSchema,
+  ReportRenderSpecSchema,
   ReportRunIdSchema,
   ReportRunStatusSchema,
   ReportRunTriggerSchema,
@@ -88,6 +90,25 @@ describe("Report limits", () => {
     ).toBe(false);
   });
 
+  test("validates the Discord channel snowflake at the boundary", () => {
+    // A valid 17-20 digit snowflake passes.
+    expect(
+      ReportCreateInputSchema.safeParse({
+        ...baseInput(),
+        channelId: "12345678901234567",
+      }).success,
+    ).toBe(true);
+    // Malformed channel IDs that the old `z.string().min(1)` accepted (and that
+    // then threw a BAD_REQUEST deeper in the handler) are now rejected at the
+    // input boundary as a field-level error.
+    for (const bad of ["", "123", "not-a-number", "1234567890123456789012"]) {
+      expect(
+        ReportCreateInputSchema.safeParse({ ...baseInput(), channelId: bad })
+          .success,
+      ).toBe(false);
+    }
+  });
+
   test("default and cap lookback days", () => {
     expect(ReportLookbackDaysSchema.parse(missingValue)).toBe(
       REPORT_DEFAULT_LOOKBACK_DAYS,
@@ -115,6 +136,60 @@ describe("Report limits", () => {
   test("expose MVP active report caps", () => {
     expect(REPORT_ACTIVE_LIMIT_PER_SERVER).toBe(3);
     expect(REPORT_ACTIVE_LIMIT_PER_OWNER_PER_SERVER).toBe(2);
+  });
+});
+
+describe("Report render spec", () => {
+  test("defaults to a TABLE render", () => {
+    expect(DEFAULT_RENDER_SPEC).toEqual({ kind: "TABLE" });
+  });
+
+  test("accepts a text kind with no encoding", () => {
+    const parsed = ReportRenderSpecSchema.parse({ kind: "LEADERBOARD" });
+    expect(parsed).toEqual({ kind: "LEADERBOARD" });
+  });
+
+  test("defaults chart encoding and options to empty objects", () => {
+    const parsed = ReportRenderSpecSchema.parse({ kind: "BAR_CHART" });
+    expect(parsed).toEqual({
+      kind: "BAR_CHART",
+      encoding: {},
+      options: {},
+    });
+  });
+
+  test("accepts chart channels and options", () => {
+    const parsed = ReportRenderSpecSchema.parse({
+      kind: "LINE_CHART",
+      encoding: { x: "label", y: "win_rate" },
+      options: { title: "Win %", yAxisLabel: "Rate" },
+    });
+    expect(parsed).toEqual({
+      kind: "LINE_CHART",
+      encoding: { x: "label", y: "win_rate" },
+      options: { title: "Win %", yAxisLabel: "Rate" },
+    });
+  });
+
+  test("rejects unknown channel and option keys", () => {
+    expect(
+      ReportRenderSpecSchema.safeParse({
+        kind: "BAR_CHART",
+        encoding: { z: "games" },
+      }).success,
+    ).toBe(false);
+    expect(
+      ReportRenderSpecSchema.safeParse({
+        kind: "BAR_CHART",
+        options: { caption: "nope" },
+      }).success,
+    ).toBe(false);
+  });
+
+  test("rejects an unknown render kind", () => {
+    expect(
+      ReportRenderSpecSchema.safeParse({ kind: "PIE_CHART" }).success,
+    ).toBe(false);
   });
 });
 

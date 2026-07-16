@@ -115,6 +115,9 @@ resource "cloudflare_dns_record" "sjer_red_cname_jellyfin" {
   proxied = true
 }
 
+# Kept for the Overseerr→Seerr redirect (see cloudflare_ruleset
+# "sjer_red_redirects" in this file). The origin is gone; the edge redirect
+# ruleset intercepts every request before the tunnel is contacted.
 resource "cloudflare_dns_record" "sjer_red_cname_overseerr" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
@@ -190,6 +193,31 @@ resource "cloudflare_dns_record" "sjer_red_cname_temporal_agent_tasks" {
   proxied = true
 }
 
+# Receives Xcode Cloud build webhooks (tasks-for-obsidian iOS app). The temporal
+# worker's receiver (event-bridge/xcode-cloud-webhook.ts) translates FAILED/
+# ERRORED builds into Alertmanager alerts. TunnelBinding lives in cdk8s; this
+# DNS record completes the public path. See packages/temporal/AGENTS.md.
+resource "cloudflare_dns_record" "sjer_red_cname_xcode_cloud_webhook" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "xcode-cloud-webhook"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
+# Self-hosted Relay Server (Obsidian real-time collaboration). TunnelBinding
+# lives in cdk8s (src/cdk8s/src/resources/relay); this record completes the
+# public path. Clients (Obsidian Relay plugin) connect over wss://relay.sjer.red.
+resource "cloudflare_dns_record" "sjer_red_cname_relay" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "relay"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
 resource "cloudflare_dns_record" "sjer_red_cname_seerr" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
@@ -197,6 +225,35 @@ resource "cloudflare_dns_record" "sjer_red_cname_seerr" {
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true
+}
+
+# Overseerr was migrated to Seerr (users + request history imported into the
+# Seerr DB, 2026-07-03). The overseerr.sjer.red record is intentionally kept as
+# a proxied CNAME (above) so the hostname still resolves through Cloudflare; the
+# dynamic-redirect ruleset below runs at the edge *before* any origin fetch and
+# 301s every request to seerr.sjer.red (path + query preserved), so the
+# now-routeless tunnel target is never actually contacted.
+resource "cloudflare_ruleset" "sjer_red_redirects" {
+  zone_id = cloudflare_zone.sjer_red.id
+  name    = "sjer.red dynamic redirects"
+  kind    = "zone"
+  phase   = "http_request_dynamic_redirect"
+
+  rules = [{
+    ref         = "overseerr_to_seerr"
+    description = "Redirect overseerr.sjer.red to seerr.sjer.red (Overseerr retired)"
+    expression  = "(http.host eq \"overseerr.sjer.red\")"
+    action      = "redirect"
+    action_parameters = {
+      from_value = {
+        status_code           = 301
+        preserve_query_string = true
+        target_url = {
+          expression = "concat(\"https://seerr.sjer.red\", http.request.uri.path)"
+        }
+      }
+    }
+  }]
 }
 
 resource "cloudflare_dns_record" "sjer_red_cname_resume" {
@@ -208,14 +265,13 @@ resource "cloudflare_dns_record" "sjer_red_cname_resume" {
   proxied = true
 }
 
-resource "cloudflare_dns_record" "sjer_red_cname_seaweedfs" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "seaweedfs"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
-  proxied = true
-}
+# seaweedfs.sjer.red removed 2026-06-27: the SeaweedFS S3 API is now tailnet-only
+# (reachable via seaweedfs-s3.tailnet-1a49.ts.net). The state + llm-archive buckets
+# live on this gateway, so it is no longer exposed on the public Cloudflare tunnel.
+# All S3 consumers that previously used this public hostname have been migrated:
+#   - CI static-site deploy containers (pipeline since removed)
+#   - Operator ~/.aws/config default + seaweedfs profiles (packages/dotfiles/)
+#   - Tofu state backends (already used seaweedfs-s3.tailnet-1a49.ts.net)
 
 resource "cloudflare_dns_record" "sjer_red_cname_shuxin_bluemap" {
   zone_id = cloudflare_zone.sjer_red.id
@@ -854,4 +910,13 @@ resource "cloudflare_dns_record" "sjer_red_tlsrpt" {
   name    = "_smtp._tls"
   type    = "TXT"
   content = "v=TLSRPTv1; rua=mailto:dmarc@sjer.red"
+}
+
+# ── Static-asset caching: respect the immutable Cache-Control the deploy sets on
+# content-hashed assets (sjer.red + the cook./stocks. Astro subdomains in this
+# zone all emit `/_astro/`) + Smart Tiered Cache (origin shielding). ───────────
+module "sjer_red_static_cache" {
+  source         = "./modules/static-cache"
+  zone_id        = cloudflare_zone.sjer_red.id
+  asset_prefixes = ["/_astro/"]
 }

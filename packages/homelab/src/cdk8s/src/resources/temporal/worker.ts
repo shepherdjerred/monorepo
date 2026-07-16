@@ -30,6 +30,7 @@ import { createTemporalWorkerAuditRbac } from "./audit-rbac.ts";
 import {
   createAgentTaskApiService,
   createTemporalWorkerGithubWebhookService,
+  createXcodeCloudWebhookService,
 } from "./http-services.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
@@ -317,11 +318,15 @@ export function createTemporalWorkerDeployment(
       //        github-webhook.ts) — exposed via Cloudflare Tunnel for PR
       //        review/summary events.
       // :9467 = authenticated agent-task scheduling API.
+      // :9468 = Xcode Cloud webhook receiver (Hono server in event-bridge/
+      //        xcode-cloud-webhook.ts) — exposed via Cloudflare Tunnel; POSTs
+      //        iOS build failures into Alertmanager.
       ports: [
         { number: 9464, name: "metrics" },
         { number: 9465, name: "app-metrics" },
         { number: 9466, name: "gh-webhook" },
         { number: 9467, name: "agent-tasks" },
+        { number: 9468, name: "xc-webhook" },
       ],
       securityContext: {
         user: UID,
@@ -348,6 +353,13 @@ export function createTemporalWorkerDeployment(
         TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
         TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
         ENVIRONMENT: EnvValue.fromValue("production"),
+        // Headless hygiene for the `claude -p` agent subprocesses: don't let
+        // startup block on statsig/telemetry fetches or an auto-update check.
+        // Defensive only — the historical 30-min hang was the `--json-schema`
+        // CLI flag (now removed), not these; keep them off for a clean headless
+        // run regardless.
+        CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: EnvValue.fromValue("1"),
+        DISABLE_AUTOUPDATER: EnvValue.fromValue("1"),
         // OpenTelemetry tracing → Tempo. initializeTracing() in worker.ts
         // gates on TELEMETRY_ENABLED.
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),
@@ -399,10 +411,6 @@ export function createTemporalWorkerDeployment(
           key: "AWS_SECRET_ACCESS_KEY",
         }),
         // GitHub
-        // PR_REVIEW_FIXTURES_REPO_URL is not wired — it belongs to the disabled
-        // pr-review-eval feature (PR_BOT_ENABLED=false) and is not present in the
-        // 1P item, so requiring it would crash-loop the worker. The eval schedule
-        // self-pauses when it's absent (register-schedules.ts).
         GITHUB_APP_ID: EnvValue.fromSecretValue({
           secret,
           key: "GITHUB_APP_ID",
@@ -449,12 +457,39 @@ export function createTemporalWorkerDeployment(
         // `isPostEnabled`.
         PR_REVIEW_POST_ENABLED: EnvValue.fromValue("true"),
         PR_REVIEW_WORKER_MAX_CONCURRENT_ACTIVITIES: EnvValue.fromValue("1"),
+        // PR babysitter — the mutating "get this PR green" bot. Independent
+        // kill switch. ENABLED: an `@temporal-worker help me get this green`
+        // comment from the owner now starts a babysitter workflow (owner-only
+        // authz + per-PR concurrency + budget still gate it). Flip back to
+        // "false" to make the issue_comment webhook ack-and-ignore without
+        // starting any workflow. See
+        // packages/temporal/src/event-bridge/babysit-webhook.ts `isPrBabysitEnabled`.
+        PR_BABYSIT_ENABLED: EnvValue.fromValue("true"),
+        PR_BABYSIT_BOT_HANDLE: EnvValue.fromValue("@temporal-worker"),
+        PR_BABYSIT_BOT_LOGIN: EnvValue.fromValue("long-summer-intern[bot]"),
+        PR_BABYSIT_WORKER_MAX_CONCURRENT_ACTIVITIES: EnvValue.fromValue("2"),
         GITHUB_WEBHOOK_PORT: EnvValue.fromValue("9466"),
         AGENT_TASK_API_PORT: EnvValue.fromValue("9467"),
         AGENT_TASK_API_TOKEN: EnvValue.fromSecretValue({
           secret,
           key: "AGENT_TASK_API_TOKEN",
         }),
+        // Xcode Cloud webhook receiver (event-bridge/xcode-cloud-webhook.ts).
+        // The receiver only starts when XCODE_CLOUD_WEBHOOK_TOKEN is set; the
+        // token authenticates the unguessable URL path (Xcode Cloud webhooks
+        // carry no signature). On a FAILED/ERRORED iOS build it POSTs a
+        // `severity=warning` alert to Alertmanager, which the existing route
+        // forwards to the PagerDuty dashboard. Required — the 1P item carries
+        // XCODE_CLOUD_WEBHOOK_TOKEN.
+        XCODE_CLOUD_WEBHOOK_PORT: EnvValue.fromValue("9468"),
+        XCODE_CLOUD_WEBHOOK_TOKEN: EnvValue.fromSecretValue({
+          secret,
+          key: "XCODE_CLOUD_WEBHOOK_TOKEN",
+        }),
+        // In-cluster Alertmanager write API. Non-sensitive; a plain literal.
+        ALERTMANAGER_URL: EnvValue.fromValue(
+          "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
+        ),
         // pr-review-bot dismissed-comments KV (Phase 9). Single Redis
         // instance is deployed inside the temporal chart via the shared
         // Redis cdk8s construct; service name is `temporal-redis-master`
@@ -577,6 +612,7 @@ export function createTemporalWorkerDeployment(
 
   createTemporalWorkerGithubWebhookService(chart, deployment);
   createAgentTaskApiService(chart, deployment);
+  createXcodeCloudWebhookService(chart, deployment);
 
   return { deployment };
 }

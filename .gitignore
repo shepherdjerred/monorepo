@@ -5,6 +5,7 @@
 .swiftpm
 **/__pycache__
 node_modules/
+.venv/
 dist/
 .env
 .env.*
@@ -61,14 +62,6 @@ packages/dpp/
 /.rustup/
 .config/
 
-# Legacy Bazel marker/lock files
-.bun-install.lock
-.bun-install-done
-.build-*.lock
-.generate-done
-
-# Lefthook local overrides
-lefthook-local.yml
 
 **/.eslintcache
 
@@ -105,7 +98,6 @@ packages/tasks-for-obsidian/ios/build/
 *.db
 *.sqlite
 *.sqlite3
-MODULE.bazel.lock
 
 # Generated TypeDoc docs (webring)
 packages/webring/docs/
@@ -121,3 +113,8 @@ packages/eslint-config/local.d.ts.map
 
 # Agent scratch scripts for live Discord interaction (see discord skill)
 packages/streambot/scratch/
+.turbo
+
+# moon
+.moon/cache
+.moon/docker

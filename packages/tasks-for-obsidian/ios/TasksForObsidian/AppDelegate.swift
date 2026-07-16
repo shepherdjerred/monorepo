@@ -9,6 +9,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
   var reactNativeDelegate: ReactNativeDelegate?
   var reactNativeFactory: RCTReactNativeFactory?
+  /// Retained for SceneDelegate, which starts React Native into its window.
+  var launchOptions: [UIApplication.LaunchOptionsKey: Any]?
 
   func application(
     _ application: UIApplication,
@@ -20,16 +22,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     reactNativeDelegate = delegate
     reactNativeFactory = factory
+    self.launchOptions = launchOptions
 
-    window = UIWindow(frame: UIScreen.main.bounds)
-
-    factory.startReactNative(
-      withModuleName: "TasksForObsidian",
-      in: window,
-      launchOptions: launchOptions
-    )
-
+    // Window creation and startReactNative happen in SceneDelegate — the
+    // iOS 27 SDK requires the UIScene lifecycle (TN3187).
     return true
+  }
+
+  func application(
+    _ application: UIApplication,
+    configurationForConnecting connectingSceneSession: UISceneSession,
+    options: UIScene.ConnectionOptions
+  ) -> UISceneConfiguration {
+    return UISceneConfiguration(
+      name: "Default Configuration",
+      sessionRole: connectingSceneSession.role
+    )
   }
 
   func application(

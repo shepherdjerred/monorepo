@@ -1,0 +1,62 @@
+{
+  "webhook": {
+    "id": "12345678-abcd-1234-5678-a12345bc4567",
+    "name": "Homelab Alertmanager",
+    "url": "https://xcode-cloud-webhook.sjer.red/hook/REDACTED"
+  },
+  "metadata": {
+    "type": "metadata",
+    "createdDate": "2026-07-11T18:14:10.194Z",
+    "eventType": "BUILD_COMPLETED"
+  },
+  "ciWorkflow": {
+    "id": "22345678-abcd-1234-5678-a12345bc4567",
+    "type": "ciWorkflows",
+    "attributes": {
+      "name": "Archive - iOS"
+    }
+  },
+  "ciProduct": {
+    "id": "32345678-abcd-1234-5678-a12345bc4567",
+    "type": "ciProducts",
+    "attributes": {
+      "name": "Tasks for Obsidian",
+      "productType": "APP"
+    }
+  },
+  "ciBuildRun": {
+    "id": "42345678-abcd-1234-5678-a12345bc4567",
+    "type": "ciBuildRuns",
+    "attributes": {
+      "number": 87,
+      "createdDate": "2026-07-11T18:07:00.000Z",
+      "startedDate": "2026-07-11T18:07:37.233Z",
+      "finishedDate": "2026-07-11T18:14:10.194Z",
+      "executionProgress": "COMPLETE",
+      "completionStatus": "FAILED",
+      "isPullRequestBuild": false,
+      "sourceCommit": {
+        "commitSha": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+        "author": "Jerred Shepherd",
+        "htmlUrl": "https://github.com/shepherdjerred/monorepo/commit/a1b2c3d4e5f60718293a4b5c6d7e8f9012345678"
+      }
+    }
+  },
+  "scmRepository": {
+    "id": "52345678-abcd-1234-5678-a12345bc4567",
+    "type": "scmRepositories",
+    "attributes": {
+      "repositoryName": "monorepo",
+      "ownerName": "shepherdjerred"
+    }
+  },
+  "scmGitReference": {
+    "id": "62345678-abcd-1234-5678-a12345bc4567",
+    "type": "scmGitReferences",
+    "attributes": {
+      "name": "main",
+      "canonicalName": "refs/heads/main",
+      "kind": "BRANCH"
+    }
+  }
+}

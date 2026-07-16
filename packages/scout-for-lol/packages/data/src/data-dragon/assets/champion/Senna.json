@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Senna": {
       "id": "Senna",
@@ -12,7 +12,7 @@
         "full": "Senna.png",
         "sprite": "champion3.png",
         "group": "champion",
-        "x": 288,
+        "x": 336,
         "y": 96,
         "w": 48,
         "h": 48
@@ -743,7 +743,7 @@
             "full": "SennaQ.png",
             "sprite": "spell12.png",
             "group": "spell",
-            "x": 96,
+            "x": 288,
             "y": 0,
             "w": 48,
             "h": 48
@@ -886,7 +886,7 @@
             "full": "SennaW.png",
             "sprite": "spell12.png",
             "group": "spell",
-            "x": 144,
+            "x": 336,
             "y": 0,
             "w": 48,
             "h": 48
@@ -1027,7 +1027,7 @@
             "full": "SennaE.png",
             "sprite": "spell12.png",
             "group": "spell",
-            "x": 192,
+            "x": 384,
             "y": 0,
             "w": 48,
             "h": 48
@@ -1144,7 +1144,7 @@
             "full": "SennaR.png",
             "sprite": "spell12.png",
             "group": "spell",
-            "x": 240,
+            "x": 432,
             "y": 0,
             "w": 48,
             "h": 48
@@ -1159,7 +1159,7 @@
           "full": "Senna_Passive.png",
           "sprite": "passive3.png",
           "group": "passive",
-          "x": 288,
+          "x": 336,
           "y": 96,
           "w": 48,
           "h": 48

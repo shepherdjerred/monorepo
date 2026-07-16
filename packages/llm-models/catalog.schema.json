@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/shepherdjerred/monorepo/packages/llm-models/catalog.schema.json",
+  "title": "LLM model catalog",
+  "description": "Language-neutral source of truth for the active LLM models we use. Token prices are USD per 1,000,000 tokens; image prices are USD per image. Validated at runtime by Zod (TS) and Pydantic (Python).",
+  "type": "object",
+  "additionalProperties": { "$ref": "#/$defs/modelEntry" },
+  "$defs": {
+    "modelEntry": {
+      "type": "object",
+      "required": [
+        "id",
+        "provider",
+        "displayName",
+        "pricing",
+        "capabilities",
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "provider": { "enum": ["openai", "anthropic", "google"] },
+        "displayName": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "contextWindow": { "type": "integer", "exclusiveMinimum": 0 },
+        "pinnedContextWindow": { "type": "boolean" },
+        "status": { "enum": ["current", "preview", "deprecated"] },
+        "category": { "type": "string" },
+        "pricing": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["modality", "input", "output"],
+              "additionalProperties": false,
+              "properties": {
+                "modality": { "const": "text" },
+                "input": { "type": "number", "minimum": 0 },
+                "output": { "type": "number", "minimum": 0 },
+                "cachedInput": { "type": "number", "minimum": 0 },
+                "cacheRead": { "type": "number", "minimum": 0 },
+                "cacheWrite": { "type": "number", "minimum": 0 }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["modality", "perImage"],
+              "additionalProperties": false,
+              "properties": {
+                "modality": { "const": "image" },
+                "perImage": { "type": "number", "minimum": 0 }
+              }
+            }
+          ]
+        },
+        "capabilities": {
+          "type": "object",
+          "required": ["supportsTemperature", "supportsTopP"],
+          "additionalProperties": false,
+          "properties": {
+            "supportsTemperature": { "type": "boolean" },
+            "supportsTopP": { "type": "boolean" },
+            "maxTokens": { "type": "integer", "exclusiveMinimum": 0 },
+            "adaptiveThinking": { "type": "boolean" },
+            "effortTiers": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    }
+  }
+}

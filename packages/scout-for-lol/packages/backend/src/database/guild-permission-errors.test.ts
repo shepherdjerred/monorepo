@@ -2,8 +2,6 @@ import { describe, expect, test, beforeEach } from "bun:test";
 import {
   recordPermissionError,
   recordSuccessfulSend,
-  getAbandonedGuilds,
-  markGuildAsNotified,
   cleanupOldErrorRecords,
 } from "#src/database/guild-permission-errors.ts";
 import {
@@ -26,7 +24,7 @@ describe("recordPermissionError", () => {
     await recordPermissionError(prisma, {
       serverId: testGuildId("12300000000"),
       channelId: testChannelId("456000000"),
-      errorType: "proactive_check",
+      errorType: "permission",
       errorReason: "Missing Send Messages",
     });
 
@@ -42,7 +40,7 @@ describe("recordPermissionError", () => {
     expect(record).toBeDefined();
     expect(record?.serverId).toBe(testGuildId("12300000000"));
     expect(record?.channelId).toBe(testChannelId("456000000"));
-    expect(record?.errorType).toBe("proactive_check");
+    expect(record?.errorType).toBe("permission");
     expect(record?.errorReason).toBe("Missing Send Messages");
     expect(record?.consecutiveErrorCount).toBe(1);
     expect(record?.firstOccurrence).toBeDefined();
@@ -54,14 +52,14 @@ describe("recordPermissionError", () => {
     await recordPermissionError(prisma, {
       serverId: testGuildId("12300000000"),
       channelId: testChannelId("456000000"),
-      errorType: "proactive_check",
+      errorType: "permission",
     });
 
     // Second error
     await recordPermissionError(prisma, {
       serverId: testGuildId("12300000000"),
       channelId: testChannelId("456000000"),
-      errorType: "api_error",
+      errorType: "channel_missing",
     });
 
     const record = await prisma.guildPermissionError.findUnique({
@@ -74,19 +72,19 @@ describe("recordPermissionError", () => {
     });
 
     expect(record?.consecutiveErrorCount).toBe(2);
-    expect(record?.errorType).toBe("api_error"); // Updates to latest error type
+    expect(record?.errorType).toBe("channel_missing"); // Updates to latest error type
   });
 
   test("tracks separate errors for different channels in same guild", async () => {
     await recordPermissionError(prisma, {
       serverId: testGuildId("12300000000"),
       channelId: testChannelId("1000000001"),
-      errorType: "proactive_check",
+      errorType: "permission",
     });
     await recordPermissionError(prisma, {
       serverId: testGuildId("12300000000"),
       channelId: testChannelId("2000000002"),
-      errorType: "proactive_check",
+      errorType: "permission",
     });
 
     const errors = await prisma.guildPermissionError.findMany({
@@ -103,12 +101,12 @@ describe("recordSuccessfulSend", () => {
     await recordPermissionError(prisma, {
       serverId: testGuildId("12300000000"),
       channelId: testChannelId("456000000"),
-      errorType: "proactive_check",
+      errorType: "permission",
     });
     await recordPermissionError(prisma, {
       serverId: testGuildId("12300000000"),
       channelId: testChannelId("456000000"),
-      errorType: "api_error",
+      errorType: "channel_missing",
     });
 
     // Record successful send
@@ -149,267 +147,6 @@ describe("recordSuccessfulSend", () => {
 
     expect(record?.consecutiveErrorCount).toBe(0);
     expect(record?.lastSuccessfulSend).toBeDefined();
-  });
-});
-
-describe("getAbandonedGuilds", () => {
-  test("finds guilds with 7+ days of consecutive errors", async () => {
-    const eightDaysAgo = new Date();
-    eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
-
-    // Create error record from 8 days ago
-    await prisma.guildPermissionError.create({
-      data: {
-        serverId: testGuildId("00"),
-        channelId: testChannelId("1000000001"),
-        errorType: "proactive_check",
-        firstOccurrence: eightDaysAgo,
-        lastOccurrence: new Date(),
-        consecutiveErrorCount: 50,
-      },
-    });
-
-    const abandoned = await getAbandonedGuilds(prisma, 7);
-
-    expect(abandoned).toHaveLength(1);
-    expect(abandoned[0]?.serverId).toBe(testGuildId("00"));
-    expect(abandoned[0]?.errorCount).toBe(50);
-  });
-
-  test("does not find guilds with recent errors (< 7 days)", async () => {
-    const fiveDaysAgo = new Date();
-    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
-
-    await prisma.guildPermissionError.create({
-      data: {
-        serverId: testGuildId("2000000001"),
-        channelId: testChannelId("1000000001"),
-        errorType: "proactive_check",
-        firstOccurrence: fiveDaysAgo,
-        lastOccurrence: new Date(),
-        consecutiveErrorCount: 10,
-      },
-    });
-
-    const abandoned = await getAbandonedGuilds(prisma, 7);
-
-    expect(abandoned).toHaveLength(0);
-  });
-
-  test("does not find guilds with recent successful sends", async () => {
-    const eightDaysAgo = new Date();
-    eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
-
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    await prisma.guildPermissionError.create({
-      data: {
-        serverId: testGuildId("00"),
-        channelId: testChannelId("1000000001"),
-        errorType: "proactive_check",
-        firstOccurrence: eightDaysAgo,
-        lastOccurrence: new Date(),
-        consecutiveErrorCount: 5,
-        lastSuccessfulSend: yesterday, // Recent success
-      },
-    });
-
-    const abandoned = await getAbandonedGuilds(prisma, 7);
-
-    expect(abandoned).toHaveLength(0);
-  });
-
-  test("does not find guilds already notified", async () => {
-    const eightDaysAgo = new Date();
-    eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
-
-    await prisma.guildPermissionError.create({
-      data: {
-        serverId: testGuildId("0"),
-        channelId: testChannelId("1000000001"),
-        errorType: "proactive_check",
-        firstOccurrence: eightDaysAgo,
-        lastOccurrence: new Date(),
-        consecutiveErrorCount: 50,
-        ownerNotified: true,
-      },
-    });
-
-    const abandoned = await getAbandonedGuilds(prisma, 7);
-
-    expect(abandoned).toHaveLength(0);
-  });
-
-  test("aggregates multiple channels for same guild", async () => {
-    const eightDaysAgo = new Date();
-    eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
-
-    // Multiple channels with errors in same guild
-    await prisma.guildPermissionError.create({
-      data: {
-        serverId: testGuildId("3000000001"),
-        channelId: testChannelId("1000000001"),
-        errorType: "proactive_check",
-        firstOccurrence: eightDaysAgo,
-        lastOccurrence: new Date(),
-        consecutiveErrorCount: 20,
-      },
-    });
-
-    await prisma.guildPermissionError.create({
-      data: {
-        serverId: testGuildId("3000000001"),
-        channelId: testChannelId("2000000002"),
-        errorType: "api_error",
-        firstOccurrence: eightDaysAgo,
-        lastOccurrence: new Date(),
-        consecutiveErrorCount: 15,
-      },
-    });
-
-    const abandoned = await getAbandonedGuilds(prisma, 7);
-
-    expect(abandoned).toHaveLength(1);
-    expect(abandoned[0]?.serverId).toBe(testGuildId("3000000001"));
-    expect(abandoned[0]?.errorCount).toBe(35); // 20 + 15
-  });
-
-  test("respects custom minDays parameter", async () => {
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-
-    await prisma.guildPermissionError.create({
-      data: {
-        serverId: testGuildId("00"),
-        channelId: testChannelId("1000000001"),
-        errorType: "proactive_check",
-        firstOccurrence: threeDaysAgo,
-        lastOccurrence: new Date(),
-        consecutiveErrorCount: 10,
-      },
-    });
-
-    // Not found with 7-day threshold
-    const abandonedSeven = await getAbandonedGuilds(prisma, 7);
-    expect(abandonedSeven).toHaveLength(0);
-
-    // Found with 2-day threshold
-    const abandonedTwo = await getAbandonedGuilds(prisma, 2);
-    expect(abandonedTwo).toHaveLength(1);
-  });
-
-  test("does not find guilds with at least one working channel", async () => {
-    const eightDaysAgo = new Date();
-    eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
-
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    // Channel 1: Has errors for 8+ days
-    await prisma.guildPermissionError.create({
-      data: {
-        serverId: testGuildId("4000000001"),
-        channelId: testChannelId("1000000001"),
-        errorType: "proactive_check",
-        firstOccurrence: eightDaysAgo,
-        lastOccurrence: new Date(),
-        consecutiveErrorCount: 50,
-      },
-    });
-
-    // Channel 2: Working fine (recent successful send)
-    await prisma.guildPermissionError.create({
-      data: {
-        serverId: testGuildId("4000000001"),
-        channelId: testChannelId("2000000002"),
-        errorType: "none",
-        firstOccurrence: yesterday,
-        lastOccurrence: yesterday,
-        consecutiveErrorCount: 0,
-        lastSuccessfulSend: yesterday,
-      },
-    });
-
-    const abandoned = await getAbandonedGuilds(prisma, 7);
-
-    // Guild should NOT be abandoned because channel 2 is working
-    expect(abandoned).toHaveLength(0);
-  });
-
-  test("finds guilds where ALL channels have errors", async () => {
-    const eightDaysAgo = new Date();
-    eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
-
-    // Channel 1: Has errors
-    await prisma.guildPermissionError.create({
-      data: {
-        serverId: testGuildId("5000000001"),
-        channelId: testChannelId("1000000001"),
-        errorType: "proactive_check",
-        firstOccurrence: eightDaysAgo,
-        lastOccurrence: new Date(),
-        consecutiveErrorCount: 30,
-      },
-    });
-
-    // Channel 2: Also has errors
-    await prisma.guildPermissionError.create({
-      data: {
-        serverId: testGuildId("5000000001"),
-        channelId: testChannelId("2000000002"),
-        errorType: "api_error",
-        firstOccurrence: eightDaysAgo,
-        lastOccurrence: new Date(),
-        consecutiveErrorCount: 20,
-      },
-    });
-
-    const abandoned = await getAbandonedGuilds(prisma, 7);
-
-    // Guild SHOULD be abandoned because ALL channels have errors
-    expect(abandoned).toHaveLength(1);
-    expect(abandoned[0]?.serverId).toBe(testGuildId("5000000001"));
-    expect(abandoned[0]?.errorCount).toBe(50); // 30 + 20
-  });
-});
-
-describe("markGuildAsNotified", () => {
-  test("marks all error records for a guild as notified", async () => {
-    const eightDaysAgo = new Date();
-    eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
-
-    // Create multiple error records for same guild
-    await prisma.guildPermissionError.create({
-      data: {
-        serverId: testGuildId("12300000000"),
-        channelId: testChannelId("1000000001"),
-        errorType: "proactive_check",
-        firstOccurrence: eightDaysAgo,
-        lastOccurrence: new Date(),
-        consecutiveErrorCount: 10,
-      },
-    });
-
-    await prisma.guildPermissionError.create({
-      data: {
-        serverId: testGuildId("12300000000"),
-        channelId: testChannelId("2000000002"),
-        errorType: "api_error",
-        firstOccurrence: eightDaysAgo,
-        lastOccurrence: new Date(),
-        consecutiveErrorCount: 5,
-      },
-    });
-
-    await markGuildAsNotified(prisma, testGuildId("12300000000"));
-
-    const records = await prisma.guildPermissionError.findMany({
-      where: { serverId: testGuildId("12300000000") },
-    });
-
-    expect(records).toHaveLength(2);
-    expect(records.every((r) => r.ownerNotified)).toBe(true);
   });
 });
 
@@ -497,7 +234,7 @@ describe("Permission Error Workflow", () => {
     await recordPermissionError(prisma, {
       serverId,
       channelId,
-      errorType: "proactive_check",
+      errorType: "permission",
     });
     let record = await prisma.guildPermissionError.findUnique({
       where: { serverId_channelId: { serverId, channelId } },
@@ -508,12 +245,12 @@ describe("Permission Error Workflow", () => {
     await recordPermissionError(prisma, {
       serverId,
       channelId,
-      errorType: "api_error",
+      errorType: "channel_missing",
     });
     await recordPermissionError(prisma, {
       serverId,
       channelId,
-      errorType: "api_error",
+      errorType: "channel_missing",
     });
     record = await prisma.guildPermissionError.findUnique({
       where: { serverId_channelId: { serverId, channelId } },
@@ -532,33 +269,148 @@ describe("Permission Error Workflow", () => {
     expect(record?.consecutiveErrorCount).toBe(0);
     expect(record?.lastSuccessfulSend).toBeDefined();
   });
+});
 
-  test("abandoned guild detection workflow", async () => {
-    const eightDaysAgo = new Date();
-    eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
+const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000);
 
-    // Create error that started 8 days ago
-    await prisma.guildPermissionError.create({
-      data: {
-        serverId: testGuildId("1230000"),
-        channelId: testChannelId("1000000001"),
-        errorType: "proactive_check",
-        firstOccurrence: eightDaysAgo,
-        lastOccurrence: new Date(),
-        consecutiveErrorCount: 50,
-      },
+// Seed a GuildPermissionError row in a specific escalation state.
+async function seedEscalationRow(opts: {
+  serverId: ReturnType<typeof testGuildId>;
+  channelId: ReturnType<typeof testChannelId>;
+  notificationStage: number;
+  lastNotifiedAt: Date | null;
+  firstOccurrence?: Date;
+  consecutiveErrorCount?: number;
+}) {
+  await prisma.guildPermissionError.create({
+    data: {
+      serverId: opts.serverId,
+      channelId: opts.channelId,
+      errorType: "api_error",
+      firstOccurrence: opts.firstOccurrence ?? new Date(),
+      lastOccurrence: new Date(),
+      consecutiveErrorCount: opts.consecutiveErrorCount ?? 1,
+      notificationStage: opts.notificationStage,
+      lastNotifiedAt: opts.lastNotifiedAt,
+    },
+  });
+}
+
+describe("recordPermissionError - escalation decisions", () => {
+  test("first failure of a streak returns 'immediate', then 'none' until the next stage", async () => {
+    const serverId = testGuildId("99001");
+    const channelId = testChannelId("99002");
+
+    expect(
+      await recordPermissionError(prisma, {
+        serverId,
+        channelId,
+        errorType: "channel_missing",
+      }),
+    ).toBe("immediate");
+
+    // Same stage, no time elapsed → no further notification.
+    expect(
+      await recordPermissionError(prisma, {
+        serverId,
+        channelId,
+        errorType: "channel_missing",
+      }),
+    ).toBe("none");
+  });
+
+  test("advances to 'week' once ~1 week has passed since the immediate DM", async () => {
+    const serverId = testGuildId("99010");
+    const channelId = testChannelId("99011");
+    await seedEscalationRow({
+      serverId,
+      channelId,
+      notificationStage: 1,
+      lastNotifiedAt: daysAgo(8),
+      consecutiveErrorCount: 20,
     });
 
-    // 1. Should be detected as abandoned
-    const abandoned = await getAbandonedGuilds(prisma, 7);
-    expect(abandoned).toHaveLength(1);
-    expect(abandoned[0]?.serverId).toBe(testGuildId("1230000"));
+    expect(
+      await recordPermissionError(prisma, {
+        serverId,
+        channelId,
+        errorType: "channel_missing",
+      }),
+    ).toBe("week");
+  });
 
-    // 2. Mark as notified
-    await markGuildAsNotified(prisma, testGuildId("1230000"));
+  test("advances to 'month' once ~1 month has passed since the week DM, then stays silent", async () => {
+    const serverId = testGuildId("99020");
+    const channelId = testChannelId("99021");
+    await seedEscalationRow({
+      serverId,
+      channelId,
+      notificationStage: 2,
+      lastNotifiedAt: daysAgo(31),
+      consecutiveErrorCount: 60,
+    });
 
-    // 3. Should no longer appear in abandoned list
-    const stillAbandoned = await getAbandonedGuilds(prisma, 7);
-    expect(stillAbandoned).toHaveLength(0);
+    expect(
+      await recordPermissionError(prisma, {
+        serverId,
+        channelId,
+        errorType: "channel_missing",
+      }),
+    ).toBe("month");
+
+    // Stage 3 is terminal — no more notifications.
+    expect(
+      await recordPermissionError(prisma, {
+        serverId,
+        channelId,
+        errorType: "channel_missing",
+      }),
+    ).toBe("none");
+  });
+
+  test("a successful send resets the streak back to 'immediate'", async () => {
+    const serverId = testGuildId("99030");
+    const channelId = testChannelId("99031");
+
+    expect(
+      await recordPermissionError(prisma, {
+        serverId,
+        channelId,
+        errorType: "channel_missing",
+      }),
+    ).toBe("immediate");
+
+    await recordSuccessfulSend(prisma, serverId, channelId);
+
+    expect(
+      await recordPermissionError(prisma, {
+        serverId,
+        channelId,
+        errorType: "channel_missing",
+      }),
+    ).toBe("immediate");
+  });
+
+  test("EXISTING guild: a pre-feature mid-streak row (stage 0, old firstOccurrence, high count) returns 'immediate', not 'month'", async () => {
+    const serverId = testGuildId("99040");
+    const channelId = testChannelId("99041");
+    // Simulates a row that existed before this feature deployed: lots of errors,
+    // first failure long ago, but never escalated (stage 0 / lastNotifiedAt null).
+    await seedEscalationRow({
+      serverId,
+      channelId,
+      notificationStage: 0,
+      lastNotifiedAt: null,
+      firstOccurrence: daysAgo(90),
+      consecutiveErrorCount: 138,
+    });
+
+    expect(
+      await recordPermissionError(prisma, {
+        serverId,
+        channelId,
+        errorType: "channel_missing",
+      }),
+    ).toBe("immediate");
   });
 });

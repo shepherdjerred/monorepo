@@ -22,20 +22,21 @@ export function createSocket({
 }): SocketChannel {
   logger.info("starting web socket listener");
 
-  let cors;
-
   if (isCorsEnabled) {
     logger.info("enabling cors for the web socket");
-    cors = {
-      origin: "*",
-      methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-      preflightContinue: false,
-      optionsSuccessStatus: 204,
-    };
   }
 
   const io = new Server(server, {
-    cors,
+    ...(isCorsEnabled
+      ? {
+          cors: {
+            origin: "*",
+            methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+            preflightContinue: false,
+            optionsSuccessStatus: 204,
+          },
+        }
+      : {}),
   });
 
   const events = new Observable<{ request: Request; socket: Socket }>(

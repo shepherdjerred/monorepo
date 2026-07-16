@@ -15,11 +15,20 @@ Beta lost both active competitions (id 9, 10) on 2026-05-12 because Prisma 6→7
 
 The originating session was diagnosis-only, per user request. No code/data fix applied. The Beta data fix decision was deferred to a future session, and prod was deliberately not touched until confirmed.
 
+## Update (2026-06-28)
+
+Two of the three items below have landed on `main` — **only the prod-data inspection remains**, which
+is why this stays `waiting-on-verification`:
+
+- ✅ Long-term fix: migration `20260514120000_revert_libsql_datetime_to_unixepoch` + the affinity comment in `database/index.ts`.
+- ✅ Regression test: the "libsql affinity regression" case in `lifecycle.integration.test.ts`.
+- ⏳ Prod-data inspection/repair (below) — needs a live `scout-prod` DB check, not visible in the repo.
+
 ## Done when
 
 - Prod `db.sqlite` `Competition` rows inspected: any active competition whose `endProcessedAt` was set on `2026-05-12T07:45*` (or any post-deploy lifecycle tick) and whose `endDate > now` is either repaired (`endProcessedAt`, `endNotifiedAt`, `endNotificationMessageId` nulled; `nextScheduledUpdateAt` re-seeded) or confirmed not present.
-- Long-term fix landed: either INTEGER→TEXT migration for legacy DateTime columns, or query rewrites with explicit CAST, or a Prisma 7 storage compatibility flag.
-- Regression test added that creates a row with INTEGER-stored `endDate > now` and asserts the lifecycle does NOT end it.
+- ✅ Long-term fix landed (migration `20260514120000_revert_libsql_datetime_to_unixepoch`).
+- ✅ Regression test added (`lifecycle.integration.test.ts` "libsql affinity regression").
 
 ## References
 

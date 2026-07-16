@@ -2,6 +2,7 @@
 # /// script
 # dependencies = [
 #     "openai>=1.30.0",
+#     "pydantic>=2.0",
 #     "tiktoken>=0.7.0",
 # ]
 # ///
@@ -23,51 +24,86 @@ import os
 import re
 import sys
 from collections import Counter, defaultdict
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Iterable, List, Sequence, Tuple
+from typing import TypedDict
 
-from openai import OpenAI
 import tiktoken
+from openai import OpenAI
+from openai.types.chat import ChatCompletionMessageParam
+from pydantic import BaseModel, TypeAdapter
+
+# Central model catalog (single source of truth) — see packages/llm-models.
+_CATALOG_PATH = (
+    Path(__file__).resolve().parents[3] / "llm-models" / "src" / "catalog.json"
+)
+
+
+class _CatalogPricing(BaseModel):
+    input: float | None = None
+    output: float | None = None
+
+
+class _CatalogEntry(BaseModel):
+    pricing: _CatalogPricing
+    contextWindow: int | None = None
+
+
+def _load_catalog() -> dict[str, _CatalogEntry]:
+    raw = json.loads(_CATALOG_PATH.read_text(encoding="utf-8"))
+    return TypeAdapter(dict[str, _CatalogEntry]).validate_python(raw)
+
+
+_CATALOG = _load_catalog()
+
+
+def _per_token_prices(model: str) -> tuple[float, float]:
+    """(input, output) USD per token from the catalog; (0, 0) if unknown."""
+    entry = _CATALOG.get(model)
+    if entry and entry.pricing.input is not None and entry.pricing.output is not None:
+        return entry.pricing.input / 1_000_000, entry.pricing.output / 1_000_000
+    return 0.0, 0.0
+
+
+class ModeConfig(TypedDict):
+    model: str
+    input_price: float
+    output_price: float
+    temperature: float
+
+
+def _mode_config(model: str, temperature: float) -> ModeConfig:
+    in_price, out_price = _per_token_prices(model)
+    return {
+        "model": model,
+        "input_price": in_price,
+        "output_price": out_price,
+        "temperature": temperature,
+    }
+
 
 DEFAULT_MODEL = "gpt-5.4-nano"
+
+# Context-window limits, derived from the catalog (id -> contextWindow).
 MODEL_CONTEXT_LIMITS = {
-    "gpt-4o-mini": 128_000,
-    "gpt-4o": 128_000,
-    "gpt-4-turbo": 128_000,
-    "o1": 200_000,
-    "o1-mini": 128_000,
-    "gpt-5-nano": 100_000,
-    "gpt-5-mini": 400_000,
-    "gpt-5.1": 400_000,
-    "gpt-5.4-nano": 100_000,
-    "gpt-5.4-mini": 200_000,
-    "gpt-5.4": 400_000,
+    model_id: entry.contextWindow
+    for model_id, entry in _CATALOG.items()
+    if entry.contextWindow is not None
 }
 
 MODE_CONFIGS = {
-    "test": {
-        "model": "gpt-5.4-nano",
-        "input_price": 0.05 / 1_000_000,
-        "output_price": 0.40 / 1_000_000,
-        "temperature": 0.3,
-    },
-    "prod": {
-        "model": "gpt-5.4",
-        "input_price": 1.25 / 1_000_000,
-        "output_price": 10.0 / 1_000_000,
-        "temperature": 1.0,
-    },
+    "test": _mode_config("gpt-5.4-nano", 0.3),
+    "prod": _mode_config("gpt-5.5", 1.0),
 }
 
-# Prices for gpt-5.4-nano (USD per token); adjust with CLI flags if pricing changes.
-INPUT_PRICE_PER_TOKEN = 0.05 / 1_000_000
-OUTPUT_PRICE_PER_TOKEN = 0.40 / 1_000_000
+# Fallback per-token prices for DEFAULT_MODEL (overridable via CLI flags).
+INPUT_PRICE_PER_TOKEN, OUTPUT_PRICE_PER_TOKEN = _per_token_prices(DEFAULT_MODEL)
 
 # Optional manual overrides for how author IDs should be displayed in output.
 # Example: {"123456789012345678": "Alice"}
-USER_ID_ALIASES: Dict[str, str] = {
+USER_ID_ALIASES: dict[str, str] = {
     # "186665676134547461": "Aaron",
     # "202595851678384137": "Brian",
     # "410595870380392458": "Irfan",
@@ -102,7 +138,7 @@ def normalize_content(text: str) -> str:
     return text.strip()
 
 
-def tokenize(text: str) -> List[str]:
+def tokenize(text: str) -> list[str]:
     lowered = text.lower()
     return re.findall(r"[a-z0-9']+", lowered)
 
@@ -110,7 +146,7 @@ def tokenize(text: str) -> List[str]:
 def read_csv_messages(
     path: Path,
     include_bots: bool,
-    id_aliases: Dict[str, str],
+    id_aliases: dict[str, str],
 ) -> Iterable[Message]:
     with path.open("r", encoding="utf-8", newline="") as f:
         reader = csv.reader(f)
@@ -119,18 +155,15 @@ def read_csv_messages(
             return
         columns = {name: idx for idx, name in enumerate(header)}
 
-        def col(name: str) -> int | None:
-            return columns.get(name)
+        def cell(row: list[str], name: str, default: str) -> str:
+            idx = columns.get(name)
+            return row[idx] if idx is not None else default
 
         for row in reader:
-            content = row[col("content")] if col("content") is not None else ""
+            content = cell(row, "content", "")
             if not content:
                 continue
-            ts_raw = (
-                row[col("timestamp")]
-                if col("timestamp") is not None
-                else (row[col("date")] if col("date") is not None else "")
-            )
+            ts_raw = cell(row, "timestamp", "") or cell(row, "date", "")
             timestamp = None
             if ts_raw:
                 try:
@@ -138,22 +171,14 @@ def read_csv_messages(
                 except ValueError:
                     timestamp = None
             raw_author_name = (
-                row[col("author.global_name")]
-                if col("author.global_name") is not None
-                else None
-            ) or (
-                row[col("author.username")]
-                if col("author.username") is not None
-                else None
-            ) or "Unknown"
-            author_id = (
-                row[col("author.id")] if col("author.id") is not None else "unknown"
+                (cell(row, "author.global_name", "") or None)
+                or (cell(row, "author.username", "") or None)
+                or "Unknown"
             )
+            author_id = cell(row, "author.id", "unknown")
             mapped_name = id_aliases.get(author_id)
             author_name = resolve_author_name(mapped_name or raw_author_name)
-            bot_flag = (
-                row[col("author.bot")] if col("author.bot") is not None else "false"
-            )
+            bot_flag = cell(row, "author.bot", "false")
             is_bot = bot_flag.strip().lower() == "true"
             if is_bot and not include_bots:
                 continue
@@ -166,7 +191,7 @@ def read_csv_messages(
             )
 
 
-def walk_csvs(base_dir: Path, guild: str | None) -> List[Path]:
+def walk_csvs(base_dir: Path, guild: str | None) -> list[Path]:
     root = base_dir if guild in (None, "all") else base_dir / guild
     return [p for p in root.rglob("*.csv") if p.is_file()]
 
@@ -177,10 +202,10 @@ def count_tokens(text: str, encoding: tiktoken.Encoding) -> int:
 
 def truncate_corpus(
     lines: Sequence[str], encoding: tiktoken.Encoding, max_tokens: int
-) -> Tuple[List[str], int]:
+) -> tuple[list[str], int]:
     """Trim from the front (oldest) if the corpus exceeds the token budget."""
     tokens_used = 0
-    kept: List[str] = []
+    kept: list[str] = []
     for line in reversed(lines):  # start from most recent
         line_tokens = count_tokens(line, encoding)
         if tokens_used + line_tokens > max_tokens:
@@ -191,13 +216,15 @@ def truncate_corpus(
     return kept, tokens_used
 
 
-def estimate_cost(input_tokens: int, output_tokens: int, args: argparse.Namespace) -> float:
+def estimate_cost(
+    input_tokens: int, output_tokens: int, args: argparse.Namespace
+) -> float:
     in_price = args.input_price or INPUT_PRICE_PER_TOKEN
     out_price = args.output_price or OUTPUT_PRICE_PER_TOKEN
     return (input_tokens * in_price) + (output_tokens * out_price)
 
 
-def format_corpus(messages: List[Message]) -> List[str]:
+def format_corpus(messages: list[Message]) -> list[str]:
     lines = []
     for msg in messages:
         ts = msg.timestamp.isoformat() if msg.timestamp else "unknown"
@@ -208,48 +235,71 @@ def format_corpus(messages: List[Message]) -> List[str]:
     return lines
 
 
-def build_user_prompt(author: str, stats: Dict[str, object], corpus_lines: List[str]) -> str:
-    top_tokens_text = ", ".join(
-        f"{tok} ({cnt})" for tok, cnt in stats["top_tokens"]
-    ) or "-"
+class Stats(TypedDict):
+    messages: int
+    top_tokens: list[tuple[str, int]]
+    avg_words: float
+    median_words: float
+    date_range: str
+
+
+def build_user_prompt(
+    author: str, stats: Stats, corpus_lines: list[str]
+) -> str:
+    top_tokens_text = (
+        ", ".join(f"{tok} ({cnt})" for tok, cnt in stats["top_tokens"]) or "-"
+    )
     return (
         f"User: {author}\n"
         f"Messages: {stats['messages']} spanning {stats['date_range']}\n"
         f"Words: avg {stats['avg_words']:.1f}, median {stats['median_words']:.1f}\n"
         f"Top tokens: {top_tokens_text}\n"
-        "Chat log (one line per message):\n"
-        + "\n".join(corpus_lines)
+        "Chat log (one line per message):\n" + "\n".join(corpus_lines)
     )
 
 
-SYSTEM_PROMPT = """You are a thorough voice/style profiler for a single user's chat log.
-You receive only this user's messages (chronological lines). Read closely for tone, stance, and repeated moves.
-Return ONE JSON object with these keys:
-- author: display name
-- coverage: {messages, date_range, truncated?: bool, notes}
-- voice: bullets on register, punctuation/emoji cadence, formatting habits (code, block quotes), pacing, sentence/word shapes
-- style_markers: notable words/phrases, slang, hedges, intensifiers, rhetorical tics (keep short)
-- topics: bullets of recurring subjects, jargon, interests, or motifs (note any fixation/avoidance)
-- relationships: mentions or implied ties (e.g., who they praise/tease/ask for help), if any
-- behaviors: activity/consistency observations (questions vs statements, commands, corrections, apologies, thanks, bragging, venting)
-- personality: 4-8 bullets inferring tendencies, attitudes, or values grounded in the text (no armchair psych)
-- humor_or_tone: humor modes (sarcasm, deadpan, slapstick, puns) or emotional palette (e.g., chill, hyped, prickly)
-- quotes: 12-20 cherry-picked lines that are funny/memorable/defining (brevity preferred)
-- summary: 3-4 tight sentences stitching the above into a usable style card
-- likes_dislikes: bullets of stated or implied likes/dislikes (food, media, habits, people, phrases); cite evidence briefly
-- league: if they talk about League of Legends, list liked vs disliked lanes/champions/items/roles (separate), plus team moods; "none" if unclear
-- other_games: list other games they mention or play; "none" if not present
-- how_to_mimic: actionable bullets on how to sound like them: openers/closers, pacing (short/long, run-ons vs staccato), question vs statement balance, punctuation cadence (??, !!, ellipses), caps/uppercase or stretchy letters, emoji/laughter habits, hyperlink/mention/quote/code/multiline frequency, slang/signature phrases to sprinkle, typical word/sentence lengths
-- sample_messages: 100 varied verbatim messages (covering different moods/topics/tones; include some mundane for balance). If fewer than 100 exist, include all available.
+SYSTEM_PROMPT = (
+    "You are a thorough voice/style profiler for a single user's chat log.\n"
+    "You receive only this user's messages (chronological lines). "
+    "Read closely for tone, stance, and repeated moves.\n"
+    "Return ONE JSON object with these keys:\n"
+    "- author: display name\n"
+    "- coverage: {messages, date_range, truncated?: bool, notes}\n"
+    "- voice: bullets on register, punctuation/emoji cadence, formatting habits "
+    "(code, block quotes), pacing, sentence/word shapes\n"
+    "- style_markers: notable words/phrases, slang, hedges, intensifiers, rhetorical tics (keep short)\n"
+    "- topics: bullets of recurring subjects, jargon, interests, or motifs (note any fixation/avoidance)\n"
+    "- relationships: mentions or implied ties (e.g., who they praise/tease/ask for help), if any\n"
+    "- behaviors: activity/consistency observations (questions vs statements, commands, corrections, "
+    "apologies, thanks, bragging, venting)\n"
+    "- personality: 4-8 bullets inferring tendencies, attitudes, or values grounded in the text "
+    "(no armchair psych)\n"
+    "- humor_or_tone: humor modes (sarcasm, deadpan, slapstick, puns) or emotional palette "
+    "(e.g., chill, hyped, prickly)\n"
+    "- quotes: 12-20 cherry-picked lines that are funny/memorable/defining (brevity preferred)\n"
+    "- summary: 3-4 tight sentences stitching the above into a usable style card\n"
+    "- likes_dislikes: bullets of stated or implied likes/dislikes (food, media, habits, people, phrases); "
+    "cite evidence briefly\n"
+    "- league: if they talk about League of Legends, list liked vs disliked lanes/champions/items/roles "
+    '(separate), plus team moods; "none" if unclear\n'
+    '- other_games: list other games they mention or play; "none" if not present\n'
+    "- how_to_mimic: actionable bullets on how to sound like them: openers/closers, "
+    "pacing (short/long, run-ons vs staccato), question vs statement balance, "
+    "punctuation cadence (??, !!, ellipses), caps/uppercase or stretchy letters, "
+    "emoji/laughter habits, hyperlink/mention/quote/code/multiline frequency, "
+    "slang/signature phrases to sprinkle, typical word/sentence lengths\n"
+    "- sample_messages: 100 varied verbatim messages (covering different moods/topics/tones; "
+    "include some mundane for balance). If fewer than 100 exist, include all available.\n"
+    "\n"
+    "Rules:\n"
+    "- Never invent content; only surface what the log shows.\n"
+    "- Prefer concrete, observable descriptors over generic adjectives.\n"
+    "- Keep JSON valid, concise, and ready to paste into code."
+)
 
-Rules:
-- Never invent content; only surface what the log shows.
-- Prefer concrete, observable descriptors over generic adjectives.
-- Keep JSON valid, concise, and ready to paste into code."""
 
-
-def compute_stats(messages: List[Message]) -> Dict[str, object]:
-    tokens = Counter()
+def compute_stats(messages: list[Message]) -> Stats:
+    tokens: Counter[str] = Counter()
     word_counts = []
     timestamps = [msg.timestamp for msg in messages if msg.timestamp]
     for msg in messages:
@@ -281,13 +331,17 @@ def compute_stats(messages: List[Message]) -> Dict[str, object]:
 
 
 def pick_authors(
-    messages_by_author: Dict[str, List[Message]],
-    author_ids_by_author: Dict[str, set[str]],
+    messages_by_author: dict[str, list[Message]],
+    author_ids_by_author: dict[str, set[str]],
     args: argparse.Namespace,
-    id_aliases: Dict[str, str],
-) -> List[str]:
+    id_aliases: dict[str, str],
+) -> list[str]:
     authors = sorted(
-        [aid for aid, msgs in messages_by_author.items() if len(msgs) >= args.min_messages],
+        [
+            aid
+            for aid, msgs in messages_by_author.items()
+            if len(msgs) >= args.min_messages
+        ],
         key=lambda aid: len(messages_by_author[aid]),
         reverse=True,
     )
@@ -304,7 +358,9 @@ def pick_authors(
             aid
             for aid in authors
             if aid.lower() in wanted
-            or any(uid.lower() in wanted for uid in author_ids_by_author.get(aid, set()))
+            or any(
+                uid.lower() in wanted for uid in author_ids_by_author.get(aid, set())
+            )
         ]
     if args.user:
         needle = args.user.lower()
@@ -315,33 +371,77 @@ def pick_authors(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="LLM-based style analyzer with test/prod modes.")
-    parser.add_argument("--guild", "-g", default="all", help='Guild directory under ./data (default: "all")')
-    parser.add_argument("--all", action="store_true", help="Analyze all guilds under ./data")
-    parser.add_argument("--user", type=str, default=None, help="Substring filter for author names")
+    parser = argparse.ArgumentParser(
+        description="LLM-based style analyzer with test/prod modes."
+    )
+    parser.add_argument(
+        "--guild",
+        "-g",
+        default="all",
+        help='Guild directory under ./data (default: "all")',
+    )
+    parser.add_argument(
+        "--all", action="store_true", help="Analyze all guilds under ./data"
+    )
+    parser.add_argument(
+        "--user", type=str, default=None, help="Substring filter for author names"
+    )
     parser.add_argument(
         "--users",
         nargs="+",
         default=None,
         help="Explicit author names to include (case-insensitive, space-separated list)",
     )
-    parser.add_argument("--top", type=int, default=10, help="Max authors to analyze (after filtering)")
-    parser.add_argument("--min-messages", type=int, default=50, help="Skip authors with fewer messages")
+    parser.add_argument(
+        "--top", type=int, default=10, help="Max authors to analyze (after filtering)"
+    )
+    parser.add_argument(
+        "--min-messages", type=int, default=50, help="Skip authors with fewer messages"
+    )
     parser.add_argument("--include-bots", action="store_true", help="Include bot users")
     parser.add_argument(
         "--mode",
         choices=["test", "prod"],
         default="test",
-        help="Mode: 'test' uses gpt-5.4-nano (cheap), 'prod' uses gpt-5.4 (better)"
+        help="Mode: 'test' uses gpt-5.4-nano (cheap), 'prod' uses gpt-5.4 (better)",
     )
-    parser.add_argument("--model", default=None, help="OpenAI model name (overrides --mode default)")
-    parser.add_argument("--max-input-tokens", type=int, default=115_000, help="Cap tokens for corpus (system prompt + metadata overhead reserved)")
-    parser.add_argument("--max-output-tokens", type=int, default=9_000, help="Cap response tokens")
-    parser.add_argument("--budget", type=float, default=5.0, help="Abort if projected spend exceeds this (USD)")
-    parser.add_argument("--input-price", type=float, default=INPUT_PRICE_PER_TOKEN, help="Override input price per token (USD)")
-    parser.add_argument("--output-price", type=float, default=OUTPUT_PRICE_PER_TOKEN, help="Override output price per token (USD)")
+    parser.add_argument(
+        "--model", default=None, help="OpenAI model name (overrides --mode default)"
+    )
+    parser.add_argument(
+        "--max-input-tokens",
+        type=int,
+        default=115_000,
+        help="Cap tokens for corpus (system prompt + metadata overhead reserved)",
+    )
+    parser.add_argument(
+        "--max-output-tokens", type=int, default=9_000, help="Cap response tokens"
+    )
+    parser.add_argument(
+        "--budget",
+        type=float,
+        default=5.0,
+        help="Abort if projected spend exceeds this (USD)",
+    )
+    parser.add_argument(
+        "--input-price",
+        type=float,
+        default=INPUT_PRICE_PER_TOKEN,
+        help="Override input price per token (USD)",
+    )
+    parser.add_argument(
+        "--output-price",
+        type=float,
+        default=OUTPUT_PRICE_PER_TOKEN,
+        help="Override output price per token (USD)",
+    )
     parser.add_argument("--temperature", type=float, default=0.3)
-    parser.add_argument("--save-dir", type=str, default="llm-out", help="Write per-user JSON outputs to this directory")
+    parser.add_argument(
+        "--save-dir",
+        type=str,
+        default="llm-out",
+        help="Write per-user JSON outputs to this directory",
+    )
     parser.add_argument(
         "--id-alias-file",
         type=str,
@@ -354,7 +454,11 @@ def main() -> None:
         default=None,
         help="Inline JSON string mapping author.id -> display name (overrides CSV names/aliases)",
     )
-    parser.add_argument("--dry-run", action="store_true", help="Estimate cost and payload sizes without calling the API")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Estimate cost and payload sizes without calling the API",
+    )
     args = parser.parse_args()
 
     # Apply mode configuration defaults (can be overridden by explicit flags)
@@ -368,18 +472,27 @@ def main() -> None:
     if args.temperature == 0.3:  # Only override if still at default
         args.temperature = mode_config["temperature"]
 
+    model: str = str(args.model)
+
     if not os.environ.get("OPENAI_API_KEY"):
         raise SystemExit("Set OPENAI_API_KEY before running.")
 
-    id_aliases: Dict[str, str] = dict(USER_ID_ALIASES)
+    id_aliases: dict[str, str] = dict(USER_ID_ALIASES)
     if args.id_alias_file:
         alias_path = Path(args.id_alias_file).expanduser().resolve()
         if not alias_path.exists():
             raise SystemExit(f"ID alias file not found: {alias_path}")
         try:
-            id_aliases.update({str(k): str(v) for k, v in json.loads(alias_path.read_text(encoding="utf-8")).items()})
+            id_aliases.update(
+                {
+                    str(k): str(v)
+                    for k, v in json.loads(
+                        alias_path.read_text(encoding="utf-8")
+                    ).items()
+                }
+            )
         except Exception as exc:  # pragma: no cover
-            raise SystemExit(f"Failed to parse ID alias file: {exc}")
+            raise SystemExit(f"Failed to parse ID alias file: {exc}") from exc
     if args.id_alias:
         try:
             inline_aliases = json.loads(args.id_alias)
@@ -387,7 +500,7 @@ def main() -> None:
                 raise ValueError("Inline alias JSON must be an object")
             id_aliases.update({str(k): str(v) for k, v in inline_aliases.items()})
         except Exception as exc:  # pragma: no cover
-            raise SystemExit(f"Failed to parse inline id alias JSON: {exc}")
+            raise SystemExit(f"Failed to parse inline id alias JSON: {exc}") from exc
 
     base_dir = Path(__file__).resolve().parent / "data"
     guild = None if args.all or args.guild in (None, "all") else args.guild
@@ -395,10 +508,12 @@ def main() -> None:
     if not csv_files:
         raise SystemExit(f"No CSV files found under {base_dir}")
 
-    messages_by_author: Dict[str, List[Message]] = defaultdict(list)
-    author_ids_by_author: Dict[str, set[str]] = defaultdict(set)
+    messages_by_author: dict[str, list[Message]] = defaultdict(list)
+    author_ids_by_author: dict[str, set[str]] = defaultdict(set)
     for csv_path in csv_files:
-        for msg in read_csv_messages(csv_path, include_bots=args.include_bots, id_aliases=id_aliases):
+        for msg in read_csv_messages(
+            csv_path, include_bots=args.include_bots, id_aliases=id_aliases
+        ):
             key = msg.author_name
             messages_by_author[key].append(msg)
             if msg.author_id:
@@ -409,9 +524,16 @@ def main() -> None:
 
     # Try to get encoding for model, fall back to cl100k_base (used by GPT-4/5)
     try:
-        encoding = tiktoken.encoding_for_model(args.model) if args.model else tiktoken.get_encoding("cl100k_base")
+        encoding = (
+            tiktoken.encoding_for_model(model)
+            if model
+            else tiktoken.get_encoding("cl100k_base")
+        )
     except KeyError:
-        print(f"Warning: No tokenizer found for {args.model}, using cl100k_base encoding", file=sys.stderr)
+        print(
+            f"Warning: No tokenizer found for {model}, using cl100k_base encoding",
+            file=sys.stderr,
+        )
         encoding = tiktoken.get_encoding("cl100k_base")
     authors = pick_authors(messages_by_author, author_ids_by_author, args, id_aliases)
     if not authors:
@@ -428,14 +550,14 @@ def main() -> None:
     if save_dir:
         save_dir.mkdir(parents=True, exist_ok=True)
 
-    model_limit = MODEL_CONTEXT_LIMITS.get(args.model, 128_000)
+    model_limit = MODEL_CONTEXT_LIMITS.get(model, 128_000)
 
     planned_cost = 0.0
-    requests: List[Tuple[str, Dict[str, object], str, int]] = []
+    requests: list[tuple[str, Stats, str, int]] = []
     for author in authors:
         stats = compute_stats(messages_by_author[author])
         corpus_lines = format_corpus(messages_by_author[author])
-        limited_lines, token_count = truncate_corpus(
+        limited_lines, _token_count = truncate_corpus(
             corpus_lines, encoding, args.max_input_tokens
         )
         prompt = build_user_prompt(author, stats, limited_lines)
@@ -461,45 +583,56 @@ def main() -> None:
             "Lower --top, --max-input-tokens, or --max-output-tokens."
         )
 
-    print(
-        f"Mode: {args.mode} (model: {args.model})"
-    )
+    print(f"Mode: {args.mode} (model: {model})")
     print(
         f"Preparing {len(requests)} request(s) with projected cost ${planned_cost:.2f} "
         f"(budget ${args.budget:.2f})."
     )
     if args.dry_run:
         for author, _, _, tokens in requests:
-            print(f"- {author}: ~{tokens} input tokens + {args.max_output_tokens} output tokens")
+            print(
+                f"- {author}: ~{tokens} input tokens + {args.max_output_tokens} output tokens"
+            )
         return
 
     client = OpenAI()
-    is_o1_model = args.model.startswith("o1")
+    is_o1_model = model.startswith("o1")
 
     for author, stats, prompt, input_tokens in requests:
         print(f"\n=== {author} ({stats['messages']} msgs) ===")
-        print(f"Input tokens ~{input_tokens}, output cap {args.max_output_tokens}, est cost ${estimate_cost(input_tokens, args.max_output_tokens, args):.4f}")
+        print(
+            f"Input tokens ~{input_tokens}, output cap {args.max_output_tokens}, "
+            f"est cost ${estimate_cost(input_tokens, args.max_output_tokens, args):.4f}"
+        )
 
         # Build API call params (o1 models don't support temperature or response_format)
-        api_params = {
-            "model": args.model,
-            "max_completion_tokens": args.max_output_tokens,
-            "messages": [
+        messages: list[ChatCompletionMessageParam]
+        if is_o1_model:
+            # For o1 models, prepend system prompt to user message since they don't support system role
+            messages = [
+                {"role": "user", "content": f"{SYSTEM_PROMPT}\n\n{prompt}"},
+            ]
+        else:
+            messages = [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": prompt},
-            ],
-        }
-        if not is_o1_model:
-            api_params["temperature"] = args.temperature
-            api_params["response_format"] = {"type": "json_object"}
-        else:
-            # For o1 models, prepend system prompt to user message since they don't support system role
-            api_params["messages"] = [
-                {"role": "user", "content": f"{SYSTEM_PROMPT}\n\n{prompt}"},
             ]
 
         try:
-            completion = client.chat.completions.create(**api_params)
+            if is_o1_model:
+                completion = client.chat.completions.create(
+                    model=model,
+                    max_completion_tokens=args.max_output_tokens,
+                    messages=messages,
+                )
+            else:
+                completion = client.chat.completions.create(
+                    model=model,
+                    max_completion_tokens=args.max_output_tokens,
+                    messages=messages,
+                    temperature=args.temperature,
+                    response_format={"type": "json_object"},
+                )
         except Exception as exc:  # pragma: no cover
             print(f"OpenAI request failed for {author}: {exc}", file=sys.stderr)
             continue
@@ -509,7 +642,9 @@ def main() -> None:
             canonical_id = next(iter(author_ids_by_author.get(author, [])), None)
             alias_name = id_aliases.get(canonical_id) if canonical_id else None
             fname_base = alias_name or author or canonical_id
-            safe_name = re.sub(r"[^A-Za-z0-9._-]+", "_", str(fname_base)).strip("_") or "user"
+            safe_name = (
+                re.sub(r"[^A-Za-z0-9._-]+", "_", str(fname_base)).strip("_") or "user"
+            )
             out_path = save_dir / f"{safe_name.lower()}_style.json"
             out_path.write_text(content, encoding="utf-8")
 

@@ -5,7 +5,10 @@ import {
   DiscordGuildIdSchema,
   RegionSchema,
   RiotIdSchema,
+  SubscriptionFilterSpecSchema,
+  type SubscriptionFilterSpec,
 } from "@scout-for-lol/data/index.ts";
+import type { ResolvedDiscordUser } from "#src/lib/discord/resolve-users.ts";
 
 export const AddSubscriptionInputSchema = z.object({
   guildId: DiscordGuildIdSchema,
@@ -15,8 +18,44 @@ export const AddSubscriptionInputSchema = z.object({
   alias: z.string().min(1),
   discordUserId: DiscordAccountIdSchema.optional(),
   creatorDiscordId: DiscordAccountIdSchema,
+  // Optional notification filters set at creation. null/absent = notify all.
+  filters: SubscriptionFilterSpecSchema.nullable().optional(),
 });
 export type AddSubscriptionInput = z.infer<typeof AddSubscriptionInputSchema>;
+
+export const SetSubscriptionFiltersInputSchema = z.object({
+  guildId: DiscordGuildIdSchema,
+  channelId: DiscordChannelIdSchema,
+  alias: z.string().min(1),
+  // null clears the filter (notify all).
+  filters: SubscriptionFilterSpecSchema.nullable(),
+  actorDiscordId: DiscordAccountIdSchema,
+});
+export type SetSubscriptionFiltersInput = z.infer<
+  typeof SetSubscriptionFiltersInputSchema
+>;
+
+export const SetChannelFiltersInputSchema = z.object({
+  guildId: DiscordGuildIdSchema,
+  channelId: DiscordChannelIdSchema,
+  // null clears filters for every subscription in the channel.
+  filters: SubscriptionFilterSpecSchema.nullable(),
+  actorDiscordId: DiscordAccountIdSchema,
+});
+export type SetChannelFiltersInput = z.infer<
+  typeof SetChannelFiltersInputSchema
+>;
+
+export const SetSubscriptionMutedInputSchema = z.object({
+  guildId: DiscordGuildIdSchema,
+  channelId: DiscordChannelIdSchema,
+  alias: z.string().min(1),
+  isMuted: z.boolean(),
+  actorDiscordId: DiscordAccountIdSchema,
+});
+export type SetSubscriptionMutedInput = z.infer<
+  typeof SetSubscriptionMutedInputSchema
+>;
 
 export const RemoveSubscriptionInputSchema = z.object({
   guildId: DiscordGuildIdSchema,
@@ -49,6 +88,8 @@ export type AddSubscriptionChannelInput = z.infer<
 
 export const ListSubscriptionsInputSchema = z.object({
   guildId: DiscordGuildIdSchema,
+  limit: z.number().int().min(1).max(100).default(50),
+  cursor: z.number().int().min(1).optional(),
 });
 export type ListSubscriptionsInput = z.infer<
   typeof ListSubscriptionsInputSchema
@@ -115,6 +156,22 @@ export type AddSubscriptionChannelResult =
   | { kind: "already-subscribed"; channelId: string }
   | { kind: "internal-error"; message: string };
 
+export type SetSubscriptionFiltersResult =
+  | { kind: "updated" }
+  | { kind: "player-not-found" }
+  | { kind: "not-subscribed-in-channel" }
+  | { kind: "internal-error"; message: string };
+
+export type SetChannelFiltersResult =
+  | { kind: "updated"; count: number }
+  | { kind: "internal-error"; message: string };
+
+export type SetSubscriptionMutedResult =
+  | { kind: "updated" }
+  | { kind: "player-not-found" }
+  | { kind: "not-subscribed-in-channel" }
+  | { kind: "internal-error"; message: string };
+
 export type SubscriptionListItem = {
   subscriptionId: number;
   channelId: string;
@@ -122,13 +179,19 @@ export type SubscriptionListItem = {
     id: number;
     alias: string;
     discordId: string | null;
+    discordUser: ResolvedDiscordUser | null;
     accounts: {
       id: number;
       alias: string;
       region: string;
       puuid: string;
+      riotGameName: string | null;
+      riotTagLine: string | null;
     }[];
   };
   creatorDiscordId: string;
+  creatorDiscordUser: ResolvedDiscordUser | null;
   createdTime: Date;
+  filters: SubscriptionFilterSpec | null;
+  isMuted: boolean;
 };

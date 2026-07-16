@@ -5,12 +5,13 @@ import type { Config } from "#src/config/schema.ts";
 import { hasCodexCredential } from "./codex-auth.ts";
 import { prepareRuntimeTools, buildEnvironment } from "./goal-runtime-env.ts";
 import type { GameSnapshot } from "#src/game/events/types.ts";
+import type { SpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 import { buildCodexArgs } from "./codex-command.ts";
 import {
   createCodexJsonlParser,
   pumpCodexStdout,
   type CodexJsonlParser,
-} from "./codex-jsonl.ts";
+} from "@shepherdjerred/llm-observability/codex-jsonl";
 import { attachCodexTrace, type CodexTrace } from "./codex-trace.ts";
 import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
 import { formatGameStateForPrompt } from "./game-state-summary.ts";
@@ -20,9 +21,11 @@ import { computeCost, formatCostLine } from "./pricing.ts";
 import {
   appendToHistory,
   HISTORY_LIMIT,
+  normalizeCompletedGoal,
   type CompletedGoal,
 } from "./goal-history.ts";
 import type { GoalState } from "./goal-types.ts";
+import { GoalMemory, buildSessionLogMeta } from "./goal-memory.ts";
 
 // Validates the envelope written by persistState() so history is safely
 // deserialized on restart even if the file has an unexpected shape.
@@ -114,44 +117,15 @@ type GoalManagerOptions = {
   sendMessage: GoalMessageSender;
   spawner?: GoalProcessSpawner;
   now?: () => Date;
-  // Live snapshot reader. Called once at goal start to seed the prompt's
-  // "Current game state" block. The model can refresh at any time via
-  // `pokemonctl state` (T5), which reads through the same path on the
-  // control-server side. Returning null is fine (renders "unavailable").
-  // Optional so existing tests that don't exercise prompt context don't have
-  // to pass a stub.
+  // Live snapshot readers called once at goal start to seed the prompt's
+  // game-state + spatial blocks. Model refreshes via `pokemonctl state`,
+  // which reads through the same path on the control-server side. Optional
+  // so tests that don't exercise prompt context don't have to pass a stub.
   snapshotProvider?: () => GameSnapshot | null;
+  spatialSnapshotProvider?: () => SpatialSnapshot | null;
 };
 
-function defaultSpawner(
-  args: string[],
-  options: {
-    cwd: string;
-    env: Record<string, string>;
-  },
-): GoalProcess {
-  return Bun.spawn(args, {
-    cwd: options.cwd,
-    env: options.env,
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-}
-
-async function streamToLog(
-  stream: ReadableStream<Uint8Array> | null,
-  label: string,
-): Promise<void> {
-  if (stream === null) {
-    return;
-  }
-
-  const text = await new Response(stream).text();
-  const trimmed = text.trim();
-  if (trimmed.length > 0) {
-    logger.info(`goal codex ${label}: ${trimmed}`);
-  }
-}
+import { defaultSpawner, streamToLog } from "./goal-process-helpers.ts";
 
 export class GoalManager {
   private active: ActiveGoal | undefined;
@@ -166,6 +140,12 @@ export class GoalManager {
   private readonly spawner: GoalProcessSpawner;
   private readonly now: () => Date;
   private readonly snapshotProvider: () => GameSnapshot | null;
+  private readonly spatialSnapshotProvider: () => SpatialSnapshot | null;
+  // Per-guild persistent memory: the curated MEMORY.md fed into every prompt,
+  // system-written session logs, and MEMORY.md archives. Backed by
+  // config.memory_dir (the driver points it under saves/<guildId>/). Exposed to
+  // the control server for the `pokemonctl list/read/grep/write` subcommands.
+  readonly memory: GoalMemory;
   // Newest first. Persisted via persistState() so it survives restarts.
   private history: CompletedGoal[] = [];
   // Goal IDs we've already snapshot into history. Guards against double-record
@@ -180,6 +160,12 @@ export class GoalManager {
     this.spawner = options.spawner ?? defaultSpawner;
     this.now = options.now ?? (() => new Date());
     this.snapshotProvider = options.snapshotProvider ?? (() => null);
+    this.spatialSnapshotProvider =
+      options.spatialSnapshotProvider ?? (() => null);
+    this.memory = new GoalMemory(
+      this.resolveRuntimePath(this.config.memory_dir),
+      this.now,
+    );
   }
 
   /**
@@ -206,11 +192,11 @@ export class GoalManager {
       );
       return;
     }
-    const loaded = (result.data.history ?? []).slice(0, HISTORY_LIMIT);
+    const loaded: CompletedGoal[] = (result.data.history ?? [])
+      .slice(0, HISTORY_LIMIT)
+      .map((entry) => normalizeCompletedGoal(entry));
     this.history = loaded;
-    for (const entry of loaded) {
-      this.recordedIds.add(entry.id);
-    }
+    for (const entry of loaded) this.recordedIds.add(entry.id);
     logger.info(
       `goal-manager: loaded ${String(loaded.length)} history entries from disk`,
     );
@@ -315,10 +301,16 @@ export class GoalManager {
     const outputPath = path.join(screenshotDirectory, `${id}-final.txt`);
     // Snapshot + 3 most-recent goals as the static prompt context. The model
     // can refresh both at any time via `pokemonctl state` / `pokemonctl history`.
-    const gameStateSummary = formatGameStateForPrompt(this.snapshotProvider());
+    const gameStateSummary = formatGameStateForPrompt(
+      this.snapshotProvider(),
+      this.spatialSnapshotProvider(),
+    );
     const promptContext = {
       gameStateSummary,
       recentGoalsSummary: formatHistoryForPrompt(this.getHistory(3)),
+      // Curated long-term memory for THIS save, injected verbatim. Empty until
+      // a session writes it; buildPrompt renders the placeholder in that case.
+      memory: await this.memory.readMemory(),
     };
     const args = buildCodexArgs({
       config: {
@@ -341,7 +333,14 @@ export class GoalManager {
         controlToken: this.controlToken,
       }),
     });
-    const jsonl = createCodexJsonlParser();
+    const jsonl = createCodexJsonlParser({
+      warn: (message) => {
+        logger.warn(message);
+      },
+      info: (message) => {
+        logger.info(message);
+      },
+    });
     // Span synthesis: subscribe before stdout pumping starts so no events are
     // missed. End the trace from every terminal path below.
     const trace = attachCodexTrace(jsonl, {
@@ -412,12 +411,14 @@ export class GoalManager {
     active.lastProgressSentAt = now;
     active.state.lastProgress = trimmed;
     await this.persistState(active.state);
+    // Mid-session updates are audience-facing narration for the livestream, not
+    // a reply to the requester — post the message verbatim with no mention/prefix
+    // so it reads naturally to viewers. (sanitizeDiscordText still defangs any @
+    // the model emits; allowedUserIds is empty so nobody is pinged.)
     await this.sendMessage({
       channelId: active.state.channelId,
-      content: truncateForDiscord(
-        `<@${active.state.requestedBy}> goal update: ${sanitizeDiscordText(trimmed)}`,
-      ),
-      allowedUserIds: [active.state.requestedBy],
+      content: truncateForDiscord(sanitizeDiscordText(trimmed)),
+      allowedUserIds: [],
     });
     return true;
   }
@@ -448,7 +449,7 @@ export class GoalManager {
     active.state.exitCode = exitCode;
     active.state.status = exitCode === 0 ? "completed" : "failed";
     active.state.finalReport = report;
-    this.recordCompletion(active.state);
+    await this.recordCompletion(active.state);
     await this.persistState(active.state);
     active.trace.end();
     this.active = undefined;
@@ -479,7 +480,7 @@ export class GoalManager {
     active.state.status = "timeout";
     active.state.finishedAt = this.now().toISOString();
     active.state.finalReport = "Goal timed out before Codex finished.";
-    this.recordCompletion(active.state);
+    await this.recordCompletion(active.state);
     await this.persistState(active.state);
     active.trace.end();
     this.active = undefined;
@@ -506,7 +507,7 @@ export class GoalManager {
       status === "replaced"
         ? "Goal was replaced by a newer goal."
         : "Goal was stopped during application shutdown.";
-    this.recordCompletion(active.state);
+    await this.recordCompletion(active.state);
     await this.persistState(active.state);
     active.trace.end();
     this.active = undefined;
@@ -539,12 +540,23 @@ export class GoalManager {
   }
 
   /**
-   * Snapshot a finished goal into the rolling history list and trim to
-   * HISTORY_LIMIT. Called from every terminal path (observeProcess,
-   * timeoutGoal, stopActive) so all of {completed, failed, timeout,
-   * replaced, shutdown} leave a trace.
+   * Snapshot a finished goal into the rolling history list (trimmed to
+   * HISTORY_LIMIT) and write its session log to the memory PVC. Called from
+   * every terminal path (observeProcess, timeoutGoal, stopActive) so all of
+   * {completed, failed, timeout, replaced, shutdown} leave a browsable log.
+   * A memory-write failure is logged, never thrown — teardown must not fail.
    */
-  private recordCompletion(state: GoalState): void {
+  private async recordCompletion(state: GoalState): Promise<void> {
     this.history = [...appendToHistory(this.history, this.recordedIds, state)];
+    try {
+      await this.memory.writeSessionLog(
+        buildSessionLogMeta(state),
+        state.finalReport ?? "(no final report)",
+      );
+    } catch (error) {
+      logger.warn(
+        `goal-manager: failed to write session log: ${String(error)}`,
+      );
+    }
   }
 }

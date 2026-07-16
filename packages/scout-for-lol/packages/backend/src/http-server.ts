@@ -7,14 +7,41 @@ import { appRouter } from "#src/trpc/router/index.ts";
 import { createContext } from "#src/trpc/context.ts";
 import {
   handleDiscordCallback,
+  handleDiscordInstall,
   handleDiscordStart,
   handleWebLogout,
 } from "#src/trpc/auth-web.ts";
 import { handleImageRoute } from "#src/trpc/image-routes.ts";
+import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
 
 const logger = createLogger("http-server");
 
 logger.info("🌐 Initializing HTTP server");
+
+/**
+ * tRPC error codes that represent expected client/user faults (bad input,
+ * auth, not-found, rate limits) rather than server bugs. These are surfaced to
+ * the caller as 4xx responses but must NOT be shipped to Sentry/Bugsink — they
+ * are noise (e.g. a stale guild that the user just left → FORBIDDEN, a
+ * malformed channelId or unparseable report query → BAD_REQUEST). Only genuine
+ * server faults (INTERNAL_SERVER_ERROR and other 5xx codes) are real bugs.
+ */
+const EXPECTED_CLIENT_ERROR_CODES = new Set<string>([
+  "PARSE_ERROR",
+  "BAD_REQUEST",
+  "UNAUTHORIZED",
+  "FORBIDDEN",
+  "NOT_FOUND",
+  "METHOD_NOT_SUPPORTED",
+  "TIMEOUT",
+  "CONFLICT",
+  "PRECONDITION_FAILED",
+  "PAYLOAD_TOO_LARGE",
+  "UNSUPPORTED_MEDIA_TYPE",
+  "UNPROCESSABLE_CONTENT",
+  "TOO_MANY_REQUESTS",
+  "CLIENT_CLOSED_REQUEST",
+]);
 
 /**
  * CORS headers for API responses.
@@ -201,6 +228,23 @@ const server = Bun.serve({
       }
     }
 
+    // Bot install: 302 to Discord's add-to-server screen for a
+    // signed-in admin, returning to /app/installed with guild_id.
+    if (url.pathname === "/api/discord/install") {
+      try {
+        return await handleDiscordInstall(request);
+      } catch (error) {
+        logger.error("❌ Bot install redirect error:", error);
+        Sentry.captureException(error, {
+          tags: { source: "auth-web-install" },
+        });
+        return new Response("Bot install redirect failed", {
+          status: 500,
+          headers: { "Content-Type": "text/plain" },
+        });
+      }
+    }
+
     // Web auth: Discord OAuth callback
     if (url.pathname === "/api/auth/discord/callback") {
       try {
@@ -220,6 +264,15 @@ const server = Bun.serve({
     // Web auth: logout
     if (url.pathname === "/api/auth/logout" && request.method === "POST") {
       return handleWebLogout(request);
+    }
+
+    const reportAiResponse = await handleReportAiRoute(
+      request,
+      url,
+      corsHeadersFor(request),
+    );
+    if (reportAiResponse !== null) {
+      return reportAiResponse;
     }
 
     // Generated chart PNGs for the web app (<img src>), cookie-authorized.
@@ -242,7 +295,9 @@ const server = Bun.serve({
           createContext: () => createContext(request),
           onError({ error, path }) {
             logger.error(`tRPC error on ${path ?? "unknown"}:`, error);
-            if (error.code !== "UNAUTHORIZED" && error.code !== "NOT_FOUND") {
+            // Only report genuine server faults; expected client errors (bad
+            // input, auth, not-found, rate limits) are not bugs.
+            if (!EXPECTED_CLIENT_ERROR_CODES.has(error.code)) {
               Sentry.captureException(error, {
                 tags: { source: "trpc", path },
               });

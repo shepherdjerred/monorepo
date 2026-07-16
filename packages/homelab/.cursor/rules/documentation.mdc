@@ -28,7 +28,6 @@ description: Documentation standards, reference guidelines, and best practices f
 When encountering unfamiliar APIs, patterns, or needing implementation guidance:
 
 ### Primary Documentation Sources
-- **[Dagger](mdc:https:/docs.dagger.io)** - CI/CD workflows, containerized operations, and Dagger API reference
 - **[Bun](mdc:https:/bun.sh/docs)** - Runtime, package manager, bundler, and test runner features
 - **[CDK8s](mdc:https:/cdk8s.io/docs/latest)** - Kubernetes constructs, TypeScript APIs, and manifest generation
 - **[Kubernetes](mdc:https:/kubernetes.io/docs/home)** - Core concepts, API reference, and best practices

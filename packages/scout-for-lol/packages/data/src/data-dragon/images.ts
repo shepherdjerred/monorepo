@@ -14,6 +14,75 @@ const canonicalChampionNames: Record<string, string> = Object.fromEntries(
   Object.keys(championList.data).map((key) => [key.toLowerCase(), key]),
 );
 
+// Numeric champion id → canonical Data Dragon key (the on-disk filename stem),
+// built once at module init from the bundled `champion.json`. This is the
+// authoritative, self-updating id→key source: `twisted`'s hardcoded champion
+// enum lags Data Dragon by weeks (e.g. it had no entry for 805/Locke, so
+// `resolveChampionKey` fell back to `Champion805` and the loading-screen image
+// 404'd). Refreshing assets via `update-data-dragon` keeps this map current
+// for every new champion without a code change.
+const championKeyById: Record<number, string> = Object.fromEntries(
+  Object.entries(championList.data).map(([key, champion]) => [
+    Number(champion.key),
+    key,
+  ]),
+);
+
+/**
+ * Resolve a numeric champion id to its canonical Data Dragon key using the
+ * bundled `champion.json`. Returns `undefined` if the id is absent (the assets
+ * are out of date — run `update-data-dragon`).
+ */
+export function getChampionKeyById(championId: number): string | undefined {
+  return championKeyById[championId];
+}
+
+// Canonical Data Dragon key (lowercased) → Riot's human display name, e.g.
+// "velkoz" -> "Vel'Koz", "monkeyking" -> "Wukong". Riot ships the correctly
+// punctuated display name directly in `champion.json`'s `name` field, so this
+// is a straight lookup table — no string transform (title-casing,
+// underscore-splitting, etc.) can reconstruct apostrophes like Vel'Koz or
+// renames like MonkeyKing -> Wukong.
+const championDisplayNames: Record<string, string> = Object.fromEntries(
+  Object.values(championList.data).map((champion) => [
+    champion.id.toLowerCase(),
+    champion.name,
+  ]),
+);
+
+// Numeric champion id → Riot's human display name, built from the same
+// `champion.json` source. Twisted-free, so unlike the twisted-enum-based
+// name lookup it never lags behind newly-released champions.
+const championDisplayNamesById: Record<number, string> = Object.fromEntries(
+  Object.values(championList.data).map((champion) => [
+    Number(champion.key),
+    champion.name,
+  ]),
+);
+
+/**
+ * Resolve a raw/any-case champion name (e.g. Riot match-data's
+ * `participant.championName`, or a Data Dragon asset key) to Riot's human
+ * display name. Normalizes the lookup key first, then looks up the display
+ * name in `championDisplayNames` — never derives it via string mangling.
+ */
+export function championNameToDisplayName(championName: string): string {
+  const normalized = normalizeChampionName(championName);
+  return championDisplayNames[normalized.toLowerCase()] ?? normalized;
+}
+
+/**
+ * Resolve a numeric champion id directly to Riot's human display name using
+ * the bundled `champion.json`. Falls back to a `Champion <id>` placeholder
+ * (matching the pre-unification fallback format) only if the id is entirely
+ * absent from the bundled assets (stale assets — run `update-data-dragon`).
+ */
+export function getChampionDisplayNameById(championId: number): string {
+  return (
+    championDisplayNamesById[championId] ?? `Champion ${championId.toString()}`
+  );
+}
+
 const championDisplayNameAliases: Record<string, string> = {
   "nunu & willump": "Nunu",
 };

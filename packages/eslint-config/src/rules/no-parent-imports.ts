@@ -60,7 +60,8 @@ export const noParentImports: TSESLint.RuleModule<MessageIds, Options> = {
             messageId: "noParentImports",
             fix(fixer) {
               // Extract the current file's package and relative path from filename.
-              // Match the LAST /packages/ segment to handle Bazel sandbox paths.
+              // Match the LAST /packages/ segment so nested workspaces (e.g.
+              // scout-for-lol/packages/*) resolve to the leaf package, not the root.
               const packageRegex = /.*\/packages\/([^/]+)\/(?:src\/)?(.+)$/;
               const fileMatch = packageRegex.exec(currentFilePath);
               if (!fileMatch) {

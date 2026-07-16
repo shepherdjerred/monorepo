@@ -205,11 +205,13 @@ async function main() {
 /**
  * Convert a string to PascalCase
  */
-function toPascalCase(str: string): string {
+export function toPascalCase(str: string): string {
   return str
     .split(/[-_\s]+/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join("");
 }
 
-void main();
+if (import.meta.main) {
+  void main();
+}

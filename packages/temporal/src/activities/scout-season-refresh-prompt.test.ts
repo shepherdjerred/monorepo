@@ -7,6 +7,8 @@ describe("buildSeasonRefreshPrompt", () => {
     workdir: "/tmp/scout-season-refresh-abc/monorepo",
     seasonsFile: "packages/scout-for-lol/packages/data/src/seasons.ts",
     seasonsTestFile: "packages/scout-for-lol/packages/data/src/seasons.test.ts",
+    changelogFile:
+      "packages/scout-for-lol/packages/frontend/src/data/changelog.tsx",
     noDriftSentinel: "NO_DRIFT",
     driftedSentinel: "DRIFTED",
   };
@@ -55,5 +57,15 @@ describe("buildSeasonRefreshPrompt", () => {
   test("requires cross-checking at least TWO sources", () => {
     const prompt = buildSeasonRefreshPrompt(baseInput);
     expect(prompt).toMatch(/TWO independent sources|cross.check/i);
+  });
+
+  test("instructs a changelog entry only when adding a new season", () => {
+    const prompt = buildSeasonRefreshPrompt(baseInput);
+    expect(prompt).toContain(baseInput.changelogFile);
+    expect(prompt).toContain("buildChangelogEntry({");
+    // Gated to brand-new seasons, not date-only corrections.
+    expect(prompt).toMatch(/ONLY when you ADD a brand-new season/);
+    // Uses today's date in the changelog's space-separated format.
+    expect(prompt).toContain('date: "2026 05 11"');
   });
 });

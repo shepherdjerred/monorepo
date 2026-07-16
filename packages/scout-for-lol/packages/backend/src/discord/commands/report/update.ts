@@ -10,9 +10,8 @@ import {
   ReportIdSchema,
   ReportLookbackDaysSchema,
   ReportMaxRowsSchema,
-  type ReportOutputFormat,
-  ReportOutputFormatSchema,
   ReportQueryTextSchema,
+  parseAndCompile,
 } from "@scout-for-lol/data";
 import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competition-cron.ts";
 import { CompetitionCronSchema } from "@scout-for-lol/data/model/competition-cron.ts";
@@ -21,7 +20,6 @@ import {
   canCreateAnotherUserReport,
   isReportManager,
 } from "#src/discord/commands/report/authorization.ts";
-import { parseReportQuery } from "#src/reports/query-language.ts";
 
 const ReportTitleSchema = z.string().trim().min(1).max(100);
 const ReportDescriptionSchema = z.string().trim().max(500);
@@ -33,7 +31,6 @@ type ReportUpdateOptions = {
   cronExpression?: string;
   lookbackDays?: number;
   maxRows?: number;
-  outputFormat?: ReportOutputFormat;
   channelId?: DiscordChannelId;
   enabled?: boolean;
 };
@@ -131,7 +128,6 @@ function readReportUpdateOptions(
     readCronOption(interaction),
     readLookbackDaysOption(interaction),
     readMaxRowsOption(interaction),
-    readOutputFormatOption(interaction),
   );
   if (channel !== null) {
     options.channelId = DiscordChannelIdSchema.parse(channel.id);
@@ -193,16 +189,6 @@ function readMaxRowsOption(
   return { maxRows: ReportMaxRowsSchema.parse(value) };
 }
 
-function readOutputFormatOption(
-  interaction: ChatInputCommandInteraction,
-): Pick<ReportUpdateOptions, "outputFormat"> | undefined {
-  const value = interaction.options.getString("output-format");
-  if (value === null) {
-    return undefined;
-  }
-  return { outputFormat: ReportOutputFormatSchema.parse(value) };
-}
-
 function readQueryOption(
   interaction: ChatInputCommandInteraction,
 ): Pick<ReportUpdateOptions, "queryText"> | undefined {
@@ -211,7 +197,7 @@ function readQueryOption(
     return undefined;
   }
   const queryText = ReportQueryTextSchema.parse(query);
-  parseReportQuery(queryText);
+  parseAndCompile(queryText);
   return { queryText };
 }
 
@@ -265,9 +251,6 @@ function buildReportUpdateData(
       ? {}
       : { lookbackDays: options.lookbackDays }),
     ...(options.maxRows === undefined ? {} : { maxRows: options.maxRows }),
-    ...(options.outputFormat === undefined
-      ? {}
-      : { outputFormat: options.outputFormat }),
     ...(options.enabled === undefined ? {} : { isEnabled: options.enabled }),
     ...(options.cronExpression === undefined
       ? {}

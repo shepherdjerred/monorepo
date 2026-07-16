@@ -1,5 +1,5 @@
 {
-  "extends": "@tsconfig/recommended/tsconfig.json",
+  "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
     "module": "NodeNext",
@@ -8,7 +8,8 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "rewriteRelativeImportExtensions": true
+    "rewriteRelativeImportExtensions": true,
+    "rootDir": "src"
   },
   "include": ["src"]
 }

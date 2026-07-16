@@ -21,7 +21,9 @@ export const reportCommand = new SlashCommandBuilder()
       .addStringOption((option) =>
         option
           .setName("query")
-          .setDescription("SQL-ish report query")
+          .setDescription(
+            "SQL-ish query; end with RENDER <kind> to set display",
+          )
           .setRequired(true)
           .setMaxLength(4000),
       )
@@ -37,19 +39,6 @@ export const reportCommand = new SlashCommandBuilder()
           .setDescription("Report schedule (CRON, UTC, min 1/day)")
           .setRequired(true)
           .setAutocomplete(true),
-      )
-      .addStringOption((option) =>
-        option
-          .setName("output-format")
-          .setDescription("How the report should render")
-          .setRequired(false)
-          .addChoices(
-            { name: "Leaderboard", value: "LEADERBOARD" },
-            { name: "List", value: "LIST" },
-            { name: "Table", value: "TABLE" },
-            { name: "Bar Chart", value: "BAR_CHART" },
-            { name: "Line Chart", value: "LINE_CHART" },
-          ),
       )
       .addIntegerOption((option) =>
         option
@@ -96,7 +85,9 @@ export const reportCommand = new SlashCommandBuilder()
       .addStringOption((option) =>
         option
           .setName("query")
-          .setDescription("SQL-ish report query")
+          .setDescription(
+            "SQL-ish query; end with RENDER <kind> to set display",
+          )
           .setRequired(false)
           .setMaxLength(4000),
       )
@@ -112,19 +103,6 @@ export const reportCommand = new SlashCommandBuilder()
           .setDescription("Report schedule (CRON, UTC, min 1/day)")
           .setRequired(false)
           .setAutocomplete(true),
-      )
-      .addStringOption((option) =>
-        option
-          .setName("output-format")
-          .setDescription("How the report should render")
-          .setRequired(false)
-          .addChoices(
-            { name: "Leaderboard", value: "LEADERBOARD" },
-            { name: "List", value: "LIST" },
-            { name: "Table", value: "TABLE" },
-            { name: "Bar Chart", value: "BAR_CHART" },
-            { name: "Line Chart", value: "LINE_CHART" },
-          ),
       )
       .addIntegerOption((option) =>
         option

@@ -1,14 +1,17 @@
 /**
- * AI model configurations and capabilities
+ * AI model configurations and capabilities for scout-for-lol.
  *
- * PRICING UPDATE NOTES:
- * - OpenAI and Gemini do NOT provide pricing APIs
- * - Pricing must be updated manually by checking official sources:
- *   - OpenAI: https://platform.openai.com/pricing
- *   - Gemini: https://ai.google.dev/pricing
- * - Last updated: December 2025
- * - Recommended: Check for updates quarterly
+ * This is a thin adapter over the central catalog
+ * (`@shepherdjerred/llm-models`). The catalog is the single source of truth for
+ * pricing / capabilities / context windows; this module re-shapes the active
+ * OpenAI text models and Gemini image models into scout's historical
+ * `ModelInfo` / `GEMINI_PRICING` surface so existing consumers keep working.
  */
+import {
+  modelsByProvider,
+  type ModelEntry,
+  type TextPricing,
+} from "@shepherdjerred/llm-models";
 
 export type ModelCapabilities = {
   supportsTemperature: boolean;
@@ -27,330 +30,67 @@ export type ModelInfo = {
   deprecated?: boolean;
 };
 
-/**
- * Comprehensive list of OpenAI models with their capabilities
- * Pricing verified from https://platform.openai.com/pricing
- * Last updated: April 2026
- */
-export const OPENAI_MODELS: Record<string, ModelInfo> = {
-  // GPT-4o Series (Most capable, multimodal)
-  "gpt-4o": {
-    id: "gpt-4o",
-    name: "GPT-4o",
-    description:
-      "⚡ Fast & capable multimodal model • $2.50 input / $10 output per 1M tokens",
-    capabilities: {
-      supportsTemperature: true,
-      supportsTopP: true,
-      maxTokens: 16_384,
-      costPer1MInputTokens: 2.5,
-      costPer1MOutputTokens: 10,
-    },
-    category: "gpt-4",
-  },
-  "gpt-4o-mini": {
-    id: "gpt-4o-mini",
-    name: "GPT-4o Mini",
-    description:
-      "💰 Most affordable GPT-4 level model • $0.15 input / $0.60 output per 1M tokens",
-    capabilities: {
-      supportsTemperature: true,
-      supportsTopP: true,
-      maxTokens: 16_384,
-      costPer1MInputTokens: 0.15,
-      costPer1MOutputTokens: 0.6,
-    },
-    category: "gpt-4",
-  },
-  "gpt-4o-2024-11-20": {
-    id: "gpt-4o-2024-11-20",
-    name: "GPT-4o (2024-11-20)",
-    description: "📅 Latest snapshot • Same as gpt-4o",
-    capabilities: {
-      supportsTemperature: true,
-      supportsTopP: true,
-      maxTokens: 16_384,
-      costPer1MInputTokens: 2.5,
-      costPer1MOutputTokens: 10,
-    },
-    category: "gpt-4",
-  },
-  "chatgpt-4o-latest": {
-    id: "chatgpt-4o-latest",
-    name: "ChatGPT-4o (Latest)",
-    description:
-      "🔄 Auto-updated to match ChatGPT • $5 input / $15 output per 1M tokens",
-    capabilities: {
-      supportsTemperature: true,
-      supportsTopP: true,
-      maxTokens: 16_384,
-      costPer1MInputTokens: 5,
-      costPer1MOutputTokens: 15,
-    },
-    category: "gpt-4",
-  },
+function categorize(id: string): ModelInfo["category"] {
+  if (id.startsWith("gpt-4")) {
+    return "gpt-4";
+  }
+  if (id.startsWith("gpt-3.5")) {
+    return "gpt-3.5";
+  }
+  if (/^o\d/.test(id)) {
+    return "o-series";
+  }
+  return "other";
+}
 
-  // O-Series (Reasoning models)
-  o1: {
-    id: "o1",
-    name: "O1",
-    description:
-      "🧠 Advanced reasoning for complex problems • $15 input / $60 output per 1M tokens • No temp control",
+function toModelInfo(entry: ModelEntry, pricing: TextPricing): ModelInfo {
+  const base: ModelInfo = {
+    id: entry.id,
+    name: entry.displayName,
+    description: entry.description ?? "",
     capabilities: {
-      supportsTemperature: false, // O-series models don't support temperature
-      supportsTopP: false,
-      maxTokens: 100_000,
-      costPer1MInputTokens: 15,
-      costPer1MOutputTokens: 60,
+      supportsTemperature: entry.capabilities.supportsTemperature,
+      supportsTopP: entry.capabilities.supportsTopP,
+      maxTokens: entry.capabilities.maxTokens ?? 4096,
+      costPer1MInputTokens: pricing.input,
+      costPer1MOutputTokens: pricing.output,
     },
-    category: "o-series",
-  },
-  "o1-mini": {
-    id: "o1-mini",
-    name: "O1 Mini",
-    description:
-      "🚀 Fast reasoning for code/math • $3 input / $12 output per 1M tokens • No temp control",
-    capabilities: {
-      supportsTemperature: false,
-      supportsTopP: false,
-      maxTokens: 65_536,
-      costPer1MInputTokens: 3,
-      costPer1MOutputTokens: 12,
-    },
-    category: "o-series",
-  },
-  "o1-preview": {
-    id: "o1-preview",
-    name: "O1 Preview",
-    description:
-      "🔬 Early O1 preview • $15 input / $60 output per 1M tokens • No temp control",
-    capabilities: {
-      supportsTemperature: false,
-      supportsTopP: false,
-      maxTokens: 32_768,
-      costPer1MInputTokens: 15,
-      costPer1MOutputTokens: 60,
-    },
-    category: "o-series",
-  },
-  "o3-mini": {
-    id: "o3-mini",
-    name: "O3 Mini",
-    description:
-      "🎯 Budget reasoning model • $1.10 input / $4.40 output per 1M tokens • No temp control",
-    capabilities: {
-      supportsTemperature: false,
-      supportsTopP: false,
-      maxTokens: 100_000,
-      costPer1MInputTokens: 1.1,
-      costPer1MOutputTokens: 4.4,
-    },
-    category: "o-series",
-  },
+    category: categorize(entry.id),
+  };
+  return entry.status === "deprecated" ? { ...base, deprecated: true } : base;
+}
 
-  // GPT-4 Turbo Series
-  "gpt-4-turbo": {
-    id: "gpt-4-turbo",
-    name: "GPT-4 Turbo",
-    description:
-      "📸 Vision + large context • $10 input / $30 output per 1M tokens",
-    capabilities: {
-      supportsTemperature: true,
-      supportsTopP: true,
-      maxTokens: 4096,
-      costPer1MInputTokens: 10,
-      costPer1MOutputTokens: 30,
-    },
-    category: "gpt-4",
-  },
-  "gpt-4-turbo-preview": {
-    id: "gpt-4-turbo-preview",
-    name: "GPT-4 Turbo Preview",
-    description: "🔍 Preview version • Same pricing as gpt-4-turbo",
-    capabilities: {
-      supportsTemperature: true,
-      supportsTopP: true,
-      maxTokens: 4096,
-      costPer1MInputTokens: 10,
-      costPer1MOutputTokens: 30,
-    },
-    category: "gpt-4",
-  },
+function buildOpenAiModels(): Record<string, ModelInfo> {
+  const models: Record<string, ModelInfo> = {};
+  for (const entry of modelsByProvider("openai")) {
+    // Skip embedding models — not selectable for text generation.
+    if (entry.pricing.modality === "text" && entry.category !== "embedding") {
+      models[entry.id] = toModelInfo(entry, entry.pricing);
+    }
+  }
+  return models;
+}
 
-  // Standard GPT-4
-  "gpt-4": {
-    id: "gpt-4",
-    name: "GPT-4",
-    description:
-      "⚠️ Original GPT-4 (deprecated) • $30 input / $60 output per 1M tokens • Use gpt-4o instead",
-    capabilities: {
-      supportsTemperature: true,
-      supportsTopP: true,
-      maxTokens: 8192,
-      costPer1MInputTokens: 30,
-      costPer1MOutputTokens: 60,
-    },
-    category: "gpt-4",
-    deprecated: true,
-  },
-
-  // GPT-3.5 Series
-  "gpt-3.5-turbo": {
-    id: "gpt-3.5-turbo",
-    name: "GPT-3.5 Turbo",
-    description:
-      "⚡ Fast & cheap for simple tasks • $0.50 input / $1.50 output per 1M tokens",
-    capabilities: {
-      supportsTemperature: true,
-      supportsTopP: true,
-      maxTokens: 4096,
-      costPer1MInputTokens: 0.5,
-      costPer1MOutputTokens: 1.5,
-    },
-    category: "gpt-3.5",
-  },
-  "gpt-3.5-turbo-16k": {
-    id: "gpt-3.5-turbo-16k",
-    name: "GPT-3.5 Turbo (16k)",
-    description: "📚 Large context window • Same pricing as gpt-3.5-turbo",
-    capabilities: {
-      supportsTemperature: true,
-      supportsTopP: true,
-      maxTokens: 16_384,
-      costPer1MInputTokens: 0.5,
-      costPer1MOutputTokens: 1.5,
-    },
-    category: "gpt-3.5",
-  },
-
-  // GPT-5 Series (superseded by gpt-5.4 series)
-  "gpt-5": {
-    id: "gpt-5",
-    name: "GPT-5",
-    description:
-      "⚠️ Superseded by gpt-5.4 • $1.25 input / $10 output per 1M tokens • No temp control",
-    capabilities: {
-      supportsTemperature: false,
-      supportsTopP: false,
-      maxTokens: 400_000,
-      costPer1MInputTokens: 1.25,
-      costPer1MOutputTokens: 10,
-    },
-    category: "other",
-    deprecated: true,
-  },
-  "gpt-5-mini": {
-    id: "gpt-5-mini",
-    name: "GPT-5 Mini",
-    description:
-      "⚠️ Superseded by gpt-5.4-mini • $0.25 input / $2 output per 1M tokens • No temp control",
-    capabilities: {
-      supportsTemperature: false,
-      supportsTopP: false,
-      maxTokens: 200_000,
-      costPer1MInputTokens: 0.25,
-      costPer1MOutputTokens: 2,
-    },
-    category: "other",
-    deprecated: true,
-  },
-  "gpt-5-nano": {
-    id: "gpt-5-nano",
-    name: "GPT-5 Nano",
-    description:
-      "⚠️ Superseded by gpt-5.4-nano • $0.05 input / $0.40 output per 1M tokens • No temp control",
-    capabilities: {
-      supportsTemperature: false,
-      supportsTopP: false,
-      maxTokens: 100_000,
-      costPer1MInputTokens: 0.05,
-      costPer1MOutputTokens: 0.4,
-    },
-    category: "other",
-    deprecated: true,
-  },
-
-  // GPT-5.1 (superseded by gpt-5.4)
-  "gpt-5.1": {
-    id: "gpt-5.1",
-    name: "GPT-5.1",
-    description:
-      "⚠️ Superseded by gpt-5.4 • 400k context • $1.25 input / $10 output per 1M tokens • No temp control",
-    capabilities: {
-      supportsTemperature: false,
-      supportsTopP: false,
-      maxTokens: 400_000,
-      costPer1MInputTokens: 1.25,
-      costPer1MOutputTokens: 10,
-    },
-    category: "other",
-    deprecated: true,
-  },
-
-  // GPT-5.4 Series (Latest - no temperature/topP support)
-  "gpt-5.4": {
-    id: "gpt-5.4",
-    name: "GPT-5.4",
-    description:
-      "🚀 Latest GPT-5.4 • 400k context • $1.25 input / $10 output per 1M tokens • No temp control",
-    capabilities: {
-      supportsTemperature: false,
-      supportsTopP: false,
-      maxTokens: 400_000,
-      costPer1MInputTokens: 1.25,
-      costPer1MOutputTokens: 10,
-    },
-    category: "other",
-  },
-  "gpt-5.4-mini": {
-    id: "gpt-5.4-mini",
-    name: "GPT-5.4 Mini",
-    description:
-      "💰 Balanced GPT-5.4 variant • $0.25 input / $2 output per 1M tokens • No temp control",
-    capabilities: {
-      supportsTemperature: false,
-      supportsTopP: false,
-      maxTokens: 200_000,
-      costPer1MInputTokens: 0.25,
-      costPer1MOutputTokens: 2,
-    },
-    category: "other",
-  },
-  "gpt-5.4-nano": {
-    id: "gpt-5.4-nano",
-    name: "GPT-5.4 Nano",
-    description:
-      "⚡ Fastest, most cost-effective • $0.05 input / $0.40 output per 1M tokens • No temp control",
-    capabilities: {
-      supportsTemperature: false,
-      supportsTopP: false,
-      maxTokens: 100_000,
-      costPer1MInputTokens: 0.05,
-      costPer1MOutputTokens: 0.4,
-    },
-    category: "other",
-  },
-};
+function buildGeminiPricing(): Record<string, number> {
+  const pricing: Record<string, number> = {};
+  for (const entry of modelsByProvider("google")) {
+    if (entry.pricing.modality === "image") {
+      pricing[entry.id] = entry.pricing.perImage;
+    }
+  }
+  return pricing;
+}
 
 /**
- * Gemini/Imagen pricing (per image)
- * Verified from https://ai.google.dev/pricing
- * Last updated: April 2026
+ * Active OpenAI text models, keyed by id. Derived from the central catalog.
  */
-export const GEMINI_PRICING = {
-  // Gemini 2.5 image models (current stable)
-  "gemini-2.5-flash-image": 0.03, // $0.03 per image (Nano Banana stable)
-  // Preview image models
-  "gemini-3-pro-image-preview": 0.15, // $0.15 per image (Nano Banana Pro - estimated, no official pricing)
-  "gemini-3.1-flash-image-preview": 0.03, // $0.03 per image (Nano Banana 2 - estimated)
-  // Deprecated models (gemini-2.0-flash shut down)
-  "gemini-2.0-flash-exp": 0.03, // deprecated
-  "gemini-2.0-flash": 0.03, // deprecated
-  "imagen-3.0-generate": 0.03, // $0.03 per image
-  // Legacy pricing for older models (if used)
-  "gemini-1.5-pro": 0.1, // $0.10 per image (estimated, not officially documented)
-  "gemini-1.5-flash": 0.05, // $0.05 per image (estimated, not officially documented)
-} as const;
+export const OPENAI_MODELS: Record<string, ModelInfo> = buildOpenAiModels();
+
+/**
+ * Gemini image-generation pricing (USD per image), keyed by id. Derived from
+ * the central catalog.
+ */
+export const GEMINI_PRICING: Record<string, number> = buildGeminiPricing();
 
 /**
  * Get model configuration by ID
@@ -442,7 +182,7 @@ export function getImagePricing(model: string): number {
   // Error if model not found - all models must be explicitly defined
   throw new Error(
     `Image generation pricing not defined for model: ${model}. ` +
-      `Please add it to GEMINI_PRICING in packages/data/src/review/models.ts`,
+      `Please add it to the catalog (@shepherdjerred/llm-models).`,
   );
 }
 
@@ -466,7 +206,7 @@ export function getModelPricing(model: string): {
   // Error if model not found - all models must be explicitly defined
   throw new Error(
     `Text generation pricing not defined for model: ${model}. ` +
-      `Please add it to OPENAI_MODELS in packages/data/src/review/models.ts`,
+      `Please add it to the catalog (@shepherdjerred/llm-models).`,
   );
 }
 

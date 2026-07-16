@@ -36,9 +36,12 @@ packages/discord-plays-mario-kart/wasm-src/
 packages/clauderon/mobile/src/types/generated/
 packages/clauderon/web/shared/src/generated/
 packages/scout-for-lol/packages/backend/generated/
-.dagger/sdk/
 
-# Release-please managed changelogs
+# Codegen output (Prisma etc.) — `generate` turbo-task outputs, never hand-formatted
+**/generated/**
+**/src-tauri/gen/**
+
+# Changelogs (mostly machine-generated)
 **/CHANGELOG.md
 
 # Coverage
@@ -76,6 +79,10 @@ packages/scout-for-lol/packages/data/src/data-dragon/assets/
 # prettier has no parser for `.txt` and the snapshot must stay byte-for-byte.
 packages/discord-plays-mario-kart/packages/backend/scripts/__fixtures__/
 
+# Captured claude/codex CLI stdout — must stay byte-faithful to real output
+# (single-line NDJSON; prettier would pretty-print the .json variant).
+packages/llm-observability/test/fixtures/
+
 # prettier-plugin-astro@0.14.1 side-effect: prettier --check . tries to parse these
 # valid Astro/MDX files with a Babel-based parser that chokes on indented code
 # blocks inside JSX, HTML comments inside JSX expressions, and shebangs in code
@@ -87,3 +94,7 @@ packages/sjer.red/src/content/blog/2024/job-hunt.mdx
 packages/sjer.red/src/content/blog/2025/writing-typescript-with-ai.mdx
 packages/sjer.red/src/content/blog/drafts/homelab-2.mdx
 packages/webring/README.md
+
+# Test fixtures are content under test, not code to format.
+**/__tests__/fixtures/**
+**/e2e/fixtures/**

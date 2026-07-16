@@ -149,7 +149,7 @@ export type ArgocdHelmValuesGlobal = {
   /**
    * Default network policy rules used by all components
    *
-   * @default {"create":false,"defaultDenyIngress":false}
+   * @default {"create":true,"defaultDenyIngress":false}
    */
   networkPolicy?: ArgocdHelmValuesGlobalNetworkPolicy;
   /**
@@ -255,7 +255,7 @@ export type ArgocdHelmValuesGlobalNetworkPolicy = {
   /**
    * Create NetworkPolicy objects for all components
    *
-   * @default false
+   * @default true
    */
   create?: boolean;
   /**
@@ -1010,9 +1010,16 @@ export type ArgocdHelmValuesController = {
    * Readiness probe for application controller
    * Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   readinessProbe?: ArgocdHelmValuesControllerReadinessProbe;
+  /**
+   * Startup probe for application controller (optional)
+   * Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+   *
+   * @default {...} (7 keys)
+   */
+  startupProbe?: ArgocdHelmValuesControllerStartupProbe;
   /**
    * terminationGracePeriodSeconds for container lifecycle hook
    *
@@ -1051,7 +1058,7 @@ export type ArgocdHelmValuesController = {
   /**
    * Application controller metrics configuration
    *
-   * @default {...} (6 keys)
+   * @default {...} (5 keys)
    */
   metrics?: ArgocdHelmValuesControllerMetrics;
   /**
@@ -1256,9 +1263,60 @@ export type ArgocdHelmValuesControllerContainerSecurityContextCapabilities = {
 
 export type ArgocdHelmValuesControllerReadinessProbe = {
   /**
+   * Http path to use for the readiness probe
+   *
+   * @default "/healthz"
+   */
+  httpPath?: string;
+  /**
    * Minimum consecutive failures for the [probe] to be considered failed after having succeeded
    *
    * @default 3
+   */
+  failureThreshold?: number;
+  /**
+   * Number of seconds after the container has started before [probe] is initiated
+   *
+   * @default 10
+   */
+  initialDelaySeconds?: number;
+  /**
+   * How often (in seconds) to perform the [probe]
+   *
+   * @default 10
+   */
+  periodSeconds?: number;
+  /**
+   * Minimum consecutive successes for the [probe] to be considered successful after having failed
+   *
+   * @default 1
+   */
+  successThreshold?: number;
+  /**
+   * Number of seconds after which the [probe] times out
+   *
+   * @default 1
+   */
+  timeoutSeconds?: number;
+};
+
+export type ArgocdHelmValuesControllerStartupProbe = {
+  /**
+   * Enable Kubernetes startup probe for application controller
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Http path to use for the startup probe
+   *
+   * @default "/healthz"
+   */
+  httpPath?: string;
+  /**
+   * Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+   *
+   * @default 20
    */
   failureThreshold?: number;
   /**
@@ -1344,12 +1402,6 @@ export type ArgocdHelmValuesControllerMetrics = {
    */
   enabled?: boolean;
   /**
-   * Prometheus ServiceMonitor scrapeTimeout. If empty, Prometheus uses the global scrape timeout unless it is less than the target's scrape interval value in which the latter is used.
-   *
-   * @default ""
-   */
-  scrapeTimeout?: string;
-  /**
    * @default {"enabled":false,"labels":[]}
    */
   applicationLabels?: ArgocdHelmValuesControllerMetricsApplicationLabels;
@@ -1358,7 +1410,7 @@ export type ArgocdHelmValuesControllerMetrics = {
    */
   service?: ArgocdHelmValuesControllerMetricsService;
   /**
-   * @default {...} (11 keys)
+   * @default {...} (12 keys)
    */
   serviceMonitor?: ArgocdHelmValuesControllerMetricsServiceMonitor;
   /**
@@ -1448,6 +1500,12 @@ export type ArgocdHelmValuesControllerMetricsServiceMonitor = {
    * @default "30s"
    */
   interval?: string;
+  /**
+   * Prometheus ServiceMonitor scrapeTimeout. If empty, Prometheus uses the global scrape timeout unless it is less than the target's scrape interval value in which the latter is used.
+   *
+   * @default ""
+   */
+  scrapeTimeout?: string;
   /**
    * When true, honorLabels preserves the metric’s labels when they collide with the target’s labels.
    *
@@ -1710,6 +1768,13 @@ export type ArgocdHelmValuesDex = {
    * @default {...} (9 keys)
    */
   readinessProbe?: ArgocdHelmValuesDexReadinessProbe;
+  /**
+   * Startup probe for Dex server (optional)
+   * Supported from Dex >= 2.28.0
+   *
+   * @default {...} (9 keys)
+   */
+  startupProbe?: ArgocdHelmValuesDexStartupProbe;
   /**
    * terminationGracePeriodSeconds for container lifecycle hook
    *
@@ -2313,6 +2378,63 @@ export type ArgocdHelmValuesDexReadinessProbe = {
   timeoutSeconds?: number;
 };
 
+export type ArgocdHelmValuesDexStartupProbe = {
+  /**
+   * Enable Kubernetes startup probe for Dex >= 2.28.0
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Http path to use for the startup probe
+   *
+   * @default "/healthz/ready"
+   */
+  httpPath?: string;
+  /**
+   * Http port to use for the startup probe
+   *
+   * @default "metrics"
+   */
+  httpPort?: string;
+  /**
+   * Scheme to use for the startup probe (can be HTTP or HTTPS)
+   *
+   * @default "HTTP"
+   */
+  httpScheme?: string;
+  /**
+   * Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+   *
+   * @default 20
+   */
+  failureThreshold?: number;
+  /**
+   * Number of seconds after the container has started before [probe] is initiated
+   *
+   * @default 10
+   */
+  initialDelaySeconds?: number;
+  /**
+   * How often (in seconds) to perform the [probe]
+   *
+   * @default 10
+   */
+  periodSeconds?: number;
+  /**
+   * Minimum consecutive successes for the [probe] to be considered successful after having failed
+   *
+   * @default 1
+   */
+  successThreshold?: number;
+  /**
+   * Number of seconds after which the [probe] times out
+   *
+   * @default 1
+   */
+  timeoutSeconds?: number;
+};
+
 export type ArgocdHelmValuesDexServiceAccount = {
   /**
    * Create dex service account
@@ -2674,7 +2796,7 @@ export type ArgocdHelmValuesRedisExporter = {
   /**
    * Prometheus redis-exporter image
    *
-   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.83.0","imagePullPolicy":""}
+   * @default {"repository":"ghcr.io/oliver006/redis_exporter","tag":"v1.86.0","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesRedisExporterImage;
   /**
@@ -2713,7 +2835,7 @@ export type ArgocdHelmValuesRedisExporterImage = {
   /**
    * Tag to use for the redis-exporter
    *
-   * @default "v1.83.0"
+   * @default "v1.86.0"
    */
   tag?: string;
   /**
@@ -3861,13 +3983,20 @@ export type ArgocdHelmValuesServer = {
    * Readiness and liveness probes for default backend
    * Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
    *
-   * @default {...} (6 keys)
+   * @default {...} (7 keys)
    */
   readinessProbe?: ArgocdHelmValuesServerReadinessProbe;
   /**
-   * @default {...} (6 keys)
+   * @default {...} (7 keys)
    */
   livenessProbe?: ArgocdHelmValuesServerLivenessProbe;
+  /**
+   * Startup probe for Argo CD server (optional)
+   * Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+   *
+   * @default {...} (7 keys)
+   */
+  startupProbe?: ArgocdHelmValuesServerStartupProbe;
   /**
    * terminationGracePeriodSeconds for container lifecycle hook
    *
@@ -3973,9 +4102,15 @@ export type ArgocdHelmValuesServer = {
    */
   backendTLSPolicy?: ArgocdHelmValuesServerBackendTLSPolicy;
   /**
-   * Enable this and set the rules: to whatever custom rules you want for the Cluster Role resource.
-   * Defaults to off
+   * NOTE: Gateway API support is in EXPERIMENTAL status
+   * ListenerSet allows attaching additional listeners to an existing Gateway
+   * Requires Gateway API v1alpha2 and a controller that supports ListenerSet
+   * Refer to https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io/v1alpha2.ListenerSet
    *
+   * @default {...} (5 keys)
+   */
+  listenerset?: ArgocdHelmValuesServerListenerset;
+  /**
    * @default {"enabled":false,"rules":[]}
    */
   clusterRoleRules?: ArgocdHelmValuesServerClusterRoleRules;
@@ -4164,7 +4299,7 @@ export type ArgocdHelmValuesServerExtensions = {
   /**
    * Argo CD extension installer image
    *
-   * @default {"repository":"quay.io/argoprojlabs/argocd-extension-installer","tag":"v1.0.0","imagePullPolicy":""}
+   * @default {"repository":"quay.io/argoprojlabs/argocd-extension-installer","tag":"v1.0.1","imagePullPolicy":""}
    */
   image?: ArgocdHelmValuesServerExtensionsImage;
   extensionList?: unknown[];
@@ -4193,7 +4328,7 @@ export type ArgocdHelmValuesServerExtensionsImage = {
   /**
    * Tag to use for extension installer image
    *
-   * @default "v1.0.0"
+   * @default "v1.0.1"
    */
   tag?: string;
   /**
@@ -4320,6 +4455,12 @@ export type ArgocdHelmValuesServerReadinessProbe = {
    */
   enabled?: boolean;
   /**
+   * Http path to use for the readiness probe
+   *
+   * @default "/healthz"
+   */
+  httpPath?: string;
+  /**
    * Minimum consecutive failures for the [probe] to be considered failed after having succeeded
    *
    * @default 3
@@ -4359,9 +4500,60 @@ export type ArgocdHelmValuesServerLivenessProbe = {
    */
   enabled?: boolean;
   /**
+   * Http path to use for the liveness probe
+   *
+   * @default "/healthz?full=true"
+   */
+  httpPath?: string;
+  /**
    * Minimum consecutive failures for the [probe] to be considered failed after having succeeded
    *
    * @default 3
+   */
+  failureThreshold?: number;
+  /**
+   * Number of seconds after the container has started before [probe] is initiated
+   *
+   * @default 10
+   */
+  initialDelaySeconds?: number;
+  /**
+   * How often (in seconds) to perform the [probe]
+   *
+   * @default 10
+   */
+  periodSeconds?: number;
+  /**
+   * Minimum consecutive successes for the [probe] to be considered successful after having failed
+   *
+   * @default 1
+   */
+  successThreshold?: number;
+  /**
+   * Number of seconds after which the [probe] times out
+   *
+   * @default 1
+   */
+  timeoutSeconds?: number;
+};
+
+export type ArgocdHelmValuesServerStartupProbe = {
+  /**
+   * Enable Kubernetes startup probe for Argo CD server
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Http path to use for the startup probe
+   *
+   * @default "/healthz"
+   */
+  httpPath?: string;
+  /**
+   * Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+   *
+   * @default 20
    */
   failureThreshold?: number;
   /**
@@ -5306,6 +5498,53 @@ export type ArgocdHelmValuesServerBackendTLSPolicyAnnotations = {
 
 export type ArgocdHelmValuesServerBackendTLSPolicyValidation = object;
 
+export type ArgocdHelmValuesServerListenerset = {
+  /**
+   * Enable ListenerSet resource for Argo CD server (Gateway API)
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Additional ListenerSet labels
+   *
+   * @default {}
+   */
+  labels?: ArgocdHelmValuesServerListenersetLabels;
+  /**
+   * Additional ListenerSet annotations
+   *
+   * @default {}
+   */
+  annotations?: ArgocdHelmValuesServerListenersetAnnotations;
+  /**
+   * Gateway API parentRef for the ListenerSet
+   * Must reference an existing Gateway. Unlike HTTPRoute, ListenerSet accepts exactly one parentRef.
+   *
+   * @default {}
+   */
+  parentRef?: ArgocdHelmValuesServerListenersetParentRef;
+  listeners?: unknown[];
+};
+
+export type ArgocdHelmValuesServerListenersetLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesServerListenersetAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesServerListenersetParentRef = object;
+
 export type ArgocdHelmValuesServerClusterRoleRules = {
   /**
    * Enable custom rules for the server's ClusterRole resource
@@ -5470,13 +5709,20 @@ export type ArgocdHelmValuesRepoServer = {
    * Readiness and liveness probes for Repo Server
    * Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
    *
-   * @default {...} (6 keys)
+   * @default {...} (7 keys)
    */
   readinessProbe?: ArgocdHelmValuesRepoServerReadinessProbe;
   /**
-   * @default {...} (6 keys)
+   * @default {...} (7 keys)
    */
   livenessProbe?: ArgocdHelmValuesRepoServerLivenessProbe;
+  /**
+   * Startup probe for Repo Server (optional)
+   * Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+   *
+   * @default {...} (7 keys)
+   */
+  startupProbe?: ArgocdHelmValuesRepoServerStartupProbe;
   /**
    * terminationGracePeriodSeconds for container lifecycle hook
    *
@@ -5813,6 +6059,12 @@ export type ArgocdHelmValuesRepoServerReadinessProbe = {
    */
   enabled?: boolean;
   /**
+   * Http path to use for the readiness probe
+   *
+   * @default "/healthz"
+   */
+  httpPath?: string;
+  /**
    * Minimum consecutive failures for the [probe] to be considered failed after having succeeded
    *
    * @default 3
@@ -5852,9 +6104,60 @@ export type ArgocdHelmValuesRepoServerLivenessProbe = {
    */
   enabled?: boolean;
   /**
+   * Http path to use for the liveness probe
+   *
+   * @default "/healthz?full=true"
+   */
+  httpPath?: string;
+  /**
    * Minimum consecutive failures for the [probe] to be considered failed after having succeeded
    *
    * @default 3
+   */
+  failureThreshold?: number;
+  /**
+   * Number of seconds after the container has started before [probe] is initiated
+   *
+   * @default 10
+   */
+  initialDelaySeconds?: number;
+  /**
+   * How often (in seconds) to perform the [probe]
+   *
+   * @default 10
+   */
+  periodSeconds?: number;
+  /**
+   * Minimum consecutive successes for the [probe] to be considered successful after having failed
+   *
+   * @default 1
+   */
+  successThreshold?: number;
+  /**
+   * Number of seconds after which the [probe] times out
+   *
+   * @default 1
+   */
+  timeoutSeconds?: number;
+};
+
+export type ArgocdHelmValuesRepoServerStartupProbe = {
+  /**
+   * Enable Kubernetes startup probe for Repo Server
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Http path to use for the startup probe
+   *
+   * @default "/healthz"
+   */
+  httpPath?: string;
+  /**
+   * Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+   *
+   * @default 20
    */
   failureThreshold?: number;
   /**
@@ -6353,6 +6656,13 @@ export type ArgocdHelmValuesApplicationSet = {
    */
   livenessProbe?: ArgocdHelmValuesApplicationSetLivenessProbe;
   /**
+   * Startup probe for ApplicationSet controller (optional)
+   * Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+   *
+   * @default {...} (6 keys)
+   */
+  startupProbe?: ArgocdHelmValuesApplicationSetStartupProbe;
+  /**
    * terminationGracePeriodSeconds for container lifecycle hook
    *
    * @default 30
@@ -6404,6 +6714,10 @@ export type ArgocdHelmValuesApplicationSet = {
    * @default {...} (6 keys)
    */
   httproute?: ArgocdHelmValuesApplicationSetHttproute;
+  /**
+   * @default {...} (5 keys)
+   */
+  listenerset?: ArgocdHelmValuesApplicationSetListenerset;
   /**
    * @default false
    */
@@ -6944,6 +7258,45 @@ export type ArgocdHelmValuesApplicationSetLivenessProbe = {
   failureThreshold?: number;
 };
 
+export type ArgocdHelmValuesApplicationSetStartupProbe = {
+  /**
+   * Enable Kubernetes startup probe for ApplicationSet controller
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Number of seconds after the container has started before [probe] is initiated
+   *
+   * @default 10
+   */
+  initialDelaySeconds?: number;
+  /**
+   * How often (in seconds) to perform the [probe]
+   *
+   * @default 10
+   */
+  periodSeconds?: number;
+  /**
+   * Number of seconds after which the [probe] times out
+   *
+   * @default 1
+   */
+  timeoutSeconds?: number;
+  /**
+   * Minimum consecutive successes for the [probe] to be considered successful after having failed
+   *
+   * @default 1
+   */
+  successThreshold?: number;
+  /**
+   * Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+   *
+   * @default 20
+   */
+  failureThreshold?: number;
+};
+
 export type ArgocdHelmValuesApplicationSetDeploymentStrategy = object;
 
 export type ArgocdHelmValuesApplicationSetCertificate = {
@@ -7184,6 +7537,53 @@ export type ArgocdHelmValuesApplicationSetHttprouteRulesMatchesPath = {
   value?: string;
 };
 
+export type ArgocdHelmValuesApplicationSetListenerset = {
+  /**
+   * Enable ListenerSet resource for Argo CD ApplicationSet webhook (Gateway API)
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Additional ListenerSet labels
+   *
+   * @default {}
+   */
+  labels?: ArgocdHelmValuesApplicationSetListenersetLabels;
+  /**
+   * Additional ListenerSet annotations
+   *
+   * @default {}
+   */
+  annotations?: ArgocdHelmValuesApplicationSetListenersetAnnotations;
+  /**
+   * Gateway API parentRef for the ListenerSet
+   * Must reference an existing Gateway. Unlike HTTPRoute, ListenerSet accepts exactly one parentRef.
+   *
+   * @default {}
+   */
+  parentRef?: ArgocdHelmValuesApplicationSetListenersetParentRef;
+  listeners?: unknown[];
+};
+
+export type ArgocdHelmValuesApplicationSetListenersetLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesApplicationSetListenersetAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type ArgocdHelmValuesApplicationSetListenersetParentRef = object;
+
 export type ArgocdHelmValuesApplicationSetNetworkPolicy = {
   /**
    * Default network policy rules used by ApplicationSet controller
@@ -7334,6 +7734,13 @@ export type ArgocdHelmValuesNotifications = {
    * @default {...} (6 keys)
    */
   livenessProbe?: ArgocdHelmValuesNotificationsLivenessProbe;
+  /**
+   * Startup probe for notifications controller Pods (optional)
+   * Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+   *
+   * @default {...} (6 keys)
+   */
+  startupProbe?: ArgocdHelmValuesNotificationsStartupProbe;
   /**
    * terminationGracePeriodSeconds for container lifecycle hook
    *
@@ -7857,6 +8264,45 @@ export type ArgocdHelmValuesNotificationsLivenessProbe = {
   failureThreshold?: number;
 };
 
+export type ArgocdHelmValuesNotificationsStartupProbe = {
+  /**
+   * Enable Kubernetes startup probe for notifications controller Pods
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Number of seconds after the container has started before [probe] is initiated
+   *
+   * @default 10
+   */
+  initialDelaySeconds?: number;
+  /**
+   * How often (in seconds) to perform the [probe]
+   *
+   * @default 10
+   */
+  periodSeconds?: number;
+  /**
+   * Number of seconds after which the [probe] times out
+   *
+   * @default 1
+   */
+  timeoutSeconds?: number;
+  /**
+   * Minimum consecutive successes for the [probe] to be considered successful after having failed
+   *
+   * @default 1
+   */
+  successThreshold?: number;
+  /**
+   * Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+   *
+   * @default 20
+   */
+  failureThreshold?: number;
+};
+
 export type ArgocdHelmValuesNotificationsDeploymentStrategy = {
   /**
    * @default "Recreate"
@@ -8047,13 +8493,20 @@ export type ArgocdHelmValuesCommitServer = {
    * Probes for commit server (optional)
    * Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
    *
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   readinessProbe?: ArgocdHelmValuesCommitServerReadinessProbe;
   /**
-   * @default {...} (5 keys)
+   * @default {...} (6 keys)
    */
   livenessProbe?: ArgocdHelmValuesCommitServerLivenessProbe;
+  /**
+   * Startup probe for commit server (optional)
+   * Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+   *
+   * @default {...} (6 keys)
+   */
+  startupProbe?: ArgocdHelmValuesCommitServerStartupProbe;
   /**
    * terminationGracePeriodSeconds for container lifecycle hook
    *
@@ -8334,6 +8787,12 @@ export type ArgocdHelmValuesCommitServerReadinessProbe = {
    */
   enabled?: boolean;
   /**
+   * Http path to use for the readiness probe
+   *
+   * @default "/healthz"
+   */
+  httpPath?: string;
+  /**
    * Number of seconds after the container has started before [probe] is initiated
    *
    * @default 5
@@ -8367,6 +8826,12 @@ export type ArgocdHelmValuesCommitServerLivenessProbe = {
    */
   enabled?: boolean;
   /**
+   * Http path to use for the liveness probe
+   *
+   * @default "/healthz?full=true"
+   */
+  httpPath?: string;
+  /**
    * Number of seconds after the container has started before [probe] is initiated
    *
    * @default 30
@@ -8388,6 +8853,45 @@ export type ArgocdHelmValuesCommitServerLivenessProbe = {
    * Minimum consecutive failures for the [probe] to be considered failed after having succeeded
    *
    * @default 3
+   */
+  failureThreshold?: number;
+};
+
+export type ArgocdHelmValuesCommitServerStartupProbe = {
+  /**
+   * Enable Kubernetes startup probe for commit server
+   *
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * Http path to use for the startup probe
+   *
+   * @default "/healthz"
+   */
+  httpPath?: string;
+  /**
+   * Number of seconds after the container has started before [probe] is initiated
+   *
+   * @default 10
+   */
+  initialDelaySeconds?: number;
+  /**
+   * How often (in seconds) to perform the [probe]
+   *
+   * @default 10
+   */
+  periodSeconds?: number;
+  /**
+   * Number of seconds after which the [probe] times out
+   *
+   * @default 1
+   */
+  timeoutSeconds?: number;
+  /**
+   * Minimum consecutive failures for the [probe] to be considered failed after having succeeded
+   *
+   * @default 20
    */
   failureThreshold?: number;
 };
@@ -8532,7 +9036,7 @@ export type ArgocdHelmValues = {
    * Specific implementation for ingress controller. One of `generic`, `aws` or `gke`
    * Additional configuration might be required in related configuration sections
    *
-   * @default {...} (43 keys)
+   * @default {...} (44 keys)
    */
   controller?: ArgocdHelmValuesController;
   /**
@@ -8542,7 +9046,7 @@ export type ArgocdHelmValues = {
    * Dex log level. One of: `debug`, `info`, `warn`, `error`
    * Redis
    *
-   * @default {...} (44 keys)
+   * @default {...} (45 keys)
    */
   dex?: ArgocdHelmValuesDex;
   /**
@@ -8571,29 +9075,29 @@ export type ArgocdHelmValues = {
   /**
    * Server
    *
-   * @default {...} (51 keys)
+   * @default {...} (53 keys)
    */
   server?: ArgocdHelmValuesServer;
   /**
    * Repo Server
    *
-   * @default {...} (47 keys)
+   * @default {...} (48 keys)
    */
   repoServer?: ArgocdHelmValuesRepoServer;
   /**
    * ApplicationSet controller
    *
-   * @default {...} (42 keys)
+   * @default {...} (44 keys)
    */
   applicationSet?: ArgocdHelmValuesApplicationSet;
   /**
    * Notifications controller
    *
-   * @default {...} (45 keys)
+   * @default {...} (46 keys)
    */
   notifications?: ArgocdHelmValuesNotifications;
   /**
-   * @default {...} (32 keys)
+   * @default {...} (33 keys)
    */
   commitServer?: ArgocdHelmValuesCommitServer;
 };
@@ -8705,11 +9209,19 @@ export type ArgocdHelmParameters = {
   "controller.containerSecurityContext.allowPrivilegeEscalation"?: string;
   "controller.containerSecurityContext.seccompProfile.type"?: string;
   "controller.containerSecurityContext.capabilities.drop"?: string;
+  "controller.readinessProbe.httpPath"?: string;
   "controller.readinessProbe.failureThreshold"?: string;
   "controller.readinessProbe.initialDelaySeconds"?: string;
   "controller.readinessProbe.periodSeconds"?: string;
   "controller.readinessProbe.successThreshold"?: string;
   "controller.readinessProbe.timeoutSeconds"?: string;
+  "controller.startupProbe.enabled"?: string;
+  "controller.startupProbe.httpPath"?: string;
+  "controller.startupProbe.failureThreshold"?: string;
+  "controller.startupProbe.initialDelaySeconds"?: string;
+  "controller.startupProbe.periodSeconds"?: string;
+  "controller.startupProbe.successThreshold"?: string;
+  "controller.startupProbe.timeoutSeconds"?: string;
   "controller.terminationGracePeriodSeconds"?: string;
   "controller.priorityClassName"?: string;
   "controller.nodeSelector"?: string;
@@ -8721,7 +9233,6 @@ export type ArgocdHelmParameters = {
   "controller.serviceAccount.name"?: string;
   "controller.serviceAccount.automountServiceAccountToken"?: string;
   "controller.metrics.enabled"?: string;
-  "controller.metrics.scrapeTimeout"?: string;
   "controller.metrics.applicationLabels.enabled"?: string;
   "controller.metrics.applicationLabels.labels"?: string;
   "controller.metrics.service.type"?: string;
@@ -8730,6 +9241,7 @@ export type ArgocdHelmParameters = {
   "controller.metrics.service.portName"?: string;
   "controller.metrics.serviceMonitor.enabled"?: string;
   "controller.metrics.serviceMonitor.interval"?: string;
+  "controller.metrics.serviceMonitor.scrapeTimeout"?: string;
   "controller.metrics.serviceMonitor.honorLabels"?: string;
   "controller.metrics.serviceMonitor.relabelings"?: string;
   "controller.metrics.serviceMonitor.metricRelabelings"?: string;
@@ -8808,6 +9320,15 @@ export type ArgocdHelmParameters = {
   "dex.readinessProbe.periodSeconds"?: string;
   "dex.readinessProbe.successThreshold"?: string;
   "dex.readinessProbe.timeoutSeconds"?: string;
+  "dex.startupProbe.enabled"?: string;
+  "dex.startupProbe.httpPath"?: string;
+  "dex.startupProbe.httpPort"?: string;
+  "dex.startupProbe.httpScheme"?: string;
+  "dex.startupProbe.failureThreshold"?: string;
+  "dex.startupProbe.initialDelaySeconds"?: string;
+  "dex.startupProbe.periodSeconds"?: string;
+  "dex.startupProbe.successThreshold"?: string;
+  "dex.startupProbe.timeoutSeconds"?: string;
   "dex.terminationGracePeriodSeconds"?: string;
   "dex.automountServiceAccountToken"?: string;
   "dex.serviceAccount.create"?: string;
@@ -9014,17 +9535,26 @@ export type ArgocdHelmParameters = {
   "server.containerSecurityContext.seccompProfile.type"?: string;
   "server.containerSecurityContext.capabilities.drop"?: string;
   "server.readinessProbe.enabled"?: string;
+  "server.readinessProbe.httpPath"?: string;
   "server.readinessProbe.failureThreshold"?: string;
   "server.readinessProbe.initialDelaySeconds"?: string;
   "server.readinessProbe.periodSeconds"?: string;
   "server.readinessProbe.successThreshold"?: string;
   "server.readinessProbe.timeoutSeconds"?: string;
   "server.livenessProbe.enabled"?: string;
+  "server.livenessProbe.httpPath"?: string;
   "server.livenessProbe.failureThreshold"?: string;
   "server.livenessProbe.initialDelaySeconds"?: string;
   "server.livenessProbe.periodSeconds"?: string;
   "server.livenessProbe.successThreshold"?: string;
   "server.livenessProbe.timeoutSeconds"?: string;
+  "server.startupProbe.enabled"?: string;
+  "server.startupProbe.httpPath"?: string;
+  "server.startupProbe.failureThreshold"?: string;
+  "server.startupProbe.initialDelaySeconds"?: string;
+  "server.startupProbe.periodSeconds"?: string;
+  "server.startupProbe.successThreshold"?: string;
+  "server.startupProbe.timeoutSeconds"?: string;
   "server.terminationGracePeriodSeconds"?: string;
   "server.priorityClassName"?: string;
   "server.nodeSelector"?: string;
@@ -9118,6 +9648,8 @@ export type ArgocdHelmParameters = {
   "server.grpcroute.rules.matches.method.type"?: string;
   "server.backendTLSPolicy.enabled"?: string;
   "server.backendTLSPolicy.targetRefs"?: string;
+  "server.listenerset.enabled"?: string;
+  "server.listenerset.listeners"?: string;
   "server.clusterRoleRules.enabled"?: string;
   "server.clusterRoleRules.rules"?: string;
   "server.networkPolicy.create"?: string;
@@ -9161,17 +9693,26 @@ export type ArgocdHelmParameters = {
   "repoServer.containerSecurityContext.seccompProfile.type"?: string;
   "repoServer.containerSecurityContext.capabilities.drop"?: string;
   "repoServer.readinessProbe.enabled"?: string;
+  "repoServer.readinessProbe.httpPath"?: string;
   "repoServer.readinessProbe.failureThreshold"?: string;
   "repoServer.readinessProbe.initialDelaySeconds"?: string;
   "repoServer.readinessProbe.periodSeconds"?: string;
   "repoServer.readinessProbe.successThreshold"?: string;
   "repoServer.readinessProbe.timeoutSeconds"?: string;
   "repoServer.livenessProbe.enabled"?: string;
+  "repoServer.livenessProbe.httpPath"?: string;
   "repoServer.livenessProbe.failureThreshold"?: string;
   "repoServer.livenessProbe.initialDelaySeconds"?: string;
   "repoServer.livenessProbe.periodSeconds"?: string;
   "repoServer.livenessProbe.successThreshold"?: string;
   "repoServer.livenessProbe.timeoutSeconds"?: string;
+  "repoServer.startupProbe.enabled"?: string;
+  "repoServer.startupProbe.httpPath"?: string;
+  "repoServer.startupProbe.failureThreshold"?: string;
+  "repoServer.startupProbe.initialDelaySeconds"?: string;
+  "repoServer.startupProbe.periodSeconds"?: string;
+  "repoServer.startupProbe.successThreshold"?: string;
+  "repoServer.startupProbe.timeoutSeconds"?: string;
   "repoServer.terminationGracePeriodSeconds"?: string;
   "repoServer.nodeSelector"?: string;
   "repoServer.tolerations"?: string;
@@ -9268,6 +9809,12 @@ export type ArgocdHelmParameters = {
   "applicationSet.livenessProbe.timeoutSeconds"?: string;
   "applicationSet.livenessProbe.successThreshold"?: string;
   "applicationSet.livenessProbe.failureThreshold"?: string;
+  "applicationSet.startupProbe.enabled"?: string;
+  "applicationSet.startupProbe.initialDelaySeconds"?: string;
+  "applicationSet.startupProbe.periodSeconds"?: string;
+  "applicationSet.startupProbe.timeoutSeconds"?: string;
+  "applicationSet.startupProbe.successThreshold"?: string;
+  "applicationSet.startupProbe.failureThreshold"?: string;
   "applicationSet.terminationGracePeriodSeconds"?: string;
   "applicationSet.nodeSelector"?: string;
   "applicationSet.tolerations"?: string;
@@ -9301,6 +9848,8 @@ export type ArgocdHelmParameters = {
   "applicationSet.httproute.hostnames"?: string;
   "applicationSet.httproute.rules.matches.path.type"?: string;
   "applicationSet.httproute.rules.matches.path.value"?: string;
+  "applicationSet.listenerset.enabled"?: string;
+  "applicationSet.listenerset.listeners"?: string;
   "applicationSet.allowAnyNamespace"?: string;
   "applicationSet.networkPolicy.create"?: string;
   "notifications.enabled"?: string;
@@ -9355,6 +9904,12 @@ export type ArgocdHelmParameters = {
   "notifications.livenessProbe.timeoutSeconds"?: string;
   "notifications.livenessProbe.successThreshold"?: string;
   "notifications.livenessProbe.failureThreshold"?: string;
+  "notifications.startupProbe.enabled"?: string;
+  "notifications.startupProbe.initialDelaySeconds"?: string;
+  "notifications.startupProbe.periodSeconds"?: string;
+  "notifications.startupProbe.timeoutSeconds"?: string;
+  "notifications.startupProbe.successThreshold"?: string;
+  "notifications.startupProbe.failureThreshold"?: string;
   "notifications.terminationGracePeriodSeconds"?: string;
   "notifications.nodeSelector"?: string;
   "notifications.tolerations"?: string;
@@ -9400,15 +9955,23 @@ export type ArgocdHelmParameters = {
   "commitServer.containerSecurityContext.capabilities.drop"?: string;
   "commitServer.containerSecurityContext.seccompProfile.type"?: string;
   "commitServer.readinessProbe.enabled"?: string;
+  "commitServer.readinessProbe.httpPath"?: string;
   "commitServer.readinessProbe.initialDelaySeconds"?: string;
   "commitServer.readinessProbe.periodSeconds"?: string;
   "commitServer.readinessProbe.timeoutSeconds"?: string;
   "commitServer.readinessProbe.failureThreshold"?: string;
   "commitServer.livenessProbe.enabled"?: string;
+  "commitServer.livenessProbe.httpPath"?: string;
   "commitServer.livenessProbe.initialDelaySeconds"?: string;
   "commitServer.livenessProbe.periodSeconds"?: string;
   "commitServer.livenessProbe.timeoutSeconds"?: string;
   "commitServer.livenessProbe.failureThreshold"?: string;
+  "commitServer.startupProbe.enabled"?: string;
+  "commitServer.startupProbe.httpPath"?: string;
+  "commitServer.startupProbe.initialDelaySeconds"?: string;
+  "commitServer.startupProbe.periodSeconds"?: string;
+  "commitServer.startupProbe.timeoutSeconds"?: string;
+  "commitServer.startupProbe.failureThreshold"?: string;
   "commitServer.terminationGracePeriodSeconds"?: string;
   "commitServer.nodeSelector"?: string;
   "commitServer.tolerations"?: string;

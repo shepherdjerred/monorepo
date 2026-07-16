@@ -7,7 +7,6 @@ import { createPlexDeployment } from "@shepherdjerred/homelab/cdk8s/src/resource
 import { createJellyfinDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/jellyfin.ts";
 import { createKometaCronJob } from "@shepherdjerred/homelab/cdk8s/src/resources/media/kometa.ts";
 import { createRadarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/radarr.ts";
-import { createOverseerrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/overseerr.ts";
 import { createSeerrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/seerr.ts";
 import { createQBitTorrentDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/qbittorrent.ts";
 import { createSonarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/sonarr.ts";
@@ -54,7 +53,6 @@ export function createMediaChart(app: App) {
     movies: moviesVolume.claim,
     downloads: downloadsVolume.claim,
   });
-  createOverseerrDeployment(chart);
   createSeerrDeployment(chart);
   createQBitTorrentDeployment(chart, {
     downloads: downloadsVolume.claim,

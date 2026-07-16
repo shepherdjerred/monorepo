@@ -8,12 +8,14 @@ type NaturalLanguageInputProps = {
   value: string;
   onChange: (text: string) => void;
   parsedResult?: NlpParseResult;
+  testID?: string | undefined;
 };
 
 export function NaturalLanguageInput({
   value,
   onChange,
   parsedResult,
+  testID,
 }: NaturalLanguageInputProps) {
   const { colors } = useSettings();
 
@@ -47,6 +49,7 @@ export function NaturalLanguageInput({
         placeholder="Buy groceries #shopping @errands !high tomorrow"
         placeholderTextColor={colors.textTertiary}
         autoFocus
+        testID={testID}
       />
       {badges.length > 0 ? (
         <View style={styles.badges}>

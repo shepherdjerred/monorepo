@@ -20,6 +20,7 @@ import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
 
 // Headless Discord Plays Mario Kart 64: a patched N64Wasm core (parallel-n64 +
 // angrylion software RDP) runs in Bun, renders frames in software, and streams
@@ -70,10 +71,25 @@ export function createMarioKartDeployment(chart: Chart) {
 
   const item = new OnePasswordItem(chart, "mario-kart-config", {
     spec: {
-      // "MK64 Config" — 1Password item with a `config.toml` field (server id,
-      // [bot], [stream] + [stream.userbot] selfbot token/ids, [stream.video],
-      // [emulator], [web]). Lives in the Homelab (Kubernetes) vault alongside
-      // the Pokebot config — see packages/discord-plays-mario-kart/README.md.
+      // "MK64 Config" — 1Password item with a `config.toml` field. As of the
+      // pokebot-mk64-pool refactor, the backend runs on-demand via /play: the
+      // emulator only boots when someone runs /play in their voice channel,
+      // and the per-guild Race leaderboard is keyed via Prisma's `guildId`
+      // column. Config.toml shape:
+      //
+      //   [stream.userbot]
+      //   id    = "<selfbot user id>"
+      //   token = "<selfbot token>"
+      //   # The single userbot account that joins voice channels and streams.
+      //   # One userbot, one emulator, one game at a time — no pool of accounts.
+      //
+      //   state_root_dir = "saves"   # default
+      //
+      // Multi-guild service: same userbot account, just invited into every
+      // Discord server you want this deployment to serve.
+      //
+      // Lives in the Homelab (Kubernetes) vault alongside the Pokebot config —
+      // see packages/discord-plays-mario-kart/README.md.
       itemPath:
         "vaults/v64ocnykdqju4ui6j6pua56xw4/items/fcugoc3kohpmfwzfvko4hgysyq",
     },
@@ -90,6 +106,10 @@ export function createMarioKartDeployment(chart: Chart) {
       image: `ghcr.io/shepherdjerred/discord-plays-mario-kart:${versions["shepherdjerred/discord-plays-mario-kart"]}`,
       envVariables: {
         NODE_ENV: EnvValue.fromValue("production"),
+        // Peer userbot Discord user IDs (Pokébot + Streambot) so the channel-handler
+        // excludes them from the "real viewers" count and leaves an otherwise-empty VC.
+        // Sourced from the canonical map in resources/userbot-ids.ts.
+        PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("marioKart")),
         // VAAPI hardware H.264 encoding on the Intel iGPU (requested below). The
         // app reads STREAM_HARDWARE_ACCELERATION/VAAPI_DEVICE; ffmpeg reads
         // LIBVA_DRIVER_NAME. Falls back to software libx264 if the device is absent.
@@ -227,5 +247,6 @@ export function createMarioKartDeployment(chart: Chart) {
   createCloudflareTunnelBinding(chart, "mariokart-cf-tunnel", {
     serviceName: uiService.name,
     subdomain: "mariokart",
+    port: WEB_PORT,
   });
 }

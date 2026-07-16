@@ -12,11 +12,11 @@ import {
   CardTitle,
 } from "#src/components/ui/card.tsx";
 import { ReportRunHistory } from "#src/components/report-run-history.tsx";
+import { ReportQueryViewer } from "#src/components/report-query-viewer.tsx";
 
 type ReportRow = {
   description: string | null;
   channelId: string;
-  outputFormat: string;
   lookbackDays: number;
   maxRows: number;
   cronExpression: string;
@@ -93,10 +93,6 @@ function ReportDefinitionCards(props: {
             {channelLabel(channels, report.channelId)}
           </p>
           <p>
-            <span className="text-muted-foreground">Format:</span>{" "}
-            {report.outputFormat}
-          </p>
-          <p>
             <span className="text-muted-foreground">Lookback:</span>{" "}
             {report.lookbackDays} days · max {report.maxRows} rows
           </p>
@@ -121,9 +117,7 @@ function ReportDefinitionCards(props: {
           <CardTitle>Query</CardTitle>
         </CardHeader>
         <CardContent>
-          <pre className="overflow-auto rounded-md border border-border bg-muted/50 p-3 font-mono text-xs">
-            {report.queryText}
-          </pre>
+          <ReportQueryViewer queryText={report.queryText} />
         </CardContent>
       </Card>
     </div>

@@ -1,6 +1,5 @@
-import { createActor, type Actor } from "xstate";
+import { createActor } from "xstate";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
-import type { PlaybackView } from "@shepherdjerred/streambot/discord/command-handler.ts";
 import {
   StatusReporter,
   type Announcement,
@@ -15,36 +14,47 @@ import {
   type PlaybackActors,
 } from "@shepherdjerred/streambot/machine/playback-machine.ts";
 import type {
-  PlaybackEvent,
-  PlaybackInput,
   ResolvedSource,
   ResolveSourceInput,
 } from "@shepherdjerred/streambot/machine/types.ts";
 import { buildPlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
-import { sourceLabel } from "@shepherdjerred/streambot/sources/source.ts";
+import {
+  sourceIdentity,
+  sourceLabel,
+} from "@shepherdjerred/streambot/sources/source.ts";
+import { listSubtitleCandidatesForSource } from "@shepherdjerred/streambot/sources/subtitle-candidates.ts";
 import {
   playbackPositionSeconds,
   queueLength,
   setPlaybackState,
+  voiceReconnectsTotal,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
-import type {
-  UserbotEntry,
-  UserbotProvider,
-} from "@shepherdjerred/streambot/pool/userbot-pool.ts";
+import type { UserbotProvider } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import {
   deleteState,
   listPersistedStateFiles,
-  loadState,
   saveState,
   stateFilePath,
 } from "@shepherdjerred/streambot/state/persistence.ts";
 import {
-  buildResumeAnnouncement,
-  buildResumeInput,
   buildSnapshot,
   resumeKeyFor,
 } from "@shepherdjerred/streambot/state/resume.ts";
 import { moveSessionRecord } from "@shepherdjerred/streambot/session/session-move.ts";
+import {
+  resumeSession,
+  type ResumeRunnerDeps,
+} from "@shepherdjerred/streambot/session/resume-runner.ts";
+import {
+  CHECKPOINT_MS,
+  RESUME_CONFIRM_MS,
+  keyOf,
+  type Session,
+  type SessionHandle,
+  type SpawnParams,
+} from "@shepherdjerred/streambot/session/session-types.ts";
+import { VoiceRecoveryCoordinator } from "@shepherdjerred/streambot/session/voice-recovery.ts";
+import { createPlaybackInspector } from "@shepherdjerred/streambot/session/playback-log.ts";
 import type {
   ChannelId,
   GuildId,
@@ -53,46 +63,6 @@ import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 const log = logger.child("session-manager");
-
-/** How often to checkpoint a session's playback state to disk for resume. */
-const CHECKPOINT_MS = 10 * 1000;
-/** Once a resume has streamed healthily this long, mark it confirmed (reset the crash-loop counter). */
-const RESUME_CONFIRM_MS = 30 * 1000;
-/** Skip resuming an item that has crashed the bot this many consecutive boots (crash-loop guard). */
-const MAX_RESUME_ATTEMPTS = 3;
-
-type PlaybackActor = Actor<ReturnType<typeof createPlaybackMachine>>;
-
-/** The slice of a session the command handler drives — bound to one guild + voice channel. */
-export type SessionHandle = {
-  dispatch: (event: PlaybackEvent) => void;
-  view: () => PlaybackView;
-  setVolume: (percent: number) => Promise<boolean>;
-  seek: (seconds: number) => Promise<boolean>;
-};
-
-type Session = {
-  key: string;
-  readonly guildId: GuildId;
-  voiceChannelId: ChannelId;
-  readonly statusChannelId: ChannelId | null;
-  readonly entry: UserbotEntry;
-  readonly actor: PlaybackActor;
-  readonly reporter: StatusReporter;
-  unsubscribe: () => void;
-  /** True once the machine has left `idle` at least once, so we don't tear down on the boot snapshot. */
-  hasStarted: boolean;
-  // Per-session resume bookkeeping (mirrors the former single-instance loop in index.ts).
-  persistResumeKey: string | null;
-  persistResumeAttempts: number;
-  resumeConfirmed: boolean;
-  readonly bootAtMs: number;
-  lastKnownPositionSeconds: number;
-  checkpointTimer: ReturnType<typeof setInterval> | null;
-  snapshotTail: Promise<void>;
-  /** Set at teardown so a queued checkpoint can't re-write the file after we delete it. */
-  torndown: boolean;
-};
 
 export type SessionManagerDeps = {
   readonly config: Config;
@@ -109,27 +79,7 @@ export type SessionManagerDeps = {
   ) => Promise<void>;
 };
 
-const IDLE_VIEW: PlaybackView = {
-  state: "idle",
-  current: null,
-  queue: [],
-  loop: "off",
-  volume: 100,
-};
-
-/** A no-op handle for commands that target a guild/channel with no active session. */
-export const EMPTY_HANDLE: SessionHandle = {
-  dispatch: () => {
-    /* no active session: ignore control events */
-  },
-  view: () => IDLE_VIEW,
-  setVolume: () => Promise.resolve(false),
-  seek: () => Promise.resolve(false),
-};
-
-function keyOf(guildId: GuildId, channelId: ChannelId): string {
-  return `${guildId}:${channelId}`;
-}
+// Re-exported for existing consumers (command-bot) — the canonical home is session-types.ts.
 
 /**
  * Owns one playback session per `(guild, voice channel)`. A play command acquires a member-userbot
@@ -140,6 +90,8 @@ function keyOf(guildId: GuildId, channelId: ChannelId): string {
 export class SessionManager {
   private readonly deps: SessionManagerDeps;
   private readonly sessions = new Map<string, Session>();
+  /** Voice-loss incident lifecycle: classify, stop-with-reason, bounded reconnect-with-resume. */
+  private readonly voiceRecovery: VoiceRecoveryCoordinator<Session>;
   /** Shared TMDB poster lookup (when configured) — attaches a poster to now-playing announcements. */
   private readonly fetchPoster: PosterFetcher | undefined;
 
@@ -149,6 +101,18 @@ export class SessionManager {
       deps.config.tmdb === undefined
         ? undefined
         : createPosterFetcher(deps.config.tmdb.apiKey);
+    this.voiceRecovery = new VoiceRecoveryCoordinator<Session>({
+      reconnect: deps.config.reconnect,
+      stateDir: deps.config.state.dir,
+      announce: deps.announce,
+      saveSnapshot: (session) => this.saveSnapshot(session),
+      hasActiveSession: (key) => this.sessions.has(key),
+      resumeOne: (guildId, channelId, opts) =>
+        this.resumeOne(guildId, channelId, {
+          origin: "reconnect",
+          reconnectAttempts: opts.reconnectAttempts,
+        }),
+    });
   }
 
   /**
@@ -204,7 +168,7 @@ export class SessionManager {
     }
     return {
       voiceChannelId: session.voiceChannelId,
-      userId: session.entry.streamer.userId(),
+      userId: session.entry.userbot.userId(),
     };
   }
 
@@ -241,79 +205,36 @@ export class SessionManager {
    * Must run after the pool has logged in.
    */
   async resumeAll(): Promise<void> {
-    const stateDir = this.deps.config.state.dir;
-    const files = await listPersistedStateFiles(stateDir);
+    const files = await listPersistedStateFiles(this.deps.config.state.dir);
     for (const { guildId, channelId } of files) {
-      const filePath = stateFilePath(stateDir, guildId, channelId);
-      const restored = await loadState(
-        filePath,
-        this.deps.config.state.resumeMaxAgeSeconds,
-      );
-      if (restored === null) {
-        await deleteState(filePath);
-        continue;
-      }
-      const base: PlaybackInput = {
-        guildId,
-        channelId,
-        idleTimeoutMs: this.deps.config.idleTimeoutSeconds * 1000,
-      };
-      const decision = buildResumeInput(restored, base, {
-        maxResumeAttempts: MAX_RESUME_ATTEMPTS,
-      });
-      const hasSomething = (decision.input.initialQueue?.length ?? 0) > 0;
-      if (!hasSomething) {
-        await deleteState(filePath);
-        continue;
-      }
-      const entry = this.deps.pool.acquire(guildId);
-      if (entry === null) {
-        if (this.deps.pool.canServe(guildId)) {
-          // A member userbot exists but is busy — keep the file and retry on a later boot (or until it
-          // ages out via resumeMaxAgeSeconds, which loadState enforces above).
-          log.warn("no userbot free to resume session (will retry)", {
-            guildId,
-            channelId,
-          });
-        } else {
-          // No pooled userbot is a member of this guild, so it can never be resumed — drop the stale
-          // file instead of letting it accumulate until expiry.
-          log.warn("dropping unresumable session (no member userbot)", {
-            guildId,
-            channelId,
-          });
-          await deleteState(filePath);
-        }
-        continue;
-      }
-      const session = this.spawn({
-        guildId,
-        voiceChannelId: channelId,
-        statusChannelId: restored.statusChannelId,
-        entry,
-        input: decision.input,
-        resumeKey: decision.resumeKey,
-        resumeAttempts: decision.resumeAttempts,
-        seekSeconds: decision.input.initialSeekSeconds ?? 0,
-      });
-      log.info("resumed session", {
-        guildId,
-        channelId,
-        resumedCurrent: decision.resumedCurrent,
-        droppedForCrashLoop: decision.droppedForCrashLoop,
-      });
-      const announcement = buildResumeAnnouncement(restored, decision);
-      if (announcement !== null) {
-        await this.deps.announce(session.statusChannelId, announcement);
-      }
+      await this.resumeOne(guildId, channelId, { origin: "boot" });
     }
+  }
+
+  private resumeOne(
+    guildId: GuildId,
+    channelId: ChannelId,
+    opts: { origin: "boot" | "reconnect"; reconnectAttempts?: number },
+  ) {
+    return resumeSession(this.resumeRunnerDeps(), guildId, channelId, opts);
+  }
+
+  private resumeRunnerDeps(): ResumeRunnerDeps {
+    return {
+      config: this.deps.config,
+      pool: this.deps.pool,
+      announce: this.deps.announce,
+      spawn: (params) => this.spawn(params),
+    };
   }
 
   /** Flush + stop every session (keeping state files for resume). Call on process shutdown. */
   async destroyAll(): Promise<void> {
+    this.voiceRecovery.cancelAll();
     const sessions = [...this.sessions.values()];
     this.sessions.clear();
     for (const session of sessions) {
+      session.entry.userbot.setVoiceCloseListener(null);
       if (session.checkpointTimer !== null) {
         clearInterval(session.checkpointTimer);
         session.checkpointTimer = null;
@@ -325,25 +246,36 @@ export class SessionManager {
     }
   }
 
-  private spawn(params: {
+  /**
+   * Gateway-side trigger: the command bot saw the streamer's voice state go to null (kicked or
+   * dropped). The ws-close trigger usually beats this and has already torn the session down —
+   * then there is nothing to do here.
+   */
+  notifyStreamerDetached(params: {
     guildId: GuildId;
-    voiceChannelId: ChannelId;
-    statusChannelId: ChannelId | null;
-    entry: UserbotEntry;
-    input: PlaybackInput;
-    resumeKey: string | null;
-    resumeAttempts: number;
-    seekSeconds?: number;
-  }): Session {
+    channelId: ChannelId;
+  }): void {
+    const session = this.sessions.get(keyOf(params.guildId, params.channelId));
+    if (session === undefined) {
+      log.info("streamer detach notification with no active session", params);
+      return;
+    }
+    void this.voiceRecovery.beginRecovery(session);
+  }
+
+  private spawn(params: SpawnParams): Session {
     const { entry } = params;
     const actors: PlaybackActors = {
-      joinVoice: entry.streamer.joinVoice,
+      joinVoice: entry.userbot.joinVoice,
       resolveSource: this.deps.resolveSource,
-      runStream: entry.streamer.runStream,
-      leaveVoice: entry.streamer.leaveVoice,
+      runStream: entry.userbot.runStream,
+      leaveVoice: entry.userbot.leaveVoice,
     };
     const actor = createActor(createPlaybackMachine(actors), {
       input: params.input,
+      inspect: createPlaybackInspector(
+        keyOf(params.guildId, params.voiceChannelId),
+      ),
     });
     const reporter = new StatusReporter(
       (message) => this.deps.announce(params.statusChannelId, message),
@@ -370,7 +302,17 @@ export class SessionManager {
       checkpointTimer: null,
       snapshotTail: Promise.resolve(),
       torndown: false,
+      preserveStateOnTeardown: params.preserveStateOnTeardown ?? false,
+      reconnectAttempts: params.reconnectAttempts ?? 0,
+      recoveredFromVoiceLoss: params.recoveredFromVoiceLoss ?? false,
+      voiceRecoveryStarted: false,
+      pendingSubtitleMenu: false,
     };
+    // Trigger 1: the fork's voice ws `close` event (fires even when the main gateway never
+    // reports the streamer leaving — the silent-to-EOF case).
+    entry.userbot.setVoiceCloseListener(() => {
+      void this.voiceRecovery.beginRecovery(session);
+    });
 
     const subscription = actor.subscribe((snapshot) => {
       const stateValue = snapshot.value;
@@ -389,6 +331,7 @@ export class SessionManager {
           currentSource === null ? null : sourceLabel(currentSource),
         blockedNonce: snapshot.context.blockedNonce,
         blockedRequester: snapshot.context.lastBlockedRequester,
+        lastError: snapshot.context.lastError,
       };
       reporter.handle(snap);
       // Metrics are process-global (unlabeled) gauges inherited from the single-session design:
@@ -419,13 +362,43 @@ export class SessionManager {
       dispatch: (event) => {
         session.actor.send(event);
       },
-      view: () => buildPlaybackView(session.actor.getSnapshot()),
-      setVolume: (percent) => session.entry.streamer.setVolume(percent),
-      seek: (seconds) => session.entry.streamer.seek(seconds),
+      view: () =>
+        buildPlaybackView(
+          session.actor.getSnapshot(),
+          session.entry.userbot.getPosition(),
+        ),
+      setVolume: (percent) => session.entry.userbot.setVolume(percent),
+      seek: (seconds) => session.entry.userbot.seek(seconds),
+      listSubtitleCandidates: (signal) => {
+        const current = session.actor.getSnapshot().context.current;
+        if (current === null) return Promise.resolve([]);
+        return listSubtitleCandidatesForSource(
+          this.deps.config,
+          current.source,
+          signal,
+        );
+      },
+      currentSourceId: () => {
+        const current = session.actor.getSnapshot().context.current;
+        return current === null ? null : sourceIdentity(current.source);
+      },
+      hasPendingSubtitleMenu: () => session.pendingSubtitleMenu,
+      claimSubtitleMenu: () => {
+        if (session.pendingSubtitleMenu) return false;
+        session.pendingSubtitleMenu = true;
+        return true;
+      },
+      releaseSubtitleMenu: () => {
+        session.pendingSubtitleMenu = false;
+      },
     };
   }
 
-  /** Natural session end: nothing playing + empty queue. Release the userbot, drop the state file. */
+  /**
+   * Session end: nothing playing + empty queue (a natural finish, an external stop, or a failed
+   * item on a dead voice connection). Releases the userbot; deletes the state file unless a
+   * voice-loss recovery wants it preserved.
+   */
   private teardown(session: Session): void {
     if (!this.sessions.has(session.key)) {
       return;
@@ -435,12 +408,27 @@ export class SessionManager {
       clearInterval(session.checkpointTimer);
       session.checkpointTimer = null;
     }
+    // Read the final context before stopping the actor: lastError distinguishes an error-driven
+    // end (external stop, failed rejoin) from a true natural finish.
+    const lastError = session.actor.getSnapshot().context.lastError;
     session.torndown = true;
     session.unsubscribe();
     session.actor.stop();
+    session.entry.userbot.setVoiceCloseListener(null);
     this.deps.pool.release(session.entry);
-    // Delete resume state only AFTER any in-flight checkpoint settles (see deleteStateAfterFlush).
-    void this.deleteStateAfterFlush(session);
+    // A preserved file only makes sense for an error-driven end; a natural finish (lastError
+    // null) has nothing to resume even mid-recovery, so it cleans up as usual.
+    const keepFile = session.preserveStateOnTeardown && lastError !== null;
+    if (keepFile) {
+      log.info("session ended — resume state preserved for reconnect", {
+        guildId: session.guildId,
+        channelId: session.voiceChannelId,
+        lastError,
+      });
+    } else {
+      // Delete resume state only AFTER any in-flight checkpoint settles (see deleteStateAfterFlush).
+      void this.deleteStateAfterFlush(session);
+    }
     queueLength.set(this.totalQueueLength());
     if (this.sessions.size === 0) {
       setPlaybackState("idle");
@@ -449,6 +437,16 @@ export class SessionManager {
       guildId: session.guildId,
       channelId: session.voiceChannelId,
     });
+    // A recovery-spawned session that died before proving healthy (e.g. the rejoin failed) —
+    // re-arm the retry loop. The voice-drop path (voiceRecoveryStarted) schedules its own.
+    if (
+      keepFile &&
+      session.recoveredFromVoiceLoss &&
+      !session.resumeConfirmed &&
+      !session.voiceRecoveryStarted
+    ) {
+      this.voiceRecovery.rearmAfterFailedRecovery(session);
+    }
   }
 
   /**
@@ -498,7 +496,7 @@ export class SessionManager {
       return;
     }
     const { context } = session.actor.getSnapshot();
-    const live = session.entry.streamer.getPosition();
+    const live = session.entry.userbot.getPosition();
     if (context.current === null) {
       session.lastKnownPositionSeconds = 0;
     } else if (live !== null) {
@@ -510,6 +508,17 @@ export class SessionManager {
       Date.now() - session.bootAtMs >= RESUME_CONFIRM_MS
     ) {
       session.resumeConfirmed = true;
+      // A confirmed session no longer needs voice-loss recovery scaffolding: count the recovery
+      // as a success, reset the incident attempt counter, and let teardown delete state normally.
+      if (session.recoveredFromVoiceLoss) {
+        voiceReconnectsTotal.inc({ outcome: "success" });
+        log.info("voice reconnect confirmed healthy", {
+          guildId: session.guildId,
+          channelId: session.voiceChannelId,
+        });
+      }
+      session.reconnectAttempts = 0;
+      session.preserveStateOnTeardown = false;
     }
     if (session.resumeConfirmed) {
       session.persistResumeKey =

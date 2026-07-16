@@ -13,8 +13,8 @@ import {
 import { Colors } from "discord.js";
 import { match } from "ts-pattern";
 import { z } from "zod";
-import { getChampionName } from "twisted/dist/constants/champions.js";
 import { differenceInCalendarDays, format } from "date-fns";
+import { getChampionDisplayName } from "#src/utils/champion.ts";
 
 type CompetitionStatus = ReturnType<typeof getCompetitionStatus>;
 
@@ -71,7 +71,7 @@ export function formatCriteriaDescription(
       (c) => `Most wins in ${formatQueue(c.queue)}`,
     )
     .with({ type: "MOST_WINS_CHAMPION" }, (c) => {
-      const championName = getChampionNameSafe(c.championId);
+      const championName = getChampionDisplayName(c.championId);
       const queueSuffix = c.queue ? ` in ${formatQueue(c.queue)}` : "";
       return `Most wins with ${championName}${queueSuffix}`;
     })
@@ -221,19 +221,4 @@ export function getMedalEmoji(rank: number): string {
  */
 export function formatQueue(queue: CompetitionQueueType): string {
   return competitionQueueTypeToString(queue);
-}
-
-/**
- * Get champion name from ID with error handling
- */
-export function getChampionNameSafe(championId: number): string {
-  try {
-    const name = getChampionName(championId);
-    if (name && name !== "") {
-      return name;
-    }
-    return `Champion ${championId.toString()}`;
-  } catch {
-    return `Champion ${championId.toString()}`;
-  }
 }

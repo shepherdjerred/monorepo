@@ -20,4 +20,11 @@ export const TASK_QUEUES = {
    * long-running Claude/Codex subprocesses do not block HA/event cron work.
    */
   AGENT_TASK: "agent-task",
+  /**
+   * Durable per-PR babysitter loops (the mutating "get this PR green" bot).
+   * Isolated from every other queue so its long-lived loops + long mutating
+   * `claude -p` subprocesses can't head-of-line block HA, cron, PR review, or
+   * agent-task work. Sized for a small concurrency cap on the worker.
+   */
+  PR_BABYSIT: "pr-babysit",
 } as const;

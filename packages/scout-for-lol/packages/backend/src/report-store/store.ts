@@ -6,9 +6,17 @@ import type {
   RawParticipant,
   RawTimeline,
 } from "@scout-for-lol/data";
-import { LeaguePuuidSchema, parseQueueType } from "@scout-for-lol/data";
+import {
+  LeaguePuuidSchema,
+  resolveQueueTypeFromGame,
+} from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { resolveLakeDir } from "#src/report-lake/paths.ts";
+import {
+  writeMatchStagingFile,
+  writePrematchStagingFile,
+} from "#src/report-lake/staging.ts";
 
 export type StoredPayloadOptions = {
   s3Key?: string;
@@ -88,44 +96,40 @@ export async function upsertStoredMatchWithFacts(
   match: RawMatch,
   options: StoredPayloadOptions = {},
 ): Promise<{ stored: boolean; factCount: number }> {
-  const queue = parseQueueType(match.info.queueId);
+  const queue = resolveQueueTypeFromGame(
+    match.info.queueId,
+    match.info.gameMode,
+    match.info.gameType,
+  );
   const matchId = match.metadata.matchId;
   const importedFromS3 = options.importedFromS3 ?? false;
+
+  const storedMatchCommon = {
+    gameId: match.info.gameId.toString(),
+    platformId: match.info.platformId,
+    queueId: match.info.queueId,
+    queue: queue ?? null,
+    gameMode: match.info.gameMode,
+    gameType: match.info.gameType,
+    gameVersion: match.info.gameVersion,
+    gameCreationAt: toDate(match.info.gameCreation),
+    gameStartAt: toDate(match.info.gameStartTimestamp),
+    gameEndAt: toDate(match.info.gameEndTimestamp),
+    durationSeconds: match.info.gameDuration,
+    participantPuuidsJson: toJson(match.metadata.participants),
+    rawJson: toJson(match),
+  };
 
   await prisma.storedMatch.upsert({
     where: { matchId },
     create: {
       matchId,
-      gameId: match.info.gameId.toString(),
-      platformId: match.info.platformId,
-      queueId: match.info.queueId,
-      queue: queue ?? null,
-      gameMode: match.info.gameMode,
-      gameType: match.info.gameType,
-      gameVersion: match.info.gameVersion,
-      gameCreationAt: toDate(match.info.gameCreation),
-      gameStartAt: toDate(match.info.gameStartTimestamp),
-      gameEndAt: toDate(match.info.gameEndTimestamp),
-      durationSeconds: match.info.gameDuration,
-      participantPuuidsJson: toJson(match.metadata.participants),
-      rawJson: toJson(match),
+      ...storedMatchCommon,
       s3Key: options.s3Key ?? null,
       importedFromS3,
     },
     update: {
-      gameId: match.info.gameId.toString(),
-      platformId: match.info.platformId,
-      queueId: match.info.queueId,
-      queue: queue ?? null,
-      gameMode: match.info.gameMode,
-      gameType: match.info.gameType,
-      gameVersion: match.info.gameVersion,
-      gameCreationAt: toDate(match.info.gameCreation),
-      gameStartAt: toDate(match.info.gameStartTimestamp),
-      gameEndAt: toDate(match.info.gameEndTimestamp),
-      durationSeconds: match.info.gameDuration,
-      participantPuuidsJson: toJson(match.metadata.participants),
-      rawJson: toJson(match),
+      ...storedMatchCommon,
       ...(shouldUpdateStoredPayloadMetadata(options, importedFromS3)
         ? {
             s3Key: options.s3Key ?? null,
@@ -134,6 +138,12 @@ export async function upsertStoredMatchWithFacts(
         : {}),
     },
   });
+
+  // Stage flattened lake rows so the DuckDB report engine sees this match
+  // before the next compaction. Best-effort by design: failures are logged
+  // and metric'd inside, never thrown — the compactor re-derives the same
+  // rows from the StoredMatch upsert above.
+  await writeMatchStagingFile(resolveLakeDir(), match);
 
   const matchParticipantPuuids = match.metadata.participants.map((puuid) =>
     LeaguePuuidSchema.parse(puuid),
@@ -149,6 +159,38 @@ export async function upsertStoredMatchWithFacts(
     const puuid = LeaguePuuidSchema.parse(participant.puuid);
     const matchingAccounts = accountLookup.get(puuid) ?? [];
     for (const account of matchingAccounts) {
+      const matchFactCommon = {
+        gameId: match.info.gameId.toString(),
+        gameCreationAt: toDate(match.info.gameCreation),
+        gameEndAt: toDate(match.info.gameEndTimestamp),
+        queueId: match.info.queueId,
+        queue: queue ?? null,
+        durationSeconds: match.info.gameDuration,
+        playerId: account.player.id,
+        accountId: account.id,
+        playerAlias: account.player.alias,
+        discordId: account.player.discordId,
+        region: account.region,
+        participantId: participant.participantId,
+        teamId: participant.teamId,
+        championId: participant.championId,
+        championName: participant.championName,
+        win: participant.win,
+        surrendered: participantSurrendered(participant),
+        earlySurrendered: participantEarlySurrendered(participant),
+        kills: participant.kills,
+        deaths: participant.deaths,
+        assists: participant.assists,
+        kda: participantKda(participant),
+        creepScore: participantCreepScore(participant),
+        goldEarned: participant.goldEarned,
+        totalDamageDealt: participant.totalDamageDealt,
+        damageToChampions: participant.totalDamageDealtToChampions,
+        damageTaken: participant.totalDamageTaken,
+        visionScore: participant.visionScore,
+        rawParticipantJson: toJson(participant),
+      };
+
       await prisma.matchParticipantFact.upsert({
         where: {
           serverId_matchId_puuid: {
@@ -160,68 +202,10 @@ export async function upsertStoredMatchWithFacts(
         create: {
           serverId: account.serverId,
           matchId,
-          gameId: match.info.gameId.toString(),
-          gameCreationAt: toDate(match.info.gameCreation),
-          gameEndAt: toDate(match.info.gameEndTimestamp),
-          queueId: match.info.queueId,
-          queue: queue ?? null,
-          durationSeconds: match.info.gameDuration,
-          playerId: account.player.id,
-          accountId: account.id,
-          playerAlias: account.player.alias,
-          discordId: account.player.discordId,
           puuid,
-          region: account.region,
-          participantId: participant.participantId,
-          teamId: participant.teamId,
-          championId: participant.championId,
-          championName: participant.championName,
-          win: participant.win,
-          surrendered: participantSurrendered(participant),
-          earlySurrendered: participantEarlySurrendered(participant),
-          kills: participant.kills,
-          deaths: participant.deaths,
-          assists: participant.assists,
-          kda: participantKda(participant),
-          creepScore: participantCreepScore(participant),
-          goldEarned: participant.goldEarned,
-          totalDamageDealt: participant.totalDamageDealt,
-          damageToChampions: participant.totalDamageDealtToChampions,
-          damageTaken: participant.totalDamageTaken,
-          visionScore: participant.visionScore,
-          rawParticipantJson: toJson(participant),
+          ...matchFactCommon,
         },
-        update: {
-          gameId: match.info.gameId.toString(),
-          gameCreationAt: toDate(match.info.gameCreation),
-          gameEndAt: toDate(match.info.gameEndTimestamp),
-          queueId: match.info.queueId,
-          queue: queue ?? null,
-          durationSeconds: match.info.gameDuration,
-          playerId: account.player.id,
-          accountId: account.id,
-          playerAlias: account.player.alias,
-          discordId: account.player.discordId,
-          region: account.region,
-          participantId: participant.participantId,
-          teamId: participant.teamId,
-          championId: participant.championId,
-          championName: participant.championName,
-          win: participant.win,
-          surrendered: participantSurrendered(participant),
-          earlySurrendered: participantEarlySurrendered(participant),
-          kills: participant.kills,
-          deaths: participant.deaths,
-          assists: participant.assists,
-          kda: participantKda(participant),
-          creepScore: participantCreepScore(participant),
-          goldEarned: participant.goldEarned,
-          totalDamageDealt: participant.totalDamageDealt,
-          damageToChampions: participant.totalDamageDealtToChampions,
-          damageTaken: participant.totalDamageTaken,
-          visionScore: participant.visionScore,
-          rawParticipantJson: toJson(participant),
-        },
+        update: matchFactCommon,
       });
       factCount++;
     }
@@ -272,12 +256,28 @@ export async function upsertStoredPrematchWithFacts(
   observedAt: Date,
   options: StoredPayloadOptions = {},
 ): Promise<{ storedPrematchId: number; factCount: number }> {
-  const queue = parseQueueType(gameInfo.gameQueueConfigId);
+  const queue = resolveQueueTypeFromGame(
+    gameInfo.gameQueueConfigId,
+    gameInfo.gameMode,
+    gameInfo.gameType,
+  );
   const importedFromS3 = options.importedFromS3 ?? false;
   const gameStartAt =
     gameInfo.gameStartTime > 0 ? toDate(gameInfo.gameStartTime) : undefined;
   const puuids = participantPuuids(gameInfo);
   const dedupeKey = `${gameInfo.platformId}:${gameInfo.gameId.toString()}`;
+
+  const storedPrematchCommon = {
+    gameStartAt: gameStartAt ?? null,
+    observedAt,
+    platformId: gameInfo.platformId,
+    queueId: gameInfo.gameQueueConfigId,
+    queue: queue ?? null,
+    gameMode: gameInfo.gameMode,
+    gameType: gameInfo.gameType,
+    participantPuuidsJson: toJson(puuids),
+    rawJson: toJson(gameInfo),
+  };
 
   const storedPrematch = await prisma.storedPrematch.upsert({
     where: {
@@ -286,28 +286,12 @@ export async function upsertStoredPrematchWithFacts(
     create: {
       dedupeKey,
       gameId: gameInfo.gameId.toString(),
-      gameStartAt: gameStartAt ?? null,
-      observedAt,
-      platformId: gameInfo.platformId,
-      queueId: gameInfo.gameQueueConfigId,
-      queue: queue ?? null,
-      gameMode: gameInfo.gameMode,
-      gameType: gameInfo.gameType,
-      participantPuuidsJson: toJson(puuids),
-      rawJson: toJson(gameInfo),
+      ...storedPrematchCommon,
       s3Key: options.s3Key ?? null,
       importedFromS3,
     },
     update: {
-      gameStartAt: gameStartAt ?? null,
-      observedAt,
-      platformId: gameInfo.platformId,
-      queueId: gameInfo.gameQueueConfigId,
-      queue: queue ?? null,
-      gameMode: gameInfo.gameMode,
-      gameType: gameInfo.gameType,
-      participantPuuidsJson: toJson(puuids),
-      rawJson: toJson(gameInfo),
+      ...storedPrematchCommon,
       ...(shouldUpdateStoredPayloadMetadata(options, importedFromS3)
         ? {
             s3Key: options.s3Key ?? null,
@@ -316,6 +300,9 @@ export async function upsertStoredPrematchWithFacts(
         : {}),
     },
   });
+
+  // Best-effort lake staging; see the match staging note above.
+  await writePrematchStagingFile(resolveLakeDir(), gameInfo, observedAt);
 
   const trackedAccounts = await findTrackedAccounts(prisma, puuids);
   const accountLookup = accountsByPuuid(trackedAccounts);

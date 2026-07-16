@@ -13,6 +13,29 @@ Services are deployed across multiple namespaces using an app-of-apps pattern. E
 category has its own namespace and Helm chart (e.g., `media`, `home`, `postal`). Services follow
 a consistent `createXxxDeployment()` pattern.
 
+## First-Party ghcr Images Must Be Public
+
+The cluster (`torvalds`) has **no imagePullSecret / dockerconfigjson infrastructure** anywhere in
+`src/cdk8s`. Every first-party image (`ghcr.io/shepherdjerred/*`) must therefore be a **public** ghcr
+package; a private package makes kubelet pull anonymously, ghcr returns `401 Unauthorized` →
+`ImagePullBackOff`.
+
+Newly-created ghcr packages default to **private**, so a brand-new service breaks on first deploy
+until its package is flipped to public — even when `versions.ts` has the correct digest (digests are
+updated manually in `versions.ts` since the CI commit-back was removed 2026-07; visibility is separate).
+
+Check visibility without cluster access:
+
+```bash
+tok=$(curl -s "https://ghcr.io/token?scope=repository:shepherdjerred/<pkg>:pull&service=ghcr.io" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("token",""))')
+curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $tok" "https://ghcr.io/v2/shepherdjerred/<pkg>/tags/list"   # 200=public, 403=private
+```
+
+Changing visibility is **GitHub-UI only** (no REST API; the default `gh` token lacks `write:packages`):
+the owner must set it at
+`https://github.com/users/shepherdjerred/packages/container/<pkg>/settings` → Danger Zone → Change
+visibility → Public. Ask the user — you cannot do this.
+
 ## Namespace Structure
 
 | Namespace   | Services                                     | Chart File     |
@@ -187,7 +210,7 @@ export function createYourNamespaceApplication(chart: Chart) {
 }
 ```
 
-Then register in `src/cdk8s/src/cdk8s-charts/apps.ts` and add to `HELM_CHARTS` in `.dagger/src/helm.ts`.
+Then register in `src/cdk8s/src/cdk8s-charts/apps.ts`. (Charts were also listed in `HELM_CHARTS` in `.dagger/src/helm.ts` for the automated helm package/push, but that pipeline was removed 2026-07 — chart packaging/publishing to ChartMuseum is manual now.)
 
 ## Advanced Patterns
 
@@ -292,4 +315,3 @@ src/cdk8s/src/
 - `src/cdk8s/src/cdk8s-charts/home.ts` - Home namespace chart
 - `src/cdk8s/src/resources/torrents/sonarr.ts` - Reference example
 - `src/cdk8s/src/resources/media/plex.ts` - Complex example with sidecars
-- `.dagger/src/helm.ts` - HELM_CHARTS list of all charts

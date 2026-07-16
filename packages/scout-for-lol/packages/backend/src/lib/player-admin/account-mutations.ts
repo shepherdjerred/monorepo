@@ -1,19 +1,22 @@
-import type { z } from "zod";
+import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
   DiscordAccountIdSchema,
   type LeaguePuuid,
   LeaguePuuidSchema,
   type PlayerConfigEntry,
+  RegionSchema,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { recordAudit } from "#src/lib/audit/index.ts";
 import { resolvePuuidFromRiotId } from "#src/discord/commands/admin/utils/riot-api.ts";
 import { backfillLastMatchTime } from "#src/league/api/backfill-match-history.ts";
+import { getRiotIdByPuuid } from "#src/lib/riot/account-riot-id.ts";
 import {
   AliasSchema,
   assertAdmin,
   conflict,
+  GuildIdInput,
   getPlayerOrThrow,
   isUniqueConstraintError,
   notFound,
@@ -27,9 +30,15 @@ export const AddAccountInput = RiotAccountInput.extend({
 export const TransferAccountInput = RiotAccountInput.extend({
   toPlayerAlias: AliasSchema,
 });
+export const UpdateAccountInput = GuildIdInput.extend({
+  accountId: z.number().int().min(1),
+  alias: AliasSchema.optional(),
+  region: RegionSchema.optional(),
+});
 export type AddAccountInputData = z.infer<typeof AddAccountInput>;
 export type RiotAccountInputData = z.infer<typeof RiotAccountInput>;
 export type TransferAccountInputData = z.infer<typeof TransferAccountInput>;
+export type UpdateAccountInputData = z.infer<typeof UpdateAccountInput>;
 
 async function resolvePuuidOrThrow(
   input: RiotAccountInputData,
@@ -71,6 +80,11 @@ export async function addAccount(ctx: WebCtx, input: AddAccountInputData) {
           alias: accountAlias,
           puuid,
           region: input.region,
+          // Seed the cached Riot ID from the user-supplied input so the UI
+          // shows it immediately; the 24h refresh canonicalizes it later.
+          riotGameName: input.riotId.game_name,
+          riotTagLine: input.riotId.tag_line,
+          riotIdUpdatedAt: now,
           playerId: player.id,
           serverId: input.guildId,
           creatorDiscordId: ctx.user.discordId,
@@ -236,4 +250,88 @@ export async function transferAccount(
     };
   });
   return transferred;
+}
+
+/**
+ * Edit an existing account's alias and/or region in place. Identified by
+ * accountId (no Riot lookup needed for an alias-only edit). If the region
+ * changes, the cached Riot ID is re-resolved so the displayed gameName#tag
+ * reflects the new routing.
+ */
+export async function updateAccount(
+  ctx: WebCtx,
+  input: UpdateAccountInputData,
+) {
+  await assertAdmin(ctx, input.guildId);
+  const account = await prisma.account.findUnique({
+    where: { id: input.accountId },
+    include: { player: true },
+  });
+  if (account === null) {
+    throw notFound("Account was not found");
+  }
+  if (account.serverId !== input.guildId) {
+    throw notFound("Account was not found");
+  }
+
+  const nextAlias = input.alias ?? account.alias;
+  const nextRegion = input.region ?? account.region;
+  const regionChanged =
+    input.region !== undefined && input.region !== account.region;
+
+  // Re-resolve the Riot ID when routing changes (best-effort; an API
+  // failure leaves the cached value untouched rather than blocking the edit).
+  const riotRefresh =
+    regionChanged && input.region !== undefined
+      ? await getRiotIdByPuuid(account.puuid, input.region)
+      : null;
+
+  const now = new Date();
+  const updated = await prisma.$transaction(async (tx) => {
+    const result = await tx.account.update({
+      where: { id: account.id },
+      data: {
+        alias: nextAlias,
+        region: nextRegion,
+        ...(riotRefresh === null
+          ? {}
+          : {
+              riotGameName: riotRefresh.gameName,
+              riotTagLine: riotRefresh.tagLine,
+              riotIdUpdatedAt: now,
+            }),
+        updatedTime: now,
+      },
+    });
+    await tx.player.update({
+      where: { id: account.playerId },
+      data: { updatedTime: now },
+    });
+    await recordAudit(
+      {
+        action: "ACCOUNT_UPDATE",
+        actorDiscordId: ctx.user.discordId,
+        serverId: input.guildId,
+        targetPlayerId: account.playerId,
+        targetAccountId: account.id,
+        payload: {
+          playerAlias: account.player.alias,
+          previousAlias: account.alias,
+          alias: nextAlias,
+          previousRegion: account.region,
+          region: nextRegion,
+        },
+        ipAddress: ctx.webSession.ipAddress,
+        userAgent: ctx.webSession.userAgent,
+      },
+      tx,
+    );
+    return result;
+  });
+
+  return {
+    accountId: updated.id,
+    alias: updated.alias,
+    region: updated.region,
+  };
 }

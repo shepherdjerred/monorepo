@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "#generated/prisma/client/index.js";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
 // Singleton pattern for Prisma client using a well-known key

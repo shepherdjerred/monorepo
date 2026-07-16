@@ -8,7 +8,6 @@ type Run = {
   id: number;
   trigger: string;
   status: string;
-  outputFormat: string;
   startedAt: Date | string;
   durationMs: number | null;
   rowsReturned: number;

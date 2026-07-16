@@ -82,3 +82,7 @@ Verified locally: `scripts/ci` typecheck + 57 pipeline tests pass; `dagger call 
 ## 6. Phase C — finer, per-service hardening (follow-up)
 
 Today all `*.ts.net` ingresses share `tag:k8s`, so ACLs can't distinguish e.g. argocd from jellyfin. To restrict sensitive surfaces (argocd, temporal-ui, seaweedfs, grafana) to admins only, give each sensitive ingress its own tag via the `TailscaleIngress` construct / operator `ProxyClass` (cdk8s), then add per-tag rules + tests here. Track separately.
+
+## Gotcha: golink runs its own node tagged `tag:k8s-operator`
+
+golink (`go.tailnet-1a49.ts.net`) runs its **own embedded tsnet node** tagged **`tag:k8s-operator`** (`src/cdk8s/src/resources/golink.ts` → `TS_ADVERTISE_TAGS`), NOT an operator-created ingress proxy (those are `tag:k8s`). The deny-by-default ACL only granted `tag:k8s → tag:k8s:443`, so reaching golink over the tailnet needs an **explicit `tag:k8s → tag:k8s-operator:443` grant** — otherwise deny-by-default silently drops it and the caller hangs ~133s then `ConnectionRefused`. This broke `golink-sync` (the temporal-worker egresses as `tag:k8s`) daily from 2026-06-14 until PR #1287 added the grant. Signature: the worker reaches `tag:k8s` ingresses (chartmuseum/seaweedfs) fine but times out on golink; `autogroup:admin` reaches it from your Mac, so it works locally but not from the cluster.

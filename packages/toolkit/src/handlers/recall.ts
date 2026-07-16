@@ -9,6 +9,10 @@ import { runWatcher } from "#daemon/watch.ts";
 import { daemonStart, daemonStop, daemonStatus } from "#daemon/daemon.ts";
 import { viewLogs } from "#daemon/logs.ts";
 import { runDebug } from "#daemon/debug.ts";
+import { printDegradationWarning } from "#lib/output/formatter.ts";
+
+const MLX_UNAVAILABLE =
+  "MLX embeddings unavailable (uv not found or broken) — semantic search disabled, keyword-only. Install uv to restore: https://docs.astral.sh/uv/";
 
 export async function handleRecallCommand(
   subcommand: string | undefined,
@@ -76,8 +80,8 @@ async function handleSearch(args: string[]): Promise<void> {
   const embedder = new EmbeddingClient();
   const useEmbedder = (await embedder.isAvailable()) ? embedder : null;
 
-  if (useEmbedder == null && values.verbose) {
-    console.error("[search] MLX not available, using keyword-only search");
+  if (useEmbedder == null) {
+    printDegradationWarning("search", MLX_UNAVAILABLE);
   }
 
   const modeStr = values.mode;
@@ -133,6 +137,9 @@ async function handleAdd(args: string[]): Promise<void> {
   const db = await createRecallDb();
   const embedder = new EmbeddingClient();
   const useEmbedder = (await embedder.isAvailable()) ? embedder : null;
+  if (useEmbedder == null) {
+    printDegradationWarning("add", MLX_UNAVAILABLE);
+  }
   const tags = values.tags?.split(",") ?? [];
 
   for (const filePath of positionals) {
@@ -201,9 +208,7 @@ async function handleReindex(args: string[]): Promise<void> {
   const useEmbedder = (await embedder.isAvailable()) ? embedder : null;
 
   if (useEmbedder == null) {
-    console.error(
-      "Warning: MLX not available. Indexing with mock embeddings (keyword search only).",
-    );
+    printDegradationWarning("reindex", MLX_UNAVAILABLE);
   }
 
   const result = await reindexAll(db, useEmbedder, values.full, values.verbose);

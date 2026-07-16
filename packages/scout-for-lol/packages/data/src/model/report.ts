@@ -6,6 +6,10 @@ import type {
   DiscordChannelId,
   DiscordGuildId,
 } from "#src/model/discord.ts";
+import {
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+} from "#src/model/discord.ts";
 
 export const REPORT_QUERY_MAX_LENGTH = 4000;
 export const REPORT_DEFAULT_LOOKBACK_DAYS = 30;
@@ -26,6 +30,13 @@ export const ReportRunIdSchema = z
   .positive()
   .brand("ReportRunId");
 
+/**
+ * The set of visualizations a report can produce. Formerly stored as the
+ * standalone `outputFormat` column; it is now the discriminant (`kind`) of the
+ * declarative `RENDER` clause embedded in the query DSL itself (parsed in
+ * backend `query-language.ts`). The enum name is retained since the values are
+ * unchanged and still describe a report's output format.
+ */
 export type ReportOutputFormat = z.infer<typeof ReportOutputFormatSchema>;
 export const ReportOutputFormatSchema = z.enum([
   "LIST",
@@ -34,6 +45,55 @@ export const ReportOutputFormatSchema = z.enum([
   "BAR_CHART",
   "LINE_CHART",
 ]);
+
+/**
+ * Channel encodings for chart kinds — a deliberately small slice of the
+ * grammar-of-graphics (à la Vega-Lite). Each channel references a column the
+ * query *produces*: `label` (the GROUP BY dimension) or a SELECTed metric.
+ * Both are optional; defaults (`x = label`, `y = first metric`) are resolved at
+ * render time so a bare `RENDER bar_chart` reproduces the pre-DSL behavior.
+ */
+export type ReportRenderChannel = z.infer<typeof ReportRenderChannelSchema>;
+export const ReportRenderChannelSchema = z
+  .object({
+    x: z.string().min(1).optional(),
+    y: z.string().min(1).optional(),
+  })
+  .strict();
+
+export type ReportChartOptions = z.infer<typeof ReportChartOptionsSchema>;
+export const ReportChartOptionsSchema = z
+  .object({
+    title: z.string().min(1).optional(),
+    yAxisLabel: z.string().min(1).optional(),
+  })
+  .strict();
+
+/**
+ * Declarative display spec parsed from a query's trailing `RENDER` clause.
+ * Discriminated on `kind`: text kinds carry no encoding; chart kinds carry
+ * optional channel encodings + options. This is the single source of truth for
+ * how a report renders — there is no separate `outputFormat` column.
+ */
+export type ReportRenderSpec = z.infer<typeof ReportRenderSpecSchema>;
+export const ReportRenderSpecSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("LIST") }),
+  z.object({ kind: z.literal("TABLE") }),
+  z.object({ kind: z.literal("LEADERBOARD") }),
+  z.object({
+    kind: z.literal("BAR_CHART"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  z.object({
+    kind: z.literal("LINE_CHART"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+]);
+
+/** Fallback render spec when a query carries no `RENDER` clause. */
+export const DEFAULT_RENDER_SPEC: ReportRenderSpec = { kind: "TABLE" };
 
 export type ReportRunStatus = z.infer<typeof ReportRunStatusSchema>;
 export const ReportRunStatusSchema = z.enum(["RUNNING", "SUCCESS", "FAILED"]);
@@ -83,7 +143,6 @@ export type Report = {
   queryText: string;
   lookbackDays: number;
   maxRows: number;
-  outputFormat: ReportOutputFormat;
   isEnabled: boolean;
   isSystemManaged: boolean;
   systemSource: ReportSystemSource | null;
@@ -103,7 +162,6 @@ export type ReportRun = {
   serverId: DiscordGuildId;
   trigger: ReportRunTrigger;
   status: ReportRunStatus;
-  outputFormat: ReportOutputFormat;
   startedAt: Date;
   completedAt: Date | null;
   durationMs: number | null;
@@ -116,13 +174,211 @@ export type ReportRun = {
 export const ReportCreateInputSchema = z.object({
   title: z.string().trim().min(1).max(100),
   description: z.string().trim().max(500).nullable().default(null),
-  channelId: z.string().min(1),
+  // Validate the Discord channel snowflake at the boundary (17-20 digits)
+  // rather than accepting any non-empty string and re-checking deeper — a
+  // malformed channelId now fails as a field-level input error instead of a
+  // BAD_REQUEST thrown from the handler. See discord.ts DiscordChannelIdSchema.
+  channelId: DiscordChannelIdSchema,
   queryText: ReportQueryTextSchema,
   lookbackDays: ReportLookbackDaysSchema,
   maxRows: ReportMaxRowsSchema,
-  outputFormat: ReportOutputFormatSchema.default("TABLE"),
   cronExpression: CompetitionCronSchema.default(DEFAULT_REPORT_CRON),
   isEnabled: z.boolean().default(true),
 });
 
 export type ReportCreateInput = z.infer<typeof ReportCreateInputSchema>;
+
+export const REPORT_AI_REQUEST_MAX_BYTES = 24 * 1024;
+export const REPORT_AI_INSTRUCTION_MAX_LENGTH = 4000;
+export const REPORT_AI_MAX_STEPS = 10;
+export const REPORT_AI_MAX_TOOL_CALLS = 30;
+export const REPORT_AI_MAX_PREVIEW_CALLS = 10;
+export const REPORT_AI_PREVIEW_MAX_ROWS = 10;
+export const REPORT_AI_TIMEOUT_MS = 180_000;
+export const REPORT_AI_MAX_OUTPUT_TOKENS = 4000;
+export const REPORT_AI_DEFAULT_WEEKLY_LIMIT = 30;
+
+export const ReportAiCurrentQueryTextSchema = z
+  .string()
+  .trim()
+  .max(REPORT_QUERY_MAX_LENGTH)
+  .nullable();
+
+export const ReportAiEditRequestSchema = z
+  .object({
+    guildId: DiscordGuildIdSchema,
+    instructions: z
+      .string()
+      .trim()
+      .min(1)
+      .max(REPORT_AI_INSTRUCTION_MAX_LENGTH),
+    currentQueryText: ReportAiCurrentQueryTextSchema.default(null),
+    currentTitle: z.string().trim().max(100).nullable().default(null),
+    currentDescription: z.string().trim().max(500).nullable().default(null),
+    lookbackDays: ReportLookbackDaysSchema.default(
+      REPORT_DEFAULT_LOOKBACK_DAYS,
+    ),
+    maxRows: ReportMaxRowsSchema.default(REPORT_DEFAULT_MAX_ROWS),
+    sourceCompetitionId: z.number().int().positive().nullable().default(null),
+  })
+  .strict();
+
+export type ReportAiEditRequest = z.infer<typeof ReportAiEditRequestSchema>;
+
+export const ReportAiFinalDraftSchema = z
+  .object({
+    title: z.string().trim().min(1).max(100),
+    description: z.string().trim().max(500).nullable().default(null),
+    queryText: ReportQueryTextSchema,
+    explanation: z.string().trim().min(1).max(1000),
+    warnings: z.array(z.string().trim().min(1).max(300)).max(5).default([]),
+  })
+  .strict();
+
+export type ReportAiFinalDraft = z.infer<typeof ReportAiFinalDraftSchema>;
+
+export const ReportAiQuotaScopeSchema = z.enum([
+  "user_guild",
+  "guild",
+  "global",
+]);
+
+export type ReportAiQuotaScope = z.infer<typeof ReportAiQuotaScopeSchema>;
+
+export const ReportAiQuotaWindowSchema = z.enum([
+  "minute",
+  "hour",
+  "day",
+  "week",
+]);
+
+export type ReportAiQuotaWindow = z.infer<typeof ReportAiQuotaWindowSchema>;
+
+export const ReportAiQuotaSnapshotSchema = z
+  .object({
+    scope: ReportAiQuotaScopeSchema,
+    window: ReportAiQuotaWindowSchema,
+    used: z.number().int().nonnegative(),
+    limit: z.number().int().positive(),
+    remaining: z.number().int().nonnegative(),
+    resetsAt: z.iso.datetime(),
+  })
+  .strict();
+
+export type ReportAiQuotaSnapshot = z.infer<typeof ReportAiQuotaSnapshotSchema>;
+
+export const ReportAiEditStatusSchema = z
+  .object({
+    enabled: z.boolean(),
+    disabledReason: z.string().trim().min(1).max(300).nullable(),
+    model: z.string().trim().min(1),
+    quota: z.array(ReportAiQuotaSnapshotSchema).min(1),
+    activeRun: z.boolean(),
+  })
+  .strict();
+
+export type ReportAiEditStatus = z.infer<typeof ReportAiEditStatusSchema>;
+
+export const ReportAiPreviewSummarySchema = z
+  .object({
+    columns: z.array(z.string()).max(20),
+    rows: z
+      .array(
+        z
+          .object({
+            label: z.string(),
+            values: z.array(
+              z
+                .object({
+                  column: z.string(),
+                  value: z.union([z.string(), z.number()]),
+                })
+                .strict(),
+            ),
+          })
+          .strict(),
+      )
+      .max(REPORT_AI_PREVIEW_MAX_ROWS),
+    rowsScanned: z.number().int().nonnegative(),
+    renderKind: ReportOutputFormatSchema,
+  })
+  .strict();
+
+export type ReportAiPreviewSummary = z.infer<
+  typeof ReportAiPreviewSummarySchema
+>;
+
+export const ReportAiStreamEventSchema = z.discriminatedUnion("type", [
+  z
+    .object({
+      type: z.literal("started"),
+      runId: z.uuid(),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("step_started"),
+      message: z.string().trim().min(1).max(500),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("tool_call"),
+      toolName: z.string().trim().min(1).max(100),
+      message: z.string().trim().min(1).max(500),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("tool_result"),
+      toolName: z.string().trim().min(1).max(100),
+      ok: z.boolean(),
+      message: z.string().trim().min(1).max(500),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("preview"),
+      preview: ReportAiPreviewSummarySchema,
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("draft_delta"),
+      text: z.string().min(1).max(4000),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("final"),
+      draft: ReportAiFinalDraftSchema,
+      formattedQueryText: ReportQueryTextSchema,
+      quota: z.array(ReportAiQuotaSnapshotSchema).min(1),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("error"),
+      message: z.string().trim().min(1).max(1000),
+      retryAfterSeconds: z.number().int().positive().nullable().default(null),
+      quota: z
+        .array(ReportAiQuotaSnapshotSchema)
+        .min(1)
+        .nullable()
+        .default(null),
+    })
+    .strict(),
+  z.object({ type: z.literal("done") }).strict(),
+]);
+
+export type ReportAiStreamEvent = z.infer<typeof ReportAiStreamEventSchema>;
+
+export const ReportAiHttpErrorSchema = z
+  .object({
+    error: z.string().trim().min(1).max(1000),
+    retryAfterSeconds: z.number().int().positive().nullable().default(null),
+    quota: z.array(ReportAiQuotaSnapshotSchema).min(1).nullable().default(null),
+  })
+  .strict();
+
+export type ReportAiHttpError = z.infer<typeof ReportAiHttpErrorSchema>;

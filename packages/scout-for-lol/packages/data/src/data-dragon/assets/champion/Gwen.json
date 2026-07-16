@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Gwen": {
       "id": "Gwen",
@@ -402,10 +402,12 @@
           "leveltip": {
             "label": [
               "Cooldown",
+              "Initial Damage",
               "Final Strike Damage"
             ],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ miniswipebasedamage }} -> {{ miniswipebasedamageNL }}",
               "{{ swipedamagebase }} -> {{ swipedamagebaseNL }}"
             ]
           },

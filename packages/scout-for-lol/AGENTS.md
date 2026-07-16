@@ -18,6 +18,23 @@ packages/
 └── ui/        # Shared UI components (React)
 ```
 
+## Workspace Dependencies
+
+Scout's sub-packages are part of the root Bun workspace and use `workspace:*`
+for internal dependencies (for example `@scout-for-lol/data` and
+`@scout-for-lol/backend`). Run `bun install` once at the repository root after
+dependency changes.
+
+- The isolated linker is configured at the repository root. Do not add package
+  local `bunfig.toml` linker overrides.
+- Internal Scout package edits are visible through workspace symlinks; no
+  package-local reinstall is needed to refresh copied `file:` dependencies.
+- The app imports the backend `AppRouter` as `import type` only, so tRPC
+  input/output changes still need dependent typechecks before the app sees the
+  new procedure shape.
+
+---
+
 ## Core Technologies
 
 | Category      | Technology                       |
@@ -27,7 +44,6 @@ packages/
 | Linting       | ESLint + Prettier                |
 | Database      | Prisma ORM                       |
 | Validation    | Zod                              |
-| CI/CD         | Dagger + Buildkite               |
 | Task Runner   | mise                             |
 | Bot Framework | Discord.js                       |
 | Frontend      | Astro                            |
@@ -56,7 +72,6 @@ bun run duplication-check # Check for code duplication
 mise run dev             # Setup development environment
 mise run check           # Run all checks (typecheck, lint, format, test, knip, duplication-check)
 mise run generate        # Generate Prisma client
-mise run ci              # Run full CI pipeline
 ```
 
 ### Backend Package
@@ -108,9 +123,9 @@ bun run build:windows    # Build for Windows
 
 Each package supports: `dev`, `build`, `test`, `lint`, `format`, `typecheck`
 
-## CI/CD Pipeline (Dagger + Buildkite)
+## CI/CD
 
-CI builds, tests, and creates container images via Dagger pipelines on Buildkite.
+CI runs on the static Buildkite pipeline (`.buildkite/pipeline.yml`): every PR runs `bun run verify` (affected-scoped, includes scout's checks), Playwright e2e, and a dry-run image build + smoke; on merge to main the backend image is built, smoked, and pushed and the frontends deploy. Locally, `bun run verify` (or `mise run check`) mirrors CI; build the backend image with `bun run --filter=@scout-for-lol/backend docker:build` (`bunx turbo run smoke --filter=@scout-for-lol/backend` builds + smoke-tests it).
 
 ---
 
@@ -204,6 +219,21 @@ The project uses custom ESLint rules in `eslint-rules/`:
 
 ---
 
+## Web App vs Marketing Site — Distinct Design
+
+Two separate web surfaces with **intentionally distinct visual design**:
+
+- `packages/app/` — Vite + React SPA, served at `scout-for-lol.com/app/`. Authenticated subscription management (tables, forms, modals). Should look like a clean admin product.
+- `packages/frontend/` — Astro marketing site. Content-heavy, Riot/LoL-branded (Beaufort for LoL + Spiegel fonts, indigo palette), conversion-focused.
+
+Rules:
+
+- Never `@import` `frontend/src/styles/global.css` or its tokens into `app/`.
+- Never reuse the marketing site's fonts (Beaufort for LoL, Spiegel), color scale, radius, or shadow choices in `app/`. The app has its own `src/styles/tokens.css` and its own Tailwind v4 `@theme` block.
+- Shared **dependencies** are fine (Tailwind v4, Radix, lucide-react, clsx, tailwind-merge). Shared **visual tokens/components** are not — if both surfaces ever need a shadcn-style Button/Card/Dialog, each gets its own copy with its own tokens (do not put them in a shared package).
+
+---
+
 ## Code Quality Limits
 
 Enforced by ESLint:
@@ -240,8 +270,56 @@ Enforced by ESLint:
 
 Commands live in `packages/backend/src/discord/commands/`. Each command exports:
 
-- `SlashCommandBuilder` - Command definition
-- `execute` function - Command handler
+- `SlashCommandBuilder` - Command definition (collected in `discord/rest.ts` for registration)
+- `execute` function - Command handler (dispatched by name/subcommand in `discord/commands/index.ts`)
+
+Builders and executors are wired **separately** by name in those two files — there
+is no per-command registry object, so adding a command means exporting the builder,
+adding it to `rest.ts`, and adding an `execute*` case to `commands/index.ts`.
+
+### Adding a Slash Command — `define-command.ts`
+
+Shared helpers in `discord/commands/define-command.ts` remove the boilerplate every
+command handler used to repeat. Prefer them for new commands:
+
+- **`parseCommandArgs(interaction, schema, rawArgs)`** — validate the options object
+  against a Zod schema. On failure it replies with a friendly ephemeral validation
+  message (system-boundary rule: user input gets a reply, not a throw) and returns
+  `{ success: false }` so you `return` early. On success returns `{ success: true, data }`.
+- **`replyError(interaction, context, error)`** — the single error-reply path. Picks
+  `editReply` vs `reply` based on the deferred/replied state, formats as
+  `❌ **Error <context>**`, and never throws even if the interaction token expired.
+- **`defineCommand({ builder, args, execute })`** — optional convenience to co-locate a
+  command's builder, args schema, and handler in one object.
+
+```typescript
+const ArgsSchema = z.object({
+  alias: z.string().min(1),
+  guildId: DiscordGuildIdSchema,
+});
+
+export async function executeExample(interaction: ChatInputCommandInteraction) {
+  const parsed = await parseCommandArgs(interaction, ArgsSchema, {
+    alias: interaction.options.getString("alias"),
+    guildId: interaction.guildId,
+  });
+  if (!parsed.success) return;
+
+  await interaction.deferReply({ ephemeral: true });
+  try {
+    // …command logic using parsed.data…
+  } catch (error) {
+    await replyError(interaction, "doing the thing", error);
+  }
+}
+```
+
+The legacy group helpers delegate to these: `subscription/reply-helpers.ts`'s
+`editReplyOnError` and `admin/utils/validation.ts`'s `validateCommandArgs` are thin
+wrappers over `replyError` / `parseCommandArgs`. The `competition/` reply helpers
+(`replyWithError` / `replyWithSuccess` / `replyWithErrorFromException`) stay separate —
+they carry distinct semantics (message truncation, success replies, Sentry capture,
+a different error-text format) that `replyError` intentionally does not absorb.
 
 ### Discord Error Handling
 
@@ -319,6 +397,27 @@ type ParticipantDto = ...;  // Use RawParticipant instead
 - Lazy load heavy dependencies
 - Follow satori best practices (enforced by `custom-rules/satori-best-practices`)
 
+## ScoutQL Report Queries — DuckDB Report Lake
+
+Scheduled/user-authored ScoutQL reports execute as **compiled SQL on embedded
+DuckDB** (`@duckdb/node-api`, lazy-loaded) over a local Parquet "report lake"
+(`REPORT_LAKE_DIR`, prod `/data/report-lake`) — not over SQLite fact tables.
+
+- Lake layout & compaction: `backend/src/report-lake/` (two-tier: 15-min
+  staging fold + nightly full rebuild from `StoredMatch`/`StoredPrematch`
+  rawJson; atomic `CURRENT`-pointer publish; the lake is disposable derived
+  data). Manual run: `bun run compact:report-lake` (`--fold` for fold-only).
+- Engine: `backend/src/reports/duckdb/` — the ScoutQL `ReportQueryPlan`
+  compiles to parameterized SQL (never interpolate plan values); ordering,
+  minGames, limits, and metric derivation stay in JS (`query-aggregates.ts`).
+- **Adding a metric** = `ReportMetricSchema` enum + `REPORT_METRICS` registry
+  entry (packages/data) + `METRIC_DISPLAY` (backend output.ts) + an aggregate
+  column in `metrics-sql.ts`/`row-schema.ts`/`execute.ts` + `METRIC_VALUES`
+  derivation. No Prisma migration, no backfill — the nightly rebuild picks up
+  new lake columns from `report-lake/schema.ts`/`flatten.ts`.
+- Ingest staging: `store.ts` appends flattened rows to
+  `<lake>/matches-recent/` so games are queryable seconds after ingest.
+
 ---
 
 ## Database (Prisma)
@@ -338,7 +437,7 @@ type ParticipantDto = ...;  // Use RawParticipant instead
 
 - Use `env-var` for type-safe environment variables
 - Validate all configuration with Zod schemas
-- Use CI secrets for sensitive data in CI/CD
+- Keep sensitive data in secret stores (1Password / k8s secrets), never in the repo
 - Separate development and production configurations
 
 ---
@@ -363,6 +462,44 @@ type ParticipantDto = ...;  // Use RawParticipant instead
 - **Type testing** - Ensure type safety in complex scenarios
 - **Run tests**: `bun test` in any package or root
 
+### Local testing without Discord login or a real Discord backing
+
+There is **no runtime auth bypass** (no `SKIP_AUTH`/`DEV_AUTH` flag), and the web
+mutations are gated by a signed session cookie + CSRF + `assertGuildAdmin` (which
+calls Discord). To exercise the web/tRPC surface offline, use one of these — both
+run fully in-process against an isolated SQLite copy of `template.db`, no OAuth,
+no Discord API:
+
+- **Domain layer (simplest)** — call the exported functions directly (e.g.
+  `setSubscriptionFilters` / `setChannelFilters` from
+  `src/lib/subscription/filters.ts`) with a test client from
+  `createTestDatabase(...)`. No auth surface at all. See
+  `src/database/subscriptions.integration.test.ts`.
+
+- **Full tRPC router** — `createOfflineTrpcHarness(...)` from
+  `src/testing/test-trpc-caller.ts`. It stubs the Discord guild guard and points
+  the router's Prisma singleton at an isolated migrated DB, then hands you an
+  authenticated (and an anonymous) `appRouter.createCaller(...)`. This exercises
+  the real procedures — input validation, audit-row writes, domain wiring — the
+  exact surface OAuth gates. Example: `src/trpc/router/subscription-filters.router.test.ts`.
+
+  ```ts
+  const trpc = await createOfflineTrpcHarness("my-feature-test");
+  const res = await trpc
+    .authedCaller()
+    .subscription.setFilters({ guildId, channelId, alias, filters });
+  // assert against trpc.prisma …; trpc.anonCaller() for unauthenticated-rejection tests
+  // remember: await trpc.prisma.$disconnect() in afterAll
+  ```
+
+  Constraints (documented in the harness): call it at the TOP of the test file
+  before anything imports `appRouter`, and take `appRouter` from the returned
+  object. `assertGuildAdmin` / `assertChannelInGuild` are stubbed, so real Discord
+  admin/membership is out of scope for these tests.
+
+For the running app end-to-end, `bun run dev:web` still needs `op signin` and real
+Discord OAuth in the browser (see **Web UI (Local end-to-end)** above).
+
 ---
 
 ## Performance Considerations
@@ -375,12 +512,14 @@ type ParticipantDto = ...;  // Use RawParticipant instead
 
 ---
 
-## Git Hooks (Husky + lint-staged)
+## Pre-commit / pre-push gates
 
-Pre-commit hooks run automatically:
+Git hooks (lefthook) run automatically: `pre-commit` formats staged files and runs
+`turbo run lint typecheck --affected`; `pre-push` runs `bun run verify -- --affected`
+(the full build/typecheck/test/lint + repo checks). Nothing extra is required, but
+running these yourself before pushing catches failures earlier:
 
-- Prettier formatting on all files
+- Prettier formatting on touched files (also auto-fixed by the pre-commit hook)
 - Markdownlint on `.md` files
-- Actionlint on GitHub workflow files
 - Per-package: typecheck, ESLint, and relevant tests
 - Rust formatting and Clippy for desktop/src-tauri

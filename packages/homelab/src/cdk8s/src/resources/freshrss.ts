@@ -91,5 +91,6 @@ export function createFreshRssDeployment(chart: Chart) {
   createCloudflareTunnelBinding(chart, "freshrss-cf-tunnel", {
     serviceName: service.name,
     subdomain: "freshrss",
+    port: 80,
   });
 }

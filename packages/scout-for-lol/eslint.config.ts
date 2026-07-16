@@ -27,7 +27,6 @@ const config = [
       "**/.cache/**/*",
       "**/node_modules/**/*",
       "**/.astro/**/*",
-      ".dagger/sdk/**/*",
       "**/src-tauri/target/**/*",
       "**/scripts/**/*",
       "**/*.md",
@@ -38,7 +37,12 @@ const config = [
     ],
     react: true,
     accessibility: true,
-    customRules: { noDtoNaming: true, noShadcnThemeTokens: true },
+    customRules: {
+      noDtoNaming: true,
+      noShadcnThemeTokens: true,
+      // knip (dead code/exports) + jscpd (duplication), both at warn.
+      analysisRules: true,
+    },
   }),
   ...astroConfig(),
   // Block twisted DTO imports
@@ -115,8 +119,6 @@ const config = [
     plugins: { "custom-rules": customRulesPlugin },
     rules: { "custom-rules/no-shadcn-theme-tokens": "error" },
   },
-  // Dagger functions external interface
-  { files: [".dagger/src/index.ts"], rules: { "max-params": "off" } },
   // Scripts and frontend — console output is expected
   {
     files: [

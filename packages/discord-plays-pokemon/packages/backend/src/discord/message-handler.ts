@@ -1,23 +1,25 @@
-import type { Message } from "discord.js";
-import { Events, channelMention, ChannelType } from "discord.js";
+import type { Client, Message } from "discord.js";
+import { Events, ChannelType } from "discord.js";
 import { parseChord, type Chord } from "#src/game/command/chord.ts";
-import client from "./client.ts";
 import { execute } from "./chord-executor.ts";
 import { isValid } from "./chord-validator.ts";
 import type { CommandInput } from "#src/game/command/command-input.ts";
+import type { PokemonGameDriver } from "#src/lifecycle/pokemon-driver.ts";
 import { logger } from "#src/logger.ts";
 import { getConfig } from "#src/config/index.ts";
 
 export let lastCommand = new Date();
 
 export function handleMessages(
+  client: Client,
+  driver: PokemonGameDriver,
   fn: (commandInput: CommandInput) => Promise<void>,
-) {
+): void {
   logger.info("ready to handle commands");
   client.on(Events.MessageCreate, (messageEvent) => {
     void (async () => {
       try {
-        await handleMessage(messageEvent, fn);
+        await handleMessage(messageEvent, driver, fn);
         return;
       } catch (error) {
         logger.info(error);
@@ -28,43 +30,42 @@ export function handleMessages(
 
 async function handleMessage(
   event: Message,
+  driver: PokemonGameDriver,
   fn: (commandInput: CommandInput) => Promise<void>,
-) {
+): Promise<void> {
   if (event.author.bot) {
     return;
   }
+  // Text commands are only accepted in the active session's bound text channel.
+  const runtime = driver.getActiveRuntime();
+  if (
+    runtime?.session.guildId !== event.guildId ||
+    runtime.session.textChannelId !== event.channelId
+  ) {
+    return;
+  }
+  const voiceChannelId = runtime.session.voiceChannelId;
 
-  if (event.channelId !== getConfig().game.commands.channel_id) {
+  if (event.member?.voice.channelId !== voiceChannelId) {
+    await event.reply(`You have to be in <#${voiceChannelId}> to play`);
     return;
   }
 
-  const channel = client.channels.cache.get(getConfig().stream.channel_id);
-  if (channel === undefined) {
+  const voiceChannel = event.guild?.channels.cache.get(voiceChannelId);
+  if (voiceChannel?.type !== ChannelType.GuildVoice) {
     await event.react("💀");
     return;
   }
 
-  if (event.member?.voice.channelId !== getConfig().stream.channel_id) {
-    await event.reply(
-      `You have to be in ${channelMention(getConfig().stream.channel_id)} to play`,
-    );
-    return;
-  }
-
-  if (channel.type !== ChannelType.GuildVoice) {
-    await event.react("💀");
-    return;
-  }
-
-  const memberCount = channel.members.filter((member) => {
-    return !member.user.bot;
-  }).size;
-  if (memberCount < getConfig().stream.minimum_in_channel) {
-    const minInChannel = getConfig().stream.minimum_in_channel;
+  const memberCount = voiceChannel.members.filter(
+    (member) => !member.user.bot,
+  ).size;
+  const minInChannel = getConfig().stream.minimum_in_channel;
+  if (memberCount < minInChannel) {
     await event.reply(
       `You can't play unless there are at least ${String(minInChannel)} ${
         minInChannel === 1 ? "person" : "people"
-      } in ${channelMention(getConfig().stream.channel_id)} 😕`,
+      } in <#${voiceChannelId}> 😕`,
     );
     return;
   }
@@ -83,7 +84,13 @@ async function handleMessage(
     return;
   }
 
-  if (isValid(chord)) {
+  const commands = getConfig().game.commands;
+  const chatLimits = {
+    maxCommands: commands.chord.max_commands,
+    maxTotal: commands.chord.max_total,
+    maxQuantityPerAction: commands.max_quantity_per_action,
+  };
+  if (isValid(chord, chatLimits)) {
     await execute(chord, fn);
     await event.react(`👍`);
     lastCommand = new Date();

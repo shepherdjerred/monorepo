@@ -1,6 +1,7 @@
 import { describe, expect, it, mock } from "bun:test";
 import { sign } from "@octokit/webhooks-methods";
-import { buildWebhookApp, postWebhookStatus } from "./github-webhook.ts";
+import { buildWebhookApp } from "./github-webhook.ts";
+import { postWebhookStatus } from "./pr-draft-skipped-status.ts";
 import type {
   CancelBuildkiteBuildsInput,
   PrAgentInput,
@@ -11,16 +12,44 @@ const SECRET = "test-webhook-secret-do-not-use-anywhere";
 
 const RESOLVED: Promise<void> = Promise.resolve();
 const noopStart = (_input: PrAgentInput): Promise<void> => RESOLVED;
-const noopStatus = (
-  _input: PrAgentInput,
-  _state: "draft_skipped",
-): Promise<void> => RESOLVED;
 const noopCancel = (_input: CancelBuildkiteBuildsInput): Promise<void> =>
   RESOLVED;
+type ConflictMainArgs = { owner: string; repo: string; mainSha: string };
+type ConflictPrArgs = {
+  owner: string;
+  repo: string;
+  prNumber: number;
+  headSha: string;
+  baseRef: string;
+};
+const noopConflictMain = (_args: ConflictMainArgs): Promise<void> => RESOLVED;
+const noopConflictPr = (_args: ConflictPrArgs): Promise<void> => RESOLVED;
 
 type StartCall = [PrAgentInput];
 type StatusCall = [PrAgentInput, "draft_skipped"];
 type CancelCall = [CancelBuildkiteBuildsInput];
+type ConflictMainCall = [ConflictMainArgs];
+type ConflictPrCall = [ConflictPrArgs];
+
+/** A `start` mock that records each PR input it is called with. */
+function capturingStart() {
+  const calls: StartCall[] = [];
+  const start = mock(async (input: PrAgentInput) => {
+    calls.push([input]);
+  });
+  return { start, calls };
+}
+
+/** A `postStatus` mock that records each (input, state) pair. */
+function capturingPostStatus() {
+  const statusCalls: StatusCall[] = [];
+  const postStatus = mock(
+    async (input: PrAgentInput, state: "draft_skipped") => {
+      statusCalls.push([input, state]);
+    },
+  );
+  return { postStatus, statusCalls };
+}
 
 function makePrInput(): PrAgentInput {
   return {
@@ -182,10 +211,7 @@ describe("buildWebhookApp", () => {
   });
 
   it("starts both workflows when an opened PR is delivered", async () => {
-    const calls: StartCall[] = [];
-    const start = mock(async (input: PrAgentInput) => {
-      calls.push([input]);
-    });
+    const { start, calls } = capturingStart();
     const app = buildWebhookApp(SECRET, start);
     const res = await postWebhook(app, makeBaseEvent());
     expect(res.status).toBe(200);
@@ -209,10 +235,7 @@ describe("buildWebhookApp", () => {
   });
 
   it("foundation: passes through fields the pr-review pipeline derives its id from", async () => {
-    const calls: StartCall[] = [];
-    const start = mock(async (input: PrAgentInput) => {
-      calls.push([input]);
-    });
+    const { start, calls } = capturingStart();
     const app = buildWebhookApp(SECRET, start);
     const res = await postWebhook(
       app,
@@ -248,13 +271,8 @@ describe("buildWebhookApp", () => {
 
   it("posts a visible draft-skipped status for draft PRs", async () => {
     const start = mock(noopStart);
-    const statusCalls: StatusCall[] = [];
-    const postStatus = mock(
-      async (input: PrAgentInput, state: "draft_skipped") => {
-        statusCalls.push([input, state]);
-      },
-    );
-    const app = buildWebhookApp(SECRET, start, postStatus);
+    const { postStatus, statusCalls } = capturingPostStatus();
+    const app = buildWebhookApp(SECRET, start, { postStatus });
     const res = await postWebhook(
       app,
       makeBaseEvent({ draft: true, action: "synchronize" }),
@@ -330,13 +348,8 @@ describe("buildWebhookApp", () => {
     Bun.env["PR_BOT_ENABLED"] = "false";
     try {
       const start = mock(noopStart);
-      const statusCalls: StatusCall[] = [];
-      const postStatus = mock(
-        async (input: PrAgentInput, state: "draft_skipped") => {
-          statusCalls.push([input, state]);
-        },
-      );
-      const app = buildWebhookApp(SECRET, start, postStatus);
+      const { postStatus } = capturingPostStatus();
+      const app = buildWebhookApp(SECRET, start, { postStatus });
       const res = await postWebhook(app, makeBaseEvent());
       expect(res.status).toBe(200);
       const text = await res.text();
@@ -353,6 +366,188 @@ describe("buildWebhookApp", () => {
   });
 });
 
+function makePushEvent(
+  overrides: Partial<{ ref: string; after: string }> = {},
+): unknown {
+  return {
+    ref: overrides.ref ?? "refs/heads/main",
+    after: overrides.after ?? "ab".repeat(20),
+    repository: {
+      name: "monorepo",
+      owner: { login: "shepherdjerred" },
+    },
+  };
+}
+
+describe("buildWebhookApp push to main", () => {
+  it("starts the conflict-check workflow for a push to refs/heads/main", async () => {
+    const calls: ConflictMainCall[] = [];
+    const startMain = mock(async (args: ConflictMainArgs) => {
+      calls.push([args]);
+    });
+    const app = buildWebhookApp(SECRET, mock(noopStart), {
+      startConflictCheckMain: startMain,
+    });
+    const res = await postWebhook(app, makePushEvent(), { event: "push" });
+    expect(res.status).toBe(200);
+    expect(await res.text()).toContain("started");
+    expect(startMain).toHaveBeenCalledTimes(1);
+    const call = calls[0];
+    if (call === undefined) {
+      throw new Error("expected one call");
+    }
+    expect(call[0].owner).toBe("shepherdjerred");
+    expect(call[0].repo).toBe("monorepo");
+    expect(call[0].mainSha).toBe("ab".repeat(20));
+  });
+
+  it("ignores pushes to refs that are not main", async () => {
+    const startMain = mock(noopConflictMain);
+    const app = buildWebhookApp(SECRET, mock(noopStart), {
+      startConflictCheckMain: startMain,
+    });
+    const res = await postWebhook(
+      app,
+      makePushEvent({ ref: "refs/heads/feature/x" }),
+      { event: "push" },
+    );
+    expect(res.status).toBe(200);
+    expect(await res.text()).toContain("non-main");
+    expect(startMain).not.toHaveBeenCalled();
+  });
+
+  it("returns 401 when a push has a bad signature", async () => {
+    const startMain = mock(noopConflictMain);
+    const app = buildWebhookApp(SECRET, mock(noopStart), {
+      startConflictCheckMain: startMain,
+    });
+    const res = await postWebhook(app, makePushEvent(), {
+      event: "push",
+      signature: "sha256=deadbeef",
+    });
+    expect(res.status).toBe(401);
+    expect(startMain).not.toHaveBeenCalled();
+  });
+
+  it("returns 500 when the conflict-check start function throws", async () => {
+    const startMain = mock((_args: ConflictMainArgs): Promise<void> => {
+      throw new Error("Temporal unavailable");
+    });
+    const app = buildWebhookApp(SECRET, mock(noopStart), {
+      startConflictCheckMain: startMain,
+    });
+    const res = await postWebhook(app, makePushEvent(), { event: "push" });
+    expect(res.status).toBe(500);
+  });
+});
+
+describe("buildWebhookApp per-PR conflict check", () => {
+  it("starts the per-PR conflict check on opened", async () => {
+    const calls: ConflictPrCall[] = [];
+    const startPr = mock(async (args: ConflictPrArgs) => {
+      calls.push([args]);
+    });
+    const app = buildWebhookApp(SECRET, mock(noopStart), {
+      startConflictCheckPr: startPr,
+    });
+    const res = await postWebhook(app, makeBaseEvent({ action: "opened" }));
+    expect(res.status).toBe(200);
+    expect(startPr).toHaveBeenCalledTimes(1);
+    const call = calls[0];
+    if (call === undefined) {
+      throw new Error("expected one call");
+    }
+    expect(call[0].prNumber).toBe(42);
+    expect(call[0].headSha).toBe("ab".repeat(20));
+    expect(call[0].baseRef).toBe("main");
+  });
+
+  it("starts the per-PR conflict check on synchronize", async () => {
+    const startPr = mock(noopConflictPr);
+    const app = buildWebhookApp(SECRET, mock(noopStart), {
+      startConflictCheckPr: startPr,
+    });
+    const res = await postWebhook(
+      app,
+      makeBaseEvent({ action: "synchronize" }),
+    );
+    expect(res.status).toBe(200);
+    expect(startPr).toHaveBeenCalledTimes(1);
+  });
+
+  it("starts the per-PR conflict check on edited (covers base-ref changes)", async () => {
+    const startPr = mock(noopConflictPr);
+    const app = buildWebhookApp(SECRET, mock(noopStart), {
+      startConflictCheckPr: startPr,
+    });
+    const res = await postWebhook(app, makeBaseEvent({ action: "edited" }));
+    // `edited` is not in RELEVANT_ACTIONS, so the review/summary pipeline does
+    // not fire. But the conflict check should — the response body says so.
+    expect(res.status).toBe(200);
+    expect(startPr).toHaveBeenCalledTimes(1);
+  });
+
+  it("starts the per-PR conflict check even for draft PRs", async () => {
+    // Drafts can still conflict with main — paint the status; the kill switch
+    // for the LLM bot doesn't gate the cheap conflict check.
+    const startPr = mock(noopConflictPr);
+    const app = buildWebhookApp(SECRET, mock(noopStart), {
+      startConflictCheckPr: startPr,
+    });
+    const res = await postWebhook(
+      app,
+      makeBaseEvent({ action: "synchronize", draft: true }),
+    );
+    expect(res.status).toBe(200);
+    expect(startPr).toHaveBeenCalledTimes(1);
+  });
+
+  it("starts the per-PR conflict check even for bot-authored PRs (Renovate etc.)", async () => {
+    const startPr = mock(noopConflictPr);
+    const app = buildWebhookApp(SECRET, mock(noopStart), {
+      startConflictCheckPr: startPr,
+    });
+    const res = await postWebhook(
+      app,
+      makeBaseEvent({
+        action: "synchronize",
+        userType: "Bot",
+        authorLogin: "renovate[bot]",
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(startPr).toHaveBeenCalledTimes(1);
+  });
+
+  it("does NOT start the per-PR conflict check for closed PRs", async () => {
+    const startPr = mock(noopConflictPr);
+    const app = buildWebhookApp(SECRET, mock(noopStart), {
+      startConflictCheckPr: startPr,
+    });
+    const res = await postWebhook(
+      app,
+      makeBaseEvent({ action: "closed", merged: true }),
+    );
+    expect(res.status).toBe(200);
+    expect(startPr).not.toHaveBeenCalled();
+  });
+
+  it("does NOT poison the review/summary pipeline when conflict-check start throws", async () => {
+    const startPr = mock((_args: ConflictPrArgs): Promise<void> => {
+      throw new Error("Temporal unavailable");
+    });
+    const startWf = mock(noopStart);
+    const app = buildWebhookApp(SECRET, startWf, {
+      startConflictCheckPr: startPr,
+    });
+    const res = await postWebhook(app, makeBaseEvent({ action: "opened" }));
+    expect(res.status).toBe(200);
+    expect(startPr).toHaveBeenCalledTimes(1);
+    // Review/summary pipeline still ran despite the conflict-check failure.
+    expect(startWf).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("buildWebhookApp PR closed", () => {
   it("starts the cancel workflow when a merged PR is closed", async () => {
     const cancelCalls: CancelCall[] = [];
@@ -360,7 +555,7 @@ describe("buildWebhookApp PR closed", () => {
     const cancel = mock(async (input: CancelBuildkiteBuildsInput) => {
       cancelCalls.push([input]);
     });
-    const app = buildWebhookApp(SECRET, start, noopStatus, cancel);
+    const app = buildWebhookApp(SECRET, start, { startCancel: cancel });
     const res = await postWebhook(
       app,
       makeBaseEvent({ action: "closed", merged: true }),
@@ -388,7 +583,9 @@ describe("buildWebhookApp PR closed", () => {
     const cancel = mock(async (input: CancelBuildkiteBuildsInput) => {
       cancelCalls.push([input]);
     });
-    const app = buildWebhookApp(SECRET, mock(noopStart), noopStatus, cancel);
+    const app = buildWebhookApp(SECRET, mock(noopStart), {
+      startCancel: cancel,
+    });
     const res = await postWebhook(
       app,
       makeBaseEvent({ action: "closed", merged: false }),
@@ -400,7 +597,9 @@ describe("buildWebhookApp PR closed", () => {
 
   it("cancels builds even for bot-authored closed PRs", async () => {
     const cancel = mock(noopCancel);
-    const app = buildWebhookApp(SECRET, mock(noopStart), noopStatus, cancel);
+    const app = buildWebhookApp(SECRET, mock(noopStart), {
+      startCancel: cancel,
+    });
     const res = await postWebhook(
       app,
       makeBaseEvent({
@@ -417,7 +616,7 @@ describe("buildWebhookApp PR closed", () => {
   it("does not start the cancel workflow for opened PRs", async () => {
     const cancel = mock(noopCancel);
     const start = mock(noopStart);
-    const app = buildWebhookApp(SECRET, start, noopStatus, cancel);
+    const app = buildWebhookApp(SECRET, start, { startCancel: cancel });
     const res = await postWebhook(app, makeBaseEvent({ action: "opened" }));
     expect(res.status).toBe(200);
     expect(start).toHaveBeenCalledTimes(1);
@@ -428,7 +627,9 @@ describe("buildWebhookApp PR closed", () => {
     const cancel = mock((_input: CancelBuildkiteBuildsInput): Promise<void> => {
       throw new Error("Temporal unavailable");
     });
-    const app = buildWebhookApp(SECRET, mock(noopStart), noopStatus, cancel);
+    const app = buildWebhookApp(SECRET, mock(noopStart), {
+      startCancel: cancel,
+    });
     const res = await postWebhook(
       app,
       makeBaseEvent({ action: "closed", merged: true }),

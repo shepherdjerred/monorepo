@@ -270,7 +270,7 @@ async function runSynthetic(): Promise<void> {
 async function runRom(romArg: string | undefined): Promise<void> {
   out("\n== rom mode (real emulator audio through the pipeline) ==");
   const rom = await resolveRom(romArg);
-  const wasm = `${Bun.env.WASM_DIR ?? "assets/n64wasm"}/n64wasm.wasm`;
+  const wasm = `${Bun.env["WASM_DIR"] ?? "assets/n64wasm"}/n64wasm.wasm`;
   if (!(await Bun.file(wasm).exists())) {
     throw new Error(
       `rom mode needs the built wasm core at ${wasm} (run: bun run --cwd packages/backend build:wasm)`,

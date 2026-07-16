@@ -2,8 +2,6 @@
 #!/bin/bash
 set -euo pipefail
 
-# Exclude Bazel output directories from Spotlight indexing
-mkdir -p ~/Library/Caches/bazel
-touch ~/Library/Caches/bazel/.metadata_never_index
+# Exclude the shared temp directory from Spotlight indexing
 sudo touch /private/var/tmp/.metadata_never_index
 {{- end -}}

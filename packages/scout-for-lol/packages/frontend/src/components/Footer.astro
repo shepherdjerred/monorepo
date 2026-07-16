@@ -15,13 +15,20 @@ const { variant = "default" } = Astro.props;
       <div class="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
         <div class="flex flex-wrap justify-center gap-4 md:order-2">
           <Button variant="link" asChild>
-            <a href="/privacy">Privacy Policy</a>
+            <a href="/privacy" class="inline-flex items-center min-h-[44px]">
+              Privacy Policy
+            </a>
           </Button>
           <Button variant="link" asChild>
-            <a href="/tos">Terms of Service</a>
+            <a href="/tos" class="inline-flex items-center min-h-[44px]">
+              Terms of Service
+            </a>
           </Button>
           <Button variant="outline" asChild>
-            <a href="/support" class="inline-flex items-center gap-2">
+            <a
+              href="/support"
+              class="inline-flex min-h-[44px] items-center gap-2"
+            >
               <Icon name="heroicons:question-mark-circle" class="h-4 w-4" />
               Get Support
             </a>
@@ -31,7 +38,7 @@ const { variant = "default" } = Astro.props;
               href="https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol"
               target="_blank"
               rel="noopener noreferrer"
-              class="inline-flex items-center gap-2"
+              class="inline-flex min-h-[44px] items-center gap-2"
             >
               <Icon name="simple-icons:github" class="h-4 w-4" />
               View on GitHub
@@ -49,21 +56,30 @@ const { variant = "default" } = Astro.props;
     <footer class="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
       <div class="mx-auto max-w-7xl px-6 py-12 lg:px-8">
         <div class="text-center">
-          <p class="text-sm text-gray-600 dark:text-gray-300">
+          <p class="flex flex-wrap items-center justify-center gap-x-2 text-sm text-gray-600 dark:text-gray-300">
             <Button variant="link" asChild>
-              <a href="/privacy">Privacy Policy</a>
+              <a href="/privacy" class="inline-flex items-center min-h-[44px]">
+                Privacy Policy
+              </a>
             </Button>
             •
             <Button variant="link" asChild>
-              <a href="/tos">Terms of Service</a>
+              <a href="/tos" class="inline-flex items-center min-h-[44px]">
+                Terms of Service
+              </a>
             </Button>
             •
             <Button variant="link" asChild>
-              <a href="/support">Get Support</a>
+              <a href="/support" class="inline-flex items-center min-h-[44px]">
+                Get Support
+              </a>
             </Button>
             •
             <Button variant="link" asChild>
-              <a href="https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol">
+              <a
+                href="https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol"
+                class="inline-flex items-center min-h-[44px]"
+              >
                 View on GitHub
               </a>
             </Button>

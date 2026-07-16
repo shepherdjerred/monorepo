@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Akshan": {
       "id": "Akshan",
@@ -160,6 +160,68 @@
           "num": 20,
           "name": "Three Honors Akshan",
           "chromas": false
+        },
+        {
+          "id": "166021",
+          "num": 21,
+          "name": "High Noon Akshan",
+          "chromas": true
+        },
+        {
+          "id": "166022",
+          "num": 22,
+          "name": "High Noon Akshan (Ruby)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "166023",
+          "num": 23,
+          "name": "High Noon Akshan (Catseye)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "166024",
+          "num": 24,
+          "name": "High Noon Akshan (Emerald)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "166025",
+          "num": 25,
+          "name": "High Noon Akshan (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "166026",
+          "num": 26,
+          "name": "High Noon Akshan (Pearl)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "166027",
+          "num": 27,
+          "name": "High Noon Akshan (Sapphire)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "166028",
+          "num": 28,
+          "name": "High Noon Akshan (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 21
+        },
+        {
+          "id": "166029",
+          "num": 29,
+          "name": "High Noon Akshan (Obsidian)",
+          "chromas": false,
+          "parentSkin": 21
         }
       ],
       "lore": "Raising an eyebrow in the face of danger, Akshan fights evil with dashing charisma, righteous vengeance, and a conspicuous lack of shirts. He is highly skilled in the art of stealth combat, able to evade the eyes of his enemies and reappear when they least expect him. With a keen sense of justice and a legendary death-reversing weapon, he rights the wrongs of Runeterra's many scoundrels while living by his own moral code: “Don't be an ass.”",

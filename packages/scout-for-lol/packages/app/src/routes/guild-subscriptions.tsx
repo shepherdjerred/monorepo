@@ -1,13 +1,25 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { AddSubscriptionDialog } from "#src/components/add-subscription-dialog.tsx";
 import {
   SubscriptionChannelDialog,
   type SubscriptionChannelAction,
 } from "#src/components/subscription-channel-dialog.tsx";
+import {
+  SubscriptionFilterDialog,
+  type SubscriptionFilterAction,
+} from "#src/components/subscription-filter-dialog.tsx";
+import { summarizeFilters } from "#src/components/subscription-filter-fields.tsx";
+import { Badge } from "#src/components/ui/badge.tsx";
 import { Button } from "#src/components/ui/button.tsx";
+import { LoadMore } from "#src/components/load-more.tsx";
 import {
   Table,
   TableBody,
@@ -17,6 +29,19 @@ import {
   TableRow,
 } from "#src/components/ui/table.tsx";
 
+function accountLabel(account: {
+  alias: string;
+  region: string;
+  riotGameName: string | null;
+  riotTagLine: string | null;
+}): string {
+  const name =
+    account.riotGameName === null
+      ? account.alias
+      : `${account.riotGameName}#${account.riotTagLine ?? ""}`;
+  return `${name} (${account.region})`;
+}
+
 export function GuildSubscriptions() {
   const { guildId } = useParams();
   const trpc = useTRPC();
@@ -24,17 +49,26 @@ export function GuildSubscriptions() {
   const [isAddOpen, setAddOpen] = useState(false);
   const [channelAction, setChannelAction] =
     useState<SubscriptionChannelAction | null>(null);
+  const [filterAction, setFilterAction] =
+    useState<SubscriptionFilterAction | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const safeGuildId = guildId ?? "";
-  const subsKey = trpc.subscription.list.queryKey({ guildId: safeGuildId });
-  const subsQuery = useQuery(
-    trpc.subscription.list.queryOptions(
-      { guildId: safeGuildId },
-      { enabled: guildId !== undefined },
+  // pathKey matches both the regular and infinite query caches for this
+  // procedure, so invalidation refreshes the paginated list.
+  const subsKey = trpc.subscription.list.pathKey();
+  const subsQuery = useInfiniteQuery(
+    trpc.subscription.list.infiniteQueryOptions(
+      { guildId: safeGuildId, limit: 50 },
+      {
+        enabled: guildId !== undefined,
+        getNextPageParam: (lastPage) => lastPage.nextCursor,
+      },
     ),
   );
+  const subscriptions =
+    subsQuery.data?.pages.flatMap((page) => page.items) ?? [];
   const channelsQuery = useQuery(
     trpc.guild.listChannels.queryOptions(
       { guildId: safeGuildId },
@@ -47,6 +81,35 @@ export function GuildSubscriptions() {
         switch (result.kind) {
           case "removed":
             setMessage("Subscription removed.");
+            setError(null);
+            void queryClient.invalidateQueries({ queryKey: subsKey });
+            return;
+          case "player-not-found":
+            setError("Player not found.");
+            return;
+          case "not-subscribed-in-channel":
+            setError("Player is not subscribed in that channel.");
+            return;
+          case "internal-error":
+            setError(result.message);
+            return;
+        }
+      },
+      onError: (err) => {
+        setError(err.message);
+      },
+    }),
+  );
+  const muteMutation = useMutation(
+    trpc.subscription.setMuted.mutationOptions({
+      onSuccess: (result, variables) => {
+        switch (result.kind) {
+          case "updated":
+            setMessage(
+              variables.isMuted
+                ? "Subscription muted — no more match notifications."
+                : "Subscription unmuted.",
+            );
             setError(null);
             void queryClient.invalidateQueries({ queryKey: subsKey });
             return;
@@ -83,6 +146,16 @@ export function GuildSubscriptions() {
           <Button
             type="button"
             size="sm"
+            variant="outline"
+            onClick={() => {
+              setFilterAction({ kind: "bulk" });
+            }}
+          >
+            Set filters for a channel
+          </Button>
+          <Button
+            type="button"
+            size="sm"
             onClick={() => {
               setAddOpen(true);
             }}
@@ -110,14 +183,18 @@ export function GuildSubscriptions() {
         <p className="text-sm text-muted-foreground">{message}</p>
       )}
 
-      {subsQuery.data && subsQuery.data.length === 0 && (
+      {subsQuery.data && subscriptions.length === 0 && (
         <p className="text-sm text-muted-foreground">
-          No subscriptions yet — click &quot;Add subscription&quot; to get
-          started.
+          No subscriptions yet — click &quot;Add subscription&quot;, or follow
+          the{" "}
+          <Link to="/welcome" className="underline">
+            setup guide
+          </Link>
+          .
         </p>
       )}
 
-      {subsQuery.data && subsQuery.data.length > 0 && (
+      {subsQuery.data && subscriptions.length > 0 && (
         <div className="rounded-md border border-border">
           <Table>
             <TableHeader>
@@ -125,11 +202,12 @@ export function GuildSubscriptions() {
                 <TableHead>Alias</TableHead>
                 <TableHead>Accounts</TableHead>
                 <TableHead>Channel</TableHead>
+                <TableHead>Filters</TableHead>
                 <TableHead className="w-1" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {subsQuery.data.map((sub) => {
+              {subscriptions.map((sub) => {
                 const channel = channelsQuery.data?.find(
                   (c) => c.id === sub.channelId,
                 );
@@ -137,7 +215,7 @@ export function GuildSubscriptions() {
                   <TableRow key={sub.subscriptionId}>
                     <TableCell className="font-medium">
                       <Link
-                        className="hover:underline"
+                        className="underline"
                         to={`/g/${guildId}/players/${encodeURIComponent(sub.player.alias)}`}
                       >
                         {sub.player.alias}
@@ -145,7 +223,7 @@ export function GuildSubscriptions() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {sub.player.accounts
-                        .map((a) => `${a.alias} (${a.region})`)
+                        .map((account) => accountLabel(account))
                         .join(", ")}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
@@ -153,8 +231,29 @@ export function GuildSubscriptions() {
                         ? sub.channelId
                         : `#${channel.name}`}
                     </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <span className="inline-flex items-center gap-2">
+                        {summarizeFilters(sub.filters)}
+                        {sub.isMuted && <Badge variant="outline">Muted</Badge>}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setFilterAction({
+                              kind: "edit",
+                              alias: sub.player.alias,
+                              channelId: sub.channelId,
+                              initial: sub.filters,
+                            });
+                          }}
+                        >
+                          Edit filters
+                        </Button>
                         <Button
                           type="button"
                           variant="ghost"
@@ -181,6 +280,22 @@ export function GuildSubscriptions() {
                           }}
                         >
                           Move
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={muteMutation.isPending}
+                          onClick={() => {
+                            muteMutation.mutate({
+                              guildId,
+                              channelId: sub.channelId,
+                              alias: sub.player.alias,
+                              isMuted: !sub.isMuted,
+                            });
+                          }}
+                        >
+                          {sub.isMuted ? "Unmute" : "Mute"}
                         </Button>
                         <Button
                           type="button"
@@ -214,6 +329,14 @@ export function GuildSubscriptions() {
         </div>
       )}
 
+      <LoadMore
+        hasNextPage={subsQuery.hasNextPage}
+        isFetchingNextPage={subsQuery.isFetchingNextPage}
+        onLoadMore={() => {
+          void subsQuery.fetchNextPage();
+        }}
+      />
+
       <AddSubscriptionDialog
         guildId={guildId}
         channels={channelsQuery.data ?? []}
@@ -235,6 +358,20 @@ export function GuildSubscriptions() {
           setMessage(nextMessage);
           setError(null);
           setChannelAction(null);
+          void queryClient.invalidateQueries({ queryKey: subsKey });
+        }}
+      />
+      <SubscriptionFilterDialog
+        guildId={guildId}
+        channels={channelsQuery.data ?? []}
+        action={filterAction}
+        onOpenChange={(open) => {
+          if (!open) setFilterAction(null);
+        }}
+        onDone={(nextMessage) => {
+          setMessage(nextMessage);
+          setError(null);
+          setFilterAction(null);
           void queryClient.invalidateQueries({ queryKey: subsKey });
         }}
       />

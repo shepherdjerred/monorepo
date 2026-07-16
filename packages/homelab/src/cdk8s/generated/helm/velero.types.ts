@@ -30,7 +30,7 @@ export type VeleroHelmValuesImage = {
    */
   repository?: string;
   /**
-   * @default "v1.18.0"
+   * @default "v1.18.1"
    */
   tag?: string;
   /**
@@ -198,6 +198,49 @@ export type VeleroHelmValuesAffinity = object;
 export type VeleroHelmValuesNodeSelector = object;
 
 export type VeleroHelmValuesDnsConfig = object;
+
+export type VeleroHelmValuesPodDisruptionBudget = {
+  /**
+   * @default false
+   */
+  enabled?: boolean;
+  /**
+   * minAvailable and maxUnavailable are mutually exclusive; set only one.
+   *
+   * @default 1
+   */
+  minAvailable?: number;
+  /**
+   * @default ""
+   */
+  maxUnavailable?: string;
+  /**
+   * See https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+   *
+   * @default {}
+   */
+  annotations?: VeleroHelmValuesPodDisruptionBudgetAnnotations;
+  /**
+   * @default {}
+   */
+  labels?: VeleroHelmValuesPodDisruptionBudgetLabels;
+};
+
+export type VeleroHelmValuesPodDisruptionBudgetAnnotations = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
+
+export type VeleroHelmValuesPodDisruptionBudgetLabels = {
+  /**
+   * This type allows arbitrary additional properties beyond those defined below.
+   * This is common for config maps, custom settings, and extensible configurations.
+   */
+  [key: string]: unknown;
+};
 
 export type VeleroHelmValuesMetrics = {
   /**
@@ -436,7 +479,7 @@ export type VeleroHelmValuesKubectl = {
    */
   extraVolumes?: unknown[];
   /**
-   * Extra volumeMounts for the upgrade/cleanup job.. Optional.
+   * Extra volumeMounts for the upgrade/cleanup job. Optional.
    *
    * @default []
    */
@@ -1088,6 +1131,14 @@ export type VeleroHelmValues = {
    */
   dnsConfig?: VeleroHelmValuesDnsConfig;
   /**
+   * Pod Disruption Budget for the Velero deployment. Optional.
+   * Velero runs a single replica with a Recreate strategy by default, so this is
+   * disabled by default. Enable it when running Velero with multiple replicas.
+   *
+   * @default {...} (5 keys)
+   */
+  podDisruptionBudget?: VeleroHelmValuesPodDisruptionBudget;
+  /**
    * Extra volumes for the Velero deployment. Optional.
    *
    * @default []
@@ -1225,6 +1276,9 @@ export type VeleroHelmParameters = {
   "readinessProbe.successThreshold"?: string;
   "readinessProbe.failureThreshold"?: string;
   tolerations?: string;
+  "podDisruptionBudget.enabled"?: string;
+  "podDisruptionBudget.minAvailable"?: string;
+  "podDisruptionBudget.maxUnavailable"?: string;
   extraVolumes?: string;
   extraVolumeMounts?: string;
   extraObjects?: string;

@@ -1,5 +1,5 @@
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
-import type { ElectionPoll } from "@prisma/client";
+import type { ElectionPoll } from "#generated/prisma/client/index.js";
 
 export type CreateElectionInput = {
   guildId: string;

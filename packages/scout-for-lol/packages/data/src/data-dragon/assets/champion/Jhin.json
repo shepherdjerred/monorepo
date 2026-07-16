@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.12.1",
+  "version": "16.13.1",
   "data": {
     "Jhin": {
       "id": "Jhin",
@@ -382,6 +382,68 @@
           "num": 55,
           "name": "Arcana Jhin",
           "chromas": false
+        },
+        {
+          "id": "202064",
+          "num": 64,
+          "name": "Broken Covenant Jhin",
+          "chromas": false
+        },
+        {
+          "id": "202065",
+          "num": 65,
+          "name": "Broken Covenant Jhin (Ruby)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "202066",
+          "num": 66,
+          "name": "Broken Covenant Jhin (Sapphire)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "202067",
+          "num": 67,
+          "name": "Broken Covenant Jhin (Catseye)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "202068",
+          "num": 68,
+          "name": "Broken Covenant Jhin (Turquoise)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "202069",
+          "num": 69,
+          "name": "Broken Covenant Jhin (Emerald)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "202070",
+          "num": 70,
+          "name": "Broken Covenant Jhin (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "202071",
+          "num": 71,
+          "name": "Broken Covenant Jhin (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 64
+        },
+        {
+          "id": "202072",
+          "num": 72,
+          "name": "Broken Covenant Jhin (Obsidian)",
+          "chromas": false,
+          "parentSkin": 64
         }
       ],
       "lore": "Jhin is a meticulous criminal psychopath who believes murder is art. Once an Ionian prisoner, but freed by shadowy elements within Ionia's ruling council, the serial killer now works as their cabal's assassin. Using his gun as his paintbrush, Jhin creates works of artistic brutality, horrifying victims and onlookers. He gains a cruel pleasure from putting on his gruesome theater, making him the ideal choice to send the most powerful of messages: terror.",

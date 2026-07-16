@@ -10,17 +10,22 @@ import {
   Routes,
   type VoiceState,
 } from "discord.js";
+import { countRealViewers } from "@shepherdjerred/discord-stream-lifecycle/viewer-presence";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { Announcement } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import {
   CommandHandler,
   type CommandInteraction,
 } from "@shepherdjerred/streambot/discord/command-handler.ts";
+import { sendPaginatedReply } from "@shepherdjerred/streambot/discord/pagination.ts";
+import { sendSubtitleMenu } from "@shepherdjerred/streambot/discord/subtitle-menu.ts";
 import { commandJson } from "@shepherdjerred/streambot/discord/commands.ts";
 import type { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
-import { EMPTY_HANDLE } from "@shepherdjerred/streambot/session/session-manager.ts";
+import { EMPTY_HANDLE } from "@shepherdjerred/streambot/session/session-types.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
+import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { PlaylistItem } from "@shepherdjerred/streambot/sources/ytdlp.ts";
+import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import {
   ChannelIdSchema,
   GuildIdSchema,
@@ -51,6 +56,11 @@ export type CommandBotDeps = {
     signal: AbortSignal,
   ) => Promise<PlaylistItem[]>;
   readonly listSources: (signal: AbortSignal) => Promise<readonly string[]>;
+  /** Synchronously pre-resolve a `/stream play` url/search source before acking (feature: fast error surfacing). */
+  readonly resolvePlaySource: (
+    source: Source,
+    signal: AbortSignal,
+  ) => Promise<ResolvedSource>;
 };
 
 /** Render a neutral {@link Announcement} into discord.js message options (text, optional poster embed). */
@@ -265,7 +275,13 @@ export class CommandBot {
       seek: handle.seek,
       expandPlaylist: this.deps.expandPlaylist,
       listSources: this.deps.listSources,
+      resolvePlaySource: this.deps.resolvePlaySource,
       announce: (message) => this.announce(announceChannel, message),
+      listSubtitleCandidates: handle.listSubtitleCandidates,
+      currentSourceId: handle.currentSourceId,
+      hasPendingSubtitleMenu: handle.hasPendingSubtitleMenu,
+      claimSubtitleMenu: handle.claimSubtitleMenu,
+      releaseSubtitleMenu: handle.releaseSubtitleMenu,
     });
     await handler.run(this.adapt(interaction));
   }
@@ -353,10 +369,13 @@ export class CommandBot {
 
     if (oldChannelId !== null && newChannelId === null) {
       this.clearAloneTimer(`${guildId}:${oldChannelId}`);
-      sessions.getExisting(guildId, oldChannelId)?.dispatch({
-        type: "STREAMER_VOICE_DETACHED",
-        reason: "streamer disconnected or was kicked from voice",
+      log.warn("streamer voice state went null — notifying session manager", {
+        guildId,
+        channelId: oldChannelId,
       });
+      // The session manager classifies the loss (kick vs transient) via the voice ws close code
+      // and decides whether to stay down or reconnect-with-resume.
+      sessions.notifyStreamerDetached({ guildId, channelId: oldChannelId });
       return true;
     }
 
@@ -376,11 +395,25 @@ export class CommandBot {
     if (channel?.isVoiceBased() !== true) {
       return;
     }
-    const humans = channel.members.filter(
-      (member) => !member.user.bot && member.id !== streamerId,
+    const voiceStates = channel.guild.voiceStates.cache;
+    const humanCount = countRealViewers(
+      channel.members.map((member) => {
+        const memberState = voiceStates.get(member.id);
+        return {
+          id: member.id,
+          isBot: member.user.bot,
+          streaming: memberState?.streaming ?? false,
+          selfDeaf: memberState?.selfDeaf ?? false,
+          selfMute: memberState?.selfMute ?? false,
+        };
+      }),
+      {
+        selfUserId: streamerId,
+        peerUserbotIds: this.deps.config.discord.peerUserbotIds,
+      },
     );
     const key = `${guildId}:${channelId}`;
-    if (humans.size > 0) {
+    if (humanCount > 0) {
       this.clearAloneTimer(key);
       return;
     }
@@ -428,6 +461,11 @@ export class CommandBot {
       editReply: async (content) => {
         await interaction.editReply(content);
       },
+      replyPaginated: async (payload) => {
+        await sendPaginatedReply(interaction, payload);
+      },
+      replySelectMenu: (candidates) =>
+        sendSubtitleMenu(interaction, candidates),
     };
   }
 

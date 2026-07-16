@@ -17,8 +17,9 @@
 //
 //   bun run scripts/audio-e2e.ts --update-baseline
 //
-// Then commit the updated WAV. Skip on CI if the wasm hasn't been built
-// yet (set `SKIP_AUDIO_FINGERPRINT=1`).
+// Then commit the updated WAV. Auto-skips when the wasm isn't built yet (e.g.
+// plain `bun run test` on a clean checkout); force-skip with
+// `SKIP_AUDIO_FINGERPRINT=1`.
 
 import { describe, expect, test } from "bun:test";
 
@@ -58,13 +59,14 @@ const FFT_WIN = 1024;
 const FFT_HOP = 256;
 const MEL_BINS = 32;
 
+const WASM_PATH = new URL("../../../assets/pokeemerald.wasm", import.meta.url)
+  .pathname;
+
 async function captureClip(frames: number): Promise<{
   mono: Float64Array;
   sampleRate: number;
 }> {
-  const wasmPath = new URL("../../../assets/pokeemerald.wasm", import.meta.url)
-    .pathname;
-  const emulator = new Emulator({ wasmPath });
+  const emulator = new Emulator({ wasmPath: WASM_PATH });
   await emulator.init();
   const drains: DrainResult[] = [];
   let rate = 0;
@@ -136,14 +138,19 @@ function chromaFingerprint(
   const acc = new Float64Array(12);
   for (const frame of frames) {
     const c = chromagram(frame, sampleRate);
-    for (let i = 0; i < 12; i++) acc[i] += c[i];
+    for (let i = 0; i < 12; i++) acc[i] = (acc[i] ?? 0) + (c[i] ?? 0);
   }
   for (let i = 0; i < 12; i++) acc[i] /= frames.length;
   return acc;
 }
 
-if (Bun.env.SKIP_AUDIO_FINGERPRINT === "1") {
-  describe.skip("audio fingerprint (skipped via SKIP_AUDIO_FINGERPRINT)", () => {
+// Skip when explicitly disabled, or when the wasm isn't present (plain
+// `bun run test` on a clean checkout — the wasm is built from source in the
+// Dagger image build and locally by scripts/build-wasm.sh, where this gate runs).
+// `Bun.file().size` is synchronous and returns 0 for a missing file — used
+// instead of node:fs (banned by the bun-runtime lint rule).
+if (Bun.env.SKIP_AUDIO_FINGERPRINT === "1" || Bun.file(WASM_PATH).size === 0) {
+  describe.skip("audio fingerprint (skipped: SKIP_AUDIO_FINGERPRINT or wasm not built)", () => {
     test("noop", () => {
       expect(true).toBe(true);
     });

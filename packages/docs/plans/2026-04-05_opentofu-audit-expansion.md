@@ -2,7 +2,9 @@
 
 ## Status
 
-Partial. GitHub ruleset work has started, but module cleanup and new providers remain open.
+Partial. GitHub `rulesets.tf` and the Tailscale provider module (`tofu/tailscale`) have landed; the
+GitHub `for_each` refactor, the SeaweedFS `aws_s3_bucket_lifecycle_configuration` swap, and the
+Buildkite/PagerDuty providers remain open.
 
 ## Context
 

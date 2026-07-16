@@ -39,10 +39,22 @@ export function encodePng(rgba: Buffer, scale = 1): Buffer {
     for (let x = 0; x < outW; x++) {
       const srcX = Math.trunc(x / factor);
       const s = (srcY * WIDTH + srcX) * 4;
-      raw[pos++] = rgba[s];
-      raw[pos++] = rgba[s + 1];
-      raw[pos++] = rgba[s + 2];
-      raw[pos++] = rgba[s + 3];
+      const r = rgba[s];
+      const g = rgba[s + 1];
+      const b = rgba[s + 2];
+      const a = rgba[s + 3];
+      if (
+        r === undefined ||
+        g === undefined ||
+        b === undefined ||
+        a === undefined
+      ) {
+        throw new Error(`RGBA source index out of range at ${String(s)}`);
+      }
+      raw[pos++] = r;
+      raw[pos++] = g;
+      raw[pos++] = b;
+      raw[pos++] = a;
     }
   }
 

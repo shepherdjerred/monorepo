@@ -9,8 +9,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "lint": "astro check",
-    "test": "echo 'No tests yet'",
-    "typecheck": "astro check && bunx tsc --noEmit"
+    "typecheck": "astro check && bunx tsc --noEmit",
+    "deploy": "bun ../../scripts/deploy-site.ts cook"
   },
   "dependencies": {
     "@iconify-json/heroicons": "^1.2.3",
@@ -22,13 +22,8 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.8",
-    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3"
-  },
-  "overrides": {
-    "devalue": "5.8.1",
-    "fast-uri": "3.1.2",
-    "esbuild": "0.28.1"
   }
 }

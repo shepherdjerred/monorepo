@@ -1,40 +1,54 @@
-import { Events } from "discord.js";
-import "./rest.ts";
-import client from "#src/discord/client.ts";
-import { makeScreenshot } from "./commands/screenshot.ts";
-import type { Emulator } from "#src/emulator/emulator.ts";
-import { help } from "./commands/help.ts";
-import { logger } from "#src/logger.ts";
-import { makeGoal } from "./commands/goal.ts";
-import type { GoalManager } from "#src/goal/goal-manager.ts";
+import type { Client, Interaction } from "discord.js";
+import type { ExtraSlashCommand } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-bot.ts";
+import { makeScreenshot, screenshotCommand } from "./commands/screenshot.ts";
+import { help, helpCommand } from "./commands/help.ts";
+import { makeGoal, goalCommand } from "./commands/goal.ts";
+import type { PokemonGameDriver } from "#src/lifecycle/pokemon-driver.ts";
 
-export function handleSlashCommands(
-  emulator: Emulator,
-  goalManager?: GoalManager,
-) {
-  logger.info("handling slash commands");
-  client.on(Events.InteractionCreate, (interaction) => {
-    void (async () => {
-      try {
+/**
+ * Build the game-specific slash commands for pokemon. `/play` and `/stop` are owned by
+ * the shared lib's `createGameBot` and are not declared here.
+ */
+export function buildPokemonExtraCommands(params: {
+  driver: PokemonGameDriver;
+  botClient: Client;
+  screenshotEnabled: boolean;
+  goalEnabled: boolean;
+}): ExtraSlashCommand[] {
+  const commands: ExtraSlashCommand[] = [
+    {
+      builder: helpCommand,
+      handle: async (interaction: Interaction) => {
         if (!interaction.isChatInputCommand()) {
           return;
         }
-        switch (interaction.commandName) {
-          case "start":
-            break;
-          case "screenshot":
-            await makeScreenshot(emulator)(interaction);
-            break;
-          case "help":
-            await help(interaction);
-            break;
-          case "goal":
-            await makeGoal(goalManager)(interaction);
-            break;
+        await help(interaction);
+      },
+    },
+  ];
+  if (params.screenshotEnabled) {
+    const handler = makeScreenshot(params.driver, params.botClient);
+    commands.push({
+      builder: screenshotCommand,
+      handle: async (interaction: Interaction) => {
+        if (!interaction.isChatInputCommand()) {
+          return;
         }
-      } catch (error) {
-        logger.error(error);
-      }
-    })();
-  });
+        await handler(interaction);
+      },
+    });
+  }
+  if (params.goalEnabled) {
+    const handler = makeGoal(params.driver);
+    commands.push({
+      builder: goalCommand,
+      handle: async (interaction: Interaction) => {
+        if (!interaction.isChatInputCommand()) {
+          return;
+        }
+        await handler(interaction);
+      },
+    });
+  }
+  return commands;
 }

@@ -20,7 +20,7 @@ import {
   checkParticipantLimit,
 } from "#src/discord/commands/competition/utils/command-helpers.ts";
 import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
-import { getErrorMessage } from "#src/utils/errors.ts";
+import { sendDM } from "#src/discord/utils/dm.ts";
 import type { CompetitionId } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 
@@ -241,23 +241,23 @@ Only the competition owner can invite participants. The owner of this competitio
   // Step 10: Send DM to invited user
   // ============================================================================
 
-  let dmFailed = false;
-  try {
-    const startDateStr = competition.startDate
-      ? competition.startDate.toLocaleDateString()
-      : competition.seasonId
-        ? `Season ${competition.seasonId}`
-        : "TBD";
-    const endDateStr = competition.endDate
-      ? competition.endDate.toLocaleDateString()
+  const startDateStr = competition.startDate
+    ? competition.startDate.toLocaleDateString()
+    : competition.seasonId
+      ? `Season ${competition.seasonId}`
       : "TBD";
-    const duration =
-      competition.startDate && competition.endDate
-        ? `${startDateStr} - ${endDateStr}`
-        : startDateStr;
+  const endDateStr = competition.endDate
+    ? competition.endDate.toLocaleDateString()
+    : "TBD";
+  const duration =
+    competition.startDate && competition.endDate
+      ? `${startDateStr} - ${endDateStr}`
+      : startDateStr;
 
-    await targetUser.send({
-      content: truncateDiscordMessage(`📩 **Competition Invitation**
+  const dmStatus = await sendDM({
+    client: interaction.client,
+    userId: DiscordAccountIdSchema.parse(targetUser.id),
+    message: truncateDiscordMessage(`📩 **Competition Invitation**
 
 You've been invited to compete in **${competition.title}**!
 
@@ -268,14 +268,17 @@ You've been invited to compete in **${competition.title}**!
 
 To join, use:
 \`/competition join competition-id:${competitionId.toString()}\``),
-    });
-    logger.info(`[Competition Invite] DM sent to user ${targetUser.id}`);
-  } catch (error) {
+    kind: "competition_invite",
+    guildId: serverId,
+    recipientTag: targetUser.tag,
+  });
+  const dmFailed = dmStatus !== "sent";
+  if (dmFailed) {
     logger.warn(
-      `[Competition Invite] Failed to DM user ${targetUser.id}:`,
-      getErrorMessage(error),
+      `[Competition Invite] DM to user ${targetUser.id} not delivered: ${dmStatus}`,
     );
-    dmFailed = true;
+  } else {
+    logger.info(`[Competition Invite] DM sent to user ${targetUser.id}`);
   }
 
   // ============================================================================

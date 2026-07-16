@@ -5,11 +5,42 @@ import {
 } from "@temporalio/client";
 import type { Duration } from "@temporalio/common";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import { EVAL_FIXTURES_PIN } from "#shared/pr-review/eval-fixture.ts";
 import type { AgentTaskInput } from "#shared/agent-task.ts";
+import { detectOrphanSchedules } from "./orphan-detection.ts";
 
 // All cron expressions below are wall-clock local time for the homelab.
 const SCHEDULE_TIMEZONE = "America/Los_Angeles";
+
+// `catchupWindow` controls replay after the Temporal SERVER was down/unavailable
+// across a scheduled time and then recovers (the "backfill" of missed runs). A
+// normal worker restart/deploy does NOT drop runs — the server still creates the
+// action on time and it queues until a worker is free. Two tiers, by intent:
+//
+//   * CATCHUP_TIGHT — time-of-day home automation (vacuum, good-morning). If the
+//     server missed the slot by more than a few minutes, skip rather than fire
+//     late; running the vacuum or a wake-up routine an hour late is worse than
+//     not running. (Does not cover a long *worker* outage executing a late run;
+//     that needs a staleness guard inside the workflow.)
+//   * CATCHUP_RELAXED (default) — reports / maintenance / data jobs. The intent
+//     is "ran this cycle," so running late after a server outage is acceptable.
+//
+// Inferred string-literal types, NOT `: Duration`. `Duration` is
+// `StringValue | number`, and under the old CI's per-package Node16 install the canary
+// `ms` resolves with no usable `StringValue` (its `exports` map has no `types`
+// condition, so TS falls through to `@types/ms`, which never exported StringValue),
+// leaving `Duration` partly error-typed. Any value whose static type is `Duration`
+// then trips @typescript-eslint/no-unsafe-assignment in CI (green locally, where a
+// StringValue-bearing `ms` resolves). Keeping these as literals — and typing the
+// catchupWindow field as the CatchupWindow union below rather than `Duration` —
+// keeps every catchup value off the error-typed `Duration` path entirely.
+const CATCHUP_TIGHT = "5 minutes";
+const CATCHUP_RELAXED = "1 hour";
+
+// The two declared catchup tiers as a literal union (not `Duration`), so reading
+// the optional schedule field in buildSchedulePolicies can never yield an
+// error-typed value. Both literals are valid Temporal `Duration`s at the policies
+// call site.
+type CatchupWindow = typeof CATCHUP_TIGHT | typeof CATCHUP_RELAXED;
 
 // Schedules whose workflow type was removed from the bundle. registerSchedules
 // deletes these on startup so they stop firing and failing. Explicit removal
@@ -23,6 +54,30 @@ export const DELETED_SCHEDULE_IDS = [
   // of reconciled weekly). The workflow type was removed from the bundle, so
   // this schedule must be deleted or it would keep firing a missing workflow.
   "helm-types-weekly-refresh",
+  // Alert-remediation workflow removed entirely: in ~1 month it opened 0 PRs
+  // (metrics: ~564 `failed`, ~2 `report-only`, 0 `pr-created`). Most PagerDuty/
+  // Bugsink alerts (absence signals, infra flaps, capacity) aren't fixable by a
+  // repo-only PR, so the premise didn't hold. Both ids stay here so the
+  // reconciler deletes the live schedules on startup rather than orphaning them.
+  "alert-remediation-hourly",
+  "alert-remediation-daily",
+  // The pokeemerald.wasm download workflow (`runPokeemeraldWasmUpdate`) is gone:
+  // the wasm was instead built from source in the (since-removed) CI image build with our
+  // customizations (the download fetched an audio-stubbed upstream that lacked
+  // them). Delete BOTH the live weekly schedule and the never-removed monthly
+  // one (a monthly→weekly rename relic the 2026-06-26 audit caught) so neither
+  // keeps firing a workflow that no longer exists in the bundle.
+  "pokeemerald-wasm-weekly",
+  "pokeemerald-wasm-monthly",
+  // The pr-review eval bot (continuous-eval + weekly A/B significance) was
+  // removed entirely — its workflow types (`prReviewEvalWorkflow`,
+  // `prReviewWeeklySignificanceWorkflow`) are no longer in the bundle. Delete
+  // BOTH schedules on startup so the worker stops firing missing workflow
+  // types (which would also trip the `temporal_schedule_orphans` gauge). The
+  // dedicated `pr_review_eval` Postgres DB and PagerDuty alert group were torn
+  // down with them.
+  "pr-review-eval-nightly",
+  "pr-review-ab-weekly-report",
 ] as const;
 
 type ScheduleDefinition = {
@@ -34,16 +89,13 @@ type ScheduleDefinition = {
   overlap: ScheduleOverlapPolicy;
   memo: string;
   workflowExecutionTimeout?: Duration;
+  // Server-outage replay margin. Omit to inherit CATCHUP_RELAXED; set
+  // CATCHUP_TIGHT on time-of-day home automation that should skip rather than
+  // fire late. See the CATCHUP_* constants above. Typed as the CatchupWindow
+  // literal union (not `Duration`) to stay off the error-typed `Duration` path
+  // under CI's Node16 `ms` resolution — see the constants' comment.
+  catchupWindow?: CatchupWindow;
 };
-
-const PR_REVIEW_EVAL_SCHEDULE_ID = "pr-review-eval-nightly";
-const PR_REVIEW_AB_WEEKLY_REPORT_SCHEDULE_ID = "pr-review-ab-weekly-report";
-const PR_REVIEW_FIXTURES_REPO_URL_ENV = "PR_REVIEW_FIXTURES_REPO_URL";
-const PR_REVIEW_EVAL_DATABASE_URL_ENV = "PR_REVIEW_EVAL_DATABASE_URL";
-const PR_REVIEW_EVAL_PAUSE_REASON =
-  "Paused because PR_REVIEW_FIXTURES_REPO_URL is not configured on the Temporal worker";
-const PR_REVIEW_EVAL_DATABASE_PAUSE_REASON =
-  "Paused because PR_REVIEW_EVAL_DATABASE_URL is not configured on the Temporal worker";
 
 const SCOUT_LANE_PRIOR_UPDATE_CONFIG = {
   lanePriors: {
@@ -141,26 +193,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Bounded daily homelab health check email via generic report-only agent task (Claude -> Postal)",
   },
   {
-    id: "alert-remediation-hourly",
-    workflowType: "alertRemediationSweepWorkflow",
-    args: [
-      {
-        repo: { fullName: "shepherdjerred/monorepo", ref: "main" },
-        provider: "claude",
-        concurrency: 3,
-        // Schema default also dropped from 80 → 15; pinning here so the
-        // intent (defense-in-depth against the 30-min activity wall) lives
-        // at the call site too.
-        maxTurns: 15,
-      },
-    ],
-    cronExpression: "0 * * * *",
-    taskQueue: TASK_QUEUES.AGENT_TASK,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "2 hours",
-    memo: "Hourly PagerDuty/Bugsink alert remediation fan-out. Child workflows may create draft PRs for straightforward repo-only fixes.",
-  },
-  {
     id: "scout-data-dragon-version-check",
     workflowType: "runScoutDataDragonVersionCheck",
     args: [SCOUT_LANE_PRIOR_UPDATE_CONFIG],
@@ -181,18 +213,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Weekly Scout Data Dragon refresh even when version is unchanged",
   },
   {
-    id: "pokeemerald-wasm-weekly",
-    workflowType: "runPokeemeraldWasmUpdate",
-    args: [],
-    // 06:00 PT every Monday. The blob only changes on upstream releases so most
-    // weeks are no-op; weekly cadence catches new releases inside ~7 days.
-    cronExpression: "0 6 * * 1",
-    taskQueue: TASK_QUEUES.DEFAULT,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "30 minutes",
-    memo: "Weekly refresh of the vendored pokeemerald.wasm emulator blob (opens a PR if it changed)",
-  },
-  {
     id: "readme-refresh-weekly",
     workflowType: "runReadmeRefresh",
     args: [],
@@ -203,6 +223,18 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
     memo: "Weekly README project-listing regeneration via cog (opens a PR if listings drifted)",
+  },
+  {
+    id: "llm-catalog-refresh-weekly",
+    workflowType: "runLlmCatalogRefresh",
+    args: [],
+    // 09:00 PT every Monday — staggered after scout-season-refresh (07:00) and
+    // readme-refresh (08:00) so the weekly PR-opening jobs don't contend.
+    cronExpression: "0 9 * * 1",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Weekly LLM model-catalog pricing cross-check vs models.dev + LiteLLM (opens a PR on drift)",
   },
   {
     id: "scout-season-refresh-weekly",
@@ -235,6 +267,25 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Daily Bugsink database housekeeping (delete old events, vacuum)",
   },
   {
+    id: "scout-image-gc-daily",
+    workflowType: "runScoutImageGcWorkflow",
+    args: [{ retentionDays: 30, dryRun: false }],
+    // 04:00 PT — after the 03:00 bugsink/zfs maintenance window so the nightly
+    // destructive jobs don't contend for the worker pod at once.
+    cronExpression: "0 4 * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    // First run sweeps ~110k objects and deletes ~38k; steady-state runs finish
+    // in <1m. This workflow-level cap must fit the activity's full retry budget,
+    // not just one attempt: the retry policy allows 3 attempts at a 20m
+    // startToCloseTimeout each (plus ~90s of backoff), so a 25m cap would let a
+    // slow-but-failing first attempt consume the whole window and starve retries
+    // 2 and 3. 65m genuinely accommodates 3 × 20m + backoff; SKIP overlap + the
+    // daily cadence make the wider ceiling harmless (the next run is 24h out).
+    workflowExecutionTimeout: "65 minutes",
+    memo: "Daily GC of Scout images: delete .png/.svg older than 30d under games/ & prematch/ in scout-prod + scout-beta (SeaweedFS), keeping JSON. See packages/docs/plans/2026-07-03_scout-s3-image-retention.md",
+  },
+  {
     id: "velero-orphan-audit",
     workflowType: "runVeleroOrphanAuditWorkflow",
     args: [],
@@ -245,34 +296,6 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "15 minutes",
     memo: "Daily Velero orphan ZFS snapshot detection — emits Prometheus metrics for the orphan-snapshot pathology (see packages/docs/decisions/2026-05-05_velero-orphan-snapshot-prevention.md)",
-  },
-  {
-    id: "pr-review-ab-weekly-report",
-    workflowType: "prReviewWeeklySignificanceWorkflow",
-    args: [{}],
-    // Monday 09:00 PT — the team is back from the weekend and can act
-    // on a Discord report before standup. Workflow is cheap (single
-    // Postgres query per experiment + 100k MC samples per arm), so we
-    // don't bother staggering against the nightly cron.
-    cronExpression: "0 9 * * 1",
-    taskQueue: TASK_QUEUES.PR_REVIEW,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "10 minutes",
-    memo: "Weekly pr-review-bot A/B significance report — Bayesian posterior over real-PR acceptance, Discord post Mon 09:00 PT",
-  },
-  {
-    id: PR_REVIEW_EVAL_SCHEDULE_ID,
-    workflowType: "prReviewEvalWorkflow",
-    args: [{ pin: EVAL_FIXTURES_PIN }],
-    // 04:00 PT — staggered after velero-orphan-audit (03:30) so the
-    // worker pod isn't fighting two cron workflows for resources. The
-    // eval workflow takes ~10-20 min depending on corpus size + LLM
-    // latency; an hour of headroom before any 5am workflows is fine.
-    cronExpression: "0 4 * * *",
-    taskQueue: TASK_QUEUES.PR_REVIEW,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "2 hours",
-    memo: "Nightly pr-review-bot continuous-eval — replay against fixture corpus, persist precision/recall to pr_review_eval Postgres, fire PD alert on > 5pp drop vs trailing-7d mean",
   },
   {
     id: "golink-sync",
@@ -293,6 +316,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
     workflowExecutionTimeout: "15 minutes",
+    catchupWindow: CATCHUP_TIGHT,
     memo: "Run vacuum if no one is home (9 AM)",
   },
   {
@@ -304,6 +328,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
     workflowExecutionTimeout: "15 minutes",
+    catchupWindow: CATCHUP_TIGHT,
     memo: "Run vacuum if no one is home (12 PM)",
   },
   {
@@ -315,7 +340,25 @@ export const SCHEDULES: ScheduleDefinition[] = [
     overlap: ScheduleOverlapPolicy.SKIP,
     // verifyState worst case = 3m delay + 3×1m inter-attempt sleeps + slack
     workflowExecutionTimeout: "15 minutes",
+    catchupWindow: CATCHUP_TIGHT,
     memo: "Run vacuum if no one is home (5 PM)",
+  },
+  {
+    // Floor preheat 2h15m before wake: the bathroom floor ramps ~8.3°C/hour
+    // (measured 2026-07-09), so reaching the 40°C setpoint from a ~22°C
+    // overnight start needs ~2¼ hours. The workflow holds the setpoint for
+    // 195m (13 × 15m presence-checked chunks) then turns off as its own
+    // backstop; the timeout carries generous slack so worker delay or activity
+    // retries can never time the run out before the turn-off executes.
+    id: "good-morning-weekday-preheat",
+    workflowType: "goodMorningPreheat",
+    args: [],
+    cronExpression: "45 5 * * 1-5",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "240 minutes",
+    catchupWindow: CATCHUP_TIGHT,
+    memo: "Bathroom floor preheat (weekdays 5:45 AM)",
   },
   {
     id: "good-morning-weekday-wake",
@@ -324,8 +367,10 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 8 * * 1-5",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    // goodMorningWakeUp now runs the 60-minute heat cycle (MORNING_HEAT_DURATION); needs > 60m + slack
+    // goodMorningWakeUp still runs its 60-minute heat window (MORNING_HEAT_DURATION)
+    // as the fallback when the preheat run was skipped; needs > 60m + slack
     workflowExecutionTimeout: "75 minutes",
+    catchupWindow: CATCHUP_TIGHT,
     memo: "Good morning wake-up + bathroom heat (weekdays 8 AM)",
   },
   {
@@ -336,7 +381,20 @@ export const SCHEDULES: ScheduleDefinition[] = [
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
+    catchupWindow: CATCHUP_TIGHT,
     memo: "Good morning get-up (weekdays 8:15 AM)",
+  },
+  {
+    // Weekend preheat: 2h15m before the 9 AM weekend wake.
+    id: "good-morning-weekend-preheat",
+    workflowType: "goodMorningPreheat",
+    args: [],
+    cronExpression: "45 6 * * 0,6",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "240 minutes",
+    catchupWindow: CATCHUP_TIGHT,
+    memo: "Bathroom floor preheat (weekends 6:45 AM)",
   },
   {
     id: "good-morning-weekend-wake",
@@ -345,8 +403,10 @@ export const SCHEDULES: ScheduleDefinition[] = [
     cronExpression: "0 9 * * 0,6",
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
-    // goodMorningWakeUp now runs the 60-minute heat cycle (MORNING_HEAT_DURATION); needs > 60m + slack
+    // goodMorningWakeUp still runs its 60-minute heat window (MORNING_HEAT_DURATION)
+    // as the fallback when the preheat run was skipped; needs > 60m + slack
     workflowExecutionTimeout: "75 minutes",
+    catchupWindow: CATCHUP_TIGHT,
     memo: "Good morning wake-up + bathroom heat (weekends 9 AM)",
   },
   {
@@ -357,63 +417,22 @@ export const SCHEDULES: ScheduleDefinition[] = [
     taskQueue: TASK_QUEUES.DEFAULT,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
+    catchupWindow: CATCHUP_TIGHT,
     memo: "Good morning get-up (weekends 9:15 AM)",
   },
 ];
 
-export function prReviewEvalFixturesConfigured(
-  env: Record<string, string | undefined> = Bun.env,
-): boolean {
-  return (env[PR_REVIEW_FIXTURES_REPO_URL_ENV]?.trim() ?? "").length > 0;
-}
-
-export function prReviewEvalDatabaseConfigured(
-  env: Record<string, string | undefined> = Bun.env,
-): boolean {
-  return (env[PR_REVIEW_EVAL_DATABASE_URL_ENV]?.trim() ?? "").length > 0;
-}
-
-export function scheduleRequiresConfigPause(
-  schedule: ScheduleDefinition,
-  env: Record<string, string | undefined> = Bun.env,
-): { paused: boolean; reason: string | undefined } {
-  if (schedule.id === PR_REVIEW_EVAL_SCHEDULE_ID) {
-    if (!prReviewEvalFixturesConfigured(env)) {
-      return { paused: true, reason: PR_REVIEW_EVAL_PAUSE_REASON };
-    }
-    if (!prReviewEvalDatabaseConfigured(env)) {
-      return { paused: true, reason: PR_REVIEW_EVAL_DATABASE_PAUSE_REASON };
-    }
-    return { paused: false, reason: undefined };
-  }
-  if (schedule.id === PR_REVIEW_AB_WEEKLY_REPORT_SCHEDULE_ID) {
-    if (!prReviewEvalDatabaseConfigured(env)) {
-      return { paused: true, reason: PR_REVIEW_EVAL_DATABASE_PAUSE_REASON };
-    }
-    return { paused: false, reason: undefined };
-  }
-  return { paused: false, reason: undefined };
-}
-
-async function reconcileSchedulePauseState(
-  handle: ReturnType<Client["schedule"]["getHandle"]>,
-  schedule: ScheduleDefinition,
-): Promise<void> {
-  const desired = scheduleRequiresConfigPause(schedule);
-  if (desired.paused) {
-    await handle.pause(desired.reason ?? "Paused by schedule configuration");
-    console.warn(`Paused schedule: ${schedule.id} (${desired.reason ?? ""})`);
-    return;
-  }
-  if (
-    schedule.id === PR_REVIEW_EVAL_SCHEDULE_ID ||
-    schedule.id === PR_REVIEW_AB_WEEKLY_REPORT_SCHEDULE_ID
-  ) {
-    await handle.unpause(
-      `Required PR review eval configuration is present; ${schedule.id} enabled`,
-    );
-    console.warn(`Unpaused schedule: ${schedule.id}`);
-  }
+export function buildSchedulePolicies(schedule: ScheduleDefinition): {
+  overlap: ScheduleOverlapPolicy;
+  // CatchupWindow (not `Duration`): the resolved value is always one of the two
+  // literal tiers, and `Duration` is error-typed under CI's Node16 `ms`
+  // resolution. Both literals are valid Temporal Durations at the call site.
+  catchupWindow: CatchupWindow;
+} {
+  return {
+    overlap: schedule.overlap,
+    catchupWindow: schedule.catchupWindow ?? CATCHUP_RELAXED,
+  };
 }
 
 export async function registerSchedules(client: Client): Promise<void> {
@@ -431,7 +450,7 @@ export async function registerSchedules(client: Client): Promise<void> {
   }
 
   for (const schedule of SCHEDULES) {
-    let handle = scheduleClient.getHandle(schedule.id);
+    const handle = scheduleClient.getHandle(schedule.id);
     try {
       // Update the existing schedule
       await handle.update((prev) => ({
@@ -449,9 +468,7 @@ export async function registerSchedules(client: Client): Promise<void> {
             ? {}
             : { workflowExecutionTimeout: schedule.workflowExecutionTimeout }),
         },
-        policies: {
-          overlap: schedule.overlap,
-        },
+        policies: buildSchedulePolicies(schedule),
       }));
 
       console.warn(`Updated schedule: ${schedule.id}`);
@@ -475,15 +492,20 @@ export async function registerSchedules(client: Client): Promise<void> {
             ? {}
             : { workflowExecutionTimeout: schedule.workflowExecutionTimeout }),
         },
-        policies: {
-          overlap: schedule.overlap,
-        },
+        policies: buildSchedulePolicies(schedule),
         memo: { description: schedule.memo },
       });
 
       console.warn(`Created schedule: ${schedule.id}`);
-      handle = scheduleClient.getHandle(schedule.id);
     }
-    await reconcileSchedulePauseState(handle, schedule);
   }
+
+  // After reconciling the declared set, surface any live schedule that is no
+  // longer represented in source (renamed/removed but not added to the delete
+  // list). Non-fatal — see detectOrphanSchedules.
+  await detectOrphanSchedules(
+    scheduleClient,
+    new Set(SCHEDULES.map((schedule) => schedule.id)),
+    new Set(DELETED_SCHEDULE_IDS),
+  );
 }

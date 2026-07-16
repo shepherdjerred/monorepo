@@ -93,12 +93,16 @@ async function helmTemplateChart(chartName: string): Promise<{
       manifestFile,
     );
 
-    const result = Bun.spawnSync(["helm", "template", "test-release", tempDir]);
-    return {
-      exitCode: result.exitCode,
-      stdout: result.stdout.toString(),
-      stderr: result.stderr.toString(),
-    };
+    const proc = Bun.spawn(["helm", "template", "test-release", tempDir], {
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const [stdout, stderr, exitCode] = await Promise.all([
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+      proc.exited,
+    ]);
+    return { exitCode, stdout, stderr };
   } finally {
     const proc = Bun.spawnSync(["rm", "-rf", tempDir]);
     if (proc.exitCode !== 0) {
@@ -126,29 +130,46 @@ describe("Helm Escaping - Denylist Check (dist/)", () => {
 });
 
 describe("Helm Escaping - helm template (dist/)", () => {
-  it("should render all charts with helm template without errors", async () => {
-    const glob = new Glob("*/Chart.yaml");
-    const chartNames: string[] = [];
-    for await (const entry of glob.scan(HELM_DIR)) {
-      chartNames.push(path.dirname(entry));
-    }
+  // Renders ~24 helm charts concurrently via `helm template` subprocesses.
+  // Each chart takes 50-200ms on a quiet machine; rendered in parallel the
+  // whole test wraps in ~1s locally. PR #1249 raised this to 60s after the
+  // serial loop kept tipping over the default 5s under concurrent CI load on
+  // torvalds (single-node). Parallelization keeps wall time well under that
+  // ceiling even when load slows individual subprocesses.
+  const HELM_TEMPLATE_TIMEOUT_MS = 60_000;
 
-    const failures: { chart: string; error: string }[] = [];
-
-    for (const chartName of chartNames) {
-      const result = await helmTemplateChart(chartName);
-      if (result.exitCode !== 0) {
-        failures.push({ chart: chartName, error: result.stderr.trim() });
+  it(
+    "should render all charts with helm template without errors",
+    async () => {
+      const glob = new Glob("*/Chart.yaml");
+      const chartNames: string[] = [];
+      for await (const entry of glob.scan(HELM_DIR)) {
+        chartNames.push(path.dirname(entry));
       }
-    }
 
-    if (failures.length > 0) {
-      const msg = failures.map((f) => `  ${f.chart}: ${f.error}`).join("\n");
-      throw new Error(
-        `helm template failed for ${String(failures.length)} chart(s):\n${msg}`,
+      const results = await Promise.all(
+        chartNames.map(async (chartName) => ({
+          chart: chartName,
+          result: await helmTemplateChart(chartName),
+        })),
       );
-    }
-  });
+
+      const failures = results
+        .filter(({ result }) => result.exitCode !== 0)
+        .map(({ chart, result }) => ({
+          chart,
+          error: result.stderr.trim(),
+        }));
+
+      if (failures.length > 0) {
+        const msg = failures.map((f) => `  ${f.chart}: ${f.error}`).join("\n");
+        throw new Error(
+          `helm template failed for ${String(failures.length)} chart(s):\n${msg}`,
+        );
+      }
+    },
+    HELM_TEMPLATE_TIMEOUT_MS,
+  );
 });
 
 describe("Helm Escaping - E2E Content Verification (dist/)", () => {
@@ -171,17 +192,27 @@ describe("Helm Escaping - E2E Content Verification (dist/)", () => {
 
   it("apps chart: PagerDuty config contains unescaped Alertmanager templates after Helm", async () => {
     const result = await helmTemplateChart("apps");
-    expect(result.stdout).toContain("{{ range .Alerts }}");
-    expect(result.stdout).toContain("{{ .Annotations.summary }}");
-    // Regression guard: the PagerDuty description must surface the per-alert
-    // `message` annotation (Velero/HA rules use `message`, not `description`)
-    // and the namespace, otherwise distinct incidents page identically and
-    // look like duplicates. See packages/docs/logs/2026-05-30_pagerduty-velero-duplicate-alerts.md
+    // Title (description) is a single clean line: shared summary (or alertname)
+    // + namespace + firing count. The full per-alert body must NOT be in the
+    // title — PagerDuty truncates it mid-word at ~1024 chars.
+    // See packages/docs/logs/2026-07-03_pagerduty-clean-titles.md
+    expect(result.stdout).toContain("{{ .CommonAnnotations.summary }}");
+    expect(result.stdout).toContain("{{ .CommonLabels.alertname }}");
+    // Regression guard: the per-alert `message` (falling back to `description`)
+    // must still reach PagerDuty — now in `details`, not the title — so distinct
+    // namespaces/objects grouped into one incident stay distinguishable.
+    // See packages/docs/logs/2026-05-30_pagerduty-velero-duplicate-alerts.md
+    expect(result.stdout).toContain("{{ range .Alerts.Firing }}");
     expect(result.stdout).toContain("{{ .Annotations.message }}");
-    expect(result.stdout).toContain("{{ .Labels.namespace }}");
-    // Regression guard: a literal backslash-n must never reach the description
-    // template. Go's text/template does not interpret `\n` in literal text, so
-    // it would clutter PagerDuty incident titles with literal "\n".
+    // Regression guard: the pre-2026-07 design inlined the whole body into the
+    // title via `{{ range .Alerts }}...summary...: ...message... }}`. Ensure the
+    // title no longer ranges over every alert (that caused the truncated blobs).
+    expect(result.stdout).not.toContain(
+      "{{ range .Alerts }}{{ .Annotations.summary }}",
+    );
+    // Regression guard: a literal backslash-n must never reach a template. Go's
+    // text/template does not interpret `\n` in literal text, so it would surface
+    // as the two characters "\n".
     expect(result.stdout).not.toContain(
       String.raw`{{ .Annotations.summary }}\n`,
     );

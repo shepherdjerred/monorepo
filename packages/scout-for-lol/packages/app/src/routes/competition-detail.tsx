@@ -50,7 +50,7 @@ export function CompetitionDetail() {
           }),
         });
         void queryClient.invalidateQueries({
-          queryKey: trpc.competition.list.queryKey({ guildId: safeGuildId }),
+          queryKey: trpc.competition.list.pathKey(),
         });
       },
     }),

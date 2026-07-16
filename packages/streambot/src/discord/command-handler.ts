@@ -2,11 +2,8 @@ import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import {
   LoopModeSchema,
   type PlaybackEvent,
+  type ResolvedSource,
 } from "@shepherdjerred/streambot/machine/types.ts";
-import {
-  isHttpUrl,
-  resolvePlayQuery,
-} from "@shepherdjerred/streambot/discord/resolve.ts";
 import {
   canControlItem,
   isAdmin,
@@ -17,90 +14,29 @@ import {
 } from "@shepherdjerred/streambot/discord/timecode.ts";
 import {
   helpText,
-  sourcesText,
+  listPages,
+  sourcesPages,
+  type PaginatedPages,
 } from "@shepherdjerred/streambot/discord/help-text.ts";
-import {
-  sourceLabel,
-  type Source,
-  type SubtitlePref,
+import type {
+  Source,
+  SubtitlePref,
 } from "@shepherdjerred/streambot/sources/source.ts";
-import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
 import {
-  searchLibrary,
-  type LibraryEntry,
-} from "@shepherdjerred/streambot/sources/library.ts";
-import {
-  isLikelyPlaylist,
-  type PlaylistItem,
-} from "@shepherdjerred/streambot/sources/ytdlp.ts";
-import {
-  isBlockedSource,
-  shameMessage,
-} from "@shepherdjerred/streambot/moderation/adult-block.ts";
+  chaptersText,
+  nowPlayingText,
+  queueText,
+  type PlaybackView,
+} from "@shepherdjerred/streambot/discord/queue-text.ts";
+import { runPlayCommand } from "@shepherdjerred/streambot/discord/play-command.ts";
+import { decodeTrackRef } from "@shepherdjerred/streambot/discord/subtitle-menu.ts";
+import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
+import type { PlaylistItem } from "@shepherdjerred/streambot/sources/ytdlp.ts";
+import type { SubtitleCandidate } from "@shepherdjerred/streambot/sources/subtitles.ts";
 import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 
-const MAX_LIST = 20;
-const PLAYLIST_TIMEOUT_MS = 60_000;
 const SOURCES_TIMEOUT_MS = 15_000;
-
-/**
- * Build a per-request subtitle preference from the `subtitles` (on/off) and `sublang` options.
- * Returns undefined when neither is set, so the source falls back to the server's subtitle config.
- */
-export function buildSubtitlePref(
-  subtitles: string | null,
-  sublang: string | null,
-): SubtitlePref | undefined {
-  const enabled = subtitles === null ? undefined : subtitles === "on";
-  const trimmed = sublang?.trim() ?? "";
-  const language = trimmed.length > 0 ? trimmed : undefined;
-  if (enabled === undefined && language === undefined) return undefined;
-  return {
-    ...(enabled === undefined ? {} : { enabled }),
-    ...(language === undefined ? {} : { language }),
-  };
-}
-
-/** Attach a subtitle preference to a resolved source, preserving its discriminant. */
-function withSubtitles(
-  source: Source,
-  subtitles: SubtitlePref | undefined,
-): Source {
-  switch (source.kind) {
-    case "file":
-      return { ...source, subtitles };
-    case "url":
-      return { ...source, subtitles };
-    case "search":
-      return { ...source, subtitles };
-  }
-}
-
-/** A short " _(subtitles: …)_" suffix for the ephemeral ack, or "" when no override was given. */
-function subtitlesSuffix(pref: SubtitlePref | undefined): string {
-  if (pref?.enabled === false) return " _(subtitles: off)_";
-  if (pref?.enabled === true) {
-    return pref.language === undefined
-      ? " _(subtitles: on)_"
-      : ` _(subtitles: ${pref.language})_`;
-  }
-  if (pref?.language !== undefined) return ` _(subtitles: ${pref.language})_`;
-  return "";
-}
-
-export type QueueItemView = {
-  readonly title: string;
-  readonly requesterId: UserId;
-  /** Chapter markers of this item (only populated for the currently-playing item). */
-  readonly chapters: readonly Chapter[];
-};
-export type PlaybackView = {
-  readonly state: string;
-  readonly current: QueueItemView | null;
-  readonly queue: readonly QueueItemView[];
-  readonly loop: string;
-  readonly volume: number;
-};
+const SUBTITLE_ENUMERATION_TIMEOUT_MS = 15_000;
 
 /**
  * The minimal slash-interaction surface the handler needs — decoupled from discord.js so the
@@ -119,6 +55,19 @@ export type CommandInteraction = {
   /** Defer (ephemeral) for a slow op, then `editReply`. */
   defer: () => Promise<void>;
   editReply: (content: string) => Promise<void>;
+  /**
+   * Edit the deferred reply to show page 1 and attach Prev/Next/First/Last buttons (when
+   * `pages.length > 1`); the adapter drives the collector so handlers stay discord.js-free.
+   * For a single-page result, this just edits in the one message with no buttons.
+   */
+  replyPaginated: (payload: PaginatedPages) => Promise<void>;
+  /**
+   * Edit the deferred reply to show a subtitle-track picker built from `candidates`, and resolve
+   * with the user's pick (an opaque encoded track ref) once they choose, or `null` on timeout.
+   */
+  replySelectMenu: (
+    candidates: readonly SubtitleCandidate[],
+  ) => Promise<string | null>;
 };
 
 export type CommandHandlerDeps = {
@@ -137,8 +86,36 @@ export type CommandHandlerDeps = {
   ) => Promise<PlaylistItem[]>;
   /** List the source/site names yt-dlp supports (cached); backs `/stream sources`. */
   readonly listSources: (signal: AbortSignal) => Promise<readonly string[]>;
+  /**
+   * Synchronously resolve a url/search `/stream play` source (yt-dlp) before acking, so bad input
+   * gets a specific error instead of a silent "Queued". The result is threaded onto the queued item
+   * so the machine's `resolving` state reuses it instead of re-fetching.
+   */
+  readonly resolvePlaySource: (
+    source: Source,
+    signal: AbortSignal,
+  ) => Promise<ResolvedSource>;
   /** Post a world-readable message to the status channel (shaming, etc.). */
   readonly announce: (message: string) => Promise<void>;
+  /** Enumerate burnable subtitle candidates for the currently-playing item; `/stream subtitles`'s picker. */
+  readonly listSubtitleCandidates: (
+    signal: AbortSignal,
+  ) => Promise<SubtitleCandidate[]>;
+  /**
+   * A stable identity (`file:<path>` / `url:<url>` / `search:<query>`) of the currently-playing
+   * source, or `null` if nothing is playing. Captured when the picker opens and re-checked right
+   * before dispatching `CHANGE_SUBTITLES`, so a pick built for one item is never applied to a
+   * *different* item that playback advanced to during the picker's wait — even one sharing the same
+   * display title. The `kind:` prefix also detects a source-kind change (which would throw in the
+   * exact subtitle resolver).
+   */
+  readonly currentSourceId: () => string | null;
+  /** True while a subtitle picker is already open for this session (single-flight guard). */
+  readonly hasPendingSubtitleMenu: () => boolean;
+  /** Claim the single-flight slot; returns false if one was already claimed. */
+  readonly claimSubtitleMenu: () => boolean;
+  /** Release the single-flight slot (call on pick, timeout, or error). */
+  readonly releaseSubtitleMenu: () => void;
 };
 
 /**
@@ -153,102 +130,107 @@ export class CommandHandler {
   }
 
   async run(interaction: CommandInteraction): Promise<void> {
-    switch (interaction.subcommand()) {
+    const sub = interaction.subcommand();
+    if (await this.runPlaybackCommand(sub, interaction)) {
+      return;
+    }
+    if (await this.runDiscoveryCommand(sub, interaction)) {
+      return;
+    }
+    await interaction.reply("Unknown command.");
+  }
+
+  /** Playback/queue-control subcommands. Returns false (no reply sent) for an unrecognized sub. */
+  private async runPlaybackCommand(
+    sub: string,
+    interaction: CommandInteraction,
+  ): Promise<boolean> {
+    switch (sub) {
       case "play":
-        return this.handlePlay(interaction, false);
+        await runPlayCommand(this.deps, interaction, false);
+        return true;
       case "playnext":
-        return this.handlePlay(interaction, true);
+        await runPlayCommand(this.deps, interaction, true);
+        return true;
       case "skip":
-        return this.handleSkip(interaction);
+        await this.handleSkip(interaction);
+        return true;
       case "stop":
-        return this.handleStop(interaction);
+        await this.handleStop(interaction);
+        return true;
       case "queue":
-        return interaction.reply(this.queueText());
+        await interaction.reply(queueText(this.deps.view()));
+        return true;
       case "nowplaying":
-        return interaction.reply(this.nowPlayingText());
+        await interaction.reply(nowPlayingText(this.deps.view()));
+        return true;
       case "remove":
-        return this.handleRemove(interaction);
+        await this.handleRemove(interaction);
+        return true;
       case "clear":
-        return this.handleClear(interaction);
+        await this.handleClear(interaction);
+        return true;
       case "move":
-        return this.handleMove(interaction);
+        await this.handleMove(interaction);
+        return true;
       case "shuffle":
-        return this.handleShuffle(interaction);
+        await this.handleShuffle(interaction);
+        return true;
       case "loop":
-        return this.handleLoop(interaction);
+        await this.handleLoop(interaction);
+        return true;
       case "volume":
-        return this.handleVolume(interaction);
+        await this.handleVolume(interaction);
+        return true;
       case "seek":
-        return this.handleSeek(interaction);
+        await this.handleSeek(interaction);
+        return true;
       case "chapters":
-        return interaction.reply(this.chaptersText());
+        await interaction.reply(chaptersText(this.deps.view()));
+        return true;
       case "chapter":
-        return this.handleChapter(interaction);
-      case "list":
-        return interaction.reply(
-          this.listText(interaction.getString("filter")),
-        );
-      case "search":
-        return interaction.reply(
-          this.listText(interaction.getStringRequired("query")),
-        );
-      case "sources":
-        return this.handleSources(interaction);
-      case "help":
-        return interaction.reply(helpText());
+        await this.handleChapter(interaction);
+        return true;
+      case "subtitles":
+        await this.handleSubtitles(interaction);
+        return true;
       default:
-        return interaction.reply("Unknown command.");
+        return false;
     }
   }
 
-  private async handlePlay(
+  /** Library/discovery subcommands (no active session required). */
+  private async runDiscoveryCommand(
+    sub: string,
     interaction: CommandInteraction,
-    next: boolean,
+  ): Promise<boolean> {
+    switch (sub) {
+      case "list":
+        await this.handleList(interaction, interaction.getString("filter"));
+        return true;
+      case "search":
+        await this.handleList(
+          interaction,
+          interaction.getStringRequired("query"),
+        );
+        return true;
+      case "sources":
+        await this.handleSources(interaction);
+        return true;
+      case "help":
+        await interaction.reply(helpText());
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  private async handleList(
+    interaction: CommandInteraction,
+    query: string | null,
   ): Promise<void> {
-    const userId = interaction.userId;
-    const query = interaction.getStringRequired("query");
-    const subtitles = buildSubtitlePref(
-      interaction.getString("subtitles"),
-      interaction.getString("sublang"),
-    );
-
-    if (isHttpUrl(query) && isLikelyPlaylist(query)) {
-      await interaction.defer();
-      const items = await this.deps.expandPlaylist(
-        query,
-        AbortSignal.timeout(PLAYLIST_TIMEOUT_MS),
-      );
-      for (const item of items) {
-        const source = { kind: "url", url: item.url, subtitles } as const;
-        this.deps.dispatch({
-          type: next ? "ADD_NEXT" : "ADD",
-          source,
-          requesterId: userId,
-        });
-      }
-      await interaction.editReply(
-        `Queued ${String(items.length)} item(s) from the playlist.${subtitlesSuffix(subtitles)}`,
-      );
-      return;
-    }
-
-    const source = withSubtitles(
-      resolvePlayQuery(query, this.deps.library()),
-      subtitles,
-    );
-    if (isBlockedSource(source)) {
-      await this.deps.announce(shameMessage(userId));
-      await interaction.reply("🚫 Nope.");
-      return;
-    }
-    this.deps.dispatch({
-      type: next ? "ADD_NEXT" : "ADD",
-      source,
-      requesterId: userId,
-    });
-    await interaction.reply(
-      `${next ? "Up next" : "Queued"}: **${sourceLabel(source)}**${subtitlesSuffix(subtitles)}`,
-    );
+    await interaction.defer();
+    await interaction.replyPaginated(listPages(this.deps.library(), query));
   }
 
   private async handleSources(interaction: CommandInteraction): Promise<void> {
@@ -258,7 +240,7 @@ export class CommandHandler {
     const sources = await this.deps.listSources(
       AbortSignal.timeout(SOURCES_TIMEOUT_MS),
     );
-    await interaction.editReply(sourcesText(sources, query));
+    await interaction.replyPaginated(sourcesPages(sources, query));
   }
 
   private async handleSkip(interaction: CommandInteraction): Promise<void> {
@@ -417,65 +399,85 @@ export class CommandHandler {
     );
   }
 
-  private chaptersText(): string {
-    const current = this.deps.view().current;
+  /**
+   * `/stream subtitles` — presents a track picker built from the currently-playing item's actual
+   * subtitle candidates (sidecar/embedded/yt-dlp), then dispatches `CHANGE_SUBTITLES` with the
+   * exact pick. A single-flight guard rejects a second concurrent picker for the same session,
+   * since two open menus dispatching independently would cause a confusing double-restart.
+   */
+  private async handleSubtitles(
+    interaction: CommandInteraction,
+  ): Promise<void> {
+    const view = this.deps.view();
+    const current = view.current;
     if (current === null) {
-      return "Nothing is playing.";
+      await interaction.reply("Nothing is playing.");
+      return;
     }
-    if (current.chapters.length === 0) {
-      return "No chapters for the current video.";
-    }
-    const lines = current.chapters.map(
-      (chapter) =>
-        `${String(chapter.index)}. \`${formatTimecode(chapter.startSeconds)}\` — ${chapter.title}`,
-    );
-    return `**Chapters for ${current.title}:**\n${lines.join("\n")}`;
-  }
-
-  private nowPlayingText(): string {
-    const view = this.deps.view();
-    if (view.current === null) {
-      return "Nothing is playing.";
-    }
-    return `**Now playing:** ${view.current.title} (requested by <@${view.current.requesterId}>)\n**Loop:** ${view.loop} · **Volume:** ${String(view.volume)}%`;
-  }
-
-  private queueText(): string {
-    const view = this.deps.view();
-    const lines: string[] = [];
-    if (view.current !== null) {
-      lines.push(`**Now:** ${view.current.title}`);
-    }
-    view.queue.slice(0, MAX_LIST).forEach((item, index) => {
-      lines.push(
-        `${String(index + 1)}. ${item.title} (<@${item.requesterId}>)`,
+    if (
+      !canControlItem(
+        interaction.userId,
+        current.requesterId,
+        this.deps.config.discord.adminIds,
+      )
+    ) {
+      await interaction.reply(
+        "Only the requester or an admin can change subtitles for this.",
       );
-    });
-    if (view.queue.length > MAX_LIST) {
-      lines.push(`…and ${String(view.queue.length - MAX_LIST)} more`);
+      return;
     }
-    return lines.length === 0 ? "The queue is empty." : lines.join("\n");
-  }
-
-  private listText(query: string | null): string {
-    const entries = this.deps.library();
-    const matched =
-      query === null ? entries : searchLibrary(entries, query, MAX_LIST);
-    if (matched.length === 0) {
-      return query === null
-        ? "The library is empty."
-        : `No matches for \`${query}\`.`;
-    }
-    const lines = matched
-      .slice(0, MAX_LIST)
-      .map(
-        (entry, index) =>
-          `${String(index + 1)}. \`${entry.title}\` _(${entry.library})_`,
+    if (!this.deps.claimSubtitleMenu()) {
+      await interaction.reply(
+        "A subtitle picker is already open for this session — finish or let it time out first.",
       );
-    const suffix =
-      matched.length > MAX_LIST
-        ? `\n…and ${String(matched.length - MAX_LIST)} more`
-        : "";
-    return `**${String(matched.length)} result(s):**\n${lines.join("\n")}${suffix}`;
+      return;
+    }
+
+    await interaction.defer();
+    try {
+      // Identity of the item whose candidates the picker will show. The candidates are enumerated
+      // from THIS source; a pick is only valid if this exact item is still current at dispatch time.
+      const pickedFromSourceId = this.deps.currentSourceId();
+      const candidates = await this.deps.listSubtitleCandidates(
+        AbortSignal.timeout(SUBTITLE_ENUMERATION_TIMEOUT_MS),
+      );
+      if (candidates.length === 0) {
+        await interaction.editReply(
+          "No subtitle tracks were found for the current video.",
+        );
+        return;
+      }
+      const picked = await interaction.replySelectMenu(candidates);
+      if (picked === null) {
+        await interaction.editReply("Selection timed out.");
+        return;
+      }
+      const trackRef = decodeTrackRef(picked);
+
+      // Playback can move on (natural end, skip, another change) during the picker's wait — re-check
+      // the current item's stable identity right before dispatching. Comparing the source identity
+      // (not the display title) catches a same-title-but-different-item swap that would otherwise
+      // burn the old item's subtitle track onto the new one or throw in the exact subtitle resolver.
+      // The `kind:` prefix on the identity also covers a source-kind change.
+      if (this.deps.currentSourceId() !== pickedFromSourceId) {
+        await interaction.editReply(
+          "Playback changed while you were choosing — nothing was applied. Try again.",
+        );
+        return;
+      }
+      const nowView = this.deps.view();
+
+      const subtitles: SubtitlePref = { trackRef };
+      this.deps.dispatch({
+        type: "CHANGE_SUBTITLES",
+        subtitles,
+        positionSeconds: nowView.positionSeconds ?? 0,
+      });
+      await interaction.editReply(
+        "🔄 Restarting with the selected subtitle track…",
+      );
+    } finally {
+      this.deps.releaseSubtitleMenu();
+    }
   }
 }

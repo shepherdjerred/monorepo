@@ -12,6 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "#src/components/ui/table.tsx";
+import { DiscordUser } from "#src/components/discord-user.tsx";
+import { LoadMore } from "#src/components/load-more.tsx";
 
 function channelLabel(
   channels: { id: string; name: string }[] | undefined,
@@ -135,14 +137,17 @@ export function PlayerList() {
                 <TableRow key={player.id}>
                   <TableCell className="font-medium">
                     <Link
-                      className="hover:underline"
+                      className="underline"
                       to={`/g/${guildId}/players/${encodeURIComponent(player.alias)}`}
                     >
                       {player.alias}
                     </Link>
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {player.discordId ?? "—"}
+                  <TableCell>
+                    <DiscordUser
+                      id={player.discordId}
+                      name={player.discordUser}
+                    />
                   </TableCell>
                   <TableCell>{player.accountCount}</TableCell>
                   <TableCell className="text-muted-foreground">
@@ -164,18 +169,13 @@ export function PlayerList() {
         </div>
       )}
 
-      {playersQuery.hasNextPage && (
-        <Button
-          type="button"
-          variant="outline"
-          disabled={playersQuery.isFetchingNextPage}
-          onClick={() => {
-            void playersQuery.fetchNextPage();
-          }}
-        >
-          {playersQuery.isFetchingNextPage ? "Loading..." : "Load more"}
-        </Button>
-      )}
+      <LoadMore
+        hasNextPage={playersQuery.hasNextPage}
+        isFetchingNextPage={playersQuery.isFetchingNextPage}
+        onLoadMore={() => {
+          void playersQuery.fetchNextPage();
+        }}
+      />
     </div>
   );
 }

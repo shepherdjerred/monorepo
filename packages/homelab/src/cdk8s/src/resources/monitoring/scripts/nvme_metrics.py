@@ -11,19 +11,19 @@ $ black -l 100 nvme_metrics.py
 import json
 import os
 import re
-import sys
 import subprocess
+import sys
+from typing import Any
 
 # Disable automatic addition of _created series. Must be set before importing prometheus_client.
 os.environ["PROMETHEUS_DISABLE_CREATED_SERIES"] = "true"
 
-from prometheus_client import CollectorRegistry, Counter, Gauge, Info, generate_latest  # noqa: E402
+from prometheus_client import CollectorRegistry, Counter, Gauge, Info, generate_latest
 
 registry = CollectorRegistry()
 namespace = "nvme"
 
-metrics = {
-    # fmt: off
+metrics: dict[str, Any] = {
     "avail_spare": Gauge(
         "available_spare_ratio",
         "Device available spare ratio",
@@ -127,11 +127,10 @@ metrics = {
         "Device used size in bytes",
         ["device"], namespace=namespace, registry=registry,
     ),
-    # fmt: on
 }
 
 
-def exec_nvme(*args):
+def exec_nvme(*args: str) -> bytes:
     """
     Execute nvme CLI tool with specified arguments and return captured stdout result. Set LC_ALL=C
     in child process environment so that the nvme tool does not perform any locale-specific number
@@ -141,7 +140,7 @@ def exec_nvme(*args):
     return subprocess.check_output(cmd, stderr=subprocess.PIPE, env=dict(os.environ, LC_ALL="C"))
 
 
-def exec_nvme_json(*args):
+def exec_nvme_json(*args: str) -> Any:
     """
     Execute nvme CLI tool with specified arguments and return parsed JSON output.
     """
@@ -155,10 +154,7 @@ def exec_nvme_json(*args):
 
 def main():
     match = re.match(r"^nvme version (\S+)", exec_nvme("version").decode())
-    if match:
-        cli_version = match.group(1)
-    else:
-        cli_version = "unknown"
+    cli_version = match.group(1) if match else "unknown"
     metrics["nvmecli"].labels(cli_version).set(1)
 
     device_list = exec_nvme_json("list")
@@ -245,7 +241,7 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        print("ERROR: {}".format(e), file=sys.stderr)
+        print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)
 
     print(generate_latest(registry).decode(), end="")

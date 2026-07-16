@@ -5,8 +5,8 @@ function fileUrl(path: string): string {
 }
 
 const databaseUrl =
-  process.env.DATABASE_URL ??
-  fileUrl(process.env.DATABASE_PATH ?? "./data/leaderboard.db");
+  process.env["DATABASE_URL"] ??
+  fileUrl(process.env["DATABASE_PATH"] ?? "./data/leaderboard.db");
 
 export default defineConfig({
   schema: "prisma/schema.prisma",

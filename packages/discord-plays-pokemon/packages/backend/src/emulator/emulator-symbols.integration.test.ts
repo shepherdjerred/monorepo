@@ -1,10 +1,13 @@
 import { Emulator } from "./emulator.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
+import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 
-// Boots the real checked-in pokeemerald.wasm and asserts the game-state symbols
-// still resolve and a snapshot read doesn't throw. The wasm is sha-pinned, so
-// this only breaks when the binary is intentionally refreshed — at which point
-// it's the canary for renamed/moved symbols before they reach production.
+// Boots the real pokeemerald.wasm and asserts the game-state symbols still
+// resolve and a snapshot read doesn't throw. It's the canary for renamed/moved
+// symbols before they reach production. The wasm is no longer committed — it's
+// built from source in the Dagger image build (and locally by
+// scripts/build-wasm.sh), where this gate runs against the real artifact. When
+// the wasm is absent (plain `bun run test` on a clean checkout), skip.
 
 const WASM_PATH = new URL("../../assets/pokeemerald.wasm", import.meta.url)
   .pathname;
@@ -13,7 +16,11 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-describe("emulator game symbols (real wasm)", () => {
+// `Bun.file().size` is synchronous and returns 0 for a missing file — used here
+// instead of node:fs (banned by the bun-runtime lint rule).
+const describeWasm = Bun.file(WASM_PATH).size > 0 ? describe : describe.skip;
+
+describeWasm("emulator game symbols (real wasm)", () => {
   test("resolves all symbols and reads snapshots without throwing", async () => {
     const emulator = new Emulator({ wasmPath: WASM_PATH });
     await emulator.init();
@@ -26,9 +33,10 @@ describe("emulator game symbols (real wasm)", () => {
     }
 
     const reader = emulator.memoryReader();
-    // Fresh boot: no save loaded yet, so this is expected to be null — the
+    // Fresh boot: no save loaded yet, so these are expected to be null — the
     // contract is "doesn't throw", which is what the watcher relies on.
     expect(() => readGameSnapshot(reader, symbols)).not.toThrow();
+    expect(() => readSpatialSnapshot(reader, symbols)).not.toThrow();
 
     // Run a few hundred frames and confirm reads stay safe as the game runs.
     emulator.start();
@@ -41,5 +49,6 @@ describe("emulator game symbols (real wasm)", () => {
 
     expect(emulator.frame).toBeGreaterThan(target - 1);
     expect(() => readGameSnapshot(reader, symbols)).not.toThrow();
+    expect(() => readSpatialSnapshot(reader, symbols)).not.toThrow();
   }, 30_000);
 });

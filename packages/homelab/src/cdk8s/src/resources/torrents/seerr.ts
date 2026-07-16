@@ -108,5 +108,6 @@ export function createSeerrDeployment(chart: Chart) {
   createCloudflareTunnelBinding(chart, "seerr-cf-tunnel", {
     serviceName: service.name,
     subdomain: "seerr",
+    port: SEERR_PORT,
   });
 }
