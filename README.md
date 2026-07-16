@@ -369,7 +369,7 @@ Discord Plays Pokémon lets a Discord server collectively play Pokémon Emerald 
 
 ### [dotfiles](https://github.com/shepherdjerred/monorepo/tree/main/packages/dotfiles) (2026-02-15)
 
-This repository is a personal monorepo aggregating active projects, learning experiments, and archived work under a shared workspace `README.md:3`. It uses a Bun-powered TypeScript setup with declared workspaces, Lefthook git hooks, Dagger tooling, and Tauri API dependencies managed through `package.json:1`. A notable capability is the Bun automation script `scripts/run-package-script.ts:1`, which discovers every package under `packages/*` and executes a requested script across them while honoring skip lists for selective runs.
+This repository is a personal monorepo aggregating active projects, learning experiments, and archived work under a shared workspace `README.md:3`. It uses a Bun-powered TypeScript setup with declared workspaces and Tauri API dependencies managed through `package.json:1`. A notable capability is the Bun automation script `scripts/run-package-script.ts:1`, which discovers every package under `packages/*` and executes a requested script across them while honoring skip lists for selective runs.
 
 ### [scout-for-lol](https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol) (2026-02-15)
 
@@ -393,7 +393,7 @@ Project provides a command-line workflow to patch Berkeley Mono TTF fonts with N
 
 ### [resume](https://github.com/shepherdjerred/monorepo/tree/main/packages/resume) (2026-01-27)
 
-Repository is a Bun-managed monorepo of personal tools and assets, including a LaTeX resume defined in `packages/resume/resume.tex` and other workspace packages registered in `package.json`. It uses Bun scripts with TypeScript, Lefthook, Dagger’s TypeScript SDK, and Tauri APIs declared in `package.json` for automation and desktop integrations. Build automation is centralized through Dagger configuration in `dagger.json`, enabling the shared scripts to orchestrate tasks across every workspace.
+Repository is a Bun-managed monorepo of personal tools and assets, including a LaTeX resume defined in `packages/resume/resume.tex` and other workspace packages registered in `package.json`. It uses Bun scripts with TypeScript and Tauri APIs declared in `package.json` for automation and desktop integrations. Shared Bun scripts orchestrate tasks across every workspace.
 
 ### [birmel](https://github.com/shepherdjerred/monorepo/tree/main/packages/birmel) (2025-12-20)
 

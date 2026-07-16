@@ -152,6 +152,7 @@ export function createJellyfinDeployment(
   createCloudflareTunnelBinding(chart, "jellyfin-cf-tunnel", {
     serviceName: service.name,
     subdomain: "jellyfin",
+    port: JELLYFIN_PORT,
   });
 
   ApiObject.of(deployment).addJsonPatch(

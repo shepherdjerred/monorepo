@@ -2,7 +2,7 @@
   "files": [
     {
       "path": "AGENTS.md",
-      "description": "Repo-wide conventions and the single source of truth for AI/reviewer rules. Covers ESLint discipline, the Dagger/CI banned-patterns list (enforced by scripts/check-dagger-hygiene.ts), documentation discipline (session log/plan rule, packages/docs taxonomy), TODO(todo:<id>) format, temporal-agent-task block schema, secret hygiene, and fail-fast principles. CLAUDE.md is a symlink to this file."
+      "description": "Repo-wide conventions and the single source of truth for AI/reviewer rules. Covers ESLint discipline, documentation discipline (session log/plan rule, packages/docs taxonomy), TODO(todo:<id>) format, temporal-agent-task block schema, secret hygiene, and fail-fast principles. CLAUDE.md is a symlink to this file."
     },
     {
       "path": "packages/docs/AGENTS.md",

@@ -111,7 +111,7 @@ export function findMissingNativePeerDependencyMessages(
 
     if (dependencyPackageJson === undefined) {
       messages.push(
-        `${dependencyName} is declared in dependencies but is missing from node_modules. Run bun install --frozen-lockfile --linker hoisted.`,
+        `${dependencyName} is declared in dependencies but is missing from node_modules. Run bun install --frozen-lockfile (workspace root).`,
       );
       continue;
     }
@@ -207,7 +207,7 @@ function ensureNodeModules(rootDir: string): string[] {
   const nodeModules = path.join(rootDir, "node_modules");
   if (!existsSync(nodeModules)) {
     return [
-      "node_modules is missing. Run bun install --frozen-lockfile --linker hoisted before checking iOS native deps.",
+      "node_modules is missing. Run bun install --frozen-lockfile (workspace root) before checking iOS native deps.",
     ];
   }
 

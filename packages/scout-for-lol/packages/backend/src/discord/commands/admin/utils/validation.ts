@@ -1,7 +1,7 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import type { z } from "zod";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { fromError } from "zod-validation-error";
+import { parseCommandArgs } from "#src/discord/commands/define-command.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("utils-validation");
@@ -34,20 +34,28 @@ export async function validateCommandArgs<T>(
 
   logger.info(`Starting ${commandName} for user ${username} (${userId})`);
 
+  // Reading/coercing Discord options is system-boundary user input: a builder
+  // throw gets the same friendly ephemeral reply as a schema failure instead
+  // of rejecting the command.
+  let rawArgs: unknown;
   try {
-    const rawArgs = argsBuilder(interaction);
-    const data = schema.parse(rawArgs);
-    logger.info(`✅ Command arguments validated successfully`);
-    return { success: true, data, userId, username };
+    rawArgs = argsBuilder(interaction);
   } catch (error) {
-    logger.error(`❌ Invalid command arguments from ${username}:`, error);
-    const validationError = fromError(error);
+    logger.info(`❌ Failed to read command options for ${commandName}`, error);
     await interaction.reply({
-      content: validationError.toString(),
+      content: `❌ Invalid command options: ${error instanceof Error ? error.message : String(error)}`,
       ephemeral: true,
     });
     return { success: false };
   }
+
+  const parseResult = await parseCommandArgs(interaction, schema, rawArgs);
+  if (!parseResult.success) {
+    return { success: false };
+  }
+
+  logger.info(`✅ Command arguments validated successfully`);
+  return { success: true, data: parseResult.data, userId, username };
 }
 
 /**

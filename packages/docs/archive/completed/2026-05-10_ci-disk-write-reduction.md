@@ -14,14 +14,14 @@
 
 Direct `du` on a real Buildkite Job pod's `container-0` overlay upperdir (`/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/<id>/fs/`):
 
-| Path | Size | What |
-| --- | --- | --- |
-| `/root/.local/share/uv` | **447 MB** | `uv tool install semgrep` venv |
-| `/root/.cache/uv/archive-v0` | **362 MB** | `uv` download cache |
-| `/usr/lib/x86_64-linux-gnu` + `/usr/libexec/gcc` | **237 MB** | apt-installed gcc/g++/libs |
-| `/var/cache/apt/archives` | **92 MB** | apt downloaded `.deb` files (never cleaned) |
-| `/workspace` (emptyDir) | **779 MB** | git clone of monorepo |
-| **Total per pod** | **~2.0 GB** | All on `nvme0n1` (xfs at `/var`) |
+| Path                                             | Size        | What                                        |
+| ------------------------------------------------ | ----------- | ------------------------------------------- |
+| `/root/.local/share/uv`                          | **447 MB**  | `uv tool install semgrep` venv              |
+| `/root/.cache/uv/archive-v0`                     | **362 MB**  | `uv` download cache                         |
+| `/usr/lib/x86_64-linux-gnu` + `/usr/libexec/gcc` | **237 MB**  | apt-installed gcc/g++/libs                  |
+| `/var/cache/apt/archives`                        | **92 MB**   | apt downloaded `.deb` files (never cleaned) |
+| `/workspace` (emptyDir)                          | **779 MB**  | git clone of monorepo                       |
+| **Total per pod**                                | **~2.0 GB** | All on `nvme0n1` (xfs at `/var`)            |
 
 ### Process-tree confirmation
 
@@ -44,23 +44,23 @@ Byte-for-byte match to `install_base()` in `.buildkite/scripts/setup-tools.sh:46
 
 Bake every tool that `setup-tools.sh` installs into `ci-base` so each `install_X()` short-circuits via `command -v X && return`:
 
-| Tier | Tools |
-| --- | --- |
-| 1 | `gcc g++ python3 libssl-dev pkg-config` (apt) + `semgrep` via `uv tool install` |
-| 2 | `gh`, `helm`, `opentofu`, `awscli`, `ripgrep`, `shellcheck`, `gitleaks`, `trivy` |
+| Tier    | Tools                                                                                       |
+| ------- | ------------------------------------------------------------------------------------------- |
+| 1       | `gcc g++ python3 libssl-dev pkg-config` (apt) + `semgrep` via `uv tool install`             |
+| 2       | `gh`, `helm`, `opentofu`, `awscli`, `ripgrep`, `shellcheck`, `gitleaks`, `trivy`            |
 | Skipped | Rust toolchain (~2 GB; only 2 step types use it; consider separate `ci-rust` variant later) |
 
 `setup-tools.sh` was NOT modified — the existing `command -v` guards handle the no-op transparently.
 
 ## Files changed
 
-| File | Change | PR |
-| --- | --- | --- |
-| `.buildkite/ci-image/Dockerfile` | +82 lines: 11 tool installs + 12 ARGs with `# renovate:` comments | #757 |
-| `.buildkite/ci-image/Dockerfile` | + `gnupg` to apt install (required by opentofu installer for signature verification) | #760 |
-| `.buildkite/ci-image/VERSION` | `404` → `406` | #757, #759 |
-| `.buildkite/pipeline.yml` line 16 | bootstrap `ci-base:404` → `ci-base:406` | #762 |
-| `.dagger/src/image.ts:771` | `dockerBuild()` → `dockerBuild({ platform: "linux/amd64" })` | #759 |
+| File                              | Change                                                                               | PR         |
+| --------------------------------- | ------------------------------------------------------------------------------------ | ---------- |
+| `.buildkite/ci-image/Dockerfile`  | +82 lines: 11 tool installs + 12 ARGs with `# renovate:` comments                    | #757       |
+| `.buildkite/ci-image/Dockerfile`  | + `gnupg` to apt install (required by opentofu installer for signature verification) | #760       |
+| `.buildkite/ci-image/VERSION`     | `404` → `406`                                                                        | #757, #759 |
+| `.buildkite/pipeline.yml` line 16 | bootstrap `ci-base:404` → `ci-base:406`                                              | #762       |
+| `.dagger/src/image.ts:771`        | `dockerBuild()` → `dockerBuild({ platform: "linux/amd64" })`                         | #759       |
 
 ## Verification — local proof
 
@@ -70,14 +70,14 @@ Bake every tool that `setup-tools.sh` installs into `ci-base` so each `install_X
 
 Direct `du` on a running `:406` pod's `container-0` upperdir:
 
-| Path | Pre-fix (`:404`) | Post-fix (`:406`) |
-| --- | --- | --- |
-| `/var/cache/apt/archives` | 92 MB | **0 MB** ✓ |
-| `/usr/libexec/gcc` | 100 MB | **0 MB** ✓ |
-| `/usr/lib/x86_64-linux-gnu` | 85 MB | **0 MB** ✓ |
-| `/root/.local/share/uv` | 447 MB | **0 MB** ✓ |
-| `/root/.cache/uv` | 388 MB | **0 MB** ✓ |
-| **TOTAL container-0 overlay** | **~1,200 MB** | **24 MB** |
+| Path                          | Pre-fix (`:404`) | Post-fix (`:406`) |
+| ----------------------------- | ---------------- | ----------------- |
+| `/var/cache/apt/archives`     | 92 MB            | **0 MB** ✓        |
+| `/usr/libexec/gcc`            | 100 MB           | **0 MB** ✓        |
+| `/usr/lib/x86_64-linux-gnu`   | 85 MB            | **0 MB** ✓        |
+| `/root/.local/share/uv`       | 447 MB           | **0 MB** ✓        |
+| `/root/.cache/uv`             | 388 MB           | **0 MB** ✓        |
+| **TOTAL container-0 overlay** | **~1,200 MB**    | **24 MB**         |
 
 The 24 MB residual is `~/.bun/install/cache` (bun install cache being warmed during job work — separate Dagger cache mount, unrelated to setup-tools.sh).
 
@@ -85,15 +85,15 @@ The 24 MB residual is `~/.bun/install/cache` (bun install cache being warmed dur
 
 ### Baseline snapshot — 2026-05-10 20:51 PDT (post-fix start)
 
-| Metric | nvme0n1 | nvme1n1 |
-| --- | --- | --- |
+| Metric                                                 | nvme0n1       | nvme1n1       |
+| ------------------------------------------------------ | ------------- | ------------- |
 | Lifetime writes (NVMe `nvme_data_units_written_total`) | **185.83 TB** | **175.81 TB** |
-| SMART wear (`nvme_percentage_used_ratio`) | 8% | 14% |
-| Current temp | 51 °C | 49 °C |
-| 30d avg write rate (pre-fix baseline) | **8.0 MB/s** | **15.2 MB/s** |
-| 7d avg write rate (pre-fix baseline) | 11.8 MB/s | 34.6 MB/s |
-| 7d peak burst (pre-fix baseline) | 542 MB/s | 584 MB/s |
-| 1h peak temp (transition noise) | 74 °C | 52 °C |
+| SMART wear (`nvme_percentage_used_ratio`)              | 8%            | 14%           |
+| Current temp                                           | 51 °C         | 49 °C         |
+| 30d avg write rate (pre-fix baseline)                  | **8.0 MB/s**  | **15.2 MB/s** |
+| 7d avg write rate (pre-fix baseline)                   | 11.8 MB/s     | 34.6 MB/s     |
+| 7d peak burst (pre-fix baseline)                       | 542 MB/s      | 584 MB/s      |
+| 1h peak temp (transition noise)                        | 74 °C         | 52 °C         |
 
 ### T+24h check (one full diurnal cycle on `:406`)
 

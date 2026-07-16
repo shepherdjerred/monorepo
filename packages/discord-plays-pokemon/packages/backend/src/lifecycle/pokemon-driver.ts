@@ -1,11 +1,11 @@
 import path from "node:path";
 import type { Client as BotClient } from "discord.js";
-import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver";
+import type { GameDriver } from "@shepherdjerred/discord-stream-lifecycle/lifecycle/game-driver.ts";
 import type {
   Session,
   SessionStopReason,
-} from "@shepherdjerred/discord-stream-lifecycle/session/session";
-import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client";
+} from "@shepherdjerred/discord-stream-lifecycle/session/session.ts";
+import type { SelfbotPooledUserbot } from "@shepherdjerred/discord-stream-lifecycle/pool/selfbot-client.ts";
 import { Emulator } from "#src/emulator/emulator.ts";
 import {
   framesFromMs,

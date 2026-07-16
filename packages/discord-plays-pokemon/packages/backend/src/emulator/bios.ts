@@ -216,7 +216,7 @@ export function createBios(): Bios {
         );
       // libc bulk-memory calls. Whether these appear as imports depends on the
       // LLVM version that compiled the wasm: newer clangs lower them to inline
-      // bulk-memory ops, older ones (e.g. trixie's clang-19, used by the Dagger
+      // bulk-memory ops, older ones (e.g. trixie's clang-19, used by the old CI
       // image build) emit calls to external libc symbols, which surface here.
       // They return the destination/comparison result per the C signatures.
       case "memcpy":

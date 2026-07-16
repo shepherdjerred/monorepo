@@ -24,17 +24,16 @@ Fully headless — no browser, no emulator UI, no GPU, no desktop:
   `[bot.notifications.events]` in `config.toml` (`mode = "log"` for a
   detect-only shadow mode; `"send"` to post).
 
-The WASM is **built from source** (ottohg pinned at `POKEEMERALD_SOURCE_REF` +
-our export patch) in the Dagger image build — and locally by
-`scripts/build-wasm.sh`. It is not committed; Renovate advances the upstream pin.
-See `wasm-src/PATCHES.md`.
+The WASM is **built from source** (ottohg pinned at `OTTOHG_SHA` +
+our export patch) by `scripts/build-wasm.sh`. It is not committed; Renovate
+advances the upstream pin. See `wasm-src/PATCHES.md`.
 
 ## Deployment
 
 Runs on the homelab Kubernetes cluster via ArgoCD
-(`packages/homelab/src/cdk8s/src/resources/pokemon.ts`). The image is built in
-CI (Dagger); configuration is a mounted `config.toml` — see
-`config.example.toml`.
+(`packages/homelab/src/cdk8s/src/resources/pokemon.ts`). Image builds and
+pushes are manual (the CI pipeline was removed 2026-07); configuration is a
+mounted `config.toml` — see `config.example.toml`.
 
 ## Disclaimer
 

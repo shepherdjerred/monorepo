@@ -27,7 +27,6 @@ const config = [
       "**/.cache/**/*",
       "**/node_modules/**/*",
       "**/.astro/**/*",
-      ".dagger/sdk/**/*",
       "**/src-tauri/target/**/*",
       "**/scripts/**/*",
       "**/*.md",
@@ -120,8 +119,6 @@ const config = [
     plugins: { "custom-rules": customRulesPlugin },
     rules: { "custom-rules/no-shadcn-theme-tokens": "error" },
   },
-  // Dagger functions external interface
-  { files: [".dagger/src/index.ts"], rules: { "max-params": "off" } },
   // Scripts and frontend — console output is expected
   {
     files: [

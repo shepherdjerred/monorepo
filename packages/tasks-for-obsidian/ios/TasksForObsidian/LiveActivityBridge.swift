@@ -59,11 +59,9 @@ class LiveActivityBridge: NSObject {
       let content = ActivityContent(state: state, staleDate: nil)
 
       Task {
-        for activity in Activity<TimeTrackingAttributes>.activities {
-          if activity.id == currentActivityId {
-            await activity.update(content)
-            break
-          }
+        for activity in Activity<TimeTrackingAttributes>.activities where activity.id == currentActivityId {
+          await activity.update(content)
+          break
         }
         resolve(nil)
       }
@@ -85,11 +83,9 @@ class LiveActivityBridge: NSObject {
       let content = ActivityContent(state: state, staleDate: nil)
 
       Task {
-        for activity in Activity<TimeTrackingAttributes>.activities {
-          if activity.id == currentActivityId {
-            await activity.end(content, dismissalPolicy: .default)
-            break
-          }
+        for activity in Activity<TimeTrackingAttributes>.activities where activity.id == currentActivityId {
+          await activity.end(content, dismissalPolicy: .default)
+          break
         }
         currentActivityId = nil
         resolve(nil)

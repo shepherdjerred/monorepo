@@ -41,6 +41,18 @@ export function createFreshRssChart(app: App) {
             },
           ],
         },
+        // Allow blackbox-exporter's in-cluster health probe (service port
+        // only — not every port on the pod)
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(80), protocol: "TCP" }],
+        },
       ],
     },
   });

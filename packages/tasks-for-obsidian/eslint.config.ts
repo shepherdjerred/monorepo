@@ -3,18 +3,10 @@ const config = [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
     reactNative: true,
-    projectService: {
-      allowDefaultProject: [
-        // src/**/*.test.ts files are now part of the main tsconfig project
-        // (they were previously excluded, so they lived here instead).
-        "scripts/*.ts",
-        "contract-tests/*.ts",
-        // tseslint disallows '**' here; all e2e TS files live at this depth
-        // (e2e/maestro/scripts/*.js are plain Maestro GraalJS, ignored).
-        "e2e/*.ts",
-      ],
-      maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 50,
-    },
+    // The package tsconfigs (app + scripts/e2e/contract-tests) cover every
+    // linted file via the project service; allowDefaultProject entries became
+    // hard "also found in the project service" errors and were removed.
+    projectService: true,
     ignores: [
       "**/generated/**/*",
       "**/dist/**/*",

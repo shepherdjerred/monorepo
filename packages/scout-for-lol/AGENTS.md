@@ -18,13 +18,20 @@ packages/
 └── ui/        # Shared UI components (React)
 ```
 
-## Workspace Dependencies (`file:` protocol)
+## Workspace Dependencies
 
-Scout's sub-packages wire each other with `file:../X` deps (e.g. `@scout-for-lol/data`, `@scout-for-lol/backend`), **not** `workspace:*`.
+Scout's sub-packages are part of the root Bun workspace and use `workspace:*`
+for internal dependencies (for example `@scout-for-lol/data` and
+`@scout-for-lol/backend`). Run `bun install` once at the repository root after
+dependency changes.
 
-- **Never migrate `file:../X` deps to `workspace:*`** (or any symlinking scheme). The `file:` copy-on-install behavior is intentional and the preference is firm — do not list it as a follow-up, tech-debt, or improvement in PRs, plans, or chat.
-- Bun **copies** `file:` deps into `node_modules/<pkg>/` rather than symlinking (bunfig.toml pins `linker = "hoisted"`; under bun's isolated linker — bug-pinned away, see `packages/docs/todos/bun-isolated-linker-eexist.md` — the copies lived at `node_modules/.bun/<pkg>@file+.../`). After editing source in a shared package (e.g. `packages/data`), the backend/app copies are **stale** — typecheck/tests fail with `Module '@scout-for-lol/data' has no exported member ...`. Fix: run `bun install` at `packages/scout-for-lol/` to re-copy, then typecheck dependents. (`bun install` reports `Saved lockfile` but usually leaves `bun.lock` unchanged — verify with `git diff`.)
-- The app imports the backend `AppRouter` as `import type` only, so tRPC input/output changes also need this refresh before the app sees the new procedure shape.
+- The isolated linker is configured at the repository root. Do not add package
+  local `bunfig.toml` linker overrides.
+- Internal Scout package edits are visible through workspace symlinks; no
+  package-local reinstall is needed to refresh copied `file:` dependencies.
+- The app imports the backend `AppRouter` as `import type` only, so tRPC
+  input/output changes still need dependent typechecks before the app sees the
+  new procedure shape.
 
 ---
 
@@ -37,7 +44,6 @@ Scout's sub-packages wire each other with `file:../X` deps (e.g. `@scout-for-lol
 | Linting       | ESLint + Prettier                |
 | Database      | Prisma ORM                       |
 | Validation    | Zod                              |
-| CI/CD         | Dagger + Buildkite               |
 | Task Runner   | mise                             |
 | Bot Framework | Discord.js                       |
 | Frontend      | Astro                            |
@@ -66,7 +72,6 @@ bun run duplication-check # Check for code duplication
 mise run dev             # Setup development environment
 mise run check           # Run all checks (typecheck, lint, format, test, knip, duplication-check)
 mise run generate        # Generate Prisma client
-mise run ci              # Run full CI pipeline
 ```
 
 ### Backend Package
@@ -118,9 +123,9 @@ bun run build:windows    # Build for Windows
 
 Each package supports: `dev`, `build`, `test`, `lint`, `format`, `typecheck`
 
-## CI/CD Pipeline (Dagger + Buildkite)
+## CI/CD
 
-CI builds, tests, and creates container images via Dagger pipelines on Buildkite.
+CI runs on the static Buildkite pipeline (`.buildkite/pipeline.yml`): every PR runs `bun run verify` (affected-scoped, includes scout's checks), Playwright e2e, and a dry-run image build + smoke; on merge to main the backend image is built, smoked, and pushed and the frontends deploy. Locally, `bun run verify` (or `mise run check`) mirrors CI; build the backend image with `bun run --filter=@scout-for-lol/backend docker:build` (`bunx turbo run smoke --filter=@scout-for-lol/backend` builds + smoke-tests it).
 
 ---
 
@@ -265,8 +270,56 @@ Enforced by ESLint:
 
 Commands live in `packages/backend/src/discord/commands/`. Each command exports:
 
-- `SlashCommandBuilder` - Command definition
-- `execute` function - Command handler
+- `SlashCommandBuilder` - Command definition (collected in `discord/rest.ts` for registration)
+- `execute` function - Command handler (dispatched by name/subcommand in `discord/commands/index.ts`)
+
+Builders and executors are wired **separately** by name in those two files — there
+is no per-command registry object, so adding a command means exporting the builder,
+adding it to `rest.ts`, and adding an `execute*` case to `commands/index.ts`.
+
+### Adding a Slash Command — `define-command.ts`
+
+Shared helpers in `discord/commands/define-command.ts` remove the boilerplate every
+command handler used to repeat. Prefer them for new commands:
+
+- **`parseCommandArgs(interaction, schema, rawArgs)`** — validate the options object
+  against a Zod schema. On failure it replies with a friendly ephemeral validation
+  message (system-boundary rule: user input gets a reply, not a throw) and returns
+  `{ success: false }` so you `return` early. On success returns `{ success: true, data }`.
+- **`replyError(interaction, context, error)`** — the single error-reply path. Picks
+  `editReply` vs `reply` based on the deferred/replied state, formats as
+  `❌ **Error <context>**`, and never throws even if the interaction token expired.
+- **`defineCommand({ builder, args, execute })`** — optional convenience to co-locate a
+  command's builder, args schema, and handler in one object.
+
+```typescript
+const ArgsSchema = z.object({
+  alias: z.string().min(1),
+  guildId: DiscordGuildIdSchema,
+});
+
+export async function executeExample(interaction: ChatInputCommandInteraction) {
+  const parsed = await parseCommandArgs(interaction, ArgsSchema, {
+    alias: interaction.options.getString("alias"),
+    guildId: interaction.guildId,
+  });
+  if (!parsed.success) return;
+
+  await interaction.deferReply({ ephemeral: true });
+  try {
+    // …command logic using parsed.data…
+  } catch (error) {
+    await replyError(interaction, "doing the thing", error);
+  }
+}
+```
+
+The legacy group helpers delegate to these: `subscription/reply-helpers.ts`'s
+`editReplyOnError` and `admin/utils/validation.ts`'s `validateCommandArgs` are thin
+wrappers over `replyError` / `parseCommandArgs`. The `competition/` reply helpers
+(`replyWithError` / `replyWithSuccess` / `replyWithErrorFromException`) stay separate —
+they carry distinct semantics (message truncation, success replies, Sentry capture,
+a different error-text format) that `replyError` intentionally does not absorb.
 
 ### Discord Error Handling
 
@@ -384,7 +437,7 @@ DuckDB** (`@duckdb/node-api`, lazy-loaded) over a local Parquet "report lake"
 
 - Use `env-var` for type-safe environment variables
 - Validate all configuration with Zod schemas
-- Use CI secrets for sensitive data in CI/CD
+- Keep sensitive data in secret stores (1Password / k8s secrets), never in the repo
 - Separate development and production configurations
 
 ---
@@ -459,12 +512,14 @@ Discord OAuth in the browser (see **Web UI (Local end-to-end)** above).
 
 ---
 
-## Git Hooks (Husky + lint-staged)
+## Pre-commit / pre-push gates
 
-Pre-commit hooks run automatically:
+Git hooks (lefthook) run automatically: `pre-commit` formats staged files and runs
+`turbo run lint typecheck --affected`; `pre-push` runs `bun run verify -- --affected`
+(the full build/typecheck/test/lint + repo checks). Nothing extra is required, but
+running these yourself before pushing catches failures earlier:
 
-- Prettier formatting on all files
+- Prettier formatting on touched files (also auto-fixed by the pre-commit hook)
 - Markdownlint on `.md` files
-- Actionlint on GitHub workflow files
 - Per-package: typecheck, ESLint, and relevant tests
 - Rust formatting and Clippy for desktop/src-tauri

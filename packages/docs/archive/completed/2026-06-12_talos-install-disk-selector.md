@@ -19,10 +19,10 @@ On any reinstall/recovery, this had a coin-flip chance of pointing at the **ZFS 
 
 ## Drive identity (re-verified live before the change)
 
-| Role | Serial |
-| --- | --- |
+| Role                                                          | Serial              |
+| ------------------------------------------------------------- | ------------------- |
 | Talos system disk (EFI/META/STATE/EPHEMERAL) → install target | **S7KGNU0XB15590B** |
-| ZFS pool drive (must never be the install target) | S7KGNU0X511734N |
+| ZFS pool drive (must never be the install target)             | S7KGNU0X511734N     |
 
 Both are Samsung 990 PRO 4TB, so `model` cannot disambiguate — serial is the only safe selector. Verification procedure: `talosctl get discoveredvolumes` (find the disk whose p4 partition is EPHEMERAL) → `talosctl get disks` (map device → serial).
 

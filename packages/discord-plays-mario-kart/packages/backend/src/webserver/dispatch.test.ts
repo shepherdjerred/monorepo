@@ -27,7 +27,7 @@ import {
 import type { StreamOverlayContext } from "#src/overlay/composite.ts";
 import type { LeaderboardStore } from "#src/leaderboard/store.ts";
 import { SeatManager } from "#src/input/seat-manager.ts";
-import { registry } from "#src/observability/metrics.ts";
+import { registry } from "@shepherdjerred/discord-plays-core/observability/metrics.ts";
 import {
   SCREENSHOT_HEIGHT,
   SCREENSHOT_WIDTH,

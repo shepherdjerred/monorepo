@@ -1,6 +1,14 @@
 # AGENTS.md
 
-Bun workspaces monorepo. Use `bun` commands exclusively (never npm/yarn/pnpm).
+Bun workspaces monorepo — a single root workspace (`workspaces` in the root
+package.json), ONE root `bun.lock`, and the **isolated linker** (root
+`bunfig.toml`): strict per-instance dependency/peer resolution, so phantom
+deps and hoisting split-brain cannot happen. Internal deps use `workspace:*`
+(live symlinks — no copy staleness, no per-package lockfile drift). `bun
+install` once at the root covers every package. Optional per-machine speedup:
+`globalStore = true` in `~/.bunfig.toml` (deliberately NOT committed — parallel
+CI installs against a shared store hit oven-sh/bun#12917).
+Use `bun` commands exclusively (never npm/yarn/pnpm).
 
 ## Structure
 
@@ -15,7 +23,7 @@ packages/
 ├── discord-plays-pokemon/      # Discord Plays Pokemon (headless emulator + Go-Live stream)
 ├── docs/                       # AI-maintained monorepo documentation
 ├── dotfiles/                   # Dotfiles & shell config (chezmoi source)
-├── eslint-config/              # Shared ESLint rules (npm)
+├── eslint-config/              # Shared ESLint flat config (workspace-internal)
 ├── fonts/                      # Custom fonts
 ├── home-assistant/             # Type-safe Home Assistant client + codegen
 ├── homelab/                    # Homelab infrastructure (K8s, cdk8s, Tofu)
@@ -35,7 +43,8 @@ packages/
 ├── toolkit/                    # CLI developer tools (fetch, recall, pr, pd, bugsink, grafana)
 ├── trmnl-dashboard/            # TRMNL e-ink dashboard
 ├── webring/                    # Webring component (npm)
-scripts/ci/                     # TypeScript CI pipeline generator
+scripts/                        # Repo automation (setup-free): checks, deploys, release, hooks
+.buildkite/pipeline.yml         # Static Buildkite CI pipeline (no generator)
 sandbox/                        # Personal scratch (not shipped, excluded from most lint/CI)
 ├── archive/                    # Legacy projects (do not modify): bun-decompile, castle-casters, clauderon, glance, hn-enhancer, macos-cross-compiler, tips
 ├── poc/                        # Proof-of-concept experiments (e.g. interview-practice CLI)
@@ -52,9 +61,9 @@ sandbox/                        # Personal scratch (not shipped, excluded from m
 - **Fix forward on dependency upgrades** — When an upgrade breaks CI, migrate the code to the new version (read the migration guide, use `validate` tooling to catch every schema change) rather than reverting.
 - **"Pre-existing" is not an excuse** — When a task or audit targets 100% quality, fix issues regardless of who introduced them. Never leave something broken as "not caused by my changes."
 - **Never skip tests** — Don't use `test.skip` / `describe.skipIf` to work around missing build artifacts or generated types. Make the test script produce the prerequisite first (e.g. `"test": "bun run build && bun test"`).
-- **Don't blame the cache** — Docker/Dagger layer cache is deterministic; different results mean different inputs. Reproduce locally with `dagger call` and compare base images / dependency versions instead of citing "transient cache issues."
+- **Don't blame the cache** — Docker layer cache and turbo's cache are deterministic; different results mean different inputs. Reproduce locally with `bunx turbo run <task>` / `docker buildx build` and compare base images / dependency versions / task inputs instead of citing "transient cache issues."
 - **Step back on complexity spirals** — After ~2 failed debugging iterations on the same problem, stop adding workarounds; re-evaluate the approach and present the constraint to the user rather than piling on layers.
-- **Verify before asserting** — Don't write a subagent's claim or your own inference into a plan/report as "confirmed." Grep the live tree (`scripts/ci/src/`, `.dagger/src/`, `lefthook.yml`) yourself before stating any CI/lint/gate wiring fact; audits often run against a stale base.
+- **Verify before asserting** — Don't write a subagent's claim or your own inference into a plan/report as "confirmed." Grep the live tree (`.buildkite/pipeline.yml`, `lefthook.yml`, root `package.json` `verify` script, per-package `turbo.json`) yourself before stating any CI/lint/gate wiring fact; audits often run against a stale base.
 - **Don't validate a replacement against the signal it replaces** — When building something to work around an unreliable upstream (e.g. GitHub's `mergeable` field, a flaky check), validate against an independent oracle (fixtures, golden files, the underlying tool, a semantic property like determinism), never the untrusted signal itself.
 - **Verify link liveness** — Every URL you write or rewrite (code, docs, READMEs, package metadata) must be liveness-checked (`curl -sI -o /dev/null -w '%{http_code}' <url>` → 200) before committing. Batch-verify mass rewrites; fall back to a known-good form or drop the link rather than ship a 404.
 - **Update docs with code** — When adding a CLI command or feature, update CLAUDE.md and the relevant skills in the same phase, not a later "polish" pass, so the integration points are usable as soon as the feature works.
@@ -164,16 +173,16 @@ TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-do
 
 Do not expose direct Temporal scheduling as a public ingress path. Public creation must go through the authenticated `/agent-tasks` HTTP API with `Authorization: Bearer $AGENT_TASK_API_TOKEN`.
 
-## Dagger & CI Code — Banned Patterns
+## Automation Code — Banned Patterns
 
-These patterns are banned in `.dagger/src/` and `scripts/ci/src/`. Automated checks (`scripts/check-dagger-hygiene.ts`) enforce this in pre-commit and CI. Do not write them.
+These patterns are banned in automation code (`scripts/`, `.buildkite/`, deploy/build scripts). `scripts/check-suppressions.ts` scans the staged diff for them (`|| true`, `2>/dev/null`, `|| bun install`, `x-access-token`, `git add -A`, `--no-exit-code`) and runs in the `pre-commit` hook (`lefthook.yml`) plus the `//#check-suppressions` turbo task under `bun run verify`. Do not write them.
 
 - `|| true` — never swallow errors silently
 - `2>/dev/null` — never hide stderr
 - `|| bun install` (after `--frozen-lockfile`) — never bypass lockfile enforcement
 - `|| echo` — never convert errors to messages
 - `x-access-token` in URLs — use `GIT_ASKPASS` for git authentication
-- Writing tokens to files (`.npmrc`, etc.) — use `--token` flags or Dagger `Secret` type
+- Writing tokens to files (`.npmrc`, etc.) — pass tokens via env vars or `--token` flags
 - `git add -A` or `git add .` — always stage specific files by path
 - `--no-exit-code` — never bypass quality gate exit codes
 
@@ -182,22 +191,17 @@ If a command legitimately needs error handling, handle the specific error explic
 ## Commands
 
 ```bash
-# Package-specific (DEFAULT — scope verification to the packages you touched; see Verification)
-cd packages/<name> && bun run <script>
-# (or `bun run --filter='./packages/<name>' <script>` if the package is registered as a Bun workspace from the repo root)
+# Whole-repo verification (build + typecheck + test + lint + every repo check)
+bun run verify                 # add -- --affected to scope to changed packages
 
-# Root commands (repo-wide fan-out over ~35 packages — only for genuinely repo-wide
-# changes, and never from multiple concurrent sessions; see Verification)
-bun run build|test|typecheck
+# Per-package task via turbo
+bunx turbo run <task> --filter=<pkg>   # e.g. bunx turbo run typecheck --filter=birmel
 
 # Linting (per-package)
 cd packages/<name> && bunx eslint . --fix
 
-# CI runs on Buildkite (NOT GitHub Actions)
+# CI runs on Buildkite (NOT GitHub Actions) via the static .buildkite/pipeline.yml
 # Check CI status via Buildkite CLI or web UI, never `gh run`
-
-# CI pipeline generator
-cd scripts/ci && bun run src/main.ts
 ```
 
 ## GitHub CLI in Codex
@@ -223,38 +227,40 @@ cd scripts/ci && bun run src/main.ts
 
 ## Development Setup
 
+Three commands after cloning or pulling changes that touch dependencies or schemas:
+
 ```bash
-bun run scripts/setup.ts     # Trust mise configs, install tools/deps, build shared artifacts, run codegen
-# Once the repo is trusted, `mise run dev` is equivalent.
+mise install                 # install pinned toolchain (bun, node, tofu, …)
+bun install --frozen-lockfile   # one workspace-wide install (isolated linker)
+bunx turbo run generate      # codegen: Prisma clients, etc. (cached — near-instant when unchanged)
+bunx lefthook install        # arm git hooks (once per clone — nothing auto-runs it)
 ```
 
-Run `bun run scripts/setup.ts` after cloning or pulling changes that modify dependencies or schemas.
-
-The setup script runs 5 phases:
-
-1. **Tools** — `mise trust` for repo configs, `mise install`, and optional tool warnings
-2. **Dependencies** — root + per-package `bun install --frozen-lockfile`
-3. **Shared Builds** — eslint-config, webring, astro-opengraph-images, discord-video-stream, helm-types
-4. **Code Generation** — Prisma (birmel, scout-for-lol, discord-plays-mario-kart). Helm value types are **not** regenerated here: the committed types in `packages/homelab/src/cdk8s/generated/helm` are the source of truth, refreshed weekly by the `helm-types-weekly-refresh` Temporal schedule (which opens a PR if they drifted).
-5. **Verify** — checks critical build artifacts exist
+There is no `scripts/setup.ts` and no per-package install: the repo is ONE bun
+workspace with the isolated linker, so a single root `bun install` covers every
+package and internal `workspace:*` deps resolve via live symlinks (no shared-artifact
+copy step). The `generate` turbo task handles code generation; helm value types are
+**not** regenerated here — the committed types in
+`packages/homelab/src/cdk8s/generated/helm` are the source of truth, refreshed weekly by
+the `helm-types-weekly-refresh` Temporal schedule (which opens a PR if they drifted).
 
 Optional tools (warned if missing): helm, swift, swiftlint, swiftformat, typeshare, go, golangci-lint, mvn, gitleaks, shellcheck.
 
-**Scoped installs for a single-package worktree:** `bun run scripts/setup.ts --group=<scout|pokemon|mk64|birmel>` scopes Phases 2-5 to that package plus the always-on shared `file:` producers (eslint-config, llm-models, webring, astro-opengraph-images, discord-video-stream, helm-types), instead of installing all ~35 packages (~13-15G). Add `--link` to additionally symlink that group's deps from Bun's global store instead of copying — verified safe for `pokemon` only; Prisma's postinstall scripts break under symlink backend, so `--link` is rejected for scout/mk64/birmel. No flags = unchanged full-install behavior.
-
 ## Verification
 
-Always verify changes, **scoped to the packages you touched**:
+`bun run verify` (root) is the single verification entry point — build +
+typecheck + test + lint + every repo check (todos, suppressions, markdownlint,
+prettier, shellcheck, knip, gitleaks, ruff/pyright, helm/talos/1Password, …),
+the identical surface CI runs. Scope it to what you touched with `--affected`;
+everything replays from turbo's cache in milliseconds when unchanged.
 
-1. `cd packages/<name> && bun run typecheck` - Type errors (or `bun run --filter='./packages/<name>' typecheck` if the package is registered as a Bun workspace from the repo root)
-2. `cd packages/<name> && bun run test` - Test failures
-3. `bunx eslint . --fix` - Lint issues (in relevant package)
-4. Python (any `.py` change): `uvx ruff check .` and `bash scripts/pyright-check.sh` from the repo root (root `ruff.toml` + `pyrightconfig.json`; the pyright script bootstraps a `.venv` from `scripts/python-dev-requirements.txt`)
-5. Rust (scout desktop): `cd packages/scout-for-lol/packages/desktop/src-tauri && cargo fmt --check && cargo clippy --all-targets --all-features -- -D warnings` (CI runs these plus `cargo test` as the `scout-desktop-rust` step)
+1. `bun run verify` — whole repo (or `bun run verify -- --affected` for changed packages only)
+2. `bunx turbo run typecheck test lint --filter=<pkg>` — a single package
+3. `bunx eslint . --fix` — autofix lint in the relevant package
 
-**Repo-wide runs (`bun run typecheck|test|build` at the root) are reserved for genuinely repo-wide changes** (shared config, eslint-config, root scripts, cross-package refactors) — and even then, run at most one at a time. A root run fans out over ~35 packages, each spawning its own node/bun toolchain; several sessions doing this concurrently has frozen the whole machine (6,000+ processes and 20-30 GB of anonymous memory materializing within seconds → macOS jetsam freeze; see `packages/docs/logs/2026-07-11_macbook-hang-jetsam-investigation.md`). If other heavy agent sessions are active, scope your verification to the touched package (`cd packages/<name> && bun run ...`) instead. Rely on CI for the exhaustive cross-package pass.
-
-Automation code is linted too: `scripts/`, `scripts/ci/`, and `.dagger/` each have an `eslint.config.ts` consuming the shared config (CI runs them as the `eslint-automation` quality-bundle child). No-op package scripts (`"lint": "true"`) are banned by `scripts/compliance-check.sh` — a package with nothing to lint/test gets a documented exemption there instead.
+The `pre-commit` hook already runs `turbo run lint typecheck --affected` and
+`pre-push` runs `bun run verify -- --affected`, so a clean push has passed the
+same gates as CI.
 
 ## Parallel Work — Use Worktrees
 
@@ -266,15 +272,19 @@ git worktree add .claude/worktrees/<feature-slug> -b feature/<slug> origin/main
 
 cd .claude/worktrees/<feature-slug>
 
-# REQUIRED before any build/test in the new worktree — runs codegen, shared builds, deps.
-# Without this, builds fail with cryptic missing-module / missing-generated-file errors.
-# Touching only one package? Scope it: bun run scripts/setup.ts --group=scout --link
-# (--group=<scout|pokemon|mk64|birmel>; --link is verified safe for pokemon only — see
-# Development Setup above)
-bun run scripts/setup.ts
+# REQUIRED before any build/test in the new worktree — installs the toolchain,
+# does the one workspace-wide install, and runs codegen. Without generate, builds
+# fail with cryptic missing-module / missing-generated-file errors.
+mise install && bun install --frozen-lockfile && bunx turbo run generate
+bunx lefthook install   # arm hooks in this worktree
 ```
 
-**Never substitute a per-package `bun install` for `scripts/setup.ts`** — shared `file:` deps (eslint-config, llm-models, webring, astro-opengraph-images, discord-video-stream) need their producer rebuilt and force-copied in, which only `setup.ts` does (even in `--group` mode). Skipping it is the #1 cause of "Cannot find module `@shepherdjerred/eslint-config`" / stale `llm-models` errors.
+Because the repo is one bun workspace with the isolated linker, a single root
+`bun install` covers every package — internal `workspace:*` deps resolve via live
+symlinks, so there is no shared-artifact copy step to get wrong (the old
+`scripts/setup.ts --group/--link` flags no longer exist). Don't skip `turbo run
+generate`, though — it's what produces the Prisma clients and other generated
+files a build needs.
 
 After PR merge: `git worktree remove .claude/worktrees/<feature-slug>` and `git branch -d feature/<slug>` from the main checkout. Run `git worktree prune` to clean up stale entries.
 
@@ -383,6 +393,6 @@ toolkit pr asset <PR_NUMBER> ./before.png ./flow.mp4 ./demo.cast ./demo-site --p
 - Uses the standard AWS toolchain (`@aws-sdk/client-s3`, path-style): credentials,
   `endpoint_url`, and region come from `~/.aws/credentials` / `~/.aws/config`.
   Select the profile with `--profile <name>` or `AWS_PROFILE` (the `seaweedfs`
-  profile points at `https://seaweedfs-s3.tailnet-1a49.ts.net`, tailnet-only).
+  profile points at `https://seaweedfs.sjer.red`).
 - Objects under `pr/assets/` expire after 365 days; the homelab must be up for
   the artifacts to load.

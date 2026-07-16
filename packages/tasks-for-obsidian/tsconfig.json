@@ -31,7 +31,8 @@
     "verbatimModuleSyntax": false,
     "declaration": false,
     "declarationMap": false,
-    "noUncheckedSideEffectImports": false
+    "noUncheckedSideEffectImports": false,
+    "types": ["react"]
   },
   "include": [
     "src/**/*",

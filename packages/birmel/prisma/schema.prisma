@@ -1,5 +1,7 @@
 generator client {
   provider = "prisma-client-js"
+  // Stable in-repo output (gitignored) so codegen lands deterministically in a
+  // bun workspace — matches the scout-for-lol backend pattern.
   output   = "../generated/prisma/client"
 }
 

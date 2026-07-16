@@ -1,28 +1,15 @@
 {
   "name": "scout-for-lol",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
-    "build": "bun run --filter='./packages/*' build",
-    "typecheck": "bun run --filter='./packages/*' typecheck",
-    "lint": "bun run --filter='./packages/*' lint",
-    "lint:ci": "bunx eslint packages/ --format json --output-file eslint-report.json || true",
-    "format": "bun run --filter='./packages/*' format",
-    "test": "bun run --filter='./packages/*' test",
     "dev:web": "op run --env-file=./dev-web.env.tpl -- ./scripts/dev-web.sh",
-    "clean": "rm -rf node_modules packages/*/node_modules",
-    "generate": "bun run --cwd packages/backend generate",
-    "knip": "knip-bun",
-    "knip:ci": "knip-bun --reporter json > knip-report.json || true",
     "duplication-check": "bun run scripts/check-duplication.ts",
     "check:assets": "bun run scripts/check-asset-sizes.ts"
   },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1",
     "@eslint/js": "^10.0.1",
-    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/bun": "^1.3.13",
     "@types/eslint-plugin-jsx-a11y": "^6.10.1",
@@ -47,7 +34,6 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "@shepherdjerred/llm-models": "file:../llm-models",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/plugin-dialog": "^2.7.0",
     "autoprefixer": "^10.5.0",
@@ -55,14 +41,5 @@
     "react": "19.2.7",
     "twisted": "^1.73.0",
     "zod": "^4.4.3"
-  },
-  "patchedDependencies": {
-    "twisted@1.73.0": "patches/twisted@1.73.0.patch"
-  },
-  "overrides": {
-    "devalue": "5.8.1",
-    "fast-uri": "3.1.2",
-    "fast-xml-builder": "1.2.0",
-    "esbuild": "0.28.1"
   }
 }

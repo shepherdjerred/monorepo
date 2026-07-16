@@ -74,7 +74,7 @@ await ha.callService("light", "turn_on", {
 // ha.getState("light.kitcen");                                                ❌ typo
 ```
 
-The generated file contains entity IDs and service definitions from the live instance — **do not commit it**. Add the output path to `.gitignore` and regenerate in CI (see the temporal package for the Dagger pattern).
+The generated file contains entity IDs and service definitions from the live instance — **do not commit it**. Add the output path to `.gitignore` and regenerate it as part of your build.
 
 ## License
 

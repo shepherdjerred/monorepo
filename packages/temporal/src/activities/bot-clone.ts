@@ -11,6 +11,24 @@ import { runCommand } from "./data-dragon-shell.ts";
 // packages/docs/plans/2026-07-11_fix-temporal-weekly-refreshes.md).
 
 /**
+ * Per-run Bun install cache directory for a bot clone, sibling to the git
+ * checkout inside the same unique `/tmp/<activity>-<uuid>` tempDir. The
+ * worker image bakes a single `BUN_INSTALL_CACHE_DIR=/tmp/bun-install-cache`
+ * into the container env (by the since-removed CI image build), which sits on an
+ * `emptyDir` scoped to the pod's lifetime — every activity invocation on
+ * the single long-lived worker pod shares that one cache directory for as
+ * long as the pod stays up between deploys. Overriding it per-call to a
+ * fresh path under this run's own tempDir means no run ever reads or writes
+ * cache state left behind by another run, past or concurrent (the cause of
+ * a `Cannot find module '@shepherdjerred/llm-models'` recurrence in
+ * `scout-data-dragon-weekly-refresh` even after the producer build was
+ * fixed — see packages/docs/plans/2026-07-12_fix-data-dragon-shared-cache.md).
+ */
+export function botCloneCacheDir(repoDir: string): string {
+  return `${repoDir}/../bun-install-cache`;
+}
+
+/**
  * Root `bun install` for an ephemeral bot clone, with lifecycle scripts
  * suppressed. Bot clones are not dev checkouts: the root `prepare` script
  * runs `lefthook install`, which would arm the full dev pre-commit suite for
@@ -24,7 +42,7 @@ import { runCommand } from "./data-dragon-shell.ts";
 export async function rootInstallWithoutHooks(repoDir: string): Promise<void> {
   await runCommand(
     ["bun", "install", "--frozen-lockfile", "--ignore-scripts"],
-    { cwd: repoDir },
+    { cwd: repoDir, env: { BUN_INSTALL_CACHE_DIR: botCloneCacheDir(repoDir) } },
   );
 }
 
@@ -33,14 +51,20 @@ export async function rootInstallWithoutHooks(repoDir: string): Promise<void> {
  * Its `dist/` entrypoint is gitignored, so a fresh clone ships it unbuilt and
  * any later `bun install` in a consumer workspace copies a broken package
  * (`Cannot find module '@shepherdjerred/llm-models'`). Must run BEFORE the
- * consumer's install so the copy picks up `dist/`. Mirrors
- * `withBuiltLlmModels` in `.dagger/src/image.ts` and the Phase 3 build in
- * `scripts/setup.ts`.
+ * consumer's install so the copy picks up `dist/`. Mirrors the shared-producer
+ * build step in the root AGENTS.md "Development Setup".
  */
 export async function buildLlmModels(repoDir: string): Promise<void> {
   const pkgDir = `${repoDir}/packages/llm-models`;
-  await runCommand(["bun", "install", "--frozen-lockfile"], { cwd: pkgDir });
-  await runCommand(["bun", "run", "build"], { cwd: pkgDir });
+  const cacheDir = botCloneCacheDir(repoDir);
+  await runCommand(["bun", "install", "--frozen-lockfile"], {
+    cwd: pkgDir,
+    env: { BUN_INSTALL_CACHE_DIR: cacheDir },
+  });
+  await runCommand(["bun", "run", "build"], {
+    cwd: pkgDir,
+    env: { BUN_INSTALL_CACHE_DIR: cacheDir },
+  });
 }
 
 /**
@@ -52,5 +76,6 @@ export async function installScoutWorkspace(repoDir: string): Promise<void> {
   await buildLlmModels(repoDir);
   await runCommand(["bun", "install", "--frozen-lockfile"], {
     cwd: `${repoDir}/packages/scout-for-lol`,
+    env: { BUN_INSTALL_CACHE_DIR: botCloneCacheDir(repoDir) },
   });
 }

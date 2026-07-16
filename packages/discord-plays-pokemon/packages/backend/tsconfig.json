@@ -2,13 +2,25 @@
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
     "types": ["bun"],
-    "rootDir": ".",
-    "outDir": "dist",
     "module": "NodeNext",
     "target": "ESNext",
     "moduleResolution": "nodenext",
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@shepherdjerred/discord-stream-lifecycle": [
+        "../../../discord-stream-lifecycle/src/index.ts"
+      ],
+      "@shepherdjerred/discord-stream-lifecycle/*": [
+        "../../../discord-stream-lifecycle/src/*"
+      ],
+      "@shepherdjerred/discord-video-stream": [
+        "../../../discord-video-stream/src/index.ts"
+      ],
+      "@shepherdjerred/discord-video-stream/*": [
+        "../../../discord-video-stream/src/*"
+      ]
+    }
   },
   "exclude": ["**/*.test.ts", "eslint.config.ts"]
 }

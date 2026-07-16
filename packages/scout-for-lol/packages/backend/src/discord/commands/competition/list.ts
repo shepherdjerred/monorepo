@@ -19,6 +19,7 @@ import { getCompetitionsByServer } from "#src/database/competition/queries.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
 import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
 import { createLogger } from "#src/logger.ts";
+import { getChampionDisplayName } from "#src/utils/champion.ts";
 
 const logger = createLogger("competition-list");
 
@@ -371,7 +372,7 @@ function getCriteriaShortDescription(
     .with({ type: "MOST_WINS_PLAYER" }, () => "Most Wins")
     .with(
       { type: "MOST_WINS_CHAMPION" },
-      (c) => `Most Wins (Champion ${c.championId.toString()})`,
+      (c) => `Most Wins (${getChampionDisplayName(c.championId)})`,
     )
     .with({ type: "HIGHEST_WIN_RATE" }, () => "Highest Win Rate")
     .exhaustive();
