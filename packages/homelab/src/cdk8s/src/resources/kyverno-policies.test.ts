@@ -69,11 +69,11 @@ describe("createResourceLimitEnforcementPolicy", () => {
     expect(policy.spec.validationFailureAction).toBe("Audit");
   });
 
-  it("is scoped to only the dagger and buildkite namespaces", () => {
+  it("is scoped to only the buildkite namespace", () => {
     const policy = synthResourceLimitPolicy();
     const namespaces = policy.spec.rules.flatMap((rule) =>
       rule.match.any.flatMap((m) => m.resources.namespaces ?? []),
     );
-    expect(namespaces.sort()).toEqual(["buildkite", "dagger"]);
+    expect(namespaces.sort()).toEqual(["buildkite"]);
   });
 });

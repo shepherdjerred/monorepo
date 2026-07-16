@@ -13,8 +13,8 @@ description: |
 
 # Xcode Cloud Debug (Tasks for Obsidian)
 
-iOS release builds run on **Apple's Xcode Cloud** — the monorepo has no macOS CI
-agents (see `packages/docs/todos/mac-mini-buildkite-agent.md`). When a build
+iOS release builds run on **Apple's Xcode Cloud** — the monorepo has no CI of its
+own (the Dagger/Buildkite pipeline was removed 2026-07). When a build
 fails you only get a terse email; the real error lives in the cloud build log.
 This skill pulls those logs and debugs the common failures.
 
@@ -98,13 +98,12 @@ regenerated whenever a consumed workspace package gains a new dependency.
 
 **Guard (catches this class pre-merge):** `bun run check:release-bundle`
 (`scripts/check-release-bundle.ts`) runs the exact Release Metro bundle — the
-same one Xcode Cloud runs during Archive, but pure JS so it works in the Linux
-Buildkite container. It's wired into the `:iphone: iOS Native Deps + Release
-Bundle` step (Dagger `tasks-for-obsidian-ios-native-deps`), which installs
-`tasknotes-types` + the app exactly like `ci_post_clone.sh` and then bundles. Any
-unresolvable import (from any package) fails CI before it reaches Xcode Cloud. Run
-it locally the same way. If you add a new source-only `file:` dep, install it in
-both `ci_post_clone.sh` and the Dagger helper — the guard will go red until you do.
+same one Xcode Cloud runs during Archive, but pure JS so it runs anywhere.
+It used to be wired into a CI step, but the pipeline was removed 2026-07 — **run
+it locally before merging** anything that touches the app's deps or imports. Any
+unresolvable import (from any package) fails the guard before it reaches Xcode
+Cloud. If you add a new source-only `file:` dep, install it in
+`ci_post_clone.sh` — the guard will go red until you do.
 
 ## 4. Reproduce the Archive JS bundle locally
 

@@ -1,10 +1,6 @@
 {
   "folders": [
     {
-      "name": "dagger",
-      "path": ".dagger",
-    },
-    {
       "name": "backend",
       "path": "packages/backend",
     },

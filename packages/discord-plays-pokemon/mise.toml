@@ -4,11 +4,8 @@ bun = "1.3.14"
 
 [tasks.dev]
 description = "Set up development environment"
-run = "bun install && (cd .dagger && bun install) && dagger develop"
+run = "bun install"
 
-[tasks.ci]
-description = "Run CI pipeline"
-run = "dagger call ci --env=dev"
 
 [tasks.check]
 description = "Run all checks"

@@ -103,10 +103,10 @@ every chart in `versions.ts`. Behavior (post-PR #1150):
   byte-clean, no manual `prettier --write` needed afterward.
 - **Recovery:** if generated types go missing/wrong, `git restore packages/homelab/src/cdk8s/generated/helm/`
   (the whole dir) — never re-run the generator to "fix" them.
-- **OCI charts** (kueue, dagger-helm, agent-stack-k8s) use `datasource=docker` in `versions.ts`
+- **OCI charts** (kueue, agent-stack-k8s) use `datasource=docker` in `versions.ts`
   (renovate models OCI as docker); they're pulled via `helm pull oci://…` and tracked by the
   `OCI_CHART_KEYS` allowlist in `parse-helm-charts.ts`.
-- **Commented-out config keys** (e.g. dagger `engine.{port,configJson}`, buildkite `config.{queue,…}`)
+- **Commented-out config keys** (e.g. buildkite `config.{queue,…}`)
   need `EXTENSIBLE_TYPE_PATTERNS` entries in `helm-types/src/config.ts`, since the generator only
   infers from active `values.yaml` defaults; those blocks become `[key: string]: unknown`.
 

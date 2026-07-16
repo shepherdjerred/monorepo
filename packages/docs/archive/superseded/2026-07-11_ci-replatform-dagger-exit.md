@@ -2,6 +2,11 @@
 
 ## Status
 
+Abandoned — **superseded 2026-07-12 (owner decision)** by a full CI strip: instead of
+replatforming onto plain Buildkite steps, ALL CI was removed from the repo with no
+replacement (see `packages/docs/plans/2026-07-12_strip-ci-remove-dagger.md`). Nothing
+below was executed. Original status text kept for history:
+
 In Progress — **approved by owner 2026-07-12** for compressed (single-session-driven)
 execution, triggered by the third distinct engine outage mechanism (cgroup OOMKill →
 unclean shutdown → full dagql/cache wipe, on top of the earlier GC/disk-full and

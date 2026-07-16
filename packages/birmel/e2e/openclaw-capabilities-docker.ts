@@ -1,4 +1,3 @@
-import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
 const repoRoot = path.resolve(import.meta.dir, "../../..");
@@ -22,39 +21,17 @@ async function run(command: string[], cwd = repoRoot): Promise<string> {
   return stdout;
 }
 
-async function buildImageIfNeeded(): Promise<void> {
+function buildImageIfNeeded(): void {
   if (Bun.env["BIRMEL_DOCKER_IMAGE"] != null) {
     return;
   }
-  const imageTar = path.join(repoRoot, ".tmp", "birmel-openclaw-e2e.tar");
-  await mkdir(path.dirname(imageTar), { recursive: true });
-  await run([
-    "dagger",
-    "call",
-    "build-image",
-    "--pkg-dir",
-    "./packages/birmel",
-    "--pkg",
-    "birmel",
-    "--dep-names",
-    "eslint-config,llm-observability",
-    "--dep-dirs",
-    "./packages/eslint-config",
-    "--dep-dirs",
-    "./packages/llm-observability",
-    "export",
-    "--path",
-    imageTar,
-  ]);
-  const loaded = await run(["docker", "load", "--input", imageTar]);
-  if (!loaded.includes(imageTag)) {
-    await run([
-      "docker",
-      "tag",
-      loaded.trim().split(/\s+/).at(-1) ?? imageTag,
-      imageTag,
-    ]);
-  }
+  // The auto-build fallback used the repo's Dagger module (`dagger call
+  // build-image`), which was removed 2026-07 with the CI pipeline. Build the
+  // birmel image yourself and point BIRMEL_DOCKER_IMAGE at it.
+  throw new Error(
+    "BIRMEL_DOCKER_IMAGE is required: the Dagger auto-build was removed 2026-07. " +
+      "Build a birmel image manually and set BIRMEL_DOCKER_IMAGE=<tag>.",
+  );
 }
 
 async function runPhase(phase: "setup" | "verify"): Promise<void> {
@@ -94,7 +71,7 @@ async function runPhase(phase: "setup" | "verify"): Promise<void> {
   ]);
 }
 
-await buildImageIfNeeded();
+buildImageIfNeeded();
 await run(["docker", "volume", "create", volumeName]);
 try {
   await runPhase("setup");

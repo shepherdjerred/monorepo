@@ -35,8 +35,7 @@ packages/
 ├── toolkit/                    # CLI developer tools (fetch, recall, pr, pd, bugsink, grafana)
 ├── trmnl-dashboard/            # TRMNL e-ink dashboard
 ├── webring/                    # Webring component (npm)
-scripts/ci/                     # TypeScript CI pipeline generator
-sandbox/                        # Personal scratch (not shipped, excluded from most lint/CI)
+sandbox/                        # Personal scratch (not shipped, excluded from most lint checks)
 ├── archive/                    # Legacy projects (do not modify): bun-decompile, castle-casters, clauderon, glance, hn-enhancer, macos-cross-compiler, tips
 ├── poc/                        # Proof-of-concept experiments (e.g. interview-practice CLI)
 └── practice/                   # Coding practice (Exercism, LeetCode, courses, books)
@@ -48,13 +47,13 @@ sandbox/                        # Personal scratch (not shipped, excluded from m
 - **Fail fast on missing tools** — Local/build scripts must call required tools directly. Never `which X && X || echo "skipping"`; a missing tool should error so the developer knows what to install.
 - **No defensive fallbacks for bad data** — Fix the root cause (refresh data, add the enum value, fix routing). Never replace a `throw` with a warning + default for unknown enums, missing assets, or unexpected shapes. Exception: user input at a system boundary (e.g. a Discord slash-command arg) should be caught and answered with a friendly message, not Sentry'd.
 - **Let contract violations fail loudly** — When `null` or an exception signals a broken caller contract, let it propagate (e.g. an NPE). Don't add null guards or defensive checks that silently hide the bug; reserve null-handling for real boundary inputs (user data, external API responses).
-- **Fix, don't ignore** — Never suppress build/CI/Renovate/lint errors with ignorePaths or exclusions. Investigate the root cause; only exclude when the thing genuinely shouldn't be processed.
-- **Fix forward on dependency upgrades** — When an upgrade breaks CI, migrate the code to the new version (read the migration guide, use `validate` tooling to catch every schema change) rather than reverting.
+- **Fix, don't ignore** — Never suppress build/Renovate/lint errors with ignorePaths or exclusions. Investigate the root cause; only exclude when the thing genuinely shouldn't be processed.
+- **Fix forward on dependency upgrades** — When an upgrade breaks the build, migrate the code to the new version (read the migration guide, use `validate` tooling to catch every schema change) rather than reverting.
 - **"Pre-existing" is not an excuse** — When a task or audit targets 100% quality, fix issues regardless of who introduced them. Never leave something broken as "not caused by my changes."
 - **Never skip tests** — Don't use `test.skip` / `describe.skipIf` to work around missing build artifacts or generated types. Make the test script produce the prerequisite first (e.g. `"test": "bun run build && bun test"`).
-- **Don't blame the cache** — Docker/Dagger layer cache is deterministic; different results mean different inputs. Reproduce locally with `dagger call` and compare base images / dependency versions instead of citing "transient cache issues."
+- **Don't blame the cache** — Docker layer cache is deterministic; different results mean different inputs. Compare base images / dependency versions instead of citing "transient cache issues."
 - **Step back on complexity spirals** — After ~2 failed debugging iterations on the same problem, stop adding workarounds; re-evaluate the approach and present the constraint to the user rather than piling on layers.
-- **Verify before asserting** — Don't write a subagent's claim or your own inference into a plan/report as "confirmed." Grep the live tree (`scripts/ci/src/`, `.dagger/src/`, `lefthook.yml`) yourself before stating any CI/lint/gate wiring fact; audits often run against a stale base.
+- **Verify before asserting** — Don't write a subagent's claim or your own inference into a plan/report as "confirmed." Grep the live tree yourself before stating any lint/gate wiring fact; audits often run against a stale base.
 - **Don't validate a replacement against the signal it replaces** — When building something to work around an unreliable upstream (e.g. GitHub's `mergeable` field, a flaky check), validate against an independent oracle (fixtures, golden files, the underlying tool, a semantic property like determinism), never the untrusted signal itself.
 - **Verify link liveness** — Every URL you write or rewrite (code, docs, READMEs, package metadata) must be liveness-checked (`curl -sI -o /dev/null -w '%{http_code}' <url>` → 200) before committing. Batch-verify mass rewrites; fall back to a known-good form or drop the link rather than ship a 404.
 - **Update docs with code** — When adding a CLI command or feature, update CLAUDE.md and the relevant skills in the same phase, not a later "polish" pass, so the integration points are usable as soon as the feature works.
@@ -133,7 +132,7 @@ When a plan in `packages/docs/plans/` reaches `Status: Complete` and the work is
 - General issue todos may exist with no source marker. Use kebab-case ids; the filename (sans `.md`) is the id.
 - TODO docs use YAML frontmatter: `id`, `status` (one of `active`, `deferred`, `blocked`, `waiting-on-verification`, `resolved`), `origin` (path to the log/plan/PR that birthed it), and `source_marker: true` only if a code marker exists.
 - When resolved, delete the doc and remove any matching source marker in the same commit.
-- `bun scripts/check-todos.ts` enforces the source-marker → doc invariant (plus frontmatter/id sanity) in pre-commit and CI.
+- `bun scripts/check-todos.ts` enforces the source-marker → doc invariant (plus frontmatter/id sanity) — run it manually before committing todo changes (there is no CI or pre-commit hook to catch it).
 
 ## Temporal Agent Follow-ups
 
@@ -164,18 +163,17 @@ TEMPORAL_ADDRESS=localhost:7233 bun run scripts/schedule-agent-task.ts --from-do
 
 Do not expose direct Temporal scheduling as a public ingress path. Public creation must go through the authenticated `/agent-tasks` HTTP API with `Authorization: Bearer $AGENT_TASK_API_TOKEN`.
 
-## Dagger & CI Code — Banned Patterns
+## Automation Code — Banned Patterns
 
-These patterns are banned in `.dagger/src/` and `scripts/ci/src/`. Automated checks (`scripts/check-dagger-hygiene.ts`) enforce this in pre-commit and CI. Do not write them.
+These patterns are banned in automation code (`scripts/`, deploy/build scripts). `scripts/check-suppressions.ts` scans for most of them (run manually — there is no CI). Do not write them.
 
 - `|| true` — never swallow errors silently
 - `2>/dev/null` — never hide stderr
 - `|| bun install` (after `--frozen-lockfile`) — never bypass lockfile enforcement
 - `|| echo` — never convert errors to messages
 - `x-access-token` in URLs — use `GIT_ASKPASS` for git authentication
-- Writing tokens to files (`.npmrc`, etc.) — use `--token` flags or Dagger `Secret` type
+- Writing tokens to files (`.npmrc`, etc.) — pass tokens via env vars or flags
 - `git add -A` or `git add .` — always stage specific files by path
-- `--no-exit-code` — never bypass quality gate exit codes
 
 If a command legitimately needs error handling, handle the specific error explicitly (e.g., check existence before creating, parse exit codes) rather than blanket-suppressing all failures.
 
@@ -192,13 +190,9 @@ bun run build|test|typecheck
 
 # Linting (per-package)
 cd packages/<name> && bunx eslint . --fix
-
-# CI runs on Buildkite (NOT GitHub Actions)
-# Check CI status via Buildkite CLI or web UI, never `gh run`
-
-# CI pipeline generator
-cd scripts/ci && bun run src/main.ts
 ```
+
+**There is no CI and no git-hook gating** (the Dagger/Buildkite pipeline and lefthook were removed 2026-07). Nothing runs automatically on commit, push, or PR — run the Verification steps below yourself before merging.
 
 ## GitHub CLI in Codex
 
@@ -216,8 +210,8 @@ cd scripts/ci && bun run src/main.ts
 - In Codex tool calls, escalation means rerunning `exec_command` with
   `sandbox_permissions: "require_escalated"` and a narrow `prefix_rule` such as
   `["gh", "pr", "view"]` or `["gh", "pr", "comment"]`.
-- CI for this monorepo is Buildkite, not GitHub Actions. Do not use `gh run` as the
-  CI source of truth; use Buildkite tooling or the relevant PR/status surface.
+- This monorepo has no CI. Do not use `gh run` or `gh pr checks` as a source of
+  truth for build health — verify locally.
 - If a PR or push flow fails, report the exact layer: local git ref permission,
   GitHub auth, sandboxed network access, or remote rejection.
 
@@ -250,11 +244,11 @@ Always verify changes, **scoped to the packages you touched**:
 2. `cd packages/<name> && bun run test` - Test failures
 3. `bunx eslint . --fix` - Lint issues (in relevant package)
 4. Python (any `.py` change): `uvx ruff check .` and `bash scripts/pyright-check.sh` from the repo root (root `ruff.toml` + `pyrightconfig.json`; the pyright script bootstraps a `.venv` from `scripts/python-dev-requirements.txt`)
-5. Rust (scout desktop): `cd packages/scout-for-lol/packages/desktop/src-tauri && cargo fmt --check && cargo clippy --all-targets --all-features -- -D warnings` (CI runs these plus `cargo test` as the `scout-desktop-rust` step)
+5. Rust (scout desktop): `cd packages/scout-for-lol/packages/desktop/src-tauri && cargo fmt --check && cargo clippy --all-targets --all-features -- -D warnings` (plus `cargo test`)
 
-**Repo-wide runs (`bun run typecheck|test|build` at the root) are reserved for genuinely repo-wide changes** (shared config, eslint-config, root scripts, cross-package refactors) — and even then, run at most one at a time. A root run fans out over ~35 packages, each spawning its own node/bun toolchain; several sessions doing this concurrently has frozen the whole machine (6,000+ processes and 20-30 GB of anonymous memory materializing within seconds → macOS jetsam freeze; see `packages/docs/logs/2026-07-11_macbook-hang-jetsam-investigation.md`). If other heavy agent sessions are active, scope your verification to the touched package (`cd packages/<name> && bun run ...`) instead. Rely on CI for the exhaustive cross-package pass.
+**Repo-wide runs (`bun run typecheck|test|build` at the root) are reserved for genuinely repo-wide changes** (shared config, eslint-config, root scripts, cross-package refactors) — and even then, run at most one at a time. A root run fans out over ~35 packages, each spawning its own node/bun toolchain; several sessions doing this concurrently has frozen the whole machine (6,000+ processes and 20-30 GB of anonymous memory materializing within seconds → macOS jetsam freeze; see `packages/docs/logs/2026-07-11_macbook-hang-jetsam-investigation.md`). If other heavy agent sessions are active, scope your verification to the touched package (`cd packages/<name> && bun run ...`) instead. There is no CI to backstop you — anything you don't verify locally ships unverified.
 
-Automation code is linted too: `scripts/`, `scripts/ci/`, and `.dagger/` each have an `eslint.config.ts` consuming the shared config (CI runs them as the `eslint-automation` quality-bundle child). No-op package scripts (`"lint": "true"`) are banned by `scripts/compliance-check.sh` — a package with nothing to lint/test gets a documented exemption there instead.
+Automation code is linted too: `scripts/` has an `eslint.config.ts` consuming the shared config (run `bunx eslint .` there manually). No-op package scripts (`"lint": "true"`) are banned by `scripts/compliance-check.sh` — a package with nothing to lint/test gets a documented exemption there instead.
 
 ## Parallel Work — Use Worktrees
 

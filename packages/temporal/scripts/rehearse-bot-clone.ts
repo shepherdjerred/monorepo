@@ -18,7 +18,9 @@
  *                even after the (1) fix, because that second install wasn't
  *                isolated from the pod's shared, persistent Bun cache. See
  *                packages/docs/plans/2026-07-12_fix-data-dragon-shared-cache.md.
- *  3. hooks    — the hook-free root install leaves no lefthook hooks, prettier
+ *  3. hooks    — the hook-free root install arms no git hooks (lefthook was
+ *                removed from the repo 2026-07; this canary catches it or any
+ *                other prepare-script hook sneaking back in), prettier
  *                (with plugins) formats the season changelog byte-stably, and
  *                a bot-style `git commit` of a scout file succeeds without any
  *                pre-commit hook running (scout-season-refresh-weekly).
@@ -125,7 +127,7 @@ async function rehearseHookFreeCommit(repoDir: string): Promise<void> {
   if (armed.length > 0) {
     throw new Error(
       `hook-free install still armed git hooks: ${armed.join(", ")} — ` +
-        "did the root `prepare` script run? Bot commits would hit lefthook.",
+        "did a root `prepare` script run? Bot commits must stay hook-free.",
     );
   }
   console.error("[rehearsal] hooks: no git hooks armed");

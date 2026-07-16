@@ -25,9 +25,7 @@ some things I'm proud of:
 - Automated backups
 - HTTPS ingress with [Tailscale](https://tailscale.com/)
 - All secrets managed with [1Password](https://1password.com/)
-- GHA Runners w/ Dagger used by my open-source projects
-- Entirely automated deployment for updates, upgrades, etc.
-  - Commit-to-deployment takes ~1min
+- Declarative deployment via ArgoCD (manifests applied manually since the CI pipeline was removed)
 
 - Automated dependency updates
   - For Docker images (w/ pinned SHAs)

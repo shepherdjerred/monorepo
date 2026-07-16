@@ -2,19 +2,11 @@
   "$schema": "https://unpkg.com/knip@latest/schema.json",
   "workspaces": {
     ".": {
-      "entry": ["scripts/**/*.ts", ".buildkite/scripts/**/*.ts"],
-      "project": ["scripts/**/*.ts", ".buildkite/scripts/**/*.ts"]
+      "entry": ["scripts/**/*.ts"],
+      "project": ["scripts/**/*.ts"]
     },
     "packages/birmel": {
       "entry": ["src/index.ts"],
-      "project": ["src/**/*.ts"]
-    },
-    ".dagger": {
-      "entry": ["src/index.ts", "src/__tests__/**/*.ts"],
-      "project": ["src/**/*.ts"]
-    },
-    "scripts/ci": {
-      "entry": ["src/main.ts", "src/__tests__/**/*.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/eslint-config": {
@@ -257,7 +249,6 @@
     "@anthropic-ai/sdk",
     "@astrojs/tailwind",
     "@commitlint/types",
-    "@dagger.io/dagger",
     "@eslint-community/eslint-plugin-eslint-comments",
     "@eslint/compat",
     "@eslint/eslintrc",
@@ -347,7 +338,6 @@
     "zod"
   ],
   "ignoreFiles": [
-    ".dagger/src/timing.ts",
     "packages/better-skill-capped/src/datastore/content-datastore.ts",
     "packages/discord-plays-mario-kart/packages/frontend/src/model/connection.ts",
     "packages/discord-plays-mario-kart/packages/frontend/src/util.ts",
@@ -357,7 +347,6 @@
     "packages/scout-for-lol/packages/frontend/src/components/StatCard.astro"
   ],
   "ignoreIssues": {
-    ".dagger/src/base.ts": ["exports"],
     "packages/better-skill-capped/src/utils/url-utilities.ts": ["exports"],
     "packages/discord-plays-mario-kart/packages/backend/src/observability/tracing.ts": [
       "exports"
@@ -427,16 +416,13 @@
     ],
     "packages/temporal/src/observability/pr-review-metrics.ts": ["exports"],
     "packages/temporal/src/observability/tracing.ts": ["exports"],
-    "packages/temporal/src/workflows/ha/util.ts": ["exports"],
-    "scripts/ci/src/catalog.ts": ["exports"],
-    "scripts/ci/src/steps/images.ts": ["exports"]
+    "packages/temporal/src/workflows/ha/util.ts": ["exports"]
   },
   "ignoreBinaries": [
     "HEAD",
     "argocd",
     "gh",
     "kubectl",
-    "lefthook",
     "mktemp",
     "op",
     "rg",

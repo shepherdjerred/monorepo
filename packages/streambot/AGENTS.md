@@ -71,8 +71,9 @@ stream files/URLs directly with ffmpeg instead of automating a browser.
   `stream-observer.ts` (maps the fork's `StreamObserver` callbacks → metrics/logs).
 - `src/util/` — structured logger, errors.
 - `test/` — `bun:test`; the machine is the most heavily tested surface.
-- `integration/` — real-ffmpeg integration tests (`bun run test:integration`); run only in the
-  streambot image (via the `smoke-test-streambot` Dagger fn), never in the plain `bun test`.
+- `integration/` — real-ffmpeg integration tests (`bun run test:integration`); need real
+  ffmpeg/ffprobe (e.g. inside the streambot image), never part of the plain `bun test`. Run them
+  manually — the Dagger CI step that used to run them was removed 2026-07.
 
 ## Subtitles
 
@@ -123,18 +124,15 @@ resumes playback on the software chain (watch `streambot_hw_fallback_total`).
 - `h264_vaapi` defaults to **AVBR** (ignores `-maxrate`/`-bufsize`, uncapped bitrate) — pin `-rc_mode VBR`. Drop `-pix_fmt yuv420p` + `hwupload` on the hw path.
 - Node `torvalds` advertises 10 `gpu.intel.com/i915` slots (iHD driver); spin a temp pod to benchmark ffmpeg against the real media (RWO PVCs mount on multiple same-node pods).
 
-## Live e2e (`e-2-e-streambot`)
+## Live e2e (`bun run e2e`)
 
-Runs against a dedicated **test** Discord server (never the production `streambot-config` guild). IDs are passed as args so prod config is untouched; tokens come from the `streambot-config` 1P item (Homelab vault). The selfbot logs in as `glidiot_`. The Dagger func is `e-2-e-streambot` (Dagger kebab-cases `e2eStreambot`, splitting the digits); internally it wires `--user-token` → secret `USER_TOKENS` and `--guild-id`/`--video-channel-id` → test-only `E2E_GUILD_ID`/`E2E_VIDEO_CHANNEL_ID` envs (production joins the issuer's current VC, which a headless test can't set).
+Runs against a dedicated **test** Discord server (never the production `streambot-config` guild). IDs are passed as env vars so prod config is untouched; tokens come from the `streambot-config` 1P item (Homelab vault). The selfbot logs in as `glidiot_`. (This used to run via a `e-2-e-streambot` Dagger function, removed 2026-07 with the CI pipeline — run `e2e/run.ts` directly now.) It needs `USER_TOKENS` plus the test-only `E2E_GUILD_ID`/`E2E_VIDEO_CHANNEL_ID` envs (production joins the issuer's current VC, which a headless test can't set), and real ffmpeg/ffprobe on PATH.
 
 ```bash
 J=$(op item get streambot-config --vault "Homelab (Kubernetes)" --format json --reveal)
 export BOT_TOKEN=$(echo "$J" | jq -r '.fields[]|select((.label//.id)=="BOT_TOKEN").value')
-export TOKEN=$(echo "$J" | jq -r '.fields[]|select((.label//.id)=="TOKEN").value')
-dagger call e-2-e-streambot --pkg-dir ./packages/streambot \
-  --bot-token=env:BOT_TOKEN --user-token=env:TOKEN \
-  --guild-id 1337623164146155593 --video-channel-id 1337623164955398253 \
-  --dep-names eslint-config --dep-dirs ./packages/eslint-config
+export USER_TOKENS=$(echo "$J" | jq -r '.fields[]|select((.label//.id)=="TOKEN").value')
+E2E_GUILD_ID=1337623164146155593 E2E_VIDEO_CHANNEL_ID=1337623164955398253 bun run e2e
 ```
 
 The homelab deployment sources `USER_TOKENS` (comma-separated pool) from that 1P item.
@@ -155,13 +153,13 @@ The ffmpeg/send signals come from the vendored fork's optional `StreamObserver`
 Standard monorepo rules apply: strict TS, no `as` casts, kebab-case files, `.ts` import
 extensions, no parent imports (use `@shepherdjerred/streambot/...`), Zod at every boundary,
 Bun APIs, structured logging. `yt-dlp` and `ffmpeg` are system binaries baked into the image
-(no runtime download). `yt-dlp` is installed by the shared `.dagger` `installYtDlp` helper, which
-downloads the per-arch standalone binary from the release **asset CDN**
-(`github.com/yt-dlp/yt-dlp/releases/latest/download/<asset>`) and verifies it against
-`SHA2-256SUMS`. Do **not** rely on `youtube-dl-exec`'s postinstall — it queries `api.github.com`
+(no runtime download). When building the image, install `yt-dlp` by downloading the per-arch
+standalone binary from the release **asset CDN**
+(`github.com/yt-dlp/yt-dlp/releases/latest/download/<asset>`) and verifying it against
+`SHA2-256SUMS` (this was the shared `.dagger` `installYtDlp` helper; the pipeline was removed 2026-07). Do **not** rely on `youtube-dl-exec`'s postinstall — it queries `api.github.com`
 unauthenticated (its token header is silently dropped by a `fetch(url, headers)` vs
-`fetch(url, { headers })` bug) and exhausts GitHub's 60 req/hr anonymous limit on shared CI egress
-IPs, intermittently failing image builds (e.g. `docker-build-birmel`).
+`fetch(url, { headers })` bug) and exhausts GitHub's 60 req/hr anonymous limit on shared egress
+IPs, intermittently failing image builds.
 
 ## Commands
 
