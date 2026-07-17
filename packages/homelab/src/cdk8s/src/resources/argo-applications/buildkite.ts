@@ -122,6 +122,24 @@ export function createBuildkiteApp(chart: Chart) {
                 priorityClassName: "batch-low",
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
                 automountServiceAccountToken: true,
+                containers: [
+                  {
+                    name: "agent",
+                    env: [
+                      {
+                        // kubernetes-bootstrap imposes the AGENT's shell
+                        // config on every command container via the
+                        // registration env; the agent image has no bash, so
+                        // its default is /bin/sh — dash on the debian
+                        // ci-base, which broke `set -o pipefail` in
+                        // toolchain.sh (builds 5651/5654). Non-secret env
+                        // only here — see the security note above.
+                        name: "BUILDKITE_SHELL",
+                        value: "/bin/bash -e -c",
+                      },
+                    ],
+                  },
+                ],
               },
             },
           } satisfies HelmValuesForChart<"agent-stack-k8s">,
