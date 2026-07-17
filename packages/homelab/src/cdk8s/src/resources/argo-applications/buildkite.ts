@@ -109,22 +109,19 @@ export function createBuildkiteApp(chart: Chart) {
               // shallow checkout (no Dagger, no bootstrap pipeline-upload step),
               // so the buildkite-git-mirrors PVC + default-checkout-params.gitMirrors
               // that the Dagger-era stack needed were dropped in the CI replatform.
+              // SECURITY: no envFrom on the agent container. It previously
+              // injected buildkite-ci-secrets into EVERY pod's agent
+              // container — including the pipeline-upload pod, where
+              // `buildkite-agent pipeline upload` interpolates `$VAR`
+              // references at upload time and bakes the secret VALUES into
+              // the stored (UI/API-visible) pipeline. Steps that need
+              // secrets get them via their own container-0 envFrom in
+              // .buildkite/pipeline.yml, and secret refs there must be
+              // written `$$VAR` (runtime shell expansion).
               "pod-spec-patch": {
                 priorityClassName: "batch-low",
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
                 automountServiceAccountToken: true,
-                containers: [
-                  {
-                    name: "agent",
-                    envFrom: [
-                      {
-                        secretRef: {
-                          name: "buildkite-ci-secrets",
-                        },
-                      },
-                    ],
-                  },
-                ],
               },
             },
           } satisfies HelmValuesForChart<"agent-stack-k8s">,
