@@ -25,7 +25,7 @@ import { asRecord, toStringRecord } from "../../../scripts/lib/json.ts";
 const MONOREPO_REPO = "shepherdjerred/monorepo";
 const MONOREPO_WRITE_URL = `https://github.com/${MONOREPO_REPO}.git`;
 const COOKLANG_VERSION_BUMP_BRANCH = "chore/cooklang-version-bump-pending";
-const DEFAULT_PLUGIN_REPO = "shepherdjerred/cooklang-rich-preview";
+const DEFAULT_PLUGIN_REPO = "shepherdjerred/cooklang-for-obsidian";
 const GITHUB_REPO_SLUG_PATTERN = /^[\w.-]+\/[\w.-]+$/;
 
 /** cooklang package root = one level up from this script. */

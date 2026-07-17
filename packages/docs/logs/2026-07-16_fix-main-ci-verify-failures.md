@@ -34,6 +34,19 @@ its own commit/fsync). Systemic fix: the backend `test` script now runs
 tasks-for-obsidian's contract suite. The `$transaction` batching from round
 one stays — it's a real speedup, just not sufficient on its own.
 
+## Third round: first real main deploy run (builds 5633/5634)
+
+PR #1525 merged (admin bypass — see Notes on the stale ruleset), and the
+main-only deploy lane ran for the first time on the new pipeline. Three
+latent failures surfaced on build 5633, plus one infra breakage on 5634:
+
+| Step                      | Cause                                                                                                                                                                                                                                          | Fix                                                                                         |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `deploy sites`            | Pods are ephemeral; site buildCmds import workspace library dists (sjer.red → astro-opengraph-images/webring) that only existed in the verify pod                                                                                              | Step builds the graph first (same exclusions as verify), reproduced + validated locally     |
+| `npm publish`             | `bun publish` in a workspace resolves `.npmrc` from the workspace ROOT (bun.lock dir) and ignores the package-dir one publish-npm.ts wrote → "missing authentication"                                                                          | Write the `${NPM_TOKEN}` indirection `.npmrc` at the repo root (still removed in `finally`) |
+| `cooklang plugin publish` | `DEFAULT_PLUGIN_REPO` pointed at `shepherdjerred/cooklang-rich-preview` (doesn't exist); old Dagger CI passed `--plugin-repo shepherdjerred/cooklang-for-obsidian`                                                                             | Fixed the default repo slug                                                                 |
+| verify/docker-e2e on 5634 | The de-mirrored agent-stack config deployed (controller restart via ArgoCD); the pipeline's `buildkite-git-mirrors` volumeMount now references a nonexistent volume → every `*pod`/`*pod_privileged` Job invalid (`stack_error`, never starts) | Dropped the git-mirrors volumeMounts from both pod anchors                                  |
+
 ## Notes
 
 - The docs-formatting failures happened because those files were committed
