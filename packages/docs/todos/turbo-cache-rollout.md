@@ -1,32 +1,39 @@
 ---
 id: turbo-cache-rollout
-status: blocked
+status: waiting-on-verification
 origin: packages/docs/plans/2026-07-13_ci-parity-implementation.md
 ---
 
-# Roll out the turbo remote-cache server (staged, not deployed)
+# Roll out the turbo remote-cache server
 
-The ducktors/turborepo-remote-cache cdk8s app is fully written
-(`src/resources/turbo-cache.ts` + chart + argo app) but its registration is
-commented out in `setup-charts.ts` and `cdk8s-charts/apps.ts` — deploying it
-before its secret exists would just crash-loop, and `check:1password`
-correctly fails on the missing vault item.
+Most operator steps completed 2026-07-16 (see
+`packages/docs/logs/2026-07-16_turbo-cache-rollout.md`):
 
-Operator steps, in order:
+- ✅ 1Password item `turbo-cache-r2` created (Homelab (Kubernetes) vault).
+  S3 keypair **reuses the account-wide "CloudFlare R2" token** — operator
+  decision 2026-07-16, chosen over minting a bucket-scoped token. The
+  bucket-scoped comment in `src/resources/turbo-cache.ts` describes the
+  original design, not what's deployed.
+- ✅ `TURBO_TOKEN` added to the `buildkite-ci-secrets` item; snapshot
+  refreshed and committed.
+- ✅ Chart + Argo app uncommented; `helm/turbo-cache/` boilerplate added.
+- ✅ CI env (`TURBO_API` in-cluster service DNS + `TURBO_TEAM`) in
+  `.buildkite/pipeline.yml`; dev shells via `config.fish.tmpl` (tailnet
+  ingress URL).
 
-1. `tofu apply` the staged R2 bucket (`packages/homelab/src/tofu/cloudflare/turbo-cache.tf`).
-2. In the Cloudflare dashboard, mint an R2 S3 token scoped to the
-   `turbo-cache` bucket (Object Read & Write).
-3. Create 1Password item `turbo-cache-r2` in the homelab vault with fields
-   `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `TURBO_TOKEN` (shared bearer token turbo
-   clients present).
-4. `cd packages/homelab/src/cdk8s && bun run scripts/snapshot-1password-vault.ts`
-   and commit the refreshed snapshot.
-5. Uncomment `createTurboCacheChart` (setup-charts.ts) +
-   `createTurboCacheApp` (apps.ts), and recreate
-   `src/cdk8s/helm/turbo-cache/Chart.yaml` (+ empty values.yaml) matching
-   the other charts' boilerplate (apiVersion v2, name turbo-cache,
-   version/appVersion "$version"/"$appVersion"); synth + merge; ArgoCD
-   deploys it.
-6. Wire clients: `TURBO_API=https://turbo-cache.<tailnet>` + `TURBO_TOKEN` +
-   `TURBO_TEAM` in `buildkite-ci-secrets` and dev shells.
+Remaining:
+
+1. **R2 bucket apply is blocked on token permissions.** The
+   "Cloudflare API Token (Tofu - Full)" token has NO R2 permission —
+   `POST /r2/buckets` and even R2 reads return 403. Operator must add
+   **Account → Workers R2 Storage → Edit** to that token in the Cloudflare
+   dashboard, then run
+   `op run --env-file=.env -- tofu -chdir=cloudflare apply -target=cloudflare_r2_bucket.turbo_cache -target=cloudflare_r2_bucket_lifecycle.turbo_cache`
+   from `packages/homelab/src/tofu`. Without this, CI's
+   `tofu apply (cloudflare)` step will also fail post-merge.
+2. Merge the PR; ArgoCD deploys the server.
+3. Verify end-to-end: `bunx turbo run build --filter=<pkg> --force` twice on a
+   dev machine → second run should log remote cache hits; check a Buildkite
+   build's turbo summary for `REMOTE` hits.
+4. Consider enabling artifact signing (`remoteCache.signature: true` in
+   `turbo.json` + `TURBO_REMOTE_CACHE_SIGNATURE_KEY` on clients and server).
