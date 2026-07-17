@@ -29,6 +29,12 @@ common:
               # image (build 5648: release step lacked the claude CLI baked
               # into the current image).
               imagePullPolicy: Always
+              env:
+                # kubernetes-bootstrap runs step commands via /bin/sh by
+                # default — dash on the debian ci-base, which rejects
+                # toolchain.sh's `set -o pipefail` (build 5651).
+                - name: BUILDKITE_SHELL
+                  value: "/bin/bash -e -c"
               resources:
                 requests: { cpu: "2", memory: "4Gi" }
                 limits: { cpu: "7", memory: "12Gi" }
@@ -48,6 +54,9 @@ common:
               env:
                 - name: DOCKER_HOST
                   value: "tcp://127.0.0.1:2375"
+                # Same dash-vs-bash guard as the base pod above (build 5651).
+                - name: BUILDKITE_SHELL
+                  value: "/bin/bash -e -c"
               resources:
                 requests: { cpu: "2", memory: "6Gi" }
                 limits: { cpu: "7", memory: "14Gi" }
