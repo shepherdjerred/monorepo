@@ -24,6 +24,11 @@ common:
           containers:
             - name: container-0
               image: "ghcr.io/shepherdjerred/ci-base:latest"
+              # :latest is mutable and the ci-image refresh step repushes it;
+              # the k8s default IfNotPresent pinned pods to a stale node-cached
+              # image (build 5648: release step lacked the claude CLI baked
+              # into the current image).
+              imagePullPolicy: Always
               resources:
                 requests: { cpu: "2", memory: "4Gi" }
                 limits: { cpu: "7", memory: "12Gi" }
@@ -38,6 +43,8 @@ common:
           containers:
             - name: container-0
               image: "ghcr.io/shepherdjerred/ci-base:latest"
+              # Same stale-:latest guard as the base pod above.
+              imagePullPolicy: Always
               env:
                 - name: DOCKER_HOST
                   value: "tcp://127.0.0.1:2375"
@@ -386,6 +393,9 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
+      # The CI secret uses the argocd CLI's canonical ARGOCD_AUTH_TOKEN name;
+      # argocd.ts reads ARGOCD_TOKEN (build 5648).
+      export ARGOCD_TOKEN="$ARGOCD_AUTH_TOKEN"
       bun packages/homelab/scripts/argocd.ts sync apps
       bun packages/homelab/scripts/argocd.ts health-wait apps --timeout 300
     retry: *retry
@@ -402,6 +412,8 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
+      # Same ARGOCD_AUTH_TOKEN → ARGOCD_TOKEN mapping as the sync step.
+      export ARGOCD_TOKEN="$ARGOCD_AUTH_TOKEN"
       bun packages/homelab/scripts/argocd.ts wait-deletion apps --group networking.cfargotunnel.com --version v1alpha1 --kind TunnelBinding --namespace seaweedfs --timeout 120
       export AWS_ACCESS_KEY_ID="$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$SEAWEEDFS_SECRET_ACCESS_KEY"
       bun packages/homelab/scripts/tofu-stack.ts cloudflare apply
