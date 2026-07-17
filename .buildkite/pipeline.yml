@@ -300,6 +300,9 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
+      # Site syncs push to SeaweedFS S3 — same credential mapping as the
+      # tofu steps (the secret exposes SEAWEEDFS_*, the AWS CLI wants AWS_*).
+      export AWS_ACCESS_KEY_ID="$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$SEAWEEDFS_SECRET_ACCESS_KEY"
       # Pods are ephemeral: site buildCmds import workspace library dists
       # (sjer.red → astro-opengraph-images/webring, scout → data/ui) that
       # only existed in the verify pod. Build the graph here first — same
