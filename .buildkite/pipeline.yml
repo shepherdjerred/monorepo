@@ -85,6 +85,14 @@ common:
 env:
   TURBO_SCM_BASE: "origin/main"
   TURBO_TELEMETRY_DISABLED: "1"
+  # Remote cache (ducktors/turborepo-remote-cache, R2-backed). CI pods run
+  # in-cluster, so they hit the Service directly instead of the Tailscale
+  # ingress developer machines use. TURBO_TOKEN comes from the
+  # buildkite-ci-secrets envFrom; turbo leaves remote caching disabled until
+  # all three of API/TEAM/TOKEN are present, so a missing token degrades to
+  # local-cache-only rather than failing the build.
+  TURBO_API: "http://turbo-cache-turbo-cache-service.turbo-cache.svc.cluster.local:3000"
+  TURBO_TEAM: "monorepo"
 
 steps:
   # ── Verify: the whole task graph + every repo check ──────────────────────
