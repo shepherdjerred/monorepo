@@ -117,6 +117,10 @@ steps:
       # chromium + headless-shell + webkit (the suite runs Mobile Safari).
       cd packages/sjer.red && bunx playwright install && cd ../..
       bunx turbo run build typecheck lint test test:e2e --filter=sjer.red --concurrency=2
+    # The deploy-sites step ships this dist: sjer.red's build needs playwright
+    # browsers (rehype-mermaid renders diagrams at build time), which only
+    # exist in this container — build 5636 failed rebuilding it in ci-base.
+    artifact_paths: "packages/sjer.red/dist/**/*"
     retry: *retry
     plugins:
       - kubernetes:
@@ -290,7 +294,7 @@ steps:
   - label: ":rocket: deploy sites"
     key: sites
     if: build.branch == pipeline.default_branch
-    depends_on: verify
+    depends_on: [verify, e2e]
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
@@ -303,7 +307,12 @@ steps:
       # with their deploy env (build 5633: sjer.red failed to resolve the
       # unbuilt astro-opengraph-images entry).
       bunx turbo run build --filter='!sjer.red' --filter='!@shepherdjerred/resume' --concurrency=6 --output-logs=errors-only
-      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red scout-frontend scout-frontend-beta better-skill-capped glitter; do
+      # sjer.red can't build here (rehype-mermaid needs playwright browsers,
+      # build 5636) — the e2e step builds it in the playwright container and
+      # ships the dist as a build artifact; deploy it prebuilt.
+      buildkite-agent artifact download "packages/sjer.red/dist/**/*" . --step e2e
+      bun scripts/deploy-site.ts sjer.red --prebuilt
+      for site in resume webring cooklang-rich-preview stocks-sjer-red scout-frontend scout-frontend-beta better-skill-capped glitter; do
         bun scripts/deploy-site.ts "$$site"
       done
     retry: *retry

@@ -460,6 +460,29 @@ async function cooklangCommitBack(
     if (prNumber === "") {
       throw new Error("cooklang version commit-back PR number is empty");
     }
+    // GitHub refuses to enable auto-merge on a draft PR, and this may reuse
+    // a pre-existing open PR for the branch that someone left as a draft
+    // (build 5636). Mark it ready first.
+    const draftState = await run(
+      [
+        "gh",
+        "pr",
+        "view",
+        "--repo",
+        MONOREPO_REPO,
+        prNumber,
+        "--json",
+        "isDraft",
+        "-q",
+        ".isDraft",
+      ],
+      { env, capture: true },
+    );
+    if (draftState.stdout.trim() === "true") {
+      await run(["gh", "pr", "ready", "--repo", MONOREPO_REPO, prNumber], {
+        env,
+      });
+    }
     await run(
       [
         "gh",
