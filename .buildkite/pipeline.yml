@@ -29,13 +29,6 @@ common:
                 limits: { cpu: "7", memory: "12Gi" }
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
-              # The live agent-stack checkout clones with git-mirror alternates;
-              # task containers need the mirror mounted to read objects. Becomes
-              # a no-op mount once the de-mirrored agent config deploys.
-              volumeMounts:
-                - name: buildkite-git-mirrors
-                  mountPath: /buildkite/git-mirrors
-                  readOnly: true
   - pod_privileged: &pod_privileged
       kubernetes:
         checkout:
@@ -53,13 +46,6 @@ common:
                 limits: { cpu: "7", memory: "14Gi" }
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
-              # The live agent-stack checkout clones with git-mirror alternates;
-              # task containers need the mirror mounted to read objects. Becomes
-              # a no-op mount once the de-mirrored agent config deploys.
-              volumeMounts:
-                - name: buildkite-git-mirrors
-                  mountPath: /buildkite/git-mirrors
-                  readOnly: true
             # Docker daemon sidecar for image builds + compose e2e. Steps source
             # .buildkite/scripts/docker-env.sh (CLI bootstrap + daemon wait).
             - name: dind
@@ -310,6 +296,13 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
+      # Pods are ephemeral: site buildCmds import workspace library dists
+      # (sjer.red → astro-opengraph-images/webring, scout → data/ui) that
+      # only existed in the verify pod. Build the graph here first — same
+      # exclusions as verify; the sites' own builds run via deploy-site.ts
+      # with their deploy env (build 5633: sjer.red failed to resolve the
+      # unbuilt astro-opengraph-images entry).
+      bunx turbo run build --filter='!sjer.red' --filter='!@shepherdjerred/resume' --concurrency=6 --output-logs=errors-only
       for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red scout-frontend scout-frontend-beta better-skill-capped glitter; do
         bun scripts/deploy-site.ts "$$site"
       done
