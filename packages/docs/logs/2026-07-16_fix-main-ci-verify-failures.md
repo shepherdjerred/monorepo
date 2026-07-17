@@ -22,6 +22,18 @@ full verify surface on main.
 | `tasks-for-obsidian#test:contract` | Calendar test hardcoded `due: "2026-07-15"`; the server's default calendar window is `[today, today+30d]`, so the test began failing when the date rolled past    | Use `localTodayYmd()` for the due date                                    |
 | `@scout-for-lol/backend#test`      | "account limit is enforced per-server independently" inserts 100 players/accounts one `create` (= one commit/fsync) each; 5475ms vs 5s default timeout on CI pods | Batch both test helpers' inserts into one `$transaction` (~240ms locally) |
 
+## Second round: PR build 5628
+
+The PR's own build then failed on a _different_ scout-backend timeout
+(`getActiveCompetitions > excludes ended competitions` — a `beforeEach` of
+three `deleteMany` calls took 5.5s). Two different marginal tests in two
+consecutive builds means the 5s bun default is simply too tight for
+SQLite-backed integration tests on contended CI pods (every statement is
+its own commit/fsync). Systemic fix: the backend `test` script now runs
+`bun test --timeout 20000`, matching the precedent set by
+tasks-for-obsidian's contract suite. The `$transaction` batching from round
+one stays — it's a real speedup, just not sufficient on its own.
+
 ## Notes
 
 - The docs-formatting failures happened because those files were committed
