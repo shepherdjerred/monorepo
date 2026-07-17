@@ -251,8 +251,12 @@ steps:
       # only main's push script adds --cache-to). The three nested-package
       # families run unconditionally (turbo's nested --affected
       # under-selection bug — same workaround as the native shims). No push.
-      bunx turbo run smoke --affected
-      bunx turbo run smoke --filter='@discord-plays-pokemon/backend' --filter='@discord-plays-mario-kart/backend' --filter='@scout-for-lol/backend'
+      # --concurrency=1: serial per image, same as main's push script —
+      # parallel builds through the one dind sidecar contend on network, and
+      # native-prebuild downloads inside `bun install` time out (build 5629:
+      # a different image's node-datachannel prebuild timed out each attempt).
+      bunx turbo run smoke --affected --concurrency=1
+      bunx turbo run smoke --filter='@discord-plays-pokemon/backend' --filter='@discord-plays-mario-kart/backend' --filter='@scout-for-lol/backend' --concurrency=1
     retry: *retry
     plugins:
       - *pod_privileged
