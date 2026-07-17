@@ -12,6 +12,27 @@ export function renderChangelogToHtml(content: ReactNode): string {
 
 export const changelog: ChangelogEntry[] = [
   buildChangelogEntry({
+    date: "2026 07 17",
+    banner: "Updated for League patch 26.14",
+    sections: [
+      {
+        title: "Game Data",
+        color: "indigo",
+        items: [
+          "Champion, item, summoner spell, and rune data refreshed for League patch 26.14",
+          "Azir's W now procs burn runes and items at full on-hit value — he's a real threat again.",
+          "Seraphine, Senna, and Locke all lost damage/utility scaling and drop in power.",
+          "Hextech Rocketbelt got a longer active cooldown and less AP — burst mages feel it.",
+          "Jungle Blue Buff now scales Ability Haste with level, and ARAM/Arena got sweeping augment tuning.",
+        ],
+      },
+    ],
+    link: {
+      label: "Read Riot's full Patch 26.14 notes",
+      href: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-14-notes",
+    },
+  }),
+  buildChangelogEntry({
     date: "2026 06 28",
     banner: "Updated for League patch 26.13",
     sections: [

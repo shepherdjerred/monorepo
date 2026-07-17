@@ -2704,8 +2704,8 @@
         1
       ],
       "CritDamageMultipler": [
-        0.25,
-        0.25,
+        0,
+        0,
         0.25,
         0.25,
         0.25,
@@ -8560,8 +8560,8 @@
     "id": 204,
     "apiName": "StackosaurusRex",
     "name": "Stackosaurus Rex",
-    "desc": "When you gain permanent <keywordMajor>Stacks</keywordMajor> of an Ability, Augment, or Item gain @StackModifier*100@% more!",
-    "tooltip": "When you gain permanent <keywordMajor>Stacks</keywordMajor> of an Ability, Augment, or Item gain @StackModifier*100@% more!",
+    "desc": "When you gain permanent <keywordMajor>Stacks</keywordMajor> of an Ability, gain @StackModifier*100@% more!",
+    "tooltip": "When you gain permanent <keywordMajor>Stacks</keywordMajor> of an Ability, gain @StackModifier*100@% more!",
     "iconLarge": "assets/ux/cherry/augments/icons/stackosaurusrex_large.png",
     "iconSmall": "assets/ux/cherry/augments/icons/stackosaurusrex_small.png",
     "rarity": "silver",
@@ -10735,6 +10735,15 @@
         -20,
         -35,
         -50
+      ],
+      "DivineInterventionCDReduction": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
       ],
       "InitalDelay": [
         12,
