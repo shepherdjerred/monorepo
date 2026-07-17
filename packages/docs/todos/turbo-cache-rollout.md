@@ -21,19 +21,22 @@ Most operator steps completed 2026-07-16 (see
   `.buildkite/pipeline.yml`; dev shells via `config.fish.tmpl` (tailnet
   ingress URL).
 
+- ✅ R2 bucket + lifecycle applied (2026-07-16, targeted apply after the
+  operator added **Account → Workers R2 Storage → Edit** to the
+  "Cloudflare API Token (Tofu - Full)" token in-place — it previously had NO
+  R2 permission and 403'd on all R2 endpoints, which would also have broken
+  CI's `tofu apply (cloudflare)`). S3 put/get/delete round-trip on the
+  bucket verified with the reused keypair.
+- ✅ `TURBO_TOKEN` confirmed synced into the live `buildkite-ci-secrets`
+  k8s secret by the 1Password operator.
+
 Remaining:
 
-1. **R2 bucket apply is blocked on token permissions.** The
-   "Cloudflare API Token (Tofu - Full)" token has NO R2 permission —
-   `POST /r2/buckets` and even R2 reads return 403. Operator must add
-   **Account → Workers R2 Storage → Edit** to that token in the Cloudflare
-   dashboard, then run
-   `op run --env-file=.env -- tofu -chdir=cloudflare apply -target=cloudflare_r2_bucket.turbo_cache -target=cloudflare_r2_bucket_lifecycle.turbo_cache`
-   from `packages/homelab/src/tofu`. Without this, CI's
-   `tofu apply (cloudflare)` step will also fail post-merge.
-2. Merge the PR; ArgoCD deploys the server.
-3. Verify end-to-end: `bunx turbo run build --filter=<pkg> --force` twice on a
+1. Merge the PR; ArgoCD deploys the server. The merge build's own `verify`
+   step runs before the server exists — turbo logs remote-cache warnings and
+   falls back to local cache; builds from then on use the remote cache.
+2. Verify end-to-end: `bunx turbo run build --filter=<pkg> --force` twice on a
    dev machine → second run should log remote cache hits; check a Buildkite
    build's turbo summary for `REMOTE` hits.
-4. Consider enabling artifact signing (`remoteCache.signature: true` in
+3. Consider enabling artifact signing (`remoteCache.signature: true` in
    `turbo.json` + `TURBO_REMOTE_CACHE_SIGNATURE_KEY` on clients and server).

@@ -2,8 +2,8 @@
 
 ## Status
 
-Partially Complete — code + secrets done; R2 bucket apply blocked on a
-Cloudflare token permission the operator must add in the dashboard.
+Complete — code, secrets, and R2 bucket all in place; PR #1526 open.
+Remaining post-merge verification tracked in `todos/turbo-cache-rollout.md`.
 
 ## What happened
 
@@ -60,11 +60,18 @@ apply from a dev machine.
 
 ### Remaining
 
-- Operator: add R2 Edit permission to the Tofu token, then
-  `op run --env-file=.env -- tofu -chdir=cloudflare apply -target=cloudflare_r2_bucket.turbo_cache -target=cloudflare_r2_bucket_lifecycle.turbo_cache`.
-- Merge PR → ArgoCD deploys; verify remote cache hits locally and in a
+- Merge PR #1526 → ArgoCD deploys; verify remote cache hits locally and in a
   Buildkite turbo summary.
 - Optional follow-up: `remoteCache.signature` artifact signing.
+
+### Addendum (same session, later)
+
+- Operator added **Workers R2 Storage → Edit** to the Tofu token in-place
+  (token value unchanged, no 1P update needed). Targeted apply created the
+  bucket + lifecycle; S3 put/get/delete round-trip verified with the reused
+  keypair. `TURBO_TOKEN` confirmed present in the live `buildkite-ci-secrets`
+  k8s secret (1P operator synced). Image pin renders digested
+  (`ducktors/turborepo-remote-cache:2.11.2`).
 
 ### Caveats
 
