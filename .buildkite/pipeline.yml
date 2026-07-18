@@ -62,11 +62,21 @@ common:
                 limits: { cpu: "7", memory: "14Gi" }
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
-            # Docker daemon sidecar for image builds + compose e2e. Steps source
-            # .buildkite/scripts/docker-env.sh (CLI bootstrap + daemon wait).
+          # Docker daemon for image builds + compose e2e, as a NATIVE SIDECAR
+          # (initContainer + restartPolicy Always): kubelet terminates it by
+          # itself once the regular containers finish, so pod completion never
+          # depends on the agent-stack controller's Job-reap update. As a
+          # regular container it zombied: the reap raced a kyverno/kueue
+          # webhook outage (failurePolicy=Fail rejected the update) and the
+          # finished pod held ~4 CPU/10Gi of Kueue quota for 2.5h, starving
+          # the whole queue (2026-07-18; same freeze signature as 07-05/08).
+          # Steps source .buildkite/scripts/docker-env.sh (CLI bootstrap +
+          # daemon wait).
+          initContainers:
             - name: dind
               # renovate: datasource=docker depName=docker
               image: "docker:28-dind"
+              restartPolicy: Always
               securityContext: { privileged: true }
               env:
                 - name: DOCKER_TLS_CERTDIR
