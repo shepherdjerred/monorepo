@@ -2,7 +2,7 @@
 
 ## Status
 
-Complete (investigation only — no changes made)
+Complete — root cause found, fixed in PR #1542, verified live in-cluster
 
 ## What the user saw
 
@@ -166,6 +166,21 @@ is bounded (a few MB), so it cannot recreate the GC-pause failure mode that
 PR #1196 fixed. Every seek segment gets a fresh burst (the option rides
 `options.prepare`/`options.play` through `createSeekablePlayer`).
 
+### 9. Live verification of the fix (test pod, same scene, 10 min @ 20 s samples)
+
+| Round   | Code                   | Mean speed | Deficit behavior                                                                |
+| ------- | ---------------------- | ---------- | ------------------------------------------------------------------------------- |
+| 1       | cushion only           | 0.942      | monotonic growth to 37.7 s — insufficient                                       |
+| 2       | cushion + pacer fix    | **0.990**  | returns to zero 5× (full recovery); worst transient 14.4 s in the heaviest tail |
+| control | null sink, no consumer | 0.999 flat | capacity proof — no scene exceeds the pipeline                                  |
+
+Round 2 ran partly against a concurrent unbounded benchmark on the same GPU
+(conservative). Event-loop lag p99 stayed 1.8–3.9 ms throughout — no GC
+regression. Residual: the heaviest ~90 s stretch can still transiently exceed
+the ~6.7 s cushion (receiver pre-roll + vPipe); whether that is
+viewer-visible needs the `playback_behind_seconds` gauge (next-steps 6.1).
+Mitigation without code: raise `STREAM_READRATE_INITIAL_BURST`.
+
 ## Suggested next steps
 
 1. ~~A/B the subtitle hypothesis~~ — done 2026-07-18, refuted (§6).
@@ -180,6 +195,24 @@ PR #1196 fixed. Every seek segment gets a fresh burst (the option rides
    metrics/events alone).
 5. Fix gauge reset on stream end (repro'd 3× now: post-Top-Gun, both A/B
    teardowns) + add pod-churn visibility to the dashboard.
+6. **Observability follow-up** (ranked by time it would have saved this
+   session; 1–3 are small additions to the packages this PR touches):
+   1. `streambot_playback_behind_seconds` gauge + late-frames-vs-schedule
+      counter in the pacer — measures the user-facing symptom directly
+      (everything this session was inferred from production-side proxies).
+   2. Pacer sync-correction counters (`pacer_sync_events_total{direction}`,
+      `pacer_schedule_reset_lost_ms_total`) — the root cause lived in an
+      uninstrumented code path that already computes every number it discards.
+   3. Demux→pacer queue-depth gauge (vPipe occupancy) — instantly separates
+      producer-starved from consumer-paced dips.
+   4. Dashboard: correct the speed-ratio panel description (1.0 = ceiling
+      since `-readrate 1`, >1.0 = catch-up, not headroom) and alert on
+      `avg_over_time(speed_ratio[5m]) < 0.97 and stream_active == 1`.
+   5. Reset ffmpeg-derived gauges on stream end, or mask stale samples in
+      panels via the existing `ffmpegProgressAgeSeconds`.
+   6. Homelab: event-exporter `maxEventAgeSeconds`, pod-churn panel
+      (`kube_pod_start_time` changes), and eventually a node-level DRM-clients
+      exporter for whole-GPU tenancy visibility.
 
 ## Workflow Friction
 
