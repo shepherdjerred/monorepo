@@ -109,6 +109,15 @@ export function createBuildkiteApp(chart: Chart) {
               // shallow checkout (no Dagger, no bootstrap pipeline-upload step),
               // so the buildkite-git-mirrors PVC + default-checkout-params.gitMirrors
               // that the Dagger-era stack needed were dropped in the CI replatform.
+              // SECURITY: no envFrom on the agent container. It previously
+              // injected buildkite-ci-secrets into EVERY pod's agent
+              // container — including the pipeline-upload pod, where
+              // `buildkite-agent pipeline upload` interpolates `$VAR`
+              // references at upload time and bakes the secret VALUES into
+              // the stored (UI/API-visible) pipeline. Steps that need
+              // secrets get them via their own container-0 envFrom in
+              // .buildkite/pipeline.yml, and secret refs there must be
+              // written `$$VAR` (runtime shell expansion).
               "pod-spec-patch": {
                 priorityClassName: "batch-low",
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
@@ -116,11 +125,17 @@ export function createBuildkiteApp(chart: Chart) {
                 containers: [
                   {
                     name: "agent",
-                    envFrom: [
+                    env: [
                       {
-                        secretRef: {
-                          name: "buildkite-ci-secrets",
-                        },
+                        // kubernetes-bootstrap imposes the AGENT's shell
+                        // config on every command container via the
+                        // registration env; the agent image has no bash, so
+                        // its default is /bin/sh — dash on the debian
+                        // ci-base, which broke `set -o pipefail` in
+                        // toolchain.sh (builds 5651/5654). Non-secret env
+                        // only here — see the security note above.
+                        name: "BUILDKITE_SHELL",
+                        value: "/bin/bash -e -c",
                       },
                     ],
                   },
