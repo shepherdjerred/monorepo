@@ -15,6 +15,13 @@ export type RunOptions = {
    * stdio. stderr is always inherited so tool diagnostics stream to the operator.
    */
   capture?: boolean;
+  /**
+   * When true, do NOT echo captured stdout back to the parent's stdout. Only
+   * meaningful with `capture: true`. Use this for commands whose stdout is a
+   * secret (e.g. a minted token) — echoing captured stdout would leak the
+   * secret into the build log even though the caller "captured" it.
+   */
+  quiet?: boolean;
 };
 
 export type RunResult = {
@@ -63,8 +70,10 @@ export async function runAllowExit(
   });
   const stdout = capture ? await new Response(proc.stdout).text() : "";
   const exitCode = await proc.exited;
-  if (capture) {
+  if (capture && opts.quiet !== true) {
     // Echo captured stdout so the operator still sees it in the terminal.
+    // Suppressed when `quiet` is set — used for secret-bearing output that must
+    // never reach the log.
     process.stdout.write(stdout);
   }
   return { stdout, exitCode };

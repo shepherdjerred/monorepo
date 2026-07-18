@@ -17,6 +17,36 @@ import { run, requireEnv, tmpBase } from "./run.ts";
 const GITHUB_APP_TOKEN_SCRIPT_REL =
   "packages/temporal/src/lib/github-app-token.ts";
 
+/**
+ * Register a runtime-obtained secret with the Buildkite log redactor so the
+ * agent scrubs it from all subsequent log output for this job.
+ *
+ * Buildkite's static `BUILDKITE_REDACTED_VARS` redaction only knows env vars
+ * present at job start; a token minted mid-build is invisible to it. The
+ * redactor CLI closes that gap — this is the native backstop that makes an
+ * accidental `echo $TOKEN` (or a captured-stdout echo bug) a no-op in the log.
+ *
+ * No-op outside Buildkite (local operator runs). Fails loudly if we ARE under
+ * Buildkite but the agent CLI is missing/errors — a silent miss here would
+ * defeat the whole control (repo fail-fast policy).
+ */
+async function registerBuildkiteRedaction(secret: string): Promise<void> {
+  if (Bun.env["BUILDKITE"] !== "true") {
+    return;
+  }
+  const proc = Bun.spawn(
+    ["buildkite-agent", "redactor", "add", "--format=none"],
+    { stdin: new Blob([secret]), stdout: "inherit", stderr: "inherit" },
+  );
+  const exitCode = await proc.exited;
+  if (exitCode !== 0) {
+    throw new Error(
+      `buildkite-agent redactor add failed (exit ${exitCode.toString()}); ` +
+        `refusing to continue with an unredacted minted token`,
+    );
+  }
+}
+
 export type GitAuth = {
   /** The minted installation token (also exported as GH_TOKEN for `gh`). */
   token: string;
@@ -43,11 +73,18 @@ export async function setupGitAuth(repoRoot: string): Promise<GitAuth> {
   requireEnv("GITHUB_APP_PRIVATE_KEY");
 
   const scriptPath = `${repoRoot}/${GITHUB_APP_TOKEN_SCRIPT_REL}`;
-  const minted = await run(["bun", scriptPath], { capture: true });
+  // `quiet: true` — the mint script prints the token to stdout; without it,
+  // run()'s captured-stdout echo would re-emit the token into the build log
+  // (the root cause of the 2026-07 ghs_ token leaks into the public pipeline).
+  const minted = await run(["bun", scriptPath], { capture: true, quiet: true });
   const token = minted.stdout.trim();
   if (token === "") {
     throw new Error("GH_TOKEN is empty after mint");
   }
+
+  // Native backstop: even if some downstream step echoes the token, the agent
+  // will scrub it from the log. Register it the instant we have it.
+  await registerBuildkiteRedaction(token);
 
   // Write an askpass helper to a temp file. Assembling the username as
   // "x-access" + "-token" mirrors the old helper (avoids the literal

@@ -214,7 +214,17 @@ steps:
 
   - label: ":mag: semgrep"
     soft_fail: true
-    command: semgrep scan --config auto --error .
+    # Excludes mirror the .gitleaks.toml allowlist: these paths hold values
+    # already triaged as non-sensitive (legacy/undeployed sandbox archive,
+    # a disabled Minecraft management-server secret, a public Firebase web
+    # apiKey). semgrep's generic-secret rule would otherwise re-print those
+    # values into the log on every build. Real code stays fully scanned.
+    command: |
+      semgrep scan --config auto --error \
+        --exclude sandbox \
+        --exclude server.properties \
+        --exclude fetcher.ts \
+        .
     plugins:
       - kubernetes:
           checkout:

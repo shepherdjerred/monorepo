@@ -137,6 +137,33 @@ export function createBuildkiteApp(chart: Chart) {
                         name: "BUILDKITE_SHELL",
                         value: "/bin/bash -e -c",
                       },
+                      {
+                        // Widen the agent's log redaction beyond the defaults
+                        // (*_PASSWORD,*_SECRET,*_TOKEN,*_ACCESS_KEY,
+                        // *_SECRET_KEY,*_CONNECTION_STRING) to cover this repo's
+                        // secret env-var naming. The agent scrubs the VALUES of
+                        // matching vars from log output. Backstop only: it can
+                        // redact values the agent process actually sees, and
+                        // runtime-minted tokens aren't env vars — those are
+                        // handled explicitly via `buildkite-agent redactor add`
+                        // in scripts/lib/github-auth.ts.
+                        name: "BUILDKITE_REDACTED_VARS",
+                        value: [
+                          "*_PASSWORD",
+                          "*_SECRET",
+                          "*_TOKEN",
+                          "*_ACCESS_KEY",
+                          "*_SECRET_KEY",
+                          "*_ACCESS_KEY_ID",
+                          "*_PRIVATE_KEY",
+                          "*_AUTH_TOKEN",
+                          "*_CONNECTION_STRING",
+                          "*_CREDENTIALS",
+                          // GH_TOKEN / GITHUB_APP_* / TURBO_TOKEN / NPM_TOKEN /
+                          // SEAWEEDFS_* / ARGOCD_AUTH_TOKEN are all already
+                          // covered by the suffix globs above.
+                        ].join(","),
+                      },
                     ],
                   },
                 ],
