@@ -30,14 +30,15 @@ const R2_ACCOUNT_ID = "48948ed6cd40d73e34d27f0cc10e595f";
 const R2_ENDPOINT = `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
 
 export function createTurboCacheDeployment(chart: Chart) {
-  // 1Password item `turbo-cache-r2` (homelab vault). Fields:
-  //   - S3_ACCESS_KEY: R2 S3 Access Key ID (R2 → Manage API Tokens, scoped to
-  //     the turbo-cache bucket, Object Read & Write)
-  //   - S3_SECRET_KEY: R2 S3 Secret Access Key (shown once at token creation)
+  // 1Password item `turbo-cache-r2` (Homelab (Kubernetes) vault). Fields:
+  //   - S3_ACCESS_KEY / S3_SECRET_KEY: R2 S3 keypair. Reuses the account-wide
+  //     "CloudFlare R2" token (operator decision 2026-07-16 — reuse over
+  //     minting a bucket-scoped token; see docs/todos/turbo-cache-rollout.md)
   //   - TURBO_TOKEN: shared bearer token turbo clients present via
-  //     `turbo --token` / TURBO_TOKEN to authenticate against this cache
+  //     `turbo --token` / TURBO_TOKEN to authenticate against this cache;
+  //     the same value lives in the `buildkite-ci-secrets` item for CI
   // The R2 bucket itself is provisioned by tofu (src/tofu/cloudflare/turbo-cache.tf);
-  // the S3 keypair cannot be minted by the tofu provider, so it is created in the
+  // the S3 keypair cannot be minted by the tofu provider, so it is managed in the
   // R2 dashboard and stored here manually.
   const secrets = new OnePasswordItem(chart, "turbo-cache-secrets", {
     spec: {

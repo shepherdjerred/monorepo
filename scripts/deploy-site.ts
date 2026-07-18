@@ -319,8 +319,10 @@ async function s3SyncStaticSite(opts: {
 
 function usage(): never {
   console.error(
-    "Usage: bun scripts/deploy-site.ts <site-name|bucket> [--dry-run]\n" +
+    "Usage: bun scripts/deploy-site.ts <site-name|bucket> [--dry-run] [--prebuilt]\n" +
       "       bun scripts/deploy-site.ts --list\n\n" +
+      "--prebuilt skips the site's buildCmd and requires distDir to already\n" +
+      "contain files (e.g. a CI artifact built in a specialized container).\n\n" +
       "A site is selected by its name OR its bucket (the bucket is the stable,\n" +
       "space-free id preferred for package scripts, e.g. `scout-frontend`).\n\n" +
       "Sites:\n" +
@@ -405,6 +407,7 @@ async function main(): Promise<void> {
   }
 
   const dryRun = args.includes("--dry-run");
+  const prebuilt = args.includes("--prebuilt");
   const site = selectSite(args);
 
   const root = repoRoot();
@@ -414,8 +417,35 @@ async function main(): Promise<void> {
   console.log(`--- Deploy ${site.name} -> ${site.bucket} (${site.url})`);
   console.log(dryRun ? "(dry run)" : "(live)");
 
-  const buildEnv = buildEnvFor(site, dryRun);
-  await runBuild(site, buildDir, buildEnv, dryRun);
+  if (prebuilt) {
+    // The dist was produced elsewhere (e.g. a CI artifact from a container
+    // with build-only tooling like playwright browsers). Refuse to sync a
+    // missing/empty dir — with --delete that would wipe the bucket.
+    const glob = new Bun.Glob("**/*");
+    let fileCount = 0;
+    try {
+      for await (const _ of glob.scan({ cwd: distDir, onlyFiles: true })) {
+        fileCount += 1;
+        break;
+      }
+    } catch (error) {
+      // Missing dir (ENOENT) → same refusal as empty; anything else is real.
+      const isEnoent =
+        error instanceof Error && "code" in error && error.code === "ENOENT";
+      if (!isEnoent) throw error;
+    }
+    if (fileCount === 0) {
+      throw new Error(
+        `--prebuilt: ${site.distDir} is missing or empty — refusing to sync`,
+      );
+    }
+    console.log(
+      `build: skipped (--prebuilt; syncing existing ${site.distDir})`,
+    );
+  } else {
+    const buildEnv = buildEnvFor(site, dryRun);
+    await runBuild(site, buildDir, buildEnv, dryRun);
+  }
 
   const endpoint =
     site.target === "r2"
