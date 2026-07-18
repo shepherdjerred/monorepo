@@ -12,6 +12,27 @@ export function renderChangelogToHtml(content: ReactNode): string {
 
 export const changelog: ChangelogEntry[] = [
   buildChangelogEntry({
+    date: "2026 07 18",
+    banner: "Updated for League patch 26.14",
+    sections: [
+      {
+        title: "Game Data",
+        color: "indigo",
+        items: [
+          "Champion, item, summoner spell, and rune data refreshed for League patch 26.14",
+          "Azir's W and R get a big mechanics overhaul — full on-hit damage and better teamfight control.",
+          "Mordekaiser, Corki, Nami, and Yunara pick up scaling buffs and hit harder late.",
+          "Senna, Seraphine, Garen, and Jayce all take nerfs to their power spikes.",
+          "Blue Buff now scales with level, rewarding junglers and mages who control it.",
+        ],
+      },
+    ],
+    link: {
+      label: "Read Riot's full Patch 26.14 notes",
+      href: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-14-notes",
+    },
+  }),
+  buildChangelogEntry({
     date: "2026 06 28",
     banner: "Updated for League patch 26.13",
     sections: [

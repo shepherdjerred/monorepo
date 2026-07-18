@@ -1,23 +1,102 @@
 {
-  "patch": "26.13",
-  "title": "Patch 26.13 Notes",
-  "url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-13-notes/",
-  "date": "2026 07 01",
-  "overview": "A balance-focused patch that reins in snowball-heavy marksmen and hands junglers a stronger early game, with a light touch on mid-lane mages.",
-  "themes": ["ADC item tuning", "jungle early game"],
-  "summary": [
-    "Marksman item spikes tuned down to slow bot-lane snowballing",
-    "Jungle early game buffed via better objective and camp rewards"
+  "patch": "26.14",
+  "title": "League of Legends Patch 26.14 Notes",
+  "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-14-notes",
+  "date": "2026 07 18",
+  "overview": "Patch 26.14 is a broad balance pass headlined by an Azir rework to his mana-cost and on-hit mechanics, a batch of scaling buffs to underperformers like Mordekaiser, Corki, Nami, and Yunara, and nerfs to lane bullies and enchanters. Jungle gets stronger with scaling Blue Buff, and Hextech Rocketbelt is reworked into a health-focused build.",
+  "themes": [
+    "Champion buffs for underperformers",
+    "Enchanter nerfs",
+    "Jungle sustain buffs",
+    "Item build-path reworks"
   ],
-  "champions": [],
-  "items": [],
-  "systems": [
+  "summary": [
+    "Azir's W and R get a big mechanics overhaul — full on-hit damage and better teamfight control.",
+    "Mordekaiser, Corki, Nami, and Yunara pick up scaling buffs and hit harder late.",
+    "Senna, Seraphine, Garen, and Jayce all take nerfs to their power spikes.",
+    "Blue Buff now scales with level, rewarding junglers and mages who control it."
+  ],
+  "champions": [
     {
-      "area": "Jungle",
+      "direction": "adjustment",
+      "magnitude": "major",
+      "summary": "W soldiers now deal full on-hit damage and apply extra rune stacks.",
+      "details": "Arise! now applies 100% of on-hit effects (Scorch, Liandry's, Blackfire Torch) instead of 50%, double Conqueror stacks, and Press the Attack, while his ult now knocks back jungle monsters — so if you're mastering Azir this patch, your soldiers finally hit like real auto-attacks.",
+      "name": "Azir"
+    },
+    {
       "direction": "buff",
       "magnitude": "moderate",
-      "summary": "Epic monster and camp gold up early",
-      "details": "Jungle camps and early objectives grant more gold, so proactive junglers get rewarded harder for clearing and contesting."
+      "summary": "AD growth and rocket recharge both improved.",
+      "details": "Attack Damage growth goes 2 → 2.5 and Missile Barrage recharge reduction extends to 2-6s, so Corki scales harder and keeps more Big Ones stocked — no excuse for running dry in a teamfight.",
+      "name": "Corki"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "moderate",
+      "summary": "Demacian Justice true damage lowered.",
+      "details": "R true damage drops to 125/200/275 from 150/250/350, so your execute threshold is smaller and you'll need to do more of the work yourself before pressing R.",
+      "name": "Garen"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "minor",
+      "summary": "Passive move speed and ult resistances cut.",
+      "details": "Hextech Capacitor bonus move speed drops 40 → 30 and Mercury Hammer's armor/MR scaling is reduced, so Jayce is squishier and slower when he swaps forms — less forgiveness for a bad engage.",
+      "name": "Jayce"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "moderate",
+      "summary": "E damage/ratio and ult stat steal both increased.",
+      "details": "Death's Grasp scales to 60/80/100/120/140 with a 45% AP ratio and Realm of Death now steals 13% of stats, so Morde wins his ult duels harder and clears waves faster — bully accordingly.",
+      "name": "Mordekaiser"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "moderate",
+      "summary": "Tidecaller's Blessing empowered damage nearly doubled at rank 5.",
+      "details": "E damage per hit rises to 20/35/50/65/80, so buffing your ADC's autos does real chunk damage now and Nami's poke lanes hit noticeably harder.",
+      "name": "Nami"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "moderate",
+      "summary": "Crit modifier and Q AP scaling on slow/heal reduced.",
+      "details": "Passive crit damage drops to 80% and Piercing Darkness's AP slow and heal ratios are cut, so AP-leaning Senna supports get less utility and your crit windups deal a bit less — lean back into the ADC playstyle.",
+      "name": "Senna"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "minor",
+      "summary": "High Note AP ratio lowered.",
+      "details": "Q AP ratio drops 50% → 40%, so your main poke and wave-clear spell hits softer through the mid game — you'll feel the lost damage every trade.",
+      "name": "Seraphine"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "minor",
+      "summary": "Attack damage growth increased.",
+      "details": "AD growth goes 2.5 → 3, giving Yunara a stronger late-game scaling curve so your auto-attacks carry harder the longer the game runs.",
+      "name": "Yunara"
+    }
+  ],
+  "items": [
+    {
+      "direction": "adjustment",
+      "magnitude": "moderate",
+      "summary": "Reworked into a tankier build path with a longer active cooldown.",
+      "details": "Build path swaps to Alternator + Kindlegem + Ruby Crystal with 350 health (up) but 60 AP (down) and a 50s dash cooldown (up from 40), so Rocketbelt is now a survivability-first pick — great for mages who want durability over burst, worse if you relied on the fast repositioning.",
+      "name": "Hextech Rocketbelt"
+    }
+  ],
+  "systems": [
+    {
+      "direction": "buff",
+      "magnitude": "moderate",
+      "summary": "Blue Buff ability haste now scales with level.",
+      "details": "Blue Buff grants 10/15/20 ability haste at levels 1/6/11 instead of a flat 10, so junglers and mid-laners who hold Blue spam abilities noticeably more often as the game goes on — contest it harder.",
+      "area": "Jungle"
     }
   ]
 }
