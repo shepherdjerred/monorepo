@@ -120,22 +120,65 @@ Bonus repro during testing: the frozen-gauge bug (§5) hit twice — after each
 stream end, `speed_ratio` froze at its last value (1.942 for 10+ min). Unlike
 the Jul-17 Top Gun case, `stream_active` did reset to 0, so the freeze is
 per-gauge: ffmpeg-derived gauges are never cleared, while `stream_active` is.
-Suspected per-frame serialization (decode→scale→tonemap→encode round-trips)
-rather than engine saturation — engines all read ≤ 17% during dips. Likely fix
-territory: `-async_depth` on the VAAPI filters/decoder, `extra_hw_frames`,
-pipeline depth tuning, or hybrid decode. Needs a dedicated session.
 
-## Suggested next steps (not done — awaiting direction)
+### 7. Root cause (2026-07-18 evening): zero-slack realtime pacing, not transcode capacity
 
-1. ~~A/B the subtitle hypothesis~~ — **done 2026-07-18, refuted (§6).**
-2. **Profile the core pipeline on a heavy scene** (Avengers @ 1:41 is a
-   reliable repro): try `-async_depth` on scale_vaapi/tonemap_vaapi and the
-   VAAPI decoder, `extra_hw_frames`, and compare; Pyroscope flamegraph of the
-   ffmpeg process during a dip to find the serialized stage.
-3. Raise event-exporter `maxEventAgeSeconds` so future pod-lifecycle causes
+Stage-isolation benchmarks inside the streambot pod (same file, same heavy
+scene via `-ss 6060`, unbounded, 60 s segments) killed the
+"serialization/capacity" theory:
+
+| Configuration                                             | Speed                   |
+| --------------------------------------------------------- | ----------------------- |
+| decode only                                               | 11.7x                   |
+| decode + scale_vaapi                                      | 11.7x                   |
+| decode + scale + tonemap_vaapi                            | 8.8x                    |
+| full prod graph (encode, no subs)                         | **6.6x**                |
+| full + `-async_depth 4/8` + `extra_hw_frames`             | 6.6x (no change)        |
+| full prod command, `-readrate 1`, `-f null` (no consumer) | **~1.0 clean, no dips** |
+| full prod command, `-readrate 1`, piped to `cat`          | ~1.0 clean, no dips     |
+| live (real consumer)                                      | dips 0.72–0.94          |
+
+The pipeline has **6.6x capacity** on the worst scene. During a live dip,
+per-thread sampling showed every ffmpeg and bun thread idle (bun main ~12%,
+zero threads blocked in `pipe_write`, demux thread sleeping in the readrate
+timer). The dips require the real consumer: since PR #1196 (`-readrate 1`,
+merged 2026-06-13 — the exact "perf was great" baseline boundary), production
+is paced to exactly realtime while the consumer chain holds zero slack
+(`highWaterMark: 0` streams + 64 KB kernel pipe ≈ 1–2 frames). Any transient
+consumer-side hiccup back-propagates instantly, stalls the whole graph, and
+the losses accumulate as visible stutter on heavy-bitrate scenes. PR #1196
+traded unbounded-buffer GC pauses for zero-margin lock-step.
+
+Also: the stream-observer doc comment claimed "ffmpeg is not readrate-limited"
+— stale since PR #1196; it misdirected this investigation for several hours.
+
+### 8. Fix (this branch)
+
+Plumb ffmpeg's `-readrate_initial_burst` through the dvs fork
+(`prepareStream`) and pair it with the fork's existing-but-never-wired
+play-side `readrateInitialBurst` pacer logic. The first N seconds (config
+`stream.readrateInitialBurst`, env `STREAM_READRATE_INITIAL_BURST`, default
+2.5 s) demux at full speed and the pacer forwards them into the Discord
+receiver's jitter buffer. Production dips then drain that cushion instead of
+starving the sender, and `readrate`'s wall-clock-line semantics let ffmpeg
+catch back up (unthrottled while behind the line) to refill it. The pre-roll
+is bounded (a few MB), so it cannot recreate the GC-pause failure mode that
+PR #1196 fixed. Every seek segment gets a fresh burst (the option rides
+`options.prepare`/`options.play` through `createSeekablePlayer`).
+
+## Suggested next steps
+
+1. ~~A/B the subtitle hypothesis~~ — done 2026-07-18, refuted (§6).
+2. ~~Profile the core pipeline~~ — done 2026-07-18, capacity is 6.6x; root
+   cause is zero-slack pacing (§7), fixed by the pre-roll cushion (§8).
+3. **Post-deploy verification:** replay Avengers @ 1:41 and confirm (a) no
+   sustained sub-1.0 stretches beyond the cushion, (b)
+   `streambot_nodejs_eventloop_lag_p99_seconds` stays low (no GC regression),
+   (c) `-readrate_initial_burst 2.5` visible in the logged ffmpeg command.
+4. Raise event-exporter `maxEventAgeSeconds` so future pod-lifecycle causes
    aren't lost from telemetry (the manual restart was untraceable from
    metrics/events alone).
-4. Fix gauge reset on stream end (repro'd 3× now: post-Top-Gun, both A/B
+5. Fix gauge reset on stream end (repro'd 3× now: post-Top-Gun, both A/B
    teardowns) + add pod-churn visibility to the dashboard.
 
 ## Workflow Friction
@@ -174,13 +217,20 @@ Missing Access` as plain text), which breaks piped parsers. Emit
   replacement (graceful SIGTERM, same ReplicaSet).
 
 - Ran live A/B via Discord test userbot (phases A–E, §6): subtitles
-  exonerated; core VAAPI pipeline confirmed unable to hold 1.0x on
-  peak-bitrate scenes (reliable repro: Avengers @ 1:41, dips to 0.72).
+  exonerated; reliable stutter repro established (Avengers @ 1:41, dips to
+  0.72).
+- Root-caused via in-pod benchmarks + per-thread sampling (§7): 6.6x
+  transcode capacity; dips are zero-slack `-readrate 1` lock-step with the
+  highWaterMark-0 consumer, introduced by PR #1196.
+- Implemented the fix (§8): `-readrate_initial_burst` plumbed through the dvs
+  fork + streambot config (default 2.5 s pre-roll into the receiver's jitter
+  buffer); stale stream-observer comment corrected; emission tests added.
+  Branch `feature/streambot-pipeline-depth`.
 
 ### Remaining
 
-- Fix the core pipeline throughput on heavy scenes (async_depth /
-  extra_hw_frames / Pyroscope profiling — §6 and next-steps 2).
+- Merge the PR, let ArgoCD deploy, and run post-deploy verification
+  (next-steps 3): Avengers @ 1:41 replay + event-loop-lag check.
 - Observability fixes: gauge reset on stream end, pod-churn panel, event
   exporter `maxEventAgeSeconds`.
 
