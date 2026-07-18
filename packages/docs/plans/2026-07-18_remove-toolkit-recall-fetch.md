@@ -2,7 +2,7 @@
 
 ## Status
 
-Complete — plan approved, pending implementation.
+Complete — implemented in PR #1540.
 
 ## Context
 
@@ -64,3 +64,23 @@ Edits:
 - `chezmoi diff` → no pending plist recreation
 - `rg -i "toolkit (recall|fetch)"` over living docs (AGENTS/CLAUDE/skills/architecture) → only historical logs/plans remain
 - PR via `pr-monitor`; no screenshots needed (non-visual)
+
+## Session Log — 2026-07-18
+
+### Done
+
+- Deleted all recall + fetch code from `packages/toolkit` (lib/recall, daemon, lib/fetch, commands/fetch, handlers, tests, recall skill); dropped `@lancedb/lancedb` + `gray-matter`; stripped `install.sh` (MLX pip, ~/.recall dirs, plist install). Binary: 179 MB → 65 MB.
+- `packages/temporal`: `hybrid-retrieval.ts` → lexical-only `symbol-retrieval.ts` (RRF + `RecallSearchFn` removed); unwired `recallSearch` from bootstrap, bootstrap-enrich, replay script, tests; Dockerfile comment updated.
+- Docs/instructions: root AGENTS.md Fetch & Recall section deleted; `packages/dotfiles/AGENTS.md` now recommends lightpanda/PinchTab/Docling (URLs liveness-checked); deleted the LaunchAgent plist from dotfiles; updated `.greptile/files.json`, architecture doc, leetcode embeddings provenance comment, `.quality-baseline.json`.
+- Live teardown: launchd daemon booted out, live plist removed, `~/.agents/skills/recall/` removed, recall-free binary installed via `install.sh`, live `~/AGENTS.md` updated (chezmoi source updated in this PR), memory files updated.
+- Verification: toolkit+temporal build/typecheck/test/lint 9/9 green; `bun run verify -- --affected` green via pre-push. PR #1540.
+
+### Remaining
+
+- `rm -rf ~/.recall` (16 GB) — the agent's delete was permission-denied; operator runs it manually.
+- Merge PR #1540; then `chezmoi apply` is a no-op for the plist (already removed live).
+
+### Caveats
+
+- Temporal's PR-review retrieval is now lexical-only; semantic recall coverage is gone by design.
+- `packages/temporal/src/activities/fetcher.ts` (unrelated HA fetcher) keeps its baseline entry — only the deleted `daemon/watch.ts` entry was removed.
