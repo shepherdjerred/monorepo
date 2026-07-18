@@ -6,7 +6,17 @@ import type { SendStats, StreamObserver } from "./StreamObserver.js";
 
 export class BaseMediaStream extends Writable {
   private _pts: number | undefined;
-  private _syncTolerance = 20;
+  /**
+   * Max sender-side A/V pts divergence (ms) before the ahead/behind correction engages. Must
+   * exceed ordinary demux interleave jitter — one video frame (33 ms at 30 fps) plus one audio
+   * frame (20 ms Opus) — or big-packet scenes trip the correction on every few frames, and each
+   * correction's `resetTimingCompensation()` re-anchors the schedule, permanently locking in the
+   * wait's overshoot. At the old 20 ms tolerance that leak sustained ~0.94x production on
+   * heavy-bitrate scenes (2026-07-18 stutter investigation). Sender-side skew at this scale is
+   * invisible to viewers: the receiver schedules frames by RTP timestamp; this tolerance only
+   * bounds sender buffer divergence.
+   */
+  private _syncTolerance = 60;
   private _loggerSend: Log;
   private _loggerSync: Log;
   private _loggerSleep: Log;
@@ -168,18 +178,29 @@ export class BaseMediaStream extends Writable {
       this.resetTimingCompensation();
       callback(null);
     } else if (this.sync && this.isAhead()) {
+      // Sleep only the excess beyond tolerance (re-checked each iteration as the partner stream
+      // advances) instead of whole-frametime quanta: the loop exits within ~1 ms of the tolerance
+      // boundary, so the resetTimingCompensation() below locks in timer slop instead of up to a
+      // full frametime per event. The old whole-frametime wait leaked ≤ 33 ms of schedule per
+      // ahead-event, which on heavy scenes (frequent events) compounded into sustained sub-realtime
+      // production — the 2026-07-18 stutter root cause.
       do {
+        const delta = this.ptsDelta();
+        if (delta === undefined) break;
+        const excess = delta - this.syncTolerance;
+        if (excess <= 0) break;
         this._loggerSync.debug(
           {
             stats: {
               pts: this.pts,
               pts_other: this.syncStream?.pts,
+              excess,
               frametime,
             },
           },
-          `Stream is ahead. Waiting for ${frametime}ms`,
+          `Stream is ahead. Waiting for ${excess}ms`,
         );
-        await setTimeout(frametime);
+        await setTimeout(Math.min(excess, frametime));
       } while (this.sync && this.isAhead());
       this.resetTimingCompensation();
       callback(null);
