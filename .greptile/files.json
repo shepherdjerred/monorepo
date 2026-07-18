@@ -31,7 +31,7 @@
     },
     {
       "path": "packages/toolkit/AGENTS.md",
-      "description": "Toolkit CLI conventions: gh CLI for all GitHub operations (no embedded tokens), lightpanda + PinchTab for fetch, structured logging, Bun shell ($), env-var-driven config, no secrets on disk, LanceDB for recall index.",
+      "description": "Toolkit CLI conventions: gh CLI for all GitHub operations (no embedded tokens), structured logging, Bun shell ($), env-var-driven config, no secrets on disk.",
       "scope": ["packages/toolkit/**"]
     },
     {

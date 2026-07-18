@@ -10,7 +10,6 @@ import type {
   RetrievedSymbolForPrompt,
 } from "#shared/pr-review/context.ts";
 import type { FileBlockDiff } from "#lib/block-diff.ts";
-import { runToolkitRecallSearch } from "#lib/hybrid-retrieval.ts";
 import {
   cleanupWorkdir as cleanupWorkdirImpl,
   defaultWorkdirDeps,
@@ -54,7 +53,7 @@ export type BootstrapResult = {
   /**
    * Phase 5 retrieval output (related symbols + snippets). Empty until the
    * bootstrap rewrite clones the PR head into the workdir and invokes
-   * `buildSymbolIndex` + `hybridSearch`; the activity / runner already
+   * `buildSymbolIndex` + `retrieveSymbols`; the activity / runner already
    * threads it through so we can light up retrieval without further plumbing
    * once the workdir lands.
    */
@@ -392,7 +391,6 @@ async function bootstrapContextImpl(
           env: { GH_TOKEN: token },
           deps: {
             workdir: defaultWorkdirDeps,
-            recallSearch: runToolkitRecallSearch,
           },
           heartbeat: sendHeartbeat,
         });
