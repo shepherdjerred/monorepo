@@ -245,8 +245,11 @@ async function main(): Promise<void> {
   // bun publish reads the token from the NPM_TOKEN env var via a static
   // `.npmrc` whose value is a literal `${NPM_TOKEN}` — bun substitutes it at
   // parse time so the secret bytes never land on disk. This avoids the
-  // "must not write tokens to files" rule. Written into the package dir.
-  const npmrcPath = `${pkgDir}/.npmrc`;
+  // "must not write tokens to files" rule. Must be written at the WORKSPACE
+  // ROOT: in a workspace, bun resolves .npmrc from the project root (where
+  // bun.lock lives) and ignores one in the package dir ("missing
+  // authentication", main build 5633).
+  const npmrcPath = `${import.meta.dir}/../.npmrc`;
   await Bun.write(npmrcPath, "//registry.npmjs.org/:_authToken=${NPM_TOKEN}\n");
   try {
     await run(
