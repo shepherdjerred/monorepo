@@ -16,12 +16,11 @@ export type RunOptions = {
    */
   capture?: boolean;
   /**
-   * When true, do NOT echo captured stdout back to the parent's stdout. Only
-   * meaningful with `capture: true`. Use this for commands whose stdout is a
-   * secret (e.g. a minted token) — echoing captured stdout would leak the
-   * secret into the build log even though the caller "captured" it.
+   * When true (with capture), do NOT echo the captured stdout back to the
+   * terminal: the output is a credential (e.g. a minted GitHub token) and must
+   * never appear in CI logs.
    */
-  quiet?: boolean;
+  secret?: boolean;
 };
 
 export type RunResult = {
@@ -70,10 +69,10 @@ export async function runAllowExit(
   });
   const stdout = capture ? await new Response(proc.stdout).text() : "";
   const exitCode = await proc.exited;
-  if (capture && opts.quiet !== true) {
+  if (capture && opts.secret !== true) {
     // Echo captured stdout so the operator still sees it in the terminal.
-    // Suppressed when `quiet` is set — used for secret-bearing output that must
-    // never reach the log.
+    // Suppressed when `secret` is set — used for secret-bearing output that
+    // must never reach the log.
     process.stdout.write(stdout);
   }
   return { stdout, exitCode };
