@@ -1,29 +1,37 @@
 # Custom mcp-gateway image.
 #
 # Translated from the old Dagger recipe (buildMcpGatewayImageHelper). A Node
-# builder clones + builds edstem-mcp (rob-9/edstem-mcp) at a pinned commit — it
+# builder fetches + builds edstem-mcp (rob-9/edstem-mcp) at a pinned commit — it
 # is git-only, has no committed dist, and no build-on-install, so npx-from-git
 # fails — then the prebuilt server is copied into the tbxark/mcp-proxy runtime
 # image. The gateway config runs it via `node /opt/edstem-mcp/dist/index.js`.
 # The base already ships node + python/uv, so the other MCP servers keep running
 # via npx/uvx at runtime.
 
-# Stage 1 — clone + build edstem-mcp into /opt/edstem-mcp.
+# Stage 1 — fetch + build edstem-mcp into /opt/edstem-mcp.
 # renovate: datasource=docker depName=node
 FROM node:24-slim@sha256:cb4e8f7c443347358b7875e717c29e27bf9befc8f5a26cf18af3c3dec80e58c5 AS builder
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends git ca-certificates \
+  && apt-get install -y --no-install-recommends curl ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
 # Pinned commit of rob-9/edstem-mcp. Bump to pick up upstream fixes (changes the
 # build cache key). Not renovate-managed (git-only dep, no tags to track).
 ARG EDSTEM_MCP_COMMIT=661a3c498c82f47b1d352410b53fa06c6806c949
 
+# Tarball download instead of a full git clone: a clone transfers the whole
+# history and died mid-transfer on a connection reset (build 5656); the
+# commit-pinned archive is a single small HTTP fetch and curl retries
+# transient network failures itself.
 RUN set -e \
-  && git clone https://github.com/rob-9/edstem-mcp /opt/edstem-mcp \
+  && curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 \
+       "https://github.com/rob-9/edstem-mcp/archive/${EDSTEM_MCP_COMMIT}.tar.gz" \
+       -o /tmp/edstem-mcp.tar.gz \
+  && mkdir /opt/edstem-mcp \
+  && tar -xzf /tmp/edstem-mcp.tar.gz -C /opt/edstem-mcp --strip-components=1 \
+  && rm /tmp/edstem-mcp.tar.gz \
   && cd /opt/edstem-mcp \
-  && git checkout "${EDSTEM_MCP_COMMIT}" \
   && npm ci \
   && npm run build \
   && npm prune --omit=dev
