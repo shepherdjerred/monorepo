@@ -118,3 +118,6 @@ packages/streambot/scratch/
 # moon
 .moon/cache
 .moon/docker
+
+# transient bun-publish auth indirection (scripts/publish-npm.ts writes + removes it)
+.npmrc

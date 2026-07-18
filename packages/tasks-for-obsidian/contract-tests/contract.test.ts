@@ -289,8 +289,10 @@ describe("pomodoro & calendar", () => {
   });
 
   test("calendar events parse", async () => {
+    // The server's default calendar window is [today, today+30d] — the due
+    // date must be dynamic or the test starts failing once the date passes.
     const withDue = unwrap(
-      await client.createTask({ title: "Due event", due: "2026-07-15" }),
+      await client.createTask({ title: "Due event", due: localTodayYmd() }),
     );
     const events = unwrap(await client.getCalendarEvents());
     expect(events.some((e) => e.title.includes("Due event"))).toBe(true);
