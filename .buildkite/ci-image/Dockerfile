@@ -1,9 +1,10 @@
+# syntax=docker/dockerfile:1.7-labs
 # CI toolchain image — baked from the repo's .mise.toml so agents run the
-# EXACT tool versions developers run. Rebuild when .mise.toml changes (the
-# pipeline's build-ci-image step keys its registry cache on it); no VERSION
-# file, no commit-back dance — the image tag is the .mise.toml content hash.
+# EXACT tool versions developers run. Rebuilt every main build via registry
+# cache (near-free when unchanged); the toolchain layers invalidate on
+# .mise.toml changes and the bun-cache layer on manifest/lockfile changes.
 
-FROM debian:bookworm-slim
+FROM debian:bookworm-slim AS base
 
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     ca-certificates curl git unzip xz-utils zstd python3 ripgrep rsync \
@@ -43,5 +44,27 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ARG CLAUDE_CODE_VERSION=2.1.175
 ENV BUN_INSTALL=/usr/local
 RUN bun add -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" && claude --version
+
+# Throwaway stage: warm the bun download cache from the workspace manifests
+# (same enumeration as the app images' install layer). Only /opt/bun-cache is
+# copied into the final image — node_modules and the manifest tree are
+# discarded. CI's per-step `bun install --frozen-lockfile` then resolves
+# packages from local disk: measured 13s warm vs 25-72s network-cold, ~11-15
+# installs per main build. A stale cache (lockfile changed since the last
+# image push) degrades gracefully — bun fetches the delta from the network.
+FROM base AS bun-cache-warm
+ENV BUN_INSTALL_CACHE_DIR=/opt/bun-cache
+COPY --parents \
+  package.json bun.lock bunfig.toml patches/ scripts/package.json \
+  packages/*/package.json packages/*/packages/*/package.json \
+  packages/homelab/src/cdk8s/package.json \
+  packages/homelab/src/helm-types/package.json \
+  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
+  ./
+RUN bun install --frozen-lockfile
+
+FROM base
+COPY --from=bun-cache-warm /opt/bun-cache /opt/bun-cache
+ENV BUN_INSTALL_CACHE_DIR=/opt/bun-cache
 
 CMD ["bash"]
