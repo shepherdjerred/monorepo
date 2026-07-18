@@ -1,0 +1,6 @@
+apiVersion: v2
+name: turbo-cache
+description: Turborepo remote cache server (ducktors/turborepo-remote-cache, R2-backed)
+type: application
+version: "$version"
+appVersion: "$appVersion"
