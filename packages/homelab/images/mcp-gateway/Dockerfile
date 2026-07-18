@@ -13,25 +13,29 @@
 FROM node:24-slim@sha256:cb4e8f7c443347358b7875e717c29e27bf9befc8f5a26cf18af3c3dec80e58c5 AS builder
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends curl ca-certificates \
+  && apt-get install -y --no-install-recommends git ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
 # Pinned commit of rob-9/edstem-mcp. Bump to pick up upstream fixes (changes the
 # build cache key). Not renovate-managed (git-only dep, no tags to track).
 ARG EDSTEM_MCP_COMMIT=661a3c498c82f47b1d352410b53fa06c6806c949
 
-# Tarball download instead of a full git clone: a clone transfers the whole
-# history and died mid-transfer on a connection reset (build 5656); the
-# commit-pinned archive is a single small HTTP fetch and curl retries
-# transient network failures itself.
+# Depth-1 fetch of the pinned commit instead of a full clone: the full-history
+# transfer died mid-clone on a connection reset (build 5656). A single-commit
+# fetch is a small transfer, git still cryptographically verifies the objects
+# against the pinned SHA (unlike a tarball, whose auto-generated checksum
+# GitHub does not guarantee stable), and transient network failures get a
+# bounded retry.
 RUN set -e \
-  && curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 \
-       "https://github.com/rob-9/edstem-mcp/archive/${EDSTEM_MCP_COMMIT}.tar.gz" \
-       -o /tmp/edstem-mcp.tar.gz \
-  && mkdir /opt/edstem-mcp \
-  && tar -xzf /tmp/edstem-mcp.tar.gz -C /opt/edstem-mcp --strip-components=1 \
-  && rm /tmp/edstem-mcp.tar.gz \
+  && git init -q /opt/edstem-mcp \
   && cd /opt/edstem-mcp \
+  && git remote add origin https://github.com/rob-9/edstem-mcp \
+  && for i in 1 2 3 4 5; do \
+       if git fetch -q --depth 1 origin "${EDSTEM_MCP_COMMIT}"; then break; fi; \
+       if [ "$i" = 5 ]; then echo "git fetch failed after 5 attempts" >&2; exit 1; fi; \
+       sleep 5; \
+     done \
+  && git checkout -q FETCH_HEAD \
   && npm ci \
   && npm run build \
   && npm prune --omit=dev
