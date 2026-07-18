@@ -3,13 +3,15 @@
  * structured logs. The fork computes these signals but otherwise only writes them to debug logs;
  * this is the seam that surfaces them.
  *
- * The headline signal is the ffmpeg realtime ratio. ffmpeg is not readrate-limited, so `speed`
- * reflects raw transcode throughput: a sustained value below ~1.0 means the pipeline cannot produce
- * frames as fast as realtime (decode/transcode-bound — the 4K-software-decode case) and playback
- * will stutter once the startup buffer drains. The send-path frametime ratio covers the
- * complementary send-bound case. We derive the ratio from `timemark` (media time) advance vs
- * wall-clock between consecutive progress callbacks rather than trusting fluent-ffmpeg to parse
- * `speed`.
+ * The headline signal is the ffmpeg realtime ratio. Since PR #1196 ffmpeg IS readrate-limited
+ * (`-readrate 1`), so ~1.0 is the steady-state ceiling, not idle headroom: values above 1.0 appear
+ * only during the initial burst or while catching back up to the wall-clock line after a dip. A
+ * sustained value below ~1.0 means production fell behind realtime — either genuinely
+ * transcode-bound (the 4K-software-decode case) or consumer backpressure through the zero-slack
+ * NUT pipe (see packages/docs/logs/2026-07-18_streambot-f1-stutter-investigation.md). The
+ * send-path frametime ratio covers the complementary send-bound case. We derive the ratio from
+ * `timemark` (media time) advance vs wall-clock between consecutive progress callbacks rather than
+ * trusting fluent-ffmpeg to parse `speed`.
  */
 
 import type { StreamObserver } from "@shepherdjerred/discord-video-stream";
