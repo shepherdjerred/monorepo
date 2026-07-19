@@ -26,6 +26,7 @@ abbr btop "sudo btop"
 abbr less ov
 abbr ping gping
 abbr claude "claude --allow-dangerously-skip-permissions"
+abbr oc opencode
 abbr finder "open -a Finder"
 
 # Set shell to fish
@@ -64,7 +65,7 @@ set -gx HASS_BASE_URL 'https://homeassistant.sjer.red'
 {{ end -}}
 # Keep provider API keys available to other tools, but never pass them to OpenCode.
 function opencode --wraps opencode
-    env -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u OPENAI_API_KEY (command -s opencode) $argv
+    env -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u OPENAI_API_KEY (command -s opencode) --auto $argv
 end
 {{ if lookPath "op" -}}
 # Turborepo remote cache (self-hosted ducktors server on the tailnet).
