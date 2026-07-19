@@ -101,23 +101,32 @@ export async function installScoutWorkspace(repoDir: string): Promise<void> {
  * `~/.gitconfig` or a differently configured lefthook could point
  * `core.hooksPath` at an arbitrary directory outside `.git/hooks`, in which
  * case the delete above silently misses every hook file and this "disarm"
- * would do nothing. Unset `core.hooksPath` in the clone's local config too
- * (checking first, since `git config --unset-all` on an unset key exits
- * non-zero and would trip `runCommand`'s fail-fast check), so no hook runs
- * regardless of where it was configured to live.
+ * would do nothing.
+ *
+ * `git config --get core.hooksPath` reads the *effective* value (local, then
+ * global, then system), but a plain `git config --unset-all core.hooksPath`
+ * writes to the *local* file only. That mismatch makes an unset-based
+ * approach unsafe two ways, confirmed empirically against a repo with a
+ * global `core.hooksPath`: (1) if the value is inherited from global/system
+ * with no local override, there is nothing local to unset and `--unset-all`
+ * exits non-zero, which trips `runCommand`'s fail-fast throw and aborts the
+ * bot commit entirely; (2) if a local override coexists with a global value,
+ * unsetting the local override doesn't touch the global one, so Git falls
+ * back to the still-configured global hooks path and the disarm is a no-op.
+ *
+ * Instead, force the *local* `core.hooksPath` to point at `.git/hooks` (now
+ * emptied by the delete above). Git config precedence is local > global >
+ * system, so this local value always wins over any inherited hooksPath —
+ * there is nothing to detect or unset, and the destination directory is
+ * guaranteed empty.
  */
 export async function disarmGitHooks(repoDir: string): Promise<void> {
   await runCommand(
     ["find", ".git/hooks", "-type", "f", "!", "-name", "*.sample", "-delete"],
     { cwd: repoDir },
   );
-  const hooksPath = await runCommand(
-    ["git", "config", "--get", "core.hooksPath"],
-    { cwd: repoDir, allowNonZeroExit: true },
+  await runCommand(
+    ["git", "config", "--local", "core.hooksPath", ".git/hooks"],
+    { cwd: repoDir },
   );
-  if (hooksPath !== "") {
-    await runCommand(["git", "config", "--unset-all", "core.hooksPath"], {
-      cwd: repoDir,
-    });
-  }
 }
