@@ -33,7 +33,11 @@ import {
   type ChannelId,
   type GuildId,
 } from "@shepherdjerred/streambot/types/ids.ts";
-import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
+import {
+  getErrorMessage,
+  isStaleInteractionError,
+} from "@shepherdjerred/streambot/util/errors.ts";
+import * as Sentry from "@sentry/bun";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 const log = logger.child("command-bot");
@@ -480,15 +484,35 @@ export class CommandBot {
         error: getErrorMessage(error),
       });
       const message = "Something went wrong handling that command.";
-      await (interaction.replied || interaction.deferred
-        ? interaction.followUp({
-            content: message,
-            flags: MessageFlags.Ephemeral,
-          })
-        : interaction.reply({
-            content: message,
-            flags: MessageFlags.Ephemeral,
-          }));
+      // This ack is best-effort: `replied`/`deferred` only flip after a
+      // *successful* ack, so when the original reply was delivered but its
+      // REST call rejected, this branch double-acks (40060). safeHandle is
+      // dispatched fire-and-forget, so anything thrown here becomes an
+      // unhandled rejection — handle every outcome explicitly instead.
+      try {
+        await (interaction.replied || interaction.deferred
+          ? interaction.followUp({
+              content: message,
+              flags: MessageFlags.Ephemeral,
+            })
+          : interaction.reply({
+              content: message,
+              flags: MessageFlags.Ephemeral,
+            }));
+      } catch (ackError) {
+        if (isStaleInteractionError(ackError)) {
+          log.warn("error ack skipped: interaction stale", {
+            command: interaction.commandName,
+            error: getErrorMessage(ackError),
+          });
+        } else {
+          log.error("error ack failed", {
+            command: interaction.commandName,
+            error: getErrorMessage(ackError),
+          });
+          Sentry.captureException(ackError);
+        }
+      }
     }
   }
 }

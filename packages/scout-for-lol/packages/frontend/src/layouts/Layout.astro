@@ -52,6 +52,18 @@ const { title, description, image, noindex } = Astro.props;
         dsn: "https://337945d2208840dca4a573be311a1bbb@bugsink.sjer.red/1",
         release: sentryRelease,
         environment: import.meta.env.MODE,
+        // Safari reports a blocked/failed third-party fetch as the generic
+        // "TypeError: Load failed" with no useful frames, so it slips past the
+        // beforeSend Pinterest matcher below — drop the frameless generic
+        // network errors here. Our own code never surfaces these strings as
+        // page errors: app fetches are handled (tRPC/react-query), and a
+        // genuine app-side network failure is not actionable from Bugsink
+        // anyway.
+        ignoreErrors: [
+          /^TypeError: Load failed$/,
+          /^TypeError: Failed to fetch$/,
+          /^TypeError: NetworkError when attempting to fetch resource\.$/,
+        ],
         beforeSend(event) {
           // Drop third-party Pinterest conversion-tag fetch failures. The
           // tag's request to ct.pinterest.com fails whenever an ad-blocker or
