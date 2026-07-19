@@ -261,6 +261,7 @@ steps:
       export PATH="/root/.bun/bin:$(dirname "$(find /usr/local/texlive -name xelatex | head -1)"):$$PATH"
       bun install --frozen-lockfile
       # PR gate: same affectedness skip as the e2e step (fail-loud helper).
+      # Main always runs — the sites deploy consumes this step's PDF artifact.
       if [ "$BUILDKITE_BRANCH" != "main" ]; then
         verdict=$(bun scripts/is-affected.ts '@shepherdjerred/resume')
         if [ "$$verdict" = "unaffected" ]; then
@@ -269,6 +270,13 @@ steps:
         fi
       fi
       bunx turbo run build --filter='@shepherdjerred/resume'
+    # The deploy-sites step ships this PDF: resume.pdf is a build artifact
+    # (gitignored, not committed) and xelatex only exists in this container.
+    # Glob (not a literal path) so the unaffected-PR skip doesn't log a
+    # nothing-matched upload warning. A missing artifact can't slip through:
+    # deploy-sites' explicit `artifact download` fails hard, and this step
+    # never skips on main.
+    artifact_paths: "packages/resume/*.pdf"
     retry: *retry
     plugins:
       - kubernetes:
@@ -433,7 +441,7 @@ steps:
   - label: ":rocket: deploy sites"
     key: sites
     if: build.branch == pipeline.default_branch
-    depends_on: [verify, e2e]
+    depends_on: [verify, e2e, resume-build]
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
@@ -454,7 +462,12 @@ steps:
       # ships the dist as a build artifact; deploy it prebuilt.
       buildkite-agent artifact download "packages/sjer.red/dist/**/*" . --step e2e
       bun scripts/deploy-site.ts sjer.red --prebuilt
-      for site in resume webring cooklang-rich-preview stocks-sjer-red scout-frontend scout-frontend-beta better-skill-capped glitter; do
+      # resume can't build here either (xelatex only exists in the texlive
+      # container) — the resume-build step ships resume.pdf as a build
+      # artifact; deploy it prebuilt. The PDF is gitignored, not committed.
+      buildkite-agent artifact download "packages/resume/resume.pdf" . --step resume-build
+      bun scripts/deploy-site.ts resume --prebuilt
+      for site in webring cooklang-rich-preview stocks-sjer-red scout-frontend scout-frontend-beta better-skill-capped glitter; do
         bun scripts/deploy-site.ts "$$site"
       done
     retry: *retry
