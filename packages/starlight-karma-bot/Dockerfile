@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7-labs
+# syntax=docker/dockerfile:1.7-labs@sha256:b99fecfe00268a8b556fad7d9c37ee25d716ae08a5d7320e6d51c4dd83246894
 # starlight-karma-bot image. Build context is the REPO ROOT (single Bun
 # workspace, one root bun.lock, isolated linker). Built via `bun run docker:build`
 # in this package (which passes `-f Dockerfile ../..`).
@@ -6,7 +6,7 @@
 # Replaces the old per-package `COPY package.json bun.lock` + `bun install` stage:
 # that world (per-package lockfiles / file: deps) is gone. We now COPY every
 # workspace manifest and run one root `bun install --frozen-lockfile`.
-FROM oven/bun:1.3.14 AS base
+FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS base
 WORKDIR /app
 
 # Manifests-only install layer: this ~6 GB `bun install` layer only invalidates

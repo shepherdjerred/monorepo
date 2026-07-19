@@ -112,6 +112,64 @@ export const sendLateFramesTotal = new Counter({
   registers: [register],
 });
 
+/**
+ * Sender-side schedule lag: how far the paced send path is behind its absolute schedule
+ * (wall-elapsed minus media-elapsed since the pacing anchor). THE direct measure of viewer-facing
+ * lateness — sustained growth here is what the viewer experiences as stutter, regardless of what
+ * the production-side `speed_ratio` shows. Added after the 2026-07-18 investigation, where this
+ * had to be inferred from production-rate proxies.
+ */
+export const playbackBehindSeconds = new Gauge({
+  name: "streambot_playback_behind_seconds",
+  help: "Sender-side schedule lag in seconds (wall-clock elapsed minus media-time elapsed since the pacing anchor); sustained growth = viewer-visible stutter",
+  labelNames: ["kind"] as const,
+  registers: [register],
+});
+
+/**
+ * Frames sent > 200 ms behind their absolute schedule, by stream kind. 200 ms (not one frametime)
+ * because per-frame lateness oscillates by the NUT interleave jitter (~1 video frame), which
+ * exceeds the audio frame budget — a tighter threshold counts ordinary jitter as lateness.
+ */
+export const framesBehindScheduleTotal = new Counter({
+  name: "streambot_frames_behind_schedule_total",
+  help: "Frames sent more than 200ms behind their pacing schedule (viewer-meaningful lateness), by stream kind",
+  labelNames: ["kind"] as const,
+  registers: [register],
+});
+
+/**
+ * A/V sync corrections taken by the pacer (each correction re-anchors the pacing schedule). The
+ * 2026-07-18 stutter root cause lived in this previously-uninstrumented path: frequent ahead
+ * corrections each leaked schedule time. High rates here mean the sync tolerance is being
+ * exceeded by demux interleave skew.
+ */
+export const sendSyncEventsTotal = new Counter({
+  name: "streambot_send_sync_events_total",
+  help: "A/V sync corrections taken by the send pacer, by stream kind and direction (ahead = waited for partner, behind = skipped sleep)",
+  labelNames: ["kind", "direction"] as const,
+  registers: [register],
+});
+
+/** Wall-clock time spent waiting in ahead-sync corrections. rate() = fraction of time lost to sync waits. */
+export const sendSyncWaitSecondsTotal = new Counter({
+  name: "streambot_send_sync_wait_seconds_total",
+  help: "Cumulative wall-clock seconds the send pacer spent waiting in A/V ahead-sync corrections, by stream kind",
+  labelNames: ["kind"] as const,
+  registers: [register],
+});
+
+/**
+ * Demux→pacer queue depth (buffered packets). Empty during a production dip = producer starved;
+ * full = the pacer is the backpressure source. Sampled ~5 s by the fork's attachPipeline.
+ */
+export const pipelineQueueDepth = new Gauge({
+  name: "streambot_pipeline_queue_depth",
+  help: "Buffered packet count between the demuxer and the paced send stream, by stream kind (empty during dips = producer-starved; full = consumer-paced)",
+  labelNames: ["kind"] as const,
+  registers: [register],
+});
+
 // --- hardware vs software ---------------------------------------------------
 
 /** 1 when the active ffmpeg command applied the VAAPI hardware-decode flags, else 0. */

@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7-labs
+# syntax=docker/dockerfile:1.7-labs@sha256:b99fecfe00268a8b556fad7d9c37ee25d716ae08a5d7320e6d51c4dd83246894
 # Headless Discord Plays Pokémon. Build context is the REPO ROOT (single Bun
 # workspace, one root bun.lock, isolated linker, workspace:* deps). Built via
 # `bun run docker:build` in packages/discord-plays-pokemon/packages/backend
@@ -15,7 +15,7 @@
 # uses clang wasm32-unknown-unknown + wasm-ld (LLVM, NOT emscripten): trixie's
 # clang-19 produces a Bun-loadable binary (bookworm's clang-14 does not).
 # ---------------------------------------------------------------------------
-FROM debian:trixie-slim AS wasm-builder
+FROM debian:trixie-slim@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7ab59f2add76a7bd AS wasm-builder
 
 # Pinned commit of ottohg/pokeemerald-wasm. Kept in sync with the OTTOHG_SHA in
 # packages/discord-plays-pokemon/scripts/build-wasm.sh (the single source of
@@ -66,7 +66,7 @@ RUN WASM_CC=clang WASM_LD=wasm-ld make wasm \
 # ---------------------------------------------------------------------------
 # Stage 2 — the headless Bun runtime.
 # ---------------------------------------------------------------------------
-FROM oven/bun:1.3.14 AS runtime
+FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS runtime
 
 # System deps:
 # - ffmpeg: discord-video-stream (fluent-ffmpeg) encodes the rawvideo frame feed.
@@ -82,6 +82,12 @@ RUN set -e; \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+
+# Goal mode shells out to Codex. BUN_INSTALL=/usr/local drops the binary into a
+# world-readable bin on PATH. Kept ABOVE the manifest/source layers: it needs
+# only bun + network, and a source edit must not re-download it.
+ENV BUN_INSTALL=/usr/local
+RUN bun add -g @openai/codex@0.139.0 && codex --version
 
 # Manifests-only install layer: this ~6 GB `bun install` layer only invalidates
 # when a manifest/lockfile/patch changes, not on every source edit.
@@ -109,11 +115,6 @@ COPY . .
 # nested backend); llm-models' catalog resolves to dist too.
 RUN cd packages/discord-stream-lifecycle && bun run build \
   && cd /app/packages/llm-models && bun run build
-
-# Goal mode shells out to Codex. BUN_INSTALL=/usr/local drops the binary into a
-# world-readable bin on PATH.
-ENV BUN_INSTALL=/usr/local
-RUN bun add -g @openai/codex@0.139.0 && codex --version
 
 # Make the goal-mode control CLI available to operators and spawned Codex loops.
 RUN install -D -m 0755 \

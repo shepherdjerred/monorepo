@@ -38,15 +38,30 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "StreambotEncoderProducerAhead",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "avg_over_time(streambot_ffmpeg_speed_ratio[1m]) > 1.10 and streambot_stream_active == 1",
+            "avg_over_time(streambot_ffmpeg_speed_ratio[1m]) > 1.25 and streambot_stream_active == 1",
           ),
           for: "1m",
           labels: { severity: "warning", category: "streaming" },
           annotations: {
             summary:
-              "ffmpeg producing > 1.10× realtime — JS-side buffer queue is growing",
+              "ffmpeg producing > 1.25× realtime sustained — readrate cap not holding",
             description: escapePrometheusTemplate(
-              "The root cause of the 2026-06-14 stutter incident: ffmpeg's `-readrate` cap is missing or higher than the realtime send loop can consume. NUT-pipe consumer buffers accumulate, V8/JSC major GC pauses ≥ 200 ms, Discord viewers see ~1 s freezes. Set STREAM_READRATE=1.0 (the default) on streambot's deployment if this fires.",
+              "The root cause of the 2026-06-14 stutter incident: ffmpeg's `-readrate` cap is missing or higher than the realtime send loop can consume. NUT-pipe consumer buffers accumulate, V8/JSC major GC pauses ≥ 200 ms, Discord viewers see ~1 s freezes. Set STREAM_READRATE=1.0 (the default) on streambot's deployment if this fires. Threshold is 1.25 (not 1.10) because bounded bursts above 1.0 are LEGITIMATE since PR #1542: the readrate_initial_burst pre-roll and post-dip catch-ups to the wall-clock line both briefly exceed realtime by design.",
+            ),
+          },
+        },
+        {
+          alert: "StreambotPlaybackBehindSchedule",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            "max(streambot_playback_behind_seconds) > 1 and on() streambot_stream_active == 1",
+          ),
+          for: "1m",
+          labels: { severity: "critical", category: "streaming" },
+          annotations: {
+            summary:
+              "Send pacer > 1 s behind schedule — viewers are experiencing stutter",
+            description: escapePrometheusTemplate(
+              "The direct viewer-facing stutter signal (added after the 2026-07-18 investigation): the paced send path is running more than 1 s behind its absolute schedule while a stream is active. Unlike speed_ratio (a production-side proxy), sustained growth here IS the user experience. Check the Streambot dashboard's 'Playback behind schedule' and 'Demux→pacer queue depth' panels: empty queues = producer-starved (transcode/readrate), full queues = pacer/sync-correction loss (see streambot_send_sync_events_total).",
             ),
           },
         },
