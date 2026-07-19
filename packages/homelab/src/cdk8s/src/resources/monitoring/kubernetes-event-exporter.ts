@@ -86,10 +86,16 @@ export function createKubernetesEventExporter(chart: Chart) {
       "config.yaml": escapeGoTemplateForJson(`
 logLevel: info
 logFormat: json
-maxEventAgeSeconds: 60
+# 300 (not 60): at 60 the exporter discarded slightly-stale events wholesale — during the
+# 2026-07-18 streambot investigation every pod-replacement event aged out before processing,
+# leaving pod-kill causes unexplainable from telemetry. 5 min absorbs informer lag/restarts.
+maxEventAgeSeconds: 300
 route:
   drop:
-    # Drop Normal events - only keep Warning
+    # Drop Normal events - only keep Warning. NOTE: this also drops Normal pod-lifecycle events
+    # (Killing/Scheduled/Started), so pod deletions remain invisible here by design — see
+    # packages/docs/todos/streambot-stutter-observability-followup.md before relying on Loki
+    # k8s-events for pod forensics.
     - type: "Normal"
   routes:
     # Route Warning events to Loki

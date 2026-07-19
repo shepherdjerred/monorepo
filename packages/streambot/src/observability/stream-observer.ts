@@ -22,9 +22,14 @@ import {
   ffmpegOutTimeSecondsTotal,
   ffmpegProgressAgeSeconds,
   ffmpegSpeedRatio,
+  framesBehindScheduleTotal,
   hwDecodeEngaged,
+  pipelineQueueDepth,
+  playbackBehindSeconds,
   sendFrametimeRatio,
   sendLateFramesTotal,
+  sendSyncEventsTotal,
+  sendSyncWaitSecondsTotal,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
 
 const log = logger.child("streamer:metrics");
@@ -104,6 +109,15 @@ export function createStreamObserver(
       clearInterval(progressAgeTimer);
       progressAgeTimer = undefined;
     }
+    // Clear segment-scoped gauges so their last values don't outlive the stream. Without this,
+    // stale readings survive indefinitely (a frozen 1.397x speed_ratio manufactured a false
+    // "healthy 1.4x baseline" during the 2026-07-18 investigation — the bug reproduced 3×).
+    ffmpegSpeedRatio.reset();
+    ffmpegFps.reset();
+    ffmpegBitrateKbps.reset();
+    ffmpegProgressAgeSeconds.reset();
+    playbackBehindSeconds.reset();
+    pipelineQueueDepth.reset();
   };
 
   const observer: StreamObserver = {
@@ -168,6 +182,30 @@ export function createStreamObserver(
       if (stats.ratio > 1) {
         sendLateFramesTotal.inc({ kind: stats.kind });
       }
+      playbackBehindSeconds.set({ kind: stats.kind }, stats.behindMs / 1000);
+      // 200 ms (≈ 6 video frames), NOT one frametime: per-frame behindMs oscillates by the NUT
+      // interleave jitter (~1 video frame, 33 ms), which exceeds audio's 20 ms budget — a
+      // one-frametime threshold counts ordinary jitter on ~half of audio frames. 200 ms is where
+      // lateness becomes viewer-meaningful.
+      if (stats.behindMs > 200) {
+        framesBehindScheduleTotal.inc({ kind: stats.kind });
+      }
+      if (stats.syncEvent !== undefined) {
+        sendSyncEventsTotal.inc({
+          kind: stats.kind,
+          direction: stats.syncEvent,
+        });
+      }
+      if (stats.syncWaitMs > 0) {
+        sendSyncWaitSecondsTotal.inc(
+          { kind: stats.kind },
+          stats.syncWaitMs / 1000,
+        );
+      }
+    },
+    onQueueDepth: (depth) => {
+      pipelineQueueDepth.set({ kind: "video" }, depth.video);
+      pipelineQueueDepth.set({ kind: "audio" }, depth.audio);
     },
   };
 

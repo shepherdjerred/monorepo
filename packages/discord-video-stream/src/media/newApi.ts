@@ -868,6 +868,24 @@ export async function attachPipeline(
 
   const vStream = new VideoStream(conn, false, options.observer);
   video.stream.pipe(vStream);
+  if (options.observer?.onQueueDepth) {
+    // Periodic demux→pacer queue depths (objectMode lengths = buffered packet counts). Empty
+    // queues during a production dip mean the producer starved; full queues mean the pacer is the
+    // backpressure source — the distinction that required in-pod thread sampling to establish
+    // during the 2026-07-18 stutter investigation.
+    // The demux streams are typed Readable but are concretely PassThrough; the writable-side
+    // buffer (hwm 128) holds most of the queued packets, so include it when available.
+    const bufferedPackets = (s: Readable): number =>
+      s.readableLength + (s instanceof PassThrough ? s.writableLength : 0);
+    const queueDepthTimer = setInterval(() => {
+      options.observer?.onQueueDepth?.({
+        video: bufferedPackets(video.stream),
+        audio: audio ? bufferedPackets(audio.stream) : 0,
+      });
+    }, 5000);
+    queueDepthTimer.unref();
+    cleanupFuncs.push(() => clearInterval(queueDepthTimer));
+  }
   // Hoisted so destroy() can tear the audio side down too (see the destroy closure below).
   let aStream: AudioStream | undefined;
   if (audio) {

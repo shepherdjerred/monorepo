@@ -4,44 +4,34 @@ status: active
 origin: packages/docs/logs/2026-07-18_streambot-f1-stutter-investigation.md
 ---
 
-# Streambot pacing observability + residual stutter follow-up
+# Streambot stutter observability — remaining items
 
-Follow-up to PR #1542 (pre-roll cushion + pacer schedule-leak fix). The fix
-took heavy-scene production from 0.942x mean (deficit growing ~3.5 s/min,
-unbounded) to ~0.99x with the deficit repeatedly recovering to zero — but the
-heaviest ~90 s stretch can still transiently exceed the ~6.7 s cushion
-(receiver pre-roll + vPipe), and today's metrics cannot say whether that is
-viewer-visible.
+Most of the observability follow-up shipped in PR #1542 itself (playback-behind
+gauge + 200ms-late counter, pacer sync-correction counters + wait-time counter,
+demux→pacer queue-depth gauge, dashboard panels + corrected speed-ratio
+semantics + pod-churn panel, `StreambotPlaybackBehindSchedule` alert,
+ProducerAhead threshold recalibrated for burst semantics, segment-gauge reset
+on stream end, event-exporter `maxEventAgeSeconds` 60→300). All new metrics
+were validated live in-cluster: counters flat in steady state, gauge ~0 during
+healthy playback, queue depth showing real buffering.
 
-## Work items (ranked by debugging time they would have saved)
+## Remaining
 
-1. **`streambot_playback_behind_seconds` gauge + frames-late counter** in the
-   pacer (`BaseMediaStream` knows pts-vs-wall-schedule at every frame). This
-   directly measures the user-facing symptom; every conclusion in the
-   investigation had to be inferred from production-side proxies.
-2. **Pacer sync-correction counters**: `pacer_sync_events_total{direction}`
-   and `pacer_schedule_reset_lost_ms_total`. The root cause lived in an
-   uninstrumented code path that computes and discards every relevant number.
-3. **Demux→pacer queue-depth gauge** (vPipe occupancy) — separates
-   producer-starved from consumer-paced dips in one panel.
-4. **Dashboard corrections**: speed-ratio panel description (1.0 = ceiling
-   since `-readrate 1`; >1.0 = catch-up, not headroom) and an alert on
-   `avg_over_time(streambot_ffmpeg_speed_ratio[5m]) < 0.97 and
-streambot_stream_active == 1`.
-5. **Gauge lifecycle**: reset ffmpeg-derived gauges on stream end (frozen-gauge
-   artifact repro'd 3×; it manufactured a false 1.4x "healthy baseline"), or
-   mask stale samples via `streambot_ffmpeg_progress_age_seconds`.
-6. **Homelab**: raise kubernetes-event-exporter `maxEventAgeSeconds`
-   (pod-delete causes were discarded); pod-churn panel via
-   `kube_pod_start_time` changes; eventually a node-level DRM-clients exporter
-   for whole-GPU tenancy (per-pod fdinfo is blind to other tenants and
-   `intel_gpu_top` is broken on Raptor Lake).
-
-## Residual investigation (needs item 1 first)
-
-With `playback_behind_seconds` in place, replay Avengers @ 1:41:00–1:56:00 and
-check whether the heaviest-tail transient deficit (14.4 s observed at 20 s
-sampling) actually starves the sender. If yes: first mitigation is raising
-`STREAM_READRATE_INITIAL_BURST` (env-only, no code); second is enlarging the
-demuxer vPipe `writableHighWaterMark` (128 packets today); third is hunting
-the remaining per-frame loss with the new counters.
+1. **Verify alert delivery**: `StreambotEncoderFallingBehind` (speed < 0.95,
+   critical) existed before 2026-07-17 and should have fired during the
+   Avengers window — the user was not notified. Check the alert's routing /
+   contact point before trusting the new `StreambotPlaybackBehindSchedule`.
+2. **Pod-lifecycle forensics gap**: the event exporter drops all Normal-type
+   events, which includes pod Killing/Scheduled/Started — pod deletions remain
+   untraceable in Loki. Needs a keep-route for Pod-kind Normal events (RE2 has
+   no negation, so this requires restructuring the drop rules).
+3. **Node-level DRM-clients exporter** for whole-GPU tenancy visibility
+   (per-pod fdinfo is blind to other tenants; `intel_gpu_top` is broken on
+   Raptor Lake — see intel/media-driver#1376).
+4. **Residual stutter check with the new gauge**: after PR #1542 deploys,
+   replay Avengers @ 1:41–1:56 and watch `streambot_playback_behind_seconds` /
+   `streambot_frames_behind_schedule_total` through the heaviest tail. If
+   lateness still materializes: raise `STREAM_READRATE_INITIAL_BURST`
+   (env-only), then consider enlarging the demuxer vPipe
+   `writableHighWaterMark` (128), then use the sync-correction counters to
+   hunt any remaining per-frame loss.

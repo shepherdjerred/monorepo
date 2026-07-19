@@ -147,15 +147,14 @@ export class BaseMediaStream extends Writable {
         `Frame takes too long to send (${(ratio * 100).toFixed(2)}% frametime)`,
       );
     }
-    this._observer?.onSendStats?.({
-      kind: this._kind,
-      ratio,
-      sendTime,
-      frametime,
-    });
-
     this._startTime ??= start_sendFrame;
     this._startPts ??= this._pts;
+    // Sender-side schedule lag: wall-clock elapsed minus media-time elapsed since the current
+    // anchor. The direct measure of viewer-facing lateness (reported via onSendStats below).
+    const behindMs = Math.max(
+      0,
+      end_sendFrame - this._startTime - (this._pts - this._startPts),
+    );
     const sleep = Math.max(
       0,
       this._pts -
@@ -163,9 +162,24 @@ export class BaseMediaStream extends Writable {
         frametime -
         (end_sendFrame - this._startTime),
     );
+    let syncWaitMs = 0;
+    let syncEvent: "ahead" | "behind" | undefined;
+    const reportSendStats = () => {
+      this._observer?.onSendStats?.({
+        kind: this._kind,
+        ratio,
+        sendTime,
+        frametime,
+        behindMs,
+        syncWaitMs,
+        ...(syncEvent !== undefined ? { syncEvent } : {}),
+      });
+    };
     if (this._noSleep || sleep === 0) {
+      reportSendStats();
       callback(null);
     } else if (this.sync && this.isBehind()) {
+      syncEvent = "behind";
       this._loggerSync.debug(
         {
           stats: {
@@ -176,14 +190,17 @@ export class BaseMediaStream extends Writable {
         "Stream is behind. Not sleeping for this frame",
       );
       this.resetTimingCompensation();
+      reportSendStats();
       callback(null);
     } else if (this.sync && this.isAhead()) {
+      syncEvent = "ahead";
       // Sleep only the excess beyond tolerance (re-checked each iteration as the partner stream
       // advances) instead of whole-frametime quanta: the loop exits within ~1 ms of the tolerance
       // boundary, so the resetTimingCompensation() below locks in timer slop instead of up to a
       // full frametime per event. The old whole-frametime wait leaked ≤ 33 ms of schedule per
       // ahead-event, which on heavy scenes (frequent events) compounded into sustained sub-realtime
       // production — the 2026-07-18 stutter root cause.
+      const waitStart = performance.now();
       do {
         const delta = this.ptsDelta();
         if (delta === undefined) break;
@@ -202,7 +219,9 @@ export class BaseMediaStream extends Writable {
         );
         await setTimeout(Math.min(excess, frametime));
       } while (this.sync && this.isAhead());
+      syncWaitMs = performance.now() - waitStart;
       this.resetTimingCompensation();
+      reportSendStats();
       callback(null);
     } else {
       this._loggerSleep.debug(
@@ -217,6 +236,7 @@ export class BaseMediaStream extends Writable {
         },
         `Sleeping for ${sleep}ms`,
       );
+      reportSendStats();
       setTimeout(sleep).then(() => callback(null));
     }
     frame.free();
