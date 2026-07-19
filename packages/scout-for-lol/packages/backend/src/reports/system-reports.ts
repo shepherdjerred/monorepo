@@ -14,7 +14,7 @@ import {
   REPORT_MAX_ROWS_LIMIT,
   getCompetitionStatus,
   parseCompetition,
-  requireReportChampionName,
+  reportChampionLiteral,
 } from "@scout-for-lol/data";
 import {
   DEFAULT_COMPETITION_CRON,
@@ -163,7 +163,7 @@ function competitionReportQuery(
       metrics: "games, wins",
       orderBy: "wins",
       extraFilters: [
-        `champion_id = champion('${requireReportChampionName(criteria.championId)}')`,
+        `champion_id = champion(${reportChampionLiteral(criteria.championId)})`,
       ],
     });
   }

@@ -3,6 +3,7 @@ import { parseAndCompile } from "#src/model/report-query-compile.ts";
 import { parseReportQuery } from "#src/model/report-query-parser.ts";
 import { lintReportQuery } from "#src/model/report-query-lint.ts";
 import { completeReportQuery } from "#src/model/report-query-complete.ts";
+import { reportChampionLiteral } from "#src/model/report-query-champions.ts";
 
 describe("parseAndCompile", () => {
   test("parses a leaderboard aggregate query", () => {
@@ -130,6 +131,19 @@ describe("parseAndCompile", () => {
       `SELECT games FROM match_participants WHERE champion_id = champion("Kai'Sa") GROUP BY player`,
     );
 
+    expect(plan.championId).toBe(145);
+  });
+
+  test("reportChampionLiteral double-quotes apostrophe names and round-trips", () => {
+    // Kai'Sa (145) has an apostrophe: a single-quoted literal would break the
+    // lexer, so reportChampionLiteral must switch to double quotes. Lux (99)
+    // has none and stays single-quoted.
+    expect(reportChampionLiteral(145)).toBe(`"Kai'Sa"`);
+    expect(reportChampionLiteral(99)).toBe(`'Lux'`);
+
+    const plan = parseAndCompile(
+      `SELECT games FROM match_participants WHERE champion_id = champion(${reportChampionLiteral(145)}) GROUP BY player`,
+    );
     expect(plan.championId).toBe(145);
   });
 
