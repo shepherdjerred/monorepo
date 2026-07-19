@@ -3,10 +3,8 @@ import type {
   ReportResultColumn,
   ReportValueFormat,
 } from "#src/model/report.ts";
-import {
-  REPORT_METRICS,
-  reportColumnLabel,
-} from "#src/model/report-query-registry.ts";
+import { reportColumnLabel } from "#src/model/report-query-registry.ts";
+import { REPORT_METRICS } from "#src/model/report-query-metrics.ts";
 
 export function reportResultColumns(
   plan: ReportQueryPlan,

@@ -81,5 +81,9 @@ export function buildSeasonRefreshPrompt(
     "  adding a new season) the changelog file named above.",
     "- Never run git commands — the calling activity handles git state.",
     "- Never push to origin or open PRs — same reason.",
+    "- If a test failure looks like a stale/missing dependency copy and you",
+    "  need to run `bun install` to fix it, ALWAYS pass `--ignore-scripts`.",
+    "  You are in an ephemeral CI clone, not a dev checkout — a plain install",
+    "  arms git hooks that must never run here.",
   ].join("\n");
 }

@@ -1,6 +1,5 @@
 import {
   formatReportDisplayValue,
-  type ReportAiPreviewSummary,
   type ReportResultColumn,
 } from "@scout-for-lol/data";
 import {
@@ -12,7 +11,12 @@ import {
   TableRow,
 } from "#src/components/ui/table.tsx";
 
-type PreviewRow = ReportAiPreviewSummary["rows"][number];
+// Accepts both the AI preview rows (non-null values) and the live tRPC preview
+// rows, whose values are nullable when a column is absent for a row.
+type PreviewRow = {
+  label: string;
+  values: { column: string; value: string | number | null }[];
+};
 
 export function ReportResultTable(props: {
   columns: ReportResultColumn[];
@@ -60,5 +64,7 @@ function formatCell(column: ReportResultColumn, row: PreviewRow): string {
     return row.label;
   }
   const value = row.values.find((entry) => entry.column === column.key)?.value;
-  return value === undefined ? "—" : formatReportDisplayValue(column, value);
+  return value === undefined || value === null
+    ? "—"
+    : formatReportDisplayValue(column, value);
 }

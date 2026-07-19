@@ -190,6 +190,54 @@ describe("RENDER clause — charts", () => {
       bare.image?.data.equals(explicitGames.image?.data ?? Buffer.alloc(0)),
     ).toBe(true);
   });
+
+  const analyticsCases = [
+    {
+      kind: "stacked-bar",
+      query:
+        "SELECT games, wins, losses FROM match_participants GROUP BY player RENDER stacked_bar WITH (y = (wins, losses), palette = team, labels = value)",
+    },
+    {
+      kind: "area",
+      query:
+        "SELECT games, wins FROM match_participants GROUP BY player RENDER area_chart WITH (y = (games, wins), smooth = true, theme = minimal_dark)",
+    },
+    {
+      kind: "donut",
+      query:
+        "SELECT games FROM match_participants GROUP BY outcome RENDER donut_chart WITH (y = games, labels = percent)",
+    },
+    {
+      kind: "scatter",
+      query:
+        "SELECT games, wins, losses FROM match_participants GROUP BY player RENDER scatter_chart WITH (x = games, y = wins, size = losses, palette = colorblind)",
+    },
+    {
+      kind: "heatmap",
+      query:
+        "SELECT games FROM match_participants GROUP BY player, outcome RENDER heatmap WITH (value = games, palette = gold, labels = value)",
+    },
+    {
+      kind: "radar",
+      query:
+        "SELECT games, wins, losses FROM match_participants GROUP BY player RENDER radar_chart WITH (y = (games, wins, losses), legend = right)",
+    },
+    {
+      kind: "kpi",
+      query:
+        "SELECT games, wins, losses FROM match_participants GROUP BY all RENDER kpi_card WITH (y = (games, wins, losses), theme = minimal_light)",
+    },
+  ];
+
+  for (const chartCase of analyticsCases) {
+    test(`RENDER ${chartCase.kind} produces a PNG`, async () => {
+      await seedFacts();
+      const output = await render(chartCase.query);
+      expect(output.image).not.toBeNull();
+      expect(output.image?.data.length).toBeGreaterThan(1000);
+      expect(output.image?.data.subarray(1, 4).toString()).toBe("PNG");
+    });
+  }
 });
 
 describe("RENDER clause — full runner pipeline", () => {

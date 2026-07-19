@@ -1,7 +1,11 @@
-import * as echarts from "echarts";
+import type * as echarts from "echarts";
 import { fileURLToPath } from "node:url";
 import { palette } from "#src/assets/colors.ts";
 import { generateSeriesPalette } from "#src/html/competition-chart-palette.ts";
+import {
+  echartsOptionToSvg,
+  echartsSvgToImage,
+} from "#src/html/echarts-image.ts";
 
 export type CompetitionChartSeries = {
   playerName: string;
@@ -373,33 +377,13 @@ function buildOption(props: CompetitionChartProps): echarts.EChartsOption {
 }
 
 export function competitionChartToSvg(props: CompetitionChartProps): string {
-  const chart = echarts.init(null, null, {
-    renderer: "svg",
-    ssr: true,
-    width: WIDTH,
-    height: HEIGHT,
-  });
-
-  try {
-    chart.setOption(buildOption(props));
-    return chart.renderToSVGString();
-  } finally {
-    chart.dispose();
-  }
+  return echartsOptionToSvg(buildOption(props), WIDTH, HEIGHT);
 }
 
-export async function competitionChartToImage(
+export function competitionChartToImage(
   props: CompetitionChartProps,
 ): Promise<Buffer> {
-  const svg = competitionChartToSvg(props);
-  const { Resvg } = await import("@resvg/resvg-js");
-  const resvg = new Resvg(svg, {
-    fitTo: { mode: "original" },
-    font: {
-      loadSystemFonts: false,
-      fontFiles: FONT_FILE_PATHS,
-      defaultFontFamily: BODY_FONT,
-    },
-  });
-  return resvg.render().asPng();
+  return Promise.resolve(
+    echartsSvgToImage(competitionChartToSvg(props), FONT_FILE_PATHS, BODY_FONT),
+  );
 }

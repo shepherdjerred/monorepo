@@ -19,11 +19,12 @@ import {
 
 export type ReportResultValue = {
   column: string;
-  value: number | string;
+  value: number | string | null;
 };
 
 export type ReportResultRow = {
   label: string;
+  dimensions: string[];
   discordId: string | null;
   values: ReportResultValue[];
 };
@@ -154,6 +155,7 @@ async function executeCompetitionRankReport(
     columns: ["label", ...columns],
     rows: leaderboard.slice(0, limit).map((entry) => ({
       label: entry.playerName,
+      dimensions: [entry.playerName],
       discordId: entry.discordId ?? null,
       values: plan.metrics.map((metric) => {
         const column = reportColumnForMetric(metric);

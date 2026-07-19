@@ -1,23 +1,16 @@
 import { match } from "ts-pattern";
 import {
+  ReportMetricSchema,
   type ReportGroupBy,
   type ReportMetric,
   type ReportSource,
-  ReportMetricSchema,
 } from "#src/model/report-query-spec.ts";
+import { REPORT_METRICS } from "#src/model/report-query-metrics.ts";
 import {
   type QueueType,
   QueueTypeSchema,
   queueTypeToDisplayString,
 } from "#src/model/state.ts";
-
-// ── Report query language registry ───────────────────────────────────────────
-// Human-facing metadata describing every part of the query language. This is the
-// single source that powers Monaco autocomplete + hover, the in-app docs, and
-// the friendly column headers in the live preview. Adding a column/operator that
-// is already grammar-expressible should only require editing this file.
-
-export type ReportMetricKind = "count" | "rate" | "ratio" | "score";
 
 export type ReportSourceInfo = {
   id: ReportSource;
@@ -25,42 +18,55 @@ export type ReportSourceInfo = {
   description: string;
   validGroupBys: ReportGroupBy[];
 };
-
-export type ReportMetricInfo = {
-  id: ReportMetric;
-  label: string;
-  description: string;
-  kind: ReportMetricKind;
-};
-
 export type ReportGroupByInfo = {
   id: ReportGroupBy;
   label: string;
-  // Header shown for the grouping ("label") column when grouped by this field.
   columnLabel: string;
   description: string;
 };
-
-export type ReportKeywordInfo = {
-  keyword: string;
-  description: string;
-};
-
+export type ReportKeywordInfo = { keyword: string; description: string };
 export type ReportFilterInfo = {
   id: string;
   syntax: string;
   description: string;
 };
-
-export type ReportExampleInfo = {
-  title: string;
-  query: string;
-};
-
-export type ReportCommonPresetInfo = ReportExampleInfo & {
+export type ReportFunctionInfo = {
   id: string;
+  syntax: string;
   description: string;
 };
+export type ReportRenderOptionInfo = {
+  id: string;
+  syntax: string;
+  description: string;
+};
+export type ReportRenderKindInfo = {
+  id: string;
+  label: string;
+  description: string;
+  isChart: boolean;
+};
+
+const MATCH_GROUP_BYS: ReportGroupBy[] = [
+  "player",
+  "champion",
+  "queue",
+  "team_position",
+  "individual_position",
+  "lane",
+  "role",
+  "game_mode",
+  "game_type",
+  "patch",
+  "map",
+  "outcome",
+  "surrender_state",
+  "arena_placement",
+  "day",
+  "week",
+  "month",
+  "all",
+];
 
 export const REPORT_SOURCES: ReportSourceInfo[] = [
   {
@@ -68,14 +74,14 @@ export const REPORT_SOURCES: ReportSourceInfo[] = [
     label: "Match participants",
     description:
       "Per-player match facts over the lookback window (one row per player per match).",
-    validGroupBys: ["player", "champion", "queue"],
+    validGroupBys: MATCH_GROUP_BYS,
   },
   {
     id: "prematch_participants",
     label: "Prematch participants",
     description:
       "Champion-select / lobby observations — who queued up as what, before the game.",
-    validGroupBys: ["player", "champion", "queue"],
+    validGroupBys: ["player", "champion", "queue", "all"],
   },
   {
     id: "player_groups",
@@ -96,7 +102,7 @@ export const REPORT_SOURCES: ReportSourceInfo[] = [
     label: "Competition match participants",
     description:
       "Match facts scoped to a competition's participants and date window. Requires competition_id.",
-    validGroupBys: ["player", "champion", "queue"],
+    validGroupBys: MATCH_GROUP_BYS,
   },
   {
     id: "competition_rank",
@@ -104,133 +110,6 @@ export const REPORT_SOURCES: ReportSourceInfo[] = [
     description:
       "Competition leaderboard ordered by rank / score. Requires competition_id.",
     validGroupBys: ["player"],
-  },
-];
-
-export const REPORT_METRICS: ReportMetricInfo[] = [
-  {
-    id: "games",
-    label: "Games",
-    description: "Number of games played.",
-    kind: "count",
-  },
-  { id: "wins", label: "Wins", description: "Number of wins.", kind: "count" },
-  {
-    id: "losses",
-    label: "Losses",
-    description: "Number of losses (games − wins).",
-    kind: "count",
-  },
-  {
-    id: "surrenders",
-    label: "Surrenders",
-    description: "Number of games that ended in a surrender.",
-    kind: "count",
-  },
-  {
-    id: "surrender_rate",
-    label: "Surrender rate",
-    description: "Fraction of games that ended in a surrender (0–1).",
-    kind: "rate",
-  },
-  {
-    id: "win_rate",
-    label: "Win rate",
-    description: "Fraction of games won (0–1).",
-    kind: "rate",
-  },
-  { id: "kills", label: "Kills", description: "Total kills.", kind: "count" },
-  {
-    id: "deaths",
-    label: "Deaths",
-    description: "Total deaths.",
-    kind: "count",
-  },
-  {
-    id: "assists",
-    label: "Assists",
-    description: "Total assists.",
-    kind: "count",
-  },
-  {
-    id: "kda",
-    label: "KDA",
-    description: "(kills + assists) / deaths (or takedowns when deaths = 0).",
-    kind: "ratio",
-  },
-  {
-    id: "creep_score",
-    label: "Creep score",
-    description: "Total minions/monsters killed (CS).",
-    kind: "count",
-  },
-  {
-    id: "damage_to_champions",
-    label: "Damage to champions",
-    description: "Total damage dealt to enemy champions.",
-    kind: "count",
-  },
-  {
-    id: "gold_earned",
-    label: "Gold earned",
-    description: "Total gold earned.",
-    kind: "count",
-  },
-  {
-    id: "vision_score",
-    label: "Vision score",
-    description: "Total vision score.",
-    kind: "count",
-  },
-  {
-    id: "damage_taken",
-    label: "Damage taken",
-    description: "Total damage taken.",
-    kind: "count",
-  },
-  {
-    id: "total_damage_dealt",
-    label: "Total damage",
-    description: "Total damage dealt to all targets (not just champions).",
-    kind: "count",
-  },
-  {
-    id: "wards_placed",
-    label: "Wards placed",
-    description: "Total wards placed.",
-    kind: "count",
-  },
-  {
-    id: "multikills",
-    label: "Multikills",
-    description: "Double + triple + quadra + penta kills combined.",
-    kind: "count",
-  },
-  {
-    id: "avg_game_duration",
-    label: "Avg game length",
-    description: "Average game duration in minutes.",
-    kind: "ratio",
-  },
-  {
-    id: "cs_per_minute",
-    label: "CS / min",
-    description: "Creep score per minute of time played.",
-    kind: "ratio",
-  },
-  {
-    id: "prematches",
-    label: "Prematches",
-    description:
-      "Number of prematch observations (alias of games for prematch_participants).",
-    kind: "count",
-  },
-  {
-    id: "score",
-    label: "Score",
-    description:
-      "Competition score / rank value (context-dependent for rank sources).",
-    kind: "score",
   },
 ];
 
@@ -260,183 +139,244 @@ export const REPORT_GROUP_BYS: ReportGroupByInfo[] = [
     description:
       "Group rows by teammate group (player_groups only): GROUP BY group(N) for one size (N = 2-5) or group(all) for every size the roster supports. Stats sum members; a win requires every member to win. GROUP BY pair is the legacy alias for group(2).",
   },
+  ...MATCH_GROUP_BYS.filter(
+    (id) => !["player", "champion", "queue"].includes(id),
+  ).map((id) => ({
+    id,
+    label: reportGroupByColumnLabel(id),
+    columnLabel: reportGroupByColumnLabel(id),
+    description: `Group rows by ${reportGroupByColumnLabel(id).toLowerCase()}.`,
+  })),
 ];
 
-export const REPORT_KEYWORDS: ReportKeywordInfo[] = [
-  { keyword: "SELECT", description: "Choose the metrics (columns) to report." },
-  { keyword: "FROM", description: "Choose the data source (table)." },
-  { keyword: "WHERE", description: "Filter rows (AND-joined clauses)." },
-  {
-    keyword: "GROUP BY",
-    description:
-      "Aggregate rows by a field: player, or group(2..5)/group(all).",
-  },
-  { keyword: "ORDER BY", description: "Sort by a metric or label." },
-  { keyword: "LIMIT", description: "Cap the number of rows returned." },
-  { keyword: "AND", description: "Combine multiple WHERE clauses." },
-  {
-    keyword: "IN",
-    description: "Match against a list of values, e.g. queue IN (solo, flex).",
-  },
-  { keyword: "ASC", description: "Sort ascending." },
-  { keyword: "DESC", description: "Sort descending (default)." },
-  {
-    keyword: "RENDER",
-    description: "Choose how the report displays, e.g. RENDER bar_chart.",
-  },
-  {
-    keyword: "WITH",
-    description:
-      'Set chart channels/options, e.g. WITH (y = win_rate, title = "…").',
-  },
+const KEYWORD_DATA: [string, string][] = [
+  ["SELECT", "Choose report outputs: metrics or bounded expressions."],
+  ["FROM", "Choose the data source (table)."],
+  ["WHERE", "Filter raw rows with AND-joined clauses."],
+  ["AS", "Name a calculated SELECT output."],
+  ["GROUP BY", "Aggregate by one or two dimensions."],
+  ["HAVING", "Filter aggregated rows by a SELECT output or alias."],
+  ["ORDER BY", "Sort by an output or label."],
+  ["LIMIT", "Cap the number of rows returned."],
+  ["AND", "Combine multiple WHERE or HAVING clauses."],
+  ["IN", "Match against a list of values."],
+  ["ASC", "Sort ascending."],
+  ["DESC", "Sort descending (default)."],
+  ["RENDER", "Choose the report display kind."],
+  ["WITH", "Set chart channels and appearance options."],
 ];
-
-export type ReportRenderKindInfo = {
-  id: string;
-  label: string;
-  description: string;
-  isChart: boolean;
-};
-
-// The display kinds accepted by the trailing `RENDER <kind>` clause. Chart kinds
-// additionally accept a `WITH (…)` clause to pick channels/options.
-export const REPORT_RENDER_KINDS: ReportRenderKindInfo[] = [
-  {
-    id: "table",
-    label: "Table",
-    description: "Plain data table.",
-    isChart: false,
-  },
-  {
-    id: "list",
-    label: "List",
-    description: "Bulleted text list.",
-    isChart: false,
-  },
-  {
-    id: "leaderboard",
-    label: "Leaderboard",
-    description: "Ranked leaderboard text.",
-    isChart: false,
-  },
-  {
-    id: "bar_chart",
-    label: "Bar chart",
-    description: "Bar chart image; WITH (y = <metric>) picks the series.",
-    isChart: true,
-  },
-  {
-    id: "line_chart",
-    label: "Line chart",
-    description: "Line chart image; WITH (y = <metric>) picks the series.",
-    isChart: true,
-  },
-];
-
-export const REPORT_FILTERS: ReportFilterInfo[] = [
-  {
-    id: "queue",
-    syntax: "queue IN (solo, flex, …)",
-    description: "Restrict to specific queue types.",
-  },
-  {
-    id: "champion",
-    syntax: "champion_id = champion('Lux')",
-    description: "Restrict to a validated champion by display name.",
-  },
-  {
-    id: "lookback",
-    syntax: "game_creation_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'",
-    description: "Restrict match facts to a recent time window.",
-  },
-  {
-    id: "games",
-    syntax: "games >= <number>",
-    description: "Only include groups with at least N games.",
-  },
-  {
-    id: "competition_id",
-    syntax: "competition_id = <number>",
-    description: "Scope competition-backed sources to a competition.",
-  },
-];
-
-export const REPORT_COMMON_PRESETS: ReportCommonPresetInfo[] = [
-  {
-    id: "activity-leaders",
-    title: "Most games played",
-    description: "Find the most active players over the lookback window.",
-    query:
-      "select games, win_rate from match_participants where game_creation_at >= current_timestamp - interval '30 days' group by player order by games desc limit 10 render leaderboard",
-  },
-  {
-    id: "ranked-win-rate",
-    title: "Best win rate (ranked solo, min 10 games)",
-    description: "Rank players by solo queue win rate with a games floor.",
-    query:
-      "select games, win_rate from match_participants where game_creation_at >= current_timestamp - interval '30 days' and queue in (solo) and games >= 10 group by player order by win_rate desc limit 10 render bar_chart with (y = win_rate)",
-  },
-  {
-    id: "surrender-watch",
-    title: "Surrender-happy champions",
-    description: "Spot champions most associated with surrender losses.",
-    query:
-      "select games, surrender_rate from match_participants where game_creation_at >= current_timestamp - interval '30 days' group by champion order by surrender_rate desc limit 10 render leaderboard",
-  },
-  {
-    id: "champion-pool",
-    title: "Most-played champions",
-    description: "Show which champions the server has been playing most.",
-    query:
-      "select games, win_rate from match_participants where game_creation_at >= current_timestamp - interval '30 days' group by champion order by games desc limit 10 render bar_chart with (y = games)",
-  },
-  {
-    id: "best-groups",
-    title: "Most active teammate groups",
-    description:
-      "List teammate groups of every size (group(2) picks duos only) by games together.",
-    query:
-      "select games, win_rate from player_groups where game_creation_at >= current_timestamp - interval '30 days' group by group(all) order by games desc limit 10 render leaderboard",
-  },
-  {
-    id: "kda-leaders",
-    title: "KDA leaders",
-    description: "Rank players by KDA with a minimum games filter.",
-    query:
-      "select games, kda from match_participants where game_creation_at >= current_timestamp - interval '30 days' and games >= 5 group by player order by kda desc limit 10 render leaderboard",
-  },
-  {
-    id: "damage-leaders",
-    title: "Damage leaders",
-    description: "Find who dealt the most champion damage.",
-    query:
-      "select games, damage_to_champions from match_participants where game_creation_at >= current_timestamp - interval '14 days' group by player order by damage_to_champions desc limit 10 render bar_chart with (y = damage_to_champions)",
-  },
-  {
-    id: "champion-select-picks",
-    title: "Champion-select picks",
-    description: "Use lobby observations to see planned champion picks.",
-    query:
-      "select prematches from prematch_participants where observed_at >= current_timestamp - interval '14 days' group by champion order by prematches desc limit 10 render bar_chart with (y = prematches)",
-  },
-  {
-    id: "queue-mix",
-    title: "Queue mix",
-    description: "Break recent server activity down by queue.",
-    query:
-      "select games, win_rate from match_participants where game_creation_at >= current_timestamp - interval '30 days' group by queue order by games desc limit 10 render table",
-  },
-];
-
-export const REPORT_EXAMPLES: ReportExampleInfo[] = REPORT_COMMON_PRESETS.map(
-  (preset) => ({ title: preset.title, query: preset.query }),
+export const REPORT_KEYWORDS: ReportKeywordInfo[] = KEYWORD_DATA.map(
+  ([keyword, description]) => ({ keyword, description }),
 );
 
-export type ReportQueueValueInfo = {
-  id: QueueType;
-  label: string;
-};
+export const REPORT_FUNCTIONS: ReportFunctionInfo[] = [
+  {
+    id: "round",
+    syntax: "round(<expression>[, <digits>]) AS <alias>",
+    description: "Round a calculated value to 0–10 decimal places.",
+  },
+  {
+    id: "coalesce",
+    syntax: "coalesce(<expression>, <fallback>) AS <alias>",
+    description: "Use a numeric fallback when an expression is null.",
+  },
+  {
+    id: "per_game",
+    syntax: "per_game(<expression>) AS <alias>",
+    description: "Divide an aggregate by games played.",
+  },
+  {
+    id: "per_minute",
+    syntax: "per_minute(<expression>) AS <alias>",
+    description: "Divide an aggregate by total minutes played.",
+  },
+];
 
+export const REPORT_RENDER_OPTIONS: ReportRenderOptionInfo[] = [
+  { id: "x", syntax: "x = <column>", description: "Horizontal channel." },
+  {
+    id: "y",
+    syntax: "y = <column|(<column>, …)>",
+    description: "One to eight numeric series.",
+  },
+  {
+    id: "series",
+    syntax: "series = <dimension>",
+    description: "Second grouping dimension for heatmaps or series.",
+  },
+  { id: "size", syntax: "size = <column>", description: "Scatter point size." },
+  {
+    id: "value",
+    syntax: "value = <column>",
+    description: "Heatmap cell or card value.",
+  },
+  { id: "title", syntax: 'title = "…"', description: "Chart title override." },
+  {
+    id: "subtitle",
+    syntax: 'subtitle = "…"',
+    description: "Optional chart subtitle.",
+  },
+  {
+    id: "x_axis",
+    syntax: 'x_axis = "…"',
+    description: "Horizontal axis label.",
+  },
+  { id: "y_axis", syntax: 'y_axis = "…"', description: "Vertical axis label." },
+  {
+    id: "theme",
+    syntax: "theme = lol_dark|lol_light|minimal_dark|minimal_light",
+    description: "Chart surface and typography theme.",
+  },
+  {
+    id: "palette",
+    syntax: "palette = ranked|categorical|team|gold|colorblind",
+    description: "Built-in series color palette.",
+  },
+  {
+    id: "colors",
+    syntax: "colors = (#rrggbb, …)",
+    description:
+      "One to eight custom colors, contrast-corrected for the theme.",
+  },
+  {
+    id: "orientation",
+    syntax: "orientation = horizontal|vertical",
+    description: "Bar orientation.",
+  },
+  {
+    id: "labels",
+    syntax: "labels = auto|show|hide|value|percent",
+    description: "Data-label behavior.",
+  },
+  {
+    id: "legend",
+    syntax: "legend = auto|none|top|right|bottom",
+    description: "Legend visibility and placement.",
+  },
+  {
+    id: "sort",
+    syntax: "sort = query|asc|desc",
+    description: "Visual ordering without changing query rows.",
+  },
+  {
+    id: "smooth",
+    syntax: "smooth = true|false",
+    description: "Smooth line and area curves.",
+  },
+];
+
+const RENDER_KIND_DATA: [string, string, string, boolean][] = [
+  ["table", "Table", "Plain data table.", false],
+  ["list", "List", "Bulleted text list.", false],
+  ["leaderboard", "Leaderboard", "Ranked leaderboard text.", false],
+  ["bar_chart", "Bar chart", "Categorical bar chart.", true],
+  ["line_chart", "Line chart", "Categorical or temporal line chart.", true],
+  ["stacked_bar", "Stacked bar", "Stacked multi-metric bar chart.", true],
+  ["area_chart", "Area chart", "Filled categorical or temporal trend.", true],
+  ["donut_chart", "Donut chart", "Part-to-whole chart for bounded rows.", true],
+  [
+    "scatter_chart",
+    "Scatter chart",
+    "Compare two outputs, optionally sized by a third.",
+    true,
+  ],
+  ["heatmap", "Heatmap", "Two-dimensional matrix colored by a metric.", true],
+  [
+    "radar_chart",
+    "Radar chart",
+    "Compare three to eight normalized metrics.",
+    true,
+  ],
+  [
+    "kpi_card",
+    "KPI card",
+    "One aggregate row displayed as metric cards.",
+    true,
+  ],
+];
+export const REPORT_RENDER_KINDS: ReportRenderKindInfo[] = RENDER_KIND_DATA.map(
+  ([id, label, description, isChart]) => ({
+    id,
+    label,
+    description,
+    isChart,
+  }),
+);
+
+const FILTER_DATA: [string, string, string][] = [
+  ["player", 'player = "<name>"', "Restrict to a player alias."],
+  ["queue", "queue IN (solo, flex, …)", "Restrict to queue types."],
+  ["champion_id", "champion_id = <number>", "Restrict to a champion id."],
+  [
+    "team_position",
+    "team_position = <position>",
+    "Restrict to a team position.",
+  ],
+  [
+    "individual_position",
+    "individual_position = <position>",
+    "Restrict to an individual position.",
+  ],
+  ["lane", "lane = <lane>", "Restrict to a lane."],
+  ["role", "role = <role>", "Restrict to a role."],
+  ["game_mode", "game_mode = <mode>", "Restrict to a game mode."],
+  ["game_type", "game_type = <type>", "Restrict to a game type."],
+  [
+    "game_version",
+    'game_version = "<version>"',
+    "Restrict to an exact version.",
+  ],
+  ["map_id", "map_id = <number>", "Restrict to a map id."],
+  ["win", "win = true|false", "Restrict by match outcome."],
+  ["surrendered", "surrendered = true|false", "Restrict by surrender state."],
+  [
+    "early_surrendered",
+    "early_surrendered = true|false",
+    "Restrict by early surrender.",
+  ],
+  [
+    "first_blood_kill",
+    "first_blood_kill = true|false",
+    "Restrict by first-blood credit.",
+  ],
+  [
+    "game_duration_seconds",
+    "game_duration_seconds <operator> <number>",
+    "Filter by match length.",
+  ],
+  ["placement", "placement <operator> <number>", "Filter by Arena placement."],
+  ["kills", "kills <operator> <number>", "Filter raw participant kills."],
+  ["deaths", "deaths <operator> <number>", "Filter raw participant deaths."],
+  ["assists", "assists <operator> <number>", "Filter raw participant assists."],
+  [
+    "creep_score",
+    "creep_score <operator> <number>",
+    "Filter raw participant creep score.",
+  ],
+  ["gold_earned", "gold_earned <operator> <number>", "Filter raw gold earned."],
+  ["gold_spent", "gold_spent <operator> <number>", "Filter raw gold spent."],
+  [
+    "damage_to_champions",
+    "damage_to_champions <operator> <number>",
+    "Filter raw champion damage.",
+  ],
+  [
+    "vision_score",
+    "vision_score <operator> <number>",
+    "Filter raw vision score.",
+  ],
+  ["games", "games >= <number>", "Require at least N aggregate games."],
+  [
+    "competition_id",
+    "competition_id = <number>",
+    "Scope competition-backed sources.",
+  ],
+];
+export const REPORT_FILTERS: ReportFilterInfo[] = FILTER_DATA.map(
+  ([id, syntax, description]) => ({ id, syntax, description }),
+);
+
+export type ReportQueueValueInfo = { id: QueueType; label: string };
 export function reportQueueValues(): ReportQueueValueInfo[] {
   return QueueTypeSchema.options.map((id) => ({
     id,
@@ -444,14 +384,27 @@ export function reportQueueValues(): ReportQueueValueInfo[] {
   }));
 }
 
-// ── Friendly-name helpers ────────────────────────────────────────────────────
-
 export function reportGroupByColumnLabel(groupBy: ReportGroupBy): string {
   return match(groupBy)
     .with("player", () => "Player")
     .with("champion", () => "Champion")
     .with("queue", () => "Queue")
     .with("group", () => "Group")
+    .with("team_position", () => "Team position")
+    .with("individual_position", () => "Individual position")
+    .with("lane", () => "Lane")
+    .with("role", () => "Role")
+    .with("game_mode", () => "Game mode")
+    .with("game_type", () => "Game type")
+    .with("patch", () => "Patch")
+    .with("map", () => "Map")
+    .with("outcome", () => "Outcome")
+    .with("surrender_state", () => "Surrender")
+    .with("arena_placement", () => "Arena placement")
+    .with("day", () => "Day")
+    .with("week", () => "Week")
+    .with("month", () => "Month")
+    .with("all", () => "All")
     .exhaustive();
 }
 
@@ -459,21 +412,13 @@ export function reportMetricLabel(metric: ReportMetric): string {
   return REPORT_METRICS.find((info) => info.id === metric)?.label ?? metric;
 }
 
-// Friendly header for a result column id. The first column is the grouping
-// ("label") column; the rest are metric ids (or "rank" for highest-rank
-// competition reports, which is not in the metric enum).
 export function reportColumnLabel(
   column: string,
   groupBy: ReportGroupBy,
 ): string {
-  if (column === "label") {
-    return reportGroupByColumnLabel(groupBy);
-  }
+  if (column === "label") return reportGroupByColumnLabel(groupBy);
   const metric = ReportMetricSchema.safeParse(column);
-  if (metric.success) {
-    return reportMetricLabel(metric.data);
-  }
-  // Fallback: humanize unknown columns (e.g. "rank") — snake_case → Title case.
+  if (metric.success) return reportMetricLabel(metric.data);
   return column
     .split("_")
     .map((part) => {
@@ -485,9 +430,7 @@ export function reportColumnLabel(
 
 export function reportSourceInfo(source: ReportSource): ReportSourceInfo {
   const info = REPORT_SOURCES.find((entry) => entry.id === source);
-  if (info === undefined) {
-    // Registry is exhaustive over the enum; this guards against drift.
+  if (info === undefined)
     throw new Error(`Missing report source registry entry: ${source}`);
-  }
   return info;
 }

@@ -47,6 +47,31 @@ async function seedTwoGames(): Promise<void> {
 }
 
 describe("new lake metrics", () => {
+  test("evaluates bounded expressions, aliases, and HAVING end to end", async () => {
+    await seedTwoGames();
+    const result = await executeReportQuery({
+      prisma,
+      serverId,
+      queryText:
+        "SELECT games, round(per_game(kills + assists), 2) AS takedowns_per_game, round(kills / deaths, 3) AS kill_death_ratio, coalesce(kills / 0, 99) AS safe_fallback FROM match_participants GROUP BY player HAVING games >= 2 AND takedowns_per_game > 10 ORDER BY takedowns_per_game DESC",
+      now,
+    });
+
+    expect(result.columns).toEqual([
+      "label",
+      "games",
+      "takedowns_per_game",
+      "kill_death_ratio",
+      "safe_fallback",
+    ]);
+    expect(result.rows[0]?.values).toEqual([
+      { column: "games", value: 2 },
+      { column: "takedowns_per_game", value: 12 },
+      { column: "kill_death_ratio", value: 1.667 },
+      { column: "safe_fallback", value: 99 },
+    ]);
+  });
+
   test("sums and per-minute/per-game derivations for players", async () => {
     await seedTwoGames();
     const result = await executeReportQuery({

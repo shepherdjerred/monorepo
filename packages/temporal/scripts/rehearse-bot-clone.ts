@@ -18,12 +18,17 @@
  *                even after the (1) fix, because that second install wasn't
  *                isolated from the pod's shared, persistent Bun cache. See
  *                packages/docs/plans/2026-07-12_fix-data-dragon-shared-cache.md.
- *  3. hooks    — the hook-free root install arms no git hooks (lefthook was
- *                removed from the repo 2026-07; this canary catches it or any
- *                other prepare-script hook sneaking back in), prettier
- *                (with plugins) formats the season changelog byte-stably, and
- *                a bot-style `git commit` of a scout file succeeds without any
- *                pre-commit hook running (scout-season-refresh-weekly).
+ *  3. hooks    — the hook-free root install leaves no git hooks, a simulated
+ *                agentic plain `bun install` arms none either (the root
+ *                `prepare` script that armed lefthook in the 2026-07-12
+ *                scout-season-refresh-weekly recurrence is gone; this leg
+ *                catches it sneaking back in), a simulated agentic
+ *                `bunx lefthook install` (what AGENTS.md tells every dev
+ *                session to run) arms them, `disarmGitHooks` removes them
+ *                again, prettier (with plugins) formats the season changelog
+ *                byte-stably, and a bot-style `git commit` of a scout file
+ *                succeeds without any pre-commit hook running
+ *                (scout-season-refresh-weekly).
  *  4. cog      — the readme-refresh COG_TARGETS exist, still contain `[[[cog`
  *                blocks, and the `cog` binary is present (readme-refresh-weekly).
  *
@@ -37,6 +42,7 @@
  */
 import {
   botCloneCacheDir,
+  disarmGitHooks,
   installScoutWorkspace,
   rootInstallWithoutHooks,
 } from "#activities/bot-clone.ts";
@@ -115,22 +121,72 @@ async function rehearseSnapshotRefresh(repoDir: string): Promise<void> {
   console.error("[rehearsal] snapshot: install-refresh + snapshot test OK");
 }
 
+async function armedHookNames(repoDir: string): Promise<string[]> {
+  const hooksDir = `${repoDir}/.git/hooks`;
+  const hookList = await runCommand(["ls", hooksDir], { cwd: repoDir });
+  return hookList
+    .split("\n")
+    .filter((name) => name !== "" && !name.endsWith(".sample"));
+}
+
 async function rehearseHookFreeCommit(repoDir: string): Promise<void> {
   console.error("[rehearsal] hooks: rootInstallWithoutHooks");
   await rootInstallWithoutHooks(repoDir);
 
-  const hooksDir = `${repoDir}/.git/hooks`;
-  const hookList = await runCommand(["ls", hooksDir], { cwd: repoDir });
-  const armed = hookList
-    .split("\n")
-    .filter((name) => name !== "" && !name.endsWith(".sample"));
-  if (armed.length > 0) {
+  const armedAfterInstall = await armedHookNames(repoDir);
+  if (armedAfterInstall.length > 0) {
     throw new Error(
-      `hook-free install still armed git hooks: ${armed.join(", ")} — ` +
+      `hook-free install still armed git hooks: ${armedAfterInstall.join(", ")} — ` +
         "did a root `prepare` script run? Bot commits must stay hook-free.",
     );
   }
   console.error("[rehearsal] hooks: no git hooks armed");
+
+  // Simulate an agentic Claude/Codex step (which runs between the pre-install
+  // and the final commit in scout-season-refresh.ts / readme-refresh.ts)
+  // deciding on its own to run a plain `bun install`. In the 2026-07-12
+  // scout-season-refresh-weekly failure this armed lefthook via the root
+  // `prepare` script; that script is gone, so today the install must arm
+  // NOTHING — this leg catches any prepare/postinstall hook sneaking back in.
+  console.error(
+    "[rehearsal] hooks: simulating an agentic step's plain `bun install`",
+  );
+  await runCommand(["bun", "install", "--frozen-lockfile"], { cwd: repoDir });
+  const armedAfterPlainInstall = await armedHookNames(repoDir);
+  if (armedAfterPlainInstall.length > 0) {
+    throw new Error(
+      `plain \`bun install\` armed git hooks: ${armedAfterPlainInstall.join(", ")} — ` +
+        "did a root `prepare`/`postinstall` script sneak back in? Bot commits must stay hook-free.",
+    );
+  }
+
+  // An agentic step can still arm hooks explicitly — AGENTS.md tells every dev
+  // session to run `bunx lefthook install` — so arm them the way an agent
+  // would and prove disarmGitHooks undoes it before the bot-style commit.
+  console.error(
+    "[rehearsal] hooks: simulating an agentic step's `bunx lefthook install`",
+  );
+  await runCommand(["bunx", "lefthook", "install"], { cwd: repoDir });
+  const armedAfterLefthookInstall = await armedHookNames(repoDir);
+  if (armedAfterLefthookInstall.length === 0) {
+    throw new Error(
+      "expected `bunx lefthook install` to arm git hooks — if lefthook no " +
+        "longer arms hooks, the canary's premise is stale and needs " +
+        "re-deriving from the real bug.",
+    );
+  }
+  console.error(
+    `[rehearsal] hooks: confirmed armed (${armedAfterLefthookInstall.join(", ")}) — now disarming`,
+  );
+
+  await disarmGitHooks(repoDir);
+  const armedAfterDisarm = await armedHookNames(repoDir);
+  if (armedAfterDisarm.length > 0) {
+    throw new Error(
+      `disarmGitHooks left hooks armed: ${armedAfterDisarm.join(", ")}`,
+    );
+  }
+  console.error("[rehearsal] hooks: disarmGitHooks removed the armed hooks");
 
   console.error("[rehearsal] hooks: prettier --write on the season changelog");
   await runCommand(["bunx", "prettier", "--write", CHANGELOG_FILE], {

@@ -29,11 +29,12 @@ import {
 } from "#src/reports/group-combinations.ts";
 export type ReportResultValue = {
   column: string;
-  value: number | string;
+  value: number | string | null;
 };
 
 export type ReportResultRow = {
   label: string;
+  dimensions: string[];
   discordId: string | null;
   values: ReportResultValue[];
 };
@@ -217,6 +218,35 @@ function toGroupFactRow(fact: MatchParticipantFactRow): GroupFactRow {
     multikills: 0,
     gameDurationSeconds: 0,
     timePlayedSeconds: 0,
+    earlySurrendered: false,
+    laneMinions: 0,
+    neutralMinions: 0,
+    goldSpent: 0,
+    damageMitigated: 0,
+    damageToObjectives: 0,
+    damageToTurrets: 0,
+    healing: 0,
+    teammateHealing: 0,
+    wardsKilled: 0,
+    controlWardsBought: 0,
+    detectorWardsPlaced: 0,
+    doubleKills: 0,
+    tripleKills: 0,
+    quadraKills: 0,
+    pentaKills: 0,
+    largestMultikill: 0,
+    killingSprees: 0,
+    firstBlood: false,
+    championLevel: 0,
+    championExperience: 0,
+    timeDeadSeconds: 0,
+    longestLifeSeconds: 0,
+    ccTimeSeconds: 0,
+    turretKills: 0,
+    inhibitorKills: 0,
+    dragonKills: 0,
+    baronKills: 0,
+    placement: null,
   };
 }
 
@@ -246,6 +276,7 @@ async function executeCompetitionRankReport(
     columns: ["label", ...columns],
     rows: leaderboard.slice(0, limit).map((entry) => ({
       label: entry.playerName,
+      dimensions: [entry.playerName],
       discordId: entry.discordId ?? null,
       values: plan.metrics.map((metric) => {
         const column = reportColumnForMetric(metric);
