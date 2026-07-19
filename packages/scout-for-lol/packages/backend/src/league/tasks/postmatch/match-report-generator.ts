@@ -25,7 +25,7 @@ import {
   svgToPng,
   setItemMissHandler,
 } from "@scout-for-lol/report";
-import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "#src/storage/s3.ts";
+import { saveImageToS3, saveSvgToS3 } from "#src/storage/s3.ts";
 import { toMatch, toArenaMatch } from "#src/league/model/match.ts";
 import { logErrorDetails } from "./match-report-debug.ts";
 import { fetchTimelineIfStandardMatch } from "./match-report-standard.ts";
@@ -339,17 +339,10 @@ export async function generateMatchReport(
       ),
     );
 
-    // Save match data to S3 (with tracked player aliases if any)
-    try {
-      const trackedPlayerAliases = playersInMatch.map((p) => p.alias);
-      await saveMatchToS3(matchData, trackedPlayerAliases);
-    } catch (error) {
-      logger.error(
-        `[generateMatchReport] Error saving match ${matchId} to S3:`,
-        error,
-      );
-      // Continue processing even if S3 storage fails
-    }
+    // Note: the authoritative match JSON is written to S3 upstream by the
+    // polling ingest gate (recordMatchForReportStore in
+    // match-history-polling.ts) before this runs, so there is no S3 match
+    // write here.
 
     if (playersInMatch.length === 0) {
       logger.info(

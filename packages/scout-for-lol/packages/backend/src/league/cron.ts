@@ -11,7 +11,6 @@ import { client } from "#src/discord/client.ts";
 import { createCronJob } from "#src/league/cron/helpers.ts";
 import { createLogger } from "#src/logger.ts";
 import { runStartupRecovery } from "#src/league/tasks/recovery/startup-recovery.ts";
-import { runReportStoreS3CatchUp } from "#src/report-store/catch-up.ts";
 import {
   runReportLakeFold,
   runReportLakeRebuild,
@@ -81,20 +80,8 @@ export async function startCronJobs() {
     logTrigger: "Posting due generic reports and advancing next-fire",
   });
 
-  logger.info("📅 Setting up report-store S3 catch-up (every 15 minutes)");
-  createCronJob({
-    schedule: "0 */15 * * * *",
-    jobName: "report_store_s3_catch_up",
-    task: runReportStoreS3CatchUp,
-    logMessage: "📥 Importing report-store facts from S3 catch-up",
-    timezone: "UTC",
-    runOnInit: true,
-    logTrigger: "Catching up SQLite report-store facts from S3 archive",
-  });
-
-  // fold freshly-ingested staging rows into the report lake every 15 minutes
-  // (offset from the S3 catch-up so they don't contend for the DB), and run
-  // on init so a fresh deploy gets a lake before the first report fires.
+  // fold freshly-ingested staging rows into the report lake every 15 minutes,
+  // and run on init so a fresh deploy gets a lake before the first report fires.
   logger.info("📅 Setting up report-lake fold (every 15 minutes at :05)");
   createCronJob({
     schedule: "0 5-59/15 * * * *",
@@ -171,7 +158,7 @@ export async function startCronJobs() {
   logger.info("✅ Cron jobs initialized successfully");
   logger.info(
     "📊 Pre-match check (30s), match history polling (1min), competition lifecycle (15min), data validation (hourly), " +
-      "match time refresh (6hr), scheduled reports (every minute), report-store S3 catch-up (15min), " +
+      "match time refresh (6hr), scheduled reports (every minute), " +
       "report-lake fold (15min) and rebuild (2AM UTC), " +
       "player pruning (3AM UTC), removed-guild reconciliation (4AM UTC) cron jobs are now active",
   );

@@ -2,9 +2,8 @@ import { api } from "#src/league/api/api.ts";
 import { Constants } from "twisted";
 const { regionToRegionGroup } = Constants;
 import { mapRegionToEnum } from "#src/league/model/region.ts";
-import { getAccountsWithState, prisma } from "#src/database/index.ts";
+import { getAccountsWithState } from "#src/database/index.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
-import { saveMatchToS3 } from "#src/storage/s3.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import type { MatchId, Region } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -197,11 +196,10 @@ export async function backfillMatchesToS3(
       }
 
       await recordMatchForReportStore({
-        prisma,
         match: matchData,
         source: "recovery_backfill",
+        trackedPlayerAliases: aliases,
       });
-      await saveMatchToS3(matchData, aliases);
       result.totalMatchesSaved += 1;
       backfillMatchesTotal.inc({ status: "saved" });
 
