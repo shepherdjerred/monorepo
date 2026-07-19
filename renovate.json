@@ -36,12 +36,14 @@
     },
     {
       "customType": "regex",
-      "description": "pokeemerald-wasm source pin \u2014 track ottohg `master` HEAD for the local wasm build script (OTTOHG_SHA), the single source of truth since the CI image build was removed; a checked-in patch adds the game-state exports our symbols.ts reads",
+      "description": "pokeemerald-wasm source pin \u2014 track ottohg `master` HEAD for both copies of OTTOHG_SHA: the quoted shell form in build-wasm.sh (the source of truth; the data generators read the pin from it) and the unquoted ENV form in the Dockerfile wasm-builder stage; a checked-in patch adds the game-state exports our symbols.ts reads",
       "managerFilePatterns": [
-        "packages/discord-plays-pokemon/scripts/build-wasm.sh"
+        "packages/discord-plays-pokemon/scripts/build-wasm.sh",
+        "packages/discord-plays-pokemon/Dockerfile"
       ],
       "matchStrings": [
-        "#\\s*renovate:\\s*datasource=git-refs\\s+depName=pokeemerald-source\\s+branch=(?<currentValue>\\S+)\\s*\\nOTTOHG_SHA=\"(?<currentDigest>[a-f0-9]{40})\""
+        "#\\s*renovate:\\s*datasource=git-refs\\s+depName=pokeemerald-source\\s+branch=(?<currentValue>\\S+)\\s*\\nOTTOHG_SHA=\"(?<currentDigest>[a-f0-9]{40})\"",
+        "#\\s*renovate:\\s*datasource=git-refs\\s+depName=pokeemerald-source\\s+branch=(?<currentValue>\\S+)\\s*\\nENV OTTOHG_SHA=(?<currentDigest>[a-f0-9]{40})"
       ],
       "datasourceTemplate": "git-refs",
       "depNameTemplate": "pokeemerald",

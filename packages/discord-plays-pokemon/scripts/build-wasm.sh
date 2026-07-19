@@ -124,3 +124,10 @@ mkdir -p "$ASSETS_DIR"
 cp "$WORKDIR/build/wasm/pokeemerald.wasm" "$WASM_OUT"
 BYTES=$(wc -c < "$WASM_OUT" | tr -d ' ')
 echo "[build-wasm] wrote $WASM_OUT (${BYTES} bytes)"
+
+# Regenerate the committed species/map data tables from the same pin (the
+# generators read OTTOHG_SHA from this script), so the derived data can never
+# lag the emulator binary after a wasm refresh.
+echo "[build-wasm] regenerating committed pokeemerald data tables"
+bun "$SCRIPT_DIR/generate-species-data.ts"
+bun "$SCRIPT_DIR/generate-map-names.ts"

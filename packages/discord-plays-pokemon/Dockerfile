@@ -21,6 +21,7 @@ FROM debian:trixie-slim@sha256:020c0d20b9880058cbe785a9db107156c3c75c2ac944a6aa7
 # packages/discord-plays-pokemon/scripts/build-wasm.sh (the single source of
 # truth; Renovate's git-refs manager advances both).
 ENV OTTOHG_REPO=https://github.com/ottohg/pokeemerald-wasm.git
+# renovate: datasource=git-refs depName=pokeemerald-source branch=master
 ENV OTTOHG_SHA=c101be5ac2ae53c5d18ee063f16eeeda751639f8
 
 # Toolchain: modern LLVM for wasm32 clang + wasm-ld, build-essential for the
