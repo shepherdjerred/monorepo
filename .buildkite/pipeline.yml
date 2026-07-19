@@ -465,6 +465,7 @@ steps:
       bun scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
       bun scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
       bun scripts/scout-site-release.ts reconcile-prod --dry-run
+      bun scripts/promote-scout.ts --ci --site-version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
       bun packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER" --dry-run
       bun scripts/release.ts --dry-run
     retry: *retry
@@ -615,6 +616,26 @@ steps:
     retry: *retry
     plugins:
       - *pod
+
+  # Standing promotion PR: whenever beta has something prod doesn't (prod
+  # never promoted, backend image line changed, or the scout package changed
+  # since the promoted site version's commit), open/refresh the
+  # scout-promote-pending PR moving BOTH prod pins in versions.ts to what beta
+  # serves; close it when prod is caught up. Merging that PR IS the promotion —
+  # ArgoCD (backend) and scout-prod-reconcile (site) act on the pin change.
+  # Auto-merge is deliberately not enabled: that would make prod track beta
+  # continuously instead of promotion being a review click.
+  - label: ":package: scout promotion PR"
+    if: build.branch == pipeline.default_branch
+    depends_on: sites
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      bun install --frozen-lockfile
+      # SeaweedFS creds: reads archive manifests to gate on real scout changes.
+      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+      bun scripts/promote-scout.ts --ci --site-version "2.0.0-$BUILDKITE_BUILD_NUMBER"
+    plugins:
+      - *pod_light
 
   # Reconcile the prod scout site to its versions.ts pin. Usually a no-op
   # (bucket marker == pin); after a promotion merge it syncs the archived
