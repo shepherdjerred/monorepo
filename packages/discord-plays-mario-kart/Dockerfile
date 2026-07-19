@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7-labs
+# syntax=docker/dockerfile:1.7-labs@sha256:b99fecfe00268a8b556fad7d9c37ee25d716ae08a5d7320e6d51c4dd83246894
 # Headless Discord Plays Mario Kart. Build context is the REPO ROOT (single Bun
 # workspace, one root bun.lock, isolated linker, workspace:* deps). Built via
 # `bun run docker:build` in packages/discord-plays-mario-kart/packages/backend
@@ -18,7 +18,7 @@
 # compiles with (a newer emsdk silently breaks it). Mirrors the removed Dagger
 # `buildDiscordPlaysMarioKartImageHelper` stage 1.
 # ---------------------------------------------------------------------------
-FROM emscripten/emsdk:2.0.7 AS wasm-builder
+FROM emscripten/emsdk:2.0.7@sha256:cbeeb7cccd2e7915fe0596345f10bfdec5578cc0386aaa823ad6f1d41910619f AS wasm-builder
 
 WORKDIR /src
 # Copy only the vendored wasm source tree (patches + the pristine `code/` tree).
@@ -38,7 +38,7 @@ RUN make clean && make
 # ---------------------------------------------------------------------------
 # Stage 2 — the headless Bun runtime.
 # ---------------------------------------------------------------------------
-FROM oven/bun:1.3.14 AS runtime
+FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS runtime
 
 # System deps:
 # - ffmpeg: discord-video-stream (fluent-ffmpeg) encodes the rawvideo frame feed.
