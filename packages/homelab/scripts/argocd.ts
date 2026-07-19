@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
- * ArgoCD operations: trigger a sync, wait for an app to become healthy, and
- * wait for a pruned resource (with a finalizer) to fully delete.
+ * ArgoCD operations: trigger a sync, wait for app or app-tree health, and wait
+ * for a pruned resource (with a finalizer) to fully delete.
  *
  * Ported from the old CI's `argoCdSyncHelper` / `argoCdHealthWaitHelper` /
  * `waitForArgoCdResourceDeletionHelper` (.dagger/src/release.ts). Runs locally
@@ -11,6 +11,7 @@
  * Usage:
  *   bun packages/homelab/scripts/argocd.ts sync <app> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts health-wait <app> [--timeout <s>] [--dry-run]
+ *   bun packages/homelab/scripts/argocd.ts tree-health-wait <app> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts wait-deletion <app> \
  *       --group <g> --version <v> --kind <k> --namespace <ns> \
  *       [--timeout <s>] [--dry-run]
@@ -21,6 +22,7 @@
  */
 
 import { requireEnv, optionalEnv } from "../../../scripts/lib/run.ts";
+import { applicationReadiness } from "../src/cdk8s/src/argocd-application-readiness.ts";
 
 const DEFAULT_SERVER_URL = "https://argocd.sjer.red";
 const DEFAULT_HEALTH_TIMEOUT_S = 300;
@@ -140,17 +142,22 @@ async function sync(
   );
 }
 
-/** Poll until an application is Healthy or the timeout elapses. */
+/** Poll until an application satisfies the selected readiness gate. */
 async function healthWait(
   appName: string,
   timeoutSeconds: number,
   dryRun: boolean,
+  requireSynced: boolean,
 ): Promise<void> {
+  const subcommand = requireSynced ? "tree-health-wait" : "health-wait";
+  const requirement = requireSynced ? "Synced/Healthy" : "Healthy";
   console.log(
-    `--- argocd health-wait: ${appName}${dryRun ? " (dry run)" : ""}`,
+    `--- argocd ${subcommand}: ${appName}${dryRun ? " (dry run)" : ""}`,
   );
   if (dryRun) {
-    console.log(`DRYRUN: would wait for ArgoCD app ${appName} to be Healthy`);
+    console.log(
+      `DRYRUN: would wait for ArgoCD app ${appName} to be ${requirement}`,
+    );
     return;
   }
   const token = requireEnv("ARGOCD_TOKEN");
@@ -158,21 +165,21 @@ async function healthWait(
   let elapsed = 0;
   while (Date.now() < deadline) {
     const app = await getApplication(appName, token);
-    const status = isRecord(app["status"]) ? app["status"] : {};
-    const health = isRecord(status["health"]) ? status["health"] : {};
-    const value = typeof health["status"] === "string" ? health["status"] : "";
+    const readiness = applicationReadiness(app, requireSynced);
     console.log(
-      `Health: ${value} (${elapsed.toString()}/${timeoutSeconds.toString()}s)`,
+      `Sync: ${readiness.sync || "(unknown)"}; ` +
+        `Health: ${readiness.health || "(unknown)"} ` +
+        `(${elapsed.toString()}/${timeoutSeconds.toString()}s)`,
     );
-    if (value === "Healthy") {
-      console.log(`healthy: ${appName}`);
+    if (readiness.ready) {
+      console.log(`${requirement.toLowerCase()}: ${appName}`);
       return;
     }
     await Bun.sleep(POLL_INTERVAL_MS);
     elapsed += POLL_INTERVAL_MS / 1000;
   }
   throw new Error(
-    `Timeout: ${appName} did not become Healthy within ${timeoutSeconds.toString()}s`,
+    `Timeout: ${appName} did not become ${requirement} within ${timeoutSeconds.toString()}s`,
   );
 }
 
@@ -252,6 +259,8 @@ function usage(): never {
       "[--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts health-wait <app> " +
       "[--timeout <s>] [--dry-run]\n" +
+      "  bun packages/homelab/scripts/argocd.ts tree-health-wait <app> " +
+      "[--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts wait-deletion <app> " +
       "--group <g> --version <v> --kind <k> --namespace <ns> " +
       "[--timeout <s>] [--dry-run]",
@@ -303,6 +312,15 @@ async function main(): Promise<void> {
         app,
         timeoutOverride ?? DEFAULT_HEALTH_TIMEOUT_S,
         dryRun,
+        false,
+      );
+      return;
+    case "tree-health-wait":
+      await healthWait(
+        app,
+        timeoutOverride ?? DEFAULT_HEALTH_TIMEOUT_S,
+        dryRun,
+        true,
       );
       return;
     case "wait-deletion": {
