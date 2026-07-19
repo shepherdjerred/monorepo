@@ -51,6 +51,10 @@ docs/
 - Keep `index.md` stable: do not add individual entries for `plans/`, `logs/`, or `todos/`
 - Prefer updating existing docs over creating new ones
 - Plans must be raw Markdown — do not generate PDF or Typst renderings alongside `.md` files
+- `decisions/` audits may ship a reproducible Typst source and rendered PDF beside the `.md` file
+  only with the repository owner's explicit, recorded approval for that specific document (e.g. an
+  executive-format audit report); this is a narrow exception to the plans rule above, not a general
+  license to render docs
 - TODO docs use YAML frontmatter (`id`, `status`, `origin`, optional `source_marker: true`). Every source `TODO(todo:<id>)` marker MUST have a matching `<id>.md` (enforced by `bun scripts/check-todos.ts`); docs without source markers are allowed for general issue tracking
 
 ## Scheduling Follow-ups
