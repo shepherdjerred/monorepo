@@ -214,8 +214,12 @@ async function main(): Promise<void> {
   console.log(`--- Publish ${pkgName} (${pkgDir}) --tag ${tag}`);
 
   // For dev releases, append -dev.<suffix> to package.json (ephemeral; the
-  // operator should not commit this). Prod releases publish the version as-is.
+  // original text is restored in the finally below, so a failed or retried
+  // publish can never leave the -dev.N version behind for a later prod
+  // publish to pick up and push under --tag latest).
+  let originalPkgJsonText: string | null = null;
   if (devSuffix !== "") {
+    originalPkgJsonText = await pkgFile.text();
     pkgJson["version"] = `${baseVersion}-dev.${devSuffix}`;
     await Bun.write(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + "\n");
     console.log(
@@ -223,52 +227,64 @@ async function main(): Promise<void> {
     );
   }
 
-  // Build from source before publishing (matches the old helper).
-  console.log("+++ build");
-  if (dryRun) {
-    console.log(`DRYRUN: would run \`bun run build\` in ${pkgDir}`);
-  } else {
-    await run(["bun", "run", "build"], { cwd: pkgDir });
-  }
-
-  if (dryRun) {
-    console.log(
-      `DRYRUN: would verify NPM_TOKEN bypasses 2FA, then ` +
-        `\`bun publish --access public --tag ${tag} --tolerate-republish\``,
-    );
-    return;
-  }
-
-  const token = requireEnv("NPM_TOKEN");
-  await verifyTokenBypasses2fa(token);
-
-  // bun publish reads the token from the NPM_TOKEN env var via a static
-  // `.npmrc` whose value is a literal `${NPM_TOKEN}` — bun substitutes it at
-  // parse time so the secret bytes never land on disk. This avoids the
-  // "must not write tokens to files" rule. Must be written at the WORKSPACE
-  // ROOT: in a workspace, bun resolves .npmrc from the project root (where
-  // bun.lock lives) and ignores one in the package dir ("missing
-  // authentication", main build 5633).
-  const npmrcPath = `${import.meta.dir}/../.npmrc`;
-  await Bun.write(npmrcPath, "//registry.npmjs.org/:_authToken=${NPM_TOKEN}\n");
   try {
-    await run(
-      [
-        "bun",
-        "publish",
-        "--access",
-        "public",
-        "--tag",
-        tag,
-        "--tolerate-republish",
-      ],
-      { cwd: pkgDir, env: { NPM_TOKEN: token } },
+    // Build from source before publishing (matches the old helper).
+    console.log("+++ build");
+    if (dryRun) {
+      console.log(`DRYRUN: would run \`bun run build\` in ${pkgDir}`);
+    } else {
+      await run(["bun", "run", "build"], { cwd: pkgDir });
+    }
+
+    if (dryRun) {
+      console.log(
+        `DRYRUN: would verify NPM_TOKEN bypasses 2FA, then ` +
+          `\`bun publish --access public --tag ${tag} --tolerate-republish\``,
+      );
+      return;
+    }
+
+    const token = requireEnv("NPM_TOKEN");
+    await verifyTokenBypasses2fa(token);
+
+    // bun publish reads the token from the NPM_TOKEN env var via a static
+    // `.npmrc` whose value is a literal `${NPM_TOKEN}` — bun substitutes it at
+    // parse time so the secret bytes never land on disk. This avoids the
+    // "must not write tokens to files" rule. Must be written at the WORKSPACE
+    // ROOT: in a workspace, bun resolves .npmrc from the project root (where
+    // bun.lock lives) and ignores one in the package dir ("missing
+    // authentication", main build 5633).
+    const npmrcPath = `${import.meta.dir}/../.npmrc`;
+    await Bun.write(
+      npmrcPath,
+      "//registry.npmjs.org/:_authToken=${NPM_TOKEN}\n",
     );
+    try {
+      await run(
+        [
+          "bun",
+          "publish",
+          "--access",
+          "public",
+          "--tag",
+          tag,
+          "--tolerate-republish",
+        ],
+        { cwd: pkgDir, env: { NPM_TOKEN: token } },
+      );
+    } finally {
+      // Remove the .npmrc so it never lingers in a working tree.
+      await Bun.file(npmrcPath)
+        .exists()
+        .then((exists) =>
+          exists ? Bun.$`rm ${npmrcPath}`.quiet() : undefined,
+        );
+    }
   } finally {
-    // Remove the .npmrc so it never lingers in a working tree.
-    await Bun.file(npmrcPath)
-      .exists()
-      .then((exists) => (exists ? Bun.$`rm ${npmrcPath}`.quiet() : undefined));
+    // Restore the pre-dev-rewrite package.json (see above).
+    if (originalPkgJsonText !== null) {
+      await Bun.write(pkgJsonPath, originalPkgJsonText);
+    }
   }
 
   console.log(`--- published ${pkgName} --tag ${tag}`);
