@@ -262,9 +262,8 @@ everything replays from turbo's cache in milliseconds when unchanged.
 2. `bunx turbo run typecheck test lint --filter=<pkg>` — a single package
 3. `bunx eslint . --fix` — autofix lint in the relevant package
 
-The `pre-commit` hook already runs `turbo run lint typecheck --affected` and
-`pre-push` runs `bun run verify -- --affected`, so a clean push has passed the
-same gates as CI.
+The `pre-commit` hook runs `bun run verify -- --affected` (there is no
+`pre-push` hook), so a clean commit has passed the same gates as CI.
 
 ## Parallel Work — Use Worktrees
 

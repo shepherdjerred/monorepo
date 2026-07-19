@@ -50,7 +50,7 @@ pre-commit:
             run: bun install --frozen-lockfile --dry-run
 
           # Formatters fix + restage; everything else formatting-related is
-          # caught by `//#prettier` in pre-push/verify.
+          # caught by `//#prettier` in verify below.
           - name: prettier
             glob: "**/*.{ts,tsx,js,jsx,json,jsonc,yaml,yml,md,css,astro,html,graphql}"
             exclude:
@@ -63,14 +63,8 @@ pre-commit:
             run: bash scripts/prettier-staged.sh {staged_files}
             stage_fixed: true
 
-    # Affected-only lint + typecheck through turbo — warm-cache replay is
-    # near-instant; only packages whose inputs changed actually run.
-    - name: turbo-affected
-      run: bunx turbo run lint typecheck --affected --concurrency=4 --output-logs=errors-only
-
-pre-push:
-  jobs:
     # The full verification surface (build/typecheck/test/lint + every repo
-    # check), affected-scoped. Identical command surface to CI.
+    # check), affected-scoped. Identical command surface to CI; warm-cache
+    # replay is near-instant.
     - name: verify-affected
       run: bun run verify -- --affected --concurrency=4 --output-logs=errors-only
