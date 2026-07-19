@@ -127,6 +127,7 @@ for dir in "${smoke_dirs[@]}"; do
 done
 
 if [ "$PUSH" = true ]; then
+  VERSIONS_TS="packages/homelab/src/cdk8s/src/versions.ts"
   digest_args=()
   for name in "${push_images[@]}"; do
     echo "--- :arrow_up: push ${name}"
@@ -135,16 +136,51 @@ if [ "$PUSH" = true ]; then
     docker push "${REGISTRY}/${name}:${SHA}"
     docker push "${REGISTRY}/${name}:latest"
     # Record the pushed manifest digest for the version commit-back step
-    # (versions.ts pins tag@digest; digest equality is its change gate).
+    # (versions.ts pins tag@digest).
     digest=$(docker inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' "${REGISTRY}/${name}:${SHA}" \
       | grep -m1 "^${REGISTRY}/${name}@" | cut -d@ -f2)
     if [ -z "$digest" ]; then
       echo "no repo digest recorded for ${REGISTRY}/${name}:${SHA} after push" >&2
       exit 1
     fi
+    # CONTENT gate, not manifest gate: VERSION/GIT_SHA are baked into every
+    # image's config, so the MANIFEST digest changes every build even for
+    # byte-identical content — gating the version bump on it would make each
+    # bump build produce "new" digests and open the next bump PR forever
+    # (the image-flavored version of the cooklang release loop; the old CI
+    # avoided it only via change detection). The rootfs layer chain ignores
+    # config-only changes: identical content => identical layers. Compare the
+    # fresh image's layers against the currently-pinned digest's and only
+    # report a digest when the CONTENT differs.
+    pinned=""
+    for key in "shepherdjerred/${name}" "shepherdjerred/${name}/beta"; do
+      if pin_lines=$(grep -A1 "\"${key}\"" "$VERSIONS_TS"); then
+        if pinned=$(printf '%s' "$pin_lines" | grep -om1 "sha256:[a-f0-9]*"); then
+          break
+        fi
+      fi
+    done
+    if [ -n "$pinned" ]; then
+      # imagetools failure (e.g. a placeholder pin that was never pushed)
+      # counts as changed — the safe direction is an extra bump, never a
+      # skipped one.
+      if old_layers=$(docker buildx imagetools inspect "${REGISTRY}/${name}@${pinned}" --format '{{json .Image.RootFS.Layers}}'); then
+        new_layers=$(docker inspect --format '{{json .RootFS.Layers}}' "${name}:dev")
+        if [ "$old_layers" = "$new_layers" ]; then
+          echo "content unchanged vs pinned ${pinned} (identical rootfs) — no version bump for ${name}"
+          continue
+        fi
+        echo "content CHANGED vs pinned ${pinned} — will bump ${name}"
+      else
+        echo "pinned digest ${pinned} for ${name} not resolvable — treating as changed"
+      fi
+    else
+      echo "no existing versions.ts pin found for ${name} — will bump"
+    fi
     digest_args+=(--arg "shepherdjerred/${name}" "$digest")
   done
   # One JSON object {"shepherdjerred/<image>": "sha256:..."} via build
-  # meta-data, consumed by the version commit-back step.
+  # meta-data, consumed by the version commit-back step. May be empty when
+  # no image's content changed — the commit-back then no-ops.
   jq -n '$ARGS.named' "${digest_args[@]}" | buildkite-agent meta-data set image-digests
 fi
