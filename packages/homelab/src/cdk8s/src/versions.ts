@@ -22,7 +22,7 @@ const versions = {
   // not managed by renovate — built from packages/streambot; CI's version commit-back fills the
   // real tag@digest after the first image push. Seed digest is a placeholder until then.
   "shepherdjerred/streambot":
-    "2.0.0-5777@sha256:be35a86d0744dc6a840d59647067e6f1d90f769591b2cf9a13c42808d5887af2",
+    "2.0.0-5781@sha256:22b33db47e47c6eb30f69b2829a9bbf1119a1b4b76c5fe8ce160e41c3816b47f",
   // not managed by renovate — built from upstream redlib's glibc Dockerfile.ubuntu
   // at REDLIB_SOURCE_REF (pinned in the since-removed CI pipeline). The published image is
   // musl/Alpine, which Reddit blocks during OAuth (redlib-org/redlib#551 —
@@ -136,26 +136,26 @@ const versions = {
   openebs: "4.5.1",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-5777@sha256:d51d9f66009ad42c5227550dfcde5a8db08454b6ed434fae995bbdb63627c822",
+    "2.0.0-5781@sha256:cd7d244f1883c21f5417376a6714bccd569e39bd2ac6d92b98d187eae78ed37f",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
   "shepherdjerred/scout-for-lol/prod":
     "2.0.0-4791@sha256:bfd87a5cebfa8567cf14d077cd58bcf84f6315d04ea962468695e1fc99bf58e6",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
-    "2.0.0-5777@sha256:da968c340fc8a457cde4a9245a0fc4e053dcfb39d09469557a58886c7d802275",
+    "2.0.0-5781@sha256:9389e0fb7069bade21566ddd2f4d5dc1c4b5550728886b6205928cf838629b7f",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
     "2.0.0-4777@sha256:6a94f1d598bef983189c3f0b74d24f1c2c94ea4ba260dc2a5203d2d4bd735402",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-5777@sha256:bb6404829da85877f0539a3d9c8ef5b8b6209ad0fef0e585a4039e547b8760e7",
+    "2.0.0-5781@sha256:dda6f9dd87d785dc3e19858f482d802aaa34b3f387594d2b98c373b2f8f38cd9",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-5777@sha256:c07b7e07e9cc2c5a5f369fd5aec0d178c268b917a9c746f6262ac2e048f6e91e",
+    "2.0.0-5781@sha256:469b832758c41a9474087b1b9abafbc1c5d9f65b30fb50fef02c8713274b3292",
   // not managed by renovate — placeholder digest; CI version-commit-back fills
   // the real digest after the first successful image push.
   "shepherdjerred/discord-plays-mario-kart":
-    "2.0.0-5777@sha256:50e0a38e97fa876df9bfe713710d5a3dd1bff1e73b23ab102133cef7c682ed90",
+    "2.0.0-5781@sha256:3cdff1c12c122f75c6f20959b83a7c012dee5eb669297a3f99d441abb7d8813f",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.29.1@sha256:ab6b363102ccdbc39f6a62db926f567c61a5289bf25ba460f1c34423d8cc1a4d",
@@ -278,7 +278,7 @@ const versions = {
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
-    "2.0.0-5777@sha256:de4d30c1f5e32a74ee661741055df6bbd607abfce4c7a017de9dc98e03f12215",
+    "2.0.0-5781@sha256:cddea8971705ec362f7c6aa168d973b6fba5e501e937090ce42db3ddf2f9b473",
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
@@ -299,11 +299,11 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-5777@sha256:5993d4531f9359fb29e54d8994d319887cef4da705feed2dead4448b51985ba0",
+    "2.0.0-5781@sha256:ed2e2092ef4f5c7dd1e12073ef7d208097e8d1d4e0ca12e0405999ddc71e56ba",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/trmnl-dashboard":
-    "2.0.0-5777@sha256:e8014eb28b7c59c18aa70d10fef7f9f9e5a07bb941e131436227c094aff3196c",
+    "2.0.0-5781@sha256:e111736899f023cd2cf5c82761ddfe7cf1ab0c2b593f83fa16d828a75f96fac1",
 };
 
 /**
