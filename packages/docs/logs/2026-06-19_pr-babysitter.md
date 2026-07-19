@@ -1,8 +1,11 @@
+---
+id: log-2026-06-19-pr-babysitter
+type: log
+status: complete
+board: false
+---
+
 # PR Babysitter Session — Drive all open PRs to green
-
-## Status
-
-In Progress (all work complete except #1281, which is escalated for a user decision; #1273 + #1256 parked by user)
 
 ## Goal
 

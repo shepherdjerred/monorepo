@@ -1,6 +1,10 @@
 ---
 id: scout-twisted-missing-champions
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/plans/2026-07-11_fix-temporal-weekly-refreshes.md
 ---
 
@@ -18,3 +22,7 @@ entries), but match analysis for these champions depends on the twisted
 library's champion enum. Bump `twisted` in
 `packages/scout-for-lol` once a release including Locke (805) and Zaahen (904)
 ships, then confirm the warning disappears from the next data-dragon run.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Bump twisted so scout recognizes Locke and Zaahen`.

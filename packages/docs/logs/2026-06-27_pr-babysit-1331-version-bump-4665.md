@@ -1,12 +1,13 @@
 ---
+id: log-2026-06-27-pr-babysit-1331-version-bump-4665
+type: log
+status: complete
+board: false
 title: "PR #1331 Babysit — version bump 2.0.0-4665 (and 4670)"
 date: 2026-06-27
-status: Complete
 ---
 
-## Status
-
-Complete — PR merged by bot at 2026-06-27T19:09:44Z.
+# Pr Babysit 1331 Version Bump 4665
 
 ## Summary
 

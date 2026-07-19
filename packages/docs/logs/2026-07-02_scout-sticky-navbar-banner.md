@@ -1,8 +1,11 @@
+---
+id: log-2026-07-02-scout-sticky-navbar-banner
+type: log
+status: complete
+board: false
+---
+
 # Scout frontend: sticky Navbar so the "What's New" banner is visible
-
-## Status
-
-Complete (pending PR)
 
 ## Problem
 

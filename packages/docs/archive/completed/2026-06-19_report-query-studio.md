@@ -1,10 +1,11 @@
+---
+id: reference-completed-2026-06-19-report-query-studio
+type: reference
+status: complete
+board: false
+---
+
 # Report Query Studio (scout-for-lol web UI)
-
-## Status
-
-Complete — shipped in PR #1273.
-
-> Mirror of the approved harness plan (`~/.claude/plans/ok-i-want-to-refactored-flame.md`). See that file for the full rationale; this is the repo-tracked copy.
 
 ## Context
 

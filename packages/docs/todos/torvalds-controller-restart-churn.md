@@ -1,6 +1,10 @@
 ---
 id: torvalds-controller-restart-churn
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/plans/2026-07-18_ci-speed.md
 ---
 
@@ -73,3 +77,7 @@ Work items:
 5. Priority/preemption: kueue + kyverno run at default priority; CI pods run
    `batch-low`. Verify system controllers preempt CI under pressure (they
    should never lose CPU to a docker build).
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Control-plane-wide restart churn on torvalds under CI load (probe-stall waves); webhook outages have Fail blast radius`.

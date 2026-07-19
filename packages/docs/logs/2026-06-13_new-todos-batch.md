@@ -1,13 +1,13 @@
 ---
+id: log-2026-06-13-new-todos-batch
+type: log
+status: complete
+board: false
 title: New TODO batch — cross-package backlog capture
 date: 2026-06-13
 ---
 
 # New TODO batch — cross-package backlog capture
-
-## Status
-
-Complete
 
 ## Context
 

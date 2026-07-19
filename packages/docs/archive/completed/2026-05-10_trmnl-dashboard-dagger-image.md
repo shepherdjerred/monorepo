@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-10-trmnl-dashboard-dagger-image
+type: reference
+status: complete
+board: false
+---
+
 # trmnl-dashboard — build via Dagger, no Dockerfile
-
-## Status
-
-PR #1 Complete (locally verified) — awaiting commit/push/merge; PR #2 Pending
 
 ## Context
 

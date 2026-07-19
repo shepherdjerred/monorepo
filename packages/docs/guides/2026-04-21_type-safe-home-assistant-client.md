@@ -1,3 +1,10 @@
+---
+id: guide-2026-04-21-type-safe-home-assistant-client
+type: guide
+status: complete
+board: false
+---
+
 # Type-safe Home Assistant client
 
 ## Summary

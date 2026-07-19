@@ -1,6 +1,10 @@
 ---
 id: bun-types-undici-phantom-dep
-status: waiting-on-verification
+type: todo
+status: awaiting-human
+board: true
+verification: human
+disposition: active
 origin: packages/docs/plans/2026-07-04_bun-workspace-migration.md
 ---
 
@@ -16,7 +20,7 @@ lives in @types/node's store entry, invisible from bun-types' files) and the
 global `Response`/`Request`/`Headers` degrade to near-empty interfaces
 (first symptom: `Property 'status' does not exist on type 'Response'`).
 
-## Done when
+## Human Verification
 
 - Upstream issue filed on oven-sh/bun (silent-degradation variant; closed
   #19300 covers only the loud no-skipLibCheck variant), AND

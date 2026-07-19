@@ -1,8 +1,11 @@
+---
+id: log-2026-07-06-pr-1391-ci-conflict-resolution
+type: log
+status: complete
+board: false
+---
+
 # PR 1391 CI Conflict Resolution
-
-## Status
-
-Complete
 
 ## Summary
 

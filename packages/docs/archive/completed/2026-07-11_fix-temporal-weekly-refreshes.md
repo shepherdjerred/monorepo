@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-11-fix-temporal-weekly-refreshes
+type: reference
+status: complete
+board: true
+verification: agent
+disposition: active
+---
+
 # Fix weekly Temporal workflow failures (scout-data-dragon, scout-season-refresh, readme-refresh)
-
-## Status
-
-Complete
 
 ## Context
 

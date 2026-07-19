@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-11-scout-season-dropdown-hardening
+type: reference
+status: complete
+board: false
+---
+
 # Scout for LoL — `/competition` season dropdown hardening
-
-## Status
-
-Complete (hardening only — `SEASONS` data refresh deferred to a separate change).
 
 ## Context
 

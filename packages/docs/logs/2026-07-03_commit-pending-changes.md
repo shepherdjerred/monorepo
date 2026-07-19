@@ -1,8 +1,11 @@
+---
+id: log-2026-07-03-commit-pending-changes
+type: log
+status: complete
+board: false
+---
+
 # Commit pending working-tree changes
-
-## Status
-
-Complete
 
 ## What happened
 

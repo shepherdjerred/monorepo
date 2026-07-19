@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-mk64-controller-ui-not-in-prod
+type: log
+status: complete
+board: false
+---
+
 # MK64 skeuomorphic controller UI not visible in prod — diagnosis
-
-## Status
-
-Complete (diagnosis only; fix not yet applied)
 
 ## Question
 

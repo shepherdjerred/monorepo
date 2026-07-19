@@ -1,8 +1,11 @@
+---
+id: log-2026-05-30-pinchtab-config-split
+type: log
+status: complete
+board: false
+---
+
 # PinchTab config-split fix & chezmoi tracking cleanup
-
-## Status
-
-Complete
 
 ## Summary
 

@@ -1,3 +1,10 @@
+---
+id: decision-2026-03-18-kueue-buildkite-resource-management
+type: decision
+status: complete
+board: false
+---
+
 # Kueue for Buildkite CI Resource Management
 
 Date: 2026-03-18

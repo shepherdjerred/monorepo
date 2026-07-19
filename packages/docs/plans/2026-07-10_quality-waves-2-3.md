@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-10-quality-waves-2-3
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Quality Waves 2–3: Burn-Down + Architecture Refactors (phases 3 & 4)
-
-## Status
-
-In Progress
 
 ## Context
 
@@ -247,3 +252,7 @@ All 6 PRs implemented and submitted as a git-spice stack on `feature/quality-wav
   - Root cause is the same for all: scoped setup doesn't install every package a full-repo merge stages.
     On CI (full install) none of these are issues. Next merge of a broad main into a scoped worktree will
     likely need the same per-producer installs before lefthook passes.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Quality Waves 2–3: Burn-Down + Architecture Refactors (phases 3 & 4)`.

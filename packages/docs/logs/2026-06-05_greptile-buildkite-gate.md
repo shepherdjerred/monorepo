@@ -1,8 +1,11 @@
+---
+id: log-2026-06-05-greptile-buildkite-gate
+type: log
+status: complete
+board: false
+---
+
 # Greptile Buildkite Gate
-
-## Status
-
-In Progress
 
 ## Summary
 

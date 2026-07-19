@@ -1,10 +1,11 @@
+---
+id: guide-2026-07-19-ha-utility-price-tracking-handoff
+type: guide
+status: complete
+board: false
+---
+
 # Handoff: Home Assistant Utility Price Tracking (Seattle)
-
-## Status
-
-Complete — operational; two small user-side items outstanding (see Outstanding).
-
-Session journal: `packages/docs/logs/2026-07-19_ha-utility-price-tracking.md`.
 
 ## What exists now
 

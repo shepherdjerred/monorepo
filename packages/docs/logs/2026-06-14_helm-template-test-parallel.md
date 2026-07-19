@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-helm-template-test-parallel
+type: log
+status: complete
+board: false
+---
+
 # Helm Template Test — Parallelize + Bump Timeout
-
-## Status
-
-Complete
 
 ## Context
 

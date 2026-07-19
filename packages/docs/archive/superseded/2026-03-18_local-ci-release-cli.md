@@ -1,3 +1,10 @@
+---
+id: reference-superseded-2026-03-18-local-ci-release-cli
+type: reference
+status: complete
+board: false
+---
+
 # Local CI/Release CLI for Ad-Hoc Deploys
 
 ## Summary

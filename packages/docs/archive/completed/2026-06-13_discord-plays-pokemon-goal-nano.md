@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-13-discord-plays-pokemon-goal-nano
+type: reference
+status: complete
+board: false
+---
+
 # discord-plays-pokemon `/goal` — nano model + smarter prompt + game-state + cost + observability
-
-## Status
-
-Complete
 
 ## Context
 

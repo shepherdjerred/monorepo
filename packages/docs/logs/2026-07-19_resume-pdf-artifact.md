@@ -1,8 +1,11 @@
+---
+id: log-2026-07-19-resume-pdf-artifact
+type: log
+status: complete
+board: false
+---
+
 # Stop committing resume.pdf — build it in CI, ship as a Buildkite artifact
-
-## Status
-
-Complete
 
 ## Context
 

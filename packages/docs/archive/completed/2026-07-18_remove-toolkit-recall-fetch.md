@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-18-remove-toolkit-recall-fetch
+type: reference
+status: complete
+board: true
+verification: agent
+disposition: active
+---
+
 # Remove `toolkit recall` + `toolkit fetch` entirely
-
-## Status
-
-Complete — implemented in PR #1540.
 
 ## Context
 

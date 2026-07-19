@@ -1,6 +1,13 @@
+---
+id: guide-2026-06-28-scout-prematch-debugging
+type: guide
+status: complete
+board: false
+---
+
 # Debugging Scout Prematch / Loading-Screen Issues
 
-## Status
+## Status Notes (Historical)
 
 Complete (reference)
 

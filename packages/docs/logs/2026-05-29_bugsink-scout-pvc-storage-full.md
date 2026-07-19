@@ -1,8 +1,11 @@
+---
+id: log-2026-05-29-bugsink-scout-pvc-storage-full
+type: log
+status: complete
+board: false
+---
+
 # bugsink + scout ZFS volumes full — expansion remediation
-
-## Status
-
-Complete (relief shipped + verified live; GitOps reconcile pending PR #966 merge)
 
 ## Summary
 

@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-07-dagger-engine-disk-hardening
+type: reference
+status: complete
+board: false
+---
+
 # Dagger Engine Disk Hardening
-
-## Status
-
-Complete — PVC early-warning alerts + GC retune (800GB/200GB) live on main.
 
 ## Context
 

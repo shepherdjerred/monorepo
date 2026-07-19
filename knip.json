@@ -13,6 +13,16 @@
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
+    "packages/docs-board": {
+      "entry": [
+        "src/client/main.tsx",
+        "src/server/index.ts",
+        "src/dev.ts",
+        "src/cli/*.ts",
+        "vite.config.ts"
+      ],
+      "project": ["src/**/*.{ts,tsx}", "vite.config.ts"]
+    },
     "packages/discord-plays-core": {
       "entry": ["src/index.ts", "src/entry.ts"],
       "project": ["src/**/*.ts"]

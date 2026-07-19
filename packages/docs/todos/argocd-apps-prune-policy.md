@@ -1,6 +1,10 @@
 ---
 id: argocd-apps-prune-policy
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-07-18_ci-green-verify-hardening.md
 ---
 
@@ -53,3 +57,7 @@ true}` in the CI sync POST) — restores real GitOps semantics and makes
 
 Option 1 after a supervised cleanup of the Dagger leftovers is the
 recommended path.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `ArgoCD apps never prunes — orphaned resources accumulate; decide a prune policy`.

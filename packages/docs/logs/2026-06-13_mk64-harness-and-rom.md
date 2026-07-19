@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-mk64-harness-and-rom
+type: log
+status: complete
+board: false
+---
+
 # MK64 manual harness + ROM persistence (Syncthing)
-
-## Status
-
-Complete — shipped on `feature/mk64-leaderboards` (PR #1143), second commit. Follow-up to the leaderboards feature ([plan](../plans/2026-06-12_mk64-leaderboards.md)).
 
 ## Context
 

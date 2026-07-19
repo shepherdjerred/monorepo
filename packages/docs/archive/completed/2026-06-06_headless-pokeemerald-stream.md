@@ -1,10 +1,11 @@
+---
+id: reference-completed-2026-06-06-headless-pokeemerald-stream
+type: reference
+status: complete
+board: false
+---
+
 # Headless pokeemerald-wasm streaming for discord-plays-pokemon
-
-## Status
-
-Complete (pending live Discord smoke test + Docker build). All code landed on
-`claude/headless-pokeemerald` ([PR #1042](https://github.com/shepherdjerred/monorepo/pull/1042)),
-typecheck/test/lint green, emulator render + stream encode verified locally.
 
 ## Context
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-07-06-scout-local-webapp-core-db
+type: log
+status: complete
+board: false
+---
+
 # Scout Local Webapp Core DB
-
-## Status
-
-Complete
 
 ## Context
 

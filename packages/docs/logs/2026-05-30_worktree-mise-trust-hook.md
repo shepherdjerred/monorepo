@@ -1,8 +1,11 @@
+---
+id: log-2026-05-30-worktree-mise-trust-hook
+type: log
+status: complete
+board: false
+---
+
 # Auto-trust mise configs on new git worktrees
-
-## Status
-
-Complete
 
 ## Goal
 

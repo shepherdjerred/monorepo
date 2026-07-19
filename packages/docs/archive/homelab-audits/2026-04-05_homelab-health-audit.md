@@ -1,3 +1,10 @@
+---
+id: reference-homelab-audits-2026-04-05-homelab-health-audit
+type: reference
+status: complete
+board: false
+---
+
 # Homelab Infrastructure Health Audit — 2026-04-05
 
 ## Cluster Overview

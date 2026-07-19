@@ -1,3 +1,10 @@
+---
+id: reference-superseded-2026-02-27-package-integration-audit
+type: reference
+status: complete
+board: false
+---
+
 # Package Integration Audit
 
 > **Note (2026-03-19):** This audit is outdated. Dagger CI has been removed (replaced by Bazel). Lefthook and Knip gaps may have been addressed. Re-audit recommended.

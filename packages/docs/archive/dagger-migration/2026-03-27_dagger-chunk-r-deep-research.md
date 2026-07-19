@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-03-27-dagger-chunk-r-deep-research
+type: reference
+status: complete
+board: false
+---
+
 # Chunk R: Deep Research — Dagger Community Knowledge
 
 **Wave:** 1 (parallel with A, B, C)

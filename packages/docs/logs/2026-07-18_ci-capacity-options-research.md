@@ -1,11 +1,11 @@
+---
+id: log-2026-07-18-ci-capacity-options-research
+type: log
+status: complete
+board: false
+---
+
 # CI Capacity Options Research — Buildkite Agent Compute
-
-## Status
-
-Complete
-
-Q&A session evaluating where to buy additional Buildkite agent capacity for the
-monorepo pipeline, grounded in measured usage from the Buildkite API.
 
 ## Measured usage (Buildkite REST API, pipeline `sjerred/monorepo`)
 

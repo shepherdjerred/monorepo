@@ -1,3 +1,10 @@
+---
+id: decision-2026-03-08-1password-deduplication
+type: decision
+status: complete
+board: false
+---
+
 # 1Password Secret Deduplication
 
 Date: 2026-03-08

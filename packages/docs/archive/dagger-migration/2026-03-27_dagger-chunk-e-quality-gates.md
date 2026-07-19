@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-03-27-dagger-chunk-e-quality-gates
+type: reference
+status: complete
+board: false
+---
+
 # Chunk E: Quality Gate Dagger Functions
 
 **Wave:** 2 (parallel with D, F)

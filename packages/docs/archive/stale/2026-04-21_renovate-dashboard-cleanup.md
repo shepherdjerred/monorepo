@@ -1,6 +1,13 @@
+---
+id: reference-stale-2026-04-21-renovate-dashboard-cleanup
+type: reference
+status: complete
+board: false
+---
+
 # Renovate Dependency Dashboard #481 Cleanup
 
-## Status
+## Status Notes (Historical)
 
 **Session 1 (2026-04-21):** Wave 1 + Wave 5 (safe subset) + Wave 6 complete. Commits `45a995ce1`, `26ac538c`, `ba6b3f768` (hotfix), `e6fbe8f5`, `4b4271b2`, `72c05b240`, `8bc6483b`, `2f09b71c`, `9a555422c`, `297896c7a`.
 

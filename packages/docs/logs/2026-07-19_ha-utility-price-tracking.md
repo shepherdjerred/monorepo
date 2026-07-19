@@ -1,8 +1,11 @@
+---
+id: log-2026-07-19-ha-utility-price-tracking
+type: log
+status: complete
+board: false
+---
+
 # Home Assistant — Electricity & Water Price Tracking (Seattle Rates)
-
-## Status
-
-Complete
 
 ## Context
 

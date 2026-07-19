@@ -1,13 +1,17 @@
 ---
 id: mk64-emulator-worker-thread
-status: waiting-on-verification
+type: todo
+status: awaiting-human
+board: true
+verification: human
+disposition: active
 origin: packages/docs/archive/completed/2026-06-19_mk64-stream-backpressure.md
 source_marker: false
 ---
 
 # MK64: move the emulator to a Worker thread to restore 30fps
 
-## Verification (2026-06-28) — unmeasurable without a live `/play`
+## Human Verification
 
 The decision gate here is a live fps measurement during a real Mario Kart `/play` session
 (`stream_ffmpeg_fps`, `emulator_ticks_total`, drops, sink-buffer). Prometheus currently exposes

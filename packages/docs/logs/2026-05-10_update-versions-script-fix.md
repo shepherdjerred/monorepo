@@ -1,8 +1,11 @@
+---
+id: log-2026-05-10-update-versions-script-fix
+type: log
+status: complete
+board: false
+---
+
 # update-versions.ts: handle same-line entries safely
-
-## Status
-
-Complete
 
 ## Problem
 

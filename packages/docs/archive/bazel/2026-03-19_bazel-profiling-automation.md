@@ -1,3 +1,10 @@
+---
+id: reference-bazel-2026-03-19-bazel-profiling-automation
+type: reference
+status: complete
+board: false
+---
+
 # Bazel Profiling Automation (Future Plan)
 
 Follow-up to one-off profiling via `scripts/bench.py`. Goal: automated, recurring Bazel build benchmarks with historical tracking.

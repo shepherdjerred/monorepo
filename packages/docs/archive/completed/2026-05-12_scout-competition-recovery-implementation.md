@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-12-scout-competition-recovery-implementation
+type: reference
+status: complete
+board: false
+---
+
 # Scout Competition Recovery Implementation
-
-## Status
-
-Complete — repair script + schema columns shipped to main; beta/prod migration & repair runs were the operational remainder (tracked in todos/scout-migration-competition-update-schedule.md).
 
 ## Summary
 

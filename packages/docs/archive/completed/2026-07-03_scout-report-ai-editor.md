@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-03-scout-report-ai-editor
+type: reference
+status: complete
+board: true
+verification: agent
+disposition: active
+---
+
 # Scout Report AI Editor
-
-## Status
-
-Complete
 
 ## Scope
 

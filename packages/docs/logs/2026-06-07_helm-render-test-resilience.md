@@ -1,8 +1,11 @@
+---
+id: log-2026-06-07-helm-render-test-resilience
+type: log
+status: complete
+board: false
+---
+
 # Helm-render test resilience (flaky external-chart fetches)
-
-## Status
-
-Complete
 
 ## Context
 

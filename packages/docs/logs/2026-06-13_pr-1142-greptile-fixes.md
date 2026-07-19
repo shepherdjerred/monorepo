@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-pr-1142-greptile-fixes
+type: log
+status: complete
+board: false
+---
+
 # PR #1142 Greptile Review Fixes
-
-## Status
-
-Complete
 
 ## What was fixed
 

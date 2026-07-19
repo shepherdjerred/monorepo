@@ -1,8 +1,11 @@
+---
+id: log-2026-05-16-bugsink-open-bugs
+type: log
+status: complete
+board: false
+---
+
 # Bugsink Open Bugs Triage
-
-## Status
-
-Complete
 
 ## Findings
 

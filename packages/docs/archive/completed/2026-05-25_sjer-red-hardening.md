@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-25-sjer-red-hardening
+type: reference
+status: complete
+board: false
+---
+
 # sjer.red — hardening (subset of pen-test findings)
-
-## Status
-
-Complete (MTA-STS subset deferred — see [packages/docs/todos/sjer-red-mta-sts.md](packages/docs/todos/sjer-red-mta-sts.md))
 
 ## Context
 

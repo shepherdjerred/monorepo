@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-11-streambot-ux-list-pagination-tips-subtitles-play-errors
+type: reference
+status: complete
+board: true
+verification: agent
+disposition: active
+---
+
 # Streambot: List Pagination, Play Tips, Live Subtitle Change, Play Error Fix
-
-## Status
-
-Complete
 
 ## Context
 

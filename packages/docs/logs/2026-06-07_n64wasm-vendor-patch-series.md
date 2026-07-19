@@ -1,8 +1,11 @@
+---
+id: log-2026-06-07-n64wasm-vendor-patch-series
+type: log
+status: complete
+board: false
+---
+
 # N64Wasm vendoring → pristine + patch-series
-
-## Status
-
-Complete
 
 ## Context
 

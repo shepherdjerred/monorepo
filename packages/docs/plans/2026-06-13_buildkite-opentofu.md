@@ -1,8 +1,13 @@
+---
+id: plan-2026-06-13-buildkite-opentofu
+type: plan
+status: planned
+board: true
+verification: agent
+disposition: active
+---
+
 # Plan: Manage Buildkite via OpenTofu
-
-## Status
-
-Not Started (proposed)
 
 ## Goal
 
@@ -62,3 +67,7 @@ drift untracked); it is **not** a throughput change.
 - Shipped alongside this plan: PR #1162 — `max-in-flight` 20→24 + build-age job priority (`scripts/ci/src/lib/build-age-priority.ts`).
 - Background + live metrics: `packages/docs/logs/2026-06-13_ci-concurrency-and-homelab-health.md`.
 - [[project_kueue_buildkite]], [[reference_github_rulesets_tofu_managed]], [[reference_tofu_state_seaweedfs]].
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Plan: Manage Buildkite via OpenTofu`.

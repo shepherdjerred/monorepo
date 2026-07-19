@@ -1,8 +1,11 @@
+---
+id: log-2026-06-12-recall-rrf-doc-fusion
+type: log
+status: complete
+board: false
+---
+
 # Recall Hybrid Search — Fix RRF Fusion to Document Level
-
-## Status
-
-Complete
 
 ## Context
 

@@ -1,13 +1,16 @@
+---
+id: reference-completed-2026-06-13-oci-helm-types-and-refresh
+type: reference
+status: complete
+board: false
+---
+
 # OCI Helm-chart typing + weekly helm-types refresh PR
 
 > **Superseded (2026-06-13):** the **weekly helm-types refresh** half of this plan (the
 > `helm-types-weekly-refresh` Temporal workflow/activity/schedule + `withHelm` on the worker image) was
 > **removed** and replaced by a fail-fast Buildkite `helm-types-drift-check` gate — see
 > `2026-06-13_helm-types-ci-gate.md`. The OCI-typing half remains in effect.
-
-## Status
-
-Complete (refresh half superseded — see note above)
 
 ## Context
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-06-06-codex-gh-sandbox-guidance
+type: log
+status: complete
+board: false
+---
+
 # Codex GitHub CLI Sandbox Guidance
-
-## Status
-
-Complete
 
 ## Summary
 

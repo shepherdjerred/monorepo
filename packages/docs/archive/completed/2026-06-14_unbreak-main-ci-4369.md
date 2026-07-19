@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-14-unbreak-main-ci-4369
+type: reference
+status: complete
+board: false
+---
+
 # Unbreak main CI — build #4369
-
-## Status
-
-Complete — shipped in PR #1245.
 
 ## Context
 

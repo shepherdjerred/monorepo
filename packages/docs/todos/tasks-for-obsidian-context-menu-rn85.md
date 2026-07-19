@@ -1,6 +1,10 @@
 ---
 id: tasks-for-obsidian-context-menu-rn85
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/plans/2026-07-03_tasknotes-first-in-class.md
 source_marker: false
 ---
@@ -21,15 +25,15 @@ deployment targets (worked around in the Podfile post_install: global
 <15.0 clamp for Xcode 27, and a 16.0 pin for react-native-ios-context-menu
 which uses iOS-16-only API unguarded).
 
-## Done when
+## Remaining
 
 Either:
 
-- upstream ships RN 0.85-compatible releases → bump, drop the bun patch and
-  the context-menu post_install deployment-target pin, or
-- the app replaces zeego's iOS context menus (used in
-  `src/components/task/TaskRow.tsx` and `src/components/common/KanbanCard.tsx`)
-  with an alternative, and the deps are removed.
+- [ ] upstream ships RN 0.85-compatible releases → bump, drop the bun patch and
+      the context-menu post_install deployment-target pin, or
+- [ ] the app replaces zeego's iOS context menus (used in
+      `src/components/task/TaskRow.tsx` and `src/components/common/KanbanCard.tsx`)
+      with an alternative, and the deps are removed.
 
 ## Context
 

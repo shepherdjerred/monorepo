@@ -1,6 +1,13 @@
+---
+id: reference-completed-2026-06-07-streambot-rewrite
+type: reference
+status: complete
+board: false
+---
+
 # Streambot rewrite — first-principles, XState, two-bot
 
-## Status
+## Status Notes (Historical)
 
 Complete — shipped in one PR (branch `claude/naughty-carson-2fca27`), including **Revision 2**
 (feedback): branded types, real slash commands (any channel, public output to the configured

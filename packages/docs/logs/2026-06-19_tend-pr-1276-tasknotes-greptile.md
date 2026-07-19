@@ -1,8 +1,11 @@
+---
+id: log-2026-06-19-tend-pr-1276-tasknotes-greptile
+type: log
+status: complete
+board: false
+---
+
 # Tend PR #1276: Resolve Greptile tasknotes-server Thread
-
-## Status
-
-Complete
 
 ## Context
 

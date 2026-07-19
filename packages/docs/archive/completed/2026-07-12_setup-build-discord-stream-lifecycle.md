@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-12-setup-build-discord-stream-lifecycle
+type: reference
+status: complete
+board: true
+verification: agent
+disposition: active
+---
+
 # PR: Build `discord-stream-lifecycle` in `setup.ts` + delete the dead Bazel vite-env fallback
-
-## Status
-
-Complete
 
 ## Context
 

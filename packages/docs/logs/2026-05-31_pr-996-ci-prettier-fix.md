@@ -1,8 +1,11 @@
+---
+id: log-2026-05-31-pr-996-ci-prettier-fix
+type: log
+status: complete
+board: false
+---
+
 # PR #996 Prettier CI Fix
-
-## Status
-
-Complete
 
 ## Context
 

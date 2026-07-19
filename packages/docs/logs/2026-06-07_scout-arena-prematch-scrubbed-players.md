@@ -1,8 +1,11 @@
+---
+id: log-2026-06-07-scout-arena-prematch-scrubbed-players
+type: log
+status: complete
+board: false
+---
+
 # Scout Arena Pre-match — Missing Tracked Player (investigation + doc)
-
-## Status
-
-Complete
 
 ## Summary
 

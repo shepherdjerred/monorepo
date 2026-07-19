@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-react-version-sync-parity-fix
+type: log
+status: complete
+board: false
+---
+
 # fix: react-version-sync parity test categorization
-
-## Status
-
-Complete
 
 ## Context
 

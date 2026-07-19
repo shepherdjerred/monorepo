@@ -1,6 +1,10 @@
 ---
 id: mac-mini-buildkite-agent
-status: deferred
+type: todo
+status: planned
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/plans/2026-07-03_tasknotes-first-in-class.md
 source_marker: false
 ---
@@ -30,7 +34,7 @@ When picked up, this promotes two gates from local/manual to CI merge gates:
   `packages/tasks-for-obsidian/**` changes.
 - Keep Xcode/simulator versions aligned with Xcode Cloud.
 
-## Done when
+## Remaining
 
-- App PRs run iOS build + Maestro suite on the Mini automatically.
-- Agent health is monitored (it going quiet should be visible, not silent).
+- [ ] App PRs run iOS build + Maestro suite on the Mini automatically.
+- [ ] Agent health is monitored (it going quiet should be visible, not silent).

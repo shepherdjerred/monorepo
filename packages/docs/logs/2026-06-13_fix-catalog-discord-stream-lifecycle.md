@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-fix-catalog-discord-stream-lifecycle
+type: log
+status: complete
+board: false
+---
+
 # Fix: Register discord-stream-lifecycle in CI Catalog
-
-## Status
-
-Complete
 
 ## Context
 

@@ -1,12 +1,14 @@
 ---
+id: log-2026-07-03-pr-1356-greptile-author-excluded
+type: log
+status: complete
+board: false
 date: 2026-07-03
 slug: pr-1356-greptile-author-excluded
-summary: Fix wait-for-greptile to handle author-excluded skip reason (PR #1356)
+summary: Fix wait-for-greptile to handle author-excluded skip reason (PR
 ---
 
-## Status
-
-In Progress (CI running — waiting for build #5077)
+# Pr 1356 Greptile Author Excluded
 
 ## Context
 

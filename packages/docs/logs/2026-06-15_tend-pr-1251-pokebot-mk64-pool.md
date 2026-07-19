@@ -1,8 +1,11 @@
+---
+id: log-2026-06-15-tend-pr-1251-pokebot-mk64-pool
+type: log
+status: complete
+board: false
+---
+
 # Tend PR #1251 — pokebot + MK64 on-demand /play via shared userbot pool
-
-## Status
-
-Complete
 
 ## Context
 

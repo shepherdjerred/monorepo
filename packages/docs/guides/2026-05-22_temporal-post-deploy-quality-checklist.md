@@ -1,8 +1,11 @@
+---
+id: guide-2026-05-22-temporal-post-deploy-quality-checklist
+type: guide
+status: complete
+board: false
+---
+
 # Temporal Post-Deploy Quality Checklist
-
-## Status
-
-Partially Complete
 
 ## Purpose
 

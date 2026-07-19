@@ -1,8 +1,11 @@
+---
+id: log-2026-06-06-ci-main-failure-diagnosis
+type: log
+status: complete
+board: false
+---
+
 # CI on main failing — diagnosis (build #3360)
-
-## Status
-
-Complete — fixes applied and verified (diagnosis + remediation)
 
 ## Root cause of the temporal Test flake (confirmed)
 

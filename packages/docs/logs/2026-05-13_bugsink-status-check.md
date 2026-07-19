@@ -1,8 +1,11 @@
+---
+id: log-2026-05-13-bugsink-status-check
+type: log
+status: complete
+board: false
+---
+
 # Bugsink Status Check - 2026-05-13
-
-## Status
-
-Complete
 
 ## Summary
 

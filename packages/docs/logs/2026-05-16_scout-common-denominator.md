@@ -1,8 +1,11 @@
+---
+id: log-2026-05-16-scout-common-denominator
+type: log
+status: complete
+board: false
+---
+
 # Scout Common Denominator Review
-
-## Status
-
-Complete
 
 ## Findings
 

@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-10-pi-feature-roadmap
+type: reference
+status: complete
+board: false
+---
+
 # Pi Feature Roadmap
-
-## Status
-
-Complete
 
 ## Intent
 

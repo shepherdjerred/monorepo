@@ -1,10 +1,11 @@
+---
+id: reference-completed-2026-05-13-bugsink-cleanup-scout-temporal-birmel
+type: reference
+status: complete
+board: false
+---
+
 # Bugsink Cleanup: Scout, Temporal, Birmel
-
-## Status
-
-**Complete** — work verified shipped to `main` during the 2026-06-06 docs groom (pass 2); archived to `archive/completed/`. Original tracking status preserved below.
-
-Partially Complete
 
 ## Summary
 

@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-20-pr1273-merge-render-clause-monaco
+type: reference
+status: complete
+board: false
+---
+
 # PR #1273 main-merge: RENDER clause ↔ Monaco query studio
-
-## Status
-
-Complete
 
 ## Context
 

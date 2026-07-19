@@ -1,8 +1,13 @@
+---
+id: plan-2026-06-14-ci-artifact-retention
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # CI Artifact Retention — Archives + Cleanup
-
-## Status
-
-In Progress (plan)
 
 ## Context
 
@@ -147,3 +152,7 @@ by §1, §2, §3. Pattern lifted from `deploySiteHelper()`
    `packages/docs/archive/` (history).
 5. Download an archived site zip, unzip, open `index.html` — confirms the
    snapshot is usable for rollback.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `CI Artifact Retention — Archives + Cleanup`.

@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-12-blackbox-probe-rollout
+type: plan
+status: awaiting-human
+board: true
+verification: human
+disposition: active
+---
+
 # Blackbox Probe Coverage — Scrypted + Full Tailnet/CF-Tunnel Rollout
-
-## Status
-
-Complete (shipped in PR #1505; post-merge/ArgoCD-sync live verification is a follow-up)
 
 ## Context
 
@@ -50,15 +55,15 @@ Research (3 Explore agents + 1 Plan agent, all against the live tree) confirmed:
 
 Added an ingress rule allowing the `prometheus` namespace (matching the existing `home-ingress-policy`/`media-ingress-policy` shape) to: `freshrss`, `birmel`, `postal` (`postal-web-netpol`), `pinchtab`, `plausible`, `tasknotes`, `temporal` (both `temporal-server-netpol` and `temporal-ui-netpol`), `mcp-gateway`, `redlib`, `syncthing`, `bugsink`, `relay`, `trmnl-dashboard`. The other ~24 involved namespaces needed no change.
 
-## Verification
+## Human Verification
 
-1. `bun run typecheck` — pass.
-2. `bun run test` — cdk8s 190/190, helm-types 252/252, including new `probe-registry.test.ts` (dedup correctness — the crux of the design), `blackbox-modules.test.ts`, `http-probe.test.ts`, and a new `ServiceProbeDown` case in `pagerduty-alerting.test.ts`.
-3. `bunx eslint . --fix` — clean (fixed 3 `strict-boolean-expressions` warnings by using `!== true` instead of `!` on the optional `disableProbe` boolean).
-4. Rendered `dist/service-probes.k8s.yaml`: **63 total `Probe` resources** (43 internal + 20 public — not 64 as estimated in the plan, since `s3-static-sites` opts out of both backend and public auto-probes). Zero duplicate names — dedup confirmed working for all 16 overlap services (e.g. `argocd`, `bugsink`, `homeassistant` each show exactly one `-internal` + one `-public`). Module overrides confirmed correct (`argocd` backend = `https_2xx_insecure` targeting `https://argocd-server.argocd.svc.cluster.local:443/`; `temporal-server` = `tcp_connect` targeting `host:7233`; webhook services = `tcp_connect` on both internal and public).
-5. Spot-checked a rendered `NetworkPolicy` (bugsink) — new prometheus-ingress rule present.
-6. Full pre-commit (tier-1 + tier-2: helm lint, 1Password lint, quality ratchet, tunnel-DNS coverage, prettier, eslint) — pass.
-7. Opened **PR #1505**.
+- `bun run typecheck` — pass.
+- `bun run test` — cdk8s 190/190, helm-types 252/252, including new `probe-registry.test.ts` (dedup correctness — the crux of the design), `blackbox-modules.test.ts`, `http-probe.test.ts`, and a new `ServiceProbeDown` case in `pagerduty-alerting.test.ts`.
+- `bunx eslint . --fix` — clean (fixed 3 `strict-boolean-expressions` warnings by using `!== true` instead of `!` on the optional `disableProbe` boolean).
+- Rendered `dist/service-probes.k8s.yaml`: **63 total `Probe` resources** (43 internal + 20 public — not 64 as estimated in the plan, since `s3-static-sites` opts out of both backend and public auto-probes). Zero duplicate names — dedup confirmed working for all 16 overlap services (e.g. `argocd`, `bugsink`, `homeassistant` each show exactly one `-internal` + one `-public`). Module overrides confirmed correct (`argocd` backend = `https_2xx_insecure` targeting `https://argocd-server.argocd.svc.cluster.local:443/`; `temporal-server` = `tcp_connect` targeting `host:7233`; webhook services = `tcp_connect` on both internal and public).
+- Spot-checked a rendered `NetworkPolicy` (bugsink) — new prometheus-ingress rule present.
+- Full pre-commit (tier-1 + tier-2: helm lint, 1Password lint, quality ratchet, tunnel-DNS coverage, prettier, eslint) — pass.
+- Opened **PR #1505**.
 
 ## Session Log — 2026-07-12
 

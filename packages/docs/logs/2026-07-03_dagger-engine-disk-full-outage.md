@@ -1,10 +1,11 @@
+---
+id: log-2026-07-03-dagger-engine-disk-full-outage
+type: log
+status: complete
+board: false
+---
+
 # Dagger CI Engine Disk-Full Outage — Post-Mortem & Runbook
-
-## Status
-
-Complete — engine recovered and hardened (2Ti volume). Root cause **corrected
-2026-07-03 (evening)** after a data-driven investigation; durable fixes implemented
-(see Follow-ups → fixes PR).
 
 ## TL;DR
 

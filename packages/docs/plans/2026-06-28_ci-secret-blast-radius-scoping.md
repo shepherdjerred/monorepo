@@ -1,8 +1,13 @@
+---
+id: plan-2026-06-28-ci-secret-blast-radius-scoping
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Plan: Shrink the blast radius of the `Buildkite CI Secrets` god item
-
-## Status
-
-In Progress (planning — not yet implemented)
 
 ## Context
 
@@ -205,3 +210,7 @@ dormant in this PR, the god secret still exists, so revert is instant with no re
 - Rename the god 1Password item → `buildkite-ci-secrets-ATTIC`; owner decides fate of parked audit fields
   (`OPENAI_API_KEY`, `ARR_API_KEYS`, `DAGGER_CLOUD_TOKEN`).
 - Coordinate `PAGERDUTY_TOKEN` placement with PR #1343 (PagerDuty tofu stack).
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Plan: Shrink the blast radius of the Buildkite CI Secrets god item`.

@@ -1,9 +1,13 @@
+---
+id: plan-2026-06-13-code-quality-remediation
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Code-Quality Remediation Plan
-
-## Status
-
-In Progress — **item #1 (pre-commit ↔ CI parity) shipped on `feature/code-quality-ci-parity`**; items 2–10 below are
-deferred and tracked here. Mirror of the approved harness plan `~/.claude/plans/ok-let-s-work-on-fancy-conway.md`.
 
 ## Context
 
@@ -72,3 +76,7 @@ Themed PRs, low→high risk: (1) enable existing rules §3 one at a time; (2) ra
 
 - Corrected two audit inaccuracies (ESLint _is_ in CI per-package; `migration-guard` _was_ already a CI gate) — re-verify
   any audit claim against current `main` before acting, since the audit ran on `8f3538b1b`.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Code-Quality Remediation Plan`.

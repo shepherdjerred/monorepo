@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-07-toolkit-deployed
+type: reference
+status: complete
+board: false
+---
+
 # Plan: `toolkit deployed` — "is my commit deployed?"
-
-## Status
-
-Complete
 
 ## Context
 

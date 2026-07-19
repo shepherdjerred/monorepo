@@ -1,3 +1,10 @@
+---
+id: reference-on-hold-2026-02-22-autonomous-agent-system
+type: reference
+status: complete
+board: false
+---
+
 # Autonomous Agent System Architecture Research
 
 ## Status: On Hold

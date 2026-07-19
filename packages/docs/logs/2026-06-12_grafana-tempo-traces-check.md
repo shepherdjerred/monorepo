@@ -1,8 +1,11 @@
+---
+id: log-2026-06-12-grafana-tempo-traces-check
+type: log
+status: complete
+board: false
+---
+
 # Grafana + Tempo Tracing Setup — Verification
-
-## Status
-
-Complete
 
 ## Question
 

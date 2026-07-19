@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-19-pokemon-goal-fs-and-limits
+type: reference
+status: complete
+board: false
+---
+
 # Plan: Goal bot — higher command limits + scoped memory/log filesystem
-
-## Status
-
-Complete — shipped in PR #1280.
 
 ## Context
 

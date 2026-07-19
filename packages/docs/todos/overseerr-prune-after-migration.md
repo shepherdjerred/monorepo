@@ -1,6 +1,10 @@
 ---
 id: overseerr-prune-after-migration
-status: blocked
+type: todo
+status: planned
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-07-03_finish-seerr-migration.md
 ---
 
@@ -73,10 +77,10 @@ prod from PR #1385's branch. Once #1385 is merged, `main` and prod Cloudflare
 state are consistent again. Do **not** `tofu apply` the cloudflare stack from
 `main` until #1385 is merged (it would destroy the ruleset).
 
-## Done when
+## Remaining
 
-- All five `media`-namespace Overseerr resources are gone and the Tailscale proxy
-  is cleaned up.
-- The Retain PV + ZFS dataset are either deleted or intentionally kept as backup
-  (note which).
-- This file is deleted in the same commit that records completion.
+- [ ] All five `media`-namespace Overseerr resources are gone and the Tailscale proxy
+      is cleaned up.
+- [ ] The Retain PV + ZFS dataset are either deleted or intentionally kept as backup
+      (note which).
+- [ ] This file is deleted in the same commit that records completion.

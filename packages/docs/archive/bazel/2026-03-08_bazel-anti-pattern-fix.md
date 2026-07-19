@@ -1,3 +1,10 @@
+---
+id: reference-bazel-2026-03-08-bazel-anti-pattern-fix
+type: reference
+status: complete
+board: false
+---
+
 # Bazel Anti-Pattern Fix Plan
 
 ## Status: 54/55 Complete (2026-03-19)

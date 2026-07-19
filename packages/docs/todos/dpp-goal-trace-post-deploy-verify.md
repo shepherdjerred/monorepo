@@ -1,6 +1,10 @@
 ---
 id: dpp-goal-trace-post-deploy-verify
-status: waiting-on-verification
+type: todo
+status: awaiting-human
+board: true
+verification: human
+disposition: active
 origin: packages/docs/plans/2026-07-04_llm-observability-gaps.md
 ---
 
@@ -28,3 +32,7 @@ Expect `pokemon.goal.run` / `.turn` / `.tool` spans and fresh `.json.gz`
 envelopes dated after the deploy. If still dark, check pod logs for
 "duplicate registration" or archive upload warnings
 (`{namespace="pokemon"} |~ "llm-observability|archive"`).
+
+## Human Verification
+
+- Verify `Verify dpp goal-mode tracing after next deploy + goal run` in its intended environment and record evidence in the Comment Log.

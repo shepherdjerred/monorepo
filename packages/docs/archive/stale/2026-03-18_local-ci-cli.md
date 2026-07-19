@@ -1,3 +1,10 @@
+---
+id: reference-stale-2026-03-18-local-ci-cli
+type: reference
+status: complete
+board: false
+---
+
 # Local CI/Release CLI (`ci-local`)
 
 Run deploy and release workflows locally without Buildkite.

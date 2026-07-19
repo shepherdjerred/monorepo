@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-12-turbo-buildout-derisk
+type: reference
+status: complete
+board: true
+verification: agent
+disposition: active
+---
+
 # Turbo Build-Out & De-Risk (pre-Phase-2)
-
-## Status
-
-Complete — graph fully green, all de-risk items verified (S3 cache round-trip proven via local MinIO; R2 deferred by user choice, tofu config staged).
 
 ## Context
 

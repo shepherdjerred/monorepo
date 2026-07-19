@@ -1,8 +1,11 @@
+---
+id: log-2026-06-25-homekit-secure-video-status-check
+type: log
+status: complete
+board: false
+---
+
 # HomeKit Secure Video — Status Check
-
-## Status
-
-In Progress (infra shipped & live; manual Apple-device setup remaining)
 
 ## Question
 

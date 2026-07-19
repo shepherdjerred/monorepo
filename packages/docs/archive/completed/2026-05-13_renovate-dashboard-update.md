@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-13-renovate-dashboard-update
+type: reference
+status: complete
+board: false
+---
+
 # Renovate Dashboard Update Batch
-
-## Status
-
-Complete
 
 ## Summary
 

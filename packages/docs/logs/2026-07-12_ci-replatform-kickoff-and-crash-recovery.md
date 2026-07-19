@@ -1,6 +1,13 @@
+---
+id: log-2026-07-12-ci-replatform-kickoff-and-crash-recovery
+type: log
+status: complete
+board: false
+---
+
 # CI Replatform kickoff — session state save after repeated machine crashes
 
-## Status
+## Status Notes (Historical)
 
 In Progress — HALTED mid-step by owner after the machine kernel-panicked
 repeatedly while this session (and at least one other agent session) ran.

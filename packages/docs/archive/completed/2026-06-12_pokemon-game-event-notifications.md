@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-12-pokemon-game-event-notifications
+type: reference
+status: complete
+board: false
+---
+
 # Discord Notifications for Pokémon Game Events
-
-## Status
-
-Complete — enabled on by default and posting to Discord (`mode = "send"`). Takes effect on the next homelab deploy after PR #1142 merges. Shadow mode is still available by setting `bot.notifications.events.mode = "log"` in the 1Password config (no redeploy of code needed).
 
 ## Context
 

@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-06-xstate-skill
+type: reference
+status: complete
+board: false
+---
+
 # Add an XState Skill
-
-## Status
-
-Complete
 
 ## Context
 

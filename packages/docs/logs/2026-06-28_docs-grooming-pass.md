@@ -1,6 +1,13 @@
+---
+id: log-2026-06-28-docs-grooming-pass
+type: log
+status: complete
+board: false
+---
+
 # Docs Grooming Pass — 2026-06-28
 
-## Status
+## Status Notes (Historical)
 
 Complete
 

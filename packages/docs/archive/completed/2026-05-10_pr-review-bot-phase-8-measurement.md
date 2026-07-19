@@ -1,3 +1,10 @@
+---
+id: reference-completed-2026-05-10-pr-review-bot-phase-8-measurement
+type: reference
+status: complete
+board: false
+---
+
 # PR Review Bot — Phase 8: Measurement
 
 > **REMOVED 2026-07-03.** The PR-review eval bot this plan helped build (nightly
@@ -5,12 +12,6 @@
 > activities, the `pr_review_eval` Postgres DB, and the `pr-review-bot-eval` PagerDuty alerts.
 > This doc is retained only as historical design context. See
 > `packages/docs/plans/2026-07-03_remove-pr-review-eval-bot.md`.
-
-## Status
-
-**Complete** — all phase code verified shipped to `main`; archived to `archive/completed/` during the 2026-06-06 docs groom (pass 2). NOTE: the PR-review bot was operationally **disabled** on 2026-06-06 (`PR_BOT_ENABLED=false`); re-enabling and the rate-limit fix are tracked in `todos/pr-review-agent-rate-limit-saturation.md`, not here. Original tracking status preserved below.
-
-In Progress
 
 ## Context
 

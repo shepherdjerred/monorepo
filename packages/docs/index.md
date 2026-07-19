@@ -1,6 +1,18 @@
+---
+id: reference-index
+type: reference
+status: complete
+board: false
+---
+
 # Monorepo Documentation
 
 AI-maintained knowledge base for the monorepo.
+
+Run `bun run docs:board` from the repository root for a local four-column view
+of planned work, active work, items awaiting human confirmation, and completed
+work. The app searches the full corpus and appends comments directly to each
+document's Markdown comment log.
 
 ## Architecture
 

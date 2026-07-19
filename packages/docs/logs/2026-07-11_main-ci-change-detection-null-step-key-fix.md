@@ -1,8 +1,11 @@
+---
+id: log-2026-07-11-main-ci-change-detection-null-step-key-fix
+type: log
+status: complete
+board: false
+---
+
 # Main CI broken: change-detection Zod schema rejected Buildkite API nulls
-
-## Status
-
-Complete
 
 ## Problem
 

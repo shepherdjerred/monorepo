@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-verify-pinchtab-op-access
+type: log
+status: complete
+board: false
+---
+
 # Verify PinchTab And 1Password CLI Access
-
-## Status
-
-Complete
 
 ## Summary
 

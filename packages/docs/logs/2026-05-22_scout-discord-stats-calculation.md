@@ -1,8 +1,11 @@
+---
+id: log-2026-05-22-scout-discord-stats-calculation
+type: log
+status: complete
+board: false
+---
+
 # Scout Discord Stats Calculation
-
-## Status
-
-Complete
 
 ## Summary
 

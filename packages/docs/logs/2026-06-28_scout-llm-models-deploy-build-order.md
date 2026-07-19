@@ -1,8 +1,11 @@
+---
+id: log-2026-06-28-scout-llm-models-deploy-build-order
+type: log
+status: complete
+board: false
+---
+
 # Scout deploy red — `@shepherdjerred/llm-models` build-order bug
-
-## Status
-
-In Progress (fix authored + locally verified; PR open)
 
 ## Symptom
 

@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-30-compact-scout-action-showcase
+type: reference
+status: complete
+board: false
+---
+
 # Compact Scout Action Showcase
-
-## Status
-
-Complete
 
 ## Summary
 

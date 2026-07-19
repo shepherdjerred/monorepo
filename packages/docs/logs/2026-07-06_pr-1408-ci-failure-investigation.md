@@ -1,8 +1,11 @@
+---
+id: log-2026-07-06-pr-1408-ci-failure-investigation
+type: log
+status: complete
+board: false
+---
+
 # PR 1408 CI Failure Investigation
-
-## Status
-
-Complete
 
 ## Question
 

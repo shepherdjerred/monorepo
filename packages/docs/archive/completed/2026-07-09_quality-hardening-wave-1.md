@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-09-quality-hardening-wave-1
+type: reference
+status: complete
+board: true
+verification: agent
+disposition: active
+---
+
 # Quality Hardening Wave 1
-
-## Status
-
-Complete
 
 ## Context
 

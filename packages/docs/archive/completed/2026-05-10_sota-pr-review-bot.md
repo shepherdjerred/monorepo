@@ -1,3 +1,10 @@
+---
+id: reference-completed-2026-05-10-sota-pr-review-bot
+type: reference
+status: complete
+board: false
+---
+
 # SOTA AI/LLM Code Review — Full Implementation Plan
 
 > **PARTIALLY REMOVED 2026-07-03.** Layer 7 (continuous evaluation — Phases 8/10) and the
@@ -6,7 +13,7 @@
 > The live review/summary pipelines (`prReviewPipeline`, `prSummaryPipeline`) remain. See
 > `packages/docs/plans/2026-07-03_remove-pr-review-eval-bot.md`.
 
-## Status
+## Status Notes (Historical)
 
 **Complete** — all phase code verified shipped to `main`; archived to `archive/completed/` during the 2026-06-06 docs groom (pass 2). NOTE: the PR-review bot was operationally **disabled** on 2026-06-06 (`PR_BOT_ENABLED=false`); re-enabling and the rate-limit fix are tracked in `todos/pr-review-agent-rate-limit-saturation.md`, not here. Original tracking status preserved below.
 

@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-16-scout-arena-3v3
+type: reference
+status: complete
+board: false
+---
+
 # Scout Arena 3v3 Detection And Rendering
-
-## Status
-
-Complete
 
 ## Summary
 

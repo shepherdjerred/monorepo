@@ -1,8 +1,11 @@
+---
+id: log-2026-06-06-pokemon-crashloop-stale-image-logger
+type: log
+status: complete
+board: false
+---
+
 # Pokemon (discord-plays-pokemon) k8s crash loop — live fix + code change
-
-## Status
-
-Complete
 
 ## Symptom
 

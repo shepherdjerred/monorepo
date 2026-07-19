@@ -1,3 +1,10 @@
+---
+id: reference-agents
+type: reference
+status: complete
+board: false
+---
+
 # packages/docs
 
 AI-maintained documentation for the monorepo. This is a knowledge base primarily written and consumed by AI agents working on this codebase.
@@ -48,6 +55,10 @@ docs/
 - Keep docs concise and factual — no filler
 - Use markdown with code examples where helpful
 - Name files with `<date>_kebab-case` (e.g., `2026-02-22_ci-pipeline.md`)
+- Every Markdown file has canonical YAML frontmatter: globally unique `id`, `type`, `status`, and `board`
+- Board items additionally require `verification` (`agent` or `human`) and `disposition` (`active`, `blocked`, or `deferred`)
+- Use only `planned`, `in-progress`, `awaiting-human`, or `complete` for workflow status; do not add a `## Status` section
+- Use unchecked tasks under `## Remaining` for agent work, `## Human Verification` for delayed signoff, and append-only entries under `## Comment Log` for steering and audit history
 - Keep `index.md` stable: do not add individual entries for `plans/`, `logs/`, or `todos/`
 - Prefer updating existing docs over creating new ones
 - Plans must be raw Markdown — do not generate PDF or Typst renderings alongside `.md` files
@@ -55,7 +66,9 @@ docs/
   only with the repository owner's explicit, recorded approval for that specific document (e.g. an
   executive-format audit report); this is a narrow exception to the plans rule above, not a general
   license to render docs
-- TODO docs use YAML frontmatter (`id`, `status`, `origin`, optional `source_marker: true`). Every source `TODO(todo:<id>)` marker MUST have a matching `<id>.md` (enforced by `bun scripts/check-todos.ts`); docs without source markers are allowed for general issue tracking
+- TODO docs retain `origin` and optional `source_marker: true`. Every source `TODO(todo:<id>)` marker MUST have a matching `<id>.md`; `bun run check-todos` validates this and the full Markdown model
+
+Run `bun run docs:board` from the repository root to open the local workboard. It reads and writes these Markdown files directly; no separate database exists.
 
 ## Scheduling Follow-ups
 
@@ -73,7 +86,7 @@ Use `"mode": "report-only"` unless the user explicitly asks for a mutating autom
 ## Keeping Things Tidy
 
 - **Archive, don't delete.** Move outdated docs to `archive/` with an appropriate subdirectory. Create new archive subdirectories as needed (e.g., `archive/bazel/`, `archive/superseded/`).
-- **Mark status in docs.** Plans should have a `## Status` section near the top (e.g., "In Progress", "Partially Complete", "Not Started").
+- **Keep workflow state in frontmatter.** Human-readable context belongs in the body, but canonical status exists only in YAML frontmatter.
 - **Superseded plans go to archive.** When a plan is replaced by a newer one, move it to `archive/superseded/`.
 - **Technology-era docs go to archive.** When a technology is removed (e.g., Bazel), move all related docs to `archive/<technology>/`.
 - **No root-level docs.** Every doc should be in a subdirectory. If a doc doesn't fit an existing category, put it in `guides/`.

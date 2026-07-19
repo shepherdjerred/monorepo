@@ -1,8 +1,11 @@
+---
+id: log-2026-05-22-archive-projects
+type: log
+status: complete
+board: false
+---
+
 # Archive Legacy Projects
-
-## Status
-
-Complete
 
 ## Summary
 

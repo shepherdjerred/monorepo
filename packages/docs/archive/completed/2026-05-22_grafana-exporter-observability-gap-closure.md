@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-22-grafana-exporter-observability-gap-closure
+type: reference
+status: complete
+board: false
+---
+
 # Grafana, Exporter, and Observability Gap Closure
-
-## Status
-
-Complete
 
 ## Summary
 

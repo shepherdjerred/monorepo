@@ -1,8 +1,13 @@
+---
+id: plan-2026-06-13-pagerduty-to-alertmanager-email
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Migrate off PagerDuty → Alertmanager-native email (Postal) + Grafana as viewer
-
-## Status
-
-In Progress (planning)
 
 ## Context
 
@@ -105,3 +110,7 @@ Files: `packages/trmnl-dashboard/src/clients/pagerduty.ts`, `config.ts`, `types.
 4. **Grafana viewer:** open Grafana → Alerting → Alert groups; confirm active Alertmanager alerts render and that no Grafana-managed alert rules exist.
 5. **Automation:** `ALERTMANAGER_URL=https://alertmanager.tailnet-1a49.ts.net toolkit alerts list` returns active alerts; run the Temporal alert-remediation activity locally and confirm it reads Alertmanager alerts (fingerprints) instead of PD incidents.
 6. **PR artifact:** screenshot the alert email (firing + resolved) and the Grafana Alerting view.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Migrate off PagerDuty → Alertmanager-native email (Postal) + Grafana as viewer`.

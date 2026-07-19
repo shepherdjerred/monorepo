@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-09-bypass-mode-defaults
+type: reference
+status: complete
+board: false
+---
+
 # Bypass-by-default for Claude Code + Codex
-
-## Status
-
-Complete
 
 ## Context
 

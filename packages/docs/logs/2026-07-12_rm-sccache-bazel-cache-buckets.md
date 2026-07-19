@@ -1,8 +1,11 @@
+---
+id: log-2026-07-12-rm-sccache-bazel-cache-buckets
+type: log
+status: complete
+board: false
+---
+
 # Remove Bazel: retired cache buckets + dead build files, tooling & config
-
-## Status
-
-Complete
 
 ## Context
 

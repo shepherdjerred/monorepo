@@ -1,6 +1,15 @@
+---
+id: plan-2026-07-09-torvalds-ci-freeze-hardening
+type: reference
+status: complete
+board: true
+verification: agent
+disposition: active
+---
+
 # Torvalds CI-Freeze Hardening: Node / K8s / Dagger-Buildkite Protections
 
-## Status
+## Status Notes (Historical)
 
 Complete — all four layers implemented, merged, and the Talos node-level manual rollout
 (watchdog, sysctls, kubelet podPidsLimit/enforceNodeAllocatable) is now live and verified

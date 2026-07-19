@@ -1,3 +1,10 @@
+---
+id: architecture-2026-06-06-scout-web-ui-and-serving
+type: architecture
+status: complete
+board: false
+---
+
 # Scout-for-LoL Web UI & S3/Caddy Serving
 
 Two front-end surfaces (a marketing Astro site and a Vite React SPA) are built into one bucket per stage and served by a shared S3-proxy Caddy that reverse-proxies `/api` + `/trpc` to the Scout backend.

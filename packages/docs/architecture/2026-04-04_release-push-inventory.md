@@ -1,3 +1,10 @@
+---
+id: architecture-2026-04-04-release-push-inventory
+type: architecture
+status: complete
+board: false
+---
+
 # Release / Push / Deploy Inventory
 
 Complete inventory of everything this monorepo publishes externally. Central source of truth: `scripts/ci/src/catalog.ts`.

@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-redlib-mcp-gateway-health
+type: log
+status: complete
+board: false
+---
+
 # redlib + mcp-gateway health — 2026-06-13
-
-## Status
-
-Partially Complete — redlib fix implemented on `feature/redlib-glibc-image` (PR pending merge → CI build/push → ArgoCD deploy); mcp-gateway fix waiting on user-supplied credentials.
 
 ## Problem
 

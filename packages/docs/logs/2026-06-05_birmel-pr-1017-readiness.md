@@ -1,12 +1,13 @@
 ---
+id: log-2026-06-05-birmel-pr-1017-readiness
+type: log
+status: complete
+board: false
 title: Birmel PR 1017 Readiness Loop
 date: 2026-06-05
-status: Complete
 ---
 
-## Status
-
-Complete
+# Birmel Pr 1017 Readiness
 
 ## Summary
 

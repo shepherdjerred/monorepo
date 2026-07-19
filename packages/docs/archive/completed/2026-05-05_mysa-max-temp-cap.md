@@ -1,6 +1,15 @@
+---
+id: plan-2026-05-05-mysa-max-temp-cap
+type: reference
+status: complete
+board: true
+verification: agent
+disposition: active
+---
+
 # Mysa HACS integration max-temp cap
 
-## Status
+## Status Notes (Historical)
 
 Complete (2026-07-03). Resolved via our own fork rather than upstream. Upstream PR #18 was closed unmerged and `kgelinas/Mysa_HA` is stale (no push since 2026-03-22, issue #16 still open), so HA now runs `shepherdjerred/Mysa_HA@v0.9.3` via HACS. `MORNING_HEAT_TEMP_C` raised 30 → 40. Verified live against `homeassistant.tailnet-1a49.ts.net`: `climate.master_bathroom.max_temp == 40`, and a `set_temperature 35 / hvac_mode heat` call returned HTTP 200 and applied (`state: heat`) with no MQTT 1005 error, then was reverted to `off`/30.
 

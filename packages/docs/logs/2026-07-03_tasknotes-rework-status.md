@@ -1,11 +1,11 @@
+---
+id: log-2026-07-03-tasknotes-rework-status
+type: log
+status: complete
+board: false
+---
+
 # TaskNotes First-in-Class Rework — Status, Follow-ups, What's Left
-
-## Status
-
-In Progress — all code phases complete and in PRs; operational rollout pending.
-
-Plan: [2026-07-03_tasknotes-first-in-class.md](../plans/2026-07-03_tasknotes-first-in-class.md) ·
-Origin review: `packages/docs/logs/2026-07-02_tasknotes-system-review.md` (uncommitted, main checkout)
 
 ## Progress at a glance
 

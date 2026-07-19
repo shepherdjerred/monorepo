@@ -1,3 +1,10 @@
+---
+id: reference-completed-2026-06-27-homelab-hicrit-remediation
+type: reference
+status: complete
+board: false
+---
+
 # Homelab HIGH/CRITICAL security remediation (2026-06-27)
 
 ## Status: Complete — shipped in PRs #1336 + #1338; deferred H8/H5b hardening items tracked separately.

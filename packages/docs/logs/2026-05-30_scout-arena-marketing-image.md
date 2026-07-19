@@ -1,8 +1,11 @@
+---
+id: log-2026-05-30-scout-arena-marketing-image
+type: log
+status: complete
+board: false
+---
+
 # Scout Arena Marketing Image
-
-## Status
-
-Complete
 
 ## Session Log — 2026-05-30
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-06-12-kueue-quota-bump
+type: log
+status: complete
+board: false
+---
+
 # Kueue Buildkite Quota Bump — 5 CPU / 10Gi → 7.5 CPU / 16Gi
-
-## Status
-
-Complete
 
 ## Context
 

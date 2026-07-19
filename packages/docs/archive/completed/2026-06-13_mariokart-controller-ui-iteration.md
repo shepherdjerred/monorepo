@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-13-mariokart-controller-ui-iteration
+type: reference
+status: complete
+board: false
+---
+
 # Mario Kart Controller UI Iteration
-
-## Status
-
-Complete — controller UI shipped; folded into PR #1178.
 
 ## Scope
 

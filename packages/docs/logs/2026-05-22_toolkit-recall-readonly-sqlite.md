@@ -1,8 +1,11 @@
+---
+id: log-2026-05-22-toolkit-recall-readonly-sqlite
+type: log
+status: complete
+board: false
+---
+
 # Toolkit Recall Readonly SQLite Fix
-
-## Status
-
-Complete
 
 ## Summary
 

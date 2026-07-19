@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-14-temporal-agent-observability
+type: reference
+status: complete
+board: false
+---
+
 # Temporal: schedule fix + agent observability uplift
-
-## Status
-
-Complete
 
 ## Context
 

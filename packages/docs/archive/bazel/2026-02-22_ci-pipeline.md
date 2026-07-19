@@ -1,3 +1,10 @@
+---
+id: reference-bazel-2026-02-22-ci-pipeline
+type: reference
+status: complete
+board: false
+---
+
 # CI Pipeline
 
 Bazel-based CI running on Buildkite with Python orchestration scripts.

@@ -1,8 +1,11 @@
+---
+id: log-2026-05-16-cooklang-versions-boundary
+type: log
+status: complete
+board: false
+---
+
 # Cooklang Versions Boundary Automation
-
-## Status
-
-Complete
 
 ## Session Log — 2026-05-16
 

@@ -1,3 +1,10 @@
+---
+id: decision-2026-06-06-homelab-security-hardening-decisions
+type: decision
+status: complete
+board: false
+---
+
 # Homelab security hardening — owner decisions (2026-06-06 pen test)
 
 **Date:** 2026-06-06

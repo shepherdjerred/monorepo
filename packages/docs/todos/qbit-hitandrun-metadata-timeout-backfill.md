@@ -1,6 +1,10 @@
 ---
 id: qbit-hitandrun-metadata-timeout-backfill
-status: deferred
+type: todo
+status: planned
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/plans/2026-07-11_qbittorrent-hitandrun-seeding.md
 source_marker: false
 ---
@@ -35,3 +39,7 @@ torrent that later got H&R-flagged).
 Add a periodic `--all` sweep (existing idempotent backfill mode) as a
 CronJob / sidecar loop in the `media` namespace, so any torrent that missed the
 add-hook window gets its size-based limit applied once metadata is available.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `qBittorrent H&R: periodic --all sweep for slow-metadata magnets`.

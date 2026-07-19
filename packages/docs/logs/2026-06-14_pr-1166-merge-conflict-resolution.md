@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-pr-1166-merge-conflict-resolution
+type: log
+status: complete
+board: false
+---
+
 # PR #1166 — merge-conflict resolution (origin/main → feature/top-level-cleanup)
-
-## Status
-
-Complete (conflicts resolved + pushed; CI follow-up may be needed — see Caveats)
 
 ## Context
 

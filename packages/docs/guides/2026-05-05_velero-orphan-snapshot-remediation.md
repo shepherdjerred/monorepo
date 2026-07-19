@@ -1,3 +1,10 @@
+---
+id: guide-2026-05-05-velero-orphan-snapshot-remediation
+type: guide
+status: complete
+board: false
+---
+
 # Velero Orphan-Snapshot Remediation Runbook
 
 Procedure for manually pruning orphan ZFS snapshots and R2 objects detected by the `velero-orphan-audit` Temporal workflow. See [the prevention decision doc](../decisions/2026-05-05_velero-orphan-snapshot-prevention.md) for background on why orphans occur and why this is manual rather than automated.

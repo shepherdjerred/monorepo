@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-mk64-screenshot-overlays-pr-tending
+type: log
+status: complete
+board: false
+---
+
 # PR tending: mk64-screenshot-overlays (#1182)
-
-## Status
-
-Complete
 
 ## Context
 

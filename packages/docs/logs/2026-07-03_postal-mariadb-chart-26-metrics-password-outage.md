@@ -1,8 +1,11 @@
+---
+id: log-2026-07-03-postal-mariadb-chart-26-metrics-password-outage
+type: log
+status: complete
+board: false
+---
+
 # Postal outage — MariaDB chart v26 requires `mariadb-metrics-password`
-
-## Status
-
-Complete
 
 ## Symptom
 
