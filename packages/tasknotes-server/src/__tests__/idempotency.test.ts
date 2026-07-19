@@ -223,6 +223,8 @@ describe("IdempotencyStore", () => {
     expect(reloaded.size).toBe(0);
   });
 
+  // 510 puts = 510 sequential ack-after-persist file writes; exceeds bun's 5s
+  // default timeout under CI disk load (observed 5.18s in Buildkite).
   test("caps stored records, evicting oldest first", async () => {
     const store = new IdempotencyStore(storePath, () => 1);
     await store.init();
@@ -240,7 +242,7 @@ describe("IdempotencyStore", () => {
     expect(store.size).toBe(500);
     expect(store.get("mut-0")).toBeUndefined();
     expect(store.get("mut-509")).toBeDefined();
-  });
+  }, 20_000);
 
   test("malformed state file logs and starts empty instead of crashing", async () => {
     await Bun.write(storePath, "{not json");
