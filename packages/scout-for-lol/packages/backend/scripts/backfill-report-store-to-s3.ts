@@ -60,10 +60,18 @@ function requireBucket(): string {
 const bucket = requireBucket();
 const client = createS3Client();
 
-type Tally = { present: number; uploaded: number; unrecoverable: number };
+type Tally = {
+  present: number;
+  uploaded: number;
+  // Dry-run only: objects that are missing from S3 and WOULD be uploaded by a
+  // real run. They are real current gaps — the completeness gate below counts
+  // them so a dry run can never masquerade as "S3 is complete".
+  wouldUpload: number;
+  unrecoverable: number;
+};
 
 function newTally(): Tally {
-  return { present: 0, uploaded: 0, unrecoverable: 0 };
+  return { present: 0, uploaded: 0, wouldUpload: 0, unrecoverable: 0 };
 }
 
 // Ensure a single object is in S3, uploading rawJson if missing. `candidateKeys`
@@ -88,7 +96,7 @@ async function ensureObject(
   }
   if (dryRun) {
     logger.info(`[dry-run] would upload ${label} -> ${uploadKey}`);
-    tally.uploaded++;
+    tally.wouldUpload++;
     return;
   }
   await putRawJsonObject(client, bucket, uploadKey, rawJson);
@@ -203,13 +211,28 @@ logger.info("Backfill complete", {
   timelines: { ...timelines, note: "best-effort (archival, no lake reader)" },
 });
 
-// Matches + prematch are the lake inputs — they must reach 0 unrecoverable gaps
-// before the destructive drop (PR-B).
-const lakeGaps = matches.unrecoverable + prematch.unrecoverable;
+// Matches + prematch are the lake inputs — they must reach 0 gaps before the
+// destructive drop (PR-B). A "gap" is anything currently missing from S3:
+//   - `unrecoverable`: missing and no candidate key to upload under (both modes).
+//   - `wouldUpload`:    missing objects a real run would upload. In a real run
+//     these were just written (0 by end), so they only count in --dry-run,
+//     where nothing was written and they are still missing. Counting them keeps
+//     the required pre-drop dry run honest: it can only report "complete" when
+//     S3 genuinely already holds every lake input.
+const dryRunPending = dryRun ? matches.wouldUpload + prematch.wouldUpload : 0;
+const lakeGaps = matches.unrecoverable + prematch.unrecoverable + dryRunPending;
 if (lakeGaps > 0) {
   logger.error(
-    `❌ ${lakeGaps.toString()} unrecoverable match/prematch gap(s) — do NOT proceed to the table drop.`,
+    `❌ ${lakeGaps.toString()} match/prematch gap(s)${
+      dryRun
+        ? ` (${dryRunPending.toString()} would be uploaded by a real run)`
+        : ""
+    } — do NOT proceed to the table drop.`,
   );
   process.exit(1);
 }
-logger.info("✅ 0 match/prematch gaps — S3 is complete for the lake inputs.");
+logger.info(
+  dryRun
+    ? "✅ [dry-run] 0 match/prematch gaps — S3 already holds every lake input."
+    : "✅ 0 match/prematch gaps — S3 is complete for the lake inputs.",
+);
