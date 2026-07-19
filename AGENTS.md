@@ -241,8 +241,12 @@ workspace with the isolated linker, so a single root `bun install` covers every
 package and internal `workspace:*` deps resolve via live symlinks (no shared-artifact
 copy step). The `generate` turbo task handles code generation; helm value types are
 **not** regenerated here — the committed types in
-`packages/homelab/src/cdk8s/generated/helm` are the source of truth, refreshed weekly by
-the `helm-types-weekly-refresh` Temporal schedule (which opens a PR if they drifted).
+`packages/homelab/src/cdk8s/generated/helm` are the source of truth. Regenerate them
+when bumping a chart in `versions.ts` (`cd packages/homelab/src/cdk8s && bun run
+generate-helm-types`); the `helm-types-drift-check` Buildkite step fails any PR that
+changes a generator input without regenerating. Renovate chart-bump PRs will sit red
+on that step until someone pushes the regen commit — that is by design (hosted
+Renovate cannot run the generator).
 
 Optional tools (warned if missing): helm, swift, swiftlint, swiftformat, typeshare, go, golangci-lint, mvn, gitleaks, shellcheck.
 

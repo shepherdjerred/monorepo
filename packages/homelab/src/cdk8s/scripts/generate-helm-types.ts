@@ -9,9 +9,10 @@
  *              `src/versions.ts`.
  *   --check    Regenerate into a throwaway dir and FAIL (exit 1) if the result
  *              differs from the committed `generated/helm/` tree — without
- *              mutating it. Formerly the CI freshness gate that replaced the
- *              weekly helm-types-refresh Temporal workflow; run it manually
- *              now that CI is removed.
+ *              mutating it. Runs in CI as the `helm-types-drift-check`
+ *              Buildkite step (PR-only, self-scoped to generator-input
+ *              changes), so a versions.ts chart bump that wasn't regenerated
+ *              fails its PR instead of drifting silently.
  */
 
 // Using string concatenation instead of node:path
