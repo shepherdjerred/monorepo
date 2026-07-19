@@ -163,32 +163,44 @@ The `"kubernetes/kubernetes"` and `"siderolabs/talos"` entries in `versions.ts` 
 
 After any `talosctl upgrade` or `talosctl upgrade-k8s` that lands on a version different from the existing pin (e.g. the Sidero kubelet image for the latest patch isn't published yet, so you pick the prior k8s patch), update `versions.ts` **and** the README upgrade snippet (`packages/homelab/README.md` `VERSION=` example lines) to the now-running version in the same change. If they drift from reality, future upgrade sessions can't tell a Renovate target from a record of what's deployed.
 
-## First-Party Image Versions (manual since 2026-07)
+## First-Party Image Versions (automated by version commit-back)
 
-First-party image entries used to be rewritten by the Dagger/Buildkite CI pipeline (removed 2026-07)
-after each image push (tag `2.0.0-$BUILDKITE_BUILD_NUMBER` + digest); image builds/pushes
-and the matching `versions.ts` updates are now manual:
+First-party image entries are rewritten by the replatformed static Buildkite
+pipeline (`.buildkite/pipeline.yml`, landed 2026-07 after the old Dagger CI was
+removed): the `images` step bakes/pushes images (tags `:$GIT_SHA` + `:latest`;
+the `2.0.0-<build>` in a pin is a cosmetic label on a digest-pinned ref) and
+records **content-gated** digests, and the `version commit-back` step
+(`scripts/update-versions.ts --commit-back`) opens the auto-merge
+"chore: bump pending image versions" PR rewriting the matching pins:
 
 ```typescript
-// not managed by renovate
+// not managed by renovate — beta updated by version-commit-back
 "shepherdjerred/temporal-worker":
   "2.0.0-1020@sha256:…",
-"shepherdjerred/scout-for-lol/beta": "1.0.82",
 ```
 
-After manually pushing an image, capture the digest from the push output and
-rewrite the matching entry in `packages/homelab/src/cdk8s/src/versions.ts` yourself.
+Commit-back only rewrites bare keys and `/beta` stage keys — never `/prod`.
 
 ### `/beta` and `/prod` are deployment-stage keys, not image names
 
 App images publish to a **single** GHCR package (e.g. `ghcr.io/shepherdjerred/scout-for-lol:2.0.0-710`) — there is no `/beta` or `/prod` in the image name. But `versions.ts` has separate `…/beta` and `…/prod` entries because they are deployment stages that may pin different versions:
 
 ```typescript
-"shepherdjerred/scout-for-lol/beta": "2.0.0-710@sha256:…", // beta tracks latest
-"shepherdjerred/scout-for-lol/prod": "2.0.0-700@sha256:…", // prod may lag
+"shepherdjerred/scout-for-lol/beta": "2.0.0-710@sha256:…", // beta tracks latest (auto-bumped)
+"shepherdjerred/scout-for-lol/prod": "2.0.0-700@sha256:…", // prod promoted explicitly
 ```
 
 The catalog's `versionKey` (used in `--tags ghcr.io/{versionKey}:…`) must **not** carry a `/beta`|`/prod` suffix; only the `versions.ts` entries and the cdk8s resources that read them use the stage suffixes to deploy a different version per stage.
+
+### Scout prod is promoted, not bumped
+
+`"shepherdjerred/scout-for-lol/prod"` and `"scout-for-lol-site/prod"` move
+**together, only** via `bun scripts/promote-scout.ts` (one PR; the beta image
+line is copied verbatim, the site pin selects the archived artifact the
+`scout-prod-reconcile` CI step syncs into the prod bucket). Never edit these
+two pins by hand and never add Renovate annotations to them — a lone backend
+bump reintroduces the frontend↔backend tRPC skew the lockstep model exists to
+prevent. See `packages/scout-for-lol/AGENTS.md` § Stage deploys.
 
 ## Renovate Configuration
 
@@ -196,7 +208,7 @@ The project uses Renovate for automated updates:
 
 1. Renovate parses `versions.ts` looking for annotations
 2. Creates PRs for version bumps
-3. There is no CI on PRs (pipeline removed 2026-07) — verify the affected package manually before merging
+3. PRs run `bun run verify` (affected-scoped) on the static Buildkite pipeline (`.buildkite/pipeline.yml`) — check the `buildkite/monorepo/pr` status before merging
 
 ### Digest/pin updates bypass `minimumReleaseAge`
 

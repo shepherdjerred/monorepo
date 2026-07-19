@@ -9,11 +9,11 @@ description: |
 
 # BuildKite Helper
 
-> **⚠️ This monorepo's Buildkite pipeline was removed 2026-07.** The `.buildkite/` directory, the `scripts/ci/` pipeline generator, and the Dagger module are gone — nothing runs on commit/push/PR anymore; verification is manual. The Buildkite org and the homelab agent-stack (`buildkite` namespace, kueue) still exist pending a separate manual teardown. Monorepo-specific notes below are **historical**; the general Buildkite reference material remains valid for other uses.
+> **This monorepo runs CI on a STATIC Buildkite pipeline** (`.buildkite/pipeline.yml`, replatformed 2026-07 — the old dynamic `scripts/ci/` TypeScript generator and the Dagger module were removed, then a static pipeline landed in their place via #1541 and follow-ups). PRs run `bun run verify` (affected-scoped), e2e, and dry-runs of the deploy scripts; main builds bake/push images (`bake-images.sh`), deploy static sites, helm-push, tofu-apply, ArgoCD-sync, and run the version commit-back. The aggregate PR status is `buildkite/monorepo/pr`. The "This Monorepo's CI Patterns (historical)" section at the bottom describes the pre-2026-07 dynamic/Dagger pipeline — historical only.
 
 ## Overview
 
-BuildKite is a CI/CD platform where builds run on your own infrastructure via agents. Pipelines are defined in YAML (static or dynamically generated). This monorepo formerly used BuildKite as its sole CI platform with dynamic TypeScript pipeline generation and Dagger for all build steps (removed 2026-07).
+BuildKite is a CI/CD platform where builds run on your own infrastructure via agents. Pipelines are defined in YAML (static or dynamically generated). This monorepo uses a static YAML pipeline on the agent-stack-k8s homelab agents; it formerly used dynamic TypeScript pipeline generation and Dagger for all build steps (removed 2026-07).
 
 ## Pipeline YAML Quick Reference
 
