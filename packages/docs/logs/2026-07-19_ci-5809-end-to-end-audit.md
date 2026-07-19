@@ -232,8 +232,8 @@ and deployment-health gap:
   `buildkite/agent:3` image in `pipeline upload --dry-run` mode. Shell syntax,
   ShellCheck, Prettier, and diff whitespace checks passed. The cdk8s package
   passed build, typecheck, lint, and 199 tests with 13 intentional skips.
-  `bun run verify -- --affected` passed 30 tasks before the main rebase and 25
-  tasks afterward.
+  `bun run verify -- --affected` passed after integrating current main, and the
+  merge commit hook passed all 33 affected tasks.
 
 At the 2026-07-19 22:22 UTC follow-up snapshot, build 5823 had passed and PR
 `#1570` had merged. Its merge canceled main build 5847 and started main build 5851. `sjer.red` still returned 403 and the live ArgoCD status had not changed;
@@ -258,8 +258,8 @@ build 5851 must reach the deployment lanes before those outcomes can change.
   passed cdk8s build, typecheck, lint, all tests, ShellCheck, Prettier, and diff
   checks, plus the full affected repository gate.
 - Committed the remediation as `0f01ac62f` on
-  `fix/ci-pipeline-audit-remediation` after rebasing onto main commit
-  `21d243734`.
+  `fix/ci-pipeline-audit-remediation`, merged main commit `398ef63be`, and
+  opened PR #1576.
 - Recorded the audit in
   `packages/docs/logs/2026-07-19_ci-5809-end-to-end-audit.md`.
 
