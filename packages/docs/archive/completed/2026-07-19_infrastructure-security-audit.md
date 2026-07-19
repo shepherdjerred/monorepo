@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-07-19-infrastructure-security-audit
+type: reference
+status: complete
+board: false
+---
+
 # Infrastructure Security Audit
-
-## Status
-
-Complete
 
 ## Objective
 

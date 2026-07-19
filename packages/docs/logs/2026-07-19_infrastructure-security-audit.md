@@ -1,11 +1,11 @@
+---
+id: log-2026-07-19-infrastructure-security-audit
+type: log
+status: complete
+board: false
+---
+
 # Infrastructure security audit — session log
-
-## Status
-
-Complete
-
-Per-session journal for the work that produced
-[the infrastructure security audit decision](../decisions/2026-07-19_infrastructure-security-audit.md).
 
 ## Session Log — 2026-07-19
 

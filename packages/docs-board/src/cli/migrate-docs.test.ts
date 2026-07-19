@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { createFrontmatter } from "./migrate-docs.ts";
+import { createFrontmatter, normalizeWorkflowSection } from "./migrate-docs.ts";
 
 describe("createFrontmatter", () => {
   test("preserves an explicit board review policy", () => {
@@ -35,5 +35,39 @@ describe("createFrontmatter", () => {
 
     expect(frontmatter.verification).toBe("human");
     expect(frontmatter.disposition).toBe("active");
+  });
+});
+
+describe("normalizeWorkflowSection", () => {
+  test("prefers an exact human-verification section over generic verification headings", () => {
+    const body = [
+      "# Fixture",
+      "",
+      "## Verification and Delivery",
+      "",
+      "- [x] Run automated checks.",
+      "",
+      "## Human Verification",
+      "",
+      "- [ ] Confirm the deployment.",
+      "",
+    ].join("\n");
+
+    expect(
+      normalizeWorkflowSection(body, "awaiting-human", true, "Fixture"),
+    ).toBe(
+      [
+        "# Fixture",
+        "",
+        "## Verification and Delivery",
+        "",
+        "- [x] Run automated checks.",
+        "",
+        "## Human Verification",
+        "",
+        "- Confirm the deployment.",
+        "",
+      ].join("\n"),
+    );
   });
 });

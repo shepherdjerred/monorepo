@@ -80,7 +80,7 @@ All other documentation remains searchable without cluttering the board.
 
 - Created an isolated `feature/docs-kanban` worktree from current `origin/main`.
 - Installed the workspace, ran code generation, and armed repository hooks.
-- Migrated and validated all 780 Markdown documents with an idempotent canonical
+- Migrated and validated all 783 Markdown documents with an idempotent canonical
   model; archived 15 completed plans.
 - Added `packages/docs-board` with the Bun/Hono store and API, React 19/Vite
   board, latest shadcn `base-nova` components, Tailwind CSS v4, comments,
@@ -95,15 +95,15 @@ All other documentation remains searchable without cluttering the board.
   contextual verification/remaining work, comment history, explicit signoff or
   request-changes actions, and a Full Document tab.
 - Added transport, subscription, workflow-section, and optimistic-cache tests;
-  the docs-board suite now has 16 passing tests.
-- Replaced per-request 780-document scans with a shared ID/path index. The file
+  the docs-board suite now has 17 passing tests.
+- Replaced per-request 783-document scans with a shared ID/path index. The file
   watcher reparses only changed paths, and mutations reread their live target
   before revision validation so caching cannot overwrite an external edit.
 - Preloaded the lazy document route from the board and raised the Bun idle
   timeout for the long-lived typed subscription. Warm detail requests measured
   0-6 ms instead of 2.25-2.41 seconds.
-- Added indexed-read, watcher-refresh, and external-edit conflict regressions;
-  the full suite passes with 16 tests and 42 assertions.
+- Added indexed-read, watcher-refresh, external-edit conflict, and exact-section
+  migration regressions; the full suite passes with 17 tests and 43 assertions.
 - Rebased onto current `origin/main`, passed full and affected verification
   (181/181 tasks each), pushed `feature/docs-kanban`, and opened draft PR #1573.
 - Rebased again after `main` advanced, migrated the 13 newly added Markdown

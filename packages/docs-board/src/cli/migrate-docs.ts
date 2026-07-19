@@ -220,7 +220,7 @@ function headingMatches(text: string, awaitingHuman: boolean): boolean {
   );
 }
 
-function normalizeWorkflowSection(
+export function normalizeWorkflowSection(
   body: string,
   status: DocumentStatus,
   board: boolean,
@@ -230,10 +230,15 @@ function normalizeWorkflowSection(
   const awaitingHuman = status === "awaiting-human";
   const target = awaitingHuman ? "Human Verification" : "Remaining";
   let metadata = parseMarkdownBody(body);
-  const candidate = metadata.headings.find(
-    (heading) =>
-      heading.depth === 2 && headingMatches(heading.text, awaitingHuman),
+  const exactCandidate = metadata.headings.find(
+    (heading) => heading.depth === 2 && heading.text === target,
   );
+  const candidate =
+    exactCandidate ??
+    metadata.headings.find(
+      (heading) =>
+        heading.depth === 2 && headingMatches(heading.text, awaitingHuman),
+    );
   let lines = body.split("\n");
   if (candidate === undefined) {
     const defaultItem = awaitingHuman
