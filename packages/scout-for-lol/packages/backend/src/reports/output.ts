@@ -301,11 +301,13 @@ function renderScatterAnalytics(context: AnalyticsRenderContext): Buffer {
 
 function renderHeatmapAnalytics(context: AnalyticsRenderContext): Buffer {
   const { base, firstColumn, params, render, rows } = context;
-  if (params.result.plan.groupBys.length !== 2) {
+  const groupBys = params.result.plan.groupBys;
+  if (groupBys.length !== 2) {
     throw new Error("Heatmaps require exactly two GROUP BY dimensions.");
   }
-  const xCategories = uniqueDimensions(rows, 0);
-  const yCategories = uniqueDimensions(rows, 1);
+  const { xDim, yDim } = resolveHeatmapAxes(groupBys, render.encoding);
+  const xCategories = uniqueDimensions(rows, xDim);
+  const yCategories = uniqueDimensions(rows, yDim);
   const valueColumn = render.encoding.value ?? firstColumn;
   return analyticsChartToImage({
     ...base,
@@ -314,11 +316,37 @@ function renderHeatmapAnalytics(context: AnalyticsRenderContext): Buffer {
     yCategories,
     valueSuffix: columnDisplay(valueColumn).percent ? "%" : "",
     cells: rows.map((row) => ({
-      x: xCategories.indexOf(row.dimensions[0] ?? ""),
-      y: yCategories.indexOf(row.dimensions[1] ?? ""),
+      x: xCategories.indexOf(row.dimensions[xDim] ?? ""),
+      y: yCategories.indexOf(row.dimensions[yDim] ?? ""),
       value: chartNumber(row, valueColumn),
     })),
   });
+}
+
+/**
+ * Resolve which of the two heatmap GROUP BY dimensions drives each axis. The
+ * `x` encoding names the x-axis dimension and `series` the y-axis dimension;
+ * either one fixes the split. With neither given, fall back to query order
+ * (x = first GROUP BY, y = second).
+ */
+export function resolveHeatmapAxes(
+  groupBys: readonly string[],
+  encoding: { x?: string | undefined; series?: string | undefined },
+): { xDim: number; yDim: number } {
+  const xFromX = heatmapDimensionIndex(groupBys, encoding.x);
+  const xFromSeries = heatmapDimensionIndex(groupBys, encoding.series);
+  const xDim =
+    xFromX ?? (xFromSeries === undefined ? 0 : xFromSeries === 0 ? 1 : 0);
+  return { xDim, yDim: xDim === 0 ? 1 : 0 };
+}
+
+function heatmapDimensionIndex(
+  groupBys: readonly string[],
+  channel: string | undefined,
+): number | undefined {
+  if (channel === undefined) return undefined;
+  const index = groupBys.indexOf(channel);
+  return index === -1 ? undefined : index;
 }
 
 function renderRadarAnalytics(context: AnalyticsRenderContext): Buffer {
