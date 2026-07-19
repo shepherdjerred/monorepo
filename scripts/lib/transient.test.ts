@@ -15,8 +15,18 @@ describe("isTransientError", () => {
     "getaddrinfo EAI_AGAIN api.github.com",
     "fetch failed: ECONNRESET",
     "net/http: TLS handshake timeout",
+    // Go's lowercase TLS handshake variant (distinct from "TLS handshake").
+    'Get "https://ghcr.io/v2/": remote error: tls: handshake failure',
     "Error: 500 Internal Server Error",
     "You have exceeded a secondary rate limit",
+    // Reverse-proxy 5xx page that reports "Proxy Error" without a numeric code.
+    "The proxy server received an invalid response. Proxy Error",
+    // Go net i/o timeout (distinct from the ETIMEDOUT errno spelling).
+    "read tcp 10.0.0.5:51234->140.82.113.3:443: i/o timeout",
+    // Node/libuv connect timeout errno.
+    "connect ETIMEDOUT 140.82.113.3:443",
+    // DNS resolution flap (getaddrinfo temporary failure).
+    "curl: (6) Could not resolve host: temporary failure in name resolution",
   ])("transient: %s", (message) => {
     expect(isTransientError(new Error(message))).toBe(true);
   });
