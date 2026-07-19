@@ -21,6 +21,7 @@ const STREAM_CONFIG: Pick<Config, "stream"> = {
     hardwareAcceleration: false,
     vaapiDevice: "/dev/dri/renderD128",
     readrate: 1,
+    readrateInitialBurst: 2.5,
   },
 };
 

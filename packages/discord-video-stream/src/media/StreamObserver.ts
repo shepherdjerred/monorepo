@@ -42,6 +42,25 @@ export type SendStats = {
   sendTime: number;
   /** The frame's duration (budget) in milliseconds. */
   frametime: number;
+  /**
+   * How late this frame was sent versus its absolute pacing schedule (wall-elapsed minus
+   * media-elapsed since the current anchor), in milliseconds; 0 when on schedule or unanchored.
+   * The direct sender-side measure of viewer-facing lateness — the signal the 2026-07-18 stutter
+   * investigation had to infer from production-rate proxies.
+   */
+  behindMs: number;
+  /** Wall-clock ms spent waiting in the A/V ahead-sync loop before completing this frame (usually 0). */
+  syncWaitMs: number;
+  /** A/V sync correction taken on this frame, if any. Each correction re-anchors the schedule. */
+  syncEvent?: "ahead" | "behind";
+};
+
+/** Buffered packet counts between the demuxer and the paced send streams. */
+export type QueueDepth = {
+  /** Packets buffered in the video demux→pacer queue (objectMode stream lengths). */
+  video: number;
+  /** Packets buffered in the audio demux→pacer queue; 0 when the source has no audio. */
+  audio: number;
 };
 
 export type StreamObserver = {
@@ -59,4 +78,10 @@ export type StreamObserver = {
   onProgress?: (progress: FfmpegProgress) => void;
   /** Per-frame send timing from the video/audio send path. High volume — sample/aggregate downstream. */
   onSendStats?: (stats: SendStats) => void;
+  /**
+   * Periodic (~5 s) demux→pacer queue depths. Separates producer-starved dips (queues empty) from
+   * consumer-paced backpressure (queues full) — the distinction that required in-pod thread
+   * sampling to establish during the 2026-07-18 stutter investigation.
+   */
+  onQueueDepth?: (depth: QueueDepth) => void;
 };
