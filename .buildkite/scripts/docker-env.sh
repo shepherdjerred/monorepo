@@ -3,7 +3,12 @@
 # toolchain.sh. The dind sidecar (see pod_privileged in pipeline.yml) provides
 # the daemon on tcp://127.0.0.1:2375; this ensures a client CLI exists (the
 # fresh ci-base bakes one; the stale image doesn't) and waits for the daemon.
-set -euo pipefail
+set -eu
+# pipefail is not POSIX (dash lacks it) and the agent may run steps under
+# /bin/sh (build 5651/5654 — the agent-stack registration env forces the
+# agent image's default shell until the BUILDKITE_SHELL controller fix is
+# deployed). Enable it when the shell is bash; plain sh proceeds without.
+case "${BASH_VERSION:-}" in "") ;; *) set -o pipefail ;; esac
 
 if ! command -v docker >/dev/null; then
   # renovate: datasource=docker depName=docker versioning=docker

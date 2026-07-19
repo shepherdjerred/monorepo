@@ -6,7 +6,17 @@ import type { SendStats, StreamObserver } from "./StreamObserver.js";
 
 export class BaseMediaStream extends Writable {
   private _pts: number | undefined;
-  private _syncTolerance = 20;
+  /**
+   * Max sender-side A/V pts divergence (ms) before the ahead/behind correction engages. Must
+   * exceed ordinary demux interleave jitter — one video frame (33 ms at 30 fps) plus one audio
+   * frame (20 ms Opus) — or big-packet scenes trip the correction on every few frames, and each
+   * correction's `resetTimingCompensation()` re-anchors the schedule, permanently locking in the
+   * wait's overshoot. At the old 20 ms tolerance that leak sustained ~0.94x production on
+   * heavy-bitrate scenes (2026-07-18 stutter investigation). Sender-side skew at this scale is
+   * invisible to viewers: the receiver schedules frames by RTP timestamp; this tolerance only
+   * bounds sender buffer divergence.
+   */
+  private _syncTolerance = 60;
   private _loggerSend: Log;
   private _loggerSync: Log;
   private _loggerSleep: Log;
@@ -137,15 +147,14 @@ export class BaseMediaStream extends Writable {
         `Frame takes too long to send (${(ratio * 100).toFixed(2)}% frametime)`,
       );
     }
-    this._observer?.onSendStats?.({
-      kind: this._kind,
-      ratio,
-      sendTime,
-      frametime,
-    });
-
     this._startTime ??= start_sendFrame;
     this._startPts ??= this._pts;
+    // Sender-side schedule lag: wall-clock elapsed minus media-time elapsed since the current
+    // anchor. The direct measure of viewer-facing lateness (reported via onSendStats below).
+    const behindMs = Math.max(
+      0,
+      end_sendFrame - this._startTime - (this._pts - this._startPts),
+    );
     const sleep = Math.max(
       0,
       this._pts -
@@ -153,9 +162,24 @@ export class BaseMediaStream extends Writable {
         frametime -
         (end_sendFrame - this._startTime),
     );
+    let syncWaitMs = 0;
+    let syncEvent: "ahead" | "behind" | undefined;
+    const reportSendStats = () => {
+      this._observer?.onSendStats?.({
+        kind: this._kind,
+        ratio,
+        sendTime,
+        frametime,
+        behindMs,
+        syncWaitMs,
+        ...(syncEvent !== undefined ? { syncEvent } : {}),
+      });
+    };
     if (this._noSleep || sleep === 0) {
+      reportSendStats();
       callback(null);
     } else if (this.sync && this.isBehind()) {
+      syncEvent = "behind";
       this._loggerSync.debug(
         {
           stats: {
@@ -166,22 +190,38 @@ export class BaseMediaStream extends Writable {
         "Stream is behind. Not sleeping for this frame",
       );
       this.resetTimingCompensation();
+      reportSendStats();
       callback(null);
     } else if (this.sync && this.isAhead()) {
+      syncEvent = "ahead";
+      // Sleep only the excess beyond tolerance (re-checked each iteration as the partner stream
+      // advances) instead of whole-frametime quanta: the loop exits within ~1 ms of the tolerance
+      // boundary, so the resetTimingCompensation() below locks in timer slop instead of up to a
+      // full frametime per event. The old whole-frametime wait leaked ≤ 33 ms of schedule per
+      // ahead-event, which on heavy scenes (frequent events) compounded into sustained sub-realtime
+      // production — the 2026-07-18 stutter root cause.
+      const waitStart = performance.now();
       do {
+        const delta = this.ptsDelta();
+        if (delta === undefined) break;
+        const excess = delta - this.syncTolerance;
+        if (excess <= 0) break;
         this._loggerSync.debug(
           {
             stats: {
               pts: this.pts,
               pts_other: this.syncStream?.pts,
+              excess,
               frametime,
             },
           },
-          `Stream is ahead. Waiting for ${frametime}ms`,
+          `Stream is ahead. Waiting for ${excess}ms`,
         );
-        await setTimeout(frametime);
+        await setTimeout(Math.min(excess, frametime));
       } while (this.sync && this.isAhead());
+      syncWaitMs = performance.now() - waitStart;
       this.resetTimingCompensation();
+      reportSendStats();
       callback(null);
     } else {
       this._loggerSleep.debug(
@@ -196,6 +236,7 @@ export class BaseMediaStream extends Writable {
         },
         `Sleeping for ${sleep}ms`,
       );
+      reportSendStats();
       setTimeout(sleep).then(() => callback(null));
     }
     frame.free();
