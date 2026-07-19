@@ -11,6 +11,15 @@ resource "buildkite_pipeline" "monorepo" {
   repository = "https://github.com/shepherdjerred/monorepo.git"
   cluster_id = buildkite_cluster.homelab.id
 
+  # Build pages and job logs must NOT be world-readable. A public pipeline
+  # serves every build's logs to anonymous viewers, so any secret a step
+  # prints (e.g. a runtime-minted token echoed by a script bug) becomes a
+  # public disclosure. Keep this managed here so a UI toggle can't drift it
+  # back to public. Defense-in-depth for the log-scrubbing controls in
+  # .buildkite/pipeline.yml + scripts/lib/github-auth.ts. See
+  # packages/docs/logs/2026-07-18_bk-log-secret-audit-and-hardening.md.
+  visibility = "PRIVATE"
+
   default_branch       = "main"
   branch_configuration = "main"
 
