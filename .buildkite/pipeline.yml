@@ -38,6 +38,15 @@ common:
               resources:
                 requests: { cpu: "2", memory: "4Gi" }
                 limits: { cpu: "7", memory: "12Gi" }
+              volumeMounts:
+                # Checkouts are mirror-backed (default-checkout-params.gitMirrors):
+                # .git/objects/info/alternates points into this volume, so every
+                # container that runs git (turbo hashing, go VCS stamping —
+                # build 5694) needs the mirror mounted, not just the checkout
+                # container. The agent stack adds the pod-level volume.
+                - name: buildkite-git-mirrors
+                  mountPath: /buildkite/git-mirrors
+                  readOnly: true
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
   - pod_privileged: &pod_privileged
@@ -60,6 +69,15 @@ common:
               resources:
                 requests: { cpu: "2", memory: "6Gi" }
                 limits: { cpu: "7", memory: "14Gi" }
+              volumeMounts:
+                # Checkouts are mirror-backed (default-checkout-params.gitMirrors):
+                # .git/objects/info/alternates points into this volume, so every
+                # container that runs git (turbo hashing, go VCS stamping —
+                # build 5694) needs the mirror mounted, not just the checkout
+                # container. The agent stack adds the pod-level volume.
+                - name: buildkite-git-mirrors
+                  mountPath: /buildkite/git-mirrors
+                  readOnly: true
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
           # Docker daemon for image builds + compose e2e, as a NATIVE SIDECAR
@@ -106,6 +124,15 @@ common:
               resources:
                 requests: { cpu: "500m", memory: "1Gi" }
                 limits: { cpu: "7", memory: "12Gi" }
+              volumeMounts:
+                # Checkouts are mirror-backed (default-checkout-params.gitMirrors):
+                # .git/objects/info/alternates points into this volume, so every
+                # container that runs git (turbo hashing, go VCS stamping —
+                # build 5694) needs the mirror mounted, not just the checkout
+                # container. The agent stack adds the pod-level volume.
+                - name: buildkite-git-mirrors
+                  mountPath: /buildkite/git-mirrors
+                  readOnly: true
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
   - retry: &retry
@@ -196,6 +223,12 @@ steps:
                 resources:
                   requests: { cpu: "2", memory: "4Gi" }
                   limits: { cpu: "4", memory: "8Gi" }
+                volumeMounts:
+                  # Mirror-backed checkouts: see the container-0 mounts in the
+                  # shared pod anchors (turbo runs git in these containers).
+                  - name: buildkite-git-mirrors
+                    mountPath: /buildkite/git-mirrors
+                    readOnly: true
                 envFrom:
                   - secretRef: { name: buildkite-ci-secrets }
 
@@ -233,6 +266,12 @@ steps:
                 resources:
                   requests: { cpu: "1", memory: "2Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
+                volumeMounts:
+                  # Mirror-backed checkouts: see the container-0 mounts in the
+                  # shared pod anchors (turbo runs git in these containers).
+                  - name: buildkite-git-mirrors
+                    mountPath: /buildkite/git-mirrors
+                    readOnly: true
                 envFrom:
                   - secretRef: { name: buildkite-ci-secrets }
 
