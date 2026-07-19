@@ -4,7 +4,12 @@
 # no-op; on a stale one (a PR just changed .mise.toml, or the image predates
 # this pipeline) mise bootstraps itself and installs the missing tools at
 # runtime, so a toolchain change never waits for the main-only image refresh.
-set -euo pipefail
+set -eu
+# pipefail is not POSIX (dash lacks it) and the agent may run steps under
+# /bin/sh (build 5651/5654 — the agent-stack registration env forces the
+# agent image's default shell until the BUILDKITE_SHELL controller fix is
+# deployed). Enable it when the shell is bash; plain sh proceeds without.
+case "${BASH_VERSION:-}" in "") ;; *) set -o pipefail ;; esac
 
 command -v mise >/dev/null || curl -fsSL https://mise.run | sh
 export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:/opt/mise/shims:$PATH"

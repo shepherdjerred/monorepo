@@ -105,3 +105,51 @@ describe("prepareStream audioInput", () => {
     }
   });
 });
+
+describe("prepareStream readrate pacing", () => {
+  test("emits -readrate_initial_burst alongside -readrate when both are set", () => {
+    const { command, output, promise } = prepareStream("video.mkv", {
+      readrate: 1,
+      readrateInitialBurst: 2.5,
+    });
+    promise.catch(() => {});
+    try {
+      const joined = ffmpegArgs(command).join(" ");
+      expect(joined).toContain("-readrate 1");
+      expect(joined).toContain("-readrate_initial_burst 2.5");
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  });
+
+  test("omits -readrate_initial_burst when readrate is unset (burst is meaningless alone)", () => {
+    const { command, output, promise } = prepareStream("video.mkv", {
+      readrateInitialBurst: 2.5,
+    });
+    promise.catch(() => {});
+    try {
+      const joined = ffmpegArgs(command).join(" ");
+      expect(joined).not.toContain("-readrate_initial_burst");
+      expect(joined).not.toContain("-readrate ");
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  });
+
+  test("omits -readrate_initial_burst when only readrate is set (ffmpeg default 0.5s applies)", () => {
+    const { command, output, promise } = prepareStream("video.mkv", {
+      readrate: 1,
+    });
+    promise.catch(() => {});
+    try {
+      const joined = ffmpegArgs(command).join(" ");
+      expect(joined).toContain("-readrate 1");
+      expect(joined).not.toContain("-readrate_initial_burst");
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  });
+});

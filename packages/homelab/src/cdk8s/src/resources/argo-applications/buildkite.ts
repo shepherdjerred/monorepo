@@ -5,8 +5,10 @@ import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   KubeLimitRange,
+  KubePersistentVolumeClaim,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
 // Exported so kueue-config.ts's `pods` nominalQuota can be asserted equal to
@@ -78,6 +80,23 @@ export function createBuildkiteApp(chart: Chart) {
     },
   });
 
+  // Shared git-mirror store for step-pod checkouts (restored 2026-07-18; it
+  // was dropped in the CI replatform on the assumption of "plain shallow
+  // checkouts", but the static pipeline does FULL `--no-tags` clones so turbo
+  // --affected can reach the merge-base). Measured: a cold full clone of the
+  // 964 MB .git is ~52s per pod on every main build vs 8-10s with a warm
+  // mirror; ~11-15 pods pay it per build. The agent stack auto-configures
+  // checkouts to use the mirror via the alternates path
+  // `/buildkite/git-mirrors/<encoded-url>/objects`.
+  new KubePersistentVolumeClaim(chart, "buildkite-git-mirrors-pvc", {
+    metadata: { name: "buildkite-git-mirrors", namespace: "buildkite" },
+    spec: {
+      accessModes: ["ReadWriteMany"],
+      storageClassName: NVME_STORAGE_CLASS,
+      resources: { requests: { storage: Quantity.fromString("20Gi") } },
+    },
+  });
+
   new Application(chart, "buildkite-app", {
     metadata: {
       name: "buildkite",
@@ -105,10 +124,29 @@ export function createBuildkiteApp(chart: Chart) {
               // nominalQuota — the two must stay in lockstep (asserted in a test).
               "max-in-flight": BUILDKITE_MAX_IN_FLIGHT,
               "empty-job-grace-period": "5m",
-              // No git-mirror checkout config: the replatformed CI does a plain
-              // shallow checkout (no Dagger, no bootstrap pipeline-upload step),
-              // so the buildkite-git-mirrors PVC + default-checkout-params.gitMirrors
-              // that the Dagger-era stack needed were dropped in the CI replatform.
+              // Git mirrors: see the buildkite-git-mirrors PVC comment above —
+              // every step pod does a FULL clone (turbo merge-base), so the
+              // mirror turns ~52s cold checkouts into ~10s reference clones.
+              "default-checkout-params": {
+                gitMirrors: {
+                  volume: {
+                    name: "buildkite-git-mirrors",
+                    persistentVolumeClaim: {
+                      claimName: "buildkite-git-mirrors",
+                    },
+                  },
+                  lockTimeout: 300,
+                },
+              },
+              // SECURITY: no envFrom on the agent container. It previously
+              // injected buildkite-ci-secrets into EVERY pod's agent
+              // container — including the pipeline-upload pod, where
+              // `buildkite-agent pipeline upload` interpolates `$VAR`
+              // references at upload time and bakes the secret VALUES into
+              // the stored (UI/API-visible) pipeline. Steps that need
+              // secrets get them via their own container-0 envFrom in
+              // .buildkite/pipeline.yml, and secret refs there must be
+              // written `$$VAR` (runtime shell expansion).
               "pod-spec-patch": {
                 priorityClassName: "batch-low",
                 serviceAccountName: "buildkite-agent-stack-k8s-controller",
@@ -116,11 +154,17 @@ export function createBuildkiteApp(chart: Chart) {
                 containers: [
                   {
                     name: "agent",
-                    envFrom: [
+                    env: [
                       {
-                        secretRef: {
-                          name: "buildkite-ci-secrets",
-                        },
+                        // kubernetes-bootstrap imposes the AGENT's shell
+                        // config on every command container via the
+                        // registration env; the agent image has no bash, so
+                        // its default is /bin/sh — dash on the debian
+                        // ci-base, which broke `set -o pipefail` in
+                        // toolchain.sh (builds 5651/5654). Non-secret env
+                        // only here — see the security note above.
+                        name: "BUILDKITE_SHELL",
+                        value: "/bin/bash -e -c",
                       },
                     ],
                   },
