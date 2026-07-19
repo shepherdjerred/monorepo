@@ -152,14 +152,20 @@ function findPagerDutyConfig(rendered: string): PagerDutyReceiver {
 /** Compile the amrender helper once (cold `go build`), returning the binary path. */
 async function buildAmRender(): Promise<string> {
   const binPath = path.join(CDK8S_DIR, `.amrender-bin-${String(Date.now())}`);
-  const proc = Bun.spawn(["go", "build", "-o", binPath, "."], {
-    cwd: AMRENDER_DIR,
-    stdout: "pipe",
-    stderr: "pipe",
-    // GOTOOLCHAIN=local: use the installed toolchain rather than fetching one to
-    // match go.mod (offline-safe). The module is stdlib-only, so no network.
-    env: { ...Bun.env, GOFLAGS: "-mod=mod", GOTOOLCHAIN: "local" },
-  });
+  // -buildvcs=false: the helper never reads its VCS stamp, and stamping makes
+  // the build depend on git state (a CI step container whose checkout had
+  // unresolvable alternates failed with `error obtaining VCS status: 128`).
+  const proc = Bun.spawn(
+    ["go", "build", "-buildvcs=false", "-o", binPath, "."],
+    {
+      cwd: AMRENDER_DIR,
+      stdout: "pipe",
+      stderr: "pipe",
+      // GOTOOLCHAIN=local: use the installed toolchain rather than fetching one to
+      // match go.mod (offline-safe). The module is stdlib-only, so no network.
+      env: { ...Bun.env, GOFLAGS: "-mod=mod", GOTOOLCHAIN: "local" },
+    },
+  );
   const [stderr, exitCode] = await Promise.all([
     new Response(proc.stderr).text(),
     proc.exited,
