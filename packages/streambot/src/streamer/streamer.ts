@@ -356,6 +356,11 @@ export class StreambotStreamer implements StreamerLike {
       // causing the downstream JS buffer pool to grow at ~25 MB/s until major GC pauses the
       // send loop ≥ 200 ms and the Discord receiver's jitter buffer shows a ~1 s freeze.
       readrate: stream.readrate,
+      // Pre-roll this many seconds at full speed before readrate pacing engages. The play-side
+      // pacer (readrateInitialBurst below) forwards the pre-roll into the receiver's jitter
+      // buffer, which absorbs transient production dips on heavy-bitrate scenes — without it the
+      // realtime-paced pipeline has zero margin and every dip stutters playback.
+      readrateInitialBurst: stream.readrateInitialBurst,
       ...(startSeconds > 0 ? { startTime: startSeconds } : {}),
       ...(input.resolved.subtitle
         ? { subtitleBurn: { path: input.resolved.subtitle.path } }
@@ -390,7 +395,14 @@ export class StreambotStreamer implements StreamerLike {
       input.resolved.ffmpegInput,
       {
         prepare: { ...prepareOpts, observer },
-        play: { type: "go-live", observer },
+        play: {
+          type: "go-live",
+          observer,
+          // Must match prepare.readrateInitialBurst: the pacer free-runs (no per-frame sleep)
+          // until this many seconds of pts have been sent, pushing the ffmpeg-side burst into
+          // the receiver's jitter buffer instead of holding it in local queues.
+          readrateInitialBurst: stream.readrateInitialBurst,
+        },
       },
     );
     this.player = player;

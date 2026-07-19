@@ -12,8 +12,39 @@ export function createKyvernoApp(chart: Chart) {
   });
 
   const kyvernoValues: HelmValuesForChart<"kyverno"> = {
+    // Keep the CI machinery out of kyverno's webhook path entirely. The
+    // admission webhooks are failurePolicy=Fail, so every kyverno restart is
+    // an API outage for covered namespaces — and kyverno restarts under CI
+    // load (25 restarts/27h on 2026-07-19; probe timeouts during node
+    // stalls). Each outage silently rejected buildkite Job creates/updates:
+    // finished pods wedged holding Kueue quota, and 'created' jobs never
+    // materialized (phantom reservations that froze the whole pipeline —
+    // builds 5663/5680/5700). No policy targets CI jobs; excluding the CI
+    // namespaces removes the coupling. kyverno + kube-system stay excluded
+    // per the chart default this selector replaces.
+    config: {
+      webhooks: {
+        namespaceSelector: {
+          matchExpressions: [
+            {
+              key: "kubernetes.io/metadata.name",
+              operator: "NotIn",
+              values: ["kyverno", "kube-system", "buildkite", "kueue-system"],
+            },
+          ],
+        },
+      },
+    },
     admissionController: {
       replicas: 1,
+      // Same correctness-not-capacity sizing rationale as kueue: probe
+      // liveness under node contention needs scheduling weight.
+      container: {
+        resources: {
+          requests: { cpu: "250m", memory: "256Mi" },
+          limits: { cpu: "1000m", memory: "768Mi" },
+        },
+      },
     },
     backgroundController: {
       replicas: 1,
