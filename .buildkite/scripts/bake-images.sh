@@ -55,10 +55,39 @@ bake_targets=()
 smoke_dirs=()
 push_images=()
 
+# Scope selection. PRs diff against origin/main (TURBO_SCM_BASE from the
+# pipeline env). Main diffs against the LAST GREEN MAIN BUILD's commit: every
+# image validated+pushed at that commit is guaranteed output-identical here
+# (digests are content-gated), so rebuilding it moves gigabytes through an
+# ephemeral BuildKit for a no-op — most merges touch no image-owning package
+# at all. If the lookup fails, degrade LOUDLY to building everything — more
+# work, never a silent skip.
+scope="all"
+scope_base=""
 if [ "$AFFECTED_ONLY" = true ]; then
+  scope="affected"
+elif [ "$PUSH" = true ]; then
+  if resp=$(curl -fsS -H "Authorization: Bearer ${BUILDKITE_API_TOKEN}" \
+      "https://api.buildkite.com/v2/organizations/sjerred/pipelines/monorepo/builds?branch=main&state=passed&per_page=1") \
+    && last_green=$(printf '%s' "$resp" | jq -r '.[0].commit // empty') \
+    && [ -n "$last_green" ] \
+    && git cat-file -e "${last_green}^{commit}"; then
+    scope="affected"
+    scope_base="$last_green"
+    echo "images scoped to changes since last green main build ($last_green)"
+  else
+    echo "WARN: could not resolve last green main build — building ALL images"
+  fi
+fi
+
+if [ "$scope" = "affected" ]; then
   # Fail loud if turbo ls breaks or changes shape — a tool error must never
   # read as "nothing affected".
-  affected_json=$(bunx turbo ls --affected --output=json)
+  if [ -n "$scope_base" ]; then
+    affected_json=$(TURBO_SCM_BASE="$scope_base" bunx turbo ls --affected --output=json)
+  else
+    affected_json=$(bunx turbo ls --affected --output=json)
+  fi
   echo "$affected_json" | jq -e '.packages.items' >/dev/null
 
   is_affected() {
@@ -75,6 +104,10 @@ if [ "$AFFECTED_ONLY" = true ]; then
     for a in "${ALWAYS_ON_TARGETS[@]}"; do
       if [ "$a" = "$target" ]; then always=true; fi
     done
+    # The always-on families cover turbo's nested --affected under-selection
+    # bug, which applies to ANY diff base — main included. They cost three
+    # image rebuilds per merge until that bug is fixed; a silent skip of a
+    # changed image would cost a stale deploy.
     if [ "$always" = true ] || is_affected "$pkg"; then
       bake_targets+=("$target")
       smoke_dirs+=("$dir")
@@ -88,6 +121,10 @@ if [ "$AFFECTED_ONLY" = true ]; then
   fi
   if [ "${#bake_targets[@]}" -eq 0 ]; then
     echo "no image-owning packages affected — nothing to build"
+    if [ "$PUSH" = true ]; then
+      # The version commit-back step reads this unconditionally.
+      jq -n '{}' | buildkite-agent meta-data set image-digests
+    fi
     exit 0
   fi
 else
