@@ -6,8 +6,6 @@ CLI utilities for development workflows, optimized for Claude Code consumption.
 
 ```bash
 # Development
-bun run src/index.ts fetch <url>           # Fetch a web page
-bun run src/index.ts recall search <query> # Search indexed documents
 bun run src/index.ts pr health             # PR health check
 bun run src/index.ts deployed scout        # Is a service/commit live on the homelab?
 
@@ -32,24 +30,18 @@ bun test
 src/
 ├── index.ts              # CLI entry point
 ├── handlers/             # Command routers
-│   ├── fetch.ts          # toolkit fetch
-│   ├── recall.ts         # toolkit recall
 │   ├── pr.ts             # toolkit pr
 │   ├── deployed.ts       # toolkit deployed
 │   ├── pagerduty.ts      # toolkit pd
 │   ├── bugsink.ts        # toolkit bugsink
 │   └── grafana.ts        # toolkit gf
 ├── commands/
-│   ├── fetch/            # Fetch subcommands
-│   ├── recall/           # Recall subcommands
 │   ├── pr/               # PR subcommands
 │   ├── deployed/         # `deployed` orchestration
 │   ├── pagerduty/        # PagerDuty subcommands
 │   ├── bugsink/          # Bugsink subcommands
 │   └── grafana/          # Grafana subcommands
 └── lib/
-    ├── fetch/            # Lightpanda + PinchTab wrappers, save logic
-    ├── recall/           # LanceDB + SQLite FTS5, MLX embeddings, chunker, search
     ├── github/           # GitHub API via gh CLI
     ├── deployed/         # Commit → homelab deploy trace (git/argocd/kubectl)
     ├── pagerduty/        # PagerDuty REST API client
