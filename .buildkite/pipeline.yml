@@ -224,7 +224,13 @@ steps:
     # The deploy-sites step ships this dist: sjer.red's build needs playwright
     # browsers (rehype-mermaid renders diagrams at build time), which only
     # exist in this container — build 5636 failed rebuilding it in ci-base.
-    artifact_paths: "packages/sjer.red/dist/**/*"
+    # Both globs are required: Buildkite's `**/*` needs an intermediate dir, so
+    # it silently skips root-level files (dist/index.html, dist/rss.xml) — the
+    # missing `dist/*` glob let build 5648's --delete sync wipe every root
+    # object from the sjer-red bucket.
+    artifact_paths:
+      - "packages/sjer.red/dist/**/*"
+      - "packages/sjer.red/dist/*"
     retry: *retry
     plugins:
       - kubernetes:
@@ -494,8 +500,10 @@ steps:
       bunx turbo run build --filter='!sjer.red' --filter='!@shepherdjerred/resume' --concurrency=6 --output-logs=errors-only
       # sjer.red can't build here (rehype-mermaid needs playwright browsers,
       # build 5636) — the e2e step builds it in the playwright container and
-      # ships the dist as a build artifact; deploy it prebuilt.
+      # ships the dist as a build artifact; deploy it prebuilt. Two downloads:
+      # `**/*` misses root-level files (see the e2e artifact_paths comment).
       buildkite-agent artifact download "packages/sjer.red/dist/**/*" . --step e2e
+      buildkite-agent artifact download "packages/sjer.red/dist/*" . --step e2e
       bun scripts/deploy-site.ts sjer.red --prebuilt
       # resume can't build here either (xelatex only exists in the texlive
       # container) — the resume-build step ships resume.pdf as a build

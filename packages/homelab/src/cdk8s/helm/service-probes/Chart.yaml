@@ -1,0 +1,6 @@
+apiVersion: v2
+name: service-probes
+description: Blackbox Probe resources for every registered Tailnet/CF service
+type: application
+version: "$version"
+appVersion: "$appVersion"
