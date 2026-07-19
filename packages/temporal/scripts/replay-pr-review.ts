@@ -59,7 +59,6 @@ import type { Finding } from "#shared/pr-review/finding.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import type { PrReviewPipelineInput } from "#shared/schemas.ts";
 import { PASSES_PER_SPECIALIST } from "#lib/diff-slicing.ts";
-import { runToolkitRecallSearch } from "#lib/hybrid-retrieval.ts";
 import { defaultWorkdirDeps } from "#lib/pr-review-workdir.ts";
 
 type CliArgs = {
@@ -241,7 +240,6 @@ async function bootstrapReplayContext(
     env: { GH_TOKEN: ghToken },
     deps: {
       workdir: defaultWorkdirDeps,
-      recallSearch: runToolkitRecallSearch,
     },
     heartbeat,
   });
