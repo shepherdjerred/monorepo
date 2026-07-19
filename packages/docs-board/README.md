@@ -24,6 +24,10 @@ The client and server share an inferred tRPC `AppRouter`; Zod still validates
 every procedure input and output at runtime. TanStack React Query caches board
 and detail reads, prefetches card details, updates successful mutations from
 their responses, and invalidates active data from a typed SSE subscription.
+The server keeps the validated document corpus in an indexed memory snapshot,
+so opening a card is an ID lookup instead of another full Markdown scan. The
+file watcher reparses only changed paths, while mutations reread their target
+from disk before writing to preserve revision-conflict protection.
 
 ## Workflow Model
 

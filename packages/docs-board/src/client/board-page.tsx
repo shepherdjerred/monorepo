@@ -26,6 +26,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import { moveDocumentInList } from "./cache.ts";
+import { loadDocumentPage } from "./route-loaders.ts";
 import { useTRPC } from "./trpc.ts";
 import { COLUMN_HINTS, COLUMN_LABELS } from "./workflow.ts";
 import { Badge } from "#components/ui/badge";
@@ -48,6 +49,8 @@ import {
   type DocumentStatus,
   type DocumentSummary,
 } from "#shared/schema";
+
+void loadDocumentPage();
 
 function formatActivity(value: string | null): string {
   if (value === null) return "No activity yet";
@@ -291,6 +294,7 @@ export function BoardPage(): React.JSX.Element {
   };
 
   const prefetchDocument = (id: string): void => {
+    void loadDocumentPage();
     void queryClient.prefetchQuery(trpc.documents.byId.queryOptions({ id }));
   };
 

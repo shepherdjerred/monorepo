@@ -1,11 +1,15 @@
-import { z } from "zod";
-
+import {
+  createDocumentSnapshot,
+  readDocumentPath,
+  type DocumentIndexSnapshot,
+  type InvalidFile,
+  type ParsedFile,
+} from "#server/document-index";
 import {
   parseMarkdownDocument,
   serializeMarkdownDocument,
 } from "#shared/markdown";
 import {
-  DocumentDetailSchema,
   DocumentListResponseSchema,
   FrontmatterSchema,
   type DocumentDetail,
@@ -15,32 +19,14 @@ import {
   type DocumentSummary,
 } from "#shared/schema";
 
-const ErrorSchema = z.instanceof(Error);
-
 export class DocumentNotFoundError extends Error {}
 export class DocumentConflictError extends Error {}
 export class DocumentWorkflowError extends Error {}
 
-type ParsedFile = {
-  absolutePath: string;
-  raw: string;
-  detail: DocumentDetail;
-};
-
-type InvalidFile = {
-  path: string;
-  title: string;
-  errors: string[];
-};
-
-type ScanResult = {
-  valid: ParsedFile[];
-  invalid: InvalidFile[];
-};
-
 type StoreOptions = {
   repoRoot: string;
   watchFiles?: boolean;
+  watchIntervalMs?: number;
 };
 
 type StatusChange = {
@@ -49,22 +35,6 @@ type StatusChange = {
   actor: string;
   note?: string | undefined;
 };
-
-function errorMessage(error: unknown): string {
-  const result = ErrorSchema.safeParse(error);
-  return result.success ? result.data.message : "unknown document error";
-}
-
-function titleFromPath(path: string): string {
-  const basename = path.split("/").at(-1)?.replace(/\.md$/u, "");
-  return (basename ?? path).replaceAll("_", " ").replaceAll("-", " ");
-}
-
-function revisionFor(raw: string): string {
-  const hasher = new Bun.CryptoHasher("sha256");
-  hasher.update(raw);
-  return hasher.digest("hex");
-}
 
 async function commandValue(
   repoRoot: string,
@@ -114,13 +84,20 @@ export class DocumentStore {
   readonly docsRoot: string;
   private readonly listeners = new Set<(event: DocumentChange) => void>();
   private readonly writeQueues = new Map<string, Promise<null>>();
+  private readonly watchIntervalMs: number;
+  private cacheRefreshQueue = Promise.resolve(null);
+  private scanGeneration = 0;
+  private scanPromise: Promise<DocumentIndexSnapshot> | null = null;
+  private scanSnapshot: DocumentIndexSnapshot | null = null;
   private watchTimer: ReturnType<typeof setInterval> | null = null;
-  private watchSignature = "";
+  private watchInitialized = false;
+  private watchSignatures = new Map<string, string>();
   private watching = false;
 
   constructor(options: StoreOptions) {
     this.repoRoot = options.repoRoot;
     this.docsRoot = `${options.repoRoot}/packages/docs`;
+    this.watchIntervalMs = options.watchIntervalMs ?? 1000;
     if (options.watchFiles !== false) this.startWatcher();
   }
 
@@ -142,101 +119,118 @@ export class DocumentStore {
     for (const listener of this.listeners) listener(event);
   }
 
+  private invalidateSnapshot(): void {
+    this.scanGeneration += 1;
+    this.scanPromise = null;
+    this.scanSnapshot = null;
+  }
+
+  private fileSignatures(): Map<string, string> {
+    const glob = new Bun.Glob("**/*.md");
+    const paths = [
+      ...glob.scanSync({ cwd: this.docsRoot, onlyFiles: true }),
+    ].sort();
+    return new Map(
+      paths.map((path) => {
+        const file = Bun.file(`${this.docsRoot}/${path}`);
+        return [path, `${String(file.size)}:${String(file.lastModified)}`];
+      }),
+    );
+  }
+
+  private changedPaths(
+    previous: Map<string, string>,
+    current: Map<string, string>,
+  ): string[] {
+    const paths = new Set([...previous.keys(), ...current.keys()]);
+    return [...paths]
+      .filter((path) => previous.get(path) !== current.get(path))
+      .sort();
+  }
+
   private startWatcher(): void {
-    const poll = (): void => {
+    const poll = async (): Promise<void> => {
       if (this.watching) return;
       this.watching = true;
       try {
-        const glob = new Bun.Glob("**/*.md");
-        const paths = [
-          ...glob.scanSync({ cwd: this.docsRoot, onlyFiles: true }),
-        ].sort();
-        const signatures = paths.map((path) => {
-          const file = Bun.file(`${this.docsRoot}/${path}`);
-          return `${path}:${String(file.size)}:${String(file.lastModified)}`;
-        });
-        const signature = signatures.join("|");
-        if (this.watchSignature !== "" && signature !== this.watchSignature) {
+        const signatures = this.fileSignatures();
+        const changed = this.changedPaths(this.watchSignatures, signatures);
+        if (this.watchInitialized && changed.length > 0) {
+          await this.refreshCachedPaths(changed);
           this.publishChange(null);
         }
-        this.watchSignature = signature;
+        this.watchSignatures = signatures;
+        this.watchInitialized = true;
       } catch (error) {
         console.error("docs watcher failed", error);
       } finally {
         this.watching = false;
       }
     };
-    poll();
-    this.watchTimer = setInterval(poll, 1000);
+    void poll();
+    this.watchTimer = setInterval(() => void poll(), this.watchIntervalMs);
   }
 
-  private async scan(): Promise<ScanResult> {
+  private async buildSnapshot(): Promise<DocumentIndexSnapshot> {
     const glob = new Bun.Glob("**/*.md");
     const paths = [
       ...glob.scanSync({ cwd: this.docsRoot, onlyFiles: true }),
     ].sort();
-    const files = await Promise.all(
-      paths.map(async (path): Promise<ParsedFile | InvalidFile> => {
-        const absolutePath = `${this.docsRoot}/${path}`;
-        const raw = await Bun.file(absolutePath).text();
-        try {
-          const parsed = parseMarkdownDocument(raw);
-          const detail = DocumentDetailSchema.parse({
-            id: parsed.frontmatter.id,
-            path,
-            title: parsed.metadata.title ?? titleFromPath(path),
-            type: parsed.frontmatter.type,
-            status: parsed.frontmatter.status,
-            board: parsed.frontmatter.board,
-            verification: parsed.frontmatter.verification ?? null,
-            disposition: parsed.frontmatter.disposition ?? null,
-            remainingCount: parsed.metadata.remainingCount,
-            hasHumanVerification: parsed.metadata.hasHumanVerification,
-            commentCount: parsed.metadata.commentCount,
-            lastActivity: parsed.metadata.lastActivity,
-            revision: revisionFor(raw),
-            markdown: parsed.body,
-            frontmatter: parsed.frontmatter,
-            workflow: parsed.metadata.workflow,
-          });
-          return { absolutePath, raw, detail };
-        } catch (error) {
-          return {
-            path,
-            title: titleFromPath(path),
-            errors: [errorMessage(error)],
-          };
-        }
-      }),
+    const entries = await Promise.all(
+      paths.map(async (path) => ({
+        path,
+        file: await readDocumentPath(this.docsRoot, path),
+      })),
     );
-    const valid: ParsedFile[] = [];
-    const invalid: InvalidFile[] = [];
-    for (const file of files) {
-      if ("detail" in file) valid.push(file);
-      else invalid.push(file);
+    const filesByPath = new Map<string, ParsedFile | InvalidFile>();
+    for (const entry of entries) {
+      if (entry.file !== null) filesByPath.set(entry.path, entry.file);
     }
-    const byId = new Map<string, ParsedFile[]>();
-    for (const file of valid) {
-      const group = byId.get(file.detail.id) ?? [];
-      group.push(file);
-      byId.set(file.detail.id, group);
+    return createDocumentSnapshot(filesByPath);
+  }
+
+  private async scan(): Promise<DocumentIndexSnapshot> {
+    if (this.scanSnapshot !== null) return this.scanSnapshot;
+    if (this.scanPromise !== null) return this.scanPromise;
+    const generation = this.scanGeneration;
+    const pending = this.buildSnapshot();
+    this.scanPromise = pending;
+    try {
+      const snapshot = await pending;
+      if (generation === this.scanGeneration) this.scanSnapshot = snapshot;
+      return snapshot;
+    } finally {
+      if (this.scanPromise === pending) this.scanPromise = null;
     }
-    const unique: ParsedFile[] = [];
-    for (const [id, group] of byId) {
-      if (group.length === 1) {
-        const file = group[0];
-        if (file !== undefined) unique.push(file);
-        continue;
+  }
+
+  private async refreshCachedPaths(paths: string[]): Promise<void> {
+    const previous = this.cacheRefreshQueue;
+    const gate = Promise.withResolvers<null>();
+    this.cacheRefreshQueue = gate.promise;
+    await previous;
+    try {
+      const snapshot = this.scanSnapshot;
+      if (snapshot === null) {
+        this.invalidateSnapshot();
+        return;
       }
-      for (const file of group) {
-        invalid.push({
-          path: file.detail.path,
-          title: file.detail.title,
-          errors: [`duplicate document id '${id}'`],
-        });
+      const entries = await Promise.all(
+        paths.map(async (path) => ({
+          path,
+          file: await readDocumentPath(this.docsRoot, path),
+        })),
+      );
+      if (this.scanSnapshot !== snapshot) return;
+      const filesByPath = new Map(snapshot.filesByPath);
+      for (const entry of entries) {
+        if (entry.file === null) filesByPath.delete(entry.path);
+        else filesByPath.set(entry.path, entry.file);
       }
+      this.scanSnapshot = createDocumentSnapshot(filesByPath);
+    } finally {
+      gate.resolve(null);
     }
-    return { valid: unique, invalid };
   }
 
   async list(): Promise<DocumentListResponse> {
@@ -283,9 +277,15 @@ export class DocumentStore {
 
   private async getFile(id: string): Promise<ParsedFile> {
     const scan = await this.scan();
-    const file = scan.valid.find((candidate) => candidate.detail.id === id);
+    const file = scan.validById.get(id);
     if (file === undefined) throw new DocumentNotFoundError(id);
     return file;
+  }
+
+  private async getFreshFile(id: string): Promise<ParsedFile> {
+    const indexed = await this.getFile(id);
+    await this.refreshCachedPaths([indexed.detail.path]);
+    return this.getFile(id);
   }
 
   private async withWriteQueue<T>(
@@ -333,9 +333,9 @@ export class DocumentStore {
     id: string,
     change: StatusChange,
   ): Promise<DocumentDetail> {
-    const initial = await this.getFile(id);
+    const initial = await this.getFreshFile(id);
     return this.withWriteQueue(initial.absolutePath, async () => {
-      const file = await this.getFile(id);
+      const file = await this.getFreshFile(id);
       this.validateRevision(file, change.revision);
       const parsed = parseMarkdownDocument(file.raw);
       if (change.status === "awaiting-human") {
@@ -392,6 +392,7 @@ export class DocumentStore {
         file.absolutePath,
         serializeMarkdownDocument(frontmatter, body),
       );
+      await this.refreshCachedPaths([file.detail.path]);
       const updated = await this.get(id);
       this.publishChange(id);
       return updated;
@@ -404,9 +405,9 @@ export class DocumentStore {
     actor: string,
     comment: string,
   ): Promise<DocumentDetail> {
-    const initial = await this.getFile(id);
+    const initial = await this.getFreshFile(id);
     return this.withWriteQueue(initial.absolutePath, async () => {
-      const file = await this.getFile(id);
+      const file = await this.getFreshFile(id);
       this.validateRevision(file, revision);
       const parsed = parseMarkdownDocument(file.raw);
       const body = appendCommentLog(
@@ -419,6 +420,7 @@ export class DocumentStore {
         file.absolutePath,
         serializeMarkdownDocument(parsed.frontmatter, body),
       );
+      await this.refreshCachedPaths([file.detail.path]);
       const updated = await this.get(id);
       this.publishChange(id);
       return updated;
@@ -430,9 +432,9 @@ export class DocumentStore {
     revision: string,
     actor: string,
   ): Promise<DocumentDetail> {
-    const initial = await this.getFile(id);
+    const initial = await this.getFreshFile(id);
     return this.withWriteQueue(initial.absolutePath, async () => {
-      const file = await this.getFile(id);
+      const file = await this.getFreshFile(id);
       this.validateRevision(file, revision);
       if (file.detail.status !== "complete") {
         throw new DocumentWorkflowError(
@@ -481,6 +483,8 @@ export class DocumentStore {
         file.absolutePath,
         target,
       ]);
+      const archivedPath = `archive/completed/${basename}`;
+      await this.refreshCachedPaths([file.detail.path, archivedPath]);
       const updated = await this.get(id);
       this.publishChange(id);
       return updated;

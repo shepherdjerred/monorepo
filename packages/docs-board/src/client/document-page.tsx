@@ -137,7 +137,11 @@ function DocumentNotFound({
         <p className="mt-2 text-sm text-muted-foreground">
           It may have been renamed, archived, or removed from this checkout.
         </p>
-        <Button className="mt-5" render={<Link to={boardHref} />}>
+        <Button
+          className="mt-5"
+          nativeButton={false}
+          render={<Link to={boardHref} />}
+        >
           <ArrowLeftIcon /> Return to the board
         </Button>
       </div>
@@ -180,6 +184,7 @@ export function DocumentPage(): React.JSX.Element {
         <div className="mx-auto max-w-6xl px-5 py-6 md:px-8 md:py-8">
           <Button
             className="mb-6 -ml-2"
+            nativeButton={false}
             render={<Link to={boardHref} />}
             variant="ghost"
           >

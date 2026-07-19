@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 
 import { DocumentChanges } from "./document-changes.tsx";
+import { loadDocumentPage } from "./route-loaders.ts";
 import { RouteNotFound } from "./route-not-found.tsx";
 import { Skeleton } from "#components/ui/skeleton";
 import { Toaster } from "#components/ui/sonner";
@@ -11,10 +12,7 @@ const BoardPage = lazy(async () => {
   return { default: module.BoardPage };
 });
 
-const DocumentPage = lazy(async () => {
-  const module = await import("./document-page.tsx");
-  return { default: module.DocumentPage };
-});
+const DocumentPage = lazy(loadDocumentPage);
 
 function RouteFallback(): React.JSX.Element {
   return (

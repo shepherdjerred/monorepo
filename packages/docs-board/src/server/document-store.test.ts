@@ -90,6 +90,71 @@ disposition: active
 - Verify it live.
 `;
 
+describe("DocumentStore index", () => {
+  test("serves warmed details from the indexed snapshot", async () => {
+    const root = await fixtureRepository(ACTIVE_PLAN);
+    const store = new DocumentStore({ repoRoot: root, watchFiles: false });
+    await store.list();
+    await command(root, ["mv", "packages/docs", "packages/docs-offline"]);
+
+    const document = await store.get("plan-fixture");
+
+    expect(document.title).toBe("Fixture");
+    expect(document.path).toBe("plans/fixture.md");
+    store.close();
+  });
+
+  test("refreshes an externally edited document through the watcher", async () => {
+    const root = await fixtureRepository(ACTIVE_PLAN);
+    const store = new DocumentStore({ repoRoot: root, watchIntervalMs: 10 });
+    await store.get("plan-fixture");
+    const change = Promise.withResolvers<{
+      documentId: string | null;
+      changedAt: string;
+    }>();
+    const unsubscribe = store.subscribe(change.resolve);
+    await Bun.write(
+      `${root}/packages/docs/plans/fixture.md`,
+      ACTIVE_PLAN.replace("# Fixture", "# Externally Edited Fixture"),
+    );
+
+    const event = await Promise.race([
+      change.promise,
+      Bun.sleep(1000).then(() => {
+        throw new Error("Watcher did not publish the external edit");
+      }),
+    ]);
+    const refreshed = await store.get("plan-fixture");
+
+    expect(event.documentId).toBeNull();
+    expect(refreshed.title).toBe("Externally Edited Fixture");
+    unsubscribe();
+    store.close();
+  });
+
+  test("checks the live target file before every mutation", async () => {
+    const root = await fixtureRepository(ACTIVE_PLAN);
+    const store = new DocumentStore({ repoRoot: root, watchFiles: false });
+    const original = await store.get("plan-fixture");
+    await Bun.write(
+      `${root}/packages/docs/plans/fixture.md`,
+      ACTIVE_PLAN.replace("# Fixture", "# Concurrent External Edit"),
+    );
+
+    await expect(
+      store.addComment(
+        original.id,
+        original.revision,
+        "Reviewer",
+        "Do not overwrite the external edit.",
+      ),
+    ).rejects.toBeInstanceOf(DocumentConflictError);
+    const refreshed = await store.get(original.id);
+    expect(refreshed.title).toBe("Concurrent External Edit");
+    store.close();
+  });
+});
+
 describe("DocumentStore", () => {
   test("serves an inferred document contract through Hono and tRPC", async () => {
     const root = await fixtureRepository(ACTIVE_PLAN);

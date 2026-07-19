@@ -35,6 +35,7 @@ const store = new DocumentStore({ repoRoot: await repositoryRoot() });
 const app = createApp(store);
 const server = Bun.serve({
   hostname: "127.0.0.1",
+  idleTimeout: 255,
   port: options.port,
   fetch: app.fetch,
 });
