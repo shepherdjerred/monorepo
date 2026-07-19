@@ -61,6 +61,12 @@ set -gx ANTHROPIC_API_KEY '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/s
 set -gx GEMINI_API_KEY '{{ onepasswordRead "op://63lcesgoblzbpkdr4koye66rei/ysjsz6ndtzbvppylhcfdiacrwe/credential" }}'
 set -gx HASS_TOKEN '{{ onepasswordRead "op://yx6je6mgj2oiss6z5bm42h3cxy/y4c2gno3yrxcdcudaofbirmi4u/password" }}'
 set -gx HASS_BASE_URL 'https://homeassistant.sjer.red'
+{{ end -}}
+# Keep provider API keys available to other tools, but never pass them to OpenCode.
+function opencode --wraps opencode
+    env -u ANTHROPIC_API_KEY -u GEMINI_API_KEY -u OPENAI_API_KEY (command -s opencode) $argv
+end
+{{ if lookPath "op" -}}
 # Turborepo remote cache (self-hosted ducktors server on the tailnet).
 # Turbo enables remote caching only when API+TEAM+TOKEN are all set.
 set -gx TURBO_API 'https://turbo-cache.tailnet-1a49.ts.net'
