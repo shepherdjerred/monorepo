@@ -872,12 +872,14 @@ application vulnerabilities.
   report URL returned HTTP 200 and Markdown lint passed.
 - Recorded the owner's repository-retention approval, tracked the reproducible Typst source and
   rendered PDF beside this decision, and backed up the audit feature branch to `origin`.
+- Opened [draft PR #1572](https://github.com/shepherdjerred/monorepo/pull/1572) and attached fresh
+  renders of the executive cover and confirmed High-findings page for visual review.
 
 ### Remaining
 
 - No audit-delivery or repository-retention work remains. Live remediation is a separate, mutating
   phase that has not started.
-- No pull request or merge into `main` was requested or performed.
+- Draft PR #1572 awaits review; no merge into `main` was requested or performed.
 
 ### Caveats
 
