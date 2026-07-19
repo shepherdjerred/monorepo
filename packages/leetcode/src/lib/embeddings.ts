@@ -1,5 +1,4 @@
-// Copied from packages/toolkit/src/lib/recall/embeddings.ts
-// Self-contained — no cross-package dependency
+// Self-contained MLX embedding wrapper — no cross-package dependency
 
 import { tmpdir } from "node:os";
 import path from "node:path";
