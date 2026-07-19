@@ -44,13 +44,13 @@ auto-pauses or auto-unpauses anything. This is intentional — pause is the one 
 everything else about a schedule lives in source. Don't add a declarative `enabled` flag, it
 would fight the UI.
 
-| To stop…             | Pause schedule id(s)                                                                                 |
-| -------------------- | ---------------------------------------------------------------------------------------------------- |
-| Floor preheat        | `good-morning-weekday-preheat`, `good-morning-weekend-preheat`                                       |
-| Wake-up (heat)       | `good-morning-weekday-wake`, `good-morning-weekend-wake`                                             |
-| Get-up (volume ramp) | `good-morning-weekday-up`, `good-morning-weekend-up`                                                 |
-| Vacuum               | `vacuum-9am`, `vacuum-12pm`, `vacuum-5pm`                                                            |
-| LoL / Scout data     | `scout-data-dragon-version-check`, `scout-data-dragon-weekly-refresh`, `scout-season-refresh-weekly` |
+| To stop…             | Pause schedule id(s)                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Floor preheat        | `good-morning-weekday-preheat`, `good-morning-weekend-preheat`                                                                        |
+| Wake-up (heat)       | `good-morning-weekday-wake`, `good-morning-weekend-wake`                                                                              |
+| Get-up (volume ramp) | `good-morning-weekday-up`, `good-morning-weekend-up`                                                                                  |
+| Vacuum               | `vacuum-9am`, `vacuum-12pm`, `vacuum-5pm`                                                                                             |
+| LoL / Scout data     | `scout-data-dragon-version-check`, `scout-data-dragon-weekly-refresh`, `scout-season-refresh-weekly`, `scout-showcase-refresh-weekly` |
 
 ### Catchup window (missed-run replay after a SERVER outage)
 
