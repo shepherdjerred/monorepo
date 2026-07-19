@@ -58,6 +58,7 @@ func (r *dhcpStaticLeaseResource) Schema(_ context.Context, _ resource.SchemaReq
 			"hostname": schema.StringAttribute{
 				Description: "Optional hostname for the lease.",
 				Optional:    true,
+				Computed:    true,
 			},
 		},
 	}
