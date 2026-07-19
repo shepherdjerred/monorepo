@@ -332,7 +332,7 @@ describe("enrichBootstrapWithWorkdir", () => {
         pipeline: PIPELINE,
         workflowId: "wf-enrich-test",
         env: { GH_TOKEN: "tok" },
-        deps: { workdir: fixture.deps, recallSearch: null },
+        deps: { workdir: fixture.deps },
         heartbeat: (note) => heartbeats.push(note),
       });
 
@@ -340,7 +340,7 @@ describe("enrichBootstrapWithWorkdir", () => {
       expect(enriched.workdir).toContain("wf-enrich-test");
       expect(heartbeats).toContain("provisioning-workdir");
       expect(heartbeats).toContain("building-symbol-index");
-      expect(heartbeats).toContain("running-hybrid-retrieval");
+      expect(heartbeats).toContain("running-symbol-retrieval");
       expect(heartbeats).toContain("computing-block-diffs");
 
       // Block diff includes the index.ts file but NOT the removed or binary entries.
@@ -349,9 +349,9 @@ describe("enrichBootstrapWithWorkdir", () => {
       expect(blockPaths).not.toContain("packages/foo/src/old.ts");
       expect(blockPaths).not.toContain("packages/foo/assets/blob.bin");
 
-      // Retrieval ran (recallSearch=null skips semantic; lexical-only path
-      // may or may not find a match depending on identifier overlap).
-      // We assert the structure is well-formed regardless.
+      // Retrieval ran (the lexical path may or may not find a match
+      // depending on identifier overlap). We assert the structure is
+      // well-formed regardless.
       for (const r of enriched.retrievedSymbols) {
         expect(r.entry.name.length).toBeGreaterThan(0);
         expect(typeof r.score).toBe("number");
@@ -382,7 +382,7 @@ describe("enrichBootstrapWithWorkdir", () => {
         pipeline: PIPELINE,
         workflowId: "wf-fail-clone",
         env: { GH_TOKEN: "tok" },
-        deps: { workdir: failingDeps, recallSearch: null },
+        deps: { workdir: failingDeps },
         heartbeat: () => {
           // no-op for tests
         },
@@ -398,7 +398,7 @@ describe("enrichBootstrapWithWorkdir", () => {
         pipeline: PIPELINE,
         workflowId: "wf-empty",
         env: { GH_TOKEN: "tok" },
-        deps: { workdir: fixture.deps, recallSearch: null },
+        deps: { workdir: fixture.deps },
         heartbeat: () => {
           // no-op for tests
         },

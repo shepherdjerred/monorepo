@@ -10,20 +10,6 @@ Usage:
   toolkit <command> [subcommand] [options]
 
 Commands:
-  fetch <url>                Fetch a web page and save to ~/.recall/fetched/
-  fetch <url> --browser      Fetch via PinchTab (real Chrome) for blocked sites
-  fetch <url> --crawl        Crawl docs site (follow links, depth 2)
-
-  recall search <query>      Hybrid semantic + keyword search
-  recall add <path>          Index file(s) or directory
-  recall remove <path>       Remove from index
-  recall reindex [--full]    Re-scan all watched directories
-  recall status [--perf]     Index stats, daemon health, performance
-  recall debug               Full diagnostic check
-  recall logs [--follow]     View structured logs
-  recall daemon start|stop   Manage background watcher
-  recall watch               Run watcher in foreground
-
   pr health [PR_NUMBER]      Check PR health (conflicts, CI, approval)
   pr logs <RUN_ID>           Get workflow run logs
   pr detect                  Detect PR for current branch
@@ -93,10 +79,6 @@ Environment Variables:
   DISCORD_USER_TOKEN         Discord user/selfbot token (for 'discord daemon start')
 
 Examples:
-  toolkit fetch https://docs.lancedb.com/
-  toolkit fetch https://react.dev/ --crawl --depth 1
-  toolkit recall search "vector database"
-  toolkit recall status --perf
   toolkit pr health
   toolkit deployed scout
   toolkit deployed scout/prod
@@ -126,16 +108,6 @@ async function main(): Promise<void> {
   }
 
   switch (command) {
-    case "fetch": {
-      const { handleFetchCommand } = await import("./handlers/fetch.ts");
-      await handleFetchCommand(subcommand, args.slice(1));
-      break;
-    }
-    case "recall": {
-      const { handleRecallCommand } = await import("./handlers/recall.ts");
-      await handleRecallCommand(subcommand, args.slice(2));
-      break;
-    }
     case "pr": {
       const { handlePrCommand } = await import("./handlers/pr.ts");
       await handlePrCommand(subcommand, args.slice(2));
