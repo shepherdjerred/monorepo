@@ -38,6 +38,25 @@ the controllers' filesystems sit on the affected pool; `ps` D-state samples
 during a build. Note the restart waves are ~13-15 min apart — check what
 runs on that period.
 
+**Second failure mode observed the same evening (23:xx): silently-lost job
+creates pin max-in-flight.** k8s Job CREATEs issued during a webhook outage
+are rejected by the API server, but the agent-stack controller logs "creating
+job" and never retries — the Buildkite jobs stay `reserved` forever with no
+k8s Job backing them. Build 5663's six deploy-lane jobs (created 20:22:43,
+mid-outage) became phantom reservations that counted against
+`max-in-flight: 10`, so the controller stopped fetching ANY new work for 3+
+hours (PR builds' upload jobs never even got "fetching job info" log lines).
+Recovery required cancelling the whole build to release the reservations.
+Upstream issue to check/file: agent-stack-k8s should retry failed Job
+creates or reconcile reserved-but-missing jobs.
+
+Recurrence within the hour: build 5680's `verify` job create was silently
+lost during kueue's 23:49 restart (9 of 10 sibling jobs materialized; no ERR
+logged for the lost one) — build unrecoverable, canceled + rebuilt as 5683.
+Detection recipe that works: for each BK job in a non-terminal state,
+`kubectl get job buildkite-<uuid>` — any miss ≥3 min after "creating job"
+is a phantom. Consider a small scheduled canary that alerts on this.
+
 Work items:
 
 1. Why does lease renewal time out? Check apiserver latency metrics during CI
