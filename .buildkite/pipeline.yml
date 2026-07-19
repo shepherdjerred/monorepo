@@ -158,12 +158,27 @@ env:
   TURBO_TEAM: "monorepo"
 
 steps:
+  # ── Release-please PR auto-skip ──────────────────────────────────────────
+  # Webhook builds of release-please's own PR (branch
+  # release-please--branches--main) are no-op version bumps; every step
+  # carries the guard below so the build uploads zero jobs instead of burning
+  # the full pipeline (the old generator's shouldSkipReleasePleasePrBuild,
+  # restored). Deliberately narrow: only build.source == "webhook" skips — a
+  # manual New Build (ui/api/schedule/trigger_job) runs full CI, and
+  # RUN_RELEASE_CI=true forces a run regardless. The empty build still passes
+  # (the pipeline-upload step always runs), so the aggregate
+  # buildkite/monorepo/pr required status goes green and the release PR stays
+  # mergeable. The guard is AND-ed with each step's own condition:
+  #   build.branch != "release-please--branches--main"
+  #     || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true"
+
   # ── Verify: the whole task graph + every repo check ──────────────────────
   # PRs run affected-scoped; main re-verifies EVERYTHING (cheap via cache).
   # The turbo run summary is annotated onto the build either way, without
   # masking verify's exit code.
   - label: ":turborepo: verify"
     key: verify
+    if: build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true"
     command: |
       . .buildkite/scripts/toolchain.sh
       . .buildkite/scripts/docker-env.sh
@@ -184,6 +199,7 @@ steps:
   # members only; docker-compose e2e runs in the docker e2e step below.
   - label: ":performing_arts: playwright e2e"
     key: e2e
+    if: build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true"
     command: |
       apt-get update -qq && apt-get install -y -qq --no-install-recommends unzip
       curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.14
@@ -237,6 +253,7 @@ steps:
   # the verify pod (--filter='!@shepherdjerred/resume').
   - label: ":scroll: resume build"
     key: resume-build
+    if: build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true"
     command: |
       apt-get update -qq && apt-get install -y -qq --no-install-recommends unzip curl
       curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.14
@@ -279,6 +296,7 @@ steps:
   # stack; needs the privileged pod's docker, not a browser container.
   - label: ":docker: docker e2e"
     key: docker-e2e
+    if: build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true"
     command: |
       . .buildkite/scripts/toolchain.sh
       . .buildkite/scripts/docker-env.sh
@@ -288,9 +306,10 @@ steps:
     plugins:
       - *pod_privileged
 
-  # ── Soft-fail lane (parallel with everything) ─────────────────────────────
+  # ── Scanners (soft-fail) + review gate (blocking), parallel with everything
   - label: ":shield: trivy"
     soft_fail: true
+    if: build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true"
     command: trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 .
     plugins:
       - kubernetes:
@@ -299,13 +318,15 @@ steps:
           podSpecPatch:
             containers:
               - name: container-0
-                image: "aquasec/trivy:latest"
+                # renovate: datasource=docker depName=aquasec/trivy
+                image: "aquasec/trivy:0.72.0"
                 resources:
                   requests: { cpu: "500m", memory: "1Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
 
   - label: ":mag: semgrep"
     soft_fail: true
+    if: build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true"
     # Excludes mirror the .gitleaks.toml allowlist: these paths hold values
     # already triaged as non-sensitive (legacy/undeployed sandbox archive,
     # a disabled Minecraft management-server secret, a public Firebase web
@@ -324,25 +345,32 @@ steps:
           podSpecPatch:
             containers:
               - name: container-0
-                image: "semgrep/semgrep:latest"
+                # renovate: datasource=docker depName=semgrep/semgrep
+                image: "semgrep/semgrep:1.170.0"
                 resources:
                   requests: { cpu: "500m", memory: "1Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
 
+  # Blocking, like the old pipeline (greptileReviewStep sat in blockingGates
+  # and fed the required check): every non-outdated Greptile review thread on
+  # the PR must be resolved before the aggregate buildkite/monorepo/pr
+  # required status can go green. wait-for-greptile.ts polls only while
+  # Greptile is still reviewing the head commit, then fails fast with the
+  # unresolved-thread list.
   - label: ":robot_face: greptile review gate"
-    if: build.branch != pipeline.default_branch
-    soft_fail: true
+    if: build.branch != pipeline.default_branch && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     command: |
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun scripts/wait-for-greptile.ts
+    retry: *retry
     plugins:
       - *pod_light
 
   # ── PR-only dry-run lane: validate every deploy path, no side effects ─────
   # (the old pipeline's --dryrun plumbing, restored)
   - label: ":terraform: tofu plan"
-    if: build.branch != pipeline.default_branch
+    if: build.branch != pipeline.default_branch && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     depends_on: verify
     command: |
       . .buildkite/scripts/toolchain.sh
@@ -356,7 +384,7 @@ steps:
       - *pod
 
   - label: ":docker: images — build + smoke (PR dry-run)"
-    if: build.branch != pipeline.default_branch
+    if: build.branch != pipeline.default_branch && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     depends_on: verify
     command: |
       . .buildkite/scripts/toolchain.sh
@@ -371,7 +399,7 @@ steps:
       - *pod_privileged
 
   - label: ":rocket: sites + helm + release (PR dry-run)"
-    if: build.branch != pipeline.default_branch
+    if: build.branch != pipeline.default_branch && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
     depends_on: verify
     command: |
       . .buildkite/scripts/toolchain.sh
@@ -434,6 +462,13 @@ steps:
       - *pod_light
 
   # ── Main-only: npm publishes ──────────────────────────────────────────────
+  # Two lanes, matching the old pipeline's npm-publish-all-prod/-dev pair:
+  # the prod lane publishes package.json versions to --tag latest (idempotent
+  # via --tolerate-republish, so it's a no-op except on the build after a
+  # release-please merge bumps versions); the dev lane then publishes
+  # <version>-dev.<build#> to --tag dev on every main build. Prod runs FIRST;
+  # dev mode rewrites package.json versions mid-publish (and restores them in
+  # a finally, so a failed dev publish can't leak -dev.N into a later prod run).
   - label: ":npm: publish packages"
     if: build.branch == pipeline.default_branch
     depends_on: verify
@@ -443,6 +478,9 @@ steps:
       bun run --cwd packages/astro-opengraph-images publish:npm
       bun run --cwd packages/webring publish:npm
       bun run --cwd packages/homelab/src/helm-types publish:npm
+      bun scripts/publish-npm.ts packages/astro-opengraph-images --dev-suffix "$BUILDKITE_BUILD_NUMBER"
+      bun scripts/publish-npm.ts packages/webring --dev-suffix "$BUILDKITE_BUILD_NUMBER"
+      bun scripts/publish-npm.ts packages/homelab/src/helm-types --dev-suffix "$BUILDKITE_BUILD_NUMBER"
     retry: *retry
     plugins:
       - *pod_light
@@ -569,11 +607,8 @@ steps:
       - *pod_light
 
   # ── Toolchain image refresh ───────────────────────────────────────────────
-  # TEMPORARY branch clause: the registry's ci-base:latest predates this
-  # pipeline (Dagger-era), so this branch bakes the first real image itself.
-  # Drop the feature/ci-parity clause after merge.
   - label: ":docker: ci-image refresh"
-    if: build.branch == pipeline.default_branch || build.branch == "feature/ci-parity"
+    if: build.branch == pipeline.default_branch
     depends_on: verify
     command: |
       . .buildkite/scripts/toolchain.sh
