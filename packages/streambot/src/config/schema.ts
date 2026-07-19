@@ -59,6 +59,16 @@ export const ConfigSchema = z.strictObject({
      * disable entirely — `positive()` validation rejects 0 and negative values.
      */
     readrate: z.number().positive().default(1),
+    /**
+     * Seconds of input demuxed at full speed before `readrate` pacing engages (ffmpeg's
+     * `-readrate_initial_burst`; its built-in default is 0.5s). The send pacer forwards this
+     * pre-roll into the Discord receiver's jitter buffer, giving the otherwise zero-margin
+     * realtime pipeline a cushion: transient production dips (heavy-bitrate scenes on 4K HDR
+     * remuxes) drain the cushion instead of stuttering playback, and `readrate` lets ffmpeg catch
+     * back up to the wall-clock line afterwards. Bounded (a few MB of media), so it cannot recreate
+     * the unbounded buffer growth / GC pauses that `readrate: 1` was introduced to fix.
+     */
+    readrateInitialBurst: z.number().positive().default(2.5),
   }),
   subtitles: z.strictObject({
     /** Burn in subtitles by default when a track is found (per-request `subtitles:off` overrides). */

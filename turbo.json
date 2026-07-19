@@ -3,6 +3,11 @@
   // Root-level files whose change must invalidate every task hash.
   // (Root package.json, turbo.json, and bun.lock are always hashed by turbo.)
   "globalDependencies": [".mise.toml", "bunfig.toml", "patches/**"],
+  // The toolkit / tasknotes-server `bun --compile` binaries are ~180 MB
+  // (64 MB zstd) — over the default upload timeout, so those tasks
+  // remote-MISSED every build ("cache artifact ... too large to upload
+  // within the timeout").
+  "remoteCache": { "uploadTimeout": 300 },
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
