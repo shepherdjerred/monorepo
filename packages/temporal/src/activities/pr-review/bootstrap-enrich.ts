@@ -3,9 +3,8 @@ import { computeFileBlockDiff } from "#lib/block-diff.ts";
 import { buildSymbolIndex, type SymbolIndex } from "#lib/symbol-index.ts";
 import {
   formatRetrievedSymbols,
-  hybridSearch,
-  type RecallSearchFn,
-} from "#lib/hybrid-retrieval.ts";
+  retrieveSymbols,
+} from "#lib/symbol-retrieval.ts";
 import {
   provisionWorkdir,
   type WorkdirDeps,
@@ -20,7 +19,6 @@ import type { BootstrapResult } from "./bootstrap.ts";
 
 export type EnrichDeps = {
   workdir: WorkdirDeps;
-  recallSearch: RecallSearchFn | null;
 };
 
 export type EnrichBootstrapInput = {
@@ -100,20 +98,17 @@ type BuildPromptSymbolsParams = {
   workdir: string;
   index: SymbolIndex;
   diff: string;
-  recallSearch: RecallSearchFn | null;
   topK: number;
 };
 
 async function buildPromptSymbolsForIndex(
   params: BuildPromptSymbolsParams,
 ): Promise<RetrievedSymbolForPrompt[]> {
-  const { workdir, index, diff, recallSearch, topK } = params;
-  const retrieved = await hybridSearch({
+  const { workdir, index, diff, topK } = params;
+  const retrieved = retrieveSymbols({
     diff,
     index,
-    repoRoot: workdir,
     k: topK,
-    recallSearch,
   });
   const out: RetrievedSymbolForPrompt[] = [];
   for (const r of retrieved) {
@@ -151,7 +146,7 @@ export async function enrichBootstrapWithWorkdir(
     commitSha: pipeline.commitSha,
   });
 
-  heartbeat("running-hybrid-retrieval");
+  heartbeat("running-symbol-retrieval");
   const diff = concatenatePatchesForRetrieval(base.changedFiles);
   const retrievedSymbols =
     diff.length === 0
@@ -160,7 +155,6 @@ export async function enrichBootstrapWithWorkdir(
           workdir,
           index,
           diff,
-          recallSearch: deps.recallSearch,
           topK,
         });
 

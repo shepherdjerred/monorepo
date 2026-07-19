@@ -231,7 +231,7 @@ COPY . .
 RUN cd packages/llm-models && bun run build
 
 # Compile the in-tree toolkit CLI into a single static binary on PATH. The
-# homelab-audit runbook + preflight shell out to `toolkit pd|bugsink|gf|recall`;
+# homelab-audit runbook + preflight shell out to `toolkit pd|bugsink|gf`;
 # it's compiled here (not `bun add -g`) because it lives in the workspace source.
 # `--external ffmpeg-static` matches the package's own build script (a native
 # shim that must not be bundled). Mirrors the old Dagger `withToolkit`.
