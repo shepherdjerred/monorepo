@@ -22,6 +22,7 @@
  */
 
 import { requireEnv, optionalEnv } from "../../../scripts/lib/run.ts";
+import { runMain } from "../../../scripts/lib/transient.ts";
 import { applicationReadiness } from "../src/cdk8s/src/argocd-application-readiness.ts";
 
 const DEFAULT_SERVER_URL = "https://argocd.sjer.red";
@@ -356,4 +357,4 @@ async function main(): Promise<void> {
   }
 }
 
-await main();
+await runMain(main);

@@ -4,7 +4,7 @@
     "types": ["bun"],
     "noEmit": true
   },
-  "include": ["*.ts", "observability/**/*.ts"],
+  "include": ["*.ts", "lib/**/*.ts", "observability/**/*.ts"],
   // local-stack is a standalone mini-package (own package.json + bun.lock,
   // deliberately outside the workspace); its deps only exist after its own
   // install, so the scripts typecheck must not include it.

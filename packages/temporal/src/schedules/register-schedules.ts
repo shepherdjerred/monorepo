@@ -247,6 +247,20 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Weekly LoL season-date drift check (claude -p → PR if drifted)",
   },
   {
+    id: "scout-showcase-refresh-weekly",
+    workflowType: "runScoutShowcaseRefresh",
+    args: [],
+    // Mon 10:00 PT — continues the weekly PR-job stagger (07/08/09). A
+    // NoSuchKey failure means a manifest-referenced S3 object vanished
+    // despite the scout-image-gc showcase exemption — re-curate the manifest
+    // (scout AGENTS.md runbook) rather than retrying.
+    cronExpression: "0 10 * * 1",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "60 minutes",
+    memo: "Weekly marketing-showcase refresh — regenerates the committed showcase PNGs + asset index from scout-prod, opens a PR on drift (generatedAt-only churn suppressed)",
+  },
+  {
     id: "zfs-maintenance-weekly",
     workflowType: "runZfsMaintenanceWorkflow",
     args: [],

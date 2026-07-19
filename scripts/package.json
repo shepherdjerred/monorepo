@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "lint": "bunx eslint --cache .",
+    "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

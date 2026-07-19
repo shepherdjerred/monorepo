@@ -134,8 +134,6 @@ while executing your query`). The step has no automatic retry in
 
 ### Remaining
 
-- `release-please` step needs `retry: *retry` in `.buildkite/pipeline.yml`
-  (a lone GitHub 500 hard-fails the build today).
 - `argocd-apps-prune-policy` todo needs an operator decision.
 - kyverno pods restart in lock-step under CI load (admission controller
   19 restarts/4h) — syncs now fail fast + retry through it, but the
@@ -149,3 +147,30 @@ while executing your query`). The step has no automatic retry in
   now), `[skip ci]` on bot docs commits, batching merges.
 - The `pr-monitor` skill description currently claims this repo has no CI —
   stale; Buildkite is live.
+
+## Round 5 — transient-failure classification + retry (post-green follow-up)
+
+Adding `retry: *retry` alone would have been inert: the anchor only retries
+exit 255/34/-1, and every Bun CI script exits 1 on any error — so no script
+failure ever auto-retried, including the two transients that needed manual
+retries in build 5809. Fix (PR #TBD):
+
+- `scripts/lib/transient.ts` — shared classifier (pattern mirrors the cdk8s
+  helm one, plus GitHub's GraphQL 500 envelope and secondary-rate-limit
+  signatures; `404`/`not found` deliberately stay hard failures) and
+  `runMain()`, which maps a thrown transient to exit 34 (the anchor's
+  reserved, previously-unused retry code) and everything else to exit 1.
+  Unit-tested (18 cases) incl. the exact build-5809 GraphQL error and the
+  build-5748 kyverno webhook error; e2e-verified exit codes 34/1.
+- Wired into `release.ts`, `update-versions.ts`, `argocd.ts`,
+  `tofu-stack.ts` (all end in `await runMain(main)` now).
+- pipeline.yml: `retry: *retry` added to `release-please`,
+  `version commit-back` (verified idempotent: fresh clone,
+  rebase-or-create, `--force-with-lease`, PR find-or-create), and
+  `tofu apply (cloudflare)` (tofu re-plans from state). The github tofu
+  apply keeps its documented no-retry policy. `argocd-sync` and
+  `tofu apply (infra)` already had the anchor — their scripts can now
+  actually trigger it.
+- `scripts/package.json` gains a `test` script (root-scripts had none, so
+  the new unit test would not have run in CI); `scripts/tsconfig.json`
+  include gains `lib/**/*.ts` so projectService lints the lib.

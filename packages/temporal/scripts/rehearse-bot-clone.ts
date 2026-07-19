@@ -238,6 +238,28 @@ async function rehearseCogTargets(repoDir: string): Promise<void> {
   console.error(`[rehearsal] cog: ${String(COG_TARGETS.length)} targets OK`);
 }
 
+async function rehearseShowcaseEnvironment(repoDir: string): Promise<void> {
+  // scout-showcase-refresh-weekly runs generate-marketing-showcase.ts in the
+  // scout backend against the curated manifest. installScoutWorkspace is
+  // already rehearsed (leg 1); assert the manifest and generator paths the
+  // activity hard-codes still exist. The S3 reads are deliberately NOT
+  // rehearsed (need live scout-prod).
+  console.error("[rehearsal] showcase: manifest + generator paths");
+  const requiredPaths = [
+    `${repoDir}/packages/scout-for-lol/showcase/marketing-showcase.manifest.json`,
+    `${repoDir}/packages/scout-for-lol/packages/backend/scripts/generate-marketing-showcase.ts`,
+    `${repoDir}/packages/scout-for-lol/packages/frontend/src/data/generated/scout-showcase-assets.json`,
+  ];
+  for (const path of requiredPaths) {
+    if (!(await Bun.file(path).exists())) {
+      throw new Error(
+        `scout-showcase-refresh-weekly path missing in the tree: ${path}`,
+      );
+    }
+  }
+  console.error("[rehearsal] showcase: environment OK");
+}
+
 async function main(): Promise<void> {
   const repoDir = parseRepoArg(process.argv.slice(2));
   await ensureScratchGitRepo(repoDir);
@@ -245,6 +267,7 @@ async function main(): Promise<void> {
   await rehearseSnapshotRefresh(repoDir);
   await rehearseHookFreeCommit(repoDir);
   await rehearseCogTargets(repoDir);
+  await rehearseShowcaseEnvironment(repoDir);
   console.error("[rehearsal] all canaries passed");
 }
 
