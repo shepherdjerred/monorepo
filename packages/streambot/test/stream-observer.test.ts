@@ -72,12 +72,16 @@ describe("createStreamObserver", () => {
       ratio: 0.5,
       sendTime: 10,
       frametime: 20,
+      behindMs: 0,
+      syncWaitMs: 0,
     });
     observer.onSendStats?.({
       kind: "video",
       ratio: 1.5,
       sendTime: 30,
       frametime: 20,
+      behindMs: 0,
+      syncWaitMs: 0,
     });
     const afterMetric = await sendLateFramesTotal.get();
     const after =
