@@ -104,11 +104,11 @@ ignored real history. A 60-day sweep (Explore agent over `packages/docs/logs/`
 
 - Prometheus `node_boot_time_seconds`) confirms:
 
-* **29 distinct boots in 60 days** (May 20 → Jul 18), ~2–3/week through
+- **29 distinct boots in 60 days** (May 20 → Jul 18), ~2–3/week through
   May–June, clustering hard around Jul 4–11. The Jul 18 00:03 UTC boot showed
   zero pre-reboot distress (49 GB free, no PSI, CPU winding down) —
   indistinguishable between graceful reboot and zero-warning lock.
-* **~25 documented incidents** in the window. Node-level, CI-load-coupled:
+- **~25 documented incidents** in the window. Node-level, CI-load-coupled:
   thermal crisis (May 24: CPU at TJMax daily under CI, NVMe 82 °C — fixed
   with AIO + RAPL cap), Dagger cache EDQUOT (Jun 7), Dagger disk-full outage
   ~2.5h all-branches (Jul 3), **repeated hard node freezes — 7 reboots in
@@ -116,16 +116,16 @@ ignored real history. A 60-day sweep (Explore agent over `packages/docs/logs/`
   containers in 1–2s (Jul 10/11, limits ≈2× allocatable), Dagger restart
   loop + full cache wipe (Jul 11), Dagger engine OOMKill → replatform
   trigger (Jul 12).
-* **Pure hardware failure:** Samsung 990 PRO controller firmware-locked on
+- **Pure hardware failure:** Samsung 990 PRO controller firmware-locked on
   an idle admin command (Jun 25) → single-disk ZFS pool suspended →
   cluster-wide stateful outage (77 PVCs: Plex, HA, Grafana, Loki…).
   Unrelated to load; a storage-redundancy problem, not a CPU/RAM problem.
-* **Unresolved hardware suspicion:** the Jul 5 19:30 hard lock happened with
+- **Unresolved hardware suspicion:** the Jul 5 19:30 hard lock happened with
   ~40 GB available and near-zero pressure — "CPU/concurrency-sensitive
   kernel or hardware instability" was a stated lead, never closed. torvalds
   is an i9-14900K, the Raptor Lake Vmin-degradation part; a degraded chip
   presents exactly as rare inexplicable locks under burst load.
-* The **majority** of the ~25 (chart bumps, placeholder secrets, probes,
+- The **majority** of the ~25 (chart bumps, placeholder secrets, probes,
   expired cert, tofu state footgun with permanent relay-docs data loss, HA
   cffi, seerr quota corruption…) were software/process failures a second
   node cannot prevent.

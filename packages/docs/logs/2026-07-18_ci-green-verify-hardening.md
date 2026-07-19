@@ -42,3 +42,8 @@ a PR.
    dep-declaration half was resolved by the workspace:\* migration; the
    remaining build-ordering half is fixed by (3). Verified: fresh-worktree
    `bunx turbo run generate` now passes.
+5. `packages/docs/logs/2026-07-18_ci-node-purchase-sanity-check.md` —
+   markdownlint `--fix` for 5 MD004 errors (asterisk bullets) committed to
+   main unlinted in `7ea657803` (hooks weren't armed there). This one is not
+   a flake: `//#markdownlint` fails deterministically, so build 5732 was
+   doomed regardless of the flakes above.
