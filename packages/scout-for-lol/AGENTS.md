@@ -512,6 +512,30 @@ Discord OAuth in the browser (see **Web UI (Local end-to-end)** above).
 
 ---
 
+## Marketing showcase assets (committed, bot-refreshed)
+
+The marketing homepage's screenshots live as committed generator output:
+`packages/frontend/public/generated/scout-showcase/*.png` + the asset index
+`packages/frontend/src/data/generated/scout-showcase-assets.json`, generated
+from the curated manifest `showcase/marketing-showcase.manifest.json` against
+real objects in the `scout-prod` bucket. Never hand-edit the outputs.
+
+- **Weekly refresh**: the `scout-showcase-refresh-weekly` Temporal schedule
+  (Mon 10:00 PT, `packages/temporal/src/activities/scout-showcase-refresh.ts`)
+  regenerates and opens a PR on drift (review the image diffs visually);
+  `generatedAt`-only churn is suppressed.
+- **GC protection**: `scout-image-gc-daily` exempts every key the manifest
+  references (it fetches the manifest from `main` before pruning), so curated
+  sources outlive the 30-day image window. Consequence: manifest edits on a
+  branch don't protect new keys until merged.
+- **Re-curation runbook** (after a renderer redesign, or if the weekly job
+  fails NoSuchKey): from `packages/backend`,
+  `AWS_PROFILE=seaweedfs bun run scripts/discover-marketing-showcase.ts
+--bucket scout-prod --out ../../showcase/marketing-showcase.manifest.json
+--prev ../../showcase/marketing-showcase.manifest.json`, then run
+  `scripts/generate-marketing-showcase.ts` with the standard flags (see the
+  Temporal activity for the exact invocation) and commit manifest + outputs.
+
 ## Pre-commit / pre-push gates
 
 Git hooks (lefthook) run automatically: `pre-commit` formats staged files and runs
