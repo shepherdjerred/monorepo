@@ -231,8 +231,9 @@ and deployment-health gap:
 - The static pipeline parsed successfully with the official
   `buildkite/agent:3` image in `pipeline upload --dry-run` mode. Shell syntax,
   ShellCheck, Prettier, and diff whitespace checks passed. The cdk8s package
-  passed build, typecheck, lint, and 199 tests with 13 intentional skips. The
-  final `bun run verify -- --affected` passed all 30 tasks.
+  passed build, typecheck, lint, and 199 tests with 13 intentional skips.
+  `bun run verify -- --affected` passed 30 tasks before the main rebase and 25
+  tasks afterward.
 
 At the 2026-07-19 22:22 UTC follow-up snapshot, build 5823 had passed and PR
 `#1570` had merged. Its merge canceled main build 5847 and started main build 5851. `sjer.red` still returned 403 and the live ArgoCD status had not changed;
@@ -256,6 +257,9 @@ build 5851 must reach the deployment lanes before those outcomes can change.
 - Validated the static pipeline with the official Buildkite agent container and
   passed cdk8s build, typecheck, lint, all tests, ShellCheck, Prettier, and diff
   checks, plus the full affected repository gate.
+- Committed the remediation as `0f01ac62f` on
+  `fix/ci-pipeline-audit-remediation` after rebasing onto main commit
+  `21d243734`.
 - Recorded the audit in
   `packages/docs/logs/2026-07-19_ci-5809-end-to-end-audit.md`.
 
@@ -271,6 +275,6 @@ build 5851 must reach the deployment lanes before those outcomes can change.
 - Main build 5847 was canceled when PR #1570 merged; replacement build 5851 was
   running at the final snapshot.
 - The Buildx, Trivy, and ArgoCD gate fixes are verified locally but have not run
-  on Buildkite; the worktree changes are not committed or pushed.
+  on Buildkite; PR validation is required before merge.
 - ArgoCD's Cloudflare comparison status was flapping with webhook restarts; the
   final snapshot was healthy, but the condition was not stable during the audit.
