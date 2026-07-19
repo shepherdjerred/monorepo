@@ -80,3 +80,17 @@ Root cause was two-layered:
   and throws on failure, so Buildkite's step retry re-syncs through
   transient webhook downtime. E2E-validated against live ArgoCD:
   stale-op guard, Running → Succeeded tracking, clean exit.
+
+## Round 3 — build 5789: typed lint races Prisma codegen
+
+Build 5789 (with #1515's competition changes invalidating the lint cache)
+failed `@scout-for-lol/backend#lint` with dozens of
+`no-unsafe-*` errors on `prisma.competitionParticipant` — the generated
+Prisma client wasn't there when lint ran. Root turbo.json gives `lint` only
+`^build` (unlike `typecheck`/`test`, which also carry `generate`), so on a
+cold CI container typed lint (projectService) races codegen and the client
+resolves as an error type. Fixed by adding
+`"lint": { "dependsOn": ["^build", "generate"] }` to all three Prisma
+packages (scout backend, birmel, dpmk backend — birmel/dpmk were the same
+latent bomb, just still cache-masked). Validated: dry-run graphs show the
+edge; deleting `generated/` and running lint regenerates then passes.
