@@ -1,10 +1,17 @@
 #!/usr/bin/env bun
 
-// delete the imports directory, allow failure
+// Regenerates generated/imports/ from the live cluster's CRDs + cdk8s-cli's
+// pinned k8s schema. Needs a working kubecontext (locally) or the in-cluster
+// service account (the homelab-crd-imports-daily Temporal schedule runs this
+// and opens a PR on drift). The `cdk8s` bin resolves from this package's
+// cdk8s-cli devDependency via `bun run update-imports`.
+
+// Wipe the output dir first so CRDs removed from the cluster don't leave
+// stale import files behind.
 try {
-  await Bun.$`rm -rf imports`.quiet();
+  await Bun.$`rm -rf generated/imports`.quiet();
 } catch (error) {
-  console.error("Failed to delete imports directory:", error);
+  console.error("Failed to delete generated/imports directory:", error);
 }
 
 // run "cdk8s import k8s --language=typescript"

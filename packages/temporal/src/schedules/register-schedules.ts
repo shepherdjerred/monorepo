@@ -181,6 +181,20 @@ export const SCHEDULES: ScheduleDefinition[] = [
     memo: "Daily DNS record audit (SPF, DMARC, MX)",
   },
   {
+    id: "homelab-crd-imports-daily",
+    workflowType: "runHomelabCrdImportsRefresh",
+    args: [],
+    // 05:30 PT — between fetcher/golink (05:00) and dns-audit (06:00). CRD
+    // drift is time-coupled (operator chart bumps ArgoCD-synced after
+    // Renovate merges land), so only a schedule can see it — no CI gate runs
+    // when the cluster changes.
+    cronExpression: "30 5 * * *",
+    taskQueue: TASK_QUEUES.DEFAULT,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "45 minutes",
+    memo: "Daily cdk8s CRD-import refresh — regenerates generated/imports from the live cluster CRDs and opens a PR on drift",
+  },
+  {
     id: "homelab-audit-daily",
     workflowType: "agentTaskWorkflow",
     args: [HOMELAB_AUDIT_AGENT_TASK],

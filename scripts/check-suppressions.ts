@@ -56,6 +56,11 @@ const EXCLUDED_FILES = [
   "packages/home-assistant/src/codegen/emit.ts",
   // Intentional: committed stub for the generated HA schema; gets overwritten by ha-codegen
   "packages/temporal/src/generated/ha-schema.stub.ts",
+  // Machine-generated cdk8s CRD imports: update-imports.ts prepends
+  // `// @ts-nocheck` and cdk8s-cli emits `/* eslint-disable ... */` headers.
+  // Refreshed by the homelab-crd-imports-daily Temporal schedule; the
+  // quality-ratchet likewise excludes /generated/ paths.
+  "packages/homelab/src/cdk8s/generated/imports/",
   // Intentional: compile-time type tests — @ts-expect-error is the whole point
   "packages/home-assistant/test/typed-client.test-d.ts",
   // Documentation: AGENTS.md files and docs mention suppression patterns as things to avoid

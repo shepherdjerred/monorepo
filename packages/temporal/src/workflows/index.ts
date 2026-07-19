@@ -32,6 +32,8 @@ import { runReadmeRefresh as _runReadmeRefresh } from "./readme-refresh.ts";
 import type { ReadmeRefreshResult } from "#activities/readme-refresh.ts";
 import { runLlmCatalogRefresh as _runLlmCatalogRefresh } from "./llm-catalog-refresh.ts";
 import type { LlmCatalogRefreshResult } from "#activities/llm-catalog-refresh.ts";
+import { runHomelabCrdImportsRefresh as _runHomelabCrdImportsRefresh } from "./homelab-crd-imports-refresh.ts";
+import type { HomelabCrdImportsRefreshResult } from "#activities/homelab-crd-imports-refresh.ts";
 import { runScoutShowcaseRefresh as _runScoutShowcaseRefresh } from "./scout-showcase-refresh.ts";
 import type { ScoutShowcaseRefreshResult } from "#activities/scout-showcase-refresh.ts";
 import { runScoutSeasonRefreshWorkflow as _runScoutSeasonRefreshWorkflow } from "./scout-season-refresh.ts";
@@ -146,6 +148,10 @@ export async function runReadmeRefresh(): Promise<ReadmeRefreshResult> {
 
 export async function runLlmCatalogRefresh(): Promise<LlmCatalogRefreshResult> {
   return _runLlmCatalogRefresh();
+}
+
+export async function runHomelabCrdImportsRefresh(): Promise<HomelabCrdImportsRefreshResult> {
+  return _runHomelabCrdImportsRefresh();
 }
 
 export async function runScoutShowcaseRefresh(): Promise<ScoutShowcaseRefreshResult> {
