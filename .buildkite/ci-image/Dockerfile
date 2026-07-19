@@ -1,10 +1,10 @@
-# syntax=docker/dockerfile:1.7-labs
+# syntax=docker/dockerfile:1.7-labs@sha256:b99fecfe00268a8b556fad7d9c37ee25d716ae08a5d7320e6d51c4dd83246894
 # CI toolchain image — baked from the repo's .mise.toml so agents run the
 # EXACT tool versions developers run. Rebuilt every main build via registry
 # cache (near-free when unchanged); the toolchain layers invalidate on
 # .mise.toml changes and the bun-cache layer on manifest/lockfile changes.
 
-FROM debian:bookworm-slim AS base
+FROM debian:bookworm-slim@sha256:7b140f374b289a7c2befc338f42ebe6441b7ea838a042bbd5acbfca6ec875818 AS base
 
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     ca-certificates curl git unzip xz-utils zstd python3 ripgrep rsync \
@@ -12,8 +12,8 @@ RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Docker CLI + buildx for image-build steps (BuildKit runs in-pod)
-COPY --from=docker:28-cli /usr/local/bin/docker /usr/local/bin/docker
-COPY --from=docker/buildx-bin:0.30.1 /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
+COPY --from=docker:28-cli@sha256:625d9431a9f54c5a2bc90f24f0e1c3d55b1349fd857dd85035f98c2c9acbdd4d /usr/local/bin/docker /usr/local/bin/docker
+COPY --from=docker/buildx-bin:0.30.1@sha256:cc16bd35c1bbdde2c9d4ee08cf33be55b17e6ed2188816292dbde51064105e25 /buildx /usr/local/lib/docker/cli-plugins/docker-buildx
 
 # swiftlint from the official release zip: the -static build is
 # self-contained (the dynamic binary needs Swift runtime libs neither the
