@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Complete
 
 ## Context
 
@@ -94,3 +94,58 @@ resolves as an error type. Fixed by adding
 packages (scout backend, birmel, dpmk backend — birmel/dpmk were the same
 latent bomb, just still cache-masked). Validated: dry-run graphs show the
 edge; deleting `generated/` and running lint regenerates then passes.
+
+## Round 4 — build 5809: the green run
+
+Builds 5795/5796/5800/5802/5808 were all canceled by pushes to main
+(PR merges, the auto-merge version-bump PR #1558, and other agent sessions
+committing session logs directly to main — `cancel_running_branch_builds`
+is on with no branch filter). After the operator paused the other sessions,
+build 5809 ran to completion with two transient hard failures retried in
+place:
+
+- `:docker: images` (build 5796's occurrence): ghcr blob-CDN egress flake —
+  the pinned `mcp-proxy` digest was verified pullable locally, so the pin is
+  correct; job retry succeeded.
+- `:package: release-please`: GitHub GraphQL 500 (`Something went wrong
+while executing your query`). The step has no automatic retry in
+  `.buildkite/pipeline.yml`; manual retry succeeded.
+
+**Build 5809 passed 2026-07-19 19:46 UTC — first green main since 5492
+(2026-07-12).**
+
+## Session Log — 2026-07-19
+
+### Done
+
+- PR #1550 (merged): idempotency-test 20s timeout, amrender
+  `-buildvcs=false`, scout `generate → ^build` edge, markdownlint MD004
+  fixes; deleted resolved todo `scout-data-missing-llm-models-dep`.
+- PR #1559 (merged): `argocd.ts sync` waits for the sync operation's
+  terminal phase (e2e-tested live); `lint → generate` edges in scout
+  backend, birmel, dpmk backend turbo.json.
+- Operational: deleted the orphaned seaweedfs `TunnelBinding`
+  (provenance-verified; finalizer completed) — unblocked the tofu tunnel
+  gate. Re-synced the `apps` ArgoCD Application.
+- Filed `todos/argocd-apps-prune-policy.md` (prune decision + full orphan
+  inventory incl. the leftover Dagger stack).
+- Retried two transient CI failures (ghcr egress, GitHub GraphQL 500) to
+  land green build 5809.
+
+### Remaining
+
+- `release-please` step needs `retry: *retry` in `.buildkite/pipeline.yml`
+  (a lone GitHub 500 hard-fails the build today).
+- `argocd-apps-prune-policy` todo needs an operator decision.
+- kyverno pods restart in lock-step under CI load (admission controller
+  19 restarts/4h) — syncs now fail fast + retry through it, but the
+  underlying instability is unaddressed.
+
+### Caveats
+
+- Main-push build cancellation churn is the dominant failure mode:
+  5 candidate builds died to pushes, not defects. Options discussed:
+  branch filter `!main` on `cancel_running_branch_builds` (declined for
+  now), `[skip ci]` on bot docs commits, batching merges.
+- The `pr-monitor` skill description currently claims this repo has no CI —
+  stale; Buildkite is live.
