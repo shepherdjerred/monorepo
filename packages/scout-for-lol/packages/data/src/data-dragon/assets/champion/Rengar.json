@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.13.1",
+  "version": "16.14.1",
   "data": {
     "Rengar": {
       "id": "Rengar",
@@ -351,6 +351,75 @@
           "name": "Street Demons Rengar (Sapphire)",
           "chromas": false,
           "parentSkin": 40
+        },
+        {
+          "id": "107049",
+          "num": 49,
+          "name": "Victorious Rengar",
+          "chromas": true
+        },
+        {
+          "id": "107050",
+          "num": 50,
+          "name": "Victorious Rengar (Bronze)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "107051",
+          "num": 51,
+          "name": "Victorious Rengar (Silver)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "107052",
+          "num": 52,
+          "name": "Victorious Rengar (Gold)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "107053",
+          "num": 53,
+          "name": "Victorious Rengar (Platinum)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "107054",
+          "num": 54,
+          "name": "Victorious Rengar (Emerald)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "107055",
+          "num": 55,
+          "name": "Victorious Rengar (Diamond)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "107056",
+          "num": 56,
+          "name": "Victorious Rengar (Master)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "107057",
+          "num": 57,
+          "name": "Victorious Rengar (Grandmaster)",
+          "chromas": false,
+          "parentSkin": 49
+        },
+        {
+          "id": "107058",
+          "num": 58,
+          "name": "Victorious Rengar (Challenger)",
+          "chromas": false,
+          "parentSkin": 49
         }
       ],
       "lore": "Rengar is a ferocious vastayan trophy hunter who lives for the thrill of tracking down and killing dangerous creatures. He scours the world for the most fearsome beasts he can find, especially seeking any trace of Kha'Zix, the void creature who scratched out his eye. Rengar stalks his prey neither for food nor glory, but for the sheer beauty of the pursuit.",

@@ -12,6 +12,27 @@ export function renderChangelogToHtml(content: ReactNode): string {
 
 export const changelog: ChangelogEntry[] = [
   buildChangelogEntry({
+    date: "2026 07 19",
+    banner: "Updated for League patch 26.14",
+    sections: [
+      {
+        title: "Game Data",
+        color: "indigo",
+        items: [
+          "Champion, item, summoner spell, and rune data refreshed for League patch 26.14",
+          "Seraphine, Senna, and Nami enchanters get reshuffled — two nerfed, one buffed.",
+          "Corki, Mordekaiser, and Azir get buffed while Garen, Jayce, and Locke take nerfs.",
+          "Blue Buff now scales ability haste with level, and the buff bar was heavily decluttered.",
+          "Hextech Rocketbelt, Immortal Path, and Protoplasm Harness all got weaker.",
+        ],
+      },
+    ],
+    link: {
+      label: "Read Riot's full Patch 26.14 notes",
+      href: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-14-notes",
+    },
+  }),
+  buildChangelogEntry({
     date: "2026 06 28",
     banner: "Updated for League patch 26.13",
     sections: [

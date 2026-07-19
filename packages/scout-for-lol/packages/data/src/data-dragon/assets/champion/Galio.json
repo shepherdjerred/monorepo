@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.13.1",
+  "version": "16.14.1",
   "data": {
     "Galio": {
       "id": "Galio",
@@ -335,6 +335,54 @@
           "name": "Aegis Frame Galio (Rose Quartz)",
           "chromas": false,
           "parentSkin": 40
+        },
+        {
+          "id": "3047",
+          "num": 47,
+          "name": "T1 Galio",
+          "chromas": true
+        },
+        {
+          "id": "3048",
+          "num": 48,
+          "name": "T1 Galio (Elite)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "3049",
+          "num": 49,
+          "name": "T1 Galio (Pearl)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "3050",
+          "num": 50,
+          "name": "T1 Galio (Ruby)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "3051",
+          "num": 51,
+          "name": "T1 Galio (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "3052",
+          "num": 52,
+          "name": "T1 Galio (Catseye)",
+          "chromas": false,
+          "parentSkin": 47
+        },
+        {
+          "id": "3053",
+          "num": 53,
+          "name": "T1 Galio (Sapphire)",
+          "chromas": false,
+          "parentSkin": 47
         }
       ],
       "lore": "Outside the gleaming city of Demacia, the stone colossus Galio keeps vigilant watch. Built as a bulwark against enemy mages, he often stands motionless for decades until the presence of powerful magic stirs him to life. Once activated, Galio makes the most of his time, savoring the thrill of a fight and the rare honor of defending his countrymen. But his triumphs are always bittersweet, for the magic he destroys is also his source of reanimation, and each victory leaves him dormant once again.",
