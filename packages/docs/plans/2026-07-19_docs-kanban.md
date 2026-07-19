@@ -58,7 +58,7 @@ All other documentation remains searchable without cluttering the board.
 - [x] Build the local API and shadcn board interface.
 - [x] Add automated schema, store, API, comment, transition, and archival verification.
 - [ ] Capture browser-level screenshots of the board and document detail view.
-- [ ] Publish the branch and PR with visual evidence.
+- [x] Publish the branch and draft PR (#1573).
 
 ## Human Verification
 
@@ -74,19 +74,20 @@ All other documentation remains searchable without cluttering the board.
 
 - Created an isolated `feature/docs-kanban` worktree from current `origin/main`.
 - Installed the workspace, ran code generation, and armed repository hooks.
-- Migrated and validated all 765 Markdown documents with an idempotent canonical
+- Migrated and validated all 767 Markdown documents with an idempotent canonical
   model; archived 15 completed plans.
 - Added `packages/docs-board` with the Bun/Hono store and API, React 19/Vite
   board, latest shadcn `base-nova` components, Tailwind CSS v4, comments,
   guarded transitions, archival, conflict detection, and external-edit refresh.
 - Added six automated workflow tests and passed package typecheck, lint, test,
   build, Knip, Prettier, Markdownlint, and docs validation gates.
+- Rebased onto current `origin/main`, passed full and affected verification
+  (181/181 tasks each), pushed `feature/docs-kanban`, and opened draft PR #1573.
 
 ### Remaining
 
 - Attach a Browser surface, capture the real board/detail screenshots, then add
-  them to the PR.
-- Commit, sync with current `origin/main`, push, and open the draft PR.
+  them to PR #1573.
 
 ### Caveats
 
