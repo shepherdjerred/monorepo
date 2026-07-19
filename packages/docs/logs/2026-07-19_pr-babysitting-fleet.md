@@ -65,32 +65,37 @@ deploy step, untouched.
 
 ### Done
 
-- All 11 PRs open during the session reached CI-green/conflict-free/comments-clear
-  except #1389's docker step (operator-blocked); #1549 and #1552 merged by user.
-- 10 real bugs fixed across 7 PRs by fleet agents (see table).
-- Two new PRs opened: #1551 (turbo-graph fix), #1553 (helm test timeouts).
-- ghcr egress failure forensically root-caused with direct registry-API evidence.
+- **End state: every open PR green** (aggregate success + merge-tree clean +
+  0 unresolved P0–P3 threads): #1557, #1514, #1513, #1512, #1479, #1389, #924.
+- Merged during the session: #1549, #1552, #1554, #1555, #1556, #1511, #1515,
+  #1551, #1553, #1558, #1559 (fleet fixed forward or verified most pre-merge).
+- ~14 real bugs fixed across the fleet (see table), plus post-merge-wave
+  conflict resolutions: #1512 (2-file fact-path vs ScoutQL union), #1513
+  (11-file ScoutQL plan-model merge — schema-cap moved to execution layer,
+  display-label rendering ported into #1515's renderer, parser helpers
+  extracted), #1514 (stacked-base follow-through), #1557 (main-merge +
+  prettier-ignore for scraped patch-notes HTML + 26.14 seed-test assertion).
+- ghcr egress failure forensically root-caused (blob-CDN
+  pkg-containers.githubusercontent.com unreachable from the buildx builder);
+  after the operator fixed egress, retried docker jobs cleared #1389 and #1558.
+  Saved as memory `reference_ghcr_blob_cdn_ci_not_found`.
 
 ### Remaining
 
-- User: merge #1551 (durable fix for the backend#generate gap) and #1553
-  (anti-flake); both green.
-- Operator: fix ghcr blob-CDN egress from the CI buildx builder (finding 4),
-  then retry #1389's docker job.
 - Cloudflare tofu-apply failure on main build 5748 (post-#1549 deploy) not
-  investigated.
+  investigated (main-only deploy step, out of scope).
 - Worktree cleanup eventually: pr-1514-s3-drop, pr-1512-s3-engine,
-  pr-1389-asuswrt, pr-924-report-designs, pr-1479-release (if created),
-  fix-backend-generate, fix-helm-test-timeout, plus pre-existing ones for
-  merged branches (ci-gap-fixes).
+  pr-1389-asuswrt, pr-924-report-designs, pr-1557-data-dragon, pr-1559-argocd
+  (if created), fix-backend-generate, fix-helm-test-timeout, plus pre-existing
+  ones for merged branches (ci-gap-fixes, pr-1511-lefthook, pr-1515-scoutql,
+  pr-1513-reporting-editor).
 
 ### Caveats
 
-- #924 went green because turbo cache satisfied `backend#build` that run; the
-  underlying graph gap remains until #1551 merges — its next cache-miss build
-  could re-fail.
 - release-please force-pushes #1479 on every main merge; each regeneration
-  re-runs CI (green twice in a row now, but it re-enters "pending" after every
-  merge to main).
+  re-runs CI (consistently re-greened all day, but it re-enters "pending" after
+  every merge to main).
 - greptile re-reviews on every push and can post NEW P1s after a fix push (hit
   #1515, #1513); babysitting must re-triage after each push, not just once.
+  The greptile-review-gate fails on any unresolved non-outdated thread —
+  resolve via GraphQL after fixing/replying, then retry just the gate job.
