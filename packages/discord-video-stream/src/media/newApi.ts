@@ -132,6 +132,19 @@ export type PrepareStreamOptions = {
   readrate?: number;
 
   /**
+   * Seconds of input to demux at full speed before `readrate` pacing engages (ffmpeg's
+   * `-readrate_initial_burst`, default 0.5s). With `readrate: 1` the pipeline runs zero-margin —
+   * production exactly matches the paced send loop, so any transient production dip immediately
+   * starves the sender and stutters playback. A burst of a few seconds front-loads that much media
+   * through the pipeline; pair it with {@link PlayStreamOptions.readrateInitialBurst} (same value)
+   * so the send pacer forwards the pre-roll into the receiver's jitter buffer, which then absorbs
+   * production dips while `readrate` lets ffmpeg catch back up to the wall-clock line.
+   *
+   * See https://ffmpeg.org/ffmpeg.html#:~:text=%2Dreadrate_initial_burst
+   */
+  readrateInitialBurst?: number;
+
+  /**
    * Custom input options to pass directly to ffmpeg
    * These will be added to the command before other options
    */
@@ -248,6 +261,11 @@ export function prepareStream(
       isFiniteNonZero(opts.readrate) && opts.readrate > 0
         ? opts.readrate
         : undefined;
+    const readrateInitialBurst =
+      isFiniteNonZero(opts.readrateInitialBurst) &&
+      opts.readrateInitialBurst > 0
+        ? opts.readrateInitialBurst
+        : undefined;
 
     return {
       noTranscoding: opts.noTranscoding ?? defaultOptions.noTranscoding,
@@ -263,6 +281,8 @@ export function prepareStream(
       ...(frameRate !== undefined ? { frameRate } : {}),
 
       ...(readrate !== undefined ? { readrate } : {}),
+
+      ...(readrateInitialBurst !== undefined ? { readrateInitialBurst } : {}),
 
       videoCodec: opts.videoCodec ?? defaultOptions.videoCodec,
 
@@ -384,6 +404,14 @@ export function prepareStream(
     !isSrt
   ) {
     command.inputOption("-readrate", String(mergedOptions.readrate));
+    // Only meaningful alongside readrate: how much input to burst-read before pacing engages.
+    // The pre-roll gives the otherwise zero-margin realtime pipeline a cushion (see the option doc).
+    if (mergedOptions.readrateInitialBurst !== undefined) {
+      command.inputOption(
+        "-readrate_initial_burst",
+        String(mergedOptions.readrateInitialBurst),
+      );
+    }
   }
 
   // input options
@@ -840,6 +868,24 @@ export async function attachPipeline(
 
   const vStream = new VideoStream(conn, false, options.observer);
   video.stream.pipe(vStream);
+  if (options.observer?.onQueueDepth) {
+    // Periodic demux→pacer queue depths (objectMode lengths = buffered packet counts). Empty
+    // queues during a production dip mean the producer starved; full queues mean the pacer is the
+    // backpressure source — the distinction that required in-pod thread sampling to establish
+    // during the 2026-07-18 stutter investigation.
+    // The demux streams are typed Readable but are concretely PassThrough; the writable-side
+    // buffer (hwm 128) holds most of the queued packets, so include it when available.
+    const bufferedPackets = (s: Readable): number =>
+      s.readableLength + (s instanceof PassThrough ? s.writableLength : 0);
+    const queueDepthTimer = setInterval(() => {
+      options.observer?.onQueueDepth?.({
+        video: bufferedPackets(video.stream),
+        audio: audio ? bufferedPackets(audio.stream) : 0,
+      });
+    }, 5000);
+    queueDepthTimer.unref();
+    cleanupFuncs.push(() => clearInterval(queueDepthTimer));
+  }
   // Hoisted so destroy() can tear the audio side down too (see the destroy closure below).
   let aStream: AudioStream | undefined;
   if (audio) {

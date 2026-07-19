@@ -36,8 +36,15 @@ const VERSIONS_FILE_REL = "packages/homelab/src/cdk8s/src/versions.ts";
 
 const escapeRegex = (s: string) =>
   s.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
-// Matches `"value"` (possibly with trailing comma) as the only content after whitespace on a line.
-const VALUE_LINE_RE = /^(\s*)"[^"]*"[ \t]*(?:,[ \t]*)?$/;
+// Matches `"value"` (possibly with trailing comma) as the only content after
+// whitespace on a line; captures the indent and the value.
+const VALUE_LINE_RE = /^(\s*)"([^"]*)"[ \t]*(?:,[ \t]*)?$/;
+
+// A digest-unchanged entry is skipped entirely (even though the version
+// prefix would differ): bumping only the version string would redeploy a
+// byte-identical image on every merge. Digest equality is the "did the
+// image actually change" gate.
+const digestOf = (value: string): string => value.split("@")[1] ?? "";
 
 /**
  * Rewrite the version+digest string assignments for the given keys in a
@@ -58,6 +65,7 @@ export async function rewriteVersionsFile(
   const source = await Bun.file(versionsFile).text();
   const lines = source.split("\n");
   let updated = 0;
+  let matched = 0;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -77,10 +85,16 @@ export async function rewriteVersionsFile(
 
       // Case 1: same-line entry — `"key": "value",`
       const sameLineRe = new RegExp(
-        String.raw`("${escapeRegex(matchedKey)}"\s*:\s*)"[^"]*"(\s*,?)`,
+        String.raw`("${escapeRegex(matchedKey)}"\s*:\s*)"([^"]*)"(\s*,?)`,
       );
-      if (sameLineRe.test(line)) {
-        lines[i] = line.replace(sameLineRe, `$1"${newValue}"$2`);
+      const sameLine = sameLineRe.exec(line);
+      if (sameLine) {
+        matched++;
+        if (digestOf(sameLine[2] ?? "") === digest) {
+          console.log(`Unchanged ${matchedKey}: digest ${digest}`);
+          continue;
+        }
+        lines[i] = line.replace(sameLineRe, `$1"${newValue}"$3`);
         updated++;
         console.log(`Updated ${matchedKey}: ${newValue}`);
         continue;
@@ -98,6 +112,11 @@ export async function rewriteVersionsFile(
             `string value: ${JSON.stringify(valueLine)}`,
         );
       }
+      matched++;
+      if (digestOf(valueMatch[2] ?? "") === digest) {
+        console.log(`Unchanged ${matchedKey}: digest ${digest}`);
+        continue;
+      }
       const indent = valueMatch[1] ?? "";
       lines[i + 1] = `${indent}"${newValue}",`;
       updated++;
@@ -105,8 +124,12 @@ export async function rewriteVersionsFile(
     }
   }
 
-  if (updated === 0) {
+  if (matched === 0) {
     throw new Error("No entries matched — check the key names");
+  }
+  if (updated === 0) {
+    console.log("All matched entries already have these digests — no rewrite");
+    return 0;
   }
 
   await Bun.write(versionsFile, lines.join("\n"));
