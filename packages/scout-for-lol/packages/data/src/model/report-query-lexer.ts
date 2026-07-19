@@ -34,14 +34,26 @@ export const GreaterEqual = createToken({
   name: "GreaterEqual",
   pattern: />=/u,
 });
+export const LessEqual = createToken({ name: "LessEqual", pattern: /<=/u });
+export const NotEqual = createToken({ name: "NotEqual", pattern: /!=/u });
+export const Less = createToken({ name: "Less", pattern: /</u });
+export const Greater = createToken({ name: "Greater", pattern: />/u });
 export const Equals = createToken({ name: "Equals", pattern: /=/u });
+export const Plus = createToken({ name: "Plus", pattern: /\+/u });
+export const Minus = createToken({ name: "Minus", pattern: /-/u });
+export const Star = createToken({ name: "Star", pattern: /\*/u });
+export const Slash = createToken({ name: "Slash", pattern: /\//u });
 export const StringLiteral = createToken({
   name: "StringLiteral",
   pattern: /'[^']*'|"[^"]*"/u,
 });
+export const HexColor = createToken({
+  name: "HexColor",
+  pattern: /#[0-9a-f]{6}/iu,
+});
 export const NumberLiteral = createToken({
   name: "NumberLiteral",
-  pattern: /\d+/u,
+  pattern: /\d+(?:\.\d+)?/u,
 });
 
 export const Select = keyword("Select", "select");
@@ -57,6 +69,7 @@ export const Asc = keyword("Asc", "asc");
 export const Desc = keyword("Desc", "desc");
 export const Render = keyword("Render", "render");
 export const With = keyword("With", "with");
+export const Having = keyword("Having", "having");
 
 // Order matters: multi-char operators before single, keywords before Identifier.
 export const reportQueryTokenTypes: TokenType[] = [
@@ -65,8 +78,17 @@ export const reportQueryTokenTypes: TokenType[] = [
   LParen,
   RParen,
   GreaterEqual,
+  LessEqual,
+  NotEqual,
+  Less,
+  Greater,
   Equals,
+  Plus,
+  Minus,
+  Star,
+  Slash,
   StringLiteral,
+  HexColor,
   NumberLiteral,
   Select,
   From,
@@ -81,6 +103,7 @@ export const reportQueryTokenTypes: TokenType[] = [
   Desc,
   Render,
   With,
+  Having,
   Identifier,
 ];
 
