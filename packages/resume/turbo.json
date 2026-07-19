@@ -3,10 +3,11 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      // The tracked resume.pdf is this task's OUTPUT — xelatex output is
-      // nondeterministic (embeds CreationDate), so hashing it as an input
-      // self-invalidates the task on every run.
-      "inputs": ["$TURBO_DEFAULT$", "!resume.pdf"],
+      // resume.pdf is this task's OUTPUT — gitignored (xelatex output is
+      // nondeterministic: it embeds CreationDate, so it must never be hashed
+      // as an input) and restored from the turbo cache. CI builds it in the
+      // resume-build step's texlive container and ships it as a Buildkite
+      // artifact for the deploy-sites step.
       "outputs": ["*.pdf"]
     }
   }

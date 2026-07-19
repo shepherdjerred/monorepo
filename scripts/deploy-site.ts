@@ -80,7 +80,9 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     name: "resume",
     url: "https://resume.sjer.red",
     buildDir: "packages/resume",
-    buildCmd: "true", // pre-built (LaTeX); deploy syncs existing files
+    // xelatex compiles the gitignored resume.pdf; CI deploys --prebuilt (the
+    // resume-build step's artifact) because only the texlive container has TeX.
+    buildCmd: "bun run build",
     distDir: "packages/resume",
     target: "s3",
     immutablePrefixes: [],
