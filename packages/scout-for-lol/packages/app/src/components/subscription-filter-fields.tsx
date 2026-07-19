@@ -23,8 +23,15 @@ function queuesToSpec(queues: QueueType[]): SubscriptionFilterSpec | null {
   return { version: 1, filters: [{ type: "queue", queues }] };
 }
 
-/** Short human summary of a filter spec for triggers/table cells. */
-export function summarizeFilters(spec: SubscriptionFilterSpec | null): string {
+/**
+ * Short human summary of a filter spec for triggers/table cells. Tolerates
+ * `undefined` (a backend deployed before the `filters` field omits it — see
+ * `subscriptionFilterQueues`): a missing spec renders as "All queues" instead
+ * of crashing the subscriptions table.
+ */
+export function summarizeFilters(
+  spec: SubscriptionFilterSpec | null | undefined,
+): string {
   const queues = subscriptionFilterQueues(spec);
   if (queues.length === 0) {
     return "All queues";
