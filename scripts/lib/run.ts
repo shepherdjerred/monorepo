@@ -71,6 +71,8 @@ export async function runAllowExit(
   const exitCode = await proc.exited;
   if (capture && opts.secret !== true) {
     // Echo captured stdout so the operator still sees it in the terminal.
+    // Suppressed when `secret` is set — used for secret-bearing output that
+    // must never reach the log.
     process.stdout.write(stdout);
   }
   return { stdout, exitCode };

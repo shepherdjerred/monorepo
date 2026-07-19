@@ -34,11 +34,10 @@ export const ClaudeMdFileSchema = z.object({
 });
 
 /**
- * Inlined `RetrievedSymbol` for the specialist prompt — the `hybrid-retrieval`
- * module's `RetrievedSymbol` carries a `sources` array used for debugging /
- * OTel, which isn't needed at the prompt boundary. We carry just the entry
- * itself, an optional rendered snippet (resolved when the workdir exists), and
- * the score so downstream code can debug ranking.
+ * Inlined `RetrievedSymbol` for the specialist prompt — mirrors the
+ * `symbol-retrieval` module's `RetrievedSymbol`, carrying the entry itself,
+ * an optional rendered snippet (resolved when the workdir exists), and the
+ * score so downstream code can debug ranking.
  */
 export const RetrievedSymbolForPromptSchema = z.object({
   entry: SymbolEntrySchema,
