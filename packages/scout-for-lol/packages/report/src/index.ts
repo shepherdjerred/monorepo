@@ -7,6 +7,12 @@ export {
   type CompetitionChartBar,
 } from "./html/competition-chart.ts";
 export {
+  analyticsChartToImage,
+  analyticsChartToSvg,
+  type AnalyticsChartProps,
+  type AnalyticsChartSeries,
+} from "./html/analytics-chart.ts";
+export {
   discordScreenshotToImage,
   discordScreenshotToSvg,
   type DiscordChatMessage,

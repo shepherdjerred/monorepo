@@ -38,6 +38,35 @@ export type GroupFactRow = {
   multikills: number;
   gameDurationSeconds: number;
   timePlayedSeconds: number;
+  earlySurrendered: boolean;
+  laneMinions: number;
+  neutralMinions: number;
+  goldSpent: number;
+  damageMitigated: number;
+  damageToObjectives: number;
+  damageToTurrets: number;
+  healing: number;
+  teammateHealing: number;
+  wardsKilled: number;
+  controlWardsBought: number;
+  detectorWardsPlaced: number;
+  doubleKills: number;
+  tripleKills: number;
+  quadraKills: number;
+  pentaKills: number;
+  largestMultikill: number;
+  killingSprees: number;
+  firstBlood: boolean;
+  championLevel: number;
+  championExperience: number;
+  timeDeadSeconds: number;
+  longestLifeSeconds: number;
+  ccTimeSeconds: number;
+  turretKills: number;
+  inhibitorKills: number;
+  dragonKills: number;
+  baronKills: number;
+  placement: number | null;
 };
 
 /**
@@ -133,6 +162,7 @@ function addGroupRow(
     current.surrenders++;
   }
   for (const member of group) {
+    current.participantRows++;
     current.kills += member.kills;
     current.deaths += member.deaths;
     current.assists += member.assists;
@@ -145,6 +175,46 @@ function addGroupRow(
     current.wardsPlaced += member.wardsPlaced;
     current.multikills += member.multikills;
     current.timePlayedSeconds += member.timePlayedSeconds;
+    if (member.earlySurrendered) current.earlySurrenders++;
+    current.laneMinions += member.laneMinions;
+    current.neutralMinions += member.neutralMinions;
+    current.goldSpent += member.goldSpent;
+    current.damageMitigated += member.damageMitigated;
+    current.damageToObjectives += member.damageToObjectives;
+    current.damageToTurrets += member.damageToTurrets;
+    current.healing += member.healing;
+    current.teammateHealing += member.teammateHealing;
+    current.wardsKilled += member.wardsKilled;
+    current.controlWardsBought += member.controlWardsBought;
+    current.detectorWardsPlaced += member.detectorWardsPlaced;
+    current.doubleKills += member.doubleKills;
+    current.tripleKills += member.tripleKills;
+    current.quadraKills += member.quadraKills;
+    current.pentaKills += member.pentaKills;
+    current.largestMultikill = Math.max(
+      current.largestMultikill,
+      member.largestMultikill,
+    );
+    current.killingSprees += member.killingSprees;
+    if (member.firstBlood) current.firstBloods++;
+    current.championLevelTotal += member.championLevel;
+    current.championExperienceTotal += member.championExperience;
+    current.timeDeadSeconds += member.timeDeadSeconds;
+    current.longestLifeSeconds = Math.max(
+      current.longestLifeSeconds,
+      member.longestLifeSeconds,
+    );
+    current.ccTimeSeconds += member.ccTimeSeconds;
+    current.turretKills += member.turretKills;
+    current.inhibitorKills += member.inhibitorKills;
+    current.dragonKills += member.dragonKills;
+    current.baronKills += member.baronKills;
+    if (member.placement !== null) {
+      current.arenaRows++;
+      current.placementSum += member.placement;
+      if (member.placement <= 2) current.topTwoPlacements++;
+      if (member.placement === 1) current.firstPlaceFinishes++;
+    }
   }
   // One duration per group-game so avg_game_duration is a true per-game
   // average (mirrors the pair engine's p1-only duration).
@@ -172,5 +242,38 @@ function emptyGroupAggregate(group: GroupFactRow[]): AggregateRow {
     multikills: 0,
     durationSeconds: 0,
     timePlayedSeconds: 0,
+    participantRows: 0,
+    earlySurrenders: 0,
+    laneMinions: 0,
+    neutralMinions: 0,
+    goldSpent: 0,
+    damageMitigated: 0,
+    damageToObjectives: 0,
+    damageToTurrets: 0,
+    healing: 0,
+    teammateHealing: 0,
+    wardsKilled: 0,
+    controlWardsBought: 0,
+    detectorWardsPlaced: 0,
+    doubleKills: 0,
+    tripleKills: 0,
+    quadraKills: 0,
+    pentaKills: 0,
+    largestMultikill: 0,
+    killingSprees: 0,
+    firstBloods: 0,
+    championLevelTotal: 0,
+    championExperienceTotal: 0,
+    timeDeadSeconds: 0,
+    longestLifeSeconds: 0,
+    ccTimeSeconds: 0,
+    turretKills: 0,
+    inhibitorKills: 0,
+    dragonKills: 0,
+    baronKills: 0,
+    arenaRows: 0,
+    placementSum: 0,
+    topTwoPlacements: 0,
+    firstPlaceFinishes: 0,
   };
 }

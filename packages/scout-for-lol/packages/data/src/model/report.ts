@@ -44,6 +44,13 @@ export const ReportOutputFormatSchema = z.enum([
   "LEADERBOARD",
   "BAR_CHART",
   "LINE_CHART",
+  "STACKED_BAR",
+  "AREA_CHART",
+  "DONUT_CHART",
+  "SCATTER_CHART",
+  "HEATMAP",
+  "RADAR_CHART",
+  "KPI_CARD",
 ]);
 
 /**
@@ -57,15 +64,68 @@ export type ReportRenderChannel = z.infer<typeof ReportRenderChannelSchema>;
 export const ReportRenderChannelSchema = z
   .object({
     x: z.string().min(1).optional(),
-    y: z.string().min(1).optional(),
+    y: z
+      .union([z.string().min(1), z.array(z.string().min(1)).min(1).max(8)])
+      .optional(),
+    series: z.string().min(1).optional(),
+    size: z.string().min(1).optional(),
+    value: z.string().min(1).optional(),
   })
   .strict();
+
+export const ReportChartThemeSchema = z.enum([
+  "lol_dark",
+  "lol_light",
+  "minimal_dark",
+  "minimal_light",
+]);
+export type ReportChartTheme = z.infer<typeof ReportChartThemeSchema>;
+export const ReportChartPaletteSchema = z.enum([
+  "ranked",
+  "categorical",
+  "team",
+  "gold",
+  "colorblind",
+]);
+export type ReportChartPalette = z.infer<typeof ReportChartPaletteSchema>;
+export const ReportChartOrientationSchema = z.enum(["horizontal", "vertical"]);
+export const ReportChartLabelsSchema = z.enum([
+  "auto",
+  "show",
+  "hide",
+  "value",
+  "percent",
+]);
+export type ReportChartLabels = z.infer<typeof ReportChartLabelsSchema>;
+export const ReportChartLegendSchema = z.enum([
+  "auto",
+  "none",
+  "top",
+  "right",
+  "bottom",
+]);
+export type ReportChartLegend = z.infer<typeof ReportChartLegendSchema>;
+export type ReportChartOrientation = z.infer<
+  typeof ReportChartOrientationSchema
+>;
+export const ReportChartSortSchema = z.enum(["query", "asc", "desc"]);
+export const ReportHexColorSchema = z.string().regex(/^#[0-9a-f]{6}$/iu);
 
 export type ReportChartOptions = z.infer<typeof ReportChartOptionsSchema>;
 export const ReportChartOptionsSchema = z
   .object({
     title: z.string().min(1).optional(),
+    subtitle: z.string().min(1).optional(),
+    xAxisLabel: z.string().min(1).optional(),
     yAxisLabel: z.string().min(1).optional(),
+    theme: ReportChartThemeSchema.optional(),
+    palette: ReportChartPaletteSchema.optional(),
+    colors: z.array(ReportHexColorSchema).min(1).max(8).optional(),
+    orientation: ReportChartOrientationSchema.optional(),
+    labels: ReportChartLabelsSchema.optional(),
+    legend: ReportChartLegendSchema.optional(),
+    sort: ReportChartSortSchema.optional(),
+    smooth: z.boolean().optional(),
   })
   .strict();
 
@@ -87,6 +147,41 @@ export const ReportRenderSpecSchema = z.discriminatedUnion("kind", [
   }),
   z.object({
     kind: z.literal("LINE_CHART"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  z.object({
+    kind: z.literal("STACKED_BAR"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  z.object({
+    kind: z.literal("AREA_CHART"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  z.object({
+    kind: z.literal("DONUT_CHART"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  z.object({
+    kind: z.literal("SCATTER_CHART"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  z.object({
+    kind: z.literal("HEATMAP"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  z.object({
+    kind: z.literal("RADAR_CHART"),
+    encoding: ReportRenderChannelSchema.default({}),
+    options: ReportChartOptionsSchema.default({}),
+  }),
+  z.object({
+    kind: z.literal("KPI_CARD"),
     encoding: ReportRenderChannelSchema.default({}),
     options: ReportChartOptionsSchema.default({}),
   }),

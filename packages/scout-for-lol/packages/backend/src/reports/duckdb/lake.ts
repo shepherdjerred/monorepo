@@ -24,10 +24,10 @@ import { listStagingFiles } from "#src/report-lake/staging.ts";
  */
 
 export type BoundParam =
-  | { kind: "scalar"; value: string | number }
+  | { kind: "scalar"; value: string | number | boolean }
   | { kind: "list"; values: string[] | number[] };
 
-export function scalarParam(value: string | number): BoundParam {
+export function scalarParam(value: string | number | boolean): BoundParam {
   return { kind: "scalar", value };
 }
 

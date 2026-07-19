@@ -15,19 +15,21 @@ describe("parseAndCompile", () => {
       LIMIT 10
     `);
 
-    expect(plan).toEqual({
-      source: "match_participants",
-      groupBy: "player",
-      metrics: ["games", "surrenders", "surrender_rate"],
-      queueFilter: ["solo", "flex"],
-      championId: undefined,
-      minGames: undefined,
-      competitionId: undefined,
-      orderBy: "surrender_rate",
-      orderDirection: "desc",
-      limit: 10,
-      render: { kind: "TABLE" },
-    });
+    expect(plan.source).toBe("match_participants");
+    expect(plan.groupBy).toBe("player");
+    expect(plan.groupBys).toEqual(["player"]);
+    expect(plan.metrics).toEqual(["games", "surrenders", "surrender_rate"]);
+    expect(plan.selectItems.map((item) => item.key)).toEqual([
+      "games",
+      "surrenders",
+      "surrender_rate",
+    ]);
+    expect(plan.queueFilter).toEqual(["solo", "flex"]);
+    expect(plan.orderBy).toBe("surrender_rate");
+    expect(plan.orderDirection).toBe("desc");
+    expect(plan.limit).toBe(10);
+    expect(plan.having).toEqual([]);
+    expect(plan.render).toEqual({ kind: "TABLE" });
   });
 
   test("compiles group(N) queries to a structured group plan", () => {
@@ -93,12 +95,22 @@ describe("parseAndCompile", () => {
     expect(plan.limit).toBeUndefined();
   });
 
-  test("rejects unsupported where clauses", () => {
+  test("parses typed row filters", () => {
+    const plan = parseAndCompile(
+      "SELECT player, games FROM match_participants WHERE kills > 5 AND role IN ('solo', 'support') GROUP BY player",
+    );
+    expect(plan.filters).toEqual([
+      { field: "kills", operator: ">", values: [5] },
+      { field: "role", operator: "in", values: ["solo", "support"] },
+    ]);
+  });
+
+  test("rejects unknown filter fields", () => {
     expect(() =>
       parseAndCompile(
-        "SELECT player, games FROM match_participants WHERE kills > 5 GROUP BY player",
+        "SELECT player, games FROM match_participants WHERE secret_stat > 5 GROUP BY player",
       ),
-    ).toThrow("Unsupported report WHERE clause");
+    ).toThrow();
   });
 
   test("parses additional bounded filters", () => {
@@ -114,6 +126,35 @@ describe("parseAndCompile", () => {
     expect(plan.queueFilter).toEqual(["arena"]);
     expect(plan.championId).toBe(22);
     expect(plan.minGames).toBe(5);
+  });
+
+  test("compiles calculated outputs, aliases, two dimensions, and HAVING", () => {
+    const plan = parseAndCompile(
+      "SELECT games, round((kills + assists) / games, 2) AS participation FROM match_participants GROUP BY champion, team_position HAVING games >= 5 AND participation > 3 ORDER BY participation DESC",
+    );
+    expect(plan.groupBys).toEqual(["champion", "team_position"]);
+    expect(plan.metrics).toEqual(["games", "kills", "assists"]);
+    expect(plan.selectItems.map((item) => item.key)).toEqual([
+      "games",
+      "participation",
+    ]);
+    expect(plan.having).toEqual([
+      { key: "games", operator: ">=", value: 5 },
+      { key: "participation", operator: ">", value: 3 },
+    ]);
+  });
+
+  test("supports UTC temporal buckets and aggregate-all reports", () => {
+    expect(
+      parseAndCompile(
+        "SELECT games FROM match_participants GROUP BY month ORDER BY label ASC",
+      ).groupBys,
+    ).toEqual(["month"]);
+    expect(
+      parseAndCompile(
+        "SELECT games, win_rate FROM match_participants GROUP BY all RENDER kpi_card WITH (y = (games, win_rate))",
+      ).groupBys,
+    ).toEqual(["all"]);
   });
 
   test("rejects unknown source", () => {
@@ -157,6 +198,40 @@ describe("RENDER clause", () => {
       encoding: { x: "label", y: "win_rate" },
       options: { title: "Win %", yAxisLabel: "Rate" },
     });
+  });
+
+  test("parses multi-series appearance options and custom colors", () => {
+    const plan = parseAndCompile(
+      'SELECT games, wins, losses FROM match_participants GROUP BY week RENDER stacked_bar WITH (y = (wins, losses), theme = minimal_light, palette = colorblind, colors = (#112233, #abcdef), orientation = vertical, labels = value, legend = top, sort = asc, smooth = true, subtitle = "Weekly")',
+    );
+    expect(plan.render).toEqual({
+      kind: "STACKED_BAR",
+      encoding: { y: ["wins", "losses"] },
+      options: {
+        theme: "minimal_light",
+        palette: "colorblind",
+        colors: ["#112233", "#abcdef"],
+        orientation: "vertical",
+        labels: "value",
+        legend: "top",
+        sort: "asc",
+        smooth: true,
+        subtitle: "Weekly",
+      },
+    });
+  });
+
+  test("rejects chart shapes that cannot render", () => {
+    expect(() =>
+      parseAndCompile(
+        "SELECT games, wins FROM match_participants GROUP BY player RENDER radar_chart WITH (y = (games, wins))",
+      ),
+    ).toThrow("between three and eight");
+    expect(() =>
+      parseAndCompile(
+        "SELECT games FROM match_participants GROUP BY champion RENDER heatmap WITH (value = games)",
+      ),
+    ).toThrow("exactly two GROUP BY");
   });
 
   test("parses a text render kind without a WITH clause", () => {
@@ -265,6 +340,18 @@ describe("lintReportQuery", () => {
       expect(diagnostics).toHaveLength(0);
     }
   });
+
+  test("positions invalid HAVING diagnostics", () => {
+    const text =
+      "select games from match_participants group by player having missing > 2";
+    const diagnostic = lintReportQuery(text).find((entry) =>
+      entry.message.includes("HAVING target"),
+    );
+    expect(diagnostic?.severity).toBe("error");
+    expect(text.slice(diagnostic?.span.start, diagnostic?.span.end)).toBe(
+      "missing > 2",
+    );
+  });
 });
 
 describe("completeReportQuery", () => {
@@ -281,6 +368,13 @@ describe("completeReportQuery", () => {
     const text = "select ";
     const items = completeReportQuery(text, text.length);
     expect(items.some((item) => item.label === "win_rate")).toBe(true);
+    expect(items.some((item) => item.label === "per_game")).toBe(true);
+  });
+
+  test("suggests aggregate outputs after HAVING", () => {
+    const text = "select games from match_participants group by player having ";
+    const items = completeReportQuery(text, text.length);
+    expect(items.some((item) => item.label === "games")).toBe(true);
   });
 
   test("suggests queue values inside queue IN (...)", () => {

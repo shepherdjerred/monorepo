@@ -1,21 +1,21 @@
 import { z } from "zod";
 import {
-  ReportMetricSchema,
   ReportOrderBySchema,
   ReportOrderDirectionSchema,
   ReportSourceSchema,
   type ReportDiagnostic,
-  type ReportMetric,
   type ReportQueryAst,
   type ReportQuerySpan,
   type ReportWhereClause,
 } from "#src/model/report-query-spec.ts";
 import { parseReportQuery } from "#src/model/report-query-parser.ts";
 import {
+  compileReportHaving,
   groupingColumnNames,
-  parseGroupByClause,
-  parseRenderClause,
+  parseGroupByClauses,
 } from "#src/model/report-query-compile.ts";
+import { parseRenderClause } from "#src/model/report-query-render.ts";
+import { parseReportSelectItem } from "#src/model/report-query-expression.ts";
 import { tokenizeReportQuery } from "#src/model/report-query-lexer.ts";
 import { QueueTypeSchema } from "#src/model/state.ts";
 
@@ -48,8 +48,34 @@ export function lintReportQuery(text: string): ReportDiagnostic[] {
   diagnostics.push(...metricDiagnostics(ast));
   diagnostics.push(...orderAndLimitDiagnostics(ast));
   diagnostics.push(...whereDiagnostics(ast.where));
+  diagnostics.push(...havingDiagnostics(ast));
   diagnostics.push(...renderDiagnostics(ast));
   return diagnostics;
+}
+
+function havingDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
+  if (ast.having === undefined) return [];
+  const outputKeys: string[] = [];
+  for (const item of ast.select) {
+    try {
+      outputKeys.push(parseReportSelectItem(item.value).key);
+    } catch {
+      return [];
+    }
+  }
+  try {
+    compileReportHaving(ast.having.value, outputKeys);
+    return [];
+  } catch (havingError) {
+    return [
+      error(
+        havingError instanceof Error
+          ? havingError.message
+          : String(havingError),
+        ast.having.span,
+      ),
+    ];
+  }
 }
 
 // Validates the RENDER clause the same way the compiler does, but surfaces the
@@ -59,22 +85,28 @@ function renderDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
   if (ast.render === undefined) {
     return [];
   }
-  const groupByClause =
-    ast.groupBy === undefined
-      ? undefined
-      : parseGroupByClause(ast.groupBy.value);
-  if (groupByClause === undefined) {
+  let groupByClauses;
+  try {
+    groupByClauses =
+      ast.groupBy === undefined ? [] : parseGroupByClauses(ast.groupBy.value);
+  } catch {
     return [];
   }
-  const metrics: ReportMetric[] = [];
+  if (groupByClauses.length === 0) return [];
+  const outputKeys: string[] = [];
   for (const item of ast.select) {
-    const parsed = ReportMetricSchema.safeParse(item.value);
-    if (parsed.success) {
-      metrics.push(parsed.data);
+    try {
+      outputKeys.push(parseReportSelectItem(item.value).key);
+    } catch {
+      // SELECT diagnostics report this at the narrower source span.
     }
   }
   try {
-    parseRenderClause(ast.render.value, metrics, groupByClause.groupBy);
+    parseRenderClause(
+      ast.render.value,
+      outputKeys,
+      groupByClauses.map((clause) => clause.groupBy),
+    );
     return [];
   } catch (renderError) {
     const message =
@@ -96,15 +128,9 @@ function sourceAndGroupDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
       ),
     );
   }
-  if (
-    ast.groupBy !== undefined &&
-    parseGroupByClause(ast.groupBy.value) === undefined
-  ) {
+  if (ast.groupBy !== undefined && !canParseGroupBys(ast.groupBy.value)) {
     out.push(
-      error(
-        `Unknown GROUP BY field "${ast.groupBy.value}". Valid fields: player, champion, queue, group(2..5), group(all), pair.`,
-        ast.groupBy.span,
-      ),
+      error(`Unknown GROUP BY field "${ast.groupBy.value}".`, ast.groupBy.span),
     );
   }
   return out;
@@ -113,22 +139,27 @@ function sourceAndGroupDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
 function metricDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
   const out: ReportDiagnostic[] = [];
   const groupByValue = ast.groupBy?.value;
-  const groupByClause =
-    groupByValue === undefined ? undefined : parseGroupByClause(groupByValue);
-  const labelNames =
-    groupByClause === undefined
-      ? new Set(["label"])
-      : groupingColumnNames(groupByClause.groupBy);
+  const groupByClauses = safeGroupBys(groupByValue);
+  const labelNames = new Set([
+    "label",
+    ...groupByClauses.flatMap((clause) => [
+      ...groupingColumnNames(clause.groupBy),
+    ]),
+  ]);
   let validMetrics = 0;
   for (const item of ast.select) {
     if (labelNames.has(item.value) || item.value === groupByValue) {
       continue;
     }
-    if (ReportMetricSchema.safeParse(item.value).success) {
+    try {
+      parseReportSelectItem(item.value);
       validMetrics += 1;
       continue;
+    } catch (parseError) {
+      const message =
+        parseError instanceof Error ? parseError.message : String(parseError);
+      out.push(error(message, item.span));
     }
-    out.push(error(`Unknown metric "${item.value}".`, item.span));
   }
   if (validMetrics === 0 && !out.some((d) => d.severity === "error")) {
     out.push(
@@ -142,17 +173,18 @@ function orderAndLimitDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
   const out: ReportDiagnostic[] = [];
   if (ast.orderBy !== undefined) {
     const { metric, direction } = ast.orderBy;
-    const groupByClause =
-      ast.groupBy === undefined
-        ? undefined
-        : parseGroupByClause(ast.groupBy.value);
+    const groupByClauses = safeGroupBys(ast.groupBy?.value);
     // The grouping column may be ordered by any of its names (`label`, `group`
     // /`pair`, or the groupBy field) — the compiler canonicalizes them to
     // `label`, so accept them here too instead of flagging a false error.
     const labelNames =
-      groupByClause === undefined
+      groupByClauses.length === 0
         ? new Set(["label"])
-        : groupingColumnNames(groupByClause.groupBy);
+        : new Set(
+            groupByClauses.flatMap((clause) => [
+              ...groupingColumnNames(clause.groupBy),
+            ]),
+          );
     if (
       !labelNames.has(metric.value) &&
       !ReportOrderBySchema.safeParse(metric.value).success
@@ -179,6 +211,24 @@ function orderAndLimitDiagnostics(ast: ReportQueryAst): ReportDiagnostic[] {
   return out;
 }
 
+function canParseGroupBys(value: string): boolean {
+  try {
+    const clauses = parseGroupByClauses(value);
+    return clauses.length > 0 && clauses.length <= 2;
+  } catch {
+    return false;
+  }
+}
+
+function safeGroupBys(value: string | undefined) {
+  if (value === undefined) return [];
+  try {
+    return parseGroupByClauses(value);
+  } catch {
+    return [];
+  }
+}
+
 function whereDiagnostics(clauses: ReportWhereClause[]): ReportDiagnostic[] {
   const out: ReportDiagnostic[] = [];
   for (const clause of clauses) {
@@ -195,6 +245,7 @@ function whereDiagnostics(clauses: ReportWhereClause[]): ReportDiagnostic[] {
       }
     } else if (
       clause.kind !== "unsupported" &&
+      clause.kind !== "field" &&
       !PositiveIntSchema.safeParse(clause.value).success
     ) {
       out.push(
