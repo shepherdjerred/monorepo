@@ -9,7 +9,7 @@
  * timeouts are preserved.
  *
  * Usage:
- *   bun packages/homelab/scripts/argocd.ts sync <app> [--dry-run]
+ *   bun packages/homelab/scripts/argocd.ts sync <app> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts health-wait <app> [--timeout <s>] [--dry-run]
  *   bun packages/homelab/scripts/argocd.ts wait-deletion <app> \
  *       --group <g> --version <v> --kind <k> --namespace <ns> \
@@ -24,6 +24,7 @@ import { requireEnv, optionalEnv } from "../../../scripts/lib/run.ts";
 
 const DEFAULT_SERVER_URL = "https://argocd.sjer.red";
 const DEFAULT_HEALTH_TIMEOUT_S = 300;
+const DEFAULT_SYNC_TIMEOUT_S = 300;
 const DEFAULT_DELETION_TIMEOUT_S = 120;
 const POLL_INTERVAL_MS = 10_000;
 
@@ -63,8 +64,23 @@ async function getApplication(
   return data;
 }
 
-/** Trigger an ArgoCD sync for an application. */
-async function sync(appName: string, dryRun: boolean): Promise<void> {
+/**
+ * Trigger an ArgoCD sync for an application and wait for the sync OPERATION to
+ * reach a terminal phase, failing on anything but Succeeded.
+ *
+ * The POST only starts the operation; its result lands asynchronously in
+ * `status.operationState`. Returning on POST success let a failed operation
+ * (e.g. an unreachable kyverno admission webhook rejecting every apply) pass
+ * this step and surface two steps later as a tofu tunnel-gate timeout with a
+ * misleading symptom (build 5748). Failing here puts the error at the step
+ * that caused it, where Buildkite's automatic retry re-syncs through
+ * transient webhook downtime.
+ */
+async function sync(
+  appName: string,
+  timeoutSeconds: number,
+  dryRun: boolean,
+): Promise<void> {
   console.log(`--- argocd sync: ${appName}${dryRun ? " (dry run)" : ""}`);
   if (dryRun) {
     console.log(`DRYRUN: would POST sync for ArgoCD app ${appName}`);
@@ -72,6 +88,8 @@ async function sync(appName: string, dryRun: boolean): Promise<void> {
   }
   const token = requireEnv("ARGOCD_TOKEN");
   const url = `${serverUrl()}/api/v1/applications/${appName}/sync`;
+  // Operations started before this instant are a previous sync, not ours.
+  const postedAt = Date.now();
   const res = await fetch(url, {
     method: "POST",
     headers: {
@@ -85,7 +103,41 @@ async function sync(appName: string, dryRun: boolean): Promise<void> {
       `Sync failed: HTTP ${res.status.toString()} ${res.statusText}\n${body}`,
     );
   }
-  console.log(`synced: ${appName}`);
+  console.log(`sync operation started: ${appName}`);
+
+  const deadline = Date.now() + timeoutSeconds * 1000;
+  let elapsed = 0;
+  while (Date.now() < deadline) {
+    const app = await getApplication(appName, token);
+    const status = isRecord(app["status"]) ? app["status"] : {};
+    const op = isRecord(status["operationState"])
+      ? status["operationState"]
+      : {};
+    const phase = typeof op["phase"] === "string" ? op["phase"] : "";
+    const startedAt =
+      typeof op["startedAt"] === "string" ? Date.parse(op["startedAt"]) : NaN;
+    // Ignore a stale operationState from an earlier sync (30s clock-skew slack).
+    const isOurs = !Number.isNaN(startedAt) && startedAt >= postedAt - 30_000;
+    console.log(
+      `Operation: ${phase || "(pending)"}${isOurs ? "" : " [previous op]"} ` +
+        `(${elapsed.toString()}/${timeoutSeconds.toString()}s)`,
+    );
+    if (isOurs && phase === "Succeeded") {
+      console.log(`synced: ${appName}`);
+      return;
+    }
+    if (isOurs && (phase === "Failed" || phase === "Error")) {
+      const message = typeof op["message"] === "string" ? op["message"] : "";
+      throw new Error(
+        `Sync operation ${phase} for ${appName}: ${message.slice(0, 1024)}`,
+      );
+    }
+    await Bun.sleep(POLL_INTERVAL_MS);
+    elapsed += POLL_INTERVAL_MS / 1000;
+  }
+  throw new Error(
+    `Timeout: sync operation for ${appName} did not complete within ${timeoutSeconds.toString()}s`,
+  );
 }
 
 /** Poll until an application is Healthy or the timeout elapses. */
@@ -196,7 +248,8 @@ async function waitDeletion(opts: {
 function usage(): never {
   console.error(
     "Usage:\n" +
-      "  bun packages/homelab/scripts/argocd.ts sync <app> [--dry-run]\n" +
+      "  bun packages/homelab/scripts/argocd.ts sync <app> " +
+      "[--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts health-wait <app> " +
       "[--timeout <s>] [--dry-run]\n" +
       "  bun packages/homelab/scripts/argocd.ts wait-deletion <app> " +
@@ -243,7 +296,7 @@ async function main(): Promise<void> {
 
   switch (subcommand) {
     case "sync":
-      await sync(app, dryRun);
+      await sync(app, timeoutOverride ?? DEFAULT_SYNC_TIMEOUT_S, dryRun);
       return;
     case "health-wait":
       await healthWait(

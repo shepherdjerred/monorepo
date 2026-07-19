@@ -47,3 +47,50 @@ a PR.
    main unlinted in `7ea657803` (hooks weren't armed there). This one is not
    a flake: `//#markdownlint` fails deterministically, so build 5732 was
    doomed regardless of the flakes above.
+
+## Round 2 — build 5748: tofu tunnel gate (after #1550 merged)
+
+With the verify flakes fixed, build 5748 got past verify and failed at
+`:terraform: tofu apply (cloudflare, after tunnel gate)`: the gate waits for
+the seaweedfs S3 `TunnelBinding` to be deleted from the `apps` Application
+and timed out with `1 remaining`.
+
+Root cause was two-layered:
+
+- **Nothing ever prunes.** The binding was removed from manifests in #1340
+  (June) with this exact gate as the fail-closed ordering guarantee — but
+  `apps` has `automated: {}` (no prune) and neither the old nor the new CI
+  sync sends `prune`, so the binding sat orphaned
+  (`requiresPruning: true`) since 2026-03-15. The old Dagger-era gate
+  apparently never actually detected it; the replatformed
+  `argocd.ts wait-deletion` reads `status.resources`, which does. Fixed
+  operationally: deleted the binding 2026-07-19 (provenance verified: tofu
+  already declares the DNS removal, all consumers migrated to tailnet;
+  finalizer completed cleanly). Policy decision filed as
+  `todos/argocd-apps-prune-policy.md` — includes a full orphan inventory
+  (notably the entire leftover Dagger stack in `apps`).
+- **The sync step masks failed operations.** Build 5748's `argocd-sync` step
+  "passed" although the sync operation failed (kyverno admission webhook
+  `connection refused` — kyverno pods restart in lock-step under CI load;
+  the admission controller had 19 restarts in 4h). The POST only starts the
+  operation; nothing checked its result, so the failure surfaced two steps
+  later at the gate with a misleading symptom. Fixed in code:
+  `argocd.ts sync` now polls `status.operationState` (guarding against the
+  previous operation's state via `startedAt`) until Succeeded/Failed/Error
+  and throws on failure, so Buildkite's step retry re-syncs through
+  transient webhook downtime. E2E-validated against live ArgoCD:
+  stale-op guard, Running → Succeeded tracking, clean exit.
+
+## Round 3 — build 5789: typed lint races Prisma codegen
+
+Build 5789 (with #1515's competition changes invalidating the lint cache)
+failed `@scout-for-lol/backend#lint` with dozens of
+`no-unsafe-*` errors on `prisma.competitionParticipant` — the generated
+Prisma client wasn't there when lint ran. Root turbo.json gives `lint` only
+`^build` (unlike `typecheck`/`test`, which also carry `generate`), so on a
+cold CI container typed lint (projectService) races codegen and the client
+resolves as an error type. Fixed by adding
+`"lint": { "dependsOn": ["^build", "generate"] }` to all three Prisma
+packages (scout backend, birmel, dpmk backend — birmel/dpmk were the same
+latent bomb, just still cache-masked). Validated: dry-run graphs show the
+edge; deleting `generated/` and running lint regenerates then passes.
