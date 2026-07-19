@@ -1,6 +1,7 @@
 [tools]
 bun = "latest"
 go = "latest"
+golangci-lint = "2.12.2"
 java = "lts"
 maven = "3.9.14"
 node = "lts"
