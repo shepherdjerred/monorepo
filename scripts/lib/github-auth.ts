@@ -43,7 +43,12 @@ export async function setupGitAuth(repoRoot: string): Promise<GitAuth> {
   requireEnv("GITHUB_APP_PRIVATE_KEY");
 
   const scriptPath = `${repoRoot}/${GITHUB_APP_TOKEN_SCRIPT_REL}`;
-  const minted = await run(["bun", scriptPath], { capture: true });
+  // secret: the stdout IS the token — it must never be echoed into CI logs
+  // (build 5656 printed it in cleartext).
+  const minted = await run(["bun", scriptPath], {
+    capture: true,
+    secret: true,
+  });
   const token = minted.stdout.trim();
   if (token === "") {
     throw new Error("GH_TOKEN is empty after mint");

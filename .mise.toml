@@ -14,6 +14,10 @@ shellcheck = "0.11"
 # Native-family shims
 go = "1.25"
 golangci-lint = "2"
+# Release automation (cooklang publish, release commit-backs) shells out to gh
+gh = "2"
+# CI scripts (bake-images.sh affected-scoping + digest collection) use jq
+jq = "1"
 # Homelab automation (helm push, tofu wrappers, ArgoCD sync, site deploys)
 helm = "3"
 opentofu = "1.10"
