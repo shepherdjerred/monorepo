@@ -39,7 +39,7 @@ export function createTemporalWorkerCrdReaderRbac(
       {
         kind: "ServiceAccount",
         name: serviceAccount.name,
-        namespace: chart.namespace ?? "temporal",
+        namespace: serviceAccount.metadata.namespace ?? "temporal",
       },
     ],
   });
