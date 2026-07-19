@@ -24,11 +24,13 @@ started.
 
 ## Publication decision
 
-This detailed decision record currently exists only in the isolated local audit branch. It
-centralizes live versions, trust relationships, public administrative exposure, and recovery
-weaknesses even after sanitization. Do not push, open a PR, or merge it into the public repository
-until the owner explicitly accepts that disclosure or the immediate attack-path findings have been
-remediated. The external executive PDF is the safer artifact to share first.
+On 2026-07-19, the owner explicitly approved preserving this sanitized audit in the repository. The
+[Markdown decision](./2026-07-19_infrastructure-security-audit.md),
+[reproducible Typst source](./2026-07-19_infrastructure-security-audit.typ), and
+[rendered executive PDF](./2026-07-19_infrastructure-security-audit.pdf) are tracked together on the
+audit feature branch. This approval covers repository retention of the sanitized artifacts; it does
+not authorize live remediation or disclosure of excluded Secret values, actionable exploit
+procedures, or sensitive topology.
 
 ## Executive verdict
 
@@ -866,15 +868,16 @@ application vulnerabilities.
 - Reconciled the exact 66-application coverage matrix, added the dated release/advisory matrix, and
   completed the prioritized findings, remediation roadmap, verification criteria, access gaps, and
   sanitized evidence appendix.
-- Rendered, opened, and visually inspected the six-page executive Typst/PDF report outside the
-  repository; verified every report URL returned HTTP 200 and Markdown lint passed.
+- Rendered, opened, and visually inspected the six-page executive Typst/PDF report; verified every
+  report URL returned HTTP 200 and Markdown lint passed.
+- Recorded the owner's repository-retention approval, tracked the reproducible Typst source and
+  rendered PDF beside this decision, and backed up the audit feature branch to `origin`.
 
 ### Remaining
 
-- No audit deliverable work remains. Live remediation is a separate, mutating phase that has not
-  started.
-- The owner must decide whether to publish this detailed report or keep it local until the immediate
-  attack-path findings are remediated.
+- No audit-delivery or repository-retention work remains. Live remediation is a separate, mutating
+  phase that has not started.
+- No pull request or merge into `main` was requested or performed.
 
 ### Caveats
 
@@ -882,5 +885,5 @@ application vulnerabilities.
   inspection was authorized or performed.
 - Findings involving physical access, LAN segmentation, Cloudflare account controls, and application
   user/plugin state remain conditional on the documented access gaps.
-- This local-branch record intentionally omits actionable exploit procedures and sensitive topology;
-  it should not be pushed to the public repository without explicit owner acceptance.
+- The repository-retention approval applies to these sanitized artifacts only; Secret values,
+  actionable exploit procedures, and sensitive topology remain intentionally excluded.

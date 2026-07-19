@@ -241,15 +241,16 @@ incidents, backup/restore evidence, and upstream availability/security guidance.
   including the exact 66-application coverage register and a dated release/advisory matrix.
 - Reconciled declared and live behavior, calibrated 25 findings through independent adversarial
   review, and produced the detailed decision record with a prioritized remediation roadmap.
-- Rendered, opened, and visually inspected the six-page executive Typst/PDF report outside the
-  repository; verified report links, formatting, lint, and internal finding/application counts.
+- Rendered, opened, and visually inspected the six-page executive Typst/PDF report; verified report
+  links, formatting, lint, and internal finding/application counts.
+- Recorded the owner's repository-retention approval, tracked the Markdown report, reproducible
+  Typst source, and rendered PDF together, and backed up the audit feature branch to `origin`.
 
 ### Remaining
 
-- No audit deliverable work remains. Live remediation is a separate, mutating phase that has not
-  started.
-- The owner must decide whether to publish the detailed record or keep it local until the immediate
-  attack-path findings are remediated.
+- No audit-delivery or repository-retention work remains. Live remediation is a separate, mutating
+  phase that has not started.
+- No pull request or merge into `main` was requested or performed.
 
 ### Caveats
 
@@ -259,5 +260,5 @@ incidents, backup/restore evidence, and upstream availability/security guidance.
   inspection was authorized or performed.
 - Physical-access, LAN-segmentation, Cloudflare-account-control, and application user/plugin-state
   conclusions remain conditional where the report documents an access gap.
-- The detailed record is intentionally local-only pending owner acceptance; it should not be pushed
-  to the public repository without an explicit publication decision.
+- The owner explicitly approved repository retention of the sanitized artifacts; Secret values,
+  actionable exploit procedures, and sensitive topology remain intentionally excluded.
