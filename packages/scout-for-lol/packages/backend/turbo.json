@@ -2,6 +2,18 @@
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
+    // Dependents (e.g. @scout-for-lol/frontend, which typechecks backend
+    // source via a relative import) only reach this package through the
+    // root pipeline's "^build" edges — never through "generate" directly,
+    // since root turbo.json's bare "generate" dependency on typecheck/test
+    // resolves to the SAME package's own generate task, not a dependency's.
+    // Without this edge, a dependent pulled into --affected scope without
+    // this package also being affected (e.g. a PR touching only a package
+    // frontend depends on) never schedules this package's Prisma codegen,
+    // so #generated/prisma/client is missing and dependent typechecks fail.
+    "build": {
+      "dependsOn": ["generate"]
+    },
     // test script interpolates ${DATABASE_URL:-file:./test.db} — ambient value
     // changes results. Everything else is pinned by the test-setup preload.
     "test": {
