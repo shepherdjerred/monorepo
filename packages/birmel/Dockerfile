@@ -50,19 +50,12 @@ COPY --parents \
   ./
 RUN bun install --frozen-lockfile
 
-# Now the sources. node_modules is excluded from context by .dockerignore, so
-# this does not clobber the installed tree.
-COPY . .
-
-# birmel's Prisma client is generated into the package (its `generate` script
-# runs `bunx --trust prisma generate`). Run it in-image so the client exists at
-# boot. Mirrors the old usePrisma entrypoint's generate step.
-RUN cd packages/birmel && bun run generate
-
 # youtube-dl-exec resolves its binary at node_modules/youtube-dl-exec/bin/yt-dlp,
 # but its own postinstall fetches that UNAUTHENTICATED from api.github.com and
 # flakes on shared runners. Provide it via the rate-limit-proof, SHA-verified
 # release-CDN download instead (mirrors the old installYtDlp for birmel).
+# Kept BEFORE the source COPY: the target dir exists right after the
+# install layer, and a source edit must not re-trigger this network fetch.
 RUN set -e; \
     arch="$(dpkg --print-architecture)"; \
     if [ "$arch" = "amd64" ]; then asset=yt-dlp_linux; \
@@ -77,6 +70,15 @@ RUN set -e; \
     install -D -m 0755 "/tmp/$asset" /app/packages/birmel/node_modules/youtube-dl-exec/bin/yt-dlp; \
     rm -f "/tmp/$asset" /tmp/SHA2-256SUMS "/tmp/$asset.sha256"; \
     test -x /app/packages/birmel/node_modules/youtube-dl-exec/bin/yt-dlp
+
+# Now the sources. node_modules is excluded from context by .dockerignore, so
+# this does not clobber the installed tree.
+COPY . .
+
+# birmel's Prisma client is generated into the package (its `generate` script
+# runs `bunx --trust prisma generate`). Run it in-image so the client exists at
+# boot. Mirrors the old usePrisma entrypoint's generate step.
+RUN cd packages/birmel && bun run generate
 
 ARG VERSION=dev
 ARG GIT_SHA=unknown

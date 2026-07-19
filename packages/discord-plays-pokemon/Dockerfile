@@ -83,6 +83,12 @@ RUN set -e; \
 
 WORKDIR /app
 
+# Goal mode shells out to Codex. BUN_INSTALL=/usr/local drops the binary into a
+# world-readable bin on PATH. Kept ABOVE the manifest/source layers: it needs
+# only bun + network, and a source edit must not re-download it.
+ENV BUN_INSTALL=/usr/local
+RUN bun add -g @openai/codex@0.139.0 && codex --version
+
 # Manifests-only install layer: this ~6 GB `bun install` layer only invalidates
 # when a manifest/lockfile/patch changes, not on every source edit.
 # trustedDependencies (node-datachannel, node-av, sharp) run their native
@@ -109,11 +115,6 @@ COPY . .
 # nested backend); llm-models' catalog resolves to dist too.
 RUN cd packages/discord-stream-lifecycle && bun run build \
   && cd /app/packages/llm-models && bun run build
-
-# Goal mode shells out to Codex. BUN_INSTALL=/usr/local drops the binary into a
-# world-readable bin on PATH.
-ENV BUN_INSTALL=/usr/local
-RUN bun add -g @openai/codex@0.139.0 && codex --version
 
 # Make the goal-mode control CLI available to operators and spawned Codex loops.
 RUN install -D -m 0755 \

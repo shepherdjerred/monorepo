@@ -62,11 +62,21 @@ common:
                 limits: { cpu: "7", memory: "14Gi" }
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
-            # Docker daemon sidecar for image builds + compose e2e. Steps source
-            # .buildkite/scripts/docker-env.sh (CLI bootstrap + daemon wait).
+          # Docker daemon for image builds + compose e2e, as a NATIVE SIDECAR
+          # (initContainer + restartPolicy Always): kubelet terminates it by
+          # itself once the regular containers finish, so pod completion never
+          # depends on the agent-stack controller's Job-reap update. As a
+          # regular container it zombied: the reap raced a kyverno/kueue
+          # webhook outage (failurePolicy=Fail rejected the update) and the
+          # finished pod held ~4 CPU/10Gi of Kueue quota for 2.5h, starving
+          # the whole queue (2026-07-18; same freeze signature as 07-05/08).
+          # Steps source .buildkite/scripts/docker-env.sh (CLI bootstrap +
+          # daemon wait).
+          initContainers:
             - name: dind
               # renovate: datasource=docker depName=docker
               image: "docker:28-dind"
+              restartPolicy: Always
               securityContext: { privileged: true }
               env:
                 - name: DOCKER_TLS_CERTDIR
@@ -74,6 +84,30 @@ common:
               resources:
                 requests: { cpu: "1", memory: "2Gi" }
                 limits: { cpu: "4", memory: "8Gi" }
+  # Light steps: thin deploy/publish/annotate scripts whose work is seconds
+  # even on a cold cache. Small REQUESTS so Kueue admits them alongside the
+  # long images job (7.5 CPU / 16Gi namespace quota — build 5644: light steps
+  # sat runnable 3-66 min behind it); limits stay high so a cold-cache burst
+  # still gets real CPU. Steps that do heavy work when cold (verify, e2e,
+  # images, site builds' turbo graph) keep the full-size pod.
+  - pod_light: &pod_light
+      kubernetes:
+        checkout:
+          cloneFlags: "--no-tags"
+        podSpecPatch:
+          serviceAccountName: buildkite-agent-stack-k8s-controller
+          containers:
+            - name: container-0
+              image: "ghcr.io/shepherdjerred/ci-base:latest"
+              imagePullPolicy: Always
+              env:
+                - name: BUILDKITE_SHELL
+                  value: "/bin/bash -e -c"
+              resources:
+                requests: { cpu: "500m", memory: "1Gi" }
+                limits: { cpu: "7", memory: "12Gi" }
+              envFrom:
+                - secretRef: { name: buildkite-ci-secrets }
   - retry: &retry
       automatic:
         # Transient infra failures only; logical failures (1, 3) never retry.
@@ -128,6 +162,17 @@ steps:
       curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.14
       export PATH="/root/.bun/bin:$$PATH"
       bun install --frozen-lockfile
+      # PR gate: skip the browser install + full sjer.red build when the site
+      # isn't affected. is-affected.ts fails loudly on tool error — only a
+      # clean "unaffected" verdict skips. Main always runs (the sites deploy
+      # consumes this step's dist artifact).
+      if [ "$BUILDKITE_BRANCH" != "main" ]; then
+        verdict=$(bun scripts/is-affected.ts sjer.red)
+        if [ "$$verdict" = "unaffected" ]; then
+          echo "sjer.red unaffected on this branch — skipping playwright e2e"
+          exit 0
+        fi
+      fi
       # Install the browser builds for the REPO-resolved playwright (run from
       # the package so bunx uses its dependency, not a downloaded latest):
       # chromium + headless-shell + webkit (the suite runs Mobile Safari).
@@ -165,6 +210,14 @@ steps:
       # The agent constructs its own PATH; re-add the texlive bin dir.
       export PATH="/root/.bun/bin:$(dirname "$(find /usr/local/texlive -name xelatex | head -1)"):$$PATH"
       bun install --frozen-lockfile
+      # PR gate: same affectedness skip as the e2e step (fail-loud helper).
+      if [ "$BUILDKITE_BRANCH" != "main" ]; then
+        verdict=$(bun scripts/is-affected.ts '@shepherdjerred/resume')
+        if [ "$$verdict" = "unaffected" ]; then
+          echo "@shepherdjerred/resume unaffected on this branch — skipping resume build"
+          exit 0
+        fi
+      fi
       bunx turbo run build --filter='@shepherdjerred/resume'
     retry: *retry
     plugins:
@@ -235,7 +288,7 @@ steps:
       bun install --frozen-lockfile
       bun scripts/wait-for-greptile.ts
     plugins:
-      - *pod
+      - *pod_light
 
   # ── PR-only dry-run lane: validate every deploy path, no side effects ─────
   # (the old pipeline's --dryrun plumbing, restored)
@@ -260,17 +313,10 @@ steps:
       . .buildkite/scripts/toolchain.sh
       . .buildkite/scripts/docker-env.sh
       bun install --frozen-lockfile
-      # Images build + smoke. Registry layer cache is read via the per-image
-      # --cache-from baked into each docker:build script (read-only on PRs —
-      # only main's push script adds --cache-to). The three nested-package
-      # families run unconditionally (turbo's nested --affected
-      # under-selection bug — same workaround as the native shims). No push.
-      # --concurrency=1: serial per image, same as main's push script —
-      # parallel builds through the one dind sidecar contend on network, and
-      # native-prebuild downloads inside `bun install` time out (build 5629:
-      # a different image's node-datachannel prebuild timed out each attempt).
-      bunx turbo run smoke --affected --concurrency=1
-      bunx turbo run smoke --filter='@discord-plays-pokemon/backend' --filter='@discord-plays-mario-kart/backend' --filter='@scout-for-lol/backend' --concurrency=1
+      # Affected-scoped parallel bake + smoke, no push, cache read-only
+      # (PUSH_CACHE stays false — only main writes the buildcache refs).
+      # Rehearses exactly the path main runs, including the --load transfer.
+      bash .buildkite/scripts/bake-images.sh --affected
     retry: *retry
     plugins:
       - *pod_privileged
@@ -290,7 +336,7 @@ steps:
     plugins:
       - *pod
 
-  # ── Main-only: images (build + smoke + push, serial per image) ───────────
+  # ── Main-only: images (parallel bake + smoke + push) ─────────────────────
   - label: ":docker: images — build, smoke, push"
     key: images
     if: build.branch == pipeline.default_branch
@@ -301,7 +347,7 @@ steps:
       . .buildkite/scripts/toolchain.sh
       . .buildkite/scripts/docker-env.sh
       bun install --frozen-lockfile
-      bash .buildkite/scripts/build-smoke-push-all.sh
+      bash .buildkite/scripts/bake-images.sh --push
     retry: *retry
     plugins:
       - *pod_privileged
@@ -336,7 +382,7 @@ steps:
       done
     retry: *retry
     plugins:
-      - *pod
+      - *pod_light
 
   # ── Main-only: npm publishes ──────────────────────────────────────────────
   - label: ":npm: publish packages"
@@ -350,7 +396,7 @@ steps:
       bun run --cwd packages/homelab/src/helm-types publish:npm
     retry: *retry
     plugins:
-      - *pod
+      - *pod_light
 
   # ── Main-only: homelab release track ─────────────────────────────────────
   - label: ":helm: helm push"
@@ -363,7 +409,7 @@ steps:
       bun packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER"
     retry: *retry
     plugins:
-      - *pod
+      - *pod_light
 
   - label: ":terraform: tofu apply (infra stacks)"
     key: tofu-apply
@@ -378,7 +424,7 @@ steps:
       done
     retry: *retry
     plugins:
-      - *pod
+      - *pod_light
 
   - label: ":terraform: tofu apply (github)"
     if: build.branch == pipeline.default_branch
@@ -393,7 +439,7 @@ steps:
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       bun packages/homelab/scripts/tofu-stack.ts github apply
     plugins:
-      - *pod
+      - *pod_light
 
   - label: ":argo: sync + wait"
     key: argocd-sync
@@ -427,19 +473,38 @@ steps:
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       bun packages/homelab/scripts/tofu-stack.ts cloudflare apply
     plugins:
-      - *pod
+      - *pod_light
 
   # ── Main-only: release automation ─────────────────────────────────────────
-  - label: ":package: release-please + version commit-back"
+  # Gates on verify only: release-please consumes no image or site artifact
+  # (build 5644: gating on [images, sites] parked it behind the 52-min images
+  # step for no data reason). The version commit-back — which DOES consume the
+  # pushed image digests — is its own step below, gated on images.
+  - label: ":package: release-please"
     if: build.branch == pipeline.default_branch
-    depends_on: [images, sites]
+    depends_on: verify
     command: |
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun scripts/release.ts
-      bun scripts/update-versions.ts
     plugins:
-      - *pod
+      - *pod_light
+
+  # Version commit-back: rewrites versions.ts tag@digest pins from the digests
+  # the images step recorded in build meta-data, and opens the auto-merge bump
+  # PR. (The replatform's bare `bun scripts/update-versions.ts` invocation was
+  # a stub — no digest plumbing existed, and the step exited 1 on every build
+  # that reached it.) Digest-unchanged entries are skipped, so a no-change
+  # merge redeploys nothing.
+  - label: ":package: version commit-back"
+    if: build.branch == pipeline.default_branch
+    depends_on: images
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      bun install --frozen-lockfile
+      bun scripts/update-versions.ts --commit-back "2.0.0-$BUILDKITE_BUILD_NUMBER" --digests "$$(buildkite-agent meta-data get image-digests)"
+    plugins:
+      - *pod_light
 
   # ── Main-only: cooklang Obsidian plugin release ───────────────────────────
   # Publishes to the plugin repo + commits the version back (idempotent: the
@@ -452,7 +517,7 @@ steps:
       bun install --frozen-lockfile
       bun run --cwd packages/cooklang-for-obsidian publish:plugin
     plugins:
-      - *pod
+      - *pod_light
 
   # ── Toolchain image refresh ───────────────────────────────────────────────
   # TEMPORARY branch clause: the registry's ci-base:latest predates this
@@ -484,4 +549,4 @@ steps:
     allow_dependency_failure: true
     command: bash .buildkite/scripts/annotate-build-summary.sh
     plugins:
-      - *pod
+      - *pod_light
