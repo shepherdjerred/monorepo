@@ -461,11 +461,15 @@ export function compilePrematchQuery(
   const aggregateWhere =
     champion.sql.length > 0 ? ` WHERE ${champion.sql}` : "";
   const grouping = prematchGrouping(input.plan.groupBy);
+  const groupBySql =
+    grouping.groupExprs.length === 0
+      ? " HAVING COUNT(*) > 0"
+      : ` GROUP BY ${grouping.groupExprs.join(", ")}`;
   return {
     aggregateSql:
       `${factsSql} SELECT ${grouping.labelExpr} AS label, ` +
       `${grouping.discordExpr} AS discord_id, ${prematchAggregateSelect()} ` +
-      `FROM facts${aggregateWhere} GROUP BY ${grouping.groupExprs.join(", ")}`,
+      `FROM facts${aggregateWhere}${groupBySql}`,
     aggregateParams: [...factsParams, ...champion.params],
     scannedSql: `${factsSql} SELECT COUNT(*)::BIGINT AS scanned FROM facts`,
     scannedParams: factsParams,

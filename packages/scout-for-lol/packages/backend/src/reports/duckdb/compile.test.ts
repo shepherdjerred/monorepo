@@ -141,6 +141,20 @@ describe("compile", () => {
     );
   });
 
+  test("prematch GROUP BY all: no trailing empty GROUP BY clause", () => {
+    const compiled = compilePrematchQuery(
+      input("SELECT prematches FROM prematch_participants GROUP BY all"),
+    );
+    if (compiled === undefined) {
+      throw new Error("expected compiled query");
+    }
+    // The `all` grouping has no group expressions; emitting a bare `GROUP BY`
+    // would make DuckDB reject the report. Mirror the match path and collapse
+    // to a whole-table aggregate guarded by HAVING instead.
+    expect(compiled.aggregateSql).not.toContain("GROUP BY");
+    expect(compiled.aggregateSql).toContain("HAVING COUNT(*) > 0");
+  });
+
   test("match rowsScanned parity: champion filter in BOTH statements", () => {
     const compiled = compileMatchQuery(
       input(
