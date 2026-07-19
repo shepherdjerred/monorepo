@@ -472,6 +472,17 @@ async function main(): Promise<void> {
     AWS_RESPONSE_CHECKSUM_VALIDATION: "WHEN_REQUIRED",
   };
 
+  // Every site in the catalog ships a root index.html. Refuse a live sync
+  // without it: pass 2 runs with --delete, so a dist missing its root files
+  // (e.g. build 5648's artifact, where the `**/*` glob dropped every
+  // root-level file) would wipe them from the bucket and take the site down.
+  // Dry runs may legitimately have no dist (the build is skipped).
+  if (!dryRun && !(await Bun.file(`${distDir}/index.html`).exists())) {
+    throw new Error(
+      `${site.distDir}/index.html is missing — refusing to sync (--delete would remove the site's root files from s3://${site.bucket}/)`,
+    );
+  }
+
   console.log(`+++ sync: ${site.distDir} -> s3://${site.bucket}/`);
   await s3SyncStaticSite({
     source: distDir,

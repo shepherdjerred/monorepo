@@ -131,6 +131,17 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
         }),
         ENVIRONMENT: EnvValue.fromValue("production"),
       },
+      // The image ends with `USER bun` (non-numeric). The cdk8s-plus default
+      // securityContext is runAsNonRoot with no runAsUser, which the kubelet
+      // cannot verify against a named user → CreateContainerConfigError. Pin
+      // the numeric uid/gid (bun = 1000, same pattern as streambot).
+      securityContext: {
+        user: 1000,
+        group: 1000,
+        ensureNonRoot: true,
+        readOnlyRootFilesystem: true,
+        allowPrivilegeEscalation: false,
+      },
       resources: {
         cpu: {
           request: Cpu.millis(50),
