@@ -44,6 +44,49 @@ describe("Markdown document model", () => {
     expect(parsed.metadata.lastActivity).toBe(
       "2026-07-19T12:00:00.000Z - Agent",
     );
+    expect(parsed.metadata.workflow.remainingMarkdown).toBe(
+      "- [ ] Deploy the fixture.\n- [x] Build the fixture.",
+    );
+    expect(parsed.metadata.workflow.humanVerificationMarkdown).toBe(
+      "- Confirm the deployment.",
+    );
+    expect(parsed.metadata.workflow.commentLogMarkdown).toContain(
+      "Ready for review.",
+    );
+  });
+
+  test("distinguishes missing and empty workflow sections", () => {
+    const withoutWorkflow = parseMarkdownDocument(`---
+id: guide-fixture
+type: guide
+status: complete
+board: false
+---
+
+# Guide
+`);
+    const emptyHumanVerification = parseMarkdownDocument(`---
+id: plan-empty-verification
+type: plan
+status: awaiting-human
+board: true
+verification: human
+disposition: active
+---
+
+# Plan
+
+## Human Verification
+`);
+
+    expect(withoutWorkflow.metadata.workflow).toEqual({
+      humanVerificationMarkdown: null,
+      remainingMarkdown: null,
+      commentLogMarkdown: null,
+    });
+    expect(
+      emptyHumanVerification.metadata.workflow.humanVerificationMarkdown,
+    ).toBe("");
   });
 
   test("serializes frontmatter in canonical order", () => {

@@ -34,14 +34,20 @@ All other documentation remains searchable without cluttering the board.
 
 ## Local Application
 
-- Add a Bun/Hono API and a React 19/Vite app using the latest shadcn CLI,
-  Base UI, the compact `base-nova` style, Tailwind CSS v4, and shadcn/typeset.
+- Add a Bun/Hono host with an end-to-end typed tRPC API and a React 19/Vite app
+  using the latest shadcn CLI, Base UI, the compact `base-nova` style, Tailwind
+  CSS v4, and shadcn/typeset.
 - Show the current checkout and branch, provide the four-column board, filters,
   global document search, responsive document details, comments, status
   transitions, and guarded archival.
 - Restrict writes to workflow frontmatter, append-only comments/audit entries,
   and safe archival. Use atomic writes and revision-based conflict detection.
 - Watch external Markdown edits and refresh connected browsers.
+- Use TanStack React Query for cached board/detail reads, detail prefetching,
+  mutation cache updates, optimistic board moves, and typed SSE invalidation.
+- Open documents on dedicated, deep-linkable pages that prioritize the relevant
+  human-verification or remaining-work section, with full Markdown as a
+  secondary tab.
 
 ## Verification and Delivery
 
@@ -81,6 +87,15 @@ All other documentation remains searchable without cluttering the board.
   guarded transitions, archival, conflict detection, and external-edit refresh.
 - Added six automated workflow tests and passed package typecheck, lint, test,
   build, Knip, Prettier, Markdownlint, and docs validation gates.
+- Replaced the handwritten REST client and global snapshot cache with an
+  inferred tRPC `AppRouter`, Zod-validated inputs/outputs, TanStack React Query,
+  optimistic board updates, cached detail prefetching, and a typed SSE
+  subscription.
+- Replaced the document sheet with `/documents/:id`: a task-first page with
+  contextual verification/remaining work, comment history, explicit signoff or
+  request-changes actions, and a Full Document tab.
+- Added transport, subscription, workflow-section, and optimistic-cache tests;
+  the docs-board suite now has 11 passing tests.
 - Rebased onto current `origin/main`, passed full and affected verification
   (181/181 tasks each), pushed `feature/docs-kanban`, and opened draft PR #1573.
 
@@ -95,3 +110,7 @@ All other documentation remains searchable without cluttering the board.
   this branch does not copy or modify those files.
 - This Codex session reported no attached in-app Browser surface, so visual QA
   and screenshot capture are waiting on that UI attachment.
+- The browser plugin discovery returned no browser instances, and its bundled
+  troubleshooting lookup referenced a removed plugin version. HTTP and typed
+  transport verification passed, but screenshots still require an attached
+  browser surface.

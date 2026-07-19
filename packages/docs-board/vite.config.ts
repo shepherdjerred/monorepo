@@ -14,7 +14,7 @@ export default defineConfig({
     port: 7332,
     strictPort: true,
     proxy: {
-      "/api": "http://127.0.0.1:7331",
+      "/trpc": "http://127.0.0.1:7331",
     },
   },
 });

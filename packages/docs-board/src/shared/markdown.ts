@@ -7,7 +7,12 @@ import { visit } from "unist-util-visit";
 import { parseDocument, stringify } from "yaml";
 import { z } from "zod";
 
-import { FrontmatterSchema, type DocumentFrontmatter } from "#shared/schema";
+import {
+  FrontmatterSchema,
+  WorkflowSectionsSchema,
+  type DocumentFrontmatter,
+  type WorkflowSections,
+} from "#shared/schema";
 
 const LooseObjectSchema = z.record(z.string(), z.unknown());
 
@@ -27,6 +32,7 @@ export type MarkdownMetadata = {
   hasHumanVerification: boolean;
   commentCount: number;
   lastActivity: string | null;
+  workflow: WorkflowSections;
 };
 
 export type ParsedMarkdownDocument = {
@@ -116,7 +122,28 @@ export function parseMarkdownBody(body: string): MarkdownMetadata {
     hasHumanVerification: humanVerification !== null,
     commentCount,
     lastActivity,
+    workflow: WorkflowSectionsSchema.parse({
+      humanVerificationMarkdown: sectionMarkdown(
+        body,
+        headings,
+        "Human Verification",
+      ),
+      remainingMarkdown: sectionMarkdown(body, headings, "Remaining"),
+      commentLogMarkdown: sectionMarkdown(body, headings, "Comment Log"),
+    }),
   };
+}
+
+export function sectionMarkdown(
+  body: string,
+  headings: MarkdownHeading[],
+  name: string,
+): string | null {
+  const section = findSection(headings, name);
+  if (section === null) return null;
+  const lines = body.split("\n");
+  const end = Number.isFinite(section.end) ? section.end - 1 : lines.length;
+  return lines.slice(section.start, end).join("\n").trim();
 }
 
 export function parseMarkdownDocument(raw: string): ParsedMarkdownDocument {

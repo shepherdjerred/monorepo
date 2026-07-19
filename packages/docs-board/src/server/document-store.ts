@@ -9,6 +9,7 @@ import {
   DocumentListResponseSchema,
   FrontmatterSchema,
   type DocumentDetail,
+  type DocumentChange,
   type DocumentListResponse,
   type DocumentStatus,
   type DocumentSummary,
@@ -111,7 +112,7 @@ function appendCommentLog(
 export class DocumentStore {
   readonly repoRoot: string;
   readonly docsRoot: string;
-  private readonly listeners = new Set<() => void>();
+  private readonly listeners = new Set<(event: DocumentChange) => void>();
   private readonly writeQueues = new Map<string, Promise<null>>();
   private watchTimer: ReturnType<typeof setInterval> | null = null;
   private watchSignature = "";
@@ -128,9 +129,17 @@ export class DocumentStore {
     this.watchTimer = null;
   }
 
-  subscribe(listener: () => void): () => void {
+  subscribe(listener: (event: DocumentChange) => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  }
+
+  private publishChange(documentId: string | null): void {
+    const event: DocumentChange = {
+      documentId,
+      changedAt: new Date().toISOString(),
+    };
+    for (const listener of this.listeners) listener(event);
   }
 
   private startWatcher(): void {
@@ -148,7 +157,7 @@ export class DocumentStore {
         });
         const signature = signatures.join("|");
         if (this.watchSignature !== "" && signature !== this.watchSignature) {
-          for (const listener of this.listeners) listener();
+          this.publishChange(null);
         }
         this.watchSignature = signature;
       } catch (error) {
@@ -188,6 +197,7 @@ export class DocumentStore {
             revision: revisionFor(raw),
             markdown: parsed.body,
             frontmatter: parsed.frontmatter,
+            workflow: parsed.metadata.workflow,
           });
           return { absolutePath, raw, detail };
         } catch (error) {
@@ -382,7 +392,9 @@ export class DocumentStore {
         file.absolutePath,
         serializeMarkdownDocument(frontmatter, body),
       );
-      return this.get(id);
+      const updated = await this.get(id);
+      this.publishChange(id);
+      return updated;
     });
   }
 
@@ -407,7 +419,9 @@ export class DocumentStore {
         file.absolutePath,
         serializeMarkdownDocument(parsed.frontmatter, body),
       );
-      return this.get(id);
+      const updated = await this.get(id);
+      this.publishChange(id);
+      return updated;
     });
   }
 
@@ -467,7 +481,9 @@ export class DocumentStore {
         file.absolutePath,
         target,
       ]);
-      return this.get(id);
+      const updated = await this.get(id);
+      this.publishChange(id);
+      return updated;
     });
   }
 }

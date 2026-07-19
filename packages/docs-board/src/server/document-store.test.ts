@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { createTRPCClient, httpBatchLink } from "@trpc/client";
+import { z } from "zod";
 
 import { createApp } from "#server/app";
 import {
@@ -6,9 +8,15 @@ import {
   DocumentStore,
   DocumentWorkflowError,
 } from "#server/document-store";
+import { appRouter, type AppRouter } from "#server/trpc";
 import { DocumentDetailSchema } from "#shared/schema";
 
 const temporaryRoots: string[] = [];
+const RequestTargetSchema = z.union([
+  z.string(),
+  z.instanceof(URL),
+  z.instanceof(Request),
+]);
 
 async function command(
   cwd: string,
@@ -83,6 +91,45 @@ disposition: active
 `;
 
 describe("DocumentStore", () => {
+  test("serves an inferred document contract through Hono and tRPC", async () => {
+    const root = await fixtureRepository(ACTIVE_PLAN);
+    const store = new DocumentStore({ repoRoot: root, watchFiles: false });
+    const app = createApp(store);
+    const client = createTRPCClient<AppRouter>({
+      links: [
+        httpBatchLink({
+          url: "http://docs-board.test/trpc",
+          fetch: async (request, init) => {
+            const requestInit: RequestInit = {};
+            if (init?.method !== undefined) requestInit.method = init.method;
+            if (init?.headers !== undefined) {
+              requestInit.headers = new Headers(init.headers);
+            }
+            if (init?.body !== undefined && init.body !== null) {
+              requestInit.body = init.body;
+            }
+            const target = RequestTargetSchema.parse(request);
+            const url =
+              typeof target === "string"
+                ? target
+                : target instanceof URL
+                  ? target.href
+                  : target.url;
+            return await app.request(url, requestInit);
+          },
+        }),
+      ],
+    });
+
+    const document = await client.documents.byId.query({ id: "plan-fixture" });
+
+    expect(document.title).toBe("Fixture");
+    expect(document.workflow.humanVerificationMarkdown).toBe(
+      "- Verify it live.",
+    );
+    store.close();
+  });
+
   test("appends durable comments and rejects stale revisions", async () => {
     const root = await fixtureRepository(ACTIVE_PLAN);
     const store = new DocumentStore({ repoRoot: root, watchFiles: false });
@@ -121,7 +168,7 @@ describe("DocumentStore", () => {
     store.close();
   });
 
-  test("returns revision conflicts through the HTTP API", async () => {
+  test("returns revision conflicts through the typed tRPC router", async () => {
     const root = await fixtureRepository(ACTIVE_PLAN);
     const store = new DocumentStore({ repoRoot: root, watchFiles: false });
     const original = await store.get("plan-fixture");
@@ -131,23 +178,65 @@ describe("DocumentStore", () => {
       "Reviewer",
       "First write",
     );
-    const response = await createApp(store).request(
-      `/api/documents/${original.id}/comments`,
-      {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          revision: original.revision,
-          actor: "Reviewer",
-          comment: "Second write",
-        }),
-      },
+    const caller = appRouter.createCaller({ store });
+
+    await expect(
+      caller.documents.addComment({
+        id: original.id,
+        revision: original.revision,
+        actor: "Reviewer",
+        comment: "Second write",
+      }),
+    ).rejects.toMatchObject({
+      code: "CONFLICT",
+      message: "This document changed on disk. Refresh before writing.",
+    });
+    store.close();
+  });
+
+  test("publishes typed changes after a successful mutation", async () => {
+    const root = await fixtureRepository(ACTIVE_PLAN);
+    const store = new DocumentStore({ repoRoot: root, watchFiles: false });
+    const original = await store.get("plan-fixture");
+    const change = Promise.withResolvers<{
+      documentId: string | null;
+      changedAt: string;
+    }>();
+    const unsubscribe = store.subscribe(change.resolve);
+
+    await store.addComment(
+      original.id,
+      original.revision,
+      "Reviewer",
+      "Ready for the next pass.",
     );
 
-    expect(response.status).toBe(409);
-    expect(await response.json()).toEqual({
-      error: "This document changed on disk. Refresh before writing.",
+    expect(await change.promise).toMatchObject({ documentId: original.id });
+    unsubscribe();
+    store.close();
+  });
+
+  test("streams typed changes through the tRPC subscription", async () => {
+    const root = await fixtureRepository(ACTIVE_PLAN);
+    const store = new DocumentStore({ repoRoot: root, watchFiles: false });
+    const original = await store.get("plan-fixture");
+    const caller = appRouter.createCaller({ store });
+    const changes = await caller.documents.changes();
+    const iterator = changes[Symbol.asyncIterator]();
+    const nextChange = iterator.next();
+
+    await store.addComment(
+      original.id,
+      original.revision,
+      "Reviewer",
+      "Subscription fixture.",
+    );
+
+    await expect(nextChange).resolves.toMatchObject({
+      done: false,
+      value: { documentId: original.id },
     });
+    await iterator.return?.();
     store.close();
   });
 

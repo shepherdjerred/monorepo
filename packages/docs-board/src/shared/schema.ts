@@ -21,6 +21,7 @@ export const DOCUMENT_STATUSES = [
 export const VERIFICATION_TYPES = ["agent", "human"] as const;
 export const DISPOSITIONS = ["active", "blocked", "deferred"] as const;
 
+export const DocumentIdSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*$/);
 export const DocumentTypeSchema = z.enum(DOCUMENT_TYPES);
 export const DocumentStatusSchema = z.enum(DOCUMENT_STATUSES);
 export const VerificationSchema = z.enum(VERIFICATION_TYPES);
@@ -28,7 +29,7 @@ export const DispositionSchema = z.enum(DISPOSITIONS);
 
 export const FrontmatterSchema = z
   .looseObject({
-    id: z.string().regex(/^[a-z0-9][a-z0-9-]*$/),
+    id: DocumentIdSchema,
     type: DocumentTypeSchema,
     status: DocumentStatusSchema,
     board: z.boolean(),
@@ -73,7 +74,7 @@ export const RepositoryInfoSchema = z.object({
 });
 
 export const DocumentSummarySchema = z.object({
-  id: z.string(),
+  id: DocumentIdSchema,
   path: z.string(),
   title: z.string(),
   type: DocumentTypeSchema,
@@ -100,9 +101,21 @@ export const DocumentListResponseSchema = z.object({
   invalidDocuments: z.array(InvalidDocumentSchema),
 });
 
+export const WorkflowSectionsSchema = z.object({
+  humanVerificationMarkdown: z.string().nullable(),
+  remainingMarkdown: z.string().nullable(),
+  commentLogMarkdown: z.string().nullable(),
+});
+
+export const DocumentChangeSchema = z.object({
+  documentId: z.string().nullable(),
+  changedAt: z.iso.datetime(),
+});
+
 export const DocumentDetailSchema = DocumentSummarySchema.extend({
   markdown: z.string(),
   frontmatter: FrontmatterSchema,
+  workflow: WorkflowSectionsSchema,
 });
 
 export const StatusUpdateRequestSchema = z.object({
@@ -123,11 +136,8 @@ export const RevisionRequestSchema = z.object({
   actor: z.string().trim().min(1).max(80),
 });
 
-export const ApiErrorSchema = z.object({
-  error: z.string(),
-  details: z.array(z.string()).optional(),
-});
-
 export type DocumentSummary = z.infer<typeof DocumentSummarySchema>;
 export type DocumentDetail = z.infer<typeof DocumentDetailSchema>;
 export type DocumentListResponse = z.infer<typeof DocumentListResponseSchema>;
+export type WorkflowSections = z.infer<typeof WorkflowSectionsSchema>;
+export type DocumentChange = z.infer<typeof DocumentChangeSchema>;
