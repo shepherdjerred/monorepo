@@ -15,10 +15,11 @@ import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
  *
  * Rows:
  *   1. Realtime health — ffmpeg speed ratio, fps, bitrate, event-loop lag
- *   2. Send path — frametime ratio p95, late-frame rate
+ *   2. Send path — frametime ratio p95, late-frame rate, playback-behind (the viewer-facing
+ *      stutter signal), demux→pacer queue depth, A/V sync corrections
  *   3. Pipeline — hw-decode engaged, stream active, hw->sw fallbacks, segment duration
  *   4. Source — current media properties (codec/resolution/HDR/audio)
- *   5. Process — CPU, memory, restarts
+ *   5. Process — CPU, memory, restarts, distinct-pods (pod churn)
  */
 
 // Strip per-pod labels so a single logical series survives pod restarts.
@@ -44,7 +45,7 @@ export function createStreambotDashboard() {
     new timeseries.PanelBuilder()
       .title("ffmpeg speed ratio (realtime)")
       .description(
-        "Media seconds produced per wall-clock second. Sustained < 1.0 = the transcode is slower than realtime and playback will stutter once the buffer drains. The single most important panel.",
+        "Media seconds produced per wall-clock second. Since -readrate 1, ~1.0 is the steady-state CEILING (not idle headroom): > 1.0 only during the initial burst or post-dip catch-up. Sustained < 1.0 = production fell behind (transcode-bound or consumer backpressure). For the viewer-facing symptom, see 'Playback behind schedule'.",
       )
       .datasource(prometheusDatasource)
       .withTarget(
@@ -158,6 +159,76 @@ export function createStreambotDashboard() {
       .gridPos({ x: 12, y: 10, w: 12, h: 8 }),
   );
 
+  builder.withPanel(
+    new timeseries.PanelBuilder()
+      .title("Playback behind schedule")
+      .description(
+        "Sender-side schedule lag (wall-clock elapsed minus media-time elapsed since the pacing anchor). THE direct viewer-facing stutter signal: sustained growth here is what the viewer experiences, regardless of what speed ratio shows. Anything above ~1s warrants investigation.",
+      )
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            `max by (kind) (streambot_playback_behind_seconds) or on() vector(0)`,
+          )
+          .legendFormat("{{kind}}"),
+      )
+      .unit("s")
+      .decimals(2)
+      .lineWidth(2)
+      .fillOpacity(10)
+      .thresholds(
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "green" },
+            { value: 1, color: "red" },
+          ]),
+      )
+      .gridPos({ x: 0, y: 18, w: 8, h: 8 }),
+  );
+
+  builder.withPanel(
+    new timeseries.PanelBuilder()
+      .title("Demux→pacer queue depth")
+      .description(
+        "Buffered packets between the demuxer and the paced send stream. Empty during a speed-ratio dip = producer starved (transcode-bound); full (video caps at ~144) = the pacer is the backpressure source (consumer-paced).",
+      )
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            `max by (kind) (streambot_pipeline_queue_depth) or on() vector(0)`,
+          )
+          .legendFormat("{{kind}}"),
+      )
+      .unit("none")
+      .lineWidth(2)
+      .fillOpacity(10)
+      .gridPos({ x: 8, y: 18, w: 8, h: 8 }),
+  );
+
+  builder.withPanel(
+    new timeseries.PanelBuilder()
+      .title("A/V sync corrections / s")
+      .description(
+        "Rate of pacer sync corrections (ahead = waited for the partner stream, behind = skipped sleeping). Each correction re-anchors the pacing schedule; a high ahead-rate means demux interleave skew exceeds the sync tolerance — the mechanism behind the 2026-07-18 stutter.",
+      )
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            `sum by (kind, direction) (rate(streambot_send_sync_events_total[5m])) or on() vector(0)`,
+          )
+          .legendFormat("{{kind}} {{direction}}"),
+      )
+      .unit("none")
+      .decimals(2)
+      .lineWidth(2)
+      .fillOpacity(10)
+      .gridPos({ x: 16, y: 18, w: 8, h: 8 }),
+  );
+
   // -------------------------------------------------------------------------
   // Row 3 — Pipeline
   // -------------------------------------------------------------------------
@@ -177,7 +248,7 @@ export function createStreambotDashboard() {
       )
       .unit("bool")
       .colorMode(common.BigValueColorMode.Background)
-      .gridPos({ x: 0, y: 19, w: 6, h: 4 }),
+      .gridPos({ x: 0, y: 27, w: 6, h: 4 }),
   );
 
   builder.withPanel(
@@ -192,7 +263,7 @@ export function createStreambotDashboard() {
       )
       .unit("bool")
       .colorMode(common.BigValueColorMode.Background)
-      .gridPos({ x: 6, y: 19, w: 6, h: 4 }),
+      .gridPos({ x: 6, y: 27, w: 6, h: 4 }),
   );
 
   builder.withPanel(
@@ -212,7 +283,7 @@ export function createStreambotDashboard() {
       .unit("none")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 12, y: 19, w: 12, h: 4 }),
+      .gridPos({ x: 12, y: 27, w: 12, h: 4 }),
   );
 
   builder.withPanel(
@@ -237,7 +308,7 @@ export function createStreambotDashboard() {
       .unit("s")
       .lineWidth(2)
       .fillOpacity(0)
-      .gridPos({ x: 0, y: 23, w: 24, h: 7 }),
+      .gridPos({ x: 0, y: 31, w: 24, h: 7 }),
   );
 
   // -------------------------------------------------------------------------
@@ -264,7 +335,7 @@ export function createStreambotDashboard() {
       .unit("none")
       .colorMode(common.BigValueColorMode.Value)
       .textMode(common.BigValueTextMode.Name)
-      .gridPos({ x: 0, y: 31, w: 24, h: 4 }),
+      .gridPos({ x: 0, y: 39, w: 24, h: 4 }),
   );
 
   // -------------------------------------------------------------------------
@@ -286,7 +357,7 @@ export function createStreambotDashboard() {
       .decimals(2)
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 0, y: 36, w: 8, h: 7 }),
+      .gridPos({ x: 0, y: 44, w: 8, h: 7 }),
   );
 
   builder.withPanel(
@@ -302,7 +373,7 @@ export function createStreambotDashboard() {
       .unit("bytes")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 8, y: 36, w: 8, h: 7 }),
+      .gridPos({ x: 8, y: 44, w: 8, h: 7 }),
   );
 
   builder.withPanel(
@@ -322,7 +393,28 @@ export function createStreambotDashboard() {
       .unit("none")
       .lineWidth(2)
       .fillOpacity(10)
-      .gridPos({ x: 16, y: 36, w: 8, h: 7 }),
+      .gridPos({ x: 16, y: 44, w: 8, h: 7 }),
+  );
+
+  builder.withPanel(
+    new timeseries.PanelBuilder()
+      .title("Distinct pods (1h window)")
+      .description(
+        "Distinct streambot pods seen over the trailing hour. The 'Container restarts' counter stays at 0 when a POD is deleted and recreated (new name, fresh counter) — this panel catches that blind spot. > 1 sustained = pod churn (manual restarts, evictions, rollouts).",
+      )
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            'count(count by (pod) (last_over_time(kube_pod_start_time{namespace="media", pod=~"media-streambot.*"}[1h])))',
+          )
+          .legendFormat("pods seen (1h)"),
+      )
+      .unit("none")
+      .decimals(0)
+      .lineWidth(2)
+      .fillOpacity(10)
+      .gridPos({ x: 0, y: 51, w: 24, h: 6 }),
   );
 
   return builder.build();
