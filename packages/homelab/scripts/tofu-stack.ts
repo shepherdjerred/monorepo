@@ -28,6 +28,7 @@ import {
   requireEnv,
   optionalEnv,
 } from "../../../scripts/lib/run.ts";
+import { runMain } from "../../../scripts/lib/transient.ts";
 
 /** homelab package root = two levels up from this script (packages/homelab). */
 function homelabRoot(): string {
@@ -184,4 +185,4 @@ async function main(): Promise<void> {
   console.log(`--- applied: ${stack}`);
 }
 
-await main();
+await runMain(main);

@@ -21,6 +21,7 @@
  */
 
 import { requireEnv, optionalEnv } from "../../../scripts/lib/run.ts";
+import { runMain } from "../../../scripts/lib/transient.ts";
 
 const DEFAULT_SERVER_URL = "https://argocd.sjer.red";
 const DEFAULT_HEALTH_TIMEOUT_S = 300;
@@ -338,4 +339,4 @@ async function main(): Promise<void> {
   }
 }
 
-await main();
+await runMain(main);

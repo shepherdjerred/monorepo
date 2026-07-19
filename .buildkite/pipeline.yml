@@ -138,6 +138,10 @@ common:
   - retry: &retry
       automatic:
         # Transient infra failures only; logical failures (1, 3) never retry.
+        # 34 is the script-declared transient code: CI scripts that talk to
+        # external services classify failures via scripts/lib/transient.ts and
+        # exit 34 when the error matches a known transient signature
+        # (5xx, network, GitHub GraphQL 500), so only retryable failures retry.
         - exit_status: 255
           limit: 2
         - exit_status: 34
@@ -559,6 +563,9 @@ steps:
       bun packages/homelab/scripts/argocd.ts wait-deletion apps --group networking.cfargotunnel.com --version v1alpha1 --kind TunnelBinding --namespace seaweedfs --timeout 120
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       bun packages/homelab/scripts/tofu-stack.ts cloudflare apply
+    # Safe to retry: tofu re-plans from state, and the scripts only exit 34
+    # (the retryable code) on classified transient failures.
+    retry: *retry
     plugins:
       - *pod_light
 
@@ -574,6 +581,9 @@ steps:
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun scripts/release.ts
+    # Safe to retry: release-please upserts its PR and skips already-cut
+    # releases; a GitHub GraphQL 500 (build 5809) exits 34 via transient.ts.
+    retry: *retry
     plugins:
       - *pod_light
 
@@ -590,6 +600,9 @@ steps:
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun scripts/update-versions.ts --commit-back "2.0.0-$BUILDKITE_BUILD_NUMBER" --digests "$$(buildkite-agent meta-data get image-digests)"
+    # Safe to retry: the bump branch is force-updated and the PR lookup is
+    # find-or-create; transient gh/git failures exit 34 via transient.ts.
+    retry: *retry
     plugins:
       - *pod_light
 
