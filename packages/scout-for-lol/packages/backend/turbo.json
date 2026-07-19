@@ -8,12 +8,15 @@
       "env": ["DATABASE_URL"]
     },
     // generate also produces the test template DB (undeclared outputs don't
-    // restore from cache). The dependsOn edge is NOT a real dependency: it
-    // serializes this prisma generate against birmel's so two concurrent runs
-    // don't race Prisma's shared engine/download cache (same synthetic edge
-    // the old setup.ts DAG carried; observed flaky at -c 4 without it).
+    // restore from cache). ^build is a real dependency: the template-DB seed
+    // imports @scout-for-lol/data → @shepherdjerred/llm-models, whose exports
+    // only resolve from its built dist/ (fresh checkouts fail without it).
+    // The birmel edge is NOT a real dependency: it serializes this prisma
+    // generate against birmel's so two concurrent runs don't race Prisma's
+    // shared engine/download cache (same synthetic edge the old setup.ts DAG
+    // carried; observed flaky at -c 4 without it).
     "generate": {
-      "dependsOn": ["@shepherdjerred/birmel#generate"],
+      "dependsOn": ["^build", "@shepherdjerred/birmel#generate"],
       "outputs": ["generated/**", "src/testing/template.db"]
     },
     // template.db must match migrations + seed inputs (old CI:
