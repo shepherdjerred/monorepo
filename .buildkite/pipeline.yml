@@ -456,8 +456,9 @@ steps:
   # the prod lane publishes package.json versions to --tag latest (idempotent
   # via --tolerate-republish, so it's a no-op except on the build after a
   # release-please merge bumps versions); the dev lane then publishes
-  # <version>-dev.<build#> to --tag dev on every main build. Prod runs FIRST —
-  # dev mode rewrites package.json versions in the working tree (ephemeral).
+  # <version>-dev.<build#> to --tag dev on every main build. Prod runs FIRST;
+  # dev mode rewrites package.json versions mid-publish (and restores them in
+  # a finally, so a failed dev publish can't leak -dev.N into a later prod run).
   - label: ":npm: publish packages"
     if: build.branch == pipeline.default_branch
     depends_on: verify
