@@ -292,6 +292,41 @@ steps:
                 envFrom:
                   - secretRef: { name: buildkite-ci-secrets }
 
+  # ── Helm value types drift gate (PR-only). The committed
+  # packages/homelab/src/cdk8s/generated/helm types must be regenerated in the
+  # same PR that changes a generator input. Replaces the deleted freshness
+  # mechanisms (helm-types-weekly-refresh Temporal schedule → #1168 Dagger
+  # gate → lost in the Buildkite replatform #1516). Accepted trade-off:
+  # Renovate chart bumps touching versions.ts fail here until someone pushes
+  # the regen commit (--check prints the command; hosted Renovate cannot run
+  # it). Main is skipped: inputs are fully version-pinned, so a green PR gate
+  # implies a green main tree. helm comes from the ci-image's mise toolchain.
+  - label: ":helm: helm types drift check"
+    key: helm-types-drift-check
+    if: build.branch != pipeline.default_branch && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      # Self-scope: regenerating pulls ~26 charts over the network — run only
+      # when a generator input (or the committed output) changed vs the merge
+      # base. Paths span two turbo packages, so a git diff beats turbo
+      # affectedness here (any cdk8s change would otherwise trigger it).
+      base=$(git merge-base origin/main HEAD)
+      if git diff --quiet "$$base" HEAD -- \
+          packages/homelab/src/cdk8s/src/versions.ts \
+          packages/homelab/src/cdk8s/scripts/generate-helm-types.ts \
+          packages/homelab/src/cdk8s/scripts/parse-helm-charts.ts \
+          packages/homelab/src/helm-types \
+          packages/homelab/src/cdk8s/generated/helm; then
+        echo "helm-types generator inputs unchanged vs main — skipping drift check"
+        exit 0
+      fi
+      bun install --frozen-lockfile
+      cd packages/homelab/src/cdk8s
+      bun run generate-helm-types --check
+    retry: *retry
+    plugins:
+      - *pod_light
+
   # ── Docker-compose e2e (PR + main) — llm-observability spins up a compose
   # stack; needs the privileged pod's docker, not a browser container.
   - label: ":docker: docker e2e"
