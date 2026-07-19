@@ -1,5 +1,6 @@
 import { Agent } from "@mastra/core/agent";
 import { createTool } from "@mastra/core/tools";
+import * as Sentry from "@sentry/bun";
 import { z } from "zod";
 import {
   formatReportQuery,
@@ -127,7 +128,23 @@ export async function streamReportQueryAgent(
   if (formattedQueryText.length === 0) {
     throw new Error("The AI report draft did not include a query.");
   }
-  await emitPreview(params, formattedQueryText);
+  // The draft is already validated (parseAndCompile above), and the agent's own
+  // preview_report_query tool exercised execution during generation — this final
+  // preview is a supplementary UI refresh. A transient lake/DuckDB failure here
+  // must not discard the finished draft (which would force the user to re-spend
+  // quota regenerating an identical query); capture it for observability and
+  // still return the draft so the caller emits `final` rather than `error`.
+  try {
+    await emitPreview(params, formattedQueryText);
+  } catch (error) {
+    Sentry.captureException(error, {
+      tags: {
+        source: "report-ai-final-preview",
+        runId: params.runId,
+        guildId: params.input.guildId,
+      },
+    });
+  }
 
   const usage = output.totalUsage;
   const inputTokens = usage.inputTokens ?? 0;
