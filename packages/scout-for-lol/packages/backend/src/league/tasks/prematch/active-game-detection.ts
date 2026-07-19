@@ -368,11 +368,14 @@ export async function checkActiveGames(
           priorGameIdByPuuid.set(p, gameInfo.gameId);
         }
 
+        // Authoritative S3 write + lake staging for this prematch observation.
+        // Runs before the notification so the raw spectator payload is durably
+        // persisted regardless of notification delivery.
         await recordPrematchForReportStore({
-          prisma,
           gameInfo,
           observedAt: new Date(),
           source: "prematch_live",
+          trackedPlayerAliases: trackedPlayersInGame.map((p) => p.alias),
         });
 
         // Send notification

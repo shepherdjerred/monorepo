@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.13.1",
+  "version": "16.14.1",
   "data": {
     "Locke": {
       "id": "Locke",
@@ -678,7 +678,7 @@
         "name": "Silver Stake",
         "description": "Locke's attacks deal additional magic damage On-Hit, increased based on enemy missing Health.",
         "image": {
-          "full": "Locke_Passive.Locke.png",
+          "full": "Locke_Passive.png",
           "sprite": "passive2.png",
           "group": "passive",
           "x": 192,

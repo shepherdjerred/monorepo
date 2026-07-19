@@ -138,9 +138,8 @@ export function groupFactSelect(): string {
 }
 
 /**
- * Prematch observations carry no in-game stats: only games counts (parity
- * with the fact engine, where aggregatePrematchFacts increments games only
- * and every stat metric reads 0).
+ * Prematch observations carry no in-game stats: only games counts (every
+ * stat metric reads 0).
  */
 export function prematchAggregateSelect(): string {
   return [

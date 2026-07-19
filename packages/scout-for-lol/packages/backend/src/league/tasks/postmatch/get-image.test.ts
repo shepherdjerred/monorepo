@@ -314,10 +314,15 @@ describe("Concurrent Uploads", () => {
   test("one failed upload doesn't affect others", async () => {
     const { saveImageToS3 } = await import("../../../storage/s3.js");
 
-    // First call fails, others succeed
+    // First call fails permanently (a 4xx is not retried), others succeed.
+    // A transient error would be recovered by the PutObject retry, so use a
+    // deterministic 403 to keep the "one failure is isolated" assertion valid.
+    const permanentError = Object.assign(new Error("Access denied"), {
+      $metadata: { httpStatusCode: 403 },
+    });
     s3Mock
       .on(PutObjectCommand)
-      .rejectsOnce(new Error("Temporary failure"))
+      .rejectsOnce(permanentError)
       .resolves({
         $metadata: { httpStatusCode: 200 },
       });

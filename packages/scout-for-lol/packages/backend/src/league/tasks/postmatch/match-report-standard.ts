@@ -5,8 +5,6 @@ import {
   type RawMatch,
   type RawTimeline,
 } from "@scout-for-lol/data/index.ts";
-import { prisma } from "#src/database/index.ts";
-import { saveTimelineToS3 } from "#src/storage/s3.ts";
 import { fetchMatchTimeline } from "./match-data-fetcher.ts";
 import { createLogger } from "#src/logger.ts";
 import * as Sentry from "@sentry/bun";
@@ -45,22 +43,24 @@ export async function fetchTimelineIfStandardMatch(
         `[generateMatchReport] ✅ Timeline fetched with ${timelineData.info.frames.length.toString()} frames`,
       );
 
-      // Save timeline to S3 for later use (e.g., frontend AI review generation)
+      // Persist the timeline to S3 (canonical raw store; used later for
+      // frontend AI review generation). Best-effort: a timeline failure must
+      // not block the match report, so swallow it here rather than let it
+      // propagate — timelines have no lake reader and the match itself was
+      // already durably saved upstream.
       try {
         const trackedPlayerAliases = playersInMatch.map((p) => p.alias);
-        await saveTimelineToS3(timelineData, trackedPlayerAliases);
+        await recordTimelineForReportStore({
+          timeline: timelineData,
+          source: "timeline_live",
+          trackedPlayerAliases,
+        });
       } catch (error) {
         logger.error(
           `[generateMatchReport] Error saving timeline ${matchId} to S3:`,
           error,
         );
-        // Continue processing even if S3 storage fails
       }
-      await recordTimelineForReportStore({
-        prisma,
-        timeline: timelineData,
-        source: "timeline_live",
-      });
     }
     return timelineData;
   } catch (error) {

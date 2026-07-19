@@ -2,8 +2,7 @@ import type { ReportGroupSize } from "@scout-for-lol/data";
 import type { AggregateRow } from "#src/reports/query-aggregates.ts";
 
 /**
- * Teammate-group aggregation shared by the DuckDB lake path (execute.ts) and
- * the legacy fact engine (query-engine-legacy.ts, parity tests only).
+ * Teammate-group aggregation for the DuckDB lake path (execute.ts).
  *
  * A "group unit" is the set of tracked players who shared a team in one
  * match: (matchId, teamId) for standard queues, plus playerSubteamId for

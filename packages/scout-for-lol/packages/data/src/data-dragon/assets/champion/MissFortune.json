@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.13.1",
+  "version": "16.14.1",
   "data": {
     "MissFortune": {
       "id": "MissFortune",
@@ -477,6 +477,54 @@
           "name": "Battle Queen Miss Fortune (Obsidian)",
           "chromas": false,
           "parentSkin": 60
+        },
+        {
+          "id": "21069",
+          "num": 69,
+          "name": "MVP T1 Miss Fortune",
+          "chromas": true
+        },
+        {
+          "id": "21070",
+          "num": 70,
+          "name": "MVP T1 Miss Fortune (Elite)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "21071",
+          "num": 71,
+          "name": "MVP T1 Miss Fortune (Pearl)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "21072",
+          "num": 72,
+          "name": "MVP T1 Miss Fortune (Ruby)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "21073",
+          "num": 73,
+          "name": "MVP T1 Miss Fortune (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "21074",
+          "num": 74,
+          "name": "MVP T1 Miss Fortune (Catseye)",
+          "chromas": false,
+          "parentSkin": 69
+        },
+        {
+          "id": "21075",
+          "num": 75,
+          "name": "MVP T1 Miss Fortune (Sapphire)",
+          "chromas": false,
+          "parentSkin": 69
         }
       ],
       "lore": "A Bilgewater captain famed for her looks but feared for her ruthlessness, Sarah Fortune paints a stark figure among the hardened criminals of the port city. As a child, she witnessed the reaver king Gangplank murder her family—an act she brutally avenged years later, blowing up his flagship while he was still aboard. Those who underestimate her will face a beguiling and unpredictable opponent… and, likely, a bullet or two in their guts.",

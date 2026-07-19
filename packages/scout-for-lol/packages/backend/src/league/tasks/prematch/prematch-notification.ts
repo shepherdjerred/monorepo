@@ -26,11 +26,7 @@ import {
   loadingScreenToImage,
   loadingScreenToSvg,
 } from "@scout-for-lol/report";
-import {
-  savePrematchDataToS3,
-  savePrematchImageToS3,
-  savePrematchSvgToS3,
-} from "#src/storage/s3.ts";
+import { savePrematchImageToS3, savePrematchSvgToS3 } from "#src/storage/s3.ts";
 import {
   prematchLoadingScreenGeneratedTotal,
   prematchLoadingScreenDurationSeconds,
@@ -138,20 +134,9 @@ export async function sendPrematchNotification(
     `[sendPrematchNotification] 📢 Sending notification for game ${gameId} with ${trackedPlayers.length.toString()} tracked player(s)`,
   );
 
-  const prematchPayloadSave = await savePrematchDataToS3(
-    gameInfo.gameId,
-    gameInfo,
-    aliases,
-  );
-  if (prematchPayloadSave.status === "error") {
-    logger.warn(
-      `[sendPrematchNotification] ⚠️  Failed to persist spectator payload to S3 for game ${gameId}; continuing with notification delivery`,
-    );
-  } else if (prematchPayloadSave.status === "skipped_no_bucket") {
-    logger.info(
-      `[sendPrematchNotification] ℹ️  S3 disabled; spectator payload not persisted for game ${gameId}`,
-    );
-  }
+  // The authoritative raw spectator payload is written to S3 upstream by the
+  // detection ingest (recordPrematchForReportStore in active-game-detection.ts)
+  // before this runs, so there is no spectator-data S3 write here.
 
   const puuids: LeaguePuuid[] = trackedPlayers.map(
     (p) => p.league.leagueAccount.puuid,

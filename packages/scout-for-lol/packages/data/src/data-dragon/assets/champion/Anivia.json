@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.13.1",
+  "version": "16.14.1",
   "data": {
     "Anivia": {
       "id": "Anivia",
@@ -587,7 +587,7 @@
           "id": "Crystallize",
           "name": "Crystallize",
           "description": "Anivia condenses the moisture in the air into an impassable wall of ice to block all movement. The wall only lasts a short duration before it melts.",
-          "tooltip": "Anivia summons a wall of ice {{ e2 }} units wide. The wall lasts for {{ e1 }} seconds before it melts.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Anivia summons a wall of ice {{ wallwidth }} units wide. The wall lasts for {{ wallduration }} seconds before it melts.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Width"

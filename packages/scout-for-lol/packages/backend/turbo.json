@@ -19,6 +19,13 @@
     "test": {
       "env": ["DATABASE_URL"]
     },
+    // Typed lint (projectService) resolves the generated Prisma client; root's
+    // lint task only depends on ^build, so on a cold container lint raced
+    // generate and every prisma.competitionParticipant access became an error
+    // type (build 5789). Same edge typecheck/test already carry via root.
+    "lint": {
+      "dependsOn": ["^build", "generate"]
+    },
     // generate also produces the test template DB (undeclared outputs don't
     // restore from cache). ^build is a real dependency: the template-DB seed
     // imports @scout-for-lol/data → @shepherdjerred/llm-models, whose exports

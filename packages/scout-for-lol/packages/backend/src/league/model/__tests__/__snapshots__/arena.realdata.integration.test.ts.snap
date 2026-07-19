@@ -4012,8 +4012,8 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
                   1,
                 ],
                 "CritDamageMultipler": [
-                  0.25,
-                  0.25,
+                  0,
+                  0,
                   0.25,
                   0.25,
                   0.25,
@@ -7332,8 +7332,8 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
                   1,
                 ],
                 "CritDamageMultipler": [
-                  0.25,
-                  0.25,
+                  0,
+                  0,
                   0.25,
                   0.25,
                   0.25,
