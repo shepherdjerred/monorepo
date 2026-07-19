@@ -1,7 +1,7 @@
 ---
 id: plan-2026-07-19-docs-kanban
 type: plan
-status: in-progress
+status: awaiting-human
 board: true
 verification: human
 disposition: active
@@ -63,7 +63,7 @@ All other documentation remains searchable without cluttering the board.
 - [x] Groom the existing documentation corpus.
 - [x] Build the local API and shadcn board interface.
 - [x] Add automated schema, store, API, comment, transition, and archival verification.
-- [ ] Capture browser-level screenshots of the board and document detail view.
+- [x] Capture browser-level screenshots of the board and document detail view.
 - [x] Publish the branch and draft PR (#1573).
 
 ## Human Verification
@@ -80,7 +80,7 @@ All other documentation remains searchable without cluttering the board.
 
 - Created an isolated `feature/docs-kanban` worktree from current `origin/main`.
 - Installed the workspace, ran code generation, and armed repository hooks.
-- Migrated and validated all 767 Markdown documents with an idempotent canonical
+- Migrated and validated all 780 Markdown documents with an idempotent canonical
   model; archived 15 completed plans.
 - Added `packages/docs-board` with the Bun/Hono store and API, React 19/Vite
   board, latest shadcn `base-nova` components, Tailwind CSS v4, comments,
@@ -96,7 +96,7 @@ All other documentation remains searchable without cluttering the board.
   request-changes actions, and a Full Document tab.
 - Added transport, subscription, workflow-section, and optimistic-cache tests;
   the docs-board suite now has 16 passing tests.
-- Replaced per-request 767-document scans with a shared ID/path index. The file
+- Replaced per-request 780-document scans with a shared ID/path index. The file
   watcher reparses only changed paths, and mutations reread their live target
   before revision validation so caching cannot overwrite an external edit.
 - Preloaded the lazy document route from the board and raised the Bun idle
@@ -109,19 +109,14 @@ All other documentation remains searchable without cluttering the board.
 - Rebased again after `main` advanced, migrated the 13 newly added Markdown
   documents into the canonical model, and added regression coverage that keeps
   explicit human-verification and disposition choices stable across migrations.
+- Captured the live four-column board and awaiting-human document detail views
+  with PinchTab, uploaded both screenshots, and embedded them in PR #1573.
 
 ### Remaining
 
-- Attach a Browser surface, capture the real board/detail screenshots, then add
-  them to PR #1573.
+- None.
 
 ### Caveats
 
 - The user's main checkout contains separate uncommitted docs and dotfile work;
   this branch does not copy or modify those files.
-- This Codex session reported no attached in-app Browser surface, so visual QA
-  and screenshot capture are waiting on that UI attachment.
-- The browser plugin discovery returned no browser instances, and its bundled
-  troubleshooting lookup referenced a removed plugin version. HTTP and typed
-  transport verification passed, but screenshots still require an attached
-  browser surface.
