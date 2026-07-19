@@ -48,22 +48,21 @@ resource "github_repository_ruleset" "monorepo_main" {
         context = "ci/merge-conflict"
       }
 
-      # Aggregate Buildkite CI check for the replatformed pipeline. The Buildkite
-      # agent stack posts a single rolled-up "buildkite/monorepo" commit status
-      # per PR build (build passed/failed), rather than the old per-step
-      # buildkite/monorepo/pr/* contexts that were removed 2026-07.
+      # Aggregate Buildkite CI check for the replatformed pipeline. Buildkite
+      # posts a single rolled-up "buildkite/monorepo/pr" commit status per PR
+      # build (build passed/failed) — NOT the bare "buildkite/monorepo" the
+      # replatform originally staged here; the context was verified live
+      # 2026-07-18 against merged PR heads (success on PR #1542's head
+      # 1433973f, failure on #1543-#1547) before being required. Red CI now
+      # blocks merge, matching the old pipeline's ci-complete-backed
+      # buildkite/monorepo/pr/* required checks.
       #
-      # LEFT COMMENTED OUT ON PURPOSE — do NOT uncomment + `tofu apply` until the
-      # Buildkite pipeline is live and has posted "buildkite/monorepo" on at least
-      # one PR build on main. Requiring a context that doesn't yet exist on PR
-      # builds blocks EVERY open PR on a missing required check (same rollout
-      # hazard called out for ci/merge-conflict above, and in
-      # packages/homelab/CLAUDE.md → "GitHub Repo Settings & Rulesets").
-      #
-      # Uncomment when the pipeline is live:
-      # required_check {
-      #   context = "buildkite/monorepo"
-      # }
+      # Release-please PR builds skip every step (see the release-please
+      # guard in .buildkite/pipeline.yml); the resulting empty build still
+      # completes and posts this context, so those PRs stay mergeable.
+      required_check {
+        context = "buildkite/monorepo/pr"
+      }
     }
   }
 
