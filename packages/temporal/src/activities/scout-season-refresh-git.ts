@@ -69,6 +69,17 @@ export async function writeGitAskpass(tempDir: string): Promise<string> {
   return path;
 }
 
+// Porcelain v1 lines are `XY<space>PATH` — a 2-char status field plus one
+// space, so the path always starts at index 3. Do NOT trim first: a
+// worktree-modified file is ` M path` (leading space), and trimming would
+// shift the slice one character into the path.
+export function parsePorcelainPaths(status: string): string[] {
+  return status
+    .split("\n")
+    .filter((line) => line.trim() !== "")
+    .map((line) => line.slice(3));
+}
+
 export async function changedFilesInPaths(
   repoDir: string,
   paths: readonly string[],
@@ -77,11 +88,7 @@ export async function changedFilesInPaths(
     ["git", "status", "--porcelain", "--", ...paths],
     { cwd: repoDir },
   );
-  return status
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line !== "")
-    .map((line) => line.slice(3));
+  return parsePorcelainPaths(status);
 }
 
 export async function getUnifiedDiff(
