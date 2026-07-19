@@ -137,9 +137,18 @@ const versions = {
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
     "2.0.0-5809@sha256:f569e2197bb1aa984022a704750527b72f9809686a0264517728b51713ef05e6",
-  // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/scout-for-lol
+  // not managed by renovate — promoted with scripts/promote-scout.ts, in
+  // lockstep with scout-for-lol-site/prod (a Renovate bump here would move the
+  // prod backend without the matching site content and reintroduce tRPC
+  // contract skew).
   "shepherdjerred/scout-for-lol/prod":
     "2.0.0-4791@sha256:bfd87a5cebfa8567cf14d077cd58bcf84f6315d04ea962468695e1fc99bf58e6",
+  // not managed by renovate — promoted with scripts/promote-scout.ts, in
+  // lockstep with shepherdjerred/scout-for-lol/prod. Version of the archived
+  // site artifact (scout-site-releases bucket) the prod bucket is synced from
+  // by the scout-prod-reconcile CI step. "unpromoted" = pre-first-promotion
+  // sentinel: reconcile logs and exits without touching the prod bucket.
+  "scout-for-lol-site/prod": "unpromoted",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
     "2.0.0-5809@sha256:d9c9c69bb364cb80fefa306a7bf02f7d1e81c03b564e7c362cda8d410841497e",

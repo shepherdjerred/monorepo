@@ -18,6 +18,11 @@
  */
 
 import { run, requireEnv, optionalEnv } from "./lib/run.ts";
+import {
+  s3SyncStaticSite,
+  SEAWEEDFS_ENDPOINT,
+  SEAWEEDFS_AWS_ENV,
+} from "./lib/s3-static-site.ts";
 
 // ---------------------------------------------------------------------------
 // Static site deploy catalog (translated verbatim from DEPLOY_SITES)
@@ -117,39 +122,12 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     target: "s3",
     immutablePrefixes: ["_astro/"],
   },
-  {
-    bucket: "scout-frontend",
-    name: "scout-for-lol frontend + app (prod)",
-    url: "https://scout-for-lol.com",
-    buildDir: "packages/scout-for-lol",
-    buildCmd: "bun run scripts/build-bucket.ts",
-    distDir: "packages/scout-for-lol/packages/frontend/dist",
-    target: "s3",
-    buildEnvVars: ["PUBLIC_PINTEREST_TAG_ID", "PUBLIC_REDDIT_PIXEL_ID"],
-    // Astro marketing (`_astro/`) + the Vite SPA bundle (`app/assets/`) are
-    // content-hashed → immutable. The SPA shell `app/index.html` is in pass 2
-    // (no-cache) so deploys take effect.
-    immutablePrefixes: ["_astro/", "app/assets/"],
-  },
-  {
-    bucket: "scout-frontend-beta",
-    name: "scout-for-lol frontend + app (beta)",
-    url: "https://beta.scout-for-lol.com",
-    buildDir: "packages/scout-for-lol",
-    buildCmd: "bun run scripts/build-bucket.ts",
-    distDir: "packages/scout-for-lol/packages/frontend/dist",
-    target: "s3",
-    // Analytics pixels intentionally omitted for beta — beta traffic must
-    // not inflate prod Pinterest/Reddit conversion data.
-    buildEnvPlaceholders: {
-      PUBLIC_PINTEREST_TAG_ID: "beta-placeholder-pinterest-tag-id",
-      PUBLIC_REDDIT_PIXEL_ID: "beta-placeholder-reddit-pixel-id",
-    },
-    // Astro marketing (`_astro/`) + the Vite SPA bundle (`app/assets/`) are
-    // content-hashed → immutable. The SPA shell `app/index.html` is in pass 2
-    // (no-cache) so deploys take effect.
-    immutablePrefixes: ["_astro/", "app/assets/"],
-  },
+  // NOTE: the scout-for-lol buckets (scout-frontend, scout-frontend-beta) are
+  // deliberately NOT in this catalog. Their deploys are versioned and
+  // stage-pinned via scripts/scout-site-release.ts (archive / deploy-beta /
+  // reconcile-prod) so prod site content stays in lockstep with the promoted
+  // backend image — a manual deploy-site.ts sync would reintroduce the
+  // unversioned skew that crashed the prod SPA against the pinned backend.
   {
     bucket: "better-skill-capped",
     name: "better-skill-capped",
@@ -173,8 +151,6 @@ const DEPLOY_SITES: readonly DeploySite[] = [
   },
 ];
 
-const SEAWEEDFS_ENDPOINT = "https://seaweedfs-s3.tailnet-1a49.ts.net";
-
 // ---------------------------------------------------------------------------
 // Repo root resolution
 // ---------------------------------------------------------------------------
@@ -182,137 +158,6 @@ const SEAWEEDFS_ENDPOINT = "https://seaweedfs-s3.tailnet-1a49.ts.net";
 /** Repo root = two levels up from this file (scripts/deploy-site.ts). */
 function repoRoot(): string {
   return new URL("..", import.meta.url).pathname.replace(/\/$/, "");
-}
-
-// ---------------------------------------------------------------------------
-// Two-pass aws s3 sync (ported from s3SyncStaticSite)
-// ---------------------------------------------------------------------------
-
-/**
- * Sync `source` to `s3://bucket/`, setting `Cache-Control` as S3 object
- * metadata (caddy-s3-proxy passes it through to the browser/CDN unchanged).
- *
- * Pass 1 uploads content-hashed/fingerprinted assets — the `immutablePrefixes`
- * (e.g. `_astro/`, `app/assets/`) — with a 1-year `immutable` Cache-Control and
- * WITHOUT `--delete`, so prior builds' hashed files survive for already-loaded
- * tabs. Pass 2 uploads everything else with `Cache-Control: no-cache` and
- * `--delete`, `--exclude`ing the hashed prefixes so retained old hashed assets
- * are left in place. When `immutablePrefixes` is empty a single `no-cache` +
- * `--delete` pass is used.
- *
- * The AWS env vars mirror the old helper: SeaweedFS S3 requires s3v4 signing,
- * so the region is pinned and the checksum headers AWS CLI v2 sends by default
- * (which SeaweedFS does not understand) are suppressed.
- */
-async function s3SyncStaticSite(opts: {
-  source: string;
-  bucket: string;
-  endpoint: string;
-  immutablePrefixes: string[];
-  cwd: string;
-  env: Record<string, string>;
-  dryRun: boolean;
-  haveCreds: boolean;
-}): Promise<void> {
-  const { source, bucket, endpoint, immutablePrefixes, cwd, env } = opts;
-  const dest = `s3://${bucket}/`;
-
-  if (opts.dryRun) {
-    const plan =
-      immutablePrefixes.length > 0
-        ? `pass 1 [${immutablePrefixes.join(", ")}] immutable (no --delete); ` +
-          `pass 2 everything else no-cache (--delete, excluding immutable prefixes)`
-        : `single pass no-cache (--delete)`;
-    console.log(
-      `DRYRUN: would sync ${source} -> ${dest} via ${endpoint} — ${plan}`,
-    );
-    if (!opts.haveCreds) {
-      console.log(
-        "DRYRUN: AWS credentials absent; skipping the real `aws s3 sync --dryrun` call. " +
-          "The plan above is what would run with creds present.",
-      );
-      return;
-    }
-    // Creds present — surface exactly what the sync would move via --dryrun.
-    if (immutablePrefixes.length > 0) {
-      await run(
-        [
-          "aws",
-          "s3",
-          "sync",
-          source,
-          dest,
-          "--endpoint-url",
-          endpoint,
-          "--exclude",
-          "*",
-          ...immutablePrefixes.flatMap((p) => ["--include", `${p}*`]),
-          "--cache-control",
-          "public, max-age=31536000, immutable",
-          "--dryrun",
-        ],
-        { cwd, env },
-      );
-    }
-    await run(
-      [
-        "aws",
-        "s3",
-        "sync",
-        source,
-        dest,
-        "--endpoint-url",
-        endpoint,
-        ...immutablePrefixes.flatMap((p) => ["--exclude", `${p}*`]),
-        "--cache-control",
-        "no-cache",
-        "--delete",
-        "--dryrun",
-      ],
-      { cwd, env },
-    );
-    return;
-  }
-
-  // Pass 1: immutable, fingerprinted assets — no --delete.
-  if (immutablePrefixes.length > 0) {
-    await run(
-      [
-        "aws",
-        "s3",
-        "sync",
-        source,
-        dest,
-        "--endpoint-url",
-        endpoint,
-        "--exclude",
-        "*",
-        ...immutablePrefixes.flatMap((p) => ["--include", `${p}*`]),
-        "--cache-control",
-        "public, max-age=31536000, immutable",
-      ],
-      { cwd, env },
-    );
-  }
-
-  // Pass 2 (or single pass): everything else, no-cache + --delete, excluding
-  // the immutable prefixes so `--delete` never prunes retained hashed assets.
-  await run(
-    [
-      "aws",
-      "s3",
-      "sync",
-      source,
-      dest,
-      "--endpoint-url",
-      endpoint,
-      ...immutablePrefixes.flatMap((p) => ["--exclude", `${p}*`]),
-      "--cache-control",
-      "no-cache",
-      "--delete",
-    ],
-    { cwd, env },
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -464,16 +309,6 @@ async function main(): Promise<void> {
     requireEnv("AWS_SECRET_ACCESS_KEY");
   }
 
-  const awsEnv: Record<string, string> = {
-    // SeaweedFS S3 requires s3v4 signing; pin the region to avoid mismatches
-    // with newer AWS CLI versions that use CRT-based signing. The
-    // WHEN_REQUIRED settings suppress checksum headers AWS CLI v2 sends by
-    // default but SeaweedFS does not understand.
-    AWS_DEFAULT_REGION: "us-east-1",
-    AWS_REQUEST_CHECKSUM_CALCULATION: "WHEN_REQUIRED",
-    AWS_RESPONSE_CHECKSUM_VALIDATION: "WHEN_REQUIRED",
-  };
-
   // Every site in the catalog ships a root index.html. Refuse a live sync
   // without it: pass 2 runs with --delete, so a dist missing its root files
   // (e.g. build 5648's artifact, where the `**/*` glob dropped every
@@ -492,7 +327,7 @@ async function main(): Promise<void> {
     endpoint,
     immutablePrefixes: site.immutablePrefixes,
     cwd: root,
-    env: awsEnv,
+    env: SEAWEEDFS_AWS_ENV,
     dryRun,
     haveCreds,
   });
