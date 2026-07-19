@@ -135,6 +135,7 @@ function completionKind(
     .with("source", () => monaco.languages.CompletionItemKind.Class)
     .with("metric", () => monaco.languages.CompletionItemKind.Field)
     .with("field", () => monaco.languages.CompletionItemKind.Property)
+    .with("function", () => monaco.languages.CompletionItemKind.Function)
     .with("queue", () => monaco.languages.CompletionItemKind.EnumMember)
     .exhaustive();
 }
@@ -165,6 +166,10 @@ function monarchLanguage(): Monaco.languages.IMonarchLanguage {
       "in",
       "asc",
       "desc",
+      "having",
+      "as",
+      "render",
+      "with",
     ],
     tokenizer: {
       root: [
@@ -172,9 +177,10 @@ function monarchLanguage(): Monaco.languages.IMonarchLanguage {
           /[a-z_]\w*/,
           { cases: { "@keywords": "keyword", "@default": "identifier" } },
         ],
-        [/\d+/, "number"],
+        [/\d+(?:\.\d+)?/, "number"],
+        [/#[0-9a-f]{6}/i, "number.hex"],
         [/'[^']*'|"[^"]*"/, "string"],
-        [/>=|[=,()]/, "operator"],
+        [/<=|>=|!=|[=<>+*/\-,()]/, "operator"],
         [/\s+/, "white"],
       ],
     },

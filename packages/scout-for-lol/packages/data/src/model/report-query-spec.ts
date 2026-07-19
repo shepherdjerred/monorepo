@@ -27,6 +27,21 @@ export const ReportGroupBySchema = z.enum([
   "player",
   "champion",
   "queue",
+  "team_position",
+  "individual_position",
+  "lane",
+  "role",
+  "game_mode",
+  "game_type",
+  "patch",
+  "map",
+  "outcome",
+  "surrender_state",
+  "arena_placement",
+  "day",
+  "week",
+  "month",
+  "all",
   // Teammate groups: `GROUP BY group(N)` / `group(all)`. The group size lives
   // in ReportQueryPlan.groupSize; `pair` is the legacy alias for group(2).
   "group",
@@ -64,7 +79,128 @@ export const ReportMetricSchema = z.enum([
   "cs_per_minute",
   "prematches",
   "score",
+  "early_surrenders",
+  "early_surrender_rate",
+  "lane_minions",
+  "neutral_minions",
+  "gold_spent",
+  "damage_mitigated",
+  "damage_to_objectives",
+  "damage_to_turrets",
+  "healing",
+  "teammate_healing",
+  "wards_killed",
+  "control_wards_bought",
+  "detector_wards_placed",
+  "double_kills",
+  "triple_kills",
+  "quadra_kills",
+  "penta_kills",
+  "largest_multikill",
+  "killing_sprees",
+  "first_bloods",
+  "first_blood_rate",
+  "avg_champion_level",
+  "avg_champion_experience",
+  "time_dead_seconds",
+  "longest_life_seconds",
+  "cc_time_seconds",
+  "turret_kills",
+  "inhibitor_kills",
+  "dragon_kills",
+  "baron_kills",
+  "arena_games",
+  "average_placement",
+  "top_two_rate",
+  "first_place_rate",
 ]);
+
+export type ReportExpression =
+  | { kind: "metric"; metric: ReportMetric }
+  | { kind: "number"; value: number }
+  | {
+      kind: "binary";
+      operator: "+" | "-" | "*" | "/";
+      left: ReportExpression;
+      right: ReportExpression;
+    }
+  | {
+      kind: "function";
+      name: "round" | "coalesce" | "per_game" | "per_minute";
+      arguments: ReportExpression[];
+    };
+
+export type ReportSelectItem = {
+  expression: ReportExpression;
+  key: string;
+  alias?: string | undefined;
+};
+
+export const ReportHavingOperatorSchema = z.enum([
+  "=",
+  "!=",
+  "<",
+  "<=",
+  ">",
+  ">=",
+]);
+export type ReportHavingOperator = z.infer<typeof ReportHavingOperatorSchema>;
+
+export type ReportHavingClause = {
+  key: string;
+  operator: ReportHavingOperator;
+  value: number;
+};
+
+export const ReportFilterFieldSchema = z.enum([
+  "player",
+  "champion_id",
+  "queue",
+  "team_position",
+  "individual_position",
+  "lane",
+  "role",
+  "game_mode",
+  "game_type",
+  "game_version",
+  "map_id",
+  "win",
+  "surrendered",
+  "early_surrendered",
+  "first_blood_kill",
+  "game_duration_seconds",
+  "placement",
+  "kills",
+  "deaths",
+  "assists",
+  "creep_score",
+  "gold_earned",
+  "gold_spent",
+  "damage_to_champions",
+  "vision_score",
+]);
+export type ReportFilterField = z.infer<typeof ReportFilterFieldSchema>;
+export const ReportFilterOperatorSchema = z.enum([
+  "=",
+  "!=",
+  "<",
+  "<=",
+  ">",
+  ">=",
+  "in",
+]);
+export type ReportFilterOperator = z.infer<typeof ReportFilterOperatorSchema>;
+export const ReportFilterValueSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+]);
+export type ReportFilterValue = z.infer<typeof ReportFilterValueSchema>;
+export type ReportFilter = {
+  field: ReportFilterField;
+  operator: ReportFilterOperator;
+  values: ReportFilterValue[];
+};
 
 export type ReportOrderDirection = z.infer<typeof ReportOrderDirectionSchema>;
 export const ReportOrderDirectionSchema = z.enum(["asc", "desc"]);
@@ -74,15 +210,21 @@ export const ReportQueryPlanSchema = z
   .object({
     source: ReportSourceSchema,
     groupBy: ReportGroupBySchema,
+    groupBys: z.array(ReportGroupBySchema).min(1).max(2),
     // Required iff groupBy === "group" (enforced by the superRefine below).
     groupSize: ReportGroupSizeSchema.optional(),
     metrics: z.array(ReportMetricSchema).min(1),
+    selectItems: z.custom<ReportSelectItem[]>().refine((items) => {
+      return items.length > 0 && items.length <= 20;
+    }, "SELECT must contain between 1 and 20 outputs."),
     queueFilter: z.array(z.string().min(1)).optional(),
     championId: z.number().int().positive().optional(),
     minGames: z.number().int().positive().optional(),
     competitionId: z.number().int().positive().optional(),
-    orderBy: z.union([ReportMetricSchema, z.literal("label")]).default("games"),
+    filters: z.array(z.custom<ReportFilter>()).default([]),
+    orderBy: z.string().min(1).default("games"),
     orderDirection: ReportOrderDirectionSchema.default("desc"),
+    having: z.array(z.custom<ReportHavingClause>()).default([]),
     limit: z.number().int().positive().optional(),
     // The trailing `RENDER <kind> [WITH (...)]` clause; absent clauses default to
     // a TABLE render so a plain query reproduces the pre-DSL behavior.
@@ -103,14 +245,29 @@ export const ReportQueryPlanSchema = z
         message: "groupSize is only valid with GROUP BY group(...).",
       });
     }
+    if (
+      plan.groupBys.includes("all") &&
+      (plan.groupBys.length !== 1 || plan.groupBy !== "all")
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["groupBys"],
+        message: "GROUP BY all cannot be combined with another dimension.",
+      });
+    }
+    if (plan.groupBy === "group" && plan.groupBys.length !== 1) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["groupBys"],
+        message:
+          "GROUP BY group(...) cannot be combined with another dimension.",
+      });
+    }
   });
 
 // The order-by target is any metric, or the special "label" grouping column.
 export type ReportOrderBy = z.infer<typeof ReportOrderBySchema>;
-export const ReportOrderBySchema = z.union([
-  ReportMetricSchema,
-  z.literal("label"),
-]);
+export const ReportOrderBySchema = z.string().min(1);
 
 // ── Editor-facing AST + diagnostics ──────────────────────────────────────────
 // The parser produces a lenient AST (raw lowercased values + source spans) plus
@@ -142,6 +299,13 @@ export type ReportWhereClause =
   | { kind: "champion_id"; value: number; span: ReportQuerySpan }
   | { kind: "min_games"; value: number; span: ReportQuerySpan }
   | { kind: "competition_id"; value: number; span: ReportQuerySpan }
+  | {
+      kind: "field";
+      field: string;
+      operator: string;
+      values: ReportFilterValue[];
+      span: ReportQuerySpan;
+    }
   | { kind: "unsupported"; text: string; span: ReportQuerySpan };
 
 export type ReportQueryOrderBy = {
@@ -154,6 +318,7 @@ export type ReportQueryAst = {
   source?: ReportQueryItem | undefined;
   where: ReportWhereClause[];
   groupBy?: ReportQueryItem | undefined;
+  having?: ReportQueryItem | undefined;
   orderBy?: ReportQueryOrderBy | undefined;
   limit?: ReportQueryItem | undefined;
   // Raw text of the trailing RENDER clause (the part after the `RENDER` keyword,

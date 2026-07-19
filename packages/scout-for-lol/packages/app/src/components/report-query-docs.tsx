@@ -1,9 +1,12 @@
 import {
   REPORT_EXAMPLES,
   REPORT_FILTERS,
+  REPORT_FUNCTIONS,
   REPORT_GROUP_BYS,
   REPORT_KEYWORDS,
   REPORT_METRICS,
+  REPORT_RENDER_KINDS,
+  REPORT_RENDER_OPTIONS,
   REPORT_SOURCES,
   reportQueueValues,
 } from "@scout-for-lol/data";
@@ -16,7 +19,7 @@ import {
 import { Button } from "#src/components/ui/button.tsx";
 
 const GRAMMAR =
-  "SELECT <metrics> FROM <source> [WHERE <filter> AND …] GROUP BY <field> [ORDER BY <metric|label> ASC|DESC] [LIMIT <n>]";
+  "SELECT <metric|expression [AS alias]>, … FROM <source> [WHERE <row filter> AND …] GROUP BY <field>[, <field>] [HAVING <output> <operator> <value>] [ORDER BY <output|label> ASC|DESC] [LIMIT <n>] [RENDER <kind> [WITH (<options>)]]";
 
 type DefinitionItem = { term: string; description: string };
 
@@ -64,8 +67,10 @@ export function ReportQueryDocs(props: {
             {GRAMMAR}
           </pre>
           <p className="mt-2 text-xs text-muted-foreground">
-            Keywords are case-insensitive. WHERE clauses are AND-joined. ORDER
-            BY defaults to <span className="font-mono">games DESC</span>.
+            Keywords are case-insensitive. WHERE filters raw rows; HAVING
+            filters aggregates and aliases. Arithmetic supports parentheses and
+            <span className="font-mono"> + − × ÷</span>. Temporal grouping uses
+            UTC day, week, and month buckets.
           </p>
         </CardContent>
       </Card>
@@ -87,6 +92,14 @@ export function ReportQueryDocs(props: {
       />
 
       <DocsSection
+        title="Calculated outputs"
+        items={REPORT_FUNCTIONS.map((fn) => ({
+          term: fn.syntax,
+          description: fn.description,
+        }))}
+      />
+
+      <DocsSection
         title="Group by"
         items={REPORT_GROUP_BYS.map((groupBy) => ({
           term: groupBy.id,
@@ -99,6 +112,22 @@ export function ReportQueryDocs(props: {
         items={REPORT_FILTERS.map((filter) => ({
           term: filter.syntax,
           description: filter.description,
+        }))}
+      />
+
+      <DocsSection
+        title="Render kinds"
+        items={REPORT_RENDER_KINDS.map((kind) => ({
+          term: kind.id,
+          description: kind.description,
+        }))}
+      />
+
+      <DocsSection
+        title="Render options (WITH)"
+        items={REPORT_RENDER_OPTIONS.map((option) => ({
+          term: option.syntax,
+          description: option.description,
         }))}
       />
 

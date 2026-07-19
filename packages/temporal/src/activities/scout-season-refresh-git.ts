@@ -1,3 +1,5 @@
+import { disarmGitHooks } from "./bot-clone.ts";
+
 export type GitRunOptions = {
   cwd: string;
   env?: Record<string, string | undefined>;
@@ -131,6 +133,10 @@ export async function openSeasonRefreshPr(
   await runCommand(["git", "add", "--", ...input.files], {
     cwd: input.repoDir,
   });
+  // Disarm hooks right before the commit, not just via rootInstallWithoutHooks
+  // earlier — an agentic Claude/Codex step upstream of this call may have
+  // armed them on its own initiative (e.g. running a plain `bun install`).
+  await disarmGitHooks(input.repoDir);
   await runCommand(["git", "commit", "-m", input.title], {
     cwd: input.repoDir,
   });

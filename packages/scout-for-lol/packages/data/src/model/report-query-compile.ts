@@ -2,25 +2,29 @@ import { match } from "ts-pattern";
 import { z } from "zod";
 import {
   ReportMetricSchema,
+  ReportGroupBySchema,
+  ReportFilterFieldSchema,
+  ReportFilterOperatorSchema,
+  ReportFilterValueSchema,
+  ReportHavingOperatorSchema,
   ReportOrderBySchema,
   ReportOrderDirectionSchema,
   ReportQueryPlanSchema,
   ReportSourceSchema,
   type ReportGroupBy,
   type ReportGroupSize,
+  type ReportHavingClause,
   type ReportMetric,
+  type ReportFilter,
   type ReportQueryAst,
   type ReportQueryPlan,
   type ReportWhereClause,
 } from "#src/model/report-query-spec.ts";
 import {
-  DEFAULT_RENDER_SPEC,
-  ReportRenderSpecSchema,
-  type ReportChartOptions,
-  type ReportOutputFormat,
-  type ReportRenderChannel,
-  type ReportRenderSpec,
-} from "#src/model/report.ts";
+  collectExpressionMetrics,
+  parseReportSelectItem,
+} from "#src/model/report-query-expression.ts";
+import { parseRenderClause } from "#src/model/report-query-render.ts";
 import {
   INVALID_QUERY_MESSAGE,
   parseReportQuery,
@@ -34,6 +38,7 @@ type WhereFilters = {
   championId?: number;
   minGames?: number;
   competitionId?: number;
+  filters: ReportFilter[];
 };
 
 // The parsed `GROUP BY` clause value: the grouping field plus, for teammate
@@ -58,8 +63,9 @@ const GROUP_CALL_PATTERN = /^group\s*\(\s*(?<size>\d+|all)\s*\)$/u;
 export function parseGroupByClause(
   value: string,
 ): ReportGroupByClause | undefined {
-  if (value === "player" || value === "champion" || value === "queue") {
-    return { groupBy: value };
+  const parsed = ReportGroupBySchema.safeParse(value);
+  if (parsed.success && parsed.data !== "group") {
+    return { groupBy: parsed.data };
   }
   if (value === "pair") {
     return { groupBy: "group", groupSize: 2 };
@@ -77,6 +83,14 @@ export function parseGroupByClause(
     return undefined;
   }
   return { groupBy: "group", groupSize: numeric };
+}
+
+export function parseGroupByClauses(value: string): ReportGroupByClause[] {
+  const clauses = splitTopLevel(value).map((part) => parseGroupByClause(part));
+  if (clauses.includes(undefined)) {
+    throw new Error(INVALID_GROUP_BY_MESSAGE);
+  }
+  return clauses.flatMap((clause) => (clause === undefined ? [] : [clause]));
 }
 
 // SELECT-list names that refer to the grouping ("label") column rather than a
@@ -99,22 +113,42 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
   // carry the canonical id so the engine matches one source.
   const rawSource = ReportSourceSchema.parse(ast.source.value);
   const source = rawSource === "player_pairs" ? "player_groups" : rawSource;
-  const groupByClause = parseGroupByClause(ast.groupBy.value);
-  if (groupByClause === undefined) {
-    throw new Error(INVALID_GROUP_BY_MESSAGE);
+  const groupByClauses = parseGroupByClauses(ast.groupBy.value);
+  if (groupByClauses.length === 0 || groupByClauses.length > 2) {
+    throw new Error("GROUP BY requires one or two dimensions.");
   }
+  const groupByClause = groupByClauses[0];
+  if (groupByClause === undefined) throw new Error(INVALID_GROUP_BY_MESSAGE);
   const { groupBy, groupSize } = groupByClause;
-  const labelNames = groupingColumnNames(groupBy);
+  const groupBys = groupByClauses.map((clause) => clause.groupBy);
+  validateSourceDimensions(source, groupBys);
+  const labelNames = new Set(
+    groupBys.flatMap((dimension) => [...groupingColumnNames(dimension)]),
+  );
+  const selectItems = ast.select
+    .filter((item) => !labelNames.has(item.value))
+    .map((item) => parseReportSelectItem(item.value));
+  if (selectItems.length === 0 || selectItems.length > 20) {
+    throw new Error("SELECT must contain between 1 and 20 metric outputs.");
+  }
+  const outputKeys = selectItems.map((item) => item.key);
+  if (new Set(outputKeys).size !== outputKeys.length) {
+    throw new Error("SELECT output aliases must be unique.");
+  }
   const metrics = z
     .array(ReportMetricSchema)
     .min(1)
-    .parse(
-      ast.select
-        .map((item) => item.value)
-        .filter((value) => !labelNames.has(value)),
-    );
+    .parse([
+      ...new Set(
+        selectItems.flatMap((item) =>
+          collectExpressionMetrics(item.expression),
+        ),
+      ),
+    ]);
+  validateSourceMetrics(source, metrics);
 
   const filters = compileWhere(ast.where);
+  validateSourceFilters(source, filters.filters);
 
   const orderBy =
     ast.orderBy === undefined
@@ -127,6 +161,13 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
         labelNames.has(ast.orderBy.metric.value)
         ? "label"
         : ReportOrderBySchema.parse(ast.orderBy.metric.value);
+  if (
+    orderBy !== "label" &&
+    !outputKeys.includes(orderBy) &&
+    orderBy !== "games"
+  ) {
+    throw new Error(`ORDER BY target "${orderBy}" is not a SELECT output.`);
+  }
   const orderDirection =
     ast.orderBy?.direction === undefined
       ? "desc"
@@ -136,26 +177,141 @@ export function compileReportQuery(ast: ReportQueryAst): ReportQueryPlan {
       ? undefined
       : PositiveIntSchema.parse(ast.limit.value);
 
-  const render = parseRenderClause(ast.render?.value, metrics, groupBy);
+  const having = compileReportHaving(ast.having?.value, outputKeys);
+  const render = parseRenderClause(ast.render?.value, outputKeys, groupBys);
 
   return ReportQueryPlanSchema.parse({
     source,
     groupBy,
+    groupBys,
     groupSize,
     metrics,
+    selectItems,
     queueFilter: filters.queueFilter,
     championId: filters.championId,
     minGames: filters.minGames,
     competitionId: filters.competitionId,
+    filters: filters.filters,
     orderBy,
     orderDirection,
+    having,
     limit,
     render,
   });
 }
 
+function validateSourceDimensions(
+  source: ReportQueryPlan["source"],
+  groupBys: ReportGroupBy[],
+): void {
+  const allowed =
+    source === "player_groups"
+      ? new Set<ReportGroupBy>(["group"])
+      : source === "rank_current" || source === "competition_rank"
+        ? new Set<ReportGroupBy>(["player"])
+        : source === "prematch_participants"
+          ? new Set<ReportGroupBy>(["player", "champion", "queue", "all"])
+          : new Set(
+              ReportGroupBySchema.options.filter((value) => value !== "group"),
+            );
+  for (const groupBy of groupBys) {
+    if (!allowed.has(groupBy)) {
+      throw new Error(`GROUP BY ${groupBy} is not available for ${source}.`);
+    }
+  }
+}
+
+function validateSourceMetrics(
+  source: ReportQueryPlan["source"],
+  metrics: ReportMetric[],
+): void {
+  const allowed =
+    source === "rank_current" || source === "competition_rank"
+      ? new Set<ReportMetric>(["score"])
+      : source === "prematch_participants"
+        ? new Set(
+            ReportMetricSchema.options.filter((metric) => metric !== "score"),
+          )
+        : new Set(
+            ReportMetricSchema.options.filter(
+              (metric) => metric !== "prematches" && metric !== "score",
+            ),
+          );
+  for (const metric of metrics) {
+    if (!allowed.has(metric)) {
+      throw new Error(`Metric ${metric} is not available for ${source}.`);
+    }
+  }
+}
+
+function validateSourceFilters(
+  source: ReportQueryPlan["source"],
+  filters: ReportFilter[],
+): void {
+  const prematchFields = new Set([
+    "player",
+    "champion_id",
+    "queue",
+    "game_mode",
+    "game_type",
+    "map_id",
+  ]);
+  for (const filter of filters) {
+    const valid =
+      source === "rank_current" || source === "competition_rank"
+        ? false
+        : source !== "prematch_participants" ||
+          prematchFields.has(filter.field);
+    if (!valid) {
+      throw new Error(`Filter ${filter.field} is not available for ${source}.`);
+    }
+  }
+}
+
+export function compileReportHaving(
+  text: string | undefined,
+  outputKeys: string[],
+): ReportHavingClause[] {
+  if (text === undefined || text.length === 0) return [];
+  return text.split(/\s+and\s+/u).map((clause) => {
+    const result =
+      /^(?<key>[a-z_]\w*)\s*(?<operator>[!><]=|[=><])\s*(?<value>-?\d+(?:\.\d+)?)$/u.exec(
+        clause.trim(),
+      );
+    if (result?.groups === undefined) {
+      throw new Error(`Invalid HAVING clause "${clause}".`);
+    }
+    const key = result.groups["key"] ?? "";
+    if (!outputKeys.includes(key)) {
+      throw new Error(`HAVING target "${key}" is not a SELECT output.`);
+    }
+    return {
+      key,
+      operator: ReportHavingOperatorSchema.parse(result.groups["operator"]),
+      value: Number(result.groups["value"]),
+    };
+  });
+}
+
+function splitTopLevel(value: string): string[] {
+  const parts: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let index = 0; index < value.length; index++) {
+    const char = value[index];
+    if (char === "(") depth++;
+    if (char === ")") depth--;
+    if (char === "," && depth === 0) {
+      parts.push(value.slice(start, index).trim());
+      start = index + 1;
+    }
+  }
+  parts.push(value.slice(start).trim());
+  return parts.filter((part) => part.length > 0);
+}
+
 function compileWhere(clauses: ReportWhereClause[]): WhereFilters {
-  const filters: WhereFilters = {};
+  const filters: WhereFilters = { filters: [] };
   for (const clause of clauses) {
     match(clause)
       .with({ kind: "unsupported" }, () => {
@@ -173,185 +329,63 @@ function compileWhere(clauses: ReportWhereClause[]): WhereFilters {
       .with({ kind: "competition_id" }, (c) => {
         filters.competitionId = PositiveIntSchema.parse(c.value);
       })
+      .with({ kind: "field" }, (c) => {
+        const filter: ReportFilter = {
+          field: ReportFilterFieldSchema.parse(c.field),
+          operator: ReportFilterOperatorSchema.parse(c.operator),
+          values: c.values.map((value) => ReportFilterValueSchema.parse(value)),
+        };
+        validateFilter(filter);
+        filters.filters.push(filter);
+      })
       .exhaustive();
   }
   return filters;
 }
 
-// ── RENDER clause compilation ────────────────────────────────────────────────
-// The trailing `RENDER <kind> [WITH (…)]` clause selects how a report displays.
-// Ported from the original string-based parser: the raw clause text (captured by
-// the Chevrotain parser) is validated here into a strict ReportRenderSpec.
-
-function normalizeToken(value: string): string {
-  return value.trim().toLowerCase();
-}
-
-const RENDER_KIND_BY_TOKEN: Record<string, ReportOutputFormat> = {
-  bar_chart: "BAR_CHART",
-  line_chart: "LINE_CHART",
-  table: "TABLE",
-  list: "LIST",
-  leaderboard: "LEADERBOARD",
-};
-
-const CHART_RENDER_KINDS = new Set<ReportOutputFormat>([
-  "BAR_CHART",
-  "LINE_CHART",
+const STRING_FILTERS = new Set([
+  "player",
+  "queue",
+  "team_position",
+  "individual_position",
+  "lane",
+  "role",
+  "game_mode",
+  "game_type",
+  "game_version",
+]);
+const BOOLEAN_FILTERS = new Set([
+  "win",
+  "surrendered",
+  "early_surrendered",
+  "first_blood_kill",
 ]);
 
-// `with ( … )` wrapper around the comma-separated channel/option pairs.
-const RENDER_WITH_PATTERN = /^with\s*\((?<body>.*)\)$/iu;
-// A single `key = value` pair; the value is a quoted string or a bareword that
-// runs to the next comma/paren. Iterated globally across the WITH body.
-const RENDER_PAIR_PATTERN =
-  /(?<key>[a-z_]+)\s*=\s*(?<value>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^,()]+)/giu;
-
-const RenderPairSchema = z.object({ key: z.string(), value: z.string() });
-
-/**
- * Parse the trailing `RENDER <kind> [WITH (…)]` clause into a fully-validated
- * render spec. `undefined` (no clause) yields the default TABLE spec. Channel
- * references (`x`/`y`) are validated against the columns the query produces —
- * `label` (the GROUP BY dimension) and the SELECTed metrics — so a typo fails
- * fast at parse time instead of silently rendering an empty chart.
- */
-export function parseRenderClause(
-  clauseText: string | undefined,
-  metrics: ReportMetric[],
-  groupBy: ReportGroupBy,
-): ReportRenderSpec {
-  if (clauseText === undefined || clauseText.length === 0) {
-    return DEFAULT_RENDER_SPEC;
+function validateFilter(filter: ReportFilter): void {
+  if (filter.values.length === 0) {
+    throw new Error(`Filter ${filter.field} requires at least one value.`);
   }
-
-  const firstSpace = clauseText.indexOf(" ");
-  const kindToken =
-    firstSpace === -1 ? clauseText : clauseText.slice(0, firstSpace);
-  const withText =
-    firstSpace === -1 ? "" : clauseText.slice(firstSpace + 1).trim();
-
-  const kind = RENDER_KIND_BY_TOKEN[normalizeToken(kindToken)];
-  if (kind === undefined) {
-    throw new Error(
-      `Unknown RENDER kind "${kindToken}". Expected one of: ${Object.keys(
-        RENDER_KIND_BY_TOKEN,
-      ).join(", ")}.`,
-    );
-  }
-
-  if (!CHART_RENDER_KINDS.has(kind)) {
-    if (withText.length > 0) {
-      throw new Error(
-        `RENDER ${normalizeToken(kindToken)} does not take a WITH clause.`,
-      );
-    }
-    return ReportRenderSpecSchema.parse({ kind });
-  }
-
-  const { encoding, options } = parseRenderWith(withText, metrics, groupBy);
-  return ReportRenderSpecSchema.parse({ kind, encoding, options });
-}
-
-function parseRenderWith(
-  withText: string,
-  metrics: ReportMetric[],
-  groupBy: ReportGroupBy,
-): { encoding: ReportRenderChannel; options: ReportChartOptions } {
-  const encoding: ReportRenderChannel = {};
-  const options: ReportChartOptions = {};
-  if (withText.length === 0) {
-    return { encoding, options };
-  }
-
-  const withMatch = RENDER_WITH_PATTERN.exec(withText);
-  if (withMatch?.groups === undefined) {
-    throw new Error(
-      'Invalid RENDER options. Expected: WITH (x = <col>, y = <col>, title = "…", y_axis = "…").',
-    );
-  }
-
-  const body = withMatch.groups["body"] ?? "";
-  for (const renderMatch of body.matchAll(RENDER_PAIR_PATTERN)) {
-    const { key, value } = RenderPairSchema.parse(renderMatch.groups);
-    const normalizedKey = normalizeToken(key);
-    switch (normalizedKey) {
-      case "x": {
-        encoding.x = assertRenderColumn(
-          normalizeColumnRef(value),
-          metrics,
-          groupBy,
-          "x",
-        );
-        break;
-      }
-      case "y": {
-        encoding.y = assertRenderColumn(
-          normalizeColumnRef(value),
-          metrics,
-          groupBy,
-          "y",
-        );
-        break;
-      }
-      case "title": {
-        options.title = stripRenderQuotes(value);
-        break;
-      }
-      case "y_axis": {
-        options.yAxisLabel = stripRenderQuotes(value);
-        break;
-      }
-      default: {
-        throw new Error(
-          `Unknown RENDER option "${key}". Expected: x, y, title, y_axis.`,
-        );
-      }
-    }
-  }
-
-  return { encoding, options };
-}
-
-function assertRenderColumn(
-  column: string,
-  metrics: ReportMetric[],
-  groupBy: ReportGroupBy,
-  channel: "x" | "y",
-): string {
-  if (channel === "x") {
-    if (groupingColumnNames(groupBy).has(column)) {
-      return column;
-    }
-    throw new Error(
-      `RENDER x = "${column}" is not a known dimension. Expected "label" or "${groupBy}".`,
-    );
-  }
-  const metricResult = ReportMetricSchema.safeParse(column);
-  if (metricResult.success && metrics.includes(metricResult.data)) {
-    return column;
-  }
-  throw new Error(
-    `RENDER y = "${column}" is not a SELECTed metric. Available: ${metrics.join(
-      ", ",
-    )}.`,
-  );
-}
-
-function normalizeColumnRef(value: string): string {
-  return normalizeToken(stripRenderQuotes(value));
-}
-
-function stripRenderQuotes(raw: string): string {
-  const value = raw.trim();
+  const supportsOrdering =
+    !STRING_FILTERS.has(filter.field) && !BOOLEAN_FILTERS.has(filter.field);
   if (
-    value.length >= 2 &&
-    ((value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'")))
+    !supportsOrdering &&
+    filter.operator !== "=" &&
+    filter.operator !== "!=" &&
+    filter.operator !== "in"
   ) {
-    return value.slice(1, -1).replaceAll(/\\(["'])/gu, "$1");
+    throw new Error(`Filter ${filter.field} only supports =, !=, and IN.`);
   }
-  return value;
+  const expected = STRING_FILTERS.has(filter.field)
+    ? "string"
+    : BOOLEAN_FILTERS.has(filter.field)
+      ? "boolean"
+      : "number";
+  if (filter.values.some((value) => typeof value !== expected)) {
+    throw new Error(`Filter ${filter.field} requires ${expected} values.`);
+  }
+  if (filter.operator !== "in" && filter.values.length !== 1) {
+    throw new Error(`Filter ${filter.field} requires exactly one value.`);
+  }
 }
 
 // Parse + compile in one step. Throws on the first structural/unsupported
