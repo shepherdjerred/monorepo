@@ -18,14 +18,14 @@
  * Env: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, GITHUB_APP_PRIVATE_KEY
  */
 
-import { run, tmpBase } from "../../../scripts/lib/run.ts";
+import { run, runAllowExit, tmpBase } from "../../../scripts/lib/run.ts";
 import { setupGitAuth } from "../../../scripts/lib/github-auth.ts";
 import { asRecord, toStringRecord } from "../../../scripts/lib/json.ts";
 
 const MONOREPO_REPO = "shepherdjerred/monorepo";
 const MONOREPO_WRITE_URL = `https://github.com/${MONOREPO_REPO}.git`;
 const COOKLANG_VERSION_BUMP_BRANCH = "chore/cooklang-version-bump-pending";
-const DEFAULT_PLUGIN_REPO = "shepherdjerred/cooklang-rich-preview";
+const DEFAULT_PLUGIN_REPO = "shepherdjerred/cooklang-for-obsidian";
 const GITHUB_REPO_SLUG_PATTERN = /^[\w.-]+\/[\w.-]+$/;
 
 /** cooklang package root = one level up from this script. */
@@ -99,6 +99,80 @@ function usage(): never {
   process.exit(1);
 }
 
+/**
+ * True when the freshly-built plugin artifacts are byte-identical to the
+ * latest release's assets (manifest.json excluded — it embeds the version).
+ * A repo with no releases yet returns false so the first release still cuts.
+ */
+async function builtArtifactsMatchLatestRelease(
+  pkgRoot: string,
+  pluginRepo: string,
+  env: Record<string, string>,
+): Promise<boolean> {
+  const latest = await runAllowExit(
+    [
+      "gh",
+      "release",
+      "view",
+      "--repo",
+      pluginRepo,
+      "--json",
+      "tagName",
+      "-q",
+      ".tagName",
+    ],
+    { env, capture: true },
+  );
+  const tag = latest.stdout.trim();
+  if (latest.exitCode !== 0 || tag === "") {
+    return false;
+  }
+
+  const downloadDir = `${tmpBase()}/cooklang-latest-release-${Date.now().toString()}`;
+  try {
+    await run(
+      [
+        "gh",
+        "release",
+        "download",
+        "--repo",
+        pluginRepo,
+        tag,
+        "--pattern",
+        "main.js",
+        "--pattern",
+        "styles.css",
+        "--dir",
+        downloadDir,
+      ],
+      { env },
+    );
+    for (const name of ["main.js", "styles.css"]) {
+      const built = Bun.file(`${pkgRoot}/${name}`);
+      const released = Bun.file(`${downloadDir}/${name}`);
+      if (!(await built.exists()) || !(await released.exists())) {
+        return false;
+      }
+      const [builtBytes, releasedBytes] = await Promise.all([
+        built.bytes(),
+        released.bytes(),
+      ]);
+      if (
+        builtBytes.length !== releasedBytes.length ||
+        Buffer.compare(builtBytes, releasedBytes) !== 0
+      ) {
+        return false;
+      }
+    }
+    console.log(`latest release ${tag} matches the built artifacts`);
+    return true;
+  } finally {
+    // rm -rf is a no-op on a nonexistent dir (Bun.file().exists() is
+    // file-only and would never fire for a directory).
+    await Bun.$`rm -rf ${downloadDir}`.quiet();
+  }
+}
+
 async function main(): Promise<void> {
   const argv = Bun.argv.slice(2);
   if (argv.includes("--help") || argv.includes("-h")) {
@@ -143,6 +217,20 @@ async function main(): Promise<void> {
   const env = auth.env;
 
   try {
+    // Idempotence gate: the static pipeline runs this step on EVERY main
+    // build (the old CI's change detection is gone), so without this check
+    // each build cuts a new patch release whose commit-back PR triggers the
+    // next build — an infinite release loop (1.0.45→46→47 on 2026-07-16,
+    // all byte-identical). The build is deterministic (verified: consecutive
+    // releases' assets are byte-identical), so skip when the built artifacts
+    // match the latest release's.
+    if (await builtArtifactsMatchLatestRelease(pkgRoot, pluginRepo, env)) {
+      console.log(
+        "--- built plugin is byte-identical to the latest release; nothing to publish",
+      );
+      return;
+    }
+
     const newVersion = await computeNextVersion(
       pluginRepo,
       manifestVersion,
@@ -459,6 +547,29 @@ async function cooklangCommitBack(
     }
     if (prNumber === "") {
       throw new Error("cooklang version commit-back PR number is empty");
+    }
+    // GitHub refuses to enable auto-merge on a draft PR, and this may reuse
+    // a pre-existing open PR for the branch that someone left as a draft
+    // (build 5636). Mark it ready first.
+    const draftState = await run(
+      [
+        "gh",
+        "pr",
+        "view",
+        "--repo",
+        MONOREPO_REPO,
+        prNumber,
+        "--json",
+        "isDraft",
+        "-q",
+        ".isDraft",
+      ],
+      { env, capture: true },
+    );
+    if (draftState.stdout.trim() === "true") {
+      await run(["gh", "pr", "ready", "--repo", MONOREPO_REPO, prNumber], {
+        env,
+      });
     }
     await run(
       [

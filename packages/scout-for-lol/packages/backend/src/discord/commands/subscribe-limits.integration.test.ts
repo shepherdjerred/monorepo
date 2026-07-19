@@ -50,71 +50,78 @@ type TestPlayerOptions = {
   prefix?: string;
 };
 
+// Both helpers batch their inserts into one $transaction: N separate creates
+// mean N commits/fsyncs, which pushed the 100-account test past the 5s default
+// timeout on slow CI pods.
 async function createSubscribedPlayers(opts: TestPlayerOptions) {
   const { count, serverId, channelId, discordUserId, now, prefix = "" } = opts;
 
-  for (let i = 0; i < count; i++) {
-    const idx = i.toString();
-    await testPrisma.subscription.create({
-      data: {
-        channelId,
-        serverId,
-        creatorDiscordId: discordUserId,
-        createdTime: now,
-        updatedTime: now,
-        player: {
-          create: {
-            alias: `${prefix}Player${idx}`,
-            discordId: null,
-            serverId,
-            creatorDiscordId: discordUserId,
-            createdTime: now,
-            updatedTime: now,
-            accounts: {
-              create: {
-                alias: `${prefix}Player${idx}`,
-                puuid: testPuuid(`${prefix.toLowerCase()}-${idx}`),
-                region: "AMERICA_NORTH",
-                serverId,
-                creatorDiscordId: discordUserId,
-                createdTime: now,
-                updatedTime: now,
+  await testPrisma.$transaction(
+    Array.from({ length: count }, (_, i) => {
+      const idx = i.toString();
+      return testPrisma.subscription.create({
+        data: {
+          channelId,
+          serverId,
+          creatorDiscordId: discordUserId,
+          createdTime: now,
+          updatedTime: now,
+          player: {
+            create: {
+              alias: `${prefix}Player${idx}`,
+              discordId: null,
+              serverId,
+              creatorDiscordId: discordUserId,
+              createdTime: now,
+              updatedTime: now,
+              accounts: {
+                create: {
+                  alias: `${prefix}Player${idx}`,
+                  puuid: testPuuid(`${prefix.toLowerCase()}-${idx}`),
+                  region: "AMERICA_NORTH",
+                  serverId,
+                  creatorDiscordId: discordUserId,
+                  createdTime: now,
+                  updatedTime: now,
+                },
               },
             },
           },
         },
-      },
-    });
-  }
+      });
+    }),
+  );
 }
 
 async function createUnsubscribedPlayers(opts: TestPlayerOptions) {
   const { count, serverId, discordUserId, now, prefix = "" } = opts;
 
-  for (let i = 0; i < count; i++) {
-    const idx = i.toString();
-    await testPrisma.player.create({
-      data: {
-        alias: `${prefix}Player${idx}`,
-        discordId: null,
-        serverId,
-        creatorDiscordId: discordUserId,
-        createdTime: now,
-        updatedTime: now,
-        accounts: {
-          create: {
-            alias: `${prefix}Player${idx}`,
-            puuid: testPuuid(`${prefix.toLowerCase()}-${idx}`),
-            region: "AMERICA_NORTH",
-            serverId,
-            creatorDiscordId: discordUserId,
-            createdTime: now,
-            updatedTime: now,
+  await testPrisma.$transaction(
+    Array.from({ length: count }, (_, i) => {
+      const idx = i.toString();
+      return testPrisma.player.create({
+        data: {
+          alias: `${prefix}Player${idx}`,
+          discordId: null,
+          serverId,
+          creatorDiscordId: discordUserId,
+          createdTime: now,
+          updatedTime: now,
+          accounts: {
+            create: {
+              alias: `${prefix}Player${idx}`,
+              puuid: testPuuid(`${prefix.toLowerCase()}-${idx}`),
+              region: "AMERICA_NORTH",
+              serverId,
+              creatorDiscordId: discordUserId,
+              createdTime: now,
+              updatedTime: now,
+            },
           },
         },
-      },
-    });
-  }
+      });
+    }),
+  );
 }
 
 describe("Subscribe Command - Subscription Limits", () => {
