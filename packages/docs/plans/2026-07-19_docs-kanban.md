@@ -95,7 +95,7 @@ All other documentation remains searchable without cluttering the board.
   contextual verification/remaining work, comment history, explicit signoff or
   request-changes actions, and a Full Document tab.
 - Added transport, subscription, workflow-section, and optimistic-cache tests;
-  the docs-board suite now has 14 passing tests.
+  the docs-board suite now has 16 passing tests.
 - Replaced per-request 767-document scans with a shared ID/path index. The file
   watcher reparses only changed paths, and mutations reread their live target
   before revision validation so caching cannot overwrite an external edit.
@@ -103,9 +103,12 @@ All other documentation remains searchable without cluttering the board.
   timeout for the long-lived typed subscription. Warm detail requests measured
   0-6 ms instead of 2.25-2.41 seconds.
 - Added indexed-read, watcher-refresh, and external-edit conflict regressions;
-  the full suite passes with 14 tests and 38 assertions.
+  the full suite passes with 16 tests and 42 assertions.
 - Rebased onto current `origin/main`, passed full and affected verification
   (181/181 tasks each), pushed `feature/docs-kanban`, and opened draft PR #1573.
+- Rebased again after `main` advanced, migrated the 13 newly added Markdown
+  documents into the canonical model, and added regression coverage that keeps
+  explicit human-verification and disposition choices stable across migrations.
 
 ### Remaining
 

@@ -9,9 +9,11 @@ import {
   splitFrontmatter,
 } from "#shared/markdown";
 import {
+  DispositionSchema,
   DocumentStatusSchema,
   DocumentTypeSchema,
   FrontmatterSchema,
+  VerificationSchema,
   type DocumentFrontmatter,
   type DocumentStatus,
 } from "#shared/schema";
@@ -286,7 +288,7 @@ function getBoolean(
   return typeof value === "boolean" ? value : undefined;
 }
 
-function createFrontmatter(
+export function createFrontmatter(
   relativePath: string,
   loose: Record<string, unknown>,
   body: string,
@@ -341,9 +343,21 @@ function createFrontmatter(
   const sourceMarker = getBoolean(loose, "source_marker");
   if (sourceMarker !== undefined) candidate["source_marker"] = sourceMarker;
   if (board) {
-    candidate["verification"] = status === "awaiting-human" ? "human" : "agent";
-    candidate["disposition"] =
-      existingStatus === "blocked"
+    const existingVerification = VerificationSchema.safeParse(
+      getPlainString(loose, "verification"),
+    );
+    candidate["verification"] =
+      status === "awaiting-human"
+        ? "human"
+        : existingVerification.success
+          ? existingVerification.data
+          : "agent";
+    const existingDisposition = DispositionSchema.safeParse(
+      getPlainString(loose, "disposition"),
+    );
+    candidate["disposition"] = existingDisposition.success
+      ? existingDisposition.data
+      : existingStatus === "blocked"
         ? "blocked"
         : existingStatus === "deferred"
           ? "deferred"

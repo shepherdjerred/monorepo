@@ -1,8 +1,11 @@
+---
+id: guide-2026-07-19-followup-verification-handoff
+type: guide
+status: complete
+board: false
+---
+
 # Follow-up Status & Verification Handoff — 2026-07-19
-
-## Status
-
-Complete (handoff document — the verification work it describes is NOT done)
 
 ## Purpose
 

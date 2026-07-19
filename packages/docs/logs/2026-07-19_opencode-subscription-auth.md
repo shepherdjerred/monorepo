@@ -1,6 +1,13 @@
+---
+id: log-2026-07-19-opencode-subscription-auth
+type: log
+status: complete
+board: false
+---
+
 # OpenCode Subscription Authentication
 
-## Status
+## Status Notes (Historical)
 
 Complete
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-07-19-bugsink-open-issues-root-cause
+type: log
+status: complete
+board: false
+---
+
 # Bugsink Open Issues — Root-Cause Session
-
-## Status
-
-Complete (root-cause analysis only; no fixes applied)
 
 ## Scope
 

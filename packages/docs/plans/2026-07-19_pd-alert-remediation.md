@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-19-pd-alert-remediation
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # PagerDuty Alert Remediation — crashed pods, service probes, sjer.red
-
-## Status
-
-In Progress
 
 ## Context
 
@@ -120,3 +125,7 @@ Why smoke didn't catch this: #1517 updated the pokemon smoke script's config mou
   merges, `git pull` there may refuse to overwrite it — remove the untracked
   copy first.
 - qbittorrent will still roll once on sync (config seed changed) — expected.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `PagerDuty Alert Remediation — crashed pods, service probes, sjer.red`.

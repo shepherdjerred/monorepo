@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-19-scout-lockstep-stage-deploys
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Scout-for-LoL: Lockstep (In-Step) Stage Deploys
-
-## Status
-
-In Progress — design complete, implementation not started.
 
 ## Context
 
@@ -182,3 +187,7 @@ undefined-safe (`data/src/model/subscription-filter.ts:111`, `=== null` →
 - **Marker exposure**: `/.release-version` served publicly — intentional (plain-text version; doubles as probe endpoint).
 - **Archive retention vs old pin**: only matters if the marker is lost AND the pin is >365d old; promotion cadence ≪ retention.
 - **New bucket** `scout-site-releases`: created via reviewed tofu PR (PR 1), never auto-created by a script.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Scout-for-LoL: Lockstep (In-Step) Stage Deploys`.

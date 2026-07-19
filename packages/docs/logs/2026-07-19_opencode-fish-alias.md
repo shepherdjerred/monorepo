@@ -1,10 +1,11 @@
+---
+id: log-2026-07-19-opencode-fish-alias
+type: log
+status: complete
+board: false
+---
+
 # OpenCode Fish Alias
-
-## Status
-
-Complete
-
-Added the `oc` Fish abbreviation for OpenCode and verified its expansion.
 
 ## Session Log — 2026-07-19
 

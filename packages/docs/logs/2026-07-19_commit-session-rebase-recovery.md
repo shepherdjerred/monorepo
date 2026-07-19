@@ -1,8 +1,11 @@
+---
+id: log-2026-07-19-commit-session-rebase-recovery
+type: log
+status: complete
+board: false
+---
+
 # Commit Session — Rebase Recovery and Hook-Gate Fixes
-
-## Status
-
-Complete
 
 ## Session Log — 2026-07-19
 
