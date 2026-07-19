@@ -17,6 +17,16 @@ import path from "node:path";
 const HELM_DIR = path.join(import.meta.dir, "../helm");
 const DIST_DIR = path.join(import.meta.dir, "../dist");
 
+// Every test below spawns a `helm template` subprocess. PR #1249 raised the
+// "render all charts" test's timeout to 60s after the default 5s bun test
+// timeout kept tipping over under concurrent CI load on torvalds
+// (single-node) — see the "Helm Escaping - helm template (dist/)" describe
+// below. Build 5765 (2026-07-19) hit the identical flake in one of the E2E
+// content-verification tests, which spawns its own single `helm template`
+// call but never got the same timeout bump. Shared here so both describe
+// blocks stay consistent.
+const HELM_TEMPLATE_TIMEOUT_MS = 60_000;
+
 /**
  * Check that no unescaped {{ sequences exist in YAML content.
  * Helm's Go template engine processes the ENTIRE file before YAML parsing.
@@ -132,12 +142,11 @@ describe("Helm Escaping - Denylist Check (dist/)", () => {
 describe("Helm Escaping - helm template (dist/)", () => {
   // Renders ~24 helm charts concurrently via `helm template` subprocesses.
   // Each chart takes 50-200ms on a quiet machine; rendered in parallel the
-  // whole test wraps in ~1s locally. PR #1249 raised this to 60s after the
-  // serial loop kept tipping over the default 5s under concurrent CI load on
-  // torvalds (single-node). Parallelization keeps wall time well under that
-  // ceiling even when load slows individual subprocesses.
-  const HELM_TEMPLATE_TIMEOUT_MS = 60_000;
-
+  // whole test wraps in ~1s locally. PR #1249 raised this to 60s (see the
+  // shared HELM_TEMPLATE_TIMEOUT_MS above) after the serial loop kept
+  // tipping over the default 5s under concurrent CI load on torvalds
+  // (single-node). Parallelization keeps wall time well under that ceiling
+  // even when load slows individual subprocesses.
   it(
     "should render all charts with helm template without errors",
     async () => {
@@ -173,65 +182,93 @@ describe("Helm Escaping - helm template (dist/)", () => {
 });
 
 describe("Helm Escaping - E2E Content Verification (dist/)", () => {
-  it("apps chart: Prometheus rules contain unescaped Go templates after Helm", async () => {
-    const result = await helmTemplateChart("apps");
-    expect(result.stdout).toContain("{{ $value }}");
-    expect(result.stdout).toContain("{{ $labels.");
-  });
+  it(
+    "apps chart: Prometheus rules contain unescaped Go templates after Helm",
+    async () => {
+      const result = await helmTemplateChart("apps");
+      expect(result.stdout).toContain("{{ $value }}");
+      expect(result.stdout).toContain("{{ $labels.");
+    },
+    HELM_TEMPLATE_TIMEOUT_MS,
+  );
 
-  it("apps chart: event-exporter config contains unescaped Go templates after Helm", async () => {
-    const result = await helmTemplateChart("apps");
-    expect(result.stdout).toContain("{{ .InvolvedObject.Namespace }}");
-    expect(result.stdout).toContain("{{ .Reason }}");
-  });
+  it(
+    "apps chart: event-exporter config contains unescaped Go templates after Helm",
+    async () => {
+      const result = await helmTemplateChart("apps");
+      expect(result.stdout).toContain("{{ .InvolvedObject.Namespace }}");
+      expect(result.stdout).toContain("{{ .Reason }}");
+    },
+    HELM_TEMPLATE_TIMEOUT_MS,
+  );
 
-  it("apps chart: R2 exporter Python has correct f-string braces after Helm", async () => {
-    const result = await helmTemplateChart("apps");
-    expect(result.stdout).toContain('{metrics_cache["storage_bytes"]}');
-  });
+  it(
+    "apps chart: R2 exporter Python has correct f-string braces after Helm",
+    async () => {
+      const result = await helmTemplateChart("apps");
+      expect(result.stdout).toContain('{metrics_cache["storage_bytes"]}');
+    },
+    HELM_TEMPLATE_TIMEOUT_MS,
+  );
 
-  it("apps chart: PagerDuty config contains unescaped Alertmanager templates after Helm", async () => {
-    const result = await helmTemplateChart("apps");
-    // Title (description) is a single clean line: shared summary (or alertname)
-    // + namespace + firing count. The full per-alert body must NOT be in the
-    // title — PagerDuty truncates it mid-word at ~1024 chars.
-    // See packages/docs/logs/2026-07-03_pagerduty-clean-titles.md
-    expect(result.stdout).toContain("{{ .CommonAnnotations.summary }}");
-    expect(result.stdout).toContain("{{ .CommonLabels.alertname }}");
-    // Regression guard: the per-alert `message` (falling back to `description`)
-    // must still reach PagerDuty — now in `details`, not the title — so distinct
-    // namespaces/objects grouped into one incident stay distinguishable.
-    // See packages/docs/logs/2026-05-30_pagerduty-velero-duplicate-alerts.md
-    expect(result.stdout).toContain("{{ range .Alerts.Firing }}");
-    expect(result.stdout).toContain("{{ .Annotations.message }}");
-    // Regression guard: the pre-2026-07 design inlined the whole body into the
-    // title via `{{ range .Alerts }}...summary...: ...message... }}`. Ensure the
-    // title no longer ranges over every alert (that caused the truncated blobs).
-    expect(result.stdout).not.toContain(
-      "{{ range .Alerts }}{{ .Annotations.summary }}",
-    );
-    // Regression guard: a literal backslash-n must never reach a template. Go's
-    // text/template does not interpret `\n` in literal text, so it would surface
-    // as the two characters "\n".
-    expect(result.stdout).not.toContain(
-      String.raw`{{ .Annotations.summary }}\n`,
-    );
-  });
+  it(
+    "apps chart: PagerDuty config contains unescaped Alertmanager templates after Helm",
+    async () => {
+      const result = await helmTemplateChart("apps");
+      // Title (description) is a single clean line: shared summary (or alertname)
+      // + namespace + firing count. The full per-alert body must NOT be in the
+      // title — PagerDuty truncates it mid-word at ~1024 chars.
+      // See packages/docs/logs/2026-07-03_pagerduty-clean-titles.md
+      expect(result.stdout).toContain("{{ .CommonAnnotations.summary }}");
+      expect(result.stdout).toContain("{{ .CommonLabels.alertname }}");
+      // Regression guard: the per-alert `message` (falling back to `description`)
+      // must still reach PagerDuty — now in `details`, not the title — so distinct
+      // namespaces/objects grouped into one incident stay distinguishable.
+      // See packages/docs/logs/2026-05-30_pagerduty-velero-duplicate-alerts.md
+      expect(result.stdout).toContain("{{ range .Alerts.Firing }}");
+      expect(result.stdout).toContain("{{ .Annotations.message }}");
+      // Regression guard: the pre-2026-07 design inlined the whole body into the
+      // title via `{{ range .Alerts }}...summary...: ...message... }}`. Ensure the
+      // title no longer ranges over every alert (that caused the truncated blobs).
+      expect(result.stdout).not.toContain(
+        "{{ range .Alerts }}{{ .Annotations.summary }}",
+      );
+      // Regression guard: a literal backslash-n must never reach a template. Go's
+      // text/template does not interpret `\n` in literal text, so it would surface
+      // as the two characters "\n".
+      expect(result.stdout).not.toContain(
+        String.raw`{{ .Annotations.summary }}\n`,
+      );
+    },
+    HELM_TEMPLATE_TIMEOUT_MS,
+  );
 
-  it("apps chart: no Helm escape artifacts remain after rendering", async () => {
-    const result = await helmTemplateChart("apps");
-    expect(result.stdout).not.toContain('{{ "{{" }}');
-    expect(result.stdout).not.toContain('{{ "}}" }}');
-  });
+  it(
+    "apps chart: no Helm escape artifacts remain after rendering",
+    async () => {
+      const result = await helmTemplateChart("apps");
+      expect(result.stdout).not.toContain('{{ "{{" }}');
+      expect(result.stdout).not.toContain('{{ "}}" }}');
+    },
+    HELM_TEMPLATE_TIMEOUT_MS,
+  );
 
-  it("home chart: HA Jinja2 templates contain unescaped braces after Helm", async () => {
-    const result = await helmTemplateChart("home");
-    expect(result.stdout).toContain("{{ states");
-  });
+  it(
+    "home chart: HA Jinja2 templates contain unescaped braces after Helm",
+    async () => {
+      const result = await helmTemplateChart("home");
+      expect(result.stdout).toContain("{{ states");
+    },
+    HELM_TEMPLATE_TIMEOUT_MS,
+  );
 
-  it("home chart: no Helm escape artifacts remain after rendering", async () => {
-    const result = await helmTemplateChart("home");
-    expect(result.stdout).not.toContain('{{ "{{" }}');
-    expect(result.stdout).not.toContain('{{ "}}" }}');
-  });
+  it(
+    "home chart: no Helm escape artifacts remain after rendering",
+    async () => {
+      const result = await helmTemplateChart("home");
+      expect(result.stdout).not.toContain('{{ "{{" }}');
+      expect(result.stdout).not.toContain('{{ "}}" }}');
+    },
+    HELM_TEMPLATE_TIMEOUT_MS,
+  );
 });
