@@ -19,7 +19,7 @@
  */
 
 import { readdirSync, existsSync } from "node:fs";
-import { run, requireEnv } from "../../../scripts/lib/run.ts";
+import { run, requireEnv, tmpBase } from "../../../scripts/lib/run.ts";
 
 const CHARTMUSEUM_URL = "https://chartmuseum.sjer.red/api/charts";
 
@@ -144,13 +144,19 @@ async function packageAndPush(opts: {
 
   const tgz = `${chart}-${version}.tgz`;
   console.log(`push: ${tgz} -> ChartMuseum`);
-  // curl with basic auth; a 2xx or 409 (already exists) is success.
+  // curl with basic auth; a 2xx or 409 (already exists) is success. The response
+  // body goes to a temp file, NOT `/dev/stderr`: on Linux `/dev/stderr` is
+  // `/proc/self/fd/2`, and curl reopening it fails with error 23 ("client
+  // returned ERROR on write") whenever the parent has piped stderr rather than
+  // inheriting a plain fd (which `run` now does to capture diagnostics). The
+  // temp file also lets us fold ChartMuseum's error body into the thrown error.
+  const bodyFile = `${tmpBase()}/helm-push-${chart}-${version}.body`;
   const result = await run(
     [
       "curl",
       "-sS",
       "-o",
-      "/dev/stderr",
+      bodyFile,
       "-w",
       "%{http_code}",
       "--connect-timeout",
@@ -166,6 +172,7 @@ async function packageAndPush(opts: {
     { capture: true },
   );
   const code = result.stdout.trim();
+  const body = (await Bun.file(bodyFile).text()).trim();
   if (code.startsWith("2")) {
     console.log(`${chart}: pushed (HTTP ${code})`);
     return;
@@ -174,7 +181,9 @@ async function packageAndPush(opts: {
     console.log(`${chart}: already exists (HTTP 409) — treating as success`);
     return;
   }
-  throw new Error(`${chart}: ChartMuseum push failed (HTTP ${code})`);
+  throw new Error(
+    `${chart}: ChartMuseum push failed (HTTP ${code})${body === "" ? "" : `: ${body}`}`,
+  );
 }
 
 function usage(): never {
