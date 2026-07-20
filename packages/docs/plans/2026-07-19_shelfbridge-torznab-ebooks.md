@@ -110,3 +110,39 @@ gluetun env in `resources/torrents/qbittorrent.ts`.
 - Z-Library account + `ZLIB_EMAIL`/`ZLIB_PASSWORD` fields for higher limits
 - Reconsider tofu management if devopsarr/prowlarr ever ships a generic
   Torznab indexer resource
+
+## Session Log — 2026-07-19
+
+### Done
+
+- Stacked PR [#1587](https://github.com/shepherdjerred/monorepo/pull/1587)
+  (base `feature/ebook-stack-bindery-cwa`), commit `01edd279f`
+- Image: `packages/homelab/images/shelfbridge/Dockerfile` + bake target +
+  `INFRA_IMAGES` + renovate git-refs pin — builds and passes smoke locally
+- cdk8s: `resources/torrents/shelfbridge.ts`, `media.ts` wiring, versions
+  seed pin; 1Password `shelfbridge` item created (id
+  `kdre4uvjpjeyaccfhrxfvs5rqy`) and vault snapshot refreshed
+- Verified: `bun run verify -- --affected` 30/30, cdk8s synth (service name
+  `media-shelfbridge-service` confirmed), `check:1password` green
+- Phase C pivot executed (Bindery-direct Torznab registration, no tofu
+  change) after verifying devopsarr/prowlarr has no generic Torznab resource
+
+### Remaining
+
+- Merge #1581, then #1587; first main build bakes/pushes the image and CI
+  commit-back fills the real `versions.ts` tag@digest
+- Post-deploy operator steps in the guide: register ShelfBridge as a Torznab
+  indexer in Bindery, then E2E with a Chinese title (原子习惯)
+- Watch for the gluetun webseed failure mode (below)
+
+### Caveats
+
+- `versions.ts` shelfbridge pin is a placeholder digest — ArgoCD cannot pull
+  the image until the first main build pushes it (same pattern as redlib's
+  seed; expected)
+- Z-Library runs anonymously; low rate limits until creds are added
+- Webseed downloads traverse gluetun's netns — if they stall at 0%, add
+  `FIREWALL_OUTBOUND_SUBNETS=<pod/service CIDR>` to the gluetun env in
+  `resources/torrents/qbittorrent.ts`
+- Anna's Archive / LibGen mirrors churn; `ANNAS_MIRRORS`/`LIBGEN_MIRRORS`
+  env may need updates as domains move
