@@ -178,7 +178,13 @@ hs.status = "Progressing"
 hs.message = ""
 if obj.status ~= nil then
   if obj.status.health ~= nil then
-    hs.status = obj.status.health.status
+    -- ArgoCD's Lua health evaluator requires a non-nil hs.status; a health
+    -- object without a .status field (e.g. a freshly-created child app) would
+    -- otherwise blank it out and fall back to Unknown. Keep the "Progressing"
+    -- default in that case.
+    if obj.status.health.status ~= nil then
+      hs.status = obj.status.health.status
+    end
     if obj.status.health.message ~= nil then
       hs.message = obj.status.health.message
     end
