@@ -2,9 +2,14 @@
   "$schema": "https://opencode.ai/config.json",
   "share": "disabled",
   "lsp": true,
+  // The Kimi provider is loaded from a local checkout of the shepherdjerred
+  // fork of opencode-kimi-full (default `master` branch), templated via chezmoi
+  // so the home directory resolves per-machine. This assumes the fork is cloned
+  // at ~/git/opencode-kimi-full; switch to a published package reference once
+  // the fork's changes land upstream.
   "plugin": [
-{{- if stat (joinPath .chezmoi.homeDir "git/opencode-kimi-full-kimi-api") }}
-    {{ joinPath .chezmoi.homeDir "git/opencode-kimi-full-kimi-api" | toJson }},
+{{- if stat (joinPath .chezmoi.homeDir "git/opencode-kimi-full") }}
+    {{ joinPath .chezmoi.homeDir "git/opencode-kimi-full" | toJson }},
 {{- end }}
     "@slkiser/opencode-quota@3.11.2",
   ],
