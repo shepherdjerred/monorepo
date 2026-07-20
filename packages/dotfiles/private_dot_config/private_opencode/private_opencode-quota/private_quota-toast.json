@@ -18,7 +18,8 @@
     "homeBottom": true,
     "sessionPrompt": true,
     "suppressWhenNativeProviderQuota": false,
-    "formatStyle": "allWindows"
+    "formatStyle": "allWindows",
+    "maxWidth": 160
   },
   "maintainerAnnouncements": {
     "enabled": false,
