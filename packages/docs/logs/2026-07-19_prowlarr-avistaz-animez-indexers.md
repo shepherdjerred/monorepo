@@ -1,8 +1,13 @@
+---
+id: log-2026-07-19-prowlarr-avistaz-animez-indexers
+type: log
+status: complete
+board: false
+---
+
 # Prowlarr AvistaZ + AnimeZ indexers (IaC)
 
-## Status
-
-Complete — both indexers created in prod Prowlarr (AvistaZ id=9, AnimeZ id=8), enabled, and passing Prowlarr's connection test.
+Both indexers created in prod Prowlarr (AvistaZ id=9, AnimeZ id=8), enabled, and passing Prowlarr's connection test.
 
 ## Goal
 
