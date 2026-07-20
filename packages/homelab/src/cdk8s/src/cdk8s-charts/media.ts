@@ -15,6 +15,8 @@ import { createMaintainerrDeployment } from "@shepherdjerred/homelab/cdk8s/src/r
 import { createRecyclarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/recyclarr.ts";
 import { createWhisperbridgeDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/whisperbridge.ts";
 import { createStreambotDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/streambot.ts";
+import { createBinderyDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/bindery.ts";
+import { createCalibreWebAutomatedDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/calibre-web-automated.ts";
 import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 
 export function createMediaChart(app: App) {
@@ -32,6 +34,10 @@ export function createMediaChart(app: App) {
   });
   const moviesVolume = new ZfsSataVolume(chart, "plex-movies-hdd-pvc", {
     storage: Size.tebibytes(6),
+  });
+  // Ebook library + CWA ingest (subPaths library/ and ingest/)
+  const booksVolume = new ZfsSataVolume(chart, "ebooks-hdd-pvc", {
+    storage: Size.gibibytes(50),
   });
 
   // Media services that share volumes
@@ -65,6 +71,15 @@ export function createMediaChart(app: App) {
   createMaintainerrDeployment(chart);
   createRecyclarrDeployment(chart);
   createWhisperbridgeDeployment(chart);
+
+  // Ebook stack: Bindery (acquire) → qBit → CWA ingest → library / Kindle Auto-Send
+  createBinderyDeployment(chart, {
+    books: booksVolume.claim,
+    downloads: downloadsVolume.claim,
+  });
+  createCalibreWebAutomatedDeployment(chart, {
+    books: booksVolume.claim,
+  });
 
   // streambot (packages/streambot) lives here so it can read-only mount the movies/tv libraries.
   createStreambotDeployment(chart, {

@@ -50,6 +50,12 @@ export function createPostalChart(app: App) {
                 matchLabels: { "kubernetes.io/metadata.name": "birmel" },
               },
             },
+            {
+              // CWA Kindle Auto-Send (SMTP configured in CWA UI → Postal)
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "media" },
+              },
+            },
           ],
           ports: [{ port: IntOrString.fromNumber(25), protocol: "TCP" }],
         },
