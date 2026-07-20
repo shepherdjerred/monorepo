@@ -97,3 +97,20 @@ reporting and existing provider integrations.
 - Restart the currently running OpenCode TUI to load the changed plugin configuration.
 - Re-run `corepack pnpm link ~/git/opencode-kimi-full` from `~/git/opencode-quota` after reinstalling quota dependencies because the local companion link lives under ignored `node_modules`.
 - Update the clones with `git pull`, reinstall dependencies when lockfiles change, and rebuild before expecting new fork code to become active.
+
+## Session Log — 2026-07-19 (Homepage Remaining + Claude Code Usage)
+
+### Done
+
+- Merged `shepherdjerred/opencode-quota#2` so compact percentage lines start with `Remaining:` or `Used:`.
+- Merged `shepherdjerred/opencode-quota#3` so Claude Code quota uses Claude CLI/OAuth credentials without requiring OpenCode Anthropic chat setup.
+- Enabled `anthropic` in live and chezmoi-managed `enabledProviders`.
+- Verified compact output shape including Claude 5h and weekly windows.
+
+### Remaining
+
+- Restart the running OpenCode TUI to load the rebuilt local plugin and Anthropic provider.
+
+### Caveats
+
+- Claude Code usage is display-only here; OpenCode auth still has only OpenAI, Kimi, and xAI credentials.

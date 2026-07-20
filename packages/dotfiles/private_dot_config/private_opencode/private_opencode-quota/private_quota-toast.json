@@ -1,5 +1,5 @@
 {
-  "enabledProviders": ["openai", "xai", "kimi-for-coding"],
+  "enabledProviders": ["openai", "xai", "kimi-for-coding", "anthropic"],
   "enableToast": false,
   "formatStyle": "allWindows",
   "percentDisplayMode": "remaining",
