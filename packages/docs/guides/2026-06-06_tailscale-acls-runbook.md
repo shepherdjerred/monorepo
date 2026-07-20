@@ -1,3 +1,10 @@
+---
+id: guide-2026-06-06-tailscale-acls-runbook
+type: guide
+status: complete
+board: false
+---
+
 # Tailscale ACLs — enablement runbook
 
 ## Status: In Progress — reconciled & validated, not yet applied

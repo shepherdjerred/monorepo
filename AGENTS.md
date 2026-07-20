@@ -86,7 +86,7 @@ When plan mode is used, copy the approved plan from `~/.claude/plans/<slug>.md` 
 
 ### Conventions (both logs and plans)
 
-- **Include a `## Status` line** near the top: `In Progress`, `Complete`, `Partially Complete`, or `Abandoned`.
+- **Use canonical YAML frontmatter** with `id`, `type`, `status`, and `board`; frontmatter is the only workflow status source. Board items also require `verification` and `disposition`.
 - **Raw Markdown only** — never render to PDF or Typst.
 - **Do not individually index high-churn docs.** `packages/docs/plans/`, `packages/docs/logs/`, and `packages/docs/todos/` are linked as directories only to avoid merge conflicts.
 - See `packages/docs/AGENTS.md` for the broader docs taxonomy (architecture / patterns / decisions / guides / plans / logs / todos).
@@ -132,7 +132,7 @@ If the fix is substantial or belongs to a future session, also file it as a `pac
 
 ### When a plan is finished
 
-When a plan in `packages/docs/plans/` reaches `Status: Complete` and the work is shipped, `git mv` it to `packages/docs/archive/completed/`. Don't leave finished plans accumulating in `plans/`.
+When a plan in `packages/docs/plans/` reaches `status: complete` and the work is shipped, move it to `packages/docs/archive/completed/`. Don't leave finished plans accumulating in `plans/`.
 
 ## TODO Documentation
 
@@ -140,9 +140,10 @@ When a plan in `packages/docs/plans/` reaches `Status: Complete` and the work is
 
 - Every source marker (`TODO(todo:<kebab-id>)`, `FIXME(todo:<kebab-id>)`, `XXX(todo:<kebab-id>)`) MUST have a matching `packages/docs/todos/<kebab-id>.md`. This direction is enforced.
 - General issue todos may exist with no source marker. Use kebab-case ids; the filename (sans `.md`) is the id.
-- TODO docs use YAML frontmatter: `id`, `status` (one of `active`, `deferred`, `blocked`, `waiting-on-verification`, `resolved`), `origin` (path to the log/plan/PR that birthed it), and `source_marker: true` only if a code marker exists.
-- When resolved, delete the doc and remove any matching source marker in the same commit.
-- `bun scripts/check-todos.ts` enforces the source-marker → doc invariant (plus frontmatter/id sanity) in pre-commit and CI.
+- TODO docs use the canonical docs frontmatter. Set `type: todo`, `board: true`, a workflow `status` (`planned`, `in-progress`, `awaiting-human`, or `complete`), `verification`, `disposition`, and `origin`; add `source_marker: true` only when a code marker exists.
+- Active work uses unchecked tasks in `## Remaining`. Work ready for delayed signoff uses `status: awaiting-human` plus `## Human Verification`. Append steering notes and status audit entries under `## Comment Log`.
+- When resolved, remove any matching source marker and archive the complete TODO to `packages/docs/archive/completed/` in the same commit.
+- `bun run check-todos` enforces the complete docs model, including the source-marker → TODO invariant, frontmatter, semantic headings, workflow sections, IDs, and archival rules.
 
 ## Temporal Agent Follow-ups
 

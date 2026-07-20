@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-renovate-pr-1214-protobufjs-v8
+type: log
+status: complete
+board: false
+---
+
 # Renovate PR #1214 — protobufjs v8.3 Tending
-
-## Status
-
-Complete
 
 ## Context
 

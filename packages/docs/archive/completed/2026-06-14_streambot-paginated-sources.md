@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-14-streambot-paginated-sources
+type: reference
+status: complete
+board: false
+---
+
 # Paginated `/stream sources` — exploration-friendly source browser
-
-## Status
-
-Complete — shipped in PR #1247.
 
 ## Context
 

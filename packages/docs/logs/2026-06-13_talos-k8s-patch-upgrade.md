@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-talos-k8s-patch-upgrade
+type: log
+status: complete
+board: false
+---
+
 # Talos 1.13.4 + Kubernetes 1.36.2 Upgrade (torvalds)
-
-## Status
-
-Complete
 
 ## Summary
 

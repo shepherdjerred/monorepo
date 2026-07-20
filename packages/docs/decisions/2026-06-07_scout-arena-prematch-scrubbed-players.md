@@ -1,3 +1,10 @@
+---
+id: decision-2026-06-07-scout-arena-prematch-scrubbed-players
+type: decision
+status: complete
+board: false
+---
+
 # Scout Arena Pre-match — Privacy-scrubbed Tracked Players Are Dropped
 
 **Date:** 2026-06-07

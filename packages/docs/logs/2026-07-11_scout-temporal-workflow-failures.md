@@ -1,8 +1,11 @@
+---
+id: log-2026-07-11-scout-temporal-workflow-failures
+type: log
+status: complete
+board: false
+---
+
 # Scout Temporal workflow failures — diagnosis
-
-## Status
-
-Complete (diagnosis only — no fix applied this session)
 
 ## Question
 

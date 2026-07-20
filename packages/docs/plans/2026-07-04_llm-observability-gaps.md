@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-04-llm-observability-gaps
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Fill LLM Observability Gaps — 100% Coverage
-
-## Status
-
-In Progress — implemented; PR [#1403](https://github.com/shepherdjerred/monorepo/pull/1403) open; post-merge live verifications pending (see Session Log)
 
 ## Decisions
 
@@ -129,3 +134,7 @@ In Progress — implemented; PR [#1403](https://github.com/shepherdjerred/monore
 - dpp keeps its non-default archive prefix `goals/discord-plays-pokemon` — don't look for its envelopes under `llm/`.
 - Temporal integration tests need a local dev server (`temporal server start-dev`); without it exactly 3 tests fail with connection-refused — environmental, not code.
 - CLI fixtures are prettier-ignored (`.prettierignore`) to stay byte-faithful to real CLI output.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Fill LLM Observability Gaps — 100% Coverage`.

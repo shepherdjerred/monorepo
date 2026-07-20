@@ -1,6 +1,11 @@
-## Status
+---
+id: reference-completed-2026-06-13-pokemon-goal-mode
+type: reference
+status: complete
+board: false
+---
 
-Complete
+# Pokemon Goal Mode
 
 ## Goal
 

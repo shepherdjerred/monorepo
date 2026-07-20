@@ -1,8 +1,11 @@
+---
+id: log-2026-06-07-skip-release-pr-1084
+type: log
+status: complete
+board: false
+---
+
 # Skip release-please PR #1084
-
-## Status
-
-Complete
 
 ## Context
 

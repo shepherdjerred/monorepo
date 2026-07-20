@@ -1,10 +1,11 @@
+---
+id: log-2026-07-19-60d-retrospective-qa
+type: log
+status: complete
+board: false
+---
+
 # 60-Day Retrospective Q&A
-
-## Status
-
-Complete
-
-Read-only Q&A session: summarized what the monorepo worked on from 2026-05-20 to 2026-07-19, sourced from `packages/docs/logs/`, `packages/docs/plans/`, and `git log --since=2026-05-20` (~1,197 commits, ~300 session logs).
 
 ## Themes identified
 

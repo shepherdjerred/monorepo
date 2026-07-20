@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-read-claude-jsonl
+type: log
+status: complete
+board: false
+---
+
 # Read Claude JSONL Transcript
-
-## Status
-
-Complete
 
 ## Summary
 

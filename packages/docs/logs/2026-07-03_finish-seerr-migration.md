@@ -1,6 +1,13 @@
+---
+id: log-2026-07-03-finish-seerr-migration
+type: log
+status: complete
+board: false
+---
+
 # Finish Overseerr → Seerr Migration
 
-## Status
+## Status Notes (Historical)
 
 **Ready to merge.** The 8 users + 156 requests were migrated into Seerr and an
 edge redirect `overseerr.sjer.red → seerr.sjer.red` is live (both executed

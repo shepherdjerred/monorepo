@@ -1,10 +1,11 @@
+---
+id: log-2026-07-09-code-quality-study
+type: log
+status: complete
+board: false
+---
+
 # Code Quality Study — Monorepo-wide Audit
-
-## Status
-
-Complete
-
-Read-only study (no code changes). Scope: everything except `sandbox/`. Census of 2,812 source files (TS/TSX/Astro/Py/Go/Rs/Swift/Java/Kt), 3 parallel Explore-agent sweeps (ESLint config, test-vs-src parity, problem spots), plus direct verification of ratchet, tsconfigs, and CI wiring.
 
 ## TL;DR
 
@@ -86,7 +87,7 @@ Verdict: no evidence of "dumb splitting" to dodge the rule; instead, the pressur
 - TS is remarkably clean: ~17 `: any` annotations repo-wide (several in eslint-config rule fixtures), 0 `as any` outside vendored code, 0 empty catches found by sweep, 0 untagged TODO/FIXME markers (check-todos enforcement works).
 - Go: 2 `_ = err` in deferred body-close (idiomatic, fine). Rust: 0 non-test `unwrap()`.
 
-## Recommendations (ranked)
+## Quality recommendations (ranked)
 
 1. **Python toolchain** (biggest gap): root `pyproject.toml`/`ruff.toml` with ruff (incl. E722) + basedpyright or mypy --strict; wire into lefthook + Dagger like shellcheck. Fix velero-report.py's 5 bare excepts as the first beneficiary.
 2. **Put scout desktop Rust in CI**: `cargo clippy --all-targets -D warnings` + `cargo fmt --check` + tests in the Dagger pipeline (currently local-only mise task; clippy.toml is dead weight in CI terms).
@@ -96,7 +97,7 @@ Verdict: no evidence of "dumb splitting" to dodge the rule; instead, the pressur
 6. **Turn on `analysisRules`** (knip + jscpd) in at least scout-for-lol, temporal, homelab — the rules already exist.
 7. **Tighten stragglers**: move dpp/dpmk backend+common tsconfigs from `@tsconfig/recommended` to `tsconfig.base.json`; give cooklang-for-obsidian real `strict: true`; consider ratcheting the test max-lines 1500 → 1000 over time.
 
-# Part 3 — Automated Enforcement Map (same session)
+## Part 3 — Automated Enforcement Map (same session)
 
 Mapping the Part 1/2 findings to mechanical enforcement. Verified: dependency-cruiser/syncpack/publint exist nowhere in the repo; knip+jscpd are already wrapped as custom ESLint rules (`packages/eslint-config/src/rules/knip-unused.ts`, `jscpd-duplication.ts`) with zero adopters.
 
@@ -116,7 +117,7 @@ Mapping the Part 1/2 findings to mechanical enforcement. Verified: dependency-cr
 
 **Rollout order**: (1) architecture tests → (2) test-hygiene custom rules + ratchet extensions → (3) dependency-cruiser (scout DAG, no-circular, deep-import bans) → (4) knip report-only→ratchet→error per package → (5) jscpd cross-package game bots → (6) syncpack/publint opportunistically.
 
-# Part 2 — Architecture Study (same session)
+## Part 2 — Architecture Study (same session)
 
 12 parallel subagent reviews, one per major package: scout-for-lol, homelab, temporal, discord-plays-pokemon, discord-plays-mario-kart, streambot, birmel, toolkit, tasks-for-obsidian (+tasknotes-server/types), monarch, CI layer (scripts/ci + .dagger + lefthook), shared libraries.
 
@@ -163,7 +164,7 @@ change-detection.ts (1,124), .dagger/index.ts (1,998 — SDK-forced single class
 
 `file:`-dep prebuild pattern: phase-4 refresh list in setup.ts is hand-maintained (5 consumers); a new consumer silently runs on stale dist. Vendored discord-video-stream fork has no upstream-drift detection.
 
-## Recommendations (ranked)
+## Architecture recommendations (ranked)
 
 1. **Extract `discord-plays` framework** from pokemon+mk middle layer (entry wiring, streamer orchestration, audio transport, dispatch skeleton) — the one large refactor with compounding payoff.
 2. **"Loud edges" pass**: tasknotes lenient-parse + structured warnings; temporal event-bridge failure alert; monarch structured-output mode + KB eviction; toolkit MLX-degradation notice.

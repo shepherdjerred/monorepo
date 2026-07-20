@@ -1,8 +1,11 @@
+---
+id: log-2026-07-09-docker-helm-infra-deps-pr
+type: log
+status: complete
+board: false
+---
+
 # Docker/Helm/Infra-Tool Dependency Bump PR
-
-## Status
-
-Complete
 
 ## Context
 

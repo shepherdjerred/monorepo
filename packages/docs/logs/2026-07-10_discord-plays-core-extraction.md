@@ -1,8 +1,11 @@
+---
+id: log-2026-07-10-discord-plays-core-extraction
+type: log
+status: complete
+board: false
+---
+
 # discord-plays-core extraction (PR6, quality wave 2)
-
-## Status
-
-Complete (uncommitted; staged in the `discord-plays-core` worktree).
 
 ## Goal
 

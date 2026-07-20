@@ -1,10 +1,15 @@
+---
+id: plan-2026-05-05-homekit-vacuum-via-matter-hub
+type: plan
+status: planned
+board: true
+verification: agent
+disposition: active
+---
+
 # HomeKit Vacuum Support via Matter Hub
 
 Add `home-assistant-matter-hub` (HAMH) to the cluster so HA `vacuum.*` entities (Roomba, Roborock, Dreame, etc.) appear as native robot vacuums in Apple Home.
-
-## Status
-
-**Not started.** Proposed; no hardware ordered, no PR open.
 
 ## Why this and not the HomeKit Bridge
 
@@ -90,3 +95,7 @@ Prerequisite: the vacuum's HA integration is already working — `vacuum.<name>`
 - Server Mode rationale (Apple aggregator crash): https://github.com/t0bst4r/home-assistant-matter-hub/issues/642
 - HA HomeKit Bridge vacuum decision: https://github.com/orgs/home-assistant/discussions/3121
 - HA community feature request thread: https://community.home-assistant.io/t/homekit-vacuum-entity-support/771548
+
+## Remaining
+
+- [ ] Complete and verify the work described in `HomeKit Vacuum Support via Matter Hub`.

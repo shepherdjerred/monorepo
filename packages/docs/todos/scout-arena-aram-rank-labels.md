@@ -1,6 +1,10 @@
 ---
 id: scout-arena-aram-rank-labels
-status: deferred
+type: todo
+status: planned
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-05-16_scout-common-denominator.md
 source_marker: false
 ---
@@ -17,11 +21,11 @@ Bonus: `ServerPairingStatsSchema` documents `individualStats` as "solo games whe
 
 The originating session was an inspection-only review of the Common Denominator feature. The bugs are real but were not fixed in-place because (a) no decision yet on whether the feature is expected to evolve further, (b) no dedicated tests exist for `calculatePairingStats`, `findSurrenderLeaders`, `generateAbbreviatedSection`, or the weekly formatting path.
 
-## Done when
+## Remaining
 
-- `generateAbbreviatedSection` (or wherever the rank label is computed) shows the global leaderboard rank for each entry in the Arena/ARAM "Worst Pairings" section.
-- The `individualStats` schema docstring matches the actual implementation (or the implementation is changed to match the docstring).
-- Focused tests added for `calculatePairingStats` and the weekly message formatter that lock in the rank-label behavior.
+- [ ] `generateAbbreviatedSection` (or wherever the rank label is computed) shows the global leaderboard rank for each entry in the Arena/ARAM "Worst Pairings" section.
+- [ ] The `individualStats` schema docstring matches the actual implementation (or the implementation is changed to match the docstring).
+- [ ] Focused tests added for `calculatePairingStats` and the weekly message formatter that lock in the rank-label behavior.
 
 ## References
 

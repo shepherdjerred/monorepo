@@ -1,8 +1,11 @@
+---
+id: log-2026-07-09-ci-base-dagger-version-mismatch
+type: log
+status: complete
+board: false
+---
+
 # PR #1391 CI failure: ci-base dagger CLI stuck on v0.20.8 vs v0.21.7 engine
-
-## Status
-
-In Progress (fix PR #1433 open; PR #1391 still needs to pick it up after merge)
 
 ## Context
 

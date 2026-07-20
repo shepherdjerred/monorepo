@@ -1,8 +1,11 @@
+---
+id: log-2026-06-25-homelab-auth-strategy-discussion
+type: log
+status: complete
+board: false
+---
+
 # Homelab Auth Strategy — Discussion
-
-## Status
-
-Complete (advisory; no code changes)
 
 ## Question
 

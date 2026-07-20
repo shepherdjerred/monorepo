@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-12-talos-install-disk-selector
+type: reference
+status: complete
+board: false
+---
+
 # Fix Talos install disk selector (serial-based) on torvalds
-
-## Status
-
-Complete — shipped 2026-06-12 (repo patch + live machine config).
 
 ## Context
 

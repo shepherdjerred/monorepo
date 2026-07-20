@@ -1,8 +1,11 @@
+---
+id: log-2026-07-04-stash-conflict-reconcile-dagger-outage-log
+type: log
+status: complete
+board: false
+---
+
 # Reconcile Stale Autostash Conflict on the Dagger Outage Log
-
-## Status
-
-Complete
 
 ## Summary
 

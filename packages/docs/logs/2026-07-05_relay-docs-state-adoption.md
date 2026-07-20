@@ -1,8 +1,11 @@
+---
+id: log-2026-07-05-relay-docs-state-adoption
+type: log
+status: complete
+board: false
+---
+
 # Relay docs bucket state adoption
-
-## Status
-
-Complete
 
 ## Summary
 

@@ -1,3 +1,10 @@
+---
+id: reference-stale-2026-03-27-minecraft-modpack-recommendations
+type: reference
+status: complete
+board: false
+---
+
 # Minecraft Modpack Recommendations
 
 Modpacks with structure, goals, and quest systems for players who prefer guided progression over pure sandbox. Optimized for cozy/building playstyles (Stardew Valley, Pokemon Pokopia fans) with minimal combat.

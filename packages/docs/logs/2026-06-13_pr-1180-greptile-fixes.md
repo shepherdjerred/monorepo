@@ -1,11 +1,13 @@
 ---
+id: log-2026-06-13-pr-1180-greptile-fixes
+type: log
+status: complete
+board: false
 title: "PR #1180 — address Greptile P1/P2 findings in goal-manager"
 date: 2026-06-13
 ---
 
-## Status
-
-Complete
+# Pr 1180 Greptile Fixes
 
 ## Summary
 

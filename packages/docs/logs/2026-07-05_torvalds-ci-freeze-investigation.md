@@ -1,6 +1,13 @@
+---
+id: log-2026-07-05-torvalds-ci-freeze-investigation
+type: log
+status: complete
+board: false
+---
+
 # torvalds CI freeze — investigation handoff (facts only)
 
-## Status
+## Status Notes (Historical)
 
 In Progress — data-gathering only. No runtime, cluster, or code changes made. No root cause
 established.

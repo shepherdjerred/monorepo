@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-12-scout-reporting-editor-improvements
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Scout Reporting Editor Improvements
-
-## Status
-
-In Progress
 
 ## Summary
 
@@ -93,3 +98,7 @@ Unify and improve Scout's reporting workflow: correct preview tables, add readab
 ### Caveats
 
 - Repository inspection and implementation have not started.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Scout Reporting Editor Improvements`.

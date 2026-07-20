@@ -1,8 +1,11 @@
+---
+id: log-2026-05-26-built-image-version-bump
+type: log
+status: complete
+board: false
+---
+
 # Built image version bump
-
-## Status
-
-Complete
 
 ## Summary
 

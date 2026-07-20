@@ -1,8 +1,11 @@
+---
+id: log-2026-06-28-pr-1340-seaweedfs-tailnet
+type: log
+status: complete
+board: false
+---
+
 # PR #1340 — SeaweedFS S3 tailnet-only endpoint
-
-## Status
-
-Complete
 
 ## Context
 

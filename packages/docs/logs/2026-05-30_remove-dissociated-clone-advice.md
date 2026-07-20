@@ -1,10 +1,11 @@
+---
+id: log-2026-05-30-remove-dissociated-clone-advice
+type: log
+status: complete
+board: false
+---
+
 # Remove dissociated-clone advice — rely on worktrees
-
-## Status
-
-Complete
-
-User asked to drop the "git alternative working sets" (dissociated clone) guidance and standardize on `git worktree` for parallel/isolated work.
 
 ## Changes
 

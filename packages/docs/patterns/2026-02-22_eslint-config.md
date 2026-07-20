@@ -1,3 +1,10 @@
+---
+id: pattern-2026-02-22-eslint-config
+type: pattern
+status: complete
+board: false
+---
+
 # ESLint Configuration
 
 Shared flat config at `packages/eslint-config/` exporting a `recommended()` function.

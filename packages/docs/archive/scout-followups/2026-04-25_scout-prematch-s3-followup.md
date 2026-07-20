@@ -1,3 +1,10 @@
+---
+id: reference-scout-followups-2026-04-25-scout-prematch-s3-followup
+type: reference
+status: complete
+board: false
+---
+
 # Scout Prematch S3 Follow-up — 2026-04-25
 
 ## Scope

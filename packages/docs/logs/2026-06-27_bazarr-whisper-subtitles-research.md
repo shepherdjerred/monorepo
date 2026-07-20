@@ -1,8 +1,11 @@
+---
+id: log-2026-06-27-bazarr-whisper-subtitles-research
+type: log
+status: complete
+board: false
+---
+
 # Bazarr: Whisper health check + subtitle-strategy research
-
-## Status
-
-Complete (research/diagnosis only — no code changes made)
 
 ## Context
 

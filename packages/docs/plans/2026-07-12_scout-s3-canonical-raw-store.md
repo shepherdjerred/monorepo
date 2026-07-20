@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-12-scout-s3-canonical-raw-store
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Scout for LoL — Arena queue fix, retire report seeding, and S3-canonical raw store
-
-## Status
-
-In Progress — Part 1 (Arena fix) and Part 2 (retire seeding + remove ARAM) implemented & tested on branch `feature/scout-s3-canonical`. Part 3 (S3-canonical pivot + destructive 7-table drop) not yet implemented in code — fully designed below.
 
 ## Context
 
@@ -166,3 +171,7 @@ One PR, but the rollout is ordered so the irreversible step is safe, and it is *
 - The branch has Parts 1 & 2 as uncommitted working-tree changes in the worktree `.claude/worktrees/scout-s3-canonical` (no commits yet). Part 3 is untouched, so the tree is build-consistent.
 - Part 3's ingest rewrite has real data-loss surface (authoritative S3 write + cursor gating) and ends in an **irreversible** table drop — it must be implemented with the §3f completeness gate + rebuild-parity, not rushed. The prematch `observed_at` shifts from a DB column to S3 `LastModified` (a documented behavior change to quantify in rebuild-parity).
 - `saveToS3` currently no-ops when `S3_BUCKET_NAME` is unset (relied on by dev/test); §3a must make that a hard failure only where S3 is authoritative without breaking the offline test path.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Scout for LoL — Arena queue fix, retire report seeding, and S3-canonical raw store`.

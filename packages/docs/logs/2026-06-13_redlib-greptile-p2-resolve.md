@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-redlib-greptile-p2-resolve
+type: log
+status: complete
+board: false
+---
+
 # PR #1147 Greptile P2 Resolution — redlib all-zeros seed digest
-
-## Status
-
-Complete
 
 ## Context
 

@@ -1,9 +1,11 @@
+---
+id: decision-2026-07-19-infrastructure-security-audit
+type: decision
+status: complete
+board: false
+---
+
 # Homelab infrastructure security audit
-
-## Status
-
-Complete — read-only assessment and independent adversarial review complete; remediation not
-started.
 
 ## Audit snapshot
 

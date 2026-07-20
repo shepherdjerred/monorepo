@@ -40,7 +40,7 @@ pre-commit:
             run: bun scripts/check-suppressions.ts
 
           - name: check-todos
-            run: bun scripts/check-todos.ts
+            run: bun run check-todos
 
           - name: migration-guard
             run: bun scripts/guard-no-package-exclusions.ts

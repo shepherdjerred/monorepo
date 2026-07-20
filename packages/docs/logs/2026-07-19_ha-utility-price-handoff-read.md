@@ -1,11 +1,11 @@
+---
+id: log-2026-07-19-ha-utility-price-handoff-read
+type: log
+status: complete
+board: false
+---
+
 # Home Assistant Utility Price Tracking Handoff Read
-
-## Status
-
-Complete
-
-Read `packages/docs/guides/2026-07-19_ha-utility-price-tracking-handoff.md`
-to establish context for subsequent Home Assistant utility-price work.
 
 ## Session Log — 2026-07-19
 

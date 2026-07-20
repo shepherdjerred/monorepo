@@ -1,8 +1,11 @@
+---
+id: log-2026-06-07-knip-ci-only-precommit
+type: log
+status: complete
+board: false
+---
+
 # Make knip CI-only (off the pre-commit path)
-
-## Status
-
-Complete
 
 ## Context
 

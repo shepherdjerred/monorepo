@@ -1,8 +1,11 @@
+---
+id: decision-2026-04-05-renovate-homeassistant-manager-disabled
+type: decision
+status: complete
+board: false
+---
+
 # Renovate: Home Assistant Manifest Manager Disabled
-
-## Status
-
-Active
 
 ## Decision
 

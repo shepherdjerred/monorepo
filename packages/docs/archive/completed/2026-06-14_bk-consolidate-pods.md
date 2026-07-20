@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-14-bk-consolidate-pods
+type: reference
+status: complete
+board: false
+---
+
 # Consolidate Buildkite — Fewer Agents, Same Parallelism
-
-## Status
-
-Complete — shipped in PR #1234 (Buildkite pods 175 → 86).
 
 ## Context
 

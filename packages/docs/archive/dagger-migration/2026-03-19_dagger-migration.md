@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-03-19-dagger-migration
+type: reference
+status: complete
+board: false
+---
+
 # Plan: Replace Bazel with Dagger for CI
 
 ## Context

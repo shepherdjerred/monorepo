@@ -1,6 +1,15 @@
+---
+id: plan-2026-06-27-homelab-iac-adoption
+type: plan
+status: awaiting-human
+board: true
+verification: human
+disposition: active
+---
+
 # Homelab IaC Adoption — Buildkite, PagerDuty, \*arr, qBittorrent
 
-## Status
+## Status Notes (Historical)
 
 Complete (PR open, pending merge)
 
@@ -74,7 +83,7 @@ Committed sanitized `qBittorrent.conf` baseline (`src/cdk8s/src/resources/config
 | Golink                                                                            | JSON snapshot export/import (additive)                                 |
 | Bugsink                                                                           | API-scriptable (teams/projects) — best automation candidate (seed Job) |
 
-## Verification
+## Human Verification
 
 Per Tofu stack: `tofu init -backend=false && tofu validate`; full `tofu plan` (via Dagger) must show **zero destroys** post-import before enabling. qBittorrent: cdk8s synth + tests + lint (done). Root: typecheck/test/eslint in touched packages; `cd scripts/ci && bun run src/main.ts`.
 

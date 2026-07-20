@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-pr-1196-greptile-fixes
+type: log
+status: complete
+board: false
+---
+
 # PR #1196 — Greptile P1/P2 fixes (streambot-readrate-backpressure)
-
-## Status
-
-Complete
 
 ## Context
 

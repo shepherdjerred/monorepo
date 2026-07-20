@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-03-scout-s3-image-retention
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Scout-for-LoL S3 image retention (30-day GC)
-
-## Status
-
-Partially Complete — code built, tested, and validated against live data; awaiting PR merge + post-deploy one-time reclaim (Phase 3).
 
 ## Problem
 
@@ -104,3 +109,7 @@ Phase 0 showed the worker's existing `scout` identity already has Admin on both 
   (fails loudly if the manifest can't be fetched). The pruned sources were
   restored byte-identically from the committed showcase PNGs (the generator
   copies S3 bytes verbatim for `s3-image` entries).
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Scout-for-LoL S3 image retention (30-day GC)`.

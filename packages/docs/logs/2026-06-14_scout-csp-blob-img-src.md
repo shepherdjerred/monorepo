@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-scout-csp-blob-img-src
+type: log
+status: complete
+board: false
+---
+
 # Scout web UI: blob: chart images blocked by CSP
-
-## Status
-
-Complete
 
 ## Symptom
 

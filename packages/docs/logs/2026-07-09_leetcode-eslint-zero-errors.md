@@ -1,8 +1,11 @@
+---
+id: log-2026-07-09-leetcode-eslint-zero-errors
+type: log
+status: complete
+board: false
+---
+
 # LeetCode package — ESLint to zero errors
-
-## Status
-
-Complete
 
 ## Context
 

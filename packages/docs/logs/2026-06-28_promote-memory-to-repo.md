@@ -1,8 +1,11 @@
+---
+id: log-2026-06-28-promote-memory-to-repo
+type: log
+status: complete
+board: false
+---
+
 # Promote personal MEMORY.md knowledge into shared repo config
-
-## Status
-
-Complete
 
 ## Context
 

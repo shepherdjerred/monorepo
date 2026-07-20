@@ -1,8 +1,11 @@
+---
+id: log-2026-06-27-main-ci-red-seaweedfs-volume-exhaustion
+type: log
+status: complete
+board: false
+---
+
 # Main CI red — SeaweedFS volume-count exhaustion
-
-## Status
-
-In Progress (fix authored — PR open; operator must apply the PVC expansion)
 
 ## Question
 

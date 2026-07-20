@@ -1,6 +1,15 @@
+---
+id: plan-2026-04-21-temporal-tailscale-exposure
+type: plan
+status: planned
+board: true
+verification: agent
+disposition: active
+---
+
 # Expose Temporal gRPC over Tailscale (no port-forward)
 
-## Status
+## Status Notes (Historical)
 
 Not Started. The Temporal runbook still uses port-forwarding, and no `TailscaleService` helper exists yet.
 
@@ -98,3 +107,7 @@ temporal operator cluster health
 - **Auth**: current gRPC is unauthenticated and now reachable from any tailnet device. That's consistent with the existing tailnet trust model (UI is also tailnet-exposed) but worth a conscious ack.
 - **Metrics port (9090)**: not exposed over tailnet today. Out of scope for this plan; add a second `TailscaleService` later if needed.
 - Any other consumer currently pointing at `temporal.tailnet-1a49.ts.net:7233`? Grep confirms only the runbook references this address, so no breakage expected.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Expose Temporal gRPC over Tailscale (no port-forward)`.

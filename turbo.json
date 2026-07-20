@@ -56,10 +56,12 @@
     // big generated dirs are negated wherever a broad glob is needed.
     "//#check-todos": {
       "inputs": [
-        "packages/docs/todos/**",
+        "packages/docs/**",
         "packages/**/*.ts",
         "!packages/**/node_modules/**",
-        "scripts/check-todos.ts"
+        "packages/docs-board/src/cli/check-docs.ts",
+        "packages/docs-board/src/server/document-store.ts",
+        "packages/docs-board/src/shared/**"
       ]
     },
     "//#check-suppressions": {

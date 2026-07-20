@@ -1,8 +1,11 @@
+---
+id: log-2026-07-19-pr-babysitting-fleet
+type: log
+status: complete
+board: false
+---
+
 # PR Babysitting Fleet — all open PRs to green
-
-## Status
-
-Complete (one PR operator-blocked; see Caveats)
 
 ## What happened
 

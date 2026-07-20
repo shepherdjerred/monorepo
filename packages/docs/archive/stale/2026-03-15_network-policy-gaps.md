@@ -1,3 +1,10 @@
+---
+id: reference-stale-2026-03-15-network-policy-gaps
+type: reference
+status: complete
+board: false
+---
+
 # Network Policy Gaps
 
 8 namespaces with Tailscale ingresses currently have no network policies.

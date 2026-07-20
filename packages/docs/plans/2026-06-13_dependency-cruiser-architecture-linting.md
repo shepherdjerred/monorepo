@@ -1,8 +1,13 @@
+---
+id: plan-2026-06-13-dependency-cruiser-architecture-linting
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Set up dependency-cruiser (architecture linting) in CI + lefthook
-
-## Status
-
-In Progress — plan complete, implementation not started (saved for later)
 
 ## Context
 
@@ -174,3 +179,7 @@ Do this in a **git worktree** (`git worktree add .claude/worktrees/depcruise -b 
 - Total fix scope is **unknown until the tool is run once** — `no-circular` and the
   nested sub-monorepo internals were never actually cruised, only eyeballed. The diff
   could be large; reassess one-PR-vs-split after the first real run.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Set up dependency-cruiser (architecture linting) in CI + lefthook`.

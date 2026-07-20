@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-13-stream-lifecycle-xstate
+type: reference
+status: complete
+board: false
+---
+
 # Stream Lifecycle XState Shared Library
-
-## Status
-
-Complete
 
 ## Scope
 

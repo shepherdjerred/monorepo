@@ -1,8 +1,11 @@
+---
+id: log-2026-05-31-homekit-secure-video
+type: log
+status: complete
+board: false
+---
+
 # HomeKit Secure Video
-
-## Status
-
-In Progress
 
 ## Context
 

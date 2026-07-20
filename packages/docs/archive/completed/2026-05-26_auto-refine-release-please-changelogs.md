@@ -1,6 +1,13 @@
+---
+id: reference-completed-2026-05-26-auto-refine-release-please-changelogs
+type: reference
+status: complete
+board: false
+---
+
 # Plan: Auto-refine release-please CHANGELOGs in CI (Dagger step)
 
-## Status
+## Status Notes (Historical)
 
 **Complete** — all plan-scoped work verified shipped to `main` during the 2026-06-06 docs groom; archived to `archive/completed/`. Original tracking status preserved below.
 

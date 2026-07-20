@@ -1,8 +1,11 @@
+---
+id: log-2026-05-11-renovate-dashboard-481-max-updates
+type: log
+status: complete
+board: false
+---
+
 # Renovate Dashboard #481 Max Update Sweep
-
-## Status
-
-Complete
 
 ## Context
 

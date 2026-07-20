@@ -1,8 +1,13 @@
+---
+id: plan-2026-06-13-discord-style-cards-extraction-daily-pipeline
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Plan: Extract `discord-style-cards` package + daily Temporal refresh pipeline
-
-## Status
-
-In Progress
 
 ## Context
 
@@ -260,3 +265,7 @@ the worker starts cleanly before the token is provisioned.
 
 - Update `packages/scout-for-lol/AGENTS.md` (already stale — missing `app` + `analysis`) and root
   `CLAUDE.md` Structure block to add `discord-style-cards` and drop `analysis` from scout.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Plan: Extract discord-style-cards package + daily Temporal refresh pipeline`.

@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-19-bugsink-triage-followups
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Bugsink Triage Follow-ups: Lockstep Deploys + Bug Fixes
-
-## Status
-
-Partially Complete — all three PRs open (2026-07-19); remaining: merges, tofu-apply, first promotion.
 
 ## Context
 
@@ -86,3 +91,7 @@ Full detail with verified file:line anchors, idempotency table, risks: `packages
 - Until the first promotion merges, prod site content is frozen at its last pre-#1567 sync (today's skew persists but stops worsening).
 - `promote-scout.ts`'s pending-bump guard greps the version-bump PR diff for the beta line; `--allow-pending-bump` overrides deliberately.
 - The dotfiles skill edits ship in #1567; `chezmoi apply` on other machines picks them up after merge.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Bugsink Triage Follow-ups: Lockstep Deploys + Bug Fixes`.

@@ -1,6 +1,13 @@
+---
+id: log-2026-07-19-generated-code-freshness-implementation
+type: log
+status: complete
+board: false
+---
+
 # Generated-code freshness automation — implementation session
 
-## Status
+## Status Notes (Historical)
 
 Complete (all five PRs open; merges + post-deploy verification remain)
 

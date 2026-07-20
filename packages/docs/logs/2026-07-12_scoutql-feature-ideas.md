@@ -1,8 +1,11 @@
+---
+id: log-2026-07-12-scoutql-feature-ideas
+type: log
+status: complete
+board: false
+---
+
 # ScoutQL Feature Ideas
-
-## Status
-
-Complete
 
 ## Context
 

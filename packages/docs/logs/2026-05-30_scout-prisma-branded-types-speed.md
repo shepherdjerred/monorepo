@@ -1,8 +1,11 @@
+---
+id: log-2026-05-30-scout-prisma-branded-types-speed
+type: log
+status: complete
+board: false
+---
+
 # Scout Prisma Branded Types Speedup
-
-## Status
-
-Complete
 
 ## Summary
 

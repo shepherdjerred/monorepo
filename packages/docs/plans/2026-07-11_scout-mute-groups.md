@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-11-scout-mute-groups
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Scout for LoL — Mute Subscription + Web UI Polish + Generalized Player Groups (group(N))
-
-## Status
-
-In Progress
 
 ## Context
 
@@ -264,3 +269,7 @@ The report lake is pod-local derived data (`REPORT_LAKE_DIR` → `/data/report-l
 - Plan-shape deviation from the approved plan: flat `groupBy: "group"` + `groupSize` field instead of a discriminated union — chosen after finding the union would churn every ts-pattern arm and the flat AI-agent registry for no semantic gain.
 - The Discord `/subscription` slash-command surface intentionally does NOT get a mute flag (per scope); the web/Discord 1:1 mirror claim in `subscription.router.ts`'s header comment is now slightly stale.
 - `system-reports.integration.test.ts` mutates `Bun.env["ENVIRONMENT"]` (beta) for the suite and restores it in `afterAll` — fine under bun's per-file sequential execution, but worth knowing if test parallelism ever changes.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Scout for LoL — Mute Subscription + Web UI Polish + Generalized Player Groups (group(N))`.

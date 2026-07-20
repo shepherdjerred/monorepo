@@ -1,8 +1,11 @@
+---
+id: log-2026-07-02-qbittorrent-firewalled-alert-gating
+type: log
+status: complete
+board: false
+---
+
 # qBittorrent "firewalled" PagerDuty alert — root cause & gating fix
-
-## Status
-
-Complete
 
 ## Context
 

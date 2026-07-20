@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-27-dpp-pokeemerald-wasm-dagger-build
+type: reference
+status: complete
+board: false
+---
+
 # Auto-build pokeemerald.wasm from source (with customizations) in Dagger
-
-## Status
-
-Complete — shipped in PR #1333.
 
 ## Context
 

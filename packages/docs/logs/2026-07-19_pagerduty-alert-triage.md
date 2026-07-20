@@ -1,8 +1,11 @@
+---
+id: log-2026-07-19-pagerduty-alert-triage
+type: log
+status: complete
+board: false
+---
+
 # PagerDuty Alert Triage — 2026-07-19
-
-## Status
-
-Complete (investigation only — no fixes applied)
 
 ## Scope
 

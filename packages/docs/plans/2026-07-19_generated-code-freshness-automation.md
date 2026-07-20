@@ -1,3 +1,12 @@
+---
+id: plan-2026-07-19-generated-code-freshness-automation
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Generated-Code Freshness Automation
 
 ## Executive Summary
@@ -33,10 +42,6 @@ gaps in five small PRs, reusing the existing Temporal clone→regen→PR helpers
 Also fixes four stale docs (root CLAUDE.md's false "weekly helm refresh"
 claim, PATCHES.md's removed-Dagger references, two generator headers).
 Estimated shape: 5 PRs, no new worker-image binaries, one RBAC addition.
-
-## Status
-
-In Progress
 
 ## Context
 
@@ -313,3 +318,7 @@ generate-helm-types --check`.
   practice; noted only.
 - **PR-only gate** accepts the rare two-interacting-PRs window on main; next
   input-touching PR catches it.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Generated-Code Freshness Automation`.

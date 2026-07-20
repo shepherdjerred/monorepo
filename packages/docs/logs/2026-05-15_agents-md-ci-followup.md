@@ -1,8 +1,11 @@
+---
+id: log-2026-05-15-agents-md-ci-followup
+type: log
+status: complete
+board: false
+---
+
 # AGENTS.md CI Follow-up
-
-## Status
-
-Complete
 
 ## Context
 

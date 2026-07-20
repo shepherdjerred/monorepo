@@ -1,11 +1,11 @@
+---
+id: log-2026-06-07-main-ci-failure-seaweedfs-aws-and-dagger-disk
+type: log
+status: complete
+board: false
+---
+
 # Main CI Failure — SeaweedFS `aws not found` + Dagger engine disk quota
-
-## Status
-
-Complete — both root causes addressed; awaiting PR #1109 merge for a fully-green main build.
-
-Build [3668](https://buildkite.com/sjerred/monorepo/builds/3668) on `main` failed with two
-independent root causes.
 
 ## Failures (hard, non-soft-fail)
 

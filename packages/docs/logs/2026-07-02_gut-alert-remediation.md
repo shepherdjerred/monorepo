@@ -1,3 +1,10 @@
+---
+id: log-2026-07-02-gut-alert-remediation
+type: log
+status: complete
+board: false
+---
+
 # Gut the alert-remediation workflow
 
 ## Status: Complete

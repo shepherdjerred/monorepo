@@ -1,6 +1,10 @@
 ---
 id: llm-cost-rollup
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/plans/2026-07-04_llm-observability-gaps.md
 ---
 
@@ -19,3 +23,7 @@ with token usage (incl. cache read/creation split), and CLI runs carry
   retention) Prometheus counters emitted alongside the spans.
 
 Deliberately kept out of the capture PR to keep it reviewable.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `LLM cost rollup — tokens → dollars`.

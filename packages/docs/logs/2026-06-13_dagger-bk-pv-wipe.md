@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-dagger-bk-pv-wipe
+type: log
+status: complete
+board: false
+---
+
 # Dagger + Buildkite PV Wipe — Fresh Cache Baseline
-
-## Status
-
-Complete
 
 ## Context
 

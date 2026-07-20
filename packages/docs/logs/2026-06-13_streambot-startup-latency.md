@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-streambot-startup-latency
+type: log
+status: complete
+board: false
+---
+
 # Streambot startup latency — 30s–1m to start playing
-
-## Status
-
-Complete (diagnosis + fix implemented; pending PR + deploy)
 
 ## Problem
 

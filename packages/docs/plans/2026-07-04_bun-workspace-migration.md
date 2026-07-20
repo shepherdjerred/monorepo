@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-04-bun-workspace-migration
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Bun Architecture — Target: Single Workspace, Isolated Linker, Global Store
-
-## Status
-
-In Progress (single-PR execution on PR #1408; awaiting CI validation)
 
 ## Problem statement (Jerred, refined over the session)
 
@@ -181,3 +186,7 @@ after round 2, Kueue quota watch after memory bumps.
   process/resource exhaustion earlier; targeted package and CI generator checks
   passed.
 - Setup was intentionally not run per operator instruction.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Bun Architecture — Target: Single Workspace, Isolated Linker, Global Store`.

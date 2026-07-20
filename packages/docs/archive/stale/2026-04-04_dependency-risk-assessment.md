@@ -1,3 +1,10 @@
+---
+id: reference-stale-2026-04-04-dependency-risk-assessment
+type: reference
+status: complete
+board: false
+---
+
 # Dependency Update Risk Assessment
 
 > Generated 2026-04-04 from Renovate dashboard analysis. Maps each pending update to usage depth, affected packages, and version delta.

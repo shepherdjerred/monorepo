@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-03-27-dagger-best-practices-audit
+type: reference
+status: complete
+board: false
+---
+
 # Dagger Best Practices & Anti-Pattern Audit
 
 ## Research Sources

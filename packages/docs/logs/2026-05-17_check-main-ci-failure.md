@@ -1,6 +1,9 @@
-## Status
-
-Complete
+---
+id: log-2026-05-17-check-main-ci-failure
+type: log
+status: complete
+board: false
+---
 
 # Check Main CI Failure
 

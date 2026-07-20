@@ -1,8 +1,11 @@
+---
+id: log-2026-05-22-npm-token-rotation
+type: log
+status: complete
+board: false
+---
+
 # npm token rotation + Dagger publish precheck
-
-## Status
-
-Complete
 
 ## Summary
 

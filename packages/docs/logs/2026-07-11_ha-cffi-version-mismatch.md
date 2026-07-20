@@ -1,8 +1,11 @@
+---
+id: log-2026-07-11-ha-cffi-version-mismatch
+type: log
+status: complete
+board: false
+---
+
 # Home Assistant `cffi`/`_cffi_backend` version mismatch breaks reolink & roborock
-
-## Status
-
-Complete
 
 ## Context
 

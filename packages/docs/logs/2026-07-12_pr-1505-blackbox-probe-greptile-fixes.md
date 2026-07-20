@@ -1,10 +1,11 @@
+---
+id: log-2026-07-12-pr-1505-blackbox-probe-greptile-fixes
+type: log
+status: complete
+board: false
+---
+
 # PR #1505 — blackbox probe rollout: greptile P1/P2 fixes
-
-## Status
-
-Complete (pushed; CI running)
-
-Branch: `feature/blackbox-probe-rollout` — fix commit `12839c9f7`.
 
 ## Findings addressed
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-07-19-opencode-vim-bindings
+type: log
+status: complete
+board: false
+---
+
 # OpenCode Vim Bindings
-
-## Status
-
-Complete
 
 ## Session Log — 2026-07-19
 

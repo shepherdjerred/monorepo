@@ -1,8 +1,11 @@
+---
+id: log-2026-05-29-opus-4-8-model-bump
+type: log
+status: complete
+board: false
+---
+
 # Opus 4.8 model reference bump
-
-## Status
-
-Complete
 
 ## Context
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-bsc-rune-coerce
+type: log
+status: complete
+board: false
+---
+
 # better-skill-capped runtime parse failure — rune field coercion
-
-## Status
-
-Complete
 
 ## Symptom
 

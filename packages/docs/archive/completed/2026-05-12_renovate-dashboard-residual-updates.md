@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-12-renovate-dashboard-residual-updates
+type: reference
+status: complete
+board: false
+---
+
 # Renovate Dashboard Residual Dependency Updates
-
-## Status
-
-Complete
 
 ## Summary
 

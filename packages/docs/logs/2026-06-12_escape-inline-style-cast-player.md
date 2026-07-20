@@ -1,8 +1,11 @@
+---
+id: log-2026-06-12-escape-inline-style-cast-player
+type: log
+status: complete
+board: false
+---
+
 # fix(toolkit): escape \</style in inlined cast player CSS
-
-## Status
-
-Complete
 
 ## Background
 

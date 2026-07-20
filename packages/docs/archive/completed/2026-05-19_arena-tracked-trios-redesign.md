@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-19-arena-tracked-trios-redesign
+type: reference
+status: complete
+board: false
+---
+
 # Arena Report Visual Redesign — "Tracked Trios"
-
-## Status
-
-Complete
 
 ## Context
 

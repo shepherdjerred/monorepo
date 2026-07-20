@@ -1,8 +1,11 @@
+---
+id: log-2026-05-24-buildkite-successful-base-predicate
+type: log
+status: complete
+board: false
+---
+
 # Buildkite Successful Base Predicate
-
-## Status
-
-Complete
 
 ## Summary
 

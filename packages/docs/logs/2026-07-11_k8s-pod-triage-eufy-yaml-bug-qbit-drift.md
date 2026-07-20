@@ -1,8 +1,11 @@
+---
+id: log-2026-07-11-k8s-pod-triage-eufy-yaml-bug-qbit-drift
+type: log
+status: complete
+board: false
+---
+
 # K8s pod triage: eufy_security patch-YAML corruption bug + qBittorrent config-drift guard
-
-## Status
-
-Complete (qBittorrent resolved 2026-07-11; eufy_security fix merged and a second, previously-masked bug in `install-custom-brand-icons` found and fixed 2026-07-12 — `home-homeassistant` is `1/1 Running`)
 
 ## Context
 

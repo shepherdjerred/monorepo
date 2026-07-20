@@ -1,3 +1,10 @@
+---
+id: decision-2026-03-27-env-var-naming-convention
+type: decision
+status: complete
+board: false
+---
+
 # Environment Variable Naming Convention
 
 Date: 2026-03-27

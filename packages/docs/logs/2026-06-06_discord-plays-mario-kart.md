@@ -1,6 +1,13 @@
+---
+id: log-2026-06-06-discord-plays-mario-kart
+type: log
+status: complete
+board: false
+---
+
 # Discord Plays Mario Kart 64 — headless build-out
 
-## Status
+## Status Notes (Historical)
 
 Code complete; not yet deployed. New package `packages/discord-plays-mario-kart`
 plus full Dagger → ghcr → cdk8s/Helm/ArgoCD wiring. Lands the same headless,

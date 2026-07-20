@@ -1,12 +1,13 @@
 ---
-title: MK64 Leaderboards — Greptile P2 comment fixes (PR #1143)
+id: log-2026-06-13-mk64-leaderboards-greptile-p2-fixes
+type: log
+status: complete
+board: false
+title: MK64 Leaderboards — Greptile P2 comment fixes (PR
 date: 2026-06-13
-status: Complete
 ---
 
-## Status
-
-Complete
+# Mk64 Leaderboards Greptile P2 Fixes
 
 ## Context
 

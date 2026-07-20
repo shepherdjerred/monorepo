@@ -1,8 +1,13 @@
+---
+id: plan-2026-06-13-pr-tending-ci-inefficiencies
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # CI / Tooling — systemic issues worth a follow-up fix
-
-## Status
-
-In Progress (living log from the 2026-06-13 multi-PR green-up; **systemic/repeating items only** — not one-offs)
 
 ## Purpose
 
@@ -54,3 +59,7 @@ Each item below is something that **recurred** while tending ~25 PRs to green an
 ### Caveats
 
 - Highest-leverage (cost time on _every_ PR/session): #2 (soft-fail flips aggregate), #3 (greptile gate on docs PRs), #11/#12 (toolkit ignores BuildKite), #6 (flaky-infra retries).
+
+## Remaining
+
+- [ ] Complete and verify the work described in `CI / Tooling — systemic issues worth a follow-up fix`.

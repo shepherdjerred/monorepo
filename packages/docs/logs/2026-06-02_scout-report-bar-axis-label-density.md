@@ -1,8 +1,11 @@
+---
+id: log-2026-06-02-scout-report-bar-axis-label-density
+type: log
+status: complete
+board: false
+---
+
 # Scout Report Bar Axis Label Density
-
-## Status
-
-Complete
 
 ## Context
 

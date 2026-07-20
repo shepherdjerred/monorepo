@@ -1,8 +1,11 @@
+---
+id: log-2026-05-16-tasks-for-obsidian-xcode-cloud-rnworklets
+type: log
+status: complete
+board: false
+---
+
 # TasksForObsidian Xcode Cloud RNWorklets Failure
-
-## Status
-
-Complete
 
 ## Summary
 

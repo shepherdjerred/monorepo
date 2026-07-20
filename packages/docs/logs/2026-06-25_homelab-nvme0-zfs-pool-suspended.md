@@ -1,9 +1,11 @@
+---
+id: log-2026-06-25-homelab-nvme0-zfs-pool-suspended
+type: log
+status: complete
+board: false
+---
+
 # Homelab outage — `zfspv-pool-nvme` suspended (nvme0 990 PRO controller death)
-
-## Status
-
-Resolved (service restored) — drive recovered via cold power-cycle, ZFS pool imported clean, all
-workloads back with no data loss. Hardware is on probation; backup/redundancy follow-ups open.
 
 ## Symptom (as reported)
 

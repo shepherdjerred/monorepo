@@ -1,6 +1,13 @@
+---
+id: log-2026-06-19-pr1273-report-query-studio-greptile-fixes
+type: log
+status: complete
+board: false
+---
+
 # PR #1273 — report query studio greptile fixes
 
-## Status
+## Status Notes (Historical)
 
 Complete
 

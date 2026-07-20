@@ -1,9 +1,11 @@
+---
+id: log-2026-06-06-cooklang-fullbuild-release-churn
+type: log
+status: complete
+board: false
+---
+
 # Cooklang Manifest-Bump Churn on Full Builds
-
-## Status
-
-Complete — shipped in [PR #1038](https://github.com/shepherdjerred/monorepo/pull/1038)
-(branch `claude/intelligent-buck-86ba99`), awaiting CI/merge.
 
 ## Summary
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-05-23-pr-873-maintenance
+type: log
+status: complete
+board: false
+---
+
 # PR 873 Maintenance
-
-## Status
-
-Complete
 
 ## Context
 

@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-10-talos-k8s-connectivity
+type: reference
+status: complete
+board: false
+---
+
 # Talos/Kubernetes Connectivity Investigation
-
-## Status
-
-Complete
 
 ## Intent
 

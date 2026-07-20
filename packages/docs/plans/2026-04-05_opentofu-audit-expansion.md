@@ -1,10 +1,13 @@
+---
+id: plan-2026-04-05-opentofu-audit-expansion
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # OpenTofu Audit & Expansion Plan
-
-## Status
-
-Partial. GitHub `rulesets.tf` and the Tailscale provider module (`tofu/tailscale`) have landed; the
-GitHub `for_each` refactor, the SeaweedFS `aws_s3_bucket_lifecycle_configuration` swap, and the
-Buildkite/PagerDuty providers remain open.
 
 ## Context
 
@@ -116,3 +119,7 @@ For each change:
 2. For imports: `tofu import` existing resources, then `tofu plan` shows no diff
 3. For new providers: `tofu init` succeeds, `tofu plan` shows expected creates
 4. Dagger CI: run `bun run typecheck` in `.dagger/` after modifying `release.ts`
+
+## Remaining
+
+- [ ] Complete and verify the work described in `OpenTofu Audit & Expansion Plan`.

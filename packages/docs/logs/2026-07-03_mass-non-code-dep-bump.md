@@ -1,8 +1,11 @@
+---
+id: log-2026-07-03-mass-non-code-dep-bump
+type: log
+status: complete
+board: false
+---
+
 # Manual mass bump of non-code dependencies
-
-## Status
-
-Complete
 
 ## Goal
 
