@@ -13,6 +13,7 @@ Define a durable session and pull-request workflow for repository agents without
 - Added the main-checkout log, worktree handoff, durable-context, and draft-PR policy to `AGENTS.md` and `CLAUDE.md`.
 - Removed repository-local Claude Code, Codex, and OpenCode lifecycle hooks so cloud and web sessions cannot execute them.
 - Updated `.gitignore` to ignore local `.claude/` and `.codex/` state.
+- Opened draft PR #1579: `https://github.com/shepherdjerred/monorepo/pull/1579`.
 
 ### Remaining
 
@@ -21,3 +22,4 @@ Define a durable session and pull-request workflow for repository agents without
 ### Caveats
 
 - The durable workflow is prompt-based, so it applies consistently across terminal and cloud agents without executing machine-specific commands.
+- PR #1579 remains draft pending workflow review.
