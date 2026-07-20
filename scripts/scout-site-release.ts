@@ -356,6 +356,10 @@ async function reconcileProd(dryRun: boolean): Promise<void> {
   }
 
   const scratch = `${tmpBase()}/scout-site-release-${pin}-${process.pid.toString()}`;
+  // Create the scratch workspace explicitly so the downloads below write into a
+  // directory that is guaranteed to exist, rather than depending on the aws CLI
+  // to materialise intermediate parents on the first `cp`.
+  await Bun.$`mkdir -p ${scratch}`.quiet();
 
   // Manifest first: it was uploaded last at archive time, so its presence
   // certifies the versioned prefix is complete. A missing manifest means the
