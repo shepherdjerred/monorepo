@@ -2,13 +2,18 @@
 
 ## Status
 
-Partially Complete — infra merged to branch; post-deploy operator checklist pending
+Partially Complete — code on
+[PR #1581](https://github.com/shepherdjerred/monorepo/pull/1581); post-merge
+operator setup pending.
+
+**Operator runbook (canonical):**
+[`guides/2026-07-19_ebook-stack-bindery-cwa.md`](../guides/2026-07-19_ebook-stack-bindery-cwa.md)
 
 ## Goal
 
 Hands-off ebook pipeline for a US Kindle Paperwhite (incl. 简体 content gap):
 
-```
+```text
 Bindery → Prowlarr → qBittorrent → CWA ingest → library / Auto-Send → @kindle.com
 ```
 
@@ -25,39 +30,39 @@ Reuse existing Prowlarr + qBit. No Shelfmark / Audiobookshelf in v1.
 
 ## Infra
 
-| Resource  | Detail                                                                         |
-| --------- | ------------------------------------------------------------------------------ |
-| Namespace | `media` (existing chart)                                                       |
-| Bindery   | `docker.io/vavallee/bindery:v1.26.2`, port 8787, host `bindery`                |
-| CWA       | `docker.io/crocodilestick/calibre-web-automated:v4.0.6`, port 8083, host `cwa` |
-| Books PVC | `library/` + `ingest/` subPaths (init mkdir+chown 1000)                        |
-| Downloads | Shared `qbittorrent-hdd-pvc`                                                   |
-| Postal    | Ingress netpol allows `media` → SMTP :25                                       |
+| Resource  | Detail                                                                                              |
+| --------- | --------------------------------------------------------------------------------------------------- |
+| Namespace | `media` (existing chart)                                                                            |
+| Bindery   | `docker.io/vavallee/bindery:v1.26.2`, port 8787, host `bindery`, pod label `app=bindery`            |
+| CWA       | `docker.io/crocodilestick/calibre-web-automated:v4.0.6`, port 8083, host `cwa`, pod label `app=cwa` |
+| Books PVC | `library/` + `ingest/` subPaths (init mkdir+chown 1000)                                             |
+| Downloads | Shared `qbittorrent-hdd-pvc`                                                                        |
+| Postal    | SMTP ingress: namespace `media` **and** pod `app=cwa` only                                          |
 
 ### Path map
 
-| Path                           | Bindery               | CWA             |
-| ------------------------------ | --------------------- | --------------- |
-| `/config`                      | own NVMe              | own NVMe        |
-| `/books` (subPath library)     | library root          | —               |
-| `/ingest` / `/cwa-book-ingest` | External handoff dest | ingest          |
-| `/calibre-library`             | —                     | Calibre library |
-| `/downloads`                   | shared qBit           | —               |
+| Path                           | Bindery                      | CWA             |
+| ------------------------------ | ---------------------------- | --------------- |
+| `/config`                      | own NVMe                     | own NVMe        |
+| `/books` (subPath library)     | library root (**read-only**) | —               |
+| `/ingest` / `/cwa-book-ingest` | External handoff dest (RW)   | ingest (RW)     |
+| `/calibre-library`             | —                            | Calibre library |
+| `/downloads`                   | shared qBit                  | —               |
 
-**Import strategy:** Bindery import mode **External** (or copy) → `/ingest` so CWA owns convert/metadata/email. Do not dual-write Calibre `metadata.db`.
+**Import strategy:** Bindery import mode **External** → `/ingest` so CWA owns
+convert/metadata/email. Library mount is read-only to prevent dual writers on
+`metadata.db`.
 
-## Post-deploy checklist
+## Post-deploy checklist (summary)
 
-1. Open `https://bindery.tailnet-…` — admin setup
-2. Bindery → download client = in-cluster qBittorrent
-3. Bindery → indexers via Prowlarr Torznab (API key)
-4. Bindery quality profile prefer EPUB; External path `/ingest`
-5. Open `https://cwa.tailnet-…` — default admin login; change password
-6. CWA: convert target EPUB, EPUB Fixer on, ingest active
-7. CWA Admin → email: SMTP host `postal-postal-smtp-service.postal`, port 25, Postal creds; from-address allowlisted on Amazon
-8. Amazon → Content & Devices → Personal Document Settings → approved sender
-9. CWA Auto-Send → `you@kindle.com`
-10. Smoke: grab one book → CWA library → Kindle Personal Docs
+Full steps: [operator guide](../guides/2026-07-19_ebook-stack-bindery-cwa.md).
+
+1. Argo sync `media` + `postal`
+2. Bindery: qBit + Prowlarr; External → `/ingest`; prefer EPUB
+3. CWA: EPUB Fixer; SMTP → `postal-postal-smtp-service.postal:25`
+4. Amazon approved Personal Document sender
+5. CWA Auto-Send → `@kindle.com`
+6. Smoke test one book → Kindle Personal Docs
 
 ## Files
 
@@ -66,29 +71,32 @@ Reuse existing Prowlarr + qBit. No Shelfmark / Audiobookshelf in v1.
 - `packages/homelab/src/cdk8s/src/cdk8s-charts/media.ts`
 - `packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts`
 - `packages/homelab/src/cdk8s/src/versions.ts`
+- `packages/docs/guides/2026-07-19_ebook-stack-bindery-cwa.md`
 
 ## Out of scope
 
-Shelfmark, Audiobookshelf, Bookshelf/Readarr forks, Seerr-for-books, public Cloudflare exposure.
+Shelfmark, Audiobookshelf, Bookshelf/Readarr forks, Seerr-for-books, public
+Cloudflare exposure, 1Password-wired CWA SMTP.
 
 ## Session Log — 2026-07-19
 
 ### Done
 
-- Worktree `feature/ebook-stack-bindery-cwa` at `.claude/worktrees/ebook-stack-bindery-cwa`
-- Deployments: `bindery.ts`, `calibre-web-automated.ts`
-- Wired `media.ts` (50 GiB `ebooks-hdd-pvc`) + Postal SMTP netpol allow `media`
-- Pinned images in `versions.ts` (Bindery v1.26.2, CWA v4.0.6)
-- `bun run typecheck` + `lint` + `build` green in `@homelab/cdk8s`
+- Worktree `feature/ebook-stack-bindery-cwa`
+- Deployments Bindery + CWA; 50 GiB books PVC; Postal SMTP scoped to `app=cwa`
+- Bindery library mount read-only; pod labels for netpol
+- Image pins Bindery v1.26.2, CWA v4.0.6
+- Operator guide under `packages/docs/guides/`
+- PR #1581
 
 ### Remaining
 
-- Push branch + open PR
-- Argo sync media + postal after merge
-- Operator checklist (Prowlarr, qBit, CWA SMTP, Amazon allowlist, Auto-Send smoke test)
+- CI green + merge
+- Argo sync media + postal
+- Operator checklist (see guide)
 
 ### Caveats
 
-- CWA SMTP is UI-configured (no 1Password wiring) — create Postal credential manually
-- Bindery External path must be set to `/ingest` in UI after first boot
-- Bindery HTTP health probe assumes unauthenticated `/api/v1/health`
+- CWA SMTP is UI-configured (Postal credential manual)
+- Bindery External path must be `/ingest` after first boot
+- Bindery health probe: unauthenticated `GET /api/v1/health`

@@ -31,7 +31,7 @@ const BINDERY_PORT = 8787;
  * Bindery — greenfield Readarr replacement (author monitor → Prowlarr/qBit).
  *
  * Runs as UID/GID 1000 to match linuxserver qBittorrent + CWA on shared volumes.
- * Configure import mode External (or copy) to `/books/ingest` so CWA owns the library.
+ * Configure import mode External (or copy) to `/ingest` so CWA owns the library.
  */
 export function createBinderyDeployment(
   chart: Chart,
