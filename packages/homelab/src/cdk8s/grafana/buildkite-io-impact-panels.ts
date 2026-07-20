@@ -17,7 +17,7 @@ export function addBuildkiteIoImpactPanels(
   builder.withPanel(
     createStatPanel({
       title: "Logical Writes (24h)",
-      query: `sum(max_over_time(buildkite:pod_parent_fs_writes_bytes_total[24h])) or on() vector(0)`,
+      query: `sum(max_over_time(buildkite:pod_parent_fs_writes_bytes_total[24h]))`,
       legend: "pod-parent writes",
       gridPos: { x: 0, y: 36, w: 4, h: 4 },
       unit: "bytes",
@@ -31,7 +31,7 @@ export function addBuildkiteIoImpactPanels(
   builder.withPanel(
     createStatPanel({
       title: "Logical Write Rate",
-      query: `${BUILDKITE_LOGICAL_WRITE_RATE} or on() vector(0)`,
+      query: BUILDKITE_LOGICAL_WRITE_RATE,
       legend: "CI logical",
       gridPos: { x: 4, y: 36, w: 4, h: 4 },
       unit: "Bps",
@@ -41,7 +41,7 @@ export function addBuildkiteIoImpactPanels(
   builder.withPanel(
     createStatPanel({
       title: "Node Physical Write Rate",
-      query: `${BUILDKITE_PHYSICAL_WRITE_RATE} or on() vector(0)`,
+      query: BUILDKITE_PHYSICAL_WRITE_RATE,
       legend: "diagnostic",
       gridPos: { x: 8, y: 36, w: 4, h: 4 },
       unit: "Bps",
@@ -62,21 +62,21 @@ export function addBuildkiteIoImpactPanels(
     createStatPanel({
       title: "Running Jobs Measured",
       query: `(
-  count(
-    buildkite:pod_parent_sample_present
-    and on (namespace, pod)
-      (kube_pod_status_phase{namespace="buildkite", phase="Running"} == 1)
+  (
+    count(
+      buildkite:pod_parent_sample_present
+      and on (namespace, pod)
+        (kube_pod_status_phase{namespace="buildkite", phase="Running"} == 1)
+    )
+    or on() vector(0)
   )
   /
-  clamp_min(
-    count(
-      (kube_pod_status_phase{namespace="buildkite", phase="Running"} == 1)
-      and on (namespace, pod)
-        kube_pod_labels{namespace="buildkite", label_buildkite_com_job_uuid!=""}
-    ),
-    1
+  count(
+    (kube_pod_status_phase{namespace="buildkite", phase="Running"} == 1)
+    and on (namespace, pod)
+      kube_pod_labels{namespace="buildkite", label_buildkite_com_job_uuid!=""}
   )
-) or on() vector(1)`,
+)`,
       legend: "coverage",
       gridPos: { x: 16, y: 36, w: 4, h: 4 },
       unit: "percentunit",
@@ -90,7 +90,7 @@ export function addBuildkiteIoImpactPanels(
   builder.withPanel(
     createStatPanel({
       title: "Canceled Pods (24h)",
-      query: `sum(increase(buildkite_pod_watcher_pods_forcefully_deleted_total{namespace="buildkite", delete_reason="job_cancelled"}[24h])) or on() vector(0)`,
+      query: `sum(increase(buildkite_pod_watcher_pods_forcefully_deleted_total{namespace="buildkite", delete_reason="job_cancelled"}[24h]))`,
       legend: "force deleted",
       gridPos: { x: 20, y: 36, w: 4, h: 4 },
       thresholds: [

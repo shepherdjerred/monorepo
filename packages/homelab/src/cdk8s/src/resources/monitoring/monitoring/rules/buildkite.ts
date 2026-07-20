@@ -34,7 +34,7 @@ function withBuildkitePodMetadata(expression: string): string {
 
 function podParentCounter(metric: string): string {
   return withBuildkitePodMetadata(
-    `sum by (namespace, pod, node) (
+    `max by (namespace, pod, node, device) (
     ${metric}{
       namespace="buildkite",
       pod=~"${BUILDKITE_JOB_POD_PATTERN}",
@@ -116,7 +116,7 @@ export function getBuildkiteRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           record: "buildkite:pod_parent_sample_present",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "buildkite:pod_parent_fs_writes_bytes_total * 0 + 1",
+            "max by (namespace, pod) (buildkite:pod_parent_fs_writes_bytes_total * 0 + 1)",
           ),
         },
       ],

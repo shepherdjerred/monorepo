@@ -48,10 +48,10 @@ describe("Buildkite CI I/O recording rules", () => {
     ]);
   });
 
-  it("selects exactly one pod-parent cgroup before summing block devices", () => {
+  it("deduplicates each pod-parent device before the lifetime sum", () => {
     const rule = recordingRule("buildkite:pod_parent_fs_writes_bytes_total");
 
-    expect(rule.expr).toContain("sum by (namespace, pod, node)");
+    expect(rule.expr).toContain("max by (namespace, pod, node, device)");
     expect(rule.expr).toContain('container=""');
     expect(rule.expr).toContain(`pod=~"${BUILDKITE_JOB_POD_PATTERN}"`);
     expect(rule.expr).toContain(`id=~"${BUILDKITE_POD_PARENT_CGROUP_PATTERN}"`);
@@ -88,7 +88,7 @@ describe("Buildkite CI I/O recording rules", () => {
   it("records one sample-presence series from the parent counter only", () => {
     const rule = recordingRule("buildkite:pod_parent_sample_present");
     expect(rule.expr).toBe(
-      "buildkite:pod_parent_fs_writes_bytes_total * 0 + 1",
+      "max by (namespace, pod) (buildkite:pod_parent_fs_writes_bytes_total * 0 + 1)",
     );
   });
 });

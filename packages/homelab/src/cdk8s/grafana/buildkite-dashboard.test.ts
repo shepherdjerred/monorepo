@@ -106,6 +106,24 @@ describe("Buildkite CI I/O dashboard", () => {
     expect(coverageQuery).toContain('phase="Running"');
     expect(coverageQuery).toContain("buildkite:pod_parent_sample_present");
     expect(coverageQuery).toContain("label_buildkite_com_job_uuid");
+    expect(coverageQuery).not.toContain("vector(1)");
+  });
+
+  it("does not render missing primary telemetry as zero savings", () => {
+    const primaryQueries = [
+      ...panelQueries("Logical Writes (24h)"),
+      ...panelQueries("Logical Write Rate"),
+      ...panelQueries("Node Physical Write Rate"),
+      ...panelQueries("Canceled Pods (24h)"),
+    ].join("\n");
+
+    expect(primaryQueries).not.toContain("vector(0)");
+  });
+
+  it("counts only pods whose requested phase is active", () => {
+    for (const query of panelQueries("Running vs Pending Pods")) {
+      expect(query).toContain("== 1");
+    }
   });
 
   it("labels node-level physical writes as diagnostic rather than savings", () => {

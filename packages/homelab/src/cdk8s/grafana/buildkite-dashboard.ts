@@ -199,11 +199,11 @@ export function createBuildkiteDashboard() {
       title: "Running Pods",
       targets: [
         {
-          query: `count(kube_pod_status_phase{namespace="buildkite", phase="Running"})`,
+          query: `count(kube_pod_status_phase{namespace="buildkite", phase="Running"} == 1)`,
           legend: "running",
         },
         {
-          query: `count(kube_pod_status_phase{namespace="buildkite", phase="Pending"})`,
+          query: `count(kube_pod_status_phase{namespace="buildkite", phase="Pending"} == 1)`,
           legend: "pending",
         },
       ],
