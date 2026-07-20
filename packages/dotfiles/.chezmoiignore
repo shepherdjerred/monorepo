@@ -12,7 +12,6 @@ AppData_*
 Library/
 {{- end }}
 
-_summary.md
 scripts
 CLAUDE.md
 .claude.json
