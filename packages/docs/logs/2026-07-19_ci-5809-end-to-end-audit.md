@@ -1,8 +1,11 @@
+---
+id: log-2026-07-19-ci-5809-end-to-end-audit
+type: log
+status: complete
+board: false
+---
+
 # Buildkite 5809 End-to-End Audit
-
-## Status
-
-Complete
 
 ## Scope
 

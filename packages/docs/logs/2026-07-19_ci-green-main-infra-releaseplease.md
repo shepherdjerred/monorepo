@@ -1,8 +1,11 @@
+---
+id: log-2026-07-19-ci-green-main-infra-releaseplease
+type: log
+status: in-progress
+board: false
+---
+
 # CI-green on main — infra bucket adoption + release-please transient retry
-
-## Status
-
-In Progress
 
 ## Goal
 
