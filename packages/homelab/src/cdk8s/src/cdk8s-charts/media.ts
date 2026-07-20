@@ -17,7 +17,7 @@ import { createWhisperbridgeDeployment } from "@shepherdjerred/homelab/cdk8s/src
 import { createStreambotDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/streambot.ts";
 import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 
-export function createMediaChart(app: App) {
+export async function createMediaChart(app: App) {
   const chart = new Chart(app, "media", {
     namespace: "media",
     disableResourceNameHashes: true,
@@ -63,7 +63,7 @@ export function createMediaChart(app: App) {
   });
   createProwlarrDeployment(chart);
   createMaintainerrDeployment(chart);
-  createRecyclarrDeployment(chart);
+  await createRecyclarrDeployment(chart);
   createWhisperbridgeDeployment(chart);
 
   // streambot (packages/streambot) lives here so it can read-only mount the movies/tv libraries.

@@ -1,20 +1,30 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/recyclarr/recyclarr/master/schemas/config-schema.json
+# Split view of the Radarr instance. Runtime source of truth is recyclarr.yaml.
 radarr:
   radarr:
     base_url: http://media-radarr-service:7878
-    api_key: !env_var RADARR_API_KEY
+    api_key: !secret radarr_api_key
     delete_old_custom_formats: true
     replace_existing_custom_formats: true
     include:
       - template: radarr-quality-definition-movie
-      - template: radarr-quality-profile-hd-bluray-web
       - template: radarr-custom-formats-hd-bluray-web
-      - template: radarr-quality-profile-uhd-bluray-web
       - template: radarr-custom-formats-uhd-bluray-web
-      - template: radarr-quality-profile-remux-web-1080p
       - template: radarr-custom-formats-remux-web-1080p
-      - template: radarr-quality-profile-remux-web-2160p
       - template: radarr-custom-formats-remux-web-2160p
+    quality_profiles:
+      - trash_id: d1d67249d3890e49bc12e275d989a7e9 # HD Bluray + WEB
+      - trash_id: 64fb5f9858489bdac2af690e27c8f42f # UHD Bluray + WEB
+      - trash_id: 9ca12ea80aa55ef916e3751f4b874151 # Remux + WEB 1080p
+      - trash_id: fd161a61e3ab826d3a22d53f935696dd # Remux + WEB 2160p
+    custom_formats:
+      - trash_ids:
+          - d6e9318c875905d6cfb5bee961afcea9 # Language: Not Original
+        assign_scores_to:
+          - name: HD Bluray + WEB
+          - name: UHD Bluray + WEB
+          - name: Remux + WEB 1080p
+          - name: Remux + WEB 2160p
     media_naming:
       folder: default
       movie:
