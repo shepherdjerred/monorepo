@@ -15,10 +15,11 @@ Define a durable session and pull-request workflow for repository agents without
 - Updated `.gitignore` to ignore local `.claude/` and `.codex/` state.
 - Opened draft PR #1579: `https://github.com/shepherdjerred/monorepo/pull/1579`.
 - Audited user and repository configuration for Claude Code, Codex, and OpenCode. Claude and OpenCode user configuration is chezmoi-managed; Codex user configuration is unmanaged.
+- Removed stale Codex hook-trust records from the unmanaged `~/.codex/config.toml`.
 
 ### Remaining
 
-- Remove the stale Codex `[hooks.state]` records in `~/.codex/config.toml` that reference the deleted repository hook and removed `~/.codex/hooks.json`, if the user wants the live user configuration cleaned up.
+- None.
 
 ### Caveats
 
