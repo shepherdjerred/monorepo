@@ -7,6 +7,8 @@ description: |
 
 # Git Helper Agent
 
+> **Branch & PR management in `shepherdjerred/monorepo` uses git-spice — every PR is a stacked PR.** Load the `git-spice-helper` skill first (it's authoritative) before creating branches, stacking, restacking, or opening PRs; create/update PRs with `git-spice branch/stack submit`. The `gh pr create` and manual-`git rebase` examples below are the generic fallback for repos without git-spice.
+
 ## What's New in Git (2024-2026)
 
 ### Git 2.52 (2025)

@@ -225,6 +225,10 @@ cd packages/<name> && bunx eslint . --fix
   CI source of truth; use Buildkite tooling or the relevant PR/status surface.
 - If a PR or push flow fails, report the exact layer: local git ref permission,
   GitHub auth, sandboxed network access, or remote rejection.
+- Feature PRs are created and updated with **git-spice** (`git-spice branch/stack
+submit`), as stacks — not `gh pr create`. See the `git-spice-helper` skill. `gh`
+  stays for PR reviews/comments/merge/queries and for automated single-PR bot flows
+  (Temporal, release automation), whose clones have no local git-spice stack state.
 
 ## Development Setup
 
@@ -270,6 +274,8 @@ The `pre-commit` hook runs `bun run verify -- --affected` (there is no
 
 **Before your first edit on any non-trivial change, create a `git worktree` — don't edit in the main checkout.** "Non-trivial" = anything you'll open a PR for, anything touching more than one file, or any multi-step task. Only stay in the main checkout for a single-file, single-commit fix you won't PR (a typo, a one-line config tweak). **When unsure, make the worktree.** Each worktree gives a branch its own isolated working directory, so parallel work and concurrent agents never collide.
 
+**A worktree holds a _stack_, and every feature PR is created and managed with git-spice (`gs`) — load the `git-spice-helper` skill before any branch/PR op.** A single PR is a stack of one (unchanged from the old flow). When a change splits into dependent pieces, stack them in the same worktree with `git-spice branch create`, move between them with `git-spice up`/`down`, and open the PRs with `git-spice stack submit`. Restack, move, and sync with native `gs` commands — never a hand-rolled `git rebase` or a bare `gh pr create` for feature work. (In scripts and the agent Bash tool, `gs` is Ghostscript, not git-spice — call `git-spice` explicitly; see the skill.)
+
 ```bash
 # Create an isolated worktree on a new branch off main
 git worktree add .claude/worktrees/<feature-slug> -b feature/<slug> origin/main
@@ -290,7 +296,7 @@ symlinks, so there is no shared-artifact copy step to get wrong (the old
 generate`, though — it's what produces the Prisma clients and other generated
 files a build needs.
 
-After PR merge: `git worktree remove .claude/worktrees/<feature-slug>` and `git branch -d feature/<slug>` from the main checkout. Run `git worktree prune` to clean up stale entries.
+After PR merge: run `git-spice repo sync` to delete merged branches and retarget the rest of the stack, then `git worktree remove .claude/worktrees/<feature-slug>` and `git branch -d feature/<slug>` from the main checkout. Run `git worktree prune` to clean up stale entries.
 
 See the `worktree-workflow` skill for the full workflow. `claude -w <slug>` creates and enters a worktree at launch; for Codex, create the worktree first and start it with `codex -C <dir>`. A `SessionStart` hook (`.claude/hooks/worktree-reminder.sh`, wired for both Claude Code and Codex) also reminds you whenever a session opens in the main checkout.
 

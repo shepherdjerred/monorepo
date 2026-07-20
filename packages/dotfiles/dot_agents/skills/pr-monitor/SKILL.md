@@ -18,6 +18,8 @@ allowed-tools:
 
 # PR Monitor Skill
 
+> **Branch & PR management in `shepherdjerred/monorepo` uses git-spice — every PR is a stacked PR.** Load the `git-spice-helper` skill first (it's authoritative); create/update PRs with `git-spice branch/stack submit` — a single PR is a stack of one. The `gh pr create` and manual-`git rebase` examples below are the generic fallback for repos without git-spice.
+
 Automates the complete PR workflow: create PR, monitor reviews/conflicts, fix issues, and notify when ready.
 
 > **No CI in this monorepo.** The Dagger/Buildkite pipeline was removed 2026-07 — nothing runs on push or PR, and `gh pr checks` will show no meaningful checks. Verification is manual: run the touched packages' typecheck/test/lint locally before and during monitoring. This skill now covers **review comments and merge conflicts only**.
