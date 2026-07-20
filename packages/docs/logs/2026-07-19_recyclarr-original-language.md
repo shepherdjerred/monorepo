@@ -1,4 +1,4 @@
-# Recyclarr original-language policy
+# Recyclarr living-room Best profiles
 
 ## Status
 
@@ -6,41 +6,40 @@ Complete
 
 ## Context
 
-Seerr requests for foreign films/shows (Chinese, Japanese, etc.) failed in
-Radarr/Sonarr because the stack effectively required English audio. Desired
-policy: grab **original language only** (English when OG is English, native
-otherwise).
+Seerr foreign-language failures plus a broader living-room quality goal:
+
+- Best-effort up to 4K (fallback when needed)
+- Size ceiling ~100–120 GiB @ ~2 hr (1100 MB/min)
+- Original audio only
+- Gear: QN90B + ATV 4K 2021 + Sonos Arc (Atmos) + Sub + Era 100s
 
 ## Approach
 
-TRaSH "Language: Original Only" via reverse-scored `Language: Not Original` CF
-(`-10000`), plus Radarr guide-backed quality profiles that sync
-`language: Original`.
+Single **Best** profile each for Radarr/Sonarr in git-owned `recyclarr.yaml`:
 
-Also fixed GitOps drift: live Recyclarr config lived only in a 1Password
-`recyclarr.yaml` secret; git `config/recyclarr/*.yaml` was not mounted.
+- Movies: Remux-2160p → Bluray-2160p → WEB-2160p → 1080p/720p
+- TV: WEB-2160p → Bluray-2160p → WEB-1080p → 720p
+- Language CF −10000; Radarr SQP trash_id keeps `language: Original`
+- HDR + HDR10+; mild DD+ Atmos (TrueHD/DTS:X scored 0)
+- Quality definition max 1100 MB/min on top 4K tiers
+- ConfigMap from git; init extracts API keys from legacy 1P yaml
 
 ## Session Log — 2026-07-19
 
 ### Done
 
-- Git-owned `config/recyclarr/recyclarr.yaml` with original-language CFs +
-  Radarr `quality_profiles` trash_ids
-- Deployment mounts ConfigMap from git; init extracts API keys from legacy 1P
-  yaml into `secrets.yml`
-- Split `radarr.yaml` / `sonarr.yaml` kept in sync as documentation views
-- PR for the change
+- `config/recyclarr/recyclarr.yaml` Best profiles + language + size + Atmos
+- Deployment ConfigMap mount + secrets.yml init
+- PR #1582
 
 ### Remaining
 
-- After merge/deploy: bounce recyclarr (or wait for `@daily`) and re-search
-  failed foreign titles
-- Optional cleanup: replace legacy 1P embedded yaml with discrete
-  `RADARR_API_KEY` / `SONARR_API_KEY` fields (init becomes unnecessary)
+- After merge: recyclarr sync; set Seerr defaults to **Best**
+- Re-search failed foreign titles
+- Optional: discrete 1P API key fields (drop init)
 
 ### Caveats
 
-- Sonarr CF trash_id differs from Radarr
-  (`ae575f95…` vs `d6e9318c…`)
-- OG language metadata comes from TMDB (movies) / TVDB (TV)
-- Profile names must still match what Seerr points at (TRaSH defaults)
+- Seerr must use profile name `Best` (old HD/UHD/Remux names removed from sync)
+- Size cap is MB/min (very long films can still exceed 120 GiB absolute)
+- OG language from TMDB/TVDB
