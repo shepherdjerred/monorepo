@@ -30,5 +30,5 @@ resource "buildkite_pipeline" "monorepo" {
 
   # Exact upload step the pipeline currently runs (queue: default keeps the
   # bootstrap step on the cluster's default queue).
-  steps = "steps:\n    - label: \":pipeline: Upload pipeline\"\n      command: buildkite-agent pipeline upload\n      agents:\n        queue: default"
+  steps = "steps:\n    - label: \":pipeline: Upload pipeline\"\n      command: buildkite-agent pipeline upload --fetch-diff-base\n      agents:\n        queue: default"
 }
