@@ -236,5 +236,7 @@ gluetun env in `resources/torrents/qbittorrent.ts` and resync.
 
 - Plan: [`plans/2026-07-19_ebook-stack-bindery-cwa.md`](../plans/2026-07-19_ebook-stack-bindery-cwa.md)
 - ShelfBridge plan: [`plans/2026-07-19_shelfbridge-torznab-ebooks.md`](../plans/2026-07-19_shelfbridge-torznab-ebooks.md)
+- Post-deploy checklist (merge order, Torznab caps check, Chinese E2E, gluetun):
+  [`logs/2026-07-19_shelfbridge-ebook-stack.md`](../logs/2026-07-19_shelfbridge-ebook-stack.md)
 - Research notes (local): `~/.claude-extra/research/hands-off-ebook-arr-kindle-2026.{md,pdf}`
 - Subtitle \*arr guide (separate): [`2026-06-27_arr-stack-subtitle-strategy.md`](2026-06-27_arr-stack-subtitle-strategy.md)

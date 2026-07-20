@@ -131,9 +131,9 @@ gluetun env in `resources/torrents/qbittorrent.ts`.
 
 - Merge #1581, then #1587; first main build bakes/pushes the image and CI
   commit-back fills the real `versions.ts` tag@digest
-- Post-deploy operator steps in the guide: register ShelfBridge as a Torznab
-  indexer in Bindery, then E2E with a Chinese title (原子习惯)
-- Watch for the gluetun webseed failure mode (below)
+- **Post-deploy checklist (full steps):**
+  [`logs/2026-07-19_shelfbridge-ebook-stack.md`](../logs/2026-07-19_shelfbridge-ebook-stack.md)
+  — Bindery indexer registration, Chinese E2E (原子习惯), gluetun fallback
 
 ### Caveats
 
