@@ -9,5 +9,9 @@ locals {
     qbittorrent        = var.qbittorrent_password
     privatehd_password = var.privatehd_password
     privatehd_pid      = var.privatehd_pid
+    avistaz_password   = var.avistaz_password
+    avistaz_pid        = var.avistaz_pid
+    animez_password    = var.animez_password
+    animez_pid         = var.animez_pid
   }
 }
