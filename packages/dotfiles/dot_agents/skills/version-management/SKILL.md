@@ -195,11 +195,16 @@ The catalog's `versionKey` (used in `--tags ghcr.io/{versionKey}:…`) must **no
 ### Scout prod is promoted, not bumped
 
 `"shepherdjerred/scout-for-lol/prod"` and `"scout-for-lol-site/prod"` move
-**together, only** via `bun scripts/promote-scout.ts` (one PR; the beta image
-line is copied verbatim, the site pin selects the archived artifact the
-`scout-prod-reconcile` CI step syncs into the prod bucket). Never edit these
-two pins by hand and never add Renovate annotations to them — a lone backend
-bump reintroduces the frontend↔backend tRPC skew the lockstep model exists to
+**together, only** via the standing `scout-promote-pending` PR that CI
+maintains (the `scout promotion PR` pipeline step runs
+`scripts/promote-scout.ts --ci` on every main build: it opens/refreshes the PR
+when beta is ahead of prod and closes it when prod catches up). **Merging that
+PR is the promotion.** The beta image line is copied verbatim; the site pin
+selects the archived artifact the `scout-prod-reconcile` CI step syncs into
+the prod bucket. Operator mode (`bun scripts/promote-scout.ts --version …
+--force`) exists for rollbacks/explicit targets. Never edit these two pins by
+hand and never add Renovate annotations to them — a lone backend bump
+reintroduces the frontend↔backend tRPC skew the lockstep model exists to
 prevent. See `packages/scout-for-lol/AGENTS.md` § Stage deploys.
 
 ## Renovate Configuration

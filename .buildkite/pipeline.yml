@@ -462,9 +462,15 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
-      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red scout-frontend scout-frontend-beta better-skill-capped glitter; do
+      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red better-skill-capped glitter; do
         bun scripts/deploy-site.ts "$$site" --dry-run
       done
+      # Scout sites deploy versioned + stage-pinned (not via the catalog);
+      # rehearse all three subcommands so PRs exercise the real main path.
+      bun scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
+      bun scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
+      bun scripts/scout-site-release.ts reconcile-prod --dry-run
+      bun scripts/promote-scout.ts --ci --site-version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
       bun packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER" --dry-run
       bun scripts/release.ts --dry-run
     retry: *retry
@@ -519,9 +525,16 @@ steps:
       # artifact; deploy it prebuilt. The PDF is gitignored, not committed.
       buildkite-agent artifact download "packages/resume/resume.pdf" . --step resume-build
       bun scripts/deploy-site.ts resume --prebuilt
-      for site in webring cooklang-rich-preview stocks-sjer-red scout-frontend scout-frontend-beta better-skill-capped glitter; do
+      for site in webring cooklang-rich-preview stocks-sjer-red better-skill-capped glitter; do
         bun scripts/deploy-site.ts "$$site"
       done
+      # Scout sites are versioned + stage-pinned (lockstep with the backend
+      # image pins): archive the prod-flavored artifact for promotion, then
+      # deploy the beta flavor live (beta stays continuous — it's the canary).
+      # Prod is synced separately by scout-prod-reconcile from the pinned
+      # archive, never from this build's dist.
+      bun scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
+      bun scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
     retry: *retry
     plugins:
       - *pod_light
@@ -608,6 +621,48 @@ steps:
     retry: *retry
     plugins:
       - *pod
+
+  # Standing promotion PR: whenever beta has something prod doesn't (prod
+  # never promoted, backend image line changed, or the scout package changed
+  # since the promoted site version's commit), open/refresh the
+  # scout-promote-pending PR moving BOTH prod pins in versions.ts to what beta
+  # serves; close it when prod is caught up. Merging that PR IS the promotion —
+  # ArgoCD (backend) and scout-prod-reconcile (site) act on the pin change.
+  # Auto-merge is deliberately not enabled: that would make prod track beta
+  # continuously instead of promotion being a review click.
+  - label: ":package: scout promotion PR"
+    if: build.branch == pipeline.default_branch
+    depends_on: sites
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      bun install --frozen-lockfile
+      # SeaweedFS creds: reads archive manifests to gate on real scout changes.
+      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+      bun scripts/promote-scout.ts --ci --site-version "2.0.0-$BUILDKITE_BUILD_NUMBER"
+    plugins:
+      - *pod_light
+
+  # Reconcile the prod scout site to its versions.ts pin. Usually a no-op
+  # (bucket marker == pin); after a promotion merge it syncs the archived
+  # artifact for the pinned version into the prod bucket. Ordered AFTER
+  # argocd-sync on purpose: the promoted backend deploys first, so the
+  # transient mid-promotion mix is old-frontend/new-backend — the safe
+  # direction (the reverse skew is what crashed the prod SPA). Shares the
+  # site-deploys concurrency group so it never races a beta sync.
+  - label: ":rocket: scout prod reconcile"
+    key: scout-prod-reconcile
+    if: build.branch == pipeline.default_branch
+    depends_on: [argocd-sync, sites]
+    concurrency: 1
+    concurrency_group: monorepo/site-deploys
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      bun install --frozen-lockfile
+      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+      bun scripts/scout-site-release.ts reconcile-prod
+    retry: *retry
+    plugins:
+      - *pod_light
 
   - label: ":terraform: tofu apply (cloudflare, after tunnel gate)"
     if: build.branch == pipeline.default_branch
