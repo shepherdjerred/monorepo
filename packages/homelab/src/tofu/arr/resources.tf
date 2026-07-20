@@ -450,3 +450,175 @@ resource "prowlarr_indexer" "privatehd" {
   tags           = []
 
 }
+
+# AvistaZ (aka AsiaTorrents) — an AvistaZ-network sibling of PrivateHD above,
+# sharing the identical AvistazSettings contract (site username + password +
+# per-account PID, all required). Unlike the imported resources this one is
+# *created* by the stack: it does not yet exist in Prowlarr. Credentials come
+# from 1Password via arr_api_keys so an apply never nulls them; the PID is the
+# value on avistaz.to's My Account / My Profile page (member rank or above is
+# required to use the API).
+resource "prowlarr_indexer" "avistaz" {
+  app_profile_id  = 1
+  config_contract = "AvistazSettings"
+  enable          = true
+  fields = [
+    {
+      bool_value      = false
+      name            = "freeleechOnly"
+      number_value    = null
+      sensitive_value = null # sensitive
+      set_value       = null
+      text_value      = null
+    },
+    {
+      bool_value      = false
+      name            = "torrentBaseSettings.preferMagnetUrl"
+      number_value    = null
+      sensitive_value = null # sensitive
+      set_value       = null
+      text_value      = null
+    },
+    {
+      bool_value      = null
+      name            = "baseSettings.limitsUnit"
+      number_value    = 0
+      sensitive_value = null # sensitive
+      set_value       = null
+      text_value      = null
+    },
+    {
+      bool_value      = null
+      name            = "baseUrl"
+      number_value    = null
+      sensitive_value = null # sensitive
+      set_value       = null
+      text_value      = "https://avistaz.to/"
+    },
+    {
+      bool_value = null
+      name       = "password"
+      # AvistaZ account password, sourced from 1Password via arr_api_keys so an
+      # apply never nulls the indexer credential.
+      number_value    = null
+      sensitive_value = local.arr_api_keys["avistaz_password"]
+      set_value       = null
+      text_value      = null
+    },
+    {
+      bool_value = null
+      name       = "pid"
+      # AvistaZ PID (per-account token from My Account / My Profile), from 1Password.
+      number_value    = null
+      sensitive_value = local.arr_api_keys["avistaz_pid"]
+      set_value       = null
+      text_value      = null
+    },
+    {
+      bool_value      = null
+      name            = "torrentBaseSettings.seedRatio"
+      number_value    = 3
+      sensitive_value = null # sensitive
+      set_value       = null
+      text_value      = null
+    },
+    {
+      bool_value      = null
+      name            = "username"
+      number_value    = null
+      sensitive_value = null # sensitive
+      set_value       = null
+      text_value      = "shprd"
+    },
+  ]
+  implementation = "AvistaZ"
+  name           = "AvistaZ"
+  priority       = 1
+  protocol       = "torrent"
+  tags           = []
+
+}
+
+# AnimeZ (ex-AnimeTorrents) — the AvistaZ network's anime/manga tracker, same
+# AvistazSettings contract as AvistaZ/PrivateHD. Also *created* (not imported).
+# The PID is the value on animez.to's My Account / My Profile page.
+resource "prowlarr_indexer" "animez" {
+  app_profile_id  = 1
+  config_contract = "AvistazSettings"
+  enable          = true
+  fields = [
+    {
+      bool_value      = false
+      name            = "freeleechOnly"
+      number_value    = null
+      sensitive_value = null # sensitive
+      set_value       = null
+      text_value      = null
+    },
+    {
+      bool_value      = false
+      name            = "torrentBaseSettings.preferMagnetUrl"
+      number_value    = null
+      sensitive_value = null # sensitive
+      set_value       = null
+      text_value      = null
+    },
+    {
+      bool_value      = null
+      name            = "baseSettings.limitsUnit"
+      number_value    = 0
+      sensitive_value = null # sensitive
+      set_value       = null
+      text_value      = null
+    },
+    {
+      bool_value      = null
+      name            = "baseUrl"
+      number_value    = null
+      sensitive_value = null # sensitive
+      set_value       = null
+      text_value      = "https://animez.to/"
+    },
+    {
+      bool_value = null
+      name       = "password"
+      # AnimeZ account password, sourced from 1Password via arr_api_keys so an
+      # apply never nulls the indexer credential.
+      number_value    = null
+      sensitive_value = local.arr_api_keys["animez_password"]
+      set_value       = null
+      text_value      = null
+    },
+    {
+      bool_value = null
+      name       = "pid"
+      # AnimeZ PID (per-account token from My Account / My Profile), from 1Password.
+      number_value    = null
+      sensitive_value = local.arr_api_keys["animez_pid"]
+      set_value       = null
+      text_value      = null
+    },
+    {
+      bool_value      = null
+      name            = "torrentBaseSettings.seedRatio"
+      number_value    = 3
+      sensitive_value = null # sensitive
+      set_value       = null
+      text_value      = null
+    },
+    {
+      bool_value      = null
+      name            = "username"
+      number_value    = null
+      sensitive_value = null # sensitive
+      set_value       = null
+      text_value      = "shprd"
+    },
+  ]
+  implementation = "AnimeZ"
+  name           = "AnimeZ"
+  priority       = 1
+  protocol       = "torrent"
+  tags           = []
+
+}
