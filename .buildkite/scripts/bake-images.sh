@@ -33,8 +33,8 @@ for arg in "$@"; do
 done
 
 # bake target → owning turbo package → package dir with the `smoke` script.
-# The four homelab infra images are one unit: the `homelab` package owns all
-# of them and its smoke script asserts on all four.
+# The homelab infra images are one unit: the `homelab` package owns all
+# of them and its smoke script asserts on all of them.
 APP_TARGETS=(
   "birmel|@shepherdjerred/birmel|packages/birmel"
   "tasknotes-server|tasknotes-server|packages/tasknotes-server"
@@ -49,7 +49,7 @@ APP_TARGETS=(
 # turbo's nested --affected under-selects these families (documented in the
 # old PR dry-run step); they always build on PRs until that bug is fixed.
 ALWAYS_ON_TARGETS=(scout-for-lol discord-plays-pokemon discord-plays-mario-kart)
-INFRA_IMAGES=(caddy-s3proxy obsidian-headless mcp-gateway redlib)
+INFRA_IMAGES=(caddy-s3proxy obsidian-headless mcp-gateway redlib shelfbridge)
 
 bake_targets=()
 smoke_dirs=()

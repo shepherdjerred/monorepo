@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Smoke tests for the four homelab infra images.
+ * Smoke tests for the homelab infra images.
  *
  * Boots each freshly-built `<name>:dev` image and asserts on startup behavior,
  * translating the old Dagger smoke tests (smokeTestCaddyS3Proxy,
@@ -392,12 +392,100 @@ async function smokeRedlib(): Promise<SmokeResult> {
   }
 }
 
+/**
+ * Smoke test shelfbridge.
+ * Verifies: the binary boots with a minimal env (fails fast without API_KEY),
+ * serves /health, and answers a Torznab caps query authenticated by the
+ * configured API key — the exact endpoint Prowlarr/Bindery will hit.
+ */
+async function smokeShelfbridge(): Promise<SmokeResult> {
+  const image = "shelfbridge:dev";
+  const name = "smoke-shelfbridge";
+  const port = 18787;
+  const apiKey = "smoke-test-key";
+  await forceRemove(name);
+  try {
+    const start = await run([
+      "docker",
+      "run",
+      "-d",
+      "--name",
+      name,
+      "-p",
+      `${String(port)}:8787`,
+      "-e",
+      `API_KEY=${apiKey}`,
+      "-e",
+      "SOURCE_LIBGEN=false",
+      "-e",
+      "SOURCE_ANNAS=false",
+      "-e",
+      "SOURCE_ZLIB=false",
+      image,
+    ]);
+    if (start.exitCode !== 0) {
+      return {
+        image,
+        ok: false,
+        detail: `docker run failed (exit ${String(start.exitCode)})\n${start.stderr}`,
+      };
+    }
+
+    const deadline = Date.now() + 30_000;
+    let healthy = false;
+    let lastErr = "";
+    while (Date.now() < deadline) {
+      try {
+        const res = await fetch(`http://127.0.0.1:${String(port)}/health`, {
+          signal: AbortSignal.timeout(2000),
+        });
+        healthy = res.ok;
+        if (healthy) break;
+      } catch (err) {
+        lastErr = err instanceof Error ? err.message : String(err);
+      }
+      await Bun.sleep(1000);
+    }
+
+    if (!healthy) {
+      const logs = await run(["docker", "logs", name]);
+      return {
+        image,
+        ok: false,
+        detail: `shelfbridge /health did not answer on :${String(port)} within 30s (last error: ${lastErr})\n${logs.stdout}\n${logs.stderr}`,
+      };
+    }
+
+    const caps = await fetch(
+      `http://127.0.0.1:${String(port)}/torznab/api?t=caps&apikey=${apiKey}`,
+      { signal: AbortSignal.timeout(5000) },
+    );
+    const capsBody = await caps.text();
+    if (!caps.ok || !capsBody.includes("<caps")) {
+      return {
+        image,
+        ok: false,
+        detail: `torznab caps query failed (status ${String(caps.status)})\n${capsBody}`,
+      };
+    }
+
+    return {
+      image,
+      ok: true,
+      detail: `shelfbridge booted, /health OK, torznab caps served on :${String(port)}`,
+    };
+  } finally {
+    await forceRemove(name);
+  }
+}
+
 async function main(): Promise<void> {
   const checks: Array<{ label: string; fn: () => Promise<SmokeResult> }> = [
     { label: "caddy-s3proxy", fn: smokeCaddyS3Proxy },
     { label: "obsidian-headless", fn: smokeObsidianHeadless },
     { label: "mcp-gateway", fn: smokeMcpGateway },
     { label: "redlib", fn: smokeRedlib },
+    { label: "shelfbridge", fn: smokeShelfbridge },
   ];
 
   const results: SmokeResult[] = [];
