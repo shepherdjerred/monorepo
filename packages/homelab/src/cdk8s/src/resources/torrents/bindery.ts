@@ -53,6 +53,9 @@ export function createBinderyDeployment(
     metadata: {
       labels: { app: "bindery" },
     },
+    podMetadata: {
+      labels: { app: "bindery" },
+    },
   });
 
   const configVolume = new ZfsNvmeVolume(chart, "bindery-pvc", {
@@ -121,9 +124,11 @@ export function createBinderyDeployment(
           volume: configVol,
         },
         {
+          // Read-only: CWA owns library writes; Bindery only scans for dupes in External mode.
           path: "/books",
           volume: booksVol,
           subPath: "library",
+          readOnly: true,
         },
         {
           path: "/ingest",

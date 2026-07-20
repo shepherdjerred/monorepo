@@ -49,6 +49,10 @@ export function createCalibreWebAutomatedDeployment(
       labels: { app: "cwa" },
       annotations: { ...LINUXSERVER_KUBE_LINTER_ANNOTATIONS },
     },
+    // Pod label used by Postal SMTP NetworkPolicy (media + app=cwa only).
+    podMetadata: {
+      labels: { app: "cwa" },
+    },
   });
 
   const configVolume = new ZfsNvmeVolume(chart, "cwa-pvc", {

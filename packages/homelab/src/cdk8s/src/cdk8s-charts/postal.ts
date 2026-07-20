@@ -51,9 +51,12 @@ export function createPostalChart(app: App) {
               },
             },
             {
-              // CWA Kindle Auto-Send (SMTP configured in CWA UI → Postal)
+              // CWA Kindle Auto-Send only (not every media pod)
               namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": "media" },
+              },
+              podSelector: {
+                matchLabels: { app: "cwa" },
               },
             },
           ],
