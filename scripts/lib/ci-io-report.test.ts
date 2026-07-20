@@ -102,7 +102,7 @@ function emptyMetrics(): PrometheusIoMetrics {
 
 function parentMetric(input: {
   pod: string;
-  device: string;
+  device: string | null;
   value: number;
   metadata?: MetricMetadata | null;
 }): DeviceMetric {
@@ -342,6 +342,39 @@ describe("Prometheus query contract", () => {
     expect(metrics.parentMax[0]?.device).toBe("/dev/nvme0n1");
     expect(metrics.parentMax[0]?.metadata?.stepKey).toBe("fixture");
     expect(metrics.childMax[0]?.device).toBe("/dev/nvme0n1");
+  });
+
+  test("preserves cAdvisor series whose device label is absent", async () => {
+    const pod = `buildkite-${IDS.long}-abc12`;
+    const client: PrometheusClientConfig = {
+      apiBaseUrl: "http://prometheus:9090/",
+      fetcher: (url) => {
+        const query = new URL(url).searchParams.get("query") ?? "";
+        const metric = query.includes("container_network_")
+          ? { pod, node: "torvalds", interface: "eth0" }
+          : query.includes('container!=""')
+            ? { pod, node: "torvalds", container: "container-0" }
+            : { pod, node: "torvalds" };
+        return Promise.resolve(
+          Response.json({
+            status: "success",
+            data: {
+              resultType: "vector",
+              result: [{ metric, value: [1, "1"] }],
+            },
+          }),
+        );
+      },
+    };
+
+    const metrics = await fetchPrometheusIoMetrics({
+      client,
+      window: WINDOW,
+      source: "raw",
+    });
+    expect(metrics.parentMax[0]?.device).toBeNull();
+    expect(metrics.childMax[0]?.device).toBeNull();
+    expect(aggregatePodMetrics(metrics)[0]?.writeBytes).toBe(1);
   });
 });
 

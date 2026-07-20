@@ -35,7 +35,7 @@ function podJobUuid(pod: string): string {
 }
 
 function deviceKey(metric: DeviceMetric): string {
-  return `${metric.pod}\u0000${metric.node}\u0000${metric.device}`;
+  return JSON.stringify([metric.pod, metric.node, metric.device]);
 }
 
 function networkKey(metric: NetworkMetric): string {

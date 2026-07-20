@@ -13,7 +13,10 @@ export type MetricSource = z.infer<typeof MetricSourceSchema>;
 const RawParentLabelsSchema = z.object({
   pod: z.string().min(1),
   node: z.string().min(1),
-  device: z.string().min(1),
+  // cAdvisor legitimately omits this label for pseudo-filesystems. Absence is
+  // part of the Prometheus series identity; preserve it instead of dropping
+  // those writes or inventing a device name.
+  device: z.string().min(1).optional(),
 });
 
 const RawChildLabelsSchema = RawParentLabelsSchema.extend({
@@ -29,7 +32,7 @@ const RawNetworkLabelsSchema = z.object({
 const RecordingMetadataLabelsSchema = z.object({
   pod: z.string().min(1),
   node: z.string().min(1),
-  device: z.string().min(1),
+  device: z.string().min(1).optional(),
   label_buildkite_com_job_uuid: z.uuid(),
   label_ci_sjer_red_step_key: z.string().min(1),
   annotation_buildkite_com_build_branch: z.string().min(1),
@@ -56,7 +59,7 @@ export type MetricMetadata = {
 export type DeviceMetric = {
   pod: string;
   node: string;
-  device: string;
+  device: string | null;
   value: number;
   metadata: MetricMetadata | null;
 };
@@ -212,7 +215,7 @@ function parseParentMetrics(
       return {
         pod: labels.pod,
         node: labels.node,
-        device: labels.device,
+        device: labels.device ?? null,
         value: metricValue(item),
         metadata: null,
       };
@@ -221,7 +224,7 @@ function parseParentMetrics(
     return {
       pod: labels.pod,
       node: labels.node,
-      device: labels.device,
+      device: labels.device ?? null,
       value: metricValue(item),
       metadata: metadataFromLabels(labels),
     };
@@ -238,7 +241,7 @@ function parseChildMetrics(
       return {
         pod: labels.pod,
         node: labels.node,
-        device: labels.device,
+        device: labels.device ?? null,
         container: labels.container,
         value: metricValue(item),
         metadata: null,
@@ -248,7 +251,7 @@ function parseChildMetrics(
     return {
       pod: labels.pod,
       node: labels.node,
-      device: labels.device,
+      device: labels.device ?? null,
       container: labels.container,
       value: metricValue(item),
       metadata: metadataFromLabels(labels),
