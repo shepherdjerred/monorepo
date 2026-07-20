@@ -1,0 +1,1 @@
+Glitter is a Node.js project configured to deploy a static site served directly from the `public` directory. It uses npm packaging defined in `package.json` and organizes all frontend assets under `public`. The dedicated `deploy` npm script highlights its streamlined, dependency-free static-site architecture.
