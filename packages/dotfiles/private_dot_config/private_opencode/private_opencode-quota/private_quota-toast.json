@@ -1,0 +1,27 @@
+{
+  "enabledProviders": ["openai", "xai", "kimi-for-coding"],
+  "enableToast": false,
+  "formatStyle": "allWindows",
+  "percentDisplayMode": "remaining",
+  "onlyCurrentModel": false,
+  "showSessionTokens": true,
+  "pricingSnapshot": {
+    "source": "auto",
+    "autoRefresh": 1
+  },
+  "tuiSidebarPanel": {
+    "enabled": true,
+    "formatStyle": "allWindows"
+  },
+  "tuiCompactStatus": {
+    "enabled": true,
+    "homeBottom": true,
+    "sessionPrompt": true,
+    "suppressWhenNativeProviderQuota": false,
+    "formatStyle": "allWindows"
+  },
+  "maintainerAnnouncements": {
+    "enabled": false,
+    "home": false
+  }
+}
