@@ -18,7 +18,7 @@
  *     (required unless --dry-run)
  */
 
-import { readdirSync, existsSync } from "node:fs";
+import { readdirSync, existsSync, rmSync } from "node:fs";
 import { run, requireEnv, tmpBase } from "../../../scripts/lib/run.ts";
 
 const CHARTMUSEUM_URL = "https://chartmuseum.sjer.red/api/charts";
@@ -173,6 +173,10 @@ async function packageAndPush(opts: {
   );
   const code = result.stdout.trim();
   const body = (await Bun.file(bodyFile).text()).trim();
+  // curl has exited and the contents are in `body`; drop the temp file so it
+  // can't accumulate. `force` tolerates an already-absent file; any other error
+  // (e.g. permissions) still surfaces rather than being silently swallowed.
+  rmSync(bodyFile, { force: true });
   if (code.startsWith("2")) {
     console.log(`${chart}: pushed (HTTP ${code})`);
     return;
