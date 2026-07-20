@@ -7,6 +7,7 @@ import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/stora
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
+  BUILDKITE_IO_OBSERVABILITY_VALUES,
   createGrafanaValues,
   type PrometheusValuesWithBlackbox,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/grafana-values.ts";
@@ -112,6 +113,10 @@ export async function createPrometheusApp(chart: Chart) {
       // https://github.com/prometheus-operator/kube-prometheus/issues/718
       enabled: false,
     },
+    // cAdvisor owns the unique pod-parent counters; kube-state-metrics adds
+    // only the Buildkite identity/link metadata used to attribute them. Both
+    // scrape at 10s so short-lived jobs retain useful coverage.
+    ...BUILDKITE_IO_OBSERVABILITY_VALUES,
     grafana: createGrafanaValues(prometheusSecrets.name),
     nodeExporter: {
       operatingSystems: {
