@@ -13,6 +13,7 @@ import {
 import { renderCiIoMarkdown } from "./lib/ci-io-markdown.ts";
 import {
   fetchPrometheusIoMetrics,
+  filterPrometheusIoMetrics,
   MetricSourceSchema,
 } from "./lib/ci-io-prometheus.ts";
 import {
@@ -311,10 +312,15 @@ async function collectWindow(input: {
     window: input.window,
     source: input.options.metricSource,
   });
+  const selectedJobIds = new Set(
+    input.builds.flatMap((build) =>
+      build.jobs.filter((job) => job.started_at !== null).map((job) => job.id),
+    ),
+  );
   return buildWindowIoReport({
     builds: input.builds,
     window: input.window,
-    metrics,
+    metrics: filterPrometheusIoMetrics(metrics, selectedJobIds),
     pipeline: input.pipeline,
     excludedJobIds: input.excludedJobIds,
   });

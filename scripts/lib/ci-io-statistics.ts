@@ -112,6 +112,47 @@ function percentChange(candidate: number, baseline: number): number | null {
   return ((candidate - baseline) / baseline) * 100;
 }
 
+function nullablePercentChange(
+  candidate: number | null,
+  baseline: number | null,
+): number | null {
+  if (candidate === null || baseline === null) {
+    return null;
+  }
+  return percentChange(candidate, baseline);
+}
+
+function fixtureIntegrityReasons(
+  baseline: StepIoReport,
+  candidate: StepIoReport,
+  changes: {
+    write: number | null;
+    duration: number | null;
+    network: number | null;
+  },
+): string[] {
+  const reasons: string[] = [];
+  if (baseline.jobCount !== candidate.jobCount) {
+    reasons.push("fixture job counts differ between comparison windows");
+  }
+  if (
+    baseline.completeJobCount !== baseline.jobCount ||
+    candidate.completeJobCount !== candidate.jobCount
+  ) {
+    reasons.push("fixture includes missing or lower-bound telemetry");
+  }
+  if (changes.write === null) {
+    reasons.push("write metrics are missing or have a zero baseline");
+  }
+  if (changes.duration === null) {
+    reasons.push("duration metrics are missing or have a zero baseline");
+  }
+  if (changes.network === null) {
+    reasons.push("network metrics are missing or have a zero baseline");
+  }
+  return reasons;
+}
+
 function fixtureGate(
   stepKey: string,
   baseline: StepIoReport | undefined,
@@ -127,66 +168,59 @@ function fixtureGate(
       reasons: ["step is absent from one comparison window"],
     };
   }
-  const writeChange =
-    baseline.medianWriteBytes === null || candidate.medianWriteBytes === null
-      ? null
-      : percentChange(candidate.medianWriteBytes, baseline.medianWriteBytes);
-  const durationChange =
-    baseline.medianDurationSeconds === null ||
-    candidate.medianDurationSeconds === null
-      ? null
-      : percentChange(
-          candidate.medianDurationSeconds,
-          baseline.medianDurationSeconds,
-        );
-  const networkChange =
-    baseline.medianNetworkBytes === null ||
-    candidate.medianNetworkBytes === null
-      ? null
-      : percentChange(
-          candidate.medianNetworkBytes,
-          baseline.medianNetworkBytes,
-        );
-  const reasons: string[] = [];
-  if (writeChange === null) {
-    reasons.push("write metrics are missing or have a zero baseline");
-  }
-  if (durationChange === null) {
-    reasons.push("duration metrics are missing or have a zero baseline");
-  }
-  if (networkChange === null) {
-    reasons.push("network metrics are missing or have a zero baseline");
-  }
-  if (
-    writeChange === null ||
-    durationChange === null ||
-    networkChange === null
-  ) {
+  const changes = {
+    write: nullablePercentChange(
+      candidate.medianWriteBytes,
+      baseline.medianWriteBytes,
+    ),
+    duration: nullablePercentChange(
+      candidate.p95DurationSeconds,
+      baseline.p95DurationSeconds,
+    ),
+    network: nullablePercentChange(
+      candidate.p95NetworkBytes,
+      baseline.p95NetworkBytes,
+    ),
+  };
+  const integrityReasons = fixtureIntegrityReasons(
+    baseline,
+    candidate,
+    changes,
+  );
+  if (integrityReasons.length > 0) {
     return {
       stepKey,
       status: "inconclusive",
-      writeReductionPercent: writeChange === null ? null : -writeChange,
-      durationChangePercent: durationChange,
-      networkChangePercent: networkChange,
-      reasons,
+      writeReductionPercent: changes.write === null ? null : -changes.write,
+      durationChangePercent: changes.duration,
+      networkChangePercent: changes.network,
+      reasons: integrityReasons,
     };
   }
-  const writeReduction = -writeChange;
+  if (
+    changes.write === null ||
+    changes.duration === null ||
+    changes.network === null
+  ) {
+    throw new Error("complete fixture comparison has missing changes");
+  }
+  const writeReduction = -changes.write;
+  const reasons: string[] = [];
   if (writeReduction < 20) {
     reasons.push("write reduction is below 20%");
   }
-  if (durationChange > 10) {
+  if (changes.duration > 10) {
     reasons.push("duration regression exceeds 10%");
   }
-  if (networkChange > 10) {
+  if (changes.network > 10) {
     reasons.push("network regression exceeds 10%");
   }
   return {
     stepKey,
     status: reasons.length === 0 ? "passed" : "failed",
     writeReductionPercent: writeReduction,
-    durationChangePercent: durationChange,
-    networkChangePercent: networkChange,
+    durationChangePercent: changes.duration,
+    networkChangePercent: changes.network,
     reasons,
   };
 }

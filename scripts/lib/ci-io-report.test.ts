@@ -14,6 +14,8 @@ import { aggregatePodMetrics } from "./ci-io-aggregate.ts";
 import { renderCiIoMarkdown } from "./ci-io-markdown.ts";
 import {
   buildIoQueries,
+  fetchPrometheusIoMetrics,
+  filterPrometheusIoMetrics,
   type DeviceMetric,
   type MetricMetadata,
   type NetworkMetric,
@@ -293,6 +295,54 @@ describe("Prometheus query contract", () => {
       "buildkite:container_fs_writes_bytes_total",
     );
   });
+
+  test("preserves recording-rule devices and enriched metadata", async () => {
+    const metadata = {
+      pod: `buildkite-${IDS.long}-abc12`,
+      node: "torvalds",
+      device: "/dev/nvme0n1",
+      label_buildkite_com_job_uuid: IDS.long,
+      label_ci_sjer_red_step_key: "fixture",
+      annotation_buildkite_com_build_branch: "feature/io",
+      annotation_buildkite_com_build_url:
+        "https://buildkite.com/sjerred/monorepo/builds/101",
+      annotation_buildkite_com_job_url: `https://buildkite.com/sjerred/monorepo/builds/101#${IDS.long}`,
+      annotation_buildkite_com_pipeline_slug: "monorepo",
+    };
+    const client: PrometheusClientConfig = {
+      apiBaseUrl: "http://prometheus:9090/",
+      fetcher: (url) => {
+        const query = new URL(url).searchParams.get("query") ?? "";
+        const metric = query.includes("container_network_")
+          ? {
+              pod: metadata.pod,
+              node: metadata.node,
+              interface: "eth0",
+            }
+          : query.includes("buildkite:container_fs_writes_bytes_total")
+            ? { ...metadata, container: "container-0" }
+            : metadata;
+        return Promise.resolve(
+          Response.json({
+            status: "success",
+            data: {
+              resultType: "vector",
+              result: [{ metric, value: [1, "1"] }],
+            },
+          }),
+        );
+      },
+    };
+
+    const metrics = await fetchPrometheusIoMetrics({
+      client,
+      window: WINDOW,
+      source: "recording",
+    });
+    expect(metrics.parentMax[0]?.device).toBe("/dev/nvme0n1");
+    expect(metrics.parentMax[0]?.metadata?.stepKey).toBe("fixture");
+    expect(metrics.childMax[0]?.device).toBe("/dev/nvme0n1");
+  });
 });
 
 describe("validated API clients", () => {
@@ -365,6 +415,18 @@ describe("validated API clients", () => {
 });
 
 describe("pod aggregation", () => {
+  test("filters concurrent builds before attribution", () => {
+    const metrics = filterPrometheusIoMetrics(
+      reportMetrics(),
+      new Set([IDS.long]),
+    );
+    for (const series of Object.values(metrics)) {
+      expect(series.every((metric) => metric.pod.includes(IDS.long))).toBe(
+        true,
+      );
+    }
+  });
+
   test("sums parent devices once and keeps children diagnostic", () => {
     const metrics = reportMetrics();
     const measurements = aggregatePodMetrics(metrics);
@@ -454,6 +516,26 @@ describe("window report", () => {
     expect(() => assertBenchmarkIntegrity(report)).toThrow();
   });
 
+  test("treats a short job with two samples as complete", () => {
+    const metrics = reportMetrics();
+    const shortSample = metrics.parentSamples.find((metric) =>
+      metric.pod.includes(IDS.short),
+    );
+    if (shortSample === undefined) {
+      throw new Error("short-job sample fixture missing");
+    }
+    shortSample.value = 2;
+    const report = buildWindowIoReport({
+      builds: reportBuilds(),
+      window: WINDOW,
+      metrics,
+      pipeline: "monorepo",
+      excludedJobIds: new Set(),
+    });
+    const shortJob = report.jobs.find((job) => job.jobId === IDS.short);
+    expect(shortJob?.coverage).toBe("complete");
+  });
+
   test("fails strict mode when a long job has no measurement", () => {
     const firstBuild = reportBuilds()[0];
     if (firstBuild === undefined) {
@@ -535,6 +617,8 @@ function stepFixture(input: {
   writes: number | null;
   duration: number | null;
   network: number | null;
+  p95Duration?: number | null;
+  p95Network?: number | null;
 }): StepIoReport {
   return {
     stepKey: "image-fixture",
@@ -547,9 +631,9 @@ function stepFixture(input: {
     medianWriteBytes: input.writes,
     p95WriteBytes: input.writes,
     medianDurationSeconds: input.duration,
-    p95DurationSeconds: input.duration,
+    p95DurationSeconds: input.p95Duration ?? input.duration,
     medianNetworkBytes: input.network,
-    p95NetworkBytes: input.network,
+    p95NetworkBytes: input.p95Network ?? input.network,
     canceledBuildWriteBytes: 0,
     canceledJobWriteBytes: 0,
   };
@@ -620,6 +704,57 @@ describe("A/B comparison gates", () => {
       compareWindows(baseline, missing, new Set(["image-fixture"])).gates
         .status,
     ).toBe("inconclusive");
+  });
+
+  test("uses p95 regressions and rejects mismatched or incomplete workloads", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+    );
+    const p95Regression = gateWindow(
+      stepFixture({
+        writes: 60,
+        duration: 100,
+        network: 100,
+        p95Duration: 111,
+      }),
+    );
+    expect(
+      compareWindows(baseline, p95Regression, new Set(["image-fixture"])).gates
+        .status,
+    ).toBe("failed");
+
+    const incompleteStep = stepFixture({
+      writes: 60,
+      duration: 100,
+      network: 100,
+    });
+    incompleteStep.completeJobCount = 4;
+    incompleteStep.lowerBoundJobCount = 1;
+    const incomplete = compareWindows(
+      baseline,
+      gateWindow(incompleteStep),
+      new Set(["image-fixture"]),
+    );
+    expect(incomplete.gates.status).toBe("inconclusive");
+    expect(incomplete.gates.fixtures[0]?.reasons).toContain(
+      "fixture includes missing or lower-bound telemetry",
+    );
+
+    const mismatchedStep = stepFixture({
+      writes: 60,
+      duration: 100,
+      network: 100,
+    });
+    mismatchedStep.jobCount = 4;
+    const mismatched = compareWindows(
+      baseline,
+      gateWindow(mismatchedStep),
+      new Set(["image-fixture"]),
+    );
+    expect(mismatched.gates.status).toBe("inconclusive");
+    expect(mismatched.gates.fixtures[0]?.reasons).toContain(
+      "fixture job counts differ between comparison windows",
+    );
   });
 });
 

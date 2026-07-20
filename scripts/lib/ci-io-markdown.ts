@@ -12,13 +12,14 @@ function formatBytes(bytes: number | null): string {
     return "missing";
   }
   const units = ["B", "KiB", "MiB", "GiB", "TiB"];
-  let value = bytes;
+  const sign = bytes < 0 ? -1 : 1;
+  let value = Math.abs(bytes);
   let unitIndex = 0;
   while (value >= 1024 && unitIndex < units.length - 1) {
     value /= 1024;
     unitIndex += 1;
   }
-  return `${value.toFixed(unitIndex === 0 ? 0 : 2)} ${units[unitIndex] ?? "B"}`;
+  return `${(value * sign).toFixed(unitIndex === 0 ? 0 : 2)} ${units[unitIndex] ?? "B"}`;
 }
 
 function formatPercent(value: number | null): string {

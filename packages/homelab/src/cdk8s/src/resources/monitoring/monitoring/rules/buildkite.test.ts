@@ -64,7 +64,9 @@ describe("Buildkite CI I/O recording rules", () => {
   it("keeps child counters separate for container attribution", () => {
     const rule = recordingRule("buildkite:container_fs_writes_bytes_total");
 
-    expect(rule.expr).toContain("sum by (namespace, pod, node, container)");
+    expect(rule.expr).toContain(
+      "max by (namespace, pod, node, container, device)",
+    );
     expect(rule.expr).toContain('container!=""');
     expect(rule.expr).toContain('container!="POD"');
     expect(rule.expr).toContain(`id=~"${BUILDKITE_POD_CHILD_CGROUP_PATTERN}"`);
@@ -88,7 +90,7 @@ describe("Buildkite CI I/O recording rules", () => {
   it("records one sample-presence series from the parent counter only", () => {
     const rule = recordingRule("buildkite:pod_parent_sample_present");
     expect(rule.expr).toBe(
-      "max by (namespace, pod) (buildkite:pod_parent_fs_writes_bytes_total * 0 + 1)",
+      "buildkite:pod_parent_fs_writes_bytes_total * 0 + 1",
     );
   });
 });

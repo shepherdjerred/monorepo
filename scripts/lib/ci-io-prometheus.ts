@@ -29,6 +29,7 @@ const RawNetworkLabelsSchema = z.object({
 const RecordingMetadataLabelsSchema = z.object({
   pod: z.string().min(1),
   node: z.string().min(1),
+  device: z.string().min(1),
   label_buildkite_com_job_uuid: z.uuid(),
   label_ci_sjer_red_step_key: z.string().min(1),
   annotation_buildkite_com_build_branch: z.string().min(1),
@@ -92,6 +93,47 @@ export type PrometheusIoMetrics = {
   networkReceiveResets: NetworkMetric[];
   networkTransmitResets: NetworkMetric[];
 };
+
+function podBelongsToJob(pod: string, jobIds: Set<string>): boolean {
+  for (const jobId of jobIds) {
+    if (pod.startsWith(`buildkite-${jobId}-`)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function filterPrometheusIoMetrics(
+  metrics: PrometheusIoMetrics,
+  jobIds: Set<string>,
+): PrometheusIoMetrics {
+  return {
+    parentMax: metrics.parentMax.filter((metric) =>
+      podBelongsToJob(metric.pod, jobIds),
+    ),
+    parentSamples: metrics.parentSamples.filter((metric) =>
+      podBelongsToJob(metric.pod, jobIds),
+    ),
+    parentResets: metrics.parentResets.filter((metric) =>
+      podBelongsToJob(metric.pod, jobIds),
+    ),
+    childMax: metrics.childMax.filter((metric) =>
+      podBelongsToJob(metric.pod, jobIds),
+    ),
+    networkReceiveMax: metrics.networkReceiveMax.filter((metric) =>
+      podBelongsToJob(metric.pod, jobIds),
+    ),
+    networkTransmitMax: metrics.networkTransmitMax.filter((metric) =>
+      podBelongsToJob(metric.pod, jobIds),
+    ),
+    networkReceiveResets: metrics.networkReceiveResets.filter((metric) =>
+      podBelongsToJob(metric.pod, jobIds),
+    ),
+    networkTransmitResets: metrics.networkTransmitResets.filter((metric) =>
+      podBelongsToJob(metric.pod, jobIds),
+    ),
+  };
+}
 
 const POD_PATTERN = "buildkite-[0-9a-f-]{36}-[a-z0-9]+";
 const RAW_PARENT_SELECTOR = `namespace="buildkite",container="",id=~"/kubepods.*pod[^/]+$",pod=~"${POD_PATTERN}"`;
@@ -179,7 +221,7 @@ function parseParentMetrics(
     return {
       pod: labels.pod,
       node: labels.node,
-      device: "recorded",
+      device: labels.device,
       value: metricValue(item),
       metadata: metadataFromLabels(labels),
     };
@@ -206,7 +248,7 @@ function parseChildMetrics(
     return {
       pod: labels.pod,
       node: labels.node,
-      device: "recorded",
+      device: labels.device,
       container: labels.container,
       value: metricValue(item),
       metadata: metadataFromLabels(labels),

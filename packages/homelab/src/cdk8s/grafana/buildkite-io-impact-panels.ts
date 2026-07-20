@@ -64,7 +64,7 @@ export function addBuildkiteIoImpactPanels(
       query: `(
   (
     count(
-      buildkite:pod_parent_sample_present
+      max by (namespace, pod) (buildkite:pod_parent_sample_present)
       and on (namespace, pod)
         (kube_pod_status_phase{namespace="buildkite", phase="Running"} == 1)
     )

@@ -111,14 +111,13 @@ function sumNetwork(
 }
 
 function coverageFor(
-  durationSeconds: number,
   measurements: PodMeasurement[],
   sampleCount: number,
 ): Coverage {
   if (measurements.length === 0) {
     return "missing";
   }
-  if (durationSeconds <= 30 || sampleCount < 2) {
+  if (sampleCount < 2) {
     return "lower-bound";
   }
   return "complete";
@@ -288,7 +287,7 @@ function createJobReport(input: {
     ].sort(),
     durationSeconds: duration.seconds,
     finished: duration.finished,
-    coverage: coverageFor(duration.seconds, measurements, sampleCount),
+    coverage: coverageFor(measurements, sampleCount),
     sampleCount,
     writeBytes:
       measurements.length === 0
