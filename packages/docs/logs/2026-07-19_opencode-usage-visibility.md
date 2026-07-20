@@ -1,8 +1,11 @@
+---
+id: log-2026-07-19-opencode-usage-visibility
+type: log
+status: complete
+board: false
+---
+
 # OpenCode Usage Visibility
-
-## Status
-
-Complete
 
 Evaluated subscription quota and local token/cost visibility for the configured OpenAI Codex and Kimi Code OAuth providers.
 
