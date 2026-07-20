@@ -22,7 +22,7 @@ const versions = {
   // not managed by renovate — built from packages/streambot; CI's version commit-back fills the
   // real tag@digest after the first image push. Seed digest is a placeholder until then.
   "shepherdjerred/streambot":
-    "2.0.0-5925@sha256:19be655779dd60774c1c28616db93447822286e6ef40edcd8e963b71c4b76a29",
+    "2.0.0-5930@sha256:1edbe999a95bf8b27ebb3bf7bd31917ffc7597ad0c51561828c6cb39c0724204",
   // not managed by renovate — built from upstream redlib's glibc Dockerfile.ubuntu
   // at REDLIB_SOURCE_REF (pinned in the since-removed CI pipeline). The published image is
   // musl/Alpine, which Reddit blocks during OAuth (redlib-org/redlib#551 —
@@ -136,7 +136,7 @@ const versions = {
   openebs: "4.5.1",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/scout-for-lol/beta":
-    "2.0.0-5925@sha256:1fc9f243e97c724e64fec8503ca77b2bd05c0a31263137902b0f7bd69ac062e8",
+    "2.0.0-5930@sha256:bb9e9991f6874c5f96b8e0f2c283acb1359efb435774d89572c7ed63daae4e3d",
   // not managed by renovate — promoted with scripts/promote-scout.ts, in
   // lockstep with scout-for-lol-site/prod (a Renovate bump here would move the
   // prod backend without the matching site content and reintroduce tRPC
@@ -151,20 +151,20 @@ const versions = {
   "scout-for-lol-site/prod": "unpromoted",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
-    "2.0.0-5925@sha256:0f0a3863b1dd48ab219c0ae9496119297f63f5781c160214befcaa4ab5aa3ab6",
+    "2.0.0-5930@sha256:b5c05ff67549e1aca172328e00078538272c7a7e0babdb71b681fd7e856f943d",
   // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver packageName=shepherdjerred/starlight-karma-bot
   "shepherdjerred/starlight-karma-bot/prod":
     "2.0.0-4777@sha256:6a94f1d598bef983189c3f0b74d24f1c2c94ea4ba260dc2a5203d2d4bd735402",
   // not managed by renovate
   "shepherdjerred/birmel":
-    "2.0.0-5925@sha256:4136949b622d69a5d8296a8f17f9a343666d30a76e203488d5ad39b45090752e",
+    "2.0.0-5930@sha256:af0b572d131570e0953403364a81b10dcb3ec93e7a29527cde44ac72550c26df",
   // not managed by renovate
   "shepherdjerred/discord-plays-pokemon":
-    "2.0.0-5925@sha256:5750abdfca8cd5cf2816c8317fefa3a676cc8c3a553c367f93b315a48c5827f5",
+    "2.0.0-5930@sha256:d49aca883be2aacb51fc7df1c8e1acb664bc33fff398f5204471f14b20ebbf67",
   // not managed by renovate — placeholder digest; CI version-commit-back fills
   // the real digest after the first successful image push.
   "shepherdjerred/discord-plays-mario-kart":
-    "2.0.0-5925@sha256:c3ae5c35fe338f6b9794accaf647366d519604e7914f281fdf7efde97da5d788",
+    "2.0.0-5930@sha256:b4f28ed77541b2bec94fe14d2e3e269a59e9cf57d0c6823a29b1f0591dbc2c0e",
   // renovate: datasource=docker registryUrl=https://docker.io versioning=docker
   "freshrss/freshrss":
     "1.29.1@sha256:ab6b363102ccdbc39f6a62db926f567c61a5289bf25ba460f1c34423d8cc1a4d",
@@ -287,7 +287,7 @@ const versions = {
   // Custom tasknotes-server image - TaskNotes API server for mobile app
   // not managed by renovate
   "shepherdjerred/tasknotes-server":
-    "2.0.0-5925@sha256:f3496840232b74df5463abf0928a44fe91f6d86734a8d1fe95dd4d4c34aa8927",
+    "2.0.0-5930@sha256:e6b631acf831ff674936de90c3918c6c27ba916f3955107d9d6665d4a719c5cd",
   // Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync
   // not managed by renovate
   "shepherdjerred/obsidian-headless":
@@ -308,11 +308,11 @@ const versions = {
   // Custom temporal-worker image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/temporal-worker":
-    "2.0.0-5925@sha256:94187e6e78920766726fcab64b1e066b090f6207aba95b98eb5edc674cd10323",
+    "2.0.0-5930@sha256:6267ebe6795f34794377048b9e2c78d1302998af7798ba5618d8039eb5d9632f",
   // Custom TRMNL dashboard image - updated by CI pipeline
   // not managed by renovate
   "shepherdjerred/trmnl-dashboard":
-    "2.0.0-5925@sha256:d088732d34ef6201c695630f8a284863c61413631a1d57612de88f2af26e7d32",
+    "2.0.0-5930@sha256:088cf081266460e933556938fce9876bf726dfc4a60273371ea9b258ef262671",
 };
 
 /**
