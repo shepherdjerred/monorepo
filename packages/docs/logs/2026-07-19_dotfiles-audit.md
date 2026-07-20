@@ -40,3 +40,45 @@ Audited chezmoi source, managed targets, unmanaged live files, source Git state,
 - `gitleaks` reports 20 documentation-example false positives under `dot_agents`; it did not report rendered credentials from the source templates.
 - `.config/chezmoi/chezmoi.toml` is intentionally unmanaged bootstrap state because it selects the chezmoi source directory.
 - `~/.codex/config.toml` was intentionally untracked in May; only its new `rules/safety.rules` source directory is pending Git addition.
+
+## Session Log — 2026-07-19 (PR #1577 Greptile follow-up)
+
+### Done
+
+- Resolved both blocking Greptile P1 review threads on PR #1577
+  (`chore/dotfiles-opencode-safety`):
+  - `packages/dotfiles/private_dot_config/private_opencode/private_opencode.jsonc`
+    renamed to `private_opencode.jsonc.tmpl` and templated so the local
+    `opencode-kimi-full-kimi-api` plugin checkout path is generated from
+    `.chezmoi.homeDir` and only included when `stat` confirms the directory
+    exists on the target machine — `chezmoi apply` on another machine no
+    longer hardcodes this machine's local plugin checkout.
+  - Broadened the `rm -rf`/`rm -fr` bash deny rules from
+    `"rm -rf /*"`/`"rm -rf ~*"` to bare `"rm -rf*"`/`"rm -fr*"` so relative
+    paths (`rm -rf .`, `rm -rf node_modules`) are denied too, matching the
+    Codex `safety.rules` prefix-rule parity.
+  - Also added the `poweroff`, `sfdisk`, and `newfs` bash denies flagged in
+    Greptile's summary comment (present in Codex's `safety.rules` but
+    missing from the OpenCode deny list).
+  - Verified the `argocd app sync*--prune*` pattern flagged in the same
+    summary comment is not actually a gap: per the OpenCode docs
+    (`https://opencode.ai/docs/permissions/#wildcards`), `*` matches zero or
+    more of any character including spaces, so the existing pattern already
+    matches `argocd app sync <app> --prune`. Left unchanged.
+  - Verified both template branches (plugin directory present/absent) render
+    to valid JSONC via `chezmoi execute-template` + a trailing-comma-tolerant
+    `JSON.parse`.
+  - Committed as `fc9a4baaf` and pushed.
+
+### Remaining
+
+- Confirm BuildKite re-runs green and the `robot-face-greptile-review-gate`
+  check clears (GitHub should mark both fixed review threads as outdated
+  since their anchor lines changed).
+
+### Caveats
+
+- GitHub API (`gh api repos/.../pulls/1577/comments`) returned repeated 503s
+  during this session; the GraphQL `reviewThreads` query was used instead to
+  read the actual inline P1 comments (the REST issue-comments endpoint only
+  surfaced Greptile's top-level summary).
