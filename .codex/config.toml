@@ -1,0 +1,10 @@
+# Repository-local Codex CLI hook. The shared script suppresses itself in hosted
+# Codex task environments, so cloud sessions never run worktree setup logic.
+[[hooks.SessionStart]]
+
+[[hooks.SessionStart.hooks]]
+type = "command"
+command = 'bash "$(git rev-parse --show-toplevel)/.claude/hooks/worktree-reminder.sh" --tool=codex'
+async = true
+timeout = 10
+statusMessage = "Worktree reminder"

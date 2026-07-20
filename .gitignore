@@ -38,13 +38,19 @@ test-results/
 # discord-plays-pokemon workspace build artifacts
 packages/dpp/
 
-# Claude Code local session files and worktrees (root level only)
-/.claude/
+# Claude Code local session files (root level only)
+# Ignore everything under .claude/ except the checked-in project config + hooks.
+/.claude/*
+!/.claude/settings.json
+!/.claude/hooks/
+/.claude/hooks/*
+!/.claude/hooks/trust-mise.sh
+!/.claude/hooks/worktree-reminder.sh
 /.claude.json
 /.claude.json.*
 
-# Codex local configuration (root level only)
-/.codex/
+/.codex/*
+!/.codex/config.toml
 
 # Clauderon daemon data (root level only)
 /.clauderon/

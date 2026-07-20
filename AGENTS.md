@@ -86,7 +86,7 @@ sandbox/                        # Personal scratch (not shipped, excluded from m
 - If the task moves to a worktree, move every agent-created write, including the session log or plan, into that worktree immediately. Do not leave duplicate or partial agent work in the main checkout.
 - The primary artifact for a code-changing session is a pull request. Create a draft PR from the worktree as soon as it contains a coherent first commit, and promote it to ready for review only after verification is complete.
 - Assume the chat may end immediately after the draft or final PR is created. Record unfinished work and handoff context in `packages/docs/`, the PR description, or an explicit final response to the user.
-- These instructions apply to all agents. Repository lifecycle hooks are intentionally absent because cloud and web sessions also load repository configuration.
+- These instructions apply to all agents. Repository lifecycle hooks are scoped to local CLI runtimes and must exit immediately in hosted or web environments.
 
 ### Mirroring harness plans
 
