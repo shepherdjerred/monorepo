@@ -14,10 +14,9 @@ import { setRevisionHistoryLimit } from "@shepherdjerred/homelab/cdk8s/src/misc/
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-const CURRENT_DIRNAME = path.dirname(fileURLToPath(import.meta.url));
+const CURRENT_DIRNAME = import.meta.dir;
 
 /**
  * Recyclarr config is git-owned (ConfigMap). API keys still live in the
