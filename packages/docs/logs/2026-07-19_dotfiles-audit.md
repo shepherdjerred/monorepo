@@ -1,8 +1,11 @@
+---
+id: log-2026-07-19-dotfiles-audit
+type: log
+status: complete
+board: false
+---
+
 # Dotfiles Audit
-
-## Status
-
-Complete
 
 Audited chezmoi source, managed targets, unmanaged live files, source Git state, secret-template handling, and Homebrew bundle state without changing machine configuration.
 
