@@ -243,6 +243,20 @@ resource "terraform_data" "llm_archive_lifecycle" {
 # PutObject, which would force the stocks-style import-block adoption dance.
 # 365-day retention: promotion cadence is far shorter, and the reconcile no-op
 # path (marker == pin) needs no archive at all.
+#
+# The resource landed on main (#5847) without this import block, and its build
+# was canceled mid-apply — SeaweedFS had already auto-created the bucket on the
+# first archive PutObject, so every subsequent `tofu apply` hit
+# `BucketAlreadyExists` (build 5864). This is exactly the stocks-style adoption
+# dance the resource comment anticipated: the bucket already exists, so adopt it
+# into state on the next apply instead of letting Tofu CreateBucket over it.
+# Safe because the import + resource land together; a no-op once in state, and
+# may be removed after the first successful apply.
+import {
+  to = aws_s3_bucket.scout_site_releases
+  id = "scout-site-releases"
+}
+
 resource "aws_s3_bucket" "scout_site_releases" {
   bucket = "scout-site-releases"
 }
