@@ -170,6 +170,27 @@ export function createArgoCdApp(chart: Chart) {
         "statusbadge.enabled": true,
         "accounts.buildkite": "apiKey",
         "accounts.buildkite.enabled": true,
+        // ArgoCD removed built-in Application CR health in 1.8. Restore the
+        // documented app-of-apps check so the root app inherits child app and
+        // workload health without widening the Buildkite account's RBAC.
+        "resource.customizations.health.argoproj.io_Application": `hs = {}
+hs.status = "Progressing"
+hs.message = ""
+if obj.status ~= nil then
+  if obj.status.health ~= nil then
+    -- ArgoCD's Lua health evaluator requires a non-nil hs.status; a health
+    -- object without a .status field (e.g. a freshly-created child app) would
+    -- otherwise blank it out and fall back to Unknown. Keep the "Progressing"
+    -- default in that case.
+    if obj.status.health.status ~= nil then
+      hs.status = obj.status.health.status
+    end
+    if obj.status.health.message ~= nil then
+      hs.message = obj.status.health.message
+    end
+  end
+end
+return hs`,
         // Exclude ephemeral Velero resources from tracking
         "resource.exclusions": `- apiGroups:
   - velero.io

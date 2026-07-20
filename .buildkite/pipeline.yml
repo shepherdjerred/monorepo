@@ -373,6 +373,11 @@ steps:
               - name: container-0
                 # renovate: datasource=docker depName=aquasec/trivy
                 image: "aquasec/trivy:0.72.0"
+                # The Trivy image has /bin/sh but no /bin/bash. The agent's
+                # default bash shell otherwise fails before Trivy can start.
+                env:
+                  - name: BUILDKITE_SHELL
+                    value: "/bin/sh -e -c"
                 resources:
                   requests: { cpu: "500m", memory: "1Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
@@ -599,7 +604,7 @@ steps:
       # argocd.ts reads ARGOCD_TOKEN (build 5648).
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
       bun packages/homelab/scripts/argocd.ts sync apps
-      bun packages/homelab/scripts/argocd.ts health-wait apps --timeout 300
+      bun packages/homelab/scripts/argocd.ts tree-health-wait apps --timeout 300
     retry: *retry
     plugins:
       - *pod
