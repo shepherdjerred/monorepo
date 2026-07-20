@@ -19,9 +19,13 @@ type SmokeResult = { image: string; ok: boolean; detail: string };
 /** Run a command to completion, capturing stdout/stderr and the exit code. */
 async function run(
   cmd: string[],
-  opts: { timeoutMs?: number } = {},
+  opts: { timeoutMs?: number; stdin?: Blob } = {},
 ): Promise<{ stdout: string; stderr: string; exitCode: number | null }> {
-  const proc = Bun.spawn(cmd, { stdout: "pipe", stderr: "pipe" });
+  const proc = Bun.spawn(cmd, {
+    stdin: opts.stdin,
+    stdout: "pipe",
+    stderr: "pipe",
+  });
 
   let timedOut = false;
   const timer = opts.timeoutMs
@@ -49,13 +53,45 @@ async function forceRemove(name: string): Promise<void> {
 /**
  * Smoke test caddy-s3proxy.
  * Verifies: the custom Caddy binary reports its version, the s3proxy module is
- * compiled in, and Caddy can validate a trivial config (binary is functional).
+ * compiled in, and the freshly built binary accepts the generated production
+ * Caddyfile (including every s3proxy/reverse-proxy directive).
  */
 async function smokeCaddyS3Proxy(): Promise<SmokeResult> {
   const image = "caddy-s3proxy:dev";
   const name = "smoke-caddy-s3proxy";
   await forceRemove(name);
   try {
+    let caddyfile: Blob;
+    const providedCaddyfile = process.env["CADDYFILE_SMOKE_PATH"];
+    if (providedCaddyfile === undefined) {
+      // Local smoke runs have cdk8s dependencies installed, so generate the
+      // same config inline. CI passes verify's artifact to keep this image lane
+      // free of a workspace install.
+      const generator = new URL(
+        "../src/cdk8s/scripts/generate-caddyfile.ts",
+        import.meta.url,
+      ).pathname;
+      const generated = await run(["bun", "run", generator]);
+      if (generated.exitCode !== 0) {
+        return {
+          image,
+          ok: false,
+          detail: `Caddyfile generation failed (exit ${String(generated.exitCode)})\n${generated.stderr}`,
+        };
+      }
+      caddyfile = new Blob([generated.stdout]);
+    } else {
+      const provided = Bun.file(providedCaddyfile);
+      if (!(await provided.exists())) {
+        return {
+          image,
+          ok: false,
+          detail: `generated Caddyfile artifact is missing: ${providedCaddyfile}`,
+        };
+      }
+      caddyfile = provided;
+    }
+
     const version = await run([
       "docker",
       "run",
@@ -94,19 +130,24 @@ async function smokeCaddyS3Proxy(): Promise<SmokeResult> {
       };
     }
 
-    // Validate a trivial static config: proves the binary parses + loads modules.
-    const validate = await run([
-      "docker",
-      "run",
-      "--rm",
-      "--name",
-      `${name}-val`,
-      "--entrypoint",
-      "sh",
-      image,
-      "-c",
-      "printf ':2015 {\\n  respond \"ok\"\\n}\\n' > /tmp/Caddyfile && caddy validate --config /tmp/Caddyfile --adapter caddyfile",
-    ]);
+    // Stream the real generated config: the dind daemon cannot bind-mount a
+    // path from the Buildkite command container.
+    const validate = await run(
+      [
+        "docker",
+        "run",
+        "--rm",
+        "-i",
+        "--name",
+        `${name}-val`,
+        "--entrypoint",
+        "sh",
+        image,
+        "-c",
+        "cat > /tmp/Caddyfile && caddy validate --config /tmp/Caddyfile --adapter caddyfile",
+      ],
+      { stdin: caddyfile },
+    );
     if (validate.exitCode !== 0) {
       return {
         image,
@@ -118,7 +159,7 @@ async function smokeCaddyS3Proxy(): Promise<SmokeResult> {
     return {
       image,
       ok: true,
-      detail: `version=${version.stdout.trim()}; s3proxy module present; config validates`,
+      detail: `version=${version.stdout.trim()}; s3proxy module present; generated production config validates`,
     };
   } finally {
     await forceRemove(name);

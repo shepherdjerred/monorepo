@@ -1,10 +1,10 @@
-# Static Buildkite pipeline — no generator. `turbo --affected` + the remote
-# cache replace the old dynamic pipeline's change detection: every build runs
-# the same steps, and unchanged work replays from cache in milliseconds.
+# Static Buildkite pipeline — no generator. PR lanes use Buildkite's native
+# `if_changed`; main lanes use the fail-open, dependency-free ci-changed.sh
+# selector against the last green main commit before installing dependencies.
 #
-# Invariant (scope-creep guard): CI runs nothing besides `mise install`,
-# `bun install`, `turbo run …` (via `bun run verify`), `docker buildx`, and
-# the thin deploy scripts. If a step needs more, fix the task graph instead.
+# Invariant (scope-creep guard): verify is the only full-root install. Other
+# lanes use filtered installs or no install, and validate-pipeline.ts enforces
+# that boundary together with step-key pod attribution.
 
 agents:
   queue: default
@@ -15,7 +15,7 @@ agents:
 # — a fast no-op on a current image, a runtime mise bootstrap on a stale one.
 common:
   - pod: &pod
-      kubernetes:
+      kubernetes: &pod_kubernetes
         checkout:
           # Full clone: turbo --affected needs the merge-base with main.
           cloneFlags: "--no-tags"
@@ -50,7 +50,7 @@ common:
               envFrom:
                 - secretRef: { name: buildkite-ci-secrets }
   - pod_privileged: &pod_privileged
-      kubernetes:
+      kubernetes: &pod_privileged_kubernetes
         checkout:
           cloneFlags: "--no-tags"
         podSpecPatch:
@@ -109,7 +109,7 @@ common:
   # still gets real CPU. Steps that do heavy work when cold (verify, e2e,
   # images, site builds' turbo graph) keep the full-size pod.
   - pod_light: &pod_light
-      kubernetes:
+      kubernetes: &pod_light_kubernetes
         checkout:
           cloneFlags: "--no-tags"
         podSpecPatch:
@@ -183,8 +183,10 @@ steps:
   - label: ":turborepo: verify"
     key: verify
     if: build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true"
+    cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
+      bun .buildkite/scripts/validate-pipeline.ts
       . .buildkite/scripts/docker-env.sh
       bun install --frozen-lockfile
       if [ "$BUILDKITE_BRANCH" = "main" ]; then SCOPE=""; else SCOPE="--affected"; fi
@@ -193,51 +195,55 @@ steps:
       verify_status=$?
       set -e
       bun scripts/annotate-turbo-summary.ts
+      if [ "$$verify_status" -eq 0 ]; then
+        bun packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts caddyfile.generated
+      fi
       exit "$$verify_status"
+    artifact_paths:
+      - "caddyfile.generated"
+      - "packages/homelab/src/cdk8s/dist/**/*"
+      - "packages/homelab/src/cdk8s/dist/*"
     retry: *retry
     plugins:
-      - *pod_privileged
+      - kubernetes:
+          <<: *pod_privileged_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: verify
 
-  # ── Playwright e2e (PR + main) — browser-equipped container, bun installed
-  # the same way the old CI's playwright step did. Browser-based test:e2e
-  # members only; docker-compose e2e runs in the docker e2e step below.
-  - label: ":performing_arts: playwright e2e"
-    key: e2e
-    if: build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true"
+  # PR change filters include the global CI/toolchain closure. A selector
+  # mistake can therefore only run extra work; it cannot hide changes to the
+  # machinery that decides or executes a lane.
+  - label: ":performing_arts: playwright e2e (PR)"
+    key: playwright-e2e-pr
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/**"
+        - ".mise.toml"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "patches/**"
+        - "turbo.json"
+        - "packages/sjer.red/**"
+        - "packages/astro-opengraph-images/**"
+        - "packages/webring/**"
+        - "packages/eslint-config/**"
+    cancel_on_build_failing: true
     command: |
       apt-get update -qq && apt-get install -y -qq --no-install-recommends unzip
       curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.14
       export PATH="/root/.bun/bin:$$PATH"
-      bun install --frozen-lockfile
-      # PR gate: skip the browser install + full sjer.red build when the site
-      # isn't affected. is-affected.ts fails loudly on tool error — only a
-      # clean "unaffected" verdict skips. Main always runs (the sites deploy
-      # consumes this step's dist artifact).
-      if [ "$BUILDKITE_BRANCH" != "main" ]; then
-        verdict=$(bun scripts/is-affected.ts sjer.red)
-        if [ "$$verdict" = "unaffected" ]; then
-          echo "sjer.red unaffected on this branch — skipping playwright e2e"
-          exit 0
-        fi
-      fi
-      # Install the browser builds for the REPO-resolved playwright (run from
-      # the package so bunx uses its dependency, not a downloaded latest):
-      # chromium + headless-shell + webkit (the suite runs Mobile Safari).
+      bun install --frozen-lockfile --filter sjer.red
       cd packages/sjer.red && bunx playwright install && cd ../..
-      bunx turbo run build typecheck lint test test:e2e --filter=sjer.red --concurrency=2
-    # The deploy-sites step ships this dist: sjer.red's build needs playwright
-    # browsers (rehype-mermaid renders diagrams at build time), which only
-    # exist in this container — build 5636 failed rebuilding it in ci-base.
-    # Both globs are required: Buildkite's `**/*` needs an intermediate dir, so
-    # it silently skips root-level files (dist/index.html, dist/rss.xml) — the
-    # missing `dist/*` glob let build 5648's --delete sync wipe every root
-    # object from the sjer-red bucket.
-    artifact_paths:
-      - "packages/sjer.red/dist/**/*"
-      - "packages/sjer.red/dist/*"
+      bunx turbo@2.10.4 run build typecheck lint test test:e2e --filter=sjer.red --concurrency=2
     retry: *retry
     plugins:
       - kubernetes:
+          metadata:
+            labels:
+              ci.sjer.red/step-key: playwright-e2e-pr
           checkout:
             cloneFlags: "--no-tags"
           podSpecPatch:
@@ -258,38 +264,70 @@ steps:
                 envFrom:
                   - secretRef: { name: buildkite-ci-secrets }
 
-  # ── Resume build (PR + main) — xelatex needs a full TeX distribution; the
-  # old CI used the texlive/texlive container for exactly this. Excluded from
-  # the verify pod (--filter='!@shepherdjerred/resume').
-  - label: ":scroll: resume build"
-    key: resume-build
-    if: build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true"
+  - label: ":performing_arts: playwright e2e (main)"
+    key: playwright-e2e-main
+    if: build.branch == pipeline.default_branch
+    cancel_on_build_failing: true
     command: |
-      apt-get update -qq && apt-get install -y -qq --no-install-recommends unzip curl
+      if ! bash .buildkite/scripts/ci-changed.sh playwright; then exit 0; fi
+      apt-get update -qq && apt-get install -y -qq --no-install-recommends unzip
       curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.14
-      # The agent constructs its own PATH; re-add the texlive bin dir.
-      export PATH="/root/.bun/bin:$(dirname "$(find /usr/local/texlive -name xelatex | head -1)"):$$PATH"
-      bun install --frozen-lockfile
-      # PR gate: same affectedness skip as the e2e step (fail-loud helper).
-      # Main always runs — the sites deploy consumes this step's PDF artifact.
-      if [ "$BUILDKITE_BRANCH" != "main" ]; then
-        verdict=$(bun scripts/is-affected.ts '@shepherdjerred/resume')
-        if [ "$$verdict" = "unaffected" ]; then
-          echo "@shepherdjerred/resume unaffected on this branch — skipping resume build"
-          exit 0
-        fi
-      fi
-      bunx turbo run build --filter='@shepherdjerred/resume'
-    # The deploy-sites step ships this PDF: resume.pdf is a build artifact
-    # (gitignored, not committed) and xelatex only exists in this container.
-    # Glob (not a literal path) so the unaffected-PR skip doesn't log a
-    # nothing-matched upload warning. A missing artifact can't slip through:
-    # deploy-sites' explicit `artifact download` fails hard, and this step
-    # never skips on main.
+      export PATH="/root/.bun/bin:$$PATH"
+      bun install --frozen-lockfile --filter sjer.red
+      cd packages/sjer.red && bunx playwright install && cd ../..
+      bunx turbo@2.10.4 run build typecheck lint test test:e2e --filter=sjer.red --concurrency=2
+    artifact_paths:
+      - "packages/sjer.red/dist/**/*"
+      - "packages/sjer.red/dist/*"
+    retry: *retry
+    plugins:
+      - kubernetes:
+          metadata:
+            labels:
+              ci.sjer.red/step-key: playwright-e2e-main
+          checkout:
+            cloneFlags: "--no-tags"
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s-controller
+            containers:
+              - name: container-0
+                # renovate: datasource=docker depName=mcr.microsoft.com/playwright
+                image: "mcr.microsoft.com/playwright:v1.61.1-noble"
+                resources:
+                  requests: { cpu: "2", memory: "4Gi" }
+                  limits: { cpu: "4", memory: "8Gi" }
+                volumeMounts:
+                  - name: buildkite-git-mirrors
+                    mountPath: /buildkite/git-mirrors
+                    readOnly: true
+                envFrom:
+                  - secretRef: { name: buildkite-ci-secrets }
+
+  - label: ":scroll: resume build (PR)"
+    key: resume-build-pr
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/**"
+        - ".mise.toml"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "patches/**"
+        - "turbo.json"
+        - "packages/resume/**"
+    cancel_on_build_failing: true
+    command: |
+      export PATH="$(dirname "$(find /usr/local/texlive -name xelatex | head -1)"):$$PATH"
+      cd packages/resume
+      xelatex resume.tex
     artifact_paths: "packages/resume/*.pdf"
     retry: *retry
     plugins:
       - kubernetes:
+          metadata:
+            labels:
+              ci.sjer.red/step-key: resume-build-pr
           checkout:
             cloneFlags: "--no-tags"
           podSpecPatch:
@@ -310,6 +348,40 @@ steps:
                 envFrom:
                   - secretRef: { name: buildkite-ci-secrets }
 
+  - label: ":scroll: resume build (main)"
+    key: resume-build-main
+    if: build.branch == pipeline.default_branch
+    cancel_on_build_failing: true
+    command: |
+      if ! bash .buildkite/scripts/ci-changed.sh resume; then exit 0; fi
+      export PATH="$(dirname "$(find /usr/local/texlive -name xelatex | head -1)"):$$PATH"
+      cd packages/resume
+      xelatex resume.tex
+    artifact_paths: "packages/resume/*.pdf"
+    retry: *retry
+    plugins:
+      - kubernetes:
+          metadata:
+            labels:
+              ci.sjer.red/step-key: resume-build-main
+          checkout:
+            cloneFlags: "--no-tags"
+          podSpecPatch:
+            serviceAccountName: buildkite-agent-stack-k8s-controller
+            containers:
+              - name: container-0
+                # renovate: datasource=docker depName=texlive/texlive
+                image: "texlive/texlive:TL2024-historic"
+                resources:
+                  requests: { cpu: "1", memory: "2Gi" }
+                  limits: { cpu: "2", memory: "4Gi" }
+                volumeMounts:
+                  - name: buildkite-git-mirrors
+                    mountPath: /buildkite/git-mirrors
+                    readOnly: true
+                envFrom:
+                  - secretRef: { name: buildkite-ci-secrets }
+
   # ── Helm value types drift gate (PR-only). The committed
   # packages/homelab/src/cdk8s/generated/helm types must be regenerated in the
   # same PR that changes a generator input. Replaces the deleted freshness
@@ -321,53 +393,110 @@ steps:
   # implies a green main tree. helm comes from the ci-image's mise toolchain.
   - label: ":helm: helm types drift check"
     key: helm-types-drift-check
-    if: build.branch != pipeline.default_branch && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/**"
+        - ".mise.toml"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "patches/**"
+        - "turbo.json"
+        - "packages/homelab/src/cdk8s/src/versions.ts"
+        - "packages/homelab/src/cdk8s/scripts/generate-helm-types.ts"
+        - "packages/homelab/src/cdk8s/scripts/parse-helm-charts.ts"
+        - "packages/homelab/src/helm-types/**"
+        - "packages/homelab/src/cdk8s/generated/helm/**"
+    cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      # Self-scope: regenerating pulls ~26 charts over the network — run only
-      # when a generator input (or the committed output) changed vs the merge
-      # base. Paths span two turbo packages, so a git diff beats turbo
-      # affectedness here (any cdk8s change would otherwise trigger it).
-      base=$(git merge-base origin/main HEAD)
-      if git diff --quiet "$$base" HEAD -- \
-          packages/homelab/src/cdk8s/src/versions.ts \
-          packages/homelab/src/cdk8s/scripts/generate-helm-types.ts \
-          packages/homelab/src/cdk8s/scripts/parse-helm-charts.ts \
-          packages/homelab/src/helm-types \
-          packages/homelab/src/cdk8s/generated/helm; then
-        echo "helm-types generator inputs unchanged vs main — skipping drift check"
-        exit 0
-      fi
-      bun install --frozen-lockfile
+      bun install --frozen-lockfile --filter '@homelab/cdk8s'
       cd packages/homelab/src/cdk8s
       bun run generate-helm-types --check
     retry: *retry
     plugins:
-      - *pod_light
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: helm-types-drift-check
 
-  # ── Docker-compose e2e (PR + main) — llm-observability spins up a compose
-  # stack; needs the privileged pod's docker, not a browser container.
-  - label: ":docker: docker e2e"
-    key: docker-e2e
-    if: build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true"
+  - label: ":docker: docker e2e (PR)"
+    key: docker-e2e-pr
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/**"
+        - ".mise.toml"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "patches/**"
+        - "turbo.json"
+        - "packages/llm-observability/**"
+        - "packages/eslint-config/**"
+    cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
       . .buildkite/scripts/docker-env.sh
-      bun install --frozen-lockfile
-      bunx turbo run test:e2e --filter='@shepherdjerred/llm-observability'
+      bun install --frozen-lockfile --filter '@shepherdjerred/llm-observability'
+      bun run --cwd packages/llm-observability test:e2e
     retry: *retry
     plugins:
-      - *pod_privileged
+      - kubernetes:
+          <<: *pod_privileged_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: docker-e2e-pr
 
-  # ── Scanners (soft-fail) + review gate (blocking), parallel with everything
-  - label: ":shield: trivy"
-    soft_fail: true
-    if: build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true"
-    command: trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 .
+  - label: ":docker: docker e2e (main)"
+    key: docker-e2e-main
+    if: build.branch == pipeline.default_branch
+    cancel_on_build_failing: true
+    command: |
+      if ! bash .buildkite/scripts/ci-changed.sh docker-e2e; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      . .buildkite/scripts/docker-env.sh
+      bun install --frozen-lockfile --filter '@shepherdjerred/llm-observability'
+      bun run --cwd packages/llm-observability test:e2e
+    retry: *retry
     plugins:
       - kubernetes:
+          <<: *pod_privileged_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: docker-e2e-main
+
+  # Findings are soft; scanner/runtime failures are hard. Both scanners are PR
+  # only and use native path filters so unchanged code never starts a pod.
+  - label: ":shield: trivy"
+    key: trivy
+    soft_fail:
+      - exit_status: 7
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/**"
+        - ".mise.toml"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "packages/**/package.json"
+        - "Dockerfile"
+        - "**/Dockerfile"
+        - "**/Dockerfile.*"
+        - "patches/**"
+        - "turbo.json"
+    cancel_on_build_failing: true
+    command: trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 7 .
+    plugins:
+      - kubernetes:
+          metadata:
+            labels:
+              ci.sjer.red/step-key: trivy
           checkout:
-            cloneFlags: "--depth=1"
+            cloneFlags: "--no-tags"
           podSpecPatch:
             containers:
               # The shell is taken from the AGENT container's registration
@@ -390,23 +519,56 @@ steps:
                   limits: { cpu: "2", memory: "4Gi" }
 
   - label: ":mag: semgrep"
-    soft_fail: true
-    if: build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true"
+    key: semgrep
+    soft_fail:
+      - exit_status: 1
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/**"
+        - ".mise.toml"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "patches/**"
+        - "turbo.json"
+        - "**/*.c"
+        - "**/*.cpp"
+        - "**/*.go"
+        - "**/*.java"
+        - "**/*.js"
+        - "**/*.jsx"
+        - "**/*.kt"
+        - "**/*.py"
+        - "**/*.sh"
+        - "**/*.ts"
+        - "**/*.tsx"
+        - "**/*.yaml"
+        - "**/*.yml"
+    cancel_on_build_failing: true
     # Excludes mirror the .gitleaks.toml allowlist: these paths hold values
     # already triaged as non-sensitive (legacy/undeployed sandbox archive,
     # a disabled Minecraft management-server secret, a public Firebase web
     # apiKey). semgrep's generic-secret rule would otherwise re-print those
     # values into the log on every build. Real code stays fully scanned.
     command: |
+      if ! base=$(git merge-base origin/main HEAD); then
+        echo "semgrep could not resolve the PR merge-base" >&2
+        exit 2
+      fi
       semgrep scan --config auto --error \
+        --baseline-commit "$$base" \
         --exclude sandbox \
         --exclude server.properties \
         --exclude fetcher.ts \
         .
     plugins:
       - kubernetes:
+          metadata:
+            labels:
+              ci.sjer.red/step-key: semgrep
           checkout:
-            cloneFlags: "--depth=1"
+            cloneFlags: "--no-tags"
           podSpecPatch:
             containers:
               # The shell is taken from the AGENT container's registration
@@ -422,6 +584,10 @@ steps:
                 resources:
                   requests: { cpu: "500m", memory: "1Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
+                volumeMounts:
+                  - name: buildkite-git-mirrors
+                    mountPath: /buildkite/git-mirrors
+                    readOnly: true
 
   # Blocking, like the old pipeline (greptileReviewStep sat in blockingGates
   # and fed the required check): every non-outdated Greptile review thread on
@@ -430,52 +596,142 @@ steps:
   # Greptile is still reviewing the head commit, then fails fast with the
   # unresolved-thread list.
   - label: ":robot_face: greptile review gate"
-    if: build.branch != pipeline.default_branch && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    key: greptile-review
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile
+      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       bun scripts/wait-for-greptile.ts
     retry: *retry
     plugins:
-      - *pod_light
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: greptile-review
 
   # ── PR-only dry-run lane: validate every deploy path, no side effects ─────
   # (the old pipeline's --dryrun plumbing, restored)
   - label: ":terraform: tofu plan"
-    if: build.branch != pipeline.default_branch && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    key: tofu-plan
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/**"
+        - ".mise.toml"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "patches/**"
+        - "turbo.json"
+        - "packages/homelab/src/tofu/**"
+        - "packages/homelab/scripts/tofu-stack.ts"
+        - "scripts/lib/run.ts"
+        - "scripts/lib/transient.ts"
     depends_on: verify
+    cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       for stack in seaweedfs tailscale buildkite arr pagerduty github cloudflare; do
         bun packages/homelab/scripts/tofu-stack.ts "$$stack" plan
       done
     retry: *retry
     plugins:
-      - *pod
+      - kubernetes:
+          <<: *pod_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-plan
 
   - label: ":docker: images — build + smoke (PR dry-run)"
-    if: build.branch != pipeline.default_branch && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    key: images-pr
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/**"
+        - ".dockerignore"
+        - ".mise.toml"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "docker-bake.hcl"
+        - "package.json"
+        - "packages/**/package.json"
+        - "patches/**"
+        - "turbo.json"
+        - "packages/birmel/**"
+        - "packages/discord-plays-core/**"
+        - "packages/discord-plays-mario-kart/**"
+        - "packages/discord-plays-pokemon/**"
+        - "packages/discord-stream-lifecycle/**"
+        - "packages/discord-video-stream/**"
+        - "packages/eslint-config/**"
+        - "packages/home-assistant/**"
+        - "packages/homelab/images/**"
+        - "packages/homelab/scripts/smoke-images.ts"
+        - "packages/llm-models/**"
+        - "packages/llm-observability/**"
+        - "packages/scout-for-lol/packages/backend/**"
+        - "packages/scout-for-lol/packages/data/**"
+        - "packages/scout-for-lol/packages/report/**"
+        - "packages/starlight-karma-bot/**"
+        - "packages/streambot/**"
+        - "packages/tasknotes-server/**"
+        - "packages/tasknotes-types/**"
+        - "packages/temporal/**"
+        - "packages/toolkit/**"
+        - "packages/trmnl-dashboard/**"
     depends_on: verify
+    cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
       . .buildkite/scripts/docker-env.sh
-      bun install --frozen-lockfile
+      buildkite-agent artifact download "caddyfile.generated" /tmp --step verify
       # Affected-scoped parallel bake + smoke, no push, cache read-only
       # (PUSH_CACHE stays false — only main writes the buildcache refs).
       # Rehearses exactly the path main runs, including the --load transfer.
-      bash .buildkite/scripts/bake-images.sh --affected
+      CADDYFILE_SMOKE_PATH=/tmp/caddyfile.generated bash .buildkite/scripts/bake-images.sh --affected
+    artifact_paths: "image-build-manifest.json"
     retry: *retry
     plugins:
-      - *pod_privileged
+      - kubernetes:
+          <<: *pod_privileged_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: images-pr
 
-  - label: ":rocket: sites + helm + release (PR dry-run)"
-    if: build.branch != pipeline.default_branch && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+  - label: ":rocket: sites (PR dry-run)"
+    key: sites-pr
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/**"
+        - ".mise.toml"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "patches/**"
+        - "turbo.json"
+        - "packages/sjer.red/**"
+        - "packages/resume/**"
+        - "packages/webring/**"
+        - "packages/astro-opengraph-images/**"
+        - "packages/cooklang-rich-preview/**"
+        - "packages/stocks-sjer-red/**"
+        - "packages/better-skill-capped/**"
+        - "packages/glitter/**"
+        - "packages/scout-for-lol/**"
+        - "packages/homelab/src/cdk8s/src/versions.ts"
+        - "scripts/deploy-site.ts"
+        - "scripts/scout-site-release.ts"
+        - "scripts/promote-scout.ts"
+        - "scripts/lib/**"
     depends_on: verify
+    cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile
+      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red better-skill-capped glitter; do
         bun scripts/deploy-site.ts "$$site" --dry-run
       done
@@ -485,73 +741,178 @@ steps:
       bun scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
       bun scripts/scout-site-release.ts reconcile-prod --dry-run
       bun scripts/promote-scout.ts --ci --site-version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: sites-pr
+
+  - label: ":helm: helm push (PR dry-run)"
+    key: helm-pr
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/**"
+        - ".mise.toml"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "patches/**"
+        - "turbo.json"
+        - "packages/homelab/src/cdk8s/**"
+        - "packages/homelab/scripts/helm-push.ts"
+        - "scripts/lib/run.ts"
+    depends_on: verify
+    cancel_on_build_failing: true
+    command: |
+      . .buildkite/scripts/toolchain.sh
       bun packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER" --dry-run
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: helm-pr
+
+  - label: ":package: release (PR dry-run)"
+    key: release-pr
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/**"
+        - ".mise.toml"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "packages/**/package.json"
+        - "patches/**"
+        - "release-please-config.json"
+        - ".release-please-manifest.json"
+        - "scripts/release.ts"
+        - "scripts/lib/**"
+        - "turbo.json"
+    depends_on: verify
+    cancel_on_build_failing: true
+    command: |
+      . .buildkite/scripts/toolchain.sh
       bun scripts/release.ts --dry-run
     retry: *retry
     plugins:
-      - *pod
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: release-pr
 
   # ── Main-only: images (parallel bake + smoke + push) ─────────────────────
   - label: ":docker: images — build, smoke, push"
     key: images
     if: build.branch == pipeline.default_branch
     depends_on: verify
+    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/image-push
     command: |
+      if ! bash .buildkite/scripts/ci-changed.sh images; then
+        jq -n '{selectedBakeTargets: [], images: []}' > image-build-manifest.json
+        jq -n '{}' | buildkite-agent meta-data set image-digests
+        exit 0
+      fi
       . .buildkite/scripts/toolchain.sh
       . .buildkite/scripts/docker-env.sh
-      bun install --frozen-lockfile
-      bash .buildkite/scripts/bake-images.sh --push
+      buildkite-agent artifact download "caddyfile.generated" /tmp --step verify
+      CADDYFILE_SMOKE_PATH=/tmp/caddyfile.generated bash .buildkite/scripts/bake-images.sh --push
+    artifact_paths: "image-build-manifest.json"
     retry: *retry
     plugins:
-      - *pod_privileged
+      - kubernetes:
+          <<: *pod_privileged_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: images
 
   # ── Main-only: static sites ───────────────────────────────────────────────
   - label: ":rocket: deploy sites"
     key: sites
     if: build.branch == pipeline.default_branch
-    depends_on: [verify, e2e, resume-build]
+    depends_on: [verify, playwright-e2e-main, resume-build-main]
+    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
+      if ! bash .buildkite/scripts/ci-changed.sh sites; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile
+      filters=()
+      site_sjer=false
+      site_resume=false
+      site_webring=false
+      site_cooklang=false
+      site_stocks=false
+      site_better_skill_capped=false
+      site_glitter=false
+      site_scout=false
+      if bash .buildkite/scripts/ci-changed.sh site-sjer-red; then
+        site_sjer=true
+      fi
+      if bash .buildkite/scripts/ci-changed.sh site-resume; then site_resume=true; fi
+      if bash .buildkite/scripts/ci-changed.sh site-webring; then
+        site_webring=true
+        filters+=(--filter webring)
+      fi
+      if bash .buildkite/scripts/ci-changed.sh site-cooklang; then
+        site_cooklang=true
+        filters+=(--filter '@shepherdjerred/cooklang-rich-preview')
+      fi
+      if bash .buildkite/scripts/ci-changed.sh site-stocks; then
+        site_stocks=true
+        filters+=(--filter stocks-sjer-red)
+      fi
+      if bash .buildkite/scripts/ci-changed.sh site-better-skill-capped; then
+        site_better_skill_capped=true
+        filters+=(--filter better-skill-capped)
+      fi
+      if bash .buildkite/scripts/ci-changed.sh site-glitter; then
+        site_glitter=true
+      fi
+      if bash .buildkite/scripts/ci-changed.sh site-scout; then
+        site_scout=true
+        filters+=(--filter '@scout-for-lol/frontend')
+        bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
+      fi
+      if [ "$${#filters[@]}" -gt 0 ]; then
+        bun install --frozen-lockfile "$${filters[@]}"
+      fi
       # Site syncs push to SeaweedFS S3 — same credential mapping as the
       # tofu steps (the secret exposes SEAWEEDFS_*, the AWS CLI wants AWS_*).
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-      # Pods are ephemeral: site buildCmds import workspace library dists
-      # (sjer.red → astro-opengraph-images/webring, scout → data/ui) that
-      # only existed in the verify pod. Build the graph here first — same
-      # exclusions as verify; the sites' own builds run via deploy-site.ts
-      # with their deploy env (build 5633: sjer.red failed to resolve the
-      # unbuilt astro-opengraph-images entry).
-      bunx turbo run build --filter='!sjer.red' --filter='!@shepherdjerred/resume' --concurrency=6 --output-logs=errors-only
-      # sjer.red can't build here (rehype-mermaid needs playwright browsers,
-      # build 5636) — the e2e step builds it in the playwright container and
-      # ships the dist as a build artifact; deploy it prebuilt. Two downloads:
-      # `**/*` misses root-level files (see the e2e artifact_paths comment).
-      buildkite-agent artifact download "packages/sjer.red/dist/**/*" . --step e2e
-      buildkite-agent artifact download "packages/sjer.red/dist/*" . --step e2e
-      bun scripts/deploy-site.ts sjer.red --prebuilt
-      # resume can't build here either (xelatex only exists in the texlive
-      # container) — the resume-build step ships resume.pdf as a build
-      # artifact; deploy it prebuilt. The PDF is gitignored, not committed.
-      buildkite-agent artifact download "packages/resume/resume.pdf" . --step resume-build
-      bun scripts/deploy-site.ts resume --prebuilt
-      for site in webring cooklang-rich-preview stocks-sjer-red better-skill-capped glitter; do
-        bun scripts/deploy-site.ts "$$site"
-      done
-      # Scout sites are versioned + stage-pinned (lockstep with the backend
-      # image pins): archive the prod-flavored artifact for promotion, then
-      # deploy the beta flavor live (beta stays continuous — it's the canary).
-      # Prod is synced separately by scout-prod-reconcile from the pinned
-      # archive, never from this build's dist.
-      bun scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
-      bun scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
+      if $$site_sjer; then
+        buildkite-agent artifact download "packages/sjer.red/dist/**/*" . --step playwright-e2e-main
+        buildkite-agent artifact download "packages/sjer.red/dist/*" . --step playwright-e2e-main
+        bun scripts/deploy-site.ts sjer.red --prebuilt
+      fi
+      if $$site_resume; then
+        buildkite-agent artifact download "packages/resume/resume.pdf" . --step resume-build-main
+        bun scripts/deploy-site.ts resume --prebuilt
+      fi
+      if $$site_webring; then bun scripts/deploy-site.ts webring; fi
+      if $$site_cooklang; then bun scripts/deploy-site.ts cooklang-rich-preview; fi
+      if $$site_stocks; then bun scripts/deploy-site.ts stocks-sjer-red; fi
+      if $$site_better_skill_capped; then bun scripts/deploy-site.ts better-skill-capped; fi
+      if $$site_glitter; then bun scripts/deploy-site.ts glitter; fi
+      if $$site_scout; then
+        bun scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
+        bun scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
+      fi
     retry: *retry
     plugins:
-      - *pod_light
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: sites
 
   # ── Main-only: npm publishes ──────────────────────────────────────────────
   # Two lanes, matching the old pipeline's npm-publish-all-prod/-dev pair:
@@ -562,11 +923,17 @@ steps:
   # dev mode rewrites package.json versions mid-publish (and restores them in
   # a finally, so a failed dev publish can't leak -dev.N into a later prod run).
   - label: ":npm: publish packages"
+    key: npm-publish
     if: build.branch == pipeline.default_branch
     depends_on: verify
+    cancel_on_build_failing: true
     command: |
+      if ! bash .buildkite/scripts/ci-changed.sh npm; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile
+      bun install --frozen-lockfile \
+        --filter astro-opengraph-images \
+        --filter webring \
+        --filter '@shepherdjerred/helm-types'
       bun run --cwd packages/astro-opengraph-images publish:npm
       bun run --cwd packages/webring publish:npm
       bun run --cwd packages/homelab/src/helm-types publish:npm
@@ -575,58 +942,82 @@ steps:
       bun scripts/publish-npm.ts packages/homelab/src/helm-types --dev-suffix "$BUILDKITE_BUILD_NUMBER"
     retry: *retry
     plugins:
-      - *pod_light
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: npm-publish
 
   # ── Main-only: homelab release track ─────────────────────────────────────
   - label: ":helm: helm push"
     key: helm-push
     if: build.branch == pipeline.default_branch
     depends_on: verify
+    cancel_on_build_failing: true
     command: |
+      if ! bash .buildkite/scripts/ci-changed.sh helm; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile
+      buildkite-agent artifact download "packages/homelab/src/cdk8s/dist/**/*" . --step verify
+      buildkite-agent artifact download "packages/homelab/src/cdk8s/dist/*" . --step verify
       bun packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER"
     retry: *retry
     plugins:
-      - *pod_light
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: helm-push
 
   - label: ":terraform: tofu apply (infra stacks)"
     key: tofu-apply
     if: build.branch == pipeline.default_branch
     depends_on: [verify, helm-push]
+    cancel_on_build_failing: true
     command: |
+      if ! bash .buildkite/scripts/ci-changed.sh tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       for stack in seaweedfs tailscale buildkite arr pagerduty; do
         bun packages/homelab/scripts/tofu-stack.ts "$$stack" apply
       done
     retry: *retry
     plugins:
-      - *pod_light
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-apply
 
   - label: ":terraform: tofu apply (github)"
+    key: tofu-github
     if: build.branch == pipeline.default_branch
     depends_on: verify
+    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/tofu-github
     # No automatic retry: GitHub API mutations are not idempotent on partial
     # failure (same policy as the old pipeline).
     command: |
+      if ! bash .buildkite/scripts/ci-changed.sh tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       bun packages/homelab/scripts/tofu-stack.ts github apply
     plugins:
-      - *pod_light
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-github
 
   - label: ":argo: sync + wait"
     key: argocd-sync
     if: build.branch == pipeline.default_branch
     depends_on: [images, helm-push, tofu-apply]
+    cancel_on_build_failing: true
     command: |
+      if ! bash .buildkite/scripts/ci-changed.sh argocd; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile
+      bun install --frozen-lockfile --filter '@homelab/cdk8s' --production
       # The CI secret uses the argocd CLI's canonical ARGOCD_AUTH_TOKEN name;
       # argocd.ts reads ARGOCD_TOKEN (build 5648).
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
@@ -634,7 +1025,11 @@ steps:
       bun packages/homelab/scripts/argocd.ts tree-health-wait apps --timeout 300
     retry: *retry
     plugins:
-      - *pod
+      - kubernetes:
+          <<: *pod_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: argocd-sync
 
   # Standing promotion PR: whenever beta has something prod doesn't (prod
   # never promoted, backend image line changed, or the scout package changed
@@ -645,16 +1040,23 @@ steps:
   # Auto-merge is deliberately not enabled: that would make prod track beta
   # continuously instead of promotion being a review click.
   - label: ":package: scout promotion PR"
+    key: scout-promotion
     if: build.branch == pipeline.default_branch
     depends_on: sites
+    cancel_on_build_failing: true
     command: |
+      if ! bash .buildkite/scripts/ci-changed.sh scout-promotion; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile
+      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       # SeaweedFS creds: reads archive manifests to gate on real scout changes.
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       bun scripts/promote-scout.ts --ci --site-version "2.0.0-$BUILDKITE_BUILD_NUMBER"
     plugins:
-      - *pod_light
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: scout-promotion
 
   # Reconcile the prod scout site to its versions.ts pin. Usually a no-op
   # (bucket marker == pin); after a promotion merge it syncs the archived
@@ -667,27 +1069,38 @@ steps:
     key: scout-prod-reconcile
     if: build.branch == pipeline.default_branch
     depends_on: [argocd-sync, sites]
+    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
+      if ! bash .buildkite/scripts/ci-changed.sh scout-reconcile; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile
+      bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       bun scripts/scout-site-release.ts reconcile-prod
     retry: *retry
     plugins:
-      - *pod_light
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: scout-prod-reconcile
 
   - label: ":terraform: tofu apply (cloudflare, after tunnel gate)"
+    key: tofu-cloudflare
     if: build.branch == pipeline.default_branch
     depends_on: argocd-sync
+    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/tofu-cloudflare
     # Fail-closed: the SeaweedFS TunnelBinding finalizer must complete before
     # the Cloudflare DNS tunnel route is removed (same gate as the old CI).
     command: |
+      if ! bash .buildkite/scripts/ci-changed.sh tofu; then
+        if ! bash .buildkite/scripts/ci-changed.sh argocd; then exit 0; fi
+      fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile
+      bun install --frozen-lockfile --filter '@homelab/cdk8s' --production
       # Same ARGOCD_AUTH_TOKEN → ARGOCD_TOKEN mapping as the sync step.
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
       bun packages/homelab/scripts/argocd.ts wait-deletion apps --group networking.cfargotunnel.com --version v1alpha1 --kind TunnelBinding --namespace seaweedfs --timeout 120
@@ -697,7 +1110,11 @@ steps:
     # (the retryable code) on classified transient failures.
     retry: *retry
     plugins:
-      - *pod_light
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tofu-cloudflare
 
   # ── Main-only: release automation ─────────────────────────────────────────
   # Gates on verify only: release-please consumes no image or site artifact
@@ -705,17 +1122,22 @@ steps:
   # step for no data reason). The version commit-back — which DOES consume the
   # pushed image digests — is its own step below, gated on images.
   - label: ":package: release-please"
+    key: release-please
     if: build.branch == pipeline.default_branch
     depends_on: verify
+    cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile
       bun scripts/release.ts
     # Safe to retry: release-please upserts its PR and skips already-cut
     # releases; a GitHub GraphQL 500 (build 5809) exits 34 via transient.ts.
     retry: *retry
     plugins:
-      - *pod_light
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: release-please
 
   # Version commit-back: rewrites versions.ts tag@digest pins from the digests
   # the images step recorded in build meta-data, and opens the auto-merge bump
@@ -724,50 +1146,71 @@ steps:
   # that reached it.) Digest-unchanged entries are skipped, so a no-change
   # merge redeploys nothing.
   - label: ":package: version commit-back"
+    key: version-commit-back
     if: build.branch == pipeline.default_branch
     depends_on: images
+    cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile
       bun scripts/update-versions.ts --commit-back "2.0.0-$BUILDKITE_BUILD_NUMBER" --digests "$$(buildkite-agent meta-data get image-digests)"
     # Safe to retry: the bump branch is force-updated and the PR lookup is
     # find-or-create; transient gh/git failures exit 34 via transient.ts.
     retry: *retry
     plugins:
-      - *pod_light
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: version-commit-back
 
   # ── Main-only: cooklang Obsidian plugin release ───────────────────────────
   # Publishes to the plugin repo + commits the version back (idempotent: the
   # script skips the release cut when the version tag already exists).
   - label: ":knife_fork_plate: cooklang plugin publish"
+    key: cooklang-publish
     if: build.branch == pipeline.default_branch
     depends_on: verify
+    cancel_on_build_failing: true
     command: |
+      if ! bash .buildkite/scripts/ci-changed.sh cooklang; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun install --frozen-lockfile
+      bun install --frozen-lockfile --filter cooklang-for-obsidian
       bun run --cwd packages/cooklang-for-obsidian publish:plugin
     plugins:
-      - *pod_light
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: cooklang-publish
 
   # ── Toolchain image refresh ───────────────────────────────────────────────
   - label: ":docker: ci-image refresh"
+    key: ci-image-refresh
     if: build.branch == pipeline.default_branch
     depends_on: verify
+    cancel_on_build_failing: true
     command: |
+      if ! bash .buildkite/scripts/ci-changed.sh ci-image; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       . .buildkite/scripts/docker-env.sh
       bash .buildkite/scripts/build-ci-image.sh
     retry: *retry
     plugins:
-      - *pod_privileged
+      - kubernetes:
+          <<: *pod_privileged_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: ci-image-refresh
 
   # ── Main-only: build summary annotation (runs even when deploys fail) ─────
   - label: ":memo: build summary"
+    key: build-summary
     if: build.branch == pipeline.default_branch
     depends_on:
       - verify
-      - e2e
-      - docker-e2e
+      - playwright-e2e-main
+      - resume-build-main
+      - docker-e2e-main
       - images
       - sites
       - helm-push
@@ -776,4 +1219,8 @@ steps:
     allow_dependency_failure: true
     command: bash .buildkite/scripts/annotate-build-summary.sh
     plugins:
-      - *pod_light
+      - kubernetes:
+          <<: *pod_light_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: build-summary

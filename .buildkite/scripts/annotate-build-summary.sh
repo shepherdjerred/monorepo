@@ -6,7 +6,7 @@ set -euo pipefail
 # meta-data plumbing). Runs with allow_dependency_failure so a red deploy
 # still gets a summary.
 
-STEPS=(verify e2e images sites helm-push tofu-apply argocd-sync)
+STEPS=(verify playwright-e2e-main resume-build-main docker-e2e-main images sites helm-push tofu-apply argocd-sync)
 
 {
   echo "### :rocket: main build summary"
