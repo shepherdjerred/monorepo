@@ -17,6 +17,10 @@ Added the `oc` Fish abbreviation for OpenCode and verified its expansion.
 - Inventoried installed coding-agent CLIs: Claude Code, Codex CLI, OpenCode, Gemini CLI, and Kimi Code.
 - Uninstalled Gemini CLI from Homebrew and Mise's Node global package prefix, removed Kimi Code, and deleted the un-managed `~/.gemini` state directory.
 - Compared OpenCode, Codex, and Claude Code global configuration. OpenCode currently only configures a Kimi provider plugin and has no equivalent model, permission, instruction, MCP, or plugin-workflow policy.
+- Audited 52 distinct first-party OpenCode documents: 36 official documentation pages, the published configuration schema, and 16 repository guides/specifications.
+- Enabled OpenCode LSP support, disabled transcript sharing, and merged the active local Kimi/quota plugin configuration into the managed template.
+- Added the Claude-equivalent OpenCode destructive-command denylist and managed Codex narrow safety rules.
+- Verified OpenCode Kimi model discovery, chezmoi synchronization, and Codex policy decisions for forbidden and safe commands.
 
 ### Remaining
 
@@ -26,3 +30,5 @@ Added the `oc` Fish abbreviation for OpenCode and verified its expansion.
 
 - `--auto` is intentionally dangerous: explicit deny rules continue to apply, but other permission requests are approved automatically.
 - The shared `GEMINI_API_KEY` Fish environment variable remains because other software may use the provider credential.
+- No OpenCode model defaults are configured so provider selection can change with subscription quotas.
+- Codex rules use literal command prefixes; recursive force deletion is blocked for every target because the rule language cannot match a home-directory path prefix safely.
