@@ -1,9 +1,13 @@
+---
+id: plan-2026-07-19-shelfbridge-torznab-ebooks
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # ShelfBridge Torznab leg for the ebook stack
-
-## Status
-
-In Progress — stacked PR on [#1581](https://github.com/shepherdjerred/monorepo/pull/1581)
-(`feature/ebook-stack-shelfbridge` → base `feature/ebook-stack-bindery-cwa`).
 
 ## Goal
 
@@ -146,3 +150,7 @@ gluetun env in `resources/torrents/qbittorrent.ts`.
   `resources/torrents/qbittorrent.ts`
 - Anna's Archive / LibGen mirrors churn; `ANNAS_MIRRORS`/`LIBGEN_MIRRORS`
   env may need updates as domains move
+
+## Remaining
+
+- [ ] Complete and verify the work described in `ShelfBridge Torznab leg for the ebook stack`.

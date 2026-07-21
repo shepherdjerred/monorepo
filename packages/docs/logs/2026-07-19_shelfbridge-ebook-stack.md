@@ -1,8 +1,11 @@
+---
+id: log-2026-07-19-shelfbridge-ebook-stack
+type: log
+status: complete
+board: false
+---
+
 # ShelfBridge ebook stack — session + post-deploy notes
-
-## Status
-
-Complete (code shipped as stacked PR; post-deploy is operator work after merge)
 
 ## Context
 
