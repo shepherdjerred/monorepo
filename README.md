@@ -245,17 +245,6 @@ Scout for League of Legends is a Discord bot that tracks your friends’ matches
 
 ### [docs](https://github.com/shepherdjerred/monorepo/tree/main/packages/docs) (2026-07-20)
 
----
-
-id: reference-summary
-type: reference
-status: complete
-board: false
-
----
-
-# Summary
-
 Monorepo Documentation is an AI-maintained knowledge base that captures architecture, decisions, guides, plans, and logs for the wider monorepo. The collection is organized as Markdown directories like `architecture/`, `patterns/`, and `guides/`, with automation hooks that rely on Bun scripts and Temporal scheduling workflows. A notable capability is the `temporal-agent-task` annotation system that lets operators trigger follow-up runs through the Temporal agent-task scheduler via `bun run scripts/schedule-agent-task.ts`.
 
 ### [docs-board](https://github.com/shepherdjerred/monorepo/tree/main/packages/docs-board) (2026-07-19)
