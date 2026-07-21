@@ -144,14 +144,17 @@ for (const required of [
 }
 
 function selectorLane(lane: string): string {
-  const match = ciChanged.match(
-    new RegExp(`^  ${lane}\\)\\n([\\s\\S]*?)^    ;;$`, "m"),
-  );
-  const block = match?.[1];
-  if (block === undefined) {
+  const startMarker = `  ${lane})\n`;
+  const start = ciChanged.indexOf(startMarker);
+  if (start === -1) {
     fail(`runtime CI selector is missing lane ${lane}`);
   }
-  return block;
+  const blockStart = start + startMarker.length;
+  const blockEnd = ciChanged.indexOf("\n    ;;", blockStart);
+  if (blockEnd === -1) {
+    fail(`runtime CI selector lane ${lane} has no terminator`);
+  }
+  return ciChanged.slice(blockStart, blockEnd);
 }
 
 for (const lane of [
@@ -227,6 +230,15 @@ for (const required of [
     fail(`Trivy path gate is missing vulnerability input ${required}`);
   }
 }
+for (const required of [
+  'exclude: "sandbox/**"',
+  "--skip-dirs node_modules",
+  "--skip-dirs sandbox",
+]) {
+  if (trivy === undefined || !trivy.includes(required)) {
+    fail(`Trivy restored scanning for unshipped sandbox content: ${required}`);
+  }
+}
 
 const semgrep = stepBlocks.get("semgrep");
 for (const required of [
@@ -239,6 +251,37 @@ for (const required of [
 ]) {
   if (semgrep === undefined || !semgrep.includes(required)) {
     fail(`Semgrep path gate is missing supported source ${required}`);
+  }
+}
+
+function containerBlock(
+  stepKey: string,
+  step: string | undefined,
+  containerName: string,
+): string {
+  if (step === undefined) {
+    fail(`pipeline is missing step ${stepKey}`);
+  }
+  const marker = `              - name: ${containerName}\n`;
+  const start = step.indexOf(marker);
+  if (start === -1) {
+    fail(`step ${stepKey} is missing container ${containerName}`);
+  }
+  const blockStart = start + marker.length;
+  const nextContainer = step.indexOf("\n              - name:", blockStart);
+  return step.slice(
+    blockStart,
+    nextContainer === -1 ? step.length : nextContainer,
+  );
+}
+
+for (const [stepKey, step] of [
+  ["trivy", trivy],
+  ["semgrep", semgrep],
+] satisfies ReadonlyArray<readonly [string, string | undefined]>) {
+  const scanner = containerBlock(stepKey, step, "container-0");
+  if (!scanner.includes("allowPrivilegeEscalation: false")) {
+    fail(`scanner container ${stepKey} permits privilege escalation`);
   }
 }
 

@@ -530,8 +530,14 @@ steps:
         - "**/Dockerfile.*"
         - "patches/**"
         - "turbo.json"
+      # sandbox is personal scratch and frozen legacy code; it is not shipped.
+      # Do not start a scanner pod for changes that only touch that tree.
+      exclude: "sandbox/**"
     cancel_on_build_failing: true
-    command: trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 7 .
+    # Excluding unshipped scratch also avoids traversing and resolving the
+    # archived Maven graphs on every scan (build 5980 exhausted Maven Central's
+    # shared-IP rate limit while resolving sandbox/archive/castle-casters).
+    command: trivy fs --scanners vuln --severity HIGH,CRITICAL --exit-code 7 --skip-dirs node_modules --skip-dirs sandbox .
     plugins:
       - kubernetes:
           metadata:
@@ -551,6 +557,8 @@ steps:
               - name: container-0
                 # renovate: datasource=docker depName=aquasec/trivy
                 image: "aquasec/trivy:0.72.0"
+                securityContext:
+                  allowPrivilegeEscalation: false
                 # The Trivy image has /bin/sh but no /bin/bash. The agent's
                 # default bash shell otherwise fails before Trivy can start.
                 env:
@@ -668,6 +676,8 @@ steps:
               - name: container-0
                 # renovate: datasource=docker depName=semgrep/semgrep
                 image: "semgrep/semgrep:1.170.0"
+                securityContext:
+                  allowPrivilegeEscalation: false
                 resources:
                   requests: { cpu: "500m", memory: "1Gi" }
                   limits: { cpu: "2", memory: "4Gi" }

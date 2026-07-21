@@ -36,6 +36,9 @@ inodes. The exact report interval and queries are recorded below.
       target-selection and smoke fixtures prove equivalence.
 - [x] Keep scanners path-aware and baseline-aware while treating scanner/runtime
       errors as hard failures.
+- [x] Remove unshipped `sandbox/` and generated `node_modules/` trees from
+      Trivy traversal instead of downloading legacy Maven graphs or persisting
+      a Maven cache elsewhere.
 - [x] Attempt the Docker containerd image-store benchmark and retain the
       candidate only if every acceptance gate passes. Both candidate attempts
       were inconclusive, so the candidate and benchmark-only plumbing were
@@ -165,6 +168,18 @@ samples per scrape. At 8,640 scrapes per day, it would parse approximately
 controller PodMonitor was added; kube-state-metrics remains on its normal
 cadence.
 
+### Scanner Traversal Guard
+
+Buildkite build 5980 showed that a repository-wide Trivy traversal was resolving
+`sandbox/archive/castle-casters/pom.xml` through Maven Central. Every checked-in
+Maven POM is under `sandbox/`, which is unshipped scratch or frozen legacy code.
+The Trivy step now excludes sandbox-only changes before pod scheduling and skips
+both `sandbox/` and generated `node_modules/` during traversal. This removes
+roughly 6,700 tracked files and 258 MB from scanner scope without excluding any
+shipped manifest or lockfile. An offline scan and a persistent Maven cache were
+rejected because they would respectively weaken fresh-pod dependency coverage
+or relocate the same dependency I/O.
+
 ## Remaining
 
 - [x] Run the full `bun run verify` gate after final cleanup.
@@ -284,6 +299,12 @@ seven-day/100-build completion report is delivered.
   inconclusive when a required validation job failed, was canceled, or never
   ran; canceled builds remain eligible when their mapped validation jobs
   passed.
+- Diagnosed Buildkite build 5980's Trivy Maven rate-limit failure and Semgrep
+  findings, removed unshipped/generated scanner traversal, hardened both
+  scanner containers against privilege escalation, and replaced the flagged
+  dynamic regular expression with bounded string parsing.
+- Re-ran the full `bun run verify` gate after the scanner fixes (182 of 182
+  tasks passed).
 
 ### Remaining
 
