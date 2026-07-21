@@ -351,6 +351,7 @@
     "react-scripts",
     "remeda",
     "sass",
+    "shadcn",
     "sodium-native",
     "tailwindcss",
     "ts-morph",
