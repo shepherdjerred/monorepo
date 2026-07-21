@@ -28,13 +28,7 @@ import {
   buildWindowIoReport as buildRawWindowIoReport,
   type BuildWindowReportInput,
 } from "./ci-io-report.ts";
-import type {
-  BranchStepIoReport,
-  CiIoReport,
-  StepIoReport,
-  WindowIoReport,
-} from "./ci-io-report-model.ts";
-import { compareWindows } from "./ci-io-statistics.ts";
+import type { CiIoReport, WindowIoReport } from "./ci-io-report-model.ts";
 import { selectCohortBuilds, selectExplicitBuilds } from "./ci-io-selection.ts";
 
 const WINDOW: TimeWindow = {
@@ -49,6 +43,7 @@ const IDS = {
   short: "20000000-0000-4000-8000-000000000002",
   canceled: "20000000-0000-4000-8000-000000000003",
   canceledBuild: "20000000-0000-4000-8000-000000000004",
+  notRun: "20000000-0000-4000-8000-000000000005",
 } as const;
 
 type TestWindowReportInput = Omit<
@@ -92,7 +87,7 @@ function jobFixture(input: {
   name: string;
   stepKey: string;
   state: string;
-  startedAt: string;
+  startedAt: string | null;
   finishedAt: string | null;
 }): unknown {
   return {
@@ -777,6 +772,48 @@ describe("window report", () => {
     const shortJob = report.jobs.find((job) => job.jobId === IDS.short);
     expect(shortJob?.coverage).toBe("complete");
   });
+
+  test("retains unstarted validation outcomes outside the metric job list", () => {
+    const source = reportBuilds()[0];
+    if (source === undefined) {
+      throw new Error("missing report build fixture");
+    }
+    const build = BuildkiteBuildSchema.parse({
+      ...source,
+      jobs: [
+        ...source.jobs,
+        jobFixture({
+          id: IDS.notRun,
+          buildNumber: source.number,
+          name: "image validation",
+          stepKey: "images-pr",
+          state: "not_run",
+          startedAt: null,
+          finishedAt: null,
+        }),
+      ],
+    });
+    const report = buildWindowIoReport({
+      builds: [build],
+      window: WINDOW,
+      metrics: emptyMetrics(),
+      pipeline: "monorepo",
+      excludedJobIds: new Set(),
+    });
+    expect(
+      report.jobOutcomes.find((outcome) => outcome.jobId === IDS.notRun),
+    ).toEqual({
+      buildNumber: source.number,
+      buildState: source.state,
+      branch: source.branch,
+      jobId: IDS.notRun,
+      jobName: "image validation",
+      jobState: "not_run",
+      stepKey: "images-pr",
+      started: false,
+    });
+    expect(report.jobs.some((job) => job.jobId === IDS.notRun)).toBe(false);
+  });
 });
 
 describe("window report integrity", () => {
@@ -916,373 +953,6 @@ describe("window report integrity", () => {
     });
     expect(report.integrityIssues.map((current) => current.code)).toContain(
       "metadata-mismatch",
-    );
-  });
-});
-
-function stepFixture(input: {
-  writes: number | null;
-  duration: number | null;
-  network: number | null;
-  p95Duration?: number | null;
-  p95Network?: number | null;
-}): StepIoReport {
-  return {
-    stepKey: "image-fixture",
-    jobCount: 5,
-    measuredJobCount: input.writes === null ? 0 : 5,
-    completeJobCount: input.writes === null ? 0 : 5,
-    lowerBoundJobCount: 0,
-    missingJobCount: input.writes === null ? 5 : 0,
-    nodeJobCounts: { torvalds: 5 },
-    totalWriteBytes: input.writes === null ? 0 : input.writes * 5,
-    medianWriteBytes: input.writes,
-    p95WriteBytes: input.writes,
-    medianDurationSeconds: input.duration,
-    p95DurationSeconds:
-      input.p95Duration === undefined ? input.duration : input.p95Duration,
-    medianNetworkBytes: input.network,
-    p95NetworkBytes:
-      input.p95Network === undefined ? input.network : input.p95Network,
-    canceledBuildWriteBytes: 0,
-    canceledJobWriteBytes: 0,
-  };
-}
-
-const MAIN_FIXED_CORPUS_STEP_KEYS = [
-  "verify",
-  "playwright-e2e-main",
-  "resume-build-main",
-  "docker-e2e-main",
-  "images",
-  "tofu-apply",
-] as const;
-
-const PR_FIXED_CORPUS_STEP_KEYS = [
-  "verify",
-  "playwright-e2e-pr",
-  "resume-build-pr",
-  "docker-e2e-pr",
-  "images-pr",
-  "tofu-plan",
-] as const;
-
-const LEGACY_FIXED_CORPUS_STEP_KEYS = [
-  "verify",
-  "e2e",
-  "resume-build",
-  "docker-e2e",
-  "images",
-  "tofu-apply",
-] as const;
-
-function gateWindow(
-  step: StepIoReport,
-  stepKeys: readonly string[] = MAIN_FIXED_CORPUS_STEP_KEYS,
-): WindowIoReport {
-  const steps = stepKeys.map((stepKey) => ({ ...step, stepKey }));
-  const jobCount = steps.reduce(
-    (total, current) => total + current.jobCount,
-    0,
-  );
-  const totalWriteBytes = steps.reduce(
-    (total, current) => total + current.totalWriteBytes,
-    0,
-  );
-  return {
-    cohort: null,
-    from: WINDOW.from.toISOString(),
-    to: WINDOW.to.toISOString(),
-    buildNumbers: [1],
-    unfinishedBuilds: [],
-    jobs: [],
-    steps,
-    branchSteps: steps.map((current) => ({ branch: "main", ...current })),
-    summary: {
-      buildCount: 1,
-      expectedJobCount: jobCount,
-      measuredJobCount: jobCount,
-      completeJobCount: jobCount,
-      lowerBoundJobCount: 0,
-      missingJobCount: 0,
-      networkMeasuredJobCount: jobCount,
-      unfinishedBuildCount: 0,
-      excludedBuildCount: 0,
-      sampleCoveragePercent: 100,
-      p95DurationSeconds: step.p95DurationSeconds,
-      totalWriteBytes,
-      lowerBoundWriteBytes: 0,
-      unmatchedWriteBytes: 0,
-      canceledBuildWriteBytes: 0,
-      canceledJobWriteBytes: 0,
-      totalNetworkReceiveBytes: 0,
-      totalNetworkTransmitBytes: 0,
-      componentWriteBytes: {},
-      componentWriteShares: {},
-    },
-    integrityIssues: [],
-  };
-}
-
-function gateLane(report: WindowIoReport, stepKey: string): BranchStepIoReport {
-  const lane = report.branchSteps.find(
-    (current) => current.stepKey === stepKey,
-  );
-  if (lane === undefined) {
-    throw new Error(`fixed-corpus lane ${stepKey} is missing`);
-  }
-  return lane;
-}
-
-function withoutGateLane(
-  report: WindowIoReport,
-  stepKey: string,
-): WindowIoReport {
-  const steps = report.steps.filter((step) => step.stepKey !== stepKey);
-  const branchSteps = report.branchSteps.filter(
-    (step) => step.stepKey !== stepKey,
-  );
-  const jobCount = steps.reduce(
-    (total, current) => total + current.jobCount,
-    0,
-  );
-  const totalWriteBytes = steps.reduce(
-    (total, current) => total + current.totalWriteBytes,
-    0,
-  );
-  return {
-    ...report,
-    steps,
-    branchSteps,
-    summary: {
-      ...report.summary,
-      expectedJobCount: jobCount,
-      measuredJobCount: jobCount,
-      completeJobCount: jobCount,
-      networkMeasuredJobCount: jobCount,
-      totalWriteBytes,
-    },
-  };
-}
-
-describe("fixed-corpus impact gate", () => {
-  test("passes 50% aggregate write reduction with at most 10% p95 regression", () => {
-    const baseline = gateWindow(
-      stepFixture({ writes: 100, duration: 100, network: 100 }),
-    );
-    const candidate = gateWindow(
-      stepFixture({ writes: 50, duration: 110, network: 100 }),
-    );
-    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
-    expect(gate.status).toBe("passed");
-    expect(gate.aggregateWriteReductionPercent).toBe(50);
-    expect(gate.p95DurationChangePercent).toBeCloseTo(10);
-    expect(gate.baselineLanes.map((lane) => lane.stepKey)).toEqual([
-      "docker-e2e",
-      "images",
-      "resume",
-      "sjer.red",
-      "tofu",
-      "verify",
-    ]);
-  });
-
-  test("accepts the PR variants of every required validation lane", () => {
-    const baseline = gateWindow(
-      stepFixture({ writes: 100, duration: 100, network: 100 }),
-      PR_FIXED_CORPUS_STEP_KEYS,
-    );
-    const candidate = gateWindow(
-      stepFixture({ writes: 50, duration: 100, network: 100 }),
-      PR_FIXED_CORPUS_STEP_KEYS,
-    );
-    expect(compareWindows(baseline, candidate).fixedCorpusGate.status).toBe(
-      "passed",
-    );
-  });
-
-  test("compares legacy baseline keys with current logical lanes", () => {
-    const baseline = gateWindow(
-      stepFixture({ writes: 100, duration: 100, network: 100 }),
-      [...LEGACY_FIXED_CORPUS_STEP_KEYS, "legacy-unrelated-step"],
-    );
-    const candidate = gateWindow(
-      stepFixture({ writes: 50, duration: 100, network: 100 }),
-      [...MAIN_FIXED_CORPUS_STEP_KEYS, "ci-selector-base"],
-    );
-    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
-    expect(gate.status).toBe("passed");
-    expect(gate.baselineLanes).toEqual(gate.candidateLanes);
-    expect(gate.baselineLanes.map((lane) => lane.stepKey)).toEqual([
-      "docker-e2e",
-      "images",
-      "resume",
-      "sjer.red",
-      "tofu",
-      "verify",
-    ]);
-  });
-
-  test("rejects a window that mixes legacy and current lane keys", () => {
-    const baseline = gateWindow(
-      stepFixture({ writes: 100, duration: 100, network: 100 }),
-      [...LEGACY_FIXED_CORPUS_STEP_KEYS, "playwright-e2e-main"],
-    );
-    const candidate = gateWindow(
-      stepFixture({ writes: 50, duration: 100, network: 100 }),
-    );
-    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
-    expect(gate.status).toBe("inconclusive");
-    expect(gate.reasons).toContain(
-      "baseline fixed-corpus window mixes pipeline schemas for logical lanes: main / sjer.red",
-    );
-  });
-});
-
-describe("fixed-corpus threshold guards", () => {
-  test("does not count unmapped workload changes toward corpus savings", () => {
-    const baseline = gateWindow(
-      stepFixture({ writes: 100, duration: 100, network: 100 }),
-      [...MAIN_FIXED_CORPUS_STEP_KEYS, "legacy-unrelated-step"],
-    );
-    const candidate = gateWindow(
-      stepFixture({ writes: 100, duration: 100, network: 100 }),
-      [...MAIN_FIXED_CORPUS_STEP_KEYS, "ci-selector-base"],
-    );
-    gateLane(baseline, "legacy-unrelated-step").totalWriteBytes = 1000;
-    baseline.summary.totalWriteBytes = 1600;
-    gateLane(candidate, "ci-selector-base").totalWriteBytes = 0;
-    candidate.summary.totalWriteBytes = 600;
-
-    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
-    expect(gate.aggregateWriteReductionPercent).toBe(0);
-    expect(gate.status).toBe("failed");
-    expect(gate.reasons).toContain("aggregate write reduction is below 50%");
-  });
-
-  test("fails fixed-corpus write and p95 duration thresholds", () => {
-    const baseline = gateWindow(
-      stepFixture({ writes: 100, duration: 100, network: 100 }),
-    );
-    const candidate = gateWindow(
-      stepFixture({ writes: 51, duration: 111, network: 100 }),
-    );
-    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
-    expect(gate.status).toBe("failed");
-    expect(gate.reasons).toContain("aggregate write reduction is below 50%");
-    expect(gate.reasons).toContain(
-      "p95 duration regression exceeds 10% for lane main / images (11.0%)",
-    );
-    expect(
-      gate.reasons.filter((reason) =>
-        reason.startsWith("p95 duration regression exceeds 10% for lane"),
-      ),
-    ).toHaveLength(MAIN_FIXED_CORPUS_STEP_KEYS.length);
-  });
-
-  test("rejects matching windows that both omit a required lane", () => {
-    const baseline = withoutGateLane(
-      gateWindow(stepFixture({ writes: 100, duration: 100, network: 100 })),
-      "docker-e2e-main",
-    );
-    const candidate = withoutGateLane(
-      gateWindow(stepFixture({ writes: 50, duration: 100, network: 100 })),
-      "docker-e2e-main",
-    );
-    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
-    expect(gate.status).toBe("inconclusive");
-    expect(gate.reasons).not.toContain(
-      "fixed-corpus lanes differ between comparison windows",
-    );
-    expect(gate.reasons).toContain(
-      "baseline fixed-corpus window is missing required validation lanes: LLM Docker E2E",
-    );
-    expect(gate.reasons).toContain(
-      "candidate fixed-corpus window is missing required validation lanes: LLM Docker E2E",
-    );
-  });
-
-  test("fails a per-lane p95 regression hidden by the aggregate p95", () => {
-    const baseline = gateWindow(
-      stepFixture({ writes: 100, duration: 100, network: 100 }),
-    );
-    const candidate = gateWindow(
-      stepFixture({ writes: 50, duration: 100, network: 100 }),
-    );
-    gateLane(candidate, "images").p95DurationSeconds = 111;
-    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
-    expect(gate.p95DurationChangePercent).toBe(0);
-    expect(gate.status).toBe("failed");
-    expect(gate.reasons).toContain(
-      "p95 duration regression exceeds 10% for lane main / images (11.0%)",
-    );
-  });
-
-  test("makes a missing per-lane p95 inconclusive", () => {
-    const baseline = gateWindow(
-      stepFixture({ writes: 100, duration: 100, network: 100 }),
-    );
-    const candidate = gateWindow(
-      stepFixture({ writes: 50, duration: 100, network: 100 }),
-    );
-    gateLane(candidate, "images").p95DurationSeconds = null;
-    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
-    expect(gate.status).toBe("inconclusive");
-    expect(gate.reasons).toContain(
-      "p95 duration change could not be calculated for lane main / images",
-    );
-  });
-
-  test("requires exact lanes, counts, and complete telemetry", () => {
-    const baseline = gateWindow(
-      stepFixture({ writes: 100, duration: 100, network: 100 }),
-    );
-    const missingLane = gateWindow(
-      stepFixture({ writes: 50, duration: 100, network: 100 }),
-    );
-    missingLane.branchSteps = [];
-    expect(
-      compareWindows(baseline, missingLane).fixedCorpusGate.reasons,
-    ).toContain("fixed-corpus lanes differ between comparison windows");
-
-    const wrongCount = gateWindow(
-      stepFixture({ writes: 50, duration: 100, network: 100 }),
-    );
-    const candidateLane = wrongCount.branchSteps[0];
-    if (candidateLane === undefined) {
-      throw new Error("fixed-corpus lane fixture missing");
-    }
-    candidateLane.jobCount = 4;
-    expect(
-      compareWindows(baseline, wrongCount).fixedCorpusGate.reasons,
-    ).toContain(
-      "fixed-corpus lane job counts differ between comparison windows",
-    );
-
-    const incomplete = gateWindow(
-      stepFixture({ writes: 50, duration: 100, network: 100 }),
-    );
-    incomplete.summary.completeJobCount -= 1;
-    incomplete.summary.lowerBoundJobCount = 1;
-    incomplete.summary.unfinishedBuildCount = 1;
-    incomplete.summary.excludedBuildCount = 1;
-    incomplete.unfinishedBuilds = [
-      {
-        buildNumber: 2,
-        branch: "main",
-        state: "running",
-        createdAt: WINDOW.from.toISOString(),
-        buildUrl: "https://buildkite.com/sjerred/monorepo/builds/2",
-        disposition: "excluded",
-      },
-    ];
-    const gate = compareWindows(baseline, incomplete).fixedCorpusGate;
-    expect(gate.status).toBe("inconclusive");
-    expect(gate.reasons).toContain(
-      "one or both fixed-corpus windows have incomplete telemetry",
-    );
-    expect(gate.reasons).toContain(
-      "one or both fixed-corpus cohorts excluded unfinished builds",
     );
   });
 });

@@ -26,7 +26,10 @@ async function main(): Promise<void> {
   const caddyfilePath = path.join(workDir, "Caddyfile");
   try {
     console.error(`[check:caddyfile] generating Caddyfile → ${caddyfilePath}`);
-    await run(["bun", "run", GENERATOR, caddyfilePath], "generate-caddyfile");
+    await run(
+      ["bun", "--no-install", "run", GENERATOR, caddyfilePath],
+      "generate-caddyfile",
+    );
 
     const generated = await Bun.file(caddyfilePath).text();
     if (generated.trim() === "") {

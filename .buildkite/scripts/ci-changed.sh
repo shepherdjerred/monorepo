@@ -40,7 +40,7 @@ if ! git merge-base --is-ancestor "$base" HEAD; then
 fi
 
 if [ "$lane" = "images" ]; then
-  targets=$(bun .buildkite/scripts/select-image-targets.ts --base "$base")
+  targets=$(bun --no-install .buildkite/scripts/select-image-targets.ts --base "$base")
   if [ "$targets" = "[]" ]; then
     echo "${lane}: unchanged since ${base}; skipping"
     exit 78
@@ -154,6 +154,8 @@ case "$lane" in
   site-scout)
     lane_paths=(
       packages/scout-for-lol
+      packages/astro-opengraph-images
+      packages/llm-models
       packages/homelab/src/cdk8s/src/versions.ts
       scripts/scout-site-release.ts
       scripts/lib
@@ -170,6 +172,7 @@ case "$lane" in
       packages/better-skill-capped
       packages/glitter
       packages/scout-for-lol
+      packages/llm-models
       scripts/deploy-site.ts
       scripts/scout-site-release.ts
       scripts/lib/s3-static-site.ts
@@ -179,6 +182,8 @@ case "$lane" in
   scout-promotion)
     lane_paths=(
       packages/scout-for-lol
+      packages/astro-opengraph-images
+      packages/llm-models
       packages/homelab/src/cdk8s/src/versions.ts
       scripts/promote-scout.ts
       scripts/lib
@@ -187,6 +192,8 @@ case "$lane" in
   scout-reconcile)
     lane_paths=(
       packages/scout-for-lol
+      packages/astro-opengraph-images
+      packages/llm-models
       packages/homelab/src/cdk8s/src/versions.ts
       scripts/scout-site-release.ts
       scripts/lib

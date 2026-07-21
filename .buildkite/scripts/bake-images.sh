@@ -86,7 +86,7 @@ if [ "$scope" = "affected" ]; then
   # The dependency-free selector returns a deterministic JSON target list.
   # Any selector/tool/schema failure builds everything: selection can only
   # save work, never omit a required image.
-  if selected_json=$(bun .buildkite/scripts/select-image-targets.ts --base "$scope_base") \
+  if selected_json=$(bun --no-install .buildkite/scripts/select-image-targets.ts --base "$scope_base") \
     && printf '%s' "$selected_json" | jq -e --argjson known "$KNOWN_TARGETS_JSON" \
       'type == "array" and all(.[]; type == "string" and (. as $target | $known | index($target) != null))' >/dev/null; then
     echo "selected image targets: $selected_json"
@@ -159,10 +159,14 @@ VERSION="$BUILD_NUMBER" GIT_SHA="$SHA" PUSH_CACHE="$PUSH_CACHE" \
 # Smoke serially (containers contend on the daemon; assertions are cheap).
 for dir in "${smoke_dirs[@]}"; do
   echo "--- :fire: smoke ${dir}"
+  smoke_script="scripts/smoke.ts"
+  if [ "$dir" = "packages/homelab" ]; then
+    smoke_script="scripts/smoke-images.ts"
+  fi
   if [ -n "${CADDYFILE_SMOKE_PATH:-}" ]; then
-    CADDYFILE_SMOKE_PATH="$CADDYFILE_SMOKE_PATH" bun run --cwd "$dir" smoke
+    CADDYFILE_SMOKE_PATH="$CADDYFILE_SMOKE_PATH" bun --no-install --cwd "$dir" "$smoke_script"
   else
-    bun run --cwd "$dir" smoke
+    bun --no-install --cwd "$dir" "$smoke_script"
   fi
 done
 

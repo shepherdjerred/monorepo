@@ -10,6 +10,7 @@ import type {
   Coverage,
   IntegrityIssue,
   JobIoReport,
+  JobOutcomeReport,
   UnfinishedBuildReport,
   WindowIoReport,
   WindowIoSummary,
@@ -24,6 +25,23 @@ type JobContext = {
   build: BuildkiteBuild;
   job: BuildkiteJob;
 };
+
+function stepKeyFor(job: BuildkiteJob): string {
+  return job.step_key ?? `unkeyed:${job.name}`;
+}
+
+function jobOutcome(context: JobContext): JobOutcomeReport {
+  return {
+    buildNumber: context.build.number,
+    buildState: context.build.state,
+    branch: context.build.branch,
+    jobId: context.job.id,
+    jobName: context.job.name,
+    jobState: context.job.state,
+    stepKey: stepKeyFor(context.job),
+    started: context.job.started_at !== null,
+  };
+}
 
 export type BuildWindowReportInput = {
   builds: BuildkiteBuild[];
@@ -166,7 +184,7 @@ function createJobReport(input: {
     measurements,
     context.job,
   );
-  const stepKey = context.job.step_key ?? `unkeyed:${context.job.name}`;
+  const stepKey = stepKeyFor(context.job);
   const report: JobIoReport = {
     buildNumber: context.build.number,
     buildState: context.build.state,
@@ -297,6 +315,13 @@ export function buildWindowIoReport(
   input: BuildWindowReportInput,
 ): WindowIoReport {
   const contexts = jobContexts(input.builds);
+  const outcomes = [...contexts.values()].map((context) => jobOutcome(context));
+  outcomes.sort(
+    (left, right) =>
+      left.buildNumber - right.buildNumber ||
+      left.stepKey.localeCompare(right.stepKey) ||
+      left.jobId.localeCompare(right.jobId),
+  );
   const podMeasurements = aggregatePodMetrics(input.metrics);
   const groupedMeasurements = measurementsByJob(podMeasurements);
   const reports: JobIoReport[] = [];
@@ -356,6 +381,7 @@ export function buildWindowIoReport(
       .map((build) => build.number)
       .sort((a, b) => a - b),
     unfinishedBuilds: input.unfinishedBuilds,
+    jobOutcomes: outcomes,
     jobs: reports,
     steps: summarizeSteps(reports),
     branchSteps: summarizeBranchSteps(reports),

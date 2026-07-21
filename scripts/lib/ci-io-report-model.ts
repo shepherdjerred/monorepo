@@ -60,6 +60,17 @@ export type JobIoReport = {
   componentWriteBytes: Record<string, number>;
 };
 
+export type JobOutcomeReport = {
+  buildNumber: number;
+  buildState: string;
+  branch: string;
+  jobId: string;
+  jobName: string;
+  jobState: string;
+  stepKey: string;
+  started: boolean;
+};
+
 export type StepIoReport = {
   stepKey: string;
   jobCount: number;
@@ -112,6 +123,7 @@ export type WindowIoReport = {
   to: string;
   buildNumbers: number[];
   unfinishedBuilds: UnfinishedBuildReport[];
+  jobOutcomes: JobOutcomeReport[];
   jobs: JobIoReport[];
   steps: StepIoReport[];
   branchSteps: BranchStepIoReport[];

@@ -74,7 +74,7 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     name: "sjer.red",
     url: "https://sjer.red",
     buildDir: "packages/sjer.red",
-    buildCmd: "bun run astro build",
+    buildCmd: "bun --no-install run astro build",
     distDir: "packages/sjer.red/dist",
     target: "s3",
     // Astro's hashed output dir.
@@ -87,7 +87,7 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     buildDir: "packages/resume",
     // xelatex compiles the gitignored resume.pdf; CI deploys --prebuilt (the
     // resume-build step's artifact) because only the texlive container has TeX.
-    buildCmd: "bun run build",
+    buildCmd: "bun --no-install run build",
     distDir: "packages/resume",
     target: "s3",
     immutablePrefixes: [],
@@ -97,7 +97,7 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     name: "webring",
     url: "https://webring.sjer.red",
     buildDir: "packages/webring",
-    buildCmd: "bun run typedoc",
+    buildCmd: "bun --no-install run typedoc",
     distDir: "packages/webring/docs",
     target: "s3",
     immutablePrefixes: [],
@@ -107,7 +107,7 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     name: "cooklang-rich-preview",
     url: "https://cook.sjer.red",
     buildDir: "packages/cooklang-rich-preview",
-    buildCmd: "bun run astro build",
+    buildCmd: "bun --no-install run astro build",
     distDir: "packages/cooklang-rich-preview/dist",
     target: "s3",
     immutablePrefixes: ["_astro/"],
@@ -117,7 +117,7 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     name: "stocks-sjer-red",
     url: "https://stocks.sjer.red",
     buildDir: "packages/stocks-sjer-red",
-    buildCmd: "bun run astro build",
+    buildCmd: "bun --no-install run astro build",
     distDir: "packages/stocks-sjer-red/dist",
     target: "s3",
     immutablePrefixes: ["_astro/"],
@@ -133,7 +133,7 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     name: "better-skill-capped",
     url: "https://better-skill-capped.com",
     buildDir: "packages/better-skill-capped",
-    buildCmd: "bun run build",
+    buildCmd: "bun --no-install run build",
     distDir: "packages/better-skill-capped/dist",
     target: "s3",
     // Vite SPA — content-hashed bundles live under `assets/`, not `_astro/`.

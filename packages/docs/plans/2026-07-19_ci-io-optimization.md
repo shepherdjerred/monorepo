@@ -29,7 +29,9 @@ inodes. The exact report interval and queries are recorded below.
 - [x] Path-gate PR work before pods are scheduled and select main work before
       dependency installation.
 - [x] Keep the full root install only in `verify`; filter or remove every other
-      install according to the command's real dependency closure.
+      install according to the command's real dependency closure, and require
+      `bun --no-install` on runtime commands so fresh pods cannot silently
+      restore an implicit root install.
 - [x] Remove unconditional image work and the hidden Caddy image build after
       target-selection and smoke fixtures prove equivalence.
 - [x] Keep scanners path-aware and baseline-aware while treating scanner/runtime
@@ -94,7 +96,7 @@ and canceled jobs for 157.36 GiB. Network receive plus transmit was 497.04 GiB.
 The 328 integrity findings were 324 missing post-finish parent samples and four
 long jobs with insufficient samples; none were treated as zero.
 
-### Install Footprints
+### Runtime Install Footprints
 
 | Closure                 |         Bytes | Entries | Full bytes | Full entries |
 | ----------------------- | ------------: | ------: | ---------: | -----------: |
@@ -108,9 +110,35 @@ long jobs with insufficient samples; none were treated as zero.
 | CDK8s production        |    56,119,296 |   4,677 |     1.495% |       1.787% |
 | Cooklang                |   177,922,048 |  21,642 |     4.741% |       8.268% |
 
-Every measured closure ran its real consuming command successfully. The
+This table covers the filtered workspace installs used by runtime Buildkite
+lanes. Every listed closure ran its real consuming command successfully. The
 tightest 50% gate, the worst sites union, passed with 31,113,216 bytes and
-2,652 entries of headroom.
+2,652 entries of headroom. Dockerfile build-stage closures are measured
+separately below and are not included in this claim.
+
+### Dockerfile Install Footprints
+
+The nine filtered Docker build-stage closures were measured from fresh,
+dependency-free extractions of commit `7f342dbf379275f0a148cbf26733afaa70587ace`
+with Bun 1.3.14. Percentages use the same 3,753,123,840-byte and 261,770-entry
+full-root reference as the runtime table.
+
+| Closure       | Filters                                               |         Bytes | Entries | Full bytes | Full entries |
+| ------------- | ----------------------------------------------------- | ------------: | ------: | ---------: | -----------: |
+| Birmel        | `@shepherdjerred/birmel`                              | 1,211,277,312 |  87,254 |    32.274% |      33.332% |
+| Mario Kart    | `@discord-plays-mario-kart/*`                         | 1,005,006,848 |  72,289 |    26.778% |      27.615% |
+| Pokemon       | `@discord-plays-pokemon/*`                            | 1,003,421,696 |  75,592 |    26.736% |      28.877% |
+| Scout backend | `@scout-for-lol/backend`                              | 1,291,403,264 |  78,034 |    34.409% |      29.810% |
+| Starlight     | `starlight-karma-bot`                                 |   288,886,784 |  35,050 |     7.697% |      13.390% |
+| Streambot     | `@shepherdjerred/streambot`                           |   500,785,152 |  46,269 |    13.343% |      17.675% |
+| TaskNotes     | `tasknotes-server`                                    |   221,073,408 |  28,731 |     5.890% |      10.976% |
+| Temporal      | `@shepherdjerred/temporal`, `@shepherdjerred/toolkit` | 1,346,682,880 |  92,403 |    35.882% |      35.299% |
+| TRMNL         | `@shepherdjerred/trmnl-dashboard`                     |   204,689,408 |  26,750 |     5.454% |      10.219% |
+
+Each closure passed the 50% byte and entry gates. A fresh unfiltered control
+was 1.378% larger by bytes and 0.445% larger by entries than the frozen
+reference; that small calibration difference does not change any outcome.
+Actual Docker builds and smoke consumers remain Buildkite acceptance checks.
 
 ### Docker Driver Experiment
 
@@ -216,8 +244,10 @@ seven-day/100-build completion report is delivered.
   image and Caddy work.
 - Replayed builds 5777-5876 through the reporter and recorded coverage,
   lower-bound, cancellation, network, and integrity results above.
-- Measured every filtered install closure and ran each real consumer; all
-  closures passed the footprint gate.
+- Measured every filtered runtime-lane install closure and ran each real
+  consumer; all listed runtime closures passed the footprint gate.
+- Measured all nine filtered Docker build-stage install closures; every closure
+  stayed below 50% of both the full-root byte and entry counts.
 - Ran the controlled Docker baseline and two candidate attempts. The candidate
   remained inconclusive and was removed rather than promoted.
 - Removed a proposed high-cost kube-state-metrics scrape after quantifying its
@@ -243,6 +273,17 @@ seven-day/100-build completion report is delivered.
   verification evidence, exclusions, and pre-deploy Grafana screenshot.
 - Scheduled and live-log-verified the report-only
   `ci-io-post-merge-impact` Temporal schedule.
+- Added a pipeline-wide `bun --no-install` runtime invariant after PR review
+  exposed that Bun's fresh-checkout auto-install could silently restore the
+  root I/O cost; dependency installs and nested automation runtimes remain
+  explicit and validator-enforced.
+- Added Scout's Astro OpenGraph and LLM model dependencies to the deploy,
+  promotion, reconciliation, and PR selectors, with behavioral fixtures wired
+  into the root-scripts test gate.
+- Made fixed-corpus comparisons retain every Buildkite job outcome and become
+  inconclusive when a required validation job failed, was canceled, or never
+  ran; canceled builds remain eligible when their mapped validation jobs
+  passed.
 
 ### Remaining
 

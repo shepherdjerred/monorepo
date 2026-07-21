@@ -71,7 +71,7 @@ async function smokeCaddyS3Proxy(): Promise<SmokeResult> {
         "../src/cdk8s/scripts/generate-caddyfile.ts",
         import.meta.url,
       ).pathname;
-      const generated = await run(["bun", "run", generator]);
+      const generated = await run(["bun", "--no-install", "run", generator]);
       if (generated.exitCode !== 0) {
         return {
           image,

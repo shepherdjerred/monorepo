@@ -30,9 +30,30 @@ const LOGICAL_LANE_BY_PIPELINE_STEP: ReadonlyMap<string, string> = new Map([
   ["tofu-apply", "tofu"],
 ]);
 
+const CONDITIONAL_STEP_COUNTERPART: ReadonlyMap<string, string> = new Map([
+  ["playwright-e2e-pr", "playwright-e2e-main"],
+  ["playwright-e2e-main", "playwright-e2e-pr"],
+  ["resume-build-pr", "resume-build-main"],
+  ["resume-build-main", "resume-build-pr"],
+  ["docker-e2e-pr", "docker-e2e-main"],
+  ["docker-e2e-main", "docker-e2e-pr"],
+  ["images-pr", "images"],
+  ["images", "images-pr"],
+  ["tofu-plan", "tofu-apply"],
+  ["tofu-apply", "tofu-plan"],
+]);
+
 type CorpusLane = FixedCorpusLane & {
   p95DurationSeconds: number | null;
   totalWriteBytes: number;
+};
+
+type CorpusJob = {
+  branch: string;
+  stepKey: string;
+  buildNumber: number;
+  jobId: string;
+  jobState: string;
 };
 
 function percentChange(candidate: number, baseline: number): number | null {
@@ -72,7 +93,47 @@ function lanes(report: WindowIoReport): CorpusLane[] {
     );
 }
 
-function laneKey(lane: FixedCorpusLane): string {
+function corpusJobs(report: WindowIoReport): CorpusJob[] {
+  const startedJobs = new Set(
+    report.jobOutcomes
+      .filter((job) => job.started)
+      .map((job) => JSON.stringify([job.buildNumber, job.stepKey])),
+  );
+  return report.jobOutcomes
+    .flatMap((job) => {
+      const logicalStepKey = LOGICAL_LANE_BY_PIPELINE_STEP.get(job.stepKey);
+      // Buildkite represents a false step-level `if` as an unstarted broken
+      // job. Both PR and main variants are uploaded together, so ignore only
+      // an alias whose mutually exclusive counterpart actually started in the
+      // same build. A broken active alias and every other unsuccessful terminal
+      // state remain visible and make the corpus inconclusive below.
+      const counterpart = CONDITIONAL_STEP_COUNTERPART.get(job.stepKey);
+      const inactiveConditionalAlias =
+        !job.started &&
+        job.jobState === "broken" &&
+        counterpart !== undefined &&
+        startedJobs.has(JSON.stringify([job.buildNumber, counterpart]));
+      return logicalStepKey === undefined || inactiveConditionalAlias
+        ? []
+        : [
+            {
+              branch: job.branch,
+              stepKey: logicalStepKey,
+              buildNumber: job.buildNumber,
+              jobId: job.jobId,
+              jobState: job.jobState,
+            },
+          ];
+    })
+    .sort(
+      (left, right) =>
+        left.branch.localeCompare(right.branch) ||
+        left.stepKey.localeCompare(right.stepKey) ||
+        left.buildNumber - right.buildNumber,
+    );
+}
+
+function laneKey(lane: Pick<FixedCorpusLane, "branch" | "stepKey">): string {
   return JSON.stringify([lane.branch, lane.stepKey]);
 }
 
@@ -87,6 +148,10 @@ function duplicateLaneDescriptions(corpusLanes: FixedCorpusLane[]): string[] {
     seen.add(key);
   }
   return [...duplicates].sort();
+}
+
+function hasDuplicateLanes(corpusLanes: FixedCorpusLane[]): boolean {
+  return duplicateLaneDescriptions(corpusLanes).length > 0;
 }
 
 function exactLanePresence(
@@ -121,8 +186,46 @@ function missingRequiredLaneGroups(corpusLanes: FixedCorpusLane[]): string[] {
   ).map((group) => group.name);
 }
 
-function laneDescription(lane: FixedCorpusLane): string {
+function laneDescription(
+  lane: Pick<FixedCorpusLane, "branch" | "stepKey">,
+): string {
   return `${lane.branch} / ${lane.stepKey}`;
+}
+
+function corpusJobCountMismatches(
+  corpusLanes: FixedCorpusLane[],
+  jobs: CorpusJob[],
+): string[] {
+  const expected = new Map<string, number>();
+  const actual = new Map<string, number>();
+  const descriptions = new Map<string, string>();
+  for (const lane of corpusLanes) {
+    const key = laneKey(lane);
+    expected.set(key, (expected.get(key) ?? 0) + lane.jobCount);
+    descriptions.set(key, laneDescription(lane));
+  }
+  for (const job of jobs) {
+    const key = laneKey(job);
+    actual.set(key, (actual.get(key) ?? 0) + 1);
+    descriptions.set(key, laneDescription(job));
+  }
+  return [...new Set([...expected.keys(), ...actual.keys()])]
+    .filter((key) => expected.get(key) !== actual.get(key))
+    .map(
+      (key) =>
+        `${descriptions.get(key) ?? key} expected ${String(expected.get(key) ?? 0)}, found ${String(actual.get(key) ?? 0)}`,
+    )
+    .sort();
+}
+
+function unsuccessfulCorpusJobs(jobs: CorpusJob[]): string[] {
+  return jobs
+    .filter((job) => job.jobState !== "passed")
+    .map(
+      (job) =>
+        `#${job.buildNumber.toString()} ${laneDescription(job)} ${job.jobId} (${job.jobState})`,
+    )
+    .sort();
 }
 
 function enforceLaneDurationGates(
@@ -172,12 +275,106 @@ function hasUnfinishedBuild(report: WindowIoReport): boolean {
   return report.unfinishedBuilds.length > 0;
 }
 
+function corpusIntegrityReasons(input: {
+  baseline: WindowIoReport;
+  candidate: WindowIoReport;
+  baselineLanes: CorpusLane[];
+  candidateLanes: CorpusLane[];
+  baselineJobs: CorpusJob[];
+  candidateJobs: CorpusJob[];
+}): string[] {
+  const reasons: string[] = [];
+  const duplicateBaselineLanes = duplicateLaneDescriptions(input.baselineLanes);
+  if (duplicateBaselineLanes.length > 0) {
+    reasons.push(
+      `baseline fixed-corpus window mixes pipeline schemas for logical lanes: ${duplicateBaselineLanes.join(", ")}`,
+    );
+  }
+  const duplicateCandidateLanes = duplicateLaneDescriptions(
+    input.candidateLanes,
+  );
+  if (duplicateCandidateLanes.length > 0) {
+    reasons.push(
+      `candidate fixed-corpus window mixes pipeline schemas for logical lanes: ${duplicateCandidateLanes.join(", ")}`,
+    );
+  }
+
+  if (!exactLanePresence(input.baselineLanes, input.candidateLanes)) {
+    reasons.push("fixed-corpus lanes differ between comparison windows");
+  } else if (!exactLaneJobCounts(input.baselineLanes, input.candidateLanes)) {
+    reasons.push(
+      "fixed-corpus lane job counts differ between comparison windows",
+    );
+  }
+  const missingBaselineLaneGroups = missingRequiredLaneGroups(
+    input.baselineLanes,
+  );
+  if (missingBaselineLaneGroups.length > 0) {
+    reasons.push(
+      `baseline fixed-corpus window is missing required validation lanes: ${missingBaselineLaneGroups.join(", ")}`,
+    );
+  }
+  const missingCandidateLaneGroups = missingRequiredLaneGroups(
+    input.candidateLanes,
+  );
+  if (missingCandidateLaneGroups.length > 0) {
+    reasons.push(
+      `candidate fixed-corpus window is missing required validation lanes: ${missingCandidateLaneGroups.join(", ")}`,
+    );
+  }
+  const baselineJobCountMismatches = corpusJobCountMismatches(
+    input.baselineLanes,
+    input.baselineJobs,
+  );
+  if (baselineJobCountMismatches.length > 0) {
+    reasons.push(
+      `baseline fixed-corpus job records do not match lane counts: ${baselineJobCountMismatches.join(", ")}`,
+    );
+  }
+  const candidateJobCountMismatches = corpusJobCountMismatches(
+    input.candidateLanes,
+    input.candidateJobs,
+  );
+  if (candidateJobCountMismatches.length > 0) {
+    reasons.push(
+      `candidate fixed-corpus job records do not match lane counts: ${candidateJobCountMismatches.join(", ")}`,
+    );
+  }
+  const unsuccessfulBaselineJobs = unsuccessfulCorpusJobs(input.baselineJobs);
+  if (unsuccessfulBaselineJobs.length > 0) {
+    reasons.push(
+      `baseline fixed-corpus jobs did not all pass: ${unsuccessfulBaselineJobs.join(", ")}`,
+    );
+  }
+  const unsuccessfulCandidateJobs = unsuccessfulCorpusJobs(input.candidateJobs);
+  if (unsuccessfulCandidateJobs.length > 0) {
+    reasons.push(
+      `candidate fixed-corpus jobs did not all pass: ${unsuccessfulCandidateJobs.join(", ")}`,
+    );
+  }
+  if (
+    !hasCompleteTelemetry(input.baseline) ||
+    !hasCompleteTelemetry(input.candidate)
+  ) {
+    reasons.push("one or both fixed-corpus windows have incomplete telemetry");
+  }
+  if (
+    hasUnfinishedBuild(input.baseline) ||
+    hasUnfinishedBuild(input.candidate)
+  ) {
+    reasons.push("one or both fixed-corpus cohorts excluded unfinished builds");
+  }
+  return reasons;
+}
+
 export function fixedCorpusGate(
   baseline: WindowIoReport,
   candidate: WindowIoReport,
 ): FixedCorpusGate {
   const baselineLanes = lanes(baseline);
   const candidateLanes = lanes(candidate);
+  const baselineJobs = corpusJobs(baseline);
+  const candidateJobs = corpusJobs(candidate);
   const baselineCorpusWriteBytes = baselineLanes.reduce(
     (total, lane) => total + lane.totalWriteBytes,
     0,
@@ -199,54 +396,15 @@ export function fixedCorpusGate(
           baseline.summary.p95DurationSeconds,
         );
   const writeReduction = reductionPercent(writeChange);
-  const inconclusiveReasons: string[] = [];
+  const inconclusiveReasons = corpusIntegrityReasons({
+    baseline,
+    candidate,
+    baselineLanes,
+    candidateLanes,
+    baselineJobs,
+    candidateJobs,
+  });
   const thresholdReasons: string[] = [];
-
-  const duplicateBaselineLanes = duplicateLaneDescriptions(baselineLanes);
-  if (duplicateBaselineLanes.length > 0) {
-    inconclusiveReasons.push(
-      `baseline fixed-corpus window mixes pipeline schemas for logical lanes: ${duplicateBaselineLanes.join(", ")}`,
-    );
-  }
-  const duplicateCandidateLanes = duplicateLaneDescriptions(candidateLanes);
-  if (duplicateCandidateLanes.length > 0) {
-    inconclusiveReasons.push(
-      `candidate fixed-corpus window mixes pipeline schemas for logical lanes: ${duplicateCandidateLanes.join(", ")}`,
-    );
-  }
-
-  const sameLanes = exactLanePresence(baselineLanes, candidateLanes);
-  if (!sameLanes) {
-    inconclusiveReasons.push(
-      "fixed-corpus lanes differ between comparison windows",
-    );
-  } else if (!exactLaneJobCounts(baselineLanes, candidateLanes)) {
-    inconclusiveReasons.push(
-      "fixed-corpus lane job counts differ between comparison windows",
-    );
-  }
-  const missingBaselineLaneGroups = missingRequiredLaneGroups(baselineLanes);
-  if (missingBaselineLaneGroups.length > 0) {
-    inconclusiveReasons.push(
-      `baseline fixed-corpus window is missing required validation lanes: ${missingBaselineLaneGroups.join(", ")}`,
-    );
-  }
-  const missingCandidateLaneGroups = missingRequiredLaneGroups(candidateLanes);
-  if (missingCandidateLaneGroups.length > 0) {
-    inconclusiveReasons.push(
-      `candidate fixed-corpus window is missing required validation lanes: ${missingCandidateLaneGroups.join(", ")}`,
-    );
-  }
-  if (!hasCompleteTelemetry(baseline) || !hasCompleteTelemetry(candidate)) {
-    inconclusiveReasons.push(
-      "one or both fixed-corpus windows have incomplete telemetry",
-    );
-  }
-  if (hasUnfinishedBuild(baseline) || hasUnfinishedBuild(candidate)) {
-    inconclusiveReasons.push(
-      "one or both fixed-corpus cohorts excluded unfinished builds",
-    );
-  }
   if (writeReduction === null) {
     inconclusiveReasons.push(
       "aggregate write reduction could not be calculated",
@@ -254,10 +412,7 @@ export function fixedCorpusGate(
   } else if (writeReduction < 50) {
     thresholdReasons.push("aggregate write reduction is below 50%");
   }
-  if (
-    duplicateBaselineLanes.length === 0 &&
-    duplicateCandidateLanes.length === 0
-  ) {
+  if (!hasDuplicateLanes(baselineLanes) && !hasDuplicateLanes(candidateLanes)) {
     enforceLaneDurationGates(
       baselineLanes,
       candidateLanes,

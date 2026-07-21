@@ -4,7 +4,8 @@
 #
 # Invariant (scope-creep guard): verify is the only full-root install. Other
 # lanes use filtered installs or no install, and validate-pipeline.ts enforces
-# that boundary together with step-key pod attribution.
+# that boundary together with step-key pod attribution. Runtime commands use
+# `bun --no-install` so a fresh pod cannot trigger Bun's implicit auto-install.
 
 agents:
   queue: default
@@ -204,17 +205,17 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun .buildkite/scripts/validate-pipeline.ts
+      bun --no-install .buildkite/scripts/validate-pipeline.ts
       . .buildkite/scripts/docker-env.sh
       bun install --frozen-lockfile
       if [ "$BUILDKITE_BRANCH" = "main" ]; then SCOPE=""; else SCOPE="--affected"; fi
       set +e
-      bun run verify -- $$SCOPE --filter='!sjer.red' --filter='!@shepherdjerred/resume' --concurrency=6 --output-logs=errors-only --summarize
+      bun --no-install run verify -- $$SCOPE --filter='!sjer.red' --filter='!@shepherdjerred/resume' --concurrency=6 --output-logs=errors-only --summarize
       verify_status=$?
       set -e
-      bun scripts/annotate-turbo-summary.ts
+      bun --no-install scripts/annotate-turbo-summary.ts
       if [ "$$verify_status" -eq 0 ]; then
-        bun packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts caddyfile.generated
+        bun --no-install packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts caddyfile.generated
       fi
       exit "$$verify_status"
     artifact_paths:
@@ -433,7 +434,7 @@ steps:
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@homelab/cdk8s'
       cd packages/homelab/src/cdk8s
-      bun run generate-helm-types --check
+      bun --no-install run generate-helm-types --check
     retry: *retry
     plugins:
       - kubernetes:
@@ -461,7 +462,7 @@ steps:
       . .buildkite/scripts/toolchain.sh
       . .buildkite/scripts/docker-env.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/llm-observability'
-      bun run --cwd packages/llm-observability test:e2e
+      bun --no-install run --cwd packages/llm-observability test:e2e
     retry: *retry
     plugins:
       - kubernetes:
@@ -480,7 +481,7 @@ steps:
       . .buildkite/scripts/toolchain.sh
       . .buildkite/scripts/docker-env.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/llm-observability'
-      bun run --cwd packages/llm-observability test:e2e
+      bun --no-install run --cwd packages/llm-observability test:e2e
     retry: *retry
     plugins:
       - kubernetes:
@@ -688,7 +689,7 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
-      bun scripts/wait-for-greptile.ts
+      bun --no-install scripts/wait-for-greptile.ts
     retry: *retry
     plugins:
       - kubernetes:
@@ -721,7 +722,7 @@ steps:
       . .buildkite/scripts/toolchain.sh
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       for stack in seaweedfs tailscale buildkite arr pagerduty github cloudflare; do
-        bun packages/homelab/scripts/tofu-stack.ts "$$stack" plan
+        bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" plan
       done
     retry: *retry
     plugins:
@@ -809,6 +810,7 @@ steps:
         - "packages/resume/**"
         - "packages/webring/**"
         - "packages/astro-opengraph-images/**"
+        - "packages/llm-models/**"
         - "packages/cooklang-rich-preview/**"
         - "packages/stocks-sjer-red/**"
         - "packages/better-skill-capped/**"
@@ -825,14 +827,14 @@ steps:
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red better-skill-capped glitter; do
-        bun scripts/deploy-site.ts "$$site" --dry-run
+        bun --no-install scripts/deploy-site.ts "$$site" --dry-run
       done
       # Scout sites deploy versioned + stage-pinned (not via the catalog);
       # rehearse all three subcommands so PRs exercise the real main path.
-      bun scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
-      bun scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
-      bun scripts/scout-site-release.ts reconcile-prod --dry-run
-      bun scripts/promote-scout.ts --ci --site-version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
+      bun --no-install scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
+      bun --no-install scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
+      bun --no-install scripts/scout-site-release.ts reconcile-prod --dry-run
+      bun --no-install scripts/promote-scout.ts --ci --site-version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
     retry: *retry
     plugins:
       - kubernetes:
@@ -860,7 +862,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER" --dry-run
+      bun --no-install packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER" --dry-run
     retry: *retry
     plugins:
       - kubernetes:
@@ -890,7 +892,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun scripts/release.ts --dry-run
+      bun --no-install scripts/release.ts --dry-run
     retry: *retry
     plugins:
       - kubernetes:
@@ -984,22 +986,22 @@ steps:
       if $$site_sjer; then
         buildkite-agent artifact download "packages/sjer.red/dist/**/*" . --step playwright-e2e-main
         buildkite-agent artifact download "packages/sjer.red/dist/*" . --step playwright-e2e-main
-        bun scripts/deploy-site.ts sjer.red --prebuilt
+        bun --no-install scripts/deploy-site.ts sjer.red --prebuilt
       fi
       if $$site_resume; then
         buildkite-agent artifact download "packages/resume/resume.pdf" . --step resume-build-main
-        bun scripts/deploy-site.ts resume --prebuilt
+        bun --no-install scripts/deploy-site.ts resume --prebuilt
       fi
-      if $$site_webring; then bun scripts/deploy-site.ts webring; fi
-      if $$site_cooklang; then bun scripts/deploy-site.ts cooklang-rich-preview; fi
-      if $$site_stocks; then bun scripts/deploy-site.ts stocks-sjer-red; fi
-      if $$site_better_skill_capped; then bun scripts/deploy-site.ts better-skill-capped; fi
-      if $$site_glitter; then bun scripts/deploy-site.ts glitter; fi
+      if $$site_webring; then bun --no-install scripts/deploy-site.ts webring; fi
+      if $$site_cooklang; then bun --no-install scripts/deploy-site.ts cooklang-rich-preview; fi
+      if $$site_stocks; then bun --no-install scripts/deploy-site.ts stocks-sjer-red; fi
+      if $$site_better_skill_capped; then bun --no-install scripts/deploy-site.ts better-skill-capped; fi
+      if $$site_glitter; then bun --no-install scripts/deploy-site.ts glitter; fi
       if $$site_scout; then
-        bun run --cwd packages/llm-models build
-        bun run --cwd packages/astro-opengraph-images build
-        bun scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
-        bun scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
+        bun --no-install run --cwd packages/llm-models build
+        bun --no-install run --cwd packages/astro-opengraph-images build
+        bun --no-install scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
+        bun --no-install scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
       fi
     retry: *retry
     plugins:
@@ -1029,12 +1031,12 @@ steps:
         --filter astro-opengraph-images \
         --filter webring \
         --filter '@shepherdjerred/helm-types'
-      bun run --cwd packages/astro-opengraph-images publish:npm
-      bun run --cwd packages/webring publish:npm
-      bun run --cwd packages/homelab/src/helm-types publish:npm
-      bun scripts/publish-npm.ts packages/astro-opengraph-images --dev-suffix "$BUILDKITE_BUILD_NUMBER"
-      bun scripts/publish-npm.ts packages/webring --dev-suffix "$BUILDKITE_BUILD_NUMBER"
-      bun scripts/publish-npm.ts packages/homelab/src/helm-types --dev-suffix "$BUILDKITE_BUILD_NUMBER"
+      bun --no-install run --cwd packages/astro-opengraph-images publish:npm
+      bun --no-install run --cwd packages/webring publish:npm
+      bun --no-install run --cwd packages/homelab/src/helm-types publish:npm
+      bun --no-install scripts/publish-npm.ts packages/astro-opengraph-images --dev-suffix "$BUILDKITE_BUILD_NUMBER"
+      bun --no-install scripts/publish-npm.ts packages/webring --dev-suffix "$BUILDKITE_BUILD_NUMBER"
+      bun --no-install scripts/publish-npm.ts packages/homelab/src/helm-types --dev-suffix "$BUILDKITE_BUILD_NUMBER"
     retry: *retry
     plugins:
       - kubernetes:
@@ -1054,7 +1056,7 @@ steps:
       . .buildkite/scripts/toolchain.sh
       buildkite-agent artifact download "packages/homelab/src/cdk8s/dist/**/*" . --step verify
       buildkite-agent artifact download "packages/homelab/src/cdk8s/dist/*" . --step verify
-      bun packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER"
+      bun --no-install packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER"
     retry: *retry
     plugins:
       - kubernetes:
@@ -1073,7 +1075,7 @@ steps:
       . .buildkite/scripts/toolchain.sh
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       for stack in seaweedfs tailscale buildkite arr pagerduty; do
-        bun packages/homelab/scripts/tofu-stack.ts "$$stack" apply
+        bun --no-install packages/homelab/scripts/tofu-stack.ts "$$stack" apply
       done
     retry: *retry
     plugins:
@@ -1096,7 +1098,7 @@ steps:
       if ! bash .buildkite/scripts/ci-changed.sh tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-      bun packages/homelab/scripts/tofu-stack.ts github apply
+      bun --no-install packages/homelab/scripts/tofu-stack.ts github apply
     plugins:
       - kubernetes:
           <<: *pod_light_kubernetes
@@ -1116,8 +1118,8 @@ steps:
       # The CI secret uses the argocd CLI's canonical ARGOCD_AUTH_TOKEN name;
       # argocd.ts reads ARGOCD_TOKEN (build 5648).
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
-      bun packages/homelab/scripts/argocd.ts sync apps
-      bun packages/homelab/scripts/argocd.ts tree-health-wait apps --timeout 300
+      bun --no-install packages/homelab/scripts/argocd.ts sync apps
+      bun --no-install packages/homelab/scripts/argocd.ts tree-health-wait apps --timeout 300
     retry: *retry
     plugins:
       - kubernetes:
@@ -1145,7 +1147,7 @@ steps:
       bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       # SeaweedFS creds: reads archive manifests to gate on real scout changes.
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-      bun scripts/promote-scout.ts --ci --site-version "2.0.0-$BUILDKITE_BUILD_NUMBER"
+      bun --no-install scripts/promote-scout.ts --ci --site-version "2.0.0-$BUILDKITE_BUILD_NUMBER"
     plugins:
       - kubernetes:
           <<: *pod_light_kubernetes
@@ -1172,7 +1174,7 @@ steps:
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-      bun scripts/scout-site-release.ts reconcile-prod
+      bun --no-install scripts/scout-site-release.ts reconcile-prod
     retry: *retry
     plugins:
       - kubernetes:
@@ -1198,9 +1200,9 @@ steps:
       bun install --frozen-lockfile --filter '@homelab/cdk8s' --production
       # Same ARGOCD_AUTH_TOKEN → ARGOCD_TOKEN mapping as the sync step.
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
-      bun packages/homelab/scripts/argocd.ts wait-deletion apps --group networking.cfargotunnel.com --version v1alpha1 --kind TunnelBinding --namespace seaweedfs --timeout 120
+      bun --no-install packages/homelab/scripts/argocd.ts wait-deletion apps --group networking.cfargotunnel.com --version v1alpha1 --kind TunnelBinding --namespace seaweedfs --timeout 120
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
-      bun packages/homelab/scripts/tofu-stack.ts cloudflare apply
+      bun --no-install packages/homelab/scripts/tofu-stack.ts cloudflare apply
     # Safe to retry: tofu re-plans from state, and the scripts only exit 34
     # (the retryable code) on classified transient failures.
     retry: *retry
@@ -1223,7 +1225,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun scripts/release.ts
+      bun --no-install scripts/release.ts
     # Safe to retry: release-please upserts its PR and skips already-cut
     # releases; a GitHub GraphQL 500 (build 5809) exits 34 via transient.ts.
     retry: *retry
@@ -1247,7 +1249,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun scripts/update-versions.ts --commit-back "2.0.0-$BUILDKITE_BUILD_NUMBER" --digests "$$(buildkite-agent meta-data get image-digests)"
+      bun --no-install scripts/update-versions.ts --commit-back "2.0.0-$BUILDKITE_BUILD_NUMBER" --digests "$$(buildkite-agent meta-data get image-digests)"
     # Safe to retry: the bump branch is force-updated and the PR lookup is
     # find-or-create; transient gh/git failures exit 34 via transient.ts.
     retry: *retry
@@ -1270,7 +1272,7 @@ steps:
       if ! bash .buildkite/scripts/ci-changed.sh cooklang; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter cooklang-for-obsidian
-      bun run --cwd packages/cooklang-for-obsidian publish:plugin
+      bun --no-install run --cwd packages/cooklang-for-obsidian publish:plugin
     plugins:
       - kubernetes:
           <<: *pod_light_kubernetes

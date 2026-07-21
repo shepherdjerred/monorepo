@@ -143,6 +143,34 @@ for (const required of [
   }
 }
 
+function selectorLane(lane: string): string {
+  const match = ciChanged.match(
+    new RegExp(`^  ${lane}\\)\\n([\\s\\S]*?)^    ;;$`, "m"),
+  );
+  const block = match?.[1];
+  if (block === undefined) {
+    fail(`runtime CI selector is missing lane ${lane}`);
+  }
+  return block;
+}
+
+for (const lane of [
+  "site-scout",
+  "sites",
+  "scout-promotion",
+  "scout-reconcile",
+]) {
+  const block = selectorLane(lane);
+  for (const dependency of [
+    "packages/astro-opengraph-images",
+    "packages/llm-models",
+  ]) {
+    if (!block.includes(dependency)) {
+      fail(`runtime CI selector ${lane} is missing ${dependency}`);
+    }
+  }
+}
+
 const selectImageTargets = await Bun.file(
   ".buildkite/scripts/select-image-targets.ts",
 ).text();
@@ -220,11 +248,21 @@ for (const required of [
   "--filter '@scout-for-lol/app'",
   "--filter astro-opengraph-images",
   "--filter '@shepherdjerred/llm-models'",
-  "bun run --cwd packages/llm-models build",
-  "bun run --cwd packages/astro-opengraph-images build",
+  "bun --no-install run --cwd packages/llm-models build",
+  "bun --no-install run --cwd packages/astro-opengraph-images build",
 ]) {
   if (sites === undefined || !sites.includes(required)) {
     fail(`sites install closure is missing ${required}`);
+  }
+}
+
+const sitesPr = stepBlocks.get("sites-pr");
+for (const dependency of [
+  '"packages/astro-opengraph-images/**"',
+  '"packages/llm-models/**"',
+]) {
+  if (sitesPr === undefined || !sitesPr.includes(dependency)) {
+    fail(`sites-pr path gate is missing ${dependency}`);
   }
 }
 
@@ -291,7 +329,66 @@ if (
   fail("the only unfiltered root install must belong to verify");
 }
 
+// Bun auto-installs dependencies when a checkout has no node_modules. Every
+// Buildkite step starts from a fresh pod, so an otherwise dependency-free
+// `bun script.ts` can silently turn into a full root install. Require every
+// runtime invocation to disable auto-install explicitly; intentional installs
+// remain visible as `bun install`, and bunx remains explicit for pinned CLIs.
 const bakeImages = await Bun.file(".buildkite/scripts/bake-images.sh").text();
+const implicitBunInstall = /\bbun\s+(?!install(?:\s|$)|--no-install(?:\s|$))/g;
+const runtimeCommandSources: { path: string; source: string }[] = [
+  { path: PIPELINE_PATH, source: pipeline },
+  { path: ".buildkite/scripts/ci-changed.sh", source: ciChanged },
+  { path: ".buildkite/scripts/bake-images.sh", source: bakeImages },
+];
+for (const { path, source } of runtimeCommandSources) {
+  const commands = source
+    .split("\n")
+    .filter((line) => !/^\s*#/.test(line))
+    .join("\n");
+  const implicitMatch = implicitBunInstall.exec(commands);
+  implicitBunInstall.lastIndex = 0;
+  if (implicitMatch !== null) {
+    const beforeMatch = commands.slice(0, implicitMatch.index);
+    const line = beforeMatch.split("\n").length;
+    fail(
+      `Bun runtime in ${path} at filtered line ${line.toString()} can auto-install dependencies`,
+    );
+  }
+}
+
+// The shell-level scan cannot see Bun processes launched by the automation
+// scripts themselves. Check every child-Bun launcher reachable from a
+// dependency-minimized pipeline lane and allow only explicit no-install
+// runtimes or Bun subcommands that do not execute repository code.
+const automationSources = [
+  "scripts/lib/github-auth.ts",
+  "scripts/deploy-site.ts",
+  "scripts/scout-site-release.ts",
+  "scripts/publish-npm.ts",
+  "scripts/check-large-files.ts",
+  "packages/scout-for-lol/scripts/build-bucket.ts",
+  "packages/homelab/scripts/helm-push.ts",
+  "packages/homelab/scripts/smoke-images.ts",
+  "packages/homelab/src/cdk8s/scripts/check-caddyfile.ts",
+  "packages/homelab/src/cdk8s/scripts/generate-helm-types.ts",
+];
+const implicitChildBun =
+  /\[\s*"bun",(?!\s*"(?:--no-install|install|x|publish)")/s;
+const implicitBuildCommand = /buildCmd:\s*["'`]bun\s+(?!--no-install(?:\s|$))/;
+const implicitTaggedBun =
+  /(?:Bun\.)?\$`bun\s+(?!--no-install(?:\s|$)|install(?:\s|$)|x(?:\s|$)|publish(?:\s|$))/;
+for (const path of automationSources) {
+  const source = await Bun.file(path).text();
+  if (
+    implicitChildBun.test(source) ||
+    implicitBuildCommand.test(source) ||
+    implicitTaggedBun.test(source)
+  ) {
+    fail(`nested Bun runtime in ${path} can auto-install dependencies`);
+  }
+}
+
 if (bakeImages.includes("ALWAYS_ON_TARGETS")) {
   fail("bake-images.sh restored the always-on image target workaround");
 }
