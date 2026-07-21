@@ -23,14 +23,17 @@ const SHELFBRIDGE_PORT = 8787;
 
 /**
  * ShelfBridge — Torznab bridge for direct-download book sources (LibGen,
- * Anna's Archive, Z-Library). Registered in Prowlarr as a generic Torznab
- * indexer (tofu: prowlarr_indexer_torznab) so Bindery searches hit shadow
- * libraries alongside the torrent indexers; grabs come back as webseed
+ * Anna's Archive, Z-Library). Registered directly in Bindery as a Torznab
+ * indexer (one-time UI step; see the operator guide) so Bindery searches hit
+ * shadow libraries alongside Prowlarr indexers; grabs come back as webseed
  * .torrents that qBittorrent downloads through this service's proxy.
+ *
+ * Note: Prowlarr registration via tofu was the original plan but was dropped
+ * because the devopsarr/prowlarr provider has no generic Torznab resource.
  *
  * PUBLIC_BASE_URL must resolve from inside the qBittorrent pod (gluetun
  * netns) — the cluster Service DNS name, not a Tailscale name. No ingress:
- * the only consumers are in-namespace (Prowlarr API queries, qBit webseeds).
+ * the only consumers are in-namespace (Bindery API queries, qBit webseeds).
  *
  * Z-Library is enabled anonymously (no ZLIB_EMAIL/PASSWORD) — returns
  * anonymous-tier results; wire creds later by adding envs + 1Password fields.

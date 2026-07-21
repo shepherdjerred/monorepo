@@ -11,6 +11,13 @@
 # SHELFBRIDGE_SOURCE_REF); upstream has no tagged releases yet, so we pin main's
 # HEAD commit like redlib.
 
+# Pinned shelfbridge commit. Advanced by Renovate's git-refs manager (renovate.json).
+# Declared globally so both the builder and release stages inherit the same value
+# (redeclaring `ARG SHELFBRIDGE_SOURCE_REF` without a default in each stage pulls
+# this default in) — the image revision label stays in lock-step with the checkout.
+# renovate: datasource=git-refs depName=shelfbridge-source branch=main
+ARG SHELFBRIDGE_SOURCE_REF=6551bc2464d76f4e119a229aa7168e26447e2604
+
 ########################
 ## builder image
 ########################
@@ -19,9 +26,7 @@ FROM golang:1.26-alpine@sha256:0178a641fbb4858c5f1b48e34bdaabe0350a330a1b1149aab
 
 RUN apk add --no-cache git ca-certificates
 
-# Pinned shelfbridge commit. Advanced by Renovate's git-refs manager (renovate.json).
-# renovate: datasource=git-refs depName=shelfbridge-source branch=main
-ARG SHELFBRIDGE_SOURCE_REF=6551bc2464d76f4e119a229aa7168e26447e2604
+ARG SHELFBRIDGE_SOURCE_REF
 
 WORKDIR /shelfbridge
 RUN set -e \
@@ -50,7 +55,8 @@ EXPOSE 8787
 
 HEALTHCHECK --interval=1m --timeout=3s CMD wget --spider -q http://localhost:8787/health || exit 1
 
+ARG SHELFBRIDGE_SOURCE_REF
 LABEL org.opencontainers.image.source="https://github.com/selmant/shelfbridge"
-LABEL org.opencontainers.image.revision.shelfbridge="6551bc2464d76f4e119a229aa7168e26447e2604"
+LABEL org.opencontainers.image.revision.shelfbridge="${SHELFBRIDGE_SOURCE_REF}"
 
 ENTRYPOINT ["/usr/local/bin/shelfbridge"]
