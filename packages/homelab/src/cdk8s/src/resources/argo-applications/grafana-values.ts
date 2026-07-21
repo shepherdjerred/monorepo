@@ -77,7 +77,7 @@ export function createGrafanaValues(
         },
       },
     },
-    defaultDashboardsEnabled: false,
+    defaultDashboardsEnabled: true,
     // Baseline request (no limits) so dashboards aren't BestEffort.
     // 30d peak ~55m / ~910Mi.
     resources: {
