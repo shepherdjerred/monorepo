@@ -142,13 +142,13 @@ const versions = {
   // prod backend without the matching site content and reintroduce tRPC
   // contract skew).
   "shepherdjerred/scout-for-lol/prod":
-    "2.0.0-4791@sha256:bfd87a5cebfa8567cf14d077cd58bcf84f6315d04ea962468695e1fc99bf58e6",
+    "2.0.0-5930@sha256:bb9e9991f6874c5f96b8e0f2c283acb1359efb435774d89572c7ed63daae4e3d",
   // not managed by renovate — promoted with scripts/promote-scout.ts, in
   // lockstep with shepherdjerred/scout-for-lol/prod. Version of the archived
   // site artifact (scout-site-releases bucket) the prod bucket is synced from
   // by the scout-prod-reconcile CI step. "unpromoted" = pre-first-promotion
   // sentinel: reconcile logs and exits without touching the prod bucket.
-  "scout-for-lol-site/prod": "unpromoted",
+  "scout-for-lol-site/prod": "2.0.0-5941",
   // not managed by renovate — beta updated by version-commit-back
   "shepherdjerred/starlight-karma-bot/beta":
     "2.0.0-5930@sha256:b5c05ff67549e1aca172328e00078538272c7a7e0babdb71b681fd7e856f943d",
