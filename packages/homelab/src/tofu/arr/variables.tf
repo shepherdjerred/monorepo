@@ -63,6 +63,46 @@ variable "privatehd_pid" {
   }
 }
 
+variable "avistaz_password" {
+  description = "AvistaZ (avistaz.to) account password for the Prowlarr AvistaZ indexer."
+  type        = string
+  sensitive   = true
+  validation {
+    condition     = length(var.avistaz_password) > 0
+    error_message = "avistaz_password must be non-empty (set AVISTAZ_PASSWORD / TF_VAR_avistaz_password)."
+  }
+}
+
+variable "avistaz_pid" {
+  description = "AvistaZ PID (per-account token from My Account / My Profile) for the Prowlarr AvistaZ indexer."
+  type        = string
+  sensitive   = true
+  validation {
+    condition     = length(var.avistaz_pid) > 0
+    error_message = "avistaz_pid must be non-empty (set AVISTAZ_PID / TF_VAR_avistaz_pid)."
+  }
+}
+
+variable "animez_password" {
+  description = "AnimeZ (animez.to) account password for the Prowlarr AnimeZ indexer."
+  type        = string
+  sensitive   = true
+  validation {
+    condition     = length(var.animez_password) > 0
+    error_message = "animez_password must be non-empty (set ANIMEZ_PASSWORD / TF_VAR_animez_password)."
+  }
+}
+
+variable "animez_pid" {
+  description = "AnimeZ PID (per-account token from My Account / My Profile) for the Prowlarr AnimeZ indexer."
+  type        = string
+  sensitive   = true
+  validation {
+    condition     = length(var.animez_pid) > 0
+    error_message = "animez_pid must be non-empty (set ANIMEZ_PID / TF_VAR_animez_pid)."
+  }
+}
+
 variable "cloudflare_account_id" {
   description = "Cloudflare account ID (passed to every stack, unused by *arr resources)"
   type        = string

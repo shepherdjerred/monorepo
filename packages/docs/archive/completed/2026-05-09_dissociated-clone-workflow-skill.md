@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-09-dissociated-clone-workflow-skill
+type: reference
+status: complete
+board: false
+---
+
 # Dissociated-Clone Workflow Skill
-
-## Status
-
-Complete
 
 ## Context
 

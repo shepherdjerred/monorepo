@@ -1,8 +1,11 @@
+---
+id: log-2026-06-02-scout-beta-report-rendering-diagnosis
+type: log
+status: complete
+board: false
+---
+
 # Scout Beta Report Rendering Diagnosis
-
-## Status
-
-Complete
 
 ## Summary
 

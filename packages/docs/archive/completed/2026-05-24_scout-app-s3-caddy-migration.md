@@ -1,10 +1,11 @@
+---
+id: reference-completed-2026-05-24-scout-app-s3-caddy-migration
+type: reference
+status: complete
+board: false
+---
+
 # Scout-app: serve SPA from shared Caddy, kill the broken in-cluster Caddy
-
-## Status
-
-**Complete** — all plan-scoped work verified shipped to `main` during the 2026-06-06 docs groom; archived to `archive/completed/`. Original tracking status preserved below.
-
-Partially Complete — code is in PR; awaiting (1) merge → ArgoCD sync, (2) one-time `aws s3 mb s3://scout-frontend-beta` against SeaweedFS.
 
 ## Context
 

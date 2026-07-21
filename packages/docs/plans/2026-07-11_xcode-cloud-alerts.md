@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-11-xcode-cloud-alerts
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Xcode Cloud build-failure alerts → Alertmanager → PagerDuty
-
-## Status
-
-In Progress — code complete + tested; awaiting 1Password field + snapshot, deploy, and App Store Connect webhook registration.
 
 ## Context
 
@@ -108,3 +113,7 @@ webhook delivery-report re-send confirms end-to-end.
   at verification time and tighten fixtures if needed.
 - Alert auto-resolves after 6h if no SUCCEEDED arrives (branch deleted/renamed); tune
   `XCODE_CLOUD_ALERT_TTL_SECONDS` if that's too short/long.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Xcode Cloud build-failure alerts → Alertmanager → PagerDuty`.

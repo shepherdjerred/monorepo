@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-06-cancel-buildkite-builds-on-pr-close
+type: reference
+status: complete
+board: false
+---
+
 # Cancel Buildkite builds when a PR is closed/merged
-
-## Status
-
-Complete (code shipped on branch; deploy + 1P token-scope upgrade remain — see Remaining)
 
 ## Context
 

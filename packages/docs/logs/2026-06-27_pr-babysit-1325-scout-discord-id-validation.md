@@ -1,8 +1,11 @@
+---
+id: log-2026-06-27-pr-babysit-1325-scout-discord-id-validation
+type: log
+status: complete
+board: false
+---
+
 # PR Babysit: #1325 — Scout Discord ID Validation
-
-## Status
-
-Complete
 
 ## Summary
 

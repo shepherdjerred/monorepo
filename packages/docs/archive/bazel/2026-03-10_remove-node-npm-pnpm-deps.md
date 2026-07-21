@@ -1,3 +1,10 @@
+---
+id: reference-bazel-2026-03-10-remove-node-npm-pnpm-deps
+type: reference
+status: complete
+board: false
+---
+
 # Plan: Remove all node/npm/pnpm dependencies — Bun only
 
 ## Status: ~95% Complete (2026-03-19)

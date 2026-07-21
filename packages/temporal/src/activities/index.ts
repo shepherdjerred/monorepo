@@ -19,6 +19,8 @@ import { readmeRefreshActivities } from "./readme-refresh.ts";
 import { llmCatalogRefreshActivities } from "./llm-catalog-refresh.ts";
 import { prBabysitActivities } from "./pr-babysit/index.ts";
 import { scoutImageGcActivities } from "./scout-image-gc.ts";
+import { homelabCrdImportsRefreshActivities } from "./homelab-crd-imports-refresh.ts";
+import { scoutShowcaseRefreshActivities } from "./scout-showcase-refresh.ts";
 
 export const activities = {
   ...fetcherActivities,
@@ -42,4 +44,6 @@ export const activities = {
   ...llmCatalogRefreshActivities,
   ...prBabysitActivities,
   ...scoutImageGcActivities,
+  ...homelabCrdImportsRefreshActivities,
+  ...scoutShowcaseRefreshActivities,
 };

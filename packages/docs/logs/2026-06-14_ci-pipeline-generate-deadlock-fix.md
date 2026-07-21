@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-ci-pipeline-generate-deadlock-fix
+type: log
+status: complete
+board: false
+---
+
 # CI pipeline-generate deadlock — pagination + emergency override
-
-## Status
-
-In Progress
 
 ## What broke
 

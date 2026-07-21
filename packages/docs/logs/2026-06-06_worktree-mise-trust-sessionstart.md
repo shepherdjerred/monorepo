@@ -1,8 +1,11 @@
+---
+id: log-2026-06-06-worktree-mise-trust-sessionstart
+type: log
+status: complete
+board: false
+---
+
 # Move mise-trust hook from WorktreeCreate to SessionStart
-
-## Status
-
-Complete
 
 ## Problem
 

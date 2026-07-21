@@ -1,11 +1,11 @@
+---
+id: log-2026-07-03-scout-seo-sweep
+type: log
+status: complete
+board: false
+---
+
 # Scout for LoL — SEO + Mobile/Desktop Usability Sweep
-
-## Status
-
-Complete (audit only — no code changes)
-
-Audited the live marketing site **https://scout-for-lol.com/** and cross-referenced
-every finding against source in `packages/scout-for-lol/packages/frontend/`.
 
 ## SEO findings (prioritized)
 

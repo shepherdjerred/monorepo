@@ -1,6 +1,10 @@
 ---
 id: pokemon-docs-site
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
@@ -32,9 +36,9 @@ place that explains setup or the Emerald-only constraint.
   template; pick one consistent with how `*.sjer.red` sites are hosted (see the
   static-site hosting topology — most are SeaweedFS S3 buckets, CI-synced).
 
-## Done when
+## Remaining
 
-- A docs site exists for discord-plays-pokemon with a simplified getting-started
-  flow, feature pages for goal mode / event notifications / Go-Live streaming,
-  and a clear "Emerald only" statement.
-- It's built + hosted (or at least buildable in CI) like the other doc sites.
+- [ ] A docs site exists for discord-plays-pokemon with a simplified getting-started
+      flow, feature pages for goal mode / event notifications / Go-Live streaming,
+      and a clear "Emerald only" statement.
+- [ ] It's built + hosted (or at least buildable in CI) like the other doc sites.

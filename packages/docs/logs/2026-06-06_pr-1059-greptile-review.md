@@ -1,8 +1,11 @@
+---
+id: log-2026-06-06-pr-1059-greptile-review
+type: log
+status: complete
+board: false
+---
+
 # PR 1059 — finish Greptile review on stream machine
-
-## Status
-
-Complete
 
 ## Final state (commit 57fd431f9)
 

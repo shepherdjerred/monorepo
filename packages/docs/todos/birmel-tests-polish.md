@@ -1,6 +1,10 @@
 ---
 id: birmel-tests-polish
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
@@ -26,14 +30,14 @@ Current state (`packages/birmel`, VoltAgent + Claude AI):
   youtube-stream-resource, openclaw-capabilities-docker) — **no full happy-path
   (message → routing → tool → response) and no Dagger e2e**.
 
-## Done when
+## Remaining
 
-- Integration tests cover agent delegation + tool execution and persona
-  injection.
-- An e2e test exercises the happy path: user message → routing-agent → specialist
-  → tool → response.
-- New functionality added per the roadmap, with the bot verified working on a
-  real Discord server.
+- [ ] Integration tests cover agent delegation + tool execution and persona
+      injection.
+- [ ] An e2e test exercises the happy path: user message → routing-agent → specialist
+      → tool → response.
+- [ ] New functionality added per the roadmap, with the bot verified working on a
+      real Discord server.
 
 ## References
 

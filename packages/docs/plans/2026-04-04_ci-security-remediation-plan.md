@@ -1,8 +1,13 @@
+---
+id: plan-2026-04-04-ci-security-remediation-plan
+type: plan
+status: planned
+board: true
+verification: agent
+disposition: active
+---
+
 # CI Security Audit: Buildkite + Dagger
-
-## Status
-
-Planned. Fork PR builds remain disabled; complete this before enabling external contributor CI.
 
 ## Context
 
@@ -240,3 +245,7 @@ Add `--reject-secrets` to `buildkite-agent pipeline upload` in `generate-pipelin
 4. **Main branch:** Merge to main — confirm full pipeline with secrets for deploy steps
 5. **CODEOWNERS:** Open a PR modifying `scripts/ci/` — confirm review required
 6. **Tofu block:** Trigger main build — confirm pause before tofu apply
+
+## Remaining
+
+- [ ] Complete and verify the work described in `CI Security Audit: Buildkite + Dagger`.

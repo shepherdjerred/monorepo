@@ -1,10 +1,11 @@
+---
+id: log-2026-06-26-scout-bugsink-open-issue-triage
+type: log
+status: complete
+board: false
+---
+
 # Scout for LoL — Bugsink open-issue triage (2026-06-26)
-
-## Status
-
-Complete — triage + fixes shipped as PRs #1322 (champion 805/Locke + asset refresh)
-and #1323 (queue 710/3220, pre-start defer, tRPC noise). Plan mode was used; the
-approved plan is at `~/.claude/plans/let-s-update-assets-to-generic-canyon.md`.
 
 ## Context
 

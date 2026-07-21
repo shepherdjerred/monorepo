@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-07-streambot-subtitles
+type: reference
+status: complete
+board: false
+---
+
 # Streambot — Subtitle Support
-
-## Status
-
-Complete
 
 ## Context
 

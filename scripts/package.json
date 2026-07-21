@@ -4,9 +4,11 @@
   "type": "module",
   "scripts": {
     "lint": "bunx eslint --cache .",
+    "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@homelab/cdk8s": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "^1.3.12",
     "eslint": "^10.7.0",

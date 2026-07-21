@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-13-tofu-plan-ci-serialization
+type: reference
+status: complete
+board: false
+---
+
 # Tofu-plan CI serialization fix
-
-## Status
-
-Complete
 
 ## Context
 

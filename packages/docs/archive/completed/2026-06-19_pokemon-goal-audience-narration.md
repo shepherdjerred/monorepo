@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-19-pokemon-goal-audience-narration
+type: reference
+status: complete
+board: false
+---
+
 # Pokémon `/goal` — encourage mid-session audience narration
-
-## Status
-
-Complete — shipped in PR #1282.
 
 ## Context
 

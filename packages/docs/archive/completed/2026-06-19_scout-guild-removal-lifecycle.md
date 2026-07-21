@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-19-scout-guild-removal-lifecycle
+type: reference
+status: complete
+board: false
+---
+
 # Scout-for-LoL: Guild-removal lifecycle + DM audit log
-
-## Status
-
-Complete — code shipped in PR #1269; one-time prod cleanup tracked in todos/scout-orphan-guild-prod-cleanup.md.
 
 ## Context
 

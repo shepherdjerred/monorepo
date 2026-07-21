@@ -1,3 +1,10 @@
+---
+id: reference-on-hold-2026-02-22-sentinel-deployment
+type: reference
+status: complete
+board: false
+---
+
 # Sentinel Deployment Guide
 
 ## Prerequisites

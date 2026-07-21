@@ -1,6 +1,11 @@
-## Status
+---
+id: log-2026-06-13-mk64-backend-reset-screenshots
+type: log
+status: complete
+board: false
+---
 
-Complete
+# Mk64 Backend Reset Screenshots
 
 ## Summary
 

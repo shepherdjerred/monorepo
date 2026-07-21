@@ -1,8 +1,11 @@
+---
+id: log-2026-07-10-quality-wave-2-new-test-suites
+type: log
+status: complete
+board: false
+---
+
 # Quality Wave 2 — New Test Suites + Typecheck Inclusion
-
-## Status
-
-Complete
 
 ## Scope
 

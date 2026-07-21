@@ -1,8 +1,11 @@
+---
+id: log-2026-07-01-pr-1353-llm-catalog-refresh-fixes
+type: log
+status: complete
+board: false
+---
+
 # PR #1353: LLM Catalog Refresh Fixes
-
-## Status
-
-Complete
 
 ## Context
 

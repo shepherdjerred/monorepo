@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-10-tasknotes-recurring-and-wiring
+type: reference
+status: complete
+board: false
+---
+
 # Fix Recurring-Task Bug + Wire Up Half-Built Subsystems
-
-## Status
-
-Complete — all 6 phases shipped as stacked PRs (#729 → #732 → #733 → #734 → #735 → #736), pending review and merge.
 
 ## Context
 

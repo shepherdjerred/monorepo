@@ -1,10 +1,11 @@
+---
+id: reference-completed-2026-05-11-scout-season-refresh
+type: reference
+status: complete
+board: false
+---
+
 # Scout for LoL — Season-Date Refresh
-
-## Status
-
-**Complete** — all plan-scoped work verified shipped to `main` during the 2026-06-06 docs groom; archived to `archive/completed/`. Original tracking status preserved below.
-
-In Progress
 
 ## Context
 

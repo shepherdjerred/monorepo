@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-fix-greptile-p2-codex-auth-envvalue
+type: log
+status: complete
+board: false
+---
+
 # Fix Greptile P2: codex-auth.ts envValue simplification
-
-## Status
-
-Complete
 
 ## Context
 

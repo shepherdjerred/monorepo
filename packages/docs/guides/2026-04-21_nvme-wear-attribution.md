@@ -1,3 +1,10 @@
+---
+id: guide-2026-04-21-nvme-wear-attribution
+type: guide
+status: complete
+board: false
+---
+
 # NVMe Wear Attribution — 2026-04-21
 
 Byte-level accounting of writes to `torvalds`'s two NVMe drives, tracing every measured byte to a named source via PromQL.

@@ -1,6 +1,9 @@
-## Status
-
-Complete
+---
+id: reference-completed-2026-05-22-rss-feed-monitoring
+type: reference
+status: complete
+board: false
+---
 
 # RSS Feed Monitoring
 

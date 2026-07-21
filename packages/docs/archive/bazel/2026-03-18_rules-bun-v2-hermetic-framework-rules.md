@@ -1,3 +1,10 @@
+---
+id: reference-bazel-2026-03-18-rules-bun-v2-hermetic-framework-rules
+type: reference
+status: complete
+board: false
+---
+
 # Plan: `rules_bun` v2 — Hermetic Framework Rules
 
 ## Summary

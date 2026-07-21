@@ -1,8 +1,13 @@
+---
+id: plan-2026-04-25-renovate-blocked-majors
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Renovate Blocked Majors
-
-## Status
-
-Active. Replaces the archived 2026-04-21 dashboard cleanup session log.
 
 ## Remaining Work
 
@@ -15,3 +20,7 @@ Active. Replaces the archived 2026-04-21 dashboard cleanup session log.
 - Each major migration gets a focused branch with targeted tests for affected packages.
 - The Renovate dashboard is updated or closed only after the corresponding package tests and CI path pass.
 - Session logs stay archived; this file remains the active high-level tracker.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Renovate Blocked Majors`.

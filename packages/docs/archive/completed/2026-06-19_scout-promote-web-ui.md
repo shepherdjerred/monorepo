@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-19-scout-promote-web-ui
+type: reference
+status: complete
+board: false
+---
+
 # Scout for LoL — Promote the Web App UI
-
-## Status
-
-Complete — shipped in PR #1265; Discord redirect-URI registration is an external operator step.
 
 ## Context
 

@@ -1,6 +1,13 @@
+---
+id: reference-superseded-2026-04-05-temporal-migration
+type: reference
+status: complete
+board: false
+---
+
 # Temporal Migration Plan
 
-## Status
+## Status Notes (Historical)
 
 Superseded. Phase 0–1 landed (worker deployed, fetcher / deps-summary / dns-audit / golink-sync workflows). Phase 2 (Home Assistant automations) was replaced by a different approach: all six HA workflows were ported into `packages/temporal/src/workflows/ha/` on top of a new generic `packages/home-assistant` client library (REST + WebSocket, no codegen). The old `packages/homelab/src/ha/` package was deleted. Phases 3–5 remain open and will be tracked in new plans.
 

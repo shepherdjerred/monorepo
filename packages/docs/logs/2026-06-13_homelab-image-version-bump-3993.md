@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-homelab-image-version-bump-3993
+type: log
+status: complete
+board: false
+---
+
 # Manual image version bump → 2.0.0-3993 (all CI-managed images)
-
-## Status
-
-In Progress — live cluster bumped (with GitOps caveats); PR blocked on a 1Password snapshot refresh (needs `op` signin).
 
 ## Why
 

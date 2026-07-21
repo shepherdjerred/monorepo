@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-setup-ts-cost-profiling
+type: log
+status: complete
+board: false
+---
+
 # `scripts/setup.ts` cost profiling + helm-codegen removal
-
-## Status
-
-Complete — helm-codegen removal + Deps-phase reliability fixes done & verified. Only the `sjer.red --force` gating was intentionally deferred (risky).
 
 ## Context
 

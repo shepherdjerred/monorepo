@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-04-02-dagger-audit-current-vs-plans
+type: reference
+status: complete
+board: false
+---
+
 # Dagger CI Audit: Current State vs Plans
 
 ## Context

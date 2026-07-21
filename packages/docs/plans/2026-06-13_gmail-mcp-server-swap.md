@@ -1,8 +1,13 @@
+---
+id: plan-2026-06-13-gmail-mcp-server-swap
+type: plan
+status: planned
+board: true
+verification: agent
+disposition: active
+---
+
 # Plan: replace the Gmail MCP server (mcp-gateway)
-
-## Status
-
-Not Started — follow-up from [PR #1155](https://github.com/shepherdjerred/monorepo/pull/1155).
 
 ## Problem
 
@@ -38,3 +43,7 @@ So it's the `@automatearmy/email-reader-mcp@1.0.3` server itself, not creds/netw
 ## Notes
 
 - Keep it read-only unless there's a reason to grant send — the other servers (fastmail/github) already cover writes.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Plan: replace the Gmail MCP server (mcp-gateway)`.

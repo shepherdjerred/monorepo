@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-17-homelab-audit-tooling-gaps
+type: reference
+status: complete
+board: false
+---
+
 # Homelab Audit Tooling Gap Remediation
-
-## Status
-
-Complete — audit-tooling code (Buildkite/Temporal CLIs, preflight, S3 archive) shipped and running in the daily audit.
 
 ## Summary
 

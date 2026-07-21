@@ -138,6 +138,10 @@ common:
   - retry: &retry
       automatic:
         # Transient infra failures only; logical failures (1, 3) never retry.
+        # 34 is the script-declared transient code: CI scripts that talk to
+        # external services classify failures via scripts/lib/transient.ts and
+        # exit 34 when the error matches a known transient signature
+        # (5xx, network, GitHub GraphQL 500), so only retryable failures retry.
         - exit_status: 255
           limit: 2
         - exit_status: 34
@@ -224,7 +228,13 @@ steps:
     # The deploy-sites step ships this dist: sjer.red's build needs playwright
     # browsers (rehype-mermaid renders diagrams at build time), which only
     # exist in this container — build 5636 failed rebuilding it in ci-base.
-    artifact_paths: "packages/sjer.red/dist/**/*"
+    # Both globs are required: Buildkite's `**/*` needs an intermediate dir, so
+    # it silently skips root-level files (dist/index.html, dist/rss.xml) — the
+    # missing `dist/*` glob let build 5648's --delete sync wipe every root
+    # object from the sjer-red bucket.
+    artifact_paths:
+      - "packages/sjer.red/dist/**/*"
+      - "packages/sjer.red/dist/*"
     retry: *retry
     plugins:
       - kubernetes:
@@ -261,6 +271,7 @@ steps:
       export PATH="/root/.bun/bin:$(dirname "$(find /usr/local/texlive -name xelatex | head -1)"):$$PATH"
       bun install --frozen-lockfile
       # PR gate: same affectedness skip as the e2e step (fail-loud helper).
+      # Main always runs — the sites deploy consumes this step's PDF artifact.
       if [ "$BUILDKITE_BRANCH" != "main" ]; then
         verdict=$(bun scripts/is-affected.ts '@shepherdjerred/resume')
         if [ "$$verdict" = "unaffected" ]; then
@@ -269,6 +280,13 @@ steps:
         fi
       fi
       bunx turbo run build --filter='@shepherdjerred/resume'
+    # The deploy-sites step ships this PDF: resume.pdf is a build artifact
+    # (gitignored, not committed) and xelatex only exists in this container.
+    # Glob (not a literal path) so the unaffected-PR skip doesn't log a
+    # nothing-matched upload warning. A missing artifact can't slip through:
+    # deploy-sites' explicit `artifact download` fails hard, and this step
+    # never skips on main.
+    artifact_paths: "packages/resume/*.pdf"
     retry: *retry
     plugins:
       - kubernetes:
@@ -291,6 +309,41 @@ steps:
                     readOnly: true
                 envFrom:
                   - secretRef: { name: buildkite-ci-secrets }
+
+  # ── Helm value types drift gate (PR-only). The committed
+  # packages/homelab/src/cdk8s/generated/helm types must be regenerated in the
+  # same PR that changes a generator input. Replaces the deleted freshness
+  # mechanisms (helm-types-weekly-refresh Temporal schedule → #1168 Dagger
+  # gate → lost in the Buildkite replatform #1516). Accepted trade-off:
+  # Renovate chart bumps touching versions.ts fail here until someone pushes
+  # the regen commit (--check prints the command; hosted Renovate cannot run
+  # it). Main is skipped: inputs are fully version-pinned, so a green PR gate
+  # implies a green main tree. helm comes from the ci-image's mise toolchain.
+  - label: ":helm: helm types drift check"
+    key: helm-types-drift-check
+    if: build.branch != pipeline.default_branch && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      # Self-scope: regenerating pulls ~26 charts over the network — run only
+      # when a generator input (or the committed output) changed vs the merge
+      # base. Paths span two turbo packages, so a git diff beats turbo
+      # affectedness here (any cdk8s change would otherwise trigger it).
+      base=$(git merge-base origin/main HEAD)
+      if git diff --quiet "$$base" HEAD -- \
+          packages/homelab/src/cdk8s/src/versions.ts \
+          packages/homelab/src/cdk8s/scripts/generate-helm-types.ts \
+          packages/homelab/src/cdk8s/scripts/parse-helm-charts.ts \
+          packages/homelab/src/helm-types \
+          packages/homelab/src/cdk8s/generated/helm; then
+        echo "helm-types generator inputs unchanged vs main — skipping drift check"
+        exit 0
+      fi
+      bun install --frozen-lockfile
+      cd packages/homelab/src/cdk8s
+      bun run generate-helm-types --check
+    retry: *retry
+    plugins:
+      - *pod_light
 
   # ── Docker-compose e2e (PR + main) — llm-observability spins up a compose
   # stack; needs the privileged pod's docker, not a browser container.
@@ -317,9 +370,21 @@ steps:
             cloneFlags: "--depth=1"
           podSpecPatch:
             containers:
+              # The shell is taken from the AGENT container's registration
+              # env (container-0-level BUILDKITE_SHELL is ignored — the
+              # build-5651 lesson). This image has no bash; use sh.
+              - name: agent
+                env:
+                  - name: BUILDKITE_SHELL
+                    value: "/bin/sh -e -c"
               - name: container-0
                 # renovate: datasource=docker depName=aquasec/trivy
                 image: "aquasec/trivy:0.72.0"
+                # The Trivy image has /bin/sh but no /bin/bash. The agent's
+                # default bash shell otherwise fails before Trivy can start.
+                env:
+                  - name: BUILDKITE_SHELL
+                    value: "/bin/sh -e -c"
                 resources:
                   requests: { cpu: "500m", memory: "1Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
@@ -344,6 +409,13 @@ steps:
             cloneFlags: "--depth=1"
           podSpecPatch:
             containers:
+              # The shell is taken from the AGENT container's registration
+              # env (container-0-level BUILDKITE_SHELL is ignored — the
+              # build-5651 lesson). This image has no bash; use sh.
+              - name: agent
+                env:
+                  - name: BUILDKITE_SHELL
+                    value: "/bin/sh -e -c"
               - name: container-0
                 # renovate: datasource=docker depName=semgrep/semgrep
                 image: "semgrep/semgrep:1.170.0"
@@ -404,9 +476,15 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
-      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red scout-frontend scout-frontend-beta better-skill-capped glitter; do
+      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red better-skill-capped glitter; do
         bun scripts/deploy-site.ts "$$site" --dry-run
       done
+      # Scout sites deploy versioned + stage-pinned (not via the catalog);
+      # rehearse all three subcommands so PRs exercise the real main path.
+      bun scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
+      bun scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
+      bun scripts/scout-site-release.ts reconcile-prod --dry-run
+      bun scripts/promote-scout.ts --ci --site-version "2.0.0-$BUILDKITE_BUILD_NUMBER" --dry-run
       bun packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER" --dry-run
       bun scripts/release.ts --dry-run
     retry: *retry
@@ -433,7 +511,7 @@ steps:
   - label: ":rocket: deploy sites"
     key: sites
     if: build.branch == pipeline.default_branch
-    depends_on: [verify, e2e]
+    depends_on: [verify, e2e, resume-build]
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
@@ -451,12 +529,26 @@ steps:
       bunx turbo run build --filter='!sjer.red' --filter='!@shepherdjerred/resume' --concurrency=6 --output-logs=errors-only
       # sjer.red can't build here (rehype-mermaid needs playwright browsers,
       # build 5636) — the e2e step builds it in the playwright container and
-      # ships the dist as a build artifact; deploy it prebuilt.
+      # ships the dist as a build artifact; deploy it prebuilt. Two downloads:
+      # `**/*` misses root-level files (see the e2e artifact_paths comment).
       buildkite-agent artifact download "packages/sjer.red/dist/**/*" . --step e2e
+      buildkite-agent artifact download "packages/sjer.red/dist/*" . --step e2e
       bun scripts/deploy-site.ts sjer.red --prebuilt
-      for site in resume webring cooklang-rich-preview stocks-sjer-red scout-frontend scout-frontend-beta better-skill-capped glitter; do
+      # resume can't build here either (xelatex only exists in the texlive
+      # container) — the resume-build step ships resume.pdf as a build
+      # artifact; deploy it prebuilt. The PDF is gitignored, not committed.
+      buildkite-agent artifact download "packages/resume/resume.pdf" . --step resume-build
+      bun scripts/deploy-site.ts resume --prebuilt
+      for site in webring cooklang-rich-preview stocks-sjer-red better-skill-capped glitter; do
         bun scripts/deploy-site.ts "$$site"
       done
+      # Scout sites are versioned + stage-pinned (lockstep with the backend
+      # image pins): archive the prod-flavored artifact for promotion, then
+      # deploy the beta flavor live (beta stays continuous — it's the canary).
+      # Prod is synced separately by scout-prod-reconcile from the pinned
+      # archive, never from this build's dist.
+      bun scripts/scout-site-release.ts archive --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
+      bun scripts/scout-site-release.ts deploy-beta --version "2.0.0-$BUILDKITE_BUILD_NUMBER"
     retry: *retry
     plugins:
       - *pod_light
@@ -539,10 +631,52 @@ steps:
       # argocd.ts reads ARGOCD_TOKEN (build 5648).
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
       bun packages/homelab/scripts/argocd.ts sync apps
-      bun packages/homelab/scripts/argocd.ts health-wait apps --timeout 300
+      bun packages/homelab/scripts/argocd.ts tree-health-wait apps --timeout 300
     retry: *retry
     plugins:
       - *pod
+
+  # Standing promotion PR: whenever beta has something prod doesn't (prod
+  # never promoted, backend image line changed, or the scout package changed
+  # since the promoted site version's commit), open/refresh the
+  # scout-promote-pending PR moving BOTH prod pins in versions.ts to what beta
+  # serves; close it when prod is caught up. Merging that PR IS the promotion —
+  # ArgoCD (backend) and scout-prod-reconcile (site) act on the pin change.
+  # Auto-merge is deliberately not enabled: that would make prod track beta
+  # continuously instead of promotion being a review click.
+  - label: ":package: scout promotion PR"
+    if: build.branch == pipeline.default_branch
+    depends_on: sites
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      bun install --frozen-lockfile
+      # SeaweedFS creds: reads archive manifests to gate on real scout changes.
+      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+      bun scripts/promote-scout.ts --ci --site-version "2.0.0-$BUILDKITE_BUILD_NUMBER"
+    plugins:
+      - *pod_light
+
+  # Reconcile the prod scout site to its versions.ts pin. Usually a no-op
+  # (bucket marker == pin); after a promotion merge it syncs the archived
+  # artifact for the pinned version into the prod bucket. Ordered AFTER
+  # argocd-sync on purpose: the promoted backend deploys first, so the
+  # transient mid-promotion mix is old-frontend/new-backend — the safe
+  # direction (the reverse skew is what crashed the prod SPA). Shares the
+  # site-deploys concurrency group so it never races a beta sync.
+  - label: ":rocket: scout prod reconcile"
+    key: scout-prod-reconcile
+    if: build.branch == pipeline.default_branch
+    depends_on: [argocd-sync, sites]
+    concurrency: 1
+    concurrency_group: monorepo/site-deploys
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      bun install --frozen-lockfile
+      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
+      bun scripts/scout-site-release.ts reconcile-prod
+    retry: *retry
+    plugins:
+      - *pod_light
 
   - label: ":terraform: tofu apply (cloudflare, after tunnel gate)"
     if: build.branch == pipeline.default_branch
@@ -559,6 +693,9 @@ steps:
       bun packages/homelab/scripts/argocd.ts wait-deletion apps --group networking.cfargotunnel.com --version v1alpha1 --kind TunnelBinding --namespace seaweedfs --timeout 120
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_SECRET_ACCESS_KEY"
       bun packages/homelab/scripts/tofu-stack.ts cloudflare apply
+    # Safe to retry: tofu re-plans from state, and the scripts only exit 34
+    # (the retryable code) on classified transient failures.
+    retry: *retry
     plugins:
       - *pod_light
 
@@ -574,6 +711,9 @@ steps:
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun scripts/release.ts
+    # Safe to retry: release-please upserts its PR and skips already-cut
+    # releases; a GitHub GraphQL 500 (build 5809) exits 34 via transient.ts.
+    retry: *retry
     plugins:
       - *pod_light
 
@@ -590,6 +730,9 @@ steps:
       . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun scripts/update-versions.ts --commit-back "2.0.0-$BUILDKITE_BUILD_NUMBER" --digests "$$(buildkite-agent meta-data get image-digests)"
+    # Safe to retry: the bump branch is force-updated and the PR lookup is
+    # find-or-create; transient gh/git failures exit 34 via transient.ts.
+    retry: *retry
     plugins:
       - *pod_light
 

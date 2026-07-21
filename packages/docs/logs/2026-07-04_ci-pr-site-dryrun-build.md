@@ -1,8 +1,11 @@
+---
+id: log-2026-07-04-ci-pr-site-dryrun-build
+type: log
+status: complete
+board: false
+---
+
 # Catch site build regressions on PRs (dryrun site builds)
-
-## Status
-
-Complete
 
 ## Context
 

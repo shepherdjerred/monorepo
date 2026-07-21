@@ -1,10 +1,11 @@
+---
+id: reference-completed-2026-06-03-birmel-openclaw-capabilities
+type: reference
+status: complete
+board: false
+---
+
 # Birmel OpenClaw-Like Capability Upgrade
-
-## Status
-
-**Complete** — all plan-scoped work verified shipped to `main` during the 2026-06-06 docs groom; archived to `archive/completed/`. Original tracking status preserved below.
-
-Partially Complete
 
 ## Summary
 

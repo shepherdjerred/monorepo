@@ -1,10 +1,11 @@
+---
+id: reference-completed-2026-06-15-deploy-glitter-ppl
+type: reference
+status: complete
+board: false
+---
+
 # Deploy glitter.html to ppl.glitter-boys.com
-
-## Status
-
-Complete — shipped in PR #1257; bucket + DNS live, HTML version-controlled with CI auto-deploy.
-
-The plan originally called for one-shot manual upload. Mid-implementation the user asked to version-control the HTML under a new `packages/glitter/` package so it deploys via CI — that addendum is captured in the Session Log below.
 
 ## Context
 

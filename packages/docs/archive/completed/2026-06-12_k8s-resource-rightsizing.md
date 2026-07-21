@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-12-k8s-resource-rightsizing
+type: reference
+status: complete
+board: false
+---
+
 # Right-size all K8s workload requests/limits (homelab)
-
-## Status
-
-Complete — shipped in PR #1135.
 
 ## Context
 

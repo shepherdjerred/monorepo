@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-30-scout-web-ui-admin-basics
+type: reference
+status: complete
+board: false
+---
+
 # Scout Web UI: Subscription, Player, and Admin Basics
-
-## Status
-
-Complete
 
 ## Summary
 

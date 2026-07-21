@@ -1,8 +1,11 @@
+---
+id: log-2026-06-07-homelab-1password-items-linter
+type: log
+status: complete
+board: false
+---
+
 # Homelab 1Password item/field linter
-
-## Status
-
-Complete — linter is green (52 item refs + 106 field refs verified), CI passing.
 
 ## Context
 

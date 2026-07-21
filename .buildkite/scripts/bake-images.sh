@@ -200,9 +200,15 @@ if [ "$PUSH" = true ]; then
     if [ -n "$pinned" ]; then
       # imagetools failure (e.g. a placeholder pin that was never pushed)
       # counts as changed — the safe direction is an extra bump, never a
-      # skipped one.
-      if old_layers=$(docker buildx imagetools inspect "${REGISTRY}/${name}@${pinned}" --format '{{json .Image.RootFS.Layers}}'); then
-        new_layers=$(docker inspect --format '{{json .RootFS.Layers}}' "${name}:dev")
+      # skipped one. These images are single-platform (bake runs with --load,
+      # which only supports one platform), so a pinned digest always resolves
+      # to an image manifest: .Image is populated and .Image.RootFS.DiffIDs is
+      # a real array, never the `null` that a multi-platform manifest-list
+      # index would yield.
+      if old_layers=$(docker buildx imagetools inspect "${REGISTRY}/${name}@${pinned}" --format '{{json .Image.RootFS.DiffIDs}}' | jq -c .); then
+        # imagetools pretty-prints its JSON while docker inspect emits compact
+        # JSON, so normalize both before comparing the same uncompressed IDs.
+        new_layers=$(docker inspect --format '{{json .RootFS.Layers}}' "${name}:dev" | jq -c .)
         if [ "$old_layers" = "$new_layers" ]; then
           echo "content unchanged vs pinned ${pinned} (identical rootfs) — no version bump for ${name}"
           continue

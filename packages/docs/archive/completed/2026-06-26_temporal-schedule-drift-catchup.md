@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-26-temporal-schedule-drift-catchup
+type: reference
+status: complete
+board: false
+---
+
 # Temporal schedules: audit drift, stop replaying missed runs, document dynamic disable
-
-## Status
-
-Complete
 
 ## Context
 

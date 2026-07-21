@@ -1,8 +1,11 @@
+---
+id: log-2026-07-05-talos-node-health-errors
+type: log
+status: complete
+board: false
+---
+
 # Talos Node Health / Errors
-
-## Status
-
-Complete
 
 ## Context
 

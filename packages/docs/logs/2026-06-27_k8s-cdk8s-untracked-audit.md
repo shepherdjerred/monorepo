@@ -1,8 +1,11 @@
+---
+id: log-2026-06-27-k8s-cdk8s-untracked-audit
+type: log
+status: complete
+board: false
+---
+
 # K8s State vs cdk8s — Untracked Resource Audit
-
-## Status
-
-Complete — audit done **and all 5 orphans cleaned up** (2026-06-27). ~145Gi reclaimed.
 
 ## Goal
 

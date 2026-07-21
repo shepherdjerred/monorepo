@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "verify": "turbo run build typecheck test lint check-todos check-suppressions markdownlint prettier shellcheck knip gitleaks jscpd quality-ratchet compliance-check lockfile-check merge-conflicts env-var-names line-endings react-version-sync large-files guard:migration ruff pyright tunnel-dns-coverage check:talos lint:helm check:1password check:test-template check:ios-native-deps lint:swift check:caddyfile test:contract check:rehearsal --continue",
+    "docs:board": "bun run --cwd packages/docs-board launch",
     "knip": "knip --no-config-hints",
     "markdownlint": "markdownlint-cli2 '**/*.md'",
     "markdownlint:fix": "markdownlint-cli2 --fix '**/*.md'",
@@ -23,7 +24,7 @@
     "ruff": "uvx ruff check .",
     "pyright": "bash scripts/pyright-check.sh",
     "tunnel-dns-coverage": "bun scripts/check-tunnel-dns-coverage.ts",
-    "check-todos": "bun scripts/check-todos.ts",
+    "check-todos": "bun run packages/docs-board/src/cli/check-docs.ts",
     "check-suppressions": "bun scripts/check-suppressions.ts"
   },
   "devDependencies": {
@@ -51,6 +52,7 @@
     "packages/discord-plays-pokemon/packages/frontend",
     "packages/discord-stream-lifecycle",
     "packages/discord-video-stream",
+    "packages/docs-board",
     "packages/eslint-config",
     "packages/glitter",
     "packages/home-assistant",

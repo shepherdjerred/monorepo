@@ -1,3 +1,10 @@
+---
+id: guide-2026-04-25-home-assistant-cleanup-followups
+type: guide
+status: complete
+board: false
+---
+
 # Home Assistant Cleanup — Next Steps
 
 Related: `guides/2026-04-25_homelab-health-audit.md`. Follows from log audit + cleanup session on 2026-04-25.

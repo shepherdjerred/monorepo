@@ -1,8 +1,11 @@
+---
+id: log-2026-06-19-llm-model-reference-audit
+type: log
+status: complete
+board: false
+---
+
 # LLM model-reference audit (OpenAI + Claude)
-
-## Status
-
-Complete (audit only — fixes not yet applied)
 
 ## Goal
 

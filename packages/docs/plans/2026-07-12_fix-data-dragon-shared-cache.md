@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-12-fix-data-dragon-shared-cache
+type: plan
+status: awaiting-human
+board: true
+verification: human
+disposition: active
+---
+
 # Fix `scout-data-dragon-weekly-refresh`'s recurring `llm-models` failure + close the CI gap
-
-## Status
-
-Complete (implementation + verification done in this session; not yet merged/PR'd)
 
 ## Context
 
@@ -35,14 +40,14 @@ Give every bot-clone install its own cache directory scoped to the run's already
 
 Raised via live `kubectl exec`/`describe` against the `temporal` namespace (see chat transcript): confirmed `/tmp` is a genuine `EmptyDir` scoped to the pod's lifetime, and the Deployment is single-replica/`recreate()` — so the shared-cache architecture is fact, not inference. The exact corrupted cache entry from the failing run could not be forensically recovered (the pod had already rotated to a new deploy before this investigation started), so the precise corruption mechanism remains unconfirmed — but per-run cache isolation is correct regardless of the exact mechanism, and the new CI canary means any future regression in this step fails the PR instead of failing silently in production.
 
-## Verification (done)
+## Human Verification
 
-1. `cd packages/temporal && bun run typecheck && bun test` — pass (3 pre-existing failures are `localhost:7233` integration tests requiring a live Temporal dev server, unrelated to this change).
-2. `cd packages/scout-for-lol/packages/data && bun run typecheck && bun test` — pass. Ran `bun run update-data-dragon --snapshots-only` directly (with `BUN_INSTALL_CACHE_DIR` unset and set to an isolated dir) — confirmed it exercises the install-refresh + snapshot-test step against committed assets with no network calls, and produces zero `git status` diff (snapshots already match).
-3. Ran the rehearsal script against a genuinely clean clone (not the dev worktree, which already has lefthook hooks armed from `scripts/setup.ts`'s root install) — all 4 canaries pass: scout, snapshot (new), hooks, cog. (`cog` canary requires the `cog` binary, not installed on this Mac — a local environment gap, not a regression; CI's worker image installs it.)
-4. Did not do the synthetic "poison a shared cache dir and confirm the canary fails without the fix" step from the original plan — the exact corruption mechanism was never confirmed, so a synthetic poison test would be testing a guess, not the real bug. Skipped as low-value; the live pod architecture confirmation was judged sufficient.
-5. No real Temporal worker pod or scheduled trigger needed for this verification — `.dagger`'s `temporal-schedule-rehearsal` CI step runs this script inside the built worker image on every PR touching `packages/temporal/**`.
-6. Once merged, the next real fix-confirmation is the following Saturday's scheduled `scout-data-dragon-weekly-refresh` run (or another manual trigger via the Temporal UI) actually opening a PR.
+- `cd packages/temporal && bun run typecheck && bun test` — pass (3 pre-existing failures are `localhost:7233` integration tests requiring a live Temporal dev server, unrelated to this change).
+- `cd packages/scout-for-lol/packages/data && bun run typecheck && bun test` — pass. Ran `bun run update-data-dragon --snapshots-only` directly (with `BUN_INSTALL_CACHE_DIR` unset and set to an isolated dir) — confirmed it exercises the install-refresh + snapshot-test step against committed assets with no network calls, and produces zero `git status` diff (snapshots already match).
+- Ran the rehearsal script against a genuinely clean clone (not the dev worktree, which already has lefthook hooks armed from `scripts/setup.ts`'s root install) — all 4 canaries pass: scout, snapshot (new), hooks, cog. (`cog` canary requires the `cog` binary, not installed on this Mac — a local environment gap, not a regression; CI's worker image installs it.)
+- Did not do the synthetic "poison a shared cache dir and confirm the canary fails without the fix" step from the original plan — the exact corruption mechanism was never confirmed, so a synthetic poison test would be testing a guess, not the real bug. Skipped as low-value; the live pod architecture confirmation was judged sufficient.
+- No real Temporal worker pod or scheduled trigger needed for this verification — `.dagger`'s `temporal-schedule-rehearsal` CI step runs this script inside the built worker image on every PR touching `packages/temporal/**`.
+- Once merged, the next real fix-confirmation is the following Saturday's scheduled `scout-data-dragon-weekly-refresh` run (or another manual trigger via the Temporal UI) actually opening a PR.
 
 ## Files touched
 

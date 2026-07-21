@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-06-dpp-xstate-streaming
+type: reference
+status: complete
+board: false
+---
+
 # Refactor discord-plays-pokemon streaming to XState
-
-## Status
-
-Complete
 
 ## Context
 

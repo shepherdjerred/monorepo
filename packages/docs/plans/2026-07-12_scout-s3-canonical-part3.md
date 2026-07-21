@@ -1,6 +1,15 @@
+---
+id: plan-2026-07-12-scout-s3-canonical-part3
+type: plan
+status: awaiting-human
+board: true
+verification: human
+disposition: active
+---
+
 # Scout for LoL — Part 3: S3-canonical raw store (engine PR → destructive drop PR)
 
-## Status
+## Status Notes (Historical)
 
 PR-A code complete (awaiting CI/merge) — Part 3 of the S3-canonical effort. Parts 1 & 2 shipped in **PR #1508** (`fix/scout-arena-queue-and-retire-cd-reports`). PR-A is implemented on `feature/scout-s3-canonical-engine` (stacked on #1508): A1–A5 done, backend typecheck clean, 1096 tests pass / 0 fail. PR-B (the destructive 7-table drop) is the remaining follow-up, gated on the beta+prod completeness gate.
 
@@ -76,7 +85,7 @@ The completeness gate + rebuild-parity + reports/comps validation run on **beta 
 4. **PR-B** → merge → deploy **beta**, confirm the 7 tables are gone and reports/comps still render from S3; then deploy **prod**.
 5. **Confirm Definition of Done:** prod SQLite = scout models only (7 tables absent, file shrunk); prod ingest continues to S3+staging; reports/comps green.
 
-## Verification
+## Human Verification
 
 - `bun install` at scout root after any `packages/data` edit (file: deps). Scope checks to touched packages: `bun run --filter='./packages/scout-for-lol/packages/backend' typecheck|test`; app typecheck (tRPC surface unchanged, but verify).
 - PR-A: backend suite green after deleting the legacy/parity tests; new compactor unit/integration test rebuilding a seeded lake from a fake S3 (or seeded Stored\* → upload → S3-rebuild); ingest test asserting a failed S3 write throws + does not advance the cursor; `S3_BUCKET_NAME` unset → boot fails in prod env.

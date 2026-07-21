@@ -1,8 +1,11 @@
+---
+id: log-2026-05-19-grafana-trace-log-correlation
+type: log
+status: complete
+board: false
+---
+
 # Grafana "Logs for this span" — wire trace ↔ log correlation
-
-## Status
-
-Complete (verified against a local docker-compose stack). Deploy gated on ArgoCD sync.
 
 ## Context
 

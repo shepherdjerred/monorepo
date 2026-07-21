@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-09-claude-md-doc-discipline
+type: reference
+status: complete
+board: false
+---
+
 # CLAUDE.md Documentation Discipline
-
-## Status
-
-Complete
 
 ## Context
 

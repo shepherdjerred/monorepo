@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-code-quality-audit
+type: log
+status: complete
+board: false
+---
+
 # Monorepo Code-Quality Audit — 2026-06-13
-
-## Status
-
-Complete (audit only — no fixes applied). Findings below are candidates for follow-up work.
 
 ## TL;DR
 

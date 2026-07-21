@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-06-07-dagger-gc-and-pvc-drift
+type: reference
+status: complete
+board: false
+---
+
 # Decision: Dagger Engine GC Semantics & PVC-Drift Hardening
 
 **Date:** 2026-06-07

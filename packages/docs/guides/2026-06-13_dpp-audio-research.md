@@ -1,8 +1,11 @@
+---
+id: guide-2026-06-13-dpp-audio-research
+type: guide
+status: complete
+board: false
+---
+
 # Discord Plays Pokémon — Audio Path Research
-
-## Status
-
-Complete (research).
 
 ## Executive Summary
 

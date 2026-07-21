@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-19-sentry-release-wiring
+type: reference
+status: complete
+board: false
+---
+
 # `toSorted` fix + monorepo-wide Sentry release wiring + coverage gaps
-
-## Status
-
-Complete — shipped in PR #1267.
 
 ## Context
 

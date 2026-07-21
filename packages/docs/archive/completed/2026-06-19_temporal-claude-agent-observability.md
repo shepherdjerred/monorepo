@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-19-temporal-claude-agent-observability
+type: reference
+status: complete
+board: false
+---
+
 # Temporal `claude -p` agents: root-cause fix + observability + local testing
-
-## Status
-
-Complete — shipped in PR #1264; deployed.
 
 ## Context
 

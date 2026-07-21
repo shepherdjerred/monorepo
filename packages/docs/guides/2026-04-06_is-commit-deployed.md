@@ -1,3 +1,10 @@
+---
+id: guide-2026-04-06-is-commit-deployed
+type: guide
+status: complete
+board: false
+---
+
 # How to Determine if a Commit is Deployed
 
 Guide for tracing a commit through the deployment pipeline to verify it's running on the `torvalds` cluster.

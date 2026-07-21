@@ -1,8 +1,13 @@
+---
+id: plan-2026-03-01-bedrock-waker
+type: plan
+status: planned
+board: true
+verification: agent
+disposition: active
+---
+
 # Plan: bedrock-waker — UDP proxy to wake sleeping Minecraft Bedrock servers
-
-## Status
-
-Not Started. No `packages/bedrock-waker/` package or cdk8s bedrock-waker resources exist yet.
 
 ## Context
 
@@ -139,3 +144,7 @@ Following the sentinel pattern (`cdk8s-plus-31` constructs):
 4. `cd packages/homelab && bunx cdk8s synth` — verify Helm chart output
 5. `bazel build //packages/bedrock-waker:image`
 6. Manual test: send synthetic UNCONNECTED_PING, verify PONG response
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Plan: bedrock-waker — UDP proxy to wake sleeping Minecraft Bedrock servers`.

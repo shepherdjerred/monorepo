@@ -1,8 +1,11 @@
+---
+id: log-2026-06-12-streambot-duplicate-slash-command-cleanup
+type: log
+status: complete
+board: false
+---
+
 # Streambot duplicate `/stream` slash command — live cleanup + prevention
-
-## Status
-
-Complete
 
 ## Problem
 

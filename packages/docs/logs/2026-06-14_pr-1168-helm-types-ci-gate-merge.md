@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-pr-1168-helm-types-ci-gate-merge
+type: log
+status: complete
+board: false
+---
+
 # PR #1168 helm-types-ci-gate: Conflict Resolution and CI Tending
-
-## Status
-
-In Progress
 
 ## Context
 

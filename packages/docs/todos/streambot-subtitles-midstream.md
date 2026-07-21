@@ -1,6 +1,10 @@
 ---
 id: streambot-subtitles-midstream
-status: deferred
+type: todo
+status: planned
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-06-13_new-todos-batch.md
 source_marker: false
 ---
@@ -29,8 +33,8 @@ toggle requires re-staging subtitles and restarting the encode mid-playback —
 likely by seamlessly restarting the current segment at the current position (or
 dropping and rejoining the Go-Live session, which disrupts playback).
 
-## Done when
+## Remaining
 
-- A `/stream subtitles on|off` command toggles subtitle burn during playback
-  with minimal disruption (ideally a seamless segment restart at the current
-  offset), without requiring the user to re-issue `/stream play`.
+- [ ] A `/stream subtitles on|off` command toggles subtitle burn during playback
+      with minimal disruption (ideally a seamless segment restart at the current
+      offset), without requiring the user to re-issue `/stream play`.

@@ -1,8 +1,11 @@
+---
+id: log-2026-06-19-pr1280-goal-memory-relative-paths
+type: log
+status: complete
+board: false
+---
+
 # PR #1280 — goal-memory relative path fix
-
-## Status
-
-Complete
 
 ## Context
 

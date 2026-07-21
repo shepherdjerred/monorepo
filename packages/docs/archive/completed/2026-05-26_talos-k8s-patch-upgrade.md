@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-26-talos-k8s-patch-upgrade
+type: reference
+status: complete
+board: false
+---
+
 # Update Talos + Kubernetes on `torvalds` (patch bumps)
-
-## Status
-
-Complete
 
 ## Context
 

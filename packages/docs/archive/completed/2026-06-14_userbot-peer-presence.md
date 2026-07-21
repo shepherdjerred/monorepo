@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-14-userbot-peer-presence
+type: reference
+status: complete
+board: false
+---
+
 # Userbots stay in voice forever when only peer userbots remain
-
-## Status
-
-Complete — Code shipped in PR #1246. Peer IDs wired via homelab cdk8s `userbot-ids.ts` + `PEER_USERBOT_IDS` env var (no Helm/1P wiring needed; homelab cdk8s populates each bot's peers from `USERBOT_IDS`). All Greptile P1/P2 threads resolved.
 
 ## Session Log — 2026-06-14
 

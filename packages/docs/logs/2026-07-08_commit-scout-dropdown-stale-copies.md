@@ -1,8 +1,11 @@
+---
+id: log-2026-07-08-commit-scout-dropdown-stale-copies
+type: log
+status: complete
+board: false
+---
+
 # Commit scout user-menu dropdown + fix stale `file:` copies
-
-## Status
-
-Complete
 
 ## Context
 

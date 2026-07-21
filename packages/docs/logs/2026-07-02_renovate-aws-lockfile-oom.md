@@ -1,8 +1,11 @@
+---
+id: log-2026-07-02-renovate-aws-lockfile-oom
+type: log
+status: complete
+board: false
+---
+
 # Renovate aws `.terraform.lock.hcl` OOM — root cause & fix
-
-## Status
-
-Complete
 
 ## Summary
 

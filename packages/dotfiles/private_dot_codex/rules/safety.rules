@@ -1,0 +1,119 @@
+prefix_rule(
+    pattern = [["sudo", "su"]],
+    decision = "forbidden",
+    justification = "Do not run privileged commands.",
+)
+
+prefix_rule(
+    pattern = ["rm", ["-rf", "-fr"]],
+    decision = "forbidden",
+    justification = "Do not force-recursively delete files or directories.",
+)
+
+prefix_rule(
+    pattern = [["dd", "mkfs", "newfs", "fdisk", "sfdisk", "parted", "wipefs", "gdisk"]],
+    decision = "forbidden",
+    justification = "Do not write, format, or partition disks.",
+)
+
+prefix_rule(
+    pattern = ["diskutil", ["eraseDisk", "eraseVolume", "secureErase", "zeroDisk"]],
+    decision = "forbidden",
+    justification = "Do not erase disks or volumes.",
+)
+
+prefix_rule(
+    pattern = [["shutdown", "reboot", "halt", "poweroff"]],
+    decision = "forbidden",
+    justification = "Do not restart or shut down the host.",
+)
+
+prefix_rule(
+    pattern = ["kubectl", "delete", ["namespace", "ns", "node", "pv", "pvc", "persistentvolume", "persistentvolumeclaim", "crd", "customresourcedefinition", "--all"]],
+    decision = "forbidden",
+    justification = "Do not directly delete critical Kubernetes resources.",
+)
+
+prefix_rule(
+    pattern = ["kubectl", "drain"],
+    decision = "forbidden",
+    justification = "Do not drain Kubernetes nodes.",
+)
+
+prefix_rule(
+    pattern = ["talosctl", ["reset", "wipe"]],
+    decision = "forbidden",
+    justification = "Do not reset or wipe Talos nodes.",
+)
+
+prefix_rule(
+    pattern = ["argocd", "cluster", "rm"],
+    decision = "forbidden",
+    justification = "Do not remove Argo CD clusters.",
+)
+
+prefix_rule(
+    pattern = ["argocd", "app", "sync", "--prune"],
+    decision = "forbidden",
+    justification = "Do not prune resources through Argo CD sync.",
+)
+
+prefix_rule(
+    pattern = ["helm", "uninstall"],
+    decision = "forbidden",
+    justification = "Do not uninstall Helm releases.",
+)
+
+prefix_rule(
+    pattern = ["aws", "s3", "rb"],
+    decision = "forbidden",
+    justification = "Do not remove S3 buckets.",
+)
+
+prefix_rule(
+    pattern = ["aws", "ec2", "terminate"],
+    decision = "forbidden",
+    justification = "Do not terminate EC2 instances.",
+)
+
+prefix_rule(
+    pattern = ["aws", "iam", "delete"],
+    decision = "forbidden",
+    justification = "Do not delete IAM resources.",
+)
+
+prefix_rule(
+    pattern = ["gh", "repo", "delete"],
+    decision = "forbidden",
+    justification = "Do not delete GitHub repositories.",
+)
+
+prefix_rule(
+    pattern = ["op", "vault", "delete"],
+    decision = "forbidden",
+    justification = "Do not delete 1Password vaults.",
+)
+
+prefix_rule(
+    pattern = ["docker", "system", "prune"],
+    decision = "forbidden",
+    justification = "Do not prune Docker system state.",
+)
+
+prefix_rule(
+    pattern = ["docker", "volume", ["prune", "rm"]],
+    decision = "forbidden",
+    justification = "Do not remove Docker volumes.",
+)
+
+prefix_rule(
+    pattern = ["velero", "backup", "delete"],
+    decision = "forbidden",
+    justification = "Do not delete Velero backups.",
+)
+
+prefix_rule(
+    pattern = ["crontab", "-r"],
+    decision = "forbidden",
+    justification = "Do not remove cron jobs.",
+)

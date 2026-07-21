@@ -1,3 +1,10 @@
+---
+id: guide-2026-04-03-local-quality-check
+type: guide
+status: complete
+board: false
+---
+
 # Local Quality Check — Full Monorepo Verification
 
 Run all linters, tests, builds, and quality gates locally. Covers TypeScript/Bun, Go (terraform-provider-asuswrt), LaTeX (resume), plus repo-wide quality gates.

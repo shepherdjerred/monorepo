@@ -72,7 +72,7 @@ export function createGrafanaPostgreSQLDatabase(chart: Chart) {
           locale: "en_US.utf8",
           "data-checksums": "true",
         },
-        pg_hba: [
+        pgHba: [
           // Allow connections from within the cluster
           "hostssl postgres postgres all md5",
           "hostssl grafana grafana all scram-sha-256",

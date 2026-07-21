@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-30-scout-prematch-default-skins
+type: reference
+status: complete
+board: false
+---
+
 # Scout Prematch Default Skins
-
-## Status
-
-Complete
 
 ## Summary
 

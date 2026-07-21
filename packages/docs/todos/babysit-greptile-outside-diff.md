@@ -1,6 +1,10 @@
 ---
 id: babysit-greptile-outside-diff
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/plans/2026-06-27_pr-babysit-bot.md
 ---
 
@@ -17,14 +21,14 @@ appear in `reviewThreads` and are not individually resolvable. The manual
 babysitter spec explicitly treats unresolved P3+ "comments outside of diff" as
 blocking, so the automated DoD under-blocks until these are covered.
 
-## What to do
+## Remaining
 
-- Also fetch the latest Greptile `pullRequestReview` bodies and/or issue
-  comments by `greptile-apps[bot]`, parse P-levels with the existing
-  `parseReviewSeverity`, and fold any unresolved P3+ into the review verdict.
-- Decide a "resolved" signal for un-anchored comments (Greptile re-reviews on a
-  new push and supersedes; or treat the latest review as authoritative).
-- Add fixtures + unit tests alongside `dod.test.ts`.
+- [ ] Also fetch the latest Greptile `pullRequestReview` bodies and/or issue
+      comments by `greptile-apps[bot]`, parse P-levels with the existing
+      `parseReviewSeverity`, and fold any unresolved P3+ into the review verdict.
+- [ ] Decide a "resolved" signal for un-anchored comments (Greptile re-reviews on a
+      new push and supersedes; or treat the latest review as authoritative).
+- [ ] Add fixtures + unit tests alongside `dod.test.ts`.
 
 Until then, the verdict's `reviews.advisory` surfaces non-blocking unresolved
 threads so a human still sees them.

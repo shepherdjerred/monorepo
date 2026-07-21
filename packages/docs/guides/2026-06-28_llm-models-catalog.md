@@ -1,10 +1,11 @@
+---
+id: guide-2026-06-28-llm-models-catalog
+type: guide
+status: complete
+board: false
+---
+
 # `packages/llm-models` — Central LLM Model Catalog
-
-## Status
-
-Complete
-
-`@shepherdjerred/llm-models` is the single source of truth for active LLM models (OpenAI/Anthropic/Google) — pricing, capabilities, context windows (PR #1281).
 
 ## Source of truth
 

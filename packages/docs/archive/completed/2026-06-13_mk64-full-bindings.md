@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-13-mk64-full-bindings
+type: reference
+status: complete
+board: false
+---
+
 # MK64 — /help bindings, name-textbox fix, UI design
-
-## Status
-
-Complete. Shipped in PR #1178.
 
 ## Context
 

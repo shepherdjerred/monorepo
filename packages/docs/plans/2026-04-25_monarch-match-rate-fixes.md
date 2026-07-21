@@ -1,8 +1,13 @@
+---
+id: plan-2026-04-25-monarch-match-rate-fixes
+type: plan
+status: planned
+board: true
+verification: agent
+disposition: active
+---
+
 # Monarch Match Rate Fixes
-
-## Status
-
-Not Started. Diagnosis from `bun run src/index.ts` on 2026-04-25.
 
 ## Context
 
@@ -103,3 +108,7 @@ Promote the scattered `[WARN]` lines for missing Conservice/USAA/Costco input di
 1. Are Bilt / USAA / Costco files actually somewhere else on disk? If yes, make paths configurable.
 2. Phase 1 diagnostic-first, or skip straight to Phase 2 fix on the strongest hypothesis?
 3. Is +13pp on Amazon worth the matcher complexity, or skip Phase 3?
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Monarch Match Rate Fixes`.

@@ -1,8 +1,11 @@
+---
+id: log-2026-05-09-pi-codex-quota-fix
+type: log
+status: complete
+board: false
+---
+
 # pi v0.74.0 Codex quota error — root cause & fix
-
-## Status
-
-Complete
 
 ## Context
 

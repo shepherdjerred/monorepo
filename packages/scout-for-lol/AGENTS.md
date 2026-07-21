@@ -125,7 +125,16 @@ Each package supports: `dev`, `build`, `test`, `lint`, `format`, `typecheck`
 
 ## CI/CD
 
-CI runs on the static Buildkite pipeline (`.buildkite/pipeline.yml`): every PR runs `bun run verify` (affected-scoped, includes scout's checks), Playwright e2e, and a dry-run image build + smoke; on merge to main the backend image is built, smoked, and pushed and the frontends deploy. Locally, `bun run verify` (or `mise run check`) mirrors CI; build the backend image with `bun run --filter=@scout-for-lol/backend docker:build` (`bunx turbo run smoke --filter=@scout-for-lol/backend` builds + smoke-tests it).
+CI runs on the static Buildkite pipeline (`.buildkite/pipeline.yml`): every PR runs `bun run verify` (affected-scoped, includes scout's checks), Playwright e2e, a dry-run image build + smoke, and dry-runs of the scout site-release subcommands; on merge to main the backend image is built, smoked, and pushed. Locally, `bun run verify` (or `mise run check`) mirrors CI; build the backend image with `bun run --filter=@scout-for-lol/backend docker:build` (`bunx turbo run smoke --filter=@scout-for-lol/backend` builds + smoke-tests it).
+
+### Stage deploys are lockstep (beta continuous, prod promoted)
+
+Each stage serves backend + marketing site + SPA from the same monorepo build; the SPA compiles against the backend tRPC router types, so mixed versions are a real contract hazard (design: `packages/docs/plans/2026-07-19_scout-lockstep-stage-deploys.md`).
+
+- **Beta (continuous):** every main build auto-bumps the `shepherdjerred/scout-for-lol/beta` image pin (version commit-back) and runs `bun scripts/scout-site-release.ts deploy-beta` (beta-flavored site → `scout-frontend-beta` bucket + a `.release-version` marker). The same build archives a prod-flavored site artifact to `s3://scout-site-releases/2.0.0-<n>/` for later promotion.
+- **Prod (promotion = merging a PR):** CI maintains the standing `scout-promote-pending` PR (the `scout promotion PR` step) whenever beta has something prod doesn't — it moves BOTH `versions.ts` pins together: `scout-for-lol-site/prod` (site artifact version) and `shepherdjerred/scout-for-lol/prod` (the beta image line copied verbatim; the `2.0.0-<n>` in an image pin is a cosmetic label on a digest-pinned ref). **Merging that PR is the promotion**: ArgoCD deploys the backend and the `scout-prod-reconcile` CI step syncs the prod bucket from the archived artifact. The PR closes itself when prod catches up; don't enable auto-merge on it unless you want prod to track beta continuously. Rollback = revert the promotion commit, or `AWS_PROFILE=seaweedfs bun scripts/promote-scout.ts --version 2.0.0-<older> --force` (operator mode) for an explicit older target.
+- **Never** deploy the scout buckets with `scripts/deploy-site.ts` (they're intentionally not in its catalog) and never bump the scout `/prod` pins by hand or via Renovate — both reintroduce the unversioned frontend↔backend skew.
+- Verify what a stage serves: `curl https://scout-for-lol.com/.release-version` / `curl https://beta.scout-for-lol.com/.release-version`.
 
 ---
 
@@ -511,6 +520,30 @@ Discord OAuth in the browser (see **Web UI (Local end-to-end)** above).
 - **Bundle optimization** - Use proper bundling strategies
 
 ---
+
+## Marketing showcase assets (committed, bot-refreshed)
+
+The marketing homepage's screenshots live as committed generator output:
+`packages/frontend/public/generated/scout-showcase/*.png` + the asset index
+`packages/frontend/src/data/generated/scout-showcase-assets.json`, generated
+from the curated manifest `showcase/marketing-showcase.manifest.json` against
+real objects in the `scout-prod` bucket. Never hand-edit the outputs.
+
+- **Weekly refresh**: the `scout-showcase-refresh-weekly` Temporal schedule
+  (Mon 10:00 PT, `packages/temporal/src/activities/scout-showcase-refresh.ts`)
+  regenerates and opens a PR on drift (review the image diffs visually);
+  `generatedAt`-only churn is suppressed.
+- **GC protection**: `scout-image-gc-daily` exempts every key the manifest
+  references (it fetches the manifest from `main` before pruning), so curated
+  sources outlive the 30-day image window. Consequence: manifest edits on a
+  branch don't protect new keys until merged.
+- **Re-curation runbook** (after a renderer redesign, or if the weekly job
+  fails NoSuchKey): from `packages/backend`,
+  `AWS_PROFILE=seaweedfs bun run scripts/discover-marketing-showcase.ts
+--bucket scout-prod --out ../../showcase/marketing-showcase.manifest.json
+--prev ../../showcase/marketing-showcase.manifest.json`, then run
+  `scripts/generate-marketing-showcase.ts` with the standard flags (see the
+  Temporal activity for the exact invocation) and commit manifest + outputs.
 
 ## Pre-commit / pre-push gates
 

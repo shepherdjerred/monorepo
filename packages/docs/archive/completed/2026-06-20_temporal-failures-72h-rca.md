@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-20-temporal-failures-72h-rca
+type: reference
+status: complete
+board: false
+---
+
 # Temporal failures — last 72h root-cause analysis + remediation
-
-## Status
-
-Complete — shipped in PR #1287; golink ACL applied.
 
 ## Context
 

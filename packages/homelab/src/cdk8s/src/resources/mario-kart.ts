@@ -27,9 +27,11 @@ import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/user
 // to a Discord voice channel (Go-Live) via a selfbot. Up to four players drive
 // karts through a thin web UI (virtual controllers). No GPU, desktop, or
 // browser. The app runs from the inner-monorepo root
-// (/workspace/packages/discord-plays-mario-kart), so config.toml / the n64wasm
-// assets / saves / roms resolve relative to that CWD.
-const APP_ROOT = "/workspace/packages/discord-plays-mario-kart";
+// (/app/packages/discord-plays-mario-kart — the image WORKDIR since the #1517
+// Dockerfile rewrite), so config.toml / the n64wasm assets / saves / roms
+// resolve relative to that CWD. APP_ROOT must match the Dockerfile's final
+// WORKDIR (enforced by app-root-matches-dockerfile.test.ts).
+export const APP_ROOT = "/app/packages/discord-plays-mario-kart";
 const WEB_PORT = 8081;
 
 export function createMarioKartDeployment(chart: Chart) {

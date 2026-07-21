@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-13-temporal-readme-refresh
+type: reference
+status: complete
+board: false
+---
+
 # Plan: Move README auto-update into a weekly Temporal workflow
-
-## Status
-
-Complete — shipped in PR #1164 (Buildkite-UI schedule removal tracked in todos).
 
 ## Context
 

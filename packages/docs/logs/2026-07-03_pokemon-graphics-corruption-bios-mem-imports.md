@@ -1,8 +1,11 @@
+---
+id: log-2026-07-03-pokemon-graphics-corruption-bios-mem-imports
+type: log
+status: complete
+board: false
+---
+
 # Pokémon graphics corruption — missing libc imports in bios.ts
-
-## Status
-
-Complete
 
 ## Symptom
 

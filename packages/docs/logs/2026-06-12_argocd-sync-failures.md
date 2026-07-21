@@ -1,8 +1,11 @@
+---
+id: log-2026-06-12-argocd-sync-failures
+type: log
+status: complete
+board: false
+---
+
 # ArgoCD Sync Failure Check
-
-## Status
-
-Complete
 
 ## Summary
 

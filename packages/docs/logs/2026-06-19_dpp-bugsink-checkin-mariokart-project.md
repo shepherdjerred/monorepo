@@ -1,8 +1,11 @@
+---
+id: log-2026-06-19-dpp-bugsink-checkin-mariokart-project
+type: log
+status: complete
+board: false
+---
+
 # Discord Plays Pokemon Bugsink check-in + Mario Kart project split
-
-## Status
-
-Complete
 
 ## Context
 

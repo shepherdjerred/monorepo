@@ -1,8 +1,11 @@
+---
+id: log-2026-06-27-homelab-iac-coverage-gap-analysis
+type: log
+status: complete
+board: false
+---
+
 # Homelab IaC Coverage — Gap Analysis
-
-## Status
-
-Complete (analysis only — no code changed)
 
 ## Question
 

@@ -1,3 +1,10 @@
+---
+id: guide-2026-04-04-homelab-audit-runbook
+type: guide
+status: complete
+board: false
+---
+
 # Homelab Infrastructure Audit Runbook
 
 Repeatable procedure for a comprehensive health audit of the `torvalds` cluster. Run periodically or when investigating issues.

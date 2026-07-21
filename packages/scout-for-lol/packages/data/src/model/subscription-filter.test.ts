@@ -1,9 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import {
   SubscriptionFilterSpecSchema,
+  describeSubscriptionFilters,
   filtersPass,
   serializeSubscriptionFilters,
   parseSubscriptionFilters,
+  subscriptionFilterQueues,
   type SubscriptionFilterSpec,
 } from "#src/model/subscription-filter.ts";
 
@@ -77,6 +79,26 @@ describe("filtersPass", () => {
     expect(filtersPass(ranked, { queueType: "flex" })).toBe(true);
     expect(filtersPass(ranked, { queueType: "solo" })).toBe(true);
     expect(filtersPass(ranked, { queueType: "aram" })).toBe(false);
+  });
+});
+
+describe("subscriptionFilterQueues", () => {
+  test("null spec has no queue constraint", () => {
+    expect(subscriptionFilterQueues(null)).toEqual([]);
+  });
+
+  test("undefined spec (older backend omits `filters`) has no queue constraint", () => {
+    // Version-skew boundary: a backend deployed before the `filters` field
+    // omits it from subscription.list items; the UI must not crash.
+    const legacyListItem: { filters?: SubscriptionFilterSpec | null } = {};
+    expect(subscriptionFilterQueues(legacyListItem.filters)).toEqual([]);
+    expect(describeSubscriptionFilters(legacyListItem.filters)).toBe(
+      "all queues",
+    );
+  });
+
+  test("queue filter reports its allow-list", () => {
+    expect(subscriptionFilterQueues(soloOnly)).toEqual(["solo"]);
   });
 });
 

@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-04-04-ci-security-audit
+type: reference
+status: complete
+board: false
+---
+
 # CI Security Audit: Buildkite + Dagger
 
 **Date:** 2026-04-04

@@ -1,8 +1,11 @@
+---
+id: log-2026-06-12-discord-skill-greptile-fixes
+type: log
+status: complete
+board: false
+---
+
 # discord skill — Greptile review fixes (PR #1132)
-
-## Status
-
-Complete
 
 ## Session Log — 2026-06-12
 

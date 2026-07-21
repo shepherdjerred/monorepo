@@ -1,3 +1,10 @@
+---
+id: reference-bazel-2026-03-11-bazel-bun-native-phase3
+type: reference
+status: complete
+board: false
+---
+
 # Phase 3: Drop rules_js — Fully Bun-Native Bazel
 
 ## Status: ~95% complete (2026-03-10)

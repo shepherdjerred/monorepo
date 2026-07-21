@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-07-streambot-multi-server-userbot-pool
+type: reference
+status: complete
+board: false
+---
+
 # Streambot multi-server via a pool of userbots
-
-## Status
-
-Complete — userbot pool + per-(guild,channel) sessions shipped; later extended to the shared game-bot pool (#1251).
 
 ## Context
 

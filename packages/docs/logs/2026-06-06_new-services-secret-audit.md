@@ -1,9 +1,11 @@
+---
+id: log-2026-06-06-new-services-secret-audit
+type: log
+status: complete
+board: false
+---
+
 # New K8s Services — Secret Audit
-
-## Status
-
-Complete (secrets) — birmel & streambot running; mcp-gateway deferred by user.
-Follow-up: streambot yt-dlp writable-dir bug (non-secret, see Remaining).
 
 ## Context
 

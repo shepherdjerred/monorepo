@@ -1,12 +1,13 @@
+---
+id: plan-2026-07-12-workspace-taskgraph-replatform
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Workspace + Task Graph Replatform (Local Dev Layers 1 & 2)
-
-## Status
-
-In Progress — design complete and fully spike-verified; landing PRs open.
-
-**PR stack:** #1516 (remove CI) → #1517 (remove setup.ts + plans) → **#1518 (workspace + turbo, draft — supersedes #1408)**. Phase 3 (remote cache deploy) and Phase-2 doc rewrite remain.
-
-Origin: 2026-07-12 session. Prereqs in flight: PR #1516 (remove all CI), PR #1517 (remove `scripts/setup.ts`, stacked on #1516).
 
 ## Goal
 
@@ -232,3 +233,7 @@ Small alignments: consolidate ~70 per-package `mise.toml`s down to root + genuin
 - Turbo cache instability will recur for any task whose script mutates tracked files non-deterministically; `.turbo` gitignore fixed the observed case but Phase 2 should audit `generate`-style scripts.
 - **Hold bun at 1.3.x** until turbo supports lockfileVersion 2 (turbo discussion #13126) — a Renovate bun bump to 1.4 would silently break turbo's workspace graph.
 - The bun-ws research agent recommends hoisted linker; this plan overrides with spike evidence — if Phase 1's full sweep surfaces isolated-linker weirdness, flip to hoisted immediately rather than debugging forward.
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Workspace + Task Graph Replatform (Local Dev Layers 1 & 2)`.

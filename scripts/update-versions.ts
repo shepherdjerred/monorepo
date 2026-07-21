@@ -24,6 +24,7 @@
 import { run, tmpBase } from "./lib/run.ts";
 import { setupGitAuth } from "./lib/github-auth.ts";
 import { toStringRecord } from "./lib/json.ts";
+import { runMain } from "./lib/transient.ts";
 
 const MONOREPO_REPO = "shepherdjerred/monorepo";
 const MONOREPO_WRITE_URL = `https://github.com/${MONOREPO_REPO}.git`;
@@ -417,4 +418,4 @@ async function main(): Promise<void> {
   );
 }
 
-await main();
+await runMain(main);

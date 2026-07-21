@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-12-fix-season-refresh-lefthook-arming
+type: plan
+status: awaiting-human
+board: true
+verification: human
+disposition: active
+---
+
 # Fix `scout-season-refresh-weekly`'s lefthook-arming failure
-
-## Status
-
-Complete (implementation + verification done in this session; not yet merged/PR'd)
 
 ## Context
 
@@ -38,12 +43,12 @@ Extended `rehearseHookFreeCommit` in `packages/temporal/scripts/rehearse-bot-clo
 
 Added a line to `scout-season-refresh-prompt.ts`'s prompt instructing Claude to always pass `--ignore-scripts` if it needs to run `bun install` in this ephemeral CI clone. Cheap defense-in-depth; the structural fix above is what actually guarantees correctness.
 
-## Verification (done)
+## Human Verification
 
-1. `cd packages/temporal && bun run typecheck && bun test` — pass (same 3 pre-existing `localhost:7233` integration-test failures as before, unrelated).
-2. `bunx eslint` on all 5 touched files — 0 errors (pre-existing duplication warnings only).
-3. Ran the extended rehearsal against a genuinely clean clone (not the dev worktree, which already has hooks armed from `scripts/setup.ts`). First run gave a **false-positive** failure: the clone's checked-out branch name (`fix/season-refresh-lefthook-arming`, inherited from this session's own feature branch) contains the substring "lefthook", which git's normal commit summary line echoes back, coincidentally matching the existing `/lefthook/i.test(commitOutput)` regex check — not an actual hook run (no lefthook banner/tier-1/tier-2 output in the log, unlike the real production failure trace). Re-ran on a differently-named branch (`rehearsal-verify`) and confirmed clean: hooks armed by the simulated plain install → `disarmGitHooks` removes them → bot-style commit succeeds with zero lefthook output. `cog` canary still fails locally only because that binary isn't installed on this Mac (same pre-existing environment gap as PR #1503's verification).
-4. Not yet done: real production confirmation (manually re-trigger `scout-season-refresh-weekly` via the Temporal UI / `kubectl exec` after merge and deploy).
+- `cd packages/temporal && bun run typecheck && bun test` — pass (same 3 pre-existing `localhost:7233` integration-test failures as before, unrelated).
+- `bunx eslint` on all 5 touched files — 0 errors (pre-existing duplication warnings only).
+- Ran the extended rehearsal against a genuinely clean clone (not the dev worktree, which already has hooks armed from `scripts/setup.ts`). First run gave a **false-positive** failure: the clone's checked-out branch name (`fix/season-refresh-lefthook-arming`, inherited from this session's own feature branch) contains the substring "lefthook", which git's normal commit summary line echoes back, coincidentally matching the existing `/lefthook/i.test(commitOutput)` regex check — not an actual hook run (no lefthook banner/tier-1/tier-2 output in the log, unlike the real production failure trace). Re-ran on a differently-named branch (`rehearsal-verify`) and confirmed clean: hooks armed by the simulated plain install → `disarmGitHooks` removes them → bot-style commit succeeds with zero lefthook output. `cog` canary still fails locally only because that binary isn't installed on this Mac (same pre-existing environment gap as PR #1503's verification).
+- Not yet done: real production confirmation (manually re-trigger `scout-season-refresh-weekly` via the Temporal UI / `kubectl exec` after merge and deploy).
 
 ## Files touched
 

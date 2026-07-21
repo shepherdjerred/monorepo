@@ -1,11 +1,11 @@
+---
+id: log-2026-07-05-torvalds-arc-ci-throttle
+type: log
+status: complete
+board: false
+---
+
 # torvalds freeze mitigation — kubelet reservations, ARC cap, CI concurrency, temp-comment sweep
-
-## Status
-
-Applied live to `torvalds` 2026-07-05 (PR #1414 open for the durable repo record; not yet merged).
-
-Follow-up to the facts-only investigation in
-[`2026-07-05_torvalds-ci-freeze-investigation.md`](./2026-07-05_torvalds-ci-freeze-investigation.md).
 
 ## Root cause (found this session)
 

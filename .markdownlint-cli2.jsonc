@@ -22,6 +22,9 @@
   },
   "ignores": [
     "sandbox/archive/**",
+    // Gitignored Claude Code local state; worktrees under .claude/worktrees are
+    // other branches' checkouts and lint in their own runs, not this one.
+    ".claude/**",
     // Test fixtures are content under test, not documentation.
     "**/__tests__/fixtures/**",
     "**/e2e/fixtures/**",

@@ -1,8 +1,11 @@
+---
+id: log-2026-07-11-afternoon-dagger-restart-loop
+type: log
+status: complete
+board: false
+---
+
 # Dagger engine restart loop during the 2026-07-11 ~19:00 UTC storm
-
-## Status
-
-Complete
 
 ## Context
 

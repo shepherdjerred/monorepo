@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-02-birmel-conversational-trigger-memory
+type: reference
+status: complete
+board: false
+---
+
 # Birmel: conversational triggering, persona-scoped memory, transcript context
-
-## Status
-
-Complete
 
 ## Context
 

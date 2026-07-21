@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-09-daily-homelab-audit-email
+type: reference
+status: complete
+board: false
+---
+
 # Daily Homelab Audit Email
-
-## Status
-
-Complete (code + RBAC + Dagger image) — 2026-05-10. Layer 6 (cluster smoke) requires the operator to populate the new 1Password fields and merge/build the worker image; the schedule is registered and will fire automatically on next 06:30 PT after that.
 
 ## Context
 

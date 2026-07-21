@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-05-19-llm-observability
+type: reference
+status: complete
+board: false
+---
+
 # LLM Observability — Tempo Spans + S3 Archive
-
-## Status
-
-Complete.
 
 ## Implementation Note — Traceloop pivot (2026-05-19)
 

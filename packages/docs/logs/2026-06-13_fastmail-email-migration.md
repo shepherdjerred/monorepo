@@ -1,8 +1,11 @@
+---
+id: log-2026-06-13-fastmail-email-migration
+type: log
+status: complete
+board: false
+---
+
 # Fastmail Email Migration Batch
-
-## Status
-
-In Progress
 
 ## Progress
 

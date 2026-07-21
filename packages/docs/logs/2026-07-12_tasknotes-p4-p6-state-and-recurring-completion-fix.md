@@ -1,6 +1,13 @@
+---
+id: log-2026-07-12-tasknotes-p4-p6-state-and-recurring-completion-fix
+type: log
+status: complete
+board: false
+---
+
 # TaskNotes: P4/P6 live-state audit + recurring-completion orphan-date fix
 
-## Status
+## Status Notes (Historical)
 
 In Progress — the recurring-completion bug fix is code-complete and verified on
 `fix/tfo-recurring-completion-date`; P4/P6 findings are recorded for the operator.

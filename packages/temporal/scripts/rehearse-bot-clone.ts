@@ -31,6 +31,9 @@
  *                (scout-season-refresh-weekly).
  *  4. cog      — the readme-refresh COG_TARGETS exist, still contain `[[[cog`
  *                blocks, and the `cog` binary is present (readme-refresh-weekly).
+ *  5. crd-imports — the cdk8s bin resolves from the cdk8s package's
+ *                cdk8s-cli devDependency after the hook-free install, and the
+ *                update-imports script exists (homelab-crd-imports-daily).
  *
  * Deliberately NOT rehearsed: asset downloads, Claude/Codex calls, and the
  * full `cog -r` regeneration (needs blobless git history + Codex for new
@@ -217,6 +220,31 @@ async function rehearseHookFreeCommit(repoDir: string): Promise<void> {
   console.error("[rehearsal] hooks: commit succeeded without pre-commit hooks");
 }
 
+async function rehearseCrdImportsEnvironment(repoDir: string): Promise<void> {
+  // homelab-crd-imports-daily runs `bun run update-imports` in the cdk8s
+  // package, which spawns the bare `cdk8s` bin — it must resolve from the
+  // package's cdk8s-cli devDependency after the hook-free root install
+  // (isolated linker → per-package node_modules/.bin). The import itself is
+  // deliberately NOT rehearsed (needs network + cluster CRDs).
+  console.error("[rehearsal] crd-imports: cdk8s bin resolves in the clone");
+  const cdk8sBin = `${repoDir}/packages/homelab/src/cdk8s/node_modules/.bin/cdk8s`;
+  if (!(await Bun.file(cdk8sBin).exists())) {
+    throw new Error(
+      `cdk8s bin missing at ${cdk8sBin} — did the cdk8s-cli devDependency ` +
+        "leave packages/homelab/src/cdk8s? homelab-crd-imports-daily's " +
+        "update-imports spawn would fail with ENOENT.",
+    );
+  }
+  const updateImportsScript = `${repoDir}/packages/homelab/src/cdk8s/scripts/update-imports.ts`;
+  if (!(await Bun.file(updateImportsScript).exists())) {
+    throw new Error(
+      `update-imports script missing at ${updateImportsScript} — ` +
+        "homelab-crd-imports-daily's `bun run update-imports` would fail.",
+    );
+  }
+  console.error("[rehearsal] crd-imports: environment OK");
+}
+
 async function rehearseCogTargets(repoDir: string): Promise<void> {
   console.error("[rehearsal] cog: verifying binary + targets");
   // cogapp has no --version long flag; -v prints the version.
@@ -238,6 +266,28 @@ async function rehearseCogTargets(repoDir: string): Promise<void> {
   console.error(`[rehearsal] cog: ${String(COG_TARGETS.length)} targets OK`);
 }
 
+async function rehearseShowcaseEnvironment(repoDir: string): Promise<void> {
+  // scout-showcase-refresh-weekly runs generate-marketing-showcase.ts in the
+  // scout backend against the curated manifest. installScoutWorkspace is
+  // already rehearsed (leg 1); assert the manifest and generator paths the
+  // activity hard-codes still exist. The S3 reads are deliberately NOT
+  // rehearsed (need live scout-prod).
+  console.error("[rehearsal] showcase: manifest + generator paths");
+  const requiredPaths = [
+    `${repoDir}/packages/scout-for-lol/showcase/marketing-showcase.manifest.json`,
+    `${repoDir}/packages/scout-for-lol/packages/backend/scripts/generate-marketing-showcase.ts`,
+    `${repoDir}/packages/scout-for-lol/packages/frontend/src/data/generated/scout-showcase-assets.json`,
+  ];
+  for (const path of requiredPaths) {
+    if (!(await Bun.file(path).exists())) {
+      throw new Error(
+        `scout-showcase-refresh-weekly path missing in the tree: ${path}`,
+      );
+    }
+  }
+  console.error("[rehearsal] showcase: environment OK");
+}
+
 async function main(): Promise<void> {
   const repoDir = parseRepoArg(process.argv.slice(2));
   await ensureScratchGitRepo(repoDir);
@@ -245,6 +295,8 @@ async function main(): Promise<void> {
   await rehearseSnapshotRefresh(repoDir);
   await rehearseHookFreeCommit(repoDir);
   await rehearseCogTargets(repoDir);
+  await rehearseCrdImportsEnvironment(repoDir);
+  await rehearseShowcaseEnvironment(repoDir);
   console.error("[rehearsal] all canaries passed");
 }
 

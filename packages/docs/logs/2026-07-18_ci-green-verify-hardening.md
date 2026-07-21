@@ -1,8 +1,11 @@
+---
+id: log-2026-07-18-ci-green-verify-hardening
+type: log
+status: complete
+board: false
+---
+
 # CI Green — Verify Hardening
-
-## Status
-
-In Progress
 
 ## Context
 
@@ -94,3 +97,83 @@ resolves as an error type. Fixed by adding
 packages (scout backend, birmel, dpmk backend — birmel/dpmk were the same
 latent bomb, just still cache-masked). Validated: dry-run graphs show the
 edge; deleting `generated/` and running lint regenerates then passes.
+
+## Round 4 — build 5809: the green run
+
+Builds 5795/5796/5800/5802/5808 were all canceled by pushes to main
+(PR merges, the auto-merge version-bump PR #1558, and other agent sessions
+committing session logs directly to main — `cancel_running_branch_builds`
+is on with no branch filter). After the operator paused the other sessions,
+build 5809 ran to completion with two transient hard failures retried in
+place:
+
+- `:docker: images` (build 5796's occurrence): ghcr blob-CDN egress flake —
+  the pinned `mcp-proxy` digest was verified pullable locally, so the pin is
+  correct; job retry succeeded.
+- `:package: release-please`: GitHub GraphQL 500 (`Something went wrong
+while executing your query`). The step has no automatic retry in
+  `.buildkite/pipeline.yml`; manual retry succeeded.
+
+**Build 5809 passed 2026-07-19 19:46 UTC — first green main since 5492
+(2026-07-12).**
+
+## Session Log — 2026-07-19
+
+### Done
+
+- PR #1550 (merged): idempotency-test 20s timeout, amrender
+  `-buildvcs=false`, scout `generate → ^build` edge, markdownlint MD004
+  fixes; deleted resolved todo `scout-data-missing-llm-models-dep`.
+- PR #1559 (merged): `argocd.ts sync` waits for the sync operation's
+  terminal phase (e2e-tested live); `lint → generate` edges in scout
+  backend, birmel, dpmk backend turbo.json.
+- Operational: deleted the orphaned seaweedfs `TunnelBinding`
+  (provenance-verified; finalizer completed) — unblocked the tofu tunnel
+  gate. Re-synced the `apps` ArgoCD Application.
+- Filed `todos/argocd-apps-prune-policy.md` (prune decision + full orphan
+  inventory incl. the leftover Dagger stack).
+- Retried two transient CI failures (ghcr egress, GitHub GraphQL 500) to
+  land green build 5809.
+
+### Remaining
+
+- `argocd-apps-prune-policy` todo needs an operator decision.
+- kyverno pods restart in lock-step under CI load (admission controller
+  19 restarts/4h) — syncs now fail fast + retry through it, but the
+  underlying instability is unaddressed.
+
+### Caveats
+
+- Main-push build cancellation churn is the dominant failure mode:
+  5 candidate builds died to pushes, not defects. Options discussed:
+  branch filter `!main` on `cancel_running_branch_builds` (declined for
+  now), `[skip ci]` on bot docs commits, batching merges.
+- The `pr-monitor` skill description currently claims this repo has no CI —
+  stale; Buildkite is live.
+
+## Round 5 — transient-failure classification + retry (post-green follow-up)
+
+Adding `retry: *retry` alone would have been inert: the anchor only retries
+exit 255/34/-1, and every Bun CI script exits 1 on any error — so no script
+failure ever auto-retried, including the two transients that needed manual
+retries in build 5809. Fix (PR #TBD):
+
+- `scripts/lib/transient.ts` — shared classifier (pattern mirrors the cdk8s
+  helm one, plus GitHub's GraphQL 500 envelope and secondary-rate-limit
+  signatures; `404`/`not found` deliberately stay hard failures) and
+  `runMain()`, which maps a thrown transient to exit 34 (the anchor's
+  reserved, previously-unused retry code) and everything else to exit 1.
+  Unit-tested (18 cases) incl. the exact build-5809 GraphQL error and the
+  build-5748 kyverno webhook error; e2e-verified exit codes 34/1.
+- Wired into `release.ts`, `update-versions.ts`, `argocd.ts`,
+  `tofu-stack.ts` (all end in `await runMain(main)` now).
+- pipeline.yml: `retry: *retry` added to `release-please`,
+  `version commit-back` (verified idempotent: fresh clone,
+  rebase-or-create, `--force-with-lease`, PR find-or-create), and
+  `tofu apply (cloudflare)` (tofu re-plans from state). The github tofu
+  apply keeps its documented no-retry policy. `argocd-sync` and
+  `tofu apply (infra)` already had the anchor — their scripts can now
+  actually trigger it.
+- `scripts/package.json` gains a `test` script (root-scripts had none, so
+  the new unit test would not have run in CI); `scripts/tsconfig.json`
+  include gains `lib/**/*.ts` so projectService lints the lib.

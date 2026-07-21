@@ -1,10 +1,11 @@
+---
+id: reference-completed-2026-05-16-pr-review-bot-usefulness-gap-close
+type: reference
+status: complete
+board: false
+---
+
 # PR Review Bot Usefulness Gap Close
-
-## Status
-
-**Complete** — all phase code verified shipped to `main`; archived to `archive/completed/` during the 2026-06-06 docs groom (pass 2). NOTE: the PR-review bot was operationally **disabled** on 2026-06-06 (`PR_BOT_ENABLED=false`); re-enabling and the rate-limit fix are tracked in `todos/pr-review-agent-rate-limit-saturation.md`, not here. Original tracking status preserved below.
-
-Partially Complete
 
 ## Summary
 

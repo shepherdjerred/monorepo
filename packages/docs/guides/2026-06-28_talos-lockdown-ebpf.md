@@ -1,8 +1,11 @@
+---
+id: guide-2026-06-28-talos-lockdown-ebpf
+type: guide
+status: complete
+board: false
+---
+
 # Talos Kernel Lockdown Breaks eBPF Profiling
-
-## Status
-
-Complete (resolved 2026-06-12 on torvalds).
 
 ## Symptom
 

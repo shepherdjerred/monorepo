@@ -16,7 +16,11 @@ import {
   MessageFlags,
 } from "discord.js";
 import type { PaginatedPages } from "@shepherdjerred/streambot/discord/help-text.ts";
-import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
+import {
+  getErrorMessage,
+  isStaleInteractionError,
+} from "@shepherdjerred/streambot/util/errors.ts";
+import * as Sentry from "@sentry/bun";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 const log = logger.child("pagination");
@@ -63,7 +67,7 @@ export async function sendPaginatedReply(
   });
 
   collector.on("collect", (button: ButtonInteraction) => {
-    void handlePaginationClick(button, interaction.user.id, () => {
+    void safePaginationClick(button, interaction.user.id, () => {
       switch (button.customId) {
         case ButtonId.First:
           page = 0;
@@ -99,6 +103,32 @@ async function clearPaginationButtons(
     log.warn("clearing pagination buttons failed", {
       error: getErrorMessage(error),
     });
+  }
+}
+
+/**
+ * Total (never-rejecting) wrapper for collector dispatch: the `collect`
+ * handler fires this without awaiting, so a rejection would surface as an
+ * unhandled promise rejection. Stale-interaction acks (40060/10062 — e.g. a
+ * click landing after an event-loop stall) are tolerable no-ops; anything
+ * else is logged and captured.
+ */
+async function safePaginationClick(
+  ...args: Parameters<typeof handlePaginationClick>
+): Promise<void> {
+  try {
+    await handlePaginationClick(...args);
+  } catch (error) {
+    if (isStaleInteractionError(error)) {
+      log.warn("pagination ack skipped: interaction stale", {
+        error: getErrorMessage(error),
+      });
+    } else {
+      log.error("pagination click failed", {
+        error: getErrorMessage(error),
+      });
+      Sentry.captureException(error);
+    }
   }
 }
 

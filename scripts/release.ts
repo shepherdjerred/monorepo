@@ -22,6 +22,7 @@
 
 import { run } from "./lib/run.ts";
 import { setupGitAuth } from "./lib/github-auth.ts";
+import { runMain } from "./lib/transient.ts";
 
 const MONOREPO_REPO = "shepherdjerred/monorepo";
 // Pinned in the old .dagger/src/constants.ts.
@@ -125,4 +126,4 @@ async function main(): Promise<void> {
   }
 }
 
-await main();
+await runMain(main);

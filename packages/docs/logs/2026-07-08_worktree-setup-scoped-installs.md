@@ -1,8 +1,11 @@
+---
+id: log-2026-07-08-worktree-setup-scoped-installs
+type: log
+status: complete
+board: false
+---
+
 # Cheaper worktree dependency installs: scoped `--group`/`--link` installs
-
-## Status
-
-Complete. Full plan: `~/.claude/plans/could-we-introduce-1-2-3-prancy-thompson.md`.
 
 ## Context
 

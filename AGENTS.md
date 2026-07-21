@@ -86,7 +86,7 @@ When plan mode is used, copy the approved plan from `~/.claude/plans/<slug>.md` 
 
 ### Conventions (both logs and plans)
 
-- **Include a `## Status` line** near the top: `In Progress`, `Complete`, `Partially Complete`, or `Abandoned`.
+- **Use canonical YAML frontmatter** with `id`, `type`, `status`, and `board`; frontmatter is the only workflow status source. Board items also require `verification` and `disposition`.
 - **Raw Markdown only** — never render to PDF or Typst.
 - **Do not individually index high-churn docs.** `packages/docs/plans/`, `packages/docs/logs/`, and `packages/docs/todos/` are linked as directories only to avoid merge conflicts.
 - See `packages/docs/AGENTS.md` for the broader docs taxonomy (architecture / patterns / decisions / guides / plans / logs / todos).
@@ -132,7 +132,7 @@ If the fix is substantial or belongs to a future session, also file it as a `pac
 
 ### When a plan is finished
 
-When a plan in `packages/docs/plans/` reaches `Status: Complete` and the work is shipped, `git mv` it to `packages/docs/archive/completed/`. Don't leave finished plans accumulating in `plans/`.
+When a plan in `packages/docs/plans/` reaches `status: complete` and the work is shipped, move it to `packages/docs/archive/completed/`. Don't leave finished plans accumulating in `plans/`.
 
 ## TODO Documentation
 
@@ -140,9 +140,10 @@ When a plan in `packages/docs/plans/` reaches `Status: Complete` and the work is
 
 - Every source marker (`TODO(todo:<kebab-id>)`, `FIXME(todo:<kebab-id>)`, `XXX(todo:<kebab-id>)`) MUST have a matching `packages/docs/todos/<kebab-id>.md`. This direction is enforced.
 - General issue todos may exist with no source marker. Use kebab-case ids; the filename (sans `.md`) is the id.
-- TODO docs use YAML frontmatter: `id`, `status` (one of `active`, `deferred`, `blocked`, `waiting-on-verification`, `resolved`), `origin` (path to the log/plan/PR that birthed it), and `source_marker: true` only if a code marker exists.
-- When resolved, delete the doc and remove any matching source marker in the same commit.
-- `bun scripts/check-todos.ts` enforces the source-marker → doc invariant (plus frontmatter/id sanity) in pre-commit and CI.
+- TODO docs use the canonical docs frontmatter. Set `type: todo`, `board: true`, a workflow `status` (`planned`, `in-progress`, `awaiting-human`, or `complete`), `verification`, `disposition`, and `origin`; add `source_marker: true` only when a code marker exists.
+- Active work uses unchecked tasks in `## Remaining`. Work ready for delayed signoff uses `status: awaiting-human` plus `## Human Verification`. Append steering notes and status audit entries under `## Comment Log`.
+- When resolved, remove any matching source marker and archive the complete TODO to `packages/docs/archive/completed/` in the same commit.
+- `bun run check-todos` enforces the complete docs model, including the source-marker → TODO invariant, frontmatter, semantic headings, workflow sections, IDs, and archival rules.
 
 ## Temporal Agent Follow-ups
 
@@ -224,6 +225,10 @@ cd packages/<name> && bunx eslint . --fix
   CI source of truth; use Buildkite tooling or the relevant PR/status surface.
 - If a PR or push flow fails, report the exact layer: local git ref permission,
   GitHub auth, sandboxed network access, or remote rejection.
+- Feature PRs are created and updated with **git-spice** (`git-spice branch/stack
+submit`), as stacks — not `gh pr create`. See the `git-spice-helper` skill. `gh`
+  stays for PR reviews/comments/merge/queries and for automated single-PR bot flows
+  (Temporal, release automation), whose clones have no local git-spice stack state.
 
 ## Development Setup
 
@@ -241,8 +246,12 @@ workspace with the isolated linker, so a single root `bun install` covers every
 package and internal `workspace:*` deps resolve via live symlinks (no shared-artifact
 copy step). The `generate` turbo task handles code generation; helm value types are
 **not** regenerated here — the committed types in
-`packages/homelab/src/cdk8s/generated/helm` are the source of truth, refreshed weekly by
-the `helm-types-weekly-refresh` Temporal schedule (which opens a PR if they drifted).
+`packages/homelab/src/cdk8s/generated/helm` are the source of truth. Regenerate them
+when bumping a chart in `versions.ts` (`cd packages/homelab/src/cdk8s && bun run
+generate-helm-types`); the `helm-types-drift-check` Buildkite step fails any PR that
+changes a generator input without regenerating. Renovate chart-bump PRs will sit red
+on that step until someone pushes the regen commit — that is by design (hosted
+Renovate cannot run the generator).
 
 Optional tools (warned if missing): helm, swift, swiftlint, swiftformat, typeshare, go, golangci-lint, mvn, gitleaks, shellcheck.
 
@@ -258,13 +267,14 @@ everything replays from turbo's cache in milliseconds when unchanged.
 2. `bunx turbo run typecheck test lint --filter=<pkg>` — a single package
 3. `bunx eslint . --fix` — autofix lint in the relevant package
 
-The `pre-commit` hook already runs `turbo run lint typecheck --affected` and
-`pre-push` runs `bun run verify -- --affected`, so a clean push has passed the
-same gates as CI.
+The `pre-commit` hook runs `bun run verify -- --affected` (there is no
+`pre-push` hook), so a clean commit has passed the same gates as CI.
 
 ## Parallel Work — Use Worktrees
 
 **Before your first edit on any non-trivial change, create a `git worktree` — don't edit in the main checkout.** "Non-trivial" = anything you'll open a PR for, anything touching more than one file, or any multi-step task. Only stay in the main checkout for a single-file, single-commit fix you won't PR (a typo, a one-line config tweak). **When unsure, make the worktree.** Each worktree gives a branch its own isolated working directory, so parallel work and concurrent agents never collide.
+
+**A worktree holds a _stack_, and every feature PR is created and managed with git-spice (`gs`) — load the `git-spice-helper` skill before any branch/PR op.** A single PR is a stack of one (unchanged from the old flow). When a change splits into dependent pieces, stack them in the same worktree with `git-spice branch create`, move between them with `git-spice up`/`down`, and open the PRs with `git-spice stack submit`. Restack, move, and sync with native `gs` commands — never a hand-rolled `git rebase` or a bare `gh pr create` for feature work. (In scripts and the agent Bash tool, `gs` is Ghostscript, not git-spice — call `git-spice` explicitly; see the skill.)
 
 ```bash
 # Create an isolated worktree on a new branch off main
@@ -286,7 +296,7 @@ symlinks, so there is no shared-artifact copy step to get wrong (the old
 generate`, though — it's what produces the Prisma clients and other generated
 files a build needs.
 
-After PR merge: `git worktree remove .claude/worktrees/<feature-slug>` and `git branch -d feature/<slug>` from the main checkout. Run `git worktree prune` to clean up stale entries.
+After PR merge: run `git-spice repo sync` to delete merged branches and retarget the rest of the stack, then `git worktree remove .claude/worktrees/<feature-slug>` and `git branch -d feature/<slug>` from the main checkout. Run `git worktree prune` to clean up stale entries.
 
 See the `worktree-workflow` skill for the full workflow. `claude -w <slug>` creates and enters a worktree at launch; for Codex, create the worktree first and start it with `codex -C <dir>`. A `SessionStart` hook (`.claude/hooks/worktree-reminder.sh`, wired for both Claude Code and Codex) also reminds you whenever a session opens in the main checkout.
 

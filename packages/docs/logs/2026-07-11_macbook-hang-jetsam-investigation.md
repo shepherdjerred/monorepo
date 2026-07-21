@@ -1,8 +1,11 @@
+---
+id: log-2026-07-11-macbook-hang-jetsam-investigation
+type: log
+status: complete
+board: false
+---
+
 # 2026-07-11 — MacBook hang investigation (jetsam / memory-pressure freezes)
-
-## Status
-
-Complete (investigation); remediation not yet applied.
 
 ## Symptom
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-06-14-pr-1230-greptile-fixes
+type: log
+status: complete
+board: false
+---
+
 # PR #1230 — Greptile fixes (temporal agent observability)
-
-## Status
-
-Complete
 
 ## Context
 

@@ -1,3 +1,10 @@
+---
+id: decision-2026-05-05-velero-orphan-snapshot-prevention
+type: decision
+status: complete
+board: false
+---
+
 # Velero Orphan-Snapshot Pathology — Prevention Options Analyzed
 
 **Date:** 2026-05-05 (reaffirmed 2026-06-06)

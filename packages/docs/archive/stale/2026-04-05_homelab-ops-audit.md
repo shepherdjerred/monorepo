@@ -1,3 +1,10 @@
+---
+id: reference-stale-2026-04-05-homelab-ops-audit
+type: reference
+status: complete
+board: false
+---
+
 # Homelab Ops Audit & Hardening Plan
 
 ## Context

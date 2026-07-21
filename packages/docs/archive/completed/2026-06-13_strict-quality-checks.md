@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-13-strict-quality-checks
+type: reference
+status: complete
+board: false
+---
+
 # Strict Quality Checks
-
-## Status
-
-Complete
 
 ## Context
 

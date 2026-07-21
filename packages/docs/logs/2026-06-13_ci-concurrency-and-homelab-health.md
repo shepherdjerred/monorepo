@@ -1,9 +1,11 @@
+---
+id: log-2026-06-13-ci-concurrency-and-homelab-health
+type: log
+status: complete
+board: false
+---
+
 # CI Concurrency, Build-Focus & Homelab Health — 2026-06-13
-
-## Status
-
-Partially Complete — `max-in-flight` bump **and** build-age job priority implemented (PR #1162);
-Buildkite-in-Tofu written up as a plan (`plans/2026-06-13_buildkite-opentofu.md`) awaiting decision.
 
 ## Questions
 

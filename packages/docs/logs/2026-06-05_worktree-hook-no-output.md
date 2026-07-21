@@ -1,8 +1,11 @@
+---
+id: log-2026-06-05-worktree-hook-no-output
+type: log
+status: complete
+board: false
+---
+
 # WorktreeCreate hook "no output" failure
-
-## Status
-
-Complete
 
 ## Problem
 

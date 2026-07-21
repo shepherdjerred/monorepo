@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-07-scout-custom-game-loading-screen
+type: reference
+status: complete
+board: false
+---
+
 # Scout for LoL — Render the loading-screen image for custom games
-
-## Status
-
-Complete — merged to main (custom-game loading-screen render fix).
 
 ## Context
 

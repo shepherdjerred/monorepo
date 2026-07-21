@@ -1,8 +1,11 @@
+---
+id: log-2026-05-30-pr-review-inline-comment-starvation
+type: log
+status: complete
+board: false
+---
+
 # PR Review Inline Comment Starvation
-
-## Status
-
-Partially Complete
 
 ## Summary
 

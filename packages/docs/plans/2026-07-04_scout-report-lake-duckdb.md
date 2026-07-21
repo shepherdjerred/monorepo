@@ -1,8 +1,13 @@
+---
+id: plan-2026-07-04-scout-report-lake-duckdb
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Scout for LoL: DuckDB Report Lake — ScoutQL→SQL over Parquet, drop SQLite fact tables
-
-## Status
-
-Partially Complete
 
 ## Context
 
@@ -435,3 +440,7 @@ feature/scout-report-lake origin/main` + `bun run scripts/setup.ts`. Add `@duckd
   tracked-only semantics are enforced at read time via the accounts join.
 - Bun `mock.module` leakage: any new config field read by long-lived modules
   needs the unknown-widening guard pattern (see `report-lake/paths.ts`).
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Scout for LoL: DuckDB Report Lake — ScoutQL→SQL over Parquet, drop SQLite fact tables`.

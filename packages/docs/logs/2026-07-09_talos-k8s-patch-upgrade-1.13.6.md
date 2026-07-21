@@ -1,8 +1,11 @@
+---
+id: log-2026-07-09-talos-k8s-patch-upgrade-1-13-6
+type: log
+status: complete
+board: false
+---
+
 # Update Talos on `torvalds` (v1.13.5 → v1.13.6)
-
-## Status
-
-Complete
 
 ## Context
 

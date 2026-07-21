@@ -1,3 +1,10 @@
+---
+id: reference-dagger-migration-2026-03-29-dagger-full-audit
+type: reference
+status: complete
+board: false
+---
+
 # Dagger CI/CD Full Audit
 
 **Date:** 2026-03-29

@@ -1,8 +1,11 @@
+---
+id: log-2026-07-10-torvalds-kubelet-crashloop
+type: log
+status: complete
+board: false
+---
+
 # torvalds Kubelet Crash-Loop — Config Regression Incident
-
-## Status
-
-Complete (live fix applied and verified; repo files pending commit)
 
 ## Summary
 

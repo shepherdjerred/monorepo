@@ -1,8 +1,11 @@
+---
+id: reference-completed-2026-06-19-scout-app-ux
+type: reference
+status: complete
+board: false
+---
+
 # Scout-for-LoL Web App (`app/`) — UX & Management Improvements
-
-## Status
-
-Complete — squash-merged in PR #1271.
 
 ## Context
 

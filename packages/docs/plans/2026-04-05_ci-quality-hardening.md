@@ -1,6 +1,15 @@
+---
+id: plan-2026-04-05-ci-quality-hardening
+type: plan
+status: in-progress
+board: true
+verification: agent
+disposition: active
+---
+
 # Harden Trivy, Semgrep, and Knip in CI
 
-## Status
+## Status Notes (Historical)
 
 Partially Complete. Findings have been triaged (`.trivyignore` is minimal), but on `main` all three —
 knip, Trivy, **and** Semgrep — are still `softFail: true` in `scripts/ci/src/steps/quality.ts` (lines
@@ -166,3 +175,7 @@ Remove `softFail: true` from all three steps in `scripts/ci/src/steps/quality.ts
 - ~20 package.json files — remove unused deps
 - ~30 source files — delete dead exports/types
 - 8 files to delete entirely
+
+## Remaining
+
+- [ ] Complete and verify the work described in `Harden Trivy, Semgrep, and Knip in CI`.

@@ -1,11 +1,11 @@
+---
+id: log-2026-07-18-commit-session-logs
+type: log
+status: complete
+board: false
+---
+
 # Commit and push pending session logs
-
-## Status
-
-Complete
-
-One-shot housekeeping session: committed the four untracked session logs from
-earlier 2026-07-18 sessions and pushed them to `main`.
 
 ## Session Log — 2026-07-18
 

@@ -1,8 +1,11 @@
+---
+id: log-2026-06-27-qbittorrent-vpn-security-audit
+type: log
+status: complete
+board: false
+---
+
 # qBittorrent + VPN (gluetun/AirVPN) Security Audit
-
-## Status
-
-Complete (audit only — no code changes)
 
 ## Scope
 

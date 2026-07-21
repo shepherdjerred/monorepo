@@ -1,6 +1,10 @@
 ---
 id: torvalds-tailscale-authkey-duplication
-status: active
+type: todo
+status: in-progress
+board: true
+verification: agent
+disposition: active
 origin: packages/docs/logs/2026-07-10_torvalds-kubelet-crashloop.md
 ---
 
@@ -60,3 +64,7 @@ future incident, and before `patches/tailscale.yaml` needs to be regenerated fro
 scratch for a re-provision (at which point whichever old key turns out to be
 revoked/expired would silently fail the very first auth attempt, right when it's
 needed).
+
+## Remaining
+
+- [ ] Complete and verify the work described in `torvalds: duplicate TS_AUTHKEY in live Tailscale ExtensionServiceConfig`.
