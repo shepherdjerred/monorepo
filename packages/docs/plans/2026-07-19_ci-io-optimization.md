@@ -219,7 +219,7 @@ CDK8s, respectively 20.926% and 14.889% of the full-root byte reference.
 
 - [x] Run the full `bun run verify` gate after final cleanup.
 - [x] Publish draft PR #1602.
-- [ ] Drive PR #1602's Buildkite checks green.
+- [x] Drive PR #1602's Buildkite checks green.
 - [ ] Capture post-deploy Grafana evidence for the new recording rules and
       panels.
 - [ ] Run the representative fixed-corpus comparison and determine the 50%
@@ -380,10 +380,12 @@ seven-day/100-build completion report is delivered.
   `bun run verify` gate (182 of 182 tasks) after closing every audit finding.
 - Updated the live `ci-io-post-merge-impact` report-only schedule through the
   authenticated agent-task API and verified the schedule ID in worker logs.
+- Passed Buildkite build 5987 on implementation head `1135b8697`, including
+  repository verification, Playwright, Docker E2E, image smoke builds, Tofu,
+  Helm, sites, release dry runs, and the Greptile review gate.
 
 ### Remaining
 
-- Drive PR #1602's Buildkite checks green.
 - Collect the fixed-corpus, post-deploy dashboard, 24-hour, and
   seven-day/100-build evidence.
 
