@@ -4,7 +4,7 @@ description: |
   Monitor a PR through reviews and merge conflicts until ready for human review.
   Use when user says "monitor PR", "watch PR", or wants automated PR workflow.
   Creates PR if needed, then monitors review comments and merge conflicts.
-  Note: this monorepo has no CI (pipeline removed 2026-07), so there is no CI to watch.
+  Note: this monorepo's CI runs on Buildkite (`buildkite/monorepo/pr` + `ci/merge-conflict`) per PR — watch it via `bk build view` or the Buildkite web UI, not `gh run`.
 user-invocable: true
 allowed-tools:
   - Bash
@@ -18,9 +18,11 @@ allowed-tools:
 
 # PR Monitor Skill
 
+> **Branch & PR management in `shepherdjerred/monorepo` uses git-spice — every PR is a stacked PR.** Load the `git-spice-helper` skill first (it's authoritative); create/update PRs with `git-spice branch/stack submit` — a single PR is a stack of one. The `gh pr create` and manual-`git rebase` examples below are the generic fallback for repos without git-spice.
+
 Automates the complete PR workflow: create PR, monitor reviews/conflicts, fix issues, and notify when ready.
 
-> **No CI in this monorepo.** The Dagger/Buildkite pipeline was removed 2026-07 — nothing runs on push or PR, and `gh pr checks` will show no meaningful checks. Verification is manual: run the touched packages' typecheck/test/lint locally before and during monitoring. This skill now covers **review comments and merge conflicts only**.
+> **CI in this monorepo.** Buildkite runs `buildkite/monorepo/pr` + `ci/merge-conflict` per PR — `gh pr checks` shows them, but use `bk build view` / the Buildkite web UI for logs (`toolkit pr logs` targets GitHub Actions run IDs and won't resolve a Buildkite build). Also run the touched packages' typecheck/test/lint locally before and during monitoring — CI catches the rest, but local verification is faster to iterate on.
 
 ## Workflow
 
@@ -114,7 +116,7 @@ git push --force-with-lease
 
 ## Important Notes
 
-1. **No CI**: There is no CI on this repo (pipeline removed 2026-07). Run the touched packages' `bun run typecheck` / `test` / `bunx eslint .` locally — anything you don't verify locally ships unverified.
+1. **CI**: Buildkite runs `buildkite/monorepo/pr` + `ci/merge-conflict` per PR — check via `bk build view` or the Buildkite web UI, not `gh run`. Also run the touched packages' `bun run typecheck` / `test` / `bunx eslint .` locally to iterate faster than waiting on CI.
 
 2. **Automated Reviews**: Claude Code automated reviews must ALL be addressed. The PR isn't approved until GitHub shows an approval.
 

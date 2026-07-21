@@ -9,6 +9,7 @@ Before doing ANY work, scan the available skills list for relevant skills and LO
 - **Leverage plugins** - Check available plugins before implementing something from scratch
 - **Web access — lightpanda, PinchTab, Docling, or similar** - For plain page/docs fetches, use [lightpanda](https://github.com/lightpanda-io/browser): `lightpanda fetch --dump markdown --strip_mode full --log_level fatal <url>` (see the `lightpanda-browser` skill). For sites that block lightpanda or need interaction (clicking, form filling, screenshots), use [PinchTab](https://github.com/pinchtab/pinchtab) — load the `pinchtab-helper` skill first. For document extraction (PDF/DOCX/etc.), use [Docling](https://github.com/docling-project/docling) per the PDF Extraction section below. Other similar tools are fine when they fit better.
 - **Look deeper** - If CI is failing, a build tool is erroring, or infrastructure has issues, don't just report the surface error. Load the relevant skill and investigate the root cause. The user wants solutions, not descriptions of problems.
+- **Branch & PR management → load the branching skill first.** Before creating branches, opening/updating/stacking/moving PRs, restacking, or syncing a branch with main, load the repo's branching skill first. In `shepherdjerred/monorepo` that is `git-spice-helper` — every PR is a git-spice stack. Do not run `git branch` / `git checkout -b` / `git rebase`, `gh pr create`, or `git-spice`/`gs` for feature work before loading it.
 
 Examples of what NOT to do:
 

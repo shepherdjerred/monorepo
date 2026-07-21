@@ -65,6 +65,10 @@ anything touching more than one file, or any multi-step task — create a worktr
   # Then set up deps scoped to the package(s) you'll touch — see AGENTS.md
   # "Development Setup" (build shared file: producers, then bun install + codegen).
 
+The worktree holds a git-spice *stack* — every feature PR is a stacked PR. Manage
+branches and PRs with git-spice (`gs`) and load the `git-spice-helper` skill before
+any branch/PR op. (In scripts, `gs` is Ghostscript — call `git-spice`.)
+
 Only stay in the main checkout for a single-file, single-commit fix you won't PR.
 When unsure, make the worktree. (Tip: `claude -w <slug>` does this at launch.)
 EOF
