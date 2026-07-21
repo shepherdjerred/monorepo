@@ -47,6 +47,13 @@ function scalar(value: string): string {
   return trimmed;
 }
 
+function hasTrimmedLine(block: string | undefined, expected: string): boolean {
+  return (
+    block !== undefined &&
+    block.split("\n").some((line) => line.trim() === expected)
+  );
+}
+
 const pipeline = await Bun.file(PIPELINE_PATH).text();
 const lines = pipeline.split("\n");
 const stepStarts = lines
@@ -121,6 +128,39 @@ if (
   !selectorStep.includes("prepare-ci-changed-base.sh")
 ) {
   fail("ci-selector-base must be a soft-fail metadata preparation step");
+}
+
+for (const key of ["playwright-e2e-pr", "playwright-e2e-main"]) {
+  const block = stepBlocks.get(key);
+  const install =
+    "bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/monorepo'";
+  if (!hasTrimmedLine(block, install)) {
+    fail(`Playwright lane ${key} is missing exact filtered install ${install}`);
+  }
+  for (const required of [
+    "bunx --no-install playwright install",
+    "bunx --no-install turbo run build lint test test:e2e",
+  ]) {
+    if (block === undefined || !block.includes(required)) {
+      fail(
+        `Playwright lane ${key} is missing explicit tool closure ${required}`,
+      );
+    }
+  }
+}
+
+const helmTypesDrift = stepBlocks.get("helm-types-drift-check");
+const helmInstall = "bun install --frozen-lockfile --filter '@homelab/cdk8s'";
+if (!hasTrimmedLine(helmTypesDrift, helmInstall)) {
+  fail(`Helm types lane is missing exact filtered install ${helmInstall}`);
+}
+for (const required of [
+  '- "packages/homelab/src/cdk8s/package.json"',
+  "bun --no-install run generate-helm-types --check",
+]) {
+  if (helmTypesDrift === undefined || !helmTypesDrift.includes(required)) {
+    fail(`Helm types lane is missing explicit tool closure ${required}`);
+  }
 }
 
 const ciChanged = await Bun.file(".buildkite/scripts/ci-changed.sh").text();
@@ -376,9 +416,11 @@ if (
 // Buildkite step starts from a fresh pod, so an otherwise dependency-free
 // `bun script.ts` can silently turn into a full root install. Require every
 // runtime invocation to disable auto-install explicitly; intentional installs
-// remain visible as `bun install`, and bunx remains explicit for pinned CLIs.
+// remain visible as `bun install`. bunx must also use --no-install so a missing
+// filtered dependency fails instead of populating Bun's global cache.
 const bakeImages = await Bun.file(".buildkite/scripts/bake-images.sh").text();
 const implicitBunInstall = /\bbun\s+(?!install(?:\s|$)|--no-install(?:\s|$))/g;
+const implicitBunxInstall = /\bbunx\s+(?!--no-install(?:\s|$))/g;
 const runtimeCommandSources: { path: string; source: string }[] = [
   { path: PIPELINE_PATH, source: pipeline },
   { path: ".buildkite/scripts/ci-changed.sh", source: ciChanged },
@@ -396,6 +438,15 @@ for (const { path, source } of runtimeCommandSources) {
     const line = beforeMatch.split("\n").length;
     fail(
       `Bun runtime in ${path} at filtered line ${line.toString()} can auto-install dependencies`,
+    );
+  }
+  const implicitBunxMatch = implicitBunxInstall.exec(commands);
+  implicitBunxInstall.lastIndex = 0;
+  if (implicitBunxMatch !== null) {
+    const beforeMatch = commands.slice(0, implicitBunxMatch.index);
+    const line = beforeMatch.split("\n").length;
+    fail(
+      `bunx runtime in ${path} at filtered line ${line.toString()} can auto-install dependencies`,
     );
   }
 }
@@ -418,6 +469,8 @@ const automationSources = [
 ];
 const implicitChildBun =
   /\[\s*"bun",(?!\s*"(?:--no-install|install|x|publish)")/s;
+const implicitChildBunx = /\[\s*"bun",\s*"x",(?!\s*"--no-install")/s;
+const implicitShellBunx = /\bbun x\s+(?!--no-install(?:\s|$))/;
 const implicitBuildCommand = /buildCmd:\s*["'`]bun\s+(?!--no-install(?:\s|$))/;
 const implicitTaggedBun =
   /(?:Bun\.)?\$`bun\s+(?!--no-install(?:\s|$)|install(?:\s|$)|x(?:\s|$)|publish(?:\s|$))/;
@@ -425,10 +478,34 @@ for (const path of automationSources) {
   const source = await Bun.file(path).text();
   if (
     implicitChildBun.test(source) ||
+    implicitChildBunx.test(source) ||
+    implicitShellBunx.test(source) ||
     implicitBuildCommand.test(source) ||
     implicitTaggedBun.test(source)
   ) {
     fail(`nested Bun runtime in ${path} can auto-install dependencies`);
+  }
+}
+
+for (const [path, required] of [
+  [
+    "packages/homelab/src/cdk8s/package.json",
+    [
+      '"typescript":',
+      '"prettier":',
+      '"bunx --no-install eslint',
+      '"bunx --no-install tsc',
+      '"generate-helm-types": "bun --no-install run',
+      '"format:generated-helm": "prettier --no-config"',
+    ],
+  ],
+  ["packages/sjer.red/package.json", ['"bunx --no-install playwright test']],
+] satisfies ReadonlyArray<readonly [string, readonly string[]]>) {
+  const manifest = await Bun.file(path).text();
+  for (const token of required) {
+    if (!manifest.includes(token)) {
+      fail(`CI package ${path} is missing explicit tool dependency ${token}`);
+    }
   }
 }
 

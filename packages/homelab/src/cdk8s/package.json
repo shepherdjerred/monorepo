@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "build": "rm -rf dist/ && bun run src/app.ts && bun run scripts/patch.ts",
-    "lint": "bunx eslint .",
-    "typecheck": "bunx tsc --noEmit",
+    "lint": "bunx --no-install eslint .",
+    "typecheck": "bunx --no-install tsc --noEmit",
     "test": "bun test && bun run test:gpu-resources",
     "test:gpu-resources": "bun run scripts/test-gpu-resources.ts",
     "clear": "rm -rf dist/",
@@ -13,7 +13,8 @@
     "patch": "bun run scripts/patch.ts",
     "r2:inventory": "bun run scripts/r2-prefix-inventory.ts",
     "update-imports": "bun run scripts/update-imports.ts",
-    "generate-helm-types": "bun run scripts/generate-helm-types.ts",
+    "generate-helm-types": "bun --no-install run scripts/generate-helm-types.ts",
+    "format:generated-helm": "prettier --no-config",
     "up": "bun run build && bun run scripts/helm-render.ts --apply",
     "render": "bun run build && bun run scripts/helm-render.ts --render",
     "diff": "bun run build && bun run scripts/helm-render.ts --diff",
@@ -41,7 +42,9 @@
     "cdk8s-cli": "2.207.41",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
+    "prettier": "^3.8.3",
     "type-fest": "^5.6.0",
+    "typescript": "^6.0.3",
     "yaml": "^2.8.3"
   }
 }

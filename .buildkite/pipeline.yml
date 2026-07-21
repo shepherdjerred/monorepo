@@ -254,9 +254,9 @@ steps:
       apt-get update -qq && apt-get install -y -qq --no-install-recommends unzip
       curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.14
       export PATH="/root/.bun/bin:$$PATH"
-      bun install --frozen-lockfile --filter sjer.red
-      cd packages/sjer.red && bunx playwright install && cd ../..
-      bunx turbo@2.10.4 run build typecheck lint test test:e2e --filter=sjer.red --concurrency=2
+      bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/monorepo'
+      cd packages/sjer.red && bunx --no-install playwright install && cd ../..
+      bunx --no-install turbo run build lint test test:e2e --filter=sjer.red --concurrency=2
     retry: *retry
     plugins:
       - kubernetes:
@@ -293,9 +293,9 @@ steps:
       apt-get update -qq && apt-get install -y -qq --no-install-recommends unzip
       curl -fsSL https://bun.sh/install | bash -s -- bun-v1.3.14
       export PATH="/root/.bun/bin:$$PATH"
-      bun install --frozen-lockfile --filter sjer.red
-      cd packages/sjer.red && bunx playwright install && cd ../..
-      bunx turbo@2.10.4 run build typecheck lint test test:e2e --filter=sjer.red --concurrency=2
+      bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/monorepo'
+      cd packages/sjer.red && bunx --no-install playwright install && cd ../..
+      bunx --no-install turbo run build lint test test:e2e --filter=sjer.red --concurrency=2
     artifact_paths:
       - "packages/sjer.red/dist/**/*"
       - "packages/sjer.red/dist/*"
@@ -424,6 +424,7 @@ steps:
         - "package.json"
         - "patches/**"
         - "turbo.json"
+        - "packages/homelab/src/cdk8s/package.json"
         - "packages/homelab/src/cdk8s/src/versions.ts"
         - "packages/homelab/src/cdk8s/scripts/generate-helm-types.ts"
         - "packages/homelab/src/cdk8s/scripts/parse-helm-charts.ts"

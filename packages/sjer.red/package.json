@@ -8,11 +8,11 @@
     "build": "astro check && tsc --noEmit && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test:update": "bun run build && bunx playwright test --update-snapshots",
+    "test:update": "bun run build && bunx --no-install playwright test --update-snapshots",
     "lint": "eslint --cache",
     "lint:fix": "eslint --cache --fix",
     "typecheck": "astro check && tsc --noEmit",
-    "test:e2e": "bunx playwright test",
+    "test:e2e": "bunx --no-install playwright test",
     "deploy": "bun ../../scripts/deploy-site.ts sjer-red"
   },
   "dependencies": {

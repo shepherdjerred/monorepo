@@ -101,17 +101,17 @@ long jobs with insufficient samples; none were treated as zero.
 
 ### Runtime Install Footprints
 
-| Closure                 |         Bytes | Entries | Full bytes | Full entries |
-| ----------------------- | ------------: | ------: | ---------: | -----------: |
-| Full root               | 3,753,123,840 | 261,770 |   100.000% |     100.000% |
-| Root scripts production |    56,119,296 |   4,681 |     1.495% |       1.788% |
-| sjer.red                |   724,738,048 |  68,265 |    19.310% |      26.078% |
-| CDK8s development       |   471,887,872 |  33,973 |    12.573% |      12.978% |
-| LLM observability       |   474,165,248 |  35,318 |    12.634% |      13.492% |
-| Worst sites union       | 1,845,448,704 | 128,233 |    49.171% |      48.987% |
-| NPM sequential union    |   462,278,656 |  46,257 |    12.317% |      17.671% |
-| CDK8s production        |    56,119,296 |   4,677 |     1.495% |       1.787% |
-| Cooklang                |   177,922,048 |  21,642 |     4.741% |       8.268% |
+| Closure                  |         Bytes | Entries | Full bytes | Full entries |
+| ------------------------ | ------------: | ------: | ---------: | -----------: |
+| Full root                | 3,753,123,840 | 261,770 |   100.000% |     100.000% |
+| Root scripts production  |    56,119,296 |   4,681 |     1.495% |       1.788% |
+| sjer.red plus root tools |   785,367,040 |  69,928 |    20.926% |      26.714% |
+| CDK8s development        |   558,800,896 |  37,340 |    14.889% |      14.264% |
+| LLM observability        |   474,165,248 |  35,318 |    12.634% |      13.492% |
+| Worst sites union        | 1,845,448,704 | 128,233 |    49.171% |      48.987% |
+| NPM sequential union     |   462,278,656 |  46,257 |    12.317% |      17.671% |
+| CDK8s production         |    56,119,296 |   4,677 |     1.495% |       1.787% |
+| Cooklang                 |   177,922,048 |  21,642 |     4.741% |       8.268% |
 
 This table covers the filtered workspace installs used by runtime Buildkite
 lanes. Every listed closure ran its real consuming command successfully. The
@@ -179,6 +179,26 @@ roughly 6,700 tracked files and 258 MB from scanner scope without excluding any
 shipped manifest or lockfile. An offline scan and a persistent Maven cache were
 rejected because they would respectively weaken fresh-pod dependency coverage
 or relocate the same dependency I/O.
+
+### Fresh-Pod Tool Closure Guard
+
+Buildkite build 5983 confirmed the bounded Trivy traversal, then exposed two
+implicit `bunx` downloads. The Playwright lane downloaded Turbo after its
+filtered install, and the Helm drift lane downloaded Prettier before failing to
+resolve the root Astro plugin. Both lanes now install their complete tool
+closure and run `bunx` with `--no-install`, so a missing dependency fails instead
+of writing into Bun's global cache. The pipeline validator enforces those
+invariants, including nested Bun runtimes launched by the Helm generator.
+
+The Playwright closure keeps the root package only for the repository-owned
+Turbo binary. Its exact `build lint test test:e2e` command passed all 110 browser
+tests; the duplicate `typecheck` task was removed because `build` already runs
+`astro check` and `tsc --noEmit`, and running both concurrently raced on Vite's
+dependency directory. The Helm package now directly owns Prettier and
+TypeScript; generated TypeScript uses `--no-config` because the root Prettier
+configuration only adds Astro parsing. Fresh isolated installs measured
+785,367,040 bytes for Playwright plus root tools and 558,800,896 bytes for
+CDK8s, respectively 20.926% and 14.889% of the full-root byte reference.
 
 ## Remaining
 
@@ -303,8 +323,11 @@ seven-day/100-build completion report is delivered.
   findings, removed unshipped/generated scanner traversal, hardened both
   scanner containers against privilege escalation, and replaced the flagged
   dynamic regular expression with bounded string parsing.
-- Re-ran the full `bun run verify` gate after the scanner fixes (182 of 182
-  tasks passed).
+- Used Buildkite build 5983 to verify the Trivy fix, then removed the implicit
+  Turbo and Prettier downloads it exposed, made the Playwright and Helm tool
+  closures explicit, and eliminated a duplicate concurrent typecheck race.
+- Re-ran the full `bun run verify` gate after the scanner and fresh-pod tool
+  closure fixes (182 of 182 tasks passed).
 
 ### Remaining
 
