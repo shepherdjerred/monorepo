@@ -61,21 +61,33 @@ function emit(line: string): void {
   process.stdout.write(`${line}\n`);
 }
 
-/** models.dev: { provider: { models: { id: { cost:{input,output}, limit:{context} } } } } — already per-1M. */
-function indexModelsDev(raw: unknown): Map<string, Upstream> {
-  const out = new Map<string, Upstream>();
-  for (const provider of Object.values(record(raw))) {
+/**
+ * models.dev: { provider: { models: { id: { cost:{input,output}, limit:{context} } } } } — already per-1M.
+ *
+ * models.dev lists the SAME model id under many providers (the canonical API
+ * owner, plus resellers/gateways like "qihang-ai" that mirror the catalog
+ * under promotional or simply wrong prices). Keying only by model id and
+ * overwriting on every provider silently lets the last reseller iterated win.
+ * Keep the full per-provider breakdown so callers can require an exact match
+ * on our own canonical provider (anthropic/openai/google) instead of trusting
+ * whichever mirror happened to be listed last.
+ */
+function indexModelsDev(raw: unknown): Map<string, Map<string, Upstream>> {
+  const out = new Map<string, Map<string, Upstream>>();
+  for (const [provider, providerRaw] of Object.entries(record(raw))) {
+    const byId = out.get(provider) ?? new Map<string, Upstream>();
     for (const [id, modelRaw] of Object.entries(
-      record(record(provider)["models"]),
+      record(record(providerRaw)["models"]),
     )) {
       const model = record(modelRaw);
       const cost = record(model["cost"]);
-      out.set(id, {
+      byId.set(id, {
         input: num(cost["input"]),
         output: num(cost["output"]),
         contextWindow: num(record(model["limit"])["context"]),
       });
     }
+    out.set(provider, byId);
   }
   return out;
 }
@@ -183,7 +195,11 @@ async function main(): Promise<void> {
       notChecked.push(`${id} (image — per-image pricing not in upstreams)`);
       continue;
     }
-    const upstream = modelsDev.get(id) ?? liteLlm.get(id);
+    // Only trust models.dev's listing under OUR OWN provider (the canonical
+    // API owner) — never a reseller/gateway mirror that happens to list the
+    // same model id under a different provider key.
+    const modelsDevUpstream = modelsDev.get(entry.provider)?.get(id);
+    const upstream = modelsDevUpstream ?? liteLlm.get(id);
     if (upstream === undefined) {
       overlayOnly.push(id);
       continue;
@@ -193,7 +209,7 @@ async function main(): Promise<void> {
         id,
         entry,
         upstream,
-        modelsDev.has(id) ? "models.dev" : "litellm",
+        modelsDevUpstream === undefined ? "litellm" : "models.dev",
       ),
     );
   }

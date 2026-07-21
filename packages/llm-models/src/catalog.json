@@ -144,8 +144,8 @@
     "description": "Dated snapshot of claude-haiku-4-5.",
     "pricing": {
       "modality": "text",
-      "input": 0.14,
-      "output": 0.71,
+      "input": 1,
+      "output": 5,
       "cacheRead": 0.1,
       "cacheWrite": 1.25
     },
