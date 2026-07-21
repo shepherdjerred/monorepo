@@ -1,0 +1,283 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/recyclarr/recyclarr/master/schemas/config-schema.json
+#
+# Living-room best-effort *arr config
+# ------------------------------------
+# Gear: Samsung QN90B (4K HDR10/HDR10+, no DV) · Apple TV 4K 2021 · Sonos Arc
+#       (1st gen Atmos) + Sub + Era 100 surrounds
+#
+# Goals:
+#   - Prefer best available up to 4K remux / 4K WEB
+#   - Fall back to worse qualities when needed (best-effort)
+#   - Hard-ish size ceiling ~100–120 GiB @ ~2 hr → max 1100 MB/min
+#   - Original audio only (English if OG English, else native)
+#   - Mild DD+ Atmos preference (ATV→eARC→Arc path). No TrueHD/DTS:X chase.
+#
+# Seerr: set movie + TV defaults to the "Best" quality profile after sync.
+#
+# API keys: secrets.yml (rendered at pod start from legacy 1Password yaml).
+
+sonarr:
+  sonarr:
+    base_url: http://media-sonarr-service:8989
+    api_key: !secret sonarr_api_key
+    delete_old_custom_formats: true
+    replace_existing_custom_formats: true
+
+    quality_definition:
+      type: series
+      qualities:
+        # ~1100 MB/min ≈ 100–120 GiB for a long 4K episode block / special
+        - name: WEBDL-2160p
+          max: 1100
+          preferred: 900
+        - name: WEBRip-2160p
+          max: 1100
+          preferred: 900
+        - name: Bluray-2160p
+          max: 1100
+          preferred: 900
+        - name: Remux-2160p
+          max: 1100
+          preferred: 900
+
+    quality_profiles:
+      - name: Best
+        reset_unmatched_scores:
+          enabled: true
+        upgrade:
+          allowed: true
+          until_quality: WEB 2160p
+          until_score: 10000
+        min_format_score: 0
+        quality_sort: top
+        qualities:
+          - name: WEB 2160p
+            qualities:
+              - WEBDL-2160p
+              - WEBRip-2160p
+          - name: Bluray-2160p
+          - name: WEB 1080p
+            qualities:
+              - WEBDL-1080p
+              - WEBRip-1080p
+          - name: Bluray-1080p
+          - name: WEB 720p
+            qualities:
+              - WEBDL-720p
+              - WEBRip-720p
+
+    custom_formats:
+      # --- Language: original only (reverse score) ---
+      - trash_ids:
+          - ae575f95ab639ba5d15f663bf019e3e8 # Language: Not Original
+        assign_scores_to:
+          - name: Best
+            score: -10000
+
+      # --- Video: HDR for 4K path; light HDR10+ (QN90B) ---
+      - trash_ids:
+          - 505d871304820ba7106b693be6fe4a9e # HDR
+          - 0c4b99df9206d2cfac3c05ab897dd62a # HDR10+ Boost
+        assign_scores_to:
+          - name: Best
+
+      # --- Audio: DD+ Atmos only (Sonos Arc). Mild scores — never required. ---
+      - trash_ids:
+          - 4232a509ce60c4e208d13825b7c06264 # DD+ ATMOS
+        assign_scores_to:
+          - name: Best
+            score: 300
+      - trash_ids:
+          - 63487786a8b01b7f20dd2bc90dd4a477 # DD+
+        assign_scores_to:
+          - name: Best
+            score: 50
+
+      # --- Unwanted / quality hygiene (TRaSH web-2160 defaults) ---
+      - trash_ids:
+          - 85c61753df5da1fb2aab6f2a47426b09 # BR-DISK
+          - 9c11cd3f07101cdba90a2d81cf0e56b4 # LQ
+          - e2315f990da2e2cbfc9fa5b7a6fcfe48 # LQ (Release Title)
+          - 47435ece6b99a0b477caf360e79ba0bb # x265 (HD)
+          - fbcb31d8dabd2a319072b84fc0b7249c # Extras
+          - 15a05bc7c1a36e2b57fd628f8977e2fc # AV1
+          - ec8fa7296b64e8cd390a1600981f3923 # Repack/Proper
+          - eb3d5cc0a2be0db205fb823640db6a3c # Repack v2
+          - 44e7c4de10ae50265753082e5dc76047 # Repack v3
+          - e6258996055b9fbab7e9cb2f75819294 # WEB Tier 01
+          - 58790d4e2fdcd9733aa7ae68ba2bb503 # WEB Tier 02
+          - d84935abd3f8556dcd51d4f27e22d0a6 # WEB Tier 03
+          - d0c516558625b04b363fa6c5c2c7cfd4 # WEB Scene
+          - d660701077794679fd59e8bdf4ce3a29 # AMZN
+          - f67c9ca88f463a48346062e8ad07713f # ATVP
+          - 89358767a60cc28783cdc3d0be9388a4 # DSNP
+          - 7a235133c87f7da4c8cccceca7e3c7a6 # HBO
+          - a880d6abc21e7c16884f3ae393f84179 # HMAX
+          - f6cce30f1733d5c8194222a7507909bb # Hulu
+          - 0ac24a2a68a9700bcb7eeca8e5cd644c # iT
+          - 81d1fbf600e2540cee87f3a23f9d3c1c # MAX
+          - d34870697c9db575f17700212167be23 # NF
+          - 1656adc6d7bb2c8cca6acfb6592db421 # PCOK
+          - c67a75ae4a1715f2bb4d492755ba4195 # PMTP
+          - 1efe8da11bfd74fbbcd4d8117ddb9213 # STAN
+        assign_scores_to:
+          - name: Best
+
+    media_naming:
+      series: default
+      season: default
+      episodes:
+        rename: true
+        standard: default
+        daily: default
+        anime: default
+
+radarr:
+  radarr:
+    base_url: http://media-radarr-service:7878
+    api_key: !secret radarr_api_key
+    delete_old_custom_formats: true
+    replace_existing_custom_formats: true
+
+    quality_definition:
+      type: movie
+      qualities:
+        # True max ~100–120 GiB @ ~2 hr (1100 MB/min). Preferred ~80–100 GiB.
+        - name: Remux-2160p
+          max: 1100
+          preferred: 900
+        - name: Bluray-2160p
+          max: 1100
+          preferred: 900
+        - name: WEBDL-2160p
+          max: 1100
+          preferred: 700
+        - name: WEBRip-2160p
+          max: 1100
+          preferred: 700
+        - name: HDTV-2160p
+          max: 1100
+          preferred: 700
+        - name: Remux-1080p
+          max: 600
+          preferred: 400
+
+    # SQP-1 trash_id → language: Original from guide. We override the ladder to
+    # allow Remux-2160p (stock SQP stops at Bluray-2160p encode) and rename Best.
+    quality_profiles:
+      - trash_id: 5128baeb2b081b72126bc8482b2a86a0 # [SQP] SQP-1 (2160p)
+        name: Best
+        reset_unmatched_scores:
+          enabled: true
+        upgrade:
+          allowed: true
+          until_quality: Remux-2160p
+          until_score: 10000
+        # 0 = true best-effort: grab plain WEB-1080p if nothing scored exists
+        min_format_score: 0
+        quality_sort: top
+        qualities:
+          - name: Remux-2160p
+          - name: Bluray-2160p
+          - name: WEB 2160p
+            qualities:
+              - WEBDL-2160p
+              - WEBRip-2160p
+          - name: Remux-1080p
+          - name: Bluray|WEB-1080p
+            qualities:
+              - Bluray-1080p
+              - WEBDL-1080p
+              - WEBRip-1080p
+              - WEBDL-720p
+              - WEBRip-720p
+
+    custom_formats:
+      # --- Language: original only ---
+      - trash_ids:
+          - d6e9318c875905d6cfb5bee961afcea9 # Language: Not Original
+        assign_scores_to:
+          - name: Best
+            score: -10000
+
+      # --- Video: HDR + HDR10+ (QN90B). No DV boost (TV has no DV). ---
+      - trash_ids:
+          - 493b6d1dbec3c3364c59d7607f7e3405 # HDR
+          - caa37d0df9c348912df1fb1d88f9273a # HDR10+ Boost
+        assign_scores_to:
+          - name: Best
+
+      # --- Audio: DD+ Atmos path only (Arc). Zero lossless that ATV can't use. ---
+      - trash_ids:
+          - 1af239278386be2919e1bcee0bde047e # DD+ ATMOS
+        assign_scores_to:
+          - name: Best
+            score: 300
+      - trash_ids:
+          - 185f1dd7264c4562b9022d963ac37424 # DD+
+        assign_scores_to:
+          - name: Best
+            score: 50
+      # Neutralize SQP audio ladder leftovers if guide scores leak onto Best
+      - trash_ids:
+          - 496f355514737f7d83bf7aa4d24f8169 # TrueHD Atmos
+          - 2f22d89048b01681dde8afe203bf2e95 # DTS X
+          - 417804f7f2c4308c1f4c5d380d4c4475 # ATMOS (undefined)
+          - 3cafb66171b47f226146a0770576870f # TrueHD
+          - dcf3ec6938fa32445f590a4da84256cd # DTS-HD MA
+          - a570d4a0e56a2874b64e5bfa55202a1b # FLAC
+          - e7c2fcae07cbada050a0af3357491d7b # PCM
+          - 8e109e50e0a0b83a5098b056e13bf6db # DTS-HD HRA
+          - f9f847ac70a0af62ea4a08280b859636 # DTS-ES
+          - 1c1a4c5e823891c75bc50380a6866f73 # DTS
+        assign_scores_to:
+          - name: Best
+            score: 0
+
+      # --- HQ groups + unwanted + streaming (from TRaSH UHD/HD baselines) ---
+      - trash_ids:
+          - 4d74ac4c4db0b64bff6ce0cffef99bf0 # UHD Bluray Tier 01
+          - a58f517a70193f8e578056642178419d # UHD Bluray Tier 02
+          - e71939fae578037e7aed3ee219bbe7c1 # UHD Bluray Tier 03
+          - 3a3ff47579026e76d6504ebea39390de # Remux Tier 01
+          - 9f98181fe5a3fbeb0cc29340da2a468a # Remux Tier 02
+          - 8baaf0b3142bf4d94c42a724f034e27a # Remux Tier 03
+          - ed27ebfef2f323e964fb1f61391bcb35 # HD Bluray Tier 01
+          - c20c8647f2746a1f4c4262b0fbbeeeae # HD Bluray Tier 02
+          - 5608c71bcebba0a5e666223bae8c9227 # HD Bluray Tier 03
+          - c20f169ef63c5f40c2def54abaf4438e # WEB Tier 01
+          - 403816d65392c79236dcb6dd591aeda4 # WEB Tier 02
+          - af94e0fe497124d1f9ce732069ec8c3b # WEB Tier 03
+          - e7718d7a3ce595f289bfee26adc178f5 # Repack/Proper
+          - ae43b294509409a6a13919dedd4764c4 # Repack2
+          - 5caaaa1c08c1742aa4342d8c4cc463f2 # Repack3
+          - ed38b889b31be83fda192888e2286d83 # BR-DISK
+          - e6886871085226c3da1830830146846c # Generated Dynamic HDR
+          - 90a6f9a284dff5103f6346090e6280c8 # LQ
+          - e204b80c87be9497a8a6eaff48f72905 # LQ (Release Title)
+          - dc98083864ea246d05a42df0d05f81cc # x265 (HD)
+          - b8cd450cbfa689c0259a01d9e29ba3d6 # 3D
+          - bfd8eb01832d646a0a89c4deb46f8564 # Upscaled
+          - 0a3f082873eb454bde444150b70253cc # Extras
+          - 712d74cd88bceb883ee32f773656b1f5 # Sing-Along Versions
+          - cae4ca30163749b891686f95532519bd # AV1
+          - b3b3a6ac74ecbd56bcdbefa4799fb9df # AMZN
+          - 40e9380490e748672c2522eaaeb692f7 # ATVP
+          - 84272245b2988854bfb76a16e60baea5 # DSNP
+          - 509e5f41146e278f9eab1ddaceb34515 # HBO
+          - 5763d1b0ce84aff3b21038eea8e9b8ad # HMAX
+          - 526d445d4c16214309f0fd2b3be18a89 # Hulu
+          - e0ec9672be6cac914ffad34a6b077209 # iT
+          - 6a061313d22e51e0f25b7cd4dc065233 # MAX
+          - 170b1d363bd8516fbf3a3eb05d4faff6 # NF
+          - c9fd353f8f5f1baf56dc601c4cb29920 # PCOK
+          - e36a0ba1bc902b26ee40818a1d59b8bd # PMTP
+          - c2863d2a50c9acad1fb50e53ece60817 # STAN
+        assign_scores_to:
+          - name: Best
+
+    media_naming:
+      folder: default
+      movie:
+        rename: true
+        standard: default
