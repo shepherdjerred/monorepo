@@ -75,9 +75,10 @@ a new git-spice skill authored from deep research (docs + source + HN/blogs).
 
 ## Remaining
 
-- [ ] Submit the stack (`git-spice branch submit`) and open the PR — pending user go-ahead (outward-facing).
+- [x] Submit the stack and open the PR — [#1588](https://github.com/shepherdjerred/monorepo/pull/1588).
+- [x] Reconcile the stale "no CI" claims in `pr-monitor`/`pr-workflow-automation`/`pr-health` — fixed in #1588 per Greptile review.
 - [ ] After merge, make the dotfiles changes live: `chezmoi apply` (Brewfile, fish, gitconfig, skills, global AGENTS.md) and `brew bundle` if `git-spice` is missing on a machine.
-- [ ] Optional follow-up (separate PR): reconcile the stale "no CI" claims in `pr-monitor`/`pr-workflow-automation`/`pr-health` and the `git-helper` "hooks removed 2026-07" line — CI (Buildkite) and lefthook hooks both exist.
+- [ ] Optional follow-up (separate doc/PR): the `git-helper` "hooks removed 2026-07" line is also stale (lefthook hooks exist) — out of scope for this PR, not touched by it.
 
 ## Session Log — 2026-07-19
 
@@ -93,5 +94,5 @@ a new git-spice skill authored from deep research (docs + source + HN/blogs).
 ### Caveats
 
 - `gs` is Ghostscript non-interactively; all docs/skill use `git-spice` in runnable blocks.
-- Pointer-only scope leaves the existing `gh pr create` examples and the stale "no CI" / "hooks removed" lines in the 5 skills in place (flagged as an optional follow-up).
+- Pointer-only scope leaves the existing `gh pr create` examples in the 5 skills in place; the stale "no CI" lines in `pr-monitor`/`pr-workflow-automation`/`pr-health` were fixed per Greptile review (see Remaining), but `git-helper`'s "hooks removed" line remains a follow-up.
 - The gitconfig/Brewfile/fish/skill changes are chezmoi **source**; they take effect after `chezmoi apply` (or merge + apply).

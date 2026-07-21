@@ -9,7 +9,7 @@ description: |
 
 > **Branch & PR management in `shepherdjerred/monorepo` uses git-spice — every PR is a stacked PR.** Load the `git-spice-helper` skill first (it's authoritative); create/update PRs with `git-spice branch/stack submit` — a single PR is a stack of one. The `gh pr create` and manual-`git rebase` examples below are the generic fallback for repos without git-spice.
 
-> **This monorepo has no CI.** The Dagger/Buildkite pipeline was removed 2026-07 — `gh pr checks` returns nothing meaningful, and there are no CI failures to watch or retry against. For this repo, the workflow is: verify locally (typecheck/test/lint for touched packages), push, create the PR, then handle **review comments and merge conflicts only**. The CI-monitoring material below is generic reference for repos that do have CI.
+> **This monorepo's CI is Buildkite, not GitHub Actions.** `buildkite/monorepo/pr` + `ci/merge-conflict` run per PR — `gh pr checks` shows their pass/fail, but the `gh run` / GitHub Actions commands in the CI-monitoring material below don't apply here (use `bk build view` or the Buildkite web UI for logs instead). For this repo, the workflow is: verify locally (typecheck/test/lint for touched packages), push, create the PR, then handle **review comments, merge conflicts, and Buildkite failures**. The CI-monitoring material below is generic reference for repos that do have GitHub Actions CI.
 
 ## Overview
 

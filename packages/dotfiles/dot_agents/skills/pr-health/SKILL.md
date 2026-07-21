@@ -13,7 +13,7 @@ allowed-tools:
 
 Check the health of a pull request including merge conflicts, CI status, and approval status.
 
-> **Note:** this monorepo has no CI (the Dagger/Buildkite pipeline was removed 2026-07), so for monorepo PRs the CI section reports no checks — health is effectively conflicts + approval. The CI/logs commands still apply to other repos.
+> **Note:** this monorepo's CI runs on Buildkite (`buildkite/monorepo/pr` + `ci/merge-conflict`) per PR in the stack — the CI section reports those checks. `toolkit pr logs` targets GitHub Actions run IDs, so use Buildkite tooling (`bk build view`) or the Buildkite web UI for logs on this repo; the `toolkit pr logs` commands below still apply to other repos.
 
 ## Commands
 

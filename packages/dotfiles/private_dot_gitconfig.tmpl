@@ -63,11 +63,11 @@
   enabled = true
   autoupdate = true
 
-# git-spice (gs) stacked-branch workflow. `updateRefs`/`autoSetupRemote`/
-# `pull.rebase` above already suit stacking. This one keeps `gs branch create`
+# git-spice stacked-branch workflow. `updateRefs`/`autoSetupRemote`/
+# `pull.rebase` above already suit stacking. This one keeps `git-spice branch create`
 # from making an empty placeholder commit that the monorepo commit-msg hook
 # (scripts/validate-commit-msg.ts) would reject — create the branch, then
-# `gs commit create -m "type(scope): …"`. See the git-spice-helper skill.
+# `git-spice commit create -m "type(scope): …"`. See the git-spice-helper skill.
 [spice "branchCreate"]
   commit = false
 
