@@ -1,8 +1,11 @@
+---
+id: log-2026-07-19-recyclarr-original-language
+type: log
+status: complete
+board: false
+---
+
 # Recyclarr living-room Best profiles
-
-## Status
-
-Complete
 
 ## Context
 
