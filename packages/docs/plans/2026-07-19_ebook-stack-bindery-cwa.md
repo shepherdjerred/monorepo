@@ -1,6 +1,11 @@
-# Ebook stack: Bindery + CWA + Kindle Auto-Send
+---
+id: plan-2026-07-19-ebook-stack-bindery-cwa
+type: plan
+status: in-progress
+board: false
+---
 
-## Status
+# Ebook stack: Bindery + CWA + Kindle Auto-Send
 
 Partially Complete — code on
 [PR #1581](https://github.com/shepherdjerred/monorepo/pull/1581); post-merge

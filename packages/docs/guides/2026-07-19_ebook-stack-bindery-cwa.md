@@ -1,6 +1,11 @@
-# Ebook stack: Bindery + Calibre-Web Automated + Kindle
+---
+id: guide-2026-07-19-ebook-stack-bindery-cwa
+type: guide
+status: complete
+board: false
+---
 
-## Status
+# Ebook stack: Bindery + Calibre-Web Automated + Kindle
 
 Operational reference — infra in PR
 [#1581](https://github.com/shepherdjerred/monorepo/pull/1581) / plan
