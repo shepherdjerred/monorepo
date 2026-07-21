@@ -74,7 +74,7 @@ export function createBugsinkPostgreSQLDatabase(chart: Chart) {
           locale: "en_US.utf8",
           "data-checksums": "true",
         },
-        pg_hba: [
+        pgHba: [
           // Local connections for postgres superuser (required for Patroni management)
           "local all postgres peer",
           "local all all peer",

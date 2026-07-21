@@ -14,6 +14,9 @@ describe("Velero large PVC backup policy alerts", () => {
     if (sizeGroup === undefined) {
       throw new Error("expected velero-backup-size rule group");
     }
+    if (sizeGroup.rules === undefined) {
+      throw new Error("expected velero-backup-size rules");
+    }
 
     const alert = sizeGroup.rules.find(
       (rule) => rule.alert === "VeleroLargePVCMayImpactBackups",

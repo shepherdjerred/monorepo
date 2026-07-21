@@ -67,7 +67,8 @@
     },
     "packages/homelab/src/cdk8s": {
       "entry": ["src/app.ts", "src/**/*.ts", "scripts/**/*.ts"],
-      "project": ["src/**/*.ts", "scripts/**/*.ts"]
+      "project": ["src/**/*.ts", "scripts/**/*.ts"],
+      "ignoreDependencies": ["cdk8s-cli"]
     },
     "packages/homelab/src/helm-types": {
       "entry": ["src/**/*.ts"],
