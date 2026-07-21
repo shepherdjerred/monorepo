@@ -31,16 +31,6 @@ const PATH_GATED_PR_KEYS = new Set([
   "helm-pr",
   "release-pr",
 ]);
-const BUILDX_BENCHMARK_KEYS = new Set([
-  "buildx-io-reject-unsafe",
-  "buildx-io-prepare",
-  "buildx-io-tasknotes",
-  "buildx-io-temporal",
-  "buildx-io-infra",
-  "buildx-io-report",
-]);
-const BUILDX_ORDINARY_GUARD =
-  'build.env("CI_IO_BUILDX_BENCHMARK_MODE") == null';
 
 function fail(message: string): never {
   throw new Error(`[validate-pipeline] ${message}`);
@@ -87,15 +77,8 @@ for (const [position, start] of stepStarts.entries()) {
   keys.add(key);
   stepBlocks.set(key, block);
 
-  const condition = blockLines.find((line) => /^    if:/.test(line));
-  if (condition === undefined) {
+  if (blockLines.find((line) => /^    if:/.test(line)) === undefined) {
     fail(`step ${key} has no condition`);
-  }
-  if (
-    !BUILDX_BENCHMARK_KEYS.has(key) &&
-    !condition.includes(BUILDX_ORDINARY_GUARD)
-  ) {
-    fail(`ordinary step ${key} can leak into a Buildx benchmark build`);
   }
 
   const labels = blockLines
@@ -169,6 +152,38 @@ if (!selectImageTargets.includes('"--no-renames"')) {
 if (!selectImageTargets.includes('"turbo.json"')) {
   fail("image selection can skip every target after turbo.json changes");
 }
+if (!selectImageTargets.includes('"tsconfig.base.json"')) {
+  fail("image selection can skip every target after root tsconfig changes");
+}
+const scoutTsconfig = "packages/scout-for-lol/tsconfig.base.json";
+if (!selectImageTargets.includes(`"${scoutTsconfig}"`)) {
+  fail("image selection can skip Scout after its base tsconfig changes");
+}
+
+const caddyConfigInputs = [
+  "packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts",
+  "packages/homelab/src/cdk8s/src/misc/common.ts",
+  "packages/homelab/src/cdk8s/src/misc/s3-static-site.ts",
+  "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
+];
+const imagesPr = stepBlocks.get("images-pr");
+if (imagesPr === undefined || !imagesPr.includes('- "scripts/package.json"')) {
+  fail("images-pr path gate is missing the root-scripts workspace manifest");
+}
+if (imagesPr === undefined || !imagesPr.includes('- "tsconfig.base.json"')) {
+  fail("images-pr path gate is missing the root TypeScript config");
+}
+if (imagesPr === undefined || !imagesPr.includes(`- "${scoutTsconfig}"`)) {
+  fail("images-pr path gate is missing the Scout base TypeScript config");
+}
+for (const caddyConfigInput of caddyConfigInputs) {
+  if (!selectImageTargets.includes(`"${caddyConfigInput}"`)) {
+    fail(`main image selector is missing Caddy input ${caddyConfigInput}`);
+  }
+  if (imagesPr === undefined || !imagesPr.includes(`"${caddyConfigInput}"`)) {
+    fail(`images-pr path gate is missing Caddy input ${caddyConfigInput}`);
+  }
+}
 
 const trivy = stepBlocks.get("trivy");
 for (const required of [
@@ -213,29 +228,6 @@ for (const required of [
   }
 }
 
-const benchmarkRejection = stepBlocks.get("buildx-io-reject-unsafe");
-if (
-  benchmarkRejection === undefined ||
-  !benchmarkRejection.includes('build.branch != "ci-io-benchmark"') ||
-  !benchmarkRejection.includes("build.pull_request.id != null") ||
-  !benchmarkRejection.includes("exit 2")
-) {
-  fail("an unsafe benchmark-only build can publish a trusted CI status");
-}
-for (const key of BUILDX_BENCHMARK_KEYS) {
-  if (key === "buildx-io-reject-unsafe") {
-    continue;
-  }
-  const block = stepBlocks.get(key);
-  if (
-    block === undefined ||
-    !block.includes('build.branch == "ci-io-benchmark"') ||
-    !block.includes("build.pull_request.id == null")
-  ) {
-    fail(`Buildx benchmark step ${key} can run outside the dedicated branch`);
-  }
-}
-
 const npmPublish = stepBlocks.get("npm-publish");
 if (
   npmPublish === undefined ||
@@ -247,29 +239,6 @@ if (
 const jsonHelpers = await Bun.file("scripts/lib/json.ts").text();
 if (jsonHelpers.includes('from "zod"')) {
   fail("tiny JSON helpers restored a hidden install dependency");
-}
-
-const benchmarkPrepare = stepBlocks.get("buildx-io-prepare");
-const benchmarkInfra = stepBlocks.get("buildx-io-infra");
-if (
-  benchmarkPrepare === undefined ||
-  !benchmarkPrepare.includes("generate-caddyfile.ts caddyfile.generated") ||
-  benchmarkInfra === undefined ||
-  !benchmarkInfra.includes("depends_on: buildx-io-prepare") ||
-  !benchmarkInfra.includes("CADDYFILE_SMOKE_PATH")
-) {
-  fail("Buildx infra fixture lacks an unmeasured Caddy preparation artifact");
-}
-
-const benchmarkReport = stepBlocks.get("buildx-io-report");
-for (const required of [
-  'artifact download "buildx-run-metadata.json"',
-  "compare-buildx-metadata.ts",
-  "timeout_in_minutes: 15",
-]) {
-  if (benchmarkReport === undefined || !benchmarkReport.includes(required)) {
-    fail(`Buildx report is missing integrity contract ${required}`);
-  }
 }
 
 const selectorPreparation = await Bun.file(
@@ -327,52 +296,60 @@ if (bakeImages.includes("ALWAYS_ON_TARGETS")) {
   fail("bake-images.sh restored the always-on image target workaround");
 }
 for (const required of [
-  "configure-buildx-driver.sh",
-  'docker buildx bake --builder "$BUILDX_BUILDER"',
-  "CI_IMAGE_VERSION",
-  "CI_BUILDX_READ_CACHE",
-  "--target",
+  "docker buildx bake --builder ci",
+  "CADDYFILE_SMOKE_PATH",
 ]) {
   if (!bakeImages.includes(required)) {
-    fail(`bake-images.sh is missing Buildx benchmark contract ${required}`);
+    fail(`bake-images.sh is missing production image contract ${required}`);
+  }
+}
+for (const forbidden of ["CI_BUILDX_", "--target", "image-build-manifest"]) {
+  if (bakeImages.includes(forbidden)) {
+    fail(`bake-images.sh retained rejected Buildx experiment ${forbidden}`);
   }
 }
 
-const buildxFixture = await Bun.file(
-  ".buildkite/scripts/run-buildx-io-fixture.sh",
-).text();
-if (!buildxFixture.includes("export CI_BUILDX_READ_CACHE=false")) {
-  fail("Buildx A/B fixtures can read a mutable registry cache");
-}
-
 const dockerBake = await Bun.file("docker-bake.hcl").text();
-if (
-  !dockerBake.includes('variable "READ_CACHE"') ||
-  !dockerBake.includes('equal(READ_CACHE, "true")')
-) {
-  fail("docker-bake.hcl cannot disable mutable cache imports for A/B runs");
+if (dockerBake.includes('variable "READ_CACHE"')) {
+  fail("docker-bake.hcl retained the rejected Buildx experiment cache mode");
 }
 
 const buildCiImage = await Bun.file(
   ".buildkite/scripts/build-ci-image.sh",
 ).text();
 if (
-  !buildCiImage.includes("configure-buildx-driver.sh") ||
-  !buildCiImage.includes('--builder "$BUILDX_BUILDER"')
+  !buildCiImage.includes(
+    "docker buildx create --name ci --driver docker-container",
+  ) ||
+  !buildCiImage.includes("--builder ci")
 ) {
-  fail("build-ci-image.sh bypasses the guarded Buildx selector");
+  fail("build-ci-image.sh must use the production docker-container builder");
 }
 
 const caddyCheck = await Bun.file(
   "packages/homelab/src/cdk8s/scripts/check-caddyfile.ts",
 ).text();
 for (const hiddenBuild of [
+  '"docker"',
   "caddy-s3proxy:dev",
   "docker buildx",
   "imageExists",
 ]) {
   if (caddyCheck.includes(hiddenBuild)) {
     fail(`check-caddyfile.ts restored hidden build path ${hiddenBuild}`);
+  }
+}
+
+const imageSmoke = await Bun.file(
+  "packages/homelab/scripts/smoke-images.ts",
+).text();
+for (const required of [
+  'const image = "caddy-s3proxy:dev"',
+  'process.env["CADDYFILE_SMOKE_PATH"]',
+  "caddy validate --config /tmp/Caddyfile --adapter caddyfile",
+]) {
+  if (!imageSmoke.includes(required)) {
+    fail(`infra image smoke is missing Caddy validation contract ${required}`);
   }
 }
 

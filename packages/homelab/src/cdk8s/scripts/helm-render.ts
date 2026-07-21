@@ -15,6 +15,8 @@
  * See: packages/docs/guides/2026-04-04_helm-escaping-pipeline.md
  */
 import { Glob } from "bun";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 
 const HELM_DIR = path.join(import.meta.dir, "../helm");
@@ -65,9 +67,8 @@ for (const chartName of chartNames) {
   }
 
   // Create temp chart directory
-  const tempDir = path.join(
-    import.meta.dir,
-    `../.helm-render-${chartName}-${String(Date.now())}`,
+  const tempDir = await mkdtemp(
+    path.join(tmpdir(), `helm-render-${chartName}-`),
   );
 
   try {
@@ -150,7 +151,7 @@ for (const chartName of chartNames) {
       // No default
     }
   } finally {
-    Bun.spawnSync(["rm", "-rf", tempDir]);
+    await rm(tempDir, { force: true, recursive: true });
   }
 }
 

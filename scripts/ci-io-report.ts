@@ -5,7 +5,6 @@ import { z } from "zod";
 import {
   fetchBuildkiteBuild,
   fetchBuildkiteBuilds,
-  type BuildkiteBuild,
   type BuildkiteClientConfig,
   type PrometheusClientConfig,
   type TimeWindow,
@@ -32,8 +31,6 @@ import {
 } from "./lib/ci-io-selection.ts";
 import { compareWindows } from "./lib/ci-io-statistics.ts";
 
-const POST_FIXTURE_SCRAPE_GRACE_MILLISECONDS = 20_000;
-
 function requestedCohortWindow(from: string, to: string): TimeWindow {
   const window = { from: new Date(from), to: new Date(to) };
   if (window.to.getTime() <= window.from.getTime()) {
@@ -52,8 +49,6 @@ async function candidateSelection(input: {
       input.options.buildNumbers,
       input.buildkite,
       input.now,
-      input.options.enforceAbGates &&
-        input.options.comparisonProfile === "docker-ab",
     );
   }
   const from = z.string().parse(input.options.from);
@@ -63,95 +58,15 @@ async function candidateSelection(input: {
   return selectCohortBuilds(builds, cohortWindow, input.now);
 }
 
-export function postFixtureScrapeWaitMilliseconds(
-  builds: BuildkiteBuild[],
-  fixtureSteps: string[],
-  now: Date,
-): number {
-  const selectedSteps = new Set(fixtureSteps);
-  const finishedAt = builds.flatMap((build) =>
-    build.jobs
-      .filter((job) => job.step_key !== null && selectedSteps.has(job.step_key))
-      .flatMap((job) =>
-        job.finished_at === null ? [] : [new Date(job.finished_at).getTime()],
-      ),
-  );
-  if (finishedAt.length === 0) {
-    return 0;
-  }
-  const latestFinish = Math.max(...finishedAt);
-  const remaining =
-    latestFinish + POST_FIXTURE_SCRAPE_GRACE_MILLISECONDS - now.getTime();
-  return Math.max(
-    0,
-    Math.min(POST_FIXTURE_SCRAPE_GRACE_MILLISECONDS, remaining),
-  );
-}
-
-async function settledCandidateSelection(input: {
-  options: CliOptions;
-  buildkite: BuildkiteClientConfig;
-  now: Date;
-}): Promise<{
-  selection: BuildSelection;
-  observedAt: Date;
-}> {
-  let selection = await candidateSelection(input);
-  if (
-    !input.options.enforceAbGates ||
-    input.options.comparisonProfile !== "docker-ab"
-  ) {
-    return { selection, observedAt: input.now };
-  }
-  const waitMilliseconds = postFixtureScrapeWaitMilliseconds(
-    selection.builds,
-    input.options.fixtureSteps,
-    input.now,
-  );
-  if (waitMilliseconds > 0) {
-    await Bun.sleep(waitMilliseconds);
-  }
-  const observedAt = new Date();
-  selection = await candidateSelection({
-    options: input.options,
-    buildkite: input.buildkite,
-    now: observedAt,
-  });
-  return { selection, observedAt };
-}
-
 async function explicitBuildSelection(
   buildNumbers: number[],
   buildkite: BuildkiteClientConfig,
   now: Date,
-  allowUnfinishedDockerAb: boolean,
 ): Promise<BuildSelection> {
   const builds = await Promise.all(
     buildNumbers.map((number) => fetchBuildkiteBuild(buildkite, number)),
   );
-  return selectExplicitBuilds({ builds, now, allowUnfinishedDockerAb });
-}
-
-export function assertEquivalentAbSelections(
-  baseline: BuildkiteBuild[],
-  candidate: BuildkiteBuild[],
-): void {
-  const candidateNumbers = new Set(candidate.map((build) => build.number));
-  if (baseline.some((build) => candidateNumbers.has(build.number))) {
-    throw new Error("CI I/O A/B build selections must be disjoint");
-  }
-  const baselineCommits = new Set(baseline.map((build) => build.commit));
-  const candidateCommits = new Set(candidate.map((build) => build.commit));
-  if (
-    baselineCommits.size !== 1 ||
-    candidateCommits.size !== 1 ||
-    baselineCommits.values().next().value !==
-      candidateCommits.values().next().value
-  ) {
-    throw new Error(
-      "CI I/O A/B builds must use one identical commit in both selections",
-    );
-  }
+  return selectExplicitBuilds({ builds, now });
 }
 
 async function collectWindow(input: {
@@ -186,7 +101,6 @@ async function collectBaseline(input: {
   options: CliOptions;
   buildkite: BuildkiteClientConfig;
   prometheus: PrometheusClientConfig;
-  candidateBuilds: BuildkiteBuild[];
   pipeline: string;
   excludedJobIds: Set<string>;
   now: Date;
@@ -197,7 +111,6 @@ async function collectBaseline(input: {
       input.options.baselineBuildNumbers,
       input.buildkite,
       input.now,
-      false,
     );
   } else if (
     input.options.baselineFrom !== undefined &&
@@ -212,12 +125,6 @@ async function collectBaseline(input: {
   }
   if (selection === null) {
     return null;
-  }
-  if (
-    input.options.enforceAbGates &&
-    input.options.comparisonProfile === "docker-ab"
-  ) {
-    assertEquivalentAbSelections(selection.builds, input.candidateBuilds);
   }
   return collectWindow({
     selection,
@@ -252,10 +159,7 @@ function annotationStyle(report: CiIoReport): string {
   ) {
     return "error";
   }
-  const gateStatus =
-    report.comparisonProfile === "fixed-corpus"
-      ? report.comparison?.fixedCorpusGate.status
-      : report.comparison?.gates.status;
+  const gateStatus = report.comparison?.fixedCorpusGate.status;
   if (gateStatus === "failed") {
     return "error";
   }
@@ -328,12 +232,11 @@ async function main(): Promise<void> {
     excludedJobIds.add(Bun.env["BUILDKITE_JOB_ID"]);
   }
   const startedAt = new Date();
-  const settled = await settledCandidateSelection({
+  const selected = await candidateSelection({
     options,
     buildkite,
     now: startedAt,
   });
-  const selected = settled.selection;
   const candidate = await collectWindow({
     selection: selected,
     prometheus,
@@ -345,26 +248,19 @@ async function main(): Promise<void> {
     options,
     buildkite,
     prometheus,
-    candidateBuilds: selected.builds,
     pipeline,
     excludedJobIds,
-    now: settled.observedAt,
+    now: startedAt,
   });
-  const fixtureSteps =
-    options.fixtureSteps.length === 0 ? null : new Set(options.fixtureSteps);
   const report: CiIoReport = {
     schemaVersion: 2,
-    generatedAt: settled.observedAt.toISOString(),
+    generatedAt: startedAt.toISOString(),
     metricSource: options.metricSource,
-    comparisonProfile: options.comparisonProfile,
     organization,
     pipeline,
     candidate,
     baseline,
-    comparison:
-      baseline === null
-        ? null
-        : compareWindows(baseline, candidate, fixtureSteps),
+    comparison: baseline === null ? null : compareWindows(baseline, candidate),
   };
   const markdown = renderCiIoMarkdown(report);
   await Promise.all([
@@ -383,14 +279,11 @@ async function main(): Promise<void> {
       assertBenchmarkIntegrity(baseline);
     }
   }
-  if (options.enforceAbGates) {
-    const gateStatus =
-      options.comparisonProfile === "fixed-corpus"
-        ? report.comparison?.fixedCorpusGate.status
-        : report.comparison?.gates.status;
+  if (options.enforceImpactGates) {
+    const gateStatus = report.comparison?.fixedCorpusGate.status;
     if (gateStatus !== "passed") {
       throw new Error(
-        `CI I/O ${options.comparisonProfile} gates did not pass: ${gateStatus ?? "missing comparison"}`,
+        `CI I/O fixed-corpus impact gate did not pass: ${gateStatus ?? "missing comparison"}`,
       );
     }
   }

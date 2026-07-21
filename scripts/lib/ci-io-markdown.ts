@@ -1,7 +1,6 @@
 import type {
   BranchStepIoReport,
   CiIoReport,
-  FixtureGate,
   IntegrityIssue,
   JobIoReport,
   StepIoReport,
@@ -149,36 +148,15 @@ function renderWindow(label: string, report: WindowIoReport): string[] {
   return lines;
 }
 
-function fixtureRows(fixtures: FixtureGate[]): string[] {
-  return fixtures.map(
-    (fixture) =>
-      `| \`${escapeCell(fixture.stepKey)}\` | ${fixture.status} | ${formatPercent(fixture.writeReductionPercent)} | ${formatPercent(fixture.durationChangePercent)} | ${formatPercent(fixture.networkChangePercent)} | ${escapeCell(fixture.reasons.join("; ") || "-")} |`,
-  );
-}
-
 function comparisonLines(report: CiIoReport): string[] {
   const comparison = report.comparison;
   if (comparison === null) {
     return [];
   }
-  const selectedStatus =
-    report.comparisonProfile === "fixed-corpus"
-      ? comparison.fixedCorpusGate.status
-      : comparison.gates.status;
   return [
     "## Baseline versus candidate",
     "",
     `Aggregate writes: ${formatPercent(comparison.writeBytesChangePercent)} (${formatBytes(comparison.writeBytesChange)}). Normalized per measured job: ${formatPercent(comparison.writeBytesPerJobChangePercent)}.`,
-    "",
-    `Selected comparison profile: \`${report.comparisonProfile}\` (**${selectedStatus}**).`,
-    "",
-    `Docker A/B gates: **${comparison.gates.status}**. Geometric-mean write reduction: ${formatPercent(comparison.gates.geometricMeanWriteReductionPercent)}.`,
-    "",
-    "| Fixture step | Gate | Write reduction | Duration change | Network change | Reasons |",
-    "| --- | --- | --- | --- | --- | --- |",
-    ...fixtureRows(comparison.gates.fixtures),
-    "",
-    ...comparison.gates.reasons.map((reason) => `- Docker A/B: ${reason}`),
     "",
     `Fixed-corpus impact gate: **${comparison.fixedCorpusGate.status}**. Aggregate write reduction: ${formatPercent(comparison.fixedCorpusGate.aggregateWriteReductionPercent)}. p95 duration change: ${formatPercent(comparison.fixedCorpusGate.p95DurationChangePercent)}.`,
     "",
@@ -192,7 +170,7 @@ export function renderCiIoMarkdown(report: CiIoReport): string {
   const lines = [
     "# CI I/O report",
     "",
-    `Generated ${report.generatedAt} for \`${escapeCell(report.organization)}/${escapeCell(report.pipeline)}\` using the explicit \`${report.metricSource}\` metric source and \`${report.comparisonProfile}\` comparison profile.`,
+    `Generated ${report.generatedAt} for \`${escapeCell(report.organization)}/${escapeCell(report.pipeline)}\` using the explicit \`${report.metricSource}\` metric source. Baseline comparisons use the fixed-corpus impact contract.`,
     "",
     ...comparisonLines(report),
   ];

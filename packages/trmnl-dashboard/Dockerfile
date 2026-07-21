@@ -10,7 +10,7 @@ WORKDIR /app
 # materializing unrelated applications. This layer only invalidates when a
 # manifest/lockfile/patch changes.
 # `--frozen-lockfile` requires every workspace member's package.json present, so
-# the globs enumerate all 47 members (top-level, nested packages/*/packages/*,
+# the globs enumerate every member (top-level, nested packages/*/packages/*,
 # homelab/src/*, the desktop src-tauri crate, and the `scripts` dir).
 COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \

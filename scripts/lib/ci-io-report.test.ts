@@ -1,10 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
 import {
-  assertEquivalentAbSelections,
-  postFixtureScrapeWaitMilliseconds,
-} from "../ci-io-report.ts";
-import {
   BuildkiteBuildSchema,
   BuildkiteJobSchema,
   fetchBuildkiteBuild,
@@ -33,6 +29,7 @@ import {
   type BuildWindowReportInput,
 } from "./ci-io-report.ts";
 import type {
+  BranchStepIoReport,
   CiIoReport,
   StepIoReport,
   WindowIoReport,
@@ -624,7 +621,7 @@ describe("build selection windows", () => {
     ]);
   });
 
-  test("labels the unfinished current build allowed by Docker A/B", () => {
+  test("rejects an explicit selection containing only unfinished builds", () => {
     const source = reportBuilds()[0];
     if (source === undefined) {
       throw new Error("selection fixture build missing");
@@ -634,20 +631,10 @@ describe("build selection windows", () => {
       state: "running",
       finished_at: null,
     });
-    const selection = selectExplicitBuilds({
-      builds: [unfinished],
-      now: WINDOW.to,
-      allowUnfinishedDockerAb: true,
-    });
-    expect(selection.builds.map((build) => build.number)).toEqual([101]);
-    expect(selection.unfinishedBuilds[0]?.disposition).toBe(
-      "included-docker-ab",
-    );
     expect(() =>
       selectExplicitBuilds({
         builds: [unfinished],
         now: WINDOW.to,
-        allowUnfinishedDockerAb: false,
       }),
     ).toThrow("explicit build selection has no finished builds");
   });
@@ -952,15 +939,56 @@ function stepFixture(input: {
     medianWriteBytes: input.writes,
     p95WriteBytes: input.writes,
     medianDurationSeconds: input.duration,
-    p95DurationSeconds: input.p95Duration ?? input.duration,
+    p95DurationSeconds:
+      input.p95Duration === undefined ? input.duration : input.p95Duration,
     medianNetworkBytes: input.network,
-    p95NetworkBytes: input.p95Network ?? input.network,
+    p95NetworkBytes:
+      input.p95Network === undefined ? input.network : input.p95Network,
     canceledBuildWriteBytes: 0,
     canceledJobWriteBytes: 0,
   };
 }
 
-function gateWindow(step: StepIoReport): WindowIoReport {
+const MAIN_FIXED_CORPUS_STEP_KEYS = [
+  "verify",
+  "playwright-e2e-main",
+  "resume-build-main",
+  "docker-e2e-main",
+  "images",
+  "tofu-apply",
+] as const;
+
+const PR_FIXED_CORPUS_STEP_KEYS = [
+  "verify",
+  "playwright-e2e-pr",
+  "resume-build-pr",
+  "docker-e2e-pr",
+  "images-pr",
+  "tofu-plan",
+] as const;
+
+const LEGACY_FIXED_CORPUS_STEP_KEYS = [
+  "verify",
+  "e2e",
+  "resume-build",
+  "docker-e2e",
+  "images",
+  "tofu-apply",
+] as const;
+
+function gateWindow(
+  step: StepIoReport,
+  stepKeys: readonly string[] = MAIN_FIXED_CORPUS_STEP_KEYS,
+): WindowIoReport {
+  const steps = stepKeys.map((stepKey) => ({ ...step, stepKey }));
+  const jobCount = steps.reduce(
+    (total, current) => total + current.jobCount,
+    0,
+  );
+  const totalWriteBytes = steps.reduce(
+    (total, current) => total + current.totalWriteBytes,
+    0,
+  );
   return {
     cohort: null,
     from: WINDOW.from.toISOString(),
@@ -968,21 +996,21 @@ function gateWindow(step: StepIoReport): WindowIoReport {
     buildNumbers: [1],
     unfinishedBuilds: [],
     jobs: [],
-    steps: [step],
-    branchSteps: [{ branch: "main", ...step }],
+    steps,
+    branchSteps: steps.map((current) => ({ branch: "main", ...current })),
     summary: {
       buildCount: 1,
-      expectedJobCount: 5,
-      measuredJobCount: 5,
-      completeJobCount: 5,
+      expectedJobCount: jobCount,
+      measuredJobCount: jobCount,
+      completeJobCount: jobCount,
       lowerBoundJobCount: 0,
       missingJobCount: 0,
-      networkMeasuredJobCount: 5,
+      networkMeasuredJobCount: jobCount,
       unfinishedBuildCount: 0,
       excludedBuildCount: 0,
       sampleCoveragePercent: 100,
       p95DurationSeconds: step.p95DurationSeconds,
-      totalWriteBytes: step.totalWriteBytes,
+      totalWriteBytes,
       lowerBoundWriteBytes: 0,
       unmatchedWriteBytes: 0,
       canceledBuildWriteBytes: 0,
@@ -996,115 +1024,46 @@ function gateWindow(step: StepIoReport): WindowIoReport {
   };
 }
 
-describe("A/B comparison gates", () => {
-  test("passes 20% per-fixture, 30% geometric mean, and 10% regression gates", () => {
-    const baseline = gateWindow(
-      stepFixture({ writes: 100, duration: 100, network: 100 }),
-    );
-    const candidate = gateWindow(
-      stepFixture({ writes: 60, duration: 105, network: 105 }),
-    );
-    const comparison = compareWindows(
-      baseline,
-      candidate,
-      new Set(["image-fixture"]),
-    );
-    expect(comparison.gates.status).toBe("passed");
-    expect(comparison.gates.geometricMeanWriteReductionPercent).toBeCloseTo(40);
-  });
+function gateLane(report: WindowIoReport, stepKey: string): BranchStepIoReport {
+  const lane = report.branchSteps.find(
+    (current) => current.stepKey === stepKey,
+  );
+  if (lane === undefined) {
+    throw new Error(`fixed-corpus lane ${stepKey} is missing`);
+  }
+  return lane;
+}
 
-  test("fails threshold regressions and marks missing metrics inconclusive", () => {
-    const baseline = gateWindow(
-      stepFixture({ writes: 100, duration: 100, network: 100 }),
-    );
-    const failed = gateWindow(
-      stepFixture({ writes: 85, duration: 111, network: 111 }),
-    );
-    expect(
-      compareWindows(baseline, failed, new Set(["image-fixture"])).gates.status,
-    ).toBe("failed");
-
-    const missing = gateWindow(
-      stepFixture({ writes: 60, duration: 105, network: null }),
-    );
-    expect(
-      compareWindows(baseline, missing, new Set(["image-fixture"])).gates
-        .status,
-    ).toBe("inconclusive");
-  });
-
-  test("uses p95 regressions and rejects mismatched or incomplete workloads", () => {
-    const baseline = gateWindow(
-      stepFixture({ writes: 100, duration: 100, network: 100 }),
-    );
-    const p95Regression = gateWindow(
-      stepFixture({
-        writes: 60,
-        duration: 100,
-        network: 100,
-        p95Duration: 111,
-      }),
-    );
-    expect(
-      compareWindows(baseline, p95Regression, new Set(["image-fixture"])).gates
-        .status,
-    ).toBe("failed");
-
-    const incompleteStep = stepFixture({
-      writes: 60,
-      duration: 100,
-      network: 100,
-    });
-    incompleteStep.completeJobCount = 4;
-    incompleteStep.lowerBoundJobCount = 1;
-    const incomplete = compareWindows(
-      baseline,
-      gateWindow(incompleteStep),
-      new Set(["image-fixture"]),
-    );
-    expect(incomplete.gates.status).toBe("inconclusive");
-    expect(incomplete.gates.fixtures[0]?.reasons).toContain(
-      "fixture includes missing or lower-bound telemetry",
-    );
-
-    const mismatchedStep = stepFixture({
-      writes: 60,
-      duration: 100,
-      network: 100,
-    });
-    mismatchedStep.jobCount = 4;
-    const mismatched = compareWindows(
-      baseline,
-      gateWindow(mismatchedStep),
-      new Set(["image-fixture"]),
-    );
-    expect(mismatched.gates.status).toBe("inconclusive");
-    expect(mismatched.gates.fixtures[0]?.reasons).toContain(
-      "fixture job counts differ between comparison windows",
-    );
-  });
-
-  test("marks fixture placement changes inconclusive", () => {
-    const baseline = gateWindow(
-      stepFixture({ writes: 100, duration: 100, network: 100 }),
-    );
-    const candidateStep = stepFixture({
-      writes: 60,
-      duration: 100,
-      network: 100,
-    });
-    candidateStep.nodeJobCounts = { grace: 1, torvalds: 4 };
-    const comparison = compareWindows(
-      baseline,
-      gateWindow(candidateStep),
-      new Set(["image-fixture"]),
-    );
-    expect(comparison.gates.status).toBe("inconclusive");
-    expect(comparison.gates.fixtures[0]?.reasons).toContain(
-      "fixture node placement differs between comparison windows",
-    );
-  });
-});
+function withoutGateLane(
+  report: WindowIoReport,
+  stepKey: string,
+): WindowIoReport {
+  const steps = report.steps.filter((step) => step.stepKey !== stepKey);
+  const branchSteps = report.branchSteps.filter(
+    (step) => step.stepKey !== stepKey,
+  );
+  const jobCount = steps.reduce(
+    (total, current) => total + current.jobCount,
+    0,
+  );
+  const totalWriteBytes = steps.reduce(
+    (total, current) => total + current.totalWriteBytes,
+    0,
+  );
+  return {
+    ...report,
+    steps,
+    branchSteps,
+    summary: {
+      ...report.summary,
+      expectedJobCount: jobCount,
+      measuredJobCount: jobCount,
+      completeJobCount: jobCount,
+      networkMeasuredJobCount: jobCount,
+      totalWriteBytes,
+    },
+  };
+}
 
 describe("fixed-corpus impact gate", () => {
   test("passes 50% aggregate write reduction with at most 10% p95 regression", () => {
@@ -1118,9 +1077,87 @@ describe("fixed-corpus impact gate", () => {
     expect(gate.status).toBe("passed");
     expect(gate.aggregateWriteReductionPercent).toBe(50);
     expect(gate.p95DurationChangePercent).toBeCloseTo(10);
-    expect(gate.baselineLanes).toEqual([
-      { branch: "main", stepKey: "image-fixture", jobCount: 5 },
+    expect(gate.baselineLanes.map((lane) => lane.stepKey)).toEqual([
+      "docker-e2e",
+      "images",
+      "resume",
+      "sjer.red",
+      "tofu",
+      "verify",
     ]);
+  });
+
+  test("accepts the PR variants of every required validation lane", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+      PR_FIXED_CORPUS_STEP_KEYS,
+    );
+    const candidate = gateWindow(
+      stepFixture({ writes: 50, duration: 100, network: 100 }),
+      PR_FIXED_CORPUS_STEP_KEYS,
+    );
+    expect(compareWindows(baseline, candidate).fixedCorpusGate.status).toBe(
+      "passed",
+    );
+  });
+
+  test("compares legacy baseline keys with current logical lanes", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+      [...LEGACY_FIXED_CORPUS_STEP_KEYS, "legacy-unrelated-step"],
+    );
+    const candidate = gateWindow(
+      stepFixture({ writes: 50, duration: 100, network: 100 }),
+      [...MAIN_FIXED_CORPUS_STEP_KEYS, "ci-selector-base"],
+    );
+    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+    expect(gate.status).toBe("passed");
+    expect(gate.baselineLanes).toEqual(gate.candidateLanes);
+    expect(gate.baselineLanes.map((lane) => lane.stepKey)).toEqual([
+      "docker-e2e",
+      "images",
+      "resume",
+      "sjer.red",
+      "tofu",
+      "verify",
+    ]);
+  });
+
+  test("rejects a window that mixes legacy and current lane keys", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+      [...LEGACY_FIXED_CORPUS_STEP_KEYS, "playwright-e2e-main"],
+    );
+    const candidate = gateWindow(
+      stepFixture({ writes: 50, duration: 100, network: 100 }),
+    );
+    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+    expect(gate.status).toBe("inconclusive");
+    expect(gate.reasons).toContain(
+      "baseline fixed-corpus window mixes pipeline schemas for logical lanes: main / sjer.red",
+    );
+  });
+});
+
+describe("fixed-corpus threshold guards", () => {
+  test("does not count unmapped workload changes toward corpus savings", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+      [...MAIN_FIXED_CORPUS_STEP_KEYS, "legacy-unrelated-step"],
+    );
+    const candidate = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+      [...MAIN_FIXED_CORPUS_STEP_KEYS, "ci-selector-base"],
+    );
+    gateLane(baseline, "legacy-unrelated-step").totalWriteBytes = 1000;
+    baseline.summary.totalWriteBytes = 1600;
+    gateLane(candidate, "ci-selector-base").totalWriteBytes = 0;
+    candidate.summary.totalWriteBytes = 600;
+
+    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+    expect(gate.aggregateWriteReductionPercent).toBe(0);
+    expect(gate.status).toBe("failed");
+    expect(gate.reasons).toContain("aggregate write reduction is below 50%");
   });
 
   test("fails fixed-corpus write and p95 duration thresholds", () => {
@@ -1132,10 +1169,68 @@ describe("fixed-corpus impact gate", () => {
     );
     const gate = compareWindows(baseline, candidate).fixedCorpusGate;
     expect(gate.status).toBe("failed");
-    expect(gate.reasons).toEqual([
-      "aggregate write reduction is below 50%",
-      "p95 duration regression exceeds 10%",
-    ]);
+    expect(gate.reasons).toContain("aggregate write reduction is below 50%");
+    expect(gate.reasons).toContain(
+      "p95 duration regression exceeds 10% for lane main / images (11.0%)",
+    );
+    expect(
+      gate.reasons.filter((reason) =>
+        reason.startsWith("p95 duration regression exceeds 10% for lane"),
+      ),
+    ).toHaveLength(MAIN_FIXED_CORPUS_STEP_KEYS.length);
+  });
+
+  test("rejects matching windows that both omit a required lane", () => {
+    const baseline = withoutGateLane(
+      gateWindow(stepFixture({ writes: 100, duration: 100, network: 100 })),
+      "docker-e2e-main",
+    );
+    const candidate = withoutGateLane(
+      gateWindow(stepFixture({ writes: 50, duration: 100, network: 100 })),
+      "docker-e2e-main",
+    );
+    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+    expect(gate.status).toBe("inconclusive");
+    expect(gate.reasons).not.toContain(
+      "fixed-corpus lanes differ between comparison windows",
+    );
+    expect(gate.reasons).toContain(
+      "baseline fixed-corpus window is missing required validation lanes: LLM Docker E2E",
+    );
+    expect(gate.reasons).toContain(
+      "candidate fixed-corpus window is missing required validation lanes: LLM Docker E2E",
+    );
+  });
+
+  test("fails a per-lane p95 regression hidden by the aggregate p95", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+    );
+    const candidate = gateWindow(
+      stepFixture({ writes: 50, duration: 100, network: 100 }),
+    );
+    gateLane(candidate, "images").p95DurationSeconds = 111;
+    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+    expect(gate.p95DurationChangePercent).toBe(0);
+    expect(gate.status).toBe("failed");
+    expect(gate.reasons).toContain(
+      "p95 duration regression exceeds 10% for lane main / images (11.0%)",
+    );
+  });
+
+  test("makes a missing per-lane p95 inconclusive", () => {
+    const baseline = gateWindow(
+      stepFixture({ writes: 100, duration: 100, network: 100 }),
+    );
+    const candidate = gateWindow(
+      stepFixture({ writes: 50, duration: 100, network: 100 }),
+    );
+    gateLane(candidate, "images").p95DurationSeconds = null;
+    const gate = compareWindows(baseline, candidate).fixedCorpusGate;
+    expect(gate.status).toBe("inconclusive");
+    expect(gate.reasons).toContain(
+      "p95 duration change could not be calculated for lane main / images",
+    );
   });
 
   test("requires exact lanes, counts, and complete telemetry", () => {
@@ -1167,7 +1262,7 @@ describe("fixed-corpus impact gate", () => {
     const incomplete = gateWindow(
       stepFixture({ writes: 50, duration: 100, network: 100 }),
     );
-    incomplete.summary.completeJobCount = 4;
+    incomplete.summary.completeJobCount -= 1;
     incomplete.summary.lowerBoundJobCount = 1;
     incomplete.summary.unfinishedBuildCount = 1;
     incomplete.summary.excludedBuildCount = 1;
@@ -1209,7 +1304,6 @@ describe("outputs and CLI", () => {
       schemaVersion: 2,
       generatedAt: WINDOW.to.toISOString(),
       metricSource: "raw",
-      comparisonProfile: "docker-ab",
       organization: "sjerred",
       pipeline: "monorepo",
       candidate,
@@ -1230,39 +1324,7 @@ describe("outputs and CLI", () => {
     expect(markdown).not.toContain("secret-token");
   });
 
-  test("bounds the enforced A/B post-fixture scrape grace", () => {
-    const builds = reportBuilds();
-    expect(
-      postFixtureScrapeWaitMilliseconds(
-        builds,
-        ["fixture"],
-        new Date("2026-07-20T00:04:50.000Z"),
-      ),
-    ).toBe(20_000);
-    expect(
-      postFixtureScrapeWaitMilliseconds(
-        builds,
-        ["fixture"],
-        new Date("2026-07-20T00:05:05.000Z"),
-      ),
-    ).toBe(15_000);
-    expect(
-      postFixtureScrapeWaitMilliseconds(
-        builds,
-        ["fixture"],
-        new Date("2026-07-20T00:05:20.000Z"),
-      ),
-    ).toBe(0);
-    expect(
-      postFixtureScrapeWaitMilliseconds(
-        builds,
-        ["missing-step"],
-        new Date("2026-07-20T00:05:05.000Z"),
-      ),
-    ).toBe(0);
-  });
-
-  test("parses explicit builds and requires explicit fixtures for A/B gates", () => {
+  test("parses explicit builds and requires a baseline for impact gates", () => {
     const parsed = parseCliOptions([
       "--build",
       "101,102",
@@ -1272,38 +1334,24 @@ describe("outputs and CLI", () => {
     ]);
     expect(parsed.buildNumbers).toEqual([101, 102]);
     expect(parsed.benchmark).toBe(true);
-    expect(parsed.comparisonProfile).toBe("docker-ab");
-    const exactAb = parseCliOptions([
+    const impact = parseCliOptions([
       "--build",
       "102",
       "--baseline-build",
       "101",
-      "--fixture-step",
-      "image-fixture",
-      "--enforce-ab-gates",
+      "--enforce-impact-gates",
     ]);
-    expect(exactAb.baselineBuildNumbers).toEqual([101]);
-    expect(exactAb.enforceAbGates).toBe(true);
-    const fixedCorpus = parseCliOptions([
-      "--build",
-      "102",
-      "--baseline-build",
-      "101",
-      "--comparison-profile",
-      "fixed-corpus",
-      "--enforce-ab-gates",
-    ]);
-    expect(fixedCorpus.comparisonProfile).toBe("fixed-corpus");
-    expect(fixedCorpus.fixtureSteps).toEqual([]);
+    expect(impact.baselineBuildNumbers).toEqual([101]);
+    expect(impact.enforceImpactGates).toBe(true);
     expect(() =>
       parseCliOptions([
         "--from",
         WINDOW.from.toISOString(),
         "--to",
         WINDOW.to.toISOString(),
-        "--enforce-ab-gates",
+        "--enforce-impact-gates",
       ]),
-    ).toThrow("--enforce-ab-gates requires a baseline selection");
+    ).toThrow("--enforce-impact-gates requires a baseline selection");
     expect(() =>
       parseCliOptions([
         "--build",
@@ -1316,38 +1364,5 @@ describe("outputs and CLI", () => {
         WINDOW.to.toISOString(),
       ]),
     ).toThrow("provide either --baseline-build or a baseline time window");
-    expect(() =>
-      parseCliOptions([
-        "--build",
-        "102",
-        "--comparison-profile",
-        "fixed-corpus",
-      ]),
-    ).toThrow("fixed-corpus requires a baseline selection");
-    expect(() =>
-      parseCliOptions(["--build", "102", "--comparison-profile", "unknown"]),
-    ).toThrow();
-  });
-
-  test("requires A/B selections to use one identical commit", () => {
-    const baseline = reportBuilds().map((build) => ({
-      ...build,
-      number: build.number + 100,
-    }));
-    const candidate = reportBuilds();
-    expect(() =>
-      assertEquivalentAbSelections(baseline, candidate),
-    ).not.toThrow();
-    const firstCandidate = candidate[0];
-    if (firstCandidate === undefined) {
-      throw new Error("candidate fixture is missing");
-    }
-    firstCandidate.commit = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-    expect(() => assertEquivalentAbSelections(baseline, candidate)).toThrow(
-      "A/B builds must use one identical commit",
-    );
-    expect(() => assertEquivalentAbSelections(candidate, candidate)).toThrow(
-      "A/B build selections must be disjoint",
-    );
   });
 });

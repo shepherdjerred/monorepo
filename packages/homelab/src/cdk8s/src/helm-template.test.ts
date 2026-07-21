@@ -1,5 +1,7 @@
 import { describe, it, expect } from "bun:test";
 import { Glob } from "bun";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 
 /**
@@ -83,10 +85,7 @@ async function helmTemplateChart(chartName: string): Promise<{
     return { exitCode: 0, stdout: "", stderr: "" };
   }
 
-  const tempDir = path.join(
-    import.meta.dir,
-    `../.helm-test-${chartName}-${String(Date.now())}`,
-  );
+  const tempDir = await mkdtemp(path.join(tmpdir(), `helm-test-${chartName}-`));
   try {
     const chartYaml = await Bun.file(
       path.join(HELM_DIR, chartName, "Chart.yaml"),
@@ -114,10 +113,7 @@ async function helmTemplateChart(chartName: string): Promise<{
     ]);
     return { exitCode, stdout, stderr };
   } finally {
-    const proc = Bun.spawnSync(["rm", "-rf", tempDir]);
-    if (proc.exitCode !== 0) {
-      console.warn(`Failed to clean up ${tempDir}`);
-    }
+    await rm(tempDir, { force: true, recursive: true });
   }
 }
 

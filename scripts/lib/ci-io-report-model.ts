@@ -1,9 +1,5 @@
-import { z } from "zod";
-
 import type { MetricSource } from "./ci-io-prometheus.ts";
 
-export const ComparisonProfileSchema = z.enum(["docker-ab", "fixed-corpus"]);
-export type ComparisonProfile = z.infer<typeof ComparisonProfileSchema>;
 export type GateStatus = "passed" | "failed" | "inconclusive";
 export type Coverage = "complete" | "lower-bound" | "missing";
 
@@ -18,7 +14,7 @@ export type UnfinishedBuildReport = {
   state: string;
   createdAt: string;
   buildUrl: string;
-  disposition: "excluded" | "included-docker-ab";
+  disposition: "excluded";
 };
 
 export type IntegrityIssueCode =
@@ -123,22 +119,6 @@ export type WindowIoReport = {
   integrityIssues: IntegrityIssue[];
 };
 
-export type FixtureGate = {
-  stepKey: string;
-  status: GateStatus;
-  writeReductionPercent: number | null;
-  durationChangePercent: number | null;
-  networkChangePercent: number | null;
-  reasons: string[];
-};
-
-export type ComparisonGates = {
-  status: GateStatus;
-  geometricMeanWriteReductionPercent: number | null;
-  fixtures: FixtureGate[];
-  reasons: string[];
-};
-
 export type FixedCorpusLane = {
   branch: string;
   stepKey: string;
@@ -158,7 +138,6 @@ export type WindowComparison = {
   writeBytesChange: number;
   writeBytesChangePercent: number | null;
   writeBytesPerJobChangePercent: number | null;
-  gates: ComparisonGates;
   fixedCorpusGate: FixedCorpusGate;
 };
 
@@ -166,7 +145,6 @@ export type CiIoReport = {
   schemaVersion: 2;
   generatedAt: string;
   metricSource: MetricSource;
-  comparisonProfile: ComparisonProfile;
   organization: string;
   pipeline: string;
   candidate: WindowIoReport;

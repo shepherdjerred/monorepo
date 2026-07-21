@@ -40,9 +40,11 @@ const GLOBAL_IMAGE_INPUTS = [
   "package.json",
   "patches/",
   "turbo.json",
+  "tsconfig.base.json",
 ];
 
 const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> = {
+  "scout-for-lol": ["packages/scout-for-lol/tsconfig.base.json"],
   // Temporal compiles toolkit into the worker image as an embedded CLI, but
   // toolkit is deliberately not a runtime workspace dependency.
   "temporal-worker": ["packages/toolkit/"],
@@ -51,6 +53,10 @@ const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> = {
   infra: [
     "packages/homelab/images/",
     "packages/homelab/scripts/smoke-images.ts",
+    "packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts",
+    "packages/homelab/src/cdk8s/src/misc/common.ts",
+    "packages/homelab/src/cdk8s/src/misc/s3-static-site.ts",
+    "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
   ],
 };
 

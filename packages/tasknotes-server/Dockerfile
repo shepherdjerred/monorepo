@@ -10,7 +10,7 @@ WORKDIR /app
 # install only invalidates when a manifest/lockfile/patch changes — not on every
 # source edit. The tasknotes-server filter includes tasknotes-types through its
 # workspace dependency closure. `--frozen-lockfile` requires every workspace
-# member's package.json present, so the globs below enumerate all 47 members
+# member's package.json present, so the globs below enumerate every member
 # (top-level, nested `packages/*/packages/*`, homelab/src/*, the desktop
 # src-tauri crate, and the `scripts` dir). The root .dockerignore keeps
 # node_modules/dist/.git out of context.

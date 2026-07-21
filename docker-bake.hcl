@@ -3,12 +3,10 @@
 # identical workspace bun-install layer the app images share — replacing the
 # serial per-image loop (45-52 min images step, build 5644/5656).
 #
-# CI (.buildkite/scripts/build-smoke-push-all.sh) invokes this with
+# CI (.buildkite/scripts/bake-images.sh) invokes this with
 # VERSION/GIT_SHA/PUSH_CACHE set; local `docker buildx bake <target>` works
 # with the dev defaults (cache is read-only unless PUSH_CACHE=true — writing
 # the ghcr buildcache refs needs a docker-container builder + push creds).
-# Controlled A/B fixtures set READ_CACHE=false so a mutable registry cache
-# cannot change between the baseline and candidate runs.
 # Per-package `docker:build` scripts remain for one-off local builds; target
 # definitions here must stay in sync with them.
 #
@@ -33,13 +31,9 @@ variable "GIT_SHA" {
 variable "PUSH_CACHE" {
   default = "false"
 }
-variable "READ_CACHE" {
-  default = "true"
-}
-
 function "cachefrom" {
   params = [name]
-  result = equal(READ_CACHE, "true") ? ["type=registry,ref=${REGISTRY}/${name}:buildcache"] : []
+  result = ["type=registry,ref=${REGISTRY}/${name}:buildcache"]
 }
 
 function "cacheto" {

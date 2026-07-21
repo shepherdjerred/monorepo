@@ -11,15 +11,13 @@
         "onepassword-vault-snapshot.json"
       ]
     },
-    // Generate the S3-static-sites Caddyfile and validate it with the CUSTOM
-    // caddy-s3proxy binary (stock caddy can't parse the `s3proxy` directive).
-    // The deployed image pin is an input, so a successful validation can be
-    // cached until either the generated config or deployed binary changes.
+    // Generate the S3-static-sites Caddyfile without materializing an image in
+    // root verify. The separately path-gated infra image smoke runs `caddy
+    // validate` with the freshly built custom caddy-s3proxy binary.
     "check:caddyfile": {
       "inputs": [
         "scripts/generate-caddyfile.ts",
         "scripts/check-caddyfile.ts",
-        "src/versions.ts",
         "src/misc/s3-static-site.ts",
         "src/misc/common.ts",
         "src/resources/s3-static-sites/sites.ts"

@@ -45,21 +45,40 @@ describe("selectImageTargets", () => {
     ).toEqual(["infra"]);
   });
 
+  test("rebuilds infra when the generated Caddyfile changes", async () => {
+    for (const path of [
+      "packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts",
+      "packages/homelab/src/cdk8s/src/misc/common.ts",
+      "packages/homelab/src/cdk8s/src/misc/s3-static-site.ts",
+      "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
+    ]) {
+      expect(await select([path])).toEqual(["infra"]);
+    }
+  });
+
   test("selects explicit Docker inputs outside workspace dependencies", async () => {
     expect(await select(["packages/toolkit/src/commands/pr.ts"])).toEqual([
       "temporal-worker",
     ]);
   });
 
-  test("selects every image for shared installation inputs", async () => {
+  test("selects every image for shared build inputs", async () => {
     expect(await select(["bun.lock"])).toEqual(ALL_IMAGE_TARGETS);
     expect(await select([".buildkite/pipeline.yml"])).toEqual(
       ALL_IMAGE_TARGETS,
     );
     expect(await select([".mise.toml"])).toEqual(ALL_IMAGE_TARGETS);
     expect(await select(["turbo.json"])).toEqual(ALL_IMAGE_TARGETS);
+    expect(await select(["tsconfig.base.json"])).toEqual(ALL_IMAGE_TARGETS);
     expect(await select(["packages/resume/package.json"])).toEqual(
       ALL_IMAGE_TARGETS,
+    );
+    expect(await select(["scripts/package.json"])).toEqual(ALL_IMAGE_TARGETS);
+  });
+
+  test("selects Scout for its shared base TypeScript config", async () => {
+    expect(await select(["packages/scout-for-lol/tsconfig.base.json"])).toEqual(
+      ["scout-for-lol"],
     );
   });
 

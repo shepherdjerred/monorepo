@@ -1,7 +1,5 @@
 import type {
   BranchStepIoReport,
-  ComparisonGates,
-  FixtureGate,
   JobIoReport,
   StepIoReport,
   WindowComparison,
@@ -159,212 +157,9 @@ function percentChange(candidate: number, baseline: number): number | null {
   return ((candidate - baseline) / baseline) * 100;
 }
 
-function nullablePercentChange(
-  candidate: number | null,
-  baseline: number | null,
-): number | null {
-  if (candidate === null || baseline === null) {
-    return null;
-  }
-  return percentChange(candidate, baseline);
-}
-
-function fixtureIntegrityReasons(
-  baseline: StepIoReport,
-  candidate: StepIoReport,
-  changes: {
-    write: number | null;
-    duration: number | null;
-    network: number | null;
-  },
-): string[] {
-  const reasons: string[] = [];
-  if (baseline.jobCount !== candidate.jobCount) {
-    reasons.push("fixture job counts differ between comparison windows");
-  }
-  if (
-    baseline.completeJobCount !== baseline.jobCount ||
-    candidate.completeJobCount !== candidate.jobCount
-  ) {
-    reasons.push("fixture includes missing or lower-bound telemetry");
-  }
-  const placementKeys = new Set([
-    ...Object.keys(baseline.nodeJobCounts),
-    ...Object.keys(candidate.nodeJobCounts),
-  ]);
-  if (
-    [...placementKeys].some(
-      (key) => baseline.nodeJobCounts[key] !== candidate.nodeJobCounts[key],
-    )
-  ) {
-    reasons.push("fixture node placement differs between comparison windows");
-  }
-  if (changes.write === null) {
-    reasons.push("write metrics are missing or have a zero baseline");
-  }
-  if (changes.duration === null) {
-    reasons.push("duration metrics are missing or have a zero baseline");
-  }
-  if (changes.network === null) {
-    reasons.push("network metrics are missing or have a zero baseline");
-  }
-  return reasons;
-}
-
-function fixtureGate(
-  stepKey: string,
-  baseline: StepIoReport | undefined,
-  candidate: StepIoReport | undefined,
-): FixtureGate {
-  if (baseline === undefined || candidate === undefined) {
-    return {
-      stepKey,
-      status: "inconclusive",
-      writeReductionPercent: null,
-      durationChangePercent: null,
-      networkChangePercent: null,
-      reasons: ["step is absent from one comparison window"],
-    };
-  }
-  const changes = {
-    write: nullablePercentChange(
-      candidate.medianWriteBytes,
-      baseline.medianWriteBytes,
-    ),
-    duration: nullablePercentChange(
-      candidate.p95DurationSeconds,
-      baseline.p95DurationSeconds,
-    ),
-    network: nullablePercentChange(
-      candidate.p95NetworkBytes,
-      baseline.p95NetworkBytes,
-    ),
-  };
-  const integrityReasons = fixtureIntegrityReasons(
-    baseline,
-    candidate,
-    changes,
-  );
-  if (integrityReasons.length > 0) {
-    return {
-      stepKey,
-      status: "inconclusive",
-      writeReductionPercent: changes.write === null ? null : -changes.write,
-      durationChangePercent: changes.duration,
-      networkChangePercent: changes.network,
-      reasons: integrityReasons,
-    };
-  }
-  if (
-    changes.write === null ||
-    changes.duration === null ||
-    changes.network === null
-  ) {
-    throw new Error("complete fixture comparison has missing changes");
-  }
-  const writeReduction = -changes.write;
-  const reasons: string[] = [];
-  if (writeReduction < 20) {
-    reasons.push("write reduction is below 20%");
-  }
-  if (changes.duration > 10) {
-    reasons.push("duration regression exceeds 10%");
-  }
-  if (changes.network > 10) {
-    reasons.push("network regression exceeds 10%");
-  }
-  return {
-    stepKey,
-    status: reasons.length === 0 ? "passed" : "failed",
-    writeReductionPercent: writeReduction,
-    durationChangePercent: changes.duration,
-    networkChangePercent: changes.network,
-    reasons,
-  };
-}
-
-function geometricMeanReduction(fixtures: FixtureGate[]): number | null {
-  const ratios: number[] = [];
-  for (const fixture of fixtures) {
-    if (fixture.writeReductionPercent === null) {
-      return null;
-    }
-    ratios.push(1 - fixture.writeReductionPercent / 100);
-  }
-  if (ratios.length === 0 || ratios.some((ratio) => ratio < 0)) {
-    return null;
-  }
-  if (ratios.includes(0)) {
-    return 100;
-  }
-  const meanLog =
-    ratios.reduce((total, ratio) => total + Math.log(ratio), 0) / ratios.length;
-  return (1 - Math.exp(meanLog)) * 100;
-}
-
-function comparisonGates(
-  baseline: WindowIoReport,
-  candidate: WindowIoReport,
-  fixtureStepKeys: Set<string> | null,
-): ComparisonGates {
-  const baselineSteps = new Map(
-    baseline.steps.map((step) => [step.stepKey, step]),
-  );
-  const candidateSteps = new Map(
-    candidate.steps.map((step) => [step.stepKey, step]),
-  );
-  const availableKeys = new Set([
-    ...baselineSteps.keys(),
-    ...candidateSteps.keys(),
-  ]);
-  const keys =
-    fixtureStepKeys === null
-      ? [...availableKeys].sort()
-      : [...fixtureStepKeys].sort();
-  const fixtures = keys.map((key) =>
-    fixtureGate(key, baselineSteps.get(key), candidateSteps.get(key)),
-  );
-  const geometricReduction = geometricMeanReduction(fixtures);
-  const reasons: string[] = [];
-  if (
-    baseline.integrityIssues.length > 0 ||
-    candidate.integrityIssues.length > 0
-  ) {
-    reasons.push("one or both windows have metric-integrity issues");
-  }
-  if (fixtures.length === 0) {
-    reasons.push("no fixture steps were available for comparison");
-  }
-  if (fixtures.some((fixture) => fixture.status === "inconclusive")) {
-    reasons.push("one or more fixture comparisons are inconclusive");
-  }
-  if (geometricReduction === null) {
-    reasons.push("geometric-mean write reduction could not be calculated");
-  } else if (geometricReduction < 30) {
-    reasons.push("geometric-mean write reduction is below 30%");
-  }
-  const inconclusive = reasons.some(
-    (reason) =>
-      reason.includes("integrity") ||
-      reason.includes("inconclusive") ||
-      reason.includes("could not") ||
-      reason.includes("no fixture"),
-  );
-  const failed =
-    fixtures.some((fixture) => fixture.status === "failed") ||
-    (geometricReduction !== null && geometricReduction < 30);
-  return {
-    status: inconclusive ? "inconclusive" : failed ? "failed" : "passed",
-    geometricMeanWriteReductionPercent: geometricReduction,
-    fixtures,
-    reasons,
-  };
-}
-
 export function compareWindows(
   baseline: WindowIoReport,
   candidate: WindowIoReport,
-  fixtureStepKeys: Set<string> | null = null,
 ): WindowComparison {
   const baselinePerJob =
     baseline.summary.measuredJobCount === 0
@@ -385,7 +180,6 @@ export function compareWindows(
       candidatePerJob,
       baselinePerJob,
     ),
-    gates: comparisonGates(baseline, candidate, fixtureStepKeys),
     fixedCorpusGate: fixedCorpusGate(baseline, candidate),
   };
 }

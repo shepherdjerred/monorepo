@@ -97,7 +97,7 @@ RUN bun add -g @openai/codex@0.139.0 && codex --version
 # manifest/lockfile/patch changes.
 # trustedDependencies (node-datachannel, node-av, sharp) run their native
 # postinstalls during the frozen install. `--frozen-lockfile` requires every
-# workspace member's package.json present, so the globs enumerate all 47 members
+# workspace member's package.json present, so the globs enumerate every member
 # (top-level, nested packages/*/packages/*, homelab/src/*, the desktop src-tauri
 # crate, and the `scripts` dir).
 COPY --parents \

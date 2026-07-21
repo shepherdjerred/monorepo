@@ -1,18 +1,15 @@
 import { z } from "zod";
 
 import { MetricSourceSchema } from "./ci-io-prometheus.ts";
-import { ComparisonProfileSchema } from "./ci-io-report-model.ts";
 
 type CliValidationOptions = {
   buildNumbers: number[];
   baselineBuildNumbers: number[];
-  fixtureSteps: string[];
   from?: string | undefined;
   to?: string | undefined;
   baselineFrom?: string | undefined;
   baselineTo?: string | undefined;
-  comparisonProfile: "docker-ab" | "fixed-corpus";
-  enforceAbGates: boolean;
+  enforceImpactGates: boolean;
   help: boolean;
 };
 
@@ -45,30 +42,10 @@ function baselineSelectionIssues(options: CliValidationOptions): string[] {
       "provide either --baseline-build or a baseline time window, not both",
     );
   }
-  if (options.enforceAbGates && !hasWindow && !hasBuilds) {
-    issues.push("--enforce-ab-gates requires a baseline selection");
-  }
-  if (
-    options.comparisonProfile === "fixed-corpus" &&
-    !hasWindow &&
-    !hasBuilds
-  ) {
-    issues.push(
-      "--comparison-profile fixed-corpus requires a baseline selection",
-    );
+  if (options.enforceImpactGates && !hasWindow && !hasBuilds) {
+    issues.push("--enforce-impact-gates requires a baseline selection");
   }
   return issues;
-}
-
-function comparisonIssues(options: CliValidationOptions): string[] {
-  if (
-    options.enforceAbGates &&
-    options.comparisonProfile === "docker-ab" &&
-    options.fixtureSteps.length === 0
-  ) {
-    return ["--enforce-ab-gates requires at least one --fixture-step"];
-  }
-  return [];
 }
 
 function uniquenessIssues(options: CliValidationOptions): string[] {
@@ -79,7 +56,6 @@ function uniquenessIssues(options: CliValidationOptions): string[] {
       options.baselineBuildNumbers.map(String),
       "--baseline-build numbers must be unique",
     ],
-    [options.fixtureSteps, "--fixture-step values must be unique"],
   ] as const) {
     if (new Set(values).size !== values.length) {
       issues.push(message);
@@ -101,12 +77,10 @@ const CliOptionsSchema = z
     prometheusUrl: z.url().optional(),
     buildkiteApiUrl: z.url(),
     metricSource: MetricSourceSchema,
-    comparisonProfile: ComparisonProfileSchema,
     jsonPath: z.string().min(1),
     markdownPath: z.string().min(1),
-    fixtureSteps: z.array(z.string().min(1)),
     benchmark: z.boolean(),
-    enforceAbGates: z.boolean(),
+    enforceImpactGates: z.boolean(),
     annotate: z.boolean(),
     help: z.boolean(),
   })
@@ -114,7 +88,6 @@ const CliOptionsSchema = z
     const issues = [
       ...candidateSelectionIssues(options),
       ...baselineSelectionIssues(options),
-      ...comparisonIssues(options),
       ...uniquenessIssues(options),
     ];
     for (const message of issues) {
@@ -131,9 +104,6 @@ export const CI_IO_USAGE = `Usage:
 Options:
   --baseline-build <number>[,<number>...]     Compare exact prior builds
   --baseline-from <ISO> --baseline-to <ISO>  Add a comparison window
-  --fixture-step <key>                       Select an A/B fixture (repeatable)
-  --comparison-profile docker-ab|fixed-corpus
-                                             Select comparison gates (default: docker-ab)
   --metrics-source raw|recording             Explicit metric contract (default: raw)
   --organization <slug>                      Defaults to BUILDKITE_ORGANIZATION_SLUG
   --pipeline <slug>                          Defaults to BUILDKITE_PIPELINE_SLUG
@@ -141,14 +111,13 @@ Options:
   --json <path>                              Default: ci-io.json
   --markdown <path>                          Default: ci-io.md
   --benchmark                                Fail on metric-integrity issues
-  --enforce-ab-gates                         Enforce the selected comparison profile
+  --enforce-impact-gates                     Enforce the fixed-corpus impact gate
   --annotate                                 Post the Markdown as a Buildkite annotation
 `;
 
 type RawCliOptions = {
   buildNumbers: number[];
   baselineBuildNumbers: number[];
-  fixtureSteps: string[];
   from: string | undefined;
   to: string | undefined;
   baselineFrom: string | undefined;
@@ -158,11 +127,10 @@ type RawCliOptions = {
   prometheusUrl: string | undefined;
   buildkiteApiUrl: string;
   metricSource: string;
-  comparisonProfile: string;
   jsonPath: string;
   markdownPath: string;
   benchmark: boolean;
-  enforceAbGates: boolean;
+  enforceImpactGates: boolean;
   annotate: boolean;
   help: boolean;
 };
@@ -171,7 +139,6 @@ function initialCliOptions(): RawCliOptions {
   return {
     buildNumbers: [],
     baselineBuildNumbers: [],
-    fixtureSteps: [],
     from: undefined,
     to: undefined,
     baselineFrom: undefined,
@@ -181,11 +148,10 @@ function initialCliOptions(): RawCliOptions {
     prometheusUrl: undefined,
     buildkiteApiUrl: "https://api.buildkite.com/v2/",
     metricSource: "raw",
-    comparisonProfile: "docker-ab",
     jsonPath: "ci-io.json",
     markdownPath: "ci-io.md",
     benchmark: Bun.env["CI_IO_OBSERVE"] === "true",
-    enforceAbGates: false,
+    enforceImpactGates: false,
     annotate: false,
     help: false,
   };
@@ -216,8 +182,6 @@ function applyValueFlag(
           ...parseBuildNumbers(value),
         ],
       };
-    case "--fixture-step":
-      return { ...options, fixtureSteps: [...options.fixtureSteps, value] };
     case "--from":
       return { ...options, from: value };
     case "--to":
@@ -236,8 +200,6 @@ function applyValueFlag(
       return { ...options, buildkiteApiUrl: value };
     case "--metrics-source":
       return { ...options, metricSource: value };
-    case "--comparison-profile":
-      return { ...options, comparisonProfile: value };
     case "--json":
       return { ...options, jsonPath: value };
     case "--markdown":
@@ -265,8 +227,8 @@ export function parseCliOptions(args: string[]): CliOptions {
       case "--benchmark":
         options = { ...options, benchmark: true };
         break;
-      case "--enforce-ab-gates":
-        options = { ...options, benchmark: true, enforceAbGates: true };
+      case "--enforce-impact-gates":
+        options = { ...options, benchmark: true, enforceImpactGates: true };
         break;
       case "--annotate":
         options = { ...options, annotate: true };

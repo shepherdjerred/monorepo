@@ -207,7 +207,7 @@ RUN set -e; \
 # each filter includes its complete workspace dependency closure (including
 # llm-models). This layer only invalidates when a manifest/lockfile/patch changes.
 # `--frozen-lockfile` requires every
-# workspace member's package.json present, so the globs enumerate all 47 members
+# workspace member's package.json present, so the globs enumerate every member
 # (top-level, nested packages/*/packages/*, homelab/src/*, the desktop src-tauri
 # crate, and the `scripts` dir). node_modules/dist are excluded from the build
 # context by the root .dockerignore, so the later `COPY . .` can't clobber the

@@ -158,6 +158,14 @@ describe("Buildkite CI I/O dashboard", () => {
     );
   });
 
+  it("preserves latency when the disk write rate is below one operation per second", () => {
+    const latencyQuery = panelQueries("Disk Write Latency").join("\n");
+    expect(latencyQuery).toContain("node_disk_write_time_seconds_total");
+    expect(latencyQuery).toContain("node_disk_writes_completed_total");
+    expect(latencyQuery).toContain("1e-9");
+    expect(latencyQuery).not.toMatch(/clamp_min\([\s\S]*,\s*1\s*\)/);
+  });
+
   it("correlates pressure with API, etcd, and controller health", () => {
     const queries = [
       ...panelQueries("CI Pod I/O Pressure"),

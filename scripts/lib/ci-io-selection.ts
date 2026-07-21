@@ -105,25 +105,19 @@ export function selectCohortBuilds(
 export function selectExplicitBuilds(input: {
   builds: BuildkiteBuild[];
   now: Date;
-  allowUnfinishedDockerAb: boolean;
 }): BuildSelection {
   const unfinished = input.builds.filter((build) => build.finished_at === null);
-  const selected = input.allowUnfinishedDockerAb
-    ? input.builds
-    : input.builds.filter((build) => build.finished_at !== null);
+  const selected = input.builds.filter((build) => build.finished_at !== null);
   if (selected.length === 0) {
     throw new Error("explicit build selection has no finished builds");
   }
   const sorted = sortedBuilds(selected);
-  const disposition = input.allowUnfinishedDockerAb
-    ? "included-docker-ab"
-    : "excluded";
   return {
     builds: sorted,
     window: metricWindowForBuilds(sorted, input.now),
     cohort: null,
     unfinishedBuilds: sortedUnfinishedBuilds(
-      unfinished.map((build) => unfinishedBuildReport(build, disposition)),
+      unfinished.map((build) => unfinishedBuildReport(build, "excluded")),
     ),
   };
 }

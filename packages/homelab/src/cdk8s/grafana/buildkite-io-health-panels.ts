@@ -65,7 +65,7 @@ clamp_min(
     rate(node_disk_writes_completed_total{device=~"${PHYSICAL_DISK_PATTERN}"}[5m])
     and on (node) ${BUILDKITE_ACTIVE_NODES}
   ),
-  1
+  1e-9
 )`,
           legend: "{{node}} · {{device}}",
         },

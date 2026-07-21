@@ -256,9 +256,7 @@ function summarizeWindow(
         job.networkReceiveBytes !== null && job.networkTransmitBytes !== null,
     ).length,
     unfinishedBuildCount: unfinishedBuilds.length,
-    excludedBuildCount: unfinishedBuilds.filter(
-      (build) => build.disposition === "excluded",
-    ).length,
+    excludedBuildCount: unfinishedBuilds.length,
     sampleCoveragePercent:
       jobs.length === 0 ? null : (measured.length / jobs.length) * 100,
     p95DurationSeconds: percentile(
