@@ -370,6 +370,13 @@ steps:
             cloneFlags: "--depth=1"
           podSpecPatch:
             containers:
+              # The shell is taken from the AGENT container's registration
+              # env (container-0-level BUILDKITE_SHELL is ignored — the
+              # build-5651 lesson). This image has no bash; use sh.
+              - name: agent
+                env:
+                  - name: BUILDKITE_SHELL
+                    value: "/bin/sh -e -c"
               - name: container-0
                 # renovate: datasource=docker depName=aquasec/trivy
                 image: "aquasec/trivy:0.72.0"
@@ -402,6 +409,13 @@ steps:
             cloneFlags: "--depth=1"
           podSpecPatch:
             containers:
+              # The shell is taken from the AGENT container's registration
+              # env (container-0-level BUILDKITE_SHELL is ignored — the
+              # build-5651 lesson). This image has no bash; use sh.
+              - name: agent
+                env:
+                  - name: BUILDKITE_SHELL
+                    value: "/bin/sh -e -c"
               - name: container-0
                 # renovate: datasource=docker depName=semgrep/semgrep
                 image: "semgrep/semgrep:1.170.0"
